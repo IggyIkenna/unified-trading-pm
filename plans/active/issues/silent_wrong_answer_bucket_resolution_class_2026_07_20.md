@@ -28,9 +28,9 @@ scope: [engineer]
 tags: [buckets, silent-failure, pnl-correctness, data-correctness, false-green, defi]
 related:
   [
-    pipeline_smoke_sweep_findings_2026_07_20.md,
-    bucket_estate_consolidation_to_sub100_2026_07_13.md,
-    backfill_vm_disk_starvation_misdiagnosed_as_tardis_quota_2026_07_18.md,
+    /plans/active/issues/pipeline_smoke_sweep_findings_2026_07_20.md,
+    /plans/active/bucket_estate_consolidation_to_sub100_2026_07_13.md,
+    /plans/archive/issues/backfill_vm_disk_starvation_misdiagnosed_as_tardis_quota_2026_07_18.md,
   ]
 created: 2026-07-20
 parent_epic: infrastructure_master

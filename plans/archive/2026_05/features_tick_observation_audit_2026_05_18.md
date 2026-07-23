@@ -1,6 +1,6 @@
 ---
 doc_type: plan
-title: 'features-tick-observation-audit: per-tick feature snapshot + MTDS provenance chain'
+title: "features-tick-observation-audit: per-tick feature snapshot + MTDS provenance chain"
 summary:
 status: complete
 nature: record
@@ -11,18 +11,23 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: 2026-05-18
-source: ['plans/active/_agent_pings.md (ikenna-main → harsh-main 2026-05-18 11:38 + 11:43 + 12:17 UTC)', plans/active/hedge_ratio_snapshot_persistence_2026_05_13.md (pattern source), unified-api-contracts/unified_api_contracts/internal/domain/defi/sim_schemas.py]
+source:
+  [
+    "plans/active/_agent_pings.md (ikenna-main → harsh-main 2026-05-18 11:38 + 11:43 + 12:17 UTC)",
+    plans/active/hedge_ratio_snapshot_persistence_2026_05_13.md (pattern source),
+    unified-api-contracts/unified_api_contracts/internal/domain/defi/sim_schemas.py,
+  ]
 related_archetypes: [CARRY_STAKED_BASIS]
 estimate_class: brand-new
 estimate_baseline_ai_days: 2
 estimate_calibrated_ai_days: 2.0
-estimate_calibration_note: 'brand-new 1.0×. New data_type + UAC schema + inline writer + manifest wiring + consumer
+estimate_calibration_note: "brand-new 1.0×. New data_type + UAC schema + inline writer + manifest wiring + consumer
 
   reader. Mirrors hedge_ratio_snapshot_persistence Pattern A — but involves features-onchain
 
   engine wiring which adds surface area. Baseline 2 AI-days.
 
-  '
+  "
 locked_by: live-defi-rollout
 locked_since: 2026-05-18
 parent_epic: defi_master
@@ -115,7 +120,7 @@ source_priority registered; UAC `quality-gates.sh` passes.
       wiring; `str | None = None` scaffold already in `FeatureObservationRecord`).
 - [x] **FORMALLY DEFERRED 2026-05-19 slot-5** [features-service] P1. Integration test (mocked GCS) `correlation_id`
       roundtrip. Named successor: this plan Phase 3 (write after Phase 3 propagation lands).
-- [x] ✅ [PM/codex] P2. Add `correlation_id` to audit chain doc at `codex/04-architecture/amm-slippage-simulation.md` —
+- [x] ✅ [PM/codex] P2. Add `correlation_id` to audit chain doc at `/codex/04-architecture/amm-slippage-simulation.md` —
       added Phase 6 block with full chain diagram + FeatureObservationRecord schema + writer refs. — pm@(this commit)
       (slot-5 2026-05-19)
 

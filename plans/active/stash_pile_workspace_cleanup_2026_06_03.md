@@ -94,7 +94,7 @@ commit date), file count, `.py` count, and a class:
 > **[doc-reconciliation 2026-07-12, finding 72, §A2 B-queue ruling] STALE BRANCH MODEL** (was: "inherit-and-commit onto
 > its own `tab/<op>/<N>` branch" as a live target above and at Phase 4 below): `cursor-configs/CLAUDE.md` states the
 > `tab/<op>/N` model is **RETIRED** — "any such instruction is STALE" (Multi-agent safety § per-slot worktrees). Current
-> model (Path-B, per `codex/05-infrastructure/per-tab-worktrees.md`): each slot is a `git clone --reference` with its
+> model (Path-B, per `/codex/05-infrastructure/per-tab-worktrees.md`): each slot is a `git clone --reference` with its
 > own `.git`, checked out directly on `live-defi-rollout` — there is no per-tab branch to inherit onto. Genuine-WIP
 > inheritance today means committing directly onto the slot's own LDR checkout (liveness-gated per the HARD RULE: dead
 > claim → inherit + commit; live claim / mtime <120s → PROTECT), not creating a `tab/<op>/<N>` ref. This plan's Phase 4
@@ -137,7 +137,7 @@ surface — do not auto-drop — genuine WIP.
 > this plan's `last_updated` shows, meaning this fan-out was never reconciled to the new topology. `vm-defi` / `vm-cefi`
 > / `vm-tradfi` / `vm-sports` / `vm-prediction` / `vm-ml` / `vm-trading-core` / `vm-operator-ops` / `vm-cross-cutting` /
 > `vm-orchestrator` are not real dispatch targets under the current central-orchestrator + role-based-dispatch model
-> (`codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`). A dispatcher should instead run the sweep
+> (`/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`). A dispatcher should instead run the sweep
 > per SLOT on the current fleet (per-slot worktrees, `codex/05-infrastructure/per-tab- worktrees.md`), not per named
 > epic VM. Annotation only — the todo list below is left as-is (no re-targeting performed in this pass; re-scoping the
 > fan-out is a judgment call, not a mechanical sync).
@@ -170,7 +170,7 @@ surface — do not auto-drop — genuine WIP.
 - [ ] [INFRA] P3. **NICE-TO-HAVE.** The pile regrew 0→31 in PM in 2 days, so the autostash/foreign-park churn is
       structural. Investigate folding a `--max-stash-age` warning into `slot-git-status-report.sh` (or a weekly cron) so
       a host pings its inbox when `refs/stash` exceeds N or a stash ages past M days, instead of relying on manual
-      sweeps. Capture decision in `codex/05-infrastructure/per-tab-worktrees.md`. — owner: planning-host
+      sweeps. Capture decision in `/codex/05-infrastructure/per-tab-worktrees.md`. — owner: planning-host
 
 ## Relationship to the 2026-06-01 issue doc
 

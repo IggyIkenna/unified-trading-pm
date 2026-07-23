@@ -15,7 +15,7 @@ stage: [data]
 repos: [unified-api-contracts, instruments-service, market-data-processing-service, unified-trading-library]
 scope: [engineer]
 tags: [sports, canonicalisation, instrument-type, uac-contract-fork, gcs-migration, odds]
-related: [data_status_page_ux_and_canonicalisation_2026_07_16.md]
+related: [/plans/active/data_status_page_ux_and_canonicalisation_2026_07_16.md]
 created: 2026-07-18
 last_updated: 2026-07-23
 parent_epic: sports_master
@@ -81,9 +81,9 @@ that cost tradfi its CME 2026-06-28 counts (repaired @bd115230). This plan lands
 
 ## Codex SSOTs (read before touching)
 
-- `codex/02-data/availability-manifest-and-data-status.md` — shard-atom / manifest write discipline (manifest LAST).
-- `codex/06-coding-standards/data-status-endpoint-contract.md` — formula-consistency contract for coverage.
-- `codex/04-architecture/instruments-service-as-ssot-for-mtds.md` — IS as reference-data SSOT; venue lists = UAC data.
+- `/codex/02-data/availability-manifest-and-data-status.md` — shard-atom / manifest write discipline (manifest LAST).
+- `/codex/06-coding-standards/data-status-endpoint-contract.md` — formula-consistency contract for coverage.
+- `/codex/04-architecture/instruments-service-as-ssot-for-mtds.md` — IS as reference-data SSOT; venue lists = UAC data.
 - The 2026-06-28 tradfi CME manifest-first corruption (repaired @bd115230) — the anti-pattern this plan avoids.
 
 ## Todos (strict order — this is a DAG, manifest LAST)

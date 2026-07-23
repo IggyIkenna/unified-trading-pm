@@ -6,7 +6,15 @@ status: complete
 nature: record
 asset_group: [infrastructure]
 stage: [meta]
-repos: [deployment-api, deployment-service, execution-service, features-service, instruments-service, market-data-processing-service]
+repos:
+  [
+    deployment-api,
+    deployment-service,
+    execution-service,
+    features-service,
+    instruments-service,
+    market-data-processing-service,
+  ]
 scope: [engineer, admin]
 tags: []
 related: []
@@ -55,9 +63,9 @@ Additional issues:
 
 ## Codex SSOTs
 
-- `codex/02-data/contracts-scope-and-layout.md`
-- `codex/02-data/honest-absence-downstream-handling.md`
-- `codex/04-architecture/instruments-service-as-ssot-for-mtds.md`
+- `/codex/02-data/contracts-scope-and-layout.md`
+- `/codex/02-data/honest-absence-downstream-handling.md`
+- `/codex/04-architecture/instruments-service-as-ssot-for-mtds.md`
 
 ## Full Execution Criterion
 
@@ -207,5 +215,5 @@ pre-existing. New regression tests: all green.
 
 ## Codex SSOT updates
 
-- Update `codex/02-data/contracts-scope-and-layout.md` after Phase 1 (new UAC types section)
+- Update `/codex/02-data/contracts-scope-and-layout.md` after Phase 1 (new UAC types section)
 - No codex doc invalidated — this is additive + rename only

@@ -331,7 +331,7 @@ or bypass observability — unacceptable.
 
 ## Cross-refs
 
-- Roadmap index: `codex/02-data/sports-scheduling-and-sharding.md` §12.
+- Roadmap index: `/codex/02-data/sports-scheduling-and-sharding.md` §12.
 - VM pre-flight: same doc §12.8.
 - Plan format: `plans/PLAN_FORMAT.md`.
 - Sub-agent rules: `cursor-configs/SUB_AGENT_MANDATORY_RULES.md`.

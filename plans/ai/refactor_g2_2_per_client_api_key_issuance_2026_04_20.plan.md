@@ -7,7 +7,7 @@ locked_by: live-defi-rollout
 locked_since: 2026-04-20
 amended: 2026-04-22
 depends_on:
-  - codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md §2.2
+  - /codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md §2.2
   - refactor_g2_1_org_scoped_jwt_claims_2026_04_20.plan.md
   - refactor_g2_6_staging_firebase_provisioning_2026_04_20.plan.md
   - plans/active/user_management_merge_2026_03_23.plan.md (folded)
@@ -51,15 +51,15 @@ deployment-api. UAC declares the `ApiKeyScope` enum: `read_data`, `read_reportin
 - **Upstream:** G2.1 (JWT claims declare scope shape), G2.6 (staging Firebase project)
 - **Wave G2-β peers (parallel):** G2.7 (demo provisioning), G2.10 (allocator UI split)
 - **Folded plan:** `plans/active/user_management_merge_2026_03_23.plan.md` — API-key sub-phases absorbed
-- **Codex:** `codex/06-coding-standards/config-reloader-pattern.md` — ApiKeyReloader reuse
+- **Codex:** `/codex/06-coding-standards/config-reloader-pattern.md` — ApiKeyReloader reuse
 - **CLAUDE.md:** Secret Manager rules, ApiKeyReloader pattern
 
 ## Mandatory read-set
 
-1. `codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md` §2.2
+1. `/codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md` §2.2
 2. `plans/active/user_management_merge_2026_03_23.plan.md`
 3. `refactor_g2_1_org_scoped_jwt_claims_2026_04_20.plan.md` — claim shape
-4. `codex/06-coding-standards/config-reloader-pattern.md`
+4. `/codex/06-coding-standards/config-reloader-pattern.md`
 5. `unified-trading-library/` — ApiKeyReloader pattern reference
 6. `deployment-api/` (or equivalent) — rate-limiting entry point
 7. `unified-trading-system-ui/lib/admin/firebase.ts` + `server/admin/firebase-admin.ts` (post-fold)
@@ -92,7 +92,7 @@ through the same UAC `validate_api_key(key, required_scope) -> ApiKeyValidation`
 
 - [ ] [AGENT] P0. `unified-api-contracts/tests/internal/unit/test_api_keys.py` — ≥10 cases: scope match, scope mismatch
       (deny), expired key (deny), invalid key (deny), rotated-from chain validation.
-- [ ] [AGENT] P0. Codex doc `codex/06-coding-standards/api-key-issuance.md` — describes issuance + rotation +
+- [ ] [AGENT] P0. Codex doc `/codex/06-coding-standards/api-key-issuance.md` — describes issuance + rotation +
       scope-to-claim mapping.
 
 ### Phase C — Secret Manager integration
@@ -123,7 +123,7 @@ through the same UAC `validate_api_key(key, required_scope) -> ApiKeyValidation`
 - `unified-api-contracts/unified_api_contracts/internal/architecture_v2/api_keys.py` — NEW
 - `unified-api-contracts/unified_api_contracts/auth.py` — MODIFY (extend facade)
 - `unified-api-contracts/tests/internal/unit/test_api_keys.py` — NEW
-- `codex/06-coding-standards/api-key-issuance.md` — NEW
+- `/codex/06-coding-standards/api-key-issuance.md` — NEW
 - `unified-trading-system-ui/app/(ops)/admin/clients/[id]/api-keys/page.tsx` — NEW
 - `unified-trading-system-ui/lib/admin/api-keys/issue.ts` — NEW
 - `deployment-api/middleware/api_key_auth.py` — NEW (or equivalent)

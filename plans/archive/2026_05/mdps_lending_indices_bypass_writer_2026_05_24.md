@@ -10,7 +10,7 @@ repos: [market-data-processing-service, unified-api-contracts]
 scope: [engineer, admin]
 tags: []
 related: []
-created: '2026-05-24'
+created: "2026-05-24"
 parent_epic: mtds_mdps_master
 assigned_vm: vm-ml
 estimate_class: brand-new
@@ -57,7 +57,7 @@ MDPS QG exits 0 on `market-data-processing-service`. UAC QG exits 0 on `unified-
 ## Codex SSOT updates
 
 No new workspace contract introduced. `lending_indices` transitions from bypass to candle-processed: update
-`codex/02-data/availability-manifest-and-data-status.md` comment if it lists bypass types explicitly (deferred —
+`/codex/02-data/availability-manifest-and-data-status.md` comment if it lists bypass types explicitly (deferred —
 low-priority cosmetic doc update, not blocking).
 
 ## Temporary states + their canonical follow-up plans

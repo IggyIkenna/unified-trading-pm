@@ -10,7 +10,7 @@ repos: [agent-orchestrator, deployment-service]
 scope: [engineer, admin]
 tags: []
 related: [epic_vm_fleet_commissioning_2026_05_21.md (archived)]
-created: '2026-05-22'
+created: "2026-05-22"
 parent_epic: orchestrator_master
 assigned_vm: vm-orchestrator
 priority: P0
@@ -35,8 +35,8 @@ only the cloud-specific calls branch.
 
 Codex SSOTs:
 
-- `codex/05-infrastructure/agent-orchestrator-worker-topology.md` — update Cloud provider toggle section when done
-- `codex/05-infrastructure/vm-tarball-deployment.md` — no changes needed (trading VMs only)
+- `/codex/05-infrastructure/agent-orchestrator-worker-topology.md` — update Cloud provider toggle section when done
+- `/codex/05-infrastructure/vm-tarball-deployment.md` — no changes needed (trading VMs only)
 
 ---
 
@@ -125,7 +125,7 @@ Launch one VM (vm-defi), verify bootstrap completes, health endpoint responds, S
       VMs deleted: agent-orch-vm-{cefi,cross-cutting,defi,ml,operator-ops,orchestrator,prediction,sports,
       tradfi,trading-core}-20260521 in asia-northeast1-c. Planning VM 34.146.53.106 kept live.
 - [x] ✅ [AGENT] P1. Updated `orchestrator_vm_registry.yaml` with AWS instance IDs + public IPs. pm@e2efe990e.
-- [x] ✅ [AGENT] P1. Updated `codex/05-infrastructure/agent-orchestrator-worker-topology.md` — AWS fleet table, cloud
+- [x] ✅ [AGENT] P1. Updated `/codex/05-infrastructure/agent-orchestrator-worker-topology.md` — AWS fleet table, cloud
       toggle section, bootstrap steps, event bus with both S3 + GCS paths, re-launch commands. pm@8ca18cfba. Also
       updated `data/config/backends.json` in agent-orchestrator with all 10 AWS VMs so Fleet tab shows them.
       agent-orch@79e5d23.

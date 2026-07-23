@@ -6,7 +6,7 @@ owner: marketing + ops + agent
 locked_by: live-defi-rollout
 locked_since: 2026-04-20
 depends_on:
-  - codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md §3.4
+  - /codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md §3.4
 # Wave G3-α — independent, parallel with G3.2/3.3/3.5/3.6.
 ---
 
@@ -36,13 +36,13 @@ Target: complete marketing copy sweep across all external surfaces; formal trade
 
 - **Upstream:** G1.12 public-site IA + briefings polish (cleanup target)
 - **Wave G3-α peers (parallel):** G3.2, G3.3, G3.5, G3.6
-- **Codex:** `codex/14-playbooks/experience/marketing-journey.md`
+- **Codex:** `/codex/14-playbooks/experience/marketing-journey.md`
 - **Memory:** 2026-04-19 DART naming + HSBC non-competing note
 
 ## Mandatory read-set
 
-1. `codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md` §3.4
-2. `codex/14-playbooks/experience/marketing-journey.md`
+1. `/codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md` §3.4
+2. `/codex/14-playbooks/experience/marketing-journey.md`
 3. `unified-trading-system-ui/components/shell/nav-copy.ts` — already uses "DART"
 4. `unified-trading-system-ui/app/(marketing)/` or `marketing-static/` directories — all external pages
 5. `unified-trading-system-ui/next.config.mjs` — redirect config
@@ -72,7 +72,7 @@ Target: complete marketing copy sweep across all external surfaces; formal trade
 
 - [ ] [OPERATOR] P0. File formal trademark search at UKIPO (`https://trademarks.ipo.gov.uk/`).
 - [ ] [OPERATOR] P0. File formal trademark search at USPTO (`https://tmsearch.uspto.gov/`).
-- [ ] [OPERATOR] P0. Document results in `codex/14-playbooks/_internal/dart-trademark-check.md` (internal-only).
+- [ ] [OPERATOR] P0. Document results in `/codex/14-playbooks/_internal/dart-trademark-check.md` (internal-only).
 
 ### Phase D — Domain setup (operator + agent)
 
@@ -96,8 +96,8 @@ Target: complete marketing copy sweep across all external surfaces; formal trade
 - `unified-trading-system-ui/lib/seo/metadata.ts` (or equivalent) — MODIFY
 - `unified-trading-system-ui/next.config.mjs` — MODIFY (domain redirect)
 - `deployment-service/config/cloud-run-routes.yaml` (or equivalent) — MODIFY
-- `codex/14-playbooks/experience/marketing-journey.md` — MODIFY (DART framing)
-- `codex/14-playbooks/_internal/dart-trademark-check.md` — NEW (operator)
+- `/codex/14-playbooks/experience/marketing-journey.md` — MODIFY (DART framing)
+- `/codex/14-playbooks/_internal/dart-trademark-check.md` — NEW (operator)
 - `unified-trading-system-ui/tests/e2e/playbooks/refactor/refactor-g3-4-dart-rebrand.spec.ts` — NEW
 
 ## Execution DAG

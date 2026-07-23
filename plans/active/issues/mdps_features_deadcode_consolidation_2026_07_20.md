@@ -24,7 +24,7 @@ stage: [data]
 repos: [deployment-service, features-service, market-data-processing-service]
 scope: [engineer, admin]
 tags: [dead-code, orphan, vm-launcher, registry, self-heal, monitoring, consolidation, mdps, features]
-related: [../data_pipeline_check_mdps_features_2026_07_20.md, ../../codex/05-infrastructure/vm-launcher-runbook.md]
+related: [../data_pipeline_check_mdps_features_2026_07_20.md, /codex/05-infrastructure/vm-launcher-runbook.md]
 created: 2026-07-20
 last_updated: 2026-07-20
 parent_epic: infrastructure_master

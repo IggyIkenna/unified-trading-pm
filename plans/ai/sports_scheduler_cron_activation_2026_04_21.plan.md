@@ -46,7 +46,7 @@ the Cloud Run path is blocked on Plans 12 (`deployment_service_build_infrastruct
 (`setup-data-pipeline-vm.sh` branch `VM_TASK=sports-scheduler-poll`) and runs `SportsTriggerScheduler.run()` in its
 built-in 300-s poll loop. Zero Cloud-Run-image dependency. Terraform in `terraform/gcp/sports_scheduler_cron.tf`
 deferred — kept in repo for future migration back to Cloud Run once Plans 12 + 13 land. See
-`codex/02-data/sports-scheduling-and-sharding.md` §8 for the Cloud Run vs VM-daemon decision notes.
+`/codex/02-data/sports-scheduling-and-sharding.md` §8 for the Cloud Run vs VM-daemon decision notes.
 
 ## Blast radius
 
@@ -190,4 +190,4 @@ Plan `sports_scheduler_periodic_tier_dispatch_2026_04_21` must reach C5 before t
 
 - Changes to the scheduler logic itself — belongs in Plan 1.
 - Per-fixture Tier-3/4 dispatch — already operational on the existing scheduler.
-- Cloud Run vs VM economics writeup — covered in `codex/02-data/sports-scheduling-and-sharding.md` §8.
+- Cloud Run vs VM economics writeup — covered in `/codex/02-data/sports-scheduling-and-sharding.md` §8.

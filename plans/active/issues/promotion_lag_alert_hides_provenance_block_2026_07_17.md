@@ -24,8 +24,8 @@ scope: [engineer]
 tags: [cicd, promotion, provenance-gate, quickmerge, alerting, branch-health]
 related:
   [
-    "codex/08-workflows/ci-cd-flow.md",
-    "codex/04-architecture/ci-alerting.md",
+    "/codex/08-workflows/ci-cd-flow.md",
+    "/codex/04-architecture/ci-alerting.md",
     "plans/active/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md",
   ]
 created: 2026-07-17
@@ -92,7 +92,7 @@ about the alert that reports the residue.
    the branch-health alert should classify it as `PROVENANCE-BLOCKED`, not `PROMOTION LAG`, and inline the offending
    SHA + subject + the "re-ship or revert, do NOT hand-arm" remedy. A lag alert and a provenance hold are different
    conditions with different responders and different correct actions; collapsing them into one message costs a manual
-   dig every time. Dedup by state-transition per `codex/04-architecture/ci-alerting.md` (fire on change / RESOLVED /
+   dig every time. Dedup by state-transition per `/codex/04-architecture/ci-alerting.md` (fire on change / RESOLVED /
    re-remind), never every tick.
 2. **[OPERATOR] P2 — clear the two current blocks at source** (owner of the bypassed code, NOT this session):
    - `market-tick-data-service@d302f07a` — re-ship via `quickmerge --agent --files '<paths>'`, or revert on LDR.

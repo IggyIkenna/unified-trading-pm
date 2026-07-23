@@ -6,19 +6,40 @@ status: complete
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [deployment-service, deployment-ui, instruments-service, strategy-service, unified-api-contracts, unified-trading-pm]
+repos:
+  [deployment-service, deployment-ui, instruments-service, strategy-service, unified-api-contracts, unified-trading-pm]
 scope: [engineer, admin]
 tags: []
 related: [plans/active/trading_agent_service_architecture_unlock_2026_05_22.md]
 created: 2026-05-07
-source: [plans/archive/issues/defi_archetypes_doc_plan_drift_2026_05_07.md (Harsh audit + 2026-05-07 PM operator follow-up), unified-api-contracts/unified_api_contracts/registry/venue_collateral.py (stale SSOT), codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md, codex/09-strategy/architecture-v2/archetypes/arbitrage-price-dispersion.md, codex/09-strategy/architecture-v2/archetypes/carry-basis-perp.md, plans/archive/leveraged_leg_controller_2026_05_01.plan.md, plans/archive/carry_staked_basis_structure_axis_2026_05_04.plan.md, plans/active/master_to_live_defi_2026_05_23.md, plans/active/defi_master.md]
-related_archetypes: [CARRY_STAKED_BASIS, ARBITRAGE_PRICE_DISPERSION, CARRY_BASIS_PERP, RECURSIVE_STAKED, all archetypes touched by LeveragedLegController]
+source:
+  [
+    plans/archive/issues/defi_archetypes_doc_plan_drift_2026_05_07.md (Harsh audit + 2026-05-07 PM operator follow-up),
+    unified-api-contracts/unified_api_contracts/registry/venue_collateral.py (stale SSOT),
+    /codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md,
+    /codex/09-strategy/architecture-v2/archetypes/arbitrage-price-dispersion.md,
+    /codex/09-strategy/architecture-v2/archetypes/carry-basis-perp.md,
+    plans/archive/leveraged_leg_controller_2026_05_01.plan.md,
+    plans/archive/carry_staked_basis_structure_axis_2026_05_04.plan.md,
+    plans/active/master_to_live_defi_2026_05_23.md,
+    plans/active/defi_master.md,
+  ]
+related_archetypes:
+  [
+    CARRY_STAKED_BASIS,
+    ARBITRAGE_PRICE_DISPERSION,
+    CARRY_BASIS_PERP,
+    RECURSIVE_STAKED,
+    all archetypes touched by LeveragedLegController,
+  ]
 estimate_class: design
 estimate_baseline_ai_days: 20
 estimate_calibrated_ai_days: 12
-estimate_calibration_note: 'Backfilled 2026-05-13: 40 todos, 17 done; multi-stream design+UAC matrix flip + archetype-doc rewrites + UAC enum audit + tracer + P&L attribution. Streams A-E parallel-shippable. Baseline 20 (~0.5 AI-day per substantive todo across remaining ~23); × 0.6 = 12.
+estimate_calibration_note: "Backfilled 2026-05-13: 40 todos, 17 done; multi-stream design+UAC matrix flip +
+  archetype-doc rewrites + UAC enum audit + tracer + P&L attribution. Streams A-E parallel-shippable. Baseline 20 (~0.5
+  AI-day per substantive todo across remaining ~23); × 0.6 = 12.
 
-  '
+  "
 parent_epic: strategy_master
 priority: P1
 locked_by: live-defi-rollout
@@ -135,17 +156,15 @@ short hedge). `ASTER` is USDT/USDF/asBNB only.
       `venue_accepts_collateral("DERIBIT", "stETH") is True`, etc. **VERIFIED 2026-05-09 audit** — tests at
       `tests/unit/test_venue_collateral.py:76-108` confirm DERIBIT stETH + BYBIT stETH/wstETH/USDe/sUSDe + OKX wstETH
       acceptance post-Stream A flip.
-- [x] [codex] P0. Update
-      [`carry-staked-basis.md`](../../codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md) "Today's
-      matrix" table (lines 101–112): replace the single DRIFT row with the corrected multi-venue table (DRIFT +
+- [x] [codex] P0. Update [`carry-staked-basis.md`](/codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md)
+      "Today's matrix" table (lines 101–112): replace the single DRIFT row with the corrected multi-venue table (DRIFT +
       Deribit + Bybit + OKX); update the slot count from 2 to ~10 (3 ETH-LSTs × 3 ETH-perp-venues + DRIFT/JitoSOL +
       DRIFT/mSOL); update the "Honest — DRIFT is the only venue" sentence to reflect the corrected reality. Update Phase
       7a status from "operator audit pending" → "shipped 2026-05-07 — see plan". **VERIFIED 2026-05-09 audit** —
       multi-venue table at carry-staked-basis.md:95-103 (DRIFT + DERIBIT + BYBIT + OKX rows).
-- [x] [codex] P0. Update
-      [`carry-staked-basis.md`](../../codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md) lines 124–130
-      (Catalog axis): bump "2 slots today" → "N slots today (post-Stream A flip)". **VERIFIED 2026-05-09 audit** —
-      "Effective slot count post-Stream A flip = ~7" at carry-staked-basis.md:110-112.
+- [x] [codex] P0. Update [`carry-staked-basis.md`](/codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md)
+      lines 124–130 (Catalog axis): bump "2 slots today" → "N slots today (post-Stream A flip)". **VERIFIED 2026-05-09
+      audit** — "Effective slot count post-Stream A flip = ~7" at carry-staked-basis.md:110-112.
 - [x] [strategy-service] P1. Confirm `_build_carry_staked_basis` in `target_universe/catalog.py` regenerates the
       expanded slot list automatically from the corrected matrix (per the codex SSOT design). If hardcoded anywhere,
       remove the hardcode. **CONFIRMED 2026-05-18 slot-3 audit**: `_emit_staked_basis_slots` calls
@@ -169,7 +188,7 @@ already supports LEADER_HEDGE mode.
 **Tasks**
 
 - [x] [codex] P0. Update
-      [`arbitrage-price-dispersion.md`](../../codex/09-strategy/architecture-v2/archetypes/arbitrage-price-dispersion.md):
+      [`arbitrage-price-dispersion.md`](/codex/09-strategy/architecture-v2/archetypes/arbitrage-price-dispersion.md):
       promote "Funding-rate dispersion arb | LEADER_HEDGE" from one-line "Supported scenarios" mention to first-class
       sub-section with its own config-schema variant. Document the cross-venue funding mechanic, the leverage
       multiplier, and the volatility-cap clamp. **VERIFIED 2026-05-09 audit** — Funding-rate dispersion arb at
@@ -180,15 +199,15 @@ already supports LEADER_HEDGE mode.
       `carry-basis-perp.md` only. **SHIPPED 2026-05-09** at PM@5fe5eabd (Phase E of
       [`arbitrage_price_dispersion_finalisation_2026_05_09.md`](../archive/arbitrage_price_dispersion_finalisation_2026_05_09.md)).
       Verify gates:
-      `rg 'CARRY_BASIS_PERP.*funding|funding.*CARRY_BASIS_PERP'     codex/09-strategy/architecture-v2/archetypes/arbitrage-price-dispersion.md`
+      `rg 'CARRY_BASIS_PERP.*funding|funding.*CARRY_BASIS_PERP'     /codex/09-strategy/architecture-v2/archetypes/arbitrage-price-dispersion.md`
       returns zero hits; `rg     'funding-rate-dispersion'` on the same file returns 1 hit. Same commit also added the
       canonical `funding-rate-dispersion` example slot pair (BTC + ETH USDT, 6-venue universe + dynamic
       best-long/best-short) to both `arbitrage-price-dispersion.md` § "Example instances" and
       `category-instrument-coverage.md` § 11.
-- [x] [codex] P0. Update [`carry-basis-perp.md`](../../codex/09-strategy/architecture-v2/archetypes/carry-basis-perp.md)
-      "Not in this archetype" section: keep the line "Cross-venue perp spread arbitrage (funding-rate differential
-      between two perp venues for the same asset) — `ARBITRAGE_PRICE_DISPERSION`" but reword it to be authoritative
-      rather than circular. **VERIFIED 2026-05-09 audit** — line at carry-basis-perp.md:138-139.
+- [x] [codex] P0. Update [`carry-basis-perp.md`](/codex/09-strategy/architecture-v2/archetypes/carry-basis-perp.md) "Not
+      in this archetype" section: keep the line "Cross-venue perp spread arbitrage (funding-rate differential between
+      two perp venues for the same asset) — `ARBITRAGE_PRICE_DISPERSION`" but reword it to be authoritative rather than
+      circular. **VERIFIED 2026-05-09 audit** — line at carry-basis-perp.md:138-139.
 - [x] [PM-plan] P0. Edit [`master_to_live_defi_2026_05_23.md`](./master_to_live_defi_2026_05_23.md): rename
       `leveraged_funding_arb` → `ARBITRAGE_PRICE_DISPERSION` (with config variant
       `ARBITRAGE_PRICE_DISPERSION@funding-dispersion-leveraged` where useful). Update the "Both archetypes" headline to
@@ -258,12 +277,13 @@ are recording past audit findings). Tracker:
 § "RESOLUTION 2026-05-10". **Stream B's 3 sister-todo deferrals — all ✅ done**: (1) L181 strategy-service slot ✅ Phase
 A end-to-end across 6 commits (strategy-service@24f8494 dispatcher + @0b4ef0e helper + @04c0d52 engine + @1107ab7
 probe + @d01661e multi-asset + @de9b4b0 allocator + @e3e0962 QG-clean Literal fix); (2) L195 tracer ✅ Phase B at
-strategy-service@2fdf7e8 + peripheral-QG @e87a84a, real-infra 2024-W1 run produced 3 EMIT / $200.63 simulated P&L; (3)
+strategy-service@2fdf7e8 + peripheral-QG @e87a84a, real-infra 2024-W1 run produced 3 EMIT /
+$200.63 simulated P&L; (3)
 L205 P&L attribution ✅ Phase C at pnl-attribution-service@f5dcf63 + operational run 2026-05-10 wrote 7 daily parquets
 (29 total rows across
 `gs://pnl-attribution-output/by_strategy/ARBITRAGE_PRICE_DISPERSION/config_variant=funding-rate-dispersion/year=2024/month=01/2024-01-{01..07}.parquet`;
-sample 2024-01-02 = 9 rows including ETH `deribit→hyperliquid` $64.04 + SOL `bybit→hyperliquid` $45.19 EMIT pairs).
-Successor finalisation plan
+sample 2024-01-02 = 9 rows including ETH `deribit→hyperliquid` $64.04 +
+SOL `bybit→hyperliquid` $45.19 EMIT pairs). Successor finalisation plan
 [`arbitrage_price_dispersion_finalisation_2026_05_09.md`](../archive/arbitrage_price_dispersion_finalisation_2026_05_09.md)
 shipped 100% end-to-end (Phases A/B/C/D/E all done with operational evidence). Stream B gate fully closed.
 
@@ -281,16 +301,16 @@ controller layer).
 
 **Tasks** (per archetype doc — each is independently shippable)
 
-- [x] [codex] P0. [`carry-staked-basis.md`](../../codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md)
+- [x] [codex] P0. [`carry-staked-basis.md`](/codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md)
       "Execution semantics" section: added `### LegController integration` sub-section crediting controller for
       mechanically generating the 4-leg sequence; Code-backport status: DEFERRED. (PM@552a3e6e)
-- [x] [codex] P0. [`carry-basis-perp.md`](../../codex/09-strategy/architecture-v2/archetypes/carry-basis-perp.md): same
+- [x] [codex] P0. [`carry-basis-perp.md`](/codex/09-strategy/architecture-v2/archetypes/carry-basis-perp.md): same
       rewrite for the 2-leg paired entry/exit. (PM@552a3e6e)
 - [x] [codex] P0.
-      [`arbitrage-price-dispersion.md`](../../codex/09-strategy/architecture-v2/archetypes/arbitrage-price-dispersion.md):
+      [`arbitrage-price-dispersion.md`](/codex/09-strategy/architecture-v2/archetypes/arbitrage-price-dispersion.md):
       added "### LegController integration" sub-section; ATOMIC + LEADER_HEDGE modes documented. (PM@552a3e6e)
 - [x] [codex] P0.
-      [`carry-recursive-staked.md`](../../codex/09-strategy/architecture-v2/archetypes/carry-recursive-staked.md): same
+      [`carry-recursive-staked.md`](/codex/09-strategy/architecture-v2/archetypes/carry-recursive-staked.md): same
       rewrite for the recursive supply/borrow loop. (PM@552a3e6e)
 - [x] [codex] P1. Remaining 7 archetype docs in `codex/09-strategy/architecture-v2/archetypes/` — same rewrite. Per
       Citadel-grade `doc → plan → code` rule, ship even if the code backport for that archetype is deferred. Each doc
@@ -324,7 +344,7 @@ Co-shipping the enum extension with the doc rewrites closes the doc-code drift.
       codex archetype doc maps to an existing enum value. Candidates surfaced via grep (`CARRY_AVS_CONTINUOUS` /
       `CARRY_ISSUER_SEASONAL`) are **PnL attribution sub-factors**, NOT strategy archetypes — they live in
       `pnl-attribution-service` as a different StrEnum (see
-      `codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md:430-431`). The reverse direction
+      `/codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md:430-431`). The reverse direction
       (enum-without-doc) has many candidates (MARKET*MAKING_PASSIVE_SPREAD / VOL*_ variants beyond VOL*TRADING_OPTIONS /
       PORTFOLIO*_) but those would be "doc the existing enum value" not "add a new enum value." **Conclusion: "8 → 11"
       framing collapses to "8 → 10" (53 → 55 enum members); no 11th archetype documented but not in enum.** If a
@@ -423,8 +443,8 @@ the canonical `ARBITRAGE_PRICE_DISPERSION` name, and the `target_leverage` schem
       monolithic, archetypes have different venue subsets. (PM@pending — defi_master lines 1124-1125 updated +
       venue-matrix sub-section added)
 - [x] [PM-plan] P1. Both plans get a "2026-05-07 venue-matrix re-verification" sub-section pointing at this plan +
-      Stream A's playbook (`codex/16-strategy-playbooks/defi/venue-collateral-2026-05-07.md`). (PM@pending — sub-section
-      added to defi_master)
+      Stream A's playbook (`/codex/16-strategy-playbooks/defi/venue-collateral-2026-05-07.md`). (PM@pending —
+      sub-section added to defi_master)
 
 **Gate:** Master plan + `defi_master` use precise venue subsets per archetype; no remaining "6 venues"
 overgeneralisation.

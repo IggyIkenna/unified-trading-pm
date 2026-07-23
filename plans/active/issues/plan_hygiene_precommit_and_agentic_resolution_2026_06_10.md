@@ -1,7 +1,7 @@
 ---
 doc_type: issue
 title: Plan-hygiene → prek (staged-only) + fold-to-QG + 24h agentic contradiction RESOLUTION
-summary: 'Plan-health today is split across two mechanisms in `.github/workflows/plan-health-agent.yml`:'
+summary: "Plan-health today is split across two mechanisms in `.github/workflows/plan-health-agent.yml`:"
 status: open
 nature: process
 asset_group: [cross-cutting]
@@ -13,7 +13,12 @@ related: []
 created: 2026-06-10
 parent_epic: plan_hygiene_master
 priority: P2
-source: [operator-design-decision-2026-06-10, .github/workflows/plan-health-agent.yml, scripts/plan-hygiene/run_hygiene_sweep.sh]
+source:
+  [
+    operator-design-decision-2026-06-10,
+    .github/workflows/plan-health-agent.yml,
+    scripts/plan-hygiene/run_hygiene_sweep.sh,
+  ]
 assigned_vm:
 resolved_by:
 locked_by: live-defi-rollout
@@ -135,7 +140,7 @@ Plan-health today is split across two mechanisms in `.github/workflows/plan-heal
       trigger + Haiku steps from `plan-health-agent.yml` (KEEP the `pull_request` `plan-health-gate` job + the
       escalate-on-gate-failure path); (b) delete the Cloud Run job `uts-prod-plan-hygiene-sweep` + its scheduler + TF
       (`deployment-service/terraform/gcp/hygiene_sweep_scheduler.tf`) + `cron_hygiene_sweep_entrypoint.sh`; (c) update
-      CLAUDE.md § "Plan Hygiene" + `codex/11-project-management/plan-hygiene.md` to the timer-on-central model. repos:
+      CLAUDE.md § "Plan Hygiene" + `/codex/11-project-management/plan-hygiene.md` to the timer-on-central model. repos:
       unified-trading-pm + deployment-service.
 - [x] ✅ [SCRIPT] P2. **`run_hygiene_sweep.sh --no-regen` (or a `--check` mode)** — STEP 1's `--ci` sweep regenerates
       the active-plan inventory into `master_to_live_defi` as a SIDE-EFFECT, dirtying a grace-window plan during the

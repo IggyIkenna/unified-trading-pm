@@ -20,11 +20,11 @@ scope: [engineer]
 tags: [live-pipeline, wsfeedconnector, phase-3-5, per-venue-rollout, handler-audit-followup]
 related:
   [
-    foundation_gates_and_capture_to_100_2026_07_06.md,
-    instruments_completion_tracker_2026_07_06.md,
-    live_pipeline_mtds_mdps_features_2026_05_08.md,
-    ../../codex/02-data/live-data-persistence-and-event-log.md,
-    ../../codex/02-data/honest-coverage-model.md,
+    /plans/archive/2026_07/foundation_gates_and_capture_to_100_2026_07_06.md,
+    /plans/active/instruments_completion_tracker_2026_07_06.md,
+    /plans/archive/2026_05/live_pipeline_mtds_mdps_features_2026_05_08.md,
+    /codex/02-data/live-data-persistence-and-event-log.md,
+    /codex/02-data/honest-coverage-model.md,
   ]
 created: 2026-07-06
 last_updated: 2026-07-14
@@ -244,7 +244,7 @@ approve / defer per category rather than per-venue.
       operator **decision #3** (already-committed SSOT). No WS connector built. Sources:
       `unified_api_contracts/canonical/crosscutting/mvp_scope.py:419-423` (comment: "BINANCE-DELIVERY (Binance COIN-M
       inverse/delivery futures) was REMOVED from the cefi MVP set — the operator accepts COIN-M delivery is NOT MVP.
-      Other venues' dated/quarterly fixed-delivery futures STAY MVP.") + `codex/02-data/mvp-scope-canonical.md` NOT-MVP
+      Other venues' dated/quarterly fixed-delivery futures STAY MVP.") + `/codex/02-data/mvp-scope-canonical.md` NOT-MVP
       row (`**NOT MVP** = **BINANCE-DELIVERY** (COIN-M inverse/delivery — dropped, decision #3)`) +
       `mvp_backfill_cefi_tick_v10_2026_06_27.md` v10-catalogue confirmation ("BINANCE-DELIVERY 222 rows all mvp=False
       ✓"). The task-brief hedge ("DELIVERY dated futures is separate") is superseded: decision #3 scope covers BOTH

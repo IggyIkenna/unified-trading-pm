@@ -125,8 +125,8 @@ DONE ✅ (deployment-service@cf6bb83 yesterday) + api_football Phase 3b/3c ✅ +
    still active? (b) which bucket maps? (c) update `vm_zombie_watchdog.py` `VM_PREFIX_TO_BUCKET` dict; (d) relaunch
    watchdog VM per CLAUDE.md. Done-def: 0 unknown prefixes; watchdog re-deployed.
 3. **Codex audit on deployment-and-qg-strategy** — Phase 8.A surfaces (B-006/B-007/B-008/B-009/B-010/B-012/B-013/B-018)
-   shipped yesterday need codex reflection. Verify `codex/05-infrastructure/deployment-and-qg-strategy.md` +
-   `codex/05-infrastructure/vm-tarball-deployment.md` reflect: new VM_PREFIX entries (qg-snapshot, honest-coverage),
+   shipped yesterday need codex reflection. Verify `/codex/05-infrastructure/deployment-and-qg-strategy.md` +
+   `/codex/05-infrastructure/vm-tarball-deployment.md` reflect: new VM_PREFIX entries (qg-snapshot, honest-coverage),
    B-018 cron VM pattern, Phase 8.A coverage targets. Done-def: codex doc updated OR confirmed already current.
 4. **alerting-service codex violations follow-up** —
    `plans/active/issues/alerting_service_codex_violations_d5_d7_2026_05_14.md` (4 D.5+D.7 codex violations filed by slot
@@ -298,8 +298,8 @@ A+B follow-on DONE ✅ + B-012 codex audit DONE ✅ (yesterday's full close-out)
 ### Day-1 queue
 
 1. **codex audit — verify execution-service custody patterns are documented** — yesterday's codex audit was on
-   `codex/04-architecture/custody-providers.md` + `interface-credential-convention.md`. Extend: verify
-   `codex/04-architecture/flash-loan-receiver.md` + DeFi error classification taxonomy in codex are current vs shipped
+   `/codex/04-architecture/custody-providers.md` + `interface-credential-convention.md`. Extend: verify
+   `/codex/04-architecture/flash-loan-receiver.md` + DeFi error classification taxonomy in codex are current vs shipped
    code. Done-def: codex docs reflect current code OR gaps filed as TODO.
 2. **DeFi error classification coverage extension** — if slot 5 didn't take this from reserve: 13 DefiErrorCode entries
    (`unified_api_contracts.canonical.crosscutting.errors.defi`). Verify each has test coverage in execution-service
@@ -400,7 +400,7 @@ repos + 5 more that took newer template version.
 
 ### Reserve queue
 
-- codex/06-coding-standards/quality-gates.md updates (document new STEP 5.79-5.82 + UAC carveouts)
+- /codex/06-coding-standards/quality-gates.md updates (document new STEP 5.79-5.82 + UAC carveouts)
 - batch_live_symmetry follow-on (L4/L5/L6 sweeps if Ikenna slot 5 punted)
 - base-service.sh template DRY (consolidate common patterns)
 

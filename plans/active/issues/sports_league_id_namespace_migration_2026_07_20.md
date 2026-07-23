@@ -272,7 +272,7 @@ fix: `batch_footystats` no-league count is **1,814 not 1,822** (arithmetic recon
 
 ## 3. Ordered procedure (reuses the established relocation/delete-safety protocol — nothing invented)
 
-Governing SSOT: `codex/02-data/gcs-and-manifest-delete-safety-protocol.md` (five-part proof, COPY-not-MOVE, disposition
+Governing SSOT: `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` (five-part proof, COPY-not-MOVE, disposition
 vocabulary, human-only hard stops). Order is **COPY → content-verify → manifest-swap → human-gated delete. Never
 manifest-first, never delete-first.** Every step before the final delete is reversible; the final delete is the single
 irreversible operation and is human-gated.

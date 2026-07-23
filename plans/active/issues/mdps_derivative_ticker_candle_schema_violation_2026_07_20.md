@@ -23,7 +23,11 @@ stage: [data]
 repos: [market-data-processing-service, unified-trading-library, unified-api-contracts]
 scope: [engineer, admin]
 tags: [data-correctness, p0, mdps, candles, schema, derivative_ticker, silent-failure, backfill-blocker]
-related: [../data_pipeline_check_mdps_features_2026_07_20.md, candle_feature_canonical_path_divergence_2026_07_20.md]
+related:
+  [
+    ../data_pipeline_check_mdps_features_2026_07_20.md,
+    /plans/active/issues/candle_feature_canonical_path_divergence_2026_07_20.md,
+  ]
 created: 2026-07-20
 last_updated: 2026-07-20
 parent_epic: infrastructure_master

@@ -20,8 +20,8 @@ scope: [engineer, admin]
 tags: [vm-launcher, gcs, rollout, deployment-correctness, did-we-reload-the-code]
 related:
   [
-    backfill_vm_disk_starvation_misdiagnosed_as_tardis_quota_2026_07_18.md,
-    launcher_gcloud_continuation_broken_by_disk_sweep_2026_07_18.md,
+    /plans/archive/issues/backfill_vm_disk_starvation_misdiagnosed_as_tardis_quota_2026_07_18.md,
+    /plans/archive/issues/launcher_gcloud_continuation_broken_by_disk_sweep_2026_07_18.md,
   ]
 created: 2026-07-19
 parent_epic: infrastructure_master

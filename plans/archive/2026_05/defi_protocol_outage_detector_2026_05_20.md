@@ -9,7 +9,7 @@ stage: [meta]
 repos: [instruments-service, market-tick-data-service, unified-api-contracts]
 scope: [engineer, admin]
 tags: []
-related: [defi_catalogue_chain_primitives_2026_05_10.md]
+related: [/plans/archive/2026_05/defi_catalogue_chain_primitives_2026_05_10.md]
 created: 2026-05-20
 priority: P0
 locked_by: live-defi-rollout

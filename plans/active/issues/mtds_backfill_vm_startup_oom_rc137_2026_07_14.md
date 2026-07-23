@@ -221,7 +221,7 @@ site, not a verified fix.
       neither doable from a backend_engineer session: (1) **Fix/investigate the DeFi manifest consolidator** — live-
       confirmed 2026-07-14T17:43Z the consolidated `availability_index.parquet` for
       `market-data-tick-defi-prd-central-element-323112` is ~4.8h stale (17,241.9s, vs the 120s default budget) — per
-      `codex/05-infrastructure/manifest-consolidator-ssot.md` this means the Cloud Run Job / Scheduler for this bucket
+      `/codex/05-infrastructure/manifest-consolidator-ssot.md` this means the Cloud Run Job / Scheduler for this bucket
       is behind or down; check its logs/last-run status and get it current. A consolidator stale for hours means EVERY
       DeFi backfill VM launched during that window hits `ManifestFreshnessCache`'s slow path (loud-fail today since
       `MANIFEST_ALLOW_STALE_FALLBACK` is unset on every DeFi launcher — verify this stays the safe default rather than
@@ -807,7 +807,7 @@ concurrent-execution pile-up) is **not established** — this needs a backend_en
 Not independently re-verified whether `xj2fb`'s later `pruned 2 shards, rows_in=0/rows_out=0` no-op cycle (22:47:48Z,
 correctly found nothing new after `2kqdc`'s fresh write) touched row counts further.
 
-**Escalating per the data-pipeline-correctness HARD RULE** (`codex/02-data/data-pipeline-correctness-hard-rule.md`) — a
+**Escalating per the data-pipeline-correctness HARD RULE** (`/codex/02-data/data-pipeline-correctness-hard-rule.md`) — a
 big finding (data-correctness, already live in production) — via `/blocked` to the operator in the same turn as this
 commit, not deferred.
 
@@ -1406,35 +1406,35 @@ inline here to keep this session's change small, tested, and immediately shippab
       was passing a filter down to pyarrow at all.
 
       **Fix shipped**: `unified-trading-library@a5b07ff7e` — threaded an optional `filters:
-                                  list[tuple[str,str,str]] | None` parameter through the read chain (`read_availability_index` →
-                                  `_read_availability_index_slim` → `_read_consolidated_if_fresh`/`_read_self_shard` →
-                                  `_read_parquet_columns_safe` → `pd.read_parquet(..., filters=filters)`), bypassing `_INDEX_SLIM_CACHE` when
-                                  filters are set (that cache's key doesn't encode the filter — caching a filtered result under an unfiltered key
-                                  would leak a partial result to a later caller). `ManifestFreshnessCache._refresh_locked()` now builds
-                                  `filters` from `date_range` and passes it through; kept the existing post-decode pandas filter too as a
-                                  belt-and-suspenders correctness check (row-group predicate pushdown is a SKIP heuristic based on row-group
-                                  min/max stats, not a guaranteed exact filter — a boundary-spanning row group could still include a few
-                                  out-of-range rows). Did NOT touch the rarer stale-consolidator per-VM-shard-merge fallback path (already
-                                  separately flagged, opt-in only via `MANIFEST_ALLOW_STALE_FALLBACK`, out of this fix's scope per rule-11
-                                  blast-radius caution). 14 new/updated regression tests (`test_manifest_freshness.py` +
-                                  `test_manifest_read_index_slim.py`), full `unified-trading-library` `quality-gates.sh` green.
+                                                                                                                                                  list[tuple[str,str,str]] | None` parameter through the read chain (`read_availability_index` →
+                                                                                                                                                  `_read_availability_index_slim` → `_read_consolidated_if_fresh`/`_read_self_shard` →
+                                                                                                                                                  `_read_parquet_columns_safe` → `pd.read_parquet(..., filters=filters)`), bypassing `_INDEX_SLIM_CACHE` when
+                                                                                                                                                  filters are set (that cache's key doesn't encode the filter — caching a filtered result under an unfiltered key
+                                                                                                                                                  would leak a partial result to a later caller). `ManifestFreshnessCache._refresh_locked()` now builds
+                                                                                                                                                  `filters` from `date_range` and passes it through; kept the existing post-decode pandas filter too as a
+                                                                                                                                                  belt-and-suspenders correctness check (row-group predicate pushdown is a SKIP heuristic based on row-group
+                                                                                                                                                  min/max stats, not a guaranteed exact filter — a boundary-spanning row group could still include a few
+                                                                                                                                                  out-of-range rows). Did NOT touch the rarer stale-consolidator per-VM-shard-merge fallback path (already
+                                                                                                                                                  separately flagged, opt-in only via `MANIFEST_ALLOW_STALE_FALLBACK`, out of this fix's scope per rule-11
+                                                                                                                                                  blast-radius caution). 14 new/updated regression tests (`test_manifest_freshness.py` +
+                                                                                                                                                  `test_manifest_read_index_slim.py`), full `unified-trading-library` `quality-gates.sh` green.
 
-                                  **Local re-verification post-fix**: same exact call, peak dropped **14,856.6 MB → 741.9 MB (~95% reduction)**,
-                                  same correct captured count. (Not as low as the isolated 5.4 MB pyarrow test — the full path also does a
-                                  self-shard-merge attempt + the membership-set build; 742 MB is still comfortably safe on `e2-standard-4`'s
-                                  16 GiB.)
+                                                                                                                                                  **Local re-verification post-fix**: same exact call, peak dropped **14,856.6 MB → 741.9 MB (~95% reduction)**,
+                                                                                                                                                  same correct captured count. (Not as low as the isolated 5.4 MB pyarrow test — the full path also does a
+                                                                                                                                                  self-shard-merge attempt + the membership-set build; 742 MB is still comfortably safe on `e2-standard-4`'s
+                                                                                                                                                  16 GiB.)
 
-                                  **Real production VM verification (the actual proof)**: rebuilt tarballs (`unified-trading-library-code @
-                                  a5b07ff7e338`, exact fix commit), relaunched `mtds-dex-pools-backfill` with the IDENTICAL config that had
-                                  killed it 5 times before (`--protocols uniswap_v2 --start 2026-07-01 --end 2026-07-03`, `e2-standard-4`, SPOT).
-                                  **Result: `exit_code=0`, `DEPLOYMENT_COMPLETED`** — `DEX pools collection complete: 17 total records
-                                  ({'uniswap_v2_ETHEREUM': 17})`, 17 real rows written to GCS, manifest shard updated, clean self-delete. The
-                                  exact workload that died identically 5 times (rc=137, SIGKILL within seconds of "DEX pools handler
-                                  initialized") now runs to full completion. This is the closing verification `mtds_backfill_vm_startup_oom_rc137
-                                  _2026_07_14` has needed since it was filed.
+                                                                                                                                                  **Real production VM verification (the actual proof)**: rebuilt tarballs (`unified-trading-library-code @
+                                                                                                                                                  a5b07ff7e338`, exact fix commit), relaunched `mtds-dex-pools-backfill` with the IDENTICAL config that had
+                                                                                                                                                  killed it 5 times before (`--protocols uniswap_v2 --start 2026-07-01 --end 2026-07-03`, `e2-standard-4`, SPOT).
+                                                                                                                                                  **Result: `exit_code=0`, `DEPLOYMENT_COMPLETED`** — `DEX pools collection complete: 17 total records
+                                                                                                                                                  ({'uniswap_v2_ETHEREUM': 17})`, 17 real rows written to GCS, manifest shard updated, clean self-delete. The
+                                                                                                                                                  exact workload that died identically 5 times (rc=137, SIGKILL within seconds of "DEX pools handler
+                                                                                                                                                  initialized") now runs to full completion. This is the closing verification `mtds_backfill_vm_startup_oom_rc137
+                                                                                                                                                  _2026_07_14` has needed since it was filed.
 
-                                  Repo: `unified-trading-library` (fix + tests) + `deployment-service` (tarball rebuild + VM relaunch, verification
-                                  only, no code change).
+                                                                                                                                                  Repo: `unified-trading-library` (fix + tests) + `deployment-service` (tarball rebuild + VM relaunch, verification
+                                                                                                                                                  only, no code change).
 
 **Status: this specific OOM mechanism (unscoped `ManifestFreshnessCache` reads) is RESOLVED and production-verified.**
 The other 2 open threads on this doc (the `uts-prod-manifest-consolidator-market-data-defi` DuckDB consolidator crash

@@ -17,7 +17,7 @@ tags: [sports, predictions, backtest, execution, matching-engine, group-c, scope
 related:
   [
     plans/active/issues/sports_predictions_live_mode_and_backtest_execution_orphaned_2026_07_21.md,
-    codex/04-architecture/backtest-groups.md,
+    /codex/04-architecture/backtest-groups.md,
   ]
 created: "2026-07-21"
 last_updated: "2026-07-21"
@@ -50,7 +50,7 @@ approved for dispatch.
 
 ## Why this is needed (not just "run the strategy backtest again")
 
-Per `codex/04-architecture/backtest-groups.md`, Group C ("execution alpha") is a distinct concern from Group B
+Per `/codex/04-architecture/backtest-groups.md`, Group C ("execution alpha") is a distinct concern from Group B
 ("strategy alpha") — it fixes the strategy instruction stream and tunes/measures the EXECUTION side (algo choice, venue
 routing, fill realism) against a matching engine with realistic microstructure. `L0Matcher`
 (`execution_service/matching_engine/engine.py:290`) already generically routes `BookmakerCategory`/`"BET"` sources to
@@ -94,4 +94,4 @@ CLI wiring, same shape as the 3 domains that already have it.
 
 ## Codex SSOTs
 
-`codex/04-architecture/backtest-groups.md` (Group C definition + output contract this harness must satisfy).
+`/codex/04-architecture/backtest-groups.md` (Group C definition + output contract this harness must satisfy).

@@ -25,8 +25,8 @@ tags: [performance, manifest, sports, backfill, gcs, p2]
 related:
   [
     ../instruments_service_docs_consolidation_2026_07_08.md,
-    ../../codex/02-data/availability-manifest-and-data-status.md,
-    ../../codex/05-infrastructure/manifest-consolidator-ssot.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/05-infrastructure/manifest-consolidator-ssot.md,
   ]
 created: 2026-07-08
 parent_epic: instruments_master
@@ -136,7 +136,7 @@ supposed to be the canonical, path-agnostic answer to "did this availability eve
 - [ ] [DATA] P2. **Design a manifest-slice-based replacement for `check_api_football_dependency()`** — load+filter once
       per backfill run (or per reasonable chunk, e.g. per year) rather than per-date network calls; keep the current
       direct-GCS path as a fallback ONLY if a genuine same-run consolidation-lag risk is confirmed real (the manifest
-      consolidator cron runs every 1 minute — `codex/05-infrastructure/manifest-consolidator-ssot.md` — so there's a
+      consolidator cron runs every 1 minute — `/codex/05-infrastructure/manifest-consolidator-ssot.md` — so there's a
       real but small lag window worth explicitly deciding how to handle, not silently ignoring).
 - [x] [DATA] P0. **CRITICAL correctness bug found + fixed while auditing the ~9 sites (2026-07-08, later)**:
       `weather.py::_fetch_weather_data`'s primary fixtures read used the stale LEGACY bare prefix (`entity=fixtures/`,
@@ -217,7 +217,7 @@ supposed to be the canonical, path-agnostic answer to "did this availability eve
 - [ ] [DATA] P2. **Design a manifest-slice-based replacement for `check_api_football_dependency()`** — load+filter once
       per backfill run (or per reasonable chunk, e.g. per year) rather than per-date network calls; keep the current
       direct-GCS path as a fallback ONLY if a genuine same-run consolidation-lag risk is confirmed real (the manifest
-      consolidator cron runs every 1 minute — `codex/05-infrastructure/manifest-consolidator-ssot.md` — so there's a
+      consolidator cron runs every 1 minute — `/codex/05-infrastructure/manifest-consolidator-ssot.md` — so there's a
       real but small lag window worth explicitly deciding how to handle, not silently ignoring). **Still open** — out of
       scope for this pass (this todo is about the ORIGINAL function's manifest-vs-GCS performance question, not the
       correctness bugs fixed above; `sports_dependency.py::check_api_football_dependency` itself was verified to already

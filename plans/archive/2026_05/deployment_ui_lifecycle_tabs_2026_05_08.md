@@ -6,7 +6,8 @@ status: complete
 nature: record
 asset_group: [infrastructure]
 stage: [meta]
-repos: [deployment-api, deployment-service, deployment-ui, instruments-service, unified-api-contracts, unified-trading-pm]
+repos:
+  [deployment-api, deployment-service, deployment-ui, instruments-service, unified-api-contracts, unified-trading-pm]
 scope: [engineer, admin]
 tags: []
 related: []
@@ -15,67 +16,441 @@ last_updated: 2026-05-08
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
 epic: epic-deployment
-completion_gates: {code: C5, deployment: D3, business: B6}
+completion_gates: { code: C5, deployment: D3, business: B6 }
 repo_gates:
-- {repo: deployment-ui, code: C0, deployment: none, business: none}
-- {repo: deployment-api, code: C0, deployment: none, business: none}
-- {repo: deployment-service, code: C2, deployment: none, business: none}
-- {repo: unified-api-contracts, code: C2, deployment: none, business: none}
-- {repo: unified-cloud-interface, code: C0, deployment: none, business: none}
-- {repo: unified-trading-pm, code: C2}
-depends_on: [deployment-api-work-stream-a-2026-05-07, launcher-scripts-consolidation-into-deployment-service-2026-05-07, infrastructure-master-2026-05-07]
+  - { repo: deployment-ui, code: C0, deployment: none, business: none }
+  - { repo: deployment-api, code: C0, deployment: none, business: none }
+  - { repo: deployment-service, code: C2, deployment: none, business: none }
+  - { repo: unified-api-contracts, code: C2, deployment: none, business: none }
+  - { repo: unified-cloud-interface, code: C0, deployment: none, business: none }
+  - { repo: unified-trading-pm, code: C2 }
+depends_on:
+  [
+    deployment-api-work-stream-a-2026-05-07,
+    launcher-scripts-consolidation-into-deployment-service-2026-05-07,
+    infrastructure-master-2026-05-07,
+  ]
 estimate_class: brand-new
 estimate_baseline_ai_days: 30
 estimate_calibrated_ai_days: 30
-estimate_calibration_note: 'Backfilled 2026-05-13: 37 nested phase todos (Phase A-F lifecycle/cloud/env/service axes + Experiments tracker + env-tiered hosting). brand-new class — single SSOT for everything deployable + greenfield Experiments tracker + env-tiered self-hosting infra slice; no prior template combining all 4 axes. Baseline 30 (~0.8 AI-day per substantive todo across 37); × 1.0 = 30. # operator-confirm — borderline brand-new/design (parts are re-shape of existing infra).
+estimate_calibration_note: "Backfilled 2026-05-13: 37 nested phase todos (Phase A-F lifecycle/cloud/env/service axes +
+  Experiments tracker + env-tiered hosting). brand-new class — single SSOT for everything deployable + greenfield
+  Experiments tracker + env-tiered self-hosting infra slice; no prior template combining all 4 axes. Baseline 30 (~0.8
+  AI-day per substantive todo across 37); × 1.0 = 30. # operator-confirm — borderline brand-new/design (parts are
+  re-shape of existing infra).
 
-  '
+  "
 todos:
-- {id: a1-lifecycle-class-taxonomy-uac-ssot, content: "- [x] [SCRIPT] P0. **DONE 2026-05-08 (UAC@ba94d05)**. Add `LifecycleClass` StrEnum to UAC\n  `unified_api_contracts/canonical/crosscutting/lifecycle_class.py` with FOUR closed members:\n  (1) `EPHEMERAL_BATCH` — data + pricing pipeline jobs (instruments, MTDS, MDPS, features-*); has start + end;\n  progress measured in dates × shards captured/empty/failed. (2) `EPHEMERAL_EXPERIMENT` — ML training,\n  strategy backtest, execution backtest research jobs; has start + end; progress measured in epochs / folds /\n  run-id metrics; produces model artifacts + result blobs. (3) `SCHEDULED_RECURRING` — Cloud Scheduler /\n  EventBridge / VM cron; expected to fire forever; \"missing\" + \"paused\" + \"stale\" states matter. (4)\n  `LONG_LIVED_LIVE` — continuous deployment cluster (strategy / execution / live-MTDS / position-balance /\n  risk / alerting); lifecycle actions are start/stop/pause/restart/drain. UAC helpers\n  `classify_vm_name(vm_name)\
-    \ -> LifecycleClass`, `classify_cloud_run_service(name) -> LifecycleClass`,\n  `classify_scheduled_job(name) -> LifecycleClass`, `classify_experiment_run(run_id) -> LifecycleClass`.\n  Single source of truth — deployment-api + UI + watchdog + experiment-tracker all read from here.\n"}
-- {id: a2-vm-naming-convention-extension, content: "- [x] [SCRIPT] P0. **DONE 2026-05-13 (deployment-service@cc3f98a)**. Extend `deployment-service/scripts/vm/vm_zombie_watchdog.py`\n  `VM_PREFIX_TO_BUCKET` dict shape from `{prefix: bucket}` to `{prefix: VmPrefixSpec(bucket=..., lifecycle_class=...)}`\n  where `VmPrefixSpec` is a typed UAC dataclass (Phase A.1). Migration: (1) all 40+ existing backfill/management/consolidator\n  prefixes converted to `VmPrefixSpec(bucket=..., lifecycle_class=LifecycleClass.EPHEMERAL_BATCH)` instances;\n  (2) 5 live-pipeline prefixes (mtds-live-*, mdps-features-live-*) tagged with `LONG_LIVED_LIVE`; (3) 9 reserved\n  prefixes registered: `live-strategy-`, `live-execution-`, `live-mtds-`, `live-pbm-`, `live-risk-`, `live-alerting-`\n  (LONG_LIVED_LIVE) + `exp-ml-`, `exp-strategy-`, `exp-execution-` (EPHEMERAL_EXPERIMENT). VM naming convention\n  updated in CLAUDE.md: every new VM prefix MUST tag a `lifecycle_class`; experiment VMs additionally tag `run_id`\n\
-    \  in name suffix (`exp-ml-{run_id}-{ts}`).\n"}
-- {id: a3-codex-deployment-ui-architecture-ssot, content: "- [x] [AGENT] P0. **DONE 2026-05-08 (PM@ebe5cc09)**. New codex doc `codex/05-infrastructure/deployment-ui-architecture.md` capturing the full\n  UX architecture: 6 top-level tabs (Deploy / Monitor / Data-Status / Builds / Readiness / Config); Monitor\n  sub-tab structure (Backfill / Experiments / Live / Scheduled); the four orthogonal axes (lifecycle class /\n  cloud target / environment / service); the env-resolution-by-domain rule (no in-UI env toggle); the\n  cross-mode prefetch policy (instant) vs the cloud-toggle loading-state policy (slow + acceptable); the\n  auth-always-available contract; the scope split between Data-Status (data + pricing correctness only) and\n  Monitor (runtime state of all jobs/clusters/schedules); the streaming-logs surface contract (one component\n  powers logs across all four lifecycle classes). NEW doc REFERENCES existing\n  `04-architecture/runtime-deployment-topology.md`, `05-infrastructure/launcher-script-ssot.md`,\n\
-    \  `05-infrastructure/runtime-tiers-and-deployment.md`, `05-infrastructure/deployment-clusters-live-vs-batch.md`,\n  `05-infrastructure/cloud-agnostic-script-pattern.md`, `05-infrastructure/firebase-split-topology.md`.\n  Single source of truth for the UX shape.\n"}
-- {id: a4-codex-update-batch-live-symmetry-ux-section, content: "- [x] [AGENT] P1. **DONE 2026-05-08 (PM@eb8a96ca)**. Extend `04-architecture/batch-live-architecture.md` with a \"UX surface\" section explicit on how\n  the symmetry shows up to the operator: same Data-Status tab, same drilldown depth, same parquet schema-view,\n  same event-tail; the only operator-visible difference between live and batch is the Data-Status mode-toggle\n  position. Reinforces the engineering invariant via the operator-facing UX.\n"}
-- {id: a5-uac-cloud-target-and-environment-discriminators, content: "- [x] [SCRIPT] P0. **DONE 2026-05-08 (UAC@ba94d05)**. Confirm + extend the existing `CloudTarget` enum in deployment-ui `CloudProviderContext.tsx`\n  and add a typed UAC mirror `unified_api_contracts/canonical/crosscutting/cloud_target.py` (already in scope).\n  ALSO add `unified_api_contracts/canonical/crosscutting/environment_tier.py` as a 3-member StrEnum\n  (`DEV` / `STAGING` / `PROD`) with helper `resolve_environment_from_hostname(hostname) -> EnvironmentTier`\n  encoding the rule: `localhost` / `127.0.0.1` / `*.local` → DEV; `staging.<research-domain>` → STAGING;\n  `<research-domain>` (no subdomain) → PROD. Server-side mirror in deployment-api boot-time config — knows its\n  own env from `CLOUD_DEPLOYMENT_ENV` env var (already used elsewhere in workspace per\n  `runtime-tiers-and-deployment.md`). The UI's env badge in Header reads the resolved tier; never offers an\n  in-UI toggle. Auth contract: deployment-api boots\
-    \ with both GCP + AWS auth/credentials loaded into its\n  session (existing `UnifiedCloudConfig` pattern); a UI cloud-toggle never re-authenticates — it just changes\n  which client is dispatched per request.\n"}
-- {id: b1-six-tab-shell-deploy-monitor-data-builds-readiness-config, content: "- [x] ✅ [SCRIPT] P0. Re-shape `deployment-ui/src/App.tsx` tab bar from current 7 tabs (Deploy / Status /\n  History / Builds / Data Status / Readiness / Config) to 6 tabs (Deploy / Monitor / Data Status / Builds /\n  Readiness / Config). Renames: History → Monitor (semantic re-purposing — the tab is for runtime state,\n  not just past deploys). Removed: standalone Status tab (Status content folds into Monitor sub-tabs per\n  lifecycle class). Header carries: cloud-target toggle (GCP / AWS), env badge (read-only, derived from\n  domain per Phase A.5). Service-axis sidebar persists unchanged — every tab still scopes to a selected\n  service when relevant; service-axis is orthogonal to the lifecycle-class tab axis.\n  — deployment-ui@567c8a1 (2026-05-13, backfilled 2026-05-19 slot 6)\n"}
-- {id: b2-monitor-tab-four-subtabs, content: "- [x] ✅ [SCRIPT] P0. Monitor tab gets four sub-tabs, one per lifecycle class:\n  (a) **Backfill** — list of currently-running + recent ephemeral data-pipeline jobs (instruments / MTDS /\n  MDPS / features-* backfills, smokes, migrations); per-job: progress %, dates-completed / total, shards\n  captured/empty/failed counts (live event count from the events bucket), live event-tail, stop / restart /\n  re-deploy actions.\n  (b) **Experiments** — list of currently-running + recent ML / strategy / execution research jobs; per-job:\n  run_id, owner, current step (epoch / fold / backtest-day), progress %, ETA, hyperparams summary, key\n  metrics live-tail (loss / sharpe / drawdown), result-blob link if completed, stop / restart / re-deploy.\n  (c) **Live** — list of long-lived deployment clusters (strategy / execution / live-MTDS / position-balance\n  / risk / alerting); per-cluster: replicas, health, last-heartbeat, freshness (last-write per data_type),\n\
-    \  start / stop / pause / restart / drain.\n  (d) **Scheduled** — list of every scheduler in the Phase D registry, joined with runtime state;\n  alive/dead/stale/paused/missing; per-row: run-now / pause / resume / logs / recent-events; \"Deploy-Missing\n  Schedulers\" button.\n  EVERY sub-tab uses the SAME row-component template (lifecycle-class-aware) so the operator sees one\n  consistent layout across all four. The deploy-via-monitor pattern (re-deploy from Monitor's row context) is\n  first-class; Deploy tab is exclusively for FRESH deployments.\n  — deployment-ui@567c8a1 (2026-05-13, shell; sub-tabs substantive via slot-7 c1-c4@f585227; backfilled 2026-05-19 slot 6)\n"}
-- {id: b3-deploy-tab-fresh-deployments-only, content: "- [x] ✅ [SCRIPT] P0. Restructure Deploy tab to be the home for FRESH deployments only — operator picks a service\n  + parameters + clicks Deploy; this fires a single Cloud Build / VM launch / Cloud Run revision rollout. Move\n  the existing `<DeployForm>` here. Re-deploys (run-it-again-with-same-params) live in Monitor, NOT Deploy —\n  the row's re-deploy action carries forward run-time state (correlation_id, chunk-shape, run_id for\n  experiments) that a fresh-deploy doesn't have. This separation prevents the foot-gun where an operator\n  re-deploys from Deploy with default params and accidentally clobbers an in-flight run.\n"}
-- {id: b4-data-status-scope-reduction-pricing-data-only, content: "- [x] ✅ [SCRIPT] P0. Restructure Data Status tab to scope to data + pricing correctness only — instruments,\n  MTDS, MDPS, features-*. Strategy / execution / ML signals + metrics are NOT in Data-Status; they live in\n  Monitor → Experiments (for ephemeral) or Monitor → Live (for live-cluster freshness). Why: Data-Status is\n  about \"did the catalog / tick / feature data land on disk correctly?\" — a manifest-driven correctness\n  question. Strategy / execution / ML are about \"is the research run completing + producing valid output?\" —\n  a runtime-state question. Conflating the two confused operators. The existing widget tree\n  (`HierarchicalShardDrilldown`, `LiveFreshnessPanel`, parquet schema-view) stays in Data-Status; service\n  filter dropdown defaults to data-pipeline services only.\n"}
-- {id: b5-data-status-mode-toggle-batch-scheduled-live, content: "- [x] ✅ [SCRIPT] P0. Add a 3-way mode toggle (Batch / Scheduled-Today / Live) at the top of `DataStatusTab.tsx`.\n  Each mode reads from a different bucket-set / time-slice: Batch = the historical buckets the tab already\n  reads; Scheduled-Today = today's-date slice (what should have run today + has it run); Live = live-write\n  buckets per asset_group (per `instruments_master.md` Phase 1 — same path as batch in\n  most cases, but the UI surfaces \"freshness\" as the metric instead of \"coverage\"). Toggle invalidates the\n  `/api/data-status` query key and refetches. NO new bucket convention — reuses the same paths the rest of\n  the workspace already writes to (per `batch-live-architecture.md` SSOT).\n  — deployment-ui@1771932 (2026-05-19 slot 6; toggle pre-existed, live-mode wired to LiveFreshnessPanel)\n"}
-- {id: b6-live-freshness-widget, content: "- [x] ✅ [SCRIPT] P1. NEW `LiveFreshnessPanel` component rendered when DataStatus mode-toggle = Live. Per\n  (asset_group, data_type, shard) shows: last-write-timestamp, expected-cadence (from Phase D scheduler\n  registry), staleness-indicator (green = fresh, amber = within tolerance, red = beyond tolerance + auto-\n  emits `INSTRUMENTS_LIVE_UPSTREAM_STALE` per `instruments_master.md` Phase A.5 if not\n  already emitted). Reads from the SAME `/api/data-status` endpoint; the freshness math is a UI computation\n  over the existing `available_at` per-row column.\n  — deployment-ui@567c8a1 (component 2026-05-13) + @1771932 (wired 2026-05-19 slot 6)\n"}
-- {id: b7-mode-prefetch-context, content: "- [x] ✅ [SCRIPT] P0. New React context `LifecyclePrefetchContext` (TanStack Query is already used per existing\n  deployment-ui patterns; just add prefetch keys for each Monitor sub-tab on cold-start + on cloud-target\n  change). On UI mount + on cloud-toggle, fire four parallel queries: `/api/monitor/backfill`,\n  `/api/monitor/experiments`, `/api/monitor/live`, `/api/monitor/scheduled`. Cache TTL 60s default. Operator\n  clicks between Monitor sub-tabs without paying network latency. Cloud-toggle (GCP→AWS) invalidates ALL\n  caches and refetches with a loading spinner — explicit \"loading\" UX is acceptable + expected\n  (per user direction 2026-05-08).\n"}
-- {id: b8-streaming-logs-component, content: "- [x] ✅ [SCRIPT] P0. NEW `StreamingLogsPanel` component — single component powers logs across all four\n  lifecycle classes. Inputs: `{lifecycle_class, target_ref, correlation_id|run_id|cluster_name}`. Streams\n  from deployment-api `/api/logs/stream/{target_ref}` (NEW; thin wrapper over existing GCS event-stream + Cloud\n  Logging tail). Server-side fans out to the right log source per lifecycle class (Cloud Run logs for\n  long-lived; VM serial console + GCS event-stream for backfills + experiments + scheduled VMs; Cloud\n  Function logs for scheduler-as-cloud-function). Filter / search / pause / download. Operator hits the same\n  component shape from Monitor → Backfill / Experiments / Live / Scheduled rows. Per CLAUDE.md UI testing\n  rule must use `pool: forks`.\n  — deployment-ui@567c8a1 (component 2026-05-13) + @a0458e2 (SSE targetRef mode + c5 wiring 2026-05-19 slot 6)\n"}
-- {id: c1-monitor-backfill-endpoint, content: "- [x] ✅ [SCRIPT] P0. Add `GET /api/monitor/backfill?cloud=<gcp|aws>` route — lists every running + recent\n  EPHEMERAL_BATCH job per cloud-target. Joins VM-name lookup (Phase A.2 lifecycle_class filter) with the\n  events bucket (last STARTED / progress / STOPPED / FAILED per correlation_id). Per-entry response:\n  `{name, lifecycle_class, asset_group, owning_plan, started_at, progress: {dates_done, dates_total,\n  shards_captured, shards_empty, shards_failed}, last_event_at, status, recent_events: [...]}`. Reuses\n  existing `vm_deployments.py` join patterns. NEW route module\n  `deployment-api/deployment_api/routes/monitor_backfill.py`.\n"}
-- {id: c2-monitor-experiments-endpoint, content: "- [x] ✅ [SCRIPT] P0. Add `GET /api/monitor/experiments?cloud=<gcp|aws>` route — lists every running + recent\n  EPHEMERAL_EXPERIMENT job. Joins experiment-registry (Phase BB.1) with run-state from the experiment-\n  tracking bucket (per-run_id metrics + artifacts). Per-entry response: `{run_id, name, owner,\n  experiment_kind: ml_training|strategy_backtest|execution_backtest, started_at, current_step,\n  progress: {fraction, eta}, hyperparams: {...}, metrics_tail: [{step, key, value}, ...],\n  result_blob_uri, status}`. NEW route module\n  `deployment-api/deployment_api/routes/monitor_experiments.py`.\n  **SHIPPED 2026-05-18 slot-7** — scaffold via DeploymentsRegistry prefix filter (ml-train-*, strategy-backtest-*,\n  execution-backtest-*); infers experiment_kind; Phase BB.1 experiment-registry join is post-cutover scope.\n  deployment-api@f585227.\n"}
-- {id: c3-monitor-live-endpoint, content: "- [x] ✅ [SCRIPT] P0. Add `GET /api/monitor/live?cloud=<gcp|aws>` route — lists every LONG_LIVED_LIVE deployment\n  cluster from the Phase E.1 registry, joined with runtime state (Cloud Run service status, GKE deployment\n  health). Per-entry response: `{name, lifecycle_class, cloud_target, deployment_kind, asset_group,\n  archetype_owners, replicas, health, last_heartbeat_at, freshness_per_data_type: {...},\n  recent_events: [...]}`. Lifecycle action endpoints:\n  `POST /api/monitor/live/{name}/{start|stop|pause|restart|drain}`. SSE event-tail\n  `/api/monitor/live/{name}/events` reuses existing `deploy_events_sse.py:76` machinery. NEW route module.\n  **SHIPPED 2026-05-18 slot-7** — scaffold via DeploymentsRegistry prefix filter (strategy-paper-*,\n  strategy-live-*, defi-recursive-*); 7-day archive window; Phase E.1 registry join is post-cutover scope.\n  deployment-api@f585227.\n"}
-- {id: c4-monitor-scheduled-endpoint, content: "- [x] ✅ [SCRIPT] P0. Add `GET /api/monitor/scheduled?cloud=<gcp|aws>` route — lists every scheduler from the\n  Phase D registry joined with current Cloud Scheduler / EventBridge / VM-cron live state. Per-entry response\n  as before (alive/dead/stale/paused/missing). Lifecycle action endpoints:\n  `POST /api/monitor/scheduled/{name}/{run-now|pause|resume}`,\n  `POST /api/monitor/scheduled/deploy-missing` (the registry-driven deploy-missing button).\n  **SHIPPED 2026-05-18 slot-7** — scaffold via DeploymentsRegistry prefix filter (cron-*, scheduled-*,\n  honest-coverage-*, qg-snapshot-*, vm-cron-*); phase_d_registry_available=false signals UI for placeholder;\n  Phase D SchedulerSpec SSOT join is post-cutover scope. deployment-api@f585227.\n"}
-- {id: c5-streaming-logs-endpoint, content: "- [x] ✅ [SCRIPT] P0. Add `GET /api/logs/stream/{target_ref}` route — SSE / WebSocket stream that fans out per\n  lifecycle class. Backfill + experiment + scheduled VM logs come from the events bucket + GCS Cloud Logging\n  tail; long-lived live logs come from Cloud Run / GKE per-pod logs. Client filter / search / pause are\n  client-side over the stream (server sends raw lines).\n  — deployment-api@6d5567b (2026-05-19 slot 6). VM path polls GCS events bucket; live-cluster 501 scaffold\n  (Cloud Run/GKE log tail is post-cutover scope, Phase E.2).\n"}
-- {id: c6-aggregated-status-endpoints-removed-folded-into-monitor, content: "- [x] ✅ [SCRIPT] P1. Per the restructure, the originally-planned aggregated `/api/{batch,scheduled,live}/status`\n  endpoints (previous draft Phase C.3) are FOLDED into the four Monitor sub-tab endpoints (C.1-C.4). Phase\n  B.7 prefetch fires the four queries directly. NO duplicate aggregation route; the Monitor sub-tab queries\n  ARE the prefetch surface.\n  **CONFIRMED 2026-05-18 slot-7** — c1/c2/c3/c4 route scaffold implements this decision; no aggregation\n  routes created. The prefetch context (b7-ext, deployment-ui@e9e90d9) calls these 4 directly.\n"}
-- {id: d1-scheduler-registry-uac-ssot-env-scoped, content: "- [x] ✅ [SCRIPT] P0. NEW UAC SSOT\n  `unified_api_contracts/canonical/crosscutting/scheduler_registry.py`. Declares every scheduler that should\n  exist per `(cloud_target, environment_tier)` cell as a typed list of `SchedulerSpec(name,\n  lifecycle_class=SCHEDULED_RECURRING, schedule_cron, target_kind, target_ref, asset_group, owning_plan,\n  expected_max_runtime, max_consecutive_failures_before_page, env_tiers: list[EnvironmentTier])`. The\n  `env_tiers` field declares which environments the scheduler is expected to exist in; staging and prod\n  usually share, but dev typically only runs a subset (no live-instruments triggers in dev, e.g.). Phase 1\n  entries: every instruments-live trigger from `instruments_master` Phase A.3 +\n  manifest-consolidator-60s + data-status rollup + manifest-aggregation cron + T+1 audit. Adding a new\n  scheduler in any plan = adding a row here; \"deploy-missing schedulers\" reads from this registry\
-    \ filtered\n  by `(cloud_target, environment_tier)`. NO ad-hoc `gcloud scheduler jobs create` outside this registry.\n  — unified-api-contracts@e90b61c (2026-05-19 slot 6). 14 entries: 10 instruments-live + 4 infra. 15 unit tests. SchedulerTargetKind + get_schedulers_for_env exported from UAC root.\n"}
-- {id: d2-scheduler-deploy-missing-implementation, content: "- [x] ✅ [SCRIPT] P0. Implement `POST /api/monitor/scheduled/deploy-missing` — for each registry entry whose\n  runtime-state ≠ deployed AND env_tiers includes the current tier, emit the cloud-target-specific create\n  command (gcloud scheduler jobs create OR AWS EventBridge `put-rule` + `put-targets`) and run it.\n  Idempotent. Returns per-entry success/fail. Same pattern as existing batch deploy-missing in\n  `deploy_missing.py:62`.\n  — deployment-api@56287ff (2026-05-19 slot 6). DeployMissingResponse schema + per-entry results +\n  GCP check-then-create + AWS preview. 14 unit tests.\n"}
-- {id: d3-scheduler-pause-resume-implementation, content: "- [x] ✅ [SCRIPT] P0. Implement pause + resume per cloud-target — gcloud scheduler jobs pause/resume / EventBridge\n  `disable-rule`/`enable-rule`. State persists across the toggle. UI shows the paused-state from the\n  scheduled list. Auto-pause on Phase H circuit-breaker trip per\n  `instruments_master.md` Phase H.2 — operator manual-resume only.\n  — deployment-api@56287ff (2026-05-19 slot 6). SchedulerActionResponse + pause/resume endpoints for\n  GCP (gcloud scheduler jobs pause/resume) and AWS (disable-rule/enable-rule). Same 14 unit tests.\n"}
-- {id: e1-live-cluster-registry-uac-ssot-env-scoped, content: "- [x] ✅ [SCRIPT] P0. NEW UAC SSOT\n  `unified_api_contracts/canonical/crosscutting/live_cluster_registry.py`. Declares every long-lived\n  deployment per `(cloud_target, environment_tier)` cell: typed list of `LiveClusterSpec(name,\n  lifecycle_class=LONG_LIVED_LIVE, cloud_target, environment_tier, deployment_kind:\n  cloud_run|gke|eks|ecs_service, target_ref, asset_group, archetype_owners, health_endpoint,\n  expected_replicas, drain_timeout)`. Phase 1 entries: 6 perp venues × 1 live-MTDS each (live + staging\n  for May-23), 1 live-strategy per archetype (carry_staked_basis + ARBITRAGE_PRICE_DISPERSION\n  (funding-rate-dispersion; renamed from legacy leveraged_funding_arb per Stream B canonicalisation 2026-05-07)),\n  1 live-execution per cloud, 1 position-balance, 1 risk, 1 alerting. Same SSOT discipline as scheduler registry.\n  — unified-api-contracts@723f8fb (2026-05-19 slot 6). 26 entries: 12 MTDS + 4 strategy + 4 execution\
-    \ + 6 infra.\n  21 unit tests. LiveClusterDeploymentKind + get_clusters_for_env exported from UAC root.\n"}
-- {id: e2-live-cluster-deploy-and-lifecycle-actions, content: "- [x] ✅ [SCRIPT] P0. Implement start / stop / pause / restart / drain per cloud-target. Cloud Run: revision\n  scale-to-0 for stop, set min-instances=N for start, traffic-split for drain. GKE/EKS: deployment scale +\n  rolling-restart. Idempotent. State persists. Reuses existing `vm_deployments.py` patterns where\n  applicable.\n  — deployment-api@4c4f221 (2026-05-19 slot 6). 5 POST routes backed by LiveClusterSpec UAC SSOT;\n  per-kind command builders (Cloud Run/GKE+EKS/ECS); mock/dry_run returns preview command. 24 unit tests.\n"}
-- {id: bb1-experiment-registry-uac-ssot, content: "- [x] ✅ [SCRIPT] P0. NEW UAC SSOT\n  `unified_api_contracts/canonical/crosscutting/experiment_registry.py`. Declares the experiment kind\n  taxonomy (closed set: `ML_TRAINING`, `STRATEGY_BACKTEST`, `EXECUTION_BACKTEST`) + the typed\n  `ExperimentRunSpec(run_id, kind, owner, asset_group, started_at, hyperparams: dict, expected_steps,\n  result_blob_uri, status: running|completed|failed|cancelled)`. Run_ids are UUIDv7 (sortable by time).\n  Persistence: per-run blob at `gs://<pid>-experiments/by_kind={kind}/run_id={run_id}/manifest.json` plus\n  per-step append-only metric stream at the same prefix `metrics.jsonl`. NO new database — file-system / GCS\n  only, mirroring the rest of the workspace.\n  — unified-api-contracts@09cb288 (2026-05-19 slot 6). ExperimentKind + ExperimentStatus StrEnums + frozen\n  ExperimentRunSpec + gcs_prefix/manifest_blob_path/metrics_blob_path properties. 15 unit tests. Exported\n  from UAC root facade.\n"}
-- {id: bb2-experiment-emission-utl-helper, content: "- [x] ✅ [SCRIPT] P0. NEW UTL helper\n  `unified_trading_library/experiment_tracker.py` — `start_experiment(kind, owner, hyperparams) -> run_id`,\n  `emit_metric(run_id, step, key, value)`, `emit_step(run_id, step_name, progress)`,\n  `complete_experiment(run_id, result_blob_uri)`, `fail_experiment(run_id, error)`. Integrates with the\n  existing `setup_events()` / `log_event()` machinery so every experiment lifecycle event also flows to the\n  events bucket. Strategy backtest harness, ML training entry-points, execution-service backtest harness all\n  adopt this helper — single emission surface.\n  — unified-trading-library@49de7c12 (2026-05-19 slot 6). 5 functions wrapping log_event() via\n  EXPERIMENT_{STARTED,METRIC,STEP,COMPLETED,FAILED} constants; UUIDv7 run IDs; 14 unit tests.\n"}
-- {id: bb3-experiment-monitor-subtab-wiring, content: "- [x] ✅ **SHIPPED 2026-05-19 slot-6 — deployment-ui@ba009b2** [SCRIPT] P0. Wire Monitor → Experiments sub-tab (Phase B.2) to `/api/monitor/experiments` endpoint\n  (Phase C.2) reading from the experiment registry + per-run blobs. Per-row: run_id, owner, kind, started_at,\n  progress, current_step, key metrics tail (sparkline of last N), status. Click-through to per-run detail\n  view with full hyperparams / metric chart / artifact download / log-stream. Stop / restart actions:\n  `POST /api/monitor/experiments/{run_id}/{stop|restart}`.\n  ExperimentsSubTab.tsx: full job table with loading/error/empty states; stop (running) + restart (failed/completed)\n  VM action buttons via handleAction(); statusVariant() + kindLabel() helpers; 4 vitest tests.\n  — deployment-api@bfabb3e (2026-05-19 slot 6). Added stop/restart POST endpoints backed by\n  gcloud compute instances stop/reset; 10 unit tests; 422 guard for non-experiment VMs; dry_run preview\
-    \ mode.\n"}
-- {id: h1-env-tier-codex-doc, content: "- [x] ✅ **SHIPPED 2026-05-18 slot-7** [AGENT] P0. NEW codex doc `codex/05-infrastructure/deployment-ui-environment-tiers.md` capturing the\n  env-tier topology for deployment-UI/API itself: dev (localhost), staging (Cloud Run on staging GCP project +\n  AWS staging mirror, hosted at `staging.<research-domain>/deployment`), prod (Cloud Run on prod GCP project +\n  AWS prod mirror, hosted at `<research-domain>/deployment`). Each env has its own deployment-api Cloud Run\n  instance, its own GCS event/log bucket scope, its own Cloud Scheduler entries, its own live clusters.\n  Operator iteration loop: dev tweaks → ship to staging → soak with staging schedules / staging live clusters\n  / staging data-status views → promote to prod. NEVER an in-UI env toggle. Same pattern the trading-system-UI\n  already follows.\n"}
-- {id: h2-deployment-api-env-aware-config, content: "- [x] ✅ **SHIPPED 2026-05-18 slot-7 — deployment-api@78b68c4** [SCRIPT] P0. Update deployment-api to read `CLOUD_DEPLOYMENT_ENV` env var at boot and scope every\n  registry read (scheduler / live-cluster / experiment) by the resolved tier. Bucket suffixes per env per the\n  existing `bucket-isolation-model.md` SSOT (e.g. `<pid>-events-staging` vs `<pid>-events-prod`). Cloud\n  Scheduler list / EventBridge list filtered to the project per env. Auth: deployment-api per env uses its\n  own service account scoped to that env's projects. NO cross-env data leakage.\n  Added `env: str` to BackfillMonitorResponse, ExperimentMonitorResponse, LiveMonitorResponse,\n  ScheduledMonitorResponse — populated from settings.DEPLOYMENT_ENV at request time.\n"}
-- {id: h3-deployment-ui-env-badge-and-domain-resolution, content: "- [x] ✅ **SHIPPED 2026-05-18 slot-7 — deployment-ui@75202df** [SCRIPT] P0. Add env badge to deployment-UI Header — read-only, computed from `window.location.hostname`\n  per Phase A.5 helper. Visual: green DEV / amber STAGING / red PROD. Clicking the badge shows a tooltip with\n  the resolved env + the API base URL + the current cloud-target. NEVER a toggle.\n  resolveEnvTier() added; tooltip via useState onBlur dismiss; tsc+build green.\n"}
-- {id: h4-staging-and-prod-domain-deployment, content: "- [x] **[DEFERRED-OPERATOR-DECISION]** [HUMAN+AGENT] P1. Provision staging + prod Cloud Run instances of deployment-api + Firebase Hosting (or\n  equivalent) for deployment-UI under `staging.<research-domain>/deployment` and `<research-domain>/deployment`.\n  DNS records, TLS certs, IAM bindings. CI builds promote `live-defi-rollout` → staging → prod via the\n  existing semver-agent + workflow promotion machinery. Reference existing trading-system-UI deployment for\n  the pattern.\n"}
-- {id: f1-cloud-toggle-loading-state, content: "- [x] ✅ **SHIPPED 2026-05-19 slot-6 — deployment-ui@ba009b2** [SCRIPT] P1. Cloud-toggle (GCP / AWS) in Header MUST show explicit loading UX during the cache\n  invalidate + parallel refetch (per Phase B.7). Skeleton-loaders or progress indicator on every tab during\n  the load; tab-state preserved across the toggle. Per user direction 2026-05-08.\n  CloudSwitchingSkeleton component + skeleton.tsx; all 4 TabsContent gated on {switching ? <CloudSwitchingSkeleton /> : <SubTab />}.\n"}
-- {id: f2-mode-toggle-instant-ux, content: "- [x] ✅ **SHIPPED 2026-05-19 slot-6 — deployment-ui@ba009b2** [SCRIPT] P1. Cross-Monitor-sub-tab navigation (Backfill ↔ Experiments ↔ Live ↔ Scheduled) MUST feel\n  instant — Phase B.7 prefetch keeps all four sub-tabs in cache. Add unit test that asserts no network call\n  fires on tab switch when cache is warm. Performance budget: <50ms perceptible delay on sub-tab toggle.\n  LifecyclePrefetchContext.test — \"F.2 — no re-fetch when all caches are warm\" test: rerenders provider without\n  target change, waits 30ms, asserts globalFetch + fetchVmDeployments + getLiveStatus call counts unchanged.\n"}
-- {id: f3-naming-convention-rule-into-claudemd, content: "- [x] ✅ [HUMAN+AGENT] P1. Update CLAUDE.md \"VM Naming Convention\" section with the new `lifecycle_class`\n  requirement (Phase A.2) + the experiment-VM run_id-suffix rule. Operator review then ship via the standard\n  PM commit. Symlinks propagate to all repo-mirrors automatically.\n  — PM@2816975af (2026-05-19 slot 6). lifecycle_class required on every VmPrefixSpec; exp-ml-/exp-strategy-/exp-execution- run_id suffix rule added.\n"}
-- {id: g1-workspace-qg-sweep, content: "- [x] ✅ **SHIPPED 2026-05-19 slot-6** [SCRIPT] P0. `bash scripts/quality-gates.sh` on every repo in `repo_gates`; UI vitest with `pool: forks`\n  per workspace rule.\n  deployment-ui@ba009b2: ✅ ALL UI QG PASSED. deployment-api@ffd97c1: ✅ ALL QG PASSED (82.35% coverage).\n  utl@424e03af: ✅ ALL QG PASSED. Also fixed 2 pre-existing failures found during sweep:\n  CounterpartyRatioCapTrigger dispatch (UTL + deployment-api risk routes) + _EMPTY_REASON_KEYS drift (3 new UAC enum values).\n"}
-- {id: g2-staging-d3, content: "- [x] **[DEFERRED-OPERATOR-DECISION]** [HUMAN+AGENT] P0. Deploy 6-tab UI + Monitor sub-tabs + new deployment-api endpoints to staging GCP\n  project (and AWS staging mirror). Verify: cloud-toggle latency, sub-tab instant-feel,\n  deploy-missing-schedulers idempotence, live-cluster lifecycle actions on smoke-cluster, experiment\n  tracker round-trips a real ML training run, streaming logs render across all four lifecycle classes,\n  env badge renders correctly per domain.\n"}
-- {id: g3-operator-signoff, content: "- [x] **[DEFERRED-OPERATOR-DECISION]** [HUMAN] P1. Operator sign-off on the 6-tab UX + Monitor sub-tab flow + Data-Status scope reduction +\n  env-tier hosting. B6 gate.\n"}
+  - { id: a1-lifecycle-class-taxonomy-uac-ssot, content: "- [x] [SCRIPT] P0. **DONE 2026-05-08 (UAC@ba94d05)**. Add
+        `LifecycleClass` StrEnum to UAC\n  `unified_api_contracts/canonical/crosscutting/lifecycle_class.py` with FOUR
+        closed members:\n  (1) `EPHEMERAL_BATCH` — data + pricing pipeline jobs (instruments, MTDS, MDPS, features-*);
+        has start + end;\n  progress measured in dates × shards captured/empty/failed. (2) `EPHEMERAL_EXPERIMENT` — ML
+        training,\n  strategy backtest, execution backtest research jobs; has start + end; progress measured in epochs /
+        folds /\n  run-id metrics; produces model artifacts + result blobs. (3) `SCHEDULED_RECURRING` — Cloud Scheduler
+        /\n  EventBridge / VM cron; expected to fire forever; \"missing\" + \"paused\" + \"stale\" states matter.
+        (4)\n  `LONG_LIVED_LIVE` — continuous deployment cluster (strategy / execution / live-MTDS / position-balance
+        /\n  risk / alerting); lifecycle actions are start/stop/pause/restart/drain. UAC
+        helpers\n  `classify_vm_name(vm_name)\
+        \ -> LifecycleClass`, `classify_cloud_run_service(name) -> LifecycleClass`,\n  `classify_scheduled_job(name) ->
+        LifecycleClass`, `classify_experiment_run(run_id) -> LifecycleClass`.\n  Single source of truth — deployment-api
+        + UI + watchdog + experiment-tracker all read from here.\n" }
+  - { id: a2-vm-naming-convention-extension, content: "- [x] [SCRIPT] P0. **DONE 2026-05-13
+        (deployment-service@cc3f98a)**. Extend
+        `deployment-service/scripts/vm/vm_zombie_watchdog.py`\n  `VM_PREFIX_TO_BUCKET` dict shape from `{prefix:
+        bucket}` to `{prefix: VmPrefixSpec(bucket=..., lifecycle_class=...)}`\n  where `VmPrefixSpec` is a typed UAC
+        dataclass (Phase A.1). Migration: (1) all 40+ existing backfill/management/consolidator\n  prefixes converted to
+        `VmPrefixSpec(bucket=..., lifecycle_class=LifecycleClass.EPHEMERAL_BATCH)` instances;\n  (2) 5 live-pipeline
+        prefixes (mtds-live-*, mdps-features-live-*) tagged with `LONG_LIVED_LIVE`; (3) 9 reserved\n  prefixes
+        registered: `live-strategy-`, `live-execution-`, `live-mtds-`, `live-pbm-`, `live-risk-`,
+        `live-alerting-`\n  (LONG_LIVED_LIVE) + `exp-ml-`, `exp-strategy-`, `exp-execution-` (EPHEMERAL_EXPERIMENT). VM
+        naming convention\n  updated in CLAUDE.md: every new VM prefix MUST tag a `lifecycle_class`; experiment VMs
+        additionally tag `run_id`\n\
+        \  in name suffix (`exp-ml-{run_id}-{ts}`).\n" }
+  - { id: a3-codex-deployment-ui-architecture-ssot, content: "- [x] [AGENT] P0. **DONE 2026-05-08 (PM@ebe5cc09)**. New
+        codex doc `/codex/05-infrastructure/deployment-ui-architecture.md` capturing the full\n  UX architecture: 6
+        top-level tabs (Deploy / Monitor / Data-Status / Builds / Readiness / Config); Monitor\n  sub-tab structure
+        (Backfill / Experiments / Live / Scheduled); the four orthogonal axes (lifecycle class /\n  cloud target /
+        environment / service); the env-resolution-by-domain rule (no in-UI env toggle); the\n  cross-mode prefetch
+        policy (instant) vs the cloud-toggle loading-state policy (slow + acceptable); the\n  auth-always-available
+        contract; the scope split between Data-Status (data + pricing correctness only) and\n  Monitor (runtime state of
+        all jobs/clusters/schedules); the streaming-logs surface contract (one component\n  powers logs across all four
+        lifecycle classes). NEW doc REFERENCES existing\n  `04-architecture/runtime-deployment-topology.md`,
+        `05-infrastructure/launcher-script-ssot.md`,\n\
+        \  `05-infrastructure/runtime-tiers-and-deployment.md`,
+        `05-infrastructure/deployment-clusters-live-vs-batch.md`,\n  `05-infrastructure/cloud-agnostic-script-pattern.md`,
+        `05-infrastructure/firebase-split-topology.md`.\n  Single source of truth for the UX shape.\n" }
+  - {
+      id: a4-codex-update-batch-live-symmetry-ux-section,
+      content:
+        "- [x] [AGENT] P1. **DONE 2026-05-08 (PM@eb8a96ca)**. Extend `04-architecture/batch-live-architecture.md` with a
+        \"UX surface\" section explicit on how\n  the symmetry shows up to the operator: same Data-Status tab, same
+        drilldown depth, same parquet schema-view,\n  same event-tail; the only operator-visible difference between live
+        and batch is the Data-Status mode-toggle\n  position. Reinforces the engineering invariant via the
+        operator-facing UX.\n",
+    }
+  - { id: a5-uac-cloud-target-and-environment-discriminators, content: "- [x] [SCRIPT] P0. **DONE 2026-05-08
+        (UAC@ba94d05)**. Confirm + extend the existing `CloudTarget` enum in deployment-ui
+        `CloudProviderContext.tsx`\n  and add a typed UAC mirror
+        `unified_api_contracts/canonical/crosscutting/cloud_target.py` (already in scope).\n  ALSO add
+        `unified_api_contracts/canonical/crosscutting/environment_tier.py` as a 3-member StrEnum\n  (`DEV` / `STAGING` /
+        `PROD`) with helper `resolve_environment_from_hostname(hostname) -> EnvironmentTier`\n  encoding the rule:
+        `localhost` / `127.0.0.1` / `*.local` → DEV; `staging.<research-domain>` → STAGING;\n  `<research-domain>` (no
+        subdomain) → PROD. Server-side mirror in deployment-api boot-time config — knows its\n  own env from
+        `CLOUD_DEPLOYMENT_ENV` env var (already used elsewhere in workspace per\n  `runtime-tiers-and-deployment.md`).
+        The UI's env badge in Header reads the resolved tier; never offers an\n  in-UI toggle. Auth contract:
+        deployment-api boots\
+        \ with both GCP + AWS auth/credentials loaded into its\n  session (existing `UnifiedCloudConfig` pattern); a UI
+        cloud-toggle never re-authenticates — it just changes\n  which client is dispatched per request.\n" }
+  - {
+      id: b1-six-tab-shell-deploy-monitor-data-builds-readiness-config,
+      content:
+        "- [x] ✅ [SCRIPT] P0. Re-shape `deployment-ui/src/App.tsx` tab bar from current 7 tabs (Deploy / Status
+        /\n  History / Builds / Data Status / Readiness / Config) to 6 tabs (Deploy / Monitor / Data Status / Builds
+        /\n  Readiness / Config). Renames: History → Monitor (semantic re-purposing — the tab is for runtime
+        state,\n  not just past deploys). Removed: standalone Status tab (Status content folds into Monitor sub-tabs
+        per\n  lifecycle class). Header carries: cloud-target toggle (GCP / AWS), env badge (read-only, derived
+        from\n  domain per Phase A.5). Service-axis sidebar persists unchanged — every tab still scopes to a
+        selected\n  service when relevant; service-axis is orthogonal to the lifecycle-class tab axis.\n  —
+        deployment-ui@567c8a1 (2026-05-13, backfilled 2026-05-19 slot 6)\n",
+    }
+  - { id: b2-monitor-tab-four-subtabs, content: "- [x] ✅ [SCRIPT] P0. Monitor tab gets four sub-tabs, one per lifecycle
+        class:\n  (a) **Backfill** — list of currently-running + recent ephemeral data-pipeline jobs (instruments / MTDS
+        /\n  MDPS / features-* backfills, smokes, migrations); per-job: progress %, dates-completed / total,
+        shards\n  captured/empty/failed counts (live event count from the events bucket), live event-tail, stop /
+        restart /\n  re-deploy actions.\n  (b) **Experiments** — list of currently-running + recent ML / strategy /
+        execution research jobs; per-job:\n  run_id, owner, current step (epoch / fold / backtest-day), progress %, ETA,
+        hyperparams summary, key\n  metrics live-tail (loss / sharpe / drawdown), result-blob link if completed, stop /
+        restart / re-deploy.\n  (c) **Live** — list of long-lived deployment clusters (strategy / execution / live-MTDS
+        / position-balance\n  / risk / alerting); per-cluster: replicas, health, last-heartbeat, freshness (last-write
+        per data_type),\n\
+        \  start / stop / pause / restart / drain.\n  (d) **Scheduled** — list of every scheduler in the Phase D
+        registry, joined with runtime state;\n  alive/dead/stale/paused/missing; per-row: run-now / pause / resume /
+        logs / recent-events; \"Deploy-Missing\n  Schedulers\" button.\n  EVERY sub-tab uses the SAME row-component
+        template (lifecycle-class-aware) so the operator sees one\n  consistent layout across all four. The
+        deploy-via-monitor pattern (re-deploy from Monitor's row context) is\n  first-class; Deploy tab is exclusively
+        for FRESH deployments.\n  — deployment-ui@567c8a1 (2026-05-13, shell; sub-tabs substantive via slot-7
+        c1-c4@f585227; backfilled 2026-05-19 slot 6)\n" }
+  - {
+      id: b3-deploy-tab-fresh-deployments-only,
+      content:
+        "- [x] ✅ [SCRIPT] P0. Restructure Deploy tab to be the home for FRESH deployments only — operator picks a
+        service\n  + parameters + clicks Deploy; this fires a single Cloud Build / VM launch / Cloud Run revision
+        rollout. Move\n  the existing `<DeployForm>` here. Re-deploys (run-it-again-with-same-params) live in Monitor,
+        NOT Deploy —\n  the row's re-deploy action carries forward run-time state (correlation_id, chunk-shape, run_id
+        for\n  experiments) that a fresh-deploy doesn't have. This separation prevents the foot-gun where an
+        operator\n  re-deploys from Deploy with default params and accidentally clobbers an in-flight run.\n",
+    }
+  - {
+      id: b4-data-status-scope-reduction-pricing-data-only,
+      content:
+        "- [x] ✅ [SCRIPT] P0. Restructure Data Status tab to scope to data + pricing correctness only —
+        instruments,\n  MTDS, MDPS, features-*. Strategy / execution / ML signals + metrics are NOT in Data-Status; they
+        live in\n  Monitor → Experiments (for ephemeral) or Monitor → Live (for live-cluster freshness). Why:
+        Data-Status is\n  about \"did the catalog / tick / feature data land on disk correctly?\" — a manifest-driven
+        correctness\n  question. Strategy / execution / ML are about \"is the research run completing + producing valid
+        output?\" —\n  a runtime-state question. Conflating the two confused operators. The existing widget
+        tree\n  (`HierarchicalShardDrilldown`, `LiveFreshnessPanel`, parquet schema-view) stays in Data-Status;
+        service\n  filter dropdown defaults to data-pipeline services only.\n",
+    }
+  - {
+      id: b5-data-status-mode-toggle-batch-scheduled-live,
+      content:
+        "- [x] ✅ [SCRIPT] P0. Add a 3-way mode toggle (Batch / Scheduled-Today / Live) at the top of
+        `DataStatusTab.tsx`.\n  Each mode reads from a different bucket-set / time-slice: Batch = the historical buckets
+        the tab already\n  reads; Scheduled-Today = today's-date slice (what should have run today + has it run); Live =
+        live-write\n  buckets per asset_group (per `instruments_master.md` Phase 1 — same path as batch in\n  most
+        cases, but the UI surfaces \"freshness\" as the metric instead of \"coverage\"). Toggle invalidates
+        the\n  `/api/data-status` query key and refetches. NO new bucket convention — reuses the same paths the rest
+        of\n  the workspace already writes to (per `batch-live-architecture.md` SSOT).\n  — deployment-ui@1771932
+        (2026-05-19 slot 6; toggle pre-existed, live-mode wired to LiveFreshnessPanel)\n",
+    }
+  - {
+      id: b6-live-freshness-widget,
+      content:
+        "- [x] ✅ [SCRIPT] P1. NEW `LiveFreshnessPanel` component rendered when DataStatus mode-toggle = Live.
+        Per\n  (asset_group, data_type, shard) shows: last-write-timestamp, expected-cadence (from Phase D
+        scheduler\n  registry), staleness-indicator (green = fresh, amber = within tolerance, red = beyond tolerance +
+        auto-\n  emits `INSTRUMENTS_LIVE_UPSTREAM_STALE` per `instruments_master.md` Phase A.5 if not\n  already
+        emitted). Reads from the SAME `/api/data-status` endpoint; the freshness math is a UI computation\n  over the
+        existing `available_at` per-row column.\n  — deployment-ui@567c8a1 (component 2026-05-13) + @1771932 (wired
+        2026-05-19 slot 6)\n",
+    }
+  - {
+      id: b7-mode-prefetch-context,
+      content:
+        "- [x] ✅ [SCRIPT] P0. New React context `LifecyclePrefetchContext` (TanStack Query is already used per
+        existing\n  deployment-ui patterns; just add prefetch keys for each Monitor sub-tab on cold-start + on
+        cloud-target\n  change). On UI mount + on cloud-toggle, fire four parallel queries:
+        `/api/monitor/backfill`,\n  `/api/monitor/experiments`, `/api/monitor/live`, `/api/monitor/scheduled`. Cache TTL
+        60s default. Operator\n  clicks between Monitor sub-tabs without paying network latency. Cloud-toggle (GCP→AWS)
+        invalidates ALL\n  caches and refetches with a loading spinner — explicit \"loading\" UX is acceptable +
+        expected\n  (per user direction 2026-05-08).\n",
+    }
+  - {
+      id: b8-streaming-logs-component,
+      content:
+        "- [x] ✅ [SCRIPT] P0. NEW `StreamingLogsPanel` component — single component powers logs across all
+        four\n  lifecycle classes. Inputs: `{lifecycle_class, target_ref, correlation_id|run_id|cluster_name}`.
+        Streams\n  from deployment-api `/api/logs/stream/{target_ref}` (NEW; thin wrapper over existing GCS event-stream
+        + Cloud\n  Logging tail). Server-side fans out to the right log source per lifecycle class (Cloud Run logs
+        for\n  long-lived; VM serial console + GCS event-stream for backfills + experiments + scheduled VMs;
+        Cloud\n  Function logs for scheduler-as-cloud-function). Filter / search / pause / download. Operator hits the
+        same\n  component shape from Monitor → Backfill / Experiments / Live / Scheduled rows. Per CLAUDE.md UI
+        testing\n  rule must use `pool: forks`.\n  — deployment-ui@567c8a1 (component 2026-05-13) + @a0458e2 (SSE
+        targetRef mode + c5 wiring 2026-05-19 slot 6)\n",
+    }
+  - {
+      id: c1-monitor-backfill-endpoint,
+      content:
+        "- [x] ✅ [SCRIPT] P0. Add `GET /api/monitor/backfill?cloud=<gcp|aws>` route — lists every running +
+        recent\n  EPHEMERAL_BATCH job per cloud-target. Joins VM-name lookup (Phase A.2 lifecycle_class filter) with
+        the\n  events bucket (last STARTED / progress / STOPPED / FAILED per correlation_id). Per-entry
+        response:\n  `{name, lifecycle_class, asset_group, owning_plan, started_at, progress: {dates_done,
+        dates_total,\n  shards_captured, shards_empty, shards_failed}, last_event_at, status, recent_events: [...]}`.
+        Reuses\n  existing `vm_deployments.py` join patterns. NEW route
+        module\n  `deployment-api/deployment_api/routes/monitor_backfill.py`.\n",
+    }
+  - {
+      id: c2-monitor-experiments-endpoint,
+      content:
+        "- [x] ✅ [SCRIPT] P0. Add `GET /api/monitor/experiments?cloud=<gcp|aws>` route — lists every running +
+        recent\n  EPHEMERAL_EXPERIMENT job. Joins experiment-registry (Phase BB.1) with run-state from the
+        experiment-\n  tracking bucket (per-run_id metrics + artifacts). Per-entry response: `{run_id, name,
+        owner,\n  experiment_kind: ml_training|strategy_backtest|execution_backtest, started_at,
+        current_step,\n  progress: {fraction, eta}, hyperparams: {...}, metrics_tail: [{step, key, value},
+        ...],\n  result_blob_uri, status}`. NEW route
+        module\n  `deployment-api/deployment_api/routes/monitor_experiments.py`.\n  **SHIPPED 2026-05-18 slot-7** —
+        scaffold via DeploymentsRegistry prefix filter (ml-train-*, strategy-backtest-*,\n  execution-backtest-*);
+        infers experiment_kind; Phase BB.1 experiment-registry join is post-cutover scope.\n  deployment-api@f585227.\n",
+    }
+  - {
+      id: c3-monitor-live-endpoint,
+      content:
+        "- [x] ✅ [SCRIPT] P0. Add `GET /api/monitor/live?cloud=<gcp|aws>` route — lists every LONG_LIVED_LIVE
+        deployment\n  cluster from the Phase E.1 registry, joined with runtime state (Cloud Run service status, GKE
+        deployment\n  health). Per-entry response: `{name, lifecycle_class, cloud_target, deployment_kind,
+        asset_group,\n  archetype_owners, replicas, health, last_heartbeat_at, freshness_per_data_type:
+        {...},\n  recent_events: [...]}`. Lifecycle action endpoints:\n  `POST
+        /api/monitor/live/{name}/{start|stop|pause|restart|drain}`. SSE event-tail\n  `/api/monitor/live/{name}/events`
+        reuses existing `deploy_events_sse.py:76` machinery. NEW route module.\n  **SHIPPED 2026-05-18 slot-7** —
+        scaffold via DeploymentsRegistry prefix filter (strategy-paper-*,\n  strategy-live-*, defi-recursive-*); 7-day
+        archive window; Phase E.1 registry join is post-cutover scope.\n  deployment-api@f585227.\n",
+    }
+  - {
+      id: c4-monitor-scheduled-endpoint,
+      content:
+        "- [x] ✅ [SCRIPT] P0. Add `GET /api/monitor/scheduled?cloud=<gcp|aws>` route — lists every scheduler from
+        the\n  Phase D registry joined with current Cloud Scheduler / EventBridge / VM-cron live state. Per-entry
+        response\n  as before (alive/dead/stale/paused/missing). Lifecycle action endpoints:\n  `POST
+        /api/monitor/scheduled/{name}/{run-now|pause|resume}`,\n  `POST /api/monitor/scheduled/deploy-missing` (the
+        registry-driven deploy-missing button).\n  **SHIPPED 2026-05-18 slot-7** — scaffold via DeploymentsRegistry
+        prefix filter (cron-*, scheduled-*,\n  honest-coverage-*, qg-snapshot-*, vm-cron-*);
+        phase_d_registry_available=false signals UI for placeholder;\n  Phase D SchedulerSpec SSOT join is post-cutover
+        scope. deployment-api@f585227.\n",
+    }
+  - {
+      id: c5-streaming-logs-endpoint,
+      content:
+        "- [x] ✅ [SCRIPT] P0. Add `GET /api/logs/stream/{target_ref}` route — SSE / WebSocket stream that fans out
+        per\n  lifecycle class. Backfill + experiment + scheduled VM logs come from the events bucket + GCS Cloud
+        Logging\n  tail; long-lived live logs come from Cloud Run / GKE per-pod logs. Client filter / search / pause
+        are\n  client-side over the stream (server sends raw lines).\n  — deployment-api@6d5567b (2026-05-19 slot 6). VM
+        path polls GCS events bucket; live-cluster 501 scaffold\n  (Cloud Run/GKE log tail is post-cutover scope, Phase
+        E.2).\n",
+    }
+  - {
+      id: c6-aggregated-status-endpoints-removed-folded-into-monitor,
+      content:
+        "- [x] ✅ [SCRIPT] P1. Per the restructure, the originally-planned aggregated
+        `/api/{batch,scheduled,live}/status`\n  endpoints (previous draft Phase C.3) are FOLDED into the four Monitor
+        sub-tab endpoints (C.1-C.4). Phase\n  B.7 prefetch fires the four queries directly. NO duplicate aggregation
+        route; the Monitor sub-tab queries\n  ARE the prefetch surface.\n  **CONFIRMED 2026-05-18 slot-7** — c1/c2/c3/c4
+        route scaffold implements this decision; no aggregation\n  routes created. The prefetch context (b7-ext,
+        deployment-ui@e9e90d9) calls these 4 directly.\n",
+    }
+  - { id: d1-scheduler-registry-uac-ssot-env-scoped, content: "- [x] ✅ [SCRIPT] P0. NEW UAC
+        SSOT\n  `unified_api_contracts/canonical/crosscutting/scheduler_registry.py`. Declares every scheduler that
+        should\n  exist per `(cloud_target, environment_tier)` cell as a typed list of
+        `SchedulerSpec(name,\n  lifecycle_class=SCHEDULED_RECURRING, schedule_cron, target_kind, target_ref,
+        asset_group, owning_plan,\n  expected_max_runtime, max_consecutive_failures_before_page, env_tiers:
+        list[EnvironmentTier])`. The\n  `env_tiers` field declares which environments the scheduler is expected to exist
+        in; staging and prod\n  usually share, but dev typically only runs a subset (no live-instruments triggers in
+        dev, e.g.). Phase 1\n  entries: every instruments-live trigger from `instruments_master` Phase A.3
+        +\n  manifest-consolidator-60s + data-status rollup + manifest-aggregation cron + T+1 audit. Adding a
+        new\n  scheduler in any plan = adding a row here; \"deploy-missing schedulers\" reads from this registry\
+        \ filtered\n  by `(cloud_target, environment_tier)`. NO ad-hoc `gcloud scheduler jobs create` outside this
+        registry.\n  — unified-api-contracts@e90b61c (2026-05-19 slot 6). 14 entries: 10 instruments-live + 4 infra. 15
+        unit tests. SchedulerTargetKind + get_schedulers_for_env exported from UAC root.\n" }
+  - {
+      id: d2-scheduler-deploy-missing-implementation,
+      content:
+        "- [x] ✅ [SCRIPT] P0. Implement `POST /api/monitor/scheduled/deploy-missing` — for each registry entry
+        whose\n  runtime-state ≠ deployed AND env_tiers includes the current tier, emit the cloud-target-specific
+        create\n  command (gcloud scheduler jobs create OR AWS EventBridge `put-rule` + `put-targets`) and run
+        it.\n  Idempotent. Returns per-entry success/fail. Same pattern as existing batch deploy-missing
+        in\n  `deploy_missing.py:62`.\n  — deployment-api@56287ff (2026-05-19 slot 6). DeployMissingResponse schema +
+        per-entry results +\n  GCP check-then-create + AWS preview. 14 unit tests.\n",
+    }
+  - {
+      id: d3-scheduler-pause-resume-implementation,
+      content:
+        "- [x] ✅ [SCRIPT] P0. Implement pause + resume per cloud-target — gcloud scheduler jobs pause/resume /
+        EventBridge\n  `disable-rule`/`enable-rule`. State persists across the toggle. UI shows the paused-state from
+        the\n  scheduled list. Auto-pause on Phase H circuit-breaker trip per\n  `instruments_master.md` Phase H.2 —
+        operator manual-resume only.\n  — deployment-api@56287ff (2026-05-19 slot 6). SchedulerActionResponse +
+        pause/resume endpoints for\n  GCP (gcloud scheduler jobs pause/resume) and AWS (disable-rule/enable-rule). Same
+        14 unit tests.\n",
+    }
+  - { id: e1-live-cluster-registry-uac-ssot-env-scoped, content: "- [x] ✅ [SCRIPT] P0. NEW UAC
+        SSOT\n  `unified_api_contracts/canonical/crosscutting/live_cluster_registry.py`. Declares every
+        long-lived\n  deployment per `(cloud_target, environment_tier)` cell: typed list of
+        `LiveClusterSpec(name,\n  lifecycle_class=LONG_LIVED_LIVE, cloud_target, environment_tier,
+        deployment_kind:\n  cloud_run|gke|eks|ecs_service, target_ref, asset_group, archetype_owners,
+        health_endpoint,\n  expected_replicas, drain_timeout)`. Phase 1 entries: 6 perp venues × 1 live-MTDS each (live
+        + staging\n  for May-23), 1 live-strategy per archetype (carry_staked_basis +
+        ARBITRAGE_PRICE_DISPERSION\n  (funding-rate-dispersion; renamed from legacy leveraged_funding_arb per Stream B
+        canonicalisation 2026-05-07)),\n  1 live-execution per cloud, 1 position-balance, 1 risk, 1 alerting. Same SSOT
+        discipline as scheduler registry.\n  — unified-api-contracts@723f8fb (2026-05-19 slot 6). 26 entries: 12 MTDS +
+        4 strategy + 4 execution\
+        \ + 6 infra.\n  21 unit tests. LiveClusterDeploymentKind + get_clusters_for_env exported from UAC root.\n" }
+  - {
+      id: e2-live-cluster-deploy-and-lifecycle-actions,
+      content:
+        "- [x] ✅ [SCRIPT] P0. Implement start / stop / pause / restart / drain per cloud-target. Cloud Run:
+        revision\n  scale-to-0 for stop, set min-instances=N for start, traffic-split for drain. GKE/EKS: deployment
+        scale +\n  rolling-restart. Idempotent. State persists. Reuses existing `vm_deployments.py` patterns
+        where\n  applicable.\n  — deployment-api@4c4f221 (2026-05-19 slot 6). 5 POST routes backed by LiveClusterSpec
+        UAC SSOT;\n  per-kind command builders (Cloud Run/GKE+EKS/ECS); mock/dry_run returns preview command. 24 unit
+        tests.\n",
+    }
+  - {
+      id: bb1-experiment-registry-uac-ssot,
+      content:
+        "- [x] ✅ [SCRIPT] P0. NEW UAC SSOT\n  `unified_api_contracts/canonical/crosscutting/experiment_registry.py`.
+        Declares the experiment kind\n  taxonomy (closed set: `ML_TRAINING`, `STRATEGY_BACKTEST`, `EXECUTION_BACKTEST`)
+        + the typed\n  `ExperimentRunSpec(run_id, kind, owner, asset_group, started_at, hyperparams: dict,
+        expected_steps,\n  result_blob_uri, status: running|completed|failed|cancelled)`. Run_ids are UUIDv7 (sortable
+        by time).\n  Persistence: per-run blob at `gs://<pid>-experiments/by_kind={kind}/run_id={run_id}/manifest.json`
+        plus\n  per-step append-only metric stream at the same prefix `metrics.jsonl`. NO new database — file-system /
+        GCS\n  only, mirroring the rest of the workspace.\n  — unified-api-contracts@09cb288 (2026-05-19 slot 6).
+        ExperimentKind + ExperimentStatus StrEnums + frozen\n  ExperimentRunSpec +
+        gcs_prefix/manifest_blob_path/metrics_blob_path properties. 15 unit tests. Exported\n  from UAC root facade.\n",
+    }
+  - {
+      id: bb2-experiment-emission-utl-helper,
+      content:
+        "- [x] ✅ [SCRIPT] P0. NEW UTL helper\n  `unified_trading_library/experiment_tracker.py` —
+        `start_experiment(kind, owner, hyperparams) -> run_id`,\n  `emit_metric(run_id, step, key, value)`,
+        `emit_step(run_id, step_name, progress)`,\n  `complete_experiment(run_id, result_blob_uri)`,
+        `fail_experiment(run_id, error)`. Integrates with the\n  existing `setup_events()` / `log_event()` machinery so
+        every experiment lifecycle event also flows to the\n  events bucket. Strategy backtest harness, ML training
+        entry-points, execution-service backtest harness all\n  adopt this helper — single emission surface.\n  —
+        unified-trading-library@49de7c12 (2026-05-19 slot 6). 5 functions wrapping log_event()
+        via\n  EXPERIMENT_{STARTED,METRIC,STEP,COMPLETED,FAILED} constants; UUIDv7 run IDs; 14 unit tests.\n",
+    }
+  - { id: bb3-experiment-monitor-subtab-wiring, content: "- [x] ✅ **SHIPPED 2026-05-19 slot-6 — deployment-ui@ba009b2**
+        [SCRIPT] P0. Wire Monitor → Experiments sub-tab (Phase B.2) to `/api/monitor/experiments` endpoint\n  (Phase
+        C.2) reading from the experiment registry + per-run blobs. Per-row: run_id, owner, kind,
+        started_at,\n  progress, current_step, key metrics tail (sparkline of last N), status. Click-through to per-run
+        detail\n  view with full hyperparams / metric chart / artifact download / log-stream. Stop / restart
+        actions:\n  `POST /api/monitor/experiments/{run_id}/{stop|restart}`.\n  ExperimentsSubTab.tsx: full job table
+        with loading/error/empty states; stop (running) + restart (failed/completed)\n  VM action buttons via
+        handleAction(); statusVariant() + kindLabel() helpers; 4 vitest tests.\n  — deployment-api@bfabb3e (2026-05-19
+        slot 6). Added stop/restart POST endpoints backed by\n  gcloud compute instances stop/reset; 10 unit tests; 422
+        guard for non-experiment VMs; dry_run preview\
+        \ mode.\n" }
+  - {
+      id: h1-env-tier-codex-doc,
+      content:
+        "- [x] ✅ **SHIPPED 2026-05-18 slot-7** [AGENT] P0. NEW codex doc
+        `/codex/05-infrastructure/deployment-ui-environment-tiers.md` capturing the\n  env-tier topology for
+        deployment-UI/API itself: dev (localhost), staging (Cloud Run on staging GCP project +\n  AWS staging mirror,
+        hosted at `staging.<research-domain>/deployment`), prod (Cloud Run on prod GCP project +\n  AWS prod mirror,
+        hosted at `<research-domain>/deployment`). Each env has its own deployment-api Cloud Run\n  instance, its own
+        GCS event/log bucket scope, its own Cloud Scheduler entries, its own live clusters.\n  Operator iteration loop:
+        dev tweaks → ship to staging → soak with staging schedules / staging live clusters\n  / staging data-status
+        views → promote to prod. NEVER an in-UI env toggle. Same pattern the trading-system-UI\n  already follows.\n",
+    }
+  - {
+      id: h2-deployment-api-env-aware-config,
+      content:
+        "- [x] ✅ **SHIPPED 2026-05-18 slot-7 — deployment-api@78b68c4** [SCRIPT] P0. Update deployment-api to read
+        `CLOUD_DEPLOYMENT_ENV` env var at boot and scope every\n  registry read (scheduler / live-cluster / experiment)
+        by the resolved tier. Bucket suffixes per env per the\n  existing `bucket-isolation-model.md` SSOT (e.g.
+        `<pid>-events-staging` vs `<pid>-events-prod`). Cloud\n  Scheduler list / EventBridge list filtered to the
+        project per env. Auth: deployment-api per env uses its\n  own service account scoped to that env's projects. NO
+        cross-env data leakage.\n  Added `env: str` to BackfillMonitorResponse, ExperimentMonitorResponse,
+        LiveMonitorResponse,\n  ScheduledMonitorResponse — populated from settings.DEPLOYMENT_ENV at request time.\n",
+    }
+  - {
+      id: h3-deployment-ui-env-badge-and-domain-resolution,
+      content:
+        "- [x] ✅ **SHIPPED 2026-05-18 slot-7 — deployment-ui@75202df** [SCRIPT] P0. Add env badge to deployment-UI
+        Header — read-only, computed from `window.location.hostname`\n  per Phase A.5 helper. Visual: green DEV / amber
+        STAGING / red PROD. Clicking the badge shows a tooltip with\n  the resolved env + the API base URL + the current
+        cloud-target. NEVER a toggle.\n  resolveEnvTier() added; tooltip via useState onBlur dismiss; tsc+build green.\n",
+    }
+  - {
+      id: h4-staging-and-prod-domain-deployment,
+      content:
+        "- [x] **[DEFERRED-OPERATOR-DECISION]** [HUMAN+AGENT] P1. Provision staging + prod Cloud Run instances of
+        deployment-api + Firebase Hosting (or\n  equivalent) for deployment-UI under
+        `staging.<research-domain>/deployment` and `<research-domain>/deployment`.\n  DNS records, TLS certs, IAM
+        bindings. CI builds promote `live-defi-rollout` → staging → prod via the\n  existing semver-agent + workflow
+        promotion machinery. Reference existing trading-system-UI deployment for\n  the pattern.\n",
+    }
+  - {
+      id: f1-cloud-toggle-loading-state,
+      content:
+        "- [x] ✅ **SHIPPED 2026-05-19 slot-6 — deployment-ui@ba009b2** [SCRIPT] P1. Cloud-toggle (GCP / AWS) in Header
+        MUST show explicit loading UX during the cache\n  invalidate + parallel refetch (per Phase B.7).
+        Skeleton-loaders or progress indicator on every tab during\n  the load; tab-state preserved across the toggle.
+        Per user direction 2026-05-08.\n  CloudSwitchingSkeleton component + skeleton.tsx; all 4 TabsContent gated on
+        {switching ? <CloudSwitchingSkeleton /> : <SubTab />}.\n",
+    }
+  - {
+      id: f2-mode-toggle-instant-ux,
+      content:
+        "- [x] ✅ **SHIPPED 2026-05-19 slot-6 — deployment-ui@ba009b2** [SCRIPT] P1. Cross-Monitor-sub-tab navigation
+        (Backfill ↔ Experiments ↔ Live ↔ Scheduled) MUST feel\n  instant — Phase B.7 prefetch keeps all four sub-tabs in
+        cache. Add unit test that asserts no network call\n  fires on tab switch when cache is warm. Performance budget:
+        <50ms perceptible delay on sub-tab toggle.\n  LifecyclePrefetchContext.test — \"F.2 — no re-fetch when all
+        caches are warm\" test: rerenders provider without\n  target change, waits 30ms, asserts globalFetch +
+        fetchVmDeployments + getLiveStatus call counts unchanged.\n",
+    }
+  - {
+      id: f3-naming-convention-rule-into-claudemd,
+      content:
+        "- [x] ✅ [HUMAN+AGENT] P1. Update CLAUDE.md \"VM Naming Convention\" section with the new
+        `lifecycle_class`\n  requirement (Phase A.2) + the experiment-VM run_id-suffix rule. Operator review then ship
+        via the standard\n  PM commit. Symlinks propagate to all repo-mirrors automatically.\n  — PM@2816975af
+        (2026-05-19 slot 6). lifecycle_class required on every VmPrefixSpec; exp-ml-/exp-strategy-/exp-execution- run_id
+        suffix rule added.\n",
+    }
+  - {
+      id: g1-workspace-qg-sweep,
+      content:
+        "- [x] ✅ **SHIPPED 2026-05-19 slot-6** [SCRIPT] P0. `bash scripts/quality-gates.sh` on every repo in
+        `repo_gates`; UI vitest with `pool: forks`\n  per workspace rule.\n  deployment-ui@ba009b2: ✅ ALL UI QG PASSED.
+        deployment-api@ffd97c1: ✅ ALL QG PASSED (82.35% coverage).\n  utl@424e03af: ✅ ALL QG PASSED. Also fixed 2
+        pre-existing failures found during sweep:\n  CounterpartyRatioCapTrigger dispatch (UTL + deployment-api risk
+        routes) + _EMPTY_REASON_KEYS drift (3 new UAC enum values).\n",
+    }
+  - {
+      id: g2-staging-d3,
+      content:
+        "- [x] **[DEFERRED-OPERATOR-DECISION]** [HUMAN+AGENT] P0. Deploy 6-tab UI + Monitor sub-tabs + new
+        deployment-api endpoints to staging GCP\n  project (and AWS staging mirror). Verify: cloud-toggle latency,
+        sub-tab instant-feel,\n  deploy-missing-schedulers idempotence, live-cluster lifecycle actions on smoke-cluster,
+        experiment\n  tracker round-trips a real ML training run, streaming logs render across all four lifecycle
+        classes,\n  env badge renders correctly per domain.\n",
+    }
+  - {
+      id: g3-operator-signoff,
+      content:
+        "- [x] **[DEFERRED-OPERATOR-DECISION]** [HUMAN] P1. Operator sign-off on the 6-tab UX + Monitor sub-tab flow +
+        Data-Status scope reduction +\n  env-tier hosting. B6 gate.\n",
+    }
 parent_epic: deployment_and_user_management_master
 priority: P2
 ---
@@ -105,7 +480,7 @@ priority: P2
 > additional UI work required for (b+); Phase 0c bucket provisioning (~300-400 new env-tiered buckets) + Phase 0d data
 > migration happen on the data plane, not the UI plane. **BE-AWARE** when reading this plan: the env-tier story per (b+)
 > is data-plane provisioning + sync scripts + region pinning + VM launcher env-awareness, NOT UI surface changes; the UI
-> surface for env was shipped pre-2026-05-11 per `codex/05-infrastructure/deployment-ui-architecture.md` § "Environment
+> surface for env was shipped pre-2026-05-11 per `/codex/05-infrastructure/deployment-ui-architecture.md` § "Environment
 > tier."
 
 > **🟡 IN-FLIGHT REFACTOR — Live-pipeline activation + features-repo consolidation 2026-05-08**
@@ -520,10 +895,10 @@ re-shape; its completion unblocks Phase B-H + Ikenna Tab 5 audit-log integration
 
 **Other A.2-adjacent codex docs** (no edits required this session):
 
-- `codex/05-infrastructure/deployment-ui-architecture.md` already aligned with A.2 (PM@ebe5cc09 — A.3 sub-agent authored
-  it knowing A.1 + A.2 were coming; references `LifecycleClass` enum, `lifecycle_class` filter, and the `VmPrefixSpec`
-  annotation explicitly).
-- `codex/05-infrastructure/replay-subsystem.md` (line 90) + `codex/05-infrastructure/live-pipeline-architecture.md`
+- `/codex/05-infrastructure/deployment-ui-architecture.md` already aligned with A.2 (PM@ebe5cc09 — A.3 sub-agent
+  authored it knowing A.1 + A.2 were coming; references `LifecycleClass` enum, `lifecycle_class` filter, and the
+  `VmPrefixSpec` annotation explicitly).
+- `/codex/05-infrastructure/replay-subsystem.md` (line 90) + `/codex/05-infrastructure/live-pipeline-architecture.md`
   (line 128) reference `VM_PREFIX_TO_BUCKET` as a registry without describing its shape — no contradiction with the A.2
   typed-spec change. Minor follow-up to mention `lifecycle_class` tagging once the referenced prefixes (`replay-`,
   `mtds-live-`, `mdps-features-live-`, `features-xc-`) are actually added to the dict — out of A.2 scope.

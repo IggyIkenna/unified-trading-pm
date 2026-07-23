@@ -6,7 +6,7 @@ owner: agent
 locked_by: live-defi-rollout
 locked_since: 2026-04-20
 depends_on:
-  - codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md §3.1
+  - /codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md §3.1
   - refactor_g1_6_derivation_engine_ship_to_strategy_service_availability_2026_04_20.plan.md
   - refactor_g3_2_pricing_numbers_from_finance_2026_04_20.plan.md
   - refactor_g2_2_per_client_api_key_issuance_2026_04_20.plan.md
@@ -40,19 +40,19 @@ populated numbers from `commercial-model/pricing-building-blocks.md` (once G3.2 
 
 - **Upstream:** G1.6 derivation engine (`cost()`), G3.2 populated numbers, G2.2 API-key scope enum
 - **Wave G3-β dependencies:** G2-α + G2-β + G3.2 all shipped
-- **Codex:** `codex/14-playbooks/commercial-model/pricing-building-blocks.md`,
-  `codex/14-playbooks/infra-spec/stage-3c-derivation-engine.md` §5
+- **Codex:** `/codex/14-playbooks/commercial-model/pricing-building-blocks.md`,
+  `/codex/14-playbooks/infra-spec/stage-3c-derivation-engine.md` §5
 - **Billing service:** will reconcile against this endpoint (separate plan, out of scope here)
 
 ## Mandatory read-set
 
-1. `codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md` §3.1
-2. `codex/14-playbooks/infra-spec/stage-3c-derivation-engine.md` §5 (pricing sub-package layout)
+1. `/codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md` §3.1
+2. `/codex/14-playbooks/infra-spec/stage-3c-derivation-engine.md` §5 (pricing sub-package layout)
 3. `refactor_g1_6_derivation_engine_ship_to_strategy_service_availability_2026_04_20.plan.md`
 4. `refactor_g3_2_pricing_numbers_from_finance_2026_04_20.plan.md`
 5. `refactor_g2_2_per_client_api_key_issuance_2026_04_20.plan.md`
-6. `codex/14-playbooks/commercial-model/pricing-building-blocks.md`
-7. `codex/14-playbooks/_ssot-rules/08-internal-cost-leakage.md`
+6. `/codex/14-playbooks/commercial-model/pricing-building-blocks.md`
+7. `/codex/14-playbooks/_ssot-rules/08-internal-cost-leakage.md`
 8. `strategy-service/strategy_service/availability/` — Phase 10.5 infrastructure
 9. `unified-api-contracts/unified_api_contracts/internal/architecture_v2/derivation.py` — `cost()` formula
 
@@ -74,7 +74,7 @@ numbers. Both paths flow through the same HTTP contract. Playwright asserts iden
 
 - [ ] [AGENT] P0. Create `strategy-service/strategy_service/availability/pricing/__init__.py` + `registry.py` +
       `loader.py`.
-- [ ] [AGENT] P0. `loader.py` — reads `codex/14-playbooks/commercial-model/pricing-building-blocks.md` + parses the
+- [ ] [AGENT] P0. `loader.py` — reads `/codex/14-playbooks/commercial-model/pricing-building-blocks.md` + parses the
       13-row × 3-col table into `PricingRegistry`.
 - [ ] [AGENT] P0. Inject `PricingRegistry` into `cost()` calls (UAC `cost()` accepts `pricing_registry` kwarg; this
       wires it up server-side).
@@ -95,7 +95,7 @@ numbers. Both paths flow through the same HTTP contract. Playwright asserts iden
 
 ### Phase D — Codex + admin stub
 
-- [ ] [AGENT] P0. Codex doc `codex/06-coding-standards/pricing-engine-endpoint.md` — describes HTTP contract + scope
+- [ ] [AGENT] P0. Codex doc `/codex/06-coding-standards/pricing-engine-endpoint.md` — describes HTTP contract + scope
       requirement.
 - [ ] [AGENT] P0. Admin UI stub at `/admin/pricing/quote-builder/page.tsx` — shape-only form + endpoint call (full
       polish post G3.2 number population).
@@ -116,7 +116,7 @@ numbers. Both paths flow through the same HTTP contract. Playwright asserts iden
 - `strategy-service/strategy_service/api/pricing_router.py` — NEW
 - `strategy-service/tests/api/test_pricing_router.py` — NEW
 - `strategy-service/strategy_service/api/main.py` — MODIFY (register router)
-- `codex/06-coding-standards/pricing-engine-endpoint.md` — NEW
+- `/codex/06-coding-standards/pricing-engine-endpoint.md` — NEW
 - `unified-trading-system-ui/app/admin/pricing/quote-builder/page.tsx` — NEW (stub)
 - `unified-trading-system-ui/tests/e2e/playbooks/refactor/refactor-g3-1-pricing-engine.spec.ts` — NEW
 
@@ -183,7 +183,7 @@ git -C unified-trading-system-ui checkout live-defi-rollout && git -C unified-tr
 # Verify upstream gates
 ls unified-api-contracts/unified_api_contracts/internal/architecture_v2/derivation.py  # G1.6
 ls unified-api-contracts/unified_api_contracts/internal/architecture_v2/api_keys.py 2>/dev/null || echo "G2.2 NOT SHIPPED"
-grep -q "# populated" codex/14-playbooks/commercial-model/pricing-building-blocks.md 2>/dev/null || echo "G3.2 NOT SHIPPED (ship with TODO sentinels for now)"
+grep -q "# populated" /codex/14-playbooks/commercial-model/pricing-building-blocks.md 2>/dev/null || echo "G3.2 NOT SHIPPED (ship with TODO sentinels for now)"
 ```
 
 All must exist. STOP if G1.6 missing. G2.2 + G3.2 are hard gates.

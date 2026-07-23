@@ -21,7 +21,11 @@ stage: [strategy, meta]
 repos: [batch-live-reconciliation-service, deployment-service]
 scope: [engineer, admin]
 tags: [gcs, recon, batch-live-reconciliation, cloud-run, silent-failure, data-pipeline-correctness]
-related: [gcs_bucket_estate_cleanup_2026_07_10.md, terraform_bucket_estate_drift_resurrection_2026_07_13.md]
+related:
+  [
+    /plans/archive/2026_07/gcs_bucket_estate_cleanup_2026_07_10.md,
+    /plans/archive/issues/terraform_bucket_estate_drift_resurrection_2026_07_13.md,
+  ]
 created: "2026-07-13"
 parent_epic: infrastructure_master
 priority: P0
@@ -90,7 +94,7 @@ rather than waiting on the LDR→staging→main promotion chain. **Verified with
 — real, live proof (a) is genuinely closed.
 
 **(b) The upstream `t1-recon/{ml,strategy}` producer chain — traced concretely, not guessed.** Cross-referenced
-`codex/08-workflows/t1-batch-dag.md` (the SSOT) against LIVE Cloud Scheduler + Cloud Run Job state:
+`/codex/08-workflows/t1-batch-dag.md` (the SSOT) against LIVE Cloud Scheduler + Cloud Run Job state:
 
 - **execution-service config-snapshot** (00:30 UTC, feeds Stage 0's `configs/snapshots/{date}/config.json` check):
   scheduler `uts-prod-execution-config-snapshot-t1-schedule` is `ENABLED` and fires daily, but its target Cloud Run Job

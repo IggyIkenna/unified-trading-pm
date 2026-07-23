@@ -28,12 +28,12 @@ related:
     plans/active/sports_arb_decay_window_and_alpha_gate_design_2026_07_21.md,
     plans/active/sports_odds_feature_naming_canonicalization_2026_07_21.md,
     plans/active/master_to_live_defi_2026_05_23.md,
-    codex/04-architecture/batch-live-architecture.md,
-    codex/04-architecture/sports-batch-live.md,
-    codex/04-architecture/sports-live-odds-connectivity.md,
-    codex/04-architecture/prediction-batch-live.md,
-    codex/04-architecture/promote-workflow-architecture.md,
-    codex/04-architecture/backtest-groups.md,
+    /codex/04-architecture/batch-live-architecture.md,
+    /codex/04-architecture/sports-batch-live.md,
+    /codex/04-architecture/sports-live-odds-connectivity.md,
+    /codex/04-architecture/prediction-batch-live.md,
+    /codex/04-architecture/promote-workflow-architecture.md,
+    /codex/04-architecture/backtest-groups.md,
     plans/active/sports_consolidated_closeout_2026_07_19.md,
   ]
 created: "2026-07-21"
@@ -90,19 +90,19 @@ checklist, not a fresh investigation.
 ## The structural blocker this plan does NOT try to solve
 
 Unlike cefi/defi (which had a real live venue feed to wire up), **sports has no in-play live odds source integrated
-today** — confirmed in `codex/04-architecture/sports-batch-live.md` §1: every current sports source
+today** — confirmed in `/codex/04-architecture/sports-batch-live.md` §1: every current sports source
 (`api_football`/`footystats`/`odds_api`/`understat`/`soccer_football_info`/`transfermarkt`/`open_meteo`) is
 `{BATCH, REPLAY}`-only in UAC's `SOURCE_MODE_CAPABILITY`; "a `live_<source>` capability lands only when a sports in-play
 live archetype exists — the capability matrix is the gate, not an aspiration." The one live-ish path that DOES exist —
-The Odds API aggregator (`codex/04-architecture/sports-live-odds-connectivity.md`, REST poll, near-real-time) — is not
+The Odds API aggregator (`/codex/04-architecture/sports-live-odds-connectivity.md`, REST poll, near-real-time) — is not
 yet declared as a `live_odds_api` capability or wired into an MTDS live-mode ingestion loop; MTDS itself is
 architecturally a **download/batch service, with no live streaming mode**, per
-`codex/04-architecture/batch-live-architecture.md` §4's service audit matrix. Wiring a live MTDS ingestion path for
+`/codex/04-architecture/batch-live-architecture.md` §4's service audit matrix. Wiring a live MTDS ingestion path for
 sports odds is real, separate infrastructure work — this plan names it as a prerequisite (Todo 1) rather than designing
 it, since it's its own scoped effort once an operator decides to pursue it.
 
 Prediction's live-odds/CLOB connectivity (Polymarket/Kalshi) is a separate question, out of this plan's immediate scope
-(`codex/04-architecture/prediction-batch-live.md` describes the CLOB matching-engine seam architecturally, but
+(`/codex/04-architecture/prediction-batch-live.md` describes the CLOB matching-engine seam architecturally, but
 prediction hasn't reached "ML pipeline running" yet per the ladder above — activation readiness there is further out
 than sports').
 
@@ -124,9 +124,9 @@ parity, D Coverage & shard, E Operability, F Trading prerequisites, G Operator U
    service-audit matrix — FSS needs its live handler built for sports before this layer can activate. Depends on
    MTDS/MDPS above landing first (features can't compute live signals from data that isn't arriving live).
 4. **Strategy/execution layer** — the CLI-primary promote workflow
-   (`codex/04-architecture/promote-workflow-architecture.md`) already exists and is asset-group-agnostic: `run-paper.sh`
-   → `preflight-cutover.sh` → `launch-strategy-paper-vm.sh` (paper), then after ≥7 days passing, `run-live.sh` →
-   `launch-strategy-live-vm.sh` (live), state-machined via
+   (`/codex/04-architecture/promote-workflow-architecture.md`) already exists and is asset-group-agnostic:
+   `run-paper.sh` → `preflight-cutover.sh` → `launch-strategy-paper-vm.sh` (paper), then after ≥7 days passing,
+   `run-live.sh` → `launch-strategy-live-vm.sh` (live), state-machined via
    `StrategyMaturityPhase: IDEATION → CANDIDATE → PAPER_1D → LIVE_EARLY`. This layer is REUSABLE once a sports archetype
    has a real `CANDIDATE`-phase backtest pass (gated on the Group-B/Group-C prerequisites below) — no new
    promote-workflow engineering needed here, just running the existing CLI chain for a sports archetype.
@@ -183,9 +183,9 @@ Per the SSOT-direction rule, these stay owned by their existing docs — this pl
 
 ## Codex SSOTs
 
-`codex/04-architecture/batch-live-architecture.md`, `codex/04-architecture/sports-batch-live.md`,
-`codex/04-architecture/sports-live-odds-connectivity.md`, `codex/04-architecture/prediction-batch-live.md`,
-`codex/04-architecture/promote-workflow-architecture.md`, `codex/04-architecture/backtest-groups.md`.
+`/codex/04-architecture/batch-live-architecture.md`, `/codex/04-architecture/sports-batch-live.md`,
+`/codex/04-architecture/sports-live-odds-connectivity.md`, `/codex/04-architecture/prediction-batch-live.md`,
+`/codex/04-architecture/promote-workflow-architecture.md`, `/codex/04-architecture/backtest-groups.md`.
 
 ## Progress Log
 

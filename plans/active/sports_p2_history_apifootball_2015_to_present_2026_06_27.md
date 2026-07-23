@@ -116,10 +116,10 @@ drift_direction: advance-code
 
 ## Codex SSOTs
 
-- `codex/02-data/honest-absence-downstream-handling.md` — coverage clips, season calendar, typed `EXPECTED_*`
-- `codex/02-data/availability-manifest-and-data-status.md` — `expected_unattempted` writer-materialised; single-walk
+- `/codex/02-data/honest-absence-downstream-handling.md` — coverage clips, season calendar, typed `EXPECTED_*`
+- `/codex/02-data/availability-manifest-and-data-status.md` — `expected_unattempted` writer-materialised; single-walk
   discipline
-- `codex/02-data/sports-gcs-path-ssot.md` — `candidate_parquet_paths()` + layouts
+- `/codex/02-data/sports-gcs-path-ssot.md` — `candidate_parquet_paths()` + layouts
 
 ## Todos
 
@@ -385,7 +385,7 @@ drift_direction: advance-code
       ODDS eu=89,073 is IMPOSSIBLE, not fetchable — do NOT fetch it).** The `api_football … ODDS eu=89,073` slice above
       is counted as a real gap "awaiting P2a enrichment coordinator". It is not: **api_football has no odds path in
       instruments-service** — the adapter's `get_odds()` is a deprecated stub that logs "use
-      `get_fixture_odds_snapshot()` instead" (`codex/02-data/sports-data-source-coverage-matrix.md` §4). No fetch, no
+      `get_fixture_odds_snapshot()` instead" (`/codex/02-data/sports-data-source-coverage-matrix.md` §4). No fetch, no
       fleet, and no credit spend can ever move these cells; ODDS is **footystats**-owned in IS (operator ruling
       2026-06-27, #6 REVERSED). The league counts are the tell: footystats ODDS spans 46 leagues (the codex footystats
       denominator); these rows span **94** — the api_football league universe cross-producted against a data_type

@@ -8,10 +8,10 @@ audience: backend engineers, frontend engineers
 parent_reference: market_data_delivery_architecture_2026_04_27.md
 sibling_plan: price_chart_gcs_delivery_2026_04_29.plan.md
 codex_refs:
-  - codex/02-data/availability-manifest-and-data-status.md
-  - codex/02-data/per-category-bucket-layouts.md
-  - codex/02-data/subscription-model.md
-  - codex/02-data/data-status-drilldown.md
+  - /codex/02-data/availability-manifest-and-data-status.md
+  - /codex/02-data/per-category-bucket-layouts.md
+  - /codex/02-data/subscription-model.md
+  - /codex/02-data/data-status-drilldown.md
 prior_audit: plans/ai/audit_instruments_gcs_2026_04_25.md
 working_branch: feat/price-chart-gcs-delivery
 ---
@@ -742,13 +742,13 @@ Schema-mapping checks:
 | `name`             | `raw_symbol` for now              | No display-name column in schema. Acceptable.                                                                                      |
 | `venue`            | `venue`                           | ✓                                                                                                                                  |
 | `category`         | derived from `asset_group`        | UI uses "CeFi"/"TradFi"/"DeFi"/"Other"; backend has `asset_group=cefi/tradfi/defi`. Add a small mapping.                           |
-| `instrumentKey`    | `instrument_key`                  | snake↔camel conversion; one place to do it.                                                                                       |
+| `instrumentKey`    | `instrument_key`                  | snake↔camel conversion; one place to do it.                                                                                        |
 | `midPrice`         | (from `tickers`, not instruments) | UI joins on `tickers` already. Keep that.                                                                                          |
 | `change`           | (from `tickers`, not instruments) | Same.                                                                                                                              |
 
-**Decide once**: do snake↔camel conversion in the backend projection (so the frontend keeps its current camelCase
-shape) or in the frontend mapping (so the backend matches the parquet column names verbatim). Backend projection is
-cleaner — a single boundary, frontend stays unchanged. **Pick backend projection.**
+**Decide once**: do snake↔camel conversion in the backend projection (so the frontend keeps its current camelCase shape)
+or in the frontend mapping (so the backend matches the parquet column names verbatim). Backend projection is cleaner — a
+single boundary, frontend stays unchanged. **Pick backend projection.**
 
 **Critical UX fix**: when API returns `[]` in real mode, the watchlist must show an empty state with "no instruments
 available — check data status" copy, not silently fall back to `DEFAULT_INSTRUMENTS`. Today's fallback masks real

@@ -7,7 +7,7 @@ locked_by: live-defi-rollout
 locked_since: 2026-04-20
 amended: 2026-04-22
 depends_on:
-  - codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md §2.1
+  - /codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md §2.1
   - refactor_g2_6_staging_firebase_provisioning_2026_04_20.plan.md
   - plans/active/user_management_merge_2026_03_23.plan.md (folded)
   - plans/active/ui_unification_v2_sanitisation_2026_04_20.plan.md Phase 6 (user-management-ui fold-in — ARCHIVED
@@ -61,8 +61,8 @@ the lookup for localhost).
 
 ## Mandatory read-set
 
-1. `codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md` §2.1
-2. `codex/14-playbooks/_ssot-rules/12-service-family-scope-rules.md` + `.yaml` (G1.11)
+1. `/codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md` §2.1
+2. `/codex/14-playbooks/_ssot-rules/12-service-family-scope-rules.md` + `.yaml` (G1.11)
 3. `plans/active/user_management_merge_2026_03_23.plan.md` — full, for JWT-shaping context being folded
 4. `unified-api-contracts/unified_api_contracts/internal/architecture_v2/derivation.py` — `UserContext` dataclass
 5. `unified-api-contracts/unified_api_contracts/internal/architecture_v2/service_family_scope.py` (G1.11)
@@ -107,7 +107,7 @@ Playwright spec uses the same `UserContext` assertion shape across both environm
 
 - [ ] [AGENT] P0. `unified-api-contracts/tests/internal/unit/test_jwt_claims.py` — ≥12 cases: valid claim sets for each
       audience × service_family combination, missing-field rejection, malformed-enum rejection, optional-field handling.
-- [ ] [AGENT] P0. Codex doc `codex/06-coding-standards/jwt-claims-contract.md` — describes the claim shape + consumer
+- [ ] [AGENT] P0. Codex doc `/codex/06-coding-standards/jwt-claims-contract.md` — describes the claim shape + consumer
       pattern + mock-vs-real axis split.
 
 ### Phase C — admin claim emission (in unified-trading-system-ui `(ops)/admin/*` post-fold)
@@ -142,7 +142,7 @@ Playwright spec uses the same `UserContext` assertion shape across both environm
 - `unified-api-contracts/unified_api_contracts/internal/architecture_v2/jwt_claims.py` — NEW
 - `unified-api-contracts/unified_api_contracts/auth.py` — NEW facade (or extend existing)
 - `unified-api-contracts/tests/internal/unit/test_jwt_claims.py` — NEW
-- `codex/06-coding-standards/jwt-claims-contract.md` — NEW
+- `/codex/06-coding-standards/jwt-claims-contract.md` — NEW
 - `unified-trading-system-ui/server/admin/firebase-admin.ts` — MODIFY (add setCustomUserClaims helpers)
 - `unified-trading-system-ui/app/(ops)/admin/users/[uid]/claims/page.tsx` — NEW
 - `unified-trading-system-ui/scripts/admin/backfill_jwt_claims.ts` — NEW

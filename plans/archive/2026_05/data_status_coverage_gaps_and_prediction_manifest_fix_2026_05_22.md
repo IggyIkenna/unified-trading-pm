@@ -28,15 +28,15 @@ broken as a downstream symptom of the IS manifest bug).
 
 ### Codex SSOTs
 
-- [`codex/02-data/prediction-schema-paths.md`](../../codex/02-data/prediction-schema-paths.md) — target shard atom for
+- [`/codex/02-data/prediction-schema-paths.md`](/codex/02-data/prediction-schema-paths.md) — target shard atom for
   prediction; currently says "Active migration" pointing to archived Plan A. **This plan resumes Plan A's IS half.**
   Update `last_reviewed` + remove stale "Active migration" pointer once Phase 3 ships.
-- [`codex/02-data/data-status-drilldown-hierarchy.md`](../../codex/02-data/data-status-drilldown-hierarchy.md) —
-  declares IS prediction drilldown: `venue → canonical_question_group → data_type → date`. Currently violated by IS
-  writing `data_type=BTC/ETH/etc.`. Update nothing until Phase 3 ships (doc is already correct — IS is the laggard).
-- [`codex/02-data/availability-manifest-and-data-status.md`](../../codex/02-data/availability-manifest-and-data-status.md)
-  — shard-atom matrix; prediction row must match once Phase 3 ships.
-- [`codex/02-data/sports-data-source-coverage-matrix.md`](../../codex/02-data/sports-data-source-coverage-matrix.md) —
+- [`/codex/02-data/data-status-drilldown-hierarchy.md`](/codex/02-data/data-status-drilldown-hierarchy.md) — declares IS
+  prediction drilldown: `venue → canonical_question_group → data_type → date`. Currently violated by IS writing
+  `data_type=BTC/ETH/etc.`. Update nothing until Phase 3 ships (doc is already correct — IS is the laggard).
+- [`/codex/02-data/availability-manifest-and-data-status.md`](/codex/02-data/availability-manifest-and-data-status.md) —
+  shard-atom matrix; prediction row must match once Phase 3 ships.
+- [`/codex/02-data/sports-data-source-coverage-matrix.md`](/codex/02-data/sports-data-source-coverage-matrix.md) —
   sports source windows (api_football 2018-01-01, footystats 2019-01-01); `KNOWN_COVERAGE_GAPS = {}` (empty). Phase 2
   gaps are confirmed not UAC issues.
 
@@ -58,7 +58,7 @@ underlying = ""                                     ← blank — should hold BT
 capture_status = None (3,145 rows) / captured (795) ← majority never finalised
 ```
 
-Target per UAC `CanonicalQuestionGroup` and `codex/02-data/data-status-drilldown-hierarchy.md`:
+Target per UAC `CanonicalQuestionGroup` and `/codex/02-data/data-status-drilldown-hierarchy.md`:
 
 ```
 data_type = prediction_canonical_question_group     ← literal string, one value
@@ -167,7 +167,7 @@ the same hierarchy level — "worst of both worlds": no question-group → under
 
 ### Phase 3 — IS Prediction manifest structural fix (P0, main work)
 
-> Resumes archived Plan A IS half. Codex SSOT: `codex/02-data/prediction-schema-paths.md` (already describes target
+> Resumes archived Plan A IS half. Codex SSOT: `/codex/02-data/prediction-schema-paths.md` (already describes target
 > state).
 
 #### 3.1 — Fix IS prediction writer (code)
@@ -256,11 +256,11 @@ the same hierarchy level — "worst of both worlds": no question-group → under
 
 ### Phase 4 — Codex alignment (P1)
 
-- [x] ✅ [DOC] P1. **Update `codex/02-data/prediction-schema-paths.md`**: replaced "Active migration" pointer with "IS
+- [x] ✅ [DOC] P1. **Update `/codex/02-data/prediction-schema-paths.md`**: replaced "Active migration" pointer with "IS
       migration complete (2026-05-22)" section documenting what shipped. last_reviewed updated to 2026-05-22. —
       unified-trading-pm@69b3689ae.
 
-- [x] ✅ [DOC] P1. **Update `codex/02-data/sports-data-source-coverage-matrix.md`**: confirmed KNOWN_COVERAGE_GAPS={}
+- [x] ✅ [DOC] P1. **Update `/codex/02-data/sports-data-source-coverage-matrix.md`**: confirmed KNOWN_COVERAGE_GAPS={}
       still accurate. Added 2026-05-22 diagnostic note confirming gaps are unfetched data (not UAC gaps) with fills
       launched. — unified-trading-pm@69b3689ae.
 

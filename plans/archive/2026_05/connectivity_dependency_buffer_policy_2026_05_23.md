@@ -6,29 +6,31 @@ status: complete
 nature: record
 asset_group: [infrastructure]
 stage: [meta]
-repos: [agent-orchestrator, alerting-service, deployment-service, execution-service, strategy-service, unified-api-contracts]
+repos:
+  [agent-orchestrator, alerting-service, deployment-service, execution-service, strategy-service, unified-api-contracts]
 scope: [engineer, admin]
 tags: []
 related: [independent_fallback_twilio_voice_2026_05_23.md]
-created: '2026-05-23'
+created: "2026-05-23"
 parent_epic: observability_master
 assigned_vm: vm-cross-cutting
 priority: P0
 estimate_class: design
 estimate_baseline_ai_days: 8
 estimate_calibrated_ai_days: 4.8
-estimate_calibration_note: 'Design class — closed-set 5-class taxonomy + per-dependency YAML policy + expected_time+buffer escalation rule.
+estimate_calibration_note: "Design class — closed-set 5-class taxonomy + per-dependency YAML policy +
+  expected_time+buffer escalation rule.
 
   Baseline 8 × 0.6 design = 4.8 cal-days. Implementation is straightforward; the design judgement is on per-dep
 
   values (operator-tuned).
 
-  '
+  "
 parent: master_to_live_defi_2026_05_23
 locked_by: live-defi-rollout
 locked_since: 2026-05-23
 depends_on: [incident_gateway_and_state_machine_2026_05_23]
-gates: ['master_to_live_defi_2026_05_23:Group-F']
+gates: ["master_to_live_defi_2026_05_23:Group-F"]
 ---
 
 # Connectivity + Dependency Buffer Policy
@@ -141,8 +143,8 @@ Codify every internal + external dependency under a closed-set 5-class taxonomy.
 
 ## Codex SSOT updates
 
-- NEW: `codex/04-architecture/dependency-health-policy.md` — 5-class taxonomy + YAML schema + escalation rule.
-- UPDATE: `codex/05-infrastructure/disaster-recovery.md` — point at new YAML registry.
+- NEW: `/codex/04-architecture/dependency-health-policy.md` — 5-class taxonomy + YAML schema + escalation rule.
+- UPDATE: `/codex/05-infrastructure/disaster-recovery.md` — point at new YAML registry.
 
 ## Tier-1-4 implementation log (2026-05-23)
 
@@ -208,7 +210,7 @@ _(No Tier-5 items in this plan's scope.)_
 
 - Operator ping doc → `plans/active/_agent_pings.md` 2026-05-23 ikenna-slot-1 → operator entry
 - 22 incident runbooks → `codex/15-runbooks/incidents/` (RB-INC/RECON/RISK/CONN/DEPLOY/INFRA/ALERT)
-- Game-day protocol → `codex/15-runbooks/incidents/game_day_protocol.md`
+- Game-day protocol → `/codex/15-runbooks/incidents/game_day_protocol.md`
 - Alerting Tier-5 → `alerting-service@e5c8084` (5 new gateway/notifier modules)
 - Strategy Tier-5 → `strategy-service@3b0f7397` (2 configs + close-all + helper)
 - Execution Tier-5 → `execution-service@a6fa7c501` (recovery_event_helper)

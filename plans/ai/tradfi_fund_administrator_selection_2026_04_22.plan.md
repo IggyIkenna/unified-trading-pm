@@ -50,7 +50,7 @@ regulatory jurisdiction) means we can't co-locate integrations.
   - Others at operator's discretion.
 - [ ] RFP / discovery calls. Capture: fee model, minimum AUM, supported jurisdictions, API / file-drop integration
       modes, SLA, reference clients.
-- [ ] Decision note in `codex/14-playbooks/commercial-model/tradfi-fund-administrator-selection.md` (internal-only)
+- [ ] Decision note in `/codex/14-playbooks/commercial-model/tradfi-fund-administrator-selection.md` (internal-only)
       recording selection + rationale.
 
 ## Stage 2 — integration scoping

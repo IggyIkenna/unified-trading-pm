@@ -505,13 +505,14 @@ proven (June snapshot-grid artifact, not policy). Zero mutations; scratch data d
       down `FEATURE_HORIZONS["HT"]` to the pre-match T-0 bucket. The slot stays declared in
       `MODEL_HORIZONS`/`FEATURE_HORIZONS`, so the OR-5b(c) B-REFINED in-play population (or the odds-api in-play capture
       leg) populates it with **no contract change**. Ruling applied: honest absence over a mislabelled row
-      (`codex/02-data/honest-absence-downstream-handling.md`). **Verified on real data, not just unit tests**: the claim
-      that HT is fed by the bug is CONFIRMED — shipped HT rows on day=2020-06-07 sit at `minutes_to_kickoff = -18.2`
-      (post-kickoff, i.e. the leak), and on day=2020-06-09 HT resolved to a **T-10m** price (+10.0) — already
-      mislabelled TODAY, before any fix. Evidence: 4 new regression tests (`TestHTHorizonHonestAbsence`) + a live batch
-      run logging `Horizon HT: no snapshot captured at this horizon —     emitting nothing (honest absence)`; QG green
-      (17,611 passed, 209 skipped). Original finding text retained: **The features `HT` model horizon loses its odds
-      source when the leak is fixed — it is fed BY the bug.** `MODEL_HORIZONS = ["T-24h","T-1h","T-10m","HT"]` and
+      (`/codex/02-data/honest-absence-downstream-handling.md`). **Verified on real data, not just unit tests**: the
+      claim that HT is fed by the bug is CONFIRMED — shipped HT rows on day=2020-06-07 sit at
+      `minutes_to_kickoff = -18.2` (post-kickoff, i.e. the leak), and on day=2020-06-09 HT resolved to a **T-10m** price
+      (+10.0) — already mislabelled TODAY, before any fix. Evidence: 4 new regression tests
+      (`TestHTHorizonHonestAbsence`) + a live batch run logging
+      `Horizon HT: no snapshot captured at this horizon —     emitting nothing (honest absence)`; QG green (17,611
+      passed, 209 skipped). Original finding text retained: **The features `HT` model horizon loses its odds source when
+      the leak is fixed — it is fed BY the bug.** `MODEL_HORIZONS = ["T-24h","T-1h","T-10m","HT"]` and
       `FEATURE_HORIZONS["HT"]` ends `[…, "T-0", "HT"]`; MDPS never emits `horizon_name="HT"`, so `_find_best_snapshot`
       falls back to the **MDPS T-0 bucket** (verified by running the real code). T-0 was the only bucket carrying `bm<0`
       **because the bug put them there** — so the HT horizon was silently living off the leak. Post-fix,
@@ -1009,7 +1010,7 @@ it would be unchanged by construction. Reporting it as an "after" would be a fal
       so this is no longer data-destroying — but the raw is still carrying a blank column that means "absent", which is
       the exact trap that cost this corpus ~1.1M observations. Either populate `fixture_id` at write time or drop the
       column rather than writing it blank (a blank-but-present column is a placeholder that looks populated —
-      `codex/02-data/honest-absence-downstream-handling.md`). Owner: MTDS (the ODDS_API writer). Measured by the
+      `/codex/02-data/honest-absence-downstream-handling.md`). Owner: MTDS (the ODDS_API writer). Measured by the
       2026-07-17 blast-radius census (2,221 dates, 0 gaps).
 - [ ] [DATA] P1. **Re-calibrate the `verify_ml_readiness.py` 95% non-NULL threshold against the HONEST matrix.** The
       gate now fails 1,683/1,860 dates at ~69-80% non-NULL — **not a regression**: the threshold was calibrated when the
@@ -1045,7 +1046,7 @@ it would be unchanged by construction. Reporting it as an "after" would be a fal
       block log), i.e. the lost cell is ALWAYS the single blank — no genuine fixture is ever dropped. This is **NOT the
       "third starvation mechanism"** the P0 todo warned about (MDPS is now RICH, e.g. 2026-05-17 = 104 fixtures); it is
       the id-set guard refusing to drop a stale collapse-artifact placeholder (a blank-but-present id — itself an
-      honest-absence violation, `codex/02-data/honest-absence-downstream-handling.md`). **Per the guard directive I did
+      honest-absence violation, `/codex/02-data/honest-absence-downstream-handling.md`). **Per the guard directive I did
       NOT bypass/delete/lower it — reported for an operator decision.** Fix options (operator to pick): (A) make the (c)
       guard treat a blank/empty `fixture_id` as ABSENT on BOTH the existing-shard and new-derive sides — mirrors the
       already-shipped MDPS `resolve_fixture_ids` (blank == absent) at `bucket_assignment_adapter.py`; then re-run the

@@ -188,4 +188,4 @@ Not every instrument gets features. Codified in UAC (Plan 3):
   (`closed/label="right"`); Plan 4 extends the guard surface.
 - **Issue `features_delta_one_tradfi_mdps_dependency_gap_2026_06_24.md` (P0)** — Plan 5 closes it.
 - **UAC `mvp_scope.py` v10 + `features_mvp_universe.py`** — Plan 3 builds the most-liquid-spot selector on top.
-- **`codex/05-infrastructure/aws_migration_cost_analysis_2026_05_07.md`** — egress $ inputs for Plan 7's cost model.
+- **`/codex/05-infrastructure/aws_migration_cost_analysis_2026_05_07.md`** — egress $ inputs for Plan 7's cost model.

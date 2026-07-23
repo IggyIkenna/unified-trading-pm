@@ -125,7 +125,7 @@ satisfies every requirement:
 - **Skip-existing pre-flight** → `sports_reference_fixtures.py:390` reads the existing per-`(entity, league, day)`
   parquet, builds the set of already-captured `af_fixture_id`s, and skips them (per-league + per-fixture-within).
 - **Coverage on a league basis** → data-status drill-down hierarchy is `data_type → league_id → date`
-  (`codex/02-data/data-status-drilldown-hierarchy.md:23`); the `_index` carries `league_id` per row → per-league % is
+  (`/codex/02-data/data-status-drilldown-hierarchy.md:23`); the `_index` carries `league_id` per row → per-league % is
   real.
 - **Write path** → orchestrator writes `partition={"entity":…, "league": _canonical_league_id(…)}` (verified
   `sports_reference_core.py`). VERIFIED in GCS: 2018→69, 2020→107, 2023→115, 2025→80 **canonical** `league=` dirs; **0
@@ -342,9 +342,10 @@ materialized.
 
 ## Codex SSOT updates
 
-- `codex/02-data/sports-data-source-coverage-matrix.md` — the curated universe + per-source eligibility + caps.
-- `codex/02-data/availability-manifest-and-data-status.md` — honest-coverage eligibility rules (per-source league caps).
-- New: `codex/02-data/sports-canonical-league-cup-registry.md` — the canonical id/name/season/transfer-window SSOT.
+- `/codex/02-data/sports-data-source-coverage-matrix.md` — the curated universe + per-source eligibility + caps.
+- `/codex/02-data/availability-manifest-and-data-status.md` — honest-coverage eligibility rules (per-source league
+  caps).
+- New: `/codex/02-data/sports-canonical-league-cup-registry.md` — the canonical id/name/season/transfer-window SSOT.
 
 ## Operator verbatim directives (2026-06-24) — preserved in full (do NOT lose nuance to summary)
 

@@ -9,8 +9,8 @@ stage: [meta]
 repos: []
 scope: [engineer, admin]
 tags: []
-related: [master_to_live_defi_2026_05_23.md]
-created: '2026-05-21'
+related: [/plans/active/master_to_live_defi_2026_05_23.md]
+created: "2026-05-21"
 parent_epic: infrastructure_master
 priority: P2
 estimate_class: refactor

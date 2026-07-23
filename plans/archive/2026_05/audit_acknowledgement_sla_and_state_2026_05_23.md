@@ -6,29 +6,36 @@ status: complete
 nature: record
 asset_group: [infrastructure]
 stage: [meta]
-repos: [agent-orchestrator, alerting-service, deployment-service, execution-service, strategy-service, unified-api-contracts]
+repos:
+  [agent-orchestrator, alerting-service, deployment-service, execution-service, strategy-service, unified-api-contracts]
 scope: [engineer, admin]
 tags: []
-related: [incident_gateway_and_state_machine_2026_05_23.md, ai_recovery_audit_signoff_agent_2026_05_23.md, deployment_ui_safety_ops_tab_2026_05_23.md]
-created: '2026-05-23'
+related:
+  [
+    incident_gateway_and_state_machine_2026_05_23.md,
+    ai_recovery_audit_signoff_agent_2026_05_23.md,
+    /plans/archive/2026_05/deployment_ui_safety_ops_tab_2026_05_23.md,
+  ]
+created: "2026-05-23"
 parent_epic: observability_master
 assigned_vm: vm-cross-cutting
 priority: P0
 estimate_class: design
 estimate_baseline_ai_days: 8
 estimate_calibrated_ai_days: 4.8
-estimate_calibration_note: 'Design class — operator-judgment SLA values per severity + escalation ladder + operational-ack-vs-audit-ack
+estimate_calibration_note: "Design class — operator-judgment SLA values per severity + escalation ladder +
+  operational-ack-vs-audit-ack
 
   distinction. Implementation is small (cron-style timer on incident state machine + DART buttons). Baseline 8 × 0.6
 
   design = 4.8 cal-days.
 
-  '
+  "
 parent: master_to_live_defi_2026_05_23
 locked_by: live-defi-rollout
 locked_since: 2026-05-23
 depends_on: [incident_gateway_and_state_machine_2026_05_23, ai_recovery_audit_signoff_agent_2026_05_23]
-gates: ['master_to_live_defi_2026_05_23:Group-F', 'master_to_live_defi_2026_05_23:Group-G']
+gates: ["master_to_live_defi_2026_05_23:Group-F", "master_to_live_defi_2026_05_23:Group-G"]
 ---
 
 # Audit-Acknowledgement SLA + State
@@ -49,7 +56,7 @@ fallback if still unacked. Even APPROVED LLM-signoff verdict requires the human 
 **Existing capability** (verified 2026-05-23):
 
 - DART Active Alerts panel + Ack button (single-button — no distinction).
-- PagerDuty escalation policy doc (`codex/15-runbooks/alerting/pagerduty-escalation-policy.md`).
+- PagerDuty escalation policy doc (`/codex/15-runbooks/alerting/pagerduty-escalation-policy.md`).
 
 **Missing for May-23**:
 
@@ -66,7 +73,7 @@ fallback if still unacked. Even APPROVED LLM-signoff verdict requires the human 
   escalates breaches.
 - TOUCH: `unified-trading-system-ui/components/widgets/alerts/ack-queue-widget.tsx` — surface countdown + secondary
   escalation status.
-- NEW: `codex/15-runbooks/alerting/audit-acknowledgement-flow.md` — operator playbook.
+- NEW: `/codex/15-runbooks/alerting/audit-acknowledgement-flow.md` — operator playbook.
 
 ## Phased execution DAG
 
@@ -151,8 +158,8 @@ fallback if still unacked. Even APPROVED LLM-signoff verdict requires the human 
 
 ## Codex SSOT updates
 
-- NEW: `codex/15-runbooks/alerting/audit-acknowledgement-flow.md` — flow diagram + SLA matrix + escalation ladder.
-- UPDATE: `codex/15-runbooks/alerting/pagerduty-escalation-policy.md` — add the secondary-after + founder-after
+- NEW: `/codex/15-runbooks/alerting/audit-acknowledgement-flow.md` — flow diagram + SLA matrix + escalation ladder.
+- UPDATE: `/codex/15-runbooks/alerting/pagerduty-escalation-policy.md` — add the secondary-after + founder-after
   thresholds per severity.
 
 ## Tier-1-4 implementation log (2026-05-23)
@@ -230,7 +237,7 @@ fallback if still unacked. Even APPROVED LLM-signoff verdict requires the human 
 
 - Operator ping doc → `plans/active/_agent_pings.md` 2026-05-23 ikenna-slot-1 → operator entry
 - 22 incident runbooks → `codex/15-runbooks/incidents/` (RB-INC/RECON/RISK/CONN/DEPLOY/INFRA/ALERT)
-- Game-day protocol → `codex/15-runbooks/incidents/game_day_protocol.md`
+- Game-day protocol → `/codex/15-runbooks/incidents/game_day_protocol.md`
 - Alerting Tier-5 → `alerting-service@e5c8084` (5 new gateway/notifier modules)
 - Strategy Tier-5 → `strategy-service@3b0f7397` (2 configs + close-all + helper)
 - Execution Tier-5 → `execution-service@a6fa7c501` (recovery_event_helper)

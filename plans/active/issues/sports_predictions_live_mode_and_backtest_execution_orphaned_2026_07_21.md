@@ -96,7 +96,7 @@ post-May-23 / not on the critical path, P3 is appropriate — the goal is visibi
       redundant tech debt, not a real gap — no code shipped, none needed. (repo: features-service)
 - [x] ✅ [SCRIPT] P3. ~~Run a strategy-service backtest for sports/predictions archetypes through the shipped execution
       matching-engine (L0 Sports TOB matcher)~~ — **investigated: not runnable as scoped, premise mixes up two
-      deliberately-separate systems.** `codex/04-architecture/backtest-groups.md:27-28,117-120` is explicit: **Group B
+      deliberately-separate systems.** `/codex/04-architecture/backtest-groups.md:27-28,117-120` is explicit: **Group B
       (strategy-service) uses benchmark fills — "No matching-engine microstructure; zero execution alpha"**; the
       matching engine (incl. `L0Matcher` — confirmed real,
       `execution-service/execution_service/matching_engine/engine.py:290`, "L0_TOB Matcher for top-of-book-only
@@ -108,24 +108,24 @@ post-May-23 / not on the critical path, P3 is appropriate — the goal is visibi
       ask is not a scoping gap, it's a category error inherited from the archived plans' original phrasing.
 
       Also verified while investigating: the ONLY sports backtest CLI/fixtures that ever existed
-                                              (`scripts/run_sports_arb_backtest.py`, `tests/fixtures/sports_odds/`) were **deleted**
-                                              `strategy-service@fe2e0c7a` ("citadel-grade service remediation... deleted orphaned scripts, legacy dirs"), so
-                                              `docs/BACKTESTS.md`'s documented invocation is dead. `execution-service`'s Group-C CLI
-                                              (`execution_service/cli/backtest_domains.py`) has `run_cefi_backtest`/`run_tradfi_backtest`/`run_defi_backtest`
-                                              but **no `run_sports_backtest`** — a genuine Group-C sports harness doesn't exist either. The
-                                              "arb-decay-window analysis" and "paper-trade alpha gate" have **zero code anywhere** in strategy-service,
-                                              execution-service, or the cited codex docs — grepped `decay_window`/`arb_decay`/`alpha_gate`/`paper_trade_alpha`,
-                                              the only hits are unchecked `- [ ]` todos in archived plans. These are net-new builds, not "run the shipped
-                                              thing" verification.
+                                                                                                                                                              (`scripts/run_sports_arb_backtest.py`, `tests/fixtures/sports_odds/`) were **deleted**
+                                                                                                                                                              `strategy-service@fe2e0c7a` ("citadel-grade service remediation... deleted orphaned scripts, legacy dirs"), so
+                                                                                                                                                              `docs/BACKTESTS.md`'s documented invocation is dead. `execution-service`'s Group-C CLI
+                                                                                                                                                              (`execution_service/cli/backtest_domains.py`) has `run_cefi_backtest`/`run_tradfi_backtest`/`run_defi_backtest`
+                                                                                                                                                              but **no `run_sports_backtest`** — a genuine Group-C sports harness doesn't exist either. The
+                                                                                                                                                              "arb-decay-window analysis" and "paper-trade alpha gate" have **zero code anywhere** in strategy-service,
+                                                                                                                                                              execution-service, or the cited codex docs — grepped `decay_window`/`arb_decay`/`alpha_gate`/`paper_trade_alpha`,
+                                                                                                                                                              the only hits are unchecked `- [ ]` todos in archived plans. These are net-new builds, not "run the shipped
+                                                                                                                                                              thing" verification.
 
-                                              Sports/prediction archetypes DO exist and are exercised (proving the strategy engines themselves work):
-                                              `strategy_service/engine/strategies/v2/archetype_slots_sports.py:20-84` (`SPORTS_ARBITRAGE`,
-                                              `SPORTS_VALUE_BETTING`, `SPORTS_ML`, `SPORTS_HALFTIME_ML`, `SPORTS_MARKET_MAKING`), concrete engines
-                                              `SportsArbDutchingEngine` + `prediction_venue_dispersion.py`, unit-tested (synthetic in-memory data, not a
-                                              file-based dataset) in `tests/unit/engine/strategies/v2/test_sports_arb_dutching.py`.
+                                                                                                                                                              Sports/prediction archetypes DO exist and are exercised (proving the strategy engines themselves work):
+                                                                                                                                                              `strategy_service/engine/strategies/v2/archetype_slots_sports.py:20-84` (`SPORTS_ARBITRAGE`,
+                                                                                                                                                              `SPORTS_VALUE_BETTING`, `SPORTS_ML`, `SPORTS_HALFTIME_ML`, `SPORTS_MARKET_MAKING`), concrete engines
+                                                                                                                                                              `SportsArbDutchingEngine` + `prediction_venue_dispersion.py`, unit-tested (synthetic in-memory data, not a
+                                                                                                                                                              file-based dataset) in `tests/unit/engine/strategies/v2/test_sports_arb_dutching.py`.
 
-                                              Split into 3 correctly-scoped follow-ups below rather than re-filing the same impossible-as-worded ask a 4th
-                                              time. (repo: strategy-service, execution-service)
+                                                                                                                                                              Split into 3 correctly-scoped follow-ups below rather than re-filing the same impossible-as-worded ask a 4th
+                                                                                                                                                              time. (repo: strategy-service, execution-service)
 
 - [x] ✅ [DATA] P3. Restore or recreate a small committed sports/prediction odds fixture dataset (the deleted
       `tests/fixtures/sports_odds/` was VCR-cassette-style local data, no live GCS needed) plus a caller script
@@ -140,44 +140,44 @@ post-May-23 / not on the critical path, P3 is appropriate — the goal is visibi
       full `V2EngineOrchestrator` + `BenchmarkFillEngine` path.
 
       **Pivoted archetype mid-task, documented in the script + fixture docstrings**: the original ask targeted
-                                              `ARBITRAGE_PRICE_DISPERSION` (the "sports arb" name), but building the first working version surfaced that
-                                              this archetype's factory-registered engine is `ArbitragePriceDispersionEngine` (CEFI cross-venue price
-                                              dispersion) — `SportsArbDutchingEngine` (the real sports-odds dutching engine) shares the same
-                                              `StrategyArchetype` enum value but is NOT in `strategy_service.engine.strategies.v2.factory`'s dispatch
-                                              table, so a "sports arb" instance silently gets the wrong engine (verified directly: registered instance's
-                                              engine type resolved to `ArbitragePriceDispersionEngine`, fed a real odds book, returned `[]` every tick).
-                                              That's a genuine, separate wiring bug — filed as
-                                              `plans/active/issues/sports_arb_dutching_engine_not_wired_to_factory_2026_07_21.md` rather than absorbed here
-                                              or worked around silently. This script/fixture instead targets `ML_DIRECTIONAL_EVENT_SETTLED`
-                                              (`SPORTS_VALUE_BETTING`), which IS correctly wired — it genuinely proves the sports Group-B pipeline works
-                                              end-to-end, which was the actual point of this todo.
+                                                                                                                                                              `ARBITRAGE_PRICE_DISPERSION` (the "sports arb" name), but building the first working version surfaced that
+                                                                                                                                                              this archetype's factory-registered engine is `ArbitragePriceDispersionEngine` (CEFI cross-venue price
+                                                                                                                                                              dispersion) — `SportsArbDutchingEngine` (the real sports-odds dutching engine) shares the same
+                                                                                                                                                              `StrategyArchetype` enum value but is NOT in `strategy_service.engine.strategies.v2.factory`'s dispatch
+                                                                                                                                                              table, so a "sports arb" instance silently gets the wrong engine (verified directly: registered instance's
+                                                                                                                                                              engine type resolved to `ArbitragePriceDispersionEngine`, fed a real odds book, returned `[]` every tick).
+                                                                                                                                                              That's a genuine, separate wiring bug — filed as
+                                                                                                                                                              `plans/active/issues/sports_arb_dutching_engine_not_wired_to_factory_2026_07_21.md` rather than absorbed here
+                                                                                                                                                              or worked around silently. This script/fixture instead targets `ML_DIRECTIONAL_EVENT_SETTLED`
+                                                                                                                                                              (`SPORTS_VALUE_BETTING`), which IS correctly wired — it genuinely proves the sports Group-B pipeline works
+                                                                                                                                                              end-to-end, which was the actual point of this todo.
 
 - [x] ✅ [DESIGN] P3. ~~Decide whether sports/predictions actually needs a Group-C execution-alpha harness~~ —
       **decision: YES, genuinely needed (not a category error like the sibling Group-B/C conflation todo above) — scoped
       as its own plan, not built now.** Investigated the actual code before deciding:
 
       - `L0Matcher` (`execution-service/execution_service/matching_engine/engine.py:290`) already dispatches
-                                                `BookmakerCategory`/`"BET"` sources to `BookType.L0_TOB` (`engine.py:813`) — the realistic-microstructure matcher
-                                                Group C needs (fill-or-reject at TOB when size exceeds available depth) is already generically wired for sports;
-                                                the missing piece is purely a `run_sports_backtest` CLI entrypoint analogous to the 3 existing domain runners
-                                                (`run_cefi_backtest`/`run_tradfi_backtest`/`run_defi_backtest`, all thin wrappers around the same
-                                                `BacktestEngine`) — this is a much smaller build than the sibling items on this list, not a from-scratch harness.
-                                              - **Adjacent finding, not fixed here**: `SportsMatchingEngine`
-                                                (`execution_service/matching_engine/sports_matching.py`) is a SECOND, unused sports matcher — docstring claims
-                                                "Used by execution-service in BATCH mode for backtesting sports strategies" but it has **zero callers anywhere**
-                                                (grepped `SportsMatchingEngine` across `execution_service/` + `tests/` — only its own definition + the
-                                                `matching_engine/__init__.py` export hit). It also always fills at requested odds (no queue-position/rejection
-                                                model), which is Group-B benchmark-fill behavior, not Group-C microstructure — so even if it were wired up it
-                                                wouldn't satisfy the Group-C contract `L0Matcher` already does. Left as-is (not deleted) since removing
-                                                plausibly-intentional code isn't a "small+clear" adjacent fix; flagged as an open question in the new plan below
-                                                for whoever implements the harness to resolve (delete as dead code, or explain why it exists alongside
-                                                `L0Matcher`).
-                                              - Authored `plans/active/sports_group_c_execution_backtest_harness_2026_07_21.md` (`assigned_vm: NA`, human plan,
-                                                not AO-dispatched — small enough to not need the design-only/spec-first gate the sibling arb-decay-window todo
-                                                needed, since the matcher + CLI pattern to copy already exist) scoping the `run_sports_backtest` CLI + a fixture
-                                                wired to `SPORTS`/`PREDICTION` asset groups, reusing the Group-B fixture dataset shipped in
-                                                `strategy-service@9a7de7f8` as the data source. Sits for operator review; flips to dispatch-ready if/when
-                                                approved. (repo: execution-service)
+                                                                                                                                                                `BookmakerCategory`/`"BET"` sources to `BookType.L0_TOB` (`engine.py:813`) — the realistic-microstructure matcher
+                                                                                                                                                                Group C needs (fill-or-reject at TOB when size exceeds available depth) is already generically wired for sports;
+                                                                                                                                                                the missing piece is purely a `run_sports_backtest` CLI entrypoint analogous to the 3 existing domain runners
+                                                                                                                                                                (`run_cefi_backtest`/`run_tradfi_backtest`/`run_defi_backtest`, all thin wrappers around the same
+                                                                                                                                                                `BacktestEngine`) — this is a much smaller build than the sibling items on this list, not a from-scratch harness.
+                                                                                                                                                              - **Adjacent finding, not fixed here**: `SportsMatchingEngine`
+                                                                                                                                                                (`execution_service/matching_engine/sports_matching.py`) is a SECOND, unused sports matcher — docstring claims
+                                                                                                                                                                "Used by execution-service in BATCH mode for backtesting sports strategies" but it has **zero callers anywhere**
+                                                                                                                                                                (grepped `SportsMatchingEngine` across `execution_service/` + `tests/` — only its own definition + the
+                                                                                                                                                                `matching_engine/__init__.py` export hit). It also always fills at requested odds (no queue-position/rejection
+                                                                                                                                                                model), which is Group-B benchmark-fill behavior, not Group-C microstructure — so even if it were wired up it
+                                                                                                                                                                wouldn't satisfy the Group-C contract `L0Matcher` already does. Left as-is (not deleted) since removing
+                                                                                                                                                                plausibly-intentional code isn't a "small+clear" adjacent fix; flagged as an open question in the new plan below
+                                                                                                                                                                for whoever implements the harness to resolve (delete as dead code, or explain why it exists alongside
+                                                                                                                                                                `L0Matcher`).
+                                                                                                                                                              - Authored `plans/active/sports_group_c_execution_backtest_harness_2026_07_21.md` (`assigned_vm: NA`, human plan,
+                                                                                                                                                                not AO-dispatched — small enough to not need the design-only/spec-first gate the sibling arb-decay-window todo
+                                                                                                                                                                needed, since the matcher + CLI pattern to copy already exist) scoping the `run_sports_backtest` CLI + a fixture
+                                                                                                                                                                wired to `SPORTS`/`PREDICTION` asset groups, reusing the Group-B fixture dataset shipped in
+                                                                                                                                                                `strategy-service@9a7de7f8` as the data source. Sits for operator review; flips to dispatch-ready if/when
+                                                                                                                                                                approved. (repo: execution-service)
 
 - [x] ✅ [SCRIPT] P3. Build the arb-decay-window analysis + paper-trade alpha gate from scratch — zero code exists
       anywhere today; this is brand-new feature work (see the `brand-new` 1.0x estimate multiplier), not a verification
@@ -223,7 +223,7 @@ post-May-23 / not on the critical path, P3 is appropriate — the goal is visibi
   on an unrelated page (wizard/paper-trading/execution routes), and this change touches ZERO production code (only adds
   vitest assertions to an existing test file), so those 25 are pre-existing host-load flakiness on this shared
   multi-slot box, not a regression from this change. The L1.5 widget regression above is the actual verifying spec for
-  this todo (per `codex/06-coding-standards/ui-testing-layers.md`'s L1.5 tier — `regression: tests/widgets/...`).
+  this todo (per `/codex/06-coding-standards/ui-testing-layers.md`'s L1.5 tier — `regression: tests/widgets/...`).
 
   **Not covered (documented, not silently dropped)**: the two dedicated "signals" pages
   (`app/(platform)/services/signals/dashboard/page.tsx`, `app/(platform)/services/research/signals/page.tsx`) key on
@@ -240,7 +240,7 @@ post-May-23 / not on the critical path, P3 is appropriate — the goal is visibi
       live-pipeline-activation precedent (not invented) via a dedicated research pass: documents sports' current
       readiness-ladder rung (ML pipeline running) and prediction's (features pipeline running), the STRUCTURAL blocker
       that genuinely differs from cefi/defi (sports has NO in-play live odds source integrated today — confirmed in
-      `codex/04-architecture/sports-batch-live.md`: every current source is `{BATCH, REPLAY}`-only in UAC's
+      `/codex/04-architecture/sports-batch-live.md`: every current source is `{BATCH, REPLAY}`-only in UAC's
       `SOURCE_MODE_CAPABILITY`), the 4-layer activation chain reusing the proven pattern (MTDS live connector → MDPS
       `LiveModeHandler` config → FSS live handler build → the existing CLI-primary promote workflow,
       `CANDIDATE→PAPER_1D→LIVE_EARLY`), and cross-references (without duplicating) the other already-tracked
@@ -249,8 +249,8 @@ post-May-23 / not on the critical path, P3 is appropriate — the goal is visibi
 
 ## Codex SSOTs
 
-`codex/04-architecture/backtest-groups.md`, `codex/04-architecture/batch-live-architecture.md`,
-`codex/09-strategy/architecture-v2/archetypes/ml-directional-event-settled.md`.
+`/codex/04-architecture/backtest-groups.md`, `/codex/04-architecture/batch-live-architecture.md`,
+`/codex/09-strategy/architecture-v2/archetypes/ml-directional-event-settled.md`.
 
 ## RE-TRIAGE (2026-07-23)
 

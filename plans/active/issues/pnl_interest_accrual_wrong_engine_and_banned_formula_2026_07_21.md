@@ -24,8 +24,8 @@ scope: [engineer, admin]
 tags: [pnl-correctness, interest-accrual, determinism-spine, ssot-contradiction, money-path, defi, operator-gate]
 related:
   [
-    features_onchain_featureless_shards_and_vocabulary_split_2026_07_20.md,
-    silent_wrong_answer_audit_candidates_2026_07_20.md,
+    /plans/active/issues/features_onchain_featureless_shards_and_vocabulary_split_2026_07_20.md,
+    /plans/active/issues/silent_wrong_answer_audit_candidates_2026_07_20.md,
   ]
 created: 2026-07-21
 parent_epic: infrastructure_master
@@ -591,7 +591,7 @@ place to persist it, no new column required.
 ### Q3 — storage vs. display, and the design already exists in codex (unwired)
 
 **The codex already specifies this exact feature**, § "Share Class P&L"
-(`codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md:704-773`):
+(`/codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md:704-773`):
 
 > P&L is converted from USD to the client's share class base currency. The FX attribution factor tracks the conversion
 > difference, keeping trading P&L separate from currency exposure. … For `USDT`: no FX conversion applies. For

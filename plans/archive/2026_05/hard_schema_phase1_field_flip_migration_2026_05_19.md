@@ -19,20 +19,66 @@ estimate_calibrated_ai_days: 2.4
 locked_by: live-defi-rollout
 locked_since: 2026-05-19
 last_updated: 2026-05-19
-completion_gates: {code: C3, deployment: D1, business: none}
+completion_gates: { code: C3, deployment: D1, business: none }
 repo_gates:
-- {repo: unified-api-contracts, code: C2, deployment: none, business: none}
-- {repo: instruments-service, code: C1, deployment: none, business: none}
-- {repo: unified-trading-pm, code: C0, deployment: none, business: none}
+  - { repo: unified-api-contracts, code: C2, deployment: none, business: none }
+  - { repo: instruments-service, code: C1, deployment: none, business: none }
+  - { repo: unified-trading-pm, code: C0, deployment: none, business: none }
 depends_on: [hard-schema-enforcement-2026-05-08, defi-catalogue-chain-primitives-2026-05-10]
 todos:
-- {id: phase-a-defi-decimals-validator, content: "- [x] ✅ [CODE] P0. **Phase A — DeFi decimals model_validator rule.** — uac@956bec1. Rules 6+7 added to _enforce_per_asset_group_required_fields; 10 new tests; all QG green. (slot 4 2026-05-19)\n  `InstrumentRecord._enforce_per_asset_group_required_fields` currently enforces:\n    (1) CeFi SPOT_PAIR/PERPETUAL → base_asset + quote_asset non-empty\n    (2) DeFi ONCHAIN → pool_address OR base_asset_contract_address non-empty\n    (3) EVENT_CONTRACT → expiry non-null\n    (4) FUTURE → expiry non-null\n    (5) OPTION → expiry non-null\n  **Gap**: no rule for `base_asset_decimals` or `quote_asset_decimals`. These are\n  required for on-chain price calculation in MTDS DeFi handlers (dex_pools reads\n  token0/token1 decimals for price; A_TOKEN/DEBT_TOKEN reads base decimals for\n  normalization). Add two rules:\n    6. DeFi `base_asset_decimals` non-null for ALL `DEFI_ONCHAIN_INSTRUMENT_TYPES`\n       (POOL / LENDING / LST / YIELD_BEARING / A_TOKEN\
-    \ / DEBT_TOKEN / STAKING / SPOT_ASSET).\n       Rationale: every DeFi instrument has a primary token with a decimals value (18 for\n       most ERC-20s, 6 for USDC, 8 for WBTC). Null decimals = silent price normalization bug.\n    7. DeFi `quote_asset_decimals` non-null for TWO-ASSET DeFi types: `{POOL}` only.\n       LENDING/LST/STAKING/A_TOKEN/DEBT_TOKEN/SPOT_ASSET are single-asset → quote decimals\n       legitimately None. POOL (Uniswap V3 / Curve / Balancer) requires both token0 and\n       token1 decimals for price computation.\n  Implementation: extend `_enforce_per_asset_group_required_fields` with two `elif`\n  branches OR fold into the existing DeFi on-chain branch as additional checks.\n  Unit tests: extend `tests/internal/unit/test_instrument_record_hard_required_fields.py`.\n", status: todo}
-- {id: phase-b-null-decimals-gcs-audit-script, content: "- [x] ✅ [SCRIPT] P0. **Phase B — Null-decimals GCS audit script.** — instruments-service@1f807c9. `scripts/audit_defi_null_decimals_2026_05_19.py` — scans DeFi parquets for null base/quote decimals; read-only; per-venue/per-type report; JSON output. (slot 4 2026-05-19)\n  Write `instruments-service/scripts/audit_defi_null_decimals_2026_05_19.py`:\n  ```python\n  # Usage: python audit_defi_null_decimals_2026_05_19.py --asset-group defi --dry-run\n  # Scans gs://instruments-store-defi-prod-{PROJECT_ID}/.../*.parquet\n  # Reads base_asset_decimals + quote_asset_decimals columns\n  # For each row where instrument_type in DEFI_ONCHAIN_INSTRUMENT_TYPES:\n  #   - null base_asset_decimals → record to audit report (pool_address, venue, date)\n  # For POOL rows: null quote_asset_decimals → same\n  # Output: JSON summary + sample rows for manual classification\n  ```\n  The script must respect CLAUDE.md \"Plans Run To Actual Completion\":\n \
-    \ - Reads from GCS via `unified_trading_library.cloud_interface`\n  - Prints null-count summary by venue + instrument_type\n  - Outputs `audit_defi_null_decimals_{date}.json` to local path\n  - Does NOT write to GCS (read-only audit)\n  Pre-condition: Phase A model_validator shipped so new rows won't add to null count.\n", status: todo}
-- {id: phase-c-cefi-empty-string-audit, content: "- [x] ✅ [SCRIPT] P1. **Phase C — CeFi empty-string base/quote audit (verification only).** — instruments-service@46bea40. `scripts/audit_cefi_empty_base_quote_2026_05_19.py` — scans CeFi parquets for empty base_asset/quote_asset in SPOT_PAIR/PERPETUAL rows; read-only; per-venue count table; JSON output. (slot 4 2026-05-19)\n  `InstrumentRecord.base_asset` and `quote_asset` are already `str = \"\"` (non-nullable\n  at declaration level). Model_validator Rule 1 enforces non-empty at write-time. This\n  phase is a verification that the existing constraint is working:\n  Scan `gs://instruments-store-cefi-prod-{PROJECT_ID}/.../*.parquet` for rows where\n  `base_asset == \"\"` or `quote_asset == \"\"` AND `instrument_type` is in\n  `CEFI_PAIR_INSTRUMENT_TYPES`. Expected count: 0 (any non-zero is a bug in the adapter\n  or a pre-Phase-1 legacy row). Output: count per venue + sample rows if any.\n  If count > 0: file separate issue doc with adapter\
-    \ fix required.\n  Note: this is a DEFENSIVE verification, not a migration. The declaration already\n  enforces `str`; the model_validator enforces non-empty. Nothing to flip.\n", status: todo}
-- {id: phase-d-per-field-declaration-status-table, content: "- [x] ✅ [DOCS] P1. **Phase D — Per-field declaration status table in plan body.** — unified-trading-pm (this commit). `plans/active/hard_schema_enforcement_2026_05_08.md` \"Per-asset-group schema-flip roadmap\" section updated with corrected per-field status table showing Rules 6+7 shipped at uac@956bec1. (slot 4 2026-05-19)\n  Update the \"Per-asset-group schema-flip roadmap\" section in\n  `hard_schema_enforcement_2026_05_08.md` with the corrected per-field status:\n  | Field | Current type | Model validator | Declaration flip needed? |\n  |\n"}
+  - { id: phase-a-defi-decimals-validator, content: "- [x] ✅ [CODE] P0. **Phase A — DeFi decimals model_validator
+        rule.** — uac@956bec1. Rules 6+7 added to _enforce_per_asset_group_required_fields; 10 new tests; all QG green.
+        (slot 4 2026-05-19)\n  `InstrumentRecord._enforce_per_asset_group_required_fields` currently enforces:\n    (1)
+        CeFi SPOT_PAIR/PERPETUAL → base_asset + quote_asset non-empty\n    (2) DeFi ONCHAIN → pool_address OR
+        base_asset_contract_address non-empty\n    (3) EVENT_CONTRACT → expiry non-null\n    (4) FUTURE → expiry
+        non-null\n    (5) OPTION → expiry non-null\n  **Gap**: no rule for `base_asset_decimals` or
+        `quote_asset_decimals`. These are\n  required for on-chain price calculation in MTDS DeFi handlers (dex_pools
+        reads\n  token0/token1 decimals for price; A_TOKEN/DEBT_TOKEN reads base decimals for\n  normalization). Add two
+        rules:\n    6. DeFi `base_asset_decimals` non-null for ALL `DEFI_ONCHAIN_INSTRUMENT_TYPES`\n       (POOL /
+        LENDING / LST / YIELD_BEARING / A_TOKEN\
+        \ / DEBT_TOKEN / STAKING / SPOT_ASSET).\n       Rationale: every DeFi instrument has a primary token with a
+        decimals value (18 for\n       most ERC-20s, 6 for USDC, 8 for WBTC). Null decimals = silent price normalization
+        bug.\n    7. DeFi `quote_asset_decimals` non-null for TWO-ASSET DeFi types: `{POOL}`
+        only.\n       LENDING/LST/STAKING/A_TOKEN/DEBT_TOKEN/SPOT_ASSET are single-asset → quote
+        decimals\n       legitimately None. POOL (Uniswap V3 / Curve / Balancer) requires both token0 and\n       token1
+        decimals for price computation.\n  Implementation: extend `_enforce_per_asset_group_required_fields` with two
+        `elif`\n  branches OR fold into the existing DeFi on-chain branch as additional checks.\n  Unit tests: extend
+        `tests/internal/unit/test_instrument_record_hard_required_fields.py`.\n", status: todo }
+  - { id: phase-b-null-decimals-gcs-audit-script, content: "- [x] ✅ [SCRIPT] P0. **Phase B — Null-decimals GCS audit
+        script.** — instruments-service@1f807c9. `scripts/audit_defi_null_decimals_2026_05_19.py` — scans DeFi parquets
+        for null base/quote decimals; read-only; per-venue/per-type report; JSON output. (slot 4 2026-05-19)\n  Write
+        `instruments-service/scripts/audit_defi_null_decimals_2026_05_19.py`:\n  ```python\n  # Usage: python
+        audit_defi_null_decimals_2026_05_19.py --asset-group defi --dry-run\n  # Scans
+        gs://instruments-store-defi-prod-{PROJECT_ID}/.../*.parquet\n  # Reads base_asset_decimals +
+        quote_asset_decimals columns\n  # For each row where instrument_type in DEFI_ONCHAIN_INSTRUMENT_TYPES:\n  #   -
+        null base_asset_decimals → record to audit report (pool_address, venue, date)\n  # For POOL rows: null
+        quote_asset_decimals → same\n  # Output: JSON summary + sample rows for manual classification\n  ```\n  The
+        script must respect CLAUDE.md \"Plans Run To Actual Completion\":\n \
+        \ - Reads from GCS via `unified_trading_library.cloud_interface`\n  - Prints null-count summary by venue +
+        instrument_type\n  - Outputs `audit_defi_null_decimals_{date}.json` to local path\n  - Does NOT write to GCS
+        (read-only audit)\n  Pre-condition: Phase A model_validator shipped so new rows won't add to null count.\n", status: todo }
+  - { id: phase-c-cefi-empty-string-audit, content: "- [x] ✅ [SCRIPT] P1. **Phase C — CeFi empty-string base/quote
+        audit (verification only).** — instruments-service@46bea40. `scripts/audit_cefi_empty_base_quote_2026_05_19.py`
+        — scans CeFi parquets for empty base_asset/quote_asset in SPOT_PAIR/PERPETUAL rows; read-only; per-venue count
+        table; JSON output. (slot 4 2026-05-19)\n  `InstrumentRecord.base_asset` and `quote_asset` are already `str =
+        \"\"` (non-nullable\n  at declaration level). Model_validator Rule 1 enforces non-empty at write-time.
+        This\n  phase is a verification that the existing constraint is working:\n  Scan
+        `gs://instruments-store-cefi-prod-{PROJECT_ID}/.../*.parquet` for rows where\n  `base_asset == \"\"` or
+        `quote_asset == \"\"` AND `instrument_type` is in\n  `CEFI_PAIR_INSTRUMENT_TYPES`. Expected count: 0 (any
+        non-zero is a bug in the adapter\n  or a pre-Phase-1 legacy row). Output: count per venue + sample rows if
+        any.\n  If count > 0: file separate issue doc with adapter\
+        \ fix required.\n  Note: this is a DEFENSIVE verification, not a migration. The declaration already\n  enforces
+        `str`; the model_validator enforces non-empty. Nothing to flip.\n", status: todo }
+  - {
+      id: phase-d-per-field-declaration-status-table,
+      content:
+        "- [x] ✅ [DOCS] P1. **Phase D — Per-field declaration status table in plan body.** — unified-trading-pm (this
+        commit). `plans/active/hard_schema_enforcement_2026_05_08.md` \"Per-asset-group schema-flip roadmap\" section
+        updated with corrected per-field status table showing Rules 6+7 shipped at uac@956bec1. (slot 4
+        2026-05-19)\n  Update the \"Per-asset-group schema-flip roadmap\" section
+        in\n  `hard_schema_enforcement_2026_05_08.md` with the corrected per-field status:\n  | Field | Current type |
+        Model validator | Declaration flip needed? |\n  |\n",
+    }
 ---
 
 > **ARCHIVED 2026-05-21** — Phases A-D complete (field-flip validators for CeFi/DeFi + InstrumentRecord validators + QG
@@ -62,9 +108,9 @@ have a fixture_id | status: todo
 
 - id: phase-f-codex-update content: |
   - [x] ✅ [DOCS] P1. **Phase F — Codex update: per-field enforcement status table.** — unified-trading-pm (this
-        commit). `codex/06-coding-standards/validation-and-errors.md` new §7 "InstrumentRecord hard-required field
+        commit). `/codex/06-coding-standards/validation-and-errors.md` new §7 "InstrumentRecord hard-required field
         enforcement" with full 7-rule table, DEFI_ONCHAIN_INSTRUMENT_TYPES, audit script pointers, SSOT cross-ref. (slot
-        4 2026-05-19) Update `codex/06-coding-standards/validation-and-errors.md` § "InstrumentRecord hard-required
+        4 2026-05-19) Update `/codex/06-coding-standards/validation-and-errors.md` § "InstrumentRecord hard-required
         field enforcement" with the corrected scope table (same as Phase D but in the codex SSOT). Cross-reference this
         plan + `hard_schema_enforcement_2026_05_08.md`. status: todo
 

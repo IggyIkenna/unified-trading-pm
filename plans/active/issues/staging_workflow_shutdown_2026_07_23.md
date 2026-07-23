@@ -47,8 +47,8 @@ repos:
 scope: [engineer, admin]
 tags: [ci-cd, github-actions, cost, staging, workflows, fleet-rollout, spend-reduction]
 related:
-  - github_actions_ci_cost_reduction_2026_07_15.md
-  - stale_staging_versions_manifest_2026_07_23.md
+  - /plans/active/github_actions_ci_cost_reduction_2026_07_15.md
+  - /plans/active/issues/stale_staging_versions_manifest_2026_07_23.md
   - ../cicd_mvp_ldr_to_main_pipeline_2026_06_30.md
 created: 2026-07-23
 priority: P2
@@ -107,7 +107,7 @@ class in `github_actions_ci_cost_reduction_2026_07_15.md`.
 
 - **Re-entry is MANUAL.** The toggle is a git-tracked JSON field (`workspace-manifest.json` `promotion_model` /
   `staging_dormant_mode`); **nothing writes it programmatically** — every reference in `scripts/**` is a read. A
-  breaking/major bump does **not** auto-route through staging: per `codex/08-workflows/ci-cd-flow.md:451` that gate
+  breaking/major bump does **not** auto-route through staging: per `/codex/08-workflows/ci-cd-flow.md:451` that gate
   moved to `ldr-to-main-promote-fleet.yml` (AST differ + `sit_validated_tree`), and `breaking_pending` is `[]`.
 - **No live-path side effects.** `staging-conflict-ldr-main-fallback` skips PM + every `ldr_main` repo (= all 25) so it
   is structurally a no-op and is NOT the LDR→main safety net (that is `ldr-to-main-promote-fleet.yml`);
@@ -164,14 +164,14 @@ once promoted to `main` — landing on LDR alone does not stop a cron.
       question — did the crons stop? — measured fleet-wide on `staging-backmerge-to-ldr` across ALL 24 repos:
 
       | window                          | scheduled runs |
-              | ------------------------------- | -------------- |
-              | 06:00–08:00Z (2h, pre-promote)  | **47**         |
-              | after 08:00Z (>1h, post-promote)| **0**          |
+                                                                                                                              | ------------------------------- | -------------- |
+                                                                                                                              | 06:00–08:00Z (2h, pre-promote)  | **47**         |
+                                                                                                                              | after 08:00Z (>1h, post-promote)| **0**          |
 
-              Repos still firing: **NONE**. PM's own three crons likewise 0 after 08:00Z (`reconcile-staging-versions`,
-              `staging-to-main`, `staging-conflict-ldr-main-fallback` — each had 1–2 runs in the prior window). Note this was
-              only tickable AFTER the promote: the same check at 07:50Z correctly showed the crons still firing, which is why
-              the box was held open through two earlier status reports rather than closed on the diff.
+                                                                                                                              Repos still firing: **NONE**. PM's own three crons likewise 0 after 08:00Z (`reconcile-staging-versions`,
+                                                                                                                              `staging-to-main`, `staging-conflict-ldr-main-fallback` — each had 1–2 runs in the prior window). Note this was
+                                                                                                                              only tickable AFTER the promote: the same check at 07:50Z correctly showed the crons still firing, which is why
+                                                                                                                              the box was held open through two earlier status reports rather than closed on the diff.
 
 - [x] [DOC] P2. Add "re-enable the staging workflows" to the staging re-entry path so the reversibility guarantee is not
       half-true. — DONE: every disabled trigger carries an inline dated note naming exactly what to uncomment and the

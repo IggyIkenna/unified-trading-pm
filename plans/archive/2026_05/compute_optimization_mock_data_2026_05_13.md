@@ -9,8 +9,8 @@ stage: [meta]
 repos: [deployment-service, execution-service, features-service, strategy-service]
 scope: [engineer, admin]
 tags: []
-related: [mock_data_pipeline_benchmarking_2026_05_10.md, master_to_live_defi_2026_05_23.md]
-created: '2026-05-21'
+related: [mock_data_pipeline_benchmarking_2026_05_10.md, /plans/active/master_to_live_defi_2026_05_23.md]
+created: "2026-05-21"
 parent_epic: infrastructure_master
 priority: P1
 estimate_class: infra
@@ -32,7 +32,7 @@ locked_since: 2026-05-13
 Successor to `mock_data_pipeline_benchmarking`. Targeted parallelization + big-machine optimizations for the top
 bottleneck stages identified in the baseline profile (features onchain 40% wall-clock). All phases 0-7 complete.
 
-Codex SSOTs: `codex/06-coding-standards/quality-gates.md`
+Codex SSOTs: `/codex/06-coding-standards/quality-gates.md`
 
 ---
 

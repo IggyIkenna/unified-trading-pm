@@ -6,10 +6,25 @@ status: complete
 nature: record
 asset_group: [defi]
 stage: [meta]
-repos: [alerting-service, batch-live-reconciliation-service, deployment-api, deployment-service, deployment-ui, execution-service]
+repos:
+  [
+    alerting-service,
+    batch-live-reconciliation-service,
+    deployment-api,
+    deployment-service,
+    deployment-ui,
+    execution-service,
+  ]
 scope: [engineer, admin]
 tags: []
-related: [master_to_live_defi_2026_05_23, cross_cutting_may_23_SUPERSEDED_2026_05_21, strategy_and_dart_master_SUPERSEDED_2026_05_21, defi_master, cefi_master]
+related:
+  [
+    master_to_live_defi_2026_05_23,
+    cross_cutting_may_23_SUPERSEDED_2026_05_21,
+    strategy_and_dart_master_SUPERSEDED_2026_05_21,
+    defi_master,
+    cefi_master,
+  ]
 created: 2026-05-08
 last_updated: 2026-05-08
 locked_by: live-defi-rollout
@@ -18,11 +33,14 @@ parent: cross_cutting_may_23_SUPERSEDED_2026_05_21
 estimate_class: design
 estimate_baseline_ai_days: 51.5
 estimate_calibrated_ai_days: 30.9
-estimate_calibration_note: 'Baseline auto-extracted from in-body AI-day mentions during 2026-05-11 sweep (~10, ~12, ~22, ~1-2, + 4 more). Class inferred from filename (design, multiplier 0.6×).
+estimate_calibration_note: "Baseline auto-extracted from in-body AI-day mentions during 2026-05-11 sweep (~10, ~12, ~22,
+  ~1-2, + 4 more). Class inferred from filename (design, multiplier 0.6×).
 
-  CAVEAT: auto-extract SUMS all in-body mentions; plans with both ''Total: X'' headlines AND per-phase line items will be double-counted. Owner agent: verify baseline, refine class per codex/08-workflows/estimation-calibration.md, recompute calibrated if either changes.
+  CAVEAT: auto-extract SUMS all in-body mentions; plans with both 'Total: X' headlines AND per-phase line items will be
+  double-counted. Owner agent: verify baseline, refine class per /codex/08-workflows/estimation-calibration.md,
+  recompute calibrated if either changes.
 
-  '
+  "
 parent_epic: defi_master
 priority: P2
 ---
@@ -136,7 +154,7 @@ Mirrors the cross_cutting epic's checkbox set — when this plan flips DONE, tho
 - [x] [DESIGN] **DART scope decision** — per-archetype list of operator-replicable manual surfaces. Operator-confirmed
       bar: every live archetype must have a manual fallback. Sports backtest exec validation manual surface acceptable
       (not live). Owner: Ikenna T6. **DONE 2026-05-08 (Tab 6.C)** — `unified-trading-pm@ab595616` shipped
-      [`codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md`](../../codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md)
+      [`/codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md`](/codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md)
       (8 sections: scope decision matrix for all 11 StrategyInstruction action types · per-archetype manual-fallback map
       covering all 18 codex archetypes · 5 BUILDs Harsh T6 ships · strategy_id attribution discipline · capital
       allocation respect · post-May-23 deferrals). Cross-link added to peer doc `operational-modes-matrix.md` via
@@ -213,7 +231,7 @@ without touching them yet) while Ikenna T6 finalizes UAC schema.
 - [x] **DART manual-trade lane scope**: is operator-only manual sufficient, or do we need a third-party broker-style
       DART for external operators? **✅ RESOLVED 2026-05-08 by 6.C** (`pm@ab595616`): operator-only this cycle;
       external-broker-style DART post-May-23. Per the
-      [`codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md`](../../codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md)
+      [`/codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md`](/codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md)
       § "Defer post-May-23" sub-section (third-party operator UI + granular RBAC + tamper-evident audit trail all
       explicitly out of scope this cycle).
 - [x] **Strategy ID versioning rule**: hash-based / sequential / semver-style? Used for batch-vs-live reconciliation
@@ -246,11 +264,11 @@ This plan owns the 4 cross-cutting deliverables; downstream consumers reference 
 
 - [`plans/epics/cross_cutting_may_23_SUPERSEDED_2026_05_21.md`](../epics/cross_cutting_may_23_SUPERSEDED_2026_05_21.md)
   — parent epic
-- [`codex/09-strategy/strategy-summary.md`](../../codex/09-strategy/strategy-summary.md) — 8-family / 18-archetype
-  catalogue baseline (existing SSOT this plan extends)
-- [`codex/09-strategy/operational/onboarding-checklist.md`](../../codex/09-strategy/operational/onboarding-checklist.md)
-  — strategy onboarding flow that needs ID-attribution wiring
-- [`codex/09-strategy/architecture-v2/cross-cutting/operational-modes-matrix.md`](../../codex/09-strategy/architecture-v2/cross-cutting/operational-modes-matrix.md)
+- [`/codex/09-strategy/strategy-summary.md`](/codex/09-strategy/strategy-summary.md) — 8-family / 18-archetype catalogue
+  baseline (existing SSOT this plan extends)
+- [`/codex/09-strategy/operational/onboarding-checklist.md`](/codex/09-strategy/operational/onboarding-checklist.md) —
+  strategy onboarding flow that needs ID-attribution wiring
+- [`/codex/09-strategy/architecture-v2/cross-cutting/operational-modes-matrix.md`](/codex/09-strategy/architecture-v2/cross-cutting/operational-modes-matrix.md)
   — DART manual-trade lane SSOT
 
 ## DONE-2026-05-08 (Tab 6.B) — Client model + capital allocation
@@ -315,7 +333,7 @@ Sub-agent 6.C shipped deliverable #4 [DESIGN] tier + deliverable #1 [DESIGN] (UI
 
 - **unified-trading-pm@ab595616** `docs(codex): add DART manual-trade-spec — per-archetype scope for May-23 cutover` —
   NEW
-  [`codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md`](../../codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md)
+  [`/codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md`](/codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md)
   (314 lines, 8 sections covering all 11 StrategyInstruction action types + 18 codex archetypes + 5 BUILDs Harsh T6
   ships + strategy_id attribution + capital allocation respect + post-May-23 deferrals).
 - **unified-trading-pm@2a0d105d** (parallel-agent commit, content correct) — cross-link to peer doc
@@ -378,7 +396,7 @@ outcome:
   consumes existing `ClientDefinition` + `TradingAccount` (per Option A migration), and `CapitalAllocation` once
   re-exported from `strategy.py` facade. Pending Option A migration per issue doc addendum.
 - Deliverable #4 [BUILD] 5 DART manual surfaces (Harsh T6) — UNBLOCKED. Spec lives at
-  [`codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md`](../../codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md).
+  [`/codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md`](/codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md).
   Strategy ID attribution per spec § 5 defers to whichever grammar Option A produces (existing 6-axis grammar expected).
 - Deliverable #1 [BUILD] strategy catalogue UI (Harsh T6) — UNBLOCKED in scope (route + filter axes + acceptance
   criteria declared above § "Strategy catalogue UI route — scope assignment"); the consumer-side data shape depends on
@@ -627,7 +645,7 @@ items unblocked).
   "Strategy catalogue UI route — scope assignment (2026-05-08, Tab 6.C)" above. Lives in `unified-trading-system-ui`
   trading-UI surface, not deployment-UI.
 - **#4 [BUILD] 5 DART manual surfaces** — consume the spec at
-  [`codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md`](../../codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md).
+  [`/codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md`](/codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md).
   Strategy ID attribution per spec § 5 uses the existing 6-axis grammar.
 
 ### Process notes for the operator (worth a glance)
@@ -664,17 +682,17 @@ Harsh's daily work_split.** No durable-record gaps. Open questions are now all `
 
 ### The 11 unresolved items + their plan home
 
-| #    | Status                                                                    | Item (line in this plan)                                 | Owner                                                                                                                                                                | Plan home                                                                                                                                                                                                                                  |
-| ---- | ------------------------------------------------------------------------- | -------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| 1    | `[ ]` (un-flipped per A2 — parallel-SSOT reverted; canonical SSOT exists) | #3 Client model in UAC stable (line 86)                  | _Done by virtue of NOT shipping the parallel SSOT_ — existing `ClientDefinition` + `TradingAccount` carry the canonical model. Annotation explains. No further work. | This plan-of-record + issue doc Addendum                                                                                                                                                                                                   |
-| 2    | `[ ]`                                                                     | #1 Catalogue rows populated (line 55)                    | Harsh T6                                                                                                                                                             | This plan + [`work_split_2026_05_08_harsh.md`](../archive/work_split_2026_05_08_harsh.md) line 109                                                                                                                                         |
-| 3    | `[ ]`                                                                     | #1 Per-archetype venue matrix populated (line 60)        | Harsh T6                                                                                                                                                             | Same as #2 — `ARCHETYPE_CAPABILITY_REGISTRY` row extension                                                                                                                                                                                 |
-| 4    | `[ ]`                                                                     | #1 Per-archetype config parameters declared (line 62)    | Harsh T6                                                                                                                                                             | Same — extends `ARCHETYPE_CONFIG_SEED` (A1's seed covers May-23 5 archetypes; Harsh extends per-archetype activation)                                                                                                                      |
-| 5    | `[ ]`                                                                     | #1 [BUILD] Strategy catalogue UI (line 64)               | Harsh T6                                                                                                                                                             | This plan § "Strategy catalogue UI route — scope assignment" + `work_split_2026_05_08_harsh.md` line 112                                                                                                                                   |
-| 6    | `[ ]`                                                                     | #2 Strategy ID registry populated (line 78)              | Harsh T6                                                                                                                                                             | Already populated via existing `STRATEGY_REGISTRY` derivation; remaining work = ensure `representative_slot_labels` cover every Harsh-needed cell. `work_split_2026_05_08_harsh.md` line 108                                               |
-| 7    | `[ ]`                                                                     | #2 Strategy ID refactor sweep (line 79)                  | Harsh T6                                                                                                                                                             | This plan + `work_split_2026_05_08_harsh.md` line 108 — mechanical sweep across execution / strategy / ml-inference / pnl-attribution / batch-live-recon / position-balance-monitor / alerting / deployment-api                            |
-| 8    | `[ ]`                                                                     | #3 Client-account-strategy tagging propagated (line 106) | Harsh T6                                                                                                                                                             | This plan + `work_split_2026_05_08_harsh.md` line 110 — consumes `ClientDefinition` + `TradingAccount` + `CapitalAllocation` from existing `strategy.py` facade                                                                            |
-| 9-13 | `[ ]`                                                                     | #4 5 DART manual surfaces (lines 120-127)                | Harsh T6                                                                                                                                                             | Spec at [`codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md`](../../codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md) (314 lines, 8 sections) + `work_split_2026_05_08_harsh.md` line 111 |
+| #    | Status                                                                    | Item (line in this plan)                                 | Owner                                                                                                                                                                | Plan home                                                                                                                                                                                                                              |
+| ---- | ------------------------------------------------------------------------- | -------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1    | `[ ]` (un-flipped per A2 — parallel-SSOT reverted; canonical SSOT exists) | #3 Client model in UAC stable (line 86)                  | _Done by virtue of NOT shipping the parallel SSOT_ — existing `ClientDefinition` + `TradingAccount` carry the canonical model. Annotation explains. No further work. | This plan-of-record + issue doc Addendum                                                                                                                                                                                               |
+| 2    | `[ ]`                                                                     | #1 Catalogue rows populated (line 55)                    | Harsh T6                                                                                                                                                             | This plan + [`work_split_2026_05_08_harsh.md`](../archive/work_split_2026_05_08_harsh.md) line 109                                                                                                                                     |
+| 3    | `[ ]`                                                                     | #1 Per-archetype venue matrix populated (line 60)        | Harsh T6                                                                                                                                                             | Same as #2 — `ARCHETYPE_CAPABILITY_REGISTRY` row extension                                                                                                                                                                             |
+| 4    | `[ ]`                                                                     | #1 Per-archetype config parameters declared (line 62)    | Harsh T6                                                                                                                                                             | Same — extends `ARCHETYPE_CONFIG_SEED` (A1's seed covers May-23 5 archetypes; Harsh extends per-archetype activation)                                                                                                                  |
+| 5    | `[ ]`                                                                     | #1 [BUILD] Strategy catalogue UI (line 64)               | Harsh T6                                                                                                                                                             | This plan § "Strategy catalogue UI route — scope assignment" + `work_split_2026_05_08_harsh.md` line 112                                                                                                                               |
+| 6    | `[ ]`                                                                     | #2 Strategy ID registry populated (line 78)              | Harsh T6                                                                                                                                                             | Already populated via existing `STRATEGY_REGISTRY` derivation; remaining work = ensure `representative_slot_labels` cover every Harsh-needed cell. `work_split_2026_05_08_harsh.md` line 108                                           |
+| 7    | `[ ]`                                                                     | #2 Strategy ID refactor sweep (line 79)                  | Harsh T6                                                                                                                                                             | This plan + `work_split_2026_05_08_harsh.md` line 108 — mechanical sweep across execution / strategy / ml-inference / pnl-attribution / batch-live-recon / position-balance-monitor / alerting / deployment-api                        |
+| 8    | `[ ]`                                                                     | #3 Client-account-strategy tagging propagated (line 106) | Harsh T6                                                                                                                                                             | This plan + `work_split_2026_05_08_harsh.md` line 110 — consumes `ClientDefinition` + `TradingAccount` + `CapitalAllocation` from existing `strategy.py` facade                                                                        |
+| 9-13 | `[ ]`                                                                     | #4 5 DART manual surfaces (lines 120-127)                | Harsh T6                                                                                                                                                             | Spec at [`/codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md`](/codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md) (314 lines, 8 sections) + `work_split_2026_05_08_harsh.md` line 111 |
 
 ### Cross-references (every external touchpoint)
 
@@ -695,11 +713,11 @@ Harsh's daily work_split.** No durable-record gaps. Open questions are now all `
 - **Issue doc**
   [`plans/archive/issues/cross_cutting_strategy_catalogue_already_shipped_2026_05_08.plan.md`](../archive/issues/cross_cutting_strategy_catalogue_already_shipped_2026_05_08.plan.md)
   — RESOLVED. Recommended Option A executed in full. Eligible for archive at next daily ledger sweep.
-- **Codex SSOT** [`codex/09-strategy/strategy-summary.md`](../../codex/09-strategy/strategy-summary.md) — refreshed
+- **Codex SSOT** [`/codex/09-strategy/strategy-summary.md`](/codex/09-strategy/strategy-summary.md) — refreshed
   `pm@d6d0cd57` to canonical 9-family / 53-archetype shape. Closes the codex SSOT drift root cause that caused this plan
   to be drafted greenfield in the first place.
 - **DART codex spec**
-  [`codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md`](../../codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md)
+  [`/codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md`](/codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md)
   — NEW (`pm@ab595616`, 314 lines). Harsh T6's 5 DART builds consume this spec.
 
 ### Process notes still in flight (NOT this-plan deliverables; tracked elsewhere)
@@ -722,7 +740,7 @@ in flight under Harsh T6's ownership; archive eligible once Harsh T6's DONE-2026
 
 Tab 8 (Ikenna slot 8, agent-tag `ikenna-manifest-phase3-tab`) shipped the **UAC contract layer** Harsh T6's 5 BUILDs
 consume. The DART scope spec at
-[`codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md`](../../codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md)
+[`/codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md`](/codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md)
 defined behaviour-level intent for each BUILD; the missing piece was the closed-set Pydantic contracts the
 implementations would post / persist.
 
@@ -758,7 +776,7 @@ implementations would post / persist.
   - 7 unit tests in `tests/unit/test_dart_manual_action_contracts.py` (closed-set membership · request/response
     correlation · both audit-row category dispatches). basedpyright clean.
   - Codex doc updated:
-    [`codex/04-architecture/manual-trade-booking.md`](../../codex/04-architecture/manual-trade-booking.md) — added "ML
+    [`/codex/04-architecture/manual-trade-booking.md`](/codex/04-architecture/manual-trade-booking.md) — added "ML
     training-control actions" endpoint table + "Audit log surface" section + extended SSOT pointer list.
 
 ### Cross-side handoff status (Ikenna T8 → Harsh T6)
@@ -807,7 +825,7 @@ Day-2 extension of the cross_cutting #4 contract layer; consumes slot 4's wallet
     without joining through embedded body) + `wallet_spending_check: WalletSpendingPreCheckResult | None`.
   - 5 new unit tests added to `tests/unit/test_dart_manual_action_contracts.py` (12/12 total pass; basedpyright clean).
   - Codex doc extended:
-    [`codex/04-architecture/manual-trade-booking.md`](../../codex/04-architecture/manual-trade-booking.md) — added
+    [`/codex/04-architecture/manual-trade-booking.md`](/codex/04-architecture/manual-trade-booking.md) — added
     "Wallet-tier wiring (DeFi manual trades)" section covering the validation algorithm + UI surface mapping for Harsh
     T6.
 
@@ -848,9 +866,9 @@ Day-3 closure of cross_cutting #4 contract scope; rounds out the UAC contract la
   - 8 new unit tests (constants / template shape / both category keys / empty + separator rejection / date prefix / UTC
     date partition); 22/22 total pass. basedpyright clean.
   - Codex doc extended:
-    [`codex/04-architecture/manual-trade-booking.md`](../../codex/04-architecture/manual-trade-booking.md) — added
-    "Audit log persistence (GCS / S3)" section covering object-key shape + bucket-name resolution + retention
-    rationale + date partition + action-category sub-partition + file format.
+    [`/codex/04-architecture/manual-trade-booking.md`](/codex/04-architecture/manual-trade-booking.md) — added "Audit
+    log persistence (GCS / S3)" section covering object-key shape + bucket-name resolution + retention rationale + date
+    partition + action-category sub-partition + file format.
 
 **Cross-side handoff to slot 4 (bucket-name SSOT owner)**: annotated
 [`plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md`](bucket_name_ssot_canonicalisation_2026_05_10.md) Phase
@@ -893,17 +911,59 @@ slot-5's `KillSwitchBus` runtime state (spec handoff EOD Day 2); audit-log _writ
 
 ### State-of-the-world per surface
 
-| Surface                                                                                                                                          | Exists today                                                                                                                                                                                                                                                                                                                                                                                 | What's missing                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
-| ------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| UAC `internal/execution.py`                                                                                                                      | `ManualInstruction` (+ `wallet_id`, `order_type: str`), `ManualExecutionMode`, `ManualMLTrainingAction`, `MLTrainingControlRequest/Response`, `ManualAuditCategory`, `WalletSpendingPreCheckResult`, `ManualInstructionPrecheckResponse`, `ManualInstructionAuditLog` — all unit-tested (22 tests)                                                                                           | nothing — contract layer DONE (Ikenna T8)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| UAC `internal/manual_audit_paths.py`                                                                                                             | path-helper module + `BUCKET_KIND_MANUAL_AUDIT`                                                                                                                                                                                                                                                                                                                                              | the `manual-audit` bucket-kind row in `deployment-service/configs/cloud-providers.yaml` (slot-4 Phase 0i tail, 🟡 cross-side)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| UAC `internal/domain/defi/wallet_config.py`                                                                                                      | `WalletProvisioningConfig` + `SpendingCaps` + `SigningSurface` + `kill_switch_id` + `allowed_protocols` (slot-4, `uac@d721b6a`)                                                                                                                                                                                                                                                              | nothing — consumed read-only by the validation algorithm                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
-| UAC `canonical/domain/execution/base.py:65` `OperationType`                                                                                      | 19 DeFi+CeFi action verbs (SWAP/STAKE/UNSTAKE/LEND/BORROW/REPAY/…/BUY/SELL)                                                                                                                                                                                                                                                                                                                  | nothing — IS the canonical DART trade-action enum; just needs an endpoint-boundary membership validator on `ManualInstruction.order_type`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| execution-service `api/manual_instruction_api.py` (25 KB, exists)                                                                                | `POST /manual/instruction` (EXECUTE + RECORD_ONLY), `/manual/cancel`, `/manual/amend`, `GET /manual/instructions/{id}`, `GET /manual/venues` (dynamic from `CAPABILITY_DECLARATIONS` via `_get_supported_venues()` + `@lru_cache`), `_SUPPORTED_ALGOS` list, `ManualInstructionRequest` validator                                                                                            | (a) `wallet_id` field not handled; (b) NO wallet-tier validation algorithm (kill-switch + 4 SpendingCaps checks); (c) NO `POST /manual/instruction/precheck` dry-run endpoint; (d) `order_type` accepted as free string — needs `OperationType.value` membership guard; (e) NO `GET /manual/algos` route (doc lists it; only `/manual/venues` exists); (f) audit-log persist (`ManualInstructionAuditLog` → `manual_audit_paths` → `resolve_bucket_name(kind="manual-audit")`) not wired                                                                                                                                                                                                                                                                                                                                                                                                       |
-| ml-training-service `api/`                                                                                                                       | `main.py` + health endpoints only                                                                                                                                                                                                                                                                                                                                                            | NEW `api/training_control_api.py` — `POST /training/{archetype}/{action}` (`pause`/`resume`/`retrain`), `GET /training/{archetype}/status`, `GET /training/audit/{request_id}`; consumes `MLTrainingControlRequest/Response`; persists `ManualInstructionAuditLog` with `action_category=ML_TRAINING_CONTROL`; mount router in `main.py`. Backend lifecycle action: wire to the existing ml-training-service training-loop control (the CLI surfaces an equivalent — verify the in-process hook before May-23)                                                                                                                                                                                                                                                                                                                                                                                 |
-| position-balance-monitor-service                                                                                                                 | (rolling-window spend not exposed for wallet caps)                                                                                                                                                                                                                                                                                                                                           | NEW endpoint/query: rolling 1h + 24h USD spend per `wallet_id` — drives validation-algorithm steps 3-4 in execution-service                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| UI `components/trading/manual/manual-trading-panel.tsx` (235 L) + `single-order-form.tsx` + `mass-quote-panel.tsx` + `constants.ts` + `types.ts` | CeFi single-order + mass-quote, side/orderType/instrument/venue/qty/price/strategyId/algo+algoParams (TWAP/VWAP/ICEBERG/SOR/BEST_PRICE/BENCHMARK_FILL)/executionMode(execute\|record_only)/counterparty/sourceReference; `strategy_id` already a payload field; venue + algo lists come from **hardcoded `constants.ts`** (`VENUES` has Hyperliquid, **no Aster**; no DeFi protocols/chains) | (a) NO "DeFi Action" tab — needs chain selector → protocol selector → action selector (`OperationType` subset) + wallet selector (disabled rows for armed kill-switch) + spending-caps display w/ headroom + `POST …/precheck` dry-run echo before submit; (b) venue/algo lists should switch from `constants.ts` to the dynamic `GET /manual/venues` + `GET /manual/algos` endpoints (eliminates the Aster-missing drift); (c) NO `category`/`asset_group` selector on the in-context panel (back-office `/services/trading/book` page reportedly has Category tabs per `manual-trade-booking.md` § "UI Surfaces" — verify); (d) NO `MlTrainingControlPanel` component under `components/dart/` + NO `/services/dart/ml-training` route (closest existing primitive: `components/dart/strategy-param-version-bump-modal.tsx`); (e) sports/prediction backtest surfaces (instrument=fixture_id | market_id, side=home/away/draw, `OperationalMode.BACKTEST`) — verify whether the panel already routes these categories, extend if not |
-| UI `components/dart/`                                                                                                                            | `automation-toggle.tsx`, `strategy-param-version-bump-modal.tsx`, `trade-monitor.tsx` + `/services/dart/{terminal,locked}/page.tsx` routes                                                                                                                                                                                                                                                   | `MlTrainingControlPanel.tsx` + `ml-training/page.tsx` route (BUILD #3 UI)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| Surface | Exists today | What's missing | |
+------------------------------------------------------------------------------------------------------------------------------------------------
+
+|
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+|
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+|
+-------------------------------------------------------------------------------------------------------------------------------------
+
+| | UAC `internal/execution.py` | `ManualInstruction` (+ `wallet_id`, `order_type: str`), `ManualExecutionMode`,
+`ManualMLTrainingAction`, `MLTrainingControlRequest/Response`, `ManualAuditCategory`, `WalletSpendingPreCheckResult`,
+`ManualInstructionPrecheckResponse`, `ManualInstructionAuditLog` — all unit-tested (22 tests) | nothing — contract layer
+DONE (Ikenna T8) | | UAC `internal/manual_audit_paths.py` | path-helper module + `BUCKET_KIND_MANUAL_AUDIT` | the
+`manual-audit` bucket-kind row in `deployment-service/configs/cloud-providers.yaml` (slot-4 Phase 0i tail, 🟡
+cross-side) | | UAC `internal/domain/defi/wallet_config.py` | `WalletProvisioningConfig` + `SpendingCaps` +
+`SigningSurface` + `kill_switch_id` + `allowed_protocols` (slot-4, `uac@d721b6a`) | nothing — consumed read-only by the
+validation algorithm | | UAC `canonical/domain/execution/base.py:65` `OperationType` | 19 DeFi+CeFi action verbs
+(SWAP/STAKE/UNSTAKE/LEND/BORROW/REPAY/…/BUY/SELL) | nothing — IS the canonical DART trade-action enum; just needs an
+endpoint-boundary membership validator on `ManualInstruction.order_type` | | execution-service
+`api/manual_instruction_api.py` (25 KB, exists) | `POST /manual/instruction` (EXECUTE + RECORD_ONLY), `/manual/cancel`,
+`/manual/amend`, `GET /manual/instructions/{id}`, `GET /manual/venues` (dynamic from `CAPABILITY_DECLARATIONS` via
+`_get_supported_venues()` + `@lru_cache`), `_SUPPORTED_ALGOS` list, `ManualInstructionRequest` validator | (a)
+`wallet_id` field not handled; (b) NO wallet-tier validation algorithm (kill-switch + 4 SpendingCaps checks); (c) NO
+`POST /manual/instruction/precheck` dry-run endpoint; (d) `order_type` accepted as free string — needs
+`OperationType.value` membership guard; (e) NO `GET /manual/algos` route (doc lists it; only `/manual/venues` exists);
+(f) audit-log persist (`ManualInstructionAuditLog` → `manual_audit_paths` → `resolve_bucket_name(kind="manual-audit")`)
+not wired | | ml-training-service `api/` | `main.py` + health endpoints only | NEW `api/training_control_api.py` —
+`POST /training/{archetype}/{action}` (`pause`/`resume`/`retrain`), `GET /training/{archetype}/status`,
+`GET /training/audit/{request_id}`; consumes `MLTrainingControlRequest/Response`; persists `ManualInstructionAuditLog`
+with `action_category=ML_TRAINING_CONTROL`; mount router in `main.py`. Backend lifecycle action: wire to the existing
+ml-training-service training-loop control (the CLI surfaces an equivalent — verify the in-process hook before May-23) |
+| position-balance-monitor-service | (rolling-window spend not exposed for wallet caps) | NEW endpoint/query: rolling
+1h + 24h USD spend per `wallet_id` — drives validation-algorithm steps 3-4 in execution-service | | UI
+`components/trading/manual/manual-trading-panel.tsx` (235 L) + `single-order-form.tsx` + `mass-quote-panel.tsx` +
+`constants.ts` + `types.ts` | CeFi single-order + mass-quote,
+side/orderType/instrument/venue/qty/price/strategyId/algo+algoParams
+(TWAP/VWAP/ICEBERG/SOR/BEST_PRICE/BENCHMARK_FILL)/executionMode(execute\|record_only)/counterparty/sourceReference;
+`strategy_id` already a payload field; venue + algo lists come from **hardcoded `constants.ts`** (`VENUES` has
+Hyperliquid, **no Aster**; no DeFi protocols/chains) | (a) NO "DeFi Action" tab — needs chain selector → protocol
+selector → action selector (`OperationType` subset) + wallet selector (disabled rows for armed kill-switch) +
+spending-caps display w/ headroom + `POST …/precheck` dry-run echo before submit; (b) venue/algo lists should switch
+from `constants.ts` to the dynamic `GET /manual/venues` + `GET /manual/algos` endpoints (eliminates the Aster-missing
+drift); (c) NO `category`/`asset_group` selector on the in-context panel (back-office `/services/trading/book` page
+reportedly has Category tabs per `manual-trade-booking.md` § "UI Surfaces" — verify); (d) NO `MlTrainingControlPanel`
+component under `components/dart/` + NO `/services/dart/ml-training` route (closest existing primitive:
+`components/dart/strategy-param-version-bump-modal.tsx`); (e) sports/prediction backtest surfaces (instrument=fixture_id
+| market_id, side=home/away/draw, `OperationalMode.BACKTEST`) — verify whether the panel already routes these
+categories, extend if not | | UI `components/dart/` | `automation-toggle.tsx`, `strategy-param-version-bump-modal.tsx`,
+`trade-monitor.tsx` + `/services/dart/{terminal,locked}/page.tsx` routes | `MlTrainingControlPanel.tsx` +
+`ml-training/page.tsx` route (BUILD #3 UI) |
 
 ### BUILD-by-BUILD work breakdown (post-pre-audit)
 

@@ -9,7 +9,12 @@ stage: [meta]
 repos: [deployment-service, execution-service, features-service, unified-api-contracts, unified-trading-library]
 scope: [engineer, admin]
 tags: []
-related: [manifest_schema_final_gate_2026_05_09.md, manifest_cross_asset_rescan_design_2026_05_08.md, honest_coverage_formula_consolidation_2026_05_19.md]
+related:
+  [
+    /plans/archive/2026_05/manifest_schema_final_gate_2026_05_09.md,
+    /plans/archive/2026_05/manifest_cross_asset_rescan_design_2026_05_08.md,
+    /plans/archive/2026_05/honest_coverage_formula_consolidation_2026_05_19.md,
+  ]
 created: 2026-05-20
 priority: P0
 locked_by: live-defi-rollout
@@ -17,7 +22,16 @@ locked_since: 2026-05-20
 estimate_class: infra
 estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 2.4
-source_audits: [plans/audit/results/manifest_v8_compliance_2026_05_20_summary.md, plans/audit/results/manifest_divergence_2026_05_20_summary.md, plans/audit/is_mtds_contract_audit_2026_05_20.md, plans/audit/mtds_features_contract_audit_2026_05_20.md, plans/audit/mtds_strategy_contract_audit_2026_05_20.md, plans/audit/uac_consumer_contract_audit_2026_05_20.md, plans/audit/utl_consumer_contract_audit_2026_05_20.md]
+source_audits:
+  [
+    plans/audit/results/manifest_v8_compliance_2026_05_20_summary.md,
+    plans/audit/results/manifest_divergence_2026_05_20_summary.md,
+    plans/audit/is_mtds_contract_audit_2026_05_20.md,
+    plans/audit/mtds_features_contract_audit_2026_05_20.md,
+    plans/audit/mtds_strategy_contract_audit_2026_05_20.md,
+    plans/audit/uac_consumer_contract_audit_2026_05_20.md,
+    plans/audit/utl_consumer_contract_audit_2026_05_20.md,
+  ]
 parent_epic: manifest_master
 ---
 

@@ -20,9 +20,9 @@ repo_gates:
     business: none
 
 ssot:
-  - codex/06-coding-standards/ui-testing-layers.md
-  - codex/06-coding-standards/integration-testing-layers.md
-  - codex/14-playbooks/testing/README.md
+  - /codex/06-coding-standards/ui-testing-layers.md
+  - /codex/06-coding-standards/integration-testing-layers.md
+  - /codex/14-playbooks/testing/README.md
   - unified-trading-system-ui/docs/manifest/widget-certification/*.json
 ---
 
@@ -30,7 +30,7 @@ ssot:
 
 ## Context
 
-- **Testing SSOT**: `codex/06-coding-standards/ui-testing-layers.md` — 8-layer model (L0–L5), branch-tier gate policy
+- **Testing SSOT**: `/codex/06-coding-standards/ui-testing-layers.md` — 8-layer model (L0–L5), branch-tier gate policy
   (feat warn, main block), hermeticity rule, naming alignment rule.
 - **Widget cert**: `unified-trading-system-ui/docs/manifest/widget-certification/*.json` — 115 widgets, 9 cert levels
   (L0–L8). Cert L6 "Tested" is null for all widgets. This plan fills cert L6.
@@ -275,7 +275,7 @@ matching `tests/widgets/` file.
 | Test pattern doesn't scale past pilot                   | Phase 1 exit criteria includes a documented template in `tests/widgets/README.md`. If scaling hits friction, revise the template before rolling out further. |
 | Cert claims pass but widget actually broken during test | Fix during test authoring + update `findings[]` in cert. This is why we test — to catch this.                                                                |
 | Test runtime balloons with 107 widgets                  | Vitest `pool: "forks"` + affected-tests-only in watch mode. Full suite on CI only. Budget: total suite <60s on CI.                                           |
-| Live backend arrives mid-rollout and breaks fixtures    | L0 fixture ↔ Zod pair (Phase 4) catches drift immediately. Tests continue to pass because they use mocked contexts, not real fetches.                       |
+| Live backend arrives mid-rollout and breaks fixtures    | L0 fixture ↔ Zod pair (Phase 4) catches drift immediately. Tests continue to pass because they use mocked contexts, not real fetches.                        |
 | Flaky tests from React 19 strict-mode re-renders        | Use `@testing-library/react` primitives; no manual rerender; fail loudly on act() warnings.                                                                  |
 | Scope creep into predictions/sports                     | This plan explicitly excludes them. If requested mid-rollout, file a separate plan rather than extending this one.                                           |
 
@@ -290,9 +290,9 @@ matching `tests/widgets/` file.
 
 ## References
 
-- **UI testing SSOT**: `codex/06-coding-standards/ui-testing-layers.md`
-- **Backend testing SSOT**: `codex/06-coding-standards/integration-testing-layers.md`
-- **Playbook testing SSOT**: `codex/14-playbooks/testing/README.md`
+- **UI testing SSOT**: `/codex/06-coding-standards/ui-testing-layers.md`
+- **Backend testing SSOT**: `/codex/06-coding-standards/integration-testing-layers.md`
+- **Playbook testing SSOT**: `/codex/14-playbooks/testing/README.md`
 - **Widget cert index**: `unified-trading-system-ui/docs/manifest/widget-certification/*.json`
 - **Strategy coverage plan (sibling)**: `unified-trading-pm/plans/ai/ui_e2e_strategy_coverage_audit_2026_04_22.plan.md`
 - **Workspace UI rule**: `.claude/rules/ui.md`

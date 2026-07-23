@@ -9,8 +9,12 @@ stage: [meta]
 repos: [market-tick-data-service, unified-api-contracts, unified-trading-pm]
 scope: [engineer, admin]
 tags: []
-related: [uac_source_capability_metadata_promotion_2026_05_20.md, issues/uac_weekly_validation_wif_secrets_missing_2026_05_17.md]
-created: '2026-05-20'
+related:
+  [
+    /plans/archive/2026_05/uac_source_capability_metadata_promotion_2026_05_20.md,
+    issues/uac_weekly_validation_wif_secrets_missing_2026_05_17.md,
+  ]
+created: "2026-05-20"
 locked_by: live-defi-rollout
 locked_since: 2026-05-20
 priority: P3
@@ -21,7 +25,7 @@ estimate_calibrated_ai_days: 0.6
 deadline: 2026-05-23
 parent_plan: master_to_live_defi_2026_05_23.md
 parent_epic: data_correctness
-codex_ssots: [codex/02-data/contracts-scope-and-layout.md]
+codex_ssots: [/codex/02-data/contracts-scope-and-layout.md]
 ---
 
 # Defunct UAC provider dirs cleanup — 2026-05-20

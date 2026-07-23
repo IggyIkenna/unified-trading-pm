@@ -260,7 +260,7 @@ Each consumer picks one. Default to migrate unless there's a contractual reason 
      one release. Update consumer side to read `asset_group` first, fall back to `category`.
    - **Document**: add a one-line comment at the surface citing the reason
      (`# wire-format pinned: <counterparty> contract requires "category"`).
-3. Update `codex/13-codex-governance/SSOT-BOUNDARY.md` "renames in flight" table with the migrated surfaces.
+3. Update `/codex/13-codex-governance/SSOT-BOUNDARY.md` "renames in flight" table with the migrated surfaces.
 4. Each touched repo's QG green.
 
 ### Test gate
@@ -370,7 +370,7 @@ code changes — but it gates everything downstream of Phase 6.
 ### Watchouts
 
 - The `--all` flag is mandatory — bare `create-code-tarballs.sh` only re-tars CORE (UAC/UTL/MTDS/deployment-service) and
-  silently runs stale code for the rest. SSOT: `codex/05-infrastructure/vm-tarball-deployment.md`.
+  silently runs stale code for the rest. SSOT: `/codex/05-infrastructure/vm-tarball-deployment.md`.
 - If you launch a CeFi smoke VM, use a small year-range (single year or even 5 days). The asset_group flag is
   `--asset-group CEFI` per the new vocabulary.
 
@@ -631,7 +631,7 @@ Per-follow-up status table with commit SHAs.
 ### Manifest-429-specific (F + G + H + I)
 
 - **Tarball-stale-code is silent**: every VM launch reads from `gs://deployment-scripts-.../code/` blindly. Forgetting
-  Follow-up F silently runs old code with no error. SSOT: `codex/05-infrastructure/vm-tarball-deployment.md`.
+  Follow-up F silently runs old code with no error. SSOT: `/codex/05-infrastructure/vm-tarball-deployment.md`.
 - **Bare `create-code-tarballs.sh` only re-tars CORE** (UAC / UTL / MTDS / deployment-service). The `--all` flag is
   mandatory for any multi-repo feature. `--asset-group SPORTS|CEFI|TRADFI|DEFI|PREDICTION` scopes to one asset_group's
   pipeline.

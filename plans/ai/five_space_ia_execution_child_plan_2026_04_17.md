@@ -1,8 +1,8 @@
 # Child execution plan — Five-space IA, preview removal, IR, catalogue API
 
-> **Canonical playbook SSOT**: see [codex/14-playbooks/](../../codex/14-playbooks/README.md) for the playbook families,
+> **Canonical playbook SSOT**: see [codex/14-playbooks/](/codex/14-playbooks/README.md) for the playbook families,
 > environments, and auth tiers this plan integrates with. Ticket #12 (staging Firebase) and ticket #4 (/briefings hub)
-> are referenced from [codex/14-playbooks/roadmap/next-waves.md](../../codex/14-playbooks/roadmap/next-waves.md).
+> are referenced from [/codex/14-playbooks/roadmap/next-waves.md](/codex/14-playbooks/roadmap/next-waves.md).
 
 Ordered backlog derived from the meta-plan (charter lives in the user’s plan file; **do not** treat this as replacing
 that charter). Tags: **`[UI]`** · **`[API]`** · **`[Infra]`** · **`[Docs]`** · **`[No-backend]`**

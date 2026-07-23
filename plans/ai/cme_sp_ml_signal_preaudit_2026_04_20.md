@@ -135,7 +135,7 @@ Item (d) cannot be verified from the local workspace — requires a GCS query ag
 - **Representative-future service** (for the roll): **DOES NOT EXIST**. Only reference is in
   `unified-trading-system-ui/lib/architecture-v2/block-list.ts` (BL-10 flag). No Python module named
   `representative_future_service` anywhere in the workspace. Codex flags this explicitly:
-  `codex/09-strategy/architecture-v2/cross-cutting/futures-roll-and-combos.md`.
+  `/codex/09-strategy/architecture-v2/cross-cutting/futures-roll-and-combos.md`.
 
 ### 1.3 unified-api-contracts
 
@@ -236,14 +236,40 @@ Item (d) cannot be verified from the local workspace — requires a GCS query ag
 
 In priority order:
 
-| #   | Blocker                                                                                                                                                                                                                                                                                                                                                                                                                       | Severity                                                                        | Fix scope                                                                                                          |
-| --- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ | --- | --- | ---- | ------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ | --------------------------------------------------- |
-| B1  | ~~**CME ES multi-year ohlcv_1m not confirmed to be in GCS.**~~ **RESOLVED 2026-05-05** by manifest probe against `gs://market-data-tick-tradfi-central-element-323112/_index/availability_index.parquet` — ES futures_chain 100% captured 2020-01-01 → 2026-05-04 (1,848 ohlcv_1m + 1,974 trades). MES same. ES_OPT options_chain has gaps 2020-2021 + sparse 2025 (fill VM `tradfi-bf-es-opt-fill-20260505-123434` running). | ~~HARD BLOCKER~~ **DONE**                                                       | n/a                                                                                                                |
-| B2  | **No continuous-series / representative-future builder.** Strategy can trade any single dated contract (e.g. `CME:FUTURE:ES-20260620`) but that contract only runs 3 months. An ML model trained on a single expiry has almost no training data. For multi-year training you need a rolled continuous series. BL-10 is the canonical reference.                                                                               | **HARD BLOCKER for a multi-year backtest.** Soft for a single-quarter backtest. | New module in MTDS OR a new `representative-future-service` repo + UAC `RepresentativeFutureRegistry` + UTL events |
-| B3  | **ES not registered in ml-training-service.** `parser.py` hard-codes `TRADFI: ["SPY"]`.                                                                                                                                                                                                                                                                                                                                       | **ERROR — CLI will reject `--instrument ES`.**                                  | 3-line change to `parser.py`                                                                                       |
-| B4  | ~~**No TRADFI backfill / ML-training VM launcher.** Cannot run heavy backtest compute on a VM.~~ **PARTIALLY RESOLVED 2026-05-05.** `deployment-service/scripts/vm/launch-tradfi-backfill-vm.sh` exists (valid roots `ES                                                                                                                                                                                                      | ES_OPT                                                                          | MES                                                                                                                | BTC | ETH | IBIT | ETHA`, singleton lock, `VM_SHUTDOWN_ON_COMPLETION=true`, ServiceBootstrap events). ML-training VM launcher still missing. | Reduced — backfill launcher done; ML-training launcher still open. | 1 remaining shell script (launch-ml-training-vm.sh) |
-| B5  | **`strategy-service` ML_DIRECTIONAL_CONTINUOUS engine has no `FUTURES_ROLL` emission**. Needed when the representative-future flips. Without it, a backtest running across more than one expiry will flatline when the contract expires.                                                                                                                                                                                      | Medium — only matters once B2 is real.                                          | Strategy-service engine extension                                                                                  |
-| B6  | **Term-structure + macro-calendar features not confirmed wired for TRADFI**. features-calendar-service has FOMC/CPI/NFP but wiring it to TRADFI-feature-group output for ES-1m consumption is untested.                                                                                                                                                                                                                       | Low — model trains without these, just weaker.                                  | Smoke test                                                                                                         |
+| # | Blocker | Severity | Fix scope | | --- |
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+| ------------------------------------------------------------------------------- |
+
+| ------------------------------------------------------------------------------------------------------------------ | --- |
+| ------------------------------------------------------------------------------------------------------------------ | --- |
+
+---
+
+| ------------------------------------------------------------------ |
+--------------------------------------------------- | | B1 | ~~**CME ES multi-year ohlcv_1m not confirmed to be in
+GCS.**~~ **RESOLVED 2026-05-05** by manifest probe against
+`gs://market-data-tick-tradfi-central-element-323112/_index/availability_index.parquet` — ES futures_chain 100% captured
+2020-01-01 → 2026-05-04 (1,848 ohlcv_1m + 1,974 trades). MES same. ES_OPT options_chain has gaps 2020-2021 + sparse 2025
+(fill VM `tradfi-bf-es-opt-fill-20260505-123434` running). | ~~HARD BLOCKER~~ **DONE** | n/a | | B2 | **No
+continuous-series / representative-future builder.** Strategy can trade any single dated contract (e.g.
+`CME:FUTURE:ES-20260620`) but that contract only runs 3 months. An ML model trained on a single expiry has almost no
+training data. For multi-year training you need a rolled continuous series. BL-10 is the canonical reference. | **HARD
+BLOCKER for a multi-year backtest.** Soft for a single-quarter backtest. | New module in MTDS OR a new
+`representative-future-service` repo + UAC `RepresentativeFutureRegistry` + UTL events | | B3 | **ES not registered in
+ml-training-service.** `parser.py` hard-codes `TRADFI: ["SPY"]`. | **ERROR — CLI will reject `--instrument ES`.** |
+3-line change to `parser.py` | | B4 | ~~**No TRADFI backfill / ML-training VM launcher.** Cannot run heavy backtest
+compute on a VM.~~ **PARTIALLY RESOLVED 2026-05-05.** `deployment-service/scripts/vm/launch-tradfi-backfill-vm.sh`
+exists (valid roots
+`ES                                                                                                                                                                                                      | ES_OPT                                                                          | MES                                                                                                                | BTC | ETH | IBIT | ETHA`,
+singleton lock, `VM_SHUTDOWN_ON_COMPLETION=true`, ServiceBootstrap events). ML-training VM launcher still missing. |
+Reduced — backfill launcher done; ML-training launcher still open. | 1 remaining shell script (launch-ml-training-vm.sh)
+| | B5 | **`strategy-service` ML_DIRECTIONAL_CONTINUOUS engine has no `FUTURES_ROLL` emission**. Needed when the
+representative-future flips. Without it, a backtest running across more than one expiry will flatline when the contract
+expires. | Medium — only matters once B2 is real. | Strategy-service engine extension | | B6 | **Term-structure +
+macro-calendar features not confirmed wired for TRADFI**. features-calendar-service has FOMC/CPI/NFP but wiring it to
+TRADFI-feature-group output for ES-1m consumption is untested. | Low — model trains without these, just weaker. | Smoke
+test |
 
 ## 3. Minimum viable backtest — what "MVP" can realistically mean
 
@@ -355,7 +381,7 @@ Three tiers of "runnable":
 - Backtest gate: `GroupBBacktestResult` emits with sharpe_ratio non-zero, num_trades > 50, and the fill series passes
   replay parity with an engine-driven live-mode dry-run.
 - Documentation gate: this plan's checkboxes all flipped to `[x]` and a
-  `codex/09-strategy/architecture-v2/archetypes/ml-directional-continuous.md` "Realised instances" row added for
+  `/codex/09-strategy/architecture-v2/archetypes/ml-directional-continuous.md` "Realised instances" row added for
   `ML_DIRECTIONAL_CONTINUOUS@cme-es-dated-1m-usd-prod`.
 
 ## 8. What this plan explicitly does NOT solve
@@ -464,4 +490,4 @@ Three tiers of "runnable":
 - [ ] [AGENT] P1. Refresh VM tarballs:
       `bash deployment-service/scripts/vm/ create-code-tarballs.sh --asset-group TRADFI`.
 - [ ] [AGENT] P2. Add a "Realised instances" row to
-      `codex/09-strategy/architecture-v2/archetypes/ml-directional-continuous.md`.
+      `/codex/09-strategy/architecture-v2/archetypes/ml-directional-continuous.md`.

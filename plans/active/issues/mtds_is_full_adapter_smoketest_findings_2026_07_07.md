@@ -36,9 +36,9 @@ tags:
 related:
   [
     ../instruments_completion_tracker_2026_07_06.md,
-    defi_lending_atoken_debttoken_instrument_split_2026_07_07.md,
-    non_tardis_dexperp_venue_data_status_smoketest_2026_07_07.md,
-    mtds_mdps_order_book_imbalance_duplicated_2026_07_07.md,
+    /plans/archive/issues/defi_lending_atoken_debttoken_instrument_split_2026_07_07.md,
+    /plans/active/issues/non_tardis_dexperp_venue_data_status_smoketest_2026_07_07.md,
+    /plans/active/issues/mtds_mdps_order_book_imbalance_duplicated_2026_07_07.md,
     ../prediction_capture_incident_remediation_2026_07_06.md,
   ]
 created: 2026-07-07

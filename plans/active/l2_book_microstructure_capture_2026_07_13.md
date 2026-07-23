@@ -12,7 +12,7 @@ stage: [data, features]
 repos: [market-tick-data-service, features-service, unified-api-contracts]
 scope: [engineer]
 tags: [strategy, v2-engine, market-making, orderbook, microstructure]
-related: [v2_engine_venue_buildout_2026_06_15.md]
+related: [/plans/active/v2_engine_venue_buildout_2026_06_15.md]
 created: 2026-07-13
 parent_epic: strategy_master
 assigned_vm: NA
@@ -57,7 +57,7 @@ sequential: true
   computed-source name.
 - **Canonical path/bucket rules (mandatory, no exceptions)**: every parquet write carries the
   `pipeline_mode = {mode}_{source}[_{transport}]` hive-partition key LEFT of `asset_group=`
-  (`codex/02-data/pipeline-mode-partition.md`); every bucket lookup goes through
+  (`/codex/02-data/pipeline-mode-partition.md`); every bucket lookup goes through
   `unified_trading_library.cloud_interface.bucket_naming.resolve_bucket_name(...)` — never an inline `gs://` path; GCS
   object ops (copy/delete/describe) go through UTL `gcs_copy_object`/`gcs_delete_object`/`gcs_describe_object`, never a
   `gcloud`/`gsutil` subprocess.
@@ -402,6 +402,6 @@ dispatchable task from them every cycle regardless, and no worker-slot-reachable
 treat this as one backlog-hygiene fix covering both `l2_book_microstructure_capture-005` and `-007` rather than two
 one-off findings — the same park recipe (RULES.md § "Park a task") applies to both, gated respectively on "Option A
 MDPS-extension authorized" (todo 5) and "a fresh CeFi live manifest row lands" (todo 7, naturally self-clearing once the
-migration completes — c.f. `codex/02-data/honest-absence-downstream-handling.md` § "Reference incidents").
+migration completes — c.f. `/codex/02-data/honest-absence-downstream-handling.md` § "Reference incidents").
 
 Docs-only update, ships via the `docs(plans):` carve-out (no code in this commit).

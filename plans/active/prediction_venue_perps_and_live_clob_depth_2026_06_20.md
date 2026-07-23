@@ -487,7 +487,7 @@ canonical home + reuses the shipped matcher→feature chain unchanged.
       That is sufficient for the detector (reads latest book) but is NOT a continuous multi-hour replayable depth
       archive. DESIGN INTENT (confirmed vs SSOT — the raw flush is a HAND-OFF to MDPS, not the final archive): per
       **Live = Batch** (CLAUDE.md §"Live = batch" + `plans/active/writegate_honest_coverage_endtoend_2026_05_06.md` +
-      `codex/02-data/pipeline-mode-and-batch-live-reconciliation.md`), `websocket_runner.py:147` states "`available_at`
+      `/codex/02-data/pipeline-mode-and-batch-live-reconciliation.md`), `websocket_runner.py:147` states "`available_at`
       is derived downstream by MDPS from `period_end + emission_latency`", and MDPS `orchestration_scanner.py` DOES scan
       `raw_tick_data/by_date/day={D}/pipeline_mode={batch|live}/…` → processes → durable processed store (same
       destination batch writes; determinism spine `citadel_paper_batch_live_reconciliation_2026_06_19.md` requires
@@ -578,14 +578,14 @@ Operator direction: we already stream live books for BOTH venues, so DETECT live
 cross-venue `arbitrage_price_dispersion` engine in PAPER mode against the live streams for ~24h on a VM, NORMALIZE both
 sides to a common YES-probability, flag PURE_ARB (bid crosses offer) + QUOTABLE_ARB (mid crosses mid, both two-way), and
 STREAM every arb opportunity to GCS over time → an accumulating arb-opportunity corpus. If it works for a day → make it
-a long-lived running service. Design SSOT written: `codex/04-architecture/cross-venue-prediction-arb-detection.md`
+a long-lived running service. Design SSOT written: `/codex/04-architecture/cross-venue-prediction-arb-detection.md`
 (reuse the shipped matcher→feature→engine; add the live wiring + the GCS arb store + the long-lived run; fix the
 producer trades-mislabel P0 first/alongside). A detailed `/autonomous` dispatch prompt was produced for a fresh agent.
 
 - [x] ✅ [DESIGN] P0. **Live cross-venue arb DETECTOR (paper-mode, GCS-persisted, long-lived) — DELIVERED (2026-06-24):
       detector RUNNING long-lived on prediction-arb-detector-20260624-134310; 4 repos shipped; honest-0 (8932 mappings,
       0 overlap). Was a DISPATCH to a fresh `/autonomous` agent.** Per
-      `codex/04-architecture/cross-venue-prediction-arb-detection.md`: (1) fix the prediction producer trades-mislabel
+      `/codex/04-architecture/cross-venue-prediction-arb-detection.md`: (1) fix the prediction producer trades-mislabel
       (P0 below — `data_type=trades` carries book data); (2) wire the shipped book dispersion feature +
       `arbitrage_price_dispersion` cross-venue engine into the LIVE path in PAPER mode, normalizing both venues to
       YES-probability with same-YES-semantics + fee-net edge; (3) flag PURE_ARB (bid×offer) + QUOTABLE_ARB (mid×mid,
@@ -1119,13 +1119,13 @@ Confirmed feasible — Kalshi GAME-series EVENT tickers encode the fixture clean
         `kalshi_event_ticker`/`polymarket_condition_id`/`api_football_fixture_id` join row).
 
         (3c) the arb-layer consumer (features/strategy) groups the two venues' instruments by
-                                        `SportsFixtureKey.pairing_key()` WITHIN the shared `SPORTS_{LEAGUE}_{BETTYPE}` cqg → the same-game arb pair.
-                                        Needs a cross-venue team-name canonicaliser (Kalshi "Seattle" ↔ Polymarket "Seattle Mariners"/"Mariners") —
-                                        extend the existing `get_canonical_team_for_polymarket` maps with Kalshi city/abbrev aliases, validated vs
-                                        REAL paired samples (no false pairs — operator). Repos:
-                                        unified-api-contracts (mapping populate + team canon) + instruments-service (sports-event link on prediction
-                                        enum) + features-service/strategy-service (arb grouping). Provenance: operator "parse fixture ids" 2026-06-23
-                                        (residual after parser UAC@3effe2fc).
+                                                                                                                                                        `SportsFixtureKey.pairing_key()` WITHIN the shared `SPORTS_{LEAGUE}_{BETTYPE}` cqg → the same-game arb pair.
+                                                                                                                                                        Needs a cross-venue team-name canonicaliser (Kalshi "Seattle" ↔ Polymarket "Seattle Mariners"/"Mariners") —
+                                                                                                                                                        extend the existing `get_canonical_team_for_polymarket` maps with Kalshi city/abbrev aliases, validated vs
+                                                                                                                                                        REAL paired samples (no false pairs — operator). Repos:
+                                                                                                                                                        unified-api-contracts (mapping populate + team canon) + instruments-service (sports-event link on prediction
+                                                                                                                                                        enum) + features-service/strategy-service (arb grouping). Provenance: operator "parse fixture ids" 2026-06-23
+                                                                                                                                                        (residual after parser UAC@3effe2fc).
 
 ### 2026-06-23 (autonomous) — P0 DATA-CORRECTNESS: 142k POLYMARKET empty_confirmed inflated by NULL instrument lifecycle (operator drill-down — CONFIRMED)
 

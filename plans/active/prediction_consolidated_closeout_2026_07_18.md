@@ -51,15 +51,15 @@ tags:
   ]
 related:
   [
-    cefi_consolidated_closeout_2026_07_18.md,
-    tradfi_consolidated_closeout_2026_07_18.md,
-    data_completion_prediction_2026_07_15.md,
-    prediction_canonical_identity_migration_2026_07_08.md,
-    prediction_capture_incident_remediation_2026_07_06.md,
-    prediction_venue_perps_and_live_clob_depth_2026_06_20.md,
-    predictions_ml_walk_forward_and_arb_2026_06_20.md,
-    predictions_other_bucket_and_ui_drilldown_2026_06_20.md,
-    data_pipeline_e2e_check_2026_07_10.md,
+    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
+    /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
+    /plans/active/data_completion_prediction_2026_07_15.md,
+    /plans/archive/2026_07/prediction_canonical_identity_migration_2026_07_08.md,
+    /plans/active/prediction_capture_incident_remediation_2026_07_06.md,
+    /plans/active/prediction_venue_perps_and_live_clob_depth_2026_06_20.md,
+    /plans/active/predictions_ml_walk_forward_and_arb_2026_06_20.md,
+    /plans/active/predictions_other_bucket_and_ui_drilldown_2026_06_20.md,
+    /plans/archive/2026_07/data_pipeline_e2e_check_2026_07_10.md,
   ]
 created: 2026-07-18
 last_updated: 2026-07-18
@@ -131,7 +131,7 @@ scopes the full end-to-end.
 The cross-AG shard-atom frame
 (`pipeline_mode · date · asset_group · venue · [chain] · instrument_type · data_type · (instrument_id OR underlying) · [quote · margin] · source`)
 applies to prediction on every axis EXCEPT the key column. Per the SSOT
-(`codex/02-data/availability-manifest-and-data-status.md:57-60`) the prediction atom is
+(`/codex/02-data/availability-manifest-and-data-status.md:57-60`) the prediction atom is
 `(asset_group=prediction, venue, data_type=prediction_canonical_question_group, canonical_question_group, day)` — keyed
 on **`canonical_question_group`**, which is neither a per-market `instrument_id` nor `underlying`. Two grains, kept
 straight:
@@ -145,7 +145,7 @@ straight:
 Corollaries the generic frame misses for prediction: `[chain]` absent; `[quote · margin]` present only for KALSHI-PERP /
 POLYMARKET-PERP; **IS side collapses to `venue → dates`** (no data_type axis — the instruments parquet IS the metadata);
 MTDS drilldown is **CQG-led** — `venue → canonical_question_group → data_type → date`
-(`codex/02-data/data-status-drilldown-hierarchy.md:42`), i.e. CQG sits ABOVE data_type (opposite ordering to the flat
+(`/codex/02-data/data-status-drilldown-hierarchy.md:42`), i.e. CQG sits ABOVE data_type (opposite ordering to the flat
 atom). Representative rows:
 
 | shard (venue · data_type · type)                                       | key                                                  | notes                                                                                                        |
@@ -439,8 +439,8 @@ fixture-linked before MVP backfill.
 
 > Makes live-odds-API-vs-Polymarket-vs-Kalshi football arb possible on a CANONICAL basis. Depends on the A4 writers +
 > the Phase-B fixture-attribute backfill landing. SSOTs:
-> `codex/04-architecture/cross-venue-prediction-arb-detection.md`,
-> `codex/16-strategy-playbooks/strategy/cme-polymarket-arb.md`, `instruments-service/docs/SPORTS_INSTRUMENTS.md`.
+> `/codex/04-architecture/cross-venue-prediction-arb-detection.md`,
+> `/codex/16-strategy-playbooks/strategy/cme-polymarket-arb.md`, `instruments-service/docs/SPORTS_INSTRUMENTS.md`.
 
 ### E1 — Thread the fixture id onto BOTH prediction venues (Leg 1)
 
@@ -486,7 +486,7 @@ fixture-linked before MVP backfill.
 - [ ] [BACKEND] P2. **3-way arb correctness guards** — prediction-market "lay" is the NO-side complement, not a real
       exchange lay (exclude from back-lay arbs; include in 3-way with exchange_meta validation); keep the honest gate
       that a real two-sided book must exist on BOTH venues before emitting an arb row.
-      `codex/04-architecture/cross-venue-prediction-arb-detection.md`. (repos: features-service)
+      `/codex/04-architecture/cross-venue-prediction-arb-detection.md`. (repos: features-service)
 - [x] ✅ [BACKEND] P2. **Venue-derivation for prediction/sports `instrument_id`s in execution-service — BOTH sites FIXED
       (2026-07-18).** The naive `split(":")[0]` returned the TYPE/SPORT for TYPE-first ids. (1) ✅
       `validation/instrument_format.py::get_venue_from_instrument_id` `execution-service@e3707472` (latent, no prod
@@ -499,15 +499,15 @@ fixture-linked before MVP backfill.
 
 ## Codex SSOTs (read before touching a phase)
 
-`codex/02-data/prediction-data-types-catalog.md`, `codex/02-data/prediction-schema-paths.md`,
-`codex/02-data/prediction-perps-sourcing.md`, `codex/02-data/prediction-settlement-availability-convention.md`,
-`codex/02-data/availability-manifest-and-data-status.md`, `codex/02-data/data-status-drilldown.md`,
-`codex/02-data/data-status-drilldown-hierarchy.md`, `codex/02-data/pipeline-mode-and-batch-live-reconciliation.md`,
-`codex/02-data/venue-availability.md`, `codex/02-data/honest-absence-downstream-handling.md`,
-`codex/04-architecture/prediction-batch-live.md`, `codex/04-architecture/cross-venue-prediction-arb-detection.md`,
-`codex/09-strategy/architecture-v2/cross-cutting/prediction-markets.md`,
-`codex/09-strategy/operational/prediction-markets-codification-gaps.md`, `codex/01-domain/sports-instruments.md`,
-`codex/16-strategy-playbooks/strategy/cme-polymarket-arb.md`. Plus (Phase E odds/fixture side, out-of-repo):
+`/codex/02-data/prediction-data-types-catalog.md`, `/codex/02-data/prediction-schema-paths.md`,
+`/codex/02-data/prediction-perps-sourcing.md`, `/codex/02-data/prediction-settlement-availability-convention.md`,
+`/codex/02-data/availability-manifest-and-data-status.md`, `/codex/02-data/data-status-drilldown.md`,
+`/codex/02-data/data-status-drilldown-hierarchy.md`, `/codex/02-data/pipeline-mode-and-batch-live-reconciliation.md`,
+`/codex/02-data/venue-availability.md`, `/codex/02-data/honest-absence-downstream-handling.md`,
+`/codex/04-architecture/prediction-batch-live.md`, `/codex/04-architecture/cross-venue-prediction-arb-detection.md`,
+`/codex/09-strategy/architecture-v2/cross-cutting/prediction-markets.md`,
+`/codex/09-strategy/operational/prediction-markets-codification-gaps.md`, `/codex/01-domain/sports-instruments.md`,
+`/codex/16-strategy-playbooks/strategy/cme-polymarket-arb.md`. Plus (Phase E odds/fixture side, out-of-repo):
 `instruments-service/docs/SPORTS_INSTRUMENTS.md`.
 
 ## Aggregated source docs (referenced, not duplicated)
@@ -582,7 +582,7 @@ drain window, or an operator decision. They are ordered, not abandoned — each 
     first migration step precisely to enumerate the live prediction dimensions before migrating (mirrors tradfi's
     enumeration-driven single-source-of-truth).
   - **Shard-atom correction added (operator, 2026-07-18)**: confirmed against the SSOT
-    (`codex/02-data/availability-manifest-and-data-status.md:57-60`) that the prediction shard atom is keyed on
+    (`/codex/02-data/availability-manifest-and-data-status.md:57-60`) that the prediction shard atom is keyed on
     `canonical_question_group` (manifest-only bundle) / per-CID `instrument_id` (raw), NOT
     `(instrument_id OR underlying)` — `underlying` is display-only. Added the "Shard atom for prediction" subsection to
     Ground-truth; it is the root cause of the Phase-B CQG-wipe and the verify-gate assertion for A0/A2/B/D.
@@ -1362,19 +1362,19 @@ drain window, or an operator decision. They are ordered, not abandoned — each 
   - **Codex audit (the operator's explicit ask: "is this documented in codex strategy docs archetypes etc" — the answer
     at the time was NO, and that was a real review-blocking omission: the work lived in plans + issue docs, which
     ARCHIVE, never in codex, which is the durable SSOT).** Four docs now match shipped reality:
-    - `codex/04-architecture/cross-venue-prediction-arb-detection.md` — rewritten as the N-venue SSOT
+    - `/codex/04-architecture/cross-venue-prediction-arb-detection.md` — rewritten as the N-venue SSOT
       (Kalshi/Polymarket/Betfair): the Betfair de-vig via book-sum overround normalization, **Betfair is BUY-YES-ONLY
       today** flagged as "the load-bearing limitation", the net-of-fees entry gate with pseudo-code
       (`net = gross − fee(buy_leg) − fee(sell_leg)`; fire iff `net >= entry_threshold AND buy_venue != sell_venue`),
       null-skip so a phantom edge cannot win, the GCS arb store, and `code_refs` pointing at the execution bridge.
-    - `codex/04-architecture/strategy-execution-protocol.md` — NEW subsection under `ATOMIC` recording what the protocol
-      ACTUALLY implements today vs what the schema merely declares: the `atomic_leg_executor` LEADER_HEDGE semantics,
-      the PAPER-by-default safety property (`create_sports_adapter(mode)`, a missing/None mode is PAPER and never live),
-      and — stated plainly rather than left implied — **that the LIVE runtime seam is still ABSENT** and why the T4 tier
-      ban means it needs a transport decision rather than a direct call.
-    - `codex/09-strategy/architecture-v2/archetypes/arbitrage-price-dispersion.md` — Variant C
+    - `/codex/04-architecture/strategy-execution-protocol.md` — NEW subsection under `ATOMIC` recording what the
+      protocol ACTUALLY implements today vs what the schema merely declares: the `atomic_leg_executor` LEADER_HEDGE
+      semantics, the PAPER-by-default safety property (`create_sports_adapter(mode)`, a missing/None mode is PAPER and
+      never live), and — stated plainly rather than left implied — **that the LIVE runtime seam is still ABSENT** and
+      why the T4 tier ban means it needs a transport decision rather than a direct call.
+    - `/codex/09-strategy/architecture-v2/archetypes/arbitrage-price-dispersion.md` — Variant C
       (cross-venue-prediction-dispersion, N-venue best-pair scan gated on NET-of-fees edge).
-    - `codex/09-strategy/architecture-v2/cross-cutting/prediction-markets.md` — its arb section documents the LEGACY
+    - `/codex/09-strategy/architecture-v2/cross-cutting/prediction-markets.md` — its arb section documents the LEGACY
       `prediction_arb/` strategy, which is a DIFFERENT code path from the v2 archetype. Rather than rewrite a doc I do
       not own, added a scoped banner marking it as not-the-v2-path and pointing at the detector SSOT, and noting its
       "~2.5% after fees" rule of thumb is superseded by the explicit per-venue fee model.

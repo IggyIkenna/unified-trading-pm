@@ -6,11 +6,23 @@ status: complete
 nature: record
 asset_group: [infrastructure]
 stage: [meta]
-repos: [agent-orchestrator, alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-service]
+repos:
+  [
+    agent-orchestrator,
+    alerting-service,
+    batch-live-reconciliation-service,
+    client-reporting-api,
+    deployment-api,
+    deployment-service,
+  ]
 scope: [engineer, admin]
 tags: []
-related: [master_to_live_defi_2026_05_23.md, gcs_migration_bundle_pipeline_mode_2026_05_08.md]
-created: '2026-05-07'
+related:
+  [
+    /plans/active/master_to_live_defi_2026_05_23.md,
+    /plans/archive/2026_05/gcs_migration_bundle_pipeline_mode_2026_05_08.md,
+  ]
+created: "2026-05-07"
 parent_epic: infrastructure_master
 assigned_vm: vm-cross-cutting
 priority: P1
@@ -50,8 +62,8 @@ DeFi S3/Athena/Glue migration complete (10 buckets, 346,920 objects, 36.83 GB). 
 Supersedes the "defer to Q3 2026" recommendation in
 [aws_migration_cost_analysis_2026_05_07.plan.md](../archive/audits/aws_migration_cost_analysis_2026_05_07.plan.md)
 (per-resource cost snapshot at
-[`aws-migration-cost-snapshot-2026-05-07.md`](../../codex/05-infrastructure/aws-migration-cost-snapshot-2026-05-07.md)).
-That analysis was wrong on three counts confirmed 2026-05-07T11:45Z:
+[`aws-migration-cost-snapshot-2026-05-07.md`](/codex/05-infrastructure/aws-migration-cost-snapshot-2026-05-07.md)). That
+analysis was wrong on three counts confirmed 2026-05-07T11:45Z:
 
 1. **AWS credits** — the analysis priced AWS at list. With non-trivial credits (operator to confirm in Phase 0), AWS
    run-cost can be net-zero or credit-funded for a defined window. The user noted "that's the whole point."
@@ -184,8 +196,10 @@ the 8 missing-ECR repos (8 file additions). `cloudbuild.yaml` ↔ `buildspec.aws
 
 ### Phase 0 — Operator confirms credit + scope (1 hour, BLOCKS Phase 1+) — **DONE 2026-05-07T12:15Z**
 
-- [x] [HUMAN] P0. AWS credit confirmed: **≥$40k** in `427895769566`, **11-month** use-by window, **no
-      service/region/account locks**. Sustainable burn ~$3,636/mo to fully utilize. Captured inline §"Operator answers".
+- [x] [HUMAN] P0. AWS credit confirmed:
+      **≥$40k** in `427895769566`, **11-month** use-by window, **no
+      service/region/account locks**. Sustainable burn ~$3,636/mo
+      to fully utilize. Captured inline §"Operator answers".
 - [x] [HUMAN] P0. Scope = **DeFi + CeFi-instruments first**. DeFi archetypes hedge across 6 CeFi perp venues so
       CeFi-instruments reference data is on critical path. CeFi historical tick data + sports + predictions + tradfi
       stay GCP-resident with Phase 9 dual-write expansion as opportunistic credit-utilization.
@@ -231,7 +245,7 @@ bucket on either backend via the `cloud-providers.yaml` template SSOT. Mismatche
       `unified-trading-pm/codex/05-infrastructure/cloud-agnostic-audit-2026-05-07.md`. **DONE 2026-05-08** (Tab 4):
       ~1961 hits across 80+ files; 95% UCI-resolved (compliant), 85 sites already `# noqa: gs-uri`-marked awaiting Wave
       2 sweep, 70 untriaged anti-patterns remain. Findings in
-      [`cloud-agnostic-audit-2026-05-07.md`](../../codex/05-infrastructure/cloud-agnostic-audit-2026-05-07.md) §
+      [`cloud-agnostic-audit-2026-05-07.md`](/codex/05-infrastructure/cloud-agnostic-audit-2026-05-07.md) §
       "Inline-string bucket-name audit (2026-05-08)" § 1.
 - [x] ✅ [SCRIPT] P0. `grep -rn "unified-trading-\|s3://\|427895769566" --include="*.py" --include="*.sh"` to enumerate
       AWS **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires deployment-service, instruments-service, or
@@ -243,7 +257,7 @@ bucket on either backend via the `cloud-providers.yaml` template SSOT. Mismatche
       `config-store` — 10 missing per Gap inventory above). Land yaml extension to close the gap. **DONE 2026-05-08**
       (Tab 4): probed `deployment-service/configs/cloud-providers.yaml` — 24 keys, zero drift. Phase 2
       (deployment-service@`7da2f3d`) already closed all 10 documented gaps. Documented in
-      [`cloud-agnostic-audit-2026-05-07.md`](../../codex/05-infrastructure/cloud-agnostic-audit-2026-05-07.md) § 2.
+      [`cloud-agnostic-audit-2026-05-07.md`](/codex/05-infrastructure/cloud-agnostic-audit-2026-05-07.md) § 2.
 - [x] [SCRIPT] P0. **Bucket-name SUFFIX drift check**: GCS has `pnl-store-central-element-323112-defi` (asset_group as
       suffix) but cloud-providers.yaml AWS template uses `unified-trading-pnl-store-defi-{env}-{account}` (asset_group
       as infix). Resolve to ONE canonical structure (recommend the AWS template form) + commit a one-time GCS bucket
@@ -252,8 +266,8 @@ bucket on either backend via the `cloud-providers.yaml` template SSOT. Mismatche
       drift documented; **resolution: keep both shapes, hide asymmetry behind UTL
       `cloud_interface.bucket_naming.resolve_bucket_name()`** (UTL@`780a9575`). Yaml internally maps each `kind` to
       per-cloud templates; on-disk GCS data stays put (PB-scale rename has no benefit). See
-      [`cloud-agnostic-audit-2026-05-07.md`](../../codex/05-infrastructure/cloud-agnostic-audit-2026-05-07.md) § 3 +
-      [`cloud-agnostic-script-pattern.md`](../../codex/05-infrastructure/cloud-agnostic-script-pattern.md) § 4.2. **NEW
+      [`cloud-agnostic-audit-2026-05-07.md`](/codex/05-infrastructure/cloud-agnostic-audit-2026-05-07.md) § 3 +
+      [`cloud-agnostic-script-pattern.md`](/codex/05-infrastructure/cloud-agnostic-script-pattern.md) § 4.2. **NEW
       BLOCKER SURFACED**: bucket-name SSOT triple-drift between `setup-defi-buckets.sh` purpose-specific shape vs
       `BUCKET_PREFIXES` per-kind shape vs `UnifiedCloudConfig` per-field env-vars — operator triage call needed. Filed
       at
@@ -399,7 +413,7 @@ seriously. **No script hardcodes `gcloud storage` or `gsutil` without an AWS bra
       canonical pattern: argparse `--cloud {gcp,aws}` with default from `CLOUD_PROVIDER` env, fallback to `gcp`,
       fail-loud on unknown values. New scripts MUST follow this pattern; QG in base-service.sh extends to enforce. **N/A
       — codex section already written at Tab 4 close-out 2026-05-08: §§ 4.1-4.5 added to
-      `codex/05-infrastructure/cloud-agnostic-script-pattern.md` (PM@b02c5050).**
+      `/codex/05-infrastructure/cloud-agnostic-script-pattern.md` (PM@b02c5050).**
 - [x] ✅ [SCRIPT] P0. **Test matrix**: every modified script gets one new test asserting it works against AWS (mocked
       via **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires deployment-service, instruments-service, or
       strategy-service not in slot 6 worktree. Operator/service-repo slot action post-cutover. moto for unit, against
@@ -463,11 +477,12 @@ seriously. **No script hardcodes `gcloud storage` or `gsutil` without an AWS bra
       `aws ecr describe-repositories`. deployment-service@4550bc3.
 - [x] ✅ [SCRIPT] P0. Copy `deployment-service/buildspec.aws.yaml` to each of the 8 service repos, parameterise
       per-service (`REPO_NAME` env var). **SHIPPED 2026-05-19** (slot 3): canonical template
-      (REPO_NAME=$(basename $(pwd)), flat ECR
-      push, PM QG clone, dynamic GH dispatch URL) propagated to all 7 service repos + deployment-service URL fix.
-      deployment-service@10dcea9, features-service@2fbcb16d, strategy-service@ff8efb8, execution-service@ec6644cc,
-      risk-and-exposure-service@07f36af, position-balance-monitor-service@6f65750, alerting-service@8008758,
-      deployment-api@83b95a5. Old REGISTRY_REPO/SERVICE_NAME template replaced (wrong ECR URI: unified-trading-system/$svc
+      (REPO_NAME=$(basename $(pwd)), flat ECR push, PM QG clone, dynamic GH dispatch URL) propagated to all 7 service
+      repos + deployment-service URL fix. deployment-service@10dcea9, features-service@2fbcb16d,
+      strategy-service@ff8efb8, execution-service@ec6644cc, risk-and-exposure-service@07f36af,
+      position-balance-monitor-service@6f65750, alerting-service@8008758, deployment-api@83b95a5. Old
+      REGISTRY_REPO/SERVICE_NAME template replaced (wrong ECR URI:
+      unified-trading-system/$svc
       vs correct flat/$svc).
 - [x] ✅ [SCRIPT] P0. Wire CodeBuild webhooks from GitHub → per-service. **DONE 2026-05-21** (slot 3): GH_PAT scope
       confirmed (`admin:repo_hook` present — webhook creation succeeded). 10/12 CodeBuild projects have ACTIVE webhooks
@@ -527,9 +542,11 @@ seriously. **No script hardcodes `gcloud storage` or `gsutil` without an AWS bra
       Capture sizes in `unified-trading-pm/codex/11-project-management/defi-bucket-sizes-2026-05-07.md`. **N/A —
       per-bucket sizes captured in Tab 4 DONE final state table (2026-05-09): total 346,920 objects / 36.83 GB across 7
       active-data DeFi buckets; 4 pre-trade buckets correctly empty.**
-- [x] [SCRIPT] P0. Estimate egress cost. GCP Tokyo egress to internet: $0.12/GB (1st TB) → $0.11/GB (1-10TB) → $0.08/GB
-      (10-100TB). For 50TB: ~$4,310 one-time. Record actual estimate. **N/A — actual transfer was 36.83 GB (sub-1TB
-      tier); one-time egress cost ~$4.4 (negligible). Captured implicitly in Tab 4 DONE section final state table.**
+- [x] [SCRIPT] P0. Estimate egress cost. GCP Tokyo egress to internet: $0.12/GB (1st TB) → $0.11/GB (1-10TB) →
+      $0.08/GB
+      (10-100TB). For 50TB: ~$4,310 one-time. Record actual estimate. **N/A — actual transfer was 36.83 GB
+      (sub-1TB tier); one-time egress cost ~$4.4 (negligible). Captured implicitly in Tab 4 DONE section final state
+      table.**
 - [x] [SCRIPT] P0. Choose transfer mechanism: (a) GCP Storage Transfer Service S3 sink (managed, single API call,
       supports parallelism); (b) `gsutil rsync` from a same-region GCE VM piped to `aws s3 sync` (cheaper but more
       babysitting); (c) AWS DataSync from S3-Compatible GCS endpoint (if Storage Transfer Service unavailable for
@@ -599,9 +616,10 @@ UX).
 ### Phase 6.5 — UI + API stack co-located with data (1-2 days, GATES Phase 7)
 
 **Data-locality principle**: UI/API must co-locate with the data it reads. Deploying `unified-trading-system-ui` or
-`deployment-ui` on GCP while data lives on AWS pays cross-cloud egress on every UI request — typically $0.08-0.12/GB out
-of GCP plus $0.09/GB into AWS, hitting $1000s/month for heavy dashboards. For DeFi cutover, **all** of (data, services,
-UI, API) must run on AWS together.
+`deployment-ui` on GCP while data lives on AWS pays cross-cloud egress on every UI request — typically
+$0.08-0.12/GB out
+of GCP plus $0.09/GB into AWS, hitting $1000s/month for heavy dashboards. For DeFi cutover, **all** of
+(data, services, UI, API) must run on AWS together.
 
 This phase moves the UI/API layer onto AWS so the May-23 DeFi cutover ships end-to-end on one cloud, not split.
 
@@ -815,7 +833,6 @@ _Archived 2026-05-23 slot 2. Phases 1-5b complete (DeFi-first). Post-cutover pha
   using ECR images. Operator must kick off after GCP primary stable.
 - **Phase 7 — Dual-cloud active mode**: Post-cutover target 2026-06-04. Shadow-mode validation + dual-write routing via
   UTL `cloud_interface/factory.py`.
-- **Phase 8 — Shadow-mode validation**: Validate byte-equal or within 0.5% drift between GCP↔AWS for all service
-  writes.
+- **Phase 8 — Shadow-mode validation**: Validate byte-equal or within 0.5% drift between GCP↔AWS for all service writes.
 - **Phase 9 — Full-workspace rollout**: Extend AWS dual-cloud from DeFi-first to all asset groups (CeFi, TradFi, Sports,
   Predictions).

@@ -40,9 +40,9 @@ tags:
   ]
 related:
   [
-    sports_fixture_round_not_captured_competition_phase_unknown_2026_07_17.md,
-    sports_halftime_odds_sfi_vs_inplay_2026_07_16.md,
-    sports_canonical_raw_truncated_rederive_destroys_corpus_2026_07_16.md,
+    /plans/archive/issues/sports_fixture_round_not_captured_competition_phase_unknown_2026_07_17.md,
+    /plans/active/issues/sports_halftime_odds_sfi_vs_inplay_2026_07_16.md,
+    /plans/active/issues/sports_canonical_raw_truncated_rederive_destroys_corpus_2026_07_16.md,
   ]
 created: 2026-07-18
 source:
@@ -706,7 +706,7 @@ Watchdog v3 was ~7 minutes from raising a FALSE "the fix did not take effect" al
 NO `fixtures_schedule` at all (only fixture_lineups/stats/events/player_stats), so the schedule writes appearing now are
 genuinely the gate fix taking effect. The root cause and the fix were right; only the measurement was wrong.
 
-Codified as a refinement in `codex/12-agent-workflow/async-wait-and-poll-discipline.md`: an artifact check is only as
+Codified as a refinement in `/codex/12-agent-workflow/async-wait-and-poll-discipline.md`: an artifact check is only as
 good as its ENTITY NAME — enumerate what a run actually created (unfiltered by-entity histogram) before concluding
 "nothing was written"; a name-filtered zero is two hypotheses (wrote nothing / wrote elsewhere), never one.
 
@@ -737,7 +737,7 @@ ancestry MUST be re-checked per launch, never assumed from the sha string).
 
 - [x] [OPS] P1. Make the SPOT preemption path safe for `--force` runs — **DONE, fleet-wide, not sports-only** (operator
       2026-07-18: "all spot preemptive vms need this recovery ... should be hard rule if they are launched from
-      deployment service scripts"). Codified as a HARD RULE in `codex/05-infrastructure/spot-vms-for-backfill.md` §
+      deployment service scripts"). Codified as a HARD RULE in `/codex/05-infrastructure/spot-vms-for-backfill.md` §
       "Preemption recovery MUST resume from PROGRESS, never replay START_DATE" + a CLAUDE.md one-liner, and ENFORCED in
       code: `RelaunchPreemptedVm` now refuses to replay a run whose captured env has `VM_FORCE=true`, returning
       `status=PAGE reason=force_run_not_replayable` with a CRITICAL `DP_VM_PREEMPTED_NO_RELAUNCH`, instead of looping
@@ -754,9 +754,9 @@ ancestry MUST be re-checked per launch, never assumed from the sha string).
       it), so ONE hook covers every launcher with NO per-launcher edit. ARTIFACT-based (fires from a real manifest
       capture, never a log line) + monotonic-gated (a non-monotonic or absent checkpoint on a `--force` run still PAGEs
       — never skips undone dates). Shipped: unified-trading-library@3de3296b (writer) + deployment-service@c138957
-      (reader) + tee-wrapper writer. SSOT: `codex/05-infrastructure/spot-vms-for-backfill.md` § "the CHECKPOINT CONTRACT
-      (IMPLEMENTED 2026-07-19)". Remaining (non-blocking): the per-launcher `lc_write_launch_params` rollout for exact
-      venue-scope replay + `VM_FORCE` persistence (only `launch-cefi-sharded-backfill.sh` calls it today).
+      (reader) + tee-wrapper writer. SSOT: `/codex/05-infrastructure/spot-vms-for-backfill.md` § "the CHECKPOINT
+      CONTRACT (IMPLEMENTED 2026-07-19)". Remaining (non-blocking): the per-launcher `lc_write_launch_params` rollout
+      for exact venue-scope replay + `VM_FORCE` persistence (only `launch-cefi-sharded-backfill.sh` calls it today).
 
 ---
 
@@ -1708,7 +1708,7 @@ itself.
 - [ ] [INFRA] P0. Fan out the features re-run. **HARD RULE interaction**: the re-run needs `FORCE=true` (otherwise
       presence-skip makes it a no-op), and `--force` on SPOT is NOT replayable — `RelaunchPreemptedVm` replays the
       original params and force disables the skip the resume relies on, so a preempted run restarts at day one FOREVER
-      (`codex/05-infrastructure/spot-vms-for-backfill.md`). Drive it as **bounded per-year chunks** (2019..2026) so a
+      (`/codex/05-infrastructure/spot-vms-for-backfill.md`). Drive it as **bounded per-year chunks** (2019..2026) so a
       preemption replays one year, not the whole corpus. Use the consolidated
       `launch-features-vm.sh --feature-family sports --asset-group SPORTS` (the sports-specific launcher carries a
       deprecation note for new backfills).
@@ -1835,7 +1835,7 @@ killing healthy work.
 Fleet watchdog re-armed on creation-time counts across two independent chunks (2019 and 2025), which move under
 overwrite.
 
-- [x] [DOC] P2. ✅ Folded into `codex/12-agent-workflow/async-wait-and-poll-discipline.md` as **rule 1a** (SSOT):
+- [x] [DOC] P2. ✅ Folded into `/codex/12-agent-workflow/async-wait-and-poll-discipline.md` as **rule 1a** (SSOT):
       "VALIDATE THE METRIC BEFORE YOU TRUST A ZERO OR A FLAT READING", with both measured failures as worked examples
       and the test to apply at arm time — _"what reading would this show if the job were healthy, and is that different
       from what it shows if the job is dead?"_ Plus the three concrete guards: resolve buckets via `resolve_bucket_name`

@@ -108,7 +108,7 @@ So every `batch_tardis` object for this venue is mislabelled by the vendor rule 
 the vendor here). Worse than a flat mislabel: on 2026-03-15 `derivative_ticker` appears in BOTH lanes (`batch_tardis`
 91 + `batch_extended` 66), so the same (venue, data_type, day) shard atom exists twice under two different
 `pipeline_mode` values. Any reader that PREFIX-MATCHES the mode (the declared reader contract in
-`codex/02-data/pipeline-mode-partition.md`) will see one of the two and silently miss the other, or double-count across
+`/codex/02-data/pipeline-mode-partition.md`) will see one of the two and silently miss the other, or double-count across
 both.
 
 ### LIGHTER-ZKSYNC — mostly CORRECT, do not "fix" it
@@ -173,6 +173,6 @@ fail-hard is a separate gate** and is NOT blocked by this issue (see the resolve
 
 ## Codex SSOTs
 
-- `codex/02-data/pipeline-mode-partition.md` — the source-aware `{mode}_{source}` contract and the reader PREFIX-MATCH
+- `/codex/02-data/pipeline-mode-partition.md` — the source-aware `{mode}_{source}` contract and the reader PREFIX-MATCH
   rule this issue violates.
-- `codex/04-architecture/solana-defi-coverage.md` — the Pacifica cull ruling.
+- `/codex/04-architecture/solana-defi-coverage.md` — the Pacifica cull ruling.

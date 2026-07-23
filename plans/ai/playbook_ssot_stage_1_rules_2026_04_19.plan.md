@@ -60,7 +60,7 @@ Stage 3.
 - **Parent SSOT work** (archived): [plans/archive/00-MASTER-CICD-PLAN.md](../archive/00-MASTER-CICD-PLAN.md) — lineage
   reference (Stage 0 audit trail) 14-playbooks skeleton plan.
 - **Existing experience playbook draft**: the v1 agent feedback in the 2026-04-19 conversation will be saved as
-  `codex/14-playbooks/_ssot-rules/_source-v1-feedback.md` in Phase 1.0 for stable citation.
+  `/codex/14-playbooks/_ssot-rules/_source-v1-feedback.md` in Phase 1.0 for stable citation.
 
 ## Mandatory read-set (before any work)
 
@@ -68,21 +68,21 @@ Agents executing this plan MUST read:
 
 **Current SSOT state:**
 
-1. [codex/14-playbooks/README.md](../../codex/14-playbooks/README.md) — current state of the playbook SSOT
-2. [codex/14-playbooks/glossary.md](../../codex/14-playbooks/glossary.md) — canonical terms (DART, SMA, Pooled, etc.)
-3. [codex/14-playbooks/information-architecture.md](../../codex/14-playbooks/information-architecture.md) — IA tree
-4. [codex/14-playbooks/playbooks/03c-demo-dart.md](../../codex/14-playbooks/playbooks/03c-demo-dart.md) — richest
-   existing impl-layer doc; reference for what "route-first" looks like so the rewrite doesn't regress
+1. [/codex/14-playbooks/README.md](/codex/14-playbooks/README.md) — current state of the playbook SSOT
+2. [/codex/14-playbooks/glossary.md](/codex/14-playbooks/glossary.md) — canonical terms (DART, SMA, Pooled, etc.)
+3. [/codex/14-playbooks/information-architecture.md](/codex/14-playbooks/information-architecture.md) — IA tree
+4. [/codex/14-playbooks/playbooks/03c-demo-dart.md](/codex/14-playbooks/playbooks/03c-demo-dart.md) — richest existing
+   impl-layer doc; reference for what "route-first" looks like so the rewrite doesn't regress
 
 **Hard taxonomy sources (authoritative for rule derivation):** 5.
-[codex/09-strategy/README.md](../../codex/09-strategy/README.md) 6.
-[codex/09-strategy/architecture-v2/README.md](../../codex/09-strategy/architecture-v2/README.md) — 18 archetypes × 8
+[/codex/09-strategy/README.md](/codex/09-strategy/README.md) 6.
+[/codex/09-strategy/architecture-v2/README.md](/codex/09-strategy/architecture-v2/README.md) — 18 archetypes × 8
 families × 7 axes 7.
-[codex/09-strategy/architecture-v2/category-instrument-coverage.md](../../codex/09-strategy/architecture-v2/category-instrument-coverage.md)
+[/codex/09-strategy/architecture-v2/category-instrument-coverage.md](/codex/09-strategy/architecture-v2/category-instrument-coverage.md)
 — coverage matrix + 10 block-list groups 8.
-[codex/09-strategy/architecture-v2/cross-cutting/strategy-availability-and-locking.md](../../codex/09-strategy/architecture-v2/cross-cutting/strategy-availability-and-locking.md)
+[/codex/09-strategy/architecture-v2/cross-cutting/strategy-availability-and-locking.md](/codex/09-strategy/architecture-v2/cross-cutting/strategy-availability-and-locking.md)
 — lock_state × maturity model 9.
-[codex/09-strategy/TIER_ZERO_UI_DEMO_AND_PARITY.md](../../codex/09-strategy/TIER_ZERO_UI_DEMO_AND_PARITY.md) — UI demo
+[/codex/09-strategy/TIER_ZERO_UI_DEMO_AND_PARITY.md](/codex/09-strategy/TIER_ZERO_UI_DEMO_AND_PARITY.md) — UI demo
 parity (drives rule 03: same-system-principle) 10. [codex/02-venues/](../../codex/02-venues/) — venue registry
 
 **Active plan context (don't duplicate their work):** 11.
@@ -90,8 +90,8 @@ parity (drives rule 03: same-system-principle) 10. [codex/02-venues/](../../code
 [plans/active/share_class_architecture_2026_04_01.plan.md](share_class_architecture_2026_04_01.plan.md) 13.
 [plans/active/defi_demo_e2e_workflow_2026_03_30.plan.md](defi_demo_e2e_workflow_2026_03_30.plan.md)
 
-**Source material for Stage 1 extraction:** 14. `codex/14-playbooks/_ssot-rules/_source-v1-feedback.md` — saved in Phase
-1.0
+**Source material for Stage 1 extraction:** 14. `/codex/14-playbooks/_ssot-rules/_source-v1-feedback.md` — saved in
+Phase 1.0
 
 **Project rules (mandatory):** 15.
 [unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md](../../cursor-configs/SUB_AGENT_MANDATORY_RULES.md) 16.
@@ -116,11 +116,11 @@ parity (drives rule 03: same-system-principle) 10. [codex/02-venues/](../../code
 > **These 4 artefacts are pre-committed by the master planner in commit `<stage-1-prefill>` (2026-04-19) and MUST NOT be
 > overwritten by the Stage 1 agent:**
 >
-> - `codex/14-playbooks/_ssot-rules/_source-v1-feedback.md`
-> - `codex/14-playbooks/_ssot-rules/03-same-system-principle.md` (includes the 5 sub-claims + phase/maturity
+> - `/codex/14-playbooks/_ssot-rules/_source-v1-feedback.md`
+> - `/codex/14-playbooks/_ssot-rules/03-same-system-principle.md` (includes the 5 sub-claims + phase/maturity
 >   orthogonality)
-> - `codex/14-playbooks/_ssot-rules/04-dart-commercial-axes.md` (2-axis matrix + 3 paths + worked examples)
-> - `codex/14-playbooks/_ssot-rules/08-pricing-principles.md` (2-tier Tier A/B, 12mo min, internal private, per-block
+> - `/codex/14-playbooks/_ssot-rules/04-dart-commercial-axes.md` (2-axis matrix + 3 paths + worked examples)
+> - `/codex/14-playbooks/_ssot-rules/08-pricing-principles.md` (2-tier Tier A/B, 12mo min, internal private, per-block
 >   mixable)
 
 - [x] [MASTER] P0. Pre-draft `_ssot-rules/_source-v1-feedback.md` + rules 03, 04, 08 (done this session).
@@ -183,13 +183,13 @@ cites the v1 source by line range.
 
 ### Phase 1.3 — Signal the layered structure
 
-- [x] [AGENT] P0. Update `codex/14-playbooks/README.md` — add a `## Layered structure` section explaining: experience
+- [x] [AGENT] P0. Update `/codex/14-playbooks/README.md` — add a `## Layered structure` section explaining: experience
       layer (narrative, sales-owned) on top; impl layer (current playbooks/, authentication/, environments/,
       cross-cutting/, page-triage/, testing/, roadmap/) underneath; rules in `_ssot-rules/`. Include a "start here"
       reader-path per role (sales → experience/; engineer → playbooks/ + cross-cutting/; admin → all).
 - [ ] [AGENT] P0. Update `codex/00-SSOT-INDEX.md` row for `14-playbooks/` to reflect the layered structure (add one line
       mentioning experience/ + \_ssot-rules/).
-- [ ] [AGENT] P1. Add a `## Layer` note to `codex/14-playbooks/playbooks/README.md` (create if missing) marking it as
+- [ ] [AGENT] P1. Add a `## Layer` note to `/codex/14-playbooks/playbooks/README.md` (create if missing) marking it as
       `[IMPL LAYER]` and pointing to `experience/` for narrative.
 
 ### Phase 1.4 — Verification
@@ -201,22 +201,22 @@ cites the v1 source by line range.
 - [ ] [AGENT] P0. Run `grep -r '\-\- for Stage 2 \-\-' codex/14-playbooks/` — all Stage 2 handoffs should be flagged
       with this marker.
 - [ ] [AGENT] P0. Commit via
-      `bash scripts/quickmerge.sh "docs(codex/playbooks): Stage 1 — extract SSOT rules + IM reference template" --agent --files "codex/14-playbooks/_ssot-rules/ codex/14-playbooks/experience/ codex/14-playbooks/README.md codex/14-playbooks/playbooks/ codex/00-SSOT-INDEX.md"`.
+      `bash scripts/quickmerge.sh "docs(codex/playbooks): Stage 1 — extract SSOT rules + IM reference template" --agent --files "codex/14-playbooks/_ssot-rules/ codex/14-playbooks/experience/ /codex/14-playbooks/README.md codex/14-playbooks/playbooks/ codex/00-SSOT-INDEX.md"`.
 
 ## Critical files
 
 **New:**
 
 - `codex/14-playbooks/_ssot-rules/` — 11 files (README + \_source-v1-feedback + 9 rule files)
-- `codex/14-playbooks/experience/README.md`
-- `codex/14-playbooks/experience/TEMPLATE.md`
-- `codex/14-playbooks/experience/im-decision-journey.md`
+- `/codex/14-playbooks/experience/README.md`
+- `/codex/14-playbooks/experience/TEMPLATE.md`
+- `/codex/14-playbooks/experience/im-decision-journey.md`
 
 **Modified:**
 
-- `codex/14-playbooks/README.md` (add layered-structure section)
+- `/codex/14-playbooks/README.md` (add layered-structure section)
 - `codex/00-SSOT-INDEX.md` (update 14-playbooks row)
-- `codex/14-playbooks/playbooks/README.md` (new; flag as impl layer)
+- `/codex/14-playbooks/playbooks/README.md` (new; flag as impl layer)
 
 ## Execution DAG
 
@@ -240,7 +240,7 @@ Phase 1.0 (save v1) ──▶ Phase 1.1 (extract 9 rules) ──┐
 
 ## Verification
 
-1. Fresh-reader test: hand an engineer unfamiliar with this convo only `codex/14-playbooks/_ssot-rules/01-grammar.md` —
+1. Fresh-reader test: hand an engineer unfamiliar with this convo only `/codex/14-playbooks/_ssot-rules/01-grammar.md` —
    they should produce a compliant playbook skeleton from the rule file alone.
 2. Tone test: read `experience/im-decision-journey.md` aloud — it should sound like Axis.to / podlabs.xyz, NOT like
    AI-generated marketing copy.
@@ -283,31 +283,31 @@ Execute every checkbox in Phases 1.0 through 1.4 of this plan:
 ### Read-set (mandatory, in this order)
 
 1. This plan file (`plans/active/playbook_ssot_stage_1_rules_2026_04_19.plan.md`)
-2. `codex/14-playbooks/README.md`, `glossary.md`, `information-architecture.md`, `playbooks/03c-demo-dart.md`
-3. `codex/09-strategy/architecture-v2/README.md` + `category-instrument-coverage.md`
-4. `codex/09-strategy/TIER_ZERO_UI_DEMO_AND_PARITY.md`
+2. `/codex/14-playbooks/README.md`, `glossary.md`, `information-architecture.md`, `playbooks/03c-demo-dart.md`
+3. `/codex/09-strategy/architecture-v2/README.md` + `category-instrument-coverage.md`
+4. `/codex/09-strategy/TIER_ZERO_UI_DEMO_AND_PARITY.md`
 5. `codex/02-venues/` (top-level index)
 6. **Pre-drafted artefacts** (already on `live-defi-rollout`, do not overwrite):
-   - `codex/14-playbooks/_ssot-rules/_source-v1-feedback.md`
-   - `codex/14-playbooks/_ssot-rules/03-same-system-principle.md`
-   - `codex/14-playbooks/_ssot-rules/04-dart-commercial-axes.md`
-   - `codex/14-playbooks/_ssot-rules/08-pricing-principles.md` Read these first — rules 01, 02, 05, 06, 07, 09 must
+   - `/codex/14-playbooks/_ssot-rules/_source-v1-feedback.md`
+   - `/codex/14-playbooks/_ssot-rules/03-same-system-principle.md`
+   - `/codex/14-playbooks/_ssot-rules/04-dart-commercial-axes.md`
+   - `/codex/14-playbooks/_ssot-rules/08-pricing-principles.md` Read these first — rules 01, 02, 05, 06, 07, 09 must
      match their style + cite the same v1 source.
 
 ### Deliverables
 
 **Create (6 rule files + experience assets + README markers):**
 
-- `codex/14-playbooks/_ssot-rules/README.md`
-- `codex/14-playbooks/_ssot-rules/01-grammar.md`
-- `codex/14-playbooks/_ssot-rules/02-tone-and-posture.md`
-- `codex/14-playbooks/_ssot-rules/05-building-block-dimensions.md`
-- `codex/14-playbooks/_ssot-rules/06-show-dont-show-discipline.md`
-- `codex/14-playbooks/_ssot-rules/07-data-licensing-boundaries.md`
-- `codex/14-playbooks/_ssot-rules/09-internal-commercial-oneliners.md`
-- `codex/14-playbooks/_ssot-rules/10-strategy-instruction-schema-principles.md` (**ADDED 2026-04-19**)
-- `codex/14-playbooks/experience/README.md` + `TEMPLATE.md` + `im-decision-journey.md`
-- `codex/14-playbooks/playbooks/README.md` (flag as impl layer)
+- `/codex/14-playbooks/_ssot-rules/README.md`
+- `/codex/14-playbooks/_ssot-rules/01-grammar.md`
+- `/codex/14-playbooks/_ssot-rules/02-tone-and-posture.md`
+- `/codex/14-playbooks/_ssot-rules/05-building-block-dimensions.md`
+- `/codex/14-playbooks/_ssot-rules/06-show-dont-show-discipline.md`
+- `/codex/14-playbooks/_ssot-rules/07-data-licensing-boundaries.md`
+- `/codex/14-playbooks/_ssot-rules/09-internal-commercial-oneliners.md`
+- `/codex/14-playbooks/_ssot-rules/10-strategy-instruction-schema-principles.md` (**ADDED 2026-04-19**)
+- `/codex/14-playbooks/experience/README.md` + `TEMPLATE.md` + `im-decision-journey.md`
+- `/codex/14-playbooks/playbooks/README.md` (flag as impl layer)
 
 **Do NOT create (already pre-drafted by master planner):**
 
@@ -315,7 +315,7 @@ Execute every checkbox in Phases 1.0 through 1.4 of this plan:
 
 **Modify:**
 
-- `codex/14-playbooks/README.md` — add `## Layered structure` section
+- `/codex/14-playbooks/README.md` — add `## Layered structure` section
 - `codex/00-SSOT-INDEX.md` — update the `14-playbooks/` row
 
 **Commit via:**
@@ -324,7 +324,7 @@ Execute every checkbox in Phases 1.0 through 1.4 of this plan:
 cd unified-trading-pm
 bash scripts/quickmerge.sh "docs(codex/playbooks): Stage 1 — extract SSOT rules + IM reference template" \
   --agent \
-  --files "codex/14-playbooks/_ssot-rules/ codex/14-playbooks/experience/ codex/14-playbooks/README.md codex/14-playbooks/playbooks/README.md codex/00-SSOT-INDEX.md"
+  --files "codex/14-playbooks/_ssot-rules/ codex/14-playbooks/experience/ /codex/14-playbooks/README.md /codex/14-playbooks/playbooks/README.md codex/00-SSOT-INDEX.md"
 ```
 
 If quickmerge is blocked by unrelated pre-existing WIP (e.g. dep-alignment failures on files you haven't touched), fall

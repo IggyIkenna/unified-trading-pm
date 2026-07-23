@@ -7,7 +7,7 @@ locked_by: live-defi-rollout
 locked_since: 2026-04-20
 amended: 2026-04-22
 depends_on:
-  - codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md §2.7
+  - /codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md §2.7
   - refactor_g2_1_org_scoped_jwt_claims_2026_04_20.plan.md
   - refactor_g2_6_staging_firebase_provisioning_2026_04_20.plan.md
   - refactor_g1_7_restriction_profile_engine_2026_04_20.plan.md
@@ -57,12 +57,12 @@ from a dropdown (DART / IM / Reg Umbrella × flavour). Credentials auto-rotate. 
 
 ## Mandatory read-set
 
-1. `codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md` §2.7
+1. `/codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md` §2.7
 2. `plans/active/defi_demo_e2e_workflow_2026_03_30.plan.md`
 3. `refactor_g1_7_restriction_profile_engine_2026_04_20.plan.md`
 4. `refactor_g1_10_questionnaire_to_configuration_flow_2026_04_20.plan.md`
-5. `codex/14-playbooks/demo-ops/demo-restriction-profiles.md`
-6. `codex/14-playbooks/demo-ops/dart-demo-modes.md`
+5. `/codex/14-playbooks/demo-ops/demo-restriction-profiles.md`
+6. `/codex/14-playbooks/demo-ops/dart-demo-modes.md`
 7. `unified-trading-system-ui/lib/admin/firebase.ts` + `server/admin/firebase-admin.ts` (post-fold)
 8. `codex/14-playbooks/demo-ops/upsell-overlay-hierarchy.yaml` (G1.13)
 

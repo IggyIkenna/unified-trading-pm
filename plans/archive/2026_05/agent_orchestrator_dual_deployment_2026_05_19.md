@@ -9,8 +9,13 @@ stage: [meta]
 repos: [agent-orchestrator, unified-trading-pm]
 scope: [engineer, admin]
 tags: []
-related: [agent_orchestrator_cloud_run_deployment_2026_05_19.md, agent_orchestrator_workers_on_vms_2026_05_19.md, master_to_live_defi_2026_05_23.md]
-created: '2026-05-20'
+related:
+  [
+    /plans/archive/2026_05/agent_orchestrator_cloud_run_deployment_2026_05_19.md,
+    agent_orchestrator_workers_on_vms_2026_05_19.md,
+    /plans/active/master_to_live_defi_2026_05_23.md,
+  ]
+created: "2026-05-20"
 parent_epic: orchestrator_master
 priority: P0
 estimate_class: infra

@@ -99,8 +99,8 @@ show a BLANK screen — no text, no branding. "Preparing demo…" was confusing 
 - [ ] [AGENT] P2. When `NEXT_PUBLIC_AUTH_PROVIDER=demo`, skip Firebase SDK entirely — use localStorage personas.
 - [ ] [AGENT] P2. Pre-seed `admin` persona as the default local-dev user (stored in `.env.local` as
       `NEXT_PUBLIC_DEV_DEFAULT_PERSONA=admin`).
-- [ ] [AGENT] P2. Document in `codex/08-workflows/local-dev.md`: devs can login as any persona → create sub-users → test
-      admin workflow without affecting prod/staging Firebase.
+- [ ] [AGENT] P2. Document in `/codex/08-workflows/local-dev.md`: devs can login as any persona → create sub-users →
+      test admin workflow without affecting prod/staging Firebase.
 
 ### Phase 7 — Playwright audit tests (quality gate enforced)
 

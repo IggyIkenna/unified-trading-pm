@@ -9,7 +9,12 @@ stage: [meta]
 repos: [execution-service, features-service, instruments-service, market-tick-data-service, strategy-service]
 scope: [engineer, admin]
 tags: []
-related: [honest_coverage_formula_consolidation_2026_05_19.md, d3_manifest_v8_finish_2026_05_20.md, writegate_honest_coverage_endtoend_2026_05_06.md]
+related:
+  [
+    /plans/archive/2026_05/honest_coverage_formula_consolidation_2026_05_19.md,
+    /plans/archive/2026_05/d3_manifest_v8_finish_2026_05_20.md,
+    /plans/archive/2026_05/writegate_honest_coverage_endtoend_2026_05_06.md,
+  ]
 created: 2026-05-20
 priority: P0
 locked_by: live-defi-rollout
@@ -17,7 +22,8 @@ locked_since: 2026-05-20
 estimate_class: infra
 estimate_baseline_ai_days: 2
 estimate_calibrated_ai_days: 1.6
-source_audits: [plans/audit/results/expected_coverage_dump_2026_05_20.parquet, plans/audit/uac_consumer_contract_audit_2026_05_20.md]
+source_audits:
+  [plans/audit/results/expected_coverage_dump_2026_05_20.parquet, plans/audit/uac_consumer_contract_audit_2026_05_20.md]
 parent_epic: sports_master
 ---
 

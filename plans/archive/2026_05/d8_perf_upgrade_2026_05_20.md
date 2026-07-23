@@ -9,16 +9,21 @@ stage: [meta]
 repos: [deployment-service, features-service, market-tick-data-service, strategy-service]
 scope: [engineer, admin]
 tags: []
-related: [defi_catalogue_chain_primitives_2026_05_10.md, live_pipeline_mtds_mdps_features_2026_05_08.md]
+related:
+  [
+    /plans/archive/2026_05/defi_catalogue_chain_primitives_2026_05_10.md,
+    /plans/archive/2026_05/live_pipeline_mtds_mdps_features_2026_05_08.md,
+  ]
 created: 2026-05-20
 priority: P2
 estimate_class: refactor
 estimate_baseline_ai_days: 2
 estimate_calibrated_ai_days: 0.8
 source_audits: [plans/audit/results/codified_shape_compliance_2026_05_20.csv]
-note: 'P2 priority — not blocking May-23 DeFi cutover. Gates D8 on D6 (strategy+execution) green since performance optimisations are meaningless before correctness is established.
+note: "P2 priority — not blocking May-23 DeFi cutover. Gates D8 on D6 (strategy+execution) green since performance
+  optimisations are meaningless before correctness is established.
 
-  '
+  "
 parent_epic: defi_master
 ---
 

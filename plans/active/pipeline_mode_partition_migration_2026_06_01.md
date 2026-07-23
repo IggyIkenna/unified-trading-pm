@@ -44,7 +44,7 @@ work splits into this named successor that piggybacks on the next whole-corpus w
 > writer/readers must become pipeline_mode-AWARE together — UAC `build_defi_partition_path` makes `pipeline_mode=`
 > canonical (not just a `candidate_parquet_paths` probe), and features-onchain + MDPS readers pass `pipeline_mode` —
 > else consumers reading the base path won't find migrated DeFi data (the regression the 2026-06-01 naming audit
-> caught). SSOT: `codex/02-data/defi-canonical-naming-ssot.md`. For non-DeFi AGs this remains a column-scan interim per
+> caught). SSOT: `/codex/02-data/defi-canonical-naming-ssot.md`. For non-DeFi AGs this remains a column-scan interim per
 > below.
 
 The `pipeline_mode` **column-level** implementation shipped fully in `pipeline_mode_implementation_2026_05_28` (Phases
@@ -103,7 +103,7 @@ partition walk anywhere (single-walk discipline):
 
 ## Codex SSOTs
 
-- `codex/02-data/pipeline-mode-and-batch-live-reconciliation.md` — documents the deferred-partition note; flip the
+- `/codex/02-data/pipeline-mode-and-batch-live-reconciliation.md` — documents the deferred-partition note; flip the
   "deferred to next migration window" line to "landed per-bucket" as each bucket's walk completes.
 
 ## Composes with

@@ -111,9 +111,9 @@ ML-ready = one row per `(fixture × bucket)`; NaN only where honest-absence (`OU
 
 ## Codex SSOTs
 
-- `codex/02-data/feature-formula-versioning.md` — sports feature versioning
-- `codex/02-data/availability-manifest-and-data-status.md` — features share the 4-state manifest
-- `codex/02-data/honest-absence-downstream-handling.md` — NaN classification propagates upstream `EXPECTED_*`
+- `/codex/02-data/feature-formula-versioning.md` — sports feature versioning
+- `/codex/02-data/availability-manifest-and-data-status.md` — features share the 4-state manifest
+- `/codex/02-data/honest-absence-downstream-handling.md` — NaN classification propagates upstream `EXPECTED_*`
 
 ## Mechanics
 
@@ -177,16 +177,16 @@ ML-ready = one row per `(fixture × bucket)`; NaN only where honest-absence (`OU
       (`npx playwright test     --project=chromium tests/smoke/`) + a cited regression spec per CLAUDE.md UI
       playwright-gate HARD RULE; on a fleet VM with no dev server, keep `[BLOCKED-PLAYWRIGHT]`.
       <!-- BLOCKED-UPSTREAM evidence (2026-06-24 slot-23):
-                                                                                                                                                                       GCS check: entity=fixtures_schedule + entity=fixtures_outcomes DO NOT EXIST in
-                                                                                                                                                                       gs://instruments-store-sports-prd-central-element-323112/sports_reference/by_date/ — only entity=fixtures.
-                                                                                                                                                                       Q5/Q6 columns absent from ALL sampled parquets: EPL 2026-05-17, Ligue1 2026-05-17, SerieA 2026-05-09,
-                                                                                                                                                                       LaLiga 2026-05-09, Bundesliga 2026-05-10, Norway 2026-06-21 (written 2026-05-23 before Q5/Q6 deploy).
-                                                                                                                                                                       Root cause: entity-split writer commit 254fb843 ("entity-split fixtures→fixtures_schedule+fixtures_outcomes;
-                                                                                                                                                                       writegate strict mode") is on origin/live-defi-rollout as of 2026-06-24 but NOT yet on main.
-                                                                                                                                                                       Q5/Q6 additive write path (48c54805, 2026-06-05) IS on main — but existing entity=fixtures parquets
-                                                                                                                                                                       were all written before 2026-06-05 and the "old-path-copy" branch does not re-process them.
-                                                                                                                                                                       Unblock: 254fb843 promotes main → IS Docker rebuild + VM relaunch → migrate_fixtures_split.py runs
-                                                                                                                                                                       on real sports buckets → new entity=fixtures_schedule+fixtures_outcomes paths appear → re-run VERIFY. --> (FOLDED
+                                                                                                                                                                                                                                                                                       GCS check: entity=fixtures_schedule + entity=fixtures_outcomes DO NOT EXIST in
+                                                                                                                                                                                                                                                                                       gs://instruments-store-sports-prd-central-element-323112/sports_reference/by_date/ — only entity=fixtures.
+                                                                                                                                                                                                                                                                                       Q5/Q6 columns absent from ALL sampled parquets: EPL 2026-05-17, Ligue1 2026-05-17, SerieA 2026-05-09,
+                                                                                                                                                                                                                                                                                       LaLiga 2026-05-09, Bundesliga 2026-05-10, Norway 2026-06-21 (written 2026-05-23 before Q5/Q6 deploy).
+                                                                                                                                                                                                                                                                                       Root cause: entity-split writer commit 254fb843 ("entity-split fixtures→fixtures_schedule+fixtures_outcomes;
+                                                                                                                                                                                                                                                                                       writegate strict mode") is on origin/live-defi-rollout as of 2026-06-24 but NOT yet on main.
+                                                                                                                                                                                                                                                                                       Q5/Q6 additive write path (48c54805, 2026-06-05) IS on main — but existing entity=fixtures parquets
+                                                                                                                                                                                                                                                                                       were all written before 2026-06-05 and the "old-path-copy" branch does not re-process them.
+                                                                                                                                                                                                                                                                                       Unblock: 254fb843 promotes main → IS Docker rebuild + VM relaunch → migrate_fixtures_split.py runs
+                                                                                                                                                                                                                                                                                       on real sports buckets → new entity=fixtures_schedule+fixtures_outcomes paths appear → re-run VERIFY. --> (FOLDED
       IN from sports_fixtures_schema_split_completion_2026_06_20, 2026-07-15, plan-reconcile §6 operator ruling)
 
 ## Success criteria
@@ -1001,7 +1001,7 @@ gone within the same ~90s window (22:09:15Z–22:10:36Z).
 **Root-caused via each VM's GCS `run.log` (not just "gone = done" assumption)**: all 3 failed identically —
 `"[HIGH] application error in features-service.compute_features: Manifest consolidator appears DOWN for bucket='instruments-store-sports-prd-central-element-323112': consolidated _index/availability_index.parquet heartbeat is 136s old (> 120s budget) while per-VM shards exist... do NOT fall back to the per-VM merge (can OOM on large buckets)"`
 — exit_code=1, self-deleted. This is the startup gate's CORRECT fail-fast behavior (matches
-`codex/05-infrastructure/manifest-consolidator-ssot.md`: consolidator loud-fails on stale index, never silently
+`/codex/05-infrastructure/manifest-consolidator-ssot.md`: consolidator loud-fails on stale index, never silently
 degrades) — none of the 3 VMs did any real compute work before failing, so nothing was lost, but nothing progressed
 either. All 3 died within the same ~90s window, strongly suggesting a shared transient consolidator-heartbeat blip
 (likely a Cloud Scheduler cycle gap), not 3 independent failures.

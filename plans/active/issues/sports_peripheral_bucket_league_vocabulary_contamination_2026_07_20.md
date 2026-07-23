@@ -17,7 +17,11 @@ stage: [data]
 repos: [features-service, instruments-service, unified-trading-pm]
 scope: [engineer]
 tags: [sports, canonical, league-id, contamination, data-correctness]
-related: [sports_league_id_namespace_migration_2026_07_20.md, ../sports_consolidated_closeout_2026_07_19.md]
+related:
+  [
+    /plans/active/issues/sports_league_id_namespace_migration_2026_07_20.md,
+    ../sports_consolidated_closeout_2026_07_19.md,
+  ]
 created: "2026-07-20"
 source: league_id relocation workflow wf_664f7ed4-df6 gcs-sizing verifier (2026-07-20)
 resolved_by:

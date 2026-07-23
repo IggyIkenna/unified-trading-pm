@@ -22,7 +22,7 @@ tags: [quality-gates, ui, codex-compliance, hardcoded-colours, gate-blind-spot]
 related:
   [
     plans/active/issues/ui_codex_gate_blind_to_app_router_layout_2026_07_21.md,
-    codex/06-coding-standards/ui-testing-layers.md,
+    /codex/06-coding-standards/ui-testing-layers.md,
   ]
 created: "2026-07-21"
 parent_epic: agent_operating_framework_master
@@ -66,7 +66,7 @@ is otherwise complete and verified).
 
 Fix in per-directory batches (same discipline as the archived-plan-debt batching in
 `pm_qg_plan_discipline_and_frontmatter_regression_2026_07_21.md`) — each batch requires a running dev server +
-Playwright visual spot-check before/after (per `codex/06-coding-standards/ui-testing-layers.md`), NOT a blind
+Playwright visual spot-check before/after (per `/codex/06-coding-standards/ui-testing-layers.md`), NOT a blind
 find-replace, since some of these are chart-library colour props that may need `chart-theme.ts`'s `CHART_COLORS` array
 rather than a single CSS var.
 
@@ -255,7 +255,7 @@ rather than a single CSS var.
 - [ ] [UI] P2. Retroactive Playwright evidence for Batch 5 — the Batch-5 flip (`unified-trading-system-ui@816a0c53`)
       cited full `quality-gates.sh` green + `tsc`/`eslint` clean but carries NO `pw:L2` citation and NO honest "no
       fabricated pw:L2" note, unlike Batches 1/3/4. Per the UI HARD RULE
-      (`codex/06-coding-standards/ui-testing-layers.md`): no UI tick lands without `[UI]` + `pw:L2 ✓` + a cited
+      (`/codex/06-coding-standards/ui-testing-layers.md`): no UI tick lands without `[UI]` + `pw:L2 ✓` + a cited
       regression spec, and a silent omission is not a documented exemption. Batch 5 touched genuinely visual-risk
       surfaces — `components/marketing/galaxy-canvas.tsx` + `components/marketing/arbitrage-galaxy.tsx` (raw Canvas 2D
       resolving tokens via `getComputedStyle`-at-mount), `app/(public)/_home-client.tsx` (theme-invariant "Odum palette"
@@ -271,4 +271,4 @@ rather than a single CSS var.
 
 ## Codex SSOTs
 
-`codex/06-coding-standards/ui-testing-layers.md`, `codex/06-coding-standards/quality-gates.md`.
+`/codex/06-coding-standards/ui-testing-layers.md`, `/codex/06-coding-standards/quality-gates.md`.

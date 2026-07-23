@@ -119,8 +119,8 @@ Plan: update those two briefings as part of this plan to split the crypto track 
 
 ## Contracts + discovery
 
-- [ ] Obtain POD integration spec (API docs or SFTP schema). File into `codex/14-playbooks/external-integrations/pod.md`
-      (internal-only). Document BOTH fund tracks.
+- [ ] Obtain POD integration spec (API docs or SFTP schema). File into
+      `/codex/14-playbooks/external-integrations/pod.md` (internal-only). Document BOTH fund tracks.
 - [ ] Add `PodClient` Protocol to fund-administration-service (not UAC — POD is internal-specific). Single client;
       per-fund-track dispatch via `fund_id`.
 - [ ] Add `FundTrack` enum to UAC: `CRYPTO_SPOT`, `CRYPTO_DERIVATIVES`, `TRADFI_*` (placeholders for tradfi plan). Each

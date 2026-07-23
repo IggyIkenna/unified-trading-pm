@@ -25,7 +25,7 @@ stage: [data, meta]
 repos: [market-tick-data-service]
 scope: [engineer, admin]
 tags: [pipeline_e2e_check, smoke-test, vm-launcher, vm-naming, concurrency, data-correctness, tooling-bug]
-related: [../data_pipeline_e2e_check_2026_07_10.md, ../../../codex/05-infrastructure/vm-launcher-runbook.md]
+related: [../data_pipeline_e2e_check_2026_07_10.md, /codex/05-infrastructure/vm-launcher-runbook.md]
 created: 2026-07-12
 parent_epic: infrastructure_master
 priority: P2

@@ -18,10 +18,10 @@ tags: [sports, arbitrage, decay-window, alpha-gate, paper-trade, promotion-gate,
 related:
   [
     plans/active/issues/sports_predictions_live_mode_and_backtest_execution_orphaned_2026_07_21.md,
-    codex/09-strategy/operational/batch-live-reconciliation-threshold-calibration.md,
-    codex/09-strategy/operational/paper-batch-live-reconciliation.md,
-    codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md,
-    codex/04-architecture/promote-workflow-architecture.md,
+    /codex/09-strategy/operational/batch-live-reconciliation-threshold-calibration.md,
+    /codex/09-strategy/operational/paper-batch-live-reconciliation.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md,
+    /codex/04-architecture/promote-workflow-architecture.md,
   ]
 created: "2026-07-21"
 last_updated: "2026-07-21"
@@ -61,11 +61,11 @@ against.
 
 - `SportsArbDutchingEngine` (`strategy_service/engine/strategies/v2/arbitrage_structural/sports_arb_dutching.py`) — the
   dutched-stake N-venue arb engine that PRODUCES the edge this design measures the decay of.
-- `codex/09-strategy/operational/batch-live-reconciliation-threshold-calibration.md` — the ONLY existing threshold/gate
+- `/codex/09-strategy/operational/batch-live-reconciliation-threshold-calibration.md` — the ONLY existing threshold/gate
   pattern in this codebase (`RECON_GREEN_THRESHOLDS`, WARNING/CRITICAL severity bands, a 7-day-soak calibration
   procedure). The alpha gate below should follow this SAME shape (a named threshold in a UAC constants module + a
   calibration procedure), not invent a new gate architecture.
-- `codex/09-strategy/operational/paper-batch-live-reconciliation.md` — "live↔paper delta IS execution alpha" is the
+- `/codex/09-strategy/operational/paper-batch-live-reconciliation.md` — "live↔paper delta IS execution alpha" is the
   existing codex framing of "alpha" in this codebase; the paper-trade alpha gate below is a PROMOTION gate (paper → live
   eligibility), a different but related concept — this plan makes that distinction explicit (§2).
 
@@ -104,7 +104,7 @@ continuously — by the time all N legs actually fill (sequenced, `hedge_deadlin
 ## 2. Paper-trade alpha gate — pass/fail criteria for promotion
 
 **The problem**: before `ARBITRAGE_SPORTS_DUTCHING` (or any sports archetype) is eligible for `paper_1d`→`live_early`
-promotion (per `codex/04-architecture/promote-workflow-architecture.md`'s existing promote workflow), there needs to be
+promotion (per `/codex/04-architecture/promote-workflow-architecture.md`'s existing promote workflow), there needs to be
 an explicit, named threshold the paper-run's realized performance must clear — analogous to `RECON_GREEN_THRESHOLDS`'s
 `bps_delta_max`/`drawdown_pct`/`fill_rate_min`, but measuring REALIZED EDGE not paper-vs-live deltas (there is no live
 leg yet at this gate — it fires BEFORE promotion, using pure paper data).
@@ -153,8 +153,8 @@ leg yet at this gate — it fires BEFORE promotion, using pure paper data).
 
 ## Codex SSOTs
 
-`codex/09-strategy/operational/batch-live-reconciliation-threshold-calibration.md` (the gate-architecture precedent),
-`codex/09-strategy/operational/paper-batch-live-reconciliation.md` (existing "alpha" framing),
-`codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md` (P&L factor taxonomy the realized-edge statistic
-must map into, not invent a parallel "other" bucket for), `codex/04-architecture/promote-workflow-architecture.md`
+`/codex/09-strategy/operational/batch-live-reconciliation-threshold-calibration.md` (the gate-architecture precedent),
+`/codex/09-strategy/operational/paper-batch-live-reconciliation.md` (existing "alpha" framing),
+`/codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md` (P&L factor taxonomy the realized-edge statistic
+must map into, not invent a parallel "other" bucket for), `/codex/04-architecture/promote-workflow-architecture.md`
 (where this gate fits in the paper→live promotion sequence).

@@ -77,9 +77,9 @@ but these 2 sites are exactly what an idiom-lint would flag — they need an exp
 
 ## Codex SSOTs
 
-- `codex/04-architecture/shard-level-failure-isolation.md` — classify via UAC `classify_venue_error()`; this plan adds
+- `/codex/04-architecture/shard-level-failure-isolation.md` — classify via UAC `classify_venue_error()`; this plan adds
   the unclassified-default + status-branch convention to it (todo 4).
-- `codex/06-coding-standards/quality-gates.md` — QG structure for the new lint step (todo 1).
+- `/codex/06-coding-standards/quality-gates.md` — QG structure for the new lint step (todo 1).
 
 ## Todos
 
@@ -99,7 +99,7 @@ but these 2 sites are exactly what an idiom-lint would flag — they need an exp
       portable (pure `rg` step, no per-repo state); otherwise record why repo-local is the right home. Repos:
       `unified-trading-pm`, `market-tick-data-service`.
 - [ ] [BACKEND] P3. Codex SSOT update — add the finalized convention to
-      `codex/04-architecture/shard-level-failure-isolation.md`: (1) unclassified venue error → `retry_safe = False`
+      `/codex/04-architecture/shard-level-failure-isolation.md`: (1) unclassified venue error → `retry_safe = False`
       (never default-retry unknowns); (2) unregistered-venue HTTP errors → branch on status (retry only 429/5xx) BEFORE
       consulting the classifier; (3) cross-link the QG lint + the two fix commits as precedent. Repo:
       `unified-trading-pm`.

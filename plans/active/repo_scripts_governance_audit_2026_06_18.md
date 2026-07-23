@@ -51,7 +51,8 @@ drift_direction: correct-codex
    (run a handful of times, then deleted). Gating them with the typechecker/coverage only manufactures **refactor
    tech-debt** for code meant to be removed (every refactor would have to keep soon-to-be-deleted scripts type-clean).
    Recurring/important logic must become a **CLI subcommand** (which IS gated as part of `$SOURCE_DIR`), never a
-   permanent `scripts/` file. Confirms the existing Script-Homes contract (`codex/06-coding-standards/script-homes.md`).
+   permanent `scripts/` file. Confirms the existing Script-Homes contract
+   (`/codex/06-coding-standards/script-homes.md`).
 2. **ADD a ruff-lint pass on `scripts/`** (cheap, autofixable rot-catch — syntax / imports / obvious bugs) — **no
    basedpyright** (too heavy + high-noise for throwaway code). Exact ruff scope (which rules, ratchet vs hard) is
    surfaced by the Phase-1 audit.
@@ -123,7 +124,7 @@ a verdict). Heaviest:
 ## Phase 0 — define + roll out the lifecycle marker convention [P2] (precedes the audit)
 
 - [x] ✅ [DESIGN] P2. **DONE 2026-06-18** — codified the 3-line lifecycle marker convention in
-      `codex/06-coding-standards/script-homes.md` § "Lifecycle marker" + a CLAUDE.md § "Script Homes" one-liner (marker
+      `/codex/06-coding-standards/script-homes.md` § "Lifecycle marker" + a CLAUDE.md § "Script Homes" one-liner (marker
       format, the `permanent|campaign|oneoff` taxonomy, `Epic`-is-ownership / `Delete-when`-is-trigger, the
       `Delete-when`-driven pruning model (no runtime tracking), ruff-yes/basedpyright-no gating). Codify the 3-line
       script lifecycle marker (a comment header — works for `.sh` AND `.py`, so it's not Python-docstring-only):
@@ -137,15 +138,15 @@ a verdict). Heaviest:
   (was: "`# Delete-when: <concrete completion condition>   # required for campaign/oneoff; permanent omits it`" —
   corrected 2026-07-12, doc-reconciliation finding 71, §A2 B-queue ruling: operator correction 2026-06-22 made
   `Delete-when` mandatory-and-present on every script, `NA` for `permanent`, so the fleet stays greppable via
-  `grep -rL '^# Delete-when:'`; see `codex/06-coding-standards/script-homes.md` § "Lifecycle marker" (the enforced SSOT)
-  and `plans/archive/2026_07/scripts_lifecycle_marker_rollout_2026_06_18.md`.)
+  `grep -rL '^# Delete-when:'`; see `/codex/06-coding-standards/script-homes.md` § "Lifecycle marker" (the enforced
+  SSOT) and `plans/archive/2026_07/scripts_lifecycle_marker_rollout_2026_06_18.md`.)
 
   Closed `Lifecycle` set mirrors the VM `lifecycle_class` spirit: **`permanent`** ≈ LONG_LIVED (`setup.sh`, dev tooling;
   template-managed scripts like `setup.sh`/`quality-gates.sh`/`quickmerge.sh` are auto-permanent — PM-sourced); whereas
   **`campaign`** ≈ a temporary-state-with-named-successor (the GCS bucket migration — lives weeks, deleted at
   completion); **`oneoff`** ≈ EPHEMERAL (run-once; `Delete-when:` = "after prod-run + orphan-sweep=0"). `Epic:` is
   OWNERSHIP (multi-plan; epics everlasting → NOT the delete trigger); `Delete-when:` carries the completion signal.
-  Codify in `codex/06-coding-standards/script-homes.md`. Composes with: VM `lifecycle_class`, the Runbook
+  Codify in `/codex/06-coding-standards/script-homes.md`. Composes with: VM `lifecycle_class`, the Runbook
   Execution-Owner SSOT (`owner/cadence/verifier/last_executed`), and "Temporary states + their canonical follow-up
   plans" — same lifecycle-declaration idea, now for scripts.
 
@@ -214,7 +215,7 @@ a verdict). Heaviest:
 
 ## Codex SSOT updates
 
-- `codex/06-coding-standards/script-homes.md` — add (a) the **lifecycle marker convention** (`Epic:`/`Lifecycle:`/
+- `/codex/06-coding-standards/script-homes.md` — add (a) the **lifecycle marker convention** (`Epic:`/`Lifecycle:`/
   `Delete-when:`, the closed `permanent|campaign|oneoff` set, `Delete-when`-driven pruning with no runtime tracking) and
   (b) the "scripts/: ruff-lint YES; basedpyright + coverage NO (by design, to avoid refactor tech-debt on throwaway
   code); recurring logic → CLI" clarification — when Phase 0/2 land.
@@ -256,6 +257,6 @@ a verdict). Heaviest:
       `orchestrator_vm_registry.yaml`'s epic set, or a non-`permanent` carrying `Delete-when: NA`. Wire it into the
       PM-sourced `base-service.sh` + `base-library.sh` so it rides fleet-wide with NO per-repo rollout (mirror STEP
       5.94/5.95). The operator unblocks this ONLY after confirming `grep -rL '^# Delete-when:' */scripts/` is empty
-      fleet-wide. Update `codex/06-coding-standards/quality-gates.md` + `script-homes.md` § "What gates a scripts/ file"
-      in the same unit. Target: **unified-trading-pm** (checker + base wiring) → fleet. (FOLDED IN from
+      fleet-wide. Update `/codex/06-coding-standards/quality-gates.md` + `script-homes.md` § "What gates a scripts/
+      file" in the same unit. Target: **unified-trading-pm** (checker + base wiring) → fleet. (FOLDED IN from
       scripts_lifecycle_marker_rollout_2026_06_18, 2026-07-15, plan-reconcile §6 operator ruling)

@@ -138,10 +138,10 @@ the post-`--apply` id-form reality (nuance: paths/catalogue canonical since this
 - [x] **[P2 L195]** MVP backtest scope: S&P 500 (CME ES + ES.OPT + SPY) + BTC/ETH ETFs (NASDAQ IBIT, NASDAQ ETHA) +
       crypto futures (CME MBT, CME MET) + CBOE BTC options on IBIT + V → FIX: Edit tradfi_master.md line 195 (the "MVP
       backtest scope" paragraph). Drop "+ CBOE BTC options on IBIT" (option_underliers={ES} ONLY per
-      codex/02-data/mvp-scope-canonical.md:88 — no crypto/non-ES options in MVP). Change "VIX 15m" to "VIX FUT — applied
-      unified-trading-pm@1dd1a22fd
+      /codex/02-data/mvp-scope-canonical.md:88 — no crypto/non-ES options in MVP). Change "VIX 15m" to "VIX FUT —
+      applied unified-trading-pm@1dd1a22fd
 
-### `codex/02-data/availability-manifest-and-data-status.md` — 4 (P1,P1,P2,P3)
+### `/codex/02-data/availability-manifest-and-data-status.md` — 4 (P1,P1,P2,P3)
 
 - [x] **[P1 L2059]** tradfi source-wiring row: "✅ WIRED | databento, massive | Multi-source; SOURCE_PRIORITY[("tradfi",
       data_type)] = ["databento", "massive"]; select_primary_availa → FIX: Rewrite the tradfi row (line 2059) to: Status
@@ -190,7 +190,7 @@ the post-`--apply` id-form reality (nuance: paths/catalogue canonical since this
       blocker (futures_chain/options_chain data_types absent from the TRADFI MTDS bucket), but replace t — applied
       unified-trading-pm@935de9424
 
-### `codex/02-data/non-canonical-path-inventory.md` — 2 (P1,P2)
+### `/codex/02-data/non-canonical-path-inventory.md` — 2 (P1,P2)
 
 - [x] **[P1 L198]** Row 10: "market-data-tick-tradfi-prd-{pid}/ — all objects under pipeline_mode=batch_massive …
       1,696,166 objects. HUMAN-ONLY HARD STOP. Removing read-recognition → FIX: Move row 10 out of the
@@ -203,7 +203,7 @@ the post-`--apply` id-form reality (nuance: paths/catalogue canonical since this
       migration run `20260720-120911`, 20/20 shards ORPHAN=0, MIGRATE 848,886 objects → ca — applied
       unified-trading-pm@1dd1a22fd
 
-### `codex/02-data/canonical-cutover-register.md` — 2 (P1,P2)
+### `/codex/02-data/canonical-cutover-register.md` — 2 (P1,P2)
 
 - [ ] **[P1 L237]** §4: "The tradfi corpus is canonical on filenames only — the manifest measured 0 canonical rows
       across all years, and the physical migration --apply is operator- → FIX: Rewrite §4's closing paragraph
@@ -246,14 +246,14 @@ the post-`--apply` id-form reality (nuance: paths/catalogue canonical since this
       2026-07-16 (corpus now 100% schema_version=9, blank pipeline_mode=0, blank source=0, per task — applied
       unified-trading-pm@935de9424
 
-### `codex/02-data/pipeline-mode-partition.md` — 1 (P3)
+### `/codex/02-data/pipeline-mode-partition.md` — 1 (P3)
 
 - [x] **[P3 L136]** Closed-set values table lists "batch_barchart — VIX 15m historical preload (2020-01-02 →
       2025-11-12)" as a live PipelineMode value. → FIX: In the closed-set values table, drop the `batch_barchart` row
       (or replace it with a retirement note): "`batch_barchart` — RETIRED 2026-06-24; Barchart removed as a source. VIX
       15m now aggregates from VX futures via Databento (XCBF.PITCH → ` — applied unified-trading-pm@1dd1a22fd
 
-### `codex/02-data/four-surface-reconciliation-procedure.md` — 1 (P3)
+### `/codex/02-data/four-surface-reconciliation-procedure.md` — 1 (P3)
 
 - [x] **[P3 L369]** §6 tradfi bullet: "batch_massive read-recognition is retained until the gated GCS purge, so a
       batch_massive path found on READ is an accepted exception, not a f → FIX: Update the §6 tradfi bullet (lines

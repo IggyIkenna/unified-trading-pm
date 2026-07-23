@@ -9,8 +9,8 @@ stage: [meta]
 repos: [deployment-api, deployment-service, instruments-service]
 scope: [engineer, admin]
 tags: []
-related: [master_to_live_defi_2026_05_23.md, d1_is_hardening_2026_05_20.md]
-created: '2026-05-21'
+related: [/plans/active/master_to_live_defi_2026_05_23.md, /plans/archive/2026_05/d1_is_hardening_2026_05_20.md]
+created: "2026-05-21"
 parent_epic: instruments_master
 priority: P1
 estimate_class: design
@@ -26,8 +26,8 @@ Per-asset-group dynamic denominators for data-status: instruments-service catalo
 (not hardcoded constants). Phases 1-3 (code) complete; Phase 4 (Polymarket calendar integration) deferred; Phase 5
 (codex) complete.
 
-Codex SSOTs: `codex/04-architecture/instruments-service-as-ssot-for-mtds.md` ·
-`codex/02-data/availability-manifest-and-data-status.md`
+Codex SSOTs: `/codex/04-architecture/instruments-service-as-ssot-for-mtds.md` ·
+`/codex/02-data/availability-manifest-and-data-status.md`
 
 ---
 
@@ -54,7 +54,7 @@ Codex SSOTs: `codex/04-architecture/instruments-service-as-ssot-for-mtds.md` ·
 
 ## Phase 5 — Codex SSOT
 
-- [x] ✅ [AGENT] P1. `codex/02-data/availability-manifest-and-data-status.md` § "Expected universe" updated; IS
+- [x] ✅ [AGENT] P1. `/codex/02-data/availability-manifest-and-data-status.md` § "Expected universe" updated; IS
       catalogue path documented.
 
 ## Temporary states + canonical follow-up plans

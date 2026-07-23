@@ -33,10 +33,10 @@ repos:
 scope: [engineer, admin]
 tags: [ci-cd, audit, silent-failure, kill-switch, release-tags, repository-dispatch, post-cutover, safety]
 related:
-  - staging_workflow_shutdown_2026_07_23.md
-  - stale_staging_versions_manifest_2026_07_23.md
-  - qg_sentinel_environment_blind_2026_07_23.md
-  - github_actions_ci_cost_reduction_2026_07_15.md
+  - /plans/active/issues/staging_workflow_shutdown_2026_07_23.md
+  - /plans/active/issues/stale_staging_versions_manifest_2026_07_23.md
+  - /plans/active/issues/qg_sentinel_environment_blind_2026_07_23.md
+  - /plans/active/github_actions_ci_cost_reduction_2026_07_15.md
 created: 2026-07-23
 priority: P1
 parent_epic: infrastructure_master
@@ -355,7 +355,7 @@ classify them by conventional-commit prefix (the rules above), compute the next 
 
 ## Docs (P2)
 
-`codex/08-workflows/ci-cd-flow.md` carries a correct dormancy banner but the branch-model narrative below it is stale:
+`/codex/08-workflows/ci-cd-flow.md` carries a correct dormancy banner but the branch-model narrative below it is stale:
 **L75-109** still shows `ldr-to-staging-promote` draining every service repo on a 15-min cron and labels direct-to-main
 as "PM only"; **L763**, **L777-786**, **L1183** still describe `quickmerge → staging → main` as canonical.
 
@@ -421,7 +421,7 @@ codex, or a future staging re-entry gets a dead pipeline.
       with the `deployed_versions` shape mismatch and the `stuck_in_sit` / promotion-blocked panels. Correct the false
       comment at `ldr-to-main-promote-fleet.yml:422-434`.
 - [ ] [INFRA] P2. Close the `sit_validated_workspace_digest` written-but-unread gap, or document why it is safe to drop.
-- [ ] [DOC] P2. Update `codex/08-workflows/ci-cd-flow.md` (L75-109, L763, L777-786, L1183) to the current LDR→main
+- [ ] [DOC] P2. Update `/codex/08-workflows/ci-cd-flow.md` (L75-109, L763, L777-786, L1183) to the current LDR→main
       model, and add the staging re-entry procedure INCLUDING "uncomment the disabled triggers" to codex.
 - [ ] [REVIEW] P3. Guard the latent repeat: `agent-runner.yml:91` / `sit-gate.yml:357` self-dispatch is safe only by
       file placement. Either hardcode the PM target or add a rollout guard.

@@ -18,7 +18,7 @@ stage: [meta]
 repos: [instruments-service, market-data-processing-service, unified-api-contracts]
 scope: [engineer, admin]
 tags: [sports, manifest, data-correctness, source, honest-coverage]
-related: [data_status_page_ux_and_canonicalisation_2026_07_16.md]
+related: [/plans/active/data_status_page_ux_and_canonicalisation_2026_07_16.md]
 created: 2026-07-16
 parent_epic: deployment_and_user_management_master
 priority: P3
@@ -107,10 +107,10 @@ from (out of this issue's scope), but the two live-GCS reads above are authorita
 
 ## Codex SSOTs referenced
 
-- `codex/02-data/pipeline-mode-partition.md` (`source`=VENDOR-only rule + the 2026-06-05/06-07 ratified source-aware
+- `/codex/02-data/pipeline-mode-partition.md` (`source`=VENDOR-only rule + the 2026-06-05/06-07 ratified source-aware
   design — `mdps_odds_horizon_bucket` and `instruments_service` are both registered `PipelineMode`/`SOURCE_PRIORITY`
   members, so they satisfy the "source is the vendor(-analog)" contract even though they are not third-party vendors).
-- `codex/05-infrastructure/manifest-consolidator-ssot.md` § "Two-writer model" (the same instruments-service-as-source
+- `/codex/05-infrastructure/manifest-consolidator-ssot.md` § "Two-writer model" (the same instruments-service-as-source
   pattern, generalized across asset groups).
 
 ## RE-TRIAGE (2026-07-23)

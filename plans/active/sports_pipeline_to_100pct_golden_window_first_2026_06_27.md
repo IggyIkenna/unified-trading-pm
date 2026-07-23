@@ -19,7 +19,7 @@ related:
     plans/active/sports_p1_golden_window_apifootball_2026_06_27.md,
     plans/active/sports_reference_backfill_oom_2026_06_22.md,
     plans/active/instruments_foundation_completeness_2026_06_24.md,
-    codex/02-data/honest-absence-downstream-handling.md,
+    /codex/02-data/honest-absence-downstream-handling.md,
     plans/active/sports_consolidated_closeout_2026_07_19.md,
   ]
 created: 2026-06-27
@@ -275,7 +275,7 @@ The orchestrator picks the worker model from **plan frontmatter** at regen
 (`agent-orchestrator/server/regen_backlog_from_plan.py`): `assigned_role:` → that role's model+thinking;
 `model_tier: opus-required` → Opus override. Every child here is `assigned_role: data_engineering` = **Sonnet 4.6 /
 thinking: high** — the maximum-reasoning Sonnet config ("Sonnet + literal `max` thinking" is not a legal combo:
-`thinking: max` ⇒ Opus per `codex/06-coding-standards/model-tier-selection.md`; the legal max for Sonnet is `high`).
+`thinking: max` ⇒ Opus per `/codex/06-coding-standards/model-tier-selection.md`; the legal max for Sonnet is `high`).
 Tasks are broken finely so each is Sonnet/high-doable. **Escalation lever**: if a child hits a genuine
 context/complexity wall (e.g. a cross-repo schema redesign), add `model_tier: opus-required` to THAT plan and push —
 regen re-stamps its tasks to Opus next tick. `data_engineering` IS the backfill/pipeline-code executor role (its def:
@@ -285,16 +285,16 @@ plans.
 
 ## Codex SSOTs (read the one your child touches)
 
-- `codex/02-data/availability-manifest-and-data-status.md` — 4-state `capture_status` (v9), shard atom,
+- `/codex/02-data/availability-manifest-and-data-status.md` — 4-state `capture_status` (v9), shard atom,
   `expected_unattempted` writer-materialised
-- `codex/02-data/honest-absence-downstream-handling.md` — typed `EXPECTED_*` reasons, season/coverage clips, the
+- `/codex/02-data/honest-absence-downstream-handling.md` — typed `EXPECTED_*` reasons, season/coverage clips, the
   golden-window effect
-- `codex/02-data/sports-gcs-path-ssot.md` — sports layouts + `candidate_parquet_paths()`
-- `codex/05-infrastructure/manifest-consolidator-ssot.md` — Cloud-Run/Fargate consolidator, loud-fail-on-stale
-- `codex/05-infrastructure/data-pipeline-alerts.md` (+ `.registry.yaml`) — DP\_\* taxonomy + "drive the alert count to
+- `/codex/02-data/sports-gcs-path-ssot.md` — sports layouts + `candidate_parquet_paths()`
+- `/codex/05-infrastructure/manifest-consolidator-ssot.md` — Cloud-Run/Fargate consolidator, loud-fail-on-stale
+- `/codex/05-infrastructure/data-pipeline-alerts.md` (+ `.registry.yaml`) — DP\_\* taxonomy + "drive the alert count to
   zero"
-- `codex/05-infrastructure/deployment-observability.md` — RESOLVED bookend, active-dp-alerts blobs
-- `codex/02-data/data-pipeline-correctness-hard-rule.md`, `…/external-data-always-available-rule.md`
+- `/codex/05-infrastructure/deployment-observability.md` — RESOLVED bookend, active-dp-alerts blobs
+- `/codex/02-data/data-pipeline-correctness-hard-rule.md`, `…/external-data-always-available-rule.md`
 
 ## References (lean on, do not duplicate)
 

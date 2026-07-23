@@ -36,7 +36,7 @@ Running `bash scripts/quality-gates.sh` in `unified-trading-pm` (needed to ship 
    `C-archive-no-successor`. This is off-by-one over baseline — some plan committed since the baseline was last written
    tipped it over (fleet-wide plan churn, not attributable to any single commit I can find without a full `git bisect`
    across dozens of concurrent slots).
-2. **Frontmatter schema violation** — `codex/02-data/sports-2020-06-data-floor.md`: `referenced_by` optional key is
+2. **Frontmatter schema violation** — `/codex/02-data/sports-2020-06-data-floor.md`: `referenced_by` optional key is
    absent (schema requires present-but-empty, not fully absent).
 
 Verified pre-existing: my only staged change was `configs/cloud-providers.yaml` (a data-only sync, see
@@ -59,11 +59,11 @@ normally.
   small plan edits fleet-wide, re-baseline with `--baseline-write` per the check's own remedy text, with an operator
   sign-off note on why the ratchet moved.
 - Add the missing `referenced_by: []` (or equivalent empty-but-present key) to
-  `codex/02-data/sports-2020-06-data-floor.md` frontmatter.
+  `/codex/02-data/sports-2020-06-data-floor.md` frontmatter.
 
 ## Todos
 
-- [x] [DOCS] P2. ✅ Fix `codex/02-data/sports-2020-06-data-floor.md` frontmatter — add the missing `referenced_by` key
+- [x] [DOCS] P2. ✅ Fix `/codex/02-data/sports-2020-06-data-floor.md` frontmatter — add the missing `referenced_by` key
       (present-but-empty is enough to pass `scripts/docs/seed_frontmatter.py --apply`) — unified-trading-pm@3122de370.
       Ran the remedy tool as-instructed; it also seeded the elective `implementation_status` key.
       `check_frontmatter_schema.py` now reports zero violations across all 1739 docs; full `quality-gates.sh` for this

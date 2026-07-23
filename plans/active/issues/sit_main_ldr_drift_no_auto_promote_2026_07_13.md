@@ -17,7 +17,7 @@ stage: [meta]
 repos: [system-integration-tests, unified-trading-pm]
 scope: [engineer, admin]
 tags: [ci-cd, promote-fleet, sit-gate, drift, test-harness, ldr-main]
-related: [codex/08-workflows/ci-cd-flow.md]
+related: [/codex/08-workflows/ci-cd-flow.md]
 created: 2026-07-13
 parent_epic: infrastructure_master
 assigned_vm: NA
@@ -58,4 +58,4 @@ silently lags until a human promotes.
 - B: Flip SIT `promotion_model` to `ldr_main` in `workspace-manifest.json` — fleet carries it automatically like the
   other 23 repos. (Check nothing in the fleet/sit-gate assumes SIT main is frozen mid-drain.)
 - C: Accept-and-document — declare the test harness intentionally hand-promoted; add the rationale to
-  `codex/08-workflows/ci-cd-flow.md`.
+  `/codex/08-workflows/ci-cd-flow.md`.

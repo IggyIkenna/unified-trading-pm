@@ -24,7 +24,7 @@ last_updated: 2026-06-27
 locked_by: live-defi-rollout
 locked_since: 2026-05-28
 supersedes:
-superseded_by: codex/02-data/tradfi-databento-sourcing-ssot.md
+superseded_by: /codex/02-data/tradfi-databento-sourcing-ssot.md
 depends_on:
 source:
 assigned_role: data_engineering
@@ -40,7 +40,7 @@ repo_gates:
 > Yahoo = daily; Massive dropped from `SOURCE_PRIORITY`, runtime routing DELETED (`uac@a2beed46` / `mtds@362a487e`). The
 > ~1.47M `batch_massive` GCS corpus was PURGED to 0 with the subscription terminated (operator Option C 2026-07-21,
 > accepted permanent loss). **This dual-source plan is OBSOLETE — do not build.** SSOT:
-> `codex/02-data/tradfi-databento-sourcing-ssot.md`,
+> `/codex/02-data/tradfi-databento-sourcing-ssot.md`,
 > `plans/active/issues/tradfi_canonical_path_migration_design_2026_07_19.md`. Remaining open Massive-build todos below
 > are retired WONTFIX in place (plan kept for audit-trail history, not archived — `locked_by: live-defi-rollout`
 > requires `[unlock-plan]` for archival).
@@ -65,7 +65,7 @@ sources.
    > **Correction 2026-07-12** (finding 375, §A2 B-queue ruling): Barchart was RETIRED 2026-06-24 — VIX 15m now sources
    > from VX futures via Databento XCBF.PITCH. Ground-truth UAC priority is now
    > `("tradfi", "ohlcv_15m"): ["databento", "massive", "yahoo"]` (was: `["databento", "yahoo", "barchart"]`). SSOT:
-   > `codex/02-data/tradfi-databento-sourcing-ssot.md`.
+   > `/codex/02-data/tradfi-databento-sourcing-ssot.md`.
 4. **Scope**: batch / historical REST first. Live / WebSocket connector deferred — operator stated "not too worried
    about live yet".
 5. **Tier**: Massive billed at delayed-OK tier — Stocks Starter $29 + Options Starter $29 + Indices Starter
@@ -287,11 +287,11 @@ NOT covered.** Resolved by existing Yahoo + Barchart layering on `ohlcv_15m` per
 > **SUPERSEDED 2026-07-19/07-21** (supersedes the 2026-07-12 P0→P2 downgrade note below, retained for history):
 > ~~Priority downgraded P0→P2 2026-07-12 (operator ruling, plan-reconciliation finding 305, §A2 of
 > `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md`): Databento is PRIMARY
-> (codex/02-data/tradfi-databento-sourcing-ssot.md); Massive remains a documented fallback — no rebuild urgency.~~
+> (/codex/02-data/tradfi-databento-sourcing-ssot.md); Massive remains a documented fallback — no rebuild urgency.~~
 > Massive (formerly Polygon.io) was fully REMOVED as a tradfi source 2026-07-19 (operator ruling: Databento = batch SoT,
 > Yahoo = daily) — deleted from `SOURCE_PRIORITY` and all runtime routing (`uac@a2beed46` + `mtds@362a487e`), and the
 > ~1.47M-object corpus was purged 2026-07-21 (permanent loss accepted). **Massive is NOT a fallback.** SSOT:
-> `codex/02-data/tradfi-databento-sourcing-ssot.md` (2026-07-19 banner).
+> `/codex/02-data/tradfi-databento-sourcing-ssot.md` (2026-07-19 banner).
 
 - [ ] ❌ [MTDS] P2. OBSOLETE/WONTFIX. ~~Rebuild `MassiveTradfiRestConnector` to emit the SAME canonical columns/dtypes
       `tradfi_shared` writes for Databento (per data_type), and route its output through
@@ -376,7 +376,7 @@ NOT covered.** Resolved by existing Yahoo + Barchart layering on `ohlcv_15m` per
       `record_captured(source="massive")` + `get_secret_client`.~~ Massive was removed as a tradfi source (operator
       2026-07-19) and purged (~1.7M objects → 0); the UTL manifest-writer `MissingSourceError` gate now HARD-REJECTS
       `source='massive'` (2026-07-20 ruling, `unified-trading-library/.../manifest_writer/_schema.py`), so any such
-      ingester would RAISE. SSOT: `codex/02-data/tradfi-databento-sourcing-ssot.md` (lines 44-61).
+      ingester would RAISE. SSOT: `/codex/02-data/tradfi-databento-sourcing-ssot.md` (lines 44-61).
 - [ ] ❌ [SCRIPT] P1. OBSOLETE (no-longer-massive-relevant). ~~Fix `backfill_tradfi_source_column.py` walk prefix to
       include the `pipeline_mode=` segment.~~ This script only ever stamped legacy `databento` rows; per the 2026-07-20
       ruling, any re-stamp of legacy `batch_massive` rows must not run — and `batch_massive` is now purged to 0 objects,
@@ -424,13 +424,13 @@ NOT covered.** Resolved by existing Yahoo + Barchart layering on `ohlcv_15m` per
 
 ### Phase 6 — Codex SSOT updates + plan archival prep (0.5 day)
 
-- [x] ✅ [CODEX] P1. `codex/02-data/contracts-scope-and-layout.md` — document `source` column as part of TradFi
+- [x] ✅ [CODEX] P1. `/codex/02-data/contracts-scope-and-layout.md` — document `source` column as part of TradFi
       canonical schema. Update SOURCE_PRIORITY example to show multi-source TradFi cell. — PM@8b616c40
-- [x] ✅ [CODEX] P1. `codex/02-data/availability-manifest-and-data-status.md` — document `source` field in manifest
+- [x] ✅ [CODEX] P1. `/codex/02-data/availability-manifest-and-data-status.md` — document `source` field in manifest
       row + per-source `capture_status` semantics. Multi-source cell can be `captured` from one source +
       `empty_confirmed` from another in the same window. — PM@2dc2cf5e
-- [x] ✅ [CODEX] P1. `codex/02-data/honest-absence-downstream-handling.md` — add per-source consumer policy: if cell has
-      at least one `captured` source, downstream treats cell as captured (union semantics). Per-reason taxonomy
+- [x] ✅ [CODEX] P1. `/codex/02-data/honest-absence-downstream-handling.md` — add per-source consumer policy: if cell
+      has at least one `captured` source, downstream treats cell as captured (union semantics). Per-reason taxonomy
       unchanged. — PM@d4f48363
 - [x] ✅ [CODEX] P1. `plans/epics/tradfi_master.md` `related_plans:` — append this plan's path. — PM@22a60541
 - [x] ✅ [CLAUDE.md] P1. Update "Other key rules" → "VIX 15m" entry to remain accurate post-Massive (no change expected;
@@ -496,10 +496,10 @@ NOT covered.** Resolved by existing Yahoo + Barchart layering on `ohlcv_15m` per
 
 ## Codex SSOTs
 
-- `codex/02-data/contracts-scope-and-layout.md` (Phase 6)
-- `codex/02-data/availability-manifest-and-data-status.md` (Phase 6)
-- `codex/02-data/honest-absence-downstream-handling.md` (Phase 6)
-- `codex/02-data/data-pipeline-correctness-hard-rule.md` (reference — this plan is a data-correctness expansion for
+- `/codex/02-data/contracts-scope-and-layout.md` (Phase 6)
+- `/codex/02-data/availability-manifest-and-data-status.md` (Phase 6)
+- `/codex/02-data/honest-absence-downstream-handling.md` (Phase 6)
+- `/codex/02-data/data-pipeline-correctness-hard-rule.md` (reference — this plan is a data-correctness expansion for
   TradFi)
 - `unified_api_contracts/canonical/crosscutting/source_priority.py` module docstring (Phase 2 — remove deferred slot
   reference)

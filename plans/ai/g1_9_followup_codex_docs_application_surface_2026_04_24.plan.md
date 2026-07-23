@@ -77,7 +77,7 @@ docs they should see, hide the rest" without rewriting docs themselves.
 - **Sync-script pattern (reuse):** `unified-trading-pm/scripts/propagation/sync-archetype-capability-to-ui.sh`
 - **Scope-manifest tooling (consume):** `unified-trading-pm/codex/14-playbooks/_tools/build-scope-manifest.sh` +
   `_generated/scope-manifest.json`
-- **Rule 11 enum (consume):** `codex/14-playbooks/_ssot-rules/11-codex-scope-registry.md`
+- **Rule 11 enum (consume):** `/codex/14-playbooks/_ssot-rules/11-codex-scope-registry.md`
 
 ## Mandatory read-set
 
@@ -92,8 +92,8 @@ docs they should see, hide the rest" without rewriting docs themselves.
 9. `unified-trading-pm/codex/14-playbooks/_generated/scope-manifest.json` — top + bottom + 1 sample per audience
 10. `unified-trading-pm/codex/14-playbooks/_tools/build-scope-manifest.sh` + the `.py` it invokes
 11. `unified-trading-pm/scripts/propagation/sync-archetype-capability-to-ui.sh` — pattern to mirror
-12. 3 sample codex docs (one heavy: `codex/04-architecture/share-class-architecture.md`; one short:
-    `codex/14-playbooks/glossary.md`; one with code blocks: `codex/06-coding-standards/quality-gates.md`)
+12. 3 sample codex docs (one heavy: `/codex/04-architecture/share-class-architecture.md`; one short:
+    `/codex/14-playbooks/glossary.md`; one with code blocks: `/codex/06-coding-standards/quality-gates.md`)
 
 ## Out of scope
 
@@ -119,7 +119,7 @@ docs they should see, hide the rest" without rewriting docs themselves.
       `codex/**/*.md` from workspace root, parses frontmatter (PyYAML), emits one JSON file:
       `unified-trading-system-ui/lib/docs/codex-fixture.json`. Schema:
       `{ docs: [{ slug, path, title, scopes,     excerpt, headings, body_markdown }] }`. Slug = doc path without `.md`,
-      slashes → hyphens (e.g. `codex/02-data/partitioning.md` → `02-data-partitioning`). Excerpt = first ~200 chars of
+      slashes → hyphens (e.g. `/codex/02-data/partitioning.md` → `02-data-partitioning`). Excerpt = first ~200 chars of
       body. Headings = flat list of H2/H3 anchors for TOC. body_markdown = raw markdown including frontmatter-stripped
       body.
 - [ ] [AGENT] P0. Add AUTO-GEN banner to `codex-fixture.json` (first key `_generated_at`, `_source_commit`,

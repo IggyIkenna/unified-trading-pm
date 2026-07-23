@@ -6,24 +6,32 @@ status: complete
 nature: record
 asset_group: [infrastructure]
 stage: [meta]
-repos: [alerting-service, deployment-service, execution-service, features-service, strategy-service, unified-api-contracts]
+repos:
+  [alerting-service, deployment-service, execution-service, features-service, strategy-service, unified-api-contracts]
 scope: [engineer, admin]
 tags: []
 related: []
-created: '2026-05-07'
+created: "2026-05-07"
 priority: P0
 parent: master_to_live_defi_2026_05_23
 depends_on: []
 extends: [live_pipeline_mtds_mdps_features_2026_05_08]
-gates: ['master_to_live_defi_2026_05_23:work-stream-E', 'master_to_live_defi_2026_05_23:Group-F', 'master_to_live_defi_2026_05_23:Group-G']
+gates:
+  [
+    "master_to_live_defi_2026_05_23:work-stream-E",
+    "master_to_live_defi_2026_05_23:Group-F",
+    "master_to_live_defi_2026_05_23:Group-G",
+  ]
 archived: 2026-05-23
 last_updated: 2026-05-23
 estimate_class: design
 estimate_baseline_ai_days: 22
 estimate_calibrated_ai_days: 13.2
-estimate_calibration_note: 'Backfilled 2026-05-13: 60 todos, 38 done; ~22 remaining (rule thresholds, paging, circuit-breaker wiring, 48h staging dry-run, live rehearsal). Design class (operator-judgment thresholds + closed-set rules). Baseline 22 (~1 AI-day per remaining substantive todo); × 0.6 = 13.2.
+estimate_calibration_note: "Backfilled 2026-05-13: 60 todos, 38 done; ~22 remaining (rule thresholds, paging,
+  circuit-breaker wiring, 48h staging dry-run, live rehearsal). Design class (operator-judgment thresholds + closed-set
+  rules). Baseline 22 (~1 AI-day per remaining substantive todo); × 0.6 = 13.2.
 
-  '
+  "
 parent_epic: observability_master
 assigned_vm: vm-cross-cutting
 ---
@@ -220,7 +228,7 @@ default-factory.
       routing per ML code, threshold sources, archetype-scope mapping) + KillSwitchScope mapping table extension showing
       all 4 KILL*SWITCH*\* codes (DEFI_LIQUIDATION_RISK=GLOBAL, PORTFOLIO_DRAWDOWN=GLOBAL, VENUE_DISCONNECT=VENUE,
       ML_MODEL_FAILURE=ARCHETYPE) + scope_key resolution rules per code. **SHIPPED 2026-05-11** PM@`<pending>`:
-      `codex/15-runbooks/alerting/alert-code-taxonomy.md` extended with (a) new
+      `/codex/15-runbooks/alerting/alert-code-taxonomy.md` extended with (a) new
       `## ML category — alert codes +     thresholds + KillSwitchScope mapping` section covering per-code routing matrix
       (6 ML codes with severity/channels/threshold_key/unit/scope), threshold sources + tuning rationale (PSI vs ratio
       guard, ms vs minutes foot-gun avoidance), operator escalation ladder (INFERENCE_LATENCY → STALENESS → DRIFT → PNL
@@ -249,7 +257,7 @@ Replace inline default-factory with UAC consumption. No double-SSOT per workspac
       audit surfaces a real threshold drift candidate.
 - [x] [AGENT] P0. `alerting-service/tests/unit/test_uac_routing_rules_consumption.py` — 37 tests covering: (a)
       byte-equivalence of `_default_routing_rules()` vs `[r.to_routing_dict() for r in LIVE_ALERT_RULES]`; (b) every
-      legacy pattern still routed (KILL*SWITCH*_, CIRCUIT*BREAKER*_, DEFI*\*, MARGIN*_, etc); (c) AAVE threshold reads
+      legacy pattern still routed (KILL*SWITCH*_, CIRCUIT*BREAKER*_, DEFI*\*, MARGIN*\_, etc); (c) AAVE threshold reads
       UAC + per-archetype overrides apply (`ARBITRAGE_PRICE_DISPERSION` (`funding-rate-dispersion`) fires at 91%,
       default doesn't); (d) `check_aave_utilization` fires correctly above/below thresholds; (e) KILL*SWITCH*_ family
       CRITICAL+PagerDuty+`triggers_kill_switch=True`; (f) CROSS_CLOUD_EGRESS_DETECTED PagerDuty-routed. All 37 green.
@@ -263,13 +271,13 @@ Replace inline default-factory with UAC consumption. No double-SSOT per workspac
       default.
 - [x] [AGENT] P0. **Phase 2.X — `AlertRule.pattern` → `event_pattern` rename follow-up PR.** UAC@d00326d shipped the
       Pydantic field as `pattern`; codex SSOT
-      [`codex/03-observability/alerting.md`](../../codex/03-observability/alerting.md) § "Alerting-Service Routing
-      Rules" (lines 116-149) uses `event_pattern`. Codex is SSOT for target structure per workspace rule. Rename
-      surface: UAC `unified_api_contracts/canonical/crosscutting/alerting/rules.py` (Pydantic field + every constructor
-      in seed dict) + UAC tests + alerting-service consumer (config.py default-factory body + any `.pattern` attribute
-      access) + tests. Single logical-unit commit; no compatibility shim. Owns the IN-FLIGHT REFACTOR banner at top of
-      this plan — banner clears when this todo flips `[x]`. **SHIPPED 2026-05-11**: UAC@`0b61aec` (Pydantic field
-      rename + 44 LIVE_ALERT_RULES constructor calls + validators `_pattern_non_empty` → `_event_pattern_non_empty` +
+      [`/codex/03-observability/alerting.md`](/codex/03-observability/alerting.md) § "Alerting-Service Routing Rules"
+      (lines 116-149) uses `event_pattern`. Codex is SSOT for target structure per workspace rule. Rename surface: UAC
+      `unified_api_contracts/canonical/crosscutting/alerting/rules.py` (Pydantic field + every constructor in seed
+      dict) + UAC tests + alerting-service consumer (config.py default-factory body + any `.pattern` attribute access) +
+      tests. Single logical-unit commit; no compatibility shim. Owns the IN-FLIGHT REFACTOR banner at top of this plan —
+      banner clears when this todo flips `[x]`. **SHIPPED 2026-05-11**: UAC@`0b61aec` (Pydantic field rename + 44
+      LIVE_ALERT_RULES constructor calls + validators `_pattern_non_empty` → `_event_pattern_non_empty` +
       `_validate_pattern_matches_codes` → `_validate_event_pattern_matches_codes` + test file rename `rule.pattern` →
       `rule.event_pattern` × all sites + drive-by fix to `test_alert_rule_accepts_kill_switch_flag_on_kill_switch_code`
       adding `kill_switch_scope=KillSwitchScope.VENUE` — 44/44 taxonomy tests green) + alerting-service@`3b94456`
@@ -560,7 +568,7 @@ Synthetic-alert injection + full operator-flow verification on prod-equivalent e
       strategy-service halt-order subscribers (per e2e plan §"Downstream Commands").
 - [x] ✅ [HUMAN] P0. Sign-off doc: `unified-trading-pm/codex/15-runbooks/alerting/REHEARSAL_2026_05_<date>.md` listing
       all 15 codes + pass/fail per code + operator name + date. Template created at
-      `codex/15-runbooks/alerting/REHEARSAL_2026_05_23.md` with all 15 codes + verification checklist (a-f) per code.
+      `/codex/15-runbooks/alerting/REHEARSAL_2026_05_23.md` with all 15 codes + verification checklist (a-f) per code.
       Operator must fill in pass/fail + sign off. PM@tab/rootm/2.
 
 ### Phase 9 — Production go-live + 7-day soak (during May-23 trading window)
@@ -641,7 +649,7 @@ KILL*SWITCH*\* code fires, no `KillSwitchEvent` emitted to bus → execution-ser
       KillSwitchEvent to in-process bus with correct scope GLOBAL×2/VENUE×1; prints PASS/FAIL per code. In-process bus
       propagation verified in isolation; full end-to-end (execution-service halt on PubSub topic) verified when operator
       runs during Phase 8 rehearsal session on live VM. QG ✅ 133s.)
-- [x] [AGENT] P1. **Codex update**: `codex/15-runbooks/alerting/alert-code-taxonomy.md` add the kill-switch-publisher
+- [x] [AGENT] P1. **Codex update**: `/codex/15-runbooks/alerting/alert-code-taxonomy.md` add the kill-switch-publisher
       hook semantics + `KillSwitchScope` field. (PM commit pending — design-only doc, ships independent of UAC field
       landing; full KillSwitchScope mapping table + scope_key resolution + failure-mode contract.)
 
@@ -664,10 +672,10 @@ pieces (MDPS write-gate consultation; MTDS `LiveConnectivityWatchdog`) live in t
       `_check_coalesce_window` + 22 unit tests in `tests/unit/notifiers/test_router_coalesce.py`). Pair-review tag in
       commit message per CLAUDE.md "alerting-service is Harsh's repo"; follows existing `_find_kill_switch_rule`
       precedent.
-- [x] [AGENT] P1. **Codex update**: `codex/04-architecture/alerting-batch-live.md` adds both codes to the
+- [x] [AGENT] P1. **Codex update**: `/codex/04-architecture/alerting-batch-live.md` adds both codes to the
       live-instruments-failure-rules section (already extended in `instruments_master` Phase A.4 — land both updates
       same-day). Shipped this commit — new "Live Instruments Failure Rules" section in
-      [`codex/04-architecture/alerting-batch-live.md`](../../codex/04-architecture/alerting-batch-live.md) covers all 4
+      [`/codex/04-architecture/alerting-batch-live.md`](/codex/04-architecture/alerting-batch-live.md) covers all 4
       AlertCodes + the 30s coalesce semantics + cross-refs to UAC + alerting-service + tests.
 
 ### Phase 1.E — Venue / lending / market-data / gas / oracle kill-switch AlertCode extensions (2026-05-13, Slot 7)
@@ -785,7 +793,7 @@ back-flip codified by the 2026-05-10 PM governance hygiene sweep (Audit C item).
    `_validate_kill_switch_scope_matches_code_family` + new unit tests in
    `tests/internal/unit/test_alerting_taxonomy.py`.
 2. alerting-service `notifiers/router.py` publisher hook + integration test.
-3. Codex update to `codex/15-runbooks/alerting/alert-code-taxonomy.md` § "Kill-switch publisher hook semantics".
+3. Codex update to `/codex/15-runbooks/alerting/alert-code-taxonomy.md` § "Kill-switch publisher hook semantics".
 
 **Item 3 (codex doc) shipped** — design SSOT with full KillSwitchScope mapping, scope_key resolution table, failure-mode
 contract. Independent of UAC field landing.
@@ -861,7 +869,7 @@ observability_master backlog._
   `alerting-quietness-20260522-083225` running until ~2026-05-24 08:32 UTC. Acceptance: 0 PagerDuty-severity FPs + ≤2
   Telegram-severity FPs in 48h. If FP > 10%/24h after analysis, operator to file follow-up threshold-adjustment task.
 - **Phase 8 rehearsal (OPERATOR ACTION)**: Operator must run `alerting-service/scripts/inject_synthetic_alert.py` for
-  all 15 alert codes and fill in sign-off doc at `codex/15-runbooks/alerting/REHEARSAL_2026_05_23.md`. Full checklist
+  all 15 alert codes and fill in sign-off doc at `/codex/15-runbooks/alerting/REHEARSAL_2026_05_23.md`. Full checklist
   (a-f verification per code) + kill-switch end-to-end steps pre-staged. DEFERRED-OPERATOR-DECISION.
 - **Phase 8 CRITICAL-severity rehearsal (OPERATOR ACTION)**: Simulate `KILL_SWITCH_DEFI_LIQUIDATION_RISK` end-to-end
   including circuit-breaker propagation to execution-service + strategy-service halt-order subscribers.

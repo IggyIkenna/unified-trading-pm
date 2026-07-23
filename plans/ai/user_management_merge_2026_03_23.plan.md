@@ -10,7 +10,7 @@ readiness:
   deployment: D0
   business: B1
 # Status (2026-04-01): 34 done / 20 pending. Phase 1 fully superseded (Firebase direct). Phase 2: 7/8 pages done, 3 pending (templates/firebase/health-checks + nav entries). Phase 3-6: partially done.
-# Canonical playbook SSOT: codex/14-playbooks/authentication/ + codex/14-customer-journeys/playbook-concepts/fund-org-hierarchy.md
+# Canonical playbook SSOT: codex/14-playbooks/authentication/ + /codex/14-customer-journeys/playbook-concepts/fund-org-hierarchy.md
 affects:
   - unified-trading-system-ui
   - auth-api

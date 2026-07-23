@@ -210,7 +210,7 @@ the hero carries. Re-inline the hero framing so briefings and homepage share the
       sibling pages include. Options: (a) duplicate the HTML (fast, drift risk) or (b) a small JS inline-include helper
       (cleaner, one seam). Default (a) for this round — each static HTML is read into ShadowDOM independently; a shared
       CSS fragment imported by each would work but needs the loader contract to honour `<link>` across shadow hosts.
-- [ ] [AGENT] P1. Codex SSOT update — add a `codex/14-playbooks/design/marketing-hero-structure.md` doc (new file if
+- [ ] [AGENT] P1. Codex SSOT update — add a `/codex/14-playbooks/design/marketing-hero-structure.md` doc (new file if
       missing) documenting the hero blocks (asset-pill / H1 / tagline / service-row / CTAs / stats-row / trust-row as 4
       merged chips) so future agents don't drift. Include the page-specific H1/tagline table above as the canonical copy
       SSOT.

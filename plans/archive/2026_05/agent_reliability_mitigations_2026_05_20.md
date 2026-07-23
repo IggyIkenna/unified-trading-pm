@@ -9,8 +9,13 @@ stage: [meta]
 repos: [agent-orchestrator, unified-trading-pm]
 scope: [engineer, admin]
 tags: []
-related: [agent_orchestrator_workers_on_vms_2026_05_19.md, agent_orchestrator_cloud_run_deployment_2026_05_19.md, master_to_live_defi_2026_05_23.md]
-created: '2026-05-20'
+related:
+  [
+    agent_orchestrator_workers_on_vms_2026_05_19.md,
+    /plans/archive/2026_05/agent_orchestrator_cloud_run_deployment_2026_05_19.md,
+    /plans/active/master_to_live_defi_2026_05_23.md,
+  ]
+created: "2026-05-20"
 parent_epic: orchestrator_master
 priority: P1
 estimate_class: infra
@@ -34,7 +39,7 @@ Four gap categories for multi-agent orchestration: (1) LDR mirror failures go un
 worktree causes context confusion; (3) No ownership tag on WIP files causes cross-agent overwrite; (4) No in-flight
 files record on heartbeat gap — can't recover what last agent was working on. Five phased mitigations.
 
-Codex SSOTs: `codex/04-architecture/agent-orchestrator-overview.md`
+Codex SSOTs: `/codex/04-architecture/agent-orchestrator-overview.md`
 
 ---
 

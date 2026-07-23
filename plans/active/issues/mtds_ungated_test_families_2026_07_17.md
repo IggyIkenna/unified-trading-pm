@@ -116,7 +116,7 @@ PYTEST_UNIT_DIR="tests/unit/ tests/market_interface/unit/test_canonical_parquet_
 - [ ] [BACKEND] P1. **Fix the 8 non-integration `tests/market_interface/unit/` failures** (`test_defi_handlers.py` ×5,
       `test_defi_adapters_boost_2.py` ×2, `test_barchart_and_yahoo_adapters.py` ×1). The `ethena_adapter` DefiLlama
       socket attempts mean a unit test is reaching the network — that is its own correctness bug, not just a gate gap.
-      Barchart is RETIRED per `codex/02-data/tradfi-databento-sourcing-ssot.md`, so its test may simply delete. (repo:
+      Barchart is RETIRED per `/codex/02-data/tradfi-databento-sourcing-ssot.md`, so its test may simply delete. (repo:
       market-tick-data-service)
 - [ ] [BACKEND] P1. **Fix the remaining 14 `tests/market_interface/adapters/**` canonical-output/write failures**
       (databento ×12, tradfi-writes ×1, tardis-options ×1). **The 2 `test_tardis_canonical_output.py` failures are

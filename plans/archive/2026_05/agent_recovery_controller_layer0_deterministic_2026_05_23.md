@@ -6,35 +6,42 @@ status: complete
 nature: record
 asset_group: [infrastructure]
 stage: [meta]
-repos: [agent-orchestrator, alerting-service, deployment-service, execution-service, strategy-service, unified-api-contracts]
+repos:
+  [agent-orchestrator, alerting-service, deployment-service, execution-service, strategy-service, unified-api-contracts]
 scope: [engineer, admin]
 tags: []
-related: [incident_gateway_and_state_machine_2026_05_23.md, ai_recovery_audit_signoff_agent_2026_05_23.md, deployment_ui_safety_ops_tab_2026_05_23.md]
-created: '2026-05-23'
+related:
+  [
+    incident_gateway_and_state_machine_2026_05_23.md,
+    ai_recovery_audit_signoff_agent_2026_05_23.md,
+    /plans/archive/2026_05/deployment_ui_safety_ops_tab_2026_05_23.md,
+  ]
+created: "2026-05-23"
 parent_epic: observability_master
 assigned_vm: vm-cross-cutting
 priority: P0
 estimate_class: brand-new
 estimate_baseline_ai_days: 14
 estimate_calibrated_ai_days: 14.0
-estimate_calibration_note: 'Brand-new class (10 distinct deterministic recovery scripts + dry-run mode + AgentActionEvent emitter library + runbook-
+estimate_calibration_note: "Brand-new class (10 distinct deterministic recovery scripts + dry-run mode +
+  AgentActionEvent emitter library + runbook-
 
   ID registry + repeated-repair-loop detector). Baseline 14 = ~1.4 days per script-on-average × 10 scripts. No
 
   multiplier discount (1.0×) — this is from-scratch work.
 
-  '
+  "
 parent: master_to_live_defi_2026_05_23
 locked_by: live-defi-rollout
 locked_since: 2026-05-23
 depends_on: [incident_gateway_and_state_machine_2026_05_23]
-gates: ['master_to_live_defi_2026_05_23:Group-F']
+gates: ["master_to_live_defi_2026_05_23:Group-F"]
 ---
 
 # Agent Recovery Controller — Layer-0 Deterministic Scripts + AgentActionEvent
 
 > **🟢 SPAWNED 2026-05-23 from `observability_disaster_recovery_audit_2026_05_23.md` gap #2.** Layer-0 of the 5-layer
-> defence-in-depth model (`codex/04-architecture/recovery-defence-in-depth-layers.md` NEW). Deterministic Python — NO
+> defence-in-depth model (`/codex/04-architecture/recovery-defence-in-depth-layers.md` NEW). Deterministic Python — NO
 > LLM in the loop on Layer-0; the LLM-audit agent lives on Layer-1 (`ai_recovery_audit_signoff_agent_2026_05_23.md`).
 
 ## Goal
@@ -211,10 +218,10 @@ detector. Do NOT duplicate logic — call the existing function with the wrapper
 
 ## Codex SSOT updates (post-plan-phase HARD RULE)
 
-- NEW: `codex/04-architecture/recovery-defence-in-depth-layers.md` — 5-layer model; Layer-0 = these 10 scripts.
-- UPDATE: `codex/04-architecture/autonomous-recovery-matrix.md` — add a section pointing each decision-tree action at
+- NEW: `/codex/04-architecture/recovery-defence-in-depth-layers.md` — 5-layer model; Layer-0 = these 10 scripts.
+- UPDATE: `/codex/04-architecture/autonomous-recovery-matrix.md` — add a section pointing each decision-tree action at
   its Layer-0 script.
-- UPDATE: `codex/04-architecture/kill-switch-circuit-breaker.md` — note that kill-switch + circuit-breaker are now
+- UPDATE: `/codex/04-architecture/kill-switch-circuit-breaker.md` — note that kill-switch + circuit-breaker are now
   AgentAction-wrapped.
 
 ## Tier-1-4 implementation log (2026-05-23)
@@ -287,7 +294,7 @@ detector. Do NOT duplicate logic — call the existing function with the wrapper
 
 - Operator ping doc → `plans/active/_agent_pings.md` 2026-05-23 ikenna-slot-1 → operator entry
 - 22 incident runbooks → `codex/15-runbooks/incidents/` (RB-INC/RECON/RISK/CONN/DEPLOY/INFRA/ALERT)
-- Game-day protocol → `codex/15-runbooks/incidents/game_day_protocol.md`
+- Game-day protocol → `/codex/15-runbooks/incidents/game_day_protocol.md`
 - Alerting Tier-5 → `alerting-service@e5c8084` (5 new gateway/notifier modules)
 - Strategy Tier-5 → `strategy-service@3b0f7397` (2 configs + close-all + helper)
 - Execution Tier-5 → `execution-service@a6fa7c501` (recovery_event_helper)

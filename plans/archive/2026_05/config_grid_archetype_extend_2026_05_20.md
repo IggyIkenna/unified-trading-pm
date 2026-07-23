@@ -31,7 +31,7 @@ estimate_calibrated_ai_days: 2.4
 - `CARRY_STAKED_BASIS` ✅ (defi-carry-family)
 - `ARBITRAGE_PRICE_DISPERSION` ✅ (arbitrage-funding-rate)
 
-Missing families per `codex/09-strategy/mvp-universe-per-asset-group.md`:
+Missing families per `/codex/09-strategy/mvp-universe-per-asset-group.md`:
 
 | Family                  | StrategyArchetype enum member  | Notes                                           |
 | ----------------------- | ------------------------------ | ----------------------------------------------- |
@@ -61,19 +61,19 @@ Dimension choices required per family:
       actual engine params in `strategy_service/engine/strategies/v2/`:
 
       | Family | Plan's proposed dims | Actual engine params |
-      |---|---|---|
-      | ml-continuous (`MLDirectionalContinuousEngine`) | `regime_window_days`, `confidence_threshold`, `position_size_pct`, `max_drawdown_threshold` | `confidence_threshold`, `max_position_fraction`, `min_mid_price` (`regime_window_days` does NOT exist) |
-      | ml-settled (`MLDirectionalEventSettledEngine`) | `event_prob_threshold`, `side_size_factor`, `max_drawdown_threshold`, `slippage_cap_bps` | `min_confidence`, `min_edge`, `max_odds`, `kelly_fraction`, `max_stake_fraction` (none of the plan's names match) |
-      | arbitrage-sportsbook (`MarketMakingEventSettledEngine`) | `edge_threshold_bps`, `round_trip_fee_cap_bps`, `position_size_pct`, `max_drawdown_threshold` | `half_spread_bps`, `max_inventory_abs`, `refresh_cadence_ms`, `refresh_threshold_bps` (none match) |
-      | arbitrage-event-markets (`ARBITRAGE_CROSS_DOMAIN_EVENT`) | `price_dispersion_threshold_bps`, `arb_window_seconds`, `hedge_ratio`, `slippage_cap_bps` | **NO ENGINE IN FACTORY** — `ARCHETYPE_ENGINE_REGISTRY` has no entry for `ARBITRAGE_CROSS_DOMAIN_EVENT`. Grid sweep would crash at registration lookup. |
+                                                                                                                      |---|---|---|
+                                                                                                                      | ml-continuous (`MLDirectionalContinuousEngine`) | `regime_window_days`, `confidence_threshold`, `position_size_pct`, `max_drawdown_threshold` | `confidence_threshold`, `max_position_fraction`, `min_mid_price` (`regime_window_days` does NOT exist) |
+                                                                                                                      | ml-settled (`MLDirectionalEventSettledEngine`) | `event_prob_threshold`, `side_size_factor`, `max_drawdown_threshold`, `slippage_cap_bps` | `min_confidence`, `min_edge`, `max_odds`, `kelly_fraction`, `max_stake_fraction` (none of the plan's names match) |
+                                                                                                                      | arbitrage-sportsbook (`MarketMakingEventSettledEngine`) | `edge_threshold_bps`, `round_trip_fee_cap_bps`, `position_size_pct`, `max_drawdown_threshold` | `half_spread_bps`, `max_inventory_abs`, `refresh_cadence_ms`, `refresh_threshold_bps` (none match) |
+                                                                                                                      | arbitrage-event-markets (`ARBITRAGE_CROSS_DOMAIN_EVENT`) | `price_dispersion_threshold_bps`, `arb_window_seconds`, `hedge_ratio`, `slippage_cap_bps` | **NO ENGINE IN FACTORY** — `ARCHETYPE_ENGINE_REGISTRY` has no entry for `ARBITRAGE_CROSS_DOMAIN_EVENT`. Grid sweep would crash at registration lookup. |
 
-      Operator must choose: (a) update the plan's proposed dimension names to match the actual engine params, OR
-      (b) add the proposed params to each engine first, THEN implement the grid dimensions.
-      Separate decision needed for `ARBITRAGE_CROSS_DOMAIN_EVENT`: either (i) implement the engine first, or
-      (ii) defer this archetype and extend the grid for 3 of 4.
-      Ping: `harsh_orchestrator/pings/slot_4.md` [2026-05-20 UTC].
-      **[DEFERRED-OPERATOR-DECISION 2026-05-23 slot 2]** No operator response since 2026-05-20. Plan is P1
-      (post-cutover). Requires strategy-service (not in worktree). Deferred to post-DeFi-cutover.
+                                                                                                                      Operator must choose: (a) update the plan's proposed dimension names to match the actual engine params, OR
+                                                                                                                      (b) add the proposed params to each engine first, THEN implement the grid dimensions.
+                                                                                                                      Separate decision needed for `ARBITRAGE_CROSS_DOMAIN_EVENT`: either (i) implement the engine first, or
+                                                                                                                      (ii) defer this archetype and extend the grid for 3 of 4.
+                                                                                                                      Ping: `harsh_orchestrator/pings/slot_4.md` [2026-05-20 UTC].
+                                                                                                                      **[DEFERRED-OPERATOR-DECISION 2026-05-23 slot 2]** No operator response since 2026-05-20. Plan is P1
+                                                                                                                      (post-cutover). Requires strategy-service (not in worktree). Deferred to post-DeFi-cutover.
 
 - [x] **[BLOCKED-OPERATOR-DECISION — depends on item 1]** [SCRIPT] P0. Add 4 `_DIMENSIONS_BY_ARCHETYPE` entries +
       `_dim_kwargs` branches + `_build_config_grid` branches in

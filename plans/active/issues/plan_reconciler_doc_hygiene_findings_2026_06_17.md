@@ -43,7 +43,7 @@ This run otherwise found a clean corpus: 0 hard hygiene failures, no missed flip
 traced to a genuinely-open todo — a done prerequisite is not a done todo), and no clear plan-vs-plan / plan-vs-epic
 contradictions.
 
-## Finding 1 — stale codex pointer `codex/09-strategy/operational/pnl-attribution.md` (4 referrers)
+## Finding 1 — stale codex pointer `/codex/09-strategy/operational/pnl-attribution.md` (4 referrers)
 
 > _(Corrected 2026-07-12, finding 231, §A2 B-queue ruling: this section's "does not exist" path and the "Recommended
 > decision" rewrite line below both showed the CORRECT path on both sides of the X → X arrow, a copy-paste artifact —
@@ -52,10 +52,10 @@ contradictions.
 
 ### What I found
 
-The SSOT pointer `codex/09-strategy/operational/pnl-attribution.md` **does not exist** — it was never committed at that
-path (`git log --all -- codex/09-strategy/operational/pnl-attribution.md` is empty). The actual doc lives at
-**`codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md`** (64 KB, the canonical PnL-attribution SSOT),
-referenced correctly by `codex/09-strategy/README.md`, `codex/04-architecture/client-reporting-architecture.md`, the
+The SSOT pointer `/codex/09-strategy/operational/pnl-attribution.md` **does not exist** — it was never committed at that
+path (`git log --all -- /codex/09-strategy/operational/pnl-attribution.md` is empty). The actual doc lives at
+**`/codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md`** (64 KB, the canonical PnL-attribution SSOT),
+referenced correctly by `/codex/09-strategy/README.md`, `/codex/04-architecture/client-reporting-architecture.md`, the
 epic `plans/epics/global_ledger_pnl_attribution_master.md`, and the `codex_ssots:` of
 `plans/active/global_ledger_pnl_attribution_migration_2026_06_01.md`.
 

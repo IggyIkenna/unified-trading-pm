@@ -21,9 +21,9 @@ scope: [engineer, admin]
 tags: [ci-cd, alerting, observability, promotion, self-hosted-runners, silent-failure, triage]
 related:
   [
-    provenance_gate_override_and_unenforced_quickmerge_hook_2026_07_17.md,
-    ../../../codex/04-architecture/ci-alerting.md,
-    ../../../codex/08-workflows/ci-cd-flow.md,
+    /plans/active/issues/provenance_gate_override_and_unenforced_quickmerge_hook_2026_07_17.md,
+    /codex/04-architecture/ci-alerting.md,
+    /codex/08-workflows/ci-cd-flow.md,
   ]
 created: 2026-07-17
 last_updated: 2026-07-17
@@ -104,22 +104,22 @@ it is currently the only thing that fires, so it absorbs every cause by accident
       candidate is kept at `/tmp/glue-runner-run.sh.broken-keepme` on the VM for post-mortem.
 
       **ROOT CAUSE FOUND (post-mortem, same day) — it was an APOSTROPHE, and the fix is one character.** The block's
-          error text contained `${GCP_PROJECT:-<unset — no --project passed; relying on gcloud's ambient default>}`.
-          Inside a `${VAR:-word}` expansion bash **re-parses quotes in the default word**, so the `'` in `gcloud's` opened
-          a single-quoted region. In a ~200-line script full of apostrophes it silently **re-paired with a later one** —
-          quotes balanced overall, so `bash -n` saw VALID syntax — while everything between them became a quoted STRING
-          instead of code, swallowing the `GH_TOKEN="${_sm_out}"` assignment. Hence `line 200: GH_TOKEN: unbound variable`
-          at the `generate-jitconfig` curl ~120 lines below the edited block. Verified in isolation: the same construct
-          alone fails `bash -n` with ``unexpected EOF while looking for matching `'``.
-          **Rule to carry forward: never put an apostrophe (or any unbalanced quote) inside a `${VAR:-...}` default word.**
-          Write "gcloud" not "gcloud's", or build the message outside the expansion.
+                                                                                                                          error text contained `${GCP_PROJECT:-<unset — no --project passed; relying on gcloud's ambient default>}`.
+                                                                                                                          Inside a `${VAR:-word}` expansion bash **re-parses quotes in the default word**, so the `'` in `gcloud's` opened
+                                                                                                                          a single-quoted region. In a ~200-line script full of apostrophes it silently **re-paired with a later one** —
+                                                                                                                          quotes balanced overall, so `bash -n` saw VALID syntax — while everything between them became a quoted STRING
+                                                                                                                          instead of code, swallowing the `GH_TOKEN="${_sm_out}"` assignment. Hence `line 200: GH_TOKEN: unbound variable`
+                                                                                                                          at the `generate-jitconfig` curl ~120 lines below the edited block. Verified in isolation: the same construct
+                                                                                                                          alone fails `bash -n` with ``unexpected EOF while looking for matching `'``.
+                                                                                                                          **Rule to carry forward: never put an apostrophe (or any unbalanced quote) inside a `${VAR:-...}` default word.**
+                                                                                                                          Write "gcloud" not "gcloud's", or build the message outside the expansion.
 
-          **Why my tests missed it**: they exercised ONLY the changed block, in a SHORT file with no later apostrophe to
-          re-pair against — so the toy either errored honestly or passed, and could never reproduce the swallow. `bash -n`
-          validates syntax, not binding, and the syntax was genuinely valid. **Still do not retry without whole-script
-          validation**: add a `--selfcheck` mode that runs everything short of exec'ing `Runner.Listener`, exercise it on a
-          scratch slot, then roll ONE unit and confirm `Listening for Jobs` before the other four. (The canary was
-          worthless last time because the same bad script had already been rolled to all five.)
+                                                                                                                          **Why my tests missed it**: they exercised ONLY the changed block, in a SHORT file with no later apostrophe to
+                                                                                                                          re-pair against — so the toy either errored honestly or passed, and could never reproduce the swallow. `bash -n`
+                                                                                                                          validates syntax, not binding, and the syntax was genuinely valid. **Still do not retry without whole-script
+                                                                                                                          validation**: add a `--selfcheck` mode that runs everything short of exec'ing `Runner.Listener`, exercise it on a
+                                                                                                                          scratch slot, then roll ONE unit and confirm `Listening for Jobs` before the other four. (The canary was
+                                                                                                                          worthless last time because the same bad script had already been rolled to all five.)
 
 - [ ] [DEVOPS] P1. **A self-hosted pool with 0 runners listening must page on its OWN cause.** Nothing watches runner
       liveness. Cheapest honest signal: alert when a `glue`-labelled job has been `queued` > N minutes while

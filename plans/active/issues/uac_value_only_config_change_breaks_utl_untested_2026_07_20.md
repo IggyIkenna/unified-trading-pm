@@ -21,7 +21,10 @@ repos: [unified-api-contracts, unified-trading-library, unified-trading-pm]
 scope: [engineer, admin]
 tags: [cross-repo, ci-cd, sit, breaking-detection, data-correctness, quality-gates]
 related:
-  [betfair_instrument_id_delimiter_cross_repo_2026_07_08.md, tradfi_canonical_path_migration_design_2026_07_19.md]
+  [
+    /plans/archive/issues/betfair_instrument_id_delimiter_cross_repo_2026_07_08.md,
+    /plans/active/issues/tradfi_canonical_path_migration_design_2026_07_19.md,
+  ]
 created: 2026-07-20
 parent_epic: infrastructure_master
 assigned_vm: NA

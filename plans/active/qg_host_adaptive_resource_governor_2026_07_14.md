@@ -18,7 +18,7 @@ tags: [infra, quality-gates, host-contention, governor, resource-admission, cros
 related:
   [
     plans/active/issues/qg_host_governor_severe_contention_2026_07_13.md,
-    codex/06-coding-standards/quality-gates.md,
+    /codex/06-coding-standards/quality-gates.md,
     scripts/quality-gates-base/qg-host-governor.sh,
   ]
 created: "2026-07-14"
@@ -48,7 +48,7 @@ source:
 
 ## Codex SSOTs (read + keep aligned)
 
-- `codex/06-coding-standards/quality-gates.md` § "Per-repo resource baseline", "VM-sizing", "Both base files are
+- `/codex/06-coding-standards/quality-gates.md` § "Per-repo resource baseline", "VM-sizing", "Both base files are
   governed" — the current fixed-K model + the (now-stale) heavy-tier claim this plan corrects.
 - `scripts/quality-gates-base/qg-host-governor.sh` — the current token-bucket governor being replaced.
 - `scripts/quality-gates-base/base-service.sh` + `base-library.sh` — the `qg_governor_acquire`/`release` call sites
@@ -312,7 +312,7 @@ runaway backstop). QG is never run below 16 GB, so no host ever needs the oversi
       `QG_HOST_CONCURRENCY=1` pin from `bootstrap_vm.sh` (kept as an optional override) — DONE in the same commit.
 - [x] [INFRA] P1. ✅ PM@6402f6cd8 (🟢 LIVE+VALIDATED note: dual-gate, capacity auto-adaptation via the resize,
       K-demoted, cgroup cap, trap-release lifecycle, small-host learning; heavy-tier already corrected) — Update
-      `codex/06-coding-standards/quality-gates.md` — the dual-gate model + the corrected heavy-tier order (UTL →
+      `/codex/06-coding-standards/quality-gates.md` — the dual-gate model + the corrected heavy-tier order (UTL →
       instruments → execution → …; the stale "execution/features = #2" fixed).
 - [x] [INFRA] P2. ✅ PM@6402f6cd8 (`status: resolved` + `resolved_by:` + ✅ banner; all 4 issue todos were already
       `[x]`) — Close the 4 todos in `issues/qg_host_governor_severe_contention_2026_07_13.md` (this plan resolves all

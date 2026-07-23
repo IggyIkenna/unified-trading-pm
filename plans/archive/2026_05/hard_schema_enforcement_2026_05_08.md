@@ -2,8 +2,8 @@
 doc_type: plan
 title: Hard Schema Enforcement at Write Boundary — Workspace-Wide
 summary: >-
-  Completed 2026-05-19 plan that made per-asset-group instrument fields hard-required at the UAC write boundary —
-  added RecordFailedReason taxonomy + InstrumentRecord model_validator (CeFi/DeFi/FUTURE/OPTION/EVENT_CONTRACT/sports),
+  Completed 2026-05-19 plan that made per-asset-group instrument fields hard-required at the UAC write boundary — added
+  RecordFailedReason taxonomy + InstrumentRecord model_validator (CeFi/DeFi/FUTURE/OPTION/EVENT_CONTRACT/sports),
   per-row SCHEMA_VALIDATION_FAILED routing at instruments-service, MalformedRowKeyError guard in UTL, and PM QG STEP
   5.83 static assertions.
 status: complete
@@ -19,36 +19,147 @@ last_updated: 2026-05-08
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
 epic: epic-code-completion
-completion_gates: {code: C5, deployment: D3, business: none}
+completion_gates: { code: C5, deployment: D3, business: none }
 repo_gates:
-- {repo: unified-api-contracts, code: C0, deployment: none, business: none}
-- {repo: unified-trading-library, code: C0, deployment: none, business: none}
-- {repo: instruments-service, code: C0, deployment: none, business: none}
-- {repo: market-tick-data-service, code: C0, deployment: none, business: none}
-- {repo: unified-trading-pm, code: C0, deployment: none, business: none}
+  - { repo: unified-api-contracts, code: C0, deployment: none, business: none }
+  - { repo: unified-trading-library, code: C0, deployment: none, business: none }
+  - { repo: instruments-service, code: C0, deployment: none, business: none }
+  - { repo: market-tick-data-service, code: C0, deployment: none, business: none }
+  - { repo: unified-trading-pm, code: C0, deployment: none, business: none }
 depends_on: [tradfi-master-2026-05-07, writegate-honest-coverage-endtoend-2026-05-06, infrastructure-master-2026-05-07]
 todos:
-- {id: phase-1-uac-schema-audit-hard-required-flips, content: "- [x] ✅ [SCRIPT] P0. **Phase 1 — UAC schema audit + hard-required field markup per asset_group.** Walk every\n  Pydantic / TypedDict / dataclass schema under `unified_api_contracts/canonical/domain/_*.py`. For each\n  asset_group, identify the fields that are workspace-rule-required-but-currently-nullable + flip nullable →\n  required:\n    - **CeFi**: `base_currency`, `quote_currency` on every spot/perp instrument schema.\n    - **DeFi**: `chain_id`, `contract_address`, `decimals` on every on-chain asset schema.\n    - **TradFi futures**: `expiry_date`, `last_trading_date`, `first_notice_date`, `delivery_date`,\n      `settlement_date` (covered by `tradfi_master` Q1 — sequence this plan AFTER tradfi_master ships\n      those flips).\n    - **TradFi options**: `expiration` (covered by `tradfi_master` Q2 — sequence AFTER).\n    - **Sports**: `fixture_id` on every per-fixture entity (lineups / events / stats / injuries).\n    -\
-    \ **Predictions**: ALREADY hard-required per Phase 1A of writegate — no change needed; serves as\n      reference for the rest.\n  Per-flip: one-shot manifest migration script back-fills + flips schema in a single PR.\n  **PARTIAL FOUNDATION + 3 ASSET-GROUP RULES SHIPPED 2026-05-11 by slot 5 (ikenna-aggressive-may15-tab,\n  RE-TASK)**: foundation (RecordFailedReason taxonomy + SCHEMA_VALIDATION_FAILED enum value) shipped at\n  uac@`3157f45`; per-asset-group `InstrumentRecord` model_validator shipped uac@`37d1ddb` enforcing 3 closed-set\n  rules: (1) CeFi spot/perp (SPOT_PAIR / PERPETUAL) → `base_asset` + `quote_asset` non-empty; (2) DeFi on-chain\n  (POOL / LENDING / LST / YIELD_BEARING / A_TOKEN / DEBT_TOKEN / STAKING / SPOT_ASSET — 8 types) → `pool_address`\n  OR `base_asset_contract_address` non-empty; (3) EVENT_CONTRACT → `expiry` non-null. Two new module-level\n  constants exposed: `CEFI_PAIR_INSTRUMENT_TYPES` + `DEFI_ONCHAIN_INSTRUMENT_TYPES` (downstream callers can\n  check `instrument.instrument_type\
-    \ in CEFI_PAIR_INSTRUMENT_TYPES` directly). 10/10 smoke tests pass —\n  validator raises `ValueError` for empty/null required fields per rule; downstream MTDS / instruments-service\n  adapters' per-row try/except routes them to\n  `record_failed(reason=RecordFailedReason.SCHEMA_VALIDATION_FAILED)` (already shipped (sister enum to\n  `EmptyConfirmedReason` per the existing `honest_coverage.py` shape). 8 closed-set members covering schema\n  violation / upstream timestamp bias / malformed tick field / upstream subgraph zero / cluster coverage\n  violation / malformed row key / classified venue error / unclassified adapter error. Foundational for\n  Phase 2 per-row `record_failed` routing — adapters route schema-rejected rows to\n  `record_failed(reason=RecordFailedReason.SCHEMA_VALIDATION_FAILED, ...)` once Phase 2 refactors the\n  `ManifestWriter.record_failed` signature to accept the structured-reason kwarg. Smoke-import verified:\n  enum count 8, frozenset size 8, mutually exclusive\
-    \ with EmptyConfirmedReason.\n  **TRADFI FUTURE+OPTION model_validator rules SHIPPED 2026-05-19 by slot 8 (uac@80aef10)**: added FUTURE\n  (tradfi_master Q1 gate passed 2026-05-13) and OPTION (tradfi_master Q2 gate passed 2026-05-13) branches to\n  `InstrumentRecord._enforce_per_asset_group_required_fields` model_validator. Both enforce `expiry` non-null\n  per workspace rule. 15 tests in `tests/internal/unit/test_instrument_record_hard_required_fields.py` cover\n  all 5 asset-group rules. QG ✅ ALL PASSED.\n  **SPORTS fixture_id COMPLETE 2026-05-19 slot 4 (uac@436bed0)**: sports per-fixture domain schemas\n  (`fixture_stats`, `lineup`, `events`, `injury`, `player_stats`, `arbitrage`, `progressive`) all declare\n  `fixture_id: str` as Pydantic required non-nullable field (no default → Pydantic enforces at construction).\n  Inspection confirms all per-fixture entities comply. No InstrumentRecord model_validator rule needed — sports\n  instruments encode fixture identity in `instrument_key`.\
-    \ Model_validator comment updated to reflect\n  completion. Phase 1 fully closed.\n  **Phase 2 record_failed COMPLETE 2026-05-19 slot 4 (instruments-service@3c2da42)**: per-row\n  SCHEMA_VALIDATION_FAILED routing at instruments-service orchestrator shipped.\n", status: done, note: ALL SHIPPED. uac@3157f45 RecordFailedReason taxonomy; uac@37d1ddb CeFi/DeFi/EVENT_CONTRACT validators; uac@80aef10 FUTURE+OPTION validators; instruments-service@3c2da42 per-row record_failed routing; uac@436bed0 Sports fixture_id closure + model_validator comment update. Phase 1 complete 2026-05-19 slot 4.}
-- {id: phase-2-per-row-record-failed-orchestrator-refactor, content: "- [x] ✅ [SCRIPT] P0. **Phase 2 — Per-row schema validation gate at instruments-service orchestrator.** Today\n  `engine/orchestrator.py` venue-shard-wide try/except causes ALL rows to fail when ONE row violates schema.\n  Refactor: split each shard into per-row try/except; valid rows → `record_captured`; invalid rows →\n  `record_failed(reason=SCHEMA_VALIDATION_FAILED, error_detail={field, expected_type, observed_value})`.\n  Same pattern UTL `instruments_write_gate.py` already partially supports. **CLAUDE.md \"shard-level failure\n  isolation\" rule applies** — no `raise` inside per-row loop.\n  **SHIPPED 2026-05-19 instruments-service@3c2da42**: replaced venue-shard failure with per-record\n  SCHEMA_VALIDATION_FAILED events; venue only added to validation_failed_venues when ALL its records fail.\n", status: done}
-- {id: phase-3-sports-adapter-full-column-capture-audit, content: "- [x] ✅ [SCRIPT] P0. **Phase 3 — Sports adapter full-column capture audit.** 6 adapters with documented\n  minimal-flatten loss (issue cites 18-30 columns dropped at normalize-time): footystats, SFI (progressive\n  + standings + matches), understat (XG per-shot — biggest miss, 15+ fields per shot dropped),\n  transfermarkt, open_meteo, odds_api. Per adapter: probe raw payload sample, compare against current\n  normalizer output, flag dropped columns; rewrite normalizer to capture all useful columns; cassette\n  parity test locks the new shape. **Coordinate with sports_master Phase 3 C.7 follow-ups** — that section\n  already lists STANDINGS / XG / MATCHES flatten work; verify alignment before duplicating.\n  — UAC@6ccb5c5: normalize_understat_shot 18-field flat dict (C.7 Follow-up #2 — biggest miss shipped);\n  sports_master C.7 Follow-up #1 (STANDINGS) done at UAC@ac12d80; C.7 Follow-up #3 (MATCHES) done at UAC@4e23bd9\n",
-  status: done}
-- {id: phase-4-manifest-row-key-shape-validation, content: "- [x] ✅ [SCRIPT] P0. **Phase 4 — Manifest row_key shape validation.** UTL `ManifestWriter.record_captured`\n  guard: for per-instrument shard atoms (per CLAUDE.md \"shard-granularity SSOT\"), row_key MUST contain\n  non-empty `instrument_id`; for bundled shards, row_key MUST contain non-empty\n  `chain` / `options_chain` / `canonical_question_group` per the shard-key matrix. Empty values → raise\n  `MalformedRowKeyError` at write-time. Catches the 2026-05-07 CeFi Tardis bundle-shape regression\n  proactively (covered separately by writegate Phase 2.A migration).\n  — UTL@0caa08e3: MalformedRowKeyError class + _coerce_row_key guard for instrument_id/chain shard-atom keys\n", status: done}
-- {id: phase-5-qg-static-assertion, content: "- [x] ✅ [SCRIPT] P0. **Phase 5 — PM `quality-gates.sh` STEP 5.83 static assertion.** Two-layer\n  coverage shipped:\n  (1) `check_uac_instrument_record_validator.py` wired in `base-library.sh` STEP 5.83 under\n  `UAC_CANONICAL_EXEMPT` guard — verifies InstrumentRecord model_validator + CEFI/DEFI frozensets\n  in UAC `internal/reference/instrument.py`. — PM@03a320846 2026-05-19\n  (2) `check_uac_hard_required_fields.py` wired in `base-service.sh` STEP 5.83 — verifies\n  `validate_instrument_records` + 3 closed-set rule landmarks in UAC `instrument_validation.py`\n  (runtime validator regression guard) + AST-walks service source for literal\n  `record_captured(data_type=\"<bundled_type>\", …)` calls missing required shard-key kwarg.\n  Smoke-tested: both [OK] against real UAC + empty source.\n  — PM@429b64b2b (STEP 5.83 base-service.sh + check_uac_hard_required_fields.py) 2026-05-19\n", status: done}
-- {id: codex-update, content: "- [x] ✅ [AGENT] P0. **Codex updates**: per-row `record_failed` pattern + `RecordFailedReason` taxonomy (all\n  9 members) added to `codex/02-data/honest-absence-downstream-handling.md` reason taxonomy table —\n  `SCHEMA_VALIDATION_FAILED`, `UPSTREAM_SUBGRAPH_ZERO`, `MALFORMED_ROW_KEY`, `CLASSIFIED_VENUE_ERROR`,\n  `UNCLASSIFIED_ADAPTER_ERROR`, `UPSTREAM_LIVE_GAP`. Per-row schema validation + `SCHEMA_VALIDATION_FAILED`\n  content already consolidated in `codex/06-coding-standards/validation-and-errors.md` § 3 (no separate\n  schema-validation.md needed — file was pre-merged per header note). — PM@tab-3 2026-05-19\n", status: done}
-- {id: composability-with-futures-expiry, content: "- [x] [HUMAN] P0. **Composability with futures expiry confirmed (operator decision 2026-05-08).** Sequence:\n  tradfi_master Q1+Q2 ships first → futures schemas become hard-required → THEN this plan ships\n  workspace-wide enforcement → existing futures rows already comply. Avoids mass-fail-during-transit. NO\n  bundling into a single coordinated migration plan (operator preference).\n", status: done}
+  - { id: phase-1-uac-schema-audit-hard-required-flips, content: "- [x] ✅ [SCRIPT] P0. **Phase 1 — UAC schema audit +
+        hard-required field markup per asset_group.** Walk every\n  Pydantic / TypedDict / dataclass schema under
+        `unified_api_contracts/canonical/domain/_*.py`. For each\n  asset_group, identify the fields that are
+        workspace-rule-required-but-currently-nullable + flip nullable →\n  required:\n    - **CeFi**: `base_currency`,
+        `quote_currency` on every spot/perp instrument schema.\n    - **DeFi**: `chain_id`, `contract_address`,
+        `decimals` on every on-chain asset schema.\n    - **TradFi futures**: `expiry_date`, `last_trading_date`,
+        `first_notice_date`, `delivery_date`,\n      `settlement_date` (covered by `tradfi_master` Q1 — sequence this
+        plan AFTER tradfi_master ships\n      those flips).\n    - **TradFi options**: `expiration` (covered by
+        `tradfi_master` Q2 — sequence AFTER).\n    - **Sports**: `fixture_id` on every per-fixture entity (lineups /
+        events / stats / injuries).\n    -\
+        \ **Predictions**: ALREADY hard-required per Phase 1A of writegate — no change needed; serves
+        as\n      reference for the rest.\n  Per-flip: one-shot manifest migration script back-fills + flips schema in a
+        single PR.\n  **PARTIAL FOUNDATION + 3 ASSET-GROUP RULES SHIPPED 2026-05-11 by slot 5
+        (ikenna-aggressive-may15-tab,\n  RE-TASK)**: foundation (RecordFailedReason taxonomy + SCHEMA_VALIDATION_FAILED
+        enum value) shipped at\n  uac@`3157f45`; per-asset-group `InstrumentRecord` model_validator shipped
+        uac@`37d1ddb` enforcing 3 closed-set\n  rules: (1) CeFi spot/perp (SPOT_PAIR / PERPETUAL) → `base_asset` +
+        `quote_asset` non-empty; (2) DeFi on-chain\n  (POOL / LENDING / LST / YIELD_BEARING / A_TOKEN / DEBT_TOKEN /
+        STAKING / SPOT_ASSET — 8 types) → `pool_address`\n  OR `base_asset_contract_address` non-empty; (3)
+        EVENT_CONTRACT → `expiry` non-null. Two new module-level\n  constants exposed: `CEFI_PAIR_INSTRUMENT_TYPES` +
+        `DEFI_ONCHAIN_INSTRUMENT_TYPES` (downstream callers can\n  check `instrument.instrument_type\
+        \ in CEFI_PAIR_INSTRUMENT_TYPES` directly). 10/10 smoke tests pass —\n  validator raises `ValueError` for
+        empty/null required fields per rule; downstream MTDS / instruments-service\n  adapters' per-row try/except
+        routes them to\n  `record_failed(reason=RecordFailedReason.SCHEMA_VALIDATION_FAILED)` (already shipped (sister
+        enum to\n  `EmptyConfirmedReason` per the existing `honest_coverage.py` shape). 8 closed-set members covering
+        schema\n  violation / upstream timestamp bias / malformed tick field / upstream subgraph zero / cluster
+        coverage\n  violation / malformed row key / classified venue error / unclassified adapter error. Foundational
+        for\n  Phase 2 per-row `record_failed` routing — adapters route schema-rejected rows
+        to\n  `record_failed(reason=RecordFailedReason.SCHEMA_VALIDATION_FAILED, ...)` once Phase 2 refactors
+        the\n  `ManifestWriter.record_failed` signature to accept the structured-reason kwarg. Smoke-import
+        verified:\n  enum count 8, frozenset size 8, mutually exclusive\
+        \ with EmptyConfirmedReason.\n  **TRADFI FUTURE+OPTION model_validator rules SHIPPED 2026-05-19 by slot 8
+        (uac@80aef10)**: added FUTURE\n  (tradfi_master Q1 gate passed 2026-05-13) and OPTION (tradfi_master Q2 gate
+        passed 2026-05-13) branches to\n  `InstrumentRecord._enforce_per_asset_group_required_fields` model_validator.
+        Both enforce `expiry` non-null\n  per workspace rule. 15 tests in
+        `tests/internal/unit/test_instrument_record_hard_required_fields.py` cover\n  all 5 asset-group rules. QG ✅ ALL
+        PASSED.\n  **SPORTS fixture_id COMPLETE 2026-05-19 slot 4 (uac@436bed0)**: sports per-fixture domain
+        schemas\n  (`fixture_stats`, `lineup`, `events`, `injury`, `player_stats`, `arbitrage`, `progressive`) all
+        declare\n  `fixture_id: str` as Pydantic required non-nullable field (no default → Pydantic enforces at
+        construction).\n  Inspection confirms all per-fixture entities comply. No InstrumentRecord model_validator rule
+        needed — sports\n  instruments encode fixture identity in `instrument_key`.\
+        \ Model_validator comment updated to reflect\n  completion. Phase 1 fully closed.\n  **Phase 2 record_failed
+        COMPLETE 2026-05-19 slot 4 (instruments-service@3c2da42)**: per-row\n  SCHEMA_VALIDATION_FAILED routing at
+        instruments-service orchestrator shipped.\n", status: done, note: ALL SHIPPED. uac@3157f45 RecordFailedReason
+        taxonomy; uac@37d1ddb CeFi/DeFi/EVENT_CONTRACT validators; uac@80aef10 FUTURE+OPTION validators;
+        instruments-service@3c2da42 per-row record_failed routing; uac@436bed0 Sports fixture_id closure +
+        model_validator comment update. Phase 1 complete 2026-05-19 slot 4. }
+  - {
+      id: phase-2-per-row-record-failed-orchestrator-refactor,
+      content:
+        "- [x] ✅ [SCRIPT] P0. **Phase 2 — Per-row schema validation gate at instruments-service orchestrator.**
+        Today\n  `engine/orchestrator.py` venue-shard-wide try/except causes ALL rows to fail when ONE row violates
+        schema.\n  Refactor: split each shard into per-row try/except; valid rows → `record_captured`; invalid rows
+        →\n  `record_failed(reason=SCHEMA_VALIDATION_FAILED, error_detail={field, expected_type,
+        observed_value})`.\n  Same pattern UTL `instruments_write_gate.py` already partially supports. **CLAUDE.md
+        \"shard-level failure\n  isolation\" rule applies** — no `raise` inside per-row loop.\n  **SHIPPED 2026-05-19
+        instruments-service@3c2da42**: replaced venue-shard failure with per-record\n  SCHEMA_VALIDATION_FAILED events;
+        venue only added to validation_failed_venues when ALL its records fail.\n",
+      status: done,
+    }
+  - {
+      id: phase-3-sports-adapter-full-column-capture-audit,
+      content:
+        "- [x] ✅ [SCRIPT] P0. **Phase 3 — Sports adapter full-column capture audit.** 6 adapters with
+        documented\n  minimal-flatten loss (issue cites 18-30 columns dropped at normalize-time): footystats, SFI
+        (progressive\n  + standings + matches), understat (XG per-shot — biggest miss, 15+ fields per shot
+        dropped),\n  transfermarkt, open_meteo, odds_api. Per adapter: probe raw payload sample, compare against
+        current\n  normalizer output, flag dropped columns; rewrite normalizer to capture all useful columns;
+        cassette\n  parity test locks the new shape. **Coordinate with sports_master Phase 3 C.7 follow-ups** — that
+        section\n  already lists STANDINGS / XG / MATCHES flatten work; verify alignment before duplicating.\n  —
+        UAC@6ccb5c5: normalize_understat_shot 18-field flat dict (C.7 Follow-up #2 — biggest miss
+        shipped);\n  sports_master C.7 Follow-up #1 (STANDINGS) done at UAC@ac12d80; C.7 Follow-up #3 (MATCHES) done at
+        UAC@4e23bd9\n",
+      status: done,
+    }
+  - {
+      id: phase-4-manifest-row-key-shape-validation,
+      content:
+        "- [x] ✅ [SCRIPT] P0. **Phase 4 — Manifest row_key shape validation.** UTL
+        `ManifestWriter.record_captured`\n  guard: for per-instrument shard atoms (per CLAUDE.md \"shard-granularity
+        SSOT\"), row_key MUST contain\n  non-empty `instrument_id`; for bundled shards, row_key MUST contain
+        non-empty\n  `chain` / `options_chain` / `canonical_question_group` per the shard-key matrix. Empty values →
+        raise\n  `MalformedRowKeyError` at write-time. Catches the 2026-05-07 CeFi Tardis bundle-shape
+        regression\n  proactively (covered separately by writegate Phase 2.A migration).\n  — UTL@0caa08e3:
+        MalformedRowKeyError class + _coerce_row_key guard for instrument_id/chain shard-atom keys\n",
+      status: done,
+    }
+  - {
+      id: phase-5-qg-static-assertion,
+      content:
+        "- [x] ✅ [SCRIPT] P0. **Phase 5 — PM `quality-gates.sh` STEP 5.83 static assertion.** Two-layer\n  coverage
+        shipped:\n  (1) `check_uac_instrument_record_validator.py` wired in `base-library.sh` STEP 5.83
+        under\n  `UAC_CANONICAL_EXEMPT` guard — verifies InstrumentRecord model_validator + CEFI/DEFI frozensets\n  in
+        UAC `internal/reference/instrument.py`. — PM@03a320846 2026-05-19\n  (2) `check_uac_hard_required_fields.py`
+        wired in `base-service.sh` STEP 5.83 — verifies\n  `validate_instrument_records` + 3 closed-set rule landmarks
+        in UAC `instrument_validation.py`\n  (runtime validator regression guard) + AST-walks service source for
+        literal\n  `record_captured(data_type=\"<bundled_type>\", …)` calls missing required shard-key
+        kwarg.\n  Smoke-tested: both [OK] against real UAC + empty source.\n  — PM@429b64b2b (STEP 5.83 base-service.sh
+        + check_uac_hard_required_fields.py) 2026-05-19\n",
+      status: done,
+    }
+  - {
+      id: codex-update,
+      content:
+        "- [x] ✅ [AGENT] P0. **Codex updates**: per-row `record_failed` pattern + `RecordFailedReason` taxonomy
+        (all\n  9 members) added to `/codex/02-data/honest-absence-downstream-handling.md` reason taxonomy table
+        —\n  `SCHEMA_VALIDATION_FAILED`, `UPSTREAM_SUBGRAPH_ZERO`, `MALFORMED_ROW_KEY`,
+        `CLASSIFIED_VENUE_ERROR`,\n  `UNCLASSIFIED_ADAPTER_ERROR`, `UPSTREAM_LIVE_GAP`. Per-row schema validation +
+        `SCHEMA_VALIDATION_FAILED`\n  content already consolidated in
+        `/codex/06-coding-standards/validation-and-errors.md` § 3 (no separate\n  schema-validation.md needed — file was
+        pre-merged per header note). — PM@tab-3 2026-05-19\n",
+      status: done,
+    }
+  - {
+      id: composability-with-futures-expiry,
+      content:
+        "- [x] [HUMAN] P0. **Composability with futures expiry confirmed (operator decision 2026-05-08).**
+        Sequence:\n  tradfi_master Q1+Q2 ships first → futures schemas become hard-required → THEN this plan
+        ships\n  workspace-wide enforcement → existing futures rows already comply. Avoids mass-fail-during-transit.
+        NO\n  bundling into a single coordinated migration plan (operator preference).\n",
+      status: done,
+    }
 isProject: false
 estimate_class: design
 estimate_baseline_ai_days: 8
 estimate_calibrated_ai_days: 4.8
-estimate_calibration_note: 'No explicit AI-day estimates found in plan body during 2026-05-11 sweep; class inferred from filename (design, multiplier 0.6×).
+estimate_calibration_note: "No explicit AI-day estimates found in plan body during 2026-05-11 sweep; class inferred from
+  filename (design, multiplier 0.6×).
 
-  Owner agent: fill baseline + multiply × 0.6 per codex/08-workflows/estimation-calibration.md. Refine class if dominant work-class differs.
+  Owner agent: fill baseline + multiply × 0.6 per /codex/08-workflows/estimation-calibration.md. Refine class if
+  dominant work-class differs.
 
-  '
+  "
 parent_epic: sports_master
 priority: P2
 ---

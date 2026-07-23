@@ -192,9 +192,9 @@ Rollout: warn-mode first to measure violation volume; strict-mode once all adapt
       `TimestampAlignmentError` → `manifest.record_failed(..., error="ALIGNMENT_VIOLATION")`.
 
 - [x] [AGENT] P1. Shipped codex §Timestamp-Alignment-Gate in
-      [`codex/06-coding-standards/validation-patterns.md`](../../codex/06-coding-standards/validation-patterns.md).
+      [`/codex/06-coding-standards/validation-patterns.md`](/codex/06-coding-standards/validation-patterns.md).
       Cross-ref §5.1 added in
-      [`02-data/sports-scheduling-and-sharding.md`](../../codex/02-data/sports-scheduling-and-sharding.md) (§5.1).
+      [`02-data/sports-scheduling-and-sharding.md`](/codex/02-data/sports-scheduling-and-sharding.md) (§5.1).
 
 ### Phase 4: QG + quickmerge [SEQUENTIAL]
 

@@ -24,21 +24,21 @@ scope: [engineer]
 tags: [sports, canonical, honest-coverage, data-completion, ml-readiness, leakage, codex, close-out]
 related:
   [
-    sports_consolidated_audit_2026_07_19.md,
-    sports_features_layer_findings_sweep_2026_07_18.md,
-    sports_legacy_bucket_cutover_2026_07_16.md,
-    sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md,
-    defi_consolidated_closeout_2026_07_18.md,
-    sports_master_closeout_2026_07_21.md,
-    sports_manifest_canonicalisation_2026_06_01.md,
-    sports_pipeline_to_100pct_golden_window_first_2026_06_27.md,
-    sports_odds_exchange_fixed_fork_2026_07_18.md,
-    sports_p2_history_apifootball_2015_to_present_2026_06_27.md,
-    sports_catalog_league_grain_only_scope_2026_07_08.md,
-    sports_odds_bookmaker_coverage_enumeration_2026_06_20.md,
-    sports_odds_feature_naming_canonicalization_2026_07_21.md,
-    sports_p2_features_history_to_ml_ready_2026_06_27.md,
-    sports_predictions_live_mode_activation_readiness_2026_07_21.md,
+    /plans/active/sports_consolidated_audit_2026_07_19.md,
+    /plans/active/issues/sports_features_layer_findings_sweep_2026_07_18.md,
+    /plans/active/sports_legacy_bucket_cutover_2026_07_16.md,
+    /plans/active/sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md,
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
+    /plans/active/sports_master_closeout_2026_07_21.md,
+    /plans/active/sports_manifest_canonicalisation_2026_06_01.md,
+    /plans/active/sports_pipeline_to_100pct_golden_window_first_2026_06_27.md,
+    /plans/active/sports_odds_exchange_fixed_fork_2026_07_18.md,
+    /plans/active/sports_p2_history_apifootball_2015_to_present_2026_06_27.md,
+    /plans/active/sports_catalog_league_grain_only_scope_2026_07_08.md,
+    /plans/active/sports_odds_bookmaker_coverage_enumeration_2026_06_20.md,
+    /plans/active/sports_odds_feature_naming_canonicalization_2026_07_21.md,
+    /plans/active/sports_p2_features_history_to_ml_ready_2026_06_27.md,
+    /plans/active/sports_predictions_live_mode_activation_readiness_2026_07_21.md,
   ]
 created: "2026-07-19"
 last_updated: "2026-07-23"
@@ -212,9 +212,9 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
       provably insufficient (a re-run never rewrites a day it produces no output for, so a fabricated object on a
       zero-output day survives). Snapshot the delete list FIRST (GCS soft-delete gives a 7-day recovery window), then
       delete every `derived_features` parquet still carrying a PRE-`2026-07-19` GCS creation timestamp. Honest absence
-      beats an invented `competition_phase` (`codex/02-data/honest-absence-downstream-handling.md`). **Not
+      beats an invented `competition_phase` (`/codex/02-data/honest-absence-downstream-handling.md`). **Not
       `[OPERATOR]`-gated** (unlike the K1/K2 GCS-delete below, which is): the soft-delete's 7-day recovery makes this
-      reversible-for-a-week, not the irreversible class `codex/02-data/gcs-and-manifest-delete-safety-protocol.md`
+      reversible-for-a-week, not the irreversible class `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`
       reserves for human-only sign-off — the snapshot-first step is this todo's safety net.
 - [ ] [DATA] P0. **Re-verify by CENSUS, not sampling, only after the PURGE todo above is done** — the terminal check is
       "zero pre-fix-dated `derived_features` objects remain", decidable from object metadata alone (a GCS creation-time
@@ -489,7 +489,7 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
       2026-07-23. Remaining work is documentation-only — see the new [DOC] todo below.
 - [ ] [DATA] P0. **NEW 2026-07-23 (decision 14) — execute the pre-floor wipe now.** 83,541 pre-floor
       (2014-01-01..2020-06-05) `FIXTURES_SCHEDULE`/`FIXTURES_OUTCOMES` rows fall before the established 2020-06-06
-      sports data floor (`codex/02-data/sports-2020-06-data-floor.md` — pre-floor odds data is fabrication-by-
+      sports data floor (`/codex/02-data/sports-2020-06-data-floor.md` — pre-floor odds data is fabrication-by-
       construction and gets wiped; this population is the fixtures-side analog). Root-cause fix already shipped
       (UAC@46d865df per the earlier audit); only the disposition ruling + actual wipe execution remain. Snapshot first
       (GCS soft-delete gives a 7-day recovery window), same procedure as the Track F derived_features purge.
@@ -946,27 +946,27 @@ All four resolved in interactive chat. These are now actionable, not gated:
       manifest's `league_id` namespace does NOT match the canonical registry's:
 
       | manifest `league_id` (raw) | canonical registry key |
-                                                                                                                                                                  | -------------------------- | ---------------------- |
-                                                                                                                                                                  | `PREMIER_LEAGUE`           | `EPL`                  |
-                                                                                                                                                                  | `CHAMPIONSHIP`             | `ENG_CHAMPIONSHIP`     |
-                                                                                                                                                                  | `PRIMERA_DIVISION`         | `LA_LIGA`              |
-                                                                                                                                                                  | `2._BUNDESLIGA`            | `BUNDESLIGA_2`         |
-                                                                                                                                                                  | `FIRST_DIVISION_A`         | (no registry entry)    |
+                                                                                                                                                                                                                                                                                  | -------------------------- | ---------------------- |
+                                                                                                                                                                                                                                                                                  | `PREMIER_LEAGUE`           | `EPL`                  |
+                                                                                                                                                                                                                                                                                  | `CHAMPIONSHIP`             | `ENG_CHAMPIONSHIP`     |
+                                                                                                                                                                                                                                                                                  | `PRIMERA_DIVISION`         | `LA_LIGA`              |
+                                                                                                                                                                                                                                                                                  | `2._BUNDESLIGA`            | `BUNDESLIGA_2`         |
+                                                                                                                                                                                                                                                                                  | `FIRST_DIVISION_A`         | (no registry entry)    |
 
-                                                                                                                                                                  Measured: **328,999 manifest rows carry a `league_id` absent from `LEAGUE_REGISTRY`, and 265,134 of them were
-                                                                                                                                                                  written ON/AFTER the 2026-07-13 gate ruling** (statuses: captured 213,861 / empty_confirmed 50,975 /
-                                                                                                                                                                  attempted_failed 298). Verified there is NO alias — `PREMIER_LEAGUE`/`PRIMERA_DIVISION`/`2._BUNDESLIGA`/
-                                                                                                                                                                  `FIRST_DIVISION_A` appear nowhere in any registry entry's definition (only `CHAMPIONSHIP` partially matches
-                                                                                                                                                                  `ENG_CHAMPIONSHIP`/`SCOTTISH_CHAMPIONSHIP`/`USL_CHAMPIONSHIP` as a substring, which is itself ambiguous).
+                                                                                                                                                                                                                                                                                  Measured: **328,999 manifest rows carry a `league_id` absent from `LEAGUE_REGISTRY`, and 265,134 of them were
+                                                                                                                                                                                                                                                                                  written ON/AFTER the 2026-07-13 gate ruling** (statuses: captured 213,861 / empty_confirmed 50,975 /
+                                                                                                                                                                                                                                                                                  attempted_failed 298). Verified there is NO alias — `PREMIER_LEAGUE`/`PRIMERA_DIVISION`/`2._BUNDESLIGA`/
+                                                                                                                                                                                                                                                                                  `FIRST_DIVISION_A` appear nowhere in any registry entry's definition (only `CHAMPIONSHIP` partially matches
+                                                                                                                                                                                                                                                                                  `ENG_CHAMPIONSHIP`/`SCOTTISH_CHAMPIONSHIP`/`USL_CHAMPIONSHIP` as a substring, which is itself ambiguous).
 
-                                                                                                                                                                  **⛔ CONSEQUENCE: executing decision 2's "purge the non-registry rows" against the SYMBOLIC `league_id` would
-                                                                                                                                                                  DELETE core trading data — Premier League, La Liga, the Championship.** Those are not out-of-universe leagues;
-                                                                                                                                                                  they are in-universe leagues recorded under a different naming convention. The purge MUST NOT run until the
-                                                                                                                                                                  namespace is reconciled.
+                                                                                                                                                                                                                                                                                  **⛔ CONSEQUENCE: executing decision 2's "purge the non-registry rows" against the SYMBOLIC `league_id` would
+                                                                                                                                                                                                                                                                                  DELETE core trading data — Premier League, La Liga, the Championship.** Those are not out-of-universe leagues;
+                                                                                                                                                                                                                                                                                  they are in-universe leagues recorded under a different naming convention. The purge MUST NOT run until the
+                                                                                                                                                                                                                                                                                  namespace is reconciled.
 
-                                                                                                                                                                  NOTE this is a DIFFERENT axis from §U's 489-pair finding, which compared NUMERIC `af_league_id` against the
-                                                                                                                                                                  registry's `api_football_id` set (sound, numeric-vs-numeric). Both are real; do not conflate them. This is the
-                                                                                                                                                                  §C2 "league_id namespace reconciliation" item, now measured and escalated to P0.
+                                                                                                                                                                                                                                                                                  NOTE this is a DIFFERENT axis from §U's 489-pair finding, which compared NUMERIC `af_league_id` against the
+                                                                                                                                                                                                                                                                                  registry's `api_football_id` set (sound, numeric-vs-numeric). Both are real; do not conflate them. This is the
+                                                                                                                                                                                                                                                                                  §C2 "league_id namespace reconciliation" item, now measured and escalated to P0.
 
 - [x] [CODE] P0. ✅ **WRITE PATH CANONICALISED — operator chose canonicalise-at-write (2026-07-20); shipped
       market-tick-data-service@ad4f1872.** `_canonical_league_id()` resolves via the NUMERIC `api_football_id`; all 30
@@ -1034,11 +1034,11 @@ All four resolved in interactive chat. These are now actionable, not gated:
 
 ## Codex SSOTs (read before touching a track)
 
-`codex/02-data/sports-gcs-path-ssot.md`, `…/sports-data-types-catalog.md`, `…/sports-data-source-coverage-matrix.md`,
+`/codex/02-data/sports-gcs-path-ssot.md`, `…/sports-data-types-catalog.md`, `…/sports-data-source-coverage-matrix.md`,
 `…/sports-adapter-dependency-order.md`, `…/availability-manifest-and-data-status.md`,
-`…/honest-absence-downstream-handling.md`, `…/pipeline-mode-partition.md`, `codex/04-architecture/sports-batch-live.md`,
-`codex/05-infrastructure/spot-vms-for-backfill.md`, `codex/12-agent-workflow/async-wait-and-poll-discipline.md` (rule
-1a). Plan↔codex drift is review-blocking.
+`…/honest-absence-downstream-handling.md`, `…/pipeline-mode-partition.md`,
+`/codex/04-architecture/sports-batch-live.md`, `/codex/05-infrastructure/spot-vms-for-backfill.md`,
+`/codex/12-agent-workflow/async-wait-and-poll-discipline.md` (rule 1a). Plan↔codex drift is review-blocking.
 
 ## Progress Log
 
@@ -1125,7 +1125,7 @@ to a root cause (not just symptom-documented) and either fixed or properly scope
       once the dormant-pipeline question above is resolved.
 - [ ] [OPERATOR] P0. **The separate, irreversible, 5-part-proof-gated DELETE of old non-canonical K1/K2 GCS objects**
       (and now also the ~7,251 `api_football` captured-cell objects) remains human-only per
-      `codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3#1 — evidence prepared, not executed, not something
+      `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3#1 — evidence prepared, not executed, not something
       to do autonomously regardless of confidence.
 
 ### Sports issue-doc index (swept 2026-07-23 — every `plans/active/issues/sports_*.md` not already linked above)

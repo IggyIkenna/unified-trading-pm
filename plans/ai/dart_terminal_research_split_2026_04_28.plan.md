@@ -5,7 +5,7 @@ owner: ikenna
 created: 2026-04-28
 locked_by: live-defi-rollout
 locked_since: 2026-04-28
-codex_ref: codex/14-playbooks/dart/dart-terminal-vs-research.md
+codex_ref: /codex/14-playbooks/dart/dart-terminal-vs-research.md
 ---
 
 # DART Terminal vs. DART Research — Tile Split + Instrument-Type View Gating
@@ -46,7 +46,7 @@ Phase E (FOMO mode default-on)          ─┘
 
 ### Phase A — Audit + SSOT (PM repo)
 
-- [x] [HUMAN] P0. Codex SSOT written at `codex/14-playbooks/dart/dart-terminal-vs-research.md` — full route inventory,
+- [x] [HUMAN] P0. Codex SSOT written at `/codex/14-playbooks/dart/dart-terminal-vs-research.md` — full route inventory,
       tile ownership, persona × tile × view matrix, instrument-type derivation chain, FOMO mode behavior. Sourced from
       actual code, not 2026-03-21 wishlist.
 - [x] [HUMAN] P0. Re-audit orphan list against actual code. **Result: 1 orphan** (`/services/research/signals`), not 14.
@@ -255,7 +255,7 @@ Phase E (FOMO mode default-on)          ─┘
 
 ## Cross-references
 
-- SSOT codex doc: `codex/14-playbooks/dart/dart-terminal-vs-research.md`
+- SSOT codex doc: `/codex/14-playbooks/dart/dart-terminal-vs-research.md`
 - Catalogue artefacts: `feedback_catalogue_gcs_artefacts.md` (memory)
 - Public catalogue ordering rationale: `feedback_primary_category_first_class_axis.md` (memory)
 - Allocator G2.10 split: commit `dfc8c5ba` in `unified-trading-system-ui`

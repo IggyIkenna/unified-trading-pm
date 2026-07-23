@@ -420,4 +420,4 @@ one-repo" and need operator awareness before execution. The OPS-pass STEP 4 (MTD
     (`gs://deployment-scripts-central-element-323112/enumerator-reports/manual-catchup-tradfi-mvp-option-narrow-20260715/tradfi-20260715-003341.csv`);
     floor-clip snapshot
     `gs://market-data-tick-tradfi-prd-central-element-323112/_index/snapshots/pre_es_option_mvp_narrow_floorclip_2026_07_15.parquet`;
-    codex updated `codex/02-data/mvp-scope-canonical.md` (TradFi section + config-version changelog).
+    codex updated `/codex/02-data/mvp-scope-canonical.md` (TradFi section + config-version changelog).

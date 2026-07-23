@@ -9,7 +9,11 @@ stage: [meta]
 repos: [agent-orchestrator, deployment-service]
 scope: [engineer, admin]
 tags: []
-related: [issues/api_host_chronic_impairment_2026_05_29.md, plan_hygiene_silent_failure_capture_2026_05_29.md]
+related:
+  [
+    issues/api_host_chronic_impairment_2026_05_29.md,
+    /plans/archive/2026_05/plan_hygiene_silent_failure_capture_2026_05_29.md,
+  ]
 created: 2026-05-29
 parent_epic: orchestrator_master
 assigned_vm: vm-orchestrator
@@ -18,7 +22,7 @@ last_updated: 2026-05-29
 estimate_class: infra
 estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 2.4
-estimate_calibration_note: 'Infra (0.8×): combination of read-only investigation (CloudWatch + on-host
+estimate_calibration_note: "Infra (0.8×): combination of read-only investigation (CloudWatch + on-host
 
   diagnostics) + small targeted code/config changes (resource limits, watchdog
 
@@ -26,7 +30,7 @@ estimate_calibration_note: 'Infra (0.8×): combination of read-only investigatio
 
   with a cheaper API call. No new product features.
 
-  '
+  "
 locked_since: 2026-05-29
 ---
 
@@ -163,11 +167,11 @@ operator intervention.
 ## Phase 6 — Codex SSOT updates (P2)
 
 - [x] ✅ [AGENT] P2. Document the central API host architecture (m8i.4xlarge, port 8026 + 443, watchdog + auto-reboot
-      pattern, claude-poller replacement) in `codex/05-infrastructure/agent-orchestrator-api-host.md` (new). **DONE
-      2026-05-30** — `codex/05-infrastructure/agent-orchestrator-api-host.md` shipped: instance identity, port layout
+      pattern, claude-poller replacement) in `/codex/05-infrastructure/agent-orchestrator-api-host.md` (new). **DONE
+      2026-05-30** — `/codex/05-infrastructure/agent-orchestrator-api-host.md` shipped: instance identity, port layout
       (nginx :443 → uvicorn :8765), MemoryHigh/MemoryMax/TasksMax resource limits, watchdog service, EventBridge
       auto-reboot + ceiling logic, httpx usage-poller replacement, root-cause history, operator runbook.
-- [x] ✅ [AGENT] P2. Cross-link from `codex/04-architecture/agent-orchestrator-overview.md` to the new doc. **DONE
+- [x] ✅ [AGENT] P2. Cross-link from `/codex/04-architecture/agent-orchestrator-overview.md` to the new doc. **DONE
       2026-05-30** — added § "Central API host" pointer in overview cross-links.
 
 ## Success criteria

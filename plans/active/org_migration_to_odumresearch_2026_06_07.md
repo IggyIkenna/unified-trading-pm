@@ -55,7 +55,7 @@ drift_direction: advance-code
 > **Sync 2026-07-12** (finding 79, §A2 B-queue ruling): frontmatter `status: active` → `paused` (was: active) — 0/27
 > todos executed since the 2026-06-07 pending-operator-decision note above (no Progress Log entry since), matching the
 > `paused` = "deliberately deferred by operator decision; not dispatched until un-paused" semantic
-> (`codex/11-project-management/doc-frontmatter-schema.md`). Un-pause when the operator rules on org-vs-stay-on-Pro.
+> (`/codex/11-project-management/doc-frontmatter-schema.md`). Un-pause when the operator rules on org-vs-stay-on-Pro.
 >
 > **Original operator decision (2026-06-07):** move ALL repos to a GitHub **Team org `OdumResearch`** for: org-level
 > rulesets, org-level secrets, team access (Harsh as member), bus-factor, and (was) unlocking AO branch protection.
@@ -113,8 +113,8 @@ Total `IggyIkenna/` footprint: **985 refs across 331 files** (204 `.md` docs, ~1
 
 ### C. Cloud GCP — MUST-CHANGE (cloud-side; NOT in terraform for WIF)
 
-- **WIF/OIDC trust** (gcloud-applied, documented in `codex/05-infrastructure/auth-setup.md:166`, `gha-wif-migration.md`,
-  `agent-orchestrator/docs/OPERATIONS.md:735`): pool
+- **WIF/OIDC trust** (gcloud-applied, documented in `/codex/05-infrastructure/auth-setup.md:166`,
+  `gha-wif-migration.md`, `agent-orchestrator/docs/OPERATIONS.md:735`): pool
   `--attribute-condition "assertion.repository_owner=='IggyIkenna'"` + per-repo `iam.workloadIdentityUser` binding
   `principalSet://.../attribute.repository/IggyIkenna/<repo>`. Consumers: `agent-orchestrator/deploy-dashboard.yml`,
   `unified-api-contracts/weekly-validation.yml`. **All WIF auth breaks on rename unless re-pointed.**

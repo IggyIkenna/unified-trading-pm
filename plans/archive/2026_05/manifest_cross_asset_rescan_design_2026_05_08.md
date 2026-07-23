@@ -9,7 +9,12 @@ stage: [meta]
 repos: [deployment-service, instruments-service]
 scope: [engineer, admin]
 tags: []
-related: [manifest_migration_SUPERSEDED_2026_05_21, gcs_migration_bundle_pipeline_mode_2026_05_08, writegate_honest_coverage_endtoend_2026_05_06]
+related:
+  [
+    manifest_migration_SUPERSEDED_2026_05_21,
+    gcs_migration_bundle_pipeline_mode_2026_05_08,
+    writegate_honest_coverage_endtoend_2026_05_06,
+  ]
 created: 2026-05-08
 priority: P1
 last_updated: 2026-05-12
@@ -19,13 +24,15 @@ locked_since: 2026-05-08
 estimate_class: infra
 estimate_baseline_ai_days: 3.0
 estimate_calibrated_ai_days: 2.4
-estimate_calibration_note: 'Dominant work: infra (VM launches, reconciler runs, log analysis) + design (drift-axis extensions). Using infra class (0.8×).
+estimate_calibration_note: "Dominant work: infra (VM launches, reconciler runs, log analysis) + design (drift-axis
+  extensions). Using infra class (0.8×).
 
-  Baseline 3 AI-days covers: axis 7-8-9 extension (0.5d), 5-VM dry-runs + log analysis (1.0d), apply-flips per AG (1.0d), codex updates (0.5d).
+  Baseline 3 AI-days covers: axis 7-8-9 extension (0.5d), 5-VM dry-runs + log analysis (1.0d), apply-flips per AG
+  (1.0d), codex updates (0.5d).
 
   Updated 2026-05-13 (slot 6 substantive touch).
 
-  '
+  "
 parent_epic: manifest_master
 ---
 
@@ -164,9 +171,9 @@ launcher script SSOT". Spec for the launcher (for the follow-up sub-agent):
 
 Per CLAUDE.md "Post-Plan-Phase Codex Audit HARD RULE":
 
-- **UPDATE** `codex/02-data/availability-manifest-and-data-status.md` § "Phantom audit — re-runnable recipe" — add
+- **UPDATE** `/codex/02-data/availability-manifest-and-data-status.md` § "Phantom audit — re-runnable recipe" — add
   rescan flip schema reference + class A/B/C closed sets above.
-- **NEW STUB** `codex/02-data/cross-asset-rescan-protocol.md` — entry-point doc cross-referencing this plan + the
+- **NEW STUB** `/codex/02-data/cross-asset-rescan-protocol.md` — entry-point doc cross-referencing this plan + the
   launcher + the rescan Python script.
 - **UPDATE** `codex/00-SSOT-INDEX.md` — register the new cross-asset-rescan-protocol.md doc.
 
@@ -210,7 +217,7 @@ parallel. Only the `--apply-flips` run requires strict ordering.
       **DONE 2026-05-18 (slot 10)** — section added below before "Dry-run command set"; expands the 4-pass table above
       with inputs/outputs/failure-mode/recovery semantics per pass + shard-atom alignment cite. Cross-references
       `data_status_drilldown_shard_atom_alignment_2026_05_07.md` +
-      `codex/02-data/availability-manifest-and-data-status.md`. Done-def cite: PM@<this commit>.
+      `/codex/02-data/availability-manifest-and-data-status.md`. Done-def cite: PM@<this commit>.
 - [x] [SCRIPT] P0. Add execution order enforcement to the rescan launcher
       (`deployment-service/scripts/vm/launch-cross-asset-rescan-vm.sh`) — pass 1 completes before pass 2 starts.
       Implement as sequential VM invocations or as a sequenced CLI flag `--pass 1|2|3|4` that the launcher orchestrates.
@@ -317,7 +324,7 @@ atom from the manifest schema at runtime; do NOT introduce reconciler-specific s
 
 - **`plans/active/data_status_drilldown_shard_atom_alignment_2026_05_07.md`** — per-service shard atom contract; the
   4-pass order above assumes those atoms match between writer + reconciler + drilldown.
-- **`codex/02-data/availability-manifest-and-data-status.md`** § "Phantom audit — re-runnable recipe" + § "Per-Service
+- **`/codex/02-data/availability-manifest-and-data-status.md`** § "Phantom audit — re-runnable recipe" + § "Per-Service
   Shard Dimension Matrix" — canonical recipe + dimension table the rescan scripts implement against.
 - **`plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md`** Phase 2.6 — bucket-rename window unblocking the
   `PRE_CUTOVER` todo at line ~222 (switch reconcilers to `resolve_bucket_name`).
@@ -359,7 +366,7 @@ python instruments-service/scripts/reconcile_legacy_blank_to_typed_reason.py --a
 
 > Per CLAUDE.md "Plans Run To Actual Completion": `--apply-flips` must run with `MANIFEST_PER_VM_SHARDS=true` and a
 > unique `VM_NAME` to prevent concurrent write races. Run on same-region GCE VM (asia-northeast1-c) per the
-> `Phantom audit` recipe in `codex/02-data/availability-manifest-and-data-status.md`.
+> `Phantom audit` recipe in `/codex/02-data/availability-manifest-and-data-status.md`.
 
 ```bash
 # Execution order: pass 1 (reference rows) → pass 2-4 (market data services). See "Reconciliation dependency
@@ -468,11 +475,11 @@ Run 2, deployment-service@574c168 (--unphantom fix). VMs: `manifest-recon-apply-
 | ---------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
 | Script 1+2 apply-flips cefi/defi/tradfi                          | ✅ COMPLETE (all 3 VMs done, 7,497 phantoms flipped, 3,146 stamps)                                                          | —                                                                                                                 |
 | Script 3 apply-flips (defi/sports/prediction)                    | ✅ CLOSED — 0 upgrades (TypeError resolved 2026-05-14; apply-flips would produce 0 changes; HOLD per Ikenna direction moot) | Issue `classify_blank_reason_fixture_manifest_kwarg_2026_05_13.md` CLOSED                                         |
-| Sports/prediction apply-flips Scripts 1+2                        | ⏸ DEFERRED — not in slot 6 scope                                                                                           | Needs separate authorized slot; sports has 99,620 phantoms, prediction 50                                         |
-| `--data-types` pass-ordering for apply-flips                     | ⏸ DEFERRED — `launch-manifest-recon-apply-vm.sh` does not implement pass 1→2 ordering                                      | Todo in plan: `[SCRIPT] P0. Add execution order enforcement to rescan launcher`. Needs launcher (not yet shipped) |
-| Cross-asset rescan launcher (`launch-cross-asset-rescan-vm.sh`)  | ⏸ DEFERRED — spec written in plan; script not yet shipped                                                                  | Blocker: reconciliation pass ordering must be settled first                                                       |
-| `resolve_bucket_name` migration for 3 reconciler scripts         | ⏸ DEFERRED — blocked on physical bucket rename (bucket_name_ssot Phase 2.6)                                                | `bucket_name_ssot_canonicalisation_2026_05_10.md` Phase 2.6 must land first                                       |
-| Codex SSOT updates (phantom audit doc + cross-asset-rescan stub) | ⏸ DEFERRED — no new patterns established this session; existing plan stub stands                                           | Ship with cross-asset-rescan launcher                                                                             |
+| Sports/prediction apply-flips Scripts 1+2                        | ⏸ DEFERRED — not in slot 6 scope                                                                                            | Needs separate authorized slot; sports has 99,620 phantoms, prediction 50                                         |
+| `--data-types` pass-ordering for apply-flips                     | ⏸ DEFERRED — `launch-manifest-recon-apply-vm.sh` does not implement pass 1→2 ordering                                       | Todo in plan: `[SCRIPT] P0. Add execution order enforcement to rescan launcher`. Needs launcher (not yet shipped) |
+| Cross-asset rescan launcher (`launch-cross-asset-rescan-vm.sh`)  | ⏸ DEFERRED — spec written in plan; script not yet shipped                                                                   | Blocker: reconciliation pass ordering must be settled first                                                       |
+| `resolve_bucket_name` migration for 3 reconciler scripts         | ⏸ DEFERRED — blocked on physical bucket rename (bucket_name_ssot Phase 2.6)                                                 | `bucket_name_ssot_canonicalisation_2026_05_10.md` Phase 2.6 must land first                                       |
+| Codex SSOT updates (phantom audit doc + cross-asset-rescan stub) | ⏸ DEFERRED — no new patterns established this session; existing plan stub stands                                            | Ship with cross-asset-rescan launcher                                                                             |
 
 ## Open questions
 

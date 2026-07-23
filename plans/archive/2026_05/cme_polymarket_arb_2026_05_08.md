@@ -9,8 +9,13 @@ stage: [meta]
 repos: [instruments-service, strategy-service, unified-api-contracts]
 scope: [engineer, admin]
 tags: []
-related: [trading_agent_service_architecture_unlock_2026_05_22.md, tradfi_ohlcv_only_mvp_backfill_2026_05_15.md, master_to_live_defi_2026_05_23.md]
-created: '2026-05-08'
+related:
+  [
+    /plans/archive/2026_05/trading_agent_service_architecture_unlock_2026_05_22.md,
+    /plans/archive/2026_05/tradfi_ohlcv_only_mvp_backfill_2026_05_15.md,
+    /plans/active/master_to_live_defi_2026_05_23.md,
+  ]
+created: "2026-05-08"
 parent_epic: tradfi_master
 priority: P1
 estimate_class: brand-new
@@ -30,9 +35,9 @@ schemas. Source RFC archived at `plans/archive/issues/cme_event_contracts_cross_
 Post-May-23 critical path; not a deadline blocker. Operator note 2026-05-15: OHLCV-1m sufficient for arb backtest (no
 tick-data dependency).
 
-Codex SSOTs: `codex/02-data/per-asset-group-bucket-layouts.md` ·
-`codex/09-strategy/architecture-v2/category-instrument-coverage.md` ·
-`codex/16-strategy-playbooks/strategy/cme-polymarket-arb.md`
+Codex SSOTs: `/codex/02-data/per-asset-group-bucket-layouts.md` ·
+`/codex/09-strategy/architecture-v2/category-instrument-coverage.md` ·
+`/codex/16-strategy-playbooks/strategy/cme-polymarket-arb.md`
 
 ---
 
@@ -67,15 +72,15 @@ Codex SSOTs: `codex/02-data/per-asset-group-bucket-layouts.md` ·
 - [x] ✅ [SCRIPT] P1. New archetype `ARBITRAGE_CROSS_DOMAIN_EVENT` in strategy-service — strategy-service@2c59f2ce
       (2026-05-22): `cme_polymarket.py` engine + factory.py registration + TIER*STABLE_STRUCTURAL Kelly +
       GREENFIELD_ARCHETYPES + 3 target_universe seed rows (ECES×2 + ECBTC×1). Reads
-      `cme_event_bid*{root}`/`cme*event_ask*{root}`+`polymarket*yes_bid*{group}`/    `polymarket*yes_ask*{group}`
-      features; emits LEADER_HEDGE AtomicInstruction when net basis > threshold. CME leg venue="CME"; Polymarket leg
+      `cme_event_bid*{root}`/`cme*event_ask*{root}`+`polymarket*yes_bid*{group}`/ `polymarket*yes_ask*{group}` features;
+      emits LEADER_HEDGE AtomicInstruction when net basis > threshold. CME leg venue="CME"; Polymarket leg
       venue="POLYMARKET". QG all gates green.
 
 ## Codex updates
 
 - [x] ✅ [AGENT] P1. `per-asset-group-bucket-layouts.md` EVENT_CONTRACT shard atom bullet;
       `category-instrument-coverage.md` Family 4 ARBITRAGE_PRICE_DISPERSION cross-venue row; NEW
-      `codex/16-strategy-playbooks/strategy/cme-polymarket-arb.md` stub. (PM@2026-05-08)
+      `/codex/16-strategy-playbooks/strategy/cme-polymarket-arb.md` stub. (PM@2026-05-08)
 
 ## Temporary states + canonical follow-up plans
 

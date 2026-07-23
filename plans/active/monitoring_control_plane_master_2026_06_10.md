@@ -984,10 +984,10 @@ manual session because firing breaking/red/billing states on the live fleet jams
 
 ## Codex SSOT updates (post-phase audit obligations)
 
-- NEW `codex/03-observability/monitoring-control-plane.md` — the division-of-surfaces contract above + data-source
+- NEW `/codex/03-observability/monitoring-control-plane.md` — the division-of-surfaces contract above + data-source
   architecture (hybrid GitHub-API+manifest, cache TTLs, Firestore swap point).
-- `codex/04-architecture/agent-orchestrator-overview.md` — fleet git-health page section.
-- `codex/08-workflows/ci-cd-flow.md` — pointer: the CI dashboard is the read surface for promotion state.
+- `/codex/04-architecture/agent-orchestrator-overview.md` — fleet git-health page section.
+- `/codex/08-workflows/ci-cd-flow.md` — pointer: the CI dashboard is the read surface for promotion state.
 
 ## Out of scope (named)
 

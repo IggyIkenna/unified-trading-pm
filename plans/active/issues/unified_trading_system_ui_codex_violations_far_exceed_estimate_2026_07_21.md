@@ -27,7 +27,7 @@ tags: [quality-gates, ui, codex-compliance, scope-estimate-miss, any-type, conso
 related:
   [
     plans/active/issues/ui_codex_gate_blind_to_app_router_layout_2026_07_21.md,
-    codex/06-coding-standards/ui-testing-layers.md,
+    /codex/06-coding-standards/ui-testing-layers.md,
   ]
 created: "2026-07-21"
 parent_epic: agent_operating_framework_master
@@ -140,7 +140,7 @@ This needs an operator/main call on sequencing + approach, not a unilateral pick
       previously-passing spec (`tests/smoke/research-real-data.smoke.spec.ts`) fails identically
       (`ERR_CONNECTION_RESET`/`ERR_ABORTED`) under this session's severe host resource contention (load avg 20-39 on an
       8-core box from many concurrent slots) — an environment condition, not a code regression. Per
-      `codex/06-coding-standards/ui-testing-layers.md`'s own escape hatch ("if the agent cannot run a dev server, the
+      `/codex/06-coding-standards/ui-testing-layers.md`'s own escape hatch ("if the agent cannot run a dev server, the
       todo stays BLOCKED-PLAYWRIGHT until a slot with UI access verifies"), **pw:L2 is NOT claimed** — the spec is
       shipped and ready, genuinely not yet run clean. Someone with a quieter host should run
       `npx playwright test --project=chromium tests/smoke/any-type-sweep-page-render.smoke.spec.ts` and append the
@@ -211,8 +211,8 @@ This needs an operator/main call on sequencing + approach, not a unilateral pick
       explicitly (verify no other file re-hardcodes the SAME hex values instead of importing from these) rather than
       blindly including or excluding them. No blind mechanical find/replace — per-file, use this repo's actual
       `--color-*` CSS vars from `app/globals.css` or Tailwind classes; **no change ships without pw:L2** per
-      `codex/06-coding-standards/ui-testing-layers.md` (visual/theming changes are exactly the class of change that rule
-      exists for). Split across multiple sub-tasks if dispatched (e.g. by directory: `components/trading/sports/*`,
+      `/codex/06-coding-standards/ui-testing-layers.md` (visual/theming changes are exactly the class of change that
+      rule exists for). Split across multiple sub-tasks if dispatched (e.g. by directory: `components/trading/sports/*`,
       `components/marketing/*`, `components/widgets/*`, remainder) rather than one giant todo. (repo:
       unified-trading-system-ui)
 - [x] ✅ [INFRA] P1. Decide interim shippability: temporary audited `CODEX_*_EXCLUDE_GLOBS` bypass (documented in
@@ -232,4 +232,4 @@ This needs an operator/main call on sequencing + approach, not a unilateral pick
 
 ## Codex SSOTs
 
-`codex/06-coding-standards/ui-testing-layers.md`, `codex/06-coding-standards/quality-gates.md`.
+`/codex/06-coding-standards/ui-testing-layers.md`, `/codex/06-coding-standards/quality-gates.md`.

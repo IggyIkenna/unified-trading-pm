@@ -30,7 +30,7 @@ related:
   [
     plans/active/sports_p2_features_history_to_ml_ready_2026_06_27.md,
     plans/active/issues/sports_gw_enrichment_false_empty_manifest_and_dropped_rows_2026_07_14.md,
-    codex/02-data/availability-manifest-and-data-status.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
   ]
 created: 2026-07-14
 parent_epic: features_and_ml_master
@@ -91,9 +91,9 @@ resolved_by: ["ml-service@360da40", "features-service@4f83f8db", "features-servi
 
 **Naming/SSOT check:**
 
-- `codex/02-data/defi-canonical-naming-ssot.md` — DeFi vocabulary only (confirmed via title/summary); does not govern
+- `/codex/02-data/defi-canonical-naming-ssot.md` — DeFi vocabulary only (confirmed via title/summary); does not govern
   this bucket.
-- `codex/02-data/sports-gcs-path-ssot.md` + UAC `canonical/domain/sports/gcs_paths.py` — governs the IS
+- `/codex/02-data/sports-gcs-path-ssot.md` + UAC `canonical/domain/sports/gcs_paths.py` — governs the IS
   `sports_reference/` bucket, not `sports_features/`. There is NO codex SSOT for the features bucket layout; the SSOT is
   the writer (`writer.py` docstring cites the legacy `sports-schema-paths.md` format). Raw numeric af-ids in `league=`
   path keys are deliberate writer behaviour; canonical NAMES live in the manifest key. The "numeric ids cleaned from the

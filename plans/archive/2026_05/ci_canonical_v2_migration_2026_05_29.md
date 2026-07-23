@@ -6,10 +6,22 @@ status: complete
 nature: record
 asset_group: cross-cutting
 stage: [meta]
-repos: [alerting-service, batch-live-reconciliation-service, deployment-ui, execution-service, features-service, instruments-service]
+repos:
+  [
+    alerting-service,
+    batch-live-reconciliation-service,
+    deployment-ui,
+    execution-service,
+    features-service,
+    instruments-service,
+  ]
 scope: [engineer, admin]
 tags: []
-related: [plans/active/issues/workspace_qg_ci_startup_failure_2026_05_26.md, plans/active/tradfi_massive_dual_source_2026_05_28.md]
+related:
+  [
+    plans/active/issues/workspace_qg_ci_startup_failure_2026_05_26.md,
+    plans/active/tradfi_massive_dual_source_2026_05_28.md,
+  ]
 created: 2026-05-29
 parent_epic: infrastructure_master
 assigned_vm: vm-cross-cutting
@@ -19,25 +31,25 @@ estimate_class: infra
 estimate_baseline_ai_days: 5
 estimate_calibrated_ai_days: 4
 owner: ikenna
-completion_gates: {code: C5, deployment: D3, business: B3}
+completion_gates: { code: C5, deployment: D3, business: B3 }
 repo_gates:
-- {repo: unified-trading-pm, code: C0, deployment: none, business: none}
-- {repo: unified-api-contracts, code: C0, deployment: none, business: none}
-- {repo: unified-trading-library, code: C0, deployment: none, business: none}
-- {repo: alerting-service, code: C0, deployment: none, business: none}
-- {repo: ml-service, code: C0, deployment: none, business: none}
-- {repo: features-service, code: C0, deployment: none, business: none}
-- {repo: batch-live-reconciliation-service, code: C0, deployment: none, business: none}
-- {repo: execution-service, code: C0, deployment: none, business: none}
-- {repo: instruments-service, code: C0, deployment: none, business: none}
-- {repo: deployment-ui, code: C0, deployment: none, business: none}
+  - { repo: unified-trading-pm, code: C0, deployment: none, business: none }
+  - { repo: unified-api-contracts, code: C0, deployment: none, business: none }
+  - { repo: unified-trading-library, code: C0, deployment: none, business: none }
+  - { repo: alerting-service, code: C0, deployment: none, business: none }
+  - { repo: ml-service, code: C0, deployment: none, business: none }
+  - { repo: features-service, code: C0, deployment: none, business: none }
+  - { repo: batch-live-reconciliation-service, code: C0, deployment: none, business: none }
+  - { repo: execution-service, code: C0, deployment: none, business: none }
+  - { repo: instruments-service, code: C0, deployment: none, business: none }
+  - { repo: deployment-ui, code: C0, deployment: none, business: none }
 ---
 
 # CI canonical v2 migration — ghost-workflow workaround
 
 ## Overview
 
-Rolls every affected workspace repo onto the new canonical CI flow (codex/08-workflows/ci-cd-flow.md) AND applies a v2
+Rolls every affected workspace repo onto the new canonical CI flow (/codex/08-workflows/ci-cd-flow.md) AND applies a v2
 rename of the workspace-qg caller workflow with a new job key to escape GitHub's server-side BuildFailed ghost cache.
 
 **Operator directive 2026-05-29**: "All pushed. Here's the canonical updated flow: LDR → Cloud Build (canonical,
@@ -85,21 +97,21 @@ alone doesn't escape it.
 
 ## Status snapshot
 
-| Layer                                      | Status                | Note                                                                        |
-| ------------------------------------------ | --------------------- | --------------------------------------------------------------------------- |
-| Canonical CI codex doc                     | ✅ shipped 2026-05-29 | `codex/08-workflows/ci-cd-flow.md` § three-tier + two-pass + sentinel model |
-| PM `python-quality-gates.yml` real content | ✅ correct on disk    | Bad comment reverted in `7ca446080`                                         |
-| PM main branch protection                  | ✅ rotated 2026-05-29 | Required check now `quality-gates-v2` (was `quality-gates`)                 |
-| GH Support ticket                          | 🟡 open               | #4422570 filed 2026-05-27, awaiting cache clear                             |
-| v2 caller workflow on PM                   | ✅ shipped 2026-05-29 | `quality-gates-v2.yml` on LDR @a9d340df; not yet merged to main             |
-| v2 callee workflow on PM                   | ✅ shipped 2026-05-29 | `python-quality-gates-v2.yml` on LDR @a9d340df; not yet merged to main      |
-| Required-check rotation (all 18 branches)  | ✅ done 2026-05-29    | `quality-gates` → `quality-gates-v2` across all 9 service repos + PM        |
+| Layer                                      | Status                | Note                                                                         |
+| ------------------------------------------ | --------------------- | ---------------------------------------------------------------------------- |
+| Canonical CI codex doc                     | ✅ shipped 2026-05-29 | `/codex/08-workflows/ci-cd-flow.md` § three-tier + two-pass + sentinel model |
+| PM `python-quality-gates.yml` real content | ✅ correct on disk    | Bad comment reverted in `7ca446080`                                          |
+| PM main branch protection                  | ✅ rotated 2026-05-29 | Required check now `quality-gates-v2` (was `quality-gates`)                  |
+| GH Support ticket                          | 🟡 open               | #4422570 filed 2026-05-27, awaiting cache clear                              |
+| v2 caller workflow on PM                   | ✅ shipped 2026-05-29 | `quality-gates-v2.yml` on LDR @a9d340df; not yet merged to main              |
+| v2 callee workflow on PM                   | ✅ shipped 2026-05-29 | `python-quality-gates-v2.yml` on LDR @a9d340df; not yet merged to main       |
+| Required-check rotation (all 18 branches)  | ✅ done 2026-05-29    | `quality-gates` → `quality-gates-v2` across all 9 service repos + PM         |
 
 ## Phased execution
 
 ### Phase 0 — Pre-flight: confirm canonical doc + branch protection access (0.25 day)
 
-- [x] ✅ [AUDIT] P0. Read `codex/08-workflows/ci-cd-flow.md` end-to-end — 292 lines. Covers three-tier branch model,
+- [x] ✅ [AUDIT] P0. Read `/codex/08-workflows/ci-cd-flow.md` end-to-end — 292 lines. Covers three-tier branch model,
       two-pass sentinel model, workspace-qg triggers excluding LDR, staging-first PR target. Plan recipe matches doc.
 - [x] ✅ [AUDIT] P0. Admin perms confirmed on PM/UAC/UTL — `gh api` returns `admin=True` for all three.
 - [x] ✅ [AUDIT] P0. Confirm `.qg_last_passed_sha` sentinel format expected by quickmerge —
@@ -219,7 +231,7 @@ execution-service, instruments-service, deployment-ui. Order by risk (lowest fir
       `workspace-qg-v3.yml` @2e8a10c - ml-service: deleted `workspace-qg.yml` @86bb7ae - execution-service: deleted
       `workspace-qg.yml` @94596ddf Remaining 4 repos blocked on pre-existing code quality issues: - features-service: 7
       lint errors; batch-live-recon: coverage 78.2%; instruments-service: coverage 76.8%; deployment-ui: GH_PAT auth
-- [x] ✅ [CODEX] P1. Update `codex/08-workflows/ci-cd-flow.md` to reference the v2 job key as the canonical
+- [x] ✅ [CODEX] P1. Update `/codex/08-workflows/ci-cd-flow.md` to reference the v2 job key as the canonical
       required-check name. Add SUPERSEDED banner to any sub-doc that names the v1 `quality-gates` context. —
       ci-cd-flow.md § quality-gates-v2 added (task -026); deployment-flow.md required check updated to quality-gates-v2
       with RETIRED note for v1; quickmerge-architecture.md + feature-branch-workflow.md reference local script only (no
@@ -269,10 +281,10 @@ execution-service, instruments-service, deployment-ui. Order by risk (lowest fir
 
 ## Codex SSOTs
 
-- `codex/08-workflows/ci-cd-flow.md` (Phase 5 update — v2 job key as canonical required check)
-- `codex/08-workflows/deployment-flow.md` (detailed canonical full CI/CD flow SSOT)
-- `codex/05-infrastructure/quickmerge-architecture.md` (verify sentinel-write step doc; no edit expected)
-- `codex/06-coding-standards/feature-branch-workflow.md` (verify aligned with new canonical; no edit expected)
+- `/codex/08-workflows/ci-cd-flow.md` (Phase 5 update — v2 job key as canonical required check)
+- `/codex/08-workflows/deployment-flow.md` (detailed canonical full CI/CD flow SSOT)
+- `/codex/05-infrastructure/quickmerge-architecture.md` (verify sentinel-write step doc; no edit expected)
+- `/codex/06-coding-standards/feature-branch-workflow.md` (verify aligned with new canonical; no edit expected)
 - `plans/active/issues/workspace_qg_ci_startup_failure_2026_05_26.md` (Phase 5 close-out)
 - `CLAUDE.md` § "CI Verification After Every Push" (Phase 5 — 1-line v2 pointer if needed)
 

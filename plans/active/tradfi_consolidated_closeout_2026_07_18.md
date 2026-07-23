@@ -46,19 +46,19 @@ tags:
   ]
 related:
   [
-    cefi_consolidated_closeout_2026_07_18.md,
-    canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md,
-    tradfi_v9_stage1_finish_2026_07_06.md,
-    data_completion_tradfi_2026_07_15.md,
-    tradfi_massive_dual_source_2026_05_28.md,
-    tradfi_multisource_backfill_2026_06_22.md,
-    tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md,
-    tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md,
-    instrument_id_format_canonicalization_2026_07_08.md,
-    master_data_canonicalisation_migration_catalogue_2026_06_07.md,
-    data_pipeline_e2e_check_2026_07_10.md,
-    consolidator_throughput_backlog_monitor_2026_07_09.md,
-    candle_feature_canonical_path_divergence_2026_07_20.md,
+    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
+    /plans/active/canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md,
+    /plans/active/tradfi_v9_stage1_finish_2026_07_06.md,
+    /plans/active/data_completion_tradfi_2026_07_15.md,
+    /plans/active/tradfi_massive_dual_source_2026_05_28.md,
+    /plans/active/tradfi_multisource_backfill_2026_06_22.md,
+    /plans/active/tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md,
+    /plans/active/issues/tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md,
+    /plans/active/issues/instrument_id_format_canonicalization_2026_07_08.md,
+    /plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md,
+    /plans/archive/2026_07/data_pipeline_e2e_check_2026_07_10.md,
+    /plans/active/consolidator_throughput_backlog_monitor_2026_07_09.md,
+    /plans/active/issues/candle_feature_canonical_path_divergence_2026_07_20.md,
   ]
 created: 2026-07-18
 last_updated: 2026-07-23
@@ -232,7 +232,7 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
       removal, and `--source` is now `choices=["databento"]` (`mtds cli/main.py:197`) with `umi_tick_provider` failing
       closed on non-databento and a `source='massive'` manifest write raising — so it would have failed argparse on
       EVERY run. Databento covers everything Massive served (DBEQ.BASIC equities, GLBX.MDP3 CME) plus CBOE/VX and
-      ohlcv_1s, so ZERO coverage gap. SSOT: `codex/02-data/tradfi-databento-sourcing-ssot.md`. **Still `- [ ]` because
+      ohlcv_1s, so ZERO coverage gap. SSOT: `/codex/02-data/tradfi-databento-sourcing-ssot.md`. **Still `- [ ]` because
       rows-written is UNPROVEN**: two real executions exited 1 at interpreter start —
       `ImportError: cannot import name 'is_recognized_tradfi_underlying' from 'unified_api_contracts'`. Root cause is a
       stale UAC bundled in the MTDS image, which kills **every** MTDS Cloud Run job (cefi-t1-recon failing since
@@ -366,8 +366,8 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
       Implicated tickers are mega-cap (AAPL, AMZN, AMD, AVGO, BAC, BRK.B, C, CAT, ABBV, BKNG), which refutes genuine
       absence outright. Fix: new `explicit_scope` flag — a caller-NAMED scope is never capped (the cap remains a real
       guard-rail for an unbounded DISCOVERED universe); MTDS passes `explicit_scope=bool(instrument_ids)`. This is NOT a
-      sentinel tier promotion (those stay operator-gated per `codex/02-data/per-instrument-sentinel-rollout.md` §3) — it
-      only stops the cap applying where it never bounded anything. Regression tests in BOTH repos assert an explicit
+      sentinel tier promotion (those stay operator-gated per `/codex/02-data/per-instrument-sentinel-rollout.md` §3) —
+      it only stops the cap applying where it never bounded anything. Regression tests in BOTH repos assert an explicit
       scope survives whole and that tail-of-alphabet instruments are present. **A blind backfill re-run would have
       re-failed on exactly these instruments.** (repos: unified-api-contracts, market-tick-data-service)
 - [ ] [DATA] P1. **Retire the 104,623 residual phantom `attempted_failed` rows.** The live emitter was already fixed for
@@ -427,7 +427,7 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
 
 > **✅ CASING FREEZE LIFTED 2026-07-20, operator ruling D1.** The Phase-B `instrument_type` case-migration script's
 > `--apply` was frozen pending the contested manifest COLUMN-case axis (C2a) — this plan's Phase-B said UPPERCASE while
-> `codex/02-data/cross-asset-canonical-target-ssot.md` §7/§11 said lowercase, both citing the same operator on
+> `/codex/02-data/cross-asset-canonical-target-ssot.md` §7/§11 said lowercase, both citing the same operator on
 > 2026-07-18. **D1 ruled UPPERCASE (catalogue wins)**, recorded in
 > [`data_pipeline_reconciliation_skill_2026_07_20.md`](data_pipeline_reconciliation_skill_2026_07_20.md) § "OPERATOR
 > DECISIONS — ALL THREE RULED 2026-07-20"; the codex has been corrected to match. The Phase-B script is **RATIFIED** and
@@ -733,10 +733,10 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
 
 ## Codex SSOTs (read before touching a phase)
 
-`codex/02-data/tradfi-databento-sourcing-ssot.md`, `codex/02-data/availability-manifest-and-data-status.md`,
-`codex/02-data/honest-coverage-model.md`, `codex/02-data/pipeline-mode-partition.md`,
-`codex/04-architecture/instruments-service-as-ssot-for-mtds.md`,
-`codex/05-infrastructure/manifest-consolidator-ssot.md`, `codex/05-infrastructure/vm-launcher-runbook.md`.
+`/codex/02-data/tradfi-databento-sourcing-ssot.md`, `/codex/02-data/availability-manifest-and-data-status.md`,
+`/codex/02-data/honest-coverage-model.md`, `/codex/02-data/pipeline-mode-partition.md`,
+`/codex/04-architecture/instruments-service-as-ssot-for-mtds.md`,
+`/codex/05-infrastructure/manifest-consolidator-ssot.md`, `/codex/05-infrastructure/vm-launcher-runbook.md`.
 
 ## Aggregated source docs (referenced, not duplicated)
 
@@ -1636,7 +1636,7 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
   - **(c)/(d) scoped, not forced**: (d) already **91.08% `-USD@LIN`** (the "0%" was pre-migration); (c) real defect is
     ~82k blank-no-underlying (1.76M "blank" are legit Option-A bundle atoms). Object-walk re-derivation is entangled
     (`instrument_id` ∈ `_OPTIONAL_DEDUP_COLS` → new key, not a flip) → P1 follow-up.
-  - **Ships (docs)**: `codex/05-infrastructure/manifest-consolidator-ssot.md` § "Surgical ROW REMOVAL"; issue doc
+  - **Ships (docs)**: `/codex/05-infrastructure/manifest-consolidator-ssot.md` § "Surgical ROW REMOVAL"; issue doc
     `tradfi_manifest_rebuild_deletion_resurrection_gap_2026_07_20.md` (a)+(b) → RESOLVED.
 
 - **2026-07-21 (sub-agent) — ✅ P2 defense-in-depth: VARCHAR-numeric-shard poisoning CLASS killed in the consolidator**
@@ -1700,7 +1700,7 @@ instrument universe with `OHLCV_DATA_TYPES=trades,tbbo,mbp_10` (and `mbo`) and a
 window (~today-1yr for L1, ~today-1mo for L2/L3), reusing the existing OHLCV launcher fleet.
 
 **SSOTs**: `market-tick-data-service/scripts/pipeline_e2e_check.py` (`_TRADFI_BILLING_GATED_DATA_TYPES`,
-`DATABENTO_SCHEMA_LEVEL` — the billing-guard oracle) + `codex/02-data/tradfi-databento-sourcing-ssot.md` "Schema
+`DATABENTO_SCHEMA_LEVEL` — the billing-guard oracle) + `/codex/02-data/tradfi-databento-sourcing-ssot.md` "Schema
 allowlist" table.
 
 ---
@@ -1781,7 +1781,7 @@ fleet/logs directly).**
   re-pulling before actually reading `/tmp/dc.log` — the real blocker was `plan-hygiene` frontmatter-schema validation
   (missing `stage`/`repos`/`scope`/`parent_epic`/`priority`/`source` on an `issue` doc; missing `auditor`/`severity`/
   `audited_scope`/`date` on an `audit-result` doc — the two doc_types have DIFFERENT required-field sets, see
-  `codex/11-project-management/doc-frontmatter-schema.md`). **Read the actual hook output before assuming drift** —
+  `/codex/11-project-management/doc-frontmatter-schema.md`). **Read the actual hook output before assuming drift** —
   `git commit` prints both under one non-zero exit and a `grep -c 'drift'` on the log false-matched on unrelated text.
 - **My own operator-facing "migration complete / ~99.65% canonical" claim was overstated** (verified + corrected this
   session, see reconciliation report + `tradfi_docs_reconciliation_findings_2026_07_21.md`): catalogue + GCS paths +

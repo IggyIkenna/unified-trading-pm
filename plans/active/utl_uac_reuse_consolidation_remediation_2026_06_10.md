@@ -543,7 +543,7 @@ range-pin pull — no consumer rebuild unless they cross `<1.0.0`.
 ## Phase 9 — Service↔service dependency violations + DEAD enforcement gate (operator sweep 2026-06-10)
 
 > Operator-requested sweep found **4 service→service path-dep edges** that the documented HARD RULE
-> (`codex/04-architecture/tier-and-import-architecture.md` § "No service ↔ service imports") forbids — live on the
+> (`/codex/04-architecture/tier-and-import-architecture.md` § "No service ↔ service imports") forbids — live on the
 > integration branch because **the QG gate is dead**: `base-service.sh:615` invokes
 > `unified-trading-pm/scripts/check-no-service-deps.py` but the file is at `scripts/validation/check-no-service-deps.py`
 > → the `[ -f ]` guard is false → **the check never runs, fleet-wide**; and even if pathed, `get_service_repos()`
@@ -614,12 +614,12 @@ range-pin pull — no consumer rebuild unless they cross `<1.0.0`.
 
 ## Phase 8 — Codex SSOT + archive (HARD RULE)
 
-- [ ] [AUDIT] P1. Update codex for every contract this plan changes: `codex/06-coding-standards/README.md`
-      (reuse-before-reimplement rule + the new UTL retry helper), `codex/04-architecture/agent-orchestrator-overview.md`
-      (cloud I/O via UTL; auth-fetch only), `codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md`
-      (strategy equity-drawdown-HWM is local + distinct from UTL fee-crystallization HWM — record the NON-finding so a
-      future audit doesn't re-flag it), and the ml model-registry doc (UTL is SSOT; writegate/manifest/allowlist now in
-      UTL).
+- [ ] [AUDIT] P1. Update codex for every contract this plan changes: `/codex/06-coding-standards/README.md`
+      (reuse-before-reimplement rule + the new UTL retry helper),
+      `/codex/04-architecture/agent-orchestrator-overview.md` (cloud I/O via UTL; auth-fetch only),
+      `/codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md` (strategy equity-drawdown-HWM is local +
+      distinct from UTL fee-crystallization HWM — record the NON-finding so a future audit doesn't re-flag it), and the
+      ml model-registry doc (UTL is SSOT; writegate/manifest/allowlist now in UTL).
 - [x] ✅ [AUDIT] P1. Record the **verified NON-findings** list (greeks BSM, execution order-CB, hwm_seeds, etc.) in the
       relevant codex docs so the next reuse audit doesn't re-open them. — unified-trading-pm@6bd87af85, done via split
       plan `utl_reuse_phase8_codex_ssot_archive_2026_07_13.md`.

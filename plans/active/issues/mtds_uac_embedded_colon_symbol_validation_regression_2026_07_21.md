@@ -20,7 +20,7 @@ stage: [data]
 repos: [market-tick-data-service, unified-api-contracts]
 scope: [engineer]
 tags: [test-baseline-drift, quality-gates-blocker, cefi, canonical-id, cross-repo]
-related: [mtds_rule11_shard_count_stale_baseline_2026_07_21.md]
+related: [/plans/active/issues/mtds_rule11_shard_count_stale_baseline_2026_07_21.md]
 created: "2026-07-21"
 parent_epic: infrastructure_master
 assigned_vm: NA

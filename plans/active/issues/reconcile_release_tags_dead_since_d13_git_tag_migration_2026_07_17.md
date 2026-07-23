@@ -49,7 +49,7 @@ related:
   [
     plans/active/github_actions_ci_cost_reduction_2026_07_15.md,
     plans/active/issues/digest_drift_sweep_silent_noop_github_token_scope_2026_07_16.md,
-    codex/08-workflows/ci-cd-flow.md,
+    /codex/08-workflows/ci-cd-flow.md,
   ]
 created: 2026-07-17
 parent_epic: deployment_and_user_management_master
@@ -153,8 +153,8 @@ backstops** (`digest-drift-sweep` = the digest-drift net; this = the missed-tag 
 The common shape: **a safety net's healthy output and its dead output are the same string**, so the only thing that ever
 reads it is a human who went looking. Both want the same remedy — an assertion that "I did nothing" and "I could not
 look" are different states. Worth a codex note under the honest-absence rule
-(`codex/02-data/honest-absence-downstream-handling.md`), which states this principle for data but is evidently a general
-one.
+(`/codex/02-data/honest-absence-downstream-handling.md`), which states this principle for data but is evidently a
+general one.
 
 ---
 

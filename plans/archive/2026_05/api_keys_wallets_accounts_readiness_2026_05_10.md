@@ -16,11 +16,14 @@ last_updated: 2026-05-23
 estimate_class: design
 estimate_baseline_ai_days: 107.5
 estimate_calibrated_ai_days: 64.5
-estimate_calibration_note: 'Baseline auto-extracted from in-body AI-day mentions during 2026-05-11 sweep (~50-70, ~38-57). Class inferred from filename (design, multiplier 0.6×).
+estimate_calibration_note: "Baseline auto-extracted from in-body AI-day mentions during 2026-05-11 sweep (~50-70,
+  ~38-57). Class inferred from filename (design, multiplier 0.6×).
 
-  CAVEAT: auto-extract SUMS all in-body mentions; plans with both ''Total: X'' headlines AND per-phase line items will be double-counted. Owner agent: verify baseline, refine class per codex/08-workflows/estimation-calibration.md, recompute calibrated if either changes.
+  CAVEAT: auto-extract SUMS all in-body mentions; plans with both 'Total: X' headlines AND per-phase line items will be
+  double-counted. Owner agent: verify baseline, refine class per /codex/08-workflows/estimation-calibration.md,
+  recompute calibrated if either changes.
 
-  '
+  "
 parent_epic: defi_master
 assigned_vm: vm-defi
 priority: P0
@@ -162,7 +165,7 @@ AI-days.** Frontmatter not updated yet — owner agent flips on next substantive
 ---
 
 > **R9 RESOLVED 2026-05-12**: May-23 ships on `CLOUD_KMS_ENCRYPTED`; June-1 flips per-wallet to
-> `COPPER_MPC`/`FIREBLOCKS_MPC`. SSOT: `codex/04-architecture/custody-providers.md`.
+> `COPPER_MPC`/`FIREBLOCKS_MPC`. SSOT: `/codex/04-architecture/custody-providers.md`.
 
 ---
 
@@ -214,12 +217,12 @@ contaminated state.
 - [x] [AGENT] P0. **0.D — Codex SSOT stubs (NEW docs, full content shipped at end of Phase 9).** Stub per
       `Post-Plan-Phase Codex Audit` HARD RULE. Each stub has TL;DR + key principles + cross-references back to this
       plan + placeholder section headers for Phase 9 fill-in:
-  - [x] `codex/05-infrastructure/credentials-matrix.md` (NEW) — workspace credential SSOT.
-  - [x] `codex/05-infrastructure/aws-iam-matrix.md` (NEW) — per-service AWS IAM.
-  - [x] `codex/05-infrastructure/secret-manager-naming.md` (NEW) — naming convention.
-  - [x] `codex/14-customer-journeys/credentials/rotation-runbook.md` (NEW) — rotation cadence + execution-owner.
-  - [x] `codex/05-infrastructure/per-archetype-wallet-isolation.md` (NEW) — multi-wallet model.
-  - [x] `codex/05-infrastructure/hsm-wallet-signing.md` (NEW) — HSM tier discipline.
+  - [x] `/codex/05-infrastructure/credentials-matrix.md` (NEW) — workspace credential SSOT.
+  - [x] `/codex/05-infrastructure/aws-iam-matrix.md` (NEW) — per-service AWS IAM.
+  - [x] `/codex/05-infrastructure/secret-manager-naming.md` (NEW) — naming convention.
+  - [x] `/codex/14-customer-journeys/credentials/rotation-runbook.md` (NEW) — rotation cadence + execution-owner.
+  - [x] `/codex/05-infrastructure/per-archetype-wallet-isolation.md` (NEW) — multi-wallet model.
+  - [x] `/codex/05-infrastructure/hsm-wallet-signing.md` (NEW) — HSM tier discipline.
 
 **Phase 0 done definition** (full-execution criterion):
 
@@ -301,7 +304,7 @@ Largest workstream per audit (R3). Provisions AWS to GCP-parity for May-23 cutov
 
 - [x] [SCRIPT] P0. **1.E — AWS Secrets Manager replication.** For every secret in GCP Secret Manager, create an AWS
       Secrets Manager equivalent in `ap-northeast-1`. Naming convention codified in
-      `codex/05-infrastructure/secret-manager-naming.md` (Phase 0.D stub). Cross-cloud SDK abstraction in
+      `/codex/05-infrastructure/secret-manager-naming.md` (Phase 0.D stub). Cross-cloud SDK abstraction in
       `UnifiedCloudConfig` already cloud-agnostic (Block H7 audit ✅) — verify every credential class actually
       round-trips through AWS Secrets Manager (Block H7 caveat: AWS half may be more stub than thought).
   - **Verification**: every credential listed in Phase 9.A `credentials-matrix.md` exists in BOTH GCP Secret Manager AND
@@ -453,7 +456,7 @@ key separation, account-level limits SSOT, per-venue rate-limit budgets.
         factory-registered; raises NotImplementedError until spec delivered — correct per plan direction)
   - [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] **3.B.4** — End-to-end real-fund-movement test (mirror 3.A).
   - [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] **3.B.5** — Operational-model decision: CEFFU replaces or augments Copper
-        for `carry_staked_basis` spot leg. Document in `codex/04-architecture/custody-architecture.md` (NEW or UPDATE).
+        for `carry_staked_basis` spot leg. Document in `/codex/04-architecture/custody-architecture.md` (NEW or UPDATE).
 
 - [x] [DECISION] P0. **3.C — HSM-grade wallet signing path RESOLVED 2026-05-12** (operator R9 sub-(a) gate closed via
       AskUserQuestion). May-23 cutover ships on `CLOUD_KMS_ENCRYPTED`; June-1 flips per-wallet to `COPPER_MPC` /
@@ -521,7 +524,7 @@ key separation, account-level limits SSOT, per-venue rate-limit budgets.
       `funding_rate_dispersion` — canonical name per
       [`defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md:37-40`](../archive/2026_05/defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md)
       and codex
-      [`arbitrage-price-dispersion.md`](../../codex/09-strategy/architecture-v2/archetypes/arbitrage-price-dispersion.md)
+      [`arbitrage-price-dispersion.md`](/codex/09-strategy/architecture-v2/archetypes/arbitrage-price-dispersion.md)
       §28+§48-53; superseded the legacy `leveraged_funding_arb` standalone-archetype name 2026-05-09) — ≥2 archetypes ×
       5 chains (Ethereum, Arbitrum, Base, Polygon, Solana) = ≥10 mainnet wallets. HD-wallet derivation under
       `CLOUD_KMS_ENCRYPTED` per-asset_group master CMK for May-23 cutover; flippable to Fireblocks master seed per Phase
@@ -533,8 +536,8 @@ key separation, account-level limits SSOT, per-venue rate-limit budgets.
   - [x] **4.A.SCHEMA — UAC wallet provisioning schema** SHIPPED 2026-05-12 by slot 4 at UAC@`d721b6a`: `SigningSurface`
         StrEnum (5 values) + `WalletKind` StrEnum (4 values) + `SpendingCaps` frozen dataclass (per_tx / per_hour /
         per_day + per_protocol_usd map) + `WalletProvisioningConfig` frozen dataclass with `validate()` enforcing 6
-        invariants (surface ↔ credential-pointer match, HOT_TRADING needs archetype_id, HOT_TRADING + GAS_RESERVE
-        reject withdraw whitelist, kill_switch_id uses known KillSwitchId prefixes). 27 schema-validation tests at
+        invariants (surface ↔ credential-pointer match, HOT_TRADING needs archetype_id, HOT_TRADING + GAS_RESERVE reject
+        withdraw whitelist, kill_switch_id uses known KillSwitchId prefixes). 27 schema-validation tests at
         `tests/internal/unit/test_wallet_provisioning_schema.py` (all green). Imports:
         `from unified_api_contracts.internal.domain.defi import (SigningSurface, WalletKind, SpendingCaps,     WalletProvisioningConfig, WalletProvisioningError)`.
         **Cross-tab handshake artefact** consumed by slot 5 (defi_recursive_borrow archetype config — chain × protocol
@@ -549,9 +552,9 @@ key separation, account-level limits SSOT, per-venue rate-limit budgets.
 
 - [x] ✅ [AGENT] P1. **4.C — Bridge protocol adapters (CCTP / Wormhole / LayerZero).** Audit found intent-engine
       declares bridge steps but no adapters. Implement at least CCTP (Circle's cross-chain USDC) for May-23 — allows
-      USDC movement Ethereum ↔ Solana for `carry_staked_basis` jitoSOL leg funding. Wormhole + LayerZero deferred
-      unless carry archetype needs them. — (uac@a0238d3 + execution-service@05bdad628 2026-05-19; CCTPBridgeConnector
-      full implementation: burn-and-mint bridge for 10 EVM chains, 5 CCTP error codes in DefiErrorCode, CCTP contract
+      USDC movement Ethereum ↔ Solana for `carry_staked_basis` jitoSOL leg funding. Wormhole + LayerZero deferred unless
+      carry archetype needs them. — (uac@a0238d3 + execution-service@05bdad628 2026-05-19; CCTPBridgeConnector full
+      implementation: burn-and-mint bridge for 10 EVM chains, 5 CCTP error codes in DefiErrorCode, CCTP contract
       addresses in testnet_contracts.yaml, 25 unit tests green; Solana receive deferred — EVM-side only)
 
 - [x] [AGENT+HUMAN] P0. **4.D — Testnet replica per R1.** Per operator direction "all 5 testnets in scope":
@@ -606,10 +609,9 @@ key separation, account-level limits SSOT, per-venue rate-limit budgets.
 > **Provenance**: slot 8 codex audit 2026-05-12 surfaced 4 pre-flight architecture findings; operator ratified
 > 2026-05-12 (R-10 = Option B shared UTL helper; R-11 = AND-aggregate w/ wallet-tier HARD floor; R-17 = NEW Layer 4
 > position-health; R-18 = SpendingCaps `min(fixed, proportional)`). Codex SSOT:
-> [`codex/04-architecture/risk-preflight-flow.md`](../../codex/04-architecture/risk-preflight-flow.md) §§ R-10..R-13.
-> Source issue docs:
-> [`../archive/issues/codex_audit_risk_2026_05_12.md`](../archive/issues/codex_audit_risk_2026_05_12.md) R-10/R-11 +
-> `risk-preflight-flow.md` § R-17/R-18.
+> [`/codex/04-architecture/risk-preflight-flow.md`](/codex/04-architecture/risk-preflight-flow.md) §§ R-10..R-13. Source
+> issue docs: [`../archive/issues/codex_audit_risk_2026_05_12.md`](../archive/issues/codex_audit_risk_2026_05_12.md)
+> R-10/R-11 + `risk-preflight-flow.md` § R-17/R-18.
 
 ### 4.C.A — UAC schema extensions (slot 4 owned; ~1 cal AI-day)
 
@@ -704,9 +706,9 @@ parallel). Critical-path floor ≈ 4 wall-clock days at 2-slot concurrency.
       `deployment-service@9943e7c9` (api-football + footystats + soccer-football-info added). Phase 5 sub-deliverables:
   - [x] ✅ DEFERRED-OPERATOR-DECISION **5.A.1** — Provision API keys for any source not yet in Secret Manager (most
         exist; verify per Block E3). **BLOCKED-OPERATOR** — requires operator to verify Secret Manager values.
-  - [x] **5.A.2** — `codex/14-customer-journeys/credentials/rotation-runbook.md` populates per-source rotation cadence +
-        execution-owner per `Runbook Execution-Owner SSOT` HARD RULE. **DONE 2026-05-15 slot 6**: file created at
-        `codex/14-customer-journeys/credentials/rotation-runbook.md` — sports (api-football/footystats/sfi 90d) +
+  - [x] **5.A.2** — `/codex/14-customer-journeys/credentials/rotation-runbook.md` populates per-source rotation
+        cadence + execution-owner per `Runbook Execution-Owner SSOT` HARD RULE. **DONE 2026-05-15 slot 6**: file created
+        at `/codex/14-customer-journeys/credentials/rotation-runbook.md` — sports (api-football/footystats/sfi 90d) +
         prediction (polymarket/kalshi 60d) + DeFi data (helius/coingecko/tenderly 90d). All 4 required fields populated.
   - [x] **5.A.3** — Skip understat / transfermarkt / open_meteo / pyth-hermes from rotation tracking (public sources, no
         key — already excluded in 9943e7c9 commit per the comment). **DONE 2026-05-15 slot 6**: documented in §1.4 of
@@ -745,7 +747,7 @@ parallel). Critical-path floor ≈ 4 wall-clock days at 2-slot concurrency.
 
 - ✅ Every sports + prediction + DeFi-data source in `_TRADE_KEY_PATTERNS` / `_DATA_KEY_PATTERNS` has a Secret Manager
   value.
-- ✅ Rotation runbook published at `codex/14-customer-journeys/credentials/rotation-runbook.md`.
+- ✅ Rotation runbook published at `/codex/14-customer-journeys/credentials/rotation-runbook.md`.
 - ✅ Polymarket execution adapter exists (or carry archetype scope confirms it's not needed).
 
 ---
@@ -779,12 +781,12 @@ parallel). Critical-path floor ≈ 4 wall-clock days at 2-slot concurrency.
 - [x] [SCRIPT] P0. **6.C — GitHub Workload Identity Federation upgrade.** Audit found classic PATs (`secrets.GH_PAT` +
       `GH_TOKEN`) — replace with WIF (GCP / AWS → GitHub OIDC trust) per repo. Eliminates long-lived PATs. **PARTIAL**
       scaffold shipped: gitleaks SSOT config + pre-commit hooks (PM@`a2c23e79`), WIF migration codex doc
-      (`codex/07-security/gha-wif-migration.md`), `benchmarks.yml` dual-path WIF/SA-key + GitHub App token scaffold
+      (`/codex/07-security/gha-wif-migration.md`), `benchmarks.yml` dual-path WIF/SA-key + GitHub App token scaffold
       (execution-service@`5bf0ae522`). GCP WIF pool provisioning + GitHub App creation BLOCKED-OPERATOR (infra HARD STOP
       — run `gha-wif-migration.md § 1` commands). Full migration complete when WORKLOAD*IDENTITY_PROVIDER + APP_ID
       secrets provisioned. Also found P0+P1: GCP SA key in 4 repos + GitHub PAT in instruments-service (issue docs
-      filed + operator notified — see
-      `plans/active/issues/gcp_sa_private_key_in_git_history*_`+    `plans/active/issues/github*pat_in_instruments_service*_`).
+      filed + operator notified — see `plans/active/issues/gcp_sa_private_key_in_git_history*_`+
+      `plans/active/issues/github*pat_in_instruments_service*_`).
 
 - [x] [SCRIPT] P2. **6.D — Anthropic API budget cap.** Per workflow run budget cap on `ANTHROPIC_API_KEY` usage.
       Currently advisory/audit workflows only — low-risk but unbounded.
@@ -851,7 +853,7 @@ Depends on Phases 2-6 having enumerated the universe of credentials.
       | SKIP: 9 (post-cutover). Root-cause triage: - **🔴 10 wrapped wallet keys missing** —
       `csb-{eth,arb,base,poly,sol}-hot-*-v1-wrapped` + `gas-reserve-{eth,arb,base,poly,sol}-v1-wrapped` — must provision
       via pre-cutover-test-wallets-runbook BEFORE May-23. Operator action: wrap private keys + push to SM per
-      `codex/05-infrastructure/pre-cutover-test-wallets-runbook.md`. - **🟡 11 naming drift items** — exist in SM under
+      `/codex/05-infrastructure/pre-cutover-test-wallets-runbook.md`. - **🟡 11 naming drift items** — exist in SM under
       legacy names, need canonical aliases: `binance-trade-api-secret` (→`binance-trade-api-key-secret`),
       `deribit-trade-api-secret` (→`deribit-trade-api-key-secret`), `bybit-trade-api-key` (→`bybit_api_key`),
       `bybit-trade-api-secret` (→`bybit_api_secret`), `bybit-read-api-key` (→`bybit_api_key`),
@@ -883,37 +885,37 @@ Depends on Phases 2-6 having enumerated the universe of credentials.
 
 Per `Post-Plan-Phase Codex Audit` HARD RULE — codex updates ride in same logical unit as code commits, not deferred.
 
-- [x] [AGENT] P0. **9.A — `codex/05-infrastructure/credentials-matrix.md`** (NEW) — workspace credential SSOT. Stub from
-      Phase 0.D; full content populated per Phase boundary (each phase's credentials added to matrix as they ship).
+- [x] [AGENT] P0. **9.A — `/codex/05-infrastructure/credentials-matrix.md`** (NEW) — workspace credential SSOT. Stub
+      from Phase 0.D; full content populated per Phase boundary (each phase's credentials added to matrix as they ship).
 
-- [x] [AGENT] P0. **9.B — `codex/05-infrastructure/aws-iam-matrix.md`** (NEW) — per-service AWS IAM. Populated by Phase
+- [x] [AGENT] P0. **9.B — `/codex/05-infrastructure/aws-iam-matrix.md`** (NEW) — per-service AWS IAM. Populated by Phase
       1.B.
 
-- [x] [AGENT] P0. **9.C — `codex/05-infrastructure/secret-manager-naming.md`** (NEW) — naming convention SSOT. Codifies
+- [x] [AGENT] P0. **9.C — `/codex/05-infrastructure/secret-manager-naming.md`** (NEW) — naming convention SSOT. Codifies
       the `<env>-<service>-<credential>` pattern + the `<venue>-<scope>-<key|secret>` extension from Phase 2.C.
 
-- [x] [AGENT] P0. **9.D — `codex/14-customer-journeys/credentials/rotation-runbook.md`** (NEW) — rotation cadence +
+- [x] [AGENT] P0. **9.D — `/codex/14-customer-journeys/credentials/rotation-runbook.md`** (NEW) — rotation cadence +
       execution-owner per credential class. Populated by Phase 5.A.2.
 
-- [x] [AGENT] P0. **9.E — `codex/05-infrastructure/per-archetype-wallet-isolation.md`** (NEW) — multi-wallet model.
+- [x] [AGENT] P0. **9.E — `/codex/05-infrastructure/per-archetype-wallet-isolation.md`** (NEW) — multi-wallet model.
       Populated by Phase 4.A.
 
-- [x] [AGENT] P0. **9.F — `codex/05-infrastructure/hsm-wallet-signing.md`** (NEW) — HSM tier discipline. Populated by
+- [x] [AGENT] P0. **9.F — `/codex/05-infrastructure/hsm-wallet-signing.md`** (NEW) — HSM tier discipline. Populated by
       Phase 3.C.
 
-- [x] [AGENT] P0. **9.G — UPDATE `codex/04-architecture/interface-credential-convention.md`** — per-credential-class
+- [x] [AGENT] P0. **9.G — UPDATE `/codex/04-architecture/interface-credential-convention.md`** — per-credential-class
       examples + cross-cloud guidance from this plan.
 
-- [x] [AGENT] P0. **9.H — UPDATE `codex/06-coding-standards/config-reloader-pattern.md`** — `ApiKeyReloader` per-service
-      coverage matrix from Block H1 audit.
+- [x] [AGENT] P0. **9.H — UPDATE `/codex/06-coding-standards/config-reloader-pattern.md`** — `ApiKeyReloader`
+      per-service coverage matrix from Block H1 audit.
 
-- [x] [AGENT] P1. **9.I — UPDATE `codex/05-infrastructure/runtime-tiers-and-deployment.md`** — credential subset per
+- [x] [AGENT] P1. **9.I — UPDATE `/codex/05-infrastructure/runtime-tiers-and-deployment.md`** — credential subset per
       tier from Phase 7.A.
 
-- [x] [AGENT] P1. **9.J — UPDATE `codex/14-customer-journeys/authentication/firebase-local.md`** — Firebase prod vs
+- [x] [AGENT] P1. **9.J — UPDATE `/codex/14-customer-journeys/authentication/firebase-local.md`** — Firebase prod vs
       emulator credential split from Phase 6.B.
 
-- [x] [AGENT] P0. **9.K — UPDATE `codex/04-architecture/custody-architecture.md`** (NEW or UPDATE) — Copper + CEFFU +
+- [x] [AGENT] P0. **9.K — UPDATE `/codex/04-architecture/custody-architecture.md`** (NEW or UPDATE) — Copper + CEFFU +
       Fireblocks operational model from Phase 3.
 
 **Phase 9 done definition** (full-execution criterion):
@@ -942,8 +944,8 @@ Per `Post-Plan-Phase Codex Audit` HARD RULE — codex updates ride in same logic
 
 **May-23 custody readiness verdict**: ✅ GREEN. Cloud-KMS path operational on GCP (execution-service@`d45d24b4`);
 verification smoke passed (UAC@`88e4e5a`). Copper/CEFFU are client-side institutional workstreams — do NOT gate May-23.
-Phase 1 AWS↔GCP parity deferred past May-23 per operator direction 2026-05-13. Phase 3.C.2 Fireblocks deferred to
-June-1 (successor: `fireblocks_copper_client_integration_2026_06_01.md`).
+Phase 1 AWS↔GCP parity deferred past May-23 per operator direction 2026-05-13. Phase 3.C.2 Fireblocks deferred to June-1
+(successor: `fireblocks_copper_client_integration_2026_06_01.md`).
 
 ## Deferred work — migrated to: defi_master
 
@@ -971,8 +973,8 @@ _Archived 2026-05-23 slot 2. Operator actions and post-cutover items migrated to
 - **Phase 6.B — Firebase SA JSON storage**: DEFERRED-AFTER-CUTOVER per operator 2026-05-12 PM. Non-Firebase DeFi auth
   path needed; spawn `defi_client_auth_path_2026_06_XX.md` when DeFi client auth decided.
 - **Phase 6.C — GHA WIF upgrade (OPERATOR ACTION)**: GCP WIF pool provisioning + GitHub App creation BLOCKED-OPERATOR.
-  Run `gha-wif-migration.md § 1` commands. Scaffold at `codex/07-security/gha-wif-migration.md`.
+  Run `gha-wif-migration.md § 1` commands. Scaffold at `/codex/07-security/gha-wif-migration.md`.
 - **Phase 8.D — Pre-cutover credential probe (OPERATOR ACTION)**: Must run
   `credential-probe.sh --mode live --archetype carry_staked_basis` from GCE VM with trading-VM SA. Provision 10 wrapped
   wallet keys (`csb-{eth,arb,base,poly,sol}-hot-*-v1-wrapped` etc.) + 11 canonical SM name aliases + 3 infra keys.
-  Pre-cutover-test-wallets-runbook at `codex/05-infrastructure/pre-cutover-test-wallets-runbook.md`.
+  Pre-cutover-test-wallets-runbook at `/codex/05-infrastructure/pre-cutover-test-wallets-runbook.md`.
