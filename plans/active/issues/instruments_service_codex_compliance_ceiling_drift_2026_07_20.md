@@ -105,3 +105,11 @@ function-size debt.
       failure mode is known (mirrors the fix already applied to the NEW
       `instruments_service/oracle/defi_removal_probe.py` module in the same session: `blob_exists()` pre-check +
       `except (json.JSONDecodeError, UnicodeDecodeError, OSError)` instead of bare `except Exception:`).
+
+## Note (2026-07-23, found via a sports issue-doc re-triage sweep)
+
+`sports_reference_function_size_qg_regression_2026_07_16.md` describes the SAME 3 functions/line-counts and was
+independently re-verified today as fully resolved by this same commit (`instruments-service@ac22305c`) — that doc's
+`status:` has been flipped to `resolved`. `status:` here intentionally left `open` (not flipped) — the size-regrowth
+todo above is done, but the other 2 follow-on todos (test_smoke_matrix audit, broad-except audit) are still `[ ]` and
+genuinely unstarted, so this doc as a whole is not fully resolved.
