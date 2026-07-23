@@ -40,6 +40,27 @@ hard-blocking since 2026-07-04). This skill covers what THAT gate cannot see:
 archival/consolidation. If a finding is actually about a plan contradicting another plan or its epic, route it there
 instead of duplicating that skill's work here.
 
+## Modes
+
+- **Interactive (default, operator present)**: `authoritative_for` collisions, codex-freshness-gate widening, and any
+  `locked_by:`-doc edit become a structured Q&A (Phase 3); operator decisions are applied immediately.
+- **Autonomous / AO-dispatched** (`/docs-reconcile --autonomous`, or dispatched to the AO VM with no operator on the
+  other end): NEVER pause for input. Apply the Phase-3 auto-fix classes as-is; park every genuine authority call
+  (`authoritative_for` collision, freshness-gate widening, `locked_by:` doc) as a `BLOCKED-OPERATOR-DECISION` entry in
+  `plans/active/issues/<slug>_<date>.md` with options + recommendation per the SUB_AGENT_MANDATORY_RULES escalation
+  format, and notify the operator. Inherits every safety rule (`cursor-configs/AUTONOMOUS_AGENT_RULES.md` when under
+  `/autonomous`).
+
+**ASK > PARK when the operator is reachable** (same calibration as `/plan-reconcile`, added there 2026-07-15 from a real
+failure): parking is for an operator who is genuinely gone, not for a mode flag. If the operator is in the session — and
+especially the moment they reply to anything — switch to interactive and ASK, even mid-autonomous-run. Re-evaluate every
+turn; the mode is a property of operator reachability, not of how the run was invoked.
+
+**Never weakened by either mode:** the codex-freshness gate stays a report-only widen-ask (this skill cannot flip
+`check_codex_doc_freshness.py`'s scope itself, in autonomous mode or otherwise); an `authoritative_for` collision is
+never auto-resolved by picking a side — evidence can show the collision exists but never which doc should keep the
+topic, so it is always a park/ask, never an auto-fix, regardless of mode.
+
 ## Phase 0 — deterministic checks (cheap, no agents)
 
 Run first, in order, over the live PM tree:

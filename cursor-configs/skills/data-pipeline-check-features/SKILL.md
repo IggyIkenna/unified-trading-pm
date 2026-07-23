@@ -39,6 +39,18 @@ is a genuine, complete proof (like `data-pipeline-check-is`). `check_exists` **f
 If the invoking prompt doesn't carry an explicit `--day YYYY-MM-DD`, **stop and ask the operator** — do not default to
 "today". A feature compute pointed at a day whose candle inputs aren't captured proves nothing and burns real VM spend.
 
+## Modes
+
+- **Interactive (default, operator present)**: "Invoked plainly" below — run once through the scoped family matrix for
+  the given `--day`, stop, report.
+- **Autonomous / AO-dispatched**: "Invoked under `/autonomous`" below — no-pause loop per step 7. `--day` still MUST
+  come from the operator or the dispatching plan/task in either mode — this skill never invents it.
+
+**ASK > PARK when the operator is reachable** (same calibration as `/plan-reconcile`): a genuine ambiguity this skill
+can't resolve deterministically (BLOCKED-CREDENTIALS, an infra outage vs. a real regression) gets asked directly if the
+operator is in the session, and parked as a `BLOCKED-OPERATOR-DECISION` issue-doc entry only when nobody's reachable —
+never silently guessed at or skipped either way.
+
 ## 1. Composing with `/autonomous`
 
 - **Invoked plainly**: run Phases 0→2 once through the scoped family matrix for that day, then stop and report.

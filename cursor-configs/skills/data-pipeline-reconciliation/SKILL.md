@@ -115,6 +115,22 @@ raw-tick exactly as before. `--layer candles` audits the MDPS processed-candle e
 a hardcoded venue / prefix / data_type list. A hardcoded prefix list is precisely the Axis-10 drift bug that made a
 phantom-audit `--apply` false-flag real captured rows as phantom.
 
+## Modes
+
+- **Interactive (default, operator present)**: run once for the given `--asset-group`/`--layer`, write + print the
+  report, stop (§1).
+- **Autonomous / AO-dispatched**: no-pause loop across the `(asset_group × layer)` matrix (§1, §6); MAY autonomously
+  dispatch the read-only Tier-2 SPOT scan (§7 "Autonomous boundary" — it reads parquets and writes only a results index,
+  never prod DATA). Every §4b human-only hard stop (prod-bucket delete, legacy-delete-after-copy, the `batch_massive`
+  purge, the `instrument_type` casing migration, the `dex_pools`/`lending_indices` delete) stays human-only regardless
+  of how many ticks have passed — the loop is throttle, never bypass.
+
+**ASK > PARK when the operator is reachable** (same calibration as `/plan-reconcile`): §6 is correct that an axis
+blocked on an operator ruling stays blocked across ticks rather than re-deriving it every pass — that's the right
+behavior when nobody's there to answer. But if the operator IS present in the session, ask directly the moment you'd
+otherwise park, rather than silently moving to the next asset_group; re-check reachability every tick, not just at
+invocation — the mode is a property of who's around, not of how the run was invoked.
+
 ## 1. Composing with `/autonomous`
 
 - **Invoked plainly** (`/data-pipeline-reconciliation --asset-group defi`): run Phases 0→2 once for that asset_group,
