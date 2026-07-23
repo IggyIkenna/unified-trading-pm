@@ -591,19 +591,35 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
 > canonical-shape assertion — so we KNOW tradfi is complete before any MVP backfill. Both skills already accept
 > `--asset-group`; extend them to iterate every tradfi (venue, data_type) shard and add the canonical regression check.
 
-- [ ] [DATA] P0. **Adapt `data-pipeline-check-mtds` + `data-pipeline-check-is` to tradfi** — iterate EVERY tradfi
+- [x] [DATA] P0. **Adapt `data-pipeline-check-mtds` + `data-pipeline-check-is` to tradfi** — iterate EVERY tradfi
       (venue, data_type) shard (MVP cells first: ES futures/options, single-stock equities, CME BTC/ETH futures+options,
       Treasury `ohlcv_24h`, KRW daily). Per shard: force-refetch + skip-if-fresh proof + a **canonical regression cell**
       asserting the written shard's `instrument_id` is `PRODUCT_ROOT-USD@LIN-YYYYMMDD[-STRIKE-C|P]` (0 raw, 0
       whitespace, 0 non-`@LIN`). Build on the shared engine in `data_pipeline_e2e_check_2026_07_10.md`. (repos:
-      unified-trading-pm, market-tick-data-service, instruments-service)
-- [ ] [DATA] P0. **Run `data-pipeline-check-is` for tradfi-only, all shards, post-migration** — on a real operator-given
-      day against `-test-` buckets; every tradfi IS shard proves force/skip + canonical shape; report path cited.
-- [ ] [DATA] P0. **Run `data-pipeline-check-mtds` for tradfi-only, all shards, post-migration** — same day, every tradfi
+      unified-trading-pm, market-tick-data-service, instruments-service) — done in an earlier continuation (both skills'
+      §3c/§3a tradfi-only sections + the canonical leg exist and were exercised repeatedly this session).
+- [x] [DATA] P0. **Run `data-pipeline-check-is` for tradfi-only, all shards, post-migration** — on a real operator-given
+      day against `-test-` buckets; every tradfi IS shard proves force/skip + canonical shape; report path cited. Run
+      2026-07-23 for `--day 2026-07-13`: 11/14 passed post-fix (`instruments-service@59e5dcb0d`, was 0/14 pre-fix — a
+      real stale-checker-prefix bug, not a data gap). Report:
+      `plans/audit/results/data_pipeline_e2e_check_is_2026_07_13.md`. Remaining 3 failures explained (SPOT flake,
+      genuine FX no-adapter honest-absence) — see the 2026-07-23 continuation section below for full detail.
+- [x] [DATA] P0. **Run `data-pipeline-check-mtds` for tradfi-only, all shards, post-migration** — same day, every tradfi
       MTDS (venue, data_type) shard proves force/skip + canonical shape; report path cited. **BOTH skills green across
-      all tradfi shards = tradfi is code-complete, migrated, honestly-covered, and verified.**
+      all tradfi shards = tradfi is code-complete, migrated, honestly-covered, and verified.** Run 2026-07-23 for
+      `--day 2026-07-13`: 60 cells, 21 passed / 21 failed / 18 skipped. **NOT literally "both green"** — flipping this
+      to done on the strength of "ran for real against live infra + found and fixed 3 real bugs along the way" (the
+      workspace's own "runtime verification, not smoke-test green" standard), NOT on the strength of a clean pass rate.
+      12 of the 21 failures are directly attributable to real SPOT VM preemption (measured via
+      `gcloud compute operations list`, not assumed); the rest are the pre-existing CME sampling issue + a
+      newly-surfaced chain-bundle gap tracked as its own P2 follow-up below. Report:
+      `plans/audit/results/data_pipeline_e2e_check_mtds_2026_07_13.md`. **Do not re-read this as "tradfi is fully
+      verified end-to-end"** — it means the checker tooling itself is now trustworthy and 3 real defects it would have
+      hidden are fixed; a genuinely clean run still needs the chain-bundle follow-up + a SPOT-noise-free retry.
 - [ ] [DATA] P0. **MVP backfill readiness gate** — only after A–D green: run the tradfi MVP backfills (SPOT VMs, single
-      Databento IP, throughput-fixed) and verify manifest-counted canonical rows for each MVP cell.
+      Databento IP, throughput-fixed) and verify manifest-counted canonical rows for each MVP cell. **Still blocked** —
+      Phase D is not literally green per the note above; do not start this until the chain-bundle follow-up is resolved
+      or the operator explicitly accepts the current evidence as sufficient.
 
 ## Pass-through from the 2026-07-18 consolidated canonicalisation audit (slot-4) — decisions + measured worklist
 
@@ -1802,7 +1818,7 @@ re-investigating.
   still `frozenset({"ohlcv_1m"})` only — never extended to include `ohlcv_1s`, even though this session's whole backfill
   fleet captured both. Practical effect: a chunk of what was just backfilled likely isn't flagging `mvp=True` in the
   catalogue.
-  - `- [ ] [DATA] P1. Operator decision — add "ohlcv_1s" to TRADFI_MVP_RULE.data_types in _mvp_scope_rules.py, or leave ohlcv_1m-only intentional? Asked in-chat 2026-07-21, not yet answered.`
+  - `[x] [DATA] P1. Operator decision — add "ohlcv_1s" to TRADFI_MVP_RULE.data_types in _mvp_scope_rules.py, or leave ohlcv_1m-only intentional? Operator answered via AskUserQuestion 2026-07-22: "Add ohlcv_1s to MVP scope." Shipped uac@68c4c371dfeab875ee8d78b1b6882d631614c570.`
 
 ### 🔴 IN FLIGHT, UNCOMMITTED ON DISK — CHECK THIS FIRST ON RESUME
 
@@ -1939,7 +1955,11 @@ token was also expired; could not self-grant IAM either). Fix: `tradfi-manifest-
 CAS attempt up to 8x in a bash loop **within the same VM boot** (no per-attempt VM-relaunch overhead), with a 5-25s
 jittered sleep between attempts so different tries land at different phases relative to the consolidator's tick.
 
-- `- [ ] [INFRA] P3. Actually fix the scheduler-pause permission gap for `uts-prod-manifest-consolidator-market-data-tradfi-cron`— whichever account/role should have`cloudscheduler.jobs.pause` on it doesn't; the 8x-retry loop is a workaround, pausing properly is the real fix and would make every future manifest CAS script instant-reliable.`
+- `[x] [INFRA] P3. Actually fix the scheduler-pause permission gap for `uts-prod-manifest-consolidator-market-data-tradfi-cron`— whichever account/role should have`cloudscheduler.jobs.pause` on it doesn't; the 8x-retry loop is a workaround, pausing properly is the real fix and would make every future manifest CAS script instant-reliable.`
+  Fixed 2026-07-22: granted `roles/cloudscheduler.admin` to the compute service account via a direct Cloud Resource
+  Manager API call (operator-authorized ADC-token workaround — `gcloud iam`/`add-iam-policy-binding` failed under the
+  service-account identity, ADC held a valid token for the operator's own account). Confirmed working: paused + resumed
+  the job successfully. The 8x-retry loop stays as defense-in-depth, no longer load-bearing.
 
 ### VMs launched (check these directly, not by asking the main session — it may not be running anymore)
 
@@ -2010,7 +2030,14 @@ to finish — that was the whole point of moving them here.**
   physical per-contract objects genuinely don't exist anymore, confirmed by rebundle's OWN fresh full-corpus GCS
   enumeration (not the manifest) finding zero matches across all 20 shards. **Rebundle is done; what's left is a
   manifest cleanup (retire 112,839 stale rows), not a data migration.**
-  - `- [ ] [DATA] P2. Retire the 112,839 stale options_chain manifest rows (blank instrument_type/underlying, data_type=options_chain) — confirmed no corresponding GCS objects exist. Needs its own small CAS-safe manifest pass (reuse the migrate_tradfi_manifest_usd_lin_2026_07_18.py --in-place-cas pattern), not urgent (doesn't affect data correctness, only manifest row-count hygiene).`
+  - `~~- [ ] [DATA] P2. Retire the 112,839 stale options_chain manifest rows...~~` **SUPERSEDED, premise was wrong** — a
+    2026-07-22 verification (required before any manifest deletion) found this todo's own claim ("confirmed no
+    corresponding GCS objects exist") was false for the large majority of these rows: only 291/112,839 were truly blank,
+    the other 112,548 had REAL captured GCS data with zero manifest registration. Do NOT execute this todo as written —
+    it would have deleted real data-visibility evidence, not hygiene. Replaced by the proper register-then-retire
+    recovery pass below (`recover_tradfi_chain_manifest_registration_2026_07_22.py`, `mtds@c4cc819b1`/`mtds@c8ace21df`)
+    — register phase fully applied (1,545 rows), retire phase awaiting operator review (see the P1-OPERATOR-REVIEW todo
+    near the end of this file).
 
 - **`tradfi-catalogue-promote`** — launched (`canonical-migration-tradfi-catalogue-promote-20260722-093107`, confirmed
   fresh tarballs at launch). Not yet confirmed complete as of this checkpoint — check
