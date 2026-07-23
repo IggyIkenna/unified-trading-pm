@@ -120,7 +120,12 @@ yet, for ANY launcher family, not just candle-migration.
       data), cross-reference against which of those already call `lc_write_preemption_signal_file` (confirmed today:
       only 3 — `launch-cefi-sharded-backfill.sh`, `launch-defi-backfill-vm.sh`,
       `launch-mtds-solana-defi-backfill-vm.sh`). Report the exact resulting list before touching more files — likely
-      several dozen, not a quick pass.
+      several dozen, not a quick pass. **Independent corroboration (2026-07-23, different session)**:
+      `launch-mtds-dex-swaps-backfill-vm.sh` is ALSO confirmed missing this wiring (grepped directly, zero matches for
+      `exit_code_fleet_monitor`/`auto_recover`/ `PREEMPTED` in that file) — this is the
+      `lst_rate_honest_coverage_2026_07_21.md` Phase 5 #2 backfill VM, which preempted 4 times in one session (manually
+      caught + relaunched each time, no auto-recovery fired). Confirms this is a real, general gap affecting multiple
+      independent launchers, not isolated to the canonical-migration one this doc was originally filed against.
 - [ ] 9. [SCRIPT] P3. Apply the same 2-3 line pattern (`lc_write_preemption_signal_file` call + `--metadata-from-file`
       flag + verify `--instance-termination-action=DELETE`) to every launcher item 8 identifies as missing it. Batch by
       quality-gate sweep per the workspace's QG-sweep-batching convention, not one commit per file.
