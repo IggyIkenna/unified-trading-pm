@@ -49,6 +49,18 @@ This check is meaningless without a real target day. If the invoking prompt does
 `--day YYYY-MM-DD`, **stop and ask the operator for one** before doing anything else — do not default to "today" or any
 other synthetic date. A smoke check silently run against the wrong day proves nothing and wastes real VM spend.
 
+## Modes
+
+- **Interactive (default, operator present)**: "Invoked plainly" below — run once through the full MVP
+  `(asset_group, venue)` matrix for the given `--day`, stop, report.
+- **Autonomous / AO-dispatched**: "Invoked under `/autonomous`" below — no-pause loop per step 6. `--day` still MUST
+  come from the operator or the dispatching plan/task in either mode — this skill never invents it.
+
+**ASK > PARK when the operator is reachable** (same calibration as `/plan-reconcile`): a genuine ambiguity this skill
+can't resolve deterministically (BLOCKED-CREDENTIALS, an infra outage vs. a real regression) gets asked directly if the
+operator is in the session, and parked as a `BLOCKED-OPERATOR-DECISION` issue-doc entry only when nobody's reachable —
+never silently guessed at or skipped either way.
+
 ## 1. Composing with `/autonomous`
 
 - **Invoked plainly** (`/data-pipeline-check-is --day 2026-07-09`): run Phases 0→3 once through the full MVP

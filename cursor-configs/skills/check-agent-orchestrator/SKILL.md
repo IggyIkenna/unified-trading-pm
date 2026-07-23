@@ -25,6 +25,18 @@ command **on the VM itself**, so `curl localhost:8765/api/backlog` succeeds agai
 mode (`auth.ALLOW_ANONYMOUS=True` per `agent-orchestrator/dashboard/API_REFERENCE.md`) — no inbound firewall change, no
 JWT, and every call is CloudTrail-audited. This is genuinely read-only: only `GET` endpoints are ever called.
 
+## Modes
+
+This skill has no judgment-call findings to route — it only reads state and reports it (§3 below is an explicit
+non-goal: it never diagnoses or restarts anything), so there is nothing for an operator to rule on either way.
+
+- **Interactive (default, operator present)**: run the check, relay the result directly in the chat response.
+- **Autonomous / AO-dispatched**: run the check the same way; write the result into the calling plan's Progress Log (or
+  the dispatching task's own report) instead of a chat response, since there is no chat to relay it into. If the
+  fleet-wide-stall signal (§2, sustained zero movement well past the 35-min window) fires while unattended, that IS a
+  genuine operator-notification case — page it per the AO-alerting SSOT rather than silently logging it and moving on;
+  everything else here is routine status, never an escalation.
+
 ## 1. Run the check
 
 ```bash

@@ -601,7 +601,7 @@ Both clauses are load-bearing and empirically verified:
 5. Resume the consolidator and verify the post-purge row count **survives one full cycle** before declaring done. Re-run
    the count at T+1 cycle and T+24h.
 
-### 3.3 Relabel pass for the 37,426 never-captured `attempted_failed` rows
+### 3.3 Relabel pass for the 37,426 never-captured `attempted_failed` rows — predicate CONFIRMED 2026-07-23
 
 These sit on pairs that never captured anything (dominated by bare-BETFAIR's 37,426 and the legacy prediction-venue
 rows) and are provably false failure claims. A one-off relabel to honest absence is the right instrument — **not** a
@@ -609,8 +609,35 @@ gate, since Part 1 stops the source. **Precedent script to model on:**
 `market-tick-data-service/scripts/relabel_sports_odds_no_coverage_2026_06_21.py`. **Constraint:** same
 consolidator-pause + per-VM-union + `_index/purge_backups/` rules as 3.2. Relabel is reversible from the snapshot; it
 does not delete rows, so it does **not** hit the human-only delete hard stop — but it **does** move the coverage number,
-so it is still gated on Part 4. **Test:** dry-run diff report asserting the 67,206 `attempted_failed` rows that are
-on-or-after their pair's first capture are **untouched** (genuine fetch failures — no gate should suppress them).
+so it is still gated on Part 4.
+
+**✅ Predicate confirmed against real prod data (2 independent agents, blind to each other, both exact-match on first
+try, no tuning):** `never_captured = capture_status=='attempted_failed' AND (venue,league_id) NOT IN LIVE_PAIRS`
+(`LIVE_PAIRS` = distinct `(venue,league_id)` with `capture_status=='captured'`) → **37,426, exact match**, reading the
+sports manifest via `instruments-service/scripts/measure_honest_coverage.py`'s `_read_manifest("sports", merge=True)`
+with its `_READ_COLUMNS*` lists monkeypatched in-process to add `league_id` (a real manifest column, not derived from
+`instrument_id`). **Venue breakdown of the 37,426 is 100% `venue=='BETFAIR'`** (not a mix with prediction-venue rows as
+the section title's "dominated by" implied) with real, non-blank `league_id` values (MLS, SEGUNDA_DIVISION, SERIE_B,
+SERIE_A, LA_LIGA, etc.) — "bare-BETFAIR" refers to the unqualified venue string, not an empty league_id.
+
+**Test in the original spec above (67,206 on-or-after-first-capture) no longer reproduces — explained, not a predicate
+bug.** Both agents got the same complement instead: 20,590 (`attempted_failed AND (venue,league_id) IN LIVE_PAIRS`), and
+37,426 + 20,590 = 58,016 = today's entire `attempted_failed` population — a clean, internally-consistent partition.
+Today's total `attempted_failed` (58,016) is itself far below the doc's 2026-07-20 measurement (112,277) — consistent
+with an actively-churning live backfill/retry pipeline closing out failures over the 3 days since this doc was written
+(also: `captured` rose 427,163→548,715, `empty_confirmed` fell 1,267,113→1,223,527 in the same window). No partition of
+today's data can reproduce 67,206; it is definitionally impossible today, not a derivation error — re-run this section's
+predicate immediately before writing relabel code, exactly as this doc's own Part 4.1 caveat already prescribes for
+stale numbers. A finer date-based split of the 20,590 IN-`LIVE_PAIRS` side (row date **on-or-after** vs. **before** that
+pair's own first-captured date — the doc's literal "on-or-after their pair's first capture" wording) gives 12,945
+on-or-after (genuine current failure) + 7,645 before-first-capture. **7,645 is an exact match to a separately-cited
+figure elsewhere in this doc** (line ~878, the deprioritized `first_capture_date` third-gate-axis measurement) — a
+disjoint population from the 37,426 (that one's entirely on never-captured pairs; this one's on pairs that DID
+eventually capture, pre-first-capture) and not double-counted with it. Full three-way split today: **37,426 (dead pair,
+unchanged) + 7,645 (live pair, pre-first-capture, unchanged) + 12,945 (live pair, genuine current failure, down from
+67,206) = 58,016** — two of three components are stable/frozen, only the actively-retried component shrank. **Test
+(updated):** dry-run diff report asserting the on-or-after-first-capture rows (currently 12,945, not 67,206 — re-measure
+at execution time) are **untouched** (genuine fetch failures — no gate should suppress them).
 
 ### 3.4 Drop the phantom uppercase `ODDS` manifest rows — BLOCKED on 2.1
 
@@ -958,9 +985,20 @@ without them regardless of how fast (1)-(2) resolve.
       (`LIVE_PAIRS` / `row_count IN (0, NULL)` narrowing) is now superseded for scoping purposes; retained in place
       below for its documented failure-mode reasoning (UNION requirement, `SOURCE_RETURNED_ZERO` carve-out), not as the
       operative predicate.
-- [ ] [SCRIPT] P1. **Restate 3.3's target-row SQL predicate explicitly** — the doc cross-references 3.2's `LIVE_PAIRS`
-      concept for the 37,426 never-captured `attempted_failed` rows but never repeats a concrete query; derive and
-      validate it reproduces 37,426 before writing any relabel code.
+- [x] [SCRIPT] P1. ✅ **RESOLVED 2026-07-23 — predicate derived + independently verified against real prod data, exact
+      match.** Two independent agents (blind to each other's approach) both derived: `LIVE_PAIRS` = distinct
+      `(venue, league_id)` pairs with `capture_status=='captured'`, over the sports manifest read via
+      `instruments-service/scripts/measure_honest_coverage.py`'s `_read_manifest("sports", merge=True)` (loaded via
+      `importlib`, never edited on disk);
+      `never_captured = capture_status=='attempted_failed' AND (venue,league_id)     NOT IN LIVE_PAIRS`. **Both agents
+      got exactly 37,426 on the first straightforward run, no filter-tuning.** Schema note for whoever writes the
+      relabel code: `league_id` IS a real, first-class manifest column
+      (`unified-trading-library/unified_trading_library/manifest_writer/_rows.py:64`, `_read_index.py`,
+      `_queries.py:69`) — it is just absent from `measure_honest_coverage.py`'s own narrower `_READ_COLUMNS*` lists,
+      which must be monkeypatched in-process (same pattern
+      `unified-api-contracts/scripts/measure_honest_coverage_formula_delta.py` already uses for `error_reason`) to
+      include it; do not re-derive league_id from `instrument_id` parsing, read it directly. See the full derivation
+      write-up + the 67,206 cross-check discrepancy (explained, not a bug) in §3.3 below.
 - [ ] [DECISION] P2. **Confirm 3.1→3.2→3.3→3.4 execution order** — 4.2's decision explicitly sequences 3.1 before 3.2;
       3.3/3.4 have no stated relative order to each other or to 3.1/3.2 beyond "all gated on 3.0."
 - [ ] [DECISION] P2. **Confirm whether 3.4 needs 3.2's full 5-step procedure** (pause consolidator, snapshot every
@@ -1111,3 +1149,29 @@ No conflicts with any other doc in this batch. `sports_live_writer_instrument_ty
 confused but are genuinely different axes — K1/K2 is about `instrument_type`/`data_type` on the raw sports odds writer,
 4.3 is about the `data_type` string's own casing vocabulary (`odds` vs `ODDS`) for a frozen-legacy dataset — this doc's
 own §4.3 already documents that distinction correctly, no correction needed here.
+
+**2026-07-23 — §3.3 P1 predicate resolved via 2-agent independent derivation (workflow `wf_701f070c-2a0`).** Both
+agents, blind to each other's implementation, derived the same predicate from the doc's own §3.2/§3.3 text and got an
+**exact match on 37,426** on the first run, no tuning. Real schema discovery in the process: `league_id` is a genuine
+manifest column (`unified-trading-library/manifest_writer/_rows.py:64` et al.), just absent from
+`measure_honest_coverage.py`'s own narrower default read-columns — must be monkeypatched in-process (same pattern
+`measure_honest_coverage_formula_delta.py` already uses for `error_reason`), not re-derived from `instrument_id`
+parsing. The doc's other §3.3 test figure (67,206) did **not** reproduce, but both agents independently landed on the
+same complement (20,590) and traced why: today's total `attempted_failed` (58,016) is itself far below the doc's
+2026-07-20 snapshot (112,277) — an actively-churning retry pipeline, not a predicate error. A finer date-split recovered
+a three-way partition (37,426 dead-pair + 7,645 live-pair-pre-first-capture + 12,945 live-pair-genuine- failure =
+58,016) where the 7,645 figure is an exact, independent match to a wholly separate citation elsewhere in this same doc
+(the deprioritized `first_capture_date` axis measurement, line ~878) — strong corroboration the methodology is right
+even though the headline 67,206 figure is simply stale. Full write-up in §3.3 above; both the P1 SCRIPT todo and the
+§3.3 section itself updated with the confirmed predicate, the schema note, and the explained discrepancy. Phase 5
+execution itself was NOT touched — this was read-only investigation against real prod data (verified `git status` clean
+on `instruments-service`/`unified-api-contracts` after the run), no manifest writes, no GCS mutation.
+
+**Lesson — this exact edit was lost once in transit, recovered from a pre-commit patch backup, not re-derived.** A
+quickmerge attempt's stash-aside-foreign-files mechanism swept this file's diff away along with unrelated foreign WIP;
+neither `git stash list` nor its top 3 entries contained it, but `~/.cache/prek/patches/*.patch` (pre-commit's own
+patch-backup directory, a separate mechanism from `git stash`) did —
+`grep -l "RESOLVED 2026-07-23" ~/.cache/prek/patches/*.patch` found it in 5 dated patches. `git apply`/`patch --fuzz`
+both failed to cleanly reapply the bundled multi-file patch against the since-moved HEAD, so the edits were
+reconstructed directly (same content, verified against the recovered patch) rather than risk a partial/fuzzy apply
+corrupting the file.

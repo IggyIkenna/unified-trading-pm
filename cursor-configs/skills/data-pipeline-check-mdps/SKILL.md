@@ -39,6 +39,18 @@ This check is meaningless without a real target day. If the invoking prompt does
 `--day YYYY-MM-DD`, **stop and ask the operator for one** — do not default to "today". A smoke check run against a day
 with no captured raw ticks proves nothing and burns real VM spend.
 
+## Modes
+
+- **Interactive (default, operator present)**: "Invoked plainly" below — run once through the scoped candle-shard matrix
+  for the given `--day`, stop, report.
+- **Autonomous / AO-dispatched**: "Invoked under `/autonomous`" below — no-pause loop per step 7. `--day` still MUST
+  come from the operator or the dispatching plan/task in either mode — this skill never invents it.
+
+**ASK > PARK when the operator is reachable** (same calibration as `/plan-reconcile`): a genuine ambiguity this skill
+can't resolve deterministically (BLOCKED-CREDENTIALS, an infra outage vs. a real regression) gets asked directly if the
+operator is in the session, and parked as a `BLOCKED-OPERATOR-DECISION` issue-doc entry only when nobody's reachable —
+never silently guessed at or skipped either way.
+
 ## 1. Composing with `/autonomous`
 
 - **Invoked plainly**: run Phases 0→2 once through the scoped matrix for that day, then stop and report.

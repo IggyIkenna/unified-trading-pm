@@ -26,6 +26,22 @@ not done.
 
 ---
 
+## Modes
+
+- **Interactive (default, operator present)**: run Steps 1–8 as written; Step 3's "big finding, notify the operator"
+  cases and the final Step 8 verdict go directly into the chat response — the operator is right there to read them.
+- **Autonomous / AO-dispatched** (mid-loop under `/autonomous`, or a background AO worker about to compact): there is no
+  chat to relay into, so every operator-facing output becomes a WRITE, not a message. Step 3's "big finding, notify the
+  operator" cases MUST land in `plans/active/issues/<slug>_<date>.md` as a `BLOCKED-OPERATOR-DECISION` entry with
+  options + recommendation (SUB_AGENT_MANDATORY_RULES escalation format) — never silently deferred, since a run that
+  hides its own findings from the very ritual meant to prevent loss defeats the point. Step 8's verdict goes into the
+  plan's Progress Log (this ritual's output IS the autonomous loop's rule-6 journal entry for this tick — they are the
+  same artifact, not two separate write-ups). **ASK > PARK still applies**: if the operator is actually present and
+  reachable in this session despite an `/autonomous` flag, ask directly instead of parking — the flag means "don't block
+  on them," not "they're gone."
+- **Never weakened by either mode**: the Cardinal Rule (durable = committed AND pushed) and Step 7's verification
+  (`git rev-list --count` MUST be 0) apply identically — there is no autonomous shortcut that skips actually pushing.
+
 ## Step 1 — Audit for loss. Do this FIRST; it is the step people skip.
 
 Ask, and actually check, not from memory:
