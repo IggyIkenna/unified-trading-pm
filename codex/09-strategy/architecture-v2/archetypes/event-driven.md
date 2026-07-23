@@ -18,15 +18,15 @@ related:
     ../families/event-driven.md,
     ../category-instrument-coverage.md,
     ../cross-cutting/execution-policies.md,
-    ml-directional-event-settled.md,
+    /codex/09-strategy/architecture-v2/archetypes/ml-directional-event-settled.md,
   ]
 created: 2026-04-17
 authoritative_for: [EVENT_DRIVEN archetype specification]
 referenced_by:
   [
-    codex/09-strategy/_archived_pre_v2/cross-cutting/event-driven-macro.md,
-    codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md,
-    codex/09-strategy/architecture-v2/families/event-driven.md,
+    /codex/09-strategy/_archived_pre_v2/cross-cutting/event-driven-macro.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md,
+    /codex/09-strategy/architecture-v2/families/event-driven.md,
     plans/epics/sports_master.md,
   ]
 owner:

@@ -1,7 +1,9 @@
 ---
 doc_type: codex-ssot
 title: Cross-Chain Smart Order Routing Rebalancing
-summary: "Pre-v2: cross-chain SOR rebalancing meta-strategy — monitors lending/LP/basis yields across 19 EVM chains + Solana, emits TRANSFER instructions when net APY gain beats bridge + gas + transit cost."
+summary:
+  "Pre-v2: cross-chain SOR rebalancing meta-strategy — monitors lending/LP/basis yields across 19 EVM chains + Solana,
+  emits TRANSFER instructions when net APY gain beats bridge + gas + transit cost."
 status: superseded
 nature: ssot
 asset_group: [meta]
@@ -12,11 +14,18 @@ tags: [defi, cross-chain, strategy, yield, migration]
 related:
   [
     ../../architecture-v2/cross-cutting/transfer-rebalance.md,
-    cross-chain-yield-arb.md,
+    /codex/09-strategy/_archived_pre_v2/defi/cross-chain-yield-arb.md,
   ]
 created: 2026-03-28
 authoritative_for: []
-referenced_by: [codex/09-strategy/_archived_pre_v2/STRATEGY_CATALOG_pre_v2.md, codex/09-strategy/_archived_pre_v2/defi/btc-lending-yield.md, codex/09-strategy/_archived_pre_v2/defi/cross-chain-yield-arb.md, codex/09-strategy/_archived_pre_v2/defi/multi-chain-lending-yield.md, codex/09-strategy/_archived_pre_v2/defi/omnichain-transfers.md]
+referenced_by:
+  [
+    /codex/09-strategy/_archived_pre_v2/STRATEGY_CATALOG_pre_v2.md,
+    /codex/09-strategy/_archived_pre_v2/defi/btc-lending-yield.md,
+    /codex/09-strategy/_archived_pre_v2/defi/cross-chain-yield-arb.md,
+    /codex/09-strategy/_archived_pre_v2/defi/multi-chain-lending-yield.md,
+    /codex/09-strategy/_archived_pre_v2/defi/omnichain-transfers.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

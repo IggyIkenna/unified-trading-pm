@@ -12,10 +12,17 @@ stage: [meta]
 repos: [deployment-api, deployment-service, deployment-ui, instruments-service]
 scope: [engineer, admin]
 tags: [honest-coverage, ui, data-status, manifest, deployment, data-quality]
-related: [../02-data/availability-manifest-and-data-status.md, ../02-data/honest-coverage-model.md]
+related: [/codex/02-data/availability-manifest-and-data-status.md, /codex/02-data/honest-coverage-model.md]
 created: 2026-05-12
 authoritative_for: [data-status honest-coverage UI surface, HonestCoverageCard component contract]
-referenced_by: [plans/epics/cefi_master.md, plans/epics/defi_master.md, plans/epics/predictions_master.md, plans/epics/sports_master.md, plans/epics/tradfi_master.md]
+referenced_by:
+  [
+    plans/epics/cefi_master.md,
+    plans/epics/defi_master.md,
+    plans/epics/predictions_master.md,
+    plans/epics/sports_master.md,
+    plans/epics/tradfi_master.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -114,7 +121,7 @@ Source: `deployment-api/deployment_api/routes/data_status.py` → `get_honest_co
 
 ## Cross-references
 
-- `codex/02-data/availability-manifest-and-data-status.md` § "Honest-coverage measurement script + UI surface"
+- `/codex/02-data/availability-manifest-and-data-status.md` § "Honest-coverage measurement script + UI surface"
 - `instruments-service/scripts/measure_honest_coverage.py` — the measurement script
 - `deployment-service/scripts/vm/launch-measure-honest-coverage-vm.sh` — cron VM launcher
 - `deployment-api/deployment_api/routes/data_status.py` → `get_honest_coverage()`

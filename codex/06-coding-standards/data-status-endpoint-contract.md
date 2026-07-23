@@ -12,7 +12,12 @@ stage: [meta]
 repos: [deployment-api]
 scope: [engineer, admin]
 tags: [data-status, honest-coverage, quality-gates, uac, data-pipeline, verification]
-related: [../02-data/honest-coverage-model.md, ../02-data/availability-manifest-and-data-status.md, ../02-data/data-status-drilldown.md]
+related:
+  [
+    /codex/02-data/honest-coverage-model.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/02-data/data-status-drilldown.md,
+  ]
 created: 2026-05-22
 authoritative_for: [data-status coverage-helper endpoint contract (compute_coverage_for_bucket / STEP 5.90)]
 referenced_by:

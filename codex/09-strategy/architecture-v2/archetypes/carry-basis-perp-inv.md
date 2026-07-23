@@ -16,22 +16,22 @@ scope: [engineer, admin]
 tags: [strategy, carry, defi, cefi, execution, archetype, bybit]
 related:
   [
-    carry-recursive-borrow-perp-hedged.md,
-    carry-recursive-staked.md,
-    carry-recursive-borrow-lending-only.md,
-    carry-basis-perp.md,
-    carry-staked-basis-dated.md,
+    /codex/09-strategy/architecture-v2/archetypes/carry-recursive-borrow-perp-hedged.md,
+    /codex/09-strategy/architecture-v2/archetypes/carry-recursive-staked.md,
+    /codex/09-strategy/architecture-v2/archetypes/carry-recursive-borrow-lending-only.md,
+    /codex/09-strategy/architecture-v2/archetypes/carry-basis-perp.md,
+    /codex/09-strategy/architecture-v2/archetypes/carry-staked-basis-dated.md,
     ../families/carry-and-yield.md,
   ]
 created: 2026-05-18
 authoritative_for: [CARRY_BASIS_PERP_INV archetype specification (recursive borrow + perp-hedged carry)]
 referenced_by:
   [
-    codex/09-strategy/architecture-v2/archetypes/carry-basis-dated-inv.md,
-    codex/09-strategy/architecture-v2/archetypes/carry-recursive-borrow-lending-only.md,
-    codex/09-strategy/architecture-v2/archetypes/carry-recursive-borrow-perp-hedged.md,
-    codex/09-strategy/architecture-v2/families/carry-and-yield.md,
-    codex/09-strategy/strategy-summary.md,
+    /codex/09-strategy/architecture-v2/archetypes/carry-basis-dated-inv.md,
+    /codex/09-strategy/architecture-v2/archetypes/carry-recursive-borrow-lending-only.md,
+    /codex/09-strategy/architecture-v2/archetypes/carry-recursive-borrow-perp-hedged.md,
+    /codex/09-strategy/architecture-v2/families/carry-and-yield.md,
+    /codex/09-strategy/strategy-summary.md,
   ]
 owner:
 last_reviewed:
@@ -122,20 +122,20 @@ Worked example (wstETH/WETH E-Mode, ltv=0.93, d=8, S=3.2%, B=2.4%, f=+12% APR):
 
 ```yaml
 # Required on-chain params:
-lending_protocol: AAVE_V3          # AAVE_V3 | MORPHO
-lending_chain: ethereum            # ethereum | arbitrum | base
-lst_asset: wstETH                  # LST collateral token
-borrow_asset: WETH                 # borrowed token
+lending_protocol: AAVE_V3 # AAVE_V3 | MORPHO
+lending_chain: ethereum # ethereum | arbitrum | base
+lst_asset: wstETH # LST collateral token
+borrow_asset: WETH # borrowed token
 
 # Recursion params:
-target_ltv: 0.90                   # per-loop LTV (must be ≤ liquidation_threshold - 0.05)
-max_recursion_depth: 8             # max supply-borrow iterations
-flash_loan_enabled: true           # use flash loan for atomic recursion (Phase 4 Solidity)
+target_ltv: 0.90 # per-loop LTV (must be ≤ liquidation_threshold - 0.05)
+max_recursion_depth: 8 # max supply-borrow iterations
+flash_loan_enabled: true # use flash loan for atomic recursion (Phase 4 Solidity)
 
 # CeFi perp hedge params:
-perp_venue: hyperliquid            # hyperliquid | bybit
+perp_venue: hyperliquid # hyperliquid | bybit
 perp_instrument: ETH-PERP
-target_net_delta: 0.0              # 0 = fully delta-neutral
+target_net_delta: 0.0 # 0 = fully delta-neutral
 usdc_margin_buffer_min_pct: "0.30" # 3× initial-margin buffer
 
 # Kill-switch thresholds:
@@ -143,8 +143,8 @@ kill_switch_drawdown_pct: "0.045"
 kill_switch_position_breach_pct: "0.03"
 
 # Leverage + net-delta (universal per StrategyInstanceDefinition):
-target_leverage: "0.93"            # per-loop LTV ≈ effective leverage on lending leg
-target_net_delta: "0.0"            # delta-neutral: on-chain equiv long = perp short
+target_leverage: "0.93" # per-loop LTV ≈ effective leverage on lending leg
+target_net_delta: "0.0" # delta-neutral: on-chain equiv long = perp short
 max_underlying_move_pct: "5.0"
 
 # Chain constraint:

@@ -13,10 +13,10 @@ stage: [meta]
 repos: [market-tick-data-service, unified-trading-library]
 scope: [engineer]
 tags: [dockerfile, infrastructure, ci-cd, quality-gates, ui]
-related: [dependency-management.md, quality-gates.md]
+related: [/codex/06-coding-standards/dependency-management.md, /codex/06-coding-standards/quality-gates.md]
 created: 2026-03-27
 authoritative_for: [Dockerfile base-image and build standards]
-referenced_by: [codex/06-coding-standards/dependency-management.md]
+referenced_by: [/codex/06-coding-standards/dependency-management.md]
 owner:
 last_reviewed:
 code_refs:

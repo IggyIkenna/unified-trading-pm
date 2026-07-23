@@ -13,15 +13,19 @@ repos: [deployment-ui, e2e-testing, unified-api-contracts, unified-trading-pm, u
 scope: [engineer]
 tags: [ui, quality-gates, validation, frontend]
 related:
-  [integration-testing-layers.md, ../02-data/vcr-cassette-ownership.md, ../14-customer-journeys/testing/README.md]
+  [
+    /codex/06-coding-standards/integration-testing-layers.md,
+    /codex/02-data/vcr-cassette-ownership.md,
+    /codex/14-customer-journeys/testing/README.md,
+  ]
 created: 2026-04-24
 authoritative_for: [8-layer UI testing strategy]
 referenced_by:
   [
-    codex/06-coding-standards/test-coverage-data-status.md,
-    codex/06-coding-standards/testing.md,
-    codex/06-coding-standards/ui-branding.md,
-    codex/06-coding-standards/ui-service-separation.md,
+    /codex/06-coding-standards/test-coverage-data-status.md,
+    /codex/06-coding-standards/testing.md,
+    /codex/06-coding-standards/ui-branding.md,
+    /codex/06-coding-standards/ui-service-separation.md,
   ]
 owner:
 last_reviewed: 2026-07-21
@@ -34,11 +38,12 @@ code_refs: [deployment-ui/tests/smoke/alerts-page.spec.ts]
 (`unified-trading-system-ui`, `deployment-ui`). **Cross-refs:**
 
 - Backend testing SSOT: [`06-coding-standards/integration-testing-layers.md`](integration-testing-layers.md)
-- Playbook testing (L3a subset): [`14-customer-journeys/testing/README.md`](../14-customer-journeys/testing/README.md),
-  [`14-customer-journeys/testing/test-matrix.md`](../14-customer-journeys/testing/test-matrix.md)
-- VCR cassette policy: [`02-data/vcr-cassette-ownership.md`](../02-data/vcr-cassette-ownership.md)
+- Playbook testing (L3a subset):
+  [`14-customer-journeys/testing/README.md`](/codex/14-customer-journeys/testing/README.md),
+  [`14-customer-journeys/testing/test-matrix.md`](/codex/14-customer-journeys/testing/test-matrix.md)
+- VCR cassette policy: [`02-data/vcr-cassette-ownership.md`](/codex/02-data/vcr-cassette-ownership.md)
 - UI functionality + API wiring:
-  [`05-infrastructure/ui-functionality-requirements.md`](../05-infrastructure/ui-functionality-requirements.md)
+  [`05-infrastructure/ui-functionality-requirements.md`](/codex/05-infrastructure/ui-functionality-requirements.md)
 - UI repo quality gates rule: workspace `.claude/rules/ui.md`
 
 ---
@@ -95,7 +100,7 @@ agree about the shape of every endpoint and message?
 - `tests/contract/webhook-payloads/` — recorded webhook POST bodies
 
 **Tier:** UI repo owns this layer. Cassette + recording ownership mirrors backend:
-[`02-data/vcr-cassette-ownership.md`](../02-data/vcr-cassette-ownership.md) — UI records from staging, commits
+[`02-data/vcr-cassette-ownership.md`](/codex/02-data/vcr-cassette-ownership.md) — UI records from staging, commits
 recordings, L0 replays against Zod, no duplicates.
 
 **Credentials needed:** None (hermetic replay).
@@ -362,8 +367,9 @@ added without a manifest entry.
 **Question answered:** Does the canonical click path for each playbook work correctly for each persona, with visibility
 slicing applied?
 
-This layer already has an SSOT at [`14-customer-journeys/testing/README.md`](../14-customer-journeys/testing/README.md).
-This section delegates — do not duplicate. The rule from that SSOT stands:
+This layer already has an SSOT at
+[`14-customer-journeys/testing/README.md`](/codex/14-customer-journeys/testing/README.md). This section delegates — do
+not duplicate. The rule from that SSOT stands:
 
 > When a playbook doc changes, the matching Playwright spec MUST be updated in the same PR.
 
@@ -649,7 +655,7 @@ blocked until the UI is updated in the same PR (monorepo pattern).
 
 ## Coverage Gates
 
-Extends the rule from [`14-customer-journeys/testing/README.md`](../14-customer-journeys/testing/README.md) ("every
+Extends the rule from [`14-customer-journeys/testing/README.md`](/codex/14-customer-journeys/testing/README.md) ("every
 playbook doc has a matching spec"):
 
 | Coverage requirement                                                | Where enforced                                                           |
@@ -722,7 +728,8 @@ UI repo owns all layers. The surface split determines which layers apply most he
   `mock-api.ts` (no route-manifest.ts, no `NEXT_PUBLIC_MOCK_API`). `deployment-ui/tests/smoke/alerts-page.spec.ts` is a
   canonical example of the pattern: URL-backed filter/sort/date-range state asserted via `page.goto` + `getByTestId`
   against the Vite dev server, mock data fixed in `mock-api.ts` rather than cassettes — see
-  [ci-alerting.md](../04-architecture/ci-alerting.md) § "The `/alerts` page UI contract" for the feature-level detail.
+  [ci-alerting.md](/codex/04-architecture/ci-alerting.md) § "The `/alerts` page UI contract" for the feature-level
+  detail.
 - L3a = playbook/persona flows; applies to user-journey surfaces (marketing, auth, onboarding, dashboard shell).
 - L3b = trader strategy workflows; applies only to the trading surface.
 - L4 visual is scoped to marketing + dashboard shell (where layout regressions are most visible to external users).
@@ -808,11 +815,11 @@ and reviewers MUST enforce this — it is equivalent in weight to the `docs(plan
 ## References
 
 - **Backend SSOT (mirror target):** [`06-coding-standards/integration-testing-layers.md`](integration-testing-layers.md)
-- **Playbook testing (L3a):** [`14-customer-journeys/testing/README.md`](../14-customer-journeys/testing/README.md),
-  [`14-customer-journeys/testing/test-matrix.md`](../14-customer-journeys/testing/test-matrix.md)
+- **Playbook testing (L3a):** [`14-customer-journeys/testing/README.md`](/codex/14-customer-journeys/testing/README.md),
+  [`14-customer-journeys/testing/test-matrix.md`](/codex/14-customer-journeys/testing/test-matrix.md)
 - **VCR cassette policy (cassette ownership rule):**
-  [`02-data/vcr-cassette-ownership.md`](../02-data/vcr-cassette-ownership.md)
+  [`02-data/vcr-cassette-ownership.md`](/codex/02-data/vcr-cassette-ownership.md)
 - **UI functionality + API wiring:**
-  [`05-infrastructure/ui-functionality-requirements.md`](../05-infrastructure/ui-functionality-requirements.md)
+  [`05-infrastructure/ui-functionality-requirements.md`](/codex/05-infrastructure/ui-functionality-requirements.md)
 - **Workspace UI rule:** `.claude/rules/ui.md`
 - **Strategy testing coverage plan:** `unified-trading-pm/plans/ai/ui_e2e_strategy_coverage_audit_2026_04_22.plan.md`

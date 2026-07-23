@@ -3,19 +3,38 @@ doc_type: codex-ssot
 title: Data Flow Map -- Batch/Live Storage Topology
 summary:
   "Batch/live GCS/S3 storage topology map: per-pipeline writer→bucket-path→reader across all services
-  (execution/instruments/market-data/features/ML/risk/PnL/recon/alerting/deployment), orphan-path analysis,
-  and the end-to-end data-flow summary."
+  (execution/instruments/market-data/features/ML/risk/PnL/recon/alerting/deployment), orphan-path analysis, and the
+  end-to-end data-flow summary."
 status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
-repos: [alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-ui, execution-service]
+repos:
+  [
+    alerting-service,
+    batch-live-reconciliation-service,
+    client-reporting-api,
+    deployment-api,
+    deployment-ui,
+    execution-service,
+  ]
 scope: [engineer, admin]
 tags: [data-flow, storage, gcs, pipeline, topology, orphan-paths]
-related: [batch-live-architecture.md, strategy-service-architecture.md, ../06-coding-standards/strategy-identity-versioning.md]
+related:
+  [
+    /codex/04-architecture/batch-live-architecture.md,
+    /codex/04-architecture/strategy-service-architecture.md,
+    /codex/06-coding-standards/strategy-identity-versioning.md,
+  ]
 created: 2026-03-27
 authoritative_for: [batch-live GCS/S3 storage topology map (writer-bucket-reader wiring)]
-referenced_by: [codex/03-observability/coordination-events.md, codex/03-observability/lifecycle-events.md, codex/04-architecture/batch-live-architecture.md, codex/04-architecture/data-ownership-principles.md]
+referenced_by:
+  [
+    /codex/03-observability/coordination-events.md,
+    /codex/03-observability/lifecycle-events.md,
+    /codex/04-architecture/batch-live-architecture.md,
+    /codex/04-architecture/data-ownership-principles.md,
+  ]
 owner:
 last_reviewed: 2026-05-20
 code_refs:

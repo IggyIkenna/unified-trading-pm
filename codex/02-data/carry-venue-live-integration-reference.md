@@ -2,9 +2,9 @@
 doc_type: codex-ssot
 title: Carry-strategy venue integration reference
 summary:
-  Integration SSOT for the carry_staked_basis live/paper path — per-venue perp-funding endpoints and quirks (13
-  venues), LST staking APR sources, collateral-acceptance and capital-efficiency, Aave lending legs, and the
-  conservative-default + filed-TODO discipline; batch==live reuses the FundingPoint machinery.
+  Integration SSOT for the carry_staked_basis live/paper path — per-venue perp-funding endpoints and quirks (13 venues),
+  LST staking APR sources, collateral-acceptance and capital-efficiency, Aave lending legs, and the conservative-default
+  + filed-TODO discipline; batch==live reuses the FundingPoint machinery.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -12,7 +12,12 @@ stage: [meta]
 repos: [e2e-testing, execution-service, features-service, ibkr-gateway-infra]
 scope: [engineer, admin]
 tags: [carry, cefi, defi, funding, staking, execution, live-trading]
-related: [../../plans/active/carry_staked_basis_funding_scan_experiment_2026_06_16.md, ../04-architecture/defi-execution-overview.md, cefi-capture-universe.md]
+related:
+  [
+    ../../plans/active/carry_staked_basis_funding_scan_experiment_2026_06_16.md,
+    /codex/04-architecture/defi-execution-overview.md,
+    /codex/02-data/cefi-capture-universe.md,
+  ]
 created: 2026-06-17
 authoritative_for: [carry-strategy live venue integration reference (funding/staking/lending sourcing)]
 referenced_by:
@@ -96,7 +101,7 @@ drives annualisation (`apy = rate × seconds_per_year / interval_seconds`).
 | **MEXC**        | ❌ per-coin  | `GET contract/funding_rate/{BASE}_USDT`                                                              | `fundingRate`                 | `collectCycle` (h)     | `{BASE}_USDT`      | `collectCycle` = interval in **hours** (usually 8); per-coin.                                                                                                                                                                                                                                         |
 | **dYdX v4**     | ✅ all       | `GET indexer.dydx.trade/v4/perpetualMarkets`                                                         | `nextFundingRate`             | **1h**                 | `{BASE}-USD`       | public indexer, no auth; **hourly**; `markets` map keyed by ticker. Verified reachable 2026-06-17.                                                                                                                                                                                                    |
 | **Vertex**      | ✅ all       | `POST gateway.prod.vertexprotocol.com/v1/query {"type":"funding_rate(s)"}` (or `archive.prod…`)      | funding rate (per product_id) | 1h (continuous)        | `product_id` (int) | public, no auth; DNS resolves `gateway.prod`/`archive.prod` (NOT `api.vertexprotocol.com` — that's a stale Vercel 404). Symbol→product_id map via `/symbols`. Verify exact query on integration.                                                                                                      |
-| **Drift**       | ⚠ creds/RPC | `data.api.drift.trade/fundingRates` (geo-blocked) → use **Solana RPC** (on-chain) or authed Data API | funding (on-chain)            | **1h**                 | `{BASE}-PERP`      | we HOLD creds (`solana-paper-keypair-private-key` + `solana-wallet-address`); the naive public GET **403s this VM** (Cloudflare/geo) + authed endpoint 401s → read on-chain via Solana RPC with the wallet. **Accepts jitoSOL/mSOL as margin → unlocks SOL staked-basis** (the only venue that does). |
+| **Drift**       | ⚠ creds/RPC  | `data.api.drift.trade/fundingRates` (geo-blocked) → use **Solana RPC** (on-chain) or authed Data API | funding (on-chain)            | **1h**                 | `{BASE}-PERP`      | we HOLD creds (`solana-paper-keypair-private-key` + `solana-wallet-address`); the naive public GET **403s this VM** (Cloudflare/geo) + authed endpoint 401s → read on-chain via Solana RPC with the wallet. **Accepts jitoSOL/mSOL as margin → unlocks SOL staked-basis** (the only venue that does). |
 
 **Symbol-base mapping quirks**: `XBT→BTC` (KuCoin, Kraken); Hyperliquid + Drift use the bare base (`BTC` / `BTC-PERP`);
 dYdX dashed-USD (`BTC-USD`); Vertex by integer `product_id`; OKX/Deribit dashed (`BTC-USDT-SWAP` / `BTC-PERPETUAL`);

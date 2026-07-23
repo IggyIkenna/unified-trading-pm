@@ -1,7 +1,9 @@
 ---
 doc_type: codex-ssot
 title: L2 Basis Trade (Reduced Gas Costs)
-summary: "Pre-v2: ETH basis trade run entirely on L2 (Arbitrum/Base) — long spot ETH + short ETH-PERP on Hyperliquid; gas ~$0.10 vs ~$15 mainnet makes $500 positions and frequent rebalancing viable."
+summary:
+  "Pre-v2: ETH basis trade run entirely on L2 (Arbitrum/Base) — long spot ETH + short ETH-PERP on Hyperliquid; gas
+  ~$0.10 vs ~$15 mainnet makes $500 positions and frequent rebalancing viable."
 status: superseded
 nature: ssot
 asset_group: [meta]
@@ -9,10 +11,15 @@ stage: [meta]
 repos: [execution-service, market-tick-data-service, strategy-service, unified-api-contracts, unified-trading-pm]
 scope: [engineer, admin]
 tags: [defi, basis, strategy, funding, l2]
-related: [../../architecture-v2/archetypes/carry-basis-perp.md, basis-trade.md]
+related: [../../architecture-v2/archetypes/carry-basis-perp.md, /codex/09-strategy/_archived_pre_v2/defi/basis-trade.md]
 created: 2026-03-28
 authoritative_for: []
-referenced_by: [codex/09-strategy/_archived_pre_v2/STRATEGY_CATALOG_pre_v2.md, codex/09-strategy/_archived_pre_v2/defi/basis-trade.md, codex/09-strategy/_archived_pre_v2/defi/omnichain-transfers.md]
+referenced_by:
+  [
+    /codex/09-strategy/_archived_pre_v2/STRATEGY_CATALOG_pre_v2.md,
+    /codex/09-strategy/_archived_pre_v2/defi/basis-trade.md,
+    /codex/09-strategy/_archived_pre_v2/defi/omnichain-transfers.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -336,8 +343,10 @@ BRIDGE to L1 --> treasury. See
 
 Gas costs are tracked per-chain via Alchemy RPC using `eth_feeHistory` (EVM). The MTDS `gas_fee_handler` fetches
 real-time gas prices for the L2 chain and writes them as features. Gas hits P&L immediately as a realized transaction
-cost -- not estimated. L2 gas is the key differentiator vs mainnet basis: ~$0.05-0.15 per rebalance on Arbitrum/Base vs
-~$15-25 on Ethereum mainnet. This makes positions as small as $500 profitable.
+cost -- not estimated. L2 gas is the key differentiator vs mainnet basis:
+~$0.05-0.15 per rebalance on Arbitrum/Base vs
+~$15-25 on Ethereum mainnet. This makes positions as small as $500
+profitable.
 
 **Reference:** `market-tick-data-service/market_tick_data_service/gas_fee_handler.py`
 

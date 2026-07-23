@@ -15,14 +15,15 @@ scope: [engineer, admin]
 tags: [ui, execution, strategy, defi, cefi, live-trading]
 related:
   [
-    ../09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md,
-    ../09-strategy/architecture-v2/cross-cutting/operational-modes-matrix.md,
-    batch-live-architecture.md,
-    defi-execution-overview.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/operational-modes-matrix.md,
+    /codex/04-architecture/batch-live-architecture.md,
+    /codex/04-architecture/defi-execution-overview.md,
   ]
 created: 2026-05-08
 authoritative_for: [research-service vs DART operator-workflow boundary]
-referenced_by: [codex/04-architecture/batch-live-architecture.md, codex/04-architecture/live-strategy-config-hot-reload.md]
+referenced_by:
+  [/codex/04-architecture/batch-live-architecture.md, /codex/04-architecture/live-strategy-config-hot-reload.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:
@@ -58,7 +59,7 @@ Each lane:
 - Routes through the **same** execution-service code path as automated mode — only the approval gate differs.
 
 Full lane spec:
-[`../09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md`](../09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md).
+[`/codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md`](/codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md).
 
 ## Research-service surface
 
@@ -84,10 +85,10 @@ Research-service does NOT execute live orders. Live execution always flows throu
 ## Cross-references
 
 - DART manual-trade spec:
-  [`../09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md`](../09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md)
+  [`/codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md`](/codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md)
 - Operational modes matrix:
-  [`../09-strategy/architecture-v2/cross-cutting/operational-modes-matrix.md`](../09-strategy/architecture-v2/cross-cutting/operational-modes-matrix.md)
-- Strategy summary: [`../09-strategy/strategy-summary.md`](../09-strategy/strategy-summary.md)
+  [`/codex/09-strategy/architecture-v2/cross-cutting/operational-modes-matrix.md`](/codex/09-strategy/architecture-v2/cross-cutting/operational-modes-matrix.md)
+- Strategy summary: [`/codex/09-strategy/strategy-summary.md`](/codex/09-strategy/strategy-summary.md)
 - Live = batch: [`batch-live-architecture.md`](batch-live-architecture.md) (single SSOT)
 - Execution architecture: [`defi-execution-overview.md`](defi-execution-overview.md) +
   [`interface-credential-convention.md`](interface-credential-convention.md)

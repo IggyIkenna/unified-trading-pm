@@ -16,19 +16,19 @@ tags: [market-making, ml, inventory-skew, book-microstructure, clob]
 related:
   [
     ../families/market-making.md,
-    market-making-inventory-skew.md,
-    market-making-passive-spread.md,
-    market-making-queue-microstructure.md,
-    ml-directional-continuous.md,
+    /codex/09-strategy/architecture-v2/archetypes/market-making-inventory-skew.md,
+    /codex/09-strategy/architecture-v2/archetypes/market-making-passive-spread.md,
+    /codex/09-strategy/architecture-v2/archetypes/market-making-queue-microstructure.md,
+    /codex/09-strategy/architecture-v2/archetypes/ml-directional-continuous.md,
   ]
 created: 2026-05-19
 authoritative_for: [MARKET_MAKING_ML_LEAN archetype specification]
 referenced_by:
   [
-    codex/09-strategy/architecture-v2/archetypes/market-making-inventory-skew.md,
-    codex/09-strategy/architecture-v2/archetypes/market-making-passive-spread.md,
-    codex/09-strategy/architecture-v2/archetypes/market-making-queue-microstructure.md,
-    codex/09-strategy/architecture-v2/families/market-making.md,
+    /codex/09-strategy/architecture-v2/archetypes/market-making-inventory-skew.md,
+    /codex/09-strategy/architecture-v2/archetypes/market-making-passive-spread.md,
+    /codex/09-strategy/architecture-v2/archetypes/market-making-queue-microstructure.md,
+    /codex/09-strategy/architecture-v2/families/market-making.md,
   ]
 owner:
 last_reviewed:

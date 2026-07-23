@@ -15,7 +15,7 @@ stage: [meta]
 repos: [unified-trading-pm, agent-orchestrator]
 scope: [engineer]
 tags: [infrastructure, tmux, precompact, context-lifecycle, tabs, cursor, claude-code]
-related: [codex/05-infrastructure/per-tab-worktrees.md, codex/05-infrastructure/claude-code-settings-symlink.md]
+related: [/codex/05-infrastructure/per-tab-worktrees.md, /codex/05-infrastructure/claude-code-settings-symlink.md]
 created: 2026-07-23
 authoritative_for: [local per-tab tmux precompact-watcher setup]
 referenced_by: []

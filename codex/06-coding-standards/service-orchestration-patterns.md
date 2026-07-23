@@ -2,21 +2,46 @@
 doc_type: codex-ssot
 title: Service Orchestration Patterns
 summary: >-
-  14 service orchestration patterns from the instruments-service + MTDS refactors
-  (34,765L→850L) — import contract, handler-orchestrator split, ServiceBootstrap entry,
-  flat config, single adapter, error-by-category, preflight, async-gather, plus the HARD
-  per-shard try/finally cleanup rule; instruments-service is the reference impl.
+  14 service orchestration patterns from the instruments-service + MTDS refactors (34,765L→850L) — import contract,
+  handler-orchestrator split, ServiceBootstrap entry, flat config, single adapter, error-by-category, preflight,
+  async-gather, plus the HARD per-shard try/finally cleanup rule; instruments-service is the reference impl.
 status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
-repos: [instruments-service, market-data-processing-service, market-tick-data-service, unified-api-contracts, unified-trading-library, unified-trading-pm]
+repos:
+  [
+    instruments-service,
+    market-data-processing-service,
+    market-tick-data-service,
+    unified-api-contracts,
+    unified-trading-library,
+    unified-trading-pm,
+  ]
 scope: [engineer]
 tags: [service-structure, instruments, mtds, refactor, execution, uac]
-related: [service-structure-standards.md, ../04-architecture/shard-level-failure-isolation.md, cli-convention.md, ../05-infrastructure/vm-tarball-deployment.md]
+related:
+  [
+    /codex/06-coding-standards/service-structure-standards.md,
+    /codex/04-architecture/shard-level-failure-isolation.md,
+    /codex/06-coding-standards/cli-convention.md,
+    /codex/05-infrastructure/vm-tarball-deployment.md,
+  ]
 created: 2026-03-27
-authoritative_for: [service orchestration patterns (handler-orchestrator split + library role boundaries), batch-service per-shard cleanup try/finally rule]
-referenced_by: [codex/05-infrastructure/vm-tarball-deployment.md, codex/06-coding-standards/README.md, codex/06-coding-standards/adapter-finalization-contract.md, codex/06-coding-standards/cli-convention.md, codex/06-coding-standards/data-engine-selection.md, codex/06-coding-standards/service-structure-standards.md]
+authoritative_for:
+  [
+    service orchestration patterns (handler-orchestrator split + library role boundaries),
+    batch-service per-shard cleanup try/finally rule,
+  ]
+referenced_by:
+  [
+    /codex/05-infrastructure/vm-tarball-deployment.md,
+    /codex/06-coding-standards/README.md,
+    /codex/06-coding-standards/adapter-finalization-contract.md,
+    /codex/06-coding-standards/cli-convention.md,
+    /codex/06-coding-standards/data-engine-selection.md,
+    /codex/06-coding-standards/service-structure-standards.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -653,8 +678,9 @@ exit path where skipping cleanup is correct.
 
 When the cleanup hook lives but is wired only into one early-exit branch (the "no work to do" path), the success path —
 "loaded the data, did the work, wrote the outputs" — silently retains every cache it built up. In a long-running multi-
-shard VM (the actual deployment shape; see [`vm-tarball-deployment.md`](../05-infrastructure/vm-tarball-deployment.md) §
-"Per-shard cleanup contract"), that residue compounds shard-over-shard until the box swap-deadlocks.
+shard VM (the actual deployment shape; see
+[`vm-tarball-deployment.md`](/codex/05-infrastructure/vm-tarball-deployment.md) § "Per-shard cleanup contract"), that
+residue compounds shard-over-shard until the box swap-deadlocks.
 
 A single `gc.collect()` at the outer process boundary cannot reach this state. The caches sit on service objects
 (`candle_processing_service`, `sampling_service`, equivalents) whose references survive the orchestrator's local-scope
@@ -753,8 +779,8 @@ the hook does (writing a final manifest snapshot, flushing a metrics buffer) hap
 
 ### Composes with
 
-- [`vm-tarball-deployment.md`](../05-infrastructure/vm-tarball-deployment.md) § "Per-shard cleanup contract" — the VM-
-  lifecycle side of this rule. Long-running multi-shard VMs depend on the per-shard cleanup hook firing.
+- [`vm-tarball-deployment.md`](/codex/05-infrastructure/vm-tarball-deployment.md) § "Per-shard cleanup contract" — the
+  VM- lifecycle side of this rule. Long-running multi-shard VMs depend on the per-shard cleanup hook firing.
 - [`cli-convention.md`](cli-convention.md) § "Instrument Identity and CLI Granularity" — defines what counts as a single
   shard, which determines where the cleanup hook attaches.
 - `data-engine-selection.md` (codified 2026-05-28) — Polars/PyArrow arenas are NOT reclaimed by this rule's primitives;

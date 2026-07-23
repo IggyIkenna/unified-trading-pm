@@ -12,10 +12,10 @@ stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]
 tags: [quickmerge, quality-gates, ci, workflows, infrastructure]
-related: [../06-coding-standards/quality-gates.md, ../08-workflows/ci-cd-flow.md]
+related: [/codex/06-coding-standards/quality-gates.md, /codex/08-workflows/ci-cd-flow.md]
 created: 2026-03-27
 authoritative_for: [quickmerge pipeline stages, quickmerge --agent .qg_last_passed_sha sentinel gate]
-referenced_by: [codex/08-workflows/ci-cd-flow.md]
+referenced_by: [/codex/08-workflows/ci-cd-flow.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:
@@ -82,7 +82,7 @@ skip flags), the script writes the current `git rev-parse HEAD` to `.qg_last_pas
 If quickmerge blocks with a SHA mismatch after you believe QG passed, check which flags were used: any partial-run flag
 means the sentinel was not written. Run the full `bash scripts/quality-gates.sh` (no flags) to generate the sentinel.
 
-See also: `codex/06-coding-standards/quality-gates.md` § "Two-Pass Workflow Model".
+See also: `/codex/06-coding-standards/quality-gates.md` § "Two-Pass Workflow Model".
 
 ## Why Not Standalone Quality Gates
 

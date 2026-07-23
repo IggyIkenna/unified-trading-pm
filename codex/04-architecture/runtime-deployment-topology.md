@@ -24,10 +24,10 @@ scope: [engineer, admin]
 tags: [infrastructure, deployment, pipeline, mdps, mtds, observability, ui]
 related:
   [
-    tier-and-import-architecture.md,
-    ../05-infrastructure/live-pipeline-architecture.md,
-    ../06-coding-standards/integration-testing-layers.md,
-    ../03-observability/lifecycle-events.md,
+    /codex/04-architecture/tier-and-import-architecture.md,
+    /codex/05-infrastructure/live-pipeline-architecture.md,
+    /codex/06-coding-standards/integration-testing-layers.md,
+    /codex/03-observability/lifecycle-events.md,
   ]
 created: 2026-03-27
 authoritative_for:
@@ -39,13 +39,13 @@ authoritative_for:
   ]
 referenced_by:
   [
-    codex/04-architecture/README.md,
-    codex/04-architecture/TOPOLOGY-DAG.md,
-    codex/04-architecture/agent-orchestrator-overview.md,
-    codex/04-architecture/batch-live-architecture.md,
-    codex/04-architecture/client-isolation-sla-and-runtime-profiles.md,
-    codex/04-architecture/commercial-service-families.md,
-    codex/04-architecture/execution-modes-and-chain-resolution.md,
+    /codex/04-architecture/README.md,
+    /codex/04-architecture/TOPOLOGY-DAG.md,
+    /codex/04-architecture/agent-orchestrator-overview.md,
+    /codex/04-architecture/batch-live-architecture.md,
+    /codex/04-architecture/client-isolation-sla-and-runtime-profiles.md,
+    /codex/04-architecture/commercial-service-families.md,
+    /codex/04-architecture/execution-modes-and-chain-resolution.md,
   ]
 owner:
 last_reviewed: 2026-07-12
@@ -264,8 +264,8 @@ via local execution-service dev setup.
 > **POST-2026-05-08 SSOT** — the rule below applies to **CROSS-SERVICE signalling** (e.g. instruments-service →
 > downstream consumers; strategy → execution; alerting fan-out). The **inner-loop live cascade** between MTDS → MDPS →
 > features-service uses **Redis Stream** (consumer groups + `XREADGROUP`), NOT PubSub. See
-> [`05-infrastructure/live-pipeline-architecture.md`](../05-infrastructure/live-pipeline-architecture.md) § "Trigger
-> cascade" + [`03-observability/coordination-events.md`](../03-observability/coordination-events.md) for the full
+> [`05-infrastructure/live-pipeline-architecture.md`](/codex/05-infrastructure/live-pipeline-architecture.md) § "Trigger
+> cascade" + [`03-observability/coordination-events.md`](/codex/03-observability/coordination-events.md) for the full
 > CANDLE_BOUNDARY_CROSSED / CANDLE_COMPUTED / FEATURES_COMPUTED cascade contract. PubSub remains the right transport for
 > async fan-out to multiple unrelated consumers; Redis Stream is the right transport for the per-shard ordered cascade
 > with replay semantics.
@@ -299,7 +299,7 @@ consumers, (c) replay from a checkpoint when a consumer restarts. PubSub is fire
 - replay guarantees the cascade depends on. Cross-service fan-out (instruments-service catalogue refresh signals,
   strategy → execution signals, alerting fan-out to multiple subscribers) uses **PubSub** because the workload is async
   broadcast to N unrelated consumers — Redis Stream's consumer-group model would over-engineer that case. Full cascade
-  contract: [`05-infrastructure/live-pipeline-architecture.md`](../05-infrastructure/live-pipeline-architecture.md).
+  contract: [`05-infrastructure/live-pipeline-architecture.md`](/codex/05-infrastructure/live-pipeline-architecture.md).
 
 ### Exceptions
 
@@ -591,8 +591,8 @@ epic VMs — that fleet was retired 2026-06-27). Currency is kept by `scripts/ao
 that FF-pulls the running checkout from `origin/live-defi-rollout` and `systemctl restart orchestrator` only when HEAD
 moves (or when the running process predates HEAD — stale-process self-heal). Shipped `agent-orchestrator@589b711`;
 hardened `@d16d737` + `@5462959` (wedge alert on a silently-drifted deploy). Full SSOT:
-`codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`; service overview:
-`codex/04-architecture/agent-orchestrator-overview.md`.
+`/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`; service overview:
+`/codex/04-architecture/agent-orchestrator-overview.md`.
 
 ---
 
@@ -1181,8 +1181,8 @@ graph TD
 ## Live Deployment: Redis Stream Cascade + Consolidated features-service
 
 > **POST-2026-05-08 SSOT** — the live-pipeline activation (per
-> [`05-infrastructure/live-pipeline-architecture.md`](../05-infrastructure/live-pipeline-architecture.md)) replaces the
-> earlier "embedded package per feature service" topology with a **Redis Stream cascade** between MTDS → MDPS →
+> [`05-infrastructure/live-pipeline-architecture.md`](/codex/05-infrastructure/live-pipeline-architecture.md)) replaces
+> the earlier "embedded package per feature service" topology with a **Redis Stream cascade** between MTDS → MDPS →
 > features-service. The 7-8 standalone-process diagram below is **historical** — keep it for context but read it as the
 > pre-2026-05-08 shape. The current shape is: one **MTDS** cluster (sharded by v5 shard atom), one **MDPS +
 > features-service-asset-scoped** colocated cluster per asset_group, plus one **features-service-cross-cutting** cluster
@@ -1295,7 +1295,7 @@ graph TB
 > **one consolidated repo** deployed in two flavors (asset-scoped colocated with MDPS + cross-cutting standalone), per
 > [`features-service-architecture.md`](features-service-architecture.md). GCS remains persistence-only; the inner-loop
 > cascade is Redis Stream. The full design lives in
-> [`05-infrastructure/live-pipeline-architecture.md`](../05-infrastructure/live-pipeline-architecture.md).
+> [`05-infrastructure/live-pipeline-architecture.md`](/codex/05-infrastructure/live-pipeline-architecture.md).
 
 ---
 

@@ -12,10 +12,10 @@ stage: [meta]
 repos: [instruments-service, market-tick-data-service, unified-api-contracts]
 scope: [engineer]
 tags: [vcr, cefi, mtds, instruments, quality-gates]
-related: [../02-data/vcr-cassette-ownership.md, ../07-security/testing-with-api-keys.md]
+related: [/codex/02-data/vcr-cassette-ownership.md, /codex/07-security/testing-with-api-keys.md]
 created: 2026-03-27
 authoritative_for: [VCR cassette in-test decorator and replay pattern]
-referenced_by: [codex/06-coding-standards/testing.md, codex/07-security/testing-with-api-keys.md]
+referenced_by: [/codex/06-coding-standards/testing.md, /codex/07-security/testing-with-api-keys.md]
 owner:
 last_reviewed:
 code_refs:
@@ -33,7 +33,7 @@ hitting rate limits or requiring credentials.
 
 > **2026-05-12 reconciliation (TS-2 + TS-3)**: this section was stale — paths now match shipped UAC layout. Canonical
 > SSOT for cassette ownership / recording / contributing is
-> [`02-data/vcr-cassette-ownership.md`](../02-data/vcr-cassette-ownership.md); this doc covers the in-test _pattern_
+> [`02-data/vcr-cassette-ownership.md`](/codex/02-data/vcr-cassette-ownership.md); this doc covers the in-test _pattern_
 > (decorator usage + replay shape). When the two docs diverge, `vcr-cassette-ownership.md` wins.
 
 | Repo                    | Path                                                  | Purpose                                                                                                    |

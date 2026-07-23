@@ -12,17 +12,24 @@ stage: [meta]
 repos: [strategy-service]
 scope: [engineer, admin]
 tags: [strategy, vol-trading, options, deribit, cross-asset, spread, mean-reversion]
-related: [vol-dispersion.md, vol-ratio-spread.md, vol-term-structure-arb.md, vol-carry.md, ../families/vol-trading.md]
+related:
+  [
+    /codex/09-strategy/architecture-v2/archetypes/vol-dispersion.md,
+    /codex/09-strategy/architecture-v2/archetypes/vol-ratio-spread.md,
+    /codex/09-strategy/architecture-v2/archetypes/vol-term-structure-arb.md,
+    /codex/09-strategy/architecture-v2/archetypes/vol-carry.md,
+    ../families/vol-trading.md,
+  ]
 created: 2026-05-19
 authoritative_for: ["VOL_CROSS_ASSET_SPREAD archetype spec"]
 referenced_by:
   [
-    codex/09-strategy/_archived_pre_v2/tradfi/relative-volatility.md,
-    codex/09-strategy/architecture-v2/archetypes/vol-dispersion.md,
-    codex/09-strategy/architecture-v2/archetypes/vol-ratio-spread.md,
-    codex/09-strategy/architecture-v2/archetypes/vol-term-structure-arb.md,
-    codex/09-strategy/architecture-v2/archetypes/vol-term-structure-slope.md,
-    codex/09-strategy/architecture-v2/families/vol-trading.md,
+    /codex/09-strategy/_archived_pre_v2/tradfi/relative-volatility.md,
+    /codex/09-strategy/architecture-v2/archetypes/vol-dispersion.md,
+    /codex/09-strategy/architecture-v2/archetypes/vol-ratio-spread.md,
+    /codex/09-strategy/architecture-v2/archetypes/vol-term-structure-arb.md,
+    /codex/09-strategy/architecture-v2/archetypes/vol-term-structure-slope.md,
+    /codex/09-strategy/architecture-v2/families/vol-trading.md,
   ]
 owner:
 last_reviewed:

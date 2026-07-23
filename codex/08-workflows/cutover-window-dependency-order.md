@@ -11,10 +11,15 @@ stage: [meta]
 repos: [deployment-api, deployment-service, features-service, strategy-service]
 scope: [engineer, admin]
 tags: [cutover, golden-window, orchestrator, backfill, ml, mvp]
-related: [../09-strategy/mvp-universe-per-asset-group.md, ./deployment-flow.md]
+related: [/codex/09-strategy/mvp-universe-per-asset-group.md, ./deployment-flow.md]
 created: 2026-05-13
 authoritative_for: [cutover-window (2026-05-13→05-23) serial-vs-parallel track sequencing timeline]
-referenced_by: [codex/05-infrastructure/deployment-and-qg-strategy.md, codex/06-coding-standards/performance-targets.md, plans/active/_agent_pings.md]
+referenced_by:
+  [
+    /codex/05-infrastructure/deployment-and-qg-strategy.md,
+    /codex/06-coding-standards/performance-targets.md,
+    plans/active/_agent_pings.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -62,7 +67,7 @@ This doc identifies what's on which track + the checkpoint dates that bind cutov
 2026-05-17 → 2026-05-18 (Sun→Mon) — MDPS + FEATURES BACKFILL (~1-2 days)
   ├─ MDPS aggregates ticks → ohlcv/book_snapshot/funding etc.
   ├─ features-service computes feature_groups per archetype × per-day × per-instrument
-  ├─ Pricing data + features READY for MVP universe (per codex/09-strategy/mvp-universe-per-asset-group.md)
+  ├─ Pricing data + features READY for MVP universe (per /codex/09-strategy/mvp-universe-per-asset-group.md)
   └─ Walk-forward training inputs available for CeFi/TradFi/Sports 5-yr; DeFi/Prediction 2-yr
   │
 2026-05-18 → 2026-05-19 (Mon→Tue) — ML TRAINING + STRATEGY BACKTESTS START
@@ -193,7 +198,7 @@ Allocate slots heavily to parallel-track work — there's no data-pipeline depen
 - Manifest freeze gate 2026-05-15 in `manifest_schema_final_gate_2026_05_09` + `code_freeze_migrate_backfill_sequencing`
   Phase 1
 - Backfill window 2026-05-15→2026-05-19 in `code_freeze_migrate_backfill_sequencing` Phase 2-3
-- Tier A archetype scope in `codex/09-strategy/mvp-universe-per-asset-group.md` (just shipped 2026-05-13)
+- Tier A archetype scope in `/codex/09-strategy/mvp-universe-per-asset-group.md` (just shipped 2026-05-13)
 - Compute optimization parallel track in `compute_optimization_mock_data_2026_05_13`
 - 7 pulled-forward May-23 items in respective plan frontmatters (2026-05-13 batch)
 
@@ -214,7 +219,7 @@ their plan bodies.
 ## Cross-references
 
 - **MVP universe** (Tier A vs Tier B scope):
-  [`codex/09-strategy/mvp-universe-per-asset-group.md`](../09-strategy/mvp-universe-per-asset-group.md)
+  [`/codex/09-strategy/mvp-universe-per-asset-group.md`](/codex/09-strategy/mvp-universe-per-asset-group.md)
 - **Compute optimization parallel track**:
   [`plans/active/compute_optimization_mock_data_2026_05_13.md`](../../plans/active/compute_optimization_mock_data_2026_05_13.md)
 - **Manifest freeze gate**:
@@ -231,12 +236,12 @@ their plan bodies.
 This document is the SSOT for cutover-window stage ordering. The following master plan Group F items depend on the
 checkpoints and parallelization insights defined above:
 
-| Master plan item                                         | What gates it here                                                                                                                                                                                        | Checkpoint                                            |
-| -------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------- |
-| **F.17** — `carry_staked_basis` end-to-end batch run     | Pipeline serial track 2026-05-18→2026-05-19 (ML/backtest kickoff slot); compute-optimization Phase 1 fan-out wrapper needed for config-grid                                                               | `code_freeze` Phase 3.3–3.5 complete                  |
-| **F.18** — 2-year P&L variance config-grid batch run     | Requires pipeline serial track through features-service + `compute_optimization` Phase 1 (per-day fan-out wrapper); VM sizing per `codex/06-coding-standards/performance-targets.md` § Acceptable targets | `code_freeze` Phase 3 complete + optimization Phase 1 |
-| **F.20** — Execution-service testnet validation          | Parallel-track (does NOT gate on data-pipeline serial track) — runs 2026-05-19→2026-05-20 via execution-alpha measurement harness (`compute_optimization` Phase 3)                                        | Days 6-7 window                                       |
-| **F.21** — Batch-vs-live reconciliation within tolerance | Last step: requires live-mode pipeline running (2026-05-22+); execution-alpha delta is the input for tolerance comparison                                                                                 | Week 3 cutover (post 2026-05-22)                      |
+| Master plan item                                         | What gates it here                                                                                                                                                                                         | Checkpoint                                            |
+| -------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------- |
+| **F.17** — `carry_staked_basis` end-to-end batch run     | Pipeline serial track 2026-05-18→2026-05-19 (ML/backtest kickoff slot); compute-optimization Phase 1 fan-out wrapper needed for config-grid                                                                | `code_freeze` Phase 3.3–3.5 complete                  |
+| **F.18** — 2-year P&L variance config-grid batch run     | Requires pipeline serial track through features-service + `compute_optimization` Phase 1 (per-day fan-out wrapper); VM sizing per `/codex/06-coding-standards/performance-targets.md` § Acceptable targets | `code_freeze` Phase 3 complete + optimization Phase 1 |
+| **F.20** — Execution-service testnet validation          | Parallel-track (does NOT gate on data-pipeline serial track) — runs 2026-05-19→2026-05-20 via execution-alpha measurement harness (`compute_optimization` Phase 3)                                         | Days 6-7 window                                       |
+| **F.21** — Batch-vs-live reconciliation within tolerance | Last step: requires live-mode pipeline running (2026-05-22+); execution-alpha delta is the input for tolerance comparison                                                                                  | Week 3 cutover (post 2026-05-22)                      |
 
 ## Continuous verification
 

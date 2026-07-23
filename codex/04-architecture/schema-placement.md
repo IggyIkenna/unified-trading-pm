@@ -2,9 +2,9 @@
 doc_type: codex-ssot
 title: Schema Placement Rules
 summary:
-  Type-placement rules — a type imported by 2+ repos lives in UAC (external-data) or UIC (cross-service
-  internal contract), never a service; services own internal processing-state types only. Includes the
-  4-step decision flow + DeFi type-to-owner placement matrix.
+  Type-placement rules — a type imported by 2+ repos lives in UAC (external-data) or UIC (cross-service internal
+  contract), never a service; services own internal processing-state types only. Includes the 4-step decision flow +
+  DeFi type-to-owner placement matrix.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -12,10 +12,15 @@ stage: [meta]
 repos: [unified-api-contracts, unified-trading-pm]
 scope: [engineer, admin]
 tags: [uac, contracts, ssot, schema, type-placement]
-related: [schema-versioning.md, ../02-data/contracts-scope-and-layout.md, separation-of-concerns.md]
+related:
+  [
+    /codex/04-architecture/schema-versioning.md,
+    /codex/02-data/contracts-scope-and-layout.md,
+    /codex/04-architecture/separation-of-concerns.md,
+  ]
 created: 2026-03-27
 authoritative_for: [schema placement rules (which repo owns a type), UAC-external-vs-UIC-internal type ownership matrix]
-referenced_by: [codex/04-architecture/schema-versioning.md, codex/04-architecture/separation-of-concerns.md]
+referenced_by: [/codex/04-architecture/schema-versioning.md, /codex/04-architecture/separation-of-concerns.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

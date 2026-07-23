@@ -15,23 +15,23 @@ scope: [engineer, admin]
 tags: [defi, custody, wallet, hsm, execution, infrastructure]
 related:
   [
-    ../04-architecture/custody-providers.md,
-    ../15-runbooks/custody-onboarding-checklist.md,
-    fireblocks-integration-spec.md,
-    per-archetype-wallet-isolation.md,
-    secret-manager-naming.md,
+    /codex/04-architecture/custody-providers.md,
+    /codex/15-runbooks/custody-onboarding-checklist.md,
+    /codex/05-infrastructure/fireblocks-integration-spec.md,
+    /codex/05-infrastructure/per-archetype-wallet-isolation.md,
+    /codex/05-infrastructure/secret-manager-naming.md,
   ]
 created: 2026-05-11
 authoritative_for: [wallet signing surface tier ladder]
 referenced_by:
   [
-    codex/05-infrastructure/aws-iam-matrix.md,
-    codex/05-infrastructure/credentials-matrix.md,
-    codex/05-infrastructure/fireblocks-integration-spec.md,
-    codex/05-infrastructure/per-archetype-wallet-isolation.md,
-    codex/15-runbooks/pre-cutover-test-wallets-runbook.md,
-    codex/15-runbooks/credential-rotation-runbook.md,
-    codex/05-infrastructure/runtime-tiers-and-deployment.md,
+    /codex/05-infrastructure/aws-iam-matrix.md,
+    /codex/05-infrastructure/credentials-matrix.md,
+    /codex/05-infrastructure/fireblocks-integration-spec.md,
+    /codex/05-infrastructure/per-archetype-wallet-isolation.md,
+    /codex/15-runbooks/pre-cutover-test-wallets-runbook.md,
+    /codex/15-runbooks/credential-rotation-runbook.md,
+    /codex/05-infrastructure/runtime-tiers-and-deployment.md,
   ]
 owner:
 last_reviewed: 2026-05-17
@@ -163,7 +163,7 @@ wallet = WalletProvisioningConfig(
 ## § 4 — Operator runbook
 
 Provisioning + flipping wallets between tiers:
-[`../15-runbooks/custody-onboarding-checklist.md`](../15-runbooks/custody-onboarding-checklist.md).
+[`/codex/15-runbooks/custody-onboarding-checklist.md`](/codex/15-runbooks/custody-onboarding-checklist.md).
 
 § B: Cloud-KMS provisioning (May-23). § C: Fireblocks flip (June-1). § A: Copper verification (pre-cutover gate).
 
@@ -210,9 +210,9 @@ Post-June-1 acceptance for COPPER/FIREBLOCKS flip MUST satisfy:
 
 ## § 7 — References
 
-- [`custody-providers.md`](../04-architecture/custody-providers.md) — full factory architecture.
-- [`../15-runbooks/custody-onboarding-checklist.md`](../15-runbooks/custody-onboarding-checklist.md) — operator-action
-  runbook.
+- [`custody-providers.md`](/codex/04-architecture/custody-providers.md) — full factory architecture.
+- [`/codex/15-runbooks/custody-onboarding-checklist.md`](/codex/15-runbooks/custody-onboarding-checklist.md) —
+  operator-action runbook.
 - [`fireblocks-integration-spec.md`](fireblocks-integration-spec.md) — June-1 paste-ready spec.
 - [`credentials-matrix.md`](credentials-matrix.md) — workspace credential SSOT.
 - [`per-archetype-wallet-isolation.md`](per-archetype-wallet-isolation.md) — multi-wallet model.

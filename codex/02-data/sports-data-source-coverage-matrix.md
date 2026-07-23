@@ -13,23 +13,23 @@ scope: [engineer, admin]
 tags: [sports, honest-coverage, data-status, footystats, odds, audit]
 related:
   [
-    codex/02-data/sports-adapter-dependency-order.md,
-    codex/02-data/sports-scheduling-and-sharding.md,
-    codex/02-data/sports-gcs-path-ssot.md,
-    codex/02-data/availability-manifest-and-data-status.md,
+    /codex/02-data/sports-adapter-dependency-order.md,
+    /codex/02-data/sports-scheduling-and-sharding.md,
+    /codex/02-data/sports-gcs-path-ssot.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
   ]
 created: 2026-04-20
 authoritative_for: [sports data_type source-to-coverage-axis matrix, per-source expected-league denominators]
 referenced_by:
   [
-    codex/01-domain/sports-instruments.md,
-    codex/02-data/chunk-safe-manifest-migrations.md,
-    codex/02-data/mtds-data-source-coverage-matrix.md,
-    codex/02-data/pipeline-coverage-matrix.md,
-    codex/02-data/sports-adapter-dependency-order.md,
-    codex/02-data/sports-data-types-catalog.md,
-    codex/02-data/sports-gcs-path-ssot.md,
-    codex/02-data/sports-scheduling-and-sharding.md,
+    /codex/01-domain/sports-instruments.md,
+    /codex/02-data/chunk-safe-manifest-migrations.md,
+    /codex/02-data/mtds-data-source-coverage-matrix.md,
+    /codex/02-data/pipeline-coverage-matrix.md,
+    /codex/02-data/sports-adapter-dependency-order.md,
+    /codex/02-data/sports-data-types-catalog.md,
+    /codex/02-data/sports-gcs-path-ssot.md,
+    /codex/02-data/sports-scheduling-and-sharding.md,
   ]
 owner:
 last_reviewed: 2026-07-08
@@ -57,10 +57,10 @@ whether `record_empty` is expected.
 
 Cross-refs:
 
-- `codex/02-data/availability-manifest-and-data-status.md` — v5 honest-coverage schema (shard columns, `capture_status`,
-  `record_empty` / `record_failed`).
-- `codex/02-data/sports-adapter-dependency-order.md` — adapter → entity mapping & T0/T1 wave order.
-- `codex/02-data/per-asset-group-bucket-layouts.md` — per-asset_group bucket layout SSOT (sports section).
+- `/codex/02-data/availability-manifest-and-data-status.md` — v5 honest-coverage schema (shard columns,
+  `capture_status`, `record_empty` / `record_failed`).
+- `/codex/02-data/sports-adapter-dependency-order.md` — adapter → entity mapping & T0/T1 wave order.
+- `/codex/02-data/per-asset-group-bucket-layouts.md` — per-asset_group bucket layout SSOT (sports section).
 - UAC: `unified_api_contracts.canonical.domain.sports.league_data` — `LEAGUE_REGISTRY`, `get_prediction_leagues`,
   `get_leagues_by_classification("Features"|"Reference")`, `get_league_fixture_calendar`.
 - UAC: `unified_api_contracts.canonical.domain.sports.league_registry` —

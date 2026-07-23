@@ -2,9 +2,9 @@
 doc_type: codex-ssot
 title: Client Reporting Architecture
 summary:
-  "Single-entry SSOT for the per-client NAV/PnL/attribution pipeline: PBMS+execution lineage → UTL
-  pnl_attribution joiner/emitter → attribution.parquet (PnLAttributionRow) → client-reporting-api →
-  deployment-ui; decomposition invariants; factor×layer model lives in pnl-attribution.md."
+  "Single-entry SSOT for the per-client NAV/PnL/attribution pipeline: PBMS+execution lineage → UTL pnl_attribution
+  joiner/emitter → attribution.parquet (PnLAttributionRow) → client-reporting-api → deployment-ui; decomposition
+  invariants; factor×layer model lives in pnl-attribution.md."
 status: current
 nature: ssot
 asset_group: [meta]
@@ -12,10 +12,20 @@ stage: [meta]
 repos: [client-reporting-api, deployment-service, deployment-ui, execution-service]
 scope: [engineer]
 tags: [client-reporting, pnl, attribution, nav, reconciliation, defi]
-related: [../09-strategy/architecture-v2/cross-cutting/pnl-attribution.md, batch-live-architecture.md, backtest-groups.md]
+related:
+  [
+    /codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md,
+    /codex/04-architecture/batch-live-architecture.md,
+    /codex/04-architecture/backtest-groups.md,
+  ]
 created: 2026-05-12
 authoritative_for: [per-client reporting pipeline (NAV/PnL/attribution parquet + decomposition invariants)]
-referenced_by: [codex/04-architecture/backtest-groups.md, codex/04-architecture/data-tranches.md, codex/04-architecture/global-ledger-architecture.md]
+referenced_by:
+  [
+    /codex/04-architecture/backtest-groups.md,
+    /codex/04-architecture/data-tranches.md,
+    /codex/04-architecture/global-ledger-architecture.md,
+  ]
 owner:
 last_reviewed: 2026-05-17
 code_refs:
@@ -25,7 +35,7 @@ ssot_plan: plans/active/client_reporting_pnl_attribution_mvp_2026_05_10.md Phase
 # Client Reporting Architecture
 
 > **Single-entry SSOT** for the per-client NAV / PnL / attribution pipeline. The underlying factor × layer model lives
-> in [`pnl-attribution.md`](../09-strategy/architecture-v2/cross-cutting/pnl-attribution.md) — do NOT duplicate the
+> in [`pnl-attribution.md`](/codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md) — do NOT duplicate the
 > factor closed set or invariant definitions here; reference them.
 
 ## Lineage flow
@@ -113,7 +123,7 @@ The May-23 demo client is seeded from UAC `unified_api_contracts.registry.client
 ## Cross-references
 
 - Factor × layer dual axis (Hard Rule #7 + PnLFactor closed set + Decomposition Invariants):
-  [pnl-attribution.md](../09-strategy/architecture-v2/cross-cutting/pnl-attribution.md)
+  [pnl-attribution.md](/codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md)
 - Batch = live (benchmark-fills contract that isolates strategy_alpha from execution_alpha):
   [batch-live-architecture.md § 5-6](batch-live-architecture.md)
 - Backtest groups (Group C execution fills feed the attribution joiner): [backtest-groups.md](backtest-groups.md)

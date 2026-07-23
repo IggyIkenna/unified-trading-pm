@@ -13,10 +13,10 @@ stage: [meta]
 repos: [deployment-api, unified-trading-pm]
 scope: [engineer]
 tags: [config-injection, quality-gates, uac, self-healing]
-related: [../08-workflows/config-injection.md, config-reloader-pattern.md]
+related: [/codex/08-workflows/config-injection.md, /codex/06-coding-standards/config-reloader-pattern.md]
 created: 2026-03-27
 authoritative_for: [os.getenv ban and UnifiedCloudConfig-only config sourcing standard]
-referenced_by: [codex/06-coding-standards/config-reloader-pattern.md]
+referenced_by: [/codex/06-coding-standards/config-reloader-pattern.md]
 owner:
 last_reviewed:
 code_refs:

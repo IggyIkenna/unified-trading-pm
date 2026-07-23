@@ -2,21 +2,35 @@
 doc_type: codex-ssot
 title: Strategy catalog — Codex expectations vs `strategy-service` workflow
 summary: >-
-  [SUPERSEDED, pre-v2] Alignment audit between codex 09-strategy prose expectations and the live
-  `strategy-service` workflow — the per-strategy template contract, the 9 system-wide hard rules, the
-  README index vs `__all__` exports (37 strategy classes), system-topology.json coverage gaps (16 classes
-  unmapped), and an actionable misalignment backlog. Replaced by architecture-v2.
+  [SUPERSEDED, pre-v2] Alignment audit between codex 09-strategy prose expectations and the live `strategy-service`
+  workflow — the per-strategy template contract, the 9 system-wide hard rules, the README index vs `__all__` exports (37
+  strategy classes), system-topology.json coverage gaps (16 classes unmapped), and an actionable misalignment backlog.
+  Replaced by architecture-v2.
 status: superseded
 nature: ssot
 asset_group: [meta]
 stage: [meta]
-repos: [execution-service, market-data-processing-service, market-tick-data-service, strategy-service, unified-trading-api, unified-trading-pm]
+repos:
+  [
+    execution-service,
+    market-data-processing-service,
+    market-tick-data-service,
+    strategy-service,
+    unified-trading-api,
+    unified-trading-pm,
+  ]
 scope: [engineer, admin]
 tags: [strategy, ssot-audit, reconciliation, catalogue, refactor]
-related: [STRATEGY_CATALOG_pre_v2.md, ../architecture-v2/README.md, ../TIER_ZERO_UI_DEMO_AND_PARITY.md]
+related:
+  [
+    /codex/09-strategy/_archived_pre_v2/STRATEGY_CATALOG_pre_v2.md,
+    ../architecture-v2/README.md,
+    ../TIER_ZERO_UI_DEMO_AND_PARITY.md,
+  ]
 created: 2026-03-27
 authoritative_for:
-referenced_by: [codex/09-strategy/TIER_ZERO_UI_DEMO_AND_PARITY.md, codex/09-strategy/_archived_pre_v2/STRATEGY_CATALOG_pre_v2.md]
+referenced_by:
+  [/codex/09-strategy/TIER_ZERO_UI_DEMO_AND_PARITY.md, /codex/09-strategy/_archived_pre_v2/STRATEGY_CATALOG_pre_v2.md]
 owner:
 last_reviewed:
 code_refs:

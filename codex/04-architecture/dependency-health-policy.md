@@ -2,8 +2,8 @@
 doc_type: codex-ssot
 title: Dependency Health Policy
 summary:
-  Closed-set 5-class DependencyClass taxonomy + per-dependency health-policy YAML (recovery/warning/escalation
-  buffers) evaluated by alerting-service into severity-graded WARN/SEV1/SEV0 alerts.
+  Closed-set 5-class DependencyClass taxonomy + per-dependency health-policy YAML (recovery/warning/escalation buffers)
+  evaluated by alerting-service into severity-graded WARN/SEV1/SEV0 alerts.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -11,7 +11,12 @@ stage: [meta]
 repos: [alerting-service, deployment-service, instruments-service]
 scope: [engineer, admin]
 tags: [dependency-health, alerting, escalation, monitoring, registry, observability]
-related: [../03-observability/data-feed-sla-registry.md, alerting-batch-live.md, ../03-observability/alerting.md]
+related:
+  [
+    /codex/03-observability/data-feed-sla-registry.md,
+    /codex/04-architecture/alerting-batch-live.md,
+    /codex/03-observability/alerting.md,
+  ]
 created: 2026-05-26
 authoritative_for: [DependencyClass taxonomy and dependency-health-policy escalation rule]
 referenced_by:

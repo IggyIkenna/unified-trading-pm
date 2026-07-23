@@ -9,13 +9,36 @@ status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
-repos: [deployment-service, deployment-ui, execution-service, features-service, instruments-service, market-tick-data-service]
+repos:
+  [
+    deployment-service,
+    deployment-ui,
+    execution-service,
+    features-service,
+    instruments-service,
+    market-tick-data-service,
+  ]
 scope: [engineer]
 tags: [defi, execution, amm, backtest, data-quality, verification]
-related: [batch-live-architecture.md, backtest-groups.md, cefi-batch-live.md]
+related:
+  [
+    /codex/04-architecture/batch-live-architecture.md,
+    /codex/04-architecture/backtest-groups.md,
+    /codex/04-architecture/cefi-batch-live.md,
+  ]
 created: 2026-05-10
 authoritative_for: [AMM per-pool-shape slippage and matching-engine simulation realism]
-referenced_by: [codex/02-data/defi-data-type-taxonomy.md, codex/04-architecture/batch-live-architecture.md, codex/04-architecture/cefi-batch-live.md, codex/04-architecture/concentrated-liquidity.md, codex/04-architecture/matching-engine-assumptions.md, codex/04-architecture/tenderly-execution-provider.md, codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md, codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md]
+referenced_by:
+  [
+    /codex/02-data/defi-data-type-taxonomy.md,
+    /codex/04-architecture/batch-live-architecture.md,
+    /codex/04-architecture/cefi-batch-live.md,
+    /codex/04-architecture/concentrated-liquidity.md,
+    /codex/04-architecture/matching-engine-assumptions.md,
+    /codex/04-architecture/tenderly-execution-provider.md,
+    /codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md,
+  ]
 owner:
 last_reviewed: 2026-05-17
 code_refs:
@@ -876,7 +899,7 @@ defi-simulate-proposal \
 ```
 
 CLI lives in `execution-service/execution_service/cli/simulate_proposal.py` (NEW Phase 4C); wired into
-`execution-service`'s service CLI per `codex/06-coding-standards/cli-convention.md`
+`execution-service`'s service CLI per `/codex/06-coding-standards/cli-convention.md`
 (`--operation simulate-proposal --mode batch --asset-group defi`). Used by
 `risk_simulations_limits_alerting_2026_05_10.md` sibling for governance-axis scenario coverage.
 
@@ -1531,12 +1554,12 @@ per cross_cutting #4; cross-side coordinate). Operator clicks APPROVE / REJECT b
 - Plan:
   [`defi_catalogue_chain_primitives_2026_05_10.md`](../../plans/active/defi_catalogue_chain_primitives_2026_05_10.md)
   Phase 3 — ships data_types this doc consumes.
-- Codex: [`defi-data-type-taxonomy.md`](../02-data/defi-data-type-taxonomy.md) — input data shapes.
+- Codex: [`defi-data-type-taxonomy.md`](/codex/02-data/defi-data-type-taxonomy.md) — input data shapes.
 - Codex: [`concentrated-liquidity.md`](concentrated-liquidity.md) — V3/V4 + Solana CLMM addendum (Phase 9B update).
 - Codex: [`batch-live-architecture.md`](batch-live-architecture.md) — live=batch principle (Phase 9D update).
 - Codex: [`tenderly-execution-provider.md`](tenderly-execution-provider.md) — Tenderly provider used by governance sim.
 - Codex:
-  [`../09-strategy/architecture-v2/cross-cutting/restaking-reward-economics.md`](../09-strategy/architecture-v2/cross-cutting/restaking-reward-economics.md)
+  [`/codex/09-strategy/architecture-v2/cross-cutting/restaking-reward-economics.md`](/codex/09-strategy/architecture-v2/cross-cutting/restaking-reward-economics.md)
   — restaking yield decomposition (Phase 9C update).
 - Code:
   [`execution-service/execution_service/matching_engine/`](../../../execution-service/execution_service/matching_engine/)

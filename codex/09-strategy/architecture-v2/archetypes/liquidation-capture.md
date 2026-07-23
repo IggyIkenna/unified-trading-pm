@@ -24,12 +24,12 @@ created: 2026-04-17
 authoritative_for: [LIQUIDATION_CAPTURE archetype specification]
 referenced_by:
   [
-    codex/04-architecture/capital-efficiency-patterns.md,
-    codex/09-strategy/architecture-v2/archetypes/arbitrage-mev-liquidation-bundle.md,
-    codex/09-strategy/architecture-v2/archetypes/arbitrage-price-dispersion.md,
-    codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md,
-    codex/09-strategy/architecture-v2/cross-cutting/mev-protection.md,
-    codex/09-strategy/architecture-v2/families/arbitrage-structural.md,
+    /codex/04-architecture/capital-efficiency-patterns.md,
+    /codex/09-strategy/architecture-v2/archetypes/arbitrage-mev-liquidation-bundle.md,
+    /codex/09-strategy/architecture-v2/archetypes/arbitrage-price-dispersion.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/mev-protection.md,
+    /codex/09-strategy/architecture-v2/families/arbitrage-structural.md,
   ]
 owner:
 last_reviewed:

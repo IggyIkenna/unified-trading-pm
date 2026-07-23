@@ -12,10 +12,14 @@ stage: [meta]
 repos: [alerting-service, deployment-api, deployment-service, deployment-ui, execution-service, features-service]
 scope: [engineer, admin]
 tags: [infrastructure, refactor, uac]
-related: [LIBRARY-DEPENDENCY-MATRIX.md, ../../04-architecture/tier-and-import-architecture.md]
+related:
+  [
+    /codex/05-infrastructure/unified-libraries/LIBRARY-DEPENDENCY-MATRIX.md,
+    ../../04-architecture/tier-and-import-architecture.md,
+  ]
 created: 2026-03-27
 authoritative_for: [internal library dependency graph (mermaid view)]
-referenced_by: [codex/05-infrastructure/unified-libraries/LIBRARY-DEPENDENCY-MATRIX.md]
+referenced_by: [/codex/05-infrastructure/unified-libraries/LIBRARY-DEPENDENCY-MATRIX.md]
 owner:
 last_reviewed: 2026-05-20
 code_refs:
@@ -352,7 +356,7 @@ See task `deployment-v3-four-way-split` and SSOT `06-coding-standards/integratio
 
 | Layer | Purpose                                     | Location                 | In quickmerge?   |
 | ----- | ------------------------------------------- | ------------------------ | ---------------- |
-| 0     | Contract alignment (AC↔UIC schema pairs)   | AC + UIC tests/          | Yes              |
+| 0     | Contract alignment (AC↔UIC schema pairs)    | AC + UIC tests/          | Yes              |
 | 1     | Schema robustness (fail-fast, corner cases) | Each repo tests/         | Yes              |
 | 2     | Infra verify (buckets, topics, IAM)         | deployment-service       | No (post-deploy) |
 | 3a    | Pipeline smoke (fast, happy path)           | system-integration-tests | No (post-deploy) |

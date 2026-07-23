@@ -13,10 +13,10 @@ scope: [engineer]
 tags: [cefi, manifest, shard-granularity, deribit, quality-gates, data-correctness]
 related:
   [
-    codex/02-data/availability-manifest-and-data-status.md,
-    codex/02-data/partitioning.md,
-    codex/04-architecture/shard-level-failure-isolation.md,
-    codex/06-coding-standards/validation-and-errors.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/02-data/partitioning.md,
+    /codex/04-architecture/shard-level-failure-isolation.md,
+    /codex/06-coding-standards/validation-and-errors.md,
   ]
 created: 2026-04-23
 authoritative_for:
@@ -57,8 +57,8 @@ constant + full column list; this doc is the CeFi-specific v6 column rollout ref
 `unified-trading-pm/plans/archive/manifest_schema_v6_quote_margin_combo_2026_04_23.plan.md` +
 `unified-trading-pm/plans/active/writegate_honest_coverage_endtoend_2026_05_06.md`. **Related:**
 [partitioning.md](./partitioning.md),
-[04-architecture/shard-level-failure-isolation.md](../04-architecture/shard-level-failure-isolation.md),
-[06-coding-standards/validation-and-errors.md](../06-coding-standards/validation-and-errors.md).
+[04-architecture/shard-level-failure-isolation.md](/codex/04-architecture/shard-level-failure-isolation.md),
+[06-coding-standards/validation-and-errors.md](/codex/06-coding-standards/validation-and-errors.md).
 
 ## Problem v6 solves
 
@@ -190,8 +190,8 @@ rows participate in the cluster count for their parent root.
 ### Three-category empty-output decision applies (post-2026-05-06)
 
 Per workspace CLAUDE.md `§ Three-category empty-output decision` +
-[`06-coding-standards/validation-and-errors.md` §1](../06-coding-standards/validation-and-errors.md), every empty-output
-result for a CeFi bundle adapter resolves to one of:
+[`06-coding-standards/validation-and-errors.md` §1](/codex/06-coding-standards/validation-and-errors.md), every
+empty-output result for a CeFi bundle adapter resolves to one of:
 
 - **A. Honest absence** — source returned 0 ticks for the requested window → `record_empty(row_key, attempted_at)`.
 - **B. Upstream timestamp bias** — source returned ticks; ALL fall outside the requested day →

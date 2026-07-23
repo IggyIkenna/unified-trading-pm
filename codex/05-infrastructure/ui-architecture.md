@@ -12,10 +12,22 @@ stage: [meta]
 repos: [client-reporting-api, deployment-api, deployment-ui, unified-trading-pm, unified-trading-system-ui]
 scope: [engineer, admin]
 tags: [ui, infrastructure, consolidation, deployment]
-related: [ui-functionality-requirements.md, ui-dependency-matrix.md, deployment-ui-architecture.md, runtime-tiers-and-deployment.md]
+related:
+  [
+    /codex/05-infrastructure/ui-functionality-requirements.md,
+    /codex/05-infrastructure/ui-dependency-matrix.md,
+    /codex/05-infrastructure/deployment-ui-architecture.md,
+    /codex/05-infrastructure/runtime-tiers-and-deployment.md,
+  ]
 created: 2026-05-13
 authoritative_for: [UI architecture SSOT entry point (active UI surface)]
-referenced_by: [codex/05-infrastructure/runtime-tiers-and-deployment.md, codex/05-infrastructure/ui-dependency-matrix.md, codex/05-infrastructure/ui-functionality-requirements.md, codex/05-infrastructure/ui-setup-checklist.md]
+referenced_by:
+  [
+    /codex/05-infrastructure/runtime-tiers-and-deployment.md,
+    /codex/05-infrastructure/ui-dependency-matrix.md,
+    /codex/05-infrastructure/ui-functionality-requirements.md,
+    /codex/05-infrastructure/ui-setup-checklist.md,
+  ]
 owner:
 last_reviewed: 2026-05-13
 code_refs:

@@ -13,12 +13,17 @@ stage: [meta]
 repos: [instruments-service]
 scope: [engineer, admin]
 tags: [defi, instruments, mtds, backfill, catalogue]
-related: [drift-v2-data-sources.md, defi-execution-overview.md, ../02-data/defi-canonical-naming-ssot.md]
+related:
+  [
+    /codex/04-architecture/drift-v2-data-sources.md,
+    /codex/04-architecture/defi-execution-overview.md,
+    /codex/02-data/defi-canonical-naming-ssot.md,
+  ]
 created: 2026-05-13
 authoritative_for:
   [Solana DeFi adapter coverage (perp-DEX/AMM/CLOB/oracle/restaking venue registry + program IDs + deploy-date floors)]
 referenced_by:
-  [codex/04-architecture/drift-v2-data-sources.md, codex/09-strategy/architecture-v2/archetypes/carry-basis-perp.md]
+  [/codex/04-architecture/drift-v2-data-sources.md, /codex/09-strategy/architecture-v2/archetypes/carry-basis-perp.md]
 owner: defi-adapters
 last_reviewed: 2026-05-17
 code_refs:
@@ -45,7 +50,7 @@ type: architecture
 > under a sibling task. GCS/manifest data purge is a separate sibling task
 > (`unified-trading-pm/plans/active/issues/solana_perp_dex_cull_drift_pacifica_2026_07_16.md`). **Everything below this
 > banner describing DRIFT-SOLANA / PACIFICA-SOLANA / the Velocity Data API is now HISTORICAL RECORD ONLY — do not use it
-> to justify re-adding these venues.** `codex/04-architecture/drift-v2-data-sources.md` is SUPERSEDED by this banner in
+> to justify re-adding these venues.** `/codex/04-architecture/drift-v2-data-sources.md` is SUPERSEDED by this banner in
 > full.
 
 > **SSOT for Solana DeFi adapter architecture.** Created: 2026-05-13 per
@@ -184,7 +189,7 @@ Pre-launch manifest rows (2018-01-01 start date) were incorrectly `expected_unat
 ### DRIFT-SOLANA capture path resolved (2026-06-01 — Velocity Data API)
 
 > Added 2026-06-01 from `plans/archive/solana_basis_trading_mvp_2026_06_01.plan.md` Phase 1 (DriftV2HistoricalIngester
-> shipped at mtds@0f70f376). Full SSOT: `codex/04-architecture/drift-v2-data-sources.md`.
+> shipped at mtds@0f70f376). Full SSOT: `/codex/04-architecture/drift-v2-data-sources.md`.
 
 The MTDS consumer gap is closed via the **Drift Velocity Data API** (`data.api.drift.trade`), not the S3 archive.
 Per-day historical endpoints (free tier, no auth): `/market/{symbol}/fundingRates/{Y}/{M}/{D}` (JSON) +
@@ -300,9 +305,9 @@ MTDS perp DEX source wiring is **NOT IN PLAN B**. Tracked in:
 
 Until MTDS source is wired, DRIFT-SOLANA (the one remaining Plan B venue) has 0% `perp_funding` capture via this Plan-B
 path — note `derivative_ticker` capture for DRIFT-SOLANA WAS wired 2026-07-15 via the Drift Data API through a different
-pipeline (see `codex/02-data/defi-data-types-catalog.md` §4a); this section describes the original, still-unwired Plan-B
-perp_funding path only. The instruments-service adapter only provides instrument discovery (reference data), not market
-data capture. (MANGO/ZETA/FLASH removed 2026-07-15 — no longer applicable.)
+pipeline (see `/codex/02-data/defi-data-types-catalog.md` §4a); this section describes the original, still-unwired
+Plan-B perp_funding path only. The instruments-service adapter only provides instrument discovery (reference data), not
+market data capture. (MANGO/ZETA/FLASH removed 2026-07-15 — no longer applicable.)
 
 ### MTDS Solana source wiring (Plan C — spot AMM/CLOB + oracle)
 
@@ -327,4 +332,4 @@ Actual per-epoch AVS reward rates require MTDS source wiring. Tracked in
 - Solana utils: `instruments-service/instruments_service/reference_data/adapters/defi/_solana_utils.py`
 - Pyth price feed SSOT: `instruments-service/instruments_service/reference_data/adapters/defi/pyth.py` §
   `PYTH_PRICE_FEEDS`
-- Related: `codex/04-architecture/defi-execution-architecture.md` (overall DeFi execution chain)
+- Related: `/codex/04-architecture/defi-execution-architecture.md` (overall DeFi execution chain)

@@ -22,14 +22,24 @@ scope: [engineer, admin]
 tags: [tier, refactor, uac, ssot, quality-gates, protocol-injection, imports, architecture]
 related:
   [
-    runtime-deployment-topology.md,
-    commercial-service-families.md,
-    ../06-coding-standards/integration-testing-layers.md,
-    cloud-agnostic-migration.md,
+    /codex/04-architecture/runtime-deployment-topology.md,
+    /codex/04-architecture/commercial-service-families.md,
+    /codex/06-coding-standards/integration-testing-layers.md,
+    /codex/04-architecture/cloud-agnostic-migration.md,
   ]
 created: 2026-03-27
 authoritative_for: [5-tier dependency model + cross-tier protocol-injection contract]
-referenced_by: [codex/02-data/contracts-scope-and-layout.md, codex/04-architecture/TOPOLOGY-DAG.md, codex/04-architecture/cloud-agnostic-migration.md, codex/04-architecture/commercial-service-families.md, codex/04-architecture/instrument-universe-registry-consolidation.md, codex/04-architecture/runtime-deployment-topology.md, codex/04-architecture/service-control-surface.md, codex/04-architecture/service-framework.md]
+referenced_by:
+  [
+    /codex/02-data/contracts-scope-and-layout.md,
+    /codex/04-architecture/TOPOLOGY-DAG.md,
+    /codex/04-architecture/cloud-agnostic-migration.md,
+    /codex/04-architecture/commercial-service-families.md,
+    /codex/04-architecture/instrument-universe-registry-consolidation.md,
+    /codex/04-architecture/runtime-deployment-topology.md,
+    /codex/04-architecture/service-control-surface.md,
+    /codex/04-architecture/service-framework.md,
+  ]
 owner:
 last_reviewed: 2026-06-25
 code_refs:
@@ -261,7 +271,7 @@ peer service. The concrete layers:
   cross-service Python imports; credential-free, `--block-network`. This is what local `quality-gates.sh` runs.
 - **Layer-3 / SIT (cross-service interaction):** HTTP / PubSub / GCS only; fires at the staging promotion boundary on a
   real breaking public-surface change, NOT on every dev push. See
-  `codex/06-coding-standards/integration-testing-layers.md` § "When Each Layer Runs".
+  `/codex/06-coding-standards/integration-testing-layers.md` § "When Each Layer Runs".
 
 ### check-no-service-deps.py — Live Enforcement (2026-06-11)
 

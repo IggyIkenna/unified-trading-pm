@@ -8,17 +8,26 @@ status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
-repos: [alerting-service, batch-live-reconciliation-service, deployment-service, execution-service, features-service, strategy-service]
+repos:
+  [
+    alerting-service,
+    batch-live-reconciliation-service,
+    deployment-service,
+    execution-service,
+    features-service,
+    strategy-service,
+  ]
 scope: [engineer, admin]
 tags: [reconciliation, pipeline, backfill, data-quality, monitoring, execution]
 related:
   [
-    ../04-architecture/reconciliation-resolution.md,
-    ../04-architecture/runtime-deployment-topology.md,
-    ../09-strategy/operational/paper-batch-live-reconciliation.md,
+    /codex/04-architecture/reconciliation-resolution.md,
+    /codex/04-architecture/runtime-deployment-topology.md,
+    /codex/09-strategy/operational/paper-batch-live-reconciliation.md,
   ]
 created: 2026-03-27
-authoritative_for: [T+1 batch reconciliation pipeline schedule (Cloud Scheduler stage DAG + t1-recon/ GCS namespace isolation)]
+authoritative_for:
+  [T+1 batch reconciliation pipeline schedule (Cloud Scheduler stage DAG + t1-recon/ GCS namespace isolation)]
 referenced_by:
 owner:
 last_reviewed:

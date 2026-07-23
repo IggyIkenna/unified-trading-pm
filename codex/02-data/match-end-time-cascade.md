@@ -2,10 +2,10 @@
 doc_type: codex-ssot
 title: Match end-time resolution cascade
 summary: >-
-  SSOT for sports fixture match_end_time derivation — the first-match-wins priority cascade (api_football native →
-  SFI progressive-stats freeze-detect → FootyStats post-match → Understat post-match → kickoff+120min fallback)
-  behind UTL resolve_match_end_time(), the defensible UTC match-conclusion timestamp used for post-match
-  available_at stamping, odds settlement and live=batch latency; plus the UAC schema columns it lands in.
+  SSOT for sports fixture match_end_time derivation — the first-match-wins priority cascade (api_football native → SFI
+  progressive-stats freeze-detect → FootyStats post-match → Understat post-match → kickoff+120min fallback) behind UTL
+  resolve_match_end_time(), the defensible UTC match-conclusion timestamp used for post-match available_at stamping,
+  odds settlement and live=batch latency; plus the UAC schema columns it lands in.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -13,10 +13,16 @@ stage: [meta]
 repos: [instruments-service, unified-trading-library]
 scope: [engineer, admin]
 tags: [sports, footystats, data-quality, validation, instruments]
-related: [availability-manifest-and-data-status.md, honest-absence-downstream-handling.md, ../04-architecture/batch-live-architecture.md, ../../plans/epics/sports_master.md]
+related:
+  [
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/02-data/honest-absence-downstream-handling.md,
+    /codex/04-architecture/batch-live-architecture.md,
+    ../../plans/epics/sports_master.md,
+  ]
 created: 2026-05-13
 authoritative_for: [sports fixture match_end_time resolution cascade]
-referenced_by: [codex/02-data/sports-fixtures-lifecycle.md]
+referenced_by: [/codex/02-data/sports-fixtures-lifecycle.md]
 owner: sports-domain
 last_reviewed: 2026-05-17
 code_refs:
@@ -134,6 +140,6 @@ Unit tests at `unified-trading-library/tests/unit/test_fixtures_resolver.py` (UT
 
 - **Plan**: `plans/epics/sports_master.md` § "C.6 + C.10 match_end_time cascade"
 - **Implementation**: `unified-trading-library/unified_trading_library/fixtures.py`
-- **Batch=live SSOT**: `codex/04-architecture/batch-live-architecture.md`
-- **Availability stamping**: `codex/02-data/availability-manifest-and-data-status.md`
-- **Honest absence**: `codex/02-data/honest-absence-downstream-handling.md`
+- **Batch=live SSOT**: `/codex/04-architecture/batch-live-architecture.md`
+- **Availability stamping**: `/codex/02-data/availability-manifest-and-data-status.md`
+- **Honest absence**: `/codex/02-data/honest-absence-downstream-handling.md`

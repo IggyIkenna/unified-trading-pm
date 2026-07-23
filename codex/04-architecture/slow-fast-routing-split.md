@@ -3,7 +3,8 @@ doc_type: codex-ssot
 title: Slow-Fast Routing Split (Architecture View)
 summary:
   Architectural justification for splitting venue routing — slow-path eligibility (strategy-service config,
-  human-approved) vs fast-path per-order SOR (execution-service, ms); the StrategyInstruction contract, meta-broker case, forbidden bypasses.
+  human-approved) vs fast-path per-order SOR (execution-service, ms); the StrategyInstruction contract, meta-broker
+  case, forbidden bypasses.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -11,10 +12,22 @@ stage: [meta]
 repos: [execution-service, market-tick-data-service, strategy-service]
 scope: [engineer, admin]
 tags: [execution, strategy, mtds, ssot]
-related: [../09-strategy/architecture-v2/cross-cutting/venue-selection-split.md, execution-policy.md, ../02-venues/venue-registry-reference.md]
+related:
+  [
+    /codex/09-strategy/architecture-v2/cross-cutting/venue-selection-split.md,
+    /codex/04-architecture/execution-policy.md,
+    /codex/02-venues/venue-registry-reference.md,
+  ]
 created: 2026-04-17
 authoritative_for: [slow-fast venue-routing split architecture (strategy eligibility vs execution SOR)]
-referenced_by: [codex/02-venues/prime-brokers.md, codex/03-services/venue-capability-registry.md, codex/04-architecture/strategy-execution-protocol.md, codex/09-strategy/architecture-v2/axes/venue-eligibility.md, codex/09-strategy/architecture-v2/cross-cutting/venue-selection-split.md]
+referenced_by:
+  [
+    /codex/02-venues/prime-brokers.md,
+    /codex/03-services/venue-capability-registry.md,
+    /codex/04-architecture/strategy-execution-protocol.md,
+    /codex/09-strategy/architecture-v2/axes/venue-eligibility.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/venue-selection-split.md,
+  ]
 owner:
 last_reviewed: 2026-05-17
 code_refs:
@@ -24,7 +37,7 @@ code_refs:
 
 > **What it is:** The architectural justification and contract for splitting venue routing into two services —
 > slow-moving eligibility (strategy-service) + fast-moving SOR (execution-service). Companion to
-> [../09-strategy/architecture-v2/cross-cutting/venue-selection-split.md](../09-strategy/architecture-v2/cross-cutting/venue-selection-split.md)
+> [/codex/09-strategy/architecture-v2/cross-cutting/venue-selection-split.md](/codex/09-strategy/architecture-v2/cross-cutting/venue-selection-split.md)
 > which covers the strategy-facing perspective.
 
 ## The core split
@@ -220,13 +233,13 @@ pick max
 ## Cross-references
 
 - Strategy-facing perspective:
-  [../09-strategy/architecture-v2/cross-cutting/venue-selection-split.md](../09-strategy/architecture-v2/cross-cutting/venue-selection-split.md)
+  [/codex/09-strategy/architecture-v2/cross-cutting/venue-selection-split.md](/codex/09-strategy/architecture-v2/cross-cutting/venue-selection-split.md)
 - Venue eligibility axis:
-  [../09-strategy/architecture-v2/axes/venue-eligibility.md](../09-strategy/architecture-v2/axes/venue-eligibility.md)
+  [/codex/09-strategy/architecture-v2/axes/venue-eligibility.md](/codex/09-strategy/architecture-v2/axes/venue-eligibility.md)
 - Execution policies: [execution-policy.md](execution-policy.md)
 - Venue-account coordination:
-  [../09-strategy/architecture-v2/cross-cutting/venue-account-coordination.md](../09-strategy/architecture-v2/cross-cutting/venue-account-coordination.md)
-- Venue registry: [../02-venues/venue-registry-reference.md](../02-venues/venue-registry-reference.md)
+  [/codex/09-strategy/architecture-v2/cross-cutting/venue-account-coordination.md](/codex/09-strategy/architecture-v2/cross-cutting/venue-account-coordination.md)
+- Venue registry: [/codex/02-venues/venue-registry-reference.md](/codex/02-venues/venue-registry-reference.md)
 
 ## Not in this doc
 

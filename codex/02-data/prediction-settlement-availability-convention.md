@@ -2,11 +2,10 @@
 doc_type: codex-ssot
 title: Prediction Settlement / Availability Convention
 summary: >-
-  Prediction settlement/availability convention SSOT — available_to for a prediction market = its
-  settlement date INCLUSIVE (active iff available_from <= D <= available_to; day D+1 =
-  EXPECTED_INSTRUMENT_DELISTED), making catalogue-active-on-D == manifest-captured-on-D reconcilable;
-  fixes the Jun-2026 off-by-one where available_to drifted to a future snapshot day instead of the
-  venue-declared settlement date.
+  Prediction settlement/availability convention SSOT — available_to for a prediction market = its settlement date
+  INCLUSIVE (active iff available_from <= D <= available_to; day D+1 = EXPECTED_INSTRUMENT_DELISTED), making
+  catalogue-active-on-D == manifest-captured-on-D reconcilable; fixes the Jun-2026 off-by-one where available_to drifted
+  to a future snapshot day instead of the venue-declared settlement date.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -16,13 +15,13 @@ scope: [engineer, admin]
 tags: [prediction, instruments, data-correctness, manifest, reconciliation, catalogue]
 related:
   [
-    codex/02-data/instruments-foundation-and-catalogue-completeness.md,
-    codex/02-data/availability-manifest-and-data-status.md,
-    codex/02-data/prediction-schema-paths.md,
+    /codex/02-data/instruments-foundation-and-catalogue-completeness.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/02-data/prediction-schema-paths.md,
   ]
 created: 2026-06-27
 authoritative_for: [prediction available_to settlement-date boundary convention]
-referenced_by: [codex/02-data/prediction-schema-paths.md]
+referenced_by: [/codex/02-data/prediction-schema-paths.md]
 owner:
 last_reviewed: 2026-06-27
 code_refs:
@@ -148,7 +147,7 @@ Expected result after the fix:
 
 ## Related SSOTs
 
-- `codex/02-data/instruments-foundation-and-catalogue-completeness.md`
-- `codex/02-data/availability-manifest-and-data-status.md`
+- `/codex/02-data/instruments-foundation-and-catalogue-completeness.md`
+- `/codex/02-data/availability-manifest-and-data-status.md`
 - `instruments-service/scripts/build_instrument_catalogue.py` — `build_prediction_catalogue_dataframe`
 - `instruments-service/scripts/enumerate_expected_universe.py` — `_enumerate_v2_prediction`

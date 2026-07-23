@@ -9,13 +9,27 @@ status: superseded
 nature: ssot
 asset_group: [meta]
 stage: [meta]
-repos: [alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-ui, execution-service]
+repos:
+  [
+    alerting-service,
+    batch-live-reconciliation-service,
+    client-reporting-api,
+    deployment-api,
+    deployment-ui,
+    execution-service,
+  ]
 scope: [engineer, admin]
 tags: [ui, infrastructure, superseded, consolidation]
-related: [ui-architecture.md, ui-dependency-matrix.md]
+related: [/codex/05-infrastructure/ui-architecture.md, /codex/05-infrastructure/ui-dependency-matrix.md]
 created: 2026-03-27
 authoritative_for: []
-referenced_by: [codex/05-infrastructure/ui-architecture.md, codex/05-infrastructure/ui-dependency-matrix.md, codex/06-coding-standards/ui-testing-layers.md, codex/DEPRECATED_UIS_NOTICE.md]
+referenced_by:
+  [
+    /codex/05-infrastructure/ui-architecture.md,
+    /codex/05-infrastructure/ui-dependency-matrix.md,
+    /codex/06-coding-standards/ui-testing-layers.md,
+    codex/DEPRECATED_UIS_NOTICE.md,
+  ]
 owner:
 last_reviewed: 2026-05-13
 code_refs:

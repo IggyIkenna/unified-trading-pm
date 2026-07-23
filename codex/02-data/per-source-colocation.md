@@ -3,10 +3,9 @@ doc_type: codex-ssot
 title: Per-Source Co-Location Pattern
 summary: >-
   Per-source co-location pattern SSOT — every external data source gets ONE flat
-  unified_api_contracts/external/{source}/ dir (schemas.py + normalize.py + mocks/ VCR cassettes +
-  examples/); normalize_utils/ holds the shared helpers and is UAC-internal (consumers use the
-  unified_api_contracts.{domain} facade, never import normalize_utils). 49 sources have normalize.py,
-  25 are schemas-only.
+  unified_api_contracts/external/{source}/ dir (schemas.py + normalize.py + mocks/ VCR cassettes + examples/);
+  normalize_utils/ holds the shared helpers and is UAC-internal (consumers use the unified_api_contracts.{domain}
+  facade, never import normalize_utils). 49 sources have normalize.py, 25 are schemas-only.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -16,13 +15,13 @@ scope: [engineer, admin]
 tags: [uac, registry, refactor, catalogue]
 related:
   [
-    codex/02-data/contracts-scope-and-layout.md,
-    codex/02-data/vcr-cassette-ownership.md,
-    codex/02-data/schema-governance.md,
+    /codex/02-data/contracts-scope-and-layout.md,
+    /codex/02-data/vcr-cassette-ownership.md,
+    /codex/02-data/schema-governance.md,
   ]
 created: 2026-03-27
 authoritative_for: [UAC external/ per-source co-location directory layout]
-referenced_by: [codex/02-data/operation-capability-registry.md, codex/02-data/schema-governance.md]
+referenced_by: [/codex/02-data/operation-capability-registry.md, /codex/02-data/schema-governance.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

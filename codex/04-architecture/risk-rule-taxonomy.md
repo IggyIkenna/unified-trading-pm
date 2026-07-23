@@ -4,8 +4,8 @@ title: Risk Rule Taxonomy
 summary:
   The closed-set UAC vocabulary for every Layer-2 pre-flight risk decision — RiskRule = RiskRuleId (28 members) ×
   RiskRuleScope (7 axes) × RiskRuleTrigger (13 typed subtypes) × RiskRuleConsequence (BLOCK / SCALE_DOWN / MONITOR /
-  TEST_ONLY); rules live in a UAC registry (never inline in service code), consumed via risk_preflight(); includes
-  the RiskRuleConsequence × 5-canonical-SSOT event-emission cross-product (§7 seam diagram).
+  TEST_ONLY); rules live in a UAC registry (never inline in service code), consumed via risk_preflight(); includes the
+  RiskRuleConsequence × 5-canonical-SSOT event-emission cross-product (§7 seam diagram).
 status: current
 nature: ssot
 asset_group: [meta]
@@ -15,15 +15,21 @@ scope: [engineer, admin]
 tags: [risk, execution, strategy, uac, kill-switch]
 related:
   [
-    risk-preflight-flow.md,
-    risk-breaker-seam.md,
-    kill-switch-circuit-breaker.md,
-    autonomous-recovery-matrix.md,
+    /codex/04-architecture/risk-preflight-flow.md,
+    /codex/04-architecture/risk-breaker-seam.md,
+    /codex/04-architecture/kill-switch-circuit-breaker.md,
+    /codex/04-architecture/autonomous-recovery-matrix.md,
   ]
 created: 2026-05-11
-authoritative_for:
-  [RiskRule taxonomy (RiskRuleId/Scope/Trigger/Consequence closed enums)]
-referenced_by: [codex/04-architecture/capital-efficiency-patterns.md, codex/04-architecture/circuit-breaker-rule-taxonomy.md, codex/04-architecture/kill-switch-circuit-breaker.md, codex/04-architecture/risk-breaker-seam.md, codex/04-architecture/risk-preflight-flow.md]
+authoritative_for: [RiskRule taxonomy (RiskRuleId/Scope/Trigger/Consequence closed enums)]
+referenced_by:
+  [
+    /codex/04-architecture/capital-efficiency-patterns.md,
+    /codex/04-architecture/circuit-breaker-rule-taxonomy.md,
+    /codex/04-architecture/kill-switch-circuit-breaker.md,
+    /codex/04-architecture/risk-breaker-seam.md,
+    /codex/04-architecture/risk-preflight-flow.md,
+  ]
 owner:
 last_reviewed: 2026-05-17
 code_refs:
@@ -41,7 +47,7 @@ code_refs:
 ## TL;DR
 
 `RiskRule` lives at **Layer 2** of the
-[4-layer risk-gates model](../09-strategy/architecture-v2/cross-cutting/risk-gates.md) — between strategy self-check
+[4-layer risk-gates model](/codex/09-strategy/architecture-v2/cross-cutting/risk-gates.md) — between strategy self-check
 (Layer 1) and execution-service pre-trade checks (Layer 3). Each rule answers one question: _given this instruction and
 current portfolio state, what should happen?_ The closed-set answer is one of `BLOCK` / `SCALE_DOWN` / `MONITOR` /
 `TEST_ONLY`. Rules are declared in a UAC registry
@@ -193,7 +199,7 @@ Reviewers reject any PR that drifts this table from the plan-body source-of-trut
 - Kill switch + circuit breaker mechanics: [kill-switch-circuit-breaker.md](kill-switch-circuit-breaker.md)
 - Capital-at-risk ceiling composition: [capital-efficiency-patterns.md](capital-efficiency-patterns.md)
 - 4-layer risk-gates model (Layer 1-4 separation):
-  [../09-strategy/architecture-v2/cross-cutting/risk-gates.md](../09-strategy/architecture-v2/cross-cutting/risk-gates.md)
+  [/codex/09-strategy/architecture-v2/cross-cutting/risk-gates.md](/codex/09-strategy/architecture-v2/cross-cutting/risk-gates.md)
 - Autonomous recovery (Layer 4 ErrorAction): [autonomous-recovery-matrix.md](autonomous-recovery-matrix.md)
 - Plan-of-record:
   [plans/active/risk_simulations_limits_alerting_2026_05_10.md](../../plans/archive/risk_simulations_limits_alerting_2026_05_10.md)

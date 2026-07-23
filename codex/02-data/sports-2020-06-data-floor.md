@@ -25,10 +25,10 @@ scope: [engineer, admin]
 tags: [sports, data-floor, honest-coverage, fabrication, wipe, coverage-denominator, fixture-expectation, hard-rule]
 related:
   [
-    availability-manifest-and-data-status.md,
-    honest-coverage-model.md,
-    honest-absence-downstream-handling.md,
-    gcs-and-manifest-delete-safety-protocol.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/02-data/honest-coverage-model.md,
+    /codex/02-data/honest-absence-downstream-handling.md,
+    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
     ../../plans/active/sports_master_closeout_2026_07_21.md,
   ]
 created: 2026-07-21

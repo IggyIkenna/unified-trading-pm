@@ -15,22 +15,22 @@ scope: [engineer, admin]
 tags: [manifest, data-correctness, backfill, data-status, ssot]
 related:
   [
-    ../02-data/availability-manifest-and-data-status.md,
-    ../05-infrastructure/deployment-clusters-live-vs-batch.md,
-    ../06-coding-standards/validation-and-errors.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/05-infrastructure/deployment-clusters-live-vs-batch.md,
+    /codex/06-coding-standards/validation-and-errors.md,
   ]
 created: 2026-03-27
 authoritative_for: [shard-level failure isolation rule (no-raise per-shard loop + record_failed continuation)]
 referenced_by:
   [
-    codex/02-data/defi-venue-protocol-catalogue.md,
-    codex/02-data/prediction-schema-paths.md,
-    codex/02-data/shard-granularity-cefi.md,
-    codex/02-data/sports-adapter-dependency-order.md,
-    codex/02-data/sports-scheduling-and-sharding.md,
-    codex/04-architecture/service-contract-audit-template.md,
-    codex/04-architecture/service-framework.md,
-    codex/05-infrastructure/deployment-clusters-live-vs-batch.md,
+    /codex/02-data/defi-venue-protocol-catalogue.md,
+    /codex/02-data/prediction-schema-paths.md,
+    /codex/02-data/shard-granularity-cefi.md,
+    /codex/02-data/sports-adapter-dependency-order.md,
+    /codex/02-data/sports-scheduling-and-sharding.md,
+    /codex/04-architecture/service-contract-audit-template.md,
+    /codex/04-architecture/service-framework.md,
+    /codex/05-infrastructure/deployment-clusters-live-vs-batch.md,
   ]
 owner:
 last_reviewed: 2026-07-12
@@ -44,9 +44,9 @@ code_refs:
 > **Category-count correction (2026-07-12, finding 346)** — this doc previously claimed a **3-category** empty-output
 > decision tree (was: honest-absence / upstream-timestamp-bias / malformed-field only, matching
 > `authoritative_for: [... three-category empty-output decision tree]`). The taxonomy SSOT is
-> [`06-coding-standards/validation-and-errors.md`](../06-coding-standards/validation-and-errors.md) §1, which documents
-> **4 categories** (adds **D. zero-activity-bar**, catalog-aware, operator directive 2026-05-07). Corrected below; this
-> doc's `authoritative_for` no longer claims the decision-tree count — that authority lives solely in
+> [`06-coding-standards/validation-and-errors.md`](/codex/06-coding-standards/validation-and-errors.md) §1, which
+> documents **4 categories** (adds **D. zero-activity-bar**, catalog-aware, operator directive 2026-05-07). Corrected
+> below; this doc's `authoritative_for` no longer claims the decision-tree count — that authority lives solely in
 > `validation-and-errors.md`.
 
 <!-- MULTI_AXIS_CORRECTION_2026_05_06 -->
@@ -104,8 +104,8 @@ disk. NO silent NaN placeholder rows.
 | **4. Cluster coverage ≥ expected** (BUNDLED only) | For `data_type ∈ BUNDLED_DATA_TYPES`, `expected_root_clusters` + `cluster_extractor` MANDATORY (UTL guard raises `MissingClusterValidationError` if absent; QG STEP 5.64 statically checks). | `record_failed(ClusterCoverageError(missing, observed))`.            |
 
 **Empty result decision tree (4 categories — was 3 prior to 2026-07-12 finding 346, NO silent NaN placeholders; taxonomy
-SSOT is [`06-coding-standards/validation-and-errors.md`](../06-coding-standards/validation-and-errors.md) §1, NOT this
-doc)**: every empty-result condition resolves to one of:
+SSOT is [`06-coding-standards/validation-and-errors.md`](/codex/06-coding-standards/validation-and-errors.md) §1, NOT
+this doc)**: every empty-result condition resolves to one of:
 
 - **A. Honest absence** — source returned 0 ticks for the requested window → `record_empty(row_key, attempted_at)`.
 - **B. Upstream timestamp bias** — source returned ticks; ALL fall outside the requested day after `interval_idx` filter
@@ -133,7 +133,7 @@ boundary, manifest row key, data-status display rollup, downstream service pre-f
 drill-down. Drift between any two = silent correctness bug.
 
 **Two cluster types** (see
-[`05-infrastructure/deployment-clusters-live-vs-batch.md`](../05-infrastructure/deployment-clusters-live-vs-batch.md)
+[`05-infrastructure/deployment-clusters-live-vs-batch.md`](/codex/05-infrastructure/deployment-clusters-live-vs-batch.md)
 for full taxonomy):
 
 - **Live deployment cluster** = multiple different services co-located + co-running (instruments-service + MTDS + MDPS +
@@ -173,7 +173,7 @@ Per the workspace CLAUDE.md `Per-asset-group shard-key matrix`, the data-pipelin
 | **Prediction**           | `(asset_group=prediction, venue, data_type=prediction_canonical_question_group, canonical_question_group, day)`                                                           | `market_id` is row-level column NOT shard axis (per Q1 resolution); cluster_extractor=market_id validates per-canonical-question coverage; lifecycle bounds enforced             |
 
 For the complete per-service shard dimension matrix, see
-[`02-data/availability-manifest-and-data-status.md`](../02-data/availability-manifest-and-data-status.md).
+[`02-data/availability-manifest-and-data-status.md`](/codex/02-data/availability-manifest-and-data-status.md).
 
 ---
 
@@ -302,15 +302,15 @@ progress + STOPPED/FAILED at exit; events stream to
 ## Cross-references
 
 - **Manifest semantics + per-service shard dimension matrix**:
-  [`02-data/availability-manifest-and-data-status.md`](../02-data/availability-manifest-and-data-status.md)
+  [`02-data/availability-manifest-and-data-status.md`](/codex/02-data/availability-manifest-and-data-status.md)
 - **Deployment cluster taxonomy (live vs batch)**:
-  [`05-infrastructure/deployment-clusters-live-vs-batch.md`](../05-infrastructure/deployment-clusters-live-vs-batch.md)
+  [`05-infrastructure/deployment-clusters-live-vs-batch.md`](/codex/05-infrastructure/deployment-clusters-live-vs-batch.md)
 - **deployment-service shard alignment + GCS path templates**:
   [`deployment-service/docs/SHARDING_AND_DATA_ALIGNMENT.md`](../../../deployment-service/docs/SHARDING_AND_DATA_ALIGNMENT.md)
 - **Four-category empty-output decision (taxonomy SSOT — was documented as three-category in this doc until 2026-07-12
   finding 346; corrected above)**:
-  [`06-coding-standards/validation-and-errors.md`](../06-coding-standards/validation-and-errors.md)
+  [`06-coding-standards/validation-and-errors.md`](/codex/06-coding-standards/validation-and-errors.md)
 - **Cluster validation + 4-pillar write-gate**:
-  [`06-coding-standards/validation-and-errors.md`](../06-coding-standards/validation-and-errors.md)
+  [`06-coding-standards/validation-and-errors.md`](/codex/06-coding-standards/validation-and-errors.md)
 - **Active plan**:
   [`plans/active/writegate_honest_coverage_endtoend_2026_05_06.md`](../../plans/active/writegate_honest_coverage_endtoend_2026_05_06.md)

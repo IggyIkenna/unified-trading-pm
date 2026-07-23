@@ -2,11 +2,9 @@
 doc_type: codex-ssot
 title: Coding Standard — Strategy Identity + Versioning
 summary: >-
-  Strategy identity + versioning rules — the 5-layer identity
-  (family→archetype→instance→config→derived categories), archetype-ID
-  structural-descriptor rules (no CEFI_/DEFI_/TRADFI_ prefixes), the slot-label grammar,
-  config content-hash + monotonic version, the -vN slot suffix, the full event-tag tuple,
-  and the QG enforcement checks.
+  Strategy identity + versioning rules — the 5-layer identity (family→archetype→instance→config→derived categories),
+  archetype-ID structural-descriptor rules (no CEFI_/DEFI_/TRADFI_ prefixes), the slot-label grammar, config
+  content-hash + monotonic version, the -vN slot suffix, the full event-tag tuple, and the QG enforcement checks.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -14,10 +12,26 @@ stage: [meta]
 repos: [deployment-service, strategy-service]
 scope: [engineer]
 tags: [strategy, versioning, uac, quality-gates, execution]
-related: [../09-strategy/architecture-v2/README.md, strategy-display-conventions.md, artifact-naming.md, ../04-architecture/artifact-versioning.md]
+related:
+  [
+    /codex/09-strategy/architecture-v2/README.md,
+    /codex/06-coding-standards/strategy-display-conventions.md,
+    /codex/06-coding-standards/artifact-naming.md,
+    /codex/04-architecture/artifact-versioning.md,
+  ]
 created: 2026-04-17
 authoritative_for: [strategy identity + versioning (5-layer identity, archetype-ID rules, slot-label grammar)]
-referenced_by: [codex/02-data/feature-formula-versioning.md, codex/04-architecture/artifact-versioning.md, codex/04-architecture/batch-live-architecture.md, codex/04-architecture/data-flow-map.md, codex/04-architecture/schema-versioning.md, codex/04-architecture/shadow-deployment-pattern.md, codex/06-coding-standards/README.md, codex/06-coding-standards/artifact-naming.md]
+referenced_by:
+  [
+    /codex/02-data/feature-formula-versioning.md,
+    /codex/04-architecture/artifact-versioning.md,
+    /codex/04-architecture/batch-live-architecture.md,
+    /codex/04-architecture/data-flow-map.md,
+    /codex/04-architecture/schema-versioning.md,
+    /codex/04-architecture/shadow-deployment-pattern.md,
+    /codex/06-coding-standards/README.md,
+    /codex/06-coding-standards/artifact-naming.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -256,11 +270,11 @@ To retire an instance:
 
 ## Cross-references
 
-- Full architecture: [../09-strategy/architecture-v2/README.md](../09-strategy/architecture-v2/README.md)
+- Full architecture: [/codex/09-strategy/architecture-v2/README.md](/codex/09-strategy/architecture-v2/README.md)
 - Strategy-execution protocol:
-  [../04-architecture/strategy-execution-protocol.md](../04-architecture/strategy-execution-protocol.md)
-- Artifact versioning: [../04-architecture/artifact-versioning.md](../04-architecture/artifact-versioning.md)
-- Schema versioning: [../04-architecture/schema-versioning.md](../04-architecture/schema-versioning.md)
+  [/codex/04-architecture/strategy-execution-protocol.md](/codex/04-architecture/strategy-execution-protocol.md)
+- Artifact versioning: [/codex/04-architecture/artifact-versioning.md](/codex/04-architecture/artifact-versioning.md)
+- Schema versioning: [/codex/04-architecture/schema-versioning.md](/codex/04-architecture/schema-versioning.md)
 - Artifact naming: [artifact-naming.md](artifact-naming.md)
 
 ## Not in this doc

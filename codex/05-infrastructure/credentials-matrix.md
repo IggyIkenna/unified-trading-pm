@@ -14,10 +14,10 @@ scope: [engineer, admin]
 tags: [defi, cefi, custody, credentials, verification]
 related:
   [
-    codex/15-runbooks/custody-onboarding-checklist.md,
-    codex/05-infrastructure/secret-manager-naming.md,
-    codex/04-architecture/custody-providers.md,
-    codex/04-architecture/interface-credential-convention.md,
+    /codex/15-runbooks/custody-onboarding-checklist.md,
+    /codex/05-infrastructure/secret-manager-naming.md,
+    /codex/04-architecture/custody-providers.md,
+    /codex/04-architecture/interface-credential-convention.md,
   ]
 created: 2026-05-11
 authoritative_for:
@@ -27,14 +27,14 @@ authoritative_for:
   ]
 referenced_by:
   [
-    codex/05-infrastructure/aws-iam-matrix.md,
-    codex/15-runbooks/custody-onboarding-checklist.md,
-    codex/05-infrastructure/hsm-wallet-signing.md,
-    codex/05-infrastructure/per-archetype-wallet-isolation.md,
-    codex/15-runbooks/credential-rotation-runbook.md,
-    codex/05-infrastructure/secret-manager-naming.md,
-    codex/07-security/gha-wif-migration.md,
-    codex/14-customer-journeys/authentication/firebase-local.md,
+    /codex/05-infrastructure/aws-iam-matrix.md,
+    /codex/15-runbooks/custody-onboarding-checklist.md,
+    /codex/05-infrastructure/hsm-wallet-signing.md,
+    /codex/05-infrastructure/per-archetype-wallet-isolation.md,
+    /codex/15-runbooks/credential-rotation-runbook.md,
+    /codex/05-infrastructure/secret-manager-naming.md,
+    /codex/07-security/gha-wif-migration.md,
+    /codex/14-customer-journeys/authentication/firebase-local.md,
   ]
 owner:
 last_reviewed: 2026-05-17
@@ -132,7 +132,7 @@ Full URI pattern:
 matched `defi-wallet-trust` value. The May-23 cutover `CLOUD_KMS_ENCRYPTED` signing path is **operationally verified**.
 
 Operator runbook:
-[`../15-runbooks/pre-cutover-test-wallets-runbook.md`](../15-runbooks/pre-cutover-test-wallets-runbook.md) § 0
+[`/codex/15-runbooks/pre-cutover-test-wallets-runbook.md`](/codex/15-runbooks/pre-cutover-test-wallets-runbook.md) § 0
 (canonical lookup) + § 3 (Solana via Trust Wallet operator-export flow).
 
 ### Tenderly + chain RPC credentials (✅ SORTED 2026-05-12)
@@ -146,7 +146,7 @@ Operator runbook:
 
 ### POD-managed credentials (delivered 2026-06-01)
 
-Per [`pod-elysium-client-onboarding.md`](../14-customer-journeys/pod-elysium-client-onboarding.md):
+Per [`pod-elysium-client-onboarding.md`](/codex/14-customer-journeys/pod-elysium-client-onboarding.md):
 
 | Secret Manager entry                                     | Provisioned by                                              | Status                  |
 | -------------------------------------------------------- | ----------------------------------------------------------- | ----------------------- |
@@ -224,7 +224,8 @@ Pre-cutover gate (2026-05-22): full probe MUST return 100% pass before live-trad
 ## § 7 — References
 
 - [`secret-manager-naming.md`](secret-manager-naming.md) — naming SSOT.
-- [`../15-runbooks/custody-onboarding-checklist.md`](../15-runbooks/custody-onboarding-checklist.md) — operator runbook.
+- [`/codex/15-runbooks/custody-onboarding-checklist.md`](/codex/15-runbooks/custody-onboarding-checklist.md) — operator
+  runbook.
 - [`fireblocks-integration-spec.md`](fireblocks-integration-spec.md) — June-1 paste-ready spec.
 - [`per-archetype-wallet-isolation.md`](per-archetype-wallet-isolation.md) — multi-wallet model.
 - [`hsm-wallet-signing.md`](hsm-wallet-signing.md) — HSM tier discipline.

@@ -11,7 +11,8 @@ stage: [meta]
 repos: [execution-service, strategy-service, unified-api-contracts]
 scope: [engineer, admin]
 tags: [ml, strategy, execution, backfill, uac]
-related: [backtest-groups.md, ../09-strategy/architecture-v2/cross-cutting/execution-policies.md]
+related:
+  [/codex/04-architecture/backtest-groups.md, /codex/09-strategy/architecture-v2/cross-cutting/execution-policies.md]
 created: 2026-03-27
 authoritative_for: [fixed-vs-grid two-tier backtest config architecture]
 referenced_by:

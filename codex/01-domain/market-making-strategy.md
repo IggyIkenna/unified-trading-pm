@@ -2,9 +2,9 @@
 doc_type: codex-ssot
 title: Market Making Strategy
 summary:
-  Market-making strategy framework — volatility/Greeks-driven spread width, time/event/price quote-refresh
-  triggers, linear vs nonlinear inventory skew, instrument/notional/Greeks position limits, rebalancing modes,
-  and multi-venue quoting; post-cutover scope (options/perps/sports Phase 1).
+  Market-making strategy framework — volatility/Greeks-driven spread width, time/event/price quote-refresh triggers,
+  linear vs nonlinear inventory skew, instrument/notional/Greeks position limits, rebalancing modes, and multi-venue
+  quoting; post-cutover scope (options/perps/sports Phase 1).
 status: current
 nature: ssot
 asset_group: [meta]
@@ -12,7 +12,12 @@ stage: [meta]
 repos: [execution-service, strategy-service]
 scope: [engineer]
 tags: [strategy, market-making, execution, greeks, options, book-microstructure]
-related: [../09-strategy/strategy-summary.md, ../09-strategy/mvp-universe-per-asset-group.md, ../../plans/epics/strategy_master.md]
+related:
+  [
+    /codex/09-strategy/strategy-summary.md,
+    /codex/09-strategy/mvp-universe-per-asset-group.md,
+    ../../plans/epics/strategy_master.md,
+  ]
 created: 2026-03-27
 authoritative_for: [market-making strategy framework (spread/inventory-skew/quoting)]
 referenced_by:

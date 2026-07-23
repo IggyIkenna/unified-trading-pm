@@ -2,9 +2,9 @@
 doc_type: codex-ssot
 title: Shadow Deployment Pattern — Archetype Upgrades
 summary:
-  How a new archetype-engine build promotes from shadow to prod — per-archetype observation window, policy
-  gates (dispersion/correlation/drawdown), PROMOTE/EXTEND/REJECT/ROLLBACK evaluator, and the two persistence
-  sinks (ArchetypeBuildRegistry + PromotionDecisionLedger).
+  How a new archetype-engine build promotes from shadow to prod — per-archetype observation window, policy gates
+  (dispersion/correlation/drawdown), PROMOTE/EXTEND/REJECT/ROLLBACK evaluator, and the two persistence sinks
+  (ArchetypeBuildRegistry + PromotionDecisionLedger).
 status: current
 nature: ssot
 asset_group: [meta]
@@ -12,10 +12,25 @@ stage: [meta]
 repos: [deployment-service, strategy-service, unified-trading-library]
 scope: [engineer, admin]
 tags: [strategy, execution, verification, reconciliation, monitoring]
-related: [artifact-versioning.md, schema-versioning.md, ../06-coding-standards/strategy-identity-versioning.md]
+related:
+  [
+    /codex/04-architecture/artifact-versioning.md,
+    /codex/04-architecture/schema-versioning.md,
+    /codex/06-coding-standards/strategy-identity-versioning.md,
+  ]
 created: 2026-04-18
-authoritative_for: [shadow deployment pattern for archetype-engine build promotion, ArchetypeBuildRegistry + PromotionDecisionLedger persistence]
-referenced_by: [codex/09-strategy/architecture-v2/MIGRATION.md, codex/16-strategy-playbooks/infra-spec/stage-3b-uac-combo-rules.md, plans/epics/strategy_and_dart_master_SUPERSEDED_2026_05_21.md, plans/epics/strategy_master.md]
+authoritative_for:
+  [
+    shadow deployment pattern for archetype-engine build promotion,
+    ArchetypeBuildRegistry + PromotionDecisionLedger persistence,
+  ]
+referenced_by:
+  [
+    /codex/09-strategy/architecture-v2/MIGRATION.md,
+    /codex/16-strategy-playbooks/infra-spec/stage-3b-uac-combo-rules.md,
+    plans/epics/strategy_and_dart_master_SUPERSEDED_2026_05_21.md,
+    plans/epics/strategy_master.md,
+  ]
 owner:
 last_reviewed: 2026-05-17
 code_refs:
@@ -183,12 +198,8 @@ Each JSONL row is a self-describing, sort-key-stable JSON object:
   "reasons": ["window 7 days < required 14 days"],
   "policy_content_hash": "9f2c…", // 16-char sha256 prefix
   "window_observed_seconds": 604800.0,
-  "metrics_snapshot": {
-    /* optional ShadowComparisonMetrics serialisation */
-  },
-  "metadata": {
-    /* caller-supplied free-form */
-  },
+  "metrics_snapshot": {/* optional ShadowComparisonMetrics serialisation */},
+  "metadata": {/* caller-supplied free-form */},
 }
 ```
 
@@ -239,9 +250,9 @@ per archetype, so this isn't a practical concern. When promotion runners become 
 - Schema versioning (distinct axis — don't confuse a schema bump with a code bump):
   [`schema-versioning.md`](schema-versioning.md)
 - Strategy identity (archetype is one of the 5 layers):
-  [`../06-coding-standards/strategy-identity-versioning.md`](../06-coding-standards/strategy-identity-versioning.md)
+  [`/codex/06-coding-standards/strategy-identity-versioning.md`](/codex/06-coding-standards/strategy-identity-versioning.md)
 - PBMS sum-equality invariant (the rollback trigger):
-  [`../09-strategy/architecture-v2/cross-cutting/venue-account-coordination.md`](../09-strategy/architecture-v2/cross-cutting/venue-account-coordination.md)
+  [`/codex/09-strategy/architecture-v2/cross-cutting/venue-account-coordination.md`](/codex/09-strategy/architecture-v2/cross-cutting/venue-account-coordination.md)
 - Shadow allocator mode (related but different — `shadow_mode=True` on `ClientAllocatorInstance` emits directives that
   are observed but not acted on):
-  [`../09-strategy/architecture-v2/cross-cutting/portfolio-allocator.md`](../09-strategy/architecture-v2/cross-cutting/portfolio-allocator.md)
+  [`/codex/09-strategy/architecture-v2/cross-cutting/portfolio-allocator.md`](/codex/09-strategy/architecture-v2/cross-cutting/portfolio-allocator.md)

@@ -14,14 +14,20 @@ scope: [engineer, admin]
 tags: [transfers, execution, client-funds-isolation, uac, idempotency, defi]
 related:
   [
-    transfer-architecture.md,
-    client-funds-isolation.md,
-    per-client-isolation-architecture.md,
-    oms-protocol-and-state-machine.md,
+    /codex/04-architecture/transfer-architecture.md,
+    /codex/04-architecture/client-funds-isolation.md,
+    /codex/04-architecture/per-client-isolation-architecture.md,
+    /codex/04-architecture/oms-protocol-and-state-machine.md,
   ]
 created: 2026-05-20
 authoritative_for: [TransferCoordinator single-entry fund-movement facade + routing table]
-referenced_by: [codex/04-architecture/client-funds-isolation.md, codex/04-architecture/execution-service-per-client-isolation.md, codex/04-architecture/oms-protocol-and-state-machine.md, codex/04-architecture/transfer-architecture.md]
+referenced_by:
+  [
+    /codex/04-architecture/client-funds-isolation.md,
+    /codex/04-architecture/execution-service-per-client-isolation.md,
+    /codex/04-architecture/oms-protocol-and-state-machine.md,
+    /codex/04-architecture/transfer-architecture.md,
+  ]
 owner:
 last_reviewed: 2026-05-20
 code_refs:
@@ -39,7 +45,7 @@ Before this facade, fund movements were fragmented across `transfer_handler.py`,
 `client_id` enforcement at the operation layer. TransferCoordinator closes all 6 BLOCKING gaps identified in
 `plans/active/issues/cross_client_funds_isolation_retroactive_audit_2026_05_20.md`.
 
-**HARD RULE cross-reference**: `codex/04-architecture/client-funds-isolation.md` — funds NEVER move between different
+**HARD RULE cross-reference**: `/codex/04-architecture/client-funds-isolation.md` — funds NEVER move between different
 clients. `TransferCoordinator` is the final-gate consumer-side enforcement point.
 
 **Status**: pending Phase 1 (UAC TransferIntent contract — slot 5).
@@ -87,7 +93,7 @@ TransferCoordinator.consume(intent: TransferIntent)
 ## Idempotency
 
 `TransferIntent.idempotency_key` maps to `operation_id` in a `TransferPersistenceAdapter` (mirrors
-`OrderPersistenceAdapter` pattern — see `codex/04-architecture/oms-protocol-and-state-machine.md`). A second submission
+`OrderPersistenceAdapter` pattern — see `/codex/04-architecture/oms-protocol-and-state-machine.md`). A second submission
 with the same key returns the cached `TransferResult` without re-executing any RPC.
 
 ---
@@ -122,7 +128,7 @@ Phase 6 wraps the pre-existing execution-service surfaces to close each BLOCKING
 
 ## Required tests
 
-Per `codex/04-architecture/client-funds-isolation.md` HARD RULE:
+Per `/codex/04-architecture/client-funds-isolation.md` HARD RULE:
 
 1. **Intra-client happy path** — USDC → Aave deposit, same `client_id` on source + dest; verifies
    `TransferResult.status = CONFIRMED`.

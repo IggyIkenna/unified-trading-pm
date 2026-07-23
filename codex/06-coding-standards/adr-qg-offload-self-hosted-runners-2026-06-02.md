@@ -1,6 +1,6 @@
 ---
 doc_type: codex-ssot
-title: 'ADR: Where the heavy QG runs — keep it local on governed 16 GB workers (Option A)'
+title: "ADR: Where the heavy QG runs — keep it local on governed 16 GB workers (Option A)"
 summary: >-
   ADR (accepted 2026-06-02, Option A): keep the full `quality-gates.sh` LOCAL on 16 GB `m7i.xlarge` workers, made viable
   by the host concurrency governor (K=floor(vCPU/4)=1 so a single ~5.3 GB peak run fits) — no fleet right-sizing;
@@ -12,7 +12,12 @@ stage: [meta]
 repos: [deployment-service, unified-trading-library]
 scope: [engineer, admin]
 tags: [quality-gates, infrastructure, performance, cost]
-related: [../../plans/active/quality_gates_resource_contention_speedup_2026_06_02.md, ../../plans/epics/infrastructure_master.md, quality-gates.md]
+related:
+  [
+    ../../plans/active/quality_gates_resource_contention_speedup_2026_06_02.md,
+    ../../plans/epics/infrastructure_master.md,
+    /codex/06-coding-standards/quality-gates.md,
+  ]
 created: 2026-06-02
 authoritative_for: [QG execution-location decision (local governed workers vs central runners)]
 referenced_by:
@@ -130,4 +135,4 @@ repos. Never run self-hosted runners on `pull_request` from forks.
 2. `[INFRA] Cutover `python-quality-gates-v2.yml`/`quality-gates-v2.yml` `runs-on`→`[self-hosted,
    qg]`; verify the required check still reports.`
 3. `[SCRIPT] Add the worker fast-pre-check (ruff + basedpyright on changed files) + repoint `.qg_last_passed_sha` to advisory.`
-4. `[DOC] Update `codex/08-workflows/ci-cd-flow.md` two-pass model: authoritative gate = central CI check, not local sentinel.`
+4. `[DOC] Update `/codex/08-workflows/ci-cd-flow.md` two-pass model: authoritative gate = central CI check, not local sentinel.`

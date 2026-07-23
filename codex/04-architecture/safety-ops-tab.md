@@ -15,14 +15,13 @@ scope: [engineer, admin]
 tags: [ui, recovery, kill-switch, safety-ops, self-healing, escalation]
 related:
   [
-    recovery-defence-in-depth-layers.md,
-    incident-gateway-state-machine.md,
-    kill-switch-circuit-breaker.md,
+    /codex/04-architecture/recovery-defence-in-depth-layers.md,
+    /codex/04-architecture/incident-gateway-state-machine.md,
+    /codex/04-architecture/kill-switch-circuit-breaker.md,
   ]
 created: 2026-05-26
-authoritative_for:
-  [Safety Ops manual-override tab (Layer-M), Layer-0 typed-confirm action buttons]
-referenced_by: [codex/04-architecture/recovery-defence-in-depth-layers.md]
+authoritative_for: [Safety Ops manual-override tab (Layer-M), Layer-0 typed-confirm action buttons]
+referenced_by: [/codex/04-architecture/recovery-defence-in-depth-layers.md]
 owner:
 last_reviewed: 2026-05-29
 code_refs:
@@ -37,7 +36,7 @@ Shipped: 2026-05-23. Plan: `plans/active/deployment_ui_safety_ops_tab_2026_05_23
 The Safety Ops tab is a manual-override surface in both `deployment-ui` and `unified-trading-system-ui` (DART cockpit)
 that exposes every Layer-0 and Layer-1 recovery action behind a typed-confirm-string gate. It is the "Layer-M"
 orthogonal to the 5-layer autonomous recovery stack — an operator can intervene at any layer via this tab. See
-`codex/04-architecture/recovery-defence-in-depth-layers.md`.
+`/codex/04-architecture/recovery-defence-in-depth-layers.md`.
 
 ## Routes
 

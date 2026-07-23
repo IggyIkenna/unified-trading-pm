@@ -2,9 +2,9 @@
 doc_type: codex-ssot
 title: Documentation Standards
 summary:
-  Per-repo required-docs standard (S5) — service repos need 8 canonical docs, libraries 5, UIs 4 (WARN-only); a stub
-  (≤3 lines or only TODO) counts as missing; no hardcoded project-IDs/buckets in docs; and the S5.11 HARD RULE that
-  repo docs link the codex SSOT rather than duplicating canonical content (stale repo-doc vs codex is review-blocking).
+  Per-repo required-docs standard (S5) — service repos need 8 canonical docs, libraries 5, UIs 4 (WARN-only); a stub (≤3
+  lines or only TODO) counts as missing; no hardcoded project-IDs/buckets in docs; and the S5.11 HARD RULE that repo
+  docs link the codex SSOT rather than duplicating canonical content (stale repo-doc vs codex is review-blocking).
 status: current
 nature: ssot
 asset_group: [meta]
@@ -12,10 +12,10 @@ stage: [meta]
 repos: [deployment-api, deployment-ui, unified-trading-library, unified-trading-pm]
 scope: [engineer]
 tags: [documentation-standards, ssot-audit, plan-hygiene, quality-gates, docspec]
-related: [../02-data/schema-governance.md, ../02-data/canonical-schema-groups.md]
+related: [/codex/02-data/schema-governance.md, /codex/02-data/canonical-schema-groups.md]
 created: 2026-03-27
 authoritative_for: [per-repo required-docs set (S5), repo-docs-defer-to-codex rule]
-referenced_by: [codex/06-coding-standards/cursor-rules-system.md]
+referenced_by: [/codex/06-coding-standards/cursor-rules-system.md]
 owner:
 last_reviewed:
 code_refs:
@@ -174,11 +174,11 @@ When filling doc gaps, use this priority:
 
 Schema governance documentation lives in:
 
-- **Canonical schema groups:** [02-data/canonical-schema-groups.md](../02-data/canonical-schema-groups.md) — UAC
+- **Canonical schema groups:** [02-data/canonical-schema-groups.md](/codex/02-data/canonical-schema-groups.md) — UAC
   (`unified_api_contracts.canonical`) = normalization outputs; UAC internal (`unified_api_contracts.internal`) =
   internal messaging contracts
-- **Schema governance:** [02-data/schema-governance.md](../02-data/schema-governance.md) — Validation integration point,
-  DRY/SoC enforcement, STEP 5.12 quality gate
+- **Schema governance:** [02-data/schema-governance.md](/codex/02-data/schema-governance.md) — Validation integration
+  point, DRY/SoC enforcement, STEP 5.12 quality gate
 - **Schema contract audit:** `unified-trading-pm/plans/archive/schema_governance_full_audit.plan.md` — Full audit
   results for UAC normalization quality, UIC utilization, cross-contract deduplication
 
@@ -201,15 +201,15 @@ canonical content changes, only the codex SSOT is edited; the repo link stays va
 
 **Per-doc-type split** (what links to codex vs what stays repo-local):
 
-| Repo doc                    | Link to codex SSOT (do NOT duplicate)                                                              | Keep in repo doc (repo-specific only)                            |
-| --------------------------- | -------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
-| `README.md`                 | —                                                                                                  | purpose, quickstart, index of links (codex + repo docs)          |
-| `docs/ARCHITECTURE.md`      | cross-cutting patterns → `codex/04-architecture/*`, `codex/03-services/*`                          | THIS repo's modules/classes/data-flows; engine/adapters/cli map  |
-| `docs/CONFIGURATION.md`     | config patterns → `codex/06-coding-standards/config-reloader-pattern.md`                           | THIS repo's config class + fields/defaults/secrets               |
-| `docs/GCS_PATHS.md`         | bucket naming + hive layout → `codex/02-data/per-asset-group-bucket-layouts.md`, `partitioning.md` | THIS repo's specific path templates + data_types                 |
-| `docs/DEPLOYMENT_GUIDE.md`  | deploy flow → `codex/08-workflows/deployment-flow.md`, `codex/05-infrastructure/*`                 | THIS repo's entrypoint, health URL, env vars, rollback specifics |
-| `docs/TESTING.md`           | testing layers → `codex/06-coding-standards/ui-testing-layers.md` + testing rules                  | THIS repo's test commands + fixtures                             |
-| `docs/SCHEMA_VALIDATION.md` | schema governance → `codex/02-data/schema-governance.md` (per S5.9)                                | which canonical schemas THIS repo uses                           |
+| Repo doc                    | Link to codex SSOT (do NOT duplicate)                                                               | Keep in repo doc (repo-specific only)                            |
+| --------------------------- | --------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| `README.md`                 | —                                                                                                   | purpose, quickstart, index of links (codex + repo docs)          |
+| `docs/ARCHITECTURE.md`      | cross-cutting patterns → `codex/04-architecture/*`, `codex/03-services/*`                           | THIS repo's modules/classes/data-flows; engine/adapters/cli map  |
+| `docs/CONFIGURATION.md`     | config patterns → `/codex/06-coding-standards/config-reloader-pattern.md`                           | THIS repo's config class + fields/defaults/secrets               |
+| `docs/GCS_PATHS.md`         | bucket naming + hive layout → `/codex/02-data/per-asset-group-bucket-layouts.md`, `partitioning.md` | THIS repo's specific path templates + data_types                 |
+| `docs/DEPLOYMENT_GUIDE.md`  | deploy flow → `/codex/08-workflows/deployment-flow.md`, `codex/05-infrastructure/*`                 | THIS repo's entrypoint, health URL, env vars, rollback specifics |
+| `docs/TESTING.md`           | testing layers → `/codex/06-coding-standards/ui-testing-layers.md` + testing rules                  | THIS repo's test commands + fixtures                             |
+| `docs/SCHEMA_VALIDATION.md` | schema governance → `/codex/02-data/schema-governance.md` (per S5.9)                                | which canonical schemas THIS repo uses                           |
 
 **Redirect-doc template** (still substantive — clears the S5.4 stub bar):
 

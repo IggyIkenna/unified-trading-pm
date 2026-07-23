@@ -12,7 +12,13 @@ stage: [meta]
 repos: [strategy-service]
 scope: [engineer, admin]
 tags: [ml, strategy, model-tier, features, live-trading, ssot]
-related: [ml-experiment-lifecycle.md, ml-service-architecture.md, promote-workflow-architecture.md, live-strategy-config-hot-reload.md]
+related:
+  [
+    /codex/04-architecture/ml-experiment-lifecycle.md,
+    /codex/04-architecture/ml-service-architecture.md,
+    /codex/04-architecture/promote-workflow-architecture.md,
+    /codex/04-architecture/live-strategy-config-hot-reload.md,
+  ]
 created: 2026-05-15
 authoritative_for:
   [
@@ -21,7 +27,7 @@ authoritative_for:
     live ML hot-reload cadence,
     per-bar batch inference replay rule,
   ]
-referenced_by: [codex/04-architecture/ml-experiment-lifecycle.md, codex/04-architecture/ml-service-architecture.md]
+referenced_by: [/codex/04-architecture/ml-experiment-lifecycle.md, /codex/04-architecture/ml-service-architecture.md]
 owner: topology_qgroup_gap_closure_2026_05_09 Phase 2
 last_reviewed: 2026-05-17
 code_refs:

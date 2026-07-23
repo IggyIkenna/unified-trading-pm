@@ -2,20 +2,33 @@
 doc_type: codex-ssot
 title: Backfill & Live Startup Architecture
 summary:
-  Backfill-then-live startup — pipeline orchestrator reads seed_spec.yaml per-service min/recommended lookback
-  (features 30-90d, ml-training 180-365d, execution cold-start), runs batch in topological order, then switches
-  to live with a lookback ring-buffer; downtime-gap recovery bands.
+  Backfill-then-live startup — pipeline orchestrator reads seed_spec.yaml per-service min/recommended lookback (features
+  30-90d, ml-training 180-365d, execution cold-start), runs batch in topological order, then switches to live with a
+  lookback ring-buffer; downtime-gap recovery bands.
 status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
-repos: [deployment-service, execution-service, features-service, instruments-service, market-tick-data-service, strategy-service]
+repos:
+  [
+    deployment-service,
+    execution-service,
+    features-service,
+    instruments-service,
+    market-tick-data-service,
+    strategy-service,
+  ]
 scope: [engineer, admin]
 tags: [backfill, pipeline, features, ml, live-trading, infrastructure]
-related: [batch-live-architecture.md, backtest-groups.md, ../02-data/pipeline-mode-partition.md]
+related:
+  [
+    /codex/04-architecture/batch-live-architecture.md,
+    /codex/04-architecture/backtest-groups.md,
+    /codex/02-data/pipeline-mode-partition.md,
+  ]
 created: 2026-03-27
 authoritative_for: [backfill-then-live startup and lookback warm-up sequencing]
-referenced_by: [codex/15-runbooks/backfill-completion-playbook.md]
+referenced_by: [/codex/15-runbooks/backfill-completion-playbook.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

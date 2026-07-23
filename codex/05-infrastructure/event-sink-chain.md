@@ -17,7 +17,7 @@ related:
   [
     ../../plans/audit/results/vm_deployment_events_audit_2026_05_15.md,
     ../../plans/audit/results/vm_event_emission_audit_2026_05_15.md,
-    live-deployment-monitoring.md,
+    /codex/05-infrastructure/live-deployment-monitoring.md,
   ]
 created: 2026-05-15
 authoritative_for: [deployment-service event sink chain]

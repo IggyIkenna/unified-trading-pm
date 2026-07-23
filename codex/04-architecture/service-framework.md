@@ -11,10 +11,16 @@ stage: [meta]
 repos: [unified-trading-library]
 scope: [engineer, admin]
 tags: [infrastructure, ssot, service-framework, batch-live]
-related: [service-control-surface.md, tier-and-import-architecture.md, shard-level-failure-isolation.md]
+related:
+  [
+    /codex/04-architecture/service-control-surface.md,
+    /codex/04-architecture/tier-and-import-architecture.md,
+    /codex/04-architecture/shard-level-failure-isolation.md,
+  ]
 created: 2026-03-27
-authoritative_for: [unified service framework (ServiceBootstrap/UnifiedServiceHandler/build_event_sink boilerplate elimination)]
-referenced_by: [codex/04-architecture/service-control-surface.md]
+authoritative_for:
+  [unified service framework (ServiceBootstrap/UnifiedServiceHandler/build_event_sink boilerplate elimination)]
+referenced_by: [/codex/04-architecture/service-control-surface.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

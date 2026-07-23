@@ -10,13 +10,34 @@ status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
-repos: [deployment-api, deployment-service, deployment-ui, execution-service, system-integration-tests, unified-trading-library]
+repos:
+  [
+    deployment-api,
+    deployment-service,
+    deployment-ui,
+    execution-service,
+    system-integration-tests,
+    unified-trading-library,
+  ]
 scope: [engineer]
 tags: [dependency-management, uv, quality-gates, quickmerge, canonicalisation, infrastructure]
-related: [dockerfile-standards.md, feature-branch-workflow.md, quality-gates.md]
+related:
+  [
+    /codex/06-coding-standards/dockerfile-standards.md,
+    /codex/06-coding-standards/feature-branch-workflow.md,
+    /codex/06-coding-standards/quality-gates.md,
+  ]
 created: 2026-03-27
 authoritative_for: [flat-deps pyproject dependency-management convention, uv.lock three-role determinism]
-referenced_by: [codex/05-infrastructure/library-setup-checklist.md, codex/05-infrastructure/new-repo-setup.md, codex/05-infrastructure/ucs-docker-image-issues.md, codex/06-coding-standards/README.md, codex/06-coding-standards/data-engine-selection.md, codex/06-coding-standards/dockerfile-standards.md]
+referenced_by:
+  [
+    /codex/05-infrastructure/library-setup-checklist.md,
+    /codex/05-infrastructure/new-repo-setup.md,
+    /codex/05-infrastructure/ucs-docker-image-issues.md,
+    /codex/06-coding-standards/README.md,
+    /codex/06-coding-standards/data-engine-selection.md,
+    /codex/06-coding-standards/dockerfile-standards.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

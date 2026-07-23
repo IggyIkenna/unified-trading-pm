@@ -13,19 +13,24 @@ stage: [meta]
 repos: [deployment-service, execution-service, strategy-service, unified-trading-pm]
 scope: [engineer, admin]
 tags: [defi, execution, connectors, cost, mev, aave, uniswap]
-related: [mev-protection.md, interface-credential-convention.md, custody-providers.md]
+related:
+  [
+    mev-protection.md,
+    /codex/04-architecture/interface-credential-convention.md,
+    /codex/04-architecture/custody-providers.md,
+  ]
 created: 2026-03-27
 authoritative_for: [DeFi execution overview and strategy-to-execution operation routing]
 referenced_by:
   [
-    codex/02-data/carry-venue-live-integration-reference.md,
-    codex/02-data/defi-data-pipeline.md,
-    codex/04-architecture/chain-environment-resolution.md,
-    codex/04-architecture/interface-credential-convention.md,
-    codex/04-architecture/mev-protection.md,
-    codex/04-architecture/research-service-and-dart-integration.md,
-    codex/04-architecture/solana-defi-coverage.md,
-    codex/04-architecture/strategy-ensemble-topology.md,
+    /codex/02-data/carry-venue-live-integration-reference.md,
+    /codex/02-data/defi-data-pipeline.md,
+    /codex/04-architecture/chain-environment-resolution.md,
+    /codex/04-architecture/interface-credential-convention.md,
+    /codex/04-architecture/mev-protection.md,
+    /codex/04-architecture/research-service-and-dart-integration.md,
+    /codex/04-architecture/solana-defi-coverage.md,
+    /codex/04-architecture/strategy-ensemble-topology.md,
   ]
 owner:
 last_reviewed: 2026-05-17
@@ -83,7 +88,7 @@ execution-service fetches credentials from SM (single SSOT — codex audit EX-23
     execution-service@d45d24b4; 10 HSM CMKs provisioned 2026-05-12 in asia-northeast1, 90-day auto-rotation).
     June-1+: per-wallet `signing_surface` field on WalletProvisioningConfig flips to `COPPER_MPC` / `CEFFU`
     (POD-provided credentials). `FIREBLOCKS_MPC` is in the UAC enum but is OUT OF SCOPE for May-23 + June-1.
-    Full provider spec: `codex/04-architecture/custody-providers.md`.
+    Full provider spec: `/codex/04-architecture/custody-providers.md`.
 
     wallet_private_key  → defi-wallet-private-key  (or `kms_key_uri` for cloud_kms_encrypted cutover default)
     alchemy_api_key     → alchemy-api-key

@@ -12,15 +12,15 @@ stage: [meta]
 repos: [features-service, market-data-processing-service]
 scope: [engineer, admin]
 tags: [sports, odds, mdps, live-trading, footystats]
-related: [sports-integration-plan.md, sports-batch-live.md]
+related: [/codex/04-architecture/sports-integration-plan.md, /codex/04-architecture/sports-batch-live.md]
 created: 2026-03-27
 authoritative_for:
   [sports live-odds connectivity paths (aggregator/exchange; scraper path retired 2026-07-08, historical only)]
 referenced_by:
   [
-    codex/02-data/sports-scheduling-and-sharding.md,
-    codex/04-architecture/sports-batch-live.md,
-    codex/04-architecture/sports-integration-plan.md,
+    /codex/02-data/sports-scheduling-and-sharding.md,
+    /codex/04-architecture/sports-batch-live.md,
+    /codex/04-architecture/sports-integration-plan.md,
   ]
 owner:
 last_reviewed: 2026-07-23

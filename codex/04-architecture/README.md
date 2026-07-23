@@ -17,8 +17,8 @@ last_reviewed: 2026-05-17
   cross-cutting standalone. The same code path as batch — only the trigger swaps from Cloud Scheduler to Redis Stream
   events. **Data transport** uses **Redis Stream** for the inner-loop cascade (MTDS → MDPS → features-service via
   CANDLE_BOUNDARY_CROSSED + CANDLE_COMPUTED + FEATURES_COMPUTED, see
-  [`../05-infrastructure/live-pipeline-architecture.md`](../05-infrastructure/live-pipeline-architecture.md)) and
-  **PubSub** for cross-service async fan-out (instruments-service catalogue refresh, strategy → execution signals,
+  [`/codex/05-infrastructure/live-pipeline-architecture.md`](/codex/05-infrastructure/live-pipeline-architecture.md))
+  and **PubSub** for cross-service async fan-out (instruments-service catalogue refresh, strategy → execution signals,
   alerting). Both are async message buses, not REST/RPC — the "no network hops" rule applies to synchronous HTTP/REST
   calls between services, not async messaging.
 - **Live deployments** (post-2026-05-08, per [`features-service-architecture.md`](features-service-architecture.md) +
@@ -30,8 +30,8 @@ last_reviewed: 2026-05-17
   (features-calendar / features-delta-one / features-volatility / features-onchain / features-sports /
   features-multi-timeframe) — all consolidated as part of the live-pipeline pre-requisite. See
   [runtime-deployment-topology.md](runtime-deployment-topology.md) for visuals
-  - [`../05-infrastructure/live-pipeline-architecture.md`](../05-infrastructure/live-pipeline-architecture.md) for the
-    full topology + Redis Stream cascade contract.
+  - [`/codex/05-infrastructure/live-pipeline-architecture.md`](/codex/05-infrastructure/live-pipeline-architecture.md)
+    for the full topology + Redis Stream cascade contract.
 - **Sync**: HTTP/REST only for the deployment API and health checks. Never for data flow.
 - **Scaling**: horizontal via sharding (category x venue x date = one container); vertical via VM sizing. Each shard is
   a fully independent unit of work.
@@ -161,7 +161,7 @@ contracts.
 
 > **[DELTA 2026-05-22]** **Current state:** The inner-loop live cascade (MTDS → MDPS → features-service) uses **Redis
 > Stream** (`CANDLE_BOUNDARY_CROSSED` / `CANDLE_COMPUTED` / `FEATURES_COMPUTED`) per
-> `../05-infrastructure/live-pipeline-architecture.md`. PubSub remains the cross-service async fan-out (instruments
+> `/codex/05-infrastructure/live-pipeline-architecture.md`. PubSub remains the cross-service async fan-out (instruments
 > refresh, strategy → execution, alerting). The `[PLANNED]` label above was stale; the architecture is shipped.
 > **Planned delta:** Per-family live handler activation gates are tracked in `plans/epics/features_and_ml_master.md`.
 > **Target architecture:** All 8 feature families deployed in live mode; Redis Stream inner-loop + PubSub cross-service

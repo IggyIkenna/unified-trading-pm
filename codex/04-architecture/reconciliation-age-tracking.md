@@ -2,10 +2,10 @@
 doc_type: codex-ssot
 title: Reconciliation Age Tracking, 12 Dimensions, and Escalation Ladder
 summary:
-  SSOT for live reconciliation staleness — the 12 ReconciliationDimensions, ReconciliationAgeFields (all ages written
-  at row-write-time, never query-time), the 3-band escalation ladder (warn 5min / investigate 15min / critical 30min)
-  plus 7 immediate-SEV0 overrides, and HUMAN-ONLY unfreeze. Live recon is distributed across strategy-service/position
-  + execution-service + alerting-service (NOT BLRS, which is T+1 batch-only); RECON_FREEZE_ARMED is still unwired.
+  SSOT for live reconciliation staleness — the 12 ReconciliationDimensions, ReconciliationAgeFields (all ages written at
+  row-write-time, never query-time), the 3-band escalation ladder (warn 5min / investigate 15min / critical 30min) plus
+  7 immediate-SEV0 overrides, and HUMAN-ONLY unfreeze. Live recon is distributed across strategy-service/position +
+  execution-service + alerting-service (NOT BLRS, which is T+1 batch-only); RECON_FREEZE_ARMED is still unwired.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -15,13 +15,18 @@ scope: [engineer, admin]
 tags: [reconciliation, escalation, monitoring, execution, data-correctness, kill-switch]
 related:
   [
-    reconciliation-resolution.md,
-    incident-gateway-state-machine.md,
-    autonomous-recovery-matrix.md,
+    /codex/04-architecture/reconciliation-resolution.md,
+    /codex/04-architecture/incident-gateway-state-machine.md,
+    /codex/04-architecture/autonomous-recovery-matrix.md,
   ]
 created: 2026-05-25
 authoritative_for: [reconciliation-age, recon-dimensions, recon-escalation, recon-freeze]
-referenced_by: [codex/04-architecture/autonomous-recovery-matrix.md, codex/04-architecture/incident-gateway-state-machine.md, plans/active/reconciliation_age_tracking_and_escalation_2026_05_23.md]
+referenced_by:
+  [
+    /codex/04-architecture/autonomous-recovery-matrix.md,
+    /codex/04-architecture/incident-gateway-state-machine.md,
+    plans/active/reconciliation_age_tracking_and_escalation_2026_05_23.md,
+  ]
 owner:
 last_reviewed: 2026-05-27
 code_refs:
@@ -53,15 +58,15 @@ exist — unfreeze is HUMAN-ONLY even when recon age recovers below threshold.
 Live reconciliation is **distributed**, not owned by a single service. `batch-live-reconciliation-service` is NOT in
 this list — it is a separate T+1 batch auditor (see `reconciliation-resolution.md`).
 
-| Concern                                                                        | Owner repo / module                                                                                                                                                                          | Status                                                                                         |
-| ------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| Concern                                                                       | Owner repo / module                                                                                                                                                                          | Status                                                                                         |
+| ----------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
 | Live venue↔internal position/balance recon + age fields + deviation lifecycle | `strategy-service/strategy_service/position/` (merged PBMS): `core/reconciliation_engine.py`, `core/fee_reconciliation_engine.py`, `core/position_drift_monitor.py`, `v2/recon_freshness.py` | Built; only `POSITIONS` + `FEES` of the 12 dimensions are populated today (other 10 spec-only) |
-| Live venue accrual / funding recon                                             | `execution-service`: `services/yield_recon_engine.py`, `services/funding_recon_engine.py`, `services/account_history_client.py`                                                              | Built                                                                                          |
-| Escalation ladder + 7 immediate-SEV0 overrides                                 | `alerting-service`: `rules/reconciliation_rules.py` (`evaluate_recon_age`, `evaluate_immediate_sev0`)                                                                                        | Built                                                                                          |
-| `RECON_FREEZE_ARMED` publisher                                                 | `alerting-service` (per § "Reconciliation Freeze")                                                                                                                                           | ⚠️ **NOT WIRED** — no code publishes the event; freeze chain is dormant (BLRS audit G12)       |
-| Recon-freeze order-block subscriber                                            | `execution-service`: `preflight/recon_freeze.py` (`ReconFreezeChecker`)                                                                                                                      | Built (but never armed — see above)                                                            |
-| Recovery-verification aggregator                                               | `alerting-service`: `gateway/recovery_verifier.py`                                                                                                                                           | Built; generic 5-boolean DR gate (see § "Recovery-verification callback")                      |
-| T+1 batch audit (batch↔live↔paper)                                           | `batch-live-reconciliation-service`                                                                                                                                                          | Separate concern; NOT live recon                                                               |
+| Live venue accrual / funding recon                                            | `execution-service`: `services/yield_recon_engine.py`, `services/funding_recon_engine.py`, `services/account_history_client.py`                                                              | Built                                                                                          |
+| Escalation ladder + 7 immediate-SEV0 overrides                                | `alerting-service`: `rules/reconciliation_rules.py` (`evaluate_recon_age`, `evaluate_immediate_sev0`)                                                                                        | Built                                                                                          |
+| `RECON_FREEZE_ARMED` publisher                                                | `alerting-service` (per § "Reconciliation Freeze")                                                                                                                                           | ⚠️ **NOT WIRED** — no code publishes the event; freeze chain is dormant (BLRS audit G12)       |
+| Recon-freeze order-block subscriber                                           | `execution-service`: `preflight/recon_freeze.py` (`ReconFreezeChecker`)                                                                                                                      | Built (but never armed — see above)                                                            |
+| Recovery-verification aggregator                                              | `alerting-service`: `gateway/recovery_verifier.py`                                                                                                                                           | Built; generic 5-boolean DR gate (see § "Recovery-verification callback")                      |
+| T+1 batch audit (batch↔live↔paper)                                            | `batch-live-reconciliation-service`                                                                                                                                                          | Separate concern; NOT live recon                                                               |
 
 ---
 
@@ -170,7 +175,7 @@ threshold, trading does NOT automatically resume.
 The recovery verifier is `alerting-service/alerting_service/gateway/recovery_verifier.py` — a per-service callback
 aggregator that produces a 5-boolean `RecoveryVerificationResult` (`health_checks_passed`, `positions_reconciled`,
 `orders_reconciled`, `market_data_fresh`, `strategy_state_restored`); all 5 must be True for `RECOVERY_CONFIRMED` (see
-`codex/04-architecture/incident-gateway-state-machine.md`). The recon-relevant booleans are `positions_reconciled` +
+`/codex/04-architecture/incident-gateway-state-machine.md`). The recon-relevant booleans are `positions_reconciled` +
 `orders_reconciled`.
 
 > **CORRECTION (BLRS audit D1, 2026-05-27)**: there is **no** `reconciliation_age`-specific gate in the result today,

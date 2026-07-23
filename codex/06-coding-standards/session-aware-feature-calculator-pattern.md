@@ -3,10 +3,9 @@ doc_type: codex-ssot
 title: Session-aware feature calculator pattern
 summary: >-
   TradFi session-aware feature-calculator pattern — calculators classify each bar via UAC
-  market_session.classify_session() (never hand-roll from clock time), adjust
-  rolling-window denominators to the in-session bar count, and honour session-typed
-  manifest reasons (EXPECTED_WEEKEND / HOLIDAY / OUTSIDE_TRADING_HOURS); half-day + holiday
-  calendars are DEFERRED.
+  market_session.classify_session() (never hand-roll from clock time), adjust rolling-window denominators to the
+  in-session bar count, and honour session-typed manifest reasons (EXPECTED_WEEKEND / HOLIDAY / OUTSIDE_TRADING_HOURS);
+  half-day + holiday calendars are DEFERRED.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -14,10 +13,16 @@ stage: [meta]
 repos: [features-service, unified-api-contracts]
 scope: [engineer]
 tags: [features, tradfi, honest-coverage, session, uac, data-quality]
-related: [../02-data/honest-absence-downstream-handling.md, feature-service-pattern.md, ../02-data/per-asset-group-bucket-layouts.md]
+related:
+  [
+    /codex/02-data/honest-absence-downstream-handling.md,
+    /codex/06-coding-standards/feature-service-pattern.md,
+    /codex/02-data/per-asset-group-bucket-layouts.md,
+  ]
 created: 2026-05-08
-authoritative_for: [session-aware feature calculator pattern (TradFi market-session classification + session-adjusted rolling windows)]
-referenced_by: [codex/02-data/honest-absence-downstream-handling.md]
+authoritative_for:
+  [session-aware feature calculator pattern (TradFi market-session classification + session-adjusted rolling windows)]
+referenced_by: [/codex/02-data/honest-absence-downstream-handling.md]
 owner:
 last_reviewed:
 code_refs:
@@ -183,12 +188,12 @@ vacuums. Including them in the denominator would produce a 5-day SMA over 7 cale
 ## Cross-references
 
 - Honest absence + session-typed availability:
-  [`../02-data/honest-absence-downstream-handling.md`](../02-data/honest-absence-downstream-handling.md) §
+  [`/codex/02-data/honest-absence-downstream-handling.md`](/codex/02-data/honest-absence-downstream-handling.md) §
   "Session-typed availability"
 - Availability semantics SSOT: `unified_api_contracts.canonical.crosscutting.availability_semantics`
 - Market-session SSOT (shipped UAC@37f6dfd 2026-05-13): `unified_api_contracts.canonical.crosscutting.market_session`
 - Feature service pattern (BaseCalculator): [`feature-service-pattern.md`](feature-service-pattern.md)
 - TradFi shard atom (per-root + half-day handling):
-  [`../02-data/per-asset-group-bucket-layouts.md`](../02-data/per-asset-group-bucket-layouts.md)
+  [`/codex/02-data/per-asset-group-bucket-layouts.md`](/codex/02-data/per-asset-group-bucket-layouts.md)
 - TradFi futures lifecycle (`CanonicalFuturesContract` + `FuturesContractLifecyclePhase`, shipped UAC@2ac74e2
   2026-05-13): `unified_api_contracts.canonical.domain.derivatives.futures`

@@ -2,28 +2,45 @@
 doc_type: codex-ssot
 title: Schema Governance
 summary: >-
-  Schema governance SSOT — the split between service-local SchemaDefinition/ColumnSchema parquet
-  write-enforcement descriptors (schemas/output_schemas.py) and UAC-owned domain/external/canonical
-  data contracts; the validate_timestamp_date_alignment pre-upload gate, NaN + dimension-aware
-  nullability rules, safe-vs-breaking schema evolution, canonical field type standards (Decimal
-  prices, tz-aware timestamps), and the schema-ownership placement matrix.
+  Schema governance SSOT — the split between service-local SchemaDefinition/ColumnSchema parquet write-enforcement
+  descriptors (schemas/output_schemas.py) and UAC-owned domain/external/canonical data contracts; the
+  validate_timestamp_date_alignment pre-upload gate, NaN + dimension-aware nullability rules, safe-vs-breaking schema
+  evolution, canonical field type standards (Decimal prices, tz-aware timestamps), and the schema-ownership placement
+  matrix.
 status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
-repos: [alerting-service, execution-service, features-service, instruments-service, market-data-processing-service, market-tick-data-service]
+repos:
+  [
+    alerting-service,
+    execution-service,
+    features-service,
+    instruments-service,
+    market-data-processing-service,
+    market-tick-data-service,
+  ]
 scope: [engineer, admin]
 tags: [uac, validation, data-correctness, schema-governance, registry]
 related:
   [
-    codex/02-data/contracts-scope-and-layout.md,
-    codex/02-data/per-source-colocation.md,
-    codex/02-data/partitioning.md,
+    /codex/02-data/contracts-scope-and-layout.md,
+    /codex/02-data/per-source-colocation.md,
+    /codex/02-data/partitioning.md,
   ]
 created: 2026-03-27
-authoritative_for:
-  [schema type ownership placement matrix, parquet SchemaDefinition vs UAC data-contract split]
-referenced_by: [codex/02-data/README.md, codex/02-data/operation-capability-registry.md, codex/02-data/per-source-colocation.md, codex/02-data/unified-api-contracts-chain.md, codex/02-data/vcr-cassette-ownership.md, codex/06-coding-standards/documentation-standards.md, codex/14-customer-journeys/handoff/harsh_data_pipeline_kickoff_2026_05_01.md, codex/15-runbooks/backfill-completion-playbook.md]
+authoritative_for: [schema type ownership placement matrix, parquet SchemaDefinition vs UAC data-contract split]
+referenced_by:
+  [
+    /codex/02-data/README.md,
+    /codex/02-data/operation-capability-registry.md,
+    /codex/02-data/per-source-colocation.md,
+    /codex/02-data/unified-api-contracts-chain.md,
+    /codex/02-data/vcr-cassette-ownership.md,
+    /codex/06-coding-standards/documentation-standards.md,
+    /codex/14-customer-journeys/handoff/harsh_data_pipeline_kickoff_2026_05_01.md,
+    /codex/15-runbooks/backfill-completion-playbook.md,
+  ]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

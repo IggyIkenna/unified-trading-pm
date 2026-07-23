@@ -2,9 +2,9 @@
 doc_type: codex-ssot
 title: SOL Staked Basis Trade (Marinade mSOL + Drift)
 summary:
-  Pre-v2 DeFi Solana staked basis — stake SOL->mSOL via Marinade (~7% APY) + short SOL-PERP on Drift; delta-neutral
-  with a staking floor, rebalances perp as the mSOL/SOL rate appreciates and exits on >3% mSOL depeg; targets 22-37%
-  combined APY, $5M. SUPERSEDED banner — see architecture-v2.
+  Pre-v2 DeFi Solana staked basis — stake SOL->mSOL via Marinade (~7% APY) + short SOL-PERP on Drift; delta-neutral with
+  a staking floor, rebalances perp as the mSOL/SOL rate appreciates and exits on >3% mSOL depeg; targets 22-37% combined
+  APY, $5M. SUPERSEDED banner — see architecture-v2.
 status: superseded
 nature: ssot
 asset_group: [meta]
@@ -12,10 +12,24 @@ stage: [meta]
 repos: [execution-service, market-tick-data-service, strategy-service, unified-api-contracts, unified-trading-pm]
 scope: [engineer, admin]
 tags: [defi, strategy, execution, basis-trade, solana, drift, staking, marinade]
-related: [sol-basis-trade.md, staked-basis.md, sol-lending-yield.md, sol-concentrated-lp.md]
+related:
+  [
+    /codex/09-strategy/_archived_pre_v2/defi/sol-basis-trade.md,
+    /codex/09-strategy/_archived_pre_v2/defi/staked-basis.md,
+    /codex/09-strategy/_archived_pre_v2/defi/sol-lending-yield.md,
+    /codex/09-strategy/_archived_pre_v2/defi/sol-concentrated-lp.md,
+  ]
 created: 2026-03-28
 authoritative_for: []
-referenced_by: [codex/09-strategy/_archived_pre_v2/STRATEGY_CATALOG_pre_v2.md, codex/09-strategy/_archived_pre_v2/defi/recursive-staked-basis.md, codex/09-strategy/_archived_pre_v2/defi/sol-basis-trade.md, codex/09-strategy/_archived_pre_v2/defi/sol-concentrated-lp.md, codex/09-strategy/_archived_pre_v2/defi/sol-lending-yield.md, codex/09-strategy/_archived_pre_v2/defi/staked-basis.md]
+referenced_by:
+  [
+    /codex/09-strategy/_archived_pre_v2/STRATEGY_CATALOG_pre_v2.md,
+    /codex/09-strategy/_archived_pre_v2/defi/recursive-staked-basis.md,
+    /codex/09-strategy/_archived_pre_v2/defi/sol-basis-trade.md,
+    /codex/09-strategy/_archived_pre_v2/defi/sol-concentrated-lp.md,
+    /codex/09-strategy/_archived_pre_v2/defi/sol-lending-yield.md,
+    /codex/09-strategy/_archived_pre_v2/defi/staked-basis.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -180,7 +194,7 @@ Low-frequency (1H candles). Solana's 400ms block time makes all operations fast.
 - **Venues:** Jupiter (spot swap aggregator), Marinade (liquid staking), Drift (perp)
 - **Order types:** Market (swap via Jupiter), Direct (Marinade stake pool), Limit (perp on Drift CLOB)
 - **Atomic execution required?** No -- legs are independent (swap, stake, and perp are separate Solana programs)
-- **Gas budget:** ~0.001 SOL per transaction (~$0.15), ~0.004 SOL per full deploy (swap + stake + deposit + perp)
+- **Gas budget:** ~~0.001 SOL per transaction (~~$0.15), ~0.004 SOL per full deploy (swap + stake + deposit + perp)
 
 ### Rebalancing
 
@@ -328,7 +342,7 @@ SWAP SOL back --> treasury. See
 
 Gas costs are tracked via Alchemy RPC using `getRecentPrioritizationFees` (Solana). The MTDS `gas_fee_handler` fetches
 real-time priority fees and writes them as features. Gas hits P&L immediately as a realized transaction cost -- not
-estimated. Full deploy costs ~0.004 SOL (~$0.60 total for swap + stake + deposit + perp). Solana gas is negligible
+estimated. Full deploy costs ~~0.004 SOL (~~$0.60 total for swap + stake + deposit + perp). Solana gas is negligible
 relative to position size.
 
 **Reference:** `market-tick-data-service/market_tick_data_service/gas_fee_handler.py`

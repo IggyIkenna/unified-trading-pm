@@ -13,10 +13,16 @@ stage: [meta]
 repos: [deployment-service, execution-service, unified-trading-library, unified-trading-pm]
 scope: [admin, engineer]
 tags: [ci-cd, migration, aws-migration, infrastructure]
-related: [codex/08-workflows/ci-cd-flow.md, codex/05-infrastructure/vm-tarball-deployment.md, codex/05-infrastructure/cloud-agnostic-build-lineage.md]
+related:
+  [
+    /codex/08-workflows/ci-cd-flow.md,
+    /codex/05-infrastructure/vm-tarball-deployment.md,
+    /codex/05-infrastructure/cloud-agnostic-build-lineage.md,
+  ]
 created: 2026-06-27
-authoritative_for: [dual-cloud image build flow (GCP Cloud Build + AWS CodeBuild routers, buildspec, promote gate, provenance)]
-referenced_by: [codex/05-infrastructure/cicd-setup.md]
+authoritative_for:
+  [dual-cloud image build flow (GCP Cloud Build + AWS CodeBuild routers, buildspec, promote gate, provenance)]
+referenced_by: [/codex/05-infrastructure/cicd-setup.md]
 owner:
 last_reviewed:
 code_refs:
@@ -216,8 +222,8 @@ Manifest state is the build-provenance audit trail; read Firestore (`ci_status`)
 
 ## Related
 
-- `codex/08-workflows/ci-cd-flow.md` — overall CI/CD pipeline, LDR-is-SSOT, quickmerge, promotion flow
-- `codex/05-infrastructure/vm-tarball-deployment.md` — VM (non-Cloud Run) deployment
+- `/codex/08-workflows/ci-cd-flow.md` — overall CI/CD pipeline, LDR-is-SSOT, quickmerge, promotion flow
+- `/codex/05-infrastructure/vm-tarball-deployment.md` — VM (non-Cloud Run) deployment
 - `unified-trading-pm/.github/workflows/cloud-build-router.yml` — GCP router (canonical ref)
 - `unified-trading-pm/.github/workflows/cloud-build-router-aws.yml` — AWS router (canonical ref)
 - `deployment-service/templates/buildspec.aws.yaml` — buildspec template

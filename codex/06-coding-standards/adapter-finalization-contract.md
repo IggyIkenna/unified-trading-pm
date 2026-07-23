@@ -12,7 +12,12 @@ stage: [meta]
 repos: [features-service, market-data-processing-service, strategy-service]
 scope: [engineer, admin]
 tags: [mdps, data-quality, data-correctness, features, cefi, defi, tradfi]
-related: [../02-data/honest-absence-downstream-handling.md, service-orchestration-patterns.md, ../../plans/active/issues/mdps_state_adapter_leading_nan_audit_2026_05_29.md]
+related:
+  [
+    /codex/02-data/honest-absence-downstream-handling.md,
+    /codex/06-coding-standards/service-orchestration-patterns.md,
+    ../../plans/active/issues/mdps_state_adapter_leading_nan_audit_2026_05_29.md,
+  ]
 created: 2026-06-02
 authoritative_for: [MDPS candle adapter finalization contract]
 referenced_by:
@@ -94,7 +99,7 @@ existing parquets to densify them rides the deferred GCS backfill pass — never
 A window with **no observation at all and no seed** collapses to the zero-row honest-absence output
 (`_make_empty_candle_output`), which the live-worker loop routes to `record_empty_for_shard`. A state adapter whose
 driver column is entirely absent (e.g. a derivative tick with funding but no mark price) therefore yields honest absence
-— never a fabricated NaN-OHLC row. This composes with `codex/02-data/honest-absence-downstream-handling.md` §
+— never a fabricated NaN-OHLC row. This composes with `/codex/02-data/honest-absence-downstream-handling.md` §
 "Per-adapter density contract".
 
 ## Code-review checklist

@@ -16,17 +16,17 @@ tags: [market-making, prediction, polymarket, kalshi, event-driven]
 related:
   [
     ../families/market-making.md,
-    market-making-event-settled.md,
-    arbitrage-cross-domain-event.md,
-    ml-directional-event-settled.md,
-    market-making-continuous.md,
+    /codex/09-strategy/architecture-v2/archetypes/market-making-event-settled.md,
+    /codex/09-strategy/architecture-v2/archetypes/arbitrage-cross-domain-event.md,
+    /codex/09-strategy/architecture-v2/archetypes/ml-directional-event-settled.md,
+    /codex/09-strategy/architecture-v2/archetypes/market-making-continuous.md,
   ]
 created: 2026-05-19
 authoritative_for: [MARKET_MAKING_PREDICTION archetype specification]
 referenced_by:
   [
-    codex/09-strategy/architecture-v2/archetypes/arbitrage-cross-domain-event.md,
-    codex/09-strategy/architecture-v2/families/market-making.md,
+    /codex/09-strategy/architecture-v2/archetypes/arbitrage-cross-domain-event.md,
+    /codex/09-strategy/architecture-v2/families/market-making.md,
   ]
 owner:
 last_reviewed:

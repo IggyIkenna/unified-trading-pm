@@ -2,9 +2,9 @@
 doc_type: codex-ssot
 title: CeFi Batch/Live Architecture
 summary:
-  CeFi per-asset-group batch/live narrative — 7 venues (Binance/Bybit/OKX/Deribit/Kraken/Hyperliquid/Aster),
-  L2Matcher order-book fills, shard atom (cefi,data_type,venue,date), 24/7 empty-rule (missing = record_failed,
-  not record_empty), DeFi hedge-leg integration, Tardis expiry-window filter + 401 ≠ honest-absence.
+  CeFi per-asset-group batch/live narrative — 7 venues (Binance/Bybit/OKX/Deribit/Kraken/Hyperliquid/Aster), L2Matcher
+  order-book fills, shard atom (cefi,data_type,venue,date), 24/7 empty-rule (missing = record_failed, not record_empty),
+  DeFi hedge-leg integration, Tardis expiry-window filter + 401 ≠ honest-absence.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -12,10 +12,22 @@ stage: [meta]
 repos: [execution-service, features-service, instruments-service]
 scope: [engineer, admin]
 tags: [cefi, batch-live, execution, manifest, honest-coverage, mtds]
-related: [batch-live-architecture.md, amm-slippage-simulation.md, ../02-data/honest-absence-downstream-handling.md]
+related:
+  [
+    /codex/04-architecture/batch-live-architecture.md,
+    /codex/04-architecture/amm-slippage-simulation.md,
+    /codex/02-data/honest-absence-downstream-handling.md,
+  ]
 created: 2026-05-14
 authoritative_for: [CeFi asset-group batch/live architecture]
-referenced_by: [codex/04-architecture/amm-slippage-simulation.md, codex/04-architecture/batch-live-architecture.md, codex/04-architecture/prediction-batch-live.md, codex/04-architecture/sports-batch-live.md, codex/04-architecture/tradfi-batch-live.md]
+referenced_by:
+  [
+    /codex/04-architecture/amm-slippage-simulation.md,
+    /codex/04-architecture/batch-live-architecture.md,
+    /codex/04-architecture/prediction-batch-live.md,
+    /codex/04-architecture/sports-batch-live.md,
+    /codex/04-architecture/tradfi-batch-live.md,
+  ]
 owner:
 last_reviewed: 2026-05-17
 code_refs:
@@ -129,8 +141,8 @@ CeFi ticks follow the same MTDS → Redis Stream → MDPS → features-service c
 
 - **MTDS** subscribes to WebSocket feeds per venue + emits `streaming.cefi.candle_boundary_crossed` at UTC-aligned
   boundaries per the
-  [`../05-infrastructure/live-pipeline-architecture.md`](../05-infrastructure/live-pipeline-architecture.md) cascade
-  contract.
+  [`/codex/05-infrastructure/live-pipeline-architecture.md`](/codex/05-infrastructure/live-pipeline-architecture.md)
+  cascade contract.
 - **MDPS** runs in asset-scoped-colocated topology: one MDPS VM per `(asset_group=cefi, venue)` pair.
 - **features-service**: `delta_one`, `volatility`, `cross_instrument` families consume CeFi candles.
 
@@ -145,7 +157,7 @@ The UTC-alignment rule (§10.1 of `batch-live-architecture.md`) applies: MTDS ne
   `{mode}_{source}[_{transport}]` closed set (cefi: `batch_tardis` / `batch_hyperliquid` / `live_<venue>` /
   `replay_<venue>`; `live_websocket` is the transitional alias until the gated `M1-BREAKING` tranche) — never an
   asset_group-glued or coarse value (see
-  [`../02-data/pipeline-mode-partition.md`](../02-data/pipeline-mode-partition.md) § "Ratified TARGET design").
+  [`/codex/02-data/pipeline-mode-partition.md`](/codex/02-data/pipeline-mode-partition.md) § "Ratified TARGET design").
 - Don't write `if asset_group == "cefi": use_l2_matcher` — matcher dispatch is on `BatchExecutionMode`, not on
   asset_group. CeFi + TradFi both use L2Matcher; DeFi uses AMMMatcher; Sports uses L0Matcher.
 - Don't emit `record_empty(reason=EXPECTED_INSTRUMENT_NOT_LISTED)` for cefi at instrument-day grain — cefi is 24/7.
@@ -157,8 +169,8 @@ The UTC-alignment rule (§10.1 of `batch-live-architecture.md`) applies: MTDS ne
 ## §9 — CeFi adapter: expiry-window contract + 401≠honest-absence (2026-05-27)
 
 > Full codex SSOT:
-> [`../02-data/honest-absence-downstream-handling.md §7`](../02-data/honest-absence-downstream-handling.md). Summary
-> here for CeFi adapter authors.
+> [`/codex/02-data/honest-absence-downstream-handling.md §7`](/codex/02-data/honest-absence-downstream-handling.md).
+> Summary here for CeFi adapter authors.
 
 ### Expiry-window pre-request filter (MANDATORY)
 
@@ -201,14 +213,14 @@ retried after key renewal. `attempted_failed` keeps the cell in the "retryable" 
 - **Matching engine + L2Matcher**: [`batch-live-architecture.md §5`](batch-live-architecture.md)
 - **AMMMatcher (DeFi leg)**: [`amm-slippage-simulation.md`](amm-slippage-simulation.md)
 - **Live pipeline cascade**:
-  [`../05-infrastructure/live-pipeline-architecture.md`](../05-infrastructure/live-pipeline-architecture.md)
-- **Replay subsystem**: [`../05-infrastructure/replay-subsystem.md`](../05-infrastructure/replay-subsystem.md)
-- **Pipeline-mode partition**: [`../02-data/pipeline-mode-partition.md`](../02-data/pipeline-mode-partition.md)
+  [`/codex/05-infrastructure/live-pipeline-architecture.md`](/codex/05-infrastructure/live-pipeline-architecture.md)
+- **Replay subsystem**: [`/codex/05-infrastructure/replay-subsystem.md`](/codex/05-infrastructure/replay-subsystem.md)
+- **Pipeline-mode partition**: [`/codex/02-data/pipeline-mode-partition.md`](/codex/02-data/pipeline-mode-partition.md)
 - **DeFi archetype hedge legs**:
   [`../09-strategy/architecture-v2/archetypes/`](../09-strategy/architecture-v2/archetypes/)
 - **BatchExecutionMode**: `unified_api_contracts.internal.execution.BatchExecutionMode`
 - **Shard-granularity SSOT**: `plans/epics/infrastructure_master.md`
 - **Empty-record rules**:
-  [`../02-data/availability-manifest-and-data-status.md`](../02-data/availability-manifest-and-data-status.md)
+  [`/codex/02-data/availability-manifest-and-data-status.md`](/codex/02-data/availability-manifest-and-data-status.md)
 - **CeFi expiry-window + 401 contract**:
-  [`../02-data/honest-absence-downstream-handling.md §7`](../02-data/honest-absence-downstream-handling.md)
+  [`/codex/02-data/honest-absence-downstream-handling.md §7`](/codex/02-data/honest-absence-downstream-handling.md)

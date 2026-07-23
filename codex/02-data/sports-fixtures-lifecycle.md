@@ -13,15 +13,15 @@ scope: [engineer, admin]
 tags: [sports, instruments, data-correctness, reconciliation, data-status, validation]
 related:
   [
-    codex/02-data/sports-data-types-catalog.md,
-    codex/02-data/sports-scheduling-and-sharding.md,
-    codex/02-data/match-end-time-cascade.md,
-    codex/02-data/honest-absence-downstream-handling.md,
+    /codex/02-data/sports-data-types-catalog.md,
+    /codex/02-data/sports-scheduling-and-sharding.md,
+    /codex/02-data/match-end-time-cascade.md,
+    /codex/02-data/honest-absence-downstream-handling.md,
   ]
 created: 2026-05-13
 authoritative_for:
   [sports fixture lifecycle state machine, cross-source fixture status verifier, postponed-fixture identity model]
-referenced_by: [codex/02-data/sports-data-types-catalog.md, codex/04-architecture/instruments-live-architecture.md]
+referenced_by: [/codex/02-data/sports-data-types-catalog.md, /codex/04-architecture/instruments-live-architecture.md]
 owner: sports-domain
 last_reviewed: 2026-05-17
 code_refs:
@@ -265,6 +265,6 @@ transient status that disappears once the new kickoff is confirmed.
 - **Plan**: `plans/epics/sports_master.md` § "C.6 + C.10 match_end_time cascade"
 - **Match-end cascade**: [`match-end-time-cascade.md`](match-end-time-cascade.md)
 - **MatchStatus SSOT**: `unified_api_contracts/canonical/domain/sports/match_status.py`
-- **Batch=live SSOT**: `codex/04-architecture/batch-live-architecture.md`
-- **Availability stamping**: `codex/02-data/availability-manifest-and-data-status.md`
-- **Honest absence**: `codex/02-data/honest-absence-downstream-handling.md`
+- **Batch=live SSOT**: `/codex/04-architecture/batch-live-architecture.md`
+- **Availability stamping**: `/codex/02-data/availability-manifest-and-data-status.md`
+- **Honest absence**: `/codex/02-data/honest-absence-downstream-handling.md`

@@ -17,23 +17,23 @@ tags: [strategy, carry, defi, cefi, execution, archetype, binance]
 related:
   [
     ../families/carry-and-yield.md,
-    carry-staked-basis.md,
-    carry-recursive-staked.md,
-    carry-basis-dated.md,
+    /codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md,
+    /codex/09-strategy/architecture-v2/archetypes/carry-recursive-staked.md,
+    /codex/09-strategy/architecture-v2/archetypes/carry-basis-dated.md,
     ../../../04-architecture/drift-v2-data-sources.md,
   ]
 created: 2026-04-17
 authoritative_for: [CARRY_BASIS_PERP archetype specification]
 referenced_by:
   [
-    codex/09-strategy/_archived_pre_v2/defi/basis-trade.md,
-    codex/09-strategy/_archived_pre_v2/defi/btc-basis-trade.md,
-    codex/09-strategy/_archived_pre_v2/defi/l2-basis-trade.md,
-    codex/09-strategy/architecture-v2/MIGRATION.md,
-    codex/09-strategy/architecture-v2/archetypes/carry-basis-dated-inv.md,
-    codex/09-strategy/architecture-v2/archetypes/carry-basis-dated.md,
-    codex/09-strategy/architecture-v2/archetypes/carry-basis-perp-inv.md,
-    codex/09-strategy/architecture-v2/archetypes/vol-overlay-protective-put.md,
+    /codex/09-strategy/_archived_pre_v2/defi/basis-trade.md,
+    /codex/09-strategy/_archived_pre_v2/defi/btc-basis-trade.md,
+    /codex/09-strategy/_archived_pre_v2/defi/l2-basis-trade.md,
+    /codex/09-strategy/architecture-v2/MIGRATION.md,
+    /codex/09-strategy/architecture-v2/archetypes/carry-basis-dated-inv.md,
+    /codex/09-strategy/architecture-v2/archetypes/carry-basis-dated.md,
+    /codex/09-strategy/architecture-v2/archetypes/carry-basis-perp-inv.md,
+    /codex/09-strategy/architecture-v2/archetypes/vol-overlay-protective-put.md,
   ]
 owner:
 last_reviewed:
@@ -204,10 +204,12 @@ Multi-coin rotation:
 The Solana basis instance of this archetype runs:
 
 - **Short leg**: SOL-PERP on **DRIFT** (Solana CLOB hybrid w/ vAMM). Funding data via Drift Velocity Data API
-  (`data.api.drift.trade`) per `codex/04-architecture/drift-v2-data-sources.md`. Hourly funding cadence.
-- **Long leg**: SOL on **ORCA** Whirlpool SOL/USDC ($28M TVL — most liquid Solana SOL/USDC pool). Pool state ingested at
+  (`data.api.drift.trade`) per `/codex/04-architecture/drift-v2-data-sources.md`. Hourly funding cadence.
+- **Long leg**: SOL on **ORCA** Whirlpool SOL/USDC
+  ($28M TVL — most liquid Solana SOL/USDC pool). Pool state ingested at
   1-min cadence via Alchemy archive RPC (`getAccountInfo` of Whirlpool account at slot). Secondary: RAYDIUM classic AMM
-  WSOL/USDC pool ($14M combined TVL) for redundancy / cross-venue dispersion check.
+  WSOL/USDC pool ($14M
+  combined TVL) for redundancy / cross-venue dispersion check.
 - **Entry**: when annualised Drift SOL-PERP funding > entry threshold (e.g., +500 bps) after fees.
 - **Exit**: when funding inverts, drops below exit threshold, or delta-drift exceeds rebalance band.
 - **Backtest loader**: `SolanaBasisGcsLoader` (`strategy_service/engine/backtest/solana_basis_loader.py`) reads Drift

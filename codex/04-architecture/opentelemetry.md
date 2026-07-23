@@ -12,7 +12,7 @@ stage: [meta]
 repos: [alerting-service, execution-service, unified-trading-library]
 scope: [engineer, admin]
 tags: [observability, monitoring, infrastructure, execution, ssot]
-related: [../03-observability/alerting.md, ../03-observability/lifecycle-events.md]
+related: [/codex/03-observability/alerting.md, /codex/03-observability/lifecycle-events.md]
 created: 2026-03-27
 authoritative_for: [OpenTelemetry tracing setup convention, setup_service_observability tracing wiring]
 referenced_by:

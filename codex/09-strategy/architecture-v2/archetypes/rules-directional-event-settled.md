@@ -16,19 +16,19 @@ tags: [rules, sports, odds, prediction, registry]
 related:
   [
     ../families/rules-directional.md,
-    rules-directional-continuous.md,
+    /codex/09-strategy/architecture-v2/archetypes/rules-directional-continuous.md,
     ../../../04-architecture/artifact-versioning.md,
     ../../../02-venues/unity-integration.md,
-    ml-directional-event-settled.md,
+    /codex/09-strategy/architecture-v2/archetypes/ml-directional-event-settled.md,
   ]
 created: 2026-04-17
 authoritative_for: [RULES_DIRECTIONAL_EVENT_SETTLED archetype specification]
 referenced_by:
   [
-    codex/09-strategy/architecture-v2/archetypes/ml-directional-event-settled.md,
-    codex/09-strategy/architecture-v2/archetypes/rules-directional-continuous.md,
-    codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md,
-    codex/09-strategy/architecture-v2/families/rules-directional.md,
+    /codex/09-strategy/architecture-v2/archetypes/ml-directional-event-settled.md,
+    /codex/09-strategy/architecture-v2/archetypes/rules-directional-continuous.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md,
+    /codex/09-strategy/architecture-v2/families/rules-directional.md,
     plans/epics/sports_master.md,
   ]
 owner:

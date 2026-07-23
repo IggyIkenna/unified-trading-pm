@@ -17,13 +17,13 @@ scope: [engineer, admin]
 tags: [orphan, gcs, manifest, reconciliation, delete-safety, single-walk, canonicalisation, data-correctness, class-e]
 related:
   [
-    four-surface-reconciliation-procedure.md,
-    reconciliation-finding-taxonomy.md,
-    gcs-and-manifest-delete-safety-protocol.md,
-    non-canonical-path-inventory.md,
-    canonical-cutover-register.md,
-    availability-manifest-and-data-status.md,
-    ../05-infrastructure/gcs-object-operations.md,
+    /codex/02-data/four-surface-reconciliation-procedure.md,
+    /codex/02-data/reconciliation-finding-taxonomy.md,
+    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+    /codex/02-data/non-canonical-path-inventory.md,
+    /codex/02-data/canonical-cutover-register.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/05-infrastructure/gcs-object-operations.md,
   ]
 created: 2026-07-20
 authoritative_for:
@@ -32,7 +32,7 @@ authoritative_for:
     orphan detection coverage gaps in existing tooling,
     orphan detection under single-walk discipline,
   ]
-referenced_by: [codex/02-data/canonical-cutover-register.md, codex/02-data/four-surface-reconciliation-procedure.md]
+referenced_by: [/codex/02-data/canonical-cutover-register.md, /codex/02-data/four-surface-reconciliation-procedure.md]
 owner:
 last_reviewed: 2026-07-20
 code_refs:
@@ -45,10 +45,10 @@ code_refs:
 
 # Orphan object detection
 
-> **Not to be confused with [`../04-architecture/orphan-audit.md`](../04-architecture/orphan-audit.md).** That doc is
-> the **UI orphan-ROUTE** policy — Next.js / React-Router pages with no nav-surface reachability. It shares only the
-> word "orphan". There is **no overlap in subject, tooling, or remediation**; this doc is about GCS objects. Neither doc
-> extends the other.
+> **Not to be confused with [`/codex/04-architecture/orphan-audit.md`](/codex/04-architecture/orphan-audit.md).** That
+> doc is the **UI orphan-ROUTE** policy — Next.js / React-Router pages with no nav-surface reachability. It shares only
+> the word "orphan". There is **no overlap in subject, tooling, or remediation**; this doc is about GCS objects. Neither
+> doc extends the other.
 >
 > **This doc REFERENCES, it does not duplicate.** The four surfaces and the comparison loop →
 > [`four-surface-reconciliation-procedure.md`](four-surface-reconciliation-procedure.md). The finding vocabulary and

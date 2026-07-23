@@ -16,19 +16,19 @@ tags: [strategy, arbitrage, defi, mev, execution, archetype]
 related:
   [
     ../families/arbitrage-structural.md,
-    arbitrage-mev-sandwich.md,
-    arbitrage-mev-jit-liquidity.md,
-    arbitrage-mev-liquidation-bundle.md,
-    arbitrage-price-dispersion.md,
+    /codex/09-strategy/architecture-v2/archetypes/arbitrage-mev-sandwich.md,
+    /codex/09-strategy/architecture-v2/archetypes/arbitrage-mev-jit-liquidity.md,
+    /codex/09-strategy/architecture-v2/archetypes/arbitrage-mev-liquidation-bundle.md,
+    /codex/09-strategy/architecture-v2/archetypes/arbitrage-price-dispersion.md,
   ]
 created: 2026-05-01
 authoritative_for: [ARBITRAGE_MEV_BACKRUN archetype specification]
 referenced_by:
   [
-    codex/09-strategy/architecture-v2/archetypes/arbitrage-mev-jit-liquidity.md,
-    codex/09-strategy/architecture-v2/archetypes/arbitrage-mev-liquidation-bundle.md,
-    codex/09-strategy/architecture-v2/archetypes/arbitrage-mev-sandwich.md,
-    codex/09-strategy/architecture-v2/families/arbitrage-structural.md,
+    /codex/09-strategy/architecture-v2/archetypes/arbitrage-mev-jit-liquidity.md,
+    /codex/09-strategy/architecture-v2/archetypes/arbitrage-mev-liquidation-bundle.md,
+    /codex/09-strategy/architecture-v2/archetypes/arbitrage-mev-sandwich.md,
+    /codex/09-strategy/architecture-v2/families/arbitrage-structural.md,
   ]
 owner:
 last_reviewed:

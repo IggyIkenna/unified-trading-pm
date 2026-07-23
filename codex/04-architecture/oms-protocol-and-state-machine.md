@@ -13,7 +13,12 @@ stage: [meta]
 repos: [execution-service]
 scope: [engineer, admin]
 tags: [execution, order-state, reconciliation, ssot]
-related: [order-state-machine.md, strategy-execution-protocol.md, transfer-coordinator.md]
+related:
+  [
+    /codex/04-architecture/order-state-machine.md,
+    /codex/04-architecture/strategy-execution-protocol.md,
+    /codex/04-architecture/transfer-coordinator.md,
+  ]
 created: 2026-05-20
 authoritative_for:
   [
@@ -22,7 +27,7 @@ authoritative_for:
     OrderPersistenceAdapter protocol,
     InstructionOrderTracker mapping,
   ]
-referenced_by: [codex/04-architecture/order-state-machine.md, codex/04-architecture/transfer-coordinator.md]
+referenced_by: [/codex/04-architecture/order-state-machine.md, /codex/04-architecture/transfer-coordinator.md]
 owner:
 last_reviewed: 2026-05-20
 code_refs:
@@ -148,4 +153,4 @@ Used by simpler adapters and test harnesses. Does not implement `OrderPersistenc
 The `TransferCoordinator` (Phase 6 new component) reuses the `operation_id`-based pattern from OMS:
 `TransferIntent.idempotency_key` maps 1:1 to `operation_id` in a `TransferPersistenceAdapter`. If the same
 idempotency_key is submitted twice, the second call returns the cached `TransferResult` without re-executing. See
-`codex/04-architecture/transfer-coordinator.md`.
+`/codex/04-architecture/transfer-coordinator.md`.

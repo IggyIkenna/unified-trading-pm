@@ -19,18 +19,18 @@ created: 2026-05-10
 authoritative_for: [per-slot reference-clone worktree model]
 referenced_by:
   [
-    codex/05-infrastructure/claude-code-settings-symlink.md,
-    codex/05-infrastructure/manifest-consolidator-ssot.md,
-    codex/05-infrastructure/plan-aware-merge-resolution.md,
-    codex/12-agent-workflow/harsh-laptop-migration-2026-05-20.md,
-    codex/12-agent-workflow/local-slot-host-symmetric-worker-model.md,
-    codex/12-agent-workflow/orchestrator-safety-mechanisms.md,
+    /codex/05-infrastructure/claude-code-settings-symlink.md,
+    /codex/05-infrastructure/manifest-consolidator-ssot.md,
+    /codex/05-infrastructure/plan-aware-merge-resolution.md,
+    /codex/12-agent-workflow/harsh-laptop-migration-2026-05-20.md,
+    /codex/12-agent-workflow/local-slot-host-symmetric-worker-model.md,
+    /codex/12-agent-workflow/orchestrator-safety-mechanisms.md,
   ]
 owner: workspace-platform
 last_reviewed: 2026-07-15
 code_refs:
 last_updated: 2026-07-09
-related_codex: [codex/05-infrastructure/plan-aware-merge-resolution.md, ../../cursor-configs/CLAUDE.md]
+related_codex: [/codex/05-infrastructure/plan-aware-merge-resolution.md, ../../cursor-configs/CLAUDE.md]
 ---
 
 # Per-slot reference-clones — 3-tier isolation for parallel-agent flow

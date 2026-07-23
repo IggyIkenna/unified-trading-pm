@@ -17,9 +17,9 @@ scope: [engineer]
 tags: [sports, features, honest-coverage, calculator, registration, playbook, coverage-gate]
 related:
   [
-    honest-coverage-model.md,
-    availability-manifest-and-data-status.md,
-    ../04-architecture/instruments-service-as-ssot-for-mtds.md,
+    /codex/02-data/honest-coverage-model.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/04-architecture/instruments-service-as-ssot-for-mtds.md,
   ]
 created: "2026-07-21"
 authoritative_for: [sports feature calculator registration procedure]

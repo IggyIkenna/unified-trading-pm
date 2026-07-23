@@ -14,14 +14,18 @@ repos: [agent-orchestrator, unified-trading-pm]
 scope: [engineer, admin]
 tags: [orchestrator, self-healing, role-registry, model-tier, slack, infrastructure]
 related:
-  [agent-orchestrator-overview.md, agent-orchestrator-worker-liveness.md, agent-orchestrator-backlog-state-alignment.md]
+  [
+    /codex/04-architecture/agent-orchestrator-overview.md,
+    /codex/04-architecture/agent-orchestrator-worker-liveness.md,
+    /codex/04-architecture/agent-orchestrator-backlog-state-alignment.md,
+  ]
 created: 2026-05-30
 authoritative_for: [agent-orchestrator AutoSpawn worker-spawn architecture]
 referenced_by:
   [
-    codex/04-architecture/agent-orchestrator-backlog-state-alignment.md,
-    codex/04-architecture/agent-orchestrator-overview.md,
-    codex/04-architecture/agent-orchestrator-worker-liveness.md,
+    /codex/04-architecture/agent-orchestrator-backlog-state-alignment.md,
+    /codex/04-architecture/agent-orchestrator-overview.md,
+    /codex/04-architecture/agent-orchestrator-worker-liveness.md,
     plans/audit/instructions/orchestrator_master_audit_instructions.md,
   ]
 owner:
@@ -32,7 +36,7 @@ code_refs:
 # Agent Orchestrator — AutoSpawn Architecture
 
 > **SSOT**: `agent-orchestrator/server/autospawn.py` **Plan**: `plans/active/autospawn_idle_vms_2026_05_30.md`
-> **Overview pointer**: `codex/04-architecture/agent-orchestrator-overview.md` § "Auto-spawn lifecycle"
+> **Overview pointer**: `/codex/04-architecture/agent-orchestrator-overview.md` § "Auto-spawn lifecycle"
 
 ## Problem statement
 
@@ -162,7 +166,7 @@ task (`mdps_polars_engine_cost_sharpening`). Commits: dispatch gate `agent-orche
 affinity upgrade `@5929815` (extends the original spawn-time pinned upgrade). Tests:
 `tests/test_dispatch_model_gate.py`, `tests/test_autospawn.py::test_*model*`/`*pinned*`/`*required*`. Cross-refs:
 `unified-trading-pm/agents/<role>.md` (per-role `model` frontmatter defaults),
-`codex/06-coding-standards/model-tier-selection.md` (the tier SSOT).
+`/codex/06-coding-standards/model-tier-selection.md` (the tier SSOT).
 
 **Quota note.** Opus is genuinely available (Max-20 accounts carry Opus headroom; there is **no** opus-budget guard in
 code), but Opus burns the weekly quota faster — so `opus-required` is rightly reserved for cross-repo/schema work, and

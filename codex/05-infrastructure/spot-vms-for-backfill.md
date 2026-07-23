@@ -14,17 +14,17 @@ scope: [engineer, admin]
 tags: [spot-vm, backfill, cost, infrastructure, deployment, runbook]
 related:
   [
-    vm-launcher-runbook.md,
-    vm-tarball-deployment.md,
-    deployment-observability.md,
-    aws-migration-cost-snapshot-2026-05-07.md,
+    /codex/05-infrastructure/vm-launcher-runbook.md,
+    /codex/05-infrastructure/vm-tarball-deployment.md,
+    /codex/05-infrastructure/deployment-observability.md,
+    /codex/05-infrastructure/aws-migration-cost-snapshot-2026-05-07.md,
   ]
 created: 2026-06-27
 authoritative_for: [Spot-VM provisioning standard for backfill launchers]
 referenced_by:
   [
-    codex/05-infrastructure/vm-launcher-runbook.md,
-    codex/05-infrastructure/vm-tarball-deployment.md,
+    /codex/05-infrastructure/vm-launcher-runbook.md,
+    /codex/05-infrastructure/vm-tarball-deployment.md,
     plans/active/issues/terminated_vm_disk_orphan_no_reaper_2026_06_30.md,
   ]
 owner:
@@ -179,7 +179,7 @@ real work. Replay-from-START_DATE would have re-done 2019-01-01..07 on every cyc
 1. A SPOT VM whose run is NOT idempotent-by-skip (i.e. any `--force`/`redo_all` run) MUST resume from **measured
    progress**, not from the original `START_DATE`.
 2. Progress is measured the same way a backfill monitor measures it — a count/max of the **target artifact** actually
-   created, entity-scoped (see `codex/12-agent-workflow/async-wait-and-poll-discipline.md`). Never a log or heartbeat.
+   created, entity-scoped (see `/codex/12-agent-workflow/async-wait-and-poll-discipline.md`). Never a log or heartbeat.
 3. Until the relauncher is progress-aware, a `--force` SPOT run MUST be driven as repeated bounded relaunches from
    `last_completed_unit + 1` (an operator loop or an explicit chunk schedule) — and that requirement belongs in the
    launch plan, not in someone's head.

@@ -1,7 +1,9 @@
 ---
 doc_type: codex-ssot
 title: Chain Environment Resolution
-summary: Resolves canonical chain names (ETHEREUM/ARBITRUM) to chain IDs + RPC URLs via CHAIN_ENV (mainnet/testnet/fork); resolve_chain_id/resolve_rpc_url in the UAC registry; 19 EVM chains + Solana + Bitcoin.
+summary:
+  Resolves canonical chain names (ETHEREUM/ARBITRUM) to chain IDs + RPC URLs via CHAIN_ENV (mainnet/testnet/fork);
+  resolve_chain_id/resolve_rpc_url in the UAC registry; 19 EVM chains + Solana + Bitcoin.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -9,10 +11,20 @@ stage: [meta]
 repos: [e2e-testing]
 scope: [engineer, admin]
 tags: [chain-resolution, defi, uac, execution, rpc, configuration]
-related: [execution-modes-and-chain-resolution.md, wallet-hierarchy-and-capital-flow.md, defi-execution-overview.md]
+related:
+  [
+    /codex/04-architecture/execution-modes-and-chain-resolution.md,
+    /codex/04-architecture/wallet-hierarchy-and-capital-flow.md,
+    /codex/04-architecture/defi-execution-overview.md,
+  ]
 created: 2026-03-30
 authoritative_for: [canonical chain-name to chain-id and RPC-URL resolution]
-referenced_by: [codex/04-architecture/defi-phase3-infrastructure.md, codex/04-architecture/execution-modes-and-chain-resolution.md, codex/05-infrastructure/per-venue-paper-policy.md]
+referenced_by:
+  [
+    /codex/04-architecture/defi-phase3-infrastructure.md,
+    /codex/04-architecture/execution-modes-and-chain-resolution.md,
+    /codex/05-infrastructure/per-venue-paper-policy.md,
+  ]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

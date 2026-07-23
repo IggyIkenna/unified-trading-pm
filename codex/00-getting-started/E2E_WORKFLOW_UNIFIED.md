@@ -1,6 +1,6 @@
 ---
 doc_type: codex-ssot
-title: 'Unified Trading System: Complete End-to-End Workflow'
+title: "Unified Trading System: Complete End-to-End Workflow"
 summary:
   Legacy Feb-2026 Level-1 orientation for the COD + service-spec end-to-end workflow and the 9-stage /
   4-automation-level maturity model; superseded for current work by the agent-orchestrator + epic worktree model.
@@ -11,7 +11,12 @@ stage: [meta]
 repos: [agent-orchestrator, execution-service]
 scope: [engineer]
 tags: [workflow, orchestrator, cod, service-spec, automation-levels, historical]
-related: [../12-agent-workflow/README.md, ../04-architecture/agent-orchestrator-overview.md, ../11-project-management/service-registry.yaml]
+related:
+  [
+    /codex/12-agent-workflow/README.md,
+    /codex/04-architecture/agent-orchestrator-overview.md,
+    ../11-project-management/service-registry.yaml,
+  ]
 created: 2026-03-27
 authoritative_for: [legacy COD-era end-to-end workflow orientation (historical)]
 referenced_by:
@@ -27,10 +32,10 @@ code_refs:
 **Visual Diagrams:**
 
 - **5-step autonomous workflow:**
-  [CLEAN_WORKFLOW_DIAGRAMS.md](../12-presentations/CLEAN_WORKFLOW_DIAGRAMS.md#1-the-5-step-autonomous-workflow)
+  [CLEAN_WORKFLOW_DIAGRAMS.md](/codex/12-presentations/CLEAN_WORKFLOW_DIAGRAMS.md#1-the-5-step-autonomous-workflow)
 - **9-stage maturity model:** [WORKFLOW_DIAGRAM.md](../../plans/archive/WORKFLOW_DIAGRAM.md)
 - **Project structure (17 projects):**
-  [PROJECT_STRUCTURE_REFERENCE.md](../12-presentations/PROJECT_STRUCTURE_REFERENCE.md)
+  [PROJECT_STRUCTURE_REFERENCE.md](/codex/12-presentations/PROJECT_STRUCTURE_REFERENCE.md)
 - **Complete vision (Google pitch):**
   [gemini-autonomous-development-pitch.html](../12-presentations/gemini-autonomous-development-pitch.html)
 
@@ -39,9 +44,9 @@ code_refs:
 > 4 = Q4 2026) are now current or past dates. **Planned delta:** The agent-orchestrator (`agent-orchestrator/`) is the
 > shipped answer to Level 2/3 orchestration — it is a live FastAPI + Vite dashboard running at
 > `https://agent-orchestrator.odum-research.com` with 8-slot × 2-operator fan-out (see
-> `codex/04-architecture/agent-orchestrator-overview.md`). The COD/service-spec workflow described here predates the
+> `/codex/04-architecture/agent-orchestrator-overview.md`). The COD/service-spec workflow described here predates the
 > current epic-based worktree model. **Target:** This doc is legacy orientation material; for current workflow see
-> `codex/12-agent-workflow/README.md` and `CLAUDE.md § Daily Work-Split Process`.
+> `/codex/12-agent-workflow/README.md` and `CLAUDE.md § Daily Work-Split Process`.
 
 ## Current State (Feb 2026) - What We're Working On TODAY
 
@@ -321,9 +326,8 @@ Appears in:
 
 ### Benefits:
 
-✅ **No manual dual-tagging** - GitHub workflows handle it automatically  
-✅ **Single source issue** - Close once, disappears from all projects  
-✅ **Filter flexibility** - Service projects can show "All work", "CODs only", "Waves only"  
+✅ **No manual dual-tagging** - GitHub workflows handle it automatically ✅ **Single source issue** - Close once,
+disappears from all projects ✅ **Filter flexibility** - Service projects can show "All work", "CODs only", "Waves only"
 ✅ **Correct cross-cutting concerns** - Tracked centrally AND per-service
 
 ### Create Service Projects:
@@ -338,35 +342,34 @@ python3 scripts/utilities/create-all-service-projects.py --service execution-ser
 ```
 
 **See detailed documentation:**
-[CROSS_CUTTING_ATTACHMENT.md](../11-project-management/github-integration/docs/CROSS_CUTTING_ATTACHMENT.md)
+[CROSS_CUTTING_ATTACHMENT.md](/codex/11-project-management/github-integration/docs/CROSS_CUTTING_ATTACHMENT.md)
 
 ## Detailed References (For Deep Dives)
 
 **Workflow Details:**
 
-- [LOCAL_VS_CLOUD_ORCHESTRATION.md](../12-agent-workflow/LOCAL_VS_CLOUD_ORCHESTRATION.md) - Local vs cloud comparison
-- [WORKER_AGENT_INSTRUCTIONS.md](../12-agent-workflow/WORKER_AGENT_INSTRUCTIONS.md) - Agent prompt templates
+- [LOCAL_VS_CLOUD_ORCHESTRATION.md](/codex/12-agent-workflow/LOCAL_VS_CLOUD_ORCHESTRATION.md) - Local vs cloud
+  comparison
+- [WORKER_AGENT_INSTRUCTIONS.md](/codex/12-agent-workflow/WORKER_AGENT_INSTRUCTIONS.md) - Agent prompt templates
 - [QUICK_REFERENCE.md](../validators/QUICK_REFERENCE.md) - Command cheat sheet
 
 **Complete Roadmap:**
 
-- [GITHUB_INTEGRATION_ROADMAP.md](../11-project-management/github-integration/GITHUB_INTEGRATION_ROADMAP.md) - 9-stage
-  detailed roadmap
-- [GITHUB_AUTOMATION_SUMMARY.md](../11-project-management/github-integration/GITHUB_AUTOMATION_SUMMARY.md) - Executive
-  summary
+- [GITHUB_INTEGRATION_ROADMAP.md](/codex/11-project-management/github-integration/GITHUB_INTEGRATION_ROADMAP.md) -
+  9-stage detailed roadmap
+- [GITHUB_AUTOMATION_SUMMARY.md](/codex/11-project-management/github-integration/GITHUB_AUTOMATION_SUMMARY.md) -
+  Executive summary
 
 **Presentations:**
 
-- [CLEAN_WORKFLOW_DIAGRAMS.md](../12-presentations/CLEAN_WORKFLOW_DIAGRAMS.md) - Visual diagrams (6 mermaid)
-- [PROJECT_STRUCTURE_REFERENCE.md](../12-presentations/PROJECT_STRUCTURE_REFERENCE.md) - 17 GitHub projects
-- [COMPREHENSIVE_SUMMARY.md](../12-presentations/COMPREHENSIVE_SUMMARY.md) - Complete system overview
+- [CLEAN_WORKFLOW_DIAGRAMS.md](/codex/12-presentations/CLEAN_WORKFLOW_DIAGRAMS.md) - Visual diagrams (6 mermaid)
+- [PROJECT_STRUCTURE_REFERENCE.md](/codex/12-presentations/PROJECT_STRUCTURE_REFERENCE.md) - 17 GitHub projects
+- [COMPREHENSIVE_SUMMARY.md](/codex/12-presentations/COMPREHENSIVE_SUMMARY.md) - Complete system overview
 - [gemini-autonomous-development-pitch.html](../12-presentations/gemini-autonomous-development-pitch.html) - Google
   partnership pitch
 
 ---
 
-**Last Updated:** 2026-02-13  
-**Status:** Current state of unified trading system workflow  
-**Next:** See
+**Last Updated:** 2026-02-13 **Status:** Current state of unified trading system workflow **Next:** See
 [phase_0_cod_service_specs_f0a0afbd.plan.md](../../.cursor/plans/phase_0_cod_service_specs_f0a0afbd.plan.md) for initial
 build plan

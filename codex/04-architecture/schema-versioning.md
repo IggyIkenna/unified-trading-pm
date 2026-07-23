@@ -2,8 +2,8 @@
 doc_type: codex-ssot
 title: Schema Versioning
 summary:
-  How UAC versions its schemas — semver rules (patch/minor/major = breaking), the 60-day parallel-publish
-  deprecation window, consumer major-version pinning, and how internal vs external canonical schemas differ.
+  How UAC versions its schemas — semver rules (patch/minor/major = breaking), the 60-day parallel-publish deprecation
+  window, consumer major-version pinning, and how internal vs external canonical schemas differ.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -11,10 +11,26 @@ stage: [meta]
 repos: [unified-api-contracts]
 scope: [engineer, admin]
 tags: [uac, schema, versioning, contracts, migration, semver]
-related: [artifact-versioning.md, schema-placement.md, ../02-data/contracts-scope-and-layout.md]
+related:
+  [
+    /codex/04-architecture/artifact-versioning.md,
+    /codex/04-architecture/schema-placement.md,
+    /codex/02-data/contracts-scope-and-layout.md,
+  ]
 created: 2026-04-17
-authoritative_for: [UAC schema semver rules (patch/minor/major), UAC schema deprecation window + consumer major-version pinning]
-referenced_by: [codex/03-services/venue-capability-registry.md, codex/04-architecture/artifact-versioning.md, codex/04-architecture/schema-placement.md, codex/04-architecture/shadow-deployment-pattern.md, codex/04-architecture/strategy-execution-protocol.md, codex/06-coding-standards/artifact-naming.md, codex/06-coding-standards/semver.md, codex/06-coding-standards/strategy-identity-versioning.md]
+authoritative_for:
+  [UAC schema semver rules (patch/minor/major), UAC schema deprecation window + consumer major-version pinning]
+referenced_by:
+  [
+    /codex/03-services/venue-capability-registry.md,
+    /codex/04-architecture/artifact-versioning.md,
+    /codex/04-architecture/schema-placement.md,
+    /codex/04-architecture/shadow-deployment-pattern.md,
+    /codex/04-architecture/strategy-execution-protocol.md,
+    /codex/06-coding-standards/artifact-naming.md,
+    /codex/06-coding-standards/semver.md,
+    /codex/06-coding-standards/strategy-identity-versioning.md,
+  ]
 owner:
 last_reviewed: 2026-05-17
 code_refs:
@@ -251,12 +267,12 @@ Per CLAUDE.md:
 
 ## Cross-references
 
-- UAC Citadel architecture: [../02-data/contracts-scope-and-layout.md](../02-data/contracts-scope-and-layout.md)
+- UAC Citadel architecture: [/codex/02-data/contracts-scope-and-layout.md](/codex/02-data/contracts-scope-and-layout.md)
 - Import rules: `imports/uac-import-surface-enforcement.mdc` (in workspace root)
 - Artifact versioning (separate axis): [artifact-versioning.md](artifact-versioning.md)
 - Semver agent: workflow `semver-agent.yml`
 - Strategy identity:
-  [../06-coding-standards/strategy-identity-versioning.md](../06-coding-standards/strategy-identity-versioning.md)
+  [/codex/06-coding-standards/strategy-identity-versioning.md](/codex/06-coding-standards/strategy-identity-versioning.md)
 
 ## Not in this doc
 

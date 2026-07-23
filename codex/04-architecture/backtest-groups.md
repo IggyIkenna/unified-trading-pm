@@ -2,9 +2,9 @@
 doc_type: codex-ssot
 title: Backtest Groups (A / B / C)
 summary:
-  Three backtest groups — A ml-training (versioned model artifacts) · B strategy (alpha via benchmark fills,
-  zero exec-alpha) · C execution (exec-alpha via matching engine vs the same benchmark); scenario-overlay is a
-  4th axis on B/C, not a group.
+  Three backtest groups — A ml-training (versioned model artifacts) · B strategy (alpha via benchmark fills, zero
+  exec-alpha) · C execution (exec-alpha via matching engine vs the same benchmark); scenario-overlay is a 4th axis on
+  B/C, not a group.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -12,10 +12,25 @@ stage: [meta]
 repos: [deployment-service, execution-service, strategy-service]
 scope: [engineer, admin]
 tags: [backtest, strategy, ml, execution, features, verification]
-related: [batch-live-architecture.md, artifact-versioning.md, ../09-strategy/architecture-v2/cross-cutting/benchmark-fills.md]
+related:
+  [
+    /codex/04-architecture/batch-live-architecture.md,
+    /codex/04-architecture/artifact-versioning.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/benchmark-fills.md,
+  ]
 created: 2026-04-17
 authoritative_for: [backtest groups A/B/C split]
-referenced_by: [codex/04-architecture/amm-slippage-simulation.md, codex/04-architecture/artifact-versioning.md, codex/04-architecture/backfill-and-live-startup.md, codex/04-architecture/client-reporting-architecture.md, codex/04-architecture/fixed-grid-config.md, codex/04-architecture/scenario-injection-architecture.md, codex/04-architecture/scenario-outcome-assertions.md, codex/09-strategy/README.md]
+referenced_by:
+  [
+    /codex/04-architecture/amm-slippage-simulation.md,
+    /codex/04-architecture/artifact-versioning.md,
+    /codex/04-architecture/backfill-and-live-startup.md,
+    /codex/04-architecture/client-reporting-architecture.md,
+    /codex/04-architecture/fixed-grid-config.md,
+    /codex/04-architecture/scenario-injection-architecture.md,
+    /codex/04-architecture/scenario-outcome-assertions.md,
+    /codex/09-strategy/README.md,
+  ]
 owner:
 last_reviewed: 2026-05-17
 code_refs:
@@ -245,11 +260,11 @@ python -m strategy_service.backtest --archetype carry_staked_basis \
   --config-hash abc123 --scenario-id DEFI_LST_DEPEG_STETH_5PCT
 ```
 
-The `--scenario-id` flag is declared per `codex/06-coding-standards/cli-convention.md` axes and wires `ScenarioContext`
+The `--scenario-id` flag is declared per `/codex/06-coding-standards/cli-convention.md` axes and wires `ScenarioContext`
 into the batch engine entry point (item 6.A/6.B — pending).
 
 **Reference:** `UAC registry/scenarios/` (UAC@`33630a6`); `UTL scenario/applier.py` (UTL@`3797fed5`); injection
-architecture: `codex/04-architecture/scenario-injection-architecture.md` (8.A SHIPPED slot 7 Day-4 2026-05-12).
+architecture: `/codex/04-architecture/scenario-injection-architecture.md` (8.A SHIPPED slot 7 Day-4 2026-05-12).
 
 ## Anti-patterns to avoid
 
@@ -302,13 +317,13 @@ See memory feedback `run_backtests_on_vms.md`: always use colocated VMs, never l
 ## Cross-references
 
 - Benchmark fills contract:
-  [../09-strategy/architecture-v2/cross-cutting/benchmark-fills.md](../09-strategy/architecture-v2/cross-cutting/benchmark-fills.md)
+  [/codex/09-strategy/architecture-v2/cross-cutting/benchmark-fills.md](/codex/09-strategy/architecture-v2/cross-cutting/benchmark-fills.md)
 - Execution policy: [execution-policy.md](execution-policy.md)
 - Artifact versioning: [artifact-versioning.md](artifact-versioning.md)
 - Strategy-execution protocol: [strategy-execution-protocol.md](strategy-execution-protocol.md)
 - PnL attribution: Group C execution fills (SIMULATED vs BENCHMARK) feed the UTL attribution joiner — the
   `strategy_alpha` vs `execution_alpha` split is computed from the Group B/C fill difference. Factor × layer contract:
-  [../09-strategy/architecture-v2/cross-cutting/pnl-attribution.md](../09-strategy/architecture-v2/cross-cutting/pnl-attribution.md)
+  [/codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md](/codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md)
 - Client reporting output (per-client parquet + API + UI surface):
   [client-reporting-architecture.md](client-reporting-architecture.md)
 

@@ -1,7 +1,9 @@
 ---
 doc_type: codex-ssot
 title: ML Pipeline — Cross-Cutting Concern
-summary: "Pre-v2: ML pipeline rules — models emit signals not decisions, training and inference are separate services, and no model goes live without human approval; 7 feature services feed it."
+summary:
+  "Pre-v2: ML pipeline rules — models emit signals not decisions, training and inference are separate services, and no
+  model goes live without human approval; 7 feature services feed it."
 status: superseded
 nature: ssot
 asset_group: [meta]
@@ -10,13 +12,10 @@ repos: [alerting-service, execution-service, strategy-service]
 scope: [engineer, admin]
 tags: [ml, features, strategy, pipeline, execution]
 related:
-  [
-    ../../architecture-v2/families/ml-directional.md,
-    ../../architecture-v2/archetypes/ml-directional-continuous.md,
-  ]
+  [../../architecture-v2/families/ml-directional.md, ../../architecture-v2/archetypes/ml-directional-continuous.md]
 created: 2026-03-27
 authoritative_for: []
-referenced_by: [codex/09-strategy/_archived_pre_v2/STRATEGY_CATALOG_pre_v2.md]
+referenced_by: [/codex/09-strategy/_archived_pre_v2/STRATEGY_CATALOG_pre_v2.md]
 owner:
 last_reviewed:
 code_refs:
@@ -132,14 +131,22 @@ in non-ML downstream repos.
 
 The ml-inference-service implements 6 inference modes:
 
-| Mode        | Handler / Engine              | Description                                                                                                                                                                                                                                              |
-| ----------- | ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------------------------------------------------------------------------------ |
-| Batch       | `BatchInferenceHandler`       | Processes historical date ranges. Loads features from GCS, generates predictions in batch, writes results.                                                                                                                                               |
-| Live        | `LiveInferenceHandler`        | Subscribes to live feature updates via `FeatureSubscriber`, runs inference per instrument/timeframe, publishes predictions to pub/sub. Polls at timeframe-specific intervals.                                                                            |
-| Ensemble    | `EnsembleInferenceEngine`     | Runs multiple base models (LightGBM, XGBoost, CatBoost, sklearn) with weighted average combination. Supports optional meta-model for stacking.                                                                                                           |
-| Cascade     | `CascadeInferenceMode`        | Multi-timeframe alignment. Trigger TF (e.g. 1h) fires, collects context TFs (4h, 1d), computes cascade confidence via weighted combination. Only publishes `CascadePredictionEvent` when confidence > threshold AND all TFs agree on direction.          |
-| Meta-Signal | `MetaSignalInferenceEngine`   | Loads `SIGNAL_VECTOR_META` model from registry. Combines direction_signal (0.4), vol_signal (0.3), timing_signal (0.2), sizing_confidence (0.1) into single meta_signal [-1, 1]. Falls back to equal-weight combination when no trained model available. |
-| SHAP        | `InferenceTimeSHAPCalculator` | Computes per-prediction feature attributions using cached `shap.TreeExplainer`. Top-N features by                                                                                                                                                        | shap_value | returned per inference call. ~2-10ms per row (explainer cached per model_key). |
+| Mode | Handler / Engine | Description | | ----------- | ----------------------------- |
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+| ---------- | ------------------------------------------------------------------------------ | | Batch |
+`BatchInferenceHandler` | Processes historical date ranges. Loads features from GCS, generates predictions in batch,
+writes results. | | Live | `LiveInferenceHandler` | Subscribes to live feature updates via `FeatureSubscriber`, runs
+inference per instrument/timeframe, publishes predictions to pub/sub. Polls at timeframe-specific intervals. | |
+Ensemble | `EnsembleInferenceEngine` | Runs multiple base models (LightGBM, XGBoost, CatBoost, sklearn) with weighted
+average combination. Supports optional meta-model for stacking. | | Cascade | `CascadeInferenceMode` | Multi-timeframe
+alignment. Trigger TF (e.g. 1h) fires, collects context TFs (4h, 1d), computes cascade confidence via weighted
+combination. Only publishes `CascadePredictionEvent` when confidence > threshold AND all TFs agree on direction. | |
+Meta-Signal | `MetaSignalInferenceEngine` | Loads `SIGNAL_VECTOR_META` model from registry. Combines direction_signal
+(0.4), vol_signal (0.3), timing_signal (0.2), sizing_confidence (0.1) into single meta_signal [-1, 1]. Falls back to
+equal-weight combination when no trained model available. | | SHAP | `InferenceTimeSHAPCalculator` | Computes
+per-prediction feature attributions using cached `shap.TreeExplainer`. Top-N features by | shap_value | returned per
+inference call. ~2-10ms per row (explainer cached per model_key). |
 
 **Cascade default profile** (`momentum_cascade`): trigger=1h, context=[4h, 1d], entry=[15m, 5m],
 confidence_threshold=0.6, require_context_alignment=True.

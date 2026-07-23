@@ -15,10 +15,10 @@ scope: [engineer, admin]
 tags: [ml, features, manifest, data-lineage, model-tier, ssot]
 related:
   [
-    ml-lifecycle.md,
-    ../02-data/data-lineage-MTDS-features-ml.md,
-    ../02-data/availability-manifest-and-data-status.md,
-    live-strategy-config-hot-reload.md,
+    /codex/04-architecture/ml-lifecycle.md,
+    /codex/02-data/data-lineage-MTDS-features-ml.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/04-architecture/live-strategy-config-hot-reload.md,
   ]
 created: 2026-05-08
 authoritative_for:
@@ -27,7 +27,13 @@ authoritative_for:
     ML-manifest vs data-manifest job_id distinction,
     ML model lifecycle states,
   ]
-referenced_by: [codex/03-observability/lifecycle-events.md, codex/04-architecture/batch-live-architecture.md, codex/04-architecture/features-service-architecture.md, codex/04-architecture/ml-lifecycle.md]
+referenced_by:
+  [
+    /codex/03-observability/lifecycle-events.md,
+    /codex/04-architecture/batch-live-architecture.md,
+    /codex/04-architecture/features-service-architecture.md,
+    /codex/04-architecture/ml-lifecycle.md,
+  ]
 owner:
 last_reviewed: 2026-05-23
 code_refs:
@@ -55,7 +61,7 @@ ML-13 so the archived doc can be cleanly hard-bannered or deleted.
    separation is what makes paper / live / shadow / batch all share the same inference path.
 2. **Training and inference are separate services.** `ml-training-service` produces artefacts in the registry;
    `ml-inference-service` (standalone, NOT features-service — see ML-2 SUPERSEDED banner in
-   `../16-strategy-playbooks/ml/cefi-ml-live-serving.md`) consumes them. Crossing the seam (e.g. running inference
+   `/codex/16-strategy-playbooks/ml/cefi-ml-live-serving.md`) consumes them. Crossing the seam (e.g. running inference
    inside the training service, or training in the inference service) breaks the artefact-versioning contract.
 3. **No model goes live without human approval.** Promotion `validated → shadow → champion` is a strategy-service config
    change with a documented runbook (see ML-10 follow-up: `15-runbooks/ml/promote-model-to-champion.md` pending). The
@@ -155,15 +161,15 @@ The same `job_id` field appears in two different manifests, tracking different t
 The two manifests serve different consumers: ML manifest → inference/strategy model selection; data manifest →
 deployment-api/downstream data availability + coverage rollups. They must not be merged — the ML manifest tracks _what
 model exists and its quality state_; the data manifest tracks _what data that job produced and its capture status_. See
-`../02-data/availability-manifest-and-data-status.md` § "Capture-status 4-state taxonomy" for the data manifest's
+`/codex/02-data/availability-manifest-and-data-status.md` § "Capture-status 4-state taxonomy" for the data manifest's
 capture_status semantics (separate from ML lifecycle states).
 
 ## Cross-references
 
 - Data lineage (data manifest companion):
-  [`../02-data/data-lineage-MTDS-features-ml.md`](../02-data/data-lineage-MTDS-features-ml.md)
+  [`/codex/02-data/data-lineage-MTDS-features-ml.md`](/codex/02-data/data-lineage-MTDS-features-ml.md)
 - Availability manifest schema + 4-state taxonomy:
-  [`../02-data/availability-manifest-and-data-status.md`](../02-data/availability-manifest-and-data-status.md)
-- Strategy summary: [`../09-strategy/strategy-summary.md`](../09-strategy/strategy-summary.md)
+  [`/codex/02-data/availability-manifest-and-data-status.md`](/codex/02-data/availability-manifest-and-data-status.md)
+- Strategy summary: [`/codex/09-strategy/strategy-summary.md`](/codex/09-strategy/strategy-summary.md)
 - Live = batch: [`batch-live-architecture.md`](batch-live-architecture.md) (single SSOT)
 - Live config hot-reload (champion swap): [`live-strategy-config-hot-reload.md`](live-strategy-config-hot-reload.md)

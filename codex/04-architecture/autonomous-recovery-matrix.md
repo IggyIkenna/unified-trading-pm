@@ -2,10 +2,9 @@
 doc_type: codex-ssot
 title: Autonomous Recovery Matrix
 summary:
-  Per-failure recovery decision tree — classify_venue_error() → RETRY/RECONNECT/SKIP/FAIL, circuit-breaker
-  escalation to STOP_NEW_ONLY / firm-wide kill-switch, multi-leg compensation, HF / liquidation / drift /
-  stale-feed ladders; codifies the agent-vs-human hard-stop scope (protective arming autonomous, manual_unkill
-  human-only).
+  Per-failure recovery decision tree — classify_venue_error() → RETRY/RECONNECT/SKIP/FAIL, circuit-breaker escalation to
+  STOP_NEW_ONLY / firm-wide kill-switch, multi-leg compensation, HF / liquidation / drift / stale-feed ladders; codifies
+  the agent-vs-human hard-stop scope (protective arming autonomous, manual_unkill human-only).
 status: current
 nature: ssot
 asset_group: [meta]
@@ -13,10 +12,25 @@ stage: [meta]
 repos: [alerting-service, deployment-service, execution-service, market-tick-data-service, strategy-service]
 scope: [engineer, admin]
 tags: [recovery, kill-switch, self-healing, escalation, monitoring, execution]
-related: [recovery-defence-in-depth-layers.md, kill-switch-circuit-breaker.md, ../03-observability/data-feed-sla-registry.md]
+related:
+  [
+    /codex/04-architecture/recovery-defence-in-depth-layers.md,
+    /codex/04-architecture/kill-switch-circuit-breaker.md,
+    /codex/03-observability/data-feed-sla-registry.md,
+  ]
 created: 2026-04-16
 authoritative_for: [autonomous recovery per-failure decision tree, agent-vs-human kill-switch recovery scope]
-referenced_by: [codex/02-data/pipeline-mode-partition.md, codex/03-observability/alerting.md, codex/03-observability/data-feed-sla-registry.md, codex/04-architecture/account-instructions.md, codex/04-architecture/alerting-batch-live.md, codex/04-architecture/batch-live-architecture.md, codex/04-architecture/capital-flow-model.md, codex/04-architecture/circuit-breaker-rule-taxonomy.md]
+referenced_by:
+  [
+    /codex/02-data/pipeline-mode-partition.md,
+    /codex/03-observability/alerting.md,
+    /codex/03-observability/data-feed-sla-registry.md,
+    /codex/04-architecture/account-instructions.md,
+    /codex/04-architecture/alerting-batch-live.md,
+    /codex/04-architecture/batch-live-architecture.md,
+    /codex/04-architecture/capital-flow-model.md,
+    /codex/04-architecture/circuit-breaker-rule-taxonomy.md,
+  ]
 owner:
 last_reviewed: 2026-06-20
 code_refs:
@@ -41,7 +55,7 @@ simultaneously — the 0.1% case.
 
 **Every action in this decision tree** is wrapped by Layer-0 deterministic scripts emitting structured
 `AgentActionEvent` to the Incident Gateway. The operator gets a human audit ack within 6h (per
-`codex/15-runbooks/alerting/audit-acknowledgement-flow.md`).
+`/codex/15-runbooks/alerting/audit-acknowledgement-flow.md`).
 
 ---
 
@@ -162,7 +176,7 @@ ERROR DETECTED
 +-- STALE DATA FEED (market-tick / feature / account-state)
 |   |   Fired when a feed's age exceeds its DataFreshnessContract.max_age_seconds
 |   |   (registry SSOT: unified_api_contracts/internal/reference/data_freshness.py
-|   |    doc SSOT: codex/03-observability/data-feed-sla-registry.md)
+|   |    doc SSOT: /codex/03-observability/data-feed-sla-registry.md)
 |   |
 |   +-- criticality == "critical"
 |   |   |
@@ -203,7 +217,7 @@ ERROR DETECTED
 |
 +-- RECONCILIATION FAILURE
     |
-    +-- Age-band escalation (per codex/04-architecture/reconciliation-age-tracking.md):
+    +-- Age-band escalation (per /codex/04-architecture/reconciliation-age-tracking.md):
     |   +-- 0-5 min   --> Internal warning only
     |   +-- 5-15 min  --> Slack/Telegram warning + agent investigation (SEV3)
     |   +-- >15 min   --> SEV1 (human investigation; RECONCILIATION_AGE_WARN AlertCode)
@@ -459,7 +473,7 @@ Scenarios with `synthetic=true` are excluded from P&L attribution. The `Scenario
 
 **Reference:** `UAC registry/scenarios/defi.py` + `cefi.py` (UAC@`33630a6`); `UTL scenario/runner.py` +
 `scenario/checker.py` (UTL@`3797fed5`); injection architecture:
-`codex/04-architecture/scenario-injection-architecture.md` (8.A, SHIPPED UTL@`66904fe0` slot 7 Day-4 2026-05-12).
+`/codex/04-architecture/scenario-injection-architecture.md` (8.A, SHIPPED UTL@`66904fe0` slot 7 Day-4 2026-05-12).
 
 ## Hard-stop scope: agent vs human (codified 2026-06-02)
 

@@ -12,10 +12,16 @@ stage: [meta]
 repos: [deployment-service]
 scope: [engineer]
 tags: [artifact-naming, ml, features, execution, registry, strategy]
-related: [../04-architecture/artifact-versioning.md, strategy-identity-versioning.md, ../04-architecture/schema-versioning.md]
+related:
+  [
+    /codex/04-architecture/artifact-versioning.md,
+    /codex/06-coding-standards/strategy-identity-versioning.md,
+    /codex/04-architecture/schema-versioning.md,
+  ]
 created: 2026-04-17
 authoritative_for: [versioned artifact naming conventions]
-referenced_by: [codex/04-architecture/artifact-versioning.md, codex/06-coding-standards/strategy-identity-versioning.md]
+referenced_by:
+  [/codex/04-architecture/artifact-versioning.md, /codex/06-coding-standards/strategy-identity-versioning.md]
 owner:
 last_reviewed:
 code_refs:
@@ -264,11 +270,12 @@ POST /artifacts/{family}                            → publish new version
 ## Cross-references
 
 - Artifact versioning architecture:
-  [../04-architecture/artifact-versioning.md](../04-architecture/artifact-versioning.md)
+  [/codex/04-architecture/artifact-versioning.md](/codex/04-architecture/artifact-versioning.md)
 - Strategy identity + versioning: [strategy-identity-versioning.md](strategy-identity-versioning.md)
-- Schema versioning (separate axis): [../04-architecture/schema-versioning.md](../04-architecture/schema-versioning.md)
+- Schema versioning (separate axis):
+  [/codex/04-architecture/schema-versioning.md](/codex/04-architecture/schema-versioning.md)
 - Venue capability registry (semver):
-  [../03-services/venue-capability-registry.md](../03-services/venue-capability-registry.md)
+  [/codex/03-services/venue-capability-registry.md](/codex/03-services/venue-capability-registry.md)
 
 ## Not in this doc
 

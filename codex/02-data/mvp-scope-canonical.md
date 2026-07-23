@@ -15,16 +15,16 @@ scope: [engineer, admin]
 tags: [mvp, cefi, defi, tradfi, sports, prediction, uac]
 related:
   [
-    codex/02-data/cefi-capture-universe.md,
-    codex/02-data/mtds-data-source-coverage-matrix.md,
-    codex/02-data/per-asset-group-bucket-layouts.md,
+    /codex/02-data/cefi-capture-universe.md,
+    /codex/02-data/mtds-data-source-coverage-matrix.md,
+    /codex/02-data/per-asset-group-bucket-layouts.md,
   ]
 created: 2026-06-27
 authoritative_for: [canonical MVP scope definition per asset_group]
 referenced_by:
   [
-    codex/04-architecture/instrument-universe-registry-consolidation.md,
-    codex/09-strategy/mvp-universe-per-asset-group.md,
+    /codex/04-architecture/instrument-universe-registry-consolidation.md,
+    /codex/09-strategy/mvp-universe-per-asset-group.md,
   ]
 owner:
 last_reviewed: 2026-07-14

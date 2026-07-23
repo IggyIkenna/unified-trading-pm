@@ -14,23 +14,23 @@ scope: [engineer, admin]
 tags: [mtds, manifest, honest-coverage, data-status, cefi, defi, prediction]
 related:
   [
-    codex/02-data/availability-manifest-and-data-status.md,
-    codex/02-data/per-instrument-sentinel-rollout.md,
-    codex/02-data/per-asset-group-bucket-layouts.md,
-    codex/02-data/sports-data-source-coverage-matrix.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/02-data/per-instrument-sentinel-rollout.md,
+    /codex/02-data/per-asset-group-bucket-layouts.md,
+    /codex/02-data/sports-data-source-coverage-matrix.md,
   ]
 created: 2026-04-21
 authoritative_for: [MTDS per-(category venue data_type) coverage-matrix denominator model]
 referenced_by:
   [
-    codex/02-data/README.md,
-    codex/02-data/defi-data-pipeline.md,
-    codex/02-data/defi-data-types-catalog.md,
-    codex/02-data/mtds-download-api.md,
-    codex/02-data/mvp-scope-canonical.md,
-    codex/02-data/per-instrument-sentinel-rollout.md,
-    codex/02-data/pipeline-coverage-matrix.md,
-    codex/02-data/prediction-data-types-catalog.md,
+    /codex/02-data/README.md,
+    /codex/02-data/defi-data-pipeline.md,
+    /codex/02-data/defi-data-types-catalog.md,
+    /codex/02-data/mtds-download-api.md,
+    /codex/02-data/mvp-scope-canonical.md,
+    /codex/02-data/per-instrument-sentinel-rollout.md,
+    /codex/02-data/pipeline-coverage-matrix.md,
+    /codex/02-data/prediction-data-types-catalog.md,
   ]
 owner:
 last_reviewed: 2026-05-17
@@ -48,13 +48,13 @@ whether `record_empty` is expected.
 
 Cross-refs:
 
-- `codex/02-data/availability-manifest-and-data-status.md` — §Layer 2 table + v5 honest-coverage schema + UAC
+- `/codex/02-data/availability-manifest-and-data-status.md` — §Layer 2 table + v5 honest-coverage schema + UAC
   denominator accessors. **Also the canonical literal-values mirror for `SOURCE_COVERAGE_START` /
   `DATA_TYPE_COVERAGE_START`** (sports + `odds_api` source coverage starts) — this doc cross-links, never redeclares the
   dates.
-- `codex/02-data/sports-data-source-coverage-matrix.md` — sibling (SPORTS instruments-service).
-- `codex/02-data/per-asset-group-bucket-layouts.md` — MTDS GCS path layouts per asset_group.
-- `codex/02-data/partitioning.md` — Hive partitioning (venue / date / data_type / instrument_type / chain / league_id).
+- `/codex/02-data/sports-data-source-coverage-matrix.md` — sibling (SPORTS instruments-service).
+- `/codex/02-data/per-asset-group-bucket-layouts.md` — MTDS GCS path layouts per asset_group.
+- `/codex/02-data/partitioning.md` — Hive partitioning (venue / date / data_type / instrument_type / chain / league_id).
 - UAC: `unified_api_contracts.registry.venue_mapping.VenueMapping` — `all_cefi_venues`, `all_databento_venues`,
   `all_defi_venues`, `get_venue_start_date`, `is_venue_available_on_date`, `get_expected_trading_dates`.
 - UAC: `unified_api_contracts.sports.SOURCE_COVERAGE_START` / `DATA_TYPE_COVERAGE_START` — runtime SSOT for sports +
@@ -280,7 +280,7 @@ for venue in expected_venues:
 ```
 
 No multipliers. No cross-venue row-count comparisons. `capture_status="empty_confirmed"` counts toward `found_shards`
-per v5 SSOT. Instrument universe capped per Phase 8E rollout — see `codex/02-data/per-instrument-sentinel-rollout.md`
+per v5 SSOT. Instrument universe capped per Phase 8E rollout — see `/codex/02-data/per-instrument-sentinel-rollout.md`
 for the 3-tier progression (MVP=50 → Expanded=200 → Full=10000) and observability gates.
 
 ## 8. Open questions / follow-ups
@@ -312,7 +312,7 @@ for the 3-tier progression (MVP=50 → Expanded=200 → Full=10000) and observab
   tables now cover CEFI/TRADFI spot/perp/options **and** DEFI + PREDICTION (Wave 8G). MTDS orchestrator emits Tier-3
   sentinels per`(venue, data_type, instrument_id, date)`; deployment-api aggregator reads those and computes honest
   coverage. Size-capped via `--per-instrument-sentinel-cap`CLI flag —
-  see`codex/02-data/per-instrument-sentinel-rollout.md` for the 3-tier progression.
+  see`/codex/02-data/per-instrument-sentinel-rollout.md` for the 3-tier progression.
 - ✅ **Phase 8G DeFi + PREDICTION seeds** (2026-04-20) — MVP seed tables populated in UAC
   `registry/defi_prediction_instrument_seeds.py`: top-20 UniswapV3-Ethereum pools (by TVL from live
   `dex-pools-central-element-323112`), top-10 AaveV3-Ethereum reserves (`USDC`, `USDT`, `DAI`, `WETH`, `WBTC`, `AAVE`,
@@ -339,7 +339,7 @@ for the 3-tier progression (MVP=50 → Expanded=200 → Full=10000) and observab
 - **2026-04-21** — Phase 8 closeout. Tier-3 per-instrument sentinel fan-out shipped across MTDS orchestrator (commit
   `2947dd2`) + deployment-api aggregator (`c059e6f`); UAC `get_expected_instruments_for_venue` +
   `is_per_instrument_shard_data_type` accessors landed (`74e278c`); `--per-instrument-sentinel-cap` CLI flag wired with
-  3-tier rollout doc at `codex/02-data/per-instrument-sentinel-rollout.md` (MTDS `629e414c` + PM `4cc0ce7a`).
+  3-tier rollout doc at `/codex/02-data/per-instrument-sentinel-rollout.md` (MTDS `629e414c` + PM `4cc0ce7a`).
   Per-instrument denominator replaces the per-(venue, `data_type`, date) shard axis for 15 per-instrument `data_types`;
   venue-level data_types (liquidations, ohlcv\*\*, tbbo, gas_fees, perp_funding, odds) stay on Tier-2. Remaining
   follow-ups: Wave 8G DeFi + PREDICTION seed tables, and VM FIXTURES backfill.

@@ -12,14 +12,19 @@ stage: [meta]
 repos: [agent-orchestrator, deployment-service, unified-trading-library, unified-trading-system-ui]
 scope: [engineer, admin]
 tags: [orchestrator, infrastructure, aws, ec2, deployment, cloud-run, dns]
-related: [../04-architecture/agent-orchestrator-overview.md, agent-orchestrator-api-host.md, launcher-script-ssot.md]
+related:
+  [
+    /codex/04-architecture/agent-orchestrator-overview.md,
+    /codex/05-infrastructure/agent-orchestrator-api-host.md,
+    /codex/05-infrastructure/launcher-script-ssot.md,
+  ]
 created: 2026-05-19
 authoritative_for: [agent-orchestrator central API VM deploy + infra reference]
 referenced_by:
   [
-    codex/04-architecture/agent-orchestrator-overview.md,
-    codex/05-infrastructure/agent-orchestrator-api-host.md,
-    codex/08-workflows/agent-orchestrator-e2e-operator-runbook.md,
+    /codex/04-architecture/agent-orchestrator-overview.md,
+    /codex/05-infrastructure/agent-orchestrator-api-host.md,
+    /codex/08-workflows/agent-orchestrator-e2e-operator-runbook.md,
     plans/audit/instructions/orchestrator_master_audit_instructions.md,
   ]
 owner:
@@ -34,7 +39,7 @@ author: ikenna-claude-subagent
 > **Scope**: This doc covers deploy + infra for the **single central orchestrator VM** — the one TLS-terminating box
 > (EC2 `13.113.200.22`, id `planning`) that runs the backend, serves the dashboard SPA over HTTPS, and hosts all N slot
 > workers as in-process tmux sessions. There are no epic VMs (that fleet was retired 2026-06-27; topology SSOT:
-> [`../12-agent-workflow/agent-orchestrator-single-vm-architecture.md`](../12-agent-workflow/agent-orchestrator-single-vm-architecture.md)).
+> [`/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`](/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md)).
 > The separate `human-planning` VM is interactive-only and never runs backlog work.
 >
 > **Cloud-agnostic posture**: the VM runs on AWS EC2 ap-northeast-1. The bootstrap, secrets, and launcher pipeline
@@ -43,10 +48,10 @@ author: ikenna-claude-subagent
 > only** — kept so the legacy deploy scripts in `launcher-script-ssot.md` still make sense in context.
 >
 > Architecture SSOT:
-> [`../04-architecture/agent-orchestrator-overview.md`](../04-architecture/agent-orchestrator-overview.md) · Operator
-> runbook: `codex/08-workflows/agent-orchestrator-e2e-operator-runbook.md` · Plan-of-record (archived):
+> [`/codex/04-architecture/agent-orchestrator-overview.md`](/codex/04-architecture/agent-orchestrator-overview.md) ·
+> Operator runbook: `/codex/08-workflows/agent-orchestrator-e2e-operator-runbook.md` · Plan-of-record (archived):
 > `plans/archive/2026_05/agent_orchestrator_cloud_run_deployment_2026_05_19.md` · Launcher SSOT:
-> `codex/05-infrastructure/launcher-script-ssot.md`
+> `/codex/05-infrastructure/launcher-script-ssot.md`
 
 ---
 
@@ -383,7 +388,7 @@ No-op when unset (local-disk state only). Recovery: restore the snapshot object 
 ## Deploy script — launcher registration
 
 `deployment-service/scripts/cloud-run/deploy-agent-orchestrator.sh` is registered as a Cloud Run launcher (not a VM
-launcher) in `codex/05-infrastructure/launcher-script-ssot.md` § "Cloud Run launchers". It does NOT need a
+launcher) in `/codex/05-infrastructure/launcher-script-ssot.md` § "Cloud Run launchers". It does NOT need a
 `VM_PREFIX_TO_BUCKET` entry or watchdog registration.
 
 The script:
@@ -412,9 +417,9 @@ Accepted by operator (plan decision 2026-05-19).
 
 ## See also
 
-- `codex/08-workflows/agent-orchestrator-e2e-operator-runbook.md` — full operator workflows
+- `/codex/08-workflows/agent-orchestrator-e2e-operator-runbook.md` — full operator workflows
 - `agent-orchestrator/README.md` — architecture overview + local dev
-- `codex/04-architecture/agent-orchestrator-overview.md` — service architecture SSOT
-- `codex/08-workflows/agent-orchestrator-e2e-operator-runbook.md` — day-to-day runbook
-- `codex/05-infrastructure/launcher-script-ssot.md` § "Cloud Run launchers" — script registry
+- `/codex/04-architecture/agent-orchestrator-overview.md` — service architecture SSOT
+- `/codex/08-workflows/agent-orchestrator-e2e-operator-runbook.md` — day-to-day runbook
+- `/codex/05-infrastructure/launcher-script-ssot.md` § "Cloud Run launchers" — script registry
 - `plans/active/agent_orchestrator_cloud_run_deployment_2026_05_19.md` — full deployment DAG

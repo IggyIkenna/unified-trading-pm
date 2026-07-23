@@ -2,8 +2,8 @@
 doc_type: codex-ssot
 title: Service Control Surface
 summary:
-  Every service is driven by exactly three input channels — CLI (sharding), env (infra), config (hot) —
-  validated into one ServiceRuntime object; lists the 9 control dimensions and their UIC/UAC StrEnum SSOTs.
+  Every service is driven by exactly three input channels — CLI (sharding), env (infra), config (hot) — validated into
+  one ServiceRuntime object; lists the 9 control dimensions and their UIC/UAC StrEnum SSOTs.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -11,10 +11,10 @@ stage: [meta]
 repos: [features-service, instruments-service, unified-api-contracts, unified-trading-library, unified-trading-pm]
 scope: [engineer, admin]
 tags: [uac, config, cli, ssot, infrastructure]
-related: [service-framework.md, tier-and-import-architecture.md]
+related: [/codex/04-architecture/service-framework.md, /codex/04-architecture/tier-and-import-architecture.md]
 created: 2026-03-27
 authoritative_for: [service control surface (CLI/env/config three-channel model), ServiceRuntime validated-input object]
-referenced_by: [codex/04-architecture/service-framework.md]
+referenced_by: [/codex/04-architecture/service-framework.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

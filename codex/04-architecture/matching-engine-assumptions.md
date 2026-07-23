@@ -12,15 +12,27 @@ stage: [meta]
 repos: [execution-service, strategy-service]
 scope: [engineer, admin]
 tags: [execution, strategy, defi, cefi, sports, ssot]
-related: [matching-engine-mode-dispatch.md, amm-slippage-simulation.md, strategy-ensemble-topology.md, batch-live-architecture.md]
+related:
+  [
+    /codex/04-architecture/matching-engine-mode-dispatch.md,
+    /codex/04-architecture/amm-slippage-simulation.md,
+    /codex/04-architecture/strategy-ensemble-topology.md,
+    /codex/04-architecture/batch-live-architecture.md,
+  ]
 created: 2026-05-15
 authoritative_for: [matching-engine per-matcher assumption surface, MatchingEngineConfig defaults]
-referenced_by: [codex/04-architecture/matching-engine-mode-dispatch.md, codex/04-architecture/strategy-ensemble-topology.md]
+referenced_by:
+  [/codex/04-architecture/matching-engine-mode-dispatch.md, /codex/04-architecture/strategy-ensemble-topology.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:
 author: ikenna
-sources: [plans/active/topology_qgroup_gap_closure_2026_05_09.md Phase 1 (GAP-12), execution-service/execution_service/matching_engine/engine.py, 'unified_api_contracts/internal/architecture_v2/enums.py (BenchmarkFillMode, InstructionActionV2)']
+sources:
+  [
+    plans/active/topology_qgroup_gap_closure_2026_05_09.md Phase 1 (GAP-12),
+    execution-service/execution_service/matching_engine/engine.py,
+    "unified_api_contracts/internal/architecture_v2/enums.py (BenchmarkFillMode, InstructionActionV2)",
+  ]
 ---
 
 # Matching Engine Assumptions

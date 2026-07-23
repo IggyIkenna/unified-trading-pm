@@ -19,10 +19,10 @@ stage: [meta]
 repos: [agent-orchestrator, unified-trading-pm]
 scope: [engineer, admin]
 tags: [model-tier, orchestrator, role-registry, escalation, model-tier-selection]
-related: [../12-agent-workflow/local-slot-host-symmetric-worker-model.md]
+related: [/codex/12-agent-workflow/local-slot-host-symmetric-worker-model.md]
 created: 2026-05-12
 authoritative_for: [model-tier selection (Sonnet vs Opus), thinking-effort tier selection]
-referenced_by: [codex/12-agent-workflow/work-philosophy.md, plans/active/issues/human_led_audit_pool_2026_05_21.md]
+referenced_by: [/codex/12-agent-workflow/work-philosophy.md, plans/active/issues/human_led_audit_pool_2026_05_21.md]
 owner:
 last_reviewed:
 code_refs:

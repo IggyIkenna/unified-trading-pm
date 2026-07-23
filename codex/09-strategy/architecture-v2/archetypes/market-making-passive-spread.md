@@ -16,19 +16,19 @@ tags: [market-making, clob, spread, strategy, binance]
 related:
   [
     ../families/market-making.md,
-    market-making-inventory-skew.md,
-    market-making-ml-lean.md,
-    market-making-queue-microstructure.md,
-    market-making-event-settled.md,
+    /codex/09-strategy/architecture-v2/archetypes/market-making-inventory-skew.md,
+    /codex/09-strategy/architecture-v2/archetypes/market-making-ml-lean.md,
+    /codex/09-strategy/architecture-v2/archetypes/market-making-queue-microstructure.md,
+    /codex/09-strategy/architecture-v2/archetypes/market-making-event-settled.md,
   ]
 created: 2026-05-19
 authoritative_for: [MARKET_MAKING_PASSIVE_SPREAD archetype specification]
 referenced_by:
   [
-    codex/09-strategy/architecture-v2/archetypes/market-making-inventory-skew.md,
-    codex/09-strategy/architecture-v2/archetypes/market-making-ml-lean.md,
-    codex/09-strategy/architecture-v2/archetypes/market-making-queue-microstructure.md,
-    codex/09-strategy/architecture-v2/families/market-making.md,
+    /codex/09-strategy/architecture-v2/archetypes/market-making-inventory-skew.md,
+    /codex/09-strategy/architecture-v2/archetypes/market-making-ml-lean.md,
+    /codex/09-strategy/architecture-v2/archetypes/market-making-queue-microstructure.md,
+    /codex/09-strategy/architecture-v2/families/market-making.md,
   ]
 owner:
 last_reviewed:

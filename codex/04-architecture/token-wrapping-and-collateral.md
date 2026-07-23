@@ -15,10 +15,10 @@ scope: [engineer, admin]
 tags: [defi, execution, collateral, token-wrapping, uac, strategy, aave, registry]
 related:
   [
-    ../02-data/defi-canonical-naming-ssot.md,
-    defi-execution-overview.md,
-    flash-loan-receiver.md,
-    strategy-service-architecture.md,
+    /codex/02-data/defi-canonical-naming-ssot.md,
+    /codex/04-architecture/defi-execution-overview.md,
+    /codex/04-architecture/flash-loan-receiver.md,
+    /codex/04-architecture/strategy-service-architecture.md,
   ]
 created: 2026-04-03
 authoritative_for: [token wrapping rules + venue collateral acceptance matrix]

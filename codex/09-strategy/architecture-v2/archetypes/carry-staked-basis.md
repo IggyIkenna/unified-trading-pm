@@ -16,8 +16,8 @@ scope: [engineer, admin]
 tags: [strategy, carry, defi, cefi, execution, archetype, uac]
 related:
   [
-    carry-recursive-staked.md,
-    carry-staked-basis-dated.md,
+    /codex/09-strategy/architecture-v2/archetypes/carry-recursive-staked.md,
+    /codex/09-strategy/architecture-v2/archetypes/carry-staked-basis-dated.md,
     ../families/carry-and-yield.md,
     ../cross-cutting/pnl-attribution.md,
     ../cross-cutting/restaking-reward-economics.md,
@@ -26,14 +26,14 @@ created: 2026-04-17
 authoritative_for: [CARRY_STAKED_BASIS archetype specification (LST_AS_MARGIN staked basis)]
 referenced_by:
   [
-    codex/09-strategy/_archived_pre_v2/defi/ethena-benchmark.md,
-    codex/09-strategy/architecture-v2/archetypes/carry-basis-perp.md,
-    codex/09-strategy/architecture-v2/archetypes/carry-recursive-borrow-lending-only.md,
-    codex/09-strategy/architecture-v2/archetypes/carry-recursive-staked-config-variants.md,
-    codex/09-strategy/architecture-v2/archetypes/carry-recursive-staked.md,
-    codex/09-strategy/architecture-v2/archetypes/carry-staked-basis-dated.md,
-    codex/09-strategy/architecture-v2/archetypes/yield-rotation-lending.md,
-    codex/09-strategy/architecture-v2/archetypes/yield-staking-simple.md,
+    /codex/09-strategy/_archived_pre_v2/defi/ethena-benchmark.md,
+    /codex/09-strategy/architecture-v2/archetypes/carry-basis-perp.md,
+    /codex/09-strategy/architecture-v2/archetypes/carry-recursive-borrow-lending-only.md,
+    /codex/09-strategy/architecture-v2/archetypes/carry-recursive-staked-config-variants.md,
+    /codex/09-strategy/architecture-v2/archetypes/carry-recursive-staked.md,
+    /codex/09-strategy/architecture-v2/archetypes/carry-staked-basis-dated.md,
+    /codex/09-strategy/architecture-v2/archetypes/yield-rotation-lending.md,
+    /codex/09-strategy/architecture-v2/archetypes/yield-staking-simple.md,
   ]
 owner:
 last_reviewed:
@@ -205,7 +205,7 @@ wrapper, and Hyperliquid takes neither. Treating "ETH LSTs" as one bucket would 
 matrix is supposed to make. Negative rows (`accepted=False`) are explicit so absences are self-documenting; positive
 rows ship after Stream A's per-venue live-probe with haircut citations from the venue's risk-engine UI or docs URL.
 Stream A's audit playbook lives at
-[`codex/16-strategy-playbooks/defi/venue-collateral-2026-05-07.md`](../../../16-strategy-playbooks/defi/venue-collateral-2026-05-07.md)
+[`/codex/16-strategy-playbooks/defi/venue-collateral-2026-05-07.md`](../../../16-strategy-playbooks/defi/venue-collateral-2026-05-07.md)
 (to be created by Stream A). Continuous-audit cadence (monthly?) is deferred to a separate plan named in Stream E
 follow-throughs.
 

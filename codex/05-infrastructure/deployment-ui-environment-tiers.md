@@ -13,15 +13,28 @@ stage: [meta]
 repos: [deployment-api, deployment-ui]
 scope: [engineer]
 tags: [ui, deployment, infrastructure]
-related: [codex/05-infrastructure/deployment-ui-architecture.md, codex/05-infrastructure/firebase-split-topology.md, codex/05-infrastructure/bucket-isolation-model.md, codex/05-infrastructure/runtime-tiers-and-deployment.md]
+related:
+  [
+    /codex/05-infrastructure/deployment-ui-architecture.md,
+    /codex/05-infrastructure/firebase-split-topology.md,
+    /codex/05-infrastructure/bucket-isolation-model.md,
+    /codex/05-infrastructure/runtime-tiers-and-deployment.md,
+  ]
 created: 2026-05-08
 authoritative_for: [deployment-UI dev/staging/prod environment-tier topology + env resolution + per-tier isolation]
-referenced_by: [codex/05-infrastructure/deployment-ui-architecture.md]
+referenced_by: [/codex/05-infrastructure/deployment-ui-architecture.md]
 owner: harsh
 last_reviewed: 2026-05-18
 code_refs:
 codified: 2026-05-18
-sources: [plans/active/deployment_ui_lifecycle_tabs_2026_05_08.md (Phase H), codex/05-infrastructure/deployment-ui-architecture.md, codex/05-infrastructure/firebase-split-topology.md, codex/05-infrastructure/bucket-isolation-model.md, codex/05-infrastructure/runtime-tiers-and-deployment.md]
+sources:
+  [
+    plans/active/deployment_ui_lifecycle_tabs_2026_05_08.md (Phase H),
+    /codex/05-infrastructure/deployment-ui-architecture.md,
+    /codex/05-infrastructure/firebase-split-topology.md,
+    /codex/05-infrastructure/bucket-isolation-model.md,
+    /codex/05-infrastructure/runtime-tiers-and-deployment.md,
+  ]
 ---
 
 # Deployment-UI environment tiers — dev / staging / prod

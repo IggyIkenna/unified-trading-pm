@@ -2,8 +2,8 @@
 doc_type: codex-ssot
 title: Transport Security
 summary: >-
-  Transport security SSOT: the intentional no-service-mesh decision (per-hop sidecar latency + complexity rationale), the
-  GCP IAM+OIDC / VPC-internal-TLS alternatives used instead, and TLS 1.2+ standards enforced at Cloud Run ingress.
+  Transport security SSOT: the intentional no-service-mesh decision (per-hop sidecar latency + complexity rationale),
+  the GCP IAM+OIDC / VPC-internal-TLS alternatives used instead, and TLS 1.2+ standards enforced at Cloud Run ingress.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -11,10 +11,15 @@ stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]
 tags: [security, infrastructure, execution, ssot-audit]
-related: [secrets-management.md, audit-logging.md, service-to-service-auth.md]
+related:
+  [
+    /codex/07-security/secrets-management.md,
+    /codex/07-security/audit-logging.md,
+    /codex/07-security/service-to-service-auth.md,
+  ]
 created: 2026-03-27
 authoritative_for: [transport security and no-service-mesh decision]
-referenced_by: [codex/07-security/service-to-service-auth.md]
+referenced_by: [/codex/07-security/service-to-service-auth.md]
 owner:
 last_reviewed:
 code_refs:

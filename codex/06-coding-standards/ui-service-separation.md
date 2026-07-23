@@ -11,10 +11,15 @@ stage: [meta]
 repos: [client-reporting-api, deployment-api, deployment-service, deployment-ui, execution-service, unified-trading-pm]
 scope: [engineer]
 tags: [ui, frontend, refactor, service-separation]
-related: [ui-branding.md, ui-testing-layers.md, ../05-infrastructure/ui-dependency-matrix.md]
+related:
+  [
+    /codex/06-coding-standards/ui-branding.md,
+    /codex/06-coding-standards/ui-testing-layers.md,
+    /codex/05-infrastructure/ui-dependency-matrix.md,
+  ]
 created: 2026-03-27
 authoritative_for: [UI/service repo separation rule]
-referenced_by: [codex/06-coding-standards/ui-branding.md]
+referenced_by: [/codex/06-coding-standards/ui-branding.md]
 owner:
 last_reviewed:
 code_refs:

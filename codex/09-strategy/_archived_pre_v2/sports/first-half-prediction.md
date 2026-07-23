@@ -2,10 +2,9 @@
 doc_type: codex-ssot
 title: Sports First Half Prediction
 summary: >-
-  [SUPERSEDED, pre-v2] Sports first-half ML strategy (SPORTS_FIRST_HALF_ML) — trains on 1H outcomes
-  directly, places pre-game 1H bets that settle at the HT whistle to free capital for halftime-ml
-  (two-phase capital efficiency); reduced max_stake (3% vs 5%) reserves Phase-2 capital. Replaced by
-  architecture-v2 ml-directional-event-settled.
+  [SUPERSEDED, pre-v2] Sports first-half ML strategy (SPORTS_FIRST_HALF_ML) — trains on 1H outcomes directly, places
+  pre-game 1H bets that settle at the HT whistle to free capital for halftime-ml (two-phase capital efficiency); reduced
+  max_stake (3% vs 5%) reserves Phase-2 capital. Replaced by architecture-v2 ml-directional-event-settled.
 status: superseded
 nature: ssot
 asset_group: [meta]
@@ -13,10 +12,15 @@ stage: [meta]
 repos: [execution-service, ml-service, strategy-service, unified-api-contracts, unified-trading-pm]
 scope: [engineer, admin]
 tags: [strategy, sports, ml, odds, prediction, features]
-related: [halftime-ml.md, pre-game-ml.md, ../../architecture-v2/archetypes/ml-directional-event-settled.md]
+related:
+  [
+    /codex/09-strategy/_archived_pre_v2/sports/halftime-ml.md,
+    /codex/09-strategy/_archived_pre_v2/sports/pre-game-ml.md,
+    ../../architecture-v2/archetypes/ml-directional-event-settled.md,
+  ]
 created: 2026-04-16
 authoritative_for:
-referenced_by: [codex/09-strategy/_archived_pre_v2/sports/halftime-ml.md]
+referenced_by: [/codex/09-strategy/_archived_pre_v2/sports/halftime-ml.md]
 owner:
 last_reviewed:
 code_refs:
@@ -33,7 +37,8 @@ code_refs:
 
 Predicts first-half outcomes specifically (not full match) using a dedicated ML model trained on first-half result data.
 The key insight is capital efficiency: the same bankroll is used twice per match day. A first-half bet settles at the
-halftime whistle, freeing capital immediately for a second-half bet via the halftime-ml strategy. A $100K bankroll
+halftime whistle, freeing capital immediately for a second-half bet via the halftime-ml strategy. A
+$100K bankroll
 effectively does $200K worth of work per match day.
 
 First-half dynamics differ meaningfully from full-match dynamics. Teams start conservatively (especially in knockout

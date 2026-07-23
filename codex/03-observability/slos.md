@@ -10,13 +10,21 @@ status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
-repos: [alerting-service, deployment-service, execution-service, instruments-service, market-data-processing-service, strategy-service]
+repos:
+  [
+    alerting-service,
+    deployment-service,
+    execution-service,
+    instruments-service,
+    market-data-processing-service,
+    strategy-service,
+  ]
 scope: [engineer, admin]
 tags: [slo, monitoring, observability, execution, performance, alerting]
-related: [alerting.md, lifecycle-events.md]
+related: [/codex/03-observability/alerting.md, /codex/03-observability/lifecycle-events.md]
 created: 2026-03-27
 authoritative_for: [service level objectives + error budgets, SLO burn-rate alerting]
-referenced_by: [codex/06-coding-standards/prometheus-metrics.md]
+referenced_by: [/codex/06-coding-standards/prometheus-metrics.md]
 owner:
 last_reviewed:
 code_refs:

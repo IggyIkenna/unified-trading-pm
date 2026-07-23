@@ -14,16 +14,16 @@ scope: [engineer, admin]
 tags: [execution, order-state, reconciliation, uac, ssot]
 related:
   [
-    oms-protocol-and-state-machine.md,
-    strategy-execution-protocol.md,
-    batch-live-architecture.md,
-    alerting-batch-live.md,
-    paper-vs-live-execution-seam.md,
+    /codex/04-architecture/oms-protocol-and-state-machine.md,
+    /codex/04-architecture/strategy-execution-protocol.md,
+    /codex/04-architecture/batch-live-architecture.md,
+    /codex/04-architecture/alerting-batch-live.md,
+    /codex/04-architecture/paper-vs-live-execution-seam.md,
   ]
 created: 2026-05-12
 authoritative_for:
   [per-order state machine, order lifecycle states and transitions, per-transition order event emission]
-referenced_by: [codex/04-architecture/oms-protocol-and-state-machine.md]
+referenced_by: [/codex/04-architecture/oms-protocol-and-state-machine.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:
@@ -101,7 +101,7 @@ Pre-submission failure path: `PENDING_NEW → FAIL_OUTBOUND` (no venue interacti
 | `PENDING_NEW` → `FAIL_OUTBOUND`       | `ORDER_OUTBOUND_FAILED` (+ AlertCode) |
 | terminal → `RECONCILED`               | `ORDER_RECONCILED`                    |
 
-`AlertCode` taxonomy: see [`codex/04-architecture/alerting-batch-live.md`](./alerting-batch-live.md). Terminal-bad
+`AlertCode` taxonomy: see [`/codex/04-architecture/alerting-batch-live.md`](./alerting-batch-live.md). Terminal-bad
 states (`REJECTED` / `FAIL_OUTBOUND`) fire P0 / P1 alerts depending on `AlertSeverity` mapping.
 
 ## Cross-references

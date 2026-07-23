@@ -2,10 +2,9 @@
 doc_type: codex-ssot
 title: Ruff discipline — workspace-safe lint fix workflow
 summary: >-
-  Workspace-safe ruff lint-fix workflow — NEVER `ruff check .` / `format .` whole-repo
-  (clobbers parallel agents' uncommitted WIP); scope ruff to your own changed files by
-  explicit path; covers common codes (E501 / I001 / RUF003), noqa guidance, and the
-  per-tab-worktree PATH fallbacks.
+  Workspace-safe ruff lint-fix workflow — NEVER `ruff check .` / `format .` whole-repo (clobbers parallel agents'
+  uncommitted WIP); scope ruff to your own changed files by explicit path; covers common codes (E501 / I001 / RUF003),
+  noqa guidance, and the per-tab-worktree PATH fallbacks.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -13,10 +12,10 @@ stage: [meta]
 repos: []
 scope: [engineer, admin]
 tags: [ruff, lint, quality-gates, ci]
-related: [quality-gates.md]
+related: [/codex/06-coding-standards/quality-gates.md]
 created: 2026-05-12
 authoritative_for: [ruff discipline (workspace-safe scoped lint-fix workflow)]
-referenced_by: [codex/06-coding-standards/quality-gates.md]
+referenced_by: [/codex/06-coding-standards/quality-gates.md]
 owner:
 last_reviewed: 2026-05-12
 code_refs:
@@ -185,7 +184,7 @@ These ARE worth paging. The lint failures this doc eliminates are not.
   `live-defi-rollout`.
 - `cursor-configs/SUB_AGENT_MANDATORY_RULES.md` — paste at top of every Task-tool spawn so sub-agents inherit these
   rules and don't run `ruff check .` blindly.
-- `codex/06-coding-standards/quality-gates.md` — broader local QG workflow (this doc is a scoped sub-discipline within
+- `/codex/06-coding-standards/quality-gates.md` — broader local QG workflow (this doc is a scoped sub-discipline within
   that workflow).
 
 ## Provenance

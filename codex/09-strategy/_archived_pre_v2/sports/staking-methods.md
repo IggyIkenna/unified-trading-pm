@@ -2,10 +2,10 @@
 doc_type: codex-ssot
 title: Sports Staking Methods
 summary: >-
-  [SUPERSEDED, pre-v2] Cross-cutting sports staking reference — six sizing methods across two code paths:
-  kelly.py live (fractional / portfolio / simultaneous / venue-constrained Kelly) and betting_strategies.py
-  backtest (FixedDollar / FixedPercentage / AdaptiveDaily / FractionalKelly V2), all sharing the Kelly
-  formula. Replaced by architecture-v2 axes/staking-methods.
+  [SUPERSEDED, pre-v2] Cross-cutting sports staking reference — six sizing methods across two code paths: kelly.py live
+  (fractional / portfolio / simultaneous / venue-constrained Kelly) and betting_strategies.py backtest (FixedDollar /
+  FixedPercentage / AdaptiveDaily / FractionalKelly V2), all sharing the Kelly formula. Replaced by architecture-v2
+  axes/staking-methods.
 status: superseded
 nature: ssot
 asset_group: [meta]
@@ -13,10 +13,15 @@ stage: [meta]
 repos: [strategy-service]
 scope: [engineer, admin]
 tags: [strategy, sports, staking, odds]
-related: [kelly.md, value-betting.md, ../../architecture-v2/axes/staking-methods.md]
+related:
+  [
+    /codex/09-strategy/_archived_pre_v2/sports/kelly.md,
+    /codex/09-strategy/_archived_pre_v2/sports/value-betting.md,
+    ../../architecture-v2/axes/staking-methods.md,
+  ]
 created: 2026-04-16
 authoritative_for:
-referenced_by: [codex/09-strategy/_archived_pre_v2/sports/kelly.md]
+referenced_by: [/codex/09-strategy/_archived_pre_v2/sports/kelly.md]
 owner:
 last_reviewed:
 code_refs:
@@ -170,4 +175,4 @@ because it operates on different input types (`edge_pct` + `odds` + `BankrollSta
 - **Backtest engine (consumer):** `strategy-service/strategy_service/engine/strategies/sports/backtest_engine.py`
 - **ML sports (consumer):** `strategy-service/strategy_service/engine/strategies/sports/ml_sports_strategy.py`
 - **Halftime ML (consumer):** `strategy-service/strategy_service/engine/strategies/sports/halftime_ml.py`
-- **Value betting doc:** `codex/09-strategy/sports/value-betting.md`
+- **Value betting doc:** `/codex/09-strategy/sports/value-betting.md`

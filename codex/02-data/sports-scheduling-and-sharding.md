@@ -14,21 +14,21 @@ scope: [engineer]
 tags: [sports, manifest, backfill, data-correctness, mtds, orchestrator]
 related:
   [
-    codex/02-data/sports-data-source-coverage-matrix.md,
-    codex/02-data/sports-adapter-dependency-order.md,
-    codex/02-data/availability-manifest-and-data-status.md,
-    codex/05-infrastructure/vm-tarball-deployment.md,
+    /codex/02-data/sports-data-source-coverage-matrix.md,
+    /codex/02-data/sports-adapter-dependency-order.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/05-infrastructure/vm-tarball-deployment.md,
   ]
 created: 2026-04-21
 authoritative_for:
   [sports fetch scheduling cadence and shard-atom contract, sports historical-backfill lookahead-bias rules]
 referenced_by:
   [
-    codex/02-data/sports-adapter-dependency-order.md,
-    codex/02-data/sports-data-source-coverage-matrix.md,
-    codex/02-data/sports-data-types-catalog.md,
-    codex/02-data/sports-fixtures-lifecycle.md,
-    codex/02-data/sports-gcs-path-ssot.md,
+    /codex/02-data/sports-adapter-dependency-order.md,
+    /codex/02-data/sports-data-source-coverage-matrix.md,
+    /codex/02-data/sports-data-types-catalog.md,
+    /codex/02-data/sports-fixtures-lifecycle.md,
+    /codex/02-data/sports-gcs-path-ssot.md,
   ]
 owner:
 last_reviewed: 2026-05-17
@@ -59,9 +59,9 @@ scheduler (`deployment-service/configs/sports-trigger-tiers.yaml`) with adapter 
 per-(league, day) sharding contract (with `fixture_id` as a row-level column).
 
 **Related**: [availability-manifest-and-data-status.md](./availability-manifest-and-data-status.md),
-[04-architecture/shard-level-failure-isolation.md](../04-architecture/shard-level-failure-isolation.md),
-[05-infrastructure/deployment-clusters-live-vs-batch.md](../05-infrastructure/deployment-clusters-live-vs-batch.md),
-[06-coding-standards/validation-and-errors.md](../06-coding-standards/validation-and-errors.md).
+[04-architecture/shard-level-failure-isolation.md](/codex/04-architecture/shard-level-failure-isolation.md),
+[05-infrastructure/deployment-clusters-live-vs-batch.md](/codex/05-infrastructure/deployment-clusters-live-vs-batch.md),
+[06-coding-standards/validation-and-errors.md](/codex/06-coding-standards/validation-and-errors.md).
 
 ## 1. Anchoring principle — fixture_id is the per-row anchor; (league_id, day) is the shard atom
 
@@ -293,7 +293,7 @@ from `unified_trading_library.instruments_write_gate`. The gate scans the `DEFAU
 (`as_of_date`, `valuation_date`, `available_at`, `kickoff_utc`, `event_time`, `computed_at`) and emits
 `DATA_ALIGNMENT_VIOLATION` (warn mode) or raises `TimestampAlignmentError` (strict mode) if any non-null value satisfies
 `value.date() > D`. See
-[`06-coding-standards/validation-and-errors.md` §5 InstrumentsWriteGate](../06-coding-standards/validation-and-errors.md#5-instrumentswritegate-raw-data-sink-writes)
+[`06-coding-standards/validation-and-errors.md` §5 InstrumentsWriteGate](/codex/06-coding-standards/validation-and-errors.md#5-instrumentswritegate-raw-data-sink-writes)
 for the full contract + usage.
 
 Pre-2026-04-22 the raw-data layer relied on adapter discipline alone — the Transfermarkt VM data-crime incident (18h
@@ -354,13 +354,13 @@ Cloud Run has a 60-minute max-per-request cap and VMs win on long-running batch.
 
 **VMs running longer than ~60s** use the shared wrapper's heartbeat daemon, streaming GCS log, `/api/vm-deployments`
 registry, and self-delete on completion — see
-[`vm-tarball-deployment.md` § Observability & Lifecycle](../05-infrastructure/vm-tarball-deployment.md#observability--lifecycle)
+[`vm-tarball-deployment.md` § Observability & Lifecycle](/codex/05-infrastructure/vm-tarball-deployment.md#observability--lifecycle)
 (provenance: `deployment-service` `cc07649`, `beaa2e5`).
 
-See [`codex/05-infrastructure/vm-tarball-deployment.md`](../05-infrastructure/vm-tarball-deployment.md) for the VM
+See [`/codex/05-infrastructure/vm-tarball-deployment.md`](/codex/05-infrastructure/vm-tarball-deployment.md) for the VM
 shape; see
-[`codex/05-infrastructure/runtime-tiers-and-deployment.md`](../05-infrastructure/runtime-tiers-and-deployment.md) for
-Cloud Run job wiring.
+[`/codex/05-infrastructure/runtime-tiers-and-deployment.md`](/codex/05-infrastructure/runtime-tiers-and-deployment.md)
+for Cloud Run job wiring.
 
 **VM-daemon pattern for live schedulers** — Long-lived scheduling processes (polling loops, cron-alternatives) can run
 as GCE daemons via the `launch-*-vm.sh` + `setup-data-pipeline-vm.sh` + `VM_TASK=*-poll` pathway. Zero Cloud-Run-image
@@ -526,15 +526,15 @@ migration. This removes the downstream resolution hop and aligns all three entit
 - Trigger tier config:
   [`deployment-service/configs/sports-trigger-tiers.yaml`](../../deployment-service/configs/sports-trigger-tiers.yaml)
 - Per-league coverage rules:
-  [`codex/02-data/sports-data-source-coverage-matrix.md`](sports-data-source-coverage-matrix.md)
-- Adapter dependency order: [`codex/02-data/sports-adapter-dependency-order.md`](sports-adapter-dependency-order.md)
+  [`/codex/02-data/sports-data-source-coverage-matrix.md`](sports-data-source-coverage-matrix.md)
+- Adapter dependency order: [`/codex/02-data/sports-adapter-dependency-order.md`](sports-adapter-dependency-order.md)
 - Manifest v5 contract:
-  [`codex/02-data/availability-manifest-and-data-status.md`](availability-manifest-and-data-status.md)
-- Chunk-safe multi-VM writes: [`codex/02-data/chunk-safe-manifest-migrations.md`](chunk-safe-manifest-migrations.md)
+  [`/codex/02-data/availability-manifest-and-data-status.md`](availability-manifest-and-data-status.md)
+- Chunk-safe multi-VM writes: [`/codex/02-data/chunk-safe-manifest-migrations.md`](chunk-safe-manifest-migrations.md)
 - Live odds connectivity:
-  [`codex/04-architecture/sports-live-odds-connectivity.md`](../04-architecture/sports-live-odds-connectivity.md)
+  [`/codex/04-architecture/sports-live-odds-connectivity.md`](/codex/04-architecture/sports-live-odds-connectivity.md)
 - VM tarball deployment:
-  [`codex/05-infrastructure/vm-tarball-deployment.md`](../05-infrastructure/vm-tarball-deployment.md)
+  [`/codex/05-infrastructure/vm-tarball-deployment.md`](/codex/05-infrastructure/vm-tarball-deployment.md)
 
 ## 12. Roadmap — open plans (entry point for agent hand-off)
 
@@ -576,7 +576,7 @@ VM-daemon path). `[x] done` / `[ ] open` is the mechanical checkbox count in eac
 | `deployment-api/deployment_api/services/data_status_drilldown.py::build_fixture_breakdown` / `build_fixture_download` | Present                                                        |
 | `deployment-ui/src/api/client.ts::fetchFixtureBreakdown` + `FixtureBreakdown.test.tsx`                                | Present                                                        |
 | `deployment-api/deployment_api/routes/fixtures.py`                                                                    | Present                                                        |
-| `codex/05-infrastructure/vm-tarball-deployment.md` Observability section                                              | Present (Plan 8's target)                                      |
+| `/codex/05-infrastructure/vm-tarball-deployment.md` Observability section                                             | Present (Plan 8's target)                                      |
 
 **Heaviest remaining work:**
 

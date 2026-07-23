@@ -13,14 +13,14 @@ scope: [engineer, admin]
 tags: [greeks, strategy, mtds, instruments, reconciliation]
 related:
   [
-    global-ledger-architecture.md,
-    ../02-data/ledger-event-taxonomy.md,
-    instruments-service-as-ssot-for-mtds.md,
-    ../02-data/availability-manifest-and-data-status.md,
+    /codex/04-architecture/global-ledger-architecture.md,
+    /codex/02-data/ledger-event-taxonomy.md,
+    /codex/04-architecture/instruments-service-as-ssot-for-mtds.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
   ]
 created: 2026-05-23
 authoritative_for: [greeks-service greek + carry-rate PricingLedger derivation]
-referenced_by: [codex/04-architecture/global-ledger-architecture.md]
+referenced_by: [/codex/04-architecture/global-ledger-architecture.md]
 owner:
 last_reviewed: 2026-05-23
 code_refs:
@@ -84,7 +84,7 @@ PricingLedger consumed by strategy / execution / risk / pnl-attribution.
 | `dividend_schedule` | list     | Discrete dividend stream for equity options                  |
 | `asset_class`       | StrEnum  | OPTION vs PERP vs SPOT vs EQUITY → which greeks/carry fields |
 
-Per the IS→MTDS contract (`codex/04-architecture/instruments-service-as-ssot-for-mtds.md`), greeks-service consumes
+Per the IS→MTDS contract (`/codex/04-architecture/instruments-service-as-ssot-for-mtds.md`), greeks-service consumes
 `InstrumentRecord` via the same canonical reader path — never re-derives strike/expiry from venue strings.
 
 ---
@@ -190,7 +190,7 @@ VM prefix declared in `deployment-service/scripts/vm/vm_zombie_watchdog.py` `VM_
 Per the `VmPrefixSpec` Phase A.2 contract, every entry MUST declare a `lifecycle_class`. Both the long-lived streaming
 VM and the ephemeral batch cohort share the `greeks-compute-` prefix but are differentiated by `lifecycle_class`; the
 prefix maps to the same PricingLedger sink bucket in both lifecycles. T+10min post-launch verification per
-`codex/05-infrastructure/vm-tarball-deployment.md` § "Post-launch verification" applies (no fire-and-forget launches).
+`/codex/05-infrastructure/vm-tarball-deployment.md` § "Post-launch verification" applies (no fire-and-forget launches).
 
 ---
 
@@ -220,16 +220,16 @@ reader and greeks_block join are pending (plan Phase 3 CODE P0 — BLOCKED-SCHEM
 
 ## Cross-references
 
-- `codex/04-architecture/global-ledger-architecture.md` — PricingLedger SSOT this service writes into; greeks-service is
-  a fifth PricingLedger writer alongside MTDS and instruments-service.
-- `codex/02-data/ledger-event-taxonomy.md` — `MARK_UPDATE` event type and the PricingLedger routing rule
+- `/codex/04-architecture/global-ledger-architecture.md` — PricingLedger SSOT this service writes into; greeks-service
+  is a fifth PricingLedger writer alongside MTDS and instruments-service.
+- `/codex/02-data/ledger-event-taxonomy.md` — `MARK_UPDATE` event type and the PricingLedger routing rule
   (`event_type=MARK_UPDATE` → PricingLedger).
-- `codex/04-architecture/client-funds-isolation.md` — HARD RULE: greeks-service does NOT move funds, but every emitted
+- `/codex/04-architecture/client-funds-isolation.md` — HARD RULE: greeks-service does NOT move funds, but every emitted
   `LedgerRow` inherits the `client_id` discipline (PricingLedger rows carry the client-agnostic sentinel, never blank;
   readers join on `client_id` downstream).
-- `codex/04-architecture/instruments-service-as-ssot-for-mtds.md` — IS as the SSOT for instrument metadata;
+- `/codex/04-architecture/instruments-service-as-ssot-for-mtds.md` — IS as the SSOT for instrument metadata;
   greeks-service consumes `InstrumentRecord` via the same canonical reader path.
-- `codex/02-data/availability-manifest-and-data-status.md` — greeks-service emits the standard 4-state `capture_status`
+- `/codex/02-data/availability-manifest-and-data-status.md` — greeks-service emits the standard 4-state `capture_status`
   per shard (`captured` / `empty_confirmed` / `attempted_failed` / `expected_unattempted`); no silent placeholder rows.
 - `plans/active/global_ledger_pnl_attribution_discovery_2026_05_21.md` — operator decision (2026-05-23) to spin
   greeks-service as a standalone service.

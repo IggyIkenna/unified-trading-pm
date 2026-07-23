@@ -2,11 +2,10 @@
 doc_type: codex-ssot
 title: Questionnaire Axes — Full Catalogue
 summary: >-
-  Questionnaire axes catalogue SSOT — the shared QuestionnaireResponse Pydantic/TS model (18 axis
-  slots: 6 required base + 7 Reg-Umbrella + 5 strategy-preference), each axis's type / allowed-values
-  / Firestore path / catalogue-filter dimension, the backwards-compat optional-default rule, and the
-  model_validate validation rules; this is the schema (axis -> catalogue-filter derivation lives in
-  the strategy-questionnaire-mapping doc).
+  Questionnaire axes catalogue SSOT — the shared QuestionnaireResponse Pydantic/TS model (18 axis slots: 6 required base
+  + 7 Reg-Umbrella + 5 strategy-preference), each axis's type / allowed-values / Firestore path / catalogue-filter
+  dimension, the backwards-compat optional-default rule, and the model_validate validation rules; this is the schema
+  (axis -> catalogue-filter derivation lives in the strategy-questionnaire-mapping doc).
 status: current
 nature: ssot
 asset_group: [meta]
@@ -16,14 +15,20 @@ scope: [engineer, sales, admin]
 tags: [uac, ui, questionnaire, onboarding, strategy]
 related:
   [
-    codex/08-workflows/prospect-questionnaire-flow.md,
-    codex/09-strategy/architecture-v2/strategy-questionnaire-mapping.md,
-    codex/08-workflows/client-onboarding.md,
-    codex/04-architecture/commercial-service-families.md,
+    /codex/08-workflows/prospect-questionnaire-flow.md,
+    /codex/09-strategy/architecture-v2/strategy-questionnaire-mapping.md,
+    /codex/08-workflows/client-onboarding.md,
+    /codex/04-architecture/commercial-service-families.md,
   ]
 created: 2026-04-24
 authoritative_for: [QuestionnaireResponse axis catalogue schema]
-referenced_by: [codex/08-workflows/client-onboarding.md, codex/09-strategy/architecture-v2/instruments-resolver-architecture.md, codex/09-strategy/architecture-v2/strategy-questionnaire-mapping.md, codex/14-customer-journeys/demo-ops/staging-demo-setup.md]
+referenced_by:
+  [
+    /codex/08-workflows/client-onboarding.md,
+    /codex/09-strategy/architecture-v2/instruments-resolver-architecture.md,
+    /codex/09-strategy/architecture-v2/strategy-questionnaire-mapping.md,
+    /codex/14-customer-journeys/demo-ops/staging-demo-setup.md,
+  ]
 owner:
 last_reviewed: 2026-05-17
 code_refs:
@@ -36,9 +41,10 @@ code_refs:
 > `unified-trading-system-ui/lib/questionnaire/types.ts::QuestionnaireResponse`. **Plans:**
 > [`plans/archive/reg_umbrella_questionnaire_and_onboarding_docs_2026_04_21.plan.md`](../../plans/archive/reg_umbrella_questionnaire_and_onboarding_docs_2026_04_21.plan.md),
 > [`plans/archive/dart_ui_strategy_filtering_and_onboarding_2026_04_24.plan.md`](../../plans/archive/dart_ui_strategy_filtering_and_onboarding_2026_04_24.plan.md).
-> **Companion docs:** [`../08-workflows/prospect-questionnaire-flow.md`](../08-workflows/prospect-questionnaire-flow.md)
-> (form + admin playback + docs flow),
-> [`../09-strategy/architecture-v2/strategy-questionnaire-mapping.md`](../09-strategy/architecture-v2/strategy-questionnaire-mapping.md)
+> **Companion docs:**
+> [`/codex/08-workflows/prospect-questionnaire-flow.md`](/codex/08-workflows/prospect-questionnaire-flow.md) (form +
+> admin playback + docs flow),
+> [`/codex/09-strategy/architecture-v2/strategy-questionnaire-mapping.md`](/codex/09-strategy/architecture-v2/strategy-questionnaire-mapping.md)
 > (axis → catalogue-filter derivation).
 
 ---
@@ -50,7 +56,7 @@ demo-provider preseed. Any field you see on `/questionnaire` comes from here; an
 derived here. This doc is the authoritative catalogue of axes, types, allowed values, and storage paths.
 
 Related but distinct:
-[`strategy-questionnaire-mapping.md`](../09-strategy/architecture-v2/strategy-questionnaire-mapping.md) is the
+[`strategy-questionnaire-mapping.md`](/codex/09-strategy/architecture-v2/strategy-questionnaire-mapping.md) is the
 derivation rules (axis → `StrategyCatalogueFilter`). This doc is the schema.
 
 ---
@@ -103,7 +109,7 @@ optional axes default to `None` (scalars) / `()` (tuples), so responses authored
 - **TS type:** `QuestionnaireStrategyStyle`
 - **Firestore path:** `/questionnaires/{id}/strategy_style`
 - **Filter dimension:** `families` (1:1 map to 8-family enum — see
-  [mapping doc §3.2](../09-strategy/architecture-v2/strategy-questionnaire-mapping.md))
+  [mapping doc §3.2](/codex/09-strategy/architecture-v2/strategy-questionnaire-mapping.md))
 
 ### 3.5 `service_family: QuestionnaireServiceFamily`
 
@@ -112,7 +118,7 @@ optional axes default to `None` (scalars) / `()` (tuples), so responses authored
 - **Default:** no default — required
 - **Firestore path:** `/questionnaires/{id}/service_family`
 - **Filter dimension:** no; controls **which tiles are visible** via rule 12 service-family scope
-  ([`../14-customer-journeys/_ssot-rules/12-service-family-scope-rules.md`](../14-customer-journeys/_ssot-rules/12-service-family-scope-rules.md))
+  ([`/codex/14-customer-journeys/_ssot-rules/12-service-family-scope-rules.md`](/codex/14-customer-journeys/_ssot-rules/12-service-family-scope-rules.md))
   - triggers the Reg-Umbrella branch of the form when value is `RegUmbrella` or `combo`.
 
 ### 3.6 `fund_structure: tuple[QuestionnaireFundStructure, ...]`
@@ -141,7 +147,7 @@ readable by admin playback.
 
 None of the Reg-Umbrella axes feed the catalogue filter — they surface in the admin org detail view at
 `/admin/organizations/[id]` for the sales handoff (see
-[`../08-workflows/prospect-questionnaire-flow.md`](../08-workflows/prospect-questionnaire-flow.md) §4).
+[`/codex/08-workflows/prospect-questionnaire-flow.md`](/codex/08-workflows/prospect-questionnaire-flow.md) §4).
 
 ---
 
@@ -149,7 +155,7 @@ None of the Reg-Umbrella axes feed the catalogue filter — they surface in the 
 
 Landed at UAC commit `c715109` + mirrored in UI `lib/questionnaire/types.ts`. All optional; all default to `None`. Feed
 `seedFiltersFromQuestionnaire()` on the Explore tab (see
-[mapping doc](../09-strategy/architecture-v2/strategy-questionnaire-mapping.md)).
+[mapping doc](/codex/09-strategy/architecture-v2/strategy-questionnaire-mapping.md)).
 
 | Axis                      | Python type                                         | Allowed values                                                                            |
 | ------------------------- | --------------------------------------------------- | ----------------------------------------------------------------------------------------- |
@@ -178,7 +184,8 @@ The 5 strategy-preference axes (2026-04-24) and the 7 Reg-Umbrella axes (2026-04
   catalogue filter, but don't affect persona resolution or tile-lock overlay.
 
 Adding a new axis must follow the same pattern — optional with a conservative default (`None` / `()`), never required.
-See [mapping doc §6](../09-strategy/architecture-v2/strategy-questionnaire-mapping.md) for the full extension protocol.
+See [mapping doc §6](/codex/09-strategy/architecture-v2/strategy-questionnaire-mapping.md) for the full extension
+protocol.
 
 ---
 
@@ -197,13 +204,13 @@ Enforced in `QuestionnaireResponse.model_validate`:
 
 ## §8 — Cross-references
 
-- [`../08-workflows/prospect-questionnaire-flow.md`](../08-workflows/prospect-questionnaire-flow.md) — form surface,
-  access-code gate, admin playback, onboarding-docs flow.
-- [`../09-strategy/architecture-v2/strategy-questionnaire-mapping.md`](../09-strategy/architecture-v2/strategy-questionnaire-mapping.md)
+- [`/codex/08-workflows/prospect-questionnaire-flow.md`](/codex/08-workflows/prospect-questionnaire-flow.md) — form
+  surface, access-code gate, admin playback, onboarding-docs flow.
+- [`/codex/09-strategy/architecture-v2/strategy-questionnaire-mapping.md`](/codex/09-strategy/architecture-v2/strategy-questionnaire-mapping.md)
   — derivation rules for the Explore tab filter.
-- [`../08-workflows/client-onboarding.md`](../08-workflows/client-onboarding.md) — 7-step client sequence in which the
-  questionnaire is step 3.
-- [`../14-customer-journeys/demo-ops/staging-demo-setup.md`](../14-customer-journeys/demo-ops/staging-demo-setup.md) —
-  demo provider preseeds questionnaire payloads by persona id for email-based login.
-- [`../04-architecture/commercial-service-families.md`](../04-architecture/commercial-service-families.md) —
+- [`/codex/08-workflows/client-onboarding.md`](/codex/08-workflows/client-onboarding.md) — 7-step client sequence in
+  which the questionnaire is step 3.
+- [`/codex/14-customer-journeys/demo-ops/staging-demo-setup.md`](/codex/14-customer-journeys/demo-ops/staging-demo-setup.md)
+  — demo provider preseeds questionnaire payloads by persona id for email-based login.
+- [`/codex/04-architecture/commercial-service-families.md`](/codex/04-architecture/commercial-service-families.md) —
   `service_family` gates tile visibility via rule 12.

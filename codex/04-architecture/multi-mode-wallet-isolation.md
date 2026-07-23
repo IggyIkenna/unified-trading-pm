@@ -12,7 +12,12 @@ stage: [meta]
 repos: [execution-service]
 scope: [engineer, admin]
 tags: [execution, defi, cefi, reconciliation, live-trading, ssot]
-related: [operational-modes.md, paper-vs-live-execution-seam.md, ../09-strategy/operational/paper-batch-live-reconciliation.md]
+related:
+  [
+    /codex/04-architecture/operational-modes.md,
+    /codex/04-architecture/paper-vs-live-execution-seam.md,
+    /codex/09-strategy/operational/paper-batch-live-reconciliation.md,
+  ]
 created: 2026-05-15
 authoritative_for: [paper-live shared-wallet isolation, PBMS virtual-ledger overlay, CanonicalPosition mode tagging]
 referenced_by:

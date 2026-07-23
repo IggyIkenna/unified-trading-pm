@@ -28,7 +28,7 @@ type: workflow
 > `merge-conflict-detected` → `escalate-to-orchestrator`). This is the playbook the escalation context points you to. It
 > exists because the generic conflict-resolution context ("resolve ON live-defi-rollout") is **wrong** for a dep-update
 > conflict — these resolve on the dep-update topic branch, not LDR. SSOT for the surrounding model:
-> `codex/08-workflows/ci-cd-flow.md` § "Convergence + conflict-resolution model"; incident:
+> `/codex/08-workflows/ci-cd-flow.md` § "Convergence + conflict-resolution model"; incident:
 > `plans/active/issues/promotion_queue_conflict_wall_pileup_2026_06_17.md`.
 
 ## What these PRs are + why they conflict

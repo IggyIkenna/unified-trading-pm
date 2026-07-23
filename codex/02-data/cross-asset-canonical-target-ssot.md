@@ -26,12 +26,12 @@ scope: [engineer, admin]
 tags: [canonicalisation, instrument-id, shard-atom, spot-taxonomy, lending, two-id-model, ssot, cross-asset, migration]
 related:
   [
-    defi-canonical-naming-ssot.md,
-    availability-manifest-and-data-status.md,
-    honest-coverage-model.md,
-    shard-granularity-cefi.md,
-    pipeline-mode-partition.md,
-    data-status-drilldown-hierarchy.md,
+    /codex/02-data/defi-canonical-naming-ssot.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/02-data/honest-coverage-model.md,
+    /codex/02-data/shard-granularity-cefi.md,
+    /codex/02-data/pipeline-mode-partition.md,
+    /codex/02-data/data-status-drilldown-hierarchy.md,
     ../../plans/active/defi_consolidated_closeout_2026_07_18.md,
     ../../plans/active/cefi_consolidated_closeout_2026_07_18.md,
     ../../plans/active/tradfi_consolidated_closeout_2026_07_18.md,
@@ -84,7 +84,7 @@ For **flat-per-contract** shards — cefi/tradfi AND **defi (target, operator 20
 ## 1. The shard-atom model — FOUR grain patterns
 
 Full atom (superset, `unified_trading_library/manifest_writer/_rows.py`;
-`codex/02-data/availability-manifest-and-data-status.md:47-71` governs which columns _earn_ a place):
+`/codex/02-data/availability-manifest-and-data-status.md:47-71` governs which columns _earn_ a place):
 
 ```
 pipeline_mode({mode}_{source}) · date · asset_group · venue · [chain] · instrument_type · data_type
@@ -105,7 +105,7 @@ Corollaries:
 
 - **`underlying` is a KEY only in pattern #2.** In prediction (#3) and elsewhere it is a **display-only** row column —
   never the shard key. (This is why the phantom reconciler must not key prediction on per-object `instrument_id`; per
-  `codex/02-data/availability-manifest-and-data-status.md:57-60` prediction keys on `canonical_question_group`.)
+  `/codex/02-data/availability-manifest-and-data-status.md:57-60` prediction keys on `canonical_question_group`.)
 - **DeFi availability is by DATA day**, not capture time: rows land in `day={YYYY-MM-DD}` by their event/block
   timestamp. Under the **target per-instrument model** a re-capture **OVERWRITES** the one `{canonical_id}.parquet` (no
   `{…}_{capture_ts}.parquet` pile-up), so the duplicate/phantom-row dedup the old batch model needed **disappears at the
@@ -115,7 +115,7 @@ Corollaries:
   close-out plan.)
 - **instruments-service (reference) side is thinner**: prediction IS = `venue → dates` (no `data_type` axis,
   `VENUE_REFERENCE_DATA_CAPABILITIES={}`); MTDS drilldown is CQG-**above**-data_type
-  (`codex/02-data/data-status-drilldown-hierarchy.md:42`).
+  (`/codex/02-data/data-status-drilldown-hierarchy.md:42`).
 
 ## 2. Canonical instrument-id grammar
 
@@ -405,7 +405,7 @@ Detail + per-protocol table: `instruments-service/docs/DEFI_INSTRUMENTS.md` §Le
   `is_valid_shard_key=False` / `is_mvp()=False`). **Clipped from BOTH numerator and denominator.**
 - DeFi's catalogue denominator is **circular** (built from the same subgraphs the manifest reads), so honest
   empty-vs-hole needs the **completeness oracle** (`enumerated / on_chain_truth`, fail-closed —
-  `codex/02-data/defi-completeness-oracle.md`). SSOT: `codex/02-data/honest-coverage-model.md`,
+  `/codex/02-data/defi-completeness-oracle.md`). SSOT: `/codex/02-data/honest-coverage-model.md`,
   `…/honest-absence-downstream-handling.md`.
 
 ## 10. Kept vs dropped venues

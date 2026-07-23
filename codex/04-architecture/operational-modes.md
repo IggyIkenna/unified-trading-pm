@@ -4,7 +4,8 @@ title: operational-modes
 summary:
   "The workspace SSOT for the operating-mode taxonomy — ONE OperationalMode enum {LIVE, MANUAL, BACKTEST, PAPER} plus
   additive (ExecutionTarget, ExecutionTrigger) axes via a pure decompose() helper; composes orthogonally with
-  RuntimeMode. Deletes the anti-patterns paper_trade:bool, _PAPER_VENUE_KEYS, and the parallel TestingStage.LIVE_TESTNET."
+  RuntimeMode. Deletes the anti-patterns paper_trade:bool, _PAPER_VENUE_KEYS, and the parallel
+  TestingStage.LIVE_TESTNET."
 status: current
 nature: ssot
 asset_group: [meta]
@@ -14,10 +15,10 @@ scope: [engineer, admin]
 tags: [execution, pipeline-mode, uac, live-trading, ssot]
 related:
   [
-    batch-live-architecture.md,
-    paper-vs-live-execution-seam.md,
-    matching-engine-mode-dispatch.md,
-    ../05-infrastructure/per-venue-paper-policy.md,
+    /codex/04-architecture/batch-live-architecture.md,
+    /codex/04-architecture/paper-vs-live-execution-seam.md,
+    /codex/04-architecture/matching-engine-mode-dispatch.md,
+    /codex/05-infrastructure/per-venue-paper-policy.md,
   ]
 created: 2026-05-09
 authoritative_for:
@@ -27,11 +28,23 @@ authoritative_for:
     ExecutionTarget and ExecutionTrigger axes,
     operational-mode decompose helper,
   ]
-referenced_by: [codex/04-architecture/manual-trade-booking.md, codex/04-architecture/matching-engine-mode-dispatch.md, codex/04-architecture/multi-mode-wallet-isolation.md, codex/04-architecture/paper-vs-live-execution-seam.md, codex/05-infrastructure/per-venue-paper-policy.md, codex/09-strategy/architecture-v2/cross-cutting/archetype-paper-readiness.md, codex/14-customer-journeys/dart/mode-toggle.md]
+referenced_by:
+  [
+    /codex/04-architecture/manual-trade-booking.md,
+    /codex/04-architecture/matching-engine-mode-dispatch.md,
+    /codex/04-architecture/multi-mode-wallet-isolation.md,
+    /codex/04-architecture/paper-vs-live-execution-seam.md,
+    /codex/05-infrastructure/per-venue-paper-policy.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/archetype-paper-readiness.md,
+    /codex/14-customer-journeys/dart/mode-toggle.md,
+  ]
 owner:
 last_reviewed: 2026-05-10
 code_refs:
-overview: SSOT for the workspace's operating-mode taxonomy — single canonical `OperationalMode` enum + additive `(ExecutionTarget, ExecutionTrigger)` two-axis decomposition + composability with `RuntimeMode`. Resolves drift across UAC + execution-service + sports-routing + UI.
+overview:
+  SSOT for the workspace's operating-mode taxonomy — single canonical `OperationalMode` enum + additive
+  `(ExecutionTarget, ExecutionTrigger)` two-axis decomposition + composability with `RuntimeMode`. Resolves drift across
+  UAC + execution-service + sports-routing + UI.
 type: codex-ssot
 locked_by: live-defi-rollout
 locked_since: 2026-05-09
@@ -136,9 +149,9 @@ that overlapped with `OperationalMode`. Deprecated 2026-05-09:
 - [`batch-live-architecture.md`](batch-live-architecture.md) — batch ⊂ paper ⊂ live in code-path; only fill source
   differs.
 - [`paper-vs-live-execution-seam.md`](paper-vs-live-execution-seam.md) — execution layer is the only seam.
-- [`../05-infrastructure/per-venue-paper-policy.md`](../05-infrastructure/per-venue-paper-policy.md) — the
+- [`/codex/05-infrastructure/per-venue-paper-policy.md`](/codex/05-infrastructure/per-venue-paper-policy.md) — the
   `paper_target_registry` SSOT.
-- [`../09-strategy/architecture-v2/cross-cutting/archetype-paper-readiness.md`](../09-strategy/architecture-v2/cross-cutting/archetype-paper-readiness.md)
+- [`/codex/09-strategy/architecture-v2/cross-cutting/archetype-paper-readiness.md`](/codex/09-strategy/architecture-v2/cross-cutting/archetype-paper-readiness.md)
   — per-archetype 4-state taxonomy.
-- [`../14-customer-journeys/dart/mode-toggle.md`](../14-customer-journeys/dart/mode-toggle.md) — DART operator surface
-  for the modes.
+- [`/codex/14-customer-journeys/dart/mode-toggle.md`](/codex/14-customer-journeys/dart/mode-toggle.md) — DART operator
+  surface for the modes.

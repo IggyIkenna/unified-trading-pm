@@ -2,24 +2,31 @@
 doc_type: codex-ssot
 title: Reconciliation Resolution Architecture
 summary:
-  The batch↔live↔paper reconciliation contract + operator resolution workflow — what gets compared (positions
-  baseline, live vs simulated fills), the comparison keys, the 6-stage recon DAG (stage0 config/manifest/data-pipeline →
-  stage1 ML → stage2 strategy → stage3 execution + 3b paper-live + 3c batch-paper), alpha decomposition (strategy vs
-  execution vs data-pipeline vs ML), per-stage/per-pair tolerance bands, and the ACCEPT/REJECT/INVESTIGATE + book-
-  correction UI flow. Per-archetype bands remain open (pvl-p21a).
+  The batch↔live↔paper reconciliation contract + operator resolution workflow — what gets compared (positions baseline,
+  live vs simulated fills), the comparison keys, the 6-stage recon DAG (stage0 config/manifest/data-pipeline → stage1 ML
+  → stage2 strategy → stage3 execution + 3b paper-live + 3c batch-paper), alpha decomposition (strategy vs execution vs
+  data-pipeline vs ML), per-stage/per-pair tolerance bands, and the ACCEPT/REJECT/INVESTIGATE + book- correction UI
+  flow. Per-archetype bands remain open (pvl-p21a).
 status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
-repos: [batch-live-reconciliation-service, execution-service, strategy-service, unified-api-contracts, unified-trading-system-ui]
+repos:
+  [
+    batch-live-reconciliation-service,
+    execution-service,
+    strategy-service,
+    unified-api-contracts,
+    unified-trading-system-ui,
+  ]
 scope: [engineer, admin]
 tags: [reconciliation, batch-live, execution, strategy, ui, data-correctness]
 related:
   [
-    batch-live-architecture.md,
-    paper-vs-live-execution-seam.md,
-    reconciliation-age-tracking.md,
-    separation-of-concerns.md,
+    /codex/04-architecture/batch-live-architecture.md,
+    /codex/04-architecture/paper-vs-live-execution-seam.md,
+    /codex/04-architecture/reconciliation-age-tracking.md,
+    /codex/04-architecture/separation-of-concerns.md,
   ]
 created: 2026-03-27
 authoritative_for:
@@ -27,11 +34,30 @@ authoritative_for:
     batch-live reconciliation resolution workflow (accept/reject/investigate + book-correction),
     batch-vs-live recon stage-DAG comparison contract,
   ]
-referenced_by: [codex/04-architecture/circuit-breaker-rule-taxonomy.md, codex/04-architecture/paper-vs-live-execution-seam.md, codex/04-architecture/reconciliation-age-tracking.md, codex/04-architecture/separation-of-concerns.md, codex/08-workflows/t1-batch-dag.md, codex/15-runbooks/position-reconciliation-deploy-gate.md, plans/active/issues/batch_live_reconciliation_service_audit_2026_05_27.md]
+referenced_by:
+  [
+    /codex/04-architecture/circuit-breaker-rule-taxonomy.md,
+    /codex/04-architecture/paper-vs-live-execution-seam.md,
+    /codex/04-architecture/reconciliation-age-tracking.md,
+    /codex/04-architecture/separation-of-concerns.md,
+    /codex/08-workflows/t1-batch-dag.md,
+    /codex/15-runbooks/position-reconciliation-deploy-gate.md,
+    plans/active/issues/batch_live_reconciliation_service_audit_2026_05_27.md,
+  ]
 owner:
 last_reviewed: 2026-05-17
 code_refs:
-execution: {owner: batch-live-reconciliation-service maintainer (resolution API + per-stage thresholds) + DART operability owner (UI workflow), cadence: T+1 nightly (per-stage recon runs); on-demand (operator-driven break resolution via UI), verifier: batch-live-reconciliation-service GET /api/breaks + POST /api/resolve persists ReconciliationResolution per UAC internal/reconciliation.py; deviation thresholds per-stage from models/deviation_thresholds.py., last_executed: NEVER (T+1 recon DAG runs in staging; prod activation pending master plan F-21)}
+execution:
+  {
+    owner:
+      batch-live-reconciliation-service maintainer (resolution API + per-stage thresholds) + DART operability owner (UI
+      workflow),
+    cadence: T+1 nightly (per-stage recon runs); on-demand (operator-driven break resolution via UI),
+    verifier:
+      batch-live-reconciliation-service GET /api/breaks + POST /api/resolve persists ReconciliationResolution per UAC
+      internal/reconciliation.py; deviation thresholds per-stage from models/deviation_thresholds.py.,
+    last_executed: NEVER (T+1 recon DAG runs in staging; prod activation pending master plan F-21),
+  }
 ---
 
 # Reconciliation Resolution Architecture
@@ -71,7 +97,7 @@ fill model). Per CLAUDE.md `Batch = Live`: _"execution alpha = live fills P&L �
 ### Comparison keys
 
 Both sides emit rows partitioned by `pipeline_mode` (batch / paper / live) per
-[`../02-data/pipeline-mode-partition.md`](../02-data/pipeline-mode-partition.md). Matching is on:
+[`/codex/02-data/pipeline-mode-partition.md`](/codex/02-data/pipeline-mode-partition.md). Matching is on:
 
 - **`(strategy_id, instrument, timestamp_bucket)`** — primary diff key (timestamp_bucket = bar granularity, e.g. 1m / 1h
   depending on the stage).

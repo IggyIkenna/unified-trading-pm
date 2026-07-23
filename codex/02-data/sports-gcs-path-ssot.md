@@ -13,19 +13,19 @@ scope: [engineer]
 tags: [sports, uac, single-walk, data-correctness, audit, canonicalisation]
 related:
   [
-    codex/02-data/sports-data-source-coverage-matrix.md,
-    codex/02-data/sports-adapter-dependency-order.md,
-    codex/02-data/sports-scheduling-and-sharding.md,
-    codex/02-data/availability-manifest-and-data-status.md,
+    /codex/02-data/sports-data-source-coverage-matrix.md,
+    /codex/02-data/sports-adapter-dependency-order.md,
+    /codex/02-data/sports-scheduling-and-sharding.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
   ]
 created: 2026-05-08
 authoritative_for:
   [sports GCS parquet path resolver and entity-folder naming, sports path-layout taxonomy (PER_LEAGUE/BARE/FLAT)]
 referenced_by:
   [
-    codex/01-domain/sports-instruments.md,
-    codex/02-data/sports-data-source-coverage-matrix.md,
-    codex/02-data/sports-data-types-catalog.md,
+    /codex/01-domain/sports-instruments.md,
+    /codex/02-data/sports-data-source-coverage-matrix.md,
+    /codex/02-data/sports-data-types-catalog.md,
   ]
 owner:
 last_reviewed: 2026-05-17

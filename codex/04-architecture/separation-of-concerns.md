@@ -1,20 +1,44 @@
 ---
 doc_type: codex-ssot
-title: 'Separation of Concerns: Three-Layer Architecture'
+title: "Separation of Concerns: Three-Layer Architecture"
 summary:
-  Three-layer architecture (UAC contracts / interface adapters / T3 services) with allowed-import rules,
-  plus the PBMS single-canonical positions+balances ledger invariant every consumer reads through (never a shadow copy).
+  Three-layer architecture (UAC contracts / interface adapters / T3 services) with allowed-import rules, plus the PBMS
+  single-canonical positions+balances ledger invariant every consumer reads through (never a shadow copy).
 status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
-repos: [batch-live-reconciliation-service, execution-service, instruments-service, strategy-service, unified-api-contracts, unified-trading-api]
+repos:
+  [
+    batch-live-reconciliation-service,
+    execution-service,
+    instruments-service,
+    strategy-service,
+    unified-api-contracts,
+    unified-trading-api,
+  ]
 scope: [engineer, admin]
 tags: [uac, contracts, ssot, positions, execution]
-related: [../02-data/contracts-scope-and-layout.md, schema-placement.md, batch-live-architecture.md]
+related:
+  [
+    /codex/02-data/contracts-scope-and-layout.md,
+    /codex/04-architecture/schema-placement.md,
+    /codex/04-architecture/batch-live-architecture.md,
+  ]
 created: 2026-03-27
-authoritative_for: [contracts/interface/service three-layer separation of concerns, PBMS single-canonical positions+balances ledger invariant]
-referenced_by: [codex/04-architecture/custody-providers.md, codex/04-architecture/reconciliation-resolution.md, codex/04-architecture/schema-placement.md, codex/10-audit/CONTRACTS_SEPARATION_AUDIT.md, codex/15-runbooks/position-reconciliation-deploy-gate.md]
+authoritative_for:
+  [
+    contracts/interface/service three-layer separation of concerns,
+    PBMS single-canonical positions+balances ledger invariant,
+  ]
+referenced_by:
+  [
+    /codex/04-architecture/custody-providers.md,
+    /codex/04-architecture/reconciliation-resolution.md,
+    /codex/04-architecture/schema-placement.md,
+    /codex/10-audit/CONTRACTS_SEPARATION_AUDIT.md,
+    /codex/15-runbooks/position-reconciliation-deploy-gate.md,
+  ]
 owner:
 last_reviewed: 2026-05-17
 code_refs:
@@ -89,7 +113,7 @@ data, not MTDS"_), but applied to the positions axis.
 - The dual-projection that PBMS exposes externally:
   - **Balances projection** — per-(wallet, asset, venue) ladder reconciled against custody + venue reads on the 5-min
     ping cadence (BALANCE_DRIFT alerting per
-    [`../15-runbooks/alerting/balance_drift.md`](../15-runbooks/alerting/balance_drift.md)).
+    [`/codex/15-runbooks/alerting/balance_drift.md`](/codex/15-runbooks/alerting/balance_drift.md)).
   - **Position-lineage projection** — per-`client_id` (top-level) and per-`client_order_id` (per-order) lineage consumed
     by strategy / risk / pnl-attribution / batch-live-reconciliation. Per slot 8 audit PB-3 (`audit-logging.md`
     IMMEDIATE), execution-side audit records are _order-keyed_ (the third arg to `persist_audit_log()` is currently
@@ -97,14 +121,14 @@ data, not MTDS"_), but applied to the positions axis.
 
 ### Consumer matrix
 
-| Consumer                          | Reads positions via                                        | Writes positions?                  |
-| --------------------------------- | ---------------------------------------------------------- | ---------------------------------- |
-| strategy-service                  | PBMS query API + Pub/Sub NAV snapshots                     | NO                                 |
-| risk-and-exposure-service         | PBMS query API (pre-flight checks)                         | NO                                 |
-| pnl-attribution-service           | PBMS query API + execution fills                           | NO                                 |
+| Consumer                          | Reads positions via                                       | Writes positions?                  |
+| --------------------------------- | --------------------------------------------------------- | ---------------------------------- |
+| strategy-service                  | PBMS query API + Pub/Sub NAV snapshots                    | NO                                 |
+| risk-and-exposure-service         | PBMS query API (pre-flight checks)                        | NO                                 |
+| pnl-attribution-service           | PBMS query API + execution fills                          | NO                                 |
 | batch-live-reconciliation-service | PBMS query API (canonical baseline for batch ↔ live diff) | NO                                 |
-| execution-service                 | publishes fills → PBMS state-update path                   | NO (publishes, does not own state) |
-| position-balance-monitor-service  | OWNS state; absorbs fills + custody pings                  | YES (sole writer)                  |
+| execution-service                 | publishes fills → PBMS state-update path                  | NO (publishes, does not own state) |
+| position-balance-monitor-service  | OWNS state; absorbs fills + custody pings                 | YES (sole writer)                  |
 
 ### Anti-patterns (banned)
 

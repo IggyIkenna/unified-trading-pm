@@ -14,8 +14,16 @@ scope: [engineer, admin]
 tags: [ci-cd, dependency-management, quality-gates, self-healing, reconciliation]
 related: [./ci-cd-flow.md, ./version-cascade-flow.md, ./deployment-flow.md]
 created: 2026-03-27
-authoritative_for: [breaking-change dependency cascade (cascade-qg-ordering topological fail-fast + downstream-fix-agent auto-fix)]
-referenced_by: [codex/08-workflows/ci-cd-flow.md, codex/08-workflows/dep-update-conflict-resolution.md, codex/08-workflows/deployment-flow.md, codex/08-workflows/per-cone-parallel-staging-locks.md, codex/08-workflows/version-cascade-flow.md]
+authoritative_for:
+  [breaking-change dependency cascade (cascade-qg-ordering topological fail-fast + downstream-fix-agent auto-fix)]
+referenced_by:
+  [
+    /codex/08-workflows/ci-cd-flow.md,
+    /codex/08-workflows/dep-update-conflict-resolution.md,
+    /codex/08-workflows/deployment-flow.md,
+    /codex/08-workflows/per-cone-parallel-staging-locks.md,
+    /codex/08-workflows/version-cascade-flow.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

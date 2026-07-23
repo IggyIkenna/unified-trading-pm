@@ -2,21 +2,34 @@
 doc_type: codex-ssot
 title: Chart Candle Delivery — End-to-End Flow
 summary:
-  End-to-end SSOT for historical chart-candle delivery — price-chart widget → Next.js rewrite →
-  unified-trading-api /market-data/candles → BatchCandleReader manifest-prune + parallel GCS processed_candles
-  read → response envelope; covers per-category data_type divergence, mode toggles, perf shape, and a
-  layer-by-layer debug path.
+  End-to-end SSOT for historical chart-candle delivery — price-chart widget → Next.js rewrite → unified-trading-api
+  /market-data/candles → BatchCandleReader manifest-prune + parallel GCS processed_candles read → response envelope;
+  covers per-category data_type divergence, mode toggles, perf shape, and a layer-by-layer debug path.
 status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
-repos: [deployment-service, market-data-processing-service, unified-trading-api, unified-trading-library, unified-trading-pm, unified-trading-system-ui]
+repos:
+  [
+    deployment-service,
+    market-data-processing-service,
+    unified-trading-api,
+    unified-trading-library,
+    unified-trading-pm,
+    unified-trading-system-ui,
+  ]
 scope: [engineer]
 tags: [ui, mdps, manifest, data-pipeline, performance, mtds]
-related: [availability-manifest-and-data-status.md, per-asset-group-bucket-layouts.md, partitioning.md]
+related:
+  [
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/02-data/per-asset-group-bucket-layouts.md,
+    /codex/02-data/partitioning.md,
+  ]
 created: 2026-04-30
 authoritative_for: [chart candle delivery end-to-end flow (GCS parquet to price-chart widget)]
-referenced_by: [codex/02-data/availability-manifest-and-data-status.md, codex/02-data/bar-boundary-candle-edge-convention.md]
+referenced_by:
+  [/codex/02-data/availability-manifest-and-data-status.md, /codex/02-data/bar-boundary-candle-edge-convention.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

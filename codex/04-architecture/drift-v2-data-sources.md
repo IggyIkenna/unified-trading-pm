@@ -13,18 +13,18 @@ scope: [engineer, admin]
 tags: [defi, drift, mtds, solana, backfill, pipeline-mode]
 related:
   [
-    instruments-service-as-ssot-for-mtds.md,
-    solana-defi-coverage.md,
-    ../02-data/defi-data-types-catalog.md,
-    ../02-data/honest-absence-downstream-handling.md,
+    /codex/04-architecture/instruments-service-as-ssot-for-mtds.md,
+    /codex/04-architecture/solana-defi-coverage.md,
+    /codex/02-data/defi-data-types-catalog.md,
+    /codex/02-data/honest-absence-downstream-handling.md,
   ]
 created: 2026-06-01
 authoritative_for: [Drift V2 Velocity Data API ingestion path]
 referenced_by:
   [
-    codex/04-architecture/instruments-service-as-ssot-for-mtds.md,
-    codex/04-architecture/solana-defi-coverage.md,
-    codex/09-strategy/architecture-v2/archetypes/carry-basis-perp.md,
+    /codex/04-architecture/instruments-service-as-ssot-for-mtds.md,
+    /codex/04-architecture/solana-defi-coverage.md,
+    /codex/09-strategy/architecture-v2/archetypes/carry-basis-perp.md,
   ]
 owner: defi-adapters
 last_reviewed: 2026-06-01
@@ -47,7 +47,7 @@ type: architecture
 > 2026-07-01 under an entirely new on-chain program — now a ~2-week-old private beta with ~$0
 > listed TVL. Operator dropped ALL Solana perp DEXes; Jupiter is the only one kept conceptually but is NOT currently
 > integrated. **This entire document is now HISTORICAL RECORD ONLY** — do not use it to re-wire Drift ingestion. SSOT
-> for the removal: `codex/04-architecture/solana-defi-coverage.md` (tombstone banner).
+> for the removal: `/codex/04-architecture/solana-defi-coverage.md` (tombstone banner).
 
 > **SSOT for Drift V2 perpetual DEX data ingestion.** Created 2026-06-01 from
 > `plans/archive/solana_basis_trading_mvp_2026_06_01.plan.md` Phase 1 (Drift V2 historical ingester shipped at
@@ -142,7 +142,7 @@ gs://market-data-tick-defi-prd-${PROJECT_ID}/raw_tick_data/by_date/day={Y-M-D}/
 ```
 
 `pipeline_mode=` partition is the canonical batch/live distinguisher per
-`codex/02-data/pipeline-mode-and-batch-live-reconciliation.md`. The handler MUST resolve `pipeline_mode` via the UTL
+`/codex/02-data/pipeline-mode-and-batch-live-reconciliation.md`. The handler MUST resolve `pipeline_mode` via the UTL
 resolver, never hardcode (per `defi_manifest_canonicalisation_2026_06_01.md` § A).
 
 ### Manifest emission (per CLAUDE.md manifest + honest absence)
@@ -167,16 +167,16 @@ resolver, never hardcode (per `defi_manifest_canonicalisation_2026_06_01.md` § 
 
 ## Composes with
 
-- `codex/04-architecture/instruments-service-as-ssot-for-mtds.md` — Drift IS adapter populates
+- `/codex/04-architecture/instruments-service-as-ssot-for-mtds.md` — Drift IS adapter populates
   `source_archive_url_template` for the S3 archive (per-instrument per-day pattern); the **Velocity Data API base URL**
   lives in UAC's `SOLANA_DEFI_PROTOCOLS["drift"]["api_url"]` (venue-wide, one host serves all markets) and is accessed
   via the public `get_solana_protocol_url("drift", "api_url")` helper. Both IS adapter and MTDS
   `DriftV2HistoricalIngester` (mtds@081ff1cf) use this canonical helper — no hardcoded URLs anywhere.
-- `codex/04-architecture/solana-defi-coverage.md` — Solana DeFi adapter registry; DRIFT-SOLANA row references this doc
+- `/codex/04-architecture/solana-defi-coverage.md` — Solana DeFi adapter registry; DRIFT-SOLANA row references this doc
   for the Velocity Data API path
-- `codex/02-data/defi-data-types-catalog.md` — canonical data_type definitions including new types from this MVP:
+- `/codex/02-data/defi-data-types-catalog.md` — canonical data_type definitions including new types from this MVP:
   `perp_trades`, `perp_mark_oracle`, `perp_open_interest`, `dex_pool_state`, `dex_orderbook`, `dex_quote`, `dex_trades`
-- `codex/02-data/honest-absence-downstream-handling.md` — `EXPECTED_PRE_VENUE_LAUNCH`, `SOURCE_RETURNED_ZERO`, typed
+- `/codex/02-data/honest-absence-downstream-handling.md` — `EXPECTED_PRE_VENUE_LAUNCH`, `SOURCE_RETURNED_ZERO`, typed
   error reasons
 - `plans/archive/solana_basis_trading_mvp_2026_06_01.plan.md` — full design history + Bug-D saga context
 

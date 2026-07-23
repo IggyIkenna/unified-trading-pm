@@ -14,9 +14,9 @@ scope: [engineer]
 tags: [audit, manifest, ssot, data-correctness, quality-gates, instruments]
 related:
   [
-    ../02-data/availability-manifest-and-data-status.md,
-    ../02-data/honest-absence-downstream-handling.md,
-    shard-level-failure-isolation.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/02-data/honest-absence-downstream-handling.md,
+    /codex/04-architecture/shard-level-failure-isolation.md,
   ]
 created: 2026-05-20
 authoritative_for: [service-contract audit reusable template (7-pattern upstream-downstream matrix)]
@@ -397,9 +397,9 @@ Fill all 4 dims per audit instantiation. Link to Dim sections above.
 1. `git fetch origin live-defi-rollout` — get latest state of all repos.
 2. Run all 7 grep recipes above against the upstream + downstream repos.
 3. Read the 3 related codex SSOTs:
-   - `codex/02-data/availability-manifest-and-data-status.md`
-   - `codex/02-data/honest-absence-downstream-handling.md`
-   - `codex/02-data/service-output-emission-semantics.md`
+   - `/codex/02-data/availability-manifest-and-data-status.md`
+   - `/codex/02-data/honest-absence-downstream-handling.md`
+   - `/codex/02-data/service-output-emission-semantics.md`
 4. Check `plans/audit/results/codified_shape_compliance_2026_05_20.csv` for the downstream repo's rows — this lists all
    10 A1 pattern violations with counts.
 5. Record the commit SHA of each repo at audit time. Changes after the SHA are out-of-scope for this instantiation.

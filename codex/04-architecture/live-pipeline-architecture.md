@@ -12,7 +12,12 @@ stage: [meta]
 repos: [features-service, instruments-service]
 scope: [engineer, admin]
 tags: [features, defi, pipeline-mode, live-trading, mtds, instruments]
-related: [batch-live-architecture.md, live-deployment-manifest.md, ../02-data/availability-manifest-and-data-status.md]
+related:
+  [
+    /codex/04-architecture/batch-live-architecture.md,
+    /codex/04-architecture/live-deployment-manifest.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+  ]
 created: 2026-05-21
 authoritative_for: []
 referenced_by:
@@ -30,7 +35,7 @@ The live pipeline is the same code path as batch, operating in live mode:
 `instruments-service → MTDS → features → strategy → execution`. Identical schemas and data_types; only difference is
 execution fills replace simulated fills.
 
-See CLAUDE.md "Live = batch" and `codex/02-data/availability-manifest-and-data-status.md`.
+See CLAUDE.md "Live = batch" and `/codex/02-data/availability-manifest-and-data-status.md`.
 
 ---
 

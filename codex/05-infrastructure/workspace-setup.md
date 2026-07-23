@@ -12,10 +12,15 @@ stage: [meta]
 repos: [system-integration-tests, unified-api-contracts, unified-trading-pm]
 scope: [engineer, admin]
 tags: [infrastructure, setup, quality-gates, scripts]
-related: [workspace-root-variable.md, ../08-workflows/ci-cd-flow.md, ../06-coding-standards/quality-gates.md]
+related:
+  [
+    /codex/05-infrastructure/workspace-root-variable.md,
+    /codex/08-workflows/ci-cd-flow.md,
+    /codex/06-coding-standards/quality-gates.md,
+  ]
 created: 2026-03-27
 authoritative_for: [workspace bootstrap and two-venv setup]
-referenced_by: [codex/05-infrastructure/workspace-root-variable.md]
+referenced_by: [/codex/05-infrastructure/workspace-root-variable.md]
 owner:
 last_reviewed: 2026-06-25
 code_refs:
@@ -23,7 +28,7 @@ code_refs:
 
 # Workspace Setup
 
-> **CI/CD pipeline SSOT:** `codex/08-workflows/ci-cd-flow.md`. This doc covers the **workspace bootstrap, venv
+> **CI/CD pipeline SSOT:** `/codex/08-workflows/ci-cd-flow.md`. This doc covers the **workspace bootstrap, venv
 > management, dependency alignment, quality-gate mechanics, and mock-infrastructure setup** — the parts not covered by
 > the CI/CD flow codex.
 
@@ -108,7 +113,7 @@ run-all-quality-gates.sh            # local e2e smoke test (all tiers, parallel 
 
 **Shipping code:** Pass 1 = `bash scripts/quality-gates.sh` (full gate). Pass 2 =
 `bash scripts/quickmerge.sh "msg" --agent --files <paths>` (pushes to `live-defi-rollout`; Tier-C bot drains LDR→staging
-every 15 min). SSOT: `codex/08-workflows/ci-cd-flow.md § Two-Pass Workflow Model`.
+every 15 min). SSOT: `/codex/08-workflows/ci-cd-flow.md § Two-Pass Workflow Model`.
 
 **Two venvs, two responsibilities:**
 
@@ -118,7 +123,7 @@ every 15 min). SSOT: `codex/08-workflows/ci-cd-flow.md § Two-Pass Workflow Mode
 | `.venv` (per-repo) | QG Python, basedpyright, pytest — CI-faithful | `run-all-setup.sh` / `setup.sh` |
 
 Never run pytest directly against `.venv-workspace` — the workspace venv has extra packages that mask missing deps. See
-`codex/06-coding-standards/quality-gates.md § Tool Version Pinning` for full rationale.
+`/codex/06-coding-standards/quality-gates.md § Tool Version Pinning` for full rationale.
 
 ---
 
@@ -459,8 +464,8 @@ semver-agent. Always prefer quickmerge→LDR for standard changes.
 
 | Doc                                                     | Purpose                                           |
 | ------------------------------------------------------- | ------------------------------------------------- |
-| `codex/08-workflows/ci-cd-flow.md`                      | CI/CD pipeline SSOT (LDR-trunk model, quickmerge) |
-| `codex/06-coding-standards/quality-gates.md`            | QG config, parity matrix, tool version pinning    |
+| `/codex/08-workflows/ci-cd-flow.md`                     | CI/CD pipeline SSOT (LDR-trunk model, quickmerge) |
+| `/codex/06-coding-standards/quality-gates.md`           | QG config, parity matrix, tool version pinning    |
 | `scripts/repo-management/README-ALIGNMENT-AND-SETUP.md` | Phase 1–2 command detail                          |
 | `scripts/workspace/setup-workspace-venv.sh`             | Underlying venv setup implementation              |
 | `scripts/dev/network_block_plugin.py`                   | Credential-free CI network block plugin           |

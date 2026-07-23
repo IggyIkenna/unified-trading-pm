@@ -14,18 +14,18 @@ scope: [engineer, admin]
 tags: [meta-broker, execution, venue, strategy, tradfi, unity]
 related:
   [
-    unity-integration.md,
-    venue-registry-reference.md,
-    ../03-services/venue-capability-registry.md,
-    ../09-strategy/architecture-v2/cross-cutting/venue-account-coordination.md,
+    /codex/02-venues/unity-integration.md,
+    /codex/02-venues/venue-registry-reference.md,
+    /codex/03-services/venue-capability-registry.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/venue-account-coordination.md,
   ]
 created: 2026-04-17
 authoritative_for: [meta-broker venue pattern, prime-broker adapter shape]
 referenced_by:
   [
-    codex/02-venues/unity-integration.md,
-    codex/02-venues/venue-registry-reference.md,
-    codex/09-strategy/architecture-v2/README.md,
+    /codex/02-venues/unity-integration.md,
+    /codex/02-venues/venue-registry-reference.md,
+    /codex/09-strategy/architecture-v2/README.md,
   ]
 owner:
 last_reviewed:
@@ -199,11 +199,11 @@ UI dashboards tailored per meta-broker.
 - Venue registry: [venue-registry-reference.md](venue-registry-reference.md)
 - Unity specifics: [unity-integration.md](unity-integration.md)
 - Slow-fast routing split:
-  [../04-architecture/slow-fast-routing-split.md](../04-architecture/slow-fast-routing-split.md)
+  [/codex/04-architecture/slow-fast-routing-split.md](/codex/04-architecture/slow-fast-routing-split.md)
 - Venue selection (strategy-facing):
-  [../09-strategy/architecture-v2/cross-cutting/venue-selection-split.md](../09-strategy/architecture-v2/cross-cutting/venue-selection-split.md)
+  [/codex/09-strategy/architecture-v2/cross-cutting/venue-selection-split.md](/codex/09-strategy/architecture-v2/cross-cutting/venue-selection-split.md)
 - Venue-account coordination:
-  [../09-strategy/architecture-v2/cross-cutting/venue-account-coordination.md](../09-strategy/architecture-v2/cross-cutting/venue-account-coordination.md)
+  [/codex/09-strategy/architecture-v2/cross-cutting/venue-account-coordination.md](/codex/09-strategy/architecture-v2/cross-cutting/venue-account-coordination.md)
 
 ## Not in this doc
 

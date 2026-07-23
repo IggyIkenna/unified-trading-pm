@@ -1,7 +1,9 @@
 ---
 doc_type: codex-ssot
 title: DeFi BTC Lending Yield
-summary: "Pre-v2: DeFi BTC lending yield (DEFI_BTC_LENDING_AAVE_4H) — supply WBTC/cbBTC to Aave V3 across EVM chains via CrossChainSOR best-APY; leveraged variant recursively borrows stables for the supply-borrow spread."
+summary:
+  "Pre-v2: DeFi BTC lending yield (DEFI_BTC_LENDING_AAVE_4H) — supply WBTC/cbBTC to Aave V3 across EVM chains via
+  CrossChainSOR best-APY; leveraged variant recursively borrows stables for the supply-borrow spread."
 status: superseded
 nature: ssot
 asset_group: [meta]
@@ -12,12 +14,16 @@ tags: [defi, strategy, aave, yield, lending, btc]
 related:
   [
     ../../architecture-v2/archetypes/carry-recursive-borrow-lending-only.md,
-    aave-lending.md,
-    cross-chain-sor-rebalancing.md,
+    /codex/09-strategy/_archived_pre_v2/defi/aave-lending.md,
+    /codex/09-strategy/_archived_pre_v2/defi/cross-chain-sor-rebalancing.md,
   ]
 created: 2026-03-28
 authoritative_for: []
-referenced_by: [codex/09-strategy/_archived_pre_v2/STRATEGY_CATALOG_pre_v2.md, codex/09-strategy/_archived_pre_v2/defi/aave-lending.md]
+referenced_by:
+  [
+    /codex/09-strategy/_archived_pre_v2/STRATEGY_CATALOG_pre_v2.md,
+    /codex/09-strategy/_archived_pre_v2/defi/aave-lending.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

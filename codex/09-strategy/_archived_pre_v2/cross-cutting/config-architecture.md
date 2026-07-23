@@ -1,23 +1,36 @@
 ---
 doc_type: codex-ssot
 title: Strategy Config Architecture — Cross-Cutting Concern
-summary: "Pre-v2: strategy-config hard rule — strategies consume only features/ML-signals/positions/risk-monitor outputs, never raw tick or candle services."
+summary:
+  "Pre-v2: strategy-config hard rule — strategies consume only features/ML-signals/positions/risk-monitor outputs, never
+  raw tick or candle services."
 status: superseded
 nature: ssot
 asset_group: [meta]
 stage: [meta]
-repos: [execution-service, market-data-processing-service, market-tick-data-service, strategy-service, unified-api-contracts]
+repos:
+  [execution-service, market-data-processing-service, market-tick-data-service, strategy-service, unified-api-contracts]
 scope: [engineer, admin]
 tags: [strategy, features, config, cross-cutting, execution]
 related:
   [
     ../../architecture-v2/cross-cutting/operational-modes-matrix.md,
-    strategy-instruction-bus.md,
-    cost-modeling.md,
+    /codex/09-strategy/_archived_pre_v2/cross-cutting/strategy-instruction-bus.md,
+    /codex/09-strategy/_archived_pre_v2/cross-cutting/cost-modeling.md,
   ]
 created: 2026-03-27
 authoritative_for: []
-referenced_by: [codex/09-strategy/_archived_pre_v2/STRATEGY_CATALOG_AND_WORKFLOW_ALIGNMENT.md, codex/09-strategy/_archived_pre_v2/STRATEGY_CATALOG_pre_v2.md, codex/09-strategy/_archived_pre_v2/cefi/market-making.md, codex/09-strategy/_archived_pre_v2/defi/cross-chain-sor-rebalancing.md, codex/09-strategy/_archived_pre_v2/defi/market-making-lp.md, codex/09-strategy/_archived_pre_v2/defi/sol-concentrated-lp.md, codex/09-strategy/_archived_pre_v2/sports/market-making.md, codex/09-strategy/_archived_pre_v2/tradfi/market-making-options.md]
+referenced_by:
+  [
+    /codex/09-strategy/_archived_pre_v2/STRATEGY_CATALOG_AND_WORKFLOW_ALIGNMENT.md,
+    /codex/09-strategy/_archived_pre_v2/STRATEGY_CATALOG_pre_v2.md,
+    /codex/09-strategy/_archived_pre_v2/cefi/market-making.md,
+    /codex/09-strategy/_archived_pre_v2/defi/cross-chain-sor-rebalancing.md,
+    /codex/09-strategy/_archived_pre_v2/defi/market-making-lp.md,
+    /codex/09-strategy/_archived_pre_v2/defi/sol-concentrated-lp.md,
+    /codex/09-strategy/_archived_pre_v2/sports/market-making.md,
+    /codex/09-strategy/_archived_pre_v2/tradfi/market-making-options.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

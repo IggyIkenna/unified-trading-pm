@@ -14,15 +14,20 @@ scope: [engineer, admin]
 tags: [treasury, custody, execution, withdrawal, defi, cefi, kill-switch, uac]
 related:
   [
-    transfer-architecture.md,
-    wallet-hierarchy-and-capital-flow.md,
-    custody-providers.md,
-    interface-credential-convention.md,
-    kill-switch-circuit-breaker.md,
+    /codex/04-architecture/transfer-architecture.md,
+    /codex/04-architecture/wallet-hierarchy-and-capital-flow.md,
+    /codex/04-architecture/custody-providers.md,
+    /codex/04-architecture/interface-credential-convention.md,
+    /codex/04-architecture/kill-switch-circuit-breaker.md,
   ]
 created: 2026-05-13
 authoritative_for: [TreasurySource taxonomy + withdrawal lifecycle N-of-M quorum + reconciliation invariant]
-referenced_by: [codex/04-architecture/interface-credential-convention.md, codex/04-architecture/transfer-architecture.md, codex/04-architecture/wallet-hierarchy-and-capital-flow.md]
+referenced_by:
+  [
+    /codex/04-architecture/interface-credential-convention.md,
+    /codex/04-architecture/transfer-architecture.md,
+    /codex/04-architecture/wallet-hierarchy-and-capital-flow.md,
+  ]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

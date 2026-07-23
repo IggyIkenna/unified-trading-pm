@@ -12,10 +12,11 @@ stage: [meta]
 repos: [deployment-service]
 scope: [engineer, admin]
 tags: [infrastructure, gcs, registry, canonicalisation]
-related: [../15-runbooks/phase-2-6-bucket-name-cutover-runbook.md, gcs-object-operations.md]
+related:
+  [/codex/15-runbooks/phase-2-6-bucket-name-cutover-runbook.md, /codex/05-infrastructure/gcs-object-operations.md]
 created: 2026-05-21
 authoritative_for: [per-environment gcs path and deployment-url registry]
-referenced_by: [codex/15-runbooks/phase-2-6-bucket-name-cutover-runbook.md]
+referenced_by: [/codex/15-runbooks/phase-2-6-bucket-name-cutover-runbook.md]
 owner:
 last_reviewed:
 code_refs:

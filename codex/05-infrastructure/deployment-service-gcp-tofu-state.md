@@ -13,7 +13,12 @@ stage: [meta]
 repos: [deployment-service]
 scope: [engineer, admin]
 tags: [infrastructure, runbook, terraform, opentofu, gcp, state, footgun]
-related: [path-registry.md, new-repo-setup.md, bucket-isolation-model.md]
+related:
+  [
+    /codex/05-infrastructure/path-registry.md,
+    /codex/05-infrastructure/new-repo-setup.md,
+    /codex/05-infrastructure/bucket-isolation-model.md,
+  ]
 created: 2026-07-15
 authoritative_for: [deployment-service terraform/gcp OpenTofu invocation + backend state prefix]
 referenced_by:

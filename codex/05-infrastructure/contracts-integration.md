@@ -9,13 +9,30 @@ status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
-repos: [execution-service, instruments-service, market-tick-data-service, strategy-service, unified-api-contracts, unified-trading-library]
+repos:
+  [
+    execution-service,
+    instruments-service,
+    market-tick-data-service,
+    strategy-service,
+    unified-api-contracts,
+    unified-trading-library,
+  ]
 scope: [engineer, admin]
 tags: [uac, contracts, validation, mtds, ml]
-related: [codex/02-data/contracts-scope-and-layout.md, codex/02-data/vcr-cassette-ownership.md, codex/06-coding-standards/integration-testing-layers.md]
+related:
+  [
+    /codex/02-data/contracts-scope-and-layout.md,
+    /codex/02-data/vcr-cassette-ownership.md,
+    /codex/06-coding-standards/integration-testing-layers.md,
+  ]
 created: 2026-03-27
-authoritative_for: [using unified-api-contracts external schemas + internal contracts in services (integration guide), UAC-vs-UEI contract-vs-protocol event split]
-referenced_by: [codex/05-infrastructure/README.md]
+authoritative_for:
+  [
+    using unified-api-contracts external schemas + internal contracts in services (integration guide),
+    UAC-vs-UEI contract-vs-protocol event split,
+  ]
+referenced_by: [/codex/05-infrastructure/README.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:
@@ -23,9 +40,9 @@ code_refs:
 
 # Contracts Integration Guide
 
-**Constraints SSOT:** [02-data/contracts-scope-and-layout.md](../02-data/contracts-scope-and-layout.md) — canonical vs
-internal scope, dependency rule (canonical/external surface cannot import internal), layout. For package layout detail:
-unified-api-contracts/docs/PACKAGE_LAYOUT_AND_SCOPE.md.
+**Constraints SSOT:** [02-data/contracts-scope-and-layout.md](/codex/02-data/contracts-scope-and-layout.md) — canonical
+vs internal scope, dependency rule (canonical/external surface cannot import internal), layout. For package layout
+detail: unified-api-contracts/docs/PACKAGE_LAYOUT_AND_SCOPE.md.
 
 ---
 
@@ -47,7 +64,7 @@ tests — not in AC. NOTE: unified-trade-execution-interface, unified-sports-exe
 unified-reference-data-interface, unified-position-interface, and unified-defi-execution-interface have been merged into
 their respective services. **Active repos contribute cassettes to AC’s `mocks/` via PR** so one canonical location is
 used for replay and by all consumers. **SSOT:**
-[02-data/vcr-cassette-ownership.md](../02-data/vcr-cassette-ownership.md).
+[02-data/vcr-cassette-ownership.md](/codex/02-data/vcr-cassette-ownership.md).
 
 | Library                                     | Purpose                                            | Examples                           |
 | ------------------------------------------- | -------------------------------------------------- | ---------------------------------- |
@@ -299,7 +316,7 @@ with databento_vcr.use_cassette("new_endpoint.yaml"):
 
 **Interfaces:** Recording is done in the six interfaces (they hold API keys). After recording, **contribute cassettes to
 AC’s `mocks/` via PR** so one canonical location is used for replay and by all consumers. **SSOT:**
-[02-data/vcr-cassette-ownership.md](../02-data/vcr-cassette-ownership.md) § “Contributing cassettes to AC mocks/ via
+[02-data/vcr-cassette-ownership.md](/codex/02-data/vcr-cassette-ownership.md) § “Contributing cassettes to AC mocks/ via
 PR”.
 
 ### 3.3 VCR Configuration
@@ -308,7 +325,7 @@ PR”.
 
 - **Canonical path:** `unified_api_contracts/unified_api_contracts/external/<venue>/mocks/` (e.g.
   `unified_api_contracts/unified_api_contracts/external/databento/mocks/` for Databento).
-- **Reference:** [02-data/vcr-cassette-ownership.md](../02-data/vcr-cassette-ownership.md).
+- **Reference:** [02-data/vcr-cassette-ownership.md](/codex/02-data/vcr-cassette-ownership.md).
 
 ```python
 # In unified-api-contracts or consumers: point to unified-api-contracts cassette root
@@ -795,7 +812,7 @@ bash unified-trading-pm/scripts/check-dependency-alignment.sh
 ### Issue: VCR cassette not found
 
 **Solution:** Cassettes live under `unified_api_contracts/unified_api_contracts/external/<venue>/mocks/`. See
-[02-data/vcr-cassette-ownership.md](../02-data/vcr-cassette-ownership.md).
+[02-data/vcr-cassette-ownership.md](/codex/02-data/vcr-cassette-ownership.md).
 
 ```bash
 # Verify cassette exists
@@ -810,9 +827,9 @@ with vcr.use_cassette("new_cassette.yaml", record_mode="new_episodes"):
 
 ## Related Documents
 
-| Document                                                                                                  | Description                            |
-| --------------------------------------------------------------------------------------------------------- | -------------------------------------- |
-| [06-coding-standards/integration-testing-layers.md](../06-coding-standards/integration-testing-layers.md) | Layer 0 (AC↔UIC alignment), Layer 1–3 |
-| [service-setup-checklist.md](service-setup-checklist.md)                                                  | Service setup workflow                 |
-| [artifact-registry-setup.md](artifact-registry-setup.md)                                                  | Publishing libraries                   |
-| [06-coding-standards/external-import-standards.md](../06-coding-standards/external-import-standards.md)   | Import patterns                        |
+| Document                                                                                                      | Description                           |
+| ------------------------------------------------------------------------------------------------------------- | ------------------------------------- |
+| [06-coding-standards/integration-testing-layers.md](/codex/06-coding-standards/integration-testing-layers.md) | Layer 0 (AC↔UIC alignment), Layer 1–3 |
+| [service-setup-checklist.md](service-setup-checklist.md)                                                      | Service setup workflow                |
+| [artifact-registry-setup.md](artifact-registry-setup.md)                                                      | Publishing libraries                  |
+| [06-coding-standards/external-import-standards.md](/codex/06-coding-standards/external-import-standards.md)   | Import patterns                       |

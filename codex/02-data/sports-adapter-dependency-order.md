@@ -15,20 +15,20 @@ scope: [engineer, admin]
 tags: [sports, instruments, backfill, footystats, data-correctness, orchestrator]
 related:
   [
-    codex/02-data/sports-data-source-coverage-matrix.md,
-    codex/02-data/sports-scheduling-and-sharding.md,
-    codex/02-data/per-asset-group-bucket-layouts.md,
-    codex/04-architecture/shard-level-failure-isolation.md,
+    /codex/02-data/sports-data-source-coverage-matrix.md,
+    /codex/02-data/sports-scheduling-and-sharding.md,
+    /codex/02-data/per-asset-group-bucket-layouts.md,
+    /codex/04-architecture/shard-level-failure-isolation.md,
   ]
 created: 2026-04-20
 authoritative_for: [sports adapter T0/T1 run-order dependency, api-football pre-flight DependencyError gate]
 referenced_by:
   [
-    codex/02-data/sports-data-source-coverage-matrix.md,
-    codex/02-data/sports-gcs-path-ssot.md,
-    codex/02-data/sports-scheduling-and-sharding.md,
-    codex/15-runbooks/backfill-completion-playbook.md,
-    codex/15-runbooks/smoke-testing-playbook.md,
+    /codex/02-data/sports-data-source-coverage-matrix.md,
+    /codex/02-data/sports-gcs-path-ssot.md,
+    /codex/02-data/sports-scheduling-and-sharding.md,
+    /codex/15-runbooks/backfill-completion-playbook.md,
+    /codex/15-runbooks/smoke-testing-playbook.md,
   ]
 owner:
 last_reviewed: 2026-07-23
@@ -53,10 +53,10 @@ matrix below.
 
 **Cross-references**:
 
-- Per-asset-group bucket & path layouts: `codex/02-data/per-asset-group-bucket-layouts.md`
+- Per-asset-group bucket & path layouts: `/codex/02-data/per-asset-group-bucket-layouts.md`
 - Smoke matrix plan: `plans/archive/institutional_smoke_matrix_2026_04_20.plan.md` § Phase 3
-- Availability manifest schema: `codex/02-data/availability-manifest-and-data-status.md`
-- Shard-level failure isolation (shard-level, NOT pre-flight): `codex/04-architecture/shard-level-failure-isolation.md`
+- Availability manifest schema: `/codex/02-data/availability-manifest-and-data-status.md`
+- Shard-level failure isolation (shard-level, NOT pre-flight): `/codex/04-architecture/shard-level-failure-isolation.md`
 - Implementation: `instruments-service/instruments_service/reference_data/sports_dependency.py`
 - Adapter factory: `instruments-service/instruments_service/reference_data/adapters/sports/factory.py`
 - Test: `instruments-service/tests/unit/test_sports_dependency_enforcement.py`
@@ -154,7 +154,7 @@ more of:
 - It does NOT mean the adapters import api-football as Python code. The dependency is on the GCS parquet artefacts, not
   on the adapter class.
 - It does NOT apply to **per-venue shard-level failures inside the shard loop**. That is governed by
-  `codex/04-architecture/shard-level-failure-isolation.md`. This doc governs only the **pre-flight gate** — and, per
+  `/codex/04-architecture/shard-level-failure-isolation.md`. This doc governs only the **pre-flight gate** — and, per
   caveat 2 above, that gate does not actually run in production, so there is currently no enforcement point BEFORE the
   shard loop starts either. §4-§5 spell this out in detail.
 
@@ -195,7 +195,7 @@ inherit it.
 Each adapter writes to one or more `entity=` partitions under
 `sports_reference/by_date/day={date}/pipeline_mode=batch_api_football/` (api-football's own entities carry the
 `pipeline_mode=` segment; T1 adapters write their own entities alongside it). Cross-reference:
-`codex/02-data/per-asset-group-bucket-layouts.md` § "instruments-service writes — SPORTS".
+`/codex/02-data/per-asset-group-bucket-layouts.md` § "instruments-service writes — SPORTS".
 
 **The "Reads (dep)" column is the INTENDED join dependency, not an enforced one** — §1 (caveat 2) and §4-§5 explain why
 the factory pre-flight that is supposed to guarantee it never actually fires in production.
@@ -297,7 +297,7 @@ behaviour. **As deployed, it is a known-broken safety net, not a working one** �
 executes when the factory call site passes `date=`, and grep across every real T1 call site confirms none of them do (§1
 caveat 2, §4.1). Read the two bullets below as the intended design, then apply the caveat that follows.
 
-- Shard-level isolation (`codex/04-architecture/shard-level-failure-isolation.md`): inside the shard loop, all errors
+- Shard-level isolation (`/codex/04-architecture/shard-level-failure-isolation.md`): inside the shard loop, all errors
   are caught per-shard and logged as `VENUE_PROCESSING_FAILED` events. No `raise`. This part IS live in production and
   unaffected by the gate's dead-code status — it keeps a bad shard from killing the whole day's run.
 - **Pre-flight** (this doc, as designed): BEFORE the shard loop starts, if api-football is missing for the whole date,
@@ -325,4 +325,4 @@ real") lands.
   the migration plan from `plans/active/`.
 - Changing the sports bucket naming convention → update §1 diagram and §4.4 test-bucket-divergence section.
 - New entity partition introduced under `sports_reference/by_date/` → add to §3 matrix AND to
-  `codex/02-data/per-asset-group-bucket-layouts.md`.
+  `/codex/02-data/per-asset-group-bucket-layouts.md`.

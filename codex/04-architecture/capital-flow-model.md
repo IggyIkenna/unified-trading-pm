@@ -3,8 +3,8 @@ doc_type: codex-ssot
 title: Capital Flow Model
 summary:
   Capital flow at 3 scopes (client / strategy / venue) via one idempotent "target X at Y = Z" event-driven
-  reconciliation primitive; one service owns each scope (platform-allocator / portfolio-allocator /
-  transfer-rebalance) with no scope leakage; 7 transfer types.
+  reconciliation primitive; one service owns each scope (platform-allocator / portfolio-allocator / transfer-rebalance)
+  with no scope leakage; 7 transfer types.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -12,10 +12,25 @@ stage: [meta]
 repos: [execution-service, strategy-service]
 scope: [engineer, admin]
 tags: [capital, execution, strategy, reconciliation, defi, cefi]
-related: [capital-efficiency-patterns.md, capital-structure-and-regulatory.md, autonomous-recovery-matrix.md]
+related:
+  [
+    /codex/04-architecture/capital-efficiency-patterns.md,
+    /codex/04-architecture/capital-structure-and-regulatory.md,
+    /codex/04-architecture/autonomous-recovery-matrix.md,
+  ]
 created: 2026-04-17
 authoritative_for: [three-scope capital-flow reconciliation model]
-referenced_by: [codex/03-services/portfolio-allocator.md, codex/04-architecture/capital-efficiency-patterns.md, codex/04-architecture/capital-structure-and-regulatory.md, codex/04-architecture/share-class-architecture.md, codex/04-architecture/strategy-execution-protocol.md, codex/09-strategy/architecture-v2/README.md, codex/09-strategy/architecture-v2/cross-cutting/portfolio-allocator.md, codex/09-strategy/architecture-v2/cross-cutting/transfer-rebalance.md]
+referenced_by:
+  [
+    /codex/03-services/portfolio-allocator.md,
+    /codex/04-architecture/capital-efficiency-patterns.md,
+    /codex/04-architecture/capital-structure-and-regulatory.md,
+    /codex/04-architecture/share-class-architecture.md,
+    /codex/04-architecture/strategy-execution-protocol.md,
+    /codex/09-strategy/architecture-v2/README.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/portfolio-allocator.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/transfer-rebalance.md,
+  ]
 owner:
 last_reviewed: 2026-05-13
 code_refs:
@@ -235,9 +250,9 @@ Full recovery matrix: [autonomous-recovery-matrix.md](autonomous-recovery-matrix
 ## Cross-references
 
 - Transfer/rebalance:
-  [../09-strategy/architecture-v2/cross-cutting/transfer-rebalance.md](../09-strategy/architecture-v2/cross-cutting/transfer-rebalance.md)
+  [/codex/09-strategy/architecture-v2/cross-cutting/transfer-rebalance.md](/codex/09-strategy/architecture-v2/cross-cutting/transfer-rebalance.md)
 - Portfolio allocator:
-  [../09-strategy/architecture-v2/cross-cutting/portfolio-allocator.md](../09-strategy/architecture-v2/cross-cutting/portfolio-allocator.md)
+  [/codex/09-strategy/architecture-v2/cross-cutting/portfolio-allocator.md](/codex/09-strategy/architecture-v2/cross-cutting/portfolio-allocator.md)
 - Capital efficiency: [capital-efficiency-patterns.md](capital-efficiency-patterns.md)
 - Capital structure + regulatory: [capital-structure-and-regulatory.md](capital-structure-and-regulatory.md)
 - Autonomous recovery: [autonomous-recovery-matrix.md](autonomous-recovery-matrix.md)
@@ -248,6 +263,7 @@ Full recovery matrix: [autonomous-recovery-matrix.md](autonomous-recovery-matrix
 - **Client onboarding flow** — [capital-structure-and-regulatory.md](capital-structure-and-regulatory.md)
 - **Platform-allocator design** — future (v2 of platform)
 - **Per-bridge selection details** —
-  [../09-strategy/architecture-v2/cross-cutting/transfer-rebalance.md](../09-strategy/architecture-v2/cross-cutting/transfer-rebalance.md)
-- **Per-allocator archetype internals** — [../03-services/portfolio-allocator.md](../03-services/portfolio-allocator.md)
+  [/codex/09-strategy/architecture-v2/cross-cutting/transfer-rebalance.md](/codex/09-strategy/architecture-v2/cross-cutting/transfer-rebalance.md)
+- **Per-allocator archetype internals** —
+  [/codex/03-services/portfolio-allocator.md](/codex/03-services/portfolio-allocator.md)
 - **Accounting / NAV calc** — PBMS + finance-reporting

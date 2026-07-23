@@ -2,10 +2,9 @@
 doc_type: codex-ssot
 title: Service Structure Standards
 summary: >-
-  Canonical engine/adapters/cli directory layout for every deployable T4 service — import
-  direction (engine has zero adapter imports), singleton adapters <100L, ServiceBootstrap
-  + make_health_router + typed config reloaders, shard-level failure isolation, and the
-  file/complexity limit table; QG-enforced via base-service.sh.
+  Canonical engine/adapters/cli directory layout for every deployable T4 service — import direction (engine has zero
+  adapter imports), singleton adapters <100L, ServiceBootstrap + make_health_router + typed config reloaders,
+  shard-level failure isolation, and the file/complexity limit table; QG-enforced via base-service.sh.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -13,10 +12,18 @@ stage: [meta]
 repos: []
 scope: [engineer]
 tags: [service-structure, quality-gates, uac, instruments, mtds, refactor]
-related: [../04-architecture/tier-and-import-architecture.md, service-orchestration-patterns.md, config-reloader-pattern.md, ../04-architecture/shard-level-failure-isolation.md, cli-convention.md]
+related:
+  [
+    /codex/04-architecture/tier-and-import-architecture.md,
+    /codex/06-coding-standards/service-orchestration-patterns.md,
+    /codex/06-coding-standards/config-reloader-pattern.md,
+    /codex/04-architecture/shard-level-failure-isolation.md,
+    /codex/06-coding-standards/cli-convention.md,
+  ]
 created: 2026-03-27
 authoritative_for: [service directory-structure standards (engine/adapters/cli layout + import-direction rule)]
-referenced_by: [codex/06-coding-standards/service-orchestration-patterns.md, codex/06-coding-standards/thin-adapters-pattern.md]
+referenced_by:
+  [/codex/06-coding-standards/service-orchestration-patterns.md, /codex/06-coding-standards/thin-adapters-pattern.md]
 owner: pm-orchestrator
 last_reviewed: 2026-06-25
 code_refs:
@@ -26,8 +33,8 @@ type: coding-standard
 # Service Structure Standards
 
 > Canonical SSOT for `engine/adapters/cli` layout. Every deployable service (T4) follows this structure. QG-enforced via
-> `base-service.sh` STEP 5.x checks. See also: `codex/04-architecture/tier-and-import-architecture.md` (5-tier
-> dependency model) and `codex/06-coding-standards/README.md` (full coding standards index).
+> `base-service.sh` STEP 5.x checks. See also: `/codex/04-architecture/tier-and-import-architecture.md` (5-tier
+> dependency model) and `/codex/06-coding-standards/README.md` (full coding standards index).
 
 ---
 
@@ -56,7 +63,7 @@ type: coding-standard
 - `adapters/` may import from `engine/` (to call into logic, not to host it).
 - `cli/` imports from `engine/` and `adapters/`; no business logic lives in `cli/`.
 - **No service↔service imports** — services integrate by API contract / GCS / events (UAC as the shared schema). SSOT:
-  `codex/04-architecture/tier-and-import-architecture.md` § "No service ↔ service imports".
+  `/codex/04-architecture/tier-and-import-architecture.md` § "No service ↔ service imports".
 
 ### Adapters
 
@@ -71,7 +78,7 @@ type: coding-standard
 - `api/main.py` must wire `make_health_router` from UTL + a `data_freshness` callback (STEP 5.62).
 - Config reloaders use a **typed config class** — never `object` or bare `getattr(service_config, ...)` (STEP 5.34).
 - API key hot-reload via `ApiKeyReloader` from UTL, not one-shot `validate_api_keys_for_venues()`. SSOT:
-  `codex/06-coding-standards/config-reloader-pattern.md`.
+  `/codex/06-coding-standards/config-reloader-pattern.md`.
 
 ### Concurrency
 
@@ -84,12 +91,12 @@ type: coding-standard
 
 - **No `raise` inside per-venue/per-shard loops** — errors are classified and logged; the loop continues.
 - Every adapter classifies errors via UAC `classify_venue_error()` + emits `ADAPTER_FETCH_FAILED`. SSOT:
-  `codex/04-architecture/shard-level-failure-isolation.md`.
+  `/codex/04-architecture/shard-level-failure-isolation.md`.
 
 ### CLI convention
 
 - CLI uses `--operation` (what), `--mode` (batch/live), `--asset-group` (domain). SSOT:
-  `codex/06-coding-standards/cli-convention.md`.
+  `/codex/06-coding-standards/cli-convention.md`.
 
 ---
 

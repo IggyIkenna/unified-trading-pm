@@ -2,10 +2,9 @@
 doc_type: codex-ssot
 title: Sports Pre-Game ML
 summary: >-
-  [SUPERSEDED, pre-v2] Sports pre-game ML value betting (SPORTS_ML_PREGAME) — compares pre-match model probs
-  vs bookmaker implied prob, bets when edge > threshold (soccer 3% / NFL 5% / NBA 4%) with fractional Kelly,
-  per-league model variants and BACK/LAY venue routing. Replaced by architecture-v2
-  ml-directional-event-settled.
+  [SUPERSEDED, pre-v2] Sports pre-game ML value betting (SPORTS_ML_PREGAME) — compares pre-match model probs vs
+  bookmaker implied prob, bets when edge > threshold (soccer 3% / NFL 5% / NBA 4%) with fractional Kelly, per-league
+  model variants and BACK/LAY venue routing. Replaced by architecture-v2 ml-directional-event-settled.
 status: superseded
 nature: ssot
 asset_group: [meta]
@@ -13,10 +12,21 @@ stage: [meta]
 repos: [execution-service, ml-service, strategy-service, unified-api-contracts, unified-trading-pm]
 scope: [engineer, admin]
 tags: [strategy, sports, ml, odds, value-betting, features]
-related: [value-betting.md, halftime-ml.md, ../../architecture-v2/archetypes/ml-directional-event-settled.md]
+related:
+  [
+    /codex/09-strategy/_archived_pre_v2/sports/value-betting.md,
+    /codex/09-strategy/_archived_pre_v2/sports/halftime-ml.md,
+    ../../architecture-v2/archetypes/ml-directional-event-settled.md,
+  ]
 created: 2026-04-16
 authoritative_for:
-referenced_by: [codex/09-strategy/_archived_pre_v2/sports/first-half-prediction.md, codex/09-strategy/_archived_pre_v2/sports/halftime-ml.md, codex/09-strategy/_archived_pre_v2/sports/odds-drift.md, codex/09-strategy/_archived_pre_v2/sports/value-betting.md]
+referenced_by:
+  [
+    /codex/09-strategy/_archived_pre_v2/sports/first-half-prediction.md,
+    /codex/09-strategy/_archived_pre_v2/sports/halftime-ml.md,
+    /codex/09-strategy/_archived_pre_v2/sports/odds-drift.md,
+    /codex/09-strategy/_archived_pre_v2/sports/value-betting.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

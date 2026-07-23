@@ -14,24 +14,24 @@ scope: [engineer, admin]
 tags: [strategy, vol-trading, options, deribit, carry, theta, delta-hedge]
 related:
   [
-    vol-arb-rv-iv.md,
-    vol-term-structure-arb.md,
-    vol-trading-options.md,
-    vol-0dte-pin-risk.md,
+    /codex/09-strategy/architecture-v2/archetypes/vol-arb-rv-iv.md,
+    /codex/09-strategy/architecture-v2/archetypes/vol-term-structure-arb.md,
+    /codex/09-strategy/architecture-v2/archetypes/vol-trading-options.md,
+    /codex/09-strategy/architecture-v2/archetypes/vol-0dte-pin-risk.md,
     ../families/vol-trading.md,
   ]
 created: 2026-05-19
 authoritative_for: ["VOL_CARRY archetype spec"]
 referenced_by:
   [
-    codex/09-strategy/architecture-v2/archetypes/vol-0dte-gamma-scalping.md,
-    codex/09-strategy/architecture-v2/archetypes/vol-0dte-pin-risk.md,
-    codex/09-strategy/architecture-v2/archetypes/vol-arb-rv-iv.md,
-    codex/09-strategy/architecture-v2/archetypes/vol-cross-asset-spread.md,
-    codex/09-strategy/architecture-v2/archetypes/vol-dispersion.md,
-    codex/09-strategy/architecture-v2/archetypes/vol-leaps-convexity.md,
-    codex/09-strategy/architecture-v2/archetypes/vol-market-making.md,
-    codex/09-strategy/architecture-v2/archetypes/vol-ml-lean.md,
+    /codex/09-strategy/architecture-v2/archetypes/vol-0dte-gamma-scalping.md,
+    /codex/09-strategy/architecture-v2/archetypes/vol-0dte-pin-risk.md,
+    /codex/09-strategy/architecture-v2/archetypes/vol-arb-rv-iv.md,
+    /codex/09-strategy/architecture-v2/archetypes/vol-cross-asset-spread.md,
+    /codex/09-strategy/architecture-v2/archetypes/vol-dispersion.md,
+    /codex/09-strategy/architecture-v2/archetypes/vol-leaps-convexity.md,
+    /codex/09-strategy/architecture-v2/archetypes/vol-market-making.md,
+    /codex/09-strategy/architecture-v2/archetypes/vol-ml-lean.md,
   ]
 owner:
 last_reviewed:

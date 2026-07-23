@@ -41,15 +41,15 @@ tags:
   ]
 related:
   [
-    four-surface-reconciliation-procedure.md,
-    reconciliation-finding-taxonomy.md,
-    cross-asset-canonical-target-ssot.md,
-    canonical-cutover-register.md,
-    non-canonical-path-inventory.md,
-    availability-manifest-and-data-status.md,
-    ../05-infrastructure/spot-vms-for-backfill.md,
-    ../05-infrastructure/vm-launcher-runbook.md,
-    ../12-agent-workflow/async-wait-and-poll-discipline.md,
+    /codex/02-data/four-surface-reconciliation-procedure.md,
+    /codex/02-data/reconciliation-finding-taxonomy.md,
+    /codex/02-data/cross-asset-canonical-target-ssot.md,
+    /codex/02-data/canonical-cutover-register.md,
+    /codex/02-data/non-canonical-path-inventory.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/05-infrastructure/spot-vms-for-backfill.md,
+    /codex/05-infrastructure/vm-launcher-runbook.md,
+    /codex/12-agent-workflow/async-wait-and-poll-discipline.md,
   ]
 created: 2026-07-20
 authoritative_for:
@@ -295,18 +295,18 @@ launch** (ship it via quickmerge first). The heartbeat-only `None` prefixes (`ma
 full-corpus results-writing job needs a real `VmPrefixSpec` + `MANIFEST_PER_VM_SHARDS=true` so the fleet monitor can key
 on target-artifact write-progress (the 2026-07-18 entity-agnostic blind spot).
 
-**SPOT + preemption (backfill HARD RULE, `../05-infrastructure/spot-vms-for-backfill.md`).** The job is idempotent per
-shard (a shard whose results row already exists is presence-skipped), so it is backfill-class → **SPOT by default**:
+**SPOT + preemption (backfill HARD RULE, `/codex/05-infrastructure/spot-vms-for-backfill.md`).** The job is idempotent
+per shard (a shard whose results row already exists is presence-skipped), so it is backfill-class → **SPOT by default**:
 `--provisioning-model=SPOT --instance-termination-action=DELETE --no-restart-on-failure`, `ON_DEMAND=false`. Preemption
 **resumes from measured PROGRESS, never a replay-from-start** — the VM emits progress on results-shard frontier advance
 → `PROGRESS.json` (monotonic-gated); `RelaunchPreemptedVm` resumes from the frontier. Because it is presence-skip (NOT
 `--force`), the standard relaunch is correct and the force-PAGE guard never fires. Call `lc_write_launch_params()` at
 create time so the relaunch replays the exact `(asset_group[, venue, data_type])` scope.
 
-**No fire-and-forget (`../12-agent-workflow/async-wait-and-poll-discipline.md`).** Arm ONE `run_in_background` heartbeat
-watchdog (≤30-min, `kill -0` liveness, no self-match, terminal verdict on every exit path) in the SAME turn as the
-launch. It watches, per VM: STARTED < 60s; **progress metric = count of results-index rows written in the run window,
-entity-scoped to `(asset_group, campaign_id)` on `time_created`** (NEVER log/heartbeat activity), require ≥1
+**No fire-and-forget (`/codex/12-agent-workflow/async-wait-and-poll-discipline.md`).** Arm ONE `run_in_background`
+heartbeat watchdog (≤30-min, `kill -0` liveness, no self-match, terminal verdict on every exit path) in the SAME turn as
+the launch. It watches, per VM: STARTED < 60s; **progress metric = count of results-index rows written in the run
+window, entity-scoped to `(asset_group, campaign_id)` on `time_created`** (NEVER log/heartbeat activity), require ≥1
 progress/hr, flat ⇒ STALL ⇒ diagnose; STOPPED/FAILED via terminal `exit_code` from the persisted `run.log` + log-mtime;
 verify T+10min.
 

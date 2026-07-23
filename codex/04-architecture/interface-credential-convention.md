@@ -9,15 +9,16 @@ status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
-repos: [execution-service, instruments-service, market-tick-data-service, unified-api-contracts, unified-trading-library]
+repos:
+  [execution-service, instruments-service, market-tick-data-service, unified-api-contracts, unified-trading-library]
 scope: [engineer, admin]
 tags: [defi, execution, cefi, custody, uac, credentials, ssot]
 related:
   [
-    custody-providers.md,
-    treasury-custody-flow.md,
-    ../05-infrastructure/per-archetype-wallet-isolation.md,
-    defi-execution-overview.md,
+    /codex/04-architecture/custody-providers.md,
+    /codex/04-architecture/treasury-custody-flow.md,
+    /codex/05-infrastructure/per-archetype-wallet-isolation.md,
+    /codex/04-architecture/defi-execution-overview.md,
   ]
 created: 2026-03-27
 authoritative_for:
@@ -27,7 +28,17 @@ authoritative_for:
     custody endpoint credential-id references,
     live DeFi wallet-key per-request lifetime,
   ]
-referenced_by: [codex/04-architecture/cefi-perp-leg-bybit.md, codex/04-architecture/custody-providers.md, codex/04-architecture/defi-execution-overview.md, codex/04-architecture/mev-protection.md, codex/04-architecture/research-service-and-dart-integration.md, codex/04-architecture/tenderly-execution-provider.md, codex/04-architecture/treasury-custody-flow.md, codex/05-infrastructure/credentials-matrix.md]
+referenced_by:
+  [
+    /codex/04-architecture/cefi-perp-leg-bybit.md,
+    /codex/04-architecture/custody-providers.md,
+    /codex/04-architecture/defi-execution-overview.md,
+    /codex/04-architecture/mev-protection.md,
+    /codex/04-architecture/research-service-and-dart-integration.md,
+    /codex/04-architecture/tenderly-execution-provider.md,
+    /codex/04-architecture/treasury-custody-flow.md,
+    /codex/05-infrastructure/credentials-matrix.md,
+  ]
 owner:
 last_reviewed: 2026-05-17
 code_refs:
@@ -98,7 +109,7 @@ into **execution-service** (matching_engine/ sub-package).
 Per [`custody-providers.md`](custody-providers.md) § 1, custody signing routes through a single factory
 `get_custody_provider(config: CustodyConfig)` that picks the right `CustodyProvider` implementation per
 `config.provider`. The provider name comes from UAC `WalletProvisioningConfig.signing_surface` (per
-[`per-archetype-wallet-isolation.md`](../05-infrastructure/per-archetype-wallet-isolation.md) § 6 + UAC@`d721b6a`
+[`per-archetype-wallet-isolation.md`](/codex/05-infrastructure/per-archetype-wallet-isolation.md) § 6 + UAC@`d721b6a`
 schema):
 
 | `signing_surface`     | `config.provider` | Required `CustodyConfig` fields                                     | Notes                                                                                             |

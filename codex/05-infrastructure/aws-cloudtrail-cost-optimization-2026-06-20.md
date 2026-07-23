@@ -12,10 +12,10 @@ stage: [meta]
 repos: [deployment-service]
 scope: [admin, engineer]
 tags: [aws, cost, cloudtrail, infrastructure, monitoring, audit]
-related: [aws-iam-matrix.md, ../15-runbooks/custody-onboarding-checklist.md]
+related: [/codex/05-infrastructure/aws-iam-matrix.md, /codex/15-runbooks/custody-onboarding-checklist.md]
 created: 2026-06-20
 authoritative_for: [AWS CloudTrail single-org-trail rule + duplicate-trail removal (2026-06-20)]
-referenced_by: [codex/05-infrastructure/aws-iam-matrix.md]
+referenced_by: [/codex/05-infrastructure/aws-iam-matrix.md]
 owner:
 last_reviewed: 2026-06-20
 code_refs:
@@ -63,7 +63,7 @@ aws cloudtrail delete-trail --name management-events --region eu-west-2   # clea
 - **Not IaC-managed** — no `aws_cloudtrail` resource anywhere in the workspace IaC (`deployment-service/terraform/aws/`
   has none) and no code/bucket references → the CLI delete sticks; nothing recreates it on the next `terraform apply`.
 - **Audit coverage unaffected** — the org trail `logs` still records all management events (incl. KMS/CMK actions, which
-  satisfies `../15-runbooks/custody-onboarding-checklist.md` B.2.4) + all S3 data events. Verified `logs`
+  satisfies `/codex/15-runbooks/custody-onboarding-checklist.md` B.2.4) + all S3 data events. Verified `logs`
   `IsLogging=true` with a fresh delivery immediately after the delete.
 - **Saving: ~$322 over the partial month → ~$500/mo of credit burn eliminated, zero coverage loss.**
 
@@ -82,14 +82,15 @@ required, scope the data-event selector to specific buckets.
 
 ## Context — credits
 
-AWS spend is ~100% covered by promotional credits (net out-of-pocket ~$0 since May 2026). Credit burn started Feb 2026
-and is accelerating (~$2.6k May, ~$2.25k in the first 20 days of June ≈ $3.4k/mo run-rate). This $500/mo CloudTrail
-saving directly extends the credit runway. Remaining credit balance is **not** queryable via API — only Billing Console
-→ Credits.
+AWS spend is ~100% covered by promotional credits (net out-of-pocket
+~$0 since May 2026). Credit burn started Feb 2026
+and is accelerating (~$2.6k May,
+~$2.25k in the first 20 days of June ≈ $3.4k/mo run-rate). This $500/mo CloudTrail saving directly extends the credit
+runway. Remaining credit balance is **not** queryable via API — only Billing Console → Credits.
 
 ## References
 
 - Cost data: AWS Cost Explorer (`aws ce get-cost-and-usage`, grouped by `RECORD_TYPE` / `USAGE_TYPE` / `SERVICE`),
   2026-06-20.
 - Custody KMS-audit requirement satisfied by the surviving `logs` trail:
-  `../15-runbooks/custody-onboarding-checklist.md` B.2.4.
+  `/codex/15-runbooks/custody-onboarding-checklist.md` B.2.4.

@@ -11,7 +11,12 @@ stage: [meta]
 repos: []
 scope: [engineer, admin]
 tags: [strategy, execution, cefi, defi, registry]
-related: [client-funds-isolation.md, per-client-isolation-architecture.md, execution-service-per-client-isolation.md]
+related:
+  [
+    /codex/04-architecture/client-funds-isolation.md,
+    /codex/04-architecture/per-client-isolation-architecture.md,
+    /codex/04-architecture/execution-service-per-client-isolation.md,
+  ]
 created: 2026-04-16
 authoritative_for: [client/account/strategy composite-key identity model]
 referenced_by:

@@ -16,23 +16,23 @@ scope: [engineer, admin]
 tags: [strategy, carry, defi, execution, archetype, uac]
 related:
   [
-    carry-recursive-staked.md,
-    carry-recursive-borrow-perp-hedged.md,
-    carry-basis-perp-inv.md,
+    /codex/09-strategy/architecture-v2/archetypes/carry-recursive-staked.md,
+    /codex/09-strategy/architecture-v2/archetypes/carry-recursive-borrow-perp-hedged.md,
+    /codex/09-strategy/architecture-v2/archetypes/carry-basis-perp-inv.md,
     ../../../04-architecture/flash-loan-receiver.md,
-    yield-rotation-lending.md,
-    yield-staking-simple.md,
+    /codex/09-strategy/architecture-v2/archetypes/yield-rotation-lending.md,
+    /codex/09-strategy/architecture-v2/archetypes/yield-staking-simple.md,
   ]
 created: 2026-05-12
 authoritative_for: [CARRY_RECURSIVE_BORROW_LENDING_ONLY archetype specification (Family 1 recursive lending loop)]
 referenced_by:
   [
-    codex/09-strategy/_archived_pre_v2/defi/btc-lending-yield.md,
-    codex/09-strategy/architecture-v2/archetypes/carry-basis-perp-inv.md,
-    codex/09-strategy/architecture-v2/archetypes/carry-recursive-borrow-perp-hedged.md,
-    codex/09-strategy/architecture-v2/archetypes/carry-recursive-staked.md,
-    codex/09-strategy/architecture-v2/families/carry-and-yield.md,
-    codex/09-strategy/strategy-summary.md,
+    /codex/09-strategy/_archived_pre_v2/defi/btc-lending-yield.md,
+    /codex/09-strategy/architecture-v2/archetypes/carry-basis-perp-inv.md,
+    /codex/09-strategy/architecture-v2/archetypes/carry-recursive-borrow-perp-hedged.md,
+    /codex/09-strategy/architecture-v2/archetypes/carry-recursive-staked.md,
+    /codex/09-strategy/architecture-v2/families/carry-and-yield.md,
+    /codex/09-strategy/strategy-summary.md,
   ]
 owner:
 last_reviewed:

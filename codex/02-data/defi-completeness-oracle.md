@@ -17,12 +17,12 @@ scope: [engineer]
 tags: [defi, honest-coverage, denominator, oracle, layer-1, catalogue, completeness, factory, genesis]
 related:
   [
-    honest-coverage-model.md,
-    availability-manifest-and-data-status.md,
-    defi-canonical-naming-ssot.md,
-    defi-venue-protocol-catalogue.md,
-    instrument-pipeline-defi.md,
-    ../04-architecture/instruments-service-as-ssot-for-mtds.md,
+    /codex/02-data/honest-coverage-model.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/02-data/defi-canonical-naming-ssot.md,
+    /codex/02-data/defi-venue-protocol-catalogue.md,
+    /codex/02-data/instrument-pipeline-defi.md,
+    /codex/04-architecture/instruments-service-as-ssot-for-mtds.md,
   ]
 created: 2026-07-06
 authoritative_for:
@@ -203,7 +203,7 @@ Perp DEXes typically expose their universe as an authoritative REST endpoint tha
 | `jupiter`     | REST `GET /perps-markets` — length                           | Program-account scan (aggregator)            |
 
 > `flash_trade`/`mango`/`zeta` rows removed 2026-07-15 (operator ruling — venues deleted; dead API endpoints, ~$0 TVL,
-> zero MTDS capture ever wired). See `codex/04-architecture/solana-defi-coverage.md`.
+> zero MTDS capture ever wired). See `/codex/04-architecture/solana-defi-coverage.md`.
 
 ### 3.4 YIELD / STAKING / RESTAKING (`protocol_class ∈ {YIELD, STAKING, RESTAKING}`)
 

@@ -8,13 +8,21 @@ status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
-repos: [deployment-api, deployment-service, execution-service, instruments-service, market-data-processing-service, strategy-service]
+repos:
+  [
+    deployment-api,
+    deployment-service,
+    execution-service,
+    instruments-service,
+    market-data-processing-service,
+    strategy-service,
+  ]
 scope: [engineer, admin]
 tags: [pipeline, mdps, execution, mtds, instruments]
-related: [../04-architecture/runtime-deployment-topology.md, ../04-architecture/tier-and-import-architecture.md]
+related: [/codex/04-architecture/runtime-deployment-topology.md, /codex/04-architecture/tier-and-import-architecture.md]
 created: 2026-03-27
 authoritative_for: [canonical service-pair interaction flows + transport-mode/persistence rules]
-referenced_by: [codex/08-workflows/config-injection.md]
+referenced_by: [/codex/08-workflows/config-injection.md]
 owner:
 last_reviewed:
 code_refs:

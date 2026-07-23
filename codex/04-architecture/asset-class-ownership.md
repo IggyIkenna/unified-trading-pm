@@ -2,9 +2,9 @@
 doc_type: codex-ssot
 title: Asset Class Ownership Map
 summary:
-  Asset-class ownership map — per-category (CeFi/TradFi/DeFi/Sports) owner+location for external schemas,
-  normalize, registry, instrument discovery, market data, and orchestration; UAC owns schemas/registries,
-  instruments-service owns discovery, UMI owns market-data adapters.
+  Asset-class ownership map — per-category (CeFi/TradFi/DeFi/Sports) owner+location for external schemas, normalize,
+  registry, instrument discovery, market data, and orchestration; UAC owns schemas/registries, instruments-service owns
+  discovery, UMI owns market-data adapters.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -12,10 +12,20 @@ stage: [meta]
 repos: [features-service, instruments-service, market-tick-data-service]
 scope: [engineer, admin]
 tags: [instruments, uac, mtds, cefi, tradfi, defi, sports, ssot-audit]
-related: [instruments-service-as-ssot-for-mtds.md, instrument-universe-registry-consolidation.md]
+related:
+  [
+    /codex/04-architecture/instruments-service-as-ssot-for-mtds.md,
+    /codex/04-architecture/instrument-universe-registry-consolidation.md,
+  ]
 created: 2026-03-27
 authoritative_for: [cross-asset-class data ownership map]
-referenced_by: [codex/04-architecture/data-ownership-principles.md, codex/04-architecture/instrument-universe-registry-consolidation.md, codex/04-architecture/instruments-live-architecture.md, plans/epics/cefi_master.md]
+referenced_by:
+  [
+    /codex/04-architecture/data-ownership-principles.md,
+    /codex/04-architecture/instrument-universe-registry-consolidation.md,
+    /codex/04-architecture/instruments-live-architecture.md,
+    plans/epics/cefi_master.md,
+  ]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

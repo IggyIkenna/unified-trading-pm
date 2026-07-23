@@ -4,23 +4,36 @@ title: VM Log Archival — Canonical Paths, Backup Contract, and Retention
 summary: >-
   Canonical VM log paths (hot `vm-logs/` 14-day stream + durable `log-archive/` snapshot/rolling/serial-rolling that
   persist indefinitely), the mandatory pre-kill `backup-vm-logs.sh` contract wired into every VM-delete path, the daily
-  `vm_log_archival_cron.py`, and the per-service log-destination convention (VM `vm-logs/` vs Cloud Run → Cloud Logging).
+  `vm_log_archival_cron.py`, and the per-service log-destination convention (VM `vm-logs/` vs Cloud Run → Cloud
+  Logging).
 status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
-repos: [agent-orchestrator, alerting-service, client-reporting-api, deployment-api, deployment-service, execution-service]
+repos:
+  [agent-orchestrator, alerting-service, client-reporting-api, deployment-api, deployment-service, execution-service]
 scope: [engineer, admin]
 tags: [infrastructure, runbook, observability, backfill, scripts]
-related: [vm-tarball-deployment.md, vm-launcher-runbook.md]
+related: [/codex/05-infrastructure/vm-tarball-deployment.md, /codex/05-infrastructure/vm-launcher-runbook.md]
 created: 2026-05-30
 authoritative_for: [VM log archival paths and retention]
-referenced_by: [codex/05-infrastructure/vm-launcher-runbook.md, codex/05-infrastructure/vm-tarball-deployment.md, plans/active/issues/fleet_audit_triad_deferred_followups_2026_06_01.md]
+referenced_by:
+  [
+    /codex/05-infrastructure/vm-launcher-runbook.md,
+    /codex/05-infrastructure/vm-tarball-deployment.md,
+    plans/active/issues/fleet_audit_triad_deferred_followups_2026_06_01.md,
+  ]
 owner:
 last_reviewed: 2026-05-30
 code_refs:
 type: infrastructure
-execution: {owner: deployment-platform, cadence: daily (Cloud Run Job) + on VM kill, verifier: 'gsutil ls -r gs://deployment-scripts-central-element-323112/log-archive/ | head -20', last_executed: '2026-05-30 (slot-2: throwaway bucket migration + periodic serial capture)'}
+execution:
+  {
+    owner: deployment-platform,
+    cadence: daily (Cloud Run Job) + on VM kill,
+    verifier: "gsutil ls -r gs://deployment-scripts-central-element-323112/log-archive/ | head -20",
+    last_executed: "2026-05-30 (slot-2: throwaway bucket migration + periodic serial capture)",
+  }
 ---
 
 # VM Log Archival — Canonical Paths, Backup Contract, and Retention
@@ -200,14 +213,14 @@ Cloud Logging (automatic), VM workloads → `vm-logs/` + `log-archive/` (this do
 | Item                    | Status                       | Notes                                                                                                                                                                                       |
 | ----------------------- | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Cloud Logging retention | ❓ Confirm current retention | GCP default is 30 days. For compliance/forensics, operator should confirm whether 30-day is sufficient or a custom `_Default` bucket retention + BigQuery export sink should be configured. |
-| Mass retrofit           | ⏸ Pending operator confirm  | No divergent services found — no mass retrofit needed as of 2026-05-30.                                                                                                                     |
+| Mass retrofit           | ⏸ Pending operator confirm   | No divergent services found — no mass retrofit needed as of 2026-05-30.                                                                                                                     |
 
 ---
 
 ## Related Docs
 
-- `codex/05-infrastructure/vm-tarball-deployment.md` — VM launch + live-stream log path
-- `codex/05-infrastructure/vm-launcher-runbook.md` — per-launcher usage; references this doc for kill/backup
+- `/codex/05-infrastructure/vm-tarball-deployment.md` — VM launch + live-stream log path
+- `/codex/05-infrastructure/vm-launcher-runbook.md` — per-launcher usage; references this doc for kill/backup
 - `deployment-service/scripts/vm/backup-vm-logs.sh` — backup script (SSOT for snapshot path)
 - `deployment-service/scripts/vm/vm_log_archival_cron.py` — daily rolling + serial capture cron
 - `deployment-service/deployment_service/deployments_registry.py` — canonical URI helpers

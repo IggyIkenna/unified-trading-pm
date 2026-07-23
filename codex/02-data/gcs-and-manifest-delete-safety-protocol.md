@@ -26,12 +26,12 @@ scope: [engineer, admin]
 tags: [delete-safety, canonicalisation, migration, gcs, manifest, data-correctness, hard-rule, reconciliation]
 related:
   [
-    pipeline-mode-partition.md,
-    cross-asset-canonical-target-ssot.md,
-    availability-manifest-and-data-status.md,
-    defi-canonical-naming-ssot.md,
-    ../05-infrastructure/gcs-object-operations.md,
-    ../05-infrastructure/bucket-isolation-model.md,
+    /codex/02-data/pipeline-mode-partition.md,
+    /codex/02-data/cross-asset-canonical-target-ssot.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/02-data/defi-canonical-naming-ssot.md,
+    /codex/05-infrastructure/gcs-object-operations.md,
+    /codex/05-infrastructure/bucket-isolation-model.md,
     ../../plans/active/data_pipeline_reconciliation_skill_2026_07_20.md,
     ../../plans/active/issues/defi_dex_pools_delete_order_stale_2026_07_20.md,
   ]
@@ -45,10 +45,10 @@ authoritative_for:
   ]
 referenced_by:
   [
-    codex/02-data/four-surface-reconciliation-procedure.md,
-    codex/02-data/reconciliation-finding-taxonomy.md,
-    codex/02-data/non-canonical-path-inventory.md,
-    codex/02-data/orphan-object-detection.md,
+    /codex/02-data/four-surface-reconciliation-procedure.md,
+    /codex/02-data/reconciliation-finding-taxonomy.md,
+    /codex/02-data/non-canonical-path-inventory.md,
+    /codex/02-data/orphan-object-detection.md,
   ]
 owner:
 last_reviewed: 2026-07-20
@@ -210,7 +210,7 @@ structured options (per `SUB_AGENT_MANDATORY_RULES.md` § escalation) — it doe
    (`PipelineMode` + `possible_manifest`) is still present in code (kept only while objects existed, to avoid
    phantom-orphan flags) and is now safe to remove — tracked separately, not yet done as of this doc's last edit. Design
    doc: `plans/active/issues/tradfi_canonical_path_migration_design_2026_07_19.md`; vendor removal:
-   `codex/02-data/tradfi-databento-sourcing-ssot.md`. This category is retained in the hard-stop list for any FUTURE
+   `/codex/02-data/tradfi-databento-sourcing-ssot.md`. This category is retained in the hard-stop list for any FUTURE
    prod-scale purge of a similar shape — not because this specific purge is still pending (it is not).
 4. **Anything touching `instrument_type` casing — RULED UPPERCASE (TARGET, D1), `migration_pending` today; still a
    human-only hard stop for prod-scale rewrites.** ⛔ corrected 2026-07-20 (re-reconciled same day, acceptance review):
@@ -281,21 +281,21 @@ Definitions: `unified-trading-library/unified_trading_library/cloud_interface/gc
 **Never a subprocess.** `gcloud` / `gsutil` spawns cost ~500ms per call versus ~50-200ms for the REST helpers, and the
 helpers release the GIL so `ThreadPoolExecutor` workers parallelise — a measured 250× throughput difference (~8,500 vs
 ~34 parquets/min at 32 workers). Rationale and benchmark:
-[`codex/05-infrastructure/gcs-object-operations.md`](../05-infrastructure/gcs-object-operations.md), which remains the
-SSOT for the helpers themselves; this doc governs only when a delete may be called.
+[`/codex/05-infrastructure/gcs-object-operations.md`](/codex/05-infrastructure/gcs-object-operations.md), which remains
+the SSOT for the helpers themselves; this doc governs only when a delete may be called.
 
 **Never an inline `gs://` bucket literal (QG 5.69).** Resolve every bucket via
 `resolve_bucket_name(cloud, kind, asset_group, deployment_env)` over `cloud-providers.yaml`. Pass `deployment_env=` —
 never mutate process env to reach a tier. Do not use a bucket-name **fragment** as a `kind` (that is precisely the
 raising call in Part 4). SSOT:
-[`codex/05-infrastructure/bucket-isolation-model.md`](../05-infrastructure/bucket-isolation-model.md).
+[`/codex/05-infrastructure/bucket-isolation-model.md`](/codex/05-infrastructure/bucket-isolation-model.md).
 
 **Enumeration is walk-disciplined.** Building a delete candidate list must not open a new whole-corpus GCS walk (that is
 review-blocking). Use the manifest-driven route or a sanctioned prefix-scoped / delimiter listing. SSOT:
 [`availability-manifest-and-data-status.md`](availability-manifest-and-data-status.md) § 9.
 
 **Pre-delete drain.** Any campaign that will delete or move objects at scale is preceded by the pre-migration drain —
-stop all VMs on both clouds, consolidate the manifest, snapshot — per `codex/05-infrastructure/vm-launcher-runbook.md`.
+stop all VMs on both clouds, consolidate the manifest, snapshot — per `/codex/05-infrastructure/vm-launcher-runbook.md`.
 Note that a snapshot does not substitute for Part 2 (§ 1).
 
 ---

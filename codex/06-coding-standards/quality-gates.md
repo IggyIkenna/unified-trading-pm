@@ -21,7 +21,14 @@ repos:
   ]
 scope: [engineer]
 tags: [quality-gates, quickmerge, ci, ruff, basedpyright, security-gates, verification]
-related: [quality-gates-memory-governance.md, ruff-discipline.md, testing.md, setup-standards.md, semver.md]
+related:
+  [
+    /codex/06-coding-standards/quality-gates-memory-governance.md,
+    /codex/06-coding-standards/ruff-discipline.md,
+    /codex/06-coding-standards/testing.md,
+    /codex/06-coding-standards/setup-standards.md,
+    /codex/06-coding-standards/semver.md,
+  ]
 created: 2026-03-27
 authoritative_for:
   [
@@ -31,14 +38,14 @@ authoritative_for:
   ]
 referenced_by:
   [
-    codex/02-data/data-pipeline-correctness-hard-rule.md,
-    codex/05-infrastructure/deployment-and-qg-strategy.md,
-    codex/05-infrastructure/quickmerge-architecture.md,
-    codex/05-infrastructure/unified-libraries/INTERNAL_DEPENDENCY_GRAPH.md,
-    codex/05-infrastructure/workspace-setup.md,
-    codex/06-coding-standards/README.md,
-    codex/06-coding-standards/adr-qg-offload-self-hosted-runners-2026-06-02.md,
-    codex/06-coding-standards/audit-remediation-guide.md,
+    /codex/02-data/data-pipeline-correctness-hard-rule.md,
+    /codex/05-infrastructure/deployment-and-qg-strategy.md,
+    /codex/05-infrastructure/quickmerge-architecture.md,
+    /codex/05-infrastructure/unified-libraries/INTERNAL_DEPENDENCY_GRAPH.md,
+    /codex/05-infrastructure/workspace-setup.md,
+    /codex/06-coding-standards/README.md,
+    /codex/06-coding-standards/adr-qg-offload-self-hosted-runners-2026-06-02.md,
+    /codex/06-coding-standards/audit-remediation-guide.md,
   ]
 owner:
 last_reviewed:
@@ -176,8 +183,8 @@ Rules (Quick Reference)" / "Service Infrastructure Requirements".
 | 5.76 | no service-level `DataType` class redeclarations (batch_live_symmetry L5)                                                                                                               | (no section here — see enforcement file)                                                                                                   | `scripts/quality-gates-base/base-service.sh`                                                                                                                  | import from `unified_api_contracts`; never redeclare locally                                                                                                                                                                                |
 | 5.77 | no `mode == "batch"`/`"live"` comparisons outside CLI seam (batch_live_symmetry L2)                                                                                                     | (no section here — see enforcement file)                                                                                                   | `scripts/quality-gates-base/base-service.sh`                                                                                                                  | `mode-axis-discipline.md` AP-1 — mode routing only at CLI entry point                                                                                                                                                                       |
 | 5.78 | `RuntimeMode` declared only in UAC `internal/modes.py` (batch_live_symmetry L3)                                                                                                         | (no section here — see enforcement file)                                                                                                   | `scripts/quality-gates-base/base-service.sh`                                                                                                                  | `mode-axis-discipline.md` AP-3 — import from UAC, never redeclare                                                                                                                                                                           |
-| 5.79 | dockerfile-base-pin — production Dockerfiles must use `@sha256:digest` not `:tag`                                                                                                       | (no section here — see enforcement file)                                                                                                   | `scripts/quality-gates-base/base-service.sh` (pending-ratchet until Phase 5)                                                                                  | `codex/06-coding-standards/dockerfile-standards.md` — pin SHA for reproducible builds; deployment_and_qg_strategy_implementation_2026_05_13.md Phase 5                                                                                      |
-| 5.80 | tarball-manifest-present — `create-code-tarballs.sh` must write sibling `manifest.json`                                                                                                 | (no section here — see enforcement file)                                                                                                   | `scripts/quality-gates-base/base-service.sh` (deployment-service only; pending-ratchet)                                                                       | `codex/05-infrastructure/vm-tarball-deployment.md` — manifest enables SHA-assertion on VM launch                                                                                                                                            |
+| 5.79 | dockerfile-base-pin — production Dockerfiles must use `@sha256:digest` not `:tag`                                                                                                       | (no section here — see enforcement file)                                                                                                   | `scripts/quality-gates-base/base-service.sh` (pending-ratchet until Phase 5)                                                                                  | `/codex/06-coding-standards/dockerfile-standards.md` — pin SHA for reproducible builds; deployment_and_qg_strategy_implementation_2026_05_13.md Phase 5                                                                                     |
+| 5.80 | tarball-manifest-present — `create-code-tarballs.sh` must write sibling `manifest.json`                                                                                                 | (no section here — see enforcement file)                                                                                                   | `scripts/quality-gates-base/base-service.sh` (deployment-service only; pending-ratchet)                                                                       | `/codex/05-infrastructure/vm-tarball-deployment.md` — manifest enables SHA-assertion on VM launch                                                                                                                                           |
 | 5.81 | tarball-env-block — deployment-api must gate staging/prod tarball uploads behind env-tier check                                                                                         | (no section here — see enforcement file)                                                                                                   | `scripts/quality-gates-base/base-service.sh` (deployment-api only; pending-ratchet)                                                                           | `deployment-and-qg-strategy.md` § env-locking (B-001 Phase 1)                                                                                                                                                                               |
 | 5.82 | image-build-on-staging-merge — staging branch workflow must trigger Cloud Build                                                                                                         | (no section here — see enforcement file)                                                                                                   | `scripts/quality-gates-base/base-service.sh` (pending-ratchet until Phase 5)                                                                                  | `deployment-and-qg-strategy.md` § image-build cutover path; deployment_and_qg_strategy_implementation_2026_05_13.md Phase 5                                                                                                                 |
 | 5.83 | adapter contract-call regression ratchet (per-file minimum on `classify_venue_error`/`ADAPTER_FETCH_FAILED`/`record_captured`/`record_empty`/`record_failed`)                           | (no section here — see enforcement file)                                                                                                   | `scripts/quality_gates/check_adapter_contract_regression.py` (driver) + `scripts/qg/no_adapter_contract_regression.sh` (wrapper)                              | `lint_sweep_774602ea8_regression_audit_2026_05_20.md` — catches layer-N+1 hygiene-sweep wiping layer-N adapter contracts (kalshi.py + polymarket_clob.py case 2026-05-20). Baseline: `scripts/quality_gates/adapter_contract_baseline.yaml` |
@@ -808,7 +815,7 @@ in business-logic code — use specific exception types there.
 3. Include an inline comment explaining WHY the carveout is legitimate for that specific file/pattern.
 4. Update `QUALITY_GATE_BYPASS_AUDIT.md` § 2.x with the same justification.
 5. Reference this section in the comment:
-   `# See codex/06-coding-standards/quality-gates.md § Library-Repo QG Carveout Patterns`
+   `# See /codex/06-coding-standards/quality-gates.md § Library-Repo QG Carveout Patterns`
 
 ---
 
@@ -1024,7 +1031,7 @@ enum extension).
   legitimate batch/live diff is which SOURCE serves a given `(asset_group, data_type)`": no recorded source ⇒
   unverifiable batch-vs-live recon.
 - [**Availability manifest v5+**](../../cursor-configs/CLAUDE.md) +
-  [`codex/02-data/availability-manifest-and-data-status.md`](../02-data/availability-manifest-and-data-status.md) —
+  [`/codex/02-data/availability-manifest-and-data-status.md`](/codex/02-data/availability-manifest-and-data-status.md) —
   `pipeline_mode` joins the v8 manifest column set alongside `service_emission_state` / `last_emission_decision_at` /
   `expected_window_completeness_fraction`; Phase 4.DEFAULT-REMOVAL drops the transitional `None` defaults from the 5
   `record_*` signatures so the column is explicit-or-fail.
@@ -1085,10 +1092,10 @@ If the omission is genuinely deliberate (e.g. a dry-run/preview path that must n
 
 - STEP 5.70 (explicit `pipeline_mode=`) — same baseline-aware-ratchet + `ast.walk()` shape, same `ManifestWriter`
   write-boundary concern, one layer earlier (persistence happening at all, vs. persistence being correctly attributed).
-- [`codex/02-data/honest-absence-downstream-handling.md`](../02-data/honest-absence-downstream-handling.md) — a dropped
-  `record_expected_empty()`/`record_empty()` write leaves the enumerator's `expected_unattempted` seed row stuck at its
-  blank-reason state — the same "eu residual" signature this whole codebase's honest-absence discipline hunts for, just
-  caused by the write path itself rather than upstream enumerator noise.
+- [`/codex/02-data/honest-absence-downstream-handling.md`](/codex/02-data/honest-absence-downstream-handling.md) — a
+  dropped `record_expected_empty()`/`record_empty()` write leaves the enumerator's `expected_unattempted` seed row stuck
+  at its blank-reason state — the same "eu residual" signature this whole codebase's honest-absence discipline hunts
+  for, just caused by the write path itself rather than upstream enumerator noise.
 
 ---
 
@@ -1468,7 +1475,7 @@ Read [`quality-gates-memory-governance.md`](quality-gates-memory-governance.md) 
   you bump a dependency FLOOR you MUST commit the regenerated `uv.lock` alongside `pyproject.toml` in the same commit**
   — CI installs the committed lock via `uv sync --frozen` (no re-resolution), so a floor bump without the lock regen
   silently installs the stale lock. A bare `version =` bump needs no lock regen (`--frozen` tolerates it). SSOT:
-  `codex/08-workflows/ci-cd-flow.md` § "Dependency promotion".
+  `/codex/08-workflows/ci-cd-flow.md` § "Dependency promotion".
 - Creates `.venv` if missing (uv venv, respects `pyproject.toml` requires-python)
 - Activates venv
 - Bootstraps uv (`pip install uv` — the only pip install)
@@ -2535,8 +2542,8 @@ This is equivalent to the GitHub Actions `quality-gates.yml` workflow for librar
 
 > Full SSOT for the mode-axis cartesian product + anti-patterns: [`mode-axis-discipline.md`](mode-axis-discipline.md).
 > Batch/live invariant:
-> [`../04-architecture/batch-live-architecture.md`](../04-architecture/batch-live-architecture.md). Pre-audit source:
-> `batch_live_design_symmetry_preaudit_2026_05_10.md § 1.Tab1`.
+> [`/codex/04-architecture/batch-live-architecture.md`](/codex/04-architecture/batch-live-architecture.md). Pre-audit
+> source: `batch_live_design_symmetry_preaudit_2026_05_10.md § 1.Tab1`.
 >
 > Status as of 2026-05-14: L1+L5 enable DAY-1 (0 violations); L2+L3 enable after fix-batch lands (Tab 3, ~21+2
 > violations); L4+L6 post-cutover (Block G1). L7 is an ongoing ratchet sweep.
@@ -2713,7 +2720,7 @@ docker pull python:3.13-slim && docker inspect python:3.13-slim --format '{{inde
 # or: crane digest python:3.13-slim
 ```
 
-**Composes with**: `codex/06-coding-standards/dockerfile-standards.md` — full Dockerfile rules;
+**Composes with**: `/codex/06-coding-standards/dockerfile-standards.md` — full Dockerfile rules;
 deployment_and_qg_strategy_implementation_2026_05_13.md Phase 5 (image-build pipeline).
 
 ---
@@ -2750,7 +2757,7 @@ EOF
 gsutil cp "/tmp/${REPO_NAME}@${COMMIT_SHA}.manifest.json" "gs://${BUCKET}/tarballs/"
 ```
 
-**Composes with**: `codex/05-infrastructure/vm-tarball-deployment.md`; STEP 5.81 (env-block).
+**Composes with**: `/codex/05-infrastructure/vm-tarball-deployment.md`; STEP 5.81 (env-block).
 
 ---
 
@@ -3153,7 +3160,7 @@ a quality gate; it should track "is the suite getting unexpectedly slower?" not 
 `IGNORE_TIMEOUT=true` and `PYRIGHT_TIMEOUT=<n>` remain sanctioned for transient **contention** escapes (another slot is
 running concurrently and the host is under load) — they are NOT the fix for a suite that has permanently grown. On a
 quiet host the permanent fix is the `MAX_DURATION` bump with a comment; the transient escape is `IGNORE_TIMEOUT=true`
-for that one run. SSOT: `codex/06-coding-standards/quality-gates.md` § "Sanctioned timeout overrides".
+for that one run. SSOT: `/codex/06-coding-standards/quality-gates.md` § "Sanctioned timeout overrides".
 
 ## Resource governance under multi-slot load (codified 2026-06-02)
 

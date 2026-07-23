@@ -15,9 +15,9 @@ scope: [engineer, admin]
 tags: [monitoring, observability, ci, quality-gates, orchestrator, ui]
 related:
   [
-    alerting.md,
+    /codex/03-observability/alerting.md,
     plans/active/monitoring_control_plane_master_2026_06_10.md,
-    ../08-workflows/ci-cd-flow.md,
+    /codex/08-workflows/ci-cd-flow.md,
   ]
 created: 2026-06-10
 authoritative_for: [monitoring control plane read surfaces, CI dashboard + fleet git-health]

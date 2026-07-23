@@ -2,10 +2,9 @@
 doc_type: codex-ssot
 title: Test coverage — data-status surface
 summary: >-
-  Test-coverage matrix the data-status surface (deployment-api routes + deployment-ui
-  components + manifest reads) MUST satisfy before merge — per-surface backend/frontend/
-  playwright tests for drilldown depth, typed error_reason, failure pillars, schema modal,
-  deploy-missing, and honest-absence; tied to the drilldown-depth-audit WORKING ratchet.
+  Test-coverage matrix the data-status surface (deployment-api routes + deployment-ui components + manifest reads) MUST
+  satisfy before merge — per-surface backend/frontend/ playwright tests for drilldown depth, typed error_reason, failure
+  pillars, schema modal, deploy-missing, and honest-absence; tied to the drilldown-depth-audit WORKING ratchet.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -13,7 +12,14 @@ stage: [meta]
 repos: [deployment-api, deployment-ui]
 scope: [engineer]
 tags: [test-coverage, data-status, ui, manifest, honest-coverage, playwright]
-related: [../02-data/deployment-ui-drilldown-depth-audit.md, ../02-data/data-status-drilldown.md, ../02-data/availability-manifest-and-data-status.md, quality-gates.md, ui-testing-layers.md]
+related:
+  [
+    /codex/02-data/deployment-ui-drilldown-depth-audit.md,
+    /codex/02-data/data-status-drilldown.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/06-coding-standards/quality-gates.md,
+    /codex/06-coding-standards/ui-testing-layers.md,
+  ]
 created: 2026-05-08
 authoritative_for: [data-status surface test-coverage matrix (deployment-api + deployment-ui)]
 referenced_by:
@@ -86,13 +92,13 @@ frontend regressed silently" failure mode.
 ## Cross-references
 
 - Drilldown depth audit:
-  [`../02-data/deployment-ui-drilldown-depth-audit.md`](../02-data/deployment-ui-drilldown-depth-audit.md)
+  [`/codex/02-data/deployment-ui-drilldown-depth-audit.md`](/codex/02-data/deployment-ui-drilldown-depth-audit.md)
 - Drilldown SSOT (per-shard + hierarchical):
-  [`../02-data/data-status-drilldown.md`](../02-data/data-status-drilldown.md)
+  [`/codex/02-data/data-status-drilldown.md`](/codex/02-data/data-status-drilldown.md)
 - Manifest schema:
-  [`../02-data/availability-manifest-and-data-status.md`](../02-data/availability-manifest-and-data-status.md)
+  [`/codex/02-data/availability-manifest-and-data-status.md`](/codex/02-data/availability-manifest-and-data-status.md)
 - Honest-absence rendering:
-  [`../02-data/honest-absence-downstream-handling.md`](../02-data/honest-absence-downstream-handling.md)
+  [`/codex/02-data/honest-absence-downstream-handling.md`](/codex/02-data/honest-absence-downstream-handling.md)
 - Quality gates (which suite runs the matrix): [`quality-gates.md`](quality-gates.md)
 - Integration testing layers: [`integration-testing-layers.md`](integration-testing-layers.md)
 - UI testing layers: [`ui-testing-layers.md`](ui-testing-layers.md)

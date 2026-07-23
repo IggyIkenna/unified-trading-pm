@@ -22,19 +22,19 @@ scope: [engineer, admin]
 tags: [defi, pipeline, data-pipeline, mtds, mdps, features, reconciliation, ssot-audit]
 related:
   [
-    defi-data-types-catalog.md,
-    defi-data-type-taxonomy.md,
-    defi-venue-protocol-catalogue.md,
-    instrument-pipeline-defi.md,
-    defi-canonical-naming-ssot.md,
+    /codex/02-data/defi-data-types-catalog.md,
+    /codex/02-data/defi-data-type-taxonomy.md,
+    /codex/02-data/defi-venue-protocol-catalogue.md,
+    /codex/02-data/instrument-pipeline-defi.md,
+    /codex/02-data/defi-canonical-naming-ssot.md,
   ]
 created: 2026-05-27
 authoritative_for: [DeFi data pipeline code-grounded current-state walkthrough, DeFi code-vs-codex drift register]
 referenced_by:
   [
-    codex/02-data/defi-canonical-naming-ssot.md,
-    codex/02-data/defi-data-types-catalog.md,
-    codex/02-data/instrument-pipeline-defi.md,
+    /codex/02-data/defi-canonical-naming-ssot.md,
+    /codex/02-data/defi-data-types-catalog.md,
+    /codex/02-data/instrument-pipeline-defi.md,
     plans/active/issues/defi_code_codex_drift_2026_05_27.md,
     plans/audit/instructions/defi_master_audit_instructions.md,
   ]
@@ -154,7 +154,7 @@ instruments" line in MTDS logs (`loaded N stamped instruments for venue=BALANCER
 | `collect-oracle-prices`                                                                                                                 | `oracle_prices`                                                 | Chainlink `latestRoundData()` (EVM) + Pyth Hermes REST (Solana)                                                                                                                                                                                                                                                                                                                                                     |
 | ~~`collect-solana-defi`~~ **(DEPRECATED — MTDS@896d5c9)**                                                                               | ~~`dex_pools`, `lending_indices`, `lst_rates`, `perp_funding`~~ | Monolithic Solana handler deleted Gate 5. Solana venues now in per-data-type handlers: Solana lending (Kamino/Solend/Marginfi) → `collect-lending-indices`; Solana AMM (Orca/Raydium/Phoenix) + Kamino vault → `collect-dex-pools`; LST (Marinade/Jito) → `collect-lst-rates`; Drift → `collect-perp-funding`. instrument_types: `solana_lending`, `solana_vault`, `solana_amm_pool` (UAC@7e9f4ad9 + UAC@90b2bb9d). |
 | `collect-vault-share-price`                                                                                                             | `vault_share_price`                                             | ERC-4626 `convertToAssets`                                                                                                                                                                                                                                                                                                                                                                                          |
-| `collect-perp-funding`                                                                                                                  | `perp_funding`                                                  | GMX / Hyperliquid (Drift removed 2026-07-16 -- operator ruling, all Solana perp DEXes dropped except Jupiter, not integrated; see `codex/04-architecture/solana-defi-coverage.md`)                                                                                                                                                                                                                                  |
+| `collect-perp-funding`                                                                                                                  | `perp_funding`                                                  | GMX / Hyperliquid (Drift removed 2026-07-16 -- operator ruling, all Solana perp DEXes dropped except Jupiter, not integrated; see `/codex/04-architecture/solana-defi-coverage.md`)                                                                                                                                                                                                                                 |
 | `collect-eigenlayer-rewards`, `-liquidations`, `-flash-loan-events`, `-bridge-events`, `-mev-events`, `-gas-fees`, `-aggregator-routes` | as named                                                        | per-protocol                                                                                                                                                                                                                                                                                                                                                                                                        |
 
 > Canonical `data_type=` strings are `dex_swaps` / `dex_pool_state` / `lending_indices` / `perp_funding` (handler
@@ -320,7 +320,7 @@ dex_pool_state ──► onchain pool-invariant-drift / concentrated-liquidity-I
 - Instruments: [`instrument-pipeline-defi`](instrument-pipeline-defi.md)
 - Buckets SSOT: `deployment-service/configs/cloud-providers.yaml` +
   `unified_trading_library.cloud_interface.bucket_naming`
-- Execution side: [`defi-execution-overview`](../04-architecture/defi-execution-overview.md)
+- Execution side: [`defi-execution-overview`](/codex/04-architecture/defi-execution-overview.md)
 - Code refs: MTDS handlers `market-tick-data-service/.../cli/handlers/*_handler.py`; MDPS
   `market-data-processing-service/.../app/adapters/defi/` + `cli/handlers/process_handler.py`; UAC
   `registry/market_data_categories.py::needs_candle_processing` + `registry/capability_declarations/_defi*.py`; features

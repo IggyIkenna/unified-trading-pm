@@ -14,11 +14,11 @@ scope: [engineer, admin]
 tags: [defi, execution, mev, uac, circuit-breaker, ssot]
 related:
   [
-    ../05-infrastructure/chain-rpc-mev-tenderly.md,
-    tenderly-execution-provider.md,
-    circuit-breaker-rule-taxonomy.md,
-    defi-execution-overview.md,
-    kill-switch-event-bus.md,
+    /codex/05-infrastructure/chain-rpc-mev-tenderly.md,
+    /codex/04-architecture/tenderly-execution-provider.md,
+    /codex/04-architecture/circuit-breaker-rule-taxonomy.md,
+    /codex/04-architecture/defi-execution-overview.md,
+    /codex/04-architecture/kill-switch-event-bus.md,
   ]
 created: 2026-04-03
 authoritative_for:
@@ -28,7 +28,14 @@ authoritative_for:
     MevSubmissionMode policy registry,
     MEV-driven breaker trigger,
   ]
-referenced_by: [codex/04-architecture/circuit-breaker-rule-taxonomy.md, codex/04-architecture/defi-execution-overview.md, codex/05-infrastructure/chain-rpc-mev-tenderly.md, codex/07-security/mev-protection.md, codex/09-strategy/architecture-v2/cross-cutting/mev-protection.md]
+referenced_by:
+  [
+    /codex/04-architecture/circuit-breaker-rule-taxonomy.md,
+    /codex/04-architecture/defi-execution-overview.md,
+    /codex/05-infrastructure/chain-rpc-mev-tenderly.md,
+    /codex/07-security/mev-protection.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/mev-protection.md,
+  ]
 owner:
 last_reviewed: 2026-05-17
 code_refs:
@@ -63,10 +70,10 @@ by reordering, inserting, or censoring transactions within a block. For DeFi tra
 | Time-bandit        | Reorg attack to steal profits from committed txs                    | Any (extremely rare)                             |
 
 **Scope**: MEV protection is **only active on Ethereum mainnet** (`chain_id = 1`) and **Solana** (Jito bundle submission
-per [`chain-rpc-mev-tenderly.md`](../05-infrastructure/chain-rpc-mev-tenderly.md)). On L2s (Arbitrum, Base, Optimism,
-Linea, Scroll, ZkSync) the sequencer is centralised and there is no public mempool, making MEV extraction structurally
-infeasible. On Polygon / Avalanche / BSC there is no Flashbots-equivalent yet — operator decision to accept exposure
-with tighter slippage or skip these chains.
+per [`chain-rpc-mev-tenderly.md`](/codex/05-infrastructure/chain-rpc-mev-tenderly.md)). On L2s (Arbitrum, Base,
+Optimism, Linea, Scroll, ZkSync) the sequencer is centralised and there is no public mempool, making MEV extraction
+structurally infeasible. On Polygon / Avalanche / BSC there is no Flashbots-equivalent yet — operator decision to accept
+exposure with tighter slippage or skip these chains.
 
 ## How the System Protects Against MEV
 
@@ -109,7 +116,7 @@ mev_protection:
   fallback_to_public: false # fail loud if private RPC unavailable
 ```
 
-Private RPC endpoints by chain (per [`chain-rpc-mev-tenderly.md`](../05-infrastructure/chain-rpc-mev-tenderly.md)):
+Private RPC endpoints by chain (per [`chain-rpc-mev-tenderly.md`](/codex/05-infrastructure/chain-rpc-mev-tenderly.md)):
 
 - **Ethereum mainnet**: Flashbots Protect (`https://rpc.flashbots.net`) + MEV Blocker (`https://rpc.mevblocker.io`) +
   Manifold (partial).
@@ -438,8 +445,8 @@ state machine including MEV-driven entry. [`kill-switch-event-bus.md`](kill-swit
 
 ## Related Docs
 
-- [`chain-rpc-mev-tenderly.md`](../05-infrastructure/chain-rpc-mev-tenderly.md) — per-chain RPC + MEV + Tenderly + gas
-  oracle SSOT.
+- [`chain-rpc-mev-tenderly.md`](/codex/05-infrastructure/chain-rpc-mev-tenderly.md) — per-chain RPC + MEV + Tenderly +
+  gas oracle SSOT.
 - [`circuit-breaker-rule-taxonomy.md`](circuit-breaker-rule-taxonomy.md) — `BreakerAction` + `BreakerRecoveryMode`
   closed sets consumed by the MEV-driven breaker trigger above.
 - [`kill-switch-circuit-breaker.md`](kill-switch-circuit-breaker.md) — full breaker state machine including
@@ -450,8 +457,8 @@ state machine including MEV-driven entry. [`kill-switch-event-bus.md`](kill-swit
 - [`flash-loan-receiver.md`](flash-loan-receiver.md) — Aave flash loan receiver contract.
 - [`defi-execution-overview.md`](defi-execution-overview.md) — full execution flow.
 - [`execution-modes-and-chain-resolution.md`](execution-modes-and-chain-resolution.md) — chain environment resolution.
-- [`../07-security/secrets-management.md`](../07-security/secrets-management.md) — Secret Manager key naming.
-- [`../09-strategy/architecture-v2/cross-cutting/mev-protection.md`](../09-strategy/architecture-v2/cross-cutting/mev-protection.md)
+- [`/codex/07-security/secrets-management.md`](/codex/07-security/secrets-management.md) — Secret Manager key naming.
+- [`/codex/09-strategy/architecture-v2/cross-cutting/mev-protection.md`](/codex/09-strategy/architecture-v2/cross-cutting/mev-protection.md)
   — strategy-side narrative on MEV policy + per-strategy config.
 
 ## Update protocol

@@ -1,7 +1,9 @@
 ---
 doc_type: codex-ssot
 title: Venue Collateral & Token Wrapping -- Cross-Cutting Concern
-summary: "Pre-v2: per-venue collateral matrix and token-wrapping rules (WETH/wstETH/weETH), CollateralValidationMixin pre-processing, and Aave V3 per-asset LTV/haircut/max-leverage table."
+summary:
+  "Pre-v2: per-venue collateral matrix and token-wrapping rules (WETH/wstETH/weETH), CollateralValidationMixin
+  pre-processing, and Aave V3 per-asset LTV/haircut/max-leverage table."
 status: superseded
 nature: ssot
 asset_group: [meta]
@@ -13,11 +15,17 @@ related:
   [
     ../../architecture-v2/cross-cutting/venue-account-coordination.md,
     ../../architecture-v2/cross-cutting/instrument-type-leverage-matrix.md,
-    margin-health.md,
+    /codex/09-strategy/_archived_pre_v2/cross-cutting/margin-health.md,
   ]
 created: 2026-04-03
 authoritative_for: []
-referenced_by: [codex/09-strategy/_archived_pre_v2/STRATEGY_CATALOG_pre_v2.md, codex/09-strategy/_archived_pre_v2/cross-cutting/margin-health.md, codex/09-strategy/_archived_pre_v2/defi/basis-trade.md, codex/09-strategy/_archived_pre_v2/defi/staked-basis.md]
+referenced_by:
+  [
+    /codex/09-strategy/_archived_pre_v2/STRATEGY_CATALOG_pre_v2.md,
+    /codex/09-strategy/_archived_pre_v2/cross-cutting/margin-health.md,
+    /codex/09-strategy/_archived_pre_v2/defi/basis-trade.md,
+    /codex/09-strategy/_archived_pre_v2/defi/staked-basis.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

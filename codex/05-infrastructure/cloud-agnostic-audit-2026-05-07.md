@@ -10,12 +10,17 @@ status: draft
 nature: ssot
 asset_group: [meta]
 stage: [meta]
-repos: [agent-orchestrator, alerting-service, deployment-api, deployment-service, execution-service, instruments-service]
+repos:
+  [agent-orchestrator, alerting-service, deployment-api, deployment-service, execution-service, instruments-service]
 scope: [engineer, admin]
 tags: [migration, aws-migration, audit, ssot-audit, infrastructure]
-related: [codex/05-infrastructure/cloud-agnostic-script-pattern.md, codex/05-infrastructure/cloud-agnostic-build-lineage.md]
+related:
+  [/codex/05-infrastructure/cloud-agnostic-script-pattern.md, /codex/05-infrastructure/cloud-agnostic-build-lineage.md]
 created: 2026-05-07
-authoritative_for: Workspace-wide audit (snapshot 2026-05-07) of every shell script + every Python script + every Cloud Run service + every adapter against the cloud-agnostic-script-pattern. Tracks compliance status + per-violation remediation owner + target completion date.
+authoritative_for:
+  Workspace-wide audit (snapshot 2026-05-07) of every shell script + every Python script + every Cloud Run service +
+  every adapter against the cloud-agnostic-script-pattern. Tracks compliance status + per-violation remediation owner +
+  target completion date.
 referenced_by: [plans/active/aws_migration_defi_first_2026_05_07.md]
 owner:
 last_reviewed: 2026-05-17

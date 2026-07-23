@@ -1,22 +1,47 @@
 ---
 doc_type: codex-ssot
-title: 'Deployment Clusters: Live vs Batch (SSOT)'
+title: "Deployment Clusters: Live vs Batch (SSOT)"
 summary:
   Canonical taxonomy of deployment clusters — a live cluster (many different services co-running) vs a batch cluster
-  (the same service ×N shards in parallel); per-tier shard atoms (data / decision / ML / execution), daily shards as
-  the universal replay axis, tarball vs Cloud Build mechanisms, and the per-VM shard-isolation + write-gate concurrency
+  (the same service ×N shards in parallel); per-tier shard atoms (data / decision / ML / execution), daily shards as the
+  universal replay axis, tarball vs Cloud Build mechanisms, and the per-VM shard-isolation + write-gate concurrency
   invariants.
 status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
-repos: [deployment-service, execution-service, instruments-service, market-data-processing-service, market-tick-data-service, strategy-service]
+repos:
+  [
+    deployment-service,
+    execution-service,
+    instruments-service,
+    market-data-processing-service,
+    market-tick-data-service,
+    strategy-service,
+  ]
 scope: [engineer, admin]
 tags: [deployment, backfill, manifest, mtds, live-trading]
-related: [codex/02-data/availability-manifest-and-data-status.md, codex/04-architecture/shard-level-failure-isolation.md, codex/05-infrastructure/vm-tarball-deployment.md, codex/05-infrastructure/deployment-ui-architecture.md]
+related:
+  [
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/04-architecture/shard-level-failure-isolation.md,
+    /codex/05-infrastructure/vm-tarball-deployment.md,
+    /codex/05-infrastructure/deployment-ui-architecture.md,
+  ]
 created: 2026-05-06
-authoritative_for: [live vs batch deployment cluster taxonomy, per-cluster-type sizing + deployment mechanism (tarball vs Cloud Build)]
-referenced_by: [codex/02-data/prediction-schema-paths.md, codex/02-data/sports-scheduling-and-sharding.md, codex/04-architecture/features-service-architecture.md, codex/04-architecture/instruments-live-architecture.md, codex/04-architecture/shard-level-failure-isolation.md, codex/05-infrastructure/deployment-observability.md, codex/05-infrastructure/deployment-ui-architecture.md, codex/06-coding-standards/feature-service-pattern.md]
+authoritative_for:
+  [live vs batch deployment cluster taxonomy, per-cluster-type sizing + deployment mechanism (tarball vs Cloud Build)]
+referenced_by:
+  [
+    /codex/02-data/prediction-schema-paths.md,
+    /codex/02-data/sports-scheduling-and-sharding.md,
+    /codex/04-architecture/features-service-architecture.md,
+    /codex/04-architecture/instruments-live-architecture.md,
+    /codex/04-architecture/shard-level-failure-isolation.md,
+    /codex/05-infrastructure/deployment-observability.md,
+    /codex/05-infrastructure/deployment-ui-architecture.md,
+    /codex/06-coding-standards/feature-service-pattern.md,
+  ]
 owner:
 last_reviewed: 2026-05-17
 code_refs:
@@ -298,13 +323,13 @@ cluster state regardless of which mechanism deployed the cluster or which type t
 ## Cross-references
 
 - **Manifest semantics + per-service shard dimension matrix**:
-  [`02-data/availability-manifest-and-data-status.md`](../02-data/availability-manifest-and-data-status.md)
+  [`02-data/availability-manifest-and-data-status.md`](/codex/02-data/availability-manifest-and-data-status.md)
 - **deployment-service shard alignment + GCS path templates**:
   [`deployment-service/docs/SHARDING_AND_DATA_ALIGNMENT.md`](../../../deployment-service/docs/SHARDING_AND_DATA_ALIGNMENT.md)
 - **Shard-level failure isolation**:
-  [`04-architecture/shard-level-failure-isolation.md`](../04-architecture/shard-level-failure-isolation.md)
+  [`04-architecture/shard-level-failure-isolation.md`](/codex/04-architecture/shard-level-failure-isolation.md)
 - **4-category empty-output + cluster validation + 4-pillar write-gate (single SSOT)**:
-  [`06-coding-standards/validation-and-errors.md`](../06-coding-standards/validation-and-errors.md)
+  [`06-coding-standards/validation-and-errors.md`](/codex/06-coding-standards/validation-and-errors.md)
 - **Tarball deployment recipe**: [`05-infrastructure/vm-tarball-deployment.md`](./vm-tarball-deployment.md)
 - **Cloud Build CI/CD setup**: [`05-infrastructure/cicd-setup.md`](./cicd-setup.md)
 - **Runtime tiers + deployment**:

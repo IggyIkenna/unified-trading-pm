@@ -14,9 +14,9 @@ scope: [engineer, admin]
 tags: [pubsub, event-bus, infrastructure, migration, audit]
 related:
   [
-    live-deployment-monitoring.md,
+    /codex/05-infrastructure/live-deployment-monitoring.md,
     ../../plans/audit/results/vm_event_emission_audit_2026_05_15.md,
-    ../02-data/live-data-persistence-and-event-log.md,
+    /codex/02-data/live-data-persistence-and-event-log.md,
   ]
 created: 2026-05-26
 authoritative_for: [GCP Pub/Sub topic inventory, AWS SNS event-bus mirroring decision]

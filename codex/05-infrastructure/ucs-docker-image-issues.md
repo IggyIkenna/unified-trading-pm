@@ -1,6 +1,6 @@
 ---
 doc_type: codex-ssot
-title: 'UCS Docker Image: Known Issues & Rollout Tracking'
+title: "UCS Docker Image: Known Issues & Rollout Tracking"
 summary:
   STALE (last content 2026-02-12) tracker for the UCS Docker base-image rollout — legacy 11/11-services migration
   complete (Python 3.13 + uv), the open Cloud-Build-not-auto-triggering-on-main bug + manual-trigger workaround; the
@@ -9,10 +9,18 @@ status: stale
 nature: ssot
 asset_group: [meta]
 stage: [meta]
-repos: [execution-service, features-service, instruments-service, market-data-processing-service, market-tick-data-service, strategy-service]
+repos:
+  [
+    execution-service,
+    features-service,
+    instruments-service,
+    market-data-processing-service,
+    market-tick-data-service,
+    strategy-service,
+  ]
 scope: [engineer, admin]
 tags: [docker, ci, infrastructure, migration, cloud-run]
-related: [../06-coding-standards/dependency-management.md]
+related: [/codex/06-coding-standards/dependency-management.md]
 created: 2026-03-27
 authoritative_for: []
 referenced_by:

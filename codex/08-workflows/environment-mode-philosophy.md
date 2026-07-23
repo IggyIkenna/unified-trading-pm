@@ -13,8 +13,10 @@ scope: [engineer]
 tags: [ui, mvp, validation, verification]
 related: [./local-dev.md, ./signup-signin-workflow.md]
 created: 2026-04-23
-authoritative_for: [UI environment × auth × data-mode three-axis model (deployment-env / Firebase-auth-db / mock-vs-real)]
-referenced_by: [codex/05-infrastructure/firebase-split-topology.md, codex/14-customer-journeys/demo-ops/staging-demo-setup.md]
+authoritative_for:
+  [UI environment × auth × data-mode three-axis model (deployment-env / Firebase-auth-db / mock-vs-real)]
+referenced_by:
+  [/codex/05-infrastructure/firebase-split-topology.md, /codex/14-customer-journeys/demo-ops/staging-demo-setup.md]
 owner:
 last_reviewed:
 code_refs:

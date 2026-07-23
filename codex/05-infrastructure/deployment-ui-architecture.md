@@ -2,8 +2,8 @@
 doc_type: codex-ssot
 title: Deployment-UI architecture — 6 tabs, 4 lifecycle classes, 4 orthogonal axes
 summary:
-  Tab-shell SSOT for the deployment-UI — 6 top-level tabs (Deploy / Monitor / Data-Status / Builds / Readiness /
-  Config) with Monitor's 4 lifecycle-class sub-tabs, the 4 orthogonal axes (lifecycle / cloud / env-tier / service),
+  Tab-shell SSOT for the deployment-UI — 6 top-level tabs (Deploy / Monitor / Data-Status / Builds / Readiness / Config)
+  with Monitor's 4 lifecycle-class sub-tabs, the 4 orthogonal axes (lifecycle / cloud / env-tier / service),
   env-resolved-by-domain (no in-UI toggle), cross-mode prefetch, and the auth-always-available cloud toggle.
 status: current
 nature: ssot
@@ -12,26 +12,53 @@ stage: [meta]
 repos: [deployment-api, deployment-service, deployment-ui, instruments-service, unified-api-contracts]
 scope: [engineer]
 tags: [ui, deployment, observability, infrastructure]
-related: [codex/02-data/data-status-drilldown.md, codex/05-infrastructure/deployment-ui-environment-tiers.md, codex/05-infrastructure/launcher-script-ssot.md, codex/05-infrastructure/deployment-clusters-live-vs-batch.md, codex/04-architecture/runtime-deployment-topology.md]
+related:
+  [
+    /codex/02-data/data-status-drilldown.md,
+    /codex/05-infrastructure/deployment-ui-environment-tiers.md,
+    /codex/05-infrastructure/launcher-script-ssot.md,
+    /codex/05-infrastructure/deployment-clusters-live-vs-batch.md,
+    /codex/04-architecture/runtime-deployment-topology.md,
+  ]
 created: 2026-05-08
-authoritative_for: [deployment-UI tab-shell architecture (6 tabs + Monitor sub-tabs) + 4 orthogonal axes + lifecycle-class UX shape]
-referenced_by: [codex/04-architecture/batch-live-architecture.md, codex/05-infrastructure/deployment-and-qg-strategy.md, codex/05-infrastructure/deployment-clusters-live-vs-batch.md, codex/05-infrastructure/deployment-observability.md, codex/05-infrastructure/deployment-ui-environment-tiers.md, codex/05-infrastructure/ui-architecture.md]
+authoritative_for:
+  [deployment-UI tab-shell architecture (6 tabs + Monitor sub-tabs) + 4 orthogonal axes + lifecycle-class UX shape]
+referenced_by:
+  [
+    /codex/04-architecture/batch-live-architecture.md,
+    /codex/05-infrastructure/deployment-and-qg-strategy.md,
+    /codex/05-infrastructure/deployment-clusters-live-vs-batch.md,
+    /codex/05-infrastructure/deployment-observability.md,
+    /codex/05-infrastructure/deployment-ui-environment-tiers.md,
+    /codex/05-infrastructure/ui-architecture.md,
+  ]
 owner: ikenna
 last_reviewed: 2026-05-15
 code_refs:
 codified: 2026-05-08
-sources: [plans/active/deployment_ui_lifecycle_tabs_2026_05_08.md (Phase A.3 — this doc), plans/epics/instruments_master.md (Phase G delegates UI scope here), plans/active/master_to_live_defi_2026_05_23.md, codex/04-architecture/runtime-deployment-topology.md, codex/05-infrastructure/launcher-script-ssot.md, codex/05-infrastructure/runtime-tiers-and-deployment.md, codex/05-infrastructure/deployment-clusters-live-vs-batch.md, codex/05-infrastructure/cloud-agnostic-script-pattern.md, codex/05-infrastructure/firebase-split-topology.md]
+sources:
+  [
+    plans/active/deployment_ui_lifecycle_tabs_2026_05_08.md (Phase A.3 — this doc),
+    plans/epics/instruments_master.md (Phase G delegates UI scope here),
+    plans/active/master_to_live_defi_2026_05_23.md,
+    /codex/04-architecture/runtime-deployment-topology.md,
+    /codex/05-infrastructure/launcher-script-ssot.md,
+    /codex/05-infrastructure/runtime-tiers-and-deployment.md,
+    /codex/05-infrastructure/deployment-clusters-live-vs-batch.md,
+    /codex/05-infrastructure/cloud-agnostic-script-pattern.md,
+    /codex/05-infrastructure/firebase-split-topology.md,
+  ]
 ---
 
 # Deployment-UI architecture — 6 tabs, 4 lifecycle classes, 4 orthogonal axes
 
 > **SSOT boundary with `data-status-drilldown.md` (codified 2026-05-12 per UI-7 audit)**: this doc is the **tab-shell
 > SSOT** (6 lifecycle tabs + 4 orthogonal axes + tier resolution);
-> [`data-status-drilldown.md`](../02-data/data-status-drilldown.md) is the **drilldown-detail SSOT**
+> [`data-status-drilldown.md`](/codex/02-data/data-status-drilldown.md) is the **drilldown-detail SSOT**
 > (`/api/data-status/*` endpoints + per-shard hierarchical drilldown semantics). A future plan should NOT create a third
 > doc covering the same surface — extend one of these two instead.
 > `plans/active/cross_asset_group_catalogue_audit_2026_05_10.md` Phase 2F's
-> `codex/03-deployment/data-status-ui-surface.md` stub is review-flagged: either extend `data-status-drilldown.md`
+> `/codex/03-deployment/data-status-ui-surface.md` stub is review-flagged: either extend `data-status-drilldown.md`
 > (drilldown half) or fold into this doc (tab-shell half), not a fresh file.
 
 > **Status promoted to stable 2026-05-12 per UI-16 audit + operator decision** — the deployment-ui ships today + has
@@ -180,9 +207,9 @@ live-cluster / experiment) by the resolved tier. Bucket suffixes per env follow
 
 The UI is asymmetric on purpose:
 
-- **Sub-tab toggle (instant).** Switching between Monitor sub-tabs (Backfill ↔ Experiments ↔ Live ↔ Scheduled) MUST
-  feel like clicking a tab in a desktop app. The `LifecyclePrefetchContext` (TanStack Query, already used elsewhere in
-  the deployment-ui) fires four parallel queries on UI mount + on cloud-target change:
+- **Sub-tab toggle (instant).** Switching between Monitor sub-tabs (Backfill ↔ Experiments ↔ Live ↔ Scheduled) MUST feel
+  like clicking a tab in a desktop app. The `LifecyclePrefetchContext` (TanStack Query, already used elsewhere in the
+  deployment-ui) fires four parallel queries on UI mount + on cloud-target change:
 
   ```
   /api/monitor/backfill?cloud=<gcp|aws>
@@ -194,10 +221,10 @@ The UI is asymmetric on purpose:
   Cache TTL 60s default. The operator clicks between sub-tabs without paying network latency. A unit test asserts no
   network call fires on sub-tab switch when the cache is warm; performance budget <50ms perceptible delay.
 
-- **Cloud-target toggle (slow + acceptable).** Switching `GCP ↔ AWS` invalidates ALL caches and refetches with a
-  loading spinner. Skeleton-loaders or progress indicator on every tab during the load; tab-state preserved across the
-  toggle. Explicit "loading" UX is acceptable + expected — a cloud-toggle is a structural switch (different region,
-  different SDK, different auth context), not a quick navigation.
+- **Cloud-target toggle (slow + acceptable).** Switching `GCP ↔ AWS` invalidates ALL caches and refetches with a loading
+  spinner. Skeleton-loaders or progress indicator on every tab during the load; tab-state preserved across the toggle.
+  Explicit "loading" UX is acceptable + expected — a cloud-toggle is a structural switch (different region, different
+  SDK, different auth context), not a quick navigation.
 
 The asymmetry is correct because the cost shapes are different: sub-tabs share a backend session (one round-trip fetches
 the full lifecycle-class cube for one cloud); cloud-toggle re-targets the SDK clients deployment-api dispatches on,
@@ -271,8 +298,8 @@ event-stream + Cloud Logging tail). Server-side fans out to the right log source
 
 Filter / search / pause / download are client-side over the stream (server sends raw lines). Operator hits the same
 component shape from Monitor → Backfill / Experiments / Live / Scheduled rows. Per
-[`local-dev.md`](../08-workflows/local-dev.md) testing rule, vitest config must use `pool: "forks"` to avoid zombie node
-processes.
+[`local-dev.md`](/codex/08-workflows/local-dev.md) testing rule, vitest config must use `pool: "forks"` to avoid zombie
+node processes.
 
 ## Deploy = fresh deployments only; re-deploys live in Monitor
 
@@ -387,23 +414,24 @@ system (deployment-ui@e2b7a81).
 
 ## Cross-references
 
-- [`codex/04-architecture/runtime-deployment-topology.md`](../04-architecture/runtime-deployment-topology.md) —
+- [`/codex/04-architecture/runtime-deployment-topology.md`](/codex/04-architecture/runtime-deployment-topology.md) —
   service-axis topology diagrams; this doc adds the lifecycle-class axis on top.
-- [`codex/04-architecture/batch-live-architecture.md`](../04-architecture/batch-live-architecture.md) (single SSOT) —
-  engineering invariant that batch + live share 99% of the code path. Includes the "UX surface" section explicit on how
-  the symmetry shows up to the operator (lifted from former batch-live-symmetry.md, folded 2026-05-08).
-- [`codex/05-infrastructure/launcher-script-ssot.md`](launcher-script-ssot.md) — VM-launcher SSOT under
+- [`/codex/04-architecture/batch-live-architecture.md`](/codex/04-architecture/batch-live-architecture.md) (single SSOT)
+  — engineering invariant that batch + live share 99% of the code path. Includes the "UX surface" section explicit on
+  how the symmetry shows up to the operator (lifted from former batch-live-symmetry.md, folded 2026-05-08).
+- [`/codex/05-infrastructure/launcher-script-ssot.md`](launcher-script-ssot.md) — VM-launcher SSOT under
   `deployment-service/scripts/vm/`. The Deploy tab + Monitor → Backfill rows + Monitor → Scheduled deploy-missing button
   all dispatch via this registry.
-- [`codex/05-infrastructure/runtime-tiers-and-deployment.md`](runtime-tiers-and-deployment.md) — `CLOUD_DEPLOYMENT_ENV`
+- [`/codex/05-infrastructure/runtime-tiers-and-deployment.md`](runtime-tiers-and-deployment.md) — `CLOUD_DEPLOYMENT_ENV`
   boot-time config + tier semantics. deployment-api per env reads this var; the UI's env badge reads
   `window.location.hostname` and crosschecks against the resolved tier.
-- [`codex/05-infrastructure/deployment-clusters-live-vs-batch.md`](deployment-clusters-live-vs-batch.md) — deployment
+- [`/codex/05-infrastructure/deployment-clusters-live-vs-batch.md`](deployment-clusters-live-vs-batch.md) — deployment
   cluster taxonomy + per-tier shard semantics. Monitor → Live rows reference this doc for cluster sizing + drain
   semantics.
-- [`codex/05-infrastructure/cloud-agnostic-script-pattern.md`](cloud-agnostic-script-pattern.md) — auth-always-available
-  pattern that backs the cloud-toggle. deployment-api boots with both clouds; UI dispatches per-request.
-- [`codex/05-infrastructure/firebase-split-topology.md`](firebase-split-topology.md) — env-tier hosting for
+- [`/codex/05-infrastructure/cloud-agnostic-script-pattern.md`](cloud-agnostic-script-pattern.md) —
+  auth-always-available pattern that backs the cloud-toggle. deployment-api boots with both clouds; UI dispatches
+  per-request.
+- [`/codex/05-infrastructure/firebase-split-topology.md`](firebase-split-topology.md) — env-tier hosting for
   trading-system-UI. The deployment-UI follows the same pattern (Phase H of the activation plan).
 - [`plans/active/deployment_ui_lifecycle_tabs_2026_05_08.md`](../../plans/active/deployment_ui_lifecycle_tabs_2026_05_08.md)
   — the active plan that owns the activation work this doc captures.

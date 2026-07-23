@@ -13,7 +13,12 @@ stage: [meta]
 repos: [deployment-api, instruments-service, unified-trading-library]
 scope: [engineer, admin]
 tags: [manifest, migration, single-walk, data-pipeline, consolidation, spot-vm]
-related: [codex/02-data/availability-manifest-and-data-status.md, codex/02-data/honest-absence-downstream-handling.md, codex/02-data/pipeline-mode-partition.md]
+related:
+  [
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/02-data/honest-absence-downstream-handling.md,
+    /codex/02-data/pipeline-mode-partition.md,
+  ]
 created: 2026-05-07
 authoritative_for: [manifest migration coordination protocol (freeze/migrate/verify/unfreeze + rollback)]
 referenced_by: [plans/epics/manifest_master.md, plans/active/manifest_schema_final_gate_2026_05_09.md]

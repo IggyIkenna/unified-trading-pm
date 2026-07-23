@@ -13,19 +13,19 @@ stage: [meta]
 repos: [features-service, market-data-processing-service, market-tick-data-service]
 scope: [engineer, admin]
 tags: [partitioning, manifest, data-pipeline, mtds, mdps, features]
-related: [codex/02-data/per-asset-group-bucket-layouts.md, codex/02-data/availability-manifest-and-data-status.md]
+related: [/codex/02-data/per-asset-group-bucket-layouts.md, /codex/02-data/availability-manifest-and-data-status.md]
 created: 2026-03-27
 authoritative_for:
   [GCS hive-partitioning conventions, BigQuery external-table partition requirement, live-vs-batch GCS path routing]
 referenced_by:
   [
-    codex/02-data/README.md,
-    codex/02-data/chart-candle-delivery-flow.md,
-    codex/02-data/data-lineage-MTDS-features-ml.md,
-    codex/02-data/instrument-pipeline-defi.md,
-    codex/02-data/per-asset-group-bucket-layouts.md,
-    codex/02-data/schema-governance.md,
-    codex/02-data/shard-granularity-cefi.md,
+    /codex/02-data/README.md,
+    /codex/02-data/chart-candle-delivery-flow.md,
+    /codex/02-data/data-lineage-MTDS-features-ml.md,
+    /codex/02-data/instrument-pipeline-defi.md,
+    /codex/02-data/per-asset-group-bucket-layouts.md,
+    /codex/02-data/schema-governance.md,
+    /codex/02-data/shard-granularity-cefi.md,
   ]
 owner:
 last_reviewed: 2026-05-17
@@ -210,7 +210,7 @@ Used by market-tick-data-service and market-data-processing-service:
 **Bundled data_types require cluster validation** at `ManifestWriter.record_captured` per writegate plan Phase 1A
 (`expected_root_clusters` + `cluster_extractor` kwargs MANDATORY; UTL guard raises `MissingClusterValidationError` if
 absent; QG STEP 5.64 statically checks). See
-[`06-coding-standards/validation-and-errors.md`](../06-coding-standards/validation-and-errors.md)
+[`06-coding-standards/validation-and-errors.md`](/codex/06-coding-standards/validation-and-errors.md)
 `§2 Write-gate quartet at record_captured`.
 
 ### instrument_type

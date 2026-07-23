@@ -9,13 +9,34 @@ status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
-repos: [deployment-api, deployment-service, features-service, strategy-service, unified-trading-library, unified-trading-system-ui]
+repos:
+  [
+    deployment-api,
+    deployment-service,
+    features-service,
+    strategy-service,
+    unified-trading-library,
+    unified-trading-system-ui,
+  ]
 scope: [admin, engineer]
 tags: [cost, migration, infrastructure, aws-migration, storage]
-related: [codex/04-architecture/cloud-agnostic-migration.md, plans/active/aws_migration_defi_first_2026_05_07.md, codex/05-infrastructure/aws_migration_cost_analysis_2026_05_07.md]
+related:
+  [
+    /codex/04-architecture/cloud-agnostic-migration.md,
+    plans/active/aws_migration_defi_first_2026_05_07.md,
+    /codex/05-infrastructure/aws_migration_cost_analysis_2026_05_07.md,
+  ]
 created: 2026-05-08
-authoritative_for: [AWS-vs-GCP per-resource cost snapshot (compute/storage/BigQuery/Pub-Sub run-rate + one-time migration + 12-month TCO, 2026-Q1 list pricing)]
-referenced_by: [codex/05-infrastructure/aws_migration_cost_analysis_2026_05_07.md, codex/05-infrastructure/spot-vms-for-backfill.md]
+authoritative_for:
+  [
+    AWS-vs-GCP per-resource cost snapshot (compute/storage/BigQuery/Pub-Sub run-rate + one-time migration + 12-month TCO,
+    2026-Q1 list pricing),
+  ]
+referenced_by:
+  [
+    /codex/05-infrastructure/aws_migration_cost_analysis_2026_05_07.md,
+    /codex/05-infrastructure/spot-vms-for-backfill.md,
+  ]
 owner:
 last_reviewed: 2026-05-17
 code_refs:
@@ -175,7 +196,7 @@ odum-portal) are hot-path interactive.
 ## Firebase (Identity Platform + Firestore + Storage + Auth + Hosting)
 
 Used for the unified-trading-system-ui authentication tier (Tier 0 emulator suite + staging + prod). Documented across
-`codex/14-customer-journeys/authentication/firebase-local.md` + workspace dev tiers. Auto-included in the GCP project.
+`/codex/14-customer-journeys/authentication/firebase-local.md` + workspace dev tiers. Auto-included in the GCP project.
 Identity Platform pricing kicks in above 50k MAU; Firestore charges per read/write/storage.
 
 ---
@@ -246,6 +267,6 @@ Run). At current scale neither cloud has a decisive cost edge.
 - Active dual-cloud decision:
   [`plans/active/aws_migration_defi_first_2026_05_07.md`](../../plans/active/aws_migration_defi_first_2026_05_07.md)
 - Cloud-agnostic SSOT:
-  [`../04-architecture/cloud-agnostic-migration.md`](../04-architecture/cloud-agnostic-migration.md)
+  [`/codex/04-architecture/cloud-agnostic-migration.md`](/codex/04-architecture/cloud-agnostic-migration.md)
 - Pricing sources (verify before commitment): GCP pricing pages 2026-01 snapshot, AWS pricing pages 2026-01 snapshot,
   internal billing console.

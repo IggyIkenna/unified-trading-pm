@@ -2,10 +2,10 @@
 doc_type: codex-ssot
 title: Sports Odds Drift (CLV Capture)
 summary: >-
-  [SUPERSEDED, pre-v2] Sports odds-drift / CLV-capture strategy (SPORTS_ODDS_DRIFT) — predicts where the
-  line closes (not the outcome) from velocity/steam/Pinnacle-lead-time features, bets soft books early when
-  drift_edge > 0 (current odds longer than predicted close); CLV is the profitability predictor. Replaced by
-  architecture-v2 ml-directional-event-settled.
+  [SUPERSEDED, pre-v2] Sports odds-drift / CLV-capture strategy (SPORTS_ODDS_DRIFT) — predicts where the line closes
+  (not the outcome) from velocity/steam/Pinnacle-lead-time features, bets soft books early when drift_edge > 0 (current
+  odds longer than predicted close); CLV is the profitability predictor. Replaced by architecture-v2
+  ml-directional-event-settled.
 status: superseded
 nature: ssot
 asset_group: [meta]
@@ -13,7 +13,12 @@ stage: [meta]
 repos: [execution-service, ml-service, strategy-service, unified-api-contracts, unified-trading-pm]
 scope: [engineer, admin]
 tags: [strategy, sports, ml, odds, clv, features]
-related: [value-betting.md, pre-game-ml.md, ../../architecture-v2/archetypes/ml-directional-event-settled.md]
+related:
+  [
+    /codex/09-strategy/_archived_pre_v2/sports/value-betting.md,
+    /codex/09-strategy/_archived_pre_v2/sports/pre-game-ml.md,
+    ../../architecture-v2/archetypes/ml-directional-event-settled.md,
+  ]
 created: 2026-04-16
 authoritative_for:
 referenced_by:

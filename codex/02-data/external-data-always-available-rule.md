@@ -2,11 +2,10 @@
 doc_type: codex-ssot
 title: External Data Is Always Available — Never Silently Defer Adapters (HARD RULE)
 summary: >-
-  HARD RULE (codified 2026-05-14): for every asset_group and MVP archetype the data exists, so an exhausted
-  free/public path is a credentials/subscription ask to the operator — never a license to defer or descope an
-  adapter; defines the closed-set BLOCKED-CREDENTIALS / -OPERATOR-DECISION / -UPSTREAM-OUTAGE status taxonomy
-  (replacing ad-hoc "deferred") and the required scaffold-anyway action plus the pings/slot_<N>.md credential-ask
-  shape.
+  HARD RULE (codified 2026-05-14): for every asset_group and MVP archetype the data exists, so an exhausted free/public
+  path is a credentials/subscription ask to the operator — never a license to defer or descope an adapter; defines the
+  closed-set BLOCKED-CREDENTIALS / -OPERATOR-DECISION / -UPSTREAM-OUTAGE status taxonomy (replacing ad-hoc "deferred")
+  and the required scaffold-anyway action plus the pings/slot_<N>.md credential-ask shape.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -14,9 +13,10 @@ stage: [meta]
 repos: [instruments-service, market-tick-data-service]
 scope: [engineer, admin]
 tags: [data-correctness, defi, cefi, tradfi, sports, prediction, escalation]
-related: [data-pipeline-correctness-hard-rule.md, honest-absence-downstream-handling.md]
+related: [/codex/02-data/data-pipeline-correctness-hard-rule.md, /codex/02-data/honest-absence-downstream-handling.md]
 created: 2026-05-23
-authoritative_for: [external-data-always-available HARD RULE, BLOCKED-CREDENTIALS/-OPERATOR-DECISION/-UPSTREAM-OUTAGE status taxonomy]
+authoritative_for:
+  [external-data-always-available HARD RULE, BLOCKED-CREDENTIALS/-OPERATOR-DECISION/-UPSTREAM-OUTAGE status taxonomy]
 referenced_by:
 owner:
 last_reviewed:

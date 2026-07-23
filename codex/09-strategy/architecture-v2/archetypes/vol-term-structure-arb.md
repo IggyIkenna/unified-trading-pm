@@ -14,23 +14,23 @@ scope: [engineer, admin]
 tags: [strategy, vol-trading, options, deribit, term-structure, calendar-spread, mean-reversion]
 related:
   [
-    vol-term-structure-slope.md,
-    vol-carry.md,
-    vol-cross-asset-spread.md,
-    vol-leaps-convexity.md,
+    /codex/09-strategy/architecture-v2/archetypes/vol-term-structure-slope.md,
+    /codex/09-strategy/architecture-v2/archetypes/vol-carry.md,
+    /codex/09-strategy/architecture-v2/archetypes/vol-cross-asset-spread.md,
+    /codex/09-strategy/architecture-v2/archetypes/vol-leaps-convexity.md,
     ../families/vol-trading.md,
   ]
 created: 2026-05-19
 authoritative_for: ["VOL_TERM_STRUCTURE_ARB archetype spec"]
 referenced_by:
   [
-    codex/09-strategy/architecture-v2/archetypes/vol-0dte-pin-risk.md,
-    codex/09-strategy/architecture-v2/archetypes/vol-carry.md,
-    codex/09-strategy/architecture-v2/archetypes/vol-cross-asset-spread.md,
-    codex/09-strategy/architecture-v2/archetypes/vol-spread-structures.md,
-    codex/09-strategy/architecture-v2/archetypes/vol-term-structure-slope.md,
-    codex/09-strategy/architecture-v2/archetypes/vol-variance-swap.md,
-    codex/09-strategy/architecture-v2/families/vol-trading.md,
+    /codex/09-strategy/architecture-v2/archetypes/vol-0dte-pin-risk.md,
+    /codex/09-strategy/architecture-v2/archetypes/vol-carry.md,
+    /codex/09-strategy/architecture-v2/archetypes/vol-cross-asset-spread.md,
+    /codex/09-strategy/architecture-v2/archetypes/vol-spread-structures.md,
+    /codex/09-strategy/architecture-v2/archetypes/vol-term-structure-slope.md,
+    /codex/09-strategy/architecture-v2/archetypes/vol-variance-swap.md,
+    /codex/09-strategy/architecture-v2/families/vol-trading.md,
   ]
 owner:
 last_reviewed:

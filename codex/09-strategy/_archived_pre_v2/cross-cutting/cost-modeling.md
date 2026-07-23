@@ -1,7 +1,9 @@
 ---
 doc_type: codex-ssot
 title: Transaction Cost Modeling — Cross-Cutting Concern
-summary: "Pre-v2: per-strategy cost budgets (max_total_cost_bps) with asset-class cost models — CeFi fees, DeFi gas, TradFi commission, sports vig, prediction spread."
+summary:
+  "Pre-v2: per-strategy cost budgets (max_total_cost_bps) with asset-class cost models — CeFi fees, DeFi gas, TradFi
+  commission, sports vig, prediction spread."
 status: superseded
 nature: ssot
 asset_group: [meta]
@@ -13,11 +15,17 @@ related:
   [
     ../../architecture-v2/cross-cutting/pnl-attribution.md,
     ../../architecture-v2/cross-cutting/execution-policies.md,
-    latency-profiles.md,
+    /codex/09-strategy/_archived_pre_v2/cross-cutting/latency-profiles.md,
   ]
 created: 2026-03-27
 authoritative_for: []
-referenced_by: [codex/09-strategy/_archived_pre_v2/STRATEGY_CATALOG_pre_v2.md, codex/09-strategy/_archived_pre_v2/cross-cutting/config-architecture.md, codex/09-strategy/_archived_pre_v2/cross-cutting/latency-profiles.md, codex/09-strategy/_archived_pre_v2/cross-cutting/pnl-attribution.md]
+referenced_by:
+  [
+    /codex/09-strategy/_archived_pre_v2/STRATEGY_CATALOG_pre_v2.md,
+    /codex/09-strategy/_archived_pre_v2/cross-cutting/config-architecture.md,
+    /codex/09-strategy/_archived_pre_v2/cross-cutting/latency-profiles.md,
+    /codex/09-strategy/_archived_pre_v2/cross-cutting/pnl-attribution.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

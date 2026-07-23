@@ -3,9 +3,9 @@ doc_type: codex-ssot
 title: Unity Integration
 summary:
   "Unity sports-betting prime broker: META_BROKER, single USD wallet, single TCP connection + Java Feed Connector
-  sidecar, 10 child books (8 confirmed + 2 TBD; 0.2%–3.0% commission-on-win), all 3 sports; commercial terms —
-  $10.8k deposit refundable at $5.3M lifetime turnover, $2.6k/mo subscription waived at $260k/mo effective turnover,
-  1x rollover."
+  sidecar, 10 child books (8 confirmed + 2 TBD; 0.2%–3.0% commission-on-win), all 3 sports; commercial terms — $10.8k
+  deposit refundable at $5.3M lifetime turnover, $2.6k/mo subscription waived at $260k/mo effective turnover, 1x
+  rollover."
 status: current
 nature: ssot
 asset_group: [meta]
@@ -15,14 +15,24 @@ scope: [engineer, admin]
 tags: [unity, sports, odds, execution, meta-broker, cost]
 related:
   [
-    prime-brokers.md,
-    venue-registry-reference.md,
-    ../03-services/venue-capability-registry.md,
-    ../04-architecture/capital-structure-and-regulatory.md,
+    /codex/02-venues/prime-brokers.md,
+    /codex/02-venues/venue-registry-reference.md,
+    /codex/03-services/venue-capability-registry.md,
+    /codex/04-architecture/capital-structure-and-regulatory.md,
   ]
 created: 2026-04-17
 authoritative_for: [Unity prime-broker integration, Unity child-book registry + commercial terms]
-referenced_by: [codex/02-venues/prime-brokers.md, codex/02-venues/venue-registry-reference.md, codex/04-architecture/capital-efficiency-patterns.md, codex/04-architecture/capital-structure-and-regulatory.md, codex/09-strategy/architecture-v2/README.md, codex/09-strategy/architecture-v2/archetypes/arbitrage-price-dispersion.md, codex/09-strategy/architecture-v2/archetypes/market-making-event-settled.md, codex/09-strategy/architecture-v2/archetypes/ml-directional-event-settled.md]
+referenced_by:
+  [
+    /codex/02-venues/prime-brokers.md,
+    /codex/02-venues/venue-registry-reference.md,
+    /codex/04-architecture/capital-efficiency-patterns.md,
+    /codex/04-architecture/capital-structure-and-regulatory.md,
+    /codex/09-strategy/architecture-v2/README.md,
+    /codex/09-strategy/architecture-v2/archetypes/arbitrage-price-dispersion.md,
+    /codex/09-strategy/architecture-v2/archetypes/market-making-event-settled.md,
+    /codex/09-strategy/architecture-v2/archetypes/ml-directional-event-settled.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -359,13 +369,13 @@ the user-authenticated quant-portal.
 - Prime brokers pattern: [prime-brokers.md](prime-brokers.md)
 - Venue registry: [venue-registry-reference.md](venue-registry-reference.md)
 - Sports archetypes using Unity:
-  [../09-strategy/architecture-v2/archetypes/market-making-event-settled.md](../09-strategy/architecture-v2/archetypes/market-making-event-settled.md),
-  [ml-directional-event-settled](../09-strategy/architecture-v2/archetypes/ml-directional-event-settled.md),
-  [arbitrage-price-dispersion](../09-strategy/architecture-v2/archetypes/arbitrage-price-dispersion.md)
+  [/codex/09-strategy/architecture-v2/archetypes/market-making-event-settled.md](/codex/09-strategy/architecture-v2/archetypes/market-making-event-settled.md),
+  [ml-directional-event-settled](/codex/09-strategy/architecture-v2/archetypes/ml-directional-event-settled.md),
+  [arbitrage-price-dispersion](/codex/09-strategy/architecture-v2/archetypes/arbitrage-price-dispersion.md)
 - Venue-account coordination (Unity shared wallet):
-  [../09-strategy/architecture-v2/cross-cutting/venue-account-coordination.md](../09-strategy/architecture-v2/cross-cutting/venue-account-coordination.md)
+  [/codex/09-strategy/architecture-v2/cross-cutting/venue-account-coordination.md](/codex/09-strategy/architecture-v2/cross-cutting/venue-account-coordination.md)
 - Capital structure + regulatory (Unity pool):
-  [../04-architecture/capital-structure-and-regulatory.md](../04-architecture/capital-structure-and-regulatory.md)
+  [/codex/04-architecture/capital-structure-and-regulatory.md](/codex/04-architecture/capital-structure-and-regulatory.md)
 
 ## Not in this doc
 

@@ -12,10 +12,10 @@ stage: [meta]
 repos: [instruments-service, unified-trading-pm]
 scope: [engineer, admin]
 tags: [infrastructure, scripts, setup]
-related: [new-repo-setup.md, workspace-setup.md, ci-cd.md]
+related: [/codex/05-infrastructure/new-repo-setup.md, /codex/05-infrastructure/workspace-setup.md, ci-cd.md]
 created: 2026-03-27
 authoritative_for: [UNIFIED_TRADING_WORKSPACE_ROOT variable pattern]
-referenced_by: [codex/05-infrastructure/README.md, codex/05-infrastructure/workspace-setup.md]
+referenced_by: [/codex/05-infrastructure/README.md, /codex/05-infrastructure/workspace-setup.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

@@ -12,10 +12,10 @@ stage: [meta]
 repos: [deployment-service, execution-service, instruments-service, unified-trading-library, unified-trading-pm]
 scope: [engineer, admin]
 tags: [security, migration, secrets, ci-cd, escalation]
-related: [secret-rotation.md, ../05-infrastructure/credentials-matrix.md]
+related: [/codex/07-security/secret-rotation.md, /codex/05-infrastructure/credentials-matrix.md]
 created: 2026-05-15
 authoritative_for: [GHA WIF and GitHub App credential migration]
-referenced_by: [codex/07-security/secret-rotation.md]
+referenced_by: [/codex/07-security/secret-rotation.md]
 owner:
 last_reviewed:
 code_refs:
@@ -280,6 +280,6 @@ jobs:
 
 - P0 issue: `plans/active/issues/gcp_sa_private_key_in_git_history_execution_service_2026_05_15.md`
 - P1 issue: `plans/active/issues/github_pat_in_instruments_service_env_2026_05_15.md`
-- Rotation runbook: `codex/15-runbooks/per-source-credential-rotation-runbook.md`
-- Credentials matrix: `codex/05-infrastructure/credentials-matrix.md`
-- AWS IAM matrix: `codex/05-infrastructure/aws-iam-matrix.md`
+- Rotation runbook: `/codex/15-runbooks/per-source-credential-rotation-runbook.md`
+- Credentials matrix: `/codex/05-infrastructure/credentials-matrix.md`
+- AWS IAM matrix: `/codex/05-infrastructure/aws-iam-matrix.md`

@@ -2,9 +2,9 @@
 doc_type: codex-ssot
 title: Canonical Schema Groups
 summary:
-  Catalogue of the UAC canonical normaliser-output schema groups (CanonicalTrade / OrderBook / OHLCV /
-  Liquidation / OptionsChainEntry, derivatives, DeFi, fixed-income, positions, risk, orders, regulatory) and the
-  canonical-vs-internal split, with the missing-field=Optional rule.
+  Catalogue of the UAC canonical normaliser-output schema groups (CanonicalTrade / OrderBook / OHLCV / Liquidation /
+  OptionsChainEntry, derivatives, DeFi, fixed-income, positions, risk, orders, regulatory) and the canonical-vs-internal
+  split, with the missing-field=Optional rule.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -12,10 +12,15 @@ stage: [meta]
 repos: [instruments-service, unified-api-contracts]
 scope: [engineer, admin]
 tags: [uac, canonicalisation, catalogue, instruments, data-pipeline]
-related: [contracts-scope-and-layout.md, data-catalogue-schema.md]
+related: [/codex/02-data/contracts-scope-and-layout.md, data-catalogue-schema.md]
 created: 2026-03-27
 authoritative_for: [canonical schema group catalogue (Canonical* field tables)]
-referenced_by: [codex/02-data/contracts-scope-and-layout.md, codex/02-data/data-catalogue-schema.md, codex/06-coding-standards/documentation-standards.md]
+referenced_by:
+  [
+    /codex/02-data/contracts-scope-and-layout.md,
+    /codex/02-data/data-catalogue-schema.md,
+    /codex/06-coding-standards/documentation-standards.md,
+  ]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

@@ -13,7 +13,7 @@ stage: [meta]
 repos: [deployment-service, e2e-testing, features-service]
 scope: [engineer]
 tags: [scripts, script-homes, lifecycle-marker, deployment, refactor, quality-gates]
-related: [cli-convention.md, quality-gates.md]
+related: [/codex/06-coding-standards/cli-convention.md, /codex/06-coding-standards/quality-gates.md]
 created: 2026-06-10
 authoritative_for: [script-homes placement decision tree, repo scripts/ lifecycle markers (Epic/Lifecycle/Delete-when)]
 referenced_by:

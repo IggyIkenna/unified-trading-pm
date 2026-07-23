@@ -3,8 +3,8 @@ doc_type: codex-ssot
 title: DeFi Market Making (AMM Liquidity Provision)
 summary:
   Pre-v2 DeFi AMM market-making via concentrated liquidity (Uniswap V3/V4, Curve, Balancer) — uses real V3 concentrated
-  IL math (not the V2 approximation) and exact feeGrowthInside fee accounting, volatility-adjusted range width;
-  targets 10-25% APY, ~$5M per pool. SUPERSEDED banner — see architecture-v2.
+  IL math (not the V2 approximation) and exact feeGrowthInside fee accounting, volatility-adjusted range width; targets
+  10-25% APY, ~$5M per pool. SUPERSEDED banner — see architecture-v2.
 status: superseded
 nature: ssot
 asset_group: [meta]
@@ -12,10 +12,19 @@ stage: [meta]
 repos: [execution-service, market-tick-data-service, strategy-service]
 scope: [engineer, admin]
 tags: [defi, strategy, execution, market-making, liquidity-provision, impermanent-loss, uniswap]
-related: [sol-concentrated-lp.md, active-defi-mm.md]
+related:
+  [
+    /codex/09-strategy/_archived_pre_v2/defi/sol-concentrated-lp.md,
+    /codex/09-strategy/_archived_pre_v2/defi/active-defi-mm.md,
+  ]
 created: 2026-03-27
 authoritative_for: []
-referenced_by: [codex/09-strategy/_archived_pre_v2/STRATEGY_CATALOG_pre_v2.md, codex/09-strategy/_archived_pre_v2/defi/liquidation-cascade-capture.md, codex/09-strategy/_archived_pre_v2/defi/sol-concentrated-lp.md]
+referenced_by:
+  [
+    /codex/09-strategy/_archived_pre_v2/STRATEGY_CATALOG_pre_v2.md,
+    /codex/09-strategy/_archived_pre_v2/defi/liquidation-cascade-capture.md,
+    /codex/09-strategy/_archived_pre_v2/defi/sol-concentrated-lp.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -330,9 +339,10 @@ Proven techniques from professional LP managers (Gamma, Arrakis, Bunni):
 3. **Asymmetric ranges**: Shift range directionally based on trend signals from features-volatility-service. Bullish
    trend = shift range upward (less downside IL exposure). This is the LP equivalent of skewing quotes.
 
-4. **Rebalance cost threshold**: Only rebalance when `expected_IL_savings > rebalance_cost`. A $50 gas cost to rebalance
-   is not justified by $10 of IL reduction. The strategy calculates the break-even horizon before emitting a rebalance
-   instruction.
+4. **Rebalance cost threshold**: Only rebalance when `expected_IL_savings > rebalance_cost`. A
+   $50 gas cost to rebalance
+   is not justified by $10 of IL reduction. The strategy calculates the break-even horizon
+   before emitting a rebalance instruction.
 
 ### V3 vs V4 Differences
 
@@ -379,8 +389,8 @@ Rebalance: REMOVE_LIQUIDITY + re-ADD_LIQUIDITY at new range (all on same chain).
 
 Gas costs are tracked per-chain via Alchemy RPC using `eth_feeHistory` (EVM). The MTDS `gas_fee_handler` fetches
 real-time gas prices and writes them as features. Gas hits P&L immediately as a realized transaction cost -- not
-estimated. LP operations are gas-intensive: ~300k gas for add (~$27 at 30 gwei on L1), ~200k for remove (~$18), ~150k
-for fee collection (~$14). Frequent rebalancing on L1 can erode fee income -- the strategy checks that
+estimated. LP operations are gas-intensive: ~~300k gas for add (~~$27 at 30 gwei on L1), ~200k for remove (~$18), ~~150k
+for fee collection (~~$14). Frequent rebalancing on L1 can erode fee income -- the strategy checks that
 `expected_IL_savings > rebalance_gas_cost` before emitting any rebalance instruction. L2 deployments (Arbitrum, Base)
 reduce gas by ~100x.
 
@@ -389,9 +399,10 @@ reduce gas by ~100x.
 ## Instrument Filtering
 
 Pool and market discovery follows the rules in [instrument-filtering.md](../../operational/instrument-filtering.md). DEX
-pools require **BOTH sides** to be in `DEFI_MAJOR_ASSET_SYMBOLS` (~65 tokens). TVL minimums: $100k for EVM (Uniswap V3
-subgraph `minTvl` param), $10k for Solana DEXes (client-side filter). Multi-token pools (Balancer) require **ALL**
-tokens to be major assets.
+pools require **BOTH sides** to be in `DEFI_MAJOR_ASSET_SYMBOLS` (~65 tokens). TVL minimums:
+$100k for EVM (Uniswap V3
+subgraph `minTvl` param), $10k for Solana DEXes (client-side filter). Multi-token pools
+(Balancer) require **ALL** tokens to be major assets.
 
 ## E2E Manual Trading Workflow
 
@@ -466,7 +477,8 @@ rebalance swap). Execution-service rejects if slippage exceeds threshold.
 | 5    | Add liquidity at new tick range centered on current price | ADD_LIQUIDITY    | Gas: ~$25. Receive: new LP NFT |
 |      | **Total rebalance cost**                                  |                  | **~$60-65**                    |
 
-**Rebalance cost check:** only rebalance if `expected_IL_savings > rebalance_gas_cost`. A $60 gas cost is not justified
+**Rebalance cost check:** only rebalance if `expected_IL_savings > rebalance_gas_cost`. A
+$60 gas cost is not justified
 by $10 of IL reduction. Strategy calculates break-even horizon before emitting instruction.
 
 ### Exit Workflow

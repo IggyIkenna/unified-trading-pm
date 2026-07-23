@@ -12,10 +12,26 @@ stage: [meta]
 repos: [execution-service, features-service, strategy-service, unified-trading-system-ui]
 scope: [engineer, admin]
 tags: [mode-axis, batch-live, uac, quality-gates, strategy, execution]
-related: [../04-architecture/batch-live-architecture.md, ../02-data/pipeline-mode-partition.md, quality-gates.md]
+related:
+  [
+    /codex/04-architecture/batch-live-architecture.md,
+    /codex/02-data/pipeline-mode-partition.md,
+    /codex/06-coding-standards/quality-gates.md,
+  ]
 created: 2026-05-14
-authoritative_for: [four mode-axis enum taxonomy (RuntimeMode/OperationalMode/BatchExecutionMode/StrategyMaturityPhase), mode-conditional seam discipline]
-referenced_by: [codex/04-architecture/batch-live-architecture.md, codex/04-architecture/prediction-batch-live.md, codex/04-architecture/sports-batch-live.md, codex/04-architecture/tradfi-batch-live.md, codex/06-coding-standards/quality-gates.md]
+authoritative_for:
+  [
+    four mode-axis enum taxonomy (RuntimeMode/OperationalMode/BatchExecutionMode/StrategyMaturityPhase),
+    mode-conditional seam discipline,
+  ]
+referenced_by:
+  [
+    /codex/04-architecture/batch-live-architecture.md,
+    /codex/04-architecture/prediction-batch-live.md,
+    /codex/04-architecture/sports-batch-live.md,
+    /codex/04-architecture/tradfi-batch-live.md,
+    /codex/06-coding-standards/quality-gates.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -122,7 +138,7 @@ Not all combinations are meaningful. The table below shows valid runtime combina
 ## §3 Where mode-conditional code belongs — the seam rule
 
 Mode differences belong ONLY at the 4 seams defined in
-[`batch-live-architecture.md §2`](../04-architecture/batch-live-architecture.md):
+[`batch-live-architecture.md §2`](/codex/04-architecture/batch-live-architecture.md):
 
 1. **Data source seam** — `RuntimeMode` branch; batch reads GCS, live subscribes to Redis Stream / PubSub.
 2. **Feature seam** — `RuntimeMode` branch; batch loads from GCS, live calls embedded UTL package.
@@ -266,10 +282,10 @@ Enforcement file: `scripts/quality-gates-base/base-service.sh`. STEPs L1/L2/L3/L
 ## §7 Cross-references
 
 - **Batch/live invariant**:
-  [`../04-architecture/batch-live-architecture.md`](../04-architecture/batch-live-architecture.md)
+  [`/codex/04-architecture/batch-live-architecture.md`](/codex/04-architecture/batch-live-architecture.md)
 - **Modes UAC source**: `unified_api_contracts.internal.modes` (all 4 axes)
 - **Pipeline-mode partition** (data-path, orthogonal to these axes):
-  [`../02-data/pipeline-mode-partition.md`](../02-data/pipeline-mode-partition.md)
+  [`/codex/02-data/pipeline-mode-partition.md`](/codex/02-data/pipeline-mode-partition.md)
 - **QG STEPs L1-L7**: [`quality-gates.md`](quality-gates.md) § "STEP entries — batch/live symmetry"
 - **Pre-audit manifest**: `plans/questions/batch_live_design_symmetry_preaudit_2026_05_10.md § 1.Tab1`
 - **J1 helper (deferred)**: `unified_api_contracts/internal/domain/strategy_service/lifecycle.py:91-116`

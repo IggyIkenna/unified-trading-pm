@@ -16,20 +16,20 @@ tags: [market-making, avellaneda-stoikov, inventory-skew, clob, strategy]
 related:
   [
     ../families/market-making.md,
-    market-making-passive-spread.md,
-    market-making-ml-lean.md,
-    market-making-queue-microstructure.md,
-    market-making-event-settled.md,
+    /codex/09-strategy/architecture-v2/archetypes/market-making-passive-spread.md,
+    /codex/09-strategy/architecture-v2/archetypes/market-making-ml-lean.md,
+    /codex/09-strategy/architecture-v2/archetypes/market-making-queue-microstructure.md,
+    /codex/09-strategy/architecture-v2/archetypes/market-making-event-settled.md,
   ]
 created: 2026-05-19
 authoritative_for: [MARKET_MAKING_INVENTORY_SKEW archetype specification]
 referenced_by:
   [
-    codex/09-strategy/architecture-v2/archetypes/market-making-continuous.md,
-    codex/09-strategy/architecture-v2/archetypes/market-making-ml-lean.md,
-    codex/09-strategy/architecture-v2/archetypes/market-making-passive-spread.md,
-    codex/09-strategy/architecture-v2/archetypes/market-making-queue-microstructure.md,
-    codex/09-strategy/architecture-v2/families/market-making.md,
+    /codex/09-strategy/architecture-v2/archetypes/market-making-continuous.md,
+    /codex/09-strategy/architecture-v2/archetypes/market-making-ml-lean.md,
+    /codex/09-strategy/architecture-v2/archetypes/market-making-passive-spread.md,
+    /codex/09-strategy/architecture-v2/archetypes/market-making-queue-microstructure.md,
+    /codex/09-strategy/architecture-v2/families/market-making.md,
   ]
 owner:
 last_reviewed:

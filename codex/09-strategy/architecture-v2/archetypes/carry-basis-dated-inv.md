@@ -16,19 +16,19 @@ scope: [engineer, admin]
 tags: [strategy, carry, tradfi, defi, archetype, deribit]
 related:
   [
-    carry-basis-dated.md,
-    carry-basis-perp.md,
-    carry-basis-perp-inv.md,
-    carry-staked-basis-dated.md,
+    /codex/09-strategy/architecture-v2/archetypes/carry-basis-dated.md,
+    /codex/09-strategy/architecture-v2/archetypes/carry-basis-perp.md,
+    /codex/09-strategy/architecture-v2/archetypes/carry-basis-perp-inv.md,
+    /codex/09-strategy/architecture-v2/archetypes/carry-staked-basis-dated.md,
     ../families/carry-and-yield.md,
   ]
 created: "2026-05-18"
 authoritative_for: [CARRY_BASIS_DATED_INV archetype specification]
 referenced_by:
   [
-    codex/09-strategy/architecture-v2/archetypes/carry-basis-dated.md,
-    codex/09-strategy/architecture-v2/families/carry-and-yield.md,
-    codex/09-strategy/strategy-summary.md,
+    /codex/09-strategy/architecture-v2/archetypes/carry-basis-dated.md,
+    /codex/09-strategy/architecture-v2/families/carry-and-yield.md,
+    /codex/09-strategy/strategy-summary.md,
   ]
 owner:
 last_reviewed:

@@ -16,21 +16,21 @@ scope: [engineer, admin]
 tags: [manifest, consolidation, infrastructure, data-correctness, single-walk, instruments]
 related:
   [
-    ../02-data/availability-manifest-and-data-status.md,
-    ../02-data/data-pipeline-correctness-hard-rule.md,
-    ../03-observability/data-feed-sla-registry.md,
-    per-tab-worktrees.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/02-data/data-pipeline-correctness-hard-rule.md,
+    /codex/03-observability/data-feed-sla-registry.md,
+    /codex/05-infrastructure/per-tab-worktrees.md,
   ]
 created: 2026-05-20
 authoritative_for: [manifest consolidator runtime]
 referenced_by:
   [
-    codex/02-data/availability-manifest-and-data-status.md,
-    codex/03-observability/data-feed-sla-registry.md,
-    codex/05-infrastructure/gcs-lifecycle-policies.md,
-    codex/05-infrastructure/gcs-object-operations.md,
-    codex/15-runbooks/phase-2-6-bucket-name-cutover-runbook.md,
-    codex/05-infrastructure/vm-tarball-deployment.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/03-observability/data-feed-sla-registry.md,
+    /codex/05-infrastructure/gcs-lifecycle-policies.md,
+    /codex/05-infrastructure/gcs-object-operations.md,
+    /codex/15-runbooks/phase-2-6-bucket-name-cutover-runbook.md,
+    /codex/05-infrastructure/vm-tarball-deployment.md,
     plans/active/instruments_mtds_subset_consistency_remediation_2026_06_17.md,
     plans/epics/mtds_mdps_master.md,
   ]
@@ -143,7 +143,7 @@ temp files and bounds working memory via `memory_limit`.
   schema change; for large buckets pair with a high `CONSOLIDATOR_DUCKDB_MEMORY_LIMIT` on a big-RAM host). _(Pattern
   adopted (2026-07-03): the instrument lifecycle-catalogue rollup now uses the same canonical+delta shape — prev
   `catalog.parquet` + trailing-window upsert daily, weekly `--mode full` self-heal — see
-  [instruments-foundation-and-catalogue-completeness.md §4](../02-data/instruments-foundation-and-catalogue-completeness.md).)_
+  [instruments-foundation-and-catalogue-completeness.md §4](/codex/02-data/instruments-foundation-and-catalogue-completeness.md).)_
 - **`memory_limit`** = env `CONSOLIDATOR_DUCKDB_MEMORY_LIMIT` (default **8GB**), set BELOW the container so an oversized
   rebuild raises a catchable `OutOfMemoryException` instead of a kernel SIGKILL crash-loop. Anti/semi joins spill to
   `temp_directory`; the **window does NOT spill (DuckDB 1.5.x)** — so a bulk shard rewrite landing as one huge "changed"
@@ -182,7 +182,7 @@ Two HARD invariants on the DuckDB UNION ALL (`_duckdb_consolidate_and_write`, `u
 **Recovery when a deployed consolidator is on a bad image** (the fix is in UTL but the Cloud Run job runs an old
 digest): pause its cron → snapshot the canonical → FORCE-REBUILD the canonical locally with fixed UTL
 (`consolidate(bucket, force=True)` on a big-RAM host) → bump+rebuild the service image (or re-deploy the job to
-re-resolve `:latest`) → re-enable the cron. (See § "Image deploy-hygiene" in `codex/08-workflows/ci-cd-flow.md` — a UTL
+re-resolve `:latest`) → re-enable the cron. (See § "Image deploy-hygiene" in `/codex/08-workflows/ci-cd-flow.md` — a UTL
 fix does NOT reach a service image until its `BASE_IMAGE_DIGEST` is bumped + rebuilt.)
 
 ### Incremental cutoff = LAST-CONTENT-WRITE marker, NOT freshness mtime (idle-bucket trap fix, 2026-06-19)
@@ -297,10 +297,10 @@ venue × instrument × data_type × date cross-product, since only it knows the 
 formula, corrected 2026-07-20, doc-reconciliation P1-09**: this is the v1 shape. The live, CK3-certified (2026-06-29)
 formula is `reachable_coverage = captured / (captured + attempted_failed + expected_unattempted)` with `empty_confirmed`
 **EXCLUDED** from the reachable denominator (retained in the all-shards completeness view). SSOT:
-`codex/02-data/honest-coverage-model.md` § Coverage formula; shipping implementation
+`/codex/02-data/honest-coverage-model.md` § Coverage formula; shipping implementation
 `instruments-service/scripts/measure_honest_coverage.py`:600-603. instruments-service dominating the row count just
 means the backfill is early (most expected cells not yet captured) — it is manifest metadata, not data, so it does not
-violate "MTDS owns market data". SSOT: `codex/02-data/availability-manifest-and-data-status.md` § "expected-universe
+violate "MTDS owns market data". SSOT: `/codex/02-data/availability-manifest-and-data-status.md` § "expected-universe
 enumerator".
 
 ## Deprecated paths (do NOT use)
@@ -568,10 +568,10 @@ the tradfi tick `_index`, 2026-07-20 — dropped 686,005 `batch_massive` + 3,615
   `empty_confirmed` (with typed reason) / `attempted_failed` / `expected_unattempted`.
 - CLAUDE.md § "Data Pipeline Correctness Is The Heartbeat" — consolidator coverage gap (R-NEW-1) is a P0
   data-pipeline-correctness issue.
-- `codex/02-data/data-pipeline-correctness-hard-rule.md` — slot-freeze protocol if consolidator goes silent for >120s.
-- `codex/05-infrastructure/per-tab-worktrees.md` — per-VM shard discipline for tab worktrees writing to manifests.
+- `/codex/02-data/data-pipeline-correctness-hard-rule.md` — slot-freeze protocol if consolidator goes silent for >120s.
+- `/codex/05-infrastructure/per-tab-worktrees.md` — per-VM shard discipline for tab worktrees writing to manifests.
 - **Feed-SLA registry (2026-06-20)** — consolidator staleness is one feed in
-  `codex/03-observability/data-feed-sla-registry.md`. **Corrected 2026-07-12 (finding 205)** — was: a single blanket
+  `/codex/03-observability/data-feed-sla-registry.md`. **Corrected 2026-07-12 (finding 205)** — was: a single blanket
   `MANIFEST_CONSOLIDATED_STALENESS_SEC` (120s) → CRITICAL rule applied uniformly to every asset_group. **Superseded** by
   a shipped per-AG override: `deployment-api@90ace9f` (`deployment_api/routes/health_consolidator.py`) added
   `_AG_STALENESS_BUDGET_SEC: dict[str, int] = {"cefi": 86400}` + `_budget_for(asset_group, default)`, wired into both

@@ -15,15 +15,23 @@ scope: [engineer, admin]
 tags: [defi, execution, tenderly, batch-live, simulation, fork, provider]
 related:
   [
-    execution-modes-and-chain-resolution.md,
-    defi-execution-overview.md,
-    interface-credential-convention.md,
-    custody-providers.md,
-    amm-slippage-simulation.md,
+    /codex/04-architecture/execution-modes-and-chain-resolution.md,
+    /codex/04-architecture/defi-execution-overview.md,
+    /codex/04-architecture/interface-credential-convention.md,
+    /codex/04-architecture/custody-providers.md,
+    /codex/04-architecture/amm-slippage-simulation.md,
   ]
 created: 2026-03-30
 authoritative_for: [Tenderly VNet execution provider + BenchmarkFillProvider]
-referenced_by: [codex/04-architecture/amm-slippage-simulation.md, codex/04-architecture/custody-providers.md, codex/04-architecture/defi-phase3-infrastructure.md, codex/04-architecture/execution-modes-and-chain-resolution.md, codex/04-architecture/mev-protection.md, codex/05-infrastructure/chain-rpc-mev-tenderly.md]
+referenced_by:
+  [
+    /codex/04-architecture/amm-slippage-simulation.md,
+    /codex/04-architecture/custody-providers.md,
+    /codex/04-architecture/defi-phase3-infrastructure.md,
+    /codex/04-architecture/execution-modes-and-chain-resolution.md,
+    /codex/04-architecture/mev-protection.md,
+    /codex/05-infrastructure/chain-rpc-mev-tenderly.md,
+  ]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

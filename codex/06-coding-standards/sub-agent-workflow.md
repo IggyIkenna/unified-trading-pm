@@ -2,10 +2,9 @@
 doc_type: codex-ssot
 title: Sub-Agent Workflow
 summary: >-
-  Canonical rules for spawning + coordinating sub-agents — when to fan out (3+ repos / 3+
-  steps / >100K-token reads), the HARD mandatory-rules injection (paste
-  SUB_AGENT_MANDATORY_RULES.md or the agent MUST NOT proceed), parallelization limits (max
-  10, never same file), explicit model= selection, and the background-wake watchdog rule.
+  Canonical rules for spawning + coordinating sub-agents — when to fan out (3+ repos / 3+ steps / >100K-token reads),
+  the HARD mandatory-rules injection (paste SUB_AGENT_MANDATORY_RULES.md or the agent MUST NOT proceed), parallelization
+  limits (max 10, never same file), explicit model= selection, and the background-wake watchdog rule.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -13,7 +12,7 @@ stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer]
 tags: [orchestrator, sub-agent, role-registry, model-tier, escalation]
-related: [../12-agent-workflow/README.md, ../12-agent-workflow/async-wait-and-poll-discipline.md]
+related: [/codex/12-agent-workflow/README.md, /codex/12-agent-workflow/async-wait-and-poll-discipline.md]
 created: 2026-03-27
 authoritative_for: [sub-agent spawning + coordination workflow (mandatory-rules injection + parallelization limits)]
 referenced_by:
@@ -26,7 +25,7 @@ type: coding-standard
 # Sub-Agent Workflow
 
 > Canonical SSOT for spawning and coordinating sub-agents in this workspace. Sub-agents preserve the main context window
-> and cost ~10× less than doing everything in the main thread. Related: `codex/12-agent-workflow/README.md` (agent
+> and cost ~10× less than doing everything in the main thread. Related: `/codex/12-agent-workflow/README.md` (agent
 > topology) · `.cursor/rules/core/sub-agent-workflow-standard.mdc`.
 
 ---
@@ -154,4 +153,4 @@ active plan with the **target repo named** + cold-start context. Verbal/chat dis
 - A dispatched sub-agent is **not a reliable wake source** — a silent crash or rate-limit sends no completion signal.
 - Always arm your own `run_in_background` heartbeat watchdog (≤ 30-min) in the same turn as the dispatch.
 - `ScheduleWakeup` is NOT a reliable unattended timer — use a tracked `run_in_background` task instead.
-- SSOT: `codex/12-agent-workflow/async-wait-and-poll-discipline.md` § "Wake sources".
+- SSOT: `/codex/12-agent-workflow/async-wait-and-poll-discipline.md` § "Wake sources".

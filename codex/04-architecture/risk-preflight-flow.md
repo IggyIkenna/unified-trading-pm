@@ -15,19 +15,21 @@ scope: [engineer, admin]
 tags: [risk, execution, strategy, defi, kill-switch]
 related:
   [
-    risk-rule-taxonomy.md,
-    risk-breaker-seam.md,
-    kill-switch-circuit-breaker.md,
-    ../09-strategy/architecture-v2/cross-cutting/risk-gates.md,
+    /codex/04-architecture/risk-rule-taxonomy.md,
+    /codex/04-architecture/risk-breaker-seam.md,
+    /codex/04-architecture/kill-switch-circuit-breaker.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/risk-gates.md,
   ]
 created: 2026-05-11
 authoritative_for:
+  [risk pre-flight order-submission flow, risk_preflight aggregation semantics, Layer-2.5 wallet-tier pre-flight stack]
+referenced_by:
   [
-    risk pre-flight order-submission flow,
-    risk_preflight aggregation semantics,
-    Layer-2.5 wallet-tier pre-flight stack,
+    /codex/04-architecture/capital-efficiency-patterns.md,
+    /codex/04-architecture/kill-switch-circuit-breaker.md,
+    /codex/04-architecture/risk-breaker-seam.md,
+    /codex/04-architecture/risk-rule-taxonomy.md,
   ]
-referenced_by: [codex/04-architecture/capital-efficiency-patterns.md, codex/04-architecture/kill-switch-circuit-breaker.md, codex/04-architecture/risk-breaker-seam.md, codex/04-architecture/risk-rule-taxonomy.md]
 owner:
 last_reviewed: 2026-05-20
 code_refs:
@@ -49,12 +51,12 @@ code_refs:
 ## TL;DR
 
 `risk_preflight()` lives at **Layer 2** of the
-[4-layer risk-gates model](../09-strategy/architecture-v2/cross-cutting/risk-gates.md). Strategy-service calls it BEFORE
-sizing the order; execution-service calls it BEFORE submitting to the venue. (Both calls happen — defense in depth — but
-strategy-side caching is forbidden because portfolio state changes per tick.) The helper iterates every `RiskRule` whose
-scope matches `(archetype_id, venue, account_id, asset_group, client_id)` from the registry, evaluates each via
-`evaluate_rule(rule, context)`, and aggregates the per-rule consequences into a single `RiskPreflightResult`. Block
-aggregates as "any BLOCK wins"; scale-down aggregates as "min of all scale_factors"; monitor and test-only are
+[4-layer risk-gates model](/codex/09-strategy/architecture-v2/cross-cutting/risk-gates.md). Strategy-service calls it
+BEFORE sizing the order; execution-service calls it BEFORE submitting to the venue. (Both calls happen — defense in
+depth — but strategy-side caching is forbidden because portfolio state changes per tick.) The helper iterates every
+`RiskRule` whose scope matches `(archetype_id, venue, account_id, asset_group, client_id)` from the registry, evaluates
+each via `evaluate_rule(rule, context)`, and aggregates the per-rule consequences into a single `RiskPreflightResult`.
+Block aggregates as "any BLOCK wins"; scale-down aggregates as "min of all scale_factors"; monitor and test-only are
 passthrough annotations.
 
 ## Flow diagram
@@ -449,7 +451,7 @@ not on individual SCALE_DOWN events.
 - Risk-breaker escalation seam: [risk-breaker-seam.md](risk-breaker-seam.md)
 - Kill switch + circuit breaker mechanics: [kill-switch-circuit-breaker.md](kill-switch-circuit-breaker.md)
 - 4-layer risk-gates separation:
-  [../09-strategy/architecture-v2/cross-cutting/risk-gates.md](../09-strategy/architecture-v2/cross-cutting/risk-gates.md)
+  [/codex/09-strategy/architecture-v2/cross-cutting/risk-gates.md](/codex/09-strategy/architecture-v2/cross-cutting/risk-gates.md)
 - Layer 4 venue-side ErrorAction: [autonomous-recovery-matrix.md](autonomous-recovery-matrix.md)
 - Capital-at-risk ceiling composition: [capital-efficiency-patterns.md](capital-efficiency-patterns.md)
 - Plan-of-record:

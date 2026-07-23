@@ -13,15 +13,20 @@ stage: [meta]
 repos: [unified-trading-library, market-tick-data-service]
 scope: [engineer, admin]
 tags: [infrastructure, gcs, migration, performance, single-walk, data-correctness]
-related: [gcs-lifecycle-policies.md, manifest-consolidator-ssot.md, ../02-data/availability-manifest-and-data-status.md]
+related:
+  [
+    /codex/05-infrastructure/gcs-lifecycle-policies.md,
+    /codex/05-infrastructure/manifest-consolidator-ssot.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+  ]
 created: 2026-05-19
 authoritative_for: [gcs object-operation helpers, whole-corpus migration performance contract]
 referenced_by:
   [
-    codex/02-data/bucket-naming-and-config.md,
-    codex/05-infrastructure/gcs-lifecycle-policies.md,
-    codex/05-infrastructure/path-registry.md,
-    codex/15-runbooks/phase-2-6-bucket-name-cutover-runbook.md,
+    /codex/02-data/bucket-naming-and-config.md,
+    /codex/05-infrastructure/gcs-lifecycle-policies.md,
+    /codex/05-infrastructure/path-registry.md,
+    /codex/15-runbooks/phase-2-6-bucket-name-cutover-runbook.md,
     plans/audit/results/perf_benchmark_d8_2026_05_20.md,
   ]
 owner:
@@ -91,7 +96,7 @@ Byte-range read `[start, end)` — never the full object. For a bounded tail rea
 `start=max(0, size - cap)` / `end=size` (`size` from a prior `gcs_describe_object` call) so at most `cap` bytes ever
 reach caller memory, independent of the object's real size. Added 2026-07-21 for deployment-api's `run.log` tail
 endpoint (`GET /api/deployments/{name}/run-log/tail`, capped at 256KB/300 lines by default) — see
-`codex/05-infrastructure/deployment-observability.md` § "Run.log viewer" for the full read-path contract this backs.
+`/codex/05-infrastructure/deployment-observability.md` § "Run.log viewer" for the full read-path contract this backs.
 Same URI-splitting convention as `gcs_describe_object`; wraps `StorageClient.download_bytes_range` across gcp/aws/local.
 
 ## Requirements
@@ -121,8 +126,8 @@ subprocess.run(["gcloud", "storage", "objects", "describe", uri], ...)
 > **♻️ SINGLE-WALK DISCIPLINE — read this FIRST (cross-reference added 2026-07-20, doc-reconciliation P1-11).** This
 > section governs **HOW** a whole-corpus walk executes. It does **NOT** authorise opening one. Whether you may walk at
 > all is governed by
-> [`../02-data/availability-manifest-and-data-status.md`](../02-data/availability-manifest-and-data-status.md) § 9
-> "Single-walk discipline", and the reconciled rule is:
+> [`/codex/02-data/availability-manifest-and-data-status.md`](/codex/02-data/availability-manifest-and-data-status.md) §
+> 9 "Single-walk discipline", and the reconciled rule is:
 >
 > **ONE walk per corpus per campaign, with every pass bundled onto that ONE snapshot.** Opening a NEW, SEPARATE
 > whole-corpus walk for a single fix is **review-blocking**. Bundle into the campaign's existing walk, or use a

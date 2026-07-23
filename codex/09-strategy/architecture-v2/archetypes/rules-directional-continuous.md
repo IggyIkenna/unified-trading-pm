@@ -16,19 +16,19 @@ tags: [rules, strategy, tradfi, execution, registry]
 related:
   [
     ../families/rules-directional.md,
-    rules-directional-event-settled.md,
+    /codex/09-strategy/architecture-v2/archetypes/rules-directional-event-settled.md,
     ../../../04-architecture/artifact-versioning.md,
-    ml-directional-continuous.md,
+    /codex/09-strategy/architecture-v2/archetypes/ml-directional-continuous.md,
   ]
 created: 2026-04-17
 authoritative_for: [RULES_DIRECTIONAL_CONTINUOUS archetype specification]
 referenced_by:
   [
-    codex/09-strategy/_archived_pre_v2/cefi/mean-reversion.md,
-    codex/09-strategy/_archived_pre_v2/tradfi/commodity-regime.md,
-    codex/09-strategy/architecture-v2/archetypes/rules-directional-event-settled.md,
-    codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md,
-    codex/09-strategy/architecture-v2/families/rules-directional.md,
+    /codex/09-strategy/_archived_pre_v2/cefi/mean-reversion.md,
+    /codex/09-strategy/_archived_pre_v2/tradfi/commodity-regime.md,
+    /codex/09-strategy/architecture-v2/archetypes/rules-directional-event-settled.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md,
+    /codex/09-strategy/architecture-v2/families/rules-directional.md,
   ]
 owner:
 last_reviewed:

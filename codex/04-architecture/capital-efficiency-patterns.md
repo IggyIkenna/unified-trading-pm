@@ -2,9 +2,9 @@
 doc_type: codex-ssot
 title: Capital Efficiency Patterns
 summary:
-  12 capital-efficiency patterns (cross-margin basis, Deribit portfolio-margin greek netting, Reg-T, Aave LTV
-  recursive loop, Unity pooled book, flash-loan atomic composites, …) — each names required venue features + the
-  CaR / gross / net risk-rule ceilings that bound joint exposure; per-client allocation summed ≤100%.
+  12 capital-efficiency patterns (cross-margin basis, Deribit portfolio-margin greek netting, Reg-T, Aave LTV recursive
+  loop, Unity pooled book, flash-loan atomic composites, …) — each names required venue features + the CaR / gross / net
+  risk-rule ceilings that bound joint exposure; per-client allocation summed ≤100%.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -14,13 +14,23 @@ scope: [engineer, admin]
 tags: [capital, execution, defi, cefi, strategy, risk]
 related:
   [
-    capital-flow-model.md,
-    capital-structure-and-regulatory.md,
-    ../09-strategy/architecture-v2/cross-cutting/venue-account-coordination.md,
+    /codex/04-architecture/capital-flow-model.md,
+    /codex/04-architecture/capital-structure-and-regulatory.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/venue-account-coordination.md,
   ]
 created: 2026-04-17
 authoritative_for: [capital-efficiency patterns and joint-exposure risk ceilings]
-referenced_by: [codex/02-venues/venue-registry-reference.md, codex/03-services/venue-capability-registry.md, codex/04-architecture/capital-flow-model.md, codex/04-architecture/capital-structure-and-regulatory.md, codex/04-architecture/risk-preflight-flow.md, codex/04-architecture/risk-rule-taxonomy.md, codex/09-strategy/architecture-v2/archetypes/carry-basis-perp.md, codex/09-strategy/architecture-v2/archetypes/market-making-continuous.md]
+referenced_by:
+  [
+    /codex/02-venues/venue-registry-reference.md,
+    /codex/03-services/venue-capability-registry.md,
+    /codex/04-architecture/capital-flow-model.md,
+    /codex/04-architecture/capital-structure-and-regulatory.md,
+    /codex/04-architecture/risk-preflight-flow.md,
+    /codex/04-architecture/risk-rule-taxonomy.md,
+    /codex/09-strategy/architecture-v2/archetypes/carry-basis-perp.md,
+    /codex/09-strategy/architecture-v2/archetypes/market-making-continuous.md,
+  ]
 owner:
 last_reviewed: 2026-05-17
 code_refs:
@@ -110,7 +120,7 @@ risk models must account for equivalent delta.
 - Recursive loop
 
 **Benefit:** Leverage ETH staking yield by ~3× (depending on LTV decay per recursion). See
-[../09-strategy/architecture-v2/archetypes/carry-recursive-staked.md](../09-strategy/architecture-v2/archetypes/carry-recursive-staked.md).
+[/codex/09-strategy/architecture-v2/archetypes/carry-recursive-staked.md](/codex/09-strategy/architecture-v2/archetypes/carry-recursive-staked.md).
 
 **Requirements:**
 
@@ -258,7 +268,7 @@ Multiple patterns compose:
 - Pattern 7 (Unity pool) + Pattern 11 (deposit leverage) on Unity
 
 Venue-account coordination primitives
-([../09-strategy/architecture-v2/cross-cutting/venue-account-coordination.md](../09-strategy/architecture-v2/cross-cutting/venue-account-coordination.md))
+([/codex/09-strategy/architecture-v2/cross-cutting/venue-account-coordination.md](/codex/09-strategy/architecture-v2/cross-cutting/venue-account-coordination.md))
 make composition safe.
 
 ## Risk scaling
@@ -336,15 +346,15 @@ integration path.
 ## Cross-references
 
 - Venue-account coordination:
-  [../09-strategy/architecture-v2/cross-cutting/venue-account-coordination.md](../09-strategy/architecture-v2/cross-cutting/venue-account-coordination.md)
-- Venue registry: [../02-venues/venue-registry-reference.md](../02-venues/venue-registry-reference.md)
-- Unity: [../02-venues/unity-integration.md](../02-venues/unity-integration.md)
+  [/codex/09-strategy/architecture-v2/cross-cutting/venue-account-coordination.md](/codex/09-strategy/architecture-v2/cross-cutting/venue-account-coordination.md)
+- Venue registry: [/codex/02-venues/venue-registry-reference.md](/codex/02-venues/venue-registry-reference.md)
+- Unity: [/codex/02-venues/unity-integration.md](/codex/02-venues/unity-integration.md)
 - Recursive staked:
-  [../09-strategy/architecture-v2/archetypes/carry-recursive-staked.md](../09-strategy/architecture-v2/archetypes/carry-recursive-staked.md)
+  [/codex/09-strategy/architecture-v2/archetypes/carry-recursive-staked.md](/codex/09-strategy/architecture-v2/archetypes/carry-recursive-staked.md)
 - Liquidation archetype:
-  [../09-strategy/architecture-v2/archetypes/liquidation-capture.md](../09-strategy/architecture-v2/archetypes/liquidation-capture.md)
+  [/codex/09-strategy/architecture-v2/archetypes/liquidation-capture.md](/codex/09-strategy/architecture-v2/archetypes/liquidation-capture.md)
 - Risk gates:
-  [../09-strategy/architecture-v2/cross-cutting/risk-gates.md](../09-strategy/architecture-v2/cross-cutting/risk-gates.md)
+  [/codex/09-strategy/architecture-v2/cross-cutting/risk-gates.md](/codex/09-strategy/architecture-v2/cross-cutting/risk-gates.md)
 - Risk rule taxonomy (closed-set RiskRuleId / RiskRuleScope / RiskRuleTrigger):
   [risk-rule-taxonomy.md](risk-rule-taxonomy.md)
 - Risk pre-flight aggregation (every-order path): [risk-preflight-flow.md](risk-preflight-flow.md)

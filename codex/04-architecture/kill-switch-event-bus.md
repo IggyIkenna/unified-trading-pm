@@ -12,15 +12,41 @@ stage: [meta]
 repos: [alerting-service, execution-service, strategy-service]
 scope: [engineer, admin]
 tags: [kill-switch, execution, defi, uac, self-healing, audit, ssot]
-related: [plans/active/disaster_recovery_circuit_breakers_2026_05_10.md, plans/active/alerting_service_live_rules_2026_05_07.md, plans/active/risk_simulations_limits_alerting_2026_05_10.md]
+related:
+  [
+    plans/active/disaster_recovery_circuit_breakers_2026_05_10.md,
+    plans/active/alerting_service_live_rules_2026_05_07.md,
+    plans/active/risk_simulations_limits_alerting_2026_05_10.md,
+  ]
 created: 2026-05-11
 authoritative_for:
-  [KillSwitchBus arm/disarm lifecycle, kill-switch audit-log persistence, KillSwitchId registry, KillSwitchProvenance taxonomy]
-referenced_by: [codex/04-architecture/autonomous-recovery-matrix.md, codex/04-architecture/circuit-breaker-rule-taxonomy.md, codex/04-architecture/client-lifecycle-event-bus.md, codex/04-architecture/kill-switch-circuit-breaker.md, codex/04-architecture/manual-trade-booking.md, codex/04-architecture/mev-protection.md, codex/15-runbooks/wallet-tier-kill-switch-operator.md]
+  [
+    KillSwitchBus arm/disarm lifecycle,
+    kill-switch audit-log persistence,
+    KillSwitchId registry,
+    KillSwitchProvenance taxonomy,
+  ]
+referenced_by:
+  [
+    /codex/04-architecture/autonomous-recovery-matrix.md,
+    /codex/04-architecture/circuit-breaker-rule-taxonomy.md,
+    /codex/04-architecture/client-lifecycle-event-bus.md,
+    /codex/04-architecture/kill-switch-circuit-breaker.md,
+    /codex/04-architecture/manual-trade-booking.md,
+    /codex/04-architecture/mev-protection.md,
+    /codex/15-runbooks/wallet-tier-kill-switch-operator.md,
+  ]
 owner: ikenna
 last_reviewed: 2026-05-17
 code_refs:
-related_codex: [codex/04-architecture/kill-switch-circuit-breaker.md, codex/04-architecture/circuit-breaker-rule-taxonomy.md, codex/04-architecture/risk-breaker-seam.md, codex/04-architecture/autonomous-recovery-matrix.md, codex/03-observability/alerting.md]
+related_codex:
+  [
+    /codex/04-architecture/kill-switch-circuit-breaker.md,
+    /codex/04-architecture/circuit-breaker-rule-taxonomy.md,
+    /codex/04-architecture/risk-breaker-seam.md,
+    /codex/04-architecture/autonomous-recovery-matrix.md,
+    /codex/03-observability/alerting.md,
+  ]
 ---
 
 # Kill-Switch Event Bus — UTL `KillSwitchBus` + Audit-Log Persistence
@@ -245,7 +271,7 @@ bus.subscribe(ExecutionMatchingEngineSubscriber())
 - Subscribers MUST NOT raise on event consumption. Failures are logged + counted in `KillSwitchBus.fan_out_failures` but
   never propagate to the publisher.
 - Subscribers SHOULD acknowledge state via a lifecycle event (`KILL_SWITCH_ACKED` per
-  [`alerting.md`](../03-observability/alerting.md)) so the operator-facing UI can render per-subscriber state.
+  [`alerting.md`](/codex/03-observability/alerting.md)) so the operator-facing UI can render per-subscriber state.
 
 ## Multi-subscriber broadcast — execution / strategy / PBMS / alerting
 
@@ -346,7 +372,7 @@ Both ship in the same logical cycle — operator sees the recovery notification 
 - Breaker state machine + kill-switch propagation: [`kill-switch-circuit-breaker.md`](kill-switch-circuit-breaker.md).
 - Risk-controller seam: [`risk-breaker-seam.md`](risk-breaker-seam.md).
 - Layer-4 ErrorAction routing: [`autonomous-recovery-matrix.md`](autonomous-recovery-matrix.md).
-- Alerting AlertCode taxonomy: [`../03-observability/alerting.md`](../03-observability/alerting.md).
+- Alerting AlertCode taxonomy: [`/codex/03-observability/alerting.md`](/codex/03-observability/alerting.md).
 - UAC SSOT: `unified_api_contracts.canonical.crosscutting.kill_switch` (UAC@a7a99b5).
 - UTL SSOT: `unified_trading_library.kill_switch.bus` (predates DR plan; audited in Phase 0.C).
 - Plan:

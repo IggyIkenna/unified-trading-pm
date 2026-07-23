@@ -14,20 +14,20 @@ scope: [engineer, admin]
 tags: [sports, batch-live, manifest, pipeline-mode, odds]
 related:
   [
-    batch-live-architecture.md,
-    sports-integration-plan.md,
-    sports-live-odds-connectivity.md,
-    ../02-data/pipeline-mode-partition.md,
+    /codex/04-architecture/batch-live-architecture.md,
+    /codex/04-architecture/sports-integration-plan.md,
+    /codex/04-architecture/sports-live-odds-connectivity.md,
+    /codex/02-data/pipeline-mode-partition.md,
   ]
 created: 2026-06-11
 authoritative_for: [sports asset-group batch/live architecture, sports fixture-dependent empty-reason taxonomy]
 referenced_by:
   [
-    codex/04-architecture/batch-live-architecture.md,
-    codex/04-architecture/prediction-batch-live.md,
-    codex/04-architecture/sports-integration-plan.md,
-    codex/04-architecture/sports-live-odds-connectivity.md,
-    codex/04-architecture/tradfi-batch-live.md,
+    /codex/04-architecture/batch-live-architecture.md,
+    /codex/04-architecture/prediction-batch-live.md,
+    /codex/04-architecture/sports-integration-plan.md,
+    /codex/04-architecture/sports-live-odds-connectivity.md,
+    /codex/04-architecture/tradfi-batch-live.md,
   ]
 owner:
 last_reviewed: 2026-07-23
@@ -43,9 +43,9 @@ plan:
 > Per-asset-group narrative for `asset_group=sports`. Cross-cutting batch=live invariant lives in
 > [`batch-live-architecture.md`](batch-live-architecture.md) (whose §7 carries the SportsMatchingEngine bet-lifecycle
 > notes); the source-aware `pipeline_mode` contract lives in
-> [`../02-data/pipeline-mode-partition.md`](../02-data/pipeline-mode-partition.md) § "Ratified TARGET design". This doc
-> covers the sports-specific shape: source list, the fixture-pinned data model, batch-SSOT continuity, matcher pattern,
-> shard atomicity + the fixture-dependent empty-reason taxonomy.
+> [`/codex/02-data/pipeline-mode-partition.md`](/codex/02-data/pipeline-mode-partition.md) § "Ratified TARGET design".
+> This doc covers the sports-specific shape: source list, the fixture-pinned data model, batch-SSOT continuity, matcher
+> pattern, shard atomicity + the fixture-dependent empty-reason taxonomy.
 
 > **⚠️ CORRECTION (2026-07-23) — §1 source table was stale, no banner previously existed.** Two facts below were drifted
 > and are now fixed in place in §1: (1) **Fixtures entity is SPLIT** — `entity=fixtures_schedule` (schedule fields incl.
@@ -55,7 +55,7 @@ plan:
 > 2026-07-23, reverting the 2026-07-18 UPPER K0-DECISION(b) and its since-shipped K1/K2 uppercase migration). The §1
 > table is corrected to the lower-case target forms; the actual data/code revert has **not** executed yet — this is a
 > documented decision only, not yet the on-disk/in-code reality. Most-current casing state:
-> [`../02-data/sports-data-types-catalog.md`](../02-data/sports-data-types-catalog.md). SSOT for both:
+> [`/codex/02-data/sports-data-types-catalog.md`](/codex/02-data/sports-data-types-catalog.md). SSOT for both:
 > `plans/active/sports_consolidated_closeout_2026_07_19.md` (ENTITY-SPLIT / K-DECISIONS).
 
 ---
@@ -134,7 +134,7 @@ Sports fills route through `execution-service/execution_service/matching_engine/
 Sports shard atom is **`(asset_group=sports, venue/source, data_type, league_id, day)`**. **`fixture_id` is a row-level
 parquet column, NOT a shard axis** — `(league_id, day)` already bounds the per-day fixture set; promoting fixture_id
 would 10× the manifest for zero failure-isolation gain (multi-axis correction, SSOT:
-[`../02-data/availability-manifest-and-data-status.md`](../02-data/availability-manifest-and-data-status.md)).
+[`/codex/02-data/availability-manifest-and-data-status.md`](/codex/02-data/availability-manifest-and-data-status.md)).
 
 **Path SSOT**: `unified_api_contracts.sports.candidate_parquet_paths()`
 (`unified_api_contracts/canonical/domain/sports/gcs_paths.py`) — byte-exact batch=live, `pipeline_mode=`-aware at level
@@ -213,16 +213,16 @@ There is no sports live stream today (capability matrix, §1). The timing rules 
 - **Batch/live invariant (global) + SportsMatchingEngine narrative**:
   [`batch-live-architecture.md`](batch-live-architecture.md) §1–§4, §7
 - **Source-aware pipeline_mode + M1–M8 target**:
-  [`../02-data/pipeline-mode-partition.md`](../02-data/pipeline-mode-partition.md) § "Ratified TARGET design"
+  [`/codex/02-data/pipeline-mode-partition.md`](/codex/02-data/pipeline-mode-partition.md) § "Ratified TARGET design"
 - **Reconciliation column + precedence**:
-  [`../02-data/pipeline-mode-and-batch-live-reconciliation.md`](../02-data/pipeline-mode-and-batch-live-reconciliation.md)
+  [`/codex/02-data/pipeline-mode-and-batch-live-reconciliation.md`](/codex/02-data/pipeline-mode-and-batch-live-reconciliation.md)
 - **Sibling per-AG docs**: [`cefi-batch-live.md`](cefi-batch-live.md) · [`tradfi-batch-live.md`](tradfi-batch-live.md) ·
   [`prediction-batch-live.md`](prediction-batch-live.md)
 - **Shard-atom + empty-reason SSOT**:
-  [`../02-data/availability-manifest-and-data-status.md`](../02-data/availability-manifest-and-data-status.md) +
-  [`../02-data/honest-absence-downstream-handling.md`](../02-data/honest-absence-downstream-handling.md)
+  [`/codex/02-data/availability-manifest-and-data-status.md`](/codex/02-data/availability-manifest-and-data-status.md) +
+  [`/codex/02-data/honest-absence-downstream-handling.md`](/codex/02-data/honest-absence-downstream-handling.md)
 - **Mode-axis discipline**:
-  [`../06-coding-standards/mode-axis-discipline.md`](../06-coding-standards/mode-axis-discipline.md)
+  [`/codex/06-coding-standards/mode-axis-discipline.md`](/codex/06-coding-standards/mode-axis-discipline.md)
 - **Sports odds connectivity**: [`sports-live-odds-connectivity.md`](sports-live-odds-connectivity.md) +
   [`sports-integration-plan.md`](sports-integration-plan.md)
 - **Sports canonicalisation walk**: `plans/active/sports_manifest_canonicalisation_2026_06_01.md`

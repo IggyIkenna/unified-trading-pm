@@ -2,9 +2,9 @@
 doc_type: codex-ssot
 title: Batch / Live Architecture — single SSOT
 summary:
-  Single SSOT for batch=live — same code path, only the execution-fill source differs; 4 seams
-  (data/feature/ML/output), Redis-Stream inner-loop + PubSub cross-service (no synchronous RPC), anti-drift
-  guards, service audit matrix, matching-engine matchers, and 4-state live/batch capture parity.
+  Single SSOT for batch=live — same code path, only the execution-fill source differs; 4 seams (data/feature/ML/output),
+  Redis-Stream inner-loop + PubSub cross-service (no synchronous RPC), anti-drift guards, service audit matrix,
+  matching-engine matchers, and 4-state live/batch capture parity.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -14,14 +14,24 @@ scope: [engineer, admin]
 tags: [batch-live, pipeline, execution, features, mdps, data-correctness]
 related:
   [
-    cefi-batch-live.md,
-    alerting-batch-live.md,
-    ../02-data/pipeline-mode-partition.md,
-    ../05-infrastructure/live-pipeline-architecture.md,
+    /codex/04-architecture/cefi-batch-live.md,
+    /codex/04-architecture/alerting-batch-live.md,
+    /codex/02-data/pipeline-mode-partition.md,
+    /codex/05-infrastructure/live-pipeline-architecture.md,
   ]
 created: 2026-05-08
 authoritative_for: [cross-asset batch=live architecture invariant]
-referenced_by: [codex/02-data/live-data-persistence-and-event-log.md, codex/02-data/match-end-time-cascade.md, codex/02-data/venue-availability.md, codex/04-architecture/alerting-batch-live.md, codex/04-architecture/amm-slippage-simulation.md, codex/04-architecture/backfill-and-live-startup.md, codex/04-architecture/backtest-groups.md, codex/04-architecture/cefi-batch-live.md]
+referenced_by:
+  [
+    /codex/02-data/live-data-persistence-and-event-log.md,
+    /codex/02-data/match-end-time-cascade.md,
+    /codex/02-data/venue-availability.md,
+    /codex/04-architecture/alerting-batch-live.md,
+    /codex/04-architecture/amm-slippage-simulation.md,
+    /codex/04-architecture/backfill-and-live-startup.md,
+    /codex/04-architecture/backtest-groups.md,
+    /codex/04-architecture/cefi-batch-live.md,
+  ]
 owner:
 last_reviewed: 2026-06-11
 code_refs:
@@ -80,9 +90,10 @@ Data flow:
 
 > **POST-2026-05-08 SSOT** — the inner-loop live cascade between MTDS → MDPS → features-service is **Redis Stream**
 > (CANDLE_BOUNDARY_CROSSED + CANDLE_COMPUTED + FEATURES_COMPUTED), per
-> [`../05-infrastructure/live-pipeline-architecture.md`](../05-infrastructure/live-pipeline-architecture.md) § "Trigger
-> cascade" + [`../03-observability/coordination-events.md`](../03-observability/coordination-events.md). PubSub remains
-> the right transport for cross-service async fan-out (instruments-service catalogue refresh, strategy → execution,
+> [`/codex/05-infrastructure/live-pipeline-architecture.md`](/codex/05-infrastructure/live-pipeline-architecture.md) §
+> "Trigger cascade" +
+> [`/codex/03-observability/coordination-events.md`](/codex/03-observability/coordination-events.md). PubSub remains the
+> right transport for cross-service async fan-out (instruments-service catalogue refresh, strategy → execution,
 > alerting). Where this doc says "PubSub" below, read it as "the live transport family — Redis Stream for the inner-loop
 > cascade, PubSub for cross-service fan-out."
 
@@ -117,8 +128,8 @@ Inter-service data flow in live mode uses two complementary async transports:
 
 - **Redis Stream** — the inner-loop cascade between MTDS → MDPS → features-service. Consumer-group semantics (`XADD` /
   `XREADGROUP`) provide ordered per-shard delivery + replay-from-checkpoint when a consumer restarts. See
-  [`../05-infrastructure/live-pipeline-architecture.md`](../05-infrastructure/live-pipeline-architecture.md) for the
-  full CANDLE_BOUNDARY_CROSSED → CANDLE_COMPUTED → FEATURES_COMPUTED cascade contract.
+  [`/codex/05-infrastructure/live-pipeline-architecture.md`](/codex/05-infrastructure/live-pipeline-architecture.md) for
+  the full CANDLE_BOUNDARY_CROSSED → CANDLE_COMPUTED → FEATURES_COMPUTED cascade contract.
 - **PubSub** — cross-service async broadcast (instruments-service catalogue refresh, strategy → execution signals,
   alerting fan-out to multiple subscribers). Fire-and-forget; downstream consumers are independent.
 
@@ -343,8 +354,8 @@ Concrete consequences for implementers:
   per-row column; no new write path.
 - "Strategy / execution / ML signals + metrics in live mode" do **not** belong in Data-Status — those live in Monitor →
   Experiments / Live per the
-  [`../05-infrastructure/deployment-ui-architecture.md`](../05-infrastructure/deployment-ui-architecture.md) scope
-  split. Data-Status is data + pricing correctness only, regardless of mode.
+  [`/codex/05-infrastructure/deployment-ui-architecture.md`](/codex/05-infrastructure/deployment-ui-architecture.md)
+  scope split. Data-Status is data + pricing correctness only, regardless of mode.
 - Operator inferring the system shape from the UI: "live mode is a different time-slice of the same data path" — never
   "live mode is a different system."
 
@@ -498,7 +509,8 @@ Detail: [`instruments-live-architecture.md`](instruments-live-architecture.md) +
 ## §10 Live-pipeline timing semantics (UTC alignment + cascade rule)
 
 The MTDS → MDPS → features-service cascade preserves batch=live by three timing invariants. The full design contract
-lives in [`../05-infrastructure/live-pipeline-architecture.md`](../05-infrastructure/live-pipeline-architecture.md); the
+lives in
+[`/codex/05-infrastructure/live-pipeline-architecture.md`](/codex/05-infrastructure/live-pipeline-architecture.md); the
 rules below are the architectural commitments every live consumer + reader must honour.
 
 ### §10.1 UTC midnight alignment
@@ -518,8 +530,9 @@ Any service can boot in any order; they all sync at the next aligned boundary. M
 booting at `14:23:30Z` + features-service booting at `14:23:55Z` all emit their first events at the next aligned
 boundary for their respective timeframes — no startup handshake, no synchronization barrier. Mid-day restart of any
 single service loses some live data; the replay subsystem
-([`../05-infrastructure/replay-subsystem.md`](../05-infrastructure/replay-subsystem.md)) fills the gap. The downstream
-service sees a stable `period_end` watermark on every event regardless of which upstream service booted first.
+([`/codex/05-infrastructure/replay-subsystem.md`](/codex/05-infrastructure/replay-subsystem.md)) fills the gap. The
+downstream service sees a stable `period_end` watermark on every event regardless of which upstream service booted
+first.
 
 ### §10.3 Multi-timeframe cascade rule (4×15s → 1m, never tick-replay)
 
@@ -541,9 +554,9 @@ diverges live from batch (batch uses cascade) and produces silent OHLCV drift ac
 
 The 4-category gap semantics (FRESH / ZERO_ACTIVITY_BAR / no-emit / STALE / WS-dead-cascade) attach per-child; the
 cascade buffer aggregates the per-child flags into the parent according to the `data_freshness` propagation table in
-[`../05-infrastructure/live-pipeline-architecture.md`](../05-infrastructure/live-pipeline-architecture.md) § "Live gap
-semantics — stale-not-missing." `PUBLISHED_DEGRADED` on any child → `PUBLISHED_DEGRADED` on parent (degraded propagates
-up); pure carry-forward across all 4 children → `data_freshness=STALE` on parent.
+[`/codex/05-infrastructure/live-pipeline-architecture.md`](/codex/05-infrastructure/live-pipeline-architecture.md) §
+"Live gap semantics — stale-not-missing." `PUBLISHED_DEGRADED` on any child → `PUBLISHED_DEGRADED` on parent (degraded
+propagates up); pure carry-forward across all 4 children → `data_freshness=STALE` on parent.
 
 ### §10.4 Cross-cutting features fan-in
 
@@ -558,8 +571,8 @@ clock-skew falls back to conservative latest-watermark (never emit beyond the sl
 
 The mode/source/transport model + the continuity contract are SETTLED codex contract (operator-ratified 2026-06-05/07;
 codified per M-COORD-1/R6-codex). The SSOT is
-[`../02-data/pipeline-mode-partition.md`](../02-data/pipeline-mode-partition.md) § "Ratified TARGET design — live/replay
-(M1–M8 settled contract)"; this doc only carries the seam-level summary:
+[`/codex/02-data/pipeline-mode-partition.md`](/codex/02-data/pipeline-mode-partition.md) § "Ratified TARGET design —
+live/replay (M1–M8 settled contract)"; this doc only carries the seam-level summary:
 
 - `pipeline_mode = {mode}_{source}[_{transport}]` for all three modes; `replay_<source>` is a REAL mode;
   `live_websocket` is the transitional alias removed by the gated `M1-BREAKING` tranche; `transport` + `cadence` are
@@ -571,7 +584,7 @@ codified per M-COORD-1/R6-codex). The SSOT is
   `replay_<source>` itself.
 - After batch lands, T+1 reconciliation confirms batch ≈ live within tolerance, then a TTL clears redundant
   `live_<source>` cells — batch is the durable SSOT
-  ([`../02-data/pipeline-mode-and-batch-live-reconciliation.md`](../02-data/pipeline-mode-and-batch-live-reconciliation.md)).
+  ([`/codex/02-data/pipeline-mode-and-batch-live-reconciliation.md`](/codex/02-data/pipeline-mode-and-batch-live-reconciliation.md)).
 
 ---
 
@@ -591,8 +604,8 @@ quirks. All docs anchor on the invariants in §1-§4 above.
 > **[DELTA 2026-06-11 — supersedes the 2026-05-22 delta]** The tradfi / sports / prediction per-asset-group batch/live
 > seam docs are SHIPPED at cefi-batch-live.md depth (M-COORD-1/R6-codex): per-domain sources + venues, batch/live seams,
 > matcher, shard atomicity + empty rules, and the source-aware `pipeline_mode` shape per
-> [`../02-data/pipeline-mode-partition.md`](../02-data/pipeline-mode-partition.md). Remaining: the full DeFi narrative
-> (AMM matcher spec shipped; narrative pending).
+> [`/codex/02-data/pipeline-mode-partition.md`](/codex/02-data/pipeline-mode-partition.md). Remaining: the full DeFi
+> narrative (AMM matcher spec shipped; narrative pending).
 
 ---
 
@@ -634,7 +647,7 @@ locally instead of importing from UAC. Tab 3 ships the fix (re-export from UAC).
 copy. Do NOT propagate the local copy to new files.
 
 **SSOT for mode-axis semantics**:
-[`../06-coding-standards/mode-axis-discipline.md`](../06-coding-standards/mode-axis-discipline.md).
+[`/codex/06-coding-standards/mode-axis-discipline.md`](/codex/06-coding-standards/mode-axis-discipline.md).
 
 ---
 
@@ -652,7 +665,7 @@ The following anti-patterns are drawn from CLAUDE.md § "Batch = Live", `pipelin
    precedence tier), and bare `replay` / bare `batch` / bare `live` are all forbidden. (SUPERSEDES the prior "replay
    output writes to `pipeline_mode=live_websocket`" rule — that contradicted M1; `live_websocket` is only the
    TRANSITIONAL alias for not-yet-migrated live shards, removed in the gated `M1-BREAKING` tranche.) SSOT:
-   [`../02-data/pipeline-mode-partition.md`](../02-data/pipeline-mode-partition.md) § "Ratified TARGET design".
+   [`/codex/02-data/pipeline-mode-partition.md`](/codex/02-data/pipeline-mode-partition.md) § "Ratified TARGET design".
 5. **Building a standalone backtest engine per asset_group** — FORBIDDEN. All fills route through
    `execution-service/matching_engine/`.
 6. **Mode conditional inside business logic** — belongs only at the 4 seams in §2. See `mode-axis-discipline.md` AP-1.
@@ -669,15 +682,15 @@ The following anti-patterns are drawn from CLAUDE.md § "Batch = Live", `pipelin
   [`tradfi-batch-live.md`](tradfi-batch-live.md) · [`sports-batch-live.md`](sports-batch-live.md) ·
   [`prediction-batch-live.md`](prediction-batch-live.md) (all shipped 2026-06-11, R6-codex)
 - **Mode-axis discipline**:
-  [`../06-coding-standards/mode-axis-discipline.md`](../06-coding-standards/mode-axis-discipline.md) (cartesian
+  [`/codex/06-coding-standards/mode-axis-discipline.md`](/codex/06-coding-standards/mode-axis-discipline.md) (cartesian
   product + anti-patterns)
 - **Live pipeline architecture**:
-  [`../05-infrastructure/live-pipeline-architecture.md`](../05-infrastructure/live-pipeline-architecture.md) (MTDS
-  standalone + MDPS+features-asset-scoped colocated topology, Redis Stream cascade)
-- **Replay subsystem**: [`../05-infrastructure/replay-subsystem.md`](../05-infrastructure/replay-subsystem.md) (smooth
-  handoff replay → live)
+  [`/codex/05-infrastructure/live-pipeline-architecture.md`](/codex/05-infrastructure/live-pipeline-architecture.md)
+  (MTDS standalone + MDPS+features-asset-scoped colocated topology, Redis Stream cascade)
+- **Replay subsystem**: [`/codex/05-infrastructure/replay-subsystem.md`](/codex/05-infrastructure/replay-subsystem.md)
+  (smooth handoff replay → live)
 - **Pipeline-mode partition (data, not instruments)**:
-  [`../02-data/pipeline-mode-partition.md`](../02-data/pipeline-mode-partition.md)
+  [`/codex/02-data/pipeline-mode-partition.md`](/codex/02-data/pipeline-mode-partition.md)
 - **Instruments live = batch**: [`instruments-live-architecture.md`](instruments-live-architecture.md)
 - **Auto-recovery + kill-switches**: [`autonomous-recovery-matrix.md`](autonomous-recovery-matrix.md)
 - **Alerting parity**: [`alerting-batch-live.md`](alerting-batch-live.md)
@@ -688,20 +701,20 @@ The following anti-patterns are drawn from CLAUDE.md § "Batch = Live", `pipelin
   [`research-service-and-dart-integration.md`](research-service-and-dart-integration.md)
 - **Features-service architecture**: [`features-service-architecture.md`](features-service-architecture.md)
 - **Feature-service pattern**:
-  [`../06-coding-standards/feature-service-pattern.md`](../06-coding-standards/feature-service-pattern.md)
+  [`/codex/06-coding-standards/feature-service-pattern.md`](/codex/06-coding-standards/feature-service-pattern.md)
 - **Integration-testing layers**:
-  [`../06-coding-standards/integration-testing-layers.md`](../06-coding-standards/integration-testing-layers.md)
+  [`/codex/06-coding-standards/integration-testing-layers.md`](/codex/06-coding-standards/integration-testing-layers.md)
 - **Honest absence downstream handling**:
-  [`../02-data/honest-absence-downstream-handling.md`](../02-data/honest-absence-downstream-handling.md)
+  [`/codex/02-data/honest-absence-downstream-handling.md`](/codex/02-data/honest-absence-downstream-handling.md)
 - **Instrument-lifecycle cache delta hot-reload**:
   [`instrument-lifecycle-cache-delta-hot-reload.md`](instrument-lifecycle-cache-delta-hot-reload.md)
 - **Strategy config architecture**: see
-  [`../06-coding-standards/strategy-identity-versioning.md`](../06-coding-standards/strategy-identity-versioning.md)
+  [`/codex/06-coding-standards/strategy-identity-versioning.md`](/codex/06-coding-standards/strategy-identity-versioning.md)
 - **Data flow map**: see [`data-flow-map.md`](data-flow-map.md)
 - **Communication patterns**: see [`communication-patterns.md`](communication-patterns.md)
 - **Deployment topology diagrams**: see [`runtime-deployment-topology.md`](runtime-deployment-topology.md)
 - **Benchmark fills cross-cutting**:
-  [`../09-strategy/architecture-v2/cross-cutting/benchmark-fills.md`](../09-strategy/architecture-v2/cross-cutting/benchmark-fills.md)
+  [`/codex/09-strategy/architecture-v2/cross-cutting/benchmark-fills.md`](/codex/09-strategy/architecture-v2/cross-cutting/benchmark-fills.md)
 - **Matching engine**: `execution-service/execution_service/matching_engine/`
   - Sports: `sports_matching.py` (`SportsMatchingEngine`, `BetOrder`, `PortfolioSummary`)
   - Unified: `engine.py` (`MatchingEngine`, `BookType`, matchers)

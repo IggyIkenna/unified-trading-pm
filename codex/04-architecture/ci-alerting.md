@@ -16,9 +16,9 @@ scope: [engineer, admin]
 tags: [alerts, slack, ci-cd, dedup, observability, notifications]
 related:
   [
-    ../08-workflows/ci-cd-flow.md,
-    agent-orchestrator-alerting.md,
-    ../05-infrastructure/quickmerge-architecture.md,
+    /codex/08-workflows/ci-cd-flow.md,
+    /codex/04-architecture/agent-orchestrator-alerting.md,
+    /codex/05-infrastructure/quickmerge-architecture.md,
     ../../plans/active/deployment_alerts_ingestion_completeness_2026_07_20.md,
   ]
 created: 2026-07-13
@@ -234,11 +234,11 @@ the full `days`-windowed response once, then narrows/reorders in-memory.
 
 ## Cross-references
 
-- Pipeline mechanics + the workflow inventory: [ci-cd-flow.md](../08-workflows/ci-cd-flow.md) § "CI health monitor +
+- Pipeline mechanics + the workflow inventory: [ci-cd-flow.md](/codex/08-workflows/ci-cd-flow.md) § "CI health monitor +
   branch-health" and § "Central CI watcher — auto-recover vs escalate, and the RESOLVED bookend".
 - The sibling AO channel contract (same page-on-transition philosophy, server-side transport):
   [agent-orchestrator-alerting.md](agent-orchestrator-alerting.md).
 - The `/alerts` page's `pw:L2` regression contract: `deployment-ui/tests/smoke/alerts-page.spec.ts` (23 cases as of
   2026-07-21 — filter/sort/date-range/drill-down/layout, each individually plus one deliberately combined case). See
-  [ui-testing-layers.md](../06-coding-standards/ui-testing-layers.md) for how this fits deployment-ui's own testing
+  [ui-testing-layers.md](/codex/06-coding-standards/ui-testing-layers.md) for how this fits deployment-ui's own testing
   surface.

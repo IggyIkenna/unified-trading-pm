@@ -2,8 +2,8 @@
 doc_type: codex-ssot
 title: VM Tarball Deployment — SSOT
 summary: >-
-  SSOT for GCE tarball-based VM deployment — the two startup patterns (A canonical `setup-data-pipeline-vm.sh` /
-  B inline daemon), mandatory `lifecycle_class` invariants, the CORE+opt-in tarball fleet and refresh cycle, singleton
+  SSOT for GCE tarball-based VM deployment — the two startup patterns (A canonical `setup-data-pipeline-vm.sh` / B
+  inline daemon), mandatory `lifecycle_class` invariants, the CORE+opt-in tarball fleet and refresh cycle, singleton
   locks, per-shard cleanup discipline, observability + T+10min post-launch verification, and the failed-VM debug recipe.
 status: current
 nature: ssot
@@ -12,10 +12,27 @@ stage: [meta]
 repos: [agent-orchestrator, alerting-service, deployment-api, deployment-service, execution-service, features-service]
 scope: [engineer, admin]
 tags: [infrastructure, spot-vm, backfill, observability, scripts]
-related: [vm-launcher-runbook.md, vm-log-archival.md, spot-vms-for-backfill.md, manifest-consolidator-ssot.md, runtime-tiers-and-deployment.md]
+related:
+  [
+    /codex/05-infrastructure/vm-launcher-runbook.md,
+    /codex/05-infrastructure/vm-log-archival.md,
+    /codex/05-infrastructure/spot-vms-for-backfill.md,
+    /codex/05-infrastructure/manifest-consolidator-ssot.md,
+    /codex/05-infrastructure/runtime-tiers-and-deployment.md,
+  ]
 created: 2026-04-20
 authoritative_for: [VM tarball deployment startup patterns A and B]
-referenced_by: [codex/02-data/chunk-safe-manifest-migrations.md, codex/02-data/sports-scheduling-and-sharding.md, codex/04-architecture/cross-venue-prediction-arb-detection.md, codex/04-architecture/features-service-architecture.md, codex/04-architecture/ml-service-architecture.md, codex/04-architecture/strategy-service-architecture.md, codex/05-infrastructure/cloud-agnostic-build-lineage.md, codex/05-infrastructure/deployment-and-qg-strategy.md]
+referenced_by:
+  [
+    /codex/02-data/chunk-safe-manifest-migrations.md,
+    /codex/02-data/sports-scheduling-and-sharding.md,
+    /codex/04-architecture/cross-venue-prediction-arb-detection.md,
+    /codex/04-architecture/features-service-architecture.md,
+    /codex/04-architecture/ml-service-architecture.md,
+    /codex/04-architecture/strategy-service-architecture.md,
+    /codex/05-infrastructure/cloud-agnostic-build-lineage.md,
+    /codex/05-infrastructure/deployment-and-qg-strategy.md,
+  ]
 owner: deployment-platform
 last_reviewed: 2026-05-17
 code_refs:
@@ -102,7 +119,7 @@ Every VM spawned via `launch-*.sh` in `deployment-service/scripts/vm/` obeys the
    `VM_TASK=sports-manifest-rescan` (added 2026-04-21) cd's to `$WORKSPACE/instruments` and runs whatever Python command
    `VM_MIGRATION_CMD` carries — used by `launch-sports-manifest-rescan-vm.sh` to invoke
    `scripts/rescan_sports_fixtures_canonical.py` for the SPORTS FIXTURES per-league index rebuild (see
-   `codex/02-data/sports-data-source-coverage-matrix.md` §8, Wave 5 follow-up).
+   `/codex/02-data/sports-data-source-coverage-matrix.md` §8, Wave 5 follow-up).
 3. **Tarball fleet in one bucket**: `gs://deployment-scripts-central-element-323112/code/<repo>-code.tar.gz`. One
    tarball per repo. VMs download the tarballs they need based on `VM_SERVICE`.
 4. **CORE always present, services opt-in**: `unified-api-contracts`, `unified-trading-library`,
@@ -163,7 +180,7 @@ Every VM spawned via `launch-*.sh` in `deployment-service/scripts/vm/` obeys the
     shard-over-shard and the VM swap-deadlocks long before its work completes.
 
     The implementation contract for the per-shard cleanup hook lives in
-    [`codex/06-coding-standards/service-orchestration-patterns.md`](../06-coding-standards/service-orchestration-patterns.md)
+    [`/codex/06-coding-standards/service-orchestration-patterns.md`](/codex/06-coding-standards/service-orchestration-patterns.md)
     § 15 "Batch Service Lifecycle: Setup, Work, Cleanup". The contract is enforced at code-review time, not VM-launch
     time — the launcher cannot tell whether the service it runs has its cleanup hook wired. **Reference incident**:
     2026-05-28 MDPS 7-day backfill on `e2-standard-8` — the `_cleanup_after_day` hook existed but was only wired into
@@ -255,7 +272,7 @@ The README now calls this out in bold.
 - The `features-` VM prefix in `VM_PREFIX_TO_BUCKET` is registered ONCE for the consolidated launcher (replacing 8
   per-family prefixes that would otherwise drift).
 - Architecture SSOT:
-  [`../04-architecture/features-service-architecture.md`](../04-architecture/features-service-architecture.md).
+  [`/codex/04-architecture/features-service-architecture.md`](/codex/04-architecture/features-service-architecture.md).
 
 ---
 
@@ -515,7 +532,7 @@ wrapper — not per-launcher one-offs.
 > spot-check (sample parquet OHLC populated; cluster validation passing per writegate Phase 1A) before the run is
 > treated as operationally complete. See CLAUDE.md "No fire-and-forget VM launches"
 >
-> - `codex/02-data/honest-absence-downstream-handling.md` (the 1440-NaN incident framing) — both are part of the
+> - `/codex/02-data/honest-absence-downstream-handling.md` (the 1440-NaN incident framing) — both are part of the
 >   observability contract, not in addition to it.
 
 ### Post-launch verification — T+10min check (codified 2026-05-18)
@@ -651,8 +668,8 @@ verification recipe + coverage gap status + operational invariants.
 **SSOT cross-refs:**
 
 - [`manifest-consolidator-ssot.md`](manifest-consolidator-ssot.md) — canonical runtime SSOT
-- [`02-data/availability-manifest-and-data-status.md`](../02-data/availability-manifest-and-data-status.md) "Manifest
-  consolidator + per_vm shard merge mechanics"
+- [`02-data/availability-manifest-and-data-status.md`](/codex/02-data/availability-manifest-and-data-status.md)
+  "Manifest consolidator + per_vm shard merge mechanics"
 - UTL CLI: `python -m unified_trading_library.manifest_consolidator --bucket <X> --once`
 
 ---
@@ -789,8 +806,8 @@ as silent. Verify all four at the T+10min post-launch check.
 - Tarball bucket: `gs://deployment-scripts-central-element-323112/code/`
 - Setup script bucket: `gs://deployment-scripts-central-element-323112/vm/setup-data-pipeline-vm.sh`
 - Honest-coverage manifest schema (what VMs write on success/empty/failure):
-  [`02-data/availability-manifest-and-data-status.md`](../02-data/availability-manifest-and-data-status.md)
+  [`02-data/availability-manifest-and-data-status.md`](/codex/02-data/availability-manifest-and-data-status.md)
 - Shard-level failure isolation (why VMs don't raise inside per-venue loops):
-  [`04-architecture/shard-level-failure-isolation.md`](../04-architecture/shard-level-failure-isolation.md)
+  [`04-architecture/shard-level-failure-isolation.md`](/codex/04-architecture/shard-level-failure-isolation.md)
 - Coverage roadmap (how to use VM tarball deployment to reach ~100% honest coverage):
   `plans/archive/proper_coverage_roadmap_2026_04_20.plan.md`

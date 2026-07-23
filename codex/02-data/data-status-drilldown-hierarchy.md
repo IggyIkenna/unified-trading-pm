@@ -2,21 +2,34 @@
 doc_type: codex-ssot
 title: Data-status drill-down hierarchy = codex shard atom
 summary:
-  The data-status drilldown tree = the codex per-asset_group shard-axis matrix (UAC SHARD_AXIS_MATRIX) —
-  per-service drill paths top→leaf, feature_family as the features-service outer axis, pipeline_mode as the
-  outermost stratifier, the /api/data-status/drilldown backend + HierarchicalShardDrilldown UI, and per-leaf
-  row_key download/Deploy-Missing.
+  The data-status drilldown tree = the codex per-asset_group shard-axis matrix (UAC SHARD_AXIS_MATRIX) — per-service
+  drill paths top→leaf, feature_family as the features-service outer axis, pipeline_mode as the outermost stratifier,
+  the /api/data-status/drilldown backend + HierarchicalShardDrilldown UI, and per-leaf row_key download/Deploy-Missing.
 status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
-repos: [deployment-api, deployment-ui, features-service, instruments-service, market-tick-data-service, unified-api-contracts]
+repos:
+  [
+    deployment-api,
+    deployment-ui,
+    features-service,
+    instruments-service,
+    market-tick-data-service,
+    unified-api-contracts,
+  ]
 scope: [engineer]
 tags: [data-status, ui, manifest, mtds, features, honest-coverage]
-related: [availability-manifest-and-data-status.md, data-status-drilldown.md, honest-absence-downstream-handling.md, pipeline-mode-partition.md]
+related:
+  [
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/02-data/data-status-drilldown.md,
+    /codex/02-data/honest-absence-downstream-handling.md,
+    /codex/02-data/pipeline-mode-partition.md,
+  ]
 created: 2026-05-07
 authoritative_for: [data-status drilldown shard-axis tree hierarchy]
-referenced_by: [codex/02-data/data-status-drilldown.md, plans/epics/features_and_ml_master.md]
+referenced_by: [/codex/02-data/data-status-drilldown.md, plans/epics/features_and_ml_master.md]
 owner:
 last_reviewed: 2026-05-07
 code_refs:
@@ -57,7 +70,7 @@ Per-asset_group depth (matches CLAUDE.md "Per-asset-group shard-key matrix"):
 > `FeatureFamily` StrEnum: `onchain` / `volatility` / `cross_instrument` / `sports` / `calendar` / `commodity` /
 > `delta_one` / `multi_timeframe`) as the top-level shard axis so operators see the consolidated repo's coverage
 > per-family without mixing families. Architecture SSOT:
-> [`../04-architecture/features-service-architecture.md`](../04-architecture/features-service-architecture.md).
+> [`/codex/04-architecture/features-service-architecture.md`](/codex/04-architecture/features-service-architecture.md).
 
 > **`pipeline_mode` is the outermost partition column** above every tree shown above (added 2026-05-08 per
 > [`gcs_migration_bundle_pipeline_mode_2026_05_08`](../../plans/active/gcs_migration_bundle_pipeline_mode_2026_05_08.md)).

@@ -1,7 +1,9 @@
 ---
 doc_type: codex-ssot
 title: Share Classes -- Cross-Cutting Concern
-summary: "Pre-v2: share_class config (USDT/ETH/BTC) setting base-currency denomination and per-class target delta (0 for USDT, total_equity for coin classes), driving P&L currency, treasury, and rebalancing."
+summary:
+  "Pre-v2: share_class config (USDT/ETH/BTC) setting base-currency denomination and per-class target delta (0 for USDT,
+  total_equity for coin classes), driving P&L currency, treasury, and rebalancing."
 status: superseded
 nature: ssot
 asset_group: [meta]
@@ -16,7 +18,16 @@ related:
   ]
 created: 2026-04-03
 authoritative_for: []
-referenced_by: [codex/09-strategy/_archived_pre_v2/STRATEGY_CATALOG_pre_v2.md, codex/09-strategy/_archived_pre_v2/cross-cutting/pnl-attribution.md, codex/09-strategy/_archived_pre_v2/defi/aave-lending.md, codex/09-strategy/_archived_pre_v2/defi/basis-trade.md, codex/09-strategy/_archived_pre_v2/defi/recursive-staked-basis.md, codex/09-strategy/_archived_pre_v2/defi/staked-basis.md, codex/09-strategy/_archived_pre_v2/defi/unhedged-recursive.md]
+referenced_by:
+  [
+    /codex/09-strategy/_archived_pre_v2/STRATEGY_CATALOG_pre_v2.md,
+    /codex/09-strategy/_archived_pre_v2/cross-cutting/pnl-attribution.md,
+    /codex/09-strategy/_archived_pre_v2/defi/aave-lending.md,
+    /codex/09-strategy/_archived_pre_v2/defi/basis-trade.md,
+    /codex/09-strategy/_archived_pre_v2/defi/recursive-staked-basis.md,
+    /codex/09-strategy/_archived_pre_v2/defi/staked-basis.md,
+    /codex/09-strategy/_archived_pre_v2/defi/unhedged-recursive.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

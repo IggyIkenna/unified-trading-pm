@@ -39,14 +39,14 @@ tags:
   ]
 related:
   [
-    four-surface-reconciliation-procedure.md,
-    cross-asset-canonical-target-ssot.md,
-    availability-manifest-and-data-status.md,
-    defi-canonical-naming-ssot.md,
-    pipeline-mode-partition.md,
-    tradfi-databento-sourcing-ssot.md,
-    honest-coverage-model.md,
-    cross-asset-rescan-protocol.md,
+    /codex/02-data/four-surface-reconciliation-procedure.md,
+    /codex/02-data/cross-asset-canonical-target-ssot.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/02-data/defi-canonical-naming-ssot.md,
+    /codex/02-data/pipeline-mode-partition.md,
+    /codex/02-data/tradfi-databento-sourcing-ssot.md,
+    /codex/02-data/honest-coverage-model.md,
+    /codex/02-data/cross-asset-rescan-protocol.md,
     ../../plans/active/data_pipeline_reconciliation_skill_2026_07_20.md,
     ../../plans/active/issues/canonical_closeout_open_questions_2026_07_18.md,
   ]
@@ -61,10 +61,10 @@ authoritative_for:
   ]
 referenced_by:
   [
-    codex/02-data/four-surface-reconciliation-procedure.md,
-    codex/02-data/orphan-object-detection.md,
-    codex/02-data/non-canonical-path-inventory.md,
-    codex/02-data/cross-asset-canonical-target-ssot.md,
+    /codex/02-data/four-surface-reconciliation-procedure.md,
+    /codex/02-data/orphan-object-detection.md,
+    /codex/02-data/non-canonical-path-inventory.md,
+    /codex/02-data/cross-asset-canonical-target-ssot.md,
   ]
 owner:
 last_reviewed: 2026-07-20
@@ -343,7 +343,7 @@ From `market-tick-data-service/scripts/validate_manifest_coverage.py:15-23`.
 
 ### 2.7 Distinct-value census + per-datapoint id (from the census/compute-tier extension)
 
-> Added 2026-07-20 from `codex/02-data/reconciliation-census-and-compute-tiers.md` §4. The per-shard path oracle
+> Added 2026-07-20 from `/codex/02-data/reconciliation-census-and-compute-tiers.md` §4. The per-shard path oracle
 > `canonical_path_violations()` (`partition_paths.py:661`) validates path STRUCTURE only — it never checks the axis
 > segment VALUES against their enums, and it drops the filename before validating. The distinct-value census (G1) closes
 > the value blind spot in-session; the Tier-2 per-datapoint scan (G2) closes the id-form blind spot at 100%. These three
@@ -437,7 +437,7 @@ Three standing qualifiers:
   blank `source`.
 - **Why accepted** — all predate 2026-07-08; confirmed unreachable by the real v9-migrator `--apply` run; no
   deterministic `pipeline_mode`/`source` is derivable from any existing column, and no raw-provider-payload trail was
-  retrievable to reconstruct them (`codex/02-data/availability-manifest-and-data-status.md:637-645`;
+  retrievable to reconstruct them (`/codex/02-data/availability-manifest-and-data-status.md:637-645`;
   `instruments-service/scripts/restamp_is_sports_blank_source_2026_07_13.py:11-22`).
 - **Ruled by / when** — operator, **BLK-d48acae4, answered 2026-07-13, decision A**.
 - **Suppression rule** — any "0 blank `pipeline_mode`/`source` over full history" gate treats this residual as accepted.
@@ -456,7 +456,7 @@ Three standing qualifiers:
   `:278-280` and `:812`.
 - **Ruled by / when** — carried in shipped code as a documented carve-out; the leg-aware spec is tracked at
   `canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md`
-  (`codex/02-data/cross-asset-canonical-target-ssot.md:132-133`).
+  (`/codex/02-data/cross-asset-canonical-target-ssot.md:132-133`).
 - **Suppression rule** — never flag a `combo` shard's bare `underlying=` tail as `non_canonical_path`.
 - **Stops being an exception when** — the leg-aware combo id format is ruled and the filename guard is extended to
   `combo`.
@@ -473,9 +473,9 @@ Three standing qualifiers:
 - **What** — every address-identified defi row carries TWO ids, and the POOL-keyed rows show a deliberate divergence
   between them rather than a single rewritten id.
 - **Why accepted** — the two-id model is the ruled design, chosen to avoid a mass historical rewrite: "**Two-id model
-  (defi, Option A — intentional, NOT a gap)**" (`codex/02-data/cross-asset-canonical-target-ssot.md:202`), restated in
+  (defi, Option A — intentional, NOT a gap)**" (`/codex/02-data/cross-asset-canonical-target-ssot.md:202`), restated in
   the operator log at `:256` ("defi two-id model kept (Option A, no mass rewrite)"). POOL rows are additionally
-  protected by the pool-address `agg_key` collapse (`codex/02-data/defi-canonical-naming-ssot.md:212`).
+  protected by the pool-address `agg_key` collapse (`/codex/02-data/defi-canonical-naming-ssot.md:212`).
 - **Ruled by / when** — operator, 2026-07-18 close-out.
 - **Suppression rule** — an `instrument_id` ≠ `canonical_instrument_id` divergence on a defi POOL row is NOT a content
   finding.
@@ -492,7 +492,7 @@ Three standing qualifiers:
   objects lived under `pipeline_mode=batch_massive/`, even though Massive (formerly Polygon.io) was REMOVED as a tradfi
   SOURCE on 2026-07-19.
 - **Why accepted (historical)** — recognition was DELIBERATELY KEPT so historical data stayed readable until the gated
-  GCS purge completed: `codex/02-data/tradfi-databento-sourcing-ssot.md:49-59` (post-purge, updated in the same pass);
+  GCS purge completed: `/codex/02-data/tradfi-databento-sourcing-ssot.md:49-59` (post-purge, updated in the same pass);
   the residual exposure was a re-consolidation/backfill that tried to RE-STAMP legacy rows.
 - **Ruled by / when** — operator ruling 2026-07-19 (source removal, recognition narrowed not revoked); purge executed
   2026-07-20 (RUN_TS=20260720-193849).
@@ -510,7 +510,7 @@ Three standing qualifiers:
 - **Why accepted** — the Wave-B flat-`LENDING`-retire OVER-REACHED and was **REVERSED** (`wn12e7itc`). Retiring it made
   `build_instrument_id(...LENDING...)` raise, which broke 5+ MTDS writers into `attempted_failed`/zero-data via their
   shard-level `except ValueError`, and the partial A_TOKEN work-around created a shard-atom desync (GCS
-  `instrument_type=a_token` vs manifest `lending`). Sources: `codex/02-data/defi-canonical-naming-ssot.md:82` and
+  `instrument_type=a_token` vs manifest `lending`). Sources: `/codex/02-data/defi-canonical-naming-ssot.md:82` and
   `:117-118`; `plans/active/issues/canonical_closeout_open_questions_2026_07_18.md:158-171`.
 - **Ruled by / when** — reversal was shipped in code; the FORWARD decision is now **RULED 2026-07-20 (operator D2 — FULL
   retire)** (CORRECTION 2026-07-20: was "PARKED for the operator, decision D, 2026-07-19"). The retire is gated on
@@ -549,7 +549,7 @@ Three standing qualifiers:
   `day=`/`timeframe=`/`data_type=`) are NEVER suppressed by either mode — see
   `unified-api-contracts/unified_api_contracts/canonical/partition_paths.py::_candle_path_violations`.
 - **Stops being an exception when** — the per-asset-group candle migration lands (see
-  `codex/02-data/canonical-cutover-register.md` for per-AG effective-from dates once populated); post-migration, a
+  `/codex/02-data/canonical-cutover-register.md` for per-AG effective-from dates once populated); post-migration, a
   surviving flat candle object for that asset_group is a genuine finding.
 
 ---
@@ -590,7 +590,7 @@ re-opening a settled ruling.
   DRAIN-GATED `--apply` runs frozen."~~ Replaced by the RULED stance above: the axis is ruled UPPERCASE-target, compared
   case-INSENSITIVELY, and not flagged during `migration_pending`. The `--apply` migration is now gated on the
   honest-coverage harness fix, not "frozen pending a ruling".
-- **Side A — lowercase.** `codex/02-data/cross-asset-canonical-target-ssot.md:210-212`, § "instrument_type case + venue
+- **Side A — lowercase.** `/codex/02-data/cross-asset-canonical-target-ssot.md:210-212`, § "instrument_type case + venue
   spelling": "**case**: LOWERCASE in the GCS path segment + the manifest `instrument_type` column (writer grain);
   **UPPER** only in [the id]". Restated in the operator log at `:257` and in the defi plan. (The path-segment-lowercase
   half remains correct and enforced; only the manifest-COLUMN half is SUPERSEDED toward the UPPERCASE target by D1.)

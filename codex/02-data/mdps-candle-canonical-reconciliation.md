@@ -21,14 +21,14 @@ scope: [engineer, admin]
 tags: [reconciliation, canonicalisation, candles, mdps, processed-candles, timeframe, shard-atom, machine-oracle]
 related:
   [
-    four-surface-reconciliation-procedure.md,
-    reconciliation-finding-taxonomy.md,
-    reconciliation-census-and-compute-tiers.md,
-    cross-asset-canonical-target-ssot.md,
-    canonical-cutover-register.md,
-    per-asset-group-bucket-layouts.md,
-    chart-candle-delivery-flow.md,
-    bar-boundary-candle-edge-convention.md,
+    /codex/02-data/four-surface-reconciliation-procedure.md,
+    /codex/02-data/reconciliation-finding-taxonomy.md,
+    /codex/02-data/reconciliation-census-and-compute-tiers.md,
+    /codex/02-data/cross-asset-canonical-target-ssot.md,
+    /codex/02-data/canonical-cutover-register.md,
+    /codex/02-data/per-asset-group-bucket-layouts.md,
+    /codex/02-data/chart-candle-delivery-flow.md,
+    /codex/02-data/bar-boundary-candle-edge-convention.md,
     ../../plans/active/issues/candle_feature_canonical_path_divergence_2026_07_20.md,
     ../../plans/active/issues/mdps_derivative_ticker_candle_schema_violation_2026_07_20.md,
   ]

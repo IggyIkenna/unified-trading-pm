@@ -1,29 +1,42 @@
 ---
 doc_type: codex-ssot
-title: '`pipeline_mode` Column — Batch/Live Reconciliation'
+title: "`pipeline_mode` Column — Batch/Live Reconciliation"
 summary: >-
-  pipeline_mode manifest-column SSOT — the source-aware {mode}_{source}[_{transport}] value
-  (mode in batch/live/replay, source=vendor-only, transport in a separate column), the
-  resolve_pipeline_mode / derive_pipeline_mode_for_row helpers, the batch<->live reconciliation
-  agreement rules, and the reconciliation-service-facing M1-M8 contract slice (could_exist guardrail,
-  select_for_mode, M6 startup gate, M7 replay recovery, T+1 live TTL).
+  pipeline_mode manifest-column SSOT — the source-aware {mode}_{source}[_{transport}] value (mode in batch/live/replay,
+  source=vendor-only, transport in a separate column), the resolve_pipeline_mode / derive_pipeline_mode_for_row helpers,
+  the batch<->live reconciliation agreement rules, and the reconciliation-service-facing M1-M8 contract slice
+  (could_exist guardrail, select_for_mode, M6 startup gate, M7 replay recovery, T+1 live TTL).
 status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
-repos: [batch-live-reconciliation-service, deployment-api, instruments-service, market-tick-data-service, unified-api-contracts, unified-trading-pm]
+repos:
+  [
+    batch-live-reconciliation-service,
+    deployment-api,
+    instruments-service,
+    market-tick-data-service,
+    unified-api-contracts,
+    unified-trading-pm,
+  ]
 scope: [engineer, admin]
 tags: [pipeline-mode, reconciliation, manifest, batch-live, live-trading, migration]
 related:
   [
-    codex/02-data/pipeline-mode-partition.md,
-    codex/02-data/availability-manifest-and-data-status.md,
-    codex/02-data/contracts-scope-and-layout.md,
+    /codex/02-data/pipeline-mode-partition.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/02-data/contracts-scope-and-layout.md,
   ]
 created: 2026-05-28
-authoritative_for:
-  [pipeline_mode manifest column semantics, batch-live-replay reconciliation agreement rules]
-referenced_by: [codex/02-data/pipeline-mode-partition.md, codex/04-architecture/batch-live-architecture.md, codex/04-architecture/prediction-batch-live.md, codex/04-architecture/sports-batch-live.md, codex/04-architecture/tradfi-batch-live.md]
+authoritative_for: [pipeline_mode manifest column semantics, batch-live-replay reconciliation agreement rules]
+referenced_by:
+  [
+    /codex/02-data/pipeline-mode-partition.md,
+    /codex/04-architecture/batch-live-architecture.md,
+    /codex/04-architecture/prediction-batch-live.md,
+    /codex/04-architecture/sports-batch-live.md,
+    /codex/04-architecture/tradfi-batch-live.md,
+  ]
 owner:
 last_reviewed: 2026-06-11
 code_refs:

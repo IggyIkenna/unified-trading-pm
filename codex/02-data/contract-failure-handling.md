@@ -2,9 +2,9 @@
 doc_type: codex-ssot
 title: Contract Failure Handling
 summary:
-  Adapter failure routing — pre-normalisation _safe_parse Pydantic failures go to the DLQ (DeadLetterRecord → GCS
-  + Pub/Sub DEAD_LETTER_VALIDATION, 0 retries) while mid-normalisation transient/data-quality errors use
-  record_failed() / record_empty() per the 4-state capture_status contract.
+  Adapter failure routing — pre-normalisation _safe_parse Pydantic failures go to the DLQ (DeadLetterRecord → GCS +
+  Pub/Sub DEAD_LETTER_VALIDATION, 0 retries) while mid-normalisation transient/data-quality errors use record_failed() /
+  record_empty() per the 4-state capture_status contract.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -12,7 +12,7 @@ stage: [meta]
 repos: [unified-api-contracts]
 scope: [engineer, admin]
 tags: [uac, data-pipeline, validation, manifest, capture-status]
-related: [honest-absence-downstream-handling.md, availability-manifest-and-data-status.md]
+related: [/codex/02-data/honest-absence-downstream-handling.md, /codex/02-data/availability-manifest-and-data-status.md]
 created: 2026-03-27
 authoritative_for: [adapter contract-failure DLQ routing (pre-normalisation validation failures)]
 referenced_by:

@@ -9,13 +9,28 @@ status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
-repos: [deployment-service, features-service, instruments-service, market-data-processing-service, market-tick-data-service, unified-api-contracts]
+repos:
+  [
+    deployment-service,
+    features-service,
+    instruments-service,
+    market-data-processing-service,
+    market-tick-data-service,
+    unified-api-contracts,
+  ]
 scope: [engineer, admin]
 tags: [estimation-calibration, plan-hygiene, performance, refactor, cost]
 related: [./estimation-retrospective-ledger.md, ../../plans/epics/README.md]
 created: 2026-05-11
 authoritative_for: [estimation-calibration per-class multipliers + AI-day-vs-wall-clock parallelism model]
-referenced_by: [codex/08-workflows/estimation-retrospective-ledger.md, codex/11-project-management/active-plan-inventory-tracker.md, codex/11-project-management/epic-execution-with-sub-agents.md, plans/active/master_to_live_defi_2026_05_23.md, plans/epics/README.md]
+referenced_by:
+  [
+    /codex/08-workflows/estimation-retrospective-ledger.md,
+    /codex/11-project-management/active-plan-inventory-tracker.md,
+    /codex/11-project-management/epic-execution-with-sub-agents.md,
+    plans/active/master_to_live_defi_2026_05_23.md,
+    plans/epics/README.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -94,9 +109,9 @@ fan-out, ~1.5 days at 8-slot fan-out.
 ### Optional frontmatter field
 
 ```yaml
-effective_concurrent_slots: 1     # default; single-slot serial work
-effective_concurrent_slots: 2-4   # typical multi-phase plan with some serial deps
-effective_concurrent_slots: 5-8   # heavily-parallel multi-phase plan; rare
+effective_concurrent_slots: 1 # default; single-slot serial work
+effective_concurrent_slots: 2-4 # typical multi-phase plan with some serial deps
+effective_concurrent_slots: 5-8 # heavily-parallel multi-phase plan; rare
 ```
 
 Use the **range form** when the parallelism axis is ambiguous (depends on what other slots are doing this cycle). Most

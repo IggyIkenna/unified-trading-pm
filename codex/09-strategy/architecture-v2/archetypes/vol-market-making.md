@@ -14,14 +14,20 @@ repos: [strategy-service]
 scope: [engineer, admin]
 tags: [strategy, vol-trading, options, deribit, market-making, delta-hedge, book-microstructure]
 related:
-  [vol-carry.md, vol-0dte-gamma-scalping.md, market-making-continuous.md, vol-arb-rv-iv.md, ../families/vol-trading.md]
+  [
+    /codex/09-strategy/architecture-v2/archetypes/vol-carry.md,
+    /codex/09-strategy/architecture-v2/archetypes/vol-0dte-gamma-scalping.md,
+    /codex/09-strategy/architecture-v2/archetypes/market-making-continuous.md,
+    /codex/09-strategy/architecture-v2/archetypes/vol-arb-rv-iv.md,
+    ../families/vol-trading.md,
+  ]
 created: 2026-05-19
 authoritative_for: ["VOL_MARKET_MAKING archetype spec"]
 referenced_by:
   [
-    codex/09-strategy/_archived_pre_v2/tradfi/market-making-options.md,
-    codex/09-strategy/architecture-v2/archetypes/vol-0dte-gamma-scalping.md,
-    codex/09-strategy/architecture-v2/families/vol-trading.md,
+    /codex/09-strategy/_archived_pre_v2/tradfi/market-making-options.md,
+    /codex/09-strategy/architecture-v2/archetypes/vol-0dte-gamma-scalping.md,
+    /codex/09-strategy/architecture-v2/families/vol-trading.md,
   ]
 owner:
 last_reviewed:

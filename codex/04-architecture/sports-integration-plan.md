@@ -20,14 +20,19 @@ repos:
   ]
 scope: [engineer, admin]
 tags: [sports, features, ml, execution, odds, superseded]
-related: [sports-batch-live.md, sports-live-odds-connectivity.md, ../02-data/per-asset-group-bucket-layouts.md]
+related:
+  [
+    /codex/04-architecture/sports-batch-live.md,
+    /codex/04-architecture/sports-live-odds-connectivity.md,
+    /codex/02-data/per-asset-group-bucket-layouts.md,
+  ]
 created: 2026-03-27
 authoritative_for: []
-referenced_by: [codex/04-architecture/sports-batch-live.md, codex/04-architecture/sports-live-odds-connectivity.md]
+referenced_by: [/codex/04-architecture/sports-batch-live.md, /codex/04-architecture/sports-live-odds-connectivity.md]
 owner:
 last_reviewed: 2026-07-23
 superseded_by:
-  [plans/active/sports_consolidated_closeout_2026_07_19.md, codex/02-data/sports-adapter-dependency-order.md]
+  [plans/active/sports_consolidated_closeout_2026_07_19.md, /codex/02-data/sports-adapter-dependency-order.md]
 code_refs:
 ---
 
@@ -66,9 +71,9 @@ code_refs:
 >   does not fire — every real caller omits the `date=` keyword argument the gate checks — so cross-provider fixture
 >   matching runs with NO enforced ordering guarantee. Never cite this doc as evidence the gate is active.
 >
-> **For the live, current sports architecture and state read instead:** `codex/04-architecture/sports-batch-live.md`,
-> `codex/02-data/sports-adapter-dependency-order.md` (adapter run-order + the T0/T1 gate caveat, body rewritten
-> 2026-07-23), `codex/02-data/sports-gcs-path-ssot.md`, `plans/epics/sports_master.md`, and — the canonical, freshly
+> **For the live, current sports architecture and state read instead:** `/codex/04-architecture/sports-batch-live.md`,
+> `/codex/02-data/sports-adapter-dependency-order.md` (adapter run-order + the T0/T1 gate caveat, body rewritten
+> 2026-07-23), `/codex/02-data/sports-gcs-path-ssot.md`, `plans/epics/sports_master.md`, and — the canonical, freshly
 > reconciled SSOT plan for all of the above — `plans/active/sports_consolidated_closeout_2026_07_19.md` (supersedes the
 > earlier `sports_consolidated_audit_2026_07_19.md`, which is itself the input audit, not the current plan).
 

@@ -26,14 +26,14 @@ scope: [engineer, admin]
 tags: [prediction, arbitrage, cross-venue, betfair, sports, features, execution, mtds, data-correctness]
 related:
   [
-    ../09-strategy/architecture-v2/archetypes/arbitrage-price-dispersion.md,
-    strategy-execution-protocol.md,
-    paper-vs-live-execution-seam.md,
-    ../09-strategy/architecture-v2/cross-cutting/prediction-markets.md,
-    ../02-data/availability-manifest-and-data-status.md,
-    ../05-infrastructure/vm-tarball-deployment.md,
-    ../05-infrastructure/deployment-observability.md,
-    ../12-agent-workflow/async-wait-and-poll-discipline.md,
+    /codex/09-strategy/architecture-v2/archetypes/arbitrage-price-dispersion.md,
+    /codex/04-architecture/strategy-execution-protocol.md,
+    /codex/04-architecture/paper-vs-live-execution-seam.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/prediction-markets.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/05-infrastructure/vm-tarball-deployment.md,
+    /codex/05-infrastructure/deployment-observability.md,
+    /codex/12-agent-workflow/async-wait-and-poll-discipline.md,
   ]
 created: 2026-06-24
 authoritative_for:
@@ -57,7 +57,7 @@ code_refs:
 # Cross-Venue Prediction Arb — N-venue detector, net-of-fees gate, GCS arb store, execution bridge
 
 **Status:** SHIPPED (2026-07-20), paper-proven end-to-end. Owning epic: `predictions_master`. Parent archetype:
-[`arbitrage_price_dispersion`](../09-strategy/architecture-v2/archetypes/arbitrage-price-dispersion.md)
+[`arbitrage_price_dispersion`](/codex/09-strategy/architecture-v2/archetypes/arbitrage-price-dispersion.md)
 (`dispersion_type = "cross-venue-prediction-dispersion"`).
 
 > **One line:** the same real-world outcome is quoted as a YES probability on several venues; we normalize them all to
@@ -234,7 +234,7 @@ odds join deterministic:
    loop. Backtest/paper settles via `GroupBRunner` + `BenchmarkFillEngine`, and the **T4 tier ban forbids a
    strategy→execution import** ([`tier-and-import-architecture.md`](tier-and-import-architecture.md)) — so the seam
    needs an operator-directed `EventTransport` decision
-   ([`../02-data/live-data-persistence-and-event-log.md`](../02-data/live-data-persistence-and-event-log.md)).
+   ([`/codex/02-data/live-data-persistence-and-event-log.md`](/codex/02-data/live-data-persistence-and-event-log.md)).
 2. **Betfair two-sided book needs Betfair Exchange API credentials.** The Odds-API aggregator is BACK-only; until a lay
    book is persisted, SELL-Betfair stays honestly absent (the formula + kernel edge are already in place).
 3. **Compensation for an already-MATCHED leader.** `cancel_bet` pulls a _resting_ order; it does **not** offset a filled
@@ -250,17 +250,17 @@ odds join deterministic:
 
 ## Composes with
 
-[`arbitrage-price-dispersion.md`](../09-strategy/architecture-v2/archetypes/arbitrage-price-dispersion.md) (parent
+[`arbitrage-price-dispersion.md`](/codex/09-strategy/architecture-v2/archetypes/arbitrage-price-dispersion.md) (parent
 archetype) · [`strategy-execution-protocol.md`](strategy-execution-protocol.md) (the `AtomicInstruction` contract) ·
 [`paper-vs-live-execution-seam.md`](paper-vs-live-execution-seam.md) (mode divergence lives only at the fill source) ·
-[`../09-strategy/architecture-v2/cross-cutting/prediction-markets.md`](../09-strategy/architecture-v2/cross-cutting/prediction-markets.md)
+[`/codex/09-strategy/architecture-v2/cross-cutting/prediction-markets.md`](/codex/09-strategy/architecture-v2/cross-cutting/prediction-markets.md)
 (prediction venues as a three-role surface) ·
-[`../02-data/availability-manifest-and-data-status.md`](../02-data/availability-manifest-and-data-status.md) (honest
-absence) · [`../05-infrastructure/deployment-observability.md`](../05-infrastructure/deployment-observability.md) (VM
-run
+[`/codex/02-data/availability-manifest-and-data-status.md`](/codex/02-data/availability-manifest-and-data-status.md)
+(honest absence) ·
+[`/codex/05-infrastructure/deployment-observability.md`](/codex/05-infrastructure/deployment-observability.md) (VM run
 
 - classify) ·
-[`../12-agent-workflow/async-wait-and-poll-discipline.md`](../12-agent-workflow/async-wait-and-poll-discipline.md)
+[`/codex/12-agent-workflow/async-wait-and-poll-discipline.md`](/codex/12-agent-workflow/async-wait-and-poll-discipline.md)
 (monitoring a long-lived detector run).
 </content>
 

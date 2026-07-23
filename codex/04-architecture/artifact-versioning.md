@@ -2,9 +2,9 @@
 doc_type: codex-ssot
 title: Artifact Versioning
 summary:
-  3-axis versioning model (code SHA/semver · artifact content-hash+monotonic-v · schema UAC-semver) — all
-  consumers pin explicit versions, no auto-upgrade anywhere; shadow-before-promote, permanent retention for
-  replay; config_hash is the strategy unit-of-truth.
+  3-axis versioning model (code SHA/semver · artifact content-hash+monotonic-v · schema UAC-semver) — all consumers pin
+  explicit versions, no auto-upgrade anywhere; shadow-before-promote, permanent retention for replay; config_hash is the
+  strategy unit-of-truth.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -12,10 +12,25 @@ stage: [meta]
 repos: [deployment-service, execution-service, features-service, instruments-service, strategy-service]
 scope: [engineer, admin]
 tags: [artifact, versioning, ml, features, execution, strategy]
-related: [backtest-groups.md, ../06-coding-standards/artifact-naming.md, ../02-data/feature-formula-versioning.md]
+related:
+  [
+    /codex/04-architecture/backtest-groups.md,
+    /codex/06-coding-standards/artifact-naming.md,
+    /codex/02-data/feature-formula-versioning.md,
+  ]
 created: 2026-04-17
 authoritative_for: [three-axis code/artifact/schema versioning model]
-referenced_by: [codex/02-data/feature-formula-versioning.md, codex/04-architecture/backtest-groups.md, codex/04-architecture/execution-policy.md, codex/04-architecture/schema-versioning.md, codex/04-architecture/shadow-deployment-pattern.md, codex/04-architecture/strategy-execution-protocol.md, codex/06-coding-standards/artifact-naming.md, codex/06-coding-standards/strategy-identity-versioning.md]
+referenced_by:
+  [
+    /codex/02-data/feature-formula-versioning.md,
+    /codex/04-architecture/backtest-groups.md,
+    /codex/04-architecture/execution-policy.md,
+    /codex/04-architecture/schema-versioning.md,
+    /codex/04-architecture/shadow-deployment-pattern.md,
+    /codex/04-architecture/strategy-execution-protocol.md,
+    /codex/06-coding-standards/artifact-naming.md,
+    /codex/06-coding-standards/strategy-identity-versioning.md,
+  ]
 owner:
 last_reviewed: 2026-05-17
 code_refs:
@@ -56,24 +71,24 @@ Separating lets:
 
 Every artifact listed below is versioned, content-hashed, and consumer-opt-in:
 
-| Artifact                         | Owner                                                                                                                                                                                                                             | Versioned by                                                        |
-| -------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
-| Feature groups                   | features-service (delta_one + onchain family + others) — registry SSOT `features_service/delta_one/app/features/registry.py`. Implementation details: [`feature-formula-versioning.md`](../02-data/feature-formula-versioning.md) | content hash + monotonic v (per-group: `max(spec.formula_version)`) |
-| ML models                        | ml-training-service                                                                                                                                                                                                               | content hash + monotonic v                                          |
-| Execution policies (rule tables) | execution-service                                                                                                                                                                                                                 | content hash + monotonic v                                          |
-| Cost models                      | execution-service                                                                                                                                                                                                                 | content hash + monotonic v                                          |
-| Benchmark modes                  | execution-service                                                                                                                                                                                                                 | content hash + monotonic v                                          |
-| Allocator algorithms             | portfolio-allocator-service                                                                                                                                                                                                       | content hash + monotonic v                                          |
-| Risk policies (limits tables)    | risk-and-exposure-service                                                                                                                                                                                                         | content hash + monotonic v                                          |
-| Venue capabilities               | UAC registry                                                                                                                                                                                                                      | semver on UAC                                                       |
-| MEV policies                     | execution-service                                                                                                                                                                                                                 | content hash + monotonic v                                          |
-| Bridge selection policies        | transfer/rebalance                                                                                                                                                                                                                | content hash + monotonic v                                          |
-| Strategy archetypes              | strategy-service codebase                                                                                                                                                                                                         | build version (git SHA + semver)                                    |
-| Strategy configs                 | strategy-service registry                                                                                                                                                                                                         | content hash + monotonic v per slot-version                         |
-| Reference data snapshots         | instruments-service                                                                                                                                                                                                               | snapshot date + version                                             |
-| Event calendars                  | event-driven data providers                                                                                                                                                                                                       | version per update                                                  |
-| Vol surface fits                 | vol-services                                                                                                                                                                                                                      | timestamp + fit version                                             |
-| Bookmaker mappings               | sports reference                                                                                                                                                                                                                  | version per update                                                  |
+| Artifact                         | Owner                                                                                                                                                                                                                                 | Versioned by                                                        |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| Feature groups                   | features-service (delta_one + onchain family + others) — registry SSOT `features_service/delta_one/app/features/registry.py`. Implementation details: [`feature-formula-versioning.md`](/codex/02-data/feature-formula-versioning.md) | content hash + monotonic v (per-group: `max(spec.formula_version)`) |
+| ML models                        | ml-training-service                                                                                                                                                                                                                   | content hash + monotonic v                                          |
+| Execution policies (rule tables) | execution-service                                                                                                                                                                                                                     | content hash + monotonic v                                          |
+| Cost models                      | execution-service                                                                                                                                                                                                                     | content hash + monotonic v                                          |
+| Benchmark modes                  | execution-service                                                                                                                                                                                                                     | content hash + monotonic v                                          |
+| Allocator algorithms             | portfolio-allocator-service                                                                                                                                                                                                           | content hash + monotonic v                                          |
+| Risk policies (limits tables)    | risk-and-exposure-service                                                                                                                                                                                                             | content hash + monotonic v                                          |
+| Venue capabilities               | UAC registry                                                                                                                                                                                                                          | semver on UAC                                                       |
+| MEV policies                     | execution-service                                                                                                                                                                                                                     | content hash + monotonic v                                          |
+| Bridge selection policies        | transfer/rebalance                                                                                                                                                                                                                    | content hash + monotonic v                                          |
+| Strategy archetypes              | strategy-service codebase                                                                                                                                                                                                             | build version (git SHA + semver)                                    |
+| Strategy configs                 | strategy-service registry                                                                                                                                                                                                             | content hash + monotonic v per slot-version                         |
+| Reference data snapshots         | instruments-service                                                                                                                                                                                                                   | snapshot date + version                                             |
+| Event calendars                  | event-driven data providers                                                                                                                                                                                                           | version per update                                                  |
+| Vol surface fits                 | vol-services                                                                                                                                                                                                                          | timestamp + fit version                                             |
+| Bookmaker mappings               | sports reference                                                                                                                                                                                                                      | version per update                                                  |
 
 ## Version tuple on every event
 
@@ -246,9 +261,9 @@ Given these, the tick is deterministic (modulo non-deterministic I/O, which is l
 
 ## Cross-references
 
-- Coding standards: [../06-coding-standards/artifact-naming.md](../06-coding-standards/artifact-naming.md)
+- Coding standards: [/codex/06-coding-standards/artifact-naming.md](/codex/06-coding-standards/artifact-naming.md)
 - Strategy identity + versioning:
-  [../06-coding-standards/strategy-identity-versioning.md](../06-coding-standards/strategy-identity-versioning.md)
+  [/codex/06-coding-standards/strategy-identity-versioning.md](/codex/06-coding-standards/strategy-identity-versioning.md)
 - Schema versioning: [schema-versioning.md](schema-versioning.md)
 - Execution policy: [execution-policy.md](execution-policy.md)
 - Strategy-execution protocol: [strategy-execution-protocol.md](strategy-execution-protocol.md)

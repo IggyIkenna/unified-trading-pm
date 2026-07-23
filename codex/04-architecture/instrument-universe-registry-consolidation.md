@@ -13,17 +13,17 @@ scope: [engineer, admin]
 tags: [instruments, uac, canonicalisation, honest-coverage, registry, refactor]
 related:
   [
-    instruments-service-as-ssot-for-mtds.md,
-    tier-and-import-architecture.md,
-    ../02-data/honest-coverage-model.md,
-    asset-class-ownership.md,
+    /codex/04-architecture/instruments-service-as-ssot-for-mtds.md,
+    /codex/04-architecture/tier-and-import-architecture.md,
+    /codex/02-data/honest-coverage-model.md,
+    /codex/04-architecture/asset-class-ownership.md,
   ]
 created: 2026-06-29
 authoritative_for: [UAC VENUE_TO_ADAPTER_KEY and venue-enumeration consolidation]
 referenced_by:
   [
-    codex/04-architecture/asset-class-ownership.md,
-    codex/04-architecture/instruments-service-as-ssot-for-mtds.md,
+    /codex/04-architecture/asset-class-ownership.md,
+    /codex/04-architecture/instruments-service-as-ssot-for-mtds.md,
     plans/active/issues/instruments_service_plan_reconciliation_2026_06_29.md,
     plans/audit/results/mvp_instrument_universe_gap_audit_2026_06_17.md,
   ]
@@ -45,7 +45,7 @@ code_refs:
 ## Problem — the universe is assembled across mirrored layers
 
 "Which instruments should be grabbed daily, per asset_group × venue × instrument_type × data_type (× league for sports)"
-is the foundation of MTDS honest coverage: the [honest-coverage model](../02-data/honest-coverage-model.md) Layer-1
+is the foundation of MTDS honest coverage: the [honest-coverage model](/codex/02-data/honest-coverage-model.md) Layer-1
 audit reconciles an EXPECTED matrix against the ENUMERATED catalogue, and Layer-2 download coverage is only trustworthy
 once Layer-1 = 100%. So the EXPECTED matrix is the denominator of the entire MVP coverage guarantee.
 
@@ -113,7 +113,7 @@ top of the canonical venue set exactly as today.
 
 ## Non-goals / explicitly out of scope
 
-- No change to the MVP scope rules ([`mvp-scope-canonical.md`](../02-data/mvp-scope-canonical.md) / `mvp_scope.py`).
+- No change to the MVP scope rules ([`mvp-scope-canonical.md`](/codex/02-data/mvp-scope-canonical.md) / `mvp_scope.py`).
 - No change to the honest-coverage two-layer model or the manifest schema — only the _source_ of the Layer-1 EXPECTED
   matrix is consolidated.
 - DeFi dynamic venue discovery from subgraph protocols stays; the hardcoded static **and Solana** venue lists are
@@ -125,5 +125,5 @@ top of the canonical venue set exactly as today.
   clarifies UAC owns the _enumeration_ IS reads.
 - [`tier-and-import-architecture.md`](tier-and-import-architecture.md) — why the adapter _class_ can't live in UAC (UAC
   is upstream), only the adapter _key_.
-- [`../02-data/honest-coverage-model.md`](../02-data/honest-coverage-model.md) — the consumer of the EXPECTED matrix
-  this consolidation hardens.
+- [`/codex/02-data/honest-coverage-model.md`](/codex/02-data/honest-coverage-model.md) — the consumer of the EXPECTED
+  matrix this consolidation hardens.

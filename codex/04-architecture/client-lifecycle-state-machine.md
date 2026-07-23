@@ -1,7 +1,10 @@
 ---
 doc_type: codex-ssot
 title: Client Lifecycle State Machine
-summary: Client onboarding state machine (DRAFT→KYC_SUBMITTED→KYC_APPROVED→DEPOSITED→SUBSCRIBED→LIVE, SUSPENDED terminal) with per-transition evidence + idempotency; UTL ClientOnboardingStateMachine persisted to GCS; May-23 MVP is manual single-client with no production KYC provider.
+summary:
+  Client onboarding state machine (DRAFT→KYC_SUBMITTED→KYC_APPROVED→DEPOSITED→SUBSCRIBED→LIVE, SUSPENDED terminal) with
+  per-transition evidence + idempotency; UTL ClientOnboardingStateMachine persisted to GCS; May-23 MVP is manual
+  single-client with no production KYC provider.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -9,10 +12,11 @@ stage: [meta]
 repos: [unified-api-contracts, unified-trading-library]
 scope: [engineer, admin]
 tags: [client-lifecycle, onboarding, kyc, state-machine, mvp, gcs]
-related: [client-lifecycle-event-bus.md, client-funds-isolation.md]
+related: [/codex/04-architecture/client-lifecycle-event-bus.md, /codex/04-architecture/client-funds-isolation.md]
 created: 2026-05-13
 authoritative_for: [client onboarding state machine and lifecycle states]
-referenced_by: [codex/04-architecture/capital-efficiency-patterns.md, codex/04-architecture/client-lifecycle-event-bus.md]
+referenced_by:
+  [/codex/04-architecture/capital-efficiency-patterns.md, /codex/04-architecture/client-lifecycle-event-bus.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

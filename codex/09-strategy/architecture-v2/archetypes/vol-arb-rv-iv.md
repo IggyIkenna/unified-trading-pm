@@ -12,19 +12,26 @@ stage: [meta]
 repos: [strategy-service]
 scope: [engineer, admin]
 tags: [strategy, vol-trading, options, deribit, iv-rv, mean-reversion, delta-hedge]
-related: [vol-carry.md, vol-spread-structures.md, vol-straddle.md, vol-ml-lean.md, ../families/vol-trading.md]
+related:
+  [
+    /codex/09-strategy/architecture-v2/archetypes/vol-carry.md,
+    /codex/09-strategy/architecture-v2/archetypes/vol-spread-structures.md,
+    /codex/09-strategy/architecture-v2/archetypes/vol-straddle.md,
+    /codex/09-strategy/architecture-v2/archetypes/vol-ml-lean.md,
+    ../families/vol-trading.md,
+  ]
 created: 2026-05-19
 authoritative_for: ["VOL_ARB_RV_IV archetype spec"]
 referenced_by:
   [
-    codex/09-strategy/_archived_pre_v2/tradfi/volatility-surface.md,
-    codex/09-strategy/architecture-v2/archetypes/vol-carry.md,
-    codex/09-strategy/architecture-v2/archetypes/vol-market-making.md,
-    codex/09-strategy/architecture-v2/archetypes/vol-ml-lean.md,
-    codex/09-strategy/architecture-v2/archetypes/vol-overlay-protective-put.md,
-    codex/09-strategy/architecture-v2/archetypes/vol-spread-structures.md,
-    codex/09-strategy/architecture-v2/archetypes/vol-straddle.md,
-    codex/09-strategy/architecture-v2/archetypes/vol-trading-options.md,
+    /codex/09-strategy/_archived_pre_v2/tradfi/volatility-surface.md,
+    /codex/09-strategy/architecture-v2/archetypes/vol-carry.md,
+    /codex/09-strategy/architecture-v2/archetypes/vol-market-making.md,
+    /codex/09-strategy/architecture-v2/archetypes/vol-ml-lean.md,
+    /codex/09-strategy/architecture-v2/archetypes/vol-overlay-protective-put.md,
+    /codex/09-strategy/architecture-v2/archetypes/vol-spread-structures.md,
+    /codex/09-strategy/architecture-v2/archetypes/vol-straddle.md,
+    /codex/09-strategy/architecture-v2/archetypes/vol-trading-options.md,
   ]
 owner:
 last_reviewed:
