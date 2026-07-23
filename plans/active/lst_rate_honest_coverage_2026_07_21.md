@@ -866,3 +866,13 @@ tarball once; always check the launcher's own freshness warning output, and if s
   passes rather than exiting after one (each "DEX swaps collection complete" cycle still writes substantial new rows —
   139,860 this pass — meaning it's not yet fully fresh/converged); this is presumably bounded to terminate once a pass
   yields near-zero new writes. No preemptions since 02:38 UTC.
+
+- **2026-07-23 04:33 UTC (dex-swaps preempted a THIRD time — resumed again)** — died ~04:05, confirmed via
+  `get-serial-port-output` (not found) + memory trail healthy right up to the last sample (1137MiB/13.4%, no OOM
+  signal). Three preemptions in ~10h total elapsed (01:20, 01:43, 04:05) is more frequent than the LST-rates VM saw
+  (zero preemptions across its whole ~7.5h run) — plausibly this zone/machine-type combo has elevated SPOT reclaim
+  pressure right now, not a code issue (memory has been healthy every single time, and the resume mechanism has now been
+  verified working twice). Per CLAUDE.md, switching to on-demand for a backfill is itself the anti-pattern to avoid —
+  staying on SPOT + idempotent resume is correct. Relaunched again (same command), all tarballs fresh, RUNNING. Will
+  keep resuming through preemptions as needed; flagging the elevated frequency here for visibility, not as an action
+  item.
