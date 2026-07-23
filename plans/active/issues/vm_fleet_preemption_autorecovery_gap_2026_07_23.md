@@ -90,16 +90,28 @@ yet, for ANY launcher family, not just candle-migration.
 ## Plan
 
 - [x] 1. ✅ [SCRIPT] P1. **`launch-canonical-migration-vm.sh`**: add `lc_write_preemption_signal_file` call — DONE,
-      shipped as part of this doc's commit (see the launcher's SPOT-preemption-contract comment block, added right after
-      the existing `lc_write_launch_params` call).
-- [ ] 2. [SCRIPT] P1. **`launch-canonical-migration-vm.sh`**: add
-      `--metadata-from-file="shutdown-script=${PREEMPTION_SIGNAL_FILE}"` to the `gcloud compute instances create` call
-      (line ~777-787) — the helper only WRITES the shutdown-script file, the caller must still attach it.
-- [ ] 3. [SCRIPT] P1. **`launch-canonical-migration-vm.sh`**: change `--instance-termination-action=STOP` → `DELETE`
-      (line 184) so a same-name relaunch can succeed — matches every other SPOT launcher in this codebase.
-- [ ] 4. [SCRIPT] P1. Verify with `bash -n` + `deployment-service`'s `quality-gates.sh`, then ship via
-      `quickmerge --agent --files 'scripts/vm/launch-canonical-migration-vm.sh'` (this is CODE — quickmerge, never a raw
-      push).
+      shipped `deployment-service@a32360a`.
+- [x] 2. ✅ [SCRIPT] P1. **`launch-canonical-migration-vm.sh`**: add
+      `--metadata-from-file="shutdown-script=${PREEMPTION_SIGNAL_FILE}"` to the `gcloud compute instances create` call —
+      DONE.
+- [x] 3. ✅ [SCRIPT] P1. **`launch-canonical-migration-vm.sh`**: change `--instance-termination-action=STOP` → `DELETE`
+      — DONE.
+- [x] 4. ✅ [SCRIPT] P1. Verified: `bash -n` clean, `test_spot_preemption_signal_coverage.py` +
+      `test_vm_launcher_scripts.py` (79 tests) pass. **Important refinement found while verifying** — this fix is NOT
+      redundant with the fleet-wide `setup-data-pipeline-vm.sh` systemd-service fix shipped 2026-07-20
+      (`uts-preemption-signal.service`, installed via that script's own `log()`-based startup sequence). That systemd
+      unit only becomes active once the startup script progresses far enough to install + `systemctl enable --now` it (a
+      few hundred lines into a >1000-line script). `lc_write_preemption_signal_file`'s mechanism is DIFFERENT: it sets
+      the NATIVE GCE `shutdown-script` instance metadata key at `gcloud compute instances create` time, which the
+      base-image `google-guest-agent` (present from boot, not something `setup-data-pipeline-vm.sh` installs) picks up
+      immediately — available from t=0, independent of how far the VM's own userspace startup has progressed. This
+      exactly explains the measured TRADFI failure mode (18/20 shards preempted within 1-4 minutes of boot, likely
+      BEFORE the custom systemd unit was ever installed) — the fleet-wide 2026-07-20 fix has a real early-preemption
+      blind spot this fix closes for `canonical-migration-*`. Confirmed no shutdown-script metadata conflict:
+      `setup-data-pipeline-vm.sh` uses a systemd unit, NOT the native GCE `shutdown-script` key, so both mechanisms
+      coexist safely (the "gcloud only accepts ONE shutdown-script" caveat in `lc_write_preemption_signal_file`'s
+      docstring refers to two callers of THAT helper colliding, not to this cross-mechanism case). Shipped via
+      quickmerge — see commit below.
 - [ ] 5. [DATA] P2. **New `DP_VM_PREEMPTED_RECOVERED` resolved-bookend event**: emitted by
       `RelaunchPreemptedVm.relaunch()` ONLY on `status=SUCCEEDED`, carrying `old_vm_name` + `new_vm_name` (note: today's
       replay reuses the SAME name via `VM_NAME_OVERRIDE` for canonical-migration, so "new" may equal "old" for THIS
