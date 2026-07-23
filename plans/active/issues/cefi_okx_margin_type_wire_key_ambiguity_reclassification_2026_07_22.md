@@ -25,7 +25,7 @@ asset_group: [cefi]
 stage: [data]
 repos: [instruments-service]
 scope: [engineer]
-tags: [cefi, margin-type, wire-key-ambiguity, ssot-contradiction, dedup, operator-review-required]
+tags: [cefi, margin-type, wire-key-ambiguity, ssot-contradiction, dedup, operator-ruled]
 related: [mtds_rule11_defi_shard_count_stale_baseline_2026_07_22.md]
 created: "2026-07-22"
 parent_epic: infrastructure_master
@@ -48,6 +48,24 @@ source:
 resolved_by:
 locked_by:
 ---
+
+## OPERATOR RULING — 2026-07-23 ~08:15Z
+
+**Ruled: build the fix.** Operator decision (verbatim): "build the fix delete the bad data formats, migrate to canonical
+formats where possible". Treat the OKX-FUTURES (70) + OKX-SWAP (5) margin_type collision as the stale-artifact
+classification, not the "real ambiguity" one currently in the shipped docstring — collapse each group, keeping the row
+whose margin_type matches a fresh call to the already-shipped `_infer_margin_type()`, dropping the stale pre-2026-07-09
+mislabeled row. Update `_dedup_cefi_expiry_off_by_one()`'s docstring to correct the now-overturned "REAL, different
+ambiguity" claim for this shape.
+
+**Scope also folded in, same ruling**: BITGET-FUTURES's 18 (a separate-but-analogous already-root-caused stale
+margin_type mislabel, commit `75bdf02d`, HIGH confidence, not in dispute the way OKX's classification was) — same
+mechanism, same fix shape, no separate SSOT contradiction to litigate, so no reason to leave it out under the same
+"migrate to canonical where possible" instruction. Total scope: 93 catalogue rows across 3 venues.
+
+**NOT included in this ruling**: BYBIT's 3 PERPETUAL groups (BTCUSD/ETHUSD/XRPUSD) — confirmed two genuinely distinct
+real products (a closed 2019-2020 linear market + a separate still-active inverse market), correctly excluded, not a
+duplicate — this ruling does not touch them.
 
 # OKX-FUTURES/OKX-SWAP margin_type wire-key collision: real ambiguity, or stale mislabel artifact?
 
