@@ -891,3 +891,8 @@ tarball once; always check the launcher's own freshness warning output, and if s
   Relaunched: `launch-mtds-dex-swaps-backfill-vm.sh --start 2023-01-01 --end 2026-07-22 --on-demand`, confirmed
   `PREEMPTIBLE` column empty (standard provisioning) at creation. Expect no further preemptions; will revert future
   backfills to SPOT-by-default (this is a one-run exception, not a standing change).
+
+- **2026-07-23 05:12 UTC (on-demand relaunch confirmed holding)** — `mtds-dex-swaps-backfill` RUNNING ~18min since the
+  04:54 on-demand relaunch (already well past the ~2-3min the last SPOT attempt survived), fresh log activity, RSS
+  healthy ~982-1258MiB. The on-demand switch resolved the rapid-preemption issue as expected. Continuing to monitor at
+  the normal cadence.
