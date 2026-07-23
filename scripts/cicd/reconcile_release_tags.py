@@ -2,9 +2,28 @@
 # Epic: infrastructure_master
 # Lifecycle: permanent
 # Delete-when: NA
-"""Reconcile release tags — ensure a ``v<pyproject.version>`` git tag exists on each repo's ``main``.
+"""Reconcile release tags, and ALARM when a tag-derived repo stops releasing.
 
-Closes the release-machinery tag-creation gap (codified 2026-06-11). The release flow is:
+Two populations, opposite treatments (split 2026-07-23):
+
+* **Tag-derived repos** (``dynamic = ["version"]`` + hatch-vcs ``source = "vcs"``) — every repo in
+  the fleet today. **The git tag IS the package version**, so "read the version, mint the matching
+  tag" is circular and this script must NOT create tags for them. What it does instead is assert the
+  invariant it exists to protect: ``main`` must not accumulate commits past the newest ``v*`` tag.
+  Unreleased commits + a tag older than ``_STALL_DAYS`` ⇒ **STALL**, reported as a ``::warning::``
+  (and a non-zero exit under ``--fail-on-stall``).
+
+  *Why this alarm exists:* on 2026-06-27 the LDR→main cutover made ``staging`` dormant, which
+  orphaned ``semver-agent`` — the only thing that mints tags — on a branch nobody pushes to. Tagging
+  stopped fleet-wide for ~4 weeks. This script ran 246 times across that window and reported
+  ``created 0 tag(s); 24 repo(s) had no main version`` **as a success**, because the old
+  ``_VERSION_RE`` could not match a dynamic version and the miss was counted as "nothing to do"
+  rather than "cannot tell". Silence on an empty input set is what made a 4-week outage invisible.
+
+* **Legacy static-version repos** (a literal ``version = "X.Y.Z"`` in ``pyproject.toml``) — the
+  original behaviour below, unchanged.
+
+Closes the release-machinery tag-creation gap (codified 2026-06-11). The legacy release flow is:
 
   semver-agent → pushes ``chore(release): bump version to X`` to ``staging`` + dispatches the bump to PM
   update-repo-version → records the version in ``workspace-manifest.json``
@@ -44,12 +63,22 @@ import os
 import re
 import subprocess
 import sys
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import cast
 
 # Plain 3-part release version only — pre-release / local suffixes are deliberately NOT auto-tagged.
 _VERSION_RE = re.compile(r'^\s*version\s*=\s*["\']([0-9]+\.[0-9]+\.[0-9]+)["\']', re.MULTILINE)
 _TAG_RE = re.compile(r"^v([0-9]+)\.([0-9]+)\.([0-9]+)$")
+# hatch-vcs / setuptools-scm marker: the version is DERIVED FROM THE TAG, so there is no
+# static `version = "X.Y.Z"` line and _VERSION_RE cannot match by construction. Detecting
+# this is what turns "0 tags created" from a silent success into an explicit N/A verdict.
+_DYNAMIC_RE = re.compile(r"^\s*dynamic\s*=\s*\[[^\]]*[\"']version[\"']", re.MULTILINE)
+_VCS_SOURCE_RE = re.compile(r"^\s*source\s*=\s*[\"']vcs[\"']", re.MULTILINE)
+
+# A dynamic repo with commits on main past its newest tag, and no new tag for this long,
+# is in the exact silent-stall state that went unnoticed 2026-06-27..07-23 (~4 weeks).
+_STALL_DAYS = 3
 
 Version = tuple[int, int, int]
 
@@ -70,8 +99,8 @@ def _ver_tuple(v: str) -> Version:
     return (int(a), int(b), int(c))
 
 
-def _main_version(owner: str, repo: str) -> str | None:
-    """Return the ``X.Y.Z`` version string from the repo's ``main`` pyproject.toml, or None."""
+def _main_pyproject(owner: str, repo: str) -> str | None:
+    """Return the decoded text of the repo's ``main`` pyproject.toml, or None."""
     # Query-in-path form (subprocess passes it verbatim — no shell globbing on '?'); unambiguous for the GET.
     rc, out = _gh([f"repos/{owner}/{repo}/contents/pyproject.toml?ref=main"])
     if rc != 0:
@@ -86,11 +115,43 @@ def _main_version(owner: str, repo: str) -> str | None:
     if not isinstance(content_b64, str):
         return None
     try:
-        text = base64.b64decode(content_b64).decode("utf-8")
+        return base64.b64decode(content_b64).decode("utf-8")
     except (ValueError, UnicodeDecodeError):
         return None
-    m = _VERSION_RE.search(text)
-    return m.group(1) if m else None
+
+
+def _is_dynamic_versioned(pyproject_text: str) -> bool:
+    """True when the package version is DERIVED FROM THE GIT TAG (hatch-vcs / setuptools-scm).
+
+    For such a repo the tag is the CAUSE of the version, not a record of it, so this
+    reconciler's "read the version, mint the matching tag" model is inverted and must not
+    run — there is nothing to reconcile. Detecting it explicitly is the whole point: the
+    pre-2026-07-23 code just failed ``_VERSION_RE`` and reported the repo under a bland
+    "N repo(s) had no main version" line, which read as SUCCESS for ~4 weeks while the
+    real tag minter (semver-agent) sat orphaned on the dormant staging branch.
+    """
+    return bool(_DYNAMIC_RE.search(pyproject_text)) or bool(_VCS_SOURCE_RE.search(pyproject_text))
+
+
+def _commits_ahead_of_tag(owner: str, repo: str, tag: str) -> int | None:
+    """Commits on ``main`` past ``tag`` (GitHub compare ``ahead_by``), or None if unavailable."""
+    rc, out = _gh([f"repos/{owner}/{repo}/compare/{tag}...main", "--jq", ".ahead_by"])
+    if rc != 0:
+        return None
+    raw = out.strip()
+    return int(raw) if raw.isdigit() else None
+
+
+def _newest_tag_age_days(owner: str, repo: str, tag: str) -> float | None:
+    """Age in days of ``tag``'s commit, via the tag ref → commit date. None if unresolvable."""
+    rc, out = _gh([f"repos/{owner}/{repo}/commits/{tag}", "--jq", ".commit.committer.date"])
+    if rc != 0 or not out.strip():
+        return None
+    try:
+        when = datetime.fromisoformat(out.strip().replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    return (datetime.now(UTC) - when).total_seconds() / 86400.0
 
 
 def _highest_existing_tag(owner: str, repo: str) -> Version | None:
@@ -193,22 +254,53 @@ def _write_firestore_release_tags(owner: str, repo_versions: dict[str, str], pro
         )
 
 
-def reconcile(owner: str, manifest_path: Path, dry_run: bool, max_creates: int) -> int:
+def reconcile(owner: str, manifest_path: Path, dry_run: bool, max_creates: int, fail_on_stall: bool) -> int:
     repos = _manifest_repos(manifest_path)
     if repos is None:
         return 1
 
     created: list[str] = []
     repo_versions: dict[str, str] = {}  # repo -> latest resolvable main version (for the Firestore write-through)
-    skipped = 0
+    dynamic_ok: list[str] = []  # tag-derived repos that are releasing normally
+    stalled: list[str] = []  # tag-derived repos with unreleased commits — the silent-stall alarm
+    unreadable = 0  # pyproject genuinely unreachable (archived / UI / transient API miss)
     for repo in repos:
         # PM itself is Option-B + not a published Python package — its versioning is the manifest, not a tag.
         if repo == "unified-trading-pm":
             continue
-        version = _main_version(owner, repo)
-        if version is None:
-            skipped += 1
-            continue  # no resolvable main pyproject version (UI repos, archived, transient API miss)
+        pyproject = _main_pyproject(owner, repo)
+        if pyproject is None:
+            unreadable += 1
+            continue  # no reachable main pyproject (UI repos, archived, transient API miss)
+
+        # ── Tag-derived (hatch-vcs) repos: NOTHING to reconcile — the tag CAUSES the version.
+        # Minting a tag from a version here would be circular. Instead, assert the invariant this
+        # reconciler exists to protect: main must not accumulate unreleased commits. That is the
+        # condition that silently held for ~4 weeks (semver-agent orphaned on dormant staging)
+        # while this script reported a clean "created 0 tag(s)" 246 times.
+        if _is_dynamic_versioned(pyproject):
+            highest = _highest_existing_tag(owner, repo)
+            if highest is None:
+                stalled.append(f"{repo}: dynamic versioning but NO v* tag exists at all")
+                continue
+            tag = f"v{'.'.join(map(str, highest))}"
+            ahead = _commits_ahead_of_tag(owner, repo, tag)
+            age = _newest_tag_age_days(owner, repo, tag)
+            if ahead is None or age is None:
+                print(f"  UNKNOWN {repo}: cannot compare main against {tag} (API miss) — not asserting healthy")
+                continue
+            if ahead > 0 and age > _STALL_DAYS:
+                stalled.append(f"{repo}: {ahead} unreleased commit(s) on main; newest tag {tag} is {age:.1f}d old")
+            else:
+                dynamic_ok.append(f"{repo}:{tag}")
+            continue
+
+        # ── Legacy static-version repos: the original read-version → mint-matching-tag path.
+        m = _VERSION_RE.search(pyproject)
+        if m is None:
+            unreadable += 1
+            continue
+        version = m.group(1)
         repo_versions[repo] = version
         tag = f"v{version}"
         if _tag_exists(owner, repo, tag):
@@ -235,9 +327,29 @@ def reconcile(owner: str, manifest_path: Path, dry_run: bool, max_creates: int) 
             created.append(f"{repo}:{tag}")
 
     verb = "would create" if dry_run else "created"
-    print(f"\nRelease-tag reconcile: {verb} {len(created)} tag(s); {skipped} repo(s) had no main version.")
+    print(
+        f"\nRelease-tag reconcile: {verb} {len(created)} tag(s) [legacy static-version path]; "
+        f"{len(dynamic_ok)} tag-derived repo(s) healthy; {len(stalled)} STALLED; "
+        f"{unreadable} repo(s) with no readable main pyproject."
+    )
     if created:
-        print("  " + ", ".join(created))
+        print("  created: " + ", ".join(created))
+    if dynamic_ok:
+        print("  tag-derived (nothing to reconcile — the tag IS the version): " + ", ".join(dynamic_ok))
+
+    # The alarm this script previously could not raise. A tag-derived repo accumulating
+    # unreleased commits means its version minter is not running — exactly the 2026-06-27
+    # orphaning. Surface it as a GitHub annotation so it is visible in the run WITHOUT
+    # failing 48 scheduled runs/day; --fail-on-stall opts a caller into a hard failure.
+    if stalled:
+        print(f"\n::warning::Release tagging STALLED for {len(stalled)} repo(s) — versions are not advancing.")
+        for line in stalled:
+            print(f"  STALL {line}")
+        print(
+            "  → The tag minter is semver-agent (fires on a push to the repo's promotion branch).\n"
+            "    Check it is enabled and targeting the branch this repo actually promotes to.\n"
+            "    SSOT: codex/08-workflows/ci-cd-flow.md § 'Release tag reconciler'."
+        )
 
     # Firestore write-through (self-healing backstop): persist latest version↔SHA per repo via the
     # CAS store so tag-readers query Firestore (free quota, zero GitHub REST) instead of the GitHub
@@ -246,7 +358,7 @@ def reconcile(owner: str, manifest_path: Path, dry_run: bool, max_creates: int) 
     gcp_project = os.environ.get("GCP_PROJECT_ID")
     if gcp_project and not dry_run and repo_versions:
         _write_firestore_release_tags(owner, repo_versions, gcp_project)
-    return 0
+    return 1 if (stalled and fail_on_stall) else 0
 
 
 def main() -> int:
@@ -260,12 +372,19 @@ def main() -> int:
         default=0,
         help="cap tags CREATED per run (0 = unlimited); throttles a backlog drain to avoid a publish herd",
     )
+    _ = ap.add_argument(
+        "--fail-on-stall",
+        action="store_true",
+        help="exit non-zero when a tag-derived repo has unreleased commits (default: warn only, so the "
+        "*/30 schedule does not fail 48x/day; opt in from a lower-frequency health check)",
+    )
     ns = ap.parse_args()
     owner = cast(str, ns.owner)
     manifest = cast(str, ns.manifest)
     dry_run = cast(bool, ns.dry_run)
     max_creates = cast(int, ns.max_creates)
-    return reconcile(owner, Path(manifest), dry_run, max_creates)
+    fail_on_stall = cast(bool, ns.fail_on_stall)
+    return reconcile(owner, Path(manifest), dry_run, max_creates, fail_on_stall)
 
 
 if __name__ == "__main__":

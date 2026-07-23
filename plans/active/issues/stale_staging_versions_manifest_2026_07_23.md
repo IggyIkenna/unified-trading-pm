@@ -67,6 +67,25 @@ source:
 > re-derive the right fix. The measured drift and the WARN-vs-`--hotfix`-BLOCK impact analysis below remain accurate —
 > only the causal story and the recommended fix are superseded.
 
+> ## ⏸️ STILL BLOCKED 2026-07-23 (later the same day) — root cause found, fix deferred to Option B
+>
+> F2's real root cause is now known and is **not** the regex: `semver-agent` (the only tag minter) was orphaned on the
+> dormant `staging` branch. A retarget was built and **proven working**, then **REVERTED on operator decision** for cost
+> (~$32/mo of `ubuntu-latest`) and commit noise (~24 PM manifest commits/day, peak 84). Minting will instead move into
+> the PM reconciler — **Option B**, see `post_cutover_silent_assumption_sweep_2026_07_23.md` § "Option B".
+>
+> **What that means for THIS issue: nothing has changed yet, so do NOT implement option 1.** Until Option B ships, no
+> tags are minted and `versions` is NOT advancing — so `staging_versions` still happens to be the key that matches the
+> last real tag, exactly as the ⚠️ box above describes. The inversion is not resolved; it is deferred.
+>
+> **What Option B will change, and the precondition to re-check:** minting will record into **`versions`** (the stable
+> key), making it live again and demoting `staging_versions` to a frozen historical record. At that point — and only
+> then — option 1 (dormancy-aware gate) becomes correct.
+>
+> **Gate before implementing option 1:** confirm `versions` is demonstrably advancing —
+> `git log --grep='chore(manifest): update' -- workspace-manifest.json` must show entries newer than 2026-07-23. As of
+> this writing the newest such entry is **2026-06-30**.
+
 ## What's wrong
 
 `scripts/quickmerge.sh:998` (STAGE 1.6 dependency version gate):
