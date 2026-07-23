@@ -367,12 +367,14 @@ this: a top banner (GCP active / AWS parked), a Health `deferred` tier (blue, "n
 
 ### Phase 3 — UI page (deployment-ui)
 
-> **🟢 VERTICAL SLICE 1 LANDED — `deployment-ui@47e6379` (2026-07-21).** The `/ops/artifacts` route + Fleet&Cost nav
-> entry + 5-tab shell are live, with the **Pipeline (builds) tab wired to real Cloud Build data**; the other four tabs
-> render an honest "backend in progress" placeholder. The Phase-3 todos below stay **open** because each is scoped to
-> the FULL 5-view page — what remains is the running / deploy / artifacts / health views + their `pw:L2` coverage +
-> `__mock` race hooks, each gated on its per-view backend. Default view is **Pipeline** (the only wired tab) until the
-> running backend lands — revisit the "default = What's running" shape then. See the Progress log.
+> **🟢 VERTICAL SLICES 1+2 LANDED — `deployment-ui@797180c` (2026-07-23).** The `/ops/artifacts` route + Fleet&Cost nav
+> entry + 5-tab shell are live, with **Pipeline (builds)** and **Deploy timeline (Cloud Run revisions)** both wired to
+> real data; the other three tabs render an honest "backend in progress" placeholder. Both live views share a
+> **date-range picker** (operator ask 2026-07-23, mirrors `CostObservability`'s exactly) and a **7-day default window**
+> (was 14d). The Phase-3 todos below stay **open** because each is scoped to the FULL 5-view page — what remains is the
+> running / artifacts / health views + their `pw:L2` coverage + `__mock` race hooks, each gated on its per-view backend.
+> Default view is still **Pipeline** until the running backend lands — revisit the "default = What's running" shape
+> then. See the Progress log.
 
 - [ ] [UI] P1. `/ops/artifacts` **top-level route + NAV_GROUPS entry** (shape locked by operator 2026-07-17: top-level,
       all 5 views in v1, default view = What's running); reuse the cost-page date-range picker, `Segmented`, `Card`,
@@ -580,6 +582,47 @@ this: a top banner (GCP active / AWS parked), a Health `deferred` tier (blue, "n
     sentinel-stale cycles (busy branch) — pull-rebase kept the merged tree, content-verified ahead=0. **Remaining UI:**
     the 4 placeholder tabs' real views + their `pw:L2` coverage + `__mock` race hooks, each gated on its per-view
     backend (deploys next).
+- **2026-07-23 — Deploy timeline vertical (2nd view) shipped end-to-end, plus a live production bugfix caught building
+  it.** Operator: "continue with the remaining pages … work in worktrees tabs 2" (confirmed the per-slot clone model IS
+  the workspace's "worktree" isolation — no separate mechanism). Synced all 3 repos first; discovered a DIFFERENT
+  operator (`harshkantariya`, host `harsh_pc`) is independently working this same plan on their own slot-2 clone —
+  `deployment-api@0a920c2` (a 30s RPC-deadline fix for the exact "keeps loading" hang the operator had just reported)
+  and `deployment-ui@038038e` (the frontend counterpart: a 45s `AbortController` timeout on `getArtifactBuilds`) both
+  landed mid-session. Neither touched the Deploys view — confirmed via full history grep before starting, no collision.
+  - **Backend — `deployment-api@72a0108`.** `gcp_cloud_run_revisions()` provider: reuses `list_cloud_run_services()` (no
+    extra RPC) to enumerate workloads + resolve the live revision, lists each service's revisions (`RevisionsClient`,
+    same `_gcp_sdk` boundary), classifies each into new/config/rollback/failed by walking the digest sequence
+    chronologically, and computes "held for" via ONE-STEP-LOOKAHEAD to the revision that replaced it.
+    `service.deploys()` mirrors `builds()`'s window/stats shape, with one deliberate exception: `live_now` is a
+    POINT-IN-TIME count over ALL facts, never the windowed subset — a narrow date range must not undercount what's
+    actually serving. `GET /api/artifacts/deploys` + 12 new `--block-network` tests (21 total). MEASURED live: 690
+    revisions / 16 services, ~9-11s cold scan (comparable to builds' ~5s, same 300s cache).
+  - **Live bug found + fixed in the SAME file (findings-triage: same-file → same commit).** Google-cloud repeated fields
+    (`Build.steps`, `Build.images`, `Revision.containers`, `Revision.conditions`) are runtime instances of
+    `proto.marshal.collections.repeated.Repeated`/`RepeatedComposite` — NOT `list`/`tuple` — so the
+    `isinstance(x, (list, tuple))` gate used throughout `providers.py` silently dropped every real field. The
+    ALREADY-SHIPPED Pipeline view's step-timeline drawer and "Produced" column have been silently empty for every real
+    build since `8eda1f8`. Root-caused via static introspection (no live RPC needed — built a synthetic proto message,
+    no network flakiness in the way) before confirming live. Fixed with one shared `_as_item_list()` helper (any
+    iterable, not just list/tuple); verified against live Cloud Build + Cloud Run data both before and after. Also
+    found + fixed a `held_for` sign-error (subtraction direction backwards, always computed negative → always empty) via
+    the SAME live-verification pass — caught because the numbers looked wrong, not because a test failed.
+  - **A genuine finding, not a bug: `deployment-service` has ZERO working Cloud Run revisions, ever.** Its one-ever
+    revision's `Ready` condition is `CONDITION_FAILED` ("container failed to start and listen on PORT=8080"); since it
+    never went ready, `list_cloud_run_services()`'s `latest_created_revision` fallback still reports it as the service's
+    newest state — so the page correctly shows `live=true, change_type=failed` for it. Left as-is (verified via the real
+    condition message, not assumed) — exactly the kind of defect this page exists to surface.
+  - **UI — `deployment-ui@797180c`.** `DeployTimelineView` mirrors `PipelineView`'s shape (data-derived stat band,
+    filter chips, flat table — no drawer, `DeployRow` has no nested detail to expand); `DEPLOY_FILTERS` (all / code /
+    live / fail) match the frozen mock's semantics exactly, filtered CLIENT-SIDE like Pipeline (one full-window fetch,
+    no round-trip per filter click). Both live views now fetch eagerly + concurrently on mount/window-change, each with
+    its own request-id guard (mirrors `CostObservability`'s `loadCore` pattern). **Operator ask, same turn:** default
+    window 7d (was 14d) + a real date-range picker on BOTH live views — ported `CostObservability`'s `DateRangePicker`
+    verbatim (native `<input type="date">`, `min`/`max` wired to the API's 366-day cap, a hand-picked range deselects
+    the day-preset pills and vice versa). Factored the peer's ad hoc 45s abort-timeout into a shared
+    `fetchArtifactApi()` helper reused by the new `getArtifactDeploys` (same hang protection, one implementation, not
+    two copies to drift). 9 Vitest + 4 `pw:L2` tests; full deployment-ui gate green (101 tests). **Remaining UI:** the 3
+    placeholder tabs' real views (running / artifacts / health), each gated on its per-view backend.
 
 ## Lessons this session (so they are not re-learned the hard way)
 
@@ -629,20 +672,51 @@ this: a top banner (GCP active / AWS parked), a Health `deferred` tier (blue, "n
   (pre-import + `sys.modules["deployment_api.services.<new>"] = real_<svc>`). Plain-import / basedpyright / ruff all
   hide it because only pytest loads that conftest — only the FULL gate catches it. Cost one gate cycle; now fixed once
   for the whole `artifact_pipeline` package (the remaining 4 views won't re-hit it).
+- **`isinstance(x, (list, tuple))` is the WRONG check for any google-cloud protobuf repeated field — workspace-wide, not
+  just here (2026-07-23).** Repeated fields (`Build.steps`, `Build.images`, `Revision.containers`,
+  `Revision.conditions`, and presumably more across the codebase) are `proto.marshal.collections.repeated.Repeated` /
+  `RepeatedComposite` at runtime — neither is a `list` or `tuple` subclass, so that isinstance gate silently returns
+  "empty" for real data while a hand-built test double using a plain list sails through every unit test. This shipped
+  silently in `8eda1f8` and was only caught because a NEW call site (`Revision.containers`) hit the identical pattern
+  and produced an empty digest that looked wrong on inspection — the ORIGINAL bug (`Build.steps`/`images`) would still
+  be unnoticed today without that coincidence. Grep `isinstance(.*\(list, tuple\))` against any file that reads a
+  `google.cloud.*` proto response before trusting its "empty" case. Fix pattern: normalize via
+  `list(cast("Iterable[object]", value))` in a try/except TypeError, not an isinstance gate.
+- **Static introspection beats a live RPC for a data-shape question, and sidesteps live-service flakiness.** Diagnosing
+  the `RepeatedComposite` bug needed to know a proto field's RUNTIME type, not its live VALUE — a synthetic
+  `cb.Build()` + `.steps.append(...)` answered it with zero network calls, in the same window where live Cloud Build
+  RPCs were intermittently hanging (a transient, unexplained blip — ADC/network were independently confirmed healthy).
+  When the question is "what type is this," construct the object; don't fight a flaky network for it.
+- **A collision check is grep-before-build, not grep-after-symptom.** Before starting the Deploys vertical, checked
+  `git log --oneline --all --grep=deploy -- <the exact files about to be touched>` and the plan's `locked_by:` — both
+  clear — BEFORE writing a line of provider/service/route code, not after noticing a conflict. Caught mid-session that a
+  different operator (`harshkantariya`, host `harsh_pc`) is independently active on this exact plan, on their own slot-2
+  clone; their one real-code commit that turn was a narrow, reactive fix to the SAME symptom this session had just
+  diagnosed for the operator (the builds hang) — not a race on unclaimed scope. Multi-agent plans need this check before
+  every new vertical, not just before a risky one.
 
-## Deferred work after 2026-07-21
+## Deferred work after 2026-07-23
 
-**Recommended NEXT: operator reviews the iterated Tabs 2–5 in the mock** (`ui@e01e5fc`) — all four had the correctness +
-usefulness pass applied this turn and now await scrutiny; that review is the only unblocked forward step. Everything
-below whole-mock sign-off is deliberately not started.
+> Superseded 2026-07-23 — the table below (whole-mock sign-off pending, Phase 1–6 not started) described the pre-build
+> state. Operator signed off all 5 tabs 2026-07-21 ("good to start … on all the tabs 1 to 5"); build is underway. This
+> is the current state.
 
-| Item                                                    | State / why deferred                                                                                                                                                                                                           | Blocked on                            |
-| ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------- |
-| Tab 1 final sign-off                                    | **Operator-owned** — reviewed + iterated, awaiting the green tick                                                                                                                                                              | operator                              |
-| Tabs 2–5 mock review (Deploy/Pipeline/Artifacts/Health) | **Operator-owned** — iterated this turn (correctness + usefulness), awaiting operator scrutiny                                                                                                                                 | operator                              |
-| Whole-mock final sign-off                               | **Operator-owned** — the gate that unblocks all implementation                                                                                                                                                                 | tabs 1–5 signed off                   |
-| Phase 1–6 implementation (backend, page, absorb, codex) | **Cannot be done yet** — gated by the mock sign-off above                                                                                                                                                                      | whole-mock sign-off                   |
-| (A) tarball commit stamp                                | **Cannot be done yet** — audit-cleared YES-WITH-CONDITIONS, but part of Phase 3c; verify via a live EPHEMERAL_BATCH launch (no CI covers the shell file)                                                                       | mock sign-off + Phase 3c start        |
-| Fill the mock's 2 `n/a — re-auth` build dates           | **Cannot be done yet** — needs a fresh GCP `gcloud auth login`                                                                                                                                                                 | operator re-auth (optional, cosmetic) |
-| Issue doc for the pipeline bugs                         | ✅ **DONE 2026-07-21** — filed `issues/build_deploy_pipeline_provenance_and_aws_deferred_gaps_2026_07_21.md`; re-verified all findings (#5 fixed, #2 not-a-bug, #6 plan-tracked); only #4/#7 (AWS-deferred) + #1/#3 (GCP) open | Ikenna (his active CI files)          |
-| AWS resume (App Runner + ECS + ECR)                     | **Cannot be done yet — operator-owned** — AWS intentionally parked; deferred until AWS credits are available                                                                                                                   | AWS credits                           |
+**Recommended NEXT: the Running view backend** (`gcp_cloud_run_revisions` + AR/tag resolution → the digest→SHA→commit
+runtime join + drift classifier) — it is both the plan's headline view (`⭐ default`) and the one every other tab's
+"Built from" column is deferred on (Deploy timeline's `built_from` is honestly empty right now, waiting on exactly this
+join). Third vertical, same builds()/deploys() cadence.
+
+| Item                                                                       | State / why deferred                                                                                                                                 | Blocked on                             |
+| -------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------- |
+| Whole-mock sign-off, all 5 tabs, tarball stamp scope                       | ✅ **DONE 2026-07-21** — operator: "good to start … on all the tabs 1 to 5"; DO-NOT-START banner lifted (`pm@161200196`)                             | —                                      |
+| Pipeline (builds) view — backend + live UI tab                             | ✅ **DONE** — `deployment-api@8eda1f8`/`0a920c2`, `deployment-ui@47e6379`/`038038e`                                                                  | —                                      |
+| Deploy timeline view — backend + live UI tab                               | ✅ **DONE 2026-07-23** — `deployment-api@72a0108`, `deployment-ui@797180c`                                                                           | —                                      |
+| Date-range picker + 7d default (both live views)                           | ✅ **DONE 2026-07-23** — operator ask, same turn as the Deploy timeline ship (`deployment-ui@797180c`)                                               | —                                      |
+| **What's running** view (the headline runtime join + drift classifier)     | **Not started** — next recommended vertical; also unblocks Deploy timeline's `built_from` column                                                     | —                                      |
+| Artifacts (registry inventory) view                                        | **Not started**                                                                                                                                      | —                                      |
+| Health (measured conditions) view                                          | **Not started** — folds in the still-open pipeline-bug findings below                                                                                | —                                      |
+| Snapshot worker (GCS parquet + DuckDB, the OOM-safe long-window read path) | **Not started** — the live-scan cache (300s TTL) covers today's needs; the worker is for long-history + concurrent-load headroom                     | —                                      |
+| (A) tarball commit stamp (Phase 3c Option A)                               | **Cannot be done yet** — audit-cleared YES-WITH-CONDITIONS; verify via a live EPHEMERAL_BATCH launch (no CI covers the shell file)                   | a deliberate operator-scheduled launch |
+| Phase 3b cross-links (Deployments URL-param filter, console deep-links)    | **Not started** — audited cheap (2-line + reuse `consoleUrl()`), gated on the Running view landing first (the version row that would deep-link)      | Running view                           |
+| Issue doc for the pipeline bugs                                            | ✅ **DONE 2026-07-21** — `issues/build_deploy_pipeline_provenance_and_aws_deferred_gaps_2026_07_21.md`; only #4/#7 (AWS-deferred) + #1/#3 (GCP) open | Ikenna (his active CI files)           |
+| AWS resume (App Runner + ECS + ECR)                                        | **Cannot be done yet — operator-owned** — AWS intentionally parked; deferred until AWS credits are available                                         | AWS credits                            |
