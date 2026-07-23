@@ -26,7 +26,7 @@ related:
 created: 2026-07-13
 last_updated: 2026-07-14
 parent_epic: manifest_master
-assigned_vm: planning
+assigned_vm: NA
 execution_scope: orchestrator-agent
 priority: P1
 estimate_class: infra

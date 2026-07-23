@@ -15,7 +15,7 @@ tags: [strategy, v2-engine, vol-trading, backtest, deribit]
 related: [v2_engine_venue_buildout_2026_06_15.md]
 created: 2026-07-13
 parent_epic: strategy_master
-assigned_vm: planning
+assigned_vm: NA
 execution_scope: orchestrator-agent
 priority: P1
 estimate_class: brand-new

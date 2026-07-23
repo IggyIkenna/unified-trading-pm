@@ -21,7 +21,7 @@ related:
   ]
 created: 2026-06-28
 parent_epic: mtds_mdps_master
-assigned_vm: planning
+assigned_vm: NA
 execution_scope: local-only
 priority: P1
 estimate_class: design

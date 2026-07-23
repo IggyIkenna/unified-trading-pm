@@ -19,7 +19,7 @@ related:
   ]
 created: "2026-06-12"
 parent_epic: sports_master
-assigned_vm: planning
+assigned_vm: NA
 execution_scope: orchestrator-agent
 priority: P0
 estimate_class: brand-new

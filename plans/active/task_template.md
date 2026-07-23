@@ -16,7 +16,7 @@ scope: [engineer, admin]
 tags: [template, format, canonical, agent-task, plan-authoring]
 related: [ao_dispatch_correctness_regen_reconcile_2026_07_07.md, PLAN_FORMAT.md]
 created: "2026-02-25"
-last_updated: 2026-07-14 # was: 2026-07-07 — corrected 2026-07-14, doc-reconciliation vr2#13: body already carried 2026-07-12 inline correction annotations (status-enum fix, sequential:true SHIPPED note) never reflected in frontmatter
+last_updated: 2026-07-23 # was: 2026-07-14 — corrected 2026-07-23, plan_quality_four_line_defense_architecture_2026_07_23.md line-1 todo: added §3 rules for findings D/E/F/G/C (section-shorthand, ambiguous verbs, delete-risk tagging, definition-of-done, stale-checkbox pre-check) surfaced by an adversarial AO-dispatch-readiness review of sports_consolidated_closeout_2026_07_19.md
 parent_epic: agent_operating_framework_master
 assigned_vm: NA
 execution_scope: local-only
@@ -106,7 +106,11 @@ ingested). Use for operator-only work, trackers, design docs, and dispatcher-sur
 - **Keep each todo's load-bearing content on the FIRST physical line** _(verified in `regen_backlog_from_plan.py`
   2026-07-21: `_parse_open_todos` captures only the first line matching `- [ ]`; wrapped/indented continuation lines are
   NOT parsed into the task brief the dispatcher sees)._ The `[TAG]`, `P<n>`, and the essential verb-phrase MUST be on
-  line 1; treat continuation lines as human-only notes the worker's brief will not include.
+  line 1; treat continuation lines as human-only notes the worker's brief will not include. **Watch for the subtle
+  failure mode** (caught 2026-07-23): a `**bold**` span that word-wraps across a markdown editor's soft line-break can
+  put a physical newline INSIDE what reads as one continuous sentence to a human — the load-bearing clause after that
+  wrap is invisible to the parser even though nobody notices reading it. When in doubt, check the raw file's actual line
+  breaks (`grep -n` or the line-numbered Read output), not how the rendered markdown looks.
 - **Reference SYMBOLS, never line numbers** _(operator rule 2026-07-21)_. A plan out-lives the code it points at — the
   moment any agent edits a file, every `file.tsx:821` / `:256-320` shifts and now points at the WRONG code (exactly what
   happened when one plan extracted shared primitives out of `Deployments.tsx` and every dependent plan's line refs went
@@ -119,6 +123,29 @@ ingested). Use for operator-only work, trackers, design docs, and dispatcher-sur
 - **Priority** `P0`–`P3` (P0 = most urgent). Same-priority tasks run in plan-file order (§4).
 - **Non-dispatchable** (kept visible, never ingested): a line containing `BLOCKED-<TOKEN>` (e.g. `BLOCKED-CREDENTIALS`,
   `BLOCKED-OPERATOR-DECISION`), `[OPERATOR]` (operator-only action), or a `_(stretch, optional)_` marker.
+- **No bare cross-doc section shorthand** _(2026-07-23, adversarial-review finding D:
+  `sports_consolidated_closeout_2026_07_19.md` had todos citing `§A2`/`§T`/`§W`-style labels that only resolved against
+  a DIFFERENT document's internal sections — meaningless to an agent dispatched just that one todo)._ A `§X` reference
+  is fine as a POINTER to a doc you also link, but the todo's first line must ALSO state the actual fact/finding that
+  section stands for — never make the fact's meaning depend on a reader having the other doc open.
+- **State the literal action, not a doc-shaped verb** _(finding E: "Absorb `<doc>.md`" was ambiguous between "do the
+  engineering work that doc describes" and "fold its text into this plan" — very different tasks)._ Avoid
+  `absorb`/`incorporate`/`handle`/`address` as the verb of a todo; write the literal action ("execute the fix in
+  `<doc>`" or "merge `<doc>`'s open todos into this track").
+- **Delete-risk tagging must be consistent within one plan** _(finding F: one plan had a prod-GCS-deleting todo tagged
+  plainly while a sibling delete todo in the same doc was `[OPERATOR]` + cited the delete-safety protocol — reads as an
+  oversight, not a decision)._ Any todo that deletes/overwrites prod data (GCS objects, manifest rows, DB rows): tag
+  `[OPERATOR]` and cite `codex/05-infrastructure/gcs-and-manifest-delete-safety-protocol.md` UNLESS you state explicitly
+  why this specific delete is lower-risk (e.g. genuinely soft-delete/reversible) — silence reads as an oversight, not a
+  ruling.
+- **State the definition-of-done** _(finding G: several todos stated the problem/goal but not what evidence proves it's
+  done — e.g. "wire the dependency gate for real" with no acceptance check)._ End each todo (or its first continuation
+  line) with the concrete evidence a done-claim must cite — a passing check, a specific query returning zero rows, a
+  build ID, etc. — not just the goal.
+- **Before writing a NEW todo, check the doc doesn't already show it done** _(finding C: a later section of the SAME
+  plan sometimes already recorded a todo's resolution — e.g. a Progress Log entry — while the checkbox up top stayed
+  unflipped; a fresh reviewer skimming top-to-bottom re-investigates an already-solved problem)._ When editing a plan,
+  grep the rest of the doc for the todo's subject before adding or leaving it open.
 
 ---
 

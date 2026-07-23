@@ -2,8 +2,10 @@
 name: plan-reconcile
 description:
   Audit the PM plans corpus (plans/active + plans/active/issues + plans/epics + the normative refs PLAN_FORMAT.md /
-  task_template.md / INDEX.md / ACTIVE_INDEX.md) for cross-doc contradictions AND done-but-unchecked todos,
-  adversarially verify every finding, then reconcile — auto-fix the mechanical classes (checkbox flips with hard
+  task_template.md / INDEX.md / ACTIVE_INDEX.md) for cross-doc contradictions, done-but-unchecked todos, AND
+  AO-dispatch-readiness defects (first-line truncation, unenforced ordering, bare section-shorthand, ambiguous verbs,
+  inconsistent delete-tagging, missing definition-of-done — per task_template.md §3), adversarially verify every
+  finding, then reconcile — auto-fix the mechanical classes (checkbox flips with hard
   evidence, supersession banners, status/frontmatter drift, dangling refs) AND anything a source of truth can settle
   (if a claim is countable, count it — do not escalate a provable fact), then route only genuine authority/preference
   calls to the operator as a batched interactive Q&A with options + a marked recommendation. ASK > PARK: park as
@@ -151,6 +153,33 @@ Candidate contract (all hunters): both sides cited as `<relpath>:<line>` + verba
 mis-route live work: opposing directives, SSOT conflict, wrong gate/status) / P1 (material drift) / P2 (stale refs,
 index drift) / P3 (cosmetic). NOT contradictions: scope/asset-group/time differences; resolved issue docs describing
 history; properly-bannered supersession (an UNbannered superseded doc that still reads authoritative IS a finding).
+
+5. **AO-dispatch-readiness hunters** — added 2026-07-23 after an ad-hoc adversarial review found 6 defect classes in a
+   single AO-eligible plan that none of Phase 0's mechanical checks or Phases 1-4's contradiction/staleness sweeps would
+   have caught, because these are CONTENT-judgment defects, not structural ones — this is why they need an LLM pass
+   (line 3 of the plan-quality four-line-defense architecture,
+   `plans/active/issues/plan_quality_four_line_defense_architecture_2026_07_23.md`), not a regex in
+   `run_hygiene_sweep.sh` (line 2). One hunter per active AO-eligible plan (`assigned_vm: planning` or a strong
+   candidate for it), checking every open `- [ ]` todo against `task_template.md` §3's rules — these are the SAME rules,
+   not a parallel spec, so a rule added to §3 is automatically in scope here:
+   - **Line-1 completeness** (task_template.md §3): does the todo's actual FIRST PHYSICAL LINE — not the sentence as it
+     reads to a human across a markdown line-wrap — carry the complete instruction (action + method + any hard
+     constraint like ON-DEMAND vs SPOT)? A bolded clause that wraps onto line 2 mid-sentence is a genuine miss even
+     though a human reader never notices (confirmed case: a "DO NOT EXECUTE" warning split across a markdown bold-span's
+     line-wrap, invisible to a human, invisible to the AO dispatcher's own risk).
+   - **Ordering stated once, machine-enforced or explicitly flagged as not** — a real dependency between todos restated
+     inconsistently in two places, or resting on prose ("after the re-runs...") with no `sequential:`/`depends_on`+
+     `gate_on_depends` and no explicit "not machine-enforced yet" guard note.
+   - **No bare cross-doc `§X` shorthand** at a todo's first use — resolve it against the source doc and confirm the fact
+     is actually restated, not just cited.
+   - **No ambiguous verb** (`absorb`/`incorporate`/`handle`/`address`) where the literal action differs materially
+     between readings.
+   - **Delete-risk tagging consistency** — every todo deleting/overwriting prod data either carries `[OPERATOR]` + cites
+     the delete-safety protocol, or explicitly states why it doesn't need to (soft-delete window, etc.).
+   - **Definition-of-done present** — every todo states what evidence proves it's done, not just the goal. Findings
+     route through the same Phase 3 adversarial-verification + Phase 4 routing as contradictions (auto-fix the
+     mechanical rewrites directly with evidence; ask/park only genuinely ambiguous judgment calls, e.g. whether a delete
+     needs `[OPERATOR]`).
 
 ## Phase 2 — done-but-unchecked sweep
 
