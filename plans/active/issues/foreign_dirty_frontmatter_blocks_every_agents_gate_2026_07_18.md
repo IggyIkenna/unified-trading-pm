@@ -16,7 +16,7 @@ summary:
   asset_group:[cross-cutting]). The gap is that a corpus-wide blocking check has no owner-scoped fallback - correctness
   of the guard and liveness of the fleet are in direct tension.
 status: resolved
-resolved_by: unified-trading-pm@PENDING
+resolved_by: unified-trading-pm@1f5d2211
 nature: issue
 asset_group: [meta]
 stage: [meta]
@@ -118,7 +118,7 @@ from `--no-verify` / `SKIP_BRANCH_DRIFT`-class overrides.
 
 ## Implemented (2026-07-22/23) — Option 1
 
-`unified-trading-pm@PENDING`. `scripts/quality-gates.sh`'s frontmatter-schema post-gate now computes "your own
+`unified-trading-pm@1f5d2211`. `scripts/quality-gates.sh`'s frontmatter-schema post-gate now computes "your own
 changeset" — the union of (a) committed-but-unpushed doc changes (`git diff --diff-filter=ACMR @{u}...HEAD`), (b)
 unstaged modifications, (c) staged changes, and (d) brand-new UNTRACKED docs
 (`git ls-files --others --exclude-standard`) — scoped to the checker's own doc-tree pathspecs, mirroring
