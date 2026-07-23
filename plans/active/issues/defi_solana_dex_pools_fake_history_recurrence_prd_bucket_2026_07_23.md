@@ -29,7 +29,7 @@ related:
     ../archive/issues/solana_defi_fake_history_snapshot_2026_06_17.md,
     ../archive/2026_07/solana_defi_legacy_migration_2026_05_27.md,
     estate_orphan_assessment_2026_07_21.md,
-    defi_consolidated_closeout_2026_07_18.md,
+    ../defi_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-07-23
 parent_epic: defi_master
@@ -141,7 +141,7 @@ is regenerated after a fix.**
       exact date range the original bug's backfill loop covered (2023-01-01..2026-04-15) — proved the population is
       EXACTLY 17 days × {ORCA, RAYDIUM}, 2025-01-01..17, no gaps, nothing beyond this window. See "Scope" section above.
 - [ ] 3. [CODE] P1. **Build the relabel-forward migration per the todo-1 ruling — SCRIPT SHIPPED + VALIDATED 2026-07-23,
-      full-scale run still pending.** `market-tick-data-service@67524cbb`
+      FULL-SCALE RUN LAUNCHED 2026-07-23, still in progress.** `market-tick-data-service@67524cbb`
       (`scripts/relabel_solana_dex_pools_fake_history.py`): for each affected object, reads the row(s), derives
       `<true_date>` from the row's own `timestamp` (NOT `available_at`), computes the canonical dest path via UAC
       `build_defi_partition_path` with `day=<true_date>` + the resolved `live_onchain_subgraph` pipeline_mode +
@@ -153,15 +153,40 @@ is regenerated after a fix.**
       (collision-safe; deliberately does not risk the separate tracked symbol-collision bug). **Validated end-to-end
       against 1 real production object** (`--apply`, then deleted + redid it once to fix the data_type bug) — also
       caught and fixed a `setup_events()`-not-initialized crash and a retry-logic gap that would have silently skipped
-      `record_captured` forever after a partial failure. **NOT yet run at full scale** (~241K rows / likely 100K+
-      objects, estimated multi-hour at real GCS latency — needs a VM, `--only-day`/`--only-venue` sharding recommended
-      per the script's own docstring; no dedicated launcher exists yet). **Interim backfill exclusion — SHIPPED
+      `record_captured` forever after a partial failure. **Interim backfill exclusion — SHIPPED
       `instruments-service@fd8450b7`**: `split_dex_pools_fake_history()` in `backfill_orphan_class_e.py` (mirrors
       `backfill_orphan_class_e_sports.py`'s `split_pre_floor` pattern) excludes all 34 known combinations from
       `record_captured` entirely — a normal defi `--apply` run cannot touch this population before the relabel migration
       runs, regardless of what todo 1 sequencing anyone follows. 2 new unit tests, `quality-gates.sh` green (also fixed
       an unrelated empty-string-fallback baseline regression from a concurrent commit that was blocking ALL
-      instruments-service commits, not just this one).
+      instruments-service commits, not just this one). **Real population count measured 2026-07-23** (concurrent listing
+      across the 34 legacy prefixes, not an estimate): exactly 241,281 objects (14,094 ORCA + 99 RAYDIUM per day x 17
+      days — the SAME object count every day, consistent with the original bug re-writing one live snapshot under 17
+      different fake `day=` labels). **`--only-day` sharding hardened before launch**
+      (`market-tick-data-service@b9a8b76e`): the script has no `--shard-of`/`--shard-index`, only
+      `--only-day`/`--only-venue`; a first sharded-launch attempt failed with `gcloud: Bad syntax for dict arg` because
+      `gcloud compute instances create --metadata` parses its value as a comma-delimited dict, and the day-list was
+      comma-joined (`2025-01-01,2025-01-02,...`) — ANY comma anywhere in a `--metadata` value breaks it, not just at the
+      top level. Fixed by accepting `:` as an additional separator (`_parse_days()`) and switching the launcher to
+      colon-joined day lists. **Launcher category added** (`deployment-service@10b2fd5c` after an earlier attempt at
+      `732c390d`): `defi-relabel` category in `launch-canonical-migration-vm.sh` (`_script_for()` + the
+      DRY-BY-DEFAULT+--apply flag list + the direct-dispatch case-arm) — reused the already-registered
+      `canonical-migration-defi-` VM-name prefix, no new registry entry needed. Resolved a real autostash-merge conflict
+      with a concurrent slot's unrelated `defi-glued-reshard` category addition to the same file (both kept,
+      self-contained, no overlap). **4 sharded VMs launched 2026-07-23 ~13:58 UTC** (`e2-standard-8` SPOT,
+      `asia-northeast1-c`, tarballs pinned to the exact shipped SHAs):
+      `canonical-migration-defi-relabel-20260723-135815-d01to05` (days 01-05), `...-135840-d06to09` (days 06-09),
+      `...-135903-d10to13` (days 10-13), `...-135929-d14to17` (days 14-17) — every shard processes BOTH venues for its
+      assigned days (RAYDIUM's ~99/day is negligible next to ORCA's ~14094/day). **Verified genuinely running, not just
+      booted**: first shard's `run.log` shows real `wrote + recorded` lines with the CORRECT dest path
+      (`day=2026-05-04/pipeline_mode=live_onchain_subgraph/.../data_type=dex_pool_state/<pool>.parquet`), matching the
+      earlier single-object validation exactly. **Measured throughput constraint**: the per-VM manifest shard write hits
+      GCS's per-object mutation rate limit (~1/sec) on nearly every row, logged as `429` + `backing off ~1s` —
+      self-healing (every retry logged `succeeded after 1 429-retry attempt`, processing continues), NOT a hard failure,
+      but caps sustained throughput to roughly 2 objects/sec per VM — consistent with the documented multi-hour estimate
+      (~56K-70K objects per shard implies single-digit hours per VM, not minutes). **Still running as of last check —
+      full-scale completion not yet verified; monitor to actual completion**, then the pending-delete report needs human
+      review before any old-object cleanup (never automated).
 - [x] 4. [REVIEW] P2. ~~Check whether the SAME bug shape exists for Kamino~~ — **PARTIALLY DONE 2026-07-23**:
       `venue=KAMINO/chain=SOLANA/instrument_type=pool/data_type=dex_pools/` has **zero objects** in the `-prd-` bucket
       across 6 sampled days (both inside and outside the affected window) — moot for the AMM-pool shape this issue
