@@ -279,4 +279,33 @@ the LENDING mismodel, resolve FUNDING per E1. Position resolution is derivable (
 min/max, never iloc). Recursive + compound/kamino dispatch = follow-on.
 
 **So the A2 build is gated on: E1 (funding source) + E2/E4 (confirms) + the 4-rate audit `wf_268532e0-323` (which rate
-is #4). Do NOT wire until these resolve.** </content>
+is #4). Do NOT wire until these resolve.**
+
+## OPERATOR RULINGS 2026-07-23 (E1/E2/E4, interactive)
+
+- **E1 — RESOLVED.** Confirmed real perp funding rate, operator's own words: "short funding is a separate track for
+  which — when we are short — we apply funding rates; net positive PnL if funding rate is positive on the short perp
+  leg, and we add the LST appreciation as our long leg. Simple. That's what staked-basis trading is." I.e. this is the
+  canonical basis-trade structure: LONG leg = hold the LST (spot exposure, earns the LST-appreciation/staking yield
+  baked into the exchange rate); SHORT leg = short the underlying's perp (delta-hedge), which EARNS funding when the
+  perp funding rate is positive (shorts receive funding when longs pay, i.e. rate > 0 → short receives). Net csb PnL =
+  LST appreciation (`lst_yields` ratio) + funding earned on the short perp leg. **Still needs a concrete data-source
+  identification pass** (which perp/venue is the canonical short leg per `lst_asset` — e.g. ETH-PERP on which venue —
+  and whether real funding-rate history is already captured for it) before this can be wired; the STRUCTURE is now
+  confirmed, the exact instrument mapping is not yet.
+- **E2 — NOT resolved, operator asked for MORE investigation, not a pick.** Operator: "investigate more, what's more
+  accurate — because depending on the share class, sometimes we want ETH-underlying units, sometimes USD, so we need to
+  be able to figure out both, no?" This means: do NOT hardcode a single unit convention (neither the doc's own "multiply
+  by quote staked_notional" recommendation nor native LST units alone) — the real requirement is **supporting BOTH
+  representations** (native-underlying and quote/USD) depending on share class, not choosing one. This is an open design
+  question needing its own investigation (what "share class" concretely means in this codebase's config, whether both
+  units can coexist in the same feed/schema or need a per-share-class branch) before E2 can be considered closed.
+- **E4 — CONFIRMED.** csb row-set = {STAKING via LST index, FUNDING via real perp}; LENDING/BASIS rows dropped entirely
+  (not explicit-zeroed-but-present) — matches the actual economic structure of a staking-basis position, operator
+  explicitly chose this over preserving the old schema shape.
+
+**Updated gating**: E4 is closed. E1's STRUCTURE is closed but the concrete perp/venue data-source mapping per
+`lst_asset` is a new, still-open sub-task. E2 is explicitly NOT closed — needs a dedicated investigation into
+share-class-dependent dual-unit support before the STAKING leg's unit convention can be finalized. The A2 build remains
+gated until E1's data-source mapping and E2's dual-unit design are both resolved — do not wire the STAKING leg with a
+single hardcoded unit convention.</content>

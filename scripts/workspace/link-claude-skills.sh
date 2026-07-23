@@ -5,10 +5,25 @@
 # link-claude-skills.sh — ensure the per-(slot)-root Claude Code agent symlinks:
 #   1. top-level `<root>/CLAUDE.md`        → unified-trading-pm/cursor-configs/CLAUDE.md
 #   2. `<root>/.claude/skills`             → unified-trading-pm/cursor-configs/skills/   (ONE dir link)
+#   3. `<root>/.claude/settings.json`      → unified-trading-pm/cursor-configs/settings.json
 # so Claude Code (a) auto-loads the PM ruleset at startup when an agent's CWD is the root, and
-# (b) surfaces each `/<name>` slash-command. Orchestrator-spawned agents launch with CWD = the
-# slot root (.tabs/<N>/) and an isolated CLAUDE_CONFIG_DIR, so the TOP-LEVEL CLAUDE.md is the only
-# reliable startup-load point — `<root>/.claude/CLAUDE.md` is NOT a path Claude Code reads as memory.
+# (b) surfaces each `/<name>` slash-command, and (c) picks up team policy (permissions,
+# bypassPermissions default, MCP servers, the destructive-command hook) at the project-settings
+# layer. Orchestrator-spawned agents launch with CWD = the slot root (.tabs/<N>/) and an isolated
+# CLAUDE_CONFIG_DIR, so the TOP-LEVEL CLAUDE.md is the only reliable startup-load point —
+# `<root>/.claude/CLAUDE.md` is NOT a path Claude Code reads as memory.
+#
+# WHY #3 EXISTS (added 2026-07-23, see
+# plans/active/issues/claude_code_settings_symlink_chain_broken_2026_07_23.md): unlike CLAUDE.md and
+# skills/, cursor-configs/settings.json is GITIGNORED (personal model/effortLevel drift used to jam
+# slot-cron-ff-pull's dirty-check — see .gitignore) — so it never arrives via `git pull` and must be
+# manually re-seeded per clone. This script does NOT invent or copy that content across clones (there
+# is no single git-tracked source of truth to copy from); it only links `.claude/settings.json` to
+# `cursor-configs/settings.json` WHEN that file already exists in THIS root's own PM clone, and skips
+# cleanly (non-blocking) otherwise. Before this fix, NO root on the human-planning VM had this
+# symlink at all — settings.json was measured absent in the workspace root and both `.tabs/1`,
+# `.tabs/2` slots, meaning team policy (incl. the destructive-command PreToolUse hook) silently never
+# loaded anywhere. See codex/05-infrastructure/claude-code-settings-symlink.md for the full model.
 #
 # The CLAUDE.md / SKILL.md sources are the git-tracked SSOT (inside the PM repo). These symlinks are
 # LOCAL, uncommitted, and regenerated on demand. Regenerating them on every QG run means a freshly-
@@ -80,6 +95,39 @@ if [ -f "${PM_CFG}/CLAUDE.md" ]; then
         echo "[link-claude-skills] ensured ${WORKSPACE_ROOT}/CLAUDE.md → PM/cursor-configs/CLAUDE.md"
     else
         echo "[link-claude-skills] could not link ${WORKSPACE_ROOT}/CLAUDE.md (non-blocking)" >&2
+    fi
+fi
+
+# ── (3) `<root>/.claude/settings.json` → PM SSOT (team policy), IFF this clone already has it ──
+# cursor-configs/settings.json is gitignored (see header note above) — never invented/copied here,
+# only linked when this root's own PM clone already has the file on disk. Placed here (before the
+# skills block below, NOT after it) because the skills block below has multiple early `exit 0` paths
+# (already-linked, no source dir) that would otherwise skip this entirely — measured: an earlier
+# version of this patch placed the settings.json block at the end of the file and it silently never
+# ran on any of the 3 roots on this host, because skills was already linked on all 3.
+_settings_src="${PM_CFG}/settings.json"
+_settings_dest="${WORKSPACE_ROOT}/.claude/settings.json"
+_settings_target="../unified-trading-pm/cursor-configs/settings.json"
+
+if [ ! -f "$_settings_src" ]; then
+    echo "[link-claude-skills] no ${_settings_src} (gitignored + per-clone — re-seed manually, see codex/05-infrastructure/claude-code-settings-symlink.md) — settings.json link skipped for this root"
+elif [ -L "$_settings_dest" ]; then
+    if [ "$(readlink "$_settings_dest")" = "$_settings_target" ]; then
+        echo "[link-claude-skills] ${_settings_dest} → ${_settings_target} (already linked)"
+    elif rm -f "$_settings_dest" 2>/dev/null && ln -sfn "$_settings_target" "$_settings_dest" 2>/dev/null; then
+        echo "[link-claude-skills] updated ${_settings_dest} → ${_settings_target}"
+    else
+        echo "[link-claude-skills] could not update ${_settings_dest} (non-blocking)" >&2
+    fi
+elif [ -e "$_settings_dest" ]; then
+    # A real file here is a deliberate personal override — never clobber it.
+    echo "[link-claude-skills] ${_settings_dest} exists as a regular file → leaving it untouched (personal override)" >&2
+else
+    mkdir -p "${WORKSPACE_ROOT}/.claude" 2>/dev/null
+    if ln -sfn "$_settings_target" "$_settings_dest" 2>/dev/null; then
+        echo "[link-claude-skills] ensured ${_settings_dest} → ${_settings_target}"
+    else
+        echo "[link-claude-skills] could not link ${_settings_dest} (non-blocking)" >&2
     fi
 fi
 

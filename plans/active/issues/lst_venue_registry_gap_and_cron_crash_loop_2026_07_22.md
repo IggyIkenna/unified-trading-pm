@@ -152,16 +152,16 @@ section) in case the two efforts have since merged or one has superseded the oth
 
 # Deferred work after 2026-07-22 (corrected)
 
-| Item                                                                      | State                                                | Blocked on                                                                                        |
-| ------------------------------------------------------------------------- | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
-| STADER/STAKEWISE/SWELL/MANTLE handler registry entries                    | Done (2026-04-10, pre-dates this session)            | Nobody -- no action needed                                                                        |
-| `uts-prod-mtds-collect-lst-rates` wrong-date-targeting                    | Not a bug                                            | Nobody -- fallback-to-yesterday is correct T+1 behavior, explicit dates already work              |
-| Single-day backfill, `day=2026-07-17`, all LST venues                     | Done 2026-07-23, content-verified                    | Nobody                                                                                            |
-| MAKER sDAI duplicate consolidation                                        | Done 2026-07-23 -- market-tick-data-service@28972ccc | Nobody                                                                                            |
-| Root-cause the rare late-stage OOM/timeout (Solana fetch suspect)         | Investigated, not conclusively pinned                | Nobody -- plausible lead (per-VM-shard-fallback bloat) documented, not fixed; real but non-urgent |
-| sUSDe/ETHENA duplicate (same shape as MAKER, both handlers, same address) | Not done                                             | Operator-owned judgment call -- out of this pass's approved scope                                 |
-| 39-day execution gap `2026-06-08`..`2026-07-17` root cause                | Not done                                             | Nobody -- unexplained, low urgency                                                                |
-| Full since-real-launch (2023->2026-04-10) historical backfill             | Not scoped                                           | Operator decision -- much bigger ask, do not assume in/out of scope                               |
+| Item                                                              | State                                                                   | Blocked on                                                                                        |
+| ----------------------------------------------------------------- | ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| STADER/STAKEWISE/SWELL/MANTLE handler registry entries            | Done (2026-04-10, pre-dates this session)                               | Nobody -- no action needed                                                                        |
+| `uts-prod-mtds-collect-lst-rates` wrong-date-targeting            | Not a bug                                                               | Nobody -- fallback-to-yesterday is correct T+1 behavior                                           |
+| Single-day backfill, `day=2026-07-17`, all LST venues             | Done 2026-07-23, content-verified                                       | Nobody                                                                                            |
+| MAKER sDAI duplicate consolidation                                | Done 2026-07-23 -- market-tick-data-service@28972ccc                    | Nobody                                                                                            |
+| sUSDe/ETHENA duplicate consolidation                              | Done 2026-07-23 -- same commit as MAKER                                 | Nobody                                                                                            |
+| 39-day execution gap `2026-06-08`..`2026-07-16` root cause        | Done 2026-07-23 -- deliberate operator PauseJob, not a bug              | Nobody -- see Resolution below                                                                    |
+| Full since-real-launch (2023->2026-04-09) historical backfill     | Already done -- verified, not new work needed                           | Nobody -- see Resolution below                                                                    |
+| Root-cause the rare late-stage OOM/timeout (Solana fetch suspect) | Investigated further, real mechanism found + quantified, NOT code-fixed | Filed as its own cross-cutting issue -- `defi_manifest_per_vm_shard_fallback_bloat_2026_07_23.md` |
 
 **Recommended next item**: the `day=2026-07-17` single-day re-run (cheapest, closes the one real gap), then the MAKER
 decision (needs operator input), then the OOM/timeout root-cause if the operator wants Solana coverage hardened. The
@@ -219,3 +219,56 @@ here rather than silently also touching it.
 
 **Still undecided, unchanged from the original correction**: whether the operator wants the full since-real-launch (2023
 -> 2026-04-10) historical backfill scoped as its own effort. Not asked again this pass -- still open.
+
+# Resolution, round 2 (2026-07-23, operator asked for all 4 remaining items "in full")
+
+**sUSDe/ETHENA duplicate -- consolidated, same commit as MAKER.** Same exact shape (identical address
+`0x9D39A5DE30e57443BfF2A8307A4256c8797A3497`, identical `convertToAssets(1e18)` call, present in both handlers). Removed
+from `lst_rates_handler.py`'s `_EVM_LST_ABI_METADATA` + `_token_to_protocol`, added the mirroring
+`test_susde_removed_duplicate_of_vault_share_price` / `test_susde_no_longer_mapped_here` tests, updated the
+`--lst-tokens` CLI help text again. `vault_share_price_handler.py` is now sole owner. Shipped in the same commit as
+MAKER, `market-tick-data-service@28972ccc`.
+
+**39-day execution gap -- ROOT-CAUSED via Cloud Audit Logs, NOT a bug.** `gcloud logging read` on
+`protoPayload.resourceName="...jobs/uts-prod-mtds-collect-lst-rates-cron"` (Admin Activity audit logs, much longer
+retention than the Data Access logs the earlier `resource.type="cloud_scheduler_job"` query hit -- that query came back
+empty for the whole window and was a dead end) shows: `PauseJob` by `ikenna@odum-research.com` at `2026-06-08T04:15:31Z`
+(a few hours after that day's normal 01:00 run -- explains why the last pre-gap execution, `lqt54`, is exactly
+2026-06-08), then a `ResumeJob`/`PauseJob` blip at `2026-07-16T07:29`/`07:36`, then the `ResumeJob` at
+`2026-07-16T09:30` that stuck -- matching the first post-gap execution (`c8lxn`, ran 2026-07-17, targets
+yesterday=2026-07-16, succeeded). This was a deliberate human pause of the Cloud Scheduler trigger, not a crash, not a
+Terraform drift, not a code defect. No fix needed; documenting the mechanism (and that Admin Activity audit logs, not
+Data Access logs, are the right tool for this class of historical question) for next time.
+
+**Full since-real-launch historical backfill -- ALREADY DONE, verified, no new work needed.** Before launching a VM (the
+sanctioned `deployment-service/scripts/vm/launch-mtds-lst-rates-backfill-vm.sh` launcher exists and was ready to use),
+checked the authoritative genesis dates MTDS actually reads at runtime
+(`unified_api_contracts.registry.capability_declarations._defi_lst.LST_TOKEN_GENESIS` -- NOTE this differs slightly from
+`chain_env.py`'s and `venue_launch_dates.py`'s dates for the same tokens; `_defi_lst.py` is the one
+`get_lst_token_genesis()` actually returns and therefore the one that governs collection, so it's the one that matters):
+swETH 2023-04-17, ETHx 2023-07-10, mETH 2023-10-06, osETH 2023-11-28. A spot-check turned up existing data at every
+genesis date, so instead of launching a redundant VM I read the bucket's consolidated manifest
+(`_index/availability_index.parquet`, 8.59M rows, ~95s to pull) and filtered to these 4 venues + `data_type=lst_rates`:
+5,946 rows, **100% `capture_status=captured`, ZERO missing days across each token's genesis-to-2026-04-09 window**
+(coverage actually extends well past that too, into the ongoing daily-cron range). Content-verified (not just
+manifest-trusted) by reading 6 real parquet files spanning 2023-04-17 through 2025-03-01: every genesis-day rate is ~1.0
+(correct -- a brand-new LST has no accrued yield yet) and rates increase monotonically over time with real, increasing
+block numbers (e.g. STADER/ETHx: 1.0000059 on 2023-07-10 -> 1.0324 on 2024-06-15) -- real, sane, non-fabricated data.
+Someone already ran this backfill (most likely the `mtds-lst-rates-*` VM lineage referenced in
+`plans/active/lst_rate_honest_coverage_2026_07_21.md`, though that exact VM name no longer appears in
+`gcloud compute instances list` -- terminated/deleted after finishing) before this session ever touched this thread. No
+VM launched, no compute spent, no operator decision needed on backfill scope -- there was nothing left to backfill.
+
+**Root-cause the rare late-stage OOM/timeout -- investigated further, real mechanism found and quantified, filed as its
+own issue rather than a rushed shared-library fix.** Checked the manifest consolidator's own health
+(`uts-prod-manifest-consolidator-market-data-defi`) -- it runs reliably (~60s cadence, mostly succeeding), ruling out
+"the consolidator never runs" as the explanation. Re-checked the DeFi manifest's `_index/per_vm/` directory: the 113.6MB
+`canonical-migration-defi-rebuild-20260722-194751.parquet` I found earlier had grown to **173.8MB and was still being
+actively written** (a live, in-progress migration process, not touched). This means the shared
+`_read_and_merge_per_vm_shards` fallback path (triggered whenever the consolidated manifest index is >120s stale) has no
+size guard against a large, currently-growing shard from ANY concurrent process -- a real, live, worsening risk to every
+DeFi handler's occasional fallback read, not something specific to `lst_rates_handler.py`. Still could NOT conclusively
+pin this to the two SPECIFIC historical incidents (the 173.8MB shard postdates both). Filed as
+`defi_manifest_per_vm_shard_fallback_bloat_2026_07_23.md` rather than patching the shared library in this LST-scoped
+pass -- a wrong bound in a function every DeFi handler depends on is a worse outcome than a documented, correctly-scoped
+follow-up.
