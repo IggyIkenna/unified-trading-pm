@@ -26,7 +26,7 @@ related:
 created: "2026-07-20"
 last_updated: "2026-07-20"
 parent_epic: observability_master
-assigned_vm: planning
+assigned_vm: NA
 execution_scope: orchestrator-agent
 priority: P0
 estimate_class: infra

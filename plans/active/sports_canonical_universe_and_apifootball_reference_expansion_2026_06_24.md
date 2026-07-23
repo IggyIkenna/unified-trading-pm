@@ -14,7 +14,7 @@ tags: [sports, canonical-universe, api-football, reference, over-capture, instru
 related: []
 created: 2026-06-24
 parent_epic: sports_master
-assigned_vm: planning
+assigned_vm: NA
 execution_scope: local-only
 priority: P2
 estimate_class: design
