@@ -37,7 +37,7 @@ summary:
   generation number + recipe below — but doing the swap safely on a live, actively-written production bucket needs a
   controlled window, not a blind in-place restore under time pressure) — documented as an open follow-up rather than
   forced."
-status: open
+status: resolved
 nature: issue
 asset_group: [sports]
 stage: [data]
@@ -77,6 +77,11 @@ resolved_by:
     "market-tick-data-service@6fad6565fe66ef34ea245172dc1e606c0a2dd183 (code fix: _attempted_at_from_row() + wiring into
     all 3 v9-rebuild re-emit call sites; prevents recurrence, does not retroactively fix the already- corrupted 112,277
     live rows)",
+    "market-tick-data-service@e9d9dec0 (2026-07-23, CAS-safe wipe of ALL source=api_football MTDS-sports manifest rows —
+    see mtds_sports_api_football_wrong_source_reaccumulated_post_wipe_2026_07_22.md — removed the entire 112,277-row
+    attempted_failed population this doc analyzed as a side effect, since every row was
+    pipeline_mode=batch_api_football/ source=api_football; makes the 'restore true attempted_at' open follow-up moot —
+    there is nothing left to restore)",
   ]
 locked_by:
 locked_since:
@@ -300,3 +305,27 @@ and the restore remains a freshness-accuracy improvement rather than a data-corr
 that it is **no longer time-boxed** and no longer requires a risky in-place soft-delete restore.
 
 Evidence: `scratchpad/verify_preclobber.py`, `scratchpad/ladder.py` (2026-07-20).
+
+## RE-TRIAGE (2026-07-23)
+
+**Verdict: RESOLVED BY LATER WORK** (data side; the code-fix half was already resolved). Re-queried the LIVE
+`market-data-tick-sports-prd-central-element-323112` / `_index/availability_index.parquet` directly (563,384 total rows
+today, down from the pre-wipe 1,830,258):
+
+- `source == "api_football"` rows: **0** (was 1,266,874 before the 2026-07-23 wipe).
+- `error_reason == "VENUE_FETCH_FAILED"` rows: **0** (was 94,127 — this doc's Part A population).
+- The `SOURCE_RETURNED_ZERO`-guard message rows (this doc's Part B, 18,150-row slice) are also **gone**: the current
+  21,920 `SOURCE_RETURNED_ZERO` rows are ALL `capture_status=empty_confirmed` (not `attempted_failed`) and their
+  `source` breakdown is `polymarket_clob=20,785 / mdps_odds_horizon_bucket=652 / footystats=449 / odds_api=34` — zero
+  `api_football`. `data_type=trades` overall now shows only `captured=374,578` / `empty_confirmed=20,803` /
+  `attempted_failed=0`.
+
+This confirms the task brief's expectation precisely: the entire 112,277-row `attempted_failed` population this doc
+diagnosed (both the VENUE_FETCH_FAILED slice and the EmptyFromLiveInstrumentError-guard slice) was removed as a side
+effect of `market-tick-data-service@e9d9dec0` (2026-07-23 CAS-safe wipe of all `source=api_football` MTDS-sports
+manifest rows, filed under `mtds_sports_api_football_wrong_source_reaccumulated_post_wipe_2026_07_22.md`) — every
+affected row was `pipeline_mode=batch_api_football`/`source=api_football`, exactly the wipe's scope. The root-cause
+analysis in Parts A/B above remains historically accurate (it correctly explained why the population looked artificially
+fresh, and the prevention fix `mtds@6fad6565` is still valid/shipped), but the specific "restore true `attempted_at` on
+the 112,277 already-corrupted rows" open follow-up is now moot — there is no longer any live row to restore a timestamp
+on. Flipped `status: resolved` and added the wipe SHA to `resolved_by`.

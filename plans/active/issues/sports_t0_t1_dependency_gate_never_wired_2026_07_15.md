@@ -113,3 +113,13 @@ unexpectedly).
       does NOT retroactively break understat's pre-2018 captures (expected: it won't, since those captures already
       succeeded and are cached/complete — the gate only affects NEW fetch attempts going forward for genuinely-missing
       dates). (repo: instruments-service)
+
+## RE-TRIAGE (2026-07-23)
+
+**Verdict: STILL OPEN, ACCURATE.** Re-grepped every real call site of `create_sports_reference_adapter()` in
+`instruments-service` today: `footystats.py:66,483,875`, `transfermarkt.py:369`, `understat.py:49`, `sfi.py:119` all
+still call it with only `venue`/`api_key` positional args — none pass `date=`. Confirmed the factory signature
+(`instruments_service/reference_data/adapters/sports/factory.py::create_sports_reference_adapter`) still has
+`date: str | None = None` as an optional kwarg, and the gate in `factory.py` still only fires `if date is not None`. The
+wiring fix described in the one open todo above has not been applied — the fail-loud `DependencyError` safety net still
+never triggers for any T1 adapter. No status change.

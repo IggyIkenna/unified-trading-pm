@@ -275,3 +275,16 @@ supposed to be the canonical, path-agnostic answer to "did this availability eve
   (verified on `origin/live-defi-rollout`). Manifest-slice performance work for `check_api_football_dependency()` and
   `sports_fixtures.py:356`, plus the real backfill-speedup verification, remain open (out of this pass's assigned scope)
   — see updated todos above.
+
+## RE-TRIAGE (2026-07-23)
+
+**Verdict: STILL OPEN, ACCURATE.** Re-read `instruments-service/instruments_service/reference_data/sports_dependency.py`
+directly (2026-07-23): `check_api_football_dependency()` still calls `_prefix_has_object()` (a live `client.list_blobs`
+prefix probe) against hardcoded canonical/legacy path templates — it does not touch the sports availability manifest at
+all. This is exactly the doc's remaining, un-checked top-level todo ("Design a manifest-slice-based replacement... Still
+open"). The large batch of correctness bugs found alongside the original performance finding (the weather.py
+stale-prefix data-loss bug, the `sports_fixtures.py`/`sports_reference_fixtures.py` stale-bare-path bugs, the 2
+dead-code removals) are already marked `[x]` in this doc and remain shipped (instruments-service@2b45cb78, unchanged).
+The `sports_fixtures.py:356` per-(entity×league) fixture-id set-membership fix and the real backfill-timing verification
+are also still open, matching the doc as written. No status change — this doc's core, still-open claim (the ONE function
+it's titled after never consults the manifest) is unchanged today.
