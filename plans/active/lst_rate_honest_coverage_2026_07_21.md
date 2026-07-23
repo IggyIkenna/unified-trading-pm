@@ -925,3 +925,20 @@ tarball once; always check the launcher's own freshness warning output, and if s
   default protocol list or adding a dead-subgraph skip-list mid-backfill, a real scope decision, not something to make
   unilaterally while a backfill is in flight) — flagging as a real, worthwhile follow-up: pruning/gating the ~15 dead
   shards would meaningfully speed up this and any future `dex_swaps` backfill.
+
+- **2026-07-23 07:10 UTC (dex-swaps — scaled to a 3-VM date-sharded fleet, operator-approved)** — measured the exact
+  remaining gap first: 570 contiguous missing days, `2024-10-07 → 2026-07-21` (729/1299 days already captured, no
+  scattered gaps — clean contiguous tail). Stopped the single `mtds-dex-swaps-backfill` VM (deleted cleanly) and
+  relaunched as 3 on-demand VMs, each covering an even ~190-day chunk with a distinct `SHARD_INDEX` (spreads the
+  starting TheGraph key across the shared 9-key pool):
+  - `mtds-dex-swaps-backfill-1`: `2024-10-07 → 2025-05-11`, SHARD_INDEX=0
+  - `mtds-dex-swaps-backfill-2`: `2025-05-12 → 2025-12-14`, SHARD_INDEX=3
+  - `mtds-dex-swaps-backfill-3`: `2025-12-15 → 2026-07-21`, SHARD_INDEX=6 All on-demand (not SPOT) — deliberate, given
+    the earlier session's 4-preemption pattern in this exact zone; 3 concurrent on-demand e2-standard-4s for the ~20-30h
+    target window is the accepted cost tradeoff for reliability. All 3 confirmed RUNNING at launch, tarballs fresh.
+    **Did NOT apply the dead-shard `--protocols` pruning optimization found earlier** — attempted it, but found a real
+    bug: the launcher's `--protocols` flag (comma-separated, per its own docs) collides with `gcloud`'s own
+    comma-delimited `--metadata` parsing (`Bad syntax for dict arg: [curve]`), so passing more than one protocol breaks
+    VM creation entirely. Filed as a quick, low-risk follow-up (fix: either `--metadata-from-file` for this one field or
+    gcloud's alternate-delimiter escape syntax) — not blocking, just means all 3 VMs still carry the ~15 known-dead
+    shards' retry overhead per day. T+10min verification pending.
