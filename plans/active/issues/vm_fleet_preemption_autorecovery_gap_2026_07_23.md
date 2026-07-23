@@ -112,15 +112,31 @@ yet, for ANY launcher family, not just candle-migration.
       coexist safely (the "gcloud only accepts ONE shutdown-script" caveat in `lc_write_preemption_signal_file`'s
       docstring refers to two callers of THAT helper colliding, not to this cross-mechanism case). Shipped via
       quickmerge — see commit below.
-- [ ] 5. [DATA] P2. **New `DP_VM_PREEMPTED_RECOVERED` resolved-bookend event**: emitted by
-      `RelaunchPreemptedVm.relaunch()` ONLY on `status=SUCCEEDED`, carrying `old_vm_name` + `new_vm_name` (note: today's
-      replay reuses the SAME name via `VM_NAME_OVERRIDE` for canonical-migration, so "new" may equal "old" for THIS
-      launcher family specifically — other launchers without name-pinning would get a genuinely different name; the
-      event schema should support both). Must route through `escalation.route_finding()` (or an equivalent direct
-      alerting-service call), NOT `log_event` alone, to actually reach the Slack channel. Correlate to the original
-      `DP_VM_PREEMPTED` alert the same way the AO alerting convention does today (webhook-only correlation via opened-at
-      ts, no threading, per `codex/04-architecture/agent-orchestrator-alerting.md` — confirm this DP-monitor pathway
-      uses the same correlation mechanism or needs its own).
+- [ ] 5. [DATA] P2. **New `DP_VM_PREEMPTED_RECOVERED` resolved-bookend event** — **REVISED, needs its own architecture
+      trace before implementing** (do not blindly build this). Correction to the earlier plan: `route_finding()` is NOT
+      a distinct delivery path from `log_event()` — it's a thin wrapper that runs the tier's extra action
+      (auto_recover/file_issue/page_operator) and THEN calls the exact same `log_event(finding.event, ...)` at its own
+      end (`escalation.py:841-844`). So `RelaunchPreemptedVm.relaunch()`'s existing success-path
+      `log_event(_EVENT_VM_PREEMPTED,     ...)` call already reaches whatever `route_finding` reaches — routing through
+      `route_finding` instead buys nothing (and would incorrectly re-trigger the auto_recover actuator dispatch /
+      file_issue / orchestrator-dispatch side effects a "resolved" confirmation should NOT re-run). Two real open
+      questions found, NEITHER yet confirmed: (a) **Dedup**: `alerting_service/core/dedup.py`'s key is
+      `event_name:hash(identity_details)`, excluding only render-only fields (`message`/`summary`/`timestamp`/etc). The
+      initial detection's `details` shape
+      (`vm_name/asset_group/exit_code/captured_before/captured_after/umbrella/cloud/...`) differs structurally from the
+      actuator's success-path `details` shape
+      (`vm_name/vm_prefix/asset_group/recovery_action/relaunched/launcher/     relaunches_today/...`) — different key
+      sets hash differently even under the SAME `event_name`, so they likely do NOT collapse into one dedup key. Reusing
+      the same event name may not actually be the reason there's no visible resolved bookend. (b) **More fundamental,
+      unconfirmed**: grepped `alerting-service` for `DP_VM_PREEMPTED` — ZERO matches, anywhere. Before designing a
+      "resolved" event, need to confirm HOW (or WHETHER) `DP_VM_PREEMPTED` (or any `DP_*` event) actually reaches
+      `alerting-service` at all today — `log_event()` writes to GCS (batch) or PubSub (live); is there a generic
+      DP_*-prefix or severity-threshold catch-all subscriber in `alerting-service` (candidate: `error_event_handler.py`,
+      unread), or does this whole VM-lifecycle alert family not reach Slack via `alerting-service` at all (a DIFFERENT
+      channel/mechanism, e.g. a Cloud Monitoring log-based alert reading the same GCS/PubSub stream directly)? This
+      determines whether item 5 is "add a resolved event" or "wire this event family to alerting-service for the first
+      time, then add a resolved event." Scope this properly before building — it's a separate architecture question from
+      the candle-migration work this issue started from.
 - [ ] 6. [SCRIPT] P2. Unit tests for the new resolved-bookend path (mirror `test_dp_recovery_actuators.py`'s existing
       coverage style) — a dry-run relaunch, a real SUCCEEDED relaunch, and a FAILED relaunch (which must NOT emit a
       resolved bookend, only the existing `DP_VM_PREEMPTED_NO_RELAUNCH`).
