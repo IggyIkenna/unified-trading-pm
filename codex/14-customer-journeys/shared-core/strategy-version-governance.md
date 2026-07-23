@@ -182,7 +182,8 @@ When preparing a version-governance audit (quarterly or on-demand):
       the prior active.
 
 Failures at any step are tier-1 incidents; page the on-call + open a post-mortem per
-`/codex/12-incidents/post-mortem-template.md`.
+`codex/12-incidents/post-mortem-template.md` (no leading slash — template not yet created; see
+`/codex/15-runbooks/incidents/README.md` for the current incident-handling index).
 
 ## 8. Links
 

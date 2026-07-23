@@ -480,4 +480,4 @@ client-level, not strategy-level.
 | Alert routing          | alerting-service       | `alerting-service/alerting_service/rules/`                  |
 | Contract deployment    | deployment-service     | `deployment-service/scripts/`                               |
 | Workspace manifest     | PM manifest            | `unified-trading-pm/workspace-manifest.json`                |
-| Client onboarding      | Strategy cross-cutting | `/codex/09-strategy/cross-cutting/client-onboarding.md`     |
+| Client onboarding      | Strategy operational   | `/codex/09-strategy/operational/client-onboarding.md`       |

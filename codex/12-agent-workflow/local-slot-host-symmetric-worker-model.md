@@ -125,4 +125,4 @@ not apply to plan files — a plan edit left unpushed is invisible to every othe
 
 - `/codex/12-agent-workflow/commit-push-flip-rule.md` — the rule that applies to ALL slots
 - `/codex/05-infrastructure/per-tab-worktrees.md` — the worktree model this builds on
-- `/codex/12-agent-workflow/daily-work-split-process.md` — orchestrator mechanics
+- `/codex/12-agent-workflow/canonical-plan-flow.md` — orchestrator mechanics

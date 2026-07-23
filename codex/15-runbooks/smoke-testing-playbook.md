@@ -114,7 +114,7 @@ partition shape keeps this smoke <5 min even when fully wired. Add more cells by
 
 Reuses the canonical SSOTs:
 
-- `/codex/02-data/per-category-bucket-layouts.md` for prefix derivation (SPORTS `sports_reference/.../entity=` vs
+- `/codex/02-data/per-asset-group-bucket-layouts.md` for prefix derivation (SPORTS `sports_reference/.../entity=` vs
   CEFI/TRADFI/DEFI/PREDICTION `instrument_availability/.../venue=`).
 - `/codex/02-data/availability-manifest-and-data-status.md` for the `capture_status` semantics (`empty_confirmed` is
   PASS, `attempted_failed` is FAIL).
@@ -181,7 +181,7 @@ service-specific shape.
 
 Routes every GCS write to a `<name>-test-<project>` bucket (7-day lifecycle, auto-delete) instead of production.
 Manifest writes go to the test bucket's `_index/availability_index.parquet`. SSOT for bucket naming and lifecycle:
-`deployment-service/configs/test-bucket-lifecycle.json` + `/codex/02-data/per-category-bucket-layouts.md`.
+`deployment-service/configs/test-bucket-lifecycle.json` + `/codex/02-data/per-asset-group-bucket-layouts.md`.
 
 ### 3.4 Services with matrix runners
 
@@ -202,7 +202,7 @@ Every smoke cell, whether in SIT or per-service, asserts the same three things:
 
 1. **Trigger ran clean** — CLI rc=0 (per-service) or HTTP 2xx (SIT).
 2. **GCS parquet written** — at least one `.parquet` exists under the category's expected prefix (see
-   `/codex/02-data/per-category-bucket-layouts.md` — SPORTS uses `sports_reference/.../entity=`, others use
+   `/codex/02-data/per-asset-group-bucket-layouts.md` — SPORTS uses `sports_reference/.../entity=`, others use
    `instrument_availability/.../venue=`, MTDS-SPORTS adds `league=` partition).
 3. **Manifest row captured** — the test bucket's `_index/availability_index.parquet` has a row for the (date, category,
    venue, data_type) tuple with `capture_status in {captured, empty_confirmed}`. `empty_confirmed` is a **PASS**, not a
@@ -225,7 +225,7 @@ Per-service scripts do not send Telegram — they are interactive developer tool
 
 - `system-integration-tests/README.md` — SIT scope + layer model
 - `/codex/06-coding-standards/integration-testing-layers.md` — canonical test layering
-- `/codex/02-data/per-category-bucket-layouts.md` — bucket layout per category
+- `/codex/02-data/per-asset-group-bucket-layouts.md` — bucket layout per category
 - `/codex/02-data/availability-manifest-and-data-status.md` — manifest v5 schema
 - `/codex/02-data/sports-adapter-dependency-order.md` — T0/T1 sports ordering
 - `deployment-service/configs/test-bucket-lifecycle.json` — TEST bucket lifecycle rules

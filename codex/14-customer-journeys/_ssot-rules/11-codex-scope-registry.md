@@ -256,7 +256,7 @@ Data, Analytics, Research & Trading — Odum's DIY platform track ...
      "engineer":  ["codex/00-SSOT-INDEX.md", ...],
      "admin":     ["/codex/07-security/secrets-management.md", ...],
      "prospect":  ["/codex/14-customer-journeys/glossary.md", ...],
-     "investor":  ["/codex/14-customer-journeys/presentations/target-experience.md", ...]
+     "investor":  ["/codex/14-customer-journeys/presentations/target-experience-post-refactor.md", ...]
    }
    ```
 2. **Downstream consumers.** Sales-collateral generators, help-drawer surfaces in `unified-trading-system-ui`, and

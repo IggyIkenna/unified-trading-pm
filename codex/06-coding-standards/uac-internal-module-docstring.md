@@ -78,7 +78,7 @@ implementation of this rule. Its docstring cites:
 - **Consumers**: position-balance-monitor-service (manual-trade-booking audit-log surface), deployment-ui (manual trade
   UI surface).
 - **Cross-reference**: `/codex/07-security/audit-logging.md` (canonical audit-path SSOT) +
-  `/codex/14-customer-journeys/manual-trade-booking/manual-trade-booking.md`.
+  `/codex/04-architecture/manual-trade-booking.md`.
 - **Provenance**: `plans/active/manual_trade_booking_2026_05_07.md` Phase X.
 
 When extending UAC `internal/` with a new consumer-facing module, mirror this shape exactly.

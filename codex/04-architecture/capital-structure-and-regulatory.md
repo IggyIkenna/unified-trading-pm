@@ -567,7 +567,7 @@ client_id, etc.). But how P&L is realized and reported differs:
 | Concern                                     | Service / doc                                                           | Scope                                   |
 | ------------------------------------------- | ----------------------------------------------------------------------- | --------------------------------------- |
 | Credential storage                          | Secret Manager (GCP default)                                            | All categories                          |
-| Credential rotation policy                  | `/codex/05-infrastructure/credential-rotation.md`                       | Cross-category                          |
+| Credential rotation policy                  | `/codex/07-security/secret-rotation.md`                                 | Cross-category                          |
 | Custodian API adapters (Copper, Fireblocks) | `execution-service/adapters/copper.py`, `fireblocks.py`                 | DeFi                                    |
 | Unity execution adapter                     | `execution-service/adapters/unity.py` (with Java sidecar for feed)      | Sports                                  |
 | CEX adapters (per-CEX)                      | `execution-service/adapters/{binance,okx,bybit,deribit,hyperliquid}.py` | CeFi                                    |

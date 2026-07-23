@@ -332,4 +332,4 @@ Actual per-epoch AVS reward rates require MTDS source wiring. Tracked in
 - Solana utils: `instruments-service/instruments_service/reference_data/adapters/defi/_solana_utils.py`
 - Pyth price feed SSOT: `instruments-service/instruments_service/reference_data/adapters/defi/pyth.py` §
   `PYTH_PRICE_FEEDS`
-- Related: `/codex/04-architecture/defi-execution-architecture.md` (overall DeFi execution chain)
+- Related: `/codex/04-architecture/defi-execution-overview.md` (overall DeFi execution chain)

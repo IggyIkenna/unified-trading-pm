@@ -832,4 +832,4 @@ with vcr.use_cassette("new_cassette.yaml", record_mode="new_episodes"):
 | [06-coding-standards/integration-testing-layers.md](/codex/06-coding-standards/integration-testing-layers.md) | Layer 0 (AC↔UIC alignment), Layer 1–3 |
 | [service-setup-checklist.md](service-setup-checklist.md)                                                      | Service setup workflow                |
 | [artifact-registry-setup.md](artifact-registry-setup.md)                                                      | Publishing libraries                  |
-| [06-coding-standards/external-import-standards.md](/codex/06-coding-standards/external-import-standards.md)   | Import patterns                       |
+| [04-architecture/tier-and-import-architecture.md](/codex/04-architecture/tier-and-import-architecture.md)     | Import patterns                       |

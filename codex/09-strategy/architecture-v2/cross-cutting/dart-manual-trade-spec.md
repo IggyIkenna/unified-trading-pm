@@ -310,8 +310,8 @@ them and so the cross-cutting plan body can flip its [DESIGN] checkbox without a
   post-triage).
 - [`/codex/04-architecture/manual-trade-booking.md`](../../../04-architecture/manual-trade-booking.md) — existing
   ManualInstruction / `/manual/instruction` API SSOT (this doc enriches, not replaces).
-- [`/codex/09-strategy/cross-cutting/operational-modes-matrix.md`](operational-modes-matrix.md) — peer doc
-  (orthogonal-axes mode SSOT).
+- [`/codex/09-strategy/architecture-v2/cross-cutting/operational-modes-matrix.md`](operational-modes-matrix.md) — peer
+  doc (orthogonal-axes mode SSOT).
 - [`/codex/09-strategy/operational/onboarding-checklist.md`](../../operational/onboarding-checklist.md) — strategy
   onboarding flow that the manual lane integrates with (every onboarded strategy gets a manual fallback automatically).
 - [`/codex/09-strategy/operational/client-onboarding.md`](../../operational/client-onboarding.md) — per-client manual

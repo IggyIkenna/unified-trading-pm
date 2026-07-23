@@ -53,9 +53,9 @@ type: architecture
 
 Scenarios ride the **same prod codepaths** as live + batch — per the workspace "live = batch — same data, same fields,
 same timing semantics" HARD RULE
-([batch-vs-live-architecture.md](/codex/05-infrastructure/batch-vs-live-architecture.md)). Only the overlay mutation
-differs. `synthetic=true` metadata on every emitted event distinguishes scenario-fire from real-fire so alerting-service
-suppresses paging while still recording the event for the operator dashboard.
+([live-data-persistence-and-event-log.md](/codex/02-data/live-data-persistence-and-event-log.md)). Only the overlay
+mutation differs. `synthetic=true` metadata on every emitted event distinguishes scenario-fire from real-fire so
+alerting-service suppresses paging while still recording the event for the operator dashboard.
 
 The harness does **not** instantiate a parallel backtest engine. It configures
 

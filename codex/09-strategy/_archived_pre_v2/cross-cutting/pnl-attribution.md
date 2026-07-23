@@ -492,15 +492,15 @@ only `PNL_FACTOR_STAKING_YIELD` applies -- there are no separate reward tokens.
 
 ## SSOT References
 
-| Concept                | SSOT                       | Location                                                  |
-| ---------------------- | -------------------------- | --------------------------------------------------------- |
-| PnL calculator         | PnLCalculator              | `strategy-service/strategy_service/pnl_calculator.py`     |
-| Settlement service     | SettlementService          | `strategy-service/strategy_service/settlement_service.py` |
-| PnL attribution schema | UIC                        | `unified-api-contracts (internal/)/`                      |
-| Fill schema            | CanonicalFill (UIC)        | `unified-api-contracts (internal/)/`                      |
-| Funding rate features  | features-delta-one-service | `features-delta-one-service/`                             |
-| Options greeks         | features-options-service   | `features-options-service/`                               |
-| Cost factors           | See cost-modeling.md       | `/codex/09-strategy/cross-cutting/cost-modeling.md`       |
-| PnL storage            | GCS archives               | `gs://pnl/{strategy_id}/{client_id}/{date}/`              |
-| Reporting UI           | trading-analytics-ui       | `trading-analytics-ui/`                                   |
-| BigQuery reporting     | UCI DataSink               | `unified-cloud-interface/`                                |
+| Concept                | SSOT                       | Location                                                             |
+| ---------------------- | -------------------------- | -------------------------------------------------------------------- |
+| PnL calculator         | PnLCalculator              | `strategy-service/strategy_service/pnl_calculator.py`                |
+| Settlement service     | SettlementService          | `strategy-service/strategy_service/settlement_service.py`            |
+| PnL attribution schema | UIC                        | `unified-api-contracts (internal/)/`                                 |
+| Fill schema            | CanonicalFill (UIC)        | `unified-api-contracts (internal/)/`                                 |
+| Funding rate features  | features-delta-one-service | `features-delta-one-service/`                                        |
+| Options greeks         | features-options-service   | `features-options-service/`                                          |
+| Cost factors           | See cost-modeling.md       | `/codex/09-strategy/_archived_pre_v2/cross-cutting/cost-modeling.md` |
+| PnL storage            | GCS archives               | `gs://pnl/{strategy_id}/{client_id}/{date}/`                         |
+| Reporting UI           | trading-analytics-ui       | `trading-analytics-ui/`                                              |
+| BigQuery reporting     | UCI DataSink               | `unified-cloud-interface/`                                           |

@@ -127,6 +127,6 @@ operation required to repair.
 
 ## Composes With
 
-- `/codex/12-agent-workflow/daily-work-split-process.md` — orchestrator dispatch mechanics
+- `/codex/12-agent-workflow/canonical-plan-flow.md` — orchestrator dispatch mechanics
 - `/codex/11-project-management/active-plan-inventory-tracker.md` — dashboard reporting based on checkbox state
 - `plans/PLAN_FORMAT.md` — checkbox syntax requirements

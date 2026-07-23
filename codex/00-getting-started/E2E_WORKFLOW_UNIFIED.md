@@ -31,11 +31,9 @@ code_refs:
 
 **Visual Diagrams:**
 
-- **5-step autonomous workflow:**
-  [CLEAN_WORKFLOW_DIAGRAMS.md](/codex/12-presentations/CLEAN_WORKFLOW_DIAGRAMS.md#1-the-5-step-autonomous-workflow)
+- **5-step autonomous workflow:** CLEAN_WORKFLOW_DIAGRAMS.md _(never created — dead historical link)_
 - **9-stage maturity model:** [WORKFLOW_DIAGRAM.md](../../plans/archive/WORKFLOW_DIAGRAM.md)
-- **Project structure (17 projects):**
-  [PROJECT_STRUCTURE_REFERENCE.md](/codex/12-presentations/PROJECT_STRUCTURE_REFERENCE.md)
+- **Project structure (17 projects):** PROJECT_STRUCTURE_REFERENCE.md _(never created — dead historical link)_
 - **Complete vision (Google pitch):**
   [gemini-autonomous-development-pitch.html](../12-presentations/gemini-autonomous-development-pitch.html)
 
@@ -341,30 +339,26 @@ python3 scripts/utilities/create-all-service-projects.py --all-services
 python3 scripts/utilities/create-all-service-projects.py --service execution-service
 ```
 
-**See detailed documentation:**
-[CROSS_CUTTING_ATTACHMENT.md](/codex/11-project-management/github-integration/docs/CROSS_CUTTING_ATTACHMENT.md)
+**See detailed documentation:** CROSS_CUTTING_ATTACHMENT.md _(never created — dead historical link)_
 
 ## Detailed References (For Deep Dives)
 
 **Workflow Details:**
 
-- [LOCAL_VS_CLOUD_ORCHESTRATION.md](/codex/12-agent-workflow/LOCAL_VS_CLOUD_ORCHESTRATION.md) - Local vs cloud
-  comparison
-- [WORKER_AGENT_INSTRUCTIONS.md](/codex/12-agent-workflow/WORKER_AGENT_INSTRUCTIONS.md) - Agent prompt templates
+- LOCAL_VS_CLOUD_ORCHESTRATION.md - Local vs cloud comparison _(never created — dead historical link)_
+- WORKER_AGENT_INSTRUCTIONS.md - Agent prompt templates _(never created — dead historical link)_
 - [QUICK_REFERENCE.md](../validators/QUICK_REFERENCE.md) - Command cheat sheet
 
 **Complete Roadmap:**
 
-- [GITHUB_INTEGRATION_ROADMAP.md](/codex/11-project-management/github-integration/GITHUB_INTEGRATION_ROADMAP.md) -
-  9-stage detailed roadmap
-- [GITHUB_AUTOMATION_SUMMARY.md](/codex/11-project-management/github-integration/GITHUB_AUTOMATION_SUMMARY.md) -
-  Executive summary
+- GITHUB_INTEGRATION_ROADMAP.md - 9-stage detailed roadmap _(never created — dead historical link)_
+- GITHUB_AUTOMATION_SUMMARY.md - Executive summary _(never created — dead historical link)_
 
 **Presentations:**
 
-- [CLEAN_WORKFLOW_DIAGRAMS.md](/codex/12-presentations/CLEAN_WORKFLOW_DIAGRAMS.md) - Visual diagrams (6 mermaid)
-- [PROJECT_STRUCTURE_REFERENCE.md](/codex/12-presentations/PROJECT_STRUCTURE_REFERENCE.md) - 17 GitHub projects
-- [COMPREHENSIVE_SUMMARY.md](/codex/12-presentations/COMPREHENSIVE_SUMMARY.md) - Complete system overview
+- CLEAN_WORKFLOW_DIAGRAMS.md - Visual diagrams (6 mermaid) _(never created — dead historical link)_
+- PROJECT_STRUCTURE_REFERENCE.md - 17 GitHub projects _(never created — dead historical link)_
+- COMPREHENSIVE_SUMMARY.md - Complete system overview _(never created — dead historical link)_
 - [gemini-autonomous-development-pitch.html](../12-presentations/gemini-autonomous-development-pitch.html) - Google
   partnership pitch
 

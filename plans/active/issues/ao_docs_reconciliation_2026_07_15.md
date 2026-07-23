@@ -124,12 +124,12 @@ table. **Routes to operator** (locked epic).
 
 ### F2 — [REVISED after Wave-2 verify] the `orchestrator-multi-vm-topology.md` codex doc is ALREADY correctly superseded; the residual is a stale epic SSOT-table _pointer_
 
-Wave-2 (Agent E) verified `/codex/12-agent-workflow/orchestrator-multi-vm-topology.md` (**since DELETED** — the file no
-longer exists as of 2026-07-23; this line is the historical record of its state at audit time) carried a correct "🔴
-SUPERSEDED (2026-07-12)" banner + `status: stale` pointing at the single-vm doc — so it is NOT an unmarked-stale drift.
-The residual is only that `orchestrator_master`'s Design-SSOT **table row** still lists it as "Owns VM shapes…" without
-a "(superseded)" note — cosmetic stale-pointer (a reader who follows it sees the banner), low severity. **The real codex
-STALE-DRIFT is elsewhere — `canonical-plan-flow.md` (see Codex-12 section, C-E1).**
+Wave-2 (Agent E) verified `codex/12-agent-workflow/orchestrator-multi-vm-topology.md` (no leading slash — **since
+DELETED** — the file no longer exists as of 2026-07-23; this line is the historical record of its state at audit time)
+carried a correct "🔴 SUPERSEDED (2026-07-12)" banner + `status: stale` pointing at the single-vm doc — so it is NOT an
+unmarked-stale drift. The residual is only that `orchestrator_master`'s Design-SSOT **table row** still lists it as
+"Owns VM shapes…" without a "(superseded)" note — cosmetic stale-pointer (a reader who follows it sees the banner), low
+severity. **The real codex STALE-DRIFT is elsewhere — `canonical-plan-flow.md` (see Codex-12 section, C-E1).**
 
 ### F3 — `agent_operating_framework_master` pillar #1 (strict `assigned_vm==backend` dispatch, W1 / D1-D6) is MOOT (STALE-DRIFT, self-acknowledged)
 

@@ -175,4 +175,4 @@ because it operates on different input types (`edge_pct` + `odds` + `BankrollSta
 - **Backtest engine (consumer):** `strategy-service/strategy_service/engine/strategies/sports/backtest_engine.py`
 - **ML sports (consumer):** `strategy-service/strategy_service/engine/strategies/sports/ml_sports_strategy.py`
 - **Halftime ML (consumer):** `strategy-service/strategy_service/engine/strategies/sports/halftime_ml.py`
-- **Value betting doc:** `/codex/09-strategy/sports/value-betting.md`
+- **Value betting doc:** `/codex/09-strategy/_archived_pre_v2/sports/value-betting.md`

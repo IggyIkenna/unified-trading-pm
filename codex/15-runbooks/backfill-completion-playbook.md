@@ -187,7 +187,7 @@ What to check before kicking off Phase 1 sports work:
 - **Manifest semantics + 3-state capture_status** —
   [02-data/availability-manifest-and-data-status.md](/codex/02-data/availability-manifest-and-data-status.md).
 - **Per-asset-group GCS path layouts** —
-  [02-data/per-category-bucket-layouts.md](/codex/02-data/per-category-bucket-layouts.md).
+  [02-data/per-asset-group-bucket-layouts.md](/codex/02-data/per-asset-group-bucket-layouts.md).
 - **VM tarball deployment + launcher conventions** —
   [05-infrastructure/vm-tarball-deployment.md](/codex/05-infrastructure/vm-tarball-deployment.md).
 - **Backfill seed specs (per-service min_days / cold-start)** —
