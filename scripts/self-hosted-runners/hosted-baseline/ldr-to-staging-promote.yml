@@ -387,7 +387,20 @@ jobs:
                   # Level-2 WARN: surface the bypass to #ci-failures so we understand WHY/WHO (drain-time
                   # detection ≤15min; the block above is the enforcement). Best-effort, never fails the drain.
                   if [ -n "${SLACK_CI_WEBHOOK_URL:-}" ]; then
-                    PROV_DETAIL="$(printf '%s' "$PROV_OUT" | grep -- '- ' | head -5 | sed 's/"/'"'"'/g')"
+                    # Pure bash (no printf|grep|head pipeline) — ldr_to_main_promote_fleet_sigpipe_silent_drop
+                    # (2026-07-21): under `set -euo pipefail` inside a backgrounded per-repo subshell, `head`
+                    # closing its read end before an upstream producer finishes writing a large payload SIGPIPEs
+                    # the producer and silently aborts the subshell (no result file written, no visible error —
+                    # this function's own `_done BLOCKED; return 0` pattern is exactly that shape). grep buffers
+                    # more than printf so this occurrence is lower-risk, but not proven safe — closed the same way.
+                    PROV_DETAIL=""; _pd_n=0
+                    while IFS= read -r _pd_line; do
+                      case "$_pd_line" in *"- "*) : ;; *) continue ;; esac
+                      PROV_DETAIL="${PROV_DETAIL}${_pd_line}"$'\n'
+                      _pd_n=$((_pd_n + 1))
+                      [ "$_pd_n" -ge 5 ] && break
+                    done <<< "$PROV_OUT"
+                    PROV_DETAIL="$(printf '%s' "$PROV_DETAIL" | sed 's/"/'"'"'/g')"
                     curl -s -X POST "$SLACK_CI_WEBHOOK_URL" -H 'Content-Type: application/json' \
                       -d "{\"text\":\":no_entry: *Provenance gate BLOCKED a promotion* — \`$REPO\` LDR→staging carries code that bypassed quickmerge (auto-merge NOT armed; PR left open). Re-ship via quickmerge or revert on live-defi-rollout.\n\`\`\`$PROV_DETAIL\`\`\`\n$PR_URL\"}" >/dev/null 2>&1 || true
                   fi
