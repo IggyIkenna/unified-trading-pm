@@ -1289,3 +1289,15 @@ itself**: the new version checks `gcloud compute instances describe --format="va
 EXIT_STATUS-only check couldn't see) — and exits IMMEDIATELY with an alert the moment any VM is found dead, rather than
 waiting silently for hours. Armed against the full 20-shard fleet (18 recovery + 2 survivors). **STATUS: IN FLIGHT, NOT
 YET VERIFIED.**
+
+**Operator asked whether to parallelize further for speed (2026-07-23, ~08:14 UTC, 3/20 done, ~1.5-2h/shard measured)**.
+Discussed and operator agreed: **do NOT reshard the in-flight run.** Killing+restarting the 17 still-running shards to
+add more concurrency would throw away real progress; adding EXTRA VMs on top under a different `SHARD_OF` would not be
+genuine parallelism (a different `shard_of` re-partitions the corpus differently, so a new batch would redundantly
+reprocess a largely-overlapping slice, not a clean split of what's left) AND would increase concurrent-VM contention
+against the same bucket — exactly the pressure already measured to produce todo 19's un-retriable stuck-forever
+stragglers (CEFI's 149-object residual). Both original SPOT survivors (shards 7, 8) have now finished, so the remaining
+17 running shards are ALL on-demand — **zero further preemption risk for the rest of this run.** Plan: let this run
+finish undisturbed, then size the (likely-needed, per DEFI/CEFI precedent) retry pass AGGRESSIVELY — since a retry only
+touches the residual straggler count (small, per DEFI/CEFI history), high shard-count there is low-risk and buys real
+wall-clock savings without the contention downside.
