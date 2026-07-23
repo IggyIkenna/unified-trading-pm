@@ -140,20 +140,28 @@ is regenerated after a fix.**
       superseded by a faster independent method**: rather than wait on the sweep, ran a targeted bounded walk across the
       exact date range the original bug's backfill loop covered (2023-01-01..2026-04-15) — proved the population is
       EXACTLY 17 days × {ORCA, RAYDIUM}, 2025-01-01..17, no gaps, nothing beyond this window. See "Scope" section above.
-- [ ] 3. [CODE] P1. **Build the relabel-forward migration per the todo-1 ruling** — a new script (sibling of
-      `migrate_legacy_solana_defi_to_canonical.py`), scoped to `venue in (ORCA, RAYDIUM)`, `data_type=dex_pools`, the
-      affected `day=2025-01-*` range: for each affected object, (1) read the row(s), derive `<true_date>` from the row's
-      own `timestamp` column (NOT `available_at`), (2) compute the new canonical dest path with `day=<true_date>` and a
-      `live_`-prefixed `pipeline_mode` (mirrors `_build_dest_path()`'s existing pure-computed-path pattern in
-      `migration_orphan_sweep.py`/`backfill_orphan_class_e.py` — reuse it, don't reinvent), (3) **re-stamp the
-      `available_at` COLUMN to match `<true_date>` before upload** (the row's OWN `timestamp` value, run through the
-      same `stamp_available_at_onchain_tick` helper the live writer uses — NOT left as the old uniform
-      `2026-06-11T09:48:03` bug artifact; path and row content must agree, or the relabel just moves the fabrication one
-      level down), upload the new object, (4) `record_captured` the NEW path only, (5) leave the OLD `day=2025-01-XX`
-      object un-recorded and log it to a "pending-human-delete" manifest for a later, separately-gated cleanup pass
-      (never auto-delete). Must also independently exclude this population from `backfill_orphan_class_e.py`'s ordinary
-      `--apply` path in the interim (route matching cells to `escalated`/`BLOCKED-OPERATOR-DECISION`) so a normal
-      backfill run can't `record_captured` the OLD mislabeled path before the relabel migration runs.
+- [ ] 3. [CODE] P1. **Build the relabel-forward migration per the todo-1 ruling — SCRIPT SHIPPED + VALIDATED 2026-07-23,
+      full-scale run still pending.** `market-tick-data-service@67524cbb`
+      (`scripts/relabel_solana_dex_pools_fake_history.py`): for each affected object, reads the row(s), derives
+      `<true_date>` from the row's own `timestamp` (NOT `available_at`), computes the canonical dest path via UAC
+      `build_defi_partition_path` with `day=<true_date>` + the resolved `live_onchain_subgraph` pipeline_mode +
+      `data_type=dex_pool_state` (this population predates the 2026-06-05 rename), re-stamps BOTH `available_at` (via
+      `stamp_available_at_onchain_tick`) and the row-level `data_type` column (a real bug caught during validation — the
+      row's own column must match its new path, not just the path), uploads, `record_captured`s only the new path, and
+      leaves the OLD object un-recorded + logged to a dedupe'd pending-human-delete report
+      (`_index/audit/dex_pools_fake_history_pending_delete.parquet`). Preserves the original pool-address leaf filename
+      (collision-safe; deliberately does not risk the separate tracked symbol-collision bug). **Validated end-to-end
+      against 1 real production object** (`--apply`, then deleted + redid it once to fix the data_type bug) — also
+      caught and fixed a `setup_events()`-not-initialized crash and a retry-logic gap that would have silently skipped
+      `record_captured` forever after a partial failure. **NOT yet run at full scale** (~241K rows / likely 100K+
+      objects, estimated multi-hour at real GCS latency — needs a VM, `--only-day`/`--only-venue` sharding recommended
+      per the script's own docstring; no dedicated launcher exists yet). **Interim backfill exclusion — SHIPPED
+      `instruments-service@fd8450b7`**: `split_dex_pools_fake_history()` in `backfill_orphan_class_e.py` (mirrors
+      `backfill_orphan_class_e_sports.py`'s `split_pre_floor` pattern) excludes all 34 known combinations from
+      `record_captured` entirely — a normal defi `--apply` run cannot touch this population before the relabel migration
+      runs, regardless of what todo 1 sequencing anyone follows. 2 new unit tests, `quality-gates.sh` green (also fixed
+      an unrelated empty-string-fallback baseline regression from a concurrent commit that was blocking ALL
+      instruments-service commits, not just this one).
 - [x] 4. [REVIEW] P2. ~~Check whether the SAME bug shape exists for Kamino~~ — **PARTIALLY DONE 2026-07-23**:
       `venue=KAMINO/chain=SOLANA/instrument_type=pool/data_type=dex_pools/` has **zero objects** in the `-prd-` bucket
       across 6 sampled days (both inside and outside the affected window) — moot for the AMM-pool shape this issue
