@@ -2487,8 +2487,14 @@ itself found `no_parquet_under` at an auto-selected historical day (`2024-03-25`
 gap in the chain-bundle sampling/atom-matching path than what this investigation targeted (never part of the original
 skip-leg-bug ask), and is scoped as its own follow-up rather than chased further here.
 
-**Verdict on the Phase D terminal gate**: the THREE real, independently-verified, GCS-evidence-backed checker bugs this
-investigation found are fixed and shipped:
+**Correction (2026-07-23, operator follow-up read of the raw JSON)**: "12 directly cite
+`vm_self_deleted_no_exit_status`" above was an eyeballed over-count — the literal string appears on exactly **6** of the
+21 failed legs (NASDAQ:ohlcv_1s force, NYSE:ohlcv_1s skip, NYSE:ohlcv_1m skip, CME:ohlcv_1s force, CBOE:ohlcv_1m force,
+CME:options_chain force). A further **3** legs are direct cascades of those same 6 (the paired skip/canonical leg
+finding nothing because its force leg never wrote anything) — so SPOT preemption is the root cause of **9 of 21**,
+not 12. The remaining 12 split: 2 `CME:ohlcv_1m` NAT-GAS-MNG (known), 9 chain-bundle (`futures_chain`/`options_chain` on
+CME/ICE — the P2 below), and **2 newly-identified `CBOE` legs that are neither** — see the new P2 item just below. the
+THREE real, independently-verified, GCS-evidence-backed checker bugs this investigation found are fixed and shipped:
 
 1. `mtds@40694074d9` — freshness pre-flight read the `-test-` tier (no consolidator, permanently stale) instead of PROD
    under `--test-run`.
@@ -2503,6 +2509,7 @@ consolidated manifest (1,545 rows). What remains genuinely open is NOT "is the s
 fixed) but a wider set of **pre-existing, mostly-infra-driven gaps** this exhaustive run surfaced along the way —
 tracked below as follow-up, not blocking this plan's core migration/manifest-recovery deliverable.
 
-- `- [ ] [DATA] P2. Investigate the chain-bundle (futures_chain/options_chain) force-leg gap surfaced by the full Phase D run: CME/ICE force legs find no_parquet_under at their auto-selected historical day (2024-03-25) — distinct from the ohlcv_1s/1m/24h gaps already understood; needs its own root-cause pass (is this real chain-bundle backfill coverage, or another checker/sampling issue) before treating it as blocking.`
+- `- [ ] [DATA] P2. Investigate the chain-bundle (futures_chain/options_chain) force-leg gap surfaced by the full Phase D run: CME/ICE force legs find no_parquet_under at their auto-selected historical day (2024-03-25) — distinct from the ohlcv_1s/1m/24h gaps already understood; needs its own root-cause pass (is this real chain-bundle backfill coverage, or another checker/sampling issue) before treating it as blocking. Note: TRADFI:CME:options_chain's skip leg samples underlying=TICKS (2026-01-30) — not a real product root like the others (BTC/AUD/COCOA/NAT-GAS-MNG) — worth checking for a sampler parsing bug on this shard while investigating.`
+- `- [ ] [DATA] P2. Investigate CBOE ohlcv_1s/1m skip-leg freshness-preflight miss surfaced by the full Phase D run: TRADFI:CBOE:ohlcv_1s's skip leg ran against a shard whose FORCE leg had already cleanly succeeded (valid non-null baseline fingerprint CIG+9NLZ...344033) yet the object's GCS generation still changed by the time the skip leg's own VM finished (...344083) — i.e. the freshness pre-flight did not prevent a redundant re-fetch/rewrite on an already-fresh capture. TRADFI:CBOE:ohlcv_1m's skip leg shows the same "skip_signal_not_found_in_run_log; object_signature_changed_or_missing" shape but its force leg was SPOT-preempted (null baseline), so that one may just be a cascade — root-cause the ohlcv_1s case specifically, it has a real fingerprint delta to explain. Distinct from the SPOT-preemption and chain-bundle P2 above: this is the one CBOE-specific case where "nothing to compare against" does not apply.`
 - `- [ ] [SCRIPT] P3. Fix IS's FX force/skip status label: manifest correctly shows empty_confirmed with a genuine NO_ADAPTER_YET reason, but the checker reports "failed" instead of "passed (honest-empty)" — cosmetic, not a data gap, low priority.`
 - `- [ ] [DATA] P1-OPERATOR-REVIEW. (carried forward) Review the retire-phase candidate list (50,520 rows) before ever running --apply — unchanged from the earlier entry; still awaiting operator review, not touched this continuation.`
