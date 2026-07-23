@@ -12,7 +12,17 @@ tags: []
 related: []
 created: 2026-05-07
 author: harsh
-source: [plans/active/master_to_live_defi_2026_05_23.md, plans/active/defi_master_2026_05_07.md, plans/archive/carry_staked_basis_structure_axis_2026_05_04.md, plans/archive/leveraged_leg_controller_2026_05_01.md, plans/archive/defi_pipeline_extension_2026_05_01.md, codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md, codex/09-strategy/architecture-v2/archetypes/carry-basis-perp.md, codex/09-strategy/architecture-v2/archetypes/arbitrage-price-dispersion.md]
+source:
+  [
+    plans/active/master_to_live_defi_2026_05_23.md,
+    plans/active/defi_master_2026_05_07.md,
+    plans/archive/carry_staked_basis_structure_axis_2026_05_04.md,
+    plans/archive/leveraged_leg_controller_2026_05_01.md,
+    plans/archive/defi_pipeline_extension_2026_05_01.md,
+    /codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md,
+    /codex/09-strategy/architecture-v2/archetypes/carry-basis-perp.md,
+    /codex/09-strategy/architecture-v2/archetypes/arbitrage-price-dispersion.md,
+  ]
 locked_by: live-defi-rollout
 locked_since: 2026-05-07
 ---
@@ -48,11 +58,11 @@ review-blocking" rule.
   must be live."_
 - [`defi_master_2026_05_07.md`](../defi_master_2026_05_07.md): _"2 DeFi perp DEXs live: Hyperliquid + Aster"_. No
   mention of DRIFT.
-- [`carry-staked-basis.md:103-112`](../../../codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md#L103):
+- [`carry-staked-basis.md:103-112`](/codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md#L103):
   HYPERLIQUID, BINANCE, BYBIT, OKX, DERIBIT, ASTER, GMX **all explicit `accepted=False`**. Only DRIFT accepts an LST as
   cross-margin.
-- [`carry-staked-basis.md:110-112`](../../../codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md#L110):
-  _"Today's slot count = 2: `CARRY_STAKED_BASIS@jito-drift-f100-usdc-1h-usdc-v2-prod` +
+- [`carry-staked-basis.md:110-112`](/codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md#L110): _"Today's
+  slot count = 2: `CARRY_STAKED_BASIS@jito-drift-f100-usdc-1h-usdc-v2-prod` +
   `CARRY_STAKED_BASIS@marinade-drift-f100-usdc-1h-usdc-v2-prod`. Honest — DRIFT is the only venue that accepts an LST as
   cross-margin in production today."_
 
@@ -67,9 +77,9 @@ master plan nor `defi_master` lists as a venue going live.
    connector / position-balance-monitor coverage for DRIFT. Tightens the Pyth-Solana-oracle dependency further (jitoSOL
    / mSOL price reads).
 2. **Phase 7a venue-matrix audit makes one of the existing 6 venues accept an ETH LST.** Codex
-   [`carry-staked-basis.md:114-120`](../../../codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md#L114)
-   says this is a per-venue verification with haircut citations — not done today. Aevo / Lyra-V2 / Hyperliquid candidate
-   list per the doc.
+   [`carry-staked-basis.md:114-120`](/codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md#L114) says this
+   is a per-venue verification with haircut citations — not done today. Aevo / Lyra-V2 / Hyperliquid candidate list per
+   the doc.
 
 Either way, the master plan + defi_master need to surface this dependency. Today they do not.
 
@@ -85,11 +95,11 @@ Either way, the master plan + defi_master need to surface this dependency. Today
   Phase 3a-catalog-regenerate (status: done, strategy-service `7074eee`): _"22 slots: 3 ETH-LST × 3 ETH-perp
   (HYPERLIQUID/DERIBIT/ASTER) × f∈{0.5,0.75} + 2 SOL-LST × HYPERLIQUID × f∈{0.5,0.75}"_. Phase 3b bumped catalog ceiling
   260 → 280.
-- [`carry-staked-basis.md:52-54`](../../../codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md#L52):
+- [`carry-staked-basis.md:52-54`](/codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md#L52):
   _"`stake_fraction` = `1.0` is the only meaningful value: the LST IS the perp margin, there is no spare USDC bucket.
   The f-grid was a SPLIT_STAKE-era artefact and was retired with the deletion."_ Slot label is `f100`.
-- [`carry-staked-basis.md:124-130`](../../../codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md#L124):
-  _"`f` is fixed at `100` (= 1.0) because LST_AS_MARGIN is the only allowed structure."_
+- [`carry-staked-basis.md:124-130`](/codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md#L124): _"`f` is
+  fixed at `100` (= 1.0) because LST_AS_MARGIN is the only allowed structure."_
 
 **Why it matters:** the codex was updated **after** the plan's Phase 3a shipped, reflecting the
 post-SPLIT_STAKE-deletion state. If Phase 3a's 22-slot catalog actually shipped to
@@ -122,13 +132,13 @@ note pointing at the codex doc.
 
 **Codex internal contradiction (independent of plans):**
 
-- [`arbitrage-price-dispersion.md:81`](../../../codex/09-strategy/architecture-v2/archetypes/arbitrage-price-dispersion.md#L81)
+- [`arbitrage-price-dispersion.md:81`](/codex/09-strategy/architecture-v2/archetypes/arbitrage-price-dispersion.md#L81)
   "Supported scenarios" includes _"Funding-rate dispersion arb | LEADER_HEDGE"_.
-- [`arbitrage-price-dispersion.md:179`](../../../codex/09-strategy/architecture-v2/archetypes/arbitrage-price-dispersion.md#L179)
+- [`arbitrage-price-dispersion.md:179`](/codex/09-strategy/architecture-v2/archetypes/arbitrage-price-dispersion.md#L179)
   "Not in this archetype": _"Funding-rate arbitrage between perp venues — `CARRY_BASIS_PERP` (cross-venue mode)"_.
-- [`carry-basis-perp.md:144`](../../../codex/09-strategy/architecture-v2/archetypes/carry-basis-perp.md#L144) "Not in
-  this archetype": _"Cross-venue perp spread arbitrage (funding-rate differential between two perp venues for the same
-  asset) — `ARBITRAGE_PRICE_DISPERSION`"_.
+- [`carry-basis-perp.md:144`](/codex/09-strategy/architecture-v2/archetypes/carry-basis-perp.md#L144) "Not in this
+  archetype": _"Cross-venue perp spread arbitrage (funding-rate differential between two perp venues for the same asset)
+  — `ARBITRAGE_PRICE_DISPERSION`"_.
 
 Each codex doc points at the other for cross-venue funding arb. Circular, contradictory.
 
@@ -161,11 +171,11 @@ codex updates.
   `basis_perp.py`, `price_dispersion.py`, `ml_directional/continuous.py`, etc. — replacing every bespoke `_build_legs`
   with `LegController.update`.
 - Codex archetype docs do not mention the controller. They describe legs archetype-specifically:
-  - [`carry-staked-basis.md:36-50`](../../../codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md#L36):
-    4-leg `LST_AS_MARGIN` sequence presented as hand-built
-  - [`carry-basis-perp.md:30-49`](../../../codex/09-strategy/architecture-v2/archetypes/carry-basis-perp.md#L30): 2-leg
-    paired entry/exit, hand-built
-  - [`arbitrage-price-dispersion.md:38-63`](../../../codex/09-strategy/architecture-v2/archetypes/arbitrage-price-dispersion.md#L38):
+  - [`carry-staked-basis.md:36-50`](/codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md#L36): 4-leg
+    `LST_AS_MARGIN` sequence presented as hand-built
+  - [`carry-basis-perp.md:30-49`](/codex/09-strategy/architecture-v2/archetypes/carry-basis-perp.md#L30): 2-leg paired
+    entry/exit, hand-built
+  - [`arbitrage-price-dispersion.md:38-63`](/codex/09-strategy/architecture-v2/archetypes/arbitrage-price-dispersion.md#L38):
     ATOMIC / LEADER_HEDGE modes, no controller layer
 
 **Why it matters:** when Phase 4 backports ship and `_build_legs` is replaced by `LegController.update`, the archetype
@@ -191,10 +201,10 @@ of an existing archetype.
   `INSTRUMENT_VOLATILITY_REGISTRY` primitive to clamp per-instrument.
 - [`leveraged_leg_controller_2026_05_01.md`](../../archive/leveraged_leg_controller_2026_05_01.md) Phase 1.2: _"Promote
   target_leverage from per-archetype configs to StrategyInstanceDefinition"_.
-- [`arbitrage-price-dispersion.md:84-105`](../../../codex/09-strategy/architecture-v2/archetypes/arbitrage-price-dispersion.md#L84)
+- [`arbitrage-price-dispersion.md:84-105`](/codex/09-strategy/architecture-v2/archetypes/arbitrage-price-dispersion.md#L84)
   config schema has **no `target_leverage` field** — only `max_capital_per_opp_pct: 0.05`.
-- [`carry-basis-perp.md:74-87`](../../../codex/09-strategy/architecture-v2/archetypes/carry-basis-perp.md#L74) config
-  schema also has no leverage field; uses `max_allocated_equity_pct: 0.30`.
+- [`carry-basis-perp.md:74-87`](/codex/09-strategy/architecture-v2/archetypes/carry-basis-perp.md#L74) config schema
+  also has no leverage field; uses `max_allocated_equity_pct: 0.30`.
 
 **Why it matters:** the leverage layer is the entire alpha multiplier on `leveraged_funding_arb` (6% → 18% net at 3x).
 Without `target_leverage` in the config schema and codex docs, deployment-UI strategy builders, paper-trade configs, and

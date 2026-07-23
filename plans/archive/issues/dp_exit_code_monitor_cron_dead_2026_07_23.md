@@ -189,8 +189,8 @@ The task brief flagged the ~15-16 minute repeat cadence (23:16, 23:32, 23:48, 00
 dedup/cooldown. Read `deployment_service/data_pipeline_monitors/meta_watchers.py` (the module that emits
 `DP_CRON_DID_NOT_FIRE` via `check_cron_fired()`) to check -- **confirmed real, but it is NOT the GH-Actions
 `notify-slack.yml` carrier** the task brief guessed at (that carrier is for the separate `ci-failures` channel per
-`codex/04-architecture/ci-alerting.md`); `data-pipeline-alerts` is a distinct, Python-side alerting path specific to the
-`dp-*` fleet monitors.
+`/codex/04-architecture/ci-alerting.md`); `data-pipeline-alerts` is a distinct, Python-side alerting path specific to
+the `dp-*` fleet monitors.
 
 - `MONITOR_CRON_CADENCE_MIN["meta"] = 15.0` -- the meta-watcher sweep (which runs `check_cron_fired`) itself runs every
   15 minutes. The observed ~15-16 min alert spacing is **exactly this sweep's own cadence**, not some intermediate

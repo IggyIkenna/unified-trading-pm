@@ -28,8 +28,8 @@ scope: [engineer]
 tags: [honest-coverage, golden-fixture, qg-red, cross-repo, bitfinex, cefi, duplicate]
 related:
   [
-    instruments_service_qg_red_golden_drift_2026_07_10.md,
-    instruments_service_cefi_golden_bitfinex_futures_drift_2026_07_12.md,
+    /plans/archive/issues/instruments_service_qg_red_golden_drift_2026_07_10.md,
+    /plans/archive/issues/instruments_service_cefi_golden_bitfinex_futures_drift_2026_07_12.md,
     ../reconcile_phantom_manifest_rows_stale_read_overwrite_2026_07_12.md,
   ]
 created: 2026-07-12
@@ -111,7 +111,7 @@ which the script's own safety-check would correctly refuse against.
 
 Blocks `quality-gates.sh` — and therefore `quickmerge --agent` — for EVERY agent shipping ANY change in
 instruments-service, not just cefi/BITFINEX-related work, until the golden is regenerated. Per
-`codex/02-data/honest-coverage-model.md` / the golden test's own docstring, a stale EXPECTED-universe golden is "the
+`/codex/02-data/honest-coverage-model.md` / the golden test's own docstring, a stale EXPECTED-universe golden is "the
 single most dangerous failure mode of Honest Coverage v2" — right now it's LOUD (the test is doing its job), but it is a
 repo-wide ship-blocker in the meantime.
 

@@ -36,7 +36,7 @@ stage: [data, meta]
 repos: [deployment-service, features-service, unified-trading-pm]
 scope: [engineer, admin]
 tags: [gcs, buckets, features-sports, cloud-run, broken-image, data-correctness, live-consumer, production-outage]
-related: [bucket_estate_consolidation_to_sub100_2026_07_13.md]
+related: [/plans/active/bucket_estate_consolidation_to_sub100_2026_07_13.md]
 created: "2026-07-15"
 parent_epic: infrastructure_master
 priority: P1
@@ -91,7 +91,7 @@ post-redeploy health check surfaced a **pre-existing, unrelated production outag
   checked-in `daily_workflow`/`backfill_workflow` Workflow YAML sources already use the current `--asset-group SPORTS`
   CLI flag, but a `terraform plan` shows the LIVE deployed workflows still pass the retired `--category SPORTS` flag —
   confirmed via workspace-wide grep that `--category` is declared in NO service CLI anywhere in this workspace anymore
-  (only `--asset-group`, per `codex/06-coding-standards/cli-convention.md`). Even once the image import is fixed, the
+  (only `--asset-group`, per `/codex/06-coding-standards/cli-convention.md`). Even once the image import is fixed, the
   scheduled workflows would still fail immediately with `parse_args()`-raised "unrecognized arguments: --category" until
   that terraform drift is also `apply`'d. Left un-applied this touch (out of the dispatched scope, and its own
   `-target`ed apply deserves independent review since it touches two live Workflow resources).

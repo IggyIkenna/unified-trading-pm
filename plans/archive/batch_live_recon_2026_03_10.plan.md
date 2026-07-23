@@ -6,34 +6,60 @@ status: complete
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [alerting-service, batch-live-reconciliation-service, deployment-api, deployment-service, execution-service, strategy-service]
+repos:
+  [
+    alerting-service,
+    batch-live-reconciliation-service,
+    deployment-api,
+    deployment-service,
+    execution-service,
+    strategy-service,
+  ]
 scope: [engineer, admin]
 tags: []
 related: []
-created: '2026-03-10'
-overview: "Three interconnected deliverables:\n(1) batch-live-reconciliation-service — nightly T+1 orchestrator that replays the full pipeline\n    (features → ML → strategy → execution → position/risk/exposure) using T+1 GCS namespace,\n    compares batch events vs live events stage by stage, and attributes deviations to the responsible service.\n(2) batch-audit-api — new API service for batch-audit-ui covering recon results, full audit trail,\n    orphan/error/TTS compliance, and data completeness checks across the entire system.\n(3) GCS T+1 namespace + T+1 Cloud Scheduler for ALL batch services — every batch service gets a\n    daily T+1 Cloud Run Job + writes to t1-recon/ GCS prefix (not overwriting thermal backtest or\n    batch/ data). Applied uniformly across all repos.\nSurfaces everything in batch-audit-ui (expanded beyond current skeleton).\n"
+created: "2026-03-10"
+overview:
+  "Three interconnected deliverables:\n(1) batch-live-reconciliation-service — nightly T+1 orchestrator that replays the
+  full pipeline\n    (features → ML → strategy → execution → position/risk/exposure) using T+1 GCS
+  namespace,\n    compares batch events vs live events stage by stage, and attributes deviations to the responsible
+  service.\n(2) batch-audit-api — new API service for batch-audit-ui covering recon results, full audit
+  trail,\n    orphan/error/TTS compliance, and data completeness checks across the entire system.\n(3) GCS T+1 namespace
+  + T+1 Cloud Scheduler for ALL batch services — every batch service gets a\n    daily T+1 Cloud Run Job + writes to
+  t1-recon/ GCS prefix (not overwriting thermal backtest or\n    batch/ data). Applied uniformly across all
+  repos.\nSurfaces everything in batch-audit-ui (expanded beyond current skeleton).\n"
 todos:
-- {id: new-repo-blrs, content: Create batch-live-reconciliation-service repo, status: done}
-- {id: new-repo-batch-audit-api, content: Create batch-audit-api repo (pairs with batch-audit-ui), status: done}
-- {id: gcs-t1-namespace, content: 'Add t1-recon/ GCS namespace to ALL batch services (ml-inference, strategy, execution, features-*); update every service''s docs/GCS_PATHS.md; add --output-prefix / --run-tag to CLIs
+  - { id: new-repo-blrs, content: Create batch-live-reconciliation-service repo, status: done }
+  - { id: new-repo-batch-audit-api, content: Create batch-audit-api repo (pairs with batch-audit-ui), status: done }
+  - { id: gcs-t1-namespace, content: "Add t1-recon/ GCS namespace to ALL batch services (ml-inference, strategy,
+        execution, features-*); update every service's docs/GCS_PATHS.md; add --output-prefix / --run-tag to CLIs
 
-    ', status: done}
-- {id: t1-cloud-scheduler, content: 'Add T+1 Cloud Scheduler triggers for every batch service in deployment-service; each service runs independently on its own schedule so recon data is ready when the orchestrator runs
+        ", status: done }
+  - { id: t1-cloud-scheduler, content: "Add T+1 Cloud Scheduler triggers for every batch service in deployment-service;
+        each service runs independently on its own schedule so recon data is ready when the orchestrator runs
 
-    ', status: done}
-- {id: codex-t1-dag-doc, content: 'Write unified-trading-codex/05-operations/t1-batch-dag.md — canonical T+1 pipeline DAG doc; register in SSOT-INDEX.md; no conflicts with existing docs
+        ", status: done }
+  - { id: codex-t1-dag-doc, content: "Write unified-trading-/codex/05-operations/t1-batch-dag.md — canonical T+1
+        pipeline DAG doc; register in SSOT-INDEX.md; no conflicts with existing docs
 
-    ', status: done}
-- {id: extend-trading-analytics-ui, content: 'Add Reconciliation tab to trading-analytics-ui: ReconRunsPage, ReconDetailPage, DeviationDrillPage (separate tab, trading vs expectation)
+        ", status: done }
+  - { id: extend-trading-analytics-ui, content: "Add Reconciliation tab to trading-analytics-ui: ReconRunsPage,
+        ReconDetailPage, DeviationDrillPage (separate tab, trading vs expectation)
 
-    ', status: done}
-- {id: extend-batch-audit-ui, content: 'Expand batch-audit-ui with Audit Trail pages: AuditTrailPage, DataCompletenessPage, CompliancePage (orphans, errors, TTS)
+        ", status: done }
+  - { id: extend-batch-audit-ui, content: "Expand batch-audit-ui with Audit Trail pages: AuditTrailPage,
+        DataCompletenessPage, CompliancePage (orphans, errors, TTS)
 
-    ', status: done}
-- {id: trading-agent-integration, content: Add reconciliation analysis task type to trading-agent-service, status: done}
-- {id: register-manifest, content: 'Register batch-live-reconciliation-service + batch-audit-api in workspace-manifest.json and unified-trading-codex/00-SSOT-INDEX.md
+        ", status: done }
+  - {
+      id: trading-agent-integration,
+      content: Add reconciliation analysis task type to trading-agent-service,
+      status: done,
+    }
+  - { id: register-manifest, content: "Register batch-live-reconciliation-service + batch-audit-api in
+        workspace-manifest.json and unified-trading-codex/00-SSOT-INDEX.md
 
-    ', status: done}
+        ", status: done }
 isProject: true
 ---
 
@@ -434,7 +460,7 @@ Add Cloud Run Job + Cloud Scheduler resources for each T+1 batch service (see sc
 - `workspace-manifest.json` — add 2 new repos
 - `plans/active/` — move this plan here as `batch_live_recon_2026_03_10.md`
 
-### New: `unified-trading-codex/05-operations/t1-batch-dag.md`
+### New: `unified-trading-/codex/05-operations/t1-batch-dag.md`
 
 Canonical T+1 pipeline DAG doc. Sections:
 

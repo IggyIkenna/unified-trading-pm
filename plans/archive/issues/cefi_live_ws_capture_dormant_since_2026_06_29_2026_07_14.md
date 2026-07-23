@@ -18,7 +18,7 @@ stage: [data]
 repos: [market-tick-data-service]
 scope: [engineer, admin]
 tags: [live-capture, data-correctness, big-finding, orderbook]
-related: [l2_book_microstructure_capture_2026_07_13.md]
+related: [/plans/active/l2_book_microstructure_capture_2026_07_13.md]
 created: 2026-07-14
 parent_epic: strategy_master
 priority: P1
@@ -98,7 +98,7 @@ Dispatched to confirm intentional-pause vs. genuine-outage. Read-only git-histor
 operator confirmation per the recommendation above):
 
 - **No evidence of a deliberate pause/kill-switch.** No commit, terraform change, or plan doc turns CeFi live capture
-  off as an intentional decision. `codex/04-architecture/autonomous-recovery-matrix.md`'s kill-switch machinery is
+  off as an intentional decision. `/codex/04-architecture/autonomous-recovery-matrix.md`'s kill-switch machinery is
   scoped to trading/execution risk, not data-capture — unrelated.
 - **Strong circumstantial evidence of a stalled infra migration around 2026-06-27–29, not a clean outage:**
   - `deployment-service/scripts/vm/launch-mtds-live-cefi-consolidated.sh` (header dated 2026-06-27) redesigns CeFi live
@@ -133,7 +133,7 @@ any relaunch.
 
 **Operator/main confirmed: INTENTIONAL PAUSE** — cost-control freeze / planned migration still in flight (the
 VM-consolidation redesign + Pub/Sub live-sink cutover documented in the investigation update above). This is NOT a
-genuine outage; no relaunch is being dispatched. Noted in `codex/02-data/honest-absence-downstream-handling.md` §
+genuine outage; no relaunch is being dispatched. Noted in `/codex/02-data/honest-absence-downstream-handling.md` §
 "Reference incidents" so a future audit doesn't re-raise this as a fresh alarm before the migration completes and a live
 row lands again.
 

@@ -21,7 +21,8 @@ stage: [data]
 repos: [instruments-service, unified-api-contracts]
 scope: [engineer]
 tags: [venue-canonicalisation, cefi, coinbase, sequencing, plan-drift, data-pipeline-correctness]
-related: [coinbase_bare_name_migration_2026_07_06.md, issues/wsfeedconnector_phase35_gap_2026_07_06.md]
+related:
+  [/plans/archive/2026_07/coinbase_bare_name_migration_2026_07_06.md, issues/wsfeedconnector_phase35_gap_2026_07_06.md]
 created: 2026-07-10
 last_updated: 2026-07-10
 parent_epic: instruments_master

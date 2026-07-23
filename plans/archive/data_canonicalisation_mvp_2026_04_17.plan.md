@@ -6,7 +6,16 @@ status: complete
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [unified-api-contracts, unified-trading-library, instruments-service, market-tick-data-service, deployment-api, deployment-ui, unified-trading-pm]
+repos:
+  [
+    unified-api-contracts,
+    unified-trading-library,
+    instruments-service,
+    market-tick-data-service,
+    deployment-api,
+    deployment-ui,
+    unified-trading-pm,
+  ]
 scope: [engineer, admin]
 tags: []
 related: []
@@ -281,7 +290,7 @@ reduce violation counts where they touch affected areas.
       `get_instruments_available_on` API, generator usage.
 - [ ] [AGENT] P1. instruments-service docs: instrument catalogue schema, `available_from/to` population logic,
       per-category reference data refresh cadence.
-- [ ] [AGENT] P1. PM codex: update `codex/02-data/availability-manifest-and-data-status.md` (expected-empty vs missing
+- [ ] [AGENT] P1. PM codex: update `/codex/02-data/availability-manifest-and-data-status.md` (expected-empty vs missing
       distinction), `codex/06-coding-standards/` add `canonical-instrument-ids.md` if missing.
 
 ## Regression prevention (how this can't happen again)

@@ -21,10 +21,10 @@ scope: [engineer, admin]
 tags: [agent-orchestrator, dispatch, autospawn, slot-skips, model-tier, craft-routing, fleet-stall, incident]
 related:
   [
-    instruments_completion_tracker_2026_07_06.md,
+    /plans/active/instruments_completion_tracker_2026_07_06.md,
     ../infra_capture_and_devops_leftovers_2026_07_06.md,
-    ../../../codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
-    ao_blocked_queue_operator_ruling_sync_gap_2026_07_13.md,
+    /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
+    /plans/archive/issues/ao_blocked_queue_operator_ruling_sync_gap_2026_07_13.md,
   ]
 created: 2026-07-07
 last_updated: 2026-07-16

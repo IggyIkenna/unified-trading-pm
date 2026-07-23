@@ -1,16 +1,24 @@
 ---
 doc_type: plan
-title: 'DeFi Phase 3: Infrastructure Alignment — Chain Config, Tenderly, Pipelines, Custody'
+title: "DeFi Phase 3: Infrastructure Alignment — Chain Config, Tenderly, Pipelines, Custody"
 summary:
 status: complete
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [e2e-testing, execution-service, instruments-service, strategy-service, unified-api-contracts, unified-trading-library]
+repos:
+  [
+    e2e-testing,
+    execution-service,
+    instruments-service,
+    strategy-service,
+    unified-api-contracts,
+    unified-trading-library,
+  ]
 scope: [engineer, admin]
 tags: []
 related: []
-created: '2026-03-30'
+created: "2026-03-30"
 priority: P0
 locked_by: live-defi-rollout
 locked_since: 2026-03-30
@@ -284,9 +292,9 @@ CHAIN_ENV, gas schema, Tenderly execution, pipelines, custody.
 Key context:
 - Memory: memory/feedback_instrument_resolution_and_mode_alignment.md
 - Memory: memory/feedback_wallet_architecture.md
-- Architecture: codex/04-architecture/execution-modes-and-chain-resolution.md
-- Architecture: codex/04-architecture/wallet-hierarchy-and-capital-flow.md
-- Architecture: codex/04-architecture/copper-custody-integration.md
+- Architecture: /codex/04-architecture/execution-modes-and-chain-resolution.md
+- Architecture: /codex/04-architecture/wallet-hierarchy-and-capital-flow.md
+- Architecture: /codex/04-architecture/copper-custody-integration.md
 - Batch pipeline: e2e-testing/scripts/defi/run-batch-pipeline.sh
 - Tenderly fixtures: execution-service/tests/integration/conftest.py
 - Custody interface: execution-service/execution_service/custody/

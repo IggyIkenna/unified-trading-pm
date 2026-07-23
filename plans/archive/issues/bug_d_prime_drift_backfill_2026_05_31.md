@@ -12,7 +12,12 @@ tags: []
 related: []
 created: 2026-05-31
 superseded: 2026-06-01
-source: ['vm-log: gs://deployment-scripts-central-element-323112/vm-logs/mtds-solana-drift-backfill/run.log', mtds@7e09b2ab (fix), deployment-service@29f4bc4 (paired fix)]
+source:
+  [
+    "vm-log: gs://deployment-scripts-central-element-323112/vm-logs/mtds-solana-drift-backfill/run.log",
+    mtds@7e09b2ab (fix),
+    deployment-service@29f4bc4 (paired fix),
+  ]
 parent_epic: mtds_mdps_master
 estimate_class: refactor
 estimate_baseline_ai_days: 0.5
@@ -31,7 +36,7 @@ priority: P2
 > the repo for potential future use (e.g., independent backfill of `tradeRecords` outside Velocity API rate limits) but
 > NOT on any critical path. The `mtds-solana-drift-backfill` VM workflow is OBSOLETE; do NOT relaunch it.
 >
-> Full design: `codex/04-architecture/drift-v2-data-sources.md` (NEW 2026-06-01). Operational follow-ups:
+> Full design: `/codex/04-architecture/drift-v2-data-sources.md` (NEW 2026-06-01). Operational follow-ups:
 > `plans/active/defi_manifest_canonicalisation_2026_06_01.md` § G (Solana basis MVP operationalisation — G1 backfill VM,
 > G2 live snapshotters, G3 paper trade, G4 live wallet promotion).
 >
@@ -190,11 +195,11 @@ Surfaced during this incident, captured per CLAUDE.md "Capture Discoveries As Pl
 - [ ] [INFRA] P2. **Manifest consolidator 11-day staleness.** The consolidated `_index/availability_index.parquet` in
       the prd DeFi bucket is not being refreshed on schedule (most recent 2026-05-20 vs today 2026-05-31). Either Cloud
       Run Job + Scheduler is failing silently, or the per-VM shards aren't being collected. Composes with
-      `codex/05-infrastructure/manifest-consolidator-ssot.md` runbook.
+      `/codex/05-infrastructure/manifest-consolidator-ssot.md` runbook.
 
 - [ ] [INFRA] P3. **Cloud Run stdout truncation symptoms.** The recent burst of subgraph-probe debug commits (`75034c18`
       → `e431e483`) was caused by Cloud Run gen2 swallowing stdout exception traces. Solution shipped at `e431e483` (UTL
-      upload_bytes mirror). Codify the diagnostic pattern in `codex/05-infrastructure/cloud-run-job-gen2-quirks.md` so
+      upload_bytes mirror). Codify the diagnostic pattern in `/codex/05-infrastructure/cloud-run-job-gen2-quirks.md` so
       the next agent doesn't repeat the trial-and-error sequence.
 
 ## Composed with
@@ -204,7 +209,7 @@ Surfaced during this incident, captured per CLAUDE.md "Capture Discoveries As Pl
 - CLAUDE.md HARD RULE "Bucket-name SSOT" (Bug 3 root cause).
 - CLAUDE.md HARD RULE "Plans Run To Actual Completion" — VM relaunched + manifest-verified, but Bug 3 keeps zero rows
   captured.
-- `codex/02-data/data-pipeline-correctness-hard-rule.md`.
+- `/codex/02-data/data-pipeline-correctness-hard-rule.md`.
 
 ## Status update 2026-06-01T00:14Z — gap-fill VM #3 launched after --resume OOM fix
 

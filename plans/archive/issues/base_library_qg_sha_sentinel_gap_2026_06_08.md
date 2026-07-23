@@ -11,7 +11,13 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: 2026-06-08
-source: [plans/active/utl_full_quality_gates_green_2026_06_01.md, scripts/quality-gates-base/base-library.sh, scripts/quality-gates-base/base-service.sh, scripts/quickmerge.sh]
+source:
+  [
+    plans/active/utl_full_quality_gates_green_2026_06_01.md,
+    scripts/quality-gates-base/base-library.sh,
+    scripts/quality-gates-base/base-service.sh,
+    scripts/quickmerge.sh,
+  ]
 priority: P2
 ---
 
@@ -21,7 +27,7 @@ priority: P2
 >
 > **ACKED-INTO-CODE** → archived 2026-06-10 — fix shipped in unified-trading-pm@09137833
 > (`fix(qg): base-library.sh writes .qg_last_passed_sha (SHA sentinel) like base-service — unblocks library agent-quickmerge`),
-> ancestor of origin/main. Codex updated: `codex/06-coding-standards/quality-gates.md` § "Library SHA-sentinel gap" now
+> ancestor of origin/main. Codex updated: `/codex/06-coding-standards/quality-gates.md` § "Library SHA-sentinel gap" now
 > reads RESOLVED (hand-bridge workaround retired).
 
 ## What I found

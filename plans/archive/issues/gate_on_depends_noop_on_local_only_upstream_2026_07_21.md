@@ -122,6 +122,6 @@ open" from "upstream ingested and now fully done+pruned":
 
 ## Codex SSOTs
 
-`codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`,
-`codex/11-project-management/doc-frontmatter-schema.md` (`depends_on` / `gate_on_depends` / `execution_scope`
+`/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`,
+`/codex/11-project-management/doc-frontmatter-schema.md` (`depends_on` / `gate_on_depends` / `execution_scope`
 semantics).

@@ -13,15 +13,18 @@ related: []
 created: 2026-05-20
 author: ikenna-main (slot 1)
 source:
-- {execution-service@774602ea8 (chore(lint): add}
-- {execution-service@a2b5eef46 (feat(sports): add classify_venue_error + ADAPTER_FETCH_FAILED to kalshi + polymarket_clob adapters)}
-- {execution-service@195cf6829 (fix(execution): restore classify_venue_error regressed by 774602ea8 lint sweep)}
+  - { execution-service@774602ea8 (chore(lint): add }
+  - {
+      execution-service@a2b5eef46 (feat(sports):
+        add classify_venue_error + ADAPTER_FETCH_FAILED to kalshi + polymarket_clob adapters),
+    }
+  - { execution-service@195cf6829 (fix(execution): restore classify_venue_error regressed by 774602ea8 lint sweep) }
 locked_by: live-defi-rollout
 foundation_gate_class: C7/C8
 ---
 
 > **🟢 RESOLVED 2026-05-20** — both regressed files restored at execution-service@195cf6829. Reference incident for the
-> foundation-completion-gate mega-audit (codex/11-project-management/foundation-completion-gate-discipline.md).
+> foundation-completion-gate mega-audit (/codex/11-project-management/foundation-completion-gate-discipline.md).
 
 ## What I found
 
@@ -34,7 +37,7 @@ discarded the SP-12(a) error-classification block in favor of the simpler pre-fi
 pattern, silently undoing the layer-N adapter contract that had landed at a2b5eef46 (2026-05-18, 2 hours earlier).
 
 This is exactly the foundation-completion-gate failure mode named in
-`codex/11-project-management/foundation-completion-gate-discipline.md` — a layer-N+1 hygiene commit (noqa comments)
+`/codex/11-project-management/foundation-completion-gate-discipline.md` — a layer-N+1 hygiene commit (noqa comments)
 silently breaking a layer-N contract guarantee (adapter error-classification).
 
 ## Why it matters
@@ -160,6 +163,6 @@ The proposed QG check is now LIVE:
 ## Related plans / SSOTs
 
 - `plans/active/issues/kalshi_polymarket_classify_venue_error_missing_2026_05_18.md` (re-resolved 2026-05-20)
-- `codex/11-project-management/foundation-completion-gate-discipline.md` (canonical reference for this incident class)
+- `/codex/11-project-management/foundation-completion-gate-discipline.md` (canonical reference for this incident class)
 - `plans/active/issues/mega_audit_and_plan_beefup_progression_2026_05_20.md` (master tracker)
 - CLAUDE.md "Every adapter MUST classify errors via UAC `classify_venue_error()` + emit `ADAPTER_FETCH_FAILED`"

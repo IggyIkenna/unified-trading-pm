@@ -23,7 +23,7 @@ related:
   [
     plans/active/issues/instruments_service_qg_red_golden_drift_2026_07_10.md,
     plans/active/issues/instruments_service_cefi_qg_red_on_ldr_head_2026_07_08.md,
-    codex/02-data/honest-coverage-model.md,
+    /codex/02-data/honest-coverage-model.md,
   ]
 created: 2026-07-12
 parent_epic: infrastructure_master
@@ -77,7 +77,7 @@ for the sports task that surfaced it) — flagging for a dedicated fix rather th
 
 This blocks `quickmerge --agent` for the ENTIRE instruments-service repo (the sentinel mechanism requires a full green
 `quality-gates.sh` on the exact committed HEAD) — every slot working ANY instruments-service task, sports or otherwise,
-will hit this same failure until resolved. Per `codex/02-data/data-pipeline-correctness-hard-rule.md`, this is exactly
+will hit this same failure until resolved. Per `/codex/02-data/data-pipeline-correctness-hard-rule.md`, this is exactly
 the class of cross-cutting data-correctness break that freezes downstream shipping.
 
 ## Recommended decision

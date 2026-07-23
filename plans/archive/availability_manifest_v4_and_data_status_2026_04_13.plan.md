@@ -10,41 +10,48 @@ repos: [alerting-service, deployment-api, deployment-service, deployment-ui, exe
 scope: [engineer, admin]
 tags: []
 related: []
-created: '2026-04-13'
-overview: Universal availability manifest schema v4 — proper shard columns, atomic writes, UAC SSOT registry, data status page hierarchy, codex documentation
+created: "2026-04-13"
+overview:
+  Universal availability manifest schema v4 — proper shard columns, atomic writes, UAC SSOT registry, data status page
+  hierarchy, codex documentation
 type: mixed
 epic: epic-code-completion
-completion_gates: {code: C5, deployment: D3, business: B3}
+completion_gates: { code: C5, deployment: D3, business: B3 }
 repo_gates:
-- {repo: unified-api-contracts, code: C0, deployment: none, business: none}
-- {repo: unified-trading-library, code: C0, deployment: none, business: none}
-- {repo: instruments-service, code: C0, deployment: none, business: none}
-- {repo: market-tick-data-service, code: C0, deployment: none, business: none}
-- {repo: market-data-processing-service, code: C0, deployment: none, business: none}
-- {repo: features-delta-one-service, code: C0, deployment: none, business: none}
-- {repo: features-volatility-service, code: C0, deployment: none, business: none}
-- {repo: features-onchain-service, code: C0, deployment: none, business: none}
-- {repo: features-sports-service, code: C0, deployment: none, business: none}
-- {repo: features-calendar-service, code: C0, deployment: none, business: none}
-- {repo: features-multi-timeframe-service, code: C0, deployment: none, business: none}
-- {repo: features-cross-instrument-service, code: C0, deployment: none, business: none}
-- {repo: features-commodity-service, code: C0, deployment: none, business: none}
-- {repo: ml-training-service, code: C0, deployment: none, business: none}
-- {repo: ml-inference-service, code: C0, deployment: none, business: none}
-- {repo: strategy-service, code: C0, deployment: none, business: none}
-- {repo: execution-service, code: C0, deployment: none, business: none}
-- {repo: risk-and-exposure-service, code: C0, deployment: none, business: none}
-- {repo: pnl-attribution-service, code: C0, deployment: none, business: none}
-- {repo: alerting-service, code: C0, deployment: none, business: none}
-- {repo: deployment-api, code: C0, deployment: none, business: none}
-- {repo: deployment-ui, code: C0, deployment: none, business: none}
-- {repo: unified-trading-pm, code: C0, deployment: none, business: none}
+  - { repo: unified-api-contracts, code: C0, deployment: none, business: none }
+  - { repo: unified-trading-library, code: C0, deployment: none, business: none }
+  - { repo: instruments-service, code: C0, deployment: none, business: none }
+  - { repo: market-tick-data-service, code: C0, deployment: none, business: none }
+  - { repo: market-data-processing-service, code: C0, deployment: none, business: none }
+  - { repo: features-delta-one-service, code: C0, deployment: none, business: none }
+  - { repo: features-volatility-service, code: C0, deployment: none, business: none }
+  - { repo: features-onchain-service, code: C0, deployment: none, business: none }
+  - { repo: features-sports-service, code: C0, deployment: none, business: none }
+  - { repo: features-calendar-service, code: C0, deployment: none, business: none }
+  - { repo: features-multi-timeframe-service, code: C0, deployment: none, business: none }
+  - { repo: features-cross-instrument-service, code: C0, deployment: none, business: none }
+  - { repo: features-commodity-service, code: C0, deployment: none, business: none }
+  - { repo: ml-training-service, code: C0, deployment: none, business: none }
+  - { repo: ml-inference-service, code: C0, deployment: none, business: none }
+  - { repo: strategy-service, code: C0, deployment: none, business: none }
+  - { repo: execution-service, code: C0, deployment: none, business: none }
+  - { repo: risk-and-exposure-service, code: C0, deployment: none, business: none }
+  - { repo: pnl-attribution-service, code: C0, deployment: none, business: none }
+  - { repo: alerting-service, code: C0, deployment: none, business: none }
+  - { repo: deployment-api, code: C0, deployment: none, business: none }
+  - { repo: deployment-ui, code: C0, deployment: none, business: none }
+  - { repo: unified-trading-pm, code: C0, deployment: none, business: none }
 depends_on: []
 locked_by: live-defi-rollout
 locked_since: 2026-04-13
 todos: []
 isProject: false
-superseded_by: [manifest_schema_v6_quote_margin_combo_2026_04_23.plan.md, data_status_institutional_drilldown_2026_04_24.plan.md, honest_coverage_metrics_2026_04_19.plan.md]
+superseded_by:
+  [
+    manifest_schema_v6_quote_margin_combo_2026_04_23.plan.md,
+    data_status_institutional_drilldown_2026_04_24.plan.md,
+    honest_coverage_metrics_2026_04_19.plan.md,
+  ]
 reconciliation_status: superseded
 reconciliation_date: 2026-04-25
 ---
@@ -105,10 +112,10 @@ features-sports-service (check script), instruments-service (verify/rebuild scri
 
 | #   | Path                                                              | Content                                   | Action                      |
 | --- | ----------------------------------------------------------------- | ----------------------------------------- | --------------------------- |
-| 1   | codex/04-architecture/shard-level-failure-isolation.md            | Shard dims per service, failure isolation | Merge into new SSOT doc     |
-| 2   | codex/02-data/venue-availability.md                               | UAC VenueMapping as SSOT                  | Merge into new SSOT doc     |
-| 3   | codex/02-data/partitioning.md                                     | GCS path templates                        | Reference from new SSOT doc |
-| 4   | codex/02-data/data-catalogue-schema.md                            | Catalogue schema                          | Reference from new SSOT doc |
+| 1   | /codex/04-architecture/shard-level-failure-isolation.md           | Shard dims per service, failure isolation | Merge into new SSOT doc     |
+| 2   | /codex/02-data/venue-availability.md                              | UAC VenueMapping as SSOT                  | Merge into new SSOT doc     |
+| 3   | /codex/02-data/partitioning.md                                    | GCS path templates                        | Reference from new SSOT doc |
+| 4   | /codex/02-data/data-catalogue-schema.md                           | Catalogue schema                          | Reference from new SSOT doc |
 | 5   | memory/project_availability_manifest_v4_full_matrix_2026_04_13.md | Full L1-L8 matrix                         | Source for new codex doc    |
 | 6   | memory/feedback_shard_integrity_principles.md                     | 3 non-negotiable principles               | Source for new codex doc    |
 | 7   | memory/feedback_defi_chain_grouping.md                            | Chain as separate column                  | Source for new codex doc    |
@@ -220,20 +227,20 @@ other doc, CLAUDE.md, cursor rule, and memory file points to it.
   - Sports bookmaker venues (not ODDS_API)
   - No data_source column (track data type not source)
 
-- [ ] [AGENT] P0. Update `codex/04-architecture/shard-level-failure-isolation.md` — replace inline shard dimension
+- [ ] [AGENT] P0. Update `/codex/04-architecture/shard-level-failure-isolation.md` — replace inline shard dimension
       tables with a cross-reference to the new SSOT doc. Keep the failure isolation rules, remove the per-service
       dimension lists (they now live in the SSOT doc).
 
-- [ ] [AGENT] P0. Update `codex/02-data/venue-availability.md` — add cross-reference to new SSOT doc for the complete
+- [ ] [AGENT] P0. Update `/codex/02-data/venue-availability.md` — add cross-reference to new SSOT doc for the complete
       picture. Keep UAC VenueMapping details.
 
 - [ ] [AGENT] P0. Update root `.claude/CLAUDE.md` — add a section referencing the SSOT doc: "For sharding dimensions,
       availability manifest schema, data status page hierarchy, and missing data logic, see
-      `codex/02-data/availability-manifest-and-data-status.md`."
+      `/codex/02-data/availability-manifest-and-data-status.md`."
 
 - [ ] [AGENT] P0. Create cursor rule `.cursor/rules/availability-manifest-ssot.mdc` — short rule that says: "When
       working on ManifestWriter, data status, availability index, or shard dimensions, read
-      `codex/02-data/availability-manifest-and-data-status.md` first. It is the SSOT."
+      `/codex/02-data/availability-manifest-and-data-status.md` first. It is the SSOT."
 
 - [ ] [AGENT] P0. QG pass for unified-trading-pm (docs fast-path — targets main directly).
 
@@ -547,11 +554,11 @@ No data re-downloads. Re-run manifest scanners to produce v4 index entries from 
 
 ### Documentation & Context Propagation
 
-- [ ] [AGENT] P0. Update the SSOT codex doc (`codex/02-data/availability-manifest-and-data-status.md`) with any changes
+- [ ] [AGENT] P0. Update the SSOT codex doc (`/codex/02-data/availability-manifest-and-data-status.md`) with any changes
       made during implementation. Ensure it matches the final code exactly.
 
 - [ ] [AGENT] P0. Update root `.claude/CLAUDE.md` — add to "Key Rules" section: "Availability manifest schema v4 — see
-      `codex/02-data/availability-manifest-and-data-status.md` for shard dimensions, data status hierarchy, and
+      `/codex/02-data/availability-manifest-and-data-status.md` for shard dimensions, data status hierarchy, and
       integrity principles. ManifestWriter writes proper columns (venue, chain, data_type, instrument_type, league_id,
       timeframe, feature_group, model_family, training_period, strategy_id, client_id, instruction_type). Never overload
       `venue` with non-venue data."

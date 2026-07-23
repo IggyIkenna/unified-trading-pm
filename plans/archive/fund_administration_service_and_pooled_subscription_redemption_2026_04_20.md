@@ -6,35 +6,51 @@ status: complete
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [client-reporting-api, execution-service, fund-administration-service, unified-api-contracts, unified-trading-library, unified-trading-system-ui]
+repos:
+  [
+    client-reporting-api,
+    execution-service,
+    fund-administration-service,
+    unified-api-contracts,
+    unified-trading-library,
+    unified-trading-system-ui,
+  ]
 scope: [engineer, admin]
 tags: []
 related: []
-created: '2026-04-20'
-overview: Build the subscription/redemption rail for IM Pooled clients — UAC fund_administration domain types, new fund-administration-service with subscription/redemption state machine + capital-routing orchestrator, platform UI pages under /services/im/funds/ — by extending existing primitives (TreasuryMonitor, TransferAdapter, CustodyProvider, FundNAVSnapshot, FeeStructure) rather than re-inventing them. Treasury/buffer wallet split is already generic in position-balance-monitor-service; this plan layers fund-admin semantics (share classes, NAV-strike unit issuance, grace-period redemption settlement) on top.
+created: "2026-04-20"
+overview:
+  Build the subscription/redemption rail for IM Pooled clients — UAC fund_administration domain types, new
+  fund-administration-service with subscription/redemption state machine + capital-routing orchestrator, platform UI
+  pages under /services/im/funds/ — by extending existing primitives (TreasuryMonitor, TransferAdapter, CustodyProvider,
+  FundNAVSnapshot, FeeStructure) rather than re-inventing them. Treasury/buffer wallet split is already generic in
+  position-balance-monitor-service; this plan layers fund-admin semantics (share classes, NAV-strike unit issuance,
+  grace-period redemption settlement) on top.
 type: mixed
 epic: epic-path-to-100m
 locked_by: live-defi-rollout
 locked_since: 2026-04-20
-completion_gates: {code: C5, deployment: D3, business: B3}
+completion_gates: { code: C5, deployment: D3, business: B3 }
 repo_gates:
-- {repo: unified-api-contracts, code: C0, deployment: none, business: none}
-- {repo: unified-trading-library, code: C0, deployment: none, business: none}
-- {repo: position-balance-monitor-service, code: C0, deployment: none, business: none}
-- {repo: execution-service, code: C0, deployment: none, business: none}
-- {repo: fund-administration-service, code: C0, deployment: D3, business: B3}
-- {repo: unified-trading-system-ui, code: C0, deployment: D2, business: none}
-- {repo: client-reporting-api, code: C0, deployment: none, business: none}
-- {repo: unified-trading-pm, code: C0, deployment: none, business: none}
+  - { repo: unified-api-contracts, code: C0, deployment: none, business: none }
+  - { repo: unified-trading-library, code: C0, deployment: none, business: none }
+  - { repo: position-balance-monitor-service, code: C0, deployment: none, business: none }
+  - { repo: execution-service, code: C0, deployment: none, business: none }
+  - { repo: fund-administration-service, code: C0, deployment: D3, business: B3 }
+  - { repo: unified-trading-system-ui, code: C0, deployment: D2, business: none }
+  - { repo: client-reporting-api, code: C0, deployment: none, business: none }
+  - { repo: unified-trading-pm, code: C0, deployment: none, business: none }
 depends_on: []
 estimate_class: design
 estimate_baseline_ai_days: TBD
 estimate_calibrated_ai_days: TBD
-estimate_calibration_note: 'No explicit AI-day estimates found in plan body during 2026-05-11 sweep; class inferred from filename (design, multiplier 0.6×).
+estimate_calibration_note: "No explicit AI-day estimates found in plan body during 2026-05-11 sweep; class inferred from
+  filename (design, multiplier 0.6×).
 
-  Owner agent: fill baseline + multiply × 0.6 per codex/08-workflows/estimation-calibration.md. Refine class if dominant work-class differs.
+  Owner agent: fill baseline + multiply × 0.6 per /codex/08-workflows/estimation-calibration.md. Refine class if
+  dominant work-class differs.
 
-  '
+  "
 ---
 
 ## Deferred work — migrated to:
@@ -95,9 +111,9 @@ venue accounts and do not touch this rail.
 
 SSOTs now reflecting the correction:
 
-- `codex/14-customer-journeys/shared-core/fund-administration-and-custody.md` — custody model per path; Odum never
+- `/codex/14-customer-journeys/shared-core/fund-administration-and-custody.md` — custody model per path; Odum never
   custodies; POD is the fund administrator; Copper (and equivalents) named as qualified custodians.
-- `codex/14-customer-journeys/shared-core/treasury-and-subaccount-model.md` — Pooled subscription/redemption rail;
+- `/codex/14-customer-journeys/shared-core/treasury-and-subaccount-model.md` — Pooled subscription/redemption rail;
   portal surface; contract surface sketch (this plan is its implementation).
 
 ## Existing primitives to reuse (not rebuild)
@@ -191,7 +207,7 @@ Phase 0 (UAC + UTL)
         `RedemptionStatus`, `AllocationExecutionStatus`. Re-export from `unified_api_contracts.internal` facade per
         Citadel import rules. Dataclasses with frozen=True; AwareDatetime; Decimal for money. No pydantic BaseModel
         unless the type is externally serialised. Mirror the schema sketch in
-        `codex/14-customer-journeys/shared-core/treasury-and-subaccount-model.md` §"Contract surface". status: pending
+        `/codex/14-customer-journeys/shared-core/treasury-and-subaccount-model.md` §"Contract surface". status: pending
 
 - id: uac-wallet-role-enum content: |
   - [x] [AGENT] P0. UAC: add `WalletRole` enum (`TREASURY` / `TRADING` / `RESERVE`) to `internal/domain/account.py`. Add
@@ -343,12 +359,12 @@ Phase 0 (UAC + UTL)
 ## Phase 5 — Codex + briefings + memory cross-link (SEQUENTIAL after Phases 2-4)
 
 - id: codex-treasury-doc-concretise content: |
-  - [ ] [AGENT] P0. PM: update `codex/14-customer-journeys/shared-core/treasury-and-subaccount-model.md` — replace the
+  - [ ] [AGENT] P0. PM: update `/codex/14-customer-journeys/shared-core/treasury-and-subaccount-model.md` — replace the
         "to-be-built" sketches with concrete UAC type paths, event names, and service endpoints as they landed. Add link
         to this plan in §Related docs. status: pending
 
 - id: codex-service-index content: |
-  - [ ] [AGENT] P0. PM: register `fund-administration-service` in `codex/05-infrastructure/service-index.md` (if
+  - [ ] [AGENT] P0. PM: register `fund-administration-service` in `/codex/05-infrastructure/service-index.md` (if
         present) + add to `service-boundaries-and-responsibilities.md` decision table. status: pending
 
 - id: briefings-concretise content: |
@@ -419,7 +435,7 @@ Every file / symbol touched — so executing agents don't need to re-scan:
 | `fund-administration-service/`                                                               | Full service scaffold per template            |
 | `fund-administration-service/fund_administration_service/subscription/state_machine.py`      | Subscription PENDING→APPROVED→SETTLED         |
 | `fund-administration-service/fund_administration_service/redemption/state_machine.py`        | Redemption PENDING→APPROVED→PROCESSED→SETTLED |
-| `fund-administration-service/fund_administration_service/capital_router.py`                  | Treasury ↔ trading-wallet orchestrator       |
+| `fund-administration-service/fund_administration_service/capital_router.py`                  | Treasury ↔ trading-wallet orchestrator        |
 | `fund-administration-service/fund_administration_service/api/main.py`                        | FastAPI routes                                |
 | `fund-administration-service/fund_administration_service/background/grace_period_handler.py` | Settles redemptions on grace-period expiry    |
 | `fund-administration-service/fund_administration_service/background/nav_strike_scheduler.py` | Triggers NAV snapshot capture                 |

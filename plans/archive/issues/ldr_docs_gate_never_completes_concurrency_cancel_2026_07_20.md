@@ -26,8 +26,8 @@ scope: [engineer, admin]
 tags: [cicd, quality-gates, frontmatter, concurrency, ci-integrity, plan-hygiene, backstop, false-green]
 related:
   [
-    prek_plan_hygiene_hook_fail_open_unhooked_clone_2026_07_17.md,
-    foreign_dirty_frontmatter_blocks_every_agents_gate_2026_07_18.md,
+    /plans/archive/issues/prek_plan_hygiene_hook_fail_open_unhooked_clone_2026_07_17.md,
+    /plans/archive/issues/foreign_dirty_frontmatter_blocks_every_agents_gate_2026_07_18.md,
   ]
 created: 2026-07-20
 parent_epic: infrastructure_master
@@ -127,7 +127,7 @@ wrong contract for a GATE, whose job is to guarantee a red corpus is eventually 
 
 A + (B or C) composes: cron as the guaranteed safety-net, plus per-sha or queued for per-commit coverage. Whichever is
 chosen, add an alert on the gate's RED verdict routed through `notify-slack.yml` (per
-`codex/04-architecture/ci-alerting.md`) so a broken corpus pages instead of waiting to be noticed.
+`/codex/04-architecture/ci-alerting.md`) so a broken corpus pages instead of waiting to be noticed.
 
 ## Verification for whoever fixes this
 

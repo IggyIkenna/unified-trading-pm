@@ -13,7 +13,16 @@ related: []
 created: 2026-05-08
 resolved: 2026-05-10
 author: tab4-aws-migration
-source: ['unified-trading-pm/plans/active/aws_migration_defi_first_2026_05_07.md (Phase 1, Phase 1.5.A, Phase 2)', 'deployment-service/scripts/aws/setup-defi-buckets.sh:62-72', 'unified-trading-library/unified_trading_library/cloud_interface/constants.py:191-218', 'unified-trading-library/unified_trading_library/config_interface/cloud_config.py:394', 'unified-trading-library/unified_trading_library/cloud_interface/bucket_naming.py (UTL@780a9575 — new resolver, partial mitigation)', unified-trading-library/tests/cloud_interface/unit/test_bucket_naming.py (UTL@24f9b2cb — option c regression pin)]
+source:
+  [
+    "unified-trading-pm/plans/active/aws_migration_defi_first_2026_05_07.md (Phase 1, Phase 1.5.A, Phase 2)",
+    "deployment-service/scripts/aws/setup-defi-buckets.sh:62-72",
+    "unified-trading-library/unified_trading_library/cloud_interface/constants.py:191-218",
+    "unified-trading-library/unified_trading_library/config_interface/cloud_config.py:394",
+    "unified-trading-library/unified_trading_library/cloud_interface/bucket_naming.py (UTL@780a9575 — new resolver,
+    partial mitigation)",
+    unified-trading-library/tests/cloud_interface/unit/test_bucket_naming.py (UTL@24f9b2cb — option c regression pin),
+  ]
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
 ---
@@ -109,7 +118,7 @@ yaml**, not between **the yaml** and **the resolver**.
 Phase 1 smoke is the readiness gate for May-23 AWS↔GCP parity. Until the script-vs-yaml drift is reconciled, no
 AWS-resident parquet read can succeed end-to-end without per-deployment env-var overrides, which themselves are a
 band-aid that violates the SSOT contract codified at
-[`codex/05-infrastructure/cloud-agnostic-script-pattern.md`](../../codex/05-infrastructure/cloud-agnostic-script-pattern.md)
+[`/codex/05-infrastructure/cloud-agnostic-script-pattern.md`](/codex/05-infrastructure/cloud-agnostic-script-pattern.md)
 § "Bucket-naming SSOT (4.2)".
 
 Long-term, all three sources must converge on ONE shape. Three options for triage:
@@ -224,9 +233,9 @@ print('PASS — write/read/delete roundtrip clean')
 
 ## Cross-references
 
-- [`codex/05-infrastructure/cloud-agnostic-script-pattern.md`](../../codex/05-infrastructure/cloud-agnostic-script-pattern.md)
+- [`/codex/05-infrastructure/cloud-agnostic-script-pattern.md`](/codex/05-infrastructure/cloud-agnostic-script-pattern.md)
   § "4-cloud-tier discipline" + § "Bucket-naming SSOT (4.2)".
-- [`codex/05-infrastructure/cloud-agnostic-audit-2026-05-07.md`](../../codex/05-infrastructure/cloud-agnostic-audit-2026-05-07.md)
+- [`/codex/05-infrastructure/cloud-agnostic-audit-2026-05-07.md`](/codex/05-infrastructure/cloud-agnostic-audit-2026-05-07.md)
   § "Inline-string bucket-name audit (2026-05-08)" + § "AWS Phase 1 smoke readiness".
 - [`plans/active/aws_migration_defi_first_2026_05_07.md`](../aws_migration_defi_first_2026_05_07.md) Phase 1 + Phase
   1.5.A + Phase 2 + Phase 5.

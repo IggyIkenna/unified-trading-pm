@@ -16,10 +16,10 @@ scope: [engineer, admin]
 tags: [defi, fold, manifest, record-captured, consolidator, honest-coverage, dex-pools, solana]
 related:
   [
-    defi_dex_pools_delete_order_stale_2026_07_20.md,
-    data_pipeline_reconciliation_skill_2026_07_20.md,
-    ../../codex/05-infrastructure/manifest-consolidator-ssot.md,
-    ../../codex/02-data/availability-manifest-and-data-status.md,
+    /plans/archive/issues/defi_dex_pools_delete_order_stale_2026_07_20.md,
+    /plans/active/data_pipeline_reconciliation_skill_2026_07_20.md,
+    /codex/05-infrastructure/manifest-consolidator-ssot.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
   ]
 created: 2026-07-21
 last_updated: 2026-07-22

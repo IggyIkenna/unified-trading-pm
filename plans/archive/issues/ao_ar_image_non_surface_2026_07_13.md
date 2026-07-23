@@ -35,10 +35,10 @@ tags:
   ]
 related:
   [
-    ../../../codex/04-architecture/runtime-deployment-topology.md,
-    ../../../codex/05-infrastructure/agent-orchestrator-deploy.md,
-    ../../../codex/05-infrastructure/dual-cloud-image-builds.md,
-    ../../../codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
+    /codex/04-architecture/runtime-deployment-topology.md,
+    /codex/05-infrastructure/agent-orchestrator-deploy.md,
+    /codex/05-infrastructure/dual-cloud-image-builds.md,
+    /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
   ]
 created: 2026-07-13
 parent_epic: orchestrator_master
@@ -75,11 +75,11 @@ production; its staleness is harmless.
 ## Evidence (all verified 2026-07-13)
 
 1. **Live runtime is git-self-pull systemd on EC2, not a container.**
-   `codex/04-architecture/runtime-deployment-topology.md` § "agent-orchestrator — self-pull deploy (added 2026-07-12)":
+   `/codex/04-architecture/runtime-deployment-topology.md` § "agent-orchestrator — self-pull deploy (added 2026-07-12)":
    central + epic VMs are long-lived systemd services (`orchestrator.service`, tmux + uvicorn :8765 on EC2
    `13.113.200.22`), "not container-redeployed on push"; currency comes from git self-pull (shipped
    `agent-orchestrator@589b711`, hardened `@d16d737` + `@5462959`). Deploy reference:
-   `codex/05-infrastructure/agent-orchestrator-deploy.md` (systemd install script; Cloud Run shape explicitly marked
+   `/codex/05-infrastructure/agent-orchestrator-deploy.md` (systemd install script; Cloud Run shape explicitly marked
    "HISTORICAL — superseded 2026-05-20 by EC2 … Not running today").
 2. **The one existing orchestrator Cloud Run service runs a DIFFERENT image.** `gcloud run services list` (project
    `central-element-323112`) shows only `agent-orchestrator-staging` (europe-west4, created 2026-05-19, latestReady
@@ -99,7 +99,7 @@ production; its staleness is harmless.
 5. **The cloudbuild.yaml's ongoing role is PR-gate buildability validation, not deployment.**
    `agent-orchestrator/.github/workflows/image-build-gate.yml` (PRs → main) calls PM `image-build-validate.yml`, which
    runs Cloud Build trigger `agent-orchestrator-staging` — not configured, so the GCP side **soft-passes**
-   ("pre-cutover" branch of the workflow). SSOT: `codex/05-infrastructure/dual-cloud-image-builds.md`.
+   ("pre-cutover" branch of the workflow). SSOT: `/codex/05-infrastructure/dual-cloud-image-builds.md`.
 
 ## Resolution
 
@@ -118,7 +118,7 @@ flows to `main` via the standing fleet promote; the image needs no action.
       `orchestrator.service` + git self-pull, live ~2 months with no image), so an `agent-orchestrator-staging` Cloud
       Build trigger would only buy GCP-side image-buildability enforcement on AO PRs for an artifact **nothing
       consumes**. The dual-cloud image-build gate continues to **soft-pass on the GCP side by design** (not a defect —
-      see `codex/05-infrastructure/dual-cloud-image-builds.md`); the AWS/ECR side retains `buildspec.aws.yaml`. Revisit
+      see `/codex/05-infrastructure/dual-cloud-image-builds.md`); the AWS/ECR side retains `buildspec.aws.yaml`. Revisit
       ONLY if AO ever becomes container-deployed.
 - [x] P3. ✅ Tear down the HISTORICAL europe-west4 Cloud Run service `agent-orchestrator-staging` (min-instances 0, runs
       the superseded `cloud-run-source-deploy:uat` image) — codex already marks it "not running today". **SERVICE

@@ -464,7 +464,7 @@ drift.
   - [x] `token-optimization.md` (474 B) — KEEP. Cited by `.cursor/rules/core/token-optimization.mdc`.
   - [x] `service-structure-standards.md` (513 B / 13 lines) — KEEP. Cited by
         `.cursor/rules/architecture/service-structure-standards.mdc:12` +
-        `codex/10-audit/MASTER_READINESS_LIVE_DEFI_2026_05_23.md:116`. Per audit C7 the content was meant to live in
+        `/codex/10-audit/MASTER_READINESS_LIVE_DEFI_2026_05_23.md:116`. Per audit C7 the content was meant to live in
         README; the stub stays as forwarder until the README breaks out a service-structure section.
 
   **No incoming-ref rewrites.** Decision rule per plan body: "If the stub describes a real concern with no canonical
@@ -519,10 +519,10 @@ drift.
       commit).
 
   **Implementation**:
-  - [x] `git rm codex/05-infrastructure/cloud-agnostic-migration.md`.
-  - [x] Update `codex/05-infrastructure/README.md:171` (and any other incoming refs in 05-infra) to point at
+  - [x] `git rm /codex/05-infrastructure/cloud-agnostic-migration.md`.
+  - [x] Update `/codex/05-infrastructure/README.md:171` (and any other incoming refs in 05-infra) to point at
         `04-architecture/cloud-agnostic-migration.md`.
-  - [x] Workspace-wide grep `codex/05-infrastructure/cloud-agnostic-migration.md` → rewrite all refs (PM-internal refs
+  - [x] Workspace-wide grep `/codex/05-infrastructure/cloud-agnostic-migration.md` → rewrite all refs (PM-internal refs
         verified; sibling-repo refs in deployment-service/terraform/ point at `unified-trading-codex/...` which is a
         sibling-repo path, out of scope for PM).
 
@@ -539,7 +539,7 @@ drift.
   - [x] Move the hostname → port routing detail (lines 24-31 of environment-tiers) into `deployment-ui-architecture.md`.
   - [x] Move the Tier 0/1/2 vs Tier 3 distinction (lines 16-21) into `deployment-ui-architecture.md` BUT rename axis to
         use UAC `EnvironmentTier` (DEV/STAGING/PROD) instead of the conflicting "Tier N" naming.
-  - [x] `git rm codex/05-infrastructure/deployment-ui-environment-tiers.md`.
+  - [x] `git rm /codex/05-infrastructure/deployment-ui-environment-tiers.md`.
   - [x] Update incoming refs: `14-playbooks/authentication/firebase-local.md` (if it references the env-tiers doc), the
         NEW docs from PM@9d873547 that cited it.
 
@@ -556,7 +556,7 @@ drift.
   **Implementation**:
   - [x] Append the migration table from `launcher-script-consolidation-2026-05-07.md` § "Migration table" into
         `launcher-script-ssot.md` § "Migration in flight".
-  - [x] `git rm codex/05-infrastructure/launcher-script-consolidation-2026-05-07.md`.
+  - [x] `git rm /codex/05-infrastructure/launcher-script-consolidation-2026-05-07.md`.
   - [x] Update incoming refs (workspace-wide grep — only PM-internal refs found, all rewritten).
 
   **Acceptance**: launcher SSOT doc has the full migration table; tracker deleted.
@@ -569,8 +569,8 @@ drift.
 
 - [x] [SCRIPT] P1. Merge `data-status-drilldown.md` (215L) + `data-status-drilldown-hierarchy.md` (105L) into a single
       doc. **SHIPPED 2026-05-08** — content merged into single SSOT (PM@c418979d bundled the merge into a foreign-agent
-      commit per foot-gun #1; the work landed correctly: 270 inserts in `codex/02-data/data-status-drilldown.md` + 118
-      deletes from `codex/02-data/data-status-drilldown-hierarchy.md` at PM@f58bc8a9; cli-convention.md ref rewrite
+      commit per foot-gun #1; the work landed correctly: 270 inserts in `/codex/02-data/data-status-drilldown.md` + 118
+      deletes from `/codex/02-data/data-status-drilldown-hierarchy.md` at PM@f58bc8a9; cli-convention.md ref rewrite
       bundled into PM@06e13ce2).
 
   **Target shape** (`data-status-drilldown.md`) — DELIVERED:
@@ -603,7 +603,7 @@ drift.
 
   **Implementation** — DONE:
   - [x] Created merged file content.
-  - [x] `git rm codex/02-data/data-status-drilldown-hierarchy.md` (bundled into PM@f58bc8a9).
+  - [x] `git rm /codex/02-data/data-status-drilldown-hierarchy.md` (bundled into PM@f58bc8a9).
   - [x] Workspace-wide grep — all forward-looking refs rewritten.
 
   **Acceptance**: only one drill-down doc; no broken links in active codex docs.
@@ -659,21 +659,21 @@ drift.
       where the deepest partition is `league=BRASILEIRAO/`, with no `fixture=...` subdirectory anywhere.
 
       **No data migration needed.** Disk shape already matches banner. This phase
-                      is a doc-only sweep removing stale body text in 02-data.
+                                                                                  is a doc-only sweep removing stale body text in 02-data.
 
-                      **SHIPPED 2026-05-08** — body-text sweep landed (3 of 4 swept files; sports-scheduling-and-sharding.md was already
-                      cleaned up at HEAD by parallel agent earlier in the session). My intended commit was absorbed by parallel agent's
-                      commit `c2bc6cd5 docs(codex): Phase B.3 — workspace-wide stale repo/provider reference sweep` — same hunks,
-                      different commit message (foot-gun #3 incident: parallel agent's prek/prettier hook ran during my commit cycle and
-                      bundled my staged D.3 hunks into their B.3 commit). Verify via
-                      `git show c2bc6cd5 -- codex/02-data/availability-manifest-and-data-status.md codex/02-data/per-category-bucket-layouts.md codex/02-data/prediction-schema-paths.md`.
-                      Acceptance grep on the 4 swept files returns zero true-positive stale shard-axis claims (remaining hits are
-                      corrective body text explicitly stating "row-level column INSIDE parquet, NOT a hive-partition shard axis").
-                      CLAUDE.md "Per-asset-group shard-key matrix" remains workspace SSOT. Spillover stale claims in
-                      `04-architecture/shard-level-failure-isolation.md` / `05-infrastructure/deployment-clusters-live-vs-batch.md` /
-                      `02-data/shard-granularity-cefi.md` / `02-data/partitioning.md` / `POST_PLAN_REALITY_2026_05_06.md` are out of D.3
-                      scope (those docs already carry the multi-axis-correction banner; cleanup deferred to adjacent codex_refactor
-                      phases or follow-up).
+                                                                                  **SHIPPED 2026-05-08** — body-text sweep landed (3 of 4 swept files; sports-scheduling-and-sharding.md was already
+                                                                                  cleaned up at HEAD by parallel agent earlier in the session). My intended commit was absorbed by parallel agent's
+                                                                                  commit `c2bc6cd5 docs(codex): Phase B.3 — workspace-wide stale repo/provider reference sweep` — same hunks,
+                                                                                  different commit message (foot-gun #3 incident: parallel agent's prek/prettier hook ran during my commit cycle and
+                                                                                  bundled my staged D.3 hunks into their B.3 commit). Verify via
+                                                                                  `git show c2bc6cd5 -- /codex/02-data/availability-manifest-and-data-status.md /codex/02-data/per-category-bucket-layouts.md /codex/02-data/prediction-schema-paths.md`.
+                                                                                  Acceptance grep on the 4 swept files returns zero true-positive stale shard-axis claims (remaining hits are
+                                                                                  corrective body text explicitly stating "row-level column INSIDE parquet, NOT a hive-partition shard axis").
+                                                                                  CLAUDE.md "Per-asset-group shard-key matrix" remains workspace SSOT. Spillover stale claims in
+                                                                                  `04-architecture/shard-level-failure-isolation.md` / `05-infrastructure/deployment-clusters-live-vs-batch.md` /
+                                                                                  `02-data/shard-granularity-cefi.md` / `02-data/partitioning.md` / `POST_PLAN_REALITY_2026_05_06.md` are out of D.3
+                                                                                  scope (those docs already carry the multi-axis-correction banner; cleanup deferred to adjacent codex_refactor
+                                                                                  phases or follow-up).
 
   **Files to sweep**:
   - [x] `02-data/sports-scheduling-and-sharding.md` § 1 — already cleaned up at HEAD before D.3 started (parallel agent
@@ -721,8 +721,8 @@ drift.
   **Implementation**:
   - [ ] Migrate Copper content → `custody-providers.md § Copper`.
   - [ ] Migrate CEFFU stub content → `custody-providers.md § CEFFU` (mark as planned where stubs).
-  - [x] `git rm codex/04-architecture/copper-custody-integration.md`.
-  - [x] `git rm codex/04-architecture/ceffu-custody-integration.md`.
+  - [x] `git rm /codex/04-architecture/copper-custody-integration.md`.
+  - [x] `git rm /codex/04-architecture/ceffu-custody-integration.md`.
   - [ ] Workspace-wide grep both deleted filenames → rewrite all refs.
 
   **Acceptance**: single custody doc; no broken links.
@@ -761,10 +761,10 @@ drift.
 
   **Implementation** — DONE:
   - [x] Create merged file (492L final).
-  - [x] `git rm codex/06-coding-standards/error-handling.md` (deletion landed via parallel agent's `3da88fed` B.2+B.3
+  - [x] `git rm /codex/06-coding-standards/error-handling.md` (deletion landed via parallel agent's `3da88fed` B.2+B.3
         sweep that absorbed the rm).
-  - [x] `git rm codex/06-coding-standards/validation-patterns.md` (same).
-  - [x] `git rm codex/06-coding-standards/schema-validation.md` (same).
+  - [x] `git rm /codex/06-coding-standards/validation-patterns.md` (same).
+  - [x] `git rm /codex/06-coding-standards/schema-validation.md` (same).
   - [x] Update all cross-doc refs (PM@e8ef9671 for the 6 in-this-commit; rest absorbed by parallel agent).
 
   **Acceptance** — MET: single validation/errors doc; no broken links; one error-class hierarchy per concern
@@ -811,8 +811,8 @@ drift.
 
   **Implementation**:
   - [ ] Create merged file.
-  - [x] `git rm codex/04-architecture/batch-live-pipeline.md`.
-  - [x] `git rm codex/04-architecture/batch-live-symmetry.md`.
+  - [x] `git rm /codex/04-architecture/batch-live-pipeline.md`.
+  - [x] `git rm /codex/04-architecture/batch-live-symmetry.md`.
   - [ ] Update all cross-doc refs (workspace-wide grep both filenames).
 
   **Acceptance**: single batch-live doc; no broken links.
@@ -924,14 +924,14 @@ drift.
   **Step 2 — `15-runbooks/` NEW** (PM@10438c32 + cross-repo: UI@48aa8dce + SIT@dd1ea4e + UAC@86e8109) — moved alerting/
   (per-alert-code runbooks + glossary + rehearsal + threshold-tuning + pagerduty-escalation), instruments-live/ (T+1
   audit discrepancy runbook), smoke-testing-playbook.md, backfill-completion-playbook.md. NEW
-  codex/15-runbooks/README.md describing scope (live-trading on-call runbooks), what does + does NOT live here,
+  /codex/15-runbooks/README.md describing scope (live-trading on-call runbooks), what does + does NOT live here,
   cross-link conventions (execution: frontmatter required per HARD RULE). Workspace-wide ref rewrite across PM (37
   files) + 3 foreign repos.
 
   **Step 3 — `16-strategy-playbooks/` NEW** (PM@fcafcb77 — residual + parallel-agent-absorbed PM@14a3ab5f / 15afa55e /
   4e7baf09 / e5944816; cross-repo: UI@a500e656 + UTL@54ac8daa + UAC@56a68a7 + strategy-service@bb3dd22) — moved defi/
   (venue-collateral playbook), strategy/ (cme-polymarket-arb), ml/ (cefi-ml-live-serving), infra-spec/ (Stage-3a-3e
-  refactor specs). NEW codex/16-strategy-playbooks/README.md describing scope (domain-specific strategy + infra
+  refactor specs). NEW /codex/16-strategy-playbooks/README.md describing scope (domain-specific strategy + infra
   playbooks), distinction from 15-runbooks (on-call) + 14-customer-journeys (audience flows) + 09-strategy (canonical
   architecture). Workspace-wide ref rewrite across PM + 4 foreign repos (33 files cross-repo total).
 
@@ -966,7 +966,7 @@ drift.
 
 - [x] [DOC] P1. Per audit S3 + workspace asset_group vocabulary rule. The file body uses both `category` and
       `asset_group` inconsistently. Rename + body-sweep. **SHIPPED 2026-05-08** — `git mv` rename
-      `codex/02-data/per-category-bucket-layouts.md` → `codex/02-data/per-asset-group-bucket-layouts.md` + body sweep
+      `/codex/02-data/per-category-bucket-layouts.md` → `/codex/02-data/per-asset-group-bucket-layouts.md` + body sweep
       (table headers `Category` → `Asset-group`; legacy-vs-canonical hive-key clarifications added inline; legacy
       `category=` preservation note retained per workspace asset-group-vocabulary rule). Workspace-wide cross-doc
       rewrites: 21 active doc / plan files updated (15 codex docs across 02-data/, 04-architecture/,
@@ -982,9 +982,9 @@ drift.
       concern) out of `06-coding-standards/`. **SHIPPED 2026-05-08**:
   - `cod-deadlock-verification-report.md` → `plans/archive/audits/cod-deadlock-verification-report-2026-02-13.md` —
     rename absorbed into PM@2677b3ae rename bundle; archive status block + successor-doc pointer
-    (`codex/06-coding-standards/quality-gates.md`) added in PM@25f109e8.
-  - `orphan-audit.md` → `codex/04-architecture/orphan-audit.md` (UI architecture policy belongs in 04-architecture/, not
-    coding-standards canon). Rename + cross-doc rewrites (3 refs in
+    (`/codex/06-coding-standards/quality-gates.md`) added in PM@25f109e8.
+  - `orphan-audit.md` → `/codex/04-architecture/orphan-audit.md` (UI architecture policy belongs in 04-architecture/,
+    not coding-standards canon). Rename + cross-doc rewrites (3 refs in
     `09-strategy/architecture-v2/strategy-catalogue-3tier.md`
     - 2 refs in `08-workflows/prospect-questionnaire-flow.md` including a previously-broken sibling-relative link)
       absorbed into PM@018b4958 (parallel agent's Phase E.3 commit bundle — staged set was hijacked by foreign `git add`
@@ -1017,10 +1017,10 @@ drift.
       Cloud Build YAML patterns. Collapsing would lose the distinct entry-points each doc serves. Renames absorbed into
       PM@4d23b431 (parallel-agent E.3 sweep absorbed my staged `git mv`s) and cross-doc rewrites absorbed into
       PM@c1dcbcdf (parallel-agent E.3 + F.6 flip commit absorbed my 7 staged sed edits) — 7 cross-ref files updated:
-      `TOPOLOGY-DAG.md`, `codex/00-SSOT-INDEX.md`, `codex/04-architecture/runtime-deployment-topology.md`,
-      `codex/06-coding-standards/ui-testing-layers.md`, `codex/06-coding-standards/ui-service-separation.md`, plus
+      `TOPOLOGY-DAG.md`, `codex/00-SSOT-INDEX.md`, `/codex/04-architecture/runtime-deployment-topology.md`,
+      `/codex/06-coding-standards/ui-testing-layers.md`, `/codex/06-coding-standards/ui-service-separation.md`, plus
       self-refs in the two renamed docs themselves. Cross-refs in `plans/active/master_to_live_defi_2026_05_23.md` and
-      `codex/08-workflows/local-dev.md` were already lowercase from earlier-session work absorbed into HEAD. Foot-gun
+      `/codex/08-workflows/local-dev.md` were already lowercase from earlier-session work absorbed into HEAD. Foot-gun
       #1/#3 attribution: parallel-agent commits hijacked the staged set during repeated HEAD resets through the session
       (~5 reset events observed in reflog); content landed correctly, attribution muddled per the workspace "Two
       teammates × multiple parallel agents" footnote.
@@ -1042,7 +1042,7 @@ drift.
 - [x] [SCRIPT] P2. 53K research-grade doc, recommendation paragraph explicitly superseded. Extract per-resource cost
       tables → `aws-migration-cost-snapshot-2026-05-07.md` (~10-15K). Move full original to `plans/archive/` or
       `codex/15-audits/`. **SHIPPED 2026-05-08** (PM@166c7f72 — per-resource cost tables extracted to
-      `codex/05-infrastructure/aws-migration-cost-snapshot-2026-05-07.md`; original git mv'd to
+      `/codex/05-infrastructure/aws-migration-cost-snapshot-2026-05-07.md`; original git mv'd to
       `plans/archive/audits/aws_migration_cost_analysis_2026_05_07.plan.md` with status block linking back to the
       snapshot + dual-cloud decision plan; 4 incoming refs in active plans rewritten — \_AUDIT_dependency_graph,
       aws_migration_defi_first, master_to_live_defi, work_split_2026_05_08_ikenna).
@@ -1100,36 +1100,36 @@ NEW docs created mid-execution (if any phase generates them): add to this sectio
 
 NEW codex docs explicitly created by this plan:
 
-- [x] `codex/04-architecture/batch-live-architecture.md` (Phase D.6 SHIPPED 2026-05-08 PM@dcd49f24 — verified extant in
+- [x] `/codex/04-architecture/batch-live-architecture.md` (Phase D.6 SHIPPED 2026-05-08 PM@dcd49f24 — verified extant in
       G.1 audit)
-- [x] `codex/04-architecture/tier-and-import-architecture.md` (Phase E.1 SHIPPED 2026-05-08 PM@14a3ab5f)
-- [x] `codex/04-architecture/runtime-deployment-topology.md` (Phase E.1 SHIPPED 2026-05-08 PM@11fe6a37 — content created
-      by prior agent; deletions + ref-rewrites in this commit)
-- [x] `codex/04-architecture/commercial-service-families.md` (Phase E.1 SHIPPED 2026-05-08 PM@eed59a97)
-- [x] `codex/06-coding-standards/validation-and-errors.md` (Phase D.5, replaces 3) — SHIPPED 2026-05-08 PM@e8ef9671
+- [x] `/codex/04-architecture/tier-and-import-architecture.md` (Phase E.1 SHIPPED 2026-05-08 PM@14a3ab5f)
+- [x] `/codex/04-architecture/runtime-deployment-topology.md` (Phase E.1 SHIPPED 2026-05-08 PM@11fe6a37 — content
+      created by prior agent; deletions + ref-rewrites in this commit)
+- [x] `/codex/04-architecture/commercial-service-families.md` (Phase E.1 SHIPPED 2026-05-08 PM@eed59a97)
+- [x] `/codex/06-coding-standards/validation-and-errors.md` (Phase D.5, replaces 3) — SHIPPED 2026-05-08 PM@e8ef9671
 
 DELETED codex docs by this plan:
 
-- [x] `codex/05-infrastructure/cloud-agnostic-migration.md` (Phase C.1, stub SHIPPED 2026-05-08 PM@1e33b423)
-- [x] `codex/05-infrastructure/deployment-ui-environment-tiers.md` (Phase C.2 SHIPPED 2026-05-08 PM@2818b6b9)
-- [x] `codex/05-infrastructure/launcher-script-consolidation-2026-05-07.md` (Phase C.3 SHIPPED 2026-05-08 PM@6a6308b3)
-- [x] `codex/02-data/data-status-drilldown-hierarchy.md` (Phase D.1 SHIPPED 2026-05-08 — bundled into PM@f58bc8a9)
-- [x] `codex/02-data/sports-data-migration.md` (Phase D.2 SHIPPED 2026-05-08)
-- [x] `codex/02-data/sports-schema-paths.md` (Phase D.2 SHIPPED 2026-05-08)
-- [x] `codex/04-architecture/copper-custody-integration.md` (Phase D.4 SHIPPED 2026-05-08 PM@c4330d9d — verified deleted
+- [x] `/codex/05-infrastructure/cloud-agnostic-migration.md` (Phase C.1, stub SHIPPED 2026-05-08 PM@1e33b423)
+- [x] `/codex/05-infrastructure/deployment-ui-environment-tiers.md` (Phase C.2 SHIPPED 2026-05-08 PM@2818b6b9)
+- [x] `/codex/05-infrastructure/launcher-script-consolidation-2026-05-07.md` (Phase C.3 SHIPPED 2026-05-08 PM@6a6308b3)
+- [x] `/codex/02-data/data-status-drilldown-hierarchy.md` (Phase D.1 SHIPPED 2026-05-08 — bundled into PM@f58bc8a9)
+- [x] `/codex/02-data/sports-data-migration.md` (Phase D.2 SHIPPED 2026-05-08)
+- [x] `/codex/02-data/sports-schema-paths.md` (Phase D.2 SHIPPED 2026-05-08)
+- [x] `/codex/04-architecture/copper-custody-integration.md` (Phase D.4 SHIPPED 2026-05-08 PM@c4330d9d — verified
+      deleted in G.1 audit)
+- [x] `/codex/04-architecture/ceffu-custody-integration.md` (Phase D.4 SHIPPED 2026-05-08 PM@c4330d9d — verified deleted
       in G.1 audit)
-- [x] `codex/04-architecture/ceffu-custody-integration.md` (Phase D.4 SHIPPED 2026-05-08 PM@c4330d9d — verified deleted
-      in G.1 audit)
-- [x] `codex/06-coding-standards/error-handling.md` (Phase D.5 SHIPPED 2026-05-08 — deletion absorbed into parallel
+- [x] `/codex/06-coding-standards/error-handling.md` (Phase D.5 SHIPPED 2026-05-08 — deletion absorbed into parallel
       agent's `3da88fed`)
-- [x] `codex/06-coding-standards/validation-patterns.md` (Phase D.5 SHIPPED 2026-05-08 — same)
-- [x] `codex/06-coding-standards/schema-validation.md` (Phase D.5 SHIPPED 2026-05-08 — same)
-- [ ] `codex/06-coding-standards/service-structure-standards.md` (Phase D.7 — KEPT as forwarder stub per B.4 audit; not
+- [x] `/codex/06-coding-standards/validation-patterns.md` (Phase D.5 SHIPPED 2026-05-08 — same)
+- [x] `/codex/06-coding-standards/schema-validation.md` (Phase D.5 SHIPPED 2026-05-08 — same)
+- [ ] `/codex/06-coding-standards/service-structure-standards.md` (Phase D.7 — KEPT as forwarder stub per B.4 audit; not
       deleted)
-- [x] `codex/04-architecture/batch-live-pipeline.md` (Phase D.6 SHIPPED 2026-05-08 PM@dcd49f24 — verified deleted in G.1
-      audit)
-- [x] `codex/04-architecture/batch-live-symmetry.md` (Phase D.6 SHIPPED 2026-05-08 PM@dcd49f24 — verified deleted in G.1
-      audit)
+- [x] `/codex/04-architecture/batch-live-pipeline.md` (Phase D.6 SHIPPED 2026-05-08 PM@dcd49f24 — verified deleted in
+      G.1 audit)
+- [x] `/codex/04-architecture/batch-live-symmetry.md` (Phase D.6 SHIPPED 2026-05-08 PM@dcd49f24 — verified deleted in
+      G.1 audit)
 - [ ] Some/all 12 stub files in `codex/06-coding-standards/` (Phase B.4, per-file decision)
 - [x] Topology 7-doc cluster (Phase E.1 SHIPPED 2026-05-08): RUNTIME_TOPOLOGY_DECISIONS, TIER-ARCHITECTURE,
       service-family-scope, deployment-topology-diagrams, pipeline-service-layers, api-services-cluster,

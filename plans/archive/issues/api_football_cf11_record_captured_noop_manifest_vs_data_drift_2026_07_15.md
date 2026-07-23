@@ -40,8 +40,8 @@ tags:
 related:
   [
     ../sports_data_sources_canonical_completion_2026_07_13.md,
-    manifest_writer_record_captured_available_at_never_persisted_2026_07_13.md,
-    sports_manifest_read_staleness_budget_missing_2026_07_15.md,
+    /plans/archive/issues/manifest_writer_record_captured_available_at_never_persisted_2026_07_13.md,
+    /plans/active/issues/sports_manifest_read_staleness_budget_missing_2026_07_15.md,
   ]
 created: 2026-07-15
 parent_epic: manifest_master

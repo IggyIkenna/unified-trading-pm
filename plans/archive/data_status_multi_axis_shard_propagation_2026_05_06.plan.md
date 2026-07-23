@@ -6,11 +6,26 @@ status: complete
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [deployment-api, deployment-service, deployment-ui, execution-service, instruments-service, market-data-processing-service]
+repos:
+  [
+    deployment-api,
+    deployment-service,
+    deployment-ui,
+    execution-service,
+    instruments-service,
+    market-data-processing-service,
+  ]
 scope: [engineer, admin]
 tags: []
-related: [shard_granularity_ssot_propagation_2026_05_06.HANDOVER.md, writegate_honest_coverage_endtoend_2026_05_06.md, data_status_offline_rollup_2026_05_06.md, feature_dag_uac_ssot_and_features_coverage_2026_05_06.md, data_status_operations_dropdown_cli_derived_2026_05_07.md]
-created: '2026-05-06'
+related:
+  [
+    shard_granularity_ssot_propagation_2026_05_06.HANDOVER.md,
+    /plans/archive/2026_05/writegate_honest_coverage_endtoend_2026_05_06.md,
+    data_status_offline_rollup_2026_05_06.md,
+    feature_dag_uac_ssot_and_features_coverage_2026_05_06.md,
+    data_status_operations_dropdown_cli_derived_2026_05_07.md,
+  ]
+created: "2026-05-06"
 locked_by: live-defi-rollout
 locked_since: 2026-05-06
 ---

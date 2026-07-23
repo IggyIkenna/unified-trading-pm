@@ -1,17 +1,33 @@
 ---
 doc_type: issue
-title: 'Session handoff — fleet VM sync + disk/tmpfs guards + AMI + slot reconciliation + quickmerge gates + prettier-churn fix + pre-commit config rollout (slot-1, 2026-06-02). Self-audited commit locations: LDR / main / local-only / dirty / stash.'
+title:
+  "Session handoff — fleet VM sync + disk/tmpfs guards + AMI + slot reconciliation + quickmerge gates + prettier-churn
+  fix + pre-commit config rollout (slot-1, 2026-06-02). Self-audited commit locations: LDR / main / local-only / dirty /
+  stash."
 summary:
 status: resolved
 nature: record
 asset_group: [infrastructure]
 stage: [meta]
-repos: [agent-orchestrator, alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-service]
+repos:
+  [
+    agent-orchestrator,
+    alerting-service,
+    batch-live-reconciliation-service,
+    client-reporting-api,
+    deployment-api,
+    deployment-service,
+  ]
 scope: [engineer, admin]
 tags: []
 related: []
 created: 2026-06-02
-source: [git fetch + rev-list audit across touched repos 2026-06-02 (slot vs origin/live-defi-rollout vs origin/main), git stash list across touched repos 2026-06-02, aws ec2 / ssm fleet state 2026-06-02]
+source:
+  [
+    git fetch + rev-list audit across touched repos 2026-06-02 (slot vs origin/live-defi-rollout vs origin/main),
+    git stash list across touched repos 2026-06-02,
+    aws ec2 / ssm fleet state 2026-06-02,
+  ]
 parent_epic: plans/epics/orchestrator_master.md
 estimate_calibrated_ai_days: 0.2
 estimate_class: infra
@@ -201,7 +217,7 @@ LDR-branch dirty worktrees need `slot-master-rebase` (cron skips them by design;
 
 Audited the #agent-orchestrator-alerts noise. **vm-0 verified 100% fsck-clean** (29 main + 478 worktrees, 0 fail) — the
 "507 issues @16:00" was a STALE guard run (scanned pre/mid-repair); the recovery held. Liveness SSOT now codified in
-`codex/05-infrastructure/agent-orchestrator-worker-topology.md` § "LIVE STATUS" + CLAUDE.md (live = vm-0 only).
+`/codex/05-infrastructure/agent-orchestrator-worker-topology.md` § "LIVE STATUS" + CLAUDE.md (live = vm-0 only).
 Follow-ups on the alert sources (all `agent-orchestrator/scripts/fleet-git-health-guard.sh` +
 server/worker_liveness.py):
 

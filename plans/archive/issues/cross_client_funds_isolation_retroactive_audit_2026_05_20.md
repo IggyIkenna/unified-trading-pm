@@ -12,7 +12,11 @@ tags: []
 related: []
 created: 2026-05-20
 locked_by: live-defi-rollout
-source: [codex/04-architecture/client-funds-isolation.md (HARD RULE SSOT), plans/active/per_client_isolation_and_venue_fanout_topology_2026_05_20.md (Group H plan)]
+source:
+  [
+    /codex/04-architecture/client-funds-isolation.md (HARD RULE SSOT),
+    plans/active/per_client_isolation_and_venue_fanout_topology_2026_05_20.md (Group H plan),
+  ]
 consumer: [slot 7 Phase 6 — TransferCoordinator facade builder]
 priority: P2
 archived: 2026-05-22
@@ -171,7 +175,7 @@ When slot 7 builds the `TransferCoordinator` facade per Phase 6 of the Group H p
 5. Dispatch to the right downstream (`adapters/order_adapter.py` CEX withdraw / `defi_execution/protocols/*` DeFi /
    `defi_execution/hyperliquid_bridge.py` bridges / `v2/handlers.py` BridgeHandler).
 6. Each existing downstream call gets wrapped (or its signature extended) such that no path bypasses the facade.
-7. Tests per `codex/04-architecture/client-funds-isolation.md` § "Required tests":
+7. Tests per `/codex/04-architecture/client-funds-isolation.md` § "Required tests":
    - intra-client happy path
    - UAC validator rejects construction
    - defence-in-depth: TransferCoordinator rejects at consume time

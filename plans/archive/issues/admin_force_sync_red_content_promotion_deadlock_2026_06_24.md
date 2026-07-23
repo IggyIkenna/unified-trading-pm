@@ -1,6 +1,8 @@
 ---
 doc_type: issue
-title: admin force-sync landed RED + divergent content on main → deadlocked LDR→staging drain + conflicted staging→main promotion (deployment-service, 2026-06-24)
+title:
+  admin force-sync landed RED + divergent content on main → deadlocked LDR→staging drain + conflicted staging→main
+  promotion (deployment-service, 2026-06-24)
 summary:
 status: resolved
 nature: notes
@@ -15,7 +17,13 @@ last_updated: 2026-06-30
 superseded_by: cicd_mvp_ldr_to_main_pipeline_2026_06_30.md
 parent_epic: infrastructure_master
 priority: P1
-source: ['2026-06-24 incident — deployment-service main RED CRITICAL (ci-status-update refiring every ~12 min); operator-directed live remediation (slot-3, laptop, owner creds)', 'deployment-service@32facd6 (chore: admin force-sync, the trigger) · fix 040d27d (noqa TID251) · PR #265 (manual LDR→staging unblock) · PR #266 (staging→main conflict resolved via -s ours) · main green @636a456']
+source:
+  [
+    "2026-06-24 incident — deployment-service main RED CRITICAL (ci-status-update refiring every ~12 min);
+    operator-directed live remediation (slot-3, laptop, owner creds)",
+    "deployment-service@32facd6 (chore: admin force-sync, the trigger) · fix 040d27d (noqa TID251) · PR #265 (manual
+    LDR→staging unblock) · PR #266 (staging→main conflict resolved via -s ours) · main green @636a456",
+  ]
 assigned_vm: NA
 resolved_by:
 locked_by: live-defi-rollout
@@ -80,4 +88,4 @@ owner intervention across two promotion hops to recover. Two distinct systemic g
       is the operator-gated clean-start force-sync to the LDR SSOT, **not** leaving a conflicting staging→main PR.
       Record the non-force-push alternative used in this incident (a content-preserving `git merge -s ours origin/main`
       on the head branch when `enforce_admins:false`) as the in-bounds manual escape. Target:
-      `codex/08-workflows/ci-cd-flow.md` § "LDR is the SSOT" / § "Force-push vs let-CI/CD".
+      `/codex/08-workflows/ci-cd-flow.md` § "LDR is the SSOT" / § "Force-push vs let-CI/CD".

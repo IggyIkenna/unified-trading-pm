@@ -30,7 +30,11 @@ stage: [data]
 repos: [market-tick-data-service, unified-trading-library]
 scope: [engineer, admin]
 tags: [gcs, manifest, data-status, availability-index, data-pipeline-correctness, manifest-writer, defi]
-related: [gcs_bucket_estate_cleanup_2026_07_10.md, gas_fees_lst_rates_manifest_bucket_mismatch_2026_07_10.md]
+related:
+  [
+    /plans/archive/2026_07/gcs_bucket_estate_cleanup_2026_07_10.md,
+    /plans/active/issues/gas_fees_lst_rates_manifest_bucket_mismatch_2026_07_10.md,
+  ]
 created: "2026-07-12"
 parent_epic: infrastructure_master
 priority: P1
@@ -118,7 +122,7 @@ per-VM-shard recovery merge this triggers can OOM (12+ GB pandas heap on large b
 docstring), and this bucket is 482MB+ / 27M+ rows, squarely in that risk zone.
 
 **Recommended next step**: check the DeFi tick-data bucket's manifest-consolidator Cloud Run Job + Scheduler health
-directly (`codex/05-infrastructure/manifest-consolidator-ssot.md` has the runbook) — confirm whether it's actually
+directly (`/codex/05-infrastructure/manifest-consolidator-ssot.md` has the runbook) — confirm whether it's actually
 behind schedule or just running on a slower cadence than 120s tolerates.
 
 ## Status

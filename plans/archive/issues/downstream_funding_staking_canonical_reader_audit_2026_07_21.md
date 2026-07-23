@@ -20,9 +20,9 @@ scope: [engineer, admin]
 tags: [funding, staking, lst-rates, perp-funding, canonical-reader, path-registry, silent-empty, bucket-resolution]
 related:
   [
-    silent_wrong_answer_bucket_resolution_class_2026_07_20.md,
-    ../../codex/05-infrastructure/bucket-isolation-model.md,
-    ../../codex/06-coding-standards/canonical-write-guard-contract.md,
+    /plans/active/issues/silent_wrong_answer_bucket_resolution_class_2026_07_20.md,
+    /codex/05-infrastructure/bucket-isolation-model.md,
+    /codex/06-coding-standards/canonical-write-guard-contract.md,
   ]
 created: 2026-07-21
 last_updated: 2026-07-21
@@ -115,7 +115,7 @@ depends_on: []
       (`domain_client/clients/market_data.py:56`, `build_bucket("raw_tick_data", …)`) — verified ZERO non-test
       downstream callers. Repoint these rows to the env-tiered yaml name (as the Group-B rows already were), or delete
       the thin clients, so a future consumer wiring them cannot silently 404. See the bucket-name resolution authority
-      section of `codex/05-infrastructure/bucket-isolation-model.md`. **SHIPPED 2026-07-22:
+      section of `/codex/05-infrastructure/bucket-isolation-model.md`. **SHIPPED 2026-07-22:
       `unified-trading-library@09435866`** — both blockers below cleared (pip-audit CVE resolved; the concurrent
       registry.py session's WIP landed as `unified-trading-library@43fa6f3f`, non-overlapping as predicted). Applied the
       exact 5-line fix verbatim, full `quality-gates.sh` green, shipped via normal quickmerge. (a) Also found + fixed a

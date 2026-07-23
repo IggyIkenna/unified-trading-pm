@@ -31,7 +31,7 @@ repos: [unified-trading-library, market-tick-data-service]
 scope: [engineer]
 tags: [defi, manifest, per-vm-shards, oom, timeout, consolidator, shared-library, canonical-migration]
 related:
-  - lst_venue_registry_gap_and_cron_crash_loop_2026_07_22.md
+  - /plans/archive/issues/lst_venue_registry_gap_and_cron_crash_loop_2026_07_22.md
   - plans/active/defi_consolidated_closeout_2026_07_18.md
 created: "2026-07-23"
 parent_epic: defi_master

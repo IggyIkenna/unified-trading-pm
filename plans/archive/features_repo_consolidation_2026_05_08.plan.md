@@ -402,7 +402,7 @@ todos:
              ```
 
              Each `features_service/<f>/__init__.py` exports `run(args)` that delegates to the lifted-from-source-repo
-             CLI logic. Workspace `codex/06-coding-standards/cli-convention.md` is the SSOT for the standardised flag set.
+             CLI logic. Workspace `/codex/06-coding-standards/cli-convention.md` is the SSOT for the standardised flag set.
 
         4.3 — Single `pyproject.toml` deduped: union the 8 source repo deps, pin to the most-recent compatible
              range across all. Workspace rule "ONE list, no [project.optional-dependencies]" applies. Run
@@ -724,7 +724,7 @@ todos:
     content: |
       - [x] [AGENT] P0. Phase 8A — Migrate any existing features-*-service VM launchers to the consolidated
         layout. Per workspace VM launcher SSOT rule
-        (`codex/05-infrastructure/launcher-script-ssot.md` + `CLAUDE.md`), every launcher MUST live in
+        (`/codex/05-infrastructure/launcher-script-ssot.md` + `CLAUDE.md`), every launcher MUST live in
         `deployment-service/scripts/vm/`.
 
         Shipped 2026-05-08 PM (Tab 8A):
@@ -790,7 +790,7 @@ todos:
         deployment-ui:
         1. `DataStatusTab` adds a `feature_family` column to the per-shard table when manifest rows have a
            non-null value (mostly features-service rows — non-features rows render `n/a`).
-        2. Drilldown hierarchy adjusted in `codex/02-data/data-status-drilldown-hierarchy.md` — feature_family
+        2. Drilldown hierarchy adjusted in `/codex/02-data/data-status-drilldown-hierarchy.md` — feature_family
            sits between asset_group and feature_group.
         3. `LeafSchemaModal` (existing — writegate Phase 4.A.4) renders feature_family alongside feature_group
            for features-service shards.
@@ -856,29 +856,29 @@ todos:
         creates the consolidation architecture doc + updates 5 existing docs.
 
         New + updated docs (all shipped 2026-05-08 PM by Wave-3 Tab PM-CODEX):
-        1. **NEW** `codex/04-architecture/features-service-architecture.md` — PM@2e5ca4e7. Replaces 4.5KB
+        1. **NEW** `/codex/04-architecture/features-service-architecture.md` — PM@2e5ca4e7. Replaces 4.5KB
            stub with full SSOT: 8 family sub-package layout, CLI dispatch contract, Health-API aggregator,
            UAC FeatureFamily enum + manifest column, 7 UTL Phase 5 lifts table, deployment topology
            (asset-scoped colocated + cross-cutting flavors), migration history, anti-patterns table.
-        2. **UPDATE** `codex/06-coding-standards/feature-service-pattern.md` — PM@9edb649c. Updated "5-6
+        2. **UPDATE** `/codex/06-coding-standards/feature-service-pattern.md` — PM@9edb649c. Updated "5-6
            separate" → "8 separate" predecessor repos enumerated by name; added cross-link to architecture
            SSOT; new 7-step "Adding a new feature_family" recipe (UAC enum first, sub-package shim, calculator
            class, Health-API freshness callback, ManifestWriter, tests, no new launcher).
-        3. **UPDATE** `codex/06-coding-standards/cli-convention.md` — PM@e0121b42. Added --feature-family row
+        3. **UPDATE** `/codex/06-coding-standards/cli-convention.md` — PM@e0121b42. Added --feature-family row
            to optional axes table (UAC FeatureFamily enum 8 members); new "--feature-family for the
            consolidated features-service (2026-05-08)" section with full dispatcher contract.
-        4. **UPDATE** `codex/02-data/data-status-drilldown-hierarchy.md` — PM@f5be06ce. Replaced 5 per-repo
+        4. **UPDATE** `/codex/02-data/data-status-drilldown-hierarchy.md` — PM@f5be06ce. Replaced 5 per-repo
            features rows with 9-row block (1 consolidated header + 8 per-family sub-rows showing
            feature_family as outermost axis); new blockquote callout introducing feature_family axis.
         5. **UPDATE** `codex/00-SSOT-INDEX.md` — PM@1d0ee16e. Registered features-service-architecture.md
            under Architecture section with full row body summary.
-        6. **UPDATE** `codex/05-infrastructure/launcher-script-ssot.md` — PM@f128e8c9. New "features-service
+        6. **UPDATE** `/codex/05-infrastructure/launcher-script-ssot.md` — PM@f128e8c9. New "features-service
            consolidation (2026-05-08)" section enumerating 8-to-1 launcher collapse (single
            launch-features-vm.sh parameterised by --feature-family + --asset-group); single `features-`
            prefix in VM_PREFIX_TO_BUCKET; tarball impact callout.
 
         Bonus update (helpful cross-link, not in original 6-item list):
-        7. **UPDATE** `codex/05-infrastructure/vm-tarball-deployment.md` — PM@20a4910a. New paragraph block
+        7. **UPDATE** `/codex/05-infrastructure/vm-tarball-deployment.md` — PM@20a4910a. New paragraph block
            noting tarball-side implications of the 8-to-1 features-* repo consolidation:
            --asset-group flag includes single features-service/ (not 8 per-family repos); VM boot:
            python -m features_service --feature-family X (replaces 8 distinct entry-points).
@@ -929,7 +929,7 @@ estimate_baseline_ai_days: 12
 estimate_calibrated_ai_days: 4.8
 estimate_calibration_note: |
   No explicit AI-day estimates found in plan body during 2026-05-11 sweep; class inferred from filename (refactor, multiplier 0.4×).
-  Owner agent: fill baseline + multiply × 0.4 per codex/08-workflows/estimation-calibration.md. Refine class if dominant work-class differs.
+  Owner agent: fill baseline + multiply × 0.4 per /codex/08-workflows/estimation-calibration.md. Refine class if dominant work-class differs.
 parent_epic: features_and_ml_master
 ---
 
@@ -944,7 +944,7 @@ parent_epic: features_and_ml_master
 >
 > [`batch_live_symmetry_2026_05_10`](batch_live_symmetry_2026_05_10.md) Tab 4 lifts `commodity` / `cross_instrument` /
 > `multi_timeframe` / `calendar` from bare classes to UTL `ModeHandler` ABC. **Before touching** those 4 family handlers
-> or the `ModeHandler` ABC itself — read `codex/04-architecture/features-service-architecture.md` § "ModeHandler lift
+> or the `ModeHandler` ABC itself — read `/codex/04-architecture/features-service-architecture.md` § "ModeHandler lift
 > status post-Tab-4". Tab 4 is in-flight on `batch_live_symmetry_2026_05_10`; changes to those families should be
 > coordinated with Tab 4 owner to avoid clobbering the lift.
 
@@ -1015,19 +1015,19 @@ lift coordinates with `ml_and_features_master` Phase 2.UTL-LIFT) but does NOT su
 Read these BEFORE making code changes — drift between code and these docs is a review-blocking failure per the workspace
 `doc → plan → code` discipline:
 
-- [`codex/06-coding-standards/feature-service-pattern.md`](../../codex/06-coding-standards/feature-service-pattern.md) —
+- [`/codex/06-coding-standards/feature-service-pattern.md`](/codex/06-coding-standards/feature-service-pattern.md) —
   features-\* service pattern (current per-repo shape; this plan's Phase 9 updates this to sub-package shape).
-- [`codex/06-coding-standards/cli-convention.md`](../../codex/06-coding-standards/cli-convention.md) — standardised CLI
-  axes (`--operation`, `--mode`, `--asset-group`); Phase 9 adds `--feature-family`.
-- [`codex/02-data/data-lineage-MTDS-features-ml.md`](../../codex/02-data/data-lineage-MTDS-features-ml.md) — MTDS →
+- [`/codex/06-coding-standards/cli-convention.md`](/codex/06-coding-standards/cli-convention.md) — standardised CLI axes
+  (`--operation`, `--mode`, `--asset-group`); Phase 9 adds `--feature-family`.
+- [`/codex/02-data/data-lineage-MTDS-features-ml.md`](/codex/02-data/data-lineage-MTDS-features-ml.md) — MTDS →
   features-\* → ml-training/ml-inference lineage; Phase 4 / 5 / 6 must preserve this lineage exactly.
-- [`codex/02-data/availability-manifest-and-data-status.md`](../../codex/02-data/availability-manifest-and-data-status.md)
-  — manifest schema + 4-state taxonomy; Phase 1A adds `feature_family` column; Phase 1B adds the writer kwarg.
-- [`codex/05-infrastructure/launcher-script-ssot.md`](../../codex/05-infrastructure/launcher-script-ssot.md) — every
-  gcloud / aws ec2 launcher MUST live in `deployment-service/scripts/vm/`. Phase 8A consolidates the 8 per-family
-  launchers into one parameterised script.
-- [`codex/04-architecture/batch-live-architecture.md`](../../codex/04-architecture/batch-live-architecture.md) —
-  batch=live code-path symmetry; consolidation must NOT introduce a batch/live divergence in any features family.
+- [`/codex/02-data/availability-manifest-and-data-status.md`](/codex/02-data/availability-manifest-and-data-status.md) —
+  manifest schema + 4-state taxonomy; Phase 1A adds `feature_family` column; Phase 1B adds the writer kwarg.
+- [`/codex/05-infrastructure/launcher-script-ssot.md`](/codex/05-infrastructure/launcher-script-ssot.md) — every gcloud
+  / aws ec2 launcher MUST live in `deployment-service/scripts/vm/`. Phase 8A consolidates the 8 per-family launchers
+  into one parameterised script.
+- [`/codex/04-architecture/batch-live-architecture.md`](/codex/04-architecture/batch-live-architecture.md) — batch=live
+  code-path symmetry; consolidation must NOT introduce a batch/live divergence in any features family.
 
 ## Pre-audit manifest
 
@@ -1617,7 +1617,7 @@ flipped 8 entries to `status=consolidated-into-features-service`. The features-s
 | **8A**                    | features-\* launchers consolidated to launch-features-vm.sh + watchdog prefix verified + Deploy-Missing UI registry                               | deployment-svc@2942815 + deployment-api@b91bca2d + PM@f1a5417c                                                                                                                                                                              | Wave 5 — Bash-syntax check + --help smoke pass; 6 old launchers banner-deprecated with redirect                                                                                 |
 | **8B-api**                | deployment-api feature_family axis end-to-end (Pydantic + service + endpoints + 18 tests)                                                         | deployment-api@6605b97 + PM@771e1a74                                                                                                                                                                                                        | Wave 5 — `_resolve_feature_family` (writer SSOT first, UAC mapping fallback); legacy manifest read-side stamping                                                                |
 | **8B-ui**                 | deployment-ui feature_family drilldown (FeatureFamilyBreakdown + FeatureFamilyFilter + 21 tests)                                                  | deployment-ui@6ce928e + PM@3489273b                                                                                                                                                                                                         | Wave 5 — 439 total tests pass; vite build clean                                                                                                                                 |
-| **9**                     | NEW codex/04-architecture/features-service-architecture.md + 5 UPDATE docs + index refresh                                                        | PM@2e5ca4e7 / 9edb649c / e0121b42 / f5be06ce / f128e8c9 / 20a4910a / 1d0ee16e + PM@4e70298c plan flip                                                                                                                                       | Wave 3 — 8 commits total                                                                                                                                                        |
+| **9**                     | NEW /codex/04-architecture/features-service-architecture.md + 5 UPDATE docs + index refresh                                                       | PM@2e5ca4e7 / 9edb649c / e0121b42 / f5be06ce / f128e8c9 / 20a4910a / 1d0ee16e + PM@4e70298c plan flip                                                                                                                                       | Wave 3 — 8 commits total                                                                                                                                                        |
 | **10**                    | Workspace-wide QG sweep on 11 consumer repos                                                                                                      | deployment-api@8012a12 (1 consolidation-induced fix — added 3 missing row_keys to \_SERVICE_REPRESENTATIVE_ROW_KEYS) + PM@48f1d7ed (status flip helper-shipped)                                                                             | sub-agent completed; deployment-ui 439 tests + build clean; 1 fix shipped, 2 follow-ups named below; foreign breakage logged + exempt per QG-cleanup-window rule                |
 | **ml_and_features 2A/2B** | Folded into Phase 5 (LookaheadBiasError adoption helper at point_in_time.py:274)                                                                  | UTL@4354276c (pre-existing, verified)                                                                                                                                                                                                       | Wave 3                                                                                                                                                                          |
 | **ml_and_features 3**     | Parquet column-pruning quick-win — 2 read-sites pruned + 10 tests + memory profile harness                                                        | ml-training-svc@365f710 + PM@72af906d                                                                                                                                                                                                       | Wave 3 — 2.66× speedup default shape, 3.04× wide; -65% to -87% df bytes                                                                                                         |
@@ -1633,7 +1633,7 @@ flipped 8 entries to `status=consolidated-into-features-service`. The features-s
 ### Deployment topology DAG SSOT
 
 - ✅ Single features-service Docker image parameterised by `--feature-family` flag
-  (codex/04-architecture/features-service-architecture.md).
+  (/codex/04-architecture/features-service-architecture.md).
 - ✅ Single launcher `deployment-service/scripts/vm/launch-features-vm.sh` covers all 8 families across all
   asset_groups.
 - ✅ VM-name pattern `features-{family}-{asset_group}-{ts}`; watchdog `features-` prefix already heartbeat-only
@@ -1738,11 +1738,12 @@ those are GCS bucket name conventions, not Python imports). CLI dispatcher verif
 per-family `_data_freshness` aggregator. deployment-api `feature_family` axis confirmed wired (`shard_detail.py:44+240`
 Pydantic models / `routes/data_status.py:498` Query param / `services/data_status_hierarchical.py:148+250`
 `_stamp_feature_family` + `_NON_AXIS_FILTERS`). deployment-ui `FeatureFamilyFilter.test.tsx` + `FEATURE_FAMILIES` from
-`api/client` confirmed. Operator launch + verify recipe shipped at `codex/15-runbooks/features-service-launch-verify.md`
-(per-family launch command + 90s STARTED probe + 10-15min progress probe + STOPPED+manifest spot-check + downstream
-sample-read + troubleshooting matrix + auto-recovery matrix). | NEVER (not yet operationally launched). Operator runs
-the recipe per-asset_group as features-service VMs come online for May-23 cutover. The runbook is the executable
-contract; this plan flip is the code-shipped half (verification audit + launch recipe doc). |
+`api/client` confirmed. Operator launch + verify recipe shipped at
+`/codex/15-runbooks/features-service-launch-verify.md` (per-family launch command + 90s STARTED probe + 10-15min
+progress probe + STOPPED+manifest spot-check + downstream sample-read + troubleshooting matrix + auto-recovery matrix).
+| NEVER (not yet operationally launched). Operator runs the recipe per-asset_group as features-service VMs come online
+for May-23 cutover. The runbook is the executable contract; this plan flip is the code-shipped half (verification
+audit + launch recipe doc). |
 
 Cross-plan items NOT addressed this session (still open in their own plans-of-record):
 

@@ -32,7 +32,7 @@ stage: [meta]
 repos: [unified-api-contracts, unified-trading-library, deployment-api, instruments-service]
 scope: [engineer, admin]
 tags: [honest-coverage, data-correctness, denominator, out-of-window, verification]
-related: [codex/02-data/honest-coverage-model.md, codex/02-data/tradfi-databento-sourcing-ssot.md]
+related: [/codex/02-data/honest-coverage-model.md, /codex/02-data/tradfi-databento-sourcing-ssot.md]
 created: 2026-07-16
 parent_epic: infrastructure_master
 assigned_vm: NA

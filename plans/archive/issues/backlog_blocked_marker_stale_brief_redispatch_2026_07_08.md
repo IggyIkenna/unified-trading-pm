@@ -34,7 +34,10 @@ repos: [agent-orchestrator]
 scope: [engineer]
 tags: [dispatch, backlog-regen, orphan-prune, race-condition, blocked-marker, worker-lifecycle]
 related:
-  [footystats_matches_predictions_fetch_gaps_2026_07_08.md, craft_scoped_slot7_ui_dispatch_mismatch_2026_07_08.md]
+  [
+    /plans/active/issues/footystats_matches_predictions_fetch_gaps_2026_07_08.md,
+    /plans/archive/issues/craft_scoped_slot7_ui_dispatch_mismatch_2026_07_08.md,
+  ]
 created: 2026-07-08
 last_updated: 2026-07-08
 parent_epic: agent_operating_framework_master

@@ -108,7 +108,7 @@ market-tick-data-service + market-data-processing-service, verifiable via the de
 GCS paths, and the secondary cutoffs applied so legitimately-empty shards (pre-launch dates, non-prediction leagues for
 rich features, etc.) don't render as missing.
 
-**Operational SSOT**: `codex/14-playbooks/backfill-completion-playbook.md`.
+**Operational SSOT**: `/codex/14-playbooks/backfill-completion-playbook.md`.
 
 **Background**: 2026-04-30 TradFi session shipped 14 commits resolving five pre-existing pipeline bugs (VM_VENUE
 routing, parent-symbol format, force-flag threading, VM-name underscore validation, ETF dataset routing). Combo bundling
@@ -216,12 +216,11 @@ verify shards, can't iterate.
       `/data-status/schema`. The user reports it's not working. Verify the endpoint actually returns the registered
       `SchemaDefinition` for the queried data type — likely a backend gap where unregistered shards return 404 or empty.
       Confirm `SchemaDefinition` registry is loaded for ALL data types being queried (instruments, market-tick,
-      market-data-processing). Cross-check with
-      [02-data/schema-governance.md](../../codex/02-data/schema-governance.md). [AUDIT 2026-05-07: VERIFIED-LIKELY-DONE
-      — `fetchShardSchema()` at `client.ts:1709` confirmed wired; SchemaModal shipped deployment-ui@`7309b56`
-      (SmartDownloadButton + multi-axis SchemaModal) + deployment-ui@`537d468` (3 schema-modal + summary-label bugs);
-      deployment-api@`4ca4bb7` enriched 'no schema yet' response with probed_paths; per-data-type SchemaDefinition
-      coverage audit pending — verify and flip]
+      market-data-processing). Cross-check with [02-data/schema-governance.md](/codex/02-data/schema-governance.md).
+      [AUDIT 2026-05-07: VERIFIED-LIKELY-DONE — `fetchShardSchema()` at `client.ts:1709` confirmed wired; SchemaModal
+      shipped deployment-ui@`7309b56` (SmartDownloadButton + multi-axis SchemaModal) + deployment-ui@`537d468` (3
+      schema-modal + summary-label bugs); deployment-api@`4ca4bb7` enriched 'no schema yet' response with probed_paths;
+      per-data-type SchemaDefinition coverage audit pending — verify and flip]
 
 ## Phase 0.5 — Verify in-flight sports work has settled
 
@@ -379,7 +378,7 @@ Most of the work landed 2026-04-30; remaining items are gap-fill + verification.
 | instruments-service            | `scripts/reconcile_phantom_manifest_rows.py` (extend per-asset-group flag if not already there) | 1-5   |
 | market-tick-data-service       | per-asset-group adapter health checks                                                           | 1-5   |
 | market-data-processing-service | candle generation gap-fill                                                                      | 2     |
-| unified-trading-pm             | this plan +`codex/14-playbooks/backfill-completion-playbook.md`                                 | 6     |
+| unified-trading-pm             | this plan +`/codex/14-playbooks/backfill-completion-playbook.md`                                | 6     |
 
 ## Success criteria
 

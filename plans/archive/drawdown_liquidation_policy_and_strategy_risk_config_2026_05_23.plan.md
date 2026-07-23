@@ -6,28 +6,34 @@ status: complete
 nature: record
 asset_group: [infrastructure]
 stage: [meta]
-repos: [agent-orchestrator, alerting-service, deployment-service, execution-service, strategy-service, unified-api-contracts]
+repos:
+  [agent-orchestrator, alerting-service, deployment-service, execution-service, strategy-service, unified-api-contracts]
 scope: [engineer, admin]
 tags: []
-related: [reconciliation_age_tracking_and_escalation_2026_05_23.md, agent_recovery_controller_layer0_deterministic_2026_05_23.md]
-created: '2026-05-23'
+related:
+  [
+    reconciliation_age_tracking_and_escalation_2026_05_23.md,
+    /plans/archive/2026_05/agent_recovery_controller_layer0_deterministic_2026_05_23.md,
+  ]
+created: "2026-05-23"
 parent_epic: observability_master
 assigned_vm: vm-cross-cutting
 priority: P0
 estimate_class: design
 estimate_baseline_ai_days: 16
 estimate_calibrated_ai_days: 9.6
-estimate_calibration_note: 'Design class — operator-judgment thresholds, closed-set enum (response_policy 5-flag, expected_drawdown_model 6-basis),
+estimate_calibration_note: "Design class — operator-judgment thresholds, closed-set enum (response_policy 5-flag,
+  expected_drawdown_model 6-basis),
 
   drawdown investigation report template, liquidation investigation report template, per-strategy idempotent
 
   close-all script contract. Baseline 16 × 0.6 = 9.6 cal-days.
 
-  '
+  "
 parent: master_to_live_defi_2026_05_23
 locked_since: 2026-05-23
 depends_on: [incident_gateway_and_state_machine_2026_05_23]
-gates: ['master_to_live_defi_2026_05_23:Group-F']
+gates: ["master_to_live_defi_2026_05_23:Group-F"]
 ---
 
 ## Deferred work — migrated to:
@@ -51,7 +57,7 @@ risk pre-detector. Ship the drawdown + liquidation investigation report template
 **Existing capability** (verified 2026-05-23):
 
 - HF thresholds (1.5/1.2/1.0/<1.0) wired for DeFi recursive-borrow per
-  `codex/04-architecture/autonomous-recovery-matrix.md`.
+  `/codex/04-architecture/autonomous-recovery-matrix.md`.
 - Per-strategy drawdown logic is bespoke; not closed-set 7-threshold.
 - Liquidation detection partial (CeFi liquidation events surface in execution-service handlers but no closed-set
   detector).
@@ -202,11 +208,11 @@ audit ack package).
 
 ## Codex SSOT updates
 
-- NEW: `codex/04-architecture/strategy-risk-config-schema.md` — 7 thresholds × 6 basis × 5 response-flags + close- all
+- NEW: `/codex/04-architecture/strategy-risk-config-schema.md` — 7 thresholds × 6 basis × 5 response-flags + close- all
   contract.
-- UPDATE: `codex/04-architecture/autonomous-recovery-matrix.md` — extend HF section with margin-ratio + ADL + venue-
+- UPDATE: `/codex/04-architecture/autonomous-recovery-matrix.md` — extend HF section with margin-ratio + ADL + venue-
   API-uncertainty pre-detection triggers.
-- UPDATE: `codex/09-strategy/architecture-v2/cross-cutting/risk-gates.md` — point to new schema.
+- UPDATE: `/codex/09-strategy/architecture-v2/cross-cutting/risk-gates.md` — point to new schema.
 
 ## Tier-1-4 implementation log (2026-05-23)
 
@@ -297,7 +303,7 @@ audit ack package).
 
 - Operator ping doc → `plans/active/_agent_pings.md` 2026-05-23 ikenna-slot-1 → operator entry
 - 22 incident runbooks → `codex/15-runbooks/incidents/` (RB-INC/RECON/RISK/CONN/DEPLOY/INFRA/ALERT)
-- Game-day protocol → `codex/15-runbooks/incidents/game_day_protocol.md`
+- Game-day protocol → `/codex/15-runbooks/incidents/game_day_protocol.md`
 - Alerting Tier-5 → `alerting-service@e5c8084` (5 new gateway/notifier modules)
 - Strategy Tier-5 → `strategy-service@3b0f7397` (2 configs + close-all + helper)
 - Execution Tier-5 → `execution-service@a6fa7c501` (recovery_event_helper)

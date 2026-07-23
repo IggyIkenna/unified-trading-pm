@@ -10,7 +10,7 @@ repos: [alerting-service, deployment-api, deployment-service, execution-service,
 scope: [engineer, admin]
 tags: []
 related: []
-created: '2026-05-07'
+created: "2026-05-07"
 ---
 
 ## Deferred work — migrated to:
@@ -94,7 +94,7 @@ ARBITRAGE_PRICE_DISPERSION are the new ones lit by A2/A3/A5.
 B1. **Writegate Phase 2.B — orchestrator pre-skip rewrite.** Per the writegate plan, lift the calendar-pre-skip logic
 from being silent to emitting `record_expected_empty(reason=EXPECTED_<X>)` per the closed reason taxonomy. Audit each
 adapter calling `record_expected_empty` vs. the existing 9-reason set; surface missing reasons as a UAC enum addition +
-downstream consumer audit per `codex/02-data/honest-absence-downstream-handling.md`.
+downstream consumer audit per `/codex/02-data/honest-absence-downstream-handling.md`.
 
 B2. **Writegate Layer 4 — 5 reconcilers.** 2 of 5 done per memory (`d3be0ef` + `ba5423f`). Remaining 3: -
 `reconcile_phantom_manifest_rows.py` (sports → multi-asset_group rollup) - reader-side fallback reconciler (manifest

@@ -1,6 +1,6 @@
 ---
 doc_type: plan
-title: 'Deployment-UI: fix VM deployments page + history tab, add venue key-status & coverage visibility — 2026-05-27'
+title: "Deployment-UI: fix VM deployments page + history tab, add venue key-status & coverage visibility — 2026-05-27"
 summary:
 status: complete
 nature: record
@@ -9,12 +9,15 @@ stage: [meta]
 repos: [deployment-api, deployment-ui, market-tick-data-service, unified-trading-system-ui]
 scope: [engineer, admin]
 tags: []
-related: [issues/running_vm_fleet_status_2026_05_27.md, cefi_venue_backfill_coverage_remediation_2026_05_27.md]
+related:
+  [issues/running_vm_fleet_status_2026_05_27.md, /plans/archive/cefi_venue_backfill_coverage_remediation_2026_05_27.md]
 created: 2026-05-27
 parent_epic: deployment_and_user_management_master
 assigned_vm: vm-operator-ops
 completed: 2026-06-01
-completed_note: Operator-marked done 2026-06-01 (harsh). All 10 items shipped; pw:L2 ran green in §5 (deployment-ui@7bbc270, 140/140) — per-item BLOCKED-INFRA libatk notes are slot-env-only and superseded by the §5 full-suite pass.
+completed_note:
+  Operator-marked done 2026-06-01 (harsh). All 10 items shipped; pw:L2 ran green in §5 (deployment-ui@7bbc270, 140/140)
+  — per-item BLOCKED-INFRA libatk notes are slot-env-only and superseded by the §5 full-suite pass.
 priority: P0
 author: harsh (claude opus 4.7)
 estimate_class: brand-new

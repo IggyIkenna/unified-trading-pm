@@ -13,8 +13,18 @@ related: []
 created: 2026-05-15
 author: ikenna-main (slot 1)
 resolved: 2026-05-17
-resolution: SUPERSEDED — B-015 chain advanced past this. Original "phantom manifest" hypothesis incorrect (manifest was clean; root cause was stale lock markers). Chain progressed through 8 VM attempts + 3 infra fixes (ml-training@876f0e5, deployment-service@a6f746f, features-service@d687df7d) + lending-indices phantom flip. VM 8 (features-onchain-defi-20260517-025847) wrote 5 lst_yields parquets — B-015 gate UNBLOCKED 2026-05-17 02:08 UTC.
-source: ['ikenna-main → harsh-slot-9 ping 2026-05-14 14:38 UTC (B-015 VMs LAUNCHED)', 'GCS event stream: gs://central-element-323112-events/events/market-tick-data-service/2026-05-14/mtds-lst-rates-20260514-143803/', 'GCS output bucket: gs://market-data-tick-defi-central-element-323112/lst_rates/ (last partition = 2026-04-14)']
+resolution:
+  SUPERSEDED — B-015 chain advanced past this. Original "phantom manifest" hypothesis incorrect (manifest was clean;
+  root cause was stale lock markers). Chain progressed through 8 VM attempts + 3 infra fixes (ml-training@876f0e5,
+  deployment-service@a6f746f, features-service@d687df7d) + lending-indices phantom flip. VM 8
+  (features-onchain-defi-20260517-025847) wrote 5 lst_yields parquets — B-015 gate UNBLOCKED 2026-05-17 02:08 UTC.
+source:
+  [
+    "ikenna-main → harsh-slot-9 ping 2026-05-14 14:38 UTC (B-015 VMs LAUNCHED)",
+    "GCS event stream:
+    gs://central-element-323112-events/events/market-tick-data-service/2026-05-14/mtds-lst-rates-20260514-143803/",
+    "GCS output bucket: gs://market-data-tick-defi-central-element-323112/lst_rates/ (last partition = 2026-04-14)",
+  ]
 severity: P0 (blocks B-015 paper-trade gate + Group B data-correctness)
 locked_by: live-defi-rollout
 locked_since: 2026-05-15
@@ -97,7 +107,7 @@ audit is COMPLETE (clean result, no action needed).
 - Predecessor ping ledger entries: `plans/active/_agent_pings.md` § "2026-05-14 13:10..14:38" (B-015 Phase 1 BLOCKED →
   P1 ACK → VMs LAUNCHED chain).
 - Related plan: `plans/active/defi_master_2026_05_07.md` § paper-trade gate (carry_staked_basis path).
-- Phantom audit pattern: `codex/02-data/availability-manifest-and-data-status.md` § "Phantom audit".
+- Phantom audit pattern: `/codex/02-data/availability-manifest-and-data-status.md` § "Phantom audit".
 - No fire-and-forget VM rule: CLAUDE.md § "No fire-and-forget VM launches (CRITICAL)" — features-onchain VM appears to
   violate this (no STARTED event in 60s window observed).
 
@@ -109,6 +119,5 @@ last_executed: NEVER
 
 ## Triage — 2026-05-18
 
-**Status**: CLOSED — SHIPPED  
-**Triaged by**: slot-8 triage sweep  
-**Reason**: Resolved 2026-05-17; VM 8 wrote 5 parquets, gate unblocked
+**Status**: CLOSED — SHIPPED **Triaged by**: slot-8 triage sweep **Reason**: Resolved 2026-05-17; VM 8 wrote 5 parquets,
+gate unblocked

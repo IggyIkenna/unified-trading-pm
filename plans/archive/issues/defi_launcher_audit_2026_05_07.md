@@ -12,7 +12,13 @@ tags: []
 related: []
 created: 2026-05-07
 author: harsh
-source: [plans/active/defi_master_2026_05_07.md (commit b8edd01 PLANNING-CRITICAL block), 'market-tick-data-service/market_tick_data_service/cli/handlers/{lending_indices,vault_share_price,lst_rates,gas_fee}_handler.py', unified-api-contracts/unified_api_contracts/registry/capability_declarations/_defi.py, deployment-service/scripts/vm/launch-mtds-*-backfill-vm.sh]
+source:
+  [
+    plans/active/defi_master_2026_05_07.md (commit b8edd01 PLANNING-CRITICAL block),
+    "market-tick-data-service/market_tick_data_service/cli/handlers/{lending_indices,vault_share_price,lst_rates,gas_fee}_handler.py",
+    unified-api-contracts/unified_api_contracts/registry/capability_declarations/_defi.py,
+    deployment-service/scripts/vm/launch-mtds-*-backfill-vm.sh,
+  ]
 locked_by: live-defi-rollout
 locked_since: 2026-05-07
 ---
@@ -55,12 +61,12 @@ source; whatever the rollup said previously is suspect.
 
 ### Per-handler evidence
 
-| Handler                                                                                                                                         | Multi-chain?                                               | Source of chain list                                                  | Default chains today                                                                                                                  |
-| ----------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- | --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| [`gas_fee_handler.py:46`](../../../market-tick-data-service/market_tick_data_service/cli/handlers/gas_fee_handler.py#L46)                       | ✅ Yes                                                     | hardcoded `DEFAULT_GAS_FEE_CHAINS`                                    | 14 chains: ETHEREUM, OPTIMISM, BSC, POLYGON, BASE, ARBITRUM, AVALANCHE, LINEA + 6 Tier 3                                              |
-| [`lending_indices_handler.py:253`](../../../market-tick-data-service/market_tick_data_service/cli/handlers/lending_indices_handler.py#L253)     | ✅ Yes                                                     | `get_supported_chains_for_protocol(protocol)` from UAC `SUBGRAPH_IDS` | AAVE_V3 → 8 chains (ETH, ARB, OPT, POL, AVAX, BASE, LINEA, BSC); COMPOUND_V3 → 4; MORPHO → 2 (ETH, BASE)                              |
+| Handler                                                                                                                                         | Multi-chain?                                              | Source of chain list                                                  | Default chains today                                                                                                                  |
+| ----------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- | --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| [`gas_fee_handler.py:46`](../../../market-tick-data-service/market_tick_data_service/cli/handlers/gas_fee_handler.py#L46)                       | ✅ Yes                                                    | hardcoded `DEFAULT_GAS_FEE_CHAINS`                                    | 14 chains: ETHEREUM, OPTIMISM, BSC, POLYGON, BASE, ARBITRUM, AVALANCHE, LINEA + 6 Tier 3                                              |
+| [`lending_indices_handler.py:253`](../../../market-tick-data-service/market_tick_data_service/cli/handlers/lending_indices_handler.py#L253)     | ✅ Yes                                                    | `get_supported_chains_for_protocol(protocol)` from UAC `SUBGRAPH_IDS` | AAVE_V3 → 8 chains (ETH, ARB, OPT, POL, AVAX, BASE, LINEA, BSC); COMPOUND_V3 → 4; MORPHO → 2 (ETH, BASE)                              |
 | [`vault_share_price_handler.py:234`](../../../market-tick-data-service/market_tick_data_service/cli/handlers/vault_share_price_handler.py#L234) | ⚠ Multi-chain capable but Ethereum-skewed by **registry** | `_VAULTS` registry                                                    | 9 ETHEREUM entries + sparse non-ETH (MORPHOVAULTS×2, MAKER, FRAX, ETHENA — these last 4 are protocol names not chains; need re-check) |
-| [`lst_rates_handler.py:251,288,301,334`](../../../market-tick-data-service/market_tick_data_service/cli/handlers/lst_rates_handler.py#L251)     | ❌ No (by design)                                          | hardcoded `chain="ETHEREUM"` + Solana side-path for Marinade          | ETHEREUM (13 EVM LSTs) + SOLANA (Marinade) only — LSTs canonically live on these two chains                                           |
+| [`lst_rates_handler.py:251,288,301,334`](../../../market-tick-data-service/market_tick_data_service/cli/handlers/lst_rates_handler.py#L251)     | ❌ No (by design)                                         | hardcoded `chain="ETHEREUM"` + Solana side-path for Marinade          | ETHEREUM (13 EVM LSTs) + SOLANA (Marinade) only — LSTs canonically live on these two chains                                           |
 
 ### Conclusion
 
@@ -287,7 +293,7 @@ operator prefers):
       preview but the UI should label it as "sample of 50 / total N missing" rather than "the missing dates". Pure doc /
       UI label fix, not a behaviour change.
 - [x] **[codex]** P1 (shipped PM@372e23aa 2026-05-07). Documented the rollup-vs-drilldown denominator divergence in
-      [`codex/02-data/availability-manifest-and-data-status.md`](../../../codex/02-data/availability-manifest-and-data-status.md)
+      [`/codex/02-data/availability-manifest-and-data-status.md`](/codex/02-data/availability-manifest-and-data-status.md)
       § "Rollup-vs-drilldown denominator divergence (codified 2026-05-07)". Closure (Half 2 — backward-fill via Phase
       3.D.4 enumerator) tracked in
       [`../writegate_honest_coverage_endtoend_2026_05_06.md`](../writegate_honest_coverage_endtoend_2026_05_06.md) §

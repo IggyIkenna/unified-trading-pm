@@ -1,17 +1,31 @@
 ---
 doc_type: issue
-title: Commit identity wrong fleet-wide — ~14/25 worktrees author as semver-rollout[bot], ~7 as agent@ci.local; + add slot·host attribution
+title:
+  Commit identity wrong fleet-wide — ~14/25 worktrees author as semver-rollout[bot], ~7 as agent@ci.local; + add
+  slot·host attribution
 summary:
 status: RESOLVED
 nature: record
 asset_group: [infrastructure]
 stage: [meta]
-repos: [agent-orchestrator, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-service, e2e-testing]
+repos:
+  [
+    agent-orchestrator,
+    batch-live-reconciliation-service,
+    client-reporting-api,
+    deployment-api,
+    deployment-service,
+    e2e-testing,
+  ]
 scope: [engineer, admin]
 tags: []
 related: []
 created: 2026-06-03
-source: [slot-3 worktree audit 2026-06-03 (git config user.email across .tabs/3/*), codex/05-infrastructure/per-tab-worktrees.md § "Commit attribution"]
+source:
+  [
+    slot-3 worktree audit 2026-06-03 (git config user.email across .tabs/3/*),
+    /codex/05-infrastructure/per-tab-worktrees.md § "Commit attribution",
+  ]
 resolved: 2026-06-07
 priority: P1
 parent_epic: infrastructure_master
@@ -29,7 +43,7 @@ estimate_class: infra
 > (`setup-workspace-from-manifest.sh` + `setup-github-auth.sh` writers now guarded; `verify-slot-host-symmetry.sh` is
 > the recurrence detector); (5) slot-1 worktrees verified attributing
 > `ikennaigboaka [slot-1·laptop] <ikennaigboaka@gmail.com>`; the deployed hook self-heals every other slot/VM on next
-> commit. Codex updated in step: `codex/05-infrastructure/per-tab-worktrees.md` § "Commit attribution" reflects what
+> commit. Codex updated in step: `/codex/05-infrastructure/per-tab-worktrees.md` § "Commit attribution" reflects what
 > shipped. The optional `prepare-commit-msg` trailer remains a nice-to-have only (not blocking). No new durable contract
 > beyond the already-in- CLAUDE.md commit-attribution rule.
 
@@ -82,7 +96,7 @@ recurs on every other slot/host until the provisioning is fixed.**
       each `.pre-commit-config.yaml` to its `tab/ikennaigboaka/1` branch (→ tab-mirror → LDR → VMs pull → enforced).
       Verified the rolled-out repos now carry `fix-commit-identity` + the single canonical gitleaks block, and that the
       slot-1 commits correctly attribute to `ikennaigboaka [slot-1·laptop] <ikennaigboaka@gmail.com>` (the hook +
-      per-worktree identity working). SSOT: `codex/05-infrastructure/per-tab-worktrees.md` § "Commit attribution".
+      per-worktree identity working). SSOT: `/codex/05-infrastructure/per-tab-worktrees.md` § "Commit attribution".
 - [x] ✅ [INFRA] P1. **DONE — VERIFIED 2026-06-07 (already shipped).** `setup-tab-worktrees.sh` already standardises
       per-worktree identity at `--init`/`--add-slot`/`--reset-slot` (lines ~283-285):
       `git config     extensions.worktreeConfig true` +

@@ -109,4 +109,4 @@ Whichever direction, the fix should be validated against BOTH confirmed instance
 
 ## Codex SSOTs
 
-`codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`.
+`/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`.

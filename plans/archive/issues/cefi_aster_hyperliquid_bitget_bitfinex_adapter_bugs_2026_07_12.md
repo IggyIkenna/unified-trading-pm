@@ -24,8 +24,8 @@ tags: [cefi, adapter-bugs, aster, hyperliquid, bitget-futures, bitfinex-futures,
 related:
   [
     ../data_pipeline_e2e_check_2026_07_10.md,
-    cefi_hl_aster_batch_data_gaps_2026_06_22.md,
-    mtds_is_full_adapter_smoketest_findings_2026_07_07.md,
+    /plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md,
+    /plans/active/issues/mtds_is_full_adapter_smoketest_findings_2026_07_07.md,
   ]
 created: 2026-07-12
 parent_epic: mtds_mdps_master
@@ -235,7 +235,7 @@ without coercing both sides to the same type first — a real, mechanical pandas
 issue. Since the error is identical for both venues, fixing the shared code path should resolve both at once. Not yet
 traced to the exact call site — `rg "Invalid comparison between dtype"` or a stack-trace capture (the run.log only shows
 the caught/logged message, not a full traceback, since this is caught via the shard-level isolation wrapper per
-`codex/04-architecture/shard-level-failure-isolation.md`) would be the next step.
+`/codex/04-architecture/shard-level-failure-isolation.md`) would be the next step.
 
 **RESOLVED 2026-07-12 (slot-3)**: root cause found via local reproduction (a synthetic-parquet harness mirroring
 `tests/unit/test_tardis_resolve_symbols_date_boundary.py`'s mock strategy, then a real `pandas==2.3.3` interactive

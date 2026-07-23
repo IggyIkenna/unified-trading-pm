@@ -6,17 +6,27 @@ status: RESOLVED 2026-05-22
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [agent-orchestrator, deployment-api, deployment-service, execution-service, features-service, instruments-service]
+repos:
+  [agent-orchestrator, deployment-api, deployment-service, execution-service, features-service, instruments-service]
 scope: [engineer, admin]
 tags: []
-related: [is_mtds_contract_audit_2026_05_20.md, master_to_live_defi_2026_05_23.md]
+related: [/plans/audit/is_mtds_contract_audit_2026_05_20.md, /plans/active/master_to_live_defi_2026_05_23.md]
 created: 2026-05-20
-source: [operator directive 2026-05-20 "we got loose ends in 3+ places... done so many ai DAYS ITS UNACCEPTABLE", drift S3 silent-absence bug 2026-05-19, 14-launcher EXIT-trap fix 2026-05-19 (deployment-service@6b4610c)]
+source:
+  [
+    operator directive 2026-05-20 "we got loose ends in 3+ places... done so many ai DAYS ITS UNACCEPTABLE",
+    drift S3 silent-absence bug 2026-05-19,
+    14-launcher EXIT-trap fix 2026-05-19 (deployment-service@6b4610c),
+  ]
 locked_by: live-defi-rollout
 priority: P2
-resolved_via: 'All phases A–D complete (A1-A6 diagnostics ✅, B1 template ✅, C0-C11 audits ✅, D0-D8 plans beefed ✅). Phase E execution STARTED (D6 strategy+execution shipped). Close criterion met. Phase F items (F1-F7, env-bucket migration) MIGRATED to plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md § Phase F (2026-05-22). Remaining open item (cross-cutting QG ratchet pattern g — expected_coverage preflight + DIVERGENT_EMPTY) deferred to plans/active/d2_uac_continuity_2026_05_20.md per CLAUDE.md archival HARD RULE.
+resolved_via: "All phases A–D complete (A1-A6 diagnostics ✅, B1 template ✅, C0-C11 audits ✅, D0-D8 plans beefed ✅).
+  Phase E execution STARTED (D6 strategy+execution shipped). Close criterion met. Phase F items (F1-F7, env-bucket
+  migration) MIGRATED to plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md § Phase F (2026-05-22).
+  Remaining open item (cross-cutting QG ratchet pattern g — expected_coverage preflight + DIVERGENT_EMPTY) deferred to
+  plans/active/d2_uac_continuity_2026_05_20.md per CLAUDE.md archival HARD RULE.
 
-  '
+  "
 ---
 
 > **ARCHIVED 2026-05-22** — all A-D phases complete; Phase E started; Phase F migrated.
@@ -44,7 +54,7 @@ between "code shipped" and "live DeFi by 2026-05-23 / 2026-06-04".
 > **🟢 PARALLEL Opus-1M operator-orchestrated session (2026-05-20 round 5)**:
 > [`strategy_archetype_logic_audit_2026_05_20.md`](strategy_archetype_logic_audit_2026_05_20.md) re-prioritised P0 +
 > ACKED to run TONIGHT in parallel with Phase -2 consolidation tail. Requires **Opus 4.7 (1M context)** per
-> `codex/06-coding-standards/model-tier-selection.md` opus-required tier — cross-archetype + cross-codebase scope.
+> `/codex/06-coding-standards/model-tier-selection.md` opus-required tier — cross-archetype + cross-codebase scope.
 > Operator authorisation: "mostly done anyway, do it tonight or in parallel." Not part of this mega-audit's data-sanity
 > scope; sequenced after consolidation Phase 11 lands clean.
 
@@ -53,7 +63,7 @@ between "code shipped" and "live DeFi by 2026-05-23 / 2026-06-04".
 > fixed, bad manifest data migrated, without exception... I won't accept anything less than perfect on this."
 >
 > Codified as workspace HARD RULE in CLAUDE.md § "Data Pipeline Correctness Is The Heartbeat" + SSOT
-> `codex/02-data/data-pipeline-correctness-hard-rule.md`.
+> `/codex/02-data/data-pipeline-correctness-hard-rule.md`.
 >
 > **Operational consequence for THIS tracker**: all Phase A items (A1-A6) MUST land GREEN before any layer-N+1 work
 > proceeds for the affected asset_groups. No `DEFERRED`. No "we'll do it after the 23rd". Closed-set deferral only via
@@ -68,12 +78,12 @@ between "code shipped" and "live DeFi by 2026-05-23 / 2026-06-04".
 
 This file is a **troubleshooting / coordination guide**. The actionable work lives elsewhere:
 
-| Output                                             | Lands in                                                   |
-| -------------------------------------------------- | ---------------------------------------------------------- |
-| Diagnostic scripts + reports                       | `plans/audit/results/` + script output to `/tmp/`          |
-| Service-contract audit results (the matrix output) | `plans/audit/<pair>_contract_audit_2026_05_20.md`          |
-| Beefed-up actionable plans                         | `plans/active/<slug>.md` (new + updates to existing)       |
-| Codified patterns (the template doc)               | `codex/04-architecture/service-contract-audit-template.md` |
+| Output                                             | Lands in                                                    |
+| -------------------------------------------------- | ----------------------------------------------------------- |
+| Diagnostic scripts + reports                       | `plans/audit/results/` + script output to `/tmp/`           |
+| Service-contract audit results (the matrix output) | `plans/audit/<pair>_contract_audit_2026_05_20.md`           |
+| Beefed-up actionable plans                         | `plans/active/<slug>.md` (new + updates to existing)        |
+| Codified patterns (the template doc)               | `/codex/04-architecture/service-contract-audit-template.md` |
 
 This file closes when (a) all audits in `plans/audit/` are complete, AND (b) all 8 ordering-step plans in
 `plans/active/` are beefed up against the audit output. Mark `resolved: <date>` + `resolution:` block when closing.
@@ -190,7 +200,7 @@ audits) since C consumes these. Phase D plan beef-ups consume all of A1-A6.
 
 ### Phase B — Template extraction (small, unblocks all sibling audits)
 
-- [x] ✅ **B1. Write `codex/04-architecture/service-contract-audit-template.md`** Lift the 7 reusable patterns out of
+- [x] ✅ **B1. Write `/codex/04-architecture/service-contract-audit-template.md`** Lift the 7 reusable patterns out of
       `is_mtds_contract_audit_2026_05_20.md`: (1) SSOT-owned reference flowing down, (2) manifest emission discipline,
       (3) schema-version compliance, (4) honest-absence reason taxonomy, (5) expected_coverage preflight +
       DIVERGENT_EMPTY post-hoc check, (6) error classification at the boundary, (7) bucket-SSOT. Include: 4-dim audit
@@ -204,20 +214,24 @@ Each audit instantiates the B1 template against its specific upstream→downstre
 `plans/audit/<slug>_2026_05_20.md` (NOT `plans/active/` — audits are diagnostic outputs, not actionable until phase D
 digests them).
 
-| #   | Pair                                | Audit file                                                                                                 | Feeds ordering step        |
-| --- | ----------------------------------- | ---------------------------------------------------------------------------------------------------------- | -------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| C0  | IS → MTDS                           | (existing) `plans/active/is_mtds_contract_audit_2026_05_20.md` — RELOCATE to `plans/audit/` after B1 lands | 1, 4                       |
-| C1  | IS → features-service               | `is_features_contract_audit_2026_05_20.md`                                                                 | 1                          |
-| C2  | IS → strategy-service               | `is_strategy_contract_audit_2026_05_20.md`                                                                 | 1                          |
-| C3  | IS → execution-service              | `is_execution_contract_audit_2026_05_20.md`                                                                | 1                          |
-| C4  | MTDS → features-service             | `mtds_features_contract_audit_2026_05_20.md`                                                               | 4, 5                       |
-| C5  | MTDS → strategy-service             | `mtds_strategy_contract_audit_2026_05_20.md`                                                               | 4, 6                       |
-| C6  | features → strategy                 | `features_strategy_contract_audit_2026_05_20.md`                                                           | 5, 6                       | [scope addendum 2026-05-20: see below](#c6-scope-addendum-2026-05-20-per-pair-viability--pricing-ownership) |
-| C7  | strategy → execution                | `strategy_execution_contract_audit_2026_05_20.md`                                                          | 6                          |
-| C8  | execution → venue adapter           | `execution_venue_contract_audit_2026_05_20.md`                                                             | 6, 7                       |
-| C9  | All → UAC                           | `uac_consumer_contract_audit_2026_05_20.md`                                                                | cross-cutting              |
-| C10 | All → UTL (events, manifest, cloud) | `utl_consumer_contract_audit_2026_05_20.md`                                                                | cross-cutting              |
-| C11 | agent-orchestrator → all            | `orchestrator_service_contract_audit_2026_05_20.md`                                                        | 0 (orchestrator migration) |
+| # | Pair | Audit file | Feeds ordering step | | --- | ----------------------------------- |
+
+| ----------------------------------------------------------------------------------------------------------  |
+| ----------------------------------------------------------------------------------------------------------- |
+| ----------------------------------------------------------------------------------------------------------- |                                                                                                            | C0  | IS                                  |
+| → MTDS                                                                                                      | (existing) `plans/active/is_mtds_contract_audit_2026_05_20.md` — RELOCATE to `plans/audit/` after B1 lands | 1,  |
+| 4                                                                                                           |                                                                                                            | C1  | IS → features-service               | `is_features_contract_audit_2026_05_20.md`          | 1                                           |     | C2  | IS → strategy-service |
+| `is_strategy_contract_audit_2026_05_20.md`                                                                  | 1                                                                                                          |     | C3                                  | IS → execution-service                              |
+| `is_execution_contract_audit_2026_05_20.md`                                                                 | 1                                                                                                          |     | C4                                  | MTDS → features-service                             |
+| `mtds_features_contract_audit_2026_05_20.md`                                                                | 4, 5                                                                                                       |     | C5                                  | MTDS → strategy-service                             |
+| `mtds_strategy_contract_audit_2026_05_20.md`                                                                | 4, 6                                                                                                       |     | C6                                  | features → strategy                                 |
+| `features_strategy_contract_audit_2026_05_20.md`                                                            | 5, 6                                                                                                       |
+| [scope addendum 2026-05-20: see below](#c6-scope-addendum-2026-05-20-per-pair-viability--pricing-ownership) |                                                                                                            | C7  |
+| strategy → execution                                                                                        | `strategy_execution_contract_audit_2026_05_20.md`                                                          | 6   |                                     | C8                                                  | execution → venue adapter                   |
+| `execution_venue_contract_audit_2026_05_20.md`                                                              | 6, 7                                                                                                       |     | C9                                  | All → UAC                                           | `uac_consumer_contract_audit_2026_05_20.md` |
+| cross-cutting                                                                                               |                                                                                                            | C10 | All → UTL (events, manifest, cloud) | `utl_consumer_contract_audit_2026_05_20.md`         |
+| cross-cutting                                                                                               |                                                                                                            | C11 | agent-orchestrator → all            | `orchestrator_service_contract_audit_2026_05_20.md` | 0 (orchestrator                             |
+| migration)                                                                                                  |
 
 - [x] ✅ **C0. Relocate** existing `is_mtds_contract_audit_2026_05_20.md` from `plans/active/` to `plans/audit/`.
       Re-source remediation P0 todos into the beefed `mtds_adapters_preflight_*.md` actionable plan in Phase D. **DONE

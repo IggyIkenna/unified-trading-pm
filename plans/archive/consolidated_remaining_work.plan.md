@@ -10,8 +10,8 @@ repos: [alerting-service, client-reporting-api, deployment-api, deployment-servi
 scope: [engineer, admin]
 tags: []
 related: []
-created: '2026-02-28'
-overview: ''
+created: "2026-02-28"
+overview: ""
 todos: []
 isProject: false
 ---
@@ -38,19 +38,19 @@ Before executing any task in this plan:
 4. **Cursor rules SSOT**: `.cursorrules` + `WORKSPACE_ROOT/.cursor/rules/*.mdc`
 5. **Key SSOT docs**:
 
-- Tier architecture: `unified-trading-codex/04-architecture/TIER-ARCHITECTURE.md`
-- Dependency matrix: `unified-trading-codex/05-infrastructure/unified-libraries/LIBRARY-DEPENDENCY-MATRIX.md`
+- Tier architecture: `unified-trading-/codex/04-architecture/TIER-ARCHITECTURE.md`
+- Dependency matrix: `unified-trading-/codex/05-infrastructure/unified-libraries/LIBRARY-DEPENDENCY-MATRIX.md`
 - Repo registry + versions: `unified-trading-pm/workspace-manifest.json` (all versions are 0.x.x until stable on main)
 - GCP auth in tests: `.cursor/rules/gcp-auth-in-tests.mdc`
-- Event naming: `unified-trading-codex/03-observability/lifecycle-events.md`
-- CI/CD workflow: `unified-trading-codex/06-coding-standards/feature-branch-workflow.md`
+- Event naming: `unified-trading-/codex/03-observability/lifecycle-events.md`
+- CI/CD workflow: `unified-trading-/codex/06-coding-standards/feature-branch-workflow.md`
 - Quickmerge (cascade + --no-pr + --unit-only): `.cursor/rules/always-use-quickmerge.mdc`
 - Conventional commits: `.cursor/rules/conventional-commits.mdc`
-- Integration testing layers (0–3): `unified-trading-codex/06-coding-standards/integration-testing-layers.md`
-- UI → API wiring: `unified-trading-codex/05-infrastructure/UI-DEPENDENCY-MATRIX.md`
+- Integration testing layers (0–3): `unified-trading-/codex/06-coding-standards/integration-testing-layers.md`
+- UI → API wiring: `unified-trading-/codex/05-infrastructure/UI-DEPENDENCY-MATRIX.md`
 - Runtime topology SSOT (v6): `unified-trading-deployment-v3/configs/runtime-topology.yaml` (sharding dims, event
   triggers, recovery, kill switches, topic templates)
-- Topology decisions doc: `unified-trading-codex/04-architecture/RUNTIME_TOPOLOGY_DECISIONS.md` (sections 1-20:
+- Topology decisions doc: `unified-trading-/codex/04-architecture/RUNTIME_TOPOLOGY_DECISIONS.md` (sections 1-20:
   architecture, sharding, recovery, retry, T+1 recon, kill switches)
 - Topology visual DAG: `unified-trading-codex/04-architecture/RUNTIME_DEPLOYMENT_TOPOLOGY_DAG.svg`
 - Error categories + retry policy SSOT: `unified-internal-contracts/schemas/errors.py` (ErrorCategory,
@@ -286,7 +286,7 @@ todos:
   new-repo-setup.md). Layer 3a (fast smoke) + Layer 3b (full pipeline smoke). Sequential: 3a must pass before 3b.
   Triggered by deployment-api post-deploy. Layer 2 (infra verification) lives in
   deployment-service/scripts/verify_infra.py — gates deployment success before Layer 3. SSOT:
-  unified-trading-codex/06-coding-standards/integration-testing-layers.md status: pending
+  unified-trading-/codex/06-coding-standards/integration-testing-layers.md status: pending
 - id: auth-ibkr-corp-actions content: "P1: Implement URDI IBKR corporate actions adapter using
   ib_insync.CorporateAction; mark PENDING_CASSETTE_AWAITING_AUTH" status: pending
 - id: auth-endpoint-registry-unvalidated content: "NOT IN CODEBASE YET — endpoint_registry.py only has requires_auth:
@@ -459,7 +459,7 @@ todos:
   endpoints, parse, cache 15s" status: pending
 - id: obs-grafana-export content: Export Grafana dashboards (trading-overview.json, system-health.json), provisioning,
   SimpleJSON datasource status: pending
-- id: obs-prometheus-codex content: "Create unified-trading-codex/03-observability/prometheus-metrics.md: metric
+- id: obs-prometheus-codex content: "Create unified-trading-/codex/03-observability/prometheus-metrics.md: metric
   catalog, alert rules, service map, triage guide" status: pending
 - id: quality-importerror-fallbacks content: Fix except ImportError fallbacks (~130 files) status: pending
 - id: quality-large-file-splits content: "Split large files: engine.py (2826L), aws_schemas.py (1424L),
@@ -1034,7 +1034,7 @@ CROSS-CUTTING (run throughout, not tier-gated)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 INTEGRATION TESTING LAYERS (cumulative, in dependency order)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-SSOT: unified-trading-codex/06-coding-standards/integration-testing-layers.md
+SSOT: unified-trading-/codex/06-coding-standards/integration-testing-layers.md
 Cursor rule: .cursor/rules/integration-testing-layers.mdc
 
   LAYER 0 — CONTRACT ALIGNMENT (runs at T0, in quickmerge)
@@ -1132,7 +1132,7 @@ Sequence (strictly ordered):
   API service repos (execution-results-api, market-data-api, client-reporting-api, strategy-ui) as explicit nodes in the
   graph. status: pending priority: P1
 - id: codex-ui-service-separation-doc content: > MISSING DOC: Add
-  unified-trading-codex/04-architecture/ui-service-separation.md (or 06-coding-standards/ui-service-separation.md)
+  unified-trading-/codex/04-architecture/ui-service-separation.md (or 06-coding-standards/ui-service-separation.md)
   documenting: (1) UI repos must be separate git repos from service engine; (2) Services expose FastAPI + SSE; (3) UIs
   consume via HTTP/SSE only; (4) No direct library imports from service engine repos in UI. Mirror the
   .cursor/rules/ui-service-separation.mdc content but as a codex reference doc. status: pending priority: P1
@@ -1220,7 +1220,7 @@ Sequence (strictly ordered):
     OAuth tokens (3) Shard calculator visualization — GET /capabilities (4) Cloud Run service health panel — GET
     /service-status with auto-refresh (5) IBKR Gateway config UI — connection status, heartbeat monitor (6)
     .env.local.example: VITE_API_URL=[http://localhost:8001](http://localhost:8001), VITE_OAUTH_CLIENT_ID=,
-    VITE_ENV=local See: unified-trading-codex/05-infrastructure/UI-DEPENDENCY-MATRIX.md (full route map, OAuth flow,
+    VITE_ENV=local See: unified-trading-/codex/05-infrastructure/UI-DEPENDENCY-MATRIX.md (full route map, OAuth flow,
     port assignments). Done: npm run build succeeds; deployment trigger calls deployment-api; OAuth blocks unauthorized
     users; all 5 panels render. status: pending priority: P2
 - id: deploy-v3-configs-cleanup-done content: > COMPLETED (2026-02-28): (1) Added auth_setup block to
@@ -1358,11 +1358,11 @@ tasks:
   logs-dashboard-ui, ml-training-ui, onboarding-ui. UIs calling execution-results-api (8002): trading-analytics-ui,
   strategy-ui, execution-analytics-ui, settlement-ui. UIs calling client-reporting-api (8003): client-reporting-ui.
   Local API quickstart: cd unified-trading-deployment-v3 && uvicorn api.main:app --reload --port 8001 (or deployment-api
-  after split). See: unified-trading-codex/05-infrastructure/UI-DEPENDENCY-MATRIX.md (port table, .env.local templates,
+  after split). See: unified-trading-/codex/05-infrastructure/UI-DEPENDENCY-MATRIX.md (port table, .env.local templates,
   quickstart commands). Done: all 11 UIs have .env.local.example; npm run dev against localhost works for each UI.
   status: pending priority: P1
 - id: topology-dag-codex-done content: > COMPLETED (2026-02-28): Wrote
-  unified-trading-codex/04-architecture/TOPOLOGY-DAG.md — full system topology DAG with T0-T3 library tiers, service
+  unified-trading-/codex/04-architecture/TOPOLOGY-DAG.md — full system topology DAG with T0-T3 library tiers, service
   pipeline layers (L1-L6), API services cluster, all 11 UIs with correct deployment-api vs execution-results-api
   routing, GCP infra, devops layer. Fixes from previous DAG: MEL→Tier0, UTS→UIC_INT/UEI edges, FOS→UDC edge, correct UI
   wiring, deployment-api shown as primary API hub, deployment-ui shown as planned standalone, UPI→PBM edge added. UI env

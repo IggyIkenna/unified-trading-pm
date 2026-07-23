@@ -84,7 +84,7 @@ over-appended it. Not investigated further — outside this dispatch's scope (da
   failures stand. My own manifest-aware-prune fix (features-sports P2) is fully green in isolation (9/9 new tests + full
   `tests/sports/` suite pass) but cannot ship via the mandated quickmerge flow until this repo goes green.
 - **Cluster A is bucket-naming correctness** — workspace HARD RULE territory
-  (`codex/05-infrastructure/gcs-object-operations.md`, bucket-name SSOT). If the flat shape is the intended
+  (`/codex/05-infrastructure/gcs-object-operations.md`, bucket-name SSOT). If the flat shape is the intended
   post-d98a1fdc behavior, 6 stale tests are silently vouching for a bucket name that hasn't existed since 2026-07-17 — a
   false-green risk the moment someone "fixes" the tests by weakening the assertion instead of confirming the real SSOT
   shape. If instead the resolver regressed (dropped the per-family segment), production writes may be landing in the

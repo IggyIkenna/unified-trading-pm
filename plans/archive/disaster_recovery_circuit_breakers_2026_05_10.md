@@ -9,24 +9,45 @@ stage: [meta]
 repos: [alerting-service, deployment-api, deployment-service, deployment-ui, e2e-testing, execution-service]
 scope: [engineer, admin]
 tags: []
-related: [plans/active/master_to_live_defi_2026_05_23.md, plans/active/alerting_service_live_rules_2026_05_07.md, plans/active/risk_simulations_limits_alerting_2026_05_10.md, plans/active/simulation_scenarios_topology_price_shocks_2026_05_09.md, plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md, plans/active/defi_catalogue_chain_primitives_2026_05_10.md, plans/active/defi_simulation_realism_2026_05_10.md]
+related:
+  [
+    plans/active/master_to_live_defi_2026_05_23.md,
+    plans/active/alerting_service_live_rules_2026_05_07.md,
+    plans/active/risk_simulations_limits_alerting_2026_05_10.md,
+    plans/active/simulation_scenarios_topology_price_shocks_2026_05_09.md,
+    plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md,
+    plans/active/defi_catalogue_chain_primitives_2026_05_10.md,
+    plans/active/defi_simulation_realism_2026_05_10.md,
+  ]
 created: 2026-05-10
 type: plan
 deadline: 2026-05-23
 horizon: 13-day pre-cutover sprint
-companion_to: master_to_live_defi_2026_05_23.md (Group F item 20 circuit breakers + kill switches + alerting + auto-recovery, item 21 batch-vs-live reconciliation)
+companion_to:
+  master_to_live_defi_2026_05_23.md (Group F item 20 circuit breakers + kill switches + alerting + auto-recovery, item
+  21 batch-vs-live reconciliation)
 locked_by: live-defi-rollout
 locked_since: 2026-05-10
 spawned_from: plans/questions/disaster_recovery_reconciliation_circuit_breakers_2026_05_08.md
-related_codex: [codex/04-architecture/kill-switch-circuit-breaker.md, codex/04-architecture/autonomous-recovery-matrix.md, codex/04-architecture/mev-protection.md, codex/03-observability/alerting.md, codex/04-architecture/capital-efficiency-patterns.md]
+related_codex:
+  [
+    /codex/04-architecture/kill-switch-circuit-breaker.md,
+    /codex/04-architecture/autonomous-recovery-matrix.md,
+    /codex/04-architecture/mev-protection.md,
+    /codex/03-observability/alerting.md,
+    /codex/04-architecture/capital-efficiency-patterns.md,
+  ]
 estimate_class: design
 estimate_baseline_ai_days: 12.8
 estimate_calibrated_ai_days: 7.6
-estimate_calibration_note: 'Baseline auto-extracted from in-body AI-day mentions during 2026-05-11 sweep (~1, ~2, ~1, ~3, + 7 more). Class inferred from filename (design, multiplier 0.6×).
+estimate_calibration_note: "Baseline auto-extracted from in-body AI-day mentions during 2026-05-11 sweep (~1, ~2, ~1,
+  ~3, + 7 more). Class inferred from filename (design, multiplier 0.6×).
 
-  CAVEAT: auto-extract SUMS all in-body mentions; plans with both ''Total: X'' headlines AND per-phase line items will be double-counted. Owner agent: verify baseline, refine class per codex/08-workflows/estimation-calibration.md, recompute calibrated if either changes.
+  CAVEAT: auto-extract SUMS all in-body mentions; plans with both 'Total: X' headlines AND per-phase line items will be
+  double-counted. Owner agent: verify baseline, refine class per /codex/08-workflows/estimation-calibration.md,
+  recompute calibrated if either changes.
 
-  '
+  "
 ---
 
 > **ARCHIVED 2026-05-16 — 100% done per inventory (slot-8 SWEEP-16 mechanical archive sweep)**
@@ -198,9 +219,9 @@ transport DEFERRED post-cutover (single-VM-per-archetype topology doesn't need i
 > **Module home**: all 8 reconcilers live under `unified_trading_library/reconcile/` — one sub-module per surface.
 > `reconcile/__init__.py` re-exports the full public surface (51 symbols) at the package level (UTL@fea6c7b — closed the
 > package-level export gap; positions/custody/onchain/event/manifest/order*state/pnl_clock_batch_live were previously
-> importable only via deep module paths). Shared shape: `reconcile*<surface>(...) ->
-> <Surface>ReconcileResult`pure function +`<Surface>Reconciler`class with`subscribe(callback)`for kill-switch / alerting fan-out + breaker id returned as a UAC`CircuitBreakerId`
-> (never free-form string).
+> importable only via deep module paths). Shared shape: `reconcile*<surface>(...) -> <Surface>ReconcileResult`pure
+> function +`<Surface>Reconciler`class with`subscribe(callback)`for kill-switch / alerting fan-out + breaker id returned
+> as a UAC`CircuitBreakerId` (never free-form string).
 
 - [x] [AGENT] P0. **3.A Position reconciler.** Diffs position-balance state vs venue REST + custody endpoint. Drift >
       tolerance fires breaker. (UTL@18488c5 — `reconcile/positions.py`: `reconcile_positions()` 3-surface diff (internal
@@ -408,10 +429,10 @@ entry.
 
 ## Phase 8 — Codex SSOTs (Day 12, ~0.5 AI-day)
 
-- [x] [AGENT] P0. **8.A NEW `codex/04-architecture/circuit-breaker-rule-taxonomy.md`.** (PM@e1f7a25e — doc existed +
+- [x] [AGENT] P0. **8.A NEW `/codex/04-architecture/circuit-breaker-rule-taxonomy.md`.** (PM@e1f7a25e — doc existed +
       fleshed-out; 350L covering CircuitBreakerId/BreakerAction/BreakerRecoveryMode/BreakerRecoveryEngine runtime
       subsection/trigger-sources/per-archetype registry/cross-refs. Verified current.)
-- [x] [AGENT] P0. **8.B NEW `codex/04-architecture/kill-switch-event-bus.md`.** (PM@e1f7a25e — doc existed +
+- [x] [AGENT] P0. **8.B NEW `/codex/04-architecture/kill-switch-event-bus.md`.** (PM@e1f7a25e — doc existed +
       fleshed-out; 335L covering KillSwitchBus.arm/disarm/subscribe/typed-UAC events/audit-log persistence/provenance
       closed-enum/consumer cross-refs. Verified current vs UTL@18488c5 + UAC@a7a99b5.)
 - [x] [AGENT] P0. **8.C UPDATE `kill-switch-circuit-breaker.md`** — wired to new taxonomy + bus. (PM@e1f7a25e — added
@@ -419,7 +440,7 @@ entry.
 - [x] [AGENT] P0. **8.D UPDATE `autonomous-recovery-matrix.md`** — per-breaker recovery rule cross-link. (PM@0c4678b0 —
       BreakerRecoveryEngine runtime subsection added 2026-05-12 prior session; arm/evaluate/tick_all/manual_unkill state
       machine + per-action defaults table. Verified current at PM@e1f7a25e.)
-- [x] [AGENT] P0. **8.F NEW `codex/04-architecture/risk-breaker-seam.md` (co-owned with risk_simulations Phase 7.E per
+- [x] [AGENT] P0. **8.F NEW `/codex/04-architecture/risk-breaker-seam.md` (co-owned with risk_simulations Phase 7.E per
       Q9 ratification 2026-05-10).** Distinct-enums-with-escalation-seam architecture: `RiskRuleConsequence` and
       `BreakerAction` are SEPARATE enums (different triggers, different layers). Seam: N consecutive
       `RiskRuleConsequence.SCALE_DOWN` fires on same `(venue, asset_group)` within window W →
@@ -480,7 +501,7 @@ entry.
 
 | Item                                               | Status            | Successor / blocker                          |
 | -------------------------------------------------- | ----------------- | -------------------------------------------- |
-| Cross-region failover (AWS↔GCP active-active)     | DEFERRED-PER-USER | Post-cutover ops plan                        |
+| Cross-region failover (AWS↔GCP active-active)      | DEFERRED-PER-USER | Post-cutover ops plan                        |
 | Full chaos-drill cadence (weekly / monthly drills) | DEFERRED-PER-USER | Post-cutover; nightly cutover MVP runs first |
 | Non-cutover venue / chain recovery playbooks       | DEFERRED-PER-USER | Post-cutover                                 |
 
@@ -569,8 +590,9 @@ cross-reference to UAC@a7a99b5.
 - `unified-api-contracts@c96447b` — Master coordinator seeded `KILL_SWITCH_AUTO_RECOVERED` +
   `KILL_SWITCH_MANUAL_UNKILLED` rule entries in `LIVE_ALERT_RULES` (alongside the 4 RISK*RULE*_ entries from the risk
   plan). Both recovery codes use `kill_switch_scope=KillSwitchScope.GLOBAL` (validator requires scope for
-  `KILL*SWITCH*_`prefix) but`triggers_kill_switch=False`— they REPORT past kill-switch state changes, not arm new ones. Test`test_kill_switch_rules_trigger_kill_switch_flag`updated to exempt RECOVERY codes from the`triggers_kill_switch=True`invariant via explicit`\_RECOVERY_CODES`
-  set. 160/160 tests pass workspace-wide.
+  `KILL*SWITCH*_`prefix) but`triggers_kill_switch=False`— they REPORT past kill-switch state changes, not arm new ones.
+  Test`test_kill_switch_rules_trigger_kill_switch_flag`updated to exempt RECOVERY codes from
+  the`triggers_kill_switch=True`invariant via explicit`\_RECOVERY_CODES` set. 160/160 tests pass workspace-wide.
 
 The risk-plan Phase 1.F flip is now live with the actual UAC@a7a99b5 + UAC@c96447b commit citations (no longer the
 placeholder "TBD" cross-reference).
@@ -626,7 +648,7 @@ placeholder "TBD" cross-reference).
 - **Phase 5 engine** — `unified-trading-library@d5161fd`: NEW `unified_trading_library/circuit_breaker/` package —
   `BreakerRecoveryEngine` (`manual_unkill` + `auto_cooldown` state machine; pure; `RecoveryDecision`/`RecoveryAction`;
   fail-loud) + 18 tests incl. parametrised over the real UAC `registry/circuit_breakers/` seeds. Codex currency:
-  `codex/04-architecture/autonomous-recovery-matrix.md` extended with the `BreakerRecoveryEngine` runtime subsection
+  `/codex/04-architecture/autonomous-recovery-matrix.md` extended with the `BreakerRecoveryEngine` runtime subsection
   (`unified-trading-pm@0c4678b0`).
 - **Phase 4 — per-service migration (5-sub-agent fan-out)**:
   - `risk-and-exposure-service@85c99aa`+`@550a39e` — Layer-2 pre-flight evaluates the UAC `RiskRule` registry via UTL

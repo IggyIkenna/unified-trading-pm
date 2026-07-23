@@ -682,7 +682,7 @@ works.
       correct canonical MTDS path (not legacy) 2. Writer goes through `StreamingParquetWriter` + `ManifestWriter` 3.
       Per-feature-group SchemaContract registered in UAC 4. `feature_group` manifest shard column populated
 - [ ] [AGENT] P0. ml-training-service + ml-inference-service: same audit. Reads features-\* from canonical paths.
-- [ ] [AGENT] P1. Cross-service data lineage doc: `codex/02-data/data-lineage-MTDS-features-ml.md` — one table per
+- [ ] [AGENT] P1. Cross-service data lineage doc: `/codex/02-data/data-lineage-MTDS-features-ml.md` — one table per
       feature group showing (upstream_bucket, upstream_path, feature_calculator, output_bucket, output_path,
       manifest_shard_dims).
 

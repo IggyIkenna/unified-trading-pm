@@ -43,7 +43,7 @@ tags:
     duplicate-finding,
   ]
 related:
-  - mdps_generic_classifier_processed_regression_2026_07_21.md
+  - /plans/archive/issues/mdps_generic_classifier_processed_regression_2026_07_21.md
   - plans/active/data_pipeline_check_mdps_features_2026_07_20.md
   - plans/active/mtds_data_status_page_parity_2026_07_21.md
 created: "2026-07-21"

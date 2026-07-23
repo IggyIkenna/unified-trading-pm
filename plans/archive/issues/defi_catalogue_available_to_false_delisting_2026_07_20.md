@@ -127,7 +127,7 @@ is a _subset_ pool-set change — exactly the case the §7.3 thin-day guard does
 
 ## SSOT contradiction
 
-`codex/02-data/instruments-foundation-and-catalogue-completeness.md` §1.3 (**HARD**):
+`/codex/02-data/instruments-foundation-and-catalogue-completeness.md` §1.3 (**HARD**):
 
 > a DeFi **pool** leaving the active set because its TVL fell below threshold is a **legitimate
 > `EXPECTED_NOT_ENOUGH_TVL` day, NOT a delisting and NOT a capture bug**. … the DeFi active-drop reason space is
@@ -158,7 +158,7 @@ CONFIRMED: the measurement, the mechanism (code-read), the SSOT contradiction, a
 shared date alone makes "these are not organic delistings" essentially certain. The single remaining upgrade from
 strongly-evidenced → gold-standard is an **on-chain spot-check**: pick ~10 TRADER_JOE_V2 pools stamped
 `available_to=2026-06-26` and confirm via the factory/subgraph that the pool contract still exists (and/or still has
-TVL) after that date. `codex/02-data/defi-completeness-oracle.md` §12 already defines the Tier-A factory / Tier-B RPC
+TVL) after that date. `/codex/02-data/defi-completeness-oracle.md` §12 already defines the Tier-A factory / Tier-B RPC
 truth probes to do this.
 
 ## Proposed fix directions (operator/architecture decision — do NOT silently mutate available_to semantics fleet-wide)

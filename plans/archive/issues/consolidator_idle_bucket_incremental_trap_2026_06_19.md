@@ -1,6 +1,8 @@
 ---
 doc_type: issue
-title: Manifest consolidator starves idle buckets — a per-VM shard written to an idle bucket never merges (incremental mtime-cutoff trap)
+title:
+  Manifest consolidator starves idle buckets — a per-VM shard written to an idle bucket never merges (incremental
+  mtime-cutoff trap)
 summary:
 status: resolved
 nature: record
@@ -11,7 +13,11 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: 2026-06-19
-source: [unified-trading-library/unified_trading_library/manifest_consolidator.py (lines 355-373), 2026-06-19 expected_unattempted materialisation run (cefi/tradfi shards never auto-merged)]
+source:
+  [
+    unified-trading-library/unified_trading_library/manifest_consolidator.py (lines 355-373),
+    2026-06-19 expected_unattempted materialisation run (cefi/tradfi shards never auto-merged),
+  ]
 locked_by: live-defi-rollout
 parent_epic: mtds_mdps_master
 estimate_class: refactor
@@ -26,13 +32,12 @@ priority: P2
 > now read a dedicated `consolidator_content_write_at` GCS metadata marker stamped ONLY by a real merge
 > (`_write_consolidated`), NEVER by the idle `_touch_canonical_mtime` freshness path — so an idle `_touch` can no longer
 > advance the cutoff past an unmerged shard. New helper `_get_content_write_mtime` + constant
-> `_CONSOLIDATOR_CONTENT_WRITE_AT_KEY` in
-> `unified-trading-library/unified_trading_library/manifest_consolidator.py` (shipped LDR@e6e56862). Legacy fallback
-> chain (`consolidator_content_write_at` → `consolidator_run_at` → `blob.updated`) is fail-toward-correctness
-> (over-includes → re-merge, never under-includes → silent drop). Regression tests:
-> `tests/unit/test_manifest_consolidator.py::test_idle_bucket_shard_written_after_last_merge_is_NOT_skipped` +
+> `_CONSOLIDATOR_CONTENT_WRITE_AT_KEY` in `unified-trading-library/unified_trading_library/manifest_consolidator.py`
+> (shipped LDR@e6e56862). Legacy fallback chain (`consolidator_content_write_at` → `consolidator_run_at` →
+> `blob.updated`) is fail-toward-correctness (over-includes → re-merge, never under-includes → silent drop). Regression
+> tests: `tests/unit/test_manifest_consolidator.py::test_idle_bucket_shard_written_after_last_merge_is_NOT_skipped` +
 > `::test_content_write_marker_stamped_on_real_merge_not_on_idle_touch`. Codex SSOT updated:
-> `codex/05-infrastructure/manifest-consolidator-ssot.md` § "Incremental cutoff = LAST-CONTENT-WRITE marker". The
+> `/codex/05-infrastructure/manifest-consolidator-ssot.md` § "Incremental cutoff = LAST-CONTENT-WRITE marker". The
 > `expected_universe_v2_scheduler.tf` KNOWN-GAP banner is cleared (no companion force-consolidate job needed — the
 > scheduler is now self-sustaining on idle AGs). Option 2 (companion force-consolidate cron) NOT taken — option 1 fixes
 > the root cause for every out-of-band writer, not just the enumerator.

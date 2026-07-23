@@ -1,6 +1,8 @@
 ---
 doc_type: issue
-title: Two question docs (client_reporting_pnl_attribution + risk_simulations_limits_alerting) + plans/questions/README.md genuinely lost — never committed, 8 active files reference them as canonical SSOTs
+title:
+  Two question docs (client_reporting_pnl_attribution + risk_simulations_limits_alerting) + plans/questions/README.md
+  genuinely lost — never committed, 8 active files reference them as canonical SSOTs
 summary:
 status: resolved
 nature: record
@@ -12,7 +14,13 @@ tags: []
 related: []
 created: 2026-05-10
 author: main-orchestrator-agent
-source: [plans/questions/ on-disk vs git-tracked diff, git log --diff-filter=D plans/questions/<missing files> (returns empty — never committed), git stash list × 20 entries (none contain the docs), grep -rln across plans/ + codex/ for the missing slugs (8 hits)]
+source:
+  [
+    plans/questions/ on-disk vs git-tracked diff,
+    git log --diff-filter=D plans/questions/<missing files> (returns empty — never committed),
+    git stash list × 20 entries (none contain the docs),
+    grep -rln across plans/ + codex/ for the missing slugs (8 hits),
+  ]
 locked_by: live-defi-rollout
 locked_since: 2026-05-10
 ---
@@ -55,7 +63,7 @@ All three existed on disk on 2026-05-08 (read directly via Read tool while draft
 | [`plans/questions/batch_live_design_symmetry_2026_05_08.md`](../../questions/batch_live_design_symmetry_2026_05_08.md)                       | 513                   | "PnL reporting must" — references `client_reporting_pnl_attribution`                                                                                                                          |
 | [`plans/questions/defi_readiness_catalogue_2026_05_08.md`](../../questions/defi_readiness_catalogue_2026_05_08.md)                           | 937, 939              | "Composes with" both — simulation harness + chain primitives feed risk simulations; PnL attribution decomposition needs DeFi catalogue                                                        |
 | [`plans/questions/paper_vs_live_workflow_maturity_2026_05_08.md`](../../questions/paper_vs_live_workflow_maturity_2026_05_08.md)             | 19, 94, 430, 688, 742 | Frontmatter `related_codex:` cite + body says `risk_simulations_limits_alerting` "owns the mock-data-as-stress-test surface"                                                                  |
-| [`codex/04-architecture/paper-vs-live-execution-seam.md`](../../../codex/04-architecture/paper-vs-live-execution-seam.md)                    | 48                    | Codex SSOT cross-links to it as the canonical risk-simulation doc                                                                                                                             |
+| [`/codex/04-architecture/paper-vs-live-execution-seam.md`](/codex/04-architecture/paper-vs-live-execution-seam.md)                           | 48                    | Codex SSOT cross-links to it as the canonical risk-simulation doc                                                                                                                             |
 
 Also, **my own `wallet_treasury_client_flow_post_trade_readiness_2026_05_08.md` formerly cross-referenced both**;
 re-creation 2026-05-09 dropped those refs since the targets were gone — the new content links to the 3 surviving sibling

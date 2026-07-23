@@ -11,22 +11,28 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: 2026-05-06
-overview: Companion to writegate_honest_coverage_endtoend_2026_05_06 — covers ONLY the features-pipeline gaps writegate defers or doesn't touch. (1) UAC feature_group->required_inputs DAG SSOT (writegate explicitly defers this as feature_dag_uac_ssot_<TBD>). (2) UAC EXPECTED_FEATURE_GROUPS_BY_SERVICE + FEATURE_COVERAGE_START registries — honest-coverage denominator for features (writegate covers raw-data shards, not features). (3) data-status denominator clip for features in deployment-api. (4) Phantom-row audit extension to features manifest. (5) ManifestFreshnessCache lifted to UTL + adopted in features-sports + features-volatility BatchHandlers.
+overview:
+  Companion to writegate_honest_coverage_endtoend_2026_05_06 — covers ONLY the features-pipeline gaps writegate defers
+  or doesn't touch. (1) UAC feature_group->required_inputs DAG SSOT (writegate explicitly defers this as
+  feature_dag_uac_ssot_<TBD>). (2) UAC EXPECTED_FEATURE_GROUPS_BY_SERVICE + FEATURE_COVERAGE_START registries —
+  honest-coverage denominator for features (writegate covers raw-data shards, not features). (3) data-status denominator
+  clip for features in deployment-api. (4) Phantom-row audit extension to features manifest. (5) ManifestFreshnessCache
+  lifted to UTL + adopted in features-sports + features-volatility BatchHandlers.
 type: code
 epic: data-pipeline-completion
 owner: Harsh
 locked_by: live-defi-rollout
 locked_since: 2026-05-06
-completion_gates: {code: C5, deployment: D2, business: B2}
+completion_gates: { code: C5, deployment: D2, business: B2 }
 repo_gates:
-- {repo: unified-api-contracts, code: C0, deployment: none, business: none}
-- {repo: unified-trading-library, code: C0, deployment: none, business: none}
-- {repo: features-sports-service, code: C0, deployment: D0, business: none}
-- {repo: features-volatility-service, code: C0, deployment: D0, business: none}
-- {repo: features-onchain-service, code: C0, deployment: D0, business: none}
-- {repo: features-delta-one-service, code: C0, deployment: D0, business: none}
-- {repo: deployment-api, code: C0, deployment: D0, business: none}
-- {repo: instruments-service, code: C0, deployment: none, business: none}
+  - { repo: unified-api-contracts, code: C0, deployment: none, business: none }
+  - { repo: unified-trading-library, code: C0, deployment: none, business: none }
+  - { repo: features-sports-service, code: C0, deployment: D0, business: none }
+  - { repo: features-volatility-service, code: C0, deployment: D0, business: none }
+  - { repo: features-onchain-service, code: C0, deployment: D0, business: none }
+  - { repo: features-delta-one-service, code: C0, deployment: D0, business: none }
+  - { repo: deployment-api, code: C0, deployment: D0, business: none }
+  - { repo: instruments-service, code: C0, deployment: none, business: none }
 depends_on: [writegate_honest_coverage_endtoend_2026_05_06]
 isProject: false
 ---
@@ -152,7 +158,7 @@ QG gate between phases.
       follow-up (see "Temporary states" section below).
 - [x] [AGENT] P0. **Per-service registry**. `EXPECTED_FEATURE_GROUPS_BY_SERVICE: dict[str, list[str]]` in
       `unified_api_contracts/canonical/domain/features/registry.py`. Source: each service's `app/calculators/` directory
-      listing + the matrix in `codex/02-data/data-lineage-MTDS-features-ml.md` Layer 3 table. **SHIPPED 2026-05-07
+      listing + the matrix in `/codex/02-data/data-lineage-MTDS-features-ml.md` Layer 3 table. **SHIPPED 2026-05-07
       UAC@4a25b07**: 5 services seeded — features-onchain (12), features-delta-one (33), features-sports (36),
       features-volatility (empty stub per audit 2026-05-07), features-cross-instrument (empty stub pending
       BuilderRegistry rollout). Used by data-status `_build_feature_group_breakdown` denominator clip.

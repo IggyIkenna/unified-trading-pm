@@ -9,27 +9,36 @@ stage: [meta]
 repos: [deployment-api, deployment-service, deployment-ui, execution-service, features-service, instruments-service]
 scope: [engineer, admin]
 tags: []
-related: [data_status_multi_axis_shard_propagation_2026_05_06.plan.md, shard_granularity_ssot_propagation_2026_05_06.HANDOVER.md, writegate_honest_coverage_endtoend_2026_05_06.md]
-created: '2026-05-07'
-overview: Realign the deployment-ui data-status drill-down hierarchy + per-shard download with the codex shard-key matrix per asset_group; add MTDS CLI flags for per-shard targeting + recovery.
+related:
+  [
+    data_status_multi_axis_shard_propagation_2026_05_06.plan.md,
+    shard_granularity_ssot_propagation_2026_05_06.HANDOVER.md,
+    /plans/archive/2026_05/writegate_honest_coverage_endtoend_2026_05_06.md,
+  ]
+created: "2026-05-07"
+overview:
+  Realign the deployment-ui data-status drill-down hierarchy + per-shard download with the codex shard-key matrix per
+  asset_group; add MTDS CLI flags for per-shard targeting + recovery.
 type: code
 epic: epic-deployment
-completion_gates: {code: C5, deployment: D3, business: none}
+completion_gates: { code: C5, deployment: D3, business: none }
 repo_gates:
-- {repo: deployment-api, code: C2, deployment: none, business: none}
-- {repo: deployment-ui, code: C2, deployment: none, business: none}
-- {repo: market-tick-data-service, code: C2, deployment: none, business: none}
-- {repo: unified-api-contracts, code: C2, deployment: none, business: none}
-- {repo: unified-trading-pm, code: C2, deployment: none, business: none}
+  - { repo: deployment-api, code: C2, deployment: none, business: none }
+  - { repo: deployment-ui, code: C2, deployment: none, business: none }
+  - { repo: market-tick-data-service, code: C2, deployment: none, business: none }
+  - { repo: unified-api-contracts, code: C2, deployment: none, business: none }
+  - { repo: unified-trading-pm, code: C2, deployment: none, business: none }
 depends_on: [data_status_multi_axis_shard_propagation_2026_05_06.plan.md]
 todos: []
 isProject: false
 estimate_class: design
 estimate_baseline_ai_days: 18
 estimate_calibrated_ai_days: 10.8
-estimate_calibration_note: 'Backfilled 2026-05-13: 41 todos, 26 done; ~15 remaining covering shard-atom drilldown + MTDS CLI shard-targeting flags across deployment-api/ui + MTDS + UAC. Design class (codex shard-key matrix alignment, UI hierarchy decisions). Baseline 18 (~1.2 AI-day avg remaining substantive todo); × 0.6 = 10.8.
+estimate_calibration_note: "Backfilled 2026-05-13: 41 todos, 26 done; ~15 remaining covering shard-atom drilldown + MTDS
+  CLI shard-targeting flags across deployment-api/ui + MTDS + UAC. Design class (codex shard-key matrix alignment, UI
+  hierarchy decisions). Baseline 18 (~1.2 AI-day avg remaining substantive todo); × 0.6 = 10.8.
 
-  '
+  "
 ---
 
 > **ARCHIVED 2026-05-20** — 100% complete (all 41 items shipped); DEFERRED items have named successor plans. Preserved
@@ -223,9 +232,9 @@ Both belong in this plan — they are the math behind the drill-down hierarchy t
 **unified-trading-pm** (codex docs + plan):
 
 - This plan moves to `plans/active/` after user approval.
-- `codex/02-data/availability-manifest-and-data-status.md` — new section "Drill-down hierarchy = shard atom" pointing at
-  the new endpoint.
-- `codex/06-coding-standards/cli-convention.md` — extend with the `--shard-key` convention so other services follow the
+- `/codex/02-data/availability-manifest-and-data-status.md` — new section "Drill-down hierarchy = shard atom" pointing
+  at the new endpoint.
+- `/codex/06-coding-standards/cli-convention.md` — extend with the `--shard-key` convention so other services follow the
   same pattern.
 
 ## Phased execution DAG
@@ -268,7 +277,7 @@ on whatever flags exist today as a degenerate case).
       per Phase 6 operator finding. DeFi uses `instrument_id` (not `protocol_id`) per Phase 6 fix at UAC@600bd21. All 5
       asset-group axis orders align with the codex drilldown navigation flow documented in the matrix comments.)
 - [x] [audit] P0. Read 5 sample on-disk parquets (one per asset_group) + confirm the canonical path matches the shard
-      atom. Reference paths in `codex/02-data/per-asset-group-bucket-layouts.md`. (2026-05-14 slot-7 GCS audit — ADC
+      atom. Reference paths in `/codex/02-data/per-asset-group-bucket-layouts.md`. (2026-05-14 slot-7 GCS audit — ADC
       access confirmed; 5 samples inspected. All have real non-NaN data. **CEFI**
       `day=.../asset_group=cefi/venue=BINANCE-FUTURES/instrument_type=perpetual/data_type=trades/BTCUSDT.parquet` — 3.4M
       rows, price non-null. ✅ matches shard atom `(venue, instrument_type, data_type, instrument_id)`. **DeFi**
@@ -413,13 +422,13 @@ Successor plan TBD; Phase 3's preview shape is sufficient for live-defi-rollout'
 
 ### Phase 5 — Codex docs + plan close
 
-- [x] [unified-trading-pm] P2 (this commit). New codex doc `codex/02-data/data-status-drilldown-hierarchy.md` —
+- [x] [unified-trading-pm] P2 (this commit). New codex doc `/codex/02-data/data-status-drilldown-hierarchy.md` —
       drill-down hierarchy SSOT with per-asset_group depth table, backend endpoint contract, frontend component
       contract, per-leaf download + Deploy-Missing surgical-recovery flow, failure modes the drill-down catches. Created
       as a NEW doc rather than editing `availability-manifest-and-data-status.md` to respect the active concurrent-edit
       on that file. ⚠️ **Re-created 2026-05-19 PM@a6af9d1c**: file was accidentally deleted in f58bc8a9 (Phase B.1 sweep
       targeted 05-infrastructure/ but swept 02-data/ too). Restored from last known content at f5be06ce.
-- [x] [unified-trading-pm] P2 (this commit). `codex/06-coding-standards/cli-convention.md` extended with `--shard-key`
+- [x] [unified-trading-pm] P2 (this commit). `/codex/06-coding-standards/cli-convention.md` extended with `--shard-key`
       convention section: pipe-delimited 6-field format, example invocations across CeFi spot / TradFi options bundle /
       DeFi protocol shard, per-service `decompose_shard_key()` adoption pattern.
 - [x] [unified-trading-pm] P2. Plan flips to closeout once Phase 3 ships + cross-service QG passes on the affected

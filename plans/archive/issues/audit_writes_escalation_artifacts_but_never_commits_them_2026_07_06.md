@@ -21,7 +21,7 @@ repos: [e2e-testing, unified-trading-pm]
 scope: [engineer, admin]
 tags: [data-pipeline, observability, self-healing, escalation, audit, ci-cd, git-hygiene]
 related:
-  [../data_pipeline_hardening_self_monitoring_2026_06_22.md, manifest_hygiene_red_2026_07_06.md] # (was: manifest_hygiene_red_2026_07_03.md — dangling; that file was WIPED by a tree-clean before ever being
+  [../data_pipeline_hardening_self_monitoring_2026_06_22.md, /plans/archive/issues/manifest_hygiene_red_2026_07_06.md] # (was: manifest_hygiene_red_2026_07_03.md — dangling; that file was WIPED by a tree-clean before ever being
   # committed (this is literally the bug this doc describes, see "Background" below) so it never existed in git
   # history. manifest_hygiene_red_2026_07_06.md is the actual re-filed successor escalation for the same stranded
   # cefi finding (see Todos item 3 below). Sync 2026-07-12, finding 391, §A2 B-queue ruling.

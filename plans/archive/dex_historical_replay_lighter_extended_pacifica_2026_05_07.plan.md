@@ -153,7 +153,7 @@ Before flipping the route on for production:
 #### Phase 1D — Backfill
 
 - [ ] Launch a `mtds-lighter-history-backfill-{ts}` VM (singleton-locked since The Graph Studio has rate limits) per
-      `codex/05-infrastructure/vm-tarball-deployment.md`.
+      `/codex/05-infrastructure/vm-tarball-deployment.md`.
 - [ ] Date range: `2024-08-01` (UAC `start_date`) → today. ~9 months × ~10-15 markets × ~5k trades/day → manageable.
 - [ ] Add the `mtds-lighter-history-` prefix to `vm_zombie_watchdog.py` `VM_PREFIX_TO_BUCKET`.
 
@@ -242,7 +242,7 @@ Same shape for Extended + Pacifica — write per-venue diagnostic scripts before
 - `--historical-replay` flag (or env var) routes pre-7-day dates through history adapters and recent dates through REST.
 - Schema-parity validation passes for one cross-checked day per venue.
 - Backfill VMs have run end-to-end on the full date range and the manifest shows `captured` for ≥99% of expected days.
-- `codex/02-data/mtds-data-source-coverage-matrix.md` updated with the new replay sources.
+- `/codex/02-data/mtds-data-source-coverage-matrix.md` updated with the new replay sources.
 - This plan archived.
 
 ## Reference commits

@@ -6,13 +6,29 @@ status: resolved
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [deployment-service, instruments-service, market-tick-data-service, strategy-service, unified-trading-library, unified-trading-pm]
+repos:
+  [
+    deployment-service,
+    instruments-service,
+    market-tick-data-service,
+    strategy-service,
+    unified-trading-library,
+    unified-trading-pm,
+  ]
 scope: [engineer, admin]
 tags: []
 related: []
 created: 2026-05-08
 author: tab3-gcs-migration
-source: [plans/active/gcs_migration_bundle_pipeline_mode_2026_05_08.md § Phase 0, unified-trading-library/unified_trading_library/core/cloud_constants.py § BUCKET_PREFIXES (workspace-local — bucket inventory SSOT), deployment-service/configs/bucket_config.yaml (workspace-local — infrastructure bucket templates + AWS mapping), codex/02-data/availability-manifest-and-data-status.md § "Phantom audit — re-runnable recipe" (read-first for §(c) + §(e))]
+source:
+  [
+    plans/active/gcs_migration_bundle_pipeline_mode_2026_05_08.md § Phase 0,
+    unified-trading-library/unified_trading_library/core/cloud_constants.py § BUCKET_PREFIXES (workspace-local — bucket
+    inventory SSOT),
+    deployment-service/configs/bucket_config.yaml (workspace-local — infrastructure bucket templates + AWS mapping),
+    /codex/02-data/availability-manifest-and-data-status.md § "Phantom audit — re-runnable recipe" (read-first for §(c)
+    + §(e)),
+  ]
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
 ---
@@ -26,7 +42,7 @@ locked_since: 2026-05-08
 
 This Phase 0 deliverable is a **runnable protocol**, not a measurement. The actual counts must be produced by the
 operator (or a follow-up sub-agent) on an `asia-northeast1-c` GCE VM per the
-[CLAUDE.md "phantom audit re-runnable recipe"](../../codex/02-data/availability-manifest-and-data-status.md#phantom-audit-re-runnable-recipe)
+[CLAUDE.md "phantom audit re-runnable recipe"](/codex/02-data/availability-manifest-and-data-status.md#phantom-audit-re-runnable-recipe)
 rule (cross-region listing is 18× slower — `~12 prefixes/sec` from a laptop vs `222/sec` on GCE same-region). The
 sections below are tagged **WORKSPACE-LOCAL** (answerable from this checkout, no GCP access required) or **REQUIRES VM
 RUN** (need same-region GCE + ADC + python + pandas + pyarrow).
@@ -260,8 +276,8 @@ Output schema per bucket:
 | `market-data-tick-prediction-${PID}` | TBD           | TBD          | TBD                      | TBD (from §d)                       | TBD                  | TBD                | TBD                                                |
 
 **Note**: sports + prediction bucket layouts differ — sports uses `entity=` instead of `asset_group=` per the
-[Sports GCS path SSOT](../../codex/02-data/contracts-scope-and-layout.md) (Axis 1 + 4 N/A there; Axis 2 + 5 may also be
-N/A). Keep them in the table for completeness; populate "N/A" if no path matches.
+[Sports GCS path SSOT](/codex/02-data/contracts-scope-and-layout.md) (Axis 1 + 4 N/A there; Axis 2 + 5 may also be N/A).
+Keep them in the table for completeness; populate "N/A" if no path matches.
 
 ---
 
@@ -545,14 +561,14 @@ on completion.
 
 **Phantom distribution by `data_type`** (chain-bundle + derivatives concentration):
 
-| data_type           | count | drift axis (per CLAUDE.md "Manifest phantom audit")     |
-| ------------------- | ----: | ------------------------------------------------------- |
+| data_type           | count | drift axis (per CLAUDE.md "Manifest phantom audit")    |
+| ------------------- | ----: | ------------------------------------------------------ |
 | `options_chain`     |   435 | Axis 5 (chain-bundle equivalence option↔options_chain) |
 | `futures_chain`     |   401 | Axis 5 (chain-bundle equivalence future↔futures_chain) |
-| `trades`            |   381 | Axis 1 (hive-vocab) or Axis 4 (path-prefix drift)       |
-| `derivative_ticker` |   367 | Axis 1 or Axis 4                                        |
-| `book_snapshot_5`   |   363 | Axis 1 or Axis 4                                        |
-| `liquidations`      |   276 | Axis 1 or Axis 4                                        |
+| `trades`            |   381 | Axis 1 (hive-vocab) or Axis 4 (path-prefix drift)      |
+| `derivative_ticker` |   367 | Axis 1 or Axis 4                                       |
+| `book_snapshot_5`   |   363 | Axis 1 or Axis 4                                       |
+| `liquidations`      |   276 | Axis 1 or Axis 4                                       |
 
 **Phantom distribution by `venue`** (Axis 3 schema-4 empty drift dominant):
 

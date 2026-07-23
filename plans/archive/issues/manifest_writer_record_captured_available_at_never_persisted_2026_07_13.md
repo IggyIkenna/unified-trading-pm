@@ -33,7 +33,7 @@ related:
   [
     plans/active/issues/sports_cf8_available_at_backfill_regression_2026_07_13.md,
     plans/active/sports_manifest_canonicalisation_2026_06_01.md,
-    codex/02-data/availability-manifest-and-data-status.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
   ]
 created: 2026-07-13
 parent_epic: manifest_master
@@ -249,7 +249,7 @@ above (MTDS/IS/strategy-service/execution-service/MDPS) was already exhaustive; 
       the 120s staleness threshold during this audit, 2026-07-13 ~23:29 UTC) — this bucket could not be read via
       `read_availability_index()` (correctly refused the OOM-risk per-VM-shard fallback), so cefi's `available_at` fill
       rate is UNKNOWN, not confirmed-green. (repo: deployment-service, per
-      `codex/05-infrastructure/manifest-consolidator-ssot.md`) — **INVESTIGATED, slot 10 (infra), 2026-07-14. Verdict:
+      `/codex/05-infrastructure/manifest-consolidator-ssot.md`) — **INVESTIGATED, slot 10 (infra), 2026-07-14. Verdict:
       NOT a current outage; a real, still-open root-cause gap found instead.**
   - **Live health, verified directly (not from logs/cache)**: `uts-prod-manifest-consolidator-market-data-cefi`'s last 8
     Cloud Run executions (checked via the Cloud Run Admin API REST, `google-auth` — `gcloud` is broken on this host,
@@ -258,7 +258,7 @@ above (MTDS/IS/strategy-service/execution-service/MDPS) was already exhaustive; 
     UTC today). Direct GCS read of `market-data-tick-cefi-prd-central-element-323112/_index/availability_index.parquet`:
     `blob.updated` age = **7.1s** at check time. The consolidator is healthy and actively writing right now.
   - **Root cause of yesterday's 267-390s reading: NOT the same as the outage this todo's title implies.**
-    `codex/05-infrastructure/manifest-consolidator-ssot.md` already documents (finding 205, 2026-07-12,
+    `/codex/05-infrastructure/manifest-consolidator-ssot.md` already documents (finding 205, 2026-07-12,
     `deployment-api@90ace9f`) that cefi is a legitimate ~60-70s-cadence-but-**86400s**-budget consolidator (matching its
     launchers' own `MANIFEST_CONSOLIDATED_STALENESS_SEC` override) — its blob age naturally swings within that cadence,
     and any reader applying the generic **120s** default sees false "stale" positives roughly 60% of the time. That

@@ -33,7 +33,7 @@ related:
   [
     plans/active/mvp_backfill_defi_onchain_v10_2026_06_27.md,
     plans/active/issues/defi_consolidator_scheduler_sigkill_unresolved_2026_07_10.md,
-    codex/05-infrastructure/manifest-consolidator-ssot.md,
+    /codex/05-infrastructure/manifest-consolidator-ssot.md,
   ]
 created: 2026-07-15
 parent_epic: defi_master
@@ -133,9 +133,9 @@ still produced the same wrong non-conclusion, since the tool's OWN input was fro
    Investigate why 12+ hours of `uts-prod-consolidator-liveness-watchdog` exit(1) failures did not escalate to a
    human/Slack page. Either the Cloud Run Job failure isn't wired to an alert policy at all, or it's wired but the
    channel/routing silently dropped it. Per this workspace's own alerting SSOT
-   (`codex/04-architecture/agent-orchestrator-alerting.md` / `…/ci-alerting.md`), a standing-condition failure like this
-   should dedup-and-page on the state transition, not require a human to stumble onto it via an unrelated verification
-   task.
+   (`/codex/04-architecture/agent-orchestrator-alerting.md` / `…/ci-alerting.md`), a standing-condition failure like
+   this should dedup-and-page on the state transition, not require a human to stumble onto it via an unrelated
+   verification task.
 3. **[NOT done — P2 follow-up, repo: unified-trading-library]** `ConsolidatorLivenessMonitor.check()` treats "heartbeat
    stale" as one bucket of causes. Consider having the watchdog (or a sibling check) explicitly query each bucket's
    triggering Cloud Scheduler job state via the Scheduler API and flag `state=PAUSED` as its own, higher-confidence
@@ -162,7 +162,7 @@ still produced the same wrong non-conclusion, since the tool's OWN input was fro
       `google_monitoring_alert_policy` in `deployment-service/terraform/gcp/*.tf` found none keyed off
       `resource.type="cloud_run_job"` for `uts-prod-consolidator-liveness-watchdog` (or any Cloud Run Job generically);
       the watchdog itself — the one thing watching the consolidator — had no independent watcher, violating the "each
-      layer independent of the one it watches" design in `codex/05-infrastructure/deployment-observability.md` §
+      layer independent of the one it watches" design in `/codex/05-infrastructure/deployment-observability.md` §
       "Out-of-band liveness". **Fix shipped**: added
       `google_monitoring_alert_policy.consolidator_liveness_watchdog_failed` to `consolidator_liveness_scheduler.tf`, a
       log-matched-condition alert on `resource.type="cloud_run_job" AND job_name=<this job> AND severity="ERROR"`, wired
@@ -205,7 +205,7 @@ still produced the same wrong non-conclusion, since the tool's OWN input was fro
       drops a page with no escalation of that failure itself, the same "who watches the watcher" gap this issue's P1
       todo just closed at the Cloud-Monitoring layer. Add a paging/summary-log path for `_route_one` dispatch failures
       (mirrors `notify_daily_summary_failed`'s "a dead digest must not be silent" pattern in
-      `codex/04-architecture/agent-orchestrator-alerting.md`) so a broken alert route is itself loud. Found while
+      `/codex/04-architecture/agent-orchestrator-alerting.md`) so a broken alert route is itself loud. Found while
       investigating why the 2026-07-15 consolidator-liveness-watchdog exit(1) failures never paged — could not verify
       live whether THIS specific incident's page was actually delivered or silently eaten by this exact code path (no
       live Cloud Logging/PagerDuty access from a repo-only investigation). — alerting-service@24c4777. Added

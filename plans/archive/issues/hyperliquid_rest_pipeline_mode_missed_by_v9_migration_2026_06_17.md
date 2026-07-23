@@ -16,7 +16,7 @@ tags: [hyperliquid, pipeline-mode, migration, cefi, defi, manifest, canonicalisa
 related:
   [
     plans/active/pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md,
-    codex/02-data/pipeline-mode-partition.md,
+    /codex/02-data/pipeline-mode-partition.md,
     plans/active/issues/live_tardis_machine_and_hl_aster_s3_batch_2026_06_21.md,
   ]
 created: 2026-06-17
@@ -83,7 +83,7 @@ loss.
       CEFI/DEFI) and remove `_VENUE_DIR_LEGACY_PIPELINE_MODES` in the carry harness — now that 0 objects carry the
       literal. **Repo: unified-api-contracts + e2e-testing.**
 - [ ] [DOCS] P3. Update stale `BATCH_HYPERLIQUID_REST`/`hyperliquid_rest` refs in
-      `codex/02-data/pipeline-mode-and-batch-live-reconciliation.md`. **Repo: unified-trading-pm.**
+      `/codex/02-data/pipeline-mode-and-batch-live-reconciliation.md`. **Repo: unified-trading-pm.**
 
 Cross-link: `plans/active/pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md` (the R4 retirement
 SSOT).

@@ -15,7 +15,7 @@ type: active-plan
 owner: ikenna
 deadline: 2026-05-23
 prior_deadline: post-cutover (operator triage)
-deadline_change_reason: 'Operator direction 2026-05-13: pulled forward into May-23 cutover scope. Workspace has
+deadline_change_reason: "Operator direction 2026-05-13: pulled forward into May-23 cutover scope. Workspace has
 
   throughput margin (~5-6x measured Day-1 2026-05-12); no descope; perfect cutover. The
 
@@ -27,9 +27,13 @@ deadline_change_reason: 'Operator direction 2026-05-13: pulled forward into May-
 
   closes the operator-UX gap for Group G Item 23.
 
-  '
+  "
 horizon: 2026-05-23
-companion_to: [plans/active/master_to_live_defi_2026_05_23.md (Group G Item 23), plans/active/cross_cutting_may_23_deliverables_2026_05_08.md (Phase 4 BUILD scope)]
+companion_to:
+  [
+    plans/active/master_to_live_defi_2026_05_23.md (Group G Item 23),
+    plans/active/cross_cutting_may_23_deliverables_2026_05_08.md (Phase 4 BUILD scope),
+  ]
 migrated_from: plans/archive/issues/dart_manual_trade_ui_build_2026_05_10.md (Phase C remainder section)
 locked_by: live-defi-rollout
 locked_since: 2026-05-13
@@ -37,8 +41,22 @@ estimate_class: design
 estimate_baseline_ai_days: 4.0
 estimate_calibrated_ai_days: 2.4
 effective_concurrent_slots: 1
-codex_refs: [codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md, codex/09-strategy/architecture-v2/cross-cutting/operational-modes-matrix.md, codex/14-customer-journeys/dart/mode-toggle.md]
-execution: {owner: next daily work-split tab on Ikenna side (UI repo familiarity required), cadence: one-shot (build-out) + per-PR (regression smoke once shipped) + Playwright e2e against Tier-2 stack pre-cutover, verifier: Playwright e2e `dart-manual-trade-flow.spec.ts` GREEN end-to-end + manual-trade-panel route surface renders with persona ACL gating, last_executed: NEVER}
+codex_refs:
+  [
+    /codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/operational-modes-matrix.md,
+    /codex/14-customer-journeys/dart/mode-toggle.md,
+  ]
+execution:
+  {
+    owner: next daily work-split tab on Ikenna side (UI repo familiarity required),
+    cadence:
+      one-shot (build-out) + per-PR (regression smoke once shipped) + Playwright e2e against Tier-2 stack pre-cutover,
+    verifier:
+      Playwright e2e `dart-manual-trade-flow.spec.ts` GREEN end-to-end + manual-trade-panel route surface renders with
+      persona ACL gating,
+    last_executed: NEVER,
+  }
 ---
 
 ## Deferred work — migrated to:
@@ -139,10 +157,10 @@ The existing `components/trading/manual/manual-trading-panel.tsx` + `single-orde
 
 ### Phase D — Codex audit + master plan flip (~0.25 AI-day)
 
-- [x] [AGENT] P1. Update `codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md` with shipped
+- [x] [AGENT] P1. Update `/codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md` with shipped
       surface paths (new dedicated route + dart-client.ts unification). (`pm@6769096e` — Phase C shipped notice added
       with route paths, components, dart-client, mocks, Playwright spec)
-- [x] [AGENT] P1. Update `codex/09-strategy/architecture-v2/cross-cutting/operational-modes-matrix.md` with the shipped
+- [x] [AGENT] P1. Update `/codex/09-strategy/architecture-v2/cross-cutting/operational-modes-matrix.md` with the shipped
       Sheet → route migration. (`pm@6769096e` — DART route surface update banner added)
 - [x] [AGENT] P0. Flip master Group G Item 23 row in `plans/active/master_to_live_defi_2026_05_23.md` to remove the
       "full UX flow refactor DEFERRED to successor plan" annotation. Update `Last verified` date. (done in this commit —

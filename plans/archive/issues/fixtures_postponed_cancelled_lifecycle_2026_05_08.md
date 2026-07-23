@@ -1,6 +1,8 @@
 ---
 doc_type: issue
-title: FIXTURES postponed/cancelled status lifecycle — api_football misflags + reference-source-itself-missing-data + new-time fixture identity question
+title:
+  FIXTURES postponed/cancelled status lifecycle — api_football misflags + reference-source-itself-missing-data +
+  new-time fixture identity question
 summary:
 status: resolved
 nature: record
@@ -13,10 +15,17 @@ related: []
 created: 2026-05-08
 author: ikenna
 source:
-- instruments-service/instruments_service/engine/orchestrator.py (FIXTURES write path)
-- unified-api-contracts/unified_api_contracts/external/api_football/normalize.py
-- unified-api-contracts/unified_api_contracts/external/api_football/schemas.py:143-159
-- {'operator-confirmed empirical observation (Harsh, 2026-05-08)': 'I have seen in few matches where api football said cancelled and footystats gave me match data and then cross-checked it. the match was postponed and not cancelled. api football misflaggeed it as cancelled instead of postponed. and sometimes they dont have the data for a match that was played on original time (no cancel or postponed) but they failed to capture, and thats the really tricky one. as api-football is the reference, and reference is missing data'}
+  - instruments-service/instruments_service/engine/orchestrator.py (FIXTURES write path)
+  - unified-api-contracts/unified_api_contracts/external/api_football/normalize.py
+  - unified-api-contracts/unified_api_contracts/external/api_football/schemas.py:143-159
+  - {
+      "operator-confirmed empirical observation (Harsh, 2026-05-08)":
+        "I have seen in few matches where api football said cancelled and footystats gave me match data and then
+        cross-checked it. the match was postponed and not cancelled. api football misflaggeed it as cancelled instead of
+        postponed. and sometimes they dont have the data for a match that was played on original time (no cancel or
+        postponed) but they failed to capture, and thats the really tricky one. as api-football is the reference, and
+        reference is missing data",
+    }
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
 ---
@@ -122,8 +131,8 @@ from "trust blindly" to "trust + verify via cross-source."
 - Re-fetch from api_football and observe: does the same `fixture_id` appear at both the original date and the
   rescheduled date? Does `status_long` evolve over time (`"Not Started" → "Postponed" → "Match Finished"`)?
 - Document the empirical lifecycle in
-  [`unified-trading-pm/codex/02-data/sports-fixtures-lifecycle.md`](../../codex/02-data/sports-fixtures-lifecycle.md)
-  (NEW codex doc).
+  [`unified-trading-pm/codex/02-data/sports-fixtures-lifecycle.md`](/codex/02-data/sports-fixtures-lifecycle.md) (NEW
+  codex doc).
 - Wire orchestrator to handle the empirical case correctly (case a: re-fetch overwrites in place + clear status_history;
   case b: explicit new-fixture detection + linked manifest rows).
 

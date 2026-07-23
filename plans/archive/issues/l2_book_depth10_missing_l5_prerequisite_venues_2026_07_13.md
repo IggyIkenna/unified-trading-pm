@@ -13,7 +13,7 @@ stage: [data]
 repos: [market-tick-data-service]
 scope: [engineer]
 tags: [live-capture, orderbook, microstructure, premise-correction]
-related: [l2_book_microstructure_capture_2026_07_13.md]
+related: [/plans/active/l2_book_microstructure_capture_2026_07_13.md]
 created: 2026-07-13
 parent_epic: strategy_master
 priority: P2

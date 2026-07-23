@@ -19,7 +19,7 @@ locked_by: live-defi-rollout
 ## ✅ RESOLUTION 2026-05-16 (slot-8)
 
 All 3 recommended lifecycle policies applied on-cloud + codified in
-[`codex/05-infrastructure/gcs-lifecycle-policies.md`](../../codex/05-infrastructure/gcs-lifecycle-policies.md):
+[`/codex/05-infrastructure/gcs-lifecycle-policies.md`](/codex/05-infrastructure/gcs-lifecycle-policies.md):
 
 1. `gs://deployment-scripts-central-element-323112/` — `vm-logs/` 14-day purge ✅
 2. `gs://central-element-323112-deployment-events/` — `quality_gates_snapshot/` 30-day retention ✅
@@ -34,8 +34,7 @@ lifecycle (delete-only, no in-flight modification, lowest-risk infra op).
 
 ## What I Found
 
-**Audit date**: 2026-05-15  
-**Buckets inspected**:
+**Audit date**: 2026-05-15 **Buckets inspected**:
 
 - `gs://central-element-323112-deployment-events/` — quality_gates_snapshot parquets
 - `gs://deployment-scripts-central-element-323112/` — code tarballs + vm-logs

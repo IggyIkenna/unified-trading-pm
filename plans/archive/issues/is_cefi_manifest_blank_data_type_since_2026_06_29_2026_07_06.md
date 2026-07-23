@@ -23,7 +23,7 @@ related:
   [
     plans/active/issues/sports_is_manifest_eu_regression_overwrite_2026_06_29.md,
     plans/archive/2026_07/is_catalogue_completion_2d_2026_07_06.md,
-    ../../codex/02-data/availability-manifest-and-data-status.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
   ]
 created: 2026-07-06
 last_updated: 2026-07-06
@@ -105,7 +105,7 @@ Two candidate root causes surfaced during investigation (2026-07-06):
    mirrors)" landed 2026-06-29T08:46 UTC. The first blank-data_type row landed 2026-06-29T13:40 (5 hours later — the
    daily t1-recon fire). Correlated in time.
 
-**Right fix (WRITER as SSOT — codex/02-data/availability-manifest-and-data-status.md):** the writer should stamp
+**Right fix (WRITER as SSOT — /codex/02-data/availability-manifest-and-data-status.md):** the writer should stamp
 `data_type="instruments"` directly at `record_captured` call time (writers.py:239), not rely on a post-hoc migration.
 That makes the atom canonical from the first emission and eliminates the migration-lag correctness window.
 `migrate_instruments_store_v9.py` remains a one-time backfill for the legacy blank rows.

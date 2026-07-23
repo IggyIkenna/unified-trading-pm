@@ -51,7 +51,7 @@ across the run (233.6s → 306.5s → 341.9s → 345.3s → 360.4s), confirming 
 ~1h10m the VM ran — it's been behind or down for a sustained period, not a single transient blip.
 
 **Impact observed**: the exception was raised inside the per-shard processing loop for date 06-09 and was CAUGHT cleanly
-by shard-level failure isolation (per `codex/04-architecture/shard-level-failure-isolation.md`) — the run logged the
+by shard-level failure isolation (per `/codex/04-architecture/shard-level-failure-isolation.md`) — the run logged the
 error and continued to date 06-10 without crashing. This is the correct resilience behavior. But it meant 06-09's data
 was never captured in that run; a second, unrelated re-run of the same window had to re-fetch it (confirmed: 06-09
 succeeded on retry, 127 teams captured, ~2m45s).
@@ -81,7 +81,7 @@ consolidated blob catches up (staleness should trend back toward 0, not keep gro
 - [x] [INFRA] P2. Check the manifest-consolidator Cloud Run Job + Scheduler status for
       `instruments-store-sports-prd-central-element-323112` — confirm whether it's genuinely down/erroring or just
       lagging under load, and get the consolidated blob's staleness trending back down. (repo: unified-trading-library
-      or the consolidator's owning infra repo — grep `codex/05-infrastructure/manifest-consolidator-ssot.md` for the
+      or the consolidator's owning infra repo — grep `/codex/05-infrastructure/manifest-consolidator-ssot.md` for the
       exact deployment target) — ✅ deployment-service@5d6200e
 
   **Diagnosis (2026-07-21, live investigation)**: the Cloud Run Job `uts-prod-manifest-consolidator-instruments-sports`
@@ -132,7 +132,7 @@ consolidated blob catches up (staleness should trend back toward 0, not keep gro
       bucket's own legitimate merge cadence, and that reader-side gap is exactly what todo 1 above diagnosed and todo 3
       below fixed fleet-wide across every affected launcher. Adding a SEPARATE staleness alert on top would have been
       solving a problem that doesn't exist (the watchdog + feed-SLA registry
-      (`codex/03-observability/data-feed-sla-registry.md`) already cover generic consolidator-down detection correctly)
+      (`/codex/03-observability/data-feed-sla-registry.md`) already cover generic consolidator-down detection correctly)
       while leaving the actual defect (the launcher-side threshold mismatch) unaddressed — todo 1/3's fix is the
       complete, correct answer.**
 - [x] [INFRA] P3. Audit every OTHER sports launcher reading `instruments-store-sports-prd-central-element-323112`
@@ -162,4 +162,4 @@ consolidated blob catches up (staleness should trend back toward 0, not keep gro
 
 ## Codex SSOTs
 
-`codex/05-infrastructure/manifest-consolidator-ssot.md`, `codex/04-architecture/shard-level-failure-isolation.md`.
+`/codex/05-infrastructure/manifest-consolidator-ssot.md`, `/codex/04-architecture/shard-level-failure-isolation.md`.

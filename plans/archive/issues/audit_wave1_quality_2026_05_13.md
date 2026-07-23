@@ -14,11 +14,21 @@ created: 2026-05-13
 author: harsh-main (slot 1)
 resolved: 2026-05-17
 resolution: AUDIT-COMPLETE — 19 findings cataloged. P0
-source: [work_split_2026_05_13_harsh.md (Wave 1 layout), 'harsh_orchestrator/pings/slot_{2..9}.md', LDR commit log 2026-05-12 → 2026-05-13]
+source:
+  [
+    work_split_2026_05_13_harsh.md (Wave 1 layout),
+    "harsh_orchestrator/pings/slot_{2..9}.md",
+    LDR commit log 2026-05-12 → 2026-05-13,
+  ]
 severity: P0 (gap findings) + retrospective (process)
 locked_by: live-defi-rollout
 locked_since: 2026-05-13
-routing: {primary_owner: harsh-main (issue author; Harsh-side Wave 1 retrospective), routed_2026_05_13: 18 findings already self-routed within issue body § "Files for follow-up", ikenna_side_action: NONE — Harsh-side internal audit; Ikenna-main acked via PM coordination ledger 2026-05-13}
+routing:
+  {
+    primary_owner: harsh-main (issue author; Harsh-side Wave 1 retrospective),
+    routed_2026_05_13: 18 findings already self-routed within issue body § "Files for follow-up",
+    ikenna_side_action: NONE — Harsh-side internal audit; Ikenna-main acked via PM coordination ledger 2026-05-13,
+  }
 ---
 
 > **🟢 ROUTING ACK (Ikenna-main, 2026-05-13)** — This Harsh-side internal Wave 1 retrospective lists 18 findings
@@ -188,9 +198,9 @@ extra-high):
 
 **Defer to Day-5 retrospective**:
 
-- Aggregate model-tier learnings into `codex/06-coding-standards/model-tier-selection.md` update (currently the doc says
-  "Opus only for main / cross-repo architecture / >200k context" but today's data suggests adding "multi-stream slots
-  with real-infra ops" + "grep-heavy multi-callsite refactors" as Opus triggers)
+- Aggregate model-tier learnings into `/codex/06-coding-standards/model-tier-selection.md` update (currently the doc
+  says "Opus only for main / cross-repo architecture / >200k context" but today's data suggests adding "multi-stream
+  slots with real-infra ops" + "grep-heavy multi-callsite refactors" as Opus triggers)
 
 ## Why it matters
 
@@ -234,6 +244,5 @@ cycle; P2 model-tier policy is operator + Ikenna decision.
 
 ## Triage — 2026-05-18
 
-**Status**: CLOSED — SHIPPED  
-**Triaged by**: slot-8 triage sweep  
-**Reason**: Resolved 2026-05-17; 19 findings cataloged; P0 items re-opened per findings triage
+**Status**: CLOSED — SHIPPED **Triaged by**: slot-8 triage sweep **Reason**: Resolved 2026-05-17; 19 findings cataloged;
+P0 items re-opened per findings triage

@@ -33,7 +33,7 @@ tags: [cefi, manifest-consolidator, staleness, incremental-trap, production-inci
 related:
   [
     ../data_pipeline_e2e_check_2026_07_10.md,
-    defi_consolidator_scheduler_sigkill_unresolved_2026_07_10.md,
+    /plans/archive/issues/defi_consolidator_scheduler_sigkill_unresolved_2026_07_10.md,
     ../../archive/issues/consolidator_idle_bucket_incremental_trap_2026_06_19.md,
   ]
 created: 2026-07-13

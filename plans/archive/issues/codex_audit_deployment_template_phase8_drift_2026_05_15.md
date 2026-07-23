@@ -12,7 +12,11 @@ tags: []
 related: []
 created: 2026-05-15
 author: slot-8 (Harsh)
-source: [plans/active/continuation_prompts_harsh_2026_05_15.md § Slot 8 item 3, plans/active/codex_vs_citadel_infrastructure_audit_2026_05_10.md]
+source:
+  [
+    plans/active/continuation_prompts_harsh_2026_05_15.md § Slot 8 item 3,
+    plans/active/codex_vs_citadel_infrastructure_audit_2026_05_10.md,
+  ]
 locked_by: live-defi-rollout
 ---
 
@@ -27,7 +31,7 @@ locked_by: live-defi-rollout
 ### DT-1 — STEP 5.79-5.82 missing from `quality-gates.md` STEP cross-reference table [IMMEDIATE — FIXED]
 
 **Status**: ✅ FIXED this session (slot-8 2026-05-15, PM commit pending) — 4 table rows added to
-`codex/06-coding-standards/quality-gates.md` § "QG STEP cross-reference".
+`/codex/06-coding-standards/quality-gates.md` § "QG STEP cross-reference".
 
 **Finding**: `base-service.sh` has 4 new enforcement steps added in B-014 (deployment_and_qg_strategy
 \_implementation_2026_05_13.md Phase 3):
@@ -74,7 +78,7 @@ in CLAUDE.md" — technically these were covered by that note. But for discovera
 **Status**: 🟡 OPEN — PRE_CUTOVER, no blocking risk for May-23.
 
 **Finding**: `unified-api-contracts/scripts/quality-gates.sh` has several carveout patterns that are NOT explained in
-`codex/06-coding-standards/quality-gates.md`:
+`/codex/06-coding-standards/quality-gates.md`:
 
 - `UAC_CANONICAL_EXEMPT=true` — disables the "no internal deep-imports" check for UAC itself
 - `BROAD_EXCEPT_EXTRA_EXCLUDES` — per-file suppress for overly-broad `except` in registry code
@@ -99,7 +103,7 @@ land before a new registry module is added post-cutover without exclusion guidan
 
 **Status**: 🟡 OPEN — PRE_CUTOVER.
 
-**Finding**: `codex/05-infrastructure/deployment-and-qg-strategy.md` describes the Phase 3 ratchet rollout ("Every
+**Finding**: `/codex/05-infrastructure/deployment-and-qg-strategy.md` describes the Phase 3 ratchet rollout ("Every
 service repo has `scripts/quality-gates.sh`") and the daily QG snapshot ("bash
 unified-trading-pm/scripts/quality_gates/snapshot.sh") but:
 

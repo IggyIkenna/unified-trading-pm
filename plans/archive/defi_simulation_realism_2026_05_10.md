@@ -6,12 +6,31 @@ status: complete
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [deployment-service, execution-service, instruments-service, market-tick-data-service, strategy-service, unified-api-contracts]
+repos:
+  [
+    deployment-service,
+    execution-service,
+    instruments-service,
+    market-tick-data-service,
+    strategy-service,
+    unified-api-contracts,
+  ]
 scope: [engineer, admin]
 tags: []
-related: [plans/active/defi_catalogue_chain_primitives_2026_05_10.md, plans/active/cross_asset_group_catalogue_audit_2026_05_10.md, plans/questions/risk_simulations_limits_alerting_2026_05_08.md, plans/active/defi_master_2026_05_07.md, plans/active/master_to_live_defi_2026_05_23.md]
+related:
+  [
+    plans/active/defi_catalogue_chain_primitives_2026_05_10.md,
+    plans/active/cross_asset_group_catalogue_audit_2026_05_10.md,
+    plans/questions/risk_simulations_limits_alerting_2026_05_08.md,
+    plans/active/defi_master_2026_05_07.md,
+    plans/active/master_to_live_defi_2026_05_23.md,
+  ]
 created: 2026-05-10
-overview: Matching engine extension for per-pool-shape AMM models (Uniswap V3 tick-bucket, Curve D-invariant, Balancer weighted+boosted, Solana CLMM, Jupiter aggregator) + lending rate-impact-from-own-trade simulator + governance proposal capture + simulation harness + staking + restaking yield-stream simulator + slashing tail-risk MC. May-23 cutover scope per all-in operator directive.
+overview:
+  Matching engine extension for per-pool-shape AMM models (Uniswap V3 tick-bucket, Curve D-invariant, Balancer
+  weighted+boosted, Solana CLMM, Jupiter aggregator) + lending rate-impact-from-own-trade simulator + governance
+  proposal capture + simulation harness + staking + restaking yield-stream simulator + slashing tail-risk MC. May-23
+  cutover scope per all-in operator directive.
 type: plan
 deadline: 2026-05-23
 horizon: ~13 calendar days; ~40-70 AI-days at full multi-agent saturation
@@ -19,15 +38,25 @@ operator: ikenna
 locked_by: live-defi-rollout
 locked_since: 2026-05-10
 spawned_from: plans/questions/defi_readiness_catalogue_2026_05_08.md
-related_codex: [codex/04-architecture/amm-slippage-simulation.md, codex/04-architecture/concentrated-liquidity.md, codex/04-architecture/batch-live-architecture.md, codex/04-architecture/tenderly-execution-provider.md, codex/09-strategy/architecture-v2/cross-cutting/restaking-reward-economics.md]
+related_codex:
+  [
+    /codex/04-architecture/amm-slippage-simulation.md,
+    /codex/04-architecture/concentrated-liquidity.md,
+    /codex/04-architecture/batch-live-architecture.md,
+    /codex/04-architecture/tenderly-execution-provider.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/restaking-reward-economics.md,
+  ]
 estimate_class: design
 estimate_baseline_ai_days: 53.5
 estimate_calibrated_ai_days: 32.1
-estimate_calibration_note: 'Baseline auto-extracted from in-body AI-day mentions during 2026-05-11 sweep (~2-3, ~10-15, ~5-8, ~8-12, + 4 more). Class inferred from filename (design, multiplier 0.6×).
+estimate_calibration_note: "Baseline auto-extracted from in-body AI-day mentions during 2026-05-11 sweep (~2-3, ~10-15,
+  ~5-8, ~8-12, + 4 more). Class inferred from filename (design, multiplier 0.6×).
 
-  CAVEAT: auto-extract SUMS all in-body mentions; plans with both ''Total: X'' headlines AND per-phase line items will be double-counted. Owner agent: verify baseline, refine class per codex/08-workflows/estimation-calibration.md, recompute calibrated if either changes.
+  CAVEAT: auto-extract SUMS all in-body mentions; plans with both 'Total: X' headlines AND per-phase line items will be
+  double-counted. Owner agent: verify baseline, refine class per /codex/08-workflows/estimation-calibration.md,
+  recompute calibrated if either changes.
 
-  '
+  "
 ---
 
 > **ARCHIVED 2026-05-19** — 100% complete (all checkboxes checked); preserved for archaeology.
@@ -162,7 +191,7 @@ Owner: ikenna (cross-cutting design); harsh implements.
       returns OK. basedpyright re-run on internal/**init**.py shows no `reportUnsupportedDunderAll` errors for these
       symbols.
 
-**Codex SSOT update (Phase 1 boundary)** — `codex/04-architecture/amm-slippage-simulation.md` exists since 2026-05-10
+**Codex SSOT update (Phase 1 boundary)** — `/codex/04-architecture/amm-slippage-simulation.md` exists since 2026-05-10
 with Phases 2-8 content stubs. **Day-1 slot-6 ship 2026-05-11 (PM@`3b76a5ef`)**: extended with NEW section #10
 Solidly-fork (Velodrome + Aerodrome math + Slipstream out-of-scope note) + NEW "Per-shape sample pools + golden fixture
 seeds" matrix table (10 rows × 7 columns covering all V1-V10 shapes with sample pool addresses, fee model, validation
@@ -185,8 +214,8 @@ Success criterion: matching engine `amm.py` extends to model each `PoolShape` ex
 of on-chain real fill at the same block (verified via Tenderly fork comparison).
 
 > **Day-1 slot-6 design ship 2026-05-11 (PM@`d66b0f9f`)**: codex
-> [`amm-slippage-simulation.md`](../../codex/04-architecture/amm-slippage-simulation.md) § "Simulation contract —
-> unified pre-trade quote interface" + § "Per-shape sample pools + golden fixture seeds" ship the Phase 2 design half:
+> [`amm-slippage-simulation.md`](/codex/04-architecture/amm-slippage-simulation.md) § "Simulation contract — unified
+> pre-trade quote interface" + § "Per-shape sample pools + golden fixture seeds" ship the Phase 2 design half:
 > `PoolMatcher` Protocol (quote/apply/spot_price/snapshot methods); per-pool-class module map (`curve.py` /
 > `balancer.py` / `solana_clmm.py` / `solidly_fork.py` / `aggregator.py` — all NEW for Phase 2C-H);
 > `engine.py:_amm_match_impl` dispatcher refactor target; per-shape sample pool addresses
@@ -256,8 +285,8 @@ of on-chain real fill at the same block (verified via Tenderly fork comparison).
       Velodrome/Aerodrome Slipstream V3-tick CL pools (registered to `PoolShape.SOLIDLY_CL_FORK` — reuses V3 tick math +
       `(chain, CLFactory)` discriminator); ≥20-Velodrome + ≥20-Aerodrome historical-swap validation (golden harness).
 
-**Codex SSOT update (Phase 2 boundary)** — `codex/04-architecture/amm-slippage-simulation.md` § "Implementation status —
-Phase 2 as-built" shipped 2026-05-12 (the as-built module map: `pool_matcher.py` Protocol + registry +
+**Codex SSOT update (Phase 2 boundary)** — `/codex/04-architecture/amm-slippage-simulation.md` § "Implementation status
+— Phase 2 as-built" shipped 2026-05-12 (the as-built module map: `pool_matcher.py` Protocol + registry +
 `BasePoolMatcher`; `amm.py` V2/V3/V4 conformance; `curve.py` / `balancer.py` / `solidly_fork.py` / `solana_clmm.py` /
 `aggregator.py`; `engine.py` dispatch; the `OrderSide`-consolidation; the deferred-follow-ups list). Per-shape
 historical-swap **validation results** still pending — fold into this section once the golden-test-set harness (below)
@@ -275,7 +304,7 @@ captures the on-chain `Swap`-event corpus.
 Owner: harsh + parallel agent.
 
 > **⚠️ HARD RULE 2026-05-12 — Phase 3 yield is derived from on-chain INDEX growth, NOT APY** (operator-codified,
-> [`pnl-attribution.md`](../../codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md) HARD RULE #4): the
+> [`pnl-attribution.md`](/codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md) HARD RULE #4): the
 > matching-engine `LendingRateImpactCalculator` (Phase 3A — execution-service@`ff6c52ba`) computes the POST-TRADE
 > marginal rate the next-block accrual will use — that output is the input to the matcher's pre-trade quote, NOT the
 > consumer's P&L attribution. **Backtest replay yield** is computed downstream from the
@@ -286,7 +315,7 @@ Owner: harsh + parallel agent.
 > `supply × apy × time_fraction` proxy as the canonical yield computation; APY is a presentation view only.
 
 > **Day-1 slot-6 design ship 2026-05-12**: codex
-> [`amm-slippage-simulation.md`](../../codex/04-architecture/amm-slippage-simulation.md) § "Lending rate-impact-from-
+> [`amm-slippage-simulation.md`](/codex/04-architecture/amm-slippage-simulation.md) § "Lending rate-impact-from-
 > own-trade" → "Per-protocol IRM parameter capture" subsection ships the Phase 3 design half with operator-runnable
 > detail for Harsh slot 4: (a) per-protocol Pool/Comet addresses + IRM getter ABIs + reserve config getters across 7
 > protocol-chain combos (Aave V3 Ethereum/Arbitrum/Optimism/Polygon/Base/Avalanche + Compound V3
@@ -369,10 +398,10 @@ Owner: harsh + parallel agent.
 Owner: ikenna for design + harsh for implementation.
 
 > **Day-1 slot-6 design ship 2026-05-12 (PM@`ae804766`)**: codex
-> [`amm-slippage-simulation.md`](../../codex/04-architecture/amm-slippage-simulation.md) § "Governance proposal
-> simulation harness" → "Per-protocol capture detail" subsection ships the Phase 4 design half with operator-runnable
-> detail for Harsh slot 4: (a) per-protocol Governor contract addresses (`GovernanceV3Ethereum`,
-> `GovernorBravoDelegator`, MakerDAO ChiefBoot for Spark, AragonVoting for Lido)
+> [`amm-slippage-simulation.md`](/codex/04-architecture/amm-slippage-simulation.md) § "Governance proposal simulation
+> harness" → "Per-protocol capture detail" subsection ships the Phase 4 design half with operator-runnable detail for
+> Harsh slot 4: (a) per-protocol Governor contract addresses (`GovernanceV3Ethereum`, `GovernorBravoDelegator`, MakerDAO
+> ChiefBoot for Spark, AragonVoting for Lido)
 >
 > - Snapshot space IDs + subgraph endpoints; (b) Tenderly fork simulator code skeleton with REST API patterns (POST
 >   `fork` + `simulate`) + ~10 sims/day budget; (c) `defi-simulate-proposal` CLI signature
@@ -431,16 +460,16 @@ Owner: ikenna for design + harsh for implementation.
 Owner: harsh + parallel agents.
 
 > **Day-1 slot-6 design ship 2026-05-12 (PM@`ae804766`)**: codex
-> [`amm-slippage-simulation.md`](../../codex/04-architecture/amm-slippage-simulation.md) § "Staking + restaking
-> yield-stream simulators" → "Per-protocol capture detail" subsection ships the Phase 5 design half with
-> operator-runnable detail for Harsh slot 4: (a) 11-row per-protocol capture table covering Ethereum beacon
-> (Lighthouse/Prysm REST per-epoch) + Ethereum execution (eth_getBlockByNumber + baseFeePerGas + priorityFee) + Solana
-> validator (getInflationReward per-epoch) + EigenLayer + Symbiotic + Karak + Jito-restaking subgraphs +
-> Ether.fi/Renzo/KelpDAO/Puffer LRT-fee contract addresses + governance subgraph polls; (b) per-component model
-> skeletons — `StakingYieldModel` calibrate+sample with attestation-efficiency-binned heteroskedasticity;
-> `RestakingAVSModel` base+log-normal-premium per-LRT operator-allocation-weighted; `LRTProtocolFeeModel` discrete-event
-> mean±σ_quarterly per-protocol; `SeasonalPointsModel` operator-tuned discount factors with 4 protocol calibration
-> anchors (Ether.fi 60% / Renzo 50% / Puffer 50% / new programs 70%); (c) `Phase 5E` composite
+> [`amm-slippage-simulation.md`](/codex/04-architecture/amm-slippage-simulation.md) § "Staking + restaking yield-stream
+> simulators" → "Per-protocol capture detail" subsection ships the Phase 5 design half with operator-runnable detail for
+> Harsh slot 4: (a) 11-row per-protocol capture table covering Ethereum beacon (Lighthouse/Prysm REST per-epoch) +
+> Ethereum execution (eth_getBlockByNumber + baseFeePerGas + priorityFee) + Solana validator (getInflationReward
+> per-epoch) + EigenLayer + Symbiotic + Karak + Jito-restaking subgraphs + Ether.fi/Renzo/KelpDAO/Puffer LRT-fee
+> contract addresses + governance subgraph polls; (b) per-component model skeletons — `StakingYieldModel`
+> calibrate+sample with attestation-efficiency-binned heteroskedasticity; `RestakingAVSModel` base+log-normal-premium
+> per-LRT operator-allocation-weighted; `LRTProtocolFeeModel` discrete-event mean±σ_quarterly per-protocol;
+> `SeasonalPointsModel` operator-tuned discount factors with 4 protocol calibration anchors (Ether.fi 60% / Renzo 50% /
+> Puffer 50% / new programs 70%); (c) `Phase 5E` composite
 > `staking_yield_stream_distribution(lst_or_lrt, chain, horizon_epochs)` code skeleton convolving all 4 layers.
 > **Implementation half remains `- [ ]` for Harsh slot 4** per cross-side handshake.
 
@@ -577,10 +606,10 @@ Owner: harsh.
 Owner: harsh.
 
 > **Day-1 slot-6 design ship 2026-05-12**: codex
-> [`amm-slippage-simulation.md`](../../codex/04-architecture/amm-slippage-simulation.md) § "Slashing tail-risk Monte
-> Carlo" → "Per-chain slashing event capture" + "Phase 7B MC simulator architecture" + "Phase 7C archetype
-> capital-allocation hook" subsections ship the Phase 7 design half with operator-runnable detail for Harsh slot 4: (a)
-> per-chain `slashing_events` data_type source — Ethereum beacon (Lighthouse/Prysm `/eth/v1/beacon/pool/*_slashings`
+> [`amm-slippage-simulation.md`](/codex/04-architecture/amm-slippage-simulation.md) § "Slashing tail-risk Monte Carlo" →
+> "Per-chain slashing event capture" + "Phase 7B MC simulator architecture" + "Phase 7C archetype capital-allocation
+> hook" subsections ship the Phase 7 design half with operator-runnable detail for Harsh slot 4: (a) per-chain
+> `slashing_events` data_type source — Ethereum beacon (Lighthouse/Prysm `/eth/v1/beacon/pool/*_slashings`
 >
 > - beaconcha.in historical backfill) + Solana (Anza RPC `getSlashingHistory` + Solana Beach cross-check); (b)
 >   `SlashingTailRiskMC` simulator code skeleton with Poisson sampling + ECDF severity + Hill-estimator heavy-tail
@@ -630,7 +659,7 @@ Owner: harsh.
 Owner: ikenna for sign-off + harsh for runs.
 
 > **Day-1 slot-6 design ship 2026-05-12**: codex
-> [`amm-slippage-simulation.md`](../../codex/04-architecture/amm-slippage-simulation.md) § "Validation gates" → "Phase 8
+> [`amm-slippage-simulation.md`](/codex/04-architecture/amm-slippage-simulation.md) § "Validation gates" → "Phase 8
 > validation framework" subsection ships the Phase 8 design half with operator-runnable detail: (a) Three parallel
 > harness scripts under `execution-service/tests/integration/backtest_fidelity/` (`run_carry_archetype_replay.py` /
 > `run_leveraged_funding_arb_replay.py` / `run_tenderly_live_reconciliation.py`) plus operator dashboard composer
@@ -691,7 +720,7 @@ Owner: ikenna for sign-off + harsh for runs.
 Per Post-Plan-Phase Codex Audit HARD RULE — codex updates ride in same logical unit as code commits. Final lock at Phase
 8 sign-off.
 
-- [x] [AGENT] P0. **9A — `codex/04-architecture/amm-slippage-simulation.md`** (NEW; full content covering all 7 pool
+- [x] [AGENT] P0. **9A — `/codex/04-architecture/amm-slippage-simulation.md`** (NEW; full content covering all 7 pool
       shapes + lending rate impact + governance sim + staking + restaking yield models + slashing MC). (Shipped Day-1
       2026-05-11 + extended Day-2 2026-05-12 by slot 6 across PM@`3b76a5ef` (per-shape sample-pool matrix + Solidly-fork
       section) + PM@`d66b0f9f` (PoolMatcher Protocol + Golden test set harness) + PM@`80905822` (lending rate-impact +
@@ -699,18 +728,18 @@ Per Post-Plan-Phase Codex Audit HARD RULE — codex updates ride in same logical
       PM@`816aed73` (matching-engine end-to-end integration + aggregator multi-hop). Doc now 1496 lines covering every
       Phase 2-8 design surface. Per-shape historical- swap validation-results subsection folds in once Phase 3C / 8C
       harnesses run.)
-- [x] [AGENT] P0. **9B — CREATE `codex/04-architecture/concentrated-liquidity.md`** (V3/V4 + Solana CLMM addendum).
+- [x] [AGENT] P0. **9B — CREATE `/codex/04-architecture/concentrated-liquidity.md`** (V3/V4 + Solana CLMM addendum).
       (PM@`<this-cycle>` 2026-05-12 — created 130-line stub with shared CL tick-math invariants (sqrtPriceX96 / tick
       math / active liquidity / position math / single-step swap / tick traversal) + per-implementation addenda for V3 /
       V4 / Velodrome+Aerodrome Slipstream / Solana CLMM; cross-references to amm-slippage-simulation.md +
       batch-live-architecture.md + execution-service amm.py.)
-- [x] [AGENT] P0. **9C — Update `codex/09-strategy/architecture-v2/cross-cutting/restaking-reward-economics.md`** with
+- [x] [AGENT] P0. **9C — Update `/codex/09-strategy/architecture-v2/cross-cutting/restaking-reward-economics.md`** with
       restaking yield decomposition + LRT-fee + seasonal-points models. (PM@`<this-cycle>` 2026-05-12 — added
       "Forward-yield simulation (composite stochastic model)" section cross-referencing amm-slippage-simulation.md §
       "Staking + restaking yield-stream simulators" Phase 5A-E; lists native staking + restaking AVS + LRT
       protocol-fee + seasonal-points discount-factor + composite simulator; cites operator-tuned per-protocol
       calibration anchors from PM@ae804766.)
-- [x] [AGENT] P0. **9D — Update `codex/04-architecture/batch-live-architecture.md`** with the matching-engine
+- [x] [AGENT] P0. **9D — Update `/codex/04-architecture/batch-live-architecture.md`** with the matching-engine
       extensions + the live=batch principle as it applies to new sim primitives. (PM@`ad6c98e1` — AMMMatcher row updated
       to dispatch-by-PoolShape over PoolMatcher Protocol; cross-reference block cites today's codex extensions
       PM@`3b76a5ef` + `d66b0f9f` + `816aed73`.)
@@ -755,7 +784,7 @@ ProtocolIRMShape + GovernanceProposal + StakingYieldDecomposition
 | Commit             | Repo                  | Scope                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | ------------------ | --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `PM@16d60480`      | unified-trading-pm    | STATUS-2026-05-11 line ([`ikenna_orchestrator/_agent_pings.md`](../../ikenna_orchestrator/_agent_pings.md)) — confirms slot-6 prior cycle (`manifest_schema_final_gate` Phase 2.A-D + Phase 3.D; carry-forward items 8+9 inherited from Harsh slot 6 EOD-2026-05-11 handoff).                                                                                                                                                                                                                                                                                                                                                                                                                                         |
-| `PM@3b76a5ef`      | unified-trading-pm    | Codex [`amm-slippage-simulation.md`](../../codex/04-architecture/amm-slippage-simulation.md) Phase 1A — NEW section #10 Solidly-fork (Velodrome + Aerodrome math + Slipstream out-of-scope note) + NEW "Per-shape sample pools + golden fixture seeds" 10-row matrix table + corrected gap analysis (V2/V3/V4 pool classes EXIST per `amm.py:52,259,403` — gap is matcher dispatcher) + cross-chain L2 hazard note + Solidly-fork update protocol footer.                                                                                                                                                                                                                                                             |
+| `PM@3b76a5ef`      | unified-trading-pm    | Codex [`amm-slippage-simulation.md`](/codex/04-architecture/amm-slippage-simulation.md) Phase 1A — NEW section #10 Solidly-fork (Velodrome + Aerodrome math + Slipstream out-of-scope note) + NEW "Per-shape sample pools + golden fixture seeds" 10-row matrix table + corrected gap analysis (V2/V3/V4 pool classes EXIST per `amm.py:52,259,403` — gap is matcher dispatcher) + cross-chain L2 hazard note + Solidly-fork update protocol footer.                                                                                                                                                                                                                                                                  |
 | `PM@fd29975e`      | unified-trading-pm    | Plan body Phase 1A — PoolShape enum amendment: 13 → 15 members (NEW `SOLIDLY_FORK` shared matcher for Velodrome + Aerodrome + other Solidly forks via `(chain, factory)` discriminator; NEW `SOLIDLY_CL_FORK` for Slipstream V3-tick CL pools). Phase 1 boundary codex SSOT note updated to acknowledge today's extension.                                                                                                                                                                                                                                                                                                                                                                                            |
 | `PM@d66b0f9f`      | unified-trading-pm    | Codex Phase 2A + Phase 3 — NEW "Simulation contract — unified pre-trade quote interface" (PoolMatcher Protocol with `quote()` / `apply()` / `spot_price()` / `snapshot()`; per-pool-class module map curve.py / balancer.py / solana_clmm.py / solidly_fork.py / aggregator.py; `engine.py:_amm_match_impl` refactor target) + NEW "Golden test set harness" (per-PoolShape JSON fixture corpus schema + pytest harness skeleton + capture runbook).                                                                                                                                                                                                                                                                  |
 | `PM@f9df943f`      | unified-trading-pm    | Cross-side ping ([`plans/active/_agent_pings.md`](_agent_pings.md)) — Phases 1A+2A+3 design ✅ → Harsh slot 4 cleared to start Day 2 morning (ahead of EOD-Day-2 handshake); slot 7 (Ikenna) cleared for AMM-flavoured topology shocks Day 1 PM.                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
@@ -769,7 +798,7 @@ ProtocolIRMShape + GovernanceProposal + StakingYieldDecomposition
 | `PM@ce625ca5`      | unified-trading-pm    | DONE block extension (Day-2 commits) + Phase 9E slot-1-routing annotation + days 2-4 plan rewritten reflecting closure status.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 | `PM@ebcc723e`      | unified-trading-pm    | **Phase 6A audit ✅ + 6B impl spec + 6C harness spec**: `carry_staked_basis` hedge ratio confirmed STATIC at `staked_basis.py:264`; codex hedge-ratio section extended with `_compute_dynamic_hedge_ratio` helper + per-tick rebalance handler + hysteresis band config + LST exchange rate source table (jitoSOL/SOL via Jito stake pool + rETH/ETH via RocketPool `rETH.getExchangeRate()` etc.); plan body Phase 6A flipped `[x]`; Phase 6B reframed conditional → confirmed-needed.                                                                                                                                                                                                                               |
 | `PM@80905822`      | unified-trading-pm    | **Phase 3 + Phase 7 design extensions**: codex § "Lending rate-impact" extended with per-protocol IRM capture table (7 protocol-chain combos: Aave V3 × 6 + Compound V3 × 4 + Spark × 2 + Radiant × 2) + `protocol_irm_shape` discriminator + protocol-dispatched `post_trade_rate()` calculator (Compound V3 single-kink shape vs Aave kinked-slope); codex § "Slashing tail-risk MC" extended with per-chain slashing event sources (Lighthouse/Prysm beacon + beaconcha.in historical + Solana `getSlashingHistory` + Solana Beach) + `SlashingTailRiskMC` Poisson+ECDF+Hill-estimator-heavy-tail simulator code + Phase 7C archetype capital-allocation hook; plan body Phase 3 + Phase 7 design-shipped banners. |
-| `PM@d5f3f04b`      | unified-trading-pm    | Cross-reference: `codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md` Phase 6A audit finding banner + AMM-doc cross-link. Final DONE block update covering 17 commits total.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| `PM@d5f3f04b`      | unified-trading-pm    | Cross-reference: `/codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md` Phase 6A audit finding banner + AMM-doc cross-link. Final DONE block update covering 17 commits total.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
 | `PM@6d77b080`      | unified-trading-pm    | **Phase 8 design ship** — backtest fidelity validation framework: 4 harness scripts under `execution-service/tests/integration/backtest_fidelity/` (carry replay + leveraged_funding_arb replay + Tenderly live-vs-simulated reconciliation + compose_sign_off_report) + BacktestFidelityReport + TenderlyReconciliationReport + SignOffReport schemas + 95%-within-10bps acceptance gate + ~$500/day Tenderly fork budget estimate. Plan body Phase 8 banner.                                                                                                                                                                                                                                                        |
 | `uac@7f978f5`      | unified-api-contracts | **Phase 1B implementation** — LendingMarketState BaseModel + ProtocolIRMShape StrEnum + compute_borrow_rate_compound_v3 + compute_borrow_rate_for_state dispatch + post_trade_rate canonical entry. Smoke tests: Aave V3 USDC +100k supply→supply_apy=0.83%/borrow_apy=2.02%; Compound V3 cUSDCv3 +100k borrow above-kink U=0.90→borrow_apy=8.00%/supply_apy=6.48%. basedpyright `rate_model.py`: 0 errors.                                                                                                                                                                                                                                                                                                           |
 | `uac@78371aa`      | unified-api-contracts | **Phase 1C+1D+1E+1F implementation** — NEW sim_schemas.py (184 lines) shipping GovernanceProposal + GovernanceProposalStatus (Phase 1C), StakingYieldDecomposition + AVSRewardComponent (Phase 1D), SlashingEvent + SlashingReason (Phase 1E), HedgeRatioSnapshot (Phase 1F). basedpyright clean (0 errors). All 4 schemas re-exported via `unified_api_contracts.internal`. Smoke-tested via construct-one-instance-per-schema pass.                                                                                                                                                                                                                                                                                 |
@@ -852,14 +881,17 @@ fan-out.
 
 ## Risk register
 
-| Risk                                                                                    | Mitigation                                                                                                                           |
-| --------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ | --------- | --------------------- |
-| Curve `gamma` math is non-trivial (crypto pools)                                        | Phase 2C uses reference Curve V2 SDK; spot-check vs `curve.fi` UI quotes                                                             |
-| Solana CLMM tick-bucket has different decimals semantics                                | Phase 2F includes parity tests vs Raydium/Orca SDKs                                                                                  |
-| Governance simulator on Tenderly fork costs $$ on Tenderly budget                       | Phase 4 limited to scheduled overnight runs + on-demand only; ~10 sims/day budget                                                    |
-| Slashing MC needs robust historical calibration                                         | Phase 7A requires ≥ 6 months data; if catalogue plan Phase 6 hasn't backfilled, slashing-event capture, slip Phase 7 to post-cutover |
-| Hedge-ratio dynamic adjustment introduces over-trading                                  | Phase 6 includes hysteresis band (only adjust when                                                                                   | peg_drift | > N bps with N tuned) |
-| Phase 4 governance proposal sim might miss edge cases (timelock delays, executor races) | Validated against ≥ 5 historical proposals before sign-off                                                                           |
+| Risk | Mitigation | | --------------------------------------------------------------------------------------- |
+------------------------------------------------------------------------------------------------------------------------------------
+
+| --------- | --------------------- | | Curve `gamma` math is non-trivial (crypto pools) | Phase 2C uses reference Curve
+V2 SDK; spot-check vs `curve.fi` UI quotes | | Solana CLMM tick-bucket has different decimals semantics | Phase 2F
+includes parity tests vs Raydium/Orca SDKs | | Governance simulator on Tenderly fork costs $$ on Tenderly budget | Phase
+4 limited to scheduled overnight runs + on-demand only; ~10 sims/day budget | | Slashing MC needs robust historical
+calibration | Phase 7A requires ≥ 6 months data; if catalogue plan Phase 6 hasn't backfilled, slashing-event capture,
+slip Phase 7 to post-cutover | | Hedge-ratio dynamic adjustment introduces over-trading | Phase 6 includes hysteresis
+band (only adjust when | peg_drift | > N bps with N tuned) | | Phase 4 governance proposal sim might miss edge cases
+(timelock delays, executor races) | Validated against ≥ 5 historical proposals before sign-off |
 
 ## Done definition
 

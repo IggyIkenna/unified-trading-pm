@@ -12,7 +12,15 @@ tags: []
 related: []
 created: 2026-05-08
 author: ikenna
-source: [plans/active/alerting_service_live_rules_2026_05_07.md (Phase 2), plans/active/work_split_2026_05_07_ikenna_5tab_layout.md (Agent 1 done definition item 2), 'unified-api-contracts/unified_api_contracts/canonical/crosscutting/alerting/rules.py (AlertRule.triggers_kill_switch field, UAC@d00326d)', alerting-service/alerting_service/kill_switch_bus_subscriber.py (consumer-side only), alerting-service/alerting_service/notifiers/router.py (where the publish hook would land)]
+source:
+  [
+    plans/active/alerting_service_live_rules_2026_05_07.md (Phase 2),
+    plans/active/work_split_2026_05_07_ikenna_5tab_layout.md (Agent 1 done definition item 2),
+    "unified-api-contracts/unified_api_contracts/canonical/crosscutting/alerting/rules.py
+    (AlertRule.triggers_kill_switch field, UAC@d00326d)",
+    alerting-service/alerting_service/kill_switch_bus_subscriber.py (consumer-side only),
+    alerting-service/alerting_service/notifiers/router.py (where the publish hook would land),
+  ]
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
 ---
@@ -128,5 +136,4 @@ Estimated effort: 30-45 minutes for steps 1-3, additional 15 minutes for step 4.
   verification).
 - Work-split parent: [`work_split_2026_05_07_ikenna_5tab_layout`](../work_split_2026_05_07_ikenna_5tab_layout.md) Agent
   1 done-definition item 2 ("KillSwitchBus integration test passes") explicitly flagged.
-- Codex SSOT:
-  [`codex/14-playbooks/alerting/alert-code-taxonomy`](../../../codex/14-playbooks/alerting/alert-code-taxonomy.md).
+- Codex SSOT: [`codex/14-playbooks/alerting/alert-code-taxonomy`](/codex/14-playbooks/alerting/alert-code-taxonomy.md).

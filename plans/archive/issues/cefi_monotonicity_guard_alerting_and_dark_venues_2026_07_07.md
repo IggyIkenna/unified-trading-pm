@@ -21,7 +21,7 @@ related:
   [
     ../instruments_completion_tracker_2026_07_06.md,
     ../instruments_foundation_completeness_2026_06_24.md,
-    manifest_reprocessing_generic_utility_2026_07_07.md,
+    /plans/active/issues/manifest_reprocessing_generic_utility_2026_07_07.md,
   ]
 created: 2026-07-07
 parent_epic: instruments_master

@@ -108,7 +108,7 @@ silent-CLEAN outcome even with the fix fully deployed.
       exit_code=None case only (the `DEPLOYMENT_COMPLETED`/manifest-end-date corroboration in the "e.g." text was
       illustrative, not load-bearing — `exit_code is None` already means no terminal marker of any kind exists, so there
       is no weaker corroboration signal available to check first). Codex updated:
-      `codex/05-infrastructure/data-pipeline-alerts.md` + `.registry.yaml` (DP-VM-007 backfilled, was undocumented;
+      `/codex/05-infrastructure/data-pipeline-alerts.md` + `.registry.yaml` (DP-VM-007 backfilled, was undocumented;
       DP-VM-008 added). Unit tests: `test_classify_partial_unconfirmed_when_exit_none_and_climb`,
       `test_classify_clean_still_requires_confirmed_exit0_not_just_climb`,
       `test_sweep_partial_unconfirmed_vm_relaunches_successfully_emits_warn_not_critical`,

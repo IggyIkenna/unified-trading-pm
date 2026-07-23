@@ -33,8 +33,8 @@ scope: [engineer]
 tags: [agent-orchestrator, reaper, tmux-pruner, agent-lifecycle, one-shot, cicd-escalator, fleet-view, dashboard]
 related:
   [
-    ../../codex/04-architecture/agent-orchestrator-overview.md,
-    ../../codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
+    /codex/04-architecture/agent-orchestrator-overview.md,
+    /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
     ../../epics/orchestrator_master.md,
   ]
 created: 2026-07-16

@@ -6,28 +6,35 @@ status: complete
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [deployment-api, deployment-service, deployment-ui, instruments-service, market-tick-data-service, unified-trading-pm]
+repos:
+  [deployment-api, deployment-service, deployment-ui, instruments-service, market-tick-data-service, unified-trading-pm]
 scope: [engineer, admin]
 tags: []
-related: [data_status_drilldown_shard_atom_alignment_2026_05_07.md]
-created: '2026-05-07'
-overview: Successor plan to data_status_drilldown_shard_atom_alignment_2026_05_07 Phase 3 -- promote the Deploy-Missing flow from preview-mode (operator copies + runs the gcloud command) to auto-launch (deployment-api directly invokes the launcher script via gcloud). Requires deployment-api->gcloud security review + paired tarball-refresh wiring + per-VM observability + idempotency guards.
+related: [/plans/archive/data_status_drilldown_shard_atom_alignment_2026_05_07.md]
+created: "2026-05-07"
+overview:
+  Successor plan to data_status_drilldown_shard_atom_alignment_2026_05_07 Phase 3 -- promote the Deploy-Missing flow
+  from preview-mode (operator copies + runs the gcloud command) to auto-launch (deployment-api directly invokes the
+  launcher script via gcloud). Requires deployment-api->gcloud security review + paired tarball-refresh wiring + per-VM
+  observability + idempotency guards.
 type: code
 epic: epic-deployment
-completion_gates: {code: C5, deployment: D3, business: none}
+completion_gates: { code: C5, deployment: D3, business: none }
 repo_gates:
-- {repo: deployment-api, code: C2, deployment: D3, business: none}
-- {repo: deployment-service, code: C2, deployment: none, business: none}
-- {repo: unified-trading-pm, code: C2, deployment: none, business: none}
+  - { repo: deployment-api, code: C2, deployment: D3, business: none }
+  - { repo: deployment-service, code: C2, deployment: none, business: none }
+  - { repo: unified-trading-pm, code: C2, deployment: none, business: none }
 depends_on: [data_status_drilldown_shard_atom_alignment_2026_05_07.md]
 todos: []
 isProject: false
 estimate_class: infra
 estimate_baseline_ai_days: 9
 estimate_calibrated_ai_days: 7.2
-estimate_calibration_note: 'Backfilled 2026-05-13: 14 todos, 6 done; 8 remaining covering deployment-api→gcloud auto-launch endpoint + tarball-refresh wiring + IAM/audit + per-VM observability + idempotency guards. infra class (real auto-launch surface, security review). Baseline 9 (~1.1 AI-day per remaining infra todo); × 0.8 = 7.2.
+estimate_calibration_note: "Backfilled 2026-05-13: 14 todos, 6 done; 8 remaining covering deployment-api→gcloud
+  auto-launch endpoint + tarball-refresh wiring + IAM/audit + per-VM observability + idempotency guards. infra class
+  (real auto-launch surface, security review). Baseline 9 (~1.1 AI-day per remaining infra todo); × 0.8 = 7.2.
 
-  '
+  "
 ---
 
 > **ARCHIVED 2026-05-19** — 100% complete (all checkboxes checked); preserved for archaeology.
@@ -647,7 +654,7 @@ that already shipped.
 
 ### Phase 4 — Codex docs + plan close
 
-- [x] ✅ [unified-trading-pm] P2. Extend `codex/02-data/data-status-drilldown.md` § "Hierarchical drill endpoint" with
+- [x] ✅ [unified-trading-pm] P2. Extend `/codex/02-data/data-status-drilldown.md` § "Hierarchical drill endpoint" with
       the auto-launch flow diagram + the IAM scope reference. Shipped at `unified-trading-pm@<pending>` — §5 "Per-leaf
       download + surgical recovery" now documents both **preview mode (shipped)** and **auto-launch mode (Phase 2/3
       in-flight)** including the `POST /api/data-status/deploy-missing-launch` contract, per-shard idempotency via GCE

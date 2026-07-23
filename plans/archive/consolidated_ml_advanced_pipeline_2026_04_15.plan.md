@@ -10,26 +10,26 @@ repos: [execution-service, strategy-service]
 scope: [engineer, admin]
 tags: []
 related: []
-created: '2026-04-16'
-overview: 'Consolidated remaining ML work from ml_pipeline_revolution and domain_agnostic_ml_framework.
+created: "2026-04-16"
+overview: "Consolidated remaining ML work from ml_pipeline_revolution and domain_agnostic_ml_framework.
 
   Covers: calibration, P&L objectives, Bayesian tuning, incremental/transfer/multi-task training,
 
   hierarchical inference, strategy signal consumption, decision policy engine, sports feature adapter.
 
-  '
+  "
 type: code
 epic: epic-code-completion
 reconciliation_status: yaml_to_markdown_converted
 reconciliation_date: 2026-04-25
 reconciliation_evidence: _reconciliation_evidence_map_2026_04_25.md
-completion_gates: {code: C5, deployment: none, business: B4}
+completion_gates: { code: C5, deployment: none, business: B4 }
 repo_gates:
-- {repo: unified-api-contracts, code: C0}
-- {repo: unified-trading-library, code: C0}
-- {repo: ml-training-service, code: C0}
-- {repo: ml-inference-service, code: C0}
-- {repo: strategy-service, code: C0}
+  - { repo: unified-api-contracts, code: C0 }
+  - { repo: unified-trading-library, code: C0 }
+  - { repo: ml-training-service, code: C0 }
+  - { repo: ml-inference-service, code: C0 }
+  - { repo: strategy-service, code: C0 }
 depends_on: []
 source_plans: [ml_pipeline_revolution_2026_04_11, domain_agnostic_ml_framework_2026_04_11]
 isProject: false
@@ -50,13 +50,12 @@ isProject: false
 This plan implements / extends the following codex documents (read these BEFORE making code changes; drift between code
 and these docs is a review-blocking failure per `doc → plan → code`):
 
-- [`codex/02-data/data-lineage-MTDS-features-ml.md`](../../codex/02-data/data-lineage-MTDS-features-ml.md) — MTDS →
-  features → ml-training/ml-inference lineage; calibration / Bayesian tuning / hierarchical inference all sit on this
-  chain
-- [`codex/04-architecture/batch-live-pipeline.md`](../../codex/04-architecture/batch-live-pipeline.md) — batch=live
+- [`/codex/02-data/data-lineage-MTDS-features-ml.md`](/codex/02-data/data-lineage-MTDS-features-ml.md) — MTDS → features
+  → ml-training/ml-inference lineage; calibration / Bayesian tuning / hierarchical inference all sit on this chain
+- [`/codex/04-architecture/batch-live-pipeline.md`](/codex/04-architecture/batch-live-pipeline.md) — batch=live
   symmetry; ml-training (batch) and ml-inference (live) MUST share the same feature-read path + same calibration
-- [`codex/04-architecture/batch-live-symmetry.md`](../../codex/04-architecture/batch-live-symmetry.md) — code-path
-  symmetry contract; strategy signal consumption + decision policy engine cannot diverge between modes
+- [`/codex/04-architecture/batch-live-symmetry.md`](/codex/04-architecture/batch-live-symmetry.md) — code-path symmetry
+  contract; strategy signal consumption + decision policy engine cannot diverge between modes
 
 If any of the docs above is missing, this plan creates a stub for it (see [`codex/`](../../codex/) tree).
 
@@ -161,10 +160,11 @@ under architecture-v2 (ml-training `d53c2ea`, `f94f7db`, `df6caa4`; ml-inference
 - [x] [AGENT] P0. mlr-p3-calibration-inference: Apply calibration at inference time. Evidence: ml-inference `d6744d0`
       (apply calibration at inference time).
 - [x] [AGENT] P1. mlr-p3-shap-inference: Add optional SHAP explanation to inference responses (PARTIALLY_DONE —
-      request.explain exists, no schema field). [AUDIT 2026-05-07: DONE — verified UAC `InferenceRequest.explain: bool =
-      Field(...)` shipped at `internal/domain/ml/schemas.py:605`; `inference_shap.py` (TreeExplainer cache + bag)
-      shipped at `ml-inference-service/ml_inference_service/app/inference/inference_shap.py`; orchestrator wires
-      `request.explain` at `engine/orchestrator.py:180`. The "no schema field" note in plan body is stale.]
+      request.explain exists, no schema field). [AUDIT 2026-05-07: DONE — verified UAC
+      `InferenceRequest.explain: bool =     Field(...)` shipped at `internal/domain/ml/schemas.py:605`;
+      `inference_shap.py` (TreeExplainer cache + bag) shipped at
+      `ml-inference-service/ml_inference_service/app/inference/inference_shap.py`; orchestrator wires `request.explain`
+      at `engine/orchestrator.py:180`. The "no schema field" note in plan body is stale.]
 - [ ] [AGENT] P1. mlr-p3-hierarchical: Support hierarchical model loading Level 0-2 (GENUINELY_PENDING). [AUDIT
       2026-05-07: FRESH — ml-inference grep `level_0|level_1|level_2|hierarchical` in `ml_inference_service/` source → 0
       hits.]

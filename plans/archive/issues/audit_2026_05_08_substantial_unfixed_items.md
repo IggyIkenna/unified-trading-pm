@@ -1,21 +1,43 @@
 ---
 doc_type: issue
-title: P0/P1 substantial work surfaced by 2026-05-08 9-agent audit (Aster connector / 2yr backtest / MDPS streaming / 18 MTDS VMs)
+title:
+  P0/P1 substantial work surfaced by 2026-05-08 9-agent audit (Aster connector / 2yr backtest / MDPS streaming / 18 MTDS
+  VMs)
 summary:
 status: resolved
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [alerting-service, deployment-service, e2e-testing, execution-service, market-data-processing-service, market-tick-data-service]
+repos:
+  [
+    alerting-service,
+    deployment-service,
+    e2e-testing,
+    execution-service,
+    market-data-processing-service,
+    market-tick-data-service,
+  ]
 scope: [engineer, admin]
 tags: []
 related: []
 created: 2026-05-08
 author: 9-agent-audit-2026-05-08
-source: ['9-agent parallel cluster audit 2026-05-08 (clusters 3, 7, 8)', master_to_live_defi_2026_05_23.md Group F items 17-22, defi_master_2026_05_07.md leveraged_funding_arb hedge venues, mdps_streaming_and_backpressure_2026_05_07.md Phase 1.1 + Phase 2]
+source:
+  [
+    "9-agent parallel cluster audit 2026-05-08 (clusters 3, 7, 8)",
+    master_to_live_defi_2026_05_23.md Group F items 17-22,
+    defi_master_2026_05_07.md leveraged_funding_arb hedge venues,
+    mdps_streaming_and_backpressure_2026_05_07.md Phase 1.1 + Phase 2,
+  ]
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
-execution: {owner: operator triage → distribute to Ikenna/Harsh tabs, cadence: one-shot per item; review at next daily-split sweep, verifier: per-item exit criteria below, last_executed: NEVER}
+execution:
+  {
+    owner: operator triage → distribute to Ikenna/Harsh tabs,
+    cadence: one-shot per item; review at next daily-split sweep,
+    verifier: per-item exit criteria below,
+    last_executed: NEVER,
+  }
 ---
 
 # 4 P0/P1 items surfaced by 9-agent audit needing operator triage
@@ -420,7 +442,7 @@ Two adjacent live-trading observability + testnet items surfaced during the 2026
 - **execution-service@90aa381a** — 11 unit tests at `tests/unit/custody/test_ceffu_provider.py` covering construction
   (sandbox flag toggle, default to production), HMAC signing skeleton produces valid headers, factory routing
   (lowercase + uppercase), and `NotImplementedError("CEFFU API spec pending")` contract on every async method.
-- **unified-trading-pm@33ef64b4** — `codex/04-architecture/custody-providers.md` § 2.4 `CeffuCustodyProvider` expanded
+- **unified-trading-pm@33ef64b4** — `/codex/04-architecture/custody-providers.md` § 2.4 `CeffuCustodyProvider` expanded
   from STUB / PENDING placeholder to a fully populated section mirroring Copper § 2.3 shape: architecture overview (OES
   bilateral mirror flow client → CEFFU → Binance Futures → daily settlement), 6-step onboarding runbook, expected REST
   endpoint catalogue with explicit `<TBD-OPERATOR-PROVIDES-API-SPEC>` markers, HMAC signing skeleton + header-naming

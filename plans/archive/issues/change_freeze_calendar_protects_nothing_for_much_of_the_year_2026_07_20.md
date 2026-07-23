@@ -20,7 +20,7 @@ stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]
 tags: [change-freeze, ci-cd, prod-deploy, market-events, data-correctness]
-related: [uac_value_only_config_change_breaks_utl_untested_2026_07_20.md]
+related: [/plans/active/issues/uac_value_only_config_change_breaks_utl_untested_2026_07_20.md]
 created: 2026-07-20
 parent_epic: infrastructure_master
 assigned_vm: NA

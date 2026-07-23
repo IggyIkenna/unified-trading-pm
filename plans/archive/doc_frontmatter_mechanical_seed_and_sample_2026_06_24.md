@@ -121,7 +121,7 @@ present-but-empty for the later content pass. Run breadth-first over a 5-per-doc
 
 ## Codex SSOT updates
 
-- `codex/11-project-management/doc-frontmatter-schema.md` — refined this pass (exemptions, `scope`/`audited_scope`,
+- `/codex/11-project-management/doc-frontmatter-schema.md` — refined this pass (exemptions, `scope`/`audited_scope`,
   status-soft-during-soak, issue `open`).
 
 ## Progress Log

@@ -21,9 +21,9 @@ scope: [engineer, admin]
 tags: [cicd, provenance-gate, quickmerge, ldr-to-main, raw-push]
 related:
   [
-    promote_provenance_marker_stale_head_query_2026_07_13.md,
-    features_sports_unbounded_memory_early_history_dates_2026_07_13.md,
-    ../../codex/08-workflows/ci-cd-flow.md,
+    /plans/archive/issues/promote_provenance_marker_stale_head_query_2026_07_13.md,
+    /plans/archive/issues/features_sports_unbounded_memory_early_history_dates_2026_07_13.md,
+    /codex/08-workflows/ci-cd-flow.md,
   ]
 created: 2026-07-13
 last_updated: 2026-07-14

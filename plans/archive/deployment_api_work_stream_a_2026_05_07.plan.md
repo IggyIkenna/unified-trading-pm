@@ -6,12 +6,22 @@ status: complete
 nature: record
 asset_group: cross-cutting
 stage: [meta]
-repos: [deployment-api, deployment-service, deployment-ui, instruments-service, market-data-processing-service, market-tick-data-service]
+repos:
+  [
+    deployment-api,
+    deployment-service,
+    deployment-ui,
+    instruments-service,
+    market-data-processing-service,
+    market-tick-data-service,
+  ]
 scope: [engineer, admin]
 tags: []
 related: []
-created: '2026-05-07'
-overview: deployment-api endpoints for programmatic VM backfill launch + GCS event tail (work-stream-A keystone unblock for the 2026-05-23 live-DeFi deadline)
+created: "2026-05-07"
+overview:
+  deployment-api endpoints for programmatic VM backfill launch + GCS event tail (work-stream-A keystone unblock for the
+  2026-05-23 live-DeFi deadline)
 type: code
 epic: epic-code-completion
 priority: P0
@@ -19,12 +29,12 @@ deadline: 2026-05-23
 parent: master_to_live_defi_2026_05_23
 locked_by: live-defi-rollout
 locked_since: 2026-05-07
-gates: ['master_to_live_defi:work-stream-A']
+gates: ["master_to_live_defi:work-stream-A"]
 last_updated: 2026-05-07
-completion_gates: {code: C5, deployment: D3, business: none}
+completion_gates: { code: C5, deployment: D3, business: none }
 repo_gates:
-- {repo: unified-api-contracts, code: C0, deployment: none, business: none}
-- {repo: deployment-api, code: C0, deployment: none, business: none}
+  - { repo: unified-api-contracts, code: C0, deployment: none, business: none }
+  - { repo: deployment-api, code: C0, deployment: none, business: none }
 depends_on: []
 isProject: false
 ---
@@ -41,15 +51,15 @@ incidental DEFERRED / post-cutover / out-of-scope tokens in the body are histori
 This plan implements / extends the following codex documents (read these BEFORE making code changes; drift between code
 and these docs is a review-blocking failure per `doc → plan → code`):
 
-- [`codex/03-observability/lifecycle-events.md`](../../codex/03-observability/lifecycle-events.md) — STARTED / STOPPED /
+- [`/codex/03-observability/lifecycle-events.md`](/codex/03-observability/lifecycle-events.md) — STARTED / STOPPED /
   FAILED event schema + bucket layout (`gs://{pid}-events/events/{service}/{YYYY-MM-DD}/{vm-name}/hour={H}/*.jsonl`);
   the live-tail endpoint reads from this surface
-- [`codex/05-infrastructure/launcher-script-ssot.md`](../../codex/05-infrastructure/launcher-script-ssot.md) — workspace
+- [`/codex/05-infrastructure/launcher-script-ssot.md`](/codex/05-infrastructure/launcher-script-ssot.md) — workspace
   rule that all VM launchers live under `deployment-service/scripts/vm/`; the programmatic-launch endpoint shells out to
   these scripts via the `_SERVICE_LAUNCHER_SCRIPTS` registry
-- [`codex/05-infrastructure/vm-tarball-deployment.md`](../../codex/05-infrastructure/vm-tarball-deployment.md) — VM
-  tarball deploy modes (tarball / tarball-from-local / sibling-clone) the launcher modal exposes
-- [`codex/03-observability/coordination-events.md`](../../codex/03-observability/coordination-events.md) — coordination
+- [`/codex/05-infrastructure/vm-tarball-deployment.md`](/codex/05-infrastructure/vm-tarball-deployment.md) — VM tarball
+  deploy modes (tarball / tarball-from-local / sibling-clone) the launcher modal exposes
+- [`/codex/03-observability/coordination-events.md`](/codex/03-observability/coordination-events.md) — coordination
   event semantics; the live-tail endpoint preserves correlation_id chains across VM lifecycle
 
 If any of the docs above is missing, this plan creates a stub for it (see [`codex/`](../../codex/) tree).

@@ -10,8 +10,8 @@ repos: [execution-service, strategy-service]
 scope: [engineer, admin]
 tags: []
 related: []
-created: '2026-03-05'
-overview: 'Enforce the service-canonical and library-canonical documentation standards (audit S5.1–S5.10)
+created: "2026-03-05"
+overview: "Enforce the service-canonical and library-canonical documentation standards (audit S5.1–S5.10)
 
   across all repos. Most docs are well-established (ARCHITECTURE.md 35+ repos,
 
@@ -25,15 +25,75 @@ overview: 'Enforce the service-canonical and library-canonical documentation sta
 
   verifies no docs use hardcoded project IDs or bucket names.
 
-  '
+  "
 todos:
-- {id: config-injection-codex, content: 'Add codex/08-workflows/config-injection.md with architecture ASCII diagram, domain schema reference, how to add a new domain, service wiring pattern, UI usage guide. (Migrated from config_dynamic_injection.md p4-codex.) RESOLVED 2026-03-08: File already exists at unified-trading-codex/08-workflows/config-injection.md (358 lines), covers all required sections: architecture ASCII, domain schemas (Instrument/Strategy/Client/Venue), adding a new domain, service wiring pattern, UI usage guide, anti-patterns, quality gate.', status: completed}
-- {id: docs-audit-services, content: 'Audit all service repos for S5.1 required docs: README.md, docs/ARCHITECTURE.md, docs/CONFIGURATION.md, docs/GCS_PATHS.md, docs/DEPLOYMENT_GUIDE.md, docs/TESTING.md, docs/SCHEMA_VALIDATION.md, QUALITY_GATE_BYPASS_AUDIT.md. Produce a gap table (repo × doc = present/stub/missing). RESOLVED 2026-03-09: Audited all 26 service repos. Result: 100% compliant — zero missing files, zero stubs. All repos have all 8 required docs. Gap report: unified-trading-pm/reports/docs_gap_report_2026_03_08.md.', status: completed}
-- {id: docs-audit-libraries, content: 'Audit all library repos for S5.2 required docs: README.md, docs/ARCHITECTURE.md, docs/CONFIGURATION.md, docs/TESTING.md, QUALITY_GATE_BYPASS_AUDIT.md. Produce a gap table (repo × doc = present/stub/missing). RESOLVED 2026-03-09: Audited all 17 library repos. 15/17 fully compliant. 2 repos with gaps: execution-algo-library (missing ARCHITECTURE.md, CONFIGURATION.md, TESTING.md) and unified-sports-execution-interface (same 3 docs missing). Stub files created for all 6 missing docs. Gap report: unified-trading-pm/reports/docs_gap_report_2026_03_08.md.', status: completed}
-- {id: docs-fill-service-gaps, content: 'Create missing service-canonical docs identified in docs-audit-services. Priority: docs/DEPLOYMENT_GUIDE.md for execution-service, strategy-service, ml-training-service, risk-and-exposure-service. Then docs/SCHEMA_VALIDATION.md and docs/GCS_PATHS.md for services that lack them. NOTE 2026-03-09: docs-audit-services found zero missing docs in service repos — all 26 services are fully compliant. No service gap fills required. Marking in-progress as no-op; library stubs (6 files) created under docs-audit-libraries. Full content authoring tracked under docs-fill-library-gaps.', status: completed}
-- {id: docs-fill-library-gaps, content: 'RESOLVED 2026-03-09: Wrote real content (replacing TODO stubs) for 6 missing library docs: execution-algo-library/docs/ARCHITECTURE.md, CONFIGURATION.md, TESTING.md and unified-sports-execution-interface/docs/ARCHITECTURE.md, CONFIGURATION.md, TESTING.md. All now meet minimum doc content standards (purpose, components, data flow, config fields, test commands).', status: completed}
-- {id: docs-stub-check, content: 'RESOLVED 2026-03-09: All stubs were in execution-algo-library and unified-sports-execution-interface (both identified by docs-audit-libraries). Both repos now have full content. No other stubs found in required doc locations across 26 service repos (docs-audit-services confirmed 100% compliant).', status: completed}
-- {id: docs-no-hardcoded-ids, content: 'RESOLVED 2026-03-09: Scanned all docs/ directories for ''odum-'', ''trading-prod-'', ''trading-staging-'', ''central-element-323112''. Hits found only in issues/, examples/, and historical audit reports — NOT in any required docs/ (ARCHITECTURE.md, CONFIGURATION.md, etc.). Zero fixes required in canonical doc locations.', status: completed}
+  - {
+      id: config-injection-codex,
+      content:
+        "Add /codex/08-workflows/config-injection.md with architecture ASCII diagram, domain schema reference, how to
+        add a new domain, service wiring pattern, UI usage guide. (Migrated from config_dynamic_injection.md p4-codex.)
+        RESOLVED 2026-03-08: File already exists at unified-trading-/codex/08-workflows/config-injection.md (358 lines),
+        covers all required sections: architecture ASCII, domain schemas (Instrument/Strategy/Client/Venue), adding a
+        new domain, service wiring pattern, UI usage guide, anti-patterns, quality gate.",
+      status: completed,
+    }
+  - {
+      id: docs-audit-services,
+      content:
+        "Audit all service repos for S5.1 required docs: README.md, docs/ARCHITECTURE.md, docs/CONFIGURATION.md,
+        docs/GCS_PATHS.md, docs/DEPLOYMENT_GUIDE.md, docs/TESTING.md, docs/SCHEMA_VALIDATION.md,
+        QUALITY_GATE_BYPASS_AUDIT.md. Produce a gap table (repo × doc = present/stub/missing). RESOLVED 2026-03-09:
+        Audited all 26 service repos. Result: 100% compliant — zero missing files, zero stubs. All repos have all 8
+        required docs. Gap report: unified-trading-pm/reports/docs_gap_report_2026_03_08.md.",
+      status: completed,
+    }
+  - {
+      id: docs-audit-libraries,
+      content:
+        "Audit all library repos for S5.2 required docs: README.md, docs/ARCHITECTURE.md, docs/CONFIGURATION.md,
+        docs/TESTING.md, QUALITY_GATE_BYPASS_AUDIT.md. Produce a gap table (repo × doc = present/stub/missing). RESOLVED
+        2026-03-09: Audited all 17 library repos. 15/17 fully compliant. 2 repos with gaps: execution-algo-library
+        (missing ARCHITECTURE.md, CONFIGURATION.md, TESTING.md) and unified-sports-execution-interface (same 3 docs
+        missing). Stub files created for all 6 missing docs. Gap report:
+        unified-trading-pm/reports/docs_gap_report_2026_03_08.md.",
+      status: completed,
+    }
+  - {
+      id: docs-fill-service-gaps,
+      content:
+        "Create missing service-canonical docs identified in docs-audit-services. Priority: docs/DEPLOYMENT_GUIDE.md for
+        execution-service, strategy-service, ml-training-service, risk-and-exposure-service. Then
+        docs/SCHEMA_VALIDATION.md and docs/GCS_PATHS.md for services that lack them. NOTE 2026-03-09:
+        docs-audit-services found zero missing docs in service repos — all 26 services are fully compliant. No service
+        gap fills required. Marking in-progress as no-op; library stubs (6 files) created under docs-audit-libraries.
+        Full content authoring tracked under docs-fill-library-gaps.",
+      status: completed,
+    }
+  - {
+      id: docs-fill-library-gaps,
+      content:
+        "RESOLVED 2026-03-09: Wrote real content (replacing TODO stubs) for 6 missing library docs:
+        execution-algo-library/docs/ARCHITECTURE.md, CONFIGURATION.md, TESTING.md and
+        unified-sports-execution-interface/docs/ARCHITECTURE.md, CONFIGURATION.md, TESTING.md. All now meet minimum doc
+        content standards (purpose, components, data flow, config fields, test commands).",
+      status: completed,
+    }
+  - {
+      id: docs-stub-check,
+      content:
+        "RESOLVED 2026-03-09: All stubs were in execution-algo-library and unified-sports-execution-interface (both
+        identified by docs-audit-libraries). Both repos now have full content. No other stubs found in required doc
+        locations across 26 service repos (docs-audit-services confirmed 100% compliant).",
+      status: completed,
+    }
+  - {
+      id: docs-no-hardcoded-ids,
+      content:
+        "RESOLVED 2026-03-09: Scanned all docs/ directories for 'odum-', 'trading-prod-', 'trading-staging-',
+        'central-element-323112'. Hits found only in issues/, examples/, and historical audit reports — NOT in any
+        required docs/ (ARCHITECTURE.md, CONFIGURATION.md, etc.). Zero fixes required in canonical doc locations.",
+      status: completed,
+    }
 isProject: false
 ---
 

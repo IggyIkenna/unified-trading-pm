@@ -22,8 +22,8 @@ scope: [engineer, admin]
 tags: [honest-coverage, cron, cloud-run, terraform, incident, launcher, iac-drift]
 related:
   [
-    data_status_page_ux_and_canonicalisation_2026_07_16.md,
-    honest_coverage_nightly_cron_undersized_and_launcher_ssot_drift_2026_07_16.md,
+    /plans/active/data_status_page_ux_and_canonicalisation_2026_07_16.md,
+    /plans/active/issues/honest_coverage_nightly_cron_undersized_and_launcher_ssot_drift_2026_07_16.md,
   ]
 created: 2026-07-17
 last_updated: 2026-07-17

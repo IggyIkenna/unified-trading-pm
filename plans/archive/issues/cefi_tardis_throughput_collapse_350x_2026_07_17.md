@@ -24,9 +24,9 @@ scope: [engineer, admin]
 tags: [cefi, tardis, throughput, regression, backfill, honest-coverage, big-finding, data-correctness]
 related:
   [
-    cefi_residual_followups_after_honest_done_2026_07_17.md,
-    tardis_concurrent_ip_lockout_2026_07_12.md,
-    cefi_mtds_writer_raw_symbol_vs_canonical_eu_namespace_mismatch_2026_07_15.md,
+    /plans/active/issues/cefi_residual_followups_after_honest_done_2026_07_17.md,
+    /plans/active/issues/tardis_concurrent_ip_lockout_2026_07_12.md,
+    /plans/active/issues/cefi_mtds_writer_raw_symbol_vs_canonical_eu_namespace_mismatch_2026_07_15.md,
   ]
 created: 2026-07-17
 source:
@@ -288,7 +288,7 @@ fault was entirely ours.
       measured pipeline result. Blocked: `create-code-tarballs.sh` correctly refuses while dep `unified-api-contracts`
       carries a live sibling's WIP; `--allow-dirty-tarball` would ship their half-done code to prod. Relaunch on bare
       defaults (no env override) so the test exercises what every future VM gets.
-- [ ] [DOC] P0. **OPERATOR RULING NEEDED** — `codex/05-infrastructure/vm-launcher-runbook.md` + `CLAUDE.md` still say
+- [ ] [DOC] P0. **OPERATOR RULING NEEDED** — `/codex/05-infrastructure/vm-launcher-runbook.md` + `CLAUDE.md` still say
       _"defaults 16/4 leave the box ~93% idle"_ and tell agents to scale those knobs. That advice **caused** the wedge:
       the box was idle BECAUSE of the deadlock, not from spare headroom. SSOT edits are operator-gated.
 - [ ] [CODE] P1. **`databento_fetch.py:672`** has the identical `run_in_executor(None, _next_dbn_chunk, ...)`

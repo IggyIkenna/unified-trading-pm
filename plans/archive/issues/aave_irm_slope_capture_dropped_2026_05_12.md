@@ -1,6 +1,7 @@
 ---
 doc_type: issue
-title: Aave V3 IRM slope params fetched from The Graph but DROPPED at normalization — proxy used in lending rate-impact sim
+title:
+  Aave V3 IRM slope params fetched from The Graph but DROPPED at normalization — proxy used in lending rate-impact sim
 summary:
 status: resolved
 nature: record
@@ -12,7 +13,13 @@ tags: []
 related: []
 created: 2026-05-12
 author: ikenna-defi-sim-realism-tab (slot 6)
-source: ['market-tick-data-service/market_tick_data_service/market_interface/adapters/defi/aave_lending.py:77-79 (fetch)', 'market-tick-data-service/market_tick_data_service/market_interface/adapters/defi/aave_lending.py:549-553 (drop)', 'unified-api-contracts/unified_api_contracts/internal/domain/defi/rate_model.py:47-97 (proxy used today)', execution-service/execution_service/matching_engine/lending/rate_impact.py (consumer)]
+source:
+  [
+    "market-tick-data-service/market_tick_data_service/market_interface/adapters/defi/aave_lending.py:77-79 (fetch)",
+    "market-tick-data-service/market_tick_data_service/market_interface/adapters/defi/aave_lending.py:549-553 (drop)",
+    "unified-api-contracts/unified_api_contracts/internal/domain/defi/rate_model.py:47-97 (proxy used today)",
+    execution-service/execution_service/matching_engine/lending/rate_impact.py (consumer),
+  ]
 locked_by: live-defi-rollout
 locked_since: 2026-05-12
 severity: P0
@@ -119,7 +126,7 @@ slopes against historical pool reserves. **Phase 8 sign-off cannot certify backt
    `LendingMarketState` as input — their call-site is upstream and consumes the captured slopes automatically once the
    state builder reads from MTDS.
 5. ✅ **Codex doc note SHIPPED at PM@`<this commit>` (2026-05-12 slot 6)** —
-   `codex/04-architecture/amm-slippage-simulation.md` § "Per-protocol IRM parameter capture" gains a top-of-section ⚠️
+   `/codex/04-architecture/amm-slippage-simulation.md` § "Per-protocol IRM parameter capture" gains a top-of-section ⚠️
    CRITICAL banner pointing at this issue doc + flagging that the backfill VM (Step 3) must land before Phase 8A/B
    replay runs.
 

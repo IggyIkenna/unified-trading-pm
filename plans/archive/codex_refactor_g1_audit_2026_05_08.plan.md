@@ -65,39 +65,39 @@ active plan.
 
 ### Layer C — physical deletions
 
-| Path                                                                  | Result     |
-| --------------------------------------------------------------------- | ---------- |
-| `codex/05-infrastructure/cloud-agnostic-migration.md`                 | ✅ DELETED |
-| `codex/05-infrastructure/deployment-ui-environment-tiers.md`          | ✅ DELETED |
-| `codex/05-infrastructure/launcher-script-consolidation-2026-05-07.md` | ✅ DELETED |
+| Path                                                                   | Result     |
+| ---------------------------------------------------------------------- | ---------- |
+| `/codex/05-infrastructure/cloud-agnostic-migration.md`                 | ✅ DELETED |
+| `/codex/05-infrastructure/deployment-ui-environment-tiers.md`          | ✅ DELETED |
+| `/codex/05-infrastructure/launcher-script-consolidation-2026-05-07.md` | ✅ DELETED |
 
 ### Layer D — consolidations
 
 | Phase | Path                                                                    | Result                          |
 | ----- | ----------------------------------------------------------------------- | ------------------------------- |
-| D.1   | `codex/02-data/data-status-drilldown-hierarchy.md` deleted              | ✅ DELETED                      |
-| D.2   | `codex/02-data/sports-data-migration.md` deleted                        | ✅ DELETED                      |
-| D.2   | `codex/02-data/sports-schema-paths.md` deleted                          | ✅ DELETED                      |
+| D.1   | `/codex/02-data/data-status-drilldown-hierarchy.md` deleted             | ✅ DELETED                      |
+| D.2   | `/codex/02-data/sports-data-migration.md` deleted                       | ✅ DELETED                      |
+| D.2   | `/codex/02-data/sports-schema-paths.md` deleted                         | ✅ DELETED                      |
 | D.3   | zero stale `(asset_group=sports.*fixture_id.*day)` shard-axis claims    | ⚠️ PARTIAL — see broken links § |
 | D.3   | zero stale `(asset_group=prediction.*market_id.*day)` shard-axis claims | ⚠️ PARTIAL — see broken links § |
-| D.4   | `codex/04-architecture/copper-custody-integration.md` deleted           | ✅ DELETED                      |
-| D.4   | `codex/04-architecture/ceffu-custody-integration.md` deleted            | ✅ DELETED                      |
-| D.5   | `codex/06-coding-standards/error-handling.md` deleted                   | ✅ DELETED                      |
-| D.5   | `codex/06-coding-standards/validation-patterns.md` deleted              | ✅ DELETED                      |
-| D.5   | `codex/06-coding-standards/schema-validation.md` deleted                | ✅ DELETED                      |
-| D.6   | `codex/04-architecture/batch-live-pipeline.md` deleted                  | ✅ DELETED                      |
-| D.6   | `codex/04-architecture/batch-live-symmetry.md` deleted                  | ✅ DELETED                      |
+| D.4   | `/codex/04-architecture/copper-custody-integration.md` deleted          | ✅ DELETED                      |
+| D.4   | `/codex/04-architecture/ceffu-custody-integration.md` deleted           | ✅ DELETED                      |
+| D.5   | `/codex/06-coding-standards/error-handling.md` deleted                  | ✅ DELETED                      |
+| D.5   | `/codex/06-coding-standards/validation-patterns.md` deleted             | ✅ DELETED                      |
+| D.5   | `/codex/06-coding-standards/schema-validation.md` deleted               | ✅ DELETED                      |
+| D.6   | `/codex/04-architecture/batch-live-pipeline.md` deleted                 | ✅ DELETED                      |
+| D.6   | `/codex/04-architecture/batch-live-symmetry.md` deleted                 | ✅ DELETED                      |
 
 D.3 textual residuals: 7 codex docs still have shard-axis literal text including `fixture_id` or `market_id` as
 hive-partition. Many are now correct post-correction (e.g. `per-asset-group-bucket-layouts.md` calls out the correction
 explicitly). Concerning ones:
 
-- `codex/05-infrastructure/deployment-clusters-live-vs-batch.md:109,111` — Sports row still lists `fixture_id, day` as a
-  shard atom; Prediction row still includes `market_id`. These appear to be **stale claims** vs the canonical row-level
-  shape (per Q1 resolution).
-- `codex/02-data/partitioning.md:30` — Prediction row includes `market_id`. Same issue.
-- `codex/02-data/shard-granularity-cefi.md:194` — Sports row includes `fixture_id`. Same issue.
-- `codex/04-architecture/shard-level-failure-isolation.md:121,123` — Sports + Prediction rows include the row-level
+- `/codex/05-infrastructure/deployment-clusters-live-vs-batch.md:109,111` — Sports row still lists `fixture_id, day` as
+  a shard atom; Prediction row still includes `market_id`. These appear to be **stale claims** vs the canonical
+  row-level shape (per Q1 resolution).
+- `/codex/02-data/partitioning.md:30` — Prediction row includes `market_id`. Same issue.
+- `/codex/02-data/shard-granularity-cefi.md:194` — Sports row includes `fixture_id`. Same issue.
+- `/codex/04-architecture/shard-level-failure-isolation.md:121,123` — Sports + Prediction rows include the row-level
   columns as shard axes. Same issue.
 - `codex/POST_PLAN_REALITY_2026_05_06.md:130,162` — Same issue (acknowledged historical doc but worth flagging).
 
@@ -110,8 +110,8 @@ These need a sweep to align with the multi-axis correction banner / Q1 resolutio
 | E.1   | All 7 source docs (`RUNTIME_TOPOLOGY_DECISIONS`, `TIER-ARCHITECTURE`, `service-family-scope`, `deployment-topology-diagrams`, `pipeline-service-layers`, `api-services-cluster`, `PROTOCOL-INJECTION`) deleted ✅. All 3 targets (`tier-and-import-architecture.md`, `runtime-deployment-topology.md`, `commercial-service-families.md`) exist ✅. |
 | E.2   | `codex/14-playbooks/` does NOT exist ✅. `codex/14-customer-journeys/` exists ✅. `codex/15-runbooks/` exists ✅. `codex/16-strategy-playbooks/` exists ✅.                                                                                                                                                                                        |
 | E.3   | `codex/09-strategy/cross-cutting/` does NOT exist ✅. `codex/09-strategy/operational/` exists ✅. `codex/09-strategy/architecture-v2/cross-cutting/` exists ✅.                                                                                                                                                                                    |
-| E.4   | `codex/02-data/per-category-bucket-layouts.md` does NOT exist ✅. `codex/02-data/per-asset-group-bucket-layouts.md` exists ✅.                                                                                                                                                                                                                     |
-| E.5   | `codex/06-coding-standards/cod-deadlock-verification-report.md` does NOT exist ✅. `codex/06-coding-standards/orphan-audit.md` does NOT exist ✅.                                                                                                                                                                                                  |
+| E.4   | `/codex/02-data/per-category-bucket-layouts.md` does NOT exist ✅. `/codex/02-data/per-asset-group-bucket-layouts.md` exists ✅.                                                                                                                                                                                                                   |
+| E.5   | `/codex/06-coding-standards/cod-deadlock-verification-report.md` does NOT exist ✅. `/codex/06-coding-standards/orphan-audit.md` does NOT exist ✅.                                                                                                                                                                                                |
 
 ## 2. Broken links — the largest finding
 
@@ -147,11 +147,11 @@ only did the directory move + `git mv`, not a content sweep to rewrite incoming 
 CLAUDE.md (and by symlink, `SUB_AGENT_MANDATORY_RULES.md` + every per-repo `.claude/CLAUDE.md`) has 2 stale
 `14-playbooks/` references:
 
-- `cursor-configs/CLAUDE.md:119` — `codex/14-playbooks/shared-core/signal-broadcast-architecture.md` (Signal Leasing
-  rule body). The actual file now lives at `codex/16-strategy-playbooks/shared-core/signal-broadcast-architecture.md`
+- `cursor-configs/CLAUDE.md:119` — `/codex/14-playbooks/shared-core/signal-broadcast-architecture.md` (Signal Leasing
+  rule body). The actual file now lives at `/codex/16-strategy-playbooks/shared-core/signal-broadcast-architecture.md`
   (verify path).
 - `cursor-configs/CLAUDE.md:926` — `unified-trading-pm/codex/14-playbooks/authentication/firebase-local.md`. The actual
-  file now lives at `codex/14-customer-journeys/authentication/firebase-local.md`.
+  file now lives at `/codex/14-customer-journeys/authentication/firebase-local.md`.
 
 **These are HIGH-impact stale references** because CLAUDE.md is loaded into every Claude Code session boot.
 

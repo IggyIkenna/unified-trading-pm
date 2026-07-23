@@ -78,10 +78,10 @@ carry_staked_basis end-to-end scaffold deep-dive · cross-plan banners + risk re
 ### Tab 1 — codex SSOT (NEW + UPDATE codex docs)
 
 - **Cross-link targets** (existing batch=live SSOT mentions to reference, NOT duplicate): `cursor-configs/CLAUDE.md` §
-  "Batch = Live"; `codex/04-architecture/batch-live-architecture.md`;
-  `codex/04-architecture/execution-modes-and-chain-resolution.md`;
-  `codex/05-infrastructure/live-pipeline-architecture.md`; `codex/05-infrastructure/replay-subsystem.md`;
-  `codex/02-data/pipeline-mode-partition.md`.
+  "Batch = Live"; `/codex/04-architecture/batch-live-architecture.md`;
+  `/codex/04-architecture/execution-modes-and-chain-resolution.md`;
+  `/codex/05-infrastructure/live-pipeline-architecture.md`; `/codex/05-infrastructure/replay-subsystem.md`;
+  `/codex/02-data/pipeline-mode-partition.md`.
 - **NEW docs to ship**: `cefi-batch-live.md` · `tradfi-batch-live.md` (post-cutover) · `prediction-batch-live.md`
   (post-cutover) · `mode-axis-discipline.md` (cartesian product table for `RuntimeMode` × `OperationalMode` ×
   `BatchExecutionMode` × `MaturityPhase`).

@@ -23,7 +23,7 @@ stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]
 tags: [cicd, quality-gates, frontmatter, multi-agent, shipping, deadlock, plan-hygiene]
-related: [quickmerge_sentinel_invalidated_by_its_own_autopull_2026_07_18.md]
+related: [/plans/archive/issues/quickmerge_sentinel_invalidated_by_its_own_autopull_2026_07_18.md]
 created: 2026-07-18
 parent_epic: infrastructure_master
 assigned_vm: NA

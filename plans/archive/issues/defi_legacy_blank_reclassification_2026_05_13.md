@@ -14,7 +14,12 @@ created: 2026-05-13
 author: slot-3-ikenna
 resolved: 2026-05-13
 resolution: SHIPPED 2026-05-13 ~16:25 BST — full fix shipped per body § "RESOLVED 2026-05-13 ~16:25 BST".
-source: [bucket_name_ssot_canonicalisation_2026_05_10, expected_unattempted_propagation_chain_2026_05_12, classify_blank_reason_fixture_manifest_kwarg_2026_05_13]
+source:
+  [
+    bucket_name_ssot_canonicalisation_2026_05_10,
+    expected_unattempted_propagation_chain_2026_05_12,
+    classify_blank_reason_fixture_manifest_kwarg_2026_05_13,
+  ]
 severity: P1
 locked_by: live-defi-rollout
 locked_since: 2026-05-13
@@ -77,7 +82,7 @@ post-cutover to clean up the status panel and improve manifest accuracy.
 
 ## Cross-references
 
-- **Original SSOT rule**: CLAUDE.md "Reason taxonomy" + `codex/02-data/availability-manifest-and-data-status.md` — defi
+- **Original SSOT rule**: CLAUDE.md "Reason taxonomy" + `/codex/02-data/availability-manifest-and-data-status.md` — defi
   cannot have `empty_confirmed` at instrument-day grain.
 - **Reconciler code**: `instruments-service/scripts/reconcile_legacy_blank_to_typed_reason.py`.
 - **Why these 604k rows existed**: some prior process (legacy batch run, pre-Phase-1 MTDS, manifest backfill) wrote them
@@ -116,7 +121,7 @@ on previous VM runs. The Harsh-side "0 upgrades for sports/prediction/defi" repo
 **Post-fix verification** (slot 3 re-run 2026-05-13 ~15:55 UTC): Sports fixture_manifest now correctly populates with
 63,857 captured fixture rows. The 1.87M sports candidates still correctly produce 0 upgrades because sports/prediction
 CAN legitimately have `empty_confirmed` at instrument-day grain per CLAUDE.md SSOT
-(`codex/02-data/availability-manifest-and-data-status.md` § "asset-group-specific empty rules").
+(`/codex/02-data/availability-manifest-and-data-status.md` § "asset-group-specific empty rules").
 
 ### Defi root cause identified — DEFI_VENUE_LAUNCH_DATES dict missing in UAC
 
@@ -236,6 +241,5 @@ venues; not exhaustive). Manual audit of cefi candidates' venues would identify 
 
 ## Triage — 2026-05-18
 
-**Status**: CLOSED — SHIPPED  
-**Triaged by**: slot-8 triage sweep  
-**Reason**: Resolved 2026-05-13; 599k defi rows corrected EXPECTED_PRE_VENUE_LAUNCH
+**Status**: CLOSED — SHIPPED **Triaged by**: slot-8 triage sweep **Reason**: Resolved 2026-05-13; 599k defi rows
+corrected EXPECTED_PRE_VENUE_LAUNCH

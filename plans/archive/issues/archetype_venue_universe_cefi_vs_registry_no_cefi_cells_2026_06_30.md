@@ -107,7 +107,7 @@ before the sync script can be safely re-run.
 verified on-disk) still lists `binance` as a CeFi hedge venue
 (`hyperliquid, gmx_v2, drift, binance, bybit, deribit, okx`) for the `CARRY_STAKED_BASIS`-family structure builder,
 while the flat-registry fix above (2026-07-10, this same resolution) deliberately limits the `CARRY_STAKED_BASIS` CEFI
-cell to `[deribit, bybit, okx]` — matching `codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md`'s
+cell to `[deribit, bybit, okx]` — matching `/codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md`'s
 venue-acceptance table (re-verified 2026-05-20, confirmed on re-read), which explicitly states BINANCE accepts "none —
 cross-collateral feature retired — 0 rows" for this archetype's LST-collateral hedge leg, and whose `venue_universe`
 frontmatter omits binance entirely. **The leg-spec's binance inclusion is the stale outlier.** **Needs its own CODE

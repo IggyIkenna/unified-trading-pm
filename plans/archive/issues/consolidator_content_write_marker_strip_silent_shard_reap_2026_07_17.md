@@ -24,8 +24,8 @@ tags: [manifest, consolidator, data-correctness, silent-data-loss, per-vm-shards
 related:
   [
     ../sports_legacy_bucket_cutover_2026_07_16.md,
-    ../../../codex/02-data/availability-manifest-and-data-status.md,
-    ../../../codex/05-infrastructure/manifest-consolidator-ssot.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/05-infrastructure/manifest-consolidator-ssot.md,
   ]
 created: 2026-07-17
 last_updated: 2026-07-17
@@ -293,7 +293,7 @@ The code fix reaches them via the same ECR `:latest` image sync.
 
 The deployed consolidators are Cloud Run Jobs (`uts-prod-manifest-consolidator-*`, ~20) + 26 AWS Batch-Fargate mirrors,
 all running the **`market-tick-data-service:latest` image with UTL installed as a dep**. Per the image deploy-hygiene
-rule (`codex/08-workflows/ci-cd-flow.md`), **a UTL fix does NOT reach them until the MTDS `BASE_IMAGE_DIGEST` is bumped
+rule (`/codex/08-workflows/ci-cd-flow.md`), **a UTL fix does NOT reach them until the MTDS `BASE_IMAGE_DIGEST` is bumped
 and MTDS is rebuilt.** Exact chain (mirrors the 2026-07-13 prune-race rollout precedent: UTL@97212d3b → MTDS@b11199cb):
 
 | #   | Step                                                                                 | State (2026-07-17 04:30Z — ROLLOUT COMPLETE)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |

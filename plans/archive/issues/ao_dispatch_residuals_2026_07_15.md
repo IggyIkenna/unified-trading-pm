@@ -21,12 +21,12 @@ scope: [engineer]
 tags: [agent-orchestrator, autospawn, dispatch, slot-skips, orphaned-todos, tracking-index]
 related:
   [
-    ao_docs_reconciliation_2026_07_15.md,
-    ao_skip_blind_spawn_budget_phantom_churn_2026_07_15.md,
-    ao_fleet_stall_opus_spawn_and_skip_thrash_2026_07_07.md,
-    ao_autospawn_role_blind_dispatch_starvation_2026_07_14.md,
-    dispatcher_role_eligibility_gap_review_slots_2026_07_13.md,
-    backlog_regen_drops_handtuned_prereqs_2026_07_12.md,
+    /plans/active/issues/ao_docs_reconciliation_2026_07_15.md,
+    /plans/active/issues/ao_skip_blind_spawn_budget_phantom_churn_2026_07_15.md,
+    /plans/archive/issues/ao_fleet_stall_opus_spawn_and_skip_thrash_2026_07_07.md,
+    /plans/archive/issues/ao_autospawn_role_blind_dispatch_starvation_2026_07_14.md,
+    /plans/archive/issues/dispatcher_role_eligibility_gap_review_slots_2026_07_13.md,
+    /plans/archive/issues/backlog_regen_drops_handtuned_prereqs_2026_07_12.md,
     ../ao_dispatch_correctness_regen_reconcile_2026_07_07.md,
   ]
 created: 2026-07-15

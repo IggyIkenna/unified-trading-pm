@@ -23,7 +23,11 @@ stage: [meta]
 repos: [unified-api-contracts, instruments-service, market-tick-data-service]
 scope: [engineer, admin]
 tags: [mvp-universe, hyperliquid, catalogue, capture-universe, data-completeness, operator-decision, cefi-onchain-perp]
-related: [cefi_backfill_per_day_catalogue_reload_2026_07_20.md, cefi_hl_aster_batch_data_gaps_2026_06_22.md]
+related:
+  [
+    /plans/active/issues/cefi_backfill_per_day_catalogue_reload_2026_07_20.md,
+    /plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md,
+  ]
 created: 2026-07-20
 parent_epic: infrastructure_master
 assigned_vm: NA

@@ -6,26 +6,33 @@ status: complete
 nature: record
 asset_group: [infrastructure]
 stage: [meta]
-repos: [agent-orchestrator, alerting-service, deployment-service, execution-service, strategy-service, unified-api-contracts]
+repos:
+  [agent-orchestrator, alerting-service, deployment-service, execution-service, strategy-service, unified-api-contracts]
 scope: [engineer, admin]
 tags: []
-related: [incident_gateway_and_state_machine_2026_05_23.md, physical_pager_research_and_webhook_prototype_2026_05_23.md, audit_acknowledgement_sla_and_state_2026_05_23.md]
-created: '2026-05-23'
+related:
+  [
+    incident_gateway_and_state_machine_2026_05_23.md,
+    /plans/archive/2026_05/physical_pager_research_and_webhook_prototype_2026_05_23.md,
+    /plans/archive/2026_05/audit_acknowledgement_sla_and_state_2026_05_23.md,
+  ]
+created: "2026-05-23"
 parent_epic: observability_master
 assigned_vm: vm-cross-cutting
 priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 6
 estimate_calibrated_ai_days: 4.8
-estimate_calibration_note: 'Infra class — new Twilio notifier subclass + Secret Manager wiring + provider health probe cron + alerting-service
+estimate_calibration_note: "Infra class — new Twilio notifier subclass + Secret Manager wiring + provider health probe
+  cron + alerting-service
 
   fallback-route logic. Baseline 6 × 0.8 infra = 4.8 cal-days.
 
-  '
+  "
 parent: master_to_live_defi_2026_05_23
 locked_since: 2026-05-23
 depends_on: [incident_gateway_and_state_machine_2026_05_23]
-gates: ['master_to_live_defi_2026_05_23:Group-F']
+gates: ["master_to_live_defi_2026_05_23:Group-F"]
 ---
 
 ## Deferred work — migrated to:
@@ -162,8 +169,8 @@ physical pager device is researched + purchased).
 
 ## Codex SSOT updates
 
-- UPDATE: `codex/03-observability/alerting.md` — add Twilio voice/SMS to channels list; document fallback-mode.
-- UPDATE: `codex/04-architecture/recovery-defence-in-depth-layers.md` — Twilio = Layer-3 (permanent fallback).
+- UPDATE: `/codex/03-observability/alerting.md` — add Twilio voice/SMS to channels list; document fallback-mode.
+- UPDATE: `/codex/04-architecture/recovery-defence-in-depth-layers.md` — Twilio = Layer-3 (permanent fallback).
 
 ## Tier-1-4 implementation log (2026-05-23)
 
@@ -235,7 +242,7 @@ physical pager device is researched + purchased).
 
 - Operator ping doc → `plans/active/_agent_pings.md` 2026-05-23 ikenna-slot-1 → operator entry
 - 22 incident runbooks → `codex/15-runbooks/incidents/` (RB-INC/RECON/RISK/CONN/DEPLOY/INFRA/ALERT)
-- Game-day protocol → `codex/15-runbooks/incidents/game_day_protocol.md`
+- Game-day protocol → `/codex/15-runbooks/incidents/game_day_protocol.md`
 - Alerting Tier-5 → `alerting-service@e5c8084` (5 new gateway/notifier modules)
 - Strategy Tier-5 → `strategy-service@3b0f7397` (2 configs + close-all + helper)
 - Execution Tier-5 → `execution-service@a6fa7c501` (recovery_event_helper)

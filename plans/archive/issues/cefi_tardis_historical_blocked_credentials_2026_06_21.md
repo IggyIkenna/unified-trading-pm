@@ -11,7 +11,8 @@ stage: [meta]
 repos: []
 scope: [engineer, admin]
 tags: [cefi, backfill, manifest, honest-coverage, cost, mtds, data-correctness]
-related: [../data_completion_to_100_all_ag_2026_06_21.md, cefi_hl_aster_batch_data_gaps_2026_06_22.md]
+related:
+  [../data_completion_to_100_all_ag_2026_06_21.md, /plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md]
 created: 2026-06-21
 parent_epic: cefi_master
 priority: P2

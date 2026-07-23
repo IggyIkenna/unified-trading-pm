@@ -1,18 +1,34 @@
 ---
 doc_type: issue
-title: Codex-vs-Citadel Blocks C/D/E/F audit findings — researcher experience, operational governance, alpha-multiplying primitives, non-negotiable primitives
+title:
+  Codex-vs-Citadel Blocks C/D/E/F audit findings — researcher experience, operational governance, alpha-multiplying
+  primitives, non-negotiable primitives
 summary:
 status: resolved
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [deployment-service, execution-service, features-service, strategy-service, unified-trading-pm, unified-trading-system-ui]
+repos:
+  [
+    deployment-service,
+    execution-service,
+    features-service,
+    strategy-service,
+    unified-trading-pm,
+    unified-trading-system-ui,
+  ]
 scope: [engineer, admin]
 tags: []
 related: []
 created: 2026-05-10
 author: ikenna + main agent
-source: [plans/active/issues/codex_vs_citadel_block_b_audit_findings_2026_05_10.md (sibling — Block A2 + B fills), plans/active/codex_vs_citadel_infrastructure_audit_2026_05_10.md (spawned audit plan; this issue doc closes the last 4 audit blocks ahead of the 12-sub-agent fan-out so the question doc isn't needed for execution), PM@e381d016 (retired question doc — git-history recovery for original Block-A/B prose)]
+source:
+  [
+    plans/active/issues/codex_vs_citadel_block_b_audit_findings_2026_05_10.md (sibling — Block A2 + B fills),
+    plans/active/codex_vs_citadel_infrastructure_audit_2026_05_10.md (spawned audit plan; this issue doc closes the last
+    4 audit blocks ahead of the 12-sub-agent fan-out so the question doc isn't needed for execution),
+    PM@e381d016 (retired question doc — git-history recovery for original Block-A/B prose),
+  ]
 locked_by: live-defi-rollout
 locked_since: 2026-05-10
 ---
@@ -46,13 +62,13 @@ KEEP/LIFT/CONSOLIDATE/DELETE/ADD recommendations + which active plan absorbs eac
   batch=live seams, UAC schema placement, instrument lifecycle hot-reload, the 5 axes of operational mode
   (env_canon.py), the ML experiment lifecycle, the strategy registry-v2 axes, restriction-policy, archetype declaration
   in UAC, etc. — before they can backtest a new signal.
-- **Codex state**: `codex/04-architecture/ml-experiment-lifecycle.md` covers ML lifecycle but not "researcher → paper →
-  live as one workflow". `codex/04-architecture/research-service-and-dart-integration.md` covers DART integration but
-  not the researcher's golden path. **No `codex/09-strategy/researcher-experience-golden-path.md` exists.**
+- **Codex state**: `/codex/04-architecture/ml-experiment-lifecycle.md` covers ML lifecycle but not "researcher → paper →
+  live as one workflow". `/codex/04-architecture/research-service-and-dart-integration.md` covers DART integration but
+  not the researcher's golden path. **No `/codex/09-strategy/researcher-experience-golden-path.md` exists.**
 - **Citadel-benchmark gap**: large. A Citadel-grade non-HFT shop ships 5-10 ideas/researcher/month; our friction
   predicts <1/month.
 - **Recommendation**: **ADD (post-cutover, highest C-block leverage)**.
-  1. **NEW codex doc**: `codex/09-strategy/researcher-experience-golden-path.md` — single-page workflow from "I have a
+  1. **NEW codex doc**: `/codex/09-strategy/researcher-experience-golden-path.md` — single-page workflow from "I have a
      hypothesis" → backtest → walk-forward → paper → live, with every prereq linked.
   2. **NEW researcher entry-point**: `unified-trading-services/research/notebooks/golden_path.ipynb` (or equivalent
      under monorepo-consolidated shape) — bootstrap notebook that hides ServiceEmissionPolicy / manifest / hive / UAC
@@ -101,13 +117,13 @@ KEEP/LIFT/CONSOLIDATE/DELETE/ADD recommendations + which active plan absorbs eac
   dispatch via `AllocatorArchetype` UAC enum. Takes NAV / returns / volatility / sharpe / CVAR / regime signal → target
   weights. Sources from PBMS NAV series + strategy-service slot list. `risk-and-exposure-service` has
   `core/correlation_matrix.py` + `v2/correlation_cap.py`. **This is most of the C3 + E1 + E7 critique already built.**
-- **Codex state**: `codex/03-services/portfolio-allocator.md` exists but appears thin per the original audit.
+- **Codex state**: `/codex/03-services/portfolio-allocator.md` exists but appears thin per the original audit.
 - **Citadel-benchmark gap**: smaller than I originally thought — **the primitives exist**. The gap is: (a) Unified
   workflow exposing them to the researcher (C1 dependency). (b) Explicit Kelly / fractional-Kelly engine (the 8
   archetype engines may approximate but need named formalisation). (c) Capacity curves as a first-class output
   (per-strategy NAV → expected-PnL curves).
 - **Recommendation**: **KEEP + LIFT to documentation parity**. The code is mostly built; the codex undersells it.
-  1. **EXTEND codex**: `codex/03-services/portfolio-allocator.md` documents the 8 archetypes + Kelly mapping (which
+  1. **EXTEND codex**: `/codex/03-services/portfolio-allocator.md` documents the 8 archetypes + Kelly mapping (which
      archetype = which sizing rule).
   2. **NEW**: explicit `portfolio_allocator/kelly.py` + `portfolio_allocator/capacity.py` modules if not already covered
      by the 8 archetypes (audit during Phase 1).
@@ -139,7 +155,7 @@ KEEP/LIFT/CONSOLIDATE/DELETE/ADD recommendations + which active plan absorbs eac
 - **Code state**: 68 `launch-*.sh` scripts in `deployment-service/scripts/vm/` (heavy GCE-instance use). AWS Batch
   terraform EXISTS in `deployment-service/terraform/modules/container-job/aws/` — partial job-runtime infra is already
   built (just not used for backfills yet).
-- **Codex state**: `codex/05-infrastructure/vm-tarball-deployment.md` is the canonical SSOT;
+- **Codex state**: `/codex/05-infrastructure/vm-tarball-deployment.md` is the canonical SSOT;
   `codex/05-infrastructure /launcher-script-ssot.md` codifies the launcher convention. Both treat VM-launches as the
   dominant shape.
 - **Citadel-benchmark gap**: large operationally. Job runtime makes lifecycle events a framework property, not an opt-in
@@ -269,7 +285,7 @@ stronger, not weaker.
 | ----- | ----- | ----------------------------------------------------- | ------------------------------------------------------------------------------------ | ------------------- |
 | C     | C1    | ADD researcher golden-path doc + notebook             | NEW `researcher_experience_golden_path_<date>.md` OR fold into spawned monorepo plan | Post-cutover        |
 | C     | C2    | ADD alpha-attribution stack (research-grade)          | NEW `alpha_attribution_stack_<date>.md`                                              | Post-cutover        |
-| C     | C3    | KEEP + LIFT to doc parity (code exists)               | EXTEND `codex/03-services/portfolio-allocator.md` + spawned audit plan Phase 1       | Pre-cutover (cheap) |
+| C     | C3    | KEEP + LIFT to doc parity (code exists)               | EXTEND `/codex/03-services/portfolio-allocator.md` + spawned audit plan Phase 1      | Pre-cutover (cheap) |
 | C     | C4    | ALIGN — fold into C1 golden path                      | (same as C1)                                                                         | Post-cutover        |
 | C     | C5    | LIFT regime to unified UAC primitive                  | NEW `regime_unified_primitive_<date>.md`                                             | Post-cutover        |
 | D     | D1    | CONSOLIDATE — pick one job runtime (AWS Batch likely) | NEW `job_runtime_migration_<date>.md`                                                | Post-cutover        |

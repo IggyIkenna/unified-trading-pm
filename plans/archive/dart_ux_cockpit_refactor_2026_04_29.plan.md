@@ -13,9 +13,9 @@ related: []
 created: 2026-04-29
 owner: ikenna
 archived: 2026-05-07
-codex_ref: codex/14-playbooks/dart/dart-terminal-vs-research.md
+codex_ref: /codex/14-playbooks/dart/dart-terminal-vs-research.md
 supersedes:
-  codex/14-playbooks/dart/dart-terminal-vs-research.md (tile-split mechanics — shipped commits a36a9889 → 0754cd3c).
+  /codex/14-playbooks/dart/dart-terminal-vs-research.md (tile-split mechanics — shipped commits a36a9889 → 0754cd3c).
   This plan addresses the structural reasons the navigation still feels like a headache instead of FOMO.
 superseded_by: plans/active/strategy_and_dart_master_2026_05_07.md
 ---

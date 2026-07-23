@@ -39,12 +39,12 @@ tags:
   ]
 related:
   [
-    mvp_backfill_cefi_tick_v10_2026_06_27.md,
-    cefi_layer1_denominator_gaps_2026_07_03.md,
-    cefi_onchain_perp_batch_venue_allowlist_gap_2026_07_12.md,
-    ../../../codex/02-data/honest-coverage-model.md,
-    ../../../codex/02-data/availability-manifest-and-data-status.md,
-    ../../../codex/02-data/honest-absence-downstream-handling.md,
+    /plans/archive/2026_07/mvp_backfill_cefi_tick_v10_2026_06_27.md,
+    /plans/active/issues/cefi_layer1_denominator_gaps_2026_07_03.md,
+    /plans/active/issues/cefi_onchain_perp_batch_venue_allowlist_gap_2026_07_12.md,
+    /codex/02-data/honest-coverage-model.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/02-data/honest-absence-downstream-handling.md,
   ]
 created: 2026-07-12
 parent_epic: cefi_master
@@ -115,7 +115,7 @@ Two design principles in this codebase are now in direct conflict for these spec
 2. **OnchainPerpBatchHandler's live-only exclusion** deliberately writes NOTHING for these tuples — not even a typed
    `empty_confirmed[EXPECTED_...]` row, unlike every other honest-absence case in this codebase (e.g. DERIBIT-COMBO's
    documented target state, HL/ASTER's other documented deferred-no-source carve-outs which DO write typed-empty rows
-   per `codex/02-data/honest-absence-downstream-handling.md`).
+   per `/codex/02-data/honest-absence-downstream-handling.md`).
 
 **Result**: as currently coded, principle (2) makes principle (1) permanently unsatisfiable for 6 tuples (ASTER
 book_snapshot_5, ASTER liquidations [already excluded from Layer-1 scope per data_type sparsity], PACIFICA-SOLANA

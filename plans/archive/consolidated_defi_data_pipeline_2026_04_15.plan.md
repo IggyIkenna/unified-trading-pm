@@ -10,33 +10,41 @@ repos: [deployment-api, deployment-service, deployment-ui, e2e-testing, instrume
 scope: [engineer, admin]
 tags: []
 related: []
-created: '2026-04-16'
-overview: 'Consolidated remaining DeFi data pipeline work from 6 source plans.
+created: "2026-04-16"
+overview: "Consolidated remaining DeFi data pipeline work from 6 source plans.
 
   Covers: MTDS normalization remaining (Solana lending, oracles, verification), DeFi E2E validation,
 
   data coverage, instrument pipeline, multichain expansion, MEV protection.
 
-  '
+  "
 type: mixed
 epic: epic-code-completion
 reconciliation_status: yaml_to_markdown_converted
 reconciliation_date: 2026-04-25
 reconciliation_evidence: _reconciliation_evidence_map_2026_04_25.md
-completion_gates: {code: C5, deployment: D3, business: B4}
+completion_gates: { code: C5, deployment: D3, business: B4 }
 repo_gates:
-- {repo: market-tick-data-service, code: C1}
-- {repo: features-onchain-service, code: C1}
-- {repo: instruments-service, code: C1}
-- {repo: unified-api-contracts, code: C1}
-- {repo: unified-trading-library, code: C1}
-- {repo: deployment-api, code: C1}
-- {repo: deployment-service, code: C1}
-- {repo: deployment-ui, code: C0}
-- {repo: execution-service, code: C0}
-- {repo: market-data-processing-service, code: C1}
+  - { repo: market-tick-data-service, code: C1 }
+  - { repo: features-onchain-service, code: C1 }
+  - { repo: instruments-service, code: C1 }
+  - { repo: unified-api-contracts, code: C1 }
+  - { repo: unified-trading-library, code: C1 }
+  - { repo: deployment-api, code: C1 }
+  - { repo: deployment-service, code: C1 }
+  - { repo: deployment-ui, code: C0 }
+  - { repo: execution-service, code: C0 }
+  - { repo: market-data-processing-service, code: C1 }
 depends_on: []
-source_plans: [mtds_defi_data_normalization_2026_04_14, defi_data_pipeline_e2e_2026_04_08, defi_full_data_coverage_2026_04_09, defi_instrument_pipeline_and_rewards_2026_04_01, multichain_defi_expansion_2026_03_28, mev_protection_and_execution_enhancements_2026_04_01]
+source_plans:
+  [
+    mtds_defi_data_normalization_2026_04_14,
+    defi_data_pipeline_e2e_2026_04_08,
+    defi_full_data_coverage_2026_04_09,
+    defi_instrument_pipeline_and_rewards_2026_04_01,
+    multichain_defi_expansion_2026_03_28,
+    mev_protection_and_execution_enhancements_2026_04_01,
+  ]
 isProject: false
 ---
 
@@ -141,7 +149,7 @@ Fork 1+2 closure work — not duplicated here. The single genuinely-open infra i
 - [ ] [AGENT] P1. **Copper sandbox integration test** — validate `CopperCustodyProvider` (in
       `execution_service/custody/copper.py`, shipped per source plan's Phase 4B) against Copper's sandbox API
       end-to-end: HMAC-SHA256 auth → `POST /platform/orders` → `POST /platform/orders/{id}/sign` → poll for completion.
-      Ref: `codex/04-architecture/copper-custody-integration.md`. Required before live wallet flips per master-plan
+      Ref: `/codex/04-architecture/copper-custody-integration.md`. Required before live wallet flips per master-plan
       Group F item 19 (Copper for DeFi-side custody).
 
 Items folded in from `defi_strategies_phase2_2026_03_29` (since archived): the March plan's strategy-archetype

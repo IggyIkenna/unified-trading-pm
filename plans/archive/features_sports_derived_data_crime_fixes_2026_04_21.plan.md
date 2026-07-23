@@ -1,6 +1,8 @@
 ---
 doc_type: plan
-title: features-sports-service — Remove data-crime defaults in derived_features (squad-value zero-default + standings lookahead)
+title:
+  features-sports-service — Remove data-crime defaults in derived_features (squad-value zero-default + standings
+  lookahead)
 summary:
 status: complete
 nature: record
@@ -16,9 +18,9 @@ owner: agent
 archived: 2026-04-22
 type: code
 epic: none
-completion_gates: {code: C5, deployment: none, business: none}
+completion_gates: { code: C5, deployment: none, business: none }
 repo_gates:
-- {repo: features-sports-service, code: C0, deployment: none, business: none}
+  - { repo: features-sports-service, code: C0, deployment: none, business: none }
 depends_on: [features_sports_denormalisation_pipeline_2026_04_21]
 isProject: false
 ---
@@ -263,7 +265,7 @@ implemented in
 - [x] [AGENT] P0. Commit + quickmerge features-sports-service (`--agent`, scoped `--files`).
 
 - [x] [AGENT] P0. Update codex
-      [`codex/02-data/sports-scheduling-and-sharding.md`](../../codex/02-data/sports-scheduling-and-sharding.md) §2.4
+      [`/codex/02-data/sports-scheduling-and-sharding.md`](/codex/02-data/sports-scheduling-and-sharding.md) §2.4
       (SFI/standings denormalisation) + §9.1 (fixture-features shipped block): remove the "out-of-scope follow-ups"
       bullets covering these two crimes. Add a §5.1 subsection "Examples of shipped fixes" pointing at this plan's
       commits.
@@ -297,10 +299,10 @@ Phase 0 (audit + grep downstream + read _normalize_standings)
 ## SSOT cross-refs
 
 - Data-crime definition:
-  [`codex/02-data/sports-scheduling-and-sharding.md`](../../codex/02-data/sports-scheduling-and-sharding.md) §5
+  [`/codex/02-data/sports-scheduling-and-sharding.md`](/codex/02-data/sports-scheduling-and-sharding.md) §5
   (lookahead-bias rules).
 - Validation-pattern rule:
-  [`codex/06-coding-standards/validation-patterns.md`](../../codex/06-coding-standards/validation-patterns.md) +
+  [`/codex/06-coding-standards/validation-patterns.md`](/codex/06-coding-standards/validation-patterns.md) +
   `.cursor/rules/standards/no-empty-fallbacks.mdc`.
 - Parent plan (declared these as out-of-scope follow-ups):
   [`plans/active/features_sports_denormalisation_pipeline_2026_04_21.md`](features_sports_denormalisation_pipeline_2026_04_21.md)

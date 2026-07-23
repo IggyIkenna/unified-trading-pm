@@ -16,7 +16,7 @@ stage: [meta]
 repos: [deployment-ui, deployment-api, unified-api-contracts]
 scope: [engineer]
 tags: [data-status, deployment-ui, deployment-api, ux, fixtures, prediction, catalogue, sports]
-related: [data_status_page_ux_and_canonicalisation_2026_07_16.md]
+related: [/plans/active/data_status_page_ux_and_canonicalisation_2026_07_16.md]
 created: 2026-07-17
 last_updated: 2026-07-18
 parent_epic: deployment_and_user_management_master
@@ -242,7 +242,7 @@ verification used the real live prev catalogue + a real window, which proves the
 
 **Operator (2026-07-17): "i thought we got rid of some of these dsol venues like DRIFT as they got hacked".** CONFIRMED:
 DRIFT was removed from the venue registry 2026-07-16 (operator ruling — hacked ~$280M, rebranded Velocity DEX; all
-Solana perp DEXes dropped; `venue_adapter_keys.py:196`, SSOT `codex/04-architecture/solana-defi-coverage.md`). Of the 8
+Solana perp DEXes dropped; `venue_adapter_keys.py:196`, SSOT `/codex/04-architecture/solana-defi-coverage.md`). Of the 8
 Solana protocols the operator saw (DRIFT, JITO, KAMINO, MARGINFI, MARINADE, ORCA, RAYDIUM, SOLEND), **only DRIFT is
 removed-but-still-showing** — the other 7 are in the ACTIVE registry (staking/lending/AMM, not perp DEXes) and are
 legitimately kept. MEASURED (2026-07-18): DRIFT = **0 rows in the MTDS defi index** but **3,556 rows in the

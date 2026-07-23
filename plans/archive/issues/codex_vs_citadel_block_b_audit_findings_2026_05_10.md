@@ -6,13 +6,28 @@ status: resolved
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [features-service, instruments-service, market-tick-data-service, strategy-service, unified-trading-library, unified-trading-pm]
+repos:
+  [
+    features-service,
+    instruments-service,
+    market-tick-data-service,
+    strategy-service,
+    unified-trading-library,
+    unified-trading-pm,
+  ]
 scope: [engineer, admin]
 tags: []
 related: []
 created: 2026-05-10
 author: ikenna + main agent
-source: [PM@e381d016 (Block B audit fill landed in retired question doc), PM@5d2d74c1 (parallel agent retired plans/questions/codex_vs_citadel_infrastructure_specs_2026_05_08.md per lifecycle Step 5 — plan-spawned graduates to active plan), plans/active/codex_vs_citadel_infrastructure_audit_2026_05_10.md (spawned active plan; this issue doc seeds its audit findings section ahead of the 12 sub-agent fan-out)]
+source:
+  [
+    PM@e381d016 (Block B audit fill landed in retired question doc),
+    PM@5d2d74c1 (parallel agent retired plans/questions/codex_vs_citadel_infrastructure_specs_2026_05_08.md per
+    lifecycle Step 5 — plan-spawned graduates to active plan),
+    plans/active/codex_vs_citadel_infrastructure_audit_2026_05_10.md (spawned active plan; this issue doc seeds its
+    audit findings section ahead of the 12 sub-agent fan-out),
+  ]
 locked_by: live-defi-rollout
 locked_since: 2026-05-10
 ---
@@ -84,9 +99,9 @@ surface so the spawned audit plan + the named active plans I'd extend can consum
 - **Code state**: UAC `external/` has **73 source sub-directories** (sample: `bybit/` has `__init__.py`, `examples/`,
   `mocks/`, `normalize.py`, `schemas.py`). 73 sources are NOT 1:1 with ~53 venues — extra ~20 are data-providers
   (databento, tardis, alchemy, defillama, cryptoquant, barchart, coinglass, etc.) + macro feeds + auxiliary services.
-  Cross-cutting "per-data*type" view comes from prose matrices in `codex/02-data/mtds-data-source-coverage-matrix.md` +
-  `sports-data-source-coverage-matrix.md` cross-linked to UAC registry helpers
-  (`VenueMapping.all*\*\_venues`, `get_expected_data_types_for_venue`, `get_venue_data_type_start_date`).
+  Cross-cutting "per-data*type" view comes from prose matrices in `/codex/02-data/mtds-data-source-coverage-matrix.md` +
+  `sports-data-source-coverage-matrix.md` cross-linked to UAC registry helpers (`VenueMapping.all*\*\_venues`,
+  `get_expected_data_types_for_venue`, `get_venue_data_type_start_date`).
 - **Operational state**: per-source colocation works for "add a source" (1 PR / 1 dir / 1 registry entry). Strains on
   cross-cutting audits — ~5 documented incidents involved cross-cutting drift not catchable from single-source view.
   2026-04-20 phantom-audit incident (false 26% sports ODDS phantom) was matrix-doc / registry-code drift.
@@ -124,8 +139,8 @@ surface so the spawned audit plan + the named active plans I'd extend can consum
   features-service + market-tick-data-service: **only 11 occurrences**. Lower than expected given the volume of doc +
   plan content asserting the principle. Suggests principle is mostly enforced; the 11 are likely legitimate seam
   dispatchers (data source / output sink / live-trigger vs batch-trigger).
-- **Codex state**: `codex/04-architecture/batch-live-architecture.md` (436 lines) is SSOT — folded from 2 prior separate
-  docs per `codex_refactor_2026_05_08`. Volume substantial (~500 lines) but earned.
+- **Codex state**: `/codex/04-architecture/batch-live-architecture.md` (436 lines) is SSOT — folded from 2 prior
+  separate docs per `codex_refactor_2026_05_08`. Volume substantial (~500 lines) but earned.
 - **Operational state**: low fire-rate in past 90 days. Principle is mostly self-enforcing.
 - **Alpha-relevance**: **direct** — bad batch=live correspondence = backtest results don't predict live PnL.
 - **Citadel-benchmark gap**: small. Bigger win is structural: per Block A1 consolidation, `Pipeline` base class lives in
@@ -147,7 +162,7 @@ surface so the spawned audit plan + the named active plans I'd extend can consum
   lookahead bias.
 - **Operational state**: lookahead-bias incidents in 3+ documented cases (carry-tracer, sports lineup leakage, sports
   fixture stats). Runtime gate catches missing-stamp; doesn't catch wrong-rule.
-- **Codex state**: `codex/04-architecture/instrument-lifecycle-cache-delta-hot-reload.md` + sports stamping rules in
+- **Codex state**: `/codex/04-architecture/instrument-lifecycle-cache-delta-hot-reload.md` + sports stamping rules in
   CLAUDE.md "Shard-granularity SSOT" section + ~5 plans + active `available_at_lookahead_bias_completion_*` plan.
   Substantial cross-referencing across multiple files.
 - **Alpha-relevance**: **direct + critical**. Lookahead bias = invalid backtest = invalid alpha. Every minute of

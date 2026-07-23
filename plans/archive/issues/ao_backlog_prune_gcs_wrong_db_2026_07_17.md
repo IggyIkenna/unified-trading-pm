@@ -38,8 +38,8 @@ scope: [engineer]
 tags: [agent-orchestrator, backlog, plan-regen, prune, zombie-tasks, ssot-drift, silent-failure, dashboard, fleet-view]
 related:
   [
-    ../../codex/04-architecture/agent-orchestrator-overview.md,
-    ../../codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
+    /codex/04-architecture/agent-orchestrator-overview.md,
+    /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
     ../../archive/2026_07/ao_dispatch_hardening_2026_07_16.md,
     ../../epics/orchestrator_master.md,
   ]

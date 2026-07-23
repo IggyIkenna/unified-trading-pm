@@ -10,47 +10,57 @@ repos: [deployment-service, execution-service, instruments-service]
 scope: [engineer, admin]
 tags: []
 related: []
-created: '2026-04-16'
-overview: 'Consolidated remaining work from 8 sports + prediction plans into a single tracking plan.
+created: "2026-04-16"
+overview: "Consolidated remaining work from 8 sports + prediction plans into a single tracking plan.
 
   Covers: sports batch E2E, Polymarket prediction wiring, sports integrations 01-06, sports ML training.
 
   Source plans retained for history; remaining todos tracked here.
 
-  '
+  "
 type: mixed
 epic: epic-code-completion
 reconciliation_status: yaml_to_markdown_converted
 reconciliation_date: 2026-04-25
 reconciliation_evidence: _reconciliation_evidence_map_2026_04_25.md
-completion_gates: {code: C5, deployment: D3, business: B4}
+completion_gates: { code: C5, deployment: D3, business: B4 }
 repo_gates:
-- {repo: unified-api-contracts, code: C0}
-- {repo: instruments-service, code: C0}
-- {repo: market-tick-data-service, code: C0}
-- {repo: features-sports-service, code: C0}
-- {repo: unified-features-interface, code: C0}
-- {repo: unified-trading-library, code: C0}
-- {repo: ml-training-service, code: C0}
-- {repo: execution-service, code: C0}
-- {repo: strategy-service, code: C0}
-- {repo: deployment-service, code: C0}
+  - { repo: unified-api-contracts, code: C0 }
+  - { repo: instruments-service, code: C0 }
+  - { repo: market-tick-data-service, code: C0 }
+  - { repo: features-sports-service, code: C0 }
+  - { repo: unified-features-interface, code: C0 }
+  - { repo: unified-trading-library, code: C0 }
+  - { repo: ml-training-service, code: C0 }
+  - { repo: execution-service, code: C0 }
+  - { repo: strategy-service, code: C0 }
+  - { repo: deployment-service, code: C0 }
 depends_on: []
-source_plans: [sports_batch_pipeline_end_to_end_2026_03_25, polymarket_prediction_pipeline_2026_03_25, sports_integration_01_reference_data_pipeline_2026_03_25, sports_integration_02_odds_market_data_pipeline_2026_03_25, sports_integration_03_features_provider_integration_2026_03_25, sports_integration_04_feature_calculators_full_2026_03_25, sports_integration_05_ml_training_pipeline_2026_03_25, sports_integration_06_strategy_execution_gcs_migration_2026_03_25]
+source_plans:
+  [
+    sports_batch_pipeline_end_to_end_2026_03_25,
+    polymarket_prediction_pipeline_2026_03_25,
+    sports_integration_01_reference_data_pipeline_2026_03_25,
+    sports_integration_02_odds_market_data_pipeline_2026_03_25,
+    sports_integration_03_features_provider_integration_2026_03_25,
+    sports_integration_04_feature_calculators_full_2026_03_25,
+    sports_integration_05_ml_training_pipeline_2026_03_25,
+    sports_integration_06_strategy_execution_gcs_migration_2026_03_25,
+  ]
 isProject: false
 ---
 
 > **Reconciliation note (2026-04-25):** YAML `todos:` block converted to canonical Cursor markdown checkboxes per
 > `PLAN_FORMAT.md`. 16 todos flipped to `[x]` with cited commit evidence; 36 remain open. Note: per evidence-map
 > duplication-cluster table, this consolidator's tracking role has been **superseded by**
-> `codex/02-data/sports-scheduling-and-sharding.md` §12.0 register + 5 active sports plans (Plans 2/4/5/6/9/11/12/13).
+> `/codex/02-data/sports-scheduling-and-sharding.md` §12.0 register + 5 active sports plans (Plans 2/4/5/6/9/11/12/13).
 > See `_reconciliation_evidence_map_2026_04_25.md` for evidence anchors (consolidated_sports_prediction_pipeline block
 > ~line 218).
 
 # Consolidated Sports & Prediction Pipeline
 
 Remaining work from 8 source plans. Each todo references its source plan for full context. Sports register §12.0 in
-`codex/02-data/sports-scheduling-and-sharding.md` is the live SSOT for ongoing sports work; this consolidator is now a
+`/codex/02-data/sports-scheduling-and-sharding.md` is the live SSOT for ongoing sports work; this consolidator is now a
 historical tracker.
 
 ## Todos

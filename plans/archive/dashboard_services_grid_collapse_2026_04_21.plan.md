@@ -10,7 +10,7 @@ repos: [unified-trading-api, unified-trading-pm, unified-trading-system-ui]
 scope: [engineer, admin]
 tags: []
 related: []
-created: '2026-04-21'
+created: "2026-04-21"
 ---
 
 ## Deferred work — migrated to:
@@ -194,11 +194,11 @@ depends_on:
 
 # unified-trading-pm/
 
-# codex/09-strategy/architecture-v2/dashboard-services-grid.md CREATE
+# /codex/09-strategy/architecture-v2/dashboard-services-grid.md CREATE
 
-# codex/09-strategy/architecture-v2/dart-tab-structure.md CROSS-REF
+# /codex/09-strategy/architecture-v2/dart-tab-structure.md CROSS-REF
 
-# codex/14-customer-journeys/playbook-concepts/visibility-slicing.md UPDATE
+# /codex/14-customer-journeys/playbook-concepts/visibility-slicing.md UPDATE
 
 # plans/active/dashboard_services_grid_collapse_2026_04_21.md (this file)
 
@@ -249,7 +249,7 @@ todos:
         im-desk-operator, prospect-dart, client-full, client-premium, client-data-only, prospect-signals-only,
         prospect-odum-signals, client-im-pooled, client-im-sma, prospect-im, client-regulatory, prospect-regulatory,
         prospect-im-under-regulatory, investor, advisor, prospect-platform, elysium-defi). See
-        `codex/09-strategy/architecture-v2/dashboard-services-grid.md` §3 matrix. (e) Export
+        `/codex/09-strategy/architecture-v2/dashboard-services-grid.md` §3 matrix. (e) Export
         `personaDashboardShape(persona)` + `personaDashboardSubRoutes(persona)` resolvers (fall back by role like
         persona-lifecycle-shape.ts does). Keep symmetry with `personaLifecycleShape` — same default-shape-with-overrides
         pattern, same fallback rules. **DONE 2026-04-21** (UI `d45be7d`). status: done
@@ -380,7 +380,7 @@ todos:
         — the DART sub-tab list now also surfaces as dashboard tile sub-route chips; persona visibility map is the union
         of DART dropdown + dashboard chip surfaces. **DONE 2026-04-21** (PM `85c43998`). status: done
 - id: p5-visibility-slicing-update content: |
-  - [ ] [AGENT] P1. Update `codex/14-customer-journeys/playbook-concepts/visibility-slicing.md` to note the 5-tile
+  - [ ] [AGENT] P1. Update `/codex/14-customer-journeys/playbook-concepts/visibility-slicing.md` to note the 5-tile
         dashboard model + per-tile sub-route slicing. One paragraph + a link to dashboard-services-grid.md. No rewrite.
         **DONE 2026-04-22** — added "Dashboard 5-tile grid + sub-route chip slicing" §addendum + Related-links entry.
         status: done

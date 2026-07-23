@@ -27,7 +27,7 @@ stage: [data]
 repos: [instruments-service, unified-api-contracts]
 scope: [engineer]
 tags: [honest-coverage, golden-fixture, layer1-denominator, qg-red, cross-repo, coinbase-cde, defi-lending]
-related: [coinbase_bare_name_migration_2026_07_06.md, ../../codex/02-data/honest-coverage-model.md]
+related: [/plans/archive/2026_07/coinbase_bare_name_migration_2026_07_06.md, /codex/02-data/honest-coverage-model.md]
 created: 2026-07-10
 last_updated: 2026-07-10
 parent_epic: instruments_master

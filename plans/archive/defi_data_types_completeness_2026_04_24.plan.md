@@ -84,7 +84,7 @@ Cross-references:
 | UTL                | `unified_trading_library/manifest_writer.py`              | Verify `data_type` col accepts new enum values |
 | deployment-service | `deployment_service/api/data_status.py` or similar        | Add expected-count rows for 10 DeFi types      |
 | deployment-ui      | `src/lib/data-status-helpers.ts`                          | Display DeFi data_type breakdown axis          |
-| unified-trading-pm | `codex/02-data/defi-data-types-catalog.md`                | New doc: full data type catalog with status    |
+| unified-trading-pm | `/codex/02-data/defi-data-types-catalog.md`               | New doc: full data type catalog with status    |
 
 ## Phases
 
@@ -184,7 +184,7 @@ commit pending on live-defi-rollout).
 
 ### Phase 6 — Codex doc + PM
 
-- [x] [AGENT] P1. Write `codex/02-data/defi-data-types-catalog.md` — Full catalog of all 14 DeFi data types with
+- [x] [AGENT] P1. Write `/codex/02-data/defi-data-types-catalog.md` — Full catalog of all 14 DeFi data types with
       description, source, shard key, implementation status, protocol coverage matrix, API key requirements. **DONE:
       file created 2026-04-24.**
 - [x] [SCRIPT] P1. Quickmerge PM. **In progress (this commit).**
