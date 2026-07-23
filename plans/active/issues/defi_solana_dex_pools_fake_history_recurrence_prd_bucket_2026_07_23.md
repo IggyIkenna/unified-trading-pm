@@ -114,24 +114,36 @@ is regenerated after a fix.**
 
 ## Todos
 
-- [ ] 1. [OPERATOR] P0. **Rule on disposition**: this is real, on-disk data (never delete casually) but its
-      `day=`/`available_at` provenance is confirmed wrong. Options: (a) WIPE per the 2020-06-floor-style precedent if
-      the data is worthless as historical record (real risk: Orca/Raydium have no historical endpoint at all, so there
-      may be no way to ever get GENUINE 2025-01 pool state for these venues — "wipe" may just mean "accept this data
-      doesn't exist for this window", not "we'll get it right later"); (b) migrate-forward: re-stamp
-      `available_at`/relabel as a `live`-mode snapshot under its TRUE date (2026-05-04/05) instead of a fabricated
-      historical `day=`, if the current pool state has standalone value; (c) leave in place but EXCLUDE from any
-      `record_captured` backfill (mark `expected_unattempted` with a documented reason instead) until (a)/(b) is
-      decided. Precedent: `solana_defi_fake_history_snapshot_2026_06_17.md` chose full delete for the flat-prefix case —
-      same reasoning likely applies here, but the operator should confirm given this is data, not just infra.
+- [x] 1. [OPERATOR] P0. **Rule on disposition — DECIDED 2026-07-23, option (b)**. Operator ruling (verbatim): "OK YEAH
+      WE need to relabel to reality." This is option (b) from the choices below: migrate-forward, re-stamp
+      `available_at`/relabel each affected object as a `live`-mode snapshot under its TRUE date (2026-05-04/05, per the
+      row's own `timestamp` column) instead of a fabricated historical `day=2025-01-XX`. NOT a wipe, NOT a
+      leave-in-place exclusion. Implementation is a COPY-forward migration (GCS objects are immutable-by-path; per the
+      delete-safety protocol, the OLD mislabeled object is left in place, unregistered, until a human confirms deletion
+      — never delete-on-relabel): for each affected object, write a NEW object at the canonical path with
+      `day=<true_date>` and `pipeline_mode=live_onchain_rpc` (or whatever the correct live-mode partition token is; the
+      object's own row-level `timestamp` is the source of truth for `<true_date>`, NOT `available_at`, which is itself
+      the uniform write-time artifact of the original bug), then `record_captured` the NEW path only. The OLD
+      `day=2025-01-XX` path is left un-recorded (never `record_captured`) and flagged for a later human delete decision
+      once the new copies are verified. See todo 3 for the concrete implementation. <br>Original options considered: (a)
+      WIPE per the 2020-06-floor-style precedent — rejected, since Orca/Raydium pool STATE (unlike a genuinely-absent
+      historical price series) has standalone present-tense value even mislabeled; (c) leave-in-place-and-exclude-only —
+      rejected as a permanent non-fix, since it never produces the TRUE coverage the data actually represents.
 - [ ] 2. [DATA] P1. **Get the TRUE final scope** once defi's orphan-sweep reaches ACCEPTANCE — re-run the shard-scan
       against the final `orphan_sweep_defi.parquet` report (not just the in-progress checkpoint shards) to confirm the
       exact row count, venue set, and day range of `data_type=dex_pools` objects in the `-prd-` bucket.
-- [ ] 3. [CODE] P1. **Exclude this population from defi's backfill** (mirror the sports `split_pre_floor` pattern in
-      `backfill_orphan_class_e_sports.py`/`instruments-service@fc5983a8`) — a durable filter in
-      `backfill_orphan_class_e.py` that routes `(day, venue, data_type=dex_pools)` cells matching this population to
-      `escalated`/`BLOCKED-OPERATOR-DECISION` instead of `record_captured`, so a future `--apply` run cannot
-      accidentally sweep this population in before todo 1 is ruled on.
+- [ ] 3. [CODE] P1. **Build the relabel-forward migration per the todo-1 ruling** — a new script (sibling of
+      `migrate_legacy_solana_defi_to_canonical.py`), scoped to `venue in (ORCA, RAYDIUM)`, `data_type=dex_pools`, the
+      affected `day=2025-01-*` range: for each affected object, (1) read the row(s), derive `<true_date>` from the row's
+      own `timestamp` column (NOT `available_at`), (2) compute the new canonical dest path with `day=<true_date>` and a
+      `live_`-prefixed `pipeline_mode` (mirrors `_build_dest_path()`'s existing pure-computed-path pattern in
+      `migration_orphan_sweep.py`/`backfill_orphan_class_e.py` — reuse it, don't reinvent), (3) upload the new object
+      (byte-identical row content; only the path changes), (4) `record_captured` the NEW path only, (5) leave the OLD
+      `day=2025-01-XX` object un-recorded and log it to a "pending-human-delete" manifest for a later, separately-gated
+      cleanup pass (never auto-delete). Must also independently exclude this population from
+      `backfill_orphan_class_e.py`'s ordinary `--apply` path in the interim (route matching cells to
+      `escalated`/`BLOCKED-OPERATOR-DECISION`) so a normal backfill run can't `record_captured` the OLD mislabeled path
+      before the relabel migration runs.
 - [x] 4. [REVIEW] P2. ~~Check whether the SAME bug shape exists for Kamino~~ — **PARTIALLY DONE 2026-07-23**:
       `venue=KAMINO/chain=SOLANA/instrument_type=pool/data_type=dex_pools/` has **zero objects** in the `-prd-` bucket
       across 6 sampled days (both inside and outside the affected window) — moot for the AMM-pool shape this issue
