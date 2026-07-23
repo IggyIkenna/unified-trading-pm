@@ -61,7 +61,12 @@ def _resolve_link(raw: object, src: Path, pm_root: Path) -> str | None:
     if not t or t.startswith("http") or "*" in t:
         return None
     t = t.split(" ")[0]  # tolerate legacy "path Section 8.B" values
-    for cand in (src.parent / t, pm_root / t):
+    # Leading-slash, PM-repo-root-relative (operator ruling 2026-07-23 — /plans/..., /codex/...)
+    # MUST be joined against pm_root with the slash stripped first: `Path(base) / "/x"` discards
+    # `base` entirely (pathlib treats an absolute-shaped RHS as a full replacement, not a join),
+    # which would silently resolve every migrated link to the filesystem root instead of the repo.
+    candidates = (pm_root / t.lstrip("/"),) if t.startswith("/") else (src.parent / t, pm_root / t)
+    for cand in candidates:
         try:
             r = cand.resolve()
             if r.is_file() and r.is_relative_to(pm_root):

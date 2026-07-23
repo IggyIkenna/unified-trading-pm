@@ -432,14 +432,23 @@ def validate_doc_references(path: Path, fm: dict, doc_type: str) -> list[Violati
     modules, often in a sibling repo not checked out here — the `.md`/`.mdc` filter excludes it
     without needing to special-case the field name).
 
-    Tries three resolutions before flagging: relative to the referencing doc's own directory (how
-    `related`'s corpus values are actually written, e.g. `../../codex/...`), relative to the PM
-    root (how `codex_ssots`'s values are written, e.g. `codex/...`), then — MEASURED 2026-07-22
-    against the live corpus: 244 of an initial 336 "broken" hits were references to a plan that
-    had since been completed and moved to `plans/archive/**` (a normal lifecycle event, not
-    breakage) — a basename search under `plans/archive/**`. Only a reference that resolves under
-    NONE of the three is flagged; this keeps the check pointed at genuine dead links, not routine
-    archival.
+    Tries four resolutions before flagging, most-specific first:
+
+    1. **Leading-slash, PM-repo-root-relative** (the convention, operator ruling 2026-07-23 —
+       `/plans/active/foo.md`, `/codex/02-data/bar.md`; see
+       `codex/11-project-management/cross-reference-path-convention.md`). MUST strip the leading
+       `/` before joining — `Path(base) / "/plans/foo.md"` silently discards `base` entirely
+       (pathlib treats an absolute-shaped RHS as a full replacement, not a join), which would
+       otherwise check the filesystem root instead of the repo (caught 2026-07-23: this exact bug
+       made every migrated `related:` entry read as "does not exist").
+    2. Relative to the referencing doc's own directory (the pre-migration form, e.g. `../../codex/...`).
+    3. Relative to the PM root, bare (the pre-migration form, e.g. `codex/...`).
+    4. — MEASURED 2026-07-22 against the live corpus: 244 of an initial 336 "broken" hits were
+       references to a plan that had since been completed and moved to `plans/archive/**` (a
+       normal lifecycle event, not breakage) — a basename search under `plans/archive/**`.
+
+    Only a reference that resolves under NONE of the four is flagged; this keeps the check pointed
+    at genuine dead links, not routine archival or a path-join footgun.
     """
     out: list[Violation] = []
     specs = UNIVERSAL_CORE + PER_TYPE.get(doc_type, [])
@@ -457,7 +466,10 @@ def validate_doc_references(path: Path, fm: dict, doc_type: str) -> list[Violati
             # CI/CD flow SSOT is codex/08-workflows/ci-cd-flow.md") is not a reference to resolve.
             if not isinstance(entry, str) or " " in entry or "/" not in entry or not entry.endswith((".md", ".mdc")):
                 continue
-            if (doc_dir / entry).is_file() or (pm_root / entry).is_file():
+            if entry.startswith("/"):
+                if (pm_root / entry.lstrip("/")).is_file():
+                    continue
+            elif (doc_dir / entry).is_file() or (pm_root / entry).is_file():
                 continue
             if any((pm_root / "plans" / "archive").glob(f"**/{Path(entry).name}")):
                 continue

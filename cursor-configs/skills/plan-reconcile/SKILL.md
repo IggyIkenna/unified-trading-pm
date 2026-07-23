@@ -117,8 +117,15 @@ Flags are CANDIDATES, not findings — a "dangling" ref often resolves to `plans
   precisely for this read-only input-gather (it avoids dirtying `master_to_live_defi_…`). Fold its output into the
   candidate set and **do not re-implement what it already checks**: frontmatter validity + schema, todo format,
   todo-regression vs origin, runbook fields, **conflict markers**, prettier-mangling, **the `depends_on` DAG (cycles +
-  self-deps)**, line caps, estimate sanity, superseded-in-active, codex path refs, parent-epic alignment,
-  CLAUDE↔SUB_AGENT parity. A RED hard check here is a finding in its own right, before any agent runs.
+  self-deps)**, **the `/plans/`+`/codex/` reference-path convention (format + existence, shrinking-ratchet baseline —
+  `check_reference_paths.py`, `/codex/11-project-management/cross-reference-path-convention.md`)**, line caps, estimate
+  sanity, superseded-in-active, codex path refs, parent-epic alignment, CLAUDE↔SUB_AGENT parity. A RED hard check here
+  is a finding in its own right, before any agent runs. **What the mechanical checker can't decide, this skill's
+  contradiction/archival phases should**: which of several ambiguous same-basename matches is the right target for a
+  bare `related:` entry the 2026-07-23 migration left untouched; what the correct reference is when a doc has genuinely
+  moved/been renamed/archived (the archival ritual's 6th step — grep every referrer, update each — is this skill's job
+  to actually execute, not just check); and whether a dangling reference should be fixed (target existed, got lost) or
+  removed (the claim itself is stale). Backlog: `/plans/active/issues/reference_path_convention_2026_07_23.md`.
 - **Phase 5 (exit, HARD green-gate):** re-run it **with** regen (`--ci`) and require **0 hard failures** + `0 orphans`
   before the run may be called done (see Phase 5).
 
@@ -176,10 +183,19 @@ history; properly-bannered supersession (an UNbannered superseded doc that still
      between readings.
    - **Delete-risk tagging consistency** — every todo deleting/overwriting prod data either carries `[OPERATOR]` + cites
      the delete-safety protocol, or explicitly states why it doesn't need to (soft-delete window, etc.).
-   - **Definition-of-done present** — every todo states what evidence proves it's done, not just the goal. Findings
-     route through the same Phase 3 adversarial-verification + Phase 4 routing as contradictions (auto-fix the
-     mechanical rewrites directly with evidence; ask/park only genuinely ambiguous judgment calls, e.g. whether a delete
-     needs `[OPERATOR]`).
+   - **Definition-of-done present** — every todo states what evidence proves it's done, not just the goal.
+   - **Bounded outcome, no judgment call** (operator ruling 2026-07-23,
+     `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` § "Dispatch-scope eligibility") — is the
+     todo's outcome DETERMINABLE by the dispatched worker alone (a checkable fact, a scoped change, an audit with a
+     stated done-when), or does completing it actually require a design/judgment call ("figure out how X should look",
+     "decide the right approach for Y") that isn't already decided? An audit todo is fine when precisely scoped ("does X
+     match Y") — flag it only when the scope itself IS the open question. A flagged todo routes to the operator as a
+     scope/authoring finding (not auto-fixable — resolving the judgment call is exactly the kind of authority-only
+     decision Phase 4 already reserves for a ruling, not a mechanical rewrite): either the operator answers it now and
+     the todo gets rewritten against that decision, or it gets pulled out of the AO-dispatched plan entirely into a
+     LOCAL/human one. Findings route through the same Phase 3 adversarial-verification + Phase 4 routing as
+     contradictions (auto-fix the mechanical rewrites directly with evidence; ask/park only genuinely ambiguous judgment
+     calls, e.g. whether a delete needs `[OPERATOR]`).
 
 ## Phase 2 — done-but-unchecked sweep
 
@@ -338,8 +354,8 @@ stays operator-triggered.
 
 ## Codex SSOTs
 
-- `codex/12-agent-workflow/commit-push-flip-rule.md` — flip cadence + format
-- `codex/11-project-management/doc-frontmatter-schema.md` + `plans/PLAN_FORMAT.md` — frontmatter truth
+- `/codex/12-agent-workflow/commit-push-flip-rule.md` — flip cadence + format
+- `/codex/11-project-management/doc-frontmatter-schema.md` + `plans/PLAN_FORMAT.md` — frontmatter truth
 - `codex/11-project-management/` — findings triage, archival ritual, issue-doc lifecycle
-- `codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` — assigned_vm/role semantics
+- `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` — assigned_vm/role semantics
 - `cursor-configs/SUB_AGENT_MANDATORY_RULES.md` — sub-agent spawn contract + escalation format

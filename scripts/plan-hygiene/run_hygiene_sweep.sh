@@ -137,10 +137,16 @@ run_check "No prettier emphasis-mangling"    hard "$SCRIPT_DIR/check_prettier_ma
 # in the full sweep, not the staged-files-only --precommit path. Corpus proven clean (0 cycles,
 # 0 self-deps) before this was made hard. SSOT: check_depends_on_graph.py.
 run_check "depends_on DAG (cycles + self-deps)" hard python3 "$SCRIPT_DIR/check_depends_on_graph.py" --quiet
+# Reference path convention (/plans/... + /codex/... leading-slash, operator ruling
+# 2026-07-23) — a shrinking-ratchet baseline (reference_paths_baseline.yaml), same shape
+# as the fallback-import/DTZ ratchets: hard-fails only on a NEW violation above the
+# pre-existing count, never on the corpus's existing debt. Supersedes check_codex_refs.sh's
+# narrower existence-only scope (kept below for its standalone fast path).
+run_check "Reference path convention (/plans, /codex — ratchet)" hard python3 "$SCRIPT_DIR/check_reference_paths.py" --quiet
 run_check "Line caps (500 soft/1000 hard/2000 umbrella)" soft "$SCRIPT_DIR/check_line_caps.sh"
 run_check "Estimate sanity (±20% drift)"     soft "$SCRIPT_DIR/check_estimate_sanity.sh"
 run_check "Superseded plans in active/"      soft "$SCRIPT_DIR/check_superseded_in_active.sh"
-run_check "Codex path refs resolve"          soft "$SCRIPT_DIR/check_codex_refs.sh"
+run_check "Codex path refs resolve (legacy, subset of the ratchet check above)" soft "$SCRIPT_DIR/check_codex_refs.sh"
 run_check "Parent-epic alignment (keyword)"  soft python3 "$SCRIPT_DIR/check_parent_epic_alignment.py"
 run_check "CLAUDE↔SUB_AGENT topic parity"    soft "$SCRIPT_DIR/check_claude_subagent_parity.sh"
 
