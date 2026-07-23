@@ -106,21 +106,58 @@ todo below apply fleet-wide, not just here.
 
 ## Outstanding — todo
 
-- [ ] [SCRIPT] P1. **Wire per-slot `.claude/settings.json` symlink creation into `setup-tab-worktrees.sh`** (its
-      `seed_slot_claude_assets()` / `provision_slot()`, alongside the existing `.claude/skills` link via
-      `scripts/workspace/link-claude-skills.sh`) so every new slot gets
-      `.claude/settings.json →     ../unified-trading-pm/cursor-configs/settings.json` automatically instead of relying
-      on the manual loop in `codex/05-infrastructure/claude-code-settings-symlink.md`. Since the target is gitignored
-      and per-clone, the script must also handle the "target doesn't exist yet in this slot's own clone" case (either
-      skip with a clear `[skip] slot N: no target — re-seed cursor-configs/settings.json in this clone first` message,
-      matching the codex doc's existing loop behavior, or copy from the main/reference clone if present). Update
-      `codex/05-infrastructure/claude-code-settings-symlink.md` to point at the automated path once done, and note in
-      the doc that the manual loop is now a fallback, not the primary mechanism.
-  - Why: this is the actual root cause of the missing symlinks (§ "What I found" #4) — without it, every future
-    `--add-slot` / `--reset-slot` reproduces this exact gap.
-  - Evidence/provenance: `setup-tab-worktrees.sh` read in full 2026-07-23 (Explore-agent read, this session); no
-    `settings.json` string anywhere in the file or in `link-claude-skills.sh`.
+- [x] ✅ [SCRIPT] P1. **Wire per-slot `.claude/settings.json` symlink creation** — done via
+      `scripts/workspace/link-claude-skills.sh`'s new responsibility #3 (settings.json) and #4 (hooks dir), called
+      automatically from `quality-gates.sh`/`setup-tab-worktrees.sh`/`workspace-bootstrap.sh`. Also added
+      `scripts/workspace/migrate-personal-settings-keys.sh` (step 0 of the linker) to self-heal any stray personal
+      `model`/`effortLevel`/`theme` key that leaks back into the team file. `cursor-configs/settings.json` re-tracked in
+      git (`e5be0047c`) now that personal switches can no longer land in it — this closes the original "gitignored,
+      never arrives via git pull, must be manually re-seeded per clone" gap entirely (see codex doc for the current
+      model; the July-23 "gitignored" framing above is superseded).
+- [x] ✅ [SCRIPT] P2. **Promote the two local-only Claude Code hooks (`context-threshold-nudge.sh`,
+      `precompact-block-auto.sh`) to git-tracked `cursor-configs/hooks/`**, symlinked in via `.claude/hooks` the same
+      way `.claude/skills` already works (link-claude-skills.sh responsibility #4) — an edit now propagates to every
+      root/slot/machine instead of living only on whichever machine authored it (`d998bfa35`).
+- [x] ✅ [SCRIPT] P2. **Fixed a second, independent bug found while verifying #2 on a Mac slot (`.tabs/3`,
+      2026-07-23)**: the team `cursor-configs/settings.json`'s 3 hook `command` strings were hardcoded ABSOLUTE paths
+      rooted at `/home/ubuntu/unified-trading-system-repos/...` (correct for the VM this was authored/tested on, but
+      silently broken on ANY other machine with a different home directory / clone location — including this Mac, and
+      including every other engineer's laptop). Because the failure is silent (a hook command that doesn't resolve just
+      doesn't fire — no error surfaces to the user), this meant the `block_destructive_commands.py` **PreToolUse safety
+      guard** — the exact hook this whole issue is about restoring — was STILL not firing on any non-VM machine, for a
+      new reason, right after being "fixed." First fix attempt (this session, on `.tabs/3`) used paths relative to the
+      session's own root; a parallel session (same operator, different machine) landed first with a cleaner fix —
+      **`$CLAUDE_PROJECT_DIR`-based absolute paths** (`35a3926c1`,
+      `fix(claude-code): use $CLAUDE_PROJECT_DIR for     portable hook paths in settings.json`) — which superseded the
+      relative-path attempt before it shipped (both were in flight concurrently; this doc reflects the version that
+      actually landed). **Verified on this Mac** with `$CLAUDE_PROJECT_DIR` set to the session root:
+      `block_destructive_commands.py` correctly BLOCKS `rm -rf /` (previously would have silently no-op'd, file not
+      found). Also removed the now-fully-redundant personal hook wiring from this slot's own
+      `.claude/settings.local.json` (the project-level file covers both hooks now; leaving both would double-fire).
+      **Lesson for whoever tests a fix like this next**: verifying "it works" on the ONE machine you're sitting at does
+      not prove a hardcoded path is portable — test (or at least grep for) absolute paths before calling a cross-machine
+      settings fix done. **Second lesson, from this exact episode**: two sessions fixing the identical bug concurrently
+      is a real, recurring cost on this repo right now (heavy multi-agent concurrent-write load) — worth a beat of
+      coordination (check recent commits / active plan claims) before starting a fix that's plausibly already in flight
+      elsewhere.
 - [ ] [SCRIPT] P2. **Document + spot-check other fleet machines** (any other engineer's / VM's checkout of this
       workspace) for the same decayed `cursor-configs/settings.json` / symlinked-`~/.claude/settings.json` /
-      missing-per-slot-symlink pattern, and apply the same fix. Not done this session — scope was the human-planning VM
-      only, per the operator's original ask.
+      missing-per-slot-symlink pattern, and apply the same fix. Should now be a no-op for any machine that just runs the
+      hand-off prompt below (re-pull + `link-claude-skills.sh`), since the settings file itself is git-tracked and the
+      hardcoded-path bug is fixed — but not independently re-verified on a 3rd machine as of this writing.
+
+## Hand-off prompt for other machines / colleagues
+
+Pull `live-defi-rollout` in your `unified-trading-pm` clone, then run `bash scripts/workspace/link-claude-skills.sh` (or
+just let your next `quality-gates.sh` run do it — it calls the same script automatically). That's it. It's fully
+idempotent and self-healing: it (1) fixes `~/.claude/settings.json` if it's still a symlink into the tracked team file,
+(2) migrates any stray personal `model`/`effortLevel`/`theme` out of `cursor-configs/settings.json` without touching
+your existing choice, and (3) creates/repairs the `.claude/settings.json`, `.claude/hooks`, `.claude/skills` symlinks at
+your workspace root and every `.tabs/N` slot. Safe to run repeatedly — never fails loudly, never touches a slot with
+real uncommitted/diverged git state (just skips it with a message).
+
+**If you pulled BEFORE 2026-07-23's later commits** (i.e. you still see `/home/ubuntu/...` absolute paths in
+`cursor-configs/settings.json`'s `hooks` section after linking): that's the hardcoded-path bug above, already fixed
+upstream — just `git pull` again to pick it up. If your hooks (especially the destructive-command guard) seem to not be
+firing at all after linking and you're not on the original VM this was authored on, check
+`cat .claude/settings.json | jq .hooks` for any lingering absolute path and compare against this doc's fix.
