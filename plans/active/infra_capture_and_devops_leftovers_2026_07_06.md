@@ -24,7 +24,7 @@ related:
     /codex/05-infrastructure/deployment-observability.md,
   ]
 created: 2026-07-06
-last_updated:
+last_updated: 2026-06-27
   2026-06-27 2026-06-27 2026-06-27 2026-07-12 # was: 2026-07-07 — corrected 2026-07-14, doc-reconciliation verify-rerun-2 finding 143: body
   # carries a dated 2026-07-12 correction (finding id 114, §A2 B-queue ruling) on the ASTER-connector task that was
   # never reflected in this frontmatter timestamp
