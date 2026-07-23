@@ -1281,3 +1281,11 @@ self-contained mechanism, distinct from the workspace's general day-frontier `PR
 the fleet would have caught or relaunched these 18 dead shards automatically; the manual detection (real `run.log`
 spot-check, since the watchdog's `EXIT_STATUS`-only check couldn't see it) and relaunch above was necessary, not
 duplicate work.
+
+**Action taken**: relaunched all 18 dead shard-indices with `ON_DEMAND=true` (`STANDARD` provisioning confirmed in each
+launch's instance list output). Left the 2 healthy SPOT survivors (shards 7, 8) running untouched. **Fixed the watchdog
+itself**: the new version checks `gcloud compute instances describe --format="value(status)"` for any VM lacking
+`EXIT_STATUS`, distinguishing genuinely-`alive`/still-working from `DEAD-NO-EXIT` (a preemption or crash the old
+EXIT_STATUS-only check couldn't see) — and exits IMMEDIATELY with an alert the moment any VM is found dead, rather than
+waiting silently for hours. Armed against the full 20-shard fleet (18 recovery + 2 survivors). **STATUS: IN FLIGHT, NOT
+YET VERIFIED.**
