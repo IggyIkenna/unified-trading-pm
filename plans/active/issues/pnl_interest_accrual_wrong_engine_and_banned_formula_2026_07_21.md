@@ -479,8 +479,21 @@ unwired since the earlier pass (`index_ratio_accrual.py` + its test) are now com
       already-decided change (no new operator ruling needed, E4 already ruled the target shape) — implement it as its
       own small build, then re-verify the passive/attribution row counts (2 rows/day post-drop: STAKING_REWARD +
       FUNDING_ACCRUAL, not 3).
-- [ ] [BACKEND] P2. `recursive_staking`'s borrow leg (`aave_borrow_index` wiring, E3) — separate, bigger, not-started
-      follow-on.
+- [x] [BACKEND] P2. `recursive_staking`'s borrow leg (`aave_borrow_index` wiring, E3) — **SHIPPED
+      `strategy-service@23bd8b76` (2026-07-23)**, done as part of
+      [[defi_archetype_universe_no_curtailment_mechanism_2026_07_23]]'s Phase 2 (also wired `CARRY_RECURSIVE_STAKED`'s
+      tick loader in the same change, since the archetype had no paper-replay path at all before this). New
+      `strategy_service/engine/core/canonical_aave_borrow_index_provider.py` (`CanonicalAaveBorrowIndexProvider`) reads
+      real `lending_rates.aave_borrow_index`, day-over-day differenced (unlike `lst_yields`, this corpus carries only
+      the current index value per row, not a pre-joined prev/now pair) — reuses the SAME `index_ratio_accrual()`
+      primitive fed the debt index instead of the LST exchange-rate index, booked NEGATIVE at a
+      `{lending_protocol}:DEBT_TOKEN:{native_asset}` key matching the engine's real `BORROW` `AtomicLeg` instrument_key
+      exactly (verified against a real replay). **Per-reserve honest absence confirmed empirically** (5 real prod days
+      spot-checked, 2026-07-23): `AAVE_V3_ETHEREUM` is 100% populated; `COMPOUND_V3_ETHEREUM` has real rows
+      (DefiLlama-Yields APY-only source) but ZERO `aave_borrow_index` ever (MTDS has no on-chain Compound V3 collector)
+      — its debt-cost leg honestly books zero, never a proxy from Aave's index; `KAMINO_SOLANA` never appears as a
+      `protocol` value in `lending_rates` at all (MTDS's Kamino connector is a BLOCKED-CREDENTIALS scaffold) — both legs
+      skip for that reserve. Full evidence + quality-gate status in the linked doc's Phase 2 entry.
 - [ ] [DATA] P2. `lst_yields` sparse coverage (~15 days) — file the coverage extension with features-onchain/MTDS once
       bandwidth allows; until then, STAKING_REWARD honestly books zero (with a visible log) for any day outside that
       window.

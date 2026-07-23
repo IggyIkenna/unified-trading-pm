@@ -19,6 +19,7 @@ related:
   [
     pnl_interest_accrual_wrong_engine_and_banned_formula_2026_07_21,
     e2e_testing_collateral_validation_dead_import_2026_07_23,
+    defi_catalog_engine_config_key_contract_drift_2026_07_23,
   ]
 created: 2026-07-23
 parent_epic: strategy_master
@@ -200,9 +201,10 @@ run SEQUENTIALLY, not in parallel:
       catalog/engine config-shape mismatch** (build agent held per its own STOP instruction; see addendum below for the
       full finding + evidence — do not re-dispatch until the config-shape question is resolved, or the build agent will
       hit the identical `ValueError` at `register_instance()` before it ever reaches the tick loader).
-- [ ] [BACKEND] P1. **Phase 2 (= E3) — NARROWED to CARRY_RECURSIVE_STAKED only, 2026-07-23** (verified before dispatch,
-      learning Phase 1's lesson): `CARRY_RECURSIVE_BORROW_LENDING_ONLY` and `CARRY_BASIS_PERP_INV` are **NOT buildable
-      via a tick-loader at all** — both set `staking_yield_enabled=false` in their catalog config, and the shared engine
+- [x] [BACKEND] P1. **Phase 2 (= E3) — NARROWED to CARRY_RECURSIVE_STAKED only, 2026-07-23 — SHIPPED
+      `strategy-service@23bd8b76`** (verified before dispatch, learning Phase 1's lesson):
+      `CARRY_RECURSIVE_BORROW_LENDING_ONLY` and `CARRY_BASIS_PERP_INV` are **NOT buildable via a tick-loader at all** —
+      both set `staking_yield_enabled=false` in their catalog config, and the shared engine
       `CarryRecursiveStakedEngine.on_tick()` (`recursive_staked.py:194-199`) explicitly returns `[]` unconditionally
       whenever that flag is false, with an in-code comment: "execution via RecursiveLoopOrchestrator landed in Phase 5.
       Stub returns [] until orchestrator wiring is in place." Grepped the ENTIRE repo for `RecursiveLoopOrchestrator` —
@@ -217,17 +219,74 @@ run SEQUENTIALLY, not in parallel:
       the Phase-1 class of bug). Phase 2 now = wire `CARRY_RECURSIVE_STAKED`'s tick loader + the new Aave `borrow_index`
       sample-to-sample accrual leg (mirrors `index_ratio_accrual()`, fed the borrow index instead of the LST
       exchange-rate index) for its lending/debt side — this IS the previously-tracked "E3" follow-on from
-      [[pnl_interest_accrual_wrong_engine_and_banned_formula_2026_07_21]].
-- [ ] [BACKEND] P2. **NEW finding 2026-07-23 — `RecursiveLoopOrchestrator` does not exist; 2 archetypes are production
-      no-ops.** `CARRY_RECURSIVE_BORROW_LENDING_ONLY` and `CARRY_BASIS_PERP_INV` need real execution logic built from
-      scratch (the "Phase 5" the in-code comment references was never actually shipped, or the comment is
-      aspirational/stale — not determined which). This is materially bigger than a tick-loader wiring task — it's new
-      production strategy-execution logic, live-path-affecting. Needs its own scoping pass before any build; do not fold
-      into the "complete the orphaned archetypes" tick-builder effort.
-- [ ] [BACKEND] P2. **Phase 3 — CARRY_BASIS_DATED + CARRY_BASIS_DATED_INV**. New data source: the
-      `paired_price_dispersion` calculator (features-cross-instrument-service) for dated-futures-vs-cash/ETF basis. Note
-      `catalog_carry.py`'s own comment flags some rows as `status=databento_pending` placeholders — confirm real data
-      exists per-cell before wiring each; some cells may have to stay honestly unwired pending Databento integration.
+      [[pnl_interest_accrual_wrong_engine_and_banned_formula_2026_07_21]]. **Shipped, evidence**:
+      `strategy_service/cli/handlers/paper_run_handler.py::_load_recursive_staked_ticks` (real per-day ticks from
+      `lst_yields.staking_apy_bps` + `lending_rates.aave_borrow_apy`, per-reserve honest-skip on absence), new
+      `strategy_service/engine/core/canonical_aave_borrow_index_provider.py` (`CanonicalAaveBorrowIndexProvider`,
+      day-over-day `aave_borrow_index` differencing), `CARRY_RECURSIVE_STAKED` added to `paper_universe.py`'s
+      `_ENGINE_DRIVABLE_ARCHETYPES` (own satisfiability gate — this archetype has no perp/spot-swap leg, so the generic
+      carry-tick-config gate would always reject it), and NEW dedicated
+      `build_recursive_staked_passive`/`build_recursive_staked_attribution` producers (2-leg: STAKING_REWARD via
+      `CanonicalLstYieldsIndexProvider` reused directly + a debt-cost leg via the new provider, booked negative, keyed
+      `{lending_protocol}:DEBT_TOKEN:{native_asset}` — verified end-to-end to match the engine's REAL `BORROW`
+      `AtomicLeg` instrument_key). Accrual notional sized from the REAL executed fill sums (STAKE/BORROW leg totals),
+      not the idealized `target_leverage × capital` (verified empirically these diverge ~2%/~18% due to the discrete
+      loop's break condition). Verified END-TO-END against REAL prod GCS (`features-defi-prd-central-element-323112`,
+      2026-04-15, `lido-aave` spec): real tick → real 9-fill 3-loop `AtomicInstruction` → real
+      `staking_index_by_day`/`borrow_index_by_day` resolved → real STAKING_REWARD=+25.88/debt-cost=-16.54 booked.
+      **Per-reserve honest-absence confirmed empirically** (5 real prod days spot-checked): `AAVE_V3_ETHEREUM` has 100%
+      populated `aave_borrow_index` (real accrual); `COMPOUND_V3_ETHEREUM` has real rows (DefiLlama-Yields-sourced APY —
+      engine still trades on it) but ZERO `aave_borrow_index` ever (debt-cost leg honestly books zero — MTDS has no
+      on-chain Compound V3 collector at all); `KAMINO_SOLANA` never appears as a `protocol` value in `lending_rates` at
+      all (both legs skip). Deliberately NOT wired in this build (documented, tracked, out of the "tick builder +
+      borrow-index leg" scope): the TRANSFERS/treasury ledger for this archetype's STAKE→LEND→BORROW loop (this
+      archetype's config has no `perp_venue`/`spot_venue` for `build_paper_run_transfers`'s carry_staked_basis-shaped
+      signature, so it is deliberately skipped rather than fed fabricated venue defaults — see the new code's
+      `continue` + comment in `run_paper`'s per-spec loop). Minor pre-existing discrepancy noted, not fixed (out of
+      scope): the catalog's `max_loops` config value ("5") is never read by `_build_loop_legs` (which hardcodes 10 as
+      its own safety cap) — does not crash, does not affect correctness (the loop already terminates on the
+      `cumulative > capital * target_leverage` condition well before either cap binds in the sampled real data). Quality
+      gates: `strategy-service` `quality-gates.sh --no-fix` GREEN (fresh, non-cached full run: 5326 tests passed incl.
+      91 new/updated for this build; basedpyright clean on every touched file — 5 pre-existing unrelated errors in
+      `manifest_allocation_guard.py`; STEP 5.101 empty-string-fallback baseline held at 166).
+- [ ] [BACKEND] P2. **NEW finding 2026-07-23 — `RecursiveLoopOrchestrator` does not exist in strategy-service; 2
+      archetypes are production no-ops.** `CARRY_RECURSIVE_BORROW_LENDING_ONLY` and `CARRY_BASIS_PERP_INV` need real
+      execution logic built from scratch (the "Phase 5" the in-code comment references was never actually shipped, or
+      the comment is aspirational/stale — not determined which). This is materially bigger than a tick-loader wiring
+      task — it's new production strategy-execution logic, live-path-affecting. Needs its own scoping pass before any
+      build; do not fold into the "complete the orphaned archetypes" tick-builder effort. **Minor factual correction
+      (2026-07-23, Phase 2 build agent, no action taken — out of scope)**: the earlier "grepped the ENTIRE repo, exists
+      NOWHERE" claim was scoped to `strategy-service` only. A REAL, tested `RecursiveLoopOrchestrator` class DOES exist
+      — `execution-service/execution_service/defi_execution/orchestrators/recursive_loop_orchestrator.py` (+
+      `tests/defi_execution/unit/test_recursive_loop_orchestrator.py`) — and UAC carries its request/response schemas
+      (`unified_api_contracts/internal/architecture_v2/recursive_loop_orchestrator.py`). This does NOT change the
+      verdict above: `CarryRecursiveStakedEngine.on_tick()`'s `if not staking_yield_enabled: return []` fires
+      UNCONDITIONALLY before any instruction is ever built, so the strategy engine never emits a signal for these two
+      archetypes regardless of execution-service's own readiness — the blocker is strategy-side, not
+      execution-service-side. Worth a scoping pass to confirm whether execution-service's orchestrator is real/complete
+      enough that ONLY the strategy-side `on_tick` stub needs finishing (a smaller task than assumed) — flagging, not
+      re-scoping unilaterally.
+- [ ] [BACKEND] P1. **Phase 3 — BLOCKED before dispatch, 2026-07-23 — SAME class of bug as Phase 1, silent this time.**
+      Pre-checked `CARRY_BASIS_DATED` + `CARRY_BASIS_DATED_INV` (mirroring the Phase-1 lesson) before spawning a build
+      agent, and caught a real, previously-undiscovered production bug: `CarryBasisDatedEngine.on_tick()`
+      (`carry_and_yield/basis_dated.py`) requires `spot_venue` + `future_venue` + `spot_instrument` +
+      `future_instrument` (`if not (spot_venue and future_venue and spot_instr and future_instr): return []`), but
+      **every single row in both archetypes' catalogs** (`catalog_carry.py`'s `build_carry_basis_dated()` +
+      `build_carry_basis_dated_inv()`, 11 rows total: 3 commodity + 2 equity-index + 2 crypto + 2 ETF-vs-CME-micro for
+      DATED; 2 crypto + 1 commodity for DATED_INV) emits DIFFERENT keys instead — `cash_venue` (not `spot_venue`),
+      `dated_venue` (not `future_venue`), a single `instrument`/`cash_instrument` (not the split
+      `spot_instrument`/`future_instrument`). Unlike Phase 1 (a `ValueError` at `register_instance()`), this does NOT
+      crash — the engine just silently `return []`s forever, for every row, in every environment (paper/batch/live).
+      This is a SILENT no-op, arguably worse than Phase 1's loud crash: nothing signals anything is wrong; it just looks
+      like "the strategy never finds an opportunity." **NOT dispatched to a build agent — do not wire a tick-loader for
+      an engine guaranteed to no-op** (same reasoning as the 2 stub archetypes above). Needs the SAME kind of
+      operator/design decision as Phase 1: is the fix a catalog key-rename (cheap, if the engine's key names are the
+      intended contract) or does the engine need to read the catalog's actual key names (a live-code change, needs
+      care)? **Strategic note**: this is the 3rd of 4 archetypes checked so far with a real catalog/engine contract
+      break (only `CARRY_RECURSIVE_STAKED` was clean) — before continuing Phase 4/5 one-by-one, consider a cheap,
+      mechanical pre-flight sweep across ALL remaining archetypes (grep each engine's actual `params.get(...)`/
+      `str_param(...)` calls vs its catalog's emitted config dict keys) to find every landmine BEFORE building any more
+      tick loaders, rather than discovering them one expensive agent-dispatch at a time.
 - [ ] [BACKEND] P2. **Phase 4 — YIELD_ROTATION_LENDING + YIELD_STAKING_SIMPLE**. Pure yield archetypes (no hedge leg) —
       reuse `lending_rates`/`lst_yields` readers already established.
 - [ ] [BACKEND] P2. **Phase 5 — LIQUIDATION_CAPTURE**. New data source: on-chain liquidation-cascade feed +
