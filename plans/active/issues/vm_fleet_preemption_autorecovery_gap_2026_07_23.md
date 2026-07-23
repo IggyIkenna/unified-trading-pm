@@ -1,0 +1,140 @@
+---
+doc_type: issue
+title: VM fleet SPOT-preemption auto-recovery gap — canonical-migration VMs + open/resolved alert bookend
+summary:
+  canonical-migration-* launcher never wrote the PREEMPTED signal blob despite being fully registered in the fleet
+  relaunch actuator, so 18/20 SPOT TRADFI shards preempted silently with zero auto-recovery; fixing that launcher,
+  adding a resolved-bookend alert, and scoping the broader backfill/migration launcher rollout.
+status: open
+nature: issue
+asset_group: [infrastructure]
+stage: [meta]
+repos: [deployment-service, unified-trading-library]
+scope: [engineer]
+tags: [spot-preemption, auto-recovery, alerting, candle-migration]
+related: [candle_feature_canonical_path_divergence_2026_07_20.md]
+created: 2026-07-23
+parent_epic: infrastructure_master
+assigned_vm: NA
+execution_scope: local-only
+priority: P1
+estimate_class: infra
+source: operator-directed, discovered live during the P7 candle-canonical-path migration
+resolved_by:
+locked_by:
+drift_direction: advance-code
+depends_on: []
+---
+
+# VM fleet SPOT-preemption auto-recovery gap
+
+## How this was found
+
+While running the TRADFI leg of the candle canonical-path migration (P7d, see
+`candle_feature_canonical_path_divergence_2026_07_20.md`), 18 of 20 `SHARD_OF=20` SPOT VMs were preempted within 1-4
+minutes of boot — a severe capacity contention event in `asia-northeast1-c`. My own watchdog missed this for ~2 hours
+because it only checked `EXIT_STATUS` (never written on a hard preemption kill), not real VM liveness. The operator then
+asked: shouldn't the fleet's existing auto-recovery have caught this? Investigation found: **no**, and here's exactly
+why, plus what to do about it.
+
+## Root cause (confirmed via code read, not assumption)
+
+`canonical-migration-*` VMs (the launcher this migration uses, `launch-canonical-migration-vm.sh`) are **fully
+registered** in the fleet's relaunch machinery:
+
+- `deployment_service/data_pipeline_monitors/launcher_registry.py` — maps
+  `canonical-migration-{cefi,tradfi,defi, prediction,sports}-` → `launch-canonical-migration-vm.sh` (registered).
+- `deployment_service/vm_prefix_registry.py` — has a `VmPrefixSpec` entry for each of those prefixes (registered).
+- `launch-canonical-migration-vm.sh` already calls `lc_write_launch_params(...)` with a FULL resume-capable env
+  (`VM_NAME_OVERRIDE`, `RESUME_ASSET_GROUP/START_DATE/END_DATE/MODE/SHARD_OF/SHARD_INDEX`) — shipped in a prior
+  session's "adversarial review 2026-07-22" pass specifically to make this launcher `RelaunchPreemptedVm`-compatible.
+
+But it was **missing the one piece that actually triggers detection**: it never called `lc_write_preemption_signal_file`
+(`deployment-service/scripts/vm/lib/launcher_common.sh:357`), the helper that writes a GCE shutdown-script which, on a
+genuine SPOT reclaim, writes `gs://deployment-scripts-<project>/vm-logs/<vm>/PREEMPTED`. Without that blob,
+`exit_code_fleet_monitor.py`'s `is_vm_preempted()` check always reads false, so a preempted `canonical-migration-*` VM
+gets classified as `GONE_NO_CAPTURE` (or just never enters the sweep's `running_vms` set at all, depending on how the
+sweep's caller populates it) — never `PREEMPTED` — so the `auto_recover` → `RelaunchPreemptedVm` path never fires.
+
+Confirmed via `gsutil ls` on a real preempted TRADFI shard's vm-logs dir: only `LAUNCH_PARAMS.json` +
+`TARBALL_PINS.json` present, no `PREEMPTED` blob, no `run.log`, no `EXIT_STATUS`.
+
+**Verified this launcher family is genuinely disjoint from the general day-frontier auto-resume contract** —
+`migrate_candle_canonical_2026_07.py`'s own docstring (~line 110/998) states its checkpoint mechanism is "a NEW,
+self-contained mechanism, distinct from the workspace's general day-frontier `PROGRESS.json`" — so this was never going
+to auto-wire itself; it needed the explicit `lc_write_preemption_signal_file` call like the 3 launchers that already
+have it (`launch-cefi-sharded-backfill.sh`, `launch-defi-backfill-vm.sh`, `launch-mtds-solana-defi-backfill-vm.sh`).
+
+### Second finding while implementing: `STOP` vs `DELETE` termination-action mismatch
+
+`launch-canonical-migration-vm.sh`'s SPOT provisioning uses `--instance-termination-action=STOP`
+(`launch-canonical-migration-vm.sh:184`) — unlike the 3 already-working launchers, which use `DELETE`
+(`launch-defi-backfill-vm.sh:133`: `--instance-termination-action=DELETE`). Since a `RelaunchPreemptedVm` replay reuses
+the EXACT SAME VM name (`VM_NAME_OVERRIDE`, needed so the migration script's checkpoint blob path — keyed on `VM_NAME` —
+stays reachable), a `STOP`'d (not deleted) instance would still occupy that name, and the relaunch's
+`gcloud compute instances create` would fail with "already exists." No comment in the script explains why `STOP` was
+chosen over `DELETE` here — looks like an oversight, not a deliberate choice, given every other SPOT launcher in this
+codebase uses `DELETE`. Fixing this is a REQUIRED part of making the relaunch actually work, not optional polish.
+
+### Third finding, from the operator's follow-up ask (open/resolved alert bookend)
+
+Traced `RelaunchPreemptedVm.relaunch()` (`scripts/recovery/relaunch_backfill_vm.py:717-728`): on a successful relaunch
+it calls `log_event(_EVENT_VM_PREEMPTED, severity="INFO", details={"relaunched": True, ...})` — but `log_event`
+(`unified_trading_library/events/__init__.py:389`) is a **raw event-stream write** (GCS in batch mode, PubSub in live
+mode), NOT the same path as `escalation.route_finding()`, which is what actually reaches the alerting-service Slack
+channel. So today's "success" signal never becomes a visible Slack message at all, let alone a correlated "resolved"
+bookend to the original `DP_VM_PREEMPTED` alert. This matches the workspace's own documented alerting convention ("every
+actionable alert that paged an OPEN gets a ✅ CLOSE bookend in-channel") — this VM-preemption class doesn't have one
+yet, for ANY launcher family, not just candle-migration.
+
+## Plan
+
+- [x] 1. ✅ [SCRIPT] P1. **`launch-canonical-migration-vm.sh`**: add `lc_write_preemption_signal_file` call — DONE,
+      shipped as part of this doc's commit (see the launcher's SPOT-preemption-contract comment block, added right after
+      the existing `lc_write_launch_params` call).
+- [ ] 2. [SCRIPT] P1. **`launch-canonical-migration-vm.sh`**: add
+      `--metadata-from-file="shutdown-script=${PREEMPTION_SIGNAL_FILE}"` to the `gcloud compute instances create` call
+      (line ~777-787) — the helper only WRITES the shutdown-script file, the caller must still attach it.
+- [ ] 3. [SCRIPT] P1. **`launch-canonical-migration-vm.sh`**: change `--instance-termination-action=STOP` → `DELETE`
+      (line 184) so a same-name relaunch can succeed — matches every other SPOT launcher in this codebase.
+- [ ] 4. [SCRIPT] P1. Verify with `bash -n` + `deployment-service`'s `quality-gates.sh`, then ship via
+      `quickmerge --agent --files 'scripts/vm/launch-canonical-migration-vm.sh'` (this is CODE — quickmerge, never a raw
+      push).
+- [ ] 5. [DATA] P2. **New `DP_VM_PREEMPTED_RECOVERED` resolved-bookend event**: emitted by
+      `RelaunchPreemptedVm.relaunch()` ONLY on `status=SUCCEEDED`, carrying `old_vm_name` + `new_vm_name` (note: today's
+      replay reuses the SAME name via `VM_NAME_OVERRIDE` for canonical-migration, so "new" may equal "old" for THIS
+      launcher family specifically — other launchers without name-pinning would get a genuinely different name; the
+      event schema should support both). Must route through `escalation.route_finding()` (or an equivalent direct
+      alerting-service call), NOT `log_event` alone, to actually reach the Slack channel. Correlate to the original
+      `DP_VM_PREEMPTED` alert the same way the AO alerting convention does today (webhook-only correlation via opened-at
+      ts, no threading, per `codex/04-architecture/agent-orchestrator-alerting.md` — confirm this DP-monitor pathway
+      uses the same correlation mechanism or needs its own).
+- [ ] 6. [SCRIPT] P2. Unit tests for the new resolved-bookend path (mirror `test_dp_recovery_actuators.py`'s existing
+      coverage style) — a dry-run relaunch, a real SUCCEEDED relaunch, and a FAILED relaunch (which must NOT emit a
+      resolved bookend, only the existing `DP_VM_PREEMPTED_NO_RELAUNCH`).
+- [ ] 7. [SCRIPT] P2. Quality gates + quickmerge for items 5-6 (deployment-service, possibly unified-trading-library if
+      the event needs a UTL registry constant like `DP_VM_EXIT_NONZERO`'s).
+- [ ] 8. [DATA] P2. **Scope the broader "all backfills and migration VMs" rollout**: enumerate the ~74 launchers already
+      registered in `launcher_registry.py`, filter to genuinely SPOT-provisioned backfill/migration categories
+      (excluding live/forward-poll/cron, which correctly stay on-demand per the HARD RULE — preemption would lose live
+      data), cross-reference against which of those already call `lc_write_preemption_signal_file` (confirmed today:
+      only 3 — `launch-cefi-sharded-backfill.sh`, `launch-defi-backfill-vm.sh`,
+      `launch-mtds-solana-defi-backfill-vm.sh`). Report the exact resulting list before touching more files — likely
+      several dozen, not a quick pass.
+- [ ] 9. [SCRIPT] P3. Apply the same 2-3 line pattern (`lc_write_preemption_signal_file` call + `--metadata-from-file`
+      flag + verify `--instance-termination-action=DELETE`) to every launcher item 8 identifies as missing it. Batch by
+      quality-gate sweep per the workspace's QG-sweep-batching convention, not one commit per file.
+
+## Codex SSOTs
+
+- `codex/05-infrastructure/spot-vms-for-backfill.md` — preemption-resume-from-PROGRESS HARD RULE.
+- `codex/04-architecture/agent-orchestrator-alerting.md` — open/resolved bookend convention (AO alerts channel; this
+  issue extends the same philosophy to the DP-monitor alerting path, which doesn't currently have it).
+
+## Why this matters beyond the current migration
+
+TRADFI's shards run ~2+ hours each (content-repair-heavy), giving each SPOT VM a much longer preemption-exposure window
+than the DEFI/PREDICTION/CEFI legs (~35-45min shards) — and this session already measured a SECOND, worse
+capacity-contention burst (18/20, vs CEFI's earlier 1/10 then 3/10) in the same zone within the same few hours. This is
+not a one-off; any future large SPOT fleet in this zone is exposed to the same silent-loss risk until items 1-4 ship,
+and the broader rollout (items 8-9) closes it for every other backfill/migration category too.
