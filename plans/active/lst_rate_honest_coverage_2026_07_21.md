@@ -839,3 +839,14 @@ tarball once; always check the launcher's own freshness warning output, and if s
   compute myself would cross a line the precedent script explicitly draws. **Correctly left for the operator** — same
   treatment as Phase 5 #1 and Phase 6. The raw-data prerequisite (this session's #4 work) is done; the feature-compute
   step is a distinct, operator-owned action.
+
+- **2026-07-23 02:38 UTC (dex-swaps preempted a SECOND time — resumed again)** — the resumed VM from the earlier 01:26
+  relaunch died again at ~01:43 (found on this check, ~54min after the fact — no other alert channel exists for this),
+  same signature as before: no clean exit marker, `get-serial-port-output` → instance not found. Checked memory levels
+  in the RESOURCE_SAMPLE trail right up to the last log line: 982MiB/12.2% — nowhere near the 85% mem_crit threshold,
+  ruling out an OOM cause (unlike the unrelated CEFI Tardis P0 issue). This is consistent with a genuine SPOT reclaim,
+  not a code bug — two preemptions in ~2h on a SPOT e2-standard-4 in this zone is plausible bad luck, not a pattern
+  requiring escalation (per CLAUDE.md, switching to on-demand for a backfill is itself an anti-pattern; SPOT +
+  idempotent resume is the correct, intended design). Relaunched again: same command
+  (`--start 2023-01-01 --end 2026-07-22`), all 4 tarballs confirmed fresh, RUNNING. Manifest was at 69,425 entries
+  before this second death; the freshness-skip logic should again pick up from there.
