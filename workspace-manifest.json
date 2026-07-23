@@ -760,10 +760,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": 90.71,
-        "warn_file_count": 9,
+        "large_file_count": 8,
         "qg_red_reason": null,
-        "large_file_count": 8
+        "coverage_pct": 90.7,
+        "warn_file_count": 9
       }
     },
     "market-data-processing-service": {
@@ -1011,10 +1011,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": null,
-        "warn_file_count": 9,
+        "large_file_count": 3,
         "qg_red_reason": null,
-        "large_file_count": 3
+        "coverage_pct": 85.56,
+        "warn_file_count": 9
       }
     },
     "system-integration-tests": {
@@ -1212,10 +1212,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": 96.33,
-        "warn_file_count": 30,
+        "large_file_count": 27,
         "qg_red_reason": null,
-        "large_file_count": 27
+        "coverage_pct": null,
+        "warn_file_count": 30
       }
     },
     "unified-trading-library": {
@@ -1417,10 +1417,10 @@
       "semver_policy": "agent",
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": 75.59,
-        "warn_file_count": 7,
+        "large_file_count": 15,
         "qg_red_reason": null,
-        "large_file_count": 15
+        "coverage_pct": 75.54,
+        "warn_file_count": 7
       },
       "breaking_scan_dir": "none"
     },
