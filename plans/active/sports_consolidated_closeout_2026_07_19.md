@@ -526,27 +526,27 @@ All four resolved in interactive chat. These are now actionable, not gated:
       manifest's `league_id` namespace does NOT match the canonical registry's:
 
       | manifest `league_id` (raw) | canonical registry key |
-                                                                                                                                          | -------------------------- | ---------------------- |
-                                                                                                                                          | `PREMIER_LEAGUE`           | `EPL`                  |
-                                                                                                                                          | `CHAMPIONSHIP`             | `ENG_CHAMPIONSHIP`     |
-                                                                                                                                          | `PRIMERA_DIVISION`         | `LA_LIGA`              |
-                                                                                                                                          | `2._BUNDESLIGA`            | `BUNDESLIGA_2`         |
-                                                                                                                                          | `FIRST_DIVISION_A`         | (no registry entry)    |
+                                                                                                                                              | -------------------------- | ---------------------- |
+                                                                                                                                              | `PREMIER_LEAGUE`           | `EPL`                  |
+                                                                                                                                              | `CHAMPIONSHIP`             | `ENG_CHAMPIONSHIP`     |
+                                                                                                                                              | `PRIMERA_DIVISION`         | `LA_LIGA`              |
+                                                                                                                                              | `2._BUNDESLIGA`            | `BUNDESLIGA_2`         |
+                                                                                                                                              | `FIRST_DIVISION_A`         | (no registry entry)    |
 
-                                                                                                                                          Measured: **328,999 manifest rows carry a `league_id` absent from `LEAGUE_REGISTRY`, and 265,134 of them were
-                                                                                                                                          written ON/AFTER the 2026-07-13 gate ruling** (statuses: captured 213,861 / empty_confirmed 50,975 /
-                                                                                                                                          attempted_failed 298). Verified there is NO alias — `PREMIER_LEAGUE`/`PRIMERA_DIVISION`/`2._BUNDESLIGA`/
-                                                                                                                                          `FIRST_DIVISION_A` appear nowhere in any registry entry's definition (only `CHAMPIONSHIP` partially matches
-                                                                                                                                          `ENG_CHAMPIONSHIP`/`SCOTTISH_CHAMPIONSHIP`/`USL_CHAMPIONSHIP` as a substring, which is itself ambiguous).
+                                                                                                                                              Measured: **328,999 manifest rows carry a `league_id` absent from `LEAGUE_REGISTRY`, and 265,134 of them were
+                                                                                                                                              written ON/AFTER the 2026-07-13 gate ruling** (statuses: captured 213,861 / empty_confirmed 50,975 /
+                                                                                                                                              attempted_failed 298). Verified there is NO alias — `PREMIER_LEAGUE`/`PRIMERA_DIVISION`/`2._BUNDESLIGA`/
+                                                                                                                                              `FIRST_DIVISION_A` appear nowhere in any registry entry's definition (only `CHAMPIONSHIP` partially matches
+                                                                                                                                              `ENG_CHAMPIONSHIP`/`SCOTTISH_CHAMPIONSHIP`/`USL_CHAMPIONSHIP` as a substring, which is itself ambiguous).
 
-                                                                                                                                          **⛔ CONSEQUENCE: executing decision 2's "purge the non-registry rows" against the SYMBOLIC `league_id` would
-                                                                                                                                          DELETE core trading data — Premier League, La Liga, the Championship.** Those are not out-of-universe leagues;
-                                                                                                                                          they are in-universe leagues recorded under a different naming convention. The purge MUST NOT run until the
-                                                                                                                                          namespace is reconciled.
+                                                                                                                                              **⛔ CONSEQUENCE: executing decision 2's "purge the non-registry rows" against the SYMBOLIC `league_id` would
+                                                                                                                                              DELETE core trading data — Premier League, La Liga, the Championship.** Those are not out-of-universe leagues;
+                                                                                                                                              they are in-universe leagues recorded under a different naming convention. The purge MUST NOT run until the
+                                                                                                                                              namespace is reconciled.
 
-                                                                                                                                          NOTE this is a DIFFERENT axis from §U's 489-pair finding, which compared NUMERIC `af_league_id` against the
-                                                                                                                                          registry's `api_football_id` set (sound, numeric-vs-numeric). Both are real; do not conflate them. This is the
-                                                                                                                                          §C2 "league_id namespace reconciliation" item, now measured and escalated to P0.
+                                                                                                                                              NOTE this is a DIFFERENT axis from §U's 489-pair finding, which compared NUMERIC `af_league_id` against the
+                                                                                                                                              registry's `api_football_id` set (sound, numeric-vs-numeric). Both are real; do not conflate them. This is the
+                                                                                                                                              §C2 "league_id namespace reconciliation" item, now measured and escalated to P0.
 
 - [x] [CODE] P0. ✅ **WRITE PATH CANONICALISED — operator chose canonicalise-at-write (2026-07-20); shipped
       market-tick-data-service@ad4f1872.** `_canonical_league_id()` resolves via the NUMERIC `api_football_id`; all 30
@@ -618,3 +618,94 @@ All four resolved in interactive chat. These are now actionable, not gated:
 
 - 2026-07-19 — Plan authored from the 6-agent audit. §Z (Track F P0) already FIXED (features-service@c6eb1f38); the
   writing fleet was stopped; corpus re-run pending behind the C1 manifest-atom fix. All other tracks open.
+- 2026-07-22/23 — K1 (live writer casing) + K2 (historical casing migration) + the phantom `soccer_*` manifest-row prune
+  ALL SHIPPED + VERIFIED complete for their scope (`batch_odds_api`/TRADES axis: 373,297 canonical rows, 0 remaining
+  lowercase, 0 remaining phantom rows). Full evidence + SHAs: `plans/active/sports_master_closeout_2026_07_21.md`
+  fourth/fifth/sixth-wave Progress Log. Track C's K1/K2 todos above are flipped with evidence.
+
+## 2026-07-23 — root-cause sweep on sports odds honest coverage (session continuation)
+
+Answering an operator Q&A thread on sports MDPS/MTDS honest-coverage tracking surfaced 3 real findings, all investigated
+to a root cause (not just symptom-documented) and either fixed or properly scoped:
+
+- [x] [DATA] P0. ✅ **api_football wrong-source manifest rows (1,266,874) — root-caused + fixed + wiped.** Root cause:
+      `SOURCE_PRIORITY` had no `("sports","TRADES")` entry, so `derive_pipeline_mode_for_row()` fell through to the
+      sports asset-group's `api_football` default, mislabeling every sports TRADES sentinel row. Fixed:
+      `unified-api-contracts@44623d25`. Wiped (CAS-safe, manifest-only): `market-tick-data-service@e9d9dec0`
+      (1,266,874/1,266,874 removed, VERIFY PASSED). GCS-object deletion for the ~7,251 captured cells remains a
+      SEPARATE, operator-gated step (prod-bucket delete = human-only). Full detail:
+      `issues/mtds_sports_api_football_wrong_source_reaccumulated_post_wipe_2026_07_22.md` (resolved). This SAME wipe
+      also removed the exact 58,016-row dead-residue population `issues/sports_trades_attempted_failed_2026_07_23.md` (a
+      concurrent agent's independent DP_RUN_MOSTLY_EMPTY alert triage) had just diagnosed — that doc's todo #1 (restore
+      historical `attempted_at`) is now superseded (rows deleted, not restored).
+- [x] [DATA] P2. ✅ **MDPS `odds_movement`/`odds_snapshot`/`arbitrage_opportunity` zero-production-objects —
+      root-caused: dead code.** The only live sports MDPS Cloud Run job (`uts-prod-mdps-odds-horizon-bucket`) runs a
+      standalone script (`reprocess_sports_odds.py`) hardcoded to `odds_horizon_bucket` only — never touches
+      `CandleAdapterRegistry`, the generic path these 3 adapters are registered under. No other job/scheduler/VM reaches
+      them. Registered in `SOURCE_PRIORITY`/`DATA_TYPES_BY_ASSET_GROUP` (aspirational), never actually scheduled.
+      Operator decision needed: wire them up for real, or retire the registrations. Detail:
+      `issues/sports_mdps_derived_odds_products_zero_prod_objects_2026_07_23.md` (resolved — the "why" is answered; the
+      "what to do about it" is an open P2 decision).
+- [ ] [DATA] P1. **NEW, bigger finding: sports ODDS_API (TRADES) capture pipeline scheduling status UNKNOWN.** While
+      verifying the api_football fix had reached running instances, found ZERO sports manifest writes of any kind for
+      ~12h+ at time of check, the historical `oddspapi-w01/w02/w03` Cloud Run jobs last ran 2026-03-29 (~4 months ago),
+      and no GCP Cloud Scheduler entry or running VM currently drives sports odds capture. Could NOT check AWS-side
+      scheduling (IAM-denied) or persistent-VM-internal crontabs. **Genuinely unknown whether new sports odds data is
+      arriving at all right now** — this matters more than the two findings above, since fixing label-correctness of
+      data that has stopped arriving is far less valuable than it looks. NOT resolved — needs its own dedicated
+      investigation with proper infra access. Detail:
+      `issues/sports_odds_capture_pipeline_scheduling_status_unknown_2026_07_23.md`.
+- [x] [VERIFY] P1. ✅ **Sentinel fan-out for TRADES honest-coverage — verified mechanism exists + looks correct.**
+      `sentinels.py::_emit_sports_v2_sentinels` fans out over every (bookmaker × league × fixture) from the
+      instruments-service fixture catalog, checks UAC `is_bookmaker_league_covered_exact()`, and resolves EVERY combo to
+      `record_failed`/`record_zero_rows`(empty_confirmed)/captured — nothing left silently untracked, by design. Could
+      not observe it actually firing in production (ties to the dormant-pipeline finding above) — the current manifest
+      shows 373,297/373,297 = 100% `captured`, 0 empty/failed for the `batch_odds_api` scope, which is consistent with
+      either genuine completeness or the mechanism simply not having run recently enough to surface any gaps. Re-verify
+      once the dormant-pipeline question above is resolved.
+- [ ] [OPERATOR] P0. **The separate, irreversible, 5-part-proof-gated DELETE of old non-canonical K1/K2 GCS objects**
+      (and now also the ~7,251 `api_football` captured-cell objects) remains human-only per
+      `codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3#1 — evidence prepared, not executed, not something
+      to do autonomously regardless of confidence.
+
+### Sports issue-doc index (swept 2026-07-23 — every `plans/active/issues/sports_*.md` not already linked above)
+
+Not individually triaged/re-verified today (that is its own large effort) — listed here so nothing is orphaned from
+discovery. Priorities are each doc's own self-assessed value; treat as a starting point, not a re-confirmed ranking.
+
+**P0 (open, 6):** `sports_canonical_raw_truncated_rederive_destroys_corpus_2026_07_16.md`,
+`sports_cf8_available_at_backfill_regression_2026_07_13.md`, `sports_features_rerun_stopped_writing_2026_07_21.md`,
+`sports_halftime_odds_sfi_vs_inplay_2026_07_16.md`,
+`sports_is_index_fixtures_job_direct_write_328k_row_cut_2026_07_15.md`,
+`sports_is_manifest_eu_regression_overwrite_2026_06_29.md`,
+`sports_is_odds_capture_code_incomplete_reversal_2026_06_27.md`, `sports_legacy_canonical_row_gap_2026_07_16.md`.
+
+**P1 (open, 11):** `cross_ag_prediction_rows_bleed_into_sports_instruments_index_2026_07_20.md`,
+`dp_catalog_not_running_sports_prediction_2026_07_15.md`,
+`sports_derived_features_per_league_layout_unread_by_ml_loader_2026_07_14.md`,
+`sports_index_recency_masked_captured_atoms_2026_07_13.md`, `sports_legacy_duplicate_triage_2026_07_22.md`,
+`sports_live_writer_instrument_type_casing_never_fixed_2026_07_22.md` (superseded by K1 completion above — worth a
+formal status flip, not done here), `sports_manifest_read_staleness_budget_missing_2026_07_15.md`,
+`sports_odds_stale_fixture_reinjection_2026_07_14.md`,
+`sports_pre_floor_fixtures_orphan_misclassification_2026_07_22.md`,
+`sports_shard_enumeration_cartesian_blowup_2026_07_20.md`,
+`sports_weather_uac_layout_per_day_bare_vs_writer_per_day_per_league_2026_07_20.md`.
+
+**P2 (open, 8):** `sports_dependency_check_manifest_vs_gcs_path_2026_07_08.md`,
+`sports_golden_window_attempted_failed_remediation_2026_06_24.md`,
+`sports_odds_feature_naming_four_way_mismatch_2026_07_21.md`,
+`sports_odds_team_name_alias_gap_south_america_2026_07_09.md`,
+`sports_phantom_audits_reference_not_marketdata_2026_07_14.md`,
+`sports_t0_t1_dependency_gate_never_wired_2026_07_15.md`, `sports_trades_venue_fetch_failed_2026_07_15.md` (see the
+2026-07-23 finding above — partially resolved by the api_football wipe), `sports_trades_attempted_failed_2026_07_23.md`
+(today's DP_RUN_MOSTLY_EMPTY triage, resolved — metric artifact of the K1/K2 swap, not a regression).
+
+**P3 (open, 4):** `features_sports_deployment_ui_coverage_tab_and_registry_playbook_2026_07_21.md`,
+`sports_predictions_live_mode_and_backtest_execution_orphaned_2026_07_21.md`,
+`sports_reference_function_size_qg_regression_2026_07_16.md`,
+`sports_source_mdps_instruments_service_not_leakage_2026_07_16.md`.
+
+**Recommended next item for a fresh session:** the dormant-pipeline investigation
+(`sports_odds_capture_pipeline_scheduling_status_unknown_2026_07_23.md`) — it gates whether any of the honest-coverage
+work above is measuring a live, growing dataset or a frozen one, and needs infra access this session didn't have (AWS
+IAM, persistent-VM inspection).
