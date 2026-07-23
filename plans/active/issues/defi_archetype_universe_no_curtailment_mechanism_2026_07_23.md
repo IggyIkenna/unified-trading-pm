@@ -127,3 +127,110 @@ archetype DeFi universe mapping audit agent run). Key files read:
 `strategy_service/engine/core/ config_loader.py`, `strategy_service/types.py`,
 `unified-api-contracts/unified_api_contracts/internal/ architecture_v2/archetype_leg_spec_seeds.py`,
 `unified-trading-pm/scripts/openapi/ generate_capability_verdict_matrix.py`.
+
+---
+
+## RESUME POINT 2026-07-23 (mid-session addendum) — operator-approved build scope, 3-layer universe design, phased plan
+
+**Operator context that changed this doc's scope**: a follow-up question ("we grabbed hundreds of candidates in
+e2e-testing backtests, why does prod hardcode 13 coins for CARRY_BASIS_PERP?") surfaced a real audit gap — the earlier
+per-archetype table above was checked only against strategy-service's _production_ catalog, never diffed against
+`e2e-testing`'s own broader exploratory scripts for the same archetypes. Concrete correction:
+
+- `e2e-testing/scripts/defi/staked_basis_funding_scan.py`'s `_DEFAULT_COINS` = a **40-coin** default list, includes
+  HYPE, PEPE, WIF, BONK, JUP, JTO, TAO, ORDI. My earlier "HYPE never appears anywhere" answer was scoped ONLY to
+  strategy-service's production catalog — wrong to state unqualified.
+- `e2e-testing/scripts/defi/funding_ensemble_engine.py`'s `_top_volume()` doesn't use a fixed list at all — it reads a
+  **live per-venue snapshot of every coin the exchange lists** (genuinely hundreds per venue: Binance/Bybit/Aster),
+  filters by a min-volume floor, takes top-N (default 40) by 24h USD volume. `SURVIVORS` in the same file = 30 coins,
+  with its own docstring: _"operator 2026-06-18: the live ensemble was Binance-only/30-survivors — far narrower than the
+  backtest."_ — a real, previously-made, documented operator narrowing decision.
+- That file's own lifecycle marker:
+  `Delete-when: ensemble orchestrator folded into strategy-service multi-strategy allocator (production)`. The fold was
+  always the intent; it never happened. Production's `CARRY_BASIS_PERP`/ `CARRY_FUNDING_DISPERSION` catalog is still the
+  static 13-coin `catalog_carry.py` list, not this dynamic mechanism.
+- `catalog_carry.py`'s own comment on `_CARRY_BASIS_PERP_COINS` says the intent was always "this can be generous; [the]
+  allocator filters" (economic threshold, 250bps) — i.e. the STATIC list was only ever meant to be a stand-in candidate
+  pool, with the real candidate-discovery mechanism (dynamic, volume-ranked) never actually wired in.
+
+### Operator-specified target architecture (verbatim intent, 2026-07-23) — THREE layers, do not collapse them
+
+> "we were supposed to use features service ohlcv derived volume per coins to understand candidates dynamically based on
+> volume. in addition strategy service catalogue should be able to screen down to a filtered list if it wants (allow
+> list and block list) on base currency, venues, instrument types and data types per archetype. then finally an
+> individual strategy id config (for a given client and axis and version of a strategy archetype) should be able to
+> allow additional filters that then allows us to keep universe wide but specifics targeted."
+
+- **Layer 1 — dynamic candidate discovery, sourced from features-service (batch-deterministic, NOT a live API call)**.
+  Confirmed reusable building block already exists:
+  `features-service/features_service/cross_instrument/app/calculators/adv.py` — a real, production rolling-ADV reader
+  over MDPS `timeframe=24h` processed candles, per `(venue, instrument_id, asset_group, as_of_date)`, already has
+  honest-absence handling (`AdvStatus.NO_DATA`/`.OK`, "≥7 days observed" gate) and an explicit "operator ask" docstring
+  matching this exact need. **Do not build a new volume pipeline — wrap this calculator with a "rank candidates by ADV,
+  return top-N" reader** that strategy-service's catalog layer can call. This replaces `e2e-testing`'s live-API
+  `_top_volume()` with a deterministic, GCS-sourced equivalent (batch=live discipline).
+- **Layer 2 — archetype-level catalog allow-list/block-list** on `{base_currency, venue, instrument_type, data_type}`,
+  applied per archetype. This GENERALIZES what `catalog_staked_basis.py`'s `_resolve_start_token()` →
+  `accepted_perp_collateral()` already does ad hoc for ONE archetype into a reusable cross-archetype filter — every
+  other archetype's catalog builder should get the same kind of structural gate, not a copy-pasted one-off.
+- **Layer 3 — per-strategy-instance config-level filter**, scoped to `(client_id, axis, archetype version)` for one
+  deployed `TargetInstanceSpec`/strategy_id. This is the mechanism from this doc's original "Finding 1" design sketch
+  (`PaperUniverseConfig` extension / `specs_for_archetype()` post-filter) — but it is explicitly the NARROWEST/LAST
+  layer, sitting on top of a wide Layer-1 candidate pool and a Layer-2 structural filter, not a replacement for either.
+  Purpose: "keep universe wide but specifics targeted" — an individual client's specific strategy instance can narrow
+  further without touching the archetype's general eligibility rules or the dynamic candidate pool.
+
+**Explicit architectural point (do not build these as one flat filter)**: Layer 1 answers "what COULD this archetype
+ever consider" (liquidity-gated, dynamic); Layer 2 answers "what is this ARCHETYPE structurally allowed to touch"
+(collateral/venue/instrument eligibility, static-ish, rarely changes); Layer 3 answers "what does THIS specific client
+strategy instance want today" (operator-tunable, changes often). Collapsing them loses the "wide universe, targeted
+specifics" property the operator explicitly asked for.
+
+### Build plan — "complete the orphaned archetypes" (operator-approved 2026-07-23, in progress)
+
+Per `paper_universe.py`'s `_ENGINE_DRIVABLE_ARCHETYPES`, only 7 of 19 DeFi/carry archetypes currently have a working
+paper-replay tick builder; the other 12 are honestly marked `engine_tick_builder_unwired`. Operator approved wiring the
+rest, phased to avoid concurrent edits to the same shared files (`paper_run_handler.py`/`paper_universe.py`) — phases
+run SEQUENTIALLY, not in parallel:
+
+- [x] [BACKEND] P1. Phase 0 (this session, prerequisite): `CARRY_STAKED_BASIS`'s STAKING_REWARD leg wired to real
+      `lst_yields` index-ratio — `strategy-service@e93902d8`. New `CanonicalLstYieldsIndexProvider` is the reusable
+      building block Phase 1 below reuses directly.
+- [ ] [BACKEND] P1. **Phase 1 — CARRY_STAKED_BASIS_DATED** (IN FLIGHT as of this addendum — dispatched to a background
+      build agent, not yet confirmed shipped). Reuses `CanonicalLstYieldsIndexProvider` for the STAKING leg; adds a new
+      dated-futures short-leg tick loader (Deribit ETH quarterly `instrument_type=FUTURE` — confirmed via
+      `unified-api-contracts`'s `CeFiMvpRule` that `FUTURE` is genuinely MVP for Deribit with real
+      `trades`/`book_snapshot_5` capture, NOT the same thing as the explicitly-non-MVP `futures_chain` bundled-chain
+      data_type — agent was instructed to verify real GCS-captured data exists before wiring, hold if not).
+- [ ] [BACKEND] P1. **Phase 2 (= E3) — CARRY_RECURSIVE_STAKED + CARRY_RECURSIVE_BORROW_LENDING_ONLY +
+      CARRY_BASIS_PERP_INV**. All three share the same new building block: an Aave `borrow_index` sample-to-sample
+      accrual leg (mirrors the already-built `index_ratio_accrual()` primitive, just fed the borrow index instead of the
+      LST exchange-rate index). This IS the previously-tracked "E3" follow-on from
+      [[pnl_interest_accrual_wrong_engine_and_banned_formula_2026_07_21]] — build it once, wire into all 3 archetypes
+      (they differ only in whether they ALSO have a staking leg or a perp hedge on top).
+- [ ] [BACKEND] P2. **Phase 3 — CARRY_BASIS_DATED + CARRY_BASIS_DATED_INV**. New data source: the
+      `paired_price_dispersion` calculator (features-cross-instrument-service) for dated-futures-vs-cash/ETF basis. Note
+      `catalog_carry.py`'s own comment flags some rows as `status=databento_pending` placeholders — confirm real data
+      exists per-cell before wiring each; some cells may have to stay honestly unwired pending Databento integration.
+- [ ] [BACKEND] P2. **Phase 4 — YIELD_ROTATION_LENDING + YIELD_STAKING_SIMPLE**. Pure yield archetypes (no hedge leg) —
+      reuse `lending_rates`/`lst_yields` readers already established.
+- [ ] [BACKEND] P2. **Phase 5 — LIQUIDATION_CAPTURE**. New data source: on-chain liquidation-cascade feed +
+      `health_factor_trigger`.
+- [ ] [BACKEND] P1. **After Phases 1-5**: build the Layer-3 curtailment mechanism (`PaperUniverseConfig` venue/currency
+      allowlist) on the now-larger drivable-archetype set.
+- [ ] [BACKEND] P3. **Separate, NOT yet explicitly confirmed as in-scope**: fold Layer-1's dynamic ADV-ranked candidate
+      discovery into `CARRY_BASIS_PERP`/`CARRY_FUNDING_DISPERSION`'s catalogs, replacing the static 13-coin list — this
+      is the concrete first real consumer of Layer 1 once built.
+- [ ] [DOCS] P3. **Explicitly OUT of the tick-builder-wiring scope**: `ARBITRAGE_MEV_LIQUIDATION_BUNDLE`,
+      `ARBITRAGE_MEV_JIT_LIQUIDITY`, `ARBITRAGE_MEV_BACKRUN` — architecturally opportunistic/runtime-mempool-driven, no
+      catalog-declared currency universe to build a day-partition tick loader against. Flagged, not silently dropped — a
+      currency constraint for these three would need new logic inside the engines themselves, a materially different
+      (and separately-scoped) piece of work.
+- [ ] [BACKEND] P2. Side-decision 1 (not started): wire `SmartOrderRoutingConfig.allowed_venues` for real, or delete it
+      (dead code, Finding 2 above).
+- [ ] [BACKEND] P2. Side-decision 2 (not started): reconcile strategy-service's catalog vs UAC's
+      `archetype_leg_spec_seeds.py` (Finding 3 above, two unreconciled registries).
+
+**Lesson recorded**: an audit that maps only the PRODUCTION side of a question ("what does the catalog declare") can
+miss a real gap that only shows up by diffing against the EXPLORATORY/backtest side ("what did we already prove out that
+never got folded in"). Check both sides before answering "is X supported" with a flat no.
