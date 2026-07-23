@@ -2,9 +2,9 @@
 doc_type: codex-ssot
 title: Three-Tranche Data Wiring
 summary:
-  "Three-tranche model for client credential + data routing: A manual/fund-of-fund (CSV in GCS), B managed
-  (Secret Manager exec-{client}-{venue}-{account_type} live API), C pooled (internal PBS+PnL APIs); canonical
-  TrancheRouter in execution-service."
+  "Three-tranche model for client credential + data routing: A manual/fund-of-fund (CSV in GCS), B managed (Secret
+  Manager exec-{client}-{venue}-{field} live API), C pooled (internal PBS+PnL APIs); canonical TrancheRouter in
+  execution-service."
 status: current
 nature: ssot
 asset_group: [meta]
@@ -12,12 +12,12 @@ stage: [meta]
 repos: [client-reporting-api, execution-service, unified-trading-pm]
 scope: [engineer, admin]
 tags: [tranche, credentials, routing, reporting, execution, secret-manager]
-related: [../07-security/secret-naming-convention.md, client-reporting-architecture.md]
+related: [../05-infrastructure/secret-manager-naming.md, client-reporting-architecture.md]
 created: 2026-03-27
 authoritative_for: [three-tranche client credential and data routing]
 referenced_by:
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-07-23
 code_refs:
 ---
 
@@ -34,11 +34,11 @@ System. The canonical implementation is `tranche_router.py` in
 The tranche model classifies how a client's trading data and credentials are managed. Each tranche maps to a distinct
 data source and secret resolution path.
 
-| Tranche | Label                     | Credential Source                                      | Data Source                                                | Use Case                                        |
-| ------- | ------------------------- | ------------------------------------------------------ | ---------------------------------------------------------- | ----------------------------------------------- |
-| A       | `manual` / `fund_of_fund` | Manual CSV upload                                      | CSV file in GCS                                            | Fund-of-fund clients; no live API access        |
-| B       | `managed`                 | Secret Manager: `exec-{client}-{venue}-{account_type}` | Live execution via exchange API                            | Directly managed accounts with exchange keys    |
-| C       | `pooled`                  | PBS + PNL APIs (internal)                              | position-balance-monitor-service + pnl-attribution-service | Pooled accounts reading from internal risk APIs |
+| Tranche | Label                     | Credential Source                               | Data Source                                                | Use Case                                        |
+| ------- | ------------------------- | ----------------------------------------------- | ---------------------------------------------------------- | ----------------------------------------------- |
+| A       | `manual` / `fund_of_fund` | Manual CSV upload                               | CSV file in GCS                                            | Fund-of-fund clients; no live API access        |
+| B       | `managed`                 | Secret Manager: `exec-{client}-{venue}-{field}` | Live execution via exchange API                            | Directly managed accounts with exchange keys    |
+| C       | `pooled`                  | PBS + PNL APIs (internal)                       | position-balance-monitor-service + pnl-attribution-service | Pooled accounts reading from internal risk APIs |
 
 ---
 
@@ -57,26 +57,31 @@ Client uploads CSV → GCS bucket → client-reporting-api reads → reporting o
 
 ## Tranche B — Secret Manager Live Execution
 
-- Credentials: `exec-{client}-{venue}-{account_type}` in GCP Secret Manager
+- Credentials: `exec-{client}-{venue}-{field}` in GCP Secret Manager (`field` = `api-key` / `api-secret` /
+  `passphrase`-for-OKX-only — corrected 2026-07-23; see
+  [`../05-infrastructure/secret-manager-naming.md`](../05-infrastructure/secret-manager-naming.md) § 1.1 for the full
+  model, including the pooled/house sibling pattern for venues without per-client credentials)
 - Data path: Live exchange API via execution-service adapters
 - Router output: `data_source = "api_live"`
 - Services: execution-service fetches credentials at startup via `get_secret_client()`
 
 ```
-CredentialsRegistry.exec_secret_for_client(client, venue, account_type)
+CredentialsRegistry.exec_secret_for_client(client, venue, field)
   -> get_secret_client().access_secret(secret_name)
   -> exchange adapter
   -> execution-service engine
 ```
 
-Secret name pattern: `exec-{client}-{venue}-{account_type}`
+Secret name pattern: `exec-{client}-{venue}-{field}`
 
-Examples:
+Examples (real, live clients as of 2026-07-23):
 
-- `exec-odum-binance-cefi`
-- `exec-odum-deribit-cefi`
-- `exec-odum-hyperliquid-defi`
-- `exec-odum-ibkr-tradfi`
+- `exec-pr-okx-api-key` / `exec-pr-okx-api-secret` / `exec-pr-okx-passphrase`
+- `exec-et-binance-api-key` / `exec-et-binance-api-secret`
+- `exec-odum-prop-binance-api-key` / `exec-odum-prop-binance-api-secret`
+
+No client-scoped secrets exist yet for Deribit, Bybit, or Hyperliquid — those venues are not yet onboarded for
+per-client live trading (they currently only have pooled/house-level credentials, see § 1 of the linked doc).
 
 ---
 

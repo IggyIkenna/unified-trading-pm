@@ -1,18 +1,31 @@
 ---
 doc_type: codex-ssot
 title: Secret Manager naming convention — SSOT
-summary:
-  Secret Manager naming-convention SSOT — the <class>-<surface>-<env>-<role>-<version> pattern plus per-class templates
-  (custody, per-venue per-scope, Cloud-KMS CMK, wrapped wallet PK, data/aux), the testnet-vs-live venue split, and the
-  AWS Secrets Manager 1:1 name mirror.
+summary: >-
+  Secret Manager naming-convention SSOT — merged 2026-07-23 with the former
+  codex/07-security/secret-naming-convention.md (superseded, redirects here). States the two-axis model verified against
+  real GCP inventory — private/client-owned execution credentials use exec-{client}-{venue}-{field} (client, venue, api
+  all present — confirmed live for OKX's 8 clients + Binance's 2 clients); public market-data and pooled/house
+  credentials share one key per venue, no client segment (read/trade-split for Binance/Deribit, single unscoped key for
+  Bybit/Aster, wallet-style for Hyperliquid). Also covers the <class>-<surface>-<env>-<role>-<version> provisioning
+  pattern for custody/CMK/wrapped-wallet/data/aux secrets, the AWS mirror, and the bybit_api_key/bybit_api_secret
+  underscore-violation fix (cloned to bybit-api-key/ bybit-api-secret 2026-07-23).
 status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
-repos: [deployment-service, unified-api-contracts]
+repos: [deployment-service, unified-api-contracts, execution-service, unified-trading-library, strategy-service]
 scope: [engineer, admin]
-tags: [secret-manager, security, canonicalisation, credentials, defi]
-related: [../15-runbooks/credential-rotation-runbook.md, credentials-matrix.md, ../04-architecture/custody-providers.md]
+tags: [secret-manager, security, canonicalisation, credentials, defi, cefi, execution]
+related:
+  [
+    ../15-runbooks/credential-rotation-runbook.md,
+    credentials-matrix.md,
+    ../04-architecture/custody-providers.md,
+    ../07-security/secret-naming-convention.md,
+    ../07-security/client-credentials.md,
+    ../07-security/service-to-service-auth.md,
+  ]
 created: 2026-05-11
 authoritative_for: [Secret Manager secret naming convention]
 referenced_by:
@@ -26,8 +39,12 @@ referenced_by:
     codex/15-runbooks/per-source-credential-rotation-runbook.md,
   ]
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-07-23
 code_refs:
+  [
+    unified-trading-library/unified_trading_library/cloud_interface/credentials_registry.py,
+    execution-service/execution_service/data/tranche_router.py,
+  ]
 ---
 
 # Secret Manager naming convention — SSOT
@@ -35,28 +52,87 @@ code_refs:
 > **Created 2026-05-12** by slot 4 per
 > [`plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md`](../../plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md)
 > Phase 9.C. Codifies the workspace naming pattern for every secret in GCP Secret Manager + AWS Secrets Manager.
+>
+> **Merged 2026-07-23** (doc-reconciliation, operator-approved) with the former
+> [`codex/07-security/secret-naming-convention.md`](../07-security/secret-naming-convention.md) — both docs carried
+> `authoritative_for: [Secret Manager secret naming convention]` verbatim, a retrieval-layer collision. That doc is now
+> `status: superseded` and redirects here.
+>
+> **The initial merge (§ 1.3/§ 1.4 as first written) found four _documented_ conventions and called it an unresolved
+> fragmentation.** A follow-up pass the same day queried the live GCP Secret Manager inventory directly (project
+> `central-element-323112`, 194 secrets) instead of trusting any doc or code comment, and found the real picture is
+> simpler than that: **one client-owned pattern (already correct in GCP, just wrongly described everywhere) and one
+> pooled/house pattern per venue** — see § 1 below for the resolved model. The operator's own rule, verified against the
+> evidence: _"private feed orders/trades need to split per client; market data (public) can always use the same key
+> shared."_ That is exactly what the GCP inventory already does — the mess was entirely in the CODE and CONFIG that
+> describe it (wrong field name, wrong currency-suffixed example names, one true underscore violation), not in the
+> secrets themselves.
 
 ---
 
-## § 1 — General pattern
+## § 1 — The two-axis model (verified against live GCP inventory, 2026-07-23)
 
-```
-<class>-<surface>-<env>-<role>-<version>
-```
+Two independent axes decide a credential's shape. Get these right and the name follows mechanically — no separate
+"general pattern" table to memorise.
 
-| Token     | Closed set                                                                                                                                                                                                                                                                                                                                                 | Examples                                                                                                                                                        |
-| --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `class`   | `custody` / `venue` / `data` / `aux` / `cloud_kms_cmk` / `wallet`                                                                                                                                                                                                                                                                                          | `copper-` / `bybit-` / `helius-` / `telegram-` / `cloud_kms_cmk_defi`                                                                                           |
-| `surface` | provider name (`copper` / `bybit` / `helius` / `fireblocks` / `ceffu` / `binance` / `okx` / `deribit` / `hyperliquid` / `aster` / `upbit` / `kraken` / `bitfinex` / `bitget` / `polymarket` / `kalshi` / `api-football` / `footystats` / `soccer-football-info` / `coingecko` / `tenderly` / `barchart` / `yahoo` / `telegram` / `firebase` / `anthropic`) | n/a                                                                                                                                                             |
-| `env`     | `testnet` / `live` for venue trade creds (paper-mode reads testnet, live-mode reads live; one Secret Manager entry per env per venue). Omitted for surfaces that don't have a testnet/live split (most non-venue creds).                                                                                                                                   | `bybit-testnet-trade-api-key` / `bybit-live-trade-api-key` / `deribit-testnet-trade-api-secret` / `binance-testnet-trade-api-key` / `okx-testnet-trade-api-key` |
-| `role`    | `api-key` / `api-secret` / `passphrase` / `org-id` / `pem` (Fireblocks) / `read` / `trade` / `withdraw` (per-scope)                                                                                                                                                                                                                                        | `api-key` / `read-api-key` / `trade-api-secret` / `read-passphrase`                                                                                             |
-| `version` | optional `v1` / `v2` / `sandbox` / `prod` suffix when ambiguous                                                                                                                                                                                                                                                                                            | `-v1` / `-sandbox` / (omitted = current)                                                                                                                        |
+**Axis 1 — whose money is it?**
 
-**2026-05-12 PM operator clarification — testnet vs live for CeFi 4**: paper-trading mode (`--mode paper` per
-`credentials_per_mode.yaml`) reads `<venue>-testnet-<role>` keys from Secret Manager; live-trading mode reads
-`<venue>-live-<role>`. Operator generates 8 credential bundles for May-23 (Bybit/Deribit/Binance/OKX × testnet + live).
-Venue testnet endpoints: `testnet.bybit.com` / `test.deribit.com` / `testnet.binancefuture.com` / OKX demo-trading
-toggle in production app. Routing is config-only via `credentials_per_mode.yaml` keys on `paper` vs `live`.
+- **Private / client-owned** (an external client's own funds — orders, trades, account-specific balances): MUST carry
+  the client. Pattern: `exec-{client}-{venue}-{field}`, `field` ∈ `api-key` / `api-secret` / `passphrase` (passphrase
+  only where the venue requires 3-field auth, e.g. OKX). This is **already correct in live GCP** — confirmed for OKX (8
+  clients: `pr`, `nn`, `std`, `gp`, `sl`, `sl2`, `anu`, `ik` × 3 fields = 24 secrets) and Binance (2 clients: `et`,
+  `odum-prop` × 2 fields). No client-scoped secrets exist yet for Deribit, Bybit, or Hyperliquid — those venues are not
+  yet onboarded for per-client live trading.
+- **Public market data, or pooled/house execution** (the firm's own capital, or read-only observation — no external
+  client to isolate from): shared, ONE key per venue, no client segment. See § 1.1 for the real per-venue shape, which
+  varies by venue capability (this is Axis 2).
+
+**Axis 2 — does the venue split read vs. trade capability?** (applies only within the pooled/house category)
+
+- **Splits**: Binance, Deribit — `{venue}-read-api-key`, `{venue}-trade-api-key`, `{venue}-write-api-key` (+ matching
+  `-secret` siblings). Real, live, intentional — not leftover experimentation.
+- **Doesn't split**: Bybit, Aster — one unscoped key does both (`bybit-api-key` / `bybit-api-secret` as of 2026-07-23;
+  see § 1.2's rename below). Aster: `aster-api-key` / `aster-secret-key`.
+- **Wallet-style**: Hyperliquid — `hyperliquid-trade-key` (EIP-712 signing, no separate secret).
+- **Single system-wide blob**: Kalshi (`kalshi-api-credentials`), IBKR (`ibkr-account-credentials` — a physical
+  single-Gateway-process constraint, not a "read-only" designation).
+- **Ad hoc multi-field, not yet normalised**: Betfair (`betfair-api-key` + `betfair-app-key` + `betfair-username` — 3
+  separate secrets), Polymarket (`polymarket-api-key` / `-passphrase` / `-private-key` / `-secret`). Out of scope for
+  this pass; flagged for a future cleanup, not touched.
+
+**Never add a client segment to a pooled/house/read-only secret** — there is no client to isolate from, and doing so
+would misrepresent what the secret is.
+
+---
+
+## § 1.1 — Client-owned execution: `exec-{client}-{venue}-{field}`
+
+The canonical, already-live pattern for private per-client trading credentials. `client` is lowercase, hyphenated (the
+YAML registry key downcased, e.g. `ODUM_PROP` → `odum-prop`). `field` is one of `api-key`, `api-secret`, `passphrase`
+(OKX only — 3-field auth).
+
+Resolved via `CredentialsRegistry.exec_secret_for_client(client, venue, field) -> str` in
+`unified_trading_library.cloud_interface.credentials_registry` (fixed 2026-07-23 — previously took a nonsensical
+`account_type` parameter and produced `exec-{client}-{venue}-{account_type}`, a shape matching zero real secrets).
+Consumed by `execution-service/execution_service/data/tranche_router.py`'s `TrancheRouter` (Tranche B / "managed"
+clients) — this class previously had a hardcoded `_load_client_registry() -> {}` stub (fixed 2026-07-23) and had zero
+external callers as of this writing, so wiring it up did not change any live behavior, only made previously-dead code
+correct.
+
+The per-client registry (`unified-trading-pm/credentials-registry.yaml`, mirrored in
+`execution-service/configs/credentials-registry.yaml` and `client-reporting-api/configs/credentials-registry.yaml`)
+declares each client's `venue` + a `secret_names:` mapping (fixed 2026-07-23 — previously a single wrong
+`secret_name: exec-{client}-{venue}-{currency}` field that matched no real secret in any of the 3 copies).
+
+## § 1.2 — Known naming violations
+
+| Name in use        | Canonical target                           | Status                                                                                                                                                                                                                                                                                |
+| ------------------ | ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `bybit_api_key`    | `bybit-api-key`                            | **FIXED 2026-07-23** — cloned in GCP (value verified byte-identical via hash), all code/config references updated across 5 repos, old underscored secret deleted from GCP after verifying zero remaining references workspace-wide.                                                   |
+| `bybit_api_secret` | `bybit-api-secret`                         | **FIXED 2026-07-23** — same as above.                                                                                                                                                                                                                                                 |
+| `ibkr-tws-key`     | `ibkr-account-credentials`                 | **Fixed** (pre-existing) — real code uses `ibkr-account-credentials` (`ibkr_credentials.py:4,113`).                                                                                                                                                                                   |
+| `betfair_app_key`  | `betfair-app-key` (NOT `-api-credentials`) | **Partially fixed, target corrected 2026-07-23** — real code already uses hyphenated `betfair-app-key`; the OLD target `betfair-api-credentials` was itself wrong (doesn't exist in GCP; Betfair is 3 separate ad hoc secrets, see § 1 above) — no further action needed on this one. |
+| `graph-api-key`    | `thegraph-api-key`                         | **Unresolved, out of scope** — multiple live variants coexist (`thegraph-api-key`(-2..9), `the-graph-api-key`, `graph-api-key`); flagged for a future pass, not touched here.                                                                                                         |
 
 ---
 
@@ -82,34 +158,40 @@ fireblocks-api-secret       # Fireblocks RSA PEM (base64 envelope)
 fireblocks-vault-account-id # vault account UUID
 ```
 
-### 2.2 Per-venue per-scope (R8 separation)
+### 2.2 Per-venue read/trade/write split (pooled/house credentials — corrected 2026-07-23)
+
+**Real for Binance and Deribit** (verified live in GCP): `{venue}-read-api-key`, `{venue}-trade-api-key`,
+`{venue}-write-api-key` (+ matching `-secret` siblings) — pooled/house-level keys, no client segment (per § 1's Axis 1:
+this is the firm's own capital or read-only market data, not a specific client's funds). This is § 1.1's sibling
+category, not a separate/aspirational design — see § 1 for the two-axis model.
 
 ```
-<venue>-{read,trade,withdraw}-{api-key,api-secret,passphrase}
+binance-read-api-key        binance-trade-api-key        binance-write-api-key
+binance-read-api-key-secret binance-trade-api-key-secret
+
+deribit-read-api-key        deribit-trade-api-key        deribit-write-api-key
+deribit-read-api-key-secret deribit-trade-api-key-secret
 ```
 
-Examples:
-
-```
-bybit-read-api-key       bybit-trade-api-key       bybit-withdraw-api-key
-bybit-read-api-secret    bybit-trade-api-secret    bybit-withdraw-api-secret
-
-okx-trade-api-key
-okx-trade-api-secret
-okx-trade-passphrase     # OKX requires 3-field auth
-
-deribit-read-api-key
-deribit-trade-api-key
-deribit-trade-api-secret
-```
-
-Total: 10 venues × 3 scopes × 2-3 fields per scope = ~60-90 secrets.
+**NOT real for OKX, Bybit, or client-scoped secrets in general**: the earlier draft of this doc described a
+`<venue>-{read,trade,withdraw}-{api-key,api-secret,passphrase}` design intended as a general **per-client** scope-
+separation model (the "R8" plan, `plans/archive/2026_05/api_keys_wallets_accounts_readiness_2026_05_10.md`) — a real,
+still-plausible security idea (a compromised read-key shouldn't be able to withdraw funds), whose enforcement half
+shipped (`execution-service`'s `ScopedCLOBAdapter`/`AdapterScope`) but whose Secret-Manager-provisioning half was
+deferred 2026-05-12 and never resumed. No client-scoped `exec-{client}-{venue}-{read,trade,withdraw}-*` secret exists in
+GCP. Do not confuse this dead per-client design with the real, live, non-client Binance/Deribit split above.
 
 ### 2.3 Prediction venues
 
+Corrected 2026-07-23 against live GCP inventory — neither venue matches a single-blob shape:
+
 ```
-polymarket-api-key
-kalshi-api-key
+kalshi-api-credentials      # single system-wide blob (matches § 1's CredentialsRegistry.VENUE_SECRET_MAP)
+
+polymarket-api-key          # 4 separate ad hoc secrets, not yet normalised — flagged for future cleanup
+polymarket-passphrase
+polymarket-private-key
+polymarket-secret
 ```
 
 ### 2.4 Cloud KMS CMKs
@@ -249,3 +331,7 @@ before merging.
   account).
 - [`per-archetype-wallet-isolation.md`](per-archetype-wallet-isolation.md) — per-wallet wrapped PK naming pattern
   derivation.
+- [`../07-security/secret-naming-convention.md`](../07-security/secret-naming-convention.md) — superseded by this doc
+  (2026-07-23); retained for history.
+- `unified-trading-library/unified_trading_library/cloud_interface/credentials_registry.py` — the real
+  `CredentialsRegistry` implementation backing § 1.1.
