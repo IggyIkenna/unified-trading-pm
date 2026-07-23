@@ -607,16 +607,53 @@ fi
 # *.mdc — plans/archive deliberately EXCLUDED) and fails on ANY violation, HARD or SOFT, so the
 # 2026-07-04 zero-violations corpus cannot rot. Replaces the two-checks lifecycle: the warn-only
 # check_docspec_coverage.py is RETIRED. Exit 0/1 from check_frontmatter_schema.py.
+#
+# SCOPED to your own changeset, not the whole corpus (2026-07-22, decision 2026-07-19 in
+# foreign_dirty_frontmatter_blocks_every_agents_gate_2026_07_18): a single bypassed bad doc from a
+# DIFFERENT agent used to fail this locally for EVERY clone on the shared branch (measured ~55min
+# fleet-wide shipping block), and the sanctioned remedy (seed_frontmatter.py --apply) correctly
+# refuses to touch a foreign-dirty file — so only the doc's own owner could clear it. Mirrors the
+# pre-push guard's own reasoning (scripts/hooks/pre-push): scope to staged + unstaged +
+# committed-but-unpushed doc changes only (the doc trees this checker covers). CI's lint-codex
+# slice is UNCHANGED and keeps corpus-wide enforcement — a bypassed bad doc still fails CI, it just
+# no longer blocks an unrelated agent's LOCAL gate. A manual full-corpus sweep remains available via
+# `python3 scripts/plan-hygiene/check_frontmatter_schema.py` (no args).
 FRONTMATTER_SCHEMA_CHECKER="${REPO_ROOT}/scripts/plan-hygiene/check_frontmatter_schema.py"
 if [ -f "$FRONTMATTER_SCHEMA_CHECKER" ]; then
     echo "Running per-doc-type frontmatter schema check (plan/epic/issue/audit)..."
-    if python3 "$FRONTMATTER_SCHEMA_CHECKER" --quiet; then
-        log_success "Frontmatter schema check passed"
+    _fm_doc_trees='plans/active/*.md plans/active/issues/*.md plans/epics/*.md plans/audit/results/*.md plans/audit/instructions/*.md codex/*.md agents/*.md *.mdc'
+    _fm_upstream=$(git -C "$REPO_ROOT" rev-parse --abbrev-ref --symbolic-full-name '@{u}' 2>/dev/null || echo "")
+    _fm_changed=""
+    if [ -n "$_fm_upstream" ]; then
+        # shellcheck disable=SC2086  # intentional word-split: _fm_doc_trees is a space-separated pathspec list
+        _fm_changed="${_fm_changed} $(git -C "$REPO_ROOT" diff --name-only --diff-filter=ACMR "${_fm_upstream}...HEAD" -- $_fm_doc_trees 2>/dev/null)"
+    fi
+    # shellcheck disable=SC2086
+    _fm_changed="${_fm_changed} $(git -C "$REPO_ROOT" diff --name-only --diff-filter=ACMR -- $_fm_doc_trees 2>/dev/null)"
+    # shellcheck disable=SC2086
+    _fm_changed="${_fm_changed} $(git -C "$REPO_ROOT" diff --cached --name-only --diff-filter=ACMR -- $_fm_doc_trees 2>/dev/null)"
+    # A brand-new doc that was never `git add`ed is UNTRACKED, so none of the three `diff` calls
+    # above see it at all (diff only compares tracked content) — without this, a fresh bad-
+    # frontmatter doc you just wrote would silently skip local validation entirely.
+    # shellcheck disable=SC2086
+    _fm_changed="${_fm_changed} $(git -C "$REPO_ROOT" ls-files --others --exclude-standard -- $_fm_doc_trees 2>/dev/null)"
+    _fm_scoped_list=""
+    for _f in $_fm_changed; do
+        [ -f "$REPO_ROOT/$_f" ] || continue
+        case " $_fm_scoped_list " in *" $_f "*) : ;; *) _fm_scoped_list="${_fm_scoped_list} $_f" ;; esac
+    done
+    if [ -z "${_fm_scoped_list// /}" ]; then
+        log_success "Frontmatter schema check skipped (no doc changes in your changeset — nothing of yours to check; CI's corpus-wide scan is unaffected)"
     else
-        echo "❌ Frontmatter schema check failed — a plan/epic/issue/audit doc has a missing/empty" >&2
-        echo "   required field or an unresolvable epic. parent_epic (plans) + assigned_vm (epics) +" >&2
-        echo "   epic (audit) must be non-empty + resolve. See plans/PLAN_FORMAT.md + plans/audit/README.md" >&2
-        _post_gate_fail "frontmatter-schema"
+        # shellcheck disable=SC2086
+        if python3 "$FRONTMATTER_SCHEMA_CHECKER" --quiet $_fm_scoped_list; then
+            log_success "Frontmatter schema check passed (scoped to your changeset)"
+        else
+            echo "❌ Frontmatter schema check failed — a plan/epic/issue/audit doc has a missing/empty" >&2
+            echo "   required field or an unresolvable epic. parent_epic (plans) + assigned_vm (epics) +" >&2
+            echo "   epic (audit) must be non-empty + resolve. See plans/PLAN_FORMAT.md + plans/audit/README.md" >&2
+            _post_gate_fail "frontmatter-schema"
+        fi
     fi
 fi
 

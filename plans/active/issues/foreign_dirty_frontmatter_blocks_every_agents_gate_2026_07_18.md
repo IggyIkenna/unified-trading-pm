@@ -15,8 +15,8 @@ summary:
   on 2 of 4 fields (I chose status:open / asset_group:[infrastructure]; the owner chose status:resolved /
   asset_group:[cross-cutting]). The gap is that a corpus-wide blocking check has no owner-scoped fallback - correctness
   of the guard and liveness of the fleet are in direct tension.
-status: open
-resolved_by:
+status: resolved
+resolved_by: unified-trading-pm@1f5d2211
 nature: issue
 asset_group: [meta]
 stage: [meta]
@@ -115,3 +115,24 @@ enforced — a bypassed bad doc still fails CI, it just no longer blocks unrelat
 (`base-service.sh` / the corpus-wide `check_frontmatter_schema` invocation) — a shared-critical script, so it is
 recorded here for operator greenlight rather than hot-patched. Complementary control (unchanged): agents remain banned
 from `--no-verify` / `SKIP_BRANCH_DRIFT`-class overrides.
+
+## Implemented (2026-07-22/23) — Option 1
+
+`unified-trading-pm@1f5d2211`. `scripts/quality-gates.sh`'s frontmatter-schema post-gate now computes "your own
+changeset" — the union of (a) committed-but-unpushed doc changes (`git diff --diff-filter=ACMR @{u}...HEAD`), (b)
+unstaged modifications, (c) staged changes, and (d) brand-new UNTRACKED docs
+(`git ls-files --others --exclude-standard`) — scoped to the checker's own doc-tree pathspecs, mirroring
+`scripts/hooks/pre-push`'s existing reasoning exactly. `check_frontmatter_schema.py` already accepted explicit
+`[file ...]` args (no engine change needed); the gate now passes this scoped list instead of calling it bare. An empty
+changeset (nothing of yours touched) skips the check entirely rather than defaulting back to the full corpus. CI's
+lint-codex slice is UNCHANGED — a bypassed bad doc from a different agent still fails CI, it just no longer blocks an
+unrelated agent's local `quality-gates.sh` run. A manual full-corpus sweep remains available via
+`python3 scripts/plan-hygiene/check_frontmatter_schema.py` (no args).
+
+**Caught during implementation, not in the original design**: untracked files needed a SEPARATE `ls-files` call — none
+of the three `git diff` invocations see a doc that was never `git add`ed at all (diff only compares tracked content), so
+without it a fresh bad-frontmatter doc you just wrote would have silently skipped local validation. Verified against a
+real git fixture (bare remote + clone) reproducing the exact incident shape: a doc already on origin (foreign, not in
+the changeset) plus a committed-unpushed / staged / untracked doc of "mine" — the scoped list correctly included only
+the three "mine" docs and excluded the foreign one. This very doc update is itself a live test of the new scoped path (a
+real `plans/active/issues/*.md` change flowing through the gate).
