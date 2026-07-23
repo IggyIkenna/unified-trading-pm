@@ -146,10 +146,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "warn_file_count": 0,
-        "large_file_count": 1,
         "qg_red_reason": null,
-        "coverage_pct": 81.47
+        "coverage_pct": null,
+        "warn_file_count": 0,
+        "large_file_count": 1
       }
     },
     "batch-live-reconciliation-service": {
@@ -273,10 +273,10 @@
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
-        "warn_file_count": 4,
-        "large_file_count": 0,
         "qg_red_reason": null,
-        "coverage_pct": 74.7
+        "large_file_count": 0,
+        "warn_file_count": 4,
+        "coverage_pct": null
       }
     },
     "deployment-api": {
@@ -341,10 +341,10 @@
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
-        "coverage_pct": 82.72,
-        "large_file_count": 6,
         "qg_red_reason": null,
-        "warn_file_count": 14
+        "large_file_count": 6,
+        "warn_file_count": 14,
+        "coverage_pct": null
       }
     },
     "deployment-service": {
@@ -392,10 +392,10 @@
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
-        "warn_file_count": 11,
-        "large_file_count": 2,
         "qg_red_reason": null,
-        "coverage_pct": 73.28
+        "large_file_count": 2,
+        "warn_file_count": 11,
+        "coverage_pct": null
       }
     },
     "execution-service": {
@@ -455,10 +455,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": 84.42,
-        "large_file_count": 0,
         "qg_red_reason": null,
-        "warn_file_count": 19
+        "coverage_pct": null,
+        "warn_file_count": 19,
+        "large_file_count": 0
       }
     },
     "features-service": {
@@ -760,10 +760,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "warn_file_count": 9,
-        "large_file_count": 8,
         "qg_red_reason": null,
-        "coverage_pct": 90.71
+        "coverage_pct": null,
+        "warn_file_count": 9,
+        "large_file_count": 8
       }
     },
     "market-data-processing-service": {
@@ -821,10 +821,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "warn_file_count": 8,
-        "large_file_count": 3,
         "qg_red_reason": null,
-        "coverage_pct": 88.47
+        "large_file_count": 3,
+        "warn_file_count": 8,
+        "coverage_pct": null
       }
     },
     "market-tick-data-service": {
@@ -881,10 +881,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "warn_file_count": 38,
-        "large_file_count": 0,
         "qg_red_reason": null,
-        "coverage_pct": 83.43
+        "large_file_count": 0,
+        "warn_file_count": 38,
+        "coverage_pct": null
       }
     },
     "ml-service": {
@@ -1011,10 +1011,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "warn_file_count": 9,
-        "large_file_count": 3,
         "qg_red_reason": null,
-        "coverage_pct": 85.59
+        "large_file_count": 3,
+        "warn_file_count": 9,
+        "coverage_pct": null
       }
     },
     "system-integration-tests": {
@@ -1165,10 +1165,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": 73.53,
-        "large_file_count": 0,
         "qg_red_reason": null,
-        "warn_file_count": 0
+        "coverage_pct": null,
+        "warn_file_count": 0,
+        "large_file_count": 0
       }
     },
     "unified-api-contracts": {
@@ -1300,10 +1300,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "warn_file_count": 0,
-        "coverage_pct": null,
+        "qg_red_reason": null,
         "large_file_count": 0,
-        "qg_red_reason": null
+        "warn_file_count": 0,
+        "coverage_pct": 73.01
       }
     },
     "unified-trading-api": {
