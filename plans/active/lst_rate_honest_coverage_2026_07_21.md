@@ -374,6 +374,21 @@ FIRST so no permanent-false-RED cell is seeded. Shard atom identical writer→ma
       operator-gated.
 - [ ] [STRATEGY] P3. **Recursive-staking borrow leg** — unblocks once #3 Aave oracle (collateral) lands; wire the
       `aave_borrow_index` cost leg + the archetype's drivability. Depends on Phase 5 #3.
+- [ ] [MTDS] P3. **Solana `lst_rates` `pipeline_mode` mislabels which tier actually supplied each row** — found
+      2026-07-23 code-tracing the 4-rate audit for `pnl_interest_accrual_wrong_engine_and_banned_formula_2026_07_21.md`.
+      `solana_lst_archival.py`'s per-row `"method"` field (`alchemy_get_account_info` / `thegraph_subgraph` / `rest_api`
+      / `defillama_historical_ratio`) correctly survives as a COLUMN inside the written parquet, but
+      `lst_rates_handler.py` calls `pipeline_mode_for_source("onchain_subgraph", ...)` **unconditionally for every
+      Solana LST row regardless of which tier fired** — so the manifest/GCS-path `pipeline_mode` label reads
+      `batch_onchain_subgraph` even for rows that came from Tier 4 (DefiLlama historical-ratio market proxy), which is
+      neither on-chain nor subgraph-derived. Net effect: a consumer doing manifest-level `source=`
+      filtering/reconciliation (this workspace's own "source= is crosscutting" convention) CANNOT distinguish genuine
+      protocol-redemption rows from market-proxy rows without reading the `method` column out of the actual parquet —
+      the label lies. Confirmed this is Solana-only (the EVM path in the same file has no tier-fallback system, so its
+      rows are unambiguous). Fix = derive `pipeline_mode_for_source` from the actual per-row `method`/tier instead of a
+      hardcoded string, or at minimum add a distinct source value for the Tier-4 path. Not fixed this session (found via
+      code-tracing while investigating the PnL doc's E1/E2 build, not this plan's own active work) — a real, scoped,
+      low-risk follow-up.
 
 ## Progress Log
 
