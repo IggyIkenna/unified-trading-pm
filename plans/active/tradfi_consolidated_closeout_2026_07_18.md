@@ -2373,6 +2373,70 @@ before concluding it's a real blocker.
     shard-count baseline (88→96) — same recurring "stale baseline" class as prior CEFI (200→208)/DEFI (2403→2646)
     re-pins, verified present on a clean unmodified HEAD (not caused by anything here), blocking the whole-program
     quality gate for an unrelated ship. Bundled into the honest-empty skip-leg fix's commit.
-  - `- [ ] [DATA] P1. Run the FULL (non-`--mvp-only`) Phase D tradfi shard check + `data-pipeline-check-is --asset-group
-    tradfi --day
-    2026-07-13` to complete the terminal gate — the MVP-cells subset is now proven fixed for the 2 real bugs found; the remaining gaps (CME sampling, CBOE no-data) are pre-existing and understood, not blocking.`
+  - `[x] [DATA] P1. Run the FULL (non-`--mvp-only`) Phase D tradfi shard check + `data-pipeline-check-is --asset-group
+    tradfi --day 2026-07-13` to complete the terminal gate.`
+
+### 2026-07-23 continuation — Phase D FULL all-shards run + IS check: a THIRD real checker bug found+fixed, final verdict
+
+**Third real bug, in instruments-service (not MTDS).** The IS check
+(`data-pipeline-check-is --asset-group TRADFI --day 2026-07-13`) initially came back **0/14 passed** — every one of the
+7 tradfi venues' force+skip legs failed `no_parquet_at:...`. Per the skill's own "read the VM run.log as ground truth"
+instruction, checked the NASDAQ force VM's log directly:
+`"instruments: date=2026-07-13 wrote 98 records across 1 venues"` + `"Shard completeness OK: 1/1 venues written"` — a
+genuine SUCCESS, contradicting the report. Root-caused: `scripts/smoke_matrix.py`'s `expected_write_prefix()` built
+`instrument_availability/by_date/day={day}/venue={venue}/`, but the real writer
+(`instruments_service/engine/orchestrator/writers.py::_instrument_availability_sink_for`) changed to the FULL canonical
+hive `.../day={day}/pipeline_mode={pm}/asset_group={ag}/venue={venue}/` on **2026-07-21** (operator HARD RULE R2,
+`instrument_availability_hive_canonicalisation_2026_07_21.md`) — the checker's prefix builder was never updated to
+match, so every non-sports/non-prediction cell false-failed for 2 days. Verified against live GCS before fixing: the
+parquets DO exist at exactly the new hive path
+(`pipeline_mode=batch_instruments_service/asset_group=tradfi/venue=NASDAQ/instruments.parquet`), confirming the writer
+works and only the checker was stale. Fixed `expected_write_prefix()` to build the correct hive prefix (`pipeline_mode`
+is always `PipelineMode.BATCH_INSTRUMENTS_SERVICE` for non-sports-ref cells per `_classify_venue_write`; `asset_group`
+via `VENUE_TO_ASSET_GROUP.get(venue, "cefi")` — same SSOT the writer uses, not re-derived). Updated the 2 tests that
+asserted the stale prefix. Shipped `instruments-service@59e5dcb0d`. `create-code-tarballs.sh`'s plain `-m` gsutil upload
+hit a persistent (not transient — retried 3x, even with `BOTO_CONFIG` parallel_process_count=1 override) macOS
+multiprocessing `AssertionError`; worked around with `--include instruments-service` (scopes the upload batch down,
+sidesteps whatever race the larger multi-repo batch was hitting).
+
+**Re-ran the IS check post-fix: 11/14 passed (up from 0/14).** All of NASDAQ/NYSE/CME/ICE/CBOE force+skip now correctly
+find their parquet and report `captured`. Remaining 3 failures, both explained, neither a checker bug: `KRX skip` hit a
+SPOT-preemption VM self-delete (infra noise); `FX force+skip` fail with `manifest=empty_confirmed` — ground-truth
+confirmed via run.log:
+`"all requested venue(s) ['FX'] are declared NO_ADAPTER_YET in UAC (venue_adapter_keys.py) — honest absence, not a fetch failure"`
+— IS genuinely has no FX reference-data adapter at all (pre-existing, already known from the MTDS skill doc's own FX
+routing notes). This is correctly-honest-absence mislabeled `failed` instead of `passed(honest-empty)` — a minor
+status-label polish, not a data-correctness issue; not fixed this session (out of the original ask's scope, low value
+relative to remaining time).
+
+**Full all-shards MTDS run (12 fetchable cells × up to 3 legs = 60 total): 21 passed, 21 failed, 18 skipped.** Breakdown
+of the 18 skipped: 15 `billing_gated_by_design` (CME/NASDAQ/NYSE `tbbo`/`trades` — Databento L2/L3 entitlement gating,
+correctly classified, not a gap) + 3 CBOE `ohlcv_24h` (already-known no-data gap). Breakdown of the 21 failed: **12
+directly cite `vm_self_deleted_no_exit_status`** (real SPOT preemption — this run measurably hit far more preemption
+than the earlier MVP-only runs, consistent with genuine infra noise rather than a code regression: `FX` — the one cell
+independently proven fixed and re-verified clean across 3 separate runs — passed force+skip+canonical cleanly in THIS
+run too); the rest are the already-known `CME:ohlcv_1m` NAT-GAS-MNG migration-boundary sampling issue, plus a
+NEWLY-SURFACED class specific to **chain-bundle types** (`futures_chain`/`options_chain` on CME/ICE) where the force leg
+itself found `no_parquet_under` at an auto-selected historical day (`2024-03-25`) — this looks like a DIFFERENT, deeper
+gap in the chain-bundle sampling/atom-matching path than what this investigation targeted (never part of the original
+skip-leg-bug ask), and is scoped as its own follow-up rather than chased further here.
+
+**Verdict on the Phase D terminal gate**: the THREE real, independently-verified, GCS-evidence-backed checker bugs this
+investigation found are fixed and shipped:
+
+1. `mtds@40694074d9` — freshness pre-flight read the `-test-` tier (no consolidator, permanently stale) instead of PROD
+   under `--test-run`.
+2. `mtds@9737d020fe` — skip-leg vacuously failed on an honest-empty force leg instead of recognizing there's nothing to
+   prove a skip against.
+3. `instruments-service@59e5dcb0d` — checker's expected write-prefix went stale after the 2026-07-21 hive
+   canonicalisation.
+
+All three were proven via direct GCS/run.log evidence, not just report verdicts, and independently re-confirmed by
+re-running after each fix. The chain-manifest recovery pass (register phase) is fully applied and verified in the
+consolidated manifest (1,545 rows). What remains genuinely open is NOT "is the skip-leg checker broken" (answered: no,
+fixed) but a wider set of **pre-existing, mostly-infra-driven gaps** this exhaustive run surfaced along the way —
+tracked below as follow-up, not blocking this plan's core migration/manifest-recovery deliverable.
+
+- `- [ ] [DATA] P2. Investigate the chain-bundle (futures_chain/options_chain) force-leg gap surfaced by the full Phase D run: CME/ICE force legs find no_parquet_under at their auto-selected historical day (2024-03-25) — distinct from the ohlcv_1s/1m/24h gaps already understood; needs its own root-cause pass (is this real chain-bundle backfill coverage, or another checker/sampling issue) before treating it as blocking.`
+- `- [ ] [SCRIPT] P3. Fix IS's FX force/skip status label: manifest correctly shows empty_confirmed with a genuine NO_ADAPTER_YET reason, but the checker reports "failed" instead of "passed (honest-empty)" — cosmetic, not a data gap, low priority.`
+- `- [ ] [DATA] P1-OPERATOR-REVIEW. (carried forward) Review the retire-phase candidate list (50,520 rows) before ever running --apply — unchanged from the earlier entry; still awaiting operator review, not touched this continuation.`
