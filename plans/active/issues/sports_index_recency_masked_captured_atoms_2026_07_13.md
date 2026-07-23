@@ -164,3 +164,40 @@ the new TEAMS/TFF_FIRST_LEAGUE/2026-07-13 nightly-image masking (see the INFRA t
 - The `[x]` adjudication todos (a)/(b)/(c) (243-atom historical re-stamp, reader-side tie-break) hold: none of the 56
   currently-masked atoms overlap the previously-adjudicated PLAYER_STATS/FIXTURES sets by date — this is fresh churn
   from the still-unguarded live pipeline, not a regression of the 2026-07-14 fix. Status left `open`.
+
+## ROOT CAUSE CORRECTED (2026-07-23, second pass) — the "redeploy image" todo targets the WRONG job
+
+Before acting on the `[ ] [INFRA] P1` "redeploy `expected-universe-v2-sports`" todo, traced the ACTUAL writer of the
+04:06:54Z masking row (`FIXTURES/BRASILEIRAO/2026-07-22`) via Cloud Run execution history rather than assuming. It does
+not match `expected-universe-v2-sports` (which ran once today at 01:30:06Z–01:30:58Z, hours before the masking write) or
+`is-daily-enum-sports` (13:30Z daily, last ran 07-22). The actual match:
+**`uts-prod-instruments-service- sports-fixtures`**, with 4 parallel executions starting 04:25:55–57Z and one completing
+04:26:53Z — squarely inside the masking window. Confirmed via `gcloud run jobs describe`: this job runs the GENERIC
+instruments-service CLI
+(`--operation=instruments --mode=batch --asset-group=SPORTS --sports-provider=API_FOOTBALL --run-tag=t1-recon`) — **a
+completely different code path from `enumerate_expected_universe.py`**, where the `ba306543` oscillation guard lives.
+This job's own `EXPECTED_NO_FIXTURE`/`EXPECTED_PAUSED_LEAGUE` empty-row emission (inside the regular sports
+fixtures/reference batch-capture orchestrator, e.g. `sports_fixtures.py`/`sports_reference_core.py`) was **never covered
+by that guard at all** — redeploying `expected-universe-v2-sports` (even with a fully fixed image, which the current
+`:latest` tag as of 2026-07-23T08:07:36Z does contain) would change NOTHING, because it is not the job producing the
+masking.
+
+**Also checked whether the shipped reader-side fix (`unified-trading-library@17ee38de`, `_merge_shard_frames`'s
+captured-outranks tie-break) neutralizes this in practice**: it does not, for this specific population — the tie-break
+only applies WITHIN one dedup-key group, and this doc's own original framing is explicit that these atoms mask
+CROSS-identity (differing `service_name`/`venue`/instrument dims), so the reader never even groups the captured and
+masking rows together to apply the tie-break. This is a genuinely live, unmitigated gap.
+
+**Corrected action item — replaces the INFRA redeploy todo above (not done, superseded by this)**:
+
+- [ ] [CODE] P1. **Extend the "never emit empty_confirmed over a captured atom" guard to the regular sports instruments
+      batch-capture emission path** (`sports_fixtures.py`/`sports_reference_core.py` or wherever
+      `uts-prod-instruments-service-sports-fixtures`'s `--operation=instruments --mode=batch --asset-group=SPORTS` run
+      emits `EXPECTED_NO_FIXTURE`/`EXPECTED_PAUSED_LEAGUE`/etc.) — same guard shape as `ba306543`
+      (`enumerate_expected_universe.py`'s `captured_set` check), applied to this SEPARATE code path. This is real code
+      investigation + a fix + tests, not a redeploy — appropriately scoped as its own session's work, not rushed here.
+      Repo: `instruments-service`.
+- [ ] [INFRA] P3. **Downgrade, don't drop, the original "redeploy `expected-universe-v2-sports`" todo** — that image IS
+      now current (confirmed `:latest` contains `ba306543` as of 2026-07-23T08:07:36Z) and Cloud Run Jobs generally
+      re-pull a mutable tag per execution, so no action is likely needed there specifically; keep as a low-priority
+      verification only, not the primary fix.
