@@ -379,7 +379,10 @@ Human-planning VM (`i-0dd9812a96cdda5dc`, interactive only) for operator work. W
 `unified-trading-pm/cursor-configs/` (setup `scripts/workspace/setup-workspace-config-symlink.sh`; strict basedpyright).
 Claude Code settings inherited by symlinking `~/.claude/settings.json` + per-slot `.claude/settings.json` →
 `cursor-configs/settings.json` (don't commit personal `model`/`theme` drift in it) →
-`codex/05-infrastructure/claude-code-settings-symlink.md`. Analysis:
+`codex/05-infrastructure/claude-code-settings-symlink.md`. **Personal per-tab context-checkpoint automation** (tmux
+`send-keys`-forced `/pre-compact` then `/compact`, mirrors `agent-orchestrator/server/context_lifecycle.py` at personal
+scale; requires a terminal-hosted `claude` CLI session — the Cursor/VS Code extension chat panel isn't tmux-reachable,
+its built-in terminal tab is) → `codex/05-infrastructure/local-tmux-precompact-watcher.md`. Analysis:
 `rg --glob '!.venv*' --glob '!build' --glob '!tests'`. **Workflow-capable `GH_TOKEN`**:
 `source scripts/workspace/load-gh-token.sh`. **agent-orchestrator auth**: dashboard JWT HS256 (central only) / internal
 proxy ES256 / accounts via setup-token env files, never `.credentials.json`; backlog plan-driven
