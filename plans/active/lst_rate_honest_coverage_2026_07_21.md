@@ -902,3 +902,26 @@ tarball once; always check the launcher's own freshness warning output, and if s
   data (60k-115k records/pass, not converging toward zero) — the exact iteration/termination model isn't fully clear
   from logs alone (no per-day date marker like the LST-rates script has), but the VM is genuinely healthy and producing
   real data, not stuck or erroring. Continuing to monitor via the manifest-count progress metric.
+
+- **2026-07-23 06:16 UTC (dex-swaps — measured REAL progress against the manifest, honest ETA + a genuine efficiency
+  finding)** — rather than keep inferring progress from log-activity alone, queried the actual PROD
+  `_index/availability_index.parquet` directly: **635 of 1,299 target days captured (48.9%)** for
+  `dex_swaps`/`dex_pool_swaps` within the `2023-01-01→2026-07-22` range (total corpus incl. pre-existing pre-2023
+  history: 1,126 distinct days, 3,020,389 captured rows). Most recently captured days cluster around
+  `2024-09-17→2024-09-25` — i.e. genuinely still mid-range, not near the end. Traced the handler code
+  (`dex_swaps_handler.py::process()`) — confirmed it IS one real calendar day per invocation (not a whole-range single
+  pass as I'd initially assumed), all 24 configured (protocol, chain) shards processed per day. At the observed
+  ~7-8min/day cadence, the remaining ~664 days imply **roughly 3.5 more days of continuous runtime** — materially longer
+  than the "few more hours" impression from earlier log-activity-only checks. Recording this honestly rather than
+  letting an optimistic ETA stand uncorrected. **Genuine efficiency finding (not touched this session — documented for a
+  future pass)**: of the 24 configured (protocol, chain) shards, roughly 15 have produced EXACTLY ZERO records in every
+  single sampled day across this entire session (`uniswap_v3_BASE`/`OPTIMISM`, all `pancakeswap_v3_*`, all `balancer_*`,
+  all `sushiswap_v3_*`, `velodrome_v2_OPTIMISM`, `trader_joe_v2_AVALANCHE`, `uniswap_v4_ETHEREUM`,
+  `camelot_v3_ARBITRUM`, `aerodrome_v3_BASE`) — each one cycles through 5-8 cascade-fallback query schemas before giving
+  up, EVERY single day, for a subgraph that (per the identical "schema drift"/"bad indexers" errors every time) appears
+  permanently dead/unindexed, not transiently down. This wastes a real fraction of each day's ~7-8min cycle on shards
+  that will never produce data. Only ~6-7 shards (`uniswap_v3_ETHEREUM/ARBITRUM/POLYGON`, `curve_ETHEREUM/AVALANCHE`,
+  `sushiswap_ARBITRUM`, `uniswap_v2_ETHEREUM`) are genuinely live. **Not fixed this session** (would mean editing the
+  default protocol list or adding a dead-subgraph skip-list mid-backfill, a real scope decision, not something to make
+  unilaterally while a backfill is in flight) — flagging as a real, worthwhile follow-up: pruning/gating the ~15 dead
+  shards would meaningfully speed up this and any future `dex_swaps` backfill.

@@ -1015,6 +1015,32 @@ load-bearing before flipping them** — if it is, the fix is a second uv-managed
       total is NOT down yet — masked by a +47% rise in non-PM repos this migration never touched. Re-check both threads
       at the 2-week mark, not just the fleet aggregate.
 
+### Phase 6 — Staging-branch machinery shutdown (NEW, audit 2026-07-23; operator-gated)
+
+> **Audit finding**: `staging` is dead in every repo (frozen 2026-06-27, now **600–967 commits behind LDR**; PM has no
+> `staging` branch at all; **0 open PRs targeting staging fleet-wide**) — yet ~**6,900 GitHub-hosted runs/week** still
+> fire against it, ~**$180–195/mo**. Re-entry is **MANUAL** (`workspace-manifest.json` → `promotion_model: ldr_main` +
+> `staging_dormant_mode: true`; nothing auto-writes it; a breaking change does NOT auto-route to staging — that gate
+> moved to `ldr-to-main-promote-fleet.yml`), so stopping this sets **no silent trap**. Full evidence + per-workflow
+> verdicts in the Progress Log entry below.
+
+- [ ] [INFRA] P2. **Stop the two fleet templates' dead-branch triggers (~6,384 runs/wk ≈ 85% of the waste).**
+      `staging-backmerge-to-ldr.yml` — comment out the hourly `schedule: "10 * * * *"` (keep `push:[staging]` +
+      `workflow_dispatch` so it self-resumes when staging is re-entered), exactly as `ldr-to-staging-promote.yml`
+      already did for its own cron 2026-06-28. `staging-lock-check.yml` — **keep the `pull_request` job**
+      (`check-staging-lock` is a REQUIRED check on the `require-staging-lock-check` ruleset in **16 of 24** repos;
+      deleting it would hang any future staging PR forever) and instead kill the `repository_dispatch` fan-out at
+      SOURCE: remove the `staging-locked`/`staging-unlocked` dispatch steps in PM's `sit-gate.yml`, `sit-unlock.yml`,
+      `staging-to-main.yml`. Edit the TEMPLATES + `rollout-workflow-templates.sh`, never a per-repo copy.
+- [ ] [INFRA] P2. **Stop the three PM-side hourly no-op crons (~520 runs/wk).** `staging-to-main.yml` (241/wk),
+      `staging-conflict-ldr-main-fallback.yml` (142/wk), `reconcile-staging-versions.yml` (137/wk) — all measured 100%
+      `schedule`/`success` no-ops. Comment out the `schedule:` blocks ONLY (keep `workflow_dispatch` +
+      `repository_dispatch` so the reversibility path is one uncomment away), matching the `ldr-to-staging-promote.yml`
+      precedent.
+- [ ] [DOC] P2. **Add "re-enable the staging workflows" to the staging re-entry runbook.** Disabled crons do NOT come
+      back on their own — whoever flips `promotion_model` off `ldr_main` must also uncomment the schedules. Without this
+      step the reversibility guarantee is only half-true. SSOT: `codex/08-workflows/ci-cd-flow.md`.
+
 ---
 
 ## Expected impact (rough — Phase-0 will make exact)
@@ -1967,6 +1993,46 @@ prove on ONE caller → only then fan out._
     `~/.claude/projects/.../memory/`; the operator rejected both tool calls. Per CLAUDE.md: agent memory is per-cwd,
     never git-tracked, never reaches a teammate or VM — session-scoped findings belong in the active plan's Progress Log
     (here), not in `memory/`. Go straight there next time instead of reaching for a memory write first.
+
+- **2026-07-23 — Fleet-wide `staging` machinery audit (operator ask: "what's still running for staging, can we stop it,
+  will it break anything?").** Follows the top-5-non-PM-repo spend audit the same day, which found the #2/#3 run-volume
+  workflows in EVERY repo sampled were staging-related. Measured, not inferred:
+  - **staging is unambiguously dead**: last commit on `staging` is **2026-06-27** in every repo checked, now **600–967
+    commits behind LDR** (UAC 967, instruments 837, deployment-api 807, agent-orchestrator 802, MTDS 786, features 600);
+    `staging` **ahead_by=0** everywhere; PM has **no `staging` branch at all**; **0 open PRs targeting staging across
+    all 24 repos** (full sweep, not a sample). `workspace-manifest.json` → `staging_dormant_mode: true`, 24/25 repos
+    `promotion_model: ldr_main`.
+  - **What still fires (7-day measured run counts)**: fleet templates ×24 repos — `staging-backmerge-to-ldr` (~134/repo,
+    hourly cron `10 * * * *`, **median runtime 13s**) + `staging-lock-check` (~132/repo, `repository_dispatch`, **median
+    8s**) = ~6,384 runs/wk; PM-side drivers — `staging-to-main` 241 (hourly cron + `staging-validated` dispatch),
+    `staging-conflict-ldr-main-fallback` 142 (hourly), `reconcile-staging-versions` 137 (hourly),
+    `ldr-to-staging-promote` 39 (cron already off since 2026-06-28; fires only via `tier-ab-green` dispatch). **Total
+    ~6,900 runs/wk, all GitHub-hosted `ubuntu-latest`, ~$180–195/mo** at $0.006/min. **~85% of it is the
+    1-minute-minimum tax**: the two fleet templates run 8–13 SECONDS and bill a full minute each — the same fan-out
+    pathology this plan already fixed inside PM, just never swept on the staging axis.
+  - **Will stopping it break anything? NO — re-entry is MANUAL.** The toggle is a git-tracked JSON field
+    (`workspace-manifest.json` `promotion_model` / `staging_dormant_mode`), **nothing writes it programmatically** —
+    every hit in `scripts/**` is a read. A breaking/major bump does **not** auto-route through staging: per
+    `codex/08-workflows/ci-cd-flow.md:451` the cross-repo breaking gate MOVED to `ldr-to-main-promote-fleet.yml` (AST
+    differ + `sit_validated_tree`), and `staging_status.breaking_pending` is `[]`. So re-enabling the workflows is part
+    of the operator's manual flip, not something an automated path can silently trip over.
+  - **The ONE real footgun, and the mitigation**: `staging-lock-check.yml`'s `check-staging-lock` job posts a **REQUIRED
+    status check** on the `require-staging-lock-check` ruleset — present in **16 of 24** repos (absent in
+    agent-orchestrator, e2e-testing, features-service, fund-administration-service, greeks-service, ml-service,
+    unified-trading-api, unified-trading-system-ui). Harmless today (0 open staging PRs), but deleting the whole
+    workflow would leave a future staging PR hanging forever on a check nothing reports. **Mitigation: keep the
+    `pull_request` job, kill only the `repository_dispatch` fan-out at its PM source** — same saving, no footgun.
+  - **Confirmed no live-path side effects**: `staging-conflict-ldr-main-fallback` skips PM + every `ldr_main` repo = all
+    25, so it is structurally a no-op and is NOT the LDR→main safety net (that is `ldr-to-main-promote-fleet.yml`);
+    `reconcile-staging-versions` writes only `staging_versions`, and its source (frozen staging pyprojects) cannot
+    change — last actual write `c2d6b1e7b`, 2026-06-27; SIT itself is untouched (`full-workspace-sit.yml` has its own
+    `0 3 * * *` cron and the fleet promoter reads that run list directly, so the `staging-locked` fan-out is vestigial).
+  - **CORRECTION to a sub-agent finding — verify, don't propagate.** The safety analysis reported that stale
+    `staging_versions` entries "can FALSE-BLOCK ships" via quickmerge STAGE 1.6. I read the code: `quickmerge.sh:1054`
+    makes this a **WARN for normal landings and a BLOCK only under `--hotfix`**. The staleness is real and verified (4
+    repos where `staging_versions` > `versions`: UAC 0.71.0→0.72.0, instruments-service 0.88.0→0.90.0, MTDS
+    0.91.0→0.92.0, ibkr-gateway-infra 0.0.74→0.0.75 — and 8 more stale in the BEHIND direction), but the severity is
+    lower than reported. Written up separately: `plans/active/issues/stale_staging_versions_manifest_2026_07_23.md`.
 
 - **2026-07-23 — 1-week interim billing check (operator ask: "did the migration pay off?").** NOT the scheduled two-week
   Phase-5 re-pull below — an informal 1-week checkpoint, live-pulled from the same Enhanced-Billing ledger

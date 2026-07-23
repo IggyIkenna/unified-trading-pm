@@ -1236,7 +1236,56 @@ contention wasn't actually the driver, that's real information to inform a diffe
 here.
 
 **Action**: launched 20 shards (`SHARD_OF=20`, `SHARD_INDEX=0..19`, same proven SHA pins, `WORKERS=16`, `MODE=full`)
-against TRADFI's `market-data-tick-tradfi-prd-central-element-323112` bucket. **STATUS: IN FLIGHT, NOT YET VERIFIED.**
-Given the content-repair-heavy disposition mix, expect substantially longer per-shard wall-clock than the ~35-45min seen
-for DEFI/PREDICTION/CEFI — do not treat a long-running watchdog tick as a stall on this AG without checking `run.log`
-for genuine progress first.
+against TRADFI's `market-data-tick-tradfi-prd-central-element-323112` bucket.
+
+## Progress Log — 2026-07-23 (P7d: TRADFI — severe SPOT preemption storm, watchdog liveness-check gap found + fixed, 18 shards recovering on-demand)
+
+**Real progress check ~1h after launch found ZERO `run.log` for any sampled shard** — every prior AG had a `run.log`
+within minutes (enumeration phase alone completes in ~3min). Diagnosed via `gcloud compute instances describe`:
+`status=TERMINATED`, and `gcloud compute operations list` confirmed `compute.instances.preempted` for every one of the
+first 3 checked, each within 1-4 MINUTES of boot. Checked all 20: **18 of 20 shards were preempted within minutes of
+boot** — a severe, real SPOT capacity contention event in `asia-northeast1-c` (following the smaller 1/10 then 3/10
+bursts already seen on CEFI in this same session — this is the third and by far worst instance, strong evidence of
+genuinely elevated demand in this zone right now, not a fluke). Only shards 7 and 8 (`...-051026`/`...-051107`)
+survived; both confirmed healthy via `run.log` — ~260,000/382,341 objects processed each, climbing steadily, disposition
+mix as expected for TRADFI's content-repair-heavy profile (`CONTENT_REPAIR_UNRESOLVED_QUARANTINED` dominant, consistent
+with the P0 census's 84.8% `NEEDS_CONTENT_TRADFI_ID` figure).
+
+**Real gap found in my own tooling, not just the migration**: the watchdog script used for every prior AG only checks
+for `EXIT_STATUS` — a preemption (hard kill) never writes it, so the watchdog had been reporting all 20 shards as
+`running` for ~2 HOURS while 18 were actually dead the whole time. This is exactly the liveness-check gap this
+workspace's own async-wait-discipline rule warns about ("monitors read terminal exit_code + ... a TERMINAL measured
+verdict (liveness kill -0 <PID>, no self-match)") — I was checking for a positive TERMINAL signal but never checking
+LIVENESS as a cross-check, so a silently-dead VM looked identical to a healthily-running one. Caught this only because
+the user asked for a status update and I spot-checked real `run.log` content instead of trusting the watchdog log —
+future watchdogs for this migration (and generally) should check
+`gcloud compute instances describe --format= "value(status)"` alongside `EXIT_STATUS`, not `EXIT_STATUS` alone.
+
+**Given each TRADFI shard runs ~2+ hours (382K objects/shard at the measured ~40-55 obj/s rate) — far longer exposure to
+preemption than DEFI/PREDICTION/CEFI's ~35-45min shards** — and given this is now a MEASURED, repeated pattern of severe
+zone-level SPOT contention (not a one-off), chose NOT to blindly retry SPOT again for the 18 dead shards. **Relaunched
+them with `ON_DEMAND=true`** (the workspace's own sanctioned opt-out from the SPOT-default HARD RULE) — trading cost for
+reliability, justified by measured evidence that SPOT capacity in this zone is genuinely scarce right now and a
+long-running shard eating another storm would cost more real time than the on-demand price premium. Deliberately left
+shards 7/8 alone (already >68% done, restarting from scratch would waste real progress — no checkpoint survives a kill
+either way, same caveat as DEFI/CEFI). **STATUS: 2 shards healthy on SPOT (7, 8), 18 shards launching on-demand, NOT YET
+VERIFIED.** If shards 7/8 get preempted later, relaunch just those 2 indices on-demand too rather than restarting the
+whole fleet.
+
+**Clarifying note (operator asked whether fleet auto-recovery should have handled this)**: it does not, for this VM
+family, by design. The workspace's general fleet auto-recovery (`RelaunchPreemptedVm` / `exit_code_fleet_monitor.py`)
+resumes from a shared `PROGRESS.json` checkpoint contract that day-frontier backfill categories participate in.
+`migrate_candle_canonical_2026_07.py`'s own docstring (line ~110/998) explicitly states its resume mechanism is "a NEW,
+self-contained mechanism, distinct from the workspace's general day-frontier `PROGRESS.json`" — and
+`launch-canonical-migration-vm.sh` has zero `PROGRESS.json` wiring for the `*-candle-apply` categories. So nothing in
+the fleet would have caught or relaunched these 18 dead shards automatically; the manual detection (real `run.log`
+spot-check, since the watchdog's `EXIT_STATUS`-only check couldn't see it) and relaunch above was necessary, not
+duplicate work.
+
+**Action taken**: relaunched all 18 dead shard-indices with `ON_DEMAND=true` (`STANDARD` provisioning confirmed in each
+launch's instance list output). Left the 2 healthy SPOT survivors (shards 7, 8) running untouched. **Fixed the watchdog
+itself**: the new version checks `gcloud compute instances describe --format="value(status)"` for any VM lacking
+`EXIT_STATUS`, distinguishing genuinely-`alive`/still-working from `DEAD-NO-EXIT` (a preemption or crash the old
+EXIT_STATUS-only check couldn't see) — and exits IMMEDIATELY with an alert the moment any VM is found dead, rather than
+waiting silently for hours. Armed against the full 20-shard fleet (18 recovery + 2 survivors). **STATUS: IN FLIGHT, NOT
+YET VERIFIED.**
