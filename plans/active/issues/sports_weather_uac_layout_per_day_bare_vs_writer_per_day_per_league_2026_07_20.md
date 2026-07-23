@@ -97,3 +97,24 @@ band-aid rows were written for WEATHER the way `write_player_values_placeholders
 - [ ] 3. [DATA] P1. After the fix, re-run the sports phantom audit and confirm the WEATHER false positives drop out of
       the `instruments-store-sports` phantom count; check for and remove any zero-row WEATHER placeholder residue (repo:
       instruments-service).
+
+## RE-TRIAGE (2026-07-23)
+
+**Verdict: STILL OPEN, ACCURATE** — confirmed on both sides of the drift with current code, and the writer side is now
+even more explicit than the doc's original disk-observation evidence.
+
+Evidence (current code, re-read 2026-07-23):
+
+- UAC side unchanged: `unified-api-contracts/unified_api_contracts/canonical/domain/sports/gcs_paths.py:139` still sets
+  `"WEATHER": SportsPathLayout.PER_DAY_BARE`.
+- Writer side confirmed per-league, not bare: `instruments-service/instruments_service/engine/orchestrator/weather.py`
+  writes via `partition={"entity": "weather", "league": _orch._canonical_league_id(_lid_v)}` (`:500`), and the
+  surrounding comment block (`:451-457`) states explicitly: "Per-league partitioned write — single SSOT, **no bare
+  write**." This is stronger confirmation than the doc's original 3-day disk sample — the writer's own code comment now
+  asserts no bare path is ever written, directly matching the doc's claim and ruling out "sometimes bare, sometimes
+  per-league" as an alternative explanation.
+- No commit touching `gcs_paths.py`'s `SPORTS_DATA_TYPE_LAYOUT["WEATHER"]` entry found in `unified-api-contracts` git
+  history — the fix (todo 2) has not shipped.
+
+The drift, and its phantom-manufacturing consequence via `candidate_parquet_paths()`, both stand exactly as documented.
+No conflicting doc found.

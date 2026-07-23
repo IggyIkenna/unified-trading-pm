@@ -218,3 +218,26 @@ T-24h/T-1h):
       (the P1d 2026-07-12 proposal — ALL 43 always-null cluster columns verified inside that set, 0 unmatched), which
       also fixes the shallow-ladder partial days (e.g. 2025-10-20 at 91.1%). No re-capture/re-fetch is part of this path
       — verified nothing re-fetchable exists for these days (live boards had zero in-window fixtures).
+
+## RE-TRIAGE (2026-07-23)
+
+**Verdict: STILL OPEN, ACCURATE** (as already partially-updated by the doc's own 2026-07-16 progress note — re-verified
+current code shows no further movement since).
+
+Evidence (current code, re-read 2026-07-23):
+
+- `market-data-processing-service/market_data_processing_service/app/adapters/sports/bucket_assignment_adapter.py` —
+  `assign_horizon_bucket()`/`assign_horizon_buckets_vectorised()` still reject only two things: `bm_minutes < 0`
+  (post-kickoff — the 2026-07-16 `mdps@3bf56ff` fix, confirmed present) and `|bm_minutes − target| > _HORIZON_CAPS` (the
+  pre-existing graduated per-horizon cap). Neither check looks at `staleness_seconds` (`fetch_utc − bm_time`) or
+  `kickoff_utc` vs the fetch day. `git log` on the file since `3bf56ff` shows only unrelated fixes (bookmaker/fixture-id
+  coalescing, loss-guard, MalformedTickFieldError reclassification, K1 dual-accept) — no staleness-cap commit. A
+  separate `bm_time <= fetch_utc` causality filter exists (`:567-575`) but that only rejects a bookmaker timestamp
+  claiming to be from the future relative to fetch — it does not bound how far in the PAST `bm_time` can be, so it does
+  not catch the Russia-Premier-League-style zombie (a board frozen 3.5 years in the past, `bm_minutes_to_kickoff` still
+  landing near a legitimate horizon target by coincidence of `kickoff_utc − bm_time` staying roughly constant).
+- The A-League post-kickoff zombie class remains fixed (per the doc's own 2026-07-16 note); the Russia-Premier-League
+  pre-kickoff-positive zombie class remains unfixed, exactly as the doc's own last update states.
+
+No new evidence found that changes this file's own already-correct self-assessment. Not touched by K1/K2 (data_type
+casing), the pre-floor registry fix, or the shard-enumeration/honest-coverage work — orthogonal MDPS-side gap.

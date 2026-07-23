@@ -102,3 +102,21 @@ uniformity — either is defensible; 1800s is the tighter, still-safe choice.
 - [ ] [DATA] P2. Grep the fleet for scripts that hardcode `MANIFEST_CONSOLIDATED_STALENESS_SEC` for the sports bucket as
       a workaround (e.g. `instruments-service/scripts/backfill/api_football_cf11_guaranteed_type_closer_2026_07_15.py`)
       and drop the per-script env once the per-AG override lands (repo: instruments-service).
+
+## RE-TRIAGE (2026-07-23)
+
+**Verdict: STILL OPEN, ACCURATE.** Nothing has changed — re-read both SSOTs the doc names and neither has a `sports`
+entry.
+
+Evidence (current code, re-read 2026-07-23):
+
+- `unified-trading-library/unified_trading_library/manifest_writer/_staleness_budget.py:23` —
+  `AG_STALENESS_BUDGET_SEC: dict[str, int] = {"cefi": 86400}`. Still only `cefi`.
+- `deployment-api/deployment_api/routes/health_consolidator.py:94` —
+  `_AG_STALENESS_BUDGET_SEC: dict[str, int] = {"cefi": 86400}`. Still only `cefi`, still mirrored (not imported), still
+  in sync with each other (both wrong in the same way).
+- No commit in either repo's recent history touches these dicts for `sports`.
+
+The finding stands exactly as written. Not touched by any of the K1/K2 casing work, the pre-floor registry fix, the
+api_football wrong-source wipe, or the shard-enumeration/honest-coverage remediation — this is an orthogonal read-path
+gate, unaffected by any of those. No conflicting doc found.
