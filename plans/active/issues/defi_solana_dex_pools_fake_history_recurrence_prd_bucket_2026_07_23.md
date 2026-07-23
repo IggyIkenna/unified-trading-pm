@@ -132,10 +132,16 @@ is regenerated after a fix.**
       `backfill_orphan_class_e.py` that routes `(day, venue, data_type=dex_pools)` cells matching this population to
       `escalated`/`BLOCKED-OPERATOR-DECISION` instead of `record_captured`, so a future `--apply` run cannot
       accidentally sweep this population in before todo 1 is ruled on.
-- [ ] 4. [REVIEW] P2. **Check whether the SAME bug shape exists for Kamino** (the third venue the original
-      `solana_defi_fake_history_snapshot_2026_06_17.md` named) in the `-prd-` bucket's hive shape — this issue's
-      shard-scan only surfaced ORCA + RAYDIUM because those are what defi's sweep has walked through so far
-      (day=2025-01-01..17); Kamino may or may not have the same recurrence, unconfirmed.
+- [x] 4. [REVIEW] P2. ~~Check whether the SAME bug shape exists for Kamino~~ — **PARTIALLY DONE 2026-07-23**:
+      `venue=KAMINO/chain=SOLANA/instrument_type=pool/data_type=dex_pools/` has **zero objects** in the `-prd-` bucket
+      across 6 sampled days (both inside and outside the affected window) — moot for the AMM-pool shape this issue
+      covers (Kamino is primarily a lending protocol, not an AMM, so it likely never wrote this shape at all). **Still
+      unconfirmed**: the original 2026-06-17 doc ALSO named a `lending_indices/{kamino,solend}` tree as affected — a
+      quick exploratory check of `data_type=lending_indices` / `lending_rates` under `instrument_type=pool` came back
+      empty too, but that's **inconclusive, not a clean bill** — I don't have confirmed knowledge of the real
+      path/instrument_type shape lending data actually uses in this bucket (my guess may simply be wrong, not "no such
+      data exists"). A real check needs someone to find lending's actual writer code + real path shape first, then
+      re-probe.
 - [ ] 5. [REVIEW] P3. **Audit whether other already-completed backfills this session (cefi, prediction) could have the
       same class of issue** — spot-check a sample of already-`record_captured`-ed cefi/prediction cells for a
       day=/timestamp mismatch before treating those backfills as fully clean. Not yet done; both were sampled for
