@@ -2509,7 +2509,41 @@ consolidated manifest (1,545 rows). What remains genuinely open is NOT "is the s
 fixed) but a wider set of **pre-existing, mostly-infra-driven gaps** this exhaustive run surfaced along the way —
 tracked below as follow-up, not blocking this plan's core migration/manifest-recovery deliverable.
 
-- `- [ ] [DATA] P2. Investigate the chain-bundle (futures_chain/options_chain) force-leg gap surfaced by the full Phase D run: CME/ICE force legs find no_parquet_under at their auto-selected historical day (2024-03-25) — distinct from the ohlcv_1s/1m/24h gaps already understood; needs its own root-cause pass (is this real chain-bundle backfill coverage, or another checker/sampling issue) before treating it as blocking. Note: TRADFI:CME:options_chain's skip leg samples underlying=TICKS (2026-01-30) — not a real product root like the others (BTC/AUD/COCOA/NAT-GAS-MNG) — worth checking for a sampler parsing bug on this shard while investigating.`
-- `- [ ] [DATA] P2. Investigate CBOE ohlcv_1s/1m skip-leg freshness-preflight miss surfaced by the full Phase D run: TRADFI:CBOE:ohlcv_1s's skip leg ran against a shard whose FORCE leg had already cleanly succeeded (valid non-null baseline fingerprint CIG+9NLZ...344033) yet the object's GCS generation still changed by the time the skip leg's own VM finished (...344083) — i.e. the freshness pre-flight did not prevent a redundant re-fetch/rewrite on an already-fresh capture. TRADFI:CBOE:ohlcv_1m's skip leg shows the same "skip_signal_not_found_in_run_log; object_signature_changed_or_missing" shape but its force leg was SPOT-preempted (null baseline), so that one may just be a cascade — root-cause the ohlcv_1s case specifically, it has a real fingerprint delta to explain. Distinct from the SPOT-preemption and chain-bundle P2 above: this is the one CBOE-specific case where "nothing to compare against" does not apply.`
-- `- [ ] [SCRIPT] P3. Fix IS's FX force/skip status label: manifest correctly shows empty_confirmed with a genuine NO_ADAPTER_YET reason, but the checker reports "failed" instead of "passed (honest-empty)" — cosmetic, not a data gap, low priority.`
+- `~~- [ ] [DATA] P2. Investigate the chain-bundle (futures_chain/options_chain) force-leg gap~~` — **SUPERSEDED
+  2026-07-23**, replaced by a proper issue doc:
+  `plans/active/issues/tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md`. Root-caused (NOT a day-selection bug —
+  direct GCS check proved both the auto-picked day AND the "known-good" day have real objects; the real cause is the
+  sampler passing a now-canonical `underlying` (e.g. "AUD") as `--instrument-ids` to CME/GLBX.MDP3, whose curated symbol
+  list uses raw exchange codes ("6A") — proven via live run.log `instrument_ids filter ['AUD'] matched nothing`). ICE
+  re-tested clean (not affected — its Databento dataset curates by name). The garbage-`underlying` half ("TICKS") is
+  `[x]` **FIXED** — `mtds@98a81c26`. The canonical→raw reverse-translation half is genuinely open (blocked on an
+  EXCHANGE_CODE_TO_NAME SSOT contradiction the investigation also surfaced — flagged operator-notify in the issue doc) —
+  not attempted this session.
+- `- [x] [DATA] P2. CBOE ohlcv_1s/1m skip-leg freshness-preflight miss — ROOT-CAUSED + FIXED, `mtds@98a81c26`.` The
+  manifest atom-coverage pre-flight (`_filter_data_types_by_atom_coverage`) stores a captured atom as the composite
+  `"underlying|quote_asset|margin_type"` key whenever a row carries quote/margin (CBOE VIX futures ohlcv_1s/1m: e.g.
+  `"VIX|USD|linear"`), but every caller — the checker AND real production callers — only ever passes the bare underlying
+  (`"VIX"`). `{"VIX"}.issubset({"VIX|USD|linear"})` was `False`, so a fully-captured CBOE shard was silently re-fetched
+  (and rewritten) on **every non-forced run**, not just this smoke test — this was a real production behavior bug
+  (wasted Databento calls), not a checker-only artifact. Fixed to match against both the raw captured set and its
+  pre-`|` base form; 2 new regression tests
+  (`tests/unit/test_preflight_atom_coverage.py::test_composite_quote_margin_atom_*`).
+- `~~- [ ] [SCRIPT] P3. Fix IS's FX force/skip status label~~` — **SUPERSEDED 2026-07-23**: rather than relabel the
+  honest-absence status, built the actual missing adapter. `instruments-service` had zero reference-data adapter for FX
+  (`NO_ADAPTER_YET`) even though MTDS already has a fully-working Yahoo-sourced FX tick/OHLCV path — a research agent
+  confirmed the fix was SIMPLE (a ~110-line static adapter, no vendor call, reading the same UAC `FX_SPOT_PAIRS` list
+  MTDS already iterates). `[x]` **SHIPPED**: `uac@<pending>` (`venue_adapter_keys.py` `"FX": NO_ADAPTER_YET` →
+  `"FX": "fx"`) + `instruments-service@<pending>` (new `FxReferenceDataAdapter`,
+  `instruments_service/reference_data/adapters/tradfi/fx.py`, byte-identical canonical-id construction to MTDS's own
+  `FX:SPOT_PAIR:{BASE}-{QUOTE}`, 5 new unit tests, all passing).
+- `- [ ] [DATA] P2. VM fleet preemption auto-recovery has a real, already-tracked coverage gap for short-lived VMs`
+  (found investigating why Phase-D checker VMs kept hitting `vm_self_deleted_no_exit_status` with no auto-relaunch):
+  auto-detect + auto-relaunch (`exit_code_fleet_monitor.py` → `RelaunchPreemptedVm`) DOES cover
+  `mtds-backfill-*-pipelinecheck-*`/`instr-backfill-*-pipelinecheck-*` VMs by launcher-prefix registry match, but its
+  trigger (a `PREEMPTED` blob written by a systemd unit installed partway through `setup-data-pipeline-vm.sh`'s
+  > 1000-line startup) only reliably fires for multi-hour production backfills — a single-shard smoke-test VM is
+  > disproportionately likely to be preempted in the early-boot blind window before the unit installs, exactly the
+  > silent-miss case already tracked in `plans/active/issues/vm_fleet_preemption_autorecovery_gap_2026_07_23.md`. That
+  > issue's remaining scoping (items 8-9) doesn't yet name the two pipeline-check launchers as candidates for the
+  > native-shutdown-script fix (3 other launchers already use it) — add them there rather than re-solving here.
 - `- [ ] [DATA] P1-OPERATOR-REVIEW. (carried forward) Review the retire-phase candidate list (50,520 rows) before ever running --apply — unchanged from the earlier entry; still awaiting operator review, not touched this continuation.`

@@ -363,6 +363,38 @@ cd market-tick-data-service && python3 scripts/pipeline_e2e_check.py \
   `data-pipeline-check-is --asset-group TRADFI` run (§ below), that is what "tradfi is code-complete, migrated,
   honestly-covered, and verified" means before the real MVP backfill runs.
 
+### 3d. Reading a full-surface failure correctly — 3 lessons from a 2026-07-23 exhaustive run
+
+A real all-shards run surfaced 21 failures that split into distinct, differently-actionable causes. Read the `reason`
+string carefully before assuming which bucket a new failure belongs to:
+
+- **SPOT preemption (`vm_not_success:vm_self_deleted_no_exit_status`)** is real infra noise, not a code bug — verify via
+  `gcloud compute operations list --filter="targetLink~<vm-name>"` for a genuine `compute.instances.preempted` event,
+  then just re-run that one leg. **Known gap (2026-07-23):** the fleet's auto-detect+relaunch DOES cover these VM name
+  prefixes by registry match, but its trigger (a systemd-installed `PREEMPTED` signal file) only reliably fires partway
+  through a multi-hour production backfill's boot — a single-shard smoke-test VM is disproportionately likely to die in
+  the early-boot blind window first. Don't wait for auto-recovery on a checker VM; manually re-run it. Tracked:
+  `plans/active/issues/vm_fleet_preemption_autorecovery_gap_2026_07_23.md`.
+- **An honest-empty shard's skip leg failing (`no_parquet_under`) does NOT mean the skip-leg checker is broken again** —
+  but DOES mean re-verify against the currently-shipped fix before assuming it's the same already-fixed bug. Two related
+  but DISTINCT code paths both had to be fixed (`mtds@98a81c26`): (1) the skip VM independently re-deriving
+  `ok (honest-empty...)` itself, and (2) — the more common real path — the skip VM's freshness pre-flight correctly
+  recognizing nothing is captured and skipping its own fetch entirely, writing NO per-VM manifest row, which used to
+  fall through to a generic `no_parquet_under` failure. If a skip leg for an honest-empty shard fails on a version after
+  `mtds@98a81c26`, that's new — don't assume it's understood.
+- **A chain-bundle (`futures_chain`/`options_chain`) force leg failing `no_parquet_under` at an `--auto-day`-picked
+  historical day is very likely NOT a day-selection problem — verify the real cause before pinning a different day.**
+  `--auto-day` reads the manifest for a day with a real `captured` row and is usually right; pinning a "known-good" day
+  does not help if the real cause is that the sampled `underlying` is now a canonicalized English product name (e.g.
+  "AUD") being passed as `--instrument-ids` to a venue (CME/`GLBX.MDP3`) whose curated Databento symbol list uses raw
+  exchange codes ("6A") — that mismatch is day-independent and will recur on any day. Read the VM's `run.log` for
+  `instrument_ids filter [...] matched nothing ... curated symbol(s) available [...]` before touching the day. Full
+  root-cause + open design question: `plans/active/issues/tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md`.
+  Separately, a chain-bundle sampler can pick a genuinely garbage `underlying` value from legacy manifest rows (e.g.
+  `"TICKS"`, not a real product root) — fixed (`mtds@98a81c26`) by preferring a
+  `is_recognized_tradfi_underlying()`-passing row when one exists in the matching set (TRADFI-only; CEFI chain shards
+  like Deribit are not filtered this way).
+
 ## 4. Phase 2 — live leg (MVP-scoped)
 
 ```bash

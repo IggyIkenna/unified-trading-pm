@@ -79,6 +79,15 @@ paths = [
 ]
 
 [[allowlists]]
+description = "credentials-registry.yaml Secret Manager pointer names, not secret values — the file maps client_id to the NAME of a secret (e.g. exec-pr-okx-api-secret), fetched separately via get_secret_client(); the pointer name is never the credential itself"
+paths = [
+  '''.*credentials-registry\.yaml''',
+]
+regexes = [
+  '''exec-[a-z0-9-]+-(api-key|api-secret|passphrase)''',
+]
+
+[[allowlists]]
 description = "GCP project-specific patterns already revoked and in history-rewrite scope"
 # These are documented in plans/active/issues/gcp_sa_private_key_in_git_history_*
 # Remove this allowlist after history rewrite (git filter-repo) completes.
