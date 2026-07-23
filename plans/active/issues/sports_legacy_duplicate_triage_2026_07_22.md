@@ -349,6 +349,27 @@ Recommended next steps, in priority order:
   required reading; every number in this doc is reproducible from the durable GCS artifacts + the grep+READ citations
   above.
 
+## RE-TRIAGE (2026-07-23)
+
+**Verdict: STILL OPEN, ACCURATE.** This is a read-only investigation doc created yesterday (2026-07-22); nothing in
+today's session (K1/K2 casing work, the `batch_api_football` wrong-source wipe, the MDPS derived-odds dead-code finding,
+or the odds-capture-scheduling-status finding) touches its subject matter (`B_legacy_duplicate` reference- bucket
+objects). Re-checked the parent tracker and for any follow-up execution of its 5 recommended next steps:
+
+- `estate_orphan_assessment_2026_07_21.md` todo 2 (the source of this triage) is marked `[x]` **DONE** — but that
+  checkmark is for _completing the triage itself_ (this doc), not for executing any of its 5 recommendations. Its own
+  summary explicitly says "none of which is a fresh delete decision" — consistent with this doc's own "no action
+  executed" framing.
+- Grepped `plans/active/` and `plans/active/issues/` for `sports_reference_v2`, `migration_orphan_sweep_sports`,
+  `is_covered_sports`, and `legacy_dup_triage_sports` — no doc other than this one and its direct ancestors references
+  the operator ruling on the 1,492 v2 pre-floor rows, the 58-row v2 post-floor migrate-forward, the two reader repoints,
+  or the classifier rescan. All 5 `[ ]` todos in § 7 remain unexecuted.
+- No GCS or manifest state check was re-run (this doc's own artifacts are durable audit parquets under `_index/audit/`
+  in `instruments-store-sports-prd`; re-deriving the 34,385-row population would require the same non-trivial
+  multi-script pass the original triage ran, out of scope for a re-triage confirmation pass).
+
+No changes needed beyond this note — `status` stays `open`, all content and todos are left as originally written.
+
 ## Lesson (do not re-learn)
 
 A sweep's "manifest says covered" check is necessary but not sufficient evidence for "safe to delete this legacy-shaped

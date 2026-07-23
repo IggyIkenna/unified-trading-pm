@@ -18,7 +18,6 @@ summary:
   01:00:59 UTC 07-15 — before the commit existed). **prediction** — `lifecycle-catalogue-regen-prediction` has been
   SIGKILLed (signal 9, consistent with OOM against its 4Gi Cloud Run memory limit) at the monotonic-guard/promote-write
   stage on 3 consecutive days (07-13, 07-14, 07-15), first failure ~40h before the commit landed.'
-status: open
 nature: issue
 asset_group: [sports, prediction, cefi, defi]
 stage: [data]
@@ -58,8 +57,10 @@ source:
     "operator report: CRITICAL DP_CATALOG_NOT_RUNNING x2 (sports, prediction) at 2026-07-15 ~03:47",
     "Group-C Cloud Run job-failure triage, 2026-07-16 (utl_uac_skew_fleet_audit_2026_07_15.md follow-up)",
   ]
+status: resolved
 assigned_vm:
-resolved_by: ["instruments-service@24f84e86 (sports)", "deployment-service@6bfa284 (prediction)"]
+resolved_by:
+  ["instruments-service@24f84e86 (sports)", "deployment-service@6bfa284 (prediction)", "re-verified live 2026-07-23"]
 locked_by:
 locked_since:
 execution_scope: orchestrator-agent
@@ -324,3 +325,38 @@ Not fixed by me: this is instruments-service reference-data correctness territor
 whether the shrink is legitimate, which the findings-triage rule reserves for diagnosis + escalation, not a unilateral
 fix. Flagging as a **NOTIFY-OPERATOR class finding** (data-pipeline correctness, instruments-service catalogue SSOT) —
 operator should decide (a) vs (b) above before anyone runs `--allow-catalogue-shrink` on production reference data.
+
+## RE-TRIAGE (2026-07-23)
+
+**Verdict: RESOLVED BY LATER WORK — for the doc's TITLE claim (sports + prediction DP_CATALOG_NOT_RUNNING).** The
+cefi/defi addendum below the title claim is a mixed picture, re-verified live and reported here for completeness.
+
+**Core title claim (sports + prediction) — CONFIRMED FIXED, live-verified 2026-07-23:**
+
+- `gs://instruments-store-sports-prd-.../prod/catalog.parquet` — `Update time: 2026-07-23 01:06:30 GMT` (~7.7h old at
+  check time, well under the 24h DP-CATALOG-001 threshold).
+- `gs://instruments-store-pred-prd-.../prod/catalog.parquet` — `Update time: 2026-07-23 01:03:17 GMT` (~7.8h old).
+- Both jobs (`lifecycle-catalogue-regen-{sports,prediction}`) have been promoting daily without incident since the
+  2026-07-15 fixes shipped — no further staleness alerts implied by these fresh timestamps. Flipping `status` to
+  `resolved`.
+
+**cefi/defi addendum (2026-07-16 section) — re-verified live 2026-07-23, PARTIALLY still open:**
+
+- **defi: RESOLVED (self-healed, as the doc itself predicted).** Today's execution (`lifecycle-catalogue-regen-defi`,
+  `catalogue-rollup-defi-20260723T010110Z`) logged
+  `Monotonic guard: new=12187 current=12171 decision=ACCEPT (monotonic_ok)` → `CATALOGUE_PROMOTED`. The widening
+  incremental window has now collapsed the residual duplicate keys, exactly per the doc's own "(a) a `--mode full`
+  weekly rebuild ... or (b) trickle out over future days" framing — option (b) happened on its own, no code fix needed.
+- **cefi: STILL OPEN, confirmed failing TODAY.** `lifecycle-catalogue-regen-cefi`'s 2026-07-23 01:00 UTC run logged
+  `Monotonic guard: new=428410 current=429129 decision=REJECT (shrink_blocked)` →
+  `CATALOGUE_SHRINK_BLOCKED: new=428410 < current=429129` (exit_code=1) — same failure class as 07-16, still unresolved
+  7 days later. **New nuance found in today's log** (not chased further, flagging for whoever picks this up): today's
+  drop-list is dominated by `dropped_delisted: 576` / `dropped_active: 0` across DERIBIT (486), OKX-FUTURES (76),
+  BINANCE-DELIVERY (8), BINANCE-FUTURES (4), KRAKEN-FUTURES (2) — expired-derivative contract IDs (e.g.
+  `...@INV-20260627`, 26 days past expiry) — which looks more like the sports-FTP-style "aged out of the window, no
+  frozen tail" bug than the "duplicate perp-lineage merge-key" hypothesis this doc originally proposed for cefi. Both
+  mechanisms point at the same `_merge_incremental` gap already fixed for sports (`_merge_sports_ftp_with_frozen_tail`,
+  `instruments-service@24f84e86`) but never generalized to cefi. This is a confirmation that cefi remains genuinely
+  broken, not a new separate doc-worthy finding (`group_c_cloud_run_job_failures_triage_2026_07_16.md` already
+  cross-references this exact addendum as living in this doc, so no fork needed) — recommend the pending [ ] P3 IAM todo
+  be joined by a new cefi-specific todo generalizing the frozen-tail fix, next time this doc (or a successor) is worked.

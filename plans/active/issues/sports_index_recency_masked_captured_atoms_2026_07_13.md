@@ -127,8 +127,8 @@ contains genuine fixture rows dated to that exact league/day (row*count 1–11).
 `truthset_20260628_confirms_no_fixtures` evidence class was systematically WRONG for these cells — the 06-28
 truthset-flip class needs an **evidence-freshness lens** (a truthset snapshot must not outrank a newer/parseable on-disk
 capture without content inspection) before any future flip campaign reuses it. Anyone re-running
-`flipped_residual_attempted_failed*_\_*truthset*_`style campaigns must content-probe captures first (this script's`--adjudicate`
-phase is the template).
+`flipped_residual_attempted_failed*_\_*truthset*_`style campaigns must content-probe captures first (this
+script's`--adjudicate` phase is the template).
 
 ## Regeneration recipe (single index read, no corpus walk)
 
@@ -137,3 +137,30 @@ rows; within each, sort by `(attempted_at, written_at)` and flag groups whose la
 measurement: 33,172 contested atoms total; 32,982 resolve captured on recency; 189 resolve empty_confirmed; 1 resolves
 attempted_failed. Post-adjudication residual (2026-07-14 02:57Z): **2 masked atoms** — the parked blank-data_type row +
 the new TEAMS/TFF_FIRST_LEAGUE/2026-07-13 nightly-image masking (see the INFRA todo).
+
+## RE-TRIAGE (2026-07-23)
+
+**Verdict: STILL OPEN, ACCURATE — confirmed actively ongoing, not just theoretically unfixed.** Re-ran this doc's own
+"Regeneration recipe" against a fresh live read of the same index
+(`gs://instruments-store-sports-prd-.../_index/availability_index.parquet`, 5,523,146 rows today) via
+`unified_trading_library.get_storage_client()`/`resolve_bucket_name()`.
+
+- **61 contested `(data_type, league_id, date)` atoms found** (both a `captured` and an
+  `empty_confirmed`/`attempted_failed` row present); **56 resolve to a non-`captured` winner on recency** — up from the
+  "2 masked atoms" residual recorded at the end of the 2026-07-14 adjudication.
+- These are NOT a residue of the original 2026-07-13 oscillation — the winning (masking) rows' `written_at` timestamps
+  span **2026-06-27 through 2026-07-23T04:06:54Z, i.e. as recent as ~4.7h before this check**, with fresh instances on
+  nearly every day in between (07-16, 07-18, 07-19, 07-20, 07-21, 07-22, 07-23), mostly `FIXTURES`/`FIXTURE_STATS`
+  `empty_confirmed` rows written by `service_name=instruments-service`, plus a handful of `trades` `attempted_failed`/
+  `empty_confirmed` rows from `market-tick-data-service`. Example: `FIXTURES/BRASILEIRAO/2026-07-22` was masked by an
+  `empty_confirmed` row written **2026-07-23T04:06:54Z** — today.
+- This directly confirms the still-open `[ ] [INFRA] P1` todo above ("Redeploy the `expected-universe-v2-sports` Cloud
+  Run image") is genuinely still needed — the guard fix itself (`instruments-service@ba306543`) IS present on the
+  current `live-defi-rollout` HEAD (`git merge-base --is-ancestor ba306543 HEAD` → true), but masking is continuing in
+  production regardless, meaning either the deployed job image predates the fix, the fix doesn't cover every emission
+  path (e.g. the ordinary `FIXTURES` per-matchday gate vs. the season-boundary gates the guard specifically targeted),
+  or a second emitter exists. Not root-caused further in this pass (out of scope for a re-triage) — flagging as
+  confirmation, not a new separate finding, since the doc's own open INFRA todo already names this exact remediation.
+- The `[x]` adjudication todos (a)/(b)/(c) (243-atom historical re-stamp, reader-side tie-break) hold: none of the 56
+  currently-masked atoms overlap the previously-adjudicated PLAYER_STATS/FIXTURES sets by date — this is fresh churn
+  from the still-unguarded live pipeline, not a regression of the 2026-07-14 fix. Status left `open`.
