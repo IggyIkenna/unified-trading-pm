@@ -308,4 +308,210 @@ is #4). Do NOT wire until these resolve.**
 `lst_asset` is a new, still-open sub-task. E2 is explicitly NOT closed — needs a dedicated investigation into
 share-class-dependent dual-unit support before the STAKING leg's unit convention can be finalized. The A2 build remains
 gated until E1's data-source mapping and E2's dual-unit design are both resolved — do not wire the STAKING leg with a
-single hardcoded unit convention.</content>
+single hardcoded unit convention.
+
+## E2 INVESTIGATION 2026-07-23 (sub-agent, design-only — no code changed)
+
+Scope: the operator's "investigate more … depending on the share class, sometimes we want ETH-underlying units,
+sometimes USD" ruling. Findings below are grep+read-verified across `strategy-service`, `unified-api-contracts`,
+`client-reporting-api`, `market-data-processing-service`, and codex. **Recommendation up front: the codebase already has
+a ruled, partially-built design for exactly this (codex § "Share Class P&L" +
+`settlement_service.py::convert_settlement_to_share_class`) — it just lives in the SAME dead/unwired Surface-A code this
+whole issue doc is about, and the real gap is wiring it, not inventing a new mechanism.**
+
+### Q1 — what "share class" concretely means, and a real SSOT contradiction found along the way
+
+**Finding (flag — not blocking, but real):** there are **two structurally-different `ShareClass` enums in UAC sharing
+one name**:
+
+- `unified_api_contracts.canonical.crosscutting.share_class.ShareClass` — `{USDT, ETH, BTC}` + `SHARE_CLASS_BASE_ASSETS`
+  (stablecoin-family grouping). Consumers: `internal/reporting/client_reporting.py`
+  (`ClientPosition`/`ClientPnLEntry`/`ClientNAV`), `registry/client_share_classes.py`.
+- `unified_api_contracts.internal.architecture_v2.enums.ShareClass` — 9 values:
+  `{USDT, USDC, FDUSD, USD, GBP, EUR, ETH, BTC, SOL}`. Consumers: essentially all of strategy-service (`catalog_*.py`,
+  `specs.py`, `portfolio_allocator/*`, `position/*`), imported via the `unified_api_contracts.internal` facade. **This
+  is the one relevant to `carry_staked_basis`.**
+
+These are two different Python classes with the same name and zero interop (`ShareClass.USDC` from one is not the
+other's `ShareClass.USDC` — the `canonical` one doesn't even have a `USDC` member). Worth a ruling on whether they
+should converge to one canonical enum or are intentionally scoped per consumer (client-reporting contracts vs.
+strategy-service internals) with a doc note explaining why — as-is it's a live wrong-import risk.
+
+**Answering the actual question:** ShareClass (the architecture_v2 one strategy-service uses) is **NOT** a
+stablecoin-only concept — native-asset values already exist as first-class members and are already used as real share
+classes elsewhere in this exact codebase:
+
+- `unified_api_contracts/internal/domain/strategy_service/catalogue.py:58-61` —
+  `_DEFAULT_SHARE_CLASSES = (ShareClass.BTC, ShareClass.ETH, ShareClass.USD, ShareClass.USDT)`, the strategy-instance
+  catalogue's cross-product default set, docstring noting `ShareClass` "has more members (GBP/EUR/SOL/etc.)".
+- `strategy_service/portfolio_allocator/share_class_fx.py` — `SHARE_CLASS_PERF_FEE_CONFIGS["ETH_FLAGSHIP"]`, a real
+  ETH-denominated share class with its own HWM/perf-fee config.
+- `strategy_service/portfolio_allocator/share_class_fx.py::ShareClassFxMatrix` — pure, tested (16 tests,
+  `tests/unit/portfolio_allocator/test_share_class_fx.py`), converts NAV between **any** two `ShareClass` values via
+  direct / inverse / triangulated (through USDT/USD hub) rates. **Not yet instantiated anywhere in production code**
+  (only in tests) — the utility is real and correct but has no live rate feed wired to it yet.
+- `strategy_service/portfolio_allocator/emitter.py::build_allocation_directive` (REAL, non-test code, lines 25-100) —
+  **already stores an amount in BOTH the client's `reporting_currency` and the strategy's native `share_class` side by
+  side**, on `StrategyEquityDirective.target_equity` (reporting currency) + `.target_equity_share_class` (native, via
+  `ShareClassFxMatrix.convert_nav()`). This is a **live, shipped precedent** for the exact "figure out both" pattern the
+  operator is asking for.
+
+So: "share class" = the currency a client's capital / NAV / PnL is **denominated and reported in** — a
+client-or-client-strategy-subscription-level property, not a description of what a position technically holds.
+`catalog_staked_basis.py` only emits stablecoin share classes (`_STABLE_TO_SHARE_CLASS = {USDC, USDT, FDUSD}`, lines
+133-138) because the archetype economically **starts** from stablecoin capital (swap→stake) — that is a
+strategy-specific restriction of one catalog generator, not a structural limit of `ShareClass` itself. **"Native
+underlying" does not need to be invented as a new enum value — `ShareClass.ETH`/`.SOL` already exist and are already
+used as real share classes elsewhere.** What's missing is the conversion machinery being wired for PnL rows specifically
+(Q3).
+
+### Q2 — where `staked_notional` flows: confirmed QUOTE-only, end to end, no native quantity stored anywhere
+
+Traced the full `carry_staked_basis` chain:
+
+1. `catalog_staked_basis.py::_emit_staked_basis_slots` (lines 281-331) — `capital_budget` + `share_class` = a
+   stablecoin, on `TargetInstanceSpec`.
+2. `cli/handlers/paper_run_handler.py:1404` — `staked_notional = budget * stake_fraction`, `budget = r.deployed_capital`
+   (quote/stablecoin units throughout).
+3. `engine/backtest/benchmark_fills.py::_compute_swap_fill` (lines 288-307) — the stablecoin→native SWAP instruction
+   **does** resolve a real spot/pool price (`_resolve_swap_benchmark`, lines 245-248: `snapshot.mid_price` or
+   `snapshot.pool_mid_at_block`) — but `fill_units = instruction.in_amount` (the stablecoin amount going **in**); the
+   resulting native OUT quantity is never computed or stored.
+4. `engine/backtest/benchmark_fills.py::_resolve_yield_benchmark` (lines 251-260) — used for STAKE/LEND/BORROW/UNSTAKE —
+   `fill_price` is **hardcoded to `Decimal("1")`**, docstring: "LEND/STAKE fills are 1:1 in units … the price for
+   yield-bearing deposits is 1.0; the downstream P&L uses the rate separately." I.e. `staked_notional` (quote) is booked
+   as if it were already a native 1:1 quantity — no real spot price applied at the STAKE step.
+5. `engine/backtest/paper_run_transfers.py::build_paper_run_transfers` (lines 88-183) — the STAKE `LedgerRow` books
+   `delta=staked_notional` (quote); `price` is never populated (stays `None`). Docstring line 27: "USDC→native→LST is
+   modelled as the staked notional landing in the LST position" — an explicit modeling shortcut, not a real native
+   quantity.
+6. `engine/backtest/paper_run_passive.py::build_paper_run_passive` (lines 70-143) — today's `notional * bps/10000/365`
+   (the banned form A2 replaces) is booked as `delta=accrued_amount` via UTL's `passive_ledger_row(...)`
+   (`unified_trading_library/ledger/materialize.py:247-263`, `delta=accrued_amount`) — same quote-only convention. **The
+   file's own docstring already flags this as deliberate** (lines 29-32, P3.4 correctness note): "a PASSIVE row's
+   `delta` is a QUOTE cash-flow, NOT a base-asset qty … these rows MUST NOT be fed to `materialize_position_ledger`."
+
+**Conclusion:** no native-unit (ETH/SOL/LST-token) quantity is computed or stored anywhere in the current
+`carry_staked_basis` pipeline — it is quote-denominated end to end, by deliberate, documented design (not an oversight).
+Supporting a native-unit view therefore needs exactly **one** new deterministic input: a spot/pool price for the native
+asset at entry. Notably this is **not actually a new feed to build** — `_resolve_swap_benchmark` already computes this
+real price at deploy time for the SWAP leg; it is simply computed and then discarded rather than threaded forward.
+`LedgerRow.price` (`unified_api_contracts/canonical/crosscutting/ledger/_ledger_row.py:277-280`, "Quote-currency price
+per unit at execution time") already exists on the schema and is unused on the STAKE row today — this is the natural
+place to persist it, no new column required.
+
+### Q3 — storage vs. display, and the design already exists in codex (unwired)
+
+**The codex already specifies this exact feature**, § "Share Class P&L"
+(`codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md:704-773`):
+
+> P&L is converted from USD to the client's share class base currency. The FX attribution factor tracks the conversion
+> difference, keeping trading P&L separate from currency exposure. … For `USDT`: no FX conversion applies. For
+> `ETH`/`BTC`: every attribution factor is converted to the base currency at settlement time, and the FX component is
+> separated as its own factor for transparency.
+
+Backing table (`pnl-attribution.md:726-738`): `USDT`/`ETH`/`BTC` share classes, FX rate features
+`fx_rate_eth_usd`/`fx_rate_btc_usd` sourced from `DefiFxRateAdapter` in MDPS. **This adapter is real, not aspirational**
+— `market-data-processing-service/market_data_processing_service/app/adapters/defi/fx_rate_adapter.py` exists in the
+live codebase. Codex names the implementing function:
+`strategy-service/strategy_service/engine/core/settlement_service.py::convert_settlement_to_share_class`.
+
+**Read it** (`engine/core/settlement_service.py:633-696`, verified real, present, correct-looking): it takes a
+`pnl: dict[str, Decimal]` (USD amounts), a `share_class` string, and `fx_rates: dict[str, Decimal]`, and returns the
+SAME dict with `{key}_share_class` keys added alongside every original `{key}` (plus
+`total_pnl_usd`/`total_pnl_share_class`/`fx_rate_used`) — dividing every USD amount by the share class's FX rate for
+`ETH`/`BTC`, or copying unchanged for `USDT`. **`grep` confirms zero callers anywhere in strategy-service** — this
+function is dead code, exactly like the rest of "Surface A" this whole issue doc is about (`orchestrator.py`'s
+`compute_pnl` + `settlement_service.py`'s index-ratio math were already identified as the correct-but-unwired reference
+for the LENDING leg; this is the SAME file's correct-but-unwired reference for share-class conversion). **Note the
+shipped function is simpler than the codex prose's illustrative "ETH share class example"** (lines 709-717,
+`fx_factor`/`trading_factor` split isolating FX noise from trading return) — the real code does a flat
+`val / fx_rate_at_read_time` divide, not an entry-vs-settlement fx-factor decomposition. If the operator wants the
+richer entry/settlement-anchored split (isolating true native-asset return from the native asset's own USD-price drift —
+see caveat below), that is MORE work than wiring the function as it stands today.
+
+**Storage-vs-display verdict: DISPLAY (derive-on-read), not new stored fields.** Every existing pattern in this codebase
+for "same number, two currencies" is a computed conversion, not duplicated storage on the per-event row:
+`ShareClassFxMatrix.convert_nav()`, `emitter.py::_convert_to_native`, `settlement_service.py`'s
+`convert_settlement_to_share_class`, and — even where a dual-field pattern DOES exist on a stored record
+(`ClientNAV.nav_usd` + `.nav_in_share_class`, `client_reporting.py:80-93`) — the conversion is applied as a computation
+over an already-canonical USD number, not by storing two independently-computed amounts. (Caveat:
+`client-reporting-api/api/routes/attribution.py::_nav_from_rows` currently sets `nav_in_share_class = nav_usd` verbatim
+— a no-op stub; the real FX wiring isn't live yet, only the schema + the pure conversion utilities exist and are
+tested.) This also matches the codebase's general philosophy of not duplicating derivable state — e.g.
+`PnLAttribution.strategy_alpha_total`/`.execution_alpha_total` are explicitly commented "DERIVED — never stored"
+(`unified_api_contracts/internal/risk.py:966-987`). **`PnLAttributionRow` needs NO new field for this** — no
+`share_class` column, no second `amount`. Keep it storing exactly what it stores today (a single signed USD/quote
+`amount`), and apply `convert_settlement_to_share_class`-equivalent logic at the reporting layer, on read, per client's
+subscribed share class.
+
+**One real economic caveat (do not conflate these two, they are different NUMBERS):**
+
+- **(A) Currency-preference view** — the shipped `convert_settlement_to_share_class` behavior: divide the
+  already-computed USD PnL by the CURRENT (settlement-time) ETH/BTC/SOL spot rate. This is what "give me my USD PnL in
+  ETH terms today" means, and is what the operator's phrasing most directly maps to (a share-class reporting preference
+  over an already-computed number).
+- **(B) True native-asset-return view** — Hard Rule #5's literal `holding × (exchange_rate_now/exchange_rate_prev − 1)`,
+  anchored to a FIXED native quantity established once at stake-entry. Over a multi-day window, (A) and (B) diverge
+  whenever ETH's/SOL's own USD price moves, because (A) re-prices the USD number at TODAY's rate (mixing the LST's real
+  staking yield with ETH's own FX/price drift), while (B) isolates the staking-index appreciation from the native
+  asset's own price movement (economically the "clean" staking return). The codex's illustrative
+  `fx_factor`/`trading_factor` split (lines 713-716) is precisely how you'd reconcile these — `trading_factor` ≈ (B),
+  `fx_factor` = the residual (A)−(B) — but that split is NOT what the shipped `convert_settlement_to_share_class`
+  function actually computes today (see above). Building the wrong one produces a subtly-wrong client-facing number,
+  which is exactly what this doc's OPERATOR GATE exists to prevent — **flagged below for an explicit ruling.**
+
+### Q4 — scope: this is a client-reporting-layer question, not staking-leg-specific
+
+Every artefact above points the same way: `ClientNAV`/`ClientPnLEntry` carry `share_class` as ONE tag for the WHOLE
+per-client(-period) record, not per-factor or per-leg (`client_reporting.py:37-93`);
+`AllocationDirective.reporting_currency` applies at the client/allocator level
+(`unified_api_contracts/internal/architecture_v2/schemas.py:390-403`); `PnLAttributionRow` carries no currency field at
+all today. The operator's framing ("depending on the share class, sometimes we want ETH-underlying units, sometimes
+USD") reads as a general client-reporting requirement that surfaced while reviewing the STAKING leg, not a request to
+make `carry_staked_basis`'s accrual formula itself unit-switchable. **Recommend scoping the real build to the
+client-reporting layer** (client-reporting-api's NAV/PnL/attribution routes, wiring
+`ShareClassFxMatrix`/`convert_settlement_to_share_class`-equivalent logic for real against a live
+`fx_rate_eth_usd`/`fx_rate_btc_usd`/(new `fx_rate_sol_usd`?) feed), while the STAKING leg's A2 build (this doc's main
+thread) continues to emit ONE canonical quote-denominated number exactly as E4 already ruled — no accrual-formula
+branching by share class inside strategy-service's engine. The FUNDING leg (E1, parallel session) is equally unaffected
+— both legs feed the same canonical `PnLAttributionRow`/`LedgerRow` amount, and dual-unit viewing would apply uniformly
+to the whole row-set at the reporting layer, not per-leg.
+
+### Smallest correct increment (answers "how to build it without a wasted rebuild")
+
+1. **No schema change** to `PnLAttributionRow` or the passive `LedgerRow` — keep the canonical stored amount in quote,
+   consistent with E4's ruling and the codebase's existing single-canonical-unit convention.
+2. **Wire `ShareClassFxMatrix` to a real rate feed** (MDPS `DefiFxRateAdapter`'s `fx_rate_eth_usd`/`fx_rate_btc_usd`,
+   extend for `fx_rate_sol_usd` if SOL share class is ever offered) — currently a correct, tested, but production-dark
+   utility.
+3. **Un-orphan `convert_settlement_to_share_class`** (or a corrected reimplementation of it) as the client-reporting
+   read-time conversion step, replacing the `client-reporting-api::_nav_from_rows` no-op stub
+   (`nav_in_share_class = nav_usd`) with a real per-client-share-class conversion. This is the direct, minimum-diff way
+   to satisfy "figure out both" — ANY client's share class (not just ETH), for ALL of NAV/PnL/attribution, with zero
+   engine-side change.
+4. If (B) (true native-asset-return, FX-noise-isolated) is separately wanted for the STAKING leg specifically: persist
+   the ONE per-position entry-day spot price already computed and discarded in `_resolve_swap_benchmark` (step 3 of Q2)
+   into the existing, currently-`None` `LedgerRow.price` field on the STAKE transfer row — a single scalar per position,
+   not a new per-accrual-row field, from which `native_yield_day_d = quote_yield_day_d / entry_spot_price` is an exact,
+   deterministic derivation (no per-day spot lookups needed).
+5. Neither (2)/(3) nor (4) block or duplicate the A2 STAKING/FUNDING wiring (E1/E4) — they are additive, reporting/
+   conversion-layer work that can land before, after, or alongside A2.
+
+### Needs an explicit operator ruling (flagging, not picking)
+
+1. **(A) vs (B) above** — does "ETH-underlying units" mean (A) a currency-preference view of the already-computed USD
+   PnL at today's rate (matches the ALREADY-SHIPPED-but-dead `convert_settlement_to_share_class`, and "share class" as
+   used everywhere else in this codebase), or (B) a genuinely different FX-noise-isolated "true native staking return"
+   metric (matches Hard Rule #5's literal `holding`-based formula, needs the one new per-position entry-price anchor
+   from item 4 above)? These visibly disagree over any multi-day window where ETH/SOL's own USD price moves — this is a
+   genuine new fork, not an implementation detail, and shipping the wrong one is a subtly-wrong client-facing PnL
+   number.
+2. **The two competing `ShareClass` enums** (`canonical.crosscutting.share_class.ShareClass` `{USDT,ETH,BTC}` vs.
+   `internal.architecture_v2.enums.ShareClass` — 9 values) — same class name, structurally incompatible, used by
+   disjoint consumer sets. Worth a ruling on whether they should converge to one canonical enum, or are intentionally
+   scoped with a doc note explaining the split (as-is, a live wrong-import risk for any future cross-cutting
+   client-reporting/strategy-service work).
+
+**This investigation does not reopen E1 (parallel session, funding-leg data-source mapping) or E4 (row-set, CONFIRMED).
+E2 remains open pending the ruling above** — do not wire the STAKING leg's unit convention until it lands.</content>
