@@ -896,3 +896,9 @@ tarball once; always check the launcher's own freshness warning output, and if s
   04:54 on-demand relaunch (already well past the ~2-3min the last SPOT attempt survived), fresh log activity, RSS
   healthy ~982-1258MiB. The on-demand switch resolved the rapid-preemption issue as expected. Continuing to monitor at
   the normal cadence.
+
+- **2026-07-23 05:43 UTC (dex-swaps re-check — healthy, ~48min on-demand uptime)** — RSS stable ~838-1308MiB, manifest
+  at 8,552+ entries. Repeated "DEX swaps collection complete" cycles (~7-8min apart) each still write substantial new
+  data (60k-115k records/pass, not converging toward zero) — the exact iteration/termination model isn't fully clear
+  from logs alone (no per-day date marker like the LST-rates script has), but the VM is genuinely healthy and producing
+  real data, not stuck or erroring. Continuing to monitor via the manifest-count progress metric.
