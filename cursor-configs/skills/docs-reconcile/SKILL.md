@@ -17,7 +17,7 @@ description:
 # /docs-reconcile — retrieval-layer + codex doc health audit
 
 Finds and fixes the failure classes that make the grep-native L0→L1→L2→L3 retrieval design
-(`codex/11-project-management/doc-frontmatter-schema.md`) quietly stop working even though every doc still passes the
+(`/codex/11-project-management/doc-frontmatter-schema.md`) quietly stop working even though every doc still passes the
 existing structural frontmatter gate (`check_frontmatter_schema.py` — required fields + closed-vocab enums, already
 hard-blocking since 2026-07-04). This skill covers what THAT gate cannot see:
 
@@ -138,7 +138,7 @@ to prevent.
 
 ## Codex SSOTs
 
-- `codex/11-project-management/doc-frontmatter-schema.md` — the frontmatter schema this skill's generator-parity check
+- `/codex/11-project-management/doc-frontmatter-schema.md` — the frontmatter schema this skill's generator-parity check
   guards
 - `scripts/docs/docspec.py` / `scripts/docs/gen_doc_index.py` — the schema's machine SSOT + the L0 generator it guards
 - `plans/active/docs_retrieval_layer_reconcile_2026_07_23.md` — this skill's origin + the AGENTS.md gap it fixed
