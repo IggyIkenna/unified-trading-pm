@@ -46,13 +46,13 @@ defaults to **Sonnet 5 at `effort: max`** regardless of size — this is the sta
 (operator ruling 2026-07-22)**: a plan/task declaring no tier gets a todo-count-derived default, not a silent "medium" —
 `xhigh` baseline, `max` past `LARGE_PLAN_TODO_THRESHOLD` (10) open todos; declare `effort:` explicitly to override.
 Sub-agent `Agent` calls MUST set `model=` explicitly. Self-check every task start: Sonnet on opus-required → STOP;
-effort mismatch → HARD STOP. SSOT: `codex/06-coding-standards/model-tier-selection.md`.
+effort mismatch → HARD STOP. SSOT: `/codex/06-coding-standards/model-tier-selection.md`.
 
 ## Environment + how to run quality gates
 
 QG / tests → repo `.venv` via `cd <repo> && bash scripts/quality-gates.sh` (no activation); IDE → `.venv-workspace`.
 **Never run `pytest` directly.** Per-family layouts (`tests/<family>/unit/`) need `PYTEST_UNIT_DIR="tests/"` before
-`source base-service.sh`. SSOT: `codex/06-coding-standards/quality-gates.md`.
+`source base-service.sh`. SSOT: `/codex/06-coding-standards/quality-gates.md`.
 
 ## Writing code → coding standards (QG-enforced; no regressions)
 
@@ -95,9 +95,9 @@ UAC-internal.
   branch is KEPT but the per-repo toggle is **REVERSIBLE** — a breaking/major bump or operator decision routes that repo
   THROUGH staging. **Gates UNCHANGED on both paths** — SIT (re-homed onto a frozen LDR snapshot for direct repos) +
   `quality-gates-v2` + quickmerge-to-main (ONE gating v2, not two). SSOT (in-flight refactor):
-  `plans/active/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md` → `codex/08-workflows/ci-cd-flow.md`.
-- SSOTs: `codex/08-workflows/ci-cd-flow.md` (quickmerge / strict-quickmerge / LDR-is-SSOT / branch-protection /
-  deployment flow) + `codex/05-infrastructure/per-tab-worktrees.md` (commit attribution).
+  `plans/active/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md` → `/codex/08-workflows/ci-cd-flow.md`.
+- SSOTs: `/codex/08-workflows/ci-cd-flow.md` (quickmerge / strict-quickmerge / LDR-is-SSOT / branch-protection /
+  deployment flow) + `/codex/05-infrastructure/per-tab-worktrees.md` (commit attribution).
 
 ## CI verification after every push
 
@@ -115,7 +115,7 @@ override). On fail: `gh run view --log-failed`, fix root cause in real time. **`
 Phase-3): `ci-status-update.yml` writes Firestore only (per-repo-doc CAS + `is_stale_write` ordering) — NEVER re-add a
 per-transition manifest commit, the `manifest-update` concurrency group, or the retired `ci-status-reconciler`; the
 hourly `ci-status-consolidator` owns the manifest-cache projection (manifest stays a fallback cache, read Firestore for
-live state). SSOT: `codex/08-workflows/ci-cd-flow.md`.
+live state). SSOT: `/codex/08-workflows/ci-cd-flow.md`.
 
 ## Commit + Push + Flip plan checkboxes as you ship (HARD RULE)
 
@@ -125,7 +125,7 @@ live state). SSOT: `codex/08-workflows/ci-cd-flow.md`.
 path arg); `git restore --staged` anything not yours; stage by name, never `git add .`/`-A`. **Half 2 — flip the plan
 checkbox in the SAME turn**: `N. ✅ [item] — <repo>@<sha> + evidence`, commit with the MANDATORY `docs(plans):` prefix.
 **Half 3 — session-end**: non-final multi-item sessions get a `## Deferred work after <date>` table. SSOT:
-`codex/12-agent-workflow/commit-push-flip-rule.md`.
+`/codex/12-agent-workflow/commit-push-flip-rule.md`.
 
 ## Multi-agent safety (per-slot worktrees)
 
@@ -137,7 +137,7 @@ own, verify against `FETCH_HEAD` (use `git merge-base --is-ancestor`), or force-
 → rebase + keep the MERGED combination; autostash conflict → `rebase --abort` + stash by name (never `git stash drop`
 foreign WIP). Inherited-dirty-WIP is **LIVENESS-gated** (dead claim → inherit + commit; live claim / mtime <120s →
 PROTECT). An interactive session IS slot N (long uncommitted WIP = stale-worker anti-pattern; `slot-cron-ff-pull.sh` +
-`slot-git-status-report.sh` every 5 min). SSOT: `codex/05-infrastructure/per-tab-worktrees.md`.
+`slot-git-status-report.sh` every 5 min). SSOT: `/codex/05-infrastructure/per-tab-worktrees.md`.
 
 ## Agent behavior
 
@@ -158,7 +158,7 @@ PROTECT). An interactive session IS slot N (long uncommitted WIP = stale-worker 
   `entity=fixtures`, and an entity-agnostic shard check passed it because OTHER entities were writing; monitors read
   terminal `exit_code` + manifest counts + log-mtime + a TERMINAL **measured** verdict (liveness `kill -0 <PID>`, no
   self-match); `ScheduleWakeup` / a dispatched sub-agent are NOT reliable wakes — arm your OWN `run_in_background`
-  heartbeat watchdog (≤30-min) in the SAME turn. SSOT: `codex/12-agent-workflow/async-wait-and-poll-discipline.md`.
+  heartbeat watchdog (≤30-min) in the SAME turn. SSOT: `/codex/12-agent-workflow/async-wait-and-poll-discipline.md`.
 - **Grep codex before asking the operator for committed numbers** (`codex/14-customer-journeys/commercial-model/`,
   plans, memory).
 
@@ -171,7 +171,7 @@ axes for broader cuts (`doc_type` / `asset_group` / `stage` / `repos` / `status`
 `rg -l '^doc_type: codex-ssot' codex/ | xargs rg -l '^asset_group:.*defi'`). Confirm relevance via `summary:` (L2)
 before opening; open ONLY the confirmed doc (L3); jump doc→code via its `code_refs` (L4, module-dir granularity). The
 conditional domain index below stays the curated shortcut for known domains; the L0/L1 grep is the general path for
-everything else. SSOT: `codex/11-project-management/doc-frontmatter-schema.md` §1 + epic
+everything else. SSOT: `/codex/11-project-management/doc-frontmatter-schema.md` §1 + epic
 `agent_operating_framework_master` § "Target architecture (L0–L4)".
 
 ## Plans — format + authoring discipline
@@ -184,8 +184,13 @@ everything else. SSOT: `codex/11-project-management/doc-frontmatter-schema.md` �
   dependency chain or same-file overlap — don't reflex-set it), **partial-parallelism isn't expressible in one plan →
   SPLIT** (parallel work in Plan A; the gated step in Plan B via `depends_on` + `gate_on_depends: true`); **no per-todo
   prereq syntax** (prereqs come only from `sequential`/`gate_on_depends`); per-task `[TAG]` roles route each todo
-  (SHIPPED); an audit is its own plan; draft-gated phase chains (later phases `status: draft` until the prior phase's
-  last todo flips them `active`). **Never hand-edit `backlog.yaml`** — author plans, the backend derives it.
+  (SHIPPED); an audit is its own plan **only when precisely scoped** — a todo is AO-eligible only if its outcome is
+  DETERMINABLE by the worker alone (a checkable fact, a scoped change, an audit with a stated done-when), NEVER an
+  open-ended judgment/design call ("figure out how X should look" is a human decision wearing a todo's clothes — resolve
+  it FIRST as a LOCAL plan/interactive session, dispatch only the properly-scoped todo against that decision's outcome;
+  operator ruling 2026-07-23, SSOT `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` §
+  "Dispatch-scope eligibility"); draft-gated phase chains (later phases `status: draft` until the prior phase's last
+  todo flips them `active`). **Never hand-edit `backlog.yaml`** — author plans, the backend derives it.
 - **Plan destination — ASK BEFORE CREATING (HARD RULE)**: before writing any new plan, ask the operator: _"Should this
   be an agent-orchestrator plan (picked up and executed by background agents) or a human plan (operator-driven, not
   auto-dispatched)?"_ **Default is human** (`assigned_vm: NA`) unless the operator explicitly says otherwise. **Valid
@@ -194,15 +199,15 @@ everything else. SSOT: `codex/11-project-management/doc-frontmatter-schema.md` �
   `human-planning` still accepted but treated as `planning` for compatibility.)
 
 - **Format**: every todo `- [x] [SCRIPT] P0. …`. **Frontmatter SSOT: `plans/PLAN_FORMAT.md`** (canonical schema via
-  `codex/11-project-management/doc-frontmatter-schema.md`). All plans carry: `doc_type: plan`, `title`, `summary`,
+  `/codex/11-project-management/doc-frontmatter-schema.md`). All plans carry: `doc_type: plan`, `title`, `summary`,
   `status`, `nature`, `asset_group`, `stage`, `repos`, `scope`, `tags`, `related`, `created`, `parent_epic`,
   `assigned_vm`, `execution_scope`, `priority`, `estimate_class`, `estimate_baseline/calibrated_ai_days`,
   `assigned_role`, `drift_direction`, + optional `depends_on` (prerequisites), `locked_by/since`,
   `supersedes/superseded_by`, `source`. **`assigned_vm` ∈ `{planning, NA}` only**: `planning` = orchestrator VM
   executes; `NA` = not dispatched. **`status: draft`** = WIP → NOT ingested; flip to `active` to dispatch.
   **`depends_on`** documents task ordering + gates archival (does NOT affect dispatch). SSOTs: `plans/PLAN_FORMAT.md`,
-  `codex/11-project-management/doc-frontmatter-schema.md`,
-  `codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`.
+  `/codex/11-project-management/doc-frontmatter-schema.md`,
+  `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`.
 - **A plan REFERENCES codex, it does not duplicate it (HARD RULE)**: the durable rule's SSOT is the codex doc; the plan
   links to it. **When authoring or touching a plan, READ the codex docs it depends on and check the plan against them**
   — plan↔codex drift is review-blocking (this is why plans cite a `Codex SSOTs:` section). After a major phase, run the
@@ -212,10 +217,16 @@ everything else. SSOT: `codex/11-project-management/doc-frontmatter-schema.md` �
   · `research` 1.2×. **Capture discoveries as plan todos immediately** (P0-P3 + provenance; never
   auto-memory/chat-summary; every deferral in a summary must already be a `- [ ]` todo). **Fanning out work = a tracked
   plan todo** (target repo named; never verbal dispatch). **Plan locking** `locked_by:` blocks archival without
-  `[unlock-plan]` (ASK, never autonomous); archival = the 5-step ritual (migrate DEFERRED → banner → codex-alignment
-  check → update CLAUDE.md/codex on a new contract → clear lock). **Plan hygiene** `run_hygiene_sweep.sh`; inventory
+  `[unlock-plan]` (ASK, never autonomous); archival = the 6-step ritual (migrate DEFERRED → banner → codex-alignment
+  check → update CLAUDE.md/codex on a new contract → **update every referrer's path corpus-wide** (grep for the old doc,
+  fix each hit — added 2026-07-23, checked-in gap: the prior 5 steps never actually named this, so it wasn't a
+  regression to fix, just missing) → clear lock). **Cross-doc references** are `/plans/...`/`/codex/...` leading-slash,
+  repo-root-relative — never a bare filename, never `../`-relative (fragile: breaks if the CITING file ever moves, even
+  though the target didn't); enforced hard via a shrinking-ratchet baseline (`check_reference_paths.py`, corpus-wide
+  migration done 2026-07-23) — `depends_on`/`parent_epic`/`supersedes`/ `superseded_by`/`entry_point_for` stay bare
+  slugs (machine-parsed, out of scope). **Plan hygiene** `run_hygiene_sweep.sh`; inventory
   `regenerate_active_plan_inventory.py` (orphan count >0 is review-blocking). SSOTs: `codex/11-project-management/`,
-  `codex/08-workflows/estimation-calibration.md`.
+  `/codex/08-workflows/estimation-calibration.md`, `/codex/11-project-management/cross-reference-path-convention.md`.
 
 ## Governance + safety HARD RULES
 
@@ -223,12 +234,12 @@ everything else. SSOT: `codex/11-project-management/doc-frontmatter-schema.md` �
   manifest-verified rows (ADC admin on GCP `central-element-323112` + AWS `427895769566`; don't pause on infra ops).
   **Hard-stops (human-only)**: wallet keys, force-push main, 1.0.0 graduation. **Kill-switch is direction+scope-aware**:
   protective arming always autonomous; resume/un-kill autonomous only within the auto-recovery matrix (`manual_unkill` =
-  human-only). SSOT: `codex/04-architecture/autonomous-recovery-matrix.md`.
+  human-only). SSOT: `/codex/04-architecture/autonomous-recovery-matrix.md`.
 - **Data pipeline correctness is the heartbeat** — an audit's issues are fixed in FULL (no deadline deferrals, no
   asset_group skipped); only operator-gated `BLOCKED-CREDENTIALS`/`-OPERATOR-DECISION`/`-UPSTREAM-OUTAGE` defer; a RED
   data audit FREEZES layer-N+1 work (foundation-completion-gate). **External data is always available** — exhausting the
   free path = a credential ask, NOT a descope; build the adapter scaffold anyway + status `BLOCKED-CREDENTIALS`. SSOTs:
-  `codex/02-data/data-pipeline-correctness-hard-rule.md`, `…/external-data-always-available-rule.md`.
+  `/codex/02-data/data-pipeline-correctness-hard-rule.md`, `…/external-data-always-available-rule.md`.
 - **Findings triage**: in your file → fix in same commit; adjacent → fix in YOUR plan; outside-plan small+clear → ≤30
   min; ambiguous → diagnose both sides; audit-scope → wrapper plan → epic VM; outside every plan →
   `plans/active/issues/<slug>_<date>.md`; **big finding** (data-correctness / May-23 critical path / cross-repo / SSOT
@@ -249,25 +260,25 @@ everything else. SSOT: `codex/11-project-management/doc-frontmatter-schema.md` �
 
 - **Working on a SERVICE?** Read that service's architecture doc first, skip the rest. Always-true:
   **instruments-service owns reference data; venue lists + adapter KEYS are UAC data** (`VENUE_TO_ADAPTER_KEY`; IS is
-  the thin resolver — `codex/04-architecture/instruments-service-as-ssot-for-mtds.md`,
+  the thin resolver — `/codex/04-architecture/instruments-service-as-ssot-for-mtds.md`,
   `…/instrument-universe-registry-consolidation.md`); **MTDS is market-data only**; service CLIs use
-  `--operation`/`--mode`/`--asset-group` (`codex/06-coding-standards/cli-convention.md`); shard-level failure isolation,
-  no `raise` in per-shard loops, classify via UAC `classify_venue_error()`
-  (`codex/04-architecture/shard-level-failure-isolation.md`); service infra requirements (STEP 5.61 `ServiceBootstrap`,
+  `--operation`/`--mode`/`--asset-group` (`/codex/06-coding-standards/cli-convention.md`); shard-level failure
+  isolation, no `raise` in per-shard loops, classify via UAC `classify_venue_error()`
+  (`/codex/04-architecture/shard-level-failure-isolation.md`); service infra requirements (STEP 5.61 `ServiceBootstrap`,
   5.62 `make_health_router`, `ApiKeyReloader`, typed config-reloaders, UAC schema provenance) →
-  `codex/06-coding-standards/config-reloader-pattern.md`. **NO service↔service deps** (T4 depends only on
+  `/codex/06-coding-standards/config-reloader-pattern.md`. **NO service↔service deps** (T4 depends only on
   UTL/UAC/`unified-*-interface`; integrate by API contract + mocks; SIT fires at the staging boundary) →
-  `codex/04-architecture/tier-and-import-architecture.md`, `codex/06-coding-standards/integration-testing-layers.md`.
+  `/codex/04-architecture/tier-and-import-architecture.md`, `/codex/06-coding-standards/integration-testing-layers.md`.
 - **Working on DATA / manifest / pipeline?** 4-state `capture_status`; canonical schema v9 but **trust the actual
   distribution, not the constant**; `expected_unattempted` materialised by the WRITER (never re-derived); `source=` is
   crosscutting (`record_captured(source=…)` required); never silent placeholders; **single-walk discipline** (any new
   whole-corpus GCS walk is review-blocking); **shard atom identical across writer/manifest/status/gate/UI**;
   phantom-audit `--apply` only after `prefix_tpls` cover the new shape. SSOTs:
-  `codex/02-data/availability-manifest-and-data-status.md`, `…/honest-absence-downstream-handling.md`,
+  `/codex/02-data/availability-manifest-and-data-status.md`, `…/honest-absence-downstream-handling.md`,
   `…/pipeline-mode-partition.md`, `plans/epics/infrastructure_master.md`. **Honest Coverage v2 (two-layer / two-view /
-  instrument-gates-download model)** → `codex/02-data/honest-coverage-model.md`. **Sports 2020-06 DATA FLOOR** (odds
+  instrument-gates-download model)** → `/codex/02-data/honest-coverage-model.md`. **Sports 2020-06 DATA FLOOR** (odds
   start 2020-06-06; pre-floor is fabrication-by-construction — WIPED from GCS + manifest, denominators/launchers/gates
-  clamp to it) → `codex/02-data/sports-2020-06-data-floor.md`.
+  clamp to it) → `/codex/02-data/sports-2020-06-data-floor.md`.
 - **RECONCILING an AG's estate against canonical (paths ↔ manifest ↔ catalogue)?** Use `/data-pipeline-reconciliation`
   (per-AG, PROD-only, read-only; deletes are SUGGESTIONS gated on a 5-part proof — prod-bucket deletes are human-only).
   Canonical/non-canonical is the UAC `canonical_path_violations()` MACHINE ORACLE, never a re-implemented rule; pass
@@ -288,27 +299,27 @@ everything else. SSOT: `codex/11-project-management/doc-frontmatter-schema.md` �
   DO-NOT-DELETE is RESOLVED; residual = the twins' manifest rows are unregistered) →
   `plans/active/issues/defi_dex_pools_delete_order_stale_2026_07_20.md` (RESOLVED),
   `…/defi_fold_manifest_registration_pending_2026_07_21.md`. SSOTs:
-  `codex/02-data/four-surface-reconciliation-procedure.md`, `…/reconciliation-finding-taxonomy.md`,
+  `/codex/02-data/four-surface-reconciliation-procedure.md`, `…/reconciliation-finding-taxonomy.md`,
   `…/gcs-and-manifest-delete-safety-protocol.md`, `…/non-canonical-path-inventory.md`,
   `…/canonical-cutover-register.md`, `…/orphan-object-detection.md`, `…/reconciliation-census-and-compute-tiers.md`.
 - **`pipeline_mode` / sourcing?** SOURCE-AWARE `{mode}_{source}[_{transport}]` (`source`=VENDOR only; GCS paths carry it
-  left of `asset_group=`, readers PREFIX-MATCH) → `codex/02-data/pipeline-mode-partition.md`. **TradFi/Databento** (3
+  left of `asset_group=`, readers PREFIX-MATCH) → `/codex/02-data/pipeline-mode-partition.md`. **TradFi/Databento** (3
   datasets billing-fail-closed; `SOURCE_PRIORITY` databento-first; backfill silent-0-row gotchas; VIX=VX-futures via
-  XCBF.PITCH, Barchart RETIRED) → `codex/02-data/tradfi-databento-sourcing-ssot.md`. **DeFi data gotchas** →
-  `codex/02-data/defi-canonical-naming-ssot.md`. **Sports paths** `candidate_parquet_paths()`. **Manifest consolidator**
-  = Cloud Run / Batch-Fargate (NOT a VM; loud-fails on stale index) →
-  `codex/05-infrastructure/manifest-consolidator-ssot.md`. **Feature versioning** →
-  `codex/02-data/feature-formula-versioning.md`. **Live = batch** (same code path; no live-only data_types).
+  XCBF.PITCH, Barchart RETIRED) → `/codex/02-data/tradfi-databento-sourcing-ssot.md`. **DeFi data gotchas** →
+  `/codex/02-data/defi-canonical-naming-ssot.md`. **Sports paths** `candidate_parquet_paths()`. **Manifest
+  consolidator** = Cloud Run / Batch-Fargate (NOT a VM; loud-fails on stale index) →
+  `/codex/05-infrastructure/manifest-consolidator-ssot.md`. **Feature versioning** →
+  `/codex/02-data/feature-formula-versioning.md`. **Live = batch** (same code path; no live-only data_types).
 - **Live = batch (event-log spine)**: MTDS/MDPS/features/ml/execution all publish/read via the UTL `EventTransport`
   facade (`unified_trading_library.streaming.event_facade`); `InMemoryTransport` for paper/colocated, Pub/Sub for live —
   same code path gives `paper(W)==batch-rerun(W)` epsilon=0. SINK_MATRIX classifies all 52 shards. SSOT:
-  `codex/02-data/live-data-persistence-and-event-log.md`.
+  `/codex/02-data/live-data-persistence-and-event-log.md`.
 - **Writing STORAGE code?** Every bucket via `resolve_bucket_name(...)`, never inline `gs://` (QG 5.69); GCS object ops
   via UTL `gcs_copy_object`/`gcs_delete_object`/`gcs_describe_object`, never subprocess `gcloud`/`gsutil`. SSOTs:
-  `codex/05-infrastructure/bucket-isolation-model.md` (naming/tiers/folded Group-B),
-  `codex/05-infrastructure/gcs-object-operations.md`.
+  `/codex/05-infrastructure/bucket-isolation-model.md` (naming/tiers/folded Group-B),
+  `/codex/05-infrastructure/gcs-object-operations.md`.
 - **Touching UI?** No Python tools (tsc/ESLint/Vitest/Playwright only); TS strict; **playwright gate** — no tick without
-  `[UI]` + `pw:L2 ✓` + a cited regression spec. SSOT: `codex/06-coding-standards/ui-testing-layers.md`.
+  `[UI]` + `pw:L2 ✓` + a cited regression spec. SSOT: `/codex/06-coding-standards/ui-testing-layers.md`.
 - **Launching VMs / infra?** **No fire-and-forget** (STARTED <60s + ≥1 progress/hr + STOPPED/FAILED; verify T+10min);
   launchers in `deployment-service/scripts/vm/` (name MUST match a real `VM_PREFIX_TO_BUCKET` entry + `lifecycle_class`
   — **grep the registry FIRST, never hand-roll a name**: unregistered = silently invisible in
@@ -330,7 +341,7 @@ everything else. SSOT: `codex/11-project-management/doc-frontmatter-schema.md` �
   not just waste) + coverage going BACKWARD; N=1 measured ZERO 403s. Scale on the ONE IP — `SINGLE_VM_QUEUE=1`
   bundling + `TARDIS_MAX_CONCURRENT_DOWNLOADS` / `TARDIS_BOOK_SNAPSHOT_MAX_CONCURRENT` (defaults 16/4 leave the box ~93%
   idle) — NEVER more VMs. Non-Tardis venues (HYPERLIQUID/ASTER/LIGHTER/EXTENDED) are exempt. SSOTs:
-  `codex/05-infrastructure/vm-launcher-runbook.md` (§ Tardis cap), `…/spot-vms-for-backfill.md`,
+  `/codex/05-infrastructure/vm-launcher-runbook.md` (§ Tardis cap), `…/spot-vms-for-backfill.md`,
   `…/vm-tarball-deployment.md`, `…/deployment-observability.md`.
 - **Working on DeFi EXECUTION?** Credential convention; `DefiErrorCode` (35 codes);
   IS→MTDS→features-onchain→strategy→execution; removed providers (Elysium/Arkham/Bloxroute/Infura/Kaiko) — do NOT
@@ -338,33 +349,33 @@ everything else. SSOT: `codex/11-project-management/doc-frontmatter-schema.md` �
   batch SoT, Yahoo = daily; NO LONGER in `SOURCE_PRIORITY`/routing [`uac@a2beed46` + `mtds@362a487e`]; `batch_massive`
   GCS data
   - `possible_manifest`/`PipelineMode` recognition KEPT until the gated GCS purge →
-    `codex/02-data/tradfi-databento-sourcing-ssot.md`,
+    `/codex/02-data/tradfi-databento-sourcing-ssot.md`,
     `plans/active/issues/tradfi_canonical_path_migration_design_2026_07_19.md`; the `polygon` you see in DeFi code is
     the CHAIN, not the vendor); Pyth Solana-only; custody `CLOUD_KMS_ENCRYPTED`. SSOT:
-    `codex/04-architecture/defi-execution-overview.md`.
+    `/codex/04-architecture/defi-execution-overview.md`.
 - **Touching TRANSFERS / funds / clients?** **HARD: funds NEVER move between clients** — every transfer scoped to one
   `client_id` (`TransferCoordinator` raises `CrossClientTransferForbiddenError`); "cross-client rebalancing" framing is
   review-blocking. Per-client isolation = one subprocess per client. SSOTs:
-  `codex/04-architecture/client-funds-isolation.md`, `…/per-client-isolation-architecture.md`.
+  `/codex/04-architecture/client-funds-isolation.md`, `…/per-client-isolation-architecture.md`.
 - **Strategy / PnL / HWM / promote?** **HWM is never raw equity** (TWR / Notional / PnL-recovery) →
-  `codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md`. **Batch=Live determinism spine** — paper(W) MUST
-  equal batch-rerun(W) trade-for-trade (ε=0 PROOF); four ledgers; integrate via canonical `InstrumentKey` derivation →
-  `codex/09-strategy/operational/paper-batch-live-reconciliation.md`. **Promote** (CLI primary / UI secondary;
-  `paper_1d`→`live_early` only pre-May-23) → `codex/04-architecture/promote-workflow-architecture.md`.
+  `/codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md`. **Batch=Live determinism spine** — paper(W)
+  MUST equal batch-rerun(W) trade-for-trade (ε=0 PROOF); four ledgers; integrate via canonical `InstrumentKey`
+  derivation → `/codex/09-strategy/operational/paper-batch-live-reconciliation.md`. **Promote** (CLI primary / UI
+  secondary; `paper_1d`→`live_early` only pre-May-23) → `/codex/04-architecture/promote-workflow-architecture.md`.
 - **Peripheral script dir / one-off?** Wire into the primary-consumer's `quality-gates.sh`; one-offs are TEMPORARY
   (delete after prod-run); **lifecycle marker** (`# Epic:` / `# Lifecycle:` / `# Delete-when:`) on every `scripts/`
-  file. SSOT: `codex/06-coding-standards/script-homes.md`.
+  file. SSOT: `/codex/06-coding-standards/script-homes.md`.
 - **AO alerts / Slack notifications?** The `agent-orchestrator-alerts` channel is **actionable-only** — automatic
   lifecycle events (dispatches / respawns / recoveries) log + feed the daily digest, they NEVER page; failures + worker
   BLOCKED questions page; standing conditions dedup by state-transition (fire on change / RESOLVED / re-remind), never
   every tick. **Every actionable alert that paged an OPEN gets a ✅ CLOSE bookend in-channel** (BLOCKED answered/auto-
   resolved · git RECOVERED · escalation resolved-if-it-paged; webhook-only correlation via opened-at ts, no threading).
-  SSOT: `codex/04-architecture/agent-orchestrator-alerting.md`. **CI alerts (`ci-failures` channel)** route through the
+  SSOT: `/codex/04-architecture/agent-orchestrator-alerting.md`. **CI alerts (`ci-failures` channel)** route through the
   reusable `notify-slack.yml` carrier (read-back dedup: `dedup_key`+`cooldown_min`, `recovery`-gated all-clears,
   fail-open); cooldowns track a condition's MEASURED cadence, not its declared cron (GH throttles `schedule:` to ≈80-90%
   delivery, corrected 2026-07-21 per `github_actions_ci_cost_reduction_2026_07_15.md`'s dated re-measurement — hourly
   crons landed 9/10, `*/30` landed 16/20; was: ≈37%, an earlier and apparently stale estimate). SSOT:
-  `codex/04-architecture/ci-alerting.md`.
+  `/codex/04-architecture/ci-alerting.md`.
 - **Runbooks**: declare `owner`/`cadence`/`verifier`/`last_executed` (missing = review-blocking). **Cross-plan
   banners**: launching a VM / in-flight refactor → add `> **🟢/🟡 …**` to every affected plan.
 
@@ -382,10 +393,10 @@ Human-planning VM (`i-0dd9812a96cdda5dc`, interactive only) for operator work. W
 `unified-trading-pm/cursor-configs/` (setup `scripts/workspace/setup-workspace-config-symlink.sh`; strict basedpyright).
 Claude Code settings inherited by symlinking `~/.claude/settings.json` + per-slot `.claude/settings.json` →
 `cursor-configs/settings.json` (don't commit personal `model`/`theme` drift in it) →
-`codex/05-infrastructure/claude-code-settings-symlink.md`. **Personal per-tab context-checkpoint automation** (tmux
+`/codex/05-infrastructure/claude-code-settings-symlink.md`. **Personal per-tab context-checkpoint automation** (tmux
 `send-keys`-forced `/pre-compact` then `/compact`, mirrors `agent-orchestrator/server/context_lifecycle.py` at personal
 scale; requires a terminal-hosted `claude` CLI session — the Cursor/VS Code extension chat panel isn't tmux-reachable,
-its built-in terminal tab is) → `codex/05-infrastructure/local-tmux-precompact-watcher.md`. Analysis:
+its built-in terminal tab is) → `/codex/05-infrastructure/local-tmux-precompact-watcher.md`. Analysis:
 `rg --glob '!.venv*' --glob '!build' --glob '!tests'`. **Workflow-capable `GH_TOKEN`**:
 `source scripts/workspace/load-gh-token.sh`. **agent-orchestrator auth**: dashboard JWT HS256 (central only) / internal
 proxy ES256 / accounts via setup-token env files, never `.credentials.json`; backlog plan-driven
@@ -393,5 +404,5 @@ proxy ES256 / accounts via setup-token env files, never `.credentials.json`; bac
 (central + role registry); runtime self-heals (AutoSpawn/failover/watchdog ON — never manually kill tmux). **Checking
 live backlog/dispatch status from a dev checkout** (no JWT, VM:8765 has no inbound rule): `/check-agent-orchestrator`
 skill or `agent-orchestrator/scripts/orchestrator/check-ao-backlog-status.sh` — read-only via AWS SSM, never a manual
-API-guessing session. SSOTs: `codex/04-architecture/runtime-deployment-topology.md`,
-`codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`, `…/agent-orchestrator-overview.md`.
+API-guessing session. SSOTs: `/codex/04-architecture/runtime-deployment-topology.md`,
+`/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`, `…/agent-orchestrator-overview.md`.

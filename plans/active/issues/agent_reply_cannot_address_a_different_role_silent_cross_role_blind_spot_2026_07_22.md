@@ -141,5 +141,29 @@ too large.
 
 # Codex SSOTs
 
-- `codex/04-architecture/agent-orchestrator-overview.md` (agent messaging / poll-reply model).
-- `codex/04-architecture/agent-orchestrator-alerting.md` (adjacent: role-directed notification routing).
+- `/codex/04-architecture/agent-orchestrator-overview.md` (agent messaging / poll-reply model).
+- `/codex/04-architecture/agent-orchestrator-alerting.md` (adjacent: role-directed notification routing).
+
+## Todos (added 2026-07-23 — `/plan-reconcile`; this doc had NO todos and was tracked by no plan)
+
+> **Finding re-verified STILL-LIVE 2026-07-23 by reading the code, not the doc**: `server/routes/agents.py`
+> `agent_reply()` posts via `post_agent_message_by_role(session, target_role=agent.role, direction="from_agent")` — it
+> hardcodes the REPLIER's own role, with no branch on the answered message's `from_role`. `AgentReplyRequest`
+> (`server/models/agents.py:148`) carries `content` / `context_used_pct` / `last_msg` / `in_reply_to` and **no
+> cross-role target field**. So a reply to a peer role lands on the replier's own thread; the peer never sees it in its
+> `/poll`. The interim mitigation this doc claims (main answering peers via `by-role/<role>/message`) was done ad hoc in
+> one live session and was **never codified** — `unified-trading-pm/agents/main.md` STEP 2A/2B still says "for each
+> message … POST your reply" for EVERY polled message regardless of `from_role`.
+
+- [ ] [BACKEND] P1. **Route `/reply` to the originating role when answering a peer.** When `req.in_reply_to` resolves to
+      a message whose `from_role != agent.role`, post `direction="to_agent"` to that `from_role` (plus the tmux nudge)
+      instead of `from_agent` on the replier's own thread. **Gate**: a regression test proves a cross-role reply lands
+      in the target role's next `/poll` (not merely its `/history`), and the existing same-role reply-ack tests stay
+      green.
+- [ ] [DOCS] P2. **Codify the peer-vs-operator branch in `agents/main.md` STEP 2B** — `from_role == "operator"` →
+      `/reply`; any other `from_role` → `POST /api/agents/by-role/<from_role>/message` with `from_agent_id`. Without
+      this the procedural half stays folklore. **Gate**: the diff lands and the next live cross-role exchange shows a
+      `to_agent` message in the recipient's poll.
+- [ ] [REVIEW] P3. **Sign-off before the routing change ships** — it touches the reply-ack / redelivery-cap machinery
+      from `ao_operator_message_silent_drop_no_reply_ack_2026_07_08`; a careless change re-breaks at-least-once
+      delivery. **Gate**: approval recorded before the P1 todo ships.

@@ -62,6 +62,14 @@ jobs:
           ref: ${{ steps.payload.outputs.commit_sha || 'main' }}
           token: ${{ secrets.GH_PAT }}
           path: library-source
+          # MANDATORY for hatch-vcs repos (fixed 2026-07-23). Every repo is now
+          # `dynamic = ["version"]` + `[tool.hatch.version] source = "vcs"`, so the version is
+          # computed from `git describe`. The default shallow checkout (fetch-depth: 1) carries
+          # NO history and NO tags, so hatch-vcs silently fell back to its no-history sentinel
+          # and this job published a wheel literally versioned `0.0.0.dev0` — that is the
+          # instruments-service artifact sitting in AR from 2026-07-03, carrying neither a
+          # version nor a commit sha. Full history is required for the version to exist at all.
+          fetch-depth: 0
 
       - name: Checkout PM repo (for manifest update)
         uses: actions/checkout@v5
@@ -98,20 +106,41 @@ jobs:
 
           echo "=== Building wheel for $REPO v$VERSION ==="
 
-          # Verify version in pyproject.toml matches expected version
-          TOML_VERSION=$(grep -oP '^version\s*=\s*"\K[0-9]+\.[0-9]+\.[0-9]+' pyproject.toml || echo "unknown")
-          echo "pyproject.toml version: $TOML_VERSION"
-          echo "Expected version: $VERSION"
-
-          if [ "$TOML_VERSION" != "$VERSION" ]; then
-            echo "WARNING: Version mismatch — pyproject.toml=$TOML_VERSION, payload=$VERSION"
-            echo "Proceeding with pyproject.toml version ($TOML_VERSION)"
-          fi
+          # Version provenance. Rewritten 2026-07-23: the previous check grepped a static
+          # `version = "X.Y.Z"` out of pyproject.toml, which matches NOTHING under
+          # `dynamic = ["version"]` — it resolved to "unknown", printed a WARNING, and
+          # published anyway. Combined with the shallow checkout that is exactly how a
+          # `0.0.0.dev0` wheel reached Artifact Registry. Assert against what was actually
+          # BUILT, not what a config file claims, and FAIL rather than warn.
+          echo "Expected version (from dispatch payload): $VERSION"
+          echo "git describe: $(git describe --tags --always --dirty 2>&1 || echo '<no tags reachable>')"
 
           python -m build --wheel --outdir dist/
 
           echo "Built wheels:"
           ls -la dist/*.whl
+
+          # Wheel filenames are `{name}-{version}-{pytag}-...whl`; field 2 is the real version.
+          WHEEL_PATH=$(ls dist/*.whl | head -1)
+          BUILT_VERSION=$(basename "$WHEEL_PATH" | awk -F- '{print $2}')
+          echo "Built version (authoritative, from the wheel): $BUILT_VERSION"
+
+          # FAIL CLOSED on an unidentifiable build. `0.0.0.dev0` is hatch-vcs's no-history
+          # sentinel — publishing it is strictly worse than not publishing, because the
+          # artifact then exists, outranks nothing, and names neither a release nor a commit.
+          if [ "$BUILT_VERSION" = "0.0.0.dev0" ] || [ -z "$BUILT_VERSION" ]; then
+            echo "::error::Refusing to publish $REPO: built version is '$BUILT_VERSION' (hatch-vcs found no reachable tag)."
+            echo "  The checkout must include full history + tags (fetch-depth: 0) and the repo must have at least one v* tag."
+            exit 1
+          fi
+
+          # A mismatch against the payload is a real provenance problem (the dispatch asked for
+          # one version, the tree builds another), but the WHEEL is the truth — publish that and
+          # make the disagreement loud rather than silently relabelling.
+          if [ "$BUILT_VERSION" != "$VERSION" ]; then
+            echo "::warning::Version mismatch — dispatch payload=$VERSION, built wheel=$BUILT_VERSION. Publishing the BUILT version."
+          fi
+          echo "built_version=$BUILT_VERSION" >> "$GITHUB_ENV"
 
       - name: Upload to Artifact Registry
         working-directory: library-source
@@ -119,7 +148,8 @@ jobs:
           set -euo pipefail
 
           REPO="${{ steps.payload.outputs.repo }}"
-          VERSION="${{ steps.payload.outputs.version }}"
+          # built_version is exported by the Build step (the wheel is the truth).
+          VERSION="${built_version:-${{ steps.payload.outputs.version }}}"
           AR_URL="https://${AR_REGION}-python.pkg.dev/${AR_PROJECT}/${AR_REPOSITORY}/"
 
           echo "=== Uploading to Artifact Registry ==="
@@ -139,7 +169,9 @@ jobs:
           set -euo pipefail
 
           REPO="${{ steps.payload.outputs.repo }}"
-          VERSION="${{ steps.payload.outputs.version }}"
+          # Record what was actually PUBLISHED (the wheel), not what the dispatch asked for —
+          # otherwise published_packages re-acquires the identity gap this fix closes.
+          VERSION="${built_version:-${{ steps.payload.outputs.version }}}"
           PUBLISHED_AT=$(date -u +%Y-%m-%dT%H:%M:%SZ)
 
           echo "=== Updating manifest: published_packages.$REPO ==="

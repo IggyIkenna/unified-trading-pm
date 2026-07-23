@@ -14,7 +14,7 @@ stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]
 tags: [template, format, canonical, agent-task, plan-authoring]
-related: [ao_dispatch_correctness_regen_reconcile_2026_07_07.md, PLAN_FORMAT.md]
+related: [/plans/archive/2026_07/ao_dispatch_correctness_regen_reconcile_2026_07_07.md, /plans/PLAN_FORMAT.md]
 created: "2026-02-25"
 last_updated: 2026-07-23 # was: 2026-07-14 — corrected 2026-07-23, plan_quality_four_line_defense_architecture_2026_07_23.md line-1 todo: added §3 rules for findings D/E/F/G/C (section-shorthand, ambiguous verbs, delete-risk tagging, definition-of-done, stale-checkbox pre-check) surfaced by an adversarial AO-dispatch-readiness review of sports_consolidated_closeout_2026_07_19.md
 parent_epic: agent_operating_framework_master
@@ -135,9 +135,9 @@ ingested). Use for operator-only work, trackers, design docs, and dispatcher-sur
 - **Delete-risk tagging must be consistent within one plan** _(finding F: one plan had a prod-GCS-deleting todo tagged
   plainly while a sibling delete todo in the same doc was `[OPERATOR]` + cited the delete-safety protocol — reads as an
   oversight, not a decision)._ Any todo that deletes/overwrites prod data (GCS objects, manifest rows, DB rows): tag
-  `[OPERATOR]` and cite `codex/05-infrastructure/gcs-and-manifest-delete-safety-protocol.md` UNLESS you state explicitly
-  why this specific delete is lower-risk (e.g. genuinely soft-delete/reversible) — silence reads as an oversight, not a
-  ruling.
+  `[OPERATOR]` and cite `/codex/05-infrastructure/gcs-and-manifest-delete-safety-protocol.md` UNLESS you state
+  explicitly why this specific delete is lower-risk (e.g. genuinely soft-delete/reversible) — silence reads as an
+  oversight, not a ruling.
 - **State the definition-of-done** _(finding G: several todos stated the problem/goal but not what evidence proves it's
   done — e.g. "wire the dependency gate for real" with no acceptance check)._ End each todo (or its first continuation
   line) with the concrete evidence a done-claim must cite — a passing check, a specific query returning zero rows, a
@@ -169,6 +169,16 @@ ingested). Use for operator-only work, trackers, design docs, and dispatcher-sur
     NOT reflexively set `sequential: true` — it forecloses ALL intra-plan parallelism; use it only when tasks genuinely
     chain or share files.
 - **An AUDIT is its own plan** (its findings shape later phases — keep it separable).
+- **Bounded outcome only — no judgment calls in a todo** _(operator ruling 2026-07-23)._ A todo is eligible for
+  `assigned_vm: planning` only if its outcome is DETERMINABLE by the dispatched worker alone: a checkable fact, a scoped
+  code change, an audit with a stated done-when. **Not eligible**: open-ended research/design work whose answer isn't
+  already decided — "figure out how the data pipeline should look for features" has no defined target and no way for an
+  isolated worker to know when it's done; that's a human decision wearing a todo's clothes. **Audits ARE eligible when
+  precisely scoped** — "does X match Y" / "count instances of Z" is a determinable fact, unlike "figure out what X
+  should be"; scope, not the word "audit," is what makes it dispatchable. Resolve the judgment call FIRST — as a
+  LOCAL/human plan or an interactive session — and write the properly-scoped AO todo against that decision's OUTCOME,
+  never against the open question itself. SSOT: `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`
+  § "Dispatch-scope eligibility".
 - **Draft-gated phase chains** — for multi-phase work, ship each phase as a SEPARATE plan: the current phase is
   `status: active`, later phases are `status: draft` (regen skips drafts, so an unfinalised phase never floods the
   backlog); the phase's LAST todo finalises the next phase's todos and flips it `draft`→`active`. _[ACTIVE NOW: draft =

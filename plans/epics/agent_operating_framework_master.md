@@ -25,7 +25,7 @@ priority: P0
 assigned_vm: planning # was: harsh_pc -- corrected 2026-07-14, finding 12: harsh_pc is a pre-2026-06-27 multi-VM host id, retired by the single-VM pivot (this epic's own body-section correction already says so; this field was never updated to match); planning is the current single central-orchestrator VM id, matching the plan_hygiene_master.md epic precedent
 parent: master_to_live_defi_2026_05_23
 co_operators: [harsh, ikenna]
-codex_ssots: [codex/11-project-management/plan-hygiene.md, codex/12-agent-workflow/canonical-plan-flow.md]
+codex_ssots: [/codex/11-project-management/plan-hygiene.md, /codex/12-agent-workflow/canonical-plan-flow.md]
 related_plans:
   - ../active/asset_class_to_asset_group_rename_2026_07_21.md
   - ../active/l0_doc_index_generator_2026_06_24.md
@@ -45,7 +45,7 @@ agents find the _right_ doc fast; (3) the **agent operating model** (role charte
 honest and graduates delegation. The whole design is **grep-native, NOT vector-RAG** (operator-confirmed 2026-06-24).
 
 > **🟢 Foundational reframe + minimum-usable re-scope (operator, 2026-06-26).** The _method_ this machinery serves is
-> now an SSOT: [`codex/12-agent-workflow/work-philosophy.md`](../../codex/12-agent-workflow/work-philosophy.md) —
+> now an SSOT: [`/codex/12-agent-workflow/work-philosophy.md`](/codex/12-agent-workflow/work-philosophy.md) —
 > codex-as-target, bidirectional drift, **plan-as-unit sized to one agent**, **role-per-plan** (`assigned_role`),
 > durable craft-role boot prompts, judgment-at-authoring. **The priority is finishing AO so we can USE it for
 > throughput**, so this epic is re-scoped to the must-haves and the rest is deferred to next quarter:
@@ -234,8 +234,13 @@ DevOps/Data-Eng "is it healthy?") vs cold one-shot (fix-it roles: CI-escalate/DP
 | role `data_eng_role_vertical_pilot_2026_06_25`          | W6 instance — Data-Eng charter DELIVERED + live; ARCHIVED 2026-07-16 (Phase-0 triage bug carved out) (first full vertical; dispatched via `assigned_role: data-pipeline-engineer` (was: **dispatched harsh_pc** — corrected 2026-07-12, finding id 7, §A2 B-queue ruling; `harsh_pc` was a pre-2026-06-27 multi-VM host id, retired by the single-VM pivot; plan frontmatter `assigned_vm: NA` is current per its own 2026-07-12 historical-dispatch-note)) | W9      | P1       | 🗄️ archived |
 
 **Escalation is its own epic** — [`escalation_and_disaster_recovery_master`](escalation_and_disaster_recovery_master.md)
-(E1 `escalation_pipeline_mvp_2026_06_25`, human-driven) owns the role-agnostic blocked→Slack→resolve→UI pipeline + the
-self-healing/auto-recovery substrate; composes with `observability_master`. The broker (W9) is its hard dependency.
+owns the role-agnostic blocked→Slack→resolve→UI pipeline + the self-healing/auto-recovery substrate; composes with
+`observability_master`. **Corrected 2026-07-23**: E1's child plan `escalation_pipeline_mvp_2026_06_25` was ARCHIVED
+(operator) and its 5 UNBUILT todos absorbed into the epic itself, which is now E1's single tracking home; **and the
+broker (W9) is NO LONGER a hard dependency** — `role_registry_schema_and_broker_mvp` was archived NOT-REQUIRED
+2026-07-16 (superseded by `assigned_role` dispatch), and the reply path already exists via
+`POST /api/blocked/{id}/answer`. (was: "E1 `escalation_pipeline_mvp_2026_06_25`, human-driven" + "The broker (W9) is its
+hard dependency".)
 
 **Fast-follow roles** (after the spine + Data-Eng pilot prove the pattern): DevOps, QA (UI-Playwright vs backend
 chaos/load split), Business-Dev (owns the criticality registry), Trading-Analysis, CTO. Quant-research stays P2 (least
@@ -309,7 +314,7 @@ The universal-core + per-type schema SSOT + a `docspec` validator with closed-vo
 Everything else (W3–W8) depends on this shape.
 
 - [x] [DOCS] P0. `DOC_FORMAT`-equivalent SSOT: universal core + per-type extensions + the `NA`/null conventions. (W2) —
-      ✅ `codex/11-project-management/doc-frontmatter-schema.md` (banner: CURRENT — fully enforced, BLOCKING
+      ✅ `/codex/11-project-management/doc-frontmatter-schema.md` (banner: CURRENT — fully enforced, BLOCKING
       2026-07-04).
 - [x] [CODE] P0. Machine validator (`docspec`: enums + `FieldSpec` R/C/O + `validate_frontmatter()`), gate-wired LAST.
       (W2) — ✅ `scripts/docs/docspec.py`; gate-wired 2026-07-04 (pm@d47886909: `check_frontmatter_schema.py` calls
@@ -331,7 +336,7 @@ Everything else (W3–W8) depends on this shape.
 - [x] [DOCS] P1. **W6** — agent-role charters (schema-ify the 11 `agents/*.md`) + operating-model arch doc +
       `[gate]`/`[convention]` rule-tagging. — ✅ charters: 14 `agents/*.md` carry full agent-role frontmatter, gated
       in-repo (agent-orchestrator@202c9b6, `check_agent_role_frontmatter.py` blocking, 14/14 green); operating model:
-      `codex/12-agent-workflow/work-philosophy.md` + role registry. Rule-tagging `[gate]`/`[convention]` not
+      `/codex/12-agent-workflow/work-philosophy.md` + role registry. Rule-tagging `[gate]`/`[convention]` not
       independently verified — if absent it rides W7 (aspirational).
 
 ## P2 — deferred (own efforts / sequenced late)

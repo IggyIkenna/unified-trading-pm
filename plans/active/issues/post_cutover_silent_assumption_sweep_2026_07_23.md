@@ -99,6 +99,32 @@ order flow — that is exactly what nobody can currently tell, because the mecha
 
 ## F2 — Fleet-wide release tagging dead since 2026-06-27 (P1)
 
+> ### ⚠️ ROOT CAUSE CORRECTED 2026-07-23 — it is NOT the regex
+>
+> The regex below is real, but it is the **backstop**, not the cause. Tracing the tag minter found **two independent
+> failures on the same date, each masking the other**:
+>
+> 1. **PRIMARY — `semver-agent.yml` was orphaned.** It is the only thing that mints `v*` tags, and it triggers on
+>    `push: branches: [staging]`. The 2026-06-27 cutover made `staging` dormant fleet-wide, so it simply **stopped
+>    firing**. Measured: its last runs were `unified-trading-library` 2026-06-28 and `unified-api-contracts` 2026-06-27
+>    — exactly matching each repo's newest tag. Nothing broke; the trigger just pointed at a branch nobody pushes to any
+>    more. This was the shelved **D13 "semver-retarget"** work item (`cicd_mvp_ldr_to_main_pipeline_2026_06_30.md` —
+>    _"Shelved (reversible; revisit if/when wanted)"_); the shelving was deliberate, its side effect on tagging was not
+>    noticed.
+> 2. **BACKSTOP — `reconcile_release_tags.py` could not catch it.** Its `_VERSION_RE` broke in the _same_ pyproject
+>    migration, so the one mechanism that would have reported the outage reported `created 0 tag(s)` as success, 246
+>    times.
+>
+> A third instance of the identical regex lived in `semver-agent`'s own `always_patch` policy branch (dormant — all 24
+> repos are `agent`), and a fourth in `publish-package.yml`'s version check, which is what let a `0.0.0.dev0` wheel be
+> published rather than rejected.
+>
+> **Status 2026-07-23: root cause CONFIRMED, retarget BUILT and PROVEN, then REVERTED by operator decision.** Reviving
+> the per-repo agent costs ~$32/mo of `ubuntu-latest` time (the runner is unmovable) and restores ~24 PM manifest
+> commits/day (peak 84). Minting moves to the PM reconciler instead — **see § "Option B" below**, which carries the
+> measurements, the proof the bump logic is correct, and the implementation steps. Reverted at
+> `unified-api-contracts@d9ff488b` · `unified-trading-library@df89ac54` · `unified-trading-api@6987074`.
+
 **Verified first-hand.** `scripts/cicd/reconcile_release_tags.py:51`:
 
 ```python
@@ -242,6 +268,91 @@ by `full-workspace-sit.yml`'s own `0 3 * * *` cron. **Fail-open points that rema
 repos take the `SIT GATE N/A` branch; and `sit_validated_workspace_digest` is still WRITTEN but never READ, so a repo
 validated against UAC v1 can promote after UAC v2 lands.
 
+## Option B — move version minting into the PM reconciler (OPERATOR DECISION 2026-07-23)
+
+**Decision: adopt Option B. The per-repo `semver-agent` retarget is REVERTED and stays dead.**
+
+### Why the obvious fix was rejected
+
+Retargeting `semver-agent` to the promotion branch works — that is not in question, it was measured (below). It was
+rejected on the two axes the operator actually cares about, both quantified rather than asserted:
+
+| axis             | measured                                                                                                                                                           |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **GHA cost**     | `runs-on: ubuntu-latest`, ~~7.4 runs/day/repo × 24 repos ≈ **178 runs/day**; 15–25 s each but Linux bills a 1-min minimum ⇒ **~~$32/month**                        |
+| **commit noise** | each bump dispatches `update-repo-version`, which commits to `workspace-manifest.json`: **733 commits in the 30 days before it died — ~24/day, peaking at 84/day** |
+
+The runner cannot be moved: all 8 self-hosted runners are registered to `unified-trading-pm` **only**, and
+`orgs/IggyIkenna/actions/runners` 404s (personal account, no org pool). A fleet template pointing at `[self-hosted]`
+would hang forever in all 24 repos. So per-repo minting is billable by construction.
+
+The manifest noise is the part the operator had noticed and welcomed the end of. Worth separating precisely, because the
+two halves have different causes:
+
+- **Gone for good** — the `chore(release): bump version to X` commits _inside each repo_. Under `version_source=git-tag`
+  the agent mints a tag and makes **zero** commits. That really was the D13 migration.
+- **Would come back** — the PM `chore(manifest): update <repo> to <version>` commits. Those stopped because
+  **semver-agent died**, not because of the migration.
+
+### Evidence the bump LOGIC is correct (reuse it, don't rewrite it)
+
+Before the revert, the retarget ran for real — `unified-trading-api`, run `30020017387`, 2026-07-23T15:19Z, the first
+semver-agent run on `main` since 2026-06-27, conclusion **success**:
+
+```
+Dynamic repo (version_source=git-tag): counted 0 v* tag mint(s) in the last hour   ← breaker live on the new path
+Baseline versions version for unified-trading-api: 0.2.19                          ← read `versions`, NOT staging_versions
+Scanning commits from 7c113d5 (version 0.2.19) to HEAD                             ← BOUNDED scan, not the widening one
+Current version: 0.2.19
+```
+
+No tag was minted because every commit since `v0.2.19` was `ci:`/`chore:` — **correct behaviour, not a failure.** So the
+conventional-commit classification, the baseline-key routing and the circuit breaker are all proven on the `main` path.
+Option B relocates this logic; it does not need to reinvent it. The reverted template is recoverable from
+`unified-api-contracts@17cc3acc` / `unified-trading-library@ef59d2a0` / `unified-trading-api@5bf6ff3`.
+
+### The design
+
+Move minting into `scripts/cicd/reconcile_release_tags.py`, already scheduled `*/30` in PM **on self-hosted runners
+(\$0)**. For each tag-derived repo it would: read commits on `main` since the newest `v*` tag via the GitHub API,
+classify them by conventional-commit prefix (the rules above), compute the next version, and mint the tag — then write
+**one batched manifest commit per run** instead of one per bump.
+
+|            | per-repo agent (rejected) | reconciler (option B)                 |
+| ---------- | ------------------------- | ------------------------------------- |
+| runner     | `ubuntu-latest`, billable | PM self-hosted, **$0**                |
+| runs       | ~178/day                  | already-scheduled `*/30`, no new runs |
+| PM commits | ~24/day, peaks 84         | **≤1 per run**, batched               |
+| bump logic | proven (above)            | **same logic, relocated**             |
+
+### Known risks to handle when implementing
+
+1. **`--max-creates` matters more here.** One reconciler run could mint 22 tags at once and fire 22 `publish-package`
+   runs. The existing cap exists for exactly this; keep it low on the first drain.
+2. **API-diff breaking detection is lost.** The per-repo agent had the repo checked out and could run
+   `detect_breaking_change.py`. The reconciler sees commit messages only, so it can classify `feat!:` but not an
+   undeclared API break. Decide explicitly: accept message-only classification, or have the reconciler dispatch the diff
+   check. **This is a real capability reduction and must not be glossed over.**
+3. **The circuit breaker must be re-implemented reconciler-side**, or the runaway protection is lost — the 2026-06-10
+   incident (0.3.0→0.30.0 at 1 bump/min) is what it exists for. Rate-limit by tag mints/hour as the git-tag path does.
+4. **Do not backfill ~2,490 intermediate releases.** Those artifacts never existed; inventing them is fabrication. Each
+   repo gets ONE tag capturing current `main`; the gap stays a gap.
+5. **Shared GitHub rate limit** — the reconciler authenticates as the same user the CI dep-clone steps use. See the
+   rate-limit caveat in `codex/08-workflows/ci-cd-flow.md`.
+
+### Sub-steps
+
+- [ ] [INFRA] P1. Implement conventional-commit bump computation + tag mint in `reconcile_release_tags.py`, reusing the
+      proven rules. Gate behind an explicit `--mint` flag so the detector stays usable standalone.
+- [ ] [OPERATOR] P1. Rule on risk 2 (message-only classification vs dispatching the API-diff check).
+- [ ] [INFRA] P1. Port the bump-rate circuit breaker to the reconciler (tag-mints/hour), plus a low `--max-creates` for
+      the first drain.
+- [ ] [INFRA] P2. Batch the manifest write to ONE commit per run (the whole point of B) — verify by confirming a single
+      `chore(manifest):` commit after a multi-repo mint.
+- [ ] [INFRA] P2. First supervised drain: run with `--dry-run`, eyeball the 22 proposed versions, then mint.
+- [ ] [DOC] P2. Update `codex/08-workflows/ci-cd-flow.md` § "Release tag reconciler" once B ships — it currently
+      documents B as _planned_.
+
 ## Docs (P2)
 
 `codex/08-workflows/ci-cd-flow.md` carries a correct dormancy banner but the branch-model narrative below it is stale:
@@ -265,9 +376,30 @@ codex, or a future staging re-entry gets a dead pipeline.
       **Re-entry gate: this item must be closed BEFORE execution-service handles live order flow** — the defect is
       invisible at runtime (204 reads as success), so it will not resurface on its own. Whoever picks up
       execution-service work owns this.
-- [ ] [INFRA] P1. **Fix F2**: make `reconcile_release_tags.py` read the version from the hatch-vcs source (or from the
-      built dist / `hatch version`) instead of a static `version =` line. Then reconcile the ~4 weeks of missing tags.
-      Verify by confirming new tags appear and `publish-package` runs again.
+- [ ] [INFRA] P1. **F2 — restore version minting via OPTION B (the PM reconciler), NOT the per-repo agent.** See §
+      "Option B" below for the full design, the evidence, and the sub-steps. The per-repo retarget was built, **proven
+      working**, and then **REVERTED on operator decision 2026-07-23** for cost + commit noise.
+- [x] ✅ [INFRA] P1. **Fix F2 — make the BACKSTOP able to report the outage.** `scripts/cicd/reconcile_release_tags.py`
+      now splits two populations: tag-derived repos (all 23 today) are **N/A for tag creation** — minting a tag from a
+      version is circular when the tag defines the version — and are instead checked for the real invariant, that `main`
+      must not accumulate commits past the newest `v*` tag. Legacy static-version repos keep the original path. **Ran
+      live (`--dry-run`, not read): 22 repos STALLED, 26–29 days, ~2,490 unreleased commits** — e.g.
+      `instruments-service` 402, `market-tick-data-service` 354, `deployment-service` 257. `--fail-on-stall` opts a
+      caller into a hard failure; the default is a `::warning::` so the `*/30` schedule does not fail 48×/day.
+- [x] ✅ [INFRA] P1. **Fix the `0.0.0.dev0` publish** (`.github/workflows/publish-package.yml`). Root cause was a
+      SHALLOW checkout: no `fetch-depth: 0` ⇒ no tags ⇒ hatch-vcs falls back to its no-history sentinel. Added
+      `fetch-depth: 0`; replaced the version check (a fourth copy of the same broken static-`version =` grep, which
+      resolved to `"unknown"` and only WARNed) with an assertion against the **built wheel's** actual version, failing
+      closed on `0.0.0.dev0`; `published_packages` and the publish log now record the BUILT version, not the payload's.
+- [x] ✅ [INFRA] P1. **Stop re-pointing the `:VERSION` Docker tag** (`unified-trading-library/cloudbuild.yaml`, the only
+      repo with this pattern — verified fleet-wide). `VERSION` came from `git describe --abbrev=0` (the bare nearest
+      tag), so every build between two tags re-tagged the same string. Now `:{version}-{sha12}` is always applied and
+      never re-pointed, `:latest` stays the mutable alias, and the bare `:{version}` tag is applied **only when HEAD is
+      exactly the release commit** — so a version tag names exactly one tree. Probe repointed to the unique tag.
+- [ ] [INFRA] P2. **Reconcile the ~4 weeks of missing tags.** NOTE: this is deliberately NOT a backfill of ~2,490
+      intermediate releases — those artifacts never existed and inventing them would be fabrication. Each repo's first
+      post-fix promotion mints ONE tag capturing current `main`; the gap stays a gap, correctly. This todo is only to
+      CONFIRM that happened for all 22, and to hand-mint for any repo whose promotion is idle.
 - [ ] [INFRA] P1. **Stop re-pointing a released Docker tag at new content** (found by the F2 blast-radius probe): the
       UTL base image is rebuilt daily and re-tagged `0.55.0`/`latest`, so `0.55.0` names a different tree every day and
       rollback-by-version is undefined. Once tagging is fixed, each rebuild must get its own immutable version tag;

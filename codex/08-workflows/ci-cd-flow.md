@@ -756,11 +756,19 @@ SSOT: `codex/08-workflows/version-graduation.md`.
 
 ### Version feedback to staging/LDR + the main→LDR back-merge requirement (codified 2026-06-01)
 
-The semver bump is **computed on `staging`** (semver-agent reads the commit labels + the `staging_versions` baseline),
-then fed back to the workspace as a `version-bump` `repository_dispatch` to **unified-trading-pm**, whose
-`workspace-manifest.json:staging_versions` is the central SSOT. PM's `update-dependency-version.yml` cascades the new
-version into every dependent repo's pyproject, and those updates flow back through the normal
-`quickmerge → staging → main` path.
+The semver bump is **computed on the repo's PROMOTION branch** — `main` under the default `ldr_main` model, `staging`
+for a repo routed back through staging (updated 2026-07-23; it was `staging`-only, which is what orphaned the minter at
+the cutover — see the ⚠️ box under "Release tag reconciler"). semver-agent reads the commit labels plus the manifest
+baseline **for that branch**, then feeds the result back as a `version-bump` `repository_dispatch` to
+**unified-trading-pm**, whose `workspace-manifest.json` records it under the **matching key**: `versions` for `main`,
+`staging_versions` for `staging`. The branch, the baseline key, the breaker's scan ref and the dispatch payload all
+derive from one `$SEMVER_BRANCH` value precisely so they cannot drift apart. PM's `update-dependency-version.yml`
+cascades the new version into every dependent repo's pyproject, and those updates flow back through the normal promotion
+path.
+
+**Consequence for `staging_versions` while staging is dormant:** it is a **frozen historical record**, not a live key.
+Anything that still PREFERS it over `versions` (e.g. the quickmerge STAGE 1.6 dep gate) is reading the stale side —
+tracked in `plans/active/issues/stale_staging_versions_manifest_2026_07_23.md`.
 
 **The closure rule (applies to version bumps AND the PM doc-fast-path):** any commit that lands **directly on `main`**
 MUST be back-merged to `live-defi-rollout`, or the standing LDR→staging PR conflicts on the changed line (classically
@@ -1260,6 +1268,52 @@ check was missing and admin-merge was refused. Fixed by dispatching `quality-gat
 AUTONOMOUS_AGENT_RULES Rule 11 (verify blast radius / all branches before declaring a fleet/branch change done).
 
 ## Release tag reconciler — the missing link in the release machinery (codified 2026-06-11)
+
+> ### ⚠️ SUPERSEDED IN PART — 2026-07-23. Read this box first.
+>
+> The section below describes the **pre-hatch-vcs** world, where `pyproject.toml` carried a static `version = "X.Y.Z"`
+> and a tag was a _record_ of it. **That is inverted now.** All 23 Python repos are `dynamic = ["version"]` +
+> `[tool.hatch.version] source = "vcs"`, so:
+>
+> **THE GIT TAG IS THE PACKAGE VERSION.** No tag ⇒ no version ⇒ no publish. The tag is the CAUSE, not the record.
+>
+> Three consequences, all load-bearing:
+>
+> 1. **`semver-agent` WAS the tag minter, and it is currently DEAD BY DESIGN.** It fires on a push to `staging`, which
+>    is dormant, so no tags are minted anywhere. A retarget to the promotion branch was built and **proven working** on
+>    2026-07-23 (run `30020017387`, `unified-trading-api`: read the `versions` baseline, bounded the scan correctly,
+>    breaker live) — then **REVERTED by operator decision the same day**, on cost and noise: it `runs-on: ubuntu-latest`
+>    (unmovable — all self-hosted runners are registered to `unified-trading-pm` only, and a personal account has no org
+>    runner pool), measuring **~178 runs/day ≈
+>    $32/month**, and each bump dispatches a PM manifest commit — **733
+>    commits in the 30 days before it died, ~24/day, peaking at 84/day**, all into `workspace-manifest.json`, the
+>    merge-driver file every slot rebases on. **Minting is moving to the PM reconciler instead** (self-hosted ⇒ $0,
+>    one batched manifest commit per run): `plans/active/issues/post_cutover_silent_assumption_sweep_2026_07_23.md` §
+>    "Option B". **If you ever revive the per-repo agent**, four things MUST move together — the trigger branch, the
+>    breaker's scan ref, the PM manifest baseline KEY (`versions` vs `staging_versions`), and the dispatch payload's
+>    `branch`. Reading one key while writing the other pins BASELINE, so the `BASELINE_SHA..HEAD` scan widens without
+>    bound. And do **NOT** put `main` in the `workflow_run` trigger: `quality-gates-v2` runs on `push: [main]`, so the
+>    workflow would fire twice per push and the second run would bump off the tag the first just minted.
+> 2. **The reconciler CANNOT mint tags for these repos** — "read the version, create the matching tag" is circular when
+>    the tag defines the version. For tag-derived repos it now asserts the opposite invariant: `main` must not
+>    accumulate commits past the newest `v*` tag. Unreleased commits + a tag older than 3 days ⇒ **STALL**, reported as
+>    a `::warning::` (hard failure under `--fail-on-stall`). The legacy static-version path below is unchanged.
+> 3. **Any build of a hatch-vcs repo needs full history** (`fetch-depth: 0`). A shallow checkout has no tags, so
+>    hatch-vcs falls back to `0.0.0.dev0` — a wheel with neither a version nor a sha. `publish-package` now **fails
+>    closed** on that rather than publishing it.
+>
+> **The incident this encodes (2026-06-27 → 2026-07-23, ~4 weeks, fleet-wide).** The LDR→main cutover made `staging`
+> dormant. `semver-agent` was still wired to `push: [staging]`, so it silently stopped firing — last runs UTL 2026-06-28
+> / UAC 2026-06-27, exactly matching each repo's newest tag. The reconciler, which existed to catch precisely this, had
+> its `_VERSION_RE` broken by the same pyproject migration, so it reported `created 0 tag(s)` as **success** 246 times.
+> Two independent failures on one date, each masking the other. Measured at discovery: **22 repos stalled, 26–29 days,
+> ~2,490 unreleased commits.** Retargeting `semver-agent` was the shelved D13 "semver-retarget" item; the shelving was
+> deliberate, its effect on tagging was not noticed.
+>
+> **Rule that generalises:** a check whose input set can become empty must report **"cannot tell"**, never success.
+> `0 of 0` and `0 of 24` are different answers.
+>
+> Related: `plans/active/issues/post_cutover_silent_assumption_sweep_2026_07_23.md` (F2).
 
 The release flow has THREE parts but a missing fourth: `semver-agent` pushes `chore(release): bump version to X` to
 `staging` + dispatches the bump to PM; `update-repo-version.yml` records the version in `workspace-manifest.json`;

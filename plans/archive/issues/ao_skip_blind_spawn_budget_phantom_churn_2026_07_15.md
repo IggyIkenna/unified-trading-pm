@@ -19,7 +19,7 @@ summary: |
   not a skip-reason. Compounding CONSEQUENCE (new here): the churn has burned 2 of 4 accounts past the 95% weekly spawn
   ceiling (sub-c 99%, sub-d 97%), shrinking the usable rotation. This doc is the verified root-cause + evidence record;
   the fix decision (skip-aware spawn budget only, vs also auto-park repeatedly-skipped tasks) is deferred to the operator.
-status: open
+status: resolved # (was: open) 2026-07-23 plan-reconcile — last open todo verified DONE; all 3 todos now [x]
 nature: issue
 asset_group: [meta]
 stage: [meta]
@@ -39,13 +39,13 @@ tags:
   ]
 related:
   [
-    ao_autospawn_role_blind_dispatch_starvation_2026_07_14.md,
-    ao_fleet_stall_opus_spawn_and_skip_thrash_2026_07_07.md,
-    backlog_regen_drops_handtuned_prereqs_2026_07_12.md,
-    backlog_blocked_marker_stale_brief_redispatch_2026_07_08.md,
+    /plans/archive/issues/ao_autospawn_role_blind_dispatch_starvation_2026_07_14.md,
+    /plans/archive/issues/ao_fleet_stall_opus_spawn_and_skip_thrash_2026_07_07.md,
+    /plans/archive/issues/backlog_regen_drops_handtuned_prereqs_2026_07_12.md,
+    /plans/archive/issues/backlog_blocked_marker_stale_brief_redispatch_2026_07_08.md,
   ]
 created: 2026-07-15
-last_updated: 2026-07-16
+last_updated: 2026-07-23
 parent_epic: orchestrator_master # was: agent_operating_framework_master — repointed 2026-07-16 (ao_docs_reconciliation F5, "cross-epic dispatch-code ownership seam fuzzy"). Every other dispatch-code doc/plan homes at orchestrator_master (ao_dispatch_residuals, ao_fleet_stall_opus_spawn_and_skip_thrash, dispatcher_role_eligibility_gap_review_slots, ao_dispatch_hardening); this one was the outlier. orchestrator_master owns the AO RUNTIME (dispatch/autospawn/slots); agent_operating_framework_master owns how agents WORK (retrieval, role charters, plan format) — a skip-blind spawn budget is runtime.
 priority: P1
 source:
@@ -55,7 +55,7 @@ source:
   - live at-rest DB /var/lib/orchestrator/state.db (read-only), backlog.yaml, slot-14 transcript
 assigned_vm: NA
 execution_scope: local-only
-resolved_by:
+resolved_by: agent-orchestrator@cfb211c # fleet-scoped cooldown store + durable auto-park; verified ancestor of origin/live-defi-rollout and code-read (auto_park.py::maybe_auto_park, auto_park_reconcile.py::AutoParkReconciler) on 2026-07-23
 locked_by:
 locked_since:
 model_tier: sonnet-doable
@@ -223,17 +223,27 @@ Durable (the park mechanism already works — `ao@8dd5763`; these APPLY it):
       not `prereqs_met` alone. Add a regression test: N tasks, all skipped by every live slot within TTL → budget 0 → no
       spawn. Closes the OPEN `Skip-exhaustion churn` todo in
       `ao_autospawn_role_blind_dispatch_starvation_2026_07_14.md`.
-- [ ] [BACKEND] P2. **Durable park for repeatedly-skipped-with-blocked-reason tasks** — **STILL OPEN, and R1 made it
-      MORE important, not less (note added 2026-07-16).** R1 fixed the churn half: a task every slot has skipped now
-      counts 0 toward the spawn budget, so the fleet stops respawning workers onto it. But that converts a LOUD failure
-      (visible spawn churn) into a SILENT one — the task simply never spawns anything and nobody is told it is stuck.
-      That is the same shape as `needs_operator_count` being computed and rendered nowhere. Durable park is the
-      visibility half: make the give-up explicit and operator-visible rather than merely quiet. Out of scope for
-      `ao_dispatch_hardening_2026_07_16` (that plan fixed dispatch correctness); this doc stays OPEN for it. Auto-park
-      at ≥N distinct within-TTL skips carrying a `BLOCKED|PARKED|GATED` reason, via the now-durable
-      `priority_override`/false-prereq recipe (park fix already shipped `ao@8dd5763`), with an unpark path when the
-      condition clears. (The alternative is purely operational: have the main agent apply that recipe — no new code, but
-      relies on it actually being done.)
+- [x] [BACKEND] P2. ✅ **DONE — SHIPPED 2026-07-20, verified 2026-07-23 (`agent-orchestrator@cfb211c`, confirmed
+      ancestor of `origin/live-defi-rollout`).** Delivered by `ao_dispatch_cooldown_and_park_2026_07_20.md` (archived
+      2026_07) as the ONE fleet-scoped cooldown store this todo asked for — not a second mechanism. Verified by READING
+      the code, not by trusting the commit message: `server/auto_park.py::maybe_auto_park` parks a task once
+      `skip_count >= tuning.dispatch_cooldown_auto_park_skip_threshold` (default 3) on a `BLOCKED|PARKED|GATED`
+      reason_code, applying exactly the recipe named below — `priority = 999`, `priority_override = True`, and a
+      synthetic prereq `auto_unpark__<task_id>`; and `server/auto_park_reconcile.py::AutoParkReconciler` provides the
+      condition-driven unpark path on a poll loop. So the visibility half this todo existed for is real: the give-up is
+      now explicit and operator-visible rather than silent. **Doc drift, not a wrong verdict** — the tracker
+      (`ao_open_issues_consolidated_close_out_2026_07_17.md`) has carried the authoritative DONE marker since
+      2026-07-20; this doc was simply never updated to mirror it. Original item: **Durable park for repeatedly-skipped-
+      with-blocked-reason tasks** — **was STILL OPEN, and R1 made it MORE important, not less (note added 2026-07-16).**
+      R1 fixed the churn half: a task every slot has skipped now counts 0 toward the spawn budget, so the fleet stops
+      respawning workers onto it. But that converts a LOUD failure (visible spawn churn) into a SILENT one — the task
+      simply never spawns anything and nobody is told it is stuck. That is the same shape as `needs_operator_count`
+      being computed and rendered nowhere. Durable park is the visibility half: make the give-up explicit and
+      operator-visible rather than merely quiet. Out of scope for `ao_dispatch_hardening_2026_07_16` (that plan fixed
+      dispatch correctness); this doc stays OPEN for it. Auto-park at ≥N distinct within-TTL skips carrying a
+      `BLOCKED|PARKED|GATED` reason, via the now-durable `priority_override`/false-prereq recipe (park fix already
+      shipped `ao@8dd5763`), with an unpark path when the condition clears. (The alternative is purely operational: have
+      the main agent apply that recipe — no new code, but relies on it actually being done.)
 - [x] [ADMIN] P2. ✅ **DONE 2026-07-16 — both halves.** (a) **Rotation recovered**: all 4 accounts probed directly via
       the live usage path 2026-07-16 ~08:12 UTC — sub-a 37%/7%, sub-b 25%/5%, sub-c 14%/3%, sub-d 0%/0% (5h/7d), all
       HTTP 200 `allowed`, binding window `five_hour`. Nothing near the 95% ceiling; the burn was intermittent, driven by

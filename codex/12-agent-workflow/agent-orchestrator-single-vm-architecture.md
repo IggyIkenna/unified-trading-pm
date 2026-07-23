@@ -30,12 +30,12 @@ tags:
   ]
 related:
   [
-    ../04-architecture/agent-orchestrator-overview.md,
-    ../04-architecture/agent-orchestrator-autospawn.md,
-    ../04-architecture/agent-orchestrator-worker-liveness.md,
-    ../04-architecture/agent-orchestrator-backlog-state-alignment.md,
-    orchestrator-safety-mechanisms.md,
-    ../11-project-management/doc-frontmatter-schema.md,
+    /codex/04-architecture/agent-orchestrator-overview.md,
+    /codex/04-architecture/agent-orchestrator-autospawn.md,
+    /codex/04-architecture/agent-orchestrator-worker-liveness.md,
+    /codex/04-architecture/agent-orchestrator-backlog-state-alignment.md,
+    /codex/12-agent-workflow/orchestrator-safety-mechanisms.md,
+    /codex/11-project-management/doc-frontmatter-schema.md,
     ../../plans/PLAN_FORMAT.md,
   ]
 created: 2026-07-12
@@ -77,9 +77,10 @@ source:
 # agent-orchestrator — architecture & operating model
 
 > **THE governing SSOT** for what agent-orchestrator is, why it exists, and how it behaves. Read this first; the
-> [service-implementation reference](../04-architecture/agent-orchestrator-overview.md) (tech stack, auth, endpoints,
-> deploy) and the per-domain docs it links sit under it. This doc is written **intention-first**: each behaviour states
-> what the system is _meant_ to do so a reader can compare it against the cited code and see drift immediately.
+> [service-implementation reference](/codex/04-architecture/agent-orchestrator-overview.md) (tech stack, auth,
+> endpoints, deploy) and the per-domain docs it links sit under it. This doc is written **intention-first**: each
+> behaviour states what the system is _meant_ to do so a reader can compare it against the cited code and see drift
+> immediately.
 
 ## Role — what AO is, and what it is not
 
@@ -97,7 +98,7 @@ kills, resumes, and rotates itself), and **observable** (one dashboard + one act
 UTL, not a node in the trading DAG (instruments → MTDS → features → strategy → execution). It coordinates _agents_, not
 markets. Do not add `--asset-group` flags, backtest modes, or STARTED/STOPPED lifecycle events to it. (Full
 service-vs-trading contrast:
-[overview.md § "Difference vs trading services"](../04-architecture/agent-orchestrator-overview.md).)
+[overview.md § "Difference vs trading services"](/codex/04-architecture/agent-orchestrator-overview.md).)
 
 ## Topology — one VM, N in-process slots (since 2026-06-27)
 
@@ -172,10 +173,10 @@ section here as the _intention_; the linked doc carries the mechanism. When code
 dead worker's task or process stranded.
 
 - **Spawn** (`AutoSpawnLoop`, `server/autospawn.py`, 60s tick): wakes a free slot when a claimable task exists and an
-  account has headroom. Full gate contract: [autospawn.md](../04-architecture/agent-orchestrator-autospawn.md).
+  account has headroom. Full gate contract: [autospawn.md](/codex/04-architecture/agent-orchestrator-autospawn.md).
 - **Liveness** (`WorkerLivenessWatchdog` + `WorkerLivenessKicker`): kicks a nudge-able worker; kills a genuinely
   stuck/silent/context-full one; AutoSpawn respawns. Full trigger contract + anti-thrash:
-  [worker-liveness.md](../04-architecture/agent-orchestrator-worker-liveness.md).
+  [worker-liveness.md](/codex/04-architecture/agent-orchestrator-worker-liveness.md).
 - **Death**: a dead worker with in-flight dirty WIP RESUMES (`--resume`, bounded by `ORCHESTRATOR_RESUME_MAX_ATTEMPTS`);
   dead + clean requeues. A `paused` slot's task is NEVER released (operator intent). Governed by
   `server/resume_lifecycle.py` + `server/tmux_pruner.py`.
@@ -197,15 +198,15 @@ dead worker's task or process stranded.
   worker picks up later work (a cleared blocked task re-reads the plan — durable state lives in the plan/Progress Log,
   so conversational context-resume is an explicit NON-GOAL). Only Class-B event-spawned crafts (which carry a
   one_shot/scheduled `AgentRow`) reap on `/done`. Full model:
-  [worker-liveness.md § "Dispatch-context-driven lifecycle"](../04-architecture/agent-orchestrator-worker-liveness.md) +
-  [`ao_worker_lifecycle_dispatch_context`](../../plans/active/ao_worker_lifecycle_dispatch_context_2026_07_21.md). This
-  corrects a live defect where four plan-worker roles declared `lifecycle: one_shot` were reaped per task via a
+  [worker-liveness.md § "Dispatch-context-driven lifecycle"](/codex/04-architecture/agent-orchestrator-worker-liveness.md) +
+  [`ao_worker_lifecycle_dispatch_context`](/plans/archive/2026_07/ao_worker_lifecycle_dispatch_context_2026_07_21.md).
+  This corrects a live defect where four plan-worker roles declared `lifecycle: one_shot` were reaped per task via a
   static-role gate (`role_one_shot`); the gate now keys on dispatch context, and role-field reclassification is
   deferred.
 - **Account failover**: usage-cap / auth-failure evicts a slot off a dead/exhausted account onto a headroom account
   (resume-preserving where a `claude_session_id` exists). Health is a poller verdict, never a heartbeat inference. Full
   contract:
-  [worker-liveness.md § "Account auth-failure eviction"](../04-architecture/agent-orchestrator-worker-liveness.md).
+  [worker-liveness.md § "Account auth-failure eviction"](/codex/04-architecture/agent-orchestrator-worker-liveness.md).
 
 > **Never manually `tmux kill-session` a slot.** The watchdog + AutoSpawn own that lifecycle; a manual kill races them.
 
@@ -269,7 +270,7 @@ task no live worker can complete does not churn the fleet.
 - **Prerequisite vs blocked-question** (do NOT conflate): a task gated by EARLIER tasks WAITS on a `prerequisite`; a
   task needing a human/main answer raises a `BlockedRow` with `authority ∈ {main_agent, operator}`. Full contract + the
   `condition`→`prerequisite` rename:
-  [overview.md § "Blocked-questions, authority…"](../04-architecture/agent-orchestrator-overview.md).
+  [overview.md § "Blocked-questions, authority…"](/codex/04-architecture/agent-orchestrator-overview.md).
 
 ### 3. Dispatch — role-based, not VM-based
 
@@ -287,7 +288,7 @@ task no live worker can complete does not churn the fleet.
   dispatch's "can this slot take it?" filter share one SSOT (`dispatch.claimable_queued_task_ids`) so a fleet-skipped,
   role-blocked, or collision-blocked task cannot inflate the spawn budget and churn the fleet. Full code map + the
   dispatch-correctness contract:
-  [backlog-state-alignment.md](../04-architecture/agent-orchestrator-backlog-state-alignment.md).
+  [backlog-state-alignment.md](/codex/04-architecture/agent-orchestrator-backlog-state-alignment.md).
 
 ### 4. Regen — plans are the source of work
 
@@ -313,6 +314,20 @@ the fleet's work, and a task's identity is stable across regens.
   `plans/active/issues/regen_positional_task_ids_not_content_stable_2026_07_17.md` (still open — one todo, the
   content-derived-id follow-up, is deliberately deferred, not resolved).
 
+### 5. Dispatch-scope eligibility — bounded outcome only, judgment calls resolved BEFORE dispatch
+
+Operator ruling 2026-07-23. A todo is eligible for `assigned_vm: planning` only if its outcome is DETERMINABLE by the
+dispatched worker alone — a checkable fact, a scoped code change, an audit with a stated done-when. It is NOT eligible
+if completing it requires a judgment call, a design decision, or open-ended exploration whose answer isn't already
+decided — e.g. "figure out how the data pipeline should look for features" has no defined target and no way for an
+isolated worker to know when it's done; the real decision is a human call masquerading as a todo. **Audits ARE eligible
+when precisely scoped**: "does X match Y" / "count instances of Z" is a determinable, checkable fact, unlike "figure out
+what X should be" — the scope, not the word "audit," is what makes it dispatchable. The judgment-call work that decides
+"what X should be" happens FIRST, as a LOCAL/human plan (`task_template.md` §1) or an interactive session; its OUTCOME
+(the decision) becomes the input to a later, properly-scoped AO todo — never the todo itself. Authoring-time check:
+`task_template.md` §4. Review-time check: `/plan-reconcile`'s AO-dispatch-readiness hunters (line 3 of the plan-quality
+four-line-defense, `/plans/active/issues/plan_quality_four_line_defense_architecture_2026_07_23.md`).
+
 ## Deploy currency — `ao-self-pull.sh`
 
 The backend runs `uvicorn server.server:app` from the VM's git checkout; nothing else keeps that checkout current.
@@ -320,7 +335,7 @@ The backend runs `uvicorn server.server:app` from the VM's git checkout; nothing
 logs + skips) and `systemctl restart`s the orchestrator only when HEAD moved, or when the running process predates the
 checkout HEAD. A deduped Slack alert (`_alert_wedge`) fires when the pull is wedged AND the clone is `≥10` commits
 behind. Full SSOT + the open "current-checkout-but-stale-process" hardening gap:
-[overview.md § "Deployment scripts"](../04-architecture/agent-orchestrator-overview.md).
+[overview.md § "Deployment scripts"](/codex/04-architecture/agent-orchestrator-overview.md).
 
 ## Checking live status from a dev checkout (read-only)
 
@@ -337,11 +352,11 @@ change, no JWT, CloudTrail-audited):
 
 ## Related
 
-[`agent-orchestrator-overview.md`](../04-architecture/agent-orchestrator-overview.md) (service-implementation reference:
-stack / auth / state / deploy / endpoints) ·
-[`agent-orchestrator-autospawn.md`](../04-architecture/agent-orchestrator-autospawn.md) ·
-[`agent-orchestrator-worker-liveness.md`](../04-architecture/agent-orchestrator-worker-liveness.md) ·
-[`agent-orchestrator-backlog-state-alignment.md`](../04-architecture/agent-orchestrator-backlog-state-alignment.md) ·
-[`orchestrator-safety-mechanisms.md`](orchestrator-safety-mechanisms.md) · `unified-trading-pm/agents/<role>.md` (role
-charters) · `plans/PLAN_FORMAT.md` + [`doc-frontmatter-schema.md`](../11-project-management/doc-frontmatter-schema.md)
-(`assigned_vm` enum authority).
+[`agent-orchestrator-overview.md`](/codex/04-architecture/agent-orchestrator-overview.md) (service-implementation
+reference: stack / auth / state / deploy / endpoints) ·
+[`agent-orchestrator-autospawn.md`](/codex/04-architecture/agent-orchestrator-autospawn.md) ·
+[`agent-orchestrator-worker-liveness.md`](/codex/04-architecture/agent-orchestrator-worker-liveness.md) ·
+[`agent-orchestrator-backlog-state-alignment.md`](/codex/04-architecture/agent-orchestrator-backlog-state-alignment.md)
+· [`orchestrator-safety-mechanisms.md`](orchestrator-safety-mechanisms.md) · `unified-trading-pm/agents/<role>.md` (role
+charters) · `plans/PLAN_FORMAT.md` +
+[`doc-frontmatter-schema.md`](/codex/11-project-management/doc-frontmatter-schema.md) (`assigned_vm` enum authority).

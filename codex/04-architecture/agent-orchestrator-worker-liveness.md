@@ -12,13 +12,13 @@ stage: [meta]
 repos: [agent-orchestrator, unified-trading-pm]
 scope: [engineer, admin]
 tags: [orchestrator, self-healing, watchdog, slack, infrastructure]
-related: [agent-orchestrator-autospawn.md, agent-orchestrator-overview.md]
+related: [/codex/04-architecture/agent-orchestrator-autospawn.md, /codex/04-architecture/agent-orchestrator-overview.md]
 created: 2026-06-01
 authoritative_for: [agent-orchestrator worker-liveness watchdog]
 referenced_by:
   [
-    codex/04-architecture/agent-orchestrator-autospawn.md,
-    codex/04-architecture/agent-orchestrator-overview.md,
+    /codex/04-architecture/agent-orchestrator-autospawn.md,
+    /codex/04-architecture/agent-orchestrator-overview.md,
     plans/audit/instructions/orchestrator_master_audit_instructions.md,
   ]
 owner:
@@ -37,7 +37,7 @@ code_refs:
 
 > **SSOT**: `agent-orchestrator/server/worker_liveness_watchdog.py` **Plan**:
 > `plans/active/agent_orchestrator_worker_liveness_watchdog_2026_06_01.md` **Related**:
-> `codex/04-architecture/agent-orchestrator-autospawn.md` § "Failure modes" **Composes with**: `WorkerLivenessKicker`
+> `/codex/04-architecture/agent-orchestrator-autospawn.md` § "Failure modes" **Composes with**: `WorkerLivenessKicker`
 > (`server/worker_liveness.py`) — kicker nudges; watchdog kills
 
 ## Problem statement
@@ -268,10 +268,10 @@ The three wedge modes above (stuck / silent / context-full) are all a worker tha
 is a **fourth** mode the watchdog was blind to: a `one_shot`/`scheduled` agent that has **finished** its work but never
 dies.
 
-**Symptom (measured 2026-07-21).** 15 finished typed agents (9 `cicd` one_shot + 6 `plan_health` scheduled) sat
+**Symptom (measured 2026-07-21).** 15 finished typed agents (9 `cicd` one*shot + 6 `plan_health` scheduled) sat
 `status=active` for up to 19 h, pinning 15/16 slots → the daily reconciler got `503 no free slot`. Their JSONLs show
-none errored — each completed its task, then idle-polled forever. The role docs already say _"then EXIT, do NOT loop"_,
-but **"EXIT" only ends the Claude _turn_**; the tmux session lingers at an idle `❯` prompt, `WorkerLivenessKicker`
+none errored — each completed its task, then idle-polled forever. The role docs already say *"then EXIT, do NOT loop"_,
+but \*\*"EXIT" only ends the Claude \_turn_\*\*; the tmux session lingers at an idle `❯` prompt, `WorkerLivenessKicker`
 re-nudges it, and it responds → idles → is nudged again (one agent logged its "179th poll").
 
 **Why every cleanup path is blind.** The finish is NOT a session death, so:
@@ -310,7 +310,7 @@ depends on it, so it was not subsumed.
 > **SSOT for: which workers are reaped on `/done` and which persist.** The completion contract above answers "how does a
 > _finished_ one-off die?"; this section answers "**which** workers are one-offs in the first place?" — and corrects a
 > defect where plan-backlog workers were wrongly reaped after every task. **Implementation plan**:
-> [`ao_worker_lifecycle_dispatch_context_2026_07_21`](../../plans/active/ao_worker_lifecycle_dispatch_context_2026_07_21.md).
+> [`ao_worker_lifecycle_dispatch_context_2026_07_21`](../../plans/archive/2026_07/ao_worker_lifecycle_dispatch_context_2026_07_21.md).
 
 ### The principle — lifecycle is a property of the DISPATCH, not of the role
 
@@ -328,8 +328,8 @@ whether to reap a worker on `/done`.** The authoritative signal is **who fired t
 The reap-on-done gate keyed on **`role_one_shot OR agent_one_shot`**, where `role_one_shot` read the **static role
 field** (`role_registry.get_role(assigned_role).is_one_shot`). Four plan-worker roles were declared `one_shot`
 (`backend_engineer`, `ui_developer`, `quant_dev`, `infra`), so a plan-backlog worker was reaped **after every task** —
-"a fresh-context session per task." Observed: one plan's tasks sprayed across slots (cost_per_day tasks ran on slots 3
-_and_ 4), and slots churned spawn→task→reap→respawn every few minutes. Each task completed + verified (no work lost),
+"a fresh-context session per task." Observed: one plan's tasks sprayed across slots (cost*per_day tasks ran on slots 3
+\_and* 4), and slots churned spawn→task→reap→respawn every few minutes. Each task completed + verified (no work lost),
 but the churn is pure waste and defeats intra-plan context.
 
 **The fix: the reap-on-done gate drops `role_one_shot` and keys only on the dispatch context** (`agent_one_shot` — the

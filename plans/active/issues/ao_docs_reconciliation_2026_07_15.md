@@ -22,8 +22,8 @@ related:
   [
     ../epics/orchestrator_master.md,
     ../epics/agent_operating_framework_master.md,
-    ao_skip_blind_spawn_budget_phantom_churn_2026_07_15.md,
-    plan_reconciliation_operator_decisions_2026_07_11.md,
+    /plans/archive/issues/ao_skip_blind_spawn_budget_phantom_churn_2026_07_15.md,
+    /plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md,
   ]
 created: 2026-07-15
 last_updated: 2026-07-16
@@ -70,7 +70,7 @@ documented).
 
 **Anchoring architecture fact:** the **2026-06-27 single-VM pivot** — ONE central orchestrator VM (`planning`) + N slot
 workers, dispatch by **role/skill** (`assigned_role`), NO per-epic VMs, NO `assigned_vm==backend` matching. SSOT:
-`codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`. Everything describing multi-VM / 9-epic-VM /
+`/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`. Everything describing multi-VM / 9-epic-VM /
 `assigned_vm`-matching is a drift candidate.
 
 ## Completion census (hard data — todo checkboxes + status field)
@@ -124,10 +124,11 @@ table. **Routes to operator** (locked epic).
 
 ### F2 — [REVISED after Wave-2 verify] the `orchestrator-multi-vm-topology.md` codex doc is ALREADY correctly superseded; the residual is a stale epic SSOT-table _pointer_
 
-Wave-2 (Agent E) verified `codex/12-agent-workflow/orchestrator-multi-vm-topology.md` carries a correct "🔴 SUPERSEDED
-(2026-07-12)" banner + `status: stale` pointing at the single-vm doc — so it is NOT an unmarked-stale drift. The
-residual is only that `orchestrator_master`'s Design-SSOT **table row** still lists it as "Owns VM shapes…" without a
-"(superseded)" note — cosmetic stale-pointer (a reader who follows it sees the banner), low severity. **The real codex
+Wave-2 (Agent E) verified `codex/12-agent-workflow/orchestrator-multi-vm-topology.md` (**since DELETED** — the file no
+longer exists as of 2026-07-23; this line is the historical record of its state at audit time) carried a correct "🔴
+SUPERSEDED (2026-07-12)" banner + `status: stale` pointing at the single-vm doc — so it is NOT an unmarked-stale drift.
+The residual is only that `orchestrator_master`'s Design-SSOT **table row** still lists it as "Owns VM shapes…" without
+a "(superseded)" note — cosmetic stale-pointer (a reader who follows it sees the banner), low severity. **The real codex
 STALE-DRIFT is elsewhere — `canonical-plan-flow.md` (see Codex-12 section, C-E1).**
 
 ### F3 — `agent_operating_framework_master` pillar #1 (strict `assigned_vm==backend` dispatch, W1 / D1-D6) is MOOT (STALE-DRIFT, self-acknowledged)
@@ -252,7 +253,7 @@ skip-aware-budget · backlog_regen's task-ID-instability Addendum.
 | uv_pin_fleet_drift_2026_06_22                           | CURRENT-OPEN (needs-triage)                                        | 2 core infra fixes confirmed still-unshipped (live grep); strike 4 moot checkboxes                                                                                                                                                                                                                                                                  |
 
 **New cross-finding G3 (feeds F1/F2 + Wave 2 codex):** the "epic VMs retired" premise is only _partially_ applied —
-`codex/04-architecture/runtime-deployment-topology.md` (edited **2026-07-12, post-pivot**) still says "central + epic
+`/codex/04-architecture/runtime-deployment-topology.md` (edited **2026-07-12, post-pivot**) still says "central + epic
 VMs are long-lived systemd services," and `launch-epic-vm*.sh` still exist (last touched 2026-06-23). So the multi-VM
 drift isn't just "epic stale, codex current" — **codex itself is unreconciled**. F1/F2 need code/codex-verify in Wave 2,
 not face-value on the pivot notices.
@@ -335,13 +336,13 @@ code-verified, but the retired multi-VM/epic-VM model still reads as _current_ i
 (frontmatter + Owns + Phase 0-12 + SSOT-table row, F1) · `canonical-plan-flow.md` (an AOF-cited SSOT, C-E1) · **5 of 11
 codex/04 docs** (host-offline-failover STALE, overview 4 sections, backlog-state-alignment, worker-liveness,
 runtime-deployment-topology — some _re-drifted post-pivot_, F/G3) · **code** (`launch-epic-vm*.sh`,
-`vm_prefix_registry.py` LONG_LIVED_LIVE). The sibling epic `agent_operating_framework_master` WAS corrected
+`vm_prefix_registry.py` LONG*LIVED_LIVE). The sibling epic `agent_operating_framework_master` WAS corrected
 (`planning`); `orchestrator_master` wasn't, same week. **Root cause:** the one codex-reconciliation audit
-(`codex_vs_repo_docs_ssot_audit_2026_06_01`) shipped 2026-06-22, _5 days before the pivot_, and nothing re-swept after.
+(`codex_vs_repo_docs_ssot_audit_2026_06_01`) shipped 2026-06-22, \_5 days before the pivot*, and nothing re-swept after.
 → this is one coherent remediation, not 10 scattered edits.
 
 **X2 — 🔴 BIG FINDING (recovery/kill-switch domain, operator-notify per triage rule):**
-`codex/04-architecture/recovery-defence-in-depth-layers.md` documents Layer-1 as a live `recovery-audit` AO agent, but
+`/codex/04-architecture/recovery-defence-in-depth-layers.md` documents Layer-1 as a live `recovery-audit` AO agent, but
 `agents/recovery-audit.md` was deleted end-to-end (code-confirmed). Either Layer-1 audit-signoff was intentionally
 dropped (doc must say so) or it needs re-implementation — an operator call.
 
@@ -444,3 +445,43 @@ post-pivot re-sweep.
   stale evidence). Launched Wave 2 (codex + AO-repo-doc reconciliation).
 - **2026-07-15** — Tracker created. Read both epics firsthand (F1-F5). Computed the plan + issue completion census.
   Launched Wave 1 (plans + issues cluster reconciliation). Codex + AO-repo-doc passes (Wave 2) queued.
+
+## Todos — the UNABSORBED remainder (added 2026-07-23 by `/plan-reconcile`, AO scope)
+
+> **This doc was NOT archivable, despite its 🟢 EXECUTION CONSOLIDATED banner.** A conservation check of all 6 tiers
+> against `../ao_open_issues_consolidated_close_out_2026_07_17.md` found most content did land (Tier 1/2/4/5 verified
+> executed, several via archived child plans), but **Tier 3 and Tier 6 left real remainders that no plan tracked**. The
+> tracker's own `- [ ]` "`ao_docs_reconciliation` close-out pass — verify tier-by-tier (1–6) what has since landed" is
+> the gate for exactly this; the todos below ARE its answer, so that todo can close once these are owned.
+
+- [x] [DOCS] P1. ✅ **DONE 2026-07-23 — `/codex/12-agent-workflow/canonical-plan-flow.md` corrected (operator-ruled).**
+      This was this doc's own **highest-priority codex hit** and it sat untouched for 8 days while agents read it as
+      `status: current`: it mandated `assigned_vm: vm-<id>` as REQUIRED and described `parent_epic` as routing "to the
+      right VM via `orchestrator_vm_registry.yaml`" — the multi-VM fleet deprecated 2026-06-27, contradicting
+      `plans/PLAN_FORMAT.md`'s `{planning, NA}`. Fixed under an explicit operator ruling (codex edits are never
+      autonomous): frontmatter block now reads `assigned_vm: planning | NA`, with a dated CORRECTED banner; two further
+      stale lines in the same doc were fixed with it (the `tab/<operator>/<N>` branch model in §[4] and §[8]-[10], and
+      "plan-level `assigned_vm` matches the slot's VM context" → role-based dispatch).
+- [ ] [OPERATOR] P2. **Rule on the epic-VM code artifacts — they have never been ruled on, by anyone.**
+      `deployment-service/scripts/vm/launch-epic-vm.sh` + `launch-epic-vm-aws.sh` still ship, and
+      `deployment_service/vm_prefix_registry.py` still registers **10**
+      `agent-orch-vm-{defi,cefi,tradfi,sports,     prediction,ml,trading-core,operator-ops,cross-cutting,orchestrator}-`
+      prefixes as `LONG_LIVED_LIVE`, commented "planning VM + per-epic VMs … run until operator tears them down".
+      Per-epic VMs were deprecated **2026-06-27**; CLAUDE.md says delete deprecated code, no shims — but the failover
+      module got an explicit **KEEP** ruling on the "multi-VM may return for resilience" argument, so this is genuinely
+      a judgment call, not a cleanup. **Operator direction 2026-07-23: file it, decide later** — the point of this todo
+      is that the decision stops being invisible. **Gate**: a recorded keep-or-delete ruling; if KEEP, the named
+      scenario under single-VM that still needs it (mirroring the failover precedent).
+- [ ] [REVIEW] P3. **Reopen or annotate `plans/active/codex_vs_repo_docs_ssot_audit_2026_06_01.md:192`** — its
+      agent-orchestrator line is still `[x] SHIPPED` with no note about the post-pivot re-drift this doc's own G-M1
+      finding asked for. A `[x]` that predates a pivot reads as current coverage. **Gate**: the line carries either a
+      re-verification date or an explicit reopen.
+- [ ] [DOCS] P3. **Banner or fix `/codex/12-agent-workflow/local-slot-host-symmetric-worker-model.md`** — it still
+      carries 2 live `tab/<operator>/<N>` references (the RETIRED tab-branch model) with no banner. Same class as the
+      `canonical-plan-flow.md` fix above and flagged by this doc's own C-cluster. **Gate**: no unbannered `tab/<...>`
+      branch instruction remains in the file.
+- [ ] [REVIEW] P2. **The Tier-6 remainder is now its own issue doc — track it there, not here.** Tier-6's per-file
+      dispositions were executed as a blanket delete, leaving 5 dead doc-references in shipped code and a tracker
+      Progress Log claiming "0 dead links" that never covered that batch. Filed 2026-07-23 as
+      [`ao_repo_docs_deleted_against_instructions_dead_code_refs_2026_07_23.md`](ao_repo_docs_deleted_against_instructions_dead_code_refs_2026_07_23.md).
+      **Gate**: that doc reaches 0 open todos; this line closes with it.

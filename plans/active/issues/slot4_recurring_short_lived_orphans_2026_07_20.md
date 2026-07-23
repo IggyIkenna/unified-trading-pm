@@ -14,12 +14,12 @@ stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer]
 tags: [agent-orchestrator, worker-lifecycle, tmux, orphan-process, slot4]
-related: [ao_worker_lifecycle_reap_2026_07_20.md]
+related: [/plans/archive/2026_07/ao_worker_lifecycle_reap_2026_07_20.md]
 created: 2026-07-20
 parent_epic: orchestrator_master
 priority: P3
 source: [agent-orchestrator central VM activity_log, 2026-07-20 11:15-11:30 UTC]
-assigned_vm:
+assigned_vm: NA # filled 2026-07-23 (plan-reconcile Phase 0) — was EMPTY, which is not a valid value; every sibling AO issue doc is NA and this doc is not AO-dispatched
 resolved_by:
 locked_by:
 execution_scope: orchestrator-agent
@@ -69,3 +69,20 @@ than just relying on the reap to keep mopping it up.
   higher rate than other slots.
 - If a fixable root cause is found (e.g. a kick/respawn race, a pane-tree-reap gap), fix it; if it's just "slot 4 gets
   dispatched more," record that and close as expected/self-mitigated by the periodic sweep.
+
+## Todos (added 2026-07-23 — `/plan-reconcile`; this doc had NO todos and was tracked by no plan)
+
+> **Re-verified 2026-07-23: the MITIGATION is live, the ROOT CAUSE was never investigated.** The periodic orphan-process
+> sweep this doc relies on is real and running (`tuning.orphan_sweep_dry_run` flipped to `False` at
+> `agent-orchestrator@95fdf9d`, live-verified reaping orphans within ~60s, per the archived
+> `ao_worker_lifecycle_reap_2026_07_20.md`). But that same plan records the slot-4-specific cause as "follow-up filed,
+> not actioned this session" and points back at THIS doc — which then had no todo, so the follow-up existed nowhere.
+> `git log` since 2026-07-20 shows no commit touching slot-4 spawn/teardown.
+
+- [ ] [BACKEND] P3. **Root-cause slot 4's elevated short-lived-orphan rate, or explicitly accept it.** The sweep reaps
+      the symptom within ~60s regardless of cause, so this is about knowing whether slot 4 is structurally different.
+      Compare `slot_resume_respawned` / `autospawn_failed` / `watchdog_slot_killed` / `tmux_session_lost` rates for slot
+      4 against the other slots **normalised per dispatch** (not raw counts — slot 4's volume differs) over a multi-day
+      window. **Gate**: either a fixed root cause (code diff + a measured slot-4 orphan-rate drop over 24h) **or** a
+      recorded "just cadence, self-mitigated by the periodic sweep" verdict citing the comparison data. Silence is not
+      an outcome.

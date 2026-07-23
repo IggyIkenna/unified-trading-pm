@@ -13,7 +13,7 @@ summary: |
   set) was on LDR and NOT RUNNING — the fleet was executing code we had already fixed. Root cause is FIXED (two ships,
   below). The VM itself is NOT yet recovered: operator ruling 2026-07-16 is that the deploy is theirs to run, because
   unfreezing pulls 23 commits, ~22 of them not written or verified by this session, onto the live orchestrator.
-status: open
+status: resolved # (was: open) 2026-07-23 plan-reconcile — both remaining todos closed (one DONE via the archived ao_fleet_infra_hardening 800-clone sweep, one operator-descoped to the deployment-ui Fleet tab)
 nature: issue
 asset_group: [meta]
 stage: [meta]
@@ -23,7 +23,7 @@ tags: [agent-orchestrator, deployment, ff-pull, stale-clone, fleet-capacity, inf
 related:
   [
     ../../archive/2026_07/ao_dispatch_hardening_2026_07_16.md,
-    ../../codex/05-infrastructure/per-tab-worktrees.md,
+    /codex/05-infrastructure/per-tab-worktrees.md,
     ../../epics/orchestrator_master.md,
   ]
 created: 2026-07-16
@@ -140,21 +140,21 @@ frozen clone among healthy ones is invisible to the alarm that exists to catch e
       the one untracked file, so this is a plain FF — no WIP at risk. Recovery, on `i-0c9b283b31d6b5ca7`:
 
       ```bash
-                          cd /home/ubuntu/unified-trading-system-repos/agent-orchestrator
-                          sudo -u ubuntu git status --short          # expect ONLY: ?? main-agent-checkpoint.md
-                          sudo -u ubuntu git diff --stat             # expect EMPTY (no tracked WIP)
-                          sudo -u ubuntu git fetch origin live-defi-rollout
-                          sudo -u ubuntu git merge --ff-only origin/live-defi-rollout   # brings the gitignore → never recurs
-                          sudo -u ubuntu git log -1 --format='%h %ci'                   # confirm it moved off 9599c91
-                          grep -c claimable_queued_task_ids server/dispatch.py          # expect ≥1 → R1 is now on the box
-                          sudo systemctl restart orchestrator.service                   # systemctl ONLY — never nohup uvicorn (main.md HARD RULE)
-                          systemctl is-active orchestrator.service
-                          ```
+                                      cd /home/ubuntu/unified-trading-system-repos/agent-orchestrator
+                                      sudo -u ubuntu git status --short          # expect ONLY: ?? main-agent-checkpoint.md
+                                      sudo -u ubuntu git diff --stat             # expect EMPTY (no tracked WIP)
+                                      sudo -u ubuntu git fetch origin live-defi-rollout
+                                      sudo -u ubuntu git merge --ff-only origin/live-defi-rollout   # brings the gitignore → never recurs
+                                      sudo -u ubuntu git log -1 --format='%h %ci'                   # confirm it moved off 9599c91
+                                      grep -c claimable_queued_task_ids server/dispatch.py          # expect ≥1 → R1 is now on the box
+                                      sudo systemctl restart orchestrator.service                   # systemctl ONLY — never nohup uvicorn (main.md HARD RULE)
+                                      systemctl is-active orchestrator.service
+                                      ```
 
-                          **Gate**: `git rev-list --count HEAD..origin/live-defi-rollout` == 0 AND
-                          `grep -c claimable_queued_task_ids server/dispatch.py` ≥ 1 AND the service is `active`. Note this deploys 23
-                          commits, ~22 of them from other sessions — all LDR-landed and gated by the normal path, but not verified by the
-                          session that found this.
+                                      **Gate**: `git rev-list --count HEAD..origin/live-defi-rollout` == 0 AND
+                                      `grep -c claimable_queued_task_ids server/dispatch.py` ≥ 1 AND the service is `active`. Note this deploys 23
+                                      commits, ~22 of them from other sessions — all LDR-landed and gated by the normal path, but not verified by the
+                                      session that found this.
 
 - [x] [INFRA] P1. ✅ **RAN 2026-07-16 17:35Z — and it FAILED, which is exactly why it was worth running.** Unblocked by
       this doc's fix (the code was finally live, so there was something real to measure). Result: **R1 did NOT reduce
@@ -165,21 +165,35 @@ frozen clone among healthy ones is invisible to the alarm that exists to catch e
       remaining pass-gate is tracked as the new P0 in `ao_dispatch_hardening_2026_07_16` Phase 3 — **not duplicated
       here**. That plan stays code-shipped-not-proven until that P0's runtime verdict lands.
 
-- [ ] [INFRA] P2. **HANDED OFF 2026-07-16 — operator is routing the UI-surface + alerting work to a separate agent**
-      ("this needs a proper UI surface and alerting system so it doesn't occur again"). Kept here as the requirement of
-      record; do NOT start it from this doc without checking with that owner first. **Make a single frozen clone
-      visible.** The dirty-streak WARN only fires when EVERY repo in a sweep is dirty, so this outage was silent for two
-      days. Alert on a per-repo streak (repo X `[skip:dirty]`/`[skip:ff-failed]` for N consecutive ticks), not on an
-      all-repos-dirty sweep. The signal already exists — `_ff_record` tokens and `ff_pull_last_result` are per-sweep;
-      make them per-repo. **Gate**: a single deliberately-frozen clone raises a WARN within N ticks.
+- [x] [INFRA] P2. 🚫 **CLOSED-SUPERSEDED 2026-07-23 — operator-descoped, delivered in another repo.** The operator
+      descoped the per-repo freeze-streak signal + surface on 2026-07-21 and handed it to the agent working the
+      deployment-ui Fleet tab (breadcrumb in `../ao_open_issues_consolidated_close_out_2026_07_17.md`). Verified the
+      deliverable actually landed: `deployment-ui/src/pages/FleetGit.tsx` renders per-repo `dirty_files` / `ahead` /
+      `behind` / `DRIFT` badges plus `ff_pull_last_result` and reporter/ff-cron staleness, so a single frozen repo among
+      clean siblings IS individually visible. **Do NOT reopen this in agent-orchestrator** — any follow-up belongs to
+      FleetGit.tsx's owner. Original item: **HANDED OFF 2026-07-16 — operator is routing the UI-surface + alerting work
+      to a separate agent** ("this needs a proper UI surface and alerting system so it doesn't occur again"). Kept here
+      as the requirement of record; do NOT start it from this doc without checking with that owner first. **Make a
+      single frozen clone visible.** The dirty-streak WARN only fires when EVERY repo in a sweep is dirty, so this
+      outage was silent for two days. Alert on a per-repo streak (repo X `[skip:dirty]`/`[skip:ff-failed]` for N
+      consecutive ticks), not on an all-repos-dirty sweep. The signal already exists — `_ff_record` tokens and
+      `ff_pull_last_result` are per-sweep; make them per-repo. **Gate**: a single deliberately-frozen clone raises a
+      WARN within N ticks.
 
-- [ ] [INFRA] P2. **Audit every host for the same freeze.** The gitignore + ff-pull fixes stop it recurring, but any
-      clone already frozen by an untracked file stays frozen until someone FFs it (self-sustaining). Sweep every host's
-      root + slot clones for `HEAD..origin/live-defi-rollout > 0` with untracked-only dirt. The main agent's own
-      checkpoint (read 2026-07-16) already reports a related, unresolved staleness on host `hk`: "hk utm behind 12→20→49
-      (growing steadily); FOUR hk repos now behind (deployment-ui=2, features-service=4, instruments-service=3,
-      market-tick-data-service=6)" — it correctly concluded "host-side cron restart = operator/host-owned (outside my
-      API surface)" and could not act. Check whether that shares this root cause.
+- [x] [INFRA] P2. ✅ **DONE 2026-07-23 (scope-qualified — read the qualification before quoting this).** Executed via
+      `ao_fleet_infra_hardening_2026_07_20.md` (archived 2026_07) todo 4: a measured sweep of **375 clones on the hk
+      host + 425 on the orchestrator VM (800 total)** — worst clone 7 behind, **no 249-behind cases**, 42 clean clones
+      FF'd, dirty clones protected rather than force-updated. **The qualification, kept deliberately**: "every host" was
+      not literal (Ikenna's laptop was not swept) and the result is POINT-IN-TIME, not a standing guarantee — the child
+      plan carries its own correction banner saying exactly that, because an earlier version of this claim was
+      overclaimed as "zero frozen clones remain". Original item: **Audit every host for the same freeze.** The
+      gitignore + ff-pull fixes stop it recurring, but any clone already frozen by an untracked file stays frozen until
+      someone FFs it (self-sustaining). Sweep every host's root + slot clones for `HEAD..origin/live-defi-rollout > 0`
+      with untracked-only dirt. The main agent's own checkpoint (read 2026-07-16) already reports a related, unresolved
+      staleness on host `hk`: "hk utm behind 12→20→49 (growing steadily); FOUR hk repos now behind (deployment-ui=2,
+      features-service=4, instruments-service=3, market-tick-data-service=6)" — it correctly concluded "host-side cron
+      restart = operator/host-owned (outside my API surface)" and could not act. Check whether that shares this root
+      cause.
 
 ## Progress Log
 

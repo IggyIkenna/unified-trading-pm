@@ -22,14 +22,16 @@ tags: [agent-orchestrator, dispatch, backlog, escalation, observability, orphane
 related:
   [
     ../../archive/2026_07/ao_dispatch_hardening_2026_07_16.md,
-    backlog_task_done_status_diverges_from_plan_checkbox_2026_07_16.md,
-    regen_positional_task_ids_not_content_stable_2026_07_17.md,
+    /plans/archive/issues/backlog_task_done_status_diverges_from_plan_checkbox_2026_07_16.md,
+    /plans/active/issues/regen_positional_task_ids_not_content_stable_2026_07_17.md,
     ../../archive/issues/ao_backlog_prune_gcs_wrong_db_2026_07_17.md,
-    ../escalation_pipeline_mvp_2026_06_25.md,
+    ../../archive/2026_07/escalation_pipeline_mvp_2026_06_25.md,
+    ../../epics/escalation_and_disaster_recovery_master.md,
     ../../epics/orchestrator_master.md,
   ]
 created: 2026-07-17
-last_updated: 2026-07-17
+last_updated: 2026-07-23 # re-verified against the live VM (main): DB_PATH todo CLOSED (gate passes), l2_book todo
+# re-scoped (measurement void under the dispatch pause), backlog-relations still blocked-upstream after 6 days
 parent_epic: orchestrator_master
 assigned_vm: NA
 execution_scope: local-only
@@ -66,17 +68,17 @@ source:
 
 ## Already homed — do NOT re-track here
 
-| Deferred item                                        | Its actual home                                                                                                                                                                           |
-| ---------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Reopen the 2 false-`done` rows                       | **DONE** by infra slot-2 2026-07-17 — but see todo 5 below, it did not hold                                                                                                               |
-| Unauditable `done` rows (`brief_hash` NULL)          | [`regen_positional_task_ids_not_content_stable_2026_07_17`](regen_positional_task_ids_not_content_stable_2026_07_17.md) todo 1                                                            |
-| Durable park for fleet-skipped tasks (the CODE half) | [`ao_skip_blind_spawn_budget_phantom_churn_2026_07_15`](ao_skip_blind_spawn_budget_phantom_churn_2026_07_15.md) (1 open todo)                                                             |
-| Sports durable park (the OPERATIONAL half)           | **MOOT 2026-07-17** — `-002` no longer exists, `-001` is `done`; sports dispatching normally                                                                                              |
-| `escalation_pipeline_mvp` un-pause                   | [`escalation_pipeline_mvp_2026_06_25`](../escalation_pipeline_mvp_2026_06_25.md) (`status: paused`, operator ruling)                                                                      |
-| Recovery-audit Layer-1 producer rewire               | [`ao_recovery_audit_layer1_deleted_2026_07_15`](ao_recovery_audit_layer1_deleted_2026_07_15.md)                                                                                           |
-| Staleness UI + alerting; audit hosts for freeze      | [`ao_service_clone_frozen_by_untracked_checkpoint_2026_07_16`](ao_service_clone_frozen_by_untracked_checkpoint_2026_07_16.md) — **another agent owns the UI half** (operator, 2026-07-16) |
-| uv-cache reconcile; 30G reclaim; `UV_CACHE_DIR`      | [`ao_host_disk_pressure_2026_07_16`](../../archive/2026_07/ao_host_disk_pressure_2026_07_16.md) — closed + its own Deferred table                                                         |
-| Deep `plan-reconciler`; capability_wizard            | their own issue docs (unchanged by the parent's archival)                                                                                                                                 |
+| Deferred item                                        | Its actual home                                                                                                                                                                                                                                                                                                                                            |
+| ---------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Reopen the 2 false-`done` rows                       | **DONE** by infra slot-2 2026-07-17 — but see todo 5 below, it did not hold                                                                                                                                                                                                                                                                                |
+| Unauditable `done` rows (`brief_hash` NULL)          | [`regen_positional_task_ids_not_content_stable_2026_07_17`](regen_positional_task_ids_not_content_stable_2026_07_17.md) todo 1                                                                                                                                                                                                                             |
+| Durable park for fleet-skipped tasks (the CODE half) | [`ao_skip_blind_spawn_budget_phantom_churn_2026_07_15`](ao_skip_blind_spawn_budget_phantom_churn_2026_07_15.md) (1 open todo)                                                                                                                                                                                                                              |
+| Sports durable park (the OPERATIONAL half)           | **MOOT 2026-07-17** — `-002` no longer exists, `-001` is `done`; sports dispatching normally                                                                                                                                                                                                                                                               |
+| escalation workstream un-pause                       | **Moved 2026-07-23** → [`escalation_and_disaster_recovery_master`](../../epics/escalation_and_disaster_recovery_master.md) (epic `status: paused`, operator ruling). The child plan [`escalation_pipeline_mvp_2026_06_25`](../../archive/2026_07/escalation_pipeline_mvp_2026_06_25.md) was ARCHIVED (operator); its 5 UNBUILT todos live in the epic now. |
+| Recovery-audit Layer-1 producer rewire               | [`ao_recovery_audit_layer1_deleted_2026_07_15`](ao_recovery_audit_layer1_deleted_2026_07_15.md)                                                                                                                                                                                                                                                            |
+| Staleness UI + alerting; audit hosts for freeze      | [`ao_service_clone_frozen_by_untracked_checkpoint_2026_07_16`](ao_service_clone_frozen_by_untracked_checkpoint_2026_07_16.md) — **another agent owns the UI half** (operator, 2026-07-16)                                                                                                                                                                  |
+| uv-cache reconcile; 30G reclaim; `UV_CACHE_DIR`      | [`ao_host_disk_pressure_2026_07_16`](../../archive/2026_07/ao_host_disk_pressure_2026_07_16.md) — closed + its own Deferred table                                                                                                                                                                                                                          |
+| Deep `plan-reconciler`; capability_wizard            | their own issue docs (unchanged by the parent's archival)                                                                                                                                                                                                                                                                                                  |
 
 ## Todos
 
@@ -86,28 +88,57 @@ source:
       escalation**. Whoever implements the second without noticing the first will either collide on the route or, worse,
       wire operator escalations into the CI judgment path. **Gate**: one of the two is renamed, or a recorded decision
       says why the near-collision is acceptable, cited from
-      [`escalation_pipeline_mvp_2026_06_25`](../escalation_pipeline_mvp_2026_06_25.md). Blocked-by: that plan is
-      `status: paused` on an operator ruling — this only needs doing if/when it un-pauses.
-- [ ] [BACKEND] P2. **`ORCHESTRATOR_DB_PATH` is set in the systemd unit but NOT in `.env.local`.** So any shell-run
-      tooling on the VM resolves `config.db_path()` to the **empty in-repo DB** instead of
+      [`escalation_and_disaster_recovery_master`](../../epics/escalation_and_disaster_recovery_master.md) § "P1 —
+      escalation pipeline MVP" (the design detail is in the archived child plan
+      [`escalation_pipeline_mvp_2026_06_25`](../../archive/2026_07/escalation_pipeline_mvp_2026_06_25.md), archived
+      2026-07-23). Blocked-by: that **epic** is `status: paused` on an operator ruling — this only needs doing if/when
+      it un-pauses. (was: blocked-by the child plan's own pause, before its todos moved to the epic.)
+- [x] [BACKEND] P2. ✅ **RESOLVED 2026-07-23 — the doc's own gate command was run on the live VM and PASSES.**
+      `sudo -u ubuntu env -u ORCHESTRATOR_DB_PATH -u ORCHESTRATOR_STATE_JSON .venv/bin/python -c "from server     import config; print(config.db_path())"`
+      → `/home/ubuntu/unified-trading-system-repos/agent-orchestrator/data/state/state.db`, and that path holds the LIVE
+      data (`tasks=68 agents=78 slots=17`), not an empty DB — which is precisely the failure mode this todo described (a
+      probe reporting zeroes that looks like a healthy answer). The one-concept-two-places condition is gone at the
+      source: the systemd unit no longer carries `Environment=ORCHESTRATOR_DB_PATH` / `ORCHESTRATOR_STATE_JSON` (only
+      `MODE`, `SNAPSHOT_INTERVAL_SECONDS`, `WORKER_HOST`, `PATH`, `TERM`), the `/var/lib/orchestrator` `ReadWritePaths=`
+      line is gone, `.env.local` never had the vars, and `/var/lib/orchestrator/` no longer exists on disk. Delivered by
+      `ao_fleet_infra_hardening_2026_07_20.md` (archived) todos 1+2 — the config change plus the operator-gated live
+      migration. Original item: **`ORCHESTRATOR_DB_PATH` is set in the systemd unit but NOT in `.env.local`.** So any
+      shell-run tooling on the VM resolves `config.db_path()` to the **empty in-repo DB** instead of
       `/var/lib/orchestrator/state.db` — a probe reports zeroes and looks like a healthy answer. This bit the 2026-07-17
       session **twice** while diagnosing the prune bug, and it is the same one-concept-two-places family as the
       `ORCHESTRATOR_DB_PATH`/`ORCHESTRATOR_REGEN_DB_PATH` drift that CAUSED that bug
       ([`ao_backlog_prune_gcs_wrong_db_2026_07_17`](../../archive/issues/ao_backlog_prune_gcs_wrong_db_2026_07_17.md)).
       **Gate**: a plain `.venv/bin/python -c "from server import config; print(config.db_path())"` on the VM, run as
       `ubuntu` with no env overrides, prints the live DB path.
-- [ ] [BACKEND] P3. **Root-cause the 2026-07-12 degradation onset.** `worker_polling_dead` went **0 → 587** and the
-      spawn:dispatch ratio **0.6:1 → 44:1** on that date. The churn itself is fixed (`f8ace1f`, proven on the live
-      rate), but **why it started that day was never explained** — so a recurrence is invisible until it costs again.
-      **Gate**: either a named cause with evidence from `activity_log`, or a recorded decision that the pre-fix window
-      is not worth excavating now that the mechanism is closed — but not silence.
-- [ ] [UI] P3. **Backlog-relations view.** Brief + real data + a 100-task synthetic fixture were handed to the design
-      agent 2026-07-17 (`agent-orchestrator/docs/BACKLOG_RELATIONS_UX_BRIEF.md`). **Cannot start until a design lands.**
-      The model is a cross-cutting GRAPH, not a hierarchy — measured: 6 of 11 task→task edges cross plans, 1 condition
-      gates 2 plans, 25/35 conditions gate nothing. A table cannot show that, which is why three table/tree attempts
-      were rejected. Needs `GET /api/backlog/graph` behind it. **Gate**: design received → implemented → the relation a
-      table cannot express (one prereq gating tasks in multiple plans) is visible in one view.
-- [ ] [INFRA] P2. **NEW 2026-07-17 — the l2_book reopen did NOT hold, and its own verification says it did.**
+- [ ] [BACKEND] P3. **Root-cause the 2026-07-12 degradation onset.** ⚠️ **DOUBLE-TRACKED (noted 2026-07-23)** — the same
+      item is also open in `ao_open_issues_consolidated_close_out_2026_07_17.md` Phase 5 ("07-12 degradation onset: name
+      it or close it"). Whoever picks it up should close BOTH, or collapse them into one owner first; do not let two
+      docs each wait for the other. `worker_polling_dead` went **0 → 587** and the spawn:dispatch ratio **0.6:1 → 44:1**
+      on that date. The churn itself is fixed (`f8ace1f`, proven on the live rate), but **why it started that day was
+      never explained** — so a recurrence is invisible until it costs again. **Gate**: either a named cause with
+      evidence from `activity_log`, or a recorded decision that the pre-fix window is not worth excavating now that the
+      mechanism is closed — but not silence.
+- [ ] [UI] P3. **Backlog-relations view.** ⏳ **STILL BLOCKED-UPSTREAM-DESIGN, re-checked 2026-07-23 (6 days later, no
+      movement):** `docs/BACKLOG_RELATIONS_UX_BRIEF.md` is present, but there is **no design deliverable, no
+      `GET /api/backlog/graph` endpoint** (grepped `server/routes/`), and no relations UI commit in `dashboard/src`. The
+      blocker is unchanged — this cannot start. **If the design is not coming, say so and close this**; an
+      indefinitely-blocked P3 that nobody owns is noise in every future sweep. Brief + real data + a 100-task synthetic
+      fixture were handed to the design agent 2026-07-17 (`agent-orchestrator/docs/BACKLOG_RELATIONS_UX_BRIEF.md`).
+      **Cannot start until a design lands.** The model is a cross-cutting GRAPH, not a hierarchy — measured: 6 of 11
+      task→task edges cross plans, 1 condition gates 2 plans, 25/35 conditions gate nothing. A table cannot show that,
+      which is why three table/tree attempts were rejected. Needs `GET /api/backlog/graph` behind it. **Gate**: design
+      received → implemented → the relation a table cannot express (one prereq gating tasks in multiple plans) is
+      visible in one view.
+- [ ] [INFRA] P2. ⚠️ **RE-SCOPED 2026-07-23 — the original measurement is now VOID; do NOT close this as fixed.**
+      Re-measured on the migrated live DB: only **1** `l2_book%` task row survives
+      (`l2_book_microstructure_capture-001`, `done`), while the plan still shows **2 open todos**. That looks like the
+      same divergence, only worse — **but it is not evidence any more**: the plan is now `assigned_vm: NA` (swept into
+      the operator's fleet-wide dispatch pause, `unified-trading-pm@468a0f580`), so regen does NOT ingest it and absent
+      task rows are the CORRECT, expected behaviour rather than a defect. **The bug is unobservable while dispatch is
+      paused, not proven fixed.** **Re-test gate**: when this plan returns to `assigned_vm: planning`, confirm every
+      open `- [ ]` gets a task row — if the two BLOCKED todos are again absent while the plan is ingested, the
+      reopen-drop defect is live and this todo becomes actionable. Original finding: **NEW 2026-07-17 — the l2_book
+      reopen did NOT hold, and its own verification says it did.**
       `backlog_task_done_status_diverges_from_plan_checkbox_2026_07_16` records that infra slot-2 reopened
       `l2_book_microstructure_capture-005`/`-007`, and verified they STUCK (`status: queued`, `done_sha: None`,
       re-fetched individually). **Measured 2026-07-17T13:57:36Z: both task ids return NOTHING — they are absent from the

@@ -1020,11 +1020,11 @@ load-bearing before flipping them** — if it is, the fix is a second uv-managed
 > **Audit finding**: `staging` is dead in every repo (frozen 2026-06-27, now **600–967 commits behind LDR**; PM has no
 > `staging` branch at all; **0 open PRs targeting staging fleet-wide**) — yet ~~**6,900 runs/week** still fire against
 > it.
-> **~~$166/mo of that is billable, and ALL of it sits in the 2 fleet templates** (see the self-hosted correction in
-> the Progress Log: PM's 4 staging drivers are ALREADY on `[self-hosted, glue]` and cost $0).
+> \*\*~~$166/mo of that is billable, and ALL of it sits in the 2 fleet templates** (see the self-hosted correction
+> in the Progress Log: PM's 4 staging drivers are ALREADY on `[self-hosted, glue]` and cost $0).
 > Re-entry is **MANUAL** (`workspace-manifest.json` → `promotion_model: ldr_main` + `staging_dormant_mode: true`;
 > nothing auto-writes it; a breaking change does NOT auto-route to staging — that gate moved to
-> `ldr-to-main-promote-fleet.yml`), so stopping this sets **no silent trap**. Full evidence + per-workflow verdicts in
+> `ldr-to-main-promote-fleet.yml`), so stopping this sets **no silent trap\*\*. Full evidence + per-workflow verdicts in
 > the Progress Log entry below.
 
 - [x] ✅ [INFRA] P2. **Stop the two fleet templates' dead-branch triggers (~6,384 runs/wk ≈ 85% of the waste).** — DONE
@@ -2035,8 +2035,8 @@ prove on ONE caller → only then fan out._
     templates ≈ 6,384 runs/wk ≈ **$166/mo**
     (staging-backmerge ~~$84 + staging-lock-check ~$82); `staging-to-main` carries ONE residual hosted job — the
     `notify-slack` reusable
-    (~~$6/mo), **KEEP-D by design** (the alert carrier must
-    stay hosted so it can page when the VM is down), not waste; the other three PM drivers are **$0**.
+    (~~$6/mo), **KEEP-D by design** (the alert carrier
+    must stay hosted so it can page when the VM is down), not waste; the other three PM drivers are **$0**.
     So **~97% of the billable staging waste sits in the 2 workflows that CANNOT move to the VM** — migration is not the
     lever here, stopping them is. **Lesson**: `billable={}` (absence of the `UBUNTU` key) is the honest self-hosted
     check on this account — `/timing`'s `total_ms` reads 0 for hosted jobs too and proves nothing on its own.
@@ -2079,10 +2079,10 @@ prove on ONE caller → only then fan out._
   flipped, canary testing in progress, spend that day was actually the month's 2nd-highest); Jul 23 excluded as a
   partial day (pulled mid-session).
   - **PM (the only repo STEP 2 touched) — real, measured win**: **$16.89/day → $10.94/day, -35.3%**
-    (-$5.96/day; run-rate
-    ~$513/mo → ~$333/mo, ~**$181/mo saved** if sustained;
-    ~$36 actually saved over the 6 clean post-migration days).
-    Against the tighter immediately-prior week (Jul 8–15 = $24.74/day,
+    (-$5.96/day;
+    run-rate ~$513/mo → ~$333/mo, ~**$181/mo saved** if sustained;
+    ~$36 actually saved over the 6 clean post-migration
+    days). Against the tighter immediately-prior week (Jul 8–15 = $24.74/day,
     since spend was ramping into mid-July — see the Jul 13/14 spike that triggered this whole plan) the drop reads
     steeper: -55.8%, ~$420/mo run-rate. Report both; the true number is baseline-sensitive and the 2-week re-pull will
     tighten it.
@@ -2141,6 +2141,43 @@ prove on ONE caller → only then fan out._
      24 rendered copies. This is the plan's existing **KEEP-T** class, re-confirmed by measurement.
 
 ---
+
+## Cost ruling 2026-07-23 — semver-agent stays DEAD; minting moves to the PM reconciler (option B)
+
+Investigating the dead fleet release tagging (`plans/active/issues/post_cutover_silent_assumption_sweep_2026_07_23.md`
+F2) surfaced a decision that belongs to THIS plan, because it is a spend decision, not a repair.
+
+**Root cause of the tagging outage was not a bug — it was an orphaning.** `semver-agent.yml` triggers on
+`push: [staging]`; the 2026-06-27 cutover made staging dormant, so the only thing that mints `v*` tags simply stopped
+firing (last runs UTL 2026-06-28 / UAC 2026-06-27, matching each repo's newest tag exactly). Measured impact: **22
+repos, 26–29 days, ~2,490 unreleased commits.**
+
+**Reviving it was built, proven, and then REVERTED — on cost and noise:**
+
+| axis         | measured                                                                                                                         |
+| ------------ | -------------------------------------------------------------------------------------------------------------------------------- |
+| GHA cost     | `ubuntu-latest` (unmovable — self-hosted runners are PM-only, no org pool), ~~178 runs/day, 1-min billing minimum ⇒ **~~$32/mo** |
+| commit noise | **733 PM `chore(manifest)` commits in 30 days — ~24/day, peak 84/day**, into the merge-driver file every slot rebases on         |
+
+~$32/mo is a **~19% add-back** against this plan's ~$166/mo baseline, which is why it was rejected here rather than
+treated as a straightforward fix. **Option B** puts minting in `reconcile_release_tags.py`, already scheduled `*/30` in
+PM on **self-hosted runners (\$0)**, with ONE batched manifest commit per run instead of one per bump — same versions
+and rollback capability, no new billable runs, no commit storm.
+
+**Reverted, verified clean:** `unified-api-contracts@d9ff488b`, `unified-trading-library@df89ac54`,
+`unified-trading-api@6987074`. The proven template is recoverable from the pre-revert shas cited in the issue doc.
+
+**KEPT deliberately** (zero cost, zero noise, independent of the minter design):
+
+- the release-stall **detector** in `reconcile_release_tags.py` — converts a silent 4-week outage into a `::warning::`
+  naming the repos and their staleness (this is what measured the numbers above);
+- `publish-package.yml` **fail-closed on `0.0.0.dev0`** + `fetch-depth: 0` (a shallow checkout has no tags, so hatch-vcs
+  emitted a sentinel version — that wheel is in AR from 2026-07-03);
+- `unified-trading-library@08b4d89a` — the `:VERSION` Docker tag is no longer re-pointed at new content.
+
+**Lesson for this plan's cost model:** "revive the dead thing" is not automatically the right fix. The measurement that
+mattered here was not whether it works, but what it costs per month and how many commits/day it generates — and both
+were knowable before writing any code. Measure the running cost of a mechanism BEFORE restoring it.
 
 ## Deferred work after 2026-07-23
 
