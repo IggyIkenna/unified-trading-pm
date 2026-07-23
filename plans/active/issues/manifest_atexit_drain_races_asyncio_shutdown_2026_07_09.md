@@ -28,7 +28,7 @@ created: 2026-07-09
 parent_epic: sports_master
 priority: P0
 source: [plans/active/issues/manifest_early_return_missing_write_loss_2026_07_09.md]
-assigned_vm: planning
+assigned_vm: NA
 resolved_by:
 locked_by:
 execution_scope: orchestrator-agent

@@ -31,7 +31,7 @@ created: 2026-07-03
 parent_epic: infrastructure_master
 priority: P1
 source: honest_coverage_uac_writer_matrix_reconciliation_2026_06_29.md implementation session (Harsh)
-assigned_vm: planning
+assigned_vm: NA
 resolved_by:
 locked_by:
 execution_scope: orchestrator-agent
@@ -324,56 +324,56 @@ enough). The % is neither an upper nor lower bound of the real value.
       is starved.
 
       **DONE 2026-07-14 (data_engineering slot-7 planning) — `unified-api-contracts@89511de8` +
-                  `instruments-service@e6fdfd00`.** Live-verified the premise first (`api.tardis.dev/v1/exchanges/deribit`
-                  genuinely carries 68,847 `type=='combo'` symbols back to `availableSince=2022-08-23`, matching the finding
-                  exactly). Implemented the recommended fix: `VENUE_TO_ADAPTER_KEY["DERIBIT-COMBO"]` flipped `"deribit_combo"` →
-                  `"tardis"` (UAC); `factory.py::get_adapter_for_canonical_venue` special-cases `mode="live"` DERIBIT-COMBO to keep
-                  routing to the `deribit_combo` REST adapter (extracted into `_build_deribit_combo_live_adapter` to stay under the
-                  200-line function cap), so `mode="batch"` (default) now resolves to Tardis with `exchanges=["deribit"]` +
-                  `canonical_venue_override="DERIBIT-COMBO"` (the `("DERIBIT-COMBO","OPTION"):"deribit"` itype-routing entry
-                  already existed in `venue_instrument_type_to_tardis`, landed 2026-07-12). Went one step further than the
-                  recommendation flagged: since the "deribit" Tardis exchange slug is shared with bare DERIBIT's own
-                  option/future/perpetual/spot universe, `canonical_venue_override` alone would have mistagged that ENTIRE universe
-                  as DERIBIT-COMBO — added a self-filter in `TardisReferenceDataAdapter.get_instruments()` restricting to
-                  `type=='combo'` rows when the override is set (the venue_mapping.py comment had already flagged this as
-                  not-yet-done). Corrected the adapter's own docstrings + the `honest-absence-downstream-handling.md` codex SSOT
-                  § "DERIBIT-COMBO historical unavailability" (2026-06-27), which had over-broadly concluded "no data source can
-                  serve it" — that was only ever true of Deribit's own REST `get_combos` endpoint, not Tardis's independent
-                  archived feed; SUPERSEDED-banner added rather than deleted, per the codex-alignment rule. Added regression tests:
-                  factory batch/live routing (`test_deribit_combo_batch_routes_to_tardis`,
-                  `test_deribit_combo_live_routes_to_rest_adapter`), the Tardis combo-type self-filter
-                  (`test_deribit_combo_override_filters_to_combo_type_only`), and fixed a stale assertion
-                  (`test_factory_contains_deribit_combo` previously asserted the old `"deribit_combo"` value). QG-green both repos
-                  (`.qg_last_passed_sha=89511de8c5bdb8fac79d5569e5c627fed44324a4` UAC,
-                  `.qg_last_passed_sha=e6fdfd0061d0fa3d88afa40975530e48b1d13bb5` instruments-service; 4409+ tests). **Next step (not
-                  this todo — a backfill VM relaunch, not code)**: re-run `cefi-deribit-combo-2024-heavy` against this fixed code to
-                  close `(DERIBIT-COMBO, options_chain, trades)` as a G4 Layer-1 tuple; tracked in
-                  `mvp_backfill_cefi_tick_v10_2026_06_27.md`.
+                          `instruments-service@e6fdfd00`.** Live-verified the premise first (`api.tardis.dev/v1/exchanges/deribit`
+                          genuinely carries 68,847 `type=='combo'` symbols back to `availableSince=2022-08-23`, matching the finding
+                          exactly). Implemented the recommended fix: `VENUE_TO_ADAPTER_KEY["DERIBIT-COMBO"]` flipped `"deribit_combo"` →
+                          `"tardis"` (UAC); `factory.py::get_adapter_for_canonical_venue` special-cases `mode="live"` DERIBIT-COMBO to keep
+                          routing to the `deribit_combo` REST adapter (extracted into `_build_deribit_combo_live_adapter` to stay under the
+                          200-line function cap), so `mode="batch"` (default) now resolves to Tardis with `exchanges=["deribit"]` +
+                          `canonical_venue_override="DERIBIT-COMBO"` (the `("DERIBIT-COMBO","OPTION"):"deribit"` itype-routing entry
+                          already existed in `venue_instrument_type_to_tardis`, landed 2026-07-12). Went one step further than the
+                          recommendation flagged: since the "deribit" Tardis exchange slug is shared with bare DERIBIT's own
+                          option/future/perpetual/spot universe, `canonical_venue_override` alone would have mistagged that ENTIRE universe
+                          as DERIBIT-COMBO — added a self-filter in `TardisReferenceDataAdapter.get_instruments()` restricting to
+                          `type=='combo'` rows when the override is set (the venue_mapping.py comment had already flagged this as
+                          not-yet-done). Corrected the adapter's own docstrings + the `honest-absence-downstream-handling.md` codex SSOT
+                          § "DERIBIT-COMBO historical unavailability" (2026-06-27), which had over-broadly concluded "no data source can
+                          serve it" — that was only ever true of Deribit's own REST `get_combos` endpoint, not Tardis's independent
+                          archived feed; SUPERSEDED-banner added rather than deleted, per the codex-alignment rule. Added regression tests:
+                          factory batch/live routing (`test_deribit_combo_batch_routes_to_tardis`,
+                          `test_deribit_combo_live_routes_to_rest_adapter`), the Tardis combo-type self-filter
+                          (`test_deribit_combo_override_filters_to_combo_type_only`), and fixed a stale assertion
+                          (`test_factory_contains_deribit_combo` previously asserted the old `"deribit_combo"` value). QG-green both repos
+                          (`.qg_last_passed_sha=89511de8c5bdb8fac79d5569e5c627fed44324a4` UAC,
+                          `.qg_last_passed_sha=e6fdfd0061d0fa3d88afa40975530e48b1d13bb5` instruments-service; 4409+ tests). **Next step (not
+                          this todo — a backfill VM relaunch, not code)**: re-run `cefi-deribit-combo-2024-heavy` against this fixed code to
+                          close `(DERIBIT-COMBO, options_chain, trades)` as a G4 Layer-1 tuple; tracked in
+                          `mvp_backfill_cefi_tick_v10_2026_06_27.md`.
 
-                  **CORRECTION 2026-07-14T07:00Z (data_engineering slot-2) — the "next step" above is INCOMPLETE, live-verified**:
-                  a bare tick-data VM relaunch is NOT sufficient by itself. Ran
-                  `instruments-service --operation instruments --mode batch --venues DERIBIT-COMBO --start-date 2024-01-01
-                  --end-date 2024-01-01 --force` as a direct empirical test of the routing fix: it correctly fetched **68,847 real
-                  Tardis combo instruments** and derived **203 genuinely active on 2024-01-01**, writing a real
-                  `instrument_availability/by_date/day=2024-01-01/venue=DERIBIT-COMBO/instruments.parquet` snapshot — **confirms the
-                  routing fix works end-to-end for reference-data enumeration.** But `prod/catalog.parquet` (checked immediately
-                  after) still carries only the OLD 4 stale rows (`available_from` all in 2026-07, pre-fix artifacts) — MTDS's
-                  `_resolve_symbols` reads the ROLLED-UP catalogue as its PRIMARY source
-                  (`_catalogue_symbols_for_venue_date`), not individual `by_date` snapshots, and `build_instrument_catalogue.py`
-                  derives each instrument's `available_from`/`available_to` window by scanning ALL `by_date` snapshots that exist —
-                  with only ONE snapshot written (2024-01-01), running the rollup NOW would incorrectly derive
-                  `available_from=available_to=2024-01-01` for all 203 symbols (a **correctness regression**, not a fix — every
-                  other date would then see zero active DERIBIT-COMBO instruments). **Did NOT run the rollup** given this risk.
-                  **Real remaining scope**: a historical `by_date` backfill across a representative date range (not full daily
-                  granularity necessarily — the roll-up's actual interpolation tolerance vs. sample-date density is unverified and
-                  itself needs a design pass) BEFORE the catalogue rollup + tick-data VM relaunch. This matches — and validates —
-                  this todo's own `design`-class / `assigned_vm: planning` scoping; deliberately not attempted further this session
-                  (time-boxed G4 verification task, not this issue's dispatch).
+                          **CORRECTION 2026-07-14T07:00Z (data_engineering slot-2) — the "next step" above is INCOMPLETE, live-verified**:
+                          a bare tick-data VM relaunch is NOT sufficient by itself. Ran
+                          `instruments-service --operation instruments --mode batch --venues DERIBIT-COMBO --start-date 2024-01-01
+                          --end-date 2024-01-01 --force` as a direct empirical test of the routing fix: it correctly fetched **68,847 real
+                          Tardis combo instruments** and derived **203 genuinely active on 2024-01-01**, writing a real
+                          `instrument_availability/by_date/day=2024-01-01/venue=DERIBIT-COMBO/instruments.parquet` snapshot — **confirms the
+                          routing fix works end-to-end for reference-data enumeration.** But `prod/catalog.parquet` (checked immediately
+                          after) still carries only the OLD 4 stale rows (`available_from` all in 2026-07, pre-fix artifacts) — MTDS's
+                          `_resolve_symbols` reads the ROLLED-UP catalogue as its PRIMARY source
+                          (`_catalogue_symbols_for_venue_date`), not individual `by_date` snapshots, and `build_instrument_catalogue.py`
+                          derives each instrument's `available_from`/`available_to` window by scanning ALL `by_date` snapshots that exist —
+                          with only ONE snapshot written (2024-01-01), running the rollup NOW would incorrectly derive
+                          `available_from=available_to=2024-01-01` for all 203 symbols (a **correctness regression**, not a fix — every
+                          other date would then see zero active DERIBIT-COMBO instruments). **Did NOT run the rollup** given this risk.
+                          **Real remaining scope**: a historical `by_date` backfill across a representative date range (not full daily
+                          granularity necessarily — the roll-up's actual interpolation tolerance vs. sample-date density is unverified and
+                          itself needs a design pass) BEFORE the catalogue rollup + tick-data VM relaunch. This matches — and validates —
+                          this todo's own `design`-class / `assigned_vm: planning` scoping; deliberately not attempted further this session
+                          (time-boxed G4 verification task, not this issue's dispatch).
 
-                  *(Historical note: this todo's text previously carried a garbled, unrelated OKX-SPOT/QG-red pointer glued onto
-                  the end from an editing mistake — removed 2026-07-14 during this flip. That OKX-SPOT content is tracked
-                  independently and in full at `plans/active/issues/instruments_service_cefi_qg_red_on_ldr_head_2026_07_08.md`,
-                  which already carries its own open DESIGN todo — nothing was lost.)*
+                          *(Historical note: this todo's text previously carried a garbled, unrelated OKX-SPOT/QG-red pointer glued onto
+                          the end from an editing mistake — removed 2026-07-14 during this flip. That OKX-SPOT content is tracked
+                          independently and in full at `plans/active/issues/instruments_service_cefi_qg_red_on_ldr_head_2026_07_08.md`,
+                          which already carries its own open DESIGN todo — nothing was lost.)*
 
 **BYBIT-SPOT writer defect (independent of the gate work — can run in parallel with 2a):**
 

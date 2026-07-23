@@ -16,7 +16,7 @@ scope: [engineer]
 tags: [cefi, deribit-combo, test-drift, cross-repo]
 related: []
 created: 2026-07-21
-assigned_vm: planning
+assigned_vm: NA
 source: [cicd-escalation-agt-9df557]
 execution_scope: orchestrator-agent
 priority: P1

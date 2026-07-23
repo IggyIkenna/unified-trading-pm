@@ -22,7 +22,7 @@ related: []
 created: "2026-07-21"
 parent_epic: infrastructure_master
 priority: P3
-assigned_vm: planning
+assigned_vm: NA
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 source: [features_sports_deployment_ui_coverage_tab_and_registry_playbook_2026_07_21-003]

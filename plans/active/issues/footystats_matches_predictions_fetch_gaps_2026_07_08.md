@@ -38,7 +38,7 @@ priority: P2
 source:
   sports_p2_history_reference_and_odds_2015_to_present-015 (slot-14, re-surfacing slot-7's 2026-07-08 20:10 UTC
   diagnosis)
-assigned_vm: planning
+assigned_vm: NA
 resolved_by:
 locked_by:
 execution_scope: orchestrator-agent

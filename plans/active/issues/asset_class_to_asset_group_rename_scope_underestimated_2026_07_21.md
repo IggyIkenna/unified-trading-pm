@@ -30,7 +30,7 @@ related: [plans/active/issues/dart_ui_capability_manifest_and_catalogue_formatti
 created: "2026-07-21"
 parent_epic: agent_operating_framework_master
 priority: P2
-assigned_vm: planning
+assigned_vm: NA
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 source: [dart_ui_capability_manifest_and_catalogue_formatting_gaps-003]

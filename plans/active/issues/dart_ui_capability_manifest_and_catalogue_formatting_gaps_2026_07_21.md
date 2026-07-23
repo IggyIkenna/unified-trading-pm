@@ -26,7 +26,7 @@ related:
 created: "2026-07-21"
 parent_epic: agent_operating_framework_master
 priority: P3
-assigned_vm: planning
+assigned_vm: NA
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 source: [batch4_strategy_ui_archived_plan_residuals-006]

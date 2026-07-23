@@ -28,7 +28,7 @@ tags: [quickmerge, prettier, husky, pre-commit, ci-cd, tooling-defect, lint-stag
 related: [prettier_emphasis_mangling_corpus_corruption_2026_07_14.md]
 created: 2026-07-21
 parent_epic: agent_operating_framework_master
-assigned_vm: planning
+assigned_vm: NA
 execution_scope: orchestrator-agent
 priority: P2
 estimate_class: infra

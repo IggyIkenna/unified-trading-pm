@@ -16,7 +16,7 @@ related: []
 created: "2026-07-21"
 parent_epic: agent_operating_framework_master
 priority: P2
-assigned_vm: planning
+assigned_vm: NA
 resolved_by:
 locked_by:
 source: [deployment_ui_vm_log_viewer_2026_07_20.md]

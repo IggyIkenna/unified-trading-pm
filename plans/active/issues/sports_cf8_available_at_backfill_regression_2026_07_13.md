@@ -31,7 +31,7 @@ created: 2026-07-13
 parent_epic: mtds_mdps_master
 priority: P0
 source: sports_manifest_canonicalisation-004 dispatch, slot 3, 2026-07-13
-assigned_vm: planning
+assigned_vm: NA
 execution_scope: orchestrator-agent
 assigned_role: data_engineering
 drift_direction: advance-code

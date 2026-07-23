@@ -38,7 +38,7 @@ priority: P0
 source:
   "plan-reconciliation audit of work_split_2026_05_22_ikenna.md ahead of archival, 2026-07-13 session (slot 3) —
   Workflow-orchestrated verification pass, adversarially re-checked"
-assigned_vm: planning
+assigned_vm: NA
 resolved_by:
 locked_by:
 execution_scope: orchestrator-agent

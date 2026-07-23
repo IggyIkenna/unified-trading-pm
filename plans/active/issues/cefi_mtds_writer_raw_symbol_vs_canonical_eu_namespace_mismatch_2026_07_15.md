@@ -56,7 +56,7 @@ related:
   ]
 created: 2026-07-15
 parent_epic: cefi_master
-assigned_vm: planning
+assigned_vm: NA
 source:
   "Root cause found by a peer data_engineering slot, 2026-07-15T18:50Z, direct filtered read of
   market-data-tick-cefi-prd-central-element-323112/_index/availability_index.parquet (KRAKEN-FUTURES/book_snapshot_5,
