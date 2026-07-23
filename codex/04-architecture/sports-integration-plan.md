@@ -5,7 +5,7 @@ summary:
   Sports (football betting) as an asset class, not a separate system — service-augmentation map, canonical fixture-ID
   matching, 19 feature categories x horizon (T-24h/T-60m/T-0/HT), and the 2026-03-01 consolidation of the 4 standalone
   sports services into the shared pipeline.
-status: current
+status: superseded
 nature: ssot
 asset_group: [meta]
 stage: [meta]
@@ -19,25 +19,58 @@ repos:
     strategy-service,
   ]
 scope: [engineer, admin]
-tags: [sports, features, ml, execution, odds]
+tags: [sports, features, ml, execution, odds, superseded]
 related: [sports-batch-live.md, sports-live-odds-connectivity.md, ../02-data/per-asset-group-bucket-layouts.md]
 created: 2026-03-27
-authoritative_for: [sports asset-class integration strategy (service-augmentation vs standalone consolidation)]
+authoritative_for: []
 referenced_by: [codex/04-architecture/sports-batch-live.md, codex/04-architecture/sports-live-odds-connectivity.md]
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-07-23
+superseded_by:
+  [plans/active/sports_consolidated_closeout_2026_07_19.md, codex/02-data/sports-adapter-dependency-order.md]
 code_refs:
 ---
 
 # Sports Integration Plan
 
-> **⛔ SUPERSEDED (2026-07-19) — historical pre-implementation artifact, not current architecture.** This doc is a
-> day-one planning document: its bucket paths (`gs://market-data-raw/SPORTS/…`, `gs://instruments-data/SPORTS/…`),
-> instrument-key formats, execution venues (Smarkets/Polymarket), and "Phase 1–6 (Q2–Q4 2026)" future-tense framing do
-> NOT match the live system. It was mislabeled `status: current`. **For live sports architecture read instead:**
-> `codex/04-architecture/sports-batch-live.md`, `codex/02-data/sports-data-types-catalog.md`,
-> `codex/02-data/sports-gcs-path-ssot.md`, `plans/epics/sports_master.md`, and
-> `plans/active/sports_consolidated_audit_2026_07_19.md`. Retained for history only.
+> **⛔ SUPERSEDED (2026-07-19; banner corrected + strengthened 2026-07-23) — historical pre-implementation artifact, not
+> current architecture.** This is a day-one (2026-03-27) planning document. Frontmatter now says so explicitly
+> (`status: superseded`, `authoritative_for: []`) — it previously claimed `status: current` while the banner said
+> otherwise, which was itself a drift bug. **Everything below this banner is retained for history only and is WRONG on
+> every one of these points as of 2026-07-23:**
+>
+> - **Bucket names are fabricated/renamed.** `gs://market-data-raw/SPORTS/…`, `gs://instruments-data/SPORTS/…`, and bare
+>   `gs://features-sports/` (no `-prd` suffix) never existed as written. The real buckets, reachable only via
+>   `resolve_bucket_name(...)` (never an inline `gs://` literal): reference data → `instruments-store-sports-prd`,
+>   odds/tick data → `market-data-tick-sports-prd` (**not** `market-data-sports-*`, which 404s — see the "Infra (Layer
+>   2)" section below, which still names that dead bucket), features → `features-sports-prd`.
+> - **Fixture/entity model is stale.** The doc's fixture-matching model and "Data Migration" `fixtures/{date}/…` layout
+>   predate the entity split: live writes are `entity=fixtures_schedule` (schedule fields incl. round) +
+>   `entity=fixtures_outcomes` (scores/status) under `pipeline_mode=batch_api_football/`. The legacy bare
+>   `entity=fixtures/` this doc implies is **FROZEN since 2026-05-23** — never describe it as an active write target.
+> - **Instrument-key format shown (`FOOTBALL:BETFAIR:MATCH_ODDS:ENG-PREMIER_LEAGUE:…`) is aspirational, not what ships,
+>   and the live canonical-id parsing built for it is currently BUGGY.** Real sports canonical ids are 8-segment
+>   (`SPORT:BOOKMAKER:MARKET:LEAGUE:SEASON:HOME-AWAY::SELECTION`), but market-data-processing-service's shaping code
+>   (`app/core/canonical_writer_shaping.py` + siblings) was written for 3–4-segment CeFi/DeFi ids and applied
+>   unconditionally with no `asset_group` gate: `venue` wrongly reads segment 0 (the sport) instead of segment 1 (the
+>   bookmaker); `instrument_type` wrongly reads segment 1 (the bookmaker) via `_type_token_from_canonical_id`; `chain`
+>   wrongly reads segment 2 (the market type) via `_infer_chain` — sports should never populate `chain` at all (no
+>   `chain` column in its `SchemaContract`; only `asset_group=prediction` legitimately hardcodes one, e.g. Polymarket
+>   rows → `chain=POLYGON`). Not yet fixed in code; fully scoped in the closeout's Canonical target section + Track C.
+>   `league_id` values like `ENG-PREMIER_LEAGUE` shown throughout this doc are the **non-canonical manifest raw string
+>   form** (e.g. `PREMIER_LEAGUE`) — the canonical form is the UAC registry code (e.g. `EPL`); a 214,842-row migration
+>   to canonical is in progress.
+> - **Execution venues (Betfair/Smarkets/Polymarket API clients) and the "Phase 1–6 (Q2–Q4 2026)" future-tense roadmap
+>   never shipped as described** — do not treat any Phase below as a live-system status report.
+> - **Fixture-matching "Solution" section implies the T0/T1 dependency gate is a working safety net.** In production it
+>   does not fire — every real caller omits the `date=` keyword argument the gate checks — so cross-provider fixture
+>   matching runs with NO enforced ordering guarantee. Never cite this doc as evidence the gate is active.
+>
+> **For the live, current sports architecture and state read instead:** `codex/04-architecture/sports-batch-live.md`,
+> `codex/02-data/sports-adapter-dependency-order.md` (adapter run-order + the T0/T1 gate caveat, body rewritten
+> 2026-07-23), `codex/02-data/sports-gcs-path-ssot.md`, `plans/epics/sports_master.md`, and — the canonical, freshly
+> reconciled SSOT plan for all of the above — `plans/active/sports_consolidated_closeout_2026_07_19.md` (supersedes the
+> earlier `sports_consolidated_audit_2026_07_19.md`, which is itself the input audit, not the current plan).
 
 ## Overview
 

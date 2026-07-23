@@ -4,7 +4,7 @@ title: Sports P2a — API-Football history 2015→present to zero-missing (+ lea
 summary:
   Backfill API-Football history 2015→present to zero expected-missing across all 94 leagues, plus league-noise wipe and
   2015-17 diagnosis.
-status: active
+status: superseded
 nature: process
 asset_group: [cross-cutting]
 stage: [data]
@@ -13,7 +13,7 @@ scope: [engineer, admin]
 tags: [sports, api-football, history-backfill, 2015-present, zero-missing, data-ingestion]
 related:
   [
-    plans/active/sports_pipeline_to_100pct_golden_window_first_2026_06_27.md,
+    plans/active/sports_consolidated_closeout_2026_07_19.md,
     plans/active/instruments_foundation_completeness_2026_06_24.md,
     plans/active/sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md,
   ]
@@ -25,22 +25,48 @@ priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 4
 estimate_calibrated_ai_days: 3.2
-last_updated: 2026-07-17
-locked_by: live-defi-rollout
-locked_since: 2026-06-27
+last_updated: 2026-07-23
 supersedes:
-superseded_by:
+superseded_by: sports_consolidated_closeout_2026_07_19.md
+locked_by:
+locked_since:
 depends_on: [sports_p0_spot_vm_launchers_2026_06_27, sports_p1_golden_window_e2e_gate_2026_06_27]
 source:
 assigned_role: data_engineering
 drift_direction: advance-code
 ---
 
-> **Coordinator**: `sports_pipeline_to_100pct_golden_window_first_2026_06_27.md` (Phase 2). Generalizes the
-> golden-window-proven recipe to ALL of api-football history, **2015→present**, 94-league universe — the R1 "every
-> fixture since 2015, zero expected-missing". **PREREQ: P1e GREEN** (window proven). One agent, `data_engineering`
-> (Sonnet/high). Smart-skip + season-aware (only not-honest-complete cells). Re-homes G1/G2 from
-> `instruments_foundation_completeness` (which is on vm-cefi and won't reach sports).
+> **🔴 SUPERSEDED 2026-07-23 — folded into `sports_consolidated_closeout_2026_07_19.md`. Do NOT pick up further work
+> from this file.** Archived as part of the operator-directed 4-plan sports fold-in reconciliation. This plan still had
+> **live, unfinished work** at archive time — all of it was extracted and copied into the closeout plan before this
+> banner was added; treat the closeout as the SSOT for it going forward:
+>
+> - **Two SPOT VMs were RUNNING at archive time**, months-to-years from their gate: `af-backfill-20260721-033537`
+>   (FIXTURE_EVENTS, walking 2020-06-06→2026-05-10, at `2024-04-25` as of the last read) and
+>   `af-backfill-20260722-033350` (FIXTURE_STATS, same window, at `2020-09-23` as of the last read — ~5y8mo of walk
+>   remaining at observed pace). A LINEUPS/PLAYER_STATS catch-up window (`2026-05-10→present`) and an INJURIES/STANDINGS
+>   full-window launch are queued behind these two, blocked by the api_football singleton launcher lock.
+> - **A live code contradiction, not just a stale doc claim**: instruments-service@`e1524d21` shipped
+>   `_read_fixtures_entity_with_schedule_fallback`, which ACTIVELY reads the legacy bare `entity=fixtures/` GCS path as
+>   a fallback for pre-migration dates. The closeout declares that legacy path FROZEN since 2026-05-23 — this fallback
+>   contradicts that declaration in shipped, running code, not merely in documentation, and needs to be resolved there.
+> - 3 unchecked todos (full-history enrichment completion, features recompute for enriched dates, ML-readiness
+>   re-verify) and 1 unchecked BLOCKED-PREREQUISITES folded-in todo (FINAL full-history zero-missing R1/R2/R3) were open
+>   and unresolved.
+> - Several open investigative threads (manifest-consolidator legacy-CAS-write visibility gap; the
+>   `sports_data_sources_canonical_completion_2026_07_13.md` TEAMS dedup-key dependency; the `exit_code_fleet_monitor`
+>   premature-kill misclassification risk) were still live.
+>
+> See the Progress Log below for full evidence; this banner does not repeat it. Its `related`/coordinator pointer to
+> `sports_pipeline_to_100pct_golden_window_first_2026_06_27.md` (also archived in this same batch) has been redirected
+> to the closeout below.
+
+> **Coordinator (SUPERSEDED — was `sports_pipeline_to_100pct_golden_window_first_2026_06_27.md`, now
+> `sports_consolidated_closeout_2026_07_19.md`)**: Generalizes the golden-window-proven recipe to ALL of api-football
+> history, **2015→present**, 94-league universe — the R1 "every fixture since 2015, zero expected-missing". **PREREQ:
+> P1e GREEN** (window proven). One agent, `data_engineering` (Sonnet/high). Smart-skip + season-aware (only
+> not-honest-complete cells). Re-homes G1/G2 from `instruments_foundation_completeness` (which is on vm-cefi and won't
+> reach sports).
 >
 > **NOTE 2026-07-12**: P1e formally flipped GREEN today after the features re-audit (0/0/0/0). The 2026-06-27→07-09
 > Phase-2 work ran AHEAD of the formal flip (gate was PARTIAL at the time) — retroactively covered by P1d's evidence +

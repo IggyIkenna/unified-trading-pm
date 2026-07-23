@@ -113,6 +113,12 @@ locked_since: YYYY-MM-DD
 depends_on: [epic-slug, plan-slug-YYYY_MM_DD] # prerequisites; enables ordering + gates archival
 supersedes: [old-plan-slug] # list of plans made obsolete by this one
 superseded_by: [new-plan-slug] # list of plans that replaced this one
+entry_point_for:
+  [live-plan-slug] # this plan is a curated index/redirect INTO the listed plan(s), which stay the
+  # live execution surface — NOT a replacement (codified 2026-07-23, sports_master_closeout precedent). Distinct from
+  # supersedes/superseded_by: those signal "safe to archive/deprioritize the old one"; entry_point_for signals
+  # "these two plans are intentionally co-live, this one is the reading shortcut." A plan carrying entry_point_for
+  # MUST NOT also claim in prose to "supersede" its target — say "is the entry point for" instead.
 source: [audit-ref, operator request, ticket URL] # provenance
 sequential:
   true # optional — SHIPPED (added 2026-07-14, verify-rerun-2 finding 224: was absent from this list —

@@ -37,9 +37,12 @@
 
 ## Model tier
 
-Default **Sonnet**; model tier (sonnet/opus/fable) and effort (`low<medium<high<xhigh<max`) are INDEPENDENT axes — no
+Default **Sonnet 5**; model tier (sonnet/opus/fable) and effort (`low<medium<high<xhigh<max`) are INDEPENDENT axes — no
 effort level requires or implies a model tier (ground truth: `agent-orchestrator/server/model_tier.py`, 2026-07).
-`model_tier: opus-required` only for main orchestrator / cross-repo arch / >200k ctx (unchanged). **Effort default
+**`model_tier: opus-required` is PURELY QUALITATIVE — main orchestrator role / cross-repo architecture judgment /
+trading judgment ONLY, never plan/context size (operator ruling 2026-07-23: Sonnet 5 has 1M context, same as Opus 4.8 —
+retires the old ">200k ctx"/">50KB plan" triggers).** Every AO planning-VM-eligible plan (`assigned_vm: planning`)
+defaults to **Sonnet 5 at `effort: max`** regardless of size — this is the standard, not a fallback. **Effort default
 (operator ruling 2026-07-22)**: a plan/task declaring no tier gets a todo-count-derived default, not a silent "medium" —
 `xhigh` baseline, `max` past `LARGE_PLAN_TODO_THRESHOLD` (10) open todos; declare `effort:` explicitly to override.
 Sub-agent `Agent` calls MUST set `model=` explicitly. Self-check every task start: Sonnet on opus-required → STOP;
@@ -175,14 +178,14 @@ everything else. SSOT: `codex/11-project-management/doc-frontmatter-schema.md` �
 
 - **Authoring a plan? READ `plans/active/task_template.md` FIRST (HARD RULE)** — it carries the LOCAL (human,
   `assigned_vm: NA` + `execution_scope: local-only`, never ingested) vs AO-DISPATCHED (`assigned_vm: planning`) tracks +
-  the AO authoring rules: **10–20 todos max**; **a plan's independent same-priority todos run CONCURRENTLY across
-  workers by default** (intended — one plan can fan out to N agents; the ONE rule: concurrent todos MUST touch different
-  files), `sequential: true` serialises the WHOLE plan (use ONLY for a real dependency chain or same-file overlap —
-  don't reflex-set it), **partial-parallelism isn't expressible in one plan → SPLIT** (parallel work in Plan A; the
-  gated step in Plan B via `depends_on` + `gate_on_depends: true`); **no per-todo prereq syntax** (prereqs come only
-  from `sequential`/`gate_on_depends`); per-task `[TAG]` roles route each todo (SHIPPED); an audit is its own plan;
-  draft-gated phase chains (later phases `status: draft` until the prior phase's last todo flips them `active`). **Never
-  hand-edit `backlog.yaml`** — author plans, the backend derives it.
+  the AO authoring rules: **10-100 todos max** (raised from 10-20, operator ruling 2026-07-23); **a plan's independent
+  same-priority todos run CONCURRENTLY across workers by default** (intended — one plan can fan out to N agents; the ONE
+  rule: concurrent todos MUST touch different files), `sequential: true` serialises the WHOLE plan (use ONLY for a real
+  dependency chain or same-file overlap — don't reflex-set it), **partial-parallelism isn't expressible in one plan →
+  SPLIT** (parallel work in Plan A; the gated step in Plan B via `depends_on` + `gate_on_depends: true`); **no per-todo
+  prereq syntax** (prereqs come only from `sequential`/`gate_on_depends`); per-task `[TAG]` roles route each todo
+  (SHIPPED); an audit is its own plan; draft-gated phase chains (later phases `status: draft` until the prior phase's
+  last todo flips them `active`). **Never hand-edit `backlog.yaml`** — author plans, the backend derives it.
 - **Plan destination — ASK BEFORE CREATING (HARD RULE)**: before writing any new plan, ask the operator: _"Should this
   be an agent-orchestrator plan (picked up and executed by background agents) or a human plan (operator-driven, not
   auto-dispatched)?"_ **Default is human** (`assigned_vm: NA`) unless the operator explicitly says otherwise. **Valid

@@ -30,10 +30,10 @@ type: data
 
 # Sports fixtures lifecycle
 
-> **Note (2026-07-19).** Fixtures are read via the SPLIT entities (`entity=fixtures_schedule` = schedule incl. `round`;
-> `entity=fixtures_outcomes` = scores/status), split 2026-05-23. Pre-cutover dates require the split-FIRST read order
-> (`features-service@e4b1f1ba`) because a legacy `entity=fixtures` object still exists there but is FROZEN and staler/
-> smaller than the live corpus. See `plans/active/sports_consolidated_audit_2026_07_19.md` § V.
+> **Note (2026-05-23 split).** The body below uses the split entity names throughout — `entity=fixtures_schedule`
+> (schedule fields incl. `round`) and `entity=fixtures_outcomes` (scores/status), both under
+> `pipeline_mode=batch_api_football/`. Legacy bare `entity=fixtures/` is FROZEN (last real write 2026-05-23) — never an
+> active write target. SSOT: `plans/active/sports_consolidated_closeout_2026_07_19.md` § "Fixtures entity split".
 
 > **SSOT for the lifetime of a sports fixture across the ingestion pipeline.** Codifies the state machine, per-state
 > available_at semantics, and cross-source verifier design.
@@ -80,21 +80,22 @@ Closed set lives in UAC `MatchStatus` SSOT (UAC@1a831b0 per sports_master). Refe
 Per CLAUDE.md "batch=live unified pipeline" rule, `available_at` MUST equal the live-pipeline-arrival timestamp. The
 stamp depends on which state's data type is being written:
 
-| Data type               | State signal     | available_at formula                                      |
-| ----------------------- | ---------------- | --------------------------------------------------------- |
-| FIXTURES (schedule)     | SCHEDULED        | announcement time (fetched_at when fixture first appears) |
-| LINEUPS                 | PRE_MATCH        | `kickoff - 60min` (publication lag P95)                   |
-| PRE_MATCH_ODDS          | PRE_MATCH        | last-update ≤ kickoff; stamped at last update             |
-| WEATHER (forecast_t0)   | PRE_MATCH        | forecast issue time (~kickoff hour)                       |
-| WEATHER (forecast_t24h) | SCHEDULED        | kickoff - 24h                                             |
-| SFI_PROGRESSIVE_STATS   | LIVE → MATCH_END | per-snapshot wall-clock; freeze stamp = match_end_time    |
-| LIVE_ODDS               | LIVE → MATCH_END | per-update wall-clock                                     |
-| FIXTURE_STATS           | POST_MATCH       | `match_end_time + SFI_DATA_LAG_P95_SECONDS (=300s)`       |
-| PLAYER_STATS            | POST_MATCH       | same as FIXTURE_STATS                                     |
-| Understat XG            | POST_MATCH       | Understat data-available timestamp (typically T+1h)       |
-| FootyStats MATCHES post | POST_MATCH       | FootyStats fetched_at (batched, T+5-15min)                |
-| WEATHER (actual)        | POST_MATCH       | OpenMeteo reanalysis publish time (T+24h)                 |
-| RESULTS / SETTLEMENT    | SETTLED          | `match_end_time + settlement_window`                      |
+| Data type               | State signal     | available_at formula                                                                     |
+| ----------------------- | ---------------- | ---------------------------------------------------------------------------------------- |
+| `fixtures_schedule`     | SCHEDULED        | announcement time (fetched_at when fixture first appears)                                |
+| `fixtures_outcomes`     | LIVE → SETTLED   | per-poll wall-clock (status/score captured each poll); terminal stamp = `match_end_time` |
+| LINEUPS                 | PRE_MATCH        | `kickoff - 60min` (publication lag P95)                                                  |
+| PRE_MATCH_ODDS          | PRE_MATCH        | last-update ≤ kickoff; stamped at last update                                            |
+| WEATHER (forecast_t0)   | PRE_MATCH        | forecast issue time (~kickoff hour)                                                      |
+| WEATHER (forecast_t24h) | SCHEDULED        | kickoff - 24h                                                                            |
+| SFI_PROGRESSIVE_STATS   | LIVE → MATCH_END | per-snapshot wall-clock; freeze stamp = match_end_time                                   |
+| LIVE_ODDS               | LIVE → MATCH_END | per-update wall-clock                                                                    |
+| FIXTURE_STATS           | POST_MATCH       | `match_end_time + SFI_DATA_LAG_P95_SECONDS (=300s)`                                      |
+| PLAYER_STATS            | POST_MATCH       | same as FIXTURE_STATS                                                                    |
+| Understat XG            | POST_MATCH       | Understat data-available timestamp (typically T+1h)                                      |
+| FootyStats MATCHES post | POST_MATCH       | FootyStats fetched_at (batched, T+5-15min)                                               |
+| WEATHER (actual)        | POST_MATCH       | OpenMeteo reanalysis publish time (T+24h)                                                |
+| RESULTS / SETTLEMENT    | SETTLED          | `match_end_time + settlement_window`                                                     |
 
 `match_end_time` itself is resolved via the cascade documented in
 [`match-end-time-cascade.md`](match-end-time-cascade.md) (UTL@89c0ae15).
@@ -121,19 +122,19 @@ features-sports may join post-match stats to a still-running fixture and produce
 ### Architecture
 
 ```
-                              ┌──────────────────────────────┐
-   api_football FIXTURES ────►│                              │
-   SFI progressive freeze  ──►│ CrossSourceFixtureVerifier   │
-   FootyStats MATCHES status►│ (features-sports OR new svc) │──► FixtureStatusReport
-   Understat XG presence ───►│                              │     ├── consensus_state
-                              └──────────────────────────────┘     ├── confidence (0..1)
-                                                                   ├── disagreeing_sources[]
-                                                                   └── drift_details
+                                    ┌──────────────────────────────┐
+   api_football fixtures_outcomes ►│                              │
+   SFI progressive freeze      ──►│ CrossSourceFixtureVerifier   │
+   FootyStats MATCHES status  ──►│ (features-sports OR new svc) │──► FixtureStatusReport
+   Understat XG presence     ───►│                              │     ├── consensus_state
+                                    └──────────────────────────────┘     ├── confidence (0..1)
+                                                                         ├── disagreeing_sources[]
+                                                                         └── drift_details
 ```
 
 - **Runs**: per-fixture, daily after all sources have had P95 time to land (i.e. ~T+24h post-kickoff).
-- **Input**: 4 parquet reads (api_football FIXTURES, SFI_PROGRESSIVE_STATS, FootyStats MATCHES, Understat XG) for the
-  fixture's date partition.
+- **Input**: 4 parquet reads (api_football `fixtures_outcomes`, SFI_PROGRESSIVE_STATS, FootyStats MATCHES, Understat XG)
+  for the fixture's date partition.
 - **Output**: `FixtureStatusReport` records written to a new `cross_source_fixture_status` data_type under
   `asset_group=sports, instrument_type=match`. Schema deferred — owner drafts on first concrete prototype.
 
@@ -231,12 +232,15 @@ transient status that disappears once the new kickoff is confirmed.
 ### Operational implications for instruments-service
 
 1. **No `fixture_id` rotation handling needed**: A rescheduled fixture continues under the same id. The
-   instruments-service FIXTURES adapter does not need to reconcile old/new ids.
-2. **PST may appear in forward-poll data**: A daily poll on the postponement day will capture the fixture with
-   `status_short=PST`. A subsequent poll (after the new date is confirmed) will return the same `fixture_id` with
-   `status_short=NS` and an updated `date`. Both rows share the same `fixture_id`.
+   instruments-service fixtures adapters (split into `fixtures_schedule` + `fixtures_outcomes`, 2026-05-23) do not need
+   to reconcile old/new ids across either entity.
+2. **PST may appear in forward-poll data**: A daily poll on the postponement day will capture the fixture's
+   `fixtures_outcomes` row with `status_short=PST`. A subsequent poll (after the new date is confirmed) will return the
+   same `fixture_id` with `fixtures_outcomes.status_short=NS` and an updated `fixtures_schedule.date`. Both entities
+   share the same `fixture_id`.
 3. **`available_at` handling**: The NS row after reschedule is a legitimate fixture update. The pipeline must treat the
-   updated kickoff date as authoritative and re-emit the FIXTURES parquet for the new partition date.
+   updated kickoff date as authoritative and re-emit the `fixtures_schedule` parquet for the new partition date (plus
+   the corresponding `fixtures_outcomes` status flip back to `NS`).
 4. **TBD and CANC are also transient for historical data**: Querying TBD/CANC for historical seasons returns 0 results,
    consistent with the same transient-status pattern (api_football resolves all historical fixtures to a terminal or
    active state by season end).
@@ -248,13 +252,13 @@ transient status that disappears once the new kickoff is confirmed.
 
 ## Schema columns supporting lifecycle
 
-| Contract                         | Lifecycle field                                        | UAC commit  |
-| -------------------------------- | ------------------------------------------------------ | ----------- |
-| `SPORTS_FIXTURES`                | `status_long`, `status_short`                          | (existing)  |
-| `SPORTS_FIXTURES`                | `match_end_time`                                       | UAC@0ba9e5b |
-| `SPORTS_SFI_PROGRESSIVE_STATS`   | `ft_timer`, `match_end_time`                           | UAC@1848647 |
-| `SPORTS_SFI_PROGRESSIVE_STATS`   | `ht_start_timer`, `ht_end_timer`                       | (existing)  |
-| (deferred) `CROSS_SOURCE_STATUS` | `consensus_state`, `confidence`, `disagreeing_sources` | TBD         |
+| Contract                                              | Lifecycle field                                        | UAC commit  |
+| ----------------------------------------------------- | ------------------------------------------------------ | ----------- |
+| `SPORTS_FIXTURES` (written under `fixtures_outcomes`) | `status_long`, `status_short`                          | (existing)  |
+| `SPORTS_FIXTURES` (written under `fixtures_outcomes`) | `match_end_time`                                       | UAC@0ba9e5b |
+| `SPORTS_SFI_PROGRESSIVE_STATS`                        | `ft_timer`, `match_end_time`                           | UAC@1848647 |
+| `SPORTS_SFI_PROGRESSIVE_STATS`                        | `ht_start_timer`, `ht_end_timer`                       | (existing)  |
+| (deferred) `CROSS_SOURCE_STATUS`                      | `consensus_state`, `confidence`, `disagreeing_sources` | TBD         |
 
 ## Cross-references
 

@@ -34,6 +34,7 @@ related:
     codex/04-architecture/prediction-batch-live.md,
     codex/04-architecture/promote-workflow-architecture.md,
     codex/04-architecture/backtest-groups.md,
+    plans/active/sports_consolidated_closeout_2026_07_19.md,
   ]
 created: "2026-07-21"
 last_updated: "2026-07-21"
@@ -59,6 +60,18 @@ drift_direction: advance-code
 ---
 
 # Sports/predictions live-mode activation readiness — scoped chain + gates
+
+> **🟡 SCOPE OVERLAP — read `sports_consolidated_closeout_2026_07_19.md` before acting on either doc (found during the
+> 2026-07-23 plan-reconciliation audit; this plan was an orphan, never linked to the closeout despite the overlap).**
+> This plan scopes new live MTDS/prediction connector infrastructure for sports/prediction with **zero visibility** into
+> the closeout's active cross-AG `asset_group=prediction` bleed bug (rows meant for `prediction` writing into sports'
+> instruments index) — a real correctness defect in the exact data path this plan's Todo 2/3 would build new live
+> ingestion on top of. The closeout's own 2026-07-23 root-cause sweep fixed and verified the bleed bug
+> (`market-tick-data-service@a7ff45f9`, manifest-bucket root cause `@299ef540`) and separately ruled **GO on live-mode
+> activation — but explicitly gated on confirming that fix is durable, not just verified-once**, before any go-live
+> proceeds. **Do not resolve this conflict unilaterally from this document alone** — check the closeout's current Track
+> sections (Track O / the 2026-07-23 re-triage + decision-record sections) for the latest state before treating either
+> doc's status as final.
 
 ## Why this plan exists, and what it is NOT
 

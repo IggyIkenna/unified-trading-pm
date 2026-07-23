@@ -8,7 +8,7 @@ summary:
   the only safe order (contracts → dual-read → GCS move → dependency_checker → manifest LAST), NOT a manifest rename.
   Manifest-first is the corrupting order that cost tradfi its CME counts. Requires a pre-drain of the sports writers
   because `odds` is written live.
-status: active
+status: superseded
 nature: process
 asset_group: [sports]
 stage: [data]
@@ -17,7 +17,7 @@ scope: [engineer]
 tags: [sports, canonicalisation, instrument-type, uac-contract-fork, gcs-migration, odds]
 related: [data_status_page_ux_and_canonicalisation_2026_07_16.md]
 created: 2026-07-18
-last_updated: 2026-07-18
+last_updated: 2026-07-23
 parent_epic: sports_master
 assigned_vm: NA
 execution_scope: local-only
@@ -33,8 +33,20 @@ source:
 locked_by:
 locked_since:
 supersedes:
-superseded_by:
+superseded_by: sports_consolidated_closeout_2026_07_19.md
 ---
+
+> **🟡 SUPERSEDED 2026-07-23 — folded into `sports_consolidated_closeout_2026_07_19.md`.** This plan was one of 4
+> fold-in plans the operator directed to archive in this batch (`sports_manifest_canonicalisation_2026_06_01`,
+> `sports_pipeline_to_100pct_golden_window_first_2026_06_27`, `sports_odds_exchange_fixed_fork_2026_07_18` (this doc),
+> `sports_p2_history_apifootball_2015_to_present_2026_06_27`). **Every todo below was still open (0/10 done)** at
+> archival time, including the P0 `[OPERATOR]` block on the ambiguous venue→class mapping (bare
+> `BETFAIR`/`ODDS_API`/`PINNACLE`), which was BLOCKED-OPERATOR-DECISION and never confirmed. All of it — the operator
+> ruling, the venue→class mapping (evidenced poles + the 3 unconfirmed edges), the strict
+> contracts→dual-read→GCS-move→dependency_checker→manifest-last ordering, and every one of the 10 todos — has been
+> extracted and pulled into `sports_consolidated_closeout_2026_07_19.md` (Track C's "EXCHANGE_ODDS vs FIXED_ODDS fork"
+> todo, expanded with this plan's full detail). **Do not pick up further work from this file** — read/update the
+> closeout instead; this file is kept only as the historical record of the original ruling + investigation.
 
 # Sports odds instrument_type fork — EXCHANGE_ODDS / FIXED_ODDS
 

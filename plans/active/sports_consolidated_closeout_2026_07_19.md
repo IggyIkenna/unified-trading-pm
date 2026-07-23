@@ -29,16 +29,43 @@ related:
     sports_legacy_bucket_cutover_2026_07_16.md,
     sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md,
     defi_consolidated_closeout_2026_07_18.md,
+    sports_master_closeout_2026_07_21.md,
+    sports_manifest_canonicalisation_2026_06_01.md,
+    sports_pipeline_to_100pct_golden_window_first_2026_06_27.md,
+    sports_odds_exchange_fixed_fork_2026_07_18.md,
+    sports_p2_history_apifootball_2015_to_present_2026_06_27.md,
+    sports_catalog_league_grain_only_scope_2026_07_08.md,
+    sports_odds_bookmaker_coverage_enumeration_2026_06_20.md,
+    sports_odds_feature_naming_canonicalization_2026_07_21.md,
+    sports_p2_features_history_to_ml_ready_2026_06_27.md,
+    sports_predictions_live_mode_activation_readiness_2026_07_21.md,
   ]
 created: "2026-07-19"
-last_updated: "2026-07-19"
+last_updated: "2026-07-23"
 parent_epic: sports_master
-assigned_vm: NA
+assigned_vm:
+  NA # ⛔ DO NOT flip to `planning` directly (operator ruling 2026-07-23). This plan has 96 open todos
+  # across multiple repos with REAL cross-todo dependencies (casing revert must land registry+writers before data;
+  # K1 before K2; league_id migration before the honest-coverage denominator fix; several Track S2 items explicitly
+  # warn "do NOT attempt step N before step M" in PROSE ONLY, not machine-enforced sequential:/depends_on+
+  # gate_on_depends) — flipping this doc's own assigned_vm would violate task_template.md's "10-20 todos, never
+  # more" AO-DISPATCHED hard cap AND risks naive concurrent dispatch corrupting exactly the sequencing this plan
+  # exists to protect (per §4's "partial parallelism is NOT expressible inside one plan — SPLIT" rule). To actually
+  # dispatch any of this work to AO: extract the specific ready todo(s) into a NEW child plan (10-20 todos,
+  # `assigned_vm: planning`) with `depends_on: [sports_consolidated_closeout_2026_07_19]` +
+  # `gate_on_depends: true` if it has a real prerequisite, or `sequential: true` if its own todos share files —
+  # never by editing this field.
 execution_scope: local-only
 priority: P0
 estimate_class: infra
-estimate_baseline_ai_days: 12
-estimate_calibrated_ai_days: 9.6
+estimate_baseline_ai_days:
+  46 # RECALCULATED 2026-07-23 (was 12) — the 2026-07-23 reconciliation session grew this
+  # plan from ~40 to 96 open todos (19 P0 / 37 P1 / 33 P2 / 5 P3) across the casing revert, the 3-bug venue/
+  # instrument_type/chain code fix, the league_id migration, the 4 absorbed fold-in plans' live work, and the
+  # honest-coverage/CF-8/CAS-tooling/odds-pipeline-dormancy tracks. Methodology: weighted by priority (P0 ~1.2d,
+  # P1 ~0.6d, P2 ~0.3d, P3 ~0.15d avg, reflecting multi-repo code+data-migration work at P0 vs cleanup at P2/P3) —
+  # a reasoned re-estimate, not false precision; re-check after the first few tracks land.
+estimate_calibrated_ai_days: 36.8 # 46 x 0.8 (infra multiplier, unchanged estimate_class)
 locked_by:
 locked_since:
 supersedes:
@@ -71,19 +98,82 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
 
 ## Canonical target (the SSOT everything converges on)
 
-- **data_type = UPPER everywhere** (operator K0-DECISION (b), 2026-07-18). Sports is the only AG that is UPPER; CF-7's
-  UPPER→lower map is SUPERSEDED for sports. Reference layer already conformant; market-data-sports is the only mixed
-  bucket.
+- **data_type = LOWER-case everywhere for sports — FINAL, reconciled 2026-07-23.** ~~The original operator K0-DECISION
+  (b) (2026-07-18) said UPPER~~ — that was reversed 2026-07-22 (codex `sports-data-types-catalog.md`, citing a 7-agent
+  GCS audit that found zero uppercase `ODDS` objects on disk) for the odds-family types. **This session's reconciliation
+  (2026-07-23) extends that to the WHOLE vocabulary, including `trades`/`TRADES`**: sports now matches every other
+  asset_group's lower-case convention with no UPPER exception at all. **This REVERTS Track C's K1/K2 work below**
+  (market-tick-data-service@2536b91c / @ad4f1872, ~260,298 GCS objects physically copied to uppercase paths +
+  manifest-swapped, "shipped+verified" 2026-07-22) — that migration must be undone, not extended. Root cause of the
+  registry-level mixed state that made K1/K2 look consistent at the time: `unified-api-contracts`'s
+  `market_data_categories.py::DATA_TYPES_BY_ASSET_GROUP["sports"]` (lines ~211-246) DUAL-registers both spellings for
+  exactly two of the 9 sports data types — "odds" AND "ODDS" (comment: "Canonical uppercase form per mega-audit R2"),
+  "trades" AND "TRADES" (comment: "Canonical uppercase form (K1, mtds@2536b91c, 2026-07-22)") — while
+  odds_snapshot/odds_movement/arbitrage_opportunity/odds_horizon_bucket/markets/outcomes/settlements/trades_inplay never
+  got a matching uppercase entry, which is exactly why the deployment-ui's Distinct Values panel shows a mixed
+  canonical/non-canonical pattern today (ODDS and TRADES pass, ODDS_MOVEMENT/ODDS_SNAPSHOT/ARBITRAGE_OPPORTUNITY fail).
+  **The revert (Track C, new todos below) must touch all three layers**: (1) the registry — delete the "ODDS"/"TRADES"
+  uppercase entries from `DATA_TYPES_BY_ASSET_GROUP["sports"]`; (2) the writers — revert `market-tick-data-service`'s
+  `odds_api_adapter.py:761` (literal `"data_type": "ODDS"`) and `engine/orchestrator/sentinels.py:308,350,420` (literal
+  `"data_type": "TRADES"`) back to lower-case; (3) the DATA — migrate the ~260,298 GCS objects + manifest rows K1/K2
+  already moved to uppercase back to lower-case (mirror the K1/K2 migration procedure in reverse). Sequencing matters:
+  revert the registry+writers FIRST (else new rows keep arriving uppercase while old ones are being moved back), then
+  migrate the data. **NOT YET EXECUTED** — this is a decision + plan only; the actual revert (GCS/manifest data
+  movement) waits until this reconciliation pass is fully committed, per operator instruction.
 - **Fixtures entity split**: `entity=fixtures_schedule` (schedule fields incl. `round`) + `entity=fixtures_outcomes`
   (scores/status), under `pipeline_mode=batch_api_football/`. The legacy bare `entity=fixtures/` is FROZEN (last real
   write 2026-05-23) and must not be read or written. **The manifest `data_type` must record the split entities, not the
-  `"FIXTURES"` umbrella** (§ C1).
+  `"FIXTURES"` umbrella** (§ C1). **NOTE (2026-07-23): this freeze is currently violated by at least 3 live artifacts**
+  — `sports_manifest_canonicalisation_2026_06_01.md` (treats bare `entity=fixtures/` as active as of 07-17),
+  `sports_p2_history_apifootball_2015_to_present_2026_06_27.md` (shipped `_read_fixtures_entity_with_schedule_fallback`,
+  an active fallback READ of the frozen path, `instruments-service@e1524d21`), and
+  `sports_catalog_league_grain_only_scope_2026_07_08.md` (writes reference data to bare
+  `entity={fixtures,teams, injuries}/` under a different namespace). See Track S/E's new todos below — these are being
+  reconciled, not silently left contradicting this rule.
 - **timeframe is its own column** — never baked into `data_type`. `odds_horizon_bucket_{15m,1h,4h,1d}` is a dead cohort.
 - **Buckets** (via `resolve_bucket_name`, never string-interpolate): reference → `instruments-store-sports-prd`, odds →
   `market-data-tick-sports-prd` (the `market-data-sports-prd` name 404s — the real name carries a `tick-` infix),
   features → `features-sports-prd`.
 - **Honest absence, never a placeholder**: `attempted_failed` is a real-failure signal — root-cause before any relabel
   (§ B2 precedent).
+- **venue / instrument_type / chain — ROOT-CAUSED 2026-07-23, all three are the SAME bug class: asset_group-blind
+  positional colon-parsing of the canonical id, written for CeFi/DeFi's 3-4-segment `VENUE:TYPE:SYMBOL` shape and never
+  gated off before running on sports' 8-segment `SPORT:BOOKMAKER:MARKET:LEAGUE:SEASON:HOME-AWAY::SELECTION` id.**
+  Confirmed via direct code read (not inferred), all in `market-data-processing-service`'s
+  `app/core/canonical_writer_shaping.py` unless noted:
+  - **`venue` reads `parts[0]` (the SPORT token, e.g. "FOOTBALL") instead of `parts[1]` (the BOOKMAKER token)** — the
+    live sites (`live_workers.py:144,177,522`, `live_workers_chain.py:329`, `batch_workers.py:159`,
+    `candle_write_mixin.py:290,351`) all do `instrument_id.split(":")[0]`, correct for CeFi/DeFi, wrong for sports. This
+    is the direct mechanism producing the non-canonical `FOOTBALL` and `UNKNOWN` (the same call sites' fallback
+    sentinel) venue values.
+  - **`instrument_type` reads `parts[1]` (the BOOKMAKER token) via `_type_token_from_canonical_id`
+    (`canonical_writer_shaping.py:257-266`)** — `len(parts) >= 3` fires on any 3+-segment id, not gated by asset_group;
+    called unconditionally from `_infer_instrument_type` (`canonical_writer.py:252`). This is the confirmed mechanism
+    producing the entire bookmaker-name-in-instrument_type cluster (PADDYPOWER, PINNACLE, betmgm, betway, bovada, coral,
+    fanduel, ladbrokes_uk, skybet, unibet_uk, williamhill, plus bare `ODDS`/`odds`/`SPORT`) — **100% of today's 16
+    distinct sports instrument_type values are non-canonical**, none are missing-from-registry; all 7 bookmaker names
+    checked exist in the UAC venue registry already, just mis-cased/mis-placed.
+  - **`chain` reads `parts[2]` (the MARKET token, e.g. "H2H"/"MATCH_ODDS"/"SPREADS") via `_infer_chain`
+    (`canonical_writer_shaping.py:499-536`)** — fires whenever `len(parts) >= 4`, same missing asset_group gate.
+    **Sports should NEVER populate `chain` at all** — confirmed via `unified-api-contracts`'s
+    `_sports_prediction_contracts.py`: the `SPORTS_ODDS_TRADES` SchemaContract has no `chain` column in its definition,
+    unlike `PREDICTION_PREDICTION_MARKET_*`'s contracts, which correctly declare `chain` as a required, STATICALLY
+    per-venue-assigned column (`polymarket_adapter.py:591,667` hardcodes `"chain": "POLYGON"` — exactly the
+    UAC-static-mapping-done-once pattern that's the right model, just correctly scoped to `prediction`, not `sports`).
+    Sports' 3 non-canonical `chain` values (H2H, MATCH_ODDS, SPREADS) are 100% a bug, not a missing mapping to add.
+  - **The fix (Track C, new todos below)**: gate all of the above on `asset_group`. For sports specifically: venue
+    should resolve from `parts[1]` (bookmaker) — the same token `instrument_type` is wrongly reading today; `chain`
+    should never be written for sports (null, matching its SchemaContract); `instrument_type` should resolve the MARKET
+    token (`parts[2]`) through the existing `ODDS_API_MARKET_TO_CANONICAL` vocabulary (already UPPER on `market_key` —
+    Track C's F2 already named promoting this vocabulary, this is now confirmed as the correct target, not merely a
+    suggestion). Of the 9 non-canonical venue VALUES seen in Distinct Values: 4 are casing/aliasing variants of
+    already-registered names (LADBROKES_UK→LADBROKES, UNIBET_UK/UNIBET_EU→UNIBET, SPORT888→BET888SPORT — simple
+    alias-map or writer fix, no registry gap); 2 are the tracked cross-AG bleed (KALSHI, POLYMARKET — belong to
+    `asset_group=prediction`, same class as the Track "Cross-AG finding" below); 1 is residual data from an
+    explicitly-removed venue (SMARKETS — deleted from all repos per codex, no new rows should ever appear); 2 are the
+    venue-from-parts[0] bug above (FOOTBALL, UNKNOWN). **Target: by the end of this closeout, the deployment-ui's sports
+    Distinct Values panel (venues / instrument_types / data_types / chains) reads 0 non-canonical across all four
+    axes.**
 
 ---
 
@@ -138,58 +228,110 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
 - [ ] [DATA] P2. Purge the 4 dead dimension groups still inflating the features manifest (players/coaches/referees/
       rounds, 4,216 rows each) — the outstanding §A2 purge.
 
-## Track C — CANON: data_type UPPER + venue/instrument_type + manifest atom · P0
+## Track C — CANON: data_type LOWER-case + venue/instrument_type/chain + manifest atom · P0
 
 - [ ] [CODE] P0. **C1 — migrate the fixtures manifest atom** from hardcoded `"FIXTURES"` to `FIXTURES_SCHEDULE`/
       `FIXTURES_OUTCOMES` across the 8 call sites (`sports_reference_fixtures.py:242,279`, `process_write.py`,
       `writers.py:219`, `catalogue.py:136`, `process_completeness.py`, `process_preflight.py`,
       `process_zero_records.py`, `sports_fixtures_daily_repoll.py`) so the manifest atom == the writer atom. Gates the
-      F-track re-run.
-- [x] [CODE] P0. ✅ **K1 — emit UPPER at the LIVE writer SHIPPED + VERIFIED (2026-07-22)** (was: fix
-      `_build_sports_shard_path` (`venue_fetch.py:871-900`) + the sentinel row-key builders per the dual-accept pre-step
-      ordering this todo specified). The dual-accept pre-step shipped first as designed
+      F-track re-run. **9th call site found 2026-07-23 (codex fix pass on `honest-absence-downstream-handling.md`)**:
+      `unified-api-contracts`'s `_honest_coverage_logic.py:293` —
+      `SCHEDULE_DEFINING_DATA_TYPES = frozenset({"FIXTURES"})` — is a live-code consumer of the SAME atom this todo
+      migrates, and this todo's own 8-file checklist omits it. Verified as of 2026-07-23 both the constant AND the
+      manifest atom are still `"FIXTURES"` (not yet mismatched — this is a **forward-looking bug**, not a
+      currently-firing one): if C1 ships the 8-file migration without also updating this constant +
+      `is_resolved_schedule_empty()`'s consumers, `SCHEDULE_DEFINING_DATA_TYPES` silently stops matching anything
+      post-migration. Add as a 9th call site.
+- [x] [CODE] P0. ✅⏪ **K1 — emit UPPER at the LIVE writer SHIPPED + VERIFIED (2026-07-22) — SUPERSEDED 2026-07-23, MUST
+      BE REVERTED.** (was: fix `_build_sports_shard_path` (`venue_fetch.py:871-900`) + the sentinel row-key builders per
+      the dual-accept pre-step ordering this todo specified). The dual-accept pre-step shipped first as designed
       (`market-data-processing-service@fa4281d2`), then the atomic writer flip (`market-tick-data-service@2536b91c`, 7
-      call sites — 2 more than originally named here: `manifest_finalize.py:347` and `odds_api_adapter.py:761`'s in-file
-      parquet column, both found via grep-then-READ, not assumed; the `sentinels.py` "180-197" citation was also wrong,
-      corrected to 126-127). Full evidence + the corrected call-site list in `sports_master_closeout_2026_07_21.md`'s
-      "fourth wave" Progress Log.
-- [x] [DATA] P1. ✅ **K2 — migrate the historical lower-case rows UP SHIPPED + VERIFIED (2026-07-22)** (was: "decide
-      explicitly: either K2 migrates ~1.8M `trades`→`TRADES`... or state why `trades` is deferred"). **Answer,
-      evidence-based**: the ~1.8M estimate did not filter by `pipeline_mode` and conflated the true `batch_odds_api`
-      writer scope (373,296 rows — K1's actual writer, now 100% canonical, 0 remaining lowercase) with two unrelated
-      populations sharing the same `trades`/`odds` string vocabulary: `batch_polymarket_clob` (20,785 rows, ALL
-      `capture_status=empty_confirmed` — zero real data, cross-AG bleed residual) and `batch_api_football` (1,265,534
-      rows, 99.4% non-data placeholder rows, an operator-ruled WRONG-SOURCE population wiped once 2026-06-24 and found
-      STILL RE-ACCUMULATING today — a genuinely new, separate finding, filed as
-      `issues/mtds_sports_api_football_wrong_source_reaccumulated_post_wipe_2026_07_22.md`, NOT part of this todo's
-      scope). K2's real, correct scope (the `batch_odds_api` axis K1 fixes) is fully migrated: GCS copy 260,298/260,298
-      objects (0 failures), manifest-swap 373,296 ADD / 320,469 REMOVE, VERIFY PASSED (0 missing/mismatched/stale). Full
-      evidence in `sports_master_closeout_2026_07_21.md`'s "fourth/fifth/sixth wave" Progress Logs.
-- [ ] [CODE] P1. **F1/F2 — venue/instrument_type cleanup**: fix the footystats legacy bundle mislabel
-      (`venue=ODDS_API`→`FOOTYSTATS`, 42,476 rows); clean the `instrument_type` pollution (110,759 blank + 56,048 None +
-      bookmaker-name rows). Do NOT touch the deliberate `mdps_odds_horizon_bucket` `venue=ODDS_API` aggregate (124,294,
-      reconciled 2026-07-14). **Root cause of the bookmaker-name rows (annotated 2026-07-20,
-      `distinct_values_noncanonical_audit_2026_07_20.md` RESULT/RC-3)**: MDPS
-      `canonical_writer_shaping.py::_type_token_from_canonical_id` assumes a 3-segment CeFi `VENUE:TYPE:SYMBOL`
-      canonical id and takes `parts[1]` as the type token. Sports ids are 8-segment `SPORT:BOOKMAKER:MARKET:...`, so
-      `parts[1]` resolves to the BOOKMAKER, and that positional read OUTRANKS the explicit `instrument_type` column at
-      the same call site — this ONE function is the mechanism minting the entire 13-value bookmaker-in-instrument_type
-      cluster (PADDYPOWER, PINNACLE, betmgm, betway, bovada, coral, fanduel, ladbrokes_uk, paddypower, pinnacle, skybet,
-      unibet_uk, williamhill — confirmed via 13 independent adversarial verification passes, all CONFIRMED
-      "no-action-owned-elsewhere" pointing here). Same shape, neighbouring id segment: the sports `chains` axis carrying
-      `H2H`/`MATCH_ODDS`/`SPREADS` (the market-type segment) is the SAME positional- parse bug on an adjacent field —
-      verified those two readers (`measure_honest_coverage.py`, `_axis_census.py`) are faithful column readers, not the
-      corruption source; fixing them would HIDE the drift. **Fix the parse (`_type_token_from_canonical_id`), not the
-      readers or this todo's downstream cleanup** — a data re-stamp here without the parser fix just regenerates the
-      pollution on the next write. The same positional-parse shape also appears in `build_instrument_catalogue.py:705`'s
-      `_instrument_type_from_id` (IS catalogue side) and should be checked/fixed together.
-- [ ] [CODE] P1. **Promote the existing market vocabulary** (`ODDS_API_MARKET_TO_CANONICAL`, already UPPER on
-      `market_key`) to the `instrument_type` axis — K1's "introduce a betting-market vocabulary" already exists, just on
-      a different column. Reconcile `canonical_writer_shaping.py:218`'s "instrument_type IS 'odds'" claim first.
-- [ ] [CODE] P2. **EXCHANGE_ODDS vs FIXED_ODDS fork** — absorb `sports_odds_exchange_fixed_fork_2026_07_18` (§F2
-      dimension-pollution): separate exchange (Betfair) from fixed-odds bookmaker prices in the canonical dimensions.
-- [ ] [REVIEW] P1. QG assertion: sports `data_type` ∈ the UAC **UPPER** sports vocabulary, `venue` ∉ {vendor names},
-      `instrument_type` ∈ the declared sports vocabulary — so this class cannot silently return.
+      call sites). **This session's casing reconciliation (see Canonical target above) decided sports data_type is
+      LOWER-case for ALL types, no UPPER exception — this todo's UPPER writer flip is now the WRONG direction and is
+      tracked for revert in the new todo below, not extended.** Kept here (not deleted) as the historical record of what
+      shipped and why it's being undone.
+- [x] [DATA] P1. ✅⏪ **K2 — migrate the historical lower-case rows UP SHIPPED + VERIFIED (2026-07-22) — SUPERSEDED
+      2026-07-23, MUST BE REVERTED.** K2's real, correct scope (the `batch_odds_api` axis K1 fixes) migrated: GCS copy
+      260,298/260,298 objects (0 failures), manifest-swap 373,296 ADD / 320,469 REMOVE, VERIFY PASSED. **Same
+      supersession as K1 above** — this data now needs to move back to lower-case, not stay UPPER. Full original
+      evidence in `sports_master_closeout_2026_07_21.md`'s "fourth/fifth/sixth wave" Progress Logs; the revert procedure
+      should mirror this same GCS-copy + manifest-swap + VERIFY pattern, in reverse.
+- [ ] [DATA] P0. **NEW — revert K1/K2's casing migration, 3 layers, in order.** (1) Registry: delete the "ODDS"/
+      "TRADES" uppercase entries from `unified-api-contracts`'s
+      `market_data_categories.py::DATA_TYPES_BY_ASSET_GROUP["sports"]` (currently lines ~213, ~224) — keep only the
+      lower-case "odds"/"trades" entries. (2) Writers: revert `market-tick-data-service`'s `odds_api_adapter.py:761`
+      (literal `"data_type": "ODDS"`) and `engine/orchestrator/sentinels.py:308,350,420` (literal
+      `"data_type": "TRADES"`) back to lower-case literals. (3) Data: migrate the 260,298 GCS objects + 373,296 manifest
+      rows K1/K2 moved to uppercase back to lower-case (GCS copy + manifest-swap + VERIFY, mirroring K1/K2's own
+      procedure in reverse). **Do registry+writers BEFORE data** — otherwise new rows keep arriving uppercase while the
+      historical migration is still moving old ones back, re-dirtying the corpus mid-migration. **NOT YET EXECUTED —
+      decision + plan only, per operator's explicit "reconcile docs first, execute after" instruction (2026-07-23).**
+- [ ] [CODE] P0. **NEW — F1/F2 SHARPENED 2026-07-23: 3 distinct positional-parse bugs, not 2, all asset_group-blind
+      colon-splits of the canonical id in `market-data-processing-service`.** Confirmed via direct code read (see
+      Canonical target section above for full detail + line numbers): (a) `venue` reads `parts[0]` (the SPORT token) via
+      `live_workers.py`/`live_workers_chain.py`/`batch_workers.py`/`candle_write_mixin.py`'s
+      `instrument_id.split(":")[0]` — produces the non-canonical `FOOTBALL`/`UNKNOWN` venue values; (b)
+      `instrument_type` reads `parts[1]` (the BOOKMAKER token) via `_type_token_from_canonical_id`
+      (`canonical_writer_shaping.py:257-266`, called from `canonical_writer.py:252`) — produces 100% of today's 16
+      distinct instrument_type values as non-canonical (the bookmaker-name cluster + bare ODDS/odds/SPORT); (c) `chain`
+      reads `parts[2]` (the MARKET token) via `_infer_chain` (`canonical_writer_shaping.py:499-536`, called from
+      `canonical_writer.py:253`) — sports should NEVER populate `chain` at all (confirmed: `SPORTS_ODDS_TRADES`'s
+      SchemaContract in `unified-api-contracts`'s `_sports_prediction_contracts.py` has no `chain` column; contrast
+      `PREDICTION_PREDICTION_MARKET_*`, which correctly declares `chain` as a required STATIC per-venue constant, e.g.
+      `polymarket_adapter.py:591,667` hardcodes `"chain": "POLYGON"` — that's the right UAC-static-mapping model,
+      already correctly built, just correctly scoped to `prediction`, not `sports`). **Fix: gate all three on
+      asset_group.** For sports: venue ← `parts[1]` (bookmaker — the token `instrument_type` is wrongly reading today);
+      `instrument_type` ← the MARKET token (`parts[2]`) resolved through `ODDS_API_MARKET_TO_CANONICAL` (already UPPER
+      on `market_key` — needs lower-casing to match the casing decision, see the revert todo above); `chain` ← never
+      written for sports (null). Do NOT touch the deliberate `mdps_odds_horizon_bucket` `venue=ODDS_API` aggregate
+      (124,294 rows, reconciled 2026-07-14) — that's a different, intentional aggregate identity, not this bug. The same
+      `parts[1]`-as-type-token shape also appears in `build_instrument_catalogue.py:723-739`'s
+      `_instrument_type_from_id` (IS catalogue side) — fix together.
+- [ ] [DATA] P1. **NEW — venue vocabulary cleanup, 4 distinct dispositions for the 9 non-canonical values** (once the
+      parse-bug fix above stops new pollution — fix the parser FIRST, re-stamp SECOND, same ordering lesson as the
+      original F1/F2 note): (1) casing/aliasing rewrite — LADBROKES_UK→LADBROKES, UNIBET_UK/UNIBET_EU→UNIBET,
+      SPORT888→BET888SPORT (all 4 already exist correctly-cased in the UAC venue registry, this is a pure re-stamp, no
+      registry gap); (2) cross-AG bleed — KALSHI, POLYMARKET rows belong to `asset_group=prediction`; same remediation
+      pattern as the "Cross-AG finding" section below (root-cause the write path, then purge); (3) residual-only —
+      SMARKETS is an explicitly deleted venue (codex: "removed from all repos, no manifest rows should be expected") —
+      any remaining rows are stale residue to purge, not a registry gap; (4) parse-bug residue — FOOTBALL/UNKNOWN clear
+      once the venue-parts[0] fix above ships and existing rows are re-stamped. Also still fix the original footystats
+      legacy bundle mislabel (`venue=ODDS_API`→`FOOTYSTATS`, 42,476 rows) — unrelated to the parse bug, a separate
+      writer defect.
+- [ ] [CODE] P0/P1. **EXCHANGE_ODDS vs FIXED_ODDS fork — ABSORBED 2026-07-23, full 9-step sequence** (was a 1-line
+      placeholder; `sports_odds_exchange_fixed_fork_2026_07_18.md` is now archived/superseded, all 10 of its todos
+      pulled in below verbatim — priority CORRECTED from this section's earlier P2 to match the source plan's real P0/P1
+      mix, which includes a live OPERATOR block):
+  - [ ] [OPERATOR] P0. Confirm the ambiguous EXCHANGE_ODDS/FIXED_ODDS venue→class mapping: bare `BETFAIR` (33 rows),
+        `ODDS_API` (33, an aggregator fitting neither class), and `PINNACLE` (32,616 rows — sportsbook by mechanism, but
+        UAC models it `PINNACLE_AS_LINE` in `_SNAPSHOT_VENUES`, so confirm FIXED_ODDS vs a PINNACLE_AS_LINE special
+        case) remain BLOCKED-OPERATOR-DECISION. Non-ambiguous poles may proceed to design without waiting: EXCHANGE_ODDS
+        = `BETFAIR_EX_UK`/`BETFAIR_EX_EU`/`SMARKETS`/`MATCHBOOK`; FIXED_ODDS = `BETFAIR_SB_UK`/`BETMGM`.
+  - [ ] [DATA] P0. Pre-drain the sports odds writers before any GCS object move — `odds` (pre-fork instrument_type,
+        561,260 rows) is written live; stop all sports odds-writing jobs both clouds + snapshot first.
+  - [ ] [DATA] P1. Add UAC contract entries for EXCHANGE_ODDS/FIXED_ODDS BEFORE touching data (contracts-first,
+        deliberately — manifest-first previously caused the tradfi CME manifest↔disk↔registry divergence, repaired
+        `@bd115230`, must not repeat). Keep the legacy `odds` contract entry live for the dual-read window.
+  - [ ] [DATA] P1. Dual-read `odds` + `EXCHANGE_ODDS`/`FIXED_ODDS` in `lookup_contract` during the migration window; add
+        a UAC unit test covering both paths.
+  - [ ] [DATA] P1. Move the `instrument_type=odds/` GCS objects to `exchange_odds/`/`fixed_odds/` per the venue→class
+        map via UTL `gcs_copy_object`/`gcs_delete_object` (never subprocess gsutil); snapshot → move → independent
+        re-read count; idempotent + resumable.
+  - [ ] [DATA] P1. Update MDPS `dependency_checker`'s hive-token matcher for the new instrument_type partitions —
+        confirm no consumer of the legacy `odds` hive token goes orphaned.
+  - [ ] [DATA] P1. Reconcile the availability manifest to the new partitions LAST, only after GCS move + dual-read are
+        proven — verify the shard atom is identical across writer/manifest/status/gate.
+  - [ ] [DATA] P2. Cut the live sports odds writers over to the new instrument_types and un-drain.
+  - [ ] [DATA] P2. Retire the legacy `odds` contract entry + the dual-read path once no object/manifest row remains
+        under `odds` and a full corpus re-read confirms parity.
+  - [ ] [REVIEW] P2. Post-phase codex audit: update `availability-manifest-and-data-status.md` + the sports
+        canonical-naming doc with the new instrument_types + migration order.
+- [ ] [REVIEW] P1. QG assertion: sports `data_type` ∈ the UAC lower-case sports vocabulary (no UPPER entries once the
+      revert above ships), `venue` ∈ the UAC venue registry (never a vendor casing variant, never a prediction-market
+      venue, never a deleted venue), `instrument_type` ∈ the declared sports vocabulary (never a bookmaker name),
+      `chain` is always null/absent for sports — so this whole class cannot silently return. **This is the
+      QG-enforceable version of the Distinct Values target**: the deployment-ui's sports panel for venues /
+      instrument_types / data_types / chains should read 0 non-canonical across all four axes once Track C lands.
 
 ## Track S — STORE: bucket hygiene + legacy path elimination · P1
 
@@ -202,6 +344,11 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
 - [ ] [DATA] P1. Absorb `sports_canonical_migrated_odds_mistamped_footystats` +
       `sports_canonical_raw_truncated_rederive_destroys_corpus` (HIGH — corpus-destroying rederive risk; guard before
       any rederive).
+- [ ] [DIAG] P2. **NEW 2026-07-23 (decision 16) — investigate 2 unfiled loose ends from the OR-1 investigation.** (1)
+      standings/teams season-2026 data being written under historical `day=` partitions across ~3,050 days in both
+      buckets; (2) an unidentified writer producing a cartesian-junk `player_values` object on 2026-06-22. Root cause
+      unknown for both — operator decision: investigate now rather than deferring, since both are currently unowned and
+      could be actively recurring. Detail: see the OR-1/player_stats-union issue doc's own RE-TRIAGE (2026-07-23).
 
 ## Track E — ENTITY-SPLIT: repoint every remaining stale consumer · P1 (sports-specific, no defi analog)
 
@@ -254,9 +401,22 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
       615-minute dead-zone; consider adding a T-18h horizon or widening the T-24h staleness cap; investigate why the
       multi-shot `TIER_1_OFFSETS` loop apparently didn't run on the quiet 2025-12 days (only 1 fetch_utc observed).
 - [ ] [DATA] P2. Purge the 1,337 dead `odds_horizon_bucket_{15m,1h,4h,1d}` manifest rows.
+- [ ] [DIAG] P1. **NEW 2026-07-23 (decision 15) — investigate + fix the MTDS live-odds fixture_id-blank collapse.**
+      Flagged 🔴 NOTIFY-OPERATOR as an ongoing live issue, last directly observed 2026-06-20 — status since then is
+      unconfirmed. Operator decision: investigate and fix now, not just re-check status, since it was already flagged as
+      a live NOTIFY-OPERATOR item a month ago. Detail: see the SFI/HT-odds pit-gate issue doc's own RE-TRIAGE
+      (2026-07-23).
 
 ## Track H — HONEST-COVERAGE: manifest honesty + denominators · P1
 
+- [ ] [DIAG] P0. **NEW 2026-07-23 (decision 8) — sports ODDS_API (TRADES) capture pipeline dormancy investigation, THE
+      single highest-priority item in this whole closeout.** Zero sports manifest writes observed for ~12h+ at last
+      check; the only odds-adjacent Cloud Run jobs last ran 2026-03-29 (~4 months ago); no matching GCP Cloud Scheduler
+      entry found. AWS-side scheduling (EventBridge/ECS) and persistent-VM-internal crontabs could NOT be checked —
+      IAM-denied. Operator decision: get the IAM access and investigate now, don't defer. If confirmed dormant, every
+      other honest-coverage/backfill claim in this closeout is being measured against a dataset that may not be growing
+      — this matters more than any single casing/naming fix above. Detail:
+      `issues/sports_odds_capture_pipeline_scheduling_status_unknown_2026_07_23.md`.
 - [ ] [DIAG] P1. Why do `reason`/`error_code`/`empty_reason`/`classified_error` read back blank for the sports odds
       manifest (schema gap or C5-class silent-empty) — blocks root-causing § O findings.
 - [ ] [DIAG] P2. Confirm sports genuinely never emits `expected_unattempted` in the odds manifest (0 of 1.97M) by
@@ -265,17 +425,55 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
       `AG_STALENESS_BUDGET_SEC["sports"]` fix (same defect, two docs).
 - [ ] [REVIEW] P2. Honest-coverage atom regrade to per-calculator grain (sweep §C3, operator-decided) + league_id
       namespace reconciliation (§C2) + `fixture_stats` 708-failure root-cause (§C6).
+- [ ] [CODE] P1. **NEW 2026-07-23 (decision 6) — implement the registry-aware honest-coverage denominator for real** in
+      `compute_coverage_for_bucket()` (deployment-api), not just a doc caveat: sports coverage % must reflect "captured
+      / UAC registry universe," per the 2026-07-20 operator decision (decision 2 in the ANSWERED section above), not
+      "captured / raw manifest." **Sequenced AFTER the league_id migration (Track V's prod-apply, still pending)** — a
+      registry-membership test cannot be correct while 328,999+ manifest rows carry non-registry-form `league_id`
+      strings; shipping this first would produce wrong/unstable numbers.
+- [ ] [DIAG] P2. **NEW 2026-07-23 (decision 10) — check downstream demand before deciding MDPS's 3 dead derived-odds
+      products' fate.** Grep `features-service`/`strategy-service` for any consumer expecting `odds_movement`/
+      `odds_snapshot`/`arbitrage_opportunity`. Root cause already diagnosed (dead code, never scheduled — the only live
+      sports MDPS Cloud Run job runs `reprocess_sports_odds.py`, hardcoded to `odds_horizon_bucket` only). Operator
+      decision: wire them up for real if something downstream needs them (not retire) — this check determines the actual
+      wire-up scope.
+- [ ] [CODE] P2. **NEW 2026-07-23 (decision 12) — design + build the missing cross-object-CAS safety mechanism** for the
+      1,066,231-row manifest purge/reclassify. Root-cause fix shipped, all 4 related operator decisions already ruled —
+      the ONLY remaining blocker is that this safety tooling doesn't exist yet (harder than the league_id migration's
+      pure scheduling gate — nothing to schedule until this is built). Detail: see the issue doc's own §7 (re-triaged
+      2026-07-23).
+- [ ] [DESIGN] P2. **NEW 2026-07-23 (decision 13) — decide + implement the honest write-abort contract for
+      AvailableAtStampingError.** Operator ruling: RAISE on all-NaT (fail loud at the shard that can't be stamped), not
+      skip-with-record — catches a CF-8-class regression the moment it starts instead of accumulating a silent ~40-50%
+      fill-rate gap for weeks. Wire this into the same code path CF-8's fix touches (Track H's CF-8 todo below) so both
+      land together.
+- [ ] [CODE] P1. **NEW 2026-07-23 (decision 11) — schedule + run the CF-8 available_at maintenance window.** Fix is
+      built + unit-tested, never run in production; CF-8 stays ~40-50% `available_at` fill until it does. Lift operator
+      stop `BLK-d9137d48` and clear the still-false backlog parking-gate condition
+      (`sports-cf8-maintenance-window-scheduled`) to run it. Detail:
+      `sports_cf8_available_at_backfill_regression_     2026_07_13.md`.
 
 ## Track V — COVERAGE: backfill to honest-100% · P1 (operator-gated where noted)
 
 - [ ] [DATA] P1. Round-derivation residual: run the retargeted backfill for the reachable in-window pairs already scoped
       (sweep §T/§W terminal state); the cup-vs-league classification is resolved (they are blank-round leagues,
       fetchable).
-- [ ] [OPERATOR] P1. **§U decision** — 489 in-window (league,season) pairs / 10,869 rows in leagues ABSENT from the UAC
-      registry: extend the registry or stop capturing. BLOCKED-OPERATOR-DECISION. "Backfilled 100%" can't be asserted
-      until settled.
-- [ ] [OPERATOR] P2. **§T decision** — pre-2019 blank-round rows (122,864) are outside the stated 2019→2026 window:
-      confirm whether 2013–2018 is in scope. BLOCKED-OPERATOR-DECISION.
+- [x] [OPERATOR] P1. ✅ **§U decision — ANSWERED 2026-07-20** (see "Operator decisions — ANSWERED 2026-07-20" above,
+      decision 2): stop capturing non-registry leagues; the 489-pair/10,869-row population is excluded from the
+      denominator and is a purge candidate — **but the purge is STILL BLOCKED** on the league_id namespace migration
+      (Track V's own note below + the "Newly-actionable todos" section above) — do not confuse "decided" with
+      "executed." ~~BLOCKED-OPERATOR-DECISION~~ was stale framing, corrected 2026-07-23.
+- [x] [OPERATOR] P2. ✅ **§T decision — ANSWERED 2026-07-20** (decision 3): pre-2019 (2013–2018) is OUT OF SCOPE,
+      intentionally excluded, no further api-football spend. ~~BLOCKED-OPERATOR-DECISION~~ was stale framing, corrected
+      2026-07-23. Remaining work is documentation-only — see the new [DOC] todo below.
+- [ ] [DATA] P0. **NEW 2026-07-23 (decision 14) — execute the pre-floor wipe now.** 83,541 pre-floor
+      (2014-01-01..2020-06-05) `FIXTURES_SCHEDULE`/`FIXTURES_OUTCOMES` rows fall before the established 2020-06-06
+      sports data floor (`codex/02-data/sports-2020-06-data-floor.md` — pre-floor odds data is fabrication-by-
+      construction and gets wiped; this population is the fixtures-side analog). Root-cause fix already shipped
+      (UAC@46d865df per the earlier audit); only the disposition ruling + actual wipe execution remain. Snapshot first
+      (GCS soft-delete gives a 7-day recovery window), same procedure as the Track F derived_features purge.
+- [ ] [DOC] P3. Document pre-2019 (2013–2018) as an intentional, explained exclusion (§T decision 3, now answered) in
+      the audit's gap table so the remaining-blanks arithmetic reads clean.
 - [ ] [DATA] P1. Absorb `sports_p2_history_apifootball_2015_to_present` residuals + the 94-league enrichment backfill
       from `sports_canonical_universe_and_apifootball_reference_expansion`.
 - [ ] [OPS] P2. Re-roll `build_instrument_catalogue.py --asset-group sports --since 2019-01-01` to pick up the §T/§U/§W
@@ -302,15 +500,23 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
 
 ## Track D — CODEX: doc alignment · P1
 
-- [x] [DOC] P1. ✅ CORRECTION BANNERS added to all 9 drifted codex docs (PM, this commit) — canonical facts stated at
-      the top (split entity, UPPER data_type per K0-(b), pipeline_mode segment, unreachable T0/T1 gate, deleted
-      scrapers, SUPERSEDED integration-plan, dead sports_reference_v2). Full body rewrites are a deliberate follow-up;
-      the banners stop the drift from misleading a reader NOW. Remaining: rewrite `sports-adapter-dependency-order.md`
-      (repoint to split entities; wire the T0/T1 gate note) + `sports-data-types-catalog.md` (UPPER per K0-(b); F3
-      timeframe) + `sports-gcs-path-ssot.md` (pipeline_mode + split entity rows).
-- [ ] [DOC] P2. SUPERSEDED banner on `sports-integration-plan.md`; retire the deleted-scrapers §3 in
-      `sports-live-odds-connectivity.md`; split-note `sports-scheduling-and-sharding.md`/`sports-fixtures-lifecycle.md`/
-      `sports-batch-live.md`/`sports-data-source-coverage-matrix.md`; fix the 5 broken `related:` paths in
+- [x] [DOC] P1. ✅ **ACTUALLY FIXED 2026-07-23 (not just re-marked — body rewrites confirmed, not more banners).**
+      Original claim ("CORRECTION BANNERS added to all 9 drifted codex docs... full body rewrites are a deliberate
+      follow-up") was inaccurate: a 2026-07-23 audit found 3 docs with NO banner at all and 3 more "banner-fixed" docs
+      with stale bodies beneath their own banners. All 6 fixed for real this pass, body content verified against the
+      current canonical facts (fixtures split, casing revert, the 3-bug venue/instrument_type/chain root cause), not
+      just banner text: `sports-adapter-dependency-order.md` (§1/§3/§4.1/§5 rewritten — split entities + T0/T1 gate
+      honestly described as non-firing), `sports-scheduling-and-sharding.md` (§9 diagram + schema note rewritten to the
+      split layout), `sports-fixtures-lifecycle.md` (available_at table now split by entity),
+      `honest-absence-downstream-handling.md` (banner added + `SCHEDULE_DEFINING_DATA_TYPES` verified against live UAC
+      source — still `{"FIXTURES"}`, flagged as the forward-looking C1 gap now added above), `sports-batch-live.md`
+      (banner added + source table casing/entity fixed), `pipeline-coverage-matrix.md` (confirming banner added +
+      league_id/entity annotations). Also picked up the rest of the original Track D scope in the same pass:
+      `sports-integration-plan.md` got a SUPERSEDED banner + frontmatter flip, `sports-live-odds-connectivity.md`'s §3
+      deleted-scrapers section was rewritten past-tense (14 retired adapters, corrected from the doc's stale "13").
+- [ ] [DOC] P2. **Still open from the original scope** (not touched by the 2026-07-23 codex pass above):
+      `sports-data-source-coverage-matrix.md` split-note (had a decent banner from 2026-07-19 — verify body isn't also
+      stale-under-banner before assuming done, same failure mode as the 6 above); fix the 5 broken `related:` paths in
       `sports_master.md`.
 
 ## Track X — CLEANUP + plan reconciliation · P2
@@ -321,12 +527,182 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
       zero remaining todos is 10 — the rest still have open items and are correctly left open.) ~~Flip
       `status: resolved` on the ~30 fully-checked-but-open sports issue docs~~ (list in the audit's reconciliation) —
       pure hygiene.
-- [ ] [PLAN] P1. Archive the fold-in plans as superseded-by this closeout
-      (`sports_manifest_canonicalisation_2026_06_01`, `sports_pipeline_to_100pct_golden_window_first`) once their live
-      items land here; keep the 2 near-done KEEP-ACTIVE plans standalone.
+- [x] [PLAN] P1. ✅ **DONE 2026-07-23 — all 4 fold-in plans archived, live content extracted.** ~~Archive the fold-in
+      plans... keep the 2 near-done KEEP-ACTIVE plans standalone~~ was this session's original framing; operator
+      decision overrode it: archived all 4 (`sports_manifest_canonicalisation_2026_06_01`,
+      `sports_pipeline_to_100pct_golden_window_first_2026_06_27`, `sports_odds_exchange_fixed_fork_2026_07_18`,
+      `sports_p2_history_apifootball_2015_to_present_2026_06_27`), each now `status: superseded` /
+      `superseded_by: sports_consolidated_closeout_2026_07_19.md` with its own banner pointing back here. Live content
+      extracted and pulled in: the EXCHANGE_ODDS/FIXED_ODDS 9-step sequence landed in Track C above; the remaining ~20
+      extracted items (CF-8/E8 gate, IS L6 index regression, live SPOT VM tracking, the
+      `_read_fixtures_entity_with_schedule_fallback` live freeze-contradiction, P2a/P2b/P2c/P2d, etc.) landed in the new
+      "Track S2 — FOLD-IN ABSORPTION" section below, organized by source plan for traceability.
+- [x] [PLAN] P1. ✅ **DONE 2026-07-23 — all 5 orphan sports plans linked + reconciliation todos filed.**
+      (`sports_catalog_league_grain_only_scope_2026_07_08`, `sports_odds_bookmaker_coverage_enumeration_2026_06_20`,
+      `sports_odds_feature_naming_canonicalization_2026_07_21`, `sports_p2_features_history_to_ml_ready_2026_06_27`,
+      `sports_predictions_live_mode_activation_readiness_2026_07_21`) — each now carries
+      `sports_consolidated_     closeout_2026_07_19.md` in its `related:` list + a cross-reference banner. The 5
+      reconciliation todos:
+  - [ ] [REVIEW] P1. Reconcile `sports_catalog_league_grain_only_scope_2026_07_08.md`'s active fixture-grain work
+        against this closeout: (1) it writes reference data under a bare `entity={fixtures,teams,injuries}/` path — a
+        second naming collision on the string this closeout declares FROZEN since 2026-05-23; (2) it's independently
+        designing a competing manifest-schema extension for per-fixture-grain capture tracking that depends on
+        `league_id` resolution, which Track V flags as an unresolved P0 that plan doesn't cite. Do not resolve
+        unilaterally in either doc.
+  - [ ] [REVIEW] P1. Reconcile the league_id canonical-vs-raw framing conflict between this closeout (registry form like
+        `EPL` is canonical) and `sports_odds_bookmaker_coverage_enumeration_2026_06_20.md` (labels raw strings like
+        `PREMIER_LEAGUE`/`BUNDESLIGA`/`SERIE_A`/`LA_LIGA` as canonical) — also fold that plan's open `LEAGUE_ID_TO_TIER`
+        mapping + 28-unmapped-league_ids gap-analysis into this closeout's league_id migration before either doc's
+        league_id items proceed.
+  - [ ] [DOC] P2. Update the sports issue-doc index above: it still lists
+        `sports_odds_feature_naming_four_way_     mismatch_2026_07_21.md` as merely open/P2, but
+        `sports_odds_feature_naming_canonicalization_2026_07_21.md` already has a DECIDED (2026-07-23) naming scheme +
+        scoped 3-repo migration in flight — a fresh agent shouldn't re-litigate the naming decision or start a duplicate
+        migration.
+  - [ ] [PLAN] P2. Reconcile `sports_p2_features_history_to_ml_ready_2026_06_27.md` against this closeout: its
+        `last_updated` is stale against its own Progress Log; it carries an open P0 VERIFY todo re-confirming
+        `FIXTURES_SCHEDULE`/`FIXTURES_OUTCOMES` column population post-split — the IDENTICAL migration Track C1/F claim
+        as canonical target — and documents live paths still using `data_type=odds_horizon_bucket` (dead cohort) and
+        raw-form `league_id=SOCCER_RUSSIA_PREMIER_LEAGUE` (same class as Track V's unresolved P0).
+  - [ ] [REVIEW] P1. Confirm the cross-AG `asset_group=prediction` bleed-bug fix (`mtds@a7ff45f9`, root cause
+        `@299ef540`) is durable, not just verified-once, as an explicit pre-req gate before
+        `sports_predictions_live_mode_activation_readiness_2026_07_21.md` proceeds past its go-live todo — that plan is
+        scoping new live MTDS/prediction infra with zero visibility into this bug (decision 17).
+- [ ] [DOC] P2. **NEW 2026-07-23 (decision 9) — formalize `sports_master_closeout_2026_07_21.md`'s entry-point
+      relationship.** ✅ **DONE 2026-07-23.** Added a new `entry_point_for: [target-plan-slug]` field to
+      `plans/PLAN_FORMAT.md`'s frontmatter schema (distinct from `supersedes`/`superseded_by` — signals "these two plans
+      are intentionally co-live," not "safe to archive the target"). Applied to `sports_master_closeout_2026_07_21.md`:
+      `entry_point_for: [sports_consolidated_closeout_2026_07_19]`, and its summary reworded from "Supersedes..." to "Is
+      the entry-point index for..." — the prose-vs-field self-contradiction is resolved, not just re-described.
 - [ ] [CLEANUP] P3. Drop the frozen 2018-2020 `markets`/`outcomes`/`settlements`/`arbitrage_opportunity` scaffolding;
       correct `SPORTS_INSTRUMENTS.md` stale "Known gaps" (lineups player-id strip claim is false); junk-symbol guard for
       non-ASCII fixtures (sweep §D).
+
+## Track S2 — FOLD-IN ABSORPTION: live items extracted from the 3 archived plans not covered above (2026-07-23)
+
+Track C above already absorbed `sports_odds_exchange_fixed_fork_2026_07_18`'s full 9-step sequence. The remaining 3
+archived fold-in plans' still-live content, organized by source plan for traceability — none of this has been executed,
+it is extraction + tracking only:
+
+**From `sports_manifest_canonicalisation_2026_06_01` (archived):**
+
+- [ ] [DATA] P0. **Sports E8 — legacy bucket delete gate still RED, blocked by CF-8 captured-row backfill.** The
+      IRREVERSIBLE delete of the legacy `market-data-tick-sports` + `instruments-store-sports` buckets stays BLOCKED —
+      `cf_manifest_audit_2026_06_01.py` is RED on both surfaces. Primary live blocker = CF-8 (`available_at`): aggregate
+      backfill hit ~85-88% fill but `capture_status='captured'` rows specifically are still only ~40-60% — root cause is
+      the manifest consolidator's dedup key includes `service_name`, so a backfill rewrite under one fixed service_name
+      can never dedupe-supersede rows written under a different one (code fix shipped
+      `market-tick-data-service@af627b5b`, unit-tested only, **not yet run in production** — same CF-8 window as Track
+      H's todo above, run together). Do not re-dispatch the audit itself until that window runs — 30+ prior re-audits
+      reproduced identical RED with zero new information. Separately, the `L6-legacy-only == 0` gate criterion needs
+      redefining — unreachable by design, doesn't exempt the operator-accepted `instrument_count=0` phantom class.
+      Detail: `sports_cf8_available_at_backfill_regression_     2026_07_13.md`.
+- [ ] [DATA] P0. **Sports IS L6 index regression — fixtures-job direct-write race vs. the manifest consolidator**
+      (repos: market-tick-data-service, unified-trading-library, instruments-service). The
+      `uts-prod-instruments-service-sports-fixtures` Cloud Scheduler job direct-writes the
+      `instruments-store-sports-prd` manifest index, racing the ~1-min consolidator cron — regressed the IS L6
+      legacy-vs-canonical gate from 28 to 3,316 legacy-only cells by silently dropping 328,292 previously-migrated rows.
+      Containment shipped (per-VM-shard mode, `ManifestIndexShrinkRefusedError` guard at
+      `unified-trading-library@45a43438`, `InvalidCompletenessFractionError` fix at `instruments-service@a25cf70d`) but
+      NOT closed out — still needed, in order: (1) an IS base-image digest bump/rebuild carrying both fixes; (2) resume
+      the four `uts-prod-sports-fixtures-*-t1-schedule` schedulers, confirm green execution; (3) — only AFTER the
+      `af-backfill-20260714-*` VM fleet completes — re-run the targeted manifest re-emission + force-consolidate, verify
+      0 regressed-legacy-only. Do NOT attempt (3) before (1)/(2) — the write gets silently reverted again. Detail:
+      `sports_is_index_fixtures_job_direct_write_328k_row_cut_2026_07_15.md`.
+- [ ] [DATA] P0. **Legacy no-env `instruments-store-sports` bucket decommission — ownership already moved,
+      cross-reference only, do NOT re-execute from here.** Ownership moved to
+      `sports_legacy_bucket_cutover_     2026_07_16.md` — a destructive, strictly-sequential, Terraform-touching cutover
+      explicitly scoped out of autonomous dispatch, mid-execution against live prod state. Track/resolve via that plan,
+      not by re-deriving this item independently (risk of a concurrent, conflicting mutation against the same live GCS
+      objects / manifest index / Terraform state).
+- [ ] [DATA] P2. **Sports IS dedup-cleanup — 88 orphan rows need manual review + a cross-surface bug-class check.**
+      During the 2026-07-13 cleanup of 683,592 duplicate rows (mis-keyed `rebuild_sports_manifest_v9.py` E4 apply-pass
+      bug, fixed going forward `market-tick-data-service@55f9e961`, historical dupes removed
+      `instruments-service@2f56038e`), 88 rows (0.01%) had no canonical twin to dedupe against and were left untouched.
+      Two follow-ups never completed: (a) manual review of those 88 rows' disposition; (b) check whether the same
+      mis-keyed-duplicate bug class hit the `mdps` surface or any other bucket rebuilt via the same script family.
+- [ ] [CODE] P1. **Mis-filed DEFI item, not sports — relocate, do not lose.** "features-service: ban `category=defi` in
+      on-disk GCS path reads" (`mtds_canonical_reader.py::_legacy_twin()` L71-72, `eigen_rewards_calculator.py:53-54`)
+      was tracked in the now-archived sports plan under a BLOCKED-PREREQUISITES marker. Its real gating plan
+      (`defi_manifest_canonicalisation_2026_06_01.md`) was itself folded into
+      `data_completion_to_100_all_ag_2026_06_21.md`, which as of last report still shows defi as NOT full C-GREEN.
+      **Re-home this to track against that defi plan, not the sports closeout** — flagged here only so it isn't silently
+      dropped during archival.
+
+**From `sports_pipeline_to_100pct_golden_window_first_2026_06_27` (archived):**
+
+- [ ] [DATA] P1. **Sports P2a — API-Football fixtures history 2015→present, never started.** 3 sub-items: (a) G1
+      non-canonical-league NOISE wipe — purge ~1,437 non-canonical leagues (~106k rows); (b) G2 2015–2017 zero-captured
+      diagnosis — subscription-tier limit vs. backfill bug, then fix/backfill; (c) G2 40,041 FIXTURES `attempted_failed`
+      re-run for 2018/2021/2023. **Its original dispatch target
+      (`sports_p2_history_apifootball_2015_to_present_2026_06_27`) is ALSO archived in this same batch** — this work has
+      no surviving plan home other than this closeout.
+- [ ] [DATA] P1. **Sports P2b — reference sources + odds history 2015→present, never started.** Extend the
+      golden-window-proven honest-coverage recipe (weather, soccerfootball_info, transfermarkt, understat, footystats,
+      odds-api) to full 2015→present within each source's own `coverage_start`; season-aware smart-skip only (typed
+      `EXPECTED_*` reasons, never blanket re-fetch).
+- [ ] [DATA] P2. **Sports P2c — features history backfill to ML-ready, blocked on P2a+P2b, never started.** Extend the
+      features-service sports feature matrix from the golden window (2025-09-01..11-30) to 2015→present once P2a/P2b
+      land.
+- [ ] [REVIEW] P2. **Sports P2d — final e2e gate stamp, deliberately deferred, blocked on P2a/P2b/P2c.** R3-daily/ R4/R5
+      sub-items already shipped/verified; R1/R2/R3-history remain BLOCKED pending P2a+P2b+P2c — re-run this gate once
+      those land, don't mark it DONE early.
+- [ ] [OPERATOR] P2. **Unresolved cefi-before-sports gate TENSION, never ruled** (flagged 2026-07-14, still open).
+      `instruments_foundation_completeness_2026_06_24.md` states sports does NOT start its G1→G5 until cefi is DONE, but
+      cefi's own G4/G5 were still open when this coordinator's G1 noise-wipe work executed (2026-06-28). Unclear whether
+      the 2026-06-27 re-homing was an implicit operator override — get a ruling, don't assume.
+
+**From `sports_p2_history_apifootball_2015_to_present_2026_06_27` (archived):**
+
+- [ ] [INFRA] P0. **2 SPOT VMs RUNNING as of 2026-07-22, months-to-years from their gate — track to completion or
+      dead-shard-detect + relaunch.** `af-backfill-20260721-033537` (FIXTURE_EVENTS, ~1y of walk remaining at observed
+      pace) and `af-backfill-20260722-033350` (FIXTURE_STATS, ~5y8mo remaining, itself a same-day relaunch of a
+      preempted predecessor). Must clear before any full-history AF enrichment gate can be evaluated.
+- [ ] [CODE] P0. **Live contradiction with this closeout's FROZEN-legacy-path declaration** —
+      `instruments-service@e1524d21` shipped `_read_fixtures_entity_with_schedule_fallback` (wired into
+      `_read_fixture_ids_from_gcs`, `_find_stale_fixture_leagues_for_date`, `_build_fixture_league_map_from_gcs`,
+      `instruments-service/instruments_service/engine/orchestrator/sports_fixtures.py`), which tries
+      `entity=fixtures_schedule/` first and FALLS BACK to the legacy bare `entity=fixtures/` path for pre-migration
+      dates. This closeout declares that path frozen since 2026-05-23 — needs an explicit decision: grandfather the
+      fallback for genuinely pre-migration dates, or remove/redirect it at the source.
+- [ ] [VERIFY] P0. **FINAL full-history zero-missing (R1/R2/R3) — BLOCKED-PREREQUISITES, bounced 6× as of last check.**
+      Gate: 0 `expected_unattempted_pending_fetch`, 0 blank-reason, 0 un-evidenced `attempted_failed` for every (source,
+      data_type) within coverage windows, plus features ML-ready. Do NOT fetch the `api_football × ODDS eu=89,073` slice
+      if it resurfaces — impossible-not-fetchable denominator pollution pending a purge/retype pass, not real work.
+- [ ] [DATA] P1. **LINEUPS/PLAYER_STATS need a new 2026-05-10→present catch-up window launched.** Prior fleet completed
+      cleanly but only to a fixed end date, not "to present" (~73+ days uncovered as of last check); blocked until the
+      P0 FIXTURE_EVENTS/FIXTURE_STATS VMs above clear the api_football singleton launcher lock.
+- [ ] [DATA] P1. **INJURIES (2021-01-01→present) and STANDINGS (2018-01-01→present) full-history windows never
+      launched** — blocked by the same api_football singleton launcher lock; launch once it clears.
+- [ ] [DATA] P2. **Features recompute for enriched dates, not yet run** — after full-history AF enrichment lands, re-run
+      sports features with force/no-skip for the enriched dates (`derived_features` + `fixture_features` only;
+      `odds_features` unaffected).
+- [ ] [VERIFY] P2. **ML-readiness re-verify, not yet run** — transitively gated behind the features recompute above.
+- [ ] [DATA] P2. **TEAMS full-history backfill gated on an external dedup-key fix** —
+      `sports_data_sources_canonical_completion_2026_07_13.md`'s consolidator NULL/empty-string dedup-key fix must land
+      first; TEAMS stays out of the enrichment fleet's scope until then.
+- [ ] [INFRA] P2. **Open question: does the aggregate manifest gate ever see a legacy-CAS (non-per-VM-shard) write?** A
+      one-off closer script closed 5,288 cells via legacy CAS write, verified correct at the cell level 3×
+      independently, but the shard-fallback aggregate gate never reflected it even after a full consolidator-cadence
+      window — possible the consolidator's shard-only rebuild path structurally never folds in prior CAS writes. Needs
+      someone to read `unified_trading_library.manifest_consolidator`'s merge-source code to confirm, then either force
+      reconciliation or fix the gate tooling. Also ~205-227 genuine gap cells from that closer's dry-run still need a
+      normal targeted re-fetch.
+- [ ] [INFRA] P2. **`exit_code_fleet_monitor` CLEAN-misclassification risk is fleet-wide, not just this plan's VMs.** A
+      no-exit-code + captured-climbed VM always resolves to silent CLEAN regardless of whether a SPOT preemption marker
+      was actually written (confirmed root cause of a ~22h undetected-dead-shard incident on this plan's own VMs).
+      Filed: `exit_code_fleet_monitor_clean_misclassifies_premature_kill_2026_07_21.md` — implicates
+      `deployment-service/exit_code_fleet_monitor.py` beyond this one fleet.
+- [ ] [DATA] P3. **Season-cache-0-fixtures gap investigation narrowed but not closed** — a full-season cache fetch can
+      return zero fixtures on a date the manifest claims one exists; scope may be larger than the 394-cell count
+      currently reported and/or double-counting the same league across numeric/canonical `league_id` representations at
+      the entity-split boundary. Filed:
+      `api_football_enrichment_stale_ns_fixture_status_and_gate_reader_inconsistency_2026_07_19.md`.
+- [ ] [DATA] P3. **Bogus api_football ODDS rows still need a purge/retype pass.** Root cause fixed (restored
+      `("sports","ODDS")` to `SOURCE_PRIORITY`, `unified-api-contracts@57bcc7c5`), stopping new bad rows, but
+      already-written rows (94-league cross-product, `source=api_football` on data api_football never actually serves)
+      are deliberately deferred until the in-flight P0 index repair (Track C) settles. Filed:
+      `sports_odds_ownership_registry_split_brain_and_bogus_api_football_denominator_2026_07_15.md` §B.
 
 ---
 
@@ -362,8 +738,10 @@ are self-contradictions in THIS closeout / the audit — both now fixed** (marke
 6. ✅ **SELF-CONTRADICTION in the audit (FIXED)**: §2.1 said `entity=fixtures` FROZEN, §2.6 said "still active today".
    Measured: every file incl. today's `day=` partition has `Creation Time 2026-05-23T20:35:42Z` — FROZEN. §2.6 conflated
    pre-fetched future-dated file _presence_ with active writing. Audit §2.6 reworded to "stale, not actively written".
-7. **`sports-data-types-catalog.md` still documents lower-case sports data_types** — contradicts K0-(b). Exact quote
-   captured. (CODEX.)
+7. ~~**`sports-data-types-catalog.md` still documents lower-case sports data_types** — contradicts K0-(b). Exact quote
+   captured. (CODEX.)~~ **INVERTED BY THIS SESSION'S 2026-07-23 RECONCILIATION**: that doc's lower-case content is now
+   the CORRECT, settled answer — K0-(b)'s UPPER decision is what's superseded (see Canonical target section above). This
+   item is retained struck-through so the history of "which one contradicted which" stays legible.
 8. ✅ **SELF-CONTRADICTION in THIS closeout (FIXED)**: K2's "~20,339 rows, one bucket" excluded `trades` = 1,806,553
    rows (91.5%, lower-case) that K1 commits to fixing at the writer. K2 scope corrected above to name the ~1.8M `trades`
    decision explicitly.
@@ -432,8 +810,11 @@ are self-contradictions in THIS closeout / the audit — both now fixed** (marke
 
 ## Cross-AG finding (belongs to a prediction/tick close-out, tracked here for visibility)
 
-- [ ] [DIAG] P1. **4,097 live `asset_group="prediction"` rows (+2 cefi/defi) physically in the sports bucket manifest**
-      (Kalshi/Polymarket, `service=market-tick-data-service`, dates 2026-06-26…07-18). Two write paths ruled out; next:
+- [x] [DIAG] P1. ✅ **STALE CHECKBOX FLIPPED 2026-07-23 (adversarial-review finding C)** — this todo's own document
+      already shows it fully resolved further down (root-caused, fixed, and remediated — see the checked item below and
+      the "re-triage" section's `mtds@a7ff45f9`/`@299ef540` entries). Original text retained for history: **4,097 live
+      `asset_group="prediction"` rows (+2 cefi/defi) physically in the sports bucket manifest** (Kalshi/Polymarket,
+      `service=market-tick-data-service`, dates 2026-06-26…07-18). Two write paths ruled out; next:
       `ingest_kalshi_bulk_to_canonical.py`, `rebuild_prediction_manifest.py`, the sentinel fan-out. Cross-repo/SSOT
       class — NOTIFY OPERATOR (done in-session 2026-07-19).
 
@@ -457,16 +838,25 @@ All four resolved in interactive chat. These are now actionable, not gated:
 3. **§T pre-2019 → OUT OF SCOPE.** The window stays 2019-01-01..present. The 122,864 pre-2019 blank-round rows
    (2013–2018) are **intentionally excluded** — document them as a known, explained exclusion, not a gap. No further
    api-football spend.
-4. **K2 casing → MIGRATE ALL ~1.8M `trades` → `TRADES`.** Full canonical consistency; the bucket ends UPPER everywhere
-   per K0-(b). This supersedes the original "~20,339 rows, one bucket" scoping (which wrongly excluded `trades` = 91.5%
-   of the bucket). **K1 (live writer emits UPPER) must ship BEFORE K2** or the migration re-dirties on the next write.
+4. **K2 casing → MIGRATE ALL ~1.8M `trades` → `TRADES`.** ~~Full canonical consistency; the bucket ends UPPER everywhere
+   per K0-(b).~~ **SUPERSEDED 2026-07-23**: K0-(b) itself is now superseded (see Canonical target section above) —
+   sports data_type is being reconciled to LOWER-case for ALL types, so K2's UPPER direction is being reverted, not the
+   other way around. This decision's scoping-correction half still stands (the "~20,339 rows, one bucket" estimate
+   wrongly excluded `trades` = 91.5% of the bucket) — only the casing DIRECTION it targeted is now wrong. This
+   supersedes the original "~20,339 rows, one bucket" scoping. **K1 (live writer emits UPPER) must ship BEFORE K2** or
+   the migration re-dirties on the next write — this ordering lesson is REUSED, not retracted, for the revert:
+   registry+writers before data (see Track C's new revert todo).
 
 ### Newly-actionable todos from these decisions
 
-- [ ] [DIAG] P1. Root-cause the cross-AG emitter (decision 1), then purge. **MEASURED 2026-07-20 — it is LIVE and
-      GROWING, and larger than the audit said**: 4,097 (audit, 07-19) → **6,597 now**, +2,500 added TODAY alone (07-17:
-      1,756 · 07-19: 2,341 · 07-20: 2,500, newest `written_at` 00:54:58Z). So a DAILY job is still writing. Fingerprint
-      (from a direct read of `instruments-store-sports-prd/_index/availability_index.parquet`):
+- [x] [DIAG] P1. ✅ **STALE CHECKBOX FLIPPED 2026-07-23 (adversarial-review finding C)** — root-caused, fixed
+      (`mtds@5581dcf9`, then the manifest-bucket sibling bug via `mtds@299ef540`), and remediated (`mtds@a7ff45f9`,
+      VERIFY PASSED, 0 remaining) — see this doc's own 2026-07-23 re-triage section. This checkbox was never flipped
+      despite the resolution being recorded further down in this same document. Original text retained for history:
+      Root-cause the cross-AG emitter (decision 1), then purge. **MEASURED 2026-07-20 — it is LIVE and GROWING, and
+      larger than the audit said**: 4,097 (audit, 07-19) → **6,597 now**, +2,500 added TODAY alone (07-17: 1,756 ·
+      07-19: 2,341 · 07-20: 2,500, newest `written_at` 00:54:58Z). So a DAILY job is still writing. Fingerprint (from a
+      direct read of `instruments-store-sports-prd/_index/availability_index.parquet`):
       `service_name=market-tick-data-service`, `pipeline_mode` batch_kalshi (6,562) / batch_polymarket_clob (35),
       `venue` KALSHI/POLYMARKET, `data_type` trades (6,484) + prediction_canonical_question_group (113),
       `capture_status` captured (6,567) / empty_confirmed (30), schema_version 9, DATA dates 2026-07-16..07-19
@@ -529,27 +919,27 @@ All four resolved in interactive chat. These are now actionable, not gated:
       manifest's `league_id` namespace does NOT match the canonical registry's:
 
       | manifest `league_id` (raw) | canonical registry key |
-                                                                                                                                                          | -------------------------- | ---------------------- |
-                                                                                                                                                          | `PREMIER_LEAGUE`           | `EPL`                  |
-                                                                                                                                                          | `CHAMPIONSHIP`             | `ENG_CHAMPIONSHIP`     |
-                                                                                                                                                          | `PRIMERA_DIVISION`         | `LA_LIGA`              |
-                                                                                                                                                          | `2._BUNDESLIGA`            | `BUNDESLIGA_2`         |
-                                                                                                                                                          | `FIRST_DIVISION_A`         | (no registry entry)    |
+                                                                                                                                                              | -------------------------- | ---------------------- |
+                                                                                                                                                              | `PREMIER_LEAGUE`           | `EPL`                  |
+                                                                                                                                                              | `CHAMPIONSHIP`             | `ENG_CHAMPIONSHIP`     |
+                                                                                                                                                              | `PRIMERA_DIVISION`         | `LA_LIGA`              |
+                                                                                                                                                              | `2._BUNDESLIGA`            | `BUNDESLIGA_2`         |
+                                                                                                                                                              | `FIRST_DIVISION_A`         | (no registry entry)    |
 
-                                                                                                                                                          Measured: **328,999 manifest rows carry a `league_id` absent from `LEAGUE_REGISTRY`, and 265,134 of them were
-                                                                                                                                                          written ON/AFTER the 2026-07-13 gate ruling** (statuses: captured 213,861 / empty_confirmed 50,975 /
-                                                                                                                                                          attempted_failed 298). Verified there is NO alias — `PREMIER_LEAGUE`/`PRIMERA_DIVISION`/`2._BUNDESLIGA`/
-                                                                                                                                                          `FIRST_DIVISION_A` appear nowhere in any registry entry's definition (only `CHAMPIONSHIP` partially matches
-                                                                                                                                                          `ENG_CHAMPIONSHIP`/`SCOTTISH_CHAMPIONSHIP`/`USL_CHAMPIONSHIP` as a substring, which is itself ambiguous).
+                                                                                                                                                              Measured: **328,999 manifest rows carry a `league_id` absent from `LEAGUE_REGISTRY`, and 265,134 of them were
+                                                                                                                                                              written ON/AFTER the 2026-07-13 gate ruling** (statuses: captured 213,861 / empty_confirmed 50,975 /
+                                                                                                                                                              attempted_failed 298). Verified there is NO alias — `PREMIER_LEAGUE`/`PRIMERA_DIVISION`/`2._BUNDESLIGA`/
+                                                                                                                                                              `FIRST_DIVISION_A` appear nowhere in any registry entry's definition (only `CHAMPIONSHIP` partially matches
+                                                                                                                                                              `ENG_CHAMPIONSHIP`/`SCOTTISH_CHAMPIONSHIP`/`USL_CHAMPIONSHIP` as a substring, which is itself ambiguous).
 
-                                                                                                                                                          **⛔ CONSEQUENCE: executing decision 2's "purge the non-registry rows" against the SYMBOLIC `league_id` would
-                                                                                                                                                          DELETE core trading data — Premier League, La Liga, the Championship.** Those are not out-of-universe leagues;
-                                                                                                                                                          they are in-universe leagues recorded under a different naming convention. The purge MUST NOT run until the
-                                                                                                                                                          namespace is reconciled.
+                                                                                                                                                              **⛔ CONSEQUENCE: executing decision 2's "purge the non-registry rows" against the SYMBOLIC `league_id` would
+                                                                                                                                                              DELETE core trading data — Premier League, La Liga, the Championship.** Those are not out-of-universe leagues;
+                                                                                                                                                              they are in-universe leagues recorded under a different naming convention. The purge MUST NOT run until the
+                                                                                                                                                              namespace is reconciled.
 
-                                                                                                                                                          NOTE this is a DIFFERENT axis from §U's 489-pair finding, which compared NUMERIC `af_league_id` against the
-                                                                                                                                                          registry's `api_football_id` set (sound, numeric-vs-numeric). Both are real; do not conflate them. This is the
-                                                                                                                                                          §C2 "league_id namespace reconciliation" item, now measured and escalated to P0.
+                                                                                                                                                              NOTE this is a DIFFERENT axis from §U's 489-pair finding, which compared NUMERIC `af_league_id` against the
+                                                                                                                                                              registry's `api_football_id` set (sound, numeric-vs-numeric). Both are real; do not conflate them. This is the
+                                                                                                                                                              §C2 "league_id namespace reconciliation" item, now measured and escalated to P0.
 
 - [x] [CODE] P0. ✅ **WRITE PATH CANONICALISED — operator chose canonicalise-at-write (2026-07-20); shipped
       market-tick-data-service@ad4f1872.** `_canonical_league_id()` resolves via the NUMERIC `api_football_id`; all 30
@@ -602,12 +992,18 @@ All four resolved in interactive chat. These are now actionable, not gated:
       the Championship as non-registry, and the purge would DELETE core trading data. Snapshot before any delete.
 - [ ] [DOC] P3. Document pre-2019 (2013–2018) as an intentional, explained exclusion (decision 3) in the audit's gap
       table so the remaining-blanks arithmetic reads clean.
-- [ ] [DATA] P1. K2 scope is now ALL lower-case rows incl. ~1.8M `trades` (decision 4) — gated on K1 shipping first.
+- [x] [DATA] P1. ~~K2 scope is now ALL lower-case rows incl. ~1.8M `trades` (decision 4) — gated on K1 shipping first.~~
+      **SUPERSEDED 2026-07-23**: K1/K2 shipped the OPPOSITE direction (migrated `trades` UP to `TRADES`, not "all
+      lower-case"). This session's casing reconciliation now supersedes decision 4 itself — see the Canonical target
+      section's data_type entry above: the target is all-lower including `trades`, and K1/K2's uppercase migration is
+      being reverted, not extended. This todo's original wording is now moot.
 
-## Operator decisions needed (blocking)
-
-- **§U** registry-absent leagues (10,869 rows) · **§T** pre-2019 scope (122,864 rows) · **§O** the two
-  `attempted_failed`/third-sentinel diagnoses before any relabel.
+<!-- REMOVED 2026-07-23 (reconciliation pass): the "## Operator decisions needed (blocking)" section that lived here
+     listed §U and §T as still-blocking, but the "Operator decisions — ANSWERED 2026-07-20" section above already
+     resolved both, and Track O's P0 retention-cliff item is separately marked done — this was a stale leftover
+     carried unedited from the parent audit doc through three later revision passes. Deleted per operator decision;
+     current genuinely-open operator items are tracked in the "Operator decisions needed (blocking) — 2026-07-23"
+     section further down, right after the 2026-07-23 root-cause sweep. -->
 
 ## Codex SSOTs (read before touching a track)
 
@@ -625,6 +1021,40 @@ All four resolved in interactive chat. These are now actionable, not gated:
   ALL SHIPPED + VERIFIED complete for their scope (`batch_odds_api`/TRADES axis: 373,297 canonical rows, 0 remaining
   lowercase, 0 remaining phantom rows). Full evidence + SHAs: `plans/active/sports_master_closeout_2026_07_21.md`
   fourth/fifth/sixth-wave Progress Log. Track C's K1/K2 todos above are flipped with evidence.
+- **2026-07-23 (interactive reconciliation session) — this closeout had drifted into internal contradiction and lost
+  track of 9 sibling plans; both fully reconciled.** A 2-pass multi-agent audit (covering every related plan/issue/
+  codex doc, ~85 documents total) plus direct code verification found: a critical unreconciled casing conflict (this doc
+  said UPPER, a same-day codex reversal said lower for the odds-family, K1/K2 shipped UPPER anyway ~19h after the
+  reversal landed); a stale "Operator decisions needed" section contradicting its own ANSWERED section 150 lines above
+  it (same stale pattern ALSO found duplicated inside Track V's §U/§T todos — both fixed); 4 plans this doc claimed to
+  "fold in" that were never actually archived and had live contradicting content; 5 more live sports plans with real
+  scope overlap this doc never knew existed; a Track D "done" checkbox certifying codex banners that a fresh read showed
+  were incomplete (3 docs with no banner, 3 more stale under their own banner); and — via a live Distinct Values read
+  from the deployment-ui pasted by the operator mid-session — confirmation that sports' venue/instrument_type/chain
+  non-canonical rates (9/17, 16/16, 3/3 respectively) trace to 3 sibling positional-parse bugs in
+  `market-data-processing-service` that were only partially root-caused before (instrument_type's mechanism was known;
+  chain's was assumed-same-function but is actually a sibling function with a different bug shape; venue's
+  parts[0]-misread was undiscovered). The operator was walked through every conflict interactively (16 numbered
+  decisions) and ruled on each — see the new "2026-07-23 — full contradiction + confusion-risk reconciliation" section
+  further down for the complete decision record, and the Tracks above for the resulting new todos. **Per explicit
+  operator instruction, this entire pass is DOCS-AND-PLANS ONLY — no code shipped, no data migrated, no GCS/manifest
+  writes executed.** The next session should start from Track C's data_type-revert + 3-bug-fix todos (P0, gates
+  everything else) and Track H's odds-pipeline-dormancy investigation (P0, the single highest-priority unknown).
+- **2026-07-23 (reconciliation session, completion) — all mechanical reconciliation work landed.** Ran to completion via
+  a follow-up multi-agent workflow: (1) all 4 fold-in plans archived (`status: superseded`,
+  `superseded_by: sports_consolidated_closeout_2026_07_19.md`, each with its own banner) with live content extracted and
+  pulled in — the EXCHANGE_ODDS/FIXED_ODDS 9-step sequence into Track C, the remaining ~20 items into the new "Track S2
+  — FOLD-IN ABSORPTION" section; (2) all 5 orphan plans linked (`related:` + banner) with a reconciliation todo each,
+  now in Track X; (3) 9 codex docs fixed with real body rewrites (not just banners):
+  `sports-adapter-dependency-order.md`, `sports-scheduling-and-sharding.md`, `sports-fixtures-lifecycle.md`,
+  `honest-absence-downstream-handling.md` (new finding: `SCHEDULE_DEFINING_DATA_TYPES` is a 9th C1 call site, added
+  above), `sports-batch-live.md`, `pipeline-coverage-matrix.md`, `sports-integration-plan.md`,
+  `sports-live-odds-connectivity.md`; (4) `sports_master_closeout_2026_07_21.md`'s entry-point self-contradiction
+  resolved via a new `entry_point_for:` frontmatter field (added to `plans/PLAN_FORMAT.md`'s schema); (5) the
+  odds-feature four-way-naming decision (new deliberate naming, full data+manifest migration) + a generative naming
+  scheme recorded in `sports_odds_feature_naming_canonicalization_2026_07_21.md`'s Progress Log. **Still nothing
+  executed** — every item above is a documentation/plan edit; no code shipped, no GCS/manifest write, no data moved. A
+  fresh session can now execute top-to-bottom without hitting any of the contradictions this pass found.
 
 ## 2026-07-23 — root-cause sweep on sports odds honest coverage (session continuation)
 
@@ -675,6 +1105,57 @@ to a root cause (not just symptom-documented) and either fixed or properly scope
 
 Not individually triaged/re-verified today (that is its own large effort) — listed here so nothing is orphaned from
 discovery. Priorities are each doc's own self-assessed value; treat as a starting point, not a re-confirmed ranking.
+
+## Track Y — PLAN-QUALITY REMEDIATION (2026-07-23, adversarial-review findings A/B/D/E/F/G)
+
+A second independent agent adversarially reviewed this doc's AO-dispatch-readiness (findings lettered A-G; finding C — 2
+stale checkboxes — was fixed directly above, in place, with evidence). The remaining findings are real defects in THIS
+document, tracked here rather than silently fixed under time pressure so nothing is lost:
+
+- [ ] [DOC] P0. **Finding A — first-line truncation guts several todos' actual instructions.** AO's `_parse_open_todos`
+      captures ONLY the first physical line of each `- [ ]`; continuation lines are human-only notes the dispatched
+      worker's brief will NOT include. Several Track F todos violate this: the "Clean corpus-wide derived_features
+      re-run" todo's brief cuts off before the SPOT-chunking method + the "does NOT depend on C1" correction; the
+      "Re-run 2017+2018" todo's brief cuts off BEFORE "ON-DEMAND" — dangerous, not just unclear, since the workspace
+      default is SPOT for backfills and an agent that never sees "ON-DEMAND" would hit the same within-year
+      preemption-replay hazard that fabricated the corpus the first time; the "PURGE the fabricated remainder" todo's
+      brief cuts off before the actual delete criterion + the snapshot-first safety note; the "sfi_progressive_features
+      is corpus-empty" todo's brief is a symptom with no verb — the actual instruction ("find why the backfill never
+      ran, then run it") is on the next line. **Fix: rewrite every todo so the complete instruction (action + method +
+      any hard constraint like ON-DEMAND vs SPOT) fits on line 1; push rationale/evidence/citations to continuation
+      lines only.** Sweep the WHOLE doc for this pattern, not just Track F — it was only sampled there.
+- [ ] [DOC] P0. **Finding B — Track F's ordering dependency is stated twice, contradictorily, and the real chain inside
+      Track F has no enforced ordering at all.** The headline verdict says the features re-run "must run AFTER the CANON
+      manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup"; the F-track todo itself says "this re-run does NOT
+      depend on §C1" and never restates the ODDS-LEAK dependency — two readers of different parts of this doc reach
+      opposite conclusions about whether it's safe to start. Separately, re-run → purge → census-verify within Track F
+      is ordered only by "After the re-runs..." prose — nothing stops a dispatcher handing PURGE to a free agent before
+      the re-run todos are done. **Fix: state the real dependency ONCE, in one place; encode the actual
+      re-run→purge→verify chain as `sequential: true` or split into gated sub-plans (`depends_on` +
+      `gate_on_depends: true`) — prose ordering is not a dispatch gate** (task_template.md §4).
+- [ ] [DOC] P1. **Finding D — bare audit-section references (§A2, §B2, §T, §U, §W, §C2/C3/C6, §R) are undefined in THIS
+      document.** They only resolve against `sports_consolidated_audit_2026_07_19.md`'s internal section labels, never
+      restated here — an AO agent dispatched just one todo has no path to that meaning (a human who read the audit does,
+      an isolated agent doesn't). K1/K2/C1 are already spelled out properly elsewhere in this doc; the audit-section
+      shorthand items are the ones that aren't. **Fix: at first use in each todo, replace the bare §X with the actual
+      fact it stands for.**
+- [ ] [DOC] P2. **Finding E — "Absorb `<doc>.md`" is ambiguous** (Track S / Track V) — unclear whether it means "do the
+      engineering work that doc describes" or "fold its text into this plan." Very different tasks for a dispatched
+      agent. **Fix: reword to the literal action** ("execute the fix in `<doc>`" or "merge `<doc>`'s open todos into
+      this track").
+- [ ] [DOC] P2. **Finding F — inconsistent delete-risk tagging.** The Track F PURGE todo deletes prod GCS objects but
+      isn't tagged `[OPERATOR]` and doesn't cite `codex/02-data/gcs-and-manifest-delete-safety-protocol.md`, while other
+      delete items in this same doc (the K1/K2 GCS-delete item) explicitly are and explicitly do. If the delete-safety
+      protocol should apply to the PURGE todo too, tag/cite it the same way; if it deliberately doesn't (soft-delete =
+      lower risk), state that reasoning explicitly so it reads as a decision, not an oversight.
+- [ ] [DOC] P2. **Finding G — several todos lack a stated definition-of-done.** E.g. "wire the T0/T1 dependency gate for
+      real" (Track E) and "build a sports pipeline-check for the tick/MDPS middle leg" (Track K) state the problem/goal
+      but not what evidence proves it's done. **Fix: add a one-line acceptance check per todo**, consistent with ones
+      that already have it (e.g. the census re-verify item).
+- [ ] [REVIEW] P1. **Full finding-C sweep** — only 2 stale-checkbox instances were found+fixed (the cross-AG emitter
+      todo, the 4,097-row finding). A second independent agent found these by spot-check, not an exhaustive pass —
+      re-sweep the WHOLE doc for any other todo whose own body (or a later section) already shows it resolved, and flip
+      it with evidence, so AO never re-investigates an already-solved problem.
 
 **P0 (open, 6):** `sports_canonical_raw_truncated_rederive_destroys_corpus_2026_07_16.md`,
 `sports_cf8_available_at_backfill_regression_2026_07_13.md`, `sports_features_rerun_stopped_writing_2026_07_21.md`,
@@ -750,3 +1231,83 @@ recorded. And a near-duplicate doc outside this sweep,
 `issues/instruments_service_codex_compliance_ceiling_drift_2026_07_20.md`, was found resolved by the same commit as
 `sports_reference_function_size_qg_regression_2026_07_16.md` but never updated — annotated, not fully flipped (2 of its
 3 sub-todos remain genuinely open).
+
+## 2026-07-23 — full contradiction + confusion-risk reconciliation (interactive, 16 operator decisions)
+
+A dedicated multi-pass audit (2 workflow passes across every related plan/issue/codex doc + direct code verification)
+found this closeout had drifted into internal self-contradiction and had lost track of several live sibling plans. The
+operator was walked through every point of conflict interactively and ruled on each — this section is the consolidated
+record. **Per explicit operator instruction: everything below is DECIDED and being written into docs/ plans NOW; none of
+the data-moving or code-shipping work has been EXECUTED yet** — that is deliberate, so a fresh agent (or a future
+session) picks up a fully reconciled, non-contradictory plan rather than doing archaeology on which of two conflicting
+SSOT claims is current.
+
+**Decisions made (ruling → what it changed):**
+
+1. **data_type casing** → ALL-LOWER for every sports data_type, reverting K1/K2's TRADES-to-UPPER migration. See
+   Canonical target section + Track C's new revert todo.
+2. **Stale "Operator decisions needed (blocking)" header** → deleted (was contradicted by the ANSWERED section 150 lines
+   above it).
+3. **4 fold-in plans never actually archived** → archive all 4 now, pulling their live content into this closeout first
+   (`sports_manifest_canonicalisation_2026_06_01`, `sports_pipeline_to_100pct_golden_window_first_2026_06_27`,
+   `sports_odds_exchange_fixed_fork_2026_07_18`, `sports_p2_history_apifootball_2015_to_present_2026_06_27`) — see the
+   new todos this pulled in below.
+4. **6 orphan plans with real overlap, never linked to this closeout** → link all + file a reconciliation todo each
+   (`sports_catalog_league_grain_only_scope_2026_07_08`, `sports_odds_bookmaker_coverage_enumeration_2026_06_20`,
+   `sports_odds_feature_naming_canonicalization_2026_07_21`, `sports_p2_features_history_to_ml_ready_2026_06_27`,
+   `sports_predictions_live_mode_activation_readiness_2026_07_21`) — see the new todos below.
+5. **Track D's "9 docs banner-fixed" claim was inaccurate** → do the full body rewrites now, not more banners (6 docs:
+   `sports-adapter-dependency-order.md`, `sports-scheduling-and-sharding.md`, `sports-fixtures-lifecycle.md`,
+   `honest-absence-downstream-handling.md`, `sports-batch-live.md`, `pipeline-coverage-matrix.md`), see Track D.
+6. **Honest-coverage UI denominator** → implement the registry-aware fix in `compute_coverage_for_bucket()` now (not
+   just a doc caveat) — new Track H todo below. Sequenced AFTER the league_id migration (decision 7) since a
+   registry-membership test can't be correct until that lands.
+7. **League_id historical migration (214,842 rows)** → schedule the monitored prod-apply + human-only delete session now
+   — see Track V, still the same P0, now explicitly scheduled rather than indefinitely deferred.
+8. **Sports ODDS_API capture pipeline dormancy** → investigate now, get the AWS IAM access this session lacked — new
+   Track H todo below, explicitly the single highest-priority NEXT action across this whole closeout.
+9. **`sports_master_closeout_2026_07_21.md`'s summary-vs-supersedes self-contradiction** → formalize a real entry-point
+   relationship field in the plan frontmatter schema rather than just rewording prose — new Track D/X todo below
+   (touches `plans/PLAN_FORMAT.md`, may need a schema discussion, not a same-session mechanical fix).
+10. **MDPS's 3 dead derived-odds products** → wire them up for real (not retire) — new Track H todo below, gated on
+    confirming downstream demand first (features-service/strategy-service consumer check).
+11. **CF-8 available_at fix** → schedule the maintenance window now, lift operator stop `BLK-d9137d48` — Track H.
+12. **1,066,231-row manifest purge** → design + build the missing cross-object-CAS safety tooling now — new Track H todo
+    below (harder blocker than league_id's pure scheduling gate — nothing to schedule until this exists).
+13. **AvailableAtStampingError write-abort contract** → raise on all-NaT (fail loud), not skip-with-record — new Track H
+    design todo below, to prevent a future CF-8-class silent regression.
+14. **83,541 pre-floor FIXTURES_SCHEDULE/FIXTURES_OUTCOMES rows** → execute the wipe now (consistent with the
+    already-established 2020-06-06 sports data floor policy) — new Track V todo below.
+15. **MTDS live-odds fixture_id-blank collapse** → investigate + fix now, don't just re-check status — new Track O todo
+    below.
+16. **OR-1's 2 unfiled loose ends** (standings/teams season-2026 under historical `day=` partitions; unidentified junk
+    `player_values` writer) → investigate both now — new Track S todo below.
+17. **Sports live-mode prediction trading go/no-go** → GO, gated explicitly on confirming the cross-AG bleed fix
+    (`mtds@a7ff45f9`, see the 2026-07-23 re-triage section above) is durable, not just verified-once — new todo on
+    `sports_predictions_live_mode_activation_readiness_2026_07_21.md` (linked in decision 4 above).
+18. **Odds-feature naming (BLK-a1ce4719's remaining field-name call)** → new deliberate naming, not adopted from any
+    single existing convention, full data+manifest migration so every real consumer's need is met. Scheme + gap analysis
+    recorded in `sports_odds_feature_naming_canonicalization_2026_07_21.md`'s Progress Log (2026-07-23).
+
+**New evidence folded in during this pass (not from the original audit)**: a live "Distinct Values" read from the
+deployment-ui's sports Instruments Service view showed 9/17 non-canonical venues, 16/16 (100%) non-canonical
+instrument_types, 3/11 non-canonical data_types, and 3/3 (100%) non-canonical chains. Root-caused to 3 separate
+asset_group-blind positional-parse bugs in `market-data-processing-service` (see Canonical target section + Track C's
+new todos). **Target, stated explicitly for the first time**: by the end of this closeout, that Distinct Values panel
+reads 0 non-canonical across all four axes for sports.
+
+## Operator decisions needed (blocking) — 2026-07-23
+
+Genuinely still-open items needing operator input or a monitored/gated execution window (replaces the deleted stale
+section above, which conflated answered and open items):
+
+- **League_id migration prod-apply + delete** (decision 7) — scheduling, not a question, but the actual window needs
+  picking.
+- **CF-8 maintenance window** (decision 11) — same, scheduling.
+- **Sports ODDS_API capture pipeline dormancy investigation** (decision 8) — needs AWS IAM access this session didn't
+  have; genuinely the top-priority next action.
+- **§O diagnoses before any relabel** (Track O's `[DIAG]` items, lines ~299-302) — root-cause the 112,277
+  `attempted_failed` triplet and the 139,620 `empty_confirmed` emitter before relabeling either; these are engineering
+  diagnosis work, not a pure operator ask, but flagged here since a premature relabel would be irreversible-adjacent.
+- **`sports_master_closeout_2026_07_21.md` entry-point relationship field** (decision 9) — may need a
+  `plans/ PLAN_FORMAT.md` schema discussion, not purely mechanical.

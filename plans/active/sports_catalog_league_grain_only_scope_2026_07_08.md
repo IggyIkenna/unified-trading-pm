@@ -30,6 +30,7 @@ related:
     plans/active/issues/betfair_instrument_id_delimiter_cross_repo_2026_07_08.md,
     codex/02-data/availability-manifest-and-data-status.md,
     codex/02-data/honest-coverage-model.md,
+    sports_consolidated_closeout_2026_07_19.md,
   ]
 created: 2026-07-08
 last_updated: 2026-07-14
@@ -49,6 +50,19 @@ supersedes:
 superseded_by:
 source: SUB_AGENT_MANDATORY_RULES dispatch (slot-3 this session) — "reference catalog is bare" investigation task
 ---
+
+> **🟡 SCOPE OVERLAP — reconcile against `sports_consolidated_closeout_2026_07_19.md`, do not resolve unilaterally here
+> (flagged during a 2026-07-23 orphan-plan audit).** This plan's fixture-grain work collides with that closeout on two
+> fronts it is not aware of: (1) it writes fixture/team/player reference data under a bare
+> `entity={fixtures,teams,injuries}/` path — a **second, different** naming collision on the same string the closeout
+> declares FROZEN since 2026-05-23 (its own bare `entity=fixtures/` writer has a separate, already-tracked violation);
+> (2) the manifest-schema extension this plan is designing for per-fixture-grain capture tracking (todos below) is a
+> **parallel, independently-designed fixture-grain redesign** running alongside the closeout's own fixture-grain
+> entity-split work, with neither doc aware of the other. This plan's fixture-grain design also depends on correct
+> `league_id` resolution, which the closeout flags as an unresolved P0 (namespace-migration finding) that this plan does
+> not cite or account for. **Before acting on either doc**, check the closeout's current Track sections (Track C / Track
+> S / Track E / Track V) for the latest state — do not design or ship the manifest-schema extension or the
+> `entity={fixtures,teams,injuries}/` path against a stale read of either plan.
 
 # Sports reference catalog is intentionally league-grain-only today
 

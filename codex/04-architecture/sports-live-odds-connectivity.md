@@ -2,8 +2,9 @@
 doc_type: codex-ssot
 title: Sports Live Odds Connectivity
 summary:
-  The three live-odds connectivity paths for sports bookmakers — The Odds API (REST poll, no login), exchange APIs
-  (Betfair/Smarkets, keys only), and login+scrape workers; latency/auth/maintenance trade-offs, MDPS as producer.
+  The two LIVE odds connectivity paths for sports bookmakers — The Odds API (REST poll, no login) and exchange APIs
+  (Betfair/Smarkets, keys only); latency/auth trade-offs, MDPS as producer. The former third path (login+scrape workers)
+  was retired 2026-07-08 and is documented here only as history (§3).
 status: current
 nature: ssot
 asset_group: [meta]
@@ -13,7 +14,8 @@ scope: [engineer, admin]
 tags: [sports, odds, mdps, live-trading, footystats]
 related: [sports-integration-plan.md, sports-batch-live.md]
 created: 2026-03-27
-authoritative_for: [sports live-odds connectivity paths (aggregator/exchange/scraper)]
+authoritative_for:
+  [sports live-odds connectivity paths (aggregator/exchange; scraper path retired 2026-07-08, historical only)]
 referenced_by:
   [
     codex/02-data/sports-scheduling-and-sharding.md,
@@ -21,35 +23,39 @@ referenced_by:
     codex/04-architecture/sports-integration-plan.md,
   ]
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-07-23
 code_refs:
 ---
 
 # Sports Live Odds Connectivity
 
-> **⚠️ CORRECTION (2026-07-19) — the "Scrapers" section describes DELETED code.** The 13 named per-bookmaker Playwright
-> scrapers (SkyBet, Coral, Paddy Power, Ladbrokes, Bet365, Betway, Unibet, 888sport, William Hill, Betfred, BetVictor,
-> BoyleSports, Bwin) were **retired 2026-07-08** (execution-service@29a888a8d). Live/near-real-time odds now come from
-> The Odds API aggregator only (`odds_api`) — the in-play WebSocket connector (`odds_api_ws.py`) is effectively dark (14
-> rows in 6 years, measured), so HT-horizon starvation is structural. Treat the §3 scraper prose below as historical.
+> **✅ CORRECTED (2026-07-23) — §3 rewritten as historical, not just banner-flagged.** A 2026-07-19 pass first flagged
+> that §3 described deleted code but never rewrote the section itself; this pass fixes the body. There are now only
+> **two live** connectivity paths (§1 The Odds API, §2 Exchanges) — the third path (login+scrape workers, formerly §3)
+> was **retired 2026-07-08** (execution-service@29a888a8d, "retire the 14 bookmaker scrapers" per operator decision) and
+> §3 below now documents it in past tense, for history only. Separately: the in-play WebSocket connector
+> (`odds_api_ws.py`) is effectively dark (14 rows in 6 years, measured), so HT-horizon starvation on the Odds API path
+> is structural — not fixed by anything below.
 
 How we connect to bookmakers in **live** mode: no batch files, real-time (or near real-time) odds. This doc is the SSOT
-for the three connectivity paths and the trade-offs (especially login/scrape).
+for the two live connectivity paths (Odds API, exchanges) plus, for history only, the retired scraper path.
 
 ---
 
 ## TL;DR
 
-| Source                                               | Live path                    | Login/scrape?      | Latency                        |
-| ---------------------------------------------------- | ---------------------------- | ------------------ | ------------------------------ |
-| **The Odds API**                                     | REST poll → Pub/Sub          | No                 | 40–60s (their update interval) |
-| **Exchanges** (Betfair, Smarkets, Matchbook, Betdaq) | REST/stream API → Pub/Sub    | No (API keys only) | 5–30s configurable             |
-| **Scrapers** (SkyBet, Coral, etc.)                   | Browser automation → Pub/Sub | Yes (login + geo)  | 60s+; high maintenance         |
+| Source                                               | Live path                 | Login/scrape?      | Latency                        |
+| ---------------------------------------------------- | ------------------------- | ------------------ | ------------------------------ |
+| **The Odds API**                                     | REST poll → Pub/Sub       | No                 | 40–60s (their update interval) |
+| **Exchanges** (Betfair, Smarkets, Matchbook, Betdaq) | REST/stream API → Pub/Sub | No (API keys only) | 5–30s configurable             |
 
-**Live “beef”:** `market-data-processing-service` (with `asset_group=SPORTS`, Batch B) is the producer: it polls these
-adapters on a schedule and writes snapshots to GCS + publishes deltas to Pub/Sub. `features-service (sports family)`
-consumes via **Pub/Sub** (live seam). So “connecting live” = that service calling USEI adapters on an interval and
-pushing to Pub/Sub.
+**Retired, historical only — not a live path:** Scrapers (SkyBet, Coral, etc.) — browser automation with login/geo, 14
+bookmaker adapters, deleted 2026-07-08. See §3.
+
+**Live “beef”:** `market-data-processing-service` (with `asset_group=SPORTS`, Batch B) is the producer: it polls the two
+live adapter families above on a schedule and writes snapshots to GCS + publishes deltas to Pub/Sub.
+`features-service (sports family)` consumes via **Pub/Sub** (live seam). So “connecting live” = that service calling
+USEI adapters on an interval and pushing to Pub/Sub.
 
 > **Note (2026-03-01):** `sports-odds-data-service` and `sports-odds-processing-service` have been consolidated into
 > `market-data-processing-service` as part of the sports service consolidation. See `sports-integration-plan.md`
@@ -87,36 +93,38 @@ pushing to Pub/Sub.
 
 ---
 
-## 3. Scrapers — login and scrape (“the tricky bit”)
+## 3. Scrapers — RETIRED 2026-07-08 (historical only, not a live path)
 
-- **Adapters:** SkyBet, Coral, Paddy Power, Ladbrokes, Bet365, Betway, Unibet, 888sport, William Hill, Betfred,
-  BetVictor, BoyleSports, Bwin (USEI scraper adapters).
-- **Current implementation:** Playwright (or similar) loads the bookmaker’s **public** page (e.g.
-  `skybet.com/football/match/{fixture_id}`) and parses HTML to extract odds. Many of these sites **require login**
-  and/or **geo** (UK only) to see full odds, so a “public only” scraper is fragile.
-- **Live mechanism options:**
-  1. **Prefer The Odds API:** For any bookmaker that Odds API already covers (e.g. sport888, coral, skybet,
-     ladbrokes_uk), we **do not** need to scrape for live. Poll Odds API and map keys. That’s the main “live” path for
-     those brands.
-  2. **Scraper when necessary:** If we need a bookmaker not on Odds API, or need higher frequency than 40–60s, we run a
-     **dedicated scraper worker** that:
-     - Uses a real browser (Playwright) with a **logged-in session** (cookies/session storage).
-     - Optionally uses **residential proxy** / geo to satisfy “UK only” or similar.
-     - Polls at a conservative interval (e.g. 60s) to avoid rate limits and bot detection.
-     - Publishes parsed odds (e.g. `CanonicalOdds`) to the same GCS + Pub/Sub pipeline.
-  3. **Session handling:** Login flow (username/password, 2FA if required) and session refresh (re-login when cookie
-     expires) must be implemented per bookmaker; credentials in Secret Manager. This is high-maintenance (site changes,
-     selectors break, ToS risk).
+**This section is history, not current architecture.** Do not build against it; there is no scraper code to call.
 
-- **Concurrency (Phase 3):** Max 4 concurrent scrapers; RAM guard (e.g. 85% → reduce to 2) to avoid OOM with multiple
-  browsers.
+- **What existed:** 14 per-bookmaker Playwright-based scraper adapters that loaded each bookmaker's **public** page
+  (e.g. `skybet.com/football/match/{fixture_id}`), parsed HTML, and for sites that gated full odds behind login/geo ran
+  a logged-in browser session (cookies, optional residential proxy) instead. Adapters covered: Bet365, 888sport,
+  Betfred, BetVictor, Betway, BoyleSports, Bwin, Coral, Ladbrokes, PaddyPower, SBOBet, SkyBet, Unibet, William Hill. (An
+  earlier version of this doc listed only 13 of these — SkyBet, Coral, Paddy Power, Ladbrokes, Bet365, Betway, Unibet,
+  888sport, William Hill, Betfred, BetVictor, BoyleSports, Bwin — omitting SBOBet; corrected here against the retirement
+  commit's own docstring.)
+- **What happened:** **Deleted 2026-07-08** (`execution-service@29a888a8d`, operator decision verbatim "retire the 14
+  bookmaker scrapers"). Verified in the current repo: `execution_service/sports_execution/adapters/scrapers/` holds no
+  source files, and `execution_service/sports_execution/adapters/__init__.py` now carries only the retirement note and
+  imports the surviving Odds API / bookmaker-API / exchange / paper adapters. Rationale: 0 rows were ever captured in
+  production via this path — it never earned its login/geo/session maintenance cost. This superseded an earlier
+  (2026-05-12) "keep as dormant scaffolding, retire indefinitely" call. Provenance:
+  `unified-trading-pm/plans/epics/sports_master.md` § "Scrapers retired 2026-07-08 per operator".
+- **What replaced it:** Nothing runs in its place — there is no scraper fallback anymore. The Odds API aggregator (§1)
+  already covers most of the same brands under its own keys (`sport888`, `betvictor`, `betway`, `boylesports`, `coral`,
+  `ladbrokes_uk`, `paddypower`, `skybet`, `unibet_uk`, `williamhill`, …); that remains the only live path for them. A
+  bookmaker that was scraper-only and is **not** covered by the Odds API today has **no live odds path** in this system
+  — that is an accepted coverage gap (operator-accepted cost of retirement), not an open TODO tracked elsewhere in this
+  doc.
 
 ---
 
 ## Where the “live beef” lives
 
-- **Producer:** `market-data-processing-service` (asset_group=SPORTS, Batch B). It holds the list of adapters (Odds API,
-  exchanges, scrapers), runs `run_live_polling()` (or equivalent), and for each cycle:
+- **Producer:** `market-data-processing-service` (asset_group=SPORTS, Batch B). It holds the list of **live** adapters
+  (Odds API, exchanges — scraper adapters were retired 2026-07-08, see §3), runs `run_live_polling()` (or equivalent),
+  and for each cycle:
   - Calls each adapter’s `get_odds` (and optionally `get_fixtures_with_odds`).
   - Writes snapshots to GCS.
   - Publishes delta events to Pub/Sub topic `market-data-updated` (with asset_group=SPORTS attribute).
@@ -125,8 +133,8 @@ pushing to Pub/Sub.
   - `features-service (sports family)` in live mode uses `LiveDataSource` (Pub/Sub subscription) to receive records
     (fixture + odds or derived data) and runs the feature pipeline per fixture.
 - So **connecting to bookmakers live** = ensuring `market-data-processing-service` is running with SPORTS category, the
-  right adapters and config (Odds API key, exchange keys, and optionally scraper credentials/sessions) and that it
-  publishes to the topic the downstream services subscribe to.
+  right adapters and config (Odds API key, exchange keys) and that it publishes to the topic the downstream services
+  subscribe to. There is no scraper credential/session path anymore.
 
 > **Note (2026-03-01):** The previous architecture had a separate `sports-odds-processing-service` consuming from
 > `sports-odds-data-service`. Both are now consolidated into `market-data-processing-service` with `asset_group=SPORTS`.
@@ -136,11 +144,12 @@ pushing to Pub/Sub.
 
 ## Summary table
 
-| Connectivity | Auth                   | Live implementation                              | Maintenance                     |
-| ------------ | ---------------------- | ------------------------------------------------ | ------------------------------- |
-| Odds API     | API key only           | Poll REST every 40–60s → GCS + Pub/Sub           | Low                             |
-| Exchanges    | API key / cert         | Poll (or stream) API every 5–30s → GCS + Pub/Sub | Low                             |
-| Scrapers     | Login + optional proxy | Browser automation, 60s poll → GCS + Pub/Sub     | High (selectors, ToS, sessions) |
+| Connectivity                                  | Auth           | Live implementation                              | Maintenance |
+| --------------------------------------------- | -------------- | ------------------------------------------------ | ----------- |
+| Odds API                                      | API key only   | Poll REST every 40–60s → GCS + Pub/Sub           | Low         |
+| Exchanges                                     | API key / cert | Poll (or stream) API every 5–30s → GCS + Pub/Sub | Low         |
+| ~~Scrapers~~ (RETIRED 2026-07-08, historical) | n/a — deleted  | n/a — deleted; see §3                            | n/a         |
 
 Use **The Odds API for live** wherever it covers the bookmaker and 40–60s latency is acceptable; use **exchanges** for
-low-latency API; use **scrapers** only when necessary and accept the operational cost.
+low-latency API. Scrapers are retired and not an available option — there is no code to run, and building a new one
+would require an explicit operator decision to reverse the 2026-07-08 retirement.
