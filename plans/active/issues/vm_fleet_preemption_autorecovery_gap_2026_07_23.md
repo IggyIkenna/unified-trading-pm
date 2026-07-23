@@ -142,21 +142,37 @@ yet, for ANY launcher family, not just candle-migration.
       resolved bookend, only the existing `DP_VM_PREEMPTED_NO_RELAUNCH`).
 - [ ] 7. [SCRIPT] P2. Quality gates + quickmerge for items 5-6 (deployment-service, possibly unified-trading-library if
       the event needs a UTL registry constant like `DP_VM_EXIT_NONZERO`'s).
-- [ ] 8. [DATA] P2. **Scope the broader "all backfills and migration VMs" rollout**: enumerate the ~74 launchers already
-      registered in `launcher_registry.py`, filter to genuinely SPOT-provisioned backfill/migration categories
-      (excluding live/forward-poll/cron, which correctly stay on-demand per the HARD RULE — preemption would lose live
-      data), cross-reference against which of those already call `lc_write_preemption_signal_file` (confirmed today:
-      only 3 — `launch-cefi-sharded-backfill.sh`, `launch-defi-backfill-vm.sh`,
-      `launch-mtds-solana-defi-backfill-vm.sh`). Report the exact resulting list before touching more files — likely
-      several dozen, not a quick pass. **Independent corroboration (2026-07-23, different session)**:
-      `launch-mtds-dex-swaps-backfill-vm.sh` is ALSO confirmed missing this wiring (grepped directly, zero matches for
-      `exit_code_fleet_monitor`/`auto_recover`/ `PREEMPTED` in that file) — this is the
-      `lst_rate_honest_coverage_2026_07_21.md` Phase 5 #2 backfill VM, which preempted 4 times in one session (manually
-      caught + relaunched each time, no auto-recovery fired). Confirms this is a real, general gap affecting multiple
-      independent launchers, not isolated to the canonical-migration one this doc was originally filed against.
+- [ ] 8. [DATA] P2. **Scope the broader "all backfills and migration VMs" rollout — REVISED after checking real
+      coverage, not just direct-call grep**: my original framing ("only 3 of ~74 launchers call
+      `lc_write_preemption_signal_file`, so ~dozens are uncovered") was misleading. Re-checked: **125 of 158**
+      `launch-*.sh` scripts already reference `setup-data-pipeline-vm.sh` (the shared boot seam that ITSELF installs the
+      `uts-preemption-signal.service` systemd unit fleet-wide, per the 2026-07-20 fix — confirmed via
+      `test_spot_preemption_signal_coverage.py`'s `test_every_spot_launcher_can_emit_the_preemption_signal`, which
+      already PASSED with 0 failures before my change today). So most launchers DO have baseline coverage — this is NOT
+      a "close a total absence" sweep.
+
+      **But the early-preemption blind spot this doc's fix closes (native GCE shutdown-script, available from t=0, vs
+          the shared seam's systemd unit which only activates once `setup-data-pipeline-vm.sh` progresses far enough to
+          install it) is REAL and independently corroborated**: `launch-mtds-dex-swaps-backfill-vm.sh` — confirmed via
+          direct grep to ALSO use the shared seam AND be registered in `launcher_registry.py` (so it SHOULD have had
+          coverage) — preempted 4 times in one session
+          (`lst_rate_honest_coverage_2026_07_21.md` Phase 5 #2) with zero auto-recovery firing (a different session,
+          independently caught + manually relaunched each time). This is consistent with the SAME early-preemption
+          pattern measured on TRADFI (18/20 shards preempted within 1-4 minutes of boot), not a separate coverage gap —
+          strengthening, not weakening, the case for rolling out the native-shutdown-script defense-in-depth more broadly.
+
+          **Revised scoping question for item 9**: not "which launchers lack ANY coverage" (few, if any, genuinely do —
+          confirm with the passing test), but "which launchers run large concurrent SPOT fleets (more zone-contention
+          exposure, matching TRADFI's failure mode) or have a long `setup-data-pipeline-vm.sh` staging chain before their
+          task-specific work starts (wider blind-spot window)" — a smaller, evidence-driven list, not a blanket 100+-file
+          sweep. Candidates already identified: `launch-mtds-dex-swaps-backfill-vm.sh` (proven hit), any `*-sharded-*`/
+          `SHARD_OF`-fan-out launcher (same concurrency profile as candle-apply).
+
 - [ ] 9. [SCRIPT] P3. Apply the same 2-3 line pattern (`lc_write_preemption_signal_file` call + `--metadata-from-file`
-      flag + verify `--instance-termination-action=DELETE`) to every launcher item 8 identifies as missing it. Batch by
-      quality-gate sweep per the workspace's QG-sweep-batching convention, not one commit per file.
+      flag + verify `--instance-termination-action=DELETE`) to the launchers item 8's revised scoping identifies —
+      starting with `launch-mtds-dex-swaps-backfill-vm.sh` (already proven to need it) and the other sharded-fan-out
+      launchers, not a blind sweep of all 158. Batch by quality-gate sweep per the workspace's QG-sweep-batching
+      convention, not one commit per file.
 
 ## Codex SSOTs
 
