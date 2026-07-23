@@ -285,8 +285,7 @@ epic._
 | [`deployment_ui_fleet_tab_consolidation_2026_07_21`](./deployment_ui_fleet_tab_consolidation_2026_07_21.md)                                                 | master                                 | refactor  | 15/15      | 100%         | 0.0      | —        |
 | [`docs_retrieval_layer_reconcile_2026_07_23`](./docs_retrieval_layer_reconcile_2026_07_23.md)                                                               | master                                 | infra     | 7/7        | 100%         | 0.0      | —        |
 | [`sports_odds_bookmaker_coverage_enumeration_2026_06_20`](./sports_odds_bookmaker_coverage_enumeration_2026_06_20.md)                                       | master                                 | brand-new | 3/3        | 100%         | 0.0      | —        |
-| [`sports_consolidated_closeout_ao_ready_model_2026_07_23`](./sports_consolidated_closeout_ao_ready_model_2026_07_23.md)                                     | master                                 |           | 23/68      | 34%          | TBD      | —        |
-| **TOTAL** (123 plans)                                                                                                                                       | 0 orphans, 1 TBD                       | —         | —          | **52% done** | **303**  | —        |
+| **TOTAL** (122 plans)                                                                                                                                       | 0 orphans, 0 TBD                       | —         | —          | **52% done** | **303**  | —        |
 
 <!-- AUTO-INVENTORY-END -->
 
