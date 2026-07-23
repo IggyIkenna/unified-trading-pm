@@ -45,6 +45,7 @@ execution_scope: local-only
 source: [operator Q&A on sports MDPS honest coverage, 2026-07-23]
 resolved_by:
 locked_by:
+depends_on: []
 ---
 
 ## Why this matters
