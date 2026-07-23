@@ -121,16 +121,14 @@ next test in the same xdist worker runs. NOT confirmed further this session — 
 - Whether this affects OTHER tests beyond these 2 (any test relying on `DEPLOYMENT_ENV` being unset/prod-default under
   the full `-n 2` suite could plausibly be silently affected depending on xdist's dynamic test distribution across runs)
   was not swept.
-- No fix was attempted this session — this is a test-infrastructure issue orthogonal to the DeFi migration/manifest work
-  that surfaced it; fixing it belongs to whoever next needs a clean quickmerge in this repo, or a dedicated pass.
 
 ## Impact
 
 Blocks `quickmerge.sh` for ANY change in market-tick-data-service whenever this ordering/leak triggers (non-obviously
-timing/distribution-dependent under `pytest-xdist`'s default `--dist=load`). Confirmed to have blocked
-`market-tick-data-service@952618d1` (the `_migrated_*` delete-tool one-off, itself unrelated and independently
-ruff-clean + smoke-tested) from shipping via the sanctioned quickmerge path this session — that commit sits local,
-unpushed, pending this issue's resolution or a lucky xdist re-distribution on a future retry.
+timing/distribution-dependent under `pytest-xdist`'s default `--dist=load`). Confirmed to have blocked the `_migrated_*`
+delete-tool one-off (itself unrelated and independently ruff-clean + smoke-tested) from shipping via the sanctioned
+quickmerge path this session on its first two attempts (local-only WIP commit `952618d1`, superseded — never reachable
+from any branch, dropped once the real fix landed).
 
 ## Resolution (2026-07-23, follow-up session)
 
