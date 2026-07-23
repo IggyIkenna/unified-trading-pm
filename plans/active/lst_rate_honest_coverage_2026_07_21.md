@@ -827,3 +827,15 @@ tarball once; always check the launcher's own freshness warning output, and if s
   over this now-complete `lst_rates` source history — a separate features-service compute step (see the
   `#4 lst_yields backfill` todo — the raw-data gap that blocked it is now closed; the ezETH/rsETH extended EVM rows and
   the Solana rows are both present for their full valid date ranges).
+
+- **2026-07-23 02:05 UTC (lst_yields feature run — checked, correctly deferred to operator)** — with the `lst_rates`
+  raw-data backfill now complete, checked whether the `#4 lst_yields backfill` todo (running the `lst_yields` FEATURE
+  over this history) is genuinely unblocked and safe to execute myself. Found the only existing runner for this exact
+  feature group, `features-service/scripts/backfill_lst_yields_30day.sh`, carries explicit markers: `# owner: operator`,
+  `# Operator invocation — do NOT execute from CI`, `# last_executed: NEVER — operator first-run`. This is a real,
+  deliberate boundary (not incidental) — the underlying
+  `python -m features_service --operation compute --feature-group lst_yields` writes real feature data that feeds
+  `carry_staked_basis` (Phase 6 A2, itself already operator-gated on E1/E2/E4 rulings), so running a full-history
+  compute myself would cross a line the precedent script explicitly draws. **Correctly left for the operator** — same
+  treatment as Phase 5 #1 and Phase 6. The raw-data prerequisite (this session's #4 work) is done; the feature-compute
+  step is a distinct, operator-owned action.
