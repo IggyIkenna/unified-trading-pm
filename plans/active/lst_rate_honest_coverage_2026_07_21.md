@@ -860,3 +860,9 @@ tarball once; always check the launcher's own freshness warning output, and if s
 - **2026-07-23 03:30 UTC (dex-swaps re-check — still healthy)** — `mtds-dex-swaps-backfill` RUNNING since the second
   resume, RSS stable ~832-1285MiB, heartbeats fresh, completed another full shard-list pass (75,274 records this pass).
   No further preemptions since 02:38 UTC. Continuing to monitor.
+
+- **2026-07-23 04:01 UTC (dex-swaps re-check — still healthy, stable ~1.5h since last preemption)** — manifest at 15,406
+  entries (this instance), RSS stable ~886-1300MiB. The collector appears to loop through repeated full shard-list
+  passes rather than exiting after one (each "DEX swaps collection complete" cycle still writes substantial new rows —
+  139,860 this pass — meaning it's not yet fully fresh/converged); this is presumably bounded to terminate once a pass
+  yields near-zero new writes. No preemptions since 02:38 UTC.
