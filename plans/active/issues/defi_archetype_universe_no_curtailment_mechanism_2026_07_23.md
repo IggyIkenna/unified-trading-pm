@@ -19,6 +19,7 @@ related:
   [
     pnl_interest_accrual_wrong_engine_and_banned_formula_2026_07_21,
     e2e_testing_collateral_validation_dead_import_2026_07_23,
+    defi_catalog_engine_config_key_contract_drift_2026_07_23,
   ]
 created: 2026-07-23
 parent_epic: strategy_master
