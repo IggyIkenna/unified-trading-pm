@@ -310,6 +310,66 @@ share-class-dependent dual-unit support before the STAKING leg's unit convention
 gated until E1's data-source mapping and E2's dual-unit design are both resolved — do not wire the STAKING leg with a
 single hardcoded unit convention.
 
+## PROGRESS 2026-07-23 — FUNDING leg shipped (E1's data-source mapping now RESOLVED); STAKING leg still gated
+
+**E1's data-source sub-task is now resolved** and the FUNDING leg is **SHIPPED**: `strategy-service@aa1fcdc7`
+(`live-defi-rollout`, quickmerge landed, `quality-gates.sh` green — 5277 tests, Codex compliance within the pre-existing
+4-violation tolerance, no new baseline-ratchet regressions).
+
+- **Data-source mapping (confirmed against real GCS + `catalog_staked_basis.py`):** the ONLY two perp venues eligible as
+  LST collateral today are **DERIBIT** (`ETH-PERPETUAL`) and **BYBIT** (`ETHUSDT`) — verified via
+  `accepted_perp_collateral()` against UAC `VENUE_COLLATERAL_MATRIX` (7.5%/10% haircuts respectively). Both carry a
+  real, non-null `derivative_ticker.funding_rate` column (spot-checked prod parquets directly: DERIBIT 2026-04-15 =
+  113,720 ticks/day; BYBIT 2026-05-15 = 228,971 ticks/day).
+- **New provider** `strategy_service/engine/core/canonical_derivative_ticker_funding_provider.py` —
+  `CanonicalDerivativeTickerFundingProvider`: reads the shared `tick-data`/`cefi` bucket, day-means the `funding_rate`
+  column (offset-robust, matching the prior-art `e2e-testing/scripts/defi/staked_basis_funding_scan.py` convention),
+  scales to a per-day fraction via the UAC `perp_funding_cadence.fundings_per_day()` SSOT (never an inline
+  periods-per-day constant). Narrow, explicit venue→symbol allowlist (DERIBIT/BYBIT only) — an unmapped venue is honest
+  absence, never a guessed symbol.
+- **Sign convention** (operator E1, verbatim): short perp RECEIVES when the rate is positive → `FUNDING_ACCRUAL`/
+  `FUNDING` = `+notional * day_funding_fraction` (no negation) — verified consistent with the existing `staked_basis.py`
+  engine docstring ("positive means longs pay shorts → adds to carry").
+- **Wiring**: a purely additive `funding_rates_by_day: Mapping[str, Decimal] | None = None` parameter on
+  `build_paper_run_passive` / `build_paper_run_attribution` (+ its `emit_` wrapper) and a new
+  `StrategyReplay.funding_rates_by_day` field, populated in `replay_carry_strategy` ONLY for
+  `spec.archetype == CARRY_STAKED_BASIS` (scoped to real config keys via direct indexing, not `.get(key, "")` —
+  `_emit_staked_basis_slots` always populates both). `None` (every other archetype, every pre-existing caller) preserves
+  the legacy `-basis_amount` proxy byte-for-byte — **zero behavior change outside this one leg**. Threaded into both
+  `paper_run_handler.py::run_paper` and `batch_rerun.py`'s passive re-derivation, so a same-window batch rerun
+  re-derives the identical mapping from the same immutable `day=` partition (ε=0 holds for the FUNDING leg too — proven
+  with a paper≡batch parity test at the producer boundary, mirroring the style of the already-held
+  `test_index_ratio_accrual.py` parity test).
+- **STAKING_REWARD / LENDING_INTEREST are untouched** — verified via the full pre-existing test suite (unchanged, still
+  green) that no other leg's computation shifted.
+- **3-lens review (money-path gate) — CLEAN, shipped.** Correctness: sign + data source cross-verified against 2
+  independent codebase sources + the operator's own words. Determinism: pure function of (perp_venue, native_asset,
+  window) over the immutable GCS partition; parity tests added at both the new provider and the two producers.
+  Honest-absence: every layer defaults to a logged zero on missing data, never a fabricated or silently-reused proxy.
+- **Big finding (data-correctness, notified here per the money-path/findings-triage rule):** verified against real prod
+  GCS that **`derivative_ticker` capture for EVERY CeFi venue under `pipeline_mode=batch_tardis` has NO coverage from
+  ~2026-05-22 through at least 2026-07-20** (not DERIBIT/BYBIT-specific — the whole CeFi derivative_ticker collector,
+  all venues, same window; `book_snapshot_5` for the same venues DOES continue into July, so this is scoped to the
+  funding-rate collector specifically). This is a **pre-existing MTDS/Tardis backfill gap**, separate from and not fixed
+  by this change. Practical effect: a LIVE rolling 7-day paper window today falls entirely inside this gap, so
+  FUNDING_ACCRUAL will honestly book **zero** (with a visible log) until the collector backfill resumes — still strictly
+  better than the current-in-prod wrong nonzero `-basis_amount` proxy, but worth a dedicated MTDS-side follow-up to
+  actually restore live funding-rate capture. Historical windows before 2026-05-22 (where real data exists) will show
+  real nonzero funding once a batch rerun covers them.
+- **Deliberately NOT touched (out of this task's scope, confirmed correct to leave alone):** `compute_pnl` /
+  `compute_handler` (dead-code surfaces per the doc's own analysis, unrelated to this fix); the STAKING leg (LST
+  appreciation — still gated on the 4-rate-identity audit + E2's dual-unit design, per the standing rulings above);
+  `LENDING_INTEREST`/`BASIS` for `carry_staked_basis` (E4 already ruled these DROP entirely, not index-ratio'd — a
+  separate, still-open build); the already-held, still-unwired `strategy_service/engine/backtest/index_ratio_accrual.py`
+  primitive — verified it is STILL PRESENT, untouched, exactly as found (not rebuilt, not committed). It is NOT the
+  right tool for FUNDING (a genuine per-cycle rate, not a cumulative index — see the doc's own REFINEMENT section) and,
+  per the fresh E4 ruling, is no longer needed for `carry_staked_basis`'s LENDING leg either (dropped, not fixed) — its
+  remaining live use is `recursive_staking`'s borrow leg (E3), an explicit, bigger follow-on left for a dedicated
+  session.
+
+**Next open item**: process E2 (share-class dual-unit investigation) + the outstanding 4-rate-identity audit result,
+then build the STAKING leg. `recursive_staking`'s borrow-leg wiring (E3) remains a separate, tracked follow-on.
+
 ## E2 INVESTIGATION 2026-07-23 (sub-agent, design-only — no code changed)
 
 Scope: the operator's "investigate more … depending on the share class, sometimes we want ETH-underlying units,
