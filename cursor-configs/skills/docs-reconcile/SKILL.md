@@ -6,12 +6,15 @@ description:
   cover: schema<->generator drift (gen_doc_index.py's _PER_TYPE_FACETS silently falling out of sync with docspec.py),
   cross-agent-instruction gaps (a retrieval rule living in only one of the three agent-facing files when it's meant to
   govern all), authoritative_for collisions (two codex-ssot docs both claiming to be THE SSOT for the same topic,
-  defeating "grep lands on the one right doc"), and placeholder/near-empty summary: fields that make the L2 grep-and-
-  read-summary step useless. Deterministic checks first (the QG scripts), then a multi-agent semantic sweep for what
-  structure alone can't catch, adversarially verified, then reconciled — auto-fix the mechanical classes, route
-  authority calls to the operator. Out of scope: plan-lifecycle contradictions and done-but-unchecked todos (that's
-  /plan-reconcile's corpus). Trigger on /docs-reconcile, "check the doc retrieval layer", "is DOC_INDEX still working",
-  "audit the codex docs", "check doc frontmatter quality", "did the doc retrieval design decay".
+  defeating "grep lands on the one right doc"), placeholder/near-empty summary: fields that make the L2 grep-and-
+  read-summary step useless, and broken links — both frontmatter path-references (related/codex_ssots/supersedes/etc,
+  via docspec.validate_doc_references()) and inline markdown body links (`[text](../foo.md)`, via
+  check_doc_body_links.py) that silently break the "jump doc→doc" retrieval flow. Deterministic checks first (the QG
+  scripts), then a multi-agent semantic sweep for what structure alone can't catch, adversarially verified, then
+  reconciled — auto-fix the mechanical classes, route authority calls to the operator. Out of scope: plan-lifecycle
+  contradictions and done-but-unchecked todos (that's /plan-reconcile's corpus). Trigger on /docs-reconcile, "check the
+  doc retrieval layer", "is DOC_INDEX still working", "audit the codex docs", "check doc frontmatter quality", "check
+  for broken links", "did the doc retrieval design decay".
 ---
 
 # /docs-reconcile — retrieval-layer + codex doc health audit
@@ -35,6 +38,16 @@ hard-blocking since 2026-07-04). This skill covers what THAT gate cannot see:
    short to substitute for opening the doc — the L2 "read summary instead of body" step depends on this being real), and
    codex staleness OUTSIDE the 4 cutover-critical dirs `check_codex_doc_freshness.py` already gates (report-only —
    widening the blocking gate is an operator call, not this skill's to make unilaterally).
+5. **Broken links** — two distinct surfaces, two distinct checkers: (a) FRONTMATTER path-shaped free_list fields
+   (`related`/`codex_ssots`/`supersedes`/`superseded_by`/`depends_on`/`related_plans`/`referenced_by`) via
+   `docspec.validate_doc_references()`, already wired into `check_frontmatter_schema.py` and ratcheted against
+   `scripts/plan-hygiene/doc_reference_baseline.yaml`; (b) inline markdown BODY links (`[text](../foo.md)`) via
+   `scripts/quality_gates/check_doc_body_links.py` (added 2026-07-23 — the frontmatter checker never looked at doc
+   bodies, so a dead `[the SSOT](../foo.md)` inside a doc's prose was invisible to every existing gate), ratcheted
+   against `scripts/quality_gates/doc_body_link_baseline.yaml`. Both are SHRINKING ratchets (pre-existing dead links
+   tolerated, only NEW breakage fails) — a link resolving under NONE of doc-dir-relative / PM-root-relative / a
+   `plans/archive/**` basename fallback is broken; a `/codex/...`-style leading-slash target is PM-root-relative, not
+   filesystem-absolute (see check_doc_body_links.py's `_resolve()` for why that distinction matters).
 
 **Out of scope (that's `/plan-reconcile`'s corpus):** plan-lifecycle contradictions, done-but-unchecked plan todos, plan
 archival/consolidation. If a finding is actually about a plan contradicting another plan or its epic, route it there
@@ -76,6 +89,13 @@ Run first, in order, over the live PM tree:
   absorbed.
 - `.venv/bin/python scripts/docs/gen_doc_index.py` — smoke-run the generator itself; a non-zero exit here means the L0
   index is not buildable at all, which is more urgent than any downstream drift check.
+- `python3 scripts/quality_gates/check_doc_body_links.py` (no args = full corpus) — inline markdown BODY link existence
+  check (frontmatter path-refs are already covered inside `check_frontmatter_schema.py` above, via
+  `docspec.validate_doc_references()` — do not re-run that check here). A RED here (exit 1) means a NEW body link broke
+  beyond the ratcheted baseline. Also report the TOTAL debt, not just "zero NEW": count the `known_broken` entries in
+  `scripts/quality_gates/doc_body_link_baseline.yaml` (`grep -c '^\s*-' ...`) — a shrinking-ratchet check that only ever
+  reports "zero new" can hide totally-stagnant pre-existing debt forever if nobody looks at the baseline size itself,
+  same "don't silently absorb the gap" rule as the freshness check below.
 
 ## Phase 1 — multi-agent semantic sweep
 
@@ -94,10 +114,20 @@ spawn; set `model=` explicitly, default sonnet):
    index format, or contradicting the current L0/L1/L2/L3 terminology).
 4. **Codex-freshness scope report** — for docs outside the 4 gated dirs, report staleness distribution (not a per-doc
    finding list) so the operator can decide if/when to widen the ratchet.
+5. **Broken-link triage hunters** — batch the `known_broken` entries from BOTH `doc_reference_baseline.yaml` and
+   `doc_body_link_baseline.yaml` that fall inside your audit scope (skip the rest — the two baselines are corpus-wide,
+   not scoped to whatever slice you're reconciling) and, for each, determine: (a) does it still reproduce (target still
+   absent) or did it get fixed since seeding (baseline entry is now stale dead weight — flag for `--update-baseline`
+   cleanup, not a finding); (b) if still broken, is the target provably MOVED (renamed file, or graduated to
+   `plans/archive/**` under a different name than the basename fallback catches) — auto-fixable, repoint it; or is it a
+   genuine dead reference with no clear successor — surface as a P1/P2 finding for someone to either fix the prose or
+   delete the dead link, this is NOT an authority question so it does not need an operator ruling the way an
+   `authoritative_for` collision does.
 
 Candidate contract: `<relpath>` + verbatim quote ≤200 chars + why it's a finding; severity P0 (breaks retrieval
-correctness — collision, generator crash) / P1 (degrades retrieval — dead summary, stale doctrine ref) / P2 (report-only
-— freshness distribution outside gated scope).
+correctness — collision, generator crash) / P1 (degrades retrieval — dead summary, stale doctrine ref, broken link with
+no obvious successor) / P2 (report-only — freshness distribution outside gated scope, or a broken link that's genuinely
+ambiguous where it should point).
 
 ## Phase 2 — adversarial verification
 
@@ -109,12 +139,14 @@ Split votes go to a tiebreaker. Only CONFIRMED findings proceed to Phase 3.
 
 **Auto-fix (no ruling needed):**
 
-| Class                                                                                            | Fix                                                                    |
-| ------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------- |
-| Schema<->generator drift (missing/stale facet entry)                                             | Fix `_PER_TYPE_FACETS` directly against the live `docspec.py`          |
-| Doctrine missing from a surface                                                                  | Add the pointer section, mirrored from the surface that already has it |
-| Stale doctrine reference (retired path/terminology)                                              | Update the reference to the current L0/L1/L2/L3 shape                  |
-| Derivable placeholder summary (the doc's own title/first-paragraph makes a real summary obvious) | Write it, cite the source line                                         |
+| Class                                                                                            | Fix                                                                                  |
+| ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------ |
+| Schema<->generator drift (missing/stale facet entry)                                             | Fix `_PER_TYPE_FACETS` directly against the live `docspec.py`                        |
+| Doctrine missing from a surface                                                                  | Add the pointer section, mirrored from the surface that already has it               |
+| Stale doctrine reference (retired path/terminology)                                              | Update the reference to the current L0/L1/L2/L3 shape                                |
+| Derivable placeholder summary (the doc's own title/first-paragraph makes a real summary obvious) | Write it, cite the source line                                                       |
+| Broken link (frontmatter ref or body link) where the target provably moved                       | Repoint the ref/link, then re-run `--update-baseline` on the matching checker        |
+| Baseline entry that no longer reproduces (link got fixed since seeding)                          | Drop it via `--update-baseline` on the matching checker (dead weight, not a finding) |
 
 **Operator ruling required:** any `authoritative_for` collision (which doc keeps the topic is an authority call, not a
 correctness call — evidence can show the collision exists but not which side should own it); widening the codex-
@@ -134,14 +166,25 @@ coherent commits. NEVER write agent memory; NEVER create `*_SUMMARY.md` — the 
 Finish with text: counts by severity/class, applied-fix list (commit shas), operator-decision list, refuted-candidate
 count, and the codex-freshness scope-report numbers from Phase 0/1.4. Report the strict-vs-baseline freshness gap
 explicitly even if not fixing it this run — a widening gap invisible outside the report is the failure this skill exists
-to prevent.
+to prevent. Report the broken-link ratchet numbers the same way: total `known_broken` count in each of
+`doc_reference_baseline.yaml` / `doc_body_link_baseline.yaml`, how many of those fall in-scope for this run, how many
+were confirmed-still-broken vs auto-fixed (target moved) vs cleared (baseline entry no longer reproduces) vs left as a
+genuine-dead-link finding for someone to fix later — a "zero NEW breakage" gate pass is not the same claim as "zero
+broken links," and the report must not conflate the two.
 
 ## Codex SSOTs
 
 - `/codex/11-project-management/doc-frontmatter-schema.md` — the frontmatter schema this skill's generator-parity check
   guards
 - `scripts/docs/docspec.py` / `scripts/docs/gen_doc_index.py` — the schema's machine SSOT + the L0 generator it guards
+- `scripts/docs/docspec.py`'s `validate_doc_references()` (wired into `check_frontmatter_schema.py`) — FRONTMATTER
+  path-ref existence check, ratcheted against `scripts/plan-hygiene/doc_reference_baseline.yaml`
+- `scripts/quality_gates/check_doc_body_links.py` — inline markdown BODY link existence check, ratcheted against
+  `scripts/quality_gates/doc_body_link_baseline.yaml`; has its own unit tests in the sibling
+  `test_check_doc_body_links.py`
 - `plans/active/docs_retrieval_layer_reconcile_2026_07_23.md` — this skill's origin + the AGENTS.md gap it fixed
 - `cursor-configs/skills/plan-reconcile/SKILL.md` — the sibling skill for plans-corpus contradictions (different scope,
-  see "Out of scope" above)
+  see "Out of scope" above); it has its own, separate dangling-ref auto-fix rule scoped to `depends_on`/`related`/
+  `supersedes`/`superseded_by` inside the PLANS corpus specifically — this skill's broken-link checks cover the CODEX
+  corpus (+ any doc type `check_frontmatter_schema.py`'s live doc trees include)
 - `cursor-configs/SUB_AGENT_MANDATORY_RULES.md` — sub-agent spawn contract + escalation format
