@@ -1216,3 +1216,27 @@ Moving to TRADFI next — same JIT-redrain (prefix-aware) approach; TRADFI's cen
 its time on parquet content reads + `_renormalize_legacy_instrument_ids`, not path-only rewrites — a materially
 different profile than DEFI/PREDICTION/CEFI. Apply the SAME accept-and-track discipline for any KEPT_SRC-class
 stragglers TRADFI hits (todo 19's gap is generic to the shared `_copy_verify_delete` helper, not CEFI-specific).
+
+## Progress Log — 2026-07-23 (P7d-prep: TRADFI JIT-redrain — nothing to stop; apply launched)
+
+**JIT-redrain**: 3 `tradfi-bf-krx-eq-ohlcv-24h-*` VMs running (`task=mtds-backfill`) — investigated via `run.log` before
+assuming safe: writes exclusively to `raw_tick_data/by_date/.../data_type=ohlcv_24h/...` (confirmed via actual upload
+log lines, not the misleading "ohlcv-24h" name), disjoint from `processed_candles/` — MTDS raw-tick capture, not MDPS
+candle output. Not a conflict, left running. No other TRADFI-relevant writer found.
+
+**Shard sizing — deliberately NOT scaled proportionally to corpus size**: TRADFI's corpus (7,646,831 objects) is ~6-8x
+DEFI/PREDICTION/CEFI's (~0.94-1.17M each), and naively scaling `SHARD_OF` proportionally would mean ~60-70 concurrent
+VMs. Given todo 19's still-unfixed retry-idempotency gap — any `KEPT_SRC`-class straggler this run produces is PERMANENT
+(can't be retried away) — and given CEFI's 149-object residual is plausibly linked to write-contention from concurrent
+VMs hitting the same bucket, scaling concurrency proportionally risks a proportionally WORSE stuck-residual outcome
+(potentially ~1,000+ objects) rather than a proportionally worse but still-small one. Chose `SHARD_OF=20` (2x the proven
+DEFI/PREDICTION/CEFI concurrency, not 6-8x) — trades longer wall-clock per shard (~382K objects/shard vs ~115K) for
+keeping contention risk in the same regime already proven tolerable. If throughput data from this run suggests
+contention wasn't actually the driver, that's real information to inform a different choice next time — not assumed away
+here.
+
+**Action**: launched 20 shards (`SHARD_OF=20`, `SHARD_INDEX=0..19`, same proven SHA pins, `WORKERS=16`, `MODE=full`)
+against TRADFI's `market-data-tick-tradfi-prd-central-element-323112` bucket. **STATUS: IN FLIGHT, NOT YET VERIFIED.**
+Given the content-repair-heavy disposition mix, expect substantially longer per-shard wall-clock than the ~35-45min seen
+for DEFI/PREDICTION/CEFI — do not treat a long-running watchdog tick as a stall on this AG without checking `run.log`
+for genuine progress first.
