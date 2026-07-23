@@ -11,7 +11,7 @@ stage: [meta]
 repos: [agent-orchestrator, client-reporting-api, deployment-api, deployment-service, deployment-ui, execution-service]
 scope: [engineer]
 tags: [ci-cd, quality-gates, refactor, dependency-management, orchestrator]
-related: [./ci-cd-flow.md, ./dependency-cascade.md, ../04-architecture/tier-and-import-architecture.md]
+related: [./ci-cd-flow.md, ./dependency-cascade.md, /codex/04-architecture/tier-and-import-architecture.md]
 created: 2026-06-27
 authoritative_for: [per-cone parallel staging-lock design (cone_locks map + T0-base-exclusive SIT parallelism rules)]
 referenced_by:

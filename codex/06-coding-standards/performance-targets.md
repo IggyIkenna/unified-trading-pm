@@ -13,10 +13,11 @@ stage: [meta]
 repos: [execution-service, features-service, strategy-service]
 scope: [engineer]
 tags: [performance, monitoring, cost, backfill, spot-vm, data-pipeline]
-related: [../05-infrastructure/synthetic-data-benchmarking.md, ../08-workflows/cutover-window-dependency-order.md]
+related:
+  [/codex/05-infrastructure/synthetic-data-benchmarking.md, /codex/08-workflows/cutover-window-dependency-order.md]
 created: 2026-03-27
 authoritative_for: [performance latency/throughput/resource targets, per-stage benchmark bottleneck classification]
-referenced_by: [codex/05-infrastructure/synthetic-data-benchmarking.md, plans/epics/features_and_ml_master.md]
+referenced_by: [/codex/05-infrastructure/synthetic-data-benchmarking.md, plans/epics/features_and_ml_master.md]
 owner:
 last_reviewed:
 code_refs:
@@ -181,8 +182,8 @@ Slow tests are marked `@pytest.mark.slow`. PR CI runs only `normal` scenario (ex
 Per-stage wall-clock / CPU / RSS / IO targets for the cutover pipeline (`mtds_read` → `mdps_compute` → `features` →
 `ml_inference` → `strategy` → `matching_engine`) should be derived from the synthetic-data benchmark harness's per-stage
 profile, NOT estimated. See
-[`../05-infrastructure/synthetic-data-benchmarking.md`](../05-infrastructure/synthetic-data-benchmarking.md) for the
-harness, the `StageProfile` shape, and the per-`(archetype, vm_shape)` recommendation matrix.
+[`/codex/05-infrastructure/synthetic-data-benchmarking.md`](/codex/05-infrastructure/synthetic-data-benchmarking.md) for
+the harness, the `StageProfile` shape, and the per-`(archetype, vm_shape)` recommendation matrix.
 
 ---
 
@@ -319,7 +320,7 @@ bottlenecks (see Top-3 section below). Their real compute profiles are essential
 
 **Combined cutover-window target**: all 6 stages complete within a **24-hour window** (concurrent with real-data
 backfill running in parallel). This is the May-23 cutover-window binding constraint per
-`codex/08-workflows/cutover-window-dependency-order.md`.
+`/codex/08-workflows/cutover-window-dependency-order.md`.
 
 ---
 

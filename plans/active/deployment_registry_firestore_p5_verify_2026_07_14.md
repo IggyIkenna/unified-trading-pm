@@ -14,9 +14,9 @@ repos: [deployment-api, unified-trading-pm]
 scope: [engineer]
 tags: [firestore, deployment-registry, scale-test, codex, verification]
 related:
-  - deployment_registry_firestore_migration_2026_07_14.md
-  - deployment_registry_firestore_p3_cutover_2026_07_14.md
-  - deployment_registry_firestore_p4_dynamodb_2026_07_14.md
+  - /plans/active/deployment_registry_firestore_migration_2026_07_14.md
+  - /plans/active/deployment_registry_firestore_p3_cutover_2026_07_14.md
+  - /plans/archive/2026_07/deployment_registry_firestore_p4_dynamodb_2026_07_14.md
 created: "2026-07-14"
 last_updated: "2026-07-14"
 parent_epic: observability_master
@@ -70,7 +70,7 @@ datetimes; QG-green.
       Progress Log (batched seed observed ~16ms/write; per-VM heartbeat is one write/interval, so cost scales with
       fleet×cadence — see the table).
 - [ ] [REVIEW] P2. Post-phase codex audit — update
-      [`codex/05-infrastructure/deployment-observability.md`](../../codex/05-infrastructure/deployment-observability.md):
+      [`/codex/05-infrastructure/deployment-observability.md`](/codex/05-infrastructure/deployment-observability.md):
       the Firestore-registry contract (collection/doc/query), the GCS→Firestore lineage note (GCS-first until 2026-07,
       then Firestore), and the DynamoDB/`cloud_interface` backend-swap note. SUPERSEDED-banner any GCS-registry-specific
       doc.
@@ -116,5 +116,5 @@ datetimes; QG-green.
 
 ## Codex SSOTs
 
-- `codex/05-infrastructure/deployment-observability.md` — the SSOT this phase updates.
+- `/codex/05-infrastructure/deployment-observability.md` — the SSOT this phase updates.
 - `CLAUDE.md` — the deployment-observability one-liner + conditional-domain-index pointer.

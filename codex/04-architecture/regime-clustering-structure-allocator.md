@@ -13,7 +13,7 @@ stage: [meta]
 repos: [execution-service, features-service, greeks-service, market-tick-data-service, ml-service, strategy-service]
 scope: [engineer, admin]
 tags: [strategy, features, ml, execution, batch-live, performance]
-related: [batch-live-architecture.md]
+related: [/codex/04-architecture/batch-live-architecture.md]
 created: 2026-05-30
 authoritative_for: [regime-clustering factor-targeted structure allocator pipeline]
 referenced_by:
@@ -74,11 +74,12 @@ features-service          ml-service / strategy-service      strategy-service / 
 
 Three independent layers applied in order. A breach at any layer vetoes the structure.
 
-| Layer                                  | Module                                           | Trigger                                                                              |
-| -------------------------------------- | ------------------------------------------------ | ------------------------------------------------------------------------------------ | --- | --- | ---- | --- | --- | --------------------------- |
-| **Risk gates** (pre-score)             | `RiskGates` in `discrete_structure_allocator.py` |                                                                                      | Δ   | ,   | Vega | ,   | Γ   | caps; premium floor/ceiling |
-| **Portfolio gate** (post-construction) | `portfolio_risk_gate.py`                         | Margin ceiling, per-tenor vega/gamma, liquidity cost                                 |
-| **Analog execution gate** (Phase 5)    | `analog_gate.py` `KnnAnalogGate`                 | kNN of historical analogs; size down/veto on bad execution history; cluster-filtered |
+| Layer                                                | Module                                                                               | Trigger                             |                                                  | -------------------------------------- | ------------------------------------------------ |
+| ---------------------------------------------------- | ------------------------------------------------------------------------------------ | ----------------------------------- | ------------------------------------------------ | -------------------------------------- | ------------------------------------------------ |
+| ---------------------------                          |                                                                                      | **Risk gates** (pre-score)          | `RiskGates` in `discrete_structure_allocator.py` |                                        | Δ                                                | ,                        |
+| Vega                                                 | ,                                                                                    | Γ                                   | caps; premium floor/ceiling                      |                                        | **Portfolio gate** (post-construction)           | `portfolio_risk_gate.py` |
+| Margin ceiling, per-tenor vega/gamma, liquidity cost |                                                                                      | **Analog execution gate** (Phase 5) | `analog_gate.py`                                 |
+| `KnnAnalogGate`                                      | kNN of historical analogs; size down/veto on bad execution history; cluster-filtered |
 
 **Slippage model**: `options_slippage.py` — size/depth-aware. Legs that walk past top-of-book depth are penalised by
 `price_impact_per_contract × qty_beyond²`. Plugged into `DiscreteStructureAllocator` via `slippage_fn`.
@@ -205,4 +206,4 @@ strategy-service — never inside ml-service.
 | Deflated Sharpe                           | `walk_forward_kpi.py` `WalkForwardReport`            | OOS Sharpe with multiple-testing correction  |
 | PBO (Probability of Backtest Overfitting) | computed per cluster                                 | Rejects in-sample-only artefacts             |
 | OOD abstain coverage                      | `walk_forward_kpi.py` `RegimeOosReport`              | 100% of OOD ticks must route to abstain      |
-| Backtest↔paper tracking error            | `tracking_error_kpi.py` `BacktestPaperParityChecker` | Proves continuous→discrete bridge is real    |
+| Backtest↔paper tracking error             | `tracking_error_kpi.py` `BacktestPaperParityChecker` | Proves continuous→discrete bridge is real    |

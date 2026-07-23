@@ -12,9 +12,17 @@ stage: [meta]
 repos: [alerting-service, deployment-service, execution-service, unified-trading-library]
 scope: [engineer, admin]
 tags: [secrets, aws-migration, dual-cloud, credentials, migration, tracking]
-related: [codex/05-infrastructure/cloud-agnostic-script-pattern.md, codex/04-architecture/interface-credential-convention.md, credentials-registry.yaml]
+related:
+  [
+    /codex/05-infrastructure/cloud-agnostic-script-pattern.md,
+    /codex/04-architecture/interface-credential-convention.md,
+    credentials-registry.yaml,
+  ]
 created: 2026-05-07
-authoritative_for: Per-secret tracking matrix for the GCP Secret Manager → AWS Secrets Manager dual-write migration. Each row tracks `secret_name / current_provider / target_provider / migration_status / consumer_services / owner / target_completion_date`.
+authoritative_for:
+  Per-secret tracking matrix for the GCP Secret Manager → AWS Secrets Manager dual-write migration. Each row tracks
+  `secret_name / current_provider / target_provider / migration_status / consumer_services / owner /
+  target_completion_date`.
 referenced_by: [plans/active/aws_migration_defi_first_2026_05_07.md]
 owner:
 last_reviewed: 2026-05-19
@@ -146,8 +154,8 @@ creation + rotation steps per wallet type.
 - **Plan(s) implementing this:** [`aws_migration_defi_first`](../../plans/active/aws_migration_defi_first_2026_05_07.md)
   Phase 4.
 - **Credential metadata SSOT:** [`credentials-registry.yaml`](../../../credentials-registry.yaml).
-- **Related codex SSOTs:** [`cloud-agnostic-script-pattern`](../05-infrastructure/cloud-agnostic-script-pattern.md),
-  [`interface-credential-convention`](../04-architecture/interface-credential-convention.md).
+- **Related codex SSOTs:** [`cloud-agnostic-script-pattern`](/codex/05-infrastructure/cloud-agnostic-script-pattern.md),
+  [`interface-credential-convention`](/codex/04-architecture/interface-credential-convention.md).
 - **Code:** `unified-config-interface/`, `unified-trading-library/api_key_reloader.py`.
 - **Operator ping filed**: `harsh_orchestrator/pings/slot_3.md` 2026-05-19 (Phase 2.A).
 

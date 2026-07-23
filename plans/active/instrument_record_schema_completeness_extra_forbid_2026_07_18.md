@@ -15,7 +15,7 @@ stage: [data]
 repos: [unified-api-contracts, instruments-service]
 scope: [engineer]
 tags: [uac-contract, instrument-record, pydantic, schema-completeness, honest-absence, silent-drop]
-related: [data_status_page_ux_and_canonicalisation_2026_07_16.md]
+related: [/plans/active/data_status_page_ux_and_canonicalisation_2026_07_16.md]
 created: 2026-07-18
 last_updated: 2026-07-18
 parent_epic: instruments_master
@@ -68,8 +68,9 @@ authoritative list comes from the full-suite `extra='forbid'` run (todo 1).
 
 ## Codex SSOTs (read before touching)
 
-- `codex/02-data/honest-absence-downstream-handling.md` — a dropped field a caller believed persisted is honest-absence.
-- `codex/02-data/availability-manifest-and-data-status.md` — INSTRUMENTS_PARQUET_SCHEMA alignment (adding a field is a
+- `/codex/02-data/honest-absence-downstream-handling.md` — a dropped field a caller believed persisted is
+  honest-absence.
+- `/codex/02-data/availability-manifest-and-data-status.md` — INSTRUMENTS_PARQUET_SCHEMA alignment (adding a field is a
   parquet-column change; the InstrumentRecord docstring documents the 1:1 model↔column contract).
 - `unified_api_contracts/internal/reference/instrument.py` — the model + `INSTRUMENTS_PARQUET_SCHEMA`.
 

@@ -31,12 +31,12 @@ scope: [engineer]
 tags: [manifest, canonicalisation, cf-audit, schema-version, cross-cutting, findings]
 related:
   [
-    prediction_manifest_canonicalisation_2026_06_01.md,
-    cefi_manifest_canonicalisation_2026_06_01.md,
-    defi_manifest_canonicalisation_2026_06_01.md,
-    tradfi_manifest_canonicalisation_2026_06_01.md,
-    sports_manifest_canonicalisation_2026_06_01.md,
-    master_data_canonicalisation_migration_catalogue_2026_06_07.md,
+    /plans/archive/2026_07/prediction_manifest_canonicalisation_2026_06_01.md,
+    /plans/archive/2026_07/cefi_manifest_canonicalisation_2026_06_01.md,
+    /plans/archive/2026_07/defi_manifest_canonicalisation_2026_06_01.md,
+    /plans/archive/2026_07/tradfi_manifest_canonicalisation_2026_06_01.md,
+    /plans/active/sports_manifest_canonicalisation_2026_06_01.md,
+    /plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md,
   ]
 created: 2026-07-11
 parent_epic: manifest_master

@@ -12,15 +12,15 @@ stage: [meta]
 repos: [execution-service, strategy-service, unified-trading-api]
 scope: [engineer]
 tags: [method-size, quality-gates, refactor, file-splitting]
-related: [quality-gates.md, file-splitting-guide.md]
+related: [/codex/06-coding-standards/quality-gates.md, /codex/06-coding-standards/file-splitting-guide.md]
 created: 2026-05-19
 authoritative_for: [method-size 50-line rule and FUNCTION_SIZE_EXTRA_EXCLUDES allowlist discipline]
-referenced_by: [codex/06-coding-standards/file-splitting-guide.md]
+referenced_by: [/codex/06-coding-standards/file-splitting-guide.md]
 owner: ikenna
 last_reviewed:
 code_refs:
 codified: 2026-05-19
-sources: ['plans/active/work_split_2026_05_19_ikenna.md (Slot 4 items 11-14, Batch-32)']
+sources: ["plans/active/work_split_2026_05_19_ikenna.md (Slot 4 items 11-14, Batch-32)"]
 ---
 
 # Method Size Rule

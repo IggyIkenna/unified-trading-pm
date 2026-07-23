@@ -2,8 +2,8 @@
 doc_type: codex-ssot
 title: Execution Modes & Chain Resolution
 summary:
-  Batch/paper/live execution-mode matrix (batch=live principle, Tenderly-fork paper), strategy→instruments→chain
-  intent resolution, CHAIN_ENV chain-id/RPC lookup (21 chains), and the strategy-vs-execution decision boundary.
+  Batch/paper/live execution-mode matrix (batch=live principle, Tenderly-fork paper), strategy→instruments→chain intent
+  resolution, CHAIN_ENV chain-id/RPC lookup (21 chains), and the strategy-vs-execution decision boundary.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -11,10 +11,23 @@ stage: [meta]
 repos: [e2e-testing, execution-service, features-service, instruments-service, strategy-service]
 scope: [engineer, admin]
 tags: [defi, execution, strategy, tenderly, mvp, live-trading]
-related: [batch-live-architecture.md, chain-environment-resolution.md, tenderly-execution-provider.md, custody-providers.md, wallet-hierarchy-and-capital-flow.md]
+related:
+  [
+    /codex/04-architecture/batch-live-architecture.md,
+    /codex/04-architecture/chain-environment-resolution.md,
+    /codex/04-architecture/tenderly-execution-provider.md,
+    /codex/04-architecture/custody-providers.md,
+    /codex/04-architecture/wallet-hierarchy-and-capital-flow.md,
+  ]
 created: 2026-03-30
 authoritative_for: [three execution modes (batch/paper/live) matrix, strategy-vs-execution decision boundary]
-referenced_by: [codex/04-architecture/chain-environment-resolution.md, codex/04-architecture/flash-loan-receiver.md, codex/04-architecture/mev-protection.md, codex/04-architecture/tenderly-execution-provider.md]
+referenced_by:
+  [
+    /codex/04-architecture/chain-environment-resolution.md,
+    /codex/04-architecture/flash-loan-receiver.md,
+    /codex/04-architecture/mev-protection.md,
+    /codex/04-architecture/tenderly-execution-provider.md,
+  ]
 owner:
 last_reviewed: 2026-05-17
 code_refs:
@@ -175,18 +188,18 @@ Tenderly fork RPC URL instead of mainnet.
 Two layers of routing. Strategy handles slow-moving yield/rate decisions. Execution handles fast-moving price/gas
 decisions.
 
-| Decision                      | Owner         | Why                             | Example                               |
-| ----------------------------- | ------------- | ------------------------------- | ------------------------------------- |
-| Which chains to deploy on     | **Strategy**  | Yield comparison is slow-moving | "Arbitrum AAVE has 5% vs Ethereum 3%" |
-| Which venues for perp leg     | **Strategy**  | Funding rates are slow-moving   | "Hyperliquid funding > Binance"       |
-| Which lending token           | **Strategy**  | APY comparison, slow-moving     | "USDC 4.8% vs USDT 4.2%"              |
-| Staking vs lending vs basis   | **Strategy**  | Capital allocation, slow-moving | "Recursive 20% APY > lending 4%"      |
+| Decision                     | Owner         | Why                             | Example                               |
+| ---------------------------- | ------------- | ------------------------------- | ------------------------------------- |
+| Which chains to deploy on    | **Strategy**  | Yield comparison is slow-moving | "Arbitrum AAVE has 5% vs Ethereum 3%" |
+| Which venues for perp leg    | **Strategy**  | Funding rates are slow-moving   | "Hyperliquid funding > Binance"       |
+| Which lending token          | **Strategy**  | APY comparison, slow-moving     | "USDC 4.8% vs USDT 4.2%"              |
+| Staking vs lending vs basis  | **Strategy**  | Capital allocation, slow-moving | "Recursive 20% APY > lending 4%"      |
 | Treasury ↔ trading transfers | **Strategy**  | Threshold-based, slow           | "Treasury at 8%, need to rebalance"   |
-| Which DEX for a SWAP          | **Execution** | Price + slippage, fast-moving   | SOR picks Uniswap vs Curve            |
-| Gas price bidding             | **Execution** | Block-by-block, fast-moving     | Priority fee estimation               |
-| Bridge protocol selection     | **Execution** | Cost + speed, medium-moving     | Across vs Socket vs LayerZero         |
-| Multi-leg coordination        | **Execution** | Atomic sequencing               | Flash borrow → swap → lend → repay    |
-| Slippage optimization         | **Execution** | Orderbook depth, fast-moving    | Split across pools                    |
+| Which DEX for a SWAP         | **Execution** | Price + slippage, fast-moving   | SOR picks Uniswap vs Curve            |
+| Gas price bidding            | **Execution** | Block-by-block, fast-moving     | Priority fee estimation               |
+| Bridge protocol selection    | **Execution** | Cost + speed, medium-moving     | Across vs Socket vs LayerZero         |
+| Multi-leg coordination       | **Execution** | Atomic sequencing               | Flash borrow → swap → lend → repay    |
+| Slippage optimization        | **Execution** | Orderbook depth, fast-moving    | Split across pools                    |
 
 **Rule of thumb:** If it's about yields/rates → strategy emits the intent. If it's about price execution → execution
 resolves the specifics.
@@ -391,7 +404,7 @@ the execution provider is pluggable.
 | -------------------------------------------- | ------------------------------------------------------------------------ |
 | Strategy declares intent (not hardcoded IDs) | **Working** — `StrategyInstrumentIntent` schema in UAC, resolution wired |
 | Dynamic instrument subscription (hot reload) | **Partially** — config_reloaders exist but not wired to instruments      |
-| Strategy ↔ execution decision boundary      | **Implemented in code** — SOR in execution, yields in strategy           |
+| Strategy ↔ execution decision boundary       | **Implemented in code** — SOR in execution, yields in strategy           |
 
 ### Execution Layer
 

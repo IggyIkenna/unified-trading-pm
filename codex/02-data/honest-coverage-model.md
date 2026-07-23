@@ -27,11 +27,11 @@ tags:
   ]
 related:
   [
-    availability-manifest-and-data-status.md,
-    honest-absence-downstream-handling.md,
-    honest_coverage_baseline_2026_05.md,
-    pipeline-mode-partition.md,
-    ../04-architecture/instruments-service-as-ssot-for-mtds.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/02-data/honest-absence-downstream-handling.md,
+    /codex/02-data/honest_coverage_baseline_2026_05.md,
+    /codex/02-data/pipeline-mode-partition.md,
+    /codex/04-architecture/instruments-service-as-ssot-for-mtds.md,
   ]
 created: 2026-06-28
 authoritative_for:
@@ -44,12 +44,12 @@ authoritative_for:
   ]
 referenced_by:
   [
-    codex/02-data/honest-absence-downstream-handling.md,
-    codex/02-data/instruments-foundation-and-catalogue-completeness.md,
-    codex/02-data/shard-coverage-classification.md,
-    codex/03-deployment/data-status-ui-surface.md,
-    codex/04-architecture/instrument-universe-registry-consolidation.md,
-    codex/06-coding-standards/data-status-endpoint-contract.md,
+    /codex/02-data/honest-absence-downstream-handling.md,
+    /codex/02-data/instruments-foundation-and-catalogue-completeness.md,
+    /codex/02-data/shard-coverage-classification.md,
+    /codex/03-deployment/data-status-ui-surface.md,
+    /codex/04-architecture/instrument-universe-registry-consolidation.md,
+    /codex/06-coding-standards/data-status-endpoint-contract.md,
     plans/active/issues/cefi_layer1_denominator_gaps_2026_07_03.md,
     plans/active/issues/honest_coverage_uac_writer_matrix_reconciliation_2026_06_29.md,
   ]
@@ -563,7 +563,7 @@ the v1 harness already wrote stays byte-for-byte compatible.
 | Expected data_types per (ag, instrument_type)                          | UAC `VALID_DATA_TYPES_BY_AG_AND_INSTRUMENT_TYPE`                                                                                                                                                                                                                          |
 | Per-venue capability + listing windows                                 | UAC `VENUE_DATA_TYPE_CAPABILITIES` (+ `FUTURE_BUNDLE_VENUES` for bundle grain)                                                                                                                                                                                            |
 | MVP filter (which instruments are in-scope for the current phase)      | UAC `is_mvp` / `mvp_scope.py`                                                                                                                                                                                                                                             |
-| Shard atom per AG                                                      | `codex/02-data/availability-manifest-and-data-status.md` § per-asset-group shard atoms                                                                                                                                                                                    |
+| Shard atom per AG                                                      | `/codex/02-data/availability-manifest-and-data-status.md` § per-asset-group shard atoms                                                                                                                                                                                   |
 | 4-state `capture_status` / typed `error_reason`                        | UTL `manifest_writer/_schema.py` `CaptureStatus`; UAC `EmptyConfirmedReason`                                                                                                                                                                                              |
 | MDPS candle `timeframe` (extra axis beyond MTDS raw-tick's shard atom) | UAC `MDPS_CANONICAL_TIMEFRAMES`/`MDPS_DERIVABLE_DATA_TYPES` (`registry/processed_data_dependencies.py`); consumed in `deployment-api`'s `per_instrument_coverage`/`mtds_honest_coverage_for_venue` via an optional `timeframes` param (`None` = MTDS raw-tick, unchanged) |
 
@@ -673,15 +673,15 @@ the per-node % will tighten as that reconciliation lands.
 
 ## Codex SSOTs
 
-| Topic                                                     | SSOT                                                            |
-| --------------------------------------------------------- | --------------------------------------------------------------- |
-| 4-state `capture_status` write contract + manifest schema | `codex/02-data/availability-manifest-and-data-status.md`        |
-| Honest absence — downstream handling (read side)          | `codex/02-data/honest-absence-downstream-handling.md`           |
-| IS as SSOT for instrument universe                        | `codex/04-architecture/instruments-service-as-ssot-for-mtds.md` |
-| Data pipeline correctness hard rule                       | `codex/02-data/data-pipeline-correctness-hard-rule.md`          |
-| Coverage baseline ratchet (v1 numbers, May 2026)          | `codex/02-data/honest_coverage_baseline_2026_05.md`             |
-| Pipeline mode / source partitioning                       | `codex/02-data/pipeline-mode-partition.md`                      |
-| Data-status UI surface (coverage.json consumer)           | `codex/03-deployment/data-status-ui-surface.md`                 |
+| Topic                                                     | SSOT                                                             |
+| --------------------------------------------------------- | ---------------------------------------------------------------- |
+| 4-state `capture_status` write contract + manifest schema | `/codex/02-data/availability-manifest-and-data-status.md`        |
+| Honest absence — downstream handling (read side)          | `/codex/02-data/honest-absence-downstream-handling.md`           |
+| IS as SSOT for instrument universe                        | `/codex/04-architecture/instruments-service-as-ssot-for-mtds.md` |
+| Data pipeline correctness hard rule                       | `/codex/02-data/data-pipeline-correctness-hard-rule.md`          |
+| Coverage baseline ratchet (v1 numbers, May 2026)          | `/codex/02-data/honest_coverage_baseline_2026_05.md`             |
+| Pipeline mode / source partitioning                       | `/codex/02-data/pipeline-mode-partition.md`                      |
+| Data-status UI surface (coverage.json consumer)           | `/codex/03-deployment/data-status-ui-surface.md`                 |
 
 </content>
 </invoke>

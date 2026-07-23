@@ -12,10 +12,15 @@ stage: [meta]
 repos: [alerting-service]
 scope: [engineer]
 tags: [prometheus-metrics, observability, monitoring, alerting]
-related: [../03-observability/slos.md, ../03-observability/alerting.md, feature-service-pattern.md]
+related:
+  [
+    /codex/03-observability/slos.md,
+    /codex/03-observability/alerting.md,
+    /codex/06-coding-standards/feature-service-pattern.md,
+  ]
 created: 2026-03-27
 authoritative_for: [Prometheus metric naming convention and required-metric set]
-referenced_by: [codex/06-coding-standards/feature-service-pattern.md]
+referenced_by: [/codex/06-coding-standards/feature-service-pattern.md]
 owner:
 last_reviewed:
 code_refs:

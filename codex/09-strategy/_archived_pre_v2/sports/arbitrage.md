@@ -2,21 +2,29 @@
 doc_type: codex-ssot
 title: Sports Arbitrage
 summary: >-
-  [SUPERSEDED, pre-v2] Sports cross-book + back-lay arbitrage — bets all outcomes when sum of implied probs
-  < 1.0 (net of probability-weighted exchange commission), rule-based confidence=1.0, same-operator legs
-  rejected via VENUE_OPERATOR_GROUPS, per-day adaptive venue allocation. Replaced by architecture-v2
-  arbitrage archetypes.
+  [SUPERSEDED, pre-v2] Sports cross-book + back-lay arbitrage — bets all outcomes when sum of implied probs < 1.0 (net
+  of probability-weighted exchange commission), rule-based confidence=1.0, same-operator legs rejected via
+  VENUE_OPERATOR_GROUPS, per-day adaptive venue allocation. Replaced by architecture-v2 arbitrage archetypes.
 status: superseded
 nature: ssot
 asset_group: [meta]
 stage: [meta]
-repos: [e2e-testing, execution-service, instruments-service, strategy-service, unified-api-contracts, unified-trading-pm]
+repos:
+  [e2e-testing, execution-service, instruments-service, strategy-service, unified-api-contracts, unified-trading-pm]
 scope: [engineer, admin]
 tags: [strategy, sports, arbitrage, odds, book-microstructure, execution]
-related: [value-betting.md, ../../architecture-v2/archetypes/arbitrage-price-dispersion.md]
+related:
+  [
+    /codex/09-strategy/_archived_pre_v2/sports/value-betting.md,
+    ../../architecture-v2/archetypes/arbitrage-price-dispersion.md,
+  ]
 created: 2026-03-27
 authoritative_for:
-referenced_by: [codex/09-strategy/_archived_pre_v2/STRATEGY_CATALOG_pre_v2.md, codex/09-strategy/_archived_pre_v2/prediction/prediction-arb.md]
+referenced_by:
+  [
+    /codex/09-strategy/_archived_pre_v2/STRATEGY_CATALOG_pre_v2.md,
+    /codex/09-strategy/_archived_pre_v2/prediction/prediction-arb.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

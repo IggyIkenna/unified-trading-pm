@@ -488,7 +488,7 @@ trusted the prior "still running" claims:
   still pinned at `2026-07-10T21:42:30Z` — byte-identical to every prior re-check in this doc and in the parent plan's
   G2 runs #2-#5. The VM's own log shows the same `ManifestConsolidatorStaleError` trace on every collection cycle (falls
   back to per-VM shards, refuses the whole-bucket merge — correct, expected behavior per
-  `codex/02-data/availability-manifest-and-data-status.md`, not a bug). Tracked separately:
+  `/codex/02-data/availability-manifest-and-data-status.md`, not a bug). Tracked separately:
   `defi_consolidator_scheduler_sigkill_unresolved_2026_07_10.md`.
 - **Verdict**: the backfill is genuinely healthy and progressing (no stall, no new error), but is still ~56 days into a
   ~1,288-day window (2023-01-01→2026-07-12) — at the observed ~33s/pre-genesis-day pace this is realistically many hours

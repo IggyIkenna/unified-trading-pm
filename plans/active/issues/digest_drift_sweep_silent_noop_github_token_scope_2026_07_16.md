@@ -52,7 +52,7 @@ related:
   [
     plans/active/build_operability_smoke_all_repos_2026_06_19.md,
     plans/active/github_actions_ci_cost_reduction_2026_07_15.md,
-    codex/08-workflows/ci-cd-flow.md,
+    /codex/08-workflows/ci-cd-flow.md,
   ]
 created: 2026-07-16
 parent_epic: deployment_and_user_management_master
@@ -186,7 +186,7 @@ silently no-op on any future scope regression. Recommended alongside the token f
 - Make the summary self-auditing: if `Dispatched + Already fresh == 0` while `IMAGE_REPOS` is non-empty, exit non-zero.
   That single assertion would have caught this on day one, and is the reason it ran green ~110 times.
 
-This is the same "green but wrong" class as `codex/02-data/honest-absence-downstream-handling.md` — an absent result
+This is the same "green but wrong" class as `/codex/02-data/honest-absence-downstream-handling.md` — an absent result
 must be distinguishable from an unreadable one, and must never be silently reported as the benign case.
 
 ## Negative test that must pass after the fix

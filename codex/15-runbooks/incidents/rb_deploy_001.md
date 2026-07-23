@@ -2,8 +2,8 @@
 doc_type: codex-runbook
 title: RB-DEPLOY-001 — Production Rollback
 summary:
-  Operator runbook for production rollback of a service to a known-good Cloud Run revision via DART Safety Ops
-  REDEPLOY (typed-confirm); health-check failure after rollback escalates to SEV0.
+  Operator runbook for production rollback of a service to a known-good Cloud Run revision via DART Safety Ops REDEPLOY
+  (typed-confirm); health-check failure after rollback escalates to SEV0.
 status: current
 nature: process
 asset_group: [meta]
@@ -11,7 +11,7 @@ stage: [meta]
 repos: []
 scope: [admin, engineer]
 tags: [runbook, incident, deployment, rollback, execution, escalation]
-related: [codex/15-runbooks/incidents/README.md, codex/15-runbooks/alerting/audit-acknowledgement-flow.md]
+related: [/codex/15-runbooks/incidents/README.md, /codex/15-runbooks/alerting/audit-acknowledgement-flow.md]
 created: 2026-05-23
 owner: ikenna@odum-research.com
 cadence: Pre-cutover
@@ -19,7 +19,12 @@ verifier: redeploy_known_good --dry-run
 last_executed: never
 code_refs:
 authoritative_for: [RB-DEPLOY-001 operator runbook]
-referenced_by: [codex/04-architecture/incident-gateway-state-machine.md, codex/04-architecture/recovery-defence-in-depth-layers.md, plans/active/incident_runbooks_and_evidence_store_2026_05_23.md]
+referenced_by:
+  [
+    /codex/04-architecture/incident-gateway-state-machine.md,
+    /codex/04-architecture/recovery-defence-in-depth-layers.md,
+    plans/active/incident_runbooks_and_evidence_store_2026_05_23.md,
+  ]
 ---
 
 # RB-DEPLOY-001 — Production Rollback
@@ -67,7 +72,7 @@ File bug for the regression that triggered the rollback.
 
 ## Related
 
-- `codex/15-runbooks/incidents/README.md` — runbook index
-- `codex/04-architecture/incident-gateway-state-machine.md` — state machine + dedup-key + audit-ack queue
-- `codex/04-architecture/recovery-defence-in-depth-layers.md` — 5+1 layer recovery model
-- `codex/15-runbooks/alerting/audit-acknowledgement-flow.md` — 6h ack SLA + escalation ladder
+- `/codex/15-runbooks/incidents/README.md` — runbook index
+- `/codex/04-architecture/incident-gateway-state-machine.md` — state machine + dedup-key + audit-ack queue
+- `/codex/04-architecture/recovery-defence-in-depth-layers.md` — 5+1 layer recovery model
+- `/codex/15-runbooks/alerting/audit-acknowledgement-flow.md` — 6h ack SLA + escalation ladder

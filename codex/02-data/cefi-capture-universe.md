@@ -15,13 +15,13 @@ scope: [engineer, admin]
 tags: [cefi, instruments, mtds, honest-coverage, mvp, uac, backfill]
 related:
   [
-    availability-manifest-and-data-status.md,
-    ../04-architecture/instruments-service-as-ssot-for-mtds.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/04-architecture/instruments-service-as-ssot-for-mtds.md,
     ../../plans/active/issues/cefi_universe_capture_rule_2026_06_23.md,
   ]
 created: 2026-06-24
 authoritative_for: [CeFi capture universe two-layer model + perp-gate]
-referenced_by: [codex/02-data/carry-venue-live-integration-reference.md, codex/02-data/mvp-scope-canonical.md]
+referenced_by: [/codex/02-data/carry-venue-live-integration-reference.md, /codex/02-data/mvp-scope-canonical.md]
 owner:
 last_reviewed:
 code_refs:
@@ -87,7 +87,7 @@ Implemented as `is_in_mvp_capture_universe(venue, base, instrument_type, *, has_
 > denominator reconciles.
 
 **data_type cut per instrument-type** (the MVP data_type set is per-`(venue, instrument_type)` — SSOT `CeFiMvpRule` /
-`get_mvp_data_types_for_cefi_venue_itype`; full table in `codex/02-data/mvp-scope-canonical.md` § CeFi):
+`get_mvp_data_types_for_cefi_venue_itype`; full table in `/codex/02-data/mvp-scope-canonical.md` § CeFi):
 SPOT/PERP/DATED-FUTURE = **trades + book_snapshot_5 + funding** (derivative_ticker/funding_rate); **PERPETUAL ALSO
 carries `liquidations` (v15, 2026-07-15, WS-E)** — a PERPETUAL-leg-ONLY data_type, venue-gated by
 `VENUE_DATA_TYPE_CAPABILITIES` to the **6 real-feed venues** (BINANCE-FUTURES, OKX-SWAP, BYBIT, KRAKEN-FUTURES,
@@ -210,20 +210,20 @@ above; the MVP-universe-as-denominator scoping still holds, but `empty_confirmed
 CeFi **tick history is accepted as partial coverage**, not 100%. The full 2026-02..07 tick backfill for all MVP venues
 (a ~2.89M-cell `expected_unattempted` gap) is **not closable at the N=1 Tardis throughput ceiling** — the shared
 academic key permits ONE active IP (N=3 measured ~94% 403s + false `attempted_failed` rows; see
-`codex/05-infrastructure/vm-launcher-runbook.md` § Tardis cap), a healthy single VM sustains only ~186 cell-fetches/hour
-(≈ 1.8 years for the full gap), and a US region is ruled out on egress (the bucket is `asia-northeast1`). The operator
-**accepted the current coverage** (~50.79% against a **COMPLETE** denominator): the gap stays honestly-labelled
-`expected_unattempted` — it is NOT a bug, a phantom, or hidden-as-captured. Only a Tardis licence upgrade (more
-concurrent IPs) would change the ceiling. Do NOT re-open the full historical backfill as "incomplete work" or burn SPOT
-VMs against the 2.89M gap without a fresh operator decision. Provenance: archived plan
+`/codex/05-infrastructure/vm-launcher-runbook.md` § Tardis cap), a healthy single VM sustains only ~186
+cell-fetches/hour (≈ 1.8 years for the full gap), and a US region is ruled out on egress (the bucket is
+`asia-northeast1`). The operator **accepted the current coverage** (~50.79% against a **COMPLETE** denominator): the gap
+stays honestly-labelled `expected_unattempted` — it is NOT a bug, a phantom, or hidden-as-captured. Only a Tardis
+licence upgrade (more concurrent IPs) would change the ceiling. Do NOT re-open the full historical backfill as
+"incomplete work" or burn SPOT VMs against the 2.89M gap without a fresh operator decision. Provenance: archived plan
 `plans/archive/2026_07/cefi_completion_program_2026_07_15.md` (terminal Progress Log + P0 decision) +
 `plans/active/issues/cefi_residual_followups_after_honest_done_2026_07_17.md` (the genuine NON-Tardis residuals).
 
 ## Composes with
 
-- `codex/02-data/availability-manifest-and-data-status.md` § `expected_unattempted` — the enumerator materialises the
+- `/codex/02-data/availability-manifest-and-data-status.md` § `expected_unattempted` — the enumerator materialises the
   denominator; consumers read it, never re-derive.
-- `codex/04-architecture/instruments-service-as-ssot-for-mtds.md` — IS owns the full catalogue; MTDS derives its capture
-  universe from it.
+- `/codex/04-architecture/instruments-service-as-ssot-for-mtds.md` — IS owns the full catalogue; MTDS derives its
+  capture universe from it.
 - `plans/active/issues/cefi_universe_capture_rule_2026_06_23.md` — authoritative operator spec with full implementation
   log.

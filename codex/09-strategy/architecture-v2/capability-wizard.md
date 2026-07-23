@@ -1,7 +1,10 @@
 ---
 doc_type: codex-ssot
 title: Capability Wizard — manifest, prospectus, walkthrough
-summary: Concept SSOT for the capability wizard — three artifacts (machine-generated capability manifest, strategy prospectus generator, walkthrough wizard UI) over one typed-edge data model; four use cases plus the schema-first / no-silent-omission / script→test→agent escalation rules.
+summary:
+  Concept SSOT for the capability wizard — three artifacts (machine-generated capability manifest, strategy prospectus
+  generator, walkthrough wizard UI) over one typed-edge data model; four use cases plus the schema-first /
+  no-silent-omission / script→test→agent escalation rules.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -9,10 +12,19 @@ stage: [meta]
 repos: [agent-orchestrator, deployment-api, deployment-ui, e2e-testing, strategy-service, unified-api-contracts]
 scope: [engineer, admin]
 tags: [strategy, capability-wizard, uac, ui, escalation, verification]
-related: [capability-wizard-question-bank.md, strategy-catalogue-3tier.md]
+related:
+  [
+    /codex/09-strategy/architecture-v2/capability-wizard-question-bank.md,
+    /codex/09-strategy/architecture-v2/strategy-catalogue-3tier.md,
+  ]
 created: 2026-06-11
 authoritative_for: [capability wizard manifest/prospectus/walkthrough model]
-referenced_by: [codex/09-strategy/architecture-v2/README.md, codex/09-strategy/architecture-v2/capability-wizard-question-bank.md, plans/active/capability_wizard_and_manifest_2026_06_11.md]
+referenced_by:
+  [
+    /codex/09-strategy/architecture-v2/README.md,
+    /codex/09-strategy/architecture-v2/capability-wizard-question-bank.md,
+    plans/active/capability_wizard_and_manifest_2026_06_11.md,
+  ]
 owner:
 last_reviewed: 2026-06-11
 code_refs:
@@ -92,7 +104,7 @@ The capability wizard is three artifacts over one data model:
   [`enums.py` StrategyArchetype/StrategyFamily](../../../../unified-api-contracts/unified_api_contracts/internal/architecture_v2/enums.py) +
   [`archetype_capability.py`](../../../../unified-api-contracts/unified_api_contracts/internal/architecture_v2/archetype_capability.py)
 - Wallet/capital flow:
-  [`codex/04-architecture/wallet-hierarchy-and-capital-flow.md`](../../04-architecture/wallet-hierarchy-and-capital-flow.md)
+  [`/codex/04-architecture/wallet-hierarchy-and-capital-flow.md`](../../04-architecture/wallet-hierarchy-and-capital-flow.md)
 - Generator suite: `unified-trading-pm/scripts/openapi/generate-unified-openapi.sh` and `docs/ui-alignment-ssot.md`
 
 ## Current state (shipped 2026-06-11 — autonomous build session)

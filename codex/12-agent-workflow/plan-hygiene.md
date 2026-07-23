@@ -15,14 +15,14 @@ scope: [engineer, admin]
 tags: [plan-hygiene, orchestrator, frontmatter, runbook, scripts, escalation]
 related:
   [
-    codex/12-agent-workflow/stale-blocker-reaper.md,
-    codex/12-agent-workflow/canonical-plan-flow.md,
-    codex/12-agent-workflow/local-slot-host-symmetric-worker-model.md,
+    /codex/12-agent-workflow/stale-blocker-reaper.md,
+    /codex/12-agent-workflow/canonical-plan-flow.md,
+    /codex/12-agent-workflow/local-slot-host-symmetric-worker-model.md,
     plans/PLAN_FORMAT.md,
   ]
 created: 2026-05-30
 authoritative_for: [plan-hygiene 4 silent-failure modes, hygiene-sweep severity ladder]
-referenced_by: [codex/12-agent-workflow/canonical-plan-flow.md, codex/12-agent-workflow/stale-blocker-reaper.md]
+referenced_by: [/codex/12-agent-workflow/canonical-plan-flow.md, /codex/12-agent-workflow/stale-blocker-reaper.md]
 owner:
 last_reviewed:
 code_refs:
@@ -114,7 +114,7 @@ task not yet `done`, and `queued_at < now - 3 days`. Three outcomes per finding:
 - **ORPHAN** (exit 1): blocker task ID not found in backlog at all → Slack alert; operator must reconcile or remove the
   prereq.
 
-Run `--dry-run` to preview without alerts. Full doc: `codex/12-agent-workflow/stale-blocker-reaper.md`.
+Run `--dry-run` to preview without alerts. Full doc: `/codex/12-agent-workflow/stale-blocker-reaper.md`.
 
 ---
 
@@ -258,8 +258,8 @@ bash unified-trading-pm/scripts/plan-hygiene/fix_todo_format.sh --apply
 - `scripts/plan-hygiene/check_todo_format.sh` — NO_PRIORITY / NON_CANONICAL detection logic
 - `scripts/plan-hygiene/fix_todo_format.sh` — mechanical rewriter for NON_CANONICAL patterns
 - `scripts/plan-hygiene/run_hygiene_sweep.sh` — the full 9-check sweep orchestrator
-- `codex/12-agent-workflow/stale-blocker-reaper.md` — blocker-reaper design, DEADLOCK/ORPHAN/PHANTOM_DONE categories
-- `codex/12-agent-workflow/local-slot-host-symmetric-worker-model.md` — unpushed-plan Slack alert (silent-failure
+- `/codex/12-agent-workflow/stale-blocker-reaper.md` — blocker-reaper design, DEADLOCK/ORPHAN/PHANTOM_DONE categories
+- `/codex/12-agent-workflow/local-slot-host-symmetric-worker-model.md` — unpushed-plan Slack alert (silent-failure
   mode 3)
 - `codex/12-agent-workflow/epic-keyword-surface.yaml` — epic keyword surface for parent_epic alignment check
 - `plans/active/plan_hygiene_silent_failure_capture_2026_05_29.md` — the plan that produced this doc

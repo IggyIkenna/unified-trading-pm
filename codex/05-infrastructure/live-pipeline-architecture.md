@@ -5,8 +5,7 @@ summary:
   "Entry-point doc for the live (websocket-streaming) pipeline: three-tier MTDS → MDPS → features-service on the SAME
   code path as batch (only the trigger swaps Cloud Scheduler → Redis Stream events). UTC-midnight alignment makes
   reconciliation a GROUP BY pipeline_mode. Covers topology, trigger cascade, 4-category live gap semantics
-  (stale-not-missing), StreamingHealthSnapshot alerting tiers + circuit breakers, and shipped UTL streaming
-  primitives."
+  (stale-not-missing), StreamingHealthSnapshot alerting tiers + circuit breakers, and shipped UTL streaming primitives."
 status: current
 nature: ssot
 asset_group: [meta]
@@ -14,10 +13,26 @@ stage: [meta]
 repos: [alerting-service, deployment-api, deployment-service, deployment-ui, execution-service, features-service]
 scope: [engineer, admin]
 tags: [live-trading, mtds, mdps, features, pipeline-mode, reconciliation, infrastructure]
-related: [replay-subsystem.md, live-deployment-monitoring.md, ../02-data/pipeline-mode-partition.md, ../04-architecture/batch-live-architecture.md]
+related:
+  [
+    /codex/05-infrastructure/replay-subsystem.md,
+    /codex/05-infrastructure/live-deployment-monitoring.md,
+    /codex/02-data/pipeline-mode-partition.md,
+    /codex/04-architecture/batch-live-architecture.md,
+  ]
 created: 2026-05-08
 authoritative_for: [live streaming pipeline topology]
-referenced_by: [codex/02-data/availability-manifest-and-data-status.md, codex/02-data/pipeline-mode-partition.md, codex/03-observability/coordination-events.md, codex/03-observability/lifecycle-events.md, codex/04-architecture/README.md, codex/04-architecture/alerting-batch-live.md, codex/04-architecture/batch-live-architecture.md, codex/04-architecture/cefi-batch-live.md]
+referenced_by:
+  [
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/02-data/pipeline-mode-partition.md,
+    /codex/03-observability/coordination-events.md,
+    /codex/03-observability/lifecycle-events.md,
+    /codex/04-architecture/README.md,
+    /codex/04-architecture/alerting-batch-live.md,
+    /codex/04-architecture/batch-live-architecture.md,
+    /codex/04-architecture/cefi-batch-live.md,
+  ]
 owner:
 last_reviewed: 2026-05-17
 code_refs:
@@ -36,8 +51,8 @@ code_refs:
 ## TL;DR
 
 Three-tier live pipeline: **MTDS → MDPS → features-service**. Same code path as batch (per
-[`batch-live-architecture.md`](../04-architecture/batch-live-architecture.md) (single SSOT) — the live activation does
-NOT introduce a new data path; it only swaps the trigger source from Cloud Scheduler to Redis Stream events). UTC
+[`batch-live-architecture.md`](/codex/04-architecture/batch-live-architecture.md) (single SSOT) — the live activation
+does NOT introduce a new data path; it only swaps the trigger source from Cloud Scheduler to Redis Stream events). UTC
 midnight alignment end-to-end ensures batch ↔ live reconciliation is a `GROUP BY pipeline_mode` over the same manifest.
 Service-start order doesn't matter — every service syncs at the next aligned candle boundary.
 
@@ -53,8 +68,8 @@ Service-start order doesn't matter — every service syncs at the next aligned c
 ## Sharding
 
 **No new shard axes for live.** The v5 shard atom matrix from
-[`availability-manifest-and-data-status.md`](../02-data/availability-manifest-and-data-status.md) applies identically to
-live. Connection pool size per shard is an orthogonal config knob — does NOT appear in the manifest.
+[`availability-manifest-and-data-status.md`](/codex/02-data/availability-manifest-and-data-status.md) applies
+identically to live. Connection pool size per shard is an orthogonal config knob — does NOT appear in the manifest.
 
 ## Storage layout
 
@@ -62,7 +77,7 @@ live. Connection pool size per shard is an orthogonal config knob — does NOT a
 every parquet path during the GCS migration bundle. Same parquet schema, same `available_at` semantics, same row-key
 shape. UAC `SOURCE_PRIORITY` does the live-vs-batch fan-in at read time. Reconciliation is a SQL
 `GROUP BY pipeline_mode` over the same `_index/availability_index.parquet`. See
-[`pipeline-mode-partition.md`](../02-data/pipeline-mode-partition.md) for full migration + reader-fallback contract.
+[`pipeline-mode-partition.md`](/codex/02-data/pipeline-mode-partition.md) for full migration + reader-fallback contract.
 
 ## Trigger cascade
 
@@ -97,7 +112,7 @@ replay subsystem fills the gap.
 ## Live gap semantics — stale-not-missing
 
 Apply the existing 4-category empty-output tree (per
-[`availability-manifest-and-data-status.md`](../02-data/availability-manifest-and-data-status.md) "Four-category
+[`availability-manifest-and-data-status.md`](/codex/02-data/availability-manifest-and-data-status.md) "Four-category
 empty-output decision") to live emissions:
 
 | Situation                                                 | Action                                                                                                 |
@@ -129,8 +144,8 @@ callback — no per-service re-implementation.
 
 alerting-service polls + subscribes to event streams + applies tiered alerts + drives circuit breakers wired to
 strategy-service via a dedicated `streaming.alerting.circuit_breaker` stream. Three actions: `stop_new_signals` /
-`force_exit_only` / `halt_strategy`. See [`alerting-batch-live.md`](../04-architecture/alerting-batch-live.md) for tier
-table.
+`force_exit_only` / `halt_strategy`. See [`alerting-batch-live.md`](/codex/04-architecture/alerting-batch-live.md) for
+tier table.
 
 ### Live-pipeline alerting tier-up — concrete rule wiring
 
@@ -152,7 +167,7 @@ land in alerting-service rule structure (Tab 5 owns); this doc is the design con
 instruments-service publishes `INSTRUMENT_CACHE_REFRESH_TRIGGER` after every successful catalog refresh. Downstream MTDS
 / MDPS / features-service consume + diff their cache + hot-reload affected state. Same pattern as `ApiKeyReloader`. NOT
 a new dedicated stream type. See
-[`instrument-lifecycle-cache-delta-hot-reload.md`](../04-architecture/instrument-lifecycle-cache-delta-hot-reload.md).
+[`instrument-lifecycle-cache-delta-hot-reload.md`](/codex/04-architecture/instrument-lifecycle-cache-delta-hot-reload.md).
 
 ## Replay subsystem
 
@@ -238,8 +253,8 @@ upstream-bias category. Five emission decisions, every per-event tree resolves t
 > `staleness_seconds > 0` AND `trade_count == 0` (dense forward-fill via MDPS `_finalize_session_grid`, 2026-06-02), NOT
 > a standalone `zero_activity` flag (no code consumers). The `data_freshness=ZERO_ACTIVITY_BAR` label is the original
 > design name retained for continuity. Prediction Category-D instead emits NaN-OHLC (nullable-OHLCV) bars. SSOT:
-> `codex/02-data/honest-absence-downstream-handling.md` § "Zero-activity-bar shape" banner +
-> `codex/06-coding-standards/adapter-finalization-contract.md`.
+> `/codex/02-data/honest-absence-downstream-handling.md` § "Zero-activity-bar shape" banner +
+> `/codex/06-coding-standards/adapter-finalization-contract.md`.
 
 The catalog-aware `InstrumentCatalogGate` Protocol distinguishes A / D / A'. The aggregator NEVER emits a
 `CandleComputedEvent` for Cat (A') — manifest's `record_empty` carries the absence signal; downstream consumers read the
@@ -297,7 +312,7 @@ ship, the Deploy-Missing button degrades to "no launcher registered" per the wor
 ## Scenario tap points
 
 Scenarios ride the **same prod codepath** as live + batch — per the reuse-prod-codepath principle in
-[`../04-architecture/scenario-injection-architecture.md`](../04-architecture/scenario-injection-architecture.md).
+[`/codex/04-architecture/scenario-injection-architecture.md`](/codex/04-architecture/scenario-injection-architecture.md).
 Overlay mutations inject at exactly one of seven pipeline-tap layers (`ScenarioOverlayLayer` enum in UAC):
 
 | Layer      | Pipeline boundary in this architecture                                     | Pre-cutover wire status           |
@@ -319,7 +334,7 @@ recording the event.
 All layers except `ORDER` are post-cutover scope per
 [`simulation_scenarios_post_cutover_2026_06_01.md`](../../plans/active/simulation_scenarios_post_cutover_2026_06_01.md).
 For the full authoring guide, mutation types, and outcome-assertion categories, see
-[`../04-architecture/scenario-injection-architecture.md`](../04-architecture/scenario-injection-architecture.md).
+[`/codex/04-architecture/scenario-injection-architecture.md`](/codex/04-architecture/scenario-injection-architecture.md).
 
 ## Anti-patterns
 
@@ -338,11 +353,12 @@ For the full authoring guide, mutation types, and outcome-assertion categories, 
 - Pre-req plan:
   [`gcs_migration_bundle_pipeline_mode_2026_05_08`](../../plans/active/gcs_migration_bundle_pipeline_mode_2026_05_08.md)
 - Sibling docs: [`replay-subsystem.md`](./replay-subsystem.md),
-  [`../02-data/pipeline-mode-partition.md`](../02-data/pipeline-mode-partition.md),
-  [`../04-architecture/instrument-lifecycle-cache-delta-hot-reload.md`](../04-architecture/instrument-lifecycle-cache-delta-hot-reload.md)
-- Foundation docs: [`../04-architecture/batch-live-architecture.md`](../04-architecture/batch-live-architecture.md)
+  [`/codex/02-data/pipeline-mode-partition.md`](/codex/02-data/pipeline-mode-partition.md),
+  [`/codex/04-architecture/instrument-lifecycle-cache-delta-hot-reload.md`](/codex/04-architecture/instrument-lifecycle-cache-delta-hot-reload.md)
+- Foundation docs:
+  [`/codex/04-architecture/batch-live-architecture.md`](/codex/04-architecture/batch-live-architecture.md)
 - Scenario injection:
-  [`../04-architecture/scenario-injection-architecture.md`](../04-architecture/scenario-injection-architecture.md) —
-  tap-layer enum + reuse-prod-codepath contract (single SSOT — replaces former batch-live-pipeline.md +
+  [`/codex/04-architecture/scenario-injection-architecture.md`](/codex/04-architecture/scenario-injection-architecture.md)
+  — tap-layer enum + reuse-prod-codepath contract (single SSOT — replaces former batch-live-pipeline.md +
   batch-live-symmetry.md),
-  [`../02-data/availability-manifest-and-data-status.md`](../02-data/availability-manifest-and-data-status.md)
+  [`/codex/02-data/availability-manifest-and-data-status.md`](/codex/02-data/availability-manifest-and-data-status.md)

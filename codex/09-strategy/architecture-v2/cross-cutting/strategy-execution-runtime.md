@@ -2,9 +2,10 @@
 doc_type: codex-ssot
 title: Strategy Execution Runtime
 summary:
-  'Strategy execution runtime tick-loop lifecycle on a strategy VM: `ServiceBootstrap` STARTED → per-client preflight
+  "Strategy execution runtime tick-loop lifecycle on a strategy VM: `ServiceBootstrap` STARTED → per-client preflight
   (KMS auth → venue ping → balance → CLIENT_READY) → per tick (features → archetype signal → allocator pipeline → emit
-  `StrategyInstruction` or `record_empty` → manifest row → PnL stream) → STOPPED/FAILED. Entry via `colocated_engine.py`.'
+  `StrategyInstruction` or `record_empty` → manifest row → PnL stream) → STOPPED/FAILED. Entry via
+  `colocated_engine.py`."
 status: current
 nature: ssot
 asset_group: [meta]
@@ -13,11 +14,24 @@ repos: [trading-agent-service]
 scope: [engineer]
 tags: [strategy, execution, orchestrator, manifest, self-healing]
 related:
-  [allocator-pipeline-contract.md, ../../../04-architecture/promote-workflow-architecture.md,
-  treasury-trading-wallet-invariant.md, universe-enumeration-contract.md]
+  [
+    /codex/09-strategy/architecture-v2/cross-cutting/allocator-pipeline-contract.md,
+    ../../../04-architecture/promote-workflow-architecture.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/treasury-trading-wallet-invariant.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/universe-enumeration-contract.md,
+  ]
 created: 2026-05-22
-authoritative_for: [strategy execution-runtime tick-loop lifecycle (colocated_engine STARTED/tick/STOPPED + instruction-emission contract)]
-referenced_by: [codex/09-strategy/architecture-v2/cross-cutting/allocator-pipeline-contract.md, codex/09-strategy/architecture-v2/cross-cutting/strategy-config-drift-detection.md, codex/09-strategy/architecture-v2/cross-cutting/universe-enumeration-contract.md]
+authoritative_for:
+  [
+    strategy execution-runtime tick-loop lifecycle (colocated_engine STARTED/tick/STOPPED + instruction-emission
+    contract),
+  ]
+referenced_by:
+  [
+    /codex/09-strategy/architecture-v2/cross-cutting/allocator-pipeline-contract.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/strategy-config-drift-detection.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/universe-enumeration-contract.md,
+  ]
 owner:
 last_reviewed: 2026-05-22
 code_refs:
@@ -76,5 +90,5 @@ VM boots → ServiceBootstrap STARTED
 - `plans/epics/strategy_master.md`
 - `plans/active/issues/strategy_archetype_logic_audit_2026_05_20.md`
 - `plans/active/strategy_execution_contract_remediation_2026_05_20.md`
-- `codex/09-strategy/architecture-v2/cross-cutting/allocator-pipeline-contract.md`
-- `codex/04-architecture/promote-workflow-architecture.md`
+- `/codex/09-strategy/architecture-v2/cross-cutting/allocator-pipeline-contract.md`
+- `/codex/04-architecture/promote-workflow-architecture.md`

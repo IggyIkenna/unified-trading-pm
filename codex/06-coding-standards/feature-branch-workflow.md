@@ -10,13 +10,31 @@ status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
-repos: [agent-orchestrator, alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-service]
+repos:
+  [
+    agent-orchestrator,
+    alerting-service,
+    batch-live-reconciliation-service,
+    client-reporting-api,
+    deployment-api,
+    deployment-service,
+  ]
 scope: [engineer]
 tags: [quickmerge, ci-cd, feature-branch, quality-gates, conventional-commits, refactor]
-related: [../08-workflows/ci-cd-flow.md, integration-testing-layers.md, quality-gates.md]
+related:
+  [
+    /codex/08-workflows/ci-cd-flow.md,
+    /codex/06-coding-standards/integration-testing-layers.md,
+    /codex/06-coding-standards/quality-gates.md,
+  ]
 created: 2026-03-27
-authoritative_for: [feature-branch conventional-commit versioning workflow, require-quality-gates ruleset + zero-human-approval gate policy]
-referenced_by: [codex/06-coding-standards/dependency-management.md, codex/06-coding-standards/integration-testing-layers.md]
+authoritative_for:
+  [
+    feature-branch conventional-commit versioning workflow,
+    require-quality-gates ruleset + zero-human-approval gate policy,
+  ]
+referenced_by:
+  [/codex/06-coding-standards/dependency-management.md, /codex/06-coding-standards/integration-testing-layers.md]
 owner:
 last_reviewed:
 code_refs:
@@ -362,7 +380,7 @@ Ruleset additions (the 7 non-`agent-orchestrator` repos surfaced 2026-06-01):
 | `ml-service`                  | main       | 17136124   | ✅ active (job-name `(alerting-service)`→`(ml-service)` fixed; green main)      |
 | `features-service`            | LDR        | 17136160   | ✅ active (green LDR v2 already; LDR already in triggers)                       |
 | `greeks-service`              | LDR        | —          | ⏳ v2-RED (MIN_COVERAGE=0 floor + codex + C901); GH_PAT secret provisioned      |
-| `fund-administration-service` | main       | —          | ⏳ v2-RED (`uv sync` starlette↔utl conflict); caller rolled out                |
+| `fund-administration-service` | main       | —          | ⏳ v2-RED (`uv sync` starlette↔utl conflict); caller rolled out                 |
 | `e2e-testing`                 | main       | —          | ⏳ v2-RED (14 ruff lint); caller rolled out                                     |
 | `unified-trading-system-ui`   | main       | —          | ⏳ no UI gate yet — roll out `ui-quality-gates`; ruleset on `… / quality-gates` |
 
@@ -432,7 +450,7 @@ Quickmerge runs Layers 0 and 1 as part of quality gates. Layers 2 and 3 run post
 
 | Layer | Scope                                                           | In quickmerge?                       |
 | ----- | --------------------------------------------------------------- | ------------------------------------ |
-| 0     | Contract alignment (AC↔UIC schema pairs)                       | Yes                                  |
+| 0     | Contract alignment (AC↔UIC schema pairs)                        | Yes                                  |
 | 1     | Schema robustness per-service                                   | Yes                                  |
 | 1.5   | Per-component integration tests with mocked direct dependencies | Yes — last local gate before Layer 2 |
 | 2     | Infrastructure verify (GCS, PubSub, IAM)                        | No — post-deploy                     |

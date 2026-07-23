@@ -1,10 +1,10 @@
 ---
 doc_type: codex-ssot
-title: 'Sports Instruments: Format, Matching, Normalization'
+title: "Sports Instruments: Format, Matching, Normalization"
 summary:
-  Canonical sports instrument-key format SPORT:VENUE:MARKET_TYPE:LEAGUE:SEASON:HOME-AWAY::SELECTION plus
-  cross-provider fixture matching (api-football canonical ID), team/league normalization, YYYY-YYYY seasons, and
-  handicap encoding; active venues ODDS_API/PINNACLE/BETFAIR only (scrapers deferred-indefinitely).
+  Canonical sports instrument-key format SPORT:VENUE:MARKET_TYPE:LEAGUE:SEASON:HOME-AWAY::SELECTION plus cross-provider
+  fixture matching (api-football canonical ID), team/league normalization, YYYY-YYYY seasons, and handicap encoding;
+  active venues ODDS_API/PINNACLE/BETFAIR only (scrapers deferred-indefinitely).
 status: current
 nature: ssot
 asset_group: [meta]
@@ -12,7 +12,13 @@ stage: [meta]
 repos: [instruments-service]
 scope: [engineer]
 tags: [sports, instruments, footystats, odds, uac, canonicalisation]
-related: [../02-data/sports-gcs-path-ssot.md, ../02-data/sports-data-source-coverage-matrix.md, ../02-data/sports-data-types-catalog.md, ../../plans/epics/sports_master.md]
+related:
+  [
+    /codex/02-data/sports-gcs-path-ssot.md,
+    /codex/02-data/sports-data-source-coverage-matrix.md,
+    /codex/02-data/sports-data-types-catalog.md,
+    ../../plans/epics/sports_master.md,
+  ]
 created: 2026-03-27
 authoritative_for: [sports canonical instrument-key format + fixture/team/league normalization]
 referenced_by:
@@ -39,8 +45,8 @@ code_refs:
 >
 > **Storage note (2026-05-22):** The BigQuery tables (`instruments.sports_instruments`, `instruments.fixture_mapping`,
 > etc.) shown in the "Storage & Schema" section below are **design-intent artefacts** from the pre-GCS architecture. The
-> current production storage is **GCS parquet** at paths governed by `codex/02-data/sports-gcs-path-ssot.md` and the UAC
-> `unified_api_contracts.sports.candidate_parquet_paths()` resolver. The BigQuery schema section is retained for
+> current production storage is **GCS parquet** at paths governed by `/codex/02-data/sports-gcs-path-ssot.md` and the
+> UAC `unified_api_contracts.sports.candidate_parquet_paths()` resolver. The BigQuery schema section is retained for
 > reference only; do not create new BigQuery tables for sports instruments without an explicit operator decision and new
 > plan.
 

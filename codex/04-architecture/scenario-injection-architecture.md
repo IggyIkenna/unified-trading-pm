@@ -15,10 +15,10 @@ scope: [engineer, admin]
 tags: [scenario-injection, simulation, risk, execution, validation, uac]
 related:
   [
-    scenario-outcome-assertions.md,
-    kill-switch-circuit-breaker.md,
-    autonomous-recovery-matrix.md,
-    ../02-data/scenario-overlay-semantics.md,
+    /codex/04-architecture/scenario-outcome-assertions.md,
+    /codex/04-architecture/kill-switch-circuit-breaker.md,
+    /codex/04-architecture/autonomous-recovery-matrix.md,
+    /codex/02-data/scenario-overlay-semantics.md,
   ]
 created: 2026-05-12
 authoritative_for:
@@ -28,7 +28,14 @@ authoritative_for:
     scenario pipeline-tap layers,
     scenario matrix runner,
   ]
-referenced_by: [codex/02-data/honest-absence-downstream-handling.md, codex/02-data/scenario-overlay-semantics.md, codex/04-architecture/scenario-outcome-assertions.md, codex/05-infrastructure/live-pipeline-architecture.md, codex/05-infrastructure/replay-subsystem.md]
+referenced_by:
+  [
+    /codex/02-data/honest-absence-downstream-handling.md,
+    /codex/02-data/scenario-overlay-semantics.md,
+    /codex/04-architecture/scenario-outcome-assertions.md,
+    /codex/05-infrastructure/live-pipeline-architecture.md,
+    /codex/05-infrastructure/replay-subsystem.md,
+  ]
 owner: simulation-platform
 last_reviewed: 2026-05-17
 code_refs:
@@ -45,9 +52,10 @@ type: architecture
 ## Reuse-prod-codepath principle
 
 Scenarios ride the **same prod codepaths** as live + batch — per the workspace "live = batch — same data, same fields,
-same timing semantics" HARD RULE ([batch-vs-live-architecture.md](../05-infrastructure/batch-vs-live-architecture.md)).
-Only the overlay mutation differs. `synthetic=true` metadata on every emitted event distinguishes scenario-fire from
-real-fire so alerting-service suppresses paging while still recording the event for the operator dashboard.
+same timing semantics" HARD RULE
+([live-data-persistence-and-event-log.md](/codex/02-data/live-data-persistence-and-event-log.md)). Only the overlay
+mutation differs. `synthetic=true` metadata on every emitted event distinguishes scenario-fire from real-fire so
+alerting-service suppresses paging while still recording the event for the operator dashboard.
 
 The harness does **not** instantiate a parallel backtest engine. It configures
 
@@ -167,12 +175,12 @@ UTL `ScenarioMatrixRunner` (UTL@`66904fe0` `scenario/matrix_runner.py`) synchron
 - [`autonomous-recovery-matrix.md`](autonomous-recovery-matrix.md) — every recovery row gets a paired `scenario_id`
   post-cutover (Phase 8.E DEFERRED).
 - [`backtest-groups.md`](backtest-groups.md) — scenario-overlay mode is a new axis (Phase 8.F DEFERRED).
-- [`../02-data/honest-absence-downstream-handling.md`](../02-data/honest-absence-downstream-handling.md) —
+- [`/codex/02-data/honest-absence-downstream-handling.md`](/codex/02-data/honest-absence-downstream-handling.md) —
   scenario-driven gap injection cross-references.
-- [`../05-infrastructure/live-pipeline-architecture.md`](../05-infrastructure/live-pipeline-architecture.md) —
+- [`/codex/05-infrastructure/live-pipeline-architecture.md`](/codex/05-infrastructure/live-pipeline-architecture.md) —
   7-layer-tap point map (Phase 8.G DEFERRED until other layers wire).
-- [`../05-infrastructure/replay-subsystem.md`](../05-infrastructure/replay-subsystem.md) — scenario-overlay-on-replay
-  extension (Phase 8.H DEFERRED).
+- [`/codex/05-infrastructure/replay-subsystem.md`](/codex/05-infrastructure/replay-subsystem.md) —
+  scenario-overlay-on-replay extension (Phase 8.H DEFERRED).
 
 ## Operator-runtime invocation
 

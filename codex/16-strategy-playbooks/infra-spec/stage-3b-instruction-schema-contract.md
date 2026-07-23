@@ -2,10 +2,10 @@
 doc_type: codex-ssot
 title: Stage 3B — Instruction Schema Contract (`(Client, downstream)` fit-check)
 summary:
-  Engineering projection of rule 10 for signals-only clients — the 8 required instruction fields (instrument_venue_context
-  … risk_and_allocation_constraints), Standard/Rich optional depths, the NEW→LIVE→FILLED lifecycle + idempotency, the
-  rejected-shape error codes, and the venue × instrument_type × execution_mode compat matrix validated by
-  instructions-service/UAC.
+  Engineering projection of rule 10 for signals-only clients — the 8 required instruction fields
+  (instrument_venue_context … risk_and_allocation_constraints), Standard/Rich optional depths, the NEW→LIVE→FILLED
+  lifecycle + idempotency, the rejected-shape error codes, and the venue × instrument_type × execution_mode compat
+  matrix validated by instructions-service/UAC.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -15,14 +15,25 @@ scope: [engineer, admin]
 tags: [execution, instruments, uac, strategy, docspec, validation]
 related:
   [
-    codex/16-strategy-playbooks/infra-spec/stage-3b-uac-combo-rules.md,
-    codex/16-strategy-playbooks/infra-spec/stage-3b-downstream-analytics-capability-matrix.md,
-    codex/16-strategy-playbooks/infra-spec/stage-3c-derivation-engine.md,
-    codex/14-customer-journeys/_ssot-rules/10-strategy-instruction-schema-principles.md,
+    /codex/16-strategy-playbooks/infra-spec/stage-3b-uac-combo-rules.md,
+    /codex/16-strategy-playbooks/infra-spec/stage-3b-downstream-analytics-capability-matrix.md,
+    /codex/16-strategy-playbooks/infra-spec/stage-3c-derivation-engine.md,
+    /codex/14-customer-journeys/_ssot-rules/10-strategy-instruction-schema-principles.md,
   ]
 created: 2026-04-20
-authoritative_for: [signals-only instruction-schema engineering contract (8 required fields + lifecycle + rejection codes + venue/instrument/mode compat matrix)]
-referenced_by: [codex/14-customer-journeys/shared-core/instruction-schema-fit-and-package-boundaries.md, codex/16-strategy-playbooks/infra-spec/stage-3b-downstream-analytics-capability-matrix.md, codex/16-strategy-playbooks/infra-spec/stage-3b-uac-combo-rules.md, codex/16-strategy-playbooks/infra-spec/stage-3c-derivation-engine.md, codex/16-strategy-playbooks/infra-spec/stage-3e-refactor-plan.md]
+authoritative_for:
+  [
+    signals-only instruction-schema engineering contract (8 required fields + lifecycle + rejection codes +
+    venue/instrument/mode compat matrix),
+  ]
+referenced_by:
+  [
+    /codex/14-customer-journeys/shared-core/instruction-schema-fit-and-package-boundaries.md,
+    /codex/16-strategy-playbooks/infra-spec/stage-3b-downstream-analytics-capability-matrix.md,
+    /codex/16-strategy-playbooks/infra-spec/stage-3b-uac-combo-rules.md,
+    /codex/16-strategy-playbooks/infra-spec/stage-3c-derivation-engine.md,
+    /codex/16-strategy-playbooks/infra-spec/stage-3e-refactor-plan.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

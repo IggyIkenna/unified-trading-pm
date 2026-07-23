@@ -12,7 +12,11 @@ stage: [meta]
 repos: []
 scope: [engineer, admin]
 tags: [strategy, carry, defi, archetype, backfill]
-related: [carry-recursive-staked.md, carry-staked-basis.md]
+related:
+  [
+    /codex/09-strategy/architecture-v2/archetypes/carry-recursive-staked.md,
+    /codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md,
+  ]
 created: 2026-05-21
 authoritative_for: []
 referenced_by:

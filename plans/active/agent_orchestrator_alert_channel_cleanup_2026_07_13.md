@@ -18,7 +18,12 @@ stage: [meta]
 repos: [agent-orchestrator, unified-trading-pm]
 scope: [engineer, admin]
 tags: [alerts, slack, agent-orchestrator, dedup, observability, notifications]
-related: [alert_quality_overhaul_2026_06_18.md, alert_quality_audit_2026_06_18.md, orchestrator_master.md]
+related:
+  [
+    /plans/archive/2026_06/alert_quality_overhaul_2026_06_18.md,
+    /plans/audit/results/alert_quality_audit_2026_06_18.md,
+    /plans/epics/orchestrator_master.md,
+  ]
 created: "2026-07-13"
 last_updated: 2026-07-14
 parent_epic: orchestrator_master
@@ -86,10 +91,10 @@ the follow-on that finishes the job.
 ## Codex SSOTs
 
 - No dedicated alerting codex doc exists yet — **WS-E** stubs one
-  (`codex/04-architecture/agent-orchestrator-alerting.md`) capturing the actionable-only channel contract + digest
+  (`/codex/04-architecture/agent-orchestrator-alerting.md`) capturing the actionable-only channel contract + digest
   model, so this becomes the durable SSOT.
-- Related: `codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`,
-  `codex/12-agent-workflow/async-wait-and-poll-discipline.md` (poll/heartbeat discipline for the new loop).
+- Related: `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`,
+  `/codex/12-agent-workflow/async-wait-and-poll-discipline.md` (poll/heartbeat discipline for the new loop).
 
 ## Design
 
@@ -197,7 +202,7 @@ through and render them multi-line, mirroring `notify_operator_gated_blocked` (`
       picks up its script change on its next tick. The ONLY remaining step is the **24–48 h verification observation
       window**: re-pull with `alerts_audit/fetch_alerts.py` after the code has been live ~24–48 h, confirm lifecycle
       churn is gone / volume at the actionable-only target, and drop the post-deploy jsonl in `alerts_audit/`.
-- [x] 8. ✅ [REVIEW] P2. WS-E: stubbed `codex/04-architecture/agent-orchestrator-alerting.md` (actionable-only
+- [x] 8. ✅ [REVIEW] P2. WS-E: stubbed `/codex/04-architecture/agent-orchestrator-alerting.md` (actionable-only
       contract + digest model + guard-dedup) as the durable SSOT; added the one-liner to CLAUDE.md's conditional index
       (size-cap QG green, 29,668 B / 40,960). — unified-trading-pm (this commit).
 - [x] 9. ✅ [BACKEND] P2. WS-B follow-up (first live digest, 2026-07-13 16:15 UTC, 1706 events / 5 failures): the digest
@@ -207,7 +212,7 @@ through and render them multi-line, mirroring `notify_operator_gated_blocked` (`
       (`test_digest_never_truncates_a_failure_out_of_view`); full `quality-gates.sh` green (1216 pytest). —
       agent-orchestrator@f79f028.
 - [x] 10. ✅ [REVIEW] P2. Documented **every digest field + every `event_type`** in the codex SSOT
-      `codex/04-architecture/agent-orchestrator-alerting.md` (operator ask, 2026-07-13): a "Digest anatomy" field table
+      `/codex/04-architecture/agent-orchestrator-alerting.md` (operator ask, 2026-07-13): a "Digest anatomy" field table
       (Since / Total events / N failure event(s) / Activity / Footer) + a "Digest event glossary" grouping all ~25 event
       types by lifecycle stage (boot·spawn / task / git-health / liveness·self-healing / plan-health·escalation) with
       their `log_activity` code refs. Frontmatter-schema + prettier green. — unified-trading-pm (this commit).
@@ -283,7 +288,7 @@ through and render them multi-line, mirroring `notify_operator_gated_blocked` (`
       Left self-healing (fresh-worker retry) untouched — cooldown-deduped the PAGE only, per
       `{repo}:{wall_type}:{reescalating|cap_hit}` (3h), cleared on resolution so a genuinely new break still pages
       immediately. — agent-orchestrator@50557aa (same commit as todo 16).
-- [x] 18. ✅ [REVIEW] P2. Codex SSOT `codex/04-architecture/agent-orchestrator-alerting.md` updated with the flap
+- [x] 18. ✅ [REVIEW] P2. Codex SSOT `/codex/04-architecture/agent-orchestrator-alerting.md` updated with the flap
       root-cause + the two repeat-page-hardening fixes (new "Git-staleness paging" bullet + a "Repeat-page hardening"
       section); `last_reviewed` bumped to 2026-07-14. — unified-trading-pm (this commit).
 
@@ -304,7 +309,7 @@ through and render them multi-line, mirroring `notify_operator_gated_blocked` (`
   INFO logs + `notify_plan_health_dispatch_failed` (deduped 1h). WS-B: `DailySummaryLoop` (activity-log rollup, cursor,
   self-failure page), enabled by default, supervised. WS-C: `fleet-git-health-guard.sh` state-transition dedup +
   `--self-test` (PASS). WS-D: `notify_slot_blocked` multi-line options/recommendation. Codex SSOT
-  `codex/04-architecture/agent-orchestrator-alerting.md` + CLAUDE.md one-liner added. **Remaining:** WS-E deploy — a
+  `/codex/04-architecture/agent-orchestrator-alerting.md` + CLAUDE.md one-liner added. **Remaining:** WS-E deploy — a
   auto-deploy via uvicorn `--reload` (no manual restart) + a 24–48 h re-pull verification (the only remaining step).
 - **2026-07-13 (complete pager audit)** — Operator (frustrated with one-at-a-time): "check EVERY alert, do the audit
   properly." Enumerated all 40 `slack._post` notifiers + grouped the live 7-day channel (2065 msgs) by shape. Most of

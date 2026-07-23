@@ -12,14 +12,21 @@ stage: [meta]
 repos: [execution-service]
 scope: [engineer, admin]
 tags: [runbook, escalation, live-trading, execution, monitoring, cefi]
-related: [codex/15-runbooks/alerting/operator-playbook.md, codex/15-runbooks/alerting/circuit_breaker_open.md, codex/15-runbooks/alerting/preflight_failed.md]
+related:
+  [
+    /codex/15-runbooks/alerting/operator-playbook.md,
+    /codex/15-runbooks/alerting/circuit_breaker_open.md,
+    /codex/15-runbooks/alerting/preflight_failed.md,
+  ]
 created: 2026-05-08
 owner: ikenna
 cadence: on-demand
 verifier: operator
 last_executed:
 code_refs:
-authoritative_for: Operator response when venue order-reject rate spikes above threshold. Indicates venue health degradation before the circuit breaker has tripped.
+authoritative_for:
+  Operator response when venue order-reject rate spikes above threshold. Indicates venue health degradation before the
+  circuit breaker has tripped.
 referenced_by: [plans/active/alerting_service_live_rules_2026_05_07.md]
 ---
 

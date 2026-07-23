@@ -14,12 +14,12 @@ scope: [engineer]
 tags: [ui, audit, orphan-route, reachability, quality-gates, refactor]
 related:
   [
-    ../09-strategy/architecture-v2/strategy-catalogue-3tier.md,
-    ../09-strategy/architecture-v2/dashboard-services-grid.md,
+    /codex/09-strategy/architecture-v2/strategy-catalogue-3tier.md,
+    /codex/09-strategy/architecture-v2/dashboard-services-grid.md,
   ]
 created: 2026-04-21
 authoritative_for: [UI orphan-route audit policy, orphan-audit whitelist reason prefixes]
-referenced_by: [codex/09-strategy/architecture-v2/strategy-catalogue-3tier.md]
+referenced_by: [/codex/09-strategy/architecture-v2/strategy-catalogue-3tier.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:
@@ -346,8 +346,8 @@ baseline stubs, run `--write-baseline`, triage the surfaced orphans, add the 3 n
 ## §9 — Cross-references
 
 - `unified-trading-system-ui/scripts/orphan-audit.ts` — implementation.
-- [`../09-strategy/architecture-v2/strategy-catalogue-3tier.md`](../09-strategy/architecture-v2/strategy-catalogue-3tier.md)
+- [`/codex/09-strategy/architecture-v2/strategy-catalogue-3tier.md`](/codex/09-strategy/architecture-v2/strategy-catalogue-3tier.md)
   §8 — example refactor that ships orphan-audit-compliant.
-- [`../09-strategy/architecture-v2/dashboard-services-grid.md`](../09-strategy/architecture-v2/dashboard-services-grid.md)
+- [`/codex/09-strategy/architecture-v2/dashboard-services-grid.md`](/codex/09-strategy/architecture-v2/dashboard-services-grid.md)
   — `SERVICE_REGISTRY` is the primary reachability source.
 - `memory/feedback_orphan_audit_3_phase_rollout.md` — the user's preference that shaped this policy.

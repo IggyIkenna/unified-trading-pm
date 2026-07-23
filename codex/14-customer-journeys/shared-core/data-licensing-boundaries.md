@@ -2,9 +2,9 @@
 doc_type: codex-ssot
 title: Data Licensing Boundaries — Expanded Reference
 summary:
-  Rule-07 expansion — the enriched-vs-raw inventory of what DART sells (analytics, positions/P&L, TCA, reconciliation) vs
-  never sells (raw ticks, reference dumps, fixture lists). The test — client pays for what Odum did to the data, not the
-  data itself. Includes copy-audit checklist + upstream-licence pre-ship audit.
+  Rule-07 expansion — the enriched-vs-raw inventory of what DART sells (analytics, positions/P&L, TCA, reconciliation)
+  vs never sells (raw ticks, reference dumps, fixture lists). The test — client pays for what Odum did to the data, not
+  the data itself. Includes copy-audit checklist + upstream-licence pre-ship audit.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -16,12 +16,17 @@ related:
   [
     ../_ssot-rules/07-data-licensing-boundaries.md,
     ../_ssot-rules/08-pricing-principles.md,
-    venue-chain-instrument-scope.md,
+    /codex/14-customer-journeys/shared-core/venue-chain-instrument-scope.md,
     ../commercial-model/pricing-building-blocks.md,
   ]
 created: 2026-04-20
 authoritative_for: [data-licensing enriched-vs-raw inventory (rule 07 expansion)]
-referenced_by: [codex/14-customer-journeys/README.md, codex/14-customer-journeys/shared-core/README.md, codex/14-customer-journeys/shared-core/competitive-landscape.md]
+referenced_by:
+  [
+    /codex/14-customer-journeys/README.md,
+    /codex/14-customer-journeys/shared-core/README.md,
+    /codex/14-customer-journeys/shared-core/competitive-landscape.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

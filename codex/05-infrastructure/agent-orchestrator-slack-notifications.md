@@ -14,15 +14,15 @@ scope: [engineer, admin]
 tags: [orchestrator, slack, notifications, monitoring, observability, self-healing]
 related:
   [
-    ../12-agent-workflow/orchestrator-safety-mechanisms.md,
-    ../04-architecture/agent-orchestrator-overview.md,
-    agent-orchestrator-api-host.md,
+    /codex/12-agent-workflow/orchestrator-safety-mechanisms.md,
+    /codex/04-architecture/agent-orchestrator-overview.md,
+    /codex/05-infrastructure/agent-orchestrator-api-host.md,
   ]
 created: 2026-05-20
 authoritative_for: [agent-orchestrator Slack notification functions + payload/retry contract]
 referenced_by:
   [
-    codex/12-agent-workflow/orchestrator-safety-mechanisms.md,
+    /codex/12-agent-workflow/orchestrator-safety-mechanisms.md,
     plans/audit/instructions/orchestrator_master_audit_instructions.md,
   ]
 owner:
@@ -56,7 +56,8 @@ failure). **The two modules no longer expose an identical set** — Slack carrie
 funcs** (verified against `rg "^(async )?def notify_" server/notifications/*.py` 2026-06-01). The three OAuth-refresh
 notifications (`notify_oauth_token_expiring`, `notify_oauth_refresh_succeeded`, `notify_oauth_refresh_failed`) were
 removed in Phase 4b-cleanup 2026-05-28 — see
-[`../12-agent-workflow/orchestrator-safety-mechanisms.md`](../12-agent-workflow/orchestrator-safety-mechanisms.md) § C.
+[`/codex/12-agent-workflow/orchestrator-safety-mechanisms.md`](/codex/12-agent-workflow/orchestrator-safety-mechanisms.md)
+§ C.
 
 The S (Slack) / T (Telegram) columns mark which module exports each function.
 

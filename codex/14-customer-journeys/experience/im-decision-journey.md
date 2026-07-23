@@ -14,15 +14,25 @@ scope: [sales, prospect]
 tags: [investment-management, briefing, prospect, sales, reporting, sma-pooled, ui]
 related:
   [
-    investment-management-demo.md,
-    briefings-hub.md,
+    /codex/14-customer-journeys/experience/investment-management-demo.md,
+    /codex/14-customer-journeys/experience/briefings-hub.md,
     ../shared-core/same-system-principle.md,
     ../commercial-model/im-vs-reg-reporting-logic.md,
     ../commercial-model/im-profit-share-structures.md,
   ]
 created: 2026-04-20
 authoritative_for: [pb2a IM decision-journey briefing experience]
-referenced_by: [codex/14-customer-journeys/README.md, codex/14-customer-journeys/_ssot-rules/01-grammar.md, codex/14-customer-journeys/_ssot-rules/02-tone-and-posture.md, codex/14-customer-journeys/commercial-model/dart-entry-points.md, codex/14-customer-journeys/commercial-model/im-profit-share-structures.md, codex/14-customer-journeys/commercial-model/im-vs-reg-reporting-logic.md, codex/14-customer-journeys/experience/README.md, codex/14-customer-journeys/experience/briefings-hub.md]
+referenced_by:
+  [
+    /codex/14-customer-journeys/README.md,
+    /codex/14-customer-journeys/_ssot-rules/01-grammar.md,
+    /codex/14-customer-journeys/_ssot-rules/02-tone-and-posture.md,
+    /codex/14-customer-journeys/commercial-model/dart-entry-points.md,
+    /codex/14-customer-journeys/commercial-model/im-profit-share-structures.md,
+    /codex/14-customer-journeys/commercial-model/im-vs-reg-reporting-logic.md,
+    /codex/14-customer-journeys/experience/README.md,
+    /codex/14-customer-journeys/experience/briefings-hub.md,
+  ]
 owner:
 last_reviewed:
 code_refs: [unified-trading-system-ui/tests/e2e/playbooks/warm-prospect-demo.spec.ts]

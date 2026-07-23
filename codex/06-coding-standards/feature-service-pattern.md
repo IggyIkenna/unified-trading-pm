@@ -13,10 +13,23 @@ stage: [meta]
 repos: [features-service, instruments-service, unified-trading-library, unified-trading-pm]
 scope: [engineer]
 tags: [features, feature-service, observability, prometheus-metrics, correlation-id, uac]
-related: [../04-architecture/features-service-architecture.md, prometheus-metrics.md, correlation-id.md]
+related:
+  [
+    /codex/04-architecture/features-service-architecture.md,
+    /codex/06-coding-standards/prometheus-metrics.md,
+    /codex/06-coding-standards/correlation-id.md,
+  ]
 created: 2026-03-27
 authoritative_for: [BaseFeatureServiceV2 features sub-package base-class pattern]
-referenced_by: [codex/04-architecture/batch-live-architecture.md, codex/04-architecture/features-service-architecture.md, codex/06-coding-standards/prometheus-metrics.md, codex/06-coding-standards/session-aware-feature-calculator-pattern.md, codex/06-coding-standards/validation-and-errors.md, plans/epics/features_and_ml_master.md]
+referenced_by:
+  [
+    /codex/04-architecture/batch-live-architecture.md,
+    /codex/04-architecture/features-service-architecture.md,
+    /codex/06-coding-standards/prometheus-metrics.md,
+    /codex/06-coding-standards/session-aware-feature-calculator-pattern.md,
+    /codex/06-coding-standards/validation-and-errors.md,
+    plans/epics/features_and_ml_master.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -31,17 +44,17 @@ features-service (volatility family), features-service (cross-instrument family)
 features-service (calendar family), features-service (commodity family), features-service (delta-one family),
 features-service (multi-timeframe family)). The current target state is a single workspace repo `features-service` with
 one sub-package per family
-([`../04-architecture/features-service-architecture.md`](../04-architecture/features-service-architecture.md) —
+([`/codex/04-architecture/features-service-architecture.md`](/codex/04-architecture/features-service-architecture.md) —
 canonical SSOT for the consolidated shape, the `--feature-family` CLI dispatcher, the Health-API aggregator, and the 7
 UTL Phase 5 lifts). `BaseFeatureServiceV2` becomes the per-sub-package base class within `features-service`, not the
 per-repo base class. The pattern below applies inside the consolidated repo: each sub-package owns its calculators; each
 calculator extends `BaseFeatureServiceV2`. The deployment topology
-([`../05-infrastructure/deployment-clusters-live-vs-batch.md`](../05-infrastructure/deployment-clusters-live-vs-batch.md))
+([`/codex/05-infrastructure/deployment-clusters-live-vs-batch.md`](/codex/05-infrastructure/deployment-clusters-live-vs-batch.md))
 splits the consolidated repo into one VM-per-asset_group (colocated with MDPS) plus one features-cross-cutting VM.
 
 The `feature_family` axis (UAC enum) is the primary shard key inside the consolidated repo and surfaces in the data-
-status drilldown — see [`../02-data/data-status-drilldown.md`](../02-data/data-status-drilldown.md) § "Per-asset_group
-depth table".
+status drilldown — see [`/codex/02-data/data-status-drilldown.md`](/codex/02-data/data-status-drilldown.md) §
+"Per-asset_group depth table".
 
 ### Adding a new feature_family
 

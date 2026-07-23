@@ -2,8 +2,9 @@
 doc_type: codex-ssot
 title: Signup / Signin workflow — prospect → client
 summary: >-
-  Target-state prospect→client funnel: the 9 ordered stages (questionnaire → deep-dives → call → strategy-eval → review →
-  walkthrough → commercial-tailoring → signup → signin), the per-service-path signup fields, and current-vs-target state.
+  Target-state prospect→client funnel: the 9 ordered stages (questionnaire → deep-dives → call → strategy-eval → review
+  → walkthrough → commercial-tailoring → signup → signin), the per-service-path signup fields, and current-vs-target
+  state.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -14,7 +15,13 @@ tags: [onboarding, questionnaire, ui, mvp, validation]
 related: [./prospect-questionnaire-flow.md, ./platform-walkthrough-and-demo-context.md, ./client-onboarding.md]
 created: 2026-04-22
 authoritative_for: [prospect→client signup/signin funnel (9-stage journey + per-service-path signup fields)]
-referenced_by: [codex/08-workflows/client-onboarding.md, codex/08-workflows/environment-mode-philosophy.md, codex/08-workflows/platform-walkthrough-and-demo-context.md, codex/08-workflows/prospect-questionnaire-flow.md]
+referenced_by:
+  [
+    /codex/08-workflows/client-onboarding.md,
+    /codex/08-workflows/environment-mode-philosophy.md,
+    /codex/08-workflows/platform-walkthrough-and-demo-context.md,
+    /codex/08-workflows/prospect-questionnaire-flow.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -31,10 +38,10 @@ current vs target state of what the UI actually implements.
 
 - [`prospect-questionnaire-flow.md`](./prospect-questionnaire-flow.md) — the questionnaire form itself (axes,
   submission, envelope).
-- [`../14-customer-journeys/authentication/firebase-staging.md`](../14-customer-journeys/authentication/firebase-staging.md)
-  / [`firebase-production.md`](../14-customer-journeys/authentication/firebase-production.md) — Firebase project setup,
-  roles, and Firestore rules.
-- [`../14-customer-journeys/authentication/light-auth-briefings.md`](../14-customer-journeys/authentication/light-auth-briefings.md)
+- [`/codex/14-customer-journeys/authentication/firebase-staging.md`](/codex/14-customer-journeys/authentication/firebase-staging.md)
+  / [`firebase-production.md`](/codex/14-customer-journeys/authentication/firebase-production.md) — Firebase project
+  setup, roles, and Firestore rules.
+- [`/codex/14-customer-journeys/authentication/light-auth-briefings.md`](/codex/14-customer-journeys/authentication/light-auth-briefings.md)
   — the briefings access-code gate (separate from the main client sign-in).
 
 ---
@@ -153,7 +160,7 @@ Key properties:
 - **Optional ops nudge:** ops may reach out around this point (post-questionnaire / mid-deep-dive) to ask whether the
   prospect wants to book a call. Whether to reach out is a CRM judgement, not a UI write.
 - **SSOT for the access-code gate:**
-  [`../14-customer-journeys/authentication/light-auth-briefings.md`](../14-customer-journeys/authentication/light-auth-briefings.md).
+  [`/codex/14-customer-journeys/authentication/light-auth-briefings.md`](/codex/14-customer-journeys/authentication/light-auth-briefings.md).
 
 ### 2.3 Initial call stage (~30 min)
 

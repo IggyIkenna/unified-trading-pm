@@ -14,10 +14,10 @@ scope: [engineer, admin]
 tags: [tradfi, databento, cost, data-correctness, pipeline-mode, ssot-audit]
 related:
   [
-    codex/02-data/tradfi-data-types-catalog.md,
-    codex/04-architecture/tradfi-batch-live.md,
-    codex/02-data/availability-manifest-and-data-status.md,
-    codex/02-data/pipeline-mode-partition.md,
+    /codex/02-data/tradfi-data-types-catalog.md,
+    /codex/04-architecture/tradfi-batch-live.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/02-data/pipeline-mode-partition.md,
   ]
 created: 2026-06-18
 authoritative_for:
@@ -27,8 +27,8 @@ authoritative_for:
   ]
 referenced_by:
   [
-    codex/02-data/tradfi-data-types-catalog.md,
-    codex/04-architecture/tradfi-batch-live.md,
+    /codex/02-data/tradfi-data-types-catalog.md,
+    /codex/04-architecture/tradfi-batch-live.md,
     plans/active/issues/dp_alert_flood_triage_and_monitor_fixes_2026_06_23.md,
     plans/audit/instructions/tradfi_master_audit_instructions.md,
     plans/audit/results/tradfi_massive_migration_audit_2026_06_08.md,
@@ -398,8 +398,8 @@ tarball rebuild is required to deploy the label fix. (c) instrument-ids need the
 
 ## Related SSOTs
 
-- `codex/02-data/tradfi-data-types-catalog.md` — TradFi data_type catalog.
-- `codex/04-architecture/tradfi-batch-live.md` — TradFi batch/live seam + Databento usage.
-- `codex/02-data/availability-manifest-and-data-status.md` — `source=` provenance (write-stamp by fetcher, all
+- `/codex/02-data/tradfi-data-types-catalog.md` — TradFi data_type catalog.
+- `/codex/04-architecture/tradfi-batch-live.md` — TradFi batch/live seam + Databento usage.
+- `/codex/02-data/availability-manifest-and-data-status.md` — `source=` provenance (write-stamp by fetcher, all
   asset_groups).
 - `registry/data_source_continuity.py` — VIX 15m index source windows.

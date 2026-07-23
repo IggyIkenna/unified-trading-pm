@@ -31,8 +31,8 @@ tags:
 related:
   [
     ../instruments_completion_tracker_2026_07_06.md,
-    adapter_findings_gcs_manifest_deployment_api_reconciliation_gap_2026_07_08.md,
-    defi_lending_atoken_debttoken_instrument_split_2026_07_07.md,
+    /plans/active/issues/adapter_findings_gcs_manifest_deployment_api_reconciliation_gap_2026_07_08.md,
+    /plans/archive/issues/defi_lending_atoken_debttoken_instrument_split_2026_07_07.md,
     ../../audit/results/canonical_instrument_id_audit_2026_07_08.md,
     ../canonical_id_p0_kraken_futures_collision_2026_07_08.md,
     ../canonical_id_p0_defi_adapter_type_filter_bug_2026_07_08.md,
@@ -652,7 +652,7 @@ heavy migrations, because "I will have to leave my laptop at some point."** All 
 background tasks tied to the operator's current interactive session — if that session ends (laptop closed/asleep), any
 in-progress, not-yet-committed/not-yet-written work in them is at risk. Real GCS spot VMs, once launched and verified
 started, run independently of any laptop or session — matching this workspace's existing
-`codex/05-infrastructure/spot-vms-for-backfill.md` pattern (SPOT by default, no fire-and-forget: verify STARTED<60s +
+`/codex/05-infrastructure/spot-vms-for-backfill.md` pattern (SPOT by default, no fire-and-forget: verify STARTED<60s +
 real progress within the first ~10min, then let it run unattended to completion). Dispatched a survey+launch agent to:
 (1) check real current state so no VM is launched for work the session agents already finished, (2) launch real spot VMs
 for genuinely large remaining pieces (Binance per-day corpus if still pending, on-chain-perp's ~19,255-object
@@ -699,7 +699,7 @@ asked directly whether these migration VMs launch through deployment-service suc
 monitoring (deployment-ui `/deployments`, `/cockpit`, Slack, fleet reconciliation) — verified via direct code read that
 they did NOT. `deployment-service/scripts/vm/vm_zombie_watchdog.py:762-768`'s `VM_PREFIX_TO_BUCKET` registry (the SSOT
 `classify_deployment_target()` longest-prefix-matches against, raising `UnclassifiedDeploymentError` — never a silent
-default, per `codex/05-infrastructure/deployment-observability.md`) only recognizes
+default, per `/codex/05-infrastructure/deployment-observability.md`) only recognizes
 `canonical-migration-{cefi,tradfi,defi,prediction,legacy}-` prefixes. The prior agent's ad hoc VM name
 (`onchain-perp-symbol-canon-...`) matched none of them — it would have surfaced as `UNKNOWN` in
 `/api/fleet/reconciliation` (subject to classify-or-kill), never shown in deployment-ui/cockpit/Slack. Real, existing,

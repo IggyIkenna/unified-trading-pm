@@ -2,10 +2,9 @@
 doc_type: codex-ssot
 title: Timestamp Ordering
 summary: >-
-  Timestamp-ordering standard — all timestamps must be tz-aware UTC (datetime.utcnow()
-  banned); enforces the exchange_time ≤ received_time ≤ processed_time ≤ published_time
-  invariant via validate_timestamp_ordering() before every write, with 500 ms clock-skew
-  tolerance and ISO-8601 +00:00 serialisation.
+  Timestamp-ordering standard — all timestamps must be tz-aware UTC (datetime.utcnow() banned); enforces the
+  exchange_time ≤ received_time ≤ processed_time ≤ published_time invariant via validate_timestamp_ordering() before
+  every write, with 500 ms clock-skew tolerance and ISO-8601 +00:00 serialisation.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -13,7 +12,7 @@ stage: [meta]
 repos: [market-tick-data-service]
 scope: [engineer]
 tags: [timestamp, data-quality, mtds, validation, data-correctness]
-related: [validation-and-errors.md]
+related: [/codex/06-coding-standards/validation-and-errors.md]
 created: 2026-03-27
 authoritative_for: [timestamp ordering (four-stage exchange/received/processed/published UTC invariant)]
 referenced_by:

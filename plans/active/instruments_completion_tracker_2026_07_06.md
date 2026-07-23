@@ -16,13 +16,13 @@ scope: [admin, engineer]
 tags: [tracker, coordinator, honest-coverage, denominator, numerator, instruments, cefi-first, layer-1-gates-layer-2]
 related:
   [
-    honest_coverage_v2_instrument_denominator_2026_06_28.md,
-    instruments_foundation_completeness_2026_06_24.md,
-    migration_verification_orphan_safety_2026_06_10.md,
-    instruments_mtds_subset_consistency_remediation_2026_06_17.md,
-    data_completion_to_100_all_ag_2026_06_21.md,
-    mvp_scope_catalogue_tagging_2026_06_08.md,
-    instruments_catalogue_incremental_rollup_2026_06_29.md,
+    /plans/archive/2026_07/honest_coverage_v2_instrument_denominator_2026_06_28.md,
+    /plans/active/instruments_foundation_completeness_2026_06_24.md,
+    /plans/active/migration_verification_orphan_safety_2026_06_10.md,
+    /plans/active/instruments_mtds_subset_consistency_remediation_2026_06_17.md,
+    /plans/active/data_completion_to_100_all_ag_2026_06_21.md,
+    /plans/active/mvp_scope_catalogue_tagging_2026_06_08.md,
+    /plans/archive/2026_07/instruments_catalogue_incremental_rollup_2026_06_29.md,
     issues/cefi_layer1_denominator_gaps_2026_07_03.md,
     issues/defi_expected_unattempted_backlog_1m_2026_07_03.md,
     issues/cefi_universe_capture_rule_2026_06_23.md,
@@ -43,8 +43,8 @@ related:
     issues/mtds_is_full_adapter_smoketest_findings_2026_07_07.md,
     issues/adapter_findings_gcs_manifest_deployment_api_reconciliation_gap_2026_07_08.md,
     issues/instrument_id_format_canonicalization_2026_07_08.md,
-    instruments_service_docs_consolidation_2026_07_08.md,
-    ../../codex/02-data/honest-coverage-model.md,
+    /plans/archive/2026_07/instruments_service_docs_consolidation_2026_07_08.md,
+    /codex/02-data/honest-coverage-model.md,
   ]
 created: 2026-07-06
 last_updated: 2026-07-10
@@ -859,4 +859,4 @@ reconciling + signing off, not redoing.)_
   Sports/Prediction correctly excluded) · `issues/defi_turbo_api_hides_real_captured_data_2026_07_07.md` (🔴 P0 —
   AAVE_V3-ARBITRUM/POLYGON + SPARK have real current captured data the turbo API silently reports as 0/0; a read-path
   bug, not a capture gap)
-- **SSOT:** `../../codex/02-data/honest-coverage-model.md`
+- **SSOT:** `/codex/02-data/honest-coverage-model.md`

@@ -13,13 +13,13 @@ stage: [meta]
 repos: [agent-orchestrator, deployment-service]
 scope: [engineer]
 tags: [orchestrator, infrastructure, aws, ec2, monitoring, self-healing, nginx]
-related: [../04-architecture/agent-orchestrator-overview.md, agent-orchestrator-deploy.md]
+related: [/codex/04-architecture/agent-orchestrator-overview.md, /codex/05-infrastructure/agent-orchestrator-deploy.md]
 created: 2026-05-30
 authoritative_for: [agent-orchestrator central API host (systemd limits + watchdog + auto-reboot)]
 referenced_by:
   [
-    codex/05-infrastructure/agent-orchestrator-deploy.md,
-    codex/05-infrastructure/agent-orchestrator-slack-notifications.md,
+    /codex/05-infrastructure/agent-orchestrator-deploy.md,
+    /codex/05-infrastructure/agent-orchestrator-slack-notifications.md,
   ]
 owner:
 last_reviewed: 2026-05-30
@@ -29,7 +29,7 @@ author: ikenna-claude-subagent
 
 # agent-orchestrator — central API host architecture
 
-> **SSOT**: this document. Related: `codex/04-architecture/agent-orchestrator-overview.md` § "Deployment shape" + §
+> **SSOT**: this document. Related: `/codex/04-architecture/agent-orchestrator-overview.md` § "Deployment shape" + §
 > "Connectivity model".
 
 ---
@@ -253,15 +253,15 @@ aws ssm describe-instance-information \
 
 ## Related systems
 
-| System                                                                 | Interaction                                                 |
-| ---------------------------------------------------------------------- | ----------------------------------------------------------- |
-| `nginx`                                                                | TLS termination, :443 → :8765 proxy; config on the host     |
-| `orch-watchdog.service`                                                | 60 s timer; forensic snapshots to `/var/log/orch-watchdog/` |
-| `orchestrator.service`                                                 | Main FastAPI backend; uvicorn on :8765                      |
-| `deployment-service/terraform/aws/api_host_auto_reboot.tf`             | CloudWatch alarm + EventBridge + Lambda                     |
-| `server/usage_tracker.py`                                              | httpx-based usage poller (no subprocess)                    |
-| `tests/test_usage_tracker_api.py`                                      | 17-test coverage for new poller                             |
-| `codex/04-architecture/agent-orchestrator-overview.md`                 | High-level deployment shape + connectivity model            |
-| `codex/05-infrastructure/agent-orchestrator-deploy.md`                 | Historical Cloud Run shape; systemd install script          |
-| `codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` | Topology + dispatch SSOT (single central VM)                |
-| `plans/active/issues/api_host_chronic_impairment_2026_05_29.md`        | Full forensic evidence for 2026-05-29 incident              |
+| System                                                                  | Interaction                                                 |
+| ----------------------------------------------------------------------- | ----------------------------------------------------------- |
+| `nginx`                                                                 | TLS termination, :443 → :8765 proxy; config on the host     |
+| `orch-watchdog.service`                                                 | 60 s timer; forensic snapshots to `/var/log/orch-watchdog/` |
+| `orchestrator.service`                                                  | Main FastAPI backend; uvicorn on :8765                      |
+| `deployment-service/terraform/aws/api_host_auto_reboot.tf`              | CloudWatch alarm + EventBridge + Lambda                     |
+| `server/usage_tracker.py`                                               | httpx-based usage poller (no subprocess)                    |
+| `tests/test_usage_tracker_api.py`                                       | 17-test coverage for new poller                             |
+| `/codex/04-architecture/agent-orchestrator-overview.md`                 | High-level deployment shape + connectivity model            |
+| `/codex/05-infrastructure/agent-orchestrator-deploy.md`                 | Historical Cloud Run shape; systemd install script          |
+| `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` | Topology + dispatch SSOT (single central VM)                |
+| `plans/active/issues/api_host_chronic_impairment_2026_05_29.md`         | Full forensic evidence for 2026-05-29 incident              |

@@ -14,23 +14,23 @@ scope: [engineer, admin]
 tags: [custody, copper, ceffu, cloud-kms, execution, health-check]
 related:
   [
-    wallet-hierarchy-and-capital-flow.md,
-    interface-credential-convention.md,
-    circuit-breaker-rule-taxonomy.md,
-    ../15-runbooks/custody-onboarding-checklist.md,
+    /codex/04-architecture/wallet-hierarchy-and-capital-flow.md,
+    /codex/04-architecture/interface-credential-convention.md,
+    /codex/04-architecture/circuit-breaker-rule-taxonomy.md,
+    /codex/15-runbooks/custody-onboarding-checklist.md,
   ]
 created: 2026-03-30
 authoritative_for: [custody provider protocol and implementations, custody-ping health-check contract]
 referenced_by:
   [
-    codex/04-architecture/client-funds-isolation.md,
-    codex/04-architecture/custody-architecture.md,
-    codex/04-architecture/defi-execution-overview.md,
-    codex/04-architecture/defi-phase3-infrastructure.md,
-    codex/04-architecture/execution-modes-and-chain-resolution.md,
-    codex/04-architecture/interface-credential-convention.md,
-    codex/04-architecture/separation-of-concerns.md,
-    codex/04-architecture/strategy-ensemble-topology.md,
+    /codex/04-architecture/client-funds-isolation.md,
+    /codex/04-architecture/custody-architecture.md,
+    /codex/04-architecture/defi-execution-overview.md,
+    /codex/04-architecture/defi-phase3-infrastructure.md,
+    /codex/04-architecture/execution-modes-and-chain-resolution.md,
+    /codex/04-architecture/interface-credential-convention.md,
+    /codex/04-architecture/separation-of-concerns.md,
+    /codex/04-architecture/strategy-ensemble-topology.md,
   ]
 owner:
 last_reviewed: 2026-05-17
@@ -53,13 +53,13 @@ code_refs:
 > [`plans/active/issues/cloud_kms_cmk_provisioning_for_may23_cutover_2026_05_12.md`](../../plans/archive/issues/cloud_kms_cmk_provisioning_for_may23_cutover_2026_05_12.md).
 >
 > **🟢 POD client scope clarified 2026-05-12** — see
-> [`codex/14-customer-journeys/pod-elysium-client-onboarding.md`](../14-customer-journeys/pod-elysium-client-onboarding.md).
+> [`/codex/14-customer-journeys/pod-elysium-client-onboarding.md`](/codex/14-customer-journeys/pod-elysium-client-onboarding.md).
 > POD (AIFM Ireland; BVI Fund) is our first DeFi allocator client. POD manages Copper + CEFFU KYB directly. **Fireblocks
 > is OUT OF SCOPE per POD stack choice** — POD uses Copper + CEFFU only. `SigningSurface.FIREBLOCKS_MPC` stays in UAC
 > enum for future-flexibility but is NOT a May-23 / June-1 target.
 >
 > Operator-runbook for every cutover + June-1 onboarding step:
-> [`codex/15-runbooks/custody-onboarding-checklist.md`](../15-runbooks/custody-onboarding-checklist.md).
+> [`/codex/15-runbooks/custody-onboarding-checklist.md`](/codex/15-runbooks/custody-onboarding-checklist.md).
 >
 > Cloud-KMS adapter (§ B in checklist) — `CloudKmsCustodyProvider` **SHIPPED** at execution-service@`d45d24b4` per Plan
 > Phase 3.C.1 (envelope-encrypted PK via Cloud HSM CMK). Bridge function `custody_config_from_wallet_provisioning`
@@ -335,7 +335,7 @@ HTTP timeouts: 30s for signing/transfers, 10s for balance queries and wallet lis
 > shape) is preserved as **design intent for the June-1+ flip** — it is NOT a May-23 implementation gate. Master plan
 > Group F Item 19's "Copper + CEFFU treasury wired" criterion is correspondingly deferred to the June-1+ checkpoint.
 > Codified per slot 4 audit refresh
-> [`codex/04-architecture/interface-credential-convention.md`](interface-credential-convention.md) 2026-05-12.
+> [`/codex/04-architecture/interface-credential-convention.md`](interface-credential-convention.md) 2026-05-12.
 >
 > **STATUS: STUB SHIPPED 2026-05-10** (the stub envelope is what reaches factory + supports the eventual June-1+ flip).
 > `CeffuCustodyProvider` exists in `execution-service/execution_service/custody/ceffu.py` with a fully-wired
@@ -741,7 +741,7 @@ Record provider API responses for replay in CI:
 
 > **Contract** for the periodic health check + balance-pull loop that keeps PBMS's balances projection honest against
 > Copper + CEFFU. Upstream signal for `BALANCE_DRIFT` (see
-> [`../15-runbooks/alerting/balance_drift.md`](../15-runbooks/alerting/balance_drift.md)) and
+> [`/codex/15-runbooks/alerting/balance_drift.md`](/codex/15-runbooks/alerting/balance_drift.md)) and
 > `CUSTODY_DISCONNECT_SECONDS` circuit-breaker (see
 > [`circuit-breaker-rule-taxonomy.md`](circuit-breaker-rule-taxonomy.md)).
 
@@ -760,14 +760,14 @@ class CustodyProvider(Protocol):
 
 `CustodyHealth` shape (canonical in UAC `unified_api_contracts.canonical.crosscutting.custody`):
 
-| Field                  | Type          | Description                                                                                                                                                      |
-| ---------------------- | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `healthy`              | `bool`        | `True` iff backend reachable AND last key-material rotation within freshness window                                                                              |
-| `last_key_rotation_at` | `datetime`    | Wall-clock of last successful CMK / key-material rotation (per [`../15-runbooks/credential-rotation-runbook.md`](../15-runbooks/credential-rotation-runbook.md)) |
-| `next_rotation_due_at` | `datetime`    | Wall-clock of next scheduled rotation (`last + cadence` per rotation-runbook per-class table)                                                                    |
-| `provider`             | `str`         | Provider name (e.g. `"copper"`, `"ceffu"`, `"cloud_kms"`) — for routing alerts                                                                                   |
-| `last_round_trip_ms`   | `int \| None` | Latency observed on the last successful ping; `None` if last ping failed                                                                                         |
-| `error`                | `str \| None` | Error message if `healthy == False`; `None` on success                                                                                                           |
+| Field                  | Type          | Description                                                                                                                                                              |
+| ---------------------- | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `healthy`              | `bool`        | `True` iff backend reachable AND last key-material rotation within freshness window                                                                                      |
+| `last_key_rotation_at` | `datetime`    | Wall-clock of last successful CMK / key-material rotation (per [`/codex/15-runbooks/credential-rotation-runbook.md`](/codex/15-runbooks/credential-rotation-runbook.md)) |
+| `next_rotation_due_at` | `datetime`    | Wall-clock of next scheduled rotation (`last + cadence` per rotation-runbook per-class table)                                                                            |
+| `provider`             | `str`         | Provider name (e.g. `"copper"`, `"ceffu"`, `"cloud_kms"`) — for routing alerts                                                                                           |
+| `last_round_trip_ms`   | `int \| None` | Latency observed on the last successful ping; `None` if last ping failed                                                                                                 |
+| `error`                | `str \| None` | Error message if `healthy == False`; `None` on success                                                                                                                   |
 
 ### §10A.2 Cadence + emitter
 
@@ -789,7 +789,7 @@ Per §3 coverage matrix and `wallet-config/{chain_env}/wallet_mapping.json`:
 
 PBMS reads `wallet_mapping.json` at startup, builds the (venue, asset) → provider routing table, then runs the 5-min
 balance-pull against the correct provider per wallet. The routing table hot-reloads per
-[`../06-coding-standards/config-reloader-pattern.md`](../06-coding-standards/config-reloader-pattern.md).
+[`/codex/06-coding-standards/config-reloader-pattern.md`](/codex/06-coding-standards/config-reloader-pattern.md).
 
 ### §10A.4 Failure modes + routing
 
@@ -799,8 +799,8 @@ Closed set; mirrors the existing alerting taxonomy.
 | --------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Single missed health-ping (transient)                                                                           | `last_round_trip_ms is None` on one tick                   | log debug; no alert (de-dup over 600s window per `balance_drift.md` pattern)                                                                                                                                                    |
 | Health-ping failed ≥ `CUSTODY_DISCONNECT_SECONDS` (default **300s** per `circuit-breaker-rule-taxonomy.md:228`) | rolling 5-tick failure window                              | emit `CUSTODY_HEALTH_DEGRADED` AlertCode → circuit-breaker `CUSTODY_DISCONNECT_SECONDS` rule fires `BLOCK_NEW` + CRITICAL severity (PagerDuty + Telegram). Slot 4 cred-rotation alert taxonomy AL-15 cross-references this code |
-| Balance-pull diff > `balance_drift_usd` threshold                                                               | per-(wallet, asset) reconciler, every 5 min                | emit `BALANCE_DRIFT` AlertCode → operator runbook per [`balance_drift.md`](../15-runbooks/alerting/balance_drift.md). Does NOT pause trading by default; pages tier-3 on `drift > 10x`                                          |
-| Key material stale (`now > next_rotation_due_at`)                                                               | health-check decision (`healthy = False` if past due-date) | emit `CREDENTIAL_ROTATION_OVERDUE` AlertCode → rotation runbook owner per [`../15-runbooks/credential-rotation-runbook.md`](../15-runbooks/credential-rotation-runbook.md) per-class table                                      |
+| Balance-pull diff > `balance_drift_usd` threshold                                                               | per-(wallet, asset) reconciler, every 5 min                | emit `BALANCE_DRIFT` AlertCode → operator runbook per [`balance_drift.md`](/codex/15-runbooks/alerting/balance_drift.md). Does NOT pause trading by default; pages tier-3 on `drift > 10x`                                      |
+| Key material stale (`now > next_rotation_due_at`)                                                               | health-check decision (`healthy = False` if past due-date) | emit `CREDENTIAL_ROTATION_OVERDUE` AlertCode → rotation runbook owner per [`/codex/15-runbooks/credential-rotation-runbook.md`](/codex/15-runbooks/credential-rotation-runbook.md) per-class table                              |
 
 `CUSTODY_HEALTH_DEGRADED` is the AlertCode name; the underlying circuit-breaker rule code is
 `CUSTODY_DISCONNECT_SECONDS` per `circuit-breaker-rule-taxonomy.md` (the two compose: emitter →
@@ -833,11 +833,11 @@ SSOT" invariant + slot 8 audit PB-19 deferred QG ratchet).
 
 ### §10A.8 Composes with
 
-- [`../15-runbooks/credential-rotation-runbook.md`](../15-runbooks/credential-rotation-runbook.md) — per-class rotation
-  cadence (Cloud HSM CMK 90d / Copper-JWT 60d / CEFFU-JWT 60d) drives `next_rotation_due_at`.
+- [`/codex/15-runbooks/credential-rotation-runbook.md`](/codex/15-runbooks/credential-rotation-runbook.md) — per-class
+  rotation cadence (Cloud HSM CMK 90d / Copper-JWT 60d / CEFFU-JWT 60d) drives `next_rotation_due_at`.
 - [`circuit-breaker-rule-taxonomy.md`](circuit-breaker-rule-taxonomy.md) `CUSTODY_DISCONNECT_SECONDS` rule.
-- [`../15-runbooks/alerting/balance_drift.md`](../15-runbooks/alerting/balance_drift.md) — the 5-min balance-pull
-  failure runbook.
+- [`/codex/15-runbooks/alerting/balance_drift.md`](/codex/15-runbooks/alerting/balance_drift.md) — the 5-min
+  balance-pull failure runbook.
 - [`separation-of-concerns.md`](separation-of-concerns.md) § "Positions SSOT" — PBMS is the sole consumer of the
   balance-pull stream; the ping loop is how the balances projection stays honest.
 

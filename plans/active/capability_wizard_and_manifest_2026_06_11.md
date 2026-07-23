@@ -53,7 +53,7 @@ A **capability manifest** (machine-generated SSOT of everything the system can d
 prospectus generator** (script that renders a per-configured-strategy document: mechanics, decision logic, exposures,
 fund-flow mermaid, risk scenarios, circuit breakers, backtest Sharpe/drawdown) + a **walkthrough wizard UI**
 (progressive configuration where every dropdown IS the availability answer). Codex SSOT for the concept:
-[`codex/09-strategy/architecture-v2/capability-wizard.md`](../../codex/09-strategy/architecture-v2/capability-wizard.md).
+[`/codex/09-strategy/architecture-v2/capability-wizard.md`](/codex/09-strategy/architecture-v2/capability-wizard.md).
 
 **Four use cases (operator-stated 2026-06-11):**
 
@@ -105,7 +105,7 @@ Key code anchors: `unified_api_contracts/internal/architecture_v2/{enums,archety
 `ml_service/training/ml/model_registry.py` · `fund_administration_service/allocation/capital_router.py` ·
 `unified_trading_library/performance_metrics.py` · `strategy_service/engine/backtest/runner.py` ·
 `codex/09-strategy/architecture-v2/archetypes/` (59 files) ·
-`codex/04-architecture/wallet-hierarchy-and-capital-flow.md`.
+`/codex/04-architecture/wallet-hierarchy-and-capital-flow.md`.
 
 ## Dependency DAG
 
@@ -555,7 +555,7 @@ actually exists (which data_types missing, over which timeframes) via the existi
 > (e2e-testing) → W12 #4 manifest-MCP-server (agent-orchestrator, heaviest).
 
 Question bank SSOT (every wizard question pinned to its code anchor):
-[`codex/09-strategy/architecture-v2/capability-wizard-question-bank.md`](../../codex/09-strategy/architecture-v2/capability-wizard-question-bank.md).
+[`/codex/09-strategy/architecture-v2/capability-wizard-question-bank.md`](/codex/09-strategy/architecture-v2/capability-wizard-question-bank.md).
 
 - [x] ✅ [DESIGN] P2. **Counterfactual "minimal unlock set" engine** — every unavailable edge computes the smallest set
       of missing pieces that would make it available ("Hyperliquid perps: adapter ✓, auth ✗ — 1 edge away"); wizard
@@ -697,14 +697,14 @@ Question bank SSOT (every wizard question pinned to its code anchor):
 `bash scripts/openapi/generate-unified-openapi.sh && python scripts/openapi/generate_capability_manifest.py && python scripts/openapi/generate_strategy_prospectus.py --archetype carry_basis_perp`
 on the laptop (full workspace) completes end-to-end: regenerated registries, manifest with 0 untyped unknowns, rendered
 prospectus whose two-sided audit section diffs against
-`codex/09-strategy/architecture-v2/archetypes/carry-basis-perp.md`. Wizard verified via Playwright L2 on both UI repos
+`/codex/09-strategy/architecture-v2/archetypes/carry-basis-perp.md`. Wizard verified via Playwright L2 on both UI repos
 against the committed manifest.
 
 ## Codex SSOT updates
 
 - NEW
-  [`codex/09-strategy/architecture-v2/capability-wizard.md`](../../codex/09-strategy/architecture-v2/capability-wizard.md)
-  — concept SSOT (shipped with this plan).
+  [`/codex/09-strategy/architecture-v2/capability-wizard.md`](/codex/09-strategy/architecture-v2/capability-wizard.md) —
+  concept SSOT (shipped with this plan).
 - `codex/14-customer-journeys/` — strategy-onboarding journey update when Phase 4 lands.
 - `plans/audit/instructions/strategy_master_audit_instructions.md` — add recurring two-sided-audit criterion (wizard vs
   codex vs code) once Phase 3 ships.

@@ -2,10 +2,9 @@
 doc_type: codex-ssot
 title: Options ML (Strike Selection)
 summary: >-
-  [SUPERSEDED, pre-v2] TradFi options-ML strategy (OptionsMLStrategy) — three dispatch-based prediction
-  types: strike-selection scoring, directional delta-conversion (0.30-delta call/put), and volatility-combo
-  straddles (predicted realized vol vs implied) on Deribit (BTC/ETH) and CBOE/IBKR (SPY). Replaced by
-  architecture-v2 vol-ml-lean.
+  [SUPERSEDED, pre-v2] TradFi options-ML strategy (OptionsMLStrategy) — three dispatch-based prediction types:
+  strike-selection scoring, directional delta-conversion (0.30-delta call/put), and volatility-combo straddles
+  (predicted realized vol vs implied) on Deribit (BTC/ETH) and CBOE/IBKR (SPY). Replaced by architecture-v2 vol-ml-lean.
 status: superseded
 nature: ssot
 asset_group: [meta]
@@ -13,10 +12,20 @@ stage: [meta]
 repos: [execution-service, strategy-service, unified-api-contracts, unified-trading-pm]
 scope: [engineer, admin]
 tags: [strategy, tradfi, cefi, ml, options, volatility, deribit]
-related: [market-making-options.md, volatility-surface.md, ../../architecture-v2/archetypes/vol-ml-lean.md]
+related:
+  [
+    /codex/09-strategy/_archived_pre_v2/tradfi/market-making-options.md,
+    /codex/09-strategy/_archived_pre_v2/tradfi/volatility-surface.md,
+    ../../architecture-v2/archetypes/vol-ml-lean.md,
+  ]
 created: 2026-03-27
 authoritative_for:
-referenced_by: [codex/09-strategy/_archived_pre_v2/STRATEGY_CATALOG_pre_v2.md, codex/09-strategy/_archived_pre_v2/tradfi/market-making-options.md, codex/09-strategy/_archived_pre_v2/tradfi/volatility-surface.md]
+referenced_by:
+  [
+    /codex/09-strategy/_archived_pre_v2/STRATEGY_CATALOG_pre_v2.md,
+    /codex/09-strategy/_archived_pre_v2/tradfi/market-making-options.md,
+    /codex/09-strategy/_archived_pre_v2/tradfi/volatility-surface.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

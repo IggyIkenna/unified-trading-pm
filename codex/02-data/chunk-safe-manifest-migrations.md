@@ -2,8 +2,8 @@
 doc_type: codex-ssot
 title: Chunk-Safe Manifest Migrations
 summary:
-  Chunked-shard + coordinator pattern (UTL ManifestMigrator / RescanScanner / chunked_date_ranges) for running
-  long manifest migrations across N VMs without racing the single _index parquet — workers write disjoint
+  Chunked-shard + coordinator pattern (UTL ManifestMigrator / RescanScanner / chunked_date_ranges) for running long
+  manifest migrations across N VMs without racing the single _index parquet — workers write disjoint
   _index/partial/<run-id>/<chunk>.parquet and one singleton-locked coordinator merges then deletes them.
 status: current
 nature: ssot
@@ -12,10 +12,15 @@ stage: [meta]
 repos: [deployment-service, instruments-service, unified-trading-library]
 scope: [engineer, admin]
 tags: [manifest, migration, backfill, single-walk, spot-vm, infrastructure]
-related: [availability-manifest-and-data-status.md, cross-asset-rescan-protocol.md, ../05-infrastructure/vm-tarball-deployment.md]
+related:
+  [
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/02-data/cross-asset-rescan-protocol.md,
+    /codex/05-infrastructure/vm-tarball-deployment.md,
+  ]
 created: 2026-04-21
 authoritative_for: [chunk-safe parallel manifest migration pattern (worker/coordinator/partial-shard)]
-referenced_by: [codex/02-data/cross-asset-rescan-protocol.md, codex/02-data/sports-scheduling-and-sharding.md]
+referenced_by: [/codex/02-data/cross-asset-rescan-protocol.md, /codex/02-data/sports-scheduling-and-sharding.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:
@@ -191,10 +196,10 @@ coordinator/worker/partial-path logic in service repos.
 
 ## SSOT cross-refs
 
-- [`codex/02-data/availability-manifest-and-data-status.md`](availability-manifest-and-data-status.md) — manifest v5
+- [`/codex/02-data/availability-manifest-and-data-status.md`](availability-manifest-and-data-status.md) — manifest v5
   shard columns + `capture_status`.
-- [`codex/02-data/sports-data-source-coverage-matrix.md`](sports-data-source-coverage-matrix.md) — Phase 5 FIXTURES
+- [`/codex/02-data/sports-data-source-coverage-matrix.md`](sports-data-source-coverage-matrix.md) — Phase 5 FIXTURES
   per-league rescan motivation.
-- [`codex/05-infrastructure/vm-tarball-deployment.md`](../05-infrastructure/vm-tarball-deployment.md) — how any VM boots
-  the migration script via `setup-data-pipeline-vm.sh`.
+- [`/codex/05-infrastructure/vm-tarball-deployment.md`](/codex/05-infrastructure/vm-tarball-deployment.md) — how any VM
+  boots the migration script via `setup-data-pipeline-vm.sh`.
 - Singleton-lock reference incident — 2026-04-19 SFI thundering herd (10 VMs / 6 hours / ~4 useful writes).

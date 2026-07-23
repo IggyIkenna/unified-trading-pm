@@ -16,11 +16,11 @@ scope: [engineer]
 tags: [canonicalisation, write-guard, gcs-paths, pipeline-mode, ssot, drift-prevention]
 related:
   [
-    ../02-data/cross-asset-canonical-target-ssot.md,
-    ../02-data/pipeline-mode-partition.md,
-    ../02-data/four-surface-reconciliation-procedure.md,
-    ../02-data/canonical-cutover-register.md,
-    ../02-data/non-canonical-path-inventory.md,
+    /codex/02-data/cross-asset-canonical-target-ssot.md,
+    /codex/02-data/pipeline-mode-partition.md,
+    /codex/02-data/four-surface-reconciliation-procedure.md,
+    /codex/02-data/canonical-cutover-register.md,
+    /codex/02-data/non-canonical-path-inventory.md,
   ]
 created: 2026-07-20
 authoritative_for:
@@ -52,8 +52,8 @@ side, and the next backfill re-creates the shape the migration just removed. Thi
 migrations of the same corpus.
 
 The canonical target itself (path grammar, id grammar, shard-atom grain) is **not** restated here — SSOT is
-[`codex/02-data/cross-asset-canonical-target-ssot.md`](../02-data/cross-asset-canonical-target-ssot.md). This doc covers
-only **who enforces it at write time**.
+[`/codex/02-data/cross-asset-canonical-target-ssot.md`](/codex/02-data/cross-asset-canonical-target-ssot.md). This doc
+covers only **who enforces it at write time**.
 
 All `file:line` citations below were read, not grepped, on 2026-07-20.
 
@@ -66,8 +66,8 @@ All `file:line` citations below were read, not grepped, on 2026-07-20.
 
 | Cited path                          | Reality                                                                                                                                                  |
 | ----------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `chart-candle-delivery-flow.md`     | EXISTS — `codex/02-data/chart-candle-delivery-flow.md`                                                                                                   |
-| `per-asset-group-bucket-layouts.md` | EXISTS — `codex/02-data/per-asset-group-bucket-layouts.md`                                                                                               |
+| `chart-candle-delivery-flow.md`     | EXISTS — `/codex/02-data/chart-candle-delivery-flow.md`                                                                                                  |
+| `per-asset-group-bucket-layouts.md` | EXISTS — `/codex/02-data/per-asset-group-bucket-layouts.md`                                                                                              |
 | `canonical-write-conventions.md`    | **Does NOT exist anywhere under `unified-trading-pm/codex/`.** It exists repo-locally as `market-tick-data-service/docs/canonical-write-conventions.md`. |
 
 The pointer is **mis-attributed, not absent**: a repo-local MTDS doc was cited as if it were a workspace codex SSOT.
@@ -94,7 +94,7 @@ Two properties are load-bearing for the guard contract:
 
 1. **`require_pipeline_mode` defaults `False`** (`:661`). The docstring states the default "accepts the back-compat bare
    paths the builders still emit". A guard that omits the keyword is therefore materially **weaker** than the codex
-   declaration in [`pipeline-mode-partition.md`](../02-data/pipeline-mode-partition.md). **Every write guard passes
+   declaration in [`pipeline-mode-partition.md`](/codex/02-data/pipeline-mode-partition.md). **Every write guard passes
    `require_pipeline_mode=True` explicitly** — all three existing guards do (§2a).
 2. **The oracle only understands the `raw_tick_data/by_date/` prefix.**
    `RAW_TICK_DATA_PREFIX = "raw_tick_data/by_date/"` (`partition_paths.py:66`); a path not starting with it returns
@@ -264,5 +264,5 @@ Not decided here.
 **Q3 — Should `build_cefi_partition_path` / `build_prediction_partition_path` gain a `pipeline_mode` axis?** Doing so
 would let the two lanes drop their external `.replace` / inline compensation and close the new-caller hazard flagged in
 §3a. Against: it touches a UAC SSOT signature with callers across repos, and the per-AG cutover dates in
-[`canonical-cutover-register.md`](../02-data/canonical-cutover-register.md) would need to gate the default. Independent
-of Q1 — the guard does not wait on this. Not decided here.
+[`canonical-cutover-register.md`](/codex/02-data/canonical-cutover-register.md) would need to gate the default.
+Independent of Q1 — the guard does not wait on this. Not decided here.

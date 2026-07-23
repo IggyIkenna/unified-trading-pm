@@ -15,14 +15,19 @@ scope: [engineer]
 tags: [portfolio-allocator, strategy, execution, reconciliation]
 related:
   [
-    venue-capability-registry.md,
-    ../09-strategy/architecture-v2/cross-cutting/portfolio-allocator.md,
-    ../04-architecture/capital-flow-model.md,
-    ../04-architecture/capital-structure-and-regulatory.md,
+    /codex/03-services/venue-capability-registry.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/portfolio-allocator.md,
+    /codex/04-architecture/capital-flow-model.md,
+    /codex/04-architecture/capital-structure-and-regulatory.md,
   ]
 created: 2026-04-17
 authoritative_for: [portfolio-allocator-service, 8 allocator archetypes]
-referenced_by: [codex/03-services/venue-capability-registry.md, codex/04-architecture/capital-flow-model.md, codex/09-strategy/architecture-v2/cross-cutting/portfolio-allocator.md]
+referenced_by:
+  [
+    /codex/03-services/venue-capability-registry.md,
+    /codex/04-architecture/capital-flow-model.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/portfolio-allocator.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -134,8 +139,8 @@ constraints:
 archetype: REGIME_AWARE
 regime_feature_ref: macro-regime-feature@v4
 regime_weights:
-  VOL_HIGH: { ..., CARRY_BASIS_PERP: 0.05, VOL_TRADING_OPTIONS: 0.40, ...}
-  VOL_LOW:  { ..., CARRY_BASIS_PERP: 0.30, VOL_TRADING_OPTIONS: 0.10, ...}
+  VOL_HIGH: { ..., CARRY_BASIS_PERP: 0.05, VOL_TRADING_OPTIONS: 0.40, ... }
+  VOL_LOW: { ..., CARRY_BASIS_PERP: 0.30, VOL_TRADING_OPTIONS: 0.10, ... }
   RISK_ON: { ... }
   RISK_OFF: { ... }
 ```
@@ -277,11 +282,11 @@ POST /allocators/{client_id}/approve-manual/{id}    → MANUAL archetype approva
 ## Cross-references
 
 - Cross-cutting concern:
-  [../09-strategy/architecture-v2/cross-cutting/portfolio-allocator.md](../09-strategy/architecture-v2/cross-cutting/portfolio-allocator.md)
-- Capital flow model: [../04-architecture/capital-flow-model.md](../04-architecture/capital-flow-model.md)
+  [/codex/09-strategy/architecture-v2/cross-cutting/portfolio-allocator.md](/codex/09-strategy/architecture-v2/cross-cutting/portfolio-allocator.md)
+- Capital flow model: [/codex/04-architecture/capital-flow-model.md](/codex/04-architecture/capital-flow-model.md)
 - Venue capability registry: [venue-capability-registry.md](venue-capability-registry.md)
 - Capital structure:
-  [../04-architecture/capital-structure-and-regulatory.md](../04-architecture/capital-structure-and-regulatory.md)
+  [/codex/04-architecture/capital-structure-and-regulatory.md](/codex/04-architecture/capital-structure-and-regulatory.md)
 
 ## Not in this doc
 

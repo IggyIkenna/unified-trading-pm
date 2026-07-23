@@ -1,7 +1,10 @@
 ---
 doc_type: codex-ssot
 title: Client Lifecycle Event Bus
-summary: Runtime client lifecycle event bus (REGISTER/DEREGISTER/QUARANTINE/UNQUARANTINE/CREDENTIAL_ROTATED) pushing operator→StrategySupervisor topology changes; ClientReady/ClientQuarantined/ShardCapacity events + the push-vs-pull hot-reload contract. Distinct from the onboarding state machine.
+summary:
+  Runtime client lifecycle event bus (REGISTER/DEREGISTER/QUARANTINE/UNQUARANTINE/CREDENTIAL_ROTATED) pushing
+  operator→StrategySupervisor topology changes; ClientReady/ClientQuarantined/ShardCapacity events + the push-vs-pull
+  hot-reload contract. Distinct from the onboarding state machine.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -9,10 +12,17 @@ stage: [meta]
 repos: [deployment-api, strategy-service]
 scope: [engineer, admin]
 tags: [client-isolation, lifecycle, event-bus, strategy, orchestrator, credentials]
-related: [per-client-isolation-architecture.md, client-lifecycle-state-machine.md, kill-switch-event-bus.md, ../05-infrastructure/strategy-shard-vm-topology.md]
+related:
+  [
+    /codex/04-architecture/per-client-isolation-architecture.md,
+    /codex/04-architecture/client-lifecycle-state-machine.md,
+    /codex/04-architecture/kill-switch-event-bus.md,
+    /codex/05-infrastructure/strategy-shard-vm-topology.md,
+  ]
 created: 2026-05-20
 authoritative_for: [client lifecycle event bus, ClientLifecycleEvent runtime topology events]
-referenced_by: [codex/04-architecture/client-lifecycle-state-machine.md, codex/05-infrastructure/strategy-shard-vm-topology.md]
+referenced_by:
+  [/codex/04-architecture/client-lifecycle-state-machine.md, /codex/05-infrastructure/strategy-shard-vm-topology.md]
 owner:
 last_reviewed: 2026-05-20
 code_refs:
@@ -32,9 +42,9 @@ from a live strategy VM, not the KYC flow.
 
 Cross-reference:
 
-- `codex/04-architecture/per-client-isolation-architecture.md` — supervisor subscription + ClientWorker spawn/reap
-- `codex/04-architecture/client-funds-isolation.md` — HARD RULE on cross-client isolation
-- `codex/04-architecture/kill-switch-event-bus.md` — the KillSwitchBusEvent pattern this extends
+- `/codex/04-architecture/per-client-isolation-architecture.md` — supervisor subscription + ClientWorker spawn/reap
+- `/codex/04-architecture/client-funds-isolation.md` — HARD RULE on cross-client isolation
+- `/codex/04-architecture/kill-switch-event-bus.md` — the KillSwitchBusEvent pattern this extends
 
 SSOT: `plans/active/per_client_isolation_and_venue_fanout_topology_2026_05_20.md`.
 
@@ -135,7 +145,7 @@ class StrategySupervisor(StrategySupervisorBase, ClientLifecycleBusSubscriberBas
 
 ## Composes With
 
-- `codex/04-architecture/kill-switch-event-bus.md` — parent bus pattern; `ClientLifecycleBusSubscriberBase` extends
+- `/codex/04-architecture/kill-switch-event-bus.md` — parent bus pattern; `ClientLifecycleBusSubscriberBase` extends
   `KillSwitchBusSubscriberBase`
-- `codex/04-architecture/per-client-isolation-architecture.md` — how the supervisor uses these events
-- `codex/05-infrastructure/strategy-shard-vm-topology.md` — shard naming and capacity events
+- `/codex/04-architecture/per-client-isolation-architecture.md` — how the supervisor uses these events
+- `/codex/05-infrastructure/strategy-shard-vm-topology.md` — shard naming and capacity events

@@ -1,21 +1,37 @@
 ---
 doc_type: codex-ssot
-title: 'Alerting Service: Batch/Live Alignment'
+title: "Alerting Service: Batch/Live Alignment"
 summary:
   Alerting-service batch/live alignment — same route_event() rules/dedup/cooldown in both modes; live delivers
-  PagerDuty+Telegram, batch suppresses delivery + writes batch_audit records; tick-staleness + connectivity-gap
-  taxonomy with 30s coalesce, DeFi operational AlertCodes, 3-tier stream-lag circuit-breaker actions.
+  PagerDuty+Telegram, batch suppresses delivery + writes batch_audit records; tick-staleness + connectivity-gap taxonomy
+  with 30s coalesce, DeFi operational AlertCodes, 3-tier stream-lag circuit-breaker actions.
 status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
-repos: [alerting-service, execution-service, features-service, strategy-service, unified-api-contracts, unified-trading-pm]
+repos:
+  [alerting-service, execution-service, features-service, strategy-service, unified-api-contracts, unified-trading-pm]
 scope: [engineer, admin]
 tags: [alerting, batch-live, monitoring, defi, escalation, data-quality]
-related: [batch-live-architecture.md, autonomous-recovery-matrix.md, kill-switch-circuit-breaker.md]
+related:
+  [
+    /codex/04-architecture/batch-live-architecture.md,
+    /codex/04-architecture/autonomous-recovery-matrix.md,
+    /codex/04-architecture/kill-switch-circuit-breaker.md,
+  ]
 created: 2026-03-27
 authoritative_for: [alerting-service batch/live alignment]
-referenced_by: [codex/03-observability/lifecycle-events.md, codex/04-architecture/batch-live-architecture.md, codex/04-architecture/defi-risk-monitoring.md, codex/04-architecture/dependency-health-policy.md, codex/04-architecture/instruments-live-architecture.md, codex/04-architecture/instruments-preflight-chain.md, codex/04-architecture/order-state-machine.md, codex/05-infrastructure/live-pipeline-architecture.md]
+referenced_by:
+  [
+    /codex/03-observability/lifecycle-events.md,
+    /codex/04-architecture/batch-live-architecture.md,
+    /codex/04-architecture/defi-risk-monitoring.md,
+    /codex/04-architecture/dependency-health-policy.md,
+    /codex/04-architecture/instruments-live-architecture.md,
+    /codex/04-architecture/instruments-preflight-chain.md,
+    /codex/04-architecture/order-state-machine.md,
+    /codex/05-infrastructure/live-pipeline-architecture.md,
+  ]
 owner:
 last_reviewed: 2026-05-17
 code_refs:
@@ -160,9 +176,9 @@ SSOTs:
 ## Live-Pipeline Alert Tier Table
 
 The live-pipeline cascade (MTDS → MDPS → features-service via Redis Streams; see
-[`../05-infrastructure/live-pipeline-architecture.md`](../05-infrastructure/live-pipeline-architecture.md)) emits
-`StreamingHealthSnapshot` per shard. Alerting-service reads the snapshot via the Health-API `data_freshness` callback +
-applies three tiers of rules:
+[`/codex/05-infrastructure/live-pipeline-architecture.md`](/codex/05-infrastructure/live-pipeline-architecture.md))
+emits `StreamingHealthSnapshot` per shard. Alerting-service reads the snapshot via the Health-API `data_freshness`
+callback + applies three tiers of rules:
 
 | Tier | Trigger condition                                                      | Source field                                | Severity   | Action                                                                                |
 | ---- | ---------------------------------------------------------------------- | ------------------------------------------- | ---------- | ------------------------------------------------------------------------------------- |

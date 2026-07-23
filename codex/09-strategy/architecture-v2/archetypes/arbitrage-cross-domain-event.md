@@ -16,16 +16,16 @@ tags: [strategy, arbitrage, prediction, sports, odds, execution, archetype]
 related:
   [
     ../families/arbitrage-structural.md,
-    arbitrage-price-dispersion.md,
-    market-making-prediction.md,
-    market-making-event-settled.md,
+    /codex/09-strategy/architecture-v2/archetypes/arbitrage-price-dispersion.md,
+    /codex/09-strategy/architecture-v2/archetypes/market-making-prediction.md,
+    /codex/09-strategy/architecture-v2/archetypes/market-making-event-settled.md,
   ]
 created: 2026-05-19
 authoritative_for: [ARBITRAGE_CROSS_DOMAIN_EVENT archetype specification]
 referenced_by:
   [
-    codex/09-strategy/architecture-v2/archetypes/market-making-prediction.md,
-    codex/09-strategy/architecture-v2/families/arbitrage-structural.md,
+    /codex/09-strategy/architecture-v2/archetypes/market-making-prediction.md,
+    /codex/09-strategy/architecture-v2/families/arbitrage-structural.md,
   ]
 owner:
 last_reviewed:

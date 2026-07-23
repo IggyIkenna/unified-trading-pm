@@ -14,17 +14,17 @@ scope: [engineer, admin]
 tags: [spot-vm, backfill, cost, infrastructure, deployment, runbook]
 related:
   [
-    vm-launcher-runbook.md,
-    vm-tarball-deployment.md,
-    deployment-observability.md,
-    aws-migration-cost-snapshot-2026-05-07.md,
+    /codex/05-infrastructure/vm-launcher-runbook.md,
+    /codex/05-infrastructure/vm-tarball-deployment.md,
+    /codex/05-infrastructure/deployment-observability.md,
+    /codex/05-infrastructure/aws-migration-cost-snapshot-2026-05-07.md,
   ]
 created: 2026-06-27
 authoritative_for: [Spot-VM provisioning standard for backfill launchers]
 referenced_by:
   [
-    codex/05-infrastructure/vm-launcher-runbook.md,
-    codex/05-infrastructure/vm-tarball-deployment.md,
+    /codex/05-infrastructure/vm-launcher-runbook.md,
+    /codex/05-infrastructure/vm-tarball-deployment.md,
     plans/active/issues/terminated_vm_disk_orphan_no_reaper_2026_06_30.md,
   ]
 owner:
@@ -133,6 +133,31 @@ deliberately (`sports_p0_spot_vm_launchers`, shipped) — its idempotent re-poll
 named carve-out, not a general licence for pollers; any OTHER forward/cron/poll launcher still defaults on-demand per
 the classification above unless it earns its own named exception here.
 
+## Manual check-in on a SPOT VM: verify preemption BEFORE diagnosing anything else (HARD RULE, codified 2026-07-23)
+
+The automated `exit_code_fleet_monitor` → `RelaunchPreemptedVm` path below only covers the standard fleet launchers.
+**One-off migration VMs (`launch-canonical-migration-vm.sh` and similar) are still SPOT by default but are commonly
+watched by a hand-rolled agent/operator watchdog, not the fleet monitor** — for those, checking preemption is on whoever
+is doing the check-in, not automatic.
+
+Whenever a SPOT VM you are checking in on looks stalled, gone, or terminal-without-a-normal-exit-marker, run this BEFORE
+concluding it's a code bug, a hang, or a monitoring false alarm:
+
+```bash
+gcloud compute operations list --project=<project> \
+  --filter="targetLink~<vm-name>" \
+  --format="table(name,operationType,status,insertTime,statusMessage)"
+```
+
+A `compute.instances.preempted` operation, `status=DONE`, is GCP's own record that the instance was genuinely reclaimed
+— root cause is confirmed and closed, no further bug-hunting needed; go straight to preemption-recovery (resume from
+measured progress, per the HARD RULE below). Its ABSENCE is equally informative: it rules out preemption and means the
+disappearance needs real investigation (crash, OOM, manual deletion, or — as found 2026-07-23 — a transient
+`gcloud describe` API blip that a watchdog without retry-before-terminal logic misreports as permanent loss; see
+`plans/active/defi_consolidated_closeout_2026_07_18.md`'s 2026-07-23 Progress Log entries for both a genuine preemption
+and a false-positive caught on the SAME watch run, minutes apart — the two look identical from a single failed
+`describe` call and are only distinguishable by checking `operations list`).
+
 ## Preemption recovery MUST resume from PROGRESS, never replay START_DATE (HARD RULE, codified 2026-07-18)
 
 Every SPOT VM launched from `deployment-service/scripts/vm/` is preemption-recovered by
@@ -154,7 +179,7 @@ real work. Replay-from-START_DATE would have re-done 2019-01-01..07 on every cyc
 1. A SPOT VM whose run is NOT idempotent-by-skip (i.e. any `--force`/`redo_all` run) MUST resume from **measured
    progress**, not from the original `START_DATE`.
 2. Progress is measured the same way a backfill monitor measures it — a count/max of the **target artifact** actually
-   created, entity-scoped (see `codex/12-agent-workflow/async-wait-and-poll-discipline.md`). Never a log or heartbeat.
+   created, entity-scoped (see `/codex/12-agent-workflow/async-wait-and-poll-discipline.md`). Never a log or heartbeat.
 3. Until the relauncher is progress-aware, a `--force` SPOT run MUST be driven as repeated bounded relaunches from
    `last_completed_unit + 1` (an operator loop or an explicit chunk schedule) — and that requirement belongs in the
    launch plan, not in someone's head.

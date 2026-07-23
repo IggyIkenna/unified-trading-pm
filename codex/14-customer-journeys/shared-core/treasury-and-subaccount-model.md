@@ -3,25 +3,26 @@ doc_type: codex-ssot
 title: Pooled fund subscription / redemption mechanic — portal surface
 summary:
   IM-Pooled-only subscription/redemption portal mechanic — client subs/redeems via UI or REST against
-  fund-administration-service, POD runs AML/KYC + NAV-strike gates, qualified 3rd-party custodian holds assets. Invariant
-  — client capital never commingles with Odum operating funds. Enumerates the shipped UAC types, 10 lifecycle events, and
-  service/UI routes.
+  fund-administration-service, POD runs AML/KYC + NAV-strike gates, qualified 3rd-party custodian holds assets.
+  Invariant — client capital never commingles with Odum operating funds. Enumerates the shipped UAC types, 10 lifecycle
+  events, and service/UI routes.
 status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
-repos: [client-reporting-api, execution-service, fund-administration-service, unified-trading-pm, unified-trading-system-ui]
+repos:
+  [client-reporting-api, execution-service, fund-administration-service, unified-trading-pm, unified-trading-system-ui]
 scope: [admin, sales, engineer]
 tags: [custody, uac, execution, reporting, ui, sales]
 related:
   [
-    fund-administration-and-custody.md,
-    org-fund-client-entity-model.md,
+    /codex/14-customer-journeys/shared-core/fund-administration-and-custody.md,
+    /codex/14-customer-journeys/shared-core/org-fund-client-entity-model.md,
     ../experience/im-decision-journey.md,
   ]
 created: 2026-04-20
 authoritative_for: [pooled fund subscription/redemption portal mechanic]
-referenced_by: [codex/14-customer-journeys/shared-core/fund-administration-and-custody.md]
+referenced_by: [/codex/14-customer-journeys/shared-core/fund-administration-and-custody.md]
 owner:
 last_reviewed:
 code_refs:

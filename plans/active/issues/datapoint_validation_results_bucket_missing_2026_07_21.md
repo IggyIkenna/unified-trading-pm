@@ -32,9 +32,9 @@ tags:
   ]
 related:
   [
-    data_pipeline_reconciliation_skill_2026_07_20.md,
-    ../../codex/02-data/reconciliation-census-and-compute-tiers.md,
-    ../../codex/05-infrastructure/bucket-isolation-model.md,
+    /plans/active/data_pipeline_reconciliation_skill_2026_07_20.md,
+    /codex/02-data/reconciliation-census-and-compute-tiers.md,
+    /codex/05-infrastructure/bucket-isolation-model.md,
   ]
 created: 2026-07-21
 last_updated: 2026-07-21

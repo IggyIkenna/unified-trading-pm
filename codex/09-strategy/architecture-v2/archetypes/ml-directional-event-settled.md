@@ -16,23 +16,23 @@ tags: [ml, sports, odds, prediction, kelly]
 related:
   [
     ../families/ml-directional.md,
-    ml-directional-continuous.md,
+    /codex/09-strategy/architecture-v2/archetypes/ml-directional-continuous.md,
     ../../../02-venues/unity-integration.md,
     ../axes/staking-methods.md,
-    rules-directional-event-settled.md,
+    /codex/09-strategy/architecture-v2/archetypes/rules-directional-event-settled.md,
   ]
 created: 2026-04-17
 authoritative_for: [ML_DIRECTIONAL_EVENT_SETTLED archetype specification]
 referenced_by:
   [
-    codex/02-venues/unity-integration.md,
-    codex/09-strategy/_archived_pre_v2/sports/first-half-prediction.md,
-    codex/09-strategy/_archived_pre_v2/sports/halftime-ml.md,
-    codex/09-strategy/_archived_pre_v2/sports/odds-drift.md,
-    codex/09-strategy/_archived_pre_v2/sports/pre-game-ml.md,
-    codex/09-strategy/_archived_pre_v2/sports/value-betting.md,
-    codex/09-strategy/architecture-v2/archetypes/event-driven.md,
-    codex/09-strategy/architecture-v2/archetypes/market-making-prediction.md,
+    /codex/02-venues/unity-integration.md,
+    /codex/09-strategy/_archived_pre_v2/sports/first-half-prediction.md,
+    /codex/09-strategy/_archived_pre_v2/sports/halftime-ml.md,
+    /codex/09-strategy/_archived_pre_v2/sports/odds-drift.md,
+    /codex/09-strategy/_archived_pre_v2/sports/pre-game-ml.md,
+    /codex/09-strategy/_archived_pre_v2/sports/value-betting.md,
+    /codex/09-strategy/architecture-v2/archetypes/event-driven.md,
+    /codex/09-strategy/architecture-v2/archetypes/market-making-prediction.md,
   ]
 owner:
 last_reviewed:

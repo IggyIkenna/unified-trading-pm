@@ -2,9 +2,9 @@
 doc_type: codex-ssot
 title: Playbook 1 — Marketing, pre-first-call
 summary:
-  'pb1 implementation layer — fully-public anonymous marketing journey (homepage + IM/DART/Reg landings +
-  /firm + /contact); canonical click paths, nav SSOTs, orphan-route triage, Playwright coverage; every
-  route 200s with no auth/entitlement gating.'
+  "pb1 implementation layer — fully-public anonymous marketing journey (homepage + IM/DART/Reg landings + /firm +
+  /contact); canonical click paths, nav SSOTs, orphan-route triage, Playwright coverage; every route 200s with no
+  auth/entitlement gating."
 status: current
 nature: ssot
 asset_group: [meta]
@@ -14,13 +14,21 @@ scope: [engineer, admin, sales]
 tags: [customer-journey, playbook, marketing, ui, public-site, prospect]
 related:
   [
-    02-research-and-documentation.md,
+    /codex/14-customer-journeys/playbooks/02-research-and-documentation.md,
     ../experience/marketing-journey.md,
     ../playbook-concepts/bloomberg-style-aesthetic.md,
   ]
 created: 2026-04-19
 authoritative_for: [pb1 marketing pre-first-call playbook implementation (routes + nav + Playwright)]
-referenced_by: [codex/14-customer-journeys/README.md, codex/14-customer-journeys/experience/marketing-journey.md, codex/14-customer-journeys/playbooks/02-research-and-documentation.md, codex/14-customer-journeys/playbooks/03-warm-prospect-demo.md, codex/14-customer-journeys/playbooks/README.md, codex/14-customer-journeys/testing/example-playbook-test.md]
+referenced_by:
+  [
+    /codex/14-customer-journeys/README.md,
+    /codex/14-customer-journeys/experience/marketing-journey.md,
+    /codex/14-customer-journeys/playbooks/02-research-and-documentation.md,
+    /codex/14-customer-journeys/playbooks/03-warm-prospect-demo.md,
+    /codex/14-customer-journeys/playbooks/README.md,
+    /codex/14-customer-journeys/testing/example-playbook-test.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

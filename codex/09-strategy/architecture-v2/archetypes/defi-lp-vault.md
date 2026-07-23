@@ -16,18 +16,18 @@ tags: [defi, market-making, erc-4626, vault, yield, strategy]
 related:
   [
     ../families/market-making.md,
-    defi-lp-concentrated.md,
-    defi-lp-pool.md,
-    yield-rotation-lending.md,
-    yield-staking-simple.md,
+    /codex/09-strategy/architecture-v2/archetypes/defi-lp-concentrated.md,
+    /codex/09-strategy/architecture-v2/archetypes/defi-lp-pool.md,
+    /codex/09-strategy/architecture-v2/archetypes/yield-rotation-lending.md,
+    /codex/09-strategy/architecture-v2/archetypes/yield-staking-simple.md,
   ]
 created: 2026-05-01
 authoritative_for: [DEFI_LP_VAULT archetype specification]
 referenced_by:
   [
-    codex/09-strategy/architecture-v2/archetypes/defi-lp-concentrated.md,
-    codex/09-strategy/architecture-v2/archetypes/defi-lp-pool.md,
-    codex/09-strategy/architecture-v2/families/market-making.md,
+    /codex/09-strategy/architecture-v2/archetypes/defi-lp-concentrated.md,
+    /codex/09-strategy/architecture-v2/archetypes/defi-lp-pool.md,
+    /codex/09-strategy/architecture-v2/families/market-making.md,
   ]
 owner:
 last_reviewed:

@@ -2,8 +2,8 @@
 doc_type: codex-ssot
 title: Deployment Flow — Operator Perspective
 summary: >-
-  Operator-perspective deployment path: the 3 gates (local quality-gates.sh Pass-1 → quickmerge Pass-2 → main promotion +
-  semver bump) through to Cloud Build, the paper→live strategy-promotion CLI/UI paths, emergency procedures, and the
+  Operator-perspective deployment path: the 3 gates (local quality-gates.sh Pass-1 → quickmerge Pass-2 → main promotion
+  + semver bump) through to Cloud Build, the paper→live strategy-promotion CLI/UI paths, emergency procedures, and the
   human-only hard-stop list.
 status: current
 nature: ssot
@@ -12,10 +12,23 @@ stage: [meta]
 repos: [deployment-service, deployment-ui, e2e-testing]
 scope: [engineer, admin]
 tags: [ci-cd, quickmerge, quality-gates, verification, observability]
-related: [./ci-cd-flow.md, ./version-graduation.md, ../04-architecture/promote-workflow-architecture.md, ./dependency-cascade.md]
+related:
+  [
+    ./ci-cd-flow.md,
+    ./version-graduation.md,
+    /codex/04-architecture/promote-workflow-architecture.md,
+    ./dependency-cascade.md,
+  ]
 created: 2026-05-15
-authoritative_for: [deployment-flow operator gate-walkthrough (3-gate local→staging→main promotion + emergency procedures)]
-referenced_by: [codex/08-workflows/branch-and-version-reference-model.md, codex/08-workflows/ci-cd-flow.md, codex/08-workflows/cutover-window-dependency-order.md, codex/08-workflows/dependency-cascade.md]
+authoritative_for:
+  [deployment-flow operator gate-walkthrough (3-gate local→staging→main promotion + emergency procedures)]
+referenced_by:
+  [
+    /codex/08-workflows/branch-and-version-reference-model.md,
+    /codex/08-workflows/ci-cd-flow.md,
+    /codex/08-workflows/cutover-window-dependency-order.md,
+    /codex/08-workflows/dependency-cascade.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -26,8 +39,8 @@ code_refs:
 > Covers the promotion path from local development through staging to main, with QG gates, version graduation, and the
 > paper-to-live strategy promotion path. Complements `ci-cd-flow.md` (engineer view).
 >
-> Cross-references: `codex/08-workflows/ci-cd-flow.md`; `codex/08-workflows/version-graduation.md`;
-> `codex/04-architecture/promote-workflow-architecture.md`; `CLAUDE.md` § "Git discipline".
+> Cross-references: `/codex/08-workflows/ci-cd-flow.md`; `/codex/08-workflows/version-graduation.md`;
+> `/codex/04-architecture/promote-workflow-architecture.md`; `CLAUDE.md` § "Git discipline".
 
 ---
 
@@ -70,7 +83,7 @@ code_refs:
 **Branch protection enforcement** (both `staging` and `main`):
 
 - Required status check: `quality-gates-v2` — nothing merges without CI green (v1 `quality-gates`/`workspace-qg`
-  **RETIRED 2026-05-29** — see `codex/08-workflows/ci-cd-flow.md` § quality-gates-v2 and
+  **RETIRED 2026-05-29** — see `/codex/08-workflows/ci-cd-flow.md` § quality-gates-v2 and
   `plans/active/ci_canonical_v2_migration_2026_05_29.md` for migration history)
 - Applies to all PRs regardless of how created (manual or quickmerge)
 - Caller file: `.github/workflows/quality-gates-v2.yml`; callee: `python-quality-gates-v2.yml` in PM
@@ -129,7 +142,7 @@ CI on staging triggers `semver-agent.yml`:
 
 - `request-major-bump.yml` creates an Issue with `major-bump-pending` label
 - Operator comments `/approve` on the issue to execute
-- See `codex/08-workflows/version-graduation.md` for full 1.0.0 graduation procedure
+- See `/codex/08-workflows/version-graduation.md` for full 1.0.0 graduation procedure
 
 ---
 
@@ -170,7 +183,7 @@ When repo A is promoted and bumped:
 Minor/patch bumps: direct commit to staging with `[skip ci]` to avoid unbounded cascade. Major bumps: create branch + PR
 requiring human review (breaking change could need code changes).
 
-See `codex/08-workflows/dependency-cascade.md` for topology and cap rules.
+See `/codex/08-workflows/dependency-cascade.md` for topology and cap rules.
 
 ---
 

@@ -15,14 +15,23 @@ scope: [engineer, admin]
 tags: [promote, strategy, mvp, execution, defi, cefi]
 related:
   [
-    per-client-isolation-architecture.md,
-    ../05-infrastructure/strategy-shard-vm-topology.md,
-    ../05-infrastructure/strategy-vm-launcher-shape.md,
+    /codex/04-architecture/per-client-isolation-architecture.md,
+    /codex/05-infrastructure/strategy-shard-vm-topology.md,
+    /codex/05-infrastructure/strategy-vm-launcher-shape.md,
   ]
 created: 2026-05-15
-authoritative_for:
-  [May-23 promote workflow (dual-track CLI/UI), StrategyMaturityPhase promote state machine]
-referenced_by: [codex/04-architecture/cross-service-promote-handlers.md, codex/04-architecture/live-deployment-manifest.md, codex/04-architecture/ml-lifecycle.md, codex/04-architecture/ml-service-architecture.md, codex/04-architecture/strategy-lifecycle-state-machine.md, codex/04-architecture/strategy-service-architecture.md, codex/04-architecture/trading-agent-service-directive-pipeline.md, codex/08-workflows/deployment-flow.md]
+authoritative_for: [May-23 promote workflow (dual-track CLI/UI), StrategyMaturityPhase promote state machine]
+referenced_by:
+  [
+    /codex/04-architecture/cross-service-promote-handlers.md,
+    /codex/04-architecture/live-deployment-manifest.md,
+    /codex/04-architecture/ml-lifecycle.md,
+    /codex/04-architecture/ml-service-architecture.md,
+    /codex/04-architecture/strategy-lifecycle-state-machine.md,
+    /codex/04-architecture/strategy-service-architecture.md,
+    /codex/04-architecture/trading-agent-service-directive-pipeline.md,
+    /codex/08-workflows/deployment-flow.md,
+  ]
 owner: strategy-platform
 last_reviewed: 2026-05-17
 code_refs:
@@ -106,14 +115,14 @@ Primary backend for the promote workflow.
 
 `deployment-service/scripts/vm/launch-strategy-paper-vm.sh` `deployment-service/scripts/vm/launch-strategy-live-vm.sh`
 
-Full shape spec: `codex/05-infrastructure/strategy-vm-launcher-shape.md`.
+Full shape spec: `/codex/05-infrastructure/strategy-vm-launcher-shape.md`.
 
 ### execution-service (manual gate path)
 
 Strategy-service emits instruction in `MANUAL` mode → execution-service holds in `manual_pending_queue` → DART UI calls
 `POST /api/manual/pending/{id}/approve` → `MANUAL_APPROVED` event emitted → execution-service unholds + executes.
 
-Full flow: `codex/14-customer-journeys/dart/mode-toggle.md`.
+Full flow: `/codex/14-customer-journeys/dart/mode-toggle.md`.
 
 ---
 
@@ -211,8 +220,8 @@ Shard auto-spawn (`strategy-live-{archetype}-shard1-...`) is **outside the promo
 
 Cross-reference:
 
-- `codex/04-architecture/per-client-isolation-architecture.md` — supervisor + ClientWorker model
-- `codex/05-infrastructure/strategy-shard-vm-topology.md` — shard naming + capacity thresholds
+- `/codex/04-architecture/per-client-isolation-architecture.md` — supervisor + ClientWorker model
+- `/codex/05-infrastructure/strategy-shard-vm-topology.md` — shard naming + capacity thresholds
 
 ---
 

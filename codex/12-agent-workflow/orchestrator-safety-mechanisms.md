@@ -15,9 +15,9 @@ scope: [engineer, admin]
 tags: [orchestrator, self-healing, slack, monitoring, escalation]
 related:
   [
-    codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md,
-    codex/05-infrastructure/agent-orchestrator-slack-notifications.md,
-    codex/05-infrastructure/per-tab-worktrees.md,
+    /codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md,
+    /codex/05-infrastructure/agent-orchestrator-slack-notifications.md,
+    /codex/05-infrastructure/per-tab-worktrees.md,
   ]
 created: 2026-05-21
 authoritative_for:
@@ -28,9 +28,9 @@ authoritative_for:
   ]
 referenced_by:
   [
-    codex/04-architecture/agent-orchestrator-overview.md,
-    codex/05-infrastructure/agent-orchestrator-slack-notifications.md,
-    codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md,
+    /codex/04-architecture/agent-orchestrator-overview.md,
+    /codex/05-infrastructure/agent-orchestrator-slack-notifications.md,
+    /codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md,
     plans/audit/instructions/orchestrator_master_audit_instructions.md,
     plans/epics/orchestrator_master.md,
   ]
@@ -122,7 +122,7 @@ deterministic and simple. Refining to `min(healthy, key=lambda a: a.weekly_pct)`
 ## C) Telegram / Slack alerts (workspace-wide alert framework)
 
 Current inventory (verified 2026-06-01; both `server/notifications/slack.py` and `server/notifications/telegram.py`
-expose this set). **Authoritative SSOT**: `codex/05-infrastructure/agent-orchestrator-slack-notifications.md` (event
+expose this set). **Authoritative SSOT**: `/codex/05-infrastructure/agent-orchestrator-slack-notifications.md` (event
 table, payload shape, retry logic, secret inventory) — cross-link here to prevent the two from drifting.
 
 | Event                              | When                                                                      | Severity  |
@@ -186,7 +186,7 @@ coordinator determines predecessor liveness **before** touching any files. Three
 The old unconditional `git add -A` path is removed — it was unsafe for the live-peer case.
 
 **Compose with**: `worktree_clean_check.py` pre-spawn gate (produces the liveness signal that drives the three-way
-branch above); `codex/05-infrastructure/per-tab-worktrees.md` § "Fresh-spawn dirty-state" (canonical detail on the
+branch above); `/codex/05-infrastructure/per-tab-worktrees.md` § "Fresh-spawn dirty-state" (canonical detail on the
 coordinator contract).
 
 **Rationale**: the foreign-files HARD RULE in CLAUDE.md governs ACTIVE-WORK files in OTHER slots. The dead-predecessor

@@ -11,10 +11,21 @@ stage: [meta]
 repos: [unified-trading-api, unified-trading-system-ui]
 scope: [sales, engineer, admin]
 tags: [onboarding, questionnaire, ui, mvp, escalation]
-related: [./prospect-questionnaire-flow.md, ./signup-signin-workflow.md, ../04-architecture/commercial-service-families.md]
+related:
+  [./prospect-questionnaire-flow.md, ./signup-signin-workflow.md, /codex/04-architecture/commercial-service-families.md]
 created: 2026-04-24
 authoritative_for: [7-step canonical client-onboarding sequence (per-step Ikenna/client/system actor playbook)]
-referenced_by: [codex/02-data/questionnaire-axes.md, codex/04-architecture/commercial-service-families.md, codex/08-workflows/prospect-questionnaire-flow.md, codex/08-workflows/signup-signin-workflow.md, codex/09-strategy/README.md, codex/09-strategy/_archived_pre_v2/cefi/market-making.md, codex/09-strategy/_archived_pre_v2/cross-cutting/config-architecture.md, codex/09-strategy/_archived_pre_v2/defi/aave-lending.md]
+referenced_by:
+  [
+    /codex/02-data/questionnaire-axes.md,
+    /codex/04-architecture/commercial-service-families.md,
+    /codex/08-workflows/prospect-questionnaire-flow.md,
+    /codex/08-workflows/signup-signin-workflow.md,
+    /codex/09-strategy/README.md,
+    /codex/09-strategy/_archived_pre_v2/cefi/market-making.md,
+    /codex/09-strategy/_archived_pre_v2/cross-cutting/config-architecture.md,
+    /codex/09-strategy/_archived_pre_v2/defi/aave-lending.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -29,9 +40,9 @@ code_refs:
 > [`plans/archive/dart_ui_strategy_filtering_and_onboarding_2026_04_24.plan.md`](../../plans/archive/dart_ui_strategy_filtering_and_onboarding_2026_04_24.plan.md)
 > **Companion docs:** [`prospect-questionnaire-flow.md`](./prospect-questionnaire-flow.md),
 > [`signup-signin-workflow.md`](./signup-signin-workflow.md),
-> [`../09-strategy/architecture-v2/strategy-questionnaire-mapping.md`](../09-strategy/architecture-v2/strategy-questionnaire-mapping.md),
-> [`../09-strategy/architecture-v2/strategy-catalogue-3tier.md`](../09-strategy/architecture-v2/strategy-catalogue-3tier.md),
-> [`../04-architecture/commercial-service-families.md`](../04-architecture/commercial-service-families.md).
+> [`/codex/09-strategy/architecture-v2/strategy-questionnaire-mapping.md`](/codex/09-strategy/architecture-v2/strategy-questionnaire-mapping.md),
+> [`/codex/09-strategy/architecture-v2/strategy-catalogue-3tier.md`](/codex/09-strategy/architecture-v2/strategy-catalogue-3tier.md),
+> [`/codex/04-architecture/commercial-service-families.md`](/codex/04-architecture/commercial-service-families.md).
 
 ---
 
@@ -66,11 +77,11 @@ Partnership / request access code" sends to `/contact`. See
 
 ### Step 2 — Deep Dive review (briefings + docs + Our Story + FAQ)
 
-| Actor  | Action                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
-| ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Ikenna | (Channel B / warm hand-off only) Sends 1-3 briefing links + per-path access code tailored to the prospect's stated shape. Typical bundles: (a) **IM candidate** → `/briefings/investment-management`; (b) **AR candidate** → `/briefings/regulatory`; (c) **DART Signals-In candidate** → `/briefings/dart-signals-in`; (d) **DART Full candidate** → `/briefings/dart-full`. Channel A skips this.                                                                              |
-| Client | Lands on a Deep Dive route (`/briefings/*`, `/docs`, `/our-story`, `/faq`). Sees `<BriefingAccessGate>` with the brief questionnaire embedded inline. Either fills it (cold inbound, channel A) or expands "I already have an access code" disclosure and pastes the code Ikenna sent (warm hand-off, channel B).                                                                                                                                                                |
-| System | `<BriefingAccessGate>` embeds `<QuestionnaireForm compact returnPath={pathname} />`. On submit OR correct code paste: `setBriefingSessionActive()` → `odum-briefing-session = "1"` in `localStorage`. Same session covers every Deep Dive route. Email-back fires with code + Next-steps block + Calendly + Strategy Evaluation pointer. See [`../14-customer-journeys/authentication/light-auth-briefings.md`](../14-customer-journeys/authentication/light-auth-briefings.md). |
+| Actor  | Action                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Ikenna | (Channel B / warm hand-off only) Sends 1-3 briefing links + per-path access code tailored to the prospect's stated shape. Typical bundles: (a) **IM candidate** → `/briefings/investment-management`; (b) **AR candidate** → `/briefings/regulatory`; (c) **DART Signals-In candidate** → `/briefings/dart-signals-in`; (d) **DART Full candidate** → `/briefings/dart-full`. Channel A skips this.                                                                                      |
+| Client | Lands on a Deep Dive route (`/briefings/*`, `/docs`, `/our-story`, `/faq`). Sees `<BriefingAccessGate>` with the brief questionnaire embedded inline. Either fills it (cold inbound, channel A) or expands "I already have an access code" disclosure and pastes the code Ikenna sent (warm hand-off, channel B).                                                                                                                                                                        |
+| System | `<BriefingAccessGate>` embeds `<QuestionnaireForm compact returnPath={pathname} />`. On submit OR correct code paste: `setBriefingSessionActive()` → `odum-briefing-session = "1"` in `localStorage`. Same session covers every Deep Dive route. Email-back fires with code + Next-steps block + Calendly + Strategy Evaluation pointer. See [`/codex/14-customer-journeys/authentication/light-auth-briefings.md`](/codex/14-customer-journeys/authentication/light-auth-briefings.md). |
 
 The questionnaire-on-the-gate flow means most prospects now combine Steps 2 + 3 in a single submission — they fill the
 brief questionnaire to get into the Deep Dive, which IS the qualification step.
@@ -83,9 +94,9 @@ brief questionnaire to get into the Deep Dive, which IS the qualification step.
 | Client | Fills 11 axes (6 base required + 5 strategy-preference optional; 7 Reg-Umbrella optional if `service_family ∈ {RegUmbrella, combo}`). Takes ~5 minutes. Submits. Two valid entry points: (a) embedded on the Deep Dive lock screen (most common), (b) standalone `/questionnaire` page (linked from marketing CTAs).                                                                                                                         |
 | System | Writes `QuestionnaireResponse` to Firestore `/questionnaires/{id}` (staging/prod) or `localStorage` (dev/mock). Envelope `{email, firm_name, access_code_fingerprint}` stored alongside. `setBriefingSessionActive()` activates the Deep Dive session. `POST /api/questionnaire/email` fires with code + Next-steps block + Calendly + Strategy Eval pointer. `router.push(returnPath)` — back to the Deep Dive route they were heading for. |
 
-SSOT schema: [`strategy-questionnaire-mapping.md`](../09-strategy/architecture-v2/strategy-questionnaire-mapping.md)
+SSOT schema: [`strategy-questionnaire-mapping.md`](/codex/09-strategy/architecture-v2/strategy-questionnaire-mapping.md)
 (derivation) + [`prospect-questionnaire-flow.md`](./prospect-questionnaire-flow.md) (admin playback + email-back funnel
-framing) + [`../02-data/questionnaire-axes.md`](../02-data/questionnaire-axes.md) (full axis catalogue).
+framing) + [`/codex/02-data/questionnaire-axes.md`](/codex/02-data/questionnaire-axes.md) (full axis catalogue).
 
 Reusable form component:
 [`components/questionnaire/questionnaire-form.tsx`](unified-trading-system-ui/components/questionnaire/questionnaire-form.tsx)
@@ -120,13 +131,12 @@ Architecture notes:
   initial render via `initialData` props — avoids the React 19 / Next.js 15 client-fetch hydration race that produced
   flash-of-empty-fields.
 - All Firestore reads/writes from API routes use `firebase-admin` so the routes work regardless of
-  `NEXT_PUBLIC_FIREBASE_*` bake-state (UAT historically didn't have those vars). **Never use the
-  client SDK in a server-side Next.js API route** — the client SDK reads `NEXT_PUBLIC_FIREBASE_*`
-  and silently no-ops on UAT: the route returns HTTP 200 with no write and an empty `submissionId`,
-  producing data-loss with no visible error. The symptom is indistinguishable from a success
-  response at the call-site; only a Firestore console inspection reveals the missing document.
-  Always import from `firebase-admin` (server SDK) in `app/api/**`, `pages/api/**`, and any
-  Server Action that writes to Firestore.
+  `NEXT_PUBLIC_FIREBASE_*` bake-state (UAT historically didn't have those vars). **Never use the client SDK in a
+  server-side Next.js API route** — the client SDK reads `NEXT_PUBLIC_FIREBASE_*` and silently no-ops on UAT: the route
+  returns HTTP 200 with no write and an empty `submissionId`, producing data-loss with no visible error. The symptom is
+  indistinguishable from a success response at the call-site; only a Firestore console inspection reveals the missing
+  document. Always import from `firebase-admin` (server SDK) in `app/api/**`, `pages/api/**`, and any Server Action that
+  writes to Firestore.
 - Storage rules are size-cap-only (500 MB). Earlier content-type allow-list rejected legitimate `.md` uploads.
 - Confirmation emails route via Resend from `hello@mail.odum-research.com` (prod) / `hello@mail.uat.odum-research.com`
   (uat) / `onboarding@resend.dev` (dev).
@@ -142,27 +152,27 @@ this step on a case-by-case basis at Step 6 — but the default is "fill it befo
 
 ### Step 6 — Phone / video call
 
-| Actor  | Action                                                                                                                                                                                                                                                       |
-| ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Ikenna | 45-60 min call. Walks the prospect through their filtered universe on the staging UI, toggles DART Full vs Signals-In if relevant, confirms mandate shape (IM vs DART vs Reg Umbrella vs combo), pricing framework, regulatory posture, onboarding timeline. |
-| Client | Confirms scope or raises a specific reservation. Outcome of the call is either a named next commitment (mandate signing, onboarding kickoff date, deeper session on one surface) or a specific gap sales addresses directly.                                 |
-| System | Sales records call outcome in `account-intelligence-record` (see [`../14-customer-journeys/demo-ops/account-intelligence-record.md`](../14-customer-journeys/demo-ops/account-intelligence-record.md)) + `meeting-history-and-interest-tracking` entry.      |
+| Actor  | Action                                                                                                                                                                                                                                                          |
+| ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Ikenna | 45-60 min call. Walks the prospect through their filtered universe on the staging UI, toggles DART Full vs Signals-In if relevant, confirms mandate shape (IM vs DART vs Reg Umbrella vs combo), pricing framework, regulatory posture, onboarding timeline.    |
+| Client | Confirms scope or raises a specific reservation. Outcome of the call is either a named next commitment (mandate signing, onboarding kickoff date, deeper session on one surface) or a specific gap sales addresses directly.                                    |
+| System | Sales records call outcome in `account-intelligence-record` (see [`/codex/14-customer-journeys/demo-ops/account-intelligence-record.md`](/codex/14-customer-journeys/demo-ops/account-intelligence-record.md)) + `meeting-history-and-interest-tracking` entry. |
 
 "Interesting, let's keep in touch" is **not** an outcome. The call is designed to resolve — follow-up is orchestrated by
-[`post-demo-followup-orchestration.md`](../14-customer-journeys/demo-ops/post-demo-followup-orchestration.md) if the
+[`post-demo-followup-orchestration.md`](/codex/14-customer-journeys/demo-ops/post-demo-followup-orchestration.md) if the
 commitment isn't in the meeting.
 
 ### Step 7 — Production onboarding
 
-| Actor  | Action                                                                                                                                                                                                                                                                                                                                        |
-| ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Ikenna | Approves signup in `/admin/organizations/[id]`. Sets entitlements (per resolved commercial path — see [`commercial-service-families.md`](../04-architecture/commercial-service-families.md)). Uploads or collects regulatory docs via `/api/onboarding/upload` (see [`prospect-questionnaire-flow.md`](./prospect-questionnaire-flow.md) §5). |
-| Client | Completes signup form → Firebase Auth user created (initially disabled, `pending_approval`). After Ikenna approves, logs in with real credentials → lands on dashboard gated to paid entitlements.                                                                                                                                            |
-| System | `user-management-api` creates `Firebase Auth` user + Firestore `/users/{uid}` profile; attaches `questionnaire_response_id` from the envelope. `unified-trading-api` reads entitlements; `services/*` tabs render per entitlement + service-family-scope. `DemoPlanToggle` no longer renders (it's demo-provider-only).                       |
+| Actor  | Action                                                                                                                                                                                                                                                                                                                                            |
+| ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Ikenna | Approves signup in `/admin/organizations/[id]`. Sets entitlements (per resolved commercial path — see [`commercial-service-families.md`](/codex/04-architecture/commercial-service-families.md)). Uploads or collects regulatory docs via `/api/onboarding/upload` (see [`prospect-questionnaire-flow.md`](./prospect-questionnaire-flow.md) §5). |
+| Client | Completes signup form → Firebase Auth user created (initially disabled, `pending_approval`). After Ikenna approves, logs in with real credentials → lands on dashboard gated to paid entitlements.                                                                                                                                                |
+| System | `user-management-api` creates `Firebase Auth` user + Firestore `/users/{uid}` profile; attaches `questionnaire_response_id` from the envelope. `unified-trading-api` reads entitlements; `services/*` tabs render per entitlement + service-family-scope. `DemoPlanToggle` no longer renders (it's demo-provider-only).                           |
 
 Post-onboarding, the client operates the same staging UI they demo'd. Same components, same data shapes — only the
 auth + data provenance differ (see
-[`../14-customer-journeys/_ssot-rules/03-same-system-principle.md`](../14-customer-journeys/_ssot-rules/03-same-system-principle.md)).
+[`/codex/14-customer-journeys/_ssot-rules/03-same-system-principle.md`](/codex/14-customer-journeys/_ssot-rules/03-same-system-principle.md)).
 
 ---
 
@@ -170,14 +180,14 @@ auth + data provenance differ (see
 
 - [`prospect-questionnaire-flow.md`](./prospect-questionnaire-flow.md) — questionnaire form, admin playback, docs flow.
 - [`signup-signin-workflow.md`](./signup-signin-workflow.md) — self-serve signup mechanics + target-state funnel.
-- [`../09-strategy/architecture-v2/strategy-questionnaire-mapping.md`](../09-strategy/architecture-v2/strategy-questionnaire-mapping.md)
+- [`/codex/09-strategy/architecture-v2/strategy-questionnaire-mapping.md`](/codex/09-strategy/architecture-v2/strategy-questionnaire-mapping.md)
   — 11-axis → catalogue-filter derivation.
-- [`../09-strategy/architecture-v2/strategy-catalogue-3tier.md`](../09-strategy/architecture-v2/strategy-catalogue-3tier.md)
+- [`/codex/09-strategy/architecture-v2/strategy-catalogue-3tier.md`](/codex/09-strategy/architecture-v2/strategy-catalogue-3tier.md)
   — Reality / FOMO tab roles, admin universe / editor surfaces.
-- [`../04-architecture/commercial-service-families.md`](../04-architecture/commercial-service-families.md) — DART Full
-  vs Signals-In feature matrix, locked-section design, demo plan toggle.
-- [`../14-customer-journeys/demo-ops/staging-demo-setup.md`](../14-customer-journeys/demo-ops/staging-demo-setup.md) —
-  staging demo persona onboarding checklist.
+- [`/codex/04-architecture/commercial-service-families.md`](/codex/04-architecture/commercial-service-families.md) —
+  DART Full vs Signals-In feature matrix, locked-section design, demo plan toggle.
+- [`/codex/14-customer-journeys/demo-ops/staging-demo-setup.md`](/codex/14-customer-journeys/demo-ops/staging-demo-setup.md)
+  — staging demo persona onboarding checklist.
 - [`../14-customer-journeys/demo-ops/profiles/desmond-dart-full.yaml`](../14-customer-journeys/demo-ops/profiles/desmond-dart-full.yaml)
   - [`desmond-signals-in.yaml`](../14-customer-journeys/demo-ops/profiles/desmond-signals-in.yaml) — worked example
     (real client).

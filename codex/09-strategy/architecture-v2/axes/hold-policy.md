@@ -1,11 +1,11 @@
 ---
 doc_type: codex-ssot
-title: 'Axis: Hold Policy'
+title: "Axis: Hold Policy"
 summary:
-  'Hold-policy axis catalog — how long a position lives and what exits it: SAME_CANDLE_EXIT (CeFi/TradFi ML only, never
+  "Hold-policy axis catalog — how long a position lives and what exits it: SAME_CANDLE_EXIT (CeFi/TradFi ML only, never
   DeFi), HOLD_UNTIL_FLIP (DeFi default), CONTINUOUS, ONE_SHOT, EXPIRY_DRIVEN, CONVERGENCE_DRIVEN, REBALANCE_DRIVEN.
   Defines the per-policy exit-triggers config contract and the hold-policy×family table; drives P&L time-in-position and
-  batch/live parity.'
+  batch/live parity."
 status: current
 nature: ssot
 asset_group: [meta]
@@ -13,10 +13,21 @@ stage: [meta]
 repos: []
 scope: [engineer, admin]
 tags: [strategy, hold-policy, reconciliation, defi, execution, backtest]
-related: [staking-methods.md, signal-sources.md, ../cross-cutting/execution-policies.md, ../cross-cutting/benchmark-fills.md]
+related:
+  [
+    staking-methods.md,
+    /codex/09-strategy/architecture-v2/axes/signal-sources.md,
+    ../cross-cutting/execution-policies.md,
+    ../cross-cutting/benchmark-fills.md,
+  ]
 created: 2026-04-17
 authoritative_for: [hold-policy axis (position lifetime + exit-trigger catalog)]
-referenced_by: [codex/09-strategy/architecture-v2/README.md, codex/09-strategy/architecture-v2/archetypes/ml-directional-continuous.md, codex/09-strategy/architecture-v2/axes/edge-methods.md]
+referenced_by:
+  [
+    /codex/09-strategy/architecture-v2/README.md,
+    /codex/09-strategy/architecture-v2/archetypes/ml-directional-continuous.md,
+    /codex/09-strategy/architecture-v2/axes/edge-methods.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

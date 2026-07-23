@@ -3,9 +3,9 @@ doc_type: codex-runbook
 title: features-service VM launch + verification runbook
 summary:
   Operator recipe to launch a features-service VM via the consolidated launch-features-vm.sh (--feature-family x
-  --asset-group viability matrix) and the mandatory non-fire-and-forget verification cycle — T+90s STARTED event, T+10-15min
-  per-instrument progress with row_count>0, T+exit STOPPED/FAILED, plus manifest + parquet-sample sanity to catch the
-  silent-zero / empty-placeholder failure modes.
+  --asset-group viability matrix) and the mandatory non-fire-and-forget verification cycle — T+90s STARTED event,
+  T+10-15min per-instrument progress with row_count>0, T+exit STOPPED/FAILED, plus manifest + parquet-sample sanity to
+  catch the silent-zero / empty-placeholder failure modes.
 status: current
 nature: process
 asset_group: [meta]
@@ -15,10 +15,10 @@ scope: [engineer, admin]
 tags: [runbook, features, spot-vm, verification, manifest, data-correctness, vm-tarball, observability]
 related:
   [
-    ../04-architecture/features-service-architecture.md,
-    ../05-infrastructure/vm-tarball-deployment.md,
-    ../02-data/availability-manifest-and-data-status.md,
-    ../02-data/honest-absence-downstream-handling.md,
+    /codex/04-architecture/features-service-architecture.md,
+    /codex/05-infrastructure/vm-tarball-deployment.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/02-data/honest-absence-downstream-handling.md,
     ../../plans/archive/features_repo_consolidation_2026_05_08.plan.md,
   ]
 created: 2026-05-08
@@ -29,7 +29,13 @@ last_executed:
 code_refs:
 audience: operator / dev
 last_updated: 2026-05-08
-execution: {owner: operator (ad-hoc per backfill / per-asset_group cutover), cadence: per-deploy, verifier: event-stream STARTED + per-instrument progress + STOPPED + manifest spot-check, last_executed: NEVER}
+execution:
+  {
+    owner: operator (ad-hoc per backfill / per-asset_group cutover),
+    cadence: per-deploy,
+    verifier: event-stream STARTED + per-instrument progress + STOPPED + manifest spot-check,
+    last_executed: NEVER,
+  }
 ---
 
 # features-service VM launch + verification runbook
@@ -309,17 +315,17 @@ If the final event is `FAILED` rather than `STOPPED`:
 
 ## Cross-references
 
-- [features-service architecture (codex/04-architecture)](../04-architecture/features-service-architecture.md) — the
+- [features-service architecture (codex/04-architecture)](/codex/04-architecture/features-service-architecture.md) — the
   consolidated package layout + CLI dispatch contract + Health-API aggregator + UAC enum SSOT.
-- [VM launcher SSOT (codex/05-infrastructure)](../05-infrastructure/launcher-script-ssot.md) — every launcher under
+- [VM launcher SSOT (codex/05-infrastructure)](/codex/05-infrastructure/launcher-script-ssot.md) — every launcher under
   `deployment-service/scripts/vm/`; tarball / sibling-clone / image deploy modes.
-- [VM tarball deployment (codex/05-infrastructure)](../05-infrastructure/vm-tarball-deployment.md) — `--all` flag,
+- [VM tarball deployment (codex/05-infrastructure)](/codex/05-infrastructure/vm-tarball-deployment.md) — `--all` flag,
   refresh cadence.
-- [Live-pipeline architecture (codex/05-infrastructure)](../05-infrastructure/live-pipeline-architecture.md) —
+- [Live-pipeline architecture (codex/05-infrastructure)](/codex/05-infrastructure/live-pipeline-architecture.md) —
   features-asset-scoped vs features-cross-cutting cluster topology; live = batch principle.
-- [Availability manifest + data status (codex/02-data)](../02-data/availability-manifest-and-data-status.md) — v5
+- [Availability manifest + data status (codex/02-data)](/codex/02-data/availability-manifest-and-data-status.md) — v5
   schema + 4-state taxonomy + `feature_family` column.
-- [Honest absence downstream handling (codex/02-data)](../02-data/honest-absence-downstream-handling.md) — NaN
+- [Honest absence downstream handling (codex/02-data)](/codex/02-data/honest-absence-downstream-handling.md) — NaN
   tolerances + per-consumer pre-flight gates.
 - [Plan-of-record (PM/plans/active)](../../plans/active/features_repo_consolidation_2026_05_08.md) — full consolidation
   plan with Phase 8A launcher commit + Phase 10 QG sweep result.

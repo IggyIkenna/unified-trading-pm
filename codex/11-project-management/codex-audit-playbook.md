@@ -3,8 +3,8 @@ doc_type: codex-ssot
 title: Codex Audit Playbook
 summary:
   Recurring codex-doc ↔ plan alignment audit — cadence table, the 6-tag drift taxonomy
-  (CODEX-MISSING/STALE/CONTRADICTS/AHEAD/BROKEN-REF/ORPHAN-EPIC-REF), and the 5-phase execution playbook
-  (structural scan → epic-level audit → plan verification → delta annotation → verification).
+  (CODEX-MISSING/STALE/CONTRADICTS/AHEAD/BROKEN-REF/ORPHAN-EPIC-REF), and the 5-phase execution playbook (structural
+  scan → epic-level audit → plan verification → delta annotation → verification).
 status: current
 nature: ssot
 asset_group: [meta]
@@ -12,7 +12,13 @@ stage: [meta]
 repos: []
 scope: [engineer, admin]
 tags: [codex-audit, ssot-audit, audit, codex-drift, plan-hygiene]
-related: [../../plans/archive/2026_05/codex_plan_audit_differential_2026_05_22.md, ../../plans/epics/plan_hygiene_master.md, ../13-codex-governance/SSOT-BOUNDARY.md, plan-hygiene.md]
+related:
+  [
+    ../../plans/archive/2026_05/codex_plan_audit_differential_2026_05_22.md,
+    ../../plans/epics/plan_hygiene_master.md,
+    /codex/13-codex-governance/SSOT-BOUNDARY.md,
+    plan-hygiene.md,
+  ]
 created: 2026-05-22
 authoritative_for: [codex-plan alignment audit cadence, codex drift taxonomy]
 referenced_by:
@@ -148,5 +154,5 @@ Publish before/after counts to `plans/audit/results/`.
 
 - `plans/active/codex_plan_audit_differential_2026_05_22.md` — first full-breadth audit run
 - `plans/epics/plan_hygiene_master.md` — parent epic
-- `codex/13-codex-governance/SSOT-BOUNDARY.md` — where to place new codex docs
-- `codex/11-project-management/plan-hygiene.md` — plan hygiene complementary process
+- `/codex/13-codex-governance/SSOT-BOUNDARY.md` — where to place new codex docs
+- `/codex/11-project-management/plan-hygiene.md` — plan hygiene complementary process

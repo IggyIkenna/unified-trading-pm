@@ -15,19 +15,19 @@ scope: [engineer, admin]
 tags: [data-correctness, data-pipeline, audit, escalation, plan-hygiene, data-quality]
 related:
   [
-    ../11-project-management/foundation-completion-gate-discipline.md,
-    ../06-coding-standards/quality-gates.md,
-    honest-absence-downstream-handling.md,
+    /codex/11-project-management/foundation-completion-gate-discipline.md,
+    /codex/06-coding-standards/quality-gates.md,
+    /codex/02-data/honest-absence-downstream-handling.md,
     ../../plans/epics/mtds_mdps_master.md,
   ]
 created: 2026-05-20
 authoritative_for: [data-pipeline-correctness heartbeat hard rule]
 referenced_by:
   [
-    codex/02-data/external-data-always-available-rule.md,
-    codex/02-data/honest-absence-downstream-handling.md,
-    codex/02-data/shard-coverage-classification.md,
-    codex/05-infrastructure/manifest-consolidator-ssot.md,
+    /codex/02-data/external-data-always-available-rule.md,
+    /codex/02-data/honest-absence-downstream-handling.md,
+    /codex/02-data/shard-coverage-classification.md,
+    /codex/05-infrastructure/manifest-consolidator-ssot.md,
     plans/archive/2026_07/honest_coverage_v2_instrument_denominator_2026_06_28.md,
     plans/active/issues/vm_backfill_data_correctness_findings_2026_06_29.md,
     plans/epics/mtds_mdps_master.md,
@@ -183,8 +183,8 @@ of these phrases in a plan MUST flag it to the plan reviewer before the plan ent
 ## QG-sweep batching — detail pointer
 
 > The canonical detail for QG-sweep batching lives in
-> [`codex/06-coding-standards/quality-gates.md`](../06-coding-standards/quality-gates.md) § "QG-sweep batching". The
-> summary below is a cross-reference so this SSOT is self-contained for agents auditing the data pipeline.
+> [`/codex/06-coding-standards/quality-gates.md`](/codex/06-coding-standards/quality-gates.md) § "QG-sweep batching".
+> The summary below is a cross-reference so this SSOT is self-contained for agents auditing the data pipeline.
 
 **Batch the GATE, not the commits (codified 2026-06-02)**: for a batch of related edits, make ALL edits first, then run
 `quality-gates.sh` ONCE per repo over the batch, then make per-shippable-unit commits + plan-flips from that green tree.
@@ -202,8 +202,8 @@ GB fits a 16 GB worker. Beyond the limit, runs serialize. Exceeding OOM-kills th
 ## Generated artifacts — gitignore and determinism
 
 > The canonical source for the generated-artifact gitignore list is
-> [`codex/08-workflows/ci-cd-flow.md`](../08-workflows/ci-cd-flow.md). The summary below is a cross-reference so this
-> SSOT is self-contained for agents working the data pipeline.
+> [`/codex/08-workflows/ci-cd-flow.md`](/codex/08-workflows/ci-cd-flow.md). The summary below is a cross-reference so
+> this SSOT is self-contained for agents working the data pipeline.
 
 ### Generated artifacts are gitignored, NEVER committed (HARD RULE, codified 2026-06-03)
 
@@ -246,7 +246,7 @@ ledger cron.
 ## Composition with other rules
 
 - **`Foundation-Completion-Gate Discipline`**
-  ([foundation-completion-gate-discipline](../11-project-management/foundation-completion-gate-discipline.md)): this
+  ([foundation-completion-gate-discipline](/codex/11-project-management/foundation-completion-gate-discipline.md)): this
   rule is the data-correctness expansion. The gate already says "no layer-N+1 until layer-N GREEN" — this rule says when
   "GREEN" is itself in doubt due to data-state divergence, the gate is automatically RED.
 - **`External Data Is Always Available`**: the per-data-source case. A credential gap doesn't justify scope removal; the

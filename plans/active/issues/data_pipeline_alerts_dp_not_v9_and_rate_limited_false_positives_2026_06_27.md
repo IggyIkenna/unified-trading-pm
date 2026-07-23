@@ -1,7 +1,9 @@
 ---
 doc_type: issue
-title: DP_NOT_V9 + DP_SOURCE_RATE_LIMITED data-pipeline alerts are false-positives (string-vs-int compare + over-broad rate-limit regex + consolidation-lag captured count)
-summary: 'Five alerts fired this morning. **None of them are real data loss.** Two distinct alerting bugs:'
+title:
+  DP_NOT_V9 + DP_SOURCE_RATE_LIMITED data-pipeline alerts are false-positives (string-vs-int compare + over-broad
+  rate-limit regex + consolidation-lag captured count)
+summary: "Five alerts fired this morning. **None of them are real data loss.** Two distinct alerting bugs:"
 status: open
 nature: process
 asset_group: [cross-cutting]
@@ -12,13 +14,18 @@ tags: [monitoring, observability, slack, data-pipeline, data-correctness, manife
 related:
   [
     data_pipeline_hardening_self_monitoring_2026_06_22,
-    data_pipeline_alert_transient_gcs_pressure_false_positives_2026_06_24.md,
-    codex/05-infrastructure/data-pipeline-alerts.md,
+    /plans/archive/issues/data_pipeline_alert_transient_gcs_pressure_false_positives_2026_06_24.md,
+    /codex/05-infrastructure/data-pipeline-alerts.md,
   ]
 created: 2026-06-27
 parent_epic: observability_master
 priority: P2
-source: ['Slack #data-pipeline-alerts 2026-06-27 08:25/08:32 (DP_SOURCE_RATE_LIMITED sports-ref-v3-1 + RESOLVED)', 'Slack #data-pipeline-alerts 2026-06-27 09:02 (DP_SOURCE_RATE_LIMITED instr-backfill-tradfi-ice-20260627-075400)', 'Slack #data-pipeline-alerts 2026-06-27 09:02 (DP_NOT_V9 cefi / defi / tradfi)']
+source:
+  [
+    "Slack #data-pipeline-alerts 2026-06-27 08:25/08:32 (DP_SOURCE_RATE_LIMITED sports-ref-v3-1 + RESOLVED)",
+    "Slack #data-pipeline-alerts 2026-06-27 09:02 (DP_SOURCE_RATE_LIMITED instr-backfill-tradfi-ice-20260627-075400)",
+    "Slack #data-pipeline-alerts 2026-06-27 09:02 (DP_NOT_V9 cefi / defi / tradfi)",
+  ]
 assigned_vm:
 resolved_by:
 locked_by: live-defi-rollout
@@ -219,6 +226,6 @@ Both alert classes fired on healthy runs during normal backfill load. Recurrent 
 
 ## Codex SSOTs
 
-- `codex/05-infrastructure/data-pipeline-alerts.md` (DP-MANIFEST-\* + daily digests)
-- `codex/02-data/availability-manifest-and-data-status.md` ("trust the actual distribution, not the constant")
-- `codex/04-architecture/autonomous-recovery-matrix.md` (DP_SOURCE_RATE_LIMITED backoff actuator)
+- `/codex/05-infrastructure/data-pipeline-alerts.md` (DP-MANIFEST-\* + daily digests)
+- `/codex/02-data/availability-manifest-and-data-status.md` ("trust the actual distribution, not the constant")
+- `/codex/04-architecture/autonomous-recovery-matrix.md` (DP_SOURCE_RATE_LIMITED backoff actuator)

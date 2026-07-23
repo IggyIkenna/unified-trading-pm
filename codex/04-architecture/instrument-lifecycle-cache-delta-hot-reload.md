@@ -2,8 +2,9 @@
 doc_type: codex-ssot
 title: Instrument Lifecycle = Event-Publish + Downstream Cache-Delta Hot-Reload (workspace pattern)
 summary:
-  Instrument-lifecycle propagation = catalog-refresh event publish + downstream cache-delta hot-reload — instruments-service
-  publishes a refresh trigger, MTDS/MDPS/features diff their cache and fire on_added/on_removed/on_changed callbacks.
+  Instrument-lifecycle propagation = catalog-refresh event publish + downstream cache-delta hot-reload —
+  instruments-service publishes a refresh trigger, MTDS/MDPS/features diff their cache and fire
+  on_added/on_removed/on_changed callbacks.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -11,10 +12,22 @@ stage: [meta]
 repos: [features-service, instruments-service, strategy-service, unified-trading-library]
 scope: [engineer, admin]
 tags: [instruments, mtds, mdps, features, pipeline-mode, self-healing]
-related: [../05-infrastructure/live-pipeline-architecture.md, instruments-live-architecture.md, ../06-coding-standards/config-reloader-pattern.md]
+related:
+  [
+    /codex/05-infrastructure/live-pipeline-architecture.md,
+    /codex/04-architecture/instruments-live-architecture.md,
+    /codex/06-coding-standards/config-reloader-pattern.md,
+  ]
 created: 2026-05-08
 authoritative_for: [instrument-lifecycle cache-delta hot-reload workspace pattern]
-referenced_by: [codex/04-architecture/batch-live-architecture.md, codex/04-architecture/live-strategy-config-hot-reload.md, codex/05-infrastructure/live-pipeline-architecture.md, codex/16-strategy-playbooks/ml/cefi-ml-live-serving.md, plans/epics/instruments_master.md]
+referenced_by:
+  [
+    /codex/04-architecture/batch-live-architecture.md,
+    /codex/04-architecture/live-strategy-config-hot-reload.md,
+    /codex/05-infrastructure/live-pipeline-architecture.md,
+    /codex/16-strategy-playbooks/ml/cefi-ml-live-serving.md,
+    plans/epics/instruments_master.md,
+  ]
 owner:
 last_reviewed: 2026-05-13
 code_refs:
@@ -243,5 +256,6 @@ Banner each plan with the other to keep the work coordinated.
   Phase 10.
 - Plan: [`instruments_master`](../../plans/epics/instruments_master.md) — publish-side owner.
 - Pattern reference: `unified-trading-library/unified_trading_library/api_key_reloader.py` — same shape for API keys.
-- Sibling: [`../05-infrastructure/live-pipeline-architecture.md`](../05-infrastructure/live-pipeline-architecture.md) —
+- Sibling:
+  [`/codex/05-infrastructure/live-pipeline-architecture.md`](/codex/05-infrastructure/live-pipeline-architecture.md) —
   uses this pattern for live MTDS/MDPS/features instrument lifecycle propagation.

@@ -216,7 +216,7 @@ equivalent of the defi `solana_amm_pool` false negative.
 
 ## Census / vocabulary nuance
 
-Added 2026-07-20 — the in-session distinct-value census (`codex/02-data/reconciliation-census-and-compute-tiers.md` §
+Added 2026-07-20 — the in-session distinct-value census (`/codex/02-data/reconciliation-census-and-compute-tiers.md` §
 1).
 
 - **No `asset_group=` node** — the census descends the `entity=`-keyed reference tree via `candidate_parquet_paths`;
@@ -230,7 +230,7 @@ Added 2026-07-20 — the in-session distinct-value census (`codex/02-data/reconc
 ## Cross-links
 
 `SKILL.md` · [`reference-prediction.md`](reference-prediction.md) (H4 bleed) ·
-`codex/02-data/four-surface-reconciliation-procedure.md` · `codex/02-data/reconciliation-finding-taxonomy.md` ·
-`codex/02-data/canonical-cutover-register.md` · `codex/02-data/non-canonical-path-inventory.md` ·
-`codex/02-data/gcs-and-manifest-delete-safety-protocol.md` · `codex/02-data/orphan-object-detection.md` ·
-`codex/02-data/service-shard-status-catalogue.md` · `codex/05-infrastructure/bucket-isolation-model.md`
+`/codex/02-data/four-surface-reconciliation-procedure.md` · `/codex/02-data/reconciliation-finding-taxonomy.md` ·
+`/codex/02-data/canonical-cutover-register.md` · `/codex/02-data/non-canonical-path-inventory.md` ·
+`/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` · `/codex/02-data/orphan-object-detection.md` ·
+`/codex/02-data/service-shard-status-catalogue.md` · `/codex/05-infrastructure/bucket-isolation-model.md`

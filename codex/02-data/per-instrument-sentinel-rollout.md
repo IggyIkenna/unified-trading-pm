@@ -1,12 +1,11 @@
 ---
 doc_type: codex-ssot
-title: 'MTDS per-instrument sentinel rollout (3-tier: MVP → Expanded → Full)'
+title: "MTDS per-instrument sentinel rollout (3-tier: MVP → Expanded → Full)"
 summary: >-
-  MTDS Tier-3 per-instrument sentinel rollout SSOT (Phase 8E) — the --per-instrument-sentinel-cap
-  thresholds (MVP=50 / Expanded=200 / Full=10000), the MVP -> Expanded -> Full promotion criteria,
-  the per-tier observability gates, and the rollback paths (incl. cap=0 emergency Tier-3 disable);
-  the cap bounds manifest fan-out and stays identical writer<->reader via
-  get_expected_instruments_for_venue.
+  MTDS Tier-3 per-instrument sentinel rollout SSOT (Phase 8E) — the --per-instrument-sentinel-cap thresholds (MVP=50 /
+  Expanded=200 / Full=10000), the MVP -> Expanded -> Full promotion criteria, the per-tier observability gates, and the
+  rollback paths (incl. cap=0 emergency Tier-3 disable); the cap bounds manifest fan-out and stays identical
+  writer<->reader via get_expected_instruments_for_venue.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -14,10 +13,10 @@ stage: [meta]
 repos: [deployment-api, deployment-service, instruments-service, market-tick-data-service, unified-api-contracts]
 scope: [engineer, admin]
 tags: [mtds, manifest, honest-coverage, backfill, observability]
-related: [codex/02-data/mtds-data-source-coverage-matrix.md, codex/02-data/availability-manifest-and-data-status.md]
+related: [/codex/02-data/mtds-data-source-coverage-matrix.md, /codex/02-data/availability-manifest-and-data-status.md]
 created: 2026-04-21
 authoritative_for: [MTDS per-instrument sentinel cap thresholds, sentinel tier-promotion gates]
-referenced_by: [codex/02-data/mtds-data-source-coverage-matrix.md]
+referenced_by: [/codex/02-data/mtds-data-source-coverage-matrix.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:
@@ -35,8 +34,8 @@ magic numbers in code — code only holds the MVP fallback (`_DEFAULT_PER_INSTRU
 
 Prerequisite reading:
 
-- `codex/02-data/mtds-data-source-coverage-matrix.md` — honest-coverage denominator model, § 2 / § 4 / § 8.
-- `codex/02-data/availability-manifest-and-data-status.md` — v5 shard schema (`instrument_id` column, `capture_status`
+- `/codex/02-data/mtds-data-source-coverage-matrix.md` — honest-coverage denominator model, § 2 / § 4 / § 8.
+- `/codex/02-data/availability-manifest-and-data-status.md` — v5 shard schema (`instrument_id` column, `capture_status`
   enum).
 - `plans/archive/mtds_per_instrument_sentinels_2026_04_21.plan.md` — Phase 8 execution DAG (Waves 8B-8F).
 
@@ -107,7 +106,7 @@ All of the above, PLUS:
 - **GCS object-count budget.** Manifest bucket total object count must be projected under 10M across the full 4-year
   backfill window even at Full-tier (cap=10000). Projection = `current_rate × 4 × 365 / days_elapsed_at_expanded_tier`.
   Fails → stay at Expanded and investigate per-dt top talkers.
-- **Aggregator fairness.** `codex/02-data/sports-data-source-coverage-matrix.md` denominator fairness checks pass — the
+- **Aggregator fairness.** `/codex/02-data/sports-data-source-coverage-matrix.md` denominator fairness checks pass — the
   aggregator does not penalise low-activity venues (e.g. a DeFi pool with 3 swaps/day would otherwise show 0.03%
   coverage if we didn't `empty_confirmed`-mark the empty days).
 - **Wave 8G DeFi seed tables landed.** Full-tier assumes UAC MVP seed tables cover DeFi pools (`UniswapV3` top-20 by
@@ -207,7 +206,7 @@ Backfill VMs go via `bash deployment-service/scripts/vm/launch-tradfi-backfill-v
 exists). Both wrap the CLI invocation in a singleton-locked systemd unit so the cap persists across VM restarts.
 Refreshing tarballs after any code change:
 `bash deployment-service/scripts/vm/create-code-tarballs.sh --asset-group CEFI` (see
-`codex/05-infrastructure/vm-tarball-deployment.md`).
+`/codex/05-infrastructure/vm-tarball-deployment.md`).
 
 ## 7. Cross-references
 
@@ -220,7 +219,7 @@ Refreshing tarballs after any code change:
   cap-sensitive, consumed by both orchestrator (writer) and deployment-api aggregator (reader).
 - `deployment-api/deployment_api/services/data_status_service.py` § `_mtds_honest_coverage_for_venue` — reader side of
   the cap contract.
-- `codex/02-data/mtds-data-source-coverage-matrix.md` § 8 Open questions — this rollout closes the ⏳ "Instrument-level
+- `/codex/02-data/mtds-data-source-coverage-matrix.md` § 8 Open questions — this rollout closes the ⏳ "Instrument-level
   expected" bullet once Wave 8F ships.
 
 ## 8. Changelog

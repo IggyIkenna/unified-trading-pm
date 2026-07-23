@@ -135,5 +135,5 @@ Whoever owns the CEFI canonicalization migration (check `cefi_consolidated_close
 
 ## Codex SSOTs
 
-- `codex/08-workflows/ci-cd-flow.md` § "Local ↔ CI QG parity matrix" (this is exactly the tracked local-ahead-of-CI
+- `/codex/08-workflows/ci-cd-flow.md` § "Local ↔ CI QG parity matrix" (this is exactly the tracked local-ahead-of-CI
   divergence class it names).

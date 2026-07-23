@@ -15,10 +15,10 @@ scope: [engineer, admin]
 tags: [honest-coverage, manifest, smoke-test, single-walk, data-correctness, golden-window]
 related:
   [
-    codex/02-data/availability-manifest-and-data-status.md,
-    codex/02-data/honest-absence-downstream-handling.md,
-    codex/02-data/honest-coverage-model.md,
-    codex/02-data/data-pipeline-correctness-hard-rule.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/02-data/honest-absence-downstream-handling.md,
+    /codex/02-data/honest-coverage-model.md,
+    /codex/02-data/data-pipeline-correctness-hard-rule.md,
   ]
 created: 2026-06-29
 authoritative_for: [windowed shard-coverage RUNNABLE/INSUFFICIENT-HISTORY/HONEST-EMPTY classification]
@@ -184,12 +184,12 @@ boundaries per `(asset_group, data_type)` and resolves the `lookback_n` value fr
 
 ## Codex SSOTs
 
-| Topic                                                        | SSOT                                                     |
-| ------------------------------------------------------------ | -------------------------------------------------------- |
-| 4-state `capture_status` write contract + manifest schema    | `codex/02-data/availability-manifest-and-data-status.md` |
-| `EmptyConfirmedReason` taxonomy + within-/out-of-window      | `codex/02-data/honest-absence-downstream-handling.md`    |
-| Honest-Coverage v2 (two-layer / two-view / instrument-gate)  | `codex/02-data/honest-coverage-model.md`                 |
-| Data-pipeline correctness hard rule (no silent placeholders) | `codex/02-data/data-pipeline-correctness-hard-rule.md`   |
+| Topic                                                        | SSOT                                                      |
+| ------------------------------------------------------------ | --------------------------------------------------------- |
+| 4-state `capture_status` write contract + manifest schema    | `/codex/02-data/availability-manifest-and-data-status.md` |
+| `EmptyConfirmedReason` taxonomy + within-/out-of-window      | `/codex/02-data/honest-absence-downstream-handling.md`    |
+| Honest-Coverage v2 (two-layer / two-view / instrument-gate)  | `/codex/02-data/honest-coverage-model.md`                 |
+| Data-pipeline correctness hard rule (no silent placeholders) | `/codex/02-data/data-pipeline-correctness-hard-rule.md`   |
 
 Plan (COMPLETE, archived 2026-07-15): `plans/archive/2026_07/honest_coverage_smoke_harness_2026_06_28.md` — all 6 todos
 verified `[x]` with evidence, no open prose work. (Was "in-flight"; corrected 2026-07-15, plan-reconcile §7-residual

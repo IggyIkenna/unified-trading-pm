@@ -2,10 +2,9 @@
 doc_type: codex-ssot
 title: Retry Pattern
 summary: >-
-  Standard retry contract — all retryable I/O uses the @with_retry decorator from
-  unified_trading_library.retry (exponential backoff + jitter); defines per-target
-  max_attempts, the NON_RETRYABLE_STATUS_CODES frozenset {400,401,403,404,422}, and
-  bans ad-hoc / tenacity retry loops.
+  Standard retry contract — all retryable I/O uses the @with_retry decorator from unified_trading_library.retry
+  (exponential backoff + jitter); defines per-target max_attempts, the NON_RETRYABLE_STATUS_CODES frozenset
+  {400,401,403,404,422}, and bans ad-hoc / tenacity retry loops.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -13,7 +12,7 @@ stage: [meta]
 repos: [unified-trading-library]
 scope: [engineer]
 tags: [retry, resilience, error-handling, backoff, validation]
-related: [../04-architecture/kill-switch-circuit-breaker.md, validation-and-errors.md]
+related: [/codex/04-architecture/kill-switch-circuit-breaker.md, /codex/06-coding-standards/validation-and-errors.md]
 created: 2026-03-27
 authoritative_for: [retry pattern (with_retry decorator + non-retryable status-code policy)]
 referenced_by:

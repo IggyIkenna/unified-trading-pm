@@ -15,18 +15,35 @@ scope: [engineer, admin]
 tags: [runbook, reconciliation, deploy-gate, execution, position, quality-gates]
 related:
   [
-    ../04-architecture/reconciliation-resolution.md,
-    ../04-architecture/separation-of-concerns.md,
+    /codex/04-architecture/reconciliation-resolution.md,
+    /codex/04-architecture/separation-of-concerns.md,
     ../../plans/active/master_to_live_defi_2026_05_23.md,
   ]
 created: 2026-05-12
-owner: deployment-service maintainer (cloud-build-router invocation) + execution-service / position-balance-monitor-service maintainers (/positions endpoint contract)
+owner:
+  deployment-service maintainer (cloud-build-router invocation) + execution-service / position-balance-monitor-service
+  maintainers (/positions endpoint contract)
 cadence: per-deploy (every pre-deploy + post-deploy invocation of `cloud-build-router.yml` on trading-critical services)
-verifier: pre-deploy `snapshot` produces JSON file in $RUNNER_TEMP; post-deploy `compare` diffs against snapshot; exit 0 on match; exit nonzero on quantity-delta-out-of-tolerance / position-id-disappeared.
+verifier:
+  pre-deploy `snapshot` produces JSON file in $RUNNER_TEMP; post-deploy `compare` diffs against snapshot; exit 0 on
+  match; exit nonzero on quantity-delta-out-of-tolerance / position-id-disappeared.
 last_executed:
 code_refs:
 author: slot 8 sub-agent (Position-balance audit PB-9 PRE_CUTOVER)
-execution: {owner: deployment-service maintainer (cloud-build-router invocation) + execution-service / position-balance-monitor-service maintainers (/positions endpoint contract), cadence: per-deploy (every pre-deploy + post-deploy invocation of `cloud-build-router.yml` on trading-critical services), verifier: pre-deploy `snapshot` produces JSON file in $RUNNER_TEMP; post-deploy `compare` diffs against snapshot; exit 0 on match; exit nonzero on quantity-delta-out-of-tolerance / position-id-disappeared., last_executed: NEVER (script exists at `unified-trading-pm/scripts/deploy/position-reconciliation-check.sh`; gate is currently non-blocking when /positions endpoint absent — flips to hard gate once endpoint ships)}
+execution:
+  {
+    owner:
+      deployment-service maintainer (cloud-build-router invocation) + execution-service /
+      position-balance-monitor-service maintainers (/positions endpoint contract),
+    cadence:
+      per-deploy (every pre-deploy + post-deploy invocation of `cloud-build-router.yml` on trading-critical services),
+    verifier:
+      pre-deploy `snapshot` produces JSON file in $RUNNER_TEMP; post-deploy `compare` diffs against snapshot; exit 0 on
+      match; exit nonzero on quantity-delta-out-of-tolerance / position-id-disappeared.,
+    last_executed:
+      NEVER (script exists at `unified-trading-pm/scripts/deploy/position-reconciliation-check.sh`; gate is currently
+      non-blocking when /positions endpoint absent — flips to hard gate once endpoint ships),
+  }
 ---
 
 # Position Reconciliation Deploy Gate
@@ -83,7 +100,7 @@ deploy-time deviation as a continuous signal — break = block deploy.
 - Script source: `unified-trading-pm/scripts/deploy/position-reconciliation-check.sh`
 - CI wiring: `.github/workflows/cloud-build-router.yml`
 - SSOT pointer: `codex/00-SSOT-INDEX.md:310`
-- Resolution API: `codex/04-architecture/reconciliation-resolution.md`
+- Resolution API: `/codex/04-architecture/reconciliation-resolution.md`
 - Master plan F-21: `master_to_live_defi_2026_05_23.md` Group F (Reconciliation suite)
-- Position SSOT (PBMS): `codex/04-architecture/separation-of-concerns.md` (PB-7 follow-up — position-balance-monitor as
+- Position SSOT (PBMS): `/codex/04-architecture/separation-of-concerns.md` (PB-7 follow-up — position-balance-monitor as
   positions SSOT codex doc pending)

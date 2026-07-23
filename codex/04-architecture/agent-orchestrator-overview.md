@@ -16,23 +16,23 @@ scope: [engineer]
 tags: [orchestrator, infrastructure, auth, connectivity, secrets, dashboard, agentkeeper, service-reference]
 related:
   [
-    ../12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
-    agent-orchestrator-autospawn.md,
-    agent-orchestrator-worker-liveness.md,
-    agent-orchestrator-backlog-state-alignment.md,
-    ../05-infrastructure/agent-orchestrator-deploy.md,
-    ../05-infrastructure/agent-orchestrator-api-host.md,
+    /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
+    /codex/04-architecture/agent-orchestrator-autospawn.md,
+    /codex/04-architecture/agent-orchestrator-worker-liveness.md,
+    /codex/04-architecture/agent-orchestrator-backlog-state-alignment.md,
+    /codex/05-infrastructure/agent-orchestrator-deploy.md,
+    /codex/05-infrastructure/agent-orchestrator-api-host.md,
   ]
 created: 2026-05-19
 authoritative_for: [agent-orchestrator service-implementation reference, agent-orchestrator auth + connectivity model]
 referenced_by:
   [
-    codex/00-getting-started/E2E_WORKFLOW_UNIFIED.md,
-    codex/04-architecture/agent-orchestrator-autospawn.md,
-    codex/04-architecture/agent-orchestrator-backlog-state-alignment.md,
-    codex/04-architecture/agent-orchestrator-worker-liveness.md,
-    codex/05-infrastructure/agent-orchestrator-api-host.md,
-    codex/05-infrastructure/agent-orchestrator-deploy.md,
+    /codex/00-getting-started/E2E_WORKFLOW_UNIFIED.md,
+    /codex/04-architecture/agent-orchestrator-autospawn.md,
+    /codex/04-architecture/agent-orchestrator-backlog-state-alignment.md,
+    /codex/04-architecture/agent-orchestrator-worker-liveness.md,
+    /codex/05-infrastructure/agent-orchestrator-api-host.md,
+    /codex/05-infrastructure/agent-orchestrator-deploy.md,
   ]
 owner:
 last_reviewed: 2026-07-18
@@ -50,17 +50,17 @@ ping files + manual dispatch). State persists in SQLite (`data/state/state.db`);
 YAML/JSON under `data/config/`.
 
 **Architecture & operating model live in the SSOT**:
-[`../12-agent-workflow/agent-orchestrator-single-vm-architecture.md`](../12-agent-workflow/agent-orchestrator-single-vm-architecture.md)
+[`/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`](/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md)
 — topology (one central VM, N in-process slots), the two worker classes (plan-driven backlog workers vs standing/
 event-driven agents), and the four behaviour domains (worker lifecycle, task lifecycle, dispatch, regen). **This doc is
 the implementation layer under it**: stack, auth, connectivity, secrets, state, dashboard, deploy, keeper.
 
 **NOT a trading service** — see § "Difference vs trading services".
 
-Cross-links: operator runbook → `codex/08-workflows/agent-orchestrator-e2e-operator-runbook.md`; deploy/infra →
-[`../05-infrastructure/agent-orchestrator-deploy.md`](../05-infrastructure/agent-orchestrator-deploy.md); central API
-host (instance, ports, watchdog, auto-reboot) →
-[`../05-infrastructure/agent-orchestrator-api-host.md`](../05-infrastructure/agent-orchestrator-api-host.md).
+Cross-links: operator runbook → `/codex/08-workflows/agent-orchestrator-e2e-operator-runbook.md`; deploy/infra →
+[`/codex/05-infrastructure/agent-orchestrator-deploy.md`](/codex/05-infrastructure/agent-orchestrator-deploy.md);
+central API host (instance, ports, watchdog, auto-reboot) →
+[`/codex/05-infrastructure/agent-orchestrator-api-host.md`](/codex/05-infrastructure/agent-orchestrator-api-host.md).
 
 ---
 
@@ -92,7 +92,7 @@ The browser reaches only the central API's public TLS endpoint; slots are in-pro
 separate hosts. The `/api/vms/<id>/*` proxy + `/api/fleet/summary` fan-out endpoints remain in the code as a single-node
 degenerate case — they were the multi-VM router; there is no fleet to fan out to today. The historical Cloud Run shape
 is documented in
-[`../05-infrastructure/agent-orchestrator-deploy.md`](../05-infrastructure/agent-orchestrator-deploy.md) as
+[`/codex/05-infrastructure/agent-orchestrator-deploy.md`](/codex/05-infrastructure/agent-orchestrator-deploy.md) as
 cloud-agnostic fallback reference — not running.
 
 ## Service bootstrap exemptions
@@ -166,10 +166,11 @@ Every account in `data/config/accounts.json` authenticates via an `oauth_token_e
 with `CLAUDE_CODE_OAUTH_TOKEN=…` + `unset ANTHROPIC_API_KEY`). Every spawn path sources the env file before
 `exec claude` and refuses HTTP 400 when it is missing. Only `creds_env_poller` (5-min cross-cloud bucket sync) remains
 of the legacy auth machinery. Model SSOT:
-[`../12-agent-workflow/claude-cli-multi-account-headless-auth.md`](../12-agent-workflow/claude-cli-multi-account-headless-auth.md);
+[`/codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md`](/codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md);
 rate-limit/auth failover:
-[`../12-agent-workflow/orchestrator-safety-mechanisms.md`](../12-agent-workflow/orchestrator-safety-mechanisms.md) § B +
-[`agent-orchestrator-worker-liveness.md`](agent-orchestrator-worker-liveness.md) § "Account auth-failure eviction".
+[`/codex/12-agent-workflow/orchestrator-safety-mechanisms.md`](/codex/12-agent-workflow/orchestrator-safety-mechanisms.md)
+§ B + [`agent-orchestrator-worker-liveness.md`](agent-orchestrator-worker-liveness.md) § "Account auth-failure
+eviction".
 
 ## AgentKeeper + agent-type oversight
 
@@ -227,7 +228,7 @@ Task-state + dispatch consequences: single-VM SSOT § "Task lifecycle".
 surface (`reporter_stale` / `ff_cron_stale` / `drift_violation` / dirty / behind badges). Dashboard route `/fleet-git`
 (`dashboard/src/FleetGit.tsx`). The PRIMARY operator view is mirrored into **deployment-ui** (`/fleet` tab via
 deployment-api); this orchestrator page stays for worker-ops. Division-of-surfaces SSOT:
-`codex/03-observability/monitoring-control-plane.md`.
+`/codex/03-observability/monitoring-control-plane.md`.
 
 ## Host-offline failover (dormant on single-VM)
 
@@ -257,7 +258,7 @@ Block Kit push to `#agent-orchestrator-alerts` via incoming webhook (`AGENT_ORCH
 `.env.local`; `_post()` no-ops when empty). The channel is **actionable-only** — automatic lifecycle events log + feed
 the daily digest, they never page; a standing condition pages once on the false→true transition with a RESOLVED bookend
 (persisted dedup, `server/dedup_state.py`). SSOT:
-[`../05-infrastructure/agent-orchestrator-slack-notifications.md`](../05-infrastructure/agent-orchestrator-slack-notifications.md)
+[`/codex/05-infrastructure/agent-orchestrator-slack-notifications.md`](/codex/05-infrastructure/agent-orchestrator-slack-notifications.md)
 
 - alerting policy [`agent-orchestrator-alerting.md`](agent-orchestrator-alerting.md).
 
@@ -308,7 +309,7 @@ points at the old — now empty — path. That reproduces the exact wrong-DB inc
 `agent-orchestrator` ships via `quickmerge --agent --files` onto `live-defi-rollout` like every repo. Promotion is **LDR
 → `main` DIRECT** (the fleet-default `ldr_main` toggle; `staging` is bypassed unless a breaking bump routes a repo
 through it). Slot clones are Path-B reference-clones on `live-defi-rollout`; `main`-behind-LDR is normal promotion lag,
-not drift. The gate on the promotion PR is `quality-gates-v2`. CI/CD SSOT: `codex/08-workflows/ci-cd-flow.md`.
+not drift. The gate on the promotion PR is `quality-gates-v2`. CI/CD SSOT: `/codex/08-workflows/ci-cd-flow.md`.
 
 ## Difference vs trading services
 
@@ -328,7 +329,7 @@ trading-pipeline DAG. It is purely an operator coordination surface.
 ## Plan reference
 
 Architecture & operating model SSOT:
-[`../12-agent-workflow/agent-orchestrator-single-vm-architecture.md`](../12-agent-workflow/agent-orchestrator-single-vm-architecture.md).
+[`/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`](/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md).
 Behaviour-domain docs: [`agent-orchestrator-autospawn.md`](agent-orchestrator-autospawn.md) (spawn) ·
 [`agent-orchestrator-worker-liveness.md`](agent-orchestrator-worker-liveness.md) (liveness + account failover) ·
 [`agent-orchestrator-backlog-state-alignment.md`](agent-orchestrator-backlog-state-alignment.md) (dispatch + regen +

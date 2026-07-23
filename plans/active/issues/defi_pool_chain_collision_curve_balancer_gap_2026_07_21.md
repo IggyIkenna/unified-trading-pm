@@ -16,7 +16,7 @@ related:
   [
     plans/archive/2026_07/defi_pool_id_chain_uniqueness_2026_07_18.md,
     plans/active/defi_consolidated_closeout_2026_07_18.md,
-    codex/02-data/defi-canonical-naming-ssot.md,
+    /codex/02-data/defi-canonical-naming-ssot.md,
   ]
 created: 2026-07-21
 priority: P1
@@ -62,7 +62,7 @@ legitimate, deliberate, better-considered replacement — not a silent drop of t
    reconciled the 2026-07-08 patch against the 2026-07-18 ruling** — for as long as the `@CHAIN`-suffixed patch remains
    live in `prod/catalog.parquet`, there is a plausible expected-universe-vs-actual-write key mismatch for exactly those
    5 Balancer rows.
-3. **Codex SSOT not updated.** `codex/02-data/defi-canonical-naming-ssot.md` was never updated with the two-id/dual-key
+3. **Codex SSOT not updated.** `/codex/02-data/defi-canonical-naming-ssot.md` was never updated with the two-id/dual-key
    POOL model. The model is documented in `unified_api_contracts/canonical/crosscutting/defi.py` docstrings,
    `instruments-service/docs/DEFI_INSTRUMENTS.md`, and the closeout plan body — but not in the codex doc the original
    plan named as its post-phase-audit target.
@@ -85,8 +85,8 @@ legitimate, deliberate, better-considered replacement — not a silent drop of t
    revert the patch (bare `instrument_id`, rely on `canonical_instrument_id` for disambiguation) or explicitly ratify
    Balancer as an intentional carve-out and document why.
 3. Fix CURVE's still-bare, still-colliding `instrument_id` (currently the only one of the 6 with zero mitigation).
-4. Update `codex/02-data/defi-canonical-naming-ssot.md` with the two-id/dual-key POOL model (post-phase codex audit that
-   `defi_pool_id_chain_uniqueness_2026_07_18.md` named but was superseded before completing).
+4. Update `/codex/02-data/defi-canonical-naming-ssot.md` with the two-id/dual-key POOL model (post-phase codex audit
+   that `defi_pool_id_chain_uniqueness_2026_07_18.md` named but was superseded before completing).
 
 ## Provenance
 

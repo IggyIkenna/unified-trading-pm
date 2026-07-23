@@ -15,13 +15,13 @@ scope: [admin, engineer]
 tags: [infrastructure, migration, gcs, canonicalisation, runbook, cutover]
 related:
   [
-    ../05-infrastructure/gcs-object-operations.md,
-    ../05-infrastructure/path-registry.md,
-    ../05-infrastructure/manifest-consolidator-ssot.md,
+    /codex/05-infrastructure/gcs-object-operations.md,
+    /codex/05-infrastructure/path-registry.md,
+    /codex/05-infrastructure/manifest-consolidator-ssot.md,
   ]
 created: 2026-05-16
 authoritative_for: [bucket-name env-tier cutover runbook]
-referenced_by: [codex/05-infrastructure/path-registry.md]
+referenced_by: [/codex/05-infrastructure/path-registry.md]
 owner: Operator (Ikenna or Harsh; whichever side initiates the cutover window)
 last_reviewed: 2026-05-16
 code_refs:

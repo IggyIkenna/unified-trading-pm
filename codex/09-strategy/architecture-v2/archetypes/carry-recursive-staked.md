@@ -17,23 +17,23 @@ tags: [strategy, carry, defi, execution, archetype, features]
 related:
   [
     ../families/carry-and-yield.md,
-    carry-staked-basis.md,
-    carry-recursive-borrow-lending-only.md,
-    carry-recursive-borrow-perp-hedged.md,
+    /codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md,
+    /codex/09-strategy/architecture-v2/archetypes/carry-recursive-borrow-lending-only.md,
+    /codex/09-strategy/architecture-v2/archetypes/carry-recursive-borrow-perp-hedged.md,
     ../cross-cutting/restaking-reward-economics.md,
   ]
 created: 2026-04-17
 authoritative_for: [CARRY_RECURSIVE_STAKED archetype specification (Family 0 recursive staked carry)]
 referenced_by:
   [
-    codex/04-architecture/capital-efficiency-patterns.md,
-    codex/09-strategy/architecture-v2/archetypes/carry-basis-perp-inv.md,
-    codex/09-strategy/architecture-v2/archetypes/carry-basis-perp.md,
-    codex/09-strategy/architecture-v2/archetypes/carry-recursive-borrow-lending-only.md,
-    codex/09-strategy/architecture-v2/archetypes/carry-recursive-borrow-perp-hedged.md,
-    codex/09-strategy/architecture-v2/archetypes/carry-recursive-staked-config-variants.md,
-    codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md,
-    codex/09-strategy/architecture-v2/archetypes/yield-staking-simple.md,
+    /codex/04-architecture/capital-efficiency-patterns.md,
+    /codex/09-strategy/architecture-v2/archetypes/carry-basis-perp-inv.md,
+    /codex/09-strategy/architecture-v2/archetypes/carry-basis-perp.md,
+    /codex/09-strategy/architecture-v2/archetypes/carry-recursive-borrow-lending-only.md,
+    /codex/09-strategy/architecture-v2/archetypes/carry-recursive-borrow-perp-hedged.md,
+    /codex/09-strategy/architecture-v2/archetypes/carry-recursive-staked-config-variants.md,
+    /codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md,
+    /codex/09-strategy/architecture-v2/archetypes/yield-staking-simple.md,
   ]
 owner:
 last_reviewed:

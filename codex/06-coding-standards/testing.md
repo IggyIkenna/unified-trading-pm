@@ -2,10 +2,9 @@
 doc_type: codex-ssot
 title: Testing Standards
 summary: >-
-  Test-file conventions SSOT — the no-`test_*_extended`/`_additional`/`_new.py` rule
-  (split by behaviour, not "part 2") and the singleton-conftest-fixture rule (codified
-  2026-05-12 per TS-10 audit); defers the 5-layer integration tier model to
-  integration-testing-layers.md and the emulator/mock infra table to README.
+  Test-file conventions SSOT — the no-`test_*_extended`/`_additional`/`_new.py` rule (split by behaviour, not "part 2")
+  and the singleton-conftest-fixture rule (codified 2026-05-12 per TS-10 audit); defers the 5-layer integration tier
+  model to integration-testing-layers.md and the emulator/mock infra table to README.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -13,10 +12,21 @@ stage: [meta]
 repos: [execution-service, market-tick-data-service, unified-api-contracts]
 scope: [engineer]
 tags: [testing, quality-gates, conventions, refactor]
-related: [integration-testing-layers.md, README.md, quality-gates.md, ui-testing-layers.md]
+related:
+  [
+    /codex/06-coding-standards/integration-testing-layers.md,
+    README.md,
+    /codex/06-coding-standards/quality-gates.md,
+    /codex/06-coding-standards/ui-testing-layers.md,
+  ]
 created: 2026-03-27
 authoritative_for: [test-file conventions (no-_extended rule + singleton-conftest-fixture rule)]
-referenced_by: [codex/02-data/vcr-cassette-ownership.md, codex/06-coding-standards/README.md, codex/06-coding-standards/quality-gates.md]
+referenced_by:
+  [
+    /codex/02-data/vcr-cassette-ownership.md,
+    /codex/06-coding-standards/README.md,
+    /codex/06-coding-standards/quality-gates.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -97,7 +107,7 @@ Reference implementation: `risk-and-exposure-service/tests/test_emission_policy_
 
 **Done-def for BLOCK_CRITICAL coverage**: risk-and-exposure-service (and any future service adopting `BLOCK_CRITICAL`)
 has tests covering suppression + alert + publish routing + deactivation re-arms. QG coverage gate applies (≥70%). SSOT:
-`codex/02-data/service-output-emission-semantics.md` § BLOCK_CRITICAL.
+`/codex/02-data/service-output-emission-semantics.md` § BLOCK_CRITICAL.
 
 ---
 
@@ -148,5 +158,5 @@ the landing) -- agents should not interpret a green Pass 2 as test coverage.
 - [README.md](README.md) § "Test Infrastructure: Emulators & Mocks" — emulator hosts + moto + mock-WS + VCR pointers.
 - [quality-gates.md](quality-gates.md) — coverage formula + ratchet thresholds + QG step inventory.
 - [vcr-cassette-pattern.md](vcr-cassette-pattern.md) → redirected to
-  [vcr-cassette-ownership.md](../02-data/vcr-cassette-ownership.md) (canonical SSOT post-TS-3).
+  [vcr-cassette-ownership.md](/codex/02-data/vcr-cassette-ownership.md) (canonical SSOT post-TS-3).
 - [test-templates/README.md](test-templates/README.md) — copy-paste boilerplate for events / pytest-asyncio fixtures.

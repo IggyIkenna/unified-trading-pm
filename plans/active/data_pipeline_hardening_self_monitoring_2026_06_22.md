@@ -13,13 +13,13 @@ scope: [engineer, admin]
 tags: [data-pipeline, hardening, monitoring, silent-failure, fetch-evidence, alerts, anti-misclassification]
 related:
   [
-    data_feed_sla_registry_and_active_self_healing_2026_06_19.md,
-    alert_quality_overhaul_2026_06_18.md,
-    deployment_ui_monitoring_pane_2026_06_19.md,
-    vm_launcher_durable_log_observability_2026_06_19.md,
-    data_completion_to_100_all_ag_2026_06_21.md,
-    cross_ag_shard_4pillar_validation_harness_2026_06_19.md,
-    audit_criteria_automation_2026_06_08.md,
+    /plans/active/data_feed_sla_registry_and_active_self_healing_2026_06_19.md,
+    /plans/archive/2026_06/alert_quality_overhaul_2026_06_18.md,
+    /plans/archive/2026_06/deployment_ui_monitoring_pane_2026_06_19.md,
+    /plans/archive/vm_launcher_durable_log_observability_2026_06_19.md,
+    /plans/active/data_completion_to_100_all_ag_2026_06_21.md,
+    /plans/archive/2026_06/cross_ag_shard_4pillar_validation_harness_2026_06_19.md,
+    /plans/archive/2026_06/audit_criteria_automation_2026_06_08.md,
     issues/fleet_data_acquisition_health_2026_06_21.md,
     issues/backfill_vm_silent_worker_stall_watchdog_2026_06_19.md,
     issues/fleet_mtds_qg_red_hardcoded_url_record_empty_ratchet_2026_06_22.md,
@@ -111,13 +111,13 @@ This plan **wires existing parts**. Net-new is only the keystone gate (Phase 1) 
 
 > Built first, AG-agnostic, following the agent-orchestrator + CI/CD Slack dynamics. Everything in Phases 1-5 emits into
 > this substrate. **Start verbose; drive the alert count to zero** (a persistent alert is a bug to close). SSOT for
-> every failure mode: `codex/05-infrastructure/data-pipeline-alerts.md` + `.registry.yaml`.
+> every failure mode: `/codex/05-infrastructure/data-pipeline-alerts.md` + `.registry.yaml`.
 
 - [x] ✅ P0. **Slack credentials in Secret Manager** —
       `DATA_PIPELINE_ALERTS_SLACK_{APP_ID,CLIENT_ID,CLIENT_SECRET,SIGNING_SECRET,VERIFICATION_TOKEN,WEBHOOK}` created in
       `central-element-323112` (mirrors `AGENT_ORCHESTRATOR_SLACK_*`). Webhook smoke-tested: HTTP 200 `ok` → message in
       `#data-pipeline-alerts`.
-- [x] ✅ P0. **Failure-mode SSOT registry** — `codex/05-infrastructure/data-pipeline-alerts.md` (human SSOT: channel,
+- [x] ✅ P0. **Failure-mode SSOT registry** — `/codex/05-infrastructure/data-pipeline-alerts.md` (human SSOT: channel,
       secrets, emit→route→escalate model, lifecycle verbose→baselined→zeroed, anti-patterns) +
       `data-pipeline-alerts.registry.yaml` (machine-readable: ~40 modes across
       FETCH/COVERAGE/PATH/VM/RATE/ENV/ORDER/MANIFEST/CATALOG/WATCHER, each with
@@ -383,33 +383,33 @@ This plan **wires existing parts**. Net-new is only the keystone gate (Phase 1) 
       tracked campaign (per-venue backfill-vs-scope decision; operator HARD RULE = NO flat clip).**
 
       — the 2026-06-22 triage (divergence CSV + measured first-capture cross-ref) split the post-`coverage_start`
-                              residual into two REAL classes, all historical (≤2025-11-18, 0 in operational window): **(a) data_type
-                              NAME-DRIFT (~5–6k cells)** — AAVE_V3/MORPHO/COMPOUND_V3/FLUID lending: the oracle scope
-                              (`_DEFI_LENDING_*_PAIRS`) expects `liquidation_events`/`position_data`/`risk_params`/`flash_loan_events`/
-                              `lending_indices` but the manifest CAPTURED `liquidations`/`rate_indices`/`utilization` (legacy
-                              `liquidations_handler.py` still exists alongside `liquidation_events_handler.py`; MORPHO subgraph emits
-                              `rate_indices`/`utilization` not the AAVE-style names). The data EXISTS under a different data_type name →
-                              diagnose both sides + reconcile (either retire the legacy handler/data_type names → the canonical scope, or
-                              correct the oracle scope to the names the handlers actually emit). NOT a flat clip. **(b) NEVER-COLLECTED real
-                              gaps (~7k cells)** — venues with ZERO captured rows for ANY scoped data_type: STARGATE/ACROSS `bridge_events`,
-                              PYTH `oracle_prices`, FLASHBOTS `mev_events`, ASTER/GMX `perp_funding`, FLUID lending, AAVE `governance_events`,
-                              ALCHEMY `token_transfers`, STAKEWISE/STADER/SWELL `staking_yields` — the adapter never ran a historical backfill,
-                              OR the data_type is out-of-MVP-archetype scope (bridge/mev/governance/flash-loan are NOT in the
-                              `carry_staked_basis`/`arbitrage_price_dispersion` data needs). Decision per venue: real-MVP-need → defi MTDS
-                              historical backfill (per-VM shards, canonical venue+chain, PER-CHAIN launch dates); out-of-MVP → move to
-                              `EMPTY_OR_DEPRECATED_DEFI_VENUES`/`DEFI_INSTRUMENTS_NOT_YET_COLLECTED` or trim the oracle scope. Candidate CSV:
-                              `plans/audit/results/divergence_2026-06-22.csv` (filter classification=DIVERGENT_EMPTY). —
-                              **unified-api-contracts, market-tick-data-service**
+                                                                                              residual into two REAL classes, all historical (≤2025-11-18, 0 in operational window): **(a) data_type
+                                                                                              NAME-DRIFT (~5–6k cells)** — AAVE_V3/MORPHO/COMPOUND_V3/FLUID lending: the oracle scope
+                                                                                              (`_DEFI_LENDING_*_PAIRS`) expects `liquidation_events`/`position_data`/`risk_params`/`flash_loan_events`/
+                                                                                              `lending_indices` but the manifest CAPTURED `liquidations`/`rate_indices`/`utilization` (legacy
+                                                                                              `liquidations_handler.py` still exists alongside `liquidation_events_handler.py`; MORPHO subgraph emits
+                                                                                              `rate_indices`/`utilization` not the AAVE-style names). The data EXISTS under a different data_type name →
+                                                                                              diagnose both sides + reconcile (either retire the legacy handler/data_type names → the canonical scope, or
+                                                                                              correct the oracle scope to the names the handlers actually emit). NOT a flat clip. **(b) NEVER-COLLECTED real
+                                                                                              gaps (~7k cells)** — venues with ZERO captured rows for ANY scoped data_type: STARGATE/ACROSS `bridge_events`,
+                                                                                              PYTH `oracle_prices`, FLASHBOTS `mev_events`, ASTER/GMX `perp_funding`, FLUID lending, AAVE `governance_events`,
+                                                                                              ALCHEMY `token_transfers`, STAKEWISE/STADER/SWELL `staking_yields` — the adapter never ran a historical backfill,
+                                                                                              OR the data_type is out-of-MVP-archetype scope (bridge/mev/governance/flash-loan are NOT in the
+                                                                                              `carry_staked_basis`/`arbitrage_price_dispersion` data needs). Decision per venue: real-MVP-need → defi MTDS
+                                                                                              historical backfill (per-VM shards, canonical venue+chain, PER-CHAIN launch dates); out-of-MVP → move to
+                                                                                              `EMPTY_OR_DEPRECATED_DEFI_VENUES`/`DEFI_INSTRUMENTS_NOT_YET_COLLECTED` or trim the oracle scope. Candidate CSV:
+                                                                                              `plans/audit/results/divergence_2026-06-22.csv` (filter classification=DIVERGENT_EMPTY). —
+                                                                                              **unified-api-contracts, market-tick-data-service**
 
-                              **RE-VERIFIED AGAIN 2026-06-22 resume-run** (fresh `detect_manifest_divergence.py --asset-group defi` on live
-                              prod `_index`, 2,436,439 cells): **DIVERGENT_EMPTY = 13,760 EXACTLY (stable — auto-flip reclassifier holding it,
-                              not growing); max date 2025-11-18; ZERO in the operational window (≥2025-11-19) — all historical, NOT
-                              blocking.** Breakdown re-confirmed = the two classes (name-drift-suspect lending + never-collected/out-of-MVP).
-                              **Sub-finding (refines class-a):** the `dex_pool_swaps` DIVERGENT_EMPTY cells (UNISWAP_V3 350 / BALANCER 355 /
-                              CURVE 43) are NOT name-drift — `dex_pool_swaps` IS actively captured (4,392 OK_CAPTURED cells), so these are
-                              genuine date-specific historical swap gaps on those venues → resolve via per-venue historical DEX-swaps backfill
-                              (PER-CHAIN launch dates), not an oracle rename. Stays the tracked per-venue backfill-vs-scope campaign (operator
-                              HARD RULE: NO flat clip).
+                                                                                              **RE-VERIFIED AGAIN 2026-06-22 resume-run** (fresh `detect_manifest_divergence.py --asset-group defi` on live
+                                                                                              prod `_index`, 2,436,439 cells): **DIVERGENT_EMPTY = 13,760 EXACTLY (stable — auto-flip reclassifier holding it,
+                                                                                              not growing); max date 2025-11-18; ZERO in the operational window (≥2025-11-19) — all historical, NOT
+                                                                                              blocking.** Breakdown re-confirmed = the two classes (name-drift-suspect lending + never-collected/out-of-MVP).
+                                                                                              **Sub-finding (refines class-a):** the `dex_pool_swaps` DIVERGENT_EMPTY cells (UNISWAP_V3 350 / BALANCER 355 /
+                                                                                              CURVE 43) are NOT name-drift — `dex_pool_swaps` IS actively captured (4,392 OK_CAPTURED cells), so these are
+                                                                                              genuine date-specific historical swap gaps on those venues → resolve via per-venue historical DEX-swaps backfill
+                                                                                              (PER-CHAIN launch dates), not an oracle rename. Stays the tracked per-venue backfill-vs-scope campaign (operator
+                                                                                              HARD RULE: NO flat clip).
 
 - [x] ✅ [CODE] P2. **`reprobe_defi.py` chain-blind false-disagreement bug (C2)** — DONE `e2e-testing@4cfbbf1` (QG
       --no-fix exit 0, sentinel==HEAD, 20 dp_audit tests green incl. 3 new; dirty-deps direct-LDR carve-out —
@@ -491,14 +491,14 @@ This plan **wires existing parts**. Net-new is only the keystone gate (Phase 1) 
 
 ## Codex SSOT updates (mandatory before archival)
 
-- [x] ✅ [DOC] P2. `codex/02-data/availability-manifest-and-data-status.md` — DONE `unified-trading-pm@894610bc2` (new
+- [x] ✅ [DOC] P2. `/codex/02-data/availability-manifest-and-data-status.md` — DONE `unified-trading-pm@894610bc2` (new
       §6a "Proof-of-honest-absence contract": FetchEvidence 4-condition `proves_honest_absence()` gate +
       `UnprovenHonestAbsenceError` hard-raise + 10-member `FetchErrorSignal` disqualifying set + EXPECTED\_\*
       exemption + STEP 5.99 twin ref).
-- [x] ✅ [DOC] P2. `codex/02-data/honest-absence-downstream-handling.md` — DONE `unified-trading-pm@894610bc2` (new
+- [x] ✅ [DOC] P2. `/codex/02-data/honest-absence-downstream-handling.md` — DONE `unified-trading-pm@894610bc2` (new
       "Daily re-probe + escalation flow": selector → UAC oracle cross-check → `DP_EMPTY_REPROBE_DISAGREEMENT` WARN →
       Phase-5 issue-file; `register_reprobe_hook` extension point).
-- [x] ✅ [DOC] P2. `codex/05-infrastructure/data-pipeline-alerts.md` — VERIFIED complete `unified-trading-pm@894610bc2`
+- [x] ✅ [DOC] P2. `/codex/05-infrastructure/data-pipeline-alerts.md` — VERIFIED complete `unified-trading-pm@894610bc2`
       (Phase-0 already shipped it covering channel/DP\_\* families/watchers/digest+hygiene cadence/verbose→zeroed
       policy; no edit needed).
 
@@ -1195,7 +1195,7 @@ items:
       recorder's synthesized `clean_fetch_evidence`). Nicety — the danger-class is already closed (errors →
       `record_failed`). — market-tick-data-service
 - [x] ✅ [CODE] P1. **DeFi DURABLE-gotcha guards — VERIFIED ALL 5 CLOSED on LDR (2026-06-22 resume-run)**: grep-read
-      each guard against `codex/02-data/defi-canonical-naming-ssot.md` § "DeFi data-pipeline DURABLE gotchas". (1)
+      each guard against `/codex/02-data/defi-canonical-naming-ssot.md` § "DeFi data-pipeline DURABLE gotchas". (1)
       catalog-freshness reader env-short: MTDS `engine/orchestrator/__init__.py:455` +
       `live/websocket_runner.py::_instruments_store_bucket` both use
       `resolve_bucket_name(kind="instruments-store", asset_group="defi")` (env-short `-prd-`) ✅; (2) consolidated
@@ -1319,7 +1319,7 @@ of canonical `venue=PROTOCOL`+`chain=X` → never converts (IS 38cec01/3e8fcd0 �
 1 TheGraph key → round-robin the 9-key pool (MTDS 5830cc8 → DP-RATE-002); sync GCS reads (`bulk_load`/
 `assert_defi_catalog_fresh`) called in async handlers → wrap in `asyncio.to_thread`; eigenlayer/protocol fetch-exception
 → `attempted_failed` not empty (MTDS 56435ac → DP-FETCH-004). Thread fetch_evidence into all 9 defi MTDS handlers +
-the IS defi catalog path. SSOT: codex/02-data/defi-canonical-naming-ssot.md "DeFi data-pipeline DURABLE gotchas".
+the IS defi catalog path. SSOT: /codex/02-data/defi-canonical-naming-ssot.md "DeFi data-pipeline DURABLE gotchas".
 ```
 
 ### CeFi
@@ -1346,7 +1346,7 @@ Recurring failures to guard: Databento WS/live key unresolved → 0 rows + mis-s
 `assert_batch_api_allowed` (billing-fail-closed); `ohlcv_1s` is FUTURES-only (equities=ohlcv_1m); backfill launcher
 must use `VM_TASK=mtds-backfill` + set `VM_SOURCE` + forward `--source` (else TickDataHandler RAISES → 0 rows at rc=0/1
 → DP-FETCH-005); end-date ≤ yesterday (Databento T+1). Thread fetch_evidence into the Databento + Massive adapters; emit
-DP_SOURCE_RATE_LIMITED on Databento throttling. SSOT: codex/02-data/tradfi-databento-sourcing-ssot.md "Operational
+DP_SOURCE_RATE_LIMITED on Databento throttling. SSOT: /codex/02-data/tradfi-databento-sourcing-ssot.md "Operational
 gotchas".
 ```
 
@@ -1556,7 +1556,7 @@ dispatch prompts.
       env-short) as a generic gate. — market-tick-data-service
 - [x] ✅ [CODE] P1. DONE mtds@477de66. **429-aware key-pool rotation** + `DP_KEY_POOL_EXHAUSTED` alert (TheGraph 9-key
       currently degrades silently to unauth). — market-tick-data-service
-- [x] ✅ [DOC] P1. DONE codex/15-runbooks/incidents/rb_data_001.md. **RB-DATA-\* DR runbook** — the
+- [x] ✅ [DOC] P1. DONE /codex/15-runbooks/incidents/rb_data_001.md. **RB-DATA-\* DR runbook** — the
       consolidator→MTDS→features cascade with RTO/RPO + auto-vs-human scope (none of the 22 rb\_\* runbooks is
       data-pipeline). — unified-trading-pm
 - [ ] [CODE] P2. Flip `data-pipeline-alerts.registry.yaml` modes `verbose`→`active` as each `escalation:` tier is wired
@@ -2392,15 +2392,15 @@ code.
       EVEN with no PM clone on disk (the Cloud Run case), so the relaunch is never stranded; (b)
       `_dispatch_to_orchestrator` client_payload now carries the STRUCTURED relaunch binding (`action=relaunch_vm` +
       `vm_name` + `relaunch_launcher` + `deployment_id` + `asset_group`) so the worker relaunches from the registries
-      deterministically; (c) worker runbook `codex/15-runbooks/incidents/rb_infra_relaunch.md` (read DeploymentsRegistry
-      row + launcher_registry → re-run launcher → verify STARTED@60s/PROGRESS@10min → ≤2/(prefix,day) bound). Registries
-      used: `deployments_registry.DeploymentsRegistry` + `launcher_registry.resolve_launcher_for_vm` +
-      `cloud_run_job_registry.CLOUD_RUN_JOBS`. Stretch (deferred sub-todo below): persist the FULL launch CLI args into
-      `DeploymentRegistryEntry` for an exact replay. ORIGINAL: Close the actuator-actuation gap NOT by packaging scripts
-      into the monitor image, but by routing the `auto_recover` UNAVAILABLE path → the EXISTING
-      `escalate-to-orchestrator` repository_dispatch (`wall_type=data_pipeline_failure`) onto a **planning-VM slot**
-      (reuses the working Claude Code auth/bootstrap; migrate to a dedicated VM later). The worker has
-      `scripts/vm/launch-*.sh` + `launcher_registry` (vm→launcher) + the `DeploymentsRegistry` row
+      deterministically; (c) worker runbook `/codex/15-runbooks/incidents/rb_infra_relaunch.md` (read
+      DeploymentsRegistry row + launcher_registry → re-run launcher → verify STARTED@60s/PROGRESS@10min →
+      ≤2/(prefix,day) bound). Registries used: `deployments_registry.DeploymentsRegistry` +
+      `launcher_registry.resolve_launcher_for_vm` + `cloud_run_job_registry.CLOUD_RUN_JOBS`. Stretch (deferred sub-todo
+      below): persist the FULL launch CLI args into `DeploymentRegistryEntry` for an exact replay. ORIGINAL: Close the
+      actuator-actuation gap NOT by packaging scripts into the monitor image, but by routing the `auto_recover`
+      UNAVAILABLE path → the EXISTING `escalate-to-orchestrator` repository_dispatch (`wall_type=data_pipeline_failure`)
+      onto a **planning-VM slot** (reuses the working Claude Code auth/bootstrap; migrate to a dedicated VM later). The
+      worker has `scripts/vm/launch-*.sh` + `launcher_registry` (vm→launcher) + the `DeploymentsRegistry` row
       (asset_group/task/mode/dates) to relaunch deterministically. Build: (a) the UNAVAILABLE auto_recover result
       escalates-to-orchestrator (not just file_issue) carrying `vm_name` + `relaunch_launcher` + registry
       `deployment_id`; (b) a crisp worker relaunch runbook; (c) optionally persist the full launch spec (CLI args) into
@@ -2459,7 +2459,7 @@ only the `get_range()` HTTP call in `asyncio.wait_for` (3600s), but the SYNCHRON
 databento stream mid-`to_df` decode hung the whole VM forever (the unbounded-fetch hang class CLAUDE.md warns about).
 Compounding: hung VMs stayed RUNNING → clogged the wave-launcher cap-20 slots → throughput collapsed. Diagnosed + fixed
 2026-06-23 (slot·human-planning). SSOT for the 3-part fix: this section +
-`codex/02-data/tradfi-databento-sourcing-ssot.md` § "Operational gotchas".
+`/codex/02-data/tradfi-databento-sourcing-ssot.md` § "Operational gotchas".
 
 - [x] ✅ [CODE] P1 (ROOT). **Bound the databento DBN chunk-decode with a per-chunk asyncio timeout.**
       `market-tick-data-service` — `_iterate_dbn_chunks` is now async: each chunk's blocking `next()` on the

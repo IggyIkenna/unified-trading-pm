@@ -3,10 +3,10 @@ doc_type: codex-ssot
 title: Feature Formula Versioning (delta_one)
 summary: >-
   Mechanism by which every delta_one feature parquet carries the formula version that produced it —
-  feature_group_version as a GCS hive partition key (max formula_version across a group's FeatureSpecs) plus
-  file-level parquet-footer metadata (feature_group_version / feature_column_versions / feature_group); covers
-  bumping via feat! semver-major, the 0 sentinel, the FeatureSpec status/custom_or_third_party/formula_hash
-  drift-detection gate, and the consumer @vN pin pattern.
+  feature_group_version as a GCS hive partition key (max formula_version across a group's FeatureSpecs) plus file-level
+  parquet-footer metadata (feature_group_version / feature_column_versions / feature_group); covers bumping via feat!
+  semver-major, the 0 sentinel, the FeatureSpec status/custom_or_third_party/formula_hash drift-detection gate, and the
+  consumer @vN pin pattern.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -14,10 +14,23 @@ stage: [meta]
 repos: [features-service]
 scope: [engineer]
 tags: [features, ml, feature-versioning, polars, strategy, data-pipeline]
-related: [../04-architecture/artifact-versioning.md, availability-manifest-and-data-status.md, ../06-coding-standards/strategy-identity-versioning.md]
+related:
+  [
+    /codex/04-architecture/artifact-versioning.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/06-coding-standards/strategy-identity-versioning.md,
+  ]
 created: 2026-05-28
-authoritative_for: [delta_one feature formula versioning + feature_group_version partition, FeatureSpec status/formula_hash drift-detection contract]
-referenced_by: [codex/04-architecture/artifact-versioning.md, plans/active/issues/features_service_defi_data_loading_blockers_2026_05_29.md]
+authoritative_for:
+  [
+    delta_one feature formula versioning + feature_group_version partition,
+    FeatureSpec status/formula_hash drift-detection contract,
+  ]
+referenced_by:
+  [
+    /codex/04-architecture/artifact-versioning.md,
+    plans/active/issues/features_service_defi_data_loading_blockers_2026_05_29.md,
+  ]
 owner:
 last_reviewed: 2026-05-28
 code_refs:
@@ -27,8 +40,8 @@ code_refs:
 
 > **What it is:** The mechanism by which every parquet file in `features-delta-one-{ag}-{pid}` carries the formula
 > version that produced it, and downstream ML / strategy consumers can pin to a specific version. Complements
-> [`artifact-versioning.md`](../04-architecture/artifact-versioning.md) § Feature groups by naming the concrete files +
-> contracts.
+> [`artifact-versioning.md`](/codex/04-architecture/artifact-versioning.md) § Feature groups by naming the concrete
+> files + contracts.
 
 ## Why
 
@@ -227,11 +240,11 @@ are explicitly rejected unless the config opts in with `accept_any: true` (for a
 
 ## Composes with
 
-- `codex/04-architecture/artifact-versioning.md` — the 3-axis versioning model (code / artifact / schema). This doc is
+- `/codex/04-architecture/artifact-versioning.md` — the 3-axis versioning model (code / artifact / schema). This doc is
   the per-features-service implementation of the Artifact axis for the `feature_group` artifact type.
-- `codex/02-data/availability-manifest-and-data-status.md` — the manifest row key extension to carry
+- `/codex/02-data/availability-manifest-and-data-status.md` — the manifest row key extension to carry
   `feature_group_version` is deferred (cross- repo, separate plan).
-- `codex/06-coding-standards/strategy-identity-versioning.md` — strategy configs reference
+- `/codex/06-coding-standards/strategy-identity-versioning.md` — strategy configs reference
   `feature_group_versions: [...]` as part of the version tuple emitted on every event.
 
 ## Plan + history

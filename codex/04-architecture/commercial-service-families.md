@@ -2,9 +2,8 @@
 doc_type: codex-ssot
 title: Commercial Service Families — DART Full vs Signals-In (+ IM, Reg Umbrella)
 summary:
-  "Commercial/UX service-family SSOT: the four shapes (IM, Reg Umbrella, DART Signals-In, DART Full), the
-  DART Full vs Signals-In feature matrix, locked-section UI design, and the demo plan toggle. NOT the
-  architecture-tier doc."
+  "Commercial/UX service-family SSOT: the four shapes (IM, Reg Umbrella, DART Signals-In, DART Full), the DART Full vs
+  Signals-In feature matrix, locked-section UI design, and the demo plan toggle. NOT the architecture-tier doc."
 status: current
 nature: ssot
 asset_group: [meta]
@@ -12,10 +11,26 @@ stage: [meta]
 repos: [unified-trading-system-ui]
 scope: [engineer, admin, sales]
 tags: [commercial, dart, service-families, ui, entitlements, demo, sales]
-related: [tier-and-import-architecture.md, runtime-deployment-topology.md, ../06-coding-standards/strategy-display-conventions.md, ../09-strategy/architecture-v2/strategy-catalogue-3tier.md]
+related:
+  [
+    /codex/04-architecture/tier-and-import-architecture.md,
+    /codex/04-architecture/runtime-deployment-topology.md,
+    /codex/06-coding-standards/strategy-display-conventions.md,
+    /codex/09-strategy/architecture-v2/strategy-catalogue-3tier.md,
+  ]
 created: 2026-04-24
 authoritative_for: [commercial service families (DART Full vs Signals-In feature matrix, IM, Reg Umbrella)]
-referenced_by: [codex/02-data/questionnaire-axes.md, codex/04-architecture/runtime-deployment-topology.md, codex/04-architecture/tier-and-import-architecture.md, codex/06-coding-standards/strategy-display-conventions.md, codex/06-coding-standards/terminology-ssot.md, codex/08-workflows/client-onboarding.md, codex/09-strategy/architecture-v2/strategy-catalogue-3tier.md, codex/09-strategy/architecture-v2/strategy-questionnaire-mapping.md]
+referenced_by:
+  [
+    /codex/02-data/questionnaire-axes.md,
+    /codex/04-architecture/runtime-deployment-topology.md,
+    /codex/04-architecture/tier-and-import-architecture.md,
+    /codex/06-coding-standards/strategy-display-conventions.md,
+    /codex/06-coding-standards/terminology-ssot.md,
+    /codex/08-workflows/client-onboarding.md,
+    /codex/09-strategy/architecture-v2/strategy-catalogue-3tier.md,
+    /codex/09-strategy/architecture-v2/strategy-questionnaire-mapping.md,
+  ]
 owner:
 last_reviewed: 2026-05-17
 code_refs:
@@ -38,11 +53,11 @@ code_refs:
 > `unified-trading-system-ui/app/(public)/briefings/[slug]/page.tsx`. **Plan:**
 > [`../../plans/archive/dart_ui_strategy_filtering_and_onboarding_2026_04_24.plan.md`](../../plans/archive/dart_ui_strategy_filtering_and_onboarding_2026_04_24.plan.md)
 > **Companion docs:**
-> [`../14-customer-journeys/_ssot-rules/12-service-family-scope-rules.md`](../14-customer-journeys/_ssot-rules/12-service-family-scope-rules.md)
+> [`/codex/14-customer-journeys/_ssot-rules/12-service-family-scope-rules.md`](/codex/14-customer-journeys/_ssot-rules/12-service-family-scope-rules.md)
 > (rule 12 — machine-readable route allowlist per family),
-> [`../06-coding-standards/strategy-display-conventions.md`](../06-coding-standards/strategy-display-conventions.md)
+> [`/codex/06-coding-standards/strategy-display-conventions.md`](/codex/06-coding-standards/strategy-display-conventions.md)
 > (plan-tier classification),
-> [`../09-strategy/architecture-v2/strategy-catalogue-3tier.md`](../09-strategy/architecture-v2/strategy-catalogue-3tier.md)
+> [`/codex/09-strategy/architecture-v2/strategy-catalogue-3tier.md`](/codex/09-strategy/architecture-v2/strategy-catalogue-3tier.md)
 > (§14 tier badge rendering).
 
 ---
@@ -60,7 +75,7 @@ different families buy different outcomes, not different permission lists.
 | **DART Full**            | Client uses Odum's full Research + Promote + Trading + Observe + Reports lifecycle | Everything DART Signals-In unlocks, plus Research (ML backtest) + Promote |
 
 Rule 12
-([`../14-customer-journeys/_ssot-rules/12-service-family-scope-rules.md`](../14-customer-journeys/_ssot-rules/12-service-family-scope-rules.md))
+([`/codex/14-customer-journeys/_ssot-rules/12-service-family-scope-rules.md`](/codex/14-customer-journeys/_ssot-rules/12-service-family-scope-rules.md))
 is the machine-readable route-allowlist table UAC uses to enforce this at access-control time.
 
 ---
@@ -86,9 +101,9 @@ UI plan; see `app/(public)/briefings/[slug]/page.tsx`). Edits here must be mirro
 
 **4 Full-only archetypes** — ML-dependent or event-model-dependent code paths: `ML_DIRECTIONAL_CONTINUOUS`,
 `ML_DIRECTIONAL_EVENT_SETTLED`, `EVENT_DRIVEN`, `VOL_TRADING_OPTIONS`. See
-[`../06-coding-standards/strategy-display-conventions.md`](../06-coding-standards/strategy-display-conventions.md) §5
-for the authoritative plan-tier classification; see
-[`../09-strategy/architecture-v2/strategy-catalogue-3tier.md`](../09-strategy/architecture-v2/strategy-catalogue-3tier.md)
+[`/codex/06-coding-standards/strategy-display-conventions.md`](/codex/06-coding-standards/strategy-display-conventions.md)
+§5 for the authoritative plan-tier classification; see
+[`/codex/09-strategy/architecture-v2/strategy-catalogue-3tier.md`](/codex/09-strategy/architecture-v2/strategy-catalogue-3tier.md)
 §14 for how the classification surfaces on FOMO cards.
 
 ---
@@ -169,7 +184,7 @@ capital statements.
 
 **Reg Umbrella** — reporting + compliance-overlay tiles; no observe / research / promote. Emerging manager operates
 customer-facing activity under Odum's FCA permissions (typically via AR or IM-delegation shape — see
-[`../14-customer-journeys/experience/regulatory-umbrella-briefing.md`](../14-customer-journeys/experience/regulatory-umbrella-briefing.md)
+[`/codex/14-customer-journeys/experience/regulatory-umbrella-briefing.md`](/codex/14-customer-journeys/experience/regulatory-umbrella-briefing.md)
 for the four-axis structure × scope × counterparty-facing × activity model).
 
 For both IM and Reg Umbrella, the DART feature matrix (§2) does not apply — they run a different surface set and
@@ -179,19 +194,19 @@ typically don't see the strategy catalogue at all. Rule 12 enforces the route-al
 
 ## §6 — Cross-references
 
-- [`../14-customer-journeys/_ssot-rules/12-service-family-scope-rules.md`](../14-customer-journeys/_ssot-rules/12-service-family-scope-rules.md)
+- [`/codex/14-customer-journeys/_ssot-rules/12-service-family-scope-rules.md`](/codex/14-customer-journeys/_ssot-rules/12-service-family-scope-rules.md)
   — machine-readable YAML; UAC-enforced at `access_control()`.
-- [`../14-customer-journeys/demo-ops/staging-demo-setup.md`](../14-customer-journeys/demo-ops/staging-demo-setup.md) —
-  operator checklist for provisioning a new demo client pair (Base + Full personas + questionnaire preseed + profile
+- [`/codex/14-customer-journeys/demo-ops/staging-demo-setup.md`](/codex/14-customer-journeys/demo-ops/staging-demo-setup.md)
+  — operator checklist for provisioning a new demo client pair (Base + Full personas + questionnaire preseed + profile
   YAML).
 - [`../14-customer-journeys/demo-ops/profiles/desmond-dart-full.yaml`](../14-customer-journeys/demo-ops/profiles/desmond-dart-full.yaml)
   - [`desmond-signals-in.yaml`](../14-customer-journeys/demo-ops/profiles/desmond-signals-in.yaml) — canonical worked
     example (real client).
-- [`../08-workflows/client-onboarding.md`](../08-workflows/client-onboarding.md) — 7-step sequence in which this matrix
-  is exposed to the prospect (step 4 exploration, step 6 call).
-- [`../06-coding-standards/strategy-display-conventions.md`](../06-coding-standards/strategy-display-conventions.md) §5
-  — plan-tier classification driving the tier badges.
-- [`../09-strategy/architecture-v2/strategy-catalogue-3tier.md`](../09-strategy/architecture-v2/strategy-catalogue-3tier.md)
+- [`/codex/08-workflows/client-onboarding.md`](/codex/08-workflows/client-onboarding.md) — 7-step sequence in which this
+  matrix is exposed to the prospect (step 4 exploration, step 6 call).
+- [`/codex/06-coding-standards/strategy-display-conventions.md`](/codex/06-coding-standards/strategy-display-conventions.md)
+  §5 — plan-tier classification driving the tier badges.
+- [`/codex/09-strategy/architecture-v2/strategy-catalogue-3tier.md`](/codex/09-strategy/architecture-v2/strategy-catalogue-3tier.md)
   §14 — FOMO tier badges + Signals-In upgrade banner.
 - [`tier-and-import-architecture.md`](tier-and-import-architecture.md) — import-tier model + protocol-injection contract
   (architecture-tier scoping, distinct from this doc's commercial scoping).

@@ -12,7 +12,12 @@ stage: [meta]
 repos: [deployment-service, deployment-api]
 scope: [engineer, admin]
 tags: [billing, cost, observability, bigquery, athena, cur, gcp, aws, deployment-ui, iam]
-related: [spot-vms-for-backfill.md, aws-cloudtrail-cost-optimization-2026-06-20.md, aws-iam-matrix.md]
+related:
+  [
+    /codex/05-infrastructure/spot-vms-for-backfill.md,
+    /codex/05-infrastructure/aws-cloudtrail-cost-optimization-2026-06-20.md,
+    /codex/05-infrastructure/aws-iam-matrix.md,
+  ]
 created: 2026-06-27
 authoritative_for:
   [deployment-UI billing/cost-observability backends (GCP BQ export + AWS CUR/Athena) and their read-only access grants]

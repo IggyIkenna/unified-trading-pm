@@ -2,8 +2,8 @@
 doc_type: codex-ssot
 title: Recursive-Borrow Backtest Scenario Taxonomy — 2026-05
 summary:
-  SSOT taxonomy of the 14 recursive-borrow backtest scenarios (Category A funding ×4 / B peg-liquidation ×5 / C venue ×5)
-  plus the 5-value per-cell verdict set that gates Family 1 + Family 2 cells design-shipped → live-ready; twins UAC
+  SSOT taxonomy of the 14 recursive-borrow backtest scenarios (Category A funding ×4 / B peg-liquidation ×5 / C venue
+  ×5) plus the 5-value per-cell verdict set that gates Family 1 + Family 2 cells design-shipped → live-ready; twins UAC
   BACKTEST_SCENARIOS. Promotion needs all B+C PASS/PASS_WITH_WARNING and ≥80% of A PASS.
 status: current
 nature: ssot
@@ -14,13 +14,20 @@ scope: [engineer, admin]
 tags: [defi, backtest, strategy, recursive-borrow, honest-coverage, verification]
 related:
   [
-    codex/16-strategy-playbooks/defi/venue-collateral-2026-05-07.md,
-    codex/09-strategy/architecture-v2/archetypes/carry-recursive-staked.md,
-    codex/16-strategy-playbooks/defi/recursive-borrow-backtest-2026-05.md,
+    /codex/16-strategy-playbooks/defi/venue-collateral-2026-05-07.md,
+    /codex/09-strategy/architecture-v2/archetypes/carry-recursive-staked.md,
+    /codex/16-strategy-playbooks/defi/recursive-borrow-backtest-2026-05.md,
   ]
 created: 2026-05-15
 authoritative_for: [recursive-borrow backtest scenario taxonomy + per-cell verdict gates (Phase 12)]
-referenced_by: [codex/09-strategy/architecture-v2/archetypes/carry-recursive-borrow-lending-only.md, codex/09-strategy/architecture-v2/archetypes/carry-recursive-borrow-perp-hedged.md, codex/09-strategy/architecture-v2/archetypes/carry-recursive-staked.md, codex/16-strategy-playbooks/defi/recursive-borrow-backtest-2026-05.md, codex/16-strategy-playbooks/defi/venue-collateral-2026-05-07.md]
+referenced_by:
+  [
+    /codex/09-strategy/architecture-v2/archetypes/carry-recursive-borrow-lending-only.md,
+    /codex/09-strategy/architecture-v2/archetypes/carry-recursive-borrow-perp-hedged.md,
+    /codex/09-strategy/architecture-v2/archetypes/carry-recursive-staked.md,
+    /codex/16-strategy-playbooks/defi/recursive-borrow-backtest-2026-05.md,
+    /codex/16-strategy-playbooks/defi/venue-collateral-2026-05-07.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -149,9 +156,9 @@ Data envelope:
 
 ## Composes with
 
-- `codex/09-strategy/architecture-v2/archetypes/carry-recursive-staked.md` — staking archetype overview
-- `codex/09-strategy/architecture-v2/archetypes/carry-recursive-borrow-lending-only.md` — Family 1 spec
-- `codex/09-strategy/architecture-v2/archetypes/carry-recursive-borrow-perp-hedged.md` — Family 2 spec
-- `codex/16-strategy-playbooks/defi/venue-collateral-2026-05-07.md` — per-cell collateral + LTV rules
+- `/codex/09-strategy/architecture-v2/archetypes/carry-recursive-staked.md` — staking archetype overview
+- `/codex/09-strategy/architecture-v2/archetypes/carry-recursive-borrow-lending-only.md` — Family 1 spec
+- `/codex/09-strategy/architecture-v2/archetypes/carry-recursive-borrow-perp-hedged.md` — Family 2 spec
+- `/codex/16-strategy-playbooks/defi/venue-collateral-2026-05-07.md` — per-cell collateral + LTV rules
 - `plans/active/defi_recursive_borrow_archetypes_post_cutover_2026_06_01.md` — the plan driving Phase 12 implementation
   (Phase 10+)

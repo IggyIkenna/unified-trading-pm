@@ -2,9 +2,9 @@
 doc_type: codex-ssot
 title: Signal Leasing
 summary:
-  Signal-leasing commercial path (fourth path beyond DART/IM/Reg Umbrella) — Odum sells strategy signal
-  output to counterparties who self-execute; four candidate pricing models (recommended hybrid — £10-20k/mo
-  floor + per-signal uplift + optional 5% P&L share), only non-IM_RESERVED cells, £4k/mo Sept-2026 anchor.
+  Signal-leasing commercial path (fourth path beyond DART/IM/Reg Umbrella) — Odum sells strategy signal output to
+  counterparties who self-execute; four candidate pricing models (recommended hybrid — £10-20k/mo floor + per-signal
+  uplift + optional 5% P&L share), only non-IM_RESERVED cells, £4k/mo Sept-2026 anchor.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -14,14 +14,22 @@ scope: [admin, sales]
 tags: [commercial-model, signal-leasing, pricing, dart, strategy, revenue]
 related:
   [
-    pricing-building-blocks.md,
-    im-profit-share-structures.md,
-    revenue-projection-2026-monthly.md,
+    /codex/14-customer-journeys/commercial-model/pricing-building-blocks.md,
+    /codex/14-customer-journeys/commercial-model/im-profit-share-structures.md,
+    /codex/14-customer-journeys/commercial-model/revenue-projection-2026-monthly.md,
     ../shared-core/signal-broadcast-architecture.md,
   ]
 created: 2026-04-20
 authoritative_for: [signal-leasing commercial path (fourth path, pricing models)]
-referenced_by: [codex/14-customer-journeys/commercial-model/dart-entry-points.md, codex/14-customer-journeys/commercial-model/elysium-account-trajectory-2026-05-14.md, codex/14-customer-journeys/commercial-model/im-profit-share-structures.md, codex/14-customer-journeys/commercial-model/pricing-building-blocks.md, codex/14-customer-journeys/commercial-model/revenue-projection-2026-monthly.md, codex/14-customer-journeys/shared-core/signal-broadcast-architecture.md]
+referenced_by:
+  [
+    /codex/14-customer-journeys/commercial-model/dart-entry-points.md,
+    /codex/14-customer-journeys/commercial-model/elysium-account-trajectory-2026-05-14.md,
+    /codex/14-customer-journeys/commercial-model/im-profit-share-structures.md,
+    /codex/14-customer-journeys/commercial-model/pricing-building-blocks.md,
+    /codex/14-customer-journeys/commercial-model/revenue-projection-2026-monthly.md,
+    /codex/14-customer-journeys/shared-core/signal-broadcast-architecture.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

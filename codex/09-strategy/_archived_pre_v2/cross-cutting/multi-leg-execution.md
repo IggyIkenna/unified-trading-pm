@@ -1,7 +1,9 @@
 ---
 doc_type: codex-ssot
 title: Multi-Leg Execution
-summary: "Pre-v2: multi-leg orchestrator (2+ legs as one trade) with SEQUENTIAL/LEADER_FOLLOWER/PARALLEL/LIQUIDITY_AWARE modes, leg roles, and automatic hedge-leg compensation/unwind."
+summary:
+  "Pre-v2: multi-leg orchestrator (2+ legs as one trade) with SEQUENTIAL/LEADER_FOLLOWER/PARALLEL/LIQUIDITY_AWARE modes,
+  leg roles, and automatic hedge-leg compensation/unwind."
 status: superseded
 nature: ssot
 asset_group: [meta]
@@ -12,11 +14,11 @@ tags: [execution, multi-leg, strategy, defi]
 related:
   [
     ../../architecture-v2/cross-cutting/execution-policies.md,
-    strategy-instruction-bus.md,
+    /codex/09-strategy/_archived_pre_v2/cross-cutting/strategy-instruction-bus.md,
   ]
 created: 2026-06-16
 authoritative_for: []
-referenced_by: [codex/09-strategy/_archived_pre_v2/cross-cutting/strategy-instruction-bus.md]
+referenced_by: [/codex/09-strategy/_archived_pre_v2/cross-cutting/strategy-instruction-bus.md]
 owner:
 last_reviewed:
 code_refs:

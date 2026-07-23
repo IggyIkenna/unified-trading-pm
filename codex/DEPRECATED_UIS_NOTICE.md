@@ -1,7 +1,8 @@
 ---
 doc_type: codex-ssot
 title: Deprecated UIs Notice
-summary: Round-1 (2026-02-21) UI-consolidation history (strategy-onboarding-ui / settlement-ui / config-ui → onboarding-ui);
+summary:
+  Round-1 (2026-02-21) UI-consolidation history (strategy-onboarding-ui / settlement-ui / config-ui → onboarding-ui);
   staleness-lifted 2026-05-12 — current active UI surface is unified-trading-system-ui + deployment-ui, see
   05-infrastructure/ui-functionality-requirements.md.
 status: stale
@@ -29,7 +30,7 @@ code_refs:
 > `live-health-monitor-ui`, `batch-audit-ui`, `client-reporting-ui`, `execution-analytics-ui`, `logs-dashboard-ui`,
 > `ml-training-ui`, `trading-analytics-ui`) into the consolidated portal `unified-trading-system-ui`. The active product
 > UI surface is now **3 repos**: `unified-trading-system-ui` (consolidated portal) + `deployment-ui` +
-> `user-management-ui`. Full current-state inventory: `codex/05-infrastructure/ui-functionality-requirements.md` §
+> `user-management-ui`. Full current-state inventory: `/codex/05-infrastructure/ui-functionality-requirements.md` §
 > "Active UI surface". The body below documents Round 1 history; do NOT treat the 3-UI list below as current.
 
 ---
@@ -40,26 +41,22 @@ The following UI services have been **deprecated** and consolidated into **onboa
 
 ### 1. strategy-onboarding-ui
 
-**Status:** ❌ DEPRECATED  
-**Consolidated Into:** `onboarding-ui` Tab 2 (Strategy Onboarding)  
-**Reason:** Reduced UI proliferation, better integrated workflows
+**Status:** ❌ DEPRECATED **Consolidated Into:** `onboarding-ui` Tab 2 (Strategy Onboarding) **Reason:** Reduced UI
+proliferation, better integrated workflows
 
 **Per-Service Docs:** Marked with deprecation notice in all 5 layers (01-domain through 05-infrastructure)
 
 ### 2. settlement-ui
 
-**Status:** ⚠️ PARTIAL CONSOLIDATION  
-**Setup Workflows Moved To:** `onboarding-ui`  
-**Remains:** Analysis/reporting features (planned standalone)  
-**Reason:** Separated setup (onboarding) from analysis (reporting)
+**Status:** ⚠️ PARTIAL CONSOLIDATION **Setup Workflows Moved To:** `onboarding-ui` **Remains:** Analysis/reporting
+features (planned standalone) **Reason:** Separated setup (onboarding) from analysis (reporting)
 
 **Per-Service Docs:** Marked with partial consolidation notice in all 5 layers
 
 ### 3. config-ui
 
-**Status:** ❌ DEPRECATED  
-**Consolidated Into:** `onboarding-ui` Tabs 1, 4, 5, 6  
-**Already Documented:** See `07-services/per-service/config-ui.md`
+**Status:** ❌ DEPRECATED **Consolidated Into:** `onboarding-ui` Tabs 1, 4, 5, 6 **Already Documented:** See
+`07-services/per-service/config-ui.md`
 
 ---
 
@@ -74,8 +71,8 @@ The following UI services have been **deprecated** and consolidated into **onboa
 5. Risk Configuration
 6. Audit Log
 
-**Epic:** `11-project-management/epics/onboarding-ui-epic.md`  
-**Service Registry:** `11-project-management/service-registry.yaml`
+**Epic:** `11-project-management/epics/onboarding-ui-epic.md` **Service Registry:**
+`11-project-management/service-registry.yaml`
 
 ---
 

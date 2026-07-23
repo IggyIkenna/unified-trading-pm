@@ -12,15 +12,22 @@ stage: [meta]
 repos: [strategy-service]
 scope: [engineer, admin]
 tags: [strategy, vol-trading, options, deribit, variance-swap, replication, delta-hedge]
-related: [vol-dispersion.md, vol-carry.md, vol-ratio-spread.md, vol-term-structure-arb.md, ../families/vol-trading.md]
+related:
+  [
+    /codex/09-strategy/architecture-v2/archetypes/vol-dispersion.md,
+    /codex/09-strategy/architecture-v2/archetypes/vol-carry.md,
+    /codex/09-strategy/architecture-v2/archetypes/vol-ratio-spread.md,
+    /codex/09-strategy/architecture-v2/archetypes/vol-term-structure-arb.md,
+    ../families/vol-trading.md,
+  ]
 created: 2026-05-19
 authoritative_for: ["VOL_VARIANCE_SWAP archetype spec"]
 referenced_by:
   [
-    codex/09-strategy/architecture-v2/archetypes/vol-dispersion.md,
-    codex/09-strategy/architecture-v2/archetypes/vol-leaps-convexity.md,
-    codex/09-strategy/architecture-v2/archetypes/vol-ratio-spread.md,
-    codex/09-strategy/architecture-v2/families/vol-trading.md,
+    /codex/09-strategy/architecture-v2/archetypes/vol-dispersion.md,
+    /codex/09-strategy/architecture-v2/archetypes/vol-leaps-convexity.md,
+    /codex/09-strategy/architecture-v2/archetypes/vol-ratio-spread.md,
+    /codex/09-strategy/architecture-v2/families/vol-trading.md,
   ]
 owner:
 last_reviewed:

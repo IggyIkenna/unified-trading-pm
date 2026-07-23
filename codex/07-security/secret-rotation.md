@@ -12,10 +12,10 @@ stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]
 tags: [secrets, runbook, monitoring, ci-cd]
-related: [secrets-management.md, gha-wif-migration.md]
+related: [/codex/07-security/secrets-management.md, /codex/07-security/gha-wif-migration.md]
 created: 2026-03-27
 authoritative_for: [secret rotation policy and schedule]
-referenced_by: [codex/07-security/gha-wif-migration.md]
+referenced_by: [/codex/07-security/gha-wif-migration.md]
 owner:
 last_reviewed:
 code_refs:

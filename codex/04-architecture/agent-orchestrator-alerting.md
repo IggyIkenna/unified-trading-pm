@@ -14,7 +14,7 @@ stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer, admin]
 tags: [alerts, slack, agent-orchestrator, observability, dedup, notifications]
-related: [autonomous-recovery-matrix.md, runtime-deployment-topology.md]
+related: [/codex/04-architecture/autonomous-recovery-matrix.md, /codex/04-architecture/runtime-deployment-topology.md]
 created: 2026-07-13
 authoritative_for: [agent-orchestrator Slack alert routing, daily-summary digest, git-health guard dedup]
 referenced_by:

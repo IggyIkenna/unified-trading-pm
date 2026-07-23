@@ -2,10 +2,10 @@
 doc_type: codex-ssot
 title: Venue Registry — Reference
 summary:
-  "Human-readable mirror of the UAC venue capability registry: the catalog of every venue the system trades on or
-  pulls data from, classified SINGLE_VENUE / META_BROKER / DATA_AGGREGATOR — 5 CeFi execution + 2 pricing-only, 3
-  TradFi (IBKR/CME/ICE), 7 DeFi chains + DEXes/lending/staking/perps, Unity + sports exchanges + aggregators,
-  prediction markets; lists permanently-removed venues (LSE/TSX/Elysium/Arkham/Bloxroute/Infura; Pyth Solana-only)."
+  "Human-readable mirror of the UAC venue capability registry: the catalog of every venue the system trades on or pulls
+  data from, classified SINGLE_VENUE / META_BROKER / DATA_AGGREGATOR — 5 CeFi execution + 2 pricing-only, 3 TradFi
+  (IBKR/CME/ICE), 7 DeFi chains + DEXes/lending/staking/perps, Unity + sports exchanges + aggregators, prediction
+  markets; lists permanently-removed venues (LSE/TSX/Elysium/Arkham/Bloxroute/Infura; Pyth Solana-only)."
 status: current
 nature: ssot
 asset_group: [meta]
@@ -15,14 +15,24 @@ scope: [engineer, admin]
 tags: [venue, registry, cefi, defi, tradfi, sports, prediction]
 related:
   [
-    prime-brokers.md,
-    unity-integration.md,
-    ../03-services/venue-capability-registry.md,
-    ../02-data/venue-availability.md,
+    /codex/02-venues/prime-brokers.md,
+    /codex/02-venues/unity-integration.md,
+    /codex/03-services/venue-capability-registry.md,
+    /codex/02-data/venue-availability.md,
   ]
 created: 2026-04-17
 authoritative_for: [venue registry human-readable reference, permanently-removed venues list]
-referenced_by: [codex/02-venues/prime-brokers.md, codex/02-venues/unity-integration.md, codex/03-services/venue-capability-registry.md, codex/04-architecture/capital-efficiency-patterns.md, codex/04-architecture/capital-structure-and-regulatory.md, codex/04-architecture/slow-fast-routing-split.md, codex/09-strategy/architecture-v2/README.md, codex/09-strategy/architecture-v2/archetypes/carry-recursive-staked.md]
+referenced_by:
+  [
+    /codex/02-venues/prime-brokers.md,
+    /codex/02-venues/unity-integration.md,
+    /codex/03-services/venue-capability-registry.md,
+    /codex/04-architecture/capital-efficiency-patterns.md,
+    /codex/04-architecture/capital-structure-and-regulatory.md,
+    /codex/04-architecture/slow-fast-routing-split.md,
+    /codex/09-strategy/architecture-v2/README.md,
+    /codex/09-strategy/architecture-v2/archetypes/carry-recursive-staked.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -172,10 +182,10 @@ Child books (8 confirmed + 2 TBD):
 
 ## Prediction markets
 
-| Venue      | Type         | Operations                            | Status                                                                                                                                                                                                                              |
-| ---------- | ------------ | ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Polymarket | SINGLE_VENUE | TRADE (BET_CLOB_YES/NO), QUOTE, TICKS | Active. CLOB migration done (49K→863K markets). USDC on Polygon.                                                                                                                                                                    |
-| Kalshi     | SINGLE_VENUE | TRADE, QUOTE                          | API migrated to `api.elections.kalshi.com` (2026-05-20, Phase 1 shipped). Status: `BLOCKED-CREDENTIALS` — integration verification pending credential provisioning (see `codex/02-data/prediction-schema-paths.md` § Kalshi delta). |
+| Venue      | Type         | Operations                            | Status                                                                                                                                                                                                                               |
+| ---------- | ------------ | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Polymarket | SINGLE_VENUE | TRADE (BET_CLOB_YES/NO), QUOTE, TICKS | Active. CLOB migration done (49K→863K markets). USDC on Polygon.                                                                                                                                                                     |
+| Kalshi     | SINGLE_VENUE | TRADE, QUOTE                          | API migrated to `api.elections.kalshi.com` (2026-05-20, Phase 1 shipped). Status: `BLOCKED-CREDENTIALS` — integration verification pending credential provisioning (see `/codex/02-data/prediction-schema-paths.md` § Kalshi delta). |
 
 ## Permanently removed
 
@@ -225,7 +235,7 @@ regional_restrictions:
   blocked_jurisdictions: [US]
 ```
 
-Full schema: [../02-data/contracts-scope-and-layout.md](../02-data/contracts-scope-and-layout.md) + UAC
+Full schema: [/codex/02-data/contracts-scope-and-layout.md](/codex/02-data/contracts-scope-and-layout.md) + UAC
 `registry/capability_declarations/`.
 
 ## Chain RPC templates
@@ -240,12 +250,12 @@ Per CLAUDE.md.
 - Prime brokers: [prime-brokers.md](prime-brokers.md)
 - Unity: [unity-integration.md](unity-integration.md)
 - Venue capability registry service:
-  [../03-services/venue-capability-registry.md](../03-services/venue-capability-registry.md)
-- Venue availability (data shards): [../02-data/venue-availability.md](../02-data/venue-availability.md)
+  [/codex/03-services/venue-capability-registry.md](/codex/03-services/venue-capability-registry.md)
+- Venue availability (data shards): [/codex/02-data/venue-availability.md](/codex/02-data/venue-availability.md)
 - Capital efficiency × venue features:
-  [../04-architecture/capital-efficiency-patterns.md](../04-architecture/capital-efficiency-patterns.md)
+  [/codex/04-architecture/capital-efficiency-patterns.md](/codex/04-architecture/capital-efficiency-patterns.md)
 - Transfer types:
-  [../09-strategy/architecture-v2/cross-cutting/transfer-rebalance.md](../09-strategy/architecture-v2/cross-cutting/transfer-rebalance.md)
+  [/codex/09-strategy/architecture-v2/cross-cutting/transfer-rebalance.md](/codex/09-strategy/architecture-v2/cross-cutting/transfer-rebalance.md)
 
 ## Not in this doc
 

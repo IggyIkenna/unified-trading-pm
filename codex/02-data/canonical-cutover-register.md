@@ -28,11 +28,11 @@ tags:
   ]
 related:
   [
-    cross-asset-canonical-target-ssot.md,
-    pipeline-mode-partition.md,
-    defi-canonical-naming-ssot.md,
-    availability-manifest-and-data-status.md,
-    orphan-object-detection.md,
+    /codex/02-data/cross-asset-canonical-target-ssot.md,
+    /codex/02-data/pipeline-mode-partition.md,
+    /codex/02-data/defi-canonical-naming-ssot.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/02-data/orphan-object-detection.md,
     ../../plans/active/defi_consolidated_closeout_2026_07_18.md,
     ../../plans/active/cefi_consolidated_closeout_2026_07_18.md,
     ../../plans/active/tradfi_consolidated_closeout_2026_07_18.md,
@@ -48,9 +48,9 @@ authoritative_for:
   ]
 referenced_by:
   [
-    codex/02-data/orphan-object-detection.md,
-    codex/02-data/four-surface-reconciliation-procedure.md,
-    codex/02-data/reconciliation-finding-taxonomy.md,
+    /codex/02-data/orphan-object-detection.md,
+    /codex/02-data/four-surface-reconciliation-procedure.md,
+    /codex/02-data/reconciliation-finding-taxonomy.md,
   ]
 owner:
 last_reviewed: 2026-07-20
@@ -368,7 +368,7 @@ lane) — this sizes the live v5 cefi migration blast radius. Fix + migration:
 **Target ruled: 2026-07-21** (operator Option-A, corrected the same evening) — `instrument_type=` added to the path for
 cefi/tradfi/defi (prediction already carries it); `pipeline_mode=` added; `data_type` STAYS SOURCE on the path (manifest
 re-aligns to source, not the reverse — the original framing had this backwards). See AE-6,
-`codex/02-data/mdps-candle-canonical-reconciliation.md`. **In force at the writer: NOT YET — no migration has run.
+`/codex/02-data/mdps-candle-canonical-reconciliation.md`. **In force at the writer: NOT YET — no migration has run.
 Effective-from PENDING for every asset_group below.**
 
 | asset_group | effective-from | state                                                                                                                                                                                                                                                        |

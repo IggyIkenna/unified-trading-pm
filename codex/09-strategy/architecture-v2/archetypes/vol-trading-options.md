@@ -14,14 +14,20 @@ repos: [strategy-service]
 scope: [engineer, admin]
 tags: [strategy, vol-trading, options, deribit, iv-rv, skew, delta-hedge]
 related:
-  [arbitrage-price-dispersion.md, stat-arb-pairs-fixed.md, vol-carry.md, vol-arb-rv-iv.md, ../families/vol-trading.md]
+  [
+    /codex/09-strategy/architecture-v2/archetypes/arbitrage-price-dispersion.md,
+    /codex/09-strategy/architecture-v2/archetypes/stat-arb-pairs-fixed.md,
+    /codex/09-strategy/architecture-v2/archetypes/vol-carry.md,
+    /codex/09-strategy/architecture-v2/archetypes/vol-arb-rv-iv.md,
+    ../families/vol-trading.md,
+  ]
 created: 2026-04-17
 authoritative_for: ["VOL_TRADING_OPTIONS archetype spec"]
 referenced_by:
   [
-    codex/09-strategy/architecture-v2/archetypes/vol-carry.md,
-    codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md,
-    codex/09-strategy/architecture-v2/families/vol-trading.md,
+    /codex/09-strategy/architecture-v2/archetypes/vol-carry.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md,
+    /codex/09-strategy/architecture-v2/families/vol-trading.md,
   ]
 owner:
 last_reviewed:

@@ -82,7 +82,7 @@ File as a P3 backlog item — neither is blocking, both are worth picking up opp
 - [x] ✅ [DOC] P3. Write a codex playbook under `codex/02-data/` documenting how to register a new sports feature
       calculator against the coverage-gating architecture (UAC `FEATURE_UPSTREAM_REQUIREMENTS` entry, `_gate_then_run`
       wiring in features-service, the deployment-api per-calc-meta entry each new calculator needs). (repo:
-      unified-trading-pm) — `codex/02-data/sports-feature-calculator-registration-playbook.md`. Covers the 2 real touch
+      unified-trading-pm) — `/codex/02-data/sports-feature-calculator-registration-playbook.md`. Covers the 2 real touch
       points (UAC `FEATURE_UPSTREAM_REQUIREMENTS` entry; the `gate(...)` call in the features-service dispatcher wired
       through `_gate_then_run`/`check_calculator_coverage`) + 1 conditional touch point (`DATA_TYPE_TO_REF_KEY` only for
       a genuinely new upstream data_type), plus an explicit correction of the todo's own premise: deployment-api's
@@ -123,7 +123,7 @@ File as a P3 backlog item — neither is blocking, both are worth picking up opp
 
 ## Codex SSOTs
 
-`codex/02-data/availability-manifest-and-data-status.md`, `codex/02-data/honest-coverage-model.md`.
+`/codex/02-data/availability-manifest-and-data-status.md`, `/codex/02-data/honest-coverage-model.md`.
 
 ## RE-TRIAGE (2026-07-23)
 
@@ -134,7 +134,7 @@ each deliverable actually exists in the current codebase (frontmatter `status` w
   `tests/unit/components/SportsFeatureCoverageCard.test.tsx`
   - `tests/smoke/sports_feature_coverage_card.spec.ts` all present on disk; `git log -1 d8def9c` =
     `feat(data-status): sports feature coverage card (Phase 8.A)`.
-- `codex/02-data/sports-feature-calculator-registration-playbook.md` present in this repo.
+- `/codex/02-data/sports-feature-calculator-registration-playbook.md` present in this repo.
 - `deployment-api/deployment_api/scripts/coverage_drift_worker.py` +
   `deployment_api/routes/data_status/_coverage_drift_run.py` present; `git log -1 47802dc5` (deployment-api) =
   `feat(data-status): wire sports coverage-drift cron entrypoint + dashboard alert (Phase 8.B)`; `git log -1 018c3ca6`

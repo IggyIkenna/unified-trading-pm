@@ -23,23 +23,23 @@ scope: [engineer, admin]
 tags: [manifest, sports, prediction, defi, tradfi, mdps, canonicalisation]
 related:
   [
-    codex/02-data/partitioning.md,
-    codex/02-data/availability-manifest-and-data-status.md,
-    codex/02-data/pipeline-coverage-matrix.md,
-    codex/02-data/service-output-emission-semantics.md,
+    /codex/02-data/partitioning.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/02-data/pipeline-coverage-matrix.md,
+    /codex/02-data/service-output-emission-semantics.md,
   ]
 created: 2026-04-20
 authoritative_for: [per-asset-group GCS bucket templates, per-asset-group path-layout divergences]
 referenced_by:
   [
-    codex/02-data/chart-candle-delivery-flow.md,
-    codex/02-data/data-status-drilldown.md,
-    codex/02-data/defi-data-types-catalog.md,
-    codex/02-data/defi-venue-protocol-catalogue.md,
-    codex/02-data/hive-schema-compatibility.md,
-    codex/02-data/is-test-run-audit-2026-04-20.md,
-    codex/02-data/mtds-data-source-coverage-matrix.md,
-    codex/02-data/mtds-download-api.md,
+    /codex/02-data/chart-candle-delivery-flow.md,
+    /codex/02-data/data-status-drilldown.md,
+    /codex/02-data/defi-data-types-catalog.md,
+    /codex/02-data/defi-venue-protocol-catalogue.md,
+    /codex/02-data/hive-schema-compatibility.md,
+    /codex/02-data/is-test-run-audit-2026-04-20.md,
+    /codex/02-data/mtds-data-source-coverage-matrix.md,
+    /codex/02-data/mtds-download-api.md,
   ]
 owner:
 last_reviewed: 2026-05-17
@@ -295,8 +295,8 @@ per-shard gating. Opt-in via `--per-shard-check` CLI flag (wired in fde923d).
 
 ## Cross-references
 
-- Sports adapter dependency order (api-football T0 + T1 enrichment): `codex/02-data/sports-adapter-dependency-order.md`
-- Manifest schema SSOT: `codex/02-data/availability-manifest-and-data-status.md`
+- Sports adapter dependency order (api-football T0 + T1 enrichment): `/codex/02-data/sports-adapter-dependency-order.md`
+- Manifest schema SSOT: `/codex/02-data/availability-manifest-and-data-status.md`
 - MDPS dep-checker implementation:
   `market-data-processing-service/market_data_processing_service/app/core/dependency_checker.py`
 - SPORTS get_instruments_for_date SPORTS branch:
@@ -309,4 +309,4 @@ per-shard gating. Opt-in via `--per-shard-check` CLI flag (wired in fde923d).
   bc33700 adds `instrument_id`)
 - Sports odds / bm_time: `market-tick-data-service/docs/SPORTS_ODDS.md`
 - Coverage roadmap (uses this doc): `unified-trading-pm/plans/archive/proper_coverage_roadmap_2026_04_20.plan.md`
-- VM tarball deployment: `codex/05-infrastructure/vm-tarball-deployment.md`
+- VM tarball deployment: `/codex/05-infrastructure/vm-tarball-deployment.md`

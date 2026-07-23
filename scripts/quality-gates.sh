@@ -678,6 +678,54 @@ if [ -f "$DOC_RETRIEVAL_PARITY_CHECKER" ] && [ -n "${WORKSPACE_ROOT:-}" ]; then
     fi
 fi
 
+# ── Post-gates: inline markdown body-link existence — baselined ratchet (blocking on NEW breakage) ──
+# SSOT: cursor-configs/skills/docs-reconcile/SKILL.md § "Broken links" (added 2026-07-23).
+# docspec.validate_doc_references() (inside the frontmatter-schema gate above) only checks FRONTMATTER
+# path-shaped fields (related/codex_ssots/supersedes/etc) — it never looks at a doc's BODY, so an
+# inline `[the SSOT](../foo.md)` dead link was invisible to every existing gate. Ratcheted against
+# doc_body_link_baseline.yaml (173 pre-existing dead links seeded 2026-07-23) so old rot doesn't fail
+# every run — only a NEW broken body link (not in the baseline) fails the gate.
+#
+# SCOPED to your own changeset (same reasoning + same shape as the frontmatter-schema gate just above:
+# foreign_dirty_frontmatter_blocks_every_agents_gate_2026_07_18 — a bypassed bad doc from a DIFFERENT
+# agent must not fail this locally for EVERY clone on the shared branch). CI's corpus-wide scan is
+# unaffected by this local scoping.
+BODY_LINK_CHECKER="${REPO_ROOT}/scripts/quality_gates/check_doc_body_links.py"
+if [ -f "$BODY_LINK_CHECKER" ]; then
+    echo "Running inline markdown body-link existence check (baselined ratchet)..."
+    _bl_doc_trees='plans/active/*.md plans/active/issues/*.md plans/epics/*.md plans/audit/results/*.md plans/audit/instructions/*.md codex/*.md agents/*.md *.mdc'
+    _bl_upstream=$(git -C "$REPO_ROOT" rev-parse --abbrev-ref --symbolic-full-name '@{u}' 2>/dev/null || echo "")
+    _bl_changed=""
+    if [ -n "$_bl_upstream" ]; then
+        # shellcheck disable=SC2086  # intentional word-split: _bl_doc_trees is a space-separated pathspec list
+        _bl_changed="${_bl_changed} $(git -C "$REPO_ROOT" diff --name-only --diff-filter=ACMR "${_bl_upstream}...HEAD" -- $_bl_doc_trees 2>/dev/null)"
+    fi
+    # shellcheck disable=SC2086
+    _bl_changed="${_bl_changed} $(git -C "$REPO_ROOT" diff --name-only --diff-filter=ACMR -- $_bl_doc_trees 2>/dev/null)"
+    # shellcheck disable=SC2086
+    _bl_changed="${_bl_changed} $(git -C "$REPO_ROOT" diff --cached --name-only --diff-filter=ACMR -- $_bl_doc_trees 2>/dev/null)"
+    # shellcheck disable=SC2086
+    _bl_changed="${_bl_changed} $(git -C "$REPO_ROOT" ls-files --others --exclude-standard -- $_bl_doc_trees 2>/dev/null)"
+    _bl_scoped_list=""
+    for _f in $_bl_changed; do
+        [ -f "$REPO_ROOT/$_f" ] || continue
+        case " $_bl_scoped_list " in *" $_f "*) : ;; *) _bl_scoped_list="${_bl_scoped_list} $_f" ;; esac
+    done
+    if [ -z "${_bl_scoped_list// /}" ]; then
+        log_success "Body-link check skipped (no doc changes in your changeset — nothing of yours to check; CI's corpus-wide scan is unaffected)"
+    else
+        # shellcheck disable=SC2086
+        if python3 "$BODY_LINK_CHECKER" --quiet $_bl_scoped_list; then
+            log_success "Body-link check passed (scoped to your changeset)"
+        else
+            echo "❌ Body-link check failed — a NEW inline markdown link in your changeset doesn't resolve" >&2
+            echo "   Fix the link target, or if it points to a doc that legitimately moved, repoint it." >&2
+            echo "   Pre-existing debt: python3 scripts/quality_gates/check_doc_body_links.py --update-baseline" >&2
+            _post_gate_fail "doc-body-links"
+        fi
+    fi
+fi
+
 # ── Post-gates: agent-rules size cap (CLAUDE.md / SUB_AGENT_MANDATORY_RULES.md) — HARD cap ──
 # SSOT: CLAUDE.md header § "Size budget". The agent rule files are a lean index (1-line directive +
 # codex pointer); detail lives in codex, never inline. They keep silently re-bloating, so the cap is

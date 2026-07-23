@@ -2,9 +2,9 @@
 doc_type: codex-ssot
 title: Visibility slicing — the core model
 summary:
-  'SSOT for the visible(user, item) filter unifying role × entitlements × catalogue lock_state × maturity
-  × org_scope into one rule applied across every UI surface; four slicing dimensions + per-role/persona
-  visible-set examples + dashboard tile/chip slicing.'
+  "SSOT for the visible(user, item) filter unifying role × entitlements × catalogue lock_state × maturity × org_scope
+  into one rule applied across every UI surface; four slicing dimensions + per-role/persona visible-set examples +
+  dashboard tile/chip slicing."
 status: current
 nature: ssot
 asset_group: [meta]
@@ -14,15 +14,25 @@ scope: [engineer, admin, sales]
 tags: [customer-journey, visibility-slicing, entitlements, ui, personas, catalogues, dashboard]
 related:
   [
-    catalogue-strategy.md,
-    catalogues.md,
-    fund-org-hierarchy.md,
+    /codex/14-customer-journeys/playbook-concepts/catalogue-strategy.md,
+    /codex/14-customer-journeys/playbook-concepts/catalogues.md,
+    /codex/14-customer-journeys/playbook-concepts/fund-org-hierarchy.md,
     ../../09-strategy/architecture-v2/dashboard-services-grid.md,
     ../roadmap/next-waves.md,
   ]
 created: 2026-04-19
-authoritative_for: [visibility-slicing model (visible(user,item) filter across UI surfaces)]
-referenced_by: [codex/14-customer-journeys/README.md, codex/14-customer-journeys/_ssot-rules/06-show-dont-show-discipline.md, codex/14-customer-journeys/_ssot-rules/11-codex-scope-registry.md, codex/14-customer-journeys/audiences-and-journeys.md, codex/14-customer-journeys/authentication/README.md, codex/14-customer-journeys/authentication/firebase-production.md, codex/14-customer-journeys/authentication/firebase-staging.md, codex/14-customer-journeys/information-architecture.md]
+authoritative_for: [visibility-slicing model (visible(user, item) filter across UI surfaces)]
+referenced_by:
+  [
+    /codex/14-customer-journeys/README.md,
+    /codex/14-customer-journeys/_ssot-rules/06-show-dont-show-discipline.md,
+    /codex/14-customer-journeys/_ssot-rules/11-codex-scope-registry.md,
+    /codex/14-customer-journeys/audiences-and-journeys.md,
+    /codex/14-customer-journeys/authentication/README.md,
+    /codex/14-customer-journeys/authentication/firebase-production.md,
+    /codex/14-customer-journeys/authentication/firebase-staging.md,
+    /codex/14-customer-journeys/information-architecture.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -167,7 +177,7 @@ The `/dashboard` surface applies the same `visible(user, item)` rule at two gran
 `lib/auth/persona-dashboard-shape.ts → personaDashboardShape()`; chip visibility via `personaDashboardSubRoutes()`. Both
 return a `visible | locked | hidden` triple per item, feeding the same three-state `<ServiceTile>` primitive used for
 admin-locked surfaces. The 19-persona × 5-tile × N-chip matrix is the SSOT at
-[`codex/09-strategy/architecture-v2/dashboard-services-grid.md`](../../09-strategy/architecture-v2/dashboard-services-grid.md)
+[`/codex/09-strategy/architecture-v2/dashboard-services-grid.md`](../../09-strategy/architecture-v2/dashboard-services-grid.md)
 §3 — visibility-slicing.md remains the canonical rule; dashboard-services-grid.md is the per-surface instantiation.
 
 ## Related

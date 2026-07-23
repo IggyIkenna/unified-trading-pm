@@ -23,11 +23,11 @@ scope: [engineer, admin]
 tags: [defi, instruments, pipeline, mtds, mdps, features, execution]
 related:
   [
-    defi-venue-protocol-catalogue.md,
-    defi-data-pipeline.md,
-    hive-schema-compatibility.md,
-    partitioning.md,
-    ../09-strategy/architecture-v2/cross-cutting/reward-lifecycle.md,
+    /codex/02-data/defi-venue-protocol-catalogue.md,
+    /codex/02-data/defi-data-pipeline.md,
+    /codex/02-data/hive-schema-compatibility.md,
+    /codex/02-data/partitioning.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/reward-lifecycle.md,
   ]
 created: 2026-04-03
 authoritative_for:
@@ -37,10 +37,10 @@ authoritative_for:
   ]
 referenced_by:
   [
-    codex/02-data/availability-manifest-and-data-status.md,
-    codex/02-data/defi-data-pipeline.md,
-    codex/02-data/defi-data-types-catalog.md,
-    codex/02-data/venue-availability.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/02-data/defi-data-pipeline.md,
+    /codex/02-data/defi-data-types-catalog.md,
+    /codex/02-data/venue-availability.md,
     plans/epics/defi_master.md,
   ]
 owner:
@@ -84,9 +84,9 @@ instruments-service
     │    Other: benqi, ethena, pyth
     │    (solayer/picasso/cambrian removed 2026-06-02 — no usable/decodable data source, operator decision)
     │    (mango/zeta/flash_trade removed 2026-07-15 — operator ruling: dead API endpoints, ~$0 TVL, zero MTDS
-    │     capture ever wired; see codex/04-architecture/solana-defi-coverage.md)
+    │     capture ever wired; see /codex/04-architecture/solana-defi-coverage.md)
     │    (drift/pacifica removed 2026-07-16 — operator ruling: all Solana perp DEXes dropped except Jupiter;
-    │     drift.py + pacifica.py DELETED, DRIFT/PACIFICA CULLED; see codex/04-architecture/solana-defi-coverage.md)
+    │     drift.py + pacifica.py DELETED, DRIFT/PACIFICA CULLED; see /codex/04-architecture/solana-defi-coverage.md)
     │    Native staking: solana_native_staking (instruments-service@9d7cfc7, 2026-05-14)
     │    (47 DeFi adapters total; excludes _solana_utils.py, _lst_utils.py, extended.py base helpers)
     │  CeFi adapters (under reference_data/adapters/cefi/): binance, hyperliquid, et al. — NOT DeFi.
@@ -123,7 +123,7 @@ execution-service
 > `ARBITRAGE_PRICE_DISPERSION:funding-rate-dispersion`, formerly `leveraged_funding_arb`). Strategy-area Phase 1.B audit
 > owns the workspace-wide rename sweep; this table will be regenerated when the archetype-name table flips. Use the
 > cross-reference to UAC `StrategyArchetype` (55 members per slot-8 strategy audit ST-1) as the canonical SSOT
-> meanwhile; codex/09-strategy/architecture-v2/README.md is the strategy-side counterpart.
+> meanwhile; /codex/09-strategy/architecture-v2/README.md is the strategy-side counterpart.
 
 | Strategy (legacy label)       | Staking Instrument                    | Perp Instrument                                  | Reward Token(s)                   | Price Feeds Needed                                                              |
 | ----------------------------- | ------------------------------------- | ------------------------------------------------ | --------------------------------- | ------------------------------------------------------------------------------- |
@@ -322,10 +322,10 @@ indirection.
 > **Update 2026-07-16 (operator ruling)**: `DRIFT-SOLANA` + the `drift` adapter were CULLED entirely (no `drift.py`);
 > the `DRIFT`/`DRIFT-SOLANA` examples above are HISTORICAL illustrations of the auto-mapping mechanism, which itself is
 > unchanged. `GMX` is now **defi-axis-only** (DEX-pool perp), no longer cefi-dual-classified. See
-> [`solana-defi-coverage.md`](../04-architecture/solana-defi-coverage.md).
+> [`solana-defi-coverage.md`](/codex/04-architecture/solana-defi-coverage.md).
 
 ## Related Docs
 
-- `codex/09-strategy/architecture-v2/cross-cutting/reward-lifecycle.md` — EIGEN/ETHFI reward claim/sell lifecycle
-- `codex/02-data/partitioning.md` — Hive partition schema for GCS
-- `codex/02-data/hive-schema-compatibility.md` — BigQuery external table compatibility
+- `/codex/09-strategy/architecture-v2/cross-cutting/reward-lifecycle.md` — EIGEN/ETHFI reward claim/sell lifecycle
+- `/codex/02-data/partitioning.md` — Hive partition schema for GCS
+- `/codex/02-data/hive-schema-compatibility.md` — BigQuery external table compatibility

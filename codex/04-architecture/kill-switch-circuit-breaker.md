@@ -15,11 +15,11 @@ scope: [engineer, admin]
 tags: [execution, kill-switch, circuit-breaker, defi, cefi, reconciliation, self-healing, ssot]
 related:
   [
-    autonomous-recovery-matrix.md,
-    kill-switch-event-bus.md,
-    circuit-breaker-rule-taxonomy.md,
-    risk-breaker-seam.md,
-    manual-trade-booking.md,
+    /codex/04-architecture/autonomous-recovery-matrix.md,
+    /codex/04-architecture/kill-switch-event-bus.md,
+    /codex/04-architecture/circuit-breaker-rule-taxonomy.md,
+    /codex/04-architecture/risk-breaker-seam.md,
+    /codex/04-architecture/manual-trade-booking.md,
   ]
 created: 2026-03-27
 authoritative_for:
@@ -31,14 +31,14 @@ authoritative_for:
   ]
 referenced_by:
   [
-    codex/04-architecture/account-instructions.md,
-    codex/04-architecture/alerting-batch-live.md,
-    codex/04-architecture/autonomous-recovery-matrix.md,
-    codex/04-architecture/circuit-breaker-rule-taxonomy.md,
-    codex/04-architecture/custody-providers.md,
-    codex/04-architecture/kill-switch-event-bus.md,
-    codex/04-architecture/manual-trade-booking.md,
-    codex/04-architecture/mev-protection.md,
+    /codex/04-architecture/account-instructions.md,
+    /codex/04-architecture/alerting-batch-live.md,
+    /codex/04-architecture/autonomous-recovery-matrix.md,
+    /codex/04-architecture/circuit-breaker-rule-taxonomy.md,
+    /codex/04-architecture/custody-providers.md,
+    /codex/04-architecture/kill-switch-event-bus.md,
+    /codex/04-architecture/manual-trade-booking.md,
+    /codex/04-architecture/mev-protection.md,
   ]
 owner:
 last_reviewed: 2026-05-17
@@ -504,7 +504,7 @@ full kill-switch propagation path exercises.
 exercise exponential backoff (cascade → multi-venue OPEN) may need a longer window declared in the scenario seed.
 
 **Reference:** `UAC registry/scenarios/defi.py` + `cefi.py` (UAC@`33630a6`); `UTL scenario/runner.py` (UTL@`3797fed5`);
-full outcome taxonomy in `codex/04-architecture/scenario-outcome-assertions.md` (item 8.B, pending).
+full outcome taxonomy in `/codex/04-architecture/scenario-outcome-assertions.md` (item 8.B, pending).
 
 ---
 

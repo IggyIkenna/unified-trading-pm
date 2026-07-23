@@ -3,8 +3,8 @@ doc_type: codex-ssot
 title: Solana Lending Yield (Kamino Finance)
 summary:
   Pre-v2 DeFi Solana lending yield on Kamino Finance — supply USDC / SOL / USDT for 5-15% APY, optional 2x recursive
-  borrow leverage (HF target 2.0, deleverage 1.5, exit 1.2); 4H cadence, ~$0.60 full leveraged deploy; targets
-  8-15% (unlev) / 15-25% (lev) APY. SUPERSEDED banner — see architecture-v2.
+  borrow leverage (HF target 2.0, deleverage 1.5, exit 1.2); 4H cadence, ~$0.60 full leveraged deploy; targets 8-15%
+  (unlev) / 15-25% (lev) APY. SUPERSEDED banner — see architecture-v2.
 status: superseded
 nature: ssot
 asset_group: [meta]
@@ -12,10 +12,21 @@ stage: [meta]
 repos: [execution-service, market-tick-data-service, strategy-service, unified-api-contracts, unified-trading-pm]
 scope: [engineer, admin]
 tags: [defi, strategy, execution, lending, solana, kamino, leverage]
-related: [aave-lending.md, sol-basis-trade.md, sol-staked-basis.md, multi-chain-lending-yield.md]
+related:
+  [
+    /codex/09-strategy/_archived_pre_v2/defi/aave-lending.md,
+    /codex/09-strategy/_archived_pre_v2/defi/sol-basis-trade.md,
+    /codex/09-strategy/_archived_pre_v2/defi/sol-staked-basis.md,
+    /codex/09-strategy/_archived_pre_v2/defi/multi-chain-lending-yield.md,
+  ]
 created: 2026-03-28
 authoritative_for: []
-referenced_by: [codex/09-strategy/_archived_pre_v2/STRATEGY_CATALOG_pre_v2.md, codex/09-strategy/_archived_pre_v2/defi/sol-basis-trade.md, codex/09-strategy/_archived_pre_v2/defi/sol-staked-basis.md]
+referenced_by:
+  [
+    /codex/09-strategy/_archived_pre_v2/STRATEGY_CATALOG_pre_v2.md,
+    /codex/09-strategy/_archived_pre_v2/defi/sol-basis-trade.md,
+    /codex/09-strategy/_archived_pre_v2/defi/sol-staked-basis.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -188,7 +199,7 @@ Low-frequency strategy (4H candles). Lending rates change slowly. Co-location pr
 - **Order types:** Direct (Kamino supply/borrow via program invocation), Market (Jupiter swap)
 - **Atomic execution required?** No -- each operation is independent. However, leveraged loop steps should execute in
   rapid succession to avoid price drift between deposit and borrow.
-- **Gas budget:** ~0.001 SOL per supply/withdraw (~$0.15), ~0.004 SOL for full leveraged deploy (swap + deposit +
+- **Gas budget:** ~~0.001 SOL per supply/withdraw (~~$0.15), ~0.004 SOL for full leveraged deploy (swap + deposit +
   borrow + re-deposit)
 
 ### Rebalancing
@@ -335,7 +346,8 @@ Capital flow: Client deposit --> treasury --> hot wallet (Solana) --> TRANSFER +
 
 Gas costs are tracked via Alchemy RPC using `getRecentPrioritizationFees` (Solana). The MTDS `gas_fee_handler` fetches
 real-time priority fees and writes them as features. Gas hits P&L immediately as a realized transaction cost -- not
-estimated. Solana gas is negligible (~0.001 SOL / ~$0.15 per transaction), making even the leveraged variant (4
+estimated. Solana gas is negligible (~0.001 SOL /
+~$0.15 per transaction), making even the leveraged variant (4
 transactions for full deploy) cost only ~$0.60 total.
 
 **Reference:** `market-tick-data-service/market_tick_data_service/gas_fee_handler.py`

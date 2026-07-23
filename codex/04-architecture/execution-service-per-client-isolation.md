@@ -11,10 +11,20 @@ stage: [meta]
 repos: [deployment-api, execution-service]
 scope: [engineer, admin]
 tags: [execution, cefi, defi, mvp, escalation]
-related: [client-funds-isolation.md, per-client-isolation-architecture.md, transfer-coordinator.md]
+related:
+  [
+    /codex/04-architecture/client-funds-isolation.md,
+    /codex/04-architecture/per-client-isolation-architecture.md,
+    /codex/04-architecture/transfer-coordinator.md,
+  ]
 created: 2026-05-20
 authoritative_for: [execution-service per-client process isolation enforcement]
-referenced_by: [codex/04-architecture/client-funds-isolation.md, codex/04-architecture/identity-model.md, codex/04-architecture/per-client-isolation-architecture.md]
+referenced_by:
+  [
+    /codex/04-architecture/client-funds-isolation.md,
+    /codex/04-architecture/identity-model.md,
+    /codex/04-architecture/per-client-isolation-architecture.md,
+  ]
 owner:
 last_reviewed: 2026-05-20
 code_refs:
@@ -28,7 +38,7 @@ Execution-service is **always isolated** — one process per client, enforced at
 keys, rate limits, entitlements, and order-flow confidentiality cannot be safely multiplexed in a single process.
 
 SSOT: `plans/active/per_client_isolation_and_venue_fanout_topology_2026_05_20.md` § Phase 6. Cross-reference:
-`codex/04-architecture/client-funds-isolation.md` HARD RULE — funds NEVER move between different clients.
+`/codex/04-architecture/client-funds-isolation.md` HARD RULE — funds NEVER move between different clients.
 
 **For May-23 2-client launch**: existing pattern is correct. No code change required. Deployment-api fans out one
 execution-service process per client_id (Odum Research UK + defi-client-1).
@@ -89,7 +99,7 @@ hardcoded path. Logs `CLIENT_VENUE_CREDENTIALS_LOADED client_id=... venue=... ha
 construct cross-client transfers via metadata (CEX withdrawal destination, DeFi protocol connector wallet, bridge
 destination address). These gaps are documented in
 `plans/active/issues/cross_client_funds_isolation_retroactive_audit_2026_05_20.md` and closed by the
-`TransferCoordinator` facade (Phase 6 new component — see `codex/04-architecture/transfer-coordinator.md`).
+`TransferCoordinator` facade (Phase 6 new component — see `/codex/04-architecture/transfer-coordinator.md`).
 
 ---
 

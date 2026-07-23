@@ -21,9 +21,9 @@ scope: [engineer, admin]
 tags: [manifest, pipeline, data-status, mtds, mdps, features, verification]
 related:
   [
-    ../02-data/availability-manifest-and-data-status.md,
-    ../02-data/data-status-drilldown.md,
-    features-service-architecture.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/02-data/data-status-drilldown.md,
+    /codex/04-architecture/features-service-architecture.md,
   ]
 created: 2026-06-02
 authoritative_for: [E2E pipeline manifest-wiring three-layer verification]
@@ -39,7 +39,7 @@ code_refs:
 > E2E + data manifest + data status; deployment UI/API need to understand and show them"). Scope of this doc =
 > **verify + document** the current wiring and name the gaps. SSOT for the live state is the code referenced inline;
 > this doc is the map. Companion:
-> [`../02-data/availability-manifest-and-data-status.md`](../02-data/availability-manifest-and-data-status.md).
+> [`/codex/02-data/availability-manifest-and-data-status.md`](/codex/02-data/availability-manifest-and-data-status.md).
 > Machine-checked by `system-integration-tests/tests/unit/test_pipeline_manifest_wiring.py`.
 
 ## The chain

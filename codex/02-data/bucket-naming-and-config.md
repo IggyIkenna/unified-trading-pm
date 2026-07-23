@@ -3,7 +3,7 @@ doc_type: codex-ssot
 title: Bucket Naming and Config Standards — SUPERSEDED 2026-05-11
 summary:
   SUPERSEDED redirect stub — the legacy {bucket_prefix}-{gcp_project_id} env-var bucket-naming pattern is BANNED; use
-  resolve_bucket_name(cloud, kind, asset_group, env) per codex/05-infrastructure/bucket-isolation-model.md and the QG
+  resolve_bucket_name(cloud, kind, asset_group, env) per /codex/05-infrastructure/bucket-isolation-model.md and the QG
   STEP 5.69 ratchet.
 status: superseded
 nature: ssot
@@ -15,29 +15,29 @@ tags: [bucket-naming, canonicalisation, ssot-audit, migration, infrastructure]
 related:
   [
     ../../plans/archive/2026_05/bucket_name_ssot_canonicalisation_2026_05_10.md,
-    ../05-infrastructure/gcs-object-operations.md,
+    /codex/05-infrastructure/gcs-object-operations.md,
   ]
 created: 2026-03-27
 authoritative_for: [legacy bucket-prefix env-var pattern deletion-gate stub]
 referenced_by:
   [
-    codex/02-data/README.md,
-    codex/02-data/data-lineage-MTDS-features-ml.md,
-    codex/02-data/is-test-run-audit-2026-04-20.md,
+    /codex/02-data/README.md,
+    /codex/02-data/data-lineage-MTDS-features-ml.md,
+    /codex/02-data/is-test-run-audit-2026-04-20.md,
   ]
 owner:
 last_reviewed: 2026-05-17
 code_refs:
-superseded_by: codex/05-infrastructure/bucket-isolation-model.md
+superseded_by: /codex/05-infrastructure/bucket-isolation-model.md
 superseded_on: 2026-05-11
 ---
 
 # Bucket Naming and Config Standards — SUPERSEDED 2026-05-11
 
 > **SUPERSEDED 2026-05-11 — live SSOT is now
-> [`codex/05-infrastructure/bucket-isolation-model.md`](../05-infrastructure/bucket-isolation-model.md)** (four-tier
-> naming, Group A vs Group B, Wave-3 folded shapes) + the `resolve_bucket_name()` resolver + the QG STEP 5.69 ratchet
-> (CLAUDE.md § "Writing STORAGE code?" carries the one-line rule). This document described the legacy
+> [`/codex/05-infrastructure/bucket-isolation-model.md`](/codex/05-infrastructure/bucket-isolation-model.md)**
+> (four-tier naming, Group A vs Group B, Wave-3 folded shapes) + the `resolve_bucket_name()` resolver + the QG STEP 5.69
+> ratchet (CLAUDE.md § "Writing STORAGE code?" carries the one-line rule). This document described the legacy
 > `{bucket_prefix}-{gcp_project_id}` env-var pattern (`MARKET_DATA_BUCKET_PREFIX_CEFI`, per-category overrides). That
 > pattern is BANNED. QG STEP 5.69 ratchet rejects inline f-string bucket-name building.
 
@@ -69,7 +69,7 @@ bucket = resolve_bucket_name(
 
 ## What you should read instead
 
-1. [`codex/05-infrastructure/bucket-isolation-model.md`](../05-infrastructure/bucket-isolation-model.md) — the live
+1. [`/codex/05-infrastructure/bucket-isolation-model.md`](/codex/05-infrastructure/bucket-isolation-model.md) — the live
    naming / tiers / Group-A-vs-B / folded-Group-B SSOT. CLAUDE.md § "Writing STORAGE code?" carries the one-line
    workspace rule and the QG STEP 5.69 ratchet.
 2. `unified-trading-library/unified_trading_library/cloud_interface/bucket_naming.py` — canonical resolver code.

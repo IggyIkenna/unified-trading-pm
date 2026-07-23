@@ -2,9 +2,9 @@
 doc_type: codex-ssot
 title: Operational Modes Matrix — Cross-Cutting Infrastructure
 summary:
-  'Human-readable matrix of the orthogonal operational axes (ENVIRONMENT / DATA_MODE / RUNTIME_MODE / CLOUD_PROVIDER /
+  "Human-readable matrix of the orthogonal operational axes (ENVIRONMENT / DATA_MODE / RUNTIME_MODE / CLOUD_PROVIDER /
   TESTNET_MODE / PHASE_MODE / OPERATIONAL_MODE + ExecutionTarget/Trigger) that compose mock/real/testnet/local-cloud;
-  machine SSOT is UAC `modes.py` + `env_canon.py`. `TestingStage` is deprecated — decompose to the new axes.'
+  machine SSOT is UAC `modes.py` + `env_canon.py`. `TestingStage` is deprecated — decompose to the new axes."
 status: current
 nature: ssot
 asset_group: [meta]
@@ -13,11 +13,25 @@ repos: [system-integration-tests, unified-api-contracts, unified-trading-library
 scope: [engineer, admin]
 tags: [operational-modes, uac, testnet, migration, cefi, defi]
 related:
-  [../../../06-coding-standards/integration-testing-layers.md, ../../../08-workflows/local-dev.md,
-  dart-manual-trade-spec.md, ../../../04-architecture/manual-trade-booking.md]
+  [
+    ../../../06-coding-standards/integration-testing-layers.md,
+    ../../../08-workflows/local-dev.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md,
+    ../../../04-architecture/manual-trade-booking.md,
+  ]
 created: 2026-03-27
 authoritative_for: [operational-modes orthogonal-axes composition matrix (mock/real/testnet/local-cloud)]
-referenced_by: [codex/04-architecture/research-service-and-dart-integration.md, codex/06-coding-standards/README.md, codex/08-workflows/local-dev.md, codex/09-strategy/README.md, codex/09-strategy/_archived_pre_v2/STRATEGY_CATALOG_AND_WORKFLOW_ALIGNMENT.md, codex/09-strategy/_archived_pre_v2/cross-cutting/config-architecture.md, codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md, plans/epics/cross_cutting_may_23_SUPERSEDED_2026_05_21.md]
+referenced_by:
+  [
+    /codex/04-architecture/research-service-and-dart-integration.md,
+    /codex/06-coding-standards/README.md,
+    /codex/08-workflows/local-dev.md,
+    /codex/09-strategy/README.md,
+    /codex/09-strategy/_archived_pre_v2/STRATEGY_CATALOG_AND_WORKFLOW_ALIGNMENT.md,
+    /codex/09-strategy/_archived_pre_v2/cross-cutting/config-architecture.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md,
+    plans/epics/cross_cutting_may_23_SUPERSEDED_2026_05_21.md,
+  ]
 owner:
 last_reviewed: 2026-05-18
 code_refs:

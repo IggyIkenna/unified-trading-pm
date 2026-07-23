@@ -12,7 +12,7 @@ stage: [meta]
 repos: []
 scope: [engineer, admin]
 tags: [manifest, data-status, data-pipeline, honest-coverage, single-walk]
-related: [../02-data/availability-manifest-and-data-status.md]
+related: [/codex/02-data/availability-manifest-and-data-status.md]
 created: 2026-05-21
 authoritative_for: []
 referenced_by:
@@ -30,4 +30,4 @@ Documents when a service is permitted to skip a shard in the manifest vs when it
 typed reason. Skip = never emit; empty_confirmed = explicit honest absence.
 
 Key rule: no silent skips. Every expected shard either has a manifest row or a typed reason. SSOT:
-`codex/02-data/availability-manifest-and-data-status.md`.
+`/codex/02-data/availability-manifest-and-data-status.md`.

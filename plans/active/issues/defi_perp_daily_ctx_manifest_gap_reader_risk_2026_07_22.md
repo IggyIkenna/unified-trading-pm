@@ -165,7 +165,7 @@ read by the live paper-trading CLI today. That, in turn, requires one of:
   "add a manifest call" change), or
 - **Dual-reading** both shapes in the provider during a transition window (real added complexity + a real
   determinism/testing burden — `paper(W) == batch-rerun(W)` epsilon=0 must hold per
-  `codex/09-strategy/operational/paper-batch-live-reconciliation.md`, and this session cannot fully verify that
+  `/codex/09-strategy/operational/paper-batch-live-reconciliation.md`, and this session cannot fully verify that
   invariant survives a live-schema change to a strategy-reading class without a dedicated backtest re-run), plus
 - Pre-empting the separately-gated `[DESIGN] P1` decision above, which the operator has not yet ruled on.
 

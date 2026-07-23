@@ -14,8 +14,12 @@ scope: [admin, sales, engineer]
 tags: [ui, onboarding, mvp, questionnaire, validation]
 related: [./signup-signin-workflow.md, ./prospect-questionnaire-flow.md]
 created: 2026-04-26
-authoritative_for: [controlled demo/UAT access context (accessContext enum + demo-session entitlement issuance + persona-scoped surfaces)]
-referenced_by: [codex/08-workflows/signup-signin-workflow.md]
+authoritative_for:
+  [
+    controlled demo/UAT access context (accessContext enum + demo-session entitlement issuance + persona-scoped
+    surfaces),
+  ]
+referenced_by: [/codex/08-workflows/signup-signin-workflow.md]
 owner:
 last_reviewed:
 code_refs:

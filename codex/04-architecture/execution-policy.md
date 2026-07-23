@@ -11,10 +11,21 @@ stage: [meta]
 repos: [execution-service]
 scope: [engineer, admin]
 tags: [execution, strategy, registry, canonicalisation, verification]
-related: [../09-strategy/architecture-v2/cross-cutting/execution-policies.md, artifact-versioning.md, ../09-strategy/architecture-v2/cross-cutting/benchmark-fills.md]
+related:
+  [
+    /codex/09-strategy/architecture-v2/cross-cutting/execution-policies.md,
+    /codex/04-architecture/artifact-versioning.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/benchmark-fills.md,
+  ]
 created: 2026-04-17
 authoritative_for: [execution-policy artifact registry and rule-evaluation engine]
-referenced_by: [codex/04-architecture/artifact-versioning.md, codex/04-architecture/backtest-groups.md, codex/04-architecture/slow-fast-routing-split.md, codex/09-strategy/architecture-v2/cross-cutting/execution-policies.md]
+referenced_by:
+  [
+    /codex/04-architecture/artifact-versioning.md,
+    /codex/04-architecture/backtest-groups.md,
+    /codex/04-architecture/slow-fast-routing-split.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/execution-policies.md,
+  ]
 owner:
 last_reviewed: 2026-05-17
 code_refs:
@@ -23,7 +34,7 @@ code_refs:
 # Execution Policy (Architecture View)
 
 > **What it is:** The artifact format + registry + runtime lookup for execution policies. Companion to
-> [../09-strategy/architecture-v2/cross-cutting/execution-policies.md](../09-strategy/architecture-v2/cross-cutting/execution-policies.md)
+> [/codex/09-strategy/architecture-v2/cross-cutting/execution-policies.md](/codex/09-strategy/architecture-v2/cross-cutting/execution-policies.md)
 > (which covers the strategy-facing perspective). This doc covers the _internal architecture_ of execution policies as
 > first-class artifacts.
 
@@ -269,17 +280,17 @@ Low-impact (param tuning) can deploy with CI-only approval.
 ## Cross-references
 
 - Strategy-facing view:
-  [../09-strategy/architecture-v2/cross-cutting/execution-policies.md](../09-strategy/architecture-v2/cross-cutting/execution-policies.md)
+  [/codex/09-strategy/architecture-v2/cross-cutting/execution-policies.md](/codex/09-strategy/architecture-v2/cross-cutting/execution-policies.md)
 - Artifact versioning: [artifact-versioning.md](artifact-versioning.md)
 - Benchmark fills:
-  [../09-strategy/architecture-v2/cross-cutting/benchmark-fills.md](../09-strategy/architecture-v2/cross-cutting/benchmark-fills.md)
+  [/codex/09-strategy/architecture-v2/cross-cutting/benchmark-fills.md](/codex/09-strategy/architecture-v2/cross-cutting/benchmark-fills.md)
 - Execution-service algo library: execution-service/algo_library/
 
 ## Not in this doc
 
 - **Strategy-side algo selection logic** —
-  [../09-strategy/architecture-v2/cross-cutting/execution-policies.md](../09-strategy/architecture-v2/cross-cutting/execution-policies.md)
+  [/codex/09-strategy/architecture-v2/cross-cutting/execution-policies.md](/codex/09-strategy/architecture-v2/cross-cutting/execution-policies.md)
 - **Algo implementations** — code
 - **Per-venue adapter code** — code
 - **MEV policy specifics** —
-  [../09-strategy/architecture-v2/cross-cutting/mev-protection.md](../09-strategy/architecture-v2/cross-cutting/mev-protection.md)
+  [/codex/09-strategy/architecture-v2/cross-cutting/mev-protection.md](/codex/09-strategy/architecture-v2/cross-cutting/mev-protection.md)

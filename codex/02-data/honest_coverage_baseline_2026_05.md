@@ -15,9 +15,9 @@ scope: [engineer, admin]
 tags: [honest-coverage, manifest, quality-gates, data-status, data-correctness, verification]
 related:
   [
-    codex/02-data/availability-manifest-and-data-status.md,
-    codex/02-data/honest-absence-downstream-handling.md,
-    codex/15-runbooks/expected-absence-backfill-runbook.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/02-data/honest-absence-downstream-handling.md,
+    /codex/15-runbooks/expected-absence-backfill-runbook.md,
   ]
 created: 2026-05-07
 authoritative_for: [May-2026 honest-coverage baseline table + QG coverage-regression ratchet]

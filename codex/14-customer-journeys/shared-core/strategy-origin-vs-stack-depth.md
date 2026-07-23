@@ -2,9 +2,9 @@
 doc_type: codex-ssot
 title: Strategy Origin × Stack Depth — The DART Commercial Matrix
 summary:
-  Implementation reference for rule 04's 2×3 matrix (strategy-origin Odum/client × stack-depth reporting-only/downstream/
-  full-pipeline) — per-cell commercial resolution, the five actual 2026 engagements (CME S&P, India Options, Elysium,
-  Desmond, BTC FoF) mapped to cells, and each cell's default demo-restriction profile.
+  Implementation reference for rule 04's 2×3 matrix (strategy-origin Odum/client × stack-depth
+  reporting-only/downstream/ full-pipeline) — per-cell commercial resolution, the five actual 2026 engagements (CME S&P,
+  India Options, Elysium, Desmond, BTC FoF) mapped to cells, and each cell's default demo-restriction profile.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -15,14 +15,24 @@ tags: [dart, strategy, sales, defi, tradfi, cost]
 related:
   [
     ../_ssot-rules/04-dart-commercial-axes.md,
-    dart-pricing-axes.md,
-    instruction-schema-fit-and-package-boundaries.md,
-    strategy-allocation-lock-matrix.md,
+    /codex/14-customer-journeys/shared-core/dart-pricing-axes.md,
+    /codex/14-customer-journeys/shared-core/instruction-schema-fit-and-package-boundaries.md,
+    /codex/14-customer-journeys/shared-core/strategy-allocation-lock-matrix.md,
     ../commercial-model/dart-entry-points.md,
   ]
 created: 2026-04-20
 authoritative_for: [DART commercial-matrix cell worked examples + demo-restriction-profile mapping]
-referenced_by: [codex/14-customer-journeys/README.md, codex/14-customer-journeys/commercial-model/README.md, codex/14-customer-journeys/commercial-model/dart-entry-points.md, codex/14-customer-journeys/commercial-model/exclusivity-and-noncompete.md, codex/14-customer-journeys/commercial-model/im-profit-share-structures.md, codex/14-customer-journeys/demo-ops/demo-restriction-profiles.md, codex/14-customer-journeys/experience/dart-briefing.md, codex/14-customer-journeys/experience/dart-demo.md]
+referenced_by:
+  [
+    /codex/14-customer-journeys/README.md,
+    /codex/14-customer-journeys/commercial-model/README.md,
+    /codex/14-customer-journeys/commercial-model/dart-entry-points.md,
+    /codex/14-customer-journeys/commercial-model/exclusivity-and-noncompete.md,
+    /codex/14-customer-journeys/commercial-model/im-profit-share-structures.md,
+    /codex/14-customer-journeys/demo-ops/demo-restriction-profiles.md,
+    /codex/14-customer-journeys/experience/dart-briefing.md,
+    /codex/14-customer-journeys/experience/dart-demo.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -149,9 +159,10 @@ home, and cross-references the pricing mechanic for that engagement.
 
 ### Example — CME S&P (Sept 2026, `(Odum, full-pipeline)`, IM co-invest)
 
-**Situation:** Odum trades its own S&P ML directional strategy on CME dated futures. The client allocates $500k and
-ramps toward $5M over year-1. Odum commits $50k skin-in-the-game alongside the client's capital. Because Odum brings the
-strategy IP on an asymmetric basis, the commercial split is **70% of profits / 10% of losses** to Odum.
+**Situation:** Odum trades its own S&P ML directional strategy on CME dated futures. The client allocates
+$500k and
+ramps toward $5M over year-1. Odum commits $50k skin-in-the-game alongside the client's capital. Because Odum
+brings the strategy IP on an asymmetric basis, the commercial split is **70% of profits / 10% of losses** to Odum.
 
 **Axis resolution:** Strategy origin = Odum; stack depth = full-pipeline. IM engagement, NOT DART.
 
@@ -164,10 +175,12 @@ confirmed at contracting.
 
 ### Example — India Options (Oct 2026, `(Odum, full-pipeline)`)
 
-**Situation:** Odum trades NSE options for deltas (not vol) for convex payouts. $100k upfront onboarding covers the
+**Situation:** Odum trades NSE options for deltas (not vol) for convex payouts.
+$100k upfront onboarding covers the
 new-venue integration (NSE options adapter, clearing, margin). Ongoing is standard 30-35% performance-share +
-platform-fee client-choice, same framework as BTC ML. Allocation $5-10M expected year-1. **Gated** on the S&P ML signal
-shipping first — India engagement does not unlock without the preceding signal proving out.
+platform-fee client-choice, same framework as BTC ML. Allocation $5-10M
+expected year-1. **Gated** on the S&P ML signal shipping first — India engagement does not unlock without the preceding
+signal proving out.
 
 **Axis resolution:** Strategy origin = Odum; stack depth = full-pipeline. IM engagement, NOT DART.
 
@@ -178,9 +191,11 @@ shipping first — India engagement does not unlock without the preceding signal
 
 ### Example — Elysium Phase A (Jun 2026, `(Client, downstream)` signals-only DART)
 
-**Situation:** Elysium runs a DeFi staked-basis yield strategy on their own $500k allocation. They bring the signals;
+**Situation:** Elysium runs a DeFi staked-basis yield strategy on their own
+$500k allocation. They bring the signals;
 Odum runs the downstream stack (execution, terminal, monitoring, reconciliation, scoped analytics). Phase A is paid as a
-conservative fixed-total onboarding package of ~$125k covering signals-only DART block composition.
+conservative fixed-total onboarding package of ~$125k
+covering signals-only DART block composition.
 
 **Axis resolution:** Strategy origin = client; stack depth = downstream integration.
 

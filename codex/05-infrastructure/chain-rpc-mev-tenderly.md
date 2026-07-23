@@ -2,9 +2,9 @@
 doc_type: codex-ssot
 title: Chain RPC + MEV protection + Tenderly + Gas oracles
 summary:
-  Per-chain operational matrix — for every chain in CHAIN_GENESIS_DATES, the RPC primary/fallback providers, MEV-protection
-  endpoints (Flashbots / MEV-Blocker / Jito), gas-oracle source, Tenderly account + bundle-simulation gating policy,
-  oracle-price source, and historical gas/oracle backfill bucket paths.
+  Per-chain operational matrix — for every chain in CHAIN_GENESIS_DATES, the RPC primary/fallback providers,
+  MEV-protection endpoints (Flashbots / MEV-Blocker / Jito), gas-oracle source, Tenderly account + bundle-simulation
+  gating policy, oracle-price source, and historical gas/oracle backfill bucket paths.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -12,10 +12,25 @@ stage: [meta]
 repos: [execution-service, market-tick-data-service, unified-api-contracts]
 scope: [engineer, admin]
 tags: [defi, execution, mev, tenderly, gas-oracle, mtds]
-related: [codex/04-architecture/mev-protection.md, codex/04-architecture/tenderly-execution-provider.md, codex/02-data/defi-venue-protocol-catalogue.md, codex/02-data/defi-data-type-taxonomy.md]
+related:
+  [
+    /codex/04-architecture/mev-protection.md,
+    /codex/04-architecture/tenderly-execution-provider.md,
+    /codex/02-data/defi-venue-protocol-catalogue.md,
+    /codex/02-data/defi-data-type-taxonomy.md,
+  ]
 created: 2026-05-10
-authoritative_for: [per-chain RPC provider redundancy + MEV-protection endpoint registry + gas-oracle sources + Tenderly bundle-simulation gating policy]
-referenced_by: [codex/02-data/defi-venue-protocol-catalogue.md, codex/04-architecture/mev-protection.md, codex/07-security/mev-protection.md]
+authoritative_for:
+  [
+    per-chain RPC provider redundancy + MEV-protection endpoint registry + gas-oracle sources + Tenderly
+    bundle-simulation gating policy,
+  ]
+referenced_by:
+  [
+    /codex/02-data/defi-venue-protocol-catalogue.md,
+    /codex/04-architecture/mev-protection.md,
+    /codex/07-security/mev-protection.md,
+  ]
 owner:
 last_reviewed: 2026-05-17
 code_refs:
@@ -27,10 +42,10 @@ code_refs:
 > Tenderly account/project + bundle-simulation gating policy, gas oracle sources, historical gas/oracle capture bucket
 > paths. Last updated 2026-05-10 (defi_catalogue_chain_primitives Phase 5D).
 
-This doc complements [`mev-protection.md`](../04-architecture/mev-protection.md) (which covers the protection mechanism)
-and [`tenderly-execution-provider.md`](../04-architecture/tenderly-execution-provider.md) (which covers the execution
-provider abstraction). This doc is the **per-chain operational matrix** — for every chain in `CHAIN_GENESIS_DATES`, what
-RPC providers + MEV protection + gas oracle + Tenderly setup we use.
+This doc complements [`mev-protection.md`](/codex/04-architecture/mev-protection.md) (which covers the protection
+mechanism) and [`tenderly-execution-provider.md`](/codex/04-architecture/tenderly-execution-provider.md) (which covers
+the execution provider abstraction). This doc is the **per-chain operational matrix** — for every chain in
+`CHAIN_GENESIS_DATES`, what RPC providers + MEV protection + gas oracle + Tenderly setup we use.
 
 ## Per-chain matrix (in scope for May-23 cutover)
 
@@ -83,7 +98,7 @@ CLAUDE.md "No fire-and-forget VM launches" event-stream contract).
 
 ## MEV protection per chain
 
-Per [`mev-protection.md`](../04-architecture/mev-protection.md) — 5 layers of MEV protection across the system. This
+Per [`mev-protection.md`](/codex/04-architecture/mev-protection.md) — 5 layers of MEV protection across the system. This
 section is the **per-chain endpoint registry**.
 
 | MevSubmissionMode        | Endpoint ref (UCI/Secret Manager)                     | Supported chains                                 | Auth signer                                                | Status                                                                                                                                                                                                                          |
@@ -114,7 +129,7 @@ Per-chain MEV story:
 
 ## Tenderly setup
 
-Per [`tenderly-execution-provider.md`](../04-architecture/tenderly-execution-provider.md). This section is the
+Per [`tenderly-execution-provider.md`](/codex/04-architecture/tenderly-execution-provider.md). This section is the
 operational policy.
 
 **Account / project**:
@@ -160,13 +175,13 @@ coverage start (distinct from `CHAIN_GENESIS_DATES`).
 
 **Pre-flight gas-budget enforcement** (CLAUDE.md "C2 — pre-flight gas-budget enforcement" finding): execution-service
 caps `maxPriorityFeePerGas` at 3 gwei for non-urgent transactions per
-[`mev-protection.md`](../04-architecture/mev-protection.md) § 3 Gas Price Strategy. Per-archetype gas-budget enforcement
-(refuse tx if expected gas cost > X% of expected PnL) location: TBD — flag for follow-up audit
+[`mev-protection.md`](/codex/04-architecture/mev-protection.md) § 3 Gas Price Strategy. Per-archetype gas-budget
+enforcement (refuse tx if expected gas cost > X% of expected PnL) location: TBD — flag for follow-up audit
 (`cross_asset_group_catalogue_audit` Phase 6).
 
 ## Oracle prices per chain
 
-Per [`defi-data-type-taxonomy.md`](../02-data/defi-data-type-taxonomy.md) — `oracle_prices` data_type captured by
+Per [`defi-data-type-taxonomy.md`](/codex/02-data/defi-data-type-taxonomy.md) — `oracle_prices` data_type captured by
 `oracle_prices_handler.py` for every chain in scope.
 
 | Chain                                           | Oracle source                                                                   | Captured                                                                             | Coverage start                                           |
@@ -185,10 +200,11 @@ reconciliation is implied by any price-arb strategy itself.
 
 ## Cross-references
 
-- [`mev-protection.md`](../04-architecture/mev-protection.md) — MEV protection mechanism details (canonical post-
+- [`mev-protection.md`](/codex/04-architecture/mev-protection.md) — MEV protection mechanism details (canonical post-
   consolidation per `cross_asset_group_catalogue_audit_2026_05_10` Phase 4).
-- [`tenderly-execution-provider.md`](../04-architecture/tenderly-execution-provider.md) — Tenderly provider abstraction.
-- [`defi-venue-protocol-catalogue.md`](../02-data/defi-venue-protocol-catalogue.md) — protocol catalogue (cross-
+- [`tenderly-execution-provider.md`](/codex/04-architecture/tenderly-execution-provider.md) — Tenderly provider
+  abstraction.
+- [`defi-venue-protocol-catalogue.md`](/codex/02-data/defi-venue-protocol-catalogue.md) — protocol catalogue (cross-
   references this doc's per-chain matrix).
 - UAC: [`registry/chain_env.py`](../../../unified-api-contracts/unified_api_contracts/registry/chain_env.py)
   (`CHAIN_GENESIS_DATES` + `CHAIN_RPC_TEMPLATES` + `resolve_rpc_url`).

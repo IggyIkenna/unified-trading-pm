@@ -1,10 +1,10 @@
 ---
 doc_type: codex-ssot
-title: 'Playbook 3a — Demo: Regulatory Umbrella flavour'
+title: "Playbook 3a — Demo: Regulatory Umbrella flavour"
 summary:
-  'pb3a implementation — Reg Umbrella demo walkthrough; reporting-only entitlements (all other services
-  padlocked-visible, not hidden), Pooled/SMA picker → fund → per-client API-key creation → 12 report tabs;
-  UI-identical to pb3b, differs only in sales narrative.'
+  "pb3a implementation — Reg Umbrella demo walkthrough; reporting-only entitlements (all other services
+  padlocked-visible, not hidden), Pooled/SMA picker → fund → per-client API-key creation → 12 report tabs; UI-identical
+  to pb3b, differs only in sales narrative."
 status: current
 nature: ssot
 asset_group: [meta]
@@ -14,15 +14,25 @@ scope: [engineer, admin, sales]
 tags: [customer-journey, playbook, demo, reg-umbrella, reporting, entitlements]
 related:
   [
-    03-warm-prospect-demo.md,
-    03b-demo-im.md,
-    03c-demo-dart.md,
-    02c-research-regulatory.md,
+    /codex/14-customer-journeys/playbooks/03-warm-prospect-demo.md,
+    /codex/14-customer-journeys/playbooks/03b-demo-im.md,
+    /codex/14-customer-journeys/playbooks/03c-demo-dart.md,
+    /codex/14-customer-journeys/playbooks/02c-research-regulatory.md,
     ../playbook-concepts/client-reporting.md,
   ]
 created: 2026-04-19
 authoritative_for: [pb3a Regulatory Umbrella demo playbook implementation]
-referenced_by: [codex/14-customer-journeys/experience/regulatory-demo.md, codex/14-customer-journeys/playbook-concepts/client-reporting.md, codex/14-customer-journeys/playbook-concepts/sma-vs-pooled.md, codex/14-customer-journeys/playbooks/02c-research-regulatory.md, codex/14-customer-journeys/playbooks/03-warm-prospect-demo.md, codex/14-customer-journeys/playbooks/03b-demo-im.md, codex/14-customer-journeys/playbooks/03c-demo-dart.md, codex/14-customer-journeys/playbooks/README.md]
+referenced_by:
+  [
+    /codex/14-customer-journeys/experience/regulatory-demo.md,
+    /codex/14-customer-journeys/playbook-concepts/client-reporting.md,
+    /codex/14-customer-journeys/playbook-concepts/sma-vs-pooled.md,
+    /codex/14-customer-journeys/playbooks/02c-research-regulatory.md,
+    /codex/14-customer-journeys/playbooks/03-warm-prospect-demo.md,
+    /codex/14-customer-journeys/playbooks/03b-demo-im.md,
+    /codex/14-customer-journeys/playbooks/03c-demo-dart.md,
+    /codex/14-customer-journeys/playbooks/README.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

@@ -1,7 +1,9 @@
 ---
 doc_type: issue
 title: CeFi capture universe + perp-gated capture rule (authoritative)
-summary: Authoritative SSOT for the CeFi capture universe + the capture rule, per operator 2026-06-23. SUPERSEDES the earlier "curated top-100 guess".
+summary:
+  Authoritative SSOT for the CeFi capture universe + the capture rule, per operator 2026-06-23. SUPERSEDES the earlier
+  "curated top-100 guess".
 status: open
 nature: process
 asset_group: [cross-cutting]
@@ -9,7 +11,7 @@ stage: [meta]
 repos: [instruments-service, market-tick-data-service, unified-api-contracts]
 scope: [engineer, admin]
 tags: [cefi, mvp, catalogue, honest-coverage, data-correctness, mtds, instruments, uac]
-related: [mvp_backfill_cefi_tick_v10_2026_06_27, cefi_hl_aster_batch_data_gaps_2026_06_22.md]
+related: [mvp_backfill_cefi_tick_v10_2026_06_27, /plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md]
 created: 2026-06-23
 parent_epic: mtds_mdps_master
 priority: P2
@@ -73,23 +75,23 @@ CURRENT GAP (2026-06-23): only linear-margin venues are enumerated — `BINANCE-
 inverse Bybit/OKX/Huobi legs are ABSENT despite Tardis access (`binance-delivery, huobi-dm, huobi-dm-swap` in our plan),
 and the catalogue has **no `margin_type` field**. Deribit inverse is the only coin-margin captured.
 
-- [x] ✅ [IS] P1. Add the inverse-margin Tardis venues we have access to (binance-delivery + inverse Bybit/OKX/Huobi legs)
-      to the venue allow-list so inverse perps enumerate.
-      — instruments-service@4838738 | BINANCE-DELIVERY added to `CANONICAL_VENUE_TO_ADAPTER`, `_TARDIS_VENUE_EXCHANGES`,
-      `_CEFI_VENUES`; `_infer_margin_type` extended for `binance-delivery` → MarginType.INVERSE; UAC venue registries
-      (venue_mapping.py, market_data_categories.py, mvp_scope.py) updated at uac@a8712016.
-- [x] ✅ [IS] [UAC] P1. Add a `margin_type` (linear|inverse) field to the catalogue + the canonical instrument key, so the
-      mvp filter can select per (venue, base).
-      — instruments-service@4838738 | `margin_type` added to CATALOG_COLUMNS + `_extract_meta` + `build_catalogue_dataframe`
-      in `scripts/build_instrument_catalogue.py`; MarginType enum already in UAC `_instrument_enums.py`; flows from
-      `_infer_margin_type` in tardis parsing.py through IS InstrumentRecord to the catalogue parquet.
-- [x] ✅ [MTDS] P1. Live-data liquidity spot-check (24h vol/OI per contract) → per (venue, base) tag the more-liquid margin
-      mvp=true (Deribit inverse always; default linear). Wire into `is_in_mvp_capture_universe`.
-      — uac@a8712016 | Deterministic default shipped: BINANCE-DELIVERY PERPETUALs + FUTUREs qualify for MVP via
-      base-membership in `mvp_scope.py` cefi_mvp_venues frozenset; `MVP_SCOPE_CONFIG_VERSION` bumped 8→9. Deribit inverse
-      already captured (always-mvp by pre-existing Deribit PERPETUAL branch). Full live-data 24h-vol/OI spot-check to
-      dynamically pick more-liquid margin side is a TODO (requires live Tardis API calls per contract; scaffolded with a
-      comment in mvp_scope.py § "live-liquidity hook TODO").
+- [x] ✅ [IS] P1. Add the inverse-margin Tardis venues we have access to (binance-delivery + inverse Bybit/OKX/Huobi
+      legs) to the venue allow-list so inverse perps enumerate. — instruments-service@4838738 | BINANCE-DELIVERY added
+      to `CANONICAL_VENUE_TO_ADAPTER`, `_TARDIS_VENUE_EXCHANGES`, `_CEFI_VENUES`; `_infer_margin_type` extended for
+      `binance-delivery` → MarginType.INVERSE; UAC venue registries (venue_mapping.py, market_data_categories.py,
+      mvp_scope.py) updated at uac@a8712016.
+- [x] ✅ [IS] [UAC] P1. Add a `margin_type` (linear|inverse) field to the catalogue + the canonical instrument key, so
+      the mvp filter can select per (venue, base). — instruments-service@4838738 | `margin_type` added to
+      CATALOG_COLUMNS + `_extract_meta` + `build_catalogue_dataframe` in `scripts/build_instrument_catalogue.py`;
+      MarginType enum already in UAC `_instrument_enums.py`; flows from `_infer_margin_type` in tardis parsing.py
+      through IS InstrumentRecord to the catalogue parquet.
+- [x] ✅ [MTDS] P1. Live-data liquidity spot-check (24h vol/OI per contract) → per (venue, base) tag the more-liquid
+      margin mvp=true (Deribit inverse always; default linear). Wire into `is_in_mvp_capture_universe`. — uac@a8712016 |
+      Deterministic default shipped: BINANCE-DELIVERY PERPETUALs + FUTUREs qualify for MVP via base-membership in
+      `mvp_scope.py` cefi_mvp_venues frozenset; `MVP_SCOPE_CONFIG_VERSION` bumped 8→9. Deribit inverse already captured
+      (always-mvp by pre-existing Deribit PERPETUAL branch). Full live-data 24h-vol/OI spot-check to dynamically pick
+      more-liquid margin side is a TODO (requires live Tardis API calls per contract; scaffolded with a comment in
+      mvp_scope.py § "live-liquidity hook TODO").
 
 ## EXCEPTION — staking/restaking/LST spot (spot-without-perp allow-list, operator 2026-06-23)
 

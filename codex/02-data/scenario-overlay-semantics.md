@@ -2,11 +2,10 @@
 doc_type: codex-ssot
 title: Scenario Overlay Semantics
 summary: >-
-  Scenario overlay data-contract SSOT — the 3 scenario-provenance parquet columns (scenario_id /
-  run_id / synthetic=True), per-row scenario_id propagation through
-  MTDS->MDPS->features->strategy->ScenarioReport, the available_at discipline under stale-hold
-  mutations (lookahead downgraded via SCENARIO_OVERLAY_LOOKAHEAD_DOWNGRADE, never suppressed), the
-  deferred MANIFEST-tap scenario_id column, and per-consumer scenario-row handling.
+  Scenario overlay data-contract SSOT — the 3 scenario-provenance parquet columns (scenario_id / run_id /
+  synthetic=True), per-row scenario_id propagation through MTDS->MDPS->features->strategy->ScenarioReport, the
+  available_at discipline under stale-hold mutations (lookahead downgraded via SCENARIO_OVERLAY_LOOKAHEAD_DOWNGRADE,
+  never suppressed), the deferred MANIFEST-tap scenario_id column, and per-consumer scenario-row handling.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -17,7 +16,7 @@ tags: [scenario, manifest, data-correctness, validation, monitoring]
 related: [plans/active/simulation_scenarios_topology_price_shocks_2026_05_09.md Phase 8.C]
 created: 2026-05-18
 authoritative_for: [scenario overlay parquet provenance columns, scenario_id propagation contract]
-referenced_by: [codex/04-architecture/scenario-injection-architecture.md]
+referenced_by: [/codex/04-architecture/scenario-injection-architecture.md]
 owner:
 last_reviewed:
 code_refs:
@@ -27,9 +26,9 @@ author: harsh-slot-3
 # Scenario Overlay Semantics
 
 > **Parent architecture**:
-> [`../04-architecture/scenario-injection-architecture.md`](../04-architecture/scenario-injection-architecture.md) — tap
-> layers, mutation types, synthetic provenance. This doc covers the data contracts for scenario overlay output: how rows
-> are marked, how provenance chains, and how `available_at` is treated.
+> [`/codex/04-architecture/scenario-injection-architecture.md`](/codex/04-architecture/scenario-injection-architecture.md)
+> — tap layers, mutation types, synthetic provenance. This doc covers the data contracts for scenario overlay output:
+> how rows are marked, how provenance chains, and how `available_at` is treated.
 
 ## Overlay parquet schema
 
@@ -134,14 +133,14 @@ for the per-consumer-class rules. Key summary:
 ## Cross-references
 
 - Parent:
-  [`../04-architecture/scenario-injection-architecture.md`](../04-architecture/scenario-injection-architecture.md) — tap
-  layers + mutation types
+  [`/codex/04-architecture/scenario-injection-architecture.md`](/codex/04-architecture/scenario-injection-architecture.md)
+  — tap layers + mutation types
 - Gap handling: [`honest-absence-downstream-handling.md`](honest-absence-downstream-handling.md) — § "Scenario-driven
   gap injection"
 - Manifest contract: [`availability-manifest-and-data-status.md`](availability-manifest-and-data-status.md) — 4-state
   capture_status + honest-absence SSOT
 - Outcome assertions:
-  [`../04-architecture/scenario-outcome-assertions.md`](../04-architecture/scenario-outcome-assertions.md) —
+  [`/codex/04-architecture/scenario-outcome-assertions.md`](/codex/04-architecture/scenario-outcome-assertions.md) —
   PASS/FAIL/WARN semantics + matrix-red cutover-block
 - Plan: `plans/active/simulation_scenarios_topology_price_shocks_2026_05_09.md` Phase 8.C
 - Post-cutover scope: `plans/active/simulation_scenarios_post_cutover_2026_06_01.md` Phase 2.C (parquet sink)

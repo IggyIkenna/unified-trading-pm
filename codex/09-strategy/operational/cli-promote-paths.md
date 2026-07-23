@@ -14,13 +14,19 @@ scope: [engineer, admin]
 tags: [promote, live-trading, defi, execution, deployment, spot-vm]
 related:
   [
-    paper-batch-live-reconciliation.md,
-    batch-live-reconciliation-threshold-calibration.md,
+    /codex/09-strategy/operational/paper-batch-live-reconciliation.md,
+    /codex/09-strategy/operational/batch-live-reconciliation-threshold-calibration.md,
     ../../04-architecture/kill-switch-circuit-breaker.md,
   ]
 created: 2026-05-15
 authoritative_for: [May-23 CLI promote paths (run-paper.sh / colocated_engine.py / run-live.sh dual-track)]
-referenced_by: [codex/04-architecture/strategy-service-architecture.md, codex/09-strategy/operational/batch-live-reconciliation-threshold-calibration.md, codex/09-strategy/operational/paper-batch-live-reconciliation.md, plans/epics/dart_and_promote_master.md]
+referenced_by:
+  [
+    /codex/04-architecture/strategy-service-architecture.md,
+    /codex/09-strategy/operational/batch-live-reconciliation-threshold-calibration.md,
+    /codex/09-strategy/operational/paper-batch-live-reconciliation.md,
+    plans/epics/dart_and_promote_master.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -128,7 +134,7 @@ All paper checks above, PLUS:
 
 - [ ] Paper trading ran ≥7d with Sharpe > backtest threshold (from Phase 3 backtest)
 - [ ] `CLOUD_KMS_ENCRYPTED` key provisioned + `PRIVATE_KEY_SECRET_REF` set
-- [ ] Kill-switch YAML present (`codex/04-architecture/kill-switch-circuit-breaker.md`)
+- [ ] Kill-switch YAML present (`/codex/04-architecture/kill-switch-circuit-breaker.md`)
 - [ ] `ManualTradeGateDialog` enabled in DART terminal for first 3 trading days
 - [ ] Recon endpoint green (`/recon` probe in `preflight-cutover.sh`)
 - [ ] Copper MPC sub-account provisioned (June-1 flip; May-23 uses KMS)
@@ -147,7 +153,7 @@ Paper and live strategy VMs are launched via:
 Both launchers: emit STARTED within 60s + emit ≥1 progress event/hour + emit STOPPED/FAILED at exit. Fire-and-forget is
 banned.
 
-Full shape spec: `codex/05-infrastructure/strategy-vm-launcher-shape.md`.
+Full shape spec: `/codex/05-infrastructure/strategy-vm-launcher-shape.md`.
 
 ---
 

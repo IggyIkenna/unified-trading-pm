@@ -12,7 +12,7 @@
 - **Per-slot worktrees (Path-B)**: each slot is a `git clone --reference` with its OWN `.git`, checked out on
   `live-defi-rollout` (the `tab/<op>/N` tab-branch model is RETIRED — no tab branch/mirror; any such instruction is
   STALE). Stay current `git pull --ff-only origin live-defi-rollout`; the one invariant = HEAD ancestor-or-equal of
-  `origin/live-defi-rollout`. SSOT: `codex/05-infrastructure/per-tab-worktrees.md`.
+  `origin/live-defi-rollout`. SSOT: `/codex/05-infrastructure/per-tab-worktrees.md`.
 
 ## Quality gates / tests — the ONLY way to run them
 
@@ -24,7 +24,7 @@ cd <repo> && bash scripts/quality-gates.sh --no-fix   # diagnostic / committing 
 **Never** run `pytest` directly (wrong venv); **never** `pip install` (use `uv pip install`); **never** re-lock
 internal-dep drift in `uv.lock` (editable range-pins absorb minor/patch by design — only a MAJOR bump acts). A
 `quality-gates.sh`-green tree is the per-repo quality boundary — **the gate ENFORCES the banned patterns, so a green
-tree is the contract.** SSOT: `codex/06-coding-standards/quality-gates.md`.
+tree is the contract.** SSOT: `/codex/06-coding-standards/quality-gates.md`.
 
 ## Ship CODE: two-pass, never a raw `git push`
 
@@ -45,7 +45,7 @@ tree is the contract.** SSOT: `codex/06-coding-standards/quality-gates.md`.
 3. **Commit + Push + Flip in the SAME turn (HARD RULE)**: after the code push, flip the plan checkbox `- [ ]` →
    `- [x] — <repo>@<sha> + evidence`, commit with the MANDATORY `docs(plans):` prefix (`plan(...)` is hook-rejected). An
    unflipped item is invisible to the orchestrator → it re-dispatches → wasted work. SSOT:
-   `codex/08-workflows/ci-cd-flow.md`.
+   `/codex/08-workflows/ci-cd-flow.md`.
 
 **Conditional push (multi-agent)**: `git fetch` first; 0 incoming → push freely; behind-remote at quickmerge → STAGE 0.4
 auto-reconciles (ff → rebase-autostash), genuine same-file conflict → `rebase --abort` + structured `QUICKMERGE_BLOCKED`
@@ -72,7 +72,7 @@ exit (recover per the autostash recipe, never blind-overwrite).
 datetimes (use `datetime.now(timezone.utc)`) · **service→service dependency** (a T4 service depends only on shared libs
 UTL/UAC/`unified-*-interface`; integrate by API contract + mocks) · fire-and-forget VM launches · empty placeholder rows
 that look populated (`record_failed`/`record_empty`, never fake `record_captured`). SSOT: `codex/06-coding-standards/` +
-`codex/04-architecture/tier-and-import-architecture.md`.
+`/codex/04-architecture/tier-and-import-architecture.md`.
 
 ## Findings triage (HARD RULE)
 
@@ -100,7 +100,7 @@ Never report a backgrounded task done before its real exit; rely on the tracked-
 tasks); poll only external work on a **progress metric** (flat = STALL → diagnose); monitors read terminal `exit_code` +
 log-mtime + reach a TERMINAL **measured** verdict (liveness `kill -0 <PID>`, no self-match). `ScheduleWakeup` / a
 dispatched sub-agent are NOT reliable wakes — arm your OWN `run_in_background` heartbeat watchdog (≤30-min). SSOT:
-`codex/12-agent-workflow/async-wait-and-poll-discipline.md`.
+`/codex/12-agent-workflow/async-wait-and-poll-discipline.md`.
 
 ## When YOU spawn sub-agents
 

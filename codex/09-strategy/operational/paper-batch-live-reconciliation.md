@@ -22,8 +22,8 @@ scope: [engineer, admin]
 tags: [reconciliation, determinism, ledger, live-trading, backfill, execution, defi]
 related:
   [
-    batch-live-reconciliation-threshold-calibration.md,
-    cli-promote-paths.md,
+    /codex/09-strategy/operational/batch-live-reconciliation-threshold-calibration.md,
+    /codex/09-strategy/operational/cli-promote-paths.md,
     ../../04-architecture/global-ledger-architecture.md,
     ../architecture-v2/cross-cutting/pnl-attribution.md,
   ]
@@ -35,12 +35,12 @@ authoritative_for:
   ]
 referenced_by:
   [
-    codex/02-data/live-data-persistence-and-event-log.md,
-    codex/04-architecture/multi-mode-wallet-isolation.md,
-    codex/04-architecture/trading-agent-service-directive-pipeline.md,
-    codex/08-workflows/t1-batch-dag.md,
-    codex/09-strategy/operational/batch-live-reconciliation-threshold-calibration.md,
-    codex/09-strategy/operational/cli-promote-paths.md,
+    /codex/02-data/live-data-persistence-and-event-log.md,
+    /codex/04-architecture/multi-mode-wallet-isolation.md,
+    /codex/04-architecture/trading-agent-service-directive-pipeline.md,
+    /codex/08-workflows/t1-batch-dag.md,
+    /codex/09-strategy/operational/batch-live-reconciliation-threshold-calibration.md,
+    /codex/09-strategy/operational/cli-promote-paths.md,
   ]
 owner:
 last_reviewed: 2026-06-22
@@ -51,10 +51,10 @@ code_refs:
 
 > **Status**: partially shipped (G3/G4/G5 DONE; G1/G2 open). Plan-of-record:
 > `plans/active/citadel_paper_batch_live_reconciliation_2026_06_19.md` (parent epic `batch_live_symmetry_master`).
-> Composes with `codex/04-architecture/global-ledger-architecture.md`,
-> `codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md`,
-> `codex/02-data/pipeline-mode-and-batch-live-reconciliation.md`, and the existing aggregate recon
-> (`codex/09-strategy/operational/batch-live-reconciliation-threshold-calibration.md`). This doc is the SSOT for the
+> Composes with `/codex/04-architecture/global-ledger-architecture.md`,
+> `/codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md`,
+> `/codex/02-data/pipeline-mode-and-batch-live-reconciliation.md`, and the existing aggregate recon
+> (`/codex/09-strategy/operational/batch-live-reconciliation-threshold-calibration.md`). This doc is the SSOT for the
 > **trade-by-trade** extension and the **as-if-filled ledger**.
 >
 > **owner**: vm-cross-cutting · **cadence**: per-paper-run (daily ledger) + T+1 (daily recon) · **verifier**:
@@ -143,7 +143,7 @@ identical inputs.** The divergence is entirely downstream (fills + ledger).
 - HWM — three simultaneous methods (TWR / Notional / PnL-recovery): `HighWaterMarkLedgerRow`
   (`internal/domain/hwm_ledger.py:40`), invariants `unified_trading_library/post_trade/hwm_invariants.py`, seeds
   `client-reporting-api/core/hwm_seeds.py`. **Never `max(equities)`** (CLAUDE.md HARD RULE).
-- Wallet hierarchy keyed by `share_class` (`codex/04-architecture/wallet-hierarchy-and-capital-flow.md`).
+- Wallet hierarchy keyed by `share_class` (`/codex/04-architecture/wallet-hierarchy-and-capital-flow.md`).
 - `InstrumentRecord` + per-venue enumeration (`instruments_service/engine/orchestrator/venue_core.py:227`); canonical
   `instrument_key = VENUE:INSTRUMENT_TYPE:SYMBOL`.
 
@@ -445,11 +445,11 @@ Last updated: 2026-06-22 (G3/G4/G5 landed; G1/G2 still open).
 ## 8. Cross-references
 
 - Plan-of-record: `plans/active/citadel_paper_batch_live_reconciliation_2026_06_19.md`.
-- Composes with: `codex/04-architecture/global-ledger-architecture.md` (the 4 SSOT ledgers + the materialisation gaps),
-  `codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md`,
-  `codex/02-data/pipeline-mode-and-batch-live-reconciliation.md`,
-  `codex/09-strategy/operational/batch-live-reconciliation-threshold-calibration.md` (the live↔paper tolerance leg),
-  `codex/04-architecture/wallet-hierarchy-and-capital-flow.md`, `codex/09-strategy/operational/cli-promote-paths.md`
+- Composes with: `/codex/04-architecture/global-ledger-architecture.md` (the 4 SSOT ledgers + the materialisation gaps),
+  `/codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md`,
+  `/codex/02-data/pipeline-mode-and-batch-live-reconciliation.md`,
+  `/codex/09-strategy/operational/batch-live-reconciliation-threshold-calibration.md` (the live↔paper tolerance leg),
+  `/codex/04-architecture/wallet-hierarchy-and-capital-flow.md`, `/codex/09-strategy/operational/cli-promote-paths.md`
   (the paper→live promote path this reconciliation gates).
 - Parent epic: `plans/epics/batch_live_symmetry_master.md` (owns "Batch = Live" + reconciliation);
   ledger-materialisation phases compose with `plans/epics/global_ledger_pnl_attribution_master.md`.

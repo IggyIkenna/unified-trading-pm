@@ -1,7 +1,9 @@
 ---
 doc_type: codex-ssot
 title: Client Configuration and Risk Dimensions
-summary: Client config schema (ClientConfig/DefiClientConfig in UAC internal.client_config) plus the five per-client risk dimensions (market/liquidity/counterparty/funding/reward) and how strategy/risk/PBM/execution services consume them.
+summary:
+  Client config schema (ClientConfig/DefiClientConfig in UAC internal.client_config) plus the five per-client risk
+  dimensions (market/liquidity/counterparty/funding/reward) and how strategy/risk/PBM/execution services consume them.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -9,7 +11,12 @@ stage: [meta]
 repos: [features-service, unified-trading-api, unified-trading-pm, unified-trading-system-ui]
 scope: [engineer, admin]
 tags: [client-config, risk, defi, cefi, health-factor, entitlements, features]
-related: [share-class-architecture.md, defi-risk-monitoring.md, ../09-strategy/architecture-v2/cross-cutting/reward-lifecycle.md]
+related:
+  [
+    /codex/04-architecture/share-class-architecture.md,
+    /codex/04-architecture/defi-risk-monitoring.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/reward-lifecycle.md,
+  ]
 created: 2026-04-03
 authoritative_for: [per-client configuration schema and the five risk dimensions]
 referenced_by:
@@ -171,6 +178,6 @@ For demo mode, the pre-seeded client is:
 
 ## Related Docs
 
-- `codex/04-architecture/share-class-architecture.md` — Share class P&L isolation
-- `codex/04-architecture/defi-risk-monitoring.md` — DeFi-specific risk monitoring
-- `codex/09-strategy/architecture-v2/cross-cutting/reward-lifecycle.md` — Reward token risk (EIGEN/ETHFI M2M)
+- `/codex/04-architecture/share-class-architecture.md` — Share class P&L isolation
+- `/codex/04-architecture/defi-risk-monitoring.md` — DeFi-specific risk monitoring
+- `/codex/09-strategy/architecture-v2/cross-cutting/reward-lifecycle.md` — Reward token risk (EIGEN/ETHFI M2M)

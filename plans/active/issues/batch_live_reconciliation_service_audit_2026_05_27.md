@@ -21,10 +21,10 @@ scope: [engineer, admin]
 tags: [reconciliation, ssot-audit, strategy, execution, audit, escalation]
 related:
   [
-    codex/04-architecture/reconciliation-resolution.md,
-    codex/04-architecture/reconciliation-age-tracking.md,
-    codex/09-strategy/operational/batch-live-reconciliation-threshold-calibration.md,
-    codex/04-architecture/paper-vs-live-execution-seam.md,
+    /codex/04-architecture/reconciliation-resolution.md,
+    /codex/04-architecture/reconciliation-age-tracking.md,
+    /codex/09-strategy/operational/batch-live-reconciliation-threshold-calibration.md,
+    /codex/04-architecture/paper-vs-live-execution-seam.md,
   ]
 created: 2026-05-27
 parent_epic: batch_live_symmetry_master

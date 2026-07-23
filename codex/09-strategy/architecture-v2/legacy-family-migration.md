@@ -1,7 +1,10 @@
 ---
 doc_type: codex-ssot
 title: Legacy Family String Migration Report
-summary: Audit report for the v1→v2 family-string sweep in unified-trading-system-ui — migrated route slugs/labels, the deferred v1 fixture consumers, and the full 53-row v1 strategy-registry equivalency audit (verdict 0 gap / 53 equivalent / 3 Elysium retired).
+summary:
+  Audit report for the v1→v2 family-string sweep in unified-trading-system-ui — migrated route slugs/labels, the
+  deferred v1 fixture consumers, and the full 53-row v1 strategy-registry equivalency audit (verdict 0 gap / 53
+  equivalent / 3 Elysium retired).
 status: current
 nature: ssot
 asset_group: [meta]
@@ -9,10 +12,24 @@ stage: [meta]
 repos: [unified-api-contracts, unified-trading-pm, unified-trading-system-ui]
 scope: [engineer, admin]
 tags: [strategy, migration, ssot-audit, ui, refactor]
-related: [strategy-registry-v2.md, naming-convention.md, tradfi-bond-instrument-type-decision.md, MIGRATION.md]
+related:
+  [
+    /codex/09-strategy/architecture-v2/strategy-registry-v2.md,
+    /codex/09-strategy/architecture-v2/naming-convention.md,
+    /codex/09-strategy/architecture-v2/tradfi-bond-instrument-type-decision.md,
+    /codex/09-strategy/architecture-v2/MIGRATION.md,
+  ]
 created: 2026-04-21
 authoritative_for: [v1 family-string UI sweep and v1 strategy-registry equivalency audit]
-referenced_by: [codex/09-strategy/README.md, codex/09-strategy/architecture-v2/MIGRATION.md, codex/09-strategy/architecture-v2/naming-convention.md, codex/09-strategy/architecture-v2/strategy-registry-v2.md, codex/09-strategy/architecture-v2/tradfi-bond-instrument-type-decision.md, codex/09-strategy/architecture-v2/value-betting-archetype-decision.md]
+referenced_by:
+  [
+    /codex/09-strategy/README.md,
+    /codex/09-strategy/architecture-v2/MIGRATION.md,
+    /codex/09-strategy/architecture-v2/naming-convention.md,
+    /codex/09-strategy/architecture-v2/strategy-registry-v2.md,
+    /codex/09-strategy/architecture-v2/tradfi-bond-instrument-type-decision.md,
+    /codex/09-strategy/architecture-v2/value-betting-archetype-decision.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -126,11 +143,11 @@ deleted without losing coverage semantics.
 
 Summary of the original six 2026-04-21 gaps + their Wave 6 resolution:
 
-| Cluster                    | Rows | Wave 5 verdict  | Wave 6 resolution                                          | Rationale                                                                                                                                                                                                                                                                                                                                                                                                 |
-| -------------------------- | ---- | --------------- | ---------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Elysium provider entries   | 3    | GAP (retired)   | **RETIRED**                                                | Provider deleted from UAC per workspace CLAUDE.md. v1 rows reference a retired venue. v2 offers no equivalent — they are RETIRED by design, not gaps to close. Marked explicitly in Wave 6 Task A; v1 rows deleted with the registry.                                                                                                                                                                     |
-| Sports value-betting       | 2    | GAP (semantics) | **EQUIVALENT** (via existing archetype + edge-method axis) | Value-betting is NOT a separate archetype — it is an `EdgeMethod.VALUE_PROB_VS_IMPLIED` config on the existing `ML_DIRECTIONAL_EVENT_SETTLED` archetype. Confirmed in `strategy_service/engine/strategies/v2/migration/legacy_strategy_mapping.py:304-382` — 5 archived v1 sports value-bet strategies already map this way. See `codex/09-strategy/architecture-v2/value-betting-archetype-decision.md`. |
-| TradFi bond mean-reversion | 1    | GAP (cell)      | **EQUIVALENT** (via existing TradFi·spot cell)             | `TRADFI_BOND_MEAN_REV_HUF_1D` trades treasury ETFs (TLT/IEF) on IBKR — these are spot equities by instrument-type, not a separate "bond" instrument. The existing `STAT_ARB_PAIRS_FIXED × TRADFI × spot` cell (venue `ibkr`) covers them. See `codex/09-strategy/architecture-v2/tradfi-bond-instrument-type-decision.md`.                                                                                |
+| Cluster                    | Rows | Wave 5 verdict  | Wave 6 resolution                                          | Rationale                                                                                                                                                                                                                                                                                                                                                                                                  |
+| -------------------------- | ---- | --------------- | ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Elysium provider entries   | 3    | GAP (retired)   | **RETIRED**                                                | Provider deleted from UAC per workspace CLAUDE.md. v1 rows reference a retired venue. v2 offers no equivalent — they are RETIRED by design, not gaps to close. Marked explicitly in Wave 6 Task A; v1 rows deleted with the registry.                                                                                                                                                                      |
+| Sports value-betting       | 2    | GAP (semantics) | **EQUIVALENT** (via existing archetype + edge-method axis) | Value-betting is NOT a separate archetype — it is an `EdgeMethod.VALUE_PROB_VS_IMPLIED` config on the existing `ML_DIRECTIONAL_EVENT_SETTLED` archetype. Confirmed in `strategy_service/engine/strategies/v2/migration/legacy_strategy_mapping.py:304-382` — 5 archived v1 sports value-bet strategies already map this way. See `/codex/09-strategy/architecture-v2/value-betting-archetype-decision.md`. |
+| TradFi bond mean-reversion | 1    | GAP (cell)      | **EQUIVALENT** (via existing TradFi·spot cell)             | `TRADFI_BOND_MEAN_REV_HUF_1D` trades treasury ETFs (TLT/IEF) on IBKR — these are spot equities by instrument-type, not a separate "bond" instrument. The existing `STAT_ARB_PAIRS_FIXED × TRADFI × spot` cell (venue `ibkr`) covers them. See `/codex/09-strategy/architecture-v2/tradfi-bond-instrument-type-decision.md`.                                                                                |
 
 **Wave-6 changes (UAC):**
 
@@ -227,8 +244,9 @@ Mapping is `v1_archetype` + asset-class inference → `v2_family.v2_archetype` +
 
 ## 3. References
 
-- `codex/09-strategy/architecture-v2/strategy-registry-v2.md` — canonical v2 registry overview.
-- `codex/09-strategy/architecture-v2/naming-convention.md` — `parse_strategy_id` / `format_strategy_id` canonical form.
-- `codex/09-strategy/architecture-v2/value-betting-archetype-decision.md` — Wave 6 decision on value-betting semantics.
-- `codex/09-strategy/architecture-v2/tradfi-bond-instrument-type-decision.md` — Wave 6 decision on bond instrument type.
+- `/codex/09-strategy/architecture-v2/strategy-registry-v2.md` — canonical v2 registry overview.
+- `/codex/09-strategy/architecture-v2/naming-convention.md` — `parse_strategy_id` / `format_strategy_id` canonical form.
+- `/codex/09-strategy/architecture-v2/value-betting-archetype-decision.md` — Wave 6 decision on value-betting semantics.
+- `/codex/09-strategy/architecture-v2/tradfi-bond-instrument-type-decision.md` — Wave 6 decision on bond instrument
+  type.
 - `lib/architecture-v2/legacy-mapping.ts` — v1→v2 bridge (removed in Wave 6 after fixture delete).

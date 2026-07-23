@@ -2,9 +2,10 @@
 doc_type: codex-ssot
 title: Stage 3C — Derivation engine (one registry, four derivations)
 summary:
-  Spec for the side-effect-free derivation engine that reads the Stage 3B combo registry and produces four pure functions
-  — combo(), cost(tier×integration_depth), demo_universe(persona×flavour), prod_restrictions(), access_control(phase) —
-  from one read with no drift; recommends shipping into strategy-service/availability/ (not a new micro-service).
+  Spec for the side-effect-free derivation engine that reads the Stage 3B combo registry and produces four pure
+  functions — combo(), cost(tier×integration_depth), demo_universe(persona×flavour), prod_restrictions(),
+  access_control(phase) — from one read with no drift; recommends shipping into strategy-service/availability/ (not a
+  new micro-service).
 status: current
 nature: ssot
 asset_group: [meta]
@@ -14,15 +15,29 @@ scope: [engineer, admin]
 tags: [uac, strategy, execution, ui, registry, docspec]
 related:
   [
-    codex/16-strategy-playbooks/infra-spec/stage-3b-uac-combo-rules.md,
-    codex/16-strategy-playbooks/infra-spec/stage-3b-instruction-schema-contract.md,
-    codex/16-strategy-playbooks/infra-spec/stage-3b-downstream-analytics-capability-matrix.md,
-    codex/16-strategy-playbooks/infra-spec/stage-3e-refactor-plan.md,
-    codex/16-strategy-playbooks/infra-spec/stage-3a-current-infra-audit.md,
+    /codex/16-strategy-playbooks/infra-spec/stage-3b-uac-combo-rules.md,
+    /codex/16-strategy-playbooks/infra-spec/stage-3b-instruction-schema-contract.md,
+    /codex/16-strategy-playbooks/infra-spec/stage-3b-downstream-analytics-capability-matrix.md,
+    /codex/16-strategy-playbooks/infra-spec/stage-3e-refactor-plan.md,
+    /codex/16-strategy-playbooks/infra-spec/stage-3a-current-infra-audit.md,
   ]
 created: 2026-04-20
-authoritative_for: [Stage 3C one-registry-four-derivations engine spec (combo / cost / demo_universe / prod_restrictions / access_control)]
-referenced_by: [codex/14-customer-journeys/commercial-model/pricing-building-blocks.md, codex/14-customer-journeys/demo-ops/README.md, codex/14-customer-journeys/demo-ops/demo-restriction-profiles.md, codex/14-customer-journeys/implementation-mapping/route-mapping.md, codex/14-customer-journeys/presentations/target-experience-post-refactor.md, codex/16-strategy-playbooks/infra-spec/stage-3a-current-infra-audit.md, codex/16-strategy-playbooks/infra-spec/stage-3b-downstream-analytics-capability-matrix.md, codex/16-strategy-playbooks/infra-spec/stage-3b-instruction-schema-contract.md]
+authoritative_for:
+  [
+    Stage 3C one-registry-four-derivations engine spec (combo / cost / demo_universe / prod_restrictions /
+    access_control),
+  ]
+referenced_by:
+  [
+    /codex/14-customer-journeys/commercial-model/pricing-building-blocks.md,
+    /codex/14-customer-journeys/demo-ops/README.md,
+    /codex/14-customer-journeys/demo-ops/demo-restriction-profiles.md,
+    /codex/14-customer-journeys/implementation-mapping/route-mapping.md,
+    /codex/14-customer-journeys/presentations/target-experience-post-refactor.md,
+    /codex/16-strategy-playbooks/infra-spec/stage-3a-current-infra-audit.md,
+    /codex/16-strategy-playbooks/infra-spec/stage-3b-downstream-analytics-capability-matrix.md,
+    /codex/16-strategy-playbooks/infra-spec/stage-3b-instruction-schema-contract.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

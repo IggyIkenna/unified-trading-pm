@@ -1,11 +1,12 @@
 ---
 doc_type: codex-ssot
-title: 'Cross-Cutting: Capital / Client Isolation'
+title: "Cross-Cutting: Capital / Client Isolation"
 summary:
   Strategy-v2 client-isolation guarantees — every event/fill/P&L/instruction carries client_id, and capital, credentials
   (Secret Manager trading/{client_id}/{venue}/{type}), configs, risk, kill-switches, audit, allocator, and UI scope are
   all isolated per client. We face ONE client per strategy instance (a fund is a single client); the only cross-client
-  operation is human-approved platform-level allocation (out of v1 scope). Covers the client-type + custody-model tables.
+  operation is human-approved platform-level allocation (out of v1 scope). Covers the client-type + custody-model
+  tables.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -14,10 +15,24 @@ repos: [execution-service]
 scope: [engineer, admin]
 tags: [strategy, execution, client-isolation, reconciliation, cefi, defi]
 related:
-  [../axes/share-class.md, portfolio-allocator.md, venue-account-coordination.md, ../../../04-architecture/capital-structure-and-regulatory.md]
+  [
+    ../axes/share-class.md,
+    portfolio-allocator.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/venue-account-coordination.md,
+    ../../../04-architecture/capital-structure-and-regulatory.md,
+  ]
 created: 2026-04-17
 authoritative_for: [strategy-v2 cross-cutting client-isolation dimensions (per-instance client_id tagging)]
-referenced_by: [codex/04-architecture/account-instructions.md, codex/09-strategy/_archived_pre_v2/cross-cutting/share-classes.md, codex/09-strategy/architecture-v2/README.md, codex/09-strategy/architecture-v2/axes/share-class.md, codex/09-strategy/architecture-v2/cross-cutting/strategy-availability-and-locking.md, codex/09-strategy/architecture-v2/cross-cutting/treasury-trading-wallet-invariant.md, codex/09-strategy/architecture-v2/cross-cutting/venue-account-coordination.md]
+referenced_by:
+  [
+    /codex/04-architecture/account-instructions.md,
+    /codex/09-strategy/_archived_pre_v2/cross-cutting/share-classes.md,
+    /codex/09-strategy/architecture-v2/README.md,
+    /codex/09-strategy/architecture-v2/axes/share-class.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/strategy-availability-and-locking.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/treasury-trading-wallet-invariant.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/venue-account-coordination.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

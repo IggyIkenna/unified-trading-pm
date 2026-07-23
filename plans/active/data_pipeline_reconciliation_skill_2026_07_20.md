@@ -16,15 +16,15 @@ scope: [engineer, admin]
 tags: [canonicalisation, reconciliation, skill, manifest, gcs-paths, catalogue, delete-safety, ssot, per-asset-group]
 related:
   [
-    ../../codex/02-data/cross-asset-canonical-target-ssot.md,
-    ../../codex/02-data/availability-manifest-and-data-status.md,
-    ../../codex/02-data/honest-coverage-model.md,
-    ../../codex/02-data/defi-canonical-naming-ssot.md,
-    ../../codex/02-data/pipeline-mode-partition.md,
-    defi_consolidated_closeout_2026_07_18.md,
-    cefi_consolidated_closeout_2026_07_18.md,
-    tradfi_consolidated_closeout_2026_07_18.md,
-    sports_consolidated_closeout_2026_07_19.md,
+    /codex/02-data/cross-asset-canonical-target-ssot.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/02-data/honest-coverage-model.md,
+    /codex/02-data/defi-canonical-naming-ssot.md,
+    /codex/02-data/pipeline-mode-partition.md,
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
+    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
+    /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
     issues/tradfi_canonical_path_migration_design_2026_07_19.md,
   ]
 created: 2026-07-20
@@ -54,10 +54,10 @@ source: operator request 2026-07-20 — "per-AG skill /data-pipeline-reconciliat
 > canonical twin already holds the data. Related to but separate from the backfill smoke skills
 > (`/data-pipeline-check-is`, `/data-pipeline-check-mtds`) — those are **statically audited here, never run**.
 >
-> **Codex SSOTs**: `codex/02-data/cross-asset-canonical-target-ssot.md` (master tie-breaker) ·
+> **Codex SSOTs**: `/codex/02-data/cross-asset-canonical-target-ssot.md` (master tie-breaker) ·
 > `availability-manifest-and-data-status.md` · `honest-coverage-model.md` · `defi-canonical-naming-ssot.md` ·
-> `pipeline-mode-partition.md` · `codex/05-infrastructure/bucket-isolation-model.md` ·
-> `codex/05-infrastructure/gcs-object-operations.md`. This plan **references** them; it does not duplicate them.
+> `pipeline-mode-partition.md` · `/codex/05-infrastructure/bucket-isolation-model.md` ·
+> `/codex/05-infrastructure/gcs-object-operations.md`. This plan **references** them; it does not duplicate them.
 
 ---
 
@@ -265,32 +265,32 @@ the machine gate is currently _weaker_ than the codex declaration; the skill key
       rule). Until ruled: the skill MUST NOT report `instrument_type` column casing as a finding, MUST NOT propose any
       casing migration, and MUST NOT flag `lending` on market/event data_types as non-canonical. Freeze the two
       DRAIN-GATED `--apply` runs (`instruments-service@555ddf1c` + the tradfi Phase-B script).
-- [x] 3. ✅ [DATA] P0. **NEW SSOT** `codex/02-data/four-surface-reconciliation-procedure.md` — the executable comparison
-      of the four surfaces for one shard, and how to classify each disagreement. This is the skill's core loop; it
-      exists today only as fragments across ~8 docs.
-- [x] 4. ✅ [DATA] P0. **NEW SSOT** `codex/02-data/reconciliation-finding-taxonomy.md` — the closed, named set of
+- [x] 3. ✅ [DATA] P0. **NEW SSOT** `/codex/02-data/four-surface-reconciliation-procedure.md` — the executable
+      comparison of the four surfaces for one shard, and how to classify each disagreement. This is the skill's core
+      loop; it exists today only as fragments across ~8 docs.
+- [x] 4. ✅ [DATA] P0. **NEW SSOT** `/codex/02-data/reconciliation-finding-taxonomy.md` — the closed, named set of
       finding types (phantom · orphan · true_gap · missing_row · divergent_empty · masked-stale ·
       drift-axis-false-positive), each with detection method + safe remediation, **plus the operator-accepted exception
       list** (the 19,274 pre-2026-07-08 sports rows with blank pipeline_mode+source [BLK-d48acae4] · tradfi `combo`
       bare-underlying · defi two-id POOL divergence [Option A, intentional] · `batch_massive` read-recognition until
       purge · defi interim flat `LENDING` for market/event data_types). Without a closed set, consecutive runs are not
       diffable.
-- [x] 5. ✅ [DATA] P0. **NEW SSOT** `codex/02-data/gcs-and-manifest-delete-safety-protocol.md` — the **five-part proof**
-      required before any delete suggestion rises above `unknown`: (1) twin resolves via `gcs_describe_object`, not by
-      path construction; (2) **CONTENT verify, not existence** (R5 precedent); (3) grep-then-READ proof nothing still
-      WRITES it; (4) grep-then-READ proof nothing still READS it; (5) the **legacy-COPIED-not-MOVED** invariant — a cell
-      backed only by a legacy copy passes reconcile but reads MISSING under canonical-only status. Any failure →
+- [x] 5. ✅ [DATA] P0. **NEW SSOT** `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` — the **five-part
+      proof** required before any delete suggestion rises above `unknown`: (1) twin resolves via `gcs_describe_object`,
+      not by path construction; (2) **CONTENT verify, not existence** (R5 precedent); (3) grep-then-READ proof nothing
+      still WRITES it; (4) grep-then-READ proof nothing still READS it; (5) the **legacy-COPIED-not-MOVED** invariant —
+      a cell backed only by a legacy copy passes reconcile but reads MISSING under canonical-only status. Any failure →
       `no-migrate-first`. Absorbs the GCS DELETE SAFETY INVARIANT currently stranded in
       `pipeline-mode-partition.md:66-77`.
-- [x] 6. ✅ [DATA] P0. **NEW SSOT** `codex/02-data/non-canonical-path-inventory.md` — the living register seeded with
+- [x] 6. ✅ [DATA] P0. **NEW SSOT** `/codex/02-data/non-canonical-path-inventory.md` — the living register seeded with
       the audit's **29 entries** (location · why · canonical twin · still-written-by · delete disposition), grouped by
       the five dispositions. This IS the input to the delete-suggestion feature; re-deriving it per run costs a walk,
       and keeping it in plans loses it at archival.
-- [x] 7. ✅ [DATA] P1. **NEW SSOT** `codex/02-data/canonical-cutover-register.md` — per-AG effective-from dates for
+- [x] 7. ✅ [DATA] P1. **NEW SSOT** `/codex/02-data/canonical-cutover-register.md` — per-AG effective-from dates for
       `require_pipeline_mode`, instrument_type case, tradfi chain tail, defi leaf filename, sports data_type case.
       Without it the skill cannot separate "legitimately historical" from "non-canonical" and will either flood false
       positives on pre-cutover data or silently pass post-cutover regressions.
-- [x] 8. ✅ [DATA] P1. **NEW SSOT** `codex/02-data/orphan-object-detection.md` — the inverse case no current tool
+- [x] 8. ✅ [DATA] P1. **NEW SSOT** `/codex/02-data/orphan-object-detection.md` — the inverse case no current tool
       covers: a parquet on GCS with **no manifest row AND outside the oracle's expected set** is invisible to every
       existing tool (all are manifest-row- or oracle-driven). The delete-suggestion feature is precisely orphan
       detection.
@@ -304,11 +304,11 @@ the machine gate is currently _weaker_ than the codex declaration; the skill key
       `source`) · SUPERSEDED-banner `data-catalogue-schema.md` (documents an artifact, writer, reader, updater and
       validating plan that **do not exist**) and replace with `service-shard-status-catalogue.md` describing the
       `shard_status[AG][VENUE].start_date` shape deployment-api actually consumes.
-- [x] 10. ✅ [CODE] P1. **NEW SSOT** `codex/06-coding-standards/canonical-write-guard-contract.md` — which lanes call
+- [x] 10. ✅ [CODE] P1. **NEW SSOT** `/codex/06-coding-standards/canonical-write-guard-contract.md` — which lanes call
       `canonical_path_violations`, with which `require_pipeline_mode`, and which are deliberately unguarded (today
       tradfi-W1 + cefi-live + microstructure guarded; cefi-batch, prediction, sports unguarded with no stated intent).
       Absorbs the dangling pointer to the non-existent `canonical-write-conventions.md`. **Plus**: extend
-      `codex/05-infrastructure/bucket-isolation-model.md` with a **bucket-name resolution authority** section —
+      `/codex/05-infrastructure/bucket-isolation-model.md` with a **bucket-name resolution authority** section —
       `cloud-providers.yaml`/`resolve_bucket_name` WINS; UTL `PATH_REGISTRY`/`build_bucket` Group-A rows resolve to
       buckets that **now 404** and are reached at runtime by `domain_client/clients/market_data.py:56` (file as a P0
       latent defect; check whether UTL market-data domain-client reads are currently failing).
@@ -502,7 +502,7 @@ integration text (not applied — SKILL.md is owned by the in-flight Phase C). P
 ### Phase E — census + per-datapoint validation + two-tier compute (operator G1–G4 ask, 2026-07-20)
 
 - [x] 26. ✅ [DATA] P1. **Codex SSOT for census + per-datapoint + compute tiers** —
-      `codex/02-data/reconciliation-census-and-compute-tiers.md` landed. Provenance: G1–G4 operator ask.
+      `/codex/02-data/reconciliation-census-and-compute-tiers.md` landed. Provenance: G1–G4 operator ask.
 - [x] 27. ✅ [SCRIPT] P1. **Wire § 3f distinct-value census into the skill.** Manifest via `get_axis_value_census`, GCS
       via delimiter descent, three comparisons, suppression — reusing `_axis_census.py` +
       `_distinct_values._comparison_set`; no endpoint change. Codex SSOT § 1.
@@ -531,10 +531,10 @@ integration text (not applied — SKILL.md is owned by the in-flight Phase C). P
 > migrated on disk yet, so the WHOLE candle corpus is `migration_pending` and the candle audit reconciles against the
 > Option-A TARGET, never the current disk shape. Candles are co-located in the SAME `market-data-tick-{ag}` buckets
 > under `processed_candles/` (sports: `processed/`); Phase-0 bucket resolution is unchanged. **Codex SSOT for this
-> phase**: `codex/02-data/mdps-candle-canonical-reconciliation.md`. Migration source-of-truth issue:
+> phase**: `/codex/02-data/mdps-candle-canonical-reconciliation.md`. Migration source-of-truth issue:
 > `plans/active/issues/candle_feature_canonical_path_divergence_2026_07_20.md`.
 
-- [x] 34. ✅ [DATA] P1. **NEW codex SSOT** `codex/02-data/mdps-candle-canonical-reconciliation.md` — the candle-LAYER
+- [x] 34. ✅ [DATA] P1. **NEW codex SSOT** `/codex/02-data/mdps-candle-canonical-reconciliation.md` — the candle-LAYER
       extension of the four-surface procedure: the candle shard atom (adds `timeframe`; `data_type` keyed on the
       AGGREGATED `mdps_data_type_key`; S3 rows filtered `service_name=="market-data-processing-service"`), the four
       surfaces for candles (S4 UNAVAILABLE by construction — no candle catalogue), and the candle canonical authority
@@ -551,7 +551,7 @@ integration text (not applied — SKILL.md is owned by the in-flight Phase C). P
       row, the `(asset_group × layer)` §6 loop, and the "Extending to a new LAYER" note. — `unified-trading-pm` (this
       batch).
 - [x] 37. ✅ [DATA] P1. **Add the candle-layer variant note to
-      `codex/02-data/four-surface-reconciliation-procedure.md`** (dated 2026-07-21, pointer + 4 key deltas: `timeframe`
+      `/codex/02-data/four-surface-reconciliation-procedure.md`** (dated 2026-07-21, pointer + 4 key deltas: `timeframe`
       atom, oracle-exempt, S4-unavailable, object-driven; migration_pending). Pointer only — no duplication. —
       `unified-trading-pm` (this batch).
 - [x] 38. ✅ [DATA] P0. AE-6 added to `reconciliation-finding-taxonomy.md` §4 (matches the corrected LOCKED shape —
@@ -597,11 +597,11 @@ asset_groups, 2026-07-20).
 | ------ | ------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
 | **24** | D3 — content-UNION the 32 legacy-only Raydium pools into canonical             | A prod GCS write (fold). Order is mandatory (KAMINO/SOLEND have zero canonical copies). Human-gated per the delete-safety protocol.                            | Yes — spec + safe order in `issues/defi_dex_pools_delete_order_stale_2026_07_20.md`.                                          |
 | **25** | D3 — repoint execution-service + fix its `resolve_bucket_name` call            | Cross-repo code (execution-service) via quickmerge; resolve the dead-provider sub-question first (the call raises outside the `try`).                          | Yes — the fix is `resolve_bucket_name(cloud="gcp", kind="market-data", asset_group="defi")` + data_type=dex_pool_state.       |
-| **31** | Register the `datapoint-validation-{ag}-` VmPrefixSpec + results-bucket kind   | Cross-repo config (deployment-service `vm_prefix_registry.py` + `cloud-providers.yaml`) via quickmerge; unregistered = invisible, so it lands BEFORE 32.       | Yes — spec in `codex/02-data/reconciliation-census-and-compute-tiers.md` § 3.                                                 |
+| **31** | Register the `datapoint-validation-{ag}-` VmPrefixSpec + results-bucket kind   | Cross-repo config (deployment-service `vm_prefix_registry.py` + `cloud-providers.yaml`) via quickmerge; unregistered = invisible, so it lands BEFORE 32.       | Yes — spec in `/codex/02-data/reconciliation-census-and-compute-tiers.md` § 3.                                                |
 | **32** | Author `launch-datapoint-validation-vm.sh` + `validate_datapoint_schema_id.py` | The Tier-2 VM runtime. Depends on 31. Reuses `launch-manifest-recon-all-vm.sh` + `validate_dataframe` + `build_canonical_instrument_id`; SPOT + PROGRESS.json. | Yes — this is the ONLY piece of the operator's "run on a VM" ask not yet built (the design + skill/doc integration ARE done). |
 
 **The operator's literal G4 ask ("otherwise these checks should be added to skills and docs") is SATISFIED** — the VM
-two-tier model is fully specified in SKILL.md § 7 and `codex/02-data/reconciliation-census-and-compute-tiers.md`. Todos
+two-tier model is fully specified in SKILL.md § 7 and `/codex/02-data/reconciliation-census-and-compute-tiers.md`. Todos
 31/32 build the runtime; they are the natural next unit of work.
 
 ## FINAL REPORT — /data-pipeline-reconciliation skill build (2026-07-20)

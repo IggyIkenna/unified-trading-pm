@@ -16,9 +16,9 @@ scope: [engineer, admin]
 tags: [manifest, backfill, honest-coverage, data-status, runbook, expected-absence, single-walk]
 related:
   [
-    codex/02-data/honest-absence-downstream-handling.md,
-    codex/02-data/availability-manifest-and-data-status.md,
-    codex/02-data/manifest-migration-coordination.md,
+    /codex/02-data/honest-absence-downstream-handling.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/02-data/manifest-migration-coordination.md,
   ]
 created: 2026-05-07
 authoritative_for: [expected-absence backfill runbook (reconciler + enumerator passes)]

@@ -2,9 +2,9 @@
 doc_type: codex-ssot
 title: Capital Structure, Custody, and Regulatory Context
 summary:
-  Custody + regulatory context per venue category — DeFi (Copper/Fireblocks client wallet), Sports (firm Unity
-  pool), CeFi (client SMA, no-withdrawal API keys), TradFi (IBKR sub-account tunnel); we always face ONE client
-  (fund mechanics abstracted); per-mode credential, onboarding, and P&L-attribution.
+  Custody + regulatory context per venue category — DeFi (Copper/Fireblocks client wallet), Sports (firm Unity pool),
+  CeFi (client SMA, no-withdrawal API keys), TradFi (IBKR sub-account tunnel); we always face ONE client (fund mechanics
+  abstracted); per-mode credential, onboarding, and P&L-attribution.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -12,10 +12,25 @@ stage: [meta]
 repos: [execution-service]
 scope: [engineer, admin]
 tags: [capital, execution, cefi, defi, sports, tradfi]
-related: [capital-flow-model.md, capital-efficiency-patterns.md, ../02-venues/venue-registry-reference.md]
+related:
+  [
+    /codex/04-architecture/capital-flow-model.md,
+    /codex/04-architecture/capital-efficiency-patterns.md,
+    /codex/02-venues/venue-registry-reference.md,
+  ]
 created: 2026-04-17
 authoritative_for: [per-category custody, regulatory posture, and onboarding structure]
-referenced_by: [codex/02-venues/unity-integration.md, codex/03-services/portfolio-allocator.md, codex/04-architecture/capital-efficiency-patterns.md, codex/04-architecture/capital-flow-model.md, codex/09-strategy/architecture-v2/README.md, codex/09-strategy/architecture-v2/axes/share-class.md, codex/09-strategy/architecture-v2/axes/venue-eligibility.md, codex/09-strategy/architecture-v2/cross-cutting/capital-client-isolation.md]
+referenced_by:
+  [
+    /codex/02-venues/unity-integration.md,
+    /codex/03-services/portfolio-allocator.md,
+    /codex/04-architecture/capital-efficiency-patterns.md,
+    /codex/04-architecture/capital-flow-model.md,
+    /codex/09-strategy/architecture-v2/README.md,
+    /codex/09-strategy/architecture-v2/axes/share-class.md,
+    /codex/09-strategy/architecture-v2/axes/venue-eligibility.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/capital-client-isolation.md,
+  ]
 owner:
 last_reviewed: 2026-05-17
 code_refs:
@@ -30,7 +45,7 @@ code_refs:
 > **Audience:** Implementers, ops, compliance, client-facing teams, and anyone building onboarding/reporting flows.
 >
 > **Context:** Augments the Capital Flow Lifecycle section in
-> [../09-strategy/architecture-v2/README.md](../09-strategy/architecture-v2/README.md) — does not replace it.
+> [/codex/09-strategy/architecture-v2/README.md](/codex/09-strategy/architecture-v2/README.md) — does not replace it.
 
 ## Important framing: we face ONE client, which may itself be a fund
 
@@ -165,13 +180,13 @@ For our own firm capital deployed in DeFi:
 
 Our supported bridges:
 
-| Bridge       | Route                         | Typical latency                | Typical fee | Use case                      |
-| ------------ | ----------------------------- | ------------------------------ | ----------- | ----------------------------- |
+| Bridge       | Route                        | Typical latency                | Typical fee | Use case                      |
+| ------------ | ---------------------------- | ------------------------------ | ----------- | ----------------------------- |
 | Circle CCTP  | USDC EVM ↔ EVM               | 15-20 min (attestation + mint) | ~$0         | Default for USDC cross-chain  |
 | LayerZero    | Any token EVM ↔ EVM + Solana | 5-15 min                       | 0.05-0.2%   | Default for ETH, other tokens |
 | Stargate     | Stable token EVM ↔ EVM       | 2-10 min                       | 0.05%       | Fast, liquid route            |
-| Hop Protocol | USDC, USDT, ETH               | 5-10 min                       | Variable    | Alternative for EVM           |
-| Wormhole     | Cross-chain including Solana  | 15-30 min                      | Variable    | Solana bridge                 |
+| Hop Protocol | USDC, USDT, ETH              | 5-10 min                       | Variable    | Alternative for EVM           |
+| Wormhole     | Cross-chain including Solana | 15-30 min                      | Variable    | Solana bridge                 |
 
 UAC's venue capability registry encodes per-bridge latency and fee. Transfer/Rebalance service picks bridge based on
 route + speed requirement + cost.
@@ -552,7 +567,7 @@ client_id, etc.). But how P&L is realized and reported differs:
 | Concern                                     | Service / doc                                                           | Scope                                   |
 | ------------------------------------------- | ----------------------------------------------------------------------- | --------------------------------------- |
 | Credential storage                          | Secret Manager (GCP default)                                            | All categories                          |
-| Credential rotation policy                  | `codex/05-infrastructure/credential-rotation.md`                        | Cross-category                          |
+| Credential rotation policy                  | `/codex/07-security/secret-rotation.md`                                 | Cross-category                          |
 | Custodian API adapters (Copper, Fireblocks) | `execution-service/adapters/copper.py`, `fireblocks.py`                 | DeFi                                    |
 | Unity execution adapter                     | `execution-service/adapters/unity.py` (with Java sidecar for feed)      | Sports                                  |
 | CEX adapters (per-CEX)                      | `execution-service/adapters/{binance,okx,bybit,deribit,hyperliquid}.py` | CeFi                                    |
@@ -597,12 +612,12 @@ For each strategy going live:
 - [capital-flow-model.md](capital-flow-model.md) — mechanical protocol for capital flow (TRANSFER / BRIDGE /
   AllocationDirective)
 - [strategy-execution-protocol.md](strategy-execution-protocol.md) — instruction catalog
-- [../09-strategy/architecture-v2/cross-cutting/transfer-rebalance.md](../09-strategy/architecture-v2/cross-cutting/transfer-rebalance.md)
+- [/codex/09-strategy/architecture-v2/cross-cutting/transfer-rebalance.md](/codex/09-strategy/architecture-v2/cross-cutting/transfer-rebalance.md)
   — service spec
-- [../09-strategy/architecture-v2/cross-cutting/portfolio-allocator.md](../09-strategy/architecture-v2/cross-cutting/portfolio-allocator.md)
+- [/codex/09-strategy/architecture-v2/cross-cutting/portfolio-allocator.md](/codex/09-strategy/architecture-v2/cross-cutting/portfolio-allocator.md)
   — allocator spec
-- [../09-strategy/architecture-v2/cross-cutting/venue-account-coordination.md](../09-strategy/architecture-v2/cross-cutting/venue-account-coordination.md)
+- [/codex/09-strategy/architecture-v2/cross-cutting/venue-account-coordination.md](/codex/09-strategy/architecture-v2/cross-cutting/venue-account-coordination.md)
   — shared-account primitives
-- [../02-venues/venue-registry-reference.md](../02-venues/venue-registry-reference.md) — venue list with custody mode
-  per venue
-- [../02-venues/unity-integration.md](../02-venues/unity-integration.md) — Unity specifics
+- [/codex/02-venues/venue-registry-reference.md](/codex/02-venues/venue-registry-reference.md) — venue list with custody
+  mode per venue
+- [/codex/02-venues/unity-integration.md](/codex/02-venues/unity-integration.md) — Unity specifics

@@ -36,9 +36,9 @@ tags: [data-correctness, canonical, gcs-paths, test-isolation, smoke-check, skil
 related:
   [
     ../data_pipeline_reconciliation_skill_2026_07_20.md,
-    ../../codex/02-data/non-canonical-path-inventory.md,
-    ../../codex/02-data/four-surface-reconciliation-procedure.md,
-    ../../codex/05-infrastructure/bucket-isolation-model.md,
+    /codex/02-data/non-canonical-path-inventory.md,
+    /codex/02-data/four-surface-reconciliation-procedure.md,
+    /codex/05-infrastructure/bucket-isolation-model.md,
   ]
 created: 2026-07-20
 last_updated: 2026-07-20
@@ -188,7 +188,7 @@ The claims this contradicts (all READ, not grepped):
   `canonicalize_cefi_defi_instrument_type_2026_07_17.py:38`/`:203` — one-off scripts that CONSTRUCT the hive path and
   will therefore miss any object the live writer has emitted since the migration.
 
-This matches `codex/02-data/non-canonical-path-inventory.md` entry 16, which already records the same verdict as
+This matches `/codex/02-data/non-canonical-path-inventory.md` entry 16, which already records the same verdict as
 VERIFIED 2026-07-20 with the same two citations. This audit **independently reproduces** that finding from the code; it
 is not a re-report of the doc.
 
@@ -220,7 +220,7 @@ So "just add `asset_group` and `pipeline_mode` to the partition dict" produces:
 instrument_availability/by_date/asset_group={ag}/day={D}/pipeline_mode={m}/venue={V}/instruments.parquet
 ```
 
-Wrong on **both** counts required by `codex/02-data/pipeline-mode-partition.md`: `day=` must come first, and
+Wrong on **both** counts required by `/codex/02-data/pipeline-mode-partition.md`: `day=` must come first, and
 `pipeline_mode=` must sit immediately after `day=` (left of `asset_group=`). Alphabetically `asset_group` < `day` <
 `pipeline_mode` < `venue`, which is a different order and cannot be reached by renaming keys.
 
@@ -257,7 +257,7 @@ The same trap already bit `market_lifecycle` (row 10): `partition={"group","day"
 3. The instruments-service `instrument_availability` writer either emits the canonical shape via the sink PREFIX
    mechanism, or the three in-repo comments in § 3b are corrected to describe the flat shape the code actually emits.
 4. The MTDS W1/W2 cefi chain-tail divergence has a ruling on which shape is canonical, recorded in
-   `codex/02-data/non-canonical-path-inventory.md`.
+   `/codex/02-data/non-canonical-path-inventory.md`.
 
 ## Follow-up todos
 

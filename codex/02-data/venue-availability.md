@@ -14,9 +14,9 @@ scope: [engineer, admin]
 tags: [instruments, defi, backfill, data-correctness, registry, cefi]
 related:
   [
-    codex/02-data/availability-manifest-and-data-status.md,
-    codex/02-data/instrument-pipeline-defi.md,
-    codex/04-architecture/batch-live-architecture.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/02-data/instrument-pipeline-defi.md,
+    /codex/04-architecture/batch-live-architecture.md,
   ]
 created: 2026-04-03
 authoritative_for:
@@ -27,9 +27,9 @@ authoritative_for:
   ]
 referenced_by:
   [
-    codex/02-data/availability-manifest-and-data-status.md,
-    codex/02-venues/venue-registry-reference.md,
-    codex/03-services/venue-capability-registry.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/02-venues/venue-registry-reference.md,
+    /codex/03-services/venue-capability-registry.md,
   ]
 owner:
 last_reviewed: 2026-05-17
@@ -38,7 +38,7 @@ code_refs:
 
 # Venue Availability SSOT
 
-> **See also:** `codex/02-data/availability-manifest-and-data-status.md` for the complete availability manifest schema
+> **See also:** `/codex/02-data/availability-manifest-and-data-status.md` for the complete availability manifest schema
 > (**v8 column-shape ratified 2026-05-09**; `MANIFEST_SCHEMA_VERSION = 7` constant transitionally pinned in UTL
 > `manifest_writer.py:131` until Phase 4.DEFAULT-REMOVAL bumps to `8`), per-service shard dimensions, data status page
 > hierarchy, availability % calculation, and integrity principles. This document covers venue launch dates and
@@ -129,7 +129,7 @@ taxonomy (execution-only / refdata-only / api-capability-source).
 Motivating catalogue audits:
 
 - CF-9 / CF-10 — bare `GMX` / `DRIFT` cefi venues with no adapter (GHOST). _(2026-07-16: `DRIFT` CULLED entirely; `GMX`
-  reclassified **defi-axis** — see `../04-architecture/solana-defi-coverage.md`.)_
+  reclassified **defi-axis** — see `/codex/04-architecture/solana-defi-coverage.md`.)_
 - DF-6 — vault venues marked "live" with no adapter, handler, OR capability anywhere.
 - DF-20 — MARGINFI / SOLEND "live" ghosts.
 
@@ -261,5 +261,5 @@ chains continue using Chainlink. SSOT: CLAUDE.md "Pyth — UNBANNED 2026-05-06" 
 
 ## Related Docs
 
-- `codex/02-data/instrument-pipeline-defi.md` — How instruments flow into MTDS/MDPS/features
-- `codex/04-architecture/batch-live-architecture.md` — How `as_of_date` works in batch vs live (single SSOT)
+- `/codex/02-data/instrument-pipeline-defi.md` — How instruments flow into MTDS/MDPS/features
+- `/codex/04-architecture/batch-live-architecture.md` — How `as_of_date` works in batch vs live (single SSOT)

@@ -15,7 +15,7 @@ stage: [meta]
 repos: [deployment-ui, deployment-api]
 scope: [engineer]
 tags: [deployment-ui, deployment-api, data-status, cherry-pick, redesign, ui]
-related: [distinct_values_noncanonical_audit_2026_07_20.md]
+related: [/plans/active/distinct_values_noncanonical_audit_2026_07_20.md]
 created: "2026-07-20"
 last_updated: "2026-07-20"
 parent_epic: deployment_and_user_management_master

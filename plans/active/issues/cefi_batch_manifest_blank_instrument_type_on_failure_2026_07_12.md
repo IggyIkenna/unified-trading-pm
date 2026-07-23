@@ -23,11 +23,11 @@ scope: [engineer, admin]
 tags: [honest-coverage, denominator-audit, layer-1, data-correctness, cefi, manifest, mvp-backfill-v10]
 related:
   [
-    mvp_backfill_cefi_tick_v10_2026_06_27.md,
-    tardis_concurrent_ip_lockout_2026_07_12.md,
-    cefi_layer1_denominator_gaps_2026_07_03.md,
-    ../../../codex/02-data/availability-manifest-and-data-status.md,
-    ../../../codex/02-data/honest-absence-downstream-handling.md,
+    /plans/archive/2026_07/mvp_backfill_cefi_tick_v10_2026_06_27.md,
+    /plans/active/issues/tardis_concurrent_ip_lockout_2026_07_12.md,
+    /plans/active/issues/cefi_layer1_denominator_gaps_2026_07_03.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/02-data/honest-absence-downstream-handling.md,
   ]
 created: 2026-07-12
 parent_epic: cefi_master
@@ -167,7 +167,7 @@ Three independent lines of evidence drove the call:
    apply here because the CeFi successor itype is a populated value, not None.)
 
 2. **Post-recapture the residual blank rows are harmless Layer-1 STRAYS, not holes.** Per
-   `codex/02-data/honest-coverage-model.md`, Layer-1 completeness = `|EXPECTED ∩ ENUMERATED| / |EXPECTED|`;
+   `/codex/02-data/honest-coverage-model.md`, Layer-1 completeness = `|EXPECTED ∩ ENUMERATED| / |EXPECTED|`;
    `missing_tuples = EXPECTED − ENUMERATED` are holes, whereas a tuple present in ENUMERATED but absent from EXPECTED is
    a **stray** — "logged as a Layer-1 warning, not a hole." Once the P1-corrected pipeline re-captures the affected
    `(venue, PERPETUAL, data_type)` triples, EXPECTED is satisfied by real `captured` rows and the leftover

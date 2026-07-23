@@ -55,9 +55,9 @@ related:
   [
     ../data_pipeline_alerts_batch_remediation_2026_07_15.md,
     ../master_data_canonicalisation_migration_catalogue_2026_06_07.md,
-    ../../../codex/02-data/availability-manifest-and-data-status.md,
-    ../../../codex/02-data/honest-absence-downstream-handling.md,
-    ../../../codex/02-data/defi-canonical-naming-ssot.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/02-data/honest-absence-downstream-handling.md,
+    /codex/02-data/defi-canonical-naming-ssot.md,
   ]
 created: 2026-07-15
 parent_epic: infrastructure_master

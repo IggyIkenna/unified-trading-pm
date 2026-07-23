@@ -21,7 +21,7 @@ related:
   ]
 created: 2026-04-19
 authoritative_for: [per-playbook local-dev tier and port selection]
-referenced_by: [codex/14-customer-journeys/environments/README.md]
+referenced_by: [/codex/14-customer-journeys/environments/README.md]
 owner:
 last_reviewed:
 code_refs: [unified-trading-system-ui/scripts/dev-tiers.sh, unified-trading-system-ui/lib/auth/personas.ts]

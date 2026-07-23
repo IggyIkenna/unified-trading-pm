@@ -28,8 +28,8 @@ created: 2026-05-11
 authoritative_for: [service-output emission policy gate, service_emission_state manifest column]
 referenced_by:
   [
-    codex/02-data/per-asset-group-bucket-layouts.md,
-    codex/04-architecture/service-emission-policy.md,
+    /codex/02-data/per-asset-group-bucket-layouts.md,
+    /codex/04-architecture/service-emission-policy.md,
     plans/epics/manifest_master.md,
   ]
 owner: ikenna
@@ -37,7 +37,7 @@ last_reviewed: 2026-05-17
 code_refs:
 last_updated: 2026-05-11
 related_codex:
-  [codex/02-data/availability-manifest-and-data-status.md, codex/02-data/honest-absence-downstream-handling.md]
+  [/codex/02-data/availability-manifest-and-data-status.md, /codex/02-data/honest-absence-downstream-handling.md]
 ---
 
 # Service-output emission semantics
@@ -293,8 +293,8 @@ with this structure (Citadel-Grade Planning Standards):
 
 ## Composes with
 
-- `codex/02-data/availability-manifest-and-data-status.md` — the 4-state manifest layer this builds on.
-- `codex/02-data/honest-absence-downstream-handling.md` — downstream NaN-handling tolerances per consumer class.
+- `/codex/02-data/availability-manifest-and-data-status.md` — the 4-state manifest layer this builds on.
+- `/codex/02-data/honest-absence-downstream-handling.md` — downstream NaN-handling tolerances per consumer class.
 - `cursor-configs/CLAUDE.md` § "Service-output emission policy" — key-rule entry pointing here.
 - `plans/active/writegate_honest_coverage_endtoend_2026_05_06.md` slices (a) + (b) + (c) — the architecture plan.
 - `plans/active/manifest_schema_final_gate_2026_05_09.md` Phase 1-2 — owns the v8 manifest schema columns

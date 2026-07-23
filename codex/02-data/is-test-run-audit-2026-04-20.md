@@ -2,18 +2,19 @@
 doc_type: codex-ssot
 title: IS_TEST_RUN Audit — Per-Service Status (2026-04-20)
 summary: >-
-  Per-service inventory (2026-04-20) of how IS_TEST_RUN=true routes writes to the -test-{pid} sibling bucket —
-  which services carry the is_test_run config field, how each routes writes (UTL get_write_bucket_name auto-honours
-  it; services that build bucket names manually must swap the suffix themselves), and the MDPS dep-checker
-  IS_TEST_RUN auto-trigger; Phase-1 deliverable of the institutional smoke matrix plan.
+  Per-service inventory (2026-04-20) of how IS_TEST_RUN=true routes writes to the -test-{pid} sibling bucket — which
+  services carry the is_test_run config field, how each routes writes (UTL get_write_bucket_name auto-honours it;
+  services that build bucket names manually must swap the suffix themselves), and the MDPS dep-checker IS_TEST_RUN
+  auto-trigger; Phase-1 deliverable of the institutional smoke matrix plan.
 status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
-repos: [deployment-service, features-service, instruments-service, market-data-processing-service, market-tick-data-service]
+repos:
+  [deployment-service, features-service, instruments-service, market-data-processing-service, market-tick-data-service]
 scope: [engineer, admin]
 tags: [smoke-test, bucket-name, infrastructure, audit, verification]
-related: [per-asset-group-bucket-layouts.md, bucket-naming-and-config.md]
+related: [/codex/02-data/per-asset-group-bucket-layouts.md, /codex/02-data/bucket-naming-and-config.md]
 created: 2026-04-20
 authoritative_for: [IS_TEST_RUN test-bucket write routing per-service audit (2026-04-20)]
 referenced_by:
@@ -155,7 +156,7 @@ under `gs://{prefix}-{category}-test-{project_id}/...`. The Phase 6 end-to-end v
 
 ## Cross-references
 
-- Per-asset-group bucket layouts SSOT: `codex/02-data/per-asset-group-bucket-layouts.md`
+- Per-asset-group bucket layouts SSOT: `/codex/02-data/per-asset-group-bucket-layouts.md`
 - Plan: `plans/archive/institutional_smoke_matrix_2026_04_20.plan.md`
 - UTL helper: `unified_trading_library/core/cloud_constants.py:215` (`get_write_bucket_name`)
 - MDPS dep-checker: `market-data-processing-service/market_data_processing_service/app/core/dependency_checker.py`

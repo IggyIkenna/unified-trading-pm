@@ -16,20 +16,20 @@ tags: [portfolio, allocation, strategy, orchestrator]
 related:
   [
     ../families/portfolio.md,
-    portfolio-risk-parity.md,
-    portfolio-factor-allocation.md,
-    portfolio-tactical-overlay.md,
+    /codex/09-strategy/architecture-v2/archetypes/portfolio-risk-parity.md,
+    /codex/09-strategy/architecture-v2/archetypes/portfolio-factor-allocation.md,
+    /codex/09-strategy/architecture-v2/archetypes/portfolio-tactical-overlay.md,
     ../cross-cutting/portfolio-allocator.md,
   ]
 created: 2026-05-18
 authoritative_for: [PORTFOLIO_MULTI_STRATEGY archetype specification]
 referenced_by:
   [
-    codex/09-strategy/architecture-v2/archetypes/portfolio-factor-allocation.md,
-    codex/09-strategy/architecture-v2/archetypes/portfolio-risk-parity.md,
-    codex/09-strategy/architecture-v2/archetypes/portfolio-tactical-overlay.md,
-    codex/09-strategy/architecture-v2/families/portfolio.md,
-    codex/09-strategy/strategy-summary.md,
+    /codex/09-strategy/architecture-v2/archetypes/portfolio-factor-allocation.md,
+    /codex/09-strategy/architecture-v2/archetypes/portfolio-risk-parity.md,
+    /codex/09-strategy/architecture-v2/archetypes/portfolio-tactical-overlay.md,
+    /codex/09-strategy/architecture-v2/families/portfolio.md,
+    /codex/09-strategy/strategy-summary.md,
   ]
 owner:
 last_reviewed: 2026-05-18

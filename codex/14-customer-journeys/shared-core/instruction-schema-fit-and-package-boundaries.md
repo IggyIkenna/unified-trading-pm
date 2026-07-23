@@ -2,9 +2,10 @@
 doc_type: codex-ssot
 title: Instruction Schema Fit + Package Boundaries
 summary:
-  Rule-10 implementation map — the eight required signals-only instruction fields, three schema depths (minimal/standard/
-  rich as block-5 pricing axis), venue×instrument×mode compatibility matrix, lifecycle semantics, and the load-bearing
-  package boundary — what signals-only enables downstream vs what requires upgrading to full DART (block 6).
+  Rule-10 implementation map — the eight required signals-only instruction fields, three schema depths
+  (minimal/standard/ rich as block-5 pricing axis), venue×instrument×mode compatibility matrix, lifecycle semantics, and
+  the load-bearing package boundary — what signals-only enables downstream vs what requires upgrading to full DART
+  (block 6).
 status: current
 nature: ssot
 asset_group: [meta]
@@ -15,13 +16,23 @@ tags: [dart, execution, instruments, strategy, cost, sales]
 related:
   [
     ../_ssot-rules/10-strategy-instruction-schema-principles.md,
-    strategy-origin-vs-stack-depth.md,
-    dart-pricing-axes.md,
+    /codex/14-customer-journeys/shared-core/strategy-origin-vs-stack-depth.md,
+    /codex/14-customer-journeys/shared-core/dart-pricing-axes.md,
     ../../16-strategy-playbooks/infra-spec/stage-3b-instruction-schema-contract.md,
   ]
 created: 2026-04-20
 authoritative_for: [signals-only 8-field instruction-schema fit + package boundary/upgrade path]
-referenced_by: [codex/14-customer-journeys/README.md, codex/14-customer-journeys/commercial-model/dart-entry-points.md, codex/14-customer-journeys/demo-ops/post-demo-followup-orchestration.md, codex/14-customer-journeys/experience/dart-briefing.md, codex/14-customer-journeys/experience/dart-demo.md, codex/14-customer-journeys/shared-core/README.md, codex/14-customer-journeys/shared-core/dart-pricing-axes.md, codex/14-customer-journeys/shared-core/signal-broadcast-architecture.md]
+referenced_by:
+  [
+    /codex/14-customer-journeys/README.md,
+    /codex/14-customer-journeys/commercial-model/dart-entry-points.md,
+    /codex/14-customer-journeys/demo-ops/post-demo-followup-orchestration.md,
+    /codex/14-customer-journeys/experience/dart-briefing.md,
+    /codex/14-customer-journeys/experience/dart-demo.md,
+    /codex/14-customer-journeys/shared-core/README.md,
+    /codex/14-customer-journeys/shared-core/dart-pricing-axes.md,
+    /codex/14-customer-journeys/shared-core/signal-broadcast-architecture.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -105,7 +116,7 @@ A signals-only client who sends well-formed instructions against the fit-check s
 | Downstream capability                            | Enabled by signals-only?                                                         |
 | ------------------------------------------------ | -------------------------------------------------------------------------------- |
 | Execution (algo selection, venue routing, fills) | Yes — block 7                                                                    |
-| Reconciliation (instruction ↔ fills)            | Yes — part of block 1 / block 4                                                  |
+| Reconciliation (instruction ↔ fills)             | Yes — part of block 1 / block 4                                                  |
 | Position tracking                                | Yes — block 1 reporting core                                                     |
 | P&L attribution to the client's strategy id      | Yes — but only to the client's declared `strategy_id`, not to upstream sub-logic |
 | Exposure analytics on the client's flow          | Yes — block 11 analytics pack (scoped)                                           |

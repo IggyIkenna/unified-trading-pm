@@ -1,10 +1,10 @@
 ---
 doc_type: codex-ssot
-title: 'Playbook 2b — Deep Dive: DART (Data Analytics, Research & Trading)'
+title: "Playbook 2b — Deep Dive: DART (Data Analytics, Research & Trading)"
 summary:
-  'pb2b implementation — /briefings/platform DART (Data Analytics, Research & Trading) deep-briefing; four
-  catalogues, the 8-stage promote pipeline, client-vs-Odum IP lock-states and observability; promotes the
-  prospect to the pb3c DART demo.'
+  "pb2b implementation — /briefings/platform DART (Data Analytics, Research & Trading) deep-briefing; four catalogues,
+  the 8-stage promote pipeline, client-vs-Odum IP lock-states and observability; promotes the prospect to the pb3c DART
+  demo."
 status: current
 nature: ssot
 asset_group: [meta]
@@ -14,15 +14,24 @@ scope: [engineer, admin, sales]
 tags: [customer-journey, playbook, briefings, dart, catalogues, prospect]
 related:
   [
-    02-research-and-documentation.md,
-    02a-research-im.md,
-    02c-research-regulatory.md,
-    03c-demo-dart.md,
+    /codex/14-customer-journeys/playbooks/02-research-and-documentation.md,
+    /codex/14-customer-journeys/playbooks/02a-research-im.md,
+    /codex/14-customer-journeys/playbooks/02c-research-regulatory.md,
+    /codex/14-customer-journeys/playbooks/03c-demo-dart.md,
     ../experience/dart-briefing.md,
   ]
 created: 2026-04-19
 authoritative_for: [pb2b DART Deep Dive briefing playbook implementation]
-referenced_by: [codex/14-customer-journeys/experience/dart-briefing.md, codex/14-customer-journeys/playbook-concepts/catalogue-execution-algo.md, codex/14-customer-journeys/playbooks/02-research-and-documentation.md, codex/14-customer-journeys/playbooks/02a-research-im.md, codex/14-customer-journeys/playbooks/02c-research-regulatory.md, codex/14-customer-journeys/playbooks/03c-demo-dart.md, codex/14-customer-journeys/playbooks/README.md]
+referenced_by:
+  [
+    /codex/14-customer-journeys/experience/dart-briefing.md,
+    /codex/14-customer-journeys/playbook-concepts/catalogue-execution-algo.md,
+    /codex/14-customer-journeys/playbooks/02-research-and-documentation.md,
+    /codex/14-customer-journeys/playbooks/02a-research-im.md,
+    /codex/14-customer-journeys/playbooks/02c-research-regulatory.md,
+    /codex/14-customer-journeys/playbooks/03c-demo-dart.md,
+    /codex/14-customer-journeys/playbooks/README.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

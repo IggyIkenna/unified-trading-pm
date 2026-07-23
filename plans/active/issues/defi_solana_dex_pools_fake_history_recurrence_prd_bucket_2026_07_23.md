@@ -28,7 +28,7 @@ related:
   [
     ../archive/issues/solana_defi_fake_history_snapshot_2026_06_17.md,
     ../archive/2026_07/solana_defi_legacy_migration_2026_05_27.md,
-    estate_orphan_assessment_2026_07_21.md,
+    /plans/active/issues/estate_orphan_assessment_2026_07_21.md,
     ../defi_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-07-23

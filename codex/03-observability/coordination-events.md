@@ -3,26 +3,39 @@ doc_type: codex-ssot
 title: Coordination Events -- Service-to-Service Wiring
 summary:
   "Maps the 10 standard live-mode coordination events (DATA_READY, INSTRUMENTS_READY, FEATURES_READY, PREDICTIONS_READY,
-  SIGNALS_READY, sports LIVE_* ...) to their Pub/Sub publishers + subscribers — only INSTRUMENTS_READY is fully wired,
-  5 publish-only, 4 defined-only; inner-loop MTDS→MDPS→features candle cascade uses Redis Streams for sub-second
-  latency."
+  SIGNALS_READY, sports LIVE_* ...) to their Pub/Sub publishers + subscribers — only INSTRUMENTS_READY is fully wired, 5
+  publish-only, 4 defined-only; inner-loop MTDS→MDPS→features candle cascade uses Redis Streams for sub-second latency."
 status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
-repos: [execution-service, features-service, instruments-service, market-data-processing-service, market-tick-data-service, strategy-service]
+repos:
+  [
+    execution-service,
+    features-service,
+    instruments-service,
+    market-data-processing-service,
+    market-tick-data-service,
+    strategy-service,
+  ]
 scope: [engineer, admin]
 tags: [coordination-events, pipeline, mtds, mdps, features, live-trading, observability]
 related:
   [
-    lifecycle-events.md,
-    alerting.md,
-    ../04-architecture/data-flow-map.md,
-    ../05-infrastructure/live-pipeline-architecture.md,
+    /codex/03-observability/lifecycle-events.md,
+    /codex/03-observability/alerting.md,
+    /codex/04-architecture/data-flow-map.md,
+    /codex/05-infrastructure/live-pipeline-architecture.md,
   ]
 created: 2026-03-27
 authoritative_for: [coordination-event service-to-service wiring, coordination-event wiring status]
-referenced_by: [codex/03-observability/alerting.md, codex/03-observability/lifecycle-events.md, codex/04-architecture/batch-live-architecture.md, codex/04-architecture/runtime-deployment-topology.md]
+referenced_by:
+  [
+    /codex/03-observability/alerting.md,
+    /codex/03-observability/lifecycle-events.md,
+    /codex/04-architecture/batch-live-architecture.md,
+    /codex/04-architecture/runtime-deployment-topology.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -77,7 +90,7 @@ includes `DATA_READY`, `PREDICTIONS_READY`, `STRATEGY_SIGNALS_READY`.
 
 The cross-service coordination above uses Pub/Sub for at-least-once cross-service signalling. The **live-pipeline inner
 loop** (MTDS → MDPS → features-service candle cascade) uses **Redis Streams** for sub-second tick-to-feature latency.
-Per [`../05-infrastructure/live-pipeline-architecture.md`](../05-infrastructure/live-pipeline-architecture.md):
+Per [`/codex/05-infrastructure/live-pipeline-architecture.md`](/codex/05-infrastructure/live-pipeline-architecture.md):
 
 | Event                     | Producer | Consumer         | Latency target |
 | ------------------------- | -------- | ---------------- | -------------- |
@@ -91,9 +104,9 @@ Why Redis Streams for the inner loop:
 - **Ordered consumer groups** — features-service replays the cascade exactly once per (asset_group, candle boundary) via
   consumer-group `XREADGROUP` semantics.
 - **Replay handoff** — replay-subsystem
-  ([`../05-infrastructure/replay-subsystem.md`](../05-infrastructure/replay-subsystem.md)) re-emits `CANDLE_COMPUTED`
-  events from a historical bookmark on warm-up; live tail picks up where replay leaves off via the same Redis Stream
-  consumer group.
+  ([`/codex/05-infrastructure/replay-subsystem.md`](/codex/05-infrastructure/replay-subsystem.md)) re-emits
+  `CANDLE_COMPUTED` events from a historical bookmark on warm-up; live tail picks up where replay leaves off via the
+  same Redis Stream consumer group.
 
 **The two transports coexist.** Pub/Sub remains the SSOT for cross-service signalling that doesn't need sub-second
 latency (`INSTRUMENTS_READY`, `PREDICTIONS_READY`, kill-switch publisher hook events, lifecycle events). Redis Streams

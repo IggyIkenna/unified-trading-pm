@@ -14,8 +14,8 @@ scope: [engineer]
 tags: [features, mdps, data-correctness, bar-edge, validation, quality-gates]
 related:
   [
-    availability-manifest-and-data-status.md,
-    chart-candle-delivery-flow.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/02-data/chart-candle-delivery-flow.md,
     ../../plans/archive/2026_07/bar_edge_left_vs_right_remediation_2026_06_08.md,
   ]
 created: 2026-06-08

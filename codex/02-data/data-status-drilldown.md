@@ -3,20 +3,43 @@ doc_type: codex-ssot
 title: Data-status drilldown — single SSOT for `/api/data-status/*`
 summary:
   Single SSOT for the /api/data-status/* surface — the per-shard ShardDetailModal endpoint (shard_class
-  grouped/per_symbol/reference/fixtures, schema + signed-URL payload, write-time strict schema validation) and
-  the hierarchical drilldown endpoint, plus Deploy-Missing preview/auto-launch modes with IAM/rate-limit/audit
-  gating.
+  grouped/per_symbol/reference/fixtures, schema + signed-URL payload, write-time strict schema validation) and the
+  hierarchical drilldown endpoint, plus Deploy-Missing preview/auto-launch modes with IAM/rate-limit/audit gating.
 status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
-repos: [deployment-api, deployment-ui, features-service, instruments-service, market-tick-data-service, unified-api-contracts]
+repos:
+  [
+    deployment-api,
+    deployment-ui,
+    features-service,
+    instruments-service,
+    market-tick-data-service,
+    unified-api-contracts,
+  ]
 scope: [engineer, admin]
 tags: [data-status, ui, manifest, mtds, instruments, defi]
-related: [availability-manifest-and-data-status.md, data-status-drilldown-hierarchy.md, honest-absence-downstream-handling.md, pipeline-mode-partition.md]
+related:
+  [
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/02-data/data-status-drilldown-hierarchy.md,
+    /codex/02-data/honest-absence-downstream-handling.md,
+    /codex/02-data/pipeline-mode-partition.md,
+  ]
 created: 2026-04-25
 authoritative_for: [data-status drilldown API contract (/api/data-status/* endpoints)]
-referenced_by: [codex/02-data/availability-manifest-and-data-status.md, codex/02-data/data-status-drilldown-hierarchy.md, codex/04-architecture/e2e-pipeline-manifest-wiring.md, codex/04-architecture/features-service-architecture.md, codex/05-infrastructure/deployment-ui-architecture.md, codex/06-coding-standards/cli-convention.md, codex/06-coding-standards/data-status-endpoint-contract.md, codex/06-coding-standards/feature-service-pattern.md]
+referenced_by:
+  [
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/02-data/data-status-drilldown-hierarchy.md,
+    /codex/04-architecture/e2e-pipeline-manifest-wiring.md,
+    /codex/04-architecture/features-service-architecture.md,
+    /codex/05-infrastructure/deployment-ui-architecture.md,
+    /codex/06-coding-standards/cli-convention.md,
+    /codex/06-coding-standards/data-status-endpoint-contract.md,
+    /codex/06-coding-standards/feature-service-pattern.md,
+  ]
 owner:
 last_reviewed: 2026-05-08
 code_refs:
@@ -127,7 +150,7 @@ Matches the workspace SSOT in CLAUDE.md "Per-asset-group shard-key matrix".
 > `FeatureFamily` StrEnum: `onchain` / `volatility` / `cross_instrument` / `sports` / `calendar` / `commodity` /
 > `delta_one` / `multi_timeframe`) as the top-level shard axis so operators see the consolidated repo's coverage
 > per-family without mixing families. Architecture SSOT:
-> [`../04-architecture/features-service-architecture.md`](../04-architecture/features-service-architecture.md).
+> [`/codex/04-architecture/features-service-architecture.md`](/codex/04-architecture/features-service-architecture.md).
 
 > **`pipeline_mode` is the outermost partition column** above every tree shown above (added 2026-05-08 per
 > [`gcs_migration_bundle_pipeline_mode_2026_05_08`](../../plans/active/gcs_migration_bundle_pipeline_mode_2026_05_08.md)).

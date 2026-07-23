@@ -12,10 +12,22 @@ stage: [meta]
 repos: [execution-service, market-tick-data-service, strategy-service, unified-api-contracts, unified-trading-pm]
 scope: [engineer, admin]
 tags: [defi, strategy, execution, basis-trade, solana, drift, funding]
-related: [sol-staked-basis.md, sol-lending-yield.md, sol-concentrated-lp.md, basis-trade.md]
+related:
+  [
+    /codex/09-strategy/_archived_pre_v2/defi/sol-staked-basis.md,
+    /codex/09-strategy/_archived_pre_v2/defi/sol-lending-yield.md,
+    /codex/09-strategy/_archived_pre_v2/defi/sol-concentrated-lp.md,
+    /codex/09-strategy/_archived_pre_v2/defi/basis-trade.md,
+  ]
 created: 2026-03-28
 authoritative_for: []
-referenced_by: [codex/09-strategy/_archived_pre_v2/STRATEGY_CATALOG_pre_v2.md, codex/09-strategy/_archived_pre_v2/defi/sol-concentrated-lp.md, codex/09-strategy/_archived_pre_v2/defi/sol-lending-yield.md, codex/09-strategy/_archived_pre_v2/defi/sol-staked-basis.md]
+referenced_by:
+  [
+    /codex/09-strategy/_archived_pre_v2/STRATEGY_CATALOG_pre_v2.md,
+    /codex/09-strategy/_archived_pre_v2/defi/sol-concentrated-lp.md,
+    /codex/09-strategy/_archived_pre_v2/defi/sol-lending-yield.md,
+    /codex/09-strategy/_archived_pre_v2/defi/sol-staked-basis.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -157,7 +169,7 @@ provides no benefit.
 - **Venues:** Jupiter (spot swap aggregator), Drift (perp)
 - **Order types:** Market (swap via Jupiter aggregator), Limit (perp on Drift CLOB)
 - **Atomic execution required?** No -- legs are independent (different programs on Solana)
-- **Gas budget:** ~0.001 SOL per transaction (~$0.15 at SOL=$150), ~0.003 SOL per full rebalance (swap + perp adjust +
+- **Gas budget:** ~~0.001 SOL per transaction (~~$0.15 at SOL=$150), ~0.003 SOL per full rebalance (swap + perp adjust +
   margin top-up)
 
 ### Rebalancing

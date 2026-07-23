@@ -1,9 +1,9 @@
 ---
 doc_type: codex-ssot
-title: 'Cross-Cutting: Execution Policies'
+title: "Cross-Cutting: Execution Policies"
 summary:
-  The execution-policy layer — a versioned, artifact-registered rule table mapping (venue × action × condition) →
-  (algo + params). Strategies emit intent and reference a policy_id; execution-service resolves the algo (MARKET_SWEEP/
+  The execution-policy layer — a versioned, artifact-registered rule table mapping (venue × action × condition) → (algo
+  + params). Strategies emit intent and reference a policy_id; execution-service resolves the algo (MARKET_SWEEP/
   TWAP/VWAP/POV/ICEBERG/SMART_ROUTED/MEV_PROTECTED_SWAP/ATOMIC_MULTI_LEG/…) + params at order time. Covers policy
   structure/resolution flow, the algo library, cost-model coupling, benchmark-fill declaration, and versioning rules.
 status: current
@@ -14,10 +14,26 @@ repos: [execution-service]
 scope: [engineer, admin]
 tags: [strategy, execution, defi, cefi, benchmark-fills]
 related:
-  [../../../04-architecture/execution-policy.md, ../../../04-architecture/artifact-versioning.md, benchmark-fills.md, venue-selection-split.md, ../axes/venue-eligibility.md]
+  [
+    ../../../04-architecture/execution-policy.md,
+    ../../../04-architecture/artifact-versioning.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/benchmark-fills.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/venue-selection-split.md,
+    ../axes/venue-eligibility.md,
+  ]
 created: 2026-04-17
 authoritative_for: [strategy cross-cutting execution-policy rule-table + algo-library catalog]
-referenced_by: [codex/04-architecture/execution-policy.md, codex/04-architecture/fixed-grid-config.md, codex/04-architecture/strategy-execution-protocol.md, codex/09-strategy/_archived_pre_v2/cross-cutting/cost-modeling.md, codex/09-strategy/_archived_pre_v2/cross-cutting/latency-profiles.md, codex/09-strategy/_archived_pre_v2/cross-cutting/multi-leg-execution.md, codex/09-strategy/architecture-v2/README.md, codex/09-strategy/architecture-v2/archetypes/arbitrage-price-dispersion.md]
+referenced_by:
+  [
+    /codex/04-architecture/execution-policy.md,
+    /codex/04-architecture/fixed-grid-config.md,
+    /codex/04-architecture/strategy-execution-protocol.md,
+    /codex/09-strategy/_archived_pre_v2/cross-cutting/cost-modeling.md,
+    /codex/09-strategy/_archived_pre_v2/cross-cutting/latency-profiles.md,
+    /codex/09-strategy/_archived_pre_v2/cross-cutting/multi-leg-execution.md,
+    /codex/09-strategy/architecture-v2/README.md,
+    /codex/09-strategy/architecture-v2/archetypes/arbitrage-price-dispersion.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

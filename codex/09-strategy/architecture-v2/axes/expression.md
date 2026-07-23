@@ -1,6 +1,6 @@
 ---
 doc_type: codex-ssot
-title: 'Axis: Expression'
+title: "Axis: Expression"
 summary:
   Expression axis catalog — how a strategy view is translated into traded instruments (independent of signal source and
   edge method). Covers cash-equivalent (SPOT/PERP/DATED_FUTURE/MARGIN), options structures, DeFi (DEX_SWAP/LP/LEND/
@@ -14,10 +14,24 @@ repos: [execution-service]
 scope: [engineer, admin]
 tags: [strategy, expression, options, defi, execution, sports]
 related:
-  [venue-eligibility.md, staking-methods.md, signal-sources.md, ../cross-cutting/execution-policies.md, ../cross-cutting/trade-expression.md]
+  [
+    /codex/09-strategy/architecture-v2/axes/venue-eligibility.md,
+    staking-methods.md,
+    /codex/09-strategy/architecture-v2/axes/signal-sources.md,
+    ../cross-cutting/execution-policies.md,
+    ../cross-cutting/trade-expression.md,
+  ]
 created: 2026-04-17
 authoritative_for: [expression axis (view-to-instrument translation catalog)]
-referenced_by: [codex/09-strategy/architecture-v2/README.md, codex/09-strategy/architecture-v2/archetypes/ml-directional-continuous.md, codex/09-strategy/architecture-v2/axes/edge-methods.md, codex/09-strategy/architecture-v2/axes/signal-sources.md, codex/09-strategy/architecture-v2/cross-cutting/trade-expression.md, codex/09-strategy/architecture-v2/families/ml-directional.md]
+referenced_by:
+  [
+    /codex/09-strategy/architecture-v2/README.md,
+    /codex/09-strategy/architecture-v2/archetypes/ml-directional-continuous.md,
+    /codex/09-strategy/architecture-v2/axes/edge-methods.md,
+    /codex/09-strategy/architecture-v2/axes/signal-sources.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/trade-expression.md,
+    /codex/09-strategy/architecture-v2/families/ml-directional.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

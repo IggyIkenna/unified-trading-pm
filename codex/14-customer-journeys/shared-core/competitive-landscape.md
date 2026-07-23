@@ -2,9 +2,9 @@
 doc_type: codex-ssot
 title: Competitive landscape — Market Deep Dive (internal)
 summary:
-  Internal-only competitive SSOT — six-layer fragmentation frame, Tier A/B/C comp-tier taxonomy, canonical "unified layer
-  vs fragmented stack" language, five sales-objection responses, and traction/strategy-family/moat reference tables. No
-  competitor names on public pages (rule 02 line 74).
+  Internal-only competitive SSOT — six-layer fragmentation frame, Tier A/B/C comp-tier taxonomy, canonical "unified
+  layer vs fragmented stack" language, five sales-objection responses, and traction/strategy-family/moat reference
+  tables. No competitor names on public pages (rule 02 line 74).
 status: current
 nature: ssot
 asset_group: [meta]
@@ -15,13 +15,18 @@ tags: [sales, escalation, strategy, defi, tradfi, prediction, sports]
 related:
   [
     ../_ssot-rules/02-tone-and-posture.md,
-    same-system-principle.md,
-    data-licensing-boundaries.md,
+    /codex/14-customer-journeys/shared-core/same-system-principle.md,
+    /codex/14-customer-journeys/shared-core/data-licensing-boundaries.md,
     ../_ssot-rules/09-internal-commercial-oneliners.md,
   ]
 created: 2026-04-22
 authoritative_for: [internal competitive landscape and comp-tier taxonomy]
-referenced_by: [codex/14-customer-journeys/_ssot-rules/09-internal-commercial-oneliners.md, codex/14-customer-journeys/experience/marketing-journey.md, codex/14-customer-journeys/shared-core/README.md]
+referenced_by:
+  [
+    /codex/14-customer-journeys/_ssot-rules/09-internal-commercial-oneliners.md,
+    /codex/14-customer-journeys/experience/marketing-journey.md,
+    /codex/14-customer-journeys/shared-core/README.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

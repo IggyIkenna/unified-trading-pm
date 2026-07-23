@@ -9,13 +9,24 @@ status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
-repos: [deployment-service, e2e-testing, execution-service, strategy-service, unified-api-contracts, unified-trading-library]
+repos:
+  [deployment-service, e2e-testing, execution-service, strategy-service, unified-api-contracts, unified-trading-library]
 scope: [engineer]
 tags: [strategy, deployment, defi, execution, infrastructure]
-related: [strategy-shard-vm-topology.md, launcher-script-ssot.md, vm-tarball-deployment.md]
+related:
+  [
+    /codex/05-infrastructure/strategy-shard-vm-topology.md,
+    /codex/05-infrastructure/launcher-script-ssot.md,
+    /codex/05-infrastructure/vm-tarball-deployment.md,
+  ]
 created: 2026-05-12
 authoritative_for: [strategy VM launcher entry-points (paper + live)]
-referenced_by: [codex/04-architecture/promote-workflow-architecture.md, codex/05-infrastructure/launcher-script-ssot.md, codex/05-infrastructure/strategy-shard-vm-topology.md]
+referenced_by:
+  [
+    /codex/04-architecture/promote-workflow-architecture.md,
+    /codex/05-infrastructure/launcher-script-ssot.md,
+    /codex/05-infrastructure/strategy-shard-vm-topology.md,
+  ]
 owner:
 last_reviewed: 2026-05-12
 code_refs:
@@ -26,7 +37,7 @@ related_plan: plans/active/promote_workflow_may23_cli_path_2026_05_10.md
 
 > **Entry-point SSOT** for the two strategy VM launchers added in Phase 1 of
 > `promote_workflow_may23_cli_path_2026_05_10.md`. Full launcher-governance rules:
-> `codex/05-infrastructure/launcher-script-ssot.md`.
+> `/codex/05-infrastructure/launcher-script-ssot.md`.
 
 ## Launchers
 

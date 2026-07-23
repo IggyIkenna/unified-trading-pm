@@ -12,13 +12,13 @@ stage: [meta]
 repos: [agent-orchestrator, unified-trading-pm]
 scope: [engineer, admin]
 tags: [orchestrator, plan-hygiene, self-healing, backlog, infrastructure]
-related: [agent-orchestrator-overview.md, agent-orchestrator-autospawn.md]
+related: [/codex/04-architecture/agent-orchestrator-overview.md, /codex/04-architecture/agent-orchestrator-autospawn.md]
 created: 2026-05-30
 authoritative_for: [agent-orchestrator backlog-to-state.db alignment and regen]
 referenced_by:
   [
-    codex/04-architecture/agent-orchestrator-autospawn.md,
-    codex/04-architecture/agent-orchestrator-overview.md,
+    /codex/04-architecture/agent-orchestrator-autospawn.md,
+    /codex/04-architecture/agent-orchestrator-overview.md,
     plans/audit/instructions/orchestrator_master_audit_instructions.md,
   ]
 owner:
@@ -30,7 +30,7 @@ code_refs:
 
 > **SSOT**: `agent-orchestrator/server/regen_backlog_from_plan.py` **Plan**:
 > `plans/active/agent_orchestrator_backlog_state_alignment_2026_05_29.md` **Overview pointer**:
-> `codex/04-architecture/agent-orchestrator-overview.md`
+> `/codex/04-architecture/agent-orchestrator-overview.md`
 
 ## Problem statement
 
@@ -198,7 +198,7 @@ medium), `tmux_spawn.py` (`--effort` haiku gate), `regen_backlog_from_plan.py` (
 
 Since the single-VM migration (2026-06-27) there is ONE orchestrator, so ingestion is a plan-level gate, not a per-VM
 routing decision. `assigned_vm ∈ {planning, NA}` only (enum authority:
-`codex/11-project-management/doc-frontmatter-schema.md`):
+`/codex/11-project-management/doc-frontmatter-schema.md`):
 
 - `assigned_vm: planning` (or `human-planning`, a legacy alias) AND not `execution_scope: local-only` AND not
   `status: draft` → the plan's `- [ ]` todos are ingested into the backlog.

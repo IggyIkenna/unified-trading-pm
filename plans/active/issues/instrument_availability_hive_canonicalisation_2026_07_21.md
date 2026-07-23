@@ -32,12 +32,12 @@ tags:
   ]
 related:
   [
-    features_by_date_root_canonicalisation_2026_07_21.md,
-    ../../../codex/02-data/cross-asset-canonical-target-ssot.md,
-    ../../../codex/02-data/canonical-cutover-register.md,
-    ../../../codex/02-data/non-canonical-path-inventory.md,
-    ../../../codex/02-data/pipeline-mode-partition.md,
-    ../../../codex/02-data/availability-manifest-and-data-status.md,
+    /plans/active/issues/features_by_date_root_canonicalisation_2026_07_21.md,
+    /codex/02-data/cross-asset-canonical-target-ssot.md,
+    /codex/02-data/canonical-cutover-register.md,
+    /codex/02-data/non-canonical-path-inventory.md,
+    /codex/02-data/pipeline-mode-partition.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
   ]
 created: 2026-07-21
 last_updated: 2026-07-21
@@ -67,7 +67,7 @@ depends_on: []
 
 ## What "full canonical hive grammar" means here
 
-The canonical hive order (per `codex/02-data/cross-asset-canonical-target-ssot.md` §8) is:
+The canonical hive order (per `/codex/02-data/cross-asset-canonical-target-ssot.md` §8) is:
 `by_date/day={D}/pipeline_mode={mode}_{src}/asset_group={ag}/venue={V}/instrument_type={it}/…`.
 `instrument_availability` today carries only `day=` and `venue=` — it is missing `pipeline_mode=`, `asset_group=` (and,
 where applicable, `instrument_type=`). The target is the full ordered key set; the exact trailing keys (whether
@@ -161,6 +161,6 @@ consume these paths must be updated in lockstep with the writer.
       (copy → verify → human-only purge of the flat tree). **Deferred to Round 2** — likely VM-scale given the volume of
       prior capture days; size it before attempting.
 - [ ] 8. [REVIEW] P1. On writer ship, record the `instrument_availability` full-hive cutover date in
-      `codex/02-data/canonical-cutover-register.md` (repo@sha) and flip the non-canonical-path-inventory row #16 to
+      `/codex/02-data/canonical-cutover-register.md` (repo@sha) and flip the non-canonical-path-inventory row #16 to
       EXECUTED with a dated post-migration probe. **Deferred to Round 2** (pairs with todo 7 — cutover date should be
       the historical-migration date, not the writer-ship date, per the register's own convention).

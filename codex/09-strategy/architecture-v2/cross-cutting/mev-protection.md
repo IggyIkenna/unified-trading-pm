@@ -1,10 +1,10 @@
 ---
 doc_type: codex-ssot
-title: 'Cross-Cutting: MEV Protection (strategy-side)'
+title: "Cross-Cutting: MEV Protection (strategy-side)"
 summary:
-  'Strategy-side MEV policy: per-chain / per-notional / per-action submission-mode rules (FLASHBOTS_PROTECT vs
-  PUBLIC_MEMPOOL; JITO_BUNDLE for Solana) mirroring UAC `MevSubmissionMode`. Canonical mechanism + provider table live in
-  `04-architecture/mev-protection.md`; Bloxroute is removed, do not re-introduce.'
+  "Strategy-side MEV policy: per-chain / per-notional / per-action submission-mode rules (FLASHBOTS_PROTECT vs
+  PUBLIC_MEMPOOL; JITO_BUNDLE for Solana) mirroring UAC `MevSubmissionMode`. Canonical mechanism + provider table live
+  in `04-architecture/mev-protection.md`; Bloxroute is removed, do not re-introduce."
 status: current
 nature: ssot
 asset_group: [meta]
@@ -12,10 +12,27 @@ stage: [meta]
 repos: [execution-service, unified-api-contracts]
 scope: [engineer, admin]
 tags: [mev, defi, execution, strategy, venue-selection, uac]
-related: [../../../04-architecture/mev-protection.md, execution-policies.md, venue-selection-split.md, benchmark-fills.md]
+related:
+  [
+    ../../../04-architecture/mev-protection.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/execution-policies.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/venue-selection-split.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/benchmark-fills.md,
+  ]
 created: 2026-04-17
-authoritative_for: [strategy-side MEV policy mapping (per-strategy MEV policy YAML + per-chain/per-action submission-mode rules)]
-referenced_by: [codex/04-architecture/execution-policy.md, codex/04-architecture/mev-protection.md, codex/07-security/mev-protection.md, codex/09-strategy/architecture-v2/README.md, codex/09-strategy/architecture-v2/archetypes/arbitrage-price-dispersion.md, codex/09-strategy/architecture-v2/archetypes/liquidation-capture.md, codex/09-strategy/architecture-v2/axes/venue-eligibility.md, codex/09-strategy/architecture-v2/cross-cutting/execution-policies.md]
+authoritative_for:
+  [strategy-side MEV policy mapping (per-strategy MEV policy YAML + per-chain/per-action submission-mode rules)]
+referenced_by:
+  [
+    /codex/04-architecture/execution-policy.md,
+    /codex/04-architecture/mev-protection.md,
+    /codex/07-security/mev-protection.md,
+    /codex/09-strategy/architecture-v2/README.md,
+    /codex/09-strategy/architecture-v2/archetypes/arbitrage-price-dispersion.md,
+    /codex/09-strategy/architecture-v2/archetypes/liquidation-capture.md,
+    /codex/09-strategy/architecture-v2/axes/venue-eligibility.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/execution-policies.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -24,7 +41,7 @@ code_refs:
 # Cross-Cutting: MEV Protection (strategy-side)
 
 > **CANONICAL location for the protection mechanism**:
-> [`codex/04-architecture/mev-protection.md`](../../../04-architecture/mev-protection.md). This doc is the
+> [`/codex/04-architecture/mev-protection.md`](../../../04-architecture/mev-protection.md). This doc is the
 > **strategy-side narrative** scope-narrowed 2026-05-10 per `cross_asset_group_catalogue_audit_2026_05_10` Phase 4 codex
 > consolidation. Read the canonical for "what is MEV / threat model / protection mechanisms / provider implementations /
 > error codes". Read THIS doc for "per-strategy MEV policy YAML + per-chain rules + per-action-type mapping + monitoring

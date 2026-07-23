@@ -28,10 +28,10 @@ tags:
   ]
 related:
   [
-    deployment_observability_expansion_2026_07_08.md,
-    cost_observability_ui_2026_07_08.md,
-    deployment_api_cache_oom_and_ui_latency_remediation_2026_07_13.md,
-    deployment_registry_firestore_migration_2026_07_14.md,
+    /plans/archive/2026_07/deployment_observability_expansion_2026_07_08.md,
+    /plans/archive/2026_07/cost_observability_ui_2026_07_08.md,
+    /plans/active/deployment_api_cache_oom_and_ui_latency_remediation_2026_07_13.md,
+    /plans/active/deployment_registry_firestore_migration_2026_07_14.md,
   ]
 created: "2026-07-17"
 last_updated: "2026-07-23"
@@ -76,14 +76,14 @@ real cross-cloud build/deploy feed, so the deployment estate's final stage becom
 
 ## Codex SSOTs (read + keep this plan aligned — plan↔codex drift is review-blocking)
 
-- `codex/05-infrastructure/dual-cloud-image-builds.md` — the image build flow (routers, registries, promote gate,
+- `/codex/05-infrastructure/dual-cloud-image-builds.md` — the image build flow (routers, registries, promote gate,
   provenance). **NOTE: this doc has measured drift — see "Codex fixes" below. Correcting it is in-scope.**
-- `codex/05-infrastructure/vm-tarball-deployment.md` — the tarball lane (Lane B).
-- `codex/05-infrastructure/cloud-agnostic-build-lineage.md` — STUB; the aspirational SHA→dual-cloud-parity model. This
+- `/codex/05-infrastructure/vm-tarball-deployment.md` — the tarball lane (Lane B).
+- `/codex/05-infrastructure/cloud-agnostic-build-lineage.md` — STUB; the aspirational SHA→dual-cloud-parity model. This
   page is the pragmatic first cut of the "trace an artifact to a SHA" goal.
-- `codex/06-coding-standards/ui-testing-layers.md` — the pw:L2 gate (no UI tick without `[UI]` + `pw:L2 ✓` + a cited
+- `/codex/06-coding-standards/ui-testing-layers.md` — the pw:L2 gate (no UI tick without `[UI]` + `pw:L2 ✓` + a cited
   regression spec).
-- `codex/12-agent-workflow/async-wait-and-poll-discipline.md` — for the snapshot worker.
+- `/codex/12-agent-workflow/async-wait-and-poll-discipline.md` — for the snapshot worker.
 - Constraint doc (active plan, not codex): `deployment_api_cache_oom_and_ui_latency_remediation_2026_07_13.md` — the
   hard memory rules the backend must obey (see "Constraints").
 
@@ -134,7 +134,7 @@ never a fabricated green (the `_image_signal` principle).
    - **Why fragmentation is the headline signal, not a nicety**: a Cloud Run service rolls forward, but **a VM never
      updates itself** — a VM launched 3 days ago runs 3-day-old code for its whole life. So a fix shipped today does NOT
      reach VMs launched before it, and they keep writing pre-fix data. That is a data-correctness concern
-     (`codex/02-data/data-pipeline-correctness-hard-rule.md`), not a tidiness one, and nothing surfaces it today.
+     (`/codex/02-data/data-pipeline-correctness-hard-rule.md`), not a tidiness one, and nothing surfaces it today.
      MEASURED live 2026-07-17: 13 running VMs, with 4 `features-sports` VMs in two cohorts launched ~7h apart.
    - **Cross-links (operator requirement)**: a version row deep-links into the **Deployments view with a pre-loaded
      filter** showing only the hosts on that image/tarball, and out to the **GCP/AWS console** where that build ran (+

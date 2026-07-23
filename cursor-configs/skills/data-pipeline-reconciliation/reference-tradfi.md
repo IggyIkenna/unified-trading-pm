@@ -50,7 +50,7 @@ Verified in `unified-trading-pm/configs/cloud-providers.yaml:93-102` and `:59-63
 
 > `unified-api-contracts/docs/canonical-instrument-ids.md`'s per-type table is **pre-2026-07-18 stale** (shows
 > `NASDAQ:EQUITY:AAPL` without `-USD`, `CME:FUTURE:ES-USD` without root resolution). Do not use it as the tie-breaker;
-> use `codex/02-data/cross-asset-canonical-target-ssot.md`.
+> use `/codex/02-data/cross-asset-canonical-target-ssot.md`.
 
 ## Catalogue (surface 4)
 
@@ -71,7 +71,7 @@ Verified in `unified-trading-pm/configs/cloud-providers.yaml:93-102` and `:59-63
 `market-tick-data-service/market_tick_data_service/engine/orchestrator/partitioned_writer.py:83-96`, invoked at
 `:258-259` under `if self._asset_group == "tradfi":`. Consequence for reconciliation: **any non-canonical tradfi object
 you find in the raw-tick bucket predates the guard** (or was written by a lane that bypasses this writer). Date-bound
-the finding against `codex/02-data/canonical-cutover-register.md` before calling it a live regression.
+the finding against `/codex/02-data/canonical-cutover-register.md` before calling it a live regression.
 
 ### H2 — `batch_massive` read-recognition is DELIBERATELY KEPT. Flagging it is a FALSE POSITIVE.
 
@@ -84,7 +84,7 @@ Massive (formerly Polygon.io) was removed as a tradfi **source** 2026-07-19, but
 - **Do not** propose the purge as a delete suggestion above `unknown`. The purge is a **human-only hard stop**
   (`SKILL.md` § 4b), and **571 Massive-only shards still need a Databento backfill first** — purging before that
   backfill destroys the only copy.
-- Pointer: `codex/02-data/tradfi-databento-sourcing-ssot.md`,
+- Pointer: `/codex/02-data/tradfi-databento-sourcing-ssot.md`,
   `plans/active/issues/tradfi_canonical_path_migration_design_2026_07_19.md`.
 
 ### H3 — `combo` is EXCLUDED from the full-id filename guard, but the live writer emits the FULL chain tail
@@ -144,7 +144,7 @@ Per `SKILL.md` § 3e, surface these with citations and a severity; do not resolv
 
 ## Census / vocabulary nuance
 
-Added 2026-07-20 — the in-session distinct-value census (`codex/02-data/reconciliation-census-and-compute-tiers.md` §
+Added 2026-07-20 — the in-session distinct-value census (`/codex/02-data/reconciliation-census-and-compute-tiers.md` §
 1).
 
 - **`batch_massive` (source / `pipeline_mode` axis) is SUPPRESSED, never a `non_canonical_axis_value`** — the
@@ -156,7 +156,7 @@ Added 2026-07-20 — the in-session distinct-value census (`codex/02-data/reconc
 
 ## Cross-links
 
-`SKILL.md` · `codex/02-data/four-surface-reconciliation-procedure.md` ·
-`codex/02-data/reconciliation-finding-taxonomy.md` · `codex/02-data/canonical-cutover-register.md` ·
-`codex/02-data/non-canonical-path-inventory.md` · `codex/02-data/gcs-and-manifest-delete-safety-protocol.md` ·
-`codex/02-data/tradfi-databento-sourcing-ssot.md` · `codex/05-infrastructure/bucket-isolation-model.md`
+`SKILL.md` · `/codex/02-data/four-surface-reconciliation-procedure.md` ·
+`/codex/02-data/reconciliation-finding-taxonomy.md` · `/codex/02-data/canonical-cutover-register.md` ·
+`/codex/02-data/non-canonical-path-inventory.md` · `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` ·
+`/codex/02-data/tradfi-databento-sourcing-ssot.md` · `/codex/05-infrastructure/bucket-isolation-model.md`

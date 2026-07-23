@@ -18,8 +18,8 @@ repos: [deployment-service, deployment-api, unified-trading-library]
 scope: [engineer]
 tags: [observability, bigquery, event-spine, resource-metrics, run-history, idle-spend]
 related:
-  - deployment_ui_observability_ux_tracker_2026_07_17.md
-  - deployment_ui_fleet_tab_consolidation_2026_07_21.md
+  - /plans/active/deployment_ui_observability_ux_tracker_2026_07_17.md
+  - /plans/active/deployment_ui_fleet_tab_consolidation_2026_07_21.md
 created: "2026-07-21"
 last_updated: "2026-07-21"
 parent_epic: observability_master
@@ -127,7 +127,7 @@ Reached after a design discussion that compared three write paths (GCS-batched, 
 - **Event spine exists** — `unified-trading-library/unified_trading_library/streaming/event_facade.py`,
   `events_interface/` with `DEPLOYMENT_STARTED/COMPLETED/FAILED/ROLLED_BACK` (`events_interface/schemas.py:477`,
   `events_interface/__init__.py:79-83`). CLAUDE.md's "live = batch event-log spine" endorses this path
-  (`codex/02-data/live-data-persistence-and-event-log.md`).
+  (`/codex/02-data/live-data-persistence-and-event-log.md`).
 - **Sampling already happens** — `unified_trading_library/lifecycle/daemon.py:229-258` samples host metrics into
   `host_metrics_window` (`HOST_METRICS_WINDOW_KEY`, last ~10 samples) on the registry entry → Firestore. **The sampling
   is there; only the rolling window survives.** This plan ADDS publishing each sample as an event; it does NOT remove
@@ -187,8 +187,8 @@ Reached after a design discussion that compared three write paths (GCS-batched, 
       (`docs(plans):`).
 - [ ] [REVIEW] P2. Post-phase codex audit — document the durable-operational-data contract (event-spine→BigQuery, the
       three tables + schemas, retention, Firestore-stays-live, analysis-via-DuckDB) in
-      `codex/05-infrastructure/deployment-observability.md`; cross-ref
-      `codex/02-data/live-data-persistence-and-event-log.md`.
+      `/codex/05-infrastructure/deployment-observability.md`; cross-ref
+      `/codex/02-data/live-data-persistence-and-event-log.md`.
 
 ## Success criteria
 
@@ -213,8 +213,8 @@ Reached after a design discussion that compared three write paths (GCS-batched, 
 
 ## Codex SSOTs
 
-- `codex/02-data/live-data-persistence-and-event-log.md` — the UTL event spine (EventTransport facade / Pub/Sub) this
+- `/codex/02-data/live-data-persistence-and-event-log.md` — the UTL event spine (EventTransport facade / Pub/Sub) this
   plan rides.
-- `codex/05-infrastructure/deployment-observability.md` — deployment inventory + (to add) the durable-operational-data
+- `/codex/05-infrastructure/deployment-observability.md` — deployment inventory + (to add) the durable-operational-data
   contract (three BQ tables, retention, Firestore-live/BQ-history split).
-- `codex/06-coding-standards/quality-gates.md` — no raw `google.cloud`/`boto3`; BQ access via the UTL cloud interface.
+- `/codex/06-coding-standards/quality-gates.md` — no raw `google.cloud`/`boto3`; BQ access via the UTL cloud interface.

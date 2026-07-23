@@ -14,19 +14,19 @@ scope: [engineer, admin]
 tags: [strategy, vol-trading, options, deribit, covered-calls, overlay, income]
 related:
   [
-    vol-overlay-protective-put.md,
-    vol-carry.md,
-    vol-straddle.md,
-    ml-directional-continuous.md,
+    /codex/09-strategy/architecture-v2/archetypes/vol-overlay-protective-put.md,
+    /codex/09-strategy/architecture-v2/archetypes/vol-carry.md,
+    /codex/09-strategy/architecture-v2/archetypes/vol-straddle.md,
+    /codex/09-strategy/architecture-v2/archetypes/ml-directional-continuous.md,
     ../families/vol-trading.md,
   ]
 created: 2026-05-19
 authoritative_for: ["VOL_OVERLAY_COVERED_CALLS archetype spec"]
 referenced_by:
   [
-    codex/09-strategy/architecture-v2/archetypes/vol-overlay-protective-put.md,
-    codex/09-strategy/architecture-v2/archetypes/vol-synthetic-delta.md,
-    codex/09-strategy/architecture-v2/families/vol-trading.md,
+    /codex/09-strategy/architecture-v2/archetypes/vol-overlay-protective-put.md,
+    /codex/09-strategy/architecture-v2/archetypes/vol-synthetic-delta.md,
+    /codex/09-strategy/architecture-v2/families/vol-trading.md,
   ]
 owner:
 last_reviewed:

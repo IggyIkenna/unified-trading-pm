@@ -15,24 +15,24 @@ scope: [engineer, admin]
 tags: [defi, wallet, custody, execution, strategy, infrastructure]
 related:
   [
-    ../04-architecture/custody-providers.md,
-    hsm-wallet-signing.md,
-    secret-manager-naming.md,
-    credentials-matrix.md,
-    ../04-architecture/wallet-hierarchy-and-capital-flow.md,
+    /codex/04-architecture/custody-providers.md,
+    /codex/05-infrastructure/hsm-wallet-signing.md,
+    /codex/05-infrastructure/secret-manager-naming.md,
+    /codex/05-infrastructure/credentials-matrix.md,
+    /codex/04-architecture/wallet-hierarchy-and-capital-flow.md,
   ]
 created: 2026-05-11
 authoritative_for: [per-archetype per-chain wallet isolation topology]
 referenced_by:
   [
-    codex/04-architecture/interface-credential-convention.md,
-    codex/05-infrastructure/aws-iam-matrix.md,
-    codex/05-infrastructure/credentials-matrix.md,
-    codex/05-infrastructure/fireblocks-integration-spec.md,
-    codex/05-infrastructure/hsm-wallet-signing.md,
-    codex/15-runbooks/pre-cutover-test-wallets-runbook.md,
-    codex/05-infrastructure/secret-manager-naming.md,
-    codex/14-customer-journeys/pod-elysium-client-onboarding.md,
+    /codex/04-architecture/interface-credential-convention.md,
+    /codex/05-infrastructure/aws-iam-matrix.md,
+    /codex/05-infrastructure/credentials-matrix.md,
+    /codex/05-infrastructure/fireblocks-integration-spec.md,
+    /codex/05-infrastructure/hsm-wallet-signing.md,
+    /codex/15-runbooks/pre-cutover-test-wallets-runbook.md,
+    /codex/05-infrastructure/secret-manager-naming.md,
+    /codex/14-customer-journeys/pod-elysium-client-onboarding.md,
   ]
 owner:
 last_reviewed: 2026-05-17
@@ -196,8 +196,8 @@ origin wallets, so rate-limit budget is N× a single-wallet baseline.
 
 ## § 8 — References
 
-- [`custody-providers.md`](../04-architecture/custody-providers.md) §1 + §2.3 — `CustodyProvider` protocol.
-- [`wallet-hierarchy-and-capital-flow.md`](../04-architecture/wallet-hierarchy-and-capital-flow.md) — treasury / hot
+- [`custody-providers.md`](/codex/04-architecture/custody-providers.md) §1 + §2.3 — `CustodyProvider` protocol.
+- [`wallet-hierarchy-and-capital-flow.md`](/codex/04-architecture/wallet-hierarchy-and-capital-flow.md) — treasury / hot
   wallet hierarchy.
 - [`credentials-matrix.md`](credentials-matrix.md) — workspace credential SSOT.
 - [`secret-manager-naming.md`](secret-manager-naming.md) — per-wallet wrapped-PK naming pattern.

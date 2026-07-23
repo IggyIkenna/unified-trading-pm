@@ -12,7 +12,7 @@ stage: [meta]
 repos: [system-integration-tests, unified-api-contracts, unified-trading-pm]
 scope: [engineer, admin]
 tags: [sit, runbook, ci, staging, quality-gates, escalation]
-related: [../08-workflows/ci-cd-flow.md, ../06-coding-standards/integration-testing-layers.md]
+related: [/codex/08-workflows/ci-cd-flow.md, /codex/06-coding-standards/integration-testing-layers.md]
 created: 2026-03-27
 authoritative_for: [SIT staging force-unlock procedure, SIT staging-lock lifecycle + starvation detector]
 referenced_by:

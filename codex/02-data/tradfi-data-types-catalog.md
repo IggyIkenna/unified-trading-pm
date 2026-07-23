@@ -11,10 +11,16 @@ stage: [meta]
 repos: [execution-service, features-service, instruments-service, strategy-service]
 scope: [engineer, admin]
 tags: [tradfi, mtds, databento, mvp, data-status, catalogue]
-related: [codex/02-data/tradfi-databento-sourcing-ssot.md, codex/02-data/mtds-data-source-coverage-matrix.md, codex/02-data/per-asset-group-bucket-layouts.md, codex/02-data/availability-manifest-and-data-status.md]
+related:
+  [
+    /codex/02-data/tradfi-databento-sourcing-ssot.md,
+    /codex/02-data/mtds-data-source-coverage-matrix.md,
+    /codex/02-data/per-asset-group-bucket-layouts.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+  ]
 created: 2026-05-24
 authoritative_for: [MTDS TradFi data_type catalog, TradFi deferred tick-data suppression (tbbo/trades/mbp_10)]
-referenced_by: [codex/02-data/README.md, codex/02-data/tradfi-databento-sourcing-ssot.md]
+referenced_by: [/codex/02-data/README.md, /codex/02-data/tradfi-databento-sourcing-ssot.md]
 owner:
 last_reviewed: 2026-05-24
 code_refs:
@@ -93,7 +99,7 @@ no such floor exists in the registry; the authoritative floor is 2020-01-01 for 
 > **OHLCV fetch = 1m AND 1s (operator 2026-06-18 subscription cutover).** Both `ohlcv-1m` and `ohlcv-1s` are L0/free
 > (16-year included history). We fetch BOTH (1m completes the existing corpus; 1s is the finer-grained add) and
 > aggregate the coarser bars (`ohlcv_15m` / `ohlcv_24h`) downstream — so `ohlcv-1h` / `ohlcv-1d` are NOT fetched (they
-> raise via `assert_schema_allowed`). SSOT: `codex/02-data/tradfi-databento-sourcing-ssot.md` +
+> raise via `assert_schema_allowed`). SSOT: `/codex/02-data/tradfi-databento-sourcing-ssot.md` +
 > `registry/databento_subscription_allowlist.py`.
 
 ---
@@ -365,7 +371,7 @@ VIX is collected as `ohlcv_24h` with a two-source layered strategy per UAC `regi
 
 All TradFi handlers follow the MTDS shard-level isolation pattern: exceptions are caught per-venue / per-instrument
 loop, recorded via the appropriate manifest recorder (`record_failed()`), and the loop continues. No bare `raise` inside
-per-shard iteration. SSOT: `codex/04-architecture/shard-level-failure-isolation.md`.
+per-shard iteration. SSOT: `/codex/04-architecture/shard-level-failure-isolation.md`.
 
 ### Availability Manifest
 
@@ -382,11 +388,11 @@ All handlers use the TradFi manifest recorder to write honest-coverage entries:
 
 ## Related Documents
 
-- `codex/02-data/mtds-data-source-coverage-matrix.md` — full MTDS source coverage matrix (§3 TRADFI)
-- `codex/02-data/per-asset-group-bucket-layouts.md` — GCS bucket layout per asset_group
-- `codex/02-data/defi-data-types-catalog.md` — sibling catalog for DeFi data types
-- `codex/02-data/availability-manifest-and-data-status.md` — manifest v5+ schema + honest-coverage semantics
-- `codex/02-data/honest-absence-downstream-handling.md` — per-reason consumer policy table
+- `/codex/02-data/mtds-data-source-coverage-matrix.md` — full MTDS source coverage matrix (§3 TRADFI)
+- `/codex/02-data/per-asset-group-bucket-layouts.md` — GCS bucket layout per asset_group
+- `/codex/02-data/defi-data-types-catalog.md` — sibling catalog for DeFi data types
+- `/codex/02-data/availability-manifest-and-data-status.md` — manifest v5+ schema + honest-coverage semantics
+- `/codex/02-data/honest-absence-downstream-handling.md` — per-reason consumer policy table
 - UAC: `unified_api_contracts.registry.capability_declarations._tradfi` — registered series IDs + venue capabilities
 - UAC: `unified_api_contracts.registry.market_data_categories` — `TRADFI_TICK_DATA_WINDOWS` + deferred constants
 - Plan: `plans/active/tradfi_ohlcv_only_mvp_backfill_2026_05_15.md` — OHLCV-only MVP backfill plan

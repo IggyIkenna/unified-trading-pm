@@ -12,10 +12,24 @@ stage: [meta]
 repos: [deployment-ui, unified-api-contracts, unified-trading-system-ui]
 scope: [engineer, sales]
 tags: [questionnaire, onboarding, uac, ui, mvp]
-related: [./signup-signin-workflow.md, ./client-onboarding.md, ../14-customer-journeys/authentication/light-auth-briefings.md]
+related:
+  [
+    ./signup-signin-workflow.md,
+    ./client-onboarding.md,
+    /codex/14-customer-journeys/authentication/light-auth-briefings.md,
+  ]
 created: 2026-04-21
-authoritative_for: [prospect questionnaire schema (13-axis QuestionnaireResponse) + onboarding-docs DocStore upload/delete flow]
-referenced_by: [codex/02-data/questionnaire-axes.md, codex/08-workflows/client-onboarding.md, codex/08-workflows/platform-walkthrough-and-demo-context.md, codex/08-workflows/signup-signin-workflow.md, codex/09-strategy/architecture-v2/strategy-questionnaire-mapping.md, codex/14-customer-journeys/authentication/light-auth-briefings.md]
+authoritative_for:
+  [prospect questionnaire schema (13-axis QuestionnaireResponse) + onboarding-docs DocStore upload/delete flow]
+referenced_by:
+  [
+    /codex/02-data/questionnaire-axes.md,
+    /codex/08-workflows/client-onboarding.md,
+    /codex/08-workflows/platform-walkthrough-and-demo-context.md,
+    /codex/08-workflows/signup-signin-workflow.md,
+    /codex/09-strategy/architecture-v2/strategy-questionnaire-mapping.md,
+    /codex/14-customer-journeys/authentication/light-auth-briefings.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -130,7 +144,7 @@ the fingerprint is the empty string and the envelope still identifies the prospe
 fingerprint will commonly be empty now since most cold-inbound prospects fill the questionnaire BEFORE having a code.
 
 For the canonical mechanism + the secondary "I already have an access code" disclosure path on the gate, see
-[`../14-customer-journeys/authentication/light-auth-briefings.md`](../14-customer-journeys/authentication/light-auth-briefings.md).
+[`/codex/14-customer-journeys/authentication/light-auth-briefings.md`](/codex/14-customer-journeys/authentication/light-auth-briefings.md).
 
 ---
 
@@ -251,8 +265,8 @@ that middleware fails, the token confirm alone is not a security boundary.
 
 The four `/api/onboarding/*` route handlers do not appear on any nav surface (they're fetched programmatically from the
 Documents panel). They are in the orphan-audit whitelist under the `API-HANDLER` category per
-[`orphan-audit.md` § Whitelist Triage Rule](../04-architecture/orphan-audit.md#whitelist-triage-rule). Both `list` and
-`delete` were added 2026-04-21 alongside this plan. `reset` was deleted (replaced by the per-doc `delete` endpoint).
+[`orphan-audit.md` § Whitelist Triage Rule](/codex/04-architecture/orphan-audit.md#whitelist-triage-rule). Both `list`
+and `delete` were added 2026-04-21 alongside this plan. `reset` was deleted (replaced by the per-doc `delete` endpoint).
 
 ---
 
@@ -282,4 +296,4 @@ Events are fire-and-forget (`void recordAdminEvent(...)`) so the response never 
   framework adapter to discover React Router routes.~~ **Shipped 2026-04-22** in deployment-ui `e5d2355`. React Router
   variant at `deployment-ui/scripts/orphan-audit.ts` discovers `<Route path="...">` JSX; same whitelist / baseline /
   blocking contract as the Next.js variant. Triage surfaced 2 real orphans (`/chaos`, `/client-subscriptions`) — wired
-  into `Header.tsx` admin nav. See `codex/04-architecture/orphan-audit.md §8`.
+  into `Header.tsx` admin nav. See `/codex/04-architecture/orphan-audit.md §8`.

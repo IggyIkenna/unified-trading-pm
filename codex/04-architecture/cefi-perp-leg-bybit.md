@@ -3,8 +3,8 @@ doc_type: codex-ssot
 title: CeFi Perp Leg — Bybit (Family 2 SECONDARY venue)
 summary:
   Bybit as Family 2 (CARRY_BASIS_PERP_INV) SECONDARY perp-hedge venue (≤50% of Hyperliquid notional for 30d
-  post-cutover) — UTA USDC-margin topology, Arbitrum USDC deposit route, Feb-2025 hack counterparty cap + LST
-  haircut, 8h funding cadence vs HL per-block, DEFI_PERP_VENUE_OUTAGE/MARGIN_CALL kill-switches.
+  post-cutover) — UTA USDC-margin topology, Arbitrum USDC deposit route, Feb-2025 hack counterparty cap + LST haircut,
+  8h funding cadence vs HL per-block, DEFI_PERP_VENUE_OUTAGE/MARGIN_CALL kill-switches.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -12,10 +12,14 @@ stage: [meta]
 repos: [strategy-service]
 scope: [engineer, admin]
 tags: [cefi, defi, bybit, execution, strategy, kill-switch]
-related: [plans/active/defi_recursive_borrow_archetypes_post_cutover_2026_06_01.md Phase 10, plans/active/master_to_live_defi_2026_05_23.md Group F (Family 2 perp leg)]
+related:
+  [
+    plans/active/defi_recursive_borrow_archetypes_post_cutover_2026_06_01.md Phase 10,
+    plans/active/master_to_live_defi_2026_05_23.md Group F (Family 2 perp leg),
+  ]
 created: 2026-05-15
 authoritative_for: [Bybit Family-2 perp hedge-leg topology]
-referenced_by: [codex/09-strategy/architecture-v2/archetypes/carry-recursive-borrow-perp-hedged.md]
+referenced_by: [/codex/09-strategy/architecture-v2/archetypes/carry-recursive-borrow-perp-hedged.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:
@@ -86,10 +90,10 @@ annualised, using the last confirmed 8h rate and the current predicted rate from
 
 ## See also
 
-- [carry-recursive-borrow-perp-hedged.md](../09-strategy/architecture-v2/archetypes/carry-recursive-borrow-perp-hedged.md)
+- [carry-recursive-borrow-perp-hedged.md](/codex/09-strategy/architecture-v2/archetypes/carry-recursive-borrow-perp-hedged.md)
   — Family 2 archetype (primary consumer of this doc)
-- [venue-collateral-2026-05-07.md](../16-strategy-playbooks/defi/venue-collateral-2026-05-07.md) — Bybit LST collateral
-  acceptance + haircut evidence trail
+- [venue-collateral-2026-05-07.md](/codex/16-strategy-playbooks/defi/venue-collateral-2026-05-07.md) — Bybit LST
+  collateral acceptance + haircut evidence trail
 - [interface-credential-convention.md](interface-credential-convention.md) — credential injection for Bybit REST adapter
   (`get_order_adapter(BYBIT, ...)`)
 - [flash-loan-receiver.md](flash-loan-receiver.md) — flash-loan-receiver for Family 1 base (used by Family 2's lending

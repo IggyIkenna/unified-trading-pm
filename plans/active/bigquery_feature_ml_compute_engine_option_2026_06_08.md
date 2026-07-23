@@ -1,11 +1,13 @@
 ---
 doc_type: plan
-title: BigQuery as an optional feature/ML compute engine over the hive-partitioned GCS corpus — scale path alongside in-process polars/DuckDB
+title:
+  BigQuery as an optional feature/ML compute engine over the hive-partitioned GCS corpus — scale path alongside
+  in-process polars/DuckDB
 summary: >-
-  Adds BigQuery as an OPTIONAL third feature/ML compute-engine tier (in-process polars → DuckDB → BigQuery)
-  over the hive-partitioned GCS corpus: Hive-partitioned external tables (uts_feature_external, one per
-  asset_group×data_type, require_partition_filter cost guardrail), BQML/BQ-as-feature-store, same
-  formula_version/canonical-v9 contract regardless of engine; selection by volume + job type.
+  Adds BigQuery as an OPTIONAL third feature/ML compute-engine tier (in-process polars → DuckDB → BigQuery) over the
+  hive-partitioned GCS corpus: Hive-partitioned external tables (uts_feature_external, one per asset_group×data_type,
+  require_partition_filter cost guardrail), BQML/BQ-as-feature-store, same formula_version/canonical-v9 contract
+  regardless of engine; selection by volume + job type.
 status: active
 nature: process
 asset_group: [cross-cutting]
@@ -13,7 +15,7 @@ stage: [meta]
 repos: [deployment-service, ml-service, unified-trading-pm]
 scope: [engineer, admin]
 tags: [features, ml, performance, infrastructure, data-engine-selection, polars, cost]
-related: [../../codex/06-coding-standards/data-engine-selection.md, ../../codex/06-coding-standards/read-time-filter-pushdown.md]
+related: [/codex/06-coding-standards/data-engine-selection.md, /codex/06-coding-standards/read-time-filter-pushdown.md]
 created: 2026-06-08
 parent_epic: features_and_ml_master
 assigned_vm: NA
@@ -28,7 +30,12 @@ locked_since: 2026-06-08
 supersedes:
 superseded_by:
 depends_on:
-source: [operator 2026-06-08 ("for performance we want an OPTION to use BigQuery to process features + ML — the whole point of hive partitions is this"), composes with codex/06-coding-standards/data-engine-selection.md + read-time-filter-pushdown.md]
+source:
+  [
+    operator 2026-06-08 ("for performance we want an OPTION to use BigQuery to process features + ML — the whole point
+    of hive partitions is this"),
+    composes with /codex/06-coding-standards/data-engine-selection.md + read-time-filter-pushdown.md,
+  ]
 drift_direction: advance-code
 ---
 
@@ -57,7 +64,7 @@ drift_direction: advance-code
 ## Design — a third engine tier (toggle), not a fork
 
 - [x] ✅ [DESIGN] P1. **Engine-selection extension** — **unified-trading-pm@cae98d92d**: added the BigQuery third tier
-      to `codex/06-coding-standards/data-engine-selection.md` (in-process polars → DuckDB → BigQuery; selection by
+      to `/codex/06-coding-standards/data-engine-selection.md` (in-process polars → DuckDB → BigQuery; selection by
       volume + job type; same `formula_version`/canonical-v9 CONTRACT regardless of engine; external-tables-over-hive +
       GCS-SSOT + cost-guardrail + cloud-agnostic boundaries; sequenced after the per-AG `--apply`).
 - [x] ✅ [INFRA] P1. **Hive-partitioned external tables** — **deployment-service@eaff3a7**:
@@ -92,7 +99,7 @@ drift_direction: advance-code
 
 ## Composes with
 
-`codex/06-coding-standards/data-engine-selection.md` (the engine tiers — this adds BQ) · `read-time-filter-pushdown.md`
+`/codex/06-coding-standards/data-engine-selection.md` (the engine tiers — this adds BQ) · `read-time-filter-pushdown.md`
 (partition pruning is the same idea at warehouse scale) · the bar-edge corpus recompute
 (`bar_edge_left_vs_right_remediation_2026_06_08.md` Phase 2 — a candidate first BQ workload) · the canonical v9 schema
 (the stable external-table schema depends on the migration landing first).

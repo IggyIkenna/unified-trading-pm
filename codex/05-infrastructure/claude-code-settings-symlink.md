@@ -15,7 +15,11 @@ stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]
 tags: [claude-code, settings, symlink, onboarding, permissions]
-related: [per-tab-worktrees.md, plans/active/issues/claude_code_settings_symlink_chain_broken_2026_07_23.md]
+related:
+  [
+    /codex/05-infrastructure/per-tab-worktrees.md,
+    plans/active/issues/claude_code_settings_symlink_chain_broken_2026_07_23.md,
+  ]
 created: 2026-06-27
 authoritative_for: [Claude Code team-shared vs personal settings split, per-slot settings.json symlink inheritance]
 referenced_by:
@@ -49,7 +53,7 @@ Claude Code merges settings from (lowest → highest precedence): `~/.claude/set
    `permissions.defaultMode: bypassPermissions` + the destructive-command `ask` denylist, `enabledPlugins`, `mcpServers`
    (playwright), and the bypass-smoothing flags. **It contains NO `model`/`theme`/`effortLevel`/ `workspaces`** — those
    are personal and must never be committed (a committed `model: opus` would silently force Opus on the whole fleet,
-   violating the Sonnet-default rule in `codex/06-coding-standards/model-tier-selection.md`). Each slot inherits this
+   violating the Sonnet-default rule in `/codex/06-coding-standards/model-tier-selection.md`). Each slot inherits this
    file via a project-level symlink.
 
 2. **PERSONAL (real file, NOT a symlink, never in git)** — your own `~/.claude/settings.json`. Holds your `model` /

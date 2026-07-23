@@ -334,14 +334,16 @@ everything else. SSOT: `/codex/11-project-management/doc-frontmatter-schema.md` 
   but restarts any `--force`/`redo_all` run at day one FOREVER (force disables the skip the resume relies on); now
   auto-resumed by the shipped PROGRESS-checkpoint contract (VM writes `vm-logs/{vm}/PROGRESS.json`, monotonic-gated;
   non-monotonic/no-checkpoint force still PAGEs); live/forward/cron/paper VMs + `--mode live` stay on-demand (preemption
-  loses live data); on-demand for backfill is a bug. **Tardis VMs: HARD cap **1** concurrent, both clouds — the lease
-  does NOT lift it, it AMPLIFIES the storm** (operator 2026-07-16; the earlier cap-3 was measured on skip-scans, not
-  real fetching): count the running fleet BEFORE launching (`tardis-concurrency-guard.sh`, wired into the cefi/mtds
-  launchers). N>1 in the real gap measured ~94% 403s + **37,212 FALSE `attempted_failed` rows** (manifest corruption,
-  not just waste) + coverage going BACKWARD; N=1 measured ZERO 403s. Scale on the ONE IP — `SINGLE_VM_QUEUE=1`
-  bundling + `TARDIS_MAX_CONCURRENT_DOWNLOADS` / `TARDIS_BOOK_SNAPSHOT_MAX_CONCURRENT` (defaults 16/4 leave the box ~93%
-  idle) — NEVER more VMs. Non-Tardis venues (HYPERLIQUID/ASTER/LIGHTER/EXTENDED) are exempt. SSOTs:
-  `/codex/05-infrastructure/vm-launcher-runbook.md` (§ Tardis cap), `…/spot-vms-for-backfill.md`,
+  loses live data); on-demand for backfill is a bug. **Manually checking in on a SPOT VM that looks stalled/gone: verify
+  `compute.instances.preempted` via `gcloud compute operations list` BEFORE diagnosing a bug/hang** — one-off migration
+  VMs aren't wired into the fleet monitor, so this is on you, not automatic. **Tardis VMs: HARD cap **1** concurrent,
+  both clouds — the lease does NOT lift it, it AMPLIFIES the storm** (operator 2026-07-16; the earlier cap-3 was
+  measured on skip-scans, not real fetching): count the running fleet BEFORE launching (`tardis-concurrency-guard.sh`,
+  wired into the cefi/mtds launchers). N>1 in the real gap measured ~94% 403s + **37,212 FALSE `attempted_failed` rows**
+  (manifest corruption, not just waste) + coverage going BACKWARD; N=1 measured ZERO 403s. Scale on the ONE IP —
+  `SINGLE_VM_QUEUE=1` bundling + `TARDIS_MAX_CONCURRENT_DOWNLOADS` / `TARDIS_BOOK_SNAPSHOT_MAX_CONCURRENT` (defaults
+  16/4 leave the box ~93% idle) — NEVER more VMs. Non-Tardis venues (HYPERLIQUID/ASTER/LIGHTER/EXTENDED) are exempt.
+  SSOTs: `/codex/05-infrastructure/vm-launcher-runbook.md` (§ Tardis cap), `…/spot-vms-for-backfill.md`,
   `…/vm-tarball-deployment.md`, `…/deployment-observability.md`.
 - **Working on DeFi EXECUTION?** Credential convention; `DefiErrorCode` (35 codes);
   IS→MTDS→features-onchain→strategy→execution; removed providers (Elysium/Arkham/Bloxroute/Infura/Kaiko) — do NOT

@@ -2,9 +2,9 @@
 doc_type: codex-ssot
 title: Fixed vs Variable Commercials — Tier A vs Tier B Decision Tree
 summary:
-  Tier A (cost-plus variable, no upfront, no exclusivity) vs Tier B (fixed upfront + monthly, unlocks
-  block-12/13 premiums) decision tree — five per-block questions, per-block default-tier table, and the
-  per-block mixability rule; both carry a twelve-month minimum commitment.
+  Tier A (cost-plus variable, no upfront, no exclusivity) vs Tier B (fixed upfront + monthly, unlocks block-12/13
+  premiums) decision tree — five per-block questions, per-block default-tier table, and the per-block mixability rule;
+  both carry a twelve-month minimum commitment.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -14,14 +14,22 @@ scope: [sales, admin]
 tags: [commercial-model, pricing, dart, tier-a-tier-b, building-blocks]
 related:
   [
-    pricing-building-blocks.md,
-    building-block-packaging.md,
-    exclusivity-and-noncompete.md,
-    dart-entry-points.md,
+    /codex/14-customer-journeys/commercial-model/pricing-building-blocks.md,
+    /codex/14-customer-journeys/commercial-model/building-block-packaging.md,
+    /codex/14-customer-journeys/commercial-model/exclusivity-and-noncompete.md,
+    /codex/14-customer-journeys/commercial-model/dart-entry-points.md,
   ]
 created: 2026-04-20
 authoritative_for: [Tier A vs Tier B commercial-tier decision tree]
-referenced_by: [codex/14-customer-journeys/README.md, codex/14-customer-journeys/commercial-model/README.md, codex/14-customer-journeys/commercial-model/building-block-packaging.md, codex/14-customer-journeys/commercial-model/dart-entry-points.md, codex/14-customer-journeys/commercial-model/exclusivity-and-noncompete.md, codex/14-customer-journeys/commercial-model/pricing-building-blocks.md]
+referenced_by:
+  [
+    /codex/14-customer-journeys/README.md,
+    /codex/14-customer-journeys/commercial-model/README.md,
+    /codex/14-customer-journeys/commercial-model/building-block-packaging.md,
+    /codex/14-customer-journeys/commercial-model/dart-entry-points.md,
+    /codex/14-customer-journeys/commercial-model/exclusivity-and-noncompete.md,
+    /codex/14-customer-journeys/commercial-model/pricing-building-blocks.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

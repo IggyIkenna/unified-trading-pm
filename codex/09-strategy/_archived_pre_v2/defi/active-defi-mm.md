@@ -1,7 +1,9 @@
 ---
 doc_type: codex-ssot
 title: Active DeFi Market Making (ML-Driven Concentrated LP)
-summary: "Pre-v2: active DeFi market making via ML-driven concentrated-LP rebalancing (Uniswap V3/Raydium/Orca) — ML confidence + IL-savings-vs-gas gate emits widen/narrow/shift/exit range actions."
+summary:
+  "Pre-v2: active DeFi market making via ML-driven concentrated-LP rebalancing (Uniswap V3/Raydium/Orca) — ML confidence
+  + IL-savings-vs-gas gate emits widen/narrow/shift/exit range actions."
 status: superseded
 nature: ssot
 asset_group: [meta]
@@ -9,14 +11,10 @@ stage: [meta]
 repos: [ml-service, strategy-service]
 scope: [engineer, admin]
 tags: [defi, market-making, ml, strategy, features]
-related:
-  [
-    ../../architecture-v2/archetypes/defi-lp-concentrated.md,
-    ../../architecture-v2/families/market-making.md,
-  ]
+related: [../../architecture-v2/archetypes/defi-lp-concentrated.md, ../../architecture-v2/families/market-making.md]
 created: 2026-06-16
 authoritative_for: []
-referenced_by: [codex/09-strategy/_archived_pre_v2/defi/market-making-lp.md]
+referenced_by: [/codex/09-strategy/_archived_pre_v2/defi/market-making-lp.md]
 owner:
 last_reviewed:
 code_refs:
@@ -70,8 +68,10 @@ ml-service (rebalance_confidence, direction, vol_forecast, optimal_width)
 
 Every rebalance must pass: `IL_savings > gas_cost * min_il_savings_ratio`
 
-This prevents unnecessary rebalancing in low-IL scenarios where gas would eat the savings. On Solana (gas ~$0.60), the
-ratio is lower (1.5x) enabling more frequent rebalancing. On Ethereum L1 (gas ~$15-50), the ratio is higher (2.0x).
+This prevents unnecessary rebalancing in low-IL scenarios where gas would eat the savings. On Solana (gas
+~$0.60), the
+ratio is lower (1.5x) enabling more frequent rebalancing. On Ethereum L1 (gas ~$15-50), the ratio is higher
+(2.0x).
 
 ### Vol-Adaptive Range Width
 

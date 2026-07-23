@@ -10,16 +10,24 @@ status: current
 nature: process
 asset_group: [meta]
 stage: [meta]
-repos: [deployment-api, deployment-service, deployment-ui, instruments-service, market-tick-data-service, unified-trading-library]
+repos:
+  [
+    deployment-api,
+    deployment-service,
+    deployment-ui,
+    instruments-service,
+    market-tick-data-service,
+    unified-trading-library,
+  ]
 scope: [engineer, admin]
 tags: [backfill, runbook, manifest, honest-coverage, sports, tradfi, data-correctness, vm-tarball]
 related:
   [
-    ../02-data/availability-manifest-and-data-status.md,
-    ../02-data/schema-governance.md,
-    ../05-infrastructure/vm-tarball-deployment.md,
-    ../04-architecture/backfill-and-live-startup.md,
-    ../02-data/sports-data-source-coverage-matrix.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/02-data/schema-governance.md,
+    /codex/05-infrastructure/vm-tarball-deployment.md,
+    /codex/04-architecture/backfill-and-live-startup.md,
+    /codex/02-data/sports-data-source-coverage-matrix.md,
   ]
 created: 2026-05-01
 owner: operator (triggered by cycle-close backfill dispatch or ad-hoc coverage gap)
@@ -29,7 +37,13 @@ last_executed:
 code_refs:
 audience: dev / operator
 last_updated: 2026-05-01
-execution: {owner: operator (triggered by cycle-close backfill dispatch or ad-hoc coverage gap), cadence: 'per-backfill-batch (event-driven, not scheduled)', verifier: 'manifest spot-check — capture_status in {captured, empty_confirmed} for target date range; QG green', last_executed: 2026-05-17}
+execution:
+  {
+    owner: operator (triggered by cycle-close backfill dispatch or ad-hoc coverage gap),
+    cadence: "per-backfill-batch (event-driven, not scheduled)",
+    verifier: "manifest spot-check — capture_status in {captured, empty_confirmed} for target date range; QG green",
+    last_executed: 2026-05-17,
+  }
 ---
 
 # Backfill completion playbook
@@ -108,7 +122,7 @@ re-migrating the entire dataset.
   `attempted_failed`.
 - **Schema governance is write-time, not read-time.** Adapters validate output against the registered `SchemaDefinition`
   BEFORE writing the parquet. If validation fails, the row goes to `record_failed`, not the bucket. Reference:
-  [02-data/schema-governance.md](../02-data/schema-governance.md).
+  [02-data/schema-governance.md](/codex/02-data/schema-governance.md).
 
 ## Special cases (data provenance you would not guess from code)
 
@@ -171,26 +185,27 @@ What to check before kicking off Phase 1 sports work:
 ## Reference SSOT docs (read these once)
 
 - **Manifest semantics + 3-state capture_status** —
-  [02-data/availability-manifest-and-data-status.md](../02-data/availability-manifest-and-data-status.md).
+  [02-data/availability-manifest-and-data-status.md](/codex/02-data/availability-manifest-and-data-status.md).
 - **Per-asset-group GCS path layouts** —
-  [02-data/per-category-bucket-layouts.md](../02-data/per-category-bucket-layouts.md).
+  [02-data/per-asset-group-bucket-layouts.md](/codex/02-data/per-asset-group-bucket-layouts.md).
 - **VM tarball deployment + launcher conventions** —
-  [05-infrastructure/vm-tarball-deployment.md](../05-infrastructure/vm-tarball-deployment.md).
+  [05-infrastructure/vm-tarball-deployment.md](/codex/05-infrastructure/vm-tarball-deployment.md).
 - **Backfill seed specs (per-service min_days / cold-start)** —
-  [04-architecture/backfill-and-live-startup.md](../04-architecture/backfill-and-live-startup.md).
+  [04-architecture/backfill-and-live-startup.md](/codex/04-architecture/backfill-and-live-startup.md).
 - **Schema governance (write-time validation, UAC as SSOT)** —
-  [02-data/schema-governance.md](../02-data/schema-governance.md).
-- **Drilldown UI + endpoints** — [02-data/data-status-drilldown.md](../02-data/data-status-drilldown.md).
+  [02-data/schema-governance.md](/codex/02-data/schema-governance.md).
+- **Drilldown UI + endpoints** — [02-data/data-status-drilldown.md](/codex/02-data/data-status-drilldown.md).
 - **Sports data-source coverage matrix + prediction-vs-reference league split** —
-  [02-data/sports-data-source-coverage-matrix.md](../02-data/sports-data-source-coverage-matrix.md).
+  [02-data/sports-data-source-coverage-matrix.md](/codex/02-data/sports-data-source-coverage-matrix.md).
 - **Sports GCS path SSOT + phantom audit** — UAC `unified_api_contracts.sports.gcs_paths` (`candidate_parquet_paths`,
   `SPORTS_DATA_TYPE_TO_FOLDER`, `SPORTS_DATA_TYPE_LAYOUT`). Phantom-audit recipe:
-  [02-data/availability-manifest-and-data-status.md](../02-data/availability-manifest-and-data-status.md) § "Phantom
+  [02-data/availability-manifest-and-data-status.md](/codex/02-data/availability-manifest-and-data-status.md) § "Phantom
   audit — re-runnable recipe".
 - **Sports adapter dependency order (api-football T0)** —
-  [02-data/sports-adapter-dependency-order.md](../02-data/sports-adapter-dependency-order.md).
-- **DeFi data type catalog** — [02-data/defi-data-types-catalog.md](../02-data/defi-data-types-catalog.md).
-- **Prediction venues + sub-categories** — [02-data/prediction-schema-paths.md](../02-data/prediction-schema-paths.md).
+  [02-data/sports-adapter-dependency-order.md](/codex/02-data/sports-adapter-dependency-order.md).
+- **DeFi data type catalog** — [02-data/defi-data-types-catalog.md](/codex/02-data/defi-data-types-catalog.md).
+- **Prediction venues + sub-categories** —
+  [02-data/prediction-schema-paths.md](/codex/02-data/prediction-schema-paths.md).
 
 ### TradFi session learnings (2026-04-30, in-line summary)
 
@@ -309,7 +324,7 @@ Repeat the sub-60% triage for each asset group when its data-status drilldown lo
 For each P0/P1 data type:
 
 1. **Identify the source + the expected league set** via
-   [02-data/sports-data-source-coverage-matrix.md](../02-data/sports-data-source-coverage-matrix.md) Table 2.
+   [02-data/sports-data-source-coverage-matrix.md](/codex/02-data/sports-data-source-coverage-matrix.md) Table 2.
 2. **Apply the prediction-vs-reference league filter** — for non-prediction leagues, only attempt FIXTURES +
    FIXTURE*EVENTS + STANDINGS. Skip FIXTURE_FEATURES / PLAYER_VALUES / SFI*\* / understat for reference leagues.
 3. **Run the relevant backfill VM** —
@@ -324,7 +339,7 @@ For each P0/P1 data type:
 
 1. From **2019-01-01 → today**, sharded per (venue, year, instrument).
 2. Use `launch-cefi-sharded-backfill.sh` (366-VM rollout pattern; SSOT in
-   [05-infrastructure/vm-tarball-deployment.md](../05-infrastructure/vm-tarball-deployment.md)).
+   [05-infrastructure/vm-tarball-deployment.md](/codex/05-infrastructure/vm-tarball-deployment.md)).
 3. Existing rollout `run-ts=20260429-154202` covers options+futures combined; verify completion + gap-fill any
    `attempted_failed` shards.
 
@@ -343,7 +358,7 @@ For each P0/P1 data type:
 1. **POLYMARKET**: from 2020-06-12 (Polymarket launch date in `PREDICTION_SOURCE_COVERAGE_START`).
 2. **KALSHI**: from 2021-07-19 (launch).
 3. Per-sub-category cutoffs (crypto / macro / football) for POLYMARKET — see
-   [02-data/prediction-schema-paths.md](../02-data/prediction-schema-paths.md).
+   [02-data/prediction-schema-paths.md](/codex/02-data/prediction-schema-paths.md).
 
 ### DeFi
 

@@ -19,15 +19,15 @@ tags:
   [canonicalisation, cefi, chain-tail, quote-margin, v5-v6, partitioned-writer, write-guard, migration, operator-ruling]
 related:
   [
-    features_by_date_root_canonicalisation_2026_07_21.md,
-    instrument_availability_hive_canonicalisation_2026_07_21.md,
-    tradfi_canonical_path_migration_design_2026_07_19.md,
-    deribit_live_options_chain_path_noncanonical_2026_07_21.md,
-    uac_build_instrument_id_colon_strictness_mtds_ripple_2026_07_21.md,
-    ../../../codex/02-data/cross-asset-canonical-target-ssot.md,
-    ../../../codex/02-data/canonical-cutover-register.md,
-    ../../../codex/02-data/non-canonical-path-inventory.md,
-    ../../../codex/02-data/shard-granularity-cefi.md,
+    /plans/active/issues/features_by_date_root_canonicalisation_2026_07_21.md,
+    /plans/active/issues/instrument_availability_hive_canonicalisation_2026_07_21.md,
+    /plans/active/issues/tradfi_canonical_path_migration_design_2026_07_19.md,
+    /plans/active/issues/deribit_live_options_chain_path_noncanonical_2026_07_21.md,
+    /plans/active/issues/uac_build_instrument_id_colon_strictness_mtds_ripple_2026_07_21.md,
+    /codex/02-data/cross-asset-canonical-target-ssot.md,
+    /codex/02-data/canonical-cutover-register.md,
+    /codex/02-data/non-canonical-path-inventory.md,
+    /codex/02-data/shard-granularity-cefi.md,
   ]
 created: 2026-07-21
 last_updated: 2026-07-21
@@ -182,7 +182,7 @@ papering over them.
 - [ ] 7. [DATA] P1. Re-sync the manifest / data-status render for the migrated cefi chain cells so all four canonical
       surfaces agree post-migration. — **DEFERRED to Round 2** (depends on todo 6).
 - [ ] 8. [REVIEW] P1. On W1 ship, record the cefi chain-tail v6 cutover date in
-      `codex/02-data/canonical-cutover-register.md` (repo@sha) and update the §7 summary cefi `chain tail` cell from
+      `/codex/02-data/canonical-cutover-register.md` (repo@sha) and update the §7 summary cefi `chain tail` cell from
       "v5/v6 dual hazard" to the ruled v6 (migration_pending → EXECUTED). — **DEFERRED**: gated on the MTDS-side W1 code
       actually shipping (todos 2/3's MTDS portion), which did not happen this session.
 

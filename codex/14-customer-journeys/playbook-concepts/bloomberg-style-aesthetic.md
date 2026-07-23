@@ -3,8 +3,8 @@ doc_type: codex-ssot
 title: Bloomberg-style aesthetic
 summary:
   Bloomberg-terminal UX principles for every post-login surface — dense scannable tables, knowledgeable-user initial
-  state, 90%-invisible-by-default, 2-3-click-to-detail, keyboard-first — plus anti-patterns and colour/typography
-  rules; the public marketing homepage is intentionally exempt.
+  state, 90%-invisible-by-default, 2-3-click-to-detail, keyboard-first — plus anti-patterns and colour/typography rules;
+  the public marketing homepage is intentionally exempt.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -12,10 +12,17 @@ stage: [meta]
 repos: [unified-trading-system-ui]
 scope: [engineer, admin, sales]
 tags: [ui, aesthetic, ux, design, navigation, testing]
-related: [../information-architecture.md, visibility-slicing.md]
+related: [../information-architecture.md, /codex/14-customer-journeys/playbook-concepts/visibility-slicing.md]
 created: 2026-04-19
 authoritative_for: [Bloomberg-style post-login UI aesthetic principles]
-referenced_by: [codex/14-customer-journeys/README.md, codex/14-customer-journeys/information-architecture.md, codex/14-customer-journeys/playbook-concepts/README.md, codex/14-customer-journeys/playbooks/01-marketing-pre-first-call.md, codex/14-customer-journeys/presentations/target-experience-post-refactor.md]
+referenced_by:
+  [
+    /codex/14-customer-journeys/README.md,
+    /codex/14-customer-journeys/information-architecture.md,
+    /codex/14-customer-journeys/playbook-concepts/README.md,
+    /codex/14-customer-journeys/playbooks/01-marketing-pre-first-call.md,
+    /codex/14-customer-journeys/presentations/target-experience-post-refactor.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

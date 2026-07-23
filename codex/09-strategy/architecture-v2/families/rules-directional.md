@@ -1,9 +1,9 @@
 ---
 doc_type: codex-ssot
-title: 'Family: Rules Directional'
+title: "Family: Rules Directional"
 summary:
-  The Rules Directional strategy family — 2 archetypes (continuous vs event-settled) firing hard-coded if-else rules
-  on features (TA, statistical thresholds, sports-timing) via a versioned YAML rule registry + evaluator; edge is
+  The Rules Directional strategy family — 2 archetypes (continuous vs event-settled) firing hard-coded if-else rules on
+  features (TA, statistical thresholds, sports-timing) via a versioned YAML rule registry + evaluator; edge is
   threshold-crossed with per-rule hit-rate monitoring that auto-retires stale rules.
 status: current
 nature: ssot
@@ -12,16 +12,19 @@ stage: [meta]
 repos: [features-service, strategy-service]
 scope: [engineer, admin]
 tags: [strategy, rules, features, odds, execution, cefi, tradfi]
-related:
-  [
-    ml-directional.md,
-    event-driven.md,
-    ../archetypes/rules-directional-continuous.md,
-    ../axes/signal-sources.md,
-  ]
+related: [ml-directional.md, event-driven.md, ../archetypes/rules-directional-continuous.md, ../axes/signal-sources.md]
 created: 2026-04-17
 authoritative_for: [Rules Directional strategy family spec (alpha thesis + 2 archetypes)]
-referenced_by: [codex/09-strategy/architecture-v2/README.md, codex/09-strategy/architecture-v2/archetypes/rules-directional-continuous.md, codex/09-strategy/architecture-v2/archetypes/rules-directional-event-settled.md, codex/09-strategy/architecture-v2/category-instrument-coverage.md, codex/09-strategy/architecture-v2/families/arbitrage-structural.md, codex/09-strategy/architecture-v2/families/event-driven.md, codex/09-strategy/architecture-v2/families/ml-directional.md]
+referenced_by:
+  [
+    /codex/09-strategy/architecture-v2/README.md,
+    /codex/09-strategy/architecture-v2/archetypes/rules-directional-continuous.md,
+    /codex/09-strategy/architecture-v2/archetypes/rules-directional-event-settled.md,
+    /codex/09-strategy/architecture-v2/category-instrument-coverage.md,
+    /codex/09-strategy/architecture-v2/families/arbitrage-structural.md,
+    /codex/09-strategy/architecture-v2/families/event-driven.md,
+    /codex/09-strategy/architecture-v2/families/ml-directional.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

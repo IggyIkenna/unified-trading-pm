@@ -25,9 +25,9 @@ related:
     plans/active/defi_dedicated_bucket_shared_migration_2026_07_13.md,
     plans/active/bucket_iam_write_protection_per_tier_2026_06_09.md,
     plans/active/bucket_fold_closeout_2026_07_17.md,
-    codex/05-infrastructure/bucket-isolation-model.md,
-    codex/05-infrastructure/manifest-consolidator-ssot.md,
-    codex/02-data/pipeline-mode-partition.md,
+    /codex/05-infrastructure/bucket-isolation-model.md,
+    /codex/05-infrastructure/manifest-consolidator-ssot.md,
+    /codex/02-data/pipeline-mode-partition.md,
   ]
 created: "2026-07-17"
 last_updated: "2026-07-17"
@@ -75,9 +75,9 @@ design's counts are 2026-07-13).
 
 ## Codex SSOTs (read before touching — plan↔codex drift is review-blocking)
 
-- `codex/05-infrastructure/bucket-isolation-model.md` — Group B naming; features rows → folded per-AG shape (closeout).
-- `codex/05-infrastructure/manifest-consolidator-ssot.md` — N per-AG feature consolidator jobs → 5 per-AG-bucket jobs.
-- `codex/02-data/pipeline-mode-partition.md` — reader-fallback discipline; `_KIND_ALIASES` soft-window.
+- `/codex/05-infrastructure/bucket-isolation-model.md` — Group B naming; features rows → folded per-AG shape (closeout).
+- `/codex/05-infrastructure/manifest-consolidator-ssot.md` — N per-AG feature consolidator jobs → 5 per-AG-bucket jobs.
+- `/codex/02-data/pipeline-mode-partition.md` — reader-fallback discipline; `_KIND_ALIASES` soft-window.
 - Design cross-cutting: [[bucket_estate_fold_design_2026_07_13]] §2.A (consolidator), §2.B (BQ external tables), §2.C
   (IAM), §2.D (alias), §2.E (lifecycle).
 
@@ -106,18 +106,19 @@ design's counts are 2026-07-13).
       (ml Fold-B deserialize gate), features-service@1368732a (all 6 family writers + 4 `-USD` test aligns),
       deployment-service@2a1e415 (authoring yaml), ml-service@01cb7fd (feature-read repoints + `object_key_prefix`).
       Each safe-standalone (no redeploy → deployed services keep old paths+buckets). **deployment-api DEFERRED**
-      (display-only `batch_config_utils.py`; its tree co-mingles a Fold-B ml-store display repoint +
-      a separate `data_status` axis-census WIP — ship those in their own scoped commits, not this Fold-A cutover).
-- [x] ✅ [CODE] P1. **Re-mount BQ feature_external external tables** — **DONE 2026-07-18.** Only ONE external table exists
-      (`uts_feature_external.defi_onchain_features`, TF-managed, ml purpose); `bq update --external_table_definition`
-      re-pointed sourceUris + hive sourceUriPrefix `features-onchain-defi/by_date/*` → `features-defi-prd/onchain/by_date/*`.
-      VERIFIED: `SELECT COUNT(*) WHERE day='2026-01-25'` = **766,074 rows** from the folded prefix.
+      (display-only `batch_config_utils.py`; its tree co-mingles a Fold-B ml-store display repoint + a separate
+      `data_status` axis-census WIP — ship those in their own scoped commits, not this Fold-A cutover).
+- [x] ✅ [CODE] P1. **Re-mount BQ feature_external external tables** — **DONE 2026-07-18.** Only ONE external table
+      exists (`uts_feature_external.defi_onchain_features`, TF-managed, ml purpose);
+      `bq update --external_table_definition` re-pointed sourceUris + hive sourceUriPrefix
+      `features-onchain-defi/by_date/*` → `features-defi-prd/onchain/by_date/*`. VERIFIED:
+      `SELECT COUNT(*) WHERE day='2026-01-25'` = **766,074 rows** from the folded prefix.
 - [x] ✅ [INFRA] P1. **Consolidator retarget (no redeploy — features-service already deployed 1a1874a8)** — **DONE
       2026-07-18.** Retargeted 3 per-kind consolidators to per-AG folded buckets via DIRECT gcloud (delta-one-cefi→
       features-cefi-prd, onchain-defi→features-defi-prd, delta-one-tradfi→features-tradfi-prd); calendar+sports already
-      on folded `-prd`; deleted 3 redundant (delta-one-defi, volatility-cefi/tradfi). VERIFIED onchain-defi run wrote root
-      `features-defi-prd/_index/latest.json`. (single-root, not per-kind — consolidator only supports `--bucket`; reader
-      reads root `_index/` so correct. Naming warts → closeout.)
+      on folded `-prd`; deleted 3 redundant (delta-one-defi, volatility-cefi/tradfi). VERIFIED onchain-defi run wrote
+      root `features-defi-prd/_index/latest.json`. (single-root, not per-kind — consolidator only supports `--bucket`;
+      reader reads root `_index/` so correct. Naming warts → closeout.)
 - [x] ✅ [INFRA] P1. **Delete sources + TF-reconcile** — **DONE 2026-07-18.** DELETED all 15 legacy per-kind buckets
       (features-{delta-one,volatility,onchain,xinstrument,mtf}-* incl -test). SAFETY: parity pre-verified — big legacy
       (delta-one-cefi 314, onchain-defi 727, xinstrument-pred 207, delta-one-cefi-test 315) migrated to folded (BQ 766k
@@ -197,8 +198,8 @@ design's counts are 2026-07-13).
   (unified-trading-pm@f6e98bbdd) so the fleet auto-re-pins to the fresh base image (unblocks execution/strategy Phase-D
   builds). **AWS deprioritized** — provisioned but will not over-invest; GCP is the correctness surface.
 - **2026-07-18, CUTOVER IMPLEMENTED + ADVERSARIALLY VERIFIED (workflow `wf_74794c43-894`, T0/T1/T2/verify, 0 errors) —
-  diffs UNCOMMITTED in the tree, shipping in progress.** Shape (b). **Verify verdict: CORRECT on every critical check** —
-  RESOLVER PASS (all 7 retired kinds + 2 re-pointed consumer aliases → `features-{ag}-{env}-{pid}`, prd+test, gcp+aws;
+  diffs UNCOMMITTED in the tree, shipping in progress.** Shape (b). **Verify verdict: CORRECT on every critical check**
+  — RESOLVER PASS (all 7 retired kinds + 2 re-pointed consumer aliases → `features-{ag}-{env}-{pid}`, prd+test, gcp+aws;
   zero errors); MISSED-ROWS PASS (all 4 design-missed PATH_REGISTRY rows delta_one/onchain/lst_seasonal_rewards/
   volatility + 4 sports rows + `FEATURES_DELTA_ONE` const repointed w/ `{kind}/` prefix); onchain-writer TypeError
   BUG-FIX PASS; CI-fixture + 4 yaml copies PASS (PM mirror excluded; retired keys kept for soft window). CONCERNs
@@ -208,72 +209,76 @@ design's counts are 2026-07-13).
   divergence is PRE-EXISTING (RISK#6, follow-up finding). (b) PATH_REGISTRY + ml-inference/training + strategy tracer
   hardcode `-prd-` (env-axis-less, matches ml-fold precedent) → identical in prod (the cutover target); latent test-env
   divergence (acceptable). (c) stale mtf docs (P3). **SHIP ORDER (fleet-safe):** ✅ (1) CI-fixture
-  `unified-trading-pm@8587ee1a1` → (2) UTL `--files 'cloud_interface/bucket_naming.py paths/registry.py
-  tests/fixtures/cloud-providers.yaml tests/cloud_interface/unit/test_bucket_naming.py domain_client/artifact_store.py
-  tests/unit/test_model_registry.py'` (BUNDLES the ml-Fold-B P1 security gate; clean 6-file scope, UTL QG running
-  `b2zl236hr`) → (3) deployment-service `--files configs/cloud-providers.yaml` (foreign tfvars WIP present) → (4) UAC
+  `unified-trading-pm@8587ee1a1` → (2) UTL
+  `--files 'cloud_interface/bucket_naming.py paths/registry.py tests/fixtures/cloud-providers.yaml tests/cloud_interface/unit/test_bucket_naming.py domain_client/artifact_store.py tests/unit/test_model_registry.py'`
+  (BUNDLES the ml-Fold-B P1 security gate; clean 6-file scope, UTL QG running `b2zl236hr`) → (3) deployment-service
+  `--files configs/cloud-providers.yaml` (foreign tfvars WIP present) → (4) UAC
   `--files unified_api_contracts/config/cloud-providers.yaml` `--skip-preflight` (foreign UAC dirty WIP) → (5)
-  features-service (all writer/reader edits) → (6) deployment-api `--files
-  deployment_api/routes/batch_config_utils.py` ONLY (tree has FOREIGN ml-store + `_axis_census` WIP — do NOT bundle) →
-  (7) ml-service (inference/config.py training/config.py dependency_checker.py) → (8) strategy-service
-  (scripts/trace_all_carry_archetypes.py). **THEN:** BQ re-mount (`bigquery_feature_external_tables.tf`
-  `defi__onchain_features` → `features-defi-prd`, static_prefix `onchain/by_date/`; verify-query rows) + consolidator
-  (GCP 8→6 / AWS 9→6 TF + gen_consolidator_catalog) + features-svc redeploy+verify-exercised + TF-state import
-  (features-{cefi,defi,tradfi} + ml-store) + Phase-E delete (time-gated). Full per-file spec: scratchpad
-  `fold_a_cutover_spec.md` + workflow `wf_74794c43-894` transcript. NOTE: heavy multi-slot PM contention — commits need
-  `--no-verify` fast-path + sync-retry (branch-drift hook races the automated main→LDR backmerge).
+  features-service (all writer/reader edits) → (6) deployment-api `--files deployment_api/routes/batch_config_utils.py`
+  ONLY (tree has FOREIGN ml-store + `_axis_census` WIP — do NOT bundle) → (7) ml-service (inference/config.py
+  training/config.py dependency_checker.py) → (8) strategy-service (scripts/trace_all_carry_archetypes.py). **THEN:** BQ
+  re-mount (`bigquery_feature_external_tables.tf` `defi__onchain_features` → `features-defi-prd`, static_prefix
+  `onchain/by_date/`; verify-query rows) + consolidator (GCP 8→6 / AWS 9→6 TF + gen_consolidator_catalog) + features-svc
+  redeploy+verify-exercised + TF-state import (features-{cefi,defi,tradfi} + ml-store) + Phase-E delete (time-gated).
+  Full per-file spec: scratchpad `fold_a_cutover_spec.md` + workflow `wf_74794c43-894` transcript. NOTE: heavy
+  multi-slot PM contention — commits need `--no-verify` fast-path + sync-retry (branch-drift hook races the automated
+  main→LDR backmerge).
 - **2026-07-18, UTL KEYSTONE SHIP — root-caused the blocker (NOT my diff) + partially fixed.** The Fold-A UTL ship
   (`--files` the 6 files: `cloud_interface/bucket_naming.py`, `config_interface/paths/registry.py`,
   `tests/fixtures/cloud-providers.yaml`, `tests/cloud_interface/unit/test_bucket_naming.py` + the bundled ml-Fold-B P1
-  security gate `domain_client/artifact_store.py` + `tests/unit/test_model_registry.py`) is blocked ONLY by a local
-  QG that is RED on **editable-sibling-ahead** foreign tests — NOT my code. PROOF: local HEAD == origin/live-defi-rollout
+  security gate `domain_client/artifact_store.py` + `tests/unit/test_model_registry.py`) is blocked ONLY by a local QG
+  that is RED on **editable-sibling-ahead** foreign tests — NOT my code. PROOF: local HEAD == origin/live-defi-rollout
   (49723b77, 0/0) and **origin UTL quality-gates-v2 is GREEN at that exact SHA** (10:29:56Z). Two stale tests: (1)
   `test_instruments_catalog_reader::test_missing_catalog_returns_source_returned_zero` — FIXED (bumped its fixture date
   2022-09-01→2023-06-01; AAVE_V3-ETHEREUM launch was corrected 2022-03-16→2023-01-27 per
-  `issues/uac_defi_launch_date_registry_drift_2026_07_18.md`, so the old date is now pre-launch; 2023-06-01 is post-launch
-  under BOTH old+new dates → safe for pinned-wheel CI too). (2) `test_derive_instrument_id::test_tradfi_equity` — expects
-  `XNAS:EQUITY:AAPL` but my editable instruments-service sibling (in-sync w/ origin, 0/0, HEAD 4b4b9a7d) produces
-  `AAPL-USD` from an UNRELEASED committed change; UTL CI uses the PINNED IS wheel (produces `AAPL`) → green. **This test
-  is NOT safely fixable by me** — changing it to `AAPL-USD` would break the pinned-wheel CI; it self-resolves when the
-  `-USD` IS wheel releases + the owning slot updates it. **My launch-date fix is UNCOMMITTED in the UTL tree (durable).**
-  **RESUME RECIPE for the loop:** (a) `cd unified-trading-library && bash scripts/quality-gates.sh --no-fix` — if the
-  ONLY failure is `test_derive_instrument_id` (editable-sibling churn), re-check periodically; when it greens (IS wheel
-  released / test updated by its owner), (b) quickmerge the 6 files + `tests/unit/test_instruments_catalog_reader.py`
-  (7 total, `--skip-preflight`), (c) then the leaf yaml/code ships (deployment-service `configs/cloud-providers.yaml`;
-  UAC `unified_api_contracts/config/cloud-providers.yaml`; features-service; deployment-api
-  `routes/batch_config_utils.py` ONLY; ml-service; strategy-service), (d) BQ re-mount + consolidator + redeploy+verify +
-  TF-state import. Do NOT `--no-verify`-ship over the derive test (it's a real behavior fork for the pinned wheel).
+  `issues/uac_defi_launch_date_registry_drift_2026_07_18.md`, so the old date is now pre-launch; 2023-06-01 is
+  post-launch under BOTH old+new dates → safe for pinned-wheel CI too). (2)
+  `test_derive_instrument_id::test_tradfi_equity` — expects `XNAS:EQUITY:AAPL` but my editable instruments-service
+  sibling (in-sync w/ origin, 0/0, HEAD 4b4b9a7d) produces `AAPL-USD` from an UNRELEASED committed change; UTL CI uses
+  the PINNED IS wheel (produces `AAPL`) → green. **This test is NOT safely fixable by me** — changing it to `AAPL-USD`
+  would break the pinned-wheel CI; it self-resolves when the `-USD` IS wheel releases + the owning slot updates it. **My
+  launch-date fix is UNCOMMITTED in the UTL tree (durable).** **RESUME RECIPE for the loop:** (a)
+  `cd unified-trading-library && bash scripts/quality-gates.sh --no-fix` — if the ONLY failure is
+  `test_derive_instrument_id` (editable-sibling churn), re-check periodically; when it greens (IS wheel released / test
+  updated by its owner), (b) quickmerge the 6 files + `tests/unit/test_instruments_catalog_reader.py` (7 total,
+  `--skip-preflight`), (c) then the leaf yaml/code ships (deployment-service `configs/cloud-providers.yaml`; UAC
+  `unified_api_contracts/config/cloud-providers.yaml`; features-service; deployment-api `routes/batch_config_utils.py`
+  ONLY; ml-service; strategy-service), (d) BQ re-mount + consolidator + redeploy+verify + TF-state import. Do NOT
+  `--no-verify`-ship over the derive test (it's a real behavior fork for the pinned wheel).
 
 - **2026-07-18, `/autonomous` — KEYSTONE UNBLOCKED (prior diagnosis CORRECTED) + T0 code cutover SHIPPING.** The prior
   entry's "wait for the IS wheel / test owner to fix `test_derive_instrument_id`" was a **MISDIAGNOSIS**. Re-diagnosed
   from first principles: the failure is `test_tradfi_equity` asserting the pre-suffix `XNAS:EQUITY:AAPL`, but **UAC
   shipped `uac@33e3f369 fix(tradfi)` today 16:43Z** appending the `-USD` quote suffix to EQUITY/CURRENCY/ETF/BOND/
   COMMODITY canonical ids (INDEX excluded). Decisive proof it was NOT "wait for CI": UTL's `quality-gates-v2` CI clones
-  UAC **at `live-defi-rollout` HEAD, content-first** (python-quality-gates-v2.yml clone_repo L470-489 — the version-aware
-  tag is only a network-failure fallback), i.e. CI == local editable sibling. So the stale test breaks IDENTICALLY in CI
-  (last green CI run 10:29Z predated the 16:43Z UAC ship). The fix was ALWAYS mine — a cross-repo contract alignment, not
-  a wait. **SHIPPED (T0 code layer, each safe-standalone — no redeploy, deployed services keep old paths+buckets):**
+  UAC **at `live-defi-rollout` HEAD, content-first** (python-quality-gates-v2.yml clone_repo L470-489 — the
+  version-aware tag is only a network-failure fallback), i.e. CI == local editable sibling. So the stale test breaks
+  IDENTICALLY in CI (last green CI run 10:29Z predated the 16:43Z UAC ship). The fix was ALWAYS mine — a cross-repo
+  contract alignment, not a wait. **SHIPPED (T0 code layer, each safe-standalone — no redeploy, deployed services keep
+  old paths+buckets):**
   1. ✅ `test_derive_instrument_id`→`AAPL-USD` + `test_instruments_catalog_reader` AAVE date — **UTL@ac2e2fef**.
   2. ✅ UAC folded `features` yaml key (GCP+AWS, additive/soft-window) — **UAC@cb951936**.
   3. ✅ UTL Fold-A resolver (`_KIND_ALIASES` 5 kinds + `PATH_REGISTRY` repoint + fixture + test) — **UTL@4f0bcc34**.
-  **IN FLIGHT this tick:** features-service (22 files, FF-pulled clean, QG running), ml-service (8 feature-read repoints,
-  `object_key_prefix` param), deployment-api (`batch_config_utils.py` + Fold-A subset — EXCLUDE the co-resident foreign
-  `data_status` axis-census WIP), deployment-service `configs/cloud-providers.yaml`. **REDEPLOY+VERIFY (todo below)
-  stays LAST** — the misplaced-write hazard only materialises on redeploy, so all code lands on LDR first. The ml Fold-B
-  `artifact_store` deserialize gate (co-location security) is a separate UTL commit, pending.
+     **IN FLIGHT this tick:** features-service (22 files, FF-pulled clean, QG running), ml-service (8 feature-read
+     repoints, `object_key_prefix` param), deployment-api (`batch_config_utils.py` + Fold-A subset — EXCLUDE the
+     co-resident foreign `data_status` axis-census WIP), deployment-service `configs/cloud-providers.yaml`.
+     **REDEPLOY+VERIFY (todo below) stays LAST** — the misplaced-write hazard only materialises on redeploy, so all code
+     lands on LDR first. The ml Fold-B `artifact_store` deserialize gate (co-location security) is a separate UTL
+     commit, pending.
 
 - **2026-07-18, `/autonomous` — Fold-A CODE CUTOVER COMPLETE (all 6 repos on LDR).** Full shipped set: UTL@ac2e2fef
   (keystone), UAC@cb951936 (yaml), UTL@4f0bcc34 (resolver), UTL@bccc4ca4 (ml Fold-B gate), features-service@1368732a
-  (writers + 4 more `-USD` ETF/COMMODITY test aligns caught by its QG — same shipped-contract drift, `test_paired_dispatch`),
-  deployment-service@2a1e415 (authoring yaml), ml-service@01cb7fd (readers). Ship order honoured the dep-gate: UAC yaml
-  first (leaf gates clone UAC-LDR for the `features` key), then UTL resolver, then leaves. Contention handled inline
-  (peer backmerge pulled, ml-gate re-gated after drift, FF-pulls clean via empty-overlap stash/pop). **NOT YET DONE
-  (gated follow-ons):** (a) **REDEPLOY+VERIFY** — pipeline-driven: LDR→main promote (*/15, v2-gated) → features-service
-  cloudbuild → my `cloudbuild.yaml` STEP 6.5 re-pins `features-service-sports-job` to `:latest`. Verify-exercised = a
-  feature batch run WRITES under `features-{ag}-{env}/{kind}/` + an ml READ resolves it (cite `Evidence: cloudbuild=<id>`
-  SUCCESS). ASYNC — awaits the promote+build; a later tick verifies. (b) **BQ re-mount** — gated on the writer being
-  deployed+writing (migrated historical data is already at the folded prefix, but time the re-mount WITH redeploy so new
-  writes + BQ agree). (c) **Consolidator N→5 retarget** (+ AWS `features-onchain-cefi` drift reconcile). (d) **Delete**
-  (Phase E, zero-reads window). **deployment-api** batch_config_utils Fold-A repoint DEFERRED (display-only; its tree
-  co-mingles an unshipped Fold-B ml-store display repoint in `deployment_api_config.py` + a `data_status` axis-census
-  WIP — ship each in its own scoped commit, tracked as a loose end).
+  (writers + 4 more `-USD` ETF/COMMODITY test aligns caught by its QG — same shipped-contract drift,
+  `test_paired_dispatch`), deployment-service@2a1e415 (authoring yaml), ml-service@01cb7fd (readers). Ship order
+  honoured the dep-gate: UAC yaml first (leaf gates clone UAC-LDR for the `features` key), then UTL resolver, then
+  leaves. Contention handled inline (peer backmerge pulled, ml-gate re-gated after drift, FF-pulls clean via
+  empty-overlap stash/pop). **NOT YET DONE (gated follow-ons):** (a) **REDEPLOY+VERIFY** — pipeline-driven: LDR→main
+  promote (*/15, v2-gated) → features-service cloudbuild → my `cloudbuild.yaml` STEP 6.5 re-pins
+  `features-service-sports-job` to `:latest`. Verify-exercised = a feature batch run WRITES under
+  `features-{ag}-{env}/{kind}/` + an ml READ resolves it (cite `Evidence: cloudbuild=<id>` SUCCESS). ASYNC — awaits the
+  promote+build; a later tick verifies. (b) **BQ re-mount** — gated on the writer being deployed+writing (migrated
+  historical data is already at the folded prefix, but time the re-mount WITH redeploy so new writes + BQ agree). (c)
+  **Consolidator N→5 retarget** (+ AWS `features-onchain-cefi` drift reconcile). (d) **Delete** (Phase E, zero-reads
+  window). **deployment-api** batch_config_utils Fold-A repoint DEFERRED (display-only; its tree co-mingles an unshipped
+  Fold-B ml-store display repoint in `deployment_api_config.py` + a `data_status` axis-census WIP — ship each in its own
+  scoped commit, tracked as a loose end).

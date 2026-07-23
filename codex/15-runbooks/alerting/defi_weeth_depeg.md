@@ -13,14 +13,21 @@ stage: [meta]
 repos: [alerting-service, features-service]
 scope: [engineer, admin]
 tags: [alerting, runbook, defi, features, kill-switch, escalation, live-trading]
-related: [codex/15-runbooks/alerting/operator-playbook.md, codex/15-runbooks/alerting/defi_health_factor_critical.md, codex/15-runbooks/alerting/kill_switch_defi_liquidation_risk.md]
+related:
+  [
+    /codex/15-runbooks/alerting/operator-playbook.md,
+    /codex/15-runbooks/alerting/defi_health_factor_critical.md,
+    /codex/15-runbooks/alerting/kill_switch_defi_liquidation_risk.md,
+  ]
 created: 2026-05-08
 owner: ikenna
 cadence: on-demand
 verifier: operator
 last_executed:
 code_refs:
-authoritative_for: Operator response when weETH/ETH peg deviation exceeds tolerance. weETH is core LST collateral for the carry_staked_basis archetype; depeg events compound HF risk.
+authoritative_for:
+  Operator response when weETH/ETH peg deviation exceeds tolerance. weETH is core LST collateral for the
+  carry_staked_basis archetype; depeg events compound HF risk.
 referenced_by: [plans/active/alerting_service_live_rules_2026_05_07.md]
 ---
 

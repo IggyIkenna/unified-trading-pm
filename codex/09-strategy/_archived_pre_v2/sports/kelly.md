@@ -2,10 +2,9 @@
 doc_type: codex-ssot
 title: Kelly Criterion
 summary: >-
-  [SUPERSEDED, pre-v2] Sports Kelly-criterion position sizing (f* = (p·b − q)/b) — fractional / portfolio /
-  simultaneous / venue-constrained variants (half-Kelly default, 5% max bet, 2% min edge), maximising
-  long-run log-wealth; shared compute_kelly_fraction() consumed by the ML sports strategies. Replaced by
-  architecture-v2 axes/staking-methods.
+  [SUPERSEDED, pre-v2] Sports Kelly-criterion position sizing (f* = (p·b − q)/b) — fractional / portfolio / simultaneous
+  / venue-constrained variants (half-Kelly default, 5% max bet, 2% min edge), maximising long-run log-wealth; shared
+  compute_kelly_fraction() consumed by the ML sports strategies. Replaced by architecture-v2 axes/staking-methods.
 status: superseded
 nature: ssot
 asset_group: [meta]
@@ -13,10 +12,20 @@ stage: [meta]
 repos: [execution-service, ml-service, strategy-service, unified-api-contracts, unified-trading-pm]
 scope: [engineer, admin]
 tags: [strategy, sports, staking, odds, execution]
-related: [staking-methods.md, value-betting.md, ../../architecture-v2/axes/staking-methods.md]
+related:
+  [
+    staking-methods.md,
+    /codex/09-strategy/_archived_pre_v2/sports/value-betting.md,
+    ../../architecture-v2/axes/staking-methods.md,
+  ]
 created: 2026-06-16
 authoritative_for:
-referenced_by: [codex/09-strategy/_archived_pre_v2/STRATEGY_CATALOG_pre_v2.md, codex/09-strategy/_archived_pre_v2/sports/staking-methods.md, codex/09-strategy/_archived_pre_v2/sports/value-betting.md]
+referenced_by:
+  [
+    /codex/09-strategy/_archived_pre_v2/STRATEGY_CATALOG_pre_v2.md,
+    /codex/09-strategy/_archived_pre_v2/sports/staking-methods.md,
+    /codex/09-strategy/_archived_pre_v2/sports/value-betting.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

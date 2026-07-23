@@ -24,7 +24,7 @@ tags:
 related: [02-data/availability-manifest-and-data-status.md, 06-coding-standards/validation-and-errors.md]
 created: 2026-05-06
 authoritative_for: [2026-05-06 writegate post-plan reality (10 cross-cutting principles + stale-doc banner registry)]
-referenced_by: [codex/10-audit/MASTER_READINESS_LIVE_DEFI_2026_05_23.md]
+referenced_by: [/codex/10-audit/MASTER_READINESS_LIVE_DEFI_2026_05_23.md]
 owner:
 last_reviewed:
 code_refs:

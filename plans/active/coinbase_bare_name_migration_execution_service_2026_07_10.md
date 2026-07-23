@@ -12,7 +12,8 @@ stage: [execution]
 repos: [execution-service]
 scope: [engineer]
 tags: [venue-canonicalisation, cefi, execution-service, migration, follow-on]
-related: [coinbase_bare_name_migration_2026_07_06.md, issues/wsfeedconnector_phase35_gap_2026_07_06.md]
+related:
+  [/plans/archive/2026_07/coinbase_bare_name_migration_2026_07_06.md, issues/wsfeedconnector_phase35_gap_2026_07_06.md]
 created: 2026-07-10
 last_updated: 2026-07-10
 parent_epic: instruments_master
@@ -132,7 +133,7 @@ cleanup (S1 below covers the audit + decision).
 ## 6. Codex SSOTs consulted
 
 - `coinbase_bare_name_migration_2026_07_06.md` §2d, §3, §7 (the parent plan this follows on from).
-- `codex/04-architecture/defi-execution-overview.md` (execution-service craft boundary — read on execution, not at
+- `/codex/04-architecture/defi-execution-overview.md` (execution-service craft boundary — read on execution, not at
   filing time, since this data_engineering worker does not touch execution-service code).
 
 ## Progress Log

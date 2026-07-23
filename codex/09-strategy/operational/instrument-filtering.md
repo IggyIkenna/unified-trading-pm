@@ -3,8 +3,8 @@ doc_type: codex-ssot
 title: Instrument Filtering — DeFi Pool & Market Discovery
 summary:
   The DeFi instrument-filtering pipeline keyed on the ~65-symbol DEFI_MAJOR_ASSET_SYMBOLS whitelist (UAC
-  defi_major_assets.py) — per-adapter rules (both-sides-major for DEX pools, base-asset-major for lending, TVL
-  minimums for Solana), address maps for subgraph/RPC filtering, and strategy-level underlying families.
+  defi_major_assets.py) — per-adapter rules (both-sides-major for DEX pools, base-asset-major for lending, TVL minimums
+  for Solana), address maps for subgraph/RPC filtering, and strategy-level underlying families.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -15,11 +15,21 @@ tags: [instruments, defi, catalogue, uac, registry, data-quality]
 related:
   [
     ../../04-architecture/instruments-service-as-ssot-for-mtds.md,
-    client-strategy-config.md,
+    /codex/09-strategy/operational/client-strategy-config.md,
   ]
 created: 2026-03-30
 authoritative_for: [DeFi instrument filtering rules + DEFI_MAJOR_ASSET_SYMBOLS major-asset whitelist]
-referenced_by: [codex/09-strategy/README.md, codex/09-strategy/_archived_pre_v2/defi/aave-lending.md, codex/09-strategy/_archived_pre_v2/defi/basis-trade.md, codex/09-strategy/_archived_pre_v2/defi/btc-basis-trade.md, codex/09-strategy/_archived_pre_v2/defi/btc-lending-yield.md, codex/09-strategy/_archived_pre_v2/defi/cross-chain-sor-rebalancing.md, codex/09-strategy/_archived_pre_v2/defi/cross-chain-yield-arb.md, codex/09-strategy/_archived_pre_v2/defi/ethena-benchmark.md]
+referenced_by:
+  [
+    /codex/09-strategy/README.md,
+    /codex/09-strategy/_archived_pre_v2/defi/aave-lending.md,
+    /codex/09-strategy/_archived_pre_v2/defi/basis-trade.md,
+    /codex/09-strategy/_archived_pre_v2/defi/btc-basis-trade.md,
+    /codex/09-strategy/_archived_pre_v2/defi/btc-lending-yield.md,
+    /codex/09-strategy/_archived_pre_v2/defi/cross-chain-sor-rebalancing.md,
+    /codex/09-strategy/_archived_pre_v2/defi/cross-chain-yield-arb.md,
+    /codex/09-strategy/_archived_pre_v2/defi/ethena-benchmark.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

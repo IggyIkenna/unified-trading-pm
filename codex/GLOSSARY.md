@@ -1,8 +1,9 @@
 ---
 doc_type: codex-ssot
 title: Glossary
-summary: Alphabetical codex-wide technical/architecture terminology — defines asset-class/venue/shard/batch-vs-live
-  vocabulary plus retired-library acronyms (USEI/UTEI/UDEI/UPI all ELIMINATED 2026-03-26).
+summary:
+  Alphabetical codex-wide technical/architecture terminology — defines asset-class/venue/shard/batch-vs-live vocabulary
+  plus retired-library acronyms (USEI/UTEI/UDEI/UPI all ELIMINATED 2026-03-26).
 status: current
 nature: ssot
 asset_group: [meta]
@@ -13,7 +14,7 @@ tags: [glossary, terminology, docspec, ssot-audit]
 related: [14-customer-journeys/glossary.md]
 created: 2026-03-27
 authoritative_for: [codex-wide technical/architecture terminology (asset-class/venue/shard/pipeline vocabulary)]
-referenced_by: [codex/14-customer-journeys/glossary.md]
+referenced_by: [/codex/14-customer-journeys/glossary.md]
 owner:
 last_reviewed:
 code_refs:

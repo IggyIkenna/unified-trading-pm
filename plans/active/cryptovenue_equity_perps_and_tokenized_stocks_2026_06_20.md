@@ -303,7 +303,7 @@ mechanics type; the equity identity moves to catalogue tags. **Implemented (root
   `_mvp_scope_capture.py` comments.
 - **Tests**: `test_mvp_scope.py`, `test_crypto_equity_link.py`, and the IS catalogue tests updated to assert the NEW
   behavior (equity perps are `PERPETUAL` + tagged `is_equity_perp`/`tracks_equity`; NVDA/META/AAPL populate
-  `tracks_equity`). **Codex**: `codex/02-data/cefi-capture-universe.md` updated.
+  `tracks_equity`). **Codex**: `/codex/02-data/cefi-capture-universe.md` updated.
 - **Effect**: catalogue `instrument_type` == manifest `instrument_type` (`PERPETUAL`) → the **WS-H double-seed blocker
   is resolved** (denominator reconciles). Prod catalogue re-stamped via the `--mode full` rebuild.
 

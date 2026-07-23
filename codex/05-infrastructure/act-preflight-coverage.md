@@ -12,7 +12,12 @@ stage: [meta]
 repos: [agent-orchestrator, unified-trading-pm]
 scope: [engineer, admin]
 tags: [ci, quality-gates, workflows, act, verification, runbook, infrastructure]
-related: [deployment-and-qg-strategy.md, cicd-setup.md, ../08-workflows/ci-cd-flow.md]
+related:
+  [
+    /codex/05-infrastructure/deployment-and-qg-strategy.md,
+    /codex/05-infrastructure/cicd-setup.md,
+    /codex/08-workflows/ci-cd-flow.md,
+  ]
 created: 2026-05-17
 authoritative_for: [act-preflight workflow local-coverage matrix]
 referenced_by:

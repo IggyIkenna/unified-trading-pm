@@ -12,7 +12,7 @@ stage: [meta]
 repos: [deployment-service, unified-trading-library, unified-trading-pm]
 scope: [engineer, admin]
 tags: [infrastructure, bucket, canonicalisation, storage]
-related: [codex/05-infrastructure/cloud-agnostic-script-pattern.md, codex/02-data/per-asset-group-bucket-layouts.md]
+related: [/codex/05-infrastructure/cloud-agnostic-script-pattern.md, /codex/02-data/per-asset-group-bucket-layouts.md]
 created: 2026-03-27
 authoritative_for:
   [
@@ -23,10 +23,10 @@ authoritative_for:
   ]
 referenced_by:
   [
-    codex/05-infrastructure/deployment-ui-architecture.md,
-    codex/05-infrastructure/deployment-ui-environment-tiers.md,
-    codex/09-strategy/architecture-v2/instruments-resolver-architecture.md,
-    codex/16-strategy-playbooks/infra-spec/stage-3e-g2-env-split.md,
+    /codex/05-infrastructure/deployment-ui-architecture.md,
+    /codex/05-infrastructure/deployment-ui-environment-tiers.md,
+    /codex/09-strategy/architecture-v2/instruments-resolver-architecture.md,
+    /codex/16-strategy-playbooks/infra-spec/stage-3e-g2-env-split.md,
     plans/archive/2026_07/bucket_env_split_rollout_2026_06.md,
     plans/active/bucket_iam_write_protection_per_tier_2026_06_09.md,
   ]

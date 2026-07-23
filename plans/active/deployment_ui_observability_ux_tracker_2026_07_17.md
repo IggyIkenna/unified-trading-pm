@@ -22,13 +22,13 @@ repos: [deployment-api, deployment-ui, deployment-service, unified-trading-libra
 scope: [engineer]
 tags: [deployment-ui, tracker, cost, billing, filters, search, logs, alerts, resource-timeline, observability]
 related:
-  - deployment_observability_expansion_2026_07_08.md
-  - deployment_ui_plain_routes_retire_cockpit_tabs_2026_07_17.md
-  - deployment_ui_cost_per_day_accuracy_2026_07_20.md
-  - deployment_ui_date_range_filter_and_search_2026_07_20.md
-  - deployment_ui_vm_log_viewer_2026_07_20.md
-  - deployment_alerts_ingestion_completeness_2026_07_20.md
-  - deployment_ui_alerts_page_rebuild_2026_07_20.md
+  - /plans/archive/2026_07/deployment_observability_expansion_2026_07_08.md
+  - /plans/active/deployment_ui_plain_routes_retire_cockpit_tabs_2026_07_17.md
+  - /plans/archive/2026_07/deployment_ui_cost_per_day_accuracy_2026_07_20.md
+  - /plans/archive/2026_07/deployment_ui_date_range_filter_and_search_2026_07_20.md
+  - /plans/archive/2026_07/deployment_ui_vm_log_viewer_2026_07_20.md
+  - /plans/active/deployment_alerts_ingestion_completeness_2026_07_20.md
+  - /plans/active/deployment_ui_alerts_page_rebuild_2026_07_20.md
 created: "2026-07-17"
 last_updated: "2026-07-17"
 parent_epic: observability_master
@@ -184,7 +184,7 @@ Path:
       vs derived figures are distinguishable; else no UI change. `pw:L2 ✓` + cited spec if touched.
 - [ ] [INFRA] P1. Ship (quickmerge `--agent --files`, cite `<repo>@<sha>`) + flip todos same turn (`docs(plans):`).
 - [ ] [REVIEW] P2. Post-phase codex audit — document the Cost/day attribution contract (three definitions, active-days
-      average, 24h basis, GCP-name/AWS-ARN join) in `codex/05-infrastructure/deployment-observability.md`.
+      average, 24h basis, GCP-name/AWS-ARN join) in `/codex/05-infrastructure/deployment-observability.md`.
 
 ### WS-1 success criteria
 
@@ -296,7 +296,7 @@ tail should show only the last **~200–500 lines** so the UI doesn't crash. The
   `/deployments/:name`) — it has a `run.log` link + a log-tail area + the events timeline (`detail-run-log`,
   `vm-events-timeline` testids).
 - GCS object ops MUST go through the UTL wrappers (`gcs_describe_object` for size/metadata; byte-range reads) — never
-  subprocess `gcloud`/`gsutil` (QG-enforced; `codex/05-infrastructure/gcs-object-operations.md`).
+  subprocess `gcloud`/`gsutil` (QG-enforced; `/codex/05-infrastructure/gcs-object-operations.md`).
 
 ### WS-4 todos
 
@@ -340,7 +340,7 @@ thorough alert coverage** — do that audit first, then write the plan.
   (`GET /api/logs/stream/{ref}`), with a `?logs=<target_ref>` deep-link param the tab owns.
 - Alert rows already deep-link a `deployment_target` to `/deployments/{target}` (pinned by `alerts-page.spec.ts`).
 - Alerting policy SSOTs exist and constrain the design — `agent-orchestrator-alerts` is actionable-only; CI alerts route
-  via the `notify-slack.yml` carrier with dedup keys/cooldowns (`codex/04-architecture/ci-alerting.md`,
+  via the `notify-slack.yml` carrier with dedup keys/cooldowns (`/codex/04-architecture/ci-alerting.md`,
   `…/agent-orchestrator-alerting.md`). Candidate feeds to audit against the ledger — ci-failures, AO alerts, kill-switch
   events, consolidator staleness, data-status RED, VM zombie-watchdog reaps, cost anomalies.
 
@@ -603,11 +603,11 @@ phases where a build depends on an audit/decision.
 
 ## Codex SSOTs
 
-- `codex/05-infrastructure/deployment-observability.md` — deployment inventory + (to add) the cost-attribution contract
+- `/codex/05-infrastructure/deployment-observability.md` — deployment inventory + (to add) the cost-attribution contract
   (WS-1) and the resource-timeline contract (WS-6, post-decision).
-- `codex/05-infrastructure/gcs-object-operations.md` — GCS ops via UTL wrappers (WS-4 size/tail/download; WS-6 option
+- `/codex/05-infrastructure/gcs-object-operations.md` — GCS ops via UTL wrappers (WS-4 size/tail/download; WS-6 option
   a).
-- `codex/06-coding-standards/ui-testing-layers.md` — the UI gate (pw:L2 + cited spec, every `[UI]` todo).
-- `codex/04-architecture/ci-alerting.md` + `codex/04-architecture/agent-orchestrator-alerting.md` — alert feed / dedup /
-  actionable-only policies WS-5 must honour.
-- `codex/02-data/live-data-persistence-and-event-log.md` — the event-spine (WS-6 option b).
+- `/codex/06-coding-standards/ui-testing-layers.md` — the UI gate (pw:L2 + cited spec, every `[UI]` todo).
+- `/codex/04-architecture/ci-alerting.md` + `/codex/04-architecture/agent-orchestrator-alerting.md` — alert feed / dedup
+  / actionable-only policies WS-5 must honour.
+- `/codex/02-data/live-data-persistence-and-event-log.md` — the event-spine (WS-6 option b).

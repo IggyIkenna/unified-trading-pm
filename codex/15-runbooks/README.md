@@ -5,11 +5,11 @@ status: active
 created: 2026-05-08
 scope: [engineer]
 related:
-  - codex/14-customer-journeys/README.md
-  - codex/16-strategy-playbooks/README.md
-  - codex/03-observability/alerting.md
-  - codex/04-architecture/instruments-live-architecture.md
-  - codex/05-infrastructure/live-deployment-monitoring.md
+  - /codex/14-customer-journeys/README.md
+  - /codex/16-strategy-playbooks/README.md
+  - /codex/03-observability/alerting.md
+  - /codex/04-architecture/instruments-live-architecture.md
+  - /codex/05-infrastructure/live-deployment-monitoring.md
 ---
 
 # 15-runbooks
@@ -34,13 +34,14 @@ declared periodic-execution path so the runbook doesn't silently rot against an 
 
 ## What does NOT live here
 
-- **Customer-facing flows + onboarding** → [`codex/14-customer-journeys/`](../14-customer-journeys/README.md).
+- **Customer-facing flows + onboarding** → [`codex/14-customer-journeys/`](/codex/14-customer-journeys/README.md).
   Investment-management demo, fund-org hierarchy, page-triage, role-based audiences.
-- **Domain-specific strategy + infra playbooks** → [`codex/16-strategy-playbooks/`](../16-strategy-playbooks/README.md).
-  DeFi venue-collateral runbooks, archetype playbooks (CME-Polymarket arb, etc.), ML lifecycle, infra-spec stage docs.
-- **Service-internal observability docs** → [`codex/03-observability/`](../03-observability/README.md). The alerting
+- **Domain-specific strategy + infra playbooks** →
+  [`codex/16-strategy-playbooks/`](/codex/16-strategy-playbooks/README.md). DeFi venue-collateral runbooks, archetype
+  playbooks (CME-Polymarket arb, etc.), ML lifecycle, infra-spec stage docs.
+- **Service-internal observability docs** → [`codex/03-observability/`](/codex/03-observability/README.md). The alerting
   surface here points BACK to runbooks under `15-runbooks/alerting/` for per-alert procedures.
-- **Live-deployment infrastructure topology** → [`codex/05-infrastructure/`](../05-infrastructure/README.md).
+- **Live-deployment infrastructure topology** → [`codex/05-infrastructure/`](/codex/05-infrastructure/README.md).
   `live-deployment-monitoring.md` cites runbooks here; the topology lives there.
 
 ## Cross-link conventions
@@ -51,7 +52,7 @@ Every runbook in this section MUST:
    `last_executed`. Runbooks without all four fields are review-blocking.
 2. Cite the alerting vocabulary in `15-runbooks/alerting/README.md` § "Severity glossary" when assigning severity. Do
    NOT redefine the CRITICAL/HIGH/WARN/INFO axis locally.
-3. Reference the live-trading topology in `codex/05-infrastructure/live-deployment-monitoring.md` for any VM /
+3. Reference the live-trading topology in `/codex/05-infrastructure/live-deployment-monitoring.md` for any VM /
    service-mesh / event-bus context the runbook touches.
 4. If a runbook fires a kill-switch or arm-state, cite the master plan readiness item it relates to (Group F/G of
    `master_to_live_defi_2026_05_23.md`) so the on-call can link the procedure to the May-23 cutover criterion.

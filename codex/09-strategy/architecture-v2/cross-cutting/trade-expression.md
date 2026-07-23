@@ -1,10 +1,11 @@
 ---
 doc_type: codex-ssot
-title: 'Cross-Cutting: Trade Expression'
+title: "Cross-Cutting: Trade Expression"
 summary:
-  'Runtime machinery that composes/decomposes a view into instrument legs: ATOMIC bundle, LEADER_HEDGE, continuous
-  delta-hedge attachment, paced basket, on-chain protocol composite, and synthetic decomposition — shared handlers across
-  every strategy family. Partial atomic fills are never permitted; decomposition lives in execution `expression_library`.'
+  "Runtime machinery that composes/decomposes a view into instrument legs: ATOMIC bundle, LEADER_HEDGE, continuous
+  delta-hedge attachment, paced basket, on-chain protocol composite, and synthetic decomposition — shared handlers
+  across every strategy family. Partial atomic fills are never permitted; decomposition lives in execution
+  `expression_library`."
 status: current
 nature: ssot
 asset_group: [meta]
@@ -12,12 +13,25 @@ stage: [meta]
 repos: [execution-service]
 scope: [engineer, admin]
 tags: [strategy, execution, expression, defi, options]
-related: [../axes/expression.md, execution-policies.md, venue-account-coordination.md, ../archetypes/carry-recursive-staked.md]
+related:
+  [
+    ../axes/expression.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/execution-policies.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/venue-account-coordination.md,
+    ../archetypes/carry-recursive-staked.md,
+  ]
 created: 2026-04-17
 authoritative_for:
-  [runtime trade-expression composition machinery (ATOMIC/LEADER_HEDGE/delta-hedge/basket/protocol-composite + synthetic
-  decomposition)]
-referenced_by: [codex/09-strategy/_archived_pre_v2/cross-cutting/strategy-instruction-bus.md, codex/09-strategy/architecture-v2/README.md, codex/09-strategy/architecture-v2/axes/expression.md]
+  [
+    runtime trade-expression composition machinery (ATOMIC/LEADER_HEDGE/delta-hedge/basket/protocol-composite +
+    synthetic decomposition),
+  ]
+referenced_by:
+  [
+    /codex/09-strategy/_archived_pre_v2/cross-cutting/strategy-instruction-bus.md,
+    /codex/09-strategy/architecture-v2/README.md,
+    /codex/09-strategy/architecture-v2/axes/expression.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

@@ -15,23 +15,23 @@ scope: [engineer]
 tags: [config-injection, quality-gates, execution, defi, self-healing]
 related:
   [
-    config-dynamic-injection.md,
-    ../15-runbooks/credential-rotation-runbook.md,
-    ../04-architecture/trading-agent-service-directive-pipeline.md,
+    /codex/06-coding-standards/config-dynamic-injection.md,
+    /codex/15-runbooks/credential-rotation-runbook.md,
+    /codex/04-architecture/trading-agent-service-directive-pipeline.md,
   ]
 created: 2026-03-27
 authoritative_for:
   [config reloader classes and ApiKeyReloader hot-reload pattern, QG STEP 5.61/5.62 service-infra presence checks]
 referenced_by:
   [
-    codex/04-architecture/custody-providers.md,
-    codex/04-architecture/instrument-lifecycle-cache-delta-hot-reload.md,
-    codex/04-architecture/live-strategy-config-hot-reload.md,
-    codex/04-architecture/multi-venue-concurrent-routing.md,
-    codex/06-coding-standards/config-dynamic-injection.md,
-    codex/06-coding-standards/service-structure-standards.md,
-    codex/08-workflows/config-injection.md,
-    codex/09-strategy/architecture-v2/strategy-lifecycle-maturity.md,
+    /codex/04-architecture/custody-providers.md,
+    /codex/04-architecture/instrument-lifecycle-cache-delta-hot-reload.md,
+    /codex/04-architecture/live-strategy-config-hot-reload.md,
+    /codex/04-architecture/multi-venue-concurrent-routing.md,
+    /codex/06-coding-standards/config-dynamic-injection.md,
+    /codex/06-coding-standards/service-structure-standards.md,
+    /codex/08-workflows/config-injection.md,
+    /codex/09-strategy/architecture-v2/strategy-lifecycle-maturity.md,
   ]
 owner:
 last_reviewed: 2026-06-25
@@ -188,7 +188,7 @@ detail (e.g. a temporary `_ProcessingState` dataclass that never crosses a servi
    `CLOUD_KMS_ENCRYPTED` → `FIREBLOCKS_MPC` June-1), `ApiKeyReloader` detects the change via the wallet-config GCS
    poll + invalidates the cached PK + rebuilds the `CustodyProvider` instance per-wallet via the factory. Per-wallet
    `kms_key_uri` rotation (90d CMK auto-rotation per
-   [`credential-rotation-runbook.md`](../15-runbooks/credential-rotation-runbook.md) § 2) is the SAME pattern —
+   [`credential-rotation-runbook.md`](/codex/15-runbooks/credential-rotation-runbook.md) § 2) is the SAME pattern —
    invalidate the cache, refetch via KMS, swap PK. Pattern reference:
    `unified_trading_library.config_reloaders.ApiKeyReloader.on_refresh()` callback fires `WALLET_PROVISIONING_RELOADED`
    event consumed by execution-service to rebuild affected providers.
@@ -265,4 +265,4 @@ are stored and returned — callers must check `.enabled`.
 **Post-cutover**: lifted into UTL as `make_directive_reloader()` alongside `make_config_reloader()` per
 `strategy_repo_consolidation_2026_05_19.md`.
 
-Full architecture: `codex/04-architecture/trading-agent-service-directive-pipeline.md`.
+Full architecture: `/codex/04-architecture/trading-agent-service-directive-pipeline.md`.

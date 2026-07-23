@@ -12,10 +12,15 @@ stage: [meta]
 repos: [unified-trading-system-ui]
 scope: [engineer, admin]
 tags: [ui, testing, playwright, docspec, customer-journeys, personas]
-related: [test-matrix.md, README.md, ../playbooks/01-marketing-pre-first-call.md]
+related: [/codex/14-customer-journeys/testing/test-matrix.md, README.md, ../playbooks/01-marketing-pre-first-call.md]
 created: 2026-04-19
 authoritative_for: [reference Playwright playbook spec exemplar]
-referenced_by: [codex/14-customer-journeys/README.md, codex/14-customer-journeys/testing/README.md, codex/14-customer-journeys/testing/test-matrix.md]
+referenced_by:
+  [
+    /codex/14-customer-journeys/README.md,
+    /codex/14-customer-journeys/testing/README.md,
+    /codex/14-customer-journeys/testing/test-matrix.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

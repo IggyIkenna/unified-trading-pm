@@ -44,16 +44,16 @@ assigned_role: backend_engineer
 drift_direction: advance-code
 Codex SSOTs:
   [
-    codex/09-strategy/operational/paper-batch-live-reconciliation.md,
-    codex/04-architecture/global-ledger-architecture.md,
-    codex/02-data/pipeline-mode-and-batch-live-reconciliation.md,
-    codex/09-strategy/operational/batch-live-reconciliation-threshold-calibration.md,
+    /codex/09-strategy/operational/paper-batch-live-reconciliation.md,
+    /codex/04-architecture/global-ledger-architecture.md,
+    /codex/02-data/pipeline-mode-and-batch-live-reconciliation.md,
+    /codex/09-strategy/operational/batch-live-reconciliation-threshold-calibration.md,
   ]
 ---
 
 # Citadel-grade Paper ⟷ Batch ⟷ Live Reconciliation
 
-> **Design SSOT**: `codex/09-strategy/operational/paper-batch-live-reconciliation.md` (full architecture +
+> **Design SSOT**: `/codex/09-strategy/operational/paper-batch-live-reconciliation.md` (full architecture +
 > EXISTS/MISSING map). This plan is the **phased execution DAG**. Read the SSOT first — do not act from this summary.
 
 ## The thesis (operator, 2026-06-19)
@@ -400,13 +400,13 @@ are identified (2) and the ledger exists (3).
 
 ## Codex SSOT updates (Citadel §6 / Post-Plan-Phase Codex Audit)
 
-- [x] ✅ [DOC] P3.8.1. Keep `codex/09-strategy/operational/paper-batch-live-reconciliation.md` in sync — DONE
+- [x] ✅ [DOC] P3.8.1. Keep `/codex/09-strategy/operational/paper-batch-live-reconciliation.md` in sync — DONE
       (`unified-trading-pm@dc624d2b`). §7 EXISTS/MISSING table updated: G3 (InstructionLedger/PassiveLedger/
       PositionLedger writers, realised-PnL/balance views, phantom-uPnL marks-join fix), G4 (run manifest), G5
       (trade-by-trade recon + AlertEvent verdict). `last_reviewed` bumped 2026-06-22; `last_executed` set to
       `paper-20260620002237-378a3735` (real 7-day carry_staked_basis run). G1/G2 remain MISSING (P1.6/P2.1-P2.2 still
-      open). `codex/04-architecture/global-ledger-architecture.md` + `ledger-event-taxonomy.md` count update deferred to
-      P3.8.2 when GroupC/execution-events land. Provenance: agt-f35b99 2026-06-22.
+      open). `/codex/04-architecture/global-ledger-architecture.md` + `ledger-event-taxonomy.md` count update deferred
+      to P3.8.2 when GroupC/execution-events land. Provenance: agt-f35b99 2026-06-22.
 
 ## Phase 9 — paper/batch spine correctness fixes (2026-06-20) + captured pre-existing findings
 
@@ -651,8 +651,8 @@ are identified (2) and the ledger exists (3).
 > **Sequencing (foundation-completion-gate):** [DATA] P1 (the marks-join fix) lands first; then producer/data [STRATEGY]
 > P2 items on strategy-service+UTL; then API metrics+backtest [API] P2 items on client-reporting-api; then the UI wave
 > [UI] P3 items once the API surfaces exist. Producer/UTL/reader items serialize (shared files); UI is a separate repo.
-> **Codex SSOT to update on completion:** `codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md`
-> (multi-dim attribution + bps/ROE) + `codex/09-strategy/operational/paper-batch-live-reconciliation.md` (backtest
+> **Codex SSOT to update on completion:** `/codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md`
+> (multi-dim attribution + bps/ROE) + `/codex/09-strategy/operational/paper-batch-live-reconciliation.md` (backtest
 > surface + transfers in the four-ledger model).
 
 ## Success criteria (per phase: QG/basedpyright/ruff green + tests)

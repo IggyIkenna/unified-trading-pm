@@ -3,8 +3,8 @@ doc_type: codex-ssot
 title: Runtime Tiers & Deployment Orchestration
 summary:
   The 7-tier deployment topology (static/T0-T6) + the UI dev-stack startup decision table, deployment clusters, the
-  live-pipeline VM topology, the 4 operational modes, and the deployed prod/uat environment topology; the runtime-profile
-  v7 axis is owned by client-isolation-sla-and-runtime-profiles.md.
+  live-pipeline VM topology, the 4 operational modes, and the deployed prod/uat environment topology; the
+  runtime-profile v7 axis is owned by client-isolation-sla-and-runtime-profiles.md.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -14,15 +14,25 @@ scope: [engineer, admin]
 tags: [infrastructure, deployment, ui, tiers, orchestrator]
 related:
   [
-    ui-architecture.md,
-    replay-subsystem.md,
-    vm-tarball-deployment.md,
-    synthetic-data-benchmarking.md,
-    ../04-architecture/client-isolation-sla-and-runtime-profiles.md,
+    /codex/05-infrastructure/ui-architecture.md,
+    /codex/05-infrastructure/replay-subsystem.md,
+    /codex/05-infrastructure/vm-tarball-deployment.md,
+    /codex/05-infrastructure/synthetic-data-benchmarking.md,
+    /codex/04-architecture/client-isolation-sla-and-runtime-profiles.md,
   ]
 created: 2026-03-27
 authoritative_for: [7-tier deployment topology (static/T0-T6), UI/dev-stack startup decision table]
-referenced_by: [codex/02-data/sports-scheduling-and-sharding.md, codex/04-architecture/client-isolation-sla-and-runtime-profiles.md, codex/04-architecture/instruments-live-architecture.md, codex/05-infrastructure/aws-iam-matrix.md, codex/05-infrastructure/deployment-and-qg-strategy.md, codex/05-infrastructure/deployment-clusters-live-vs-batch.md, codex/05-infrastructure/deployment-ui-architecture.md, codex/05-infrastructure/deployment-ui-environment-tiers.md]
+referenced_by:
+  [
+    /codex/02-data/sports-scheduling-and-sharding.md,
+    /codex/04-architecture/client-isolation-sla-and-runtime-profiles.md,
+    /codex/04-architecture/instruments-live-architecture.md,
+    /codex/05-infrastructure/aws-iam-matrix.md,
+    /codex/05-infrastructure/deployment-and-qg-strategy.md,
+    /codex/05-infrastructure/deployment-clusters-live-vs-batch.md,
+    /codex/05-infrastructure/deployment-ui-architecture.md,
+    /codex/05-infrastructure/deployment-ui-environment-tiers.md,
+  ]
 owner:
 last_reviewed: 2026-05-17
 code_refs:
@@ -49,7 +59,7 @@ code_refs:
 live cloud state). Both `dev-tiers.sh` and `dev-start.sh` accept explicit mode overrides via env / flags.
 
 For full env-axis matrix + the `runtime_profile` v7 collapse: § "Runtime Profiles (v7)" below + § Mode axes in
-[`local-dev.md`](../08-workflows/local-dev.md).
+[`local-dev.md`](/codex/08-workflows/local-dev.md).
 
 ---
 
@@ -184,7 +194,7 @@ window per `WatermarkAlignmentFanin`). Region pinning per asset_group follows th
 `deploy-shards live start --service mtds-live-cefi` etc. Mode-4 **Cluster Bootstrap** spins all 10 per-asset-group VMs +
 2 singletons in one action; mode-1 **Thermal Batch** is the batch-mode equivalent (no live VMs running, all parquet
 writes via `pipeline_mode in {batch_databento, batch_tardis, ...}` per
-[`../02-data/pipeline-mode-partition.md`](../02-data/pipeline-mode-partition.md)).
+[`/codex/02-data/pipeline-mode-partition.md`](/codex/02-data/pipeline-mode-partition.md)).
 
 ---
 

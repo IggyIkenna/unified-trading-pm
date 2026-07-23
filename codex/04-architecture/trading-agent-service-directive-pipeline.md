@@ -14,17 +14,17 @@ scope: [engineer, admin]
 tags: [trading-agent, strategy, orchestrator, uac, features, allocation, mvp]
 related:
   [
-    strategy-service-architecture.md,
-    promote-workflow-architecture.md,
-    features-service-architecture.md,
-    ../09-strategy/operational/paper-batch-live-reconciliation.md,
+    /codex/04-architecture/strategy-service-architecture.md,
+    /codex/04-architecture/promote-workflow-architecture.md,
+    /codex/04-architecture/features-service-architecture.md,
+    /codex/09-strategy/operational/paper-batch-live-reconciliation.md,
   ]
 created: 2026-05-20
 authoritative_for: [trading-agent-service directive pipeline (PnL stream to ArchetypeAllocationDirective)]
 referenced_by:
   [
-    codex/06-coding-standards/config-reloader-pattern.md,
-    codex/09-strategy/architecture-v2/cross-cutting/allocator-pipeline-contract.md,
+    /codex/06-coding-standards/config-reloader-pattern.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/allocator-pipeline-contract.md,
   ]
 owner:
 last_reviewed:

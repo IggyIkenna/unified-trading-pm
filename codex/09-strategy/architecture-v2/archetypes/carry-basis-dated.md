@@ -14,18 +14,23 @@ repos: [strategy-service]
 scope: [engineer, admin]
 tags: [strategy, carry, tradfi, defi, archetype, deribit]
 related:
-  [carry-basis-perp.md, carry-basis-dated-inv.md, ../category-instrument-coverage.md, ../families/carry-and-yield.md]
+  [
+    /codex/09-strategy/architecture-v2/archetypes/carry-basis-perp.md,
+    /codex/09-strategy/architecture-v2/archetypes/carry-basis-dated-inv.md,
+    ../category-instrument-coverage.md,
+    ../families/carry-and-yield.md,
+  ]
 created: 2026-04-17
 authoritative_for: [CARRY_BASIS_DATED archetype specification]
 referenced_by:
   [
-    codex/09-strategy/architecture-v2/archetypes/carry-basis-dated-inv.md,
-    codex/09-strategy/architecture-v2/archetypes/carry-basis-perp.md,
-    codex/09-strategy/architecture-v2/archetypes/carry-staked-basis-dated.md,
-    codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md,
-    codex/09-strategy/architecture-v2/cross-cutting/futures-roll-and-combos.md,
-    codex/09-strategy/architecture-v2/families/carry-and-yield.md,
-    codex/09-strategy/strategy-summary.md,
+    /codex/09-strategy/architecture-v2/archetypes/carry-basis-dated-inv.md,
+    /codex/09-strategy/architecture-v2/archetypes/carry-basis-perp.md,
+    /codex/09-strategy/architecture-v2/archetypes/carry-staked-basis-dated.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/futures-roll-and-combos.md,
+    /codex/09-strategy/architecture-v2/families/carry-and-yield.md,
+    /codex/09-strategy/strategy-summary.md,
   ]
 owner:
 last_reviewed:

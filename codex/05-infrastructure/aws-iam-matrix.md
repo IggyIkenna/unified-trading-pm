@@ -14,18 +14,18 @@ scope: [admin, engineer]
 tags: [aws, iam, infrastructure, security, execution, kms, secrets]
 related:
   [
-    credentials-matrix.md,
-    secret-manager-naming.md,
-    ../15-runbooks/credential-rotation-runbook.md,
-    aws-cloudtrail-cost-optimization-2026-06-20.md,
+    /codex/05-infrastructure/credentials-matrix.md,
+    /codex/05-infrastructure/secret-manager-naming.md,
+    /codex/15-runbooks/credential-rotation-runbook.md,
+    /codex/05-infrastructure/aws-cloudtrail-cost-optimization-2026-06-20.md,
   ]
 created: 2026-05-12
 authoritative_for: [AWS per-service IAM role naming + policy matrix (target shape)]
 referenced_by:
   [
-    codex/05-infrastructure/aws-cloudtrail-cost-optimization-2026-06-20.md,
-    codex/05-infrastructure/credentials-matrix.md,
-    codex/14-customer-journeys/authentication/firebase-local.md,
+    /codex/05-infrastructure/aws-cloudtrail-cost-optimization-2026-06-20.md,
+    /codex/05-infrastructure/credentials-matrix.md,
+    /codex/14-customer-journeys/authentication/firebase-local.md,
   ]
 owner:
 last_reviewed: 2026-05-17
@@ -146,8 +146,8 @@ execution:
 
 - [`credentials-matrix.md`](credentials-matrix.md) — workspace credential SSOT.
 - [`secret-manager-naming.md`](secret-manager-naming.md) — per-service secret naming.
-- [`../15-runbooks/credential-rotation-runbook.md`](../15-runbooks/credential-rotation-runbook.md) — rotation cadence
-  per IAM role.
+- [`/codex/15-runbooks/credential-rotation-runbook.md`](/codex/15-runbooks/credential-rotation-runbook.md) — rotation
+  cadence per IAM role.
 - [`per-archetype-wallet-isolation.md`](per-archetype-wallet-isolation.md) — wallet × IAM mapping.
 - [`hsm-wallet-signing.md`](hsm-wallet-signing.md) — Cloud-KMS Decrypter IAM discipline.
 - [`runtime-tiers-and-deployment.md`](runtime-tiers-and-deployment.md) — deployment matrix.

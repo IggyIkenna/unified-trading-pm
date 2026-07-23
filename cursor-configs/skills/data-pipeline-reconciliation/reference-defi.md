@@ -126,7 +126,7 @@ decision D".)_
 - 11 collect + 3 forward crons **PAUSED ~40 days**. Recency gaps are expected; do not report them as capture failures.
 - The manifest rebuild crashes in the CF-11 honest-absence re-emit with `MalformedRowKeyError` — **4.55M of 43.5M
   `_index` rows (~10%) carry a blank `instrument_id` as legitimate cell-level honest-absence**. A blank `instrument_id`
-  is not automatically a defect; classify per `codex/02-data/honest-absence-downstream-handling.md`.
+  is not automatically a defect; classify per `/codex/02-data/honest-absence-downstream-handling.md`.
 
 ### H5 — a legacy GLUED-VENUE FLAT tree INSIDE `raw_tick_data/` that discovery cannot see
 
@@ -138,7 +138,7 @@ No `pipeline_mode=`, venue+chain **glued**, no `chain=` / `instrument_type=` / `
 `_PAT_DEFI` returns `None`, so **discovery = 0** and the R3 reshape never saw it. Two related legacy shapes ARE in the
 templates (`possible_manifest.py:185-195`: the no-asset-group 2024-05 shape and the `venue={venue}-{chain}` overload) —
 but the flat `ticks_migrated_*.parquet` tail is not parsed. Probe for it explicitly; report as orphan-class per
-`codex/02-data/orphan-object-detection.md`.
+`/codex/02-data/orphan-object-detection.md`.
 
 ### H6 — axis-value census: the manifest carries duplicate and non-canonical vocabulary
 
@@ -188,7 +188,7 @@ Report it; do not treat the unsatisfiable expected rows as a capture failure.
 ### H10 — manifest `pipeline_mode` ↔ `source` desync
 
 Measured rows carry `pipeline_mode=batch_onchain_rpc` with `source=onchain_subgraph` — the SOURCE-AWARE
-`{mode}_{source}` invariant (`codex/02-data/pipeline-mode-partition.md`) is broken for these rows. Report as a typed
+`{mode}_{source}` invariant (`/codex/02-data/pipeline-mode-partition.md`) is broken for these rows. Report as a typed
 finding; do not silently "correct" either field.
 
 ## Known-good spot-check — run BEFORE trusting any absence result
@@ -210,7 +210,7 @@ finding; do not silently "correct" either field.
 
 ## Census / vocabulary nuance
 
-Added 2026-07-20 — the in-session distinct-value census (`codex/02-data/reconciliation-census-and-compute-tiers.md` §
+Added 2026-07-20 — the in-session distinct-value census (`/codex/02-data/reconciliation-census-and-compute-tiers.md` §
 1).
 
 - **`chain=` is a LIVE census axis (defi is the only AG with one)** — enumerate the distinct `chain=` set from the
@@ -225,8 +225,8 @@ Added 2026-07-20 — the in-session distinct-value census (`codex/02-data/reconc
 
 ## Cross-links
 
-`SKILL.md` · `codex/02-data/defi-canonical-naming-ssot.md` · `codex/02-data/defi-data-types-catalog.md` ·
-`codex/02-data/four-surface-reconciliation-procedure.md` · `codex/02-data/reconciliation-finding-taxonomy.md` ·
-`codex/02-data/gcs-and-manifest-delete-safety-protocol.md` · `codex/02-data/non-canonical-path-inventory.md` ·
-`codex/02-data/orphan-object-detection.md` · `codex/02-data/honest-coverage-model.md` ·
+`SKILL.md` · `/codex/02-data/defi-canonical-naming-ssot.md` · `/codex/02-data/defi-data-types-catalog.md` ·
+`/codex/02-data/four-surface-reconciliation-procedure.md` · `/codex/02-data/reconciliation-finding-taxonomy.md` ·
+`/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` · `/codex/02-data/non-canonical-path-inventory.md` ·
+`/codex/02-data/orphan-object-detection.md` · `/codex/02-data/honest-coverage-model.md` ·
 `plans/active/issues/defi_dex_pools_delete_order_stale_2026_07_20.md`

@@ -75,12 +75,12 @@ ladder, the 4-state honest-absence manifest).
 
 ## Codex SSOT updates (mandatory — enumerated per Citadel rule §6)
 
-| Doc                                                     | Change                                                                                                                                                                                          |
-| ------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `codex/03-observability/data-feed-sla-registry.md`      | **NEW** — document the EXISTING `DataFreshnessContract` / `ALL_FRESHNESS_CONTRACTS` registry as the feed-SLA SSOT: schema, criticality tiers, who reads it, the account-state feeds added in 1a |
-| `codex/04-architecture/autonomous-recovery-matrix.md`   | Add the `refetch-feed` Layer-0 action row + its decision-tree branch (stale critical feed → refetch attempt → escalate on fail)                                                                 |
-| `codex/03-observability/alerting.md`                    | Note `tick_staleness_seconds` now derives from / is cross-validated against `MARKET_TICK_FRESHNESS` — one freshness home                                                                        |
-| `codex/05-infrastructure/manifest-consolidator-ssot.md` | Cross-ref: consolidator staleness is one feed in the registry; same criticality semantics                                                                                                       |
+| Doc                                                      | Change                                                                                                                                                                                          |
+| -------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/codex/03-observability/data-feed-sla-registry.md`      | **NEW** — document the EXISTING `DataFreshnessContract` / `ALL_FRESHNESS_CONTRACTS` registry as the feed-SLA SSOT: schema, criticality tiers, who reads it, the account-state feeds added in 1a |
+| `/codex/04-architecture/autonomous-recovery-matrix.md`   | Add the `refetch-feed` Layer-0 action row + its decision-tree branch (stale critical feed → refetch attempt → escalate on fail)                                                                 |
+| `/codex/03-observability/alerting.md`                    | Note `tick_staleness_seconds` now derives from / is cross-validated against `MARKET_TICK_FRESHNESS` — one freshness home                                                                        |
+| `/codex/05-infrastructure/manifest-consolidator-ssot.md` | Cross-ref: consolidator staleness is one feed in the registry; same criticality semantics                                                                                                       |
 
 ## Phase 1 — consolidate onto the existing freshness registry
 

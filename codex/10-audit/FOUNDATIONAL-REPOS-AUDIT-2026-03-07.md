@@ -2,21 +2,29 @@
 doc_type: codex-ssot
 title: Foundational Repos Audit — 2026-03-07
 summary:
-  Historical 2026-03-07 snapshot grading 18 pre-service repos (T0–T3 + system-integration-tests) across
-  10 dimensions — headline "0 of 18 repos pass their quality gate"; per-repo grades, cross-cutting
-  systemic issues (coverage-gaming files, schema duplication, REPO_ARCH_TIER unwired), and a P0–P3
-  remediation order. Superseded by later QG hardening — use repos/<name>.yaml for current readiness.
+  Historical 2026-03-07 snapshot grading 18 pre-service repos (T0–T3 + system-integration-tests) across 10 dimensions —
+  headline "0 of 18 repos pass their quality gate"; per-repo grades, cross-cutting systemic issues (coverage-gaming
+  files, schema duplication, REPO_ARCH_TIER unwired), and a P0–P3 remediation order. Superseded by later QG hardening —
+  use repos/<name>.yaml for current readiness.
 status: stale
 nature: ssot
 asset_group: [meta]
 stage: [meta]
-repos: [deployment-service, execution-service, features-service, instruments-service, market-tick-data-service, strategy-service]
+repos:
+  [
+    deployment-service,
+    execution-service,
+    features-service,
+    instruments-service,
+    market-tick-data-service,
+    strategy-service,
+  ]
 scope: [engineer, admin]
 tags: [audit, quality-gates, ssot-audit, coverage, tier]
-related: [codex/10-audit/QUALITY_GATES_COVERAGE_REPORT.md, codex/10-audit/QUALITY_GATE_BYPASS_AUDIT.md]
+related: [/codex/10-audit/QUALITY_GATES_COVERAGE_REPORT.md, /codex/10-audit/QUALITY_GATE_BYPASS_AUDIT.md]
 created: 2026-03-27
 authoritative_for: [2026-03-07 foundational-repos audit snapshot]
-referenced_by: [codex/10-audit/QUALITY_GATES_COVERAGE_REPORT.md, codex/10-audit/VALIDATOR_COVERAGE_MATRIX.md]
+referenced_by: [/codex/10-audit/QUALITY_GATES_COVERAGE_REPORT.md, /codex/10-audit/VALIDATOR_COVERAGE_MATRIX.md]
 owner:
 last_reviewed:
 code_refs:

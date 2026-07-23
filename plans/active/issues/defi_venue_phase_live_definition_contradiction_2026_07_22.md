@@ -17,7 +17,11 @@ stage: [data]
 repos: [unified-api-contracts, instruments-service, deployment-api, deployment-ui, market-tick-data-service]
 scope: [engineer]
 tags: [defi, ssot-contradiction, phase, coverage, honest-coverage, data-correctness]
-related: [distinct_values_noncanonical_audit_2026_07_20.md, honest_coverage_v2_instrument_denominator_2026_06_28.md]
+related:
+  [
+    /plans/active/distinct_values_noncanonical_audit_2026_07_20.md,
+    /plans/archive/2026_07/honest_coverage_v2_instrument_denominator_2026_06_28.md,
+  ]
 created: "2026-07-22"
 parent_epic: infrastructure_master
 assigned_vm: NA

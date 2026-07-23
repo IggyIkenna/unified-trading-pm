@@ -3,8 +3,8 @@ doc_type: codex-ssot
 title: Solana Concentrated Liquidity LP (Raydium / Orca)
 summary:
   Pre-v2 DeFi Solana concentrated LP — tight-range liquidity on Raydium CLMM / Orca Whirlpool with optional Drift
-  SOL-PERP delta hedge, ~$0.30-0.60 rebalance gas enabling aggressive 15M range management; vol-sized ranges;
-  targets 20-60% APY, ~$2M per pool. SUPERSEDED banner — see architecture-v2.
+  SOL-PERP delta hedge, ~$0.30-0.60 rebalance gas enabling aggressive 15M range management; vol-sized ranges; targets
+  20-60% APY, ~$2M per pool. SUPERSEDED banner — see architecture-v2.
 status: superseded
 nature: ssot
 asset_group: [meta]
@@ -12,10 +12,21 @@ stage: [meta]
 repos: [execution-service, market-tick-data-service, strategy-service, unified-api-contracts, unified-trading-pm]
 scope: [engineer, admin]
 tags: [defi, strategy, execution, market-making, liquidity-provision, solana, raydium, orca]
-related: [market-making-lp.md, sol-basis-trade.md, sol-staked-basis.md]
+related:
+  [
+    /codex/09-strategy/_archived_pre_v2/defi/market-making-lp.md,
+    /codex/09-strategy/_archived_pre_v2/defi/sol-basis-trade.md,
+    /codex/09-strategy/_archived_pre_v2/defi/sol-staked-basis.md,
+  ]
 created: 2026-03-28
 authoritative_for: []
-referenced_by: [codex/09-strategy/_archived_pre_v2/STRATEGY_CATALOG_pre_v2.md, codex/09-strategy/_archived_pre_v2/defi/market-making-lp.md, codex/09-strategy/_archived_pre_v2/defi/sol-basis-trade.md, codex/09-strategy/_archived_pre_v2/defi/sol-staked-basis.md]
+referenced_by:
+  [
+    /codex/09-strategy/_archived_pre_v2/STRATEGY_CATALOG_pre_v2.md,
+    /codex/09-strategy/_archived_pre_v2/defi/market-making-lp.md,
+    /codex/09-strategy/_archived_pre_v2/defi/sol-basis-trade.md,
+    /codex/09-strategy/_archived_pre_v2/defi/sol-staked-basis.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -260,7 +271,7 @@ latency-critical -- the 15M check interval means a few seconds of delay is accep
 - **Order types:** Protocol interactions (not order book) -- Solana program invocations
 - **Atomic execution required?** No for standard LP. Yes for delta-neutral variant (LP add + Drift short should be
   near-atomic to avoid delta exposure window)
-- **Gas budget:** ~0.002 SOL per add/remove (~$0.30), ~0.004 SOL per full rebalance (~$0.60)
+- **Gas budget:** ~~0.002 SOL per add/remove (~~$0.30), ~0.004 SOL per full rebalance (~$0.60)
 
 ### Rebalancing
 
@@ -376,7 +387,8 @@ REMOVE_LIQUIDITY + COLLECT_FEES --> TRANSFER --> treasury. See
 
 Gas costs are tracked via Alchemy RPC using `getRecentPrioritizationFees` (Solana). The MTDS `gas_fee_handler` fetches
 real-time priority fees and writes them as features. Gas hits P&L immediately as a realized transaction cost -- not
-estimated. Solana LP operations cost ~0.002-0.004 SOL per add/remove (~$0.30-0.60), enabling aggressive range management
+estimated. Solana LP operations cost ~~0.002-0.004 SOL per add/remove
+(~~$0.30-0.60), enabling aggressive range management
 that would be uneconomical on Ethereum L1 (~$50-100 per rebalance).
 
 **Reference:** `market-tick-data-service/market_tick_data_service/gas_fee_handler.py`

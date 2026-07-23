@@ -21,9 +21,9 @@ scope: [engineer]
 tags: [ui, navigation, routing, duplication, dead-code, orphan-audit]
 related:
   [
-    deployment_ui_l2_smoke_gate_red_2026_07_17.md,
-    ../../../codex/04-architecture/orphan-audit.md,
-    ../../../codex/06-coding-standards/ui-testing-layers.md,
+    /plans/active/issues/deployment_ui_l2_smoke_gate_red_2026_07_17.md,
+    /codex/04-architecture/orphan-audit.md,
+    /codex/06-coding-standards/ui-testing-layers.md,
   ]
 created: 2026-07-17
 last_updated: 2026-07-17

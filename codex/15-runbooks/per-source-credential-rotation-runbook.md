@@ -14,9 +14,9 @@ scope: [admin, engineer]
 tags: [credentials, rotation, runbook, secret-manager, defi, sports, prediction]
 related:
   [
-    credential-rotation-runbook.md,
-    ../05-infrastructure/credentials-matrix.md,
-    ../05-infrastructure/secret-manager-naming.md,
+    /codex/15-runbooks/credential-rotation-runbook.md,
+    /codex/05-infrastructure/credentials-matrix.md,
+    /codex/05-infrastructure/secret-manager-naming.md,
   ]
 created: 2026-05-15
 authoritative_for: [per-data-source credential rotation (sports, prediction, DeFi-data)]
@@ -29,11 +29,12 @@ execution:
     owner: operator (ikenna) — per-source credential rotation,
     cadence: per-source (see body table — typically 90d),
     verifier: gcloud secrets versions list --secret=<source>_api_key + verify latest enabled within cadence,
-    last_executed: per-source rotation log appended in body; cross-ref codex/15-runbooks/credential-rotation-runbook.md,
+    last_executed:
+      per-source rotation log appended in body; cross-ref /codex/15-runbooks/credential-rotation-runbook.md,
   }
 cadence: per-source (see body table — typically 90d)
 verifier: gcloud secrets versions list --secret=<source>_api_key + verify latest enabled within cadence
-last_executed: per-source rotation log appended in body; cross-ref codex/15-runbooks/credential-rotation-runbook.md
+last_executed: per-source rotation log appended in body; cross-ref /codex/15-runbooks/credential-rotation-runbook.md
 ---
 
 # Per-source credential rotation runbook — sports, prediction, DeFi data
@@ -41,7 +42,7 @@ last_executed: per-source rotation log appended in body; cross-ref codex/15-runb
 > **Created 2026-05-15** per
 > [`plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md`](../../../plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md)
 > Phase 5.A.2. Full cross-class rotation cadence is at
-> [`codex/15-runbooks/credential-rotation-runbook.md`](credential-rotation-runbook.md).
+> [`/codex/15-runbooks/credential-rotation-runbook.md`](credential-rotation-runbook.md).
 >
 > This doc specialises on **data-source** credentials (sports, prediction, DeFi data) per the Runbook Execution-Owner
 > SSOT HARD RULE (4 required fields: `owner` / `cadence` / `verifier` / `last_executed`).
@@ -61,7 +62,7 @@ execution:
 ```
 
 Secret Manager name: `prod-instruments-service-api-football-key` (see
-[`secret-manager-naming.md`](../05-infrastructure/secret-manager-naming.md)).
+[`secret-manager-naming.md`](/codex/05-infrastructure/secret-manager-naming.md)).
 
 Steps:
 
@@ -182,11 +183,11 @@ Secret Manager name: `prod-execution-service-tenderly-access-key`.
 
 ## § 4 — References
 
-- [`codex/15-runbooks/credential-rotation-runbook.md`](credential-rotation-runbook.md) — cross-class cadence (wallets,
+- [`/codex/15-runbooks/credential-rotation-runbook.md`](credential-rotation-runbook.md) — cross-class cadence (wallets,
   CMK, CeFi trade-scope, withdraw-scope, aux).
-- [`codex/05-infrastructure/credentials-matrix.md`](../05-infrastructure/credentials-matrix.md) — workspace credential
-  SSOT (full enumeration).
-- [`codex/05-infrastructure/secret-manager-naming.md`](../05-infrastructure/secret-manager-naming.md) — secret name
+- [`/codex/05-infrastructure/credentials-matrix.md`](/codex/05-infrastructure/credentials-matrix.md) — workspace
+  credential SSOT (full enumeration).
+- [`/codex/05-infrastructure/secret-manager-naming.md`](/codex/05-infrastructure/secret-manager-naming.md) — secret name
   conventions.
 - [`deployment-service/scripts/audit/credential-probe.sh`](../../../deployment-service/scripts/audit/credential-probe.sh)
   — automated probe + verification.

@@ -1,10 +1,10 @@
 ---
 doc_type: codex-ssot
-title: 'Playbook 2a — Deep Dive: Investment Management'
+title: "Playbook 2a — Deep Dive: Investment Management"
 summary:
-  'pb2a implementation — /briefings/investment-management IM deep-briefing covering the IM proposition,
-  four catalogues, Pooled vs SMA, allocator client reporting, FCA 975797 framework and track record;
-  promotes the prospect to the pb3b IM demo.'
+  "pb2a implementation — /briefings/investment-management IM deep-briefing covering the IM proposition, four catalogues,
+  Pooled vs SMA, allocator client reporting, FCA 975797 framework and track record; promotes the prospect to the pb3b IM
+  demo."
 status: current
 nature: ssot
 asset_group: [meta]
@@ -14,15 +14,23 @@ scope: [engineer, admin, sales]
 tags: [customer-journey, playbook, briefings, investment-management, reporting, prospect]
 related:
   [
-    02-research-and-documentation.md,
-    02b-research-dart.md,
-    02c-research-regulatory.md,
-    03b-demo-im.md,
+    /codex/14-customer-journeys/playbooks/02-research-and-documentation.md,
+    /codex/14-customer-journeys/playbooks/02b-research-dart.md,
+    /codex/14-customer-journeys/playbooks/02c-research-regulatory.md,
+    /codex/14-customer-journeys/playbooks/03b-demo-im.md,
     ../experience/im-decision-journey.md,
   ]
 created: 2026-04-19
 authoritative_for: [pb2a IM Deep Dive briefing playbook implementation]
-referenced_by: [codex/14-customer-journeys/experience/im-decision-journey.md, codex/14-customer-journeys/playbooks/02-research-and-documentation.md, codex/14-customer-journeys/playbooks/02b-research-dart.md, codex/14-customer-journeys/playbooks/02c-research-regulatory.md, codex/14-customer-journeys/playbooks/03b-demo-im.md, codex/14-customer-journeys/playbooks/README.md]
+referenced_by:
+  [
+    /codex/14-customer-journeys/experience/im-decision-journey.md,
+    /codex/14-customer-journeys/playbooks/02-research-and-documentation.md,
+    /codex/14-customer-journeys/playbooks/02b-research-dart.md,
+    /codex/14-customer-journeys/playbooks/02c-research-regulatory.md,
+    /codex/14-customer-journeys/playbooks/03b-demo-im.md,
+    /codex/14-customer-journeys/playbooks/README.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

@@ -40,9 +40,9 @@ related:
     plans/active/bucket_estate_consolidation_to_sub100_2026_07_13.md,
     plans/active/bucket_iam_write_protection_per_tier_2026_06_09.md,
     plans/active/bucket_fold_closeout_2026_07_17.md,
-    codex/05-infrastructure/bucket-isolation-model.md,
-    codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md,
-    codex/02-data/pipeline-mode-partition.md,
+    /codex/05-infrastructure/bucket-isolation-model.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md,
+    /codex/02-data/pipeline-mode-partition.md,
   ]
 created: "2026-07-17"
 last_updated: "2026-07-17"
@@ -96,10 +96,10 @@ per-domain path prefixes:
 
 ## Codex SSOTs (read before touching — plan↔codex drift is review-blocking)
 
-- `codex/05-infrastructure/bucket-isolation-model.md` — Group B naming → folded portfolio-state shape (closeout).
-- `codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md` — pnl-attribution semantics (do not corrupt on
+- `/codex/05-infrastructure/bucket-isolation-model.md` — Group B naming → folded portfolio-state shape (closeout).
+- `/codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md` — pnl-attribution semantics (do not corrupt on
   migrate).
-- `codex/02-data/pipeline-mode-partition.md` — reader-fallback discipline; `_KIND_ALIASES` soft-window.
+- `/codex/02-data/pipeline-mode-partition.md` — reader-fallback discipline; `_KIND_ALIASES` soft-window.
 - Design cross-cutting: [[bucket_estate_fold_design_2026_07_13]] §2.A/C/D/E.
 
 ## Todos — DeFi-playbook order, but delete + reader-cutover OPERATOR-GATED

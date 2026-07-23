@@ -12,7 +12,11 @@ repos: [execution-service, strategy-service]
 scope: [engineer, admin]
 tags: [strategy, execution, ssot, reconciliation, defi]
 related:
-  [account-instructions.md, slow-fast-routing-split.md, ../09-strategy/architecture-v2/cross-cutting/benchmark-fills.md]
+  [
+    /codex/04-architecture/account-instructions.md,
+    /codex/04-architecture/slow-fast-routing-split.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/benchmark-fills.md,
+  ]
 created: 2026-04-17
 authoritative_for:
   [
@@ -21,14 +25,14 @@ authoritative_for:
   ]
 referenced_by:
   [
-    codex/04-architecture/account-instructions.md,
-    codex/04-architecture/artifact-versioning.md,
-    codex/04-architecture/backtest-groups.md,
-    codex/04-architecture/capital-flow-model.md,
-    codex/04-architecture/capital-structure-and-regulatory.md,
-    codex/04-architecture/oms-protocol-and-state-machine.md,
-    codex/04-architecture/order-state-machine.md,
-    codex/04-architecture/share-class-architecture.md,
+    /codex/04-architecture/account-instructions.md,
+    /codex/04-architecture/artifact-versioning.md,
+    /codex/04-architecture/backtest-groups.md,
+    /codex/04-architecture/capital-flow-model.md,
+    /codex/04-architecture/capital-structure-and-regulatory.md,
+    /codex/04-architecture/oms-protocol-and-state-machine.md,
+    /codex/04-architecture/order-state-machine.md,
+    /codex/04-architecture/share-class-architecture.md,
   ]
 owner:
 last_reviewed: 2026-05-17
@@ -130,7 +134,7 @@ live:
 Strategy alpha attribution uses only `benchmark_pnl`. Execution alpha measures `real_pnl - benchmark_pnl`.
 
 Full contract:
-[../09-strategy/architecture-v2/cross-cutting/benchmark-fills.md](../09-strategy/architecture-v2/cross-cutting/benchmark-fills.md).
+[/codex/09-strategy/architecture-v2/cross-cutting/benchmark-fills.md](/codex/09-strategy/architecture-v2/cross-cutting/benchmark-fills.md).
 
 ## StrategyInstruction (Polymorphic, 11 Actions)
 
@@ -372,15 +376,15 @@ attribution.
 ## Cross-references
 
 - Polymorphic StrategyInstruction axis details:
-  [../09-strategy/architecture-v2/README.md](../09-strategy/architecture-v2/README.md)
+  [/codex/09-strategy/architecture-v2/README.md](/codex/09-strategy/architecture-v2/README.md)
 - Benchmark fills:
-  [../09-strategy/architecture-v2/cross-cutting/benchmark-fills.md](../09-strategy/architecture-v2/cross-cutting/benchmark-fills.md)
+  [/codex/09-strategy/architecture-v2/cross-cutting/benchmark-fills.md](/codex/09-strategy/architecture-v2/cross-cutting/benchmark-fills.md)
 - Risk gates (4-layer):
-  [../09-strategy/architecture-v2/cross-cutting/risk-gates.md](../09-strategy/architecture-v2/cross-cutting/risk-gates.md)
+  [/codex/09-strategy/architecture-v2/cross-cutting/risk-gates.md](/codex/09-strategy/architecture-v2/cross-cutting/risk-gates.md)
 - Venue-account coordination:
-  [../09-strategy/architecture-v2/cross-cutting/venue-account-coordination.md](../09-strategy/architecture-v2/cross-cutting/venue-account-coordination.md)
+  [/codex/09-strategy/architecture-v2/cross-cutting/venue-account-coordination.md](/codex/09-strategy/architecture-v2/cross-cutting/venue-account-coordination.md)
 - Execution policies:
-  [../09-strategy/architecture-v2/cross-cutting/execution-policies.md](../09-strategy/architecture-v2/cross-cutting/execution-policies.md)
+  [/codex/09-strategy/architecture-v2/cross-cutting/execution-policies.md](/codex/09-strategy/architecture-v2/cross-cutting/execution-policies.md)
 - Artifact versioning: [artifact-versioning.md](artifact-versioning.md)
 - Account instructions: [account-instructions.md](account-instructions.md)
 - Capital flow model: [capital-flow-model.md](capital-flow-model.md)

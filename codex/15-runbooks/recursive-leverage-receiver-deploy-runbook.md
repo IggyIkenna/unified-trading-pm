@@ -13,10 +13,10 @@ stage: [meta]
 repos: [deployment-service, execution-service, unified-api-contracts]
 scope: [engineer, admin]
 tags: [defi, execution, runbook, deployment, uac]
-related: [../04-architecture/flash-loan-receiver.md]
+related: [/codex/04-architecture/flash-loan-receiver.md]
 created: 2026-05-15
 authoritative_for: [RecursiveLeverageReceiver deploy runbook]
-referenced_by: [codex/04-architecture/flash-loan-receiver.md]
+referenced_by: [/codex/04-architecture/flash-loan-receiver.md]
 owner: slot-2-ikenna
 last_reviewed: 2026-05-17
 code_refs:
@@ -37,8 +37,8 @@ last_executed: 2026-05-15 (Sepolia)
 Operator runbook for deploying the Phase 4 `RecursiveLeverageReceiver.sol` (action-encoder pattern) to a target chain
 and registering the address in UAC + Secret Manager.
 
-Companion SSOT to [`../04-architecture/flash-loan-receiver.md`](../04-architecture/flash-loan-receiver.md) § "Extended
-receiver".
+Companion SSOT to [`/codex/04-architecture/flash-loan-receiver.md`](/codex/04-architecture/flash-loan-receiver.md) §
+"Extended receiver".
 
 ## Pre-deploy checklist
 
@@ -197,5 +197,5 @@ UAC registry SHA:  unified-api-contracts@468df51
 
 - Phase 4 of
   [`defi_recursive_borrow_archetypes_2026_05_10.md`](../../plans/active/defi_recursive_borrow_archetypes_2026_05_10.md)
-- Companion: [`../04-architecture/flash-loan-receiver.md`](../04-architecture/flash-loan-receiver.md) (passthrough
-  sibling contract)
+- Companion: [`/codex/04-architecture/flash-loan-receiver.md`](/codex/04-architecture/flash-loan-receiver.md)
+  (passthrough sibling contract)

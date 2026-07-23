@@ -43,8 +43,8 @@ tags:
 related:
   [
     ../data_completion_to_100_all_ag_2026_06_21.md,
-    codex/02-data/availability-manifest-and-data-status.md,
-    codex/05-infrastructure/manifest-consolidator-ssot.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/05-infrastructure/manifest-consolidator-ssot.md,
   ]
 created: 2026-07-13
 parent_epic: mtds_mdps_master

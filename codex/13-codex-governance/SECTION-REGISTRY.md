@@ -2,9 +2,8 @@
 doc_type: codex-ssot
 title: Codex Section Registry
 summary:
-  "Canonical registry of all 14 codex section directories (00-13 + deleted 14 Testing Guides) — each row's
-  purpose, update trigger, and correct-content examples, plus the table of content types that do NOT belong in
-  any codex section."
+  "Canonical registry of all 14 codex section directories (00-13 + deleted 14 Testing Guides) — each row's purpose,
+  update trigger, and correct-content examples, plus the table of content types that do NOT belong in any codex section."
 status: current
 nature: ssot
 asset_group: [meta]
@@ -12,10 +11,10 @@ stage: [meta]
 repos: [deployment-service, unified-trading-pm]
 scope: [engineer, admin]
 tags: [codex, governance, registry, ssot-audit, docspec]
-related: [SSOT-BOUNDARY.md]
+related: [/codex/13-codex-governance/SSOT-BOUNDARY.md]
 created: 2026-03-27
 authoritative_for: [codex section registry (14-section directory map)]
-referenced_by: [codex/13-codex-governance/SSOT-BOUNDARY.md]
+referenced_by: [/codex/13-codex-governance/SSOT-BOUNDARY.md]
 owner:
 last_reviewed:
 code_refs:

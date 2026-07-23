@@ -15,7 +15,7 @@ related:
   [
     plans/active/issues/live_tardis_machine_and_hl_aster_s3_batch_2026_06_21.md,
     plans/active/issues/live_mode_event_sink_topic_missing_2026_06_21.md,
-    codex/02-data/pipeline-mode-partition.md,
+    /codex/02-data/pipeline-mode-partition.md,
   ]
 created: 2026-06-21
 parent_epic: infrastructure_master

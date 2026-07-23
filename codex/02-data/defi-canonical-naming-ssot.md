@@ -23,10 +23,10 @@ scope: [engineer, admin]
 tags: [defi, canonicalisation, pipeline-mode, manifest, data-correctness, ssot-audit, migration]
 related:
   [
-    defi-data-pipeline.md,
-    defi-data-types-catalog.md,
-    defi-data-type-taxonomy.md,
-    pipeline-mode-partition.md,
+    /codex/02-data/defi-data-pipeline.md,
+    /codex/02-data/defi-data-types-catalog.md,
+    /codex/02-data/defi-data-type-taxonomy.md,
+    /codex/02-data/pipeline-mode-partition.md,
     ../../plans/archive/2026_07/defi_manifest_canonicalisation_2026_06_01.md,
   ]
 created: 2026-06-01
@@ -38,11 +38,11 @@ authoritative_for:
   ]
 referenced_by:
   [
-    codex/02-data/defi-data-pipeline.md,
-    codex/02-data/defi-data-types-catalog.md,
-    codex/02-data/instruments-foundation-and-catalogue-completeness.md,
-    codex/04-architecture/solana-defi-coverage.md,
-    codex/04-architecture/token-wrapping-and-collateral.md,
+    /codex/02-data/defi-data-pipeline.md,
+    /codex/02-data/defi-data-types-catalog.md,
+    /codex/02-data/instruments-foundation-and-catalogue-completeness.md,
+    /codex/04-architecture/solana-defi-coverage.md,
+    /codex/04-architecture/token-wrapping-and-collateral.md,
     plans/active/issues/defi_code_codex_drift_2026_05_27.md,
     plans/active/issues/features_service_defi_data_loading_blockers_2026_05_29.md,
     plans/audit/results/defi_c0_datastate_audit_2026_06_01.md,

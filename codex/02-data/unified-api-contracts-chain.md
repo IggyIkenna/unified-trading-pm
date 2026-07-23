@@ -8,13 +8,23 @@ status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
-repos: [alerting-service, execution-service, features-service, instruments-service, market-data-processing-service, market-tick-data-service]
+repos:
+  [
+    alerting-service,
+    execution-service,
+    features-service,
+    instruments-service,
+    market-data-processing-service,
+    market-tick-data-service,
+  ]
 scope: [engineer, admin]
 tags: [uac, validation, quality-gates, mtds, execution, instruments]
-related: [codex/02-data/schema-governance.md, codex/02-data/vcr-cassette-ownership.md, codex/06-coding-standards/README.md]
+related:
+  [/codex/02-data/schema-governance.md, /codex/02-data/vcr-cassette-ownership.md, /codex/06-coding-standards/README.md]
 created: 2026-03-27
-authoritative_for: [unified-api-contracts normalization chain (config to canonical), check_sdk_version_alignment SDK-pin gate]
-referenced_by: [codex/02-data/subscription-model.md, codex/02-data/vcr-cassette-ownership.md]
+authoritative_for:
+  [unified-api-contracts normalization chain (config to canonical), check_sdk_version_alignment SDK-pin gate]
+referenced_by: [/codex/02-data/subscription-model.md, /codex/02-data/vcr-cassette-ownership.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

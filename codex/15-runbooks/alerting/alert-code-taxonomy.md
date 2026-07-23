@@ -15,9 +15,9 @@ scope: [engineer, admin]
 tags: [alerting, uac, runbook, defi, ml, kill-switch, escalation, live-trading]
 related:
   [
-    codex/15-runbooks/alerting/operator-playbook.md,
-    codex/15-runbooks/alerting/threshold-tuning.md,
-    codex/05-infrastructure/live-deployment-monitoring.md,
+    /codex/15-runbooks/alerting/operator-playbook.md,
+    /codex/15-runbooks/alerting/threshold-tuning.md,
+    /codex/05-infrastructure/live-deployment-monitoring.md,
   ]
 created: 2026-05-07
 owner: ikenna

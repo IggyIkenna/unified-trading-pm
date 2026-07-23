@@ -4,8 +4,8 @@ title: MDPS long-running efficiency audit — synthesis
 summary: >-
   Operator-readable rollup of the 7 MDPS long-running efficiency findings docs (2026-05-28): engine-mixing (likely
   majority owner of the 15.7 GB floor), CLI canonical-id silent-zero-blobs, double 526 MB manifest read per shard,
-  execution-shape cost model, observability gaps, axes E/G/H, state inventory. Empirical anchor: Phase-3.2 canary
-  15.7 GB post-day-1 residue (cleanup pulls only ~9 GB); the rest lives in Polars/PyArrow arenas Python GC cannot reach.
+  execution-shape cost model, observability gaps, axes E/G/H, state inventory. Empirical anchor: Phase-3.2 canary 15.7
+  GB post-day-1 residue (cleanup pulls only ~9 GB); the rest lives in Polars/PyArrow arenas Python GC cannot reach.
   Recommends pure-Polars + subprocess-per-date for Phase 1.
 status: partial
 nature: record
@@ -19,8 +19,10 @@ related:
   - plans/audit/results/mdps_long_running_cli_granularity_2026_05_28.md
   - plans/active/mdps_long_running_multi_shard_architecture_audit_2026_05_28.md
 created: 2026-05-28
-audited_scope: synthesis of the 7 MDPS long-running efficiency findings docs (state-inventory / engine-mixing / cli-granularity / manifest-io / concurrency / observability / axes-e-g-h)
-date: '2026-05-28'
+audited_scope:
+  synthesis of the 7 MDPS long-running efficiency findings docs (state-inventory / engine-mixing / cli-granularity /
+  manifest-io / concurrency / observability / axes-e-g-h)
+date: "2026-05-28"
 auditor: claude opus 4.7 (slot main)
 parent_epic: mtds_mdps_master
 severity: P1
@@ -96,14 +98,14 @@ Driven by what these 7 docs surfaced:
 
 All 7 findings are consistent with the four codex docs landed 2026-05-28:
 
-- [`codex/06-coding-standards/service-orchestration-patterns.md`](../../codex/06-coding-standards/service-orchestration-patterns.md)
+- [`codex/06-coding-standards/service-orchestration-patterns.md`](/codex/06-coding-standards/service-orchestration-patterns.md)
   § 15 — referenced by findings 1, 7.
-- [`codex/06-coding-standards/cli-convention.md`](../../codex/06-coding-standards/cli-convention.md) "Instrument
-  Identity" — finding 3 is the implementation-side audit of this contract.
-- [`codex/05-infrastructure/vm-tarball-deployment.md`](../../codex/05-infrastructure/vm-tarball-deployment.md) invariant
-  #10 — referenced by finding 5.
-- [`codex/06-coding-standards/data-engine-selection.md`](../../codex/06-coding-standards/data-engine-selection.md) —
-  finding 2 is the implementation-side audit.
+- [`codex/06-coding-standards/cli-convention.md`](/codex/06-coding-standards/cli-convention.md) "Instrument Identity" —
+  finding 3 is the implementation-side audit of this contract.
+- [`codex/05-infrastructure/vm-tarball-deployment.md`](/codex/05-infrastructure/vm-tarball-deployment.md) invariant #10
+  — referenced by finding 5.
+- [`codex/06-coding-standards/data-engine-selection.md`](/codex/06-coding-standards/data-engine-selection.md) — finding
+  2 is the implementation-side audit.
 
 No codex contradictions surfaced — these are gap-fills + first audits against newly-codified rules.
 

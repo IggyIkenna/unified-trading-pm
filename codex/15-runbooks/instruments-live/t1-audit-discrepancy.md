@@ -2,8 +2,8 @@
 doc_type: codex-runbook
 title: T+1 audit discrepancy — runbook
 summary: >-
-  Operator runbook for INSTRUMENTS_LIVE_T1_AUDIT_DISCREPANCY: triage by discrepancy_type into Class A MISSING_ROWS_LIVE /
-  B EXTRA_ROWS_LIVE / C FIELD_VALUE_DRIFT / D AVAILABLE_AT_DRIFT, remediate per class (re-run refresh, fix the live
+  Operator runbook for INSTRUMENTS_LIVE_T1_AUDIT_DISCREPANCY: triage by discrepancy_type into Class A MISSING_ROWS_LIVE
+  / B EXTRA_ROWS_LIVE / C FIELD_VALUE_DRIFT / D AVAILABLE_AT_DRIFT, remediate per class (re-run refresh, fix the live
   adapter never batch, kill-switch spurious rows), and skip last-day-of-coverage + honest-gap windows.
 status: current
 nature: process
@@ -14,11 +14,11 @@ scope: [engineer]
 tags: [runbook, instruments, data-status, data-correctness, audit, escalation]
 related:
   [
-    codex/04-architecture/instruments-live-architecture.md,
-    codex/04-architecture/instruments-preflight-chain.md,
-    codex/15-runbooks/alerting/alert-code-taxonomy.md,
-    codex/02-data/mtds-data-source-coverage-matrix.md,
-    codex/05-infrastructure/live-deployment-monitoring.md,
+    /codex/04-architecture/instruments-live-architecture.md,
+    /codex/04-architecture/instruments-preflight-chain.md,
+    /codex/15-runbooks/alerting/alert-code-taxonomy.md,
+    /codex/02-data/mtds-data-source-coverage-matrix.md,
+    /codex/05-infrastructure/live-deployment-monitoring.md,
   ]
 created: 2026-05-08
 owner: ikenna

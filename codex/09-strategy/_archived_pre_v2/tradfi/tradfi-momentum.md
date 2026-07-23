@@ -2,10 +2,9 @@
 doc_type: codex-ssot
 title: TradFi Momentum
 summary: >-
-  [SUPERSEDED, pre-v2] TradFi ML momentum strategy (SPY, TRADFI_SPY_MOM_MACD) — maps swing_high/swing_low ML
-  predictions to LONG/SHORT/FLAT with instruments-service market-hours gating; SCE (same-candle-exit
-  intraday) and HUF (hold-until-flip swing) execution modes. Replaced by architecture-v2
-  ml-directional-continuous.
+  [SUPERSEDED, pre-v2] TradFi ML momentum strategy (SPY, TRADFI_SPY_MOM_MACD) — maps swing_high/swing_low ML predictions
+  to LONG/SHORT/FLAT with instruments-service market-hours gating; SCE (same-candle-exit intraday) and HUF
+  (hold-until-flip swing) execution modes. Replaced by architecture-v2 ml-directional-continuous.
 status: superseded
 nature: ssot
 asset_group: [meta]
@@ -16,7 +15,11 @@ tags: [strategy, tradfi, ml, momentum, instruments, features]
 related: [ml-directional.md, ../../architecture-v2/archetypes/ml-directional-continuous.md]
 created: 2026-06-16
 authoritative_for:
-referenced_by: [codex/09-strategy/_archived_pre_v2/STRATEGY_CATALOG_pre_v2.md, codex/09-strategy/_archived_pre_v2/tradfi/ml-directional.md]
+referenced_by:
+  [
+    /codex/09-strategy/_archived_pre_v2/STRATEGY_CATALOG_pre_v2.md,
+    /codex/09-strategy/_archived_pre_v2/tradfi/ml-directional.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

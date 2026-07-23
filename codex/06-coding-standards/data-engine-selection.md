@@ -13,9 +13,16 @@ stage: [meta]
 repos: [deployment-service, market-data-processing-service]
 scope: [engineer]
 tags: [polars, performance, data-pipeline, mdps, refactor, features, quality-gates]
-related: [read-time-filter-pushdown.md, service-orchestration-patterns.md, ../05-infrastructure/vm-tarball-deployment.md, dependency-management.md]
+related:
+  [
+    /codex/06-coding-standards/read-time-filter-pushdown.md,
+    /codex/06-coding-standards/service-orchestration-patterns.md,
+    /codex/05-infrastructure/vm-tarball-deployment.md,
+    /codex/06-coding-standards/dependency-management.md,
+  ]
 created: 2026-05-28
-authoritative_for: [per-service data-engine selection (Polars/Pandas+PyArrow/PyArrow/BigQuery), single-engine mid-pipeline discipline]
+authoritative_for:
+  [per-service data-engine selection (Polars/Pandas+PyArrow/PyArrow/BigQuery), single-engine mid-pipeline discipline]
 referenced_by: [plans/active/bigquery_feature_ml_compute_engine_option_2026_06_08.md]
 owner:
 last_reviewed:
@@ -60,7 +67,7 @@ GCS bytes  →  pl.read_parquet  →  pl.DataFrame
 
 allocates **four** independent buffer regions for one shard's data. Even after the function returns, three of them
 remain pinned in their respective arenas. For a long-running multi-shard VM (see
-[`vm-tarball-deployment.md`](../05-infrastructure/vm-tarball-deployment.md) § "Per-shard cleanup discipline"), this
+[`vm-tarball-deployment.md`](/codex/05-infrastructure/vm-tarball-deployment.md) § "Per-shard cleanup discipline"), this
 compounds shard-over-shard regardless of any per-shard cleanup hook the service wires — the cleanup hook can `del` the
 Python wrappers but cannot reach the arenas.
 
@@ -231,7 +238,7 @@ asserted equal to the polars path on a fixture), same canonical v9 schema, same 
 - [`service-orchestration-patterns.md`](service-orchestration-patterns.md) § 15 "Batch Service Lifecycle: Setup, Work,
   Cleanup" — the per-shard cleanup hook handles Python-level state; single-engine discipline handles C-extension arena
   state. Both are required for stable multi-shard RSS.
-- [`vm-tarball-deployment.md`](../05-infrastructure/vm-tarball-deployment.md) § "Per-shard cleanup discipline for
+- [`vm-tarball-deployment.md`](/codex/05-infrastructure/vm-tarball-deployment.md) § "Per-shard cleanup discipline for
   multi-shard VMs" — the VM-lifecycle side of the same rule.
 - [`cli-convention.md`](cli-convention.md) § "Instrument Identity and CLI Granularity" — single-shard drilldown runs
   must still exercise the chosen engine end-to-end; conversion churn is a multi-shard problem but a single-shard

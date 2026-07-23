@@ -56,9 +56,9 @@ related:
     plans/archive/2026_07/bucket_env_split_rollout_2026_06.md,
     plans/active/defi_dedicated_bucket_shared_migration_2026_07_13.md,
     plans/active/bucket_iam_write_protection_per_tier_2026_06_09.md,
-    codex/05-infrastructure/bucket-isolation-model.md,
-    codex/02-data/pipeline-mode-partition.md,
-    codex/05-infrastructure/manifest-consolidator-ssot.md,
+    /codex/05-infrastructure/bucket-isolation-model.md,
+    /codex/02-data/pipeline-mode-partition.md,
+    /codex/05-infrastructure/manifest-consolidator-ssot.md,
   ]
 created: "2026-07-13"
 last_updated: "2026-07-13"
@@ -97,12 +97,11 @@ source:
 > retention differs.
 
 **Codex SSOTs** (this plan REFERENCES, does not duplicate):
-[`codex/05-infrastructure/bucket-isolation-model.md`](../../codex/05-infrastructure/bucket-isolation-model.md) (naming /
-tiers / Group A-vs-B), [`codex/02-data/pipeline-mode-partition.md`](../../codex/02-data/pipeline-mode-partition.md) (the
+[`/codex/05-infrastructure/bucket-isolation-model.md`](/codex/05-infrastructure/bucket-isolation-model.md) (naming /
+tiers / Group A-vs-B), [`/codex/02-data/pipeline-mode-partition.md`](/codex/02-data/pipeline-mode-partition.md) (the
 `pipeline_mode=` path key is LEFT of `asset_group=` and unaffected by a bucket-name/prefix fold),
-[`codex/05-infrastructure/manifest-consolidator-ssot.md`](../../codex/05-infrastructure/manifest-consolidator-ssot.md)
-(one Cloud Run / Batch-Fargate job per `(service_kind, asset_group)` — folding buckets changes the consolidator target
-set).
+[`/codex/05-infrastructure/manifest-consolidator-ssot.md`](/codex/05-infrastructure/manifest-consolidator-ssot.md) (one
+Cloud Run / Batch-Fargate job per `(service_kind, asset_group)` — folding buckets changes the consolidator target set).
 
 **Design invariant.** A fold changes TWO things: the bucket NAME (per-AG/per-kind → one folded name) and the object PATH
 (the old kind/AG axis becomes a top-level path prefix). `resolve_bucket_name()` returns only the name, so the prefix

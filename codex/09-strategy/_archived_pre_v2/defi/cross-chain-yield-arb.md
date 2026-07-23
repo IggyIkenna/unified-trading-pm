@@ -1,7 +1,9 @@
 ---
 doc_type: codex-ssot
 title: Cross-Chain Yield Arbitrage
-summary: "Pre-v2: cross-chain yield arbitrage (DEFI_CROSSCHAIN_YIELD_ARB_1H) — capture same-asset APY spreads across chains (e.g. Aave USDC 8% Arbitrum vs 3% Ethereum) by bridging when spread > bridge+gas costs."
+summary:
+  "Pre-v2: cross-chain yield arbitrage (DEFI_CROSSCHAIN_YIELD_ARB_1H) — capture same-asset APY spreads across chains
+  (e.g. Aave USDC 8% Arbitrum vs 3% Ethereum) by bridging when spread > bridge+gas costs."
 status: superseded
 nature: ssot
 asset_group: [meta]
@@ -12,11 +14,17 @@ tags: [defi, cross-chain, strategy, yield, arbitrage]
 related:
   [
     ../../architecture-v2/archetypes/yield-rotation-lending.md,
-    cross-chain-sor-rebalancing.md,
+    /codex/09-strategy/_archived_pre_v2/defi/cross-chain-sor-rebalancing.md,
   ]
 created: 2026-03-28
 authoritative_for: []
-referenced_by: [codex/09-strategy/_archived_pre_v2/STRATEGY_CATALOG_pre_v2.md, codex/09-strategy/_archived_pre_v2/defi/cross-chain-sor-rebalancing.md, codex/09-strategy/_archived_pre_v2/defi/multi-chain-lending-yield.md, codex/09-strategy/_archived_pre_v2/defi/omnichain-transfers.md]
+referenced_by:
+  [
+    /codex/09-strategy/_archived_pre_v2/STRATEGY_CATALOG_pre_v2.md,
+    /codex/09-strategy/_archived_pre_v2/defi/cross-chain-sor-rebalancing.md,
+    /codex/09-strategy/_archived_pre_v2/defi/multi-chain-lending-yield.md,
+    /codex/09-strategy/_archived_pre_v2/defi/omnichain-transfers.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

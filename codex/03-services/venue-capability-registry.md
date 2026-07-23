@@ -15,14 +15,21 @@ scope: [engineer]
 tags: [venue-capability, registry, uac, execution, strategy, cefi, defi]
 related:
   [
-    ../02-venues/venue-registry-reference.md,
+    /codex/02-venues/venue-registry-reference.md,
     portfolio-allocator.md,
-    ../04-architecture/capital-efficiency-patterns.md,
-    ../02-data/contracts-scope-and-layout.md,
+    /codex/04-architecture/capital-efficiency-patterns.md,
+    /codex/02-data/contracts-scope-and-layout.md,
   ]
 created: 2026-04-17
 authoritative_for: [venue capability registry, venue capability declaration schema]
-referenced_by: [codex/02-venues/prime-brokers.md, codex/02-venues/unity-integration.md, codex/02-venues/venue-registry-reference.md, codex/03-services/portfolio-allocator.md, codex/06-coding-standards/artifact-naming.md]
+referenced_by:
+  [
+    /codex/02-venues/prime-brokers.md,
+    /codex/02-venues/unity-integration.md,
+    /codex/02-venues/venue-registry-reference.md,
+    /codex/03-services/portfolio-allocator.md,
+    /codex/06-coding-standards/artifact-naming.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -194,7 +201,8 @@ Venue capability declarations follow UAC semver:
 - Minor bump: adding new operation/instrument support (backward compatible)
 - Major bump: removing support, changing LTV semantics, renaming enums
 
-Consumers pin UAC major version. See [../04-architecture/schema-versioning.md](../04-architecture/schema-versioning.md).
+Consumers pin UAC major version. See
+[/codex/04-architecture/schema-versioning.md](/codex/04-architecture/schema-versioning.md).
 
 ## Consumers
 
@@ -268,17 +276,17 @@ UI consumes auto-generated types from UAC (OpenAPI pipeline).
 
 ## Cross-references
 
-- Venue registry reference: [../02-venues/venue-registry-reference.md](../02-venues/venue-registry-reference.md)
+- Venue registry reference: [/codex/02-venues/venue-registry-reference.md](/codex/02-venues/venue-registry-reference.md)
 - Capital efficiency (consumes this registry):
-  [../04-architecture/capital-efficiency-patterns.md](../04-architecture/capital-efficiency-patterns.md)
+  [/codex/04-architecture/capital-efficiency-patterns.md](/codex/04-architecture/capital-efficiency-patterns.md)
 - Slow-fast routing split:
-  [../04-architecture/slow-fast-routing-split.md](../04-architecture/slow-fast-routing-split.md)
-- UAC Citadel layout: [../02-data/contracts-scope-and-layout.md](../02-data/contracts-scope-and-layout.md)
-- Schema versioning: [../04-architecture/schema-versioning.md](../04-architecture/schema-versioning.md)
+  [/codex/04-architecture/slow-fast-routing-split.md](/codex/04-architecture/slow-fast-routing-split.md)
+- UAC Citadel layout: [/codex/02-data/contracts-scope-and-layout.md](/codex/02-data/contracts-scope-and-layout.md)
+- Schema versioning: [/codex/04-architecture/schema-versioning.md](/codex/04-architecture/schema-versioning.md)
 
 ## Not in this doc
 
-- **Venue data paths** — [../02-data/venue-availability.md](../02-data/venue-availability.md) for data shards
+- **Venue data paths** — [/codex/02-data/venue-availability.md](/codex/02-data/venue-availability.md) for data shards
 - **Per-venue adapter code** — execution-service/adapters/
 - **Per-venue credentials** — Secret Manager
 - **Dynamic venue health** — execution-service runtime

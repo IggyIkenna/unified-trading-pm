@@ -17,9 +17,9 @@ tags: [honest-coverage, instrument-type, case, d1-ruling, migration-pending, cov
 related:
   [
     ../data_pipeline_reconciliation_skill_2026_07_20.md,
-    ../../codex/02-data/honest-coverage-model.md,
-    ../../codex/02-data/cross-asset-canonical-target-ssot.md,
-    ../../codex/02-data/canonical-cutover-register.md,
+    /codex/02-data/honest-coverage-model.md,
+    /codex/02-data/cross-asset-canonical-target-ssot.md,
+    /codex/02-data/canonical-cutover-register.md,
   ]
 created: 2026-07-20
 last_updated: 2026-07-20
@@ -50,12 +50,12 @@ source:
 
 ## The contradiction
 
-- `codex/02-data/honest-coverage-model.md:154-157` states, as CK3-certified SSOT for the v2 coverage harness's read
+- `/codex/02-data/honest-coverage-model.md:154-157` states, as CK3-certified SSOT for the v2 coverage harness's read
   grain: _"`instrument_type` is a **real lowercase writer-grain column** (`spot`, `perpetuals`, `options_chain`,
   `futures_chain`, `pool`, `lending`, `prediction_market`, …) — **NOT the UPPERCASE catalogue enum**. The v2 harness
   MUST read `instrument_type`…"_
 - The 2026-07-20 **D1** ruling (`plans/active/data_pipeline_reconciliation_skill_2026_07_20.md` § D1 +
-  `codex/02-data/cross-asset-canonical-target-ssot.md` §7/§11) makes the canonical manifest `instrument_type` **COLUMN
+  `/codex/02-data/cross-asset-canonical-target-ssot.md` §7/§11) makes the canonical manifest `instrument_type` **COLUMN
   UPPERCASE** (catalogue enum wins).
 
 These describe the **same column** in opposite cases. Both are internally right for their moment: honest-coverage

@@ -17,10 +17,10 @@ scope: [engineer, admin]
 tags: [security, github-actions, self-hosted-runners, adc, credentials, ci-cd, glue-runners]
 related:
   [
-    secrets-management.md,
-    gha-wif-migration.md,
-    ../08-workflows/ci-cd-flow.md,
-    ../05-infrastructure/claude-code-settings-symlink.md,
+    /codex/07-security/secrets-management.md,
+    /codex/07-security/gha-wif-migration.md,
+    /codex/08-workflows/ci-cd-flow.md,
+    /codex/05-infrastructure/claude-code-settings-symlink.md,
   ]
 created: 2026-07-17
 authoritative_for: [self-hosted runner ambient-identity posture, glue-runner credential-exposure facts]

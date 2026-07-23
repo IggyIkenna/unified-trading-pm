@@ -12,15 +12,34 @@ stage: [meta]
 repos: [deployment-service, execution-service, instruments-service, unified-api-contracts]
 scope: [engineer, admin]
 tags: [audit, execution, compliance, observability, data-status]
-related: [compliance.md, secrets-management.md, ../03-observability/lifecycle-events.md]
+related:
+  [
+    /codex/07-security/compliance.md,
+    /codex/07-security/secrets-management.md,
+    /codex/03-observability/lifecycle-events.md,
+  ]
 created: 2026-03-27
 authoritative_for:
   [security audit events (AUTH_FAILURE/SECRET_ACCESSED/CONFIG_CHANGED), trade and strategy audit retention]
-referenced_by: [codex/03-observability/lifecycle-events.md, codex/06-coding-standards/correlation-id.md, codex/07-security/compliance.md, codex/07-security/transport-security.md]
+referenced_by:
+  [
+    /codex/03-observability/lifecycle-events.md,
+    /codex/06-coding-standards/correlation-id.md,
+    /codex/07-security/compliance.md,
+    /codex/07-security/transport-security.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
-execution: {owner: execution-service maintainer (audit-log path) + governance (retention-lock provisioning), cadence: continuous (live emission per trade/order action; one-shot retention-lock setup pre-cutover), verifier: 'GCS object-listing under `audit/{client_id_or_order_id}/{YYYY/MM/DD}/` matches `EXECUTION_AUDIT.required_fields` schema; retention-lock policy attached via `gsutil retention set`.', last_executed: NEVER (retention-lock provisioning P0 PRE_CUTOVER gap per slot 8 audit PB-2 / PB-8)}
+execution:
+  {
+    owner: execution-service maintainer (audit-log path) + governance (retention-lock provisioning),
+    cadence: continuous (live emission per trade/order action; one-shot retention-lock setup pre-cutover),
+    verifier:
+      "GCS object-listing under `audit/{client_id_or_order_id}/{YYYY/MM/DD}/` matches `EXECUTION_AUDIT.required_fields`
+      schema; retention-lock policy attached via `gsutil retention set`.",
+    last_executed: NEVER (retention-lock provisioning P0 PRE_CUTOVER gap per slot 8 audit PB-2 / PB-8),
+  }
 ---
 
 # Audit Logging

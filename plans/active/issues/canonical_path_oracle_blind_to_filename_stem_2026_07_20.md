@@ -142,10 +142,10 @@ legacy prefix. **A report that cites one class and claims "canonical" is wrong.*
 | consumer                                                                                   | behaviour     | falsely clean?                                                                             |
 | ------------------------------------------------------------------------------------------ | ------------- | ------------------------------------------------------------------------------------------ |
 | `/data-pipeline-reconciliation` skill (surface A)                                          | reports       | **YES** — its HARD RULE names this oracle as the only authority; CeFi surface A read clean |
-| `codex/02-data/four-surface-reconciliation-procedure.md` § 4                               | procedure     | **YES** — enumerated the oracle's clauses without noting the stem is unvalidated           |
-| `codex/02-data/reconciliation-finding-taxonomy.md` § 2.2 `non_canonical_path`              | taxonomy      | **YES** — the finding could never fire on a wire-named CeFi object                         |
+| `/codex/02-data/four-surface-reconciliation-procedure.md` § 4                              | procedure     | **YES** — enumerated the oracle's clauses without noting the stem is unvalidated           |
+| `/codex/02-data/reconciliation-finding-taxonomy.md` § 2.2 `non_canonical_path`             | taxonomy      | **YES** — the finding could never fire on a wire-named CeFi object                         |
 | `e2e-testing/scripts/audit/manifest_hygiene_daily.py:197` (`DP_NONCANONICAL_PATH_ON_DISK`) | counts / WARN | **YES** — index-only oracle run; wire stems never raised the alert                         |
-| `codex/02-data/non-canonical-path-inventory.md`, `…/canonical-cutover-register.md`         | reference     | inherit the same weaker definition                                                         |
+| `/codex/02-data/non-canonical-path-inventory.md`, `…/canonical-cutover-register.md`        | reference     | inherit the same weaker definition                                                         |
 
 ## 5. The fix — implemented + verified, HELD (not landed) pending § 9
 
@@ -230,7 +230,7 @@ DeFi oracle case (`eth/usd` → `eth_usd`). Ordered last so a canonical/wire obj
 the canonical id **VERBATIM** — its docstring is explicit: _"written VERBATIM, not `_sanitize_symbol`-d — real live
 filenames carry literal `:`"_. The **live** runner and the **microstructure** handler sanitize instead. So live and
 batch write the same instrument to **different object names**. This is both a canonicality defect and a **batch=live
-determinism** concern (`codex/09-strategy/operational/paper-batch-live-reconciliation.md`).
+determinism** concern (`/codex/09-strategy/operational/paper-batch-live-reconciliation.md`).
 
 **Fixing § 6.2 is what makes § 6.1 disappear** — it is the canonical-SSOT-and-migrate move, not a softening. **DONE.**
 Full write-path treatment (the verbatim-write + no-guard + `validate=False` family) is tracked in
@@ -286,8 +286,9 @@ Full write-path treatment (the verbatim-write + no-guard + `validate=False` fami
 
 ## 8. Codex SSOTs updated
 
-- `codex/02-data/four-surface-reconciliation-procedure.md` § 4 — corrected banner + two-class table + § 4.0 scope caveat
-- `codex/02-data/reconciliation-finding-taxonomy.md` § 2.2 — violation class must be named in every report
+- `/codex/02-data/four-surface-reconciliation-procedure.md` § 4 — corrected banner + two-class table + § 4.0 scope
+  caveat
+- `/codex/02-data/reconciliation-finding-taxonomy.md` § 2.2 — violation class must be named in every report
 - `cursor-configs/skills/data-pipeline-reconciliation/SKILL.md` § 3a — two-question statement
 - `cursor-configs/CLAUDE.md` — reconciliation one-liner
 

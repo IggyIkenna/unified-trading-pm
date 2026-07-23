@@ -26,8 +26,8 @@ scope: [engineer, admin]
 tags: [data-pipeline, alerting, manifest-consolidator, dedup, autonomous, incident]
 related:
   [
-    codex/05-infrastructure/data-pipeline-alerts.md,
-    codex/05-infrastructure/manifest-consolidator-ssot.md,
+    /codex/05-infrastructure/data-pipeline-alerts.md,
+    /codex/05-infrastructure/manifest-consolidator-ssot.md,
     plans/active/issues/manifest_consolidator_instruments_sports_intermittent_slow_run_2026_07_14.md,
     plans/active/issues/defi_consolidator_scheduler_sigkill_unresolved_2026_07_10.md,
     plans/active/data_pipeline_hardening_self_monitoring_2026_06_22.md,
@@ -63,8 +63,8 @@ document them), (3) drive this to a clean channel state autonomously, locally, o
 stopping to ask. `/autonomous` was explicitly invoked. This is a LOCAL plan (`assigned_vm: NA`) — operator said
 "locally"; not routed through AO ingestion.
 
-**Codex SSOTs**: `codex/05-infrastructure/data-pipeline-alerts.md` (failure-mode registry + emit/route/escalate model),
-`codex/05-infrastructure/manifest-consolidator-ssot.md` (consolidator runtime + verification recipe).
+**Codex SSOTs**: `/codex/05-infrastructure/data-pipeline-alerts.md` (failure-mode registry + emit/route/escalate model),
+`/codex/05-infrastructure/manifest-consolidator-ssot.md` (consolidator runtime + verification recipe).
 
 ## Ground truth established before this plan was written (do not re-derive)
 
@@ -161,7 +161,7 @@ stopping to ask. `/autonomous` was explicitly invoked. This is a LOCAL plan (`as
 - 2026-07-15 (later same session): Alert-dedup root cause DIAGNOSED (agent completed) — full code-level cause with
   file:line refs, filed as `plans/active/issues/dp_run_mostly_empty_no_recurring_dedup_2026_07_15.md`
   (unified-trading-pm@1db306a86). Corrected the codex incident-gateway wiring claim in
-  `codex/05-infrastructure/data-pipeline-alerts.md` (same commit) — DP_\* CRITICAL events were never actually wired
+  `/codex/05-infrastructure/data-pipeline-alerts.md` (same commit) — DP_\* CRITICAL events were never actually wired
   through the incident gateway, contrary to the diagram; they rely on `AlertDeduplicator` + a per-event cooldown map.
   Live-verified the defi consolidator lock-TTL/livelock fix (shipped by another slot, `unified-trading-library@9358fb0b`
   - `deployment-service@fe67a53`, deployed with `CONSOLIDATOR_LOCK_TTL_SECONDS=4200`) is WORKING: a 24m28s execution
@@ -278,7 +278,7 @@ stopping to ask. `/autonomous` was explicitly invoked. This is a LOCAL plan (`as
 now honestly `open` with full methodology),
 `tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md` (filed, 1 of 3 findings fixed),
 `phantom_captures_cefi_2026_06_28.md` (annotated — a "RESOLVED" claim corrected to reflect reality), plus
-`codex/05-infrastructure/data-pipeline-alerts.md` (corrected an inaccurate architecture claim).
+`/codex/05-infrastructure/data-pipeline-alerts.md` (corrected an inaccurate architecture claim).
 
 **Genuine impossibilities / items requiring an operator decision, not blind-fixed (Rule 1 exception)**:
 

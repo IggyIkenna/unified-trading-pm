@@ -2,8 +2,8 @@
 doc_type: codex-ssot
 title: Strategy Ensemble VM Topology
 summary:
-  Strategy VM topology for the 2026-05-23 cutover — ONE ensemble VM per asset_group (no cross-group state),
-  per-VM 4-process layout (strategy/PBMS/risk/execution) over loopback Redis, launcher registry + colocation bootstrap.
+  Strategy VM topology for the 2026-05-23 cutover — ONE ensemble VM per asset_group (no cross-group state), per-VM
+  4-process layout (strategy/PBMS/risk/execution) over loopback Redis, launcher registry + colocation bootstrap.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -11,15 +11,24 @@ stage: [meta]
 repos: [deployment-service, execution-service, strategy-service]
 scope: [engineer, admin]
 tags: [strategy, infrastructure, execution, spot-vm, live-trading]
-related: [runtime-deployment-topology.md, batch-live-architecture.md, defi-execution-overview.md]
+related:
+  [
+    /codex/04-architecture/runtime-deployment-topology.md,
+    /codex/04-architecture/batch-live-architecture.md,
+    /codex/04-architecture/defi-execution-overview.md,
+  ]
 created: 2026-05-15
 authoritative_for: [strategy ensemble VM topology (one-VM-per-asset-group + per-VM process layout)]
-referenced_by: [codex/04-architecture/matching-engine-assumptions.md]
+referenced_by: [/codex/04-architecture/matching-engine-assumptions.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:
 author: ikenna
-sources: ['plans/active/topology_qgroup_gap_closure_2026_05_09.md Phase 1 (GAP-1, GAP-4)', plans/epics/strategy_master.md (supersedes strategy_and_dart_master_SUPERSEDED_2026_05_21.md Phase 1.9)]
+sources:
+  [
+    "plans/active/topology_qgroup_gap_closure_2026_05_09.md Phase 1 (GAP-1, GAP-4)",
+    plans/epics/strategy_master.md (supersedes strategy_and_dart_master_SUPERSEDED_2026_05_21.md Phase 1.9),
+  ]
 ---
 
 # Strategy Ensemble VM Topology

@@ -26,7 +26,7 @@ stage: [data]
 repos: [instruments-service]
 scope: [engineer]
 tags: [cefi, margin-type, wire-key-ambiguity, ssot-contradiction, dedup, operator-ruled]
-related: [mtds_rule11_defi_shard_count_stale_baseline_2026_07_22.md]
+related: [/plans/archive/issues/mtds_rule11_defi_shard_count_stale_baseline_2026_07_22.md]
 created: "2026-07-22"
 parent_epic: infrastructure_master
 assigned_vm: NA

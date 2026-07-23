@@ -3,26 +3,40 @@ doc_type: codex-ssot
 title: Data-Feed SLA Registry
 summary:
   "Feed-SLA registry (SSOT in data_freshness.py — DataFreshnessContract + ALL_FRESHNESS_CONTRACTS): per-feed
-  max_age/warn_age/cadence/criticality (critical/important/informational) plus refetch_action Layer-0 self-healing;
-  four sub-dicts (MARKET_TICK/FEATURE/ML/ACCOUNT_STATE_FRESHNESS), CI-enforced no-orphan + warn<max invariants;
+  max_age/warn_age/cadence/criticality (critical/important/informational) plus refetch_action Layer-0 self-healing; four
+  sub-dicts (MARKET_TICK/FEATURE/ML/ACCOUNT_STATE_FRESHNESS), CI-enforced no-orphan + warn<max invariants;
   cross-validated with ALERT_THRESHOLDS tick_staleness (300s floor)."
 status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
-repos: [alerting-service, deployment-service, execution-service, market-tick-data-service, strategy-service, unified-api-contracts]
+repos:
+  [
+    alerting-service,
+    deployment-service,
+    execution-service,
+    market-tick-data-service,
+    strategy-service,
+    unified-api-contracts,
+  ]
 scope: [engineer, admin]
 tags: [data-feed-sla, data-quality, self-healing, monitoring, reconciliation, observability]
 related:
   [
-    alerting.md,
-    ../04-architecture/autonomous-recovery-matrix.md,
-    ../04-architecture/reconciliation-age-tracking.md,
-    ../05-infrastructure/manifest-consolidator-ssot.md,
+    /codex/03-observability/alerting.md,
+    /codex/04-architecture/autonomous-recovery-matrix.md,
+    /codex/04-architecture/reconciliation-age-tracking.md,
+    /codex/05-infrastructure/manifest-consolidator-ssot.md,
   ]
 created: 2026-06-20
 authoritative_for: [data-feed SLA registry, feed freshness contracts + refetch_action binding]
-referenced_by: [codex/03-observability/alerting.md, codex/04-architecture/autonomous-recovery-matrix.md, codex/04-architecture/dependency-health-policy.md, codex/05-infrastructure/manifest-consolidator-ssot.md]
+referenced_by:
+  [
+    /codex/03-observability/alerting.md,
+    /codex/04-architecture/autonomous-recovery-matrix.md,
+    /codex/04-architecture/dependency-health-policy.md,
+    /codex/05-infrastructure/manifest-consolidator-ssot.md,
+  ]
 owner:
 last_reviewed: 2026-06-20
 code_refs:
@@ -101,11 +115,11 @@ is enforced by a CI test (`tests/internal/unit/test_freshness_ssot_agreement.py`
 Added 2026-06-19 to close the gap identified by the Blue Flame comparison. These feeds cover execution-layer state, not
 market data, so their `asset_group` is `"execution"`:
 
-| Feed key             | `max_age_seconds` | `warn_age_seconds` | Criticality | Notes                                                                                                                                                     |
-| -------------------- | ----------------- | ------------------ | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `account_snapshot`   | 120               | 60                 | `critical`  | Live account balance / equity snapshot from venues.                                                                                                       |
-| `positions_snapshot` | 120               | 60                 | `critical`  | Live position state from venues.                                                                                                                          |
-| `reconciliation_age` | 2400              | 1200               | `critical`  | Age of the most-recent successful reconciliation run. `warn` = SEV1 band; `max` = SEV0 band (per `codex/04-architecture/reconciliation-age-tracking.md`). |
+| Feed key             | `max_age_seconds` | `warn_age_seconds` | Criticality | Notes                                                                                                                                                      |
+| -------------------- | ----------------- | ------------------ | ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `account_snapshot`   | 120               | 60                 | `critical`  | Live account balance / equity snapshot from venues.                                                                                                        |
+| `positions_snapshot` | 120               | 60                 | `critical`  | Live position state from venues.                                                                                                                           |
+| `reconciliation_age` | 2400              | 1200               | `critical`  | Age of the most-recent successful reconciliation run. `warn` = SEV1 band; `max` = SEV0 band (per `/codex/04-architecture/reconciliation-age-tracking.md`). |
 
 These feeds are reachable via `ALL_FRESHNESS_CONTRACTS` and via
 `from unified_api_contracts.internal import ACCOUNT_STATE_FRESHNESS`.
@@ -131,7 +145,7 @@ Layer-0 recovery action that fires when the feed is stale:
 tightening (infrastructure_master B.2 Phase 5). Feeds in the `execution`, `feature`, and `ml` domains raise
 `UnroutableFeedError` because their owning CLIs are outside MTDS scope — the escalation ladder handles them directly.
 
-Full architecture: `codex/04-architecture/autonomous-recovery-matrix.md` § "Stale feed — refetch-feed Layer-0 action".
+Full architecture: `/codex/04-architecture/autonomous-recovery-matrix.md` § "Stale feed — refetch-feed Layer-0 action".
 
 ---
 
@@ -169,8 +183,8 @@ All consumers read `ALL_FRESHNESS_CONTRACTS` (or a sub-dict) from the registry �
 
 ## Related
 
-- `codex/04-architecture/autonomous-recovery-matrix.md` — Layer-0 `refetch-feed` action + decision tree
-- `codex/03-observability/alerting.md` — alert routing; `tick_staleness_seconds` cross-validation note
-- `codex/05-infrastructure/manifest-consolidator-ssot.md` — consolidator staleness as a feed in this registry
-- `codex/04-architecture/reconciliation-age-tracking.md` — recon-age SEV1/SEV0 bands (the `reconciliation_age` contract
+- `/codex/04-architecture/autonomous-recovery-matrix.md` — Layer-0 `refetch-feed` action + decision tree
+- `/codex/03-observability/alerting.md` — alert routing; `tick_staleness_seconds` cross-validation note
+- `/codex/05-infrastructure/manifest-consolidator-ssot.md` — consolidator staleness as a feed in this registry
+- `/codex/04-architecture/reconciliation-age-tracking.md` — recon-age SEV1/SEV0 bands (the `reconciliation_age` contract
   SLA source)

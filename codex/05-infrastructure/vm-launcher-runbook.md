@@ -12,15 +12,21 @@ stage: [meta]
 repos: [deployment-service, execution-service, instruments-service]
 scope: [engineer, admin]
 tags: [infrastructure, runbook, spot-vm, backfill, mtds, scripts]
-related: [vm-tarball-deployment.md, vm-log-archival.md, spot-vms-for-backfill.md, launcher-script-ssot.md]
+related:
+  [
+    /codex/05-infrastructure/vm-tarball-deployment.md,
+    /codex/05-infrastructure/vm-log-archival.md,
+    /codex/05-infrastructure/spot-vms-for-backfill.md,
+    /codex/05-infrastructure/launcher-script-ssot.md,
+  ]
 created: 2026-05-15
 authoritative_for: [VM launcher per-script usage runbook]
 referenced_by:
   [
-    codex/05-infrastructure/spot-vms-for-backfill.md,
-    codex/05-infrastructure/vm-log-archival.md,
+    /codex/05-infrastructure/spot-vms-for-backfill.md,
+    /codex/05-infrastructure/vm-log-archival.md,
     plans/audit/results/vm_security_audit_2026_05_15.md,
-    codex/05-infrastructure/vm-tarball-deployment.md,
+    /codex/05-infrastructure/vm-tarball-deployment.md,
   ]
 owner:
 last_reviewed: 2026-05-17
@@ -49,12 +55,12 @@ shellcheck (security) **Last executed**: 2026-05-15 (slot-2 security audit sweep
 
 Every section below: **When to use → Required args → Expected duration → Common failures**.
 
-For VM naming rules see `codex/05-infrastructure/launcher-script-ssot.md`. For event emission see
+For VM naming rules see `/codex/05-infrastructure/launcher-script-ssot.md`. For event emission see
 `plans/audit/results/vm_event_emission_audit_2026_05_15.md`. For tarball creation see
-`codex/05-infrastructure/vm-tarball-deployment.md`. For log backup, archival, and kill/teardown runbook see
-`codex/05-infrastructure/vm-log-archival.md`. **Provisioning (HARD RULE): backfill VMs default to Spot**
+`/codex/05-infrastructure/vm-tarball-deployment.md`. For log backup, archival, and kill/teardown runbook see
+`/codex/05-infrastructure/vm-log-archival.md`. **Provisioning (HARD RULE): backfill VMs default to Spot**
 (`--provisioning-model=SPOT`, `--on-demand` opt-out; live VMs stay on-demand) — see
-`codex/05-infrastructure/spot-vms-for-backfill.md`.
+`/codex/05-infrastructure/spot-vms-for-backfill.md`.
 
 **HARD RULE — never hand-roll a VM name; verify the registry FIRST, before launch, not after a failure.**
 `VM_PREFIX_TO_BUCKET` (`deployment-service/scripts/vm/vm_zombie_watchdog.py`) is the SSOT `classify_deployment_target()`
@@ -475,8 +481,8 @@ default 16/VM + `TARDIS_BOOK_SNAPSHOT_MAX_CONCURRENT` 4/VM) — keep the fleet t
 
 ## References
 
-- `codex/05-infrastructure/launcher-script-ssot.md` — naming, CODE_BUCKET, tarball patterns
-- `codex/05-infrastructure/vm-tarball-deployment.md` — tarball creation + deployment
+- `/codex/05-infrastructure/launcher-script-ssot.md` — naming, CODE_BUCKET, tarball patterns
+- `/codex/05-infrastructure/vm-tarball-deployment.md` — tarball creation + deployment
 - `plans/audit/results/vm_event_emission_audit_2026_05_15.md` — event emission chain
 - `plans/audit/results/vm_security_audit_2026_05_15.md` — shellcheck security audit
 - `deployment-service/deployment_service/vm/vm_zombie_watchdog.py` — VM_PREFIX_TO_BUCKET registry

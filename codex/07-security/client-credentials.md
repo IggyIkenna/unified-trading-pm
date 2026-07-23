@@ -11,10 +11,10 @@ stage: [meta]
 repos: [execution-service]
 scope: [engineer, admin]
 tags: [secrets, execution, cefi, credentials]
-related: [secrets-management.md, secret-naming-convention.md]
+related: [/codex/07-security/secrets-management.md, /codex/07-security/secret-naming-convention.md]
 created: 2026-03-27
 authoritative_for: [per-client exchange credential secrets]
-referenced_by: [codex/07-security/secret-naming-convention.md, codex/07-security/secrets-management.md]
+referenced_by: [/codex/07-security/secret-naming-convention.md, /codex/07-security/secrets-management.md]
 owner:
 last_reviewed:
 code_refs:

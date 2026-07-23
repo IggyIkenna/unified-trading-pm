@@ -3,8 +3,8 @@ doc_type: codex-ssot
 title: Account Instructions
 summary:
   AccountInstruction — the operator-driven account-ops envelope parallel to StrategyInstruction (CLOSE_ALL,
-  SET_MARGIN_MODE, EMERGENCY_LIQUIDATE, WITHDRAW, ROTATE_CREDENTIAL, PAUSE/RESUME); NOT strategy-attributed,
-  skips Layer-1 self-check, per-action authorization + permanent audit.
+  SET_MARGIN_MODE, EMERGENCY_LIQUIDATE, WITHDRAW, ROTATE_CREDENTIAL, PAUSE/RESUME); NOT strategy-attributed, skips
+  Layer-1 self-check, per-action authorization + permanent audit.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -12,10 +12,15 @@ stage: [meta]
 repos: [execution-service]
 scope: [engineer, admin]
 tags: [execution, account-ops, kill-switch, audit, defi, cefi]
-related: [strategy-execution-protocol.md, autonomous-recovery-matrix.md, kill-switch-circuit-breaker.md]
+related:
+  [
+    /codex/04-architecture/strategy-execution-protocol.md,
+    /codex/04-architecture/autonomous-recovery-matrix.md,
+    /codex/04-architecture/kill-switch-circuit-breaker.md,
+  ]
 created: 2026-04-17
 authoritative_for: [AccountInstruction operator-driven account-ops envelope]
-referenced_by: [codex/04-architecture/strategy-execution-protocol.md]
+referenced_by: [/codex/04-architecture/strategy-execution-protocol.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:
@@ -268,7 +273,7 @@ When an AccountInstruction generates fills (e.g., CLOSE_ALL):
 AccountInstructions interact with the coordination layer:
 
 - May acquire account lock (see
-  [../09-strategy/architecture-v2/cross-cutting/venue-account-coordination.md](../09-strategy/architecture-v2/cross-cutting/venue-account-coordination.md))
+  [/codex/09-strategy/architecture-v2/cross-cutting/venue-account-coordination.md](/codex/09-strategy/architecture-v2/cross-cutting/venue-account-coordination.md))
 - May cause strategies on the account to receive `VENUE_ACCOUNT_LOCKED` responses
 - PBMS updates on completion
 
@@ -294,9 +299,9 @@ Operator UI provides forms for each AccountInstruction type. Submission requires
 - Autonomous recovery: [autonomous-recovery-matrix.md](autonomous-recovery-matrix.md)
 - Kill switch: [kill-switch-circuit-breaker.md](kill-switch-circuit-breaker.md)
 - Venue-account coordination:
-  [../09-strategy/architecture-v2/cross-cutting/venue-account-coordination.md](../09-strategy/architecture-v2/cross-cutting/venue-account-coordination.md)
+  [/codex/09-strategy/architecture-v2/cross-cutting/venue-account-coordination.md](/codex/09-strategy/architecture-v2/cross-cutting/venue-account-coordination.md)
 - Capital-client isolation:
-  [../09-strategy/architecture-v2/cross-cutting/capital-client-isolation.md](../09-strategy/architecture-v2/cross-cutting/capital-client-isolation.md)
+  [/codex/09-strategy/architecture-v2/cross-cutting/capital-client-isolation.md](/codex/09-strategy/architecture-v2/cross-cutting/capital-client-isolation.md)
 
 ## Not in this doc
 

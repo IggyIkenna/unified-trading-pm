@@ -4,8 +4,9 @@ title: DART Manual-Trade Lane — Per-Archetype Scope Specification
 summary:
   Per-archetype DART manual-trade lane scope spec — which of the 14 InstructionActionV2 actions (TRADE/SWAP/LEND/BORROW/
   STAKE/UNSTAKE/QUOTE/TRANSFER/BRIDGE/ATOMIC/CANCEL/…) each May-23 critical-path archetype must replicate manually
-  through the SAME execution path as automation, the 5 UI BUILD enrichments of existing surfaces, strategy_id attribution
-  (FAMILY.ARCHETYPE.slot_id) at /manual/instruction, and CapitalAllocation-respect validation. Phase C shipped 2026-05-13.
+  through the SAME execution path as automation, the 5 UI BUILD enrichments of existing surfaces, strategy_id
+  attribution (FAMILY.ARCHETYPE.slot_id) at /manual/instruction, and CapitalAllocation-respect validation. Phase C
+  shipped 2026-05-13.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -14,10 +15,20 @@ repos: [alerting-service, batch-live-reconciliation-service, execution-service, 
 scope: [engineer, admin]
 tags: [strategy, dart, ui, execution, defi, verification]
 related:
-  [../../../04-architecture/manual-trade-booking.md, operational-modes-matrix.md, ../archetypes/carry-staked-basis.md, ../archetypes/carry-basis-perp.md, ../README.md]
+  [
+    ../../../04-architecture/manual-trade-booking.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/operational-modes-matrix.md,
+    ../archetypes/carry-staked-basis.md,
+    ../archetypes/carry-basis-perp.md,
+    ../README.md,
+  ]
 created: 2026-05-08
 authoritative_for: [DART manual-trade per-archetype scope + action-type replication matrix]
-referenced_by: [codex/04-architecture/research-service-and-dart-integration.md, codex/09-strategy/architecture-v2/cross-cutting/operational-modes-matrix.md]
+referenced_by:
+  [
+    /codex/04-architecture/research-service-and-dart-integration.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/operational-modes-matrix.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -96,7 +107,7 @@ emits this action this cycle, OR the action lives in a deferred archetype family
 | `UNSTAKE`   | ✅             | **CARRY_STAKED_BASIS** (close-out: redeem LST → underlying)                                                                                                                                   | Same panel as `STAKE`; mode toggle.                                                                                                                                                                                                                                                                                     | ✅                                |
 | `QUOTE`     | ✗              | `MARKET_MAKING_CONTINUOUS`, `MARKET_MAKING_EVENT_SETTLED` (both post-cutover)                                                                                                                 | Out-of-scope this cycle. Manual quote surface is post-cutover work paired with market-making archetype activation.                                                                                                                                                                                                      | ✗ (when activated: ✅)            |
 | `TRANSFER`  | ✅             | **CARRY_STAKED_BASIS** (operator funds DeFi wallet from CEX), **CARRY_BASIS_PERP** (cross-venue rebalance)                                                                                    | New DART panel: per-(source, dest) account transfer. CEX → DeFi wallet (Binance/OKX/Bybit → on-chain wallet). Sub-account moves within CeFi venue. Wires through `execution-service` `INTERNAL_SUBACCOUNT` + `CEX_WITHDRAWAL_DEPOSIT` + `ON_CHAIN_TRANSFER` primitives per `strategy-summary.md` § Transfer primitives. | ✅                                |
-| `BRIDGE`    | ✅             | **CARRY_STAKED_BASIS** (cross-chain rebalance), `YIELD_ROTATION_LENDING` (post-cutover)                                                                                                       | Same DART panel as `TRANSFER`; mode toggle for cross-chain. Across / Stargate / LayerZero per `strategy-summary.md`. Required cross-chain pairs: Ethereum ↔ Arbitrum, Ethereum ↔ Base, Solana ↔ Ethereum (via Wormhole / Allbridge if Across not yet supported on Solana — confirm at impl time).                    | ✅                                |
+| `BRIDGE`    | ✅             | **CARRY_STAKED_BASIS** (cross-chain rebalance), `YIELD_ROTATION_LENDING` (post-cutover)                                                                                                       | Same DART panel as `TRANSFER`; mode toggle for cross-chain. Across / Stargate / LayerZero per `strategy-summary.md`. Required cross-chain pairs: Ethereum ↔ Arbitrum, Ethereum ↔ Base, Solana ↔ Ethereum (via Wormhole / Allbridge if Across not yet supported on Solana — confirm at impl time).                       | ✅                                |
 | `ATOMIC`    | ✅             | **CARRY_STAKED_BASIS** (flash-loan-backed open: Aave flash loan → swap → stake → deposit → borrow → repay, all in one tx)                                                                     | New DART panel: bundled action submission. Wires through `execution-service` flash-loan receiver (`FlashLoanReceiver.sol` deployed per chain). Operator submits the bundle shape via UI, backend executes atomically.                                                                                                   | ✅                                |
 | `CANCEL`    | ✅             | All archetypes that emit live orders (`TRADE`, pending DEX swaps, pending bridges)                                                                                                            | Already covered by `/manual/cancel` endpoint per [`manual-trade-booking.md`](../../../04-architecture/manual-trade-booking.md). DART surface = "cancel my last in-flight" button per archetype context.                                                                                                                 | ✅                                |
 
@@ -297,17 +308,17 @@ them and so the cross-cutting plan body can flip its [DESIGN] checkbox without a
 - [`plans/active/issues/cross_cutting_strategy_catalogue_already_shipped_2026_05_08.md`](../../../plans/active/issues/cross_cutting_strategy_catalogue_already_shipped_2026_05_08.md)
   — Tab 6.A finding that strategy_id grammar is already shipped (this spec consumes whichever grammar lands
   post-triage).
-- [`codex/04-architecture/manual-trade-booking.md`](../../../04-architecture/manual-trade-booking.md) — existing
+- [`/codex/04-architecture/manual-trade-booking.md`](../../../04-architecture/manual-trade-booking.md) — existing
   ManualInstruction / `/manual/instruction` API SSOT (this doc enriches, not replaces).
-- [`codex/09-strategy/cross-cutting/operational-modes-matrix.md`](operational-modes-matrix.md) — peer doc
-  (orthogonal-axes mode SSOT).
-- [`codex/09-strategy/operational/onboarding-checklist.md`](../../operational/onboarding-checklist.md) — strategy
+- [`/codex/09-strategy/architecture-v2/cross-cutting/operational-modes-matrix.md`](operational-modes-matrix.md) — peer
+  doc (orthogonal-axes mode SSOT).
+- [`/codex/09-strategy/operational/onboarding-checklist.md`](../../operational/onboarding-checklist.md) — strategy
   onboarding flow that the manual lane integrates with (every onboarded strategy gets a manual fallback automatically).
-- [`codex/09-strategy/operational/client-onboarding.md`](../../operational/client-onboarding.md) — per-client manual
+- [`/codex/09-strategy/operational/client-onboarding.md`](../../operational/client-onboarding.md) — per-client manual
   lane setup flow.
-- [`codex/09-strategy/strategy-summary.md`](../../strategy-summary.md) — 8-family / 18-archetype baseline (codex SSOT;
+- [`/codex/09-strategy/strategy-summary.md`](../../strategy-summary.md) — 8-family / 18-archetype baseline (codex SSOT;
   stale relative to UAC v2 enum's 9-family / 46-archetype shape — see issue doc above).
-- [`codex/09-strategy/architecture-v2/README.md`](../README.md) — architecture-v2 SSOT entry point.
+- [`/codex/09-strategy/architecture-v2/README.md`](../README.md) — architecture-v2 SSOT entry point.
 
 ### Archetype docs referenced by this spec (May-23 live + backtest subset)
 

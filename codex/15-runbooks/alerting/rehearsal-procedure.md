@@ -2,9 +2,9 @@
 doc_type: codex-runbook
 title: Alerting Rehearsal Procedure
 summary:
-  Quarterly alert-rehearsal drill — inject synthetic (rehearsal=true) events via the admin
-  /alerting/rehearsal/inject endpoint, verify the right AlertCode fires the right severity routing, the on-call acks
-  within SLA, and the operator follows the playbook entry. STUB (planned 2026-05-07); first cycle is the pre-May-23 dry-run.
+  Quarterly alert-rehearsal drill — inject synthetic (rehearsal=true) events via the admin /alerting/rehearsal/inject
+  endpoint, verify the right AlertCode fires the right severity routing, the on-call acks within SLA, and the operator
+  follows the playbook entry. STUB (planned 2026-05-07); first cycle is the pre-May-23 dry-run.
 status: current
 nature: process
 asset_group: [meta]
@@ -12,14 +12,22 @@ stage: [meta]
 repos: [alerting-service]
 scope: [engineer, admin]
 tags: [runbook, escalation, live-trading, verification, monitoring, smoke-test]
-related: [codex/15-runbooks/alerting/alert-code-taxonomy.md, codex/15-runbooks/alerting/operator-playbook.md, codex/15-runbooks/alerting/threshold-tuning.md]
+related:
+  [
+    /codex/15-runbooks/alerting/alert-code-taxonomy.md,
+    /codex/15-runbooks/alerting/operator-playbook.md,
+    /codex/15-runbooks/alerting/threshold-tuning.md,
+  ]
 created: 2026-05-07
 owner: ikenna
 cadence: quarterly (first Monday of each quarter; full AlertCode subset covered every 4 quarters)
 verifier: operator
 last_executed:
 code_refs:
-authoritative_for: Quarterly alert-rehearsal procedure to verify paging works end-to-end. Synthetic events injected through the alerting-service must produce a real PagerDuty/phone page within SLA, and the on-call must follow the operator-playbook entry to the documented action.
+authoritative_for:
+  Quarterly alert-rehearsal procedure to verify paging works end-to-end. Synthetic events injected through the
+  alerting-service must produce a real PagerDuty/phone page within SLA, and the on-call must follow the
+  operator-playbook entry to the documented action.
 referenced_by: [plans/active/alerting_service_live_rules_2026_05_07.md]
 ---
 

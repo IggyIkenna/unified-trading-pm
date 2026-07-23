@@ -1,6 +1,6 @@
 ---
 doc_type: codex-ssot
-title: 'Axis: Share Class'
+title: "Axis: Share Class"
 summary:
   Share-class axis — the per-instance accounting currency (USDT/USDC/FDUSD, USD/GBP/EUR, ETH/BTC/SOL) that fixes the
   NAV/Sharpe/return denominator and whether FX/basis risk is inside strategy P&L. Structural per-instance (different
@@ -14,10 +14,21 @@ repos: [strategy-service]
 scope: [engineer, admin]
 tags: [strategy, share-class, reconciliation, cefi, defi]
 related:
-  [../cross-cutting/portfolio-allocator.md, ../cross-cutting/transfer-rebalance.md, ../cross-cutting/capital-client-isolation.md, ../../../04-architecture/capital-structure-and-regulatory.md]
+  [
+    ../cross-cutting/portfolio-allocator.md,
+    ../cross-cutting/transfer-rebalance.md,
+    ../cross-cutting/capital-client-isolation.md,
+    ../../../04-architecture/capital-structure-and-regulatory.md,
+  ]
 created: 2026-04-17
 authoritative_for: [share-class axis (per-instance accounting currency)]
-referenced_by: [codex/04-architecture/defi-risk-monitoring.md, codex/09-strategy/architecture-v2/README.md, codex/09-strategy/architecture-v2/cross-cutting/capital-client-isolation.md, plans/epics/client_isolation_and_governance_master.md]
+referenced_by:
+  [
+    /codex/04-architecture/defi-risk-monitoring.md,
+    /codex/09-strategy/architecture-v2/README.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/capital-client-isolation.md,
+    plans/epics/client_isolation_and_governance_master.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -77,8 +88,8 @@ When a strategy trades instruments not natively in the share-class currency, the
 
 | Example                                                  | Implied cross-currency |
 | -------------------------------------------------------- | ---------------------- |
-| USD share class running a USDT-margined Binance strategy | USD↔USDT basis risk   |
-| USDT share class holding ETH position                    | USDT↔ETH FX           |
+| USD share class running a USDT-margined Binance strategy | USD↔USDT basis risk    |
+| USDT share class holding ETH position                    | USDT↔ETH FX            |
 | USDC share class trading Polymarket shares               | trivial (both USDC)    |
 
 Strategy config declares how this is handled:

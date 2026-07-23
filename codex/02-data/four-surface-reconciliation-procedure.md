@@ -26,14 +26,14 @@ scope: [engineer, admin]
 tags: [reconciliation, canonicalisation, shard-atom, manifest, gcs-paths, catalogue, single-walk, machine-oracle]
 related:
   [
-    cross-asset-canonical-target-ssot.md,
-    reconciliation-finding-taxonomy.md,
-    availability-manifest-and-data-status.md,
-    honest-coverage-model.md,
-    defi-canonical-naming-ssot.md,
-    pipeline-mode-partition.md,
-    ../05-infrastructure/bucket-isolation-model.md,
-    ../05-infrastructure/gcs-object-operations.md,
+    /codex/02-data/cross-asset-canonical-target-ssot.md,
+    /codex/02-data/reconciliation-finding-taxonomy.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/02-data/honest-coverage-model.md,
+    /codex/02-data/defi-canonical-naming-ssot.md,
+    /codex/02-data/pipeline-mode-partition.md,
+    /codex/05-infrastructure/bucket-isolation-model.md,
+    /codex/05-infrastructure/gcs-object-operations.md,
     ../../plans/active/data_pipeline_reconciliation_skill_2026_07_20.md,
   ]
 created: 2026-07-20
@@ -46,9 +46,9 @@ authoritative_for:
   ]
 referenced_by:
   [
-    codex/02-data/reconciliation-finding-taxonomy.md,
-    codex/02-data/orphan-object-detection.md,
-    codex/02-data/non-canonical-path-inventory.md,
+    /codex/02-data/reconciliation-finding-taxonomy.md,
+    /codex/02-data/orphan-object-detection.md,
+    /codex/02-data/non-canonical-path-inventory.md,
   ]
 owner:
 last_reviewed: 2026-07-20
@@ -73,14 +73,14 @@ code_refs:
 >
 > **What this doc is NOT.** It does not define the finding types. The closed, named set — its exact type names, their
 > detection methods, default severities, safe remediations, delete-eligibility, and the operator-accepted exception list
-> — lives in **`codex/02-data/reconciliation-finding-taxonomy.md`**, which is authoritative for all of them. Classify
+> — lives in **`/codex/02-data/reconciliation-finding-taxonomy.md`**, which is authoritative for all of them. Classify
 > there; compare here. **Do not restate the type names here**: a second enumeration is precisely how the two docs drift
 > (this paragraph previously carried three names — `orphan`, `masked-stale`, `drift-axis-false-positive` — that the
 > taxonomy does not use, one of which it had explicitly rejected).
 >
 > **This doc is the RAW-TICK layer. There is a candle-LAYER variant (added 2026-07-21).** The MDPS processed-candle
 > layer (`--layer candles`) reconciles the same four surfaces but with four deltas, so it has its own SSOT —
-> `codex/02-data/mdps-candle-canonical-reconciliation.md` — do NOT apply this doc's raw-tick rules to candles: (1) the
+> `/codex/02-data/mdps-candle-canonical-reconciliation.md` — do NOT apply this doc's raw-tick rules to candles: (1) the
 > candle shard atom **adds a `timeframe` axis** and keys `data_type` on the AGGREGATED `mdps_data_type_key`, with S3
 > rows filtered `service_name == "market-data-processing-service"`; (2) the candle namespace (`processed_candles/`) is
 > **oracle-EXEMPT** — `canonical_path_violations()` hardcodes `raw_tick_data/by_date/` (`partition_paths.py:67`) and
@@ -176,14 +176,14 @@ there is no row.
 
 **Step 2 — resolve the bucket.** `resolve_bucket_name(cloud, kind, asset_group, deployment_env)` over
 `cloud-providers.yaml` — never an inline `gs://`, never a bucket-name fragment as a `kind`, and **never mutate process
-env to reach a tier; pass `deployment_env=`**. SSOT: `codex/05-infrastructure/bucket-isolation-model.md`. Record which
+env to reach a tier; pass `deployment_env=`**. SSOT: `/codex/05-infrastructure/bucket-isolation-model.md`. Record which
 bucket each read targeted — the report's Bucket-paths table is generated from this.
 
 **Step 3 — S1, the GCS path.** Obtain the object path via one of the three sanctioned routes in §5 — prefix-scoped from
 the Step-1 rows by default. Do **not** assert an object exists because a path can be constructed: existence is
 `gcs_describe_object(uri)` (`unified-trading-library/unified_trading_library/cloud_interface/gcs_blob_ops.py:51`)
 returning non-`None`. All GCS object ops go through the UTL `gcs_*` helpers, never `subprocess gcloud`/`gsutil`
-(`codex/05-infrastructure/gcs-object-operations.md`).
+(`/codex/05-infrastructure/gcs-object-operations.md`).
 
 **Step 4 — run the machine oracle on the S1 path (§4).** This is the ONLY step that decides canonical vs non-canonical.
 
@@ -191,7 +191,7 @@ returning non-`None`. All GCS object ops go through the UTL `gcs_*` helpers, nev
 **Content, not existence.** A path that looks like a duplicate of a canonical twin is not a duplicate until the CONTENT
 is verified — the R5 content-verify overturned a DUP verdict on 98-vs-99 pools whose intersection was only 66
 (`plans/active/data_pipeline_reconciliation_skill_2026_07_20.md:70-77`). Delete-adjacent conclusions additionally
-require the five-part proof in `codex/02-data/gcs-and-manifest-delete-safety-protocol.md`.
+require the five-part proof in `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`.
 
 **Step 6 — S4, the catalogue/status render.** (a) `reference_genesis(asset_group, venue)` for the in-scope test at
 venue/day grain (`reference_scope.py:120`); note that a role-qualified manifest venue (`OKX-FUTURES`) is matched against
@@ -199,8 +199,8 @@ its BASE token before being declared unlisted (`reference_scope.py:109-118`). (b
 `available_from`→`available_to` window for the per-instrument expectation.
 
 **Step 7 — compare and classify.** Compare the four values **at the atom grain from §2**. Emit the disagreement to the
-finding taxonomy — `codex/02-data/reconciliation-finding-taxonomy.md`. Apply that doc's operator-accepted exception list
-BEFORE emitting: re-reporting an accepted exception as a fresh finding destroys the report's signal and makes
+finding taxonomy — `/codex/02-data/reconciliation-finding-taxonomy.md`. Apply that doc's operator-accepted exception
+list BEFORE emitting: re-reporting an accepted exception as a fresh finding destroys the report's signal and makes
 consecutive runs undiffable.
 
 **Step 8 — report the number with its formula named.** Any coverage figure must name its formula. The live,
@@ -292,13 +292,13 @@ and must never be counted as id-form violations.
 
 `require_pipeline_mode` **defaults to `False`** (`:661`, documented `:672-676`: _"Default False accepts the back-compat
 bare paths the builders still emit (the segment is canonical-but-optional for CeFi/Prediction and back-compat for
-DeFi/TradFi)."_) The codex declares `pipeline_mode` canonical (`codex/02-data/pipeline-mode-partition.md`;
+DeFi/TradFi)."_) The codex declares `pipeline_mode` canonical (`/codex/02-data/pipeline-mode-partition.md`;
 `cross-asset-canonical-target-ssot.md:220-229` puts it in every template), but the machine gate does not enforce it by
 default. **Consequence: a path missing `pipeline_mode=` passes the oracle while contradicting the declared canonical
 form.**
 
 The reconciler therefore keys `require_pipeline_mode` off a **per-asset-group effective-from date** (the
-canonical-cutover register, `codex/02-data/canonical-cutover-register.md`): `False` for days before that AG's cutover,
+canonical-cutover register, `/codex/02-data/canonical-cutover-register.md`): `False` for days before that AG's cutover,
 `True` on and after. Without that date the run either floods false positives on legitimately historical data or silently
 passes post-cutover regressions.
 
@@ -337,8 +337,8 @@ Where object listing is unavoidable, only these three no-walk routes are sanctio
 > `reconcile_phantom_manifest_rows_all.py` calls `client.list_blobs(bucket, prefix=…)` at `:311` and `:425`. It is
 > exempt because every listing is prefix-scoped. Never claim an exemption on the grounds that a script "reads the
 > index"; claim it on the grounds that every listing it issues is prefix-bounded. For HOW to walk once you are permitted
-> to, see [`../05-infrastructure/gcs-object-operations.md`](../05-infrastructure/gcs-object-operations.md) — that doc
-> governs mechanics, this one governs WHETHER.
+> to, see [`/codex/05-infrastructure/gcs-object-operations.md`](/codex/05-infrastructure/gcs-object-operations.md) —
+> that doc governs mechanics, this one governs WHETHER.
 
 ### 5.1 Route #3 in practice — the Tier-2 per-datapoint VM is the sanctioned single walk for S2 (added 2026-07-20)
 
@@ -451,8 +451,8 @@ stalls forever or migrates something it had no mandate to touch.
   **EXCLUDED** (CK3-certified 2026-06-29; shipping implementation
   `instruments-service/scripts/measure_honest_coverage.py:600-603`). The two superseded v1 sites now carry ⛔ SUPERSEDED
   banners pointing here — `availability-manifest-and-data-status.md` (:117, :1027, :1968) and
-  `../05-infrastructure/manifest-consolidator-ssot.md` (:296), all verified present 2026-07-20. **The reconciler uses
-  the `honest-coverage-model.md` formula and does not treat coverage as contested.** Step 8's name-the-formula
+  `/codex/05-infrastructure/manifest-consolidator-ssot.md` (:296), all verified present 2026-07-20. **The reconciler
+  uses the `honest-coverage-model.md` formula and does not treat coverage as contested.** Step 8's name-the-formula
   discipline still stands — not because the formula is in doubt, but because a bare percentage is unfalsifiable
   regardless.
   - _Residual, and it is a CODE question rather than a doc contradiction:_ `compute_honest_coverage()` is still a live

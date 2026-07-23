@@ -10,10 +10,23 @@ status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
-repos: [alerting-service, batch-live-reconciliation-service, deployment-service, execution-service, strategy-service, unified-api-contracts]
+repos:
+  [
+    alerting-service,
+    batch-live-reconciliation-service,
+    deployment-service,
+    execution-service,
+    strategy-service,
+    unified-api-contracts,
+  ]
 scope: [engineer, admin]
 tags: [execution, defi, ui, audit, kill-switch, uac, ssot]
-related: [kill-switch-circuit-breaker.md, kill-switch-event-bus.md, operational-modes.md]
+related:
+  [
+    /codex/04-architecture/kill-switch-circuit-breaker.md,
+    /codex/04-architecture/kill-switch-event-bus.md,
+    /codex/04-architecture/operational-modes.md,
+  ]
 created: 2026-03-27
 authoritative_for:
   [
@@ -22,7 +35,13 @@ authoritative_for:
     manual-instruction audit-log persistence,
     RECORD_ONLY vs EXECUTE manual execution modes,
   ]
-referenced_by: [codex/04-architecture/kill-switch-circuit-breaker.md, codex/04-architecture/risk-preflight-flow.md, codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md, codex/09-strategy/architecture-v2/cross-cutting/operational-modes-matrix.md]
+referenced_by:
+  [
+    /codex/04-architecture/kill-switch-circuit-breaker.md,
+    /codex/04-architecture/risk-preflight-flow.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/operational-modes-matrix.md,
+  ]
 owner:
 last_reviewed: 2026-05-17
 code_refs:
@@ -205,8 +224,8 @@ The `manual-audit` bucket-kind entry lands in `deployment-service/configs/cloud-
 Phase 0i tail (slot 4 owned scope) — proposed shape:
 
 ```yaml
-manual-audit: "manual-audit-${DEPLOYMENT_ENV_SHORT}-${GCP_PROJECT_ID}"  # GCP
-manual-audit: "unified-trading-manual-audit-${DEPLOYMENT_ENV}-${AWS_ACCOUNT_ID}"  # AWS
+manual-audit: "manual-audit-${DEPLOYMENT_ENV_SHORT}-${GCP_PROJECT_ID}" # GCP
+manual-audit: "unified-trading-manual-audit-${DEPLOYMENT_ENV}-${AWS_ACCOUNT_ID}" # AWS
 ```
 
 ### Why separate from operational events bucket
@@ -295,4 +314,4 @@ route.
 - API handler (training control): `ml-training-service/ml_training_service/api/training_control_api.py` (TBD per BUILD
   #3)
 - Cluster configs: `deployment-service/configs/clusters/*.yaml`
-- DART scope spec: `codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md`
+- DART scope spec: `/codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md`

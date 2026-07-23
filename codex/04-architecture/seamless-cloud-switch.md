@@ -2,8 +2,8 @@
 doc_type: codex-ssot
 title: Seamless cloud switch
 summary:
-  Drain-snapshot-switch-warm-up protocol for migrating a live workload GCP-to-AWS (or back) without losing
-  in-flight state; names the preserved-state matrix (positions/orders/config/manifest/credentials) and the no-split-brain rule.
+  Drain-snapshot-switch-warm-up protocol for migrating a live workload GCP-to-AWS (or back) without losing in-flight
+  state; names the preserved-state matrix (positions/orders/config/manifest/credentials) and the no-split-brain rule.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -11,10 +11,16 @@ stage: [meta]
 repos: [alerting-service, execution-service]
 scope: [engineer, admin]
 tags: [infrastructure, migration, execution, reconciliation, live-trading]
-related: [cloud-agnostic-migration.md, ../05-infrastructure/cloud-agnostic-build-lineage.md, ../05-infrastructure/live-deployment-monitoring.md]
+related:
+  [
+    /codex/04-architecture/cloud-agnostic-migration.md,
+    /codex/05-infrastructure/cloud-agnostic-build-lineage.md,
+    /codex/05-infrastructure/live-deployment-monitoring.md,
+  ]
 created: 2026-05-08
-authoritative_for: [seamless dual-cloud switch protocol (drain/snapshot/switch/warm-up), cross-cloud preserved-state matrix]
-referenced_by: [codex/04-architecture/batch-live-architecture.md]
+authoritative_for:
+  [seamless dual-cloud switch protocol (drain/snapshot/switch/warm-up), cross-cloud preserved-state matrix]
+referenced_by: [/codex/04-architecture/batch-live-architecture.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:
@@ -33,7 +39,7 @@ cloud switch boring.
 
 | State                        | Where it lives                               | Migration mechanism                                                     |
 | ---------------------------- | -------------------------------------------- | ----------------------------------------------------------------------- |
-| Open positions               | position-balance-monitor (per-cloud DB)      | Bidirectional CDC: position table replicates GCP↔AWS continuously      |
+| Open positions               | position-balance-monitor (per-cloud DB)      | Bidirectional CDC: position table replicates GCP↔AWS continuously       |
 | In-flight orders             | execution-service (per-cloud DB)             | Pre-switch drain: stop accepting new orders, finish or cancel in-flight |
 | Strategy config + last-state | Firestore + per-strategy snapshot            | Read on warm-up; identical schema both clouds                           |
 | Manifest writes              | GCS (per-cloud bucket)                       | Manifest consolidator reads both buckets (writegate Phase 3.D)          |
@@ -67,10 +73,10 @@ cloud switch boring.
 
 - Cloud-agnostic migration overview: [`cloud-agnostic-migration.md`](cloud-agnostic-migration.md)
 - Build lineage (cross-cloud build provenance):
-  [`../05-infrastructure/cloud-agnostic-build-lineage.md`](../05-infrastructure/cloud-agnostic-build-lineage.md)
+  [`/codex/05-infrastructure/cloud-agnostic-build-lineage.md`](/codex/05-infrastructure/cloud-agnostic-build-lineage.md)
 - Cloud-agnostic script pattern:
-  [`../05-infrastructure/cloud-agnostic-script-pattern.md`](../05-infrastructure/cloud-agnostic-script-pattern.md)
+  [`/codex/05-infrastructure/cloud-agnostic-script-pattern.md`](/codex/05-infrastructure/cloud-agnostic-script-pattern.md)
 - Secrets migration tracker:
-  [`../11-project-management/secrets-migration-tracking.md`](../11-project-management/secrets-migration-tracking.md)
+  [`/codex/11-project-management/secrets-migration-tracking.md`](/codex/11-project-management/secrets-migration-tracking.md)
 - Live deployment monitoring (event-stream parity):
-  [`../05-infrastructure/live-deployment-monitoring.md`](../05-infrastructure/live-deployment-monitoring.md)
+  [`/codex/05-infrastructure/live-deployment-monitoring.md`](/codex/05-infrastructure/live-deployment-monitoring.md)

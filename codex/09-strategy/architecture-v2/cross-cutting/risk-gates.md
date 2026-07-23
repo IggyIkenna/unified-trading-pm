@@ -1,10 +1,10 @@
 ---
 doc_type: codex-ssot
-title: 'Cross-Cutting: Risk Gates (4-Layer Model)'
+title: "Cross-Cutting: Risk Gates (4-Layer Model)"
 summary:
-  'The 4-layer risk enforcement model between a strategy instruction and the venue order: L1 strategy self-check → L2
-  risk-and-exposure-service portfolio pre-flight → L3 execution-service venue-account pre-trade → L4 venue-side. Instance
-  kill-switches live in L2; layers traverse in order and are idempotent by `instruction_id`.'
+  "The 4-layer risk enforcement model between a strategy instruction and the venue order: L1 strategy self-check → L2
+  risk-and-exposure-service portfolio pre-flight → L3 execution-service venue-account pre-trade → L4 venue-side.
+  Instance kill-switches live in L2; layers traverse in order and are idempotent by `instruction_id`."
 status: current
 nature: ssot
 asset_group: [meta]
@@ -13,11 +13,26 @@ repos: [execution-service, strategy-service]
 scope: [engineer, admin]
 tags: [risk, strategy, execution, self-healing, monitoring]
 related:
-  [venue-account-coordination.md, ../../../04-architecture/kill-switch-circuit-breaker.md,
-  ../../../04-architecture/autonomous-recovery-matrix.md, ../../../04-architecture/strategy-risk-config-schema.md]
+  [
+    /codex/09-strategy/architecture-v2/cross-cutting/venue-account-coordination.md,
+    ../../../04-architecture/kill-switch-circuit-breaker.md,
+    ../../../04-architecture/autonomous-recovery-matrix.md,
+    ../../../04-architecture/strategy-risk-config-schema.md,
+  ]
 created: 2026-04-17
-authoritative_for: [4-layer risk-gate model (strategy self-check / risk-exposure preflight / execution pre-trade / venue-side)]
-referenced_by: [codex/04-architecture/capital-efficiency-patterns.md, codex/04-architecture/risk-breaker-seam.md, codex/04-architecture/risk-preflight-flow.md, codex/04-architecture/risk-rule-taxonomy.md, codex/04-architecture/strategy-execution-protocol.md, codex/04-architecture/strategy-risk-config-schema.md, codex/09-strategy/_archived_pre_v2/cross-cutting/margin-health.md, codex/09-strategy/architecture-v2/README.md]
+authoritative_for:
+  [4-layer risk-gate model (strategy self-check / risk-exposure preflight / execution pre-trade / venue-side)]
+referenced_by:
+  [
+    /codex/04-architecture/capital-efficiency-patterns.md,
+    /codex/04-architecture/risk-breaker-seam.md,
+    /codex/04-architecture/risk-preflight-flow.md,
+    /codex/04-architecture/risk-rule-taxonomy.md,
+    /codex/04-architecture/strategy-execution-protocol.md,
+    /codex/04-architecture/strategy-risk-config-schema.md,
+    /codex/09-strategy/_archived_pre_v2/cross-cutting/margin-health.md,
+    /codex/09-strategy/architecture-v2/README.md,
+  ]
 owner:
 last_reviewed: 2026-05-25
 code_refs:
@@ -29,7 +44,7 @@ code_refs:
 > distinct gates, each with a specific responsibility and authority to reject/modify.
 
 > **Per-strategy risk config** (drawdown thresholds, expected-drawdown model, response policy): see
-> [`codex/04-architecture/strategy-risk-config-schema.md`](../../../04-architecture/strategy-risk-config-schema.md).
+> [`/codex/04-architecture/strategy-risk-config-schema.md`](../../../04-architecture/strategy-risk-config-schema.md).
 > Every live strategy MUST declare all 3 blocks. The strategy-service `config_loader.py` enforces at load time.
 
 ## The 4 layers

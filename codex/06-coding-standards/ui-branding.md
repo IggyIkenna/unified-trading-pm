@@ -11,10 +11,10 @@ stage: [meta]
 repos: [deployment-ui]
 scope: [engineer]
 tags: [ui, ui-kit, frontend, refactor]
-related: [ui-service-separation.md, ui-testing-layers.md]
+related: [/codex/06-coding-standards/ui-service-separation.md, /codex/06-coding-standards/ui-testing-layers.md]
 created: 2026-03-27
 authoritative_for: [UI branding and ui-kit shared-component standardization]
-referenced_by: [codex/06-coding-standards/ui-service-separation.md]
+referenced_by: [/codex/06-coding-standards/ui-service-separation.md]
 owner:
 last_reviewed:
 code_refs:

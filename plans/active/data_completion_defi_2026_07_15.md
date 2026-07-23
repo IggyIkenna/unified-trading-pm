@@ -14,7 +14,8 @@ stage: [data]
 repos: [instruments-service, market-tick-data-service, unified-api-contracts]
 scope: [engineer, admin]
 tags: [backfill, manifest, honest-coverage, data-completion, defi, data-correctness]
-related: [data_completion_to_100_all_ag_2026_06_21.md, defi_consolidated_closeout_2026_07_18.md]
+related:
+  [/plans/active/data_completion_to_100_all_ag_2026_06_21.md, /plans/active/defi_consolidated_closeout_2026_07_18.md]
 created: 2026-07-15
 parent_epic: manifest_master
 assigned_vm: NA
@@ -73,15 +74,15 @@ drift_direction: advance-code
       `day=/category=defi/venue={FLAT}/chain=/…` form.
 
       The C0/**v9** step is a NEW, separate read+rewrite tool —
-                                                                  `market-tick-data-service/.../scripts/migrate_defi_full_v9_canonical.py` (**WRITTEN + launcher-wired
-                                                                  2026-06-01**, proper home beside the other `migrate_*.py`; dry-run-able; ruff+parse clean; helpers verified) —
-                                                                  that takes the flat objects to FULL canonical: `category=defi`→`asset_group=defi` + `pipeline_mode={MODE}`
-                                                                  partition + schema_version=9 + `source` column (UAC SOURCE_PRIORITY) + canonical `_V{N}` venue (UAC SSOT,
-                                                                  complete incl TraderJoe/Velodrome post-C12-UAC) + **`available_at` preserve-or-backfill** (preserve where
-                                                                  present; backfill only missing/null from day end-of-day UTC — never regenerate to migration-time) + env-split
-                                                                  `{kind}-prd-{project}` bucket. mtds@a07cea55; launcher deployment-service@4484802. **Remaining = the C0a–C0f
-                                                                  VM-cutover sub-todos below.** parent_epic: manifest_master. **The VM-cutover sequence is tracked as explicit
-                                                                  sub-todos C0a–C0f below.**
+                                                                                                                                  `market-tick-data-service/.../scripts/migrate_defi_full_v9_canonical.py` (**WRITTEN + launcher-wired
+                                                                                                                                  2026-06-01**, proper home beside the other `migrate_*.py`; dry-run-able; ruff+parse clean; helpers verified) —
+                                                                                                                                  that takes the flat objects to FULL canonical: `category=defi`→`asset_group=defi` + `pipeline_mode={MODE}`
+                                                                                                                                  partition + schema_version=9 + `source` column (UAC SOURCE_PRIORITY) + canonical `_V{N}` venue (UAC SSOT,
+                                                                                                                                  complete incl TraderJoe/Velodrome post-C12-UAC) + **`available_at` preserve-or-backfill** (preserve where
+                                                                                                                                  present; backfill only missing/null from day end-of-day UTC — never regenerate to migration-time) + env-split
+                                                                                                                                  `{kind}-prd-{project}` bucket. mtds@a07cea55; launcher deployment-service@4484802. **Remaining = the C0a–C0f
+                                                                                                                                  VM-cutover sub-todos below.** parent_epic: manifest_master. **The VM-cutover sequence is tracked as explicit
+                                                                                                                                  sub-todos C0a–C0f below.**
 
   - [x] ✅ [SCRIPT] P0. C0-PROVISION — **5 dedicated DeFi `-prd` buckets PROVISIONED** (operator-authorized 2026-06-03,
         supersedes the "no new buckets/VMs" pause): `oracle-prices-prd`, `lst-rates-prd`, `lending-indices-prd`,
@@ -183,8 +184,8 @@ drift_direction: advance-code
   object paths `venue=TRADER_JOEV2`→`TRADER_JOE_V2` etc. — VM single-walk (bundle with C0). - **Manifest index**:
   `dex-pools`/`dex-swaps` index — DONE for the already-underscore venues (UNISWAP_V3 39,355 + dex-swaps); TODO
   TRADER_JOE_V2/VELODROME_V2 (coordinate with the object rename so index==object). - **Docs**:
-  `codex/02-data/availability-manifest-and-data-status.md`, `contracts-scope-and-layout.md`, etc. Coordinated cross-repo
-  migration (all surfaces together; objects = VM). parent_epic: manifest_master. **(MIGRATED FROM:
+  `/codex/02-data/availability-manifest-and-data-status.md`, `contracts-scope-and-layout.md`, etc. Coordinated
+  cross-repo migration (all surfaces together; objects = VM). parent_epic: manifest_master. **(MIGRATED FROM:
   `defi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
 
 - [ ] [DATA] P0. D1 features-onchain-defi is near-empty (3 rows); features-delta-one-defi + features-volatility-defi
@@ -228,14 +229,14 @@ drift_direction: advance-code
       `asset_group=defi`).
 
       Verification (per CLAUDE.md "Plans Run To Actual Completion"):
-                                                                  `gsutil ls gs://market-data-tick-defi-prd-${PID}/raw_tick_data/by_date/day=*/pipeline_mode=batch_*/asset_group=defi/venue=DRIFT/chain=SOLANA/instrument_type=perpetual/data_type=perp_funding/`
-                                                                  returns a parquet per day in window; sample-inspect 3 random parquets (early/mid/late window) for non-empty
-                                                                  `funding_rate`, `oracle_price_twap`, `mark_price_twap` columns; manifest-verified row count > 0 per day-shard;
-                                                                  equivalent checks for `perp_trades` (active days only; allow `empty_confirmed[SOURCE_RETURNED_ZERO]` on quiet
-                                                                  days) + `dex_pool_state` for Orca + Raydium. **No silent gaps**: any day with 0 rows MUST carry a typed
-                                                                  `empty_confirmed` reason (not `attempted_failed`). parent_epic: mtds_mdps_master. **Operator-launched (long
-                                                                  wall-clock; not a dispatch).** **(MIGRATED FROM: `defi_manifest_canonicalisation_2026_06_01.md`,
-                                                                  2026-07-13 per MTDS consolidation ruling.)**
+                                                                                                                                  `gsutil ls gs://market-data-tick-defi-prd-${PID}/raw_tick_data/by_date/day=*/pipeline_mode=batch_*/asset_group=defi/venue=DRIFT/chain=SOLANA/instrument_type=perpetual/data_type=perp_funding/`
+                                                                                                                                  returns a parquet per day in window; sample-inspect 3 random parquets (early/mid/late window) for non-empty
+                                                                                                                                  `funding_rate`, `oracle_price_twap`, `mark_price_twap` columns; manifest-verified row count > 0 per day-shard;
+                                                                                                                                  equivalent checks for `perp_trades` (active days only; allow `empty_confirmed[SOURCE_RETURNED_ZERO]` on quiet
+                                                                                                                                  days) + `dex_pool_state` for Orca + Raydium. **No silent gaps**: any day with 0 rows MUST carry a typed
+                                                                                                                                  `empty_confirmed` reason (not `attempted_failed`). parent_epic: mtds_mdps_master. **Operator-launched (long
+                                                                                                                                  wall-clock; not a dispatch).** **(MIGRATED FROM: `defi_manifest_canonicalisation_2026_06_01.md`,
+                                                                                                                                  2026-07-13 per MTDS consolidation ruling.)**
 
 - [ ] [DATA] P0. G2 Launch live-mode snapshotters via `--live --continuous` (mtds@1d35c7f2 unified live/batch path).
       Terminal A:

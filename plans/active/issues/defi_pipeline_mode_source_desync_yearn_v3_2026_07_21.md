@@ -9,7 +9,7 @@ summary: >-
   data_pipeline_reconciliation_defi_2026_07_20.md §4+§9). The YEARN_V3/ETHEREUM/yield_bearing/vault_share_price manifest
   row sampled on day=2026-04-14 carries pipeline_mode=batch_onchain_rpc but source=onchain_subgraph — the two axes
   disagree on the same row, which breaks the SOURCE-AWARE `{mode}_{source}[_{transport}]` partition scheme
-  (codex/02-data/pipeline-mode-partition.md) that requires them to be derived together. The audit report explicitly
+  (/codex/02-data/pipeline-mode-partition.md) that requires them to be derived together. The audit report explicitly
   lists F10 as "not in the register as defi-scoped rows ... flagged as follow-up" (§9) and this repo's task instructed
   filing it as its own issue since the audit run itself did not. A code read of the CURRENT
   market-tick-data-service/cli/handlers/vault_share_price_handler.py shows every record_captured call stamps
@@ -84,7 +84,7 @@ had not, until this doc.)
 
 ## Why it matters
 
-`codex/02-data/pipeline-mode-partition.md` defines the manifest/GCS partition scheme as SOURCE-AWARE:
+`/codex/02-data/pipeline-mode-partition.md` defines the manifest/GCS partition scheme as SOURCE-AWARE:
 `{mode}_{source}[_{transport}]` — `pipeline_mode` is meant to be _derived from_ the vendor `source`
 (`pipeline_mode_for_source(source, mode)`), not an independent field. A row where `pipeline_mode=batch_onchain_rpc` but
 `source=onchain_subgraph` means the two axes were stamped from **different, disagreeing inputs on the same manifest
@@ -133,7 +133,7 @@ vault-share-price collector) end-to-end:
 - [ ] 4. [DECISION] P2. If todo 1 confirms stale legacy rows (not an active-write bug), rule on remediation: leave the
       legacy row as an accepted historical artifact (annotate the cutover register) vs. a targeted manifest correction
       pass — do not blind-pick; this is manifest-absence/correction semantics territory per the workspace's
-      data-pipeline-correctness rule (repo: unified-trading-pm, `codex/02-data/canonical-cutover-register.md`).
+      data-pipeline-correctness rule (repo: unified-trading-pm, `/codex/02-data/canonical-cutover-register.md`).
 - [ ] 5. [DATA] P3. Append F10 to the reconciliation register per the audit's own §9 maintenance-contract note (the
       audit run flagged this as not-yet-registered and deferred it) — repo: unified-trading-pm,
-      `codex/02-data/non-canonical-path-inventory.md` or the register doc F10 belongs under.
+      `/codex/02-data/non-canonical-path-inventory.md` or the register doc F10 belongs under.

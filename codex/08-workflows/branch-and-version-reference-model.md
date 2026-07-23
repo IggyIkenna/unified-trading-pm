@@ -14,8 +14,9 @@ scope: [engineer, admin]
 tags: [ci-cd, quickmerge, dependency-management, quality-gates, ssot-audit]
 related: [./ci-cd-flow.md, ./deployment-flow.md]
 created: 2026-06-02
-authoritative_for: [branch-vs-version two-reference model (code-integration LDR ref vs dependency-safety staging/main+semver ref)]
-referenced_by: [codex/08-workflows/ci-cd-flow.md]
+authoritative_for:
+  [branch-vs-version two-reference model (code-integration LDR ref vs dependency-safety staging/main+semver ref)]
+referenced_by: [/codex/08-workflows/ci-cd-flow.md]
 owner:
 last_reviewed:
 code_refs:
@@ -77,8 +78,8 @@ layer-2 reference; both live in `workspace-manifest.json` and are read from `ori
 The integration guarantee for a dependency — "this version passed SIT, so it won't break consumers" — is established at
 the **staging → main promotion** (`quality-gates-v2` + `system-integration-tests`, then `semver-agent` records the
 version). `quickmerge.sh` STAGE 1.6 is the **consumer-side guard** that you are not pinning _behind_ that promoted
-version; it does not itself run SIT. See `codex/08-workflows/ci-cd-flow.md` for the promotion mechanism and
-`codex/08-workflows/deployment-flow.md` for the full dev → staging → main flow.
+version; it does not itself run SIT. See `/codex/08-workflows/ci-cd-flow.md` for the promotion mechanism and
+`/codex/08-workflows/deployment-flow.md` for the full dev → staging → main flow.
 
 ## Anti-patterns (review-blocking)
 
@@ -94,7 +95,7 @@ version; it does not itself run SIT. See `codex/08-workflows/ci-cd-flow.md` for 
 
 - `scripts/quickmerge.sh` — STAGE 0.4 (branch not-behind), STAGE 1 (dep branch alignment), STAGE 1.6 (dep version gate)
 - `workspace-manifest.json` — `active_feature_branch`, `versions`, `staging_versions`
-- `codex/08-workflows/ci-cd-flow.md` — `quality-gates-v2`, branch protection, staging → main promotion
-- `codex/08-workflows/deployment-flow.md` — dev → staging → main + paper → live
+- `/codex/08-workflows/ci-cd-flow.md` — `quality-gates-v2`, branch protection, staging → main promotion
+- `/codex/08-workflows/deployment-flow.md` — dev → staging → main + paper → live
 - `plans/active/cicd_contract_hardening_2026_06_01.md` — staging → main / SIT / semver promotion automation (under
   repair)

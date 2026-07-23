@@ -2,10 +2,10 @@
 doc_type: codex-ssot
 title: Plan-aware merge resolution — slot master reconciliation protocol
 summary:
-  "Slot-master reconciliation protocol for LDR rebase conflicts: classifies each conflict into a closed 4-shape
-  taxonomy — Shape A append-section (auto-resolve via union), Shape B checkbox-flip (keep [x] + both evidence lines),
-  Shape C paragraph-rewrite (ESCALATE with 5-line summary), Shape D code-conflict (union if disjoint, else escalate).
-  ~80% of PM conflicts auto-resolve; the rest reach the operator with plan-context reasoning."
+  "Slot-master reconciliation protocol for LDR rebase conflicts: classifies each conflict into a closed 4-shape taxonomy
+  — Shape A append-section (auto-resolve via union), Shape B checkbox-flip (keep [x] + both evidence lines), Shape C
+  paragraph-rewrite (ESCALATE with 5-line summary), Shape D code-conflict (union if disjoint, else escalate). ~80% of PM
+  conflicts auto-resolve; the rest reach the operator with plan-context reasoning."
 status: current
 nature: ssot
 asset_group: [meta]
@@ -16,12 +16,12 @@ tags: [quickmerge, reconciliation, orchestrator, plan-hygiene, infrastructure]
 related: [plans/active/per_agent_worktrees_2026_05_10.md]
 created: 2026-05-10
 authoritative_for: [plan-aware merge conflict resolution]
-referenced_by: [codex/05-infrastructure/per-tab-worktrees.md]
+referenced_by: [/codex/05-infrastructure/per-tab-worktrees.md]
 owner: ikenna
 last_reviewed: 2026-05-17
 code_refs:
 last_updated: 2026-05-10
-related_codex: [codex/05-infrastructure/per-tab-worktrees.md, ../../cursor-configs/CLAUDE.md]
+related_codex: [/codex/05-infrastructure/per-tab-worktrees.md, ../../cursor-configs/CLAUDE.md]
 ---
 
 # Plan-aware merge resolution — slot master reconciliation protocol

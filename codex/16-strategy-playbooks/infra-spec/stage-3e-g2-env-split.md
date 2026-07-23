@@ -3,25 +3,37 @@ doc_type: codex-ssot
 title: Stage 3E G2 — Env-split design (dev / staging / prod) for pricing, contracts, metering, claims, compliance
 summary:
   mock/staging/prod sink placement for the 5 G2.x state items — pricing numbers (codex markdown, no split), client
-  contracts (Firestore per project), usage metering (GCS parquet + BigQuery), capability claims (Firebase custom claims),
-  compliance events (UTL → Pub/Sub) — with Firestore rules, the odum-staging setup walkthrough, and the staging→prod
-  promotion diff.
+  contracts (Firestore per project), usage metering (GCS parquet + BigQuery), capability claims (Firebase custom
+  claims), compliance events (UTL → Pub/Sub) — with Firestore rules, the odum-staging setup walkthrough, and the
+  staging→prod promotion diff.
 status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
-repos: [execution-service, instruments-service, strategy-service, unified-api-contracts, unified-trading-pm, unified-trading-system-ui]
+repos:
+  [
+    execution-service,
+    instruments-service,
+    strategy-service,
+    unified-api-contracts,
+    unified-trading-pm,
+    unified-trading-system-ui,
+  ]
 scope: [engineer, admin]
 tags: [infrastructure, uac, execution, cost, migration, docspec]
 related:
   [
-    codex/16-strategy-playbooks/infra-spec/stage-3c-derivation-engine.md,
-    codex/16-strategy-playbooks/infra-spec/stage-3e-refactor-plan.md,
-    codex/05-infrastructure/bucket-isolation-model.md,
+    /codex/16-strategy-playbooks/infra-spec/stage-3c-derivation-engine.md,
+    /codex/16-strategy-playbooks/infra-spec/stage-3e-refactor-plan.md,
+    /codex/05-infrastructure/bucket-isolation-model.md,
   ]
 created: 2026-04-20
-authoritative_for: [Stage 3E G2 dev/staging/prod env-split placement for pricing / contracts / usage-metering / capability-claims / compliance-events]
-referenced_by: [codex/14-customer-journeys/commercial-model/pricing-building-blocks.md]
+authoritative_for:
+  [
+    Stage 3E G2 dev/staging/prod env-split placement for pricing / contracts / usage-metering / capability-claims /
+    compliance-events,
+  ]
+referenced_by: [/codex/14-customer-journeys/commercial-model/pricing-building-blocks.md]
 owner:
 last_reviewed:
 code_refs:
@@ -69,7 +81,7 @@ Tier B tables as prod. Internal cost column stays codex-private per rule 08.
 
 **Implementation:**
 
-- **SSOT:** `codex/14-customer-journeys/commercial-model/pricing-building-blocks.md` (locked ranges today;
+- **SSOT:** `/codex/14-customer-journeys/commercial-model/pricing-building-blocks.md` (locked ranges today;
   finance-committed point values land inline once signed off).
 - **Loader (new):** `unified-trading-pm/scripts/propagation/sync-pricing-tables-to-uac.{sh,py}` — parses the markdown
   table, emits `unified-api-contracts/unified_api_contracts/internal/architecture_v2/pricing_manifest.json`. Pattern

@@ -2,9 +2,9 @@
 doc_type: codex-ssot
 title: Strategy Version Governance — Operator Playbook
 summary:
-  Day-to-day operator playbook for DART forked strategy versions — who approves (internal-trader/admin), SLA targets, the
-  hard backtest_1yr approval floor (412 on lower maturity, no exception path), reject/backtest-failure escalation, rollout
-  + hot-revert + feature-flag rollback, and the quarterly auditor checklist.
+  Day-to-day operator playbook for DART forked strategy versions — who approves (internal-trader/admin), SLA targets,
+  the hard backtest_1yr approval floor (412 on lower maturity, no exception path), reject/backtest-failure escalation,
+  rollout + hot-revert + feature-flag rollback, and the quarterly auditor checklist.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -16,12 +16,17 @@ related:
   [
     ../../09-strategy/architecture-v2/dart-exclusive-research-fork.md,
     ../../09-strategy/architecture-v2/strategy-lifecycle-maturity.md,
-    odum-paper-client-zero.md,
+    /codex/14-customer-journeys/shared-core/odum-paper-client-zero.md,
     ../../09-strategy/architecture-v2/performance-overlay.md,
   ]
 created: 2026-04-22
 authoritative_for: [DART strategy-version approval/rollout operator playbook (backtest_1yr floor, SLAs)]
-referenced_by: [codex/09-strategy/architecture-v2/dart-exclusive-research-fork.md, codex/09-strategy/architecture-v2/dashboard-services-grid.md, codex/14-customer-journeys/shared-core/odum-paper-client-zero.md]
+referenced_by:
+  [
+    /codex/09-strategy/architecture-v2/dart-exclusive-research-fork.md,
+    /codex/09-strategy/architecture-v2/dashboard-services-grid.md,
+    /codex/14-customer-journeys/shared-core/odum-paper-client-zero.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -33,7 +38,7 @@ Status: **canonical** — source of truth for the day-to-day governance of DART 
 UI copy must mirror this document.
 
 Parent plan: `plans/archive/dart_exclusive_subscription_research_fork_2026_04_21.plan.md`. Architecture SSOT:
-[`codex/09-strategy/architecture-v2/dart-exclusive-research-fork.md`](../../09-strategy/architecture-v2/dart-exclusive-research-fork.md).
+[`/codex/09-strategy/architecture-v2/dart-exclusive-research-fork.md`](../../09-strategy/architecture-v2/dart-exclusive-research-fork.md).
 
 Cross-refs:
 
@@ -43,7 +48,7 @@ Cross-refs:
 - UTL events: `STRATEGY_VERSION_APPROVAL_REQUESTED`, `STRATEGY_VERSION_APPROVED`, `STRATEGY_VERSION_REJECTED`,
   `STRATEGY_VERSION_ROLLED_OUT`.
 - Plan A maturity ladder:
-  [`codex/09-strategy/architecture-v2/strategy-lifecycle-maturity.md`](../../09-strategy/architecture-v2/strategy-lifecycle-maturity.md).
+  [`/codex/09-strategy/architecture-v2/strategy-lifecycle-maturity.md`](../../09-strategy/architecture-v2/strategy-lifecycle-maturity.md).
 - Odum-paper runs: [`odum-paper-client-zero.md`](odum-paper-client-zero.md).
 
 ---
@@ -177,7 +182,8 @@ When preparing a version-governance audit (quarterly or on-demand):
       the prior active.
 
 Failures at any step are tier-1 incidents; page the on-call + open a post-mortem per
-`codex/12-incidents/post-mortem-template.md`.
+`codex/12-incidents/post-mortem-template.md` (no leading slash — template not yet created; see
+`/codex/15-runbooks/incidents/README.md` for the current incident-handling index).
 
 ## 8. Links
 

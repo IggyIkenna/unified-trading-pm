@@ -14,15 +14,25 @@ scope: [engineer, admin]
 tags: [instruments, mtds, ssot, manifest, defi, data-correctness, honest-coverage]
 related:
   [
-    instrument-universe-registry-consolidation.md,
-    drift-v2-data-sources.md,
-    ../02-data/honest-absence-downstream-handling.md,
-    ../02-data/availability-manifest-and-data-status.md,
+    /codex/04-architecture/instrument-universe-registry-consolidation.md,
+    /codex/04-architecture/drift-v2-data-sources.md,
+    /codex/02-data/honest-absence-downstream-handling.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
   ]
 created: 2026-05-20
 authoritative_for:
   [IS→MTDS reference-data contract, MTDS no-hardcoded-venue-url rule, MTDS per-shard manifest emission requirement]
-referenced_by: [codex/02-data/cefi-capture-universe.md, codex/02-data/honest-coverage-model.md, codex/02-data/instruments-foundation-and-catalogue-completeness.md, codex/04-architecture/asset-class-ownership.md, codex/04-architecture/drift-v2-data-sources.md, codex/04-architecture/greeks-service-overview.md, codex/04-architecture/instrument-universe-registry-consolidation.md, codex/09-strategy/architecture-v2/cross-cutting/universe-enumeration-contract.md]
+referenced_by:
+  [
+    /codex/02-data/cefi-capture-universe.md,
+    /codex/02-data/honest-coverage-model.md,
+    /codex/02-data/instruments-foundation-and-catalogue-completeness.md,
+    /codex/04-architecture/asset-class-ownership.md,
+    /codex/04-architecture/drift-v2-data-sources.md,
+    /codex/04-architecture/greeks-service-overview.md,
+    /codex/04-architecture/instrument-universe-registry-consolidation.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/universe-enumeration-contract.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -48,7 +58,7 @@ instruments-service catalogue.
 > **How the catalogue stays fresh (2026-07-03):** the `prod/catalog.parquet` MTDS derives from is maintained by the
 > daily **incremental** lifecycle rollup (prev catalogue + self-widening trailing window + frozen-tail upsert; ~90s
 > tradfi vs the retired 2h17m full walk) with a weekly `--mode full` self-heal. Mechanism SSOT:
-> [instruments-foundation-and-catalogue-completeness.md §4](../02-data/instruments-foundation-and-catalogue-completeness.md).
+> [instruments-foundation-and-catalogue-completeness.md §4](/codex/02-data/instruments-foundation-and-catalogue-completeness.md).
 
 ```
                     ┌────────────────────────────────┐
@@ -155,7 +165,7 @@ absence is by-design, not a fetch error. See `honest-absence-downstream-handling
 ### Drift Velocity Data API as new primary historical source (2026-06-01)
 
 > **Added 2026-06-01** from `plans/archive/solana_basis_trading_mvp_2026_06_01.plan.md` Phase 1
-> (DriftV2HistoricalIngester shipped at mtds@0f70f376). Full SSOT: `codex/04-architecture/drift-v2-data-sources.md`.
+> (DriftV2HistoricalIngester shipped at mtds@0f70f376). Full SSOT: `/codex/04-architecture/drift-v2-data-sources.md`.
 
 The S3 archive (`drift-historical-data-v2`) covers Drift V2 launch (2022-11-04) → 2025-01-08. Post-2025-01-08, the
 **Drift Velocity Data API** (`data.api.drift.trade`) is the canonical primary historical source for funding rates,
@@ -197,8 +207,8 @@ The new MTDS handler is the `DriftV2HistoricalIngester` (script-mode) in
 
 ## Related docs
 
-- `codex/02-data/honest-absence-downstream-handling.md` § "Reason taxonomy" — full `error_reason` matrix including
+- `/codex/02-data/honest-absence-downstream-handling.md` § "Reason taxonomy" — full `error_reason` matrix including
   `EXPECTED_PAST_SOURCE_COVERAGE_END`
-- `codex/02-data/availability-manifest-and-data-status.md` — manifest schema + `capture_status` state machine
+- `/codex/02-data/availability-manifest-and-data-status.md` — manifest schema + `capture_status` state machine
 - `plans/active/is_mtds_contract_audit_2026_05_20.md` — Phase 1-8 remediation plan (original contract codification)
 - `plans/epics/mtds_mdps_master.md` — operator-handoff entry point; Phase -2 to Phase 14 pipeline migration sequencing

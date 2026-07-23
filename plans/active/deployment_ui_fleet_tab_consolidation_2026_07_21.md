@@ -18,9 +18,9 @@ repos: [deployment-ui, deployment-api]
 scope: [engineer]
 tags: [deployment-ui, fleet, consolidation, cleanup, observability, idle-spend]
 related:
-  - deployment_ui_observability_ux_tracker_2026_07_17.md
-  - deployment_ui_date_range_filter_and_search_2026_07_20.md
-  - deployment_ui_vm_log_viewer_2026_07_20.md
+  - /plans/active/deployment_ui_observability_ux_tracker_2026_07_17.md
+  - /plans/archive/2026_07/deployment_ui_date_range_filter_and_search_2026_07_20.md
+  - /plans/archive/2026_07/deployment_ui_vm_log_viewer_2026_07_20.md
 created: "2026-07-21"
 last_updated: "2026-07-21"
 parent_epic: observability_master
@@ -302,16 +302,16 @@ Key audit facts driving the merges:
       flipping this todo — nothing outstanding to ship.
 - [x] [REVIEW] P2. ✅ Post-phase codex audit — document the consolidated contract (Deployments owns VM inventory + idle
       spend + reap actions + history; Fleet = git-health-only; `/vm-deployments` retired) in
-      `codex/05-infrastructure/deployment-observability.md`. — ✅ `unified-trading-pm@dd5068f4c`. Added a new "Fleet-tab
-      consolidation" section documenting: Deployments now owns idle-spend (rollup cards + verdict/ stopped-age + dry-run
-      reap/delete, ported verbatim from the removed `FleetOrphans.tsx`) + the folded `/vm-deployments` archive history;
-      Fleet is git-health-only (`FleetTab` renders exactly `FleetGitContent` + the new snapshot timestamp);
-      `/vm-deployments` is legacy-quarantined (NOT redirected — BLK-7cb5bbbc, stays live for the 4 venue-config panels,
-      later given its own canonical `/venue-config` route). **Also corrected** the now-stale "cockpit Fleet tab wires
-      it" claim in the pre-existing cross-cloud-reconciliation paragraph (the endpoint is unchanged, just no longer
-      UI-consumed after this plan). Added `FleetGit.tsx`/`Cockpit.tsx`/ `NavMenu.tsx`/`DeploymentDetail.tsx` to the
-      doc's `code_refs` and this plan to `related`. **Plan is now fully closed** — every todo (10 code todos + this
-      audit) done.
+      `/codex/05-infrastructure/deployment-observability.md`. — ✅ `unified-trading-pm@dd5068f4c`. Added a new
+      "Fleet-tab consolidation" section documenting: Deployments now owns idle-spend (rollup cards + verdict/
+      stopped-age + dry-run reap/delete, ported verbatim from the removed `FleetOrphans.tsx`) + the folded
+      `/vm-deployments` archive history; Fleet is git-health-only (`FleetTab` renders exactly `FleetGitContent` + the
+      new snapshot timestamp); `/vm-deployments` is legacy-quarantined (NOT redirected — BLK-7cb5bbbc, stays live for
+      the 4 venue-config panels, later given its own canonical `/venue-config` route). **Also corrected** the now-stale
+      "cockpit Fleet tab wires it" claim in the pre-existing cross-cloud-reconciliation paragraph (the endpoint is
+      unchanged, just no longer UI-consumed after this plan). Added `FleetGit.tsx`/`Cockpit.tsx`/
+      `NavMenu.tsx`/`DeploymentDetail.tsx` to the doc's `code_refs` and this plan to `related`. **Plan is now fully
+      closed** — every todo (10 code todos + this audit) done.
 
 ## Success criteria
 
@@ -341,8 +341,8 @@ Key audit facts driving the merges:
 
 ## Codex SSOTs
 
-- `codex/05-infrastructure/deployment-observability.md` — deployment inventory + (to add) the consolidated
+- `/codex/05-infrastructure/deployment-observability.md` — deployment inventory + (to add) the consolidated
   Deployments-owns-everything / Fleet-is-git-health-only contract.
-- `codex/06-coding-standards/ui-testing-layers.md` — the UI gate (pw:L2 + cited spec) for every `[UI]` todo.
-- `codex/05-infrastructure/per-tab-worktrees.md` — the slot/dirty-repo model behind the FleetGit keep-set
+- `/codex/06-coding-standards/ui-testing-layers.md` — the UI gate (pw:L2 + cited spec) for every `[UI]` todo.
+- `/codex/05-infrastructure/per-tab-worktrees.md` — the slot/dirty-repo model behind the FleetGit keep-set
   (`slot-git-status-report.sh` + `slot-cron-ff-pull.sh` → AO `/api/fleet/git-health`).

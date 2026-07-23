@@ -16,7 +16,7 @@ related:
   [
     plans/active/issues/dp_alert_flood_triage_and_monitor_fixes_2026_06_23.md,
     plans/active/issues/live_mode_event_sink_topic_missing_2026_06_21.md,
-    codex/05-infrastructure/deployment-observability.md,
+    /codex/05-infrastructure/deployment-observability.md,
   ]
 created: 2026-06-22
 parent_epic: observability_master

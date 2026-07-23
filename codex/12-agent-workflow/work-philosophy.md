@@ -14,10 +14,10 @@ scope: [engineer, admin]
 tags: [work-philosophy, plan-sizing, role-based-dispatch, drift-closing, codex-target, model-tier, boot-prompts]
 related:
   [
-    canonical-plan-flow.md,
+    /codex/12-agent-workflow/canonical-plan-flow.md,
     ../../plans/epics/README.md,
     ../../plans/PLAN_FORMAT.md,
-    ../06-coding-standards/model-tier-selection.md,
+    /codex/06-coding-standards/model-tier-selection.md,
   ]
 created: 2026-06-26
 authoritative_for:
@@ -101,7 +101,7 @@ Read the relevant entry before authoring or executing.
   Model tier follows: Opus/operator at authoring + hard-verify of risky tasks; **Sonnet for execution.** **Why:**
   generalizes the per-plan model-tier split (D12 of `orchestrator_consolidated_remaining` — "architecture decided → no
   reasoning premium → Sonnet") to the default shape of every plan. Tier SSOT:
-  [`../06-coding-standards/model-tier-selection.md`](../06-coding-standards/model-tier-selection.md).
+  [`/codex/06-coding-standards/model-tier-selection.md`](/codex/06-coding-standards/model-tier-selection.md).
 
 - **L6 — Verification is at the shippable boundary, not per-task.** Agent completes the plan → runs `quality-gates.sh` →
   ships via quickmerge (the enforced workspace gate) → the review agent reviews + checks regression. A green→red QG
@@ -186,5 +186,5 @@ problem. Instead:
   drift-direction tag, the sizing rule.
 - [`../../plans/epics/agent_operating_framework_master.md`](../../plans/epics/agent_operating_framework_master.md) — the
   machinery (roles, retrieval, dispatch) that implements this method, and the restructure workstreams.
-- [`../06-coding-standards/model-tier-selection.md`](../06-coding-standards/model-tier-selection.md) — the model-tier
-  rule L5 generalizes.
+- [`/codex/06-coding-standards/model-tier-selection.md`](/codex/06-coding-standards/model-tier-selection.md) — the
+  model-tier rule L5 generalizes.

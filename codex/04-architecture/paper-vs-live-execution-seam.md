@@ -14,18 +14,32 @@ scope: [engineer, admin]
 tags: [paper-trading, live-trading, execution, reconciliation, defi, batch-live]
 related:
   [
-    operational-modes.md,
-    batch-live-architecture.md,
-    ../05-infrastructure/per-venue-paper-policy.md,
-    reconciliation-resolution.md,
+    /codex/04-architecture/operational-modes.md,
+    /codex/04-architecture/batch-live-architecture.md,
+    /codex/05-infrastructure/per-venue-paper-policy.md,
+    /codex/04-architecture/reconciliation-resolution.md,
   ]
 created: 2026-05-09
 authoritative_for: [paper-vs-live-vs-batch execution seam, mode-divergence-only-at-execution-layer principle]
-referenced_by: [codex/04-architecture/multi-mode-wallet-isolation.md, codex/04-architecture/operational-modes.md, codex/04-architecture/order-state-machine.md, codex/04-architecture/reconciliation-resolution.md, codex/04-architecture/separation-of-concerns.md, codex/05-infrastructure/per-venue-paper-policy.md, codex/09-strategy/architecture-v2/cross-cutting/archetype-paper-readiness.md, codex/14-customer-journeys/dart/mode-toggle.md]
+referenced_by:
+  [
+    /codex/04-architecture/multi-mode-wallet-isolation.md,
+    /codex/04-architecture/operational-modes.md,
+    /codex/04-architecture/order-state-machine.md,
+    /codex/04-architecture/reconciliation-resolution.md,
+    /codex/04-architecture/separation-of-concerns.md,
+    /codex/05-infrastructure/per-venue-paper-policy.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/archetype-paper-readiness.md,
+    /codex/14-customer-journeys/dart/mode-toggle.md,
+  ]
 owner:
 last_reviewed: 2026-05-10
 code_refs:
-overview: Pins the principle that batch / paper / live differ ONLY at the execution layer — strategy / risk / P&L / position / alerting / instructions are identical across modes. Pricing has no real "paper" concept (just right data); mock-data is for risk simulations + dev fixtures (NOT paper-trading); mock-vs-paper is operator-discipline only (no enforcement).
+overview:
+  Pins the principle that batch / paper / live differ ONLY at the execution layer — strategy / risk / P&L / position /
+  alerting / instructions are identical across modes. Pricing has no real "paper" concept (just right data); mock-data
+  is for risk simulations + dev fixtures (NOT paper-trading); mock-vs-paper is operator-discipline only (no
+  enforcement).
 type: codex-ssot
 locked_by: live-defi-rollout
 locked_since: 2026-05-09
@@ -37,7 +51,7 @@ implements_in: plans/active/master_to_live_defi_2026_05_23.md
 
 > **Canonical 2026-05-10.** Per-venue paper-target policy + simulate-first-floor / testnet-upgrade-where-credentials-
 > exist mechanics live in
-> [`../05-infrastructure/per-venue-paper-policy.md`](../05-infrastructure/per-venue-paper-policy.md) (the
+> [`/codex/05-infrastructure/per-venue-paper-policy.md`](/codex/05-infrastructure/per-venue-paper-policy.md) (the
 > `paper_target_registry` SSOT). Solana paper for non-EVM uses devnet / localnet / surfnet per the same registry.
 > Consumer-site implementation (Group F sub-items `pvl-p17a` / `pvl-p17b` / `pvl-p17c` / `pvl-p17d` / `pvl-p20a..c`)
 > owned by `master_to_live_defi_2026_05_23.md`.
@@ -116,8 +130,8 @@ Execution-service routes per `decompose(mode)`:
 ## Reconciliation
 
 > **SHIPPED 2026-05-27 (was DESIGN-ONLY DEFERRED 2026-05-12 per slot 8 audit PB-5; un-deferred per BLRS audit
-> `plans/active/issues/batch_live_reconciliation_service_audit_2026_05_27.md`)**: 3-way reconciliation (batch ↔ paper
-> ↔ live) is **implemented today**. The `batch-live-reconciliation-service` stage DAG ships `stage0_config_pull` +
+> `plans/active/issues/batch_live_reconciliation_service_audit_2026_05_27.md`)**: 3-way reconciliation (batch ↔ paper ↔
+> live) is **implemented today**. The `batch-live-reconciliation-service` stage DAG ships `stage0_config_pull` +
 > `stage0_manifest_reason_check` + `stage0_data_pipeline_recon` + `stage1_ml_recon` + `stage2_strategy_recon` +
 > `stage3_execution_recon` + **`stage3b_paper_live_recon`** + **`stage3c_batch_paper_recon`** +
 > `stage4_agent_analysis` + `stage5_results_writer`, with **per-pair thresholds** (`PaperLiveThresholds` 2× tighter,
@@ -141,5 +155,5 @@ remain the open `pvl-p21a` extension.
 
 - [`operational-modes.md`](operational-modes.md) — the canonical mode enum + decompose helper.
 - [`batch-live-architecture.md`](batch-live-architecture.md) — broader batch=live SSOT this doc specialises.
-- [`../05-infrastructure/per-venue-paper-policy.md`](../05-infrastructure/per-venue-paper-policy.md) — the
+- [`/codex/05-infrastructure/per-venue-paper-policy.md`](/codex/05-infrastructure/per-venue-paper-policy.md) — the
   `paper_target_registry` SSOT.

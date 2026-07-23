@@ -15,14 +15,14 @@ scope: [engineer]
 tags: [manifest, mtds, mdps, instruments, defi, cefi, data-status]
 related:
   [
-    codex/02-data/availability-manifest-and-data-status.md,
-    codex/02-data/per-asset-group-bucket-layouts.md,
-    codex/02-data/mtds-data-source-coverage-matrix.md,
-    codex/02-data/sports-data-source-coverage-matrix.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/02-data/per-asset-group-bucket-layouts.md,
+    /codex/02-data/mtds-data-source-coverage-matrix.md,
+    /codex/02-data/sports-data-source-coverage-matrix.md,
   ]
 created: 2026-05-06
 authoritative_for: [instruments-service/MTDS/MDPS pipeline coverage navigational matrix]
-referenced_by: [codex/02-data/defi-data-pipeline.md, codex/02-data/per-asset-group-bucket-layouts.md]
+referenced_by: [/codex/02-data/defi-data-pipeline.md, /codex/02-data/per-asset-group-bucket-layouts.md]
 owner:
 last_reviewed: 2026-07-23
 code_refs:
@@ -50,10 +50,10 @@ end-to-end coverage.
 **Last audited:** 2026-05-06 (parallel agent audit of source + GCS reality check) **Project:** `central-element-323112`
 **Related SSOTs:**
 
-- `codex/02-data/availability-manifest-and-data-status.md` — manifest schema + capture_status
-- `codex/02-data/per-asset-group-bucket-layouts.md` — bucket naming
-- `codex/02-data/mtds-data-source-coverage-matrix.md` — MTDS-specific deeper dive
-- `codex/02-data/sports-data-source-coverage-matrix.md` — sports-specific deeper dive
+- `/codex/02-data/availability-manifest-and-data-status.md` — manifest schema + capture_status
+- `/codex/02-data/per-asset-group-bucket-layouts.md` — bucket naming
+- `/codex/02-data/mtds-data-source-coverage-matrix.md` — MTDS-specific deeper dive
+- `/codex/02-data/sports-data-source-coverage-matrix.md` — sports-specific deeper dive
 - `market-tick-data-service/market_tick_data_service/raw_tick_hive.py` — hive key SSOT
 - `unified_api_contracts.canonical.domain.sports.league_data` — `SOURCE_COVERAGE_START`
 
@@ -186,7 +186,7 @@ CeFi options underlyings filtered to BTC/ETH only (`CEFI_OPTIONS_UNDERLYINGS`).
 > **Culled/reclassified 2026-07-16 (operator ruling)**: `DRIFT` + `PACIFICA-SOLANA` CULLED (all Solana perp DEXes
 > dropped except Jupiter — no adapters, no UAC registration). `GMX` moved to the **defi** axis (DEX-pool perp — see the
 > DEFI table below + `defi-venue-protocol-catalogue.md`), so it is no longer a cefi-table venue. `EXTENDED-STARKNET` +
-> `LIGHTER-ZKSYNC` are KEPT (cefi-axis). See `codex/04-architecture/solana-defi-coverage.md`.
+> `LIGHTER-ZKSYNC` are KEPT (cefi-axis). See `/codex/04-architecture/solana-defi-coverage.md`.
 
 ### DEFI
 

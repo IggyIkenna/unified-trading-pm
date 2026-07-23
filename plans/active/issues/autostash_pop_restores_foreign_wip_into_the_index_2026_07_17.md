@@ -25,7 +25,7 @@ stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]
 tags: [multi-agent-safety, git, autostash, shared-checkout, foreign-wip, process, big-finding, commit-hygiene]
-related: [sports_fixture_round_not_captured_competition_phase_unknown_2026_07_17.md]
+related: [/plans/archive/issues/sports_fixture_round_not_captured_competition_phase_unknown_2026_07_17.md]
 created: 2026-07-17
 source:
   - Self-caught 2026-07-17 while committing an issue doc to unified-trading-pm, then flagged by the operator ("sure flag
@@ -73,7 +73,7 @@ git commit -F msg                                        # commits the INDEX →
 files that were merely dirty in the working tree come back **staged**. `git commit` then commits the whole index — the
 `git add <file>` you ran is irrelevant, because those foreign paths are already in it.
 
-This is the **non-conflict** path. Existing guidance (`codex/05-infrastructure/per-tab-worktrees.md`, CLAUDE.md
+This is the **non-conflict** path. Existing guidance (`/codex/05-infrastructure/per-tab-worktrees.md`, CLAUDE.md
 "Multi-agent safety") only addresses the conflict path — _"autostash conflict → `rebase --abort` + stash by name (never
 `git stash drop` foreign WIP)"_ — so an agent doing everything right, on the happy path, still sweeps.
 
@@ -101,7 +101,7 @@ right up until the pull, and the post-pull index is never re-inspected.
 - [ ] [DEVOPS] P3. Consider a pre-commit hook that FAILS when the staged set contains paths the invoking agent did not
       explicitly name (e.g. compare against a `QM_FILES`-style env the wrapper sets) — the machine guard equivalent of
       the `Quickmerge:` trailer check. Would have blocked 1a59516af.
-- [ ] [DOCS] P2. Fold the non-conflict autostash hazard into `codex/05-infrastructure/per-tab-worktrees.md` +
+- [ ] [DOCS] P2. Fold the non-conflict autostash hazard into `/codex/05-infrastructure/per-tab-worktrees.md` +
       CLAUDE.md's Multi-agent safety block — currently both only warn about the conflict path, which is the rarer case.
 
 ## Do NOT "fix" a sweep by reverting

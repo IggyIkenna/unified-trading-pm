@@ -13,16 +13,40 @@ stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]
 tags: [alerting, runbook, defi, cefi, reconciliation, escalation, live-trading]
-related: [codex/15-runbooks/alerting/operator-playbook.md, codex/15-runbooks/alerting/preflight_failed.md, codex/15-runbooks/alerting/margin_threshold_breach.md]
+related:
+  [
+    /codex/15-runbooks/alerting/operator-playbook.md,
+    /codex/15-runbooks/alerting/preflight_failed.md,
+    /codex/15-runbooks/alerting/margin_threshold_breach.md,
+  ]
 created: 2026-05-08
-owner: alerting-service maintainer (alert emission) + position-balance-monitor-service maintainer (drift detection) + on-call rotation (operator response)
-cadence: continuous (custody-ping loop emits `BALANCE_DRIFT` per 5min; threshold review quarterly per `threshold-tuning.md`)
-verifier: alert routes to Telegram + HIGH severity → PagerDuty; resolved via PBMS reconciliation API; WARN noise-floor `balance_drift_usd=1000`
+owner:
+  alerting-service maintainer (alert emission) + position-balance-monitor-service maintainer (drift detection) + on-call
+  rotation (operator response)
+cadence:
+  continuous (custody-ping loop emits `BALANCE_DRIFT` per 5min; threshold review quarterly per `threshold-tuning.md`)
+verifier:
+  alert routes to Telegram + HIGH severity → PagerDuty; resolved via PBMS reconciliation API; WARN noise-floor
+  `balance_drift_usd=1000`
 last_executed:
 code_refs:
-authoritative_for: Operator response when wallet balance drifts from expected ledger state by more than the threshold. Indicates a missed event (fee, withdrawal, deposit) or PBM ledger bug.
+authoritative_for:
+  Operator response when wallet balance drifts from expected ledger state by more than the threshold. Indicates a missed
+  event (fee, withdrawal, deposit) or PBM ledger bug.
 referenced_by: [plans/active/alerting_service_live_rules_2026_05_07.md]
-execution: {owner: alerting-service maintainer (alert emission) + position-balance-monitor-service maintainer (drift detection) + on-call rotation (operator response), cadence: continuous (custody-ping loop emits `BALANCE_DRIFT` per 5min; threshold review quarterly per `threshold-tuning.md`), verifier: alert routes to Telegram + HIGH severity → PagerDuty; resolved via PBMS reconciliation API; WARN noise-floor `balance_drift_usd=1000`, last_executed: NEVER (live custody-ping activation pending master plan Group F-19 Copper+CEFFU)}
+execution:
+  {
+    owner:
+      alerting-service maintainer (alert emission) + position-balance-monitor-service maintainer (drift detection) +
+      on-call rotation (operator response),
+    cadence:
+      continuous (custody-ping loop emits `BALANCE_DRIFT` per 5min; threshold review quarterly per
+      `threshold-tuning.md`),
+    verifier:
+      alert routes to Telegram + HIGH severity → PagerDuty; resolved via PBMS reconciliation API; WARN noise-floor
+      `balance_drift_usd=1000`,
+    last_executed: NEVER (live custody-ping activation pending master plan Group F-19 Copper+CEFFU),
+  }
 ---
 
 # `BALANCE_DRIFT` Runbook

@@ -29,7 +29,7 @@ last_updated: 2026-07-12
 
 > Auto-filed by the daily data-pipeline audit `manifest_hygiene_daily.py` (Wave 4b, Phase 5 scripted→LLM escalation
 > hop). A deterministic candidate list was non-empty — the verdicts below need a worker's judgment (real gap vs code
-> bug, straggler vs intentional new venue). See `codex/05-infrastructure/data-pipeline-alerts.md`.
+> bug, straggler vs intentional new venue). See `/codex/05-infrastructure/data-pipeline-alerts.md`.
 
 ## What I found
 
@@ -54,7 +54,7 @@ new venues/spellings → extend the UAC oracle/canonical builders. Per
 data_pipeline_hardening_self_monitoring_2026_06_22.md Phase 3/5.
 
 Cold-start context: read `unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md` in full +
-`codex/05-infrastructure/data-pipeline-alerts.md` + the candidate CSV(s) above before acting.
+`/codex/05-infrastructure/data-pipeline-alerts.md` + the candidate CSV(s) above before acting.
 
 ## Reconciliation note (2026-07-12)
 

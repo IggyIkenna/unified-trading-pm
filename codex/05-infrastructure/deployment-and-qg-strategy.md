@@ -23,14 +23,14 @@ scope: [engineer, admin]
 tags: [quality-gates, infrastructure, ci-cd, deployment]
 related:
   [
-    codex/05-infrastructure/vm-tarball-deployment.md,
-    codex/05-infrastructure/deployment-ui-architecture.md,
-    codex/08-workflows/ci-cd-flow.md,
-    codex/06-coding-standards/quality-gates.md,
+    /codex/05-infrastructure/vm-tarball-deployment.md,
+    /codex/05-infrastructure/deployment-ui-architecture.md,
+    /codex/08-workflows/ci-cd-flow.md,
+    /codex/06-coding-standards/quality-gates.md,
   ]
 created: 2026-05-14
 authoritative_for: [deployment-method decision matrix (tarball vs image per env) + the 4-tier QG enforcement stack]
-referenced_by: [codex/05-infrastructure/act-preflight-coverage.md]
+referenced_by: [/codex/05-infrastructure/act-preflight-coverage.md]
 owner: workspace-platform
 last_reviewed: 2026-05-17
 code_refs:
@@ -107,7 +107,7 @@ QG runs at 4 points in the developer → production pipeline, each catching diff
 
 ## The tarball flow (dev only)
 
-Per `codex/05-infrastructure/vm-tarball-deployment.md` existing SSOT + operator clarifications 2026-05-13:
+Per `/codex/05-infrastructure/vm-tarball-deployment.md` existing SSOT + operator clarifications 2026-05-13:
 
 1. **Generation**: `bash deployment-service/scripts/vm/create-code-tarballs.sh <flag>` — refresh per code change
    (CLAUDE.md HARD RULE).
@@ -174,7 +174,8 @@ Per CLAUDE.md "Version Graduation" + semver-agent:
 - Every `feat!` on 1.0.x+ bumps MAJOR (requires `/approve` issue)
 - **Bump → image build**: yes, every staging-branch merge fires cloud-build
 - **Tarball flow**: dev iteration uses tarballs (no image churn); staging-merge fires image
-- **Cost**: ~5 deploys/day during cutover × ~50 services = ~250 builds/day worst case. At $0.003/build-min × 10 min =
+- **Cost**: ~5 deploys/day during cutover × ~50 services = ~250 builds/day worst case. At
+  $0.003/build-min × 10 min =
   ~$7.50/day. Trivial vs live-trading capital at risk.
 
 ## 99%-repo identification (per Harsh's suggestion)
@@ -267,12 +268,12 @@ is test coverage on the function (Phase 8 target = 100% on validation + orchestr
 ## Cross-references
 
 - **Cutover-window timeline** (companion):
-  [`codex/08-workflows/cutover-window-dependency-order.md`](../08-workflows/cutover-window-dependency-order.md)
+  [`/codex/08-workflows/cutover-window-dependency-order.md`](/codex/08-workflows/cutover-window-dependency-order.md)
 - **VM tarball deployment SSOT** (existing):
-  [`codex/05-infrastructure/vm-tarball-deployment.md`](vm-tarball-deployment.md)
-- **VM launcher script SSOT** (existing): [`codex/05-infrastructure/launcher-script-ssot.md`](launcher-script-ssot.md)
+  [`/codex/05-infrastructure/vm-tarball-deployment.md`](vm-tarball-deployment.md)
+- **VM launcher script SSOT** (existing): [`/codex/05-infrastructure/launcher-script-ssot.md`](launcher-script-ssot.md)
 - **Runtime tiers + deployment** (existing):
-  [`codex/05-infrastructure/runtime-tiers-and-deployment.md`](runtime-tiers-and-deployment.md)
+  [`/codex/05-infrastructure/runtime-tiers-and-deployment.md`](runtime-tiers-and-deployment.md)
 - **Promote workflow May-23 CLI plan**:
   [`plans/active/promote_workflow_may23_cli_path_2026_05_10.md`](../../plans/active/promote_workflow_may23_cli_path_2026_05_10.md)
   — wires in the env-locking enforcement + 99%-repo identification
@@ -283,7 +284,7 @@ is test coverage on the function (Phase 8 target = 100% on validation + orchestr
   [`plans/active/governance_qg_automation_gaps_post_cutover_2026_05_12.md`](../../plans/archive/governance_qg_automation_gaps_post_cutover_2026_05_12.md)
   — wires audit scripts (`dockerfile-base-pin.sh`, `artifact-registry-retention.sh`, `snapshot.sh`)
 - **MVP universe**:
-  [`codex/09-strategy/mvp-universe-per-asset-group.md`](../09-strategy/mvp-universe-per-asset-group.md)
+  [`/codex/09-strategy/mvp-universe-per-asset-group.md`](/codex/09-strategy/mvp-universe-per-asset-group.md)
 
 ## Phase 8.A — VM infrastructure hardening (shipped 2026-05-15)
 
@@ -371,7 +372,7 @@ Last reviewed: 2026-05-15. Next review: 2026-05-17 (post 99%-repo image-build + 
   > Tracked under `plans/epics/infrastructure_master.md`.
 
   Plan: `plans/active/deployment_and_qg_strategy_implementation_2026_05_13.md`. STEP SSOT:
-  `codex/06-coding-standards/quality-gates.md` §§ 5.79-5.82.
+  `/codex/06-coding-standards/quality-gates.md` §§ 5.79-5.82.
 
 - **B-018 Phase 4.A QG snapshot cron** (2026-05-15): Daily QG-status snapshot (described at § "99%-repo identification"
   above) implemented as `unified-trading-pm/scripts/quality_gates/snapshot.sh` + `check_snapshot_staleness.py`. VM
@@ -384,7 +385,7 @@ Last reviewed: 2026-05-15. Next review: 2026-05-17 (post 99%-repo image-build + 
 ## Phase 9 — Deployment API endpoint extensions (shipped 2026-05-15)
 
 Phase 9 added 10 deployment-api endpoints + 5 deployment-ui routes that are now canonical workspace surfaces. Full
-endpoint table in `codex/05-infrastructure/deployment-ui-architecture.md` § "Phase 9 shipped patterns".
+endpoint table in `/codex/05-infrastructure/deployment-ui-architecture.md` § "Phase 9 shipped patterns".
 
 **Key additions**:
 

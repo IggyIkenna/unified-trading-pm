@@ -2,9 +2,9 @@
 doc_type: codex-ssot
 title: Client Funds Isolation — HARD RULE
 summary:
-  "HARD RULE: funds NEVER move between clients — every TransferIntent carries one client_id; enforced by
-  UAC structural guarantee + execution-service consume-time raise + strategy-service
-  IntraClientRebalanceCoordinator emit-time raise (CrossClientTransferForbiddenError)."
+  "HARD RULE: funds NEVER move between clients — every TransferIntent carries one client_id; enforced by UAC structural
+  guarantee + execution-service consume-time raise + strategy-service IntraClientRebalanceCoordinator emit-time raise
+  (CrossClientTransferForbiddenError)."
 status: current
 nature: ssot
 asset_group: [meta]
@@ -12,10 +12,26 @@ stage: [meta]
 repos: [alerting-service, client-reporting-api, deployment-service, execution-service, strategy-service]
 scope: [engineer, admin]
 tags: [client-isolation, funds, transfers, rebalancing, execution, hard-rule]
-related: [execution-service-per-client-isolation.md, per-client-isolation-architecture.md, transfer-coordinator.md, custody-providers.md]
+related:
+  [
+    /codex/04-architecture/execution-service-per-client-isolation.md,
+    /codex/04-architecture/per-client-isolation-architecture.md,
+    /codex/04-architecture/transfer-coordinator.md,
+    /codex/04-architecture/custody-providers.md,
+  ]
 created: 2026-05-20
 authoritative_for: [client funds isolation HARD RULE, cross-client transfer prohibition]
-referenced_by: [codex/02-data/ledger-event-taxonomy.md, codex/04-architecture/client-lifecycle-state-machine.md, codex/04-architecture/execution-service-per-client-isolation.md, codex/04-architecture/global-ledger-architecture.md, codex/04-architecture/identity-model.md, codex/04-architecture/per-client-isolation-architecture.md, codex/04-architecture/transfer-coordinator.md, codex/09-strategy/architecture-v2/cross-cutting/treasury-trading-wallet-invariant.md]
+referenced_by:
+  [
+    /codex/02-data/ledger-event-taxonomy.md,
+    /codex/04-architecture/client-lifecycle-state-machine.md,
+    /codex/04-architecture/execution-service-per-client-isolation.md,
+    /codex/04-architecture/global-ledger-architecture.md,
+    /codex/04-architecture/identity-model.md,
+    /codex/04-architecture/per-client-isolation-architecture.md,
+    /codex/04-architecture/transfer-coordinator.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/treasury-trading-wallet-invariant.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -46,13 +62,15 @@ wording that overstated the implemented raise count):
 
 **Shipped 2026-06-23 (Phase E.3)**: strategy-service `IntraClientRebalanceCoordinator`
 (`strategy_service/transfer_coordinator.py`, `strategy-service@1450019e`) adds the emit-time raise. It nets N
-per-strategy intra-client transfers into ONE `TransferIntent` per `client × {unordered venue pair} × asset ×
-transfer_type` (signed sum, drop zero-nets, bidirectional flows collapse) and raises `CrossClientTransferForbiddenError`
-on any cross-client `add_request` (defence-in-depth alongside the execution-service consume-time raise; logs
-`CROSS_CLIENT_TRANSFER_FORBIDDEN` at ERROR for alert-on-attempt). Both runtime raises (layer 2 execution-service consume
-+ layer 3 strategy-service emit) are now live; the strategy-service raise is on the coordinator, not yet on a live
-per-strategy emit loop (no live transfer-emit pipeline exists in strategy-service today — the coordinator is the tested,
-importable primitive future rebalance code builds on).
+per-strategy intra-client transfers into ONE `TransferIntent` per
+`client × {unordered venue pair} × asset × transfer_type` (signed sum, drop zero-nets, bidirectional flows collapse) and
+raises `CrossClientTransferForbiddenError` on any cross-client `add_request` (defence-in-depth alongside the
+execution-service consume-time raise; logs `CROSS_CLIENT_TRANSFER_FORBIDDEN` at ERROR for alert-on-attempt). Both
+runtime raises (layer 2 execution-service consume
+
+- layer 3 strategy-service emit) are now live; the strategy-service raise is on the coordinator, not yet on a live
+  per-strategy emit loop (no live transfer-emit pipeline exists in strategy-service today — the coordinator is the
+  tested, importable primitive future rebalance code builds on).
 
 ## Why this is a HARD rule, not a preference
 
@@ -130,12 +148,12 @@ or read-only config visibility**, "cross-client" is a valid descriptor.
 
 ## Code-level invariants
 
-| Layer             | Class / function                                                | Invariant                                                                                                                                                  | Raises                                                               |
-| ----------------- | --------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
-| UAC schema        | `TransferIntent` (single `client_id: str` field)                | Structural: one `client_id` per intent — no separate source/dest fields to mismatch; cross-client movement requires two distinct intents                   | N/A — structural, not a runtime validator                            |
+| Layer             | Class / function                                                                                | Invariant                                                                                                                                                                                         | Raises                                                                    |
+| ----------------- | ----------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| UAC schema        | `TransferIntent` (single `client_id: str` field)                                                | Structural: one `client_id` per intent — no separate source/dest fields to mismatch; cross-client movement requires two distinct intents                                                          | N/A — structural, not a runtime validator                                 |
 | strategy-service  | `IntraClientRebalanceCoordinator` (Phase E.3 — SHIPPED 2026-06-23, `strategy-service@1450019e`) | At emit time: carries identical `client_id` per emitted TransferIntent + nets per-strategy transfers into one intent per `client × venue-pair × asset × type`; rejects cross-client `add_request` | `CrossClientTransferForbiddenError` (emit-time — LIVE on the coordinator) |
-| execution-service | `TransferCoordinator.execute()` (`transfer_coordinator.py:241`) | At consume time: rejects any TransferIntent whose `client_id` ≠ process-bound CLIENT_ID; logs alert; emits `TransferResult.status = REJECTED_CROSS_CLIENT` | `CrossClientTransferForbiddenError` (the only current runtime raise) |
-| execution-service | `isolation_policy.assert_client_allowed()` (existing)           | Process-bound `CLIENT_ID` rejects any bus event whose `client_id` differs                                                                                  | `CrossClientEventError` (already in place)                           |
+| execution-service | `TransferCoordinator.execute()` (`transfer_coordinator.py:241`)                                 | At consume time: rejects any TransferIntent whose `client_id` ≠ process-bound CLIENT_ID; logs alert; emits `TransferResult.status = REJECTED_CROSS_CLIENT`                                        | `CrossClientTransferForbiddenError` (the only current runtime raise)      |
+| execution-service | `isolation_policy.assert_client_allowed()` (existing)                                           | Process-bound `CLIENT_ID` rejects any bus event whose `client_id` differs                                                                                                                         | `CrossClientEventError` (already in place)                                |
 
 ## Required tests
 
@@ -154,10 +172,10 @@ Every plan that adds transfer / rebalancing / fund-movement code MUST include:
 
 - `plans/active/per_client_isolation_and_venue_fanout_topology_2026_05_20.md` — origin plan; Phase E.3 owns the
   IntraClientRebalanceCoordinator.
-- `codex/04-architecture/execution-service-per-client-isolation.md` — existing per-process per-client model that this
+- `/codex/04-architecture/execution-service-per-client-isolation.md` — existing per-process per-client model that this
   rule layers on top of.
-- `codex/04-architecture/transfer-coordinator.md` — TransferCoordinator facade design (Phase 6).
-- `codex/04-architecture/custody-providers.md` — Copper + CEFFU custody surface (June-1).
+- `/codex/04-architecture/transfer-coordinator.md` — TransferCoordinator facade design (Phase 6).
+- `/codex/04-architecture/custody-providers.md` — Copper + CEFFU custody surface (June-1).
 - `feedback_cross_client_funds_forbidden.md` (agent memory) — the operator-direction anchor for this rule.
 
 ## CeFi margin traceability (margin cluster, 2026-06-15)

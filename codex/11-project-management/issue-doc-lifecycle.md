@@ -12,10 +12,20 @@ stage: [meta]
 repos: []
 scope: [engineer, admin]
 tags: [issue-lifecycle, plan-hygiene, archival, audit]
-related: [foundation-completion-gate-discipline.md, citadel-grade-planning-standards.md]
+related:
+  [
+    /codex/11-project-management/foundation-completion-gate-discipline.md,
+    /codex/11-project-management/citadel-grade-planning-standards.md,
+  ]
 created: 2026-05-20
 authoritative_for: [issue-doc lifecycle state machine, issue-doc archive triggers]
-referenced_by: [codex/11-project-management/audit-lifecycle.md, codex/11-project-management/citadel-grade-planning-standards.md, codex/11-project-management/epic-execution-with-sub-agents.md, codex/11-project-management/foundation-completion-gate-discipline.md]
+referenced_by:
+  [
+    /codex/11-project-management/audit-lifecycle.md,
+    /codex/11-project-management/citadel-grade-planning-standards.md,
+    /codex/11-project-management/epic-execution-with-sub-agents.md,
+    /codex/11-project-management/foundation-completion-gate-discipline.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

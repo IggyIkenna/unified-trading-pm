@@ -1,15 +1,22 @@
 ---
 doc_type: issue
 title: Capability wizard — gap discovery tracker
-summary: '**Purpose**: running pool of gaps surfaced by the capability wizard/manifest work (operator rule 2026-06-11: as much as possible scripted; issues found get tests built around them; agents only when...'
+summary:
+  "**Purpose**: running pool of gaps surfaced by the capability wizard/manifest work (operator rule 2026-06-11: as much
+  as possible scripted; issues found get tests built around them; agents only when..."
 status: open
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [agent-orchestrator, e2e-testing, execution-service, features-service, fund-administration-service, greeks-service]
+repos:
+  [agent-orchestrator, e2e-testing, execution-service, features-service, fund-administration-service, greeks-service]
 scope: [engineer, admin]
 tags: [strategy, registry, ssot-audit, execution, ml, ui, uac]
-related: [capability_wizard_analysis_findings_2026_06_11.md, ../capability_wizard_and_manifest_2026_06_11.md]
+related:
+  [
+    /plans/active/issues/capability_wizard_analysis_findings_2026_06_11.md,
+    ../capability_wizard_and_manifest_2026_06_11.md,
+  ]
 created: 2026-06-11
 parent_epic: strategy_master
 priority: P2

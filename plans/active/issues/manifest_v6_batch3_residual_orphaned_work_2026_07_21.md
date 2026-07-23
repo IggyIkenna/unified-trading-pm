@@ -164,4 +164,4 @@ overhead.
 
 ## Codex SSOTs
 
-`codex/02-data/shard-granularity-cefi.md`, `codex/02-data/availability-manifest-and-data-status.md`.
+`/codex/02-data/shard-granularity-cefi.md`, `/codex/02-data/availability-manifest-and-data-status.md`.

@@ -2,9 +2,9 @@
 doc_type: codex-ssot
 title: Exclusivity and Non-Compete — What It Means, Who Gets It
 summary:
-  Defines the block-12 exclusivity / non-compete premium (Tier-B-only) — the three scope axes it binds,
-  the four IP-power tier anchors (20-30% commodity → 120-200% uniquely-differentiated uplift on Tier B
-  monthly), revenue-forgone × margin quote method, legal framing, and leadership/legal escalation triggers.
+  Defines the block-12 exclusivity / non-compete premium (Tier-B-only) — the three scope axes it binds, the four
+  IP-power tier anchors (20-30% commodity → 120-200% uniquely-differentiated uplift on Tier B monthly), revenue-forgone
+  × margin quote method, legal framing, and leadership/legal escalation triggers.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -14,15 +14,25 @@ scope: [sales, admin]
 tags: [commercial-model, exclusivity, pricing, dart, tier-b, ip-power]
 related:
   [
-    pricing-building-blocks.md,
-    fixed-vs-variable-commercials.md,
-    dart-entry-points.md,
-    im-profit-share-structures.md,
+    /codex/14-customer-journeys/commercial-model/pricing-building-blocks.md,
+    /codex/14-customer-journeys/commercial-model/fixed-vs-variable-commercials.md,
+    /codex/14-customer-journeys/commercial-model/dart-entry-points.md,
+    /codex/14-customer-journeys/commercial-model/im-profit-share-structures.md,
     ../shared-core/dart-pricing-axes.md,
   ]
 created: 2026-04-20
 authoritative_for: [exclusivity / non-compete commercial premium (block 12) negotiation framing]
-referenced_by: [codex/14-customer-journeys/README.md, codex/14-customer-journeys/_ssot-rules/05-building-block-dimensions.md, codex/14-customer-journeys/commercial-model/README.md, codex/14-customer-journeys/commercial-model/building-block-packaging.md, codex/14-customer-journeys/commercial-model/dart-entry-points.md, codex/14-customer-journeys/commercial-model/elysium-account-trajectory-2026-05-14.md, codex/14-customer-journeys/commercial-model/fixed-vs-variable-commercials.md, codex/14-customer-journeys/commercial-model/pricing-building-blocks.md]
+referenced_by:
+  [
+    /codex/14-customer-journeys/README.md,
+    /codex/14-customer-journeys/_ssot-rules/05-building-block-dimensions.md,
+    /codex/14-customer-journeys/commercial-model/README.md,
+    /codex/14-customer-journeys/commercial-model/building-block-packaging.md,
+    /codex/14-customer-journeys/commercial-model/dart-entry-points.md,
+    /codex/14-customer-journeys/commercial-model/elysium-account-trajectory-2026-05-14.md,
+    /codex/14-customer-journeys/commercial-model/fixed-vs-variable-commercials.md,
+    /codex/14-customer-journeys/commercial-model/pricing-building-blocks.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

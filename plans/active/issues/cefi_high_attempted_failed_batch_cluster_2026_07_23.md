@@ -38,13 +38,13 @@ scope: [engineer, admin]
 tags: [data-correctness, attempted-failed, cefi, tardis, concurrency-lock, options_chain, futures_chain, alerting]
 related:
   [
-    deribit_options_chain_af_g4_blocker_2026_07_03.md,
-    tardis_concurrent_ip_lockout_2026_07_12.md,
-    tardis_impossible_combinations_recorded_as_attempted_failed_2026_07_17.md,
-    deribit_combo_perpetual_partition_move_2026_07_21.md,
+    /plans/active/issues/deribit_options_chain_af_g4_blocker_2026_07_03.md,
+    /plans/active/issues/tardis_concurrent_ip_lockout_2026_07_12.md,
+    /plans/active/issues/tardis_impossible_combinations_recorded_as_attempted_failed_2026_07_17.md,
+    /plans/active/issues/deribit_combo_perpetual_partition_move_2026_07_21.md,
     ../cefi_consolidated_closeout_2026_07_18.md,
-    ../../../codex/02-data/availability-manifest-and-data-status.md,
-    ../../../codex/04-architecture/shard-level-failure-isolation.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/04-architecture/shard-level-failure-isolation.md,
   ]
 created: 2026-07-23
 parent_epic: cefi_master

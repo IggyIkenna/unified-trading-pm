@@ -12,15 +12,27 @@ stage: [meta]
 repos: [alerting-service, unified-api-contracts]
 scope: [engineer, admin]
 tags: [runbook, uac, monitoring, live-trading, defi, threshold-tuning, escalation]
-related: [codex/15-runbooks/alerting/alert-code-taxonomy.md, codex/15-runbooks/alerting/operator-playbook.md, codex/15-runbooks/alerting/rehearsal-procedure.md]
+related:
+  [
+    /codex/15-runbooks/alerting/alert-code-taxonomy.md,
+    /codex/15-runbooks/alerting/operator-playbook.md,
+    /codex/15-runbooks/alerting/rehearsal-procedure.md,
+  ]
 created: 2026-05-07
 owner: ikenna
 cadence: on-demand
 verifier: operator
 last_executed:
-code_refs: [unified-api-contracts/unified_api_contracts/canonical/crosscutting/alerting/thresholds.py, alerting-service/alerting_service/rules/defi_rules.py]
+code_refs:
+  [
+    unified-api-contracts/unified_api_contracts/canonical/crosscutting/alerting/thresholds.py,
+    alerting-service/alerting_service/rules/defi_rules.py,
+  ]
 updated: 2026-05-07
-authoritative_for: How alert thresholds are set, who owns each threshold, when they get reviewed. Avoids the "alert on a number nobody can defend" failure mode that produces noise + alert fatigue. Phase 1 (UAC SSOT + 10 seed thresholds) shipped UAC@d00326d.
+authoritative_for:
+  How alert thresholds are set, who owns each threshold, when they get reviewed. Avoids the "alert on a number nobody
+  can defend" failure mode that produces noise + alert fatigue. Phase 1 (UAC SSOT + 10 seed thresholds) shipped
+  UAC@d00326d.
 referenced_by: [plans/active/alerting_service_live_rules_2026_05_07.md]
 ---
 

@@ -9,19 +9,34 @@ status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
-repos: [alerting-service, deployment-service, execution-service, instruments-service, market-tick-data-service, strategy-service]
+repos:
+  [
+    alerting-service,
+    deployment-service,
+    execution-service,
+    instruments-service,
+    market-tick-data-service,
+    strategy-service,
+  ]
 scope: [engineer, admin]
 tags: [onboarding, runbook, client-config, strategy, deployment, execution]
 related:
   [
     client-onboarding.md,
-    client-strategy-config.md,
+    /codex/09-strategy/operational/client-strategy-config.md,
     ../architecture-v2/strategy-catalogue-3tier.md,
     ../architecture-v2/strategy-registry-v2.md,
   ]
 created: 2026-03-27
 authoritative_for: [8-phase strategy/client onboarding operational checklist]
-referenced_by: [codex/09-strategy/README.md, codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md, codex/09-strategy/operational/client-onboarding.md, codex/09-strategy/operational/client-strategy-config.md, plans/epics/cross_cutting_may_23_SUPERSEDED_2026_05_21.md]
+referenced_by:
+  [
+    /codex/09-strategy/README.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md,
+    /codex/09-strategy/operational/client-onboarding.md,
+    /codex/09-strategy/operational/client-strategy-config.md,
+    plans/epics/cross_cutting_may_23_SUPERSEDED_2026_05_21.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -455,14 +470,14 @@ client-level, not strategy-level.
 
 ## SSOT References
 
-| Concept                | SSOT                   | Location                                                   |
-| ---------------------- | ---------------------- | ---------------------------------------------------------- |
-| Strategy config schema | TypedDicts             | `strategy-service/strategy_service/config.py`              |
-| Credential convention  | Codex architecture doc | `codex/04-architecture/interface-credential-convention.md` |
-| Instrument registry    | instruments-service    | `instruments-service/`                                     |
-| Sharding config        | PM configs             | `unified-trading-pm/configs/`                              |
-| Risk limits            | GCS risk config        | `gs://config/risk/{client_id}/`                            |
-| Alert routing          | alerting-service       | `alerting-service/alerting_service/rules/`                 |
-| Contract deployment    | deployment-service     | `deployment-service/scripts/`                              |
-| Workspace manifest     | PM manifest            | `unified-trading-pm/workspace-manifest.json`               |
-| Client onboarding      | Strategy cross-cutting | `codex/09-strategy/cross-cutting/client-onboarding.md`     |
+| Concept                | SSOT                   | Location                                                    |
+| ---------------------- | ---------------------- | ----------------------------------------------------------- |
+| Strategy config schema | TypedDicts             | `strategy-service/strategy_service/config.py`               |
+| Credential convention  | Codex architecture doc | `/codex/04-architecture/interface-credential-convention.md` |
+| Instrument registry    | instruments-service    | `instruments-service/`                                      |
+| Sharding config        | PM configs             | `unified-trading-pm/configs/`                               |
+| Risk limits            | GCS risk config        | `gs://config/risk/{client_id}/`                             |
+| Alert routing          | alerting-service       | `alerting-service/alerting_service/rules/`                  |
+| Contract deployment    | deployment-service     | `deployment-service/scripts/`                               |
+| Workspace manifest     | PM manifest            | `unified-trading-pm/workspace-manifest.json`                |
+| Client onboarding      | Strategy operational   | `/codex/09-strategy/operational/client-onboarding.md`       |

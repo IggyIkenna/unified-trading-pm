@@ -14,22 +14,22 @@ scope: [engineer, admin]
 tags: [defi, execution, migration, verification]
 related:
   [
-    execution-modes-and-chain-resolution.md,
-    ../15-runbooks/recursive-leverage-receiver-deploy-runbook.md,
-    defi-phase3-infrastructure.md,
+    /codex/04-architecture/execution-modes-and-chain-resolution.md,
+    /codex/15-runbooks/recursive-leverage-receiver-deploy-runbook.md,
+    /codex/04-architecture/defi-phase3-infrastructure.md,
   ]
 created: 2026-03-27
 authoritative_for: [FlashLoanReceiver and RecursiveLeverageReceiver contract architecture]
 referenced_by:
   [
-    codex/02-data/defi-venue-protocol-catalogue.md,
-    codex/04-architecture/cefi-perp-leg-bybit.md,
-    codex/04-architecture/custody-providers.md,
-    codex/04-architecture/defi-phase3-infrastructure.md,
-    codex/04-architecture/mev-protection.md,
-    codex/15-runbooks/recursive-leverage-receiver-deploy-runbook.md,
-    codex/04-architecture/strategy-service-architecture.md,
-    codex/04-architecture/tenderly-execution-provider.md,
+    /codex/02-data/defi-venue-protocol-catalogue.md,
+    /codex/04-architecture/cefi-perp-leg-bybit.md,
+    /codex/04-architecture/custody-providers.md,
+    /codex/04-architecture/defi-phase3-infrastructure.md,
+    /codex/04-architecture/mev-protection.md,
+    /codex/15-runbooks/recursive-leverage-receiver-deploy-runbook.md,
+    /codex/04-architecture/strategy-service-architecture.md,
+    /codex/04-architecture/tenderly-execution-provider.md,
   ]
 owner:
 last_reviewed: 2026-05-17
@@ -303,5 +303,5 @@ the chain-specific Aave V3 pool.
 - Phase 4 of
   [`defi_recursive_borrow_archetypes_2026_05_10.md`](../../plans/active/defi_recursive_borrow_archetypes_2026_05_10.md)
 - See also
-  [`../15-runbooks/recursive-leverage-receiver-deploy-runbook.md`](../15-runbooks/recursive-leverage-receiver-deploy-runbook.md)
+  [`/codex/15-runbooks/recursive-leverage-receiver-deploy-runbook.md`](/codex/15-runbooks/recursive-leverage-receiver-deploy-runbook.md)
   for the full operator runbook (owner / cadence / verifier / last_executed metadata).

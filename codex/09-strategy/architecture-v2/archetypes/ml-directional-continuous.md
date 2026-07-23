@@ -16,7 +16,7 @@ tags: [ml, strategy, kelly, live-trading, execution]
 related:
   [
     ../families/ml-directional.md,
-    ml-directional-event-settled.md,
+    /codex/09-strategy/architecture-v2/archetypes/ml-directional-event-settled.md,
     ../axes/expression.md,
     ../axes/hold-policy.md,
     ../cross-cutting/benchmark-fills.md,
@@ -25,14 +25,14 @@ created: 2026-04-17
 authoritative_for: [ML_DIRECTIONAL_CONTINUOUS archetype specification]
 referenced_by:
   [
-    codex/09-strategy/_archived_pre_v2/cefi/ml-directional.md,
-    codex/09-strategy/_archived_pre_v2/cefi/momentum.md,
-    codex/09-strategy/_archived_pre_v2/cross-cutting/ml-pipeline.md,
-    codex/09-strategy/_archived_pre_v2/tradfi/ml-directional.md,
-    codex/09-strategy/_archived_pre_v2/tradfi/tradfi-momentum.md,
-    codex/09-strategy/architecture-v2/archetypes/market-making-ml-lean.md,
-    codex/09-strategy/architecture-v2/archetypes/ml-directional-event-settled.md,
-    codex/09-strategy/architecture-v2/archetypes/rules-directional-continuous.md,
+    /codex/09-strategy/_archived_pre_v2/cefi/ml-directional.md,
+    /codex/09-strategy/_archived_pre_v2/cefi/momentum.md,
+    /codex/09-strategy/_archived_pre_v2/cross-cutting/ml-pipeline.md,
+    /codex/09-strategy/_archived_pre_v2/tradfi/ml-directional.md,
+    /codex/09-strategy/_archived_pre_v2/tradfi/tradfi-momentum.md,
+    /codex/09-strategy/architecture-v2/archetypes/market-making-ml-lean.md,
+    /codex/09-strategy/architecture-v2/archetypes/ml-directional-event-settled.md,
+    /codex/09-strategy/architecture-v2/archetypes/rules-directional-continuous.md,
   ]
 owner:
 last_reviewed:

@@ -1,7 +1,10 @@
 ---
 doc_type: codex-ssot
 title: Cloud-Agnostic Migration
-summary: All cloud I/O (storage/secrets/queues) goes through unified-cloud-interface Tier-0 factories (get_storage_client/get_secret_client/get_queue_client); CLOUD_PROVIDER switches gcp/aws/local at runtime; Cloud* naming rule, before/after migration examples, and the Phase-0 direct-import ban.
+summary:
+  All cloud I/O (storage/secrets/queues) goes through unified-cloud-interface Tier-0 factories
+  (get_storage_client/get_secret_client/get_queue_client); CLOUD_PROVIDER switches gcp/aws/local at runtime; Cloud*
+  naming rule, before/after migration examples, and the Phase-0 direct-import ban.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -9,10 +12,22 @@ stage: [meta]
 repos: []
 scope: [engineer, admin]
 tags: [cloud-agnostic, uci, storage, secrets, migration, gcp, aws]
-related: [tier-and-import-architecture.md, ../07-security/secrets-management.md, ../06-coding-standards/pre-sprint-baseline.md]
+related:
+  [
+    /codex/04-architecture/tier-and-import-architecture.md,
+    /codex/07-security/secrets-management.md,
+    /codex/06-coding-standards/pre-sprint-baseline.md,
+  ]
 created: 2026-03-27
 authoritative_for: [cloud-agnostic application-code migration to UCI factories]
-referenced_by: [codex/04-architecture/seamless-cloud-switch.md, codex/04-architecture/tier-and-import-architecture.md, codex/05-infrastructure/README.md, codex/05-infrastructure/aws-migration-cost-snapshot-2026-05-07.md, plans/epics/cross_cutting_may_23_SUPERSEDED_2026_05_21.md]
+referenced_by:
+  [
+    /codex/04-architecture/seamless-cloud-switch.md,
+    /codex/04-architecture/tier-and-import-architecture.md,
+    /codex/05-infrastructure/README.md,
+    /codex/05-infrastructure/aws-migration-cost-snapshot-2026-05-07.md,
+    plans/epics/cross_cutting_may_23_SUPERSEDED_2026_05_21.md,
+  ]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

@@ -1,6 +1,6 @@
 ---
 doc_type: codex-ssot
-title: 'Cross-Cutting: Benchmark Fills Contract'
+title: "Cross-Cutting: Benchmark Fills Contract"
 summary:
   The benchmark-fills contract that keeps batch=live honest — every execution algo exposes a deterministic
   benchmark_fill() (zero market-impact, zero timing alpha). Batch mode REPLACES real fills with it (exec_alpha=0), live
@@ -14,10 +14,25 @@ repos: [execution-service, market-tick-data-service]
 scope: [engineer, admin]
 tags: [strategy, execution, reconciliation, backtest, verification, live-trading]
 related:
-  [execution-policies.md, ../../../04-architecture/backtest-groups.md, ../../../04-architecture/strategy-execution-protocol.md, ../axes/edge-methods.md]
+  [
+    /codex/09-strategy/architecture-v2/cross-cutting/execution-policies.md,
+    ../../../04-architecture/backtest-groups.md,
+    ../../../04-architecture/strategy-execution-protocol.md,
+    ../axes/edge-methods.md,
+  ]
 created: 2026-04-17
 authoritative_for: [benchmark-fills contract (batch=live seam + execution-alpha measurement)]
-referenced_by: [codex/04-architecture/backtest-groups.md, codex/04-architecture/batch-live-architecture.md, codex/04-architecture/execution-policy.md, codex/04-architecture/strategy-execution-protocol.md, codex/09-strategy/README.md, codex/09-strategy/architecture-v2/README.md, codex/09-strategy/architecture-v2/archetypes/ml-directional-continuous.md, codex/09-strategy/architecture-v2/axes/edge-methods.md]
+referenced_by:
+  [
+    /codex/04-architecture/backtest-groups.md,
+    /codex/04-architecture/batch-live-architecture.md,
+    /codex/04-architecture/execution-policy.md,
+    /codex/04-architecture/strategy-execution-protocol.md,
+    /codex/09-strategy/README.md,
+    /codex/09-strategy/architecture-v2/README.md,
+    /codex/09-strategy/architecture-v2/archetypes/ml-directional-continuous.md,
+    /codex/09-strategy/architecture-v2/axes/edge-methods.md,
+  ]
 owner:
 last_reviewed: 2026-05-18
 code_refs:
@@ -230,4 +245,4 @@ Enforced at QG: test-suite validates all registered algos.
 - Backtest groups: [../../../04-architecture/backtest-groups.md](../../../04-architecture/backtest-groups.md)
 - Strategy-execution protocol:
   [../../../04-architecture/strategy-execution-protocol.md](../../../04-architecture/strategy-execution-protocol.md)
-- Batch=live architecture: `codex/04-architecture/batch-live-architecture.md`
+- Batch=live architecture: `/codex/04-architecture/batch-live-architecture.md`

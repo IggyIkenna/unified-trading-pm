@@ -2,11 +2,10 @@
 doc_type: codex-ssot
 title: CeFi Statistical Arbitrage
 summary: >-
-  [SUPERSEDED, pre-v2] CeFi statistical-arbitrage strategy — cointegrated-pair (BTC/ETH default) spread
-  trading gated by three simultaneous checks (cointegration_score ≥ 0.5, OU half-life ≤ 30 bars, |z| ≥
-  2.0), hedge-ratio-sized legs, cross-margin on Binance Futures, exit on reversion (0.5σ). Consumes
-  `PairSpreadFeatureRecord` from features-cross-instrument. Replaced by architecture-v2
-  `STAT_ARB_PAIRS_FIXED`.
+  [SUPERSEDED, pre-v2] CeFi statistical-arbitrage strategy — cointegrated-pair (BTC/ETH default) spread trading gated by
+  three simultaneous checks (cointegration_score ≥ 0.5, OU half-life ≤ 30 bars, |z| ≥ 2.0), hedge-ratio-sized legs,
+  cross-margin on Binance Futures, exit on reversion (0.5σ). Consumes `PairSpreadFeatureRecord` from
+  features-cross-instrument. Replaced by architecture-v2 `STAT_ARB_PAIRS_FIXED`.
 status: superseded
 nature: ssot
 asset_group: [meta]
@@ -14,10 +13,16 @@ stage: [meta]
 repos: [execution-service, strategy-service, unified-api-contracts, unified-trading-pm]
 scope: [engineer, admin]
 tags: [strategy, cefi, binance, arbitrage, features]
-related: [cross-exchange.md, ../../architecture-v2/archetypes/stat-arb-pairs-fixed.md]
+related:
+  [/codex/09-strategy/_archived_pre_v2/cefi/cross-exchange.md, ../../architecture-v2/archetypes/stat-arb-pairs-fixed.md]
 created: 2026-06-16
 authoritative_for:
-referenced_by: [codex/09-strategy/_archived_pre_v2/STRATEGY_CATALOG_pre_v2.md, codex/09-strategy/_archived_pre_v2/cefi/cross-exchange.md, codex/09-strategy/_archived_pre_v2/cefi/mean-reversion.md]
+referenced_by:
+  [
+    /codex/09-strategy/_archived_pre_v2/STRATEGY_CATALOG_pre_v2.md,
+    /codex/09-strategy/_archived_pre_v2/cefi/cross-exchange.md,
+    /codex/09-strategy/_archived_pre_v2/cefi/mean-reversion.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

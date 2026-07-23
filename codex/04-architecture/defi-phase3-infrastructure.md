@@ -2,19 +2,34 @@
 doc_type: codex-ssot
 title: DeFi Phase 3 Infrastructure
 summary:
-  DeFi paper-to-live infra pillars — CHAIN_ENV chain switch, unified gas-cost schema (DeFiFillRecord),
-  Tenderly-fork paper execution, and CustodyProvider treasury/trading wallet abstraction.
+  DeFi paper-to-live infra pillars — CHAIN_ENV chain switch, unified gas-cost schema (DeFiFillRecord), Tenderly-fork
+  paper execution, and CustodyProvider treasury/trading wallet abstraction.
 status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
-repos: [execution-service, features-service, instruments-service, market-data-processing-service, market-tick-data-service, strategy-service]
+repos:
+  [
+    execution-service,
+    features-service,
+    instruments-service,
+    market-data-processing-service,
+    market-tick-data-service,
+    strategy-service,
+  ]
 scope: [engineer, admin]
 tags: [defi, execution, infrastructure, custody, tenderly, gas]
-related: [tenderly-execution-provider.md, flash-loan-receiver.md, custody-providers.md, chain-environment-resolution.md, wallet-hierarchy-and-capital-flow.md]
+related:
+  [
+    /codex/04-architecture/tenderly-execution-provider.md,
+    /codex/04-architecture/flash-loan-receiver.md,
+    /codex/04-architecture/custody-providers.md,
+    /codex/04-architecture/chain-environment-resolution.md,
+    /codex/04-architecture/wallet-hierarchy-and-capital-flow.md,
+  ]
 created: 2026-04-03
 authoritative_for: [DeFi Phase 3 paper-to-live infrastructure pillars]
-referenced_by: [codex/04-architecture/defi-risk-monitoring.md, codex/04-architecture/flash-loan-receiver.md]
+referenced_by: [/codex/04-architecture/defi-risk-monitoring.md, /codex/04-architecture/flash-loan-receiver.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:
@@ -241,8 +256,8 @@ bash unified-trading-pm/scripts/demo-mode.sh --seed
 
 ## Related Docs
 
-- `codex/04-architecture/tenderly-execution-provider.md` — Tenderly deep-dive
-- `codex/04-architecture/flash-loan-receiver.md` — Flash loan contract deployment
-- `codex/04-architecture/custody-providers.md` — Copper / CEFFU / LocalKey / Mock custody providers (single SSOT)
-- `codex/04-architecture/chain-environment-resolution.md` — CHAIN_ENV resolution
-- `codex/04-architecture/wallet-hierarchy-and-capital-flow.md` — Treasury wallet structure
+- `/codex/04-architecture/tenderly-execution-provider.md` — Tenderly deep-dive
+- `/codex/04-architecture/flash-loan-receiver.md` — Flash loan contract deployment
+- `/codex/04-architecture/custody-providers.md` — Copper / CEFFU / LocalKey / Mock custody providers (single SSOT)
+- `/codex/04-architecture/chain-environment-resolution.md` — CHAIN_ENV resolution
+- `/codex/04-architecture/wallet-hierarchy-and-capital-flow.md` — Treasury wallet structure

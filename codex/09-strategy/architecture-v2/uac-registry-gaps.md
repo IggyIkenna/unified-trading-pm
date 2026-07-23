@@ -2,11 +2,10 @@
 doc_type: codex-ssot
 title: UAC Registry Gaps — Additions for the Category × Instrument Coverage Matrix
 summary: >-
-  The 12 additive UAC declarations (ArchetypeCapabilityV2, supported_signal_variants,
-  FlashLoanReceiverRegistry, LiquidationBonusScheduleV2, EventCalendarSourceCapability,
-  RepresentativeFutureRegistry, StrategyAvailabilityRegistry, ...) proposed to unblock the
-  BLOCKED/PARTIAL cells of the category x instrument coverage matrix — each with proposed shape,
-  consumers, and PR phasing (A-F). Companion proposal to category-instrument-coverage.md (the SSOT).
+  The 12 additive UAC declarations (ArchetypeCapabilityV2, supported_signal_variants, FlashLoanReceiverRegistry,
+  LiquidationBonusScheduleV2, EventCalendarSourceCapability, RepresentativeFutureRegistry, StrategyAvailabilityRegistry,
+  ...) proposed to unblock the BLOCKED/PARTIAL cells of the category x instrument coverage matrix — each with proposed
+  shape, consumers, and PR phasing (A-F). Companion proposal to category-instrument-coverage.md (the SSOT).
 status: current
 nature: ssot
 asset_group: [meta]
@@ -16,13 +15,22 @@ scope: [engineer, admin]
 tags: [uac, strategy, defi, registry, execution, features, archetype, coverage-matrix]
 related:
   [
-    category-instrument-coverage.md,
+    /codex/09-strategy/architecture-v2/category-instrument-coverage.md,
     cross-cutting/strategy-availability-and-locking.md,
     cross-cutting/futures-roll-and-combos.md,
   ]
 created: 2026-04-20
 authoritative_for: [UAC registry gap additions for the architecture-v2 category-instrument coverage matrix]
-referenced_by: [codex/09-strategy/architecture-v2/block-list.md, codex/09-strategy/architecture-v2/category-instrument-coverage.md, codex/09-strategy/architecture-v2/cross-cutting/futures-roll-and-combos.md, codex/09-strategy/architecture-v2/cross-cutting/strategy-availability-and-locking.md, codex/16-strategy-playbooks/infra-spec/stage-3a-current-infra-audit.md, codex/16-strategy-playbooks/infra-spec/stage-3b-uac-combo-rules.md, codex/16-strategy-playbooks/infra-spec/stage-3e-refactor-plan.md]
+referenced_by:
+  [
+    /codex/09-strategy/architecture-v2/block-list.md,
+    /codex/09-strategy/architecture-v2/category-instrument-coverage.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/futures-roll-and-combos.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/strategy-availability-and-locking.md,
+    /codex/16-strategy-playbooks/infra-spec/stage-3a-current-infra-audit.md,
+    /codex/16-strategy-playbooks/infra-spec/stage-3b-uac-combo-rules.md,
+    /codex/16-strategy-playbooks/infra-spec/stage-3e-refactor-plan.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -153,7 +161,7 @@ def blocked_combinations() -> Iterator[ArchetypeCoverageCell]:
 **Unblocks:** Every cell in the matrix. Foundational — #2, #8, #9 reference back to it.
 
 **QG check:** `tests/test_archetype_capability_matrix_parity.py` parses
-`codex/09-strategy/architecture-v2/category-instrument-coverage.md` and asserts every row appears in
+`/codex/09-strategy/architecture-v2/category-instrument-coverage.md` and asserts every row appears in
 `ARCHETYPE_CAPABILITY_V2` with matching status. Markdown remains the narrative SSOT; Python mirrors it for runtime
 queries.
 
@@ -188,7 +196,7 @@ class VenueCapabilityV2(BaseModel):
 | --------------------- | ------------------------------------------------------- |
 | `price`               | Spot or perp price, tick-level orderbook available      |
 | `funding_rate`        | Perp funding rate tradeable (and measurable)            |
-| `basis`               | Spot ↔ future / spot ↔ perp basis tradeable           |
+| `basis`               | Spot ↔ future / spot ↔ perp basis tradeable             |
 | `iv_dispersion`       | Vol surface IV deltas between venues tradeable          |
 | `vol_metric`          | IV vs RV, skew, term-structure                          |
 | `rate_spread`         | Cross-venue lending rate spread                         |

@@ -12,14 +12,20 @@ stage: [meta]
 repos: [execution-service, strategy-service]
 scope: [engineer, admin]
 tags: [runbook, escalation, live-trading, monitoring, observability, self-healing]
-related: [codex/15-runbooks/alerting/operator-playbook.md, codex/15-runbooks/alerting/circuit_breaker_open.md, codex/15-runbooks/alerting/defi_feature_stale.md]
+related:
+  [
+    /codex/15-runbooks/alerting/operator-playbook.md,
+    /codex/15-runbooks/alerting/circuit_breaker_open.md,
+    /codex/15-runbooks/alerting/defi_feature_stale.md,
+  ]
 created: 2026-05-08
 owner: ikenna
 cadence: on-demand
 verifier: operator
 last_executed:
 code_refs:
-authoritative_for: Operator response when a workspace service emits SERVICE_DEGRADED — running but operating below full functionality.
+authoritative_for:
+  Operator response when a workspace service emits SERVICE_DEGRADED — running but operating below full functionality.
 referenced_by: [plans/active/alerting_service_live_rules_2026_05_07.md]
 ---
 

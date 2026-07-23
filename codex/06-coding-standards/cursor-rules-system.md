@@ -9,12 +9,12 @@ stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer]
 tags: [cursor-rules, meta]
-related: [documentation-standards.md]
-created: '2026-03-27'
+related: [/codex/06-coding-standards/documentation-standards.md]
+created: "2026-03-27"
 authoritative_for: [cursor .mdc rules-system layout and loading]
 referenced_by:
 owner: pm-orchestrator
-last_reviewed: '2026-06-25'
+last_reviewed: "2026-06-25"
 code_refs: [.cursor/rules/]
 ---
 

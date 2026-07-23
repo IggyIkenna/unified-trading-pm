@@ -14,20 +14,20 @@ scope: [engineer, admin]
 tags: [tradfi, batch-live, pipeline-mode, manifest, databento, source-provenance, data-correctness, mtds]
 related:
   [
-    batch-live-architecture.md,
-    cefi-batch-live.md,
-    sports-batch-live.md,
-    ../02-data/pipeline-mode-partition.md,
-    ../02-data/tradfi-databento-sourcing-ssot.md,
+    /codex/04-architecture/batch-live-architecture.md,
+    /codex/04-architecture/cefi-batch-live.md,
+    /codex/04-architecture/sports-batch-live.md,
+    /codex/02-data/pipeline-mode-partition.md,
+    /codex/02-data/tradfi-databento-sourcing-ssot.md,
   ]
 created: 2026-05-16
 authoritative_for: [TradFi (asset_group=tradfi) batch/live per-AG architecture]
 referenced_by:
   [
-    codex/02-data/tradfi-databento-sourcing-ssot.md,
-    codex/04-architecture/batch-live-architecture.md,
-    codex/04-architecture/prediction-batch-live.md,
-    codex/04-architecture/sports-batch-live.md,
+    /codex/02-data/tradfi-databento-sourcing-ssot.md,
+    /codex/04-architecture/batch-live-architecture.md,
+    /codex/04-architecture/prediction-batch-live.md,
+    /codex/04-architecture/sports-batch-live.md,
   ]
 owner:
 last_reviewed: 2026-06-11
@@ -42,9 +42,9 @@ plan:
 
 > Per-asset-group narrative for `asset_group=tradfi`. Cross-cutting batch=live invariant lives in
 > [`batch-live-architecture.md`](batch-live-architecture.md); the source-aware `pipeline_mode` contract lives in
-> [`../02-data/pipeline-mode-partition.md`](../02-data/pipeline-mode-partition.md) § "Ratified TARGET design". This doc
-> covers the TradFi-specific shape: source list, calendar gating, matcher pattern, shard atomicity, and the dual-source
-> (databento + massive) seam.
+> [`/codex/02-data/pipeline-mode-partition.md`](/codex/02-data/pipeline-mode-partition.md) § "Ratified TARGET design".
+> This doc covers the TradFi-specific shape: source list, calendar gating, matcher pattern, shard atomicity, and the
+> dual-source (databento + massive) seam.
 
 ---
 
@@ -174,7 +174,7 @@ The migrator reference implementation for the whole workspace is `migrate_tradfi
 ## §6 Live pipeline timing — TradFi
 
 TradFi ticks follow the same MTDS → Redis Stream → MDPS → features-service cascade
-([`../05-infrastructure/live-pipeline-architecture.md`](../05-infrastructure/live-pipeline-architecture.md)):
+([`/codex/05-infrastructure/live-pipeline-architecture.md`](/codex/05-infrastructure/live-pipeline-architecture.md)):
 
 - **MTDS** subscribes to the Databento live gateway (`databento_tradfi_ws.py`) + emits
   `streaming.tradfi.candle_boundary_crossed` at UTC-aligned boundaries. The UTC-alignment rule (§10.1 of
@@ -207,19 +207,19 @@ TradFi ticks follow the same MTDS → Redis Stream → MDPS → features-service
 
 - **Batch/live invariant (global)**: [`batch-live-architecture.md`](batch-live-architecture.md) §1-§4
 - **Source-aware pipeline_mode + M1–M8 target**:
-  [`../02-data/pipeline-mode-partition.md`](../02-data/pipeline-mode-partition.md) § "Ratified TARGET design"
+  [`/codex/02-data/pipeline-mode-partition.md`](/codex/02-data/pipeline-mode-partition.md) § "Ratified TARGET design"
 - **Reconciliation column + precedence**:
-  [`../02-data/pipeline-mode-and-batch-live-reconciliation.md`](../02-data/pipeline-mode-and-batch-live-reconciliation.md)
+  [`/codex/02-data/pipeline-mode-and-batch-live-reconciliation.md`](/codex/02-data/pipeline-mode-and-batch-live-reconciliation.md)
 - **Sibling per-AG docs**: [`cefi-batch-live.md`](cefi-batch-live.md) · [`sports-batch-live.md`](sports-batch-live.md) ·
   [`prediction-batch-live.md`](prediction-batch-live.md)
 - **Matching engine + L2Matcher**: [`batch-live-architecture.md §5`](batch-live-architecture.md)
 - **Live pipeline cascade**:
-  [`../05-infrastructure/live-pipeline-architecture.md`](../05-infrastructure/live-pipeline-architecture.md)
-- **Replay subsystem**: [`../05-infrastructure/replay-subsystem.md`](../05-infrastructure/replay-subsystem.md)
+  [`/codex/05-infrastructure/live-pipeline-architecture.md`](/codex/05-infrastructure/live-pipeline-architecture.md)
+- **Replay subsystem**: [`/codex/05-infrastructure/replay-subsystem.md`](/codex/05-infrastructure/replay-subsystem.md)
 - **Mode-axis discipline**:
-  [`../06-coding-standards/mode-axis-discipline.md`](../06-coding-standards/mode-axis-discipline.md)
+  [`/codex/06-coding-standards/mode-axis-discipline.md`](/codex/06-coding-standards/mode-axis-discipline.md)
 - **Empty-record taxonomy**:
-  [`../02-data/availability-manifest-and-data-status.md`](../02-data/availability-manifest-and-data-status.md) +
-  [`../02-data/honest-absence-downstream-handling.md`](../02-data/honest-absence-downstream-handling.md)
+  [`/codex/02-data/availability-manifest-and-data-status.md`](/codex/02-data/availability-manifest-and-data-status.md) +
+  [`/codex/02-data/honest-absence-downstream-handling.md`](/codex/02-data/honest-absence-downstream-handling.md)
 - **Source provenance plan**: `plans/archive/2026_07/data_source_provenance_all_asset_groups_2026_06_01.md`
 - **TradFi canonicalisation walk**: `plans/archive/2026_07/tradfi_manifest_canonicalisation_2026_06_01.md`

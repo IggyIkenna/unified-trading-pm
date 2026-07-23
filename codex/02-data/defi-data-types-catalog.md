@@ -15,23 +15,23 @@ scope: [engineer]
 tags: [defi, mtds, catalogue, data-pipeline, features]
 related:
   [
-    defi-data-pipeline.md,
-    defi-data-type-taxonomy.md,
-    defi-venue-protocol-catalogue.md,
-    instrument-pipeline-defi.md,
-    mtds-data-source-coverage-matrix.md,
+    /codex/02-data/defi-data-pipeline.md,
+    /codex/02-data/defi-data-type-taxonomy.md,
+    /codex/02-data/defi-venue-protocol-catalogue.md,
+    /codex/02-data/instrument-pipeline-defi.md,
+    /codex/02-data/mtds-data-source-coverage-matrix.md,
   ]
 created: 2026-04-24
 authoritative_for: [DeFi MTDS per-data_type definitions catalog, DeFi data_type to CLI-operation and source mapping]
 referenced_by:
   [
-    codex/02-data/README.md,
-    codex/02-data/defi-canonical-naming-ssot.md,
-    codex/02-data/defi-data-pipeline.md,
-    codex/02-data/defi-data-type-taxonomy.md,
-    codex/02-data/defi-venue-protocol-catalogue.md,
-    codex/04-architecture/drift-v2-data-sources.md,
-    codex/15-runbooks/backfill-completion-playbook.md,
+    /codex/02-data/README.md,
+    /codex/02-data/defi-canonical-naming-ssot.md,
+    /codex/02-data/defi-data-pipeline.md,
+    /codex/02-data/defi-data-type-taxonomy.md,
+    /codex/02-data/defi-venue-protocol-catalogue.md,
+    /codex/04-architecture/drift-v2-data-sources.md,
+    /codex/15-runbooks/backfill-completion-playbook.md,
     plans/active/issues/defi_code_codex_drift_2026_05_27.md,
   ]
 owner:
@@ -192,14 +192,14 @@ check already accepts `funding_rate_24h` as an alternative to `funding_rate` (re
 
 ### 4a. derivative_ticker (canonical raw-funding home for ALL perps, 2026-07-15)
 
-| Field               | Value                                                                                                                                                                                                                                                                                                                                                           |
-| ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **CLI operation**   | `collect-perp-funding` (GMX, dual-write alongside perp_funding) · UMI tick-provider batch-live (Hyperliquid/Aster/Extended-Starknet, native REST/S3) · Tardis (Lighter-ZKSYNC, `date >= 2026-04-17` only). (Drift `solana-defi`/UMI batch-live + Pacifica-Solana removed 2026-07-16 -- operator ruling.)                                                        |
-| **Sources**         | The Graph (GMX), Hyperliquid S3 `asset_ctxs` + REST, Aster `/fapi/v1/fundingRate`, Extended `/info/{symbol}/funding`, Tardis archive (Lighter). (Drift Data API `/fundingRates` + Pacifica `/funding_rate/history` removed 2026-07-16 -- operator ruling.)                                                                                                      |
-| **Shard key**       | venue × chain × date                                                                                                                                                                                                                                                                                                                                            |
-| **Instrument type** | `perpetual`                                                                                                                                                                                                                                                                                                                                                     |
-| **Status**          | Production (GMX/Hyperliquid/Aster/Extended/Lighter all wired). MANGO-SOLANA/ZETA-SOLANA/FLASH-SOLANA — DELETED 2026-07-15; DRIFT-SOLANA/PACIFICA-SOLANA — DELETED 2026-07-16 (operator ruling: all Solana perp DEXes dropped except Jupiter, not integrated). No adapters exist for any of these five now. See `codex/04-architecture/solana-defi-coverage.md`. |
-| **Schema fields**   | instrument_id, venue, chain, symbol, ts_event, funding_rate (nullable — but effectively always populated), open_interest (nullable), mark_price (nullable), index_price (nullable)                                                                                                                                                                              |
+| Field               | Value                                                                                                                                                                                                                                                                                                                                                            |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **CLI operation**   | `collect-perp-funding` (GMX, dual-write alongside perp_funding) · UMI tick-provider batch-live (Hyperliquid/Aster/Extended-Starknet, native REST/S3) · Tardis (Lighter-ZKSYNC, `date >= 2026-04-17` only). (Drift `solana-defi`/UMI batch-live + Pacifica-Solana removed 2026-07-16 -- operator ruling.)                                                         |
+| **Sources**         | The Graph (GMX), Hyperliquid S3 `asset_ctxs` + REST, Aster `/fapi/v1/fundingRate`, Extended `/info/{symbol}/funding`, Tardis archive (Lighter). (Drift Data API `/fundingRates` + Pacifica `/funding_rate/history` removed 2026-07-16 -- operator ruling.)                                                                                                       |
+| **Shard key**       | venue × chain × date                                                                                                                                                                                                                                                                                                                                             |
+| **Instrument type** | `perpetual`                                                                                                                                                                                                                                                                                                                                                      |
+| **Status**          | Production (GMX/Hyperliquid/Aster/Extended/Lighter all wired). MANGO-SOLANA/ZETA-SOLANA/FLASH-SOLANA — DELETED 2026-07-15; DRIFT-SOLANA/PACIFICA-SOLANA — DELETED 2026-07-16 (operator ruling: all Solana perp DEXes dropped except Jupiter, not integrated). No adapters exist for any of these five now. See `/codex/04-architecture/solana-defi-coverage.md`. |
+| **Schema fields**   | instrument_id, venue, chain, symbol, ts_event, funding_rate (nullable — but effectively always populated), open_interest (nullable), mark_price (nullable), index_price (nullable)                                                                                                                                                                               |
 
 **Operator ruling (2026-07-15, verbatim intent)**: "the highest-resolution derivative_ticker data should be run for ALL
 perps — even if they don't have OI at the data source — for canonicalisation of where raw funding is." This is the
@@ -405,7 +405,7 @@ These data_types are emitted by code but were absent from the 14 documented abov
 
 > Added 2026-06-01 from `plans/archive/solana_basis_trading_mvp_2026_06_01.plan.md` Phase 1+2. Canonical UAC contracts:
 > uac@f26097f9 (7 new types) + uac@9ad04ab0 (`InstrumentType.DEX_POOL`). SSOT:
-> `codex/04-architecture/drift-v2-data-sources.md`.
+> `/codex/04-architecture/drift-v2-data-sources.md`.
 
 | data_type            | CLI / handler                                                                               | Source(s)                                                                          | Key columns                                                                                                                                       | Status                                                                                                 |
 | -------------------- | ------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
@@ -499,8 +499,8 @@ All handlers use `DefiManifestRecorder` to write honest-coverage entries:
 
 ## Related Documents
 
-- `codex/02-data/mtds-data-source-coverage-matrix.md` — full MTDS source coverage
-- `codex/02-data/instrument-pipeline-defi.md` — DeFi instrument discovery pipeline
-- `codex/02-data/per-asset-group-bucket-layouts.md` — GCS bucket layout
+- `/codex/02-data/mtds-data-source-coverage-matrix.md` — full MTDS source coverage
+- `/codex/02-data/instrument-pipeline-defi.md` — DeFi instrument discovery pipeline
+- `/codex/02-data/per-asset-group-bucket-layouts.md` — GCS bucket layout
 - `deployment-service/configs/venue_data_types.yaml` — expected data type declarations per venue
 - Plan: `plans/archive/defi_data_types_completeness_2026_04_24.plan.md`

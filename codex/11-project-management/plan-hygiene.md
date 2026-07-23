@@ -14,7 +14,7 @@ scope: [engineer, admin]
 tags: [plan-hygiene, cron, frontmatter, archive, quality-gates, docspec]
 related:
   [
-    doc-frontmatter-schema.md,
+    /codex/11-project-management/doc-frontmatter-schema.md,
     ../../plans/epics/plan_hygiene_master.md,
     ../../plans/archive/2026_05/plan_hygiene_automation_2026_05_21.md,
   ]
@@ -22,9 +22,9 @@ created: 2026-05-21
 authoritative_for: [plan-hygiene script suite (structural checks), required/deprecated plan frontmatter field list]
 referenced_by:
   [
-    codex/11-project-management/active-plan-inventory-tracker.md,
-    codex/11-project-management/codex-audit-playbook.md,
-    codex/11-project-management/doc-frontmatter-schema.md,
+    /codex/11-project-management/active-plan-inventory-tracker.md,
+    /codex/11-project-management/codex-audit-playbook.md,
+    /codex/11-project-management/doc-frontmatter-schema.md,
   ]
 owner: plan_hygiene_master
 last_reviewed: 2026-05-21
@@ -184,7 +184,7 @@ Every **active plan** (not epics) carries `estimate_class`, `estimate_baseline_a
 `cal_remaining = calibrated × (open_todos / total_todos)` and rolls up the workspace-wide AI-days total.
 
 Multipliers per class: `refactor=0.4` · `design=0.6` · `infra=0.8` · `brand-new=1.0` · `research=1.2`. Full SSOT:
-`codex/08-workflows/estimation-calibration.md`.
+`/codex/08-workflows/estimation-calibration.md`.
 
 ---
 

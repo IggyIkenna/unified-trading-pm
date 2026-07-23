@@ -19,10 +19,10 @@ scope: [engineer, admin]
 tags: [audit, plan-hygiene, orchestrator, strategy, ml, execution, reconciliation]
 related:
   [
-    master_to_live_defi_2026_05_23.md,
-    mega_audit_and_plan_beefup_progression_2026_05_20.md,
-    strategy_archetype_logic_audit_2026_05_20.md,
-    mtds_mdps_master.md,
+    /plans/active/master_to_live_defi_2026_05_23.md,
+    /plans/archive/issues/mega_audit_and_plan_beefup_progression_2026_05_20.md,
+    /plans/audit/results/strategy_archetype_logic_audit_2026_05_20.md,
+    /plans/epics/mtds_mdps_master.md,
   ]
 created: 2026-05-21
 parent_epic: plan_hygiene_master
@@ -94,8 +94,8 @@ Verbatim from operator note to Harsh ahead of meet, 2026-05-21:
 
 **Human work** = audit + plan upgrades + wrapper-plan creation + ack decisions. **Agent work** = remediation execution
 against the wrapper plan. Audit work is Opus 4.7 1M context (cross-archetype, cross-codebase scope per
-[`codex/06-coding-standards/model-tier-selection.md`](../../../codex/06-coding-standards/model-tier-selection.md));
-remediation execution defaults to Sonnet 4.6.
+[`/codex/06-coding-standards/model-tier-selection.md`](/codex/06-coding-standards/model-tier-selection.md)); remediation
+execution defaults to Sonnet 4.6.
 
 ## Roles
 
@@ -277,7 +277,7 @@ remediation actions (restart service / re-launch VM / re-run consolidator / re-t
 closed set pages operator. Hard-stop list explicit (wallet keys / force-push / 1.0.0 graduation per CLAUDE.md).
 Kill-switch scope is direction+scope-aware (corrected 2026-07-15, plan-reconcile: CLAUDE.md's human-only hard-stop list
 is only wallet keys / force-push main / 1.0.0 graduation; kill-switch is carved out per
-`codex/04-architecture/autonomous-recovery-matrix.md` — protective arming always autonomous, resume/un-kill autonomous
+`/codex/04-architecture/autonomous-recovery-matrix.md` — protective arming always autonomous, resume/un-kill autonomous
 only within the auto-recovery matrix, `manual_unkill` human-only).
 
 ### #10. Manual-UI replication of every strategy archetype
@@ -391,7 +391,7 @@ Tier 1 (May-23 critical path): #3, #4, #6 (carry_staked_basis + arbitrage_price_
 ### Foundation-completion-gate composition
 
 This pool composes with CLAUDE.md § "Plans Run To Actual Completion" +
-`codex/11-project-management/foundation-completion-gate-discipline.md`: no Tier-2 or Tier-3 row is dispatched while
+`/codex/11-project-management/foundation-completion-gate-discipline.md`: no Tier-2 or Tier-3 row is dispatched while
 Tier-1 wrapper plans have open P0 items on the same surface. Slot-1 main enforces this at row-pickup time.
 
 ### Issue-doc lifecycle (per CLAUDE.md § Issue-Doc Lifecycle Discipline)

@@ -16,13 +16,23 @@ related:
   [
     ../_ssot-rules/04-dart-commercial-axes.md,
     ../_ssot-rules/08-pricing-principles.md,
-    strategy-origin-vs-stack-depth.md,
-    instruction-schema-fit-and-package-boundaries.md,
+    /codex/14-customer-journeys/shared-core/strategy-origin-vs-stack-depth.md,
+    /codex/14-customer-journeys/shared-core/instruction-schema-fit-and-package-boundaries.md,
     ../commercial-model/pricing-building-blocks.md,
   ]
 created: 2026-04-20
 authoritative_for: [DART pricing dimensional model (signals-only vs full-DART metering axes)]
-referenced_by: [codex/14-customer-journeys/commercial-model/dart-entry-points.md, codex/14-customer-journeys/commercial-model/exclusivity-and-noncompete.md, codex/14-customer-journeys/commercial-model/pricing-building-blocks.md, codex/14-customer-journeys/experience/dart-briefing.md, codex/14-customer-journeys/shared-core/instruction-schema-fit-and-package-boundaries.md, codex/14-customer-journeys/shared-core/signal-broadcast-architecture.md, codex/14-customer-journeys/shared-core/strategy-allocation-lock-matrix.md, codex/14-customer-journeys/shared-core/strategy-origin-vs-stack-depth.md]
+referenced_by:
+  [
+    /codex/14-customer-journeys/commercial-model/dart-entry-points.md,
+    /codex/14-customer-journeys/commercial-model/exclusivity-and-noncompete.md,
+    /codex/14-customer-journeys/commercial-model/pricing-building-blocks.md,
+    /codex/14-customer-journeys/experience/dart-briefing.md,
+    /codex/14-customer-journeys/shared-core/instruction-schema-fit-and-package-boundaries.md,
+    /codex/14-customer-journeys/shared-core/signal-broadcast-architecture.md,
+    /codex/14-customer-journeys/shared-core/strategy-allocation-lock-matrix.md,
+    /codex/14-customer-journeys/shared-core/strategy-origin-vs-stack-depth.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

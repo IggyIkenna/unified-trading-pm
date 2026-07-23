@@ -11,7 +11,7 @@ stage: [meta]
 repos: [agent-orchestrator, unified-trading-pm]
 scope: [engineer, admin]
 tags: [orchestrator, runbook, escalation, self-healing, observability]
-related: [../04-architecture/agent-orchestrator-overview.md, ../05-infrastructure/agent-orchestrator-deploy.md]
+related: [/codex/04-architecture/agent-orchestrator-overview.md, /codex/05-infrastructure/agent-orchestrator-deploy.md]
 created: 2026-05-19
 authoritative_for:
   [agent-orchestrator e2e operator runbook (workspace URL registry + spawn/stale-recovery/escalation procedures)]
@@ -33,12 +33,12 @@ execution:
 
 > **THE operator runbook** for agent-orchestrator (the repo-local `OPERATIONS.md` wrapper was retired 2026-07-18 — this
 > is the single authoritative runbook). Architecture SSOT:
-> `codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`; service reference:
-> `codex/04-architecture/agent-orchestrator-overview.md`. Carries the runbook governance fields required by CLAUDE.md
+> `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`; service reference:
+> `/codex/04-architecture/agent-orchestrator-overview.md`. Carries the runbook governance fields required by CLAUDE.md
 > "Runbook Execution-Owner SSOT" HARD RULE.
 >
-> Architecture SSOT: `codex/04-architecture/agent-orchestrator-overview.md` Infra/deploy reference:
-> `codex/05-infrastructure/agent-orchestrator-deploy.md` Plan-of-record:
+> Architecture SSOT: `/codex/04-architecture/agent-orchestrator-overview.md` Infra/deploy reference:
+> `/codex/05-infrastructure/agent-orchestrator-deploy.md` Plan-of-record:
 > `plans/active/agent_orchestrator_cloud_run_deployment_2026_05_19.md`
 
 ---
@@ -86,7 +86,7 @@ The strict-auth flip recipe + endpoint inventory: `agent-orchestrator/docs/AUTH_
 3. JWT is issued (HS256, signed by `ORCHESTRATOR_JWT_SECRET` — central-VM-only secret loaded from
    `/home/ubuntu/unified-trading-system-repos/agent-orchestrator/.env.local`). The operator JWT validates on the central
    API only and never leaves that VM — central→worker proxy calls use the separate `ORCHESTRATOR_INTERNAL_SECRET` (see
-   `codex/04-architecture/agent-orchestrator-overview.md` § "Connectivity model — centralized API router" for the
+   `/codex/04-architecture/agent-orchestrator-overview.md` § "Connectivity model — centralized API router" for the
    two-secret auth model).
 
 Per-backend bootstrap: each backend has its own `data/config/users.json`, but per the centralized-router model
@@ -247,7 +247,7 @@ Each slot is assigned an `account_id` from `data/config/accounts.json`. When an 
 
 Account failover is automatic: the watchdog evicts a slot off a usage-capped / auth-failed account onto a headroom
 account (resume-preserving where a `claude_session_id` exists). Full contract:
-`codex/04-architecture/agent-orchestrator-worker-liveness.md` § account failover.
+`/codex/04-architecture/agent-orchestrator-worker-liveness.md` § account failover.
 
 ---
 
@@ -294,12 +294,12 @@ All are live on the central VM backend. The original plan + per-phase commit sha
 alerting via `tab-mirror-to-ldr.yml`, was RETIRED with the tab-branch model — see § "Slot model" — and is dropped from
 the table below.)
 
-| #   | Mitigation                    | Surface                                                                  | What it does                                                                                                                                                                           |
-| --- | ----------------------------- | ------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 2   | Pre-spawn dirty-state gate    | `spawn_slot()` runs `server/worktree_clean_check.py` before tmux         | Refuses spawn (HTTP 409) when slot worktrees have uncommitted changes. Returns per-repo dirty manifest + 3 resolution options. `dirty_state_resolution=stash` auto-stashes             |
-| 3   | Per-agent `.agent-claim` file | `.tabs/<N>/.agent-claim` JSON; `GET /api/slots/<N>/claim`                | Distinguishes "my predecessor's WIP (context reset)" from "another teammate's WIP (foreign)". 1h TTL refreshed by heartbeat. Agent on boot reads claim to decide ownership             |
-| 4   | Heartbeat in-flight files     | `HeartbeatRequest.in_flight_files`; `GET /api/slots/<N>/in-flight-files` | Each heartbeat carries `{repo, path, intent, last_touched}` per file the worker is touching. Persists past tmux death so a successor agent can resume the predecessor's WIP            |
-| 5   | On-demand artifact pattern    | `.tabs/<N>/` code-only; venvs / node_modules built on first need         | Verified 2026-05-20 on VM: 12 slots × 27 repos = 3.7G total (would be ~160G if venvs eagerly built). See `codex/05-infrastructure/per-tab-worktrees.md` § "On-demand artifact pattern" |
+| #   | Mitigation                    | Surface                                                                  | What it does                                                                                                                                                                            |
+| --- | ----------------------------- | ------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2   | Pre-spawn dirty-state gate    | `spawn_slot()` runs `server/worktree_clean_check.py` before tmux         | Refuses spawn (HTTP 409) when slot worktrees have uncommitted changes. Returns per-repo dirty manifest + 3 resolution options. `dirty_state_resolution=stash` auto-stashes              |
+| 3   | Per-agent `.agent-claim` file | `.tabs/<N>/.agent-claim` JSON; `GET /api/slots/<N>/claim`                | Distinguishes "my predecessor's WIP (context reset)" from "another teammate's WIP (foreign)". 1h TTL refreshed by heartbeat. Agent on boot reads claim to decide ownership              |
+| 4   | Heartbeat in-flight files     | `HeartbeatRequest.in_flight_files`; `GET /api/slots/<N>/in-flight-files` | Each heartbeat carries `{repo, path, intent, last_touched}` per file the worker is touching. Persists past tmux death so a successor agent can resume the predecessor's WIP             |
+| 5   | On-demand artifact pattern    | `.tabs/<N>/` code-only; venvs / node_modules built on first need         | Verified 2026-05-20 on VM: 12 slots × 27 repos = 3.7G total (would be ~160G if venvs eagerly built). See `/codex/05-infrastructure/per-tab-worktrees.md` § "On-demand artifact pattern" |
 
 ## Slot model (single central VM)
 
@@ -308,7 +308,7 @@ namespace `orch-slot-N`. Slots are in-process tmux sessions; work routes to them
 `[TAG]`), not by operator or VM. The retired multi-master/two-laptop model (per-operator backends, `tab/**` branches,
 `tab-mirror-to-ldr.yml`, `_agent_pings.md`) is gone — do not reintroduce it. Both operators view the same central API
 through the Firebase dashboard. Architecture SSOT:
-`codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`.
+`/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`.
 
 ## Deploying SSOT systemd unit changes
 

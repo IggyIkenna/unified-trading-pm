@@ -21,7 +21,11 @@ stage: [meta]
 repos: [market-tick-data-service, deployment-service]
 scope: [engineer, admin]
 tags: [vm-launcher, backfill, performance, catalogue, did-we-reload-the-code, cefi-onchain-perp]
-related: [vm_startup_scripts_no_auto_rollout_to_gcs_2026_07_19.md, cefi_hl_aster_batch_data_gaps_2026_06_22.md]
+related:
+  [
+    /plans/active/issues/vm_startup_scripts_no_auto_rollout_to_gcs_2026_07_19.md,
+    /plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md,
+  ]
 created: 2026-07-20
 parent_epic: infrastructure_master
 assigned_vm: NA

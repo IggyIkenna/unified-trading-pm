@@ -22,19 +22,23 @@ repos:
 scope: [engineer]
 tags: [integration-testing, quality-gates, ci-cd, uac, verification, smoke-test]
 related:
-  [../04-architecture/tier-and-import-architecture.md, ../02-data/vcr-cassette-ownership.md, feature-branch-workflow.md]
+  [
+    /codex/04-architecture/tier-and-import-architecture.md,
+    /codex/02-data/vcr-cassette-ownership.md,
+    /codex/06-coding-standards/feature-branch-workflow.md,
+  ]
 created: 2026-03-27
 authoritative_for: [five-layer integration-testing strategy (Layers 0-4)]
 referenced_by:
   [
-    codex/04-architecture/batch-live-architecture.md,
-    codex/04-architecture/runtime-deployment-topology.md,
-    codex/04-architecture/tier-and-import-architecture.md,
-    codex/05-infrastructure/contracts-integration.md,
-    codex/15-runbooks/sit-runbook.md,
-    codex/05-infrastructure/unified-libraries/INTERNAL_DEPENDENCY_GRAPH.md,
-    codex/06-coding-standards/README.md,
-    codex/06-coding-standards/feature-branch-workflow.md,
+    /codex/04-architecture/batch-live-architecture.md,
+    /codex/04-architecture/runtime-deployment-topology.md,
+    /codex/04-architecture/tier-and-import-architecture.md,
+    /codex/05-infrastructure/contracts-integration.md,
+    /codex/15-runbooks/sit-runbook.md,
+    /codex/05-infrastructure/unified-libraries/INTERNAL_DEPENDENCY_GRAPH.md,
+    /codex/06-coding-standards/README.md,
+    /codex/06-coding-standards/feature-branch-workflow.md,
   ]
 owner:
 last_reviewed:
@@ -114,9 +118,9 @@ VCR-based integration tests do NOT run standalone from AC. They EXECUTE from wit
 Each declares `unified-api-contracts` as a dependency and provides the normalization layer under test. This ensures the
 cassette replays are exercised against the actual adapter code, not in isolation.
 
-See [`vcr-cassette-ownership.md`](../02-data/vcr-cassette-ownership.md) for the canonical recording workflow + cassette
-inventory (the earlier `vcr-cassette-pattern.md` was deprecated 2026-05-12 per TS-3 audit; its content is folded into
-ownership.md).
+See [`vcr-cassette-ownership.md`](/codex/02-data/vcr-cassette-ownership.md) for the canonical recording workflow +
+cassette inventory (the earlier `vcr-cassette-pattern.md` was deprecated 2026-05-12 per TS-3 audit; its content is
+folded into ownership.md).
 
 **Tier:** T0 (unified-api-contracts is the T0 pure leaf covering both surfaces)
 
@@ -539,7 +543,7 @@ repo = add to `REQUIRED_SIBLINGS` + `sit_cross_repo_validated_repos` + write the
 
 The producer (`full-workspace-sit.yml`) computes `sit_validated_workspace_digest` (SHA-256 of all 21 repos' LDR tree
 SHAs) at validation time. This captures the exact COMBINATION of sibling versions SIT validated — see
-`codex/08-workflows/ci-cd-flow.md` § "Cross-repo COMBINATION fingerprint" for the full contract.
+`/codex/08-workflows/ci-cd-flow.md` § "Cross-repo COMBINATION fingerprint" for the full contract.
 
 ---
 

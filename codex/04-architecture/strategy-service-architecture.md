@@ -14,15 +14,24 @@ scope: [engineer, admin]
 tags: [strategy, refactor, consolidation, execution, cli-convention, service-architecture]
 related:
   [
-    promote-workflow-architecture.md,
-    flash-loan-receiver.md,
-    ../05-infrastructure/launcher-script-ssot.md,
-    ../05-infrastructure/vm-tarball-deployment.md,
-    ../09-strategy/operational/cli-promote-paths.md,
+    /codex/04-architecture/promote-workflow-architecture.md,
+    /codex/04-architecture/flash-loan-receiver.md,
+    /codex/05-infrastructure/launcher-script-ssot.md,
+    /codex/05-infrastructure/vm-tarball-deployment.md,
+    /codex/09-strategy/operational/cli-promote-paths.md,
   ]
 created: 2026-05-19
 authoritative_for: [strategy-service 4-repo consolidation + sub-package layout]
-referenced_by: [codex/00-getting-started/DEPRECATED_SERVICES.md, codex/04-architecture/data-flow-map.md, codex/04-architecture/risk-preflight-flow.md, codex/04-architecture/runtime-deployment-topology.md, codex/04-architecture/token-wrapping-and-collateral.md, codex/04-architecture/trading-agent-service-directive-pipeline.md, codex/05-infrastructure/unified-libraries/INTERNAL_DEPENDENCY_GRAPH.md]
+referenced_by:
+  [
+    /codex/00-getting-started/DEPRECATED_SERVICES.md,
+    /codex/04-architecture/data-flow-map.md,
+    /codex/04-architecture/risk-preflight-flow.md,
+    /codex/04-architecture/runtime-deployment-topology.md,
+    /codex/04-architecture/token-wrapping-and-collateral.md,
+    /codex/04-architecture/trading-agent-service-directive-pipeline.md,
+    /codex/05-infrastructure/unified-libraries/INTERNAL_DEPENDENCY_GRAPH.md,
+  ]
 owner:
 last_reviewed: 2026-05-20
 code_refs:
@@ -102,7 +111,7 @@ strategy-service/
 | `strategy-live`   | live         | strategy-service                 | paper / live trading; signal broadcast active              |
 | `backtest`        | batch        | strategy-service                 | 2yr config-grid backtest harness                           |
 
-All other CLI axes per `codex/06-coding-standards/cli-convention.md`: `--asset-group`, `--mode`, domain-specific flags.
+All other CLI axes per `/codex/06-coding-standards/cli-convention.md`: `--asset-group`, `--mode`, domain-specific flags.
 
 ## Health-API aggregator
 
@@ -147,11 +156,11 @@ repos' `kill_switch_bus_subscriber.py` modules into a single dispatcher keyed by
   `--operation` selection drives paper vs live vs batch.
 - [`flash-loan-receiver.md`](./flash-loan-receiver.md) — risk/preflight surface in `strategy_service/risk/v2/` consumes
   Aave flash-loan capability declarations.
-- [`codex/09-strategy/operational/cli-promote-paths.md`](../09-strategy/operational/cli-promote-paths.md) — promote-CLI
-  invokes `strategy-service --operation strategy-live`.
-- [`codex/05-infrastructure/launcher-script-ssot.md`](../05-infrastructure/launcher-script-ssot.md) — 4-to-1 launcher
-  collapse.
-- [`codex/05-infrastructure/vm-tarball-deployment.md`](../05-infrastructure/vm-tarball-deployment.md) — single
+- [`/codex/09-strategy/operational/cli-promote-paths.md`](/codex/09-strategy/operational/cli-promote-paths.md) —
+  promote-CLI invokes `strategy-service --operation strategy-live`.
+- [`/codex/05-infrastructure/launcher-script-ssot.md`](/codex/05-infrastructure/launcher-script-ssot.md) — 4-to-1
+  launcher collapse.
+- [`/codex/05-infrastructure/vm-tarball-deployment.md`](/codex/05-infrastructure/vm-tarball-deployment.md) — single
   strategy-service tarball replaces 4-source-repo matrix.
 
 ## Anti-patterns (do NOT)

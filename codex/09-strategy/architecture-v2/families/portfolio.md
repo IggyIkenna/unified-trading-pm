@@ -1,10 +1,10 @@
 ---
 doc_type: codex-ssot
-title: 'Family: Portfolio'
+title: "Family: Portfolio"
 summary:
   The Portfolio strategy family — 4 meta-allocation archetypes (multi-strategy, risk-parity, factor-allocation,
-  tactical-overlay) that emit AllocationDirective events to re-weight child strategies rather than TRADE
-  instructions; strategy instances (not the Portfolio Allocator service), run through the same risk/kill-switch gates.
+  tactical-overlay) that emit AllocationDirective events to re-weight child strategies rather than TRADE instructions;
+  strategy instances (not the Portfolio Allocator service), run through the same risk/kill-switch gates.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -21,7 +21,15 @@ related:
   ]
 created: 2026-05-18
 authoritative_for: [Portfolio strategy family spec (4 meta-allocation archetypes)]
-referenced_by: [codex/09-strategy/architecture-v2/README.md, codex/09-strategy/architecture-v2/archetypes/portfolio-factor-allocation.md, codex/09-strategy/architecture-v2/archetypes/portfolio-multi-strategy.md, codex/09-strategy/architecture-v2/archetypes/portfolio-risk-parity.md, codex/09-strategy/architecture-v2/archetypes/portfolio-tactical-overlay.md, codex/09-strategy/strategy-summary.md]
+referenced_by:
+  [
+    /codex/09-strategy/architecture-v2/README.md,
+    /codex/09-strategy/architecture-v2/archetypes/portfolio-factor-allocation.md,
+    /codex/09-strategy/architecture-v2/archetypes/portfolio-multi-strategy.md,
+    /codex/09-strategy/architecture-v2/archetypes/portfolio-risk-parity.md,
+    /codex/09-strategy/architecture-v2/archetypes/portfolio-tactical-overlay.md,
+    /codex/09-strategy/strategy-summary.md,
+  ]
 owner:
 last_reviewed: 2026-05-18
 code_refs:

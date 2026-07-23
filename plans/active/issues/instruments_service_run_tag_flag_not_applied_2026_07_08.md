@@ -64,7 +64,7 @@ paths a tagless run would.
 ## Todos
 
 - [x] [DECISION] P2. **Decide the fix direction — RESOLVED 2026-07-10 (operator): option (a), wire it through.** This
-      was framed as an open operator call, but it isn't — `codex/08-workflows/t1-batch-dag.md` already documents the
+      was framed as an open operator call, but it isn't — `/codex/08-workflows/t1-batch-dag.md` already documents the
       target `--run-tag` behavior verbatim ("data goes to `t1-recon/`... implementation steps: CLI arg, GCS writer
       prefix, event writer prefix"), and `main.py`'s existing `"t1-recon"` string-match special-case proves the flag was
       added with that contract in mind — it just never finished the wiring. The code should be brought into compliance

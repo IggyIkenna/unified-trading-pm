@@ -3,8 +3,8 @@ doc_type: codex-ssot
 title: Rule 08 — Pricing principles
 summary:
   "Pricing principles — two external tiers (A cost-plus variable / B fixed upfront+monthly), per-block mixable,
-  twelve-month minimum, internal-cost column codex-private, exclusivity + custom premiums Tier-B-only; actual
-  numbers live only in commercial-model/pricing-building-blocks.md."
+  twelve-month minimum, internal-cost column codex-private, exclusivity + custom premiums Tier-B-only; actual numbers
+  live only in commercial-model/pricing-building-blocks.md."
 status: current
 nature: ssot
 asset_group: [meta]
@@ -12,10 +12,25 @@ stage: [meta]
 repos: [strategy-service]
 scope: [engineer, admin, sales]
 tags: [customer-journey, sales, cost, dart, registry]
-related: [05-building-block-dimensions.md, 04-dart-commercial-axes.md, 07-data-licensing-boundaries.md]
+related:
+  [
+    /codex/14-customer-journeys/_ssot-rules/05-building-block-dimensions.md,
+    /codex/14-customer-journeys/_ssot-rules/04-dart-commercial-axes.md,
+    /codex/14-customer-journeys/_ssot-rules/07-data-licensing-boundaries.md,
+  ]
 created: 2026-04-19
 authoritative_for: [pricing principles (two-tier building-block model)]
-referenced_by: [codex/14-customer-journeys/_ssot-rules/04-dart-commercial-axes.md, codex/14-customer-journeys/_ssot-rules/05-building-block-dimensions.md, codex/14-customer-journeys/_ssot-rules/06-show-dont-show-discipline.md, codex/14-customer-journeys/_ssot-rules/07-data-licensing-boundaries.md, codex/14-customer-journeys/_ssot-rules/10-strategy-instruction-schema-principles.md, codex/14-customer-journeys/_ssot-rules/README.md, codex/14-customer-journeys/commercial-model/building-block-packaging.md, codex/14-customer-journeys/commercial-model/cash-deployment-plan.md]
+referenced_by:
+  [
+    /codex/14-customer-journeys/_ssot-rules/04-dart-commercial-axes.md,
+    /codex/14-customer-journeys/_ssot-rules/05-building-block-dimensions.md,
+    /codex/14-customer-journeys/_ssot-rules/06-show-dont-show-discipline.md,
+    /codex/14-customer-journeys/_ssot-rules/07-data-licensing-boundaries.md,
+    /codex/14-customer-journeys/_ssot-rules/10-strategy-instruction-schema-principles.md,
+    /codex/14-customer-journeys/_ssot-rules/README.md,
+    /codex/14-customer-journeys/commercial-model/building-block-packaging.md,
+    /codex/14-customer-journeys/commercial-model/cash-deployment-plan.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -70,7 +85,7 @@ Every building block has three numbers internally:
 The internal cost number **never** appears in any client-facing document, pricing sheet, commercial proposal, demo
 environment, or public marketing asset. It lives only in:
 
-- `codex/14-customer-journeys/commercial-model/pricing-building-blocks.md` (Stage 2 output — codex-private by directory
+- `/codex/14-customer-journeys/commercial-model/pricing-building-blocks.md` (Stage 2 output — codex-private by directory
   convention; not rendered in any client-facing UI).
 - Odum finance analysis exports.
 - Board/investor materials clearly marked internal.

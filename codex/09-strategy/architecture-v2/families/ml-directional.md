@@ -1,6 +1,6 @@
 ---
 doc_type: codex-ssot
-title: 'Family: ML Directional'
+title: "Family: ML Directional"
 summary:
   The ML Directional strategy family — 2 archetypes (continuous vs event-settled) betting when calibrated model
   probability exceeds market-implied by a min-edge threshold; fractional-Kelly sized. The general-purpose directional
@@ -14,15 +14,25 @@ scope: [engineer, admin]
 tags: [strategy, ml, prediction, odds, features, execution]
 related:
   [
-    rules-directional.md,
-    stat-arb-pairs.md,
-    vol-trading.md,
+    /codex/09-strategy/architecture-v2/families/rules-directional.md,
+    /codex/09-strategy/architecture-v2/families/stat-arb-pairs.md,
+    /codex/09-strategy/architecture-v2/families/vol-trading.md,
     ../archetypes/ml-directional-continuous.md,
     ../axes/signal-sources.md,
   ]
 created: 2026-04-17
 authoritative_for: [ML Directional strategy family spec (alpha thesis + 2 archetypes)]
-referenced_by: [codex/09-strategy/_archived_pre_v2/cross-cutting/ml-pipeline.md, codex/09-strategy/architecture-v2/README.md, codex/09-strategy/architecture-v2/archetypes/ml-directional-continuous.md, codex/09-strategy/architecture-v2/archetypes/ml-directional-event-settled.md, codex/09-strategy/architecture-v2/category-instrument-coverage.md, codex/09-strategy/architecture-v2/families/arbitrage-structural.md, codex/09-strategy/architecture-v2/families/event-driven.md, codex/09-strategy/architecture-v2/families/rules-directional.md]
+referenced_by:
+  [
+    /codex/09-strategy/_archived_pre_v2/cross-cutting/ml-pipeline.md,
+    /codex/09-strategy/architecture-v2/README.md,
+    /codex/09-strategy/architecture-v2/archetypes/ml-directional-continuous.md,
+    /codex/09-strategy/architecture-v2/archetypes/ml-directional-event-settled.md,
+    /codex/09-strategy/architecture-v2/category-instrument-coverage.md,
+    /codex/09-strategy/architecture-v2/families/arbitrage-structural.md,
+    /codex/09-strategy/architecture-v2/families/event-driven.md,
+    /codex/09-strategy/architecture-v2/families/rules-directional.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

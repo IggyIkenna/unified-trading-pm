@@ -2,21 +2,29 @@
 doc_type: codex-ssot
 title: Readiness Checklist Consolidation — Gap Analysis
 summary:
-  2026-03-11 Phase-0 read-only gap analysis feeding the v3.0 canonical readiness template — reconciles
-  the deployment-service 52-item checklist, the codex enhanced template, and the CR/DR/BR stage model;
-  decides data-catalogue items are operational (SSOT in pm/configs) not readiness, and merges the retired
-  batch/ + live/ split into per-repo repos/<name>.yaml. Pre-v3.0 planning record.
+  2026-03-11 Phase-0 read-only gap analysis feeding the v3.0 canonical readiness template — reconciles the
+  deployment-service 52-item checklist, the codex enhanced template, and the CR/DR/BR stage model; decides
+  data-catalogue items are operational (SSOT in pm/configs) not readiness, and merges the retired batch/ + live/ split
+  into per-repo repos/<name>.yaml. Pre-v3.0 planning record.
 status: stale
 nature: ssot
 asset_group: [meta]
 stage: [meta]
-repos: [deployment-service, deployment-ui, execution-service, features-service, instruments-service, market-data-processing-service]
+repos:
+  [
+    deployment-service,
+    deployment-ui,
+    execution-service,
+    features-service,
+    instruments-service,
+    market-data-processing-service,
+  ]
 scope: [engineer, admin]
 tags: [audit, readiness, consolidation, data-catalogue, ssot-audit]
-related: [codex/10-audit/gap-analysis-2026-03-11.md, codex/10-audit/ssot-reference-mapping.md]
+related: [/codex/10-audit/gap-analysis-2026-03-11.md, /codex/10-audit/ssot-reference-mapping.md]
 created: 2026-03-27
 authoritative_for: [readiness-checklist consolidation gap analysis (pre-v3.0 record)]
-referenced_by: [codex/10-audit/gap-analysis-2026-03-11.md, codex/10-audit/ssot-reference-mapping.md]
+referenced_by: [/codex/10-audit/gap-analysis-2026-03-11.md, /codex/10-audit/ssot-reference-mapping.md]
 owner:
 last_reviewed:
 code_refs:

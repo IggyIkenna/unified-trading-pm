@@ -40,15 +40,15 @@ tags:
   ]
 related:
   [
-    cross-asset-canonical-target-ssot.md,
-    gcs-and-manifest-delete-safety-protocol.md,
-    reconciliation-finding-taxonomy.md,
-    four-surface-reconciliation-procedure.md,
-    pipeline-mode-partition.md,
-    defi-canonical-naming-ssot.md,
-    availability-manifest-and-data-status.md,
-    ../05-infrastructure/bucket-isolation-model.md,
-    ../05-infrastructure/gcs-object-operations.md,
+    /codex/02-data/cross-asset-canonical-target-ssot.md,
+    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+    /codex/02-data/reconciliation-finding-taxonomy.md,
+    /codex/02-data/four-surface-reconciliation-procedure.md,
+    /codex/02-data/pipeline-mode-partition.md,
+    /codex/02-data/defi-canonical-naming-ssot.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/05-infrastructure/bucket-isolation-model.md,
+    /codex/05-infrastructure/gcs-object-operations.md,
     ../../plans/active/data_pipeline_reconciliation_skill_2026_07_20.md,
     ../../plans/active/issues/defi_dex_pools_delete_order_stale_2026_07_20.md,
   ]
@@ -62,9 +62,9 @@ authoritative_for:
   ]
 referenced_by:
   [
-    codex/02-data/four-surface-reconciliation-procedure.md,
-    codex/02-data/reconciliation-finding-taxonomy.md,
-    codex/02-data/orphan-object-detection.md,
+    /codex/02-data/four-surface-reconciliation-procedure.md,
+    /codex/02-data/reconciliation-finding-taxonomy.md,
+    /codex/02-data/orphan-object-detection.md,
   ]
 owner:
 last_reviewed: 2026-07-20
@@ -86,7 +86,7 @@ code_refs:
 > `availability-manifest-and-data-status.md` §9) or lost it at plan archival.
 >
 > **What this doc is NOT.** It is **not a delete authorization**. A row's disposition is a _standing hypothesis_
-> carrying its evidence. The five-part proof in `codex/02-data/gcs-and-manifest-delete-safety-protocol.md` gates every
+> carrying its evidence. The five-part proof in `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` gates every
 > actual suggestion, and **prod-bucket deletes are a human-only hard stop**. The canonical grammar this register
 > measures against is `cross-asset-canonical-target-ssot.md`; the machine oracle is UAC `canonical_path_violations()`.
 > This doc references both and duplicates neither.
@@ -198,7 +198,7 @@ Twin confirmed present; still gated on the five-part proof before any delete exe
 > reads are currently FAILING in production is an **OPEN question** — tracked as P1-10 in
 > `plans/active/data_pipeline_reconciliation_skill_2026_07_20.md`. Nothing here should be "closed" until that is
 > answered; the bucket-name resolution authority is `cloud-providers.yaml` / `resolve_bucket_name`, per
-> `codex/05-infrastructure/bucket-isolation-model.md`.
+> `/codex/05-infrastructure/bucket-isolation-model.md`.
 
 ---
 

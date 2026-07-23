@@ -14,12 +14,12 @@ stage: [meta]
 repos: [alerting-service]
 scope: [admin, engineer]
 tags: [alerting, monitoring, escalation, infrastructure, runbook, observability]
-related: [../04-architecture/recovery-defence-in-depth-layers.md]
+related: [/codex/04-architecture/recovery-defence-in-depth-layers.md]
 created: 2026-05-23
 authoritative_for: [physical-pager-comparison, webhook-prototype, twilio-bridge]
 referenced_by:
   [
-    codex/04-architecture/recovery-defence-in-depth-layers.md,
+    /codex/04-architecture/recovery-defence-in-depth-layers.md,
     plans/active/physical_pager_research_and_webhook_prototype_2026_05_23.md,
     plans/active/independent_fallback_twilio_voice_2026_05_23.md,
   ]

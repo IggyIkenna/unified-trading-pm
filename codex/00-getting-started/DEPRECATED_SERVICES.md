@@ -2,9 +2,9 @@
 doc_type: codex-ssot
 title: Deprecated Services (2026)
 summary:
-  Registry of removed/consolidated post-trade services — reconciliation-service folded into
-  position-balance-monitor, risk+exposure merged into risk-and-exposure-service, plus the pre-May-23 5→2
-  strategy/ML repo consolidation (soft-freeze + BLOCKED-CUTOVER auto-flip).
+  Registry of removed/consolidated post-trade services — reconciliation-service folded into position-balance-monitor,
+  risk+exposure merged into risk-and-exposure-service, plus the pre-May-23 5→2 strategy/ML repo consolidation
+  (soft-freeze + BLOCKED-CUTOVER auto-flip).
 status: current
 nature: ssot
 asset_group: [meta]
@@ -12,8 +12,14 @@ stage: [meta]
 repos: [features-service, ml-service, strategy-service]
 scope: [engineer]
 tags: [deprecation, consolidation, refactor, migration, strategy, ml]
-related: [../04-architecture/strategy-service-architecture.md, ../04-architecture/ml-service-architecture.md, ../11-project-management/service-registry.yaml, ../../plans/archive/2026_05/strategy_repo_consolidation_2026_05_19.md]
-created: '2026-03-27'
+related:
+  [
+    /codex/04-architecture/strategy-service-architecture.md,
+    /codex/04-architecture/ml-service-architecture.md,
+    ../11-project-management/service-registry.yaml,
+    ../../plans/archive/2026_05/strategy_repo_consolidation_2026_05_19.md,
+  ]
+created: "2026-03-27"
 authoritative_for: [deprecated/consolidated post-trade service migration status]
 referenced_by:
 owner:
@@ -29,9 +35,7 @@ The following services have been removed or consolidated as part of the post-tra
 
 ### reconciliation-service
 
-**Status**: REMOVED  
-**Reason**: Functionality integrated into `position-balance-monitor-service`  
-**Date**: Feb 2026
+**Status**: REMOVED **Reason**: Functionality integrated into `position-balance-monitor-service` **Date**: Feb 2026
 
 `position-balance-monitor-service` is now the **source of truth** for positions and handles:
 
@@ -50,9 +54,7 @@ The following services have been removed or consolidated as part of the post-tra
 
 ### risk-monitor-service + exposure-monitor-service
 
-**Status**: MERGED  
-**Reason**: Consolidated into `risk-and-exposure-service`  
-**Date**: Feb 2026
+**Status**: MERGED **Reason**: Consolidated into `risk-and-exposure-service` **Date**: Feb 2026
 
 `risk-and-exposure-service` provides:
 
@@ -102,7 +104,7 @@ Target architecture SSOT: `04-architecture/ml-service-architecture.md` (status: 
 
 **Soft freeze (both consolidations)**: no new public-API surfaces, no new top-level packages, no module renames in any
 of the 5 source repos until Phase 7 archive lands. Internal bugfixes + test work continue. Cross-plan banner
-coordination per `codex/05-infrastructure/plan-aware-merge-resolution.md`.
+coordination per `/codex/05-infrastructure/plan-aware-merge-resolution.md`.
 
 **Auto-flip to `BLOCKED-CUTOVER`** if Phase 6 parity slips — sub-packages remain merged (correctness preserved), source
 repos remain alive un-archived, archive deferred post-cutover. No late-binding hacks.

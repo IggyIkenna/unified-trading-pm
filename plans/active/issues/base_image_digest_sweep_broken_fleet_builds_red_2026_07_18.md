@@ -38,7 +38,7 @@ repos:
   ]
 scope: [engineer, admin]
 tags: [ci, cloudbuild, base-image, digest, pip-audit, fleet, p1, deploy-blocker]
-related: [bucket_fold_ml_2026_07_17.md]
+related: [/plans/active/bucket_fold_ml_2026_07_17.md]
 created: 2026-07-18
 parent_epic: infrastructure_master
 priority: P1

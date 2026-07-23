@@ -1,7 +1,10 @@
 ---
 doc_type: codex-ssot
 title: Dashboard Services Grid — 5-Tile Product-Axis Model
-summary: 5-tile product-axis SSOT for /dashboard (DART, Odum Signals, Reports, Investor Relations, Admin & Ops) — tile keys, entitlement gates, sub-route chips, the per-persona tile × sub-route visibility matrix, and the product-axis-vs-lifecycle-axis distinction (Strategy Catalogue is a shared primitive, not a 6th tile).
+summary:
+  5-tile product-axis SSOT for /dashboard (DART, Odum Signals, Reports, Investor Relations, Admin & Ops) — tile keys,
+  entitlement gates, sub-route chips, the per-persona tile × sub-route visibility matrix, and the
+  product-axis-vs-lifecycle-axis distinction (Strategy Catalogue is a shared primitive, not a 6th tile).
 status: current
 nature: ssot
 asset_group: [meta]
@@ -9,10 +12,26 @@ stage: [meta]
 repos: [strategy-service, unified-trading-system-ui]
 scope: [engineer]
 tags: [strategy, dart, ui, catalogue]
-related: [dart-tab-structure.md, restriction-policy.md, strategy-catalogue-3tier.md, dart-exclusive-research-fork.md]
+related:
+  [
+    /codex/09-strategy/architecture-v2/dart-tab-structure.md,
+    /codex/09-strategy/architecture-v2/restriction-policy.md,
+    /codex/09-strategy/architecture-v2/strategy-catalogue-3tier.md,
+    /codex/09-strategy/architecture-v2/dart-exclusive-research-fork.md,
+  ]
 created: 2026-04-21
 authoritative_for: [dashboard 5-tile product-axis model]
-referenced_by: [codex/04-architecture/orphan-audit.md, codex/09-strategy/architecture-v2/dart-exclusive-research-fork.md, codex/09-strategy/architecture-v2/dart-tab-structure.md, codex/09-strategy/architecture-v2/performance-overlay.md, codex/09-strategy/architecture-v2/restriction-policy.md, codex/09-strategy/architecture-v2/strategy-catalogue-3tier.md, codex/09-strategy/architecture-v2/strategy-lifecycle-maturity.md, codex/14-customer-journeys/playbook-concepts/visibility-slicing.md]
+referenced_by:
+  [
+    /codex/04-architecture/orphan-audit.md,
+    /codex/09-strategy/architecture-v2/dart-exclusive-research-fork.md,
+    /codex/09-strategy/architecture-v2/dart-tab-structure.md,
+    /codex/09-strategy/architecture-v2/performance-overlay.md,
+    /codex/09-strategy/architecture-v2/restriction-policy.md,
+    /codex/09-strategy/architecture-v2/strategy-catalogue-3tier.md,
+    /codex/09-strategy/architecture-v2/strategy-lifecycle-maturity.md,
+    /codex/14-customer-journeys/playbook-concepts/visibility-slicing.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -24,8 +43,8 @@ code_refs:
 `unified-trading-system-ui/lib/config/services.ts`, `lib/auth/persona-dashboard-shape.ts`,
 `app/(platform)/dashboard/page.tsx` **Cross-refs:** [`dart-tab-structure.md`](./dart-tab-structure.md) ·
 [`restriction-policy.md`](./restriction-policy.md) ·
-`codex/14-customer-journeys/playbook-concepts/visibility-slicing.md` ·
-`codex/14-customer-journeys/demo-ops/demo-restriction-profiles.md`
+`/codex/14-customer-journeys/playbook-concepts/visibility-slicing.md` ·
+`/codex/14-customer-journeys/demo-ops/demo-restriction-profiles.md`
 
 ---
 
@@ -234,9 +253,9 @@ counterparty-outbound stays at the top level (it's a commercial product), the la
 - [`dart-exclusive-research-fork.md`](./dart-exclusive-research-fork.md) — Plan D. DART exclusive subscription + client
   research fork + joint Odum-client version governance. DART tile gains `subscriptions` + `versions` chips; Admin & Ops
   tile gains `strategy-version-approvals` chip.
-- `codex/14-customer-journeys/playbook-concepts/visibility-slicing.md` — visibility-slicing doctrine (hidden / locked /
+- `/codex/14-customer-journeys/playbook-concepts/visibility-slicing.md` — visibility-slicing doctrine (hidden / locked /
   visible three-state enum across the product).
-- `codex/14-customer-journeys/demo-ops/demo-restriction-profiles.md` — tempt-logic (padlocked-visible) for prospect
+- `/codex/14-customer-journeys/demo-ops/demo-restriction-profiles.md` — tempt-logic (padlocked-visible) for prospect
   personas.
 
 ---

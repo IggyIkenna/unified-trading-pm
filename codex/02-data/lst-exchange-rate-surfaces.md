@@ -18,7 +18,12 @@ repos: [market-tick-data-service, instruments-service, unified-api-contracts, fe
 scope: [engineer, admin]
 tags: [lst, exchange-rate, staking, oracle, dex, honest-coverage, pnl-correctness, defi]
 authoritative_for: [lst-exchange-rate, lst-oracle-price, lst-staking-accrual, lst-rate-canonical-homes]
-related: [honest-coverage-model.md, availability-manifest-and-data-status.md, defi-canonical-naming-ssot.md]
+related:
+  [
+    /codex/02-data/honest-coverage-model.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/02-data/defi-canonical-naming-ssot.md,
+  ]
 created: "2026-07-21"
 referenced_by:
 code_refs:

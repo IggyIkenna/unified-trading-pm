@@ -15,15 +15,15 @@ scope: [engineer, admin]
 tags: [sports, mtds, mdps, odds, data-status, catalogue]
 related:
   [
-    codex/02-data/sports-gcs-path-ssot.md,
-    codex/02-data/sports-data-source-coverage-matrix.md,
-    codex/02-data/sports-scheduling-and-sharding.md,
-    codex/02-data/sports-fixtures-lifecycle.md,
+    /codex/02-data/sports-gcs-path-ssot.md,
+    /codex/02-data/sports-data-source-coverage-matrix.md,
+    /codex/02-data/sports-scheduling-and-sharding.md,
+    /codex/02-data/sports-fixtures-lifecycle.md,
   ]
 created: 2026-05-24
 authoritative_for: [MTDS/MDPS sports data_type catalog (odds and derived types), sports bookmaker coverage matrix]
 referenced_by:
-  [codex/01-domain/sports-instruments.md, codex/02-data/README.md, codex/02-data/sports-fixtures-lifecycle.md]
+  [/codex/01-domain/sports-instruments.md, /codex/02-data/README.md, /codex/02-data/sports-fixtures-lifecycle.md]
 owner:
 last_reviewed: 2026-07-22
 code_refs:
@@ -93,7 +93,7 @@ production instrument_type for any of them.
 - **Reference** (NEEDS_CANDLE=False): `markets`, `outcomes`, `settlements` — structural and result data per event;
   pass-through from source to GCS without MDPS transformation.
 
-**Shard atom** (canonical per `codex/02-data/sports-scheduling-and-sharding.md` § "Multi-axis correction"):
+**Shard atom** (canonical per `/codex/02-data/sports-scheduling-and-sharding.md` § "Multi-axis correction"):
 `asset_group=sports / source={bookmaker} / data_type={dt} / league_id={league} / day={date}` for all odds-based types.
 `fixture_id` is a **row-level column inside the parquet, NOT a shard axis** — `(league_id, day)` already bounds the
 per-day fixture set; per-fixture detail surfaces from reading the parquet rows. This avoids ~10× manifest inflation that
@@ -107,7 +107,7 @@ UTL guard `MissingClusterValidationError` if kwargs absent; QG STEP 5.64 statica
 snapshot (`entity=footystats_odds/`), a one-per-fixture-date refdata-style capture (~72h before kickoff). The MTDS
 Sports data types in this catalog are intra-day market movement — live ticks, horizon buckets, and cross-bookmaker arb
 scanning. These are different-purpose data that legitimately coexist; do NOT merge in the aggregator. See
-`codex/02-data/sports-data-source-coverage-matrix.md` § 4 for the full disambiguation.
+`/codex/02-data/sports-data-source-coverage-matrix.md` § 4 for the full disambiguation.
 
 ### GCS Path Convention
 
@@ -124,7 +124,7 @@ unified_trading_library.cloud_interface.bucket_naming.resolve_bucket_name(
 )
 ```
 
-Never inline `gs://...` strings — QG STEP 5.69 ratchet enforces. See `codex/02-data/bucket-naming-and-config.md`.
+Never inline `gs://...` strings — QG STEP 5.69 ratchet enforces. See `/codex/02-data/bucket-naming-and-config.md`.
 
 Path resolver: `unified_api_contracts.sports.candidate_parquet_paths()` in
 `unified_api_contracts/canonical/domain/sports/gcs_paths.py`. Coverage windows:
@@ -165,7 +165,7 @@ fixture as odds update throughout the pre-match and in-play windows. `market_typ
 Coverage gated by `is_in_known_gap()` and `clip_dates_to_source_coverage()`. `fixture_id` is a row-level filter key, not
 a shard axis — all fixtures for a (league_id, day) pair land in one shard parquet.
 
-Match-state-driven polling cadence (per `codex/02-data/sports-scheduling-and-sharding.md` § 3):
+Match-state-driven polling cadence (per `/codex/02-data/sports-scheduling-and-sharding.md` § 3):
 
 | Match state            | Cadence                                        |
 | ---------------------- | ---------------------------------------------- |
@@ -438,7 +438,7 @@ The Odds API key is the gateway credential for ~90% of bookmaker coverage. Witho
 
 All MTDS sports odds handlers follow the shard-level isolation pattern: exceptions caught per-bookmaker/per-league loop,
 recorded via manifest `record_failed(error=classify_venue_error(exc))`, loop continues. No `raise` inside per-shard
-loops. SSOT: `codex/04-architecture/shard-level-failure-isolation.md`.
+loops. SSOT: `/codex/04-architecture/shard-level-failure-isolation.md`.
 
 ### Manifest honest-absence emission
 
@@ -470,14 +470,14 @@ All sports MTDS handlers emit honest-coverage entries per the manifest v5 contra
 
 ## Related Documents
 
-- `codex/02-data/sports-gcs-path-ssot.md` — canonical GCS path resolver for all sports parquets
-- `codex/02-data/sports-data-source-coverage-matrix.md` — expected league counts, coverage axes, aggregator algorithm
-- `codex/02-data/sports-adapter-dependency-order.md` — T0/T1 adapter dependency order for instruments-service
-- `codex/02-data/sports-scheduling-and-sharding.md` — scheduling cadence, shard-atom definition, lookahead-bias rules
-- `codex/02-data/sports-fixtures-lifecycle.md` — fixture state transitions and honest-absence semantics
-- `codex/02-data/per-asset-group-bucket-layouts.md` — GCS bucket layout per asset_group (sports section)
-- `codex/02-data/availability-manifest-and-data-status.md` — manifest v5 honest-coverage schema
-- `codex/04-architecture/shard-level-failure-isolation.md` — per-shard error handling invariant
+- `/codex/02-data/sports-gcs-path-ssot.md` — canonical GCS path resolver for all sports parquets
+- `/codex/02-data/sports-data-source-coverage-matrix.md` — expected league counts, coverage axes, aggregator algorithm
+- `/codex/02-data/sports-adapter-dependency-order.md` — T0/T1 adapter dependency order for instruments-service
+- `/codex/02-data/sports-scheduling-and-sharding.md` — scheduling cadence, shard-atom definition, lookahead-bias rules
+- `/codex/02-data/sports-fixtures-lifecycle.md` — fixture state transitions and honest-absence semantics
+- `/codex/02-data/per-asset-group-bucket-layouts.md` — GCS bucket layout per asset_group (sports section)
+- `/codex/02-data/availability-manifest-and-data-status.md` — manifest v5 honest-coverage schema
+- `/codex/04-architecture/shard-level-failure-isolation.md` — per-shard error handling invariant
 - Plans epic: `plans/epics/sports_master.md` — sports asset_group umbrella epic
 - `plans/active/issues/sports_shard_enumeration_cartesian_blowup_2026_07_20.md` — 7-agent audit that reversed
   K0-DECISION(b) case direction and corrected the `instrument_type`/`trades` doc↔prod gap (2026-07-22, Part 4)

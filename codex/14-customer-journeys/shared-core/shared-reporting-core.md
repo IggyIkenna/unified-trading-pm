@@ -16,13 +16,23 @@ related:
   [
     ../_ssot-rules/03-same-system-principle.md,
     ../playbook-concepts/client-reporting.md,
-    org-fund-client-entity-model.md,
-    same-system-principle.md,
-    client-reporting-demo-walkthrough.md,
+    /codex/14-customer-journeys/shared-core/org-fund-client-entity-model.md,
+    /codex/14-customer-journeys/shared-core/same-system-principle.md,
+    /codex/14-customer-journeys/shared-core/client-reporting-demo-walkthrough.md,
   ]
 created: 2026-04-20
 authoritative_for: [shared client-reporting core surface (one component tree, entitlement-filtered)]
-referenced_by: [codex/14-customer-journeys/README.md, codex/14-customer-journeys/commercial-model/im-vs-reg-reporting-logic.md, codex/14-customer-journeys/experience/investment-management-demo.md, codex/14-customer-journeys/experience/regulatory-demo.md, codex/14-customer-journeys/experience/regulatory-umbrella-briefing.md, codex/14-customer-journeys/implementation-mapping/route-mapping.md, codex/14-customer-journeys/playbook-concepts/README.md, codex/14-customer-journeys/shared-core/README.md]
+referenced_by:
+  [
+    /codex/14-customer-journeys/README.md,
+    /codex/14-customer-journeys/commercial-model/im-vs-reg-reporting-logic.md,
+    /codex/14-customer-journeys/experience/investment-management-demo.md,
+    /codex/14-customer-journeys/experience/regulatory-demo.md,
+    /codex/14-customer-journeys/experience/regulatory-umbrella-briefing.md,
+    /codex/14-customer-journeys/implementation-mapping/route-mapping.md,
+    /codex/14-customer-journeys/playbook-concepts/README.md,
+    /codex/14-customer-journeys/shared-core/README.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

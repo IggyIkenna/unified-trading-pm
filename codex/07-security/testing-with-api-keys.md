@@ -12,10 +12,15 @@ stage: [meta]
 repos: [execution-service, instruments-service, market-tick-data-service, unified-api-contracts]
 scope: [engineer, admin]
 tags: [vcr, quality-gates, validation, uac]
-related: [../02-data/vcr-cassette-ownership.md, secrets-management.md, ../06-coding-standards/vcr-cassette-pattern.md]
+related:
+  [
+    /codex/02-data/vcr-cassette-ownership.md,
+    /codex/07-security/secrets-management.md,
+    /codex/06-coding-standards/vcr-cassette-pattern.md,
+  ]
 created: 2026-03-27
 authoritative_for: [INTEGRATION_TEST_MODE convention]
-referenced_by: [codex/06-coding-standards/vcr-cassette-pattern.md]
+referenced_by: [/codex/06-coding-standards/vcr-cassette-pattern.md]
 owner:
 last_reviewed:
 code_refs:
@@ -81,7 +86,7 @@ Never commit credentials. See `07-security/secrets-management.md`.
 > (`unified-api-contracts/mocks/<iface>/`) that no longer exist. The interface repos collapsed into `execution-service`
 > / `instruments-service` / `position-balance-monitor-service` / `market-tick-data-service`; cassettes live at
 > `unified_api_contracts/external/<venue>/mocks/*.yaml` (per
-> [`02-data/vcr-cassette-ownership.md`](../02-data/vcr-cassette-ownership.md) "Current Cassettes" — ~22 VALIDATED
+> [`02-data/vcr-cassette-ownership.md`](/codex/02-data/vcr-cassette-ownership.md) "Current Cassettes" — ~22 VALIDATED
 > cassettes across crypto/sports/databento/onchain venues). **Treat this table as historical**; the live cassette matrix
 > is in `vcr-cassette-ownership.md` § "Current Cassettes", and the per-source path SSOT is the canonical
 > `external/<venue>/mocks/` layout (TS-2 fix). Inline rewrite of this table tracked as a P2 doc-clean.

@@ -13,7 +13,7 @@ stage: [meta]
 repos: [execution-service]
 scope: [engineer, admin]
 tags: [execution, defi, routing, circuit-breaker, self-healing, ssot]
-related: [kill-switch-circuit-breaker.md, ../06-coding-standards/config-reloader-pattern.md]
+related: [/codex/04-architecture/kill-switch-circuit-breaker.md, /codex/06-coding-standards/config-reloader-pattern.md]
 created: 2026-05-20
 authoritative_for:
   [

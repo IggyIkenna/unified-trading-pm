@@ -54,8 +54,8 @@ to, rather than absorbing:
 
 ### `cross-cutting/` — still authoritative
 
-- [`cross-cutting/client-onboarding.md`](../08-workflows/client-onboarding.md) — client-specific onboarding workflow.
-  Referenced from `architecture-v2/cross-cutting/capital-client-isolation.md`.
+- [`cross-cutting/client-onboarding.md`](/codex/08-workflows/client-onboarding.md) — client-specific onboarding
+  workflow. Referenced from `architecture-v2/cross-cutting/capital-client-isolation.md`.
 - [`cross-cutting/client-strategy-config.md`](operational/client-strategy-config.md) — per-client strategy config
   surface. Extended by `architecture-v2/cross-cutting/portfolio-allocator.md`.
 - [`cross-cutting/instrument-filtering.md`](operational/instrument-filtering.md) — major-asset whitelist + pool TVL
@@ -88,7 +88,8 @@ Three top-level docs that were superseded are in the archive too:
 - `strategy-registry.md` → UAC `StrategyInstanceDefinition` + `StrategyInstanceIdentity` types are the registry now.
 - `STRATEGY_CATALOG_AND_WORKFLOW_ALIGNMENT.md` → superseded by
   [`architecture-v2/MIGRATION.md`](architecture-v2/MIGRATION.md).
-- `execution-modes.md` → absorbed into [`../04-architecture/backtest-groups.md`](../04-architecture/backtest-groups.md)
+- `execution-modes.md` → absorbed into
+  [`/codex/04-architecture/backtest-groups.md`](/codex/04-architecture/backtest-groups.md)
   - [`architecture-v2/cross-cutting/benchmark-fills.md`](architecture-v2/cross-cutting/benchmark-fills.md).
 
 ## Legacy implementation code

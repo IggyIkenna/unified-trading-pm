@@ -1,6 +1,6 @@
 ---
 doc_type: codex-ssot
-title: 'Axis: Signal Sources'
+title: "Axis: Signal Sources"
 summary:
   'Signal-source axis catalog — the mechanism that produces the raw decision trigger: ML models, rules engines,
   rate/yield monitors, orderbook/microstructure, price-dispersion scanners, DeFi protocol-state watchers, event
@@ -13,10 +13,27 @@ stage: [meta]
 repos: []
 scope: [engineer, admin]
 tags: [strategy, signal-sources, ml, features, market-making, book-microstructure]
-related: [edge-methods.md, expression.md, venue-eligibility.md, staking-methods.md, ../../../04-architecture/artifact-versioning.md]
+related:
+  [
+    /codex/09-strategy/architecture-v2/axes/edge-methods.md,
+    /codex/09-strategy/architecture-v2/axes/expression.md,
+    /codex/09-strategy/architecture-v2/axes/venue-eligibility.md,
+    staking-methods.md,
+    ../../../04-architecture/artifact-versioning.md,
+  ]
 created: 2026-04-17
 authoritative_for: [signal-source axis (raw decision-trigger catalog)]
-referenced_by: [codex/09-strategy/architecture-v2/README.md, codex/09-strategy/architecture-v2/axes/edge-methods.md, codex/09-strategy/architecture-v2/axes/expression.md, codex/09-strategy/architecture-v2/axes/hold-policy.md, codex/09-strategy/architecture-v2/axes/staking-methods.md, codex/09-strategy/architecture-v2/families/ml-directional.md, codex/09-strategy/architecture-v2/families/rules-directional.md, codex/09-strategy/architecture-v2/families/stat-arb-pairs.md]
+referenced_by:
+  [
+    /codex/09-strategy/architecture-v2/README.md,
+    /codex/09-strategy/architecture-v2/axes/edge-methods.md,
+    /codex/09-strategy/architecture-v2/axes/expression.md,
+    /codex/09-strategy/architecture-v2/axes/hold-policy.md,
+    /codex/09-strategy/architecture-v2/axes/staking-methods.md,
+    /codex/09-strategy/architecture-v2/families/ml-directional.md,
+    /codex/09-strategy/architecture-v2/families/rules-directional.md,
+    /codex/09-strategy/architecture-v2/families/stat-arb-pairs.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

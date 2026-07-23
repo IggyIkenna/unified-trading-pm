@@ -15,22 +15,22 @@ scope: [engineer, admin]
 tags: [defi, data-quality, manifest, features, catalogue, cefi, data-pipeline]
 related:
   [
-    defi-venue-protocol-catalogue.md,
-    defi-data-types-catalog.md,
-    availability-manifest-and-data-status.md,
-    honest-absence-downstream-handling.md,
+    /codex/02-data/defi-venue-protocol-catalogue.md,
+    /codex/02-data/defi-data-types-catalog.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/02-data/honest-absence-downstream-handling.md,
   ]
 created: 2026-05-10
 authoritative_for: [DeFi per-(venue, data_type) capture matrix, DeFi bundled cluster-validation registry map]
 referenced_by:
   [
-    codex/02-data/README.md,
-    codex/02-data/defi-canonical-naming-ssot.md,
-    codex/02-data/defi-data-pipeline.md,
-    codex/02-data/defi-data-types-catalog.md,
-    codex/02-data/defi-venue-protocol-catalogue.md,
-    codex/04-architecture/amm-slippage-simulation.md,
-    codex/05-infrastructure/chain-rpc-mev-tenderly.md,
+    /codex/02-data/README.md,
+    /codex/02-data/defi-canonical-naming-ssot.md,
+    /codex/02-data/defi-data-pipeline.md,
+    /codex/02-data/defi-data-types-catalog.md,
+    /codex/02-data/defi-venue-protocol-catalogue.md,
+    /codex/04-architecture/amm-slippage-simulation.md,
+    /codex/05-infrastructure/chain-rpc-mev-tenderly.md,
   ]
 owner:
 last_reviewed: 2026-07-15
@@ -177,7 +177,7 @@ MANGO-SOLANA / ZETA-SOLANA / FLASH-SOLANA — DELETED 2026-07-15 (operator rulin
 reference-data adapters, factory registrations, UAC venue-adapter-key entries) was removed rather than completing
 onboarding. All 3 declared API hosts were dead and DeFiLlama TVL was ~$0; zero MTDS market-data capture was ever wired
 for any of them (not derivative_ticker-specific — no trades/book_snapshot either). See
-`codex/04-architecture/solana-defi-coverage.md` for the full removal record.
+`/codex/04-architecture/solana-defi-coverage.md` for the full removal record.
 
 ### Native Staking — Solana (NEW per `solana_lst_native_staking_adapters_2026_05_14` Phase 5)
 
@@ -350,8 +350,8 @@ For each protocol in the catalogue, this matrix declares which data_types are ca
 - [`availability-manifest-and-data-status.md`](availability-manifest-and-data-status.md) — manifest schema.
 - [`honest-absence-downstream-handling.md`](honest-absence-downstream-handling.md) — empty/missing handling per
   data_type.
-- [`amm-slippage-simulation.md`](../04-architecture/amm-slippage-simulation.md) — how `dex_pools` data feeds matching
-  engine.
+- [`amm-slippage-simulation.md`](/codex/04-architecture/amm-slippage-simulation.md) — how `dex_pools` data feeds
+  matching engine.
 - Plan:
   [`defi_catalogue_chain_primitives_2026_05_10.md`](../../plans/active/defi_catalogue_chain_primitives_2026_05_10.md)
   Phase 3 owns the buildout for every ✗ above.

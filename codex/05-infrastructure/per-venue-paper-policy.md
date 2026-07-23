@@ -2,10 +2,10 @@
 doc_type: codex-ssot
 title: per-venue-paper-policy
 summary:
-  "Simulate-first per-venue paper-mode policy: the matching engine is the universal paper floor for every venue,
-  testnet is an additive upgrade where a venue exposes one. Codifies PAPER_EXECUTION_TARGETS (UAC) mapping chains/
-  venues to ExecutionTarget FORK/TESTNET/SIMULATION. DeFi EVM → Tenderly fork; Solana → devnet; CeFi perps → testnet
-  (Hyperliquid wired, Binance/Bybit/OKX/Aster pending adapter); sports/prediction/TradFi → matching-engine simulation."
+  "Simulate-first per-venue paper-mode policy: the matching engine is the universal paper floor for every venue, testnet
+  is an additive upgrade where a venue exposes one. Codifies PAPER_EXECUTION_TARGETS (UAC) mapping chains/ venues to
+  ExecutionTarget FORK/TESTNET/SIMULATION. DeFi EVM → Tenderly fork; Solana → devnet; CeFi perps → testnet (Hyperliquid
+  wired, Binance/Bybit/OKX/Aster pending adapter); sports/prediction/TradFi → matching-engine simulation."
 status: current
 nature: ssot
 asset_group: [meta]
@@ -13,14 +13,27 @@ stage: [meta]
 repos: [execution-service]
 scope: [engineer, admin]
 tags: [execution, cefi, defi, tradfi, sports, prediction, infrastructure]
-related: [../04-architecture/operational-modes.md, ../04-architecture/paper-vs-live-execution-seam.md, ../04-architecture/chain-environment-resolution.md]
+related:
+  [
+    /codex/04-architecture/operational-modes.md,
+    /codex/04-architecture/paper-vs-live-execution-seam.md,
+    /codex/04-architecture/chain-environment-resolution.md,
+  ]
 created: 2026-05-09
 authoritative_for: [per-venue paper execution policy]
-referenced_by: [codex/04-architecture/operational-modes.md, codex/04-architecture/paper-vs-live-execution-seam.md, codex/09-strategy/architecture-v2/cross-cutting/archetype-paper-readiness.md, plans/epics/defi_master.md]
+referenced_by:
+  [
+    /codex/04-architecture/operational-modes.md,
+    /codex/04-architecture/paper-vs-live-execution-seam.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/archetype-paper-readiness.md,
+    plans/epics/defi_master.md,
+  ]
 owner:
 last_reviewed: 2026-05-17
 code_refs:
-overview: SSOT for the per-venue paper-mode policy — simulate-first floor for every venue (matching engine is the universal fallback); testnet upgrade where API + credentials exist. Codifies PAPER_EXECUTION_TARGETS in UAC.
+overview:
+  SSOT for the per-venue paper-mode policy — simulate-first floor for every venue (matching engine is the universal
+  fallback); testnet upgrade where API + credentials exist. Codifies PAPER_EXECUTION_TARGETS in UAC.
 type: codex-ssot
 updated: 2026-05-15
 locked_by: live-defi-rollout
@@ -167,10 +180,11 @@ banner mutual.
 
 ## Composes with
 
-- [`../04-architecture/operational-modes.md`](../04-architecture/operational-modes.md) — the canonical mode SSOT.
-- [`../04-architecture/paper-vs-live-execution-seam.md`](../04-architecture/paper-vs-live-execution-seam.md) — pins the
-  execution-only seam.
-- [`../04-architecture/flash-loan-receiver.md`](../04-architecture/flash-loan-receiver.md) — Aave V3 flash loan
+- [`/codex/04-architecture/operational-modes.md`](/codex/04-architecture/operational-modes.md) — the canonical mode
+  SSOT.
+- [`/codex/04-architecture/paper-vs-live-execution-seam.md`](/codex/04-architecture/paper-vs-live-execution-seam.md) —
+  pins the execution-only seam.
+- [`/codex/04-architecture/flash-loan-receiver.md`](/codex/04-architecture/flash-loan-receiver.md) — Aave V3 flash loan
   deployment validates `connect()` against fork; same shape extends to Tenderly fork validation.
-- [`../04-architecture/chain-environment-resolution.md`](../04-architecture/chain-environment-resolution.md) — per-chain
-  RPC + fork URL resolution.
+- [`/codex/04-architecture/chain-environment-resolution.md`](/codex/04-architecture/chain-environment-resolution.md) —
+  per-chain RPC + fork URL resolution.

@@ -1,7 +1,9 @@
 ---
 doc_type: issue
 title: Deferred follow-ups from the 2026-05-27 fleet-audit triad (archived)
-summary: The three 2026-05-27 fleet-audit plans were operator-marked **done** and archived on 2026-06-01. Their code shipped; these are the consciously-deferred tails ("let it be" — not to be actioned until...
+summary:
+  The three 2026-05-27 fleet-audit plans were operator-marked **done** and archived on 2026-06-01. Their code shipped;
+  these are the consciously-deferred tails ("let it be" — not to be actioned until...
 status: open
 nature: process
 asset_group: [cross-cutting]
@@ -11,14 +13,19 @@ scope: [engineer, admin]
 tags: [infrastructure, backfill, tradfi, defi, ui, runbook, plan-hygiene]
 related:
   [
-    codex/05-infrastructure/vm-log-archival.md,
+    /codex/05-infrastructure/vm-log-archival.md,
     plans/active/issues/issue_docs_remediation_sweep_2026_06_02.md,
     plans/active/issues/gcs_hive_partition_malformed_paths_remediation_2026_06_01.md,
   ]
 created: 2026-06-01
 parent_epic: infrastructure_master
 priority: P2
-source: [../canonical_vm_log_archival_2026_05_27.md, ../cefi_venue_backfill_coverage_remediation_2026_05_27.md, ../deployment_ui_vm_and_venue_coverage_visibility_2026_05_27.md]
+source:
+  [
+    ../canonical_vm_log_archival_2026_05_27.md,
+    ../cefi_venue_backfill_coverage_remediation_2026_05_27.md,
+    ../deployment_ui_vm_and_venue_coverage_visibility_2026_05_27.md,
+  ]
 assigned_vm:
 resolved_by:
 locked_by: harsh-fleet-audit

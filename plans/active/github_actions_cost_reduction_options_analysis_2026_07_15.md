@@ -29,9 +29,9 @@ tags:
     decision-record,
   ]
 related:
-  - github_actions_ci_cost_reduction_2026_07_15.md
-  - cicd_mvp_ldr_to_main_pipeline_2026_06_30.md
-  - github_billing_dashboard_access_2026_07_09.md
+  - /plans/active/github_actions_ci_cost_reduction_2026_07_15.md
+  - /plans/active/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md
+  - /plans/archive/issues/github_billing_dashboard_access_2026_07_09.md
 created: 2026-07-15
 last_updated: 2026-07-16
 parent_epic: deployment_and_user_management_master
@@ -238,7 +238,7 @@ churn/latency ever bites (then a `deployment-api` endpoint is the cheap option).
 
 ### Reconciliation with the QG-offload ADR (2026-06-02) — complementary, not contradictory
 
-`codex/06-coding-standards/adr-qg-offload-self-hosted-runners-2026-06-02.md` (accepted, Option A) **rejected a central
+`/codex/06-coding-standards/adr-qg-offload-self-hosted-runners-2026-06-02.md` (accepted, Option A) **rejected a central
 self-hosted runner pool — but for the _heavy QG gate_**, because moving the authoritative pass/fail off the worker
 breaks the local feedback loop (which SHA is tested; async failure-routing back to the agent). It kept heavy
 `quality-gates.sh` **local on the worker VMs**, governed by `qg-host-governor.sh` (K = `floor(vCPU/4)` concurrent).
@@ -328,7 +328,7 @@ VM's warm state (see §"Capacity assessment" → B2 DROPPED note). B2/B3 are not
 | ---------------------------------------------- | --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Move CI to Cloud Build / CodeBuild**         | ❌ Not worth it       | Cloud Build `e2-highcpu-8` is **$0.0156/min** — _more expensive per minute_ than the GitHub runners you're fleeing ($0.006), and far more than free self-hosted. HIGH effort (rebuild required-checks + promoter-bot logic for 25 repos), HIGH risk (branch-protection rulesets hard-require `quality-gates-v2`/`sit-gate` contexts). The one good idea inside it — "run on compute we own" — is just B1. |
 | **GitHub merge queue** instead of promote bots | ❌ Doesn't fit        | Merge queue solves many-parallel-human-PRs contention. This pipeline has **one standing bot-owned promote PR per repo** whose head is a branch ref — structurally at odds with merge queue. It also only handles the merge step, not content-discovery/provenance/SIT-fingerprint. Touches ~$0 of the actual cost drivers.                                                                                |
-| **Monorepo / repo consolidation**              | ❌ Not for cost       | Fights the load-bearing no-service-deps tier rule (`codex/04-architecture/tier-and-import-architecture.md`); every tool is per-repo (quickmerge, promoter fleet, Path-B worktrees, branch protection, secrets). Multi-month re-architecture; savings are mostly maintenance, not dollars — and the dollar driver is fixed far more cheaply by Set A + B.                                                  |
+| **Monorepo / repo consolidation**              | ❌ Not for cost       | Fights the load-bearing no-service-deps tier rule (`/codex/04-architecture/tier-and-import-architecture.md`); every tool is per-repo (quickmerge, promoter fleet, Path-B worktrees, branch protection, secrets). Multi-month re-architecture; savings are mostly maintenance, not dollars — and the dollar driver is fixed far more cheaply by Set A + B.                                                 |
 | **Hard Actions spending cap**                  | ⚠️ Caution, not a fix | A hard cap already **caused a fleet-wide CI outage on 2026-06-22** (cap exhausted → all promotion halted). Use **soft budget alerts** (email thresholds), never a hard stop.                                                                                                                                                                                                                              |
 
 ---
@@ -460,7 +460,7 @@ change the recommendation).
 
 **Why deployment-api, not agent-orchestrator:** deployment-api is a public Cloud Run service by design;
 agent-orchestrator binds `127.0.0.1:8765` with no public inbound rule
-(`codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md:117`), so GitHub can't reach it without new
+(`/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md:117`), so GitHub can't reach it without new
 networking. deployment-api also already holds the cloud/Firestore/GH plumbing.
 
 **Building blocks that ALREADY exist (this is why B2 is cheap here):**
@@ -545,13 +545,13 @@ _(Reference checklist, not dispatch todos — `☐` open, `✅` done.)_
 
 ## Codex SSOTs (read before executing any item)
 
-- `codex/08-workflows/ci-cd-flow.md` — pipeline / promotion / branch protection
-- `codex/06-coding-standards/adr-qg-offload-self-hosted-runners-2026-06-02.md` — the QG-offload ADR (Option A: heavy QG
+- `/codex/08-workflows/ci-cd-flow.md` — pipeline / promotion / branch protection
+- `/codex/06-coding-standards/adr-qg-offload-self-hosted-runners-2026-06-02.md` — the QG-offload ADR (Option A: heavy QG
   stays LOCAL, rejected central `qg` pool). B1 here is complementary (moves GLUE, keeps QG off self-hosted) — see
   §"Reconciliation with the QG-offload ADR" above; **do not** add QG to the `glue` pool.
-- `codex/04-architecture/tier-and-import-architecture.md` — the no-service-deps rule (why monorepo is rejected)
-- `codex/04-architecture/runtime-deployment-topology.md` +
-  `codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` — why deployment-api (public Cloud Run) is the
+- `/codex/04-architecture/tier-and-import-architecture.md` — the no-service-deps rule (why monorepo is rejected)
+- `/codex/04-architecture/runtime-deployment-topology.md` +
+  `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` — why deployment-api (public Cloud Run) is the
   fold-in host, not agent-orchestrator (:8765, no inbound rule)
 - `codex/05-infrastructure/` — runner/VM conventions; workflow-template rollout
 - Sibling execution plan:

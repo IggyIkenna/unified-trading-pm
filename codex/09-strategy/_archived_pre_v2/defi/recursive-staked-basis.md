@@ -12,10 +12,23 @@ stage: [meta]
 repos: [execution-service, market-tick-data-service, strategy-service, unified-api-contracts, unified-trading-pm]
 scope: [engineer, admin]
 tags: [defi, strategy, execution, basis-trade, flash-loan, leverage, staking, hedging]
-related: [unhedged-recursive.md, staked-basis.md, sol-staked-basis.md, reward-lifecycle.md]
+related:
+  [
+    /codex/09-strategy/_archived_pre_v2/defi/unhedged-recursive.md,
+    /codex/09-strategy/_archived_pre_v2/defi/staked-basis.md,
+    /codex/09-strategy/_archived_pre_v2/defi/sol-staked-basis.md,
+    reward-lifecycle.md,
+  ]
 created: 2026-03-27
 authoritative_for: []
-referenced_by: [codex/09-strategy/_archived_pre_v2/STRATEGY_CATALOG_pre_v2.md, codex/09-strategy/_archived_pre_v2/defi/lending-protocol-arb.md, codex/09-strategy/_archived_pre_v2/defi/reward-lifecycle.md, codex/09-strategy/_archived_pre_v2/defi/staked-basis.md, codex/09-strategy/_archived_pre_v2/defi/unhedged-recursive.md]
+referenced_by:
+  [
+    /codex/09-strategy/_archived_pre_v2/STRATEGY_CATALOG_pre_v2.md,
+    /codex/09-strategy/_archived_pre_v2/defi/lending-protocol-arb.md,
+    /codex/09-strategy/_archived_pre_v2/defi/reward-lifecycle.md,
+    /codex/09-strategy/_archived_pre_v2/defi/staked-basis.md,
+    /codex/09-strategy/_archived_pre_v2/defi/unhedged-recursive.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -533,8 +546,8 @@ strategy reduces position --> atomic deleverage bundle + close perp --> treasury
 
 Gas costs are tracked via Alchemy RPC using `eth_feeHistory` (Ethereum mainnet). The MTDS `gas_fee_handler` fetches
 real-time gas prices and writes them as features. Gas hits P&L immediately as a realized transaction cost -- not
-estimated. Atomic bundles are gas-intensive: ~500k gas for entry (~$45 at 30 gwei), ~600k for exit. Gas is a significant
-cost component that must be recovered by the leveraged yield within the first few hours of deployment.
+estimated. Atomic bundles are gas-intensive: ~~500k gas for entry (~~$45 at 30 gwei), ~600k for exit. Gas is a
+significant cost component that must be recovered by the leveraged yield within the first few hours of deployment.
 
 **Reference:** `market-tick-data-service/market_tick_data_service/gas_fee_handler.py`
 

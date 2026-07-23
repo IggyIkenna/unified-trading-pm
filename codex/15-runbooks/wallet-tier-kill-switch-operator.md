@@ -15,9 +15,9 @@ scope: [engineer, admin]
 tags: [runbook, kill-switch, defi, execution, escalation, custody]
 related:
   [
-    codex/04-architecture/kill-switch-event-bus.md,
-    codex/04-architecture/custody-providers.md,
-    codex/15-runbooks/smoke-testing-playbook.md,
+    /codex/04-architecture/kill-switch-event-bus.md,
+    /codex/04-architecture/custody-providers.md,
+    /codex/15-runbooks/smoke-testing-playbook.md,
   ]
 created: 2026-05-14
 owner: on-call operator (Ikenna / Harsh by rotation)
@@ -28,7 +28,13 @@ code_refs:
 type: runbook
 source_finding: R-16 (codex_audit_risk_2026_05_12.md)
 locked_by: live-defi-rollout
-execution: {owner: on-call operator (Ikenna / Harsh by rotation), cadence: on-demand (incident response) + quarterly DR drill, verifier: slot-1 orchestrator reviews audit log within 24h of any arm event, last_executed: never (first arm expected post-cutover 2026-05)}
+execution:
+  {
+    owner: on-call operator (Ikenna / Harsh by rotation),
+    cadence: on-demand (incident response) + quarterly DR drill,
+    verifier: slot-1 orchestrator reviews audit log within 24h of any arm event,
+    last_executed: never (first arm expected post-cutover 2026-05),
+  }
 ---
 
 # Wallet-Tier Kill-Switch — Operator Runbook
@@ -158,6 +164,6 @@ Check the **Pending Orders** tile in DART immediately after arming to confirm ca
 
 ## Related docs
 
-- `codex/04-architecture/kill-switch-event-bus.md` — event schema + provenance gating
-- `codex/04-architecture/custody-providers.md` — wallet provisioning
-- `codex/15-runbooks/smoke-testing-playbook.md` — post-disarm smoke test procedure
+- `/codex/04-architecture/kill-switch-event-bus.md` — event schema + provenance gating
+- `/codex/04-architecture/custody-providers.md` — wallet provisioning
+- `/codex/15-runbooks/smoke-testing-playbook.md` — post-disarm smoke test procedure

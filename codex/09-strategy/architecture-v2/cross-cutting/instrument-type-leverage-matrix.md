@@ -13,10 +13,20 @@ stage: [meta]
 repos: []
 scope: [engineer, admin]
 tags: [strategy, leverage, allocator, risk, defi, cefi]
-related: [allocator-pipeline-contract.md, archetype-param-schema-inventory.md]
+related:
+  [
+    /codex/09-strategy/architecture-v2/cross-cutting/allocator-pipeline-contract.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/archetype-param-schema-inventory.md,
+  ]
 created: 2026-05-22
 authoritative_for: [instrument-type x asset-group max-leverage matrix (guard_rails enforcement)]
-referenced_by: [codex/09-strategy/_archived_pre_v2/cross-cutting/venue-collateral-and-wrapping.md, codex/09-strategy/architecture-v2/cross-cutting/allocator-pipeline-contract.md, codex/09-strategy/architecture-v2/cross-cutting/archetype-param-schema-inventory.md, codex/09-strategy/architecture-v2/cross-cutting/leverage-and-volatility.md]
+referenced_by:
+  [
+    /codex/09-strategy/_archived_pre_v2/cross-cutting/venue-collateral-and-wrapping.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/allocator-pipeline-contract.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/archetype-param-schema-inventory.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/leverage-and-volatility.md,
+  ]
 owner:
 last_reviewed: 2026-05-22
 code_refs:
@@ -58,5 +68,5 @@ Full matrix expansion (per-venue sub-limits, per-archetype overrides, margin-mod
 
 - `plans/epics/strategy_master.md`
 - `plans/active/issues/strategy_archetype_logic_audit_2026_05_20.md`
-- `codex/09-strategy/architecture-v2/cross-cutting/allocator-pipeline-contract.md`
-- `codex/09-strategy/architecture-v2/leverage-and-volatility.md`
+- `/codex/09-strategy/architecture-v2/cross-cutting/allocator-pipeline-contract.md`
+- `/codex/09-strategy/architecture-v2/cross-cutting/leverage-and-volatility.md`

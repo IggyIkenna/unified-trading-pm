@@ -14,24 +14,24 @@ scope: [engineer, admin]
 tags: [manifest, data-status, capture-status, honest-coverage, single-walk, data-correctness, defi]
 related:
   [
-    honest-absence-downstream-handling.md,
-    pipeline-mode-partition.md,
-    chart-candle-delivery-flow.md,
-    data-status-drilldown.md,
-    ../05-infrastructure/manifest-consolidator-ssot.md,
+    /codex/02-data/honest-absence-downstream-handling.md,
+    /codex/02-data/pipeline-mode-partition.md,
+    /codex/02-data/chart-candle-delivery-flow.md,
+    /codex/02-data/data-status-drilldown.md,
+    /codex/05-infrastructure/manifest-consolidator-ssot.md,
   ]
 created: 2026-04-13
 authoritative_for: [availability manifest schema + capture_status 4-state ledger]
 referenced_by:
   [
-    codex/02-data/bar-boundary-candle-edge-convention.md,
-    codex/02-data/cefi-capture-universe.md,
-    codex/02-data/chart-candle-delivery-flow.md,
-    codex/02-data/chunk-safe-manifest-migrations.md,
-    codex/02-data/contract-failure-handling.md,
-    codex/02-data/cross-asset-rescan-protocol.md,
-    codex/02-data/data-catalogue-schema.md,
-    codex/02-data/data-lineage-MTDS-features-ml.md,
+    /codex/02-data/bar-boundary-candle-edge-convention.md,
+    /codex/02-data/cefi-capture-universe.md,
+    /codex/02-data/chart-candle-delivery-flow.md,
+    /codex/02-data/chunk-safe-manifest-migrations.md,
+    /codex/02-data/contract-failure-handling.md,
+    /codex/02-data/cross-asset-rescan-protocol.md,
+    /codex/02-data/data-catalogue-schema.md,
+    /codex/02-data/data-lineage-MTDS-features-ml.md,
   ]
 owner:
 last_reviewed: 2026-06-25
@@ -86,7 +86,7 @@ exists** in that bucket. Each row represents one shard — a unit of data writte
 > `{last_run_at, verdict(produced|empty|failed), shards_changed, rows_in/out/added, duration_ms, …}` — the authoritative
 > "did this consolidator produce its data" record the deployment cockpit reads. Absent = that consolidator has never run
 > the reporting code (dead / not yet fired) → shown as "not reporting", never a fake all-clear. Contract SSOT:
-> `../05-infrastructure/manifest-consolidator-ssot.md` § "Cockpit data-correctness signals + `_index/latest.json`".
+> `/codex/05-infrastructure/manifest-consolidator-ssot.md` § "Cockpit data-correctness signals + `_index/latest.json`".
 
 > **Annotate-once, read-everywhere (governing principle; F2).** The manifest is the canonical honest **4-state** ledger
 > (`captured` / `empty_confirmed[typed reason]` / `attempted_failed` / **`expected_unattempted`**). Every cell is
@@ -422,7 +422,7 @@ unchanged.
 >    none). Fix: the MTDS OHLCV backfill requires an explicit validated `--source databento|massive` that drives BOTH
 >    the fetch adapter AND the stamp (`derive_pipeline_mode_for_row(source=…)` → `batch_<vendor>`, bypassing
 >    `SOURCE_PRIORITY`); UAC `assert_source_capable_for_venue` fail-closes a venue-incapable source (CBOE+massive
->    raises). SSOT: `codex/02-data/tradfi-databento-sourcing-ssot.md` § "Source provenance is WRITE-STAMPED by the
+>    raises). SSOT: `/codex/02-data/tradfi-databento-sourcing-ssot.md` § "Source provenance is WRITE-STAMPED by the
 >    FETCHING adapter".
 
 **Schema v8** (UTL@`547ff3c`, 2026-05-12): `MANIFEST_SCHEMA_VERSION = 8`. The `pipeline_mode=` default was removed
@@ -535,7 +535,7 @@ class AvailabilityRecord:
     # row knows whether it was produced by batch (one entry per SOURCE_PRIORITY
     # source) or by live websocket. Closed-set per UAC `PipelineMode` StrEnum;
     # round-trip with `SOURCE_PRIORITY` enforced via test_pipeline_mode.py.
-    # See codex/02-data/pipeline-mode-partition.md for the full SSOT.
+    # See /codex/02-data/pipeline-mode-partition.md for the full SSOT.
     # ─────────────────────────────────────────────────────────────────────
     # Runtime is `str = ""` (NOT `str | None = None`) — the empty-string default is a
     # read-side compat shim for rows that slipped the Phase-3 backfill; writers MUST
@@ -645,7 +645,7 @@ class AvailabilityRecord:
   skipped shard because upstream was empty/failed or instrument is outside scope; counts in denominator; superseded by
   `captured` when data arrives).
 - **PROOF-OF-HONEST-ABSENCE — `empty_confirmed[SOURCE_RETURNED_ZERO]` is PROVEN, not trusted (HARD RULE, codified
-  2026-06-22; SSOT `codex/05-infrastructure/data-pipeline-alerts.md`)**: the "source returned 200 + zero rows" claim
+  2026-06-22; SSOT `/codex/05-infrastructure/data-pipeline-alerts.md`)**: the "source returned 200 + zero rows" claim
   above used to be taken on the adapter's word — the #1 source of "a VM ran for hours then marked everything
   `empty_confirmed` when the data was actually fetchable with a code fix" (defi/sports especially). Now `record_empty`
   REQUIRES a UAC
@@ -699,7 +699,7 @@ class AvailabilityRecord:
 > **SUPERSEDED 2026-07-21** — Massive removed as a TradFi source (operator ruling 2026-07-19), `batch_massive` GCS
 > objects purged 2026-07-21. TradFi is single-source Databento (+ Yahoo daily for KRX/rolling-VIX). No dual-source
 > Databento+Massive cell exists; `MassiveTradfiRestConnector` is gone. SSOT:
-> `codex/02-data/tradfi-databento-sourcing-ssot.md`. The table below is retained as a historical record of the v9
+> `/codex/02-data/tradfi-databento-sourcing-ssot.md`. The table below is retained as a historical record of the v9
 > dual-source design; it no longer describes live behavior.
 
 When a TradFi `(asset_group, venue, day, data_type)` cell had multiple sources in `SOURCE_PRIORITY` (Databento +
@@ -723,8 +723,8 @@ no longer resolves a databento-vs-massive choice for tradfi.
 Conflict detection: `detect_dual_source_conflicts()` still exists in code for asset groups that ARE genuinely
 multi-source; it no longer fires for tradfi.
 
-SSOT: `codex/02-data/pipeline-mode-and-batch-live-reconciliation.md` § "Multi-source merge",
-`codex/02-data/tradfi-databento-sourcing-ssot.md`.
+SSOT: `/codex/02-data/pipeline-mode-and-batch-live-reconciliation.md` § "Multi-source merge",
+`/codex/02-data/tradfi-databento-sourcing-ssot.md`.
 
 ### Documented exception: permanently-untyped legacy rows (sports IS, pre-2026-07-08)
 
@@ -1088,13 +1088,13 @@ are `live_<source>` and consumers PREFIX-MATCH `live_*` — never an exact alias
 `M1-BREAKING` tranche, SSOT [`pipeline-mode-partition.md`](pipeline-mode-partition.md) § "Ratified TARGET design").
 Per-state semantics in live mode:
 
-| State                | `pipeline_mode`  | `capture_status`   | Live-mode trigger                                                                                                                                                                                  |
-| -------------------- | ---------------- | ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Ingested**         | `live_websocket` | `captured`         | MTDS WS adapter received trades for the window → MDPS aggregated → wrote candle parquet + `record_captured`.                                                                                       |
-| **Zero-activity**    | `live_websocket` | `captured`         | WS connected, catalog says instrument alive, zero trades in window → `O=H=L=C=prior_LTP, vol=0, trade_count=0` (per 4-category empty-output decision D). Manifest row carries real bar count.      |
-| **Expected-empty**   | `live_websocket` | `empty_confirmed`  | WS connected, catalog says instrument delisted/non-trading on this day → no candle row; `error_reason ∈ EMPTY_CONFIRMED_REASONS` (e.g. `EXPECTED_INSTRUMENT_DELISTED`, `EXPECTED_PAUSED_LEAGUE`).  |
-| **Attempted-failed** | `live_websocket` | `attempted_failed` | WS disconnected mid-window beyond grace OR WS-dead-cascade exceeded N consecutive windows → `data_freshness=STALE` candle written + `error_reason=LIVE_WS_DEAD` (or similar typed reason).         |
-| **Missing**          | (no row)         | —                  | Live VM crashed / restarted mid-day → gap window has no manifest row. Replay subsystem fills the gap (see [`../05-infrastructure/replay-subsystem.md`](../05-infrastructure/replay-subsystem.md)). |
+| State                | `pipeline_mode`  | `capture_status`   | Live-mode trigger                                                                                                                                                                                          |
+| -------------------- | ---------------- | ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Ingested**         | `live_websocket` | `captured`         | MTDS WS adapter received trades for the window → MDPS aggregated → wrote candle parquet + `record_captured`.                                                                                               |
+| **Zero-activity**    | `live_websocket` | `captured`         | WS connected, catalog says instrument alive, zero trades in window → `O=H=L=C=prior_LTP, vol=0, trade_count=0` (per 4-category empty-output decision D). Manifest row carries real bar count.              |
+| **Expected-empty**   | `live_websocket` | `empty_confirmed`  | WS connected, catalog says instrument delisted/non-trading on this day → no candle row; `error_reason ∈ EMPTY_CONFIRMED_REASONS` (e.g. `EXPECTED_INSTRUMENT_DELISTED`, `EXPECTED_PAUSED_LEAGUE`).          |
+| **Attempted-failed** | `live_websocket` | `attempted_failed` | WS disconnected mid-window beyond grace OR WS-dead-cascade exceeded N consecutive windows → `data_freshness=STALE` candle written + `error_reason=LIVE_WS_DEAD` (or similar typed reason).                 |
+| **Missing**          | (no row)         | —                  | Live VM crashed / restarted mid-day → gap window has no manifest row. Replay subsystem fills the gap (see [`/codex/05-infrastructure/replay-subsystem.md`](/codex/05-infrastructure/replay-subsystem.md)). |
 
 **Pipeline-mode partition is canonical** for separating batch vs live shard accounting. Coverage % per
 `(asset_group, data_type, day)` is computed per pipeline_mode slice — batch coverage and live coverage are reported
@@ -1105,7 +1105,7 @@ separately to avoid masking a live gap with batch backfill (or vice versa). See
 `live_*` — the transitional `live_websocket` alias plus the source-aware `live_<source>` members; the top-level
 data-status view stays the mode-AGNOSTIC union per M5, shipped `deployment-api@4dd2575`) and joins per-shard
 `StreamingHealthSnapshot` via the deployment- api Health-API HTTP join (see
-[`../05-infrastructure/live-pipeline-architecture.md`](../05-infrastructure/live-pipeline-architecture.md) §
+[`/codex/05-infrastructure/live-pipeline-architecture.md`](/codex/05-infrastructure/live-pipeline-architecture.md) §
 "Health-API + alerting integration"). The deployment-ui `<LiveDataStatusTab/>` (since deployment-ui@`5738237`) renders
 the resulting rows with per-row `capture_status` badges + per-row staleness badges (WARN ≥ 30s, CRIT ≥ 60s).
 
@@ -1726,7 +1726,7 @@ per-VM shards exist**, `read_availability_index()` now RAISES `ManifestConsolida
 an explicit opt-IN escape-hatch via `MANIFEST_ALLOW_STALE_FALLBACK=true`. A `assert_consolidator_healthy(bucket)`
 preflight + a `ConsolidatorLivenessMonitor` watchdog (Cloud Run Job `*/2`) emit `CONSOLIDATOR_DOWN` on heartbeat
 absence. Full contract:
-[`codex/05-infrastructure/manifest-consolidator-ssot.md` § "Liveness + health contract"](../05-infrastructure/manifest-consolidator-ssot.md)
+[`/codex/05-infrastructure/manifest-consolidator-ssot.md` § "Liveness + health contract"](/codex/05-infrastructure/manifest-consolidator-ssot.md)
 (plan `manifest_consolidator_liveness_health_2026_06_01`).
 
 ### 8. Temporary state must have named successor plan (workspace rule, codified 2026-05-06)
@@ -1749,10 +1749,10 @@ Currently-tracked temporary states relevant to the manifest:
 ### 9. Single-walk discipline — ONE walk per corpus per campaign (HARD RULE, codified Phase 2.2; reconciled 2026-07-20)
 
 > **♻️ RECONCILED 2026-07-20, doc-reconciliation P1-11.** This section and
-> [`../05-infrastructure/gcs-object-operations.md`](../05-infrastructure/gcs-object-operations.md) § "Migration-script
-> performance contract" previously **never cross-referenced each other and read as contradictory** — this one said
-> whole-corpus walks are review-blocking; that one specifies a six-point performance contract _for_ whole-corpus walks.
-> They are not in conflict once stated as one rule:
+> [`/codex/05-infrastructure/gcs-object-operations.md`](/codex/05-infrastructure/gcs-object-operations.md) §
+> "Migration-script performance contract" previously **never cross-referenced each other and read as contradictory** —
+> this one said whole-corpus walks are review-blocking; that one specifies a six-point performance contract _for_
+> whole-corpus walks. They are not in conflict once stated as one rule:
 >
 > **Walks are not banned — UNBUNDLED walks are. ONE walk per corpus per campaign, with every pass bundled onto that ONE
 > snapshot.** This section governs **WHETHER** you may open a walk (the bundling rule). `gcs-object-operations.md` §
@@ -1807,8 +1807,8 @@ run **in order over that ONE snapshot**.
 of an existing campaign's single walk.
 
 SSOT: this section (WHETHER) +
-[`../05-infrastructure/gcs-object-operations.md`](../05-infrastructure/gcs-object-operations.md) § "Migration-script
-performance contract" (HOW). `CLAUDE.md` § "single-walk discipline" carries the one-liner pointer.
+[`/codex/05-infrastructure/gcs-object-operations.md`](/codex/05-infrastructure/gcs-object-operations.md) §
+"Migration-script performance contract" (HOW). `CLAUDE.md` § "single-walk discipline" carries the one-liner pointer.
 
 ### 10. Cross-representation ("triad") agreement — data ⇄ manifest ⇄ catalogue must reconcile (HARD RULE, codified 2026-06-27)
 
@@ -2038,7 +2038,7 @@ the daily JSON blob and returns it as raw JSON; 404 when coverage has not yet be
 with a coloured progress bar (captured / empty_confirmed / attempted_failed / expected_unattempted stacked).
 
 SSOT: `plans/active/cross_asset_group_catalogue_audit_2026_05_10.md` Phase 2 +
-`codex/03-deployment/data-status-ui-surface.md`.
+`/codex/03-deployment/data-status-ui-surface.md`.
 
 ---
 
@@ -2070,13 +2070,13 @@ source over time, so every captured cell (even single-source today, for swap-res
 
 Current write-wiring status per asset group (snapshot; update when an AG is wired):
 
-| Asset group    | Status     | Source values wired                       | Notes                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| -------------- | ---------- | ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **tradfi**     | ✅ WIRED   | `databento`, `yahoo`                      | Databento (batch source-of-truth) + Yahoo (daily/rolling: `ohlcv_1m`/`15m`/`24h`, KRX Korean underliers + FX/treasury indices). Live `SOURCE_PRIORITY` per `_source_priority_data.py`: `("tradfi","ohlcv_1m")=["databento","yahoo"]`, `("tradfi","ohlcv_15m")=["databento","yahoo"]`, `("tradfi","ohlcv_24h")=["yahoo"]`, and `["databento"]` for trades/tbbo/ohlcv_1s/options_chain/futures_chain; Databento is primary. **Massive (formerly Polygon.io) REMOVED as a tradfi source 2026-07-19** (operator ruling; `uac@a2beed46` / `mtds@362a487e`) and GCS-purged 2026-07-21 — only `batch_massive/` PipelineMode recognition is retained historically. SSOT: `codex/02-data/tradfi-databento-sourcing-ssot.md`. |
-| **prediction** | ✅ WIRED   | `polymarket_clob`, `polymarket_gamma_api` | Single-source per writer; auto-stamped via `default_source` on `ManifestWriter`; UAC `SOURCE_PRIORITY` already carries the prediction pairs. `Prediction venue ≠ source`: Polymarket-vs-Kalshi dispersion is a feature-layer concern, NOT a source merge. Historical `_index` source-stamp rides the prediction canonicalisation walk; live/new writes auto-stamp already.                                                                                                                                                                                                                                                                                                                                          |
-| **cefi**       | 🔴 RED GAP | —                                         | Write-wiring not yet implemented. Cells land with `source=""`. Tracked as a gap in `plans/archive/2026_07/data_source_provenance_all_asset_groups_2026_06_01.md`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
-| **defi**       | 🔴 RED GAP | —                                         | Write-wiring not yet implemented. Cells land with `source=""`. Same tracking plan.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| **sports**     | 🔴 RED GAP | —                                         | Write-wiring not yet implemented. Cells land with `source=""`. Same tracking plan.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| Asset group    | Status     | Source values wired                       | Notes                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| -------------- | ---------- | ----------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **tradfi**     | ✅ WIRED   | `databento`, `yahoo`                      | Databento (batch source-of-truth) + Yahoo (daily/rolling: `ohlcv_1m`/`15m`/`24h`, KRX Korean underliers + FX/treasury indices). Live `SOURCE_PRIORITY` per `_source_priority_data.py`: `("tradfi","ohlcv_1m")=["databento","yahoo"]`, `("tradfi","ohlcv_15m")=["databento","yahoo"]`, `("tradfi","ohlcv_24h")=["yahoo"]`, and `["databento"]` for trades/tbbo/ohlcv_1s/options_chain/futures_chain; Databento is primary. **Massive (formerly Polygon.io) REMOVED as a tradfi source 2026-07-19** (operator ruling; `uac@a2beed46` / `mtds@362a487e`) and GCS-purged 2026-07-21 — only `batch_massive/` PipelineMode recognition is retained historically. SSOT: `/codex/02-data/tradfi-databento-sourcing-ssot.md`. |
+| **prediction** | ✅ WIRED   | `polymarket_clob`, `polymarket_gamma_api` | Single-source per writer; auto-stamped via `default_source` on `ManifestWriter`; UAC `SOURCE_PRIORITY` already carries the prediction pairs. `Prediction venue ≠ source`: Polymarket-vs-Kalshi dispersion is a feature-layer concern, NOT a source merge. Historical `_index` source-stamp rides the prediction canonicalisation walk; live/new writes auto-stamp already.                                                                                                                                                                                                                                                                                                                                           |
+| **cefi**       | 🔴 RED GAP | —                                         | Write-wiring not yet implemented. Cells land with `source=""`. Tracked as a gap in `plans/archive/2026_07/data_source_provenance_all_asset_groups_2026_06_01.md`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| **defi**       | 🔴 RED GAP | —                                         | Write-wiring not yet implemented. Cells land with `source=""`. Same tracking plan.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| **sports**     | 🔴 RED GAP | —                                         | Write-wiring not yet implemented. Cells land with `source=""`. Same tracking plan.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 
 **Downstream consumer policy for RED-gap AGs**: `select_primary_available_source()` gracefully handles empty `source`
 columns (returns the first available entry; does not raise). RED-gap cells still satisfy all other manifest integrity
@@ -2089,7 +2089,7 @@ ever added. The SSOT tracking plan is `plans/archive/2026_07/data_source_provena
 > **SUPERSEDED 2026-07-21** — Massive removed as a TradFi source (operator ruling 2026-07-19), `batch_massive` GCS
 > objects purged 2026-07-21. TradFi is single-source Databento (+ Yahoo daily for KRX/rolling-VIX). No dual-source
 > Databento+Massive cell exists; `MassiveTradfiRestConnector` is gone. SSOT:
-> `codex/02-data/tradfi-databento-sourcing-ssot.md`. The examples below are retained as a historical record; they no
+> `/codex/02-data/tradfi-databento-sourcing-ssot.md`. The examples below are retained as a historical record; they no
 > longer describe live behavior.
 
 When both Databento and Massive ran for the same `(venue, data_type, day)` (pre-2026-07-19), the manifest contained
@@ -2109,7 +2109,7 @@ A cell where one source succeeded and one failed:
 
 **Honest-coverage denominator rule**: a cell counts as `captured` for coverage purposes if **at least one** source row
 has `capture_status=captured`. A cell where all source rows are `attempted_failed` counts as failed. This is the "union
-semantics" policy documented in `codex/02-data/honest-absence-downstream-handling.md`.
+semantics" policy documented in `/codex/02-data/honest-absence-downstream-handling.md`.
 
 ### `MissingSourceError` gate
 

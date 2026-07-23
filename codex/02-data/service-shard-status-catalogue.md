@@ -18,9 +18,9 @@ tags: [catalogue, data-status, shard-status, genesis, reference-data, ssot, stal
 related:
   [
     data-catalogue-schema.md,
-    availability-manifest-and-data-status.md,
-    cross-asset-canonical-target-ssot.md,
-    honest-coverage-model.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/02-data/cross-asset-canonical-target-ssot.md,
+    /codex/02-data/honest-coverage-model.md,
   ]
 created: 2026-07-20
 authoritative_for:
@@ -29,7 +29,7 @@ authoritative_for:
     shard_status genesis + configured-venue universe,
     data-catalogue staleness + missing-writer state,
   ]
-referenced_by: [codex/02-data/data-catalogue-schema.md]
+referenced_by: [/codex/02-data/data-catalogue-schema.md]
 owner:
 last_reviewed: 2026-07-20
 code_refs:

@@ -16,7 +16,7 @@ stage: [data]
 repos: [instruments-service, unified-api-contracts]
 scope: [engineer, admin]
 tags: [cefi, quality-gates, expected-universe, honest-coverage, bybit, okx, regression, ship-blocker]
-related: [codex/02-data/availability-manifest-and-data-status.md, codex/02-data/honest-coverage-model.md]
+related: [/codex/02-data/availability-manifest-and-data-status.md, /codex/02-data/honest-coverage-model.md]
 created: 2026-07-08
 parent_epic: infrastructure_master
 priority: P0
@@ -127,8 +127,8 @@ shipping-freeze is already resolved; this is now a lower-urgency architecture cl
 This blocks `quickmerge --agent` for the ENTIRE instruments-service repo — the sentinel mechanism requires a full green
 `quality-gates.sh` run on the exact committed HEAD, and no one currently gets one on `live-defi-rollout` tip without
 either fixing this hole or (incorrectly) papering over it via a golden-fixture regen. Per
-`codex/02-data/data-pipeline-correctness-hard-rule.md` this is exactly the class of cross-cutting data-correctness break
-that freezes downstream shipping until resolved.
+`/codex/02-data/data-pipeline-correctness-hard-rule.md` this is exactly the class of cross-cutting data-correctness
+break that freezes downstream shipping until resolved.
 
 ## Recommended decision
 

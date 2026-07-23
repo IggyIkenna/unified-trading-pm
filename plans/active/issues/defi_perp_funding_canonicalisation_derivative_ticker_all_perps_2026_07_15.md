@@ -42,7 +42,7 @@ locked_since:
 > `[CODE] P1` "DRIFT derivative_ticker funding endpoint is DEAD (403)" todo, and the `[VERIFY] P1` cross-source
 > funding-parity todo's DRIFT-SOLANA leg) are now MOOT — there is no DRIFT adapter or venue left to fix or verify. The
 > REST of this doc (Hyperliquid/Aster/GMX/Lighter derivative_ticker canonicalisation) is UNAFFECTED and remains active.
-> SSOT for the removal: `codex/04-architecture/solana-defi-coverage.md` (tombstone banner).
+> SSOT for the removal: `/codex/04-architecture/solana-defi-coverage.md` (tombstone banner).
 
 # Perp funding canonicalisation — derivative_ticker for all perps (2026-07-15)
 

@@ -2,8 +2,8 @@
 doc_type: codex-ssot
 title: dart-mode-toggle
 summary:
-  DART operator-surface SSOT (stub) — 3-way batch/paper/live P&L comparison view, single mode-data API
-  GET /strategy/{id}/runs?mode=, and the ManualTradeGateDialog per-trade approval gate (MANUAL_APPROVED emits to
+  DART operator-surface SSOT (stub) — 3-way batch/paper/live P&L comparison view, single mode-data API GET
+  /strategy/{id}/runs?mode=, and the ManualTradeGateDialog per-trade approval gate (MANUAL_APPROVED emits to
   execution-service unhold); extends dart-scope-bar + execution-mode-toggle. UI ships via promote-workflow plan U5/U6.
 status: draft
 nature: ssot
@@ -12,19 +12,38 @@ stage: [meta]
 repos: [deployment-api, execution-service, strategy-service, unified-trading-system-ui]
 scope: [engineer, admin]
 tags: [dart, ui, execution, paper-live, manual-gate, mode-toggle, promote]
-related: [dart-terminal-vs-research.md, ../../04-architecture/operational-modes.md, ../../04-architecture/paper-vs-live-execution-seam.md, ../../09-strategy/architecture-v2/cross-cutting/archetype-paper-readiness.md]
+related:
+  [
+    /codex/14-customer-journeys/dart/dart-terminal-vs-research.md,
+    ../../04-architecture/operational-modes.md,
+    ../../04-architecture/paper-vs-live-execution-seam.md,
+    ../../09-strategy/architecture-v2/cross-cutting/archetype-paper-readiness.md,
+  ]
 created: 2026-05-09
 authoritative_for: [DART 3-way mode visualization + manual-trade gate UI]
-referenced_by: [codex/04-architecture/operational-modes.md, codex/09-strategy/architecture-v2/cross-cutting/archetype-paper-readiness.md, codex/14-customer-journeys/dart/dart-terminal-vs-research.md]
+referenced_by:
+  [
+    /codex/04-architecture/operational-modes.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/archetype-paper-readiness.md,
+    /codex/14-customer-journeys/dart/dart-terminal-vs-research.md,
+  ]
 owner:
 last_reviewed: 2026-05-10
-code_refs: [unified-trading-system-ui/components/shell/dart-scope-bar.tsx, unified-trading-system-ui/components/trading/execution-mode-toggle.tsx]
-overview: SSOT for the DART operator surface — 3-way mode visualization (batch / paper / live), per-strategy event/fill/P&L rendering wired to real backend, and the manual-trade gate UI for `OperationalMode.MANUAL` strategies. Composes with the existing `dart-scope-bar.tsx` cockpit + `execution-mode-toggle.tsx` mode pills.
+code_refs:
+  [
+    unified-trading-system-ui/components/shell/dart-scope-bar.tsx,
+    unified-trading-system-ui/components/trading/execution-mode-toggle.tsx,
+  ]
+overview:
+  SSOT for the DART operator surface — 3-way mode visualization (batch / paper / live), per-strategy event/fill/P&L
+  rendering wired to real backend, and the manual-trade gate UI for `OperationalMode.MANUAL` strategies. Composes with
+  the existing `dart-scope-bar.tsx` cockpit + `execution-mode-toggle.tsx` mode pills.
 type: codex-ssot
 locked_by: live-defi-rollout
 locked_since: 2026-05-09
 spawned_from: plans/questions/paper_vs_live_workflow_maturity_2026_05_08.md
-implements_in: [plans/active/master_to_live_defi_2026_05_23.md, plans/active/promote_workflow_may23_cli_path_2026_05_10.md]
+implements_in:
+  [plans/active/master_to_live_defi_2026_05_23.md, plans/active/promote_workflow_may23_cli_path_2026_05_10.md]
 ---
 
 # DART mode toggle — 3-way visualization + manual gate

@@ -3,8 +3,8 @@ doc_type: codex-ssot
 title: DeFi Unhedged Recursive Strategy
 summary:
   Pre-v2 DeFi unhedged recursive strategy — directional variant of recursive staked basis, using flash-loan leveraged
-  weETH plus Aave WETH borrow with NO perp hedge (full leveraged ETH long); net yield ~13% plus dominant directional
-  ETH P&L, Sharpe 0.8-1.5, max DD 30%, 3x cap. Superseded by architecture-v2.
+  weETH plus Aave WETH borrow with NO perp hedge (full leveraged ETH long); net yield ~13% plus dominant directional ETH
+  P&L, Sharpe 0.8-1.5, max DD 30%, 3x cap. Superseded by architecture-v2.
 status: stale
 nature: ssot
 asset_group: [meta]
@@ -12,10 +12,20 @@ stage: [meta]
 repos: [execution-service, market-tick-data-service, strategy-service, unified-api-contracts, unified-trading-pm]
 scope: [engineer, admin]
 tags: [defi, strategy, execution, leverage, flash-loan, staking, directional]
-related: [recursive-staked-basis.md, staked-basis.md, reward-lifecycle.md]
+related:
+  [
+    /codex/09-strategy/_archived_pre_v2/defi/recursive-staked-basis.md,
+    /codex/09-strategy/_archived_pre_v2/defi/staked-basis.md,
+    reward-lifecycle.md,
+  ]
 created: 2026-06-16
 authoritative_for: []
-referenced_by: [codex/09-strategy/_archived_pre_v2/STRATEGY_CATALOG_pre_v2.md, codex/09-strategy/_archived_pre_v2/defi/recursive-staked-basis.md, codex/09-strategy/_archived_pre_v2/defi/reward-lifecycle.md]
+referenced_by:
+  [
+    /codex/09-strategy/_archived_pre_v2/STRATEGY_CATALOG_pre_v2.md,
+    /codex/09-strategy/_archived_pre_v2/defi/recursive-staked-basis.md,
+    /codex/09-strategy/_archived_pre_v2/defi/reward-lifecycle.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -564,9 +574,9 @@ See [wallet-hierarchy-and-capital-flow.md](../../04-architecture/wallet-hierarch
 
 ## Gas Fee Tracking
 
-Gas costs are tracked via Alchemy RPC using `eth_feeHistory` (Ethereum mainnet). Atomic bundles are gas-intensive: ~500k
-gas for entry (~$45 at 30 gwei), ~500k for exit. Slightly cheaper than hedged variant (no perp margin transfer or perp
-trade). Gas hits P&L immediately as a realized transaction cost.
+Gas costs are tracked via Alchemy RPC using `eth_feeHistory` (Ethereum mainnet). Atomic bundles are gas-intensive:
+~~500k gas for entry (~~$45 at 30 gwei), ~500k for exit. Slightly cheaper than hedged variant (no perp margin transfer
+or perp trade). Gas hits P&L immediately as a realized transaction cost.
 
 **Reference:** `market-tick-data-service/market_tick_data_service/gas_fee_handler.py`
 

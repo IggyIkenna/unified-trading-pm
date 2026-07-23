@@ -15,8 +15,8 @@ related:
   [
     plans/active/issues/issue_docs_remediation_sweep_2026_06_02.md,
     plans/active/issues/defi_code_codex_drift_2026_05_27.md,
-    codex/02-data/feature-formula-versioning.md,
-    codex/02-data/defi-canonical-naming-ssot.md,
+    /codex/02-data/feature-formula-versioning.md,
+    /codex/02-data/defi-canonical-naming-ssot.md,
   ]
 created: 2026-05-29
 parent_epic: features_and_ml_master
@@ -248,7 +248,7 @@ features-service --feature-family delta_one --operation compute --mode batch \
 - `plans/active/features_calc_efficiency_and_correctness_2026_05_27.md` — original 4h/24h blocking issue § 1.0b
 - `plans/active/features_registry_status_versioning_2026_05_28.md` — yesterday's shipped registry / status / version
   work (downstream consumer of whatever data layer fix lands here)
-- `codex/02-data/feature-formula-versioning.md` — codex SSOT for downstream feature versioning
+- `/codex/02-data/feature-formula-versioning.md` — codex SSOT for downstream feature versioning
 
 ## Status taxonomy
 

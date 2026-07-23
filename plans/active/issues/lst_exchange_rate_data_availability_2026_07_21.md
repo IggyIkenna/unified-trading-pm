@@ -22,8 +22,8 @@ scope: [engineer, admin]
 tags: [lst, exchange-rate, staking, oracle, data-availability, defi, pnl-correctness]
 related:
   [
-    pnl_interest_accrual_wrong_engine_and_banned_formula_2026_07_21.md,
-    onchain_manifest_dishonest_and_recompute_blocked_2026_07_21.md,
+    /plans/active/issues/pnl_interest_accrual_wrong_engine_and_banned_formula_2026_07_21.md,
+    /plans/active/issues/onchain_manifest_dishonest_and_recompute_blocked_2026_07_21.md,
   ]
 created: 2026-07-21
 parent_epic: infrastructure_master

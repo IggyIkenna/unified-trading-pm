@@ -15,15 +15,22 @@ scope: [engineer, admin]
 tags: [risk, kill-switch, execution, escalation, uac]
 related:
   [
-    risk-rule-taxonomy.md,
-    risk-preflight-flow.md,
-    kill-switch-circuit-breaker.md,
-    autonomous-recovery-matrix.md,
+    /codex/04-architecture/risk-rule-taxonomy.md,
+    /codex/04-architecture/risk-preflight-flow.md,
+    /codex/04-architecture/kill-switch-circuit-breaker.md,
+    /codex/04-architecture/autonomous-recovery-matrix.md,
   ]
 created: 2026-05-11
-authoritative_for:
-  [risk-controller ↔ circuit-breaker escalation seam (BREAKER_ESCALATION_REQUESTED)]
-referenced_by: [codex/04-architecture/capital-efficiency-patterns.md, codex/04-architecture/circuit-breaker-rule-taxonomy.md, codex/04-architecture/kill-switch-circuit-breaker.md, codex/04-architecture/kill-switch-event-bus.md, codex/04-architecture/risk-preflight-flow.md, codex/04-architecture/risk-rule-taxonomy.md]
+authoritative_for: [risk-controller ↔ circuit-breaker escalation seam (BREAKER_ESCALATION_REQUESTED)]
+referenced_by:
+  [
+    /codex/04-architecture/capital-efficiency-patterns.md,
+    /codex/04-architecture/circuit-breaker-rule-taxonomy.md,
+    /codex/04-architecture/kill-switch-circuit-breaker.md,
+    /codex/04-architecture/kill-switch-event-bus.md,
+    /codex/04-architecture/risk-preflight-flow.md,
+    /codex/04-architecture/risk-rule-taxonomy.md,
+  ]
 owner:
 last_reviewed: 2026-05-17
 code_refs:
@@ -235,7 +242,7 @@ plans cite the seam in their `## Cross-plan coordination` sections.
 - Pre-flight flow + aggregation semantics: [risk-preflight-flow.md](risk-preflight-flow.md)
 - Kill switch + circuit breaker mechanics: [kill-switch-circuit-breaker.md](kill-switch-circuit-breaker.md)
 - 4-layer risk-gates separation:
-  [../09-strategy/architecture-v2/cross-cutting/risk-gates.md](../09-strategy/architecture-v2/cross-cutting/risk-gates.md)
+  [/codex/09-strategy/architecture-v2/cross-cutting/risk-gates.md](/codex/09-strategy/architecture-v2/cross-cutting/risk-gates.md)
 - Layer 4 ErrorAction taxonomy: [autonomous-recovery-matrix.md](autonomous-recovery-matrix.md)
 - Co-owned plans:
   [plans/active/risk_simulations_limits_alerting_2026_05_10.md](../../plans/archive/risk_simulations_limits_alerting_2026_05_10.md) +

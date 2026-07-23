@@ -4,7 +4,8 @@ title: POSITION_DRIFT Runbook
 summary:
   Operator runbook for a position weight drifting from target by more than position_drift_bps (default 100bps / 1%).
   WARN / Telegram-only, no kill-switch; normally auto-rebalanced by strategy-service — fires only when auto-rebalance is
-  gated (kill-switch / venue disconnect / stale signal). Operator waits, clears the gate, or manually rebalances via DART.
+  gated (kill-switch / venue disconnect / stale signal). Operator waits, clears the gate, or manually rebalances via
+  DART.
 status: current
 nature: process
 asset_group: [meta]
@@ -12,16 +13,32 @@ stage: [meta]
 repos: [execution-service, strategy-service]
 scope: [engineer, admin]
 tags: [runbook, escalation, live-trading, strategy, execution, monitoring]
-related: [codex/15-runbooks/alerting/operator-playbook.md, codex/15-runbooks/alerting/balance_drift.md]
+related: [/codex/15-runbooks/alerting/operator-playbook.md, /codex/15-runbooks/alerting/balance_drift.md]
 created: 2026-05-08
-owner: alerting-service maintainer (alert emission) + position-balance-monitor-service maintainer (drift detection) + on-call rotation (operator response)
+owner:
+  alerting-service maintainer (alert emission) + position-balance-monitor-service maintainer (drift detection) + on-call
+  rotation (operator response)
 cadence: continuous (PBMS reconciliation loop emits `POSITION_DRIFT` per `position_drift_bps` threshold)
-verifier: alert routes to Telegram + CRITICAL severity → PagerDuty + auto STOP_NEW_ONLY per `autonomous-recovery-matrix.md` G4; WARN noise-floor `position_drift_bps=100`
+verifier:
+  alert routes to Telegram + CRITICAL severity → PagerDuty + auto STOP_NEW_ONLY per `autonomous-recovery-matrix.md` G4;
+  WARN noise-floor `position_drift_bps=100`
 last_executed:
 code_refs:
-authoritative_for: Operator response when position drifts from target weight by more than the threshold. Rebalance trigger; common industry standard ~1% from target.
+authoritative_for:
+  Operator response when position drifts from target weight by more than the threshold. Rebalance trigger; common
+  industry standard ~1% from target.
 referenced_by: [plans/active/alerting_service_live_rules_2026_05_07.md]
-execution: {owner: alerting-service maintainer (alert emission) + position-balance-monitor-service maintainer (drift detection) + on-call rotation (operator response), cadence: continuous (PBMS reconciliation loop emits `POSITION_DRIFT` per `position_drift_bps` threshold), verifier: alert routes to Telegram + CRITICAL severity → PagerDuty + auto STOP_NEW_ONLY per `autonomous-recovery-matrix.md` G4; WARN noise-floor `position_drift_bps=100`, last_executed: NEVER (live PBMS reconciliation activation pending master plan Group F)}
+execution:
+  {
+    owner:
+      alerting-service maintainer (alert emission) + position-balance-monitor-service maintainer (drift detection) +
+      on-call rotation (operator response),
+    cadence: continuous (PBMS reconciliation loop emits `POSITION_DRIFT` per `position_drift_bps` threshold),
+    verifier:
+      alert routes to Telegram + CRITICAL severity → PagerDuty + auto STOP_NEW_ONLY per `autonomous-recovery-matrix.md`
+      G4; WARN noise-floor `position_drift_bps=100`,
+    last_executed: NEVER (live PBMS reconciliation activation pending master plan Group F),
+  }
 ---
 
 # `POSITION_DRIFT` Runbook

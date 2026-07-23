@@ -12,10 +12,27 @@ stage: [meta]
 repos: []
 scope: [sales, engineer, admin]
 tags: [demo-ops, sales, dart, decision-matrix, restriction-profile, curation]
-related: [demo-restriction-profiles.md, dart-demo-modes.md, pre-demo-discovery-framework.md, account-intelligence-record.md, pre-demo-curation-rules.md]
+related:
+  [
+    /codex/14-customer-journeys/demo-ops/demo-restriction-profiles.md,
+    /codex/14-customer-journeys/demo-ops/dart-demo-modes.md,
+    /codex/14-customer-journeys/demo-ops/pre-demo-discovery-framework.md,
+    /codex/14-customer-journeys/demo-ops/account-intelligence-record.md,
+    /codex/14-customer-journeys/demo-ops/pre-demo-curation-rules.md,
+  ]
 created: 2026-04-20
 authoritative_for: [demo decision matrix (prospect profile to demo path)]
-referenced_by: [codex/14-customer-journeys/README.md, codex/14-customer-journeys/demo-ops/README.md, codex/14-customer-journeys/demo-ops/account-intelligence-record.md, codex/14-customer-journeys/demo-ops/demo-restriction-profiles.md, codex/14-customer-journeys/demo-ops/meeting-history-and-interest-tracking.md, codex/14-customer-journeys/demo-ops/post-demo-followup-orchestration.md, codex/14-customer-journeys/demo-ops/pre-demo-discovery-framework.md, codex/14-customer-journeys/demo-ops/staging-demo-setup.md]
+referenced_by:
+  [
+    /codex/14-customer-journeys/README.md,
+    /codex/14-customer-journeys/demo-ops/README.md,
+    /codex/14-customer-journeys/demo-ops/account-intelligence-record.md,
+    /codex/14-customer-journeys/demo-ops/demo-restriction-profiles.md,
+    /codex/14-customer-journeys/demo-ops/meeting-history-and-interest-tracking.md,
+    /codex/14-customer-journeys/demo-ops/post-demo-followup-orchestration.md,
+    /codex/14-customer-journeys/demo-ops/pre-demo-discovery-framework.md,
+    /codex/14-customer-journeys/demo-ops/staging-demo-setup.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

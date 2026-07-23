@@ -15,23 +15,23 @@ scope: [engineer]
 tags: [data-correctness, validation, manifest, honest-coverage, data-pipeline]
 related:
   [
-    ../02-data/availability-manifest-and-data-status.md,
-    ../02-data/honest-absence-downstream-handling.md,
-    ../04-architecture/shard-level-failure-isolation.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/02-data/honest-absence-downstream-handling.md,
+    /codex/04-architecture/shard-level-failure-isolation.md,
   ]
 created: 2026-05-08
 authoritative_for:
   [write-gate quartet at record_captured, four-category empty-output decision, InstrumentsWriteGate raw-data alignment]
 referenced_by:
   [
-    codex/02-data/partitioning.md,
-    codex/02-data/prediction-schema-paths.md,
-    codex/02-data/shard-granularity-cefi.md,
-    codex/02-data/sports-scheduling-and-sharding.md,
-    codex/04-architecture/shard-level-failure-isolation.md,
-    codex/05-infrastructure/deployment-clusters-live-vs-batch.md,
-    codex/06-coding-standards/README.md,
-    codex/06-coding-standards/retry-pattern.md,
+    /codex/02-data/partitioning.md,
+    /codex/02-data/prediction-schema-paths.md,
+    /codex/02-data/shard-granularity-cefi.md,
+    /codex/02-data/sports-scheduling-and-sharding.md,
+    /codex/04-architecture/shard-level-failure-isolation.md,
+    /codex/05-infrastructure/deployment-clusters-live-vs-batch.md,
+    /codex/06-coding-standards/README.md,
+    /codex/06-coding-standards/retry-pattern.md,
   ]
 owner:
 last_reviewed:
@@ -279,7 +279,7 @@ Every raw-data `sink.write(...)` in `instruments-service` with a `day={D}` parti
 `InstrumentsWriteGate.validate_and_write(...)` from `unified_trading_library.instruments_write_gate`.
 
 The gate enforces the §5 lookahead-bias rule
-([`02-data/sports-scheduling-and-sharding.md` §5](../02-data/sports-scheduling-and-sharding.md#5-lookahead-bias--data-crimes)):
+([`02-data/sports-scheduling-and-sharding.md` §5](/codex/02-data/sports-scheduling-and-sharding.md#5-lookahead-bias--data-crimes)):
 no row-level "as-of" / "valuation" / "data-available-at" timestamp may exceed the partition's batch date.
 
 **Why this exists.** On 2026-04-22 a Transfermarkt backfill VM (`tm-backfill-20260421-231758`) ran 18 hours writing
@@ -461,7 +461,7 @@ for shard in shards_to_process:
 ### Live cluster vs batch cluster — same handling, different concurrency
 
 Per
-[`05-infrastructure/deployment-clusters-live-vs-batch.md`](../05-infrastructure/deployment-clusters-live-vs-batch.md):
+[`05-infrastructure/deployment-clusters-live-vs-batch.md`](/codex/05-infrastructure/deployment-clusters-live-vs-batch.md):
 
 - **Live cluster**: multiple different services co-located + co-running. A failed shard in MTDS (e.g. one venue's tick
   stream errors) doesn't kill MDPS, features-\*, strategy, or execution running concurrently in the same cluster — each
@@ -537,20 +537,20 @@ per-instrument-type constraints in the type system alone). The `model_validator`
 ## Cross-references
 
 - **Manifest semantics + write-gate quartet (read-side detail)**:
-  [`02-data/availability-manifest-and-data-status.md`](../02-data/availability-manifest-and-data-status.md)
+  [`02-data/availability-manifest-and-data-status.md`](/codex/02-data/availability-manifest-and-data-status.md)
   `§ Integrity Principles 4`
 - **Honest absence (read-side downstream)**:
-  [`02-data/honest-absence-downstream-handling.md`](../02-data/honest-absence-downstream-handling.md) — how downstream
-  consumers handle `attempted_failed` rows + reason taxonomy detail.
+  [`02-data/honest-absence-downstream-handling.md`](/codex/02-data/honest-absence-downstream-handling.md) — how
+  downstream consumers handle `attempted_failed` rows + reason taxonomy detail.
 - **Shard-level failure isolation pattern**:
-  [`04-architecture/shard-level-failure-isolation.md`](../04-architecture/shard-level-failure-isolation.md)
+  [`04-architecture/shard-level-failure-isolation.md`](/codex/04-architecture/shard-level-failure-isolation.md)
 - **Deployment cluster taxonomy**:
-  [`05-infrastructure/deployment-clusters-live-vs-batch.md`](../05-infrastructure/deployment-clusters-live-vs-batch.md)
+  [`05-infrastructure/deployment-clusters-live-vs-batch.md`](/codex/05-infrastructure/deployment-clusters-live-vs-batch.md)
 - **BaseCalculator (where the validation hook lives)**: [`feature-service-pattern.md`](feature-service-pattern.md)
 - **FeatureWriteGate parallel**: `unified_trading_library.feature_service_base.write_gate` — composes NaN/inf/leakage
   checks + `validate_timestamp_date_alignment`. `InstrumentsWriteGate` is the narrower raw-data analogue.
 - **Upstream lookahead-bias rule (sports)**:
-  [`02-data/sports-scheduling-and-sharding.md` §5](../02-data/sports-scheduling-and-sharding.md#5-lookahead-bias--data-crimes)
+  [`02-data/sports-scheduling-and-sharding.md` §5](/codex/02-data/sports-scheduling-and-sharding.md#5-lookahead-bias--data-crimes)
 - **Active write-gate plan**:
   [`plans/active/writegate_honest_coverage_endtoend_2026_05_06.md`](../../plans/active/writegate_honest_coverage_endtoend_2026_05_06.md)
 - **Active hard-schema enforcement plan**:

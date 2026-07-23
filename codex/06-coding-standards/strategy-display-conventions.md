@@ -3,9 +3,9 @@ doc_type: codex-ssot
 title: Coding Standard — Strategy Display Conventions
 summary: >-
   UI strategy-display conventions — never render raw UNDERSCORE_IDs to clients; every
-  family/archetype/slot-label/venue-scope identifier pipes through the 7-function API in
-  lib/strategy-display.ts; covers the 18 bespoke archetype + 8 family display names, the
-  full-only vs both plan-tier classification, and acronym preservation.
+  family/archetype/slot-label/venue-scope identifier pipes through the 7-function API in lib/strategy-display.ts; covers
+  the 18 bespoke archetype + 8 family display names, the full-only vs both plan-tier classification, and acronym
+  preservation.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -13,10 +13,21 @@ stage: [meta]
 repos: [unified-trading-system-ui]
 scope: [engineer]
 tags: [strategy, ui, terminology, defi, cefi, tradfi]
-related: [strategy-identity-versioning.md, ../09-strategy/architecture-v2/README.md, ../04-architecture/commercial-service-families.md]
+related:
+  [
+    /codex/06-coding-standards/strategy-identity-versioning.md,
+    /codex/09-strategy/architecture-v2/README.md,
+    /codex/04-architecture/commercial-service-families.md,
+  ]
 created: 2026-04-24
 authoritative_for: [strategy display conventions (client-facing strategy-identifier formatting rules)]
-referenced_by: [codex/04-architecture/commercial-service-families.md, codex/06-coding-standards/strategy-identity-versioning.md, codex/06-coding-standards/terminology-ssot.md, codex/09-strategy/architecture-v2/strategy-catalogue-3tier.md]
+referenced_by:
+  [
+    /codex/04-architecture/commercial-service-families.md,
+    /codex/06-coding-standards/strategy-identity-versioning.md,
+    /codex/06-coding-standards/terminology-ssot.md,
+    /codex/09-strategy/architecture-v2/strategy-catalogue-3tier.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -32,8 +43,8 @@ code_refs:
 > `unified-trading-system-ui/lib/strategy-display.ts`. **Plan:**
 > [`../../plans/archive/dart_ui_strategy_filtering_and_onboarding_2026_04_24.plan.md`](../../plans/archive/dart_ui_strategy_filtering_and_onboarding_2026_04_24.plan.md)
 > **Companion docs:** [`strategy-identity-versioning.md`](./strategy-identity-versioning.md) (naming of the underlying
-> IDs), [`../09-strategy/architecture-v2/README.md`](../09-strategy/architecture-v2/README.md) (the 8 families + 18
-> archetypes this formats).
+> IDs), [`/codex/09-strategy/architecture-v2/README.md`](/codex/09-strategy/architecture-v2/README.md) (the 8 families +
+> 18 archetypes this formats).
 
 ---
 
@@ -140,7 +151,7 @@ Consumers of this classification:
 - `/briefings/dart-signals-in` — `DartTierComparisonTable` feature matrix.
 
 SSOT for the wider DART Full vs Signals-In feature matrix:
-[`../04-architecture/commercial-service-families.md`](../04-architecture/commercial-service-families.md).
+[`/codex/04-architecture/commercial-service-families.md`](/codex/04-architecture/commercial-service-families.md).
 
 ---
 

@@ -15,15 +15,15 @@ scope: [engineer, admin]
 tags: [infrastructure, disaster-recovery, runbook, escalation]
 related:
   [
-    codex/04-architecture/recovery-defence-in-depth-layers.md,
-    codex/04-architecture/incident-gateway-state-machine.md,
-    codex/15-runbooks/physical-pager-layer.md,
-    codex/15-runbooks/alerting/audit-acknowledgement-flow.md,
+    /codex/04-architecture/recovery-defence-in-depth-layers.md,
+    /codex/04-architecture/incident-gateway-state-machine.md,
+    /codex/15-runbooks/physical-pager-layer.md,
+    /codex/15-runbooks/alerting/audit-acknowledgement-flow.md,
   ]
 created: 2026-03-13
 authoritative_for:
   [disaster-recovery RTO/RPO targets + Tier 0-3 recovery methods + manifest-restore procedure + GCS backup locations]
-referenced_by: [codex/04-architecture/recovery-defence-in-depth-layers.md]
+referenced_by: [/codex/04-architecture/recovery-defence-in-depth-layers.md]
 owner:
 last_reviewed: 2026-05-23
 code_refs:
@@ -35,10 +35,10 @@ code_refs:
 > The broader **incident operating model** (5-layer defence-in-depth, incident state machine, audit-ack SLA, LLM
 > recovery-audit-signoff, physical pager) lives in:
 >
-> - `codex/04-architecture/recovery-defence-in-depth-layers.md` — the 5+1 layer model
-> - `codex/04-architecture/incident-gateway-state-machine.md` — 13-state incident lifecycle
-> - `codex/15-runbooks/physical-pager-layer.md` — Layer-4 device comparison + webhook
-> - `codex/15-runbooks/alerting/audit-acknowledgement-flow.md` — Layer-5 6h ack SLA + escalation ladder
+> - `/codex/04-architecture/recovery-defence-in-depth-layers.md` — the 5+1 layer model
+> - `/codex/04-architecture/incident-gateway-state-machine.md` — 13-state incident lifecycle
+> - `/codex/15-runbooks/physical-pager-layer.md` — Layer-4 device comparison + webhook
+> - `/codex/15-runbooks/alerting/audit-acknowledgement-flow.md` — Layer-5 6h ack SLA + escalation ladder
 > - `plans/active/issues/disaster_recovery.md` — operator-supplied target operating model (sections 1-22)
 > - `plans/audit/results/observability_disaster_recovery_audit_2026_05_23.md` — gap audit of target model vs prod
 >
@@ -117,15 +117,20 @@ For batch services (Cloud Build jobs), update the image tag in the Cloud Build t
 > The watchdog dict (`deployment-service/scripts/vm/vm_zombie_watchdog.py` § `VM_PREFIX_TO_BUCKET`) is the live registry
 > of which bucket pattern serves which VM-prefix.
 
-| Data               | Canonical bucket kind (resolve via `resolve_bucket_name(kind=...)`)                         | Path                                                              | Retention                                                                                           |
-| ------------------ | ------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- | ---------- |
-| Manifest snapshots | `manifest` (asset-group-scoped where applicable; see `cloud-providers.yaml`)                | `snapshots/YYYY-MM-DD/workspace-manifest.json`                    | 90 days                                                                                             |
-| Service configs    | `configs` (env-tier: dev / staging / prod via `${DEPLOYMENT_ENV}`)                          | `<service>/config.json`                                           | 30 days (versioned bucket)                                                                          |
-| Market data        | `market-data-tick` (per asset_group — `cefi` / `defi` / `tradfi` / `sports` / `prediction`) | `pipeline_mode=<batch                                             | live>/asset_group=<ag>/<venue>/<instrument>/YYYY/MM/DD/` (`pipeline_mode` in PATH, not bucket name) | Indefinite |
-| ML models          | `ml-models`                                                                                 | `<model>/<version>/`                                              | Indefinite (tagged)                                                                                 |
-| Audit logs         | `audit-logs` (per service)                                                                  | `<service>/YYYY/MM/DD/`                                           | 1 year                                                                                              |
-| Events             | `events` (per service / per cloud)                                                          | `events/<service>/{YYYY-MM-DD}/{correlation_id}/hour={H}/*.jsonl` | 90 days (per retention policy)                                                                      |
-| Kill-switch audit  | `kill-switch-audit`                                                                         | `audit/kill_switch/{YYYY-MM-DD}/`                                 | Indefinite (regulatory)                                                                             |
+| Data | Canonical bucket kind (resolve via `resolve_bucket_name(kind=...)`) | Path | Retention | | ------------------ |
+
+| -------------------------------------------------------------------------------------------         |
+| --------------------------------------------------------------------------------------------------- |
+| --------------------------------------------------------------------------------------------------- | ----------                                                                   |                            |
+| Manifest snapshots                                                                                  | `manifest` (asset-group-scoped where applicable; see `cloud-providers.yaml`) |
+| `snapshots/YYYY-MM-DD/workspace-manifest.json`                                                      | 90 days                                                                      |                            | Service configs            | `configs` (env-tier: dev / staging / prod |
+| via `${DEPLOYMENT_ENV}`)                                                                            | `<service>/config.json`                                                      | 30 days (versioned bucket) |                            | Market data                               | `market-data-tick`      |
+| (per asset_group — `cefi` / `defi` / `tradfi` / `sports` / `prediction`)                            |
+| `pipeline_mode=<batch                                                                               | live>/asset_group=<ag>/<venue>/<instrument>/YYYY/MM/DD/`                     |
+| (`pipeline_mode` in PATH, not bucket name)                                                          | Indefinite                                                                   |                            | ML models                  | `ml-models`                               | `<model>/<version>/`    | Indefinite |
+| (tagged)                                                                                            |                                                                              | Audit logs                 | `audit-logs` (per service) | `<service>/YYYY/MM/DD/`                   | 1 year                  |            | Events | `events` (per |
+| service / per cloud)                                                                                | `events/<service>/{YYYY-MM-DD}/{correlation_id}/hour={H}/*.jsonl`            | 90 days (per retention     |
+| policy)                                                                                             |                                                                              | Kill-switch audit          | `kill-switch-audit`        | `audit/kill_switch/{YYYY-MM-DD}/`         | Indefinite (regulatory) |
 
 ## Communication Protocol During Incidents
 

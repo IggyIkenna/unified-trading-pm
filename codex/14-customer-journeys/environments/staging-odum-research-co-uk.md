@@ -12,10 +12,22 @@ stage: [meta]
 repos: [unified-trading-system-ui]
 scope: [engineer, admin]
 tags: [staging, demo, ui, environments, deployment, prospect]
-related: [production-odum-research-com.md, ../authentication/firebase-staging.md, ../playbooks/03-warm-prospect-demo.md]
+related:
+  [
+    /codex/14-customer-journeys/environments/production-odum-research-com.md,
+    ../authentication/firebase-staging.md,
+    ../playbooks/03-warm-prospect-demo.md,
+  ]
 created: 2026-04-19
 authoritative_for: [odum-research.co.uk staging demo/QA environment]
-referenced_by: [codex/14-customer-journeys/environments/README.md, codex/14-customer-journeys/environments/production-odum-research-com.md, codex/14-customer-journeys/experience/staging-demo-journey.md, codex/14-customer-journeys/roadmap/plan-references.md, codex/16-strategy-playbooks/infra-spec/stage-3e-g2-env-split.md]
+referenced_by:
+  [
+    /codex/14-customer-journeys/environments/README.md,
+    /codex/14-customer-journeys/environments/production-odum-research-com.md,
+    /codex/14-customer-journeys/experience/staging-demo-journey.md,
+    /codex/14-customer-journeys/roadmap/plan-references.md,
+    /codex/16-strategy-playbooks/infra-spec/stage-3e-g2-env-split.md,
+  ]
 owner:
 last_reviewed:
 code_refs: [unified-trading-system-ui/scripts/deploy-cloud-run.sh]

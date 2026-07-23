@@ -11,10 +11,10 @@ stage: [meta]
 repos: [deployment-service, unified-trading-pm]
 scope: [engineer, admin]
 tags: [topology, ssot, refactor, infrastructure]
-related: [tier-and-import-architecture.md, runtime-deployment-topology.md]
+related: [/codex/04-architecture/tier-and-import-architecture.md, /codex/04-architecture/runtime-deployment-topology.md]
 created: 2026-03-27
 authoritative_for: []
-referenced_by: [codex/05-infrastructure/unified-libraries/INTERNAL_DEPENDENCY_GRAPH.md]
+referenced_by: [/codex/05-infrastructure/unified-libraries/INTERNAL_DEPENDENCY_GRAPH.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

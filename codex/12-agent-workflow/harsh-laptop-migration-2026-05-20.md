@@ -15,9 +15,9 @@ scope: [engineer, admin]
 tags: [orchestrator, infrastructure, migration, quickmerge, self-healing]
 related:
   [
-    codex/04-architecture/agent-orchestrator-overview.md,
-    codex/05-infrastructure/per-tab-worktrees.md,
-    codex/12-agent-workflow/README.md,
+    /codex/04-architecture/agent-orchestrator-overview.md,
+    /codex/05-infrastructure/per-tab-worktrees.md,
+    /codex/12-agent-workflow/README.md,
     unified-trading-pm/agents/main.md,
     unified-trading-pm/agents/worker.md,
   ]
@@ -25,7 +25,7 @@ created: 2026-05-20
 authoritative_for: [harsh laptop worker-host migration setup]
 referenced_by:
   [
-    codex/12-agent-workflow/local-slot-host-symmetric-worker-model.md,
+    /codex/12-agent-workflow/local-slot-host-symmetric-worker-model.md,
     plans/audit/instructions/orchestrator_master_audit_instructions.md,
   ]
 owner: ikenna
@@ -55,7 +55,7 @@ This doc is the canonical migration checklist for Harsh. Ikenna keeps it current
 > `git config user.name "harshkantariya [slot-<N>·laptop]"` (plain, not `--worktree`). Stay current via
 > `git pull --ff-only origin live-defi-rollout`; **ship ONLY via `quickmerge --agent --files`** (strict-quickmerge HARD
 > RULE 2026-06-08 — direct code pushes to LDR are banned). Canonical SSOT: `cursor-configs/CLAUDE.md` § "Per-slot
-> worktrees — Path-B reference-clones on LDR" + § "Strict quickmerge" + `codex/05-infrastructure/per-tab-worktrees.md`.
+> worktrees — Path-B reference-clones on LDR" + § "Strict quickmerge" + `/codex/05-infrastructure/per-tab-worktrees.md`.
 > **Email migration is DONE** — Harsh commits as `harshkantariya <harshkantariya@odum-research.com>` (see Change log
 > 2026-06-08). The shared-backend / slot-range / token / cron steps below remain valid.
 
@@ -153,7 +153,7 @@ cd "${WORKSPACE_PATH}"
 # Per-repo branch convention (2026-05-20 reversal — everything on LDR):
 #   - ALL repos including agent-orchestrator → branch `live-defi-rollout`
 #   - main is the production-promotion branch only; LDR is the integration branch
-#     (see codex/08-workflows/deployment-flow.md for the LDR → staging → main path)
+#     (see /codex/08-workflows/deployment-flow.md for the LDR → staging → main path)
 
 # Update agent-orchestrator (now on LDR like everything else)
 cd "${WORKSPACE_PATH}/agent-orchestrator"
@@ -168,7 +168,7 @@ git checkout live-defi-rollout
 git pull --ff-only origin live-defi-rollout
 
 # Verify the migration doc lives where this README says it does
-ls -la codex/12-agent-workflow/harsh-laptop-migration-2026-05-20.md
+ls -la /codex/12-agent-workflow/harsh-laptop-migration-2026-05-20.md
 ```
 
 If any repo refuses to FF-pull (diverged because Harsh has uncommitted local edits): stash by file name (NOT
@@ -268,7 +268,7 @@ done
 
 (Future `setup-tab-worktrees.sh --init/--add-slot/--reset-slot` runs now read the same declaration and provision the
 correct identity automatically — the re-stamp loop above is only needed for worktrees provisioned before this fix.)
-SSOT: `codex/05-infrastructure/per-tab-worktrees.md` § "Commit attribution".
+SSOT: `/codex/05-infrastructure/per-tab-worktrees.md` § "Commit attribution".
 
 ---
 
@@ -418,7 +418,7 @@ logs for traffic patterns).
 
 - **Branch per repo**: every workspace repo (including agent-orchestrator as of 2026-05-20 reversal) integrates on
   `live-defi-rollout`. Main is reserved for production promotion only (LDR → staging → main per
-  `codex/08-workflows/deployment-flow.md`). `cron-branch-overrides.txt` is empty — no per-repo deviations.
+  `/codex/08-workflows/deployment-flow.md`). `cron-branch-overrides.txt` is empty — no per-repo deviations.
 - **Commit + push + flip plan checkbox in same agent turn**: the workspace has a HARD RULE on this (see CLAUDE.md §
   "Commit + Push + Flip Plan Checkboxes As You Ship Each Item"). Backfill-flipping later is reviewer- rejected.
 - **Quality gates are a merge prerequisite**: `bash scripts/quality-gates.sh` exit 0 before any push. No exceptions

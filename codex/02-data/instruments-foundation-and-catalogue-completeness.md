@@ -3,11 +3,11 @@ doc_type: codex-ssot
 title: Instruments Foundation & Catalogue Completeness — the standard for EVERY asset group
 summary: >-
   The operator-directed STANDARD (2026-06-24) making the instruments catalogue the audited FOUNDATION every
-  asset_group's MTDS coverage is filtered against — the gated G1–G5 dependency order (IS correct per-day → backfill
-  → aggregate → MTDS filters the catalogue → coverage rises), the per-venue completeness checks (no day-gaps,
+  asset_group's MTDS coverage is filtered against — the gated G1–G5 dependency order (IS correct per-day → backfill →
+  aggregate → MTDS filters the catalogue → coverage rises), the per-venue completeness checks (no day-gaps,
   cumulative-monotonic, weekly type/symbol, universe depth, noise guard), and the two-layer day_coverage /
-  depth_coverage model with its per-AG expected-universe oracle (cefi/tradfi expiry-listing rules, DeFi per-date
-  TVL threshold, sports fixture-completeness).
+  depth_coverage model with its per-AG expected-universe oracle (cefi/tradfi expiry-listing rules, DeFi per-date TVL
+  threshold, sports fixture-completeness).
 status: current
 nature: ssot
 asset_group: [meta]
@@ -15,10 +15,28 @@ stage: [meta]
 repos: [deployment-api, instruments-service]
 scope: [engineer, admin]
 tags: [instruments, catalogue, honest-coverage, data-correctness, manifest, tradfi, defi, sports]
-related: [availability-manifest-and-data-status.md, honest-coverage-model.md, defi-canonical-naming-ssot.md, ../04-architecture/instruments-service-as-ssot-for-mtds.md, ../05-infrastructure/deployment-observability.md]
+related:
+  [
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/02-data/honest-coverage-model.md,
+    /codex/02-data/defi-canonical-naming-ssot.md,
+    /codex/04-architecture/instruments-service-as-ssot-for-mtds.md,
+    /codex/05-infrastructure/deployment-observability.md,
+  ]
 created: 2026-06-24
-authoritative_for: [instruments-foundation completeness standard (G1–G5 gated process, all asset_groups), day_coverage/depth_coverage two-layer coverage + expected-universe oracle]
-referenced_by: [codex/02-data/prediction-settlement-availability-convention.md, codex/04-architecture/instruments-service-as-ssot-for-mtds.md, codex/05-infrastructure/manifest-consolidator-ssot.md, plans/active/instruments_foundation_completeness_2026_06_24.md]
+authoritative_for:
+  [
+    instruments-foundation completeness standard (G1–G5 gated process,
+    all asset_groups),
+    day_coverage/depth_coverage two-layer coverage + expected-universe oracle,
+  ]
+referenced_by:
+  [
+    /codex/02-data/prediction-settlement-availability-convention.md,
+    /codex/04-architecture/instruments-service-as-ssot-for-mtds.md,
+    /codex/05-infrastructure/manifest-consolidator-ssot.md,
+    plans/active/instruments_foundation_completeness_2026_06_24.md,
+  ]
 owner:
 last_reviewed: 2026-06-24
 code_refs:
@@ -80,7 +98,7 @@ the backfill runs). Concretely, every instruments backfill VM, lifecycle-roll-up
    SSH-and-hope is banned. Composes with the CLAUDE.md HARD RULES "No fire-and-forget VM launches (T+10min verify)" +
    "self-deleting VM monitor must check terminal exit_code + log-mtime advancement".
 
-SSOT: `codex/05-infrastructure/deployment-observability.md` +
+SSOT: `/codex/05-infrastructure/deployment-observability.md` +
 `plans/active/deployment_observability_parity_live_batch_paper_2026_06_22.md`.
 
 ---
@@ -256,7 +274,7 @@ The process (§0 gates + §1 checks + §2 layered coverage) is identical; only t
   ORCA / KAMINO / VELODROME_V2 / RAYDIUM were uncovered in the 2026-06-24 audit) — if genuinely none exists,
   `BLOCKED-CREDENTIALS`/known-gap, never silently dropped; (f) The Graph skip-based pagination caps at ~5000 → use
   **timestamp-cursor pagination** so a queried pool's full day captures (mtds@08b45468). DeFi SSOT:
-  `codex/02-data/defi-canonical-naming-ssot.md` + plan `defi_instrument_catalogue_and_capture_pipeline_2026_06_23.md`.
+  `/codex/02-data/defi-canonical-naming-ssot.md` + plan `defi_instrument_catalogue_and_capture_pipeline_2026_06_23.md`.
 - **tradfi** — Databento universe (GLBX.MDP3 CME futures, DBEQ.BASIC US equities, XCBF.PITCH CFE/VX). Per the operator,
   "tradfi perpetuals" (single stocks/commodities on Binance) are **cefi**, not here. Same gates + layered coverage.
 - **sports** — **fixtures ARE the instruments** (the catalogue atoms); universe = the **~101 canonical MVP leagues**

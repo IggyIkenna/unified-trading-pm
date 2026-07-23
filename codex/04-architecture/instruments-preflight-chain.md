@@ -2,8 +2,8 @@
 doc_type: codex-ssot
 title: Instruments preflight chain (live = batch)
 summary:
-  UAC instruments_preflight_dag SSOT — per-(asset_group, downstream-entity) required upstream entity-types + max-staleness,
-  enforced identically in batch and live via validate_preflight_for_trigger before any source fetch.
+  UAC instruments_preflight_dag SSOT — per-(asset_group, downstream-entity) required upstream entity-types +
+  max-staleness, enforced identically in batch and live via validate_preflight_for_trigger before any source fetch.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -11,10 +11,21 @@ stage: [meta]
 repos: []
 scope: [engineer, admin]
 tags: [instruments, sports, cefi, pipeline-mode, data-correctness]
-related: [instruments-live-architecture.md, ../02-data/honest-absence-downstream-handling.md, alerting-batch-live.md]
+related:
+  [
+    /codex/04-architecture/instruments-live-architecture.md,
+    /codex/02-data/honest-absence-downstream-handling.md,
+    /codex/04-architecture/alerting-batch-live.md,
+  ]
 created: 2026-05-08
 authoritative_for: [instruments preflight-DAG chain (live=batch)]
-referenced_by: [codex/03-observability/lifecycle-events.md, codex/04-architecture/batch-live-architecture.md, codex/04-architecture/instruments-live-architecture.md, codex/15-runbooks/instruments-live/t1-audit-discrepancy.md]
+referenced_by:
+  [
+    /codex/03-observability/lifecycle-events.md,
+    /codex/04-architecture/batch-live-architecture.md,
+    /codex/04-architecture/instruments-live-architecture.md,
+    /codex/15-runbooks/instruments-live/t1-audit-discrepancy.md,
+  ]
 owner:
 last_reviewed: 2026-05-17
 code_refs:
@@ -79,7 +90,7 @@ trigger.
 
 - Architecture entry-point: [`instruments-live-architecture.md`](instruments-live-architecture.md)
 - Honest-absence rules:
-  [`../02-data/honest-absence-downstream-handling.md`](../02-data/honest-absence-downstream-handling.md)
+  [`/codex/02-data/honest-absence-downstream-handling.md`](/codex/02-data/honest-absence-downstream-handling.md)
 - Alerting taxonomy: [`alerting-batch-live.md`](alerting-batch-live.md) § "Instruments-live failure rules"
 - Lifecycle events: `unified_api_contracts/internal/events.py` (`INSTRUMENTS_LIVE_PREFLIGHT_FAILED` /
   `INSTRUMENTS_LIVE_UPSTREAM_STALE`)

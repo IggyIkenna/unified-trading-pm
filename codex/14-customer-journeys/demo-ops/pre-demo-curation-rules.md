@@ -12,10 +12,27 @@ stage: [meta]
 repos: []
 scope: [sales, engineer, admin]
 tags: [demo-ops, sales, dart, curation, restriction-profile, session-prep]
-related: [demo-restriction-profiles.md, dart-demo-modes.md, upsell-overlays.md, account-intelligence-record.md, pre-demo-discovery-framework.md]
+related:
+  [
+    /codex/14-customer-journeys/demo-ops/demo-restriction-profiles.md,
+    /codex/14-customer-journeys/demo-ops/dart-demo-modes.md,
+    /codex/14-customer-journeys/demo-ops/upsell-overlays.md,
+    /codex/14-customer-journeys/demo-ops/account-intelligence-record.md,
+    /codex/14-customer-journeys/demo-ops/pre-demo-discovery-framework.md,
+  ]
 created: 2026-04-20
 authoritative_for: [pre-demo curation rules (show/skim/skip)]
-referenced_by: [codex/14-customer-journeys/README.md, codex/14-customer-journeys/demo-ops/README.md, codex/14-customer-journeys/demo-ops/account-intelligence-record.md, codex/14-customer-journeys/demo-ops/dart-demo-modes.md, codex/14-customer-journeys/demo-ops/demo-decision-matrix.md, codex/14-customer-journeys/demo-ops/demo-restriction-profiles.md, codex/14-customer-journeys/demo-ops/pre-demo-discovery-framework.md, codex/14-customer-journeys/demo-ops/staging-demo-setup.md]
+referenced_by:
+  [
+    /codex/14-customer-journeys/README.md,
+    /codex/14-customer-journeys/demo-ops/README.md,
+    /codex/14-customer-journeys/demo-ops/account-intelligence-record.md,
+    /codex/14-customer-journeys/demo-ops/dart-demo-modes.md,
+    /codex/14-customer-journeys/demo-ops/demo-decision-matrix.md,
+    /codex/14-customer-journeys/demo-ops/demo-restriction-profiles.md,
+    /codex/14-customer-journeys/demo-ops/pre-demo-discovery-framework.md,
+    /codex/14-customer-journeys/demo-ops/staging-demo-setup.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

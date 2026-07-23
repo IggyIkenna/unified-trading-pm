@@ -37,8 +37,8 @@ related:
   [
     plans/active/mvp_backfill_defi_onchain_v10_2026_06_27.md,
     plans/active/defi_manifest_canonicalisation_2026_06_01.md,
-    codex/02-data/defi-canonical-naming-ssot.md,
-    codex/02-data/honest-absence-downstream-handling.md,
+    /codex/02-data/defi-canonical-naming-ssot.md,
+    /codex/02-data/honest-absence-downstream-handling.md,
   ]
 created: 2026-07-15
 parent_epic: defi_master
@@ -131,7 +131,7 @@ not wired into the batch `dex_swaps_handler.py` cascade for `dex_pool_swaps`.
    all 5 cascade schemas) as a **distinct, terminal condition** — do not raise the generic `RuntimeError`; instead
    raise/return a typed `_SubgraphNotFoundError`-equivalent (or a new `_SubgraphDeindexedError`) so the manifest writer
    can record an honest absence (e.g. `EXPECTED_SUBGRAPH_DEINDEXED`) instead of `attempted_failed`, matching this
-   workspace's honest-absence-vs-attempted-failed convention (`codex/02-data/honest-absence-downstream-handling.md`).
+   workspace's honest-absence-vs-attempted-failed convention (`/codex/02-data/honest-absence-downstream-handling.md`).
    Repo: `market-tick-data-service`.
 2. **[DESIGN] P3.** Evaluate wiring the existing `curve_adapter.py`/`api.curve.fi` REST path into the batch
    `dex_pool_swaps` collection for CURVE/OPTIMISM (mirroring the "ARB/POLY only on hosted service" precedent already

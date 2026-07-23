@@ -43,7 +43,7 @@ tags:
     data-correctness,
     cross-repo,
   ]
-related: [sports_manifest_canonicalisation_2026_06_01.md]
+related: [/plans/active/sports_manifest_canonicalisation_2026_06_01.md]
 created: 2026-07-17
 parent_epic: manifest_master
 source:

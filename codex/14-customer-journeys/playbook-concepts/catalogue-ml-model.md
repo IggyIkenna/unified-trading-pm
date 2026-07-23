@@ -12,10 +12,24 @@ stage: [meta]
 repos: [strategy-service, unified-api-contracts, unified-trading-library]
 scope: [engineer, admin, sales]
 tags: [catalogue, ml, uac, ui, strategy, registry]
-related: [catalogues.md, catalogue-strategy.md, visibility-slicing.md, ../roadmap/next-waves.md]
+related:
+  [
+    /codex/14-customer-journeys/playbook-concepts/catalogues.md,
+    /codex/14-customer-journeys/playbook-concepts/catalogue-strategy.md,
+    /codex/14-customer-journeys/playbook-concepts/visibility-slicing.md,
+    ../roadmap/next-waves.md,
+  ]
 created: 2026-04-19
 authoritative_for: [ML-model catalogue UI-surface parity gap]
-referenced_by: [codex/14-customer-journeys/page-triage/broken-links.md, codex/14-customer-journeys/playbook-concepts/README.md, codex/14-customer-journeys/playbook-concepts/catalogues.md, codex/14-customer-journeys/playbooks/02b-research-dart.md, codex/14-customer-journeys/playbooks/03c-demo-dart.md, codex/14-customer-journeys/roadmap/plan-references.md]
+referenced_by:
+  [
+    /codex/14-customer-journeys/page-triage/broken-links.md,
+    /codex/14-customer-journeys/playbook-concepts/README.md,
+    /codex/14-customer-journeys/playbook-concepts/catalogues.md,
+    /codex/14-customer-journeys/playbooks/02b-research-dart.md,
+    /codex/14-customer-journeys/playbooks/03c-demo-dart.md,
+    /codex/14-customer-journeys/roadmap/plan-references.md,
+  ]
 owner:
 last_reviewed: 2026-05-13
 code_refs:
@@ -57,14 +71,14 @@ UAC gap — closed 2026-05-13.
 
 ## Gap vs canonical pattern
 
-| Parity feature        | Strategy Catalogue |                                   ML Model Catalogue                                   |
-| --------------------- | :----------------: | :------------------------------------------------------------------------------------: |
+| Parity feature        | Strategy Catalogue |                                  ML Model Catalogue                                   |
+| --------------------- | :----------------: | :-----------------------------------------------------------------------------------: |
 | Overview page         |         ✅         | ⚠ `/services/research/ml` exists but as sub-section, not standalone catalogue landing |
-| Coverage matrix       |         ✅         |   — (needs: model families × asset class × training-data range × validation status)    |
-| By-combination filter |         ✅         |                                           —                                            |
+| Coverage matrix       |         ✅         |   — (needs: model families × asset class × training-data range × validation status)   |
+| By-combination filter |         ✅         |                                           —                                           |
 | Per-entry detail      |         ✅         |            ⚠ `/services/research/ml/registry` has list but no detail page             |
-| Admin lock-state      |         ✅         |                                           —                                            |
-| Blocked               |         ✅         |                                           —                                            |
+| Admin lock-state      |         ✅         |                                           —                                           |
+| Blocked               |         ✅         |                                           —                                           |
 
 ## What to build for parity
 

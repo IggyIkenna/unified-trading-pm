@@ -1,7 +1,9 @@
 ---
 doc_type: codex-ssot
 title: Strategy Instruction Bus
-summary: "Pre-v2: typed StrategyInstruction bus (StrategyInstructionType enum) decoupling strategy intent from execution — execution-service decomposes each instruction into atomic steps via the instruction adapter."
+summary:
+  "Pre-v2: typed StrategyInstruction bus (StrategyInstructionType enum) decoupling strategy intent from execution —
+  execution-service decomposes each instruction into atomic steps via the instruction adapter."
 status: superseded
 nature: ssot
 asset_group: [meta]
@@ -12,11 +14,15 @@ tags: [strategy, execution, uac, instruction-bus, defi]
 related:
   [
     ../../architecture-v2/cross-cutting/trade-expression.md,
-    multi-leg-execution.md,
+    /codex/09-strategy/_archived_pre_v2/cross-cutting/multi-leg-execution.md,
   ]
 created: 2026-06-16
 authoritative_for: []
-referenced_by: [codex/09-strategy/_archived_pre_v2/cross-cutting/config-architecture.md, codex/09-strategy/_archived_pre_v2/cross-cutting/multi-leg-execution.md]
+referenced_by:
+  [
+    /codex/09-strategy/_archived_pre_v2/cross-cutting/config-architecture.md,
+    /codex/09-strategy/_archived_pre_v2/cross-cutting/multi-leg-execution.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

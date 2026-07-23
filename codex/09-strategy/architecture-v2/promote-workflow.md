@@ -13,7 +13,12 @@ stage: [meta]
 repos: [execution-service, strategy-service]
 scope: [engineer, admin]
 tags: [strategy, promote, execution, live-trading, runbook]
-related: [strategy-lifecycle-maturity.md, cross-cutting/archetype-paper-readiness.md, MIGRATION.md]
+related:
+  [
+    /codex/09-strategy/architecture-v2/strategy-lifecycle-maturity.md,
+    cross-cutting/archetype-paper-readiness.md,
+    /codex/09-strategy/architecture-v2/MIGRATION.md,
+  ]
 created: 2026-05-12
 authoritative_for: [strategy-service --operation promote CLI surface]
 referenced_by:

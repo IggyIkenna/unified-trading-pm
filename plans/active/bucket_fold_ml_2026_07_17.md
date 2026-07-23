@@ -24,9 +24,9 @@ related:
     plans/active/bucket_estate_consolidation_to_sub100_2026_07_13.md,
     plans/active/bucket_iam_write_protection_per_tier_2026_06_09.md,
     plans/active/bucket_fold_closeout_2026_07_17.md,
-    codex/05-infrastructure/bucket-isolation-model.md,
-    codex/05-infrastructure/manifest-consolidator-ssot.md,
-    codex/02-data/pipeline-mode-partition.md,
+    /codex/05-infrastructure/bucket-isolation-model.md,
+    /codex/05-infrastructure/manifest-consolidator-ssot.md,
+    /codex/02-data/pipeline-mode-partition.md,
   ]
 created: "2026-07-17"
 last_updated: "2026-07-17"
@@ -85,10 +85,10 @@ two `dependency_checker.py` per-AG guard maps; UTL `ml/model_registry.py` + `dom
 
 ## Codex SSOTs (read before touching — plan↔codex drift is review-blocking)
 
-- `codex/05-infrastructure/bucket-isolation-model.md` — Group B naming; update the ml rows to the folded shape (closeout
-  plan).
-- `codex/05-infrastructure/manifest-consolidator-ssot.md` — "one job per (service_kind, asset_group)"; ml 5 jobs → 1.
-- `codex/02-data/pipeline-mode-partition.md` — reader-fallback discipline; anchors the `_KIND_ALIASES` soft-window +
+- `/codex/05-infrastructure/bucket-isolation-model.md` — Group B naming; update the ml rows to the folded shape
+  (closeout plan).
+- `/codex/05-infrastructure/manifest-consolidator-ssot.md` — "one job per (service_kind, asset_group)"; ml 5 jobs → 1.
+- `/codex/02-data/pipeline-mode-partition.md` — reader-fallback discipline; anchors the `_KIND_ALIASES` soft-window +
   hard-removal.
 - Design cross-cutting: [[bucket_estate_fold_design_2026_07_13]] §2.A (consolidator), §2.C (IAM re-gate), §2.D (alias),
   §2.E (lifecycle).
@@ -147,41 +147,40 @@ two `dependency_checker.py` per-AG guard maps; UTL `ml/model_registry.py` + `dom
       keys in the same change so `terraform plan` (derived-from-yaml drift detector) stays green. This also closes the
       parent plan's W2 flat-`ml-models-store` delete todo — flip it too.
 - [~] [INFRA] P0. **TF-STATE RECONCILE — ml-store IMPORTED + 8 stale REMOVED (DONE 2026-07-18); BIG FINDING: larger
-      estate drift blocks a clean apply (below).** State backed up to scratchpad first; `tofu init` (prod backend) +
-      `tofu import 'google_storage_bucket.canonical["ml-store-{prd,test}-central-element-323112"]'` (both live, now in
-      state — moved from would-409 to would-update-in-place) + `tofu state rm` the 8 audit-verified-stale bucket
-      instances (eigenlayer-rewards-{prd,test}, features-delta-one-sports, features-onchain-cefi,
-      features-volatility-{defi,pred,sports}, features-xinstrument-sports — all confirmed gone-live first). State canonical
-      count 79→73 = the committed config-derived set. **BIG FINDING (surface to operator — the audit was bucket-scoped +
-      missed this):** `tofu plan -refresh=false -var=bucket_prefix=uts` = `1 import / 27 add / 23 change / **32 DESTROY**`
-      — the 32 destroys are mostly **IAM-member** resources (`catalogue_regen_instruments_reader` /
-      `instrument_catalogue_{instruments,market-data}_reader` for instruments-store/market-data-tick-{cefi,defi,tradfi,
-      sports}) + scheduler jobs — a PRE-EXISTING estate drift beyond the bucket fold (config removed these IAM members but
-      state still carries them; `-refresh=false` can't tell if the LIVE bindings still exist). prevent_destroy protects
-      the BUCKETS (no data-loss regression, per the earlier audit) but an apply would drop 32 IAM/scheduler resources
-      (ACCESS regression). So "TF agrees + apply-clean without exception" needs a REFRESHED-plan IAM/scheduler reconcile
-      (state-rm the stale IAM members if the live bindings are already gone, or restore the config if not) — a bigger,
-      sensitive, operator-aware effort, NOT done in the unattended loop. **Remaining fold imports** (deferred until each
-      yaml key COMMITS): features-{cefi,defi,tradfi}-{prd,test} (Fold-A yaml uncommitted), execution-store-{prd,test} +
-      strategy-store-prd + portfolio-state-{prd,test} (C+D/E yaml not written yet). NOTE the real prod TF vars:
-      project_id=central-element-323112, region=asia-northeast1, environment=prod, **bucket_prefix=uts** (NOT empty —
-      empty drops the uts- prefix on non-bucket resources; bucket_prefix does NOT affect canonical bucket names).
-      _(original todo:)_ **TF-STATE RECONCILE the folded ml-store into state (operator P0 2026-07-18 — "TF must AGREE with the
-      canonicalised reduced buckets, no regression on apply"; the 2026-07-13 ruling's "existing canonical buckets
-      IMPORTED into the for_each").** The read-only TF-vs-estate audit (agent `a240ee56`, 137 live GCP buckets, evidence
-      in scratchpad `reconcile.py`/`threeway.py`) confirmed: **NO data-loss regression** (prevent_destroy intact, ZERO
-      settings-drift on the 73 for_each-managed buckets, every removed yaml key points to an already-deleted empty
-      bucket) — BUT `terraform apply` is NOT runnable-clean: `ml-store-{prd,test}` are in yaml
-      (`cloud-providers.yaml:143`) + LIVE but were provisioned direct-gcloud and NEVER imported → apply plans CREATE →
-      409 fail-closed. FIX (do with Phase E, after backing up state): `tofu init` deployment-service/terraform/gcp →
-      `tofu import 'google_storage_bucket.canonical["ml-store-prd-central-element-323112"]' ml-store-prd-central-element-323112`
-      (+ `-test`) → `tofu state rm` the 8 stale for_each instances (eigenlayer-rewards-{prd,test},
-      features-delta-one-sports, features-onchain-cefi, features-volatility-{defi,pred,sports},
-      features-xinstrument-sports — yaml keys removed, buckets already gone) → confirm `tofu plan` shows only the
-      expected pending-features creates, no destroy of any live bucket. (NOTE: the same import is needed for the 6
-      Fold-A `features-{cefi,defi,tradfi}-{prd,test}` buckets once the Fold-A yaml key ships — captured in the features
-      plan. Compliance orphans `manual-audit-{prd,test}` / `trading-audit-records-test` are data-bearing + TF-unmanaged
-      (coverage gap, not an apply risk) — optional hardening.)
+  estate drift blocks a clean apply (below).** State backed up to scratchpad first; `tofu init` (prod backend) +
+  `tofu import 'google_storage_bucket.canonical["ml-store-{prd,test}-central-element-323112"]'` (both live, now in state
+  — moved from would-409 to would-update-in-place) + `tofu state rm` the 8 audit-verified-stale bucket instances
+  (eigenlayer-rewards-{prd,test}, features-delta-one-sports, features-onchain-cefi,
+  features-volatility-{defi,pred,sports}, features-xinstrument-sports — all confirmed gone-live first). State canonical
+  count 79→73 = the committed config-derived set. **BIG FINDING (surface to operator — the audit was bucket-scoped +
+  missed this):** `tofu plan -refresh=false -var=bucket_prefix=uts` = `1 import / 27 add / 23 change / **32 DESTROY**` —
+  the 32 destroys are mostly **IAM-member** resources (`catalogue_regen_instruments_reader` /
+  `instrument_catalogue_{instruments,market-data}_reader` for instruments-store/market-data-tick-{cefi,defi,tradfi,
+  sports}) + scheduler jobs — a PRE-EXISTING estate drift beyond the bucket fold (config removed these IAM members but
+  state still carries them; `-refresh=false` can't tell if the LIVE bindings still exist). prevent_destroy protects the
+  BUCKETS (no data-loss regression, per the earlier audit) but an apply would drop 32 IAM/scheduler resources (ACCESS
+  regression). So "TF agrees + apply-clean without exception" needs a REFRESHED-plan IAM/scheduler reconcile (state-rm
+  the stale IAM members if the live bindings are already gone, or restore the config if not) — a bigger, sensitive,
+  operator-aware effort, NOT done in the unattended loop. **Remaining fold imports** (deferred until each yaml key
+  COMMITS): features-{cefi,defi,tradfi}-{prd,test} (Fold-A yaml uncommitted), execution-store-{prd,test} +
+  strategy-store-prd + portfolio-state-{prd,test} (C+D/E yaml not written yet). NOTE the real prod TF vars:
+  project_id=central-element-323112, region=asia-northeast1, environment=prod, **bucket_prefix=uts** (NOT empty — empty
+  drops the uts- prefix on non-bucket resources; bucket_prefix does NOT affect canonical bucket names). _(original
+  todo:)_ **TF-STATE RECONCILE the folded ml-store into state (operator P0 2026-07-18 — "TF must AGREE with the
+  canonicalised reduced buckets, no regression on apply"; the 2026-07-13 ruling's "existing canonical buckets IMPORTED
+  into the for_each").** The read-only TF-vs-estate audit (agent `a240ee56`, 137 live GCP buckets, evidence in
+  scratchpad `reconcile.py`/`threeway.py`) confirmed: **NO data-loss regression** (prevent_destroy intact, ZERO
+  settings-drift on the 73 for_each-managed buckets, every removed yaml key points to an already-deleted empty bucket) —
+  BUT `terraform apply` is NOT runnable-clean: `ml-store-{prd,test}` are in yaml (`cloud-providers.yaml:143`) + LIVE but
+  were provisioned direct-gcloud and NEVER imported → apply plans CREATE → 409 fail-closed. FIX (do with Phase E, after
+  backing up state): `tofu init` deployment-service/terraform/gcp →
+  `tofu import 'google_storage_bucket.canonical["ml-store-prd-central-element-323112"]' ml-store-prd-central-element-323112`
+  (+ `-test`) → `tofu state rm` the 8 stale for_each instances (eigenlayer-rewards-{prd,test},
+  features-delta-one-sports, features-onchain-cefi, features-volatility-{defi,pred,sports}, features-xinstrument-sports
+  — yaml keys removed, buckets already gone) → confirm `tofu plan` shows only the expected pending-features creates, no
+  destroy of any live bucket. (NOTE: the same import is needed for the 6 Fold-A `features-{cefi,defi,tradfi}-{prd,test}`
+  buckets once the Fold-A yaml key ships — captured in the features plan. Compliance orphans `manual-audit-{prd,test}` /
+  `trading-audit-records-test` are data-bearing + TF-unmanaged (coverage gap, not an apply risk) — optional hardening.)
 - [ ] [INFRA] P1. **IAM + lifecycle** — **LIFECYCLE DONE** (2026-07-18: verified `ml-store-{prd,test}` carry
       STANDARD→COLDLINE@60d + UBLA, set at provision). **IAM Group-B join PENDING**: join `ml-store-prd` to
       [[bucket_iam_write_protection_per_tier_2026_06_09]] Phase-2 Group-B (signal it unblocked for THIS fold); `-test-`

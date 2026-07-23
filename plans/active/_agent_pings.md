@@ -4,7 +4,7 @@ RETIRED 2026-07-04 — this ping-ledger channel is decommissioned. Do NOT append
 The file-based ping ledgers (this file + ikenna_orchestrator/_agent_pings.md +
 harsh_orchestrator/_agent_pings.md) predate the agent-orchestrator. Agent↔agent and
 agent↔operator comms now go through the agent-orchestrator HTTP server (uvicorn :8765) —
-see codex/12-agent-workflow/agent-orchestrator-overview.md. AO agents are explicitly
+see /codex/04-architecture/agent-orchestrator-overview.md. AO agents are explicitly
 forbidden from polling this file (agent-orchestrator/agents/RULES.md).
 
 Evidence of retirement: zero pings were read-and-cleared after the 2026-06-27 single-VM

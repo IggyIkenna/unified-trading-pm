@@ -2,11 +2,10 @@
 doc_type: codex-ssot
 title: Execution Modes — SCE vs HUF vs EVT
 summary: >-
-  [SUPERSEDED, pre-v2] The three strategy execution modes — HUF (Hold Until Flip, signal-driven), SCE
-  (Same Candle Exit, ML TP/SL within one candle), EVT (Event Driven, market-making / options / live
-  sports) — with per-category allowed-mode restrictions (DeFi + Sports never SCE) enforced via UTL
-  `id_conventions.py` and UAC `StrategyRegistry.allowed_modes`. Replaced by the architecture-v2 hold-policy
-  axis.
+  [SUPERSEDED, pre-v2] The three strategy execution modes — HUF (Hold Until Flip, signal-driven), SCE (Same Candle Exit,
+  ML TP/SL within one candle), EVT (Event Driven, market-making / options / live sports) — with per-category
+  allowed-mode restrictions (DeFi + Sports never SCE) enforced via UTL `id_conventions.py` and UAC
+  `StrategyRegistry.allowed_modes`. Replaced by the architecture-v2 hold-policy axis.
 status: superseded
 nature: ssot
 asset_group: [meta]
@@ -14,10 +13,10 @@ stage: [meta]
 repos: [strategy-service, unified-api-contracts, unified-trading-library]
 scope: [engineer, admin]
 tags: [strategy, execution, cefi, tradfi, defi, uac]
-related: [strategy-registry.md, ../architecture-v2/README.md]
+related: [/codex/09-strategy/_archived_pre_v2/strategy-registry.md, ../architecture-v2/README.md]
 created: 2026-04-16
 authoritative_for:
-referenced_by: [codex/09-strategy/_archived_pre_v2/strategy-registry.md]
+referenced_by: [/codex/09-strategy/_archived_pre_v2/strategy-registry.md]
 owner:
 last_reviewed:
 code_refs:

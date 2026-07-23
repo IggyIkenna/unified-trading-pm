@@ -2,9 +2,9 @@
 doc_type: codex-ssot
 title: SMA vs Pooled
 summary:
-  'Fund-level structural choice: Pooled (one fund, clients as share classes, allocation-engine NAV) vs SMA
-  (one fund per client, own API keys, NAV=actual P&L); surfaces in pb3a/pb3b demos, catalogue-agnostic,
-  irreversible without redemption + new-fund creation.'
+  "Fund-level structural choice: Pooled (one fund, clients as share classes, allocation-engine NAV) vs SMA (one fund per
+  client, own API keys, NAV=actual P&L); surfaces in pb3a/pb3b demos, catalogue-agnostic, irreversible without
+  redemption + new-fund creation."
 status: current
 nature: ssot
 asset_group: [meta]
@@ -14,15 +14,25 @@ scope: [engineer, admin, sales]
 tags: [customer-journey, fund-structure, sma-pooled, reporting, demo, share-class]
 related:
   [
-    fund-org-hierarchy.md,
-    client-reporting.md,
+    /codex/14-customer-journeys/playbook-concepts/fund-org-hierarchy.md,
+    /codex/14-customer-journeys/playbook-concepts/client-reporting.md,
     ../playbooks/03a-demo-reg-umbrella.md,
     ../../04-architecture/share-class-architecture.md,
     ../../04-architecture/capital-flow-model.md,
   ]
 created: 2026-04-19
 authoritative_for: [SMA vs Pooled fund-structure decision (customer-journey framing)]
-referenced_by: [codex/14-customer-journeys/README.md, codex/14-customer-journeys/_ssot-rules/12-service-family-scope-rules.md, codex/14-customer-journeys/experience/im-decision-journey.md, codex/14-customer-journeys/experience/investment-management-demo.md, codex/14-customer-journeys/experience/regulatory-umbrella-briefing.md, codex/14-customer-journeys/playbook-concepts/README.md, codex/14-customer-journeys/playbook-concepts/client-reporting.md, codex/14-customer-journeys/playbook-concepts/fund-org-hierarchy.md]
+referenced_by:
+  [
+    /codex/14-customer-journeys/README.md,
+    /codex/14-customer-journeys/_ssot-rules/12-service-family-scope-rules.md,
+    /codex/14-customer-journeys/experience/im-decision-journey.md,
+    /codex/14-customer-journeys/experience/investment-management-demo.md,
+    /codex/14-customer-journeys/experience/regulatory-umbrella-briefing.md,
+    /codex/14-customer-journeys/playbook-concepts/README.md,
+    /codex/14-customer-journeys/playbook-concepts/client-reporting.md,
+    /codex/14-customer-journeys/playbook-concepts/fund-org-hierarchy.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

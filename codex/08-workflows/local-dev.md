@@ -9,18 +9,30 @@ status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
-repos: [agent-orchestrator, client-reporting-api, deployment-api, deployment-ui, execution-service, unified-api-contracts]
+repos:
+  [agent-orchestrator, client-reporting-api, deployment-api, deployment-ui, execution-service, unified-api-contracts]
 scope: [engineer, admin]
 tags: [scripts, defi, verification, infrastructure, smoke-test]
 related:
   [
-    ../05-infrastructure/runtime-tiers-and-deployment.md,
-    ../09-strategy/architecture-v2/cross-cutting/operational-modes-matrix.md,
-    ../06-coding-standards/quality-gates.md,
+    /codex/05-infrastructure/runtime-tiers-and-deployment.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/operational-modes-matrix.md,
+    /codex/06-coding-standards/quality-gates.md,
   ]
 created: 2026-03-27
-authoritative_for: [local backend-orchestration dev workflow (dev-start.sh mode axes + API port registry + MockStateStore)]
-referenced_by: [codex/05-infrastructure/deployment-ui-architecture.md, codex/05-infrastructure/runtime-tiers-and-deployment.md, codex/05-infrastructure/ui-setup-checklist.md, codex/08-workflows/environment-mode-philosophy.md, codex/09-strategy/architecture-v2/cross-cutting/operational-modes-matrix.md, codex/14-customer-journeys/README.md, codex/14-customer-journeys/environments/local-dev.md, codex/16-strategy-playbooks/infra-spec/stage-3e-g2-env-split.md]
+authoritative_for:
+  [local backend-orchestration dev workflow (dev-start.sh mode axes + API port registry + MockStateStore)]
+referenced_by:
+  [
+    /codex/05-infrastructure/deployment-ui-architecture.md,
+    /codex/05-infrastructure/runtime-tiers-and-deployment.md,
+    /codex/05-infrastructure/ui-setup-checklist.md,
+    /codex/08-workflows/environment-mode-philosophy.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/operational-modes-matrix.md,
+    /codex/14-customer-journeys/README.md,
+    /codex/14-customer-journeys/environments/local-dev.md,
+    /codex/16-strategy-playbooks/infra-spec/stage-3e-g2-env-split.md,
+  ]
 owner:
 last_reviewed: 2026-06-25
 code_refs:
@@ -30,17 +42,17 @@ code_refs:
 
 > **Decision table — which startup script when** (codified 2026-05-12 per UI-1/UI-14 audit):
 >
-> | Use case                                                    | Script                                                                         | Reference                                                                                 |
-> | ----------------------------------------------------------- | ------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------- |
-> | Consolidated portal / UI work (default)                     | `bash unified-trading-system-ui/scripts/dev-tiers.sh --tier {static\|0\|1\|2}` | [`runtime-tiers-and-deployment.md`](../05-infrastructure/runtime-tiers-and-deployment.md) |
-> | Firebase emulator suite (auth/admin work)                   | covered by `dev-tiers.sh --tier 0` (auto-seeds 23 demo personas)               | [`firebase-local.md`](../14-customer-journeys/authentication/firebase-local.md)           |
-> | deployment-api (port 8004) + deployment-ui (port 5183) only | `bash unified-trading-pm/scripts/dev/restart-deployment-stack.sh`              | `cursor-configs/CLAUDE.md` § "Deployment-stack restart (SSOT)"                            |
-> | Backend service ad-hoc spin-up (8004-8016 range)            | `bash unified-trading-pm/scripts/dev/dev-start.sh` (this doc)                  | —                                                                                         |
+> | Use case                                                    | Script                                                                         | Reference                                                                                     |
+> | ----------------------------------------------------------- | ------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------- |
+> | Consolidated portal / UI work (default)                     | `bash unified-trading-system-ui/scripts/dev-tiers.sh --tier {static\|0\|1\|2}` | [`runtime-tiers-and-deployment.md`](/codex/05-infrastructure/runtime-tiers-and-deployment.md) |
+> | Firebase emulator suite (auth/admin work)                   | covered by `dev-tiers.sh --tier 0` (auto-seeds 23 demo personas)               | [`firebase-local.md`](/codex/14-customer-journeys/authentication/firebase-local.md)           |
+> | deployment-api (port 8004) + deployment-ui (port 5183) only | `bash unified-trading-pm/scripts/dev/restart-deployment-stack.sh`              | `cursor-configs/CLAUDE.md` § "Deployment-stack restart (SSOT)"                                |
+> | Backend service ad-hoc spin-up (8004-8016 range)            | `bash unified-trading-pm/scripts/dev/dev-start.sh` (this doc)                  | —                                                                                             |
 >
 > This doc covers the **backend orchestration** half (`dev-start.sh` / `dev-stop.sh` / `dev-status.sh`). The frontend /
 > consolidated-portal half was trimmed 2026-05-12 (UI-1 + UI-3 + UI-5 + UI-14) — for portal startup, mode-axis collapse
 > to `runtime_profile` v7, and the live UI port mapping see
-> [`runtime-tiers-and-deployment.md`](../05-infrastructure/runtime-tiers-and-deployment.md) and
+> [`runtime-tiers-and-deployment.md`](/codex/05-infrastructure/runtime-tiers-and-deployment.md) and
 > `unified-trading-pm/scripts/dev/ui-api-mapping.json` (the machine-readable port SSOT).
 
 ---
@@ -54,7 +66,7 @@ mock/real semantics, hot reload, zombie process prevention.
 
 **Cross-repo operational modes:** For the canonical env-axis matrix (including `DATA_MODE`, `TESTNET_MODE`, migration
 from `CLOUD_MOCK_MODE`, and Layer 3 SIT expectations), see
-[operational-modes-matrix.md](../09-strategy/architecture-v2/cross-cutting/operational-modes-matrix.md). This guide
+[operational-modes-matrix.md](/codex/09-strategy/architecture-v2/cross-cutting/operational-modes-matrix.md). This guide
 focuses on `dev-start.sh` presets and UI-specific toggles.
 
 ---
@@ -65,9 +77,9 @@ focuses on `dev-start.sh` presets and UI-specific toggles.
 > / `DISABLE_AUTH` / `MOCK_STATE_MODE`) was split by the consolidated-portal migration. `VITE_*` axes are obsolete
 > (Next.js uses `NEXT_PUBLIC_MOCK_API` / `NEXT_PUBLIC_USE_FIREBASE_EMULATOR` — see `unified-trading-system-ui` repo).
 > The 5 env vars also collapsed into the single `runtime_profile` axis for deployment-api per
-> [`runtime-tiers-and-deployment.md`](../05-infrastructure/runtime-tiers-and-deployment.md) § "Runtime Profiles (v7)".
-> The backend axes documented below remain accurate for ad-hoc service spin-up via `dev-start.sh` — they are NOT the
-> SSOT for portal startup.
+> [`runtime-tiers-and-deployment.md`](/codex/05-infrastructure/runtime-tiers-and-deployment.md) § "Runtime Profiles
+> (v7)". The backend axes documented below remain accurate for ad-hoc service spin-up via `dev-start.sh` — they are NOT
+> the SSOT for portal startup.
 
 The `dev-start.sh` backend stack has 3 independent mode axes (the UI axes above are deprecated):
 
@@ -142,8 +154,8 @@ bash unified-trading-pm/scripts/dev/dev-start.sh --list
 > `deployment-ui`). All but `deployment-ui` are archived (consolidated into `unified-trading-system-ui` per
 > `codex/DEPRECATED_UIS_NOTICE.md` + `05-infrastructure/ui-functionality-requirements.md`). For the live UI port mapping
 > see `unified-trading-pm/scripts/dev/ui-api-mapping.json` (machine-readable SSOT) +
-> [`runtime-tiers-and-deployment.md`](../05-infrastructure/runtime-tiers-and-deployment.md) (consolidated portal ports:
-> `unified-trading-system-ui` Next.js dev `:3000`, real-API server `:3100`; `deployment-ui` `:5183`).
+> [`runtime-tiers-and-deployment.md`](/codex/05-infrastructure/runtime-tiers-and-deployment.md) (consolidated portal
+> ports: `unified-trading-system-ui` Next.js dev `:3000`, real-API server `:3100`; `deployment-ui` `:5183`).
 
 ### API Ports (8004-8016)
 
@@ -192,7 +204,7 @@ internally (set in Dockerfile); local dev uses 8026 per workspace port registry.
 
 Dashboard public URLs: `https://agent-orchestrator.odum-research.com` (prod, pending P5 cutover) and
 `https://agent-orchestrator.staging.odum-research.com` (staging). Architecture SSOT:
-`codex/04-architecture/agent-orchestrator-overview.md`.
+`/codex/04-architecture/agent-orchestrator-overview.md`.
 
 ---
 
@@ -545,11 +557,11 @@ All tests run credential-free. Quality gates automatically set `CLOUD_PROVIDER=l
 
 ### GCP Emulator Ports
 
-| Service         | Emulator address      |
-| --------------- | --------------------- |
-| **Pub/Sub**     | `localhost:8085`      |
-| **GCS (Storage)** | `localhost:4443`    |
-| **BigQuery**    | `localhost:9050`      |
+| Service           | Emulator address |
+| ----------------- | ---------------- |
+| **Pub/Sub**       | `localhost:8085` |
+| **GCS (Storage)** | `localhost:4443` |
+| **BigQuery**      | `localhost:9050` |
 
 These are started automatically by `demo-mode.sh --seed` and the quality-gate emulator fixture. Configure them via
 `PUBSUB_EMULATOR_HOST`, `STORAGE_EMULATOR_HOST`, and `BIGQUERY_EMULATOR_HOST` respectively.

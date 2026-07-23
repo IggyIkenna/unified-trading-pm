@@ -18,8 +18,10 @@ related:
   - plans/audit/results/mdps_long_running_efficiency_SUMMARY_2026_05_28.md
   - plans/active/mdps_long_running_multi_shard_architecture_audit_2026_05_28.md
 created: 2026-05-28
-audited_scope: MDPS Layer-0 data-engine benchmark — pure-Polars-lazy vs pandas+pyarrow vs current-round-trip vs polars-eager on real prod trades parquets (wall-clock + per-instrument RSS trajectory)
-date: '2026-05-28'
+audited_scope:
+  MDPS Layer-0 data-engine benchmark — pure-Polars-lazy vs pandas+pyarrow vs current-round-trip vs polars-eager on real
+  prod trades parquets (wall-clock + per-instrument RSS trajectory)
+date: "2026-05-28"
 auditor: claude opus 4.7 (slot main)
 parent_epic: mtds_mdps_master
 severity: P2
@@ -31,7 +33,13 @@ epic: mtds_mdps_master
 audit_instructions: mtds_mdps_master_audit_instructions.md
 parent_plan: mdps_long_running_multi_shard_architecture_audit_2026_05_28.md
 related_findings: [mdps_long_running_engine_mixing_2026_05_28.md]
-benchmark_raw_data: [benchmarks/mdps_engine_comparison_2026_05_28/results.md, benchmarks/mdps_engine_comparison_2026_05_28/results.json, benchmarks/mdps_engine_comparison_2026_05_28/path_runner.py, benchmarks/mdps_engine_comparison_2026_05_28/run_all.py]
+benchmark_raw_data:
+  [
+    benchmarks/mdps_engine_comparison_2026_05_28/results.md,
+    benchmarks/mdps_engine_comparison_2026_05_28/results.json,
+    benchmarks/mdps_engine_comparison_2026_05_28/path_runner.py,
+    benchmarks/mdps_engine_comparison_2026_05_28/run_all.py,
+  ]
 ---
 
 # MDPS engine benchmark — Polars vs Pandas+PyArrow on the real workload
@@ -189,7 +197,7 @@ engines need Layer 3 to bound the leak.
 ## What this means for Layer 0
 
 Lock the decision in: **pure Polars, end-to-end**. The codex
-[`data-engine-selection.md`](../codex/06-coding-standards/data-engine-selection.md) gets a cross-reference to this
+[`data-engine-selection.md`](/codex/06-coding-standards/data-engine-selection.md) gets a cross-reference to this
 benchmark; the architectural plan's Phase 2 (data engine) is now evidence-backed not aspiration-backed.
 
 What "pure polars" means concretely:

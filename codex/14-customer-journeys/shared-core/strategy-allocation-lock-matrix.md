@@ -3,8 +3,8 @@ doc_type: codex-ssot
 title: Strategy Allocation Lock Matrix — Current Snapshot
 summary:
   Dated (2026-04-20) snapshot of which strategy cells are INVESTMENT_MANAGEMENT_RESERVED (hidden from DART prospects) vs
-  PUBLIC — only STAT_ARB_PAIRS_FIXED crypto pairs + BTC-FoF wrapper are PUBLIC; every other archetype×instrument×venue is
-  IM_RESERVED by default. Per-client override (Elysium/Desmond) grants access without locking out others.
+  PUBLIC — only STAT_ARB_PAIRS_FIXED crypto pairs + BTC-FoF wrapper are PUBLIC; every other archetype×instrument×venue
+  is IM_RESERVED by default. Per-client override (Elysium/Desmond) grants access without locking out others.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -15,13 +15,23 @@ tags: [strategy, defi, cefi, tradfi, sports, ui, registry]
 related:
   [
     ../_ssot-rules/06-show-dont-show-discipline.md,
-    strategy-origin-vs-stack-depth.md,
+    /codex/14-customer-journeys/shared-core/strategy-origin-vs-stack-depth.md,
     ../../09-strategy/architecture-v2/cross-cutting/strategy-availability-and-locking.md,
     ../../09-strategy/architecture-v2/category-instrument-coverage.md,
   ]
 created: 2026-04-20
 authoritative_for: [strategy allocation lock-state snapshot (IM_RESERVED vs PUBLIC cells)]
-referenced_by: [codex/09-strategy/architecture-v2/category-instrument-coverage.md, codex/09-strategy/architecture-v2/cross-cutting/strategy-availability-and-locking.md, codex/09-strategy/architecture-v2/restriction-policy.md, codex/14-customer-journeys/commercial-model/exclusivity-and-noncompete.md, codex/14-customer-journeys/commercial-model/im-profit-share-structures.md, codex/14-customer-journeys/commercial-model/signal-leasing.md, codex/14-customer-journeys/demo-ops/demo-restriction-profiles.md, codex/14-customer-journeys/experience/dart-briefing.md]
+referenced_by:
+  [
+    /codex/09-strategy/architecture-v2/category-instrument-coverage.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/strategy-availability-and-locking.md,
+    /codex/09-strategy/architecture-v2/restriction-policy.md,
+    /codex/14-customer-journeys/commercial-model/exclusivity-and-noncompete.md,
+    /codex/14-customer-journeys/commercial-model/im-profit-share-structures.md,
+    /codex/14-customer-journeys/commercial-model/signal-leasing.md,
+    /codex/14-customer-journeys/demo-ops/demo-restriction-profiles.md,
+    /codex/14-customer-journeys/experience/dart-briefing.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

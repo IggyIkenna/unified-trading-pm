@@ -3,7 +3,8 @@ doc_type: codex-ssot
 title: Instruments-live architecture (entry-point)
 summary:
   Instruments-service live-mode entry-point — refreshes reference-data catalog rows (not ticks) to the same GCS path as
-  batch, with per-(asset_group, entity-type) trigger routing, run_preflight, typed lifecycle events, and T+1 audit (not backfill).
+  batch, with per-(asset_group, entity-type) trigger routing, run_preflight, typed lifecycle events, and T+1 audit (not
+  backfill).
 status: current
 nature: ssot
 asset_group: [meta]
@@ -11,10 +12,24 @@ stage: [meta]
 repos: [instruments-service]
 scope: [engineer, admin]
 tags: [instruments, sports, cefi, tradfi, prediction, live-trading]
-related: [batch-live-architecture.md, instruments-preflight-chain.md, ../05-infrastructure/deployment-clusters-live-vs-batch.md, alerting-batch-live.md]
+related:
+  [
+    /codex/04-architecture/batch-live-architecture.md,
+    /codex/04-architecture/instruments-preflight-chain.md,
+    /codex/05-infrastructure/deployment-clusters-live-vs-batch.md,
+    /codex/04-architecture/alerting-batch-live.md,
+  ]
 created: 2026-05-08
 authoritative_for: [instruments-service live-mode reference-data refresh architecture]
-referenced_by: [codex/03-observability/lifecycle-events.md, codex/04-architecture/batch-live-architecture.md, codex/04-architecture/instrument-lifecycle-cache-delta-hot-reload.md, codex/04-architecture/instruments-preflight-chain.md, codex/09-strategy/architecture-v2/cross-cutting/prediction-markets.md, codex/15-runbooks/instruments-live/t1-audit-discrepancy.md]
+referenced_by:
+  [
+    /codex/03-observability/lifecycle-events.md,
+    /codex/04-architecture/batch-live-architecture.md,
+    /codex/04-architecture/instrument-lifecycle-cache-delta-hot-reload.md,
+    /codex/04-architecture/instruments-preflight-chain.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/prediction-markets.md,
+    /codex/15-runbooks/instruments-live/t1-audit-discrepancy.md,
+  ]
 owner:
 last_reviewed: 2026-05-17
 code_refs:
@@ -54,8 +69,8 @@ live trigger or a batch run.
 The next morning a retrospective audit job re-runs each (asset_group, entity-type) for the prior day from the
 historical-batch source and compares against what live wrote. Discrepancies above tolerance escalate via
 `INSTRUMENTS_LIVE_T1_AUDIT_DISCREPANCY` and the
-[`t1-audit-discrepancy.md`](../15-runbooks/instruments-live/t1-audit-discrepancy.md) playbook. T+1 is **not** a parallel
-backfill — the live row stays in place; the audit job only writes a discrepancy report.
+[`t1-audit-discrepancy.md`](/codex/15-runbooks/instruments-live/t1-audit-discrepancy.md) playbook. T+1 is **not** a
+parallel backfill — the live row stays in place; the audit job only writes a discrepancy report.
 
 ## Trigger-driven (sports), wall-clock-driven (cefi/tradfi/prediction)
 
@@ -66,36 +81,36 @@ routing table below.
 
 ## Per-(asset_group, entity-type) routing table
 
-| asset_group | entity-type                                                     | Cadence / Trigger                      | Source adapter                        | Manifest shard                                                   | Detail doc                                                                                             |
-| ----------- | --------------------------------------------------------------- | -------------------------------------- | ------------------------------------- | ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
-| cefi        | instrument-catalog                                              | 15-min wall-clock                      | CCXT (replaces Tardis T+1 historical) | `(asset_group=cefi, venue, instrument_type, day)`                | [`asset-class-ownership.md`](asset-class-ownership.md)                                                 |
-| tradfi      | instrument-catalog                                              | 15-min wall-clock                      | Polygon / Yahoo (Databento alt)       | `(asset_group=tradfi, venue, instrument_type, root, day)`        | [`asset-class-ownership.md`](asset-class-ownership.md)                                                 |
-| prediction  | market-discovery                                                | 15-min wall-clock                      | Polymarket / Kalshi REST              | `(asset_group=prediction, venue, canonical_question_group, day)` | [`../02-data/prediction-schema-paths.md`](../02-data/prediction-schema-paths.md)                       |
-| sports      | fixtures                                                        | daily fixture re-poll                  | api_football                          | `(asset_group=sports, source=af, league_id, day)`                | [`../02-data/sports-fixtures-lifecycle.md`](../02-data/sports-fixtures-lifecycle.md)                   |
-| sports      | teams + mappings                                                | per-league season-roll trigger         | api_football, sfi, transfermarkt      | `(asset_group=sports, source, league_id, season)`                | [`../02-data/sports-data-source-coverage-matrix.md`](../02-data/sports-data-source-coverage-matrix.md) |
-| sports      | player-values                                                   | annual transfer-window trigger         | transfermarkt                         | `(asset_group=sports, source=tm, league_id, season)`             | [`../02-data/sports-data-source-coverage-matrix.md`](../02-data/sports-data-source-coverage-matrix.md) |
-| sports      | injuries (event-time)                                           | rolling sub-hourly while season active | api_football                          | `(asset_group=sports, source=af, league_id, day)`                | [`../02-data/sports-fixtures-lifecycle.md`](../02-data/sports-fixtures-lifecycle.md)                   |
-| sports      | weather cascade                                                 | trigger-driven leading up to kickoff   | open-meteo                            | `(asset_group=sports, source=openmeteo, league_id, fixture_id)`  | [`../02-data/sports-fixtures-lifecycle.md`](../02-data/sports-fixtures-lifecycle.md)                   |
-| sports      | lineups                                                         | `kickoff − 60min` trigger              | api_football                          | `(asset_group=sports, source=af, league_id, fixture_id)`         | [`../02-data/sports-fixtures-lifecycle.md`](../02-data/sports-fixtures-lifecycle.md)                   |
-| sports      | post-match (results, fixture_stats, sfi_progressive, understat) | `match_end_time` trigger               | api_football, sfi, understat          | `(asset_group=sports, source, league_id, fixture_id)`            | [`../02-data/sports-fixtures-lifecycle.md`](../02-data/sports-fixtures-lifecycle.md)                   |
+| asset_group | entity-type                                                     | Cadence / Trigger                      | Source adapter                        | Manifest shard                                                   | Detail doc                                                                                                     |
+| ----------- | --------------------------------------------------------------- | -------------------------------------- | ------------------------------------- | ---------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| cefi        | instrument-catalog                                              | 15-min wall-clock                      | CCXT (replaces Tardis T+1 historical) | `(asset_group=cefi, venue, instrument_type, day)`                | [`asset-class-ownership.md`](asset-class-ownership.md)                                                         |
+| tradfi      | instrument-catalog                                              | 15-min wall-clock                      | Polygon / Yahoo (Databento alt)       | `(asset_group=tradfi, venue, instrument_type, root, day)`        | [`asset-class-ownership.md`](asset-class-ownership.md)                                                         |
+| prediction  | market-discovery                                                | 15-min wall-clock                      | Polymarket / Kalshi REST              | `(asset_group=prediction, venue, canonical_question_group, day)` | [`/codex/02-data/prediction-schema-paths.md`](/codex/02-data/prediction-schema-paths.md)                       |
+| sports      | fixtures                                                        | daily fixture re-poll                  | api_football                          | `(asset_group=sports, source=af, league_id, day)`                | [`/codex/02-data/sports-fixtures-lifecycle.md`](/codex/02-data/sports-fixtures-lifecycle.md)                   |
+| sports      | teams + mappings                                                | per-league season-roll trigger         | api_football, sfi, transfermarkt      | `(asset_group=sports, source, league_id, season)`                | [`/codex/02-data/sports-data-source-coverage-matrix.md`](/codex/02-data/sports-data-source-coverage-matrix.md) |
+| sports      | player-values                                                   | annual transfer-window trigger         | transfermarkt                         | `(asset_group=sports, source=tm, league_id, season)`             | [`/codex/02-data/sports-data-source-coverage-matrix.md`](/codex/02-data/sports-data-source-coverage-matrix.md) |
+| sports      | injuries (event-time)                                           | rolling sub-hourly while season active | api_football                          | `(asset_group=sports, source=af, league_id, day)`                | [`/codex/02-data/sports-fixtures-lifecycle.md`](/codex/02-data/sports-fixtures-lifecycle.md)                   |
+| sports      | weather cascade                                                 | trigger-driven leading up to kickoff   | open-meteo                            | `(asset_group=sports, source=openmeteo, league_id, fixture_id)`  | [`/codex/02-data/sports-fixtures-lifecycle.md`](/codex/02-data/sports-fixtures-lifecycle.md)                   |
+| sports      | lineups                                                         | `kickoff − 60min` trigger              | api_football                          | `(asset_group=sports, source=af, league_id, fixture_id)`         | [`/codex/02-data/sports-fixtures-lifecycle.md`](/codex/02-data/sports-fixtures-lifecycle.md)                   |
+| sports      | post-match (results, fixture_stats, sfi_progressive, understat) | `match_end_time` trigger               | api_football, sfi, understat          | `(asset_group=sports, source, league_id, fixture_id)`            | [`/codex/02-data/sports-fixtures-lifecycle.md`](/codex/02-data/sports-fixtures-lifecycle.md)                   |
 
 ## Cross-references
 
 - Symmetry: [`batch-live-architecture.md`](batch-live-architecture.md) § 9 Instruments-live exception (single SSOT)
 - Pre-flight chain (live=batch): [`instruments-preflight-chain.md`](instruments-preflight-chain.md)
 - Cloud Scheduler topology + per-trigger cron expressions:
-  [`../05-infrastructure/runtime-tiers-and-deployment.md`](../05-infrastructure/runtime-tiers-and-deployment.md) §
-  "Instruments-live Cloud Scheduler topology"
+  [`/codex/05-infrastructure/runtime-tiers-and-deployment.md`](/codex/05-infrastructure/runtime-tiers-and-deployment.md)
+  § "Instruments-live Cloud Scheduler topology"
 - Cluster topology (where these run):
-  [`../05-infrastructure/deployment-clusters-live-vs-batch.md`](../05-infrastructure/deployment-clusters-live-vs-batch.md)
+  [`/codex/05-infrastructure/deployment-clusters-live-vs-batch.md`](/codex/05-infrastructure/deployment-clusters-live-vs-batch.md)
 - Live monitoring + event cadence:
-  [`../05-infrastructure/live-deployment-monitoring.md`](../05-infrastructure/live-deployment-monitoring.md)
+  [`/codex/05-infrastructure/live-deployment-monitoring.md`](/codex/05-infrastructure/live-deployment-monitoring.md)
 - Alerting taxonomy (typed failure modes): [`alerting-batch-live.md`](alerting-batch-live.md) § "Instruments-live
   failure rules"
 - T+1 audit discrepancy runbook:
-  [`../15-runbooks/instruments-live/t1-audit-discrepancy.md`](../15-runbooks/instruments-live/t1-audit-discrepancy.md)
-- CLI surface: [`../06-coding-standards/cli-convention.md`](../06-coding-standards/cli-convention.md) (`--operation` /
-  `--mode batch|live` / `--asset-group` / `--trigger <name>`)
+  [`/codex/15-runbooks/instruments-live/t1-audit-discrepancy.md`](/codex/15-runbooks/instruments-live/t1-audit-discrepancy.md)
+- CLI surface: [`/codex/06-coding-standards/cli-convention.md`](/codex/06-coding-standards/cli-convention.md)
+  (`--operation` / `--mode batch|live` / `--asset-group` / `--trigger <name>`)
 
 ## Code surface
 

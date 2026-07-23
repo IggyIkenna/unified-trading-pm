@@ -12,10 +12,24 @@ stage: [meta]
 repos: [deployment-ui, execution-service, features-service, instruments-service, market-tick-data-service, ml-service]
 scope: [engineer]
 tags: [cli-convention, mtds, features, ml, instruments, mdps]
-related: [../02-data/data-status-drilldown.md, service-orchestration-patterns.md, ../04-architecture/features-service-architecture.md, ../04-architecture/ml-service-architecture.md]
+related:
+  [
+    /codex/02-data/data-status-drilldown.md,
+    /codex/06-coding-standards/service-orchestration-patterns.md,
+    /codex/04-architecture/features-service-architecture.md,
+    /codex/04-architecture/ml-service-architecture.md,
+  ]
 created: 2026-03-27
 authoritative_for: [service CLI convention and canonical instrument_id CLI parsing, shard-key CLI format]
-referenced_by: [codex/04-architecture/features-service-architecture.md, codex/04-architecture/instruments-live-architecture.md, codex/06-coding-standards/data-engine-selection.md, codex/06-coding-standards/script-homes.md, codex/06-coding-standards/service-orchestration-patterns.md, codex/06-coding-standards/service-structure-standards.md]
+referenced_by:
+  [
+    /codex/04-architecture/features-service-architecture.md,
+    /codex/04-architecture/instruments-live-architecture.md,
+    /codex/06-coding-standards/data-engine-selection.md,
+    /codex/06-coding-standards/script-homes.md,
+    /codex/06-coding-standards/service-orchestration-patterns.md,
+    /codex/06-coding-standards/service-structure-standards.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -117,12 +131,15 @@ For live services, support runtime adjustment:
 
 ### Current Violations (to be fixed)
 
-| Service                  | Violation                                                 | Fix                                                                                                                                              |
-| ------------------------ | --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | ----- | -------- | ----------- | ----------------------- |
-| instruments-service      | `--mode` used for operation, `--run-mode` for actual mode | Rename: `--operation` for what, `--mode` for batch/live                                                                                          |
-| market-tick-data-service | `args.operation` referenced but not defined               | Add `--operation` or fix reference                                                                                                               |
-| ~~ml-training-service~~  | ~~`--mode` used for operation (train/evaluate)~~          | **DONE + REPO ARCHIVED** — ml-training-service + ml-inference-service consolidated into `ml-service` (2026-05-20). `ml-service --operation train | infer | evaluate | grid-search | pipeline` is canonical. |
-| UTL base_service.py      | Passes `mode="service"` to UEI                            | Pass actual CLI mode (batch/live)                                                                                                                |
+| Service | Violation | Fix | | ------------------------ | --------------------------------------------------------- |
+------------------------------------------------------------------------------------------------------------------------------------------------
+
+| ----- | -------- | ----------- | ----------------------- | | instruments-service | `--mode` used for operation,
+`--run-mode` for actual mode | Rename: `--operation` for what, `--mode` for batch/live | | market-tick-data-service |
+`args.operation` referenced but not defined | Add `--operation` or fix reference | | ~~ml-training-service~~ |
+~~`--mode` used for operation (train/evaluate)~~ | **DONE + REPO ARCHIVED** — ml-training-service + ml-inference-service
+consolidated into `ml-service` (2026-05-20). `ml-service --operation train | infer | evaluate | grid-search | pipeline`
+is canonical. | | UTL base_service.py | Passes `mode="service"` to UEI | Pass actual CLI mode (batch/live) |
 
 ### Instrument Identity and CLI Granularity (HARD RULE — codified 2026-05-28)
 
@@ -229,7 +246,7 @@ instrument in those two venues) instead of 4. Memory hit 70 GB. Operator-side po
 
 - [`--shard-key` for surgical per-shard recovery](#--shard-key-for-surgical-per-shard-recovery-2026-05-07) — the
   single-string pipe-delimited form of the same 6-tuple.
-- [`02-data/data-status-drilldown.md`](../02-data/data-status-drilldown.md) — the UI-side drill-down hierarchy that
+- [`02-data/data-status-drilldown.md`](/codex/02-data/data-status-drilldown.md) — the UI-side drill-down hierarchy that
   emits these forms.
 - [`service-orchestration-patterns.md`](service-orchestration-patterns.md) § 15 "Batch Service Lifecycle: Setup, Work,
   Cleanup" — a single-instrument drilldown invocation MUST still call the per-shard cleanup hook on exit.
@@ -260,7 +277,7 @@ Contract:
   Family-specific flags (e.g. `--feature-group`, `--start-date`) are interpreted by the family's `run()` after dispatch.
 
 Architecture SSOT:
-[`../04-architecture/features-service-architecture.md`](../04-architecture/features-service-architecture.md).
+[`/codex/04-architecture/features-service-architecture.md`](/codex/04-architecture/features-service-architecture.md).
 
 ### `--operation` for the consolidated ml-service (2026-05-20)
 
@@ -289,7 +306,8 @@ python -m ml_service \
 | `final-training`      | batch      | Final model training with validated hyperparameters           |
 | `pipeline`            | batch      | End-to-end ML pipeline (pre-select → grid → final → evaluate) |
 
-Architecture SSOT: [`../04-architecture/ml-service-architecture.md`](../04-architecture/ml-service-architecture.md).
+Architecture SSOT:
+[`/codex/04-architecture/ml-service-architecture.md`](/codex/04-architecture/ml-service-architecture.md).
 
 ### `--shard-key` for surgical per-shard recovery (2026-05-07)
 
@@ -327,4 +345,4 @@ Other services that backfill per-shard (instruments-service, features-\* service
 convention. SSOT for the format + parser:
 [`market_tick_data_service/cli/shard_key.py`](../../market-tick-data-service/market_tick_data_service/cli/shard_key.py).
 SSOT for the drill-down hierarchy that emits this form:
-[`codex/02-data/data-status-drilldown.md`](../02-data/data-status-drilldown.md) § "Per-asset_group depth table".
+[`/codex/02-data/data-status-drilldown.md`](/codex/02-data/data-status-drilldown.md) § "Per-asset_group depth table".

@@ -2,19 +2,30 @@
 doc_type: codex-ssot
 title: Master Readiness — Live DeFi Trading by 2026-05-23
 summary:
-  Codex companion SSOT to the live-DeFi master plan — owns the durable 7-group / 23-item per-service
-  readiness model (code health, data correctness, runtime parity, coverage, operability, trading
-  prereqs, operator UX), the doc-touchpoint map, and the plan↔doc↔code drift-audit pattern for the
-  2026-05-23 live-DeFi cutover.
+  Codex companion SSOT to the live-DeFi master plan — owns the durable 7-group / 23-item per-service readiness model
+  (code health, data correctness, runtime parity, coverage, operability, trading prereqs, operator UX), the
+  doc-touchpoint map, and the plan↔doc↔code drift-audit pattern for the 2026-05-23 live-DeFi cutover.
 status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
-repos: [alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-service, deployment-ui]
+repos:
+  [
+    alerting-service,
+    batch-live-reconciliation-service,
+    client-reporting-api,
+    deployment-api,
+    deployment-service,
+    deployment-ui,
+  ]
 scope: [engineer, admin]
 tags: [defi, live-trading, mvp, data-correctness, readiness, cefi]
 related:
-  [plans/active/master_to_live_defi_2026_05_23.md, codex/10-audit/REPO_READINESS_CHECKLIST.yaml, codex/POST_PLAN_REALITY_2026_05_06.md]
+  [
+    plans/active/master_to_live_defi_2026_05_23.md,
+    codex/10-audit/REPO_READINESS_CHECKLIST.yaml,
+    codex/POST_PLAN_REALITY_2026_05_06.md,
+  ]
 created: 2026-05-23
 authoritative_for: [live-defi May-23 per-service readiness model (7-group 23-item)]
 referenced_by:
@@ -22,7 +33,10 @@ owner:
 last_reviewed:
 code_refs:
 last_refreshed: 2026-05-15
-refresh_note: A-G sweep after heavy multi-slot shipping (slots 2-9, 2026-05-14/15). Custody item 19 corrected to reflect CLOUD_KMS_ENCRYPTED as May-23 custody method (Copper+CEFFU are June-1). No structural model changes to 23 items; all group descriptions confirmed accurate vs shipped code.
+refresh_note:
+  A-G sweep after heavy multi-slot shipping (slots 2-9, 2026-05-14/15). Custody item 19 corrected to reflect
+  CLOUD_KMS_ENCRYPTED as May-23 custody method (Copper+CEFFU are June-1). No structural model changes to 23 items; all
+  group descriptions confirmed accurate vs shipped code.
 ---
 
 # Master Readiness — Live DeFi Trading by 2026-05-23
@@ -100,7 +114,7 @@ in `repos/<service>.yaml` extend their item set to track 4–23 (items 1–3 are
 18. **2-year batch backtest run** — completed across config grid; P&L variance per archetype configuration captured
 19. **Treasury / custody integration** — **May-23: `CLOUD_KMS_ENCRYPTED`** (GCP KMS for all live keys; no Copper/CEFFU
     dependency on cutover date). Copper (DeFi side) + CEFFU (Binance institutional flow) are **June-1** follow-ons.
-    Single SSOT: `codex/04-architecture/custody-providers.md` (Copper + CEFFU + LocalKey + Mock; folded 2026-05-08,
+    Single SSOT: `/codex/04-architecture/custody-providers.md` (Copper + CEFFU + LocalKey + Mock; folded 2026-05-08,
     replaces former per-provider docs)
 20. **Live testnet replicates prod** — Tenderly fork / forked-mainnet for DeFi; Binance testnet / Bybit testnet for CeFi
 21. **Reconciliation suite** — batch-vs-live reconciliation, P&L attribution decomposed per source, per-trade
@@ -203,11 +217,11 @@ The 7-group readiness applies to:
 > **Re-verified 2026-05-15** (slot 6 A-G sweep): service list confirmed accurate. Key updates vs 2026-05-08:
 >
 > - Group F item 19 (custody): corrected to CLOUD_KMS_ENCRYPTED for May-23; Copper+CEFFU deferred to June-1 (aligned
->   with `codex/04-architecture/custody-providers.md` which is the live SSOT — drift-audited clean per slot 6 item 5).
+>   with `/codex/04-architecture/custody-providers.md` which is the live SSOT — drift-audited clean per slot 6 item 5).
 > - batch-live-reconciliation-service: UTL `batch_live_reconciler` confirmed shipped + concurrency-tested.
 > - DeFi error classification: **35 codes** in `DefiErrorCode` (13 Aave + 7 RECURSIVE_LOOP + 8 HL\_ + 2 ORACLE\_ + 5
 >   CCTP added 2026-05-19); CLAUDE.md + this codex updated 2026-05-24 per F-27 (AUDIT-03 §6) —
->   codex/04-architecture/defi-execution-overview.md is accurate SSOT.
+>   /codex/04-architecture/defi-execution-overview.md is accurate SSOT.
 > - No structural changes to 23-item A-G model.
 
 - deployment-api

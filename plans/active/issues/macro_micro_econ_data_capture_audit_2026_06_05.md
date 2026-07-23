@@ -223,10 +223,11 @@ chain to assess viability_" (Ikenna's bar), not a full build.
 | **Massive = Polygon.io rebrand / Benzinga news** | US-equity news (published_utc PIT, Benzinga archive to 2001) + ticker sentiment                                                                                                                                                | $29-79/mo                                                                                                  | ✅ **Already an adopted vendor** — Massive _is_ Polygon.io rebranded (2025-10-30) and is Databento's secondary TradFi source in `SOURCE_PRIORITY` (plan `tradfi_massive_dual_source_2026_05_28.md`); we already hold the adapter + key, so its Benzinga **news** endpoint is a natural same-vendor add. (The CLAUDE.md "removed Polygon.io" line is **stale** — see sub-finding.) |
 | **LunarCrush**                                   | crypto (now equities) social metrics (Galaxy Score, AltRank, social volume)                                                                                                                                                    | ~$24/mo                                                                                                    | cheap social-sentiment feed; metrics not raw news                                                                                                                                                                                                                                                                                                                                 |
 
-**Net:** cheapest high-value adds = **Glassnode Pro (~$999/yr)** for the on-chain whale-flow / Saylor signal, and
-**CoinGlass (~$299/mo)** if we want ETF flows + the CeFi-aggregator gap in one sub. Both are operator
-credential/subscription asks. **CryptoQuant is already half-wired** (Category B) — evaluate wiring it before buying
-Glassnode.
+**Net:** cheapest high-value adds = **Glassnode Pro
+(~$999/yr)** for the on-chain whale-flow / Saylor signal, and
+**CoinGlass (~$299/mo)** if we want ETF flows + the
+CeFi-aggregator gap in one sub. Both are operator credential/subscription asks. **CryptoQuant is already half-wired**
+(Category B) — evaluate wiring it before buying Glassnode.
 
 ## Architecture direction (Ikenna + Harsh, 2026-06-05)
 
@@ -265,9 +266,10 @@ Phased, foundation-first; parallel-up _within_ a layer, not across:
 
 1. **`altdata` home:** revive `altdata` as a real asset_group, or model macro as a SHARED cross-asset axis? (Decides
    where data_types + buckets live.)
-2. **Build-vs-buy for paid sources:** approve **Glassnode Pro (~$999/yr, whale/entity flows)** and/or **CoinGlass
-   (~$299/mo, ETF flows + CeFi aggregator)** — or evaluate the already-half-wired **CryptoQuant** adapter first? All are
-   credential/subscription asks per the External-Data rule.
+2. **Build-vs-buy for paid sources:** approve **Glassnode Pro
+   (~$999/yr, whale/entity flows)** and/or **CoinGlass
+   (~$299/mo, ETF flows + CeFi aggregator)** — or evaluate the
+   already-half-wired **CryptoQuant** adapter first? All are credential/subscription asks per the External-Data rule.
 3. **Single FRED source of truth:** MTDS `fred_adapter` vs features-service `calendar/fred_adapter` — both exist; one
    should be deleted (no parallel paths).
 4. **Scope of first tranche:** all 5 asset groups' macro at once, or crypto (CeFi+DeFi) macro/sentiment + ETF flows
@@ -275,7 +277,7 @@ Phased, foundation-first; parallel-up _within_ a layer, not across:
 
 ## Correctness sub-findings (surfaced per Findings-Triage, NOT fixed here)
 
-- **`codex/02-data/tradfi-data-types-catalog.md` is stale:** claims earnings via Polygon (actually **yfinance**);
+- **`/codex/02-data/tradfi-data-types-catalog.md` is stale:** claims earnings via Polygon (actually **yfinance**);
   references handler names that don't exist in code (`tradfi_ohlcv_handler`, `corporate_action_handler`). →
   codex-alignment fix.
 - **Stale SSOT + naming inconsistency (NOT a ban — corrected 2026-06-05):** the workspace CLAUDE.md "Removed providers:

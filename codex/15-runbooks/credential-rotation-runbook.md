@@ -14,21 +14,21 @@ scope: [admin, engineer]
 tags: [rotation, runbook, secret-manager, credentials, security, defi]
 related:
   [
-    ../05-infrastructure/secret-manager-naming.md,
-    ../05-infrastructure/credentials-matrix.md,
-    ../05-infrastructure/hsm-wallet-signing.md,
-    ../04-architecture/custody-providers.md,
+    /codex/05-infrastructure/secret-manager-naming.md,
+    /codex/05-infrastructure/credentials-matrix.md,
+    /codex/05-infrastructure/hsm-wallet-signing.md,
+    /codex/04-architecture/custody-providers.md,
   ]
 created: 2026-05-11
 authoritative_for: [credential rotation cadence and execution-owner per class]
 referenced_by:
   [
-    codex/04-architecture/custody-providers.md,
-    codex/05-infrastructure/aws-iam-matrix.md,
-    codex/05-infrastructure/secret-manager-naming.md,
-    codex/06-coding-standards/config-reloader-pattern.md,
-    codex/14-customer-journeys/authentication/firebase-local.md,
-    codex/15-runbooks/per-source-credential-rotation-runbook.md,
+    /codex/04-architecture/custody-providers.md,
+    /codex/05-infrastructure/aws-iam-matrix.md,
+    /codex/05-infrastructure/secret-manager-naming.md,
+    /codex/06-coding-standards/config-reloader-pattern.md,
+    /codex/14-customer-journeys/authentication/firebase-local.md,
+    /codex/15-runbooks/per-source-credential-rotation-runbook.md,
   ]
 owner: credential-ops (operator) + per-class secondary owner declared in body
 last_reviewed: 2026-05-17
@@ -122,8 +122,8 @@ Operator runbook (manual one-shot per rotation event):
 ### 2.2 Continuous verification
 
 Daily cron `credential-probe.sh --mode live` includes `cloud_kms_cmk_*` probes (see
-[`../05-infrastructure/credentials-matrix.md`](../05-infrastructure/credentials-matrix.md) § 6) — fails if KMS Decrypt
-returns version mismatch.
+[`/codex/05-infrastructure/credentials-matrix.md`](/codex/05-infrastructure/credentials-matrix.md) § 6) — fails if KMS
+Decrypt returns version mismatch.
 
 ---
 
@@ -139,7 +139,7 @@ execution:
 
 ### 3.1 Copper rotation (HMAC api_key + api_secret)
 
-Per Copper documentation + [`custody-providers.md`](../04-architecture/custody-providers.md) § 2.3:
+Per Copper documentation + [`custody-providers.md`](/codex/04-architecture/custody-providers.md) § 2.3:
 
 1. Operator generates new api_key + api_secret via Copper dashboard (Account → API Keys → Generate New).
 2. Provision new values in Secret Manager: `gcloud secrets versions add copper-api-key --data-file=- <<< "$NEW_KEY"`.
@@ -154,7 +154,8 @@ Per Copper documentation + [`custody-providers.md`](../04-architecture/custody-p
 
 ### 3.2 Fireblocks rotation (RSA PEM + API user)
 
-Per [`../05-infrastructure/fireblocks-integration-spec.md`](../05-infrastructure/fireblocks-integration-spec.md) § 2.3:
+Per [`/codex/05-infrastructure/fireblocks-integration-spec.md`](/codex/05-infrastructure/fireblocks-integration-spec.md)
+§ 2.3:
 
 1. Operator generates new RSA keypair on cold laptop: `openssl genrsa -out fireblocks-private-new.pem 4096`.
 2. Upload public key half to Fireblocks dashboard (Settings → API Users → Edit → New Public Key).
@@ -185,7 +186,7 @@ For each of the 10 venues (Bybit / Binance / OKX / Deribit / Hyperliquid / Aster
 1. Operator logs into venue dashboard + generates new trade-scope sub-key (IP whitelist pinned to VM egress IPs where
    supported).
 2. Provision in Secret Manager per
-   [`../05-infrastructure/secret-manager-naming.md`](../05-infrastructure/secret-manager-naming.md) § 2.2:
+   [`/codex/05-infrastructure/secret-manager-naming.md`](/codex/05-infrastructure/secret-manager-naming.md) § 2.2:
    `<venue>-trade-{api-key,api-secret,passphrase}`.
 3. Trading-VM `ApiKeyReloader` (from UTL) picks up new keys within reload interval (default 60s).
 4. Revoke old trade-scope key in venue dashboard.
@@ -206,7 +207,8 @@ execution:
   last_executed: NEVER
 ```
 
-Per [`../05-infrastructure/credentials-matrix.md`](../05-infrastructure/credentials-matrix.md) § 1, data + aux creds:
+Per [`/codex/05-infrastructure/credentials-matrix.md`](/codex/05-infrastructure/credentials-matrix.md) § 1, data + aux
+creds:
 
 - Sports (api-football, footystats, soccer-football-info): 90d.
 - DeFi data (helius, coingecko, tenderly): 90d.
@@ -263,14 +265,16 @@ zero rotation events.
 
 ## § 8 — References
 
-- [`../05-infrastructure/credentials-matrix.md`](../05-infrastructure/credentials-matrix.md) — workspace credential
-  SSOT.
-- [`../05-infrastructure/secret-manager-naming.md`](../05-infrastructure/secret-manager-naming.md) — naming convention.
-- [`custody-providers.md`](../04-architecture/custody-providers.md) — Copper + CEFFU + Fireblocks architecture.
+- [`/codex/05-infrastructure/credentials-matrix.md`](/codex/05-infrastructure/credentials-matrix.md) — workspace
+  credential SSOT.
+- [`/codex/05-infrastructure/secret-manager-naming.md`](/codex/05-infrastructure/secret-manager-naming.md) — naming
+  convention.
+- [`custody-providers.md`](/codex/04-architecture/custody-providers.md) — Copper + CEFFU + Fireblocks architecture.
 - [`custody-onboarding-checklist.md`](custody-onboarding-checklist.md) — § A
   - B + C operator-action runbooks per surface.
-- [`../05-infrastructure/hsm-wallet-signing.md`](../05-infrastructure/hsm-wallet-signing.md) — § 6 acceptance criteria.
-- [`../05-infrastructure/fireblocks-integration-spec.md`](../05-infrastructure/fireblocks-integration-spec.md) — § 2.3
-  RS256 JWT auth + rotation pattern.
+- [`/codex/05-infrastructure/hsm-wallet-signing.md`](/codex/05-infrastructure/hsm-wallet-signing.md) — § 6 acceptance
+  criteria.
+- [`/codex/05-infrastructure/fireblocks-integration-spec.md`](/codex/05-infrastructure/fireblocks-integration-spec.md) —
+  § 2.3 RS256 JWT auth + rotation pattern.
 - [`deployment-service/scripts/audit/credential-probe.sh`](../../deployment-service/scripts/audit/credential-probe.sh) —
   audit harness used in pre-cutover gate + daily cron.

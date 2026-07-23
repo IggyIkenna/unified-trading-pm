@@ -16,10 +16,10 @@ scope: [engineer, admin]
 tags: [observability, monitoring, deployment, self-healing, ui, cost, billing]
 related:
   [
-    codex/05-infrastructure/data-pipeline-alerts.md,
-    codex/05-infrastructure/deployment-ui-architecture.md,
-    codex/05-infrastructure/deployment-clusters-live-vs-batch.md,
-    codex/05-infrastructure/live-deployment-monitoring.md,
+    /codex/05-infrastructure/data-pipeline-alerts.md,
+    /codex/05-infrastructure/deployment-ui-architecture.md,
+    /codex/05-infrastructure/deployment-clusters-live-vs-batch.md,
+    /codex/05-infrastructure/live-deployment-monitoring.md,
     plans/active/deployment_ui_cost_per_day_accuracy_2026_07_20.md,
     plans/active/deployment_ui_fleet_tab_consolidation_2026_07_21.md,
   ]
@@ -31,10 +31,10 @@ authoritative_for:
   ]
 referenced_by:
   [
-    codex/02-data/instruments-foundation-and-catalogue-completeness.md,
-    codex/04-architecture/cross-venue-prediction-arb-detection.md,
-    codex/05-infrastructure/data-pipeline-alerts.md,
-    codex/05-infrastructure/spot-vms-for-backfill.md,
+    /codex/02-data/instruments-foundation-and-catalogue-completeness.md,
+    /codex/04-architecture/cross-venue-prediction-arb-detection.md,
+    /codex/05-infrastructure/data-pipeline-alerts.md,
+    /codex/05-infrastructure/spot-vms-for-backfill.md,
     plans/active/issues/dp_alert_flood_triage_and_monitor_fixes_2026_06_23.md,
     plans/active/issues/dp_event_pubsub_delivery_gap_2026_06_22.md,
     plans/active/issues/terminated_vm_disk_orphan_no_reaper_2026_06_30.md,

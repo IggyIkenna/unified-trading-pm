@@ -10,13 +10,26 @@ status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
-repos: [execution-service, features-service, instruments-service, market-tick-data-service, unified-api-contracts, unified-trading-library]
+repos:
+  [
+    execution-service,
+    features-service,
+    instruments-service,
+    market-tick-data-service,
+    unified-api-contracts,
+    unified-trading-library,
+  ]
 scope: [engineer]
 tags: [pre-sprint-baseline, quality-gates, audit, ssot-audit, refactor]
-related: [quality-gates.md, integration-testing-layers.md, ../04-architecture/tier-and-import-architecture.md]
+related:
+  [
+    /codex/06-coding-standards/quality-gates.md,
+    /codex/06-coding-standards/integration-testing-layers.md,
+    /codex/04-architecture/tier-and-import-architecture.md,
+  ]
 created: 2026-03-27
 authoritative_for: [Phase-0 pre-sprint baseline audit protocol]
-referenced_by: [codex/04-architecture/cloud-agnostic-migration.md]
+referenced_by: [/codex/04-architecture/cloud-agnostic-migration.md]
 owner:
 last_reviewed:
 code_refs:

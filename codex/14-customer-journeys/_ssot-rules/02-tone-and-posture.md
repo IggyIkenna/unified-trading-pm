@@ -12,10 +12,25 @@ stage: [meta]
 repos: []
 scope: [engineer, admin, sales]
 tags: [customer-journey, sales, tone, branding, docspec]
-related: [01-grammar.md, 06-show-dont-show-discipline.md, 09-internal-commercial-oneliners.md]
+related:
+  [
+    /codex/14-customer-journeys/_ssot-rules/01-grammar.md,
+    /codex/14-customer-journeys/_ssot-rules/06-show-dont-show-discipline.md,
+    /codex/14-customer-journeys/_ssot-rules/09-internal-commercial-oneliners.md,
+  ]
 created: 2026-04-20
 authoritative_for: [Odum external voice and tone standard]
-referenced_by: [codex/14-customer-journeys/_ssot-rules/01-grammar.md, codex/14-customer-journeys/_ssot-rules/09-internal-commercial-oneliners.md, codex/14-customer-journeys/_ssot-rules/11-codex-scope-registry.md, codex/14-customer-journeys/_ssot-rules/README.md, codex/14-customer-journeys/demo-ops/post-demo-followup-orchestration.md, codex/14-customer-journeys/demo-ops/pre-demo-discovery-framework.md, codex/14-customer-journeys/demo-ops/upsell-overlays.md, codex/14-customer-journeys/experience/README.md]
+referenced_by:
+  [
+    /codex/14-customer-journeys/_ssot-rules/01-grammar.md,
+    /codex/14-customer-journeys/_ssot-rules/09-internal-commercial-oneliners.md,
+    /codex/14-customer-journeys/_ssot-rules/11-codex-scope-registry.md,
+    /codex/14-customer-journeys/_ssot-rules/README.md,
+    /codex/14-customer-journeys/demo-ops/post-demo-followup-orchestration.md,
+    /codex/14-customer-journeys/demo-ops/pre-demo-discovery-framework.md,
+    /codex/14-customer-journeys/demo-ops/upsell-overlays.md,
+    /codex/14-customer-journeys/experience/README.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

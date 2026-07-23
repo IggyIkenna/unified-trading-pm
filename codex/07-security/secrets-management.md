@@ -12,10 +12,25 @@ stage: [meta]
 repos: [client-reporting-api, execution-service, unified-api-contracts]
 scope: [engineer, admin]
 tags: [secrets, cefi, defi, tradfi, sports, data-vendor]
-related: [secret-naming-convention.md, client-credentials.md, ../02-data/vcr-cassette-ownership.md]
+related:
+  [
+    /codex/07-security/secret-naming-convention.md,
+    /codex/07-security/client-credentials.md,
+    /codex/02-data/vcr-cassette-ownership.md,
+  ]
 created: 2026-03-27
 authoritative_for: [get_secret_client secret access pattern, Secret Manager key inventory]
-referenced_by: [codex/04-architecture/cloud-agnostic-migration.md, codex/04-architecture/mev-protection.md, codex/07-security/audit-logging.md, codex/07-security/client-credentials.md, codex/07-security/dependency-scanning.md, codex/07-security/secret-naming-convention.md, codex/07-security/secret-rotation.md, codex/07-security/testing-with-api-keys.md]
+referenced_by:
+  [
+    /codex/04-architecture/cloud-agnostic-migration.md,
+    /codex/04-architecture/mev-protection.md,
+    /codex/07-security/audit-logging.md,
+    /codex/07-security/client-credentials.md,
+    /codex/07-security/dependency-scanning.md,
+    /codex/07-security/secret-naming-convention.md,
+    /codex/07-security/secret-rotation.md,
+    /codex/07-security/testing-with-api-keys.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

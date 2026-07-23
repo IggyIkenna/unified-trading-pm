@@ -15,15 +15,15 @@ scope: [admin, engineer]
 tags: [defi, wallet, custody, runbook, infrastructure, execution]
 related:
   [
-    custody-onboarding-checklist.md,
-    ../05-infrastructure/hsm-wallet-signing.md,
-    ../05-infrastructure/per-archetype-wallet-isolation.md,
-    ../14-customer-journeys/pod-elysium-client-onboarding.md,
+    /codex/15-runbooks/custody-onboarding-checklist.md,
+    /codex/05-infrastructure/hsm-wallet-signing.md,
+    /codex/05-infrastructure/per-archetype-wallet-isolation.md,
+    /codex/14-customer-journeys/pod-elysium-client-onboarding.md,
   ]
 created: 2026-05-12
 authoritative_for: [pre-cutover test wallet provisioning]
 referenced_by:
-  [codex/05-infrastructure/credentials-matrix.md, codex/14-customer-journeys/pod-elysium-client-onboarding.md]
+  [/codex/05-infrastructure/credentials-matrix.md, /codex/14-customer-journeys/pod-elysium-client-onboarding.md]
 owner: operator (ikenna) — wallet generation + KMS encryption
 last_reviewed: 2026-05-17
 code_refs:
@@ -49,7 +49,7 @@ last_executed: pending May-23 cutover (test-wallet ramp)
 > window where we use OUR own wallets (not POD's capital).
 >
 > Composes with:
-> [`codex/14-customer-journeys/pod-elysium-client-onboarding.md`](../14-customer-journeys/pod-elysium-client-onboarding.md)
+> [`/codex/14-customer-journeys/pod-elysium-client-onboarding.md`](/codex/14-customer-journeys/pod-elysium-client-onboarding.md)
 > § 3.1 — pre-cutover test wallet table.
 
 ---
@@ -323,11 +323,12 @@ Sepolia + Polygon Amoy + Holesky
 
 ## § 6 — Cross-references
 
-- [`pod-elysium-client-onboarding.md`](../14-customer-journeys/pod-elysium-client-onboarding.md) — POD entity SSOT.
+- [`pod-elysium-client-onboarding.md`](/codex/14-customer-journeys/pod-elysium-client-onboarding.md) — POD entity SSOT.
 - [`custody-onboarding-checklist.md`](custody-onboarding-checklist.md) § B.3 — envelope-encrypt operator runbook.
-- [`../05-infrastructure/per-archetype-wallet-isolation.md`](../05-infrastructure/per-archetype-wallet-isolation.md) —
-  N×M wallet model.
-- [`../05-infrastructure/hsm-wallet-signing.md`](../05-infrastructure/hsm-wallet-signing.md) — 5-tier HSM ladder.
+- [`/codex/05-infrastructure/per-archetype-wallet-isolation.md`](/codex/05-infrastructure/per-archetype-wallet-isolation.md)
+  — N×M wallet model.
+- [`/codex/05-infrastructure/hsm-wallet-signing.md`](/codex/05-infrastructure/hsm-wallet-signing.md) — 5-tier HSM
+  ladder.
 - [`cutover_wallet_provisioning_mainnet_template.json`](../../unified-api-contracts/unified_api_contracts/config/cutover_wallet_provisioning_mainnet_template.json)
   — prod template.
 - [`api_keys_wallets_accounts_readiness_2026_05_10.md`](../../plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md)

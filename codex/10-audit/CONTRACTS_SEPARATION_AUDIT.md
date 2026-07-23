@@ -2,10 +2,10 @@
 doc_type: codex-ssot
 title: Contracts Separation of Concerns — Audit Report
 summary:
-  2026-03-04 audit of contract separation across unified-api-contracts (external / canonical /
-  internal subpackage) — flags 5 duplication violations (P0 canonical market schemas duplicated in
-  market-tick-data-service, P1 ML + risk types, P2 InstrumentDefinition) plus 4 orphan schemas; fix is
-  import from unified_api_contracts.internal and delete the local definitions.
+  2026-03-04 audit of contract separation across unified-api-contracts (external / canonical / internal subpackage) —
+  flags 5 duplication violations (P0 canonical market schemas duplicated in market-tick-data-service, P1 ML + risk
+  types, P2 InstrumentDefinition) plus 4 orphan schemas; fix is import from unified_api_contracts.internal and delete
+  the local definitions.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -13,7 +13,7 @@ stage: [meta]
 repos: [execution-service, instruments-service, market-tick-data-service, unified-api-contracts, unified-trading-pm]
 scope: [engineer, admin]
 tags: [uac, audit, ssot-audit, contracts, refactor]
-related: [codex/04-architecture/separation-of-concerns.md, codex/10-audit/ssot-reference-mapping.md]
+related: [/codex/04-architecture/separation-of-concerns.md, /codex/10-audit/ssot-reference-mapping.md]
 created: 2026-03-27
 authoritative_for: [contracts separation-of-concerns audit (2026-03 findings)]
 referenced_by:

@@ -10,7 +10,7 @@ PM methodology standards, scope specifications (epics), architecture decision re
 **This section contains:** durable standards, ADRs, and scope specs. **For active task tracking:**
 `plans/active/master_to_live_defi_2026_05_23.md` (auto-inventory between `<!-- AUTO-INVENTORY-START/END -->` markers;
 regenerate via `python3 scripts/plans/regenerate_active_plan_inventory.py`). SSOT for tracker:
-`codex/11-project-management/active-plan-inventory-tracker.md`. **For active plans and roadmaps:**
+`/codex/11-project-management/active-plan-inventory-tracker.md`. **For active plans and roadmaps:**
 `unified-trading-pm/plans/`
 
 Boundary rule: See `unified-trading-pm/codex/13-codex-governance/SSOT-BOUNDARY.md`

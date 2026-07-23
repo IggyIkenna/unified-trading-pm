@@ -2,8 +2,8 @@
 doc_type: codex-ssot
 title: Share Class Architecture
 summary:
-  Share class = the base currency (USDT/ETH/BTC) a client portfolio is denominated in; defines per-class
-  delta-neutral targets, margin-currency-mismatch + base-currency-drift risk checks, and FX-component PnL decomposition.
+  Share class = the base currency (USDT/ETH/BTC) a client portfolio is denominated in; defines per-class delta-neutral
+  targets, margin-currency-mismatch + base-currency-drift risk checks, and FX-component PnL decomposition.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -11,10 +11,20 @@ stage: [meta]
 repos: [e2e-testing, execution-service, strategy-service]
 scope: [engineer, admin]
 tags: [strategy, defi, cefi, execution, reconciliation]
-related: [strategy-execution-protocol.md, capital-flow-model.md]
+related: [/codex/04-architecture/strategy-execution-protocol.md, /codex/04-architecture/capital-flow-model.md]
 created: 2026-04-03
-authoritative_for: [share-class base-currency architecture (USDT/ETH/BTC denomination + per-class delta-neutral targets)]
-referenced_by: [codex/04-architecture/client-config-and-risk-dimensions.md, codex/14-customer-journeys/glossary.md, codex/14-customer-journeys/playbook-concepts/client-reporting.md, codex/14-customer-journeys/playbook-concepts/fund-org-hierarchy.md, codex/14-customer-journeys/playbook-concepts/sma-vs-pooled.md, codex/14-customer-journeys/playbooks/02a-research-im.md, codex/14-customer-journeys/roadmap/plan-references.md]
+authoritative_for:
+  [share-class base-currency architecture (USDT/ETH/BTC denomination + per-class delta-neutral targets)]
+referenced_by:
+  [
+    /codex/04-architecture/client-config-and-risk-dimensions.md,
+    /codex/14-customer-journeys/glossary.md,
+    /codex/14-customer-journeys/playbook-concepts/client-reporting.md,
+    /codex/14-customer-journeys/playbook-concepts/fund-org-hierarchy.md,
+    /codex/14-customer-journeys/playbook-concepts/sma-vs-pooled.md,
+    /codex/14-customer-journeys/playbooks/02a-research-im.md,
+    /codex/14-customer-journeys/roadmap/plan-references.md,
+  ]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

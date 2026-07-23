@@ -1,7 +1,9 @@
 ---
 doc_type: codex-ssot
 title: DeFi AAVE Lending
-summary: "Pre-v2: simplest DeFi yield strategy (DEFI_USDT_LENDING_SCE_1H) — supply USDT to Aave V3, receive aUSDT, P&L accrues from liquidity-index growth; no hedge/stake/leverage."
+summary:
+  "Pre-v2: simplest DeFi yield strategy (DEFI_USDT_LENDING_SCE_1H) — supply USDT to Aave V3, receive aUSDT, P&L accrues
+  from liquidity-index growth; no hedge/stake/leverage."
 status: superseded
 nature: ssot
 asset_group: [meta]
@@ -10,10 +12,20 @@ repos: [execution-service, market-tick-data-service, strategy-service, unified-a
 scope: [engineer, admin]
 tags: [defi, strategy, aave, yield, lending]
 related:
-  [../../architecture-v2/archetypes/yield-rotation-lending.md, btc-lending-yield.md]
+  [
+    ../../architecture-v2/archetypes/yield-rotation-lending.md,
+    /codex/09-strategy/_archived_pre_v2/defi/btc-lending-yield.md,
+  ]
 created: 2026-03-27
 authoritative_for: []
-referenced_by: [codex/09-strategy/_archived_pre_v2/STRATEGY_CATALOG_pre_v2.md, codex/09-strategy/_archived_pre_v2/defi/btc-lending-yield.md, codex/09-strategy/_archived_pre_v2/defi/lending-protocol-arb.md, codex/09-strategy/_archived_pre_v2/defi/liquidation-cascade-capture.md, codex/09-strategy/_archived_pre_v2/defi/sol-lending-yield.md]
+referenced_by:
+  [
+    /codex/09-strategy/_archived_pre_v2/STRATEGY_CATALOG_pre_v2.md,
+    /codex/09-strategy/_archived_pre_v2/defi/btc-lending-yield.md,
+    /codex/09-strategy/_archived_pre_v2/defi/lending-protocol-arb.md,
+    /codex/09-strategy/_archived_pre_v2/defi/liquidation-cascade-capture.md,
+    /codex/09-strategy/_archived_pre_v2/defi/sol-lending-yield.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

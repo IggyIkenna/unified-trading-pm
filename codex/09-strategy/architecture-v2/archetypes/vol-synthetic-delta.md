@@ -13,10 +13,17 @@ stage: [meta]
 repos: [strategy-service]
 scope: [engineer, admin]
 tags: [strategy, vol-trading, options, deribit, synthetic-delta, carry, delta-hedge]
-related: [carry-basis-perp.md, vol-straddle.md, vol-overlay-covered-calls.md, vol-carry.md, ../families/vol-trading.md]
+related:
+  [
+    /codex/09-strategy/architecture-v2/archetypes/carry-basis-perp.md,
+    /codex/09-strategy/architecture-v2/archetypes/vol-straddle.md,
+    /codex/09-strategy/architecture-v2/archetypes/vol-overlay-covered-calls.md,
+    /codex/09-strategy/architecture-v2/archetypes/vol-carry.md,
+    ../families/vol-trading.md,
+  ]
 created: 2026-05-19
 authoritative_for: ["VOL_SYNTHETIC_DELTA archetype spec"]
-referenced_by: [codex/09-strategy/architecture-v2/families/vol-trading.md]
+referenced_by: [/codex/09-strategy/architecture-v2/families/vol-trading.md]
 owner:
 last_reviewed:
 code_refs:

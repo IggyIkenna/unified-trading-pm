@@ -14,14 +14,24 @@ scope: [engineer, admin]
 tags: [replay, live-trading, pipeline-mode, mtds, backfill, data-quality]
 related:
   [
-    runtime-tiers-and-deployment.md,
-    ../02-data/pipeline-mode-partition.md,
-    ../04-architecture/scenario-injection-architecture.md,
-    ../04-architecture/autonomous-recovery-matrix.md,
+    /codex/05-infrastructure/runtime-tiers-and-deployment.md,
+    /codex/02-data/pipeline-mode-partition.md,
+    /codex/04-architecture/scenario-injection-architecture.md,
+    /codex/04-architecture/autonomous-recovery-matrix.md,
   ]
 created: 2026-05-08
 authoritative_for: [replay subsystem gap-fill watermark-KV handoff, REPLAY_BACKSTOP_REACHED multi-hour-outage backstop]
-referenced_by: [codex/02-data/availability-manifest-and-data-status.md, codex/02-data/pipeline-mode-partition.md, codex/03-observability/coordination-events.md, codex/04-architecture/batch-live-architecture.md, codex/04-architecture/cefi-batch-live.md, codex/04-architecture/scenario-injection-architecture.md, codex/04-architecture/tradfi-batch-live.md, codex/05-infrastructure/live-pipeline-architecture.md]
+referenced_by:
+  [
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/02-data/pipeline-mode-partition.md,
+    /codex/03-observability/coordination-events.md,
+    /codex/04-architecture/batch-live-architecture.md,
+    /codex/04-architecture/cefi-batch-live.md,
+    /codex/04-architecture/scenario-injection-architecture.md,
+    /codex/04-architecture/tradfi-batch-live.md,
+    /codex/05-infrastructure/live-pipeline-architecture.md,
+  ]
 owner:
 last_reviewed: 2026-06-11
 code_refs:
@@ -41,7 +51,7 @@ code_refs:
 > mode-contextual precedence), and `live_websocket` is only the TRANSITIONAL alias until the gated `M1-BREAKING` tranche
 > migrates live/replay writers + objects + readers. The `live_websocket` stamping described below is the CURRENT
 > (transitional) implementation, not the target. SSOT:
-> [`../02-data/pipeline-mode-partition.md`](../02-data/pipeline-mode-partition.md) § "Ratified TARGET design —
+> [`/codex/02-data/pipeline-mode-partition.md`](/codex/02-data/pipeline-mode-partition.md) § "Ratified TARGET design —
 > live/replay (M1–M8 settled contract)".
 
 ## TL;DR
@@ -240,8 +250,8 @@ snapshot only retains 24h, Databento has a fetch-throttle ceiling), the replay f
 emits `REPLAY_BACKSTOP_REACHED{shard_key, attempted_window, coverage_limit}`. alerting-service routes this to a CRITICAL
 alert + a manual-intervention gate on strategy-service: operator must explicitly resume after batch backfill catches up.
 Auto-recovery is intentionally NOT in scope for the May-23 cutover (per
-[`../04-architecture/autonomous-recovery-matrix.md`](../04-architecture/autonomous-recovery-matrix.md) — auto-recovery
-ships post-cutover for known transient failure classes).
+[`/codex/04-architecture/autonomous-recovery-matrix.md`](/codex/04-architecture/autonomous-recovery-matrix.md) —
+auto-recovery ships post-cutover for known transient failure classes).
 
 ## Watermark KV semantics
 
@@ -319,6 +329,7 @@ unaffected. Full post-cutover scope tracked in
   Phase 7 (replay subsystem) + Phase 2C (UTL replay-cascade helpers).
 - Sibling: [`live-pipeline-architecture.md`](./live-pipeline-architecture.md).
 - Scenario injection:
-  [`../04-architecture/scenario-injection-architecture.md`](../04-architecture/scenario-injection-architecture.md) —
-  overlay layer enum + composition contract.
-- Foundation: [`../04-architecture/autonomous-recovery-matrix.md`](../04-architecture/autonomous-recovery-matrix.md).
+  [`/codex/04-architecture/scenario-injection-architecture.md`](/codex/04-architecture/scenario-injection-architecture.md)
+  — overlay layer enum + composition contract.
+- Foundation:
+  [`/codex/04-architecture/autonomous-recovery-matrix.md`](/codex/04-architecture/autonomous-recovery-matrix.md).

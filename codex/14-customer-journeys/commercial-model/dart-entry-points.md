@@ -2,9 +2,9 @@
 doc_type: codex-ssot
 title: DART Entry Points — Three Commercial Paths
 summary:
-  Maps the three practical DART commercial paths (reporting-only visibility, signals-only downstream,
-  full pipeline) to the rule-04 origin×depth matrix cells, block compositions, and buyer shapes; includes
-  named 2026-pipeline worked examples (Elysium signals-only, Desmond combined, India Options NOT-DART).
+  Maps the three practical DART commercial paths (reporting-only visibility, signals-only downstream, full pipeline) to
+  the rule-04 origin×depth matrix cells, block compositions, and buyer shapes; includes named 2026-pipeline worked
+  examples (Elysium signals-only, Desmond combined, India Options NOT-DART).
 status: current
 nature: ssot
 asset_group: [meta]
@@ -14,16 +14,26 @@ scope: [sales, admin]
 tags: [commercial-model, dart, pricing, building-blocks, elysium, im, signal-leasing]
 related:
   [
-    building-block-packaging.md,
-    pricing-building-blocks.md,
-    fixed-vs-variable-commercials.md,
-    exclusivity-and-noncompete.md,
-    im-profit-share-structures.md,
-    signal-leasing.md,
+    /codex/14-customer-journeys/commercial-model/building-block-packaging.md,
+    /codex/14-customer-journeys/commercial-model/pricing-building-blocks.md,
+    /codex/14-customer-journeys/commercial-model/fixed-vs-variable-commercials.md,
+    /codex/14-customer-journeys/commercial-model/exclusivity-and-noncompete.md,
+    /codex/14-customer-journeys/commercial-model/im-profit-share-structures.md,
+    /codex/14-customer-journeys/commercial-model/signal-leasing.md,
   ]
 created: 2026-04-20
 authoritative_for: [three DART commercial entry paths (reporting-only / signals-only / full-pipeline)]
-referenced_by: [codex/14-customer-journeys/README.md, codex/14-customer-journeys/commercial-model/README.md, codex/14-customer-journeys/commercial-model/building-block-packaging.md, codex/14-customer-journeys/commercial-model/exclusivity-and-noncompete.md, codex/14-customer-journeys/commercial-model/fixed-vs-variable-commercials.md, codex/14-customer-journeys/commercial-model/im-vs-reg-reporting-logic.md, codex/14-customer-journeys/demo-ops/demo-decision-matrix.md, codex/14-customer-journeys/demo-ops/post-demo-followup-orchestration.md]
+referenced_by:
+  [
+    /codex/14-customer-journeys/README.md,
+    /codex/14-customer-journeys/commercial-model/README.md,
+    /codex/14-customer-journeys/commercial-model/building-block-packaging.md,
+    /codex/14-customer-journeys/commercial-model/exclusivity-and-noncompete.md,
+    /codex/14-customer-journeys/commercial-model/fixed-vs-variable-commercials.md,
+    /codex/14-customer-journeys/commercial-model/im-vs-reg-reporting-logic.md,
+    /codex/14-customer-journeys/demo-ops/demo-decision-matrix.md,
+    /codex/14-customer-journeys/demo-ops/post-demo-followup-orchestration.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -188,10 +198,11 @@ These are the three named 2026-pipeline engagements and how they resolve against
 Client keeps strategy IP + decision logic upstream; Odum provides the downstream execution, cross-chain treasury
 management, reconciliation, reporting, analytics.
 
-**Commercial mechanic:** Profit-share **replaces** block pricing post go-live. Onboarding is a fixed $125k (partially
-paid; remaining $35k as of April 2026). Once live, Odum takes **30% of Elysium's fees/returns** from the strategy they
-operate via our stack. See [`im-profit-share-structures.md`](im-profit-share-structures.md) §Elysium framing —
-rationale: client preferred upside-aligned mechanics over flat Tier B monthly.
+**Commercial mechanic:** Profit-share **replaces** block pricing post go-live. Onboarding is a fixed
+$125k (partially
+paid; remaining $35k as of April 2026). Once live, Odum takes **30% of Elysium's fees/returns** from the
+strategy they operate via our stack. See [`im-profit-share-structures.md`](im-profit-share-structures.md) §Elysium
+framing — rationale: client preferred upside-aligned mechanics over flat Tier B monthly.
 
 **Capital phases:**
 

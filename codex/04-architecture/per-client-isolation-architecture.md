@@ -15,22 +15,22 @@ scope: [engineer, admin]
 tags: [per-client-isolation, strategy, cefi, defi, execution, client-funds, reconciliation]
 related:
   [
-    client-funds-isolation.md,
-    ../05-infrastructure/strategy-shard-vm-topology.md,
-    execution-service-per-client-isolation.md,
+    /codex/04-architecture/client-funds-isolation.md,
+    /codex/05-infrastructure/strategy-shard-vm-topology.md,
+    /codex/04-architecture/execution-service-per-client-isolation.md,
   ]
 created: 2026-05-20
 authoritative_for: [strategy-service StrategySupervisor + ClientWorker per-client isolation model]
 referenced_by:
   [
-    codex/04-architecture/client-funds-isolation.md,
-    codex/04-architecture/client-lifecycle-event-bus.md,
-    codex/04-architecture/execution-service-per-client-isolation.md,
-    codex/04-architecture/global-ledger-architecture.md,
-    codex/04-architecture/identity-model.md,
-    codex/04-architecture/promote-workflow-architecture.md,
-    codex/04-architecture/transfer-coordinator.md,
-    codex/04-architecture/wallet-hierarchy-and-capital-flow.md,
+    /codex/04-architecture/client-funds-isolation.md,
+    /codex/04-architecture/client-lifecycle-event-bus.md,
+    /codex/04-architecture/execution-service-per-client-isolation.md,
+    /codex/04-architecture/global-ledger-architecture.md,
+    /codex/04-architecture/identity-model.md,
+    /codex/04-architecture/promote-workflow-architecture.md,
+    /codex/04-architecture/transfer-coordinator.md,
+    /codex/04-architecture/wallet-hierarchy-and-capital-flow.md,
   ]
 owner:
 last_reviewed: 2026-05-20
@@ -48,7 +48,7 @@ uncaught exception in one ClientWorker does not affect any other client on the s
 This architecture was designed for the May-23 2-client launch (Odum Research UK + defi-client-1) and scales to N clients
 per archetype VM with auto-shard onto additional VMs when capacity thresholds are breached.
 
-Cross-reference: `codex/04-architecture/client-funds-isolation.md` HARD RULE — funds NEVER move between different
+Cross-reference: `/codex/04-architecture/client-funds-isolation.md` HARD RULE — funds NEVER move between different
 clients. All TransferIntent events must satisfy `source_account.client_id == dest_account.client_id`.
 
 SSOT: `plans/active/per_client_isolation_and_venue_fanout_topology_2026_05_20.md`.
@@ -235,8 +235,8 @@ supervisor appends to runtime client list and spawns the new worker).
 
 ## Composes With
 
-- `codex/04-architecture/client-funds-isolation.md` — HARD RULE: funds never cross client boundaries
-- `codex/04-architecture/client-lifecycle-event-bus.md` — event types for
+- `/codex/04-architecture/client-funds-isolation.md` — HARD RULE: funds never cross client boundaries
+- `/codex/04-architecture/client-lifecycle-event-bus.md` — event types for
   REGISTER/DEREGISTER/QUARANTINE/CREDENTIAL_ROTATED
-- `codex/05-infrastructure/strategy-shard-vm-topology.md` — VM naming, shard auto-spawn, capacity thresholds
-- `codex/04-architecture/execution-service-per-client-isolation.md` — execution-side isolation (one process per client)
+- `/codex/05-infrastructure/strategy-shard-vm-topology.md` — VM naming, shard auto-spawn, capacity thresholds
+- `/codex/04-architecture/execution-service-per-client-isolation.md` — execution-side isolation (one process per client)

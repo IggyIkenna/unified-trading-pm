@@ -3,21 +3,29 @@ doc_type: codex-ssot
 title: CeFi Market Making
 summary: >-
   [SUPERSEDED, pre-v2] CeFi market-making strategy — continuous two-sided limit quoting on one CeFi venue
-  (Binance/Deribit), event-driven on a sub-second underlying-move threshold (not candles), with
-  normal/elevated/critical inventory-skew rebalancing and spot-only no-leverage. Never streams raw market
-  data — consumes mid / spread / vol / imbalance / inventory-skew features. Replaced by architecture-v2 MM
-  archetypes.
+  (Binance/Deribit), event-driven on a sub-second underlying-move threshold (not candles), with normal/elevated/critical
+  inventory-skew rebalancing and spot-only no-leverage. Never streams raw market data — consumes mid / spread / vol /
+  imbalance / inventory-skew features. Replaced by architecture-v2 MM archetypes.
 status: superseded
 nature: ssot
 asset_group: [meta]
 stage: [meta]
-repos: [execution-service, features-service, market-tick-data-service, strategy-service, unified-api-contracts, unified-trading-pm]
+repos:
+  [
+    execution-service,
+    features-service,
+    market-tick-data-service,
+    strategy-service,
+    unified-api-contracts,
+    unified-trading-pm,
+  ]
 scope: [engineer, admin]
 tags: [strategy, cefi, binance, book-microstructure, execution]
-related: [momentum.md, ../../architecture-v2/archetypes/market-making-continuous.md]
+related:
+  [/codex/09-strategy/_archived_pre_v2/cefi/momentum.md, ../../architecture-v2/archetypes/market-making-continuous.md]
 created: 2026-03-27
 authoritative_for:
-referenced_by: [codex/09-strategy/_archived_pre_v2/STRATEGY_CATALOG_pre_v2.md]
+referenced_by: [/codex/09-strategy/_archived_pre_v2/STRATEGY_CATALOG_pre_v2.md]
 owner:
 last_reviewed:
 code_refs:

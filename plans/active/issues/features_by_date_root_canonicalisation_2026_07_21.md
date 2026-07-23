@@ -17,11 +17,11 @@ scope: [engineer, admin]
 tags: [canonicalisation, features, by-date, data-at-rest, hive, delta-one, volatility, migration, operator-ruling]
 related:
   [
-    instrument_availability_hive_canonicalisation_2026_07_21.md,
-    ../../../codex/02-data/cross-asset-canonical-target-ssot.md,
-    ../../../codex/02-data/canonical-cutover-register.md,
-    ../../../codex/02-data/non-canonical-path-inventory.md,
-    ../../../codex/02-data/feature-formula-versioning.md,
+    /plans/active/issues/instrument_availability_hive_canonicalisation_2026_07_21.md,
+    /codex/02-data/cross-asset-canonical-target-ssot.md,
+    /codex/02-data/canonical-cutover-register.md,
+    /codex/02-data/non-canonical-path-inventory.md,
+    /codex/02-data/feature-formula-versioning.md,
   ]
 created: 2026-07-21
 last_updated: 2026-07-21
@@ -151,7 +151,7 @@ THEN re-sync the manifest / data-status. Do not delete the old tree until the tw
 - [ ] 7. [DATA] P1. Re-sync the availability manifest + data-status render for the migrated features cells so all four
       canonical surfaces agree; verify the coverage surface after the migration.
 - [ ] 8. [REVIEW] P1. On writer ship, record the features `by_date/day=` cutover date in
-      `codex/02-data/canonical-cutover-register.md` (repo@sha), and flip the non-canonical-path-inventory row #17
+      `/codex/02-data/canonical-cutover-register.md` (repo@sha), and flip the non-canonical-path-inventory row #17
       disposition to EXECUTED with a dated post-migration probe.
 
 ## Progress Log
@@ -173,9 +173,9 @@ quality-gates run finishes") did **not** match a shipped state:
 - Todo 4 — NOT addressed by the peer at all (no doc edit, no code comment). Completed directly in this verification pass
   (see todo 4 above, doc-only, no code change needed).
 - Todo 6 (real-day proof + historical migration), todo 7 (manifest resync), todo 8 (cutover register + inventory row #17
-  EXECUTED flip) — NOT attempted. `codex/02-data/canonical-cutover-register.md` §6a still reads "In force at the writer:
-  NOT YET" with both `delta_one`/`volatility` rows `❌ migration_pending`; `non-canonical-path-inventory.md` row #17 is
-  unchanged.
+  EXECUTED flip) — NOT attempted. `/codex/02-data/canonical-cutover-register.md` §6a still reads "In force at the
+  writer: NOT YET" with both `delta_one`/`volatility` rows `❌ migration_pending`; `non-canonical-path-inventory.md` row
+  #17 is unchanged.
 - **Why this verification pass did not ship todos 1/2/3/5 itself**: the `features-service` clone is a SHARED working
   tree currently carrying unrelated uncommitted WIP from other in-flight tasks (`git stash list` shows a prior deferred
   stash; live dirty files include `features_service/sports/cli/handlers/batch_handler.py` +

@@ -13,9 +13,9 @@ scope: [engineer, admin]
 tags: [manifest, uac, data-status, honest-coverage, observability]
 related:
   [
-    ../02-data/service-output-emission-semantics.md,
-    ../02-data/availability-manifest-and-data-status.md,
-    ../02-data/honest-absence-downstream-handling.md,
+    /codex/02-data/service-output-emission-semantics.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/02-data/honest-absence-downstream-handling.md,
   ]
 created: 2026-05-11
 authoritative_for:
@@ -33,10 +33,10 @@ code_refs:
 
 > **What it is:** The architectural seam between a service's publish boundary and the v8 manifest column that records
 > what was published. Companion to
-> [`../02-data/service-output-emission-semantics.md`](../02-data/service-output-emission-semantics.md) (which covers the
-> runtime/data-side perspective). This doc covers the _architectural_ seam — how the policy SSOT, the publish-boundary
-> helper, the resolver, and the manifest column compose to give downstream consumers a single read surface for "what was
-> published, and how complete was it."
+> [`/codex/02-data/service-output-emission-semantics.md`](/codex/02-data/service-output-emission-semantics.md) (which
+> covers the runtime/data-side perspective). This doc covers the _architectural_ seam — how the policy SSOT, the
+> publish-boundary helper, the resolver, and the manifest column compose to give downstream consumers a single read
+> surface for "what was published, and how complete was it."
 >
 > **Why this doc exists separately from `02-data/`.** The 02-data doc is the runtime/operator-facing SSOT: which kwargs
 > to pass to `publish_with_policy()`, which lifecycle event the publisher emits, how to wire a new service. THIS doc is
@@ -142,12 +142,12 @@ imports UAC. The runtime path is `publisher → resolver → ManifestWriter`; th
 
 ## Cross-references
 
-- [`../02-data/service-output-emission-semantics.md`](../02-data/service-output-emission-semantics.md) — runtime/data
-  perspective: kwargs, lifecycle events, helper API, per-service rollout playbook, worked examples.
-- [`../02-data/availability-manifest-and-data-status.md`](../02-data/availability-manifest-and-data-status.md) — full
-  manifest schema (v8 incl. the 3 new emission columns); `AvailabilityRecord` dataclass.
-- [`../02-data/honest-absence-downstream-handling.md`](../02-data/honest-absence-downstream-handling.md) — downstream
-  NaN-handling tolerances per consumer class (the layer below this doc).
+- [`/codex/02-data/service-output-emission-semantics.md`](/codex/02-data/service-output-emission-semantics.md) —
+  runtime/data perspective: kwargs, lifecycle events, helper API, per-service rollout playbook, worked examples.
+- [`/codex/02-data/availability-manifest-and-data-status.md`](/codex/02-data/availability-manifest-and-data-status.md) —
+  full manifest schema (v8 incl. the 3 new emission columns); `AvailabilityRecord` dataclass.
+- [`/codex/02-data/honest-absence-downstream-handling.md`](/codex/02-data/honest-absence-downstream-handling.md) —
+  downstream NaN-handling tolerances per consumer class (the layer below this doc).
 - [`../../plans/active/manifest_schema_final_gate_2026_05_09.md`](../../plans/active/manifest_schema_final_gate_2026_05_09.md)
   — owns the v8 manifest schema columns + the `next_state` resolver.
 - [`../../plans/active/writegate_honest_coverage_endtoend_2026_05_06.md`](../../plans/active/writegate_honest_coverage_endtoend_2026_05_06.md)

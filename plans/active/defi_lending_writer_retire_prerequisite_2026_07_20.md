@@ -27,12 +27,12 @@ tags:
   ]
 related:
   [
-    data_pipeline_reconciliation_skill_2026_07_20.md,
-    defi_consolidated_closeout_2026_07_18.md,
+    /plans/active/data_pipeline_reconciliation_skill_2026_07_20.md,
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
     issues/canonical_closeout_open_questions_2026_07_18.md,
-    ../../codex/02-data/defi-canonical-naming-ssot.md,
-    ../../codex/02-data/availability-manifest-and-data-status.md,
-    ../../codex/04-architecture/shard-level-failure-isolation.md,
+    /codex/02-data/defi-canonical-naming-ssot.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/04-architecture/shard-level-failure-isolation.md,
   ]
 created: 2026-07-20
 last_updated: 2026-07-21
@@ -72,9 +72,9 @@ source:
 >
 > **Ruling authority**: `plans/active/data_pipeline_reconciliation_skill_2026_07_20.md` §"OPERATOR DECISIONS — ALL THREE
 > RULED 2026-07-20" (D2 + its "D2 consequences" block). **Codex SSOTs** (referenced, never duplicated here):
-> `codex/02-data/defi-canonical-naming-ssot.md` (the two-layer lending model + the interim banner) ·
-> `codex/02-data/availability-manifest-and-data-status.md` (shard atom, 4-state `capture_status`) ·
-> `codex/04-architecture/shard-level-failure-isolation.md` (per-shard `except` discipline).
+> `/codex/02-data/defi-canonical-naming-ssot.md` (the two-layer lending model + the interim banner) ·
+> `/codex/02-data/availability-manifest-and-data-status.md` (shard atom, 4-state `capture_status`) ·
+> `/codex/04-architecture/shard-level-failure-isolation.md` (per-shard `except` discipline).
 
 ---
 
@@ -192,13 +192,13 @@ This plan is **green** — and only then may step 2 (the ~16.7M-row migration) b
       branch each protocol in `_DEFAULT_PROTOCOLS` `:172` actually reaches before collapsing, do not assume.
 - [x] ✅ 4. [CODE] P0. **SHIPPED `market-tick-data-service@fec20de2`.** Fix the live `liquidations_handler` desync —
       `:534` manifest `"liquidation"` vs `:644` GCS `LENDING`. Decide which is correct against
-      `codex/02-data/defi-canonical-naming-ssot.md` (the naming SSOT is the authority, not either literal), fix both
+      `/codex/02-data/defi-canonical-naming-ssot.md` (the naming SSOT is the authority, not either literal), fix both
       surfaces onto one resolver, and record whether already-written rows need a re-key as a todo in the migration plan
       (this plan does not own the data fix).
 - [x] ✅ 5. [CODE] P0. **SHIPPED `market-tick-data-service@fec20de2`.** Make the contract error loud. On every lending
       write path, a `ValueError` originating from `build_instrument_id` must NOT be swallowed into `record_failed` as if
       it were a venue/network failure — classify it distinctly per
-      `codex/04-architecture/shard-level-failure-isolation.md` and UAC `classify_venue_error()`. Verified swallow site
+      `/codex/04-architecture/shard-level-failure-isolation.md` and UAC `classify_venue_error()`. Verified swallow site
       to start from: `flash_loan_events_handler.py:214-223`. This is the change that would have made the first attempt
       fail loudly in minutes instead of silently producing `attempted_failed` rows.
 - [x] ✅ 6. [CODE] P0. **RULED (session-2 entry above) — SOLANA_LENDING is OUT of the D2 EVM retire scope.** Rule the

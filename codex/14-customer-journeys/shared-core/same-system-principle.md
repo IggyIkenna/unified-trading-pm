@@ -16,12 +16,22 @@ related:
   [
     ../_ssot-rules/03-same-system-principle.md,
     ../_ssot-rules/06-show-dont-show-discipline.md,
-    shared-reporting-core.md,
-    client-reporting-demo-walkthrough.md,
+    /codex/14-customer-journeys/shared-core/shared-reporting-core.md,
+    /codex/14-customer-journeys/shared-core/client-reporting-demo-walkthrough.md,
   ]
 created: 2026-04-20
 authoritative_for: [same-system-principle implementation map (UI routes/services/anti-pattern greps)]
-referenced_by: [codex/14-customer-journeys/README.md, codex/14-customer-journeys/experience/dart-briefing.md, codex/14-customer-journeys/experience/dart-demo.md, codex/14-customer-journeys/experience/im-decision-journey.md, codex/14-customer-journeys/implementation-mapping/route-mapping.md, codex/14-customer-journeys/shared-core/README.md, codex/14-customer-journeys/shared-core/client-reporting-demo-walkthrough.md, codex/14-customer-journeys/shared-core/competitive-landscape.md]
+referenced_by:
+  [
+    /codex/14-customer-journeys/README.md,
+    /codex/14-customer-journeys/experience/dart-briefing.md,
+    /codex/14-customer-journeys/experience/dart-demo.md,
+    /codex/14-customer-journeys/experience/im-decision-journey.md,
+    /codex/14-customer-journeys/implementation-mapping/route-mapping.md,
+    /codex/14-customer-journeys/shared-core/README.md,
+    /codex/14-customer-journeys/shared-core/client-reporting-demo-walkthrough.md,
+    /codex/14-customer-journeys/shared-core/competitive-landscape.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

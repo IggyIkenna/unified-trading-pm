@@ -14,7 +14,7 @@ stage: [data]
 repos: [instruments-service, market-tick-data-service, unified-api-contracts]
 scope: [engineer, admin]
 tags: [backfill, manifest, honest-coverage, data-completion, cefi, data-correctness]
-related: [data_completion_to_100_all_ag_2026_06_21.md]
+related: [/plans/active/data_completion_to_100_all_ag_2026_06_21.md]
 created: 2026-07-15
 parent_epic: manifest_master
 assigned_vm: NA

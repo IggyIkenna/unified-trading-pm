@@ -2,9 +2,9 @@
 doc_type: codex-ssot
 title: Pricing Building Blocks — 13-Row Anchor Ranges
 summary:
-  The 13-block DART pricing anchor table (internal-cost / Tier A cost-plus / Tier B fixed monthly + upfront)
-  with the codex-private internal-cost column allocated from the ~£34k/mo base burn; also block-5 depth
-  pricing, block-12 exclusivity uplift, signal-leasing row 14, and IM/CME/India/Elysium special structures.
+  The 13-block DART pricing anchor table (internal-cost / Tier A cost-plus / Tier B fixed monthly + upfront) with the
+  codex-private internal-cost column allocated from the ~£34k/mo base burn; also block-5 depth pricing, block-12
+  exclusivity uplift, signal-leasing row 14, and IM/CME/India/Elysium special structures.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -14,16 +14,26 @@ scope: [sales, admin]
 tags: [commercial-model, pricing, dart, building-blocks, tier-a-tier-b, exclusivity, cost]
 related:
   [
-    building-block-packaging.md,
-    fixed-vs-variable-commercials.md,
-    exclusivity-and-noncompete.md,
-    im-profit-share-structures.md,
-    signal-leasing.md,
+    /codex/14-customer-journeys/commercial-model/building-block-packaging.md,
+    /codex/14-customer-journeys/commercial-model/fixed-vs-variable-commercials.md,
+    /codex/14-customer-journeys/commercial-model/exclusivity-and-noncompete.md,
+    /codex/14-customer-journeys/commercial-model/im-profit-share-structures.md,
+    /codex/14-customer-journeys/commercial-model/signal-leasing.md,
     ../shared-core/dart-pricing-axes.md,
   ]
 created: 2026-04-20
 authoritative_for: [DART 13-block pricing anchor table (Tier A/B ranges + codex-private internal-cost column)]
-referenced_by: [codex/14-customer-journeys/README.md, codex/14-customer-journeys/_ssot-rules/05-building-block-dimensions.md, codex/14-customer-journeys/commercial-model/README.md, codex/14-customer-journeys/commercial-model/building-block-packaging.md, codex/14-customer-journeys/commercial-model/cash-deployment-plan.md, codex/14-customer-journeys/commercial-model/dart-entry-points.md, codex/14-customer-journeys/commercial-model/elysium-account-trajectory-2026-05-14.md, codex/14-customer-journeys/commercial-model/elysium-managed-sla-2026-05-14.md]
+referenced_by:
+  [
+    /codex/14-customer-journeys/README.md,
+    /codex/14-customer-journeys/_ssot-rules/05-building-block-dimensions.md,
+    /codex/14-customer-journeys/commercial-model/README.md,
+    /codex/14-customer-journeys/commercial-model/building-block-packaging.md,
+    /codex/14-customer-journeys/commercial-model/cash-deployment-plan.md,
+    /codex/14-customer-journeys/commercial-model/dart-entry-points.md,
+    /codex/14-customer-journeys/commercial-model/elysium-account-trajectory-2026-05-14.md,
+    /codex/14-customer-journeys/commercial-model/elysium-managed-sla-2026-05-14.md,
+  ]
 owner:
 last_reviewed:
 code_refs: [unified-api-contracts/unified_api_contracts/internal/architecture_v2/derivation_cost.py]

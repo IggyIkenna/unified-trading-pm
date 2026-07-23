@@ -2,10 +2,10 @@
 doc_type: codex-ssot
 title: Ledger Event Taxonomy
 summary: >-
-  The closed UAC enum taxonomy for the global ledger — EventOrigin (INSTRUCTION vs PASSIVE), 37 EventTypes
-  (19 instruction + 18 passive), 17 AssetClasses, Direction and OptionRight — with the ledger-routing table
-  (Instruction / Passive / Pricing / Treasury ledgers + writers), the cross-client-transfer invariant, and the
-  PricingLedger dividend_yield (TTM-sum) + rebase_rate carry-rate column formulas.
+  The closed UAC enum taxonomy for the global ledger — EventOrigin (INSTRUCTION vs PASSIVE), 37 EventTypes (19
+  instruction + 18 passive), 17 AssetClasses, Direction and OptionRight — with the ledger-routing table (Instruction /
+  Passive / Pricing / Treasury ledgers + writers), the cross-client-transfer invariant, and the PricingLedger
+  dividend_yield (TTM-sum) + rebase_rate carry-rate column formulas.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -13,10 +13,19 @@ stage: [meta]
 repos: [execution-service, market-tick-data-service, strategy-service, unified-api-contracts]
 scope: [engineer, admin]
 tags: [ledger, pnl, execution, uac, strategy, defi, cefi]
-related: [../04-architecture/global-ledger-architecture.md, ../04-architecture/client-funds-isolation.md, ../09-strategy/architecture-v2/cross-cutting/pnl-attribution.md]
+related:
+  [
+    /codex/04-architecture/global-ledger-architecture.md,
+    /codex/04-architecture/client-funds-isolation.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md,
+  ]
 created: 2026-05-21
-authoritative_for: [ledger event taxonomy (EventOrigin/EventType/AssetClass/Direction closed enums), PricingLedger dividend_yield + rebase_rate carry-rate formulas]
-referenced_by: [codex/04-architecture/global-ledger-architecture.md, codex/04-architecture/greeks-service-overview.md]
+authoritative_for:
+  [
+    ledger event taxonomy (EventOrigin/EventType/AssetClass/Direction closed enums),
+    PricingLedger dividend_yield + rebase_rate carry-rate formulas,
+  ]
+referenced_by: [/codex/04-architecture/global-ledger-architecture.md, /codex/04-architecture/greeks-service-overview.md]
 owner:
 last_reviewed: 2026-05-23
 code_refs:
@@ -30,7 +39,7 @@ type: data
 > requires a PR; removing or renaming any value is a breaking schema change.
 
 **UAC module**: `unified_api_contracts.canonical.crosscutting.ledger` **Codex companion**:
-`codex/04-architecture/global-ledger-architecture.md`
+`/codex/04-architecture/global-ledger-architecture.md`
 
 ---
 
@@ -69,8 +78,8 @@ Routes rows to derived-ledger computation in strategy-service. Grouped by origin
 | `CASH_OUT`           | `cash_out`           | Prediction-market / sports-book cash-out of an open position before resolution (operator-initiated close at the book's current quote). Distinct from TRADE because it is a venue-mediated unwind     |
 | `DEPOSIT`            | `deposit`            | Client funds inflow to a venue/account/wallet from an external source (bank wire, on-chain incoming transfer from a non-tracked address). Feeds TreasuryLedger when counterparty_client_id is None   |
 | `WITHDRAWAL_TO_BANK` | `withdrawal_to_bank` | Client funds outflow from a venue/account/wallet to an off-platform destination (bank wire, on-chain outgoing transfer to a non-tracked address). Feeds TreasuryLedger                               |
-| `CUSTODY_MOVE`       | `custody_move`       | Movement of assets between custody providers / sub-custodians for the same client (Copper ↔ CEFFU ↔ on-chain wallet ↔ KMS-encrypted hot wallet). HARD RULE: counterparty_client_id == client_id   |
-| `FX_CONVERSION`      | `fx_conversion`      | Stablecoin / fiat / currency conversion that is not order-book mediated (e.g. on-chain stablecoin swap via 1:1 oracle, custodian-quoted FX fill, USDC ↔ USDT bridge-equivalent)                     |
+| `CUSTODY_MOVE`       | `custody_move`       | Movement of assets between custody providers / sub-custodians for the same client (Copper ↔ CEFFU ↔ on-chain wallet ↔ KMS-encrypted hot wallet). HARD RULE: counterparty_client_id == client_id      |
+| `FX_CONVERSION`      | `fx_conversion`      | Stablecoin / fiat / currency conversion that is not order-book mediated (e.g. on-chain stablecoin swap via 1:1 oracle, custodian-quoted FX fill, USDC ↔ USDT bridge-equivalent)                      |
 | `LIQUIDATION`        | `liquidation`        | Forced liquidation by venue/protocol (partial or full). Counted as instruction-driven because the venue's keeper acts as the instructing agent on behalf of the protocol                             |
 
 ### Passive events (EventOrigin.PASSIVE) — 18 values
@@ -181,7 +190,7 @@ Notes:
 ## Cross-Client Transfer Invariant
 
 `counterparty_client_id`, when set, MUST equal `client_id`. `CrossClientTransferForbiddenError` is raised at `LedgerRow`
-construction time. See `codex/04-architecture/client-funds-isolation.md`.
+construction time. See `/codex/04-architecture/client-funds-isolation.md`.
 
 Valid usages of "cross-client" in this codebase:
 

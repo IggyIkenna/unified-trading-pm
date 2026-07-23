@@ -236,7 +236,7 @@ in-flight uncredited) — the authoritative measure is bytes off the wire (Cloud
 `429` (it matches millisecond timestamps — match `HTTP 429`). If Monitoring returns no data (VM younger than ~3 min),
 report **UNMEASURED** rather than substituting a completion-derived figure.
 
-**Projection model** (`codex/06-coding-standards/performance-targets.md` §formula):
+**Projection model** (`/codex/06-coding-standards/performance-targets.md` §formula):
 
 ```
 serial_hours = per_shard_day_seconds × shard_days / 3600

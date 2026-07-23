@@ -2,9 +2,8 @@
 doc_type: codex-ssot
 title: QG Memory Governance — OOM Prevention for Parallel-Slot QGs
 summary: >-
-  OOM guardrails for parallel-slot quality-gate runs — QG_MEM_CAP (systemd-run
-  MemoryMax hard cap, default 10G), PYTEST_WORKERS=1, and IDE basedpyright
-  openFilesOnly — landed after the 2026-05-15 79.7 GB-RSS kernel-OOM incident;
+  OOM guardrails for parallel-slot quality-gate runs — QG_MEM_CAP (systemd-run MemoryMax hard cap, default 10G),
+  PYTEST_WORKERS=1, and IDE basedpyright openFilesOnly — landed after the 2026-05-15 79.7 GB-RSS kernel-OOM incident;
   includes per-box cap table + relaxation order.
 status: current
 nature: ssot
@@ -13,10 +12,10 @@ stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]
 tags: [quality-gates, oom-prevention, memory, parallel-slot, basedpyright, pytest, infrastructure]
-related: [quality-gates.md]
+related: [/codex/06-coding-standards/quality-gates.md]
 created: 2026-05-15
 authoritative_for: [quality-gate memory governance (QG_MEM_CAP / PYTEST_WORKERS OOM guardrails)]
-referenced_by: [codex/06-coding-standards/quality-gates.md, plans/active/_agent_pings.md]
+referenced_by: [/codex/06-coding-standards/quality-gates.md, plans/active/_agent_pings.md]
 owner: harsh-main
 last_reviewed:
 code_refs:
@@ -164,7 +163,7 @@ Pattern:
 #     PARGS="-n ${PYTEST_WORKERS:-$_DEFAULT_WORKERS} ..."
 # NEW (post-OOM): ...one-line reason for change...
 # TO REVERT: comment NEW line below, uncomment OLD pair above.
-# SSOT: codex/06-coding-standards/quality-gates-memory-governance.md
+# SSOT: /codex/06-coding-standards/quality-gates-memory-governance.md
 # ╚════════════════════════════════════════════════════════════════════════╝
 PARGS="-n ${PYTEST_WORKERS:-1} ..."   # NEW
 ```
@@ -210,7 +209,7 @@ ps auxf | grep basedpyright-langserver | awk '{print $4, $5/1024/1024 " GB"}'
 
 ## Related SSOTs
 
-- `codex/06-coding-standards/quality-gates.md` — main QG SSOT (links from here)
+- `/codex/06-coding-standards/quality-gates.md` — main QG SSOT (links from here)
 - `scripts/quality-gates-base/base-service.sh` — implementation
 - `scripts/quality-gates-base/qg-common.sh` — `run_timeout` helper
 - `scripts/quality-gates-base/quality-gates-service-template.sh` — repo stub template

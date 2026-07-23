@@ -12,10 +12,11 @@ stage: [meta]
 repos: [deployment-api]
 scope: [engineer, admin]
 tags: [strategy, promote, mvp, uac, live-trading, ssot]
-related: [promote-workflow-architecture.md, cross-service-promote-handlers.md]
+related:
+  [/codex/04-architecture/promote-workflow-architecture.md, /codex/04-architecture/cross-service-promote-handlers.md]
 created: 2026-05-15
 authoritative_for: [candidate manifest schema, MinimalCandidateManifest promote record]
-referenced_by: [codex/04-architecture/live-pipeline-architecture.md]
+referenced_by: [/codex/04-architecture/live-pipeline-architecture.md]
 owner: deployment-platform
 last_reviewed: 2026-05-17
 code_refs:

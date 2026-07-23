@@ -3,8 +3,8 @@ doc_type: codex-ssot
 title: Rule 12 — Service-family scope rules
 summary:
   "Rule 12 — the six-family closed enum (IM, RegUmbrella, DART, DART_reporting_only, admin, IM_desk) with
-  surfaces/excludes/route_allowlist, enforced as a short-circuit pre-check in G1.6 access_control(); machine
-  YAML at 12-service-family-scope-rules.yaml, validated + Playwright dev/staging/prod parity."
+  surfaces/excludes/route_allowlist, enforced as a short-circuit pre-check in G1.6 access_control(); machine YAML at
+  12-service-family-scope-rules.yaml, validated + Playwright dev/staging/prod parity."
 status: current
 nature: ssot
 asset_group: [meta]
@@ -12,10 +12,21 @@ stage: [meta]
 repos: [unified-api-contracts, unified-trading-system-ui]
 scope: [engineer, admin]
 tags: [customer-journey, sales, uac, ui, registry]
-related: [04-dart-commercial-axes.md, 03-same-system-principle.md, 11-codex-scope-registry.md]
+related:
+  [
+    /codex/14-customer-journeys/_ssot-rules/04-dart-commercial-axes.md,
+    /codex/14-customer-journeys/_ssot-rules/03-same-system-principle.md,
+    /codex/14-customer-journeys/_ssot-rules/11-codex-scope-registry.md,
+  ]
 created: 2026-04-20
 authoritative_for: [service-family scope rules (six-family route-allowlist enforcement)]
-referenced_by: [codex/02-data/questionnaire-axes.md, codex/04-architecture/commercial-service-families.md, codex/14-customer-journeys/_ssot-rules/04-dart-commercial-axes.md, codex/16-strategy-playbooks/infra-spec/stage-3e-g2-env-split.md]
+referenced_by:
+  [
+    /codex/02-data/questionnaire-axes.md,
+    /codex/04-architecture/commercial-service-families.md,
+    /codex/14-customer-journeys/_ssot-rules/04-dart-commercial-axes.md,
+    /codex/16-strategy-playbooks/infra-spec/stage-3e-g2-env-split.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

@@ -3,8 +3,8 @@ doc_type: codex-ssot
 title: DeFi Staked Basis
 summary:
   Pre-v2 DeFi staked basis (ETH) — swap USDT->weETH (EtherFi LST) + short ETH perp on Hyperliquid; delta-neutral,
-  collects ~3.5% weETH staking + funding + EIGEN/ETHFI rewards, EtherFi/Lido configurable via staking_protocol;
-  targets 12-20% APY, $10M. SUPERSEDED banner — see architecture-v2.
+  collects ~3.5% weETH staking + funding + EIGEN/ETHFI rewards, EtherFi/Lido configurable via staking_protocol; targets
+  12-20% APY, $10M. SUPERSEDED banner — see architecture-v2.
 status: superseded
 nature: ssot
 asset_group: [meta]
@@ -12,10 +12,23 @@ stage: [meta]
 repos: [execution-service, market-tick-data-service, strategy-service, unified-api-contracts, unified-trading-pm]
 scope: [engineer, admin]
 tags: [defi, strategy, execution, basis-trade, staking, etherfi, hedging, rewards]
-related: [basis-trade.md, recursive-staked-basis.md, sol-staked-basis.md, reward-lifecycle.md]
+related:
+  [
+    /codex/09-strategy/_archived_pre_v2/defi/basis-trade.md,
+    /codex/09-strategy/_archived_pre_v2/defi/recursive-staked-basis.md,
+    /codex/09-strategy/_archived_pre_v2/defi/sol-staked-basis.md,
+    reward-lifecycle.md,
+  ]
 created: 2026-03-27
 authoritative_for: []
-referenced_by: [codex/09-strategy/_archived_pre_v2/STRATEGY_CATALOG_pre_v2.md, codex/09-strategy/_archived_pre_v2/defi/recursive-staked-basis.md, codex/09-strategy/_archived_pre_v2/defi/reward-lifecycle.md, codex/09-strategy/_archived_pre_v2/defi/sol-staked-basis.md, codex/09-strategy/_archived_pre_v2/defi/unhedged-recursive.md]
+referenced_by:
+  [
+    /codex/09-strategy/_archived_pre_v2/STRATEGY_CATALOG_pre_v2.md,
+    /codex/09-strategy/_archived_pre_v2/defi/recursive-staked-basis.md,
+    /codex/09-strategy/_archived_pre_v2/defi/reward-lifecycle.md,
+    /codex/09-strategy/_archived_pre_v2/defi/sol-staked-basis.md,
+    /codex/09-strategy/_archived_pre_v2/defi/unhedged-recursive.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

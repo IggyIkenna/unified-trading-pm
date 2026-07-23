@@ -10,13 +10,27 @@ status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
-repos: [instruments-service, market-tick-data-service, unified-api-contracts, unified-trading-library, unified-trading-pm]
+repos:
+  [instruments-service, market-tick-data-service, unified-api-contracts, unified-trading-library, unified-trading-pm]
 scope: [engineer, admin]
 tags: [infrastructure, scripts, quality-gates, registry, runbook]
-related: [library-setup-checklist.md, service-setup-checklist.md, ui-setup-checklist.md, ../06-coding-standards/dependency-management.md]
+related:
+  [
+    /codex/05-infrastructure/library-setup-checklist.md,
+    /codex/05-infrastructure/service-setup-checklist.md,
+    /codex/05-infrastructure/ui-setup-checklist.md,
+    /codex/06-coding-standards/dependency-management.md,
+  ]
 created: 2026-03-27
 authoritative_for: [new repo setup workflow]
-referenced_by: [codex/05-infrastructure/README.md, codex/05-infrastructure/cicd-setup.md, codex/05-infrastructure/library-setup-checklist.md, codex/05-infrastructure/service-setup-checklist.md, codex/05-infrastructure/workspace-root-variable.md]
+referenced_by:
+  [
+    /codex/05-infrastructure/README.md,
+    /codex/05-infrastructure/cicd-setup.md,
+    /codex/05-infrastructure/library-setup-checklist.md,
+    /codex/05-infrastructure/service-setup-checklist.md,
+    /codex/05-infrastructure/workspace-root-variable.md,
+  ]
 owner:
 last_reviewed: 2026-05-17
 code_refs:
@@ -743,7 +757,7 @@ gh api \
 
 ## Step 13: Add GitHub Actions Workflow
 
-> **SSOT**: `codex/08-workflows/ci-cd-flow.md`
+> **SSOT**: `/codex/08-workflows/ci-cd-flow.md`
 > Do NOT hand-write these files. Roll out the canonical template — it renders the per-repo `name:`, the transitive editable dep closure, and the action ref from `quality-gates-v2.yml.tmpl`.
 
 ```bash

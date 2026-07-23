@@ -15,22 +15,22 @@ tags: [strategy, defi, yield, lending, aave, rotation, carry]
 related:
   [
     ../families/carry-and-yield.md,
-    yield-staking-simple.md,
-    carry-staked-basis.md,
-    arbitrage-price-dispersion.md,
+    /codex/09-strategy/architecture-v2/archetypes/yield-staking-simple.md,
+    /codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md,
+    /codex/09-strategy/architecture-v2/archetypes/arbitrage-price-dispersion.md,
     ../../../02-venues/venue-registry-reference.md,
   ]
 created: 2026-04-17
 authoritative_for: ["YIELD_ROTATION_LENDING archetype spec"]
 referenced_by:
   [
-    codex/09-strategy/_archived_pre_v2/defi/aave-lending.md,
-    codex/09-strategy/_archived_pre_v2/defi/cross-chain-yield-arb.md,
-    codex/09-strategy/architecture-v2/archetypes/carry-recursive-borrow-lending-only.md,
-    codex/09-strategy/architecture-v2/archetypes/defi-lp-pool.md,
-    codex/09-strategy/architecture-v2/archetypes/defi-lp-vault.md,
-    codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md,
-    codex/09-strategy/architecture-v2/families/carry-and-yield.md,
+    /codex/09-strategy/_archived_pre_v2/defi/aave-lending.md,
+    /codex/09-strategy/_archived_pre_v2/defi/cross-chain-yield-arb.md,
+    /codex/09-strategy/architecture-v2/archetypes/carry-recursive-borrow-lending-only.md,
+    /codex/09-strategy/architecture-v2/archetypes/defi-lp-pool.md,
+    /codex/09-strategy/architecture-v2/archetypes/defi-lp-vault.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md,
+    /codex/09-strategy/architecture-v2/families/carry-and-yield.md,
   ]
 owner:
 last_reviewed:

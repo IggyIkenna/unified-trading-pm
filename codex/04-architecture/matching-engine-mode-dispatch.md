@@ -12,8 +12,13 @@ stage: [meta]
 repos: [execution-service]
 scope: [engineer, admin]
 tags: [execution, defi, cefi, sports, pipeline-mode, ssot]
-related: [matching-engine-assumptions.md, operational-modes.md, batch-live-architecture.md]
-created: '2026-05-15'
+related:
+  [
+    /codex/04-architecture/matching-engine-assumptions.md,
+    /codex/04-architecture/operational-modes.md,
+    /codex/04-architecture/batch-live-architecture.md,
+  ]
+created: "2026-05-15"
 authoritative_for:
   [
     operational-mode to matcher routing,
@@ -21,7 +26,7 @@ authoritative_for:
     BenchmarkFillMode per instruction action,
     BATCH always-fill contract,
   ]
-referenced_by: [codex/04-architecture/matching-engine-assumptions.md, codex/04-architecture/operational-modes.md]
+referenced_by: [/codex/04-architecture/matching-engine-assumptions.md, /codex/04-architecture/operational-modes.md]
 owner: topology_qgroup_gap_closure_2026_05_09 Phase 8
 last_reviewed: 2026-05-17
 code_refs:

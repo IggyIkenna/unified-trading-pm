@@ -3,7 +3,8 @@ doc_type: codex-ssot
 title: Incident Gateway State Machine
 summary:
   13-state incident lifecycle owned by alerting-service as the central Incident Gateway — AUTO_ACTION_SUCCEEDED≠RESOLVED
-  (separate recovery-verification gate), IncidentEnvelope schema, dedup incident_key, audit-ack queue, 7 immediate-SEV0 overrides.
+  (separate recovery-verification gate), IncidentEnvelope schema, dedup incident_key, audit-ack queue, 7 immediate-SEV0
+  overrides.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -11,10 +12,22 @@ stage: [meta]
 repos: [alerting-service, batch-live-reconciliation-service, execution-service, strategy-service]
 scope: [engineer, admin]
 tags: [alerting, observability, escalation, self-healing, runbook]
-related: [recovery-defence-in-depth-layers.md, autonomous-recovery-matrix.md, ../15-runbooks/alerting/audit-acknowledgement-flow.md, ../03-observability/alerting.md]
+related:
+  [
+    /codex/04-architecture/recovery-defence-in-depth-layers.md,
+    /codex/04-architecture/autonomous-recovery-matrix.md,
+    /codex/15-runbooks/alerting/audit-acknowledgement-flow.md,
+    /codex/03-observability/alerting.md,
+  ]
 created: 2026-05-23
 authoritative_for: [incident-state-machine, audit-ack-queue, dedup-key]
-referenced_by: [codex/03-observability/alerting.md, codex/04-architecture/recovery-defence-in-depth-layers.md, plans/archive/incident_gateway_and_state_machine_2026_05_23.plan.md, plans/audit/instructions/observability_master_audit_instructions.md]
+referenced_by:
+  [
+    /codex/03-observability/alerting.md,
+    /codex/04-architecture/recovery-defence-in-depth-layers.md,
+    plans/archive/incident_gateway_and_state_machine_2026_05_23.plan.md,
+    plans/audit/instructions/observability_master_audit_instructions.md,
+  ]
 owner:
 last_reviewed: 2026-05-23
 code_refs:
@@ -66,7 +79,7 @@ AUTO_ACTION_STARTED
 - `AUTO_ACTION_SUCCEEDED → RESOLVED` (must go via RECOVERY_VERIFICATION_STARTED → RECOVERY_CONFIRMED).
 - `DETECTED → CLOSED` (must be at least HUMAN_AUDIT_ACKED first if `human_audit_ack_required=True`).
 - `RECOVERY_CONFIRMED → CLOSED` skipping AUDIT_REPORT_GENERATED + HUMAN_AUDIT_ACKED (the operator audit ack is mandatory
-  per the 6h SLA — see `codex/15-runbooks/alerting/audit-acknowledgement-flow.md`).
+  per the 6h SLA — see `/codex/15-runbooks/alerting/audit-acknowledgement-flow.md`).
 
 ## IncidentEnvelope schema
 
@@ -113,7 +126,7 @@ Redis Streams backed durable queue at `alerting-service/alerting_service/gateway
 by due-at provides O(log N) due-soon polling.
 
 Escalation cron runs every 30s; on breach, escalates per the per-severity SLA matrix in
-`codex/15-runbooks/alerting/audit-acknowledgement-flow.md`:
+`/codex/15-runbooks/alerting/audit-acknowledgement-flow.md`:
 
 | Severity | default | secondary_human_after | founder_after |
 | -------- | ------- | --------------------- | ------------- |

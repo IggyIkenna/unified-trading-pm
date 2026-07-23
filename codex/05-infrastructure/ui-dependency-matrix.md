@@ -9,13 +9,26 @@ status: superseded
 nature: ssot
 asset_group: [meta]
 stage: [meta]
-repos: [client-reporting-api, deployment-api, deployment-service, deployment-ui, system-integration-tests, unified-trading-api]
+repos:
+  [
+    client-reporting-api,
+    deployment-api,
+    deployment-service,
+    deployment-ui,
+    system-integration-tests,
+    unified-trading-api,
+  ]
 scope: [engineer, admin]
 tags: [ui, infrastructure, deployment, superseded, api]
-related: [ui-architecture.md, ui-functionality-requirements.md]
+related: [/codex/05-infrastructure/ui-architecture.md, /codex/05-infrastructure/ui-functionality-requirements.md]
 created: 2026-03-27
 authoritative_for: []
-referenced_by: [codex/05-infrastructure/ui-architecture.md, codex/05-infrastructure/ui-functionality-requirements.md, codex/06-coding-standards/ui-service-separation.md]
+referenced_by:
+  [
+    /codex/05-infrastructure/ui-architecture.md,
+    /codex/05-infrastructure/ui-functionality-requirements.md,
+    /codex/06-coding-standards/ui-service-separation.md,
+  ]
 owner:
 last_reviewed: 2026-05-13
 code_refs:

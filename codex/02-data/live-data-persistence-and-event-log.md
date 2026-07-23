@@ -16,9 +16,9 @@ scope: [engineer, admin]
 tags: [live-trading, event-log, pipeline-mode, reconciliation, data-pipeline, mtds, mdps]
 related:
   [
-    pipeline-mode-partition.md,
-    ../09-strategy/operational/paper-batch-live-reconciliation.md,
-    ../04-architecture/batch-live-architecture.md,
+    /codex/02-data/pipeline-mode-partition.md,
+    /codex/09-strategy/operational/paper-batch-live-reconciliation.md,
+    /codex/04-architecture/batch-live-architecture.md,
   ]
 created: 2026-06-26
 authoritative_for:
@@ -28,7 +28,7 @@ authoritative_for:
   ]
 referenced_by:
   [
-    codex/05-infrastructure/pubsub-topic-inventory.md,
+    /codex/05-infrastructure/pubsub-topic-inventory.md,
     plans/audit/results/vm_deployment_events_audit_2026_05_15.md,
     plans/active/issues/live_mode_event_sink_topic_missing_2026_06_21.md,
     plans/active/issues/mtds_plan_reconciliation_2026_06_29.md,
@@ -116,6 +116,6 @@ deployed in `deployment-service/terraform/gcp/live_event_log/`.
 - SINK_MATRIX definition: `unified_api_contracts/events/sink_matrix.py`
 - UTL facade: `unified_trading_library/streaming/event_facade.py`
 - Terraform infra: `deployment-service/terraform/gcp/live_event_log/`
-- Batch==live reconciliation: `codex/09-strategy/operational/paper-batch-live-reconciliation.md`
-- Pipeline mode partition: `codex/02-data/pipeline-mode-partition.md`
-- Pipeline mode + batch/live reconciliation: `codex/02-data/pipeline-mode-and-batch-live-reconciliation.md`
+- Batch==live reconciliation: `/codex/09-strategy/operational/paper-batch-live-reconciliation.md`
+- Pipeline mode partition: `/codex/02-data/pipeline-mode-partition.md`
+- Pipeline mode + batch/live reconciliation: `/codex/02-data/pipeline-mode-and-batch-live-reconciliation.md`

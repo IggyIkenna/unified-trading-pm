@@ -2,8 +2,8 @@
 doc_type: codex-ssot
 title: DeFi Risk Monitoring
 summary:
-  DeFi risk-type taxonomy + alert thresholds — health-factor, oracle-depeg, borrow/staking spread,
-  stablecoin depeg, withdrawal-delay, base-currency drift, margin-currency mismatch — plus per-check monitoring cadence.
+  DeFi risk-type taxonomy + alert thresholds — health-factor, oracle-depeg, borrow/staking spread, stablecoin depeg,
+  withdrawal-delay, base-currency drift, margin-currency mismatch — plus per-check monitoring cadence.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -11,10 +11,19 @@ stage: [meta]
 repos: [alerting-service]
 scope: [engineer, admin]
 tags: [defi, risk, monitoring, health-factor, oracle, alerting]
-related: [defi-phase3-infrastructure.md, ../09-strategy/architecture-v2/axes/share-class.md, alerting-batch-live.md]
+related:
+  [
+    /codex/04-architecture/defi-phase3-infrastructure.md,
+    /codex/09-strategy/architecture-v2/axes/share-class.md,
+    /codex/04-architecture/alerting-batch-live.md,
+  ]
 created: 2026-04-03
 authoritative_for: [DeFi risk-type taxonomy and alert thresholds]
-referenced_by: [codex/04-architecture/client-config-and-risk-dimensions.md, codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md]
+referenced_by:
+  [
+    /codex/04-architecture/client-config-and-risk-dimensions.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md,
+  ]
 owner:
 last_reviewed: 2026-05-17
 code_refs:
@@ -152,7 +161,7 @@ delta in base asset = account_equity / fx_rate (NOT zero).
 
 Drift > 2% triggers WARNING, > 5% triggers CRITICAL.
 
-See `codex/09-strategy/architecture-v2/axes/share-class.md` for full share class architecture.
+See `/codex/09-strategy/architecture-v2/axes/share-class.md` for full share class architecture.
 
 ## Margin Currency Mismatch
 

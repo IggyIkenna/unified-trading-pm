@@ -18,11 +18,11 @@ scope: [engineer, admin]
 tags: [manifest, honest-coverage, data-correctness, data-status, features, reconciliation, deribit]
 related:
   [
-    availability-manifest-and-data-status.md,
-    honest-coverage-model.md,
-    ../15-runbooks/expected-absence-backfill-runbook.md,
-    data-pipeline-correctness-hard-rule.md,
-    ../05-infrastructure/data-pipeline-alerts.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/02-data/honest-coverage-model.md,
+    /codex/15-runbooks/expected-absence-backfill-runbook.md,
+    /codex/02-data/data-pipeline-correctness-hard-rule.md,
+    /codex/05-infrastructure/data-pipeline-alerts.md,
   ]
 created: 2026-05-06
 authoritative_for:
@@ -33,14 +33,14 @@ authoritative_for:
   ]
 referenced_by:
   [
-    codex/02-data/availability-manifest-and-data-status.md,
-    codex/02-data/contract-failure-handling.md,
-    codex/02-data/data-pipeline-correctness-hard-rule.md,
-    codex/02-data/data-status-drilldown-hierarchy.md,
-    codex/02-data/data-status-drilldown.md,
-    codex/02-data/defi-data-type-taxonomy.md,
-    codex/15-runbooks/expected-absence-backfill-runbook.md,
-    codex/02-data/external-data-always-available-rule.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/02-data/contract-failure-handling.md,
+    /codex/02-data/data-pipeline-correctness-hard-rule.md,
+    /codex/02-data/data-status-drilldown-hierarchy.md,
+    /codex/02-data/data-status-drilldown.md,
+    /codex/02-data/defi-data-type-taxonomy.md,
+    /codex/15-runbooks/expected-absence-backfill-runbook.md,
+    /codex/02-data/external-data-always-available-rule.md,
   ]
 owner:
 last_reviewed: 2026-05-22
@@ -492,7 +492,7 @@ opt-in refinement.
 
 **Event family.** `DP_EMPTY_REPROBE_DISAGREEMENT` is a WARN-tier `DP_*` event routed to `#data-pipeline-alerts`
 (registry class `DP-FETCH-006`). Full alert taxonomy + routing:
-[`codex/05-infrastructure/data-pipeline-alerts.md`](../05-infrastructure/data-pipeline-alerts.md). Plan SSOT:
+[`/codex/05-infrastructure/data-pipeline-alerts.md`](/codex/05-infrastructure/data-pipeline-alerts.md). Plan SSOT:
 [`data_pipeline_hardening_self_monitoring_2026_06_22.md`](../../plans/active/data_pipeline_hardening_self_monitoring_2026_06_22.md)
 Phase 1 (keystone) + Phase 5 (escalation hop).
 
@@ -725,7 +725,7 @@ self-filter live in `instruments_service/reference_data/factory.py::get_adapter_
 - § [Reconciler chain for legacy error_reason](#reconciler-chain-for-legacy-error_reason-the-three-passes) — the three
   `instruments-service/scripts/reconcile_*.py` passes that retrospectively backfill typed reasons
 - Per-asset-group backfill runbook (shipped 2026-05-07):
-  [`codex/15-runbooks/expected-absence-backfill-runbook.md`](./../15-runbooks/expected-absence-backfill-runbook.md) —
+  [`/codex/15-runbooks/expected-absence-backfill-runbook.md`](./../15-runbooks/expected-absence-backfill-runbook.md) —
   volumes per asset_group, invocation recipe, reconciler + enumerator scripts
   (`instruments-service/scripts/reconcile_expected_absence_reasons.py` + `enumerate_expected_universe.py`), UTL
   reader-side fallback `classify_legacy_empty_row()`
@@ -1199,8 +1199,8 @@ on `capture_status`:
 > `staleness_seconds>0 + trade_count==0`; **prediction** Category-D uses the **nullable-OHLCV** variant and emits
 > NaN-OHLC bars (a distinct marker — nullable OHLC is allowed only for `prediction`/`sports`). Wherever a row below says
 > `zero_activity=True`, read it as "the shipped `staleness_seconds>0 + trade_count==0` carried bar" (cefi/tradfi/defi)
-> or the NaN-OHLC bar (prediction). Canonical contract: `codex/06-coding-standards/adapter-finalization-contract.md` + §
-> "Per-adapter density contract" below.
+> or the NaN-OHLC bar (prediction). Canonical contract: `/codex/06-coding-standards/adapter-finalization-contract.md` +
+> § "Per-adapter density contract" below.
 
 > **Status**: audit complete (2026-05-11, `wave3x_residual_ssots_2026_05_08.md` Track D); the **dense forward-fill
 > carry-forward shipped 2026-06-02** via `_finalize_session_grid` (see banner above + § "Per-adapter density contract").
@@ -1272,7 +1272,7 @@ Key findings:
 - All 18 adapters route on-source-zero-response to `record_empty(reason=EXPECTED_*)` (Category A) correctly.
 - GMX perp funding is captured on the **defi axis** (`derivative_ticker` + `perp_funding` via The Graph, wired
   2026-07-15); it has no cefi tick adapter, which is correct — not a manifest violation. DRIFT was CULLED 2026-07-16
-  (removed entirely). See `../04-architecture/solana-defi-coverage.md`.
+  (removed entirely). See `/codex/04-architecture/solana-defi-coverage.md`.
 - `_handle_empty_tick_data` (MDPS `batch_workers.py` + `live_workers.py`) is the approved post-Wave-2.M method that
   routes through `record_empty_for_shard` — it is NOT in the banned-pattern set (it replaced `_create_empty_output`).
 
@@ -1383,7 +1383,7 @@ This note is pre-emptive — v2 has not yet launched. Update this section after 
   `non_trading_day_reason`.
 - Intra-day session classifier: `unified_api_contracts.canonical.crosscutting.market_session.classify_session`.
 - Feature calculator pattern for session-aware rolling windows:
-  [`../../codex/06-coding-standards/session-aware-feature-calculator-pattern.md`](../../codex/06-coding-standards/session-aware-feature-calculator-pattern.md).
+  [`/codex/06-coding-standards/session-aware-feature-calculator-pattern.md`](/codex/06-coding-standards/session-aware-feature-calculator-pattern.md).
 - Writegate Phase 2.E.2 plan item: `plans/epics/tradfi_master.md` § "Replace zero-volume bars during non-tradeable
   sessions."
 
@@ -1431,13 +1431,13 @@ heartbeats but does NOT kill honest-coverage VMs (they are inherently short-live
 ### Cross-references
 
 - Plan: `cross_asset_group_catalogue_audit_2026_05_10.md` Phase 2B + B-018 Phase 8.A.
-- Deployment codex: `codex/05-infrastructure/vm-tarball-deployment.md` (tarball creation for VM code).
+- Deployment codex: `/codex/05-infrastructure/vm-tarball-deployment.md` (tarball creation for VM code).
 - QG enforcement: STEP 5.66 (`MANIFEST_PER_VM_SHARDS=true`) + STEP 5.61 (STARTED/STOPPED lifecycle).
 
 ## Scenario-driven gap injection
 
 The scenario harness can produce **synthetic gaps** via two `ScenarioMutationSpec` types from
-[`../04-architecture/scenario-injection-architecture.md`](../04-architecture/scenario-injection-architecture.md):
+[`/codex/04-architecture/scenario-injection-architecture.md`](/codex/04-architecture/scenario-injection-architecture.md):
 
 - **`DropRows`**: drops one or more data rows mid-sequence at the `MANIFEST` tap layer, causing the manifest writer to
   emit `empty_confirmed[SOURCE_RETURNED_ZERO]` or `attempted_failed` depending on the harness config.
@@ -1631,7 +1631,7 @@ active," which is the correct operational state.
 ### Cross-references
 
 - `cefi_venue_backfill_coverage_remediation_2026_05_27.md` §1 (expiry window), §2 (401 rule)
-- `codex/04-architecture/cefi-batch-live.md` §9 (adapter-level expiry-window + 401 contract)
+- `/codex/04-architecture/cefi-batch-live.md` §9 (adapter-level expiry-window + 401 contract)
 - `market-tick-data-service@91e3df03` — window filter implementation
 - `instruments-service@ffb8192` — Kraken underscore-symbol expiry parser
 
@@ -1640,7 +1640,7 @@ active," which is the correct operational state.
 ## Per-adapter density contract: dense + LOCF + no leading NaN + carry-from-prior-day
 
 > Codified 2026-06-02 from `plans/active/issues/mdps_state_adapter_leading_nan_audit_2026_05_29.md` (operator decisions
-> 2026-06-01). Full contract + per-adapter table: `codex/06-coding-standards/adapter-finalization-contract.md`.
+> 2026-06-01). Full contract + per-adapter table: `/codex/06-coding-standards/adapter-finalization-contract.md`.
 
 **Within-series density is a separate axis from shard-level honest absence.** Shard-level honest absence answers "did
 this (venue × `data_type` × day) shard get captured at all?" (`captured` / `empty_confirmed` / `attempted_failed` /

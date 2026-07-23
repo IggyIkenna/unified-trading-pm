@@ -15,24 +15,24 @@ scope: [engineer, admin]
 tags: [alerting, escalation, monitoring, self-healing, observability, live-trading]
 related:
   [
-    data-feed-sla-registry.md,
-    lifecycle-events.md,
-    coordination-events.md,
-    ../04-architecture/autonomous-recovery-matrix.md,
-    ../04-architecture/incident-gateway-state-machine.md,
+    /codex/03-observability/data-feed-sla-registry.md,
+    /codex/03-observability/lifecycle-events.md,
+    /codex/03-observability/coordination-events.md,
+    /codex/04-architecture/autonomous-recovery-matrix.md,
+    /codex/04-architecture/incident-gateway-state-machine.md,
   ]
 created: 2026-03-27
 authoritative_for: [autonomous-recovery alert matrix, alert delivery channels]
 referenced_by:
   [
-    codex/03-observability/coordination-events.md,
-    codex/03-observability/data-feed-sla-registry.md,
-    codex/03-observability/lifecycle-events.md,
-    codex/03-observability/monitoring-control-plane.md,
-    codex/03-observability/slos.md,
-    codex/04-architecture/dependency-health-policy.md,
-    codex/04-architecture/incident-gateway-state-machine.md,
-    codex/04-architecture/kill-switch-event-bus.md,
+    /codex/03-observability/coordination-events.md,
+    /codex/03-observability/data-feed-sla-registry.md,
+    /codex/03-observability/lifecycle-events.md,
+    /codex/03-observability/monitoring-control-plane.md,
+    /codex/03-observability/slos.md,
+    /codex/04-architecture/dependency-health-policy.md,
+    /codex/04-architecture/incident-gateway-state-machine.md,
+    /codex/04-architecture/kill-switch-event-bus.md,
   ]
 owner:
 last_reviewed:
@@ -52,26 +52,26 @@ voice/SMS** (permanent Layer-3 fallback — survives PagerDuty API outage + phon
 
 > **Incident Gateway (2026-05-23)**: all alerts now flow through the central `alerting-service` Incident Gateway as
 > structured `IncidentEnvelope` events with 13-state lifecycle tracking, dedup-key storm collapse, and 6h audit-ack
-> queue. See `codex/04-architecture/incident-gateway-state-machine.md` for the SSOT. The 5-layer defence-in-depth model
+> queue. See `/codex/04-architecture/incident-gateway-state-machine.md` for the SSOT. The 5-layer defence-in-depth model
 > (Layer-0 scripts → Layer-1 LLM agent → Layer-2 PagerDuty → Layer-3 Twilio → Layer-4 physical pager) is in
-> `codex/04-architecture/recovery-defence-in-depth-layers.md`.
+> `/codex/04-architecture/recovery-defence-in-depth-layers.md`.
 
 > **🟡 SLACK DEPRECATION RECONCILIATION (AL-6 PRE_CUTOVER 2026-05-12, slot 8 audit)** — this doc declares Slack
 > deprecated; downstream references still treating Slack as a live channel are tracked for follow-up: (a)
-> `codex/04-architecture/alerting-batch-live.md:18` lists "PagerDuty / Telegram / Slack"; (b)
-> `codex/15-runbooks/alerting/operator-playbook.md:48` references "pinned in the Slack channel"; (c)
-> `codex/15-runbooks/alerting/alert-code-taxonomy.md:189-190` ML routing matrix lists SLACK as a live channel; (d) code:
-> `AlertChannel.SLACK` exists in `codes.py:271`; `alerting-service/notifiers/slack.py` + sibling modules still ship.
-> Operator-declared direction: Telegram + PagerDuty only. Code-removal + ML-routing updates routed to alerting-service
-> maintainer (cross-ref slot 8 ALERTING AL-6 PRE_CUTOVER follow-up).
+> `/codex/04-architecture/alerting-batch-live.md:18` lists "PagerDuty / Telegram / Slack"; (b)
+> `/codex/15-runbooks/alerting/operator-playbook.md:48` references "pinned in the Slack channel"; (c)
+> `/codex/15-runbooks/alerting/alert-code-taxonomy.md:189-190` ML routing matrix lists SLACK as a live channel; (d)
+> code: `AlertChannel.SLACK` exists in `codes.py:271`; `alerting-service/notifiers/slack.py` + sibling modules still
+> ship. Operator-declared direction: Telegram + PagerDuty only. Code-removal + ML-routing updates routed to
+> alerting-service maintainer (cross-ref slot 8 ALERTING AL-6 PRE_CUTOVER follow-up).
 
 ---
 
 ## Alert Severity Tiers
 
 > **Severity vocabulary SSOT** — see
-> [`15-runbooks/alerting/README.md` § Severity glossary](../15-runbooks/alerting/README.md#severity-glossary) for the
-> canonical mapping between the UAC `AlertSeverity` codex enum (CRITICAL / HIGH / WARN / INFO), PagerDuty incident
+> [`15-runbooks/alerting/README.md` § Severity glossary](/codex/15-runbooks/alerting/README.md#severity-glossary) for
+> the canonical mapping between the UAC `AlertSeverity` codex enum (CRITICAL / HIGH / WARN / INFO), PagerDuty incident
 > priorities (P0 / P1 / P2 / P3), time-to-ack targets, routing channels, and worked examples. The tier labels used in
 > the recovery matrix below (`T1 CRITICAL` / `T2 HIGH` / `T3 WARNING` / `T4 INFO`) are display aliases for the codex
 > enum members of the same name.
@@ -171,7 +171,7 @@ Every autonomous recovery action the system takes, mapped to its alert tier:
 the coarse alerting floor for tick-staleness alerts (default 300 s). The per-venue freshness thresholds that govern
 whether a specific feed is actually stale live in `MARKET_TICK_FRESHNESS` inside
 `unified_api_contracts/internal/reference/data_freshness.py` — the feed-SLA registry SSOT
-(`codex/03-observability/data-feed-sla-registry.md`).
+(`/codex/03-observability/data-feed-sla-registry.md`).
 
 The two values are **cross-validated, not import-time-derived** (import-time derivation would create an
 alerting↔reference circular import). The enforcement is the CI test:
@@ -196,8 +196,8 @@ contracts are consistent — the test is the single enforcement point.
 > kill-switch-recovery / tick-staleness / connectivity-gap / DeFi / margin / position-recon / order-recovery / multi-leg
 > / service-health / cross-cloud-egress codes. Operator overrides flow via `AlertingSystemConfig.routing_rules`. The
 > closed AlertCode set is governed in
-> [`../15-runbooks/alerting/alert-code-taxonomy.md`](../15-runbooks/alerting/alert-code-taxonomy.md); the
-> [`AlertRule._validate_kill_switch_scope_matches_code_family`](../15-runbooks/alerting/alert-code-taxonomy.md#construction-time-validation)
+> [`/codex/15-runbooks/alerting/alert-code-taxonomy.md`](/codex/15-runbooks/alerting/alert-code-taxonomy.md); the
+> [`AlertRule._validate_kill_switch_scope_matches_code_family`](/codex/15-runbooks/alerting/alert-code-taxonomy.md#construction-time-validation)
 > validator enforces per-rule consistency.
 >
 > Routing-rule philosophy (preserved verbatim): **first-match-wins** on `event_pattern` glob, with a `*` fallback

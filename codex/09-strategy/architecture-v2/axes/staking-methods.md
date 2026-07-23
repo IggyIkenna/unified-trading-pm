@@ -1,11 +1,11 @@
 ---
 doc_type: codex-ssot
-title: 'Axis: Staking Methods (Position Sizing)'
+title: "Axis: Staking Methods (Position Sizing)"
 summary:
   'Position-sizing axis ("staking methods") — how much to bet once the edge method says yes: fractional Kelly,
   confidence-scaled, fixed % of equity, fixed notional $, vol-scaled, delta-neutral paired, inventory-skewed, vega/gamma
-  notional cap, tier-based, rank-weighted / equal-weight. Final size = min(method output, per-instrument cap, family cap,
-  venue headroom, kill-switch reduction); folds in legacy sports staking (Martingale/Roll-up retired).'
+  notional cap, tier-based, rank-weighted / equal-weight. Final size = min(method output, per-instrument cap, family
+  cap, venue headroom, kill-switch reduction); folds in legacy sports staking (Martingale/Roll-up retired).'
 status: current
 nature: ssot
 asset_group: [meta]
@@ -13,10 +13,26 @@ stage: [meta]
 repos: []
 scope: [engineer, admin]
 tags: [strategy, staking-methods, sizing, sports, market-making]
-related: [edge-methods.md, signal-sources.md, venue-eligibility.md, ../cross-cutting/risk-gates.md]
+related:
+  [
+    /codex/09-strategy/architecture-v2/axes/edge-methods.md,
+    /codex/09-strategy/architecture-v2/axes/signal-sources.md,
+    /codex/09-strategy/architecture-v2/axes/venue-eligibility.md,
+    ../cross-cutting/risk-gates.md,
+  ]
 created: 2026-04-17
 authoritative_for: [position-sizing axis (staking / stake-sizing method catalog)]
-referenced_by: [codex/09-strategy/_archived_pre_v2/sports/kelly.md, codex/09-strategy/_archived_pre_v2/sports/staking-methods.md, codex/09-strategy/architecture-v2/README.md, codex/09-strategy/architecture-v2/archetypes/ml-directional-event-settled.md, codex/09-strategy/architecture-v2/axes/edge-methods.md, codex/09-strategy/architecture-v2/axes/expression.md, codex/09-strategy/architecture-v2/axes/hold-policy.md, codex/09-strategy/architecture-v2/axes/signal-sources.md]
+referenced_by:
+  [
+    /codex/09-strategy/_archived_pre_v2/sports/kelly.md,
+    /codex/09-strategy/_archived_pre_v2/sports/staking-methods.md,
+    /codex/09-strategy/architecture-v2/README.md,
+    /codex/09-strategy/architecture-v2/archetypes/ml-directional-event-settled.md,
+    /codex/09-strategy/architecture-v2/axes/edge-methods.md,
+    /codex/09-strategy/architecture-v2/axes/expression.md,
+    /codex/09-strategy/architecture-v2/axes/hold-policy.md,
+    /codex/09-strategy/architecture-v2/axes/signal-sources.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

@@ -2,10 +2,10 @@
 doc_type: codex-runbook
 title: Audit Acknowledgement Flow
 summary:
-  SSOT for the audit-ack SLA + escalation ladder — the two ack types (operational ack = ownership, no state change; audit
-  ack = human sign-off, transitions to HUMAN_AUDIT_ACKED), the per-severity SLA matrix (CRITICAL 5min .. WARN 6h), the
-  secondary->founder->physical-pager cascade, the even-APPROVED-LLM-verdict-still-requires-human-ack HARD RULE, the DART
-  widgets, and the 30s ack-escalation cron with GCS-durable audit trail.
+  SSOT for the audit-ack SLA + escalation ladder — the two ack types (operational ack = ownership, no state change;
+  audit ack = human sign-off, transitions to HUMAN_AUDIT_ACKED), the per-severity SLA matrix (CRITICAL 5min .. WARN 6h),
+  the secondary->founder->physical-pager cascade, the even-APPROVED-LLM-verdict-still-requires-human-ack HARD RULE, the
+  DART widgets, and the 30s ack-escalation cron with GCS-durable audit trail.
 status: current
 nature: process
 asset_group: [meta]
@@ -15,9 +15,9 @@ scope: [engineer, admin]
 tags: [alerting, runbook, escalation, ui, self-healing, live-trading]
 related:
   [
-    codex/04-architecture/incident-gateway-state-machine.md,
-    codex/04-architecture/recovery-defence-in-depth-layers.md,
-    codex/15-runbooks/alerting/pagerduty-escalation-policy.md,
+    /codex/04-architecture/incident-gateway-state-machine.md,
+    /codex/04-architecture/recovery-defence-in-depth-layers.md,
+    /codex/15-runbooks/alerting/pagerduty-escalation-policy.md,
   ]
 created: 2026-05-23
 owner: ikenna
@@ -27,7 +27,13 @@ last_executed:
 code_refs:
 last_reviewed: 2026-05-23
 authoritative_for: [audit-ack-sla, escalation-ladder, operational-vs-audit-ack]
-referenced_by: [codex/04-architecture/incident-gateway-state-machine.md, codex/04-architecture/recovery-defence-in-depth-layers.md, codex/15-runbooks/alerting/pagerduty-escalation-policy.md, plans/active/audit_acknowledgement_sla_and_state_2026_05_23.md]
+referenced_by:
+  [
+    /codex/04-architecture/incident-gateway-state-machine.md,
+    /codex/04-architecture/recovery-defence-in-depth-layers.md,
+    /codex/15-runbooks/alerting/pagerduty-escalation-policy.md,
+    plans/active/audit_acknowledgement_sla_and_state_2026_05_23.md,
+  ]
 ---
 
 # Audit Acknowledgement Flow

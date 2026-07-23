@@ -2,10 +2,10 @@
 doc_type: codex-ssot
 title: Quality Gate Bypass Audit — Workspace Aggregate (SSOT)
 summary:
-  Codex-level SSOT for cross-repo quality-gate bypass tracking — defines what counts as a bypass
-  (type:ignore / noqa / file-size / coverage exceptions), the per-repo QUALITY_GATE_BYPASS_AUDIT.md file
-  structure, the suppression-category rubric (LIBRARY_STUB_MISSING and OVERLOAD_PATTERN acceptable;
-  ARCHITECTURAL_VIOLATION never), and enforcement hooks. The Feb-27 scan counts are a historical snapshot.
+  Codex-level SSOT for cross-repo quality-gate bypass tracking — defines what counts as a bypass (type:ignore / noqa /
+  file-size / coverage exceptions), the per-repo QUALITY_GATE_BYPASS_AUDIT.md file structure, the suppression-category
+  rubric (LIBRARY_STUB_MISSING and OVERLOAD_PATTERN acceptable; ARCHITECTURAL_VIOLATION never), and enforcement hooks.
+  The Feb-27 scan counts are a historical snapshot.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -13,10 +13,16 @@ stage: [meta]
 repos: [deployment-service, execution-service, instruments-service, strategy-service]
 scope: [engineer, admin]
 tags: [quality-gates, audit, ssot-audit, ssot]
-related: [codex/06-coding-standards/quality-gates.md, codex/10-audit/QUALITY_GATES_COVERAGE_REPORT.md]
+related: [/codex/06-coding-standards/quality-gates.md, /codex/10-audit/QUALITY_GATES_COVERAGE_REPORT.md]
 created: 2026-03-27
 authoritative_for: [quality-gate bypass audit methodology (cross-repo aggregate)]
-referenced_by: [codex/06-coding-standards/audit-remediation-guide.md, codex/10-audit/FOUNDATIONAL-REPOS-AUDIT-2026-03-07.md, codex/10-audit/QUALITY_GATES_COVERAGE_REPORT.md, codex/QUALITY_GATE_BYPASS_AUDIT.md]
+referenced_by:
+  [
+    /codex/06-coding-standards/audit-remediation-guide.md,
+    /codex/10-audit/FOUNDATIONAL-REPOS-AUDIT-2026-03-07.md,
+    /codex/10-audit/QUALITY_GATES_COVERAGE_REPORT.md,
+    codex/QUALITY_GATE_BYPASS_AUDIT.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

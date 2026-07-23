@@ -14,10 +14,10 @@ scope: [engineer, admin]
 tags: [ml, refactor, consolidation, infrastructure, model-tier, ssot]
 related:
   [
-    features-service-architecture.md,
-    ml-lifecycle.md,
-    promote-workflow-architecture.md,
-    ../05-infrastructure/vm-tarball-deployment.md,
+    /codex/04-architecture/features-service-architecture.md,
+    /codex/04-architecture/ml-lifecycle.md,
+    /codex/04-architecture/promote-workflow-architecture.md,
+    /codex/05-infrastructure/vm-tarball-deployment.md,
   ]
 created: 2026-05-19
 authoritative_for:
@@ -29,9 +29,9 @@ authoritative_for:
   ]
 referenced_by:
   [
-    codex/00-getting-started/DEPRECATED_SERVICES.md,
-    codex/04-architecture/ml-lifecycle.md,
-    codex/06-coding-standards/cli-convention.md,
+    /codex/00-getting-started/DEPRECATED_SERVICES.md,
+    /codex/04-architecture/ml-lifecycle.md,
+    /codex/06-coding-standards/cli-convention.md,
   ]
 owner:
 last_reviewed: 2026-05-20
@@ -105,7 +105,7 @@ ml-service/                              # NEW repo
 | `live-inference`    | live         | ml-inference-service | real-time prediction publisher subscribed to feature stream |
 | `cascade-inference` | live / batch | ml-inference-service | 2-stage meta-signal cascade                                 |
 
-All other CLI axes per `codex/06-coding-standards/cli-convention.md`: `--asset-group`, `--mode`, domain-specific flags.
+All other CLI axes per `/codex/06-coding-standards/cli-convention.md`: `--asset-group`, `--mode`, domain-specific flags.
 
 ## Health-API aggregator
 
@@ -180,11 +180,11 @@ migration used.
   10-phase pattern, same template.
 - [`promote-workflow-architecture.md`](./promote-workflow-architecture.md) — promote workflow pins `ml-service`
   inference-image + references model-promotion gate.
-- [`codex/05-infrastructure/launcher-script-ssot.md`](../05-infrastructure/launcher-script-ssot.md) — 2-to-1 launcher
-  collapse.
-- [`codex/05-infrastructure/vm-tarball-deployment.md`](../05-infrastructure/vm-tarball-deployment.md) — single
+- [`/codex/05-infrastructure/launcher-script-ssot.md`](/codex/05-infrastructure/launcher-script-ssot.md) — 2-to-1
+  launcher collapse.
+- [`/codex/05-infrastructure/vm-tarball-deployment.md`](/codex/05-infrastructure/vm-tarball-deployment.md) — single
   ml-service tarball replaces 2-source-repo matrix.
-- [`codex/02-data/README.md`](../02-data/README.md) — ML data lineage post-merge.
+- [`/codex/02-data/README.md`](/codex/02-data/README.md) — ML data lineage post-merge.
 
 ## Anti-patterns (do NOT)
 

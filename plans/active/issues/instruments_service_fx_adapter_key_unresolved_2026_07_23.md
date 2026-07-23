@@ -13,7 +13,7 @@ summary: >-
   step for every instruments-service ship attempt, not just the one that surfaced it. Confirmed unrelated to the CeFi
   catalogue-enumeration-gap script this was discovered while shipping (a brand-new, isolated file) -- reproduced the
   same 4 failures on a re-run with no code changes present.
-status: open
+status: resolved
 nature: issue
 asset_group: [tradfi]
 stage: [data]
@@ -38,9 +38,19 @@ source:
     via quickmerge --agent -- Re-gate failed on the full suite, isolated to 4 pre-existing adapter-registry-invariant
     tests unrelated to the shipped diff",
   ]
-resolved_by:
+resolved_by: "instruments-service@f9be7ec7 (FxReferenceDataAdapter, concurrent sibling session)"
 locked_by:
 ---
+
+## RESOLVED — 2026-07-23 ~17:20Z
+
+A concurrent sibling session shipped `instruments-service@f9be7ec7` ("feat(tradfi): add FxReferenceDataAdapter -- static
+FX_SPOT_PAIRS-derived instrument-list adapter, no vendor call. Registers venue key 'fx' in factory.py, ...")
+independently of this issue doc. Confirmed the fix: rebased my own blocked commit
+(`scripts/measure_cefi_catalogue_enumeration_gap_2026_07_23.py`) onto the new origin HEAD, re-ran the 2 previously-
+failing invariant tests directly (`test_every_uac_adapter_key_resolves_to_a_class`,
+`test_adapter_data_sources_covers_all_adapters`) -- both pass now -- then ran the full quickmerge Re-gate, which passed
+clean. Landed at `instruments-service@f6f16785`. No further action needed.
 
 # instruments-service Re-gate blocked: UAC's new `FX` venue key has no adapter class
 

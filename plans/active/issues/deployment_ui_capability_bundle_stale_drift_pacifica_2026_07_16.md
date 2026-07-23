@@ -28,7 +28,7 @@ stage: [meta]
 repos: [deployment-ui, unified-api-contracts]
 scope: [engineer]
 tags: [drift, pacifica, solana, capability-manifest, stale-bundle, data-correctness, ui]
-related: [../../codex/04-architecture/solana-defi-coverage.md, ../../codex/06-coding-standards/ui-testing-layers.md]
+related: [/codex/04-architecture/solana-defi-coverage.md, /codex/06-coding-standards/ui-testing-layers.md]
 created: 2026-07-16
 parent_epic: defi_master
 priority: P2
@@ -111,7 +111,7 @@ hand-authored JSX.
    `unified-api-contracts/scripts/generate_archetype_capability_manifest.py`'s approach (serialize the live UAC registry
    deterministically) but targeting deployment-ui's manifest/verdict-matrix shape, and commit it under
    `deployment-ui/scripts/` with the standard `# Epic:` / `# Lifecycle:` / `# Delete-when:` lifecycle marker per
-   `codex/06-coding-standards/script-homes.md`.
+   `/codex/06-coding-standards/script-homes.md`.
 4. After regeneration, run `tests/unit/capability-verdict-matrix-loader.test.ts` +
    `tests/unit/capability-helpers.test.ts` + the `CapabilityTab` smoke spec (if one exists under `tests/smoke/`) to
    confirm the tab still renders, then quickmerge scoped to the two data files + any new script.

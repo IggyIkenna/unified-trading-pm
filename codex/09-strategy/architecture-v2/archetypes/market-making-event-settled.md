@@ -16,7 +16,7 @@ tags: [market-making, sports, prediction, odds, event-driven]
 related:
   [
     ../families/market-making.md,
-    market-making-continuous.md,
+    /codex/09-strategy/architecture-v2/archetypes/market-making-continuous.md,
     ../../../02-venues/unity-integration.md,
     ../category-instrument-coverage.md,
   ]
@@ -24,14 +24,14 @@ created: 2026-04-17
 authoritative_for: [MARKET_MAKING_EVENT_SETTLED archetype specification]
 referenced_by:
   [
-    codex/02-venues/unity-integration.md,
-    codex/09-strategy/_archived_pre_v2/sports/market-making.md,
-    codex/09-strategy/architecture-v2/archetypes/arbitrage-cross-domain-event.md,
-    codex/09-strategy/architecture-v2/archetypes/market-making-continuous.md,
-    codex/09-strategy/architecture-v2/archetypes/market-making-inventory-skew.md,
-    codex/09-strategy/architecture-v2/archetypes/market-making-passive-spread.md,
-    codex/09-strategy/architecture-v2/archetypes/market-making-prediction.md,
-    codex/09-strategy/architecture-v2/archetypes/market-making-queue-microstructure.md,
+    /codex/02-venues/unity-integration.md,
+    /codex/09-strategy/_archived_pre_v2/sports/market-making.md,
+    /codex/09-strategy/architecture-v2/archetypes/arbitrage-cross-domain-event.md,
+    /codex/09-strategy/architecture-v2/archetypes/market-making-continuous.md,
+    /codex/09-strategy/architecture-v2/archetypes/market-making-inventory-skew.md,
+    /codex/09-strategy/architecture-v2/archetypes/market-making-passive-spread.md,
+    /codex/09-strategy/architecture-v2/archetypes/market-making-prediction.md,
+    /codex/09-strategy/architecture-v2/archetypes/market-making-queue-microstructure.md,
   ]
 owner:
 last_reviewed:

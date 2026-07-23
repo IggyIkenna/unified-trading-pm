@@ -2,8 +2,8 @@
 doc_type: codex-runbook
 title: KILL_SWITCH_DEFI_LIQUIDATION_RISK Runbook
 summary:
-  Operator response to the highest-impact DeFi alert (CRITICAL, PagerDuty P1, triggers_kill_switch=TRUE) — HF crossed the
-  critical threshold (default 1.05) so the switch halts strategy/execution DeFi surfaces and stages a flash-loan
+  Operator response to the highest-impact DeFi alert (CRITICAL, PagerDuty P1, triggers_kill_switch=TRUE) — HF crossed
+  the critical threshold (default 1.05) so the switch halts strategy/execution DeFi surfaces and stages a flash-loan
   auto-deleverage. Verify HF on-chain + whether auto-deleverage fired, then confirm it (Path 1), manually deleverage to
   HF>=1.30 (Path 2), or full platform halt (Path 3); operator must run resume-from-halt before re-arm.
 status: current
@@ -13,16 +13,32 @@ stage: [meta]
 repos: [alerting-service, execution-service, features-service, strategy-service]
 scope: [engineer, admin]
 tags: [alerting, runbook, defi, kill-switch, execution, escalation, live-trading]
-related: [codex/15-runbooks/alerting/operator-playbook.md, codex/15-runbooks/alerting/alert-code-taxonomy.md, codex/15-runbooks/alerting/defi_health_factor_critical.md, codex/15-runbooks/alerting/circuit_breaker_open.md, codex/04-architecture/flash-loan-receiver.md]
+related:
+  [
+    /codex/15-runbooks/alerting/operator-playbook.md,
+    /codex/15-runbooks/alerting/alert-code-taxonomy.md,
+    /codex/15-runbooks/alerting/defi_health_factor_critical.md,
+    /codex/15-runbooks/alerting/circuit_breaker_open.md,
+    /codex/04-architecture/flash-loan-receiver.md,
+  ]
 created: 2026-05-08
 owner: on-call operator (Ikenna / Harsh by rotation)
 cadence: on-demand (incident response) + quarterly DR drill
 verifier: DeFi connectors halted; collateral deleverage tx confirmed on-chain; health-factor >1.3 before re-arm
 last_executed:
 code_refs:
-authoritative_for: Operator response when the DeFi liquidation-risk kill-switch fires. Halts execution-service DeFi connectors + paper- trade strategies + auto-deleverages collateral when health-factor approaches 1.0. Highest-impact alert in the live- DeFi pipeline; tier-1 page + circuit-breaker propagation.
+authoritative_for:
+  Operator response when the DeFi liquidation-risk kill-switch fires. Halts execution-service DeFi connectors + paper-
+  trade strategies + auto-deleverages collateral when health-factor approaches 1.0. Highest-impact alert in the live-
+  DeFi pipeline; tier-1 page + circuit-breaker propagation.
 referenced_by: [plans/active/alerting_service_live_rules_2026_05_07.md, plans/active/master_to_live_defi_2026_05_23.md]
-execution: {owner: on-call operator (Ikenna / Harsh by rotation), cadence: on-demand (incident response) + quarterly DR drill, verifier: DeFi connectors halted; collateral deleverage tx confirmed on-chain; health-factor >1.3 before re-arm, last_executed: never}
+execution:
+  {
+    owner: on-call operator (Ikenna / Harsh by rotation),
+    cadence: on-demand (incident response) + quarterly DR drill,
+    verifier: DeFi connectors halted; collateral deleverage tx confirmed on-chain; health-factor >1.3 before re-arm,
+    last_executed: never,
+  }
 ---
 
 # `KILL_SWITCH_DEFI_LIQUIDATION_RISK` Runbook
@@ -207,6 +223,6 @@ deploy-state audit, position-size limit review.
 - **Co-firing alerts:** [`defi_health_factor_critical.md`](./defi_health_factor_critical.md),
   [`defi_weeth_depeg.md`](./defi_weeth_depeg.md).
 - **Flash-loan-receiver:**
-  [`codex/04-architecture/flash-loan-receiver.md`](../../04-architecture/flash-loan-receiver.md).
+  [`/codex/04-architecture/flash-loan-receiver.md`](../../04-architecture/flash-loan-receiver.md).
 - **Implementing plan:**
   [`alerting_service_live_rules_2026_05_07`](../../../plans/active/alerting_service_live_rules_2026_05_07.md).

@@ -3,8 +3,8 @@ doc_type: codex-ssot
 title: UI Setup Checklist
 summary:
   Bootstrap checklist for a UI repo (Next.js/React/TS) from clean clone to dev-serving — Node/Java/gcloud prereqs, npm
-  install + generate:types, the .env.local shapes per UI, dev-tiers.sh startup, the mandatory vitest pool:forks rule, and
-  type-regen after API changes.
+  install + generate:types, the .env.local shapes per UI, dev-tiers.sh startup, the mandatory vitest pool:forks rule,
+  and type-regen after API changes.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -12,10 +12,20 @@ stage: [meta]
 repos: [deployment-api, deployment-ui, unified-trading-api, unified-trading-pm, unified-trading-system-ui]
 scope: [engineer, admin]
 tags: [ui, runbook, infrastructure, quality-gates, onboarding]
-related: [runtime-tiers-and-deployment.md, ../08-workflows/local-dev.md, ui-architecture.md]
+related:
+  [
+    /codex/05-infrastructure/runtime-tiers-and-deployment.md,
+    /codex/08-workflows/local-dev.md,
+    /codex/05-infrastructure/ui-architecture.md,
+  ]
 created: 2026-03-27
 authoritative_for: [UI repo setup/bootstrap checklist]
-referenced_by: [codex/05-infrastructure/README.md, codex/05-infrastructure/library-setup-checklist.md, codex/05-infrastructure/new-repo-setup.md]
+referenced_by:
+  [
+    /codex/05-infrastructure/README.md,
+    /codex/05-infrastructure/library-setup-checklist.md,
+    /codex/05-infrastructure/new-repo-setup.md,
+  ]
 owner:
 last_reviewed: 2026-05-17
 code_refs:
@@ -68,7 +78,7 @@ For `deployment-ui` (always real cloud mode):
 NEXT_PUBLIC_DEPLOYMENT_API_URL=http://localhost:8004
 ```
 
-Full env-var matrix: `codex/05-infrastructure/runtime-tiers-and-deployment.md` § "Runtime Profiles (v7)".
+Full env-var matrix: `/codex/05-infrastructure/runtime-tiers-and-deployment.md` § "Runtime Profiles (v7)".
 
 ## Run dev server
 
@@ -83,8 +93,8 @@ bash scripts/dev-tiers.sh --stop / --status
 bash unified-trading-pm/scripts/dev/restart-deployment-stack.sh
 ```
 
-Full guide: `codex/08-workflows/local-dev.md` (backend orchestration) +
-`codex/05-infrastructure/runtime-tiers-and-deployment.md` (tier model + UI startup decision table).
+Full guide: `/codex/08-workflows/local-dev.md` (backend orchestration) +
+`/codex/05-infrastructure/runtime-tiers-and-deployment.md` (tier model + UI startup decision table).
 
 ## Vitest config requirement (CRITICAL)
 
@@ -121,9 +131,9 @@ Two-step flow is manual today (no CI gate catches stale generated types — trac
 ## Cross-references
 
 - Full env-var matrix + runtime profiles + UI startup decision table:
-  `codex/05-infrastructure/runtime-tiers-and-deployment.md`
-- Frontend-backend dev orchestration: `codex/08-workflows/local-dev.md`
-- Firebase emulator + persona seeding: `codex/14-customer-journeys/authentication/firebase-local.md`
-- Active UI surface + archived UI inventory: `codex/05-infrastructure/ui-functionality-requirements.md` +
+  `/codex/05-infrastructure/runtime-tiers-and-deployment.md`
+- Frontend-backend dev orchestration: `/codex/08-workflows/local-dev.md`
+- Firebase emulator + persona seeding: `/codex/14-customer-journeys/authentication/firebase-local.md`
+- Active UI surface + archived UI inventory: `/codex/05-infrastructure/ui-functionality-requirements.md` +
   `codex/DEPRECATED_UIS_NOTICE.md`
 - Deployment-stack restart SSOT: `unified-trading-pm/scripts/dev/restart-deployment-stack.sh`

@@ -15,13 +15,17 @@ scope: [engineer, admin]
 tags: [strategy, execution, uac, verification, docspec, reconciliation]
 related:
   [
-    codex/16-strategy-playbooks/infra-spec/stage-3b-instruction-schema-contract.md,
-    codex/16-strategy-playbooks/infra-spec/stage-3b-uac-combo-rules.md,
-    codex/16-strategy-playbooks/infra-spec/stage-3c-derivation-engine.md,
+    /codex/16-strategy-playbooks/infra-spec/stage-3b-instruction-schema-contract.md,
+    /codex/16-strategy-playbooks/infra-spec/stage-3b-uac-combo-rules.md,
+    /codex/16-strategy-playbooks/infra-spec/stage-3c-derivation-engine.md,
   ]
 created: 2026-04-20
 authoritative_for: [downstream analytics capability × integration-mode support matrix (signals-only vs full-pipeline)]
-referenced_by: [codex/16-strategy-playbooks/infra-spec/stage-3b-instruction-schema-contract.md, codex/16-strategy-playbooks/infra-spec/stage-3c-derivation-engine.md]
+referenced_by:
+  [
+    /codex/16-strategy-playbooks/infra-spec/stage-3b-instruction-schema-contract.md,
+    /codex/16-strategy-playbooks/infra-spec/stage-3c-derivation-engine.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

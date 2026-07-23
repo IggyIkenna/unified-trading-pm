@@ -23,23 +23,23 @@ scope: [engineer, admin]
 tags: [pipeline-mode, manifest, migration, single-walk, canonicalisation, batch-live]
 related:
   [
-    codex/02-data/pipeline-mode-and-batch-live-reconciliation.md,
-    codex/02-data/availability-manifest-and-data-status.md,
-    codex/05-infrastructure/live-pipeline-architecture.md,
-    codex/05-infrastructure/replay-subsystem.md,
+    /codex/02-data/pipeline-mode-and-batch-live-reconciliation.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/05-infrastructure/live-pipeline-architecture.md,
+    /codex/05-infrastructure/replay-subsystem.md,
   ]
 created: 2026-05-08
 authoritative_for: [pipeline_mode hive-partition key, source-aware live/replay M1-M8 target design]
 referenced_by:
   [
-    codex/02-data/availability-manifest-and-data-status.md,
-    codex/02-data/data-status-drilldown-hierarchy.md,
-    codex/02-data/data-status-drilldown.md,
-    codex/02-data/defi-canonical-naming-ssot.md,
-    codex/02-data/honest-coverage-model.md,
-    codex/02-data/live-data-persistence-and-event-log.md,
-    codex/02-data/manifest-migration-coordination.md,
-    codex/02-data/pipeline-mode-and-batch-live-reconciliation.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/02-data/data-status-drilldown-hierarchy.md,
+    /codex/02-data/data-status-drilldown.md,
+    /codex/02-data/defi-canonical-naming-ssot.md,
+    /codex/02-data/honest-coverage-model.md,
+    /codex/02-data/live-data-persistence-and-event-log.md,
+    /codex/02-data/manifest-migration-coordination.md,
+    /codex/02-data/pipeline-mode-and-batch-live-reconciliation.md,
   ]
 owner:
 last_reviewed: 2026-06-25
@@ -267,7 +267,8 @@ Homes: batch-live-reconciliation-service + strategy-service (live-flip readiness
 
 Alerting + auto-recovery DETECT a gap (batch stopped + no live + replay-capable shard) and FIRE `replay_<source>`
 themselves — same-data where capable, autonomously. "Gaps are OK" is a per-shard DR config, never a default. Composes
-with [`../04-architecture/autonomous-recovery-matrix.md`](../04-architecture/autonomous-recovery-matrix.md). **[GATED]**
+with [`/codex/04-architecture/autonomous-recovery-matrix.md`](/codex/04-architecture/autonomous-recovery-matrix.md).
+**[GATED]**
 
 ### M8 — cadence is a COLUMN (an observability axis), NEVER a path key
 
@@ -366,8 +367,9 @@ execution:
   [`gcs_migration_bundle_pipeline_mode_2026_05_08`](../../plans/active/gcs_migration_bundle_pipeline_mode_2026_05_08.md)
 - Foundation: [`availability-manifest-and-data-status.md`](./availability-manifest-and-data-status.md) — manifest
   schema + 4-state taxonomy + reason taxonomy.
-- Sibling: [`../05-infrastructure/live-pipeline-architecture.md`](../05-infrastructure/live-pipeline-architecture.md) —
+- Sibling:
+  [`/codex/05-infrastructure/live-pipeline-architecture.md`](/codex/05-infrastructure/live-pipeline-architecture.md) —
   consumer of the new partition for live-mode writes.
-- Sibling: [`../05-infrastructure/replay-subsystem.md`](../05-infrastructure/replay-subsystem.md) — the replay subsystem
-  (the source-aware `replay_<source>` write path lands in a separate gated tranche; see § "Source-aware modes +
-  transport").
+- Sibling: [`/codex/05-infrastructure/replay-subsystem.md`](/codex/05-infrastructure/replay-subsystem.md) — the replay
+  subsystem (the source-aware `replay_<source>` write path lands in a separate gated tranche; see § "Source-aware
+  modes + transport").

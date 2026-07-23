@@ -2,8 +2,8 @@
 doc_type: codex-ssot
 title: Hive Schema Compatibility
 summary: >-
-  Migration strategy + rationale for GCS-native Parquet with Hive-style partitioning replacing BigQuery storage
-  (40-60% lower storage cost; self-describing day=/venue=/data_type= keys queryable as BigQuery external tables +
+  Migration strategy + rationale for GCS-native Parquet with Hive-style partitioning replacing BigQuery storage (40-60%
+  lower storage cost; self-describing day=/venue=/data_type= keys queryable as BigQuery external tables +
   Presto/Athena); the BigQuery dual-write/reader phases are now legacy (migration completed 2026-05-22, BQ writers
   removed) — per-asset-group path templates + shard atoms live in per-asset-group-bucket-layouts.
 status: current
@@ -13,10 +13,15 @@ stage: [meta]
 repos: [features-service, market-data-processing-service, strategy-service]
 scope: [engineer, admin]
 tags: [migration, cost, data-pipeline, infrastructure, canonicalisation, polars]
-related: [per-asset-group-bucket-layouts.md, availability-manifest-and-data-status.md, ../../plans/epics/mtds_mdps_master.md]
+related:
+  [
+    /codex/02-data/per-asset-group-bucket-layouts.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    ../../plans/epics/mtds_mdps_master.md,
+  ]
 created: 2026-03-27
 authoritative_for: [GCS parquet hive-partitioning cost/rationale + BigQuery-to-GCS migration]
-referenced_by: [codex/02-data/instrument-pipeline-defi.md]
+referenced_by: [/codex/02-data/instrument-pipeline-defi.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:

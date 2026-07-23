@@ -418,7 +418,7 @@ tracking: `instrument_id_format_canonicalization_2026_07_08.md` +
   - **A (recommended):** repoint FSS's subscriber default from `sports-odds-ready` → the real `persist-sports-odds`
     topic MTDS already publishes (4 files: `subscriber.py`, `cli/handlers/live_handler.py`, `cli/main.py`,
     `cli/parser.py`). Zero new MTDS code; matches the fleet-wide "Live = batch event-log spine" SSOT
-    (`codex/02-data/live-data-persistence-and-event-log.md`) and the resolution chosen for the sibling bug. Deprecate
+    (`/codex/02-data/live-data-persistence-and-event-log.md`) and the resolution chosen for the sibling bug. Deprecate
     the unused `sports-odds-ready` terraform entry after cutover.
   - **B:** implement the originally-designed publisher — add a real `sports-odds-ready` publish in MTDS's odds
     snapshot-flush path (per `LIVE_PUBSUB_README.md`), keeping subscriber + terraform topic as-is. More code; preserves

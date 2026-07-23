@@ -2,8 +2,8 @@
 doc_type: codex-ssot
 title: Rule 09 — Internal commercial one-liners
 summary:
-  "The three canonical internal one-liner definitions of DART / IM / Reg Umbrella (verbatim, internal-only),
-  their external three-sentence expansion pattern (position → differentiator → proof), and the per-path internal
+  "The three canonical internal one-liner definitions of DART / IM / Reg Umbrella (verbatim, internal-only), their
+  external three-sentence expansion pattern (position → differentiator → proof), and the per-path internal
   competitive-frame table."
 status: current
 nature: ssot
@@ -12,10 +12,26 @@ stage: [meta]
 repos: []
 scope: [engineer, admin, sales]
 tags: [customer-journey, sales, dart, tone, branding]
-related: [02-tone-and-posture.md, 03-same-system-principle.md, 04-dart-commercial-axes.md, ../glossary.md]
+related:
+  [
+    /codex/14-customer-journeys/_ssot-rules/02-tone-and-posture.md,
+    /codex/14-customer-journeys/_ssot-rules/03-same-system-principle.md,
+    /codex/14-customer-journeys/_ssot-rules/04-dart-commercial-axes.md,
+    ../glossary.md,
+  ]
 created: 2026-04-20
 authoritative_for: [internal commercial one-liners (DART/IM/Reg-Umbrella positioning + expansion pattern)]
-referenced_by: [codex/14-customer-journeys/_ssot-rules/02-tone-and-posture.md, codex/14-customer-journeys/_ssot-rules/11-codex-scope-registry.md, codex/14-customer-journeys/_ssot-rules/README.md, codex/14-customer-journeys/commercial-model/dart-entry-points.md, codex/14-customer-journeys/commercial-model/im-vs-reg-reporting-logic.md, codex/14-customer-journeys/commercial-model/revenue-projection-2026-monthly.md, codex/14-customer-journeys/demo-ops/account-intelligence-record.md, codex/14-customer-journeys/demo-ops/pre-demo-discovery-framework.md]
+referenced_by:
+  [
+    /codex/14-customer-journeys/_ssot-rules/02-tone-and-posture.md,
+    /codex/14-customer-journeys/_ssot-rules/11-codex-scope-registry.md,
+    /codex/14-customer-journeys/_ssot-rules/README.md,
+    /codex/14-customer-journeys/commercial-model/dart-entry-points.md,
+    /codex/14-customer-journeys/commercial-model/im-vs-reg-reporting-logic.md,
+    /codex/14-customer-journeys/commercial-model/revenue-projection-2026-monthly.md,
+    /codex/14-customer-journeys/demo-ops/account-intelligence-record.md,
+    /codex/14-customer-journeys/demo-ops/pre-demo-discovery-framework.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

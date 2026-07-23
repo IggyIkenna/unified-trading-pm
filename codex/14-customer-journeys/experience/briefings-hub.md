@@ -14,15 +14,25 @@ scope: [sales, prospect]
 tags: [briefings, prospect, sales, dart, investment-management, regulatory, ui]
 related:
   [
-    im-decision-journey.md,
-    dart-briefing.md,
-    regulatory-umbrella-briefing.md,
+    /codex/14-customer-journeys/experience/im-decision-journey.md,
+    /codex/14-customer-journeys/experience/dart-briefing.md,
+    /codex/14-customer-journeys/experience/regulatory-umbrella-briefing.md,
     ../playbooks/02-research-and-documentation.md,
     ../authentication/light-auth-briefings.md,
   ]
 created: 2026-04-20
 authoritative_for: [pb2 post-first-call briefings hub experience]
-referenced_by: [codex/14-customer-journeys/experience/README.md, codex/14-customer-journeys/experience/dart-briefing.md, codex/14-customer-journeys/experience/im-decision-journey.md, codex/14-customer-journeys/experience/marketing-journey.md, codex/14-customer-journeys/experience/regulatory-umbrella-briefing.md, codex/14-customer-journeys/implementation-mapping/persona-and-user-prototype-mapping.md, codex/14-customer-journeys/implementation-mapping/playbook-to-qa-coverage.md, codex/14-customer-journeys/implementation-mapping/route-mapping.md]
+referenced_by:
+  [
+    /codex/14-customer-journeys/experience/README.md,
+    /codex/14-customer-journeys/experience/dart-briefing.md,
+    /codex/14-customer-journeys/experience/im-decision-journey.md,
+    /codex/14-customer-journeys/experience/marketing-journey.md,
+    /codex/14-customer-journeys/experience/regulatory-umbrella-briefing.md,
+    /codex/14-customer-journeys/implementation-mapping/persona-and-user-prototype-mapping.md,
+    /codex/14-customer-journeys/implementation-mapping/playbook-to-qa-coverage.md,
+    /codex/14-customer-journeys/implementation-mapping/route-mapping.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

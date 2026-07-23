@@ -14,10 +14,26 @@ stage: [meta]
 repos: [agent-orchestrator, deployment-api, deployment-service, deployment-ui, e2e-testing, features-service]
 scope: [engineer]
 tags: [infrastructure, spot-vm, deployment-service, scripts, monitoring, runbook]
-related: [vm-tarball-deployment.md, strategy-vm-launcher-shape.md, live-deployment-monitoring.md, ../04-architecture/features-service-architecture.md]
+related:
+  [
+    /codex/05-infrastructure/vm-tarball-deployment.md,
+    /codex/05-infrastructure/strategy-vm-launcher-shape.md,
+    /codex/05-infrastructure/live-deployment-monitoring.md,
+    /codex/04-architecture/features-service-architecture.md,
+  ]
 created: 2026-05-07
 authoritative_for: [vm launcher script conventions]
-referenced_by: [codex/04-architecture/features-service-architecture.md, codex/04-architecture/ml-service-architecture.md, codex/04-architecture/strategy-service-architecture.md, codex/05-infrastructure/agent-orchestrator-deploy.md, codex/05-infrastructure/cloud-agnostic-build-lineage.md, codex/05-infrastructure/deployment-and-qg-strategy.md, codex/05-infrastructure/deployment-ui-architecture.md, codex/05-infrastructure/live-deployment-monitoring.md]
+referenced_by:
+  [
+    /codex/04-architecture/features-service-architecture.md,
+    /codex/04-architecture/ml-service-architecture.md,
+    /codex/04-architecture/strategy-service-architecture.md,
+    /codex/05-infrastructure/agent-orchestrator-deploy.md,
+    /codex/05-infrastructure/cloud-agnostic-build-lineage.md,
+    /codex/05-infrastructure/deployment-and-qg-strategy.md,
+    /codex/05-infrastructure/deployment-ui-architecture.md,
+    /codex/05-infrastructure/live-deployment-monitoring.md,
+  ]
 owner:
 last_reviewed: 2026-05-17
 code_refs:
@@ -209,14 +225,14 @@ those 8 launchers collapse to a single `deployment-service/scripts/vm/launch-fea
    `features-defi-onchain-20260508-152400`. The `features-` prefix is registered ONCE in `VM_PREFIX_TO_BUCKET`,
    replacing the 8 per-family prefixes that would otherwise be needed.
 4. Boots with `python -m features_service --feature-family <X> ...` per the dispatcher contract in
-   [`../04-architecture/features-service-architecture.md`](../04-architecture/features-service-architecture.md).
+   [`/codex/04-architecture/features-service-architecture.md`](/codex/04-architecture/features-service-architecture.md).
 
 **Tarball impact**: `create-code-tarballs.sh --asset-group X` includes the single `features-service/` repo (rather than
 the 8 prior `features-*-service` repos). The consolidated tarball is smaller (deduplicated boilerplate + shared common/
 directory) and faster to refresh.
 
 **Architecture SSOT**:
-[`../04-architecture/features-service-architecture.md`](../04-architecture/features-service-architecture.md).
+[`/codex/04-architecture/features-service-architecture.md`](/codex/04-architecture/features-service-architecture.md).
 
 ## Migration status (2026-05-10): 10 shipped Tab 11 + 20 deferred
 
@@ -321,8 +337,8 @@ Once a row is migrated:
 ### Why per-asset-group launchers (post features-service consolidation)
 
 The features-service consolidation
-([`../04-architecture/features-service-architecture.md`](../04-architecture/features-service-architecture.md)) collapses
-5–6 features-\* repos into a single repo with sub-packages. The per-asset-group launchers (e.g.
+([`/codex/04-architecture/features-service-architecture.md`](/codex/04-architecture/features-service-architecture.md))
+collapses 5–6 features-\* repos into a single repo with sub-packages. The per-asset-group launchers (e.g.
 `launch-features-cefi-vm.sh` for the colocated cefi cluster) replace the 5–6 per-repo launchers with one launcher per
 deployment-cluster shape (asset-scoped vs cross-cutting).
 
@@ -570,7 +586,7 @@ do NOT need a `VM_PREFIX_TO_BUCKET` entry or watchdog registration. They live un
 
 `deploy-agent-orchestrator.sh` shipped at Phase 1 of
 `plans/active/agent_orchestrator_cloud_run_deployment_2026_05_19.md`. Architecture SSOT:
-`codex/04-architecture/agent-orchestrator-overview.md`.
+`/codex/04-architecture/agent-orchestrator-overview.md`.
 
 ---
 
@@ -579,8 +595,9 @@ do NOT need a `VM_PREFIX_TO_BUCKET` entry or watchdog registration. They live un
 - CLAUDE.md "VM launcher script SSOT" rule (cursor-configs/CLAUDE.md, codified 2026-05-07).
 - CLAUDE.md "VM tarball deployment" — `create-code-tarballs.sh --all` + boot path.
 - CLAUDE.md "VM Naming Convention" — `VM_PREFIX_TO_BUCKET` registry.
-- [`codex/05-infrastructure/vm-tarball-deployment.md`](vm-tarball-deployment.md) — tarball mechanics.
-- [`codex/05-infrastructure/strategy-vm-launcher-shape.md`](strategy-vm-launcher-shape.md) — paper + live launcher SSOT.
+- [`/codex/05-infrastructure/vm-tarball-deployment.md`](vm-tarball-deployment.md) — tarball mechanics.
+- [`/codex/05-infrastructure/strategy-vm-launcher-shape.md`](strategy-vm-launcher-shape.md) — paper + live launcher
+  SSOT.
 - [`plans/ai/deploy_missing_auto_launch_2026_05_07.md`](../../plans/archive/deploy_missing_auto_launch_2026_05_07.md) —
   preview → auto-launch successor.
 - [`plans/active/aws_migration_defi_first_2026_05_07.md`](../../plans/active/aws_migration_defi_first_2026_05_07.md) —

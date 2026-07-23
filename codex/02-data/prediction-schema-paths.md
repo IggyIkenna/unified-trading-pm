@@ -15,21 +15,21 @@ scope: [engineer, admin]
 tags: [prediction, mtds, manifest, instruments, pipeline-mode, canonicalisation]
 related:
   [
-    codex/02-data/availability-manifest-and-data-status.md,
-    codex/02-data/prediction-data-types-catalog.md,
-    codex/02-data/prediction-settlement-availability-convention.md,
-    codex/04-architecture/shard-level-failure-isolation.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/02-data/prediction-data-types-catalog.md,
+    /codex/02-data/prediction-settlement-availability-convention.md,
+    /codex/04-architecture/shard-level-failure-isolation.md,
   ]
 created: 2026-03-27
 authoritative_for: [prediction GCS schema paths, canonical_question_group shard atom and taxonomy]
 referenced_by:
   [
-    codex/02-data/prediction-data-types-catalog.md,
-    codex/02-data/prediction-perps-sourcing.md,
-    codex/02-data/prediction-settlement-availability-convention.md,
-    codex/04-architecture/instruments-live-architecture.md,
-    codex/09-strategy/architecture-v2/cross-cutting/prediction-markets.md,
-    codex/15-runbooks/backfill-completion-playbook.md,
+    /codex/02-data/prediction-data-types-catalog.md,
+    /codex/02-data/prediction-perps-sourcing.md,
+    /codex/02-data/prediction-settlement-availability-convention.md,
+    /codex/04-architecture/instruments-live-architecture.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/prediction-markets.md,
+    /codex/15-runbooks/backfill-completion-playbook.md,
     plans/epics/predictions_master.md,
   ]
 owner:
@@ -59,9 +59,9 @@ All 3,940 legacy IS manifest rows (data_type=BTC/ETH/SOL/etc., blank underlying)
 A, deleted) + target (post-Plan A, current).
 
 **Related**: [availability-manifest-and-data-status.md](./availability-manifest-and-data-status.md),
-[04-architecture/shard-level-failure-isolation.md](../04-architecture/shard-level-failure-isolation.md),
-[05-infrastructure/deployment-clusters-live-vs-batch.md](../05-infrastructure/deployment-clusters-live-vs-batch.md),
-[06-coding-standards/validation-and-errors.md](../06-coding-standards/validation-and-errors.md).
+[04-architecture/shard-level-failure-isolation.md](/codex/04-architecture/shard-level-failure-isolation.md),
+[05-infrastructure/deployment-clusters-live-vs-batch.md](/codex/05-infrastructure/deployment-clusters-live-vs-batch.md),
+[06-coding-standards/validation-and-errors.md](/codex/06-coding-standards/validation-and-errors.md).
 
 ## Asset group
 

@@ -1,7 +1,10 @@
 ---
 doc_type: codex-ssot
 title: v2 Migration Audit — Legacy → Architecture-v2 Mapping
-summary: Complete legacy→architecture-v2 mapping audit — every legacy cefi/defi/sports/tradfi strategy doc, strategy-service class, and e2e config mapped to a v2 archetype+instance; includes the load-bearing legacy-code deletion schedule gated on the batch-factory cutover.
+summary:
+  Complete legacy→architecture-v2 mapping audit — every legacy cefi/defi/sports/tradfi strategy doc, strategy-service
+  class, and e2e config mapped to a v2 archetype+instance; includes the load-bearing legacy-code deletion schedule gated
+  on the batch-factory cutover.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -9,10 +12,25 @@ stage: [meta]
 repos: [e2e-testing, execution-service, strategy-service]
 scope: [engineer, admin]
 tags: [strategy, migration, refactor, ssot-audit, cefi, defi, sports]
-related: [README.md, strategy-registry-v2.md, category-instrument-coverage.md, legacy-family-migration.md]
+related:
+  [
+    README.md,
+    /codex/09-strategy/architecture-v2/strategy-registry-v2.md,
+    /codex/09-strategy/architecture-v2/category-instrument-coverage.md,
+    /codex/09-strategy/architecture-v2/legacy-family-migration.md,
+  ]
 created: 2026-04-17
 authoritative_for: [legacy strategy doc-and-code to architecture-v2 mapping audit]
-referenced_by: [codex/09-strategy/README.md, codex/09-strategy/_archived_pre_v2/README.md, codex/09-strategy/_archived_pre_v2/STRATEGY_CATALOG_pre_v2.md, codex/09-strategy/architecture-v2/README.md, codex/09-strategy/architecture-v2/legacy-family-migration.md, codex/09-strategy/architecture-v2/promote-workflow.md, codex/09-strategy/strategy-summary.md]
+referenced_by:
+  [
+    /codex/09-strategy/README.md,
+    /codex/09-strategy/_archived_pre_v2/README.md,
+    /codex/09-strategy/_archived_pre_v2/STRATEGY_CATALOG_pre_v2.md,
+    /codex/09-strategy/architecture-v2/README.md,
+    /codex/09-strategy/architecture-v2/legacy-family-migration.md,
+    /codex/09-strategy/architecture-v2/promote-workflow.md,
+    /codex/09-strategy/strategy-summary.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -191,20 +209,27 @@ engines**. The migration audit per strategy class:
 
 (No dedicated tradfi/ directory in strategy-service today; TradFi strategies live in cefi/ or root.)
 
-| Legacy file                                      | Target archetype class                                                                                                                             | Target instance(s)                                                                                | Status                                                         |
-| ------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- | ------------------------------------------------- |
-| `tradfi_ml_swing_strategy.py` / `tradfi_ml_*.py` | `MLDirectionalContinuousEngine`                                                                                                                    | `@ibkr-spy-5m-usd-prod`                                                                           | ✓                                                              |
-| `event_driven_macro.py`                          | `EventDrivenEngine`                                                                                                                                | `@multi-cex-macro-crypto-usdt-prod`, `@cme-macro-equities-usd-prod`                               | ✓                                                              |
-| `commodity_regime.py`                            | `RulesDirectionalContinuousEngine` (regime-switching config)                                                                                       | `@ibkr-cl-futures-usd-prod`                                                                       | ✓                                                              |
-| `options_ml_*.py` (delta, strike, vol)           | `MLDirectionalContinuousEngine` (delta/strike) or `VolTradingOptionsEngine` (vol)                                                                  | Config-dependent                                                                                  | !                                                              |
-| `vol_surface_btc.py`                             | `ArbitragePriceDispersionEngine` (if hard no-arb violations or cross-venue IV dispersion) OR `VolTradingOptionsEngine` (if soft surface residuals) | `@deribit-okx-btc-vol-usdt-prod` (arb) or `@deribit-btc-surface-residual-usdt-prod` (vol trading) | !                                                              | Decision criteria: mechanical vs statistical edge |
-| `rel_vol_btc_eth.py`                             | `StatArbPairsFixedEngine` (vol-pair variant)                                                                                                       | `@deribit-btc-eth-relvol-usdt-prod`                                                               | ✓                                                              |
-| `stat_arb_btc_eth.py`                            | `StatArbPairsFixedEngine`                                                                                                                          | `@binance-btc-eth-usdt-prod`                                                                      | ✓                                                              |
-| `cross_exchange_btc.py`                          | `ArbitragePriceDispersionEngine`                                                                                                                   | `@binance-bybit-btc-usdt-prod`                                                                    | ✓                                                              |
-| `basis_trade_multi_coin.py`                      | `CarryBasisPerpEngine` (multi-instrument rotation)                                                                                                 | `@binance-multicoin-usdt-prod`                                                                    | ✓                                                              |
-| `basis_trade_multi_venue.py`                     | `CarryBasisPerpEngine` (multi-venue eligibility)                                                                                                   | `@multi-cex-eth-usdt-prod`                                                                        | ✓                                                              |
-| `prediction_arb_btc.py`                          | `ArbitragePriceDispersionEngine`                                                                                                                   | `@polymarket-binance-btc-usdc-prod`                                                               | ✓                                                              |
-| `cefi_market_making.py`                          | `MarketMakingContinuousEngine`                                                                                                                     | `@binance-btc-usdt-mm-prod`                                                                       | ✓ (already uses position reconciliation we added this session) |
+| Legacy file | Target archetype class | Target instance(s) | Status | |
+------------------------------------------------ |
+--------------------------------------------------------------------------------------------------------------------------------------------------
+
+| ------------------------------------------------------------------------------------------------- |
+-------------------------------------------------------------- | ------------------------------------------------- | |
+`tradfi_ml_swing_strategy.py` / `tradfi_ml_*.py` | `MLDirectionalContinuousEngine` | `@ibkr-spy-5m-usd-prod` | ✓ | |
+`event_driven_macro.py` | `EventDrivenEngine` | `@multi-cex-macro-crypto-usdt-prod`, `@cme-macro-equities-usd-prod` | ✓
+| | `commodity_regime.py` | `RulesDirectionalContinuousEngine` (regime-switching config) | `@ibkr-cl-futures-usd-prod` |
+✓ | | `options_ml_*.py` (delta, strike, vol) | `MLDirectionalContinuousEngine` (delta/strike) or
+`VolTradingOptionsEngine` (vol) | Config-dependent | ! | | `vol_surface_btc.py` | `ArbitragePriceDispersionEngine` (if
+hard no-arb violations or cross-venue IV dispersion) OR `VolTradingOptionsEngine` (if soft surface residuals) |
+`@deribit-okx-btc-vol-usdt-prod` (arb) or `@deribit-btc-surface-residual-usdt-prod` (vol trading) | ! | Decision
+criteria: mechanical vs statistical edge | | `rel_vol_btc_eth.py` | `StatArbPairsFixedEngine` (vol-pair variant) |
+`@deribit-btc-eth-relvol-usdt-prod` | ✓ | | `stat_arb_btc_eth.py` | `StatArbPairsFixedEngine` |
+`@binance-btc-eth-usdt-prod` | ✓ | | `cross_exchange_btc.py` | `ArbitragePriceDispersionEngine` |
+`@binance-bybit-btc-usdt-prod` | ✓ | | `basis_trade_multi_coin.py` | `CarryBasisPerpEngine` (multi-instrument rotation)
+| `@binance-multicoin-usdt-prod` | ✓ | | `basis_trade_multi_venue.py` | `CarryBasisPerpEngine` (multi-venue eligibility)
+| `@multi-cex-eth-usdt-prod` | ✓ | | `prediction_arb_btc.py` | `ArbitragePriceDispersionEngine` |
+`@polymarket-binance-btc-usdc-prod` | ✓ | | `cefi_market_making.py` | `MarketMakingContinuousEngine` |
+`@binance-btc-usdt-mm-prod` | ✓ (already uses position reconciliation we added this session) |
 
 ## 9. e2e-testing Strategy Configs → v2
 

@@ -14,7 +14,11 @@ stage: [data]
 repos: [unified-api-contracts, market-tick-data-service]
 scope: [engineer]
 tags: [defi, kalshi-perp, source-priority, manifest, registry-gap]
-related: [distinct_values_noncanonical_audit_2026_07_20.md, defi_consolidated_closeout_2026_07_18.md]
+related:
+  [
+    /plans/active/distinct_values_noncanonical_audit_2026_07_20.md,
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
+  ]
 created: 2026-07-23
 parent_epic: infrastructure_master
 assigned_vm: NA
@@ -69,5 +73,5 @@ concrete, currently-failing symptom; the classification question is the census a
 
 ## Codex SSOTs
 
-- `codex/02-data/defi-canonical-naming-ssot.md` (KALSHI_PERP classification)
+- `/codex/02-data/defi-canonical-naming-ssot.md` (KALSHI_PERP classification)
 - UAC `unified_api_contracts/canonical/crosscutting/source_priority.py` (`SOURCE_PRIORITY` registry)

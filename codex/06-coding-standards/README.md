@@ -54,21 +54,21 @@ All other `os.environ` / `os.getenv()` access in service code is banned. Use `ge
 
 ## Document Map
 
-| Topic                                                                              | Canonical Doc                                                                                           |
-| ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| Running quality gates / CI setup                                                   | [quality-gates.md](quality-gates.md)                                                                    |
-| Developer formatting setup (VSCode, pre-commit)                                    | [formatting-standards.md](formatting-standards.md)                                                      |
-| Forbidden code patterns                                                            | [STANDARDS.md](STANDARDS.md)                                                                            |
-| Config class patterns                                                              | [configuration-management.md](configuration-management.md)                                              |
-| Testing patterns                                                                   | [testing.md](testing.md)                                                                                |
-| Integration testing layers (0–3)                                                   | [integration-testing-layers.md](integration-testing-layers.md)                                          |
-| File/function size limits                                                          | [file-splitting-guide.md](file-splitting-guide.md)                                                      |
-| Validation + errors (4-category empty, write-gate quartet, schema, available_at)   | [validation-and-errors.md](validation-and-errors.md)                                                    |
-| Workspace dependency pinning                                                       | [dependency-management.md](dependency-management.md) (§ Workspace-wide dependency pinning)              |
-| Contribution workflow                                                              | [contribution-guide.md](contribution-guide.md)                                                          |
-| Strategy data access & event-driven rules                                          | [strategy-identity-versioning.md](strategy-identity-versioning.md)                                      |
-| Operational mode axes (mock, testnet, local cloud, SIT)                            | [operational-modes-matrix.md](../09-strategy/architecture-v2/cross-cutting/operational-modes-matrix.md) |
-| Service orchestration patterns (import contract, handler-orchestrator split, etc.) | [service-orchestration-patterns.md](service-orchestration-patterns.md)                                  |
+| Topic                                                                              | Canonical Doc                                                                                               |
+| ---------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| Running quality gates / CI setup                                                   | [quality-gates.md](quality-gates.md)                                                                        |
+| Developer formatting setup (VSCode, pre-commit)                                    | [formatting-standards.md](formatting-standards.md)                                                          |
+| Forbidden code patterns                                                            | [STANDARDS.md](STANDARDS.md)                                                                                |
+| Config class patterns                                                              | [configuration-management.md](configuration-management.md)                                                  |
+| Testing patterns                                                                   | [testing.md](testing.md)                                                                                    |
+| Integration testing layers (0–3)                                                   | [integration-testing-layers.md](integration-testing-layers.md)                                              |
+| File/function size limits                                                          | [file-splitting-guide.md](file-splitting-guide.md)                                                          |
+| Validation + errors (4-category empty, write-gate quartet, schema, available_at)   | [validation-and-errors.md](validation-and-errors.md)                                                        |
+| Workspace dependency pinning                                                       | [dependency-management.md](dependency-management.md) (§ Workspace-wide dependency pinning)                  |
+| Contribution workflow                                                              | [contribution-guide.md](contribution-guide.md)                                                              |
+| Strategy data access & event-driven rules                                          | [strategy-identity-versioning.md](strategy-identity-versioning.md)                                          |
+| Operational mode axes (mock, testnet, local cloud, SIT)                            | [operational-modes-matrix.md](/codex/09-strategy/architecture-v2/cross-cutting/operational-modes-matrix.md) |
+| Service orchestration patterns (import contract, handler-orchestrator split, etc.) | [service-orchestration-patterns.md](service-orchestration-patterns.md)                                      |
 
 ---
 

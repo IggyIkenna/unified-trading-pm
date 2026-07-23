@@ -1,18 +1,45 @@
 ---
 doc_type: codex-ssot
 title: Strategy Registry (v2)
-summary: Post-v1-delete SSOT for the v2 StrategyRegistry that resolves strategy_id→(name, family, category, archetype), derived from the archetype capability manifest; documents the to_dict() shape change, the Category vs VenueCategoryV2 seam, and slot-label-grammar fallback resolution. Concrete counts are the 2026-04-21 baseline (UAC enums are canonical).
+summary:
+  Post-v1-delete SSOT for the v2 StrategyRegistry that resolves strategy_id→(name, family, category, archetype), derived
+  from the archetype capability manifest; documents the to_dict() shape change, the Category vs VenueCategoryV2 seam,
+  and slot-label-grammar fallback resolution. Concrete counts are the 2026-04-21 baseline (UAC enums are canonical).
 status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
-repos: [e2e-testing, execution-service, strategy-service, unified-api-contracts, unified-trading-api, unified-trading-library]
+repos:
+  [
+    e2e-testing,
+    execution-service,
+    strategy-service,
+    unified-api-contracts,
+    unified-trading-api,
+    unified-trading-library,
+  ]
 scope: [engineer, admin]
 tags: [strategy, registry, uac, refactor, canonicalisation]
-related: [naming-convention.md, category-instrument-coverage.md, strategy-lifecycle-maturity.md, legacy-family-migration.md]
+related:
+  [
+    /codex/09-strategy/architecture-v2/naming-convention.md,
+    /codex/09-strategy/architecture-v2/category-instrument-coverage.md,
+    /codex/09-strategy/architecture-v2/strategy-lifecycle-maturity.md,
+    /codex/09-strategy/architecture-v2/legacy-family-migration.md,
+  ]
 created: 2026-04-21
 authoritative_for: [v2 strategy registry derivation (strategy_id resolution)]
-referenced_by: [codex/09-strategy/README.md, codex/09-strategy/architecture-v2/MIGRATION.md, codex/09-strategy/architecture-v2/category-instrument-coverage.md, codex/09-strategy/architecture-v2/dart-exclusive-research-fork.md, codex/09-strategy/architecture-v2/legacy-family-migration.md, codex/09-strategy/architecture-v2/naming-convention.md, codex/09-strategy/architecture-v2/strategy-lifecycle-maturity.md, codex/09-strategy/architecture-v2/tradfi-bond-instrument-type-decision.md]
+referenced_by:
+  [
+    /codex/09-strategy/README.md,
+    /codex/09-strategy/architecture-v2/MIGRATION.md,
+    /codex/09-strategy/architecture-v2/category-instrument-coverage.md,
+    /codex/09-strategy/architecture-v2/dart-exclusive-research-fork.md,
+    /codex/09-strategy/architecture-v2/legacy-family-migration.md,
+    /codex/09-strategy/architecture-v2/naming-convention.md,
+    /codex/09-strategy/architecture-v2/strategy-lifecycle-maturity.md,
+    /codex/09-strategy/architecture-v2/tradfi-bond-instrument-type-decision.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -156,7 +183,7 @@ Registry ownership follows the `unified-api-contracts` Citadel convention:
 - **Schema / code SSOT**: `unified-api-contracts` (this document lives here as its codex dossier).
 - **Data SSOT**:
   `unified-api-contracts/unified_api_contracts/internal/architecture_v2/archetype_capability_manifest.json`. Humans edit
-  that JSON via the flow documented in `codex/09-strategy/architecture-v2/category-instrument-coverage.md`; the UI
+  that JSON via the flow documented in `/codex/09-strategy/architecture-v2/category-instrument-coverage.md`; the UI
   mirror `coverage.ts` is auto-generated from it.
 - **Test parity**: `unified-api-contracts/tests/internal/unit/test_archetype_capability_manifest_parity.py` — any drift
   between the manifest and the in-memory registry fails loud.

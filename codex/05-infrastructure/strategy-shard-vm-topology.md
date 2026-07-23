@@ -14,14 +14,20 @@ scope: [engineer, admin]
 tags: [strategy, infrastructure, deployment, defi, orchestrator]
 related:
   [
-    strategy-vm-launcher-shape.md,
-    vm-tarball-deployment.md,
-    ../04-architecture/per-client-isolation-architecture.md,
-    ../04-architecture/client-lifecycle-event-bus.md,
+    /codex/05-infrastructure/strategy-vm-launcher-shape.md,
+    /codex/05-infrastructure/vm-tarball-deployment.md,
+    /codex/04-architecture/per-client-isolation-architecture.md,
+    /codex/04-architecture/client-lifecycle-event-bus.md,
   ]
 created: 2026-05-20
 authoritative_for: [strategy-service per-client shard VM topology (archetype×shard naming + auto-spawn)]
-referenced_by: [codex/04-architecture/client-lifecycle-event-bus.md, codex/04-architecture/per-client-isolation-architecture.md, codex/04-architecture/promote-workflow-architecture.md, codex/05-infrastructure/strategy-vm-launcher-shape.md]
+referenced_by:
+  [
+    /codex/04-architecture/client-lifecycle-event-bus.md,
+    /codex/04-architecture/per-client-isolation-architecture.md,
+    /codex/04-architecture/promote-workflow-architecture.md,
+    /codex/05-infrastructure/strategy-vm-launcher-shape.md,
+  ]
 owner:
 last_reviewed: 2026-05-20
 code_refs:
@@ -170,6 +176,6 @@ SSOT: `plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md` § Ph
 
 ## Composes With
 
-- `codex/04-architecture/per-client-isolation-architecture.md` — supervisor + ClientWorker model
-- `codex/04-architecture/client-lifecycle-event-bus.md` — ShardCapacityEvent definition
-- `codex/05-infrastructure/vm-tarball-deployment.md` — tarball creation + post-launch verification
+- `/codex/04-architecture/per-client-isolation-architecture.md` — supervisor + ClientWorker model
+- `/codex/04-architecture/client-lifecycle-event-bus.md` — ShardCapacityEvent definition
+- `/codex/05-infrastructure/vm-tarball-deployment.md` — tarball creation + post-launch verification

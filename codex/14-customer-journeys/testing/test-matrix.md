@@ -12,10 +12,18 @@ stage: [meta]
 repos: [unified-trading-system-ui]
 scope: [engineer, admin]
 tags: [ui, testing, playwright, personas, customer-journeys, visibility-slicing]
-related: [example-playbook-test.md, README.md, ../authentication/README.md]
+related: [/codex/14-customer-journeys/testing/example-playbook-test.md, README.md, ../authentication/README.md]
 created: 2026-04-19
 authoritative_for: [Playwright test-spec matrix (spec x persona x environment)]
-referenced_by: [codex/06-coding-standards/ui-testing-layers.md, codex/14-customer-journeys/README.md, codex/14-customer-journeys/playbooks/README.md, codex/14-customer-journeys/roadmap/plan-references.md, codex/14-customer-journeys/testing/README.md, codex/14-customer-journeys/testing/example-playbook-test.md]
+referenced_by:
+  [
+    /codex/06-coding-standards/ui-testing-layers.md,
+    /codex/14-customer-journeys/README.md,
+    /codex/14-customer-journeys/playbooks/README.md,
+    /codex/14-customer-journeys/roadmap/plan-references.md,
+    /codex/14-customer-journeys/testing/README.md,
+    /codex/14-customer-journeys/testing/example-playbook-test.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

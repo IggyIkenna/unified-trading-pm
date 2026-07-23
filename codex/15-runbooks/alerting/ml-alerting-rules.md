@@ -14,10 +14,10 @@ scope: [engineer, admin]
 tags: [runbook, ml, escalation, monitoring, live-trading, model-tier, reconciliation]
 related:
   [
-    codex/15-runbooks/alerting/alert-code-taxonomy.md,
-    codex/15-runbooks/alerting/operator-playbook.md,
-    codex/05-infrastructure/live-pipeline-architecture.md,
-    codex/16-strategy-playbooks/ml/cefi-ml-live-serving.md,
+    /codex/15-runbooks/alerting/alert-code-taxonomy.md,
+    /codex/15-runbooks/alerting/operator-playbook.md,
+    /codex/05-infrastructure/live-pipeline-architecture.md,
+    /codex/16-strategy-playbooks/ml/cefi-ml-live-serving.md,
   ]
 created: 2026-05-08
 owner: ikenna
@@ -25,7 +25,11 @@ cadence: on-demand
 verifier: operator
 last_executed:
 code_refs:
-authoritative_for: [live-ML alerting rule design contract (ML_SIGNAL_STALE / ML_MODEL_DRIFT_DETECTED / ML_PNL_DEVIATION / ML_INFERENCE_LATENCY_SLO)]
+authoritative_for:
+  [
+    live-ML alerting rule design contract (ML_SIGNAL_STALE / ML_MODEL_DRIFT_DETECTED / ML_PNL_DEVIATION /
+    ML_INFERENCE_LATENCY_SLO),
+  ]
 ---
 
 # ML Alerting Rules — Live ML Inference + Signal Lifecycle

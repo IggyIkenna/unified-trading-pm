@@ -3,8 +3,8 @@ doc_type: codex-ssot
 title: Multi-Chain Lending Yield Optimization
 summary:
   Pre-v2 DeFi cross-chain lending yield optimizer — CrossChainSOR scores 22+ (protocol, chain) tuples across Aave V3 /
-  Compound V3 / Morpho / Kamino and bridges via Socket to the best net APY (gross minus annualized gas + bridge fee);
-  4H cadence, supply-only (no liquidation risk); targets 5-12% APY, $50M+. SUPERSEDED banner — see architecture-v2.
+  Compound V3 / Morpho / Kamino and bridges via Socket to the best net APY (gross minus annualized gas + bridge fee); 4H
+  cadence, supply-only (no liquidation risk); targets 5-12% APY, $50M+. SUPERSEDED banner — see architecture-v2.
 status: superseded
 nature: ssot
 asset_group: [meta]
@@ -12,10 +12,22 @@ stage: [meta]
 repos: [execution-service, market-tick-data-service, strategy-service, unified-api-contracts, unified-trading-pm]
 scope: [engineer, admin]
 tags: [defi, strategy, execution, lending, cross-chain, bridge, sor]
-related: [omnichain-transfers.md, cross-chain-yield-arb.md, cross-chain-sor-rebalancing.md, lending-protocol-arb.md]
+related:
+  [
+    /codex/09-strategy/_archived_pre_v2/defi/omnichain-transfers.md,
+    /codex/09-strategy/_archived_pre_v2/defi/cross-chain-yield-arb.md,
+    /codex/09-strategy/_archived_pre_v2/defi/cross-chain-sor-rebalancing.md,
+    /codex/09-strategy/_archived_pre_v2/defi/lending-protocol-arb.md,
+  ]
 created: 2026-03-28
 authoritative_for: []
-referenced_by: [codex/09-strategy/_archived_pre_v2/STRATEGY_CATALOG_pre_v2.md, codex/09-strategy/_archived_pre_v2/defi/lending-protocol-arb.md, codex/09-strategy/_archived_pre_v2/defi/omnichain-transfers.md, codex/09-strategy/_archived_pre_v2/defi/sol-lending-yield.md]
+referenced_by:
+  [
+    /codex/09-strategy/_archived_pre_v2/STRATEGY_CATALOG_pre_v2.md,
+    /codex/09-strategy/_archived_pre_v2/defi/lending-protocol-arb.md,
+    /codex/09-strategy/_archived_pre_v2/defi/omnichain-transfers.md,
+    /codex/09-strategy/_archived_pre_v2/defi/sol-lending-yield.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -345,7 +357,8 @@ Rebalance: treasury < 10% --> strategy reduces position --> WITHDRAW + BRIDGE ba
 
 Gas costs are tracked per-chain via Alchemy RPC using `eth_feeHistory` (EVM). The MTDS `gas_fee_handler` fetches
 real-time gas prices for all supported chains and writes them as features consumed by CrossChainSOR. Gas hits P&L
-immediately as a realized transaction cost -- not estimated. The gas cost differential between chains (L1 ~$15-25 vs L2
+immediately as a realized transaction cost -- not estimated. The gas cost differential between chains (L1
+~$15-25 vs L2
 ~$0.10-0.25) is a key input to the SOR scoring formula.
 
 **Reference:** `market-tick-data-service/market_tick_data_service/gas_fee_handler.py`

@@ -204,7 +204,7 @@ documented** (operator 2026-06-16): we don't chase carry where we lack the data 
     `gas_cost_usd = gas_units × gas_price × native_price`. **Gas-price DATA in GCS** (`gas_fees/chain_id=…/date=…/`,
     schema base_fee_gwei + priority_fee_p25/50/75 + blob_base_fee; ETH 2020→, SOL 2021→, 14 EVM chains). → backtest
     computes gas from EXISTING data + the prod gas-unit table.
-  - **WALLET / treasury-vs-trading** (`codex/04-architecture/wallet-hierarchy-and-capital-flow.md`): keyed by
+  - **WALLET / treasury-vs-trading** (`/codex/04-architecture/wallet-hierarchy-and-capital-flow.md`): keyed by
     **share_class**, DeFi **20% treasury / 80% hot-per-strategy** (CeFi 0/100), `WalletMappingConfig` reserve_pct 20% +
     min/max bands (10%/30%); rebalance automation **NOT yet shipped** (Phase E.3) → the rebalancing sim is a genuine
     prototype of unshipped logic. Capital map = **4-leg AtomicInstruction** (SWAP usdc→eth → STAKE eth→LST → TRANSFER
@@ -356,7 +356,7 @@ documented** (operator 2026-06-16): we don't chase carry where we lack the data 
   endpoints: **11 venues reachable no-auth** (the 6 backtest venues + Gate/KuCoin/Bitget/Kraken-Futures/MEXC). Locked
   each venue's funding field/interval/symbol/sign quirks (HL+Kraken **hourly**; Kraken `fundingRate÷markPrice`
   absolute→relative; Deribit stored 8h-figure; Gate/MEXC expose interval; KuCoin/Kraken `XBT`=BTC; OKX/Deribit/MEXC
-  per-coin, rest all-symbols). Wrote the integration SSOT **`codex/02-data/carry-venue-live-integration-reference.md`**
+  per-coin, rest all-symbols). Wrote the integration SSOT **`/codex/02-data/carry-venue-live-integration-reference.md`**
   covering funding venues + LST **staking** (Lido/Jito/RocketPool/Coinbase/ether.fi-weETH+EigenLayer/Marinade) +
   **Aave** lending (cash floor + recursive borrow leg) + the conservative-cash-margin default + how-to-add-a-venue.
   Filed the `--live` build + UAC-registry (cadence/collateral) + staking/lending-source + credentialed-venue TODOs under
@@ -539,7 +539,7 @@ short immediately, then you replace it once the spot balance moves over (or just
 the exchange — never physically moving the coin). This is exactly what **off-exchange settlement networks** do: **Copper
 ClearLoop, Ceffu (Binance) MirrorX, FalconX / Hidden Road prime** — collateral stays in custody, the exchange recognises
 it for margin, no transfer-timing gap. The workspace already uses **Copper + Ceffu** for custody
-(`codex/04-architecture/custody-providers.md`) → ClearLoop/MirrorX are the natural rails for capital-efficient
+(`/codex/04-architecture/custody-providers.md`) → ClearLoop/MirrorX are the natural rails for capital-efficient
 cross-venue basis. **Action: confirm which of our custody PBs support off-exchange margin on which short venues; if so,
 structures 3–4 collapse toward `efficiency ≈ 1`.**
 
@@ -555,7 +555,7 @@ structures 3–4 collapse toward `efficiency ≈ 1`.**
 
 ## Live/paper multi-venue expansion (operator 2026-06-17)
 
-**Spec / integration SSOT**: `codex/02-data/carry-venue-live-integration-reference.md` (per-venue funding quirks + LST
+**Spec / integration SSOT**: `/codex/02-data/carry-venue-live-integration-reference.md` (per-venue funding quirks + LST
 staking + Aave lending + conservative-default discipline + how-to-add-a-venue). For paper the decision doesn't need deep
 history, so the live path uses **every venue we can reach by public API or hold credentials for** + conservative
 estimates (filed below) where a characteristic isn't yet verified. **Probed reachable 2026-06-17** (public, no auth):
@@ -826,7 +826,7 @@ GCS `perp_funding` + `perp_daily_ctx` datasets (code in `e2e-testing/scripts/def
       as a candidate alongside the spot/LST basis. **Repo: e2e-testing → strategy-service.**
 - [ ] [RESEARCH] P2. Prime-broker / off-exchange-settlement bridge — confirm whether Copper ClearLoop / Ceffu MirrorX /
       FalconX / Hidden Road give off-exchange margin on our short venues (HL/Aster/Bybit/OKX); if yes, structures 3–4
-      collapse to `efficiency ≈ 1`. Cross-link `codex/04-architecture/custody-providers.md`. **Repo: PM research +
+      collapse to `efficiency ≈ 1`. Cross-link `/codex/04-architecture/custody-providers.md`. **Repo: PM research +
       execution-service.**
 
 - [ ] [STRATEGY] P2. Use `predicted_funding_rate` (already a `derivative_ticker` column) to gauge ENTRY on venues that

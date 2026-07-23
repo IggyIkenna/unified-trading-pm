@@ -34,9 +34,9 @@ Produced by `[AGENT] P1` in `plans/epics/plan_hygiene_master.md` Phase 4.
 
 ## Broken refs (file doesn't exist)
 
-| Plan                                                                          | Ref                                                     | Status                                                                 |
-| ----------------------------------------------------------------------------- | ------------------------------------------------------- | ---------------------------------------------------------------------- |
-| `sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md` | `codex/02-data/sports-canonical-league-cup-registry.md` | NOT_YET_CREATED — marked "New:" in plan; acceptable for in-flight work |
+| Plan                                                                          | Ref                                                                                          | Status                                                                 |
+| ----------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| `sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md` | `codex/02-data/sports-canonical-league-cup-registry.md` (no leading slash — not yet created) | NOT_YET_CREATED — marked "New:" in plan; acceptable for in-flight work |
 
 **Action**: no action needed. The plan itself will create this doc when it ships.
 

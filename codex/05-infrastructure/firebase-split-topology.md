@@ -4,8 +4,8 @@ title: Firebase project split — compute on prod, Firebase on staging
 summary:
   "UAT (uat.odum-research.com) runs Cloud Run compute on the PROD project (central-element-323112) but Firebase
   (Auth/Firestore/Storage) on the odum-staging project — a deliberate split needing three cross-project IAM bindings
-  (datastore.user + storage.admin + firebaseauth.admin) on odum-staging for the prod compute SA. Server-side API
-  routes MUST use firebase-admin, never the client SDK (which silently no-ops on API routes, returning 200 + empty
+  (datastore.user + storage.admin + firebaseauth.admin) on odum-staging for the prod compute SA. Server-side API routes
+  MUST use firebase-admin, never the client SDK (which silently no-ops on API routes, returning 200 + empty
   submissionId)."
 status: current
 nature: ssot
@@ -14,15 +14,21 @@ stage: [meta]
 repos: [unified-trading-system-ui]
 scope: [engineer]
 tags: [ui, firebase, infrastructure, staging, auth, gcp]
-related: [auth-setup.md, ../08-workflows/environment-mode-philosophy.md]
+related: [/codex/05-infrastructure/auth-setup.md, /codex/08-workflows/environment-mode-philosophy.md]
 created: 2026-05-07
 authoritative_for: [firebase project split topology]
-referenced_by: [codex/05-infrastructure/deployment-ui-architecture.md, codex/05-infrastructure/deployment-ui-environment-tiers.md]
+referenced_by:
+  [/codex/05-infrastructure/deployment-ui-architecture.md, /codex/05-infrastructure/deployment-ui-environment-tiers.md]
 owner: ikenna
 last_reviewed: 2026-06-25
 code_refs:
 codified: 2026-05-07
-sources: [plans/archive/_uat_firebase_flip_handover_prompt_2026_04_25.md (prior handover; archived), plans/ai/refactor_g2_6_staging_firebase_provisioning_2026_04_20.plan.md, codex/08-workflows/environment-mode-philosophy.md (Axis 2 — staging vs prod)]
+sources:
+  [
+    plans/archive/_uat_firebase_flip_handover_prompt_2026_04_25.md (prior handover; archived),
+    plans/ai/refactor_g2_6_staging_firebase_provisioning_2026_04_20.plan.md,
+    /codex/08-workflows/environment-mode-philosophy.md (Axis 2 — staging vs prod),
+  ]
 ---
 
 # Firebase project split — compute on prod, Firebase on staging
@@ -83,16 +89,16 @@ part that's easy to miss.
 ## Server-side API routes must use `firebase-admin`, never the client SDK (HARD RULE)
 
 **Rule**: all Next.js API routes (files under `app/api/` or `pages/api/`) that read or write Firebase (Firestore, Auth,
-Storage) **must** import from `firebase-admin`, not from the Firebase client SDK (`firebase/app`,
-`firebase/firestore`, etc.).
+Storage) **must** import from `firebase-admin`, not from the Firebase client SDK (`firebase/app`, `firebase/firestore`,
+etc.).
 
-**Why the client SDK silently fails on API routes**: the client SDK is initialised from
-`NEXT_PUBLIC_FIREBASE_*` environment variables. On UAT (and in server-side Node.js contexts generally) those variables
-are either absent or point at the wrong project, so the SDK initialises against an unreachable or wrong Firebase
-backend. The call does **not** throw — it succeeds from the SDK's perspective and returns HTTP 200 to the browser, but
-**no data is written to Firestore** and the response body contains an empty `submissionId` (or whichever write-confirmation
-field the route returns). This makes the bug almost invisible: the UI shows success, the response is 200, and the
-failure only surfaces when a downstream read or an audit finds the expected document is absent.
+**Why the client SDK silently fails on API routes**: the client SDK is initialised from `NEXT_PUBLIC_FIREBASE_*`
+environment variables. On UAT (and in server-side Node.js contexts generally) those variables are either absent or point
+at the wrong project, so the SDK initialises against an unreachable or wrong Firebase backend. The call does **not**
+throw — it succeeds from the SDK's perspective and returns HTTP 200 to the browser, but **no data is written to
+Firestore** and the response body contains an empty `submissionId` (or whichever write-confirmation field the route
+returns). This makes the bug almost invisible: the UI shows success, the response is 200, and the failure only surfaces
+when a downstream read or an audit finds the expected document is absent.
 
 **Correct pattern** (server-side route):
 
@@ -121,5 +127,5 @@ them, the correct `firebase-admin` call still fails with `PERMISSION_DENIED`.
 ## Related docs
 
 - `plans/ai/refactor_g2_6_staging_firebase_provisioning_2026_04_20.plan.md` — the original provisioning plan.
-- `codex/08-workflows/environment-mode-philosophy.md` § Axis 2 (staging vs prod).
-- `codex/05-infrastructure/auth-setup.md` — Firebase Auth patterns.
+- `/codex/08-workflows/environment-mode-philosophy.md` § Axis 2 (staging vs prod).
+- `/codex/05-infrastructure/auth-setup.md` — Firebase Auth patterns.

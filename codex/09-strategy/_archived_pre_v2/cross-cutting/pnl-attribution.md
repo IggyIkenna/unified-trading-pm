@@ -1,7 +1,9 @@
 ---
 doc_type: codex-ssot
 title: P&L Attribution — Cross-Cutting Concern
-summary: "Pre-v2: P&L attribution using canonical factors only, identical live/batch PnLCalculator code path, and mandatory T+1 reconciliation where batch P&L overrides indicative live P&L."
+summary:
+  "Pre-v2: P&L attribution using canonical factors only, identical live/batch PnLCalculator code path, and mandatory T+1
+  reconciliation where batch P&L overrides indicative live P&L."
 status: superseded
 nature: ssot
 asset_group: [meta]
@@ -10,10 +12,13 @@ repos: [alerting-service, execution-service, strategy-service, unified-api-contr
 scope: [engineer, admin]
 tags: [pnl, reconciliation, strategy, execution, data-correctness]
 related:
-  [../../architecture-v2/cross-cutting/pnl-attribution.md, cost-modeling.md]
+  [
+    ../../architecture-v2/cross-cutting/pnl-attribution.md,
+    /codex/09-strategy/_archived_pre_v2/cross-cutting/cost-modeling.md,
+  ]
 created: 2026-06-16
 authoritative_for: []
-referenced_by: [codex/09-strategy/_archived_pre_v2/STRATEGY_CATALOG_pre_v2.md]
+referenced_by: [/codex/09-strategy/_archived_pre_v2/STRATEGY_CATALOG_pre_v2.md]
 owner:
 last_reviewed:
 code_refs:
@@ -428,7 +433,7 @@ equity_in_eth worth of ETH exposure. Zero ETH delta would mean underperforming E
 When drift exceeds threshold, strategy emits a SWAP instruction to buy ETH back toward target.
 
 See [cross-cutting/share-classes.md](../cross-cutting/share-classes.md) for the full share class specification and
-[codex/04-architecture/defi-risk-monitoring.md](../../04-architecture/defi-risk-monitoring.md) for monitoring
+[/codex/04-architecture/defi-risk-monitoring.md](../../04-architecture/defi-risk-monitoring.md) for monitoring
 thresholds.
 
 ## Implementation: pnl-attribution-service `compute_pnl_breakdown()`
@@ -487,15 +492,15 @@ only `PNL_FACTOR_STAKING_YIELD` applies -- there are no separate reward tokens.
 
 ## SSOT References
 
-| Concept                | SSOT                       | Location                                                  |
-| ---------------------- | -------------------------- | --------------------------------------------------------- |
-| PnL calculator         | PnLCalculator              | `strategy-service/strategy_service/pnl_calculator.py`     |
-| Settlement service     | SettlementService          | `strategy-service/strategy_service/settlement_service.py` |
-| PnL attribution schema | UIC                        | `unified-api-contracts (internal/)/`                      |
-| Fill schema            | CanonicalFill (UIC)        | `unified-api-contracts (internal/)/`                      |
-| Funding rate features  | features-delta-one-service | `features-delta-one-service/`                             |
-| Options greeks         | features-options-service   | `features-options-service/`                               |
-| Cost factors           | See cost-modeling.md       | `codex/09-strategy/cross-cutting/cost-modeling.md`        |
-| PnL storage            | GCS archives               | `gs://pnl/{strategy_id}/{client_id}/{date}/`              |
-| Reporting UI           | trading-analytics-ui       | `trading-analytics-ui/`                                   |
-| BigQuery reporting     | UCI DataSink               | `unified-cloud-interface/`                                |
+| Concept                | SSOT                       | Location                                                             |
+| ---------------------- | -------------------------- | -------------------------------------------------------------------- |
+| PnL calculator         | PnLCalculator              | `strategy-service/strategy_service/pnl_calculator.py`                |
+| Settlement service     | SettlementService          | `strategy-service/strategy_service/settlement_service.py`            |
+| PnL attribution schema | UIC                        | `unified-api-contracts (internal/)/`                                 |
+| Fill schema            | CanonicalFill (UIC)        | `unified-api-contracts (internal/)/`                                 |
+| Funding rate features  | features-delta-one-service | `features-delta-one-service/`                                        |
+| Options greeks         | features-options-service   | `features-options-service/`                                          |
+| Cost factors           | See cost-modeling.md       | `/codex/09-strategy/_archived_pre_v2/cross-cutting/cost-modeling.md` |
+| PnL storage            | GCS archives               | `gs://pnl/{strategy_id}/{client_id}/{date}/`                         |
+| Reporting UI           | trading-analytics-ui       | `trading-analytics-ui/`                                              |
+| BigQuery reporting     | UCI DataSink               | `unified-cloud-interface/`                                           |

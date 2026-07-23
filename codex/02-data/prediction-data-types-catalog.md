@@ -2,11 +2,10 @@
 doc_type: codex-ssot
 title: Prediction Data Types Catalog
 summary: >-
-  Prediction data-types catalog SSOT — the 3 MTDS prediction data_types (trades /
-  prediction_canonical_question_group / market_lifecycle), their CLI ops, sources (polymarket_clob,
-  polymarket_gamma_api, kalshi_*), shard keys and schemas; the venue-vs-source invariant (never
-  collapse Polymarket-vs-Kalshi into a source merge), event_driven coverage semantics, and the
-  MARKET_LIFECYCLE dual-casing.
+  Prediction data-types catalog SSOT — the 3 MTDS prediction data_types (trades / prediction_canonical_question_group /
+  market_lifecycle), their CLI ops, sources (polymarket_clob, polymarket_gamma_api, kalshi_*), shard keys and schemas;
+  the venue-vs-source invariant (never collapse Polymarket-vs-Kalshi into a source merge), event_driven coverage
+  semantics, and the MARKET_LIFECYCLE dual-casing.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -16,15 +15,16 @@ scope: [engineer, admin]
 tags: [prediction, mtds, data-pipeline, manifest, instruments, canonicalisation]
 related:
   [
-    codex/02-data/prediction-schema-paths.md,
-    codex/02-data/mtds-data-source-coverage-matrix.md,
-    codex/02-data/per-asset-group-bucket-layouts.md,
-    codex/02-data/availability-manifest-and-data-status.md,
-    codex/02-data/contracts-scope-and-layout.md,
+    /codex/02-data/prediction-schema-paths.md,
+    /codex/02-data/mtds-data-source-coverage-matrix.md,
+    /codex/02-data/per-asset-group-bucket-layouts.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/02-data/contracts-scope-and-layout.md,
   ]
 created: 2026-05-24
 authoritative_for: [MTDS prediction data_type catalog, prediction venue-vs-source provenance invariant]
-referenced_by: [codex/02-data/README.md, codex/02-data/prediction-perps-sourcing.md, codex/02-data/prediction-schema-paths.md]
+referenced_by:
+  [/codex/02-data/README.md, /codex/02-data/prediction-perps-sourcing.md, /codex/02-data/prediction-schema-paths.md]
 owner:
 last_reviewed: 2026-06-04
 code_refs:
@@ -102,7 +102,7 @@ manifest rebuild via the SAME `derive_pipeline_mode_for_row` SSOT):
 `{mode}` = `batch_polymarket_clob` (trades / book / the `prediction_canonical_question_group` bundle) or
 `batch_polymarket_gamma_api` (`MARKET_LIFECYCLE`) — derived per-data_type, never venue-blanket. The migration-window
 readers dual-probe BOTH the legacy (no-`pipeline_mode=`) and canonical shapes until the global Phase-8 cutover removes
-the fallback (~2026-06-15, per `codex/02-data/pipeline-mode-partition.md`).
+the fallback (~2026-06-15, per `/codex/02-data/pipeline-mode-partition.md`).
 
 For `prediction_canonical_question_group` (cluster-grain): shard is per `canonical_question_group`, not per
 `conditionId`. `conditionId` is a row-level column + cluster validation key. The raw OBJECTS stay per-cid
@@ -279,9 +279,9 @@ conditions emit `record_empty(reason=SOURCE_RETURNED_ZERO)` and count as success
 
 ## Related Documents
 
-- `codex/02-data/prediction-schema-paths.md` — GCS path conventions, shard atom definition, canonical question group
+- `/codex/02-data/prediction-schema-paths.md` — GCS path conventions, shard atom definition, canonical question group
   taxonomy
-- `codex/02-data/mtds-data-source-coverage-matrix.md` — full MTDS source coverage
-- `codex/02-data/per-asset-group-bucket-layouts.md` — GCS bucket layout
-- `codex/02-data/availability-manifest-and-data-status.md` — manifest v5+ honest-absence semantics
-- `codex/02-data/contracts-scope-and-layout.md` — UAC layout + MARKET_LIFECYCLE dual-casing note
+- `/codex/02-data/mtds-data-source-coverage-matrix.md` — full MTDS source coverage
+- `/codex/02-data/per-asset-group-bucket-layouts.md` — GCS bucket layout
+- `/codex/02-data/availability-manifest-and-data-status.md` — manifest v5+ honest-absence semantics
+- `/codex/02-data/contracts-scope-and-layout.md` — UAC layout + MARKET_LIFECYCLE dual-casing note

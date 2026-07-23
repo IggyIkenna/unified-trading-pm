@@ -2,11 +2,9 @@
 doc_type: codex-ssot
 title: Read-time filter pushdown — list before load
 summary: >-
-  Read-time filter-pushdown rule for batch services with a
-  list→filter→load→process→write shape — scope filters (instrument_ids / venues /
-  data_types) MUST be applied at the LIST stage before any blob is downloaded;
-  filtering only at write-time is review-blocking (RSS grows linearly with the
-  unfiltered blob count → OOM).
+  Read-time filter-pushdown rule for batch services with a list→filter→load→process→write shape — scope filters
+  (instrument_ids / venues / data_types) MUST be applied at the LIST stage before any blob is downloaded; filtering only
+  at write-time is review-blocking (RSS grows linearly with the unfiltered blob count → OOM).
 status: current
 nature: ssot
 asset_group: [meta]
@@ -14,10 +12,15 @@ stage: [meta]
 repos: [batch-live-reconciliation-service, instruments-service, market-data-processing-service]
 scope: [engineer, admin]
 tags: [memory, backfill, mdps, polars, data-pipeline, performance]
-related: [../04-architecture/shard-level-failure-isolation.md, ../02-data/availability-manifest-and-data-status.md]
+related:
+  [/codex/04-architecture/shard-level-failure-isolation.md, /codex/02-data/availability-manifest-and-data-status.md]
 created: 2026-05-28
 authoritative_for: [read-time filter pushdown (list-before-load scope filtering for batch services)]
-referenced_by: [codex/06-coding-standards/data-engine-selection.md, plans/active/bigquery_feature_ml_compute_engine_option_2026_06_08.md]
+referenced_by:
+  [
+    /codex/06-coding-standards/data-engine-selection.md,
+    plans/active/bigquery_feature_ml_compute_engine_option_2026_06_08.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -131,9 +134,9 @@ partition-level ones.
 
 ## Composes with
 
-- [`codex/04-architecture/shard-level-failure-isolation.md`](../04-architecture/shard-level-failure-isolation.md) —
+- [`/codex/04-architecture/shard-level-failure-isolation.md`](/codex/04-architecture/shard-level-failure-isolation.md) —
   per-shard scoping (a different scope axis)
-- [`codex/02-data/availability-manifest-and-data-status.md`](../02-data/availability-manifest-and-data-status.md) —
+- [`/codex/02-data/availability-manifest-and-data-status.md`](/codex/02-data/availability-manifest-and-data-status.md) —
   write-side honest-absence (unrelated; this rule is read-side)
 
 ## Reference plan

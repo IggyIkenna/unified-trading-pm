@@ -3,8 +3,8 @@ doc_type: codex-ssot
 title: Synthetic-Data Pipeline Benchmarking
 summary:
   SSOT for the synthetic-data benchmark harness — the 5 UAC contract axes
-  (SyntheticGeneratorId/Domain/RealismAxis/ShardLayout/Params), the UTL generator + per-stage profiler + BenchmarkHarness
-  DAG, the benchmark CLI/launcher, and the (still-unpopulated) VM-shape recommendation matrix.
+  (SyntheticGeneratorId/Domain/RealismAxis/ShardLayout/Params), the UTL generator + per-stage profiler +
+  BenchmarkHarness DAG, the benchmark CLI/launcher, and the (still-unpopulated) VM-shape recommendation matrix.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -12,10 +12,16 @@ stage: [meta]
 repos: [deployment-service, unified-trading-library]
 scope: [engineer, admin]
 tags: [synthetic-data, performance, benchmark, infrastructure, spot-vm]
-related: [runtime-tiers-and-deployment.md, ../06-coding-standards/performance-targets.md, ../02-data/availability-manifest-and-data-status.md]
+related:
+  [
+    /codex/05-infrastructure/runtime-tiers-and-deployment.md,
+    /codex/06-coding-standards/performance-targets.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+  ]
 created: 2026-05-12
 authoritative_for: [synthetic-data pipeline benchmark harness]
-referenced_by: [codex/05-infrastructure/runtime-tiers-and-deployment.md, codex/06-coding-standards/performance-targets.md]
+referenced_by:
+  [/codex/05-infrastructure/runtime-tiers-and-deployment.md, /codex/06-coding-standards/performance-targets.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:
@@ -28,8 +34,8 @@ code_refs:
 > `plans/archive/2026_05/mock_data_pipeline_benchmarking_2026_05_10.md` (Phase 7.A — archived 2026-05-21). Composes with
 > [`runtime-tiers-and-deployment.md`](runtime-tiers-and-deployment.md) (VM-shape recommendations feed the data-pipeline
 > VM machine-type defaults) and
-> [`../06-coding-standards/performance-targets.md`](../06-coding-standards/performance-targets.md) (the per-stage
-> targets there should be backed by benchmark profile data, not guessed).
+> [`/codex/06-coding-standards/performance-targets.md`](/codex/06-coding-standards/performance-targets.md) (the
+> per-stage targets there should be backed by benchmark profile data, not guessed).
 
 ## Why this exists
 
@@ -54,7 +60,7 @@ for value correctness) is post-cutover.
    2: + string-column width tuned to a real backfill byte-size sample) → `SHARD_COUNT` (axis 3: + correct fan-out so
    GCS/S3 listing depth matches prod). `CALIBRATED_DYNAMICS` (axis 4) is declared but NOT shipped.
 4. **`SyntheticShardLayout`** — `shard_key_axes` (the SAME shard atom the `ManifestWriter` row key uses for that
-   `(asset_group, data_type)` — see [`../02-data/availability-manifest-and-data-status.md`] + the per-asset_group
+   `(asset_group, data_type)` — see [`/codex/02-data/availability-manifest-and-data-status.md`] + the per-asset_group
    shard-atom matrix in `plans/epics/infrastructure_master.md`) + `shards_per_day` + `partition_template`. Drift between
    `shard_key_axes` and the manifest matrix is review-blocking.
 5. **`SyntheticParams`** — a concrete generation request (a generator id + date range + cardinality knobs + resolved

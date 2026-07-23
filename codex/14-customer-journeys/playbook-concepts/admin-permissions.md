@@ -12,7 +12,11 @@ stage: [meta]
 repos: [unified-trading-system-ui]
 scope: [engineer, admin]
 tags: [admin, permissions, authentication, ui, security, entitlements]
-related: [visibility-slicing.md, fund-org-hierarchy.md]
+related:
+  [
+    /codex/14-customer-journeys/playbook-concepts/visibility-slicing.md,
+    /codex/14-customer-journeys/playbook-concepts/fund-org-hierarchy.md,
+  ]
 created: 2026-04-21
 authoritative_for: [UI admin-permissions gating model (admin_permissions custom claim)]
 referenced_by:

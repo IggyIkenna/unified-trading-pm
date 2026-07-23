@@ -18,7 +18,11 @@ stage: [meta]
 repos: [deployment-ui, deployment-api, unified-trading-library]
 scope: [engineer]
 tags: [deployment-observability, cockpit, consolidator, manifest, backlog, throughput, deployment-ui]
-related: [deployment_observability_expansion_2026_07_08.md, deployment_full_estate_cost_provenance_2026_07_09.md]
+related:
+  [
+    /plans/archive/2026_07/deployment_observability_expansion_2026_07_08.md,
+    /plans/archive/2026_07/deployment_full_estate_cost_provenance_2026_07_09.md,
+  ]
 created: "2026-07-09"
 last_updated: "2026-07-10"
 parent_epic: observability_master
@@ -76,14 +80,14 @@ drift_direction: advance-code
 ## Codex SSOTs (READ before touching each area)
 
 - Manifest consolidator runtime (Cloud Run Job + Scheduler `*/1`, per-(kind, AG), `unified_trading_sa` objectAdmin):
-  `codex/05-infrastructure/manifest-consolidator-ssot.md`.
-- Availability manifest / per-VM shard layout + single-walk: `codex/02-data/availability-manifest-and-data-status.md`.
+  `/codex/05-infrastructure/manifest-consolidator-ssot.md`.
+- Availability manifest / per-VM shard layout + single-walk: `/codex/02-data/availability-manifest-and-data-status.md`.
 - Consolidator health endpoint: `deployment-api/deployment_api/routes/health_consolidator.py` (`ConsolidatorAgHealth`,
   `_ag_health`); per-VM shard helpers `unified_trading_library.manifest_writer._state` (`_per_vm_shards_exist`,
   `_consolidated_blob_age_sec`). (Cross-ref: this endpoint was shipped by `unified_deployment_health_cockpit_2026_06_23`
   [complete], which is the same surface `monitoring_control_plane_master_2026_06_10.md`'s G3 item still lists as
   "homeless"/"IN PROGRESS — slot 3"; see that doc's G3 note for the reconciliation. [finding 182, synced 2026-07-14])
-- UI testing gate (playwright L2): `codex/06-coding-standards/ui-testing-layers.md`.
+- UI testing gate (playwright L2): `/codex/06-coding-standards/ui-testing-layers.md`.
 
 ---
 
@@ -199,10 +203,10 @@ drift_direction: advance-code
       (`Markdown.tsx`, `consolidators-help.md`). Supersedes the per-metric-tooltip approach.
 - [x] [DOCS] P2. ✅ **Consolidator/manifest docs updated — DONE 2026-07-11.** The shipped `docs/consolidators-help.md`
       documents every metric (rows/size/fed-by/index-age/backlog/oldest-pending/verdict incl. fired-but-empty + the
-      run-summary/not-reporting state). Mirrored to codex: `codex/05-infrastructure/manifest-consolidator-ssot.md`
+      run-summary/not-reporting state). Mirrored to codex: `/codex/05-infrastructure/manifest-consolidator-ssot.md`
       gained a "Cockpit data-correctness signals + `_index/latest.json` run summary" section (verdict vocabulary,
       per-cadence budget, backlog+oldest-pending, absolute snapshot, the latest.json contract + dynamic-enumeration
-      source), and `codex/02-data/availability-manifest-and-data-status.md` gained the sibling-`latest.json` note
+      source), and `/codex/02-data/availability-manifest-and-data-status.md` gained the sibling-`latest.json` note
       pointing to it. — PM plan flip (this commit). Phantom/reprobe docs stay with that separate, still-open item.
 
 ### Fan-in — oldest-unmerged-shard age (operator-SCOPED-DOWN 2026-07-11)

@@ -14,7 +14,7 @@ stage: [data]
 repos: [instruments-service, market-tick-data-service, unified-api-contracts]
 scope: [engineer, admin]
 tags: [backfill, manifest, honest-coverage, data-completion, prediction, data-correctness]
-related: [data_completion_to_100_all_ag_2026_06_21.md]
+related: [/plans/active/data_completion_to_100_all_ag_2026_06_21.md]
 created: 2026-07-15
 parent_epic: manifest_master
 assigned_vm: NA
@@ -139,9 +139,9 @@ drift_direction: advance-code
 > market_lifecycle, …) — this migration's actual scope is the **`trades`/`prediction_trades` subset of that corpus
 > only** (see "Scope: which data_type" below), not the full 5.42M.
 
-**Codex SSOTs for this section**: `codex/02-data/per-asset-group-bucket-layouts.md` ~L121 ("PREDICTION (post-Plan A
-target)" table row — the ratified object shape); `codex/02-data/pipeline-mode-partition.md` § "Predictions migration
-(Plan A)"; `codex/02-data/availability-manifest-and-data-status.md` § "Bundled data_types"
+**Codex SSOTs for this section**: `/codex/02-data/per-asset-group-bucket-layouts.md` ~L121 ("PREDICTION (post-Plan A
+target)" table row — the ratified object shape); `/codex/02-data/pipeline-mode-partition.md` § "Predictions migration
+(Plan A)"; `/codex/02-data/availability-manifest-and-data-status.md` § "Bundled data_types"
 (`prediction_canonical_question_group` / `PREDICTION_GROUPS`). No conflicting in-flight migration found:
 `gcloud compute instances list` (2026-07-13) shows no prediction/canonical-migration VM running; the only
 prediction-adjacent active plans are `prediction_canonical_identity_migration_2026_07_08.md` (instruments-service

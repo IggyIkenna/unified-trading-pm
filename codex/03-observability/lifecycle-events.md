@@ -4,8 +4,8 @@ title: Lifecycle Events
 summary:
   "Lifecycle-event taxonomy: batch services emit 11 mandatory ordered events (STARTED→…→STOPPED/FAILED), live mode adds
   DATA_BROADCAST (12); required envelope fields + per-event extras; conditional event families (instruments-live,
-  live-pipeline, ML, strategy hot-reload, kill-switch bus); ServiceBootstrap auto-emits STARTED/STOPPED/FAILED
-  (QG STEP 5.61). Machine SSOT = UAC internal/events.py."
+  live-pipeline, ML, strategy hot-reload, kill-switch bus); ServiceBootstrap auto-emits STARTED/STOPPED/FAILED (QG STEP
+  5.61). Machine SSOT = UAC internal/events.py."
 status: current
 nature: ssot
 asset_group: [meta]
@@ -15,14 +15,23 @@ scope: [engineer, admin]
 tags: [lifecycle-events, observability, pipeline, monitoring, data-quality, live-trading]
 related:
   [
-    coordination-events.md,
-    alerting.md,
-    ../04-architecture/data-flow-map.md,
-    ../07-security/audit-logging.md,
+    /codex/03-observability/coordination-events.md,
+    /codex/03-observability/alerting.md,
+    /codex/04-architecture/data-flow-map.md,
+    /codex/07-security/audit-logging.md,
   ]
 created: 2026-03-27
 authoritative_for: [lifecycle-event taxonomy, mandatory lifecycle event sequence]
-referenced_by: [codex/03-observability/alerting.md, codex/03-observability/coordination-events.md, codex/03-observability/slos.md, codex/04-architecture/opentelemetry.md, codex/04-architecture/runtime-deployment-topology.md, codex/06-coding-standards/correlation-id.md, codex/07-security/audit-logging.md]
+referenced_by:
+  [
+    /codex/03-observability/alerting.md,
+    /codex/03-observability/coordination-events.md,
+    /codex/03-observability/slos.md,
+    /codex/04-architecture/opentelemetry.md,
+    /codex/04-architecture/runtime-deployment-topology.md,
+    /codex/06-coding-standards/correlation-id.md,
+    /codex/07-security/audit-logging.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -124,8 +133,9 @@ service's run. They share the
 
 ### Instruments-live (7 codes)
 
-Per [`../04-architecture/instruments-live-architecture.md`](../04-architecture/instruments-live-architecture.md) +
-[`instruments-preflight-chain.md`](../04-architecture/instruments-preflight-chain.md):
+Per
+[`/codex/04-architecture/instruments-live-architecture.md`](/codex/04-architecture/instruments-live-architecture.md) +
+[`instruments-preflight-chain.md`](/codex/04-architecture/instruments-preflight-chain.md):
 
 | Event                                   | When                                                              |
 | --------------------------------------- | ----------------------------------------------------------------- |
@@ -144,8 +154,8 @@ the trigger.
 
 ### Live-pipeline (4 codes)
 
-Per [`../05-infrastructure/live-pipeline-architecture.md`](../05-infrastructure/live-pipeline-architecture.md) +
-[`../04-architecture/alerting-batch-live.md`](../04-architecture/alerting-batch-live.md):
+Per [`/codex/05-infrastructure/live-pipeline-architecture.md`](/codex/05-infrastructure/live-pipeline-architecture.md) +
+[`/codex/04-architecture/alerting-batch-live.md`](/codex/04-architecture/alerting-batch-live.md):
 
 | Event                                 | When                                                                      |
 | ------------------------------------- | ------------------------------------------------------------------------- |
@@ -156,7 +166,7 @@ Per [`../05-infrastructure/live-pipeline-architecture.md`](../05-infrastructure/
 
 ### ML lifecycle (5 codes)
 
-Per [`../04-architecture/ml-experiment-lifecycle.md`](../04-architecture/ml-experiment-lifecycle.md):
+Per [`/codex/04-architecture/ml-experiment-lifecycle.md`](/codex/04-architecture/ml-experiment-lifecycle.md):
 
 | Event                      | When                                                                 |
 | -------------------------- | -------------------------------------------------------------------- |
@@ -168,7 +178,8 @@ Per [`../04-architecture/ml-experiment-lifecycle.md`](../04-architecture/ml-expe
 
 ### Strategy hot-reload (1 code)
 
-Per [`../04-architecture/live-strategy-config-hot-reload.md`](../04-architecture/live-strategy-config-hot-reload.md):
+Per
+[`/codex/04-architecture/live-strategy-config-hot-reload.md`](/codex/04-architecture/live-strategy-config-hot-reload.md):
 
 | Event                      | When                                                                 |
 | -------------------------- | -------------------------------------------------------------------- |
@@ -193,7 +204,7 @@ SSOTs:
   helper, post-channel-dispatch wire). alerting-service@`8eda37c`.
 - UAC: `unified_api_contracts.canonical.crosscutting.alerting.codes.KillSwitchScope` (enum).
 - Tests: `alerting-service/tests/integration/test_kill_switch_publisher_hook.py` (5 integration tests).
-- Per-code scope mapping: `codex/15-runbooks/alerting/alert-code-taxonomy.md` § "Kill-switch family".
+- Per-code scope mapping: `/codex/15-runbooks/alerting/alert-code-taxonomy.md` § "Kill-switch family".
 
 ### Per-instrument progress (silent-success-with-zero-output detector)
 

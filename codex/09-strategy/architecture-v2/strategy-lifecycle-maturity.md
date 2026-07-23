@@ -1,18 +1,44 @@
 ---
 doc_type: codex-ssot
 title: Strategy Lifecycle & Maturity Model
-summary: SSOT for the 5-dimension strategy-instance model — the 9-phase forward-only StrategyMaturityPhase staircase, ProductRouting, venue-set-variant upsell ladders, ShareClass, and odum-paper/odum-live client-zero; the UAC-catalogue vs Firestore-runtime-state split and admin lifecycle-editor flow. Instance explosion ~200-300 rows.
+summary:
+  SSOT for the 5-dimension strategy-instance model — the 9-phase forward-only StrategyMaturityPhase staircase,
+  ProductRouting, venue-set-variant upsell ladders, ShareClass, and odum-paper/odum-live client-zero; the UAC-catalogue
+  vs Firestore-runtime-state split and admin lifecycle-editor flow. Instance explosion ~200-300 rows.
 status: current
 nature: ssot
 asset_group: [meta]
 stage: [meta]
-repos: [execution-service, strategy-service, unified-api-contracts, unified-trading-api, unified-trading-pm, unified-trading-system-ui]
+repos:
+  [
+    execution-service,
+    strategy-service,
+    unified-api-contracts,
+    unified-trading-api,
+    unified-trading-pm,
+    unified-trading-system-ui,
+  ]
 scope: [engineer, admin]
 tags: [strategy, catalogue, uac, promote, reconciliation]
-related: [strategy-registry-v2.md, strategy-catalogue-3tier.md, performance-overlay.md, dashboard-services-grid.md]
+related:
+  [
+    /codex/09-strategy/architecture-v2/strategy-registry-v2.md,
+    /codex/09-strategy/architecture-v2/strategy-catalogue-3tier.md,
+    /codex/09-strategy/architecture-v2/performance-overlay.md,
+    /codex/09-strategy/architecture-v2/dashboard-services-grid.md,
+  ]
 created: 2026-04-21
 authoritative_for: [strategy 9-phase maturity model + 5-dim instance registry + venue-set variants]
-referenced_by: [codex/09-strategy/architecture-v2/dart-exclusive-research-fork.md, codex/09-strategy/architecture-v2/performance-overlay.md, codex/09-strategy/architecture-v2/promote-workflow.md, codex/09-strategy/architecture-v2/strategy-catalogue-3tier.md, codex/09-strategy/architecture-v2/strategy-registry-v2.md, codex/14-customer-journeys/shared-core/odum-paper-client-zero.md, codex/14-customer-journeys/shared-core/strategy-version-governance.md]
+referenced_by:
+  [
+    /codex/09-strategy/architecture-v2/dart-exclusive-research-fork.md,
+    /codex/09-strategy/architecture-v2/performance-overlay.md,
+    /codex/09-strategy/architecture-v2/promote-workflow.md,
+    /codex/09-strategy/architecture-v2/strategy-catalogue-3tier.md,
+    /codex/09-strategy/architecture-v2/strategy-registry-v2.md,
+    /codex/14-customer-journeys/shared-core/odum-paper-client-zero.md,
+    /codex/14-customer-journeys/shared-core/strategy-version-governance.md,
+  ]
 owner:
 last_reviewed:
 code_refs:

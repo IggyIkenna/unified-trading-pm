@@ -35,9 +35,9 @@ related:
     plans/active/issues/strategy_store_split_brain_2026_07_13.md,
     plans/active/bucket_iam_write_protection_per_tier_2026_06_09.md,
     plans/active/bucket_fold_closeout_2026_07_17.md,
-    codex/05-infrastructure/bucket-isolation-model.md,
-    codex/05-infrastructure/manifest-consolidator-ssot.md,
-    codex/02-data/pipeline-mode-partition.md,
+    /codex/05-infrastructure/bucket-isolation-model.md,
+    /codex/05-infrastructure/manifest-consolidator-ssot.md,
+    /codex/02-data/pipeline-mode-partition.md,
   ]
 created: "2026-07-17"
 last_updated: "2026-07-17"
@@ -92,9 +92,9 @@ UAC facade `canonical/gcs_paths.py::strategy_store_bucket` (must return the flat
 
 ## Codex SSOTs (read before touching — plan↔codex drift is review-blocking)
 
-- `codex/05-infrastructure/bucket-isolation-model.md` — Group B naming → folded execution/strategy shapes (closeout).
-- `codex/05-infrastructure/manifest-consolidator-ssot.md` — execution consolidator 5 → 1.
-- `codex/02-data/pipeline-mode-partition.md` — reader-fallback discipline; `_KIND_ALIASES` soft-window.
+- `/codex/05-infrastructure/bucket-isolation-model.md` — Group B naming → folded execution/strategy shapes (closeout).
+- `/codex/05-infrastructure/manifest-consolidator-ssot.md` — execution consolidator 5 → 1.
+- `/codex/02-data/pipeline-mode-partition.md` — reader-fallback discipline; `_KIND_ALIASES` soft-window.
 - Design cross-cutting: [[bucket_estate_fold_design_2026_07_13]] §2.A/C/D/E.
 
 ## Todos — DeFi-playbook order (Fold C + Fold D interleaved by phase)
@@ -132,11 +132,12 @@ UAC facade `canonical/gcs_paths.py::strategy_store_bucket` (must return the flat
       `_index/latest.json` (execution-store-prd + strategy-store-prd). Naming wart: exec job still `-cefi` (closeout
       rename). AWS consolidators (all 404-drifted) → closeout.
 - [x] ✅ [INFRA] P1. **Delete sources + TF-state reconcile** — **DONE 2026-07-18 (operator pre-authorized autonomous
-      delete; cefi was test data not live fills).** DELETED (GCP): execution-store-{cefi(6144),defi(2),tradfi(1),sports},
-      execution-store-pred-{prd,test}, strategy-store(flat,172); strategy-store-{cefi,tradfi,defi} were already 404.
-      Parity pre-verified (execution-store-prd 6147 = cefi+defi+tradfi; strategy-store-prd 172 = flat). yaml keys already
-      folded. TF-state: IMPORTED folded execution-store-{prd,test} + strategy-store-prd; STATE-RM'd the deleted sources.
-      Estate IAM/scheduler drift stays operator-aware (not applied).
+      delete; cefi was test data not live fills).** DELETED (GCP):
+      execution-store-{cefi(6144),defi(2),tradfi(1),sports}, execution-store-pred-{prd,test}, strategy-store(flat,172);
+      strategy-store-{cefi,tradfi,defi} were already 404. Parity pre-verified (execution-store-prd 6147 =
+      cefi+defi+tradfi; strategy-store-prd 172 = flat). yaml keys already folded. TF-state: IMPORTED folded
+      execution-store-{prd,test} + strategy-store-prd; STATE-RM'd the deleted sources. Estate IAM/scheduler drift stays
+      operator-aware (not applied).
 - [ ] [INFRA] P2. **IAM + lifecycle** — join `execution-store-prd` + `strategy-store-prd` to
       [[bucket_iam_write_protection_per_tier_2026_06_09]] Phase-2 Group-B; `-test-` twins get test-tier.
       STANDARD→COLDLINE@60d whole-bucket, with a prefix-scoped STANDARD exception for `strategy-store/catalogue/`

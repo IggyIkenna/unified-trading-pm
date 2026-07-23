@@ -20,8 +20,8 @@ tags: [reprocessing, reclassify, honest-coverage, hygiene, script-homes, cefi, d
 related:
   [
     ../instruments_completion_tracker_2026_07_06.md,
-    cefi_monotonicity_guard_alerting_and_dark_venues_2026_07_07.md,
-    ../../../codex/06-coding-standards/script-homes.md,
+    /plans/archive/issues/cefi_monotonicity_guard_alerting_and_dark_venues_2026_07_07.md,
+    /codex/06-coding-standards/script-homes.md,
   ]
 created: 2026-07-07
 parent_epic: instruments_master
@@ -84,9 +84,9 @@ but only by date range, not by error reason, and only if a human remembers to re
 venue and window. It does nothing on its own when a fix lands.
 
 **Codex already flags this as the recurring-need pattern it's supposed to prevent:**
-`codex/06-coding-standards/script-homes.md:62-66`: _"If the script encodes a recurring need, it has a named successor (a
-service CLI subcommand / deployment-service job) and is retired the moment that lands — never left as a parallel path."_
-11 scripts in 8 weeks is exactly that recurring need, and it hasn't graduated.
+`/codex/06-coding-standards/script-homes.md:62-66`: _"If the script encodes a recurring need, it has a named successor
+(a service CLI subcommand / deployment-service job) and is retired the moment that lands — never left as a parallel
+path."_ 11 scripts in 8 weeks is exactly that recurring need, and it hasn't graduated.
 
 **ASTER itself is the proof, not a one-off exception**: per `cefi_hl_aster_batch_data_gaps_2026_06_22.md`, ASTER
 accumulated three _more_ distinct attempted*failed-causing bugs after the 2026-05-14 base-URL fix (book_snapshot_5
@@ -110,8 +110,8 @@ template to generalize from: `instruments-service/scripts/retry_transient_cefi_f
 `_is_transient`, `_identify_transient_rows`, and `_flip_to_expected_unattempted` functions are already ~90% of the
 generic shape; they just need the hardcoded pattern list and hardcoded bucket resolver replaced with CLI args.
 
-**Where it should surface:** per `codex/06-coding-standards/script-homes.md`'s decision rule ("production verb → service
-CLI subcommand"), as a permanent instruments-service CLI subcommand — e.g.
+**Where it should surface:** per `/codex/06-coding-standards/script-homes.md`'s decision rule ("production verb →
+service CLI subcommand"), as a permanent instruments-service CLI subcommand — e.g.
 `instruments-service --operation reprocess-shards --asset-group cefi --venue ASTER --capture-status attempted_failed --error-reason-contains "404" --date-start 2024-10-01 --date-end 2026-05-14 [--apply]`
 — backed by the UTL library function so market-tick-data-service and any future consumer get it for free.
 
