@@ -715,6 +715,21 @@ this: a top banner (GCP active / AWS parked), a Health `deferred` tier (blue, "n
   - Coverage: 19 Vitest (page total) + 10 `pw:L2` (spec total); full deployment-ui gate green (1097 tests workspace-
     wide). Both live dev servers (tmux-hosted, `:5183` UI / `:8004` API) picked up every change via Vite HMR — verified
     healthy post-ship, no restart needed.
+- **2026-07-23 (later) — two operator-driven layout passes over the page header/toolbar, both shipped same day.** (1)
+  `deployment-ui@ed49dbe` — dropped the page's icon+title+subtitle header block and the standalone GCP-active/
+  AWS-parked banner; both pieces of copy now live only in the help dialog (a new "GCP / AWS" `HelpTerm` carries the
+  banner's full text verbatim). The tab bar moved up to occupy the header's old position (left side), with the window
+  presets / date-range picker / refresh / help button unchanged on the right — one row instead of three stacked blocks
+  (header, banner, tabs). (2) `deployment-ui@de8271a` — restructured every view's stat-tile-grid + filter-pill-bar
+  (previously two full-width blocks stacked, stats on top) into one row via a new shared `ViewToolbar` component: filter
+  pills left (bigger — `px-2.5 py-1 text-xs` → `px-3 py-1.5 text-[13px]`), stat tiles right (smaller — `StatTile`'s
+  `text-2xl`/`p-3` → `text-lg`/`px-2.5 py-1.5`, wrapped in `flex flex-wrap` instead of a `grid` so they cluster instead
+  of stretching full-width), and the pill row's explanation text moved from beside the pills to its own line below them.
+  Applied identically to all 5 views via the one shared component — a single edit point instead of 5 independent ones,
+  so the layout can't drift between tabs. Visually verified via Playwright screenshots (Pipeline + What's running)
+  before shipping, not just eyeballed in code. No test asserted on visual layout/DOM order, so both ships were zero-risk
+  to the existing 19 Vitest + 10 `pw:L2` suite (all still pass unchanged) — a reminder that a pure-layout change needs a
+  screenshot check precisely because the test suite can't catch it.
 
 ## Lessons this session (so they are not re-learned the hard way)
 
