@@ -28,6 +28,7 @@ drift_direction: NA
 resolved_by:
 locked_by:
 source: agent-discovered (e2e-testing vs prod DeFi corner-case audit, 2026-07-23)
+depends_on: []
 ---
 
 # e2e-testing collateral-validation test — dead import since 2026-05-01, 9 scenarios never run
