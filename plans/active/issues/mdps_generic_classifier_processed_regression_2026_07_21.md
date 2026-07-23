@@ -23,7 +23,7 @@ summary: >-
   for every post-cutover MDPS row, and the generic classifier can never again emit "blocked_on_raw" for MDPS -- it
   silently degrades to always reporting "missing" instead, for any MDPS venue/category that isn't (yet) covered by the
   honest-coverage path (i.e. everything, since that path doesn't exist yet -- see the sibling design doc).
-status: open
+status: resolved
 nature: issue
 asset_group: [cefi, defi, tradfi]
 stage: [data]
@@ -39,10 +39,12 @@ tags:
     manifest,
     processed-vs-raw,
     operator-ruling-2026-07-21,
+    duplicate-finding,
   ]
 related:
   - mdps_honest_coverage_timeframe_extension_design_2026_07_21.md
   - plans/active/data_pipeline_check_mdps_features_2026_07_20.md
+  - ../../archive/issues/mdps_datatype_axis_switch_breaks_generic_classifier_2026_07_21.md
 created: "2026-07-21"
 parent_epic: defi_master
 assigned_vm: NA
@@ -54,7 +56,11 @@ estimate_calibrated_ai_days: 0.2
 assigned_role: backend_engineer
 drift_direction: advance-code
 depends_on: []
-resolved_by:
+resolved_by: >-
+  DUPLICATE of `plans/archive/issues/mdps_datatype_axis_switch_breaks_generic_classifier_2026_07_21.md` (same root
+  cause, found independently by a different agent the same day, already fixed+shipped there:
+  unified-api-contracts@0900a4d98b1e5136ba28d343cbf6df7c58bfbd47 +
+  deployment-api@ac2e61e606e41ba87515d54eb531648bafa304a3, both verified landed on origin/live-defi-rollout).
 locked_by:
 source: [self-investigation-2026-07-21, promoted-from-scratchpad-2026-07-23]
 ---
@@ -135,3 +141,29 @@ of 2026-07-21) regression.
 3. Confirm the actual production impact: is `_classify_data_type_for_venue`'s output currently visible anywhere an
    operator/user would see a misleading "missing" (vs "blocked_on_raw") status for MDPS data today? If so, this is a
    live, user-visible correctness issue and should be prioritized accordingly, not treated as cosmetic.
+
+# Resolution (2026-07-23) — DUPLICATE of an already-fixed issue, not new work
+
+While re-verifying citations against the current tree per the "suggested next step" above, found that
+`_classify_data_type_for_venue` (`deployment-api/deployment_api/services/data_status/breakdowns_core.py:680-756`)
+**already has the fix**: `service: str = ""` is a real parameter (line 688), threaded into
+`is_processed_data_type`/`get_raw_source_data_types` exactly as this doc's own "suggested next step" option (b)
+described, with a docstring (lines 730-744) citing `mdps_datatype_axis_switch_breaks_generic_classifier_2026_07_21.md`
+by name.
+
+That doc — `plans/archive/issues/mdps_datatype_axis_switch_breaks_generic_classifier_2026_07_21.md` — describes the
+IDENTICAL root cause (same commit `752eaff`, same file:line citations, same "missing vs blocked_on_raw" mechanism),
+found independently the same day (2026-07-21) by a different agent working
+`mtds_data_status_page_parity_2026_07_21.md`'s MDPS-parity todo, and already fixed + shipped + archived:
+`unified-api-contracts@0900a4d98b1e5136ba28d343cbf6df7c58bfbd47` (option (b), NOT (a) — a service-scoped dual-key, since
+a global re-key would have misclassified genuine raw MTDS rows carrying the same token) +
+`deployment-api@ac2e61e606e41ba87515d54eb531648bafa304a3` (threads `service=service` through), both verified landed on
+`origin/live-defi-rollout` by SHA, both repos' full `quality-gates.sh` green, with dedicated regression tests
+(`test_processed_data_dependencies.py`, `TestMdpsSourceAxisClassification` in `test_data_status_service.py`).
+
+**This doc's own promotion (2026-07-23, "rescued" from a scratchpad file with zero prior repo footprint) was itself the
+duplicate** — the finding was real and correctly triaged at the time it was originally made (2026-07-21), but by the
+time it was promoted out of scratchpad two days later, a parallel session had already found, fixed, and archived the
+same root cause under a different filename. Nothing further to do here. Also fixed in the same shipped commit (per the
+archived doc's own todos): the closely-related `_TIMEFRAMES` vocabulary gap (missing `"15s"`) this doc's "suggested next
+step" #2 also flagged.
