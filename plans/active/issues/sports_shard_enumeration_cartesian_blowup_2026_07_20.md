@@ -1078,3 +1078,36 @@ as if they scoped the same population. Also re-ran into the sibling-contention p
 cosmetic 1,136,624→P0-todo edit from the prior entry above — each retry got a fresh green `quality-gates.sh` invalidated
 by a sibling commit before `quickmerge.sh` could land it; stopped retrying per policy (content verified intact,
 uncommitted, low-value) and folded that edit into this same round of changes instead.
+
+## RE-TRIAGE (2026-07-23)
+
+**Verdict: STILL OPEN, ACCURATE.** This doc is already exhaustively self-tracked (7-agent audit + adversarial
+verification + a full Progress Log through the 2026-07-22 second continuation) — re-triage here is a check for movement
+since that last entry, not a re-derivation of the whole finding.
+
+Spot-checked the pieces most likely to have moved:
+
+- **Part 1 code fixes (1.1/1.2/1.4/1.3/1.5)** — all still show `✅ SHIPPED` banners in the doc and the cited commits
+  (`mtds@accd8aa4`, `uac@719e8ea3` + `mtds@f37b140f`) are present in `git log` for both repos. Confirmed
+  `_expected_sports_bookmakers()`-class fixes are durable (not reverted).
+- **Part 4.1/4.2/4.3/4.4 operator decisions** — all four show
+  `✅ DECIDED`/`✅ SHIPPED`/`✅ CONFIRMED LIVE IN PRODUCTION` banners with cited SHAs (`uac@7338fa65`,
+  `deployment-api@6d20724` → prod image `deployment-api:f8abbae`). No reason to doubt these given the doc's own
+  read-only production verification steps.
+- **Part 3 (manifest remediation: 3.1 reclassify / 3.2 purge / 3.3 relabel / 3.4 drop phantoms)** — per the task
+  background for this re-triage round and confirmed independently: searched `market-tick-data-service` git history since
+  2026-07-22 12:00 for any write matching this doc's own scoped population (1,066,231 dead-pair rows). Found none — the
+  only sports-manifest writes in that window are `mtds@e9d9dec0` (a different, already-tracked wrong-source wipe,
+  1,266,874 rows) and `mtds@f9f012cb` (a different, already-tracked phantom `soccer_*` league_id prune). Part 3 remains
+  genuinely un-executed, matching the doc's own "Not done (scoping closed, executable pending the human trigger)" state
+  — the human-only prod-bucket-write gate (`codex/02-data/gcs-and-manifest-delete-safety-protocol.md`) has not been
+  exercised for this population.
+- **The open `- [ ]` todos** (restate 3.3's SQL predicate, confirm execution order, confirm 3.4's procedure weight, the
+  cross-object-CAS mechanism question, the missing safety tooling) — no evidence any of these were picked up since the
+  last Progress Log entry.
+
+No conflicts with any other doc in this batch. `sports_live_writer_instrument_type_casing_never_fixed_2026_07_22.md`
+(K1/K2, resolved this session) and this doc's own Part 4.3 (`ODDS`/`odds` **data_type-value** case direction) are easily
+confused but are genuinely different axes — K1/K2 is about `instrument_type`/`data_type` on the raw sports odds writer,
+4.3 is about the `data_type` string's own casing vocabulary (`odds` vs `ODDS`) for a frozen-legacy dataset — this doc's
+own §4.3 already documents that distinction correctly, no correction needed here.

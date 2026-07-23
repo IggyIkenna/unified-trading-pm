@@ -110,3 +110,24 @@ Real production GCS read, 2026-07-09, `central-element-323112`, buckets `market-
 `instruments-store-sports-prd-*`. Verification script logic mirrors the shipped
 `market-tick-data-service/market_tick_data_service/market_interface/adapters/sports/fixture_id_resolver.py`
 (`FixtureIdResolver`) exactly — no separate/divergent matching heuristic was used to produce these numbers.
+
+## RE-TRIAGE (2026-07-23)
+
+**Verdict: STILL OPEN, ACCURATE — re-measured live, essentially unchanged.** Re-read the same 4 real production days
+(`2026-06-13/14/19/20`) directly from `market-data-tick-sports-prd-central-element-323112` and re-ran
+`validate_team_resolution()` (current code) against every real PRIMERA_DIVISION team name observed (06-20 had zero
+PRIMERA_DIVISION objects this time; 06-13/14/19 yielded 21,322 rows / 7 distinct fixtures): **4/7 fixtures fully resolve
+(57.1%)** — statistically the same as the original 57.0% (81/142 team-instance rate). Unresolved fixtures today:
+`Coquimbo Unido` vs `O'Higgins`, `Deportes Concepción` vs `Deportes Limache`, `Universidad Católica (CHI)` vs
+`Universidad de Concepción` — the EXACT SAME 3 sample pairs this doc originally cited.
+
+**Notable, worth flagging**: a related fix DID land in the interim —
+`unified_api_contracts/external/api_football/team_mappings.py` now has a `CHILE_PRIMERA_TEAM_ALIASES` dict (15 teams,
+dated "Phase-E L2a, 2026-07-18" in code comments, filed for a different SA odds-join gap, not this doc) that added
+`OHIGGINS` and `UNIVERSIDAD_CATOLICA` aliases — which is exactly why `O'Higgins` and `Universidad Católica (CHI)` now
+resolve. But it did NOT add `Coquimbo Unido`, `Deportes Concepción`, `Deportes Limache`, or `Universidad de Concepción`
+— the counterpart teams in this doc's own named sample — so every one of the 3 originally-cited unresolved fixtures is
+STILL unresolved today, just for the other side of each pairing. Confirmed live:
+`validate_team_resolution("Coquimbo Unido", provider="odds_api")` / `"Deportes Concepción"` / `"Deportes Limache"` /
+`"Universidad de Concepción"` all still raise `TeamResolutionError` ("not in any alias dict"). No status change — this
+is a real, still-open, precisely-unchanged gap; the fix that landed happened to miss exactly this doc's cited teams.

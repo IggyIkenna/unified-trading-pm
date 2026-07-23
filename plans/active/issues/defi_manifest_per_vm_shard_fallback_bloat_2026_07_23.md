@@ -44,7 +44,7 @@ estimate_calibrated_ai_days: 0.7
 assigned_role: backend_engineer
 drift_direction: advance-code
 depends_on: []
-resolved_by: unified-trading-library@c5cd6186
+resolved_by: unified-trading-library@c5cd6186, unified-trading-library@36bdbbae
 locked_by:
 source: [self-investigation-2026-07-23]
 ---
@@ -136,5 +136,41 @@ whether the consolidator should fold+archive large per-VM shards more proactivel
 specific, confirmed gap for date-bounded callers (`ManifestFreshnessCache`, the common case); a caller with NO date
 bound would still pay the full cost if it ever hits this path — that residual case is still open.
 
-**Status: resolved** (the confirmed gap is closed and shipped; the broader size-cap/consolidator-cadence questions
-remain open, lower-priority follow-ups, not blocking).
+# Resolution, round 2 (2026-07-23 -- operator asked to do the two remaining items in full)
+
+**Size/row cap for callers with no date bound -- shipped.** `_read_and_merge_per_vm_shards` now accepts an optional
+`max_total_bytes`. When set, shards are listed with their real size (`BlobMetadata.size`, free from the same
+`list_blobs` call -- no extra network round-trip), sorted smallest-first, and read until the NEXT shard would exceed
+budget; the caller's own shard and the legacy seed are ALWAYS kept regardless of size (mirrors `_read_self_shard`'s "a
+writer always sees its own writes" guarantee, and the seed's permanent-bootstrap status), and at least one shard is
+always kept overall so a lone giant shard with a tiny budget doesn't collapse the read to nothing. Anything skipped past
+the budget is logged (WARNING) and emitted as a new `MANIFEST_PER_VM_MERGE_SHARDS_SKIPPED` event -- never silently
+dropped. Default 200MiB (headroom under the 2Gi Cloud Run ceiling most DeFi collect jobs run under, at a 3-5x pandas
+decode multiplier), overridable via `MANIFEST_PER_VM_MERGE_MAX_BYTES`. Wired into `_read_slow_path` ONLY when the caller
+has no `filters=` (a filtered caller already gets the row-group-pushdown protection from the earlier fix);
+`merge_canonical_with_outstanding_shards`'s read-before-write-back and `_maintenance.py`'s reconciler call
+`_read_and_merge_per_vm_shards` directly and never pass this budget, so their completeness guarantee is unaffected. 7
+new tests (pure unit tests for the budget-trimming logic itself, plus an end-to-end test with a real
+`BlobMetadata`-backed stub proving a shard over budget contributes zero rows to the merged result). One real bug caught
+and fixed during testing: the initial "always keep at least one" exemption logic incorrectly checked for a non-exempt
+entry already present, which let the self-shard/legacy-seed exemptions accidentally starve the budget check entirely
+whenever either was present -- fixed to the correct invariant (never skip if doing so would leave the kept set
+completely empty, full stop). Shipped `unified-trading-library@36bdbbae`, QG-green.
+
+**Consolidator proactive fold+archive -- investigated, no code change warranted.** Read
+`manifest_consolidator.py::_prune_consolidated_shards` in full: it already deletes a per-VM shard as soon as it can
+PROVE the shard's rows are durably in the canonical (mtime `<= cutoff`, where cutoff is the last merge's own
+listing-start marker) -- and explicitly, by design, refuses to prune any shard whose mtime is still advancing
+(`if mtime > cutoff: continue  # not yet settled -- keep`), because deleting an actively-written shard risks losing rows
+never merged. This is correct and already as proactive as it safely can be. The growth observed earlier (one migration
+shard becoming several, ~114MB -> ~386MB) is an INHERENT, TEMPORARY property of currently-running migration VMs
+continuously appending to their own shard files, not a consolidator gap -- each VM's shard becomes prune-eligible on the
+next cycle after that VM stops writing. No fix needed or made here; forcing the consolidator to prune an
+actively-written shard would be actively unsafe.
+
+**Also checked, per a separate operator ask**: scanned every production bucket's `_index/per_vm/` directory (execution,
+features x5, instruments x5, market-data x5, ml-store, strategy x2 -- 20 buckets) for shards older than 1 hour (a looser
+threshold than the consolidator's own staleness budget). Zero found anywhere -- no stuck/regressed shards across the
+estate right now; everything present is either actively being written or the permanent legacy seed.
+
+**Status: resolved, both remaining items closed.**

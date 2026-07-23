@@ -123,3 +123,17 @@ scope a design decision first, then a real parity test becomes possible against 
 
 No existing codex SSOT names sports odds-feature naming specifically; `codex/09-strategy/architecture-v2/archetypes/`
 (archetype-level docs) would be the natural home for whichever convention gets canonicalized, once decided.
+
+## RE-TRIAGE (2026-07-23)
+
+**Verdict: STILL OPEN, ACCURATE.** The doc's two todos are marked `[x]` for the DECISION/scoping step only (operator
+ruled BLK-a1ce4719, migration plan authored) — the actual four-way naming mismatch is **unchanged in the code today**:
+re-grepped `SportsFeatureVector` across `features-service`, `ml-service`, `strategy-service` (non-test) — still **zero
+hits**, confirming it remains completely disconnected from all three real consumers. Read
+`plans/active/sports_odds_feature_naming_canonicalization_2026_07_21.md` (the migration plan this doc handed execution
+to): `status: active`, but **all 8 of its todos are still unchecked (`[ ]`)**, starting with the P1 `[OPERATOR]`
+field-naming decision at the top — the migration has not started. So the finding as originally written ("FSS output ≠
+ml-service loader ≠ strategy-service v2 ≠ strategy-service legacy ≠ UAC's own unused schema, zero cross-service
+enforcement") is still 100% true in the live codebase; only the ownership/scoping half of this doc's own todos is done.
+No status flip — leaving `status: open` since the underlying problem this doc reports is not fixed yet, and execution
+should be tracked via the (still all-open) canonicalization plan.

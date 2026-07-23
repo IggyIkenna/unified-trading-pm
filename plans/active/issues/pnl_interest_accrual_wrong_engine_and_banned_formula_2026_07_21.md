@@ -409,6 +409,82 @@ single hardcoded unit convention.
 **Next open item**: process E2 (share-class dual-unit investigation) + the outstanding 4-rate-identity audit result,
 then build the STAKING leg. `recursive_staking`'s borrow-leg wiring (E3) remains a separate, tracked follow-on.
 
+## PROGRESS 2026-07-23 — STAKING leg SHIPPED (csb STAKING_REWARD/CARRY now index-ratio'd); LENDING mismodeling still open
+
+**The STAKING leg is now wired + shipped**: `strategy-service@e93902d8` (`live-defi-rollout`, quickmerge landed,
+`quality-gates.sh --no-fix` green — 5296 tests passed incl. 5 new/updated test files for this build; the two files held
+unwired since the earlier pass (`index_ratio_accrual.py` + its test) are now committed as part of this change).
+
+- **Schema confirmed (verified against the real producer, not inferred):**
+  `features-service/features_service/onchain/engine/lst_features.py::compute_lst_features_for_day` joins `day` and
+  `day - 1`'s `lst_rates` oracle rows per token BEFORE writing the `lst_yields` feature parquet, so a SINGLE row per
+  `(day, token)` already carries both `exchange_rate` (today) and `prev_rate` (yesterday, pre-joined) — exactly the
+  `(index_prev, index_now)` pair `index_ratio_accrual` needs, no separate two-day fetch required on the strategy side.
+  Keying confirmed against the prior-art reader for THIS EXACT archetype
+  (`scripts/trace_all_carry_archetypes.py::_resolve_carry_staked_basis`): catalog `lst_asset` (e.g. `stETH`) matches the
+  parquet's `token` column directly; `staking_protocol` (e.g. `LIDO`, matching UAC
+  `LST_TOKEN_TO_PROTOCOL_ASSET["stETH"] == ("LIDO", "ETH")`) is a belt-and-braces cross-check against `protocol`
+  (normalised — strip underscores/hyphens — so catalog `rocketpool` matches parquet `ROCKET_POOL`).
+- **New provider** `strategy_service/engine/core/canonical_lst_yields_index_provider.py` —
+  `CanonicalLstYieldsIndexProvider`: composes the EXISTING `GCSFeatureProvider` (the same reader
+  `_load_carry_staked_ticks` already uses for `lending_rates` — same bucket, same
+  `onchain/by_date/day={D}/feature_group={group}/features.parquet` path convention) rather than reinventing raw GCS
+  access, since `lst_yields` is a features-onchain output like `lending_rates`, not a raw tick-data corpus (unlike the
+  FUNDING leg's `derivative_ticker`, which genuinely lives in the shared tick-data bucket). Honest absence: a day with
+  no `lst_yields` row for the (protocol, token) pair returns `None` — the caller books zero + logs.
+- **Wiring**: mirrors the FUNDING leg (E1) exactly — a purely additive
+  `staking_index_by_day: Mapping[str, tuple[Decimal, Decimal]] | None = None` parameter on `build_paper_run_passive` /
+  `build_paper_run_attribution` (+ its `emit_` wrapper) and a new `StrategyReplay.staking_index_by_day` field, populated
+  in `replay_carry_strategy` ONLY for `spec.archetype == CARRY_STAKED_BASIS` (direct indexing on
+  `config["staking_protocol"]`/`config["lst_asset"]` — `_emit_staked_basis_slots` always populates both). `None` (every
+  other archetype, every pre-existing caller) preserves the legacy `notional * staking_bps/1e4/365` proxy byte-for-byte
+  — zero behavior change outside this one leg. Threaded into `paper_run_handler.py::run_paper` and `batch_rerun.py`'s
+  passive re-derivation (batch_rerun.py does not call the attribution producer at all — only the passive tape — so that
+  is the one call site there).
+- **What changed vs what stayed**: ONLY `STAKING_REWARD` (passive) / `CARRY` (attribution) now use
+  `index_ratio_accrual(notional, index_prev, index_now)` when real data resolves. `LENDING_INTEREST`/`BASIS` are
+  UNCHANGED in this build (see below — still the pre-existing `rate_spread/365` form, not yet corrected for the
+  mismodeling). `FUNDING_ACCRUAL`/`FUNDING` are unaffected (E1's leg, untouched).
+- **Determinism**: pure function of (staking_protocol, lst_asset, window) over the immutable GCS `day=` partition;
+  parity tests added at both the new provider (`test_canonical_lst_yields_index_provider.py`) and the two producers
+  (`test_paper_run_passive.py`/`test_paper_run_attribution.py`/`test_index_ratio_accrual.py`) — paper vs same-window
+  batch-rerun re-derive byte-identical STAKING_REWARD/CARRY rows.
+- **3-lens review (money-path gate) — CLEAN, shipped.** Correctness: schema + keying cross-verified against the real
+  features-service producer AND the prior-art tracer reader (2 independent codebase sources), not inferred. Determinism:
+  pure function of the immutable partition + parity tests at both layers. Honest-absence: every layer defaults to a
+  logged zero on missing data (real gap — `lst_yields` coverage is sparse, ~15 days total as of 2026-07-23), never a
+  fabricated or silently-reused proxy.
+- **Deliberately NOT touched in this build (confirmed correct to leave alone):**
+  - `LENDING_INTEREST` for `carry_staked_basis` — **STILL the banned `rate_spread/365` form, UNCHANGED.** The operator
+    ruled (2026-07-21, "OPERATOR RULING") this leg is a MISMODELING — `carry_staked_basis` does not lend/borrow on Aave,
+    it stakes + shorts a perp — but did NOT rule what replaces the formula: zero it, drop the row entirely (which is
+    what the later E4 ruling implies for the row-SET but has not yet been implemented in code — E4 said "LENDING/ BASIS
+    rows dropped entirely", but the current code still emits them, just with the old formula), or something else. **This
+    is the next concrete increment**: implement E4's already-ruled row-set (drop LENDING_INTEREST/BASIS for csb
+    entirely, not just leave the formula) — a smaller, already-decided change, not a new ruling needed.
+  - `recursive_staking`'s borrow leg (`aave_borrow_index` wiring, E3) — separate, bigger, not-started follow-on.
+  - Any Solana LST wiring — Solana `lst_yields`/`lst_rates` data is confirmed a market-derived proxy (not true
+    protocol-redemption), not a true index; would need its own caveat-aware build if a Solana LST ever becomes
+    perp-eligible.
+  - `compute_pnl`/`compute_handler`/`settlement_service.py` — confirmed dead-code / correct-reference surfaces,
+    unrelated to this fix.
+- **The prod-NAV RECOMPUTE remains a separate, human-gated step** (unchanged from the FUNDING leg's note above) — this
+  code change does not retroactively restate historical client NAV/PnL.
+
+**Next open item / follow-up (tracked here since this doc has no separate active plan):**
+
+- [ ] [BACKEND] P1. E4's already-ruled row-set (csb row-set = {STAKING via LST index, FUNDING via real perp};
+      LENDING/BASIS DROPPED entirely, not just left on the old formula) is NOT YET implemented —
+      `LENDING_INTEREST`/`BASIS` still emit every day at the old `rate_spread/365` form. This is a smaller,
+      already-decided change (no new operator ruling needed, E4 already ruled the target shape) — implement it as its
+      own small build, then re-verify the passive/attribution row counts (2 rows/day post-drop: STAKING_REWARD +
+      FUNDING_ACCRUAL, not 3).
+- [ ] [BACKEND] P2. `recursive_staking`'s borrow leg (`aave_borrow_index` wiring, E3) — separate, bigger, not-started
+      follow-on.
+- [ ] [DATA] P2. `lst_yields` sparse coverage (~15 days) — file the coverage extension with features-onchain/MTDS once
+      bandwidth allows; until then, STAKING_REWARD honestly books zero (with a visible log) for any day outside that
+      window.
+
 ## E2 INVESTIGATION 2026-07-23 (sub-agent, design-only — no code changed)
 
 Scope: the operator's "investigate more … depending on the share class, sometimes we want ETH-underlying units,

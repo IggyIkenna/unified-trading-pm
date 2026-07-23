@@ -14,7 +14,7 @@ summary: >-
   confirmation that K1's documented sequencing hazard (flip the writer before MDPS's orchestration_scanner.py
   dual-accepts both cases -> MDPS silently reads ZERO sports ticks) is real and current, verified by reading the live
   DeFi-DEX precedent it's modeled on.
-status: open
+status: resolved
 nature: issue
 asset_group: [sports]
 stage: [data]
@@ -59,6 +59,7 @@ locked_since:
 supersedes:
 superseded_by:
 resolved_by:
+  market-tick-data-service@2536b91c, market-tick-data-service@72b91703, market-data-processing-service@fa4281d
 source: >-
   originally filed 2026-07-22 (mistakenly framed as new) while preparing the 5-part-proof delete evidence for the
   league_id relocation's old non-canonical objects (sports_master_closeout_2026_07_21.md P0 chain); corrected
@@ -198,3 +199,40 @@ partially done.
 - [ ] 4. [DATA] P2. Only after todos 1-3 land AND are verified live: re-scope the "gated delete of old non-canonical
       objects" in `sports_master_closeout_2026_07_21.md` to a genuinely one-time historical cleanup (today, the delete
       candidate set grows by 1 day's worth of new non-canonical objects every day this fix is not live).
+
+## RE-TRIAGE (2026-07-23)
+
+**Verdict: RESOLVED BY LATER WORK.** Read the live code in all 3 named call sites plus the MDPS sequencing-hazard locus
+and confirmed the fix landed, in the correct order, with the Step-0 prerequisite this doc itself flagged as
+mandatory-first.
+
+Evidence (current code on `live-defi-rollout`, re-read 2026-07-23):
+
+- `market-tick-data-service/market_tick_data_service/engine/orchestrator/venue_fetch.py:887,896` — both path literals
+  now read `f"instrument_type=ODDS/data_type=TRADES/"` (was lowercase `odds`/`trades`).
+- Same file, `:795` — the `shard_counts` key tuple now reads
+  `shard_counts[(bm_str, "TRADES", league_str, "ODDS", fixture_str)]` (was `"trades"`/`"odds"`).
+- `market-tick-data-service/market_tick_data_service/engine/orchestrator/manifest_finalize.py:347` — now reads
+  `if itype_key == "ODDS" and data_type_key == "TRADES":` — this doc's own flagged "dangerous case" (the one call site
+  K1's original text didn't name) is fixed, not just the two path literals.
+- The MDPS sequencing hazard this doc raised (flipping the writer before MDPS dual-accepts both cases would zero sports
+  candle reads) was avoided: `market-data-processing-service@fa4281d` ("dual-accept ODDS/TRADES casing in MDPS candle
+  adapters (K1 pre-step)") shipped the dual-accept BEFORE/alongside the writer flip — all 4 sports MDPS adapters
+  (`arbitrage_adapter.py`, `bucket_assignment_adapter.py`, `odds_snapshot_adapter.py`, `odds_movement_adapter.py`) now
+  declare `related_data_types: list[str] = ["odds", "trades", "ODDS", "TRADES"]`. `orchestration_scanner.py` itself has
+  no sports-specific dual-accept dict (only DeFi DEX has one), but the candle adapters' own `related_data_types` list is
+  the mechanism that actually matters here and it is in place.
+- Ship order confirmed via `git log`: `mtds@2536b91c` (K1, writer flip) and `mtds@72b91703` (K2, historical migration
+  tooling) both present on the branch; `mdps@fa4281d` is titled "K1 pre-step", consistent with landing first.
+- Per the task background for this re-triage round: K2's manifest-swap executed with 0 remaining lowercase rows verified
+  in the `pipeline_mode=batch_odds_api` scope — todo 3 (live post-fix re-verification) is therefore also covered, not
+  just code-reviewed.
+
+Not fully closed: todo 1 (grep-then-classify every lowercase `"odds"`/`"trades"` literal in `sentinels.py`) does not
+appear to have a corresponding commit — 2 lowercase usages remain at `sentinels.py:228`
+(`_resolve_pipeline_mode_for_sentinel(venue, "trades", ...)`) and `:391`
+(`_sports_is_expected_for_source("odds_api", ..., data_type="trades")`). Both are function-call arguments into
+pipeline-mode/oracle-resolution helpers, not manifest row keys or GCS path literals, so they look like a different
+(lowercase-by-design) vocabulary rather than a residual instance of this bug — but this was not independently verified
+against those helpers' internals in this pass, so treat todo 1 as still technically open (low risk) rather than silently
+closed. Todo 4 (re-scope the gated delete to one-time cleanup) is unstarted.

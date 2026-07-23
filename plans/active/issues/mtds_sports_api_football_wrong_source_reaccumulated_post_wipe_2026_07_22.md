@@ -28,7 +28,7 @@ summary:
   different bucket, different capture_status distribution (mostly empty_confirmed/attempted_failed, not
   expected_unattempted), and a materially different scale on the `captured` (real-data) tail. Possibly the same root
   cause (an api_football cron/writer never disabled after the ruling), possibly two independent leaks -- unconfirmed."
-status: open
+status: resolved
 nature: issue
 asset_group: [sports]
 stage: [data]
@@ -53,7 +53,7 @@ drift_direction: unknown
 assigned_vm: NA
 execution_scope: local-only
 source: [sports_master_closeout_2026_07_21.md sixth wave, 2026-07-22]
-resolved_by:
+resolved_by: unified-api-contracts@44623d25, market-tick-data-service@e9d9dec0
 locked_by:
 depends_on: []
 ---
@@ -152,3 +152,32 @@ pipeline_mode=batch_polymarket_clob total rows:                 20,785
   ALL capture_status=empty_confirmed, venue=KALSHI, source=polymarket_clob
   -- zero real data; almost certainly cross-AG prediction-bleed residual, not this issue's scope.
 ```
+
+## RESOLVED (2026-07-23) — deploy verified, manifest wiped
+
+**#3 (deploy verification)**: could not empirically observe the fix firing (zero sports manifest activity of ANY kind
+since 2026-07-22 19:48 — no cron/job/VM currently running for sports odds capture at all, see the new dormant-pipeline
+finding below). Verified the DEPLOYABLE ARTIFACTS instead: `unified-api-contracts-code.tar.gz` rebuilt
+2026-07-23T07:31:17Z and `mtds-code.tar.gz` rebuilt 2026-07-23T08:00:57Z — both AFTER the fix (`uac@44623d25`,
+06:55:15Z). Any future VM/Cloud-Run deploy picks up the fix; risk of re-pollution on the next real run is now low.
+
+**#4 (wipe)**: EXECUTED. `market-tick-data-service@e9d9dec0`
+(`scripts/sports/wipe_api_football_sports_manifest_2026_07_23.py`, new CAS-safe tool — snapshot
+
+- generation-matched remove, unlike the original unprotected script). Result: 1,266,874/1,266,874 `source=api_football`
+  rows removed (base 1,830,258 → 563,384), VERIFY PASSED (0 remaining). Snapshot:
+  `gs://market-data-tick-sports-prd-central-element-323112/_index/snapshots/ pre_api_football_manifest_wipe_2026_07_23_20260723T081810Z.parquet`.
+  Also caught a small population my earlier narrower query missed — `data_type=odds_horizon_bucket` (1,337 rows) and
+  `data_type=ARBITRAGE_OPPORTUNITY` (3 rows) also carried `source=api_football`; the new tool filters on `source` alone
+  (matching the original wipe's full scope) so these were correctly included.
+
+**#5 (captured-cells fate)**: manifest rows wiped (with the rest, per the standing ruling — no carve-out found). The
+underlying **GCS objects for the ~7,251 captured cells are NOT deleted** — that is a separate, operator-gated step
+(prod-bucket delete = human-only), matching the K1/K2 old-object delete precedent. Evidence for that follow-up:
+`source=api_football`, `pipeline_mode=batch_api_football/` prefix, `market-data-tick-sports-prd` bucket, ~7,251 objects.
+
+**New, bigger finding surfaced while verifying #3**: no Cloud Run job, scheduler, or VM appears to be currently driving
+sports ODDS_API capture at all (`oddspapi-w01/w02/w03` last ran 2026-03-29; no scheduler entries found for sports/odds
+in any checked GCP region; AWS-side scheduling not checked, no IAM access). See
+`issues/sports_odds_capture_pipeline_scheduling_status_unknown_2026_07_23.md` — this is a plausibly bigger operational
+question than this issue, filed separately, P1.

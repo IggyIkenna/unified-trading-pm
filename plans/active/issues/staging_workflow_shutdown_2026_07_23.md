@@ -12,7 +12,7 @@ summary: >-
   them to run" (they still consume VM capacity and clutter the signal), so they stop too. Re-entry is MANUAL (a
   git-tracked `workspace-manifest.json` flip), so nothing auto-routes into a disabled path — the shutdown is reversible
   by uncommenting.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -62,6 +62,9 @@ estimate_baseline_ai_days: 0.5
 estimate_calibrated_ai_days: 0.4
 locked_by:
 resolved_by:
+  "unified-trading-pm@a7b5cc27c (6 workflow triggers disabled + 2 templates) + 24-repo rollout, all verified on origin;
+  effect MEASURED 2026-07-23T09:04Z — staging-backmerge-to-ldr fleet-wide 47 runs in the 2h before promote vs 0 in the
+  >1h after, zero repos still firing"
 depends_on: []
 source:
   - "operator ask 2026-07-23: audit what still runs for staging fleet-wide, can we stop it, will it break anything"
@@ -154,14 +157,22 @@ once promoted to `main` — landing on LDR alone does not stop a cron.
       market-tick-data-service@74938624 · ml-service@eed9fc9b · strategy-service@6c7a5673 ·
       trading-agent-service@e500abac · unified-trading-api@1f41dba4 · deployment-api@bcc125e9 (landed by a PEER slot
       concurrently — verified, not re-shipped) · e2e-testing@e4dae527 · system-integration-tests@1f86d524.
-- [ ] [VERIFY] P2. Confirm run volume drops to ~0 once the changes reach `main` (default-branch gotcha — a `schedule:`
-      fires from the DEFAULT branch, so landing on LDR alone does NOT stop a cron). **STATE 2026-07-23: PARTIAL, and
-      deliberately NOT ticked.** PM's copy IS on `main` already (verified:
-      `git show     origin/main:.github/workflows/staging-to-main.yml` carries the marker), but the 24 fleet repos still
-      read `0` on `main`, pending their `*/15` v2-gated LDR→main promote. Measured while pending:
-      `reconcile-staging-versions` last ran 07:24Z, `features-service` staging-backmerge last ran 07:02Z — both still
-      firing, exactly as predicted until promote lands. Re-check after a promote cycle; do NOT close this on the
-      strength of the shipped diff alone.
+- [x] [VERIFY] P2. Confirm run volume drops to ~0 once the changes reach `main` (default-branch gotcha — a `schedule:`
+      fires from the DEFAULT branch, so landing on LDR alone does NOT stop a cron). — **VERIFIED BY MEASUREMENT
+      2026-07-23T09:04Z, not by the shipped diff.** Promote tracked to completion (1→8→15→19→22→**24/24 on `main`** at
+      09:04Z; the run was deliberately watched on a climbing progress metric, not a fixed sleep). Then the actual
+      question — did the crons stop? — measured fleet-wide on `staging-backmerge-to-ldr` across ALL 24 repos:
+
+      | window                          | scheduled runs |
+              | ------------------------------- | -------------- |
+              | 06:00–08:00Z (2h, pre-promote)  | **47**         |
+              | after 08:00Z (>1h, post-promote)| **0**          |
+
+              Repos still firing: **NONE**. PM's own three crons likewise 0 after 08:00Z (`reconcile-staging-versions`,
+              `staging-to-main`, `staging-conflict-ldr-main-fallback` — each had 1–2 runs in the prior window). Note this was
+              only tickable AFTER the promote: the same check at 07:50Z correctly showed the crons still firing, which is why
+              the box was held open through two earlier status reports rather than closed on the diff.
+
 - [x] [DOC] P2. Add "re-enable the staging workflows" to the staging re-entry path so the reversibility guarantee is not
       half-true. — DONE: every disabled trigger carries an inline dated note naming exactly what to uncomment and the
       `workspace-manifest.json` flip that constitutes re-entry; § "Method — reversible by construction" is the index.

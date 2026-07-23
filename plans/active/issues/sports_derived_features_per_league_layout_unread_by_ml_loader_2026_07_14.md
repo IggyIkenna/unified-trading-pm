@@ -19,7 +19,7 @@ summary:
   data_type} WITHOUT league_id while successes are recorded per-league, so 27 stale attempted_failed(ValueError,
   league_id='') rows from the pre-fix 06-27/06-29 waves coexist with today's captured per-league rows for the same
   dates. No relaunch/redo of the recompute is needed (redo cost 0)."
-status: open
+status: resolved
 nature: issue
 asset_group: [sports]
 stage: [data, features]
@@ -38,7 +38,6 @@ assigned_vm: NA
 execution_scope: local-only
 priority: P1
 source: [diagnosis agent 2026-07-14 (autonomous loop dispatched off the GW recompute per-league-shape suspicion)]
-resolved_by:
 locked_by:
 estimate_class: infra
 estimate_baseline_ai_days: 0.75
@@ -46,6 +45,7 @@ estimate_calibrated_ai_days: 0.6
 assigned_role: data_engineering
 drift_direction: advance-code
 depends_on: []
+resolved_by: ["ml-service@360da40", "features-service@4f83f8db", "features-service@76f234ce", "ml-service@5ee0a8e"]
 ---
 
 # Sports derived/fixture per-league layout — recompute shape is CANONICAL; the gap is the ml-service day-level-only reader
@@ -201,3 +201,32 @@ depends_on: []
 
 - **No recompute relaunch / no redo** — today's output is byte-shape-identical to all history; redo cost 0.
 - **No in-place GCS rename of numeric league dirs** — would orphan every historical reader/manifest reference.
+
+## RE-TRIAGE (2026-07-23)
+
+**Verdict: RESOLVED BY LATER WORK.** All 3 P1/P2 `[CODE]` todos are already checked `[x]` in this doc with strong
+first-party evidence (unit tests + real-bucket runtime verification against `day=2025-10-20`), so this is a confirmation
+pass, not a re-diagnosis:
+
+- ml-service's sports GCS loader is layout-aware (`ml-service@360da40`) — derived_features/fixture_features now load
+  from the per-league layout, plus the bucket-resolution bug (flat `features-sports-{pid}` → tiered
+  `features-sports-prd-{pid}`) fixed in the same commit.
+- features-service's failure-atom/success-atom league-granularity mismatch fixed + 28 consolidated + 2
+  `_legacy_seed.parquet` stale rows cleaned (`features-service@4f83f8db` + `@76f234ce`).
+- The odds_features↔fixture join-key crosswalk (`event_id`↔`fixture_id`, zero raw-value overlap) fixed via a
+  deterministic 3-hop merge-time crosswalk (`ml-service@5ee0a8e`).
+
+Checked whether the two remaining `[ ]` P3 todos have since been done — they have NOT:
+
+- **`[DOC] P3` features-bucket path SSOT** — `find codex/02-data -iname '*sports*'` finds no doc matching this scope
+  (`sports-gcs-path-ssot.md` governs the IS `sports_reference/` bucket, not `sports_features/`, as this doc itself
+  already notes); `sports_consolidated_closeout_2026_07_19.md`'s sweep (item **I**) still lists this as outstanding.
+  Genuinely still open.
+- **`[DATA] P3` `odds_api_team_mapping` coverage gap (Burgos CF etc.)** — grepped `plans/active/` for follow-ups; only
+  this doc and `sports_p2_features_history_to_ml_ready_2026_06_27.md` reference it, no fix/extension found. Genuinely
+  still open.
+
+Flipping `status` to `resolved` (the doc's core cross-repo data-correctness findings are shipped + verified) while
+leaving both P3 todos unchecked — this mirrors the convention used elsewhere in this sweep
+(`mtds_sports_api_football_wrong_source_reaccumulated_post_wipe_2026_07_22.md`) where `resolved` tolerates a residual,
+lower-priority open tail rather than requiring 100% todo completion.

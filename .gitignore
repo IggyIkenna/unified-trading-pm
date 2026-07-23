@@ -203,10 +203,14 @@ plan_skeleton.md
 # linger in a clone and jam FF-pull. Gitignored defensively so it never reads as dirty.
 harsh_orchestrator/backlog.yaml
 
-# Claude Code team-shared settings — git-rm'd + gitignored 2026-07-09: personal model/effortLevel
-# edits kept getting left uncommitted in this file, repeatedly tripping slot-cron-ff-pull.sh's
-# dirty-check (21+ consecutive ticks) and stranding the AO's plan source behind origin. Per
-# codex/05-infrastructure/claude-code-settings-symlink.md, personal overrides belong in the real,
-# untracked ~/.claude/settings.json — NOT here. New clones must re-seed this file manually (it no
-# longer arrives via git); existing per-slot symlinks to this path keep working off the on-disk copy.
-cursor-configs/settings.json
+# cursor-configs/settings.json RE-TRACKED 2026-07-23 (was gitignored 2026-07-09 — see git history /
+# plans/active/issues/claude_code_settings_symlink_chain_broken_2026_07_23.md for the full story).
+# The 2026-07-09 untrack treated a SYMPTOM: personal model/effortLevel edits kept landing in this
+# file and tripping slot-cron-ff-pull.sh's dirty-check. The actual ROOT CAUSE was that
+# ~/.claude/settings.json was a SYMLINK into this tracked file, so every `/model`/`/effort` switch
+# wrote straight into git. That's fixed now — ~/.claude/settings.json is a real, personal,
+# never-tracked file (codex/05-infrastructure/claude-code-settings-symlink.md), and
+# scripts/workspace/migrate-personal-settings-keys.sh self-heals if a personal key ever leaks back
+# in here. With the root cause closed, this file can safely go back to being git-tracked — the
+# whole POINT of the team-shared layer (permissions.allow, mcpServers, hooks) is that it should
+# sync via `git pull` like everything else, not require a manual per-clone `cp`.

@@ -23,7 +23,7 @@ summary:
   (13%)** would lose fixtures on recompute (18 fixtures). Until the legacy->canonical raw recovery (OR-5b(b) option-D G1
   read-split-merge) lands, ANY `--force` re-derive at any sports layer is destructive and must be guarded by a per-date
   loss check."
-status: open
+status: resolved
 nature: issue
 asset_group: [sports]
 stage: [data]
@@ -40,7 +40,7 @@ related:
     ../../epics/sports_master.md,
   ]
 created: 2026-07-16
-last_updated: 2026-07-16
+last_updated: 2026-07-23
 parent_epic: sports_master
 assigned_vm: NA
 execution_scope: local-only
@@ -56,6 +56,12 @@ locked_since:
 supersedes:
 superseded_by:
 resolved_by:
+  [
+    "market-tick-data-service@75f226e8 (199-day batch_footystats merge)",
+    "market-data-processing-service@6d20fb18 (per-date loss guard, MDPS)",
+    "market-data-processing-service@9f2560b7 (fixture-identity collapse fix)",
+    "features-service@3c15f3ff (per-date loss guard, features)",
+  ]
 source:
   [
     "T-0 lookahead-leak recompute leg, 2026-07-16 — measured while piloting `reprocess_sports_odds.py --force`",
@@ -273,3 +279,30 @@ Only T-0 was contaminated. The other seven are real, correctly-bucketed, irrepla
       MDPS `reprocess_sports_odds.py` guard) is still OPEN and still P0** — this closes the FEATURES path only.
 - [ ] [DOCS] P1. **Correct the cutover runbook's canonical-is-a-superset premise** for raw odds on early dates, and
       cross-reference this issue from the delete-gate section.
+
+## RE-TRIAGE (2026-07-23)
+
+**Verdict: RESOLVED BY LATER WORK.** Re-read the doc in full; re-verified against the current codebase and the umbrella
+`sports_master_closeout_2026_07_21.md` (§B, `ac#5`, last touched 2026-07-21 — 2 days old, no drift since).
+
+- All three P0 code/data items in this doc's own Todos are `[x]` and each cites a real, distinct commit:
+  `market-tick-data-service@75f226e8` (199-day `batch_footystats`→`batch_odds_api` merge, the raw-population fix),
+  `market-data-processing-service@6d20fb18` (MDPS per-date loss guard) + `@9f2560b7` (fixture-identity-collapse fix, the
+  second starvation mechanism this doc predicted), and `features-service@3c15f3ff` (features-layer loss guard). The
+  doc's own in-body banner ("🟢 THE SYMPTOM IS FIXED 2026-07-17") is internally consistent with the todo state — not a
+  stale claim.
+- **Confirmed the loss guard is real, not just claimed**: `market-data-processing-service` ships
+  `app/adapters/sports/odds_loss_guard.py` and a features-side `features_service/sports/data/loss_guard.py` per the
+  doc's own cited paths (not independently re-run live — the doc already documents a real `--force` block on
+  `day=2023-01-08`, 514→61 rows, with a byte-fingerprint check, which is sufficient contemporaneous evidence).
+- **Only the P1 DOCS todo remains unchecked** — "correct the cutover runbook's superset premise." Checked
+  `plans/active/sports_legacy_bucket_cutover_2026_07_16.md` directly: it already carries an inline correction banner
+  dated the same day (2026-07-16, lines ~1782-1784) explicitly citing this doc by name ("its cause corrected... fix
+  direction (a) refused, loss-guard (b) stands, P0") — so the runbook's delete-gate section is NOT running on the stale
+  premise in practice, even though this doc's own checkbox was never flipped. The remaining "superset" phrases elsewhere
+  in that runbook (lines 180/1540/1585/1591/1710) are about unrelated topics (seed-data dedup, OR-4 legacy index, SFI
+  coverage) — not this doc's raw-truncation claim. Leaving the checkbox open (cosmetic/doc-hygiene only) since I did not
+  personally edit the runbook.
+- No conflicting doc found. `sports_canonical_migrated_odds_mistamped_footystats_2026_07_16.md` is the doc that
+  corrected THIS doc's original diagnosis (already reflected in the superseded-banner history at the top of this file) —
+  not a new contradiction.

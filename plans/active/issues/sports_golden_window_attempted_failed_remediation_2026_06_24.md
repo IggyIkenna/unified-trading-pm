@@ -140,3 +140,29 @@ footystats + 62 odds_api; 29,701 captured) — **misplaced**; IS `PREDICTIONS` =
       actually ruled: RAW bookmaker TICK odds = odds-api (MTDS); footystats' _predictive_ `ODDS` **+** `PREDICTIONS` =
       IS reference. (was:
       `- [ ] [DOCS] P3. Codex: state odds=MTDS-domain (the footystats exception in IS is PREDICTIONS, not ODDS) in `tradfi-databento-sourcing-ssot`-style sports SSOT + `instruments-foundation-and-catalogue-completeness.md` (sports universe = fixtures + reference + enrichment + footystats PREDICTIONS; NOT odds).`)
+
+## RE-TRIAGE (2026-07-23)
+
+**Verdict: STILL OPEN (mixed — 2 items confirmed newly resolved, others unchanged).** Re-checked the specific still-open
+sub-items against current code:
+
+- **Fix #2 (understat per-league 404 scoping) — NOW CONFIRMED SHIPPED.** Read
+  `instruments-service/instruments_service/engine/orchestrator/understat.py` directly: `_failed_league_names` /
+  `_canonical_league_id()` are wired into both the XG and XG_SHOTS branches, with `record_failed` scoped only to errored
+  leagues and `record_empty` for the rest — exactly as described ("BUILT this session... pending ship"). It has since
+  shipped; no longer pending.
+- **The `candidate_parquet_paths` forward-phantom-over-flag gap — NOW FIXED, the "DO NOT run forward `--apply`" warning
+  is stale.** Read `unified_api_contracts/canonical/domain/sports/gcs_paths.py` directly: all 3 missing shapes this doc
+  named are now present — (a) `fetched_at_hour=` wildcard sub-partitioning (`_FETCHED_AT_HOUR_FOLDERS`, covers
+  footystats_odds/footystats_predictions), (b) the legacy `transfermarkt_teams.parquet` filename fallback, (c)
+  `league=`-without-`season=` handling for PLAYER_VALUES. This closes the risk that blocked a forward `--apply`.
+- **Still unverified/likely still open**: the 3-way understat `EXPECTED_NO_PROVIDER_COVERAGE` split (still gated on
+  broadening the expected-league denominator — no evidence this changed) and the odds-api 3-league backfill gap (UEFA
+  Champions League / China Superleague / Russia Premier League) — not re-measured this pass.
+
+The doc's core diagnosis ("golden window ~100%, the ~5,900 attempted_failed cells are mostly misclassification, not
+missing data") remains historically accurate and its RE-HOMED banner correctly routes live ownership to the (now
+archived) `sports_p0_sourcing_and_honest_coverage_correctness_2026_06_27.md` /
+`sports_p1_golden_window_mtds_odds_2026_06_27.md` plans under the still-`status: active` coordinator
+`sports_pipeline_to_100pct_golden_window_first_2026_06_27.md`. No status flip — real open items remain (see above), so
+this stays `status: open` as a diagnosis-of-record with the two newly-confirmed-resolved items noted.

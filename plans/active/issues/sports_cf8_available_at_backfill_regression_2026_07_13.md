@@ -887,3 +887,25 @@ to it. Added `test_parking_state_migrates_to_wrap_shifted_successor` (positive c
 `test_parking_state_does_not_migrate_to_unrelated_todo` (guards against leaking a gate onto an unrelated same-tag todo)
 to `tests/test_regen_reconcile.py`. Full `quality-gates.sh` green (ruff/basedpyright clean, 1368 passed, 1 skipped).
 Shipped via quickmerge: `agent-orchestrator@22738f6` on `live-defi-rollout`.
+
+## RE-TRIAGE (2026-07-23)
+
+**Verdict: STILL OPEN, ACCURATE.** Re-read the doc in full. The core P0 finding (a real regression, root-caused + fixed
+at `unified-trading-library@f5f15e3a`/`@9c9cdc50`) is long since resolved and correctly reflected in the doc's own todos
+— but the doc's live-data claim, "CF-8 remains RED on both surfaces," is still true today.
+
+- Corroborating evidence: `plans/active/sports_master_closeout_2026_07_21.md` §C (`ac#6`, 2 days old, no drift since)
+  independently reconfirms: _"`available_at` fill only ~40-50% on `captured` rows (service_name-scoped dedup); targeted
+  re-emit BLOCKED pending per-service_name write-fix design (operator said STOP)."_ — the exact same blocker this doc's
+  own last Progress Log entries (slot-12, 2026-07-14) already identified and the backlog parking gate
+  (`sports-cf8-maintenance-window-scheduled`, still `false` as of the last read at 2026-07-17) still enforces.
+- Attempted a fresh live re-query of the captured-row fill rate myself (same idiom as the doc's own investigation) but
+  the `cf_manifest_audit_2026_06_01.py` script referenced throughout this doc is not present in the current
+  `market-tick-data-service` checkout (likely session-scratch-only, never committed) — could not independently re-derive
+  the percentage this session. Relying on the 2-day-old closeout-plan corroboration above instead, which is a
+  live-manifest-derived figure, not carried-forward vibes.
+- No evidence found that the per-service_name write redesign (`market-tick-data-service@af627b5b`, built + unit tested
+  2026-07-14) has been run against production, or that the operator has lifted the `BLK-d9137d48` STOP / scheduled the
+  maintenance window. The doc's engineering-side todos are genuinely done; the operational/data-state claim in its title
+  and summary stands unchanged.
+- No conflicting doc found.

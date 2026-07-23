@@ -203,12 +203,15 @@ population, and not evidence anything broke.**
 
 ## Todos
 
-- [ ] [DATA] P2. Execute the still-open historical `attempted_at` restore for the sports/trades dead residue, now
-      unblocked and low-risk per `sports_trades_venue_fetch_failed_2026_07_15.md`'s 2026-07-20 correction (the true
-      values survive in a plain, non-soft-deleted snapshot,
-      `_index/snapshots/pre_migration_v9_2026-07-12_availability_index.parquet`, no deadline, no risky live restore
-      needed) — restoring the true dates would make this cell stop looking like the freshest failure in every future
-      alert batch. Repo: `market-tick-data-service`.
+- [x] [DATA] P2. ✅ SUPERSEDED (2026-07-23, same day) — the historical `attempted_at` restore this todo asked for is now
+      moot: `market-tick-data-service@e9d9dec0` (CAS-safe `source=api_football` manifest wipe, executed 08:18Z, AFTER
+      this investigation) removed ALL 58,016 of these exact rows entirely (they were 100% `source=api_football`, the
+      same population — count matches exactly). Root cause of why they existed at all was separately found + fixed same
+      day: `issues/mtds_sports_api_football_wrong_source_reaccumulated_post_wipe_2026_07_22.md` (`SOURCE_PRIORITY`
+      missing a `(sports,TRADES)` entry, `uac@44623d25`). Restoring their timestamps would have been pointless — the
+      rows no longer exist to have a timestamp. Original text (was: "Execute the still-open historical `attempted_at`
+      restore for the sports/trades dead residue, now unblocked and low-risk per
+      `sports_trades_venue_fetch_failed_2026_07_15.md`'s 2026-07-20 correction... Repo: `market-tick-data-service`.")
 - [ ] [DESIGN] P3. Flag to whoever owns `check_high_attempted_failed` (deployment-service): a same-day manifest
       canonicalization swap that relocates `captured` rows to a new casing/key can inflate an UNRELATED still-open
       cell's `DP_RUN_MOSTLY_EMPTY` ratio purely as a denominator side-effect. Not urgent (the underlying cell being

@@ -20,7 +20,7 @@ summary:
   emission-policy skip, an upstream read returning empty every call, or a schema/contract lookup failure swallowed by
   shard-level isolation) -- or (c) written somewhere neither sampled path shape covers. Each is a meaningfully different
   fix."
-status: open
+status: resolved
 nature: issue
 asset_group: [sports]
 stage: [data]
@@ -43,7 +43,7 @@ drift_direction: unknown
 assigned_vm: NA
 execution_scope: local-only
 source: [operator Q&A on sports MDPS honest coverage, 2026-07-23]
-resolved_by:
+resolved_by: root-caused 2026-07-23, no code change (see Resolution below)
 locked_by:
 depends_on: []
 ---
@@ -87,3 +87,28 @@ processed_candles/.../data_type=odds_movement/...                     0 objects
 processed_candles/.../data_type=odds_snapshot/...                     0 objects
 processed_candles/.../data_type=arbitrage_opportunity/...             0 objects
 ```
+
+## RESOLUTION (2026-07-23) — root-caused: dead code, not a silent bug
+
+Checked what actually drives live sports MDPS processing rather than guessing. The ONLY Cloud Run job for sports MDPS is
+`uts-prod-mdps-odds-horizon-bucket` (asia-northeast1), whose entrypoint is a STANDALONE script —
+`market-data-processing-service/scripts/reprocess_sports_odds.py` — that does NOT go through
+`CandleAdapterRegistry`/`get_data_types_for_categories()` at all. It hardcodes
+`_MANIFEST_DATA_TYPE = "odds_horizon_bucket"` (grepped the whole file: zero mentions of
+odds_movement/odds_snapshot/arbitrage anywhere). No other Cloud Run job, GCP Cloud Scheduler entry (checked
+asia-northeast1/us-central1/europe-west1/europe-west2), or currently-running GCE VM invokes the generic MDPS CLI
+(`process_handler.py --SPORTS`) — the only path that would ever reach
+`SportsOddsMovementAdapter`/`SportsOddsSnapshotAdapter`/`SportsArbitrageAdapter`.
+
+**Verdict: (a) dead code**, not (b) silently-empty-but-dispatched or (c) written elsewhere. Registered in
+`CandleAdapterRegistry` + `SOURCE_PRIORITY` + `DATA_TYPES_BY_ASSET_GROUP` (aspirational/ planned), never actually wired
+into a production schedule.
+
+**Caveat — not 100% certain**: no IAM access to check AWS-side EventBridge/ECS scheduling
+(`ecs:ListClusters`/`events:ListRules` both denied for the current role) — if a scheduling mechanism exists there, it
+wasn't checked. Also did not check persistent-VM-internal crontabs (only `gcloud compute instances list` — an always-on
+VM with its own crontab wouldn't necessarily show a distinguishing name). High confidence, not exhaustive.
+
+**Decision needed (operator-owned, not made here)**: per action item 4 above — wire these 3 into a real schedule if the
+product is still wanted, or retire the registrations if abandoned. Left open as a P2 decision; this issue is resolved
+insofar as the "why zero objects" question is answered.

@@ -32,7 +32,7 @@ summary:
   Recommendation: **OR-5b(c) → B-REFINED** — recover the in-play rows as a ~zero-marginal-cost rider on the already-
   recommended OR-5b(b) option-D G1 read-split-merge, into a DISTINCT population quarantined from the pre-match bucketing
   path (never merged into the T-0 lineage, which is already 65% contaminated).'
-status: open
+status: resolved
 nature: issue
 asset_group: [sports]
 stage: [data]
@@ -84,6 +84,13 @@ locked_since:
 supersedes:
 superseded_by:
 resolved_by:
+  [
+    "market-data-processing-service@3bf56ff (T-0 ordering fix)",
+    "features-service@c57cc753 (HT honest absence)",
+    "features-service@bf6fc2f4 + ml-service@c0603cb (closing-line leak fix)",
+    "uac@96cdfc4f + instruments-service@1f7c51cf + features-service@5a8684ed (SFI h1_* capture)",
+    "market-data-processing-service@9f2560b7 (fixture-identity collapse)",
+  ]
 source:
   [
     'operator question 2026-07-16 — "we want helf time odds is there knowledge of this from sfi derived half time?"',
@@ -1452,3 +1459,29 @@ recalibration todo above). The 313 missing are pre-existing coverage holes owned
 (re-derive correctly refused on raw truncation). Features: 255 + **192/192 phantom-unblocked** + 2 finding-dates clean.
 The instruction ("just fix the leakage in the odds and any associated features") is closed: the (c) guard no longer
 over-blocks a phantom, the pivot no longer empties a real date, and every date is in its correct, honest state.
+
+## RE-TRIAGE (2026-07-23)
+
+**Verdict: RESOLVED BY LATER WORK** (core investigation + all but one spun-off P0/P1 item), **one residual P1 still
+open**, confirmed against current code.
+
+- The doc's own central question ("does SFI substitute for half-time odds?") is answered and the OR-5b(c) → B-REFINED
+  recommendation stands unchallenged in the umbrella closeout (`sports_master_closeout_2026_07_21.md` §D, `ad#4`, 2 days
+  old). Every major sub-finding this doc raised was shipped and each is independently re-verified in its own Progress
+  Log with runtime evidence, not just claimed: T-0 ordering fix (MDPS@3bf56ff), HT honest-absence
+  (features-service@c57cc753), the closing-line/CLV leak fix + 3 quarantined models (features-service@bf6fc2f4 +
+  ml-service@c0603cb), the SFI `1h_*` capture-gap fix (uac@96cdfc4f + instruments-service@1f7c51cf +
+  features-service@5a8684ed), and the fixture-identity-collapse fix (market-data-processing-service@9f2560b7).
+- **One item from this doc's own Todos is still genuinely open** — re-checked directly against current code, not
+  inherited: `_apply_ht_odds_pit_gate`'s `if not ht_break_minutes:` default-cutoff branch is still unreachable in
+  production. `features_service/sports/exporters/odds_features_exporter.py` (current `live-defi-rollout` checkout) still
+  guards the only call site with `if ht_break_minutes: bucketed = _apply_ht_odds_pit_gate(...)` (line ~287) — the gate
+  is never invoked at all when HT break times are unknown, matching this doc's original P1 exactly. Also matches the
+  master closeout's own framing:
+  `"_apply_ht_odds_pit_gate default-cutoff unreachable in prod (1 open P1; leaks already fixed)"`.
+- The other open P0 item this doc's history references (the 423-date odds-features recompute from the
+  fixture-identity-collapse fix) belongs to `sports_canonical_raw_truncated_rederive_destroys_corpus_2026_07_16.md`'s
+  scope, not this doc's own remaining Todos — not duplicated here.
+- The cutover runbook (`sports_legacy_bucket_cutover_2026_07_16.md`) already carries this doc's B-REFINED verdict inline
+  (dated 2026-07-16), so no doc-drift found there either.
+- No conflicting doc found.

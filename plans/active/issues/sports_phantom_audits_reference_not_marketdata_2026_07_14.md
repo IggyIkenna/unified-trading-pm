@@ -207,6 +207,21 @@ their real location, so the cross-bucket probe is the more correct fix if anyone
 This confirms sub-item 1 in "Open sub-items" above precisely: it's the "no market-data phantom audit for sports" design
 gap, manifesting as blanket false positives rather than as an absence.
 
+## RE-TRIAGE (2026-07-23)
+
+**Verdict: STILL OPEN, ACCURATE — confirmed unchanged.** Re-read
+`instruments-service/scripts/reconcile_phantom_manifest_rows_all.py` directly: `_BUCKET_KIND_MAP["sports"]` is still
+`("instruments-store", "sports")` — unchanged from every other AG's `("market-data", <ag>)` pattern, exactly as this doc
+documents (the two-card split persists). Also re-read `unified_api_contracts/canonical/domain/sports/gcs_paths.py`'s
+`SPORTS_DATA_TYPE_TO_FOLDER`: still has no `trades` or `odds_horizon_bucket` keys (grepped, zero hits) — the
+data_type-aware cross-bucket branch this doc's "Corrected fix suggestion" recommends has not been built. This all
+matches the operator's 2026-07-14 decision ("leave code as-is, document only") — nothing has drifted since. Separately
+worth noting for context (not a change to THIS doc's finding): the live MTDS sports manifest's `trades`/
+`odds_horizon_bucket` `source=api_football` population that the 2026-07-14 addendum partly attributed phantom rows to
+has since been wiped entirely (`market-tick-data-service@e9d9dec0`, 2026-07-23) — this doesn't touch the reference-side
+`instruments-store-sports` phantom audit this doc is actually about, so it does not change the verdict here. No status
+change.
+
 **The remaining 2.3% (~16,511 rows) is NOT explained by the above** — these are all registered reference data_types with
 real candidate-path templates. Spot-checked one `PLAYER_VALUES` row directly (`day=2021-06-27`,
 `manifest_status: captured`, `manifest_capture_time: 2026-07-13T23:49:29Z` — i.e. written only hours before this audit

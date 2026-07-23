@@ -112,6 +112,27 @@ durable/as-written per the single-walk discipline.
       these 83,541 no longer appear as `E_orphan_real` (either wiped from GCS, or now correctly classified `C3` if any
       remain pending the wipe) — closes the loop on the registry fix's real-world effect.
 
+## RE-TRIAGE (2026-07-23)
+
+**Verdict: STILL OPEN, ACCURATE** — the registry-gap fix (todo 1) is confirmed shipped and durable; the operator-gated
+disposition (todos 2-4, the actual wipe) has NOT executed, so this is not yet resolvable to `resolved`.
+
+Evidence (current code + git log, re-read 2026-07-23):
+
+- `unified-api-contracts/unified_api_contracts/canonical/domain/sports/league_data.py:240-241` —
+  `"FIXTURES_SCHEDULE": "api_football"` and `"FIXTURES_OUTCOMES": "api_football"` are present in
+  `SPORTS_DATA_TYPE_TO_SOURCE`, confirming `unified-api-contracts@46d865df` is on the branch and durable —
+  `is_pre_launch_date()` now resolves a source for both data_types instead of silently returning `False`.
+- Searched `market-tick-data-service`, `instruments-service`, and `unified-api-contracts` git history since 2026-07-22
+  12:00 for any wipe/delete execution touching the 83,541 pre-floor `FIXTURES_SCHEDULE`/`FIXTURES_OUTCOMES` rows — found
+  none. The only sports-manifest deletes in that window are `mtds@e9d9dec0` (the unrelated `source=api_football`
+  wrong-source wipe, 1,266,874 rows, tracked by a different doc) and `mtds@f9f012cb` (a `soccer_*` phantom league_id
+  prune, also a different doc/population).
+- Todo 4 (re-run `migration_orphan_sweep_sports.py --dry-run` to confirm the 83,541 clear) has therefore also not run.
+
+No conflict with another doc. This remains exactly where the doc's own todos 2-4 leave it: root cause fixed, human
+disposition ruling + execution still outstanding.
+
 ## Lesson (do not re-learn)
 
 A writer cutover that introduces new data_type constants must update **every** registry keyed on data_type, not just the

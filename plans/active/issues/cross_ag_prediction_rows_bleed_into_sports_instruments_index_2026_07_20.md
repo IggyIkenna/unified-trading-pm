@@ -108,3 +108,41 @@ plus the recent, still-growing dates are the strongest lead.
 - [ ] 4. [DATA] P2. Remediate the already-written bleed rows — decide whether to relocate them to the prediction index
       or delete the mis-targeted rows (manifest-write, human-gated), and re-measure both estates' coverage denominators
       after (repo: instruments-service).
+
+## RE-TRIAGE (2026-07-23)
+
+**Verdict: STILL OPEN, ACCURATE — and materially WORSE than either this doc or the parent
+`sports_consolidated_closeout_2026_07_19.md` currently record.** The parent plan documents this as fully root-caused,
+fixed, and remediated on 2026-07-20 (`market-tick-data-service@5581dcf9` fixing per-venue bucket resolution in
+`process_ticks()`, plus a "CROSS-AG DATA REMEDIATION COMPLETE" section claiming 6,597 rows purged from the sports
+manifest down to **0 remaining**). A fresh live read of the same index today contradicts that "0 remaining" claim.
+
+**Live evidence (2026-07-23, direct read of
+`gs://instruments-store-sports-prd-central-element-323112/_index/availability_index.parquet` via
+`unified_trading_library.get_storage_client()`/`resolve_bucket_name(kind="instruments-store", asset_group="sports")`):**
+
+- `asset_group=prediction` rows present: **11,727** (KALSHI 11,667 / POLYMARKET 60; `trades` 11,540 /
+  `prediction_canonical_question_group` 187; all `service_name=market-tick-data-service`), plus the same 1 cefi + 1 defi
+  row noted originally.
+- Broken down by `written_at` date: **07-17: 1,756 · 07-19: 2,341 · 07-20: 2,500 · 07-21: 2,468 · 07-22: 2,662.** The
+  first three figures are an **exact match** to the doc's own 2026-07-20 measurement of the pre-purge population (1,756
+  / 2,341 / 2,500 — see "Newly-actionable todos" section above), strongly suggesting those original rows were never
+  durably removed (or were re-absorbed from a stale per-VM shard — the same consolidator-fan-in hazard already
+  documented elsewhere in this epic, e.g.
+  `sports_derived_features_per_league_layout_unread_by_ml_loader_2026_07_14.md`'s "Hard-learned during apply" note). The
+  07-21 and 07-22 additions are NEW rows written well **after** the `5581dcf9` fix landed (2026-07-20T10:35 UTC) and
+  after the plan's remediation was recorded complete — i.e. the writer bug is not conclusively fixed in production, or a
+  second emitter exists.
+- Verified `5581dcf9` is on the current `live-defi-rollout` HEAD (`git merge-base --is-ancestor 5581dcf9 HEAD` → true)
+  and the `market-tick-data-service` image actively serving the daily `fast-t1-recon` Cloud Run job
+  (`uts-prod-market-tick-data-service-fast-t1-recon`, executions run every 5 min) was rebuilt as recently as
+  2026-07-23T08:24 UTC — so the code fix is deployed, yet the bleed continued accumulating through 07-21/07-22.
+
+**This is a genuinely new, significant finding, not a re-confirmation of the original claim**: the parent plan's
+"CROSS-AG DATA REMEDIATION COMPLETE" / "0 remaining" section is contradicted by live production data. Flagging per the
+findings-triage HARD RULE rather than attempting a fix here (root cause of the reaccumulation — incomplete fix, a second
+write path, or stale-shard re-absorption — was not diagnosed in this pass). Recommend: (1) re-verify whether `5581dcf9`
+actually addresses every code path that writes into this bucket (not just `process_ticks()`), (2) check for an un-pruned
+per-VM shard still carrying the pre-purge rows, (3) re-run the same relocate+purge remediation once (1)/(2) are ruled
+out, and (4) notify the operator that the 07-20 "complete" claim needs retraction/correction. Status left `open` (todos
+1-4 above are NOT actually done — only step 3's code fix is real, and even that hasn't held).
