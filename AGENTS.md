@@ -29,6 +29,20 @@ Multi-repo workspace (~62 independent git repos). Key locations:
 
 ---
 
+## Doc Retrieval — grep the L0 index first (L0→L4, grep-native)
+
+Finding any doc/rule/SSOT: **grep the L0 index FIRST** — `unified-trading-pm/DOC_INDEX.generated.md` (per-clone,
+gitignored; absent/stale → `.venv/bin/python scripts/docs/gen_doc_index.py`, ~1.4s; NEVER read it whole — grep it).
+Narrow with L1 frontmatter facets: `rg -l '^authoritative_for:.*<topic>' codex/` lands THE one SSOT; compose axes for
+broader cuts (`doc_type` / `asset_group` / `stage` / `repos` / `status` / `nature` / `tags`, e.g.
+`rg -l '^doc_type: codex-ssot' codex/ | xargs rg -l '^asset_group:.*defi'`). Confirm relevance via `summary:` (L2)
+before opening; open ONLY the confirmed doc (L3); jump doc→code via its `code_refs` (L4, module-dir granularity). This
+applies to every agent reading this file (Claude Code, Codex, Cursor) — not just Claude Code's own retrieval habits.
+SSOT: `codex/11-project-management/doc-frontmatter-schema.md` §1 + epic `agent_operating_framework_master` § "Target
+architecture (L0–L4)".
+
+---
+
 ## Sub-Agent Rules
 
 Sub-agents start with FRESH context — they do NOT inherit rules.

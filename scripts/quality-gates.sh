@@ -657,6 +657,27 @@ if [ -f "$FRONTMATTER_SCHEMA_CHECKER" ]; then
     fi
 fi
 
+# ── Post-gates: Doc retrieval-layer parity (L0 index <-> schema; cross-agent doctrine) ──
+# SSOT: codex/11-project-management/doc-frontmatter-schema.md + plans/active/docs_retrieval_layer_reconcile_2026_07_23.md.
+# Guards two things nothing else checks: (1) scripts/docs/gen_doc_index.py's hand-maintained
+# _PER_TYPE_FACETS dict staying in lockstep with docspec.py's DOC_TYPES/PER_TYPE (a schema change
+# with no matching generator update would otherwise silently produce a stale/incomplete L0 index
+# line for that doc_type); (2) the "grep DOC_INDEX.generated.md first" retrieval doctrine staying
+# discoverable in BOTH cursor-configs/CLAUDE.md and AGENTS.md — a real regression (2026-07-23) had
+# it living only in CLAUDE.md, so Codex/Cursor agents never received it despite AGENTS.md being
+# the documented shared-instructions file for all three agent types.
+DOC_RETRIEVAL_PARITY_CHECKER="${REPO_ROOT}/scripts/quality_gates/check_doc_retrieval_layer_parity.py"
+if [ -f "$DOC_RETRIEVAL_PARITY_CHECKER" ] && [ -n "${WORKSPACE_ROOT:-}" ]; then
+    echo "Running doc retrieval-layer parity check (L0 index schema + cross-agent doctrine)..."
+    if python3 "$DOC_RETRIEVAL_PARITY_CHECKER" --workspace-root "$WORKSPACE_ROOT"; then
+        log_success "Doc retrieval-layer parity check passed"
+    else
+        echo "❌ Doc retrieval-layer parity violation — see output above for the exact remedy" >&2
+        echo "   SSOT: codex/11-project-management/doc-frontmatter-schema.md" >&2
+        _post_gate_fail "doc-retrieval-layer-parity"
+    fi
+fi
+
 # ── Post-gates: agent-rules size cap (CLAUDE.md / SUB_AGENT_MANDATORY_RULES.md) — HARD cap ──
 # SSOT: CLAUDE.md header § "Size budget". The agent rule files are a lean index (1-line directive +
 # codex pointer); detail lives in codex, never inline. They keep silently re-bloating, so the cap is
