@@ -1010,7 +1010,10 @@ load-bearing before flipping them** — if it is, the fix is a second uv-managed
 
 - [ ] [VERIFY] P3. Two weeks after rollout, re-pull the billing ledger and compare to the Phase-0 baseline; record
       actual $/mo saved per repo. Target landing: **fleet ~$1,000/mo → ~$300–400/mo**, and structurally flat when
-      activity grows (glue cost stays on our VM; only real test minutes scale).
+      activity grows (glue cost stays on our VM; only real test minutes scale). **1-week interim pull done 2026-07-23**
+      (Progress Log below): PM itself is down 35–56% depending on baseline (real, on-target direction) but the fleet
+      total is NOT down yet — masked by a +47% rise in non-PM repos this migration never touched. Re-check both threads
+      at the 2-week mark, not just the fleet aggregate.
 
 ---
 
@@ -1964,3 +1967,37 @@ prove on ONE caller → only then fan out._
     `~/.claude/projects/.../memory/`; the operator rejected both tool calls. Per CLAUDE.md: agent memory is per-cwd,
     never git-tracked, never reaches a teammate or VM — session-scoped findings belong in the active plan's Progress Log
     (here), not in `memory/`. Go straight there next time instead of reaching for a memory write first.
+
+- **2026-07-23 — 1-week interim billing check (operator ask: "did the migration pay off?").** NOT the scheduled two-week
+  Phase-5 re-pull below — an informal 1-week checkpoint, live-pulled from the same Enhanced-Billing ledger
+  (`github-billing-token` → `GET /users/IggyIkenna/settings/billing/usage?year=2026&month=7`, 1,283 line items, 100%
+  `product=actions`, token shredded from scratchpad immediately after the pull). Method: pre = Jul 1–15 (the plan's own
+  Phase-0 baseline window); post = Jul 17–22 (6 full days — the first clean days after BOTH STEP 2, 37/37 movers, and
+  STEP 2c, the composite-action conversion, landed 2026-07-17); Jul 16 excluded as the deploy/transition day (only 10/38
+  flipped, canary testing in progress, spend that day was actually the month's 2nd-highest); Jul 23 excluded as a
+  partial day (pulled mid-session).
+  - **PM (the only repo STEP 2 touched) — real, measured win**: **$16.89/day → $10.94/day, -35.3%**
+    (-$5.96/day; run-rate
+    ~$513/mo → ~$333/mo, ~**$181/mo saved** if sustained;
+    ~$36 actually saved over the 6 clean post-migration days).
+    Against the tighter immediately-prior week (Jul 8–15 = $24.74/day,
+    since spend was ramping into mid-July — see the Jul 13/14 spike that triggered this whole plan) the drop reads
+    steeper: -55.8%, ~$420/mo run-rate. Report both; the true number is baseline-sensitive and the 2-week re-pull will
+    tighten it.
+  - **Fleet-wide total did NOT drop** — $35.51/day → $38.37/day (**+8.1%**), nowhere near the plan's own
+    "~$1,000/mo →
+    ~$300–400/mo" target. Root cause, isolated by repo: **every non-PM repo rose**,
+    $18.61/day → $27.44/day (**+47%**, ~$566/mo → ~$834/mo run-rate) — and STEP 2 touched **zero** non-PM workflows, so
+    this is not the migration backfiring. Per-day trace shows several repos (features-service, agent-orchestrator,
+    deployment-api, market-tick-data-service) were already elevated on Jul 14–16, _before_ migration — a fleet-wide
+    activity ramp this plan didn't touch, now masking PM's real saving in the naive fleet total. Not investigated
+    further (out of this plan's scope) — worth a look if it doesn't revert on its own by the 2-week re-pull.
+  - **Data-quality note**: this pull's Jul 1–15 fleet total
+    ($532.58) is ~10% above the plan's originally-recorded
+    baseline ($485, frontmatter `source:`) — Enhanced-Billing
+    appears to backfill/revise a few days after the fact (the original was pulled ~Jul 15/16, before the period closed).
+    Use this session's $532.58/$16.89-per-day-PM as the more complete Phase-0 reference going forward.
+  - **Verdict**: PM's piece of the plan is working as designed, in the right direction, at roughly 36–100% of the item-1
+    estimate ($400–500/mo) depending which baseline you trust — genuine progress, not yet provable as the full plan
+    target, and invisible in a naive fleet-total check because of unrelated fleet growth. Don't re-derive this by hand
+    next time — the pull command + math above is reusable verbatim for the scheduled 2-week comparison.
