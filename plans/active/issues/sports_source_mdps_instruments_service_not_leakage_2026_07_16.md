@@ -25,8 +25,8 @@ priority: P3
 source: [operator P9 Q3 review 2026-07-16]
 assigned_vm: NA
 resolved_by:
-  re-verified live 2026-07-23, see RE-TRIAGE section re-triaged and verified live 2026-07-23 (see RE-TRIAGE section) --
-  root cause was already correctly diagnosed as not-a-bug on 2026-07-16
+  re-triage-2026-07-23 re-verified live 2026-07-23, see RE-TRIAGE section re-triaged and verified live 2026-07-23 (see
+  RE-TRIAGE section) -- root cause was already correctly diagnosed as not-a-bug on 2026-07-16
 locked_by:
 execution_scope: local-only
 drift_direction: advance-code

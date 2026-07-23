@@ -29,9 +29,9 @@ execution_scope: orchestrator-agent
 drift_direction: advance-code
 source: [pm_qg_plan_discipline_and_frontmatter_regression-004]
 resolved_by:
-  deployment-ui@d8def9c, deployment-api@47802dc5, unified-api-contracts@018c3ca6 deployment-ui@d8def9c,
-  unified-trading-pm@codex/02-data/sports-feature-calculator-registration-playbook.md, deployment-api@47802dc5,
-  unified-api-contracts@018c3ca6
+  deployment-ui@d8def9c deployment-ui@d8def9c, deployment-api@47802dc5, unified-api-contracts@018c3ca6
+  deployment-ui@d8def9c, unified-trading-pm@codex/02-data/sports-feature-calculator-registration-playbook.md,
+  deployment-api@47802dc5, unified-api-contracts@018c3ca6
 locked_by:
 depends_on: []
 ---
