@@ -211,6 +211,45 @@ NOT wire staking PnL to it until the audit confirms which, and that we have the 
 running:** workflow `wf_268532e0-323` builds the availability matrix (token × 4 sources × coverage + source-of-truth);
 its result is NOT yet on disk — process it when it lands.
 
+### Partial resolution 2026-07-23 — code-traced which rate MTDS's `lst_rates` actually is, per chain
+
+This does NOT replace `wf_268532e0-323` (that audit's availability matrix is broader — all 4 sources × all tokens), but
+directly answers "is `lst_yields.exchange_rate` really #4?" for the tokens that matter TODAY (the only currently
+perp-eligible LST is stETH, per E1) — traced by reading the actual collector code, not inferring:
+
+- **EVM side (stETH, rETH, weETH, cbETH, mETH, swETH, ETHx, osETH, ankrETH, pufETH, wstETH) — CONFIRMED genuine #4, for
+  EVERY historical date, not just "today".** `market-tick-data-service/.../lst_rates_handler.py`'s
+  `_EVM_LST_ABI_METADATA` calls each token's OWN protocol contract method directly (stETH→ `getPooledEthByShares`,
+  rETH→`getExchangeRate`, weETH→`getRate`, etc. — one canonical redemption/exchange-rate function per protocol).
+  Critically, `_query_rate()` (line 834) takes an explicit `block_number: int` ("Historical block number to query at"),
+  resolved per-date via `alchemy_client.get_block_by_timestamp(noon_ts, chain= "ETHEREUM")`, then calls
+  `web3.eth.call(..., block_identifier=block_number)` — a genuine on-chain read AT THAT HISTORICAL BLOCK, confirmed live
+  in this session's own backfill run.log ("Querying LST rates for 2025-04-15 at block 22274244"). This is NOT a
+  current-state proxy — it's true protocol-redemption fair value, accurate for every historical day. **Confidence: high
+  — the STAKING leg's data source for stETH (today's only perp-eligible LST) is genuinely #4, and E1's FUNDING-leg build
+  can proceed to a STAKING-leg build on the same footing whenever that's scoped**, without waiting on the SOL-side
+  caveat below.
+- **Solana side (jitoSOL, mSOL, bSOL, sanctumSOL) — CONFIRMED NOT #4 for historical dates; a market-derived proxy
+  instead.** `solana_lst_archival.py`'s Tier 1 (`_tier1_*_alchemy`, the genuine on-chain SPL stake-pool decode — the
+  true Solana analog of `getPooledEthByShares`) is explicitly gated `if today and rpc_url:` in every fetch function
+  (`_fetch_jito_rate`/`_fetch_bsol_rate`/`_fetch_sanctum_rate`) — correctly, because Solana's `getAccountInfo` JSON-RPC
+  call has no historical-block parameter in this codebase's usage (always returns CURRENT state), so Tier 1 can only
+  ever answer for the actual present day, never a backfill date. Tier 2 (The Graph subgraph) is a confirmed permanent
+  no-op today (no Solana subgraph IDs registered in UAC). Tier 3 (each protocol's own REST API) is ALSO explicitly gated
+  to `today`-only in the code (its own docstring: "Only valid for the current day... there is no per-day series").
+  **This means every single historical day of Solana `lst_rates` data (i.e. all of this session's
+  `2021-08-17→2026-07-22` Solana backfill except the literal last day) came from Tier 4 — `coins.llama.fi` DefiLlama
+  historical price ratio (LST-USD / SOL-USD)**, which is a MARKET-DERIVED price (closer to rate #1/#2, an aggregated
+  spot-price ratio) — NOT the protocol's own redemption rate. Not a bug (the code's own honest-absence/tier-gating
+  design correctly prevents mislabeling current-state as historical — verified no date-mislabeling occurs), but a real,
+  now-confirmed caveat: if a Solana LST ever becomes perp-eligible again (none are today per E1 — DRIFT was removed),
+  its STAKING leg would need this caveat accounted for before wiring, since `lst_yields.exchange_rate` for those tokens
+  is NOT rate #4 historically, unlike the EVM side.
+- **Not yet checked**: rsETH/ezETH/wBETH (the `_lst_extended_rates.py` extended-EVM roster, distinct from
+  `lst_rates_handler.py`'s core roster above) and the Aave-oracle (#3) / CEX-spot (#1) / DEX-pool (#2) sourcing for any
+  of these tokens — out of scope for this pass since none of them are in `_STAKED_BASIS_ETH_LSTS` today. Leave to
+  `wf_268532e0-323`'s broader matrix.
+
 ## Progress / in-flight (fresh-session resume point)
 
 - **RULED:** engine = spine (option A), scope = A2 (LENDING + STAKING). Economics per operator recorded above.
@@ -309,6 +348,66 @@ is #4). Do NOT wire until these resolve.**
 share-class-dependent dual-unit support before the STAKING leg's unit convention can be finalized. The A2 build remains
 gated until E1's data-source mapping and E2's dual-unit design are both resolved — do not wire the STAKING leg with a
 single hardcoded unit convention.
+
+## PROGRESS 2026-07-23 — FUNDING leg shipped (E1's data-source mapping now RESOLVED); STAKING leg still gated
+
+**E1's data-source sub-task is now resolved** and the FUNDING leg is **SHIPPED**: `strategy-service@aa1fcdc7`
+(`live-defi-rollout`, quickmerge landed, `quality-gates.sh` green — 5277 tests, Codex compliance within the pre-existing
+4-violation tolerance, no new baseline-ratchet regressions).
+
+- **Data-source mapping (confirmed against real GCS + `catalog_staked_basis.py`):** the ONLY two perp venues eligible as
+  LST collateral today are **DERIBIT** (`ETH-PERPETUAL`) and **BYBIT** (`ETHUSDT`) — verified via
+  `accepted_perp_collateral()` against UAC `VENUE_COLLATERAL_MATRIX` (7.5%/10% haircuts respectively). Both carry a
+  real, non-null `derivative_ticker.funding_rate` column (spot-checked prod parquets directly: DERIBIT 2026-04-15 =
+  113,720 ticks/day; BYBIT 2026-05-15 = 228,971 ticks/day).
+- **New provider** `strategy_service/engine/core/canonical_derivative_ticker_funding_provider.py` —
+  `CanonicalDerivativeTickerFundingProvider`: reads the shared `tick-data`/`cefi` bucket, day-means the `funding_rate`
+  column (offset-robust, matching the prior-art `e2e-testing/scripts/defi/staked_basis_funding_scan.py` convention),
+  scales to a per-day fraction via the UAC `perp_funding_cadence.fundings_per_day()` SSOT (never an inline
+  periods-per-day constant). Narrow, explicit venue→symbol allowlist (DERIBIT/BYBIT only) — an unmapped venue is honest
+  absence, never a guessed symbol.
+- **Sign convention** (operator E1, verbatim): short perp RECEIVES when the rate is positive → `FUNDING_ACCRUAL`/
+  `FUNDING` = `+notional * day_funding_fraction` (no negation) — verified consistent with the existing `staked_basis.py`
+  engine docstring ("positive means longs pay shorts → adds to carry").
+- **Wiring**: a purely additive `funding_rates_by_day: Mapping[str, Decimal] | None = None` parameter on
+  `build_paper_run_passive` / `build_paper_run_attribution` (+ its `emit_` wrapper) and a new
+  `StrategyReplay.funding_rates_by_day` field, populated in `replay_carry_strategy` ONLY for
+  `spec.archetype == CARRY_STAKED_BASIS` (scoped to real config keys via direct indexing, not `.get(key, "")` —
+  `_emit_staked_basis_slots` always populates both). `None` (every other archetype, every pre-existing caller) preserves
+  the legacy `-basis_amount` proxy byte-for-byte — **zero behavior change outside this one leg**. Threaded into both
+  `paper_run_handler.py::run_paper` and `batch_rerun.py`'s passive re-derivation, so a same-window batch rerun
+  re-derives the identical mapping from the same immutable `day=` partition (ε=0 holds for the FUNDING leg too — proven
+  with a paper≡batch parity test at the producer boundary, mirroring the style of the already-held
+  `test_index_ratio_accrual.py` parity test).
+- **STAKING_REWARD / LENDING_INTEREST are untouched** — verified via the full pre-existing test suite (unchanged, still
+  green) that no other leg's computation shifted.
+- **3-lens review (money-path gate) — CLEAN, shipped.** Correctness: sign + data source cross-verified against 2
+  independent codebase sources + the operator's own words. Determinism: pure function of (perp_venue, native_asset,
+  window) over the immutable GCS partition; parity tests added at both the new provider and the two producers.
+  Honest-absence: every layer defaults to a logged zero on missing data, never a fabricated or silently-reused proxy.
+- **Big finding (data-correctness, notified here per the money-path/findings-triage rule):** verified against real prod
+  GCS that **`derivative_ticker` capture for EVERY CeFi venue under `pipeline_mode=batch_tardis` has NO coverage from
+  ~2026-05-22 through at least 2026-07-20** (not DERIBIT/BYBIT-specific — the whole CeFi derivative_ticker collector,
+  all venues, same window; `book_snapshot_5` for the same venues DOES continue into July, so this is scoped to the
+  funding-rate collector specifically). This is a **pre-existing MTDS/Tardis backfill gap**, separate from and not fixed
+  by this change. Practical effect: a LIVE rolling 7-day paper window today falls entirely inside this gap, so
+  FUNDING_ACCRUAL will honestly book **zero** (with a visible log) until the collector backfill resumes — still strictly
+  better than the current-in-prod wrong nonzero `-basis_amount` proxy, but worth a dedicated MTDS-side follow-up to
+  actually restore live funding-rate capture. Historical windows before 2026-05-22 (where real data exists) will show
+  real nonzero funding once a batch rerun covers them.
+- **Deliberately NOT touched (out of this task's scope, confirmed correct to leave alone):** `compute_pnl` /
+  `compute_handler` (dead-code surfaces per the doc's own analysis, unrelated to this fix); the STAKING leg (LST
+  appreciation — still gated on the 4-rate-identity audit + E2's dual-unit design, per the standing rulings above);
+  `LENDING_INTEREST`/`BASIS` for `carry_staked_basis` (E4 already ruled these DROP entirely, not index-ratio'd — a
+  separate, still-open build); the already-held, still-unwired `strategy_service/engine/backtest/index_ratio_accrual.py`
+  primitive — verified it is STILL PRESENT, untouched, exactly as found (not rebuilt, not committed). It is NOT the
+  right tool for FUNDING (a genuine per-cycle rate, not a cumulative index — see the doc's own REFINEMENT section) and,
+  per the fresh E4 ruling, is no longer needed for `carry_staked_basis`'s LENDING leg either (dropped, not fixed) — its
+  remaining live use is `recursive_staking`'s borrow leg (E3), an explicit, bigger follow-on left for a dedicated
+  session.
+
+**Next open item**: process E2 (share-class dual-unit investigation) + the outstanding 4-rate-identity audit result,
+then build the STAKING leg. `recursive_staking`'s borrow-leg wiring (E3) remains a separate, tracked follow-on.
 
 ## E2 INVESTIGATION 2026-07-23 (sub-agent, design-only — no code changed)
 
