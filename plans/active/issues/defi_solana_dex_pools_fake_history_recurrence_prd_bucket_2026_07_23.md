@@ -100,9 +100,12 @@ the current canonical vocabulary entirely.
 - Venues: `ORCA`, `RAYDIUM` only (no other venue seen with this shape in the scanned shards).
 - Days: `2025-01-01` through `2025-01-17` (17 distinct days) — bounded so far, but the sweep has not finished; this
   range may extend once the full walk completes.
-- Re-run the scope scan (`scratchpad/scope_fake_history_scan.py`-style: filter checkpoint shards or the final
-  `orphan_sweep_defi.parquet` report for `data_type == "dex_pools"`) once defi's sweep reaches ACCEPTANCE, to get the
-  true final count/day-range.
+- Re-run the scope scan once defi's sweep reaches ACCEPTANCE:
+  `instruments-service/scripts/scope_defi_dex_pools_fake_history.py --source final` (promoted 2026-07-23 from a session
+  scratchpad per the "an open todo needs it" rule; `--source checkpoint`, the default, works NOW while the sweep is
+  still running — last run 2026-07-23 against 60 checkpoint shards: **241,281 legacy rows, unchanged from the earlier
+  55-shard sample**, ORCA+RAYDIUM only, days 2025-01-01..17 — the population is bounded, not still growing, even as
+  total actionable rows grew from 3,074,283 to 4,067,100 in the interim).
 
 ## Why this blocks the backfill
 
