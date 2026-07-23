@@ -137,13 +137,15 @@ is regenerated after a fix.**
       affected `day=2025-01-*` range: for each affected object, (1) read the row(s), derive `<true_date>` from the row's
       own `timestamp` column (NOT `available_at`), (2) compute the new canonical dest path with `day=<true_date>` and a
       `live_`-prefixed `pipeline_mode` (mirrors `_build_dest_path()`'s existing pure-computed-path pattern in
-      `migration_orphan_sweep.py`/`backfill_orphan_class_e.py` — reuse it, don't reinvent), (3) upload the new object
-      (byte-identical row content; only the path changes), (4) `record_captured` the NEW path only, (5) leave the OLD
-      `day=2025-01-XX` object un-recorded and log it to a "pending-human-delete" manifest for a later, separately-gated
-      cleanup pass (never auto-delete). Must also independently exclude this population from
-      `backfill_orphan_class_e.py`'s ordinary `--apply` path in the interim (route matching cells to
-      `escalated`/`BLOCKED-OPERATOR-DECISION`) so a normal backfill run can't `record_captured` the OLD mislabeled path
-      before the relabel migration runs.
+      `migration_orphan_sweep.py`/`backfill_orphan_class_e.py` — reuse it, don't reinvent), (3) **re-stamp the
+      `available_at` COLUMN to match `<true_date>` before upload** (the row's OWN `timestamp` value, run through the
+      same `stamp_available_at_onchain_tick` helper the live writer uses — NOT left as the old uniform
+      `2026-06-11T09:48:03` bug artifact; path and row content must agree, or the relabel just moves the fabrication one
+      level down), upload the new object, (4) `record_captured` the NEW path only, (5) leave the OLD `day=2025-01-XX`
+      object un-recorded and log it to a "pending-human-delete" manifest for a later, separately-gated cleanup pass
+      (never auto-delete). Must also independently exclude this population from `backfill_orphan_class_e.py`'s ordinary
+      `--apply` path in the interim (route matching cells to `escalated`/`BLOCKED-OPERATOR-DECISION`) so a normal
+      backfill run can't `record_captured` the OLD mislabeled path before the relabel migration runs.
 - [x] 4. [REVIEW] P2. ~~Check whether the SAME bug shape exists for Kamino~~ — **PARTIALLY DONE 2026-07-23**:
       `venue=KAMINO/chain=SOLANA/instrument_type=pool/data_type=dex_pools/` has **zero objects** in the `-prd-` bucket
       across 6 sampled days (both inside and outside the affected window) — moot for the AMM-pool shape this issue
