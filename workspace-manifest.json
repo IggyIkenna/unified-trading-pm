@@ -758,7 +758,7 @@
         "data-ingestion",
         "standard"
       ],
-      "ldr_ci_status": "GREEN",
+      "ldr_ci_status": "RED",
       "codebase_health": {
         "warn_file_count": 9,
         "large_file_count": 8,
@@ -1351,7 +1351,7 @@
         "coverage_pct": 80.61,
         "qg_red_reason": "ruff"
       },
-      "ldr_ci_status": "GREEN"
+      "ldr_ci_status": "RED"
     },
     "unified-trading-system-ui": {
       "promotion_model": "ldr_main",
