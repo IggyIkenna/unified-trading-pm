@@ -36,10 +36,10 @@ tags:
 related:
   [
     issues/ao_fleet_stall_opus_spawn_and_skip_thrash_2026_07_07.md,
-    instruments_completion_tracker_2026_07_06.md,
-    ../../codex/04-architecture/agent-orchestrator-backlog-state-alignment.md,
-    ../../codex/04-architecture/agent-orchestrator-overview.md,
-    ../../codex/04-architecture/agent-orchestrator-autospawn.md,
+    /plans/active/instruments_completion_tracker_2026_07_06.md,
+    /codex/04-architecture/agent-orchestrator-backlog-state-alignment.md,
+    /codex/04-architecture/agent-orchestrator-overview.md,
+    /codex/04-architecture/agent-orchestrator-autospawn.md,
   ]
 created: 2026-07-07
 last_updated: 2026-07-15
@@ -263,9 +263,9 @@ the start, author them as N separate plans (each ≤20 todos), one per agent —
 
 ## Codex SSOTs (read before touching; update at Phase 6 — plan↔codex drift is review-blocking)
 
-- `codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` — dispatch + regen + ingestion contract.
-- `codex/12-agent-workflow/agent-orchestrator-overview.md` — runtime loops (AutoSpawn / regen / failover / watchdog).
-- `codex/04-architecture/role-registry.md` — role → (model, thinking, lifecycle); the tag→role mapping extends this.
+- `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` — dispatch + regen + ingestion contract.
+- `/codex/12-agent-workflow/agent-orchestrator-overview.md` — runtime loops (AutoSpawn / regen / failover / watchdog).
+- `/codex/04-architecture/role-registry.md` — role → (model, thinking, lifecycle); the tag→role mapping extends this.
 
 ---
 
@@ -437,7 +437,7 @@ the start, author them as N separate plans (each ≤20 todos), one per agent —
       hygiene (D), plan grouping + draft-gating (E), single-agent stickiness (F); banner-invalidate anything the change
       supersedes. (task_template + CLAUDE.md author-facing docs already shipped in Phase 1.) — ✅ DONE pm@20dce55f3:
       added a "Dispatch-correctness update (2026-07-07)" section to
-      `codex/04-architecture/agent-orchestrator-backlog-state-alignment.md` documenting RC-1 reconcile / plan_order /
+      `/codex/04-architecture/agent-orchestrator-backlog-state-alignment.md` documenting RC-1 reconcile / plan_order /
       sequential / cancelled, RC-2 per-task roles + stickiness, RC-3 skip-TTL/unskip — and marked the old append-only
       lifecycle diagram SUPERSEDED. (Capability chain C is documented as deferred.)
 
@@ -733,14 +733,14 @@ its next dispatch). Plan ARCHIVED.
   injection, remove worker role-refusal, first-claim `target_slot` stickiness) — highest remaining value; **Phase 3**
   (capability chain for DISPATCHED retiers — stop-lower + `--resume`-higher; the QUEUED path already works via the model
   gate; this is the in-flight-retier edge case, riskiest = worker-lifecycle) — lower priority; **Phase 6** (codex SSOT:
-  real doc is `codex/04-architecture/agent-orchestrator-backlog-state-alignment.md`, not the stale
+  real doc is `/codex/04-architecture/agent-orchestrator-backlog-state-alignment.md`, not the stale
   `12-agent-workflow/...single-vm-architecture.md` in this plan's refs). **Operator note**: Phase 4's stickiness =
   DEFAULT makes fleet parallelism ≈ active-plan count (a deliberate shift, §F) — worth a glance before deploying it.
 - **2026-07-12 — correction (finding 352, §A2 B-queue ruling).** The 2026-07-07 note directly above ("Phase 6 (codex
-  SSOT: real doc is `codex/04-architecture/agent-orchestrator-backlog-state-alignment.md`, not the stale
+  SSOT: real doc is `/codex/04-architecture/agent-orchestrator-backlog-state-alignment.md`, not the stale
   `12-agent-workflow/...single-vm-architecture.md` in this plan's refs)") is itself now outdated: operator ruling
   2026-07-12 (`plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` `codex-gap` row) created
-  `codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` as the live SSOT for dispatch/regen/topology.
+  `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` as the live SSOT for dispatch/regen/topology.
   The '## Codex SSOTs' header above (line 265, citing `agent-orchestrator-single-vm-architecture.md` — dispatch + regen
   - ingestion contract) was therefore CORRECT all along and needs no edit;
     `agent-orchestrator-backlog-state-alignment.md` (cited in this plan's frontmatter `related:`) covers the narrower

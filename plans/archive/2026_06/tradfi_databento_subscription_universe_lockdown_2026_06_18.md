@@ -6,7 +6,15 @@ status: complete
 nature: record
 asset_group: [tradfi]
 stage: [meta]
-repos: [deployment-service, instruments-service, market-data-processing-service, market-tick-data-service, unified-api-contracts, unified-trading-library]
+repos:
+  [
+    deployment-service,
+    instruments-service,
+    market-data-processing-service,
+    market-tick-data-service,
+    unified-api-contracts,
+    unified-trading-library,
+  ]
 scope: [engineer, admin]
 tags: []
 related: []
@@ -41,7 +49,7 @@ candle aggregator, or any non-Databento source. Barchart/Yahoo VIX `ohlcv_15m` i
 guards never run on it, `ohlcv_15m`/`ohlcv_24h` remain registered TradFi data_types, and nothing deletes stored rows
 (see "Out of scope" below + the codex SSOT "VIX" section).
 
-**Codex SSOT:** `codex/02-data/tradfi-databento-sourcing-ssot.md`. **Contract module:**
+**Codex SSOT:** `/codex/02-data/tradfi-databento-sourcing-ssot.md`. **Contract module:**
 `unified-api-contracts/unified_api_contracts/registry/databento_subscription_allowlist.py`.
 
 ## Shipped 2026-06-18 (this session)
@@ -78,7 +86,7 @@ guards never run on it, `ohlcv_15m`/`ohlcv_24h` remain registered TradFi data_ty
 > **Bug:** the OHLCV write path stamped `source`/`pipeline_mode` from `SOURCE_PRIORITY[(ag,dt)][0]` (the READ-time
 > priority source) not the FETCHING adapter. `("tradfi","ohlcv_1m")` priority = `["massive","databento"]` → CBOE VX
 > futures (fetched by Databento `XCBF.PITCH`; Massive carries NO CFE) stamped `batch_massive`. SOURCE_PRIORITY is
-> read-time resolution, never the write stamp. SSOT: `codex/02-data/tradfi-databento-sourcing-ssot.md`.
+> read-time resolution, never the write stamp. SSOT: `/codex/02-data/tradfi-databento-sourcing-ssot.md`.
 
 - [x] ✅ [UTL] P0. `pipeline_mode_resolver.derive_pipeline_mode_for_row(source=...)` — explicit batch-source override
       builds `batch_<source>` directly (bypasses SOURCE_PRIORITY when a source is given); `_VENUE_DT_OVERRIDES`
@@ -248,9 +256,9 @@ guards never run on it, `ohlcv_15m`/`ohlcv_24h` remain registered TradFi data_ty
 - [ ] [PM] P1. QG grep-ratchet: no raw `batch.submit_job` call outside the guarded `submit_batch_job`; no off-allowlist
       dataset string literal in tradfi fetch paths. Wire into market-tick-data-service `quality-gates.sh`. Repo: PM +
       market-tick-data-service.
-- [x] [DOCS] P2. Update `codex/02-data/tradfi-data-types-catalog.md` to reflect **1m+1s** OHLCV (added `ohlcv_1s` row +
+- [x] [DOCS] P2. Update `/codex/02-data/tradfi-data-types-catalog.md` to reflect **1m+1s** OHLCV (added `ohlcv_1s` row +
       the "OHLCV fetch = 1m AND 1s" note; CFE/VX-futures venue). — unified-trading-pm (this commit). **Still open:**
-      `codex/04-architecture/tradfi-batch-live.md` (3-dataset universe + CFE) — pairs with the Phase-2 universe prune.
+      `/codex/04-architecture/tradfi-batch-live.md` (3-dataset universe + CFE) — pairs with the Phase-2 universe prune.
       Repo: unified-trading-pm.
 
 ## Out of scope / explicit non-goals
@@ -261,9 +269,9 @@ guards never run on it, `ohlcv_15m`/`ohlcv_24h` remain registered TradFi data_ty
 
 ## Codex SSOT updates
 
-- `codex/02-data/tradfi-databento-sourcing-ssot.md` (NEW — authoritative).
-- `codex/02-data/tradfi-data-types-catalog.md` (Phase 3 — reflect **1m+1s** OHLCV — DONE: `ohlcv_1s` row + OHLCV note).
-- `codex/04-architecture/tradfi-batch-live.md` (Phase 3 — reflect 3-dataset + CFE).
+- `/codex/02-data/tradfi-databento-sourcing-ssot.md` (NEW — authoritative).
+- `/codex/02-data/tradfi-data-types-catalog.md` (Phase 3 — reflect **1m+1s** OHLCV — DONE: `ohlcv_1s` row + OHLCV note).
+- `/codex/04-architecture/tradfi-batch-live.md` (Phase 3 — reflect 3-dataset + CFE).
 
 ## Phase 2.5 — universe-CHANGE manifest reconciliation (GAP found 2026-06-20)
 

@@ -14,8 +14,8 @@ tags: [role-registry, message-broker, routing, dispatch, archived]
 related:
   [
     ../epics/agent_operating_framework_master.md,
-    pm_role_charter_formalization_2026_06_25.md,
-    data_eng_role_vertical_pilot_2026_06_25.md,
+    /plans/archive/2026_07/pm_role_charter_formalization_2026_06_25.md,
+    /plans/archive/2026_07/data_eng_role_vertical_pilot_2026_06_25.md,
     ../epics/escalation_and_disaster_recovery_master.md,
   ]
 created: 2026-06-25
@@ -46,7 +46,7 @@ drift_direction: advance-code
 > REQUIRED** — Phase 2 is superseded by the shipped `assigned_role` dispatch ("no broker", per
 > `agent_operating_framework_master`'s KEEP/DEFER ruling), and Phase 3 (W9) stays an epic-level deferred item (the
 > escalation/DR epic tracks it if ever revived). The `agent-role` schema SSOT is now `scripts/docs/docspec.py` +
-> `unified-trading-pm/agents/<role>.md` (`codex/04-architecture/role-registry.md` deleted 2026-07-16).
+> `unified-trading-pm/agents/<role>.md` (`/codex/04-architecture/role-registry.md` deleted 2026-07-16).
 
 > **W6 (registry schema realization) + W9 (broker)** of `agent_operating_framework_master`. This is the **spine**: the
 > PM-role plan, the Data-Eng-role plan, and the escalation MVP all consume the registry + broker this ships. Built
@@ -57,8 +57,8 @@ drift_direction: advance-code
 > **📎 role-registry.md retired + consolidated (2026-07-16).** This plan's deliverable — the `agent-role` frontmatter
 > schema — is now the single SSOT in `scripts/docs/docspec.py` (`PER_TYPE['agent-role']`, QG-enforced via
 > `check_frontmatter_schema.py`); per-role data is the frontmatter in each `unified-trading-pm/agents/<role>.md`
-> charter. The `codex/04-architecture/role-registry.md` doc this plan created was **deleted** — the DONE records + paths
-> below (incl. `agent-orchestrator/agents/*.md`, now `unified-trading-pm/agents/`) describe the now-consolidated
+> charter. The `/codex/04-architecture/role-registry.md` doc this plan created was **deleted** — the DONE records +
+> paths below (incl. `agent-orchestrator/agents/*.md`, now `unified-trading-pm/agents/`) describe the now-consolidated
 > artifact; do not re-create the doc.
 
 ## Why
@@ -76,7 +76,7 @@ We are not building a registry from scratch. Four things already exist (operator
 
 So the spine is **three generalizations**: (1) charters → machine-readable rows; (2) dispatch key `assigned_vm` (where)
 → `(role, domain)` (who + what); (3) `by-role/message` → a tagged ingest→queue→route broker. SSOT for the runtime this
-rides on: `codex/04-architecture/agent-orchestrator-overview.md`.
+rides on: `/codex/04-architecture/agent-orchestrator-overview.md`.
 
 ## Locked design (operator, 2026-06-25)
 
@@ -96,7 +96,7 @@ rides on: `codex/04-architecture/agent-orchestrator-overview.md`.
 
 ### Phase 0 — Registry schema SSOT [no code]
 
-- [x] ✅ [DOCS] P0. Role-registry SSOT `codex/04-architecture/role-registry.md`: the `agent-role` frontmatter row
+- [x] ✅ [DOCS] P0. Role-registry SSOT `/codex/04-architecture/role-registry.md`: the `agent-role` frontmatter row
       (extends W2's `agent-role` doc_type) + the `(role, domain)` routing-key spec + the
       lifecycle/escalation/temperament fields. Dogfoods W2's schema. **Gate**: `docspec --check` clean on the SSOT's own
       frontmatter. — DONE `unified-trading-pm@3fc71129b` (role-registry.md SSOT incl. the per-role
@@ -157,9 +157,9 @@ rides on: `codex/04-architecture/agent-orchestrator-overview.md`.
 
 ## Codex SSOT updates
 
-- `codex/04-architecture/role-registry.md` (NEW) — the registry-row schema + `(role, domain)` routing-key + broker
+- `/codex/04-architecture/role-registry.md` (NEW) — the registry-row schema + `(role, domain)` routing-key + broker
   contract.
-- `codex/04-architecture/agent-orchestrator-overview.md` — add the broker ingest path beside plan-ingestion; cross-link
+- `/codex/04-architecture/agent-orchestrator-overview.md` — add the broker ingest path beside plan-ingestion; cross-link
   the registry.
 
 ## Progress Log
@@ -190,4 +190,4 @@ rides on: `codex/04-architecture/agent-orchestrator-overview.md`.
   dispatch ("no broker", per `agent_operating_framework_master`'s KEEP/DEFER ruling); Phase 3 (W9 broker) stays an
   epic-level deferred item (escalation/DR epic hard-dependency) if ever revived — not this plan's work. Registry-schema
   SSOT since consolidated into `scripts/docs/docspec.py` + `unified-trading-pm/agents/<role>.md`
-  (`codex/04-architecture/role-registry.md` deleted 2026-07-16). Moved to `plans/archive/2026_07/`.
+  (`/codex/04-architecture/role-registry.md` deleted 2026-07-16). Moved to `plans/archive/2026_07/`.

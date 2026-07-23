@@ -9,7 +9,13 @@ stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer, admin]
 tags: []
-related: [plans/active/per_agent_worktrees_2026_05_10.md, plans/active/qg_commit_quality_boundary_and_slot_ff_push_2026_06_03.md, plans/archive/2026_06/quickmerge_dep_content_sync_and_strict_enforcement_2026_06_08.md, plans/active/staging_clean_start_and_stale_pr_hygiene_2026_06_08.md]
+related:
+  [
+    plans/active/per_agent_worktrees_2026_05_10.md,
+    plans/active/qg_commit_quality_boundary_and_slot_ff_push_2026_06_03.md,
+    plans/archive/2026_06/quickmerge_dep_content_sync_and_strict_enforcement_2026_06_08.md,
+    plans/active/staging_clean_start_and_stale_pr_hygiene_2026_06_08.md,
+  ]
 created: 2026-06-08
 parent_epic: infrastructure_master
 assigned_vm: vm-cross-cutting
@@ -69,7 +75,7 @@ time, mediated by remote atomicity). The sound form is **Path B** (documented + 
 - [x] ✅ [SCRIPT] P2. Grep every consumer of `tab/<op>/N` branch naming: `setup-tab-worktrees.sh`,
       `slot-cron-ff-pull.sh`, `slot-git-status-report.sh`, `slot-master-rebase.sh`, `tab-mirror-to-ldr.yml`,
       `verify-slot-host-symmetry.sh`, `agent-orchestrator/server/worktree_clean_check.py`, `workspace-manifest.json`
-      base-branch overrides, and the CLAUDE.md / `codex/05-infrastructure/per-tab-worktrees.md` rule surface. Build the
+      base-branch overrides, and the CLAUDE.md / `/codex/05-infrastructure/per-tab-worktrees.md` rule surface. Build the
       removal/rewrite manifest BEFORE any change.
 
 ## Phase 0 — Spike (research)
@@ -97,7 +103,7 @@ time, mediated by remote atomicity). The sound form is **Path B** (documented + 
 
 ## Phase 3 — Rules + codex alignment (depends: Phase 2)
 
-- [x] ✅ [DOCS] P2. Rewrite CLAUDE.md + `codex/05-infrastructure/per-tab-worktrees.md`: remove tab-branch/upstream/
+- [x] ✅ [DOCS] P2. Rewrite CLAUDE.md + `/codex/05-infrastructure/per-tab-worktrees.md`: remove tab-branch/upstream/
       diverged-tab recovery sections; replace with the Path-B LDR-direct model. Update `SUB_AGENT_MANDATORY_RULES.md` §
       git-discipline.
   - ⚠️ **Over-marked correction (2026-06-18)**: the 2026-06-08 pass only **SUPERSEDED-bannered** the docs (Progress note
@@ -130,7 +136,7 @@ time, mediated by remote atomicity). The sound form is **Path B** (documented + 
 
 ## Codex SSOT updates
 
-`codex/05-infrastructure/per-tab-worktrees.md` (rewrite), CLAUDE.md § Per-Tab Worktrees + § Git discipline,
+`/codex/05-infrastructure/per-tab-worktrees.md` (rewrite), CLAUDE.md § Per-Tab Worktrees + § Git discipline,
 `SUB_AGENT_MANDATORY_RULES.md` § git.
 
 ## Progress — 2026-06-08 (slot-1 autonomous, EXECUTED)
@@ -165,7 +171,7 @@ time, mediated by remote atomicity). The sound form is **Path B** (documented + 
 `m8i.4xlarge`, running, `api.agent-orchestrator.odum-research.com → 13.113.200.22`. `/health` reports **version 0.6.0**
 (CLAUDE.md references v0.7+ for `assigned_vm`) and `data_freshness.stale: true` → the deployed orchestrator is also
 BEHIND and should be redeployed as part of this. Worker-topology SSOT:
-`codex/05-infrastructure/agent-orchestrator-worker-topology.md`.
+`/codex/05-infrastructure/agent-orchestrator-worker-topology.md`.
 
 - [x] ✅ [INFRA] P1. On `i-0c9b283b31d6b5ca7`: pull the new PM tooling (`setup-tab-worktrees.sh` Path-B,
       `migrate-slots-to-pathb.sh`, `slot_drift_check.py`, the strict-quickmerge pre-push hook, updated CLAUDE.md +

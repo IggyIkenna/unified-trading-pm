@@ -1,7 +1,16 @@
 ---
 doc_type: plan
 title: CI/CD retire the staging branch — re-home SIT onto LDR, single LDR→main path, ONE v2 (operator end-state)
-summary: 'OPERATOR END-STATE (directed + clarified 2026-06-27): a **GHA TOGGLE** decides, per repo, whether LDR promotes **through staging** or **straight to main**. The `staging` branch is **KEPT** (the toggle is REVERSIBLE — a major/breaking version bump or an operator decision still routes that repo THROUGH staging). The toggle changes ONLY the promote PATH, never the gates: **SIT, the quality-gate requirement, and the quickmerge-to-main requirement all remain the same**. PM already bypasses straight to main (and still runs plan-hygiene + the plan-health agent). For a direct repo, SIT re-homes onto a frozen LDR snapshot so the cross-repo breaking-change gate still runs on the actually-promoted content. Net: ONE gating v2 (not 2), SAME rigor, faster — drops the staging→main squash-divergence that made staging↔main diffs unresolvable. Supersedes cicd_staging_main_deadcode_retirement (that only removed the staging→main MERGE).'
+summary:
+  "OPERATOR END-STATE (directed + clarified 2026-06-27): a **GHA TOGGLE** decides, per repo, whether LDR promotes
+  **through staging** or **straight to main**. The `staging` branch is **KEPT** (the toggle is REVERSIBLE — a
+  major/breaking version bump or an operator decision still routes that repo THROUGH staging). The toggle changes ONLY
+  the promote PATH, never the gates: **SIT, the quality-gate requirement, and the quickmerge-to-main requirement all
+  remain the same**. PM already bypasses straight to main (and still runs plan-hygiene + the plan-health agent). For a
+  direct repo, SIT re-homes onto a frozen LDR snapshot so the cross-repo breaking-change gate still runs on the
+  actually-promoted content. Net: ONE gating v2 (not 2), SAME rigor, faster — drops the staging→main squash-divergence
+  that made staging↔main diffs unresolvable. Supersedes cicd_staging_main_deadcode_retirement (that only removed the
+  staging→main MERGE)."
 status: superseded
 nature: process
 asset_group: cross-asset
@@ -9,7 +18,15 @@ stage: [meta]
 repos: [unified-trading-pm, system-integration-tests]
 scope: [engineer, admin]
 tags: [cicd, WS-L, staging-removal, SIT-rehome, single-path, ldr_main, frozen-head, one-v2, D12]
-related: [cicd_consolidated_remaining_2026_06_24.md, cicd_phase2_finalize_2026_06_27.md, cicd_staging_main_deadcode_retirement_2026_06_27.md, ../epics/infrastructure_master.md, ../../codex/08-workflows/ci-cd-flow.md, ../../codex/06-coding-standards/integration-testing-layers.md]
+related:
+  [
+    /plans/archive/2026_06/cicd_consolidated_remaining_2026_06_24.md,
+    /plans/archive/2026_06/cicd_phase2_finalize_2026_06_27.md,
+    /plans/archive/2026_06/cicd_staging_main_deadcode_retirement_2026_06_27.md,
+    ../epics/infrastructure_master.md,
+    /codex/08-workflows/ci-cd-flow.md,
+    /codex/06-coding-standards/integration-testing-layers.md,
+  ]
 created: 2026-06-27
 parent_epic: infrastructure_master
 assigned_vm: NA
@@ -100,36 +117,40 @@ drift_direction: advance-code
 >     so a stale served bundle / the un-guarded HopPills component + the never-reframed panel leaked staging). Hardened:
 >     extracted `isStagingDormant(row)` as the SSOT predicate (repoCi.ts) now used by `classifyStall` + HopPills (own
 >     guard, belt-and-suspenders) + StallReasonCell + the panel; panel title + empty-state reframe to **LDR→main** /
->     "Staging dormant — LDR→main direct; no staging→main promotion" when the fleet is dormant. Regression coverage added
->     (the gap that let it ship wrong): +4 `isStagingDormant` vitest unit tests + a dormant mock repo (alerting-service,
->     35f/14f staging deltas + drain_stalled) + **3 e2e specs** (hops+drain-chip suppressed under dormant; STILL shown for
->     the non-dormant agent-orchestrator case; panel reframes to LDR→main). **pw:L2 ✓ (43 e2e green)** + tsc+ESLint+84
->     vitest+build green. ⚠️ Display only SHOWS once the served deployment-ui bundle redeploys (Build-LDR opt-in stamped
->     on the commit). (deployment-ui)
->   - ↳ **DESIGN CORRECTION DONE 2026-06-28 — deployment-ui@d98a753.** Operator: don't HIDE the dormant staging signals —
->     SHOW them muted. The 81375bd cut suppressed them (HopPills→null, hops cell→"—", classifyStall→"none"), which threw
->     away real data and meant flipping staging back on would need a structural change. Reworked so dormancy is purely a
->     STYLING concern: `classifyStall` is now dormant-AGNOSTIC (reports the real git-delta kind); the render layer
->     (HopPills / StallReasonChip / StallReasonCell) calls `isStagingDormant(row)` to render the staging hops + stall
->     reason + drain-stalled **MUTED** (grey via `TONE_TEXT.gray`, never red) + a "dormant · ignored" tag — flip staging
->     relevant → the same cells return to red-when-behind, zero structural change. Tests updated to the new contract
->     (classifyStall dormant→real kind not "none"; e2e: dormant SHOWS muted+tagged vs the non-dormant agent-orchestrator
->     showing the SAME signal RED). **pw:L2 ✓ (43 e2e green)** + tsc+ESLint+910 vitest+build green. Same redeploy caveat
->     below. (deployment-ui)
+>     "Staging dormant — LDR→main direct; no staging→main promotion" when the fleet is dormant. Regression coverage
+>     added (the gap that let it ship wrong): +4 `isStagingDormant` vitest unit tests + a dormant mock repo
+>     (alerting-service, 35f/14f staging deltas + drain_stalled) + **3 e2e specs** (hops+drain-chip suppressed under
+>     dormant; STILL shown for the non-dormant agent-orchestrator case; panel reframes to LDR→main). **pw:L2 ✓ (43 e2e
+>     green)** + tsc+ESLint+84 vitest+build green. ⚠️ Display only SHOWS once the served deployment-ui bundle redeploys
+>     (Build-LDR opt-in stamped on the commit). (deployment-ui)
+>   - ↳ **DESIGN CORRECTION DONE 2026-06-28 — deployment-ui@d98a753.** Operator: don't HIDE the dormant staging signals
+>     — SHOW them muted. The 81375bd cut suppressed them (HopPills→null, hops cell→"—", classifyStall→"none"), which
+>     threw away real data and meant flipping staging back on would need a structural change. Reworked so dormancy is
+>     purely a STYLING concern: `classifyStall` is now dormant-AGNOSTIC (reports the real git-delta kind); the render
+>     layer (HopPills / StallReasonChip / StallReasonCell) calls `isStagingDormant(row)` to render the staging hops +
+>     stall reason + drain-stalled **MUTED** (grey via `TONE_TEXT.gray`, never red) + a "dormant · ignored" tag — flip
+>     staging relevant → the same cells return to red-when-behind, zero structural change. Tests updated to the new
+>     contract (classifyStall dormant→real kind not "none"; e2e: dormant SHOWS muted+tagged vs the non-dormant
+>     agent-orchestrator showing the SAME signal RED). **pw:L2 ✓ (43 e2e green)** + tsc+ESLint+910 vitest+build green.
+>     Same redeploy caveat below. (deployment-ui)
 > - [ ] ⚠️ [SCRIPT] P1. **REDEPLOY the `deployment-dashboard` service — the dashboard fixes have NEVER reached the
->       operator's live /repos.** Root-cause of the operator's persistent stale-staging view: the live `deployment-dashboard`
->       Cloud Run service serves image `:07d09a56` (NOT a current-history commit — genuinely stale, predates even the
->       classifyStall fix). That service is built ONLY by `deployment-api/cloudbuild-dashboard.yaml` → `Dockerfile.dashboard`
->       (a SINGLE image = deployment-api FastAPI HEAD + the deployment-ui Vite SPA baked from `deployment-ui-src/` staged at
->       submit time). The earlier "deployment-ui REDEPLOYED 8d5022ce" built the **standalone deployment-ui nginx image**
->       (`deployment-ui/cloudbuild.yaml`, SHORT_SHA=b0d8eac) — that artifact does NOT feed `deployment-dashboard`, so NONE
->       of the dormant fixes ever went live. **Runbook (operator/new-tab — needs the live SHORT_SHA convention used for
->       rev-70):** from `deployment-api/` (clean @ LDR tip 920d98e), stage the deployment-ui tree at `./deployment-ui-src/`
->       (`git -C ../deployment-ui archive d98a753 | tar -x -C deployment-ui-src` — the dormant-display tip), then
+>       operator's live /repos.** Root-cause of the operator's persistent stale-staging view: the live
+>       `deployment-dashboard` Cloud Run service serves image `:07d09a56` (NOT a current-history commit — genuinely
+>       stale, predates even the classifyStall fix). That service is built ONLY by
+>       `deployment-api/cloudbuild-dashboard.yaml` → `Dockerfile.dashboard` (a SINGLE image = deployment-api FastAPI
+>       HEAD + the deployment-ui Vite SPA baked from `deployment-ui-src/` staged at submit time). The earlier
+>       "deployment-ui REDEPLOYED 8d5022ce" built the **standalone deployment-ui nginx image**
+>       (`deployment-ui/cloudbuild.yaml`, SHORT_SHA=b0d8eac) — that artifact does NOT feed `deployment-dashboard`, so
+>       NONE of the dormant fixes ever went live. **Runbook (operator/new-tab — needs the live SHORT_SHA convention used
+>       for rev-70):** from `deployment-api/` (clean @ LDR tip 920d98e), stage the deployment-ui tree at
+>       `./deployment-ui-src/` (`git -C ../deployment-ui archive d98a753 | tar -x -C deployment-ui-src` — the
+>       dormant-display tip), then
 >       `gcloud builds submit . --config=cloudbuild-dashboard.yaml --region=asia-northeast1 --substitutions=_UI_BRANCH=live-defi-rollout,SHORT_SHA=<sha>`
->       → `gcloud run services update deployment-dashboard --region=asia-northeast1 --image=…/deployment-dashboard/deployment-dashboard:<sha>`
+>       →
+>       `gcloud run services update deployment-dashboard --region=asia-northeast1 --image=…/deployment-dashboard/deployment-dashboard:<sha>`
 >       → verify the new revision + curl the served bundle for `isStagingDormant`. NOT raced from the monitor session
->       (concurrent prod-build collision risk; this is the new-tab's "confirm /repos post-redeploy" scope). (deployment-api)
+>       (concurrent prod-build collision risk; this is the new-tab's "confirm /repos post-redeploy" scope).
+>       (deployment-api)
 > - [x] ✅ [SCRIPT] P2. alert routing DONE 2026-06-27. `promotion_lag_monitor._main_direct_repos` reads the
 >       `staging_dormant_mode` toggle → when on, EVERY repo is treated main-direct so the lag monitor + Slack skip ALL
 >       staging directions fleet-wide (not just ldr_main). Reversible; +regression test. (unified-trading-pm)
@@ -157,10 +178,10 @@ drift_direction: advance-code
   tier3 via `_SERVICE_NAME` attribution). deployment-ui@d98a753/9551408, deployment-api@b1e1041/acf5764 +
   Dockerfile.dashboard ARG fix @2f270d2, deployment-service@70e208f. Live on uts-shared-deployment-api rev 00130.
 - ⚠️ **Follow-ups (not blockers)**: (1) the **flaky dep-clone** in QG (phantom-version → stale-deps) is what made UTL
-  flake — it will re-trip the dep-order gate + the overnight Dead-Man-Switch; durable fix = harden the QG dep-resolution.
-  (2) **deployment-ui + agent-orchestrator** read `unknown-delta` (TS / differ source-dir) — they promote once the
-  auto-dispatched SIT validates their tree (coverage flipped 21/21, `7e0177e1e`); if not, they need genuine SIT
-  invariants (no forged manifest edits). See `issues/sit_rehome_safety_gate_gaps_2026_06_27.md`.
+  flake — it will re-trip the dep-order gate + the overnight Dead-Man-Switch; durable fix = harden the QG
+  dep-resolution. (2) **deployment-ui + agent-orchestrator** read `unknown-delta` (TS / differ source-dir) — they
+  promote once the auto-dispatched SIT validates their tree (coverage flipped 21/21, `7e0177e1e`); if not, they need
+  genuine SIT invariants (no forged manifest edits). See `issues/sit_rehome_safety_gate_gaps_2026_06_27.md`.
 
 ## Tasks
 
@@ -175,17 +196,18 @@ drift_direction: advance-code
       assembles the cross-repo set from LDR tips (clones `live-defi-rollout`) and now emits `SIT_VALIDATED` +
       `sit_validated_tree` keyed to the LDR tree — but ONLY for `sit_cross_repo_validated_repos` (the repos the suite
       actually validates; the other 16 ldr_main repos stay conservatively BLOCKED on breaking, no forged guarantee). The
-      LDR→main consumer gates a BREAKING `main..LDR` delta on Firestore-live `sit_validated_tree == the promoted LDR
-      tree` (decoupled from the no-downgrade status rank), fail-CLOSED, with a differ source-dir guard. `sit-gate.yml` /
-      `sit-debounce-trigger.yml` are UNCHANGED (kept for the dormant/reversible staging path — per the operator
-      correction above). **Gate:** a deliberately-breaking cross-repo change on a COVERED repo is CAUGHT by SIT on LDR
-      and blocks LDR→main until SIT-validated; a non-breaking change promotes on the single LDR→main v2. Producer+drift-
-      guard system-integration-tests; consumer/store/manifest PM@95bb7b5c6 + docs PM@7433c138f. **Adversarially verified
-      (2 rounds): both CRITICAL gaps closed.** Expand-coverage + cross-repo-combination deferred →
-      issues/sit_rehome_safety_gate_gaps_2026_06_27.md. (unified-trading-pm + system-integration-tests)
+      LDR→main consumer gates a BREAKING `main..LDR` delta on Firestore-live
+      `sit_validated_tree == the promoted LDR     tree` (decoupled from the no-downgrade status rank), fail-CLOSED, with
+      a differ source-dir guard. `sit-gate.yml` / `sit-debounce-trigger.yml` are UNCHANGED (kept for the
+      dormant/reversible staging path — per the operator correction above). **Gate:** a deliberately-breaking cross-repo
+      change on a COVERED repo is CAUGHT by SIT on LDR and blocks LDR→main until SIT-validated; a non-breaking change
+      promotes on the single LDR→main v2. Producer+drift- guard system-integration-tests; consumer/store/manifest
+      PM@95bb7b5c6 + docs PM@7433c138f. **Adversarially verified (2 rounds): both CRITICAL gaps closed.**
+      Expand-coverage + cross-repo-combination deferred → issues/sit_rehome_safety_gate_gaps_2026_06_27.md.
+      (unified-trading-pm + system-integration-tests)
 - [x] ⏭️ SUPERSEDED [SCRIPT] P1. ~~Drop the staging axis from the manifest + gates~~ — SUPERSEDED by the OPERATOR DESIGN
-      CORRECTION above (keep `staging` dormant + REVERSIBLE). `staging_versions` keying + `sit-debounce`/`sit-gate`
-      STAY (they drive the dormant/reversible through-staging path for major/breaking/operator). The "drop" framing is
+      CORRECTION above (keep `staging` dormant + REVERSIBLE). `staging_versions` keying + `sit-debounce`/`sit-gate` STAY
+      (they drive the dormant/reversible through-staging path for major/breaking/operator). The "drop" framing is
       retired.
 - [x] ⏭️ SUPERSEDED [WORKFLOW] P1. ~~Delete the LDR→staging machinery~~ — SUPERSEDED (keep dormant + reversible).
       `ldr-to-staging-promote.yml` etc. are RETAINED (they skip ldr_main/dormant repos at source but resume on toggle-
@@ -198,9 +220,9 @@ drift_direction: advance-code
 - [ ] [VERIFY] P1. **End-state proof** (PARTIAL — re-scoped to the dormant-not-deleted end-state). DONE: (2) exactly ONE
       gating v2 on the LDR→main direct path (no LDR→staging v2 for ldr_main repos); (4) the `action_required` jam class
       is gone (PAT-authored + frozen head). PENDING a live exercise: (3) a deliberately-breaking cross-repo change on a
-      COVERED repo caught by SIT-on-LDR before main (the gate is shipped + adversarially verified but unexercised until a
-      real breaking change lands; currently the fleet promote is also blocked by the Cloud Build hatch-vcs regression —
-      being fixed in parallel). (1) is N/A (branch kept dormant, not deleted). `ci-cd-flow.md` updated (PM@7433c138f).
+      COVERED repo caught by SIT-on-LDR before main (the gate is shipped + adversarially verified but unexercised until
+      a real breaking change lands; currently the fleet promote is also blocked by the Cloud Build hatch-vcs regression
+      — being fixed in parallel). (1) is N/A (branch kept dormant, not deleted). `ci-cd-flow.md` updated (PM@7433c138f).
 
 ## Success criteria
 
@@ -210,9 +232,9 @@ drift_direction: advance-code
 
 ## Codex SSOT updates
 
-- `codex/08-workflows/ci-cd-flow.md` — replace the staging-in-the-flow model with the no-staging single-path LDR→main +
+- `/codex/08-workflows/ci-cd-flow.md` — replace the staging-in-the-flow model with the no-staging single-path LDR→main +
   SIT-on-LDR model; document the frozen-head promote.
-- `codex/06-coding-standards/integration-testing-layers.md` — SIT now runs on the LDR snapshot, not staging.
+- `/codex/06-coding-standards/integration-testing-layers.md` — SIT now runs on the LDR snapshot, not staging.
 - Correct the WS-L design block in `cicd_consolidated_remaining_2026_06_24.md` ("staging stays" → "staging removed").
 
 ## Progress Log
@@ -261,11 +283,11 @@ drift_direction: advance-code
 - 2026-06-27 (**SIT-rehome EXECUTION started — steps 2/3 landed + App-token jam fix shipped**). Operator lifted the
   SIT-live-flip checkpoint ("do all of it no shortcuts or waiting for approval") and asked to fold in a sibling agent's
   App-token finding. Progress:
-  - ✅ **STEP 3 (store)** — `ci_status_store.py` persists `sit_validated_tree` (clear-on-any-non-SIT_VALIDATED-status, the
-    load-bearing safety) + `--sit-validated-tree` CLI + `ci-status-update.yml` threading + 2 unit tests. Landed
+  - ✅ **STEP 3 (store)** — `ci_status_store.py` persists `sit_validated_tree` (clear-on-any-non-SIT_VALIDATED-status,
+    the load-bearing safety) + `--sit-validated-tree` CLI + `ci-status-update.yml` threading + 2 unit tests. Landed
     (PM@375b967).
-  - ✅ **STEP 2 (producer)** — `full-workspace-sit.yml` stamps `ci_status=SIT_VALIDATED` + `sit_validated_tree` per repo on
-    a GREEN cross-repo run, keyed to each sibling's LDR SHA/tree. **Key finding: full-workspace-sit ALREADY assembles
+  - ✅ **STEP 2 (producer)** — `full-workspace-sit.yml` stamps `ci_status=SIT_VALIDATED` + `sit_validated_tree` per repo
+    on a GREEN cross-repo run, keyed to each sibling's LDR SHA/tree. **Key finding: full-workspace-sit ALREADY assembles
     from LDR tips** (clones `live-defi-rollout`), so "re-home SIT onto LDR" is already true — STEP 5 does NOT need to
     repoint sit-debounce/sit-gate (those stay for the dormant staging path); the only missing trigger is an on-block SIT
     dispatch from the fleet promoter + the nightly cron. Landed (system-integration-tests@1e92c0a). Additive (writes the
@@ -291,30 +313,31 @@ drift_direction: advance-code
     dispatch. Adversarial-verify before landing (partial = fleet jams breaking changes).
 - 2026-06-27 (**SIT-rehome COMPLETE — Option B+ shipped + adversarially verified ×2**). Operator chose "safe interim".
   Shipped: store decouple + get-doc + consumer gate + manifest `sit_cross_repo_validated_repos` (PM@95bb7b5c6, hotfix
-  c3160ae89 for a manifest autostash-conflict I pushed); producer scoping + suite drift-guard (system-integration-tests);
-  App-token→PAT promote-PR fix (PM@860f64d0c); codex ci-cd-flow B+ section + codex-freshness ratchet-down (PM@7433c138f).
-  Frozen-head + Re-home-SIT tasks flipped DONE; the 4 staging-DELETE tasks SUPERSEDED by the operator keep-dormant
-  correction; End-state-proof PARTIAL (gate live + verified, awaiting a live breaking-change exercise + the Cloud Build
-  hatch-vcs regression fix). 2 re-verification rounds confirmed both original CRITICAL gaps (MAIN_GREEN liveness jam +
-  5-of-21 over-stamp) CLOSED; the residual is_stale_write jam also fixed. Deferred (tracked in
-  issues/sit_rehome_safety_gate_gaps_2026_06_27.md): expand SIT coverage to all 21; cross-repo-combination fingerprint;
-  per-SHA immutable ref. **Separately found + fixed/fixing operator-flagged fleet fires**: Cloud Build failures =
-  hatch-vcs can't detect version in the `build-wheel` step (`.git` present but no tags in the Cloud Build shallow
-  checkout) — a regression from the WS-L git-tag migration, blocking v2 → the 26h promotion lag (surgical per-repo fix in
-  flight via a sub-agent); IAM grant `github-actions-deploy@ roles/cloudbuild.builds.editor` (market-tick-data-service-prod
-  trigger PERMISSION_DENIED) DONE.
+  c3160ae89 for a manifest autostash-conflict I pushed); producer scoping + suite drift-guard
+  (system-integration-tests); App-token→PAT promote-PR fix (PM@860f64d0c); codex ci-cd-flow B+ section + codex-freshness
+  ratchet-down (PM@7433c138f). Frozen-head + Re-home-SIT tasks flipped DONE; the 4 staging-DELETE tasks SUPERSEDED by
+  the operator keep-dormant correction; End-state-proof PARTIAL (gate live + verified, awaiting a live breaking-change
+  exercise + the Cloud Build hatch-vcs regression fix). 2 re-verification rounds confirmed both original CRITICAL gaps
+  (MAIN_GREEN liveness jam + 5-of-21 over-stamp) CLOSED; the residual is_stale_write jam also fixed. Deferred (tracked
+  in issues/sit_rehome_safety_gate_gaps_2026_06_27.md): expand SIT coverage to all 21; cross-repo-combination
+  fingerprint; per-SHA immutable ref. **Separately found + fixed/fixing operator-flagged fleet fires**: Cloud Build
+  failures = hatch-vcs can't detect version in the `build-wheel` step (`.git` present but no tags in the Cloud Build
+  shallow checkout) — a regression from the WS-L git-tag migration, blocking v2 → the 26h promotion lag (surgical
+  per-repo fix in flight via a sub-agent); IAM grant `github-actions-deploy@ roles/cloudbuild.builds.editor`
+  (market-tick-data-service-prod trigger PERMISSION_DENIED) DONE.
 - 2026-06-27 (**STEPS 1+4+5 IMPLEMENTED → adversarially verified → REVERTED (2 CRITICAL gaps caught pre-merge); operator
-  decision required**). Implemented the coupled unit (atomic LDR sha+tree read; Firestore-live fail-CLOSED consumer gate;
-  on-block SIT dispatch; frozen-head `promote/<repo>` ref) and ran 3 read-only adversarial sub-agents (safety/liveness/
-  mechanics) BEFORE landing. Two CRITICAL findings, both DIRECTLY VERIFIED in the code, make it unsafe to ship as specced:
-  (1) **liveness** — `resolve_status` no-downgrade (`SIT_VALIDATED:3 < MAIN_GREEN:4`) REJECTS every SIT_VALIDATED write
-  once a repo is MAIN_GREEN → `sit_validated_tree` never re-written → the gate would jam every ldr_main repo on its 2nd
-  breaking change forever; (2) **safety** — `run_cross_repo_invariants.sh` validates only 5 `REQUIRED_SIBLINGS` but the
-  STEP 2 producer stamps SIT_VALIDATED on all 21 ldr_main repos → a breaking change in any of the other 16 promotes
-  ungated (forged certificate). Plus HIGH design issues: mutable vs per-SHA promote ref; per-repo fingerprint can't
-  express the cross-repo combination; differ `--source-dir` blind guess → silent false-negative. **Action:** reverted the
-  uncommitted consumer+frozen-head (diff backed up `scratchpad/fleet_promoter_step145.diff`); the inert shipped building
-  blocks (producer/store/get-doc/token-swap) stay. Full analysis + the corrected-design requirements + the operator's
-  coverage-guarantee fork (A expand SIT to 21 / B scope to 5 / C workspace-digest) →
-  `plans/active/issues/sit_rehome_safety_gate_gaps_2026_06_27.md`. **NOTIFYING OPERATOR** (big cross-repo safety-gate
-  finding). The current state is safe (breaking ldr_main changes stay conservatively blocked, not leaked).
+  decision required**). Implemented the coupled unit (atomic LDR sha+tree read; Firestore-live fail-CLOSED consumer
+  gate; on-block SIT dispatch; frozen-head `promote/<repo>` ref) and ran 3 read-only adversarial sub-agents
+  (safety/liveness/ mechanics) BEFORE landing. Two CRITICAL findings, both DIRECTLY VERIFIED in the code, make it unsafe
+  to ship as specced: (1) **liveness** — `resolve_status` no-downgrade (`SIT_VALIDATED:3 < MAIN_GREEN:4`) REJECTS every
+  SIT_VALIDATED write once a repo is MAIN_GREEN → `sit_validated_tree` never re-written → the gate would jam every
+  ldr_main repo on its 2nd breaking change forever; (2) **safety** — `run_cross_repo_invariants.sh` validates only 5
+  `REQUIRED_SIBLINGS` but the STEP 2 producer stamps SIT_VALIDATED on all 21 ldr_main repos → a breaking change in any
+  of the other 16 promotes ungated (forged certificate). Plus HIGH design issues: mutable vs per-SHA promote ref;
+  per-repo fingerprint can't express the cross-repo combination; differ `--source-dir` blind guess → silent
+  false-negative. **Action:** reverted the uncommitted consumer+frozen-head (diff backed up
+  `scratchpad/fleet_promoter_step145.diff`); the inert shipped building blocks (producer/store/get-doc/token-swap) stay.
+  Full analysis + the corrected-design requirements + the operator's coverage-guarantee fork (A expand SIT to 21 / B
+  scope to 5 / C workspace-digest) → `plans/active/issues/sit_rehome_safety_gate_gaps_2026_06_27.md`. **NOTIFYING
+  OPERATOR** (big cross-repo safety-gate finding). The current state is safe (breaking ldr_main changes stay
+  conservatively blocked, not leaked).

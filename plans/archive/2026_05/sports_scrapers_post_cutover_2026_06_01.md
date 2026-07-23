@@ -9,8 +9,8 @@ stage: [meta]
 repos: [alerting-service, deployment-service]
 scope: [engineer, admin]
 tags: []
-related: [master_to_live_defi_2026_05_23.md]
-created: '2026-05-21'
+related: [/plans/active/master_to_live_defi_2026_05_23.md]
+created: "2026-05-21"
 parent_epic: sports_master
 priority: P2
 estimate_class: brand-new
@@ -77,5 +77,6 @@ Codex SSOTs: `codex/14-customer-journeys/sports/` (per-book credential rotation 
 
 - Activation gated on operator decision + account provisioning (Phase 1). No auto-fire.
 - Sports MVP path that ships May-23 (without scrapers): api-football + the-odds-api + OddsJam + SFI Footystats.
-- Credential approval request shape (pre-filled per HARD RULE): 14 UK/EU books + GeoComply/XPoint ~$2-5k/mo enterprise
+- Credential approval request shape (pre-filled per HARD RULE): 14 UK/EU books + GeoComply/XPoint
+  ~$2-5k/mo enterprise
   tier + optional residential-proxy provider ~$500-1500/mo.

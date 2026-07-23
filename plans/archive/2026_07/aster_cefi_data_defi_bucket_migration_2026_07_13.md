@@ -16,9 +16,9 @@ scope: [engineer]
 tags: [migration, bucket-placement, data-correctness, canonicalisation, cefi, defi, aster]
 related:
   [
-    bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md,
-    defi_manifest_canonicalisation_2026_06_01.md,
-    cefi_manifest_canonicalisation_2026_06_01.md,
+    /plans/archive/2026_07/bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md,
+    /plans/archive/2026_07/defi_manifest_canonicalisation_2026_06_01.md,
+    /plans/archive/2026_07/cefi_manifest_canonicalisation_2026_06_01.md,
   ]
 created: 2026-07-13
 last_updated: 2026-07-13
@@ -85,10 +85,10 @@ to 2 (still needs the split/legacy-migrated-shape handling separately).
 
 ## Codex SSOTs
 
-- `codex/02-data/pipeline-mode-partition.md` (source-aware `pipeline_mode` model)
-- `codex/05-infrastructure/gcs-object-operations.md` (`gcs_copy_object`/`gcs_delete_object`, never subprocess
+- `/codex/02-data/pipeline-mode-partition.md` (source-aware `pipeline_mode` model)
+- `/codex/05-infrastructure/gcs-object-operations.md` (`gcs_copy_object`/`gcs_delete_object`, never subprocess
   `gcloud`/`gsutil`)
-- `codex/02-data/availability-manifest-and-data-status.md` (manifest rewrite discipline, single-walk rule)
+- `/codex/02-data/availability-manifest-and-data-status.md` (manifest rewrite discipline, single-walk rule)
 
 ## Phase 1 — Confirm scope + build the migration script (P0)
 
@@ -213,8 +213,8 @@ to 2 (still needs the split/legacy-migrated-shape handling separately).
       `migrate_onchain_perp_perpetual_canonical_2026_07_08.py`. Nothing mutated (dry-run only).
 - [x] ✅ [DATA] P0. `--apply` the migration, sharded by date range if the full 948-day/100K-object run is too slow for
       one pass (mirrors this workspace's per-VM-shard convention for large migrations — launch on a VM per
-      `codex/05-infrastructure/vm-launcher-runbook.md` if a local/interactive run proves too slow; SPOT provisioning per
-      the backfill-VM default). No fire-and-forget — verify STARTED + periodic progress + terminal state per the
+      `/codex/05-infrastructure/vm-launcher-runbook.md` if a local/interactive run proves too slow; SPOT provisioning
+      per the backfill-VM default). No fire-and-forget — verify STARTED + periodic progress + terminal state per the
       VM-launcher runbook if dispatched to a VM. — **DONE, slot 14, market-tick-data-service@`aea8515e`
       (`scripts/migrate_aster_cefi_defi_bucket_2026_07_13.py --apply --workers 32`)**, run local/interactive (a single
       948-day pass proved fast enough — full run, scan+copy, completed in ~9 minutes — no VM shard needed). No
@@ -318,26 +318,26 @@ to 2 (still needs the split/legacy-migrated-shape handling separately).
       ASTER originals no longer exist anywhere; the CeFi bucket is the sole canonical copy for all 948 days.**
 
       Full history of this gate (preserved below): originally — only after Phase 2's parity verification is fully
-              green: delete the DeFi-bucket-resident ASTER `asset_group=cefi` originals (version-aware, matching the same rigor as
-              `bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md`'s Phase-7 decommission gate — snapshot first,
-              verify canonical ≥ legacy via live-object counts, never a naive `ls`). This is explicitly NOT bundled with the
-              migration apply step — do not delete until an operator confirms the parity verification evidence. **⚠️ 2026-07-13
-              (slot 14): parity verification is NOT green for the `high_dup` band (2024-01→2025-06) — see
-              [`aster_cefi_bucket_duplicate_schema_row_mismatch_2026_07_13.md`](issues/aster_cefi_bucket_duplicate_schema_row_mismatch_2026_07_13.md).
-              The CeFi-bucket "duplicates" in that band are narrower-schema and sometimes row-deficient vs the DeFi-bucket
-              originals — deleting the DeFi-bucket originals for this band under the current plan would be a DATA LOSS
-              regression (deletes the more-complete copy), not a cleanup. This gate is BLOCKED for that band until the linked
-              issue doc's operator-decision todo resolves (unaffected: `zero_dup` and `low_dup` bands verified clean).** **✅
-              2026-07-13 (slot 6): operator decision resolved (Option A, BLK-4032eac4) — `high_dup` band re-migrated with the
-              new `--force` flag on `migrate_aster_cefi_defi_bucket_2026_07_13.py`, making the 23-column DeFi-bucket shape
-              authoritative at the CeFi-bucket canonical target for 2024-01-01→2025-06-15. Result:
-              `{'force_overwritten': 39216, 'already_migrated_parity_confirmed': 1190, 'skipped_not_in_scope': 0}`, 0 errors.
-              **Post-force parity re-verification DONE and GREEN**: existence 40,406/40,406 present (0 missing); spot-check
-              20/20 row_count_matches, 20/20 byte_identical (vs the pre-force 5/15 and 0/15). Full evidence in
-              `aster_cefi_bucket_duplicate_schema_row_mismatch_2026_07_13.md` P2. **This gate is now UNBLOCKED for the
-              `high_dup` band** — parity is fully green for all three bands (`zero_dup`, `high_dup`, `low_dup`). The DeFi-bucket
-              originals are still NOT deleted by this todo; deletion remains a separate, explicitly operator-gated step (this
-              todo itself), now unblocked to proceed whenever an operator wants to schedule it.**
+                                                                                                                          green: delete the DeFi-bucket-resident ASTER `asset_group=cefi` originals (version-aware, matching the same rigor as
+                                                                                                                          `bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md`'s Phase-7 decommission gate — snapshot first,
+                                                                                                                          verify canonical ≥ legacy via live-object counts, never a naive `ls`). This is explicitly NOT bundled with the
+                                                                                                                          migration apply step — do not delete until an operator confirms the parity verification evidence. **⚠️ 2026-07-13
+                                                                                                                          (slot 14): parity verification is NOT green for the `high_dup` band (2024-01→2025-06) — see
+                                                                                                                          [`aster_cefi_bucket_duplicate_schema_row_mismatch_2026_07_13.md`](issues/aster_cefi_bucket_duplicate_schema_row_mismatch_2026_07_13.md).
+                                                                                                                          The CeFi-bucket "duplicates" in that band are narrower-schema and sometimes row-deficient vs the DeFi-bucket
+                                                                                                                          originals — deleting the DeFi-bucket originals for this band under the current plan would be a DATA LOSS
+                                                                                                                          regression (deletes the more-complete copy), not a cleanup. This gate is BLOCKED for that band until the linked
+                                                                                                                          issue doc's operator-decision todo resolves (unaffected: `zero_dup` and `low_dup` bands verified clean).** **✅
+                                                                                                                          2026-07-13 (slot 6): operator decision resolved (Option A, BLK-4032eac4) — `high_dup` band re-migrated with the
+                                                                                                                          new `--force` flag on `migrate_aster_cefi_defi_bucket_2026_07_13.py`, making the 23-column DeFi-bucket shape
+                                                                                                                          authoritative at the CeFi-bucket canonical target for 2024-01-01→2025-06-15. Result:
+                                                                                                                          `{'force_overwritten': 39216, 'already_migrated_parity_confirmed': 1190, 'skipped_not_in_scope': 0}`, 0 errors.
+                                                                                                                          **Post-force parity re-verification DONE and GREEN**: existence 40,406/40,406 present (0 missing); spot-check
+                                                                                                                          20/20 row_count_matches, 20/20 byte_identical (vs the pre-force 5/15 and 0/15). Full evidence in
+                                                                                                                          `aster_cefi_bucket_duplicate_schema_row_mismatch_2026_07_13.md` P2. **This gate is now UNBLOCKED for the
+                                                                                                                          `high_dup` band** — parity is fully green for all three bands (`zero_dup`, `high_dup`, `low_dup`). The DeFi-bucket
+                                                                                                                          originals are still NOT deleted by this todo; deletion remains a separate, explicitly operator-gated step (this
+                                                                                                                          todo itself), now unblocked to proceed whenever an operator wants to schedule it.**
 
 ## Deferred work after 2026-07-13 (found this session, out of THIS plan's scope)
 

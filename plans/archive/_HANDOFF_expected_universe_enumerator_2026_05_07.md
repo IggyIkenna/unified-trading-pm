@@ -10,7 +10,7 @@ estimate_baseline_ai_days: TBD
 estimate_calibrated_ai_days: TBD
 estimate_calibration_note: |
   No explicit AI-day estimates found in plan body during 2026-05-11 sweep; class inferred from filename (design, multiplier 0.6×).
-  Owner agent: fill baseline + multiply × 0.6 per codex/08-workflows/estimation-calibration.md. Refine class if dominant work-class differs.
+  Owner agent: fill baseline + multiply × 0.6 per /codex/08-workflows/estimation-calibration.md. Refine class if dominant work-class differs.
 ---
 
 ## Deferred work — migrated to:
@@ -94,19 +94,19 @@ see deferred items below.
       update per the CLAUDE.md "VM Naming Convention" rule:
 
       ```bash
-                      gcloud compute instances delete vm-zombie-watchdog-* --zone=asia-northeast1-c --quiet
-                      bash deployment-service/scripts/vm/launch-vm-zombie-watchdog.sh
-                      ```
+                                                                                                                                  gcloud compute instances delete vm-zombie-watchdog-* --zone=asia-northeast1-c --quiet
+                                                                                                                                  bash deployment-service/scripts/vm/launch-vm-zombie-watchdog.sh
+                                                                                                                                  ```
 
 - [ ] **Refresh tarballs** with the new script + launcher:
 
       ```bash
-                      bash deployment-service/scripts/vm/create-code-tarballs.sh --all
-                      ```
+                                                                                                                                  bash deployment-service/scripts/vm/create-code-tarballs.sh --all
+                                                                                                                                  ```
 
-                      This re-tars instruments-service (with the new `enumerate_expected_universe.py`) + deployment-service (with
-                      the new launcher). **Required before any VM launch** — without this, VMs boot with stale code and the new
-                      script is missing.
+                                                                                                                                  This re-tars instruments-service (with the new `enumerate_expected_universe.py`) + deployment-service (with
+                                                                                                                                  the new launcher). **Required before any VM launch** — without this, VMs boot with stale code and the new
+                                                                                                                                  script is missing.
 
 - [ ] **Commit + push** these three changes (launcher + watchdog dict + any tarball script edits) per the workspace Half
       1 / Half 2 rule. Plan-flip checkbox in this handoff doc inline.

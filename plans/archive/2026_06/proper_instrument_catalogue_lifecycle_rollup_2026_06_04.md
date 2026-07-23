@@ -1,12 +1,22 @@
 ---
 doc_type: plan
-title: Proper instrument catalogue — lifecycle roll-up from per-date definitions + IS completeness gate (all asset groups, v9)
+title:
+  Proper instrument catalogue — lifecycle roll-up from per-date definitions + IS completeness gate (all asset groups,
+  v9)
 summary:
 status: complete
 nature: record
 asset_group: [infrastructure]
 stage: [meta]
-repos: [deployment-api, deployment-service, deployment-ui, instruments-service, market-tick-data-service, unified-api-contracts]
+repos:
+  [
+    deployment-api,
+    deployment-service,
+    deployment-ui,
+    instruments-service,
+    market-tick-data-service,
+    unified-api-contracts,
+  ]
 scope: [engineer, admin]
 tags: []
 related: []
@@ -19,7 +29,12 @@ estimate_baseline_ai_days: 8
 estimate_calibrated_ai_days: 8
 locked_by: NA
 locked_since: 2026-06-04
-source: [cefi_manifest_canonicalisation_2026_06_01.md Dim-7 P3 (the v2-enumerator `catalog.parquet` has NO producer), 'operator architecture decision 2026-06-04 (lifecycle catalogue = roll-up of the per-date `by_date/` instrument definitions; materialise + overwrite with a monotonic row-count promotion guard; v9, NOT v10)']
+source:
+  [
+    cefi_manifest_canonicalisation_2026_06_01.md Dim-7 P3 (the v2-enumerator `catalog.parquet` has NO producer),
+    "operator architecture decision 2026-06-04 (lifecycle catalogue = roll-up of the per-date `by_date/` instrument
+    definitions; materialise + overwrite with a monotonic row-count promotion guard; v9, NOT v10)",
+  ]
 master: defi_manifest_canonicalisation_2026_06_01.md (cross-plan canonical-SSOT coordinator)
 ---
 
@@ -306,10 +321,10 @@ and it is correct + self-refreshing, with no separate artifact to drift.
 
 ## Codex SSOT updates (required before archival)
 
-- `codex/04-architecture/instruments-service-as-ssot-for-mtds.md` — add the lifecycle-catalogue roll-up contract
+- `/codex/04-architecture/instruments-service-as-ssot-for-mtds.md` — add the lifecycle-catalogue roll-up contract
   (catalogue = roll-up of `by_date/` definitions; canonical path; monotonic-guard regen; v2-enumerator consumer).
-- `codex/02-data/availability-manifest-and-data-status.md` — note the catalogue as the could-exist-universe SSOT feeding
-  `expected_unattempted`.
+- `/codex/02-data/availability-manifest-and-data-status.md` — note the catalogue as the could-exist-universe SSOT
+  feeding `expected_unattempted`.
 
 ## Cross-references + supersedes
 
@@ -362,10 +377,15 @@ and it is correct + self-refreshing, with no separate artifact to drift.
 ### NEW P0 BUG found+fixed during backfill — defi venue-tag underscore regression (c7d9bb2)
 
 The defi re-run dropped **the entire fetched universe of 21 venues** (UNISWAP*V3-\*, PANCAKESWAP_V3-\*, AAVE_V3-\* all
-chains, SUSHISWAP_V3-\*, AERODROME_V3-BASE, CAMELOT_V3-ARBITRUM, VELODROME_V2-OPTIMISM, …): `uniswap_v3.py` +
-`aave_v3.py` built `\_venue_prefix = protocol_slug.replace("*",
-"").upper()`→`PANCAKESWAPV3-BASE`, which the URDI venue filter (`urdi_reference_provider.\_fetch_one`) drops as unknown-venue. Commit c7d9bb2 (2026-05-23 — the day after the last good capture) renamed the canonical to the underscore form but **updated only the comments, not the code**. Worse, the completeness check then **excluded those venues from `expected`** ("fetched OK but 0 records after filtering") → days wrote "complete-looking" with 31/55 venues — the exact silent-thinning class the coverage-horizon check NICE-TO-HAVE above anticipates. **FIX shipped**: `\_venue_prefix
+chains, SUSHISWAP_V3-\*, AERODROME_V3-BASE, CAMELOT_V3-ARBITRUM, VELODROME_V2-OPTIMISM, …): `uniswap_v3.py` + `aave_v3.py`
+built `\_venue_prefix = protocol_slug.replace("*", "").upper()`→`PANCAKESWAPV3-BASE`, which the URDI venue filter (`urdi_reference_provider.\_fetch_one`)
+drops as unknown-venue. Commit c7d9bb2 (2026-05-23 — the day after the last good capture) renamed the canonical to the
+underscore form but **updated only the comments, not the code**. Worse, the completeness check then **excluded those
+venues from `expected`** ("fetched OK but 0 records after filtering") → days wrote "complete-looking" with 31/55 venues
+— the exact silent-thinning class the coverage-horizon check NICE-TO-HAVE above anticipates. **FIX shipped**:
+`\_venue_prefix
 =
+
 protocol_slug.upper()`in both adapters (instruments-service, slot-4; QG`--no-fix`exit 0 — sentinel 87f93ff; landed on LDR via`quickmerge
 --agent
 --files`as **instruments-service@0ae4e481**, Tier-C drain promotes). defi backfill re-run with the fix +`--force` over

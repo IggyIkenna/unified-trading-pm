@@ -22,7 +22,7 @@ related:
   [
     ../issues/slot_venv_duplication_disk_pressure_2026_06_29.md,
     ../../active/qg_host_adaptive_resource_governor_2026_07_14.md,
-    ao_dispatch_hardening_2026_07_16.md,
+    /plans/archive/2026_07/ao_dispatch_hardening_2026_07_16.md,
     ../../epics/orchestrator_master.md,
   ]
 created: 2026-07-16
@@ -282,10 +282,10 @@ was the governor plan's own "Net:" summary. The MEASUREMENT was right; the cited
 
 ## Codex SSOTs
 
-- `codex/05-infrastructure/per-tab-worktrees.md` — the per-slot clone model + hardlink/uv-cache convention.
-- `codex/05-infrastructure/vm-launcher-runbook.md` — VM lifecycle + guard cron placement.
-- `codex/06-coding-standards/quality-gates.md` — the QG host-governor contract (RAM/CPU, not disk).
-- `codex/12-agent-workflow/async-wait-and-poll-discipline.md` — measured-verdict discipline for the Phase 1 gates.
+- `/codex/05-infrastructure/per-tab-worktrees.md` — the per-slot clone model + hardlink/uv-cache convention.
+- `/codex/05-infrastructure/vm-launcher-runbook.md` — VM lifecycle + guard cron placement.
+- `/codex/06-coding-standards/quality-gates.md` — the QG host-governor contract (RAM/CPU, not disk).
+- `/codex/12-agent-workflow/async-wait-and-poll-discipline.md` — measured-verdict discipline for the Phase 1 gates.
 
 ## Progress Log
 
@@ -344,7 +344,7 @@ was the governor plan's own "Net:" summary. The MEASUREMENT was right; the cited
   a live ≥80% event, not by absence.
 - **The B2 interactive-shell gap closed cross-host** per operator re-scope: `install-uv-cache-shell-env.sh` shipped
   (`pm@86dea79d5`) + installed/verified on the planning VM and the hk dev host. Codex now carries the convention:
-  `codex/05-infrastructure/per-tab-worktrees.md` § "Shared uv cache".
+  `/codex/05-infrastructure/per-tab-worktrees.md` § "Shared uv cache".
 - **All 7 todos genuinely done; both deferred items operator-ruled same day; plan archived** (5-step ritual: deferred
   migrated → banner → codex-alignment → codex updated → no lock to clear).
 

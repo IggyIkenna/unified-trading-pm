@@ -9,7 +9,12 @@ stage: [meta]
 repos: [deployment-api, deployment-service, unified-api-contracts, unified-trading-library, unified-trading-pm]
 scope: [engineer, admin]
 tags: []
-related: [plans/archive/2026_06/quickmerge_dep_content_sync_and_strict_enforcement_2026_06_08.md, plans/active/staging_clean_start_and_stale_pr_hygiene_2026_06_08.md, plans/active/issues/full_cicd_sit_target_state_2026_05_24.md]
+related:
+  [
+    plans/archive/2026_06/quickmerge_dep_content_sync_and_strict_enforcement_2026_06_08.md,
+    plans/active/staging_clean_start_and_stale_pr_hygiene_2026_06_08.md,
+    plans/active/issues/full_cicd_sit_target_state_2026_05_24.md,
+  ]
 created: 2026-06-08
 parent_epic: infrastructure_master
 assigned_vm: vm-cross-cutting
@@ -139,7 +144,7 @@ defect in the parity, and it gets audited and closed, not normalized.
 
 ## Codex SSOT updates
 
-`codex/06-coding-standards/quality-gates.md` § local↔CI parity matrix; `codex/08-workflows/ci-cd-flow.md` § "local QG
+`/codex/06-coding-standards/quality-gates.md` § local↔CI parity matrix; `/codex/08-workflows/ci-cd-flow.md` § "local QG
 is the staging oracle"; `full_cicd_sit_target_state_2026_05_24.md` cross-link (SIT = the assembled-invariant layer).
 
 ## Progress — 2026-06-08 (slot-1 autonomous)
@@ -147,7 +152,7 @@ is the staging oracle"; `full_cicd_sit_target_state_2026_05_24.md` cross-link (S
 - **DONE**: `local_qg_sweep.py` (dep-order pre-promotion oracle; ≤2 concurrent host-governor; tier-gated;
   content-sync-gated; per-repo verdict + staging-confidence). Shipped PM@308570d9b. Parity principle + the
   SIT-deferral + the **tag-lag divergence** (drift-checker byte-compares tag-pinned CI clones → false drift; fixed by CI
-  no-op) documented in `codex/08-workflows/ci-cd-flow.md`. Remaining: full per-step parity-matrix table + the auto-file
+  no-op) documented in `/codex/08-workflows/ci-cd-flow.md`. Remaining: full per-step parity-matrix table + the auto-file
   divergence watchdog.
 
 ## Progress — 2026-06-10 (slot-3) — `grep -P` portability divergence ROOT-CAUSED + FIXED

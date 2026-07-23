@@ -16,8 +16,8 @@ scope: [engineer, admin]
 tags: [defi, canonicalisation, manifest, single-walk, migration, consolidation, data-correctness, pipeline-mode]
 related:
   [
-    bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md,
-    downstream_services_manifest_canonicalisation_2026_06_01.md,
+    /plans/archive/2026_07/bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md,
+    /plans/archive/2026_07/downstream_services_manifest_canonicalisation_2026_06_01.md,
     ../epics/defi_master.md,
   ]
 created: 2026-06-01
@@ -729,7 +729,7 @@ What to verify/wire (B0 corrected scope):
       bucket-name / menu / data_type / manifest conventions"). Slot-2 two-front audit 2026-06-02 found the C0-CN sweep
       aligned the DeFi raw read/write path but NOT the **manifest-handler / data-status / deployment-API+UI** surfaces,
       which hardcode legacy bucket names + data_types. Each sub-item names repo + file:line; VERIFY-then-fix (some are
-      intentional logical-name distinctions — confirm against `codex/02-data/per-asset-group-bucket-layouts.md` +
+      intentional logical-name distinctions — confirm against `/codex/02-data/per-asset-group-bucket-layouts.md` +
       `resolve_bucket_name()` before editing). Tag `[DATA]` surfaces that need a test added so the regression can't
       reappear. parent_epic: mtds_mdps_master.
   - [x] ✅ [CODE] P0. **A11a — MTDS `data_manifest_handler.py` SHIPPED mtds@7ebfa749.** The 5 `_scan_*` f-strings
@@ -1135,7 +1135,7 @@ What to verify/wire (B0 corrected scope):
 >    ~100 conns covers workers≤~64); CPU/bandwidth-bound → bigger VM (more vCPU + egress) or shard across VMs by date.
 >    GCS has **no client-side warm cache** — concurrency (in-flight requests), not "warming", is the throughput lever.
 >
-> SSOT for GCS object ops + this contract: `codex/05-infrastructure/gcs-object-operations.md` (add a "migration-script
+> SSOT for GCS object ops + this contract: `/codex/05-infrastructure/gcs-object-operations.md` (add a "migration-script
 > performance contract" section there when this plan archives).
 >
 > **`source` is a COLUMN, not a path key (provenance SSOT — operator 2026-06-01)**: all sources co-mingle on the SAME
@@ -1264,7 +1264,7 @@ What to verify/wire (B0 corrected scope):
 >       `migrate_defi_full_v9_canonical.py` `\_VENUE_SCHEMA["dex_pool_swaps"]` before apply. DECOUPLED from the A11c
 >       landing.
 
-### C0-CN — Canonical-naming reconciliation (operator-locked 2026-06-01) — SSOT `codex/02-data/defi-canonical-naming-ssot.md`
+### C0-CN — Canonical-naming reconciliation (operator-locked 2026-06-01) — SSOT `/codex/02-data/defi-canonical-naming-ssot.md`
 
 > A naming-alignment audit (codex + IS + MTDS + MDPS, 2026-06-01) found the migration would have regressed consumers (it
 > normalised the on-disk `data_type` to the logical manifest name, and the live readers don't read `pipeline_mode=`).
@@ -1460,8 +1460,8 @@ What to verify/wire (B0 corrected scope):
   object paths `venue=TRADER_JOEV2`→`TRADER_JOE_V2` etc. — VM single-walk (bundle with C0). - **Manifest index**:
   `dex-pools`/`dex-swaps` index — DONE for the already-underscore venues (UNISWAP_V3 39,355 + dex-swaps); TODO
   TRADER_JOE_V2/VELODROME_V2 (coordinate with the object rename so index==object). - **Docs**:
-  `codex/02-data/availability-manifest-and-data-status.md`, `contracts-scope-and-layout.md`, etc. Coordinated cross-repo
-  migration (all surfaces together; objects = VM). parent_epic: manifest_master.
+  `/codex/02-data/availability-manifest-and-data-status.md`, `contracts-scope-and-layout.md`, etc. Coordinated
+  cross-repo migration (all surfaces together; objects = VM). parent_epic: manifest_master.
 
 ## D. Features propagation (L3) — coverage must reach features-service
 
@@ -1497,15 +1497,15 @@ What to verify/wire (B0 corrected scope):
 
 ## F. Docs / SSOT — record canonical forms
 
-- [x] ✅ [DOCS] P1. F1 — DONE (slot-2 2026-06-05): `codex/02-data/defi-data-types-catalog.md` already carries the
+- [x] ✅ [DOCS] P1. F1 — DONE (slot-2 2026-06-05): `/codex/02-data/defi-data-types-catalog.md` already carries the
       operator-locked "🛑 D14 RESOLVED + CANONICAL NAMING LOCKED" banner (canonical data_type = `dex_pool_state`/
       `dex_pool_swaps` EVERYWHERE; `dex_pools`/`dex_swaps` retired; hyphen aliases deprecated) + the C0-CN8 cross-ref to
       `defi-canonical-naming-ssot.md`. The dated 2026-05-27 "PARTIAL STALENESS" banner's `dex_swaps` line is a
       historical record explicitly superseded by the D14 banner directly below it. Underscore-canonical names +
       dedicated bucket per type are documented.
 - [x] ✅ [DOCS] P1. F2 — DONE (slot-2 2026-06-05): added the **"Annotate-once, read-everywhere"** governing-principle
-      box to `codex/02-data/availability-manifest-and-data-status.md` § "What Is the Availability Manifest?" — documents
-      the materialised `expected_unattempted` 4-state (writer/pre-flight-driven, NOT consolidator), the
+      box to `/codex/02-data/availability-manifest-and-data-status.md` § "What Is the Availability Manifest?" —
+      documents the materialised `expected_unattempted` 4-state (writer/pre-flight-driven, NOT consolidator), the
       manifest-annotates- once / consumers-read denominator principle, the `record_zero_rows` pre-launch demotion + A10c
       ratchet, and the per-(venue,chain) requirement. (The 4-state + per-chain start-dates were already present; this
       adds the explicit annotate-once principle.)
@@ -1646,8 +1646,8 @@ What to verify/wire (B0 corrected scope):
   `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 B-queue ruling.)
 - `plans/active/issues/bug_d_prime_drift_backfill_2026_05_31.md`: SUPERSEDED 2026-06-01 (the Helius sig-walking path
   that issue documents is OBSOLETE — Drift V2 historical now flows via `data.api.drift.trade` Velocity Data API per the
-  archived MVP plan + new codex `codex/04-architecture/drift-v2-data-sources.md`). Issue doc gets a SUPERSEDED banner in
-  the same archival commit.
+  archived MVP plan + new codex `/codex/04-architecture/drift-v2-data-sources.md`). Issue doc gets a SUPERSEDED banner
+  in the same archival commit.
 
 ## H. DeFi slices of the per-service plans (claimed via the five-slot asset-group split, operator 2026-06-03)
 

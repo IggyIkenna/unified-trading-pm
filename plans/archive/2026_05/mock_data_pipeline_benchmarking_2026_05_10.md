@@ -9,8 +9,9 @@ stage: [meta]
 repos: [features-service, instruments-service, unified-trading-pm]
 scope: [engineer, admin]
 tags: []
-related: [compute_optimization_mock_data_2026_05_13.md, master_to_live_defi_2026_05_23.md]
-created: '2026-05-10'
+related:
+  [/plans/archive/2026_05/compute_optimization_mock_data_2026_05_13.md, /plans/active/master_to_live_defi_2026_05_23.md]
+created: "2026-05-10"
 parent_epic: infrastructure_master
 priority: P1
 estimate_class: brand-new
@@ -34,7 +35,7 @@ Synthetic-data harness for per-stage bottleneck profiling: generates mock parque
 runs each pipeline stage in isolation, captures wall-clock + CPU + memory per stage. Foundation for
 `compute_optimization_mock_data` plan. Phases 0-7 complete; Phase 8.A (master-plan row) open.
 
-Codex SSOTs: `codex/06-coding-standards/quality-gates.md`
+Codex SSOTs: `/codex/06-coding-standards/quality-gates.md`
 
 ---
 
@@ -78,7 +79,7 @@ Codex SSOTs: `codex/06-coding-standards/quality-gates.md`
 
 ## Phase 7 — Codex SSOT update
 
-- [x] ✅ [AGENT] P1. `codex/06-coding-standards/quality-gates.md` STEP 5.80 documented; benchmark baseline CSV path
+- [x] ✅ [AGENT] P1. `/codex/06-coding-standards/quality-gates.md` STEP 5.80 documented; benchmark baseline CSV path
       referenced.
 
 ## Phase 8 — Master plan tracking

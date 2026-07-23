@@ -10,7 +10,7 @@ repos: [deployment-api, deployment-service, market-tick-data-service, unified-ap
 scope: [engineer, admin]
 tags: []
 related: []
-created: '2026-05-17'
+created: "2026-05-17"
 ---
 
 > **ARCHIVED 2026-05-21** — 100% complete. 70 VMs drained 2026-05-17; 216,876 captured + 7,365 empty_confirmed + 0
@@ -36,8 +36,8 @@ post-cutover. Backfill OHLCV to full Databento-available period floored at 2019-
 ohlcv_1m + CBOE VIX 15m (existing). 70 VMs drained 2026-05-17; 216,876 captured + 7,365 empty_confirmed + 0
 attempted_failed; 100% honest-fill, 96.72% capture rate.
 
-Codex SSOTs: `codex/02-data/mtds-data-source-coverage-matrix.md` ·
-`codex/02-data/availability-manifest-and-data-status.md`
+Codex SSOTs: `/codex/02-data/mtds-data-source-coverage-matrix.md` ·
+`/codex/02-data/availability-manifest-and-data-status.md`
 
 ---
 

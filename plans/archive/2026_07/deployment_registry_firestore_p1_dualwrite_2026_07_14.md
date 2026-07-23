@@ -14,9 +14,9 @@ repos: [unified-trading-library, deployment-api]
 scope: [engineer]
 tags: [firestore, deployment-registry, dual-write, cloud-interface, migration]
 related:
-  - deployment_registry_firestore_migration_2026_07_14.md
-  - deployment_registry_firestore_p0_unblock_2026_07_14.md
-  - ci_status_firestore_side_store_2026_06_10.md
+  - /plans/active/deployment_registry_firestore_migration_2026_07_14.md
+  - /plans/active/deployment_registry_firestore_p0_unblock_2026_07_14.md
+  - /plans/archive/2026_06/ci_status_firestore_side_store_2026_06_10.md
 created: "2026-07-14"
 last_updated: "2026-07-14"
 parent_epic: observability_master
@@ -149,4 +149,4 @@ UTC datetimes only. QG-green per repo before commit.
 ## Codex SSOTs
 
 - `ci_status_firestore_side_store_2026_06_10.md` (archived) — the proven dual-write-first phasing to mirror.
-- `codex/05-infrastructure/deployment-observability.md` — registry SSOT (updated later, Phase 5).
+- `/codex/05-infrastructure/deployment-observability.md` — registry SSOT (updated later, Phase 5).

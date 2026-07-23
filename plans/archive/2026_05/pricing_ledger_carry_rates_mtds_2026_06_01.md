@@ -6,11 +6,26 @@ status: complete
 nature: record
 asset_group: [infrastructure]
 stage: [meta]
-repos: [alerting-service, deployment-service, features-service, fund-administration-service, greeks-service, instruments-service]
+repos:
+  [
+    alerting-service,
+    deployment-service,
+    features-service,
+    fund-administration-service,
+    greeks-service,
+    instruments-service,
+  ]
 scope: [engineer, admin]
 tags: []
-related: [plans/archive/2026_05/global_ledger_pnl_attribution_migration_2026_06_01.md (ARCHIVED — Phase 6.5/7-9 items folded into this plan), plans/epics/mtds_mdps_master.md, plans/epics/instruments_master.md, plans/epics/global_ledger_pnl_attribution_master.md]
-created: '2026-05-23'
+related:
+  [
+    plans/archive/2026_05/global_ledger_pnl_attribution_migration_2026_06_01.md (ARCHIVED — Phase 6.5/7-9 items folded
+    into this plan),
+    plans/epics/mtds_mdps_master.md,
+    plans/epics/instruments_master.md,
+    plans/epics/global_ledger_pnl_attribution_master.md,
+  ]
+created: "2026-05-23"
 parent_epic: mtds_mdps_master
 priority: P0
 estimate_class: design
@@ -19,8 +34,17 @@ estimate_calibrated_ai_days: 3
 assigned_vm: vm-ml
 locked_by: live-defi-rollout
 locked_since: 2026-05-23
-predecessor: plans/archive/2026_05/global_ledger_pnl_attribution_discovery_2026_05_21.md (ARCHIVED in 2026-05-23 PM consolidation; Phase 5 operator-ACK captured below in "Operator decisions" section)
-shipped_commits: [uac@709e9aff — LedgerRow greek (option_delta/gamma/theta/vega/rho) + carry (funding/lending/borrow/staking/dividend/rebase) columns, deployment-service@460bb6e — greeks-compute-live-/greeks-compute-batch- VM prefixes, greeks-service@b9dbade — repo skeleton (15 files); worktree model wired (main clone + 11 tab worktrees), pm@f7ca196a1 — workspace-manifest topologicalOrder level 4]
+predecessor:
+  plans/archive/2026_05/global_ledger_pnl_attribution_discovery_2026_05_21.md (ARCHIVED in 2026-05-23 PM consolidation;
+  Phase 5 operator-ACK captured below in "Operator decisions" section)
+shipped_commits:
+  [
+    uac@709e9aff — LedgerRow greek (option_delta/gamma/theta/vega/rho) + carry
+    (funding/lending/borrow/staking/dividend/rebase) columns,
+    deployment-service@460bb6e — greeks-compute-live-/greeks-compute-batch- VM prefixes,
+    greeks-service@b9dbade — repo skeleton (15 files); worktree model wired (main clone + 11 tab worktrees),
+    pm@f7ca196a1 — workspace-manifest topologicalOrder level 4,
+  ]
 ---
 
 # PricingLedger carry-rate computation in MTDS — dividend_yield + rebase_rate + greeks-service handshake
@@ -69,7 +93,8 @@ the discovery plan's Phase 2 — see commit verification under Risk callouts).
       live-defi-rollout, no script edit).
 - [x] ✅ [INFRA] workspace-manifest registration — pm (repositories dict + topologicalOrder level 4 @ pm@f7ca196a1).
 - [x] ✅ [SCRIPT] `uv lock` generated in greeks-service (203 packages).
-- [x] ✅ [DOC] codex/04-architecture/greeks-service-overview.md (197 lines, 10 sections) + boundary-vs-features-service.
+- [x] ✅ [DOC] /codex/04-architecture/greeks-service-overview.md (197 lines, 10 sections) +
+      boundary-vs-features-service.
 - [x] ✅ DEFERRED [INFRA] P1. Add greeks-service row to `deployment-service/configs/cloud-providers.yaml` for
       PricingLedger sink bucket — DEFERRED until bucket-SSOT canonicalisation
       (`bucket_name_ssot_canonicalisation_2026_05_10.md`) stabilises. Bucket lookup MUST use `resolve_bucket_name()` per
@@ -108,9 +133,9 @@ the discovery plan's Phase 2 — see commit verification under Risk callouts).
 
 - [x] ✅ [DESIGN] P0. Annualisation formula spec — TTM dividend × frequency vs trailing-12-month sum vs
       forward-estimate. Quant/operator decision item; capture rationale + edge cases (special dividends, spin-offs,
-      suspended dividends). Document in `codex/02-data/ledger-event-taxonomy.md` under `dividend_yield` row. **Decision:
-      TTM sum** (`sum(regular_divs[-365d]) / spot`). Rationale + edge-case table in codex. — unified-trading-pm (see
-      Changelog 2026-05-24)
+      suspended dividends). Document in `/codex/02-data/ledger-event-taxonomy.md` under `dividend_yield` row.
+      **Decision: TTM sum** (`sum(regular_divs[-365d]) / spot`). Rationale + edge-case table in codex. —
+      unified-trading-pm (see Changelog 2026-05-24)
 - [x] ✅ [CODE] P0. Add `dividend_yield` derivation in `market-tick-data-service/market_tick_data_service/derived/` —
       reads IS `CanonicalCorporateAction` via IS HTTP API; computes annualised rate per `instrument_id` using the
       formula from the design item. Decimal arithmetic; no float drift. — market-tick-data-service@1762f1aa
@@ -131,9 +156,9 @@ the discovery plan's Phase 2 — see commit verification under Risk callouts).
       regression on `unified-api-contracts` consumer tests (`pricing_ledger` cassette parity). —
       market-tick-data-service@1762f1aa (derived 25/25 passed; pre-existing UAC-update failures HYPERLIQUID/ASTER
       asset_group + log assertion excluded per operator directive 2026-05-24)
-- [x] ✅ [DOC] P1. Update `codex/02-data/ledger-event-taxonomy.md` — `dividend_yield` row notes "populated for
+- [x] ✅ [DOC] P1. Update `/codex/02-data/ledger-event-taxonomy.md` — `dividend_yield` row notes "populated for
       equities/ETFs only; `None` for crypto/futures/options"; cite the annualisation formula from Phase 1 design. —
-      unified-trading-pm@f7238fb1 (codex/02-data/ledger-event-taxonomy.md: writer note + implementation ref
+      unified-trading-pm@f7238fb1 (/codex/02-data/ledger-event-taxonomy.md: writer note + implementation ref
       market-tick-data-service@1762f1aa; non-applicable → None hardcoded)
 
 ## Phase 2 — `rebase_rate` delta computation (MTDS or IS)
@@ -141,7 +166,7 @@ the discovery plan's Phase 2 — see commit verification under Risk callouts).
 - [x] ✅ [DESIGN] P0. Delta-computation strategy decision — per-snapshot delta on every new `lst_rates` row vs
       daily-checkpoint delta. Operator/quant decision (rolling-window cost vs latency for greeks-service consumers).
       Owner repo decision: MTDS derived layer (consistent with `dividend_yield`) vs IS write-time (closer to the source
-      table). Captured in `codex/04-architecture/global-ledger-architecture.md` under `rebase_rate`. **Decision:
+      table). Captured in `/codex/04-architecture/global-ledger-architecture.md` under `rebase_rate`. **Decision:
       MTDS-derived, per-consecutive-snapshot delta** annualised via seconds_per_year/elapsed. Documented with edge-case
       table. CODE gated on operator-ACK. — unified-trading-pm (see global-ledger-architecture.md)
 - [x] ✅ [CODE] P0. Add `rebase_rate` derivation in the repo chosen above — reads consecutive `lst_rates.exchange_rate`
@@ -161,11 +186,11 @@ the discovery plan's Phase 2 — see commit verification under Risk callouts).
       same-ts→None ✓, reversed-ts→None ✓, zero/negative rate→None ✓, formula exact ✓)
 - [x] ✅ [QG] P0. `bash scripts/quality-gates.sh` in the owner repo (MTDS or IS) — green before merge. Cross-repo
       regression on the other side of the IS↔MTDS contract (per
-      `codex/04-architecture/instruments-service-as-ssot-for-mtds.md`). — market-tick-data-service@1762f1aa (same QG run
-      as Phase 1; derived 25/25 passed; pre-existing UAC-update failures excluded per operator directive 2026-05-24)
-- [x] ✅ [DOC] P1. Update `codex/02-data/ledger-event-taxonomy.md` — `rebase_rate` row notes "populated for LST/LRT
+      `/codex/04-architecture/instruments-service-as-ssot-for-mtds.md`). — market-tick-data-service@1762f1aa (same QG
+      run as Phase 1; derived 25/25 passed; pre-existing UAC-update failures excluded per operator directive 2026-05-24)
+- [x] ✅ [DOC] P1. Update `/codex/02-data/ledger-event-taxonomy.md` — `rebase_rate` row notes "populated for LST/LRT
       only; `None` for everything else; cumulative `exchange_rate` remains in IS `lst_rates` table as SSOT". —
-      unified-trading-pm@f7238fb1 (codex/02-data/ledger-event-taxonomy.md: full formula + edge-case table + writer
+      unified-trading-pm@f7238fb1 (/codex/02-data/ledger-event-taxonomy.md: full formula + edge-case table + writer
       note + IS SSOT invariant; implementation ref market-tick-data-service@1762f1aa)
 
 ## Phase 3 — greeks-service ⟷ MTDS handshake (greeks-service)
@@ -246,7 +271,7 @@ the discovery plan's Phase 2 — see commit verification under Risk callouts).
 - **Annualisation methodology (Phase 1)**: quant-call. Operator likely wants to review the formula spec before
   implementation. Phase 1 DESIGN todo is gated on operator-ACK; do not start Phase 1 CODE without that ACK.
 - **Phase 2 owner-repo split**: MTDS-derived vs IS-write-time is an architecture call. The decision impacts the IS↔MTDS
-  contract (`codex/04-architecture/instruments-service-as-ssot-for-mtds.md`) — if IS becomes a writer of derived data,
+  contract (`/codex/04-architecture/instruments-service-as-ssot-for-mtds.md`) — if IS becomes a writer of derived data,
   that contract needs an explicit amendment, otherwise QG STEP 5.70's `no_silent_absence_handlers.sh` may flag the new
   derivation as a contract drift.
 - **None vs zero discipline**: every Phase 1/2/3 emission path MUST emit `None` for non-applicable instruments — never a

@@ -7,7 +7,7 @@ estimate_baseline_ai_days: TBD
 estimate_calibrated_ai_days: TBD
 estimate_calibration_note: |
   No explicit AI-day estimates found in plan body during 2026-05-11 sweep; class inferred from filename (infra, multiplier 0.8×).
-  Owner agent: fill baseline + multiply × 0.8 per codex/08-workflows/estimation-calibration.md. Refine class if dominant work-class differs.
+  Owner agent: fill baseline + multiply × 0.8 per /codex/08-workflows/estimation-calibration.md. Refine class if dominant work-class differs.
 ---
 
 ## Deferred work — migrated to:
@@ -50,10 +50,10 @@ incidental DEFERRED / post-cutover / out-of-scope tokens in the body are histori
 
 ## New codex docs
 
-| Path                                               | Content                                                                                                                                                                                                  |
-| -------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `codex/02-data/data-status-drilldown-hierarchy.md` | Per-asset_group drill-down depth table, backend + frontend contracts, per-leaf download + Deploy-Missing flow, failure modes caught.                                                                     |
-| `codex/05-infrastructure/launcher-script-ssot.md`  | VM launcher script SSOT — what counts as a launcher, four delivery modes (tarball / tarball-from-local / sibling-clone / future-image), workflow for adding a new launcher, in-flight migration tracker. |
+| Path                                                | Content                                                                                                                                                                                                  |
+| --------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/codex/02-data/data-status-drilldown-hierarchy.md` | Per-asset_group drill-down depth table, backend + frontend contracts, per-leaf download + Deploy-Missing flow, failure modes caught.                                                                     |
+| `/codex/05-infrastructure/launcher-script-ssot.md`  | VM launcher script SSOT — what counts as a launcher, four delivery modes (tarball / tarball-from-local / sibling-clone / future-image), workflow for adding a new launcher, in-flight migration tracker. |
 
 ## CLAUDE.md additions (cursor-configs/CLAUDE.md)
 

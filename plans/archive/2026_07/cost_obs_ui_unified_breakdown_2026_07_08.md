@@ -15,7 +15,11 @@ stage: [meta]
 repos: [deployment-ui]
 scope: [engineer]
 tags: [billing, cost, observability, breakdown, ui, deployment-ui, playwright]
-related: [cost_observability_ui_2026_07_08.md, cost_obs_backend_sku_usage_enrichment_2026_07_08.md]
+related:
+  [
+    /plans/archive/2026_07/cost_observability_ui_2026_07_08.md,
+    /plans/archive/2026_07/cost_obs_backend_sku_usage_enrichment_2026_07_08.md,
+  ]
 created: "2026-07-08"
 last_updated: "2026-07-08"
 parent_epic: deployment_and_user_management_master
@@ -38,7 +42,7 @@ source: cost_observability_ui_2026_07_08.md
 # Cost Observability — unified breakdown table + resource-detail columns (UI)
 
 > **✅ ARCHIVED 2026-07-10 — COMPLETE.** Every todo shipped (see the Progress Log below). Codex aligned
-> (`codex/05-infrastructure/billing-cost-observability.md`: label dimension + real GitHub provider). Moved to
+> (`/codex/05-infrastructure/billing-cost-observability.md`: label dimension + real GitHub provider). Moved to
 > `plans/archive/2026_07/`.
 
 > **AO-DISPATCHED UI plan — starts `draft` (NOT ingested).** Released to `active` by the LAST task of the backend plan
@@ -53,8 +57,8 @@ source: cost_observability_ui_2026_07_08.md
 
 ## Codex SSOTs (read before touching)
 
-- `codex/06-coding-standards/ui-testing-layers.md` — the Playwright L2 gate.
-- `codex/05-infrastructure/billing-cost-observability.md` — the API row contract the backend plan extends (net/gross/
+- `/codex/06-coding-standards/ui-testing-layers.md` — the Playwright L2 gate.
+- `/codex/05-infrastructure/billing-cost-observability.md` — the API row contract the backend plan extends (net/gross/
   credit, sku, usage, bucket-volume, waste fields).
 
 ## Tasks
@@ -94,8 +98,8 @@ source: cost_observability_ui_2026_07_08.md
       regression: tests/smoke/cost-observability.spec.ts ("By bucket shows
       storage/class-split/$-per-GB
       columns formatted in GB, not bytes" — asserts the Storage cell reads "18,500 GB" not a raw byte count, the
-      class-split cell lists "Standard", the $/GB cell suffixes "/GB", and all three columns disappear under "By
-      resource").
+      class-split cell lists "Standard", the $/GB
+      cell suffixes "/GB", and all three columns disappear under "By resource").
 - [x] ✅ [UI] P2. **Resource / waste columns** (dimension = resource) — deployment-ui@`047494b`. Added
       `machine_type`/`vcpu`/`memory_gb` + `is_idle`/`waste_kind` to `CostBreakdownRow` (mirrors the backend's
       resource-dimension fields). `BreakdownPanel` renders, resource-dimension-only: a **Machine** column (e.g.
@@ -110,7 +114,7 @@ source: cost_observability_ui_2026_07_08.md
       `CostBreakdownRow` (mirrors the backend's resource/service-dimension field). `BreakdownPanel` renders a
       **Purchase** column, resource/service-dimension-only: a green "spot" badge, plain "on-demand" text, or a dash for
       "other"/non-compute rows. `mock-api.ts` fixtures give the backfill VMs "spot" (mirrors the workspace's
-      spot-by-default backfill rule, `codex/05-infrastructure/spot-vms-for-backfill.md`) and the AWS EC2 instance
+      spot-by-default backfill rule, `/codex/05-infrastructure/spot-vms-for-backfill.md`) and the AWS EC2 instance
       "on-demand". tsc/ESLint/vitest (85 tests) all green — 2 new vitest cases (chip on service rows, on-demand +
       column-omitted-on-other-dimensions on resource rows) per the plan's "vitest" spec for this task (no pw:L2 cited).
       Reconciled 2x onto concurrently-landed resource/waste-columns (`047494b`) and stale-during-refetch (`0b396a8`)
@@ -166,8 +170,10 @@ source: cost_observability_ui_2026_07_08.md
       2026-07-10). Reconciled `fetch_github_billing()` output against the raw GitHub Enhanced Billing API for the live
       30-day window (same Secret-Manager token, never printed): records 1,469 == 1,469; **NET $1,332.55 == $1,332.55**;
       gross $1,430.97 == $1,430.97; credit −$98.42 == −$98.42 — exact to the cent. Confirms the mapping (`cost`=gross,
-      `credit`=net−gross, net=cost+credit) and the `[start,end)` window slice. Context: June full-month net $1,441,
-      July-to-date $221. The displayed GitHub figure is verified correct — no code change (provider already shipped).
+      `credit`=net−gross, net=cost+credit) and the `[start,end)` window slice. Context: June full-month net
+      $1,441,
+      July-to-date $221. The displayed GitHub figure is verified correct — no code change (provider already
+      shipped).
 - [x] ✅ [UI] P3. **Cost page layout refresh + help guide** (operator review session 2026-07-10). Five folded UI
       refinements on `/ops/costs`: (1) the breakdown header is now ONE row — title + dimension tabs + dimension note +
       stats share a line (was two), reclaiming vertical space; (2) the per-column filter dropdowns moved INTO each

@@ -20,7 +20,11 @@ estimate_class: infra
 estimate_baseline_ai_days: 4
 estimate_calibrated_ai_days: 3.2
 parent_consolidation: cicd_docs_and_consolidation_2026_06_18
-source: [sit_uac_orphan_cap_stale_consumer_list_2026_06_07 (consolidated), cicd_contract_hardening_2026_06_01 (SIT + fleet subset)]
+source:
+  [
+    sit_uac_orphan_cap_stale_consumer_list_2026_06_07 (consolidated),
+    cicd_contract_hardening_2026_06_01 (SIT + fleet subset),
+  ]
 ---
 
 > **⚠️ SUPERSEDED 2026-06-24 → [cicd_consolidated_remaining_2026_06_24.md](cicd_consolidated_remaining_2026_06_24.md)**
@@ -32,7 +36,7 @@ source: [sit_uac_orphan_cap_stale_consumer_list_2026_06_07 (consolidated), cicd_
 > work them in the consolidated plan.
 
 > **Consolidated 2026-06-18** (see `cicd_docs_and_consolidation_2026_06_18`). **SSOT:**
-> `codex/08-workflows/ci-cd-flow.md` (§ "Breaking = public-surface change" / SIT) + `CICD-WORKFLOW-CATALOG.md`. Zero
+> `/codex/08-workflows/ci-cd-flow.md` (§ "Breaking = public-surface change" / SIT) + `CICD-WORKFLOW-CATALOG.md`. Zero
 > open items dropped.
 >
 > **NOT consolidated here:** `fleet_audit_triad_deferred_followups_2026_06_01` stays standalone — it is a cross-domain
@@ -49,35 +53,34 @@ rollout, fleet-wide CI hygiene audits, and the UAC removed-symbol orphan cap tha
 ### SIT mechanics
 
 - [SCRIPT] P2. Review `sit-gate.yml` + `sit-unlock.yml` membership in the `manifest-update` concurrency group
-      (displacement-class review). (cicd_contract_hardening #26)
+  (displacement-class review). (cicd_contract_hardening #26)
 - [WORKFLOW] P2. Upgrade `sit-starvation-detector` from alert-only toward auto-redispatch (composes with the sprawl
-      fold-into-`sit-debounce`; see cicd_release_machinery). (cicd_contract_hardening #28)
-- [SCRIPT] P2. Promote `system-integration-tests` LDR→main so the SIT report-back goes live (promotion + e2e
-      verify). (cicd_contract_hardening #30)
+  fold-into-`sit-debounce`; see cicd_release_machinery). (cicd_contract_hardening #28)
+- [SCRIPT] P2. Promote `system-integration-tests` LDR→main so the SIT report-back goes live (promotion + e2e verify).
+  (cicd_contract_hardening #30)
 - [DESIGN] P2. Per-cone parallel staging locks (design doc — let independent dep cones promote concurrently).
-      (cicd_contract_hardening #32)
-- [SCRIPT] P2. Audit the fleet for `[skip ci]` version-bump commits stranded on staging (the same deadlock
-      signature). (cicd_contract_hardening #25)
+  (cicd_contract_hardening #32)
+- [SCRIPT] P2. Audit the fleet for `[skip ci]` version-bump commits stranded on staging (the same deadlock signature).
+  (cicd_contract_hardening #25)
 
 ### Fleet ruleset rollout (blocked on per-repo QG-RED — real debt)
 
-- [SCRIPT] P2. greeks-service ruleset — blocked on v2-RED (coverage floor + C901); fix the per-repo debt, then
-      enable. (cicd_contract_hardening #15)
-- [SCRIPT] P2. fund-administration ruleset — blocked on the uv-sync starlette cross-repo conflict; resolve, then
-      enable. (cicd_contract_hardening #16)
+- [SCRIPT] P2. greeks-service ruleset — blocked on v2-RED (coverage floor + C901); fix the per-repo debt, then enable.
+  (cicd_contract_hardening #15)
+- [SCRIPT] P2. fund-administration ruleset — blocked on the uv-sync starlette cross-repo conflict; resolve, then enable.
+  (cicd_contract_hardening #16)
 - [SCRIPT] P2. e2e-testing ruleset — blocked on 14 ruff errors; fix, then enable. (cicd_contract_hardening #17)
 
 ### Fleet deploy-config + smokes
 
 - [SCRIPT] P2. Tier-D — per-service Cloud Run deploy-config audit + add the missing HTTP deploys.
-      (cicd_contract_hardening #12)
-- [SCRIPT] P2. Tier-E — wire game-day + synthetic smokes into the staging SIT schedule. (cicd_contract_hardening
-      #13)
+  (cicd_contract_hardening #12)
+- [SCRIPT] P2. Tier-E — wire game-day + synthetic smokes into the staging SIT schedule. (cicd_contract_hardening #13)
 
 ### UAC orphan cap
 
 - [SCRIPT] P2. Drive the 328 removed-symbol orphans down (add UTL to the consumer set and/or follow facade/`__all__`
-      re-exports), then lower the cap from 400. (sit_uac_orphan)
+  re-exports), then lower the cap from 400. (sit_uac_orphan)
 
 ## Closed on consolidation (premise superseded — not carried)
 

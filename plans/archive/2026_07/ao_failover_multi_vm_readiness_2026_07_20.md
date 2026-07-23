@@ -13,7 +13,11 @@ stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer]
 tags: [agent-orchestrator, failover, resilience, multi-vm, dormant-infra]
-related: [ao_open_issues_consolidated_close_out_2026_07_17.md, ao_dispatch_liveness_p0_2026_07_20.md]
+related:
+  [
+    /plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md,
+    /plans/archive/2026_07/ao_dispatch_liveness_p0_2026_07_20.md,
+  ]
 created: 2026-07-20
 last_updated: 2026-07-20
 parent_epic: orchestrator_master
@@ -119,7 +123,7 @@ now** and would be today's preferred target.
       above green, the paused-slot fix deployed), and how to verify the first real re-route. Declare `owner` / `cadence`
       / `verifier` / `last_executed` per the runbook rule. **Gate**: an operator can re-enable failover from the
       checklist alone without re-deriving any of this. ✅ `unified-trading-pm` —
-      `codex/15-runbooks/agent-orchestrator-failover-re-enable-checklist.md` (`doc_type: codex-runbook`, full
+      `/codex/15-runbooks/agent-orchestrator-failover-re-enable-checklist.md` (`doc_type: codex-runbook`, full
       owner/cadence/verifier/last_executed frontmatter per the runbook schema).
 - [x] [BACKEND] P3. **Keep the dormant module from rotting.** Confirm `failover.py` and its tests are inside the
       `quality-gates.sh` scope so dormant code cannot silently drift out of type/lint compliance, and add a one-line
@@ -155,10 +159,10 @@ now** and would be today's preferred target.
 
 ## Codex SSOTs
 
-- `codex/04-architecture/recovery-defence-in-depth-layers.md` + `…/autonomous-recovery-matrix.md` — where failover
+- `/codex/04-architecture/recovery-defence-in-depth-layers.md` + `…/autonomous-recovery-matrix.md` — where failover
   does/does not belong as a recovery layer.
-- `codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` — the current topology this is dormant under.
-- `codex/06-coding-standards/quality-gates.md` — the gate keeping dormant code honest.
+- `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` — the current topology this is dormant under.
+- `/codex/06-coding-standards/quality-gates.md` — the gate keeping dormant code honest.
 
 ## Progress Log
 

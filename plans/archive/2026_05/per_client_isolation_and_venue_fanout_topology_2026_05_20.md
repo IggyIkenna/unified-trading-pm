@@ -9,8 +9,14 @@ stage: [meta]
 repos: [deployment-api, deployment-service, execution-service, strategy-service]
 scope: [engineer, admin]
 tags: []
-related: [master_to_live_defi_2026_05_23.md, strategy_repo_consolidation_2026_05_19.md, promote_workflow_may23_cli_path_2026_05_10.md, api_keys_wallets_accounts_readiness_2026_05_10.md]
-created: '2026-05-20'
+related:
+  [
+    /plans/active/master_to_live_defi_2026_05_23.md,
+    /plans/archive/2026_05/strategy_repo_consolidation_2026_05_19.md,
+    /plans/archive/2026_05/promote_workflow_may23_cli_path_2026_05_10.md,
+    /plans/archive/2026_05/api_keys_wallets_accounts_readiness_2026_05_10.md,
+  ]
+created: "2026-05-20"
 parent_epic: client_isolation_and_governance_master
 priority: P0
 estimate_class: brand-new
@@ -28,8 +34,8 @@ per tick in supervisor and broadcasts via shared memory to all workers. `ClientL
 REGISTER/DEREGISTER/QUARANTINE/CREDENTIAL_ROTATED. HARD RULE codified: funds NEVER move between different clients;
 `CrossClientTransferForbiddenError` raised at 2 defensive layers.
 
-Codex SSOTs: `codex/04-architecture/per-client-isolation-architecture.md` -
-`codex/04-architecture/client-funds-isolation.md` - `codex/05-infrastructure/strategy-shard-vm-topology.md`
+Codex SSOTs: `/codex/04-architecture/per-client-isolation-architecture.md` -
+`/codex/04-architecture/client-funds-isolation.md` - `/codex/05-infrastructure/strategy-shard-vm-topology.md`
 
 ---
 

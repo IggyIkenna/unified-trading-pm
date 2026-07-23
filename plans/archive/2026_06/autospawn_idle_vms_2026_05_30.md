@@ -9,7 +9,12 @@ stage: [meta]
 repos: [agent-orchestrator, deployment-service, unified-trading-pm]
 scope: [engineer, admin]
 tags: []
-related: [plans/active/agent_orchestrator_backlog_state_alignment_2026_05_29.md, plans/active/harsh_pc_dispatch_failover_2026_05_30.md, plans/active/api_host_chronic_impairment_2026_05_29.md]
+related:
+  [
+    plans/active/agent_orchestrator_backlog_state_alignment_2026_05_29.md,
+    plans/active/harsh_pc_dispatch_failover_2026_05_30.md,
+    plans/active/api_host_chronic_impairment_2026_05_29.md,
+  ]
 created: 2026-05-30
 parent_epic: plans/epics/orchestrator_master.md
 assigned_vm: vm-orchestrator
@@ -20,7 +25,11 @@ estimate_calibrated_ai_days: 0.8
 last_updated: 2026-05-30
 locked_by: live-defi-rollout
 locked_since: 2026-05-30
-codex_ssots: [codex/04-architecture/agent-orchestrator-overview.md, codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md]
+codex_ssots:
+  [
+    /codex/04-architecture/agent-orchestrator-overview.md,
+    /codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md,
+  ]
 ---
 
 > **✅ COMPLETE — ARCHIVED 2026-06-01.** All 14 todos done; `AutoSpawnLoop` rolled fleet-wide to all 11 VMs
@@ -107,12 +116,12 @@ Operator sweep captured. Worker spawn done manually via SSM on 10 VMs.
 
 ### Phase 1 — Design the AutoSpawnLoop
 
-- [x] ✅ [DESIGN] P0. Document the `AutoSpawnLoop` design in `codex/04-architecture/agent-orchestrator-overview.md` §
+- [x] ✅ [DESIGN] P0. Document the `AutoSpawnLoop` design in `/codex/04-architecture/agent-orchestrator-overview.md` §
       "Auto-spawn lifecycle": trigger conditions (the 5-item contract above), cooldown window (5 min default),
       account-pick rotation logic (least-used five_hour_pct first, weekly_pct tiebreaker), failure modes (preview fetch
       failed, spawn HTTP 4xx, tmux create failed), what to log on each path. Collision group: `ao_autospawn_design`.
       Estimate: 0.15 AI-day. **DONE 2026-05-30** — new `## Auto-spawn lifecycle` section added to
-      `codex/04-architecture/agent-orchestrator-overview.md`. Covers trigger contract table, account-pick rotation,
+      `/codex/04-architecture/agent-orchestrator-overview.md`. Covers trigger contract table, account-pick rotation,
       spawn execution, anti-flap/Slack alert, failure mode table, env vars table, rollout pointer.
 - [x] ✅ [DESIGN] P0. Identify accountable PR scope — confirm that `AutoSpawnLoop` lives ENTIRELY in
       `agent-orchestrator/server/` (no PM changes needed) and does NOT touch `regen_backlog_from_plan.py` (different
@@ -192,9 +201,9 @@ flag via systemd drop-in + restart orchestrator. **Sequential per-VM** so a bug 
       **DONE 2026-05-30** — Added HARD RULE block under `### Other key rules` in `cursor-configs/CLAUDE.md`: autospawn
       default on every VM via drop-in, AutoSpawnLoop trigger contract summary, manual spawn only for cold-start, link to
       `plans/active/autospawn_idle_vms_2026_05_30.md`.
-- [x] ✅ [DOCS] P1. Add codex doc `codex/04-architecture/agent-orchestrator-autospawn.md` — the full architecture:
+- [x] ✅ [DOCS] P1. Add codex doc `/codex/04-architecture/agent-orchestrator-autospawn.md` — the full architecture:
       trigger contract, cooldown, account rotation, failure modes, alerting, recovery if autospawn flaps. Collision
-      group: none. Estimate: 0.1 AI-day. **DONE 2026-05-30** — `codex/04-architecture/agent-orchestrator-autospawn.md`
+      group: none. Estimate: 0.1 AI-day. **DONE 2026-05-30** — `/codex/04-architecture/agent-orchestrator-autospawn.md`
       written: trigger contract table (5 gates + skip reasons), account-pick rotation, spawn execution flow,
       anti-flap/Slack alert, failure modes table, env vars, rollout procedure, verification steps, anti-patterns,
       related-systems table.

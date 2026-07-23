@@ -10,7 +10,7 @@ repos: [instruments-service]
 scope: [engineer, admin]
 tags: []
 related: []
-created: '2026-02-25'
+created: "2026-02-25"
 ---
 
 # Library Production Hardening Prompt Template
@@ -464,7 +464,7 @@ If {UNIFIED_EVENTS_INTERFACE} supports both batch and live modes:
 - 90% code shared (mode-agnostic engine)
 - Only 4 seams differ: data source, data sink, persistence thread, trigger
 - Clearly document what live deviates on
-- See `unified-trading-codex/04-architecture/batch-live-symmetry.md`
+- See `unified-trading-/codex/04-architecture/batch-live-symmetry.md`
 
 ---
 

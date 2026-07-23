@@ -10,7 +10,7 @@ repos: [deployment-service, unified-trading-pm]
 scope: [engineer, admin]
 tags: []
 related: []
-created: '2026-05-21'
+created: "2026-05-21"
 priority: P1
 assigned_vm: vm-cross-cutting
 parent_epic: infrastructure_master
@@ -30,7 +30,7 @@ canonical `startup-script-url=gs://${CODE_BUCKET}/vm/setup-data-pipeline-vm.sh` 
 O-18 (codex two-pattern documentation) is DONE — `unified-trading-pm@b7da8ae9`.
 
 **Two-pattern reality** (permanent): 5 daemon/validator/orchestrator launchers are intentional Pattern B exceptions and
-MUST NOT be converted. See `codex/05-infrastructure/vm-tarball-deployment.md` § "Launcher pattern decision matrix".
+MUST NOT be converted. See `/codex/05-infrastructure/vm-tarball-deployment.md` § "Launcher pattern decision matrix".
 
 ## Pre-conditions (blockers to resolve before migration)
 
@@ -169,12 +169,12 @@ Plan is operationally complete when:
 3. `grep -l 'metadata-from-file=startup-script' deployment-service/scripts/vm/launch-*.sh` returns only the 9 Pattern B
    exceptions with the unquoted form (aave, amm, epic, features-sports-parallel, gcs-migration-bundle, planning,
    prediction-features, prediction-pipeline, zombie-watchdog). The 2 cron launchers use quoted form.
-4. `codex/05-infrastructure/vm-tarball-deployment.md` updated to reflect 11 exceptions. ✅ 2026-05-21
+4. `/codex/05-infrastructure/vm-tarball-deployment.md` updated to reflect 11 exceptions. ✅ 2026-05-21
 
 ## Deferred work — migrated to:
 
 No required deferrals. All 17 todos closed. Pattern B exceptions (11 launchers) are permanent by design, documented in
-`codex/05-infrastructure/vm-tarball-deployment.md` § "Launcher pattern decision matrix". Soft suggestion only:
+`/codex/05-infrastructure/vm-tarball-deployment.md` § "Launcher pattern decision matrix". Soft suggestion only:
 `launch-gcs-migration-bundle-vm.sh` GCS script staging could be moved to `CODE_BUCKET/scripts/` in a future pass —
 tracked as P3 in `infrastructure_master` if operator chooses to pursue.
 

@@ -1,7 +1,13 @@
 ---
 doc_type: plan
-title: AO agent legibility + role-dispatch — backend (kind roster · role-dispatch wiring · per-agent fields · dispatch fixes · resume)
-summary: Backend half of agent legibility — clean the kind roster (remove recovery_audit, escalate→cicd, schematize main/review), wire role-dispatch (`assigned_role` → boot prompt + model), expose every agent's source/task/plan/role + full log + the activity query via the API, fix the stand-up dispatch bugs, and verify session-resume. This is the data layer the fleet dashboard UI renders, plus the keystone that makes the craft-role boot prompts functional.
+title:
+  AO agent legibility + role-dispatch — backend (kind roster · role-dispatch wiring · per-agent fields · dispatch fixes
+  · resume)
+summary:
+  Backend half of agent legibility — clean the kind roster (remove recovery_audit, escalate→cicd, schematize
+  main/review), wire role-dispatch (`assigned_role` → boot prompt + model), expose every agent's source/task/plan/role +
+  full log + the activity query via the API, fix the stand-up dispatch bugs, and verify session-resume. This is the data
+  layer the fleet dashboard UI renders, plus the keystone that makes the craft-role boot prompts functional.
 status: complete
 nature: design
 asset_group: [cross-cutting]
@@ -9,7 +15,14 @@ stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer, admin]
 tags: [agent-orchestrator, agent-kinds, observability, dispatch, session-resume, backend]
-related: [ao_blocked_questions_backend_2026_06_26.md, ao_dashboard_fleet_ui_2026_06_26.md, ../epics/orchestrator_master.md, ../../codex/12-agent-workflow/work-philosophy.md, ../../codex/04-architecture/agent-orchestrator-overview.md]
+related:
+  [
+    /plans/archive/2026_06/ao_blocked_questions_backend_2026_06_26.md,
+    /plans/archive/2026_06/ao_dashboard_fleet_ui_2026_06_26.md,
+    ../epics/orchestrator_master.md,
+    /codex/12-agent-workflow/work-philosophy.md,
+    /codex/04-architecture/agent-orchestrator-overview.md,
+  ]
 created: 2026-06-26
 parent_epic: orchestrator_master
 assigned_vm: NA
@@ -33,7 +46,7 @@ drift_direction: advance-code
 
 > **Backend lane** of the AO agent-observability + kind-fixes work — a work-philosophy **L4** role split into 4 plans
 > (DAG: 1→3 · 2→4). The fleet-UI plan (`ao_dashboard_fleet_ui`) depends on the fields this exposes. Durable rules:
-> `codex/12-agent-workflow/work-philosophy.md`; this is the work-order.
+> `/codex/12-agent-workflow/work-philosophy.md`; this is the work-order.
 >
 > **Cross-epic:** this plan's `parent_epic` is `orchestrator_master` (the runtime), but it also carries the
 > `agent_operating_framework_master` **KEEP keystone** — the role-dispatch wiring (`assigned_role` → boot prompt +
@@ -158,7 +171,7 @@ drift_direction: advance-code
 
 ## Codex SSOT updates
 
-- [x] `codex/04-architecture/agent-orchestrator-overview.md` — cleaned kind roster, the per-kind source/task/role
+- [x] `/codex/04-architecture/agent-orchestrator-overview.md` — cleaned kind roster, the per-kind source/task/role
       contract, the `plan_ref` field, the activity noise-set. ✅ 2026-07-01: fixed two now-stale facts in the
       "Agent-type oversight" section (`escalate`→`cicd`; `recovery_audit` removed end-to-end, not just `NEVER_LAUNCH`-
       guarded) and added two paragraphs — the per-kind `source`/`task`/`role` + `plan_ref` + activity-noise-set

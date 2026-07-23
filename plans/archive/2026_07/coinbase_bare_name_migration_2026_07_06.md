@@ -39,9 +39,9 @@ tags: [venue-canonicalisation, cefi, d2a-naming-reconciliation, layer1-checker, 
 related:
   [
     issues/wsfeedconnector_phase35_gap_2026_07_06.md,
-    ../../codex/02-data/availability-manifest-and-data-status.md,
-    ../../codex/02-data/honest-coverage-model.md,
-    ../../codex/02-data/defi-canonical-naming-ssot.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/02-data/honest-coverage-model.md,
+    /codex/02-data/defi-canonical-naming-ssot.md,
   ]
 created: 2026-07-06
 parent_epic: instruments_master
@@ -473,7 +473,7 @@ emit a small, expected residual — never a silent zeroing).
     changes — but every dirty file in both, across 5 consecutive retries over ~20 minutes, belonged to OTHER
     concurrently-dispatched agents' unrelated in-flight work (OKX-SPOT venue registration, UAC data-type-validity
     redesign, DeFi capability-registry additions, polymarket schema changes, mvp_mode research) — none of it is this
-    task's to commit (codex/08-workflows/ci-cd-flow.md's "dirty-deps" carve-out is for a repo the SAME agent owns
+    task's to commit (/codex/08-workflows/ci-cd-flow.md's "dirty-deps" carve-out is for a repo the SAME agent owns
     mid-edit, not for absorbing other agents' WIP under this agent's authorship). **Next agent/operator**: re-run the
     exact quickmerge command below once UAC + UTL are clean; the code itself needs no further changes.
 
@@ -558,10 +558,10 @@ emit a small, expected residual — never a silent zeroing).
 
 ## 5. Codex SSOTs consulted
 
-- `codex/02-data/availability-manifest-and-data-status.md` — the writer/expected/enumerated pipeline that the D2a fold
+- `/codex/02-data/availability-manifest-and-data-status.md` — the writer/expected/enumerated pipeline that the D2a fold
   reconciles.
-- `codex/02-data/honest-coverage-model.md` — Layer-1 / Layer-2 model that the itype-gate authority switch feeds.
-- `codex/02-data/defi-canonical-naming-ssot.md` — DeFi-side canonical (protocol-chain) key rules — confirms the
+- `/codex/02-data/honest-coverage-model.md` — Layer-1 / Layer-2 model that the itype-gate authority switch feeds.
+- `/codex/02-data/defi-canonical-naming-ssot.md` — DeFi-side canonical (protocol-chain) key rules — confirms the
   LST-issuer bare-COINBASE (cbETH context) is a DEFI-side key that STAYS bare.
 - `plans/PLAN_FORMAT.md` — this plan's frontmatter shape.
 

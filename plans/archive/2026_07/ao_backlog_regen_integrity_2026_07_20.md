@@ -13,7 +13,11 @@ stage: [meta]
 repos: [agent-orchestrator, unified-trading-pm]
 scope: [engineer]
 tags: [agent-orchestrator, regen, backlog, data-integrity, audit]
-related: [ao_open_issues_consolidated_close_out_2026_07_17.md, ao_dispatch_cooldown_and_park_2026_07_20.md]
+related:
+  [
+    /plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md,
+    /plans/archive/2026_07/ao_dispatch_cooldown_and_park_2026_07_20.md,
+  ]
 created: 2026-07-20
 last_updated: 2026-07-20
 parent_epic: orchestrator_master
@@ -164,19 +168,19 @@ as `ubuntu` does not inherit the unit's `Environment=`). **Never write to the li
       this exact content (same B1-audit provenance, same wording — `ao_scheduled_agent_hygiene_2026_07_20.md`'s own todo
       6, same underlying finding, split from the same 2026-07-17 consolidated close-out): (1)
       `server/regen_backlog_from_plan.py`'s module docstring — `agent-orchestrator@fd09764`; (2) the operator-facing
-      codex doc, `codex/04-architecture/agent-orchestrator-backlog-state-alignment.md` § "The tasks table is a
+      codex doc, `/codex/04-architecture/agent-orchestrator-backlog-state-alignment.md` § "The tasks table is a
       projection, not a completion ledger" — `unified-trading-pm@b5e184357`. Read both in full: content matches this
       todo's ask verbatim (BLOCKED-\* never ingested, prune_stale GC of orphans, done/dispatched rows never touched, "a
       missing row is never by itself evidence"). **Gate met** — no new commit needed under this plan; flagging the
       cross-plan duplication here so a future reader doesn't wonder why this todo has no code of its own.
 - [x] ✅ [REVIEW] P1. **Close doc #4 (`backlog_task_done_status_diverges…`) for real.** — this commit. **Codex-alignment
       check first** (per the archival ritual): found TWO stale contracts and fixed both before closing —
-      `codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` still described the pre-todo-4
+      `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` still described the pre-todo-4
       file-touch-vs-checkbox-diff gate only (no mention of the checkbox-currently- checked fallback) and still called
       the sibling-reset guard's positional-id gap "not eliminated" citing the now-narrowed issue doc; both updated to
       the current, shipped contracts. **Recorded the corollary this todo asks for**: added a new § "Auditing
       `status=done` honesty — `audit_false_done.py` cadence" to
-      `codex/04-architecture/agent-orchestrator-backlog-state-alignment.md` — the gated mechanism needs no periodic
+      `/codex/04-architecture/agent-orchestrator-backlog-state-alignment.md` — the gated mechanism needs no periodic
       sweep, but the UNAUDITABLE→auditable transition can surface old poison at any time, so the tool runs once per
       close-out session, not on a cron. **Resolved doc #4**: `status: resolved`, `resolved_by` filled (cites this plan's
       todo 5 investigation), `last_updated` bumped, a `🟢 RESOLVED` banner added, moved `plans/active/issues/` →
@@ -192,7 +196,7 @@ as `ubuntu` does not inherit the unit's `Environment=`). **Never write to the li
 
 ## Codex SSOTs
 
-- `codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` — regen/backlog derivation model.
+- `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` — regen/backlog derivation model.
 - `codex/11-project-management/` — plan/todo format the regen parses; the checkbox-is-SSOT position behind todo 4.
 
 ## Progress Log

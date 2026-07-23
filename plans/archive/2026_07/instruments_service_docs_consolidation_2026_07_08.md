@@ -27,7 +27,7 @@ related:
     issues/instrument_id_format_canonicalization_2026_07_08.md,
     issues/adapter_findings_gcs_manifest_deployment_api_reconciliation_gap_2026_07_08.md,
     issues/defi_lending_atoken_debttoken_instrument_split_2026_07_07.md,
-    instruments_completion_tracker_2026_07_06.md,
+    /plans/active/instruments_completion_tracker_2026_07_06.md,
     ../audit/results/canonical_instrument_id_audit_2026_07_08.md,
   ]
 created: 2026-07-08
@@ -70,7 +70,7 @@ source:
    bugs verified this session, per asset group.
 3. **The real code** — instruments-service adapters, `canonical_id_builder.py`, MVP-scope constants.
 4. **UAC** — `unified_api_contracts` venue/instrument-type registries (the actual SSOT for venue lists + adapter keys
-   per `codex/04-architecture/instruments-service-as-ssot-for-mtds.md`).
+   per `/codex/04-architecture/instruments-service-as-ssot-for-mtds.md`).
 5. **This session's 2 PM issue docs** — `instrument_id_format_canonicalization_2026_07_08.md` (the decided
    canonical-format target-state) and `adapter_findings_gcs_manifest_deployment_api_reconciliation_gap_2026_07_08.md`
    (the 3-layer GCS/manifest/deployment-UI reconciliation gap) — both need to be reflected in the new docs, not just

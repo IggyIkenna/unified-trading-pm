@@ -1,15 +1,30 @@
 ---
 doc_type: plan
-title: Plan-hygiene cron — close the 3 remaining silent-failure gaps (parent_epic semantic, unpushed plan, stale-blocker reaper)
+title:
+  Plan-hygiene cron — close the 3 remaining silent-failure gaps (parent_epic semantic, unpushed plan, stale-blocker
+  reaper)
 summary:
 status: complete
 nature: record
 asset_group: [infrastructure]
 stage: [meta]
-repos: [agent-orchestrator, features-service, instruments-service, market-data-processing-service, market-tick-data-service, ml-service]
+repos:
+  [
+    agent-orchestrator,
+    features-service,
+    instruments-service,
+    market-data-processing-service,
+    market-tick-data-service,
+    ml-service,
+  ]
 scope: [engineer, admin]
 tags: []
-related: [scripts/plan-hygiene/check_todo_format.sh, scripts/dev/slot-git-status-report.sh, agent-orchestrator/server/regen_backlog_from_plan.py]
+related:
+  [
+    scripts/plan-hygiene/check_todo_format.sh,
+    scripts/dev/slot-git-status-report.sh,
+    agent-orchestrator/server/regen_backlog_from_plan.py,
+  ]
 created: 2026-05-29
 parent_epic: orchestrator_master
 assigned_vm: vm-orchestrator
@@ -18,7 +33,7 @@ last_updated: 2026-05-29
 estimate_class: refactor
 estimate_baseline_ai_days: 2
 estimate_calibrated_ai_days: 0.8
-estimate_calibration_note: 'Refactor (0.4×): three discrete additions, each with an existing analog in the
+estimate_calibration_note: "Refactor (0.4×): three discrete additions, each with an existing analog in the
 
   workspace (check_todo_format pattern; git-status reporter; backlog DB cron).
 
@@ -26,12 +41,13 @@ estimate_calibration_note: 'Refactor (0.4×): three discrete additions, each wit
 
   git-status reporter + one reaper cron). No new infra.
 
-  '
+  "
 ---
 
 ## Deferred work — migrated to:
 
-- pm-pull install/audit on the 9 stopped epic VMs → **`orchestrator_fleet_worker_spawn_enablement_2026_06_02.md` § F6** (per-VM rollout; `run_fleet_install_pm_pull.sh` runs when each VM starts). Archived 2026-06-02 — 22/22 done.
+- pm-pull install/audit on the 9 stopped epic VMs → **`orchestrator_fleet_worker_spawn_enablement_2026_06_02.md` § F6**
+  (per-VM rollout; `run_fleet_install_pm_pull.sh` runs when each VM starts). Archived 2026-06-02 — 22/22 done.
 
 # Plan-hygiene cron — silent-failure capture (3 remaining gaps)
 
@@ -125,7 +141,7 @@ indefinitely with no auto-unblock when blockers complete.
       `server/notifications/slack.py`. Added `_maybe_alert_unpushed_plans()` to `WorkerLivenessKicker` (throttled
       30min). Called from liveness tick. No staleness threshold for plan files — alert fires immediately on first
       dirty-plan detection. — agent-orchestrator@<sha>
-- [x] ✅ [AGENT] P1. Update `codex/12-agent-workflow/symmetric-worker-model.md` (or appropriate codex doc) to note that
+- [x] ✅ [AGENT] P1. Update `/codex/12-agent-workflow/symmetric-worker-model.md` (or appropriate codex doc) to note that
       plan-file dirty-state has its own alert. Updated `local-slot-host-symmetric-worker-model.md` under "Drift
       reporter" section: documented `unpushed_plans` field, immediate Slack alert, 30min throttle, and the
       no-grace-period rule for plan files. — unified-trading-pm@<sha>
@@ -155,7 +171,7 @@ indefinitely with no auto-unblock when blockers complete.
       `sudo bash scripts/orchestrator/install_reap_stale_blockers.sh` on the orchestrator VM to activate. —
       unified-trading-pm@<sha>
 - [x] ✅ [AGENT] P1. Document the reaper in `codex/12-agent-workflow/` (new sub-doc or extension of existing). New doc:
-      `codex/12-agent-workflow/stale-blocker-reaper.md`. Covers: background (no blocked status in DB), three finding
+      `/codex/12-agent-workflow/stale-blocker-reaper.md`. Covers: background (no blocked status in DB), three finding
       categories (DEADLOCK/ORPHAN/PHANTOM_DONE), script usage, cron schedule, operator response guide, cross-references.
       — unified-trading-pm@<sha>
 
@@ -170,16 +186,16 @@ indefinitely with no auto-unblock when blockers complete.
 
 ## Phase 5 — Codex SSOT updates (P2)
 
-- [x] ✅ [AGENT] P2. Update `codex/12-agent-workflow/plan-hygiene.md` (create if missing) documenting: - All 4
+- [x] ✅ [AGENT] P2. Update `/codex/12-agent-workflow/plan-hygiene.md` (create if missing) documenting: - All 4
       silent-failure modes + which check catches each. - The closed-set of valid tags + how to add a new one (PR to
       PLAN_FORMAT.md). - The 3 cron schedules (plan-hygiene 05:00 UTC, blocker-reaper 04:00 UTC, orphan-ping every
-      4h). - Severity ladder: HARD (sweep exit 1) vs SOFT (warn only). Created `codex/12-agent-workflow/plan-hygiene.md`
-      with all 4 modes, severity table, cron schedules, and tag set. Slot-3 (PM@edc373c1) + slot-2 (PM@ab6c3039) both
-      created; merged at PM@b763feec.
+      4h). - Severity ladder: HARD (sweep exit 1) vs SOFT (warn only). Created
+      `/codex/12-agent-workflow/plan-hygiene.md` with all 4 modes, severity table, cron schedules, and tag set. Slot-3
+      (PM@edc373c1) + slot-2 (PM@ab6c3039) both created; merged at PM@b763feec.
 - [x] ✅ [AGENT] P2. Cross-link from `plans/PLAN_FORMAT.md` to the codex doc and to `check_todo_format.sh` so authors
       see the canonical form + the auto-fixer in one place. **DONE (2026-05-30 slot-2)**: Added "Full hygiene reference"
       pointer paragraph to PLAN_FORMAT.md §"Canonical form + automated hygiene" immediately after the closed-set tag
-      list. Points to `codex/12-agent-workflow/plan-hygiene.md` (the full reference doc, created by -002) and describes
+      list. Points to `/codex/12-agent-workflow/plan-hygiene.md` (the full reference doc, created by -002) and describes
       the 4 modes/cron schedules/severity ladder. The existing `check_todo_format.sh` + `fix_todo_format.sh` references
       in that same section remain the per-script canonical pointers. PM commit pushed to live-defi-rollout.
 

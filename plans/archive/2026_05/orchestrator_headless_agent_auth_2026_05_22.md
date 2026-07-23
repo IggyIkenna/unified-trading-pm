@@ -1,6 +1,8 @@
 ---
 doc_type: plan
-title: Orchestrator headless agent auth — token-auth interactive agents (workers + main), account switching, Remote-Control deferral
+title:
+  Orchestrator headless agent auth — token-auth interactive agents (workers + main), account switching, Remote-Control
+  deferral
 summary:
 status: complete
 nature: record
@@ -118,7 +120,7 @@ directly**.
       (`server/usage_tracker.py`). It drives the interactive `/usage` TUI; in 2.1.145 there's no non-interactive usage
       command and `claude -p '/usage'` returns only a stub. Needs re-engineering the TUI scrape for 2.1.145, OR dropping
       it for manual/backend-driven usage. Not auth-related.
-- [x] ✅ [AGENT] P2. **Update the codex SSOT** `codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md` with
+- [x] ✅ [AGENT] P2. **Update the codex SSOT** `/codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md` with
       these verified findings (the CLAUDE_CONFIG_DIR + onboarding-seed recipe; that the env token is `-p`-only WITHOUT
       the seed). The existing doc predates the 2.1.145 findings. — PM@`f785f13` (this slot).
 
@@ -195,4 +197,4 @@ tmux capture-pane -t orch-slot-99 -p | tail   # → authenticated, replied SPAWN
 - Accounts + token files: `data/config/accounts.json` (`oauth_token_env_file`), `~/.claude-accounts/<id>.env`.
 - Token SSOT buckets: `gs://central-element-323112-orchestrator-creds/accounts/`,
   `s3://uts-orchestrator-creds-427895769566/accounts/`.
-- Codex SSOT (update pending): `codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md`.
+- Codex SSOT (update pending): `/codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md`.

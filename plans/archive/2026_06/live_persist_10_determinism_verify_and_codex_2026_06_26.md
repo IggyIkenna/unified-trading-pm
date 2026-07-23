@@ -45,7 +45,7 @@ copy** of the streamed bars. Recent replay = Pub/Sub seek / warm BQ-view; long-t
       e2e-testing@090b078 — `test_faithful_copy_three_tier_read_agreement` passes (3 independent tier-reads agree)
 - [x] [VERIFY] P1. **Lifecycle e2e on real GCS/BQ**: STREAM_ONLY cold never TTLs; REPRODUCIBLE cold TTLs per matrix. ✅
       e2e-testing@090b078 — `test_lifecycle_reproducible_vs_stream_only` + `test_sink_matrix_covers_all_52_shards`
-- [x] [DOCS] P1. New codex SSOT `codex/02-data/live-data-persistence-and-event-log.md` (central log, pluggable
+- [x] [DOCS] P1. New codex SSOT `/codex/02-data/live-data-persistence-and-event-log.md` (central log, pluggable
       service/GCS/table consumers, 2-tier GCS, retention classes, determinism). Add one-liner to CLAUDE.md
       `§ Live = batch`. Repo: unified-trading-pm. ✅ unified-trading-pm — codex SSOT written; CLAUDE.md one-liner added
 - [x] [DOCS] P1. Archive the issue `issues/live_pipeline_persistence_hot_path_decoupling_2026_06_24.md` (acked →

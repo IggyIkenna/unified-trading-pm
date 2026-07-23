@@ -12,17 +12,22 @@ tags: []
 related: []
 created: 2026-05-10
 target_start: 2026-06-01
-migrated_from: simulation_scenarios_topology_price_shocks_2026_05_09.md (Phase 4-9 broader scope deferred 2026-05-10 per Audit C Finding C-5; Phase 6/7 coverage matrix + probability table added 2026-05-13 slot 7)
+migrated_from:
+  simulation_scenarios_topology_price_shocks_2026_05_09.md (Phase 4-9 broader scope deferred 2026-05-10 per Audit C
+  Finding C-5; Phase 6/7 coverage matrix + probability table added 2026-05-13 slot 7)
 locked_by: live-defi-rollout
 locked_since: 2026-05-10
 estimate_class: infra
 estimate_baseline_ai_days: 19.0
 estimate_calibrated_ai_days: 15.2
-estimate_calibration_note: 'Baseline auto-extracted from in-body AI-day mentions during 2026-05-11 sweep (~5, ~6, ~2, ~1, + 2 more). Class inferred from filename (infra, multiplier 0.8×).
+estimate_calibration_note: "Baseline auto-extracted from in-body AI-day mentions during 2026-05-11 sweep (~5, ~6, ~2,
+  ~1, + 2 more). Class inferred from filename (infra, multiplier 0.8×).
 
-  CAVEAT: auto-extract SUMS all in-body mentions; plans with both ''Total: X'' headlines AND per-phase line items will be double-counted. Owner agent: verify baseline, refine class per codex/08-workflows/estimation-calibration.md, recompute calibrated if either changes.
+  CAVEAT: auto-extract SUMS all in-body mentions; plans with both 'Total: X' headlines AND per-phase line items will be
+  double-counted. Owner agent: verify baseline, refine class per /codex/08-workflows/estimation-calibration.md,
+  recompute calibrated if either changes.
 
-  '
+  "
 parent_epic: defi_master
 priority: P2
 ---
@@ -85,7 +90,7 @@ is enumerated here per Plan Archival HARD RULE (§ "Migrate every deferred item"
 **Note**: Phase 8.B-I codex additions (scenario authoring guide, archetype selection, runner usage, report shape,
 adversarial wiring, provenance, archive, operator runbook) were shipped 2026-05-13 at PM@`91577006` as design artefacts
 that support Phase 4 of this plan. Phase 4 todo (codex SSOT sweep) still applies for the remaining 2 new codex docs
-(`codex/03-services/simulation-scenarios.md` + `codex/02-data/scenario-overlay-write-time-semantics.md`).
+(`/codex/03-services/simulation-scenarios.md` + `/codex/02-data/scenario-overlay-write-time-semantics.md`).
 
 ## Why deferred
 
@@ -181,7 +186,7 @@ Pick up the deferred wire-ins from pre-cutover plan Phase 3:
 ### Phase 3 — Backtest harness CLI + scenario integration (P0, ~2 AI-days)
 
 - [x] **[DEFERRED-POST-CUTOVER]** [AGENT] P0. **6.A Unified backtest CLI flags.** Per
-      `codex/06-coding-standards/cli-convention.md` axes: extend the backtest CLI with `--scenario <id>`. **MIGRATED
+      `/codex/06-coding-standards/cli-convention.md` axes: extend the backtest CLI with `--scenario <id>`. **MIGRATED
       FROM:** simulation_scenarios_topology_price_shocks_2026_05_09 Phase 6.A. status: todo
 
 - [x] **[DEFERRED-POST-CUTOVER]** [AGENT] P0. **6.B Pipeline wiring.** Backtest entry instantiates `ScenarioContext`
@@ -191,8 +196,8 @@ Pick up the deferred wire-ins from pre-cutover plan Phase 3:
 ### Phase 4 — Codex SSOT sweep (P0, ~1 AI-day)
 
 - [x] **[DEFERRED-POST-CUTOVER]** [AGENT] P0. **Phase 7 codex updates** — document scenario taxonomy + applier
-      patterns + per-asset_group conventions in `codex/04-architecture/scenario-injection-architecture.md` (NEW) +
-      `codex/03-services/simulation-scenarios.md` (NEW) + `codex/02-data/scenario-overlay-write-time-semantics.md`
+      patterns + per-asset_group conventions in `/codex/04-architecture/scenario-injection-architecture.md` (NEW) +
+      `/codex/03-services/simulation-scenarios.md` (NEW) + `/codex/02-data/scenario-overlay-write-time-semantics.md`
       (NEW). **MIGRATED FROM:** simulation_scenarios_topology_price_shocks_2026_05_09 Phase 7. status: todo
 
 ### Phase 5 — DART manual-trade rehearsal with scenario injection (P0, ~2 AI-days)

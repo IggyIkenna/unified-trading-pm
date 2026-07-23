@@ -9,7 +9,7 @@ stage: [meta]
 repos: []
 scope: [engineer, admin]
 tags: []
-related: [plans/active/ci_canonical_v2_migration_2026_05_29.md, codex/08-workflows/ci-cd-flow.md]
+related: [plans/active/ci_canonical_v2_migration_2026_05_29.md, /codex/08-workflows/ci-cd-flow.md]
 created: 2026-05-29
 parent_epic: infrastructure_master
 locked_by: live-defi-rollout
@@ -29,7 +29,7 @@ priority: P2
 
 ## What I found
 
-`codex/08-workflows/ci-cd-flow.md` (the canonical SSOT for the workspace CI/CD pipeline) describes a sentinel-write
+`/codex/08-workflows/ci-cd-flow.md` (the canonical SSOT for the workspace CI/CD pipeline) describes a sentinel-write
 contract:
 
 > Pass 1 — Quality Gates (MANDATORY — FULL run, no skip flags) bash scripts/quality-gates.sh ... **On clean exit with NO

@@ -15,12 +15,12 @@ scope: [engineer, admin]
 tags: [observability, monitoring, ui, infrastructure, spot-vm, live-trading, self-healing]
 related:
   [
-    deployment_ui_monitoring_pane_2026_06_19.md,
-    vm_launcher_durable_log_observability_2026_06_19.md,
-    ci_dashboard_deployment_ui_2026_06_10.md,
-    monitoring_control_plane_master_2026_06_10.md,
-    data_pipeline_hardening_self_monitoring_2026_06_22.md,
-    data_feed_sla_registry_and_active_self_healing_2026_06_19.md,
+    /plans/archive/2026_06/deployment_ui_monitoring_pane_2026_06_19.md,
+    /plans/archive/vm_launcher_durable_log_observability_2026_06_19.md,
+    /plans/archive/2026_06/ci_dashboard_deployment_ui_2026_06_10.md,
+    /plans/active/monitoring_control_plane_master_2026_06_10.md,
+    /plans/active/data_pipeline_hardening_self_monitoring_2026_06_22.md,
+    /plans/active/data_feed_sla_registry_and_active_self_healing_2026_06_19.md,
   ]
 created: 2026-06-22
 parent_epic: observability_master
@@ -44,7 +44,7 @@ drift_direction: advance-code
 
 > **✅ ARCHIVED 2026-07-13 — COMPLETE.** All Phase 0-6 todos shipped (parity #1-#6, incl. the daily deployment-estate
 > digest via the log_event → Pub/Sub → ni-service relay). Codex aligned — this plan created
-> `codex/05-infrastructure/deployment-observability.md` and the digest was added to its Slack-parity section on
+> `/codex/05-infrastructure/deployment-observability.md` and the digest was added to its Slack-parity section on
 > archival. Lock cleared with operator authorization (`[unlock-plan]`). Frozen record.
 
 > **Operator intent (2026-06-22)**: "CI/CD observability across Slack + deployment-ui is already great for the `/repos`
@@ -239,9 +239,9 @@ GCP first (operator), then AWS. Cloud Run jobs are GCP-only today; AWS equivalen
 
 ## Phase 6 — Documentation (HARD: "all documented and done")
 
-- [x] ✅ P1. New codex `codex/05-infrastructure/deployment-observability.md` — DONE (umbrella model + classification
+- [x] ✅ P1. New codex `/codex/05-infrastructure/deployment-observability.md` — DONE (umbrella model + classification
       SSOT + /api/deployments contract + /deployments UI + Slack parity + GCP-complete/AWS-pending). New codex
-      `codex/05-infrastructure/deployment-observability.md` — the umbrella model, the classification SSOT, the
+      `/codex/05-infrastructure/deployment-observability.md` — the umbrella model, the classification SSOT, the
       `/api/deployments` contract, the `/deployments` UI surface, the Slack parity, GCP-vs-AWS coverage. —
       **unified-trading-pm**
 - [x] ✅ P2. One-liner + pointer in CLAUDE.md — DONE (cursor-configs/CLAUDE.md VM-launchers section: every compute unit

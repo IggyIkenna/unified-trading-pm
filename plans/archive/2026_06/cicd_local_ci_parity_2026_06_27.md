@@ -1,7 +1,11 @@
 ---
 doc_type: plan
 title: CI/CD local↔CI parity (WS-D) — drive the gate to byte-identical + churn-protection + e2e conflict test
-summary: WS-D drive-to-parity. Fix any non-SIT-delta divergence in the local↔CI matrix to byte-identical so a local quality-gates.sh green reliably predicts a server quality-gates-v2 green. Add churn-protection (manifest-canonical-form so the manifest stops re-serializing differently) and an e2e merge-conflict test that forces a conflict PR across separate Path-B clones to exercise quickmerge STAGE 0.4 auto-reconcile. Independent of Phase-2.
+summary:
+  WS-D drive-to-parity. Fix any non-SIT-delta divergence in the local↔CI matrix to byte-identical so a local
+  quality-gates.sh green reliably predicts a server quality-gates-v2 green. Add churn-protection
+  (manifest-canonical-form so the manifest stops re-serializing differently) and an e2e merge-conflict test that forces
+  a conflict PR across separate Path-B clones to exercise quickmerge STAGE 0.4 auto-reconcile. Independent of Phase-2.
 status: superseded
 nature: process
 asset_group: cross-asset
@@ -9,7 +13,12 @@ stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]
 tags: [cicd, WS-D, local-ci-parity, churn-protection, quickmerge, manifest-canonical-form]
-related: [cicd_consolidated_remaining_2026_06_24.md, ../epics/infrastructure_master.md, ../../codex/06-coding-standards/quality-gates.md]
+related:
+  [
+    /plans/archive/2026_06/cicd_consolidated_remaining_2026_06_24.md,
+    ../epics/infrastructure_master.md,
+    /codex/06-coding-standards/quality-gates.md,
+  ]
 created: 2026-06-27
 parent_epic: infrastructure_master
 assigned_vm: NA
@@ -56,7 +65,7 @@ drift_direction: advance-code
 
 ## Codex SSOT updates
 
-- `codex/06-coding-standards/quality-gates.md` — note the local↔v2 parity guarantee + manifest-canonical-form.
+- `/codex/06-coding-standards/quality-gates.md` — note the local↔v2 parity guarantee + manifest-canonical-form.
 
 ## Progress Log
 

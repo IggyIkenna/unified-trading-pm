@@ -13,7 +13,11 @@ stage: [meta]
 repos: [agent-orchestrator, deployment-ui]
 scope: [engineer]
 tags: [agent-orchestrator, infra, state-home, env-vars, fleet, quality-gates]
-related: [ao_open_issues_consolidated_close_out_2026_07_17.md, qg_host_adaptive_resource_governor_2026_07_14.md]
+related:
+  [
+    /plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md,
+    /plans/active/qg_host_adaptive_resource_governor_2026_07_14.md,
+  ]
 created: 2026-07-20
 last_updated: 2026-07-20
 parent_epic: orchestrator_master
@@ -131,22 +135,22 @@ Code/config work is local. **The live state migration in todo 1 is a PRODUCTION 
       unreachable this session).
 
       **⚠️ GATE CORRECTION + RE-MEASURE 2026-07-20 (hk host).** The "zero frozen clones remain" claim above was
-                                      **overclaimed when written**: the 5 `deployment-api` clones (slots 25/27/28/29/30) whose ref-corruption this todo
-                                      un-masked were left at **249 behind, explicitly un-approved and un-FF'd** ("reported, not yet approved"), and the
-                                      "✅ FF-unfroze all 4" sentence covers only the four TRACKED-DIRTY clones — a different set. Nothing anywhere
-                                      tracked those 5. Re-swept all **375 hk-host slot clones + 25 root repos** today with a measured survey
-                                      (`git fetch` + `HEAD..origin/<branch>` per clone): **`deployment-api` is `behind=0` on all 15 slots** — the
-                                      249-behind class is genuinely gone here, so the gate is NOW met on this host, but it was met by later cron
-                                      catch-up, not by this todo. Worst observed anywhere was **7** (an actively-committed PM clone). FF'd 42 clean
-                                      clones across two passes (0 failures); **2 dirty clones deliberately PROTECTED** (slots 27/28 `unified-trading-pm`
-                                      — live agent WIP, mtimes minutes old, per the liveness-gated inherited-WIP rule).
+                                                                                                                                                  **overclaimed when written**: the 5 `deployment-api` clones (slots 25/27/28/29/30) whose ref-corruption this todo
+                                                                                                                                                  un-masked were left at **249 behind, explicitly un-approved and un-FF'd** ("reported, not yet approved"), and the
+                                                                                                                                                  "✅ FF-unfroze all 4" sentence covers only the four TRACKED-DIRTY clones — a different set. Nothing anywhere
+                                                                                                                                                  tracked those 5. Re-swept all **375 hk-host slot clones + 25 root repos** today with a measured survey
+                                                                                                                                                  (`git fetch` + `HEAD..origin/<branch>` per clone): **`deployment-api` is `behind=0` on all 15 slots** — the
+                                                                                                                                                  249-behind class is genuinely gone here, so the gate is NOW met on this host, but it was met by later cron
+                                                                                                                                                  catch-up, not by this todo. Worst observed anywhere was **7** (an actively-committed PM clone). FF'd 42 clean
+                                                                                                                                                  clones across two passes (0 failures); **2 dirty clones deliberately PROTECTED** (slots 27/28 `unified-trading-pm`
+                                                                                                                                                  — live agent WIP, mtimes minutes old, per the liveness-gated inherited-WIP rule).
 
-                                      **Lesson that outlives this todo — `behind=1` is CHURN, not a freeze.** Between two full sweeps ~4 min apart the
-                                      behind>0 count went 16 → 29, purely because other agents kept pushing to LDR. Chasing an absolute behind-count is
-                                      a treadmill; a frozen clone is one whose behind-count **grows monotonically without recovery**, which is a
-                                      STREAK signal, not a threshold. This is exactly why the per-repo freeze-streak detector (re-homed todos 4/5 →
-                                      `monitoring_control_plane_master_2026_06_10.md`) matters more than any manual sweep: a sweep is stale the moment
-                                      it finishes. **Do not re-run a manual sweep as a substitute for landing the detector.**
+                                                                                                                                                  **Lesson that outlives this todo — `behind=1` is CHURN, not a freeze.** Between two full sweeps ~4 min apart the
+                                                                                                                                                  behind>0 count went 16 → 29, purely because other agents kept pushing to LDR. Chasing an absolute behind-count is
+                                                                                                                                                  a treadmill; a frozen clone is one whose behind-count **grows monotonically without recovery**, which is a
+                                                                                                                                                  STREAK signal, not a threshold. This is exactly why the per-repo freeze-streak detector (re-homed todos 4/5 →
+                                                                                                                                                  `monitoring_control_plane_master_2026_06_10.md`) matters more than any manual sweep: a sweep is stale the moment
+                                                                                                                                                  it finishes. **Do not re-run a manual sweep as a substitute for landing the detector.**
 
 - [x] [INFRA] P2. ✅ **Dispatch-time full-QG throttle — coordinate, do NOT build a second governor.** The shared-host
       "≤2 full QG" cap is unenforced at dispatch; 4-6 concurrent full-QG pytests saturated the VM on 07-17. The RAM/CPU
@@ -185,10 +189,10 @@ Code/config work is local. **The live state migration in todo 1 is a PRODUCTION 
 
 ## Codex SSOTs
 
-- `codex/05-infrastructure/per-tab-worktrees.md` — slot clones, ff-pull, the freeze mode this detects.
-- `codex/06-coding-standards/quality-gates.md` — the shared-host QG cap todo 7 enforces.
-- `codex/06-coding-standards/ui-testing-layers.md` — the playwright gate binding the deployment-ui todo.
-- `codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` — state/topology context for the state home.
+- `/codex/05-infrastructure/per-tab-worktrees.md` — slot clones, ff-pull, the freeze mode this detects.
+- `/codex/06-coding-standards/quality-gates.md` — the shared-host QG cap todo 7 enforces.
+- `/codex/06-coding-standards/ui-testing-layers.md` — the playwright gate binding the deployment-ui todo.
+- `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` — state/topology context for the state home.
 
 ## Progress Log
 

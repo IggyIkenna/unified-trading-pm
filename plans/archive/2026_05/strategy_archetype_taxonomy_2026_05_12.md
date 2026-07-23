@@ -1,6 +1,8 @@
 ---
 doc_type: plan
-title: Strategy archetype taxonomy — share-class-driven neutrality + recursive carry rename + cross-domain extensions + vol surface infra + doc completion
+title:
+  Strategy archetype taxonomy — share-class-driven neutrality + recursive carry rename + cross-domain extensions + vol
+  surface infra + doc completion
 summary:
 status: complete
 nature: record
@@ -16,7 +18,15 @@ promoted_from_issue: 2026-05-12
 estimate_class: design
 estimate_baseline_ai_days: 8
 estimate_calibrated_ai_days: 4.8
-source: [codex/09-strategy/strategy-summary.md, codex/09-strategy/architecture-v2/archetypes/*, unified-api-contracts/unified_api_contracts/internal/architecture_v2/enums.py (StrategyArchetype enum + ARCHETYPE_TO_FAMILY dict), 'plans/active/master_to_live_defi_2026_05_23.md:224', plans/active/defi_recursive_borrow_archetypes_2026_05_10.md]
+source:
+  [
+    /codex/09-strategy/strategy-summary.md,
+    codex/09-strategy/architecture-v2/archetypes/*,
+    unified-api-contracts/unified_api_contracts/internal/architecture_v2/enums.py (StrategyArchetype enum +
+    ARCHETYPE_TO_FAMILY dict),
+    "plans/active/master_to_live_defi_2026_05_23.md:224",
+    plans/active/defi_recursive_borrow_archetypes_2026_05_10.md,
+  ]
 locked_by: live-defi-rollout
 locked_since: 2026-05-12
 parent_epic: strategy_master
@@ -341,12 +351,12 @@ legacy archetypes after granular variants doc-complete). **+rename**: `CARRY_REC
 
 **Slot 8** (codex_vs_citadel + cross_cutting #4):
 
-- Update `codex/09-strategy/strategy-summary.md`: corrections per items 1-13 above; corrected counts.
+- Update `/codex/09-strategy/strategy-summary.md`: corrections per items 1-13 above; corrected counts.
 - Per-archetype doc completion: 4 Portfolio + 18 Vol + `market-making-event-settled.md` (drop legacy) + new
   `carry-staked-basis-dated.md` + new `carry-basis-perp-inv.md` + new `carry-basis-dated-inv.md`.
 - Workspace-grep + reconcile `(8 families / 18 archetypes)` / `(9 families / 53 archetypes)` /
   `(9 families / 55 archetypes)` count drift across all plans + master plan + CLAUDE.md (likely 10+ locations).
-- Update `codex/09-strategy/strategy-summary.md` § 18 line (Phase 9 expansion sub-count drift).
+- Update `/codex/09-strategy/strategy-summary.md` § 18 line (Phase 9 expansion sub-count drift).
 
 **Slot 1 (main)**:
 
@@ -450,13 +460,13 @@ Two discrepancies found between this plan's operator decisions and current UAC s
 
 Slot-3 created the missing per-archetype docs for the 3 V-1 archetypes (PM@`f3236961`):
 
-- `codex/09-strategy/architecture-v2/archetypes/carry-basis-perp-inv.md` ✅ — canonical doc for renamed archetype;
+- `/codex/09-strategy/architecture-v2/archetypes/carry-basis-perp-inv.md` ✅ — canonical doc for renamed archetype;
   recursive borrow loop + CeFi perp hedge; replaces `carry-recursive-borrow-perp-hedged.md` (redirect banner added)
-- `codex/09-strategy/architecture-v2/archetypes/carry-basis-dated-inv.md` ✅ — new archetype; inverse dated basis (short
-  future + long cash captures backwardation); full config schema + risk profile
-- `codex/09-strategy/architecture-v2/archetypes/carry-staked-basis-dated.md` ✅ — new archetype; dated-contract variant
+- `/codex/09-strategy/architecture-v2/archetypes/carry-basis-dated-inv.md` ✅ — new archetype; inverse dated basis
+  (short future + long cash captures backwardation); full config schema + risk profile
+- `/codex/09-strategy/architecture-v2/archetypes/carry-staked-basis-dated.md` ✅ — new archetype; dated-contract variant
   of staked basis; staking yield + locked basis premium at expiry; Deribit/Drift/Bybit catalog slots
-- `codex/09-strategy/strategy-summary.md` ✅ — Carry & Yield count 8 → 10; new archetype entries; updated links
+- `/codex/09-strategy/strategy-summary.md` ✅ — Carry & Yield count 8 → 10; new archetype entries; updated links
 
 **Scope boundary**: Slot-8 Vol Trading 18 per-archetype docs + `market-making-event-settled.md` retention doc remain on
 Slot 8's stack (not yet shipped). This V-3 covers only the 3 V-1 Carry archetypes.
@@ -467,13 +477,13 @@ Slot-3 updated 4 codex docs to reflect 55 → 57 archetype count post V-1 additi
 
 - `codex/00-SSOT-INDEX.md` ✅ — "9 families × 55 archetypes" → "9 families × 57 archetypes"; "StrategyArchetype (55)" →
   "(57)"; "55 strategy archetypes" → "57 strategy archetypes"
-- `codex/09-strategy/architecture-v2/README.md` ✅ — "## 55 Archetypes" → "## 57 Archetypes"; "1 of 55 archetypes" → "1
+- `/codex/09-strategy/architecture-v2/README.md` ✅ — "## 55 Archetypes" → "## 57 Archetypes"; "1 of 55 archetypes" → "1
   of 57"; "Total: 55 archetypes" → "57"; Carry & Yield row: renamed `CARRY_RECURSIVE_BORROW_PERP_HEDGED` →
   `CARRY_BASIS_PERP_INV` + added `CARRY_STAKED_BASIS_DATED` + `CARRY_BASIS_DATED_INV`; 8 docs → 10 docs; historical
   narrative updated with V-1 rename + +2 addition
-- `codex/09-strategy/architecture-v2/strategy-registry-v2.md` ✅ — "9 families / 55 archetypes" → "9 families / 57
+- `/codex/09-strategy/architecture-v2/strategy-registry-v2.md` ✅ — "9 families / 55 archetypes" → "9 families / 57
   archetypes" in the PARTIALLY SUPERSEDED banner canonical-counts note
-- `codex/09-strategy/architecture-v2/cross-cutting/archetype-paper-readiness.md` ✅ — "55 archetypes" → "57 archetypes"
+- `/codex/09-strategy/architecture-v2/cross-cutting/archetype-paper-readiness.md` ✅ — "55 archetypes" → "57 archetypes"
   (frontmatter + body); CARRY_RECURSIVE_BORROW_PERP_HEDGED row renamed + 2 new stub rows added for
   `CARRY_STAKED_BASIS_DATED` + `CARRY_BASIS_DATED_INV`
 
@@ -490,12 +500,12 @@ archetypes" or "53 archetypes" are all historical baseline markers (correct cont
 Slot-3 found and updated 6 codex docs + 1 active plan that still referenced the old archetype name as a live
 (non-historical) identifier (PM@`013d6d0f`):
 
-- `codex/04-architecture/flash-loan-receiver.md` ✅ — RecursiveLeverageReceiver users list
-- `codex/04-architecture/cefi-perp-leg-bybit.md` ✅ — Family 2 context callout
-- `codex/04-architecture/batch-live-architecture.md` ✅ — archetype × engine table row
-- `codex/08-workflows/cutover-window-dependency-order.md` ✅ — backtest dependency diagram
-- `codex/16-strategy-playbooks/defi/venue-collateral-2026-05-07.md` ✅ — Family 2 section header
-- `codex/09-strategy/architecture-v2/category-instrument-coverage.md` ✅ — currency note + 57-count annotation added
+- `/codex/04-architecture/flash-loan-receiver.md` ✅ — RecursiveLeverageReceiver users list
+- `/codex/04-architecture/cefi-perp-leg-bybit.md` ✅ — Family 2 context callout
+- `/codex/04-architecture/batch-live-architecture.md` ✅ — archetype × engine table row
+- `/codex/08-workflows/cutover-window-dependency-order.md` ✅ — backtest dependency diagram
+- `/codex/16-strategy-playbooks/defi/venue-collateral-2026-05-07.md` ✅ — Family 2 section header
+- `/codex/09-strategy/architecture-v2/category-instrument-coverage.md` ✅ — currency note + 57-count annotation added
 - `plans/active/compute_optimization_mock_data_2026_05_13.md` ✅ — deferred item archetype list
 
 Additional active references found and fixed in follow-on commits (PM@`d17236bb`, `e9e5f976`):
@@ -508,8 +518,8 @@ All remaining `CARRY_RECURSIVE_BORROW_PERP_HEDGED` references in the PM repo are
 
 ### Item V-6 — carry-and-yield family doc 6 → 10 archetypes ✅ SHIPPED 2026-05-19 slot-3
 
-`codex/09-strategy/architecture-v2/families/carry-and-yield.md` was last written when the family had 6 archetypes. After
-V-1 additions (uac@0196842) the canonical count is 10. Slot-3 updated (PM@`a28a315e`):
+`/codex/09-strategy/architecture-v2/families/carry-and-yield.md` was last written when the family had 6 archetypes.
+After V-1 additions (uac@0196842) the canonical count is 10. Slot-3 updated (PM@`a28a315e`):
 
 - Frontmatter archetype count: `6` → `10` with V-1 provenance note
 - Alpha thesis: 6 bullets → 10 bullets (added CARRY_BASIS_DATED_INV, CARRY_BASIS_PERP_INV, CARRY_STAKED_BASIS_DATED,
@@ -520,8 +530,8 @@ V-1 additions (uac@0196842) the canonical count is 10. Slot-3 updated (PM@`a28a3
 
 ### Item V-7 — arbitrage-structural family doc 2 → 7 archetypes ✅ SHIPPED 2026-05-19 slot-3
 
-`codex/09-strategy/architecture-v2/families/arbitrage-structural.md` showed count 2; UAC enum has 7 after MEV variants +
-ARBITRAGE_CROSS_DOMAIN_EVENT were added. Updated (PM@`4d0ffca5`):
+`/codex/09-strategy/architecture-v2/families/arbitrage-structural.md` showed count 2; UAC enum has 7 after MEV
+variants + ARBITRAGE_CROSS_DOMAIN_EVENT were added. Updated (PM@`4d0ffca5`):
 
 - Frontmatter archetype count: `2` → `7` with V-1 provenance note
 - Section heading: `## 2 Archetypes` → `## 7 Archetypes`
@@ -534,9 +544,9 @@ ARBITRAGE_CROSS_DOMAIN_EVENT were added. Updated (PM@`4d0ffca5`):
 
 Found and fixed 3 additional codex docs still referencing stale 55/53 archetype counts (PM@`37b520ce`):
 
-- `codex/09-strategy/README.md` ✅ — "9 families × 55 archetypes" + "StrategyArchetype (55)" → 57
-- `codex/09-strategy/mvp-universe-per-asset-group.md` ✅ — "enum (53 archetypes)" → 57; "25 files" → 35
-- `codex/09-strategy/architecture-v2/MIGRATION.md` ✅ — Phase 9 note "55 archetypes" → 57 with V-1 provenance
+- `/codex/09-strategy/README.md` ✅ — "9 families × 55 archetypes" + "StrategyArchetype (55)" → 57
+- `/codex/09-strategy/mvp-universe-per-asset-group.md` ✅ — "enum (53 archetypes)" → 57; "25 files" → 35
+- `/codex/09-strategy/architecture-v2/MIGRATION.md` ✅ — Phase 9 note "55 archetypes" → 57 with V-1 provenance
 
 Also pinged Slot 1 main about `master_to_live_defi_2026_05_23.md:264` stale "Carry & Yield (6)" → (10) + "53 archetypes"
 → 57 (Slot 1 owns that file per slot-precedence rule).
@@ -618,7 +628,7 @@ stub (`carry-recursive-borrow-perp-hedged.md`).
 
 ## Composes with
 
-- `codex/09-strategy/strategy-summary.md` (canonical archetype list)
+- `/codex/09-strategy/strategy-summary.md` (canonical archetype list)
 - `unified-api-contracts/.../internal/architecture_v2/enums.py` (UAC enum)
 - `plans/active/defi_recursive_borrow_archetypes_2026_05_10.md` (slot 5 Phases 1-2 design + new Family 1/2 archetypes)
 - `plans/active/master_to_live_defi_2026_05_23.md:224` (master plan strategy archetypes row)

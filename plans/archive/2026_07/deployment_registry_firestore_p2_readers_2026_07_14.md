@@ -16,8 +16,8 @@ repos: [deployment-api, unified-trading-library]
 scope: [engineer]
 tags: [firestore, deployment-registry, census, partial-render, migration]
 related:
-  - deployment_registry_firestore_migration_2026_07_14.md
-  - deployment_registry_firestore_p1_dualwrite_2026_07_14.md
+  - /plans/active/deployment_registry_firestore_migration_2026_07_14.md
+  - /plans/archive/2026_07/deployment_registry_firestore_p1_dualwrite_2026_07_14.md
 created: "2026-07-14"
 last_updated: "2026-07-14"
 parent_epic: observability_master
@@ -149,5 +149,5 @@ untouched. No `raise` in per-row enrichment (best-effort). UTC datetimes; QG-gre
 
 ## Codex SSOTs
 
-- `codex/04-architecture/shard-level-failure-isolation.md` — the per-KIND degradation principle the census follows.
-- `codex/05-infrastructure/deployment-observability.md` — registry SSOT (updated Phase 5).
+- `/codex/04-architecture/shard-level-failure-isolation.md` — the per-KIND degradation principle the census follows.
+- `/codex/05-infrastructure/deployment-observability.md` — registry SSOT (updated Phase 5).

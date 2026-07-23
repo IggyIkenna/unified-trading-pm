@@ -19,7 +19,13 @@ priority: P1
 estimate_class: design
 estimate_baseline_ai_days: 6
 estimate_calibrated_ai_days: 3.6
-source: [plans/audit/results/cicd_pipeline_vs_plans_drift_audit_2026_06_17.md (§ "Deferred exercise"), the 13 infrastructure_master cicd active plans + 11 cicd issue docs (inventory below), codex/08-workflows/ci-cd-flow.md (the engineer SSOT being refreshed), .github/workflows/*.yml (51 live workflows — ground truth)]
+source:
+  [
+    plans/audit/results/cicd_pipeline_vs_plans_drift_audit_2026_06_17.md (§ "Deferred exercise"),
+    the 13 infrastructure_master cicd active plans + 11 cicd issue docs (inventory below),
+    /codex/08-workflows/ci-cd-flow.md (the engineer SSOT being refreshed),
+    .github/workflows/*.yml (51 live workflows — ground truth),
+  ]
 ---
 
 > **⚠️ SUPERSEDED 2026-06-24 → [cicd_consolidated_remaining_2026_06_24.md](cicd_consolidated_remaining_2026_06_24.md)**
@@ -113,7 +119,7 @@ consolidate-then-archive.
 | New plan (`*_2026_06_18`) | Theme                                                                     | Fed by (open-item sources)                                                                                   |
 | ------------------------- | ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
 | `cicd_promotion_pipeline` | commit→LDR→staging→SIT→main→image + ci_status SSOT                        | ldr_trunk, ci_status_firestore, ldr_tarball, promotion_queue, cloud_build_router, contract_hardening(subset) |
-| `cicd_quality_gates`      | quickmerge + quality-gates.sh + local↔CI + worktree                      | qg_commit_boundary, ci_local_parity, worktree_ldr, contract_hardening(subset)                                |
+| `cicd_quality_gates`      | quickmerge + quality-gates.sh + local↔CI + worktree                       | qg_commit_boundary, ci_local_parity, worktree_ldr, contract_hardening(subset)                                |
 | `cicd_release_machinery`  | semver/version/manifest + sprawl/templates + watchers/self-heal + gh-rate | semver_skip_ci, sprawl, gh_rate, self_healing_gaps, ci_incident, contract_hardening(subset)                  |
 | `cicd_sit_and_fleet`      | SIT + fleet audit/re-audit + UAC orphan cap                               | sit_uac_orphan, fleet_audit_triad, contract_hardening(subset)                                                |
 
@@ -121,10 +127,10 @@ consolidate-then-archive.
 
 ## Phases
 
-- [x] ✅ [DOCS] P1. **Phase 1 — document the current shape.** Refresh `codex/08-workflows/ci-cd-flow.md` to the as-built
-      final pipeline (complete the D5–D9 partial pass); add a top-level mermaid (commit→LDR→staging→SIT→main→image, each
-      node tagged with its workflow) via the existing `cicd-pipeline-definition.yaml`→`CI-CD-PIPELINE.svg` generator;
-      add an **auto-generated workflow catalog**
+- [x] ✅ [DOCS] P1. **Phase 1 — document the current shape.** Refresh `/codex/08-workflows/ci-cd-flow.md` to the
+      as-built final pipeline (complete the D5–D9 partial pass); add a top-level mermaid
+      (commit→LDR→staging→SIT→main→image, each node tagged with its workflow) via the existing
+      `cicd-pipeline-definition.yaml`→`CI-CD-PIPELINE.svg` generator; add an **auto-generated workflow catalog**
       (`name | trigger | concurrency | stage | reads/writes |     fires-next`) emitted by a generator that parses the
       `.yml` files so it can't rot.
 - [x] ✅ [DOCS] P1. **Phase 2 — consolidate into the 4 themed plans** above, each carrying ONLY open items (triaged:
@@ -188,7 +194,7 @@ All three phases shipped autonomously in one session.
 
 **Phase 1 — docs + diagram (codex is now the as-built SSOT):**
 
-- `codex/08-workflows/ci-cd-flow.md` refreshed to the LDR-trunk model — added the canonical **mermaid** pipeline
+- `/codex/08-workflows/ci-cd-flow.md` refreshed to the LDR-trunk model — added the canonical **mermaid** pipeline
   diagram + the catalog pointer; replaced the retired three-tier headline; fixed `workspace-qg`→v2, codex-as-repo,
   tab-mirror, the `--to-staging`/dep-branch worked example; collapsed the dead 2026-06-01 snapshot; added the 7-state
   ci_status lifecycle. (33bad466c)

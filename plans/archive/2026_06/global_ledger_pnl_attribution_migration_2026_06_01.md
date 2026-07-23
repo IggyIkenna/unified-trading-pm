@@ -9,8 +9,15 @@ stage: [meta]
 repos: [alerting-service, client-reporting-api, execution-service, strategy-service]
 scope: [engineer, admin]
 tags: []
-related: [plans/active/global_ledger_pnl_attribution_discovery_2026_05_21.md, plans/epics/global_ledger_pnl_attribution_master.md, plans/epics/execution_master.md, plans/epics/strategy_master.md, plans/epics/instruments_master.md]
-created: '2026-05-23'
+related:
+  [
+    plans/active/global_ledger_pnl_attribution_discovery_2026_05_21.md,
+    plans/epics/global_ledger_pnl_attribution_master.md,
+    plans/epics/execution_master.md,
+    plans/epics/strategy_master.md,
+    plans/epics/instruments_master.md,
+  ]
+created: "2026-05-23"
 parent_epic: global_ledger_pnl_attribution_master
 priority: P0
 model_tier: opus-required
@@ -22,7 +29,13 @@ assigned_vm: vm-execution
 locked_by: live-defi-rollout
 locked_since: 2026-05-23
 predecessor: plans/active/global_ledger_pnl_attribution_discovery_2026_05_21.md
-Codex SSOTs: [codex/04-architecture/global-ledger-architecture.md, codex/02-data/ledger-event-taxonomy.md, codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md, codex/04-architecture/client-funds-isolation.md]
+Codex SSOTs:
+  [
+    /codex/04-architecture/global-ledger-architecture.md,
+    /codex/02-data/ledger-event-taxonomy.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md,
+    /codex/04-architecture/client-funds-isolation.md,
+  ]
 ---
 
 # Global Ledger + PnL Attribution — Migration Sub-Plan

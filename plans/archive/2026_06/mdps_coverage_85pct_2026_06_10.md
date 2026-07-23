@@ -9,7 +9,12 @@ stage: [meta]
 repos: [market-data-processing-service, unified-trading-pm]
 scope: [engineer, admin]
 tags: []
-related: [plans/active/uac_coverage_90pct_2026_06_10.md, plans/active/quality_gates_speed_and_config_ssot_2026_06_09.md, plans/active/cicd_contract_hardening_2026_06_01.md]
+related:
+  [
+    plans/active/uac_coverage_90pct_2026_06_10.md,
+    plans/active/quality_gates_speed_and_config_ssot_2026_06_09.md,
+    plans/active/cicd_contract_hardening_2026_06_01.md,
+  ]
 created: 2026-06-10
 parent_epic: mtds_mdps_master
 assigned_vm: vm-ml
@@ -50,7 +55,7 @@ Three levers (mirrors `uac_coverage_90pct_2026_06_10.md`):
 - **Lever 3 — Branch/edge-case tests:** error paths, shard-isolation no-raise loops, typed-error routing, CLI mode
   dispatch on the orchestration-core / CLI / writer modules.
 
-Codex SSOT: `codex/06-coding-standards/quality-gates.md` § "Coverage by repo type".
+Codex SSOT: `/codex/06-coding-standards/quality-gates.md` § "Coverage by repo type".
 
 ## Result (2026-06-10)
 
@@ -106,8 +111,8 @@ target). Full `scripts/quality-gates.sh --no-fix` green.
 
 - [x] ✅ [SCRIPT] P1. Raise `fail_under` 77→85 in `pyproject.toml` (actual 86.71%) — `market-data-processing-service`
 - [x] ✅ [QG] P1. `bash scripts/quality-gates.sh --no-fix` green at 85% floor — `market-data-processing-service`
-- [x] ✅ [DOCS] P2. Update `codex/06-coding-standards/quality-gates.md` § "Coverage by repo type" with MDPS 85% combined
-      target + rationale — `unified-trading-pm`
+- [x] ✅ [DOCS] P2. Update `/codex/06-coding-standards/quality-gates.md` § "Coverage by repo type" with MDPS 85%
+      combined target + rationale — `unified-trading-pm`
 - [ ] [QG] P2. Run PM `bash scripts/quality-gates.sh` to confirm plan + codex update pass — `unified-trading-pm`
 
 ## Temporary states + their canonical follow-up plans

@@ -114,7 +114,7 @@ causes are real: serializer drift AND stale-lock commit-discipline gaps.
 ### Phase 5 — Codex SSOT update
 
 - [x] [INFRA] P3. Codex update — `.cursor/rules/dependencies/uv-lock-file.mdc` +
-      `codex/06-coding-standards/dependency-management.md` document the 3-role split ✅
+      `/codex/06-coding-standards/dependency-management.md` document the 3-role split ✅
 
 ## Discovered during promotion (2026-06-02)
 

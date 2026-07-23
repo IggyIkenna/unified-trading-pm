@@ -6,18 +6,20 @@ status: complete
 nature: record
 asset_group: [infrastructure]
 stage: [meta]
-repos: [agent-orchestrator, alerting-service, deployment-service, execution-service, strategy-service, unified-api-contracts]
+repos:
+  [agent-orchestrator, alerting-service, deployment-service, execution-service, strategy-service, unified-api-contracts]
 scope: [engineer, admin]
 tags: []
 related: [independent_fallback_twilio_voice_2026_05_23.md, incident_gateway_and_state_machine_2026_05_23.md]
-created: '2026-05-23'
+created: "2026-05-23"
 parent_epic: observability_master
 assigned_vm: vm-cross-cutting
 priority: P0
 estimate_class: research
 estimate_baseline_ai_days: 4
 estimate_calibrated_ai_days: 4.8
-estimate_calibration_note: 'Research class — operator buys the device; AI researches candidate devices, ships a webhook prototype that any
+estimate_calibration_note: 'Research class — operator buys the device; AI researches candidate devices, ships a webhook
+  prototype that any
 
   candidate''s API can hit, hooks up Twilio voice as permanent bridge fallback. Baseline 4 × 1.2 research = 4.8 cal-
 
@@ -28,7 +30,7 @@ parent: master_to_live_defi_2026_05_23
 locked_by: live-defi-rollout
 locked_since: 2026-05-23
 depends_on: [independent_fallback_twilio_voice_2026_05_23]
-gates: ['master_to_live_defi_2026_05_23:Group-F']
+gates: ["master_to_live_defi_2026_05_23:Group-F"]
 ---
 
 # Physical Pager Layer (Layer-4) — Research + Webhook Prototype + Twilio Bridge
@@ -60,23 +62,23 @@ pager closes the residual gap.
 ### Phase 1 — Candidate research (1 cal-day)
 
 - [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.1. **Webfetch + assess 4-6 candidates** — write
-      `codex/05-infrastructure/physical-pager-layer.md` with a comparison matrix. Each candidate covered with: name,
+      `/codex/05-infrastructure/physical-pager-layer.md` with a comparison matrix. Each candidate covered with: name,
       vendor, current 2026 price, alert path (webhook URL, email-to-pager, SMS-to-pager, satellite uplink), power
       requirements, network independence, pros/cons, recommended-for-which-scenario.
 
       Candidates to evaluate:
-      - **(1) Dedicated SIM-only on-call phone** (Nokia 2660 Flip or similar — £50, separate carrier from operator's
-        primary, always-charged, DND-bypass, loud ringtone): cheap, reliable, but still mobile-network-dependent.
-      - **(2) LoRa pager** (e.g. Meshtastic mesh-network pager, ~$80; or commercial Spok pager via paging carrier
-        subscription, ~$15/mo): independent network; range limited; subscription required.
-      - **(3) GSM siren alarm box with separate SIM** (e.g. Eshion GSM alarm or DAYTECH M5; ~£30-50): wall-mounted,
-        very loud, SMS-triggered; survives phone failure entirely; requires SIM card on different carrier.
-      - **(4) Cellular smartwatch with dedicated SIM** (Apple Watch Cellular w/ separate eSIM ~£500 + £5/mo; or
-        Galaxy Watch LTE): wearable; PagerDuty app installed; expensive.
-      - **(5) Satellite messenger / hotspot** (Garmin inReach Mini 2 ~£350 + £15/mo Iridium plan; or Starlink Mini
-        + roaming SIM): travel-resilient, works in no-signal; expensive + monthly fee.
-      - **(6) Hosted IoT button / panic alarm** (e.g. AlertMedia panic device, RingAlarm with SIM backup): less
-        relevant — needs operator action vs alerting operator.
+                                                                                                                  - **(1) Dedicated SIM-only on-call phone** (Nokia 2660 Flip or similar — £50, separate carrier from operator's
+                                                                                                                    primary, always-charged, DND-bypass, loud ringtone): cheap, reliable, but still mobile-network-dependent.
+                                                                                                                  - **(2) LoRa pager** (e.g. Meshtastic mesh-network pager, ~$80; or commercial Spok pager via paging carrier
+                                                                                                                    subscription, ~$15/mo): independent network; range limited; subscription required.
+                                                                                                                  - **(3) GSM siren alarm box with separate SIM** (e.g. Eshion GSM alarm or DAYTECH M5; ~£30-50): wall-mounted,
+                                                                                                                    very loud, SMS-triggered; survives phone failure entirely; requires SIM card on different carrier.
+                                                                                                                  - **(4) Cellular smartwatch with dedicated SIM** (Apple Watch Cellular w/ separate eSIM ~£500 + £5/mo; or
+                                                                                                                    Galaxy Watch LTE): wearable; PagerDuty app installed; expensive.
+                                                                                                                  - **(5) Satellite messenger / hotspot** (Garmin inReach Mini 2 ~£350 + £15/mo Iridium plan; or Starlink Mini
+                                                                                                                    + roaming SIM): travel-resilient, works in no-signal; expensive + monthly fee.
+                                                                                                                  - **(6) Hosted IoT button / panic alarm** (e.g. AlertMedia panic device, RingAlarm with SIM backup): less
+                                                                                                                    relevant — needs operator action vs alerting operator.
 
 - [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.2. Recommended pick: **(1) + (3) combo**: dedicated SIM-only phone on
       Voda + GSM siren on EE. Total ~£100 hardware + £15/mo airtime. Survives PagerDuty/Telegram/Twilio outage by
@@ -154,9 +156,9 @@ pager closes the residual gap.
 
 ## Codex SSOT updates
 
-- NEW: `codex/05-infrastructure/physical-pager-layer.md` — comparison matrix + recommended pick + webhook contract +
+- NEW: `/codex/05-infrastructure/physical-pager-layer.md` — comparison matrix + recommended pick + webhook contract +
   Twilio bridge.
-- UPDATE: `codex/04-architecture/recovery-defence-in-depth-layers.md` — Layer-4 is this layer.
+- UPDATE: `/codex/04-architecture/recovery-defence-in-depth-layers.md` — Layer-4 is this layer.
 
 ## Tier-1-4 implementation log (2026-05-23)
 
@@ -178,8 +180,9 @@ pager closes the residual gap.
 
 **Items still `- [ ]` for follow-up sessions (per-plan):**
 
-- [x] [BLOCKED-OPERATOR-ACTION] Phase 1 P0.1-P0.3 — comparison matrix in codex/05-infrastructure/physical-pager-layer.md
-      (already exists); **OPERATOR DEVICE PURCHASE** pending ping doc item #2; Nokia + GSM siren combo recommended
+- [x] [BLOCKED-OPERATOR-ACTION] Phase 1 P0.1-P0.3 — comparison matrix in
+      /codex/05-infrastructure/physical-pager-layer.md (already exists); **OPERATOR DEVICE PURCHASE** pending ping doc
+      item #2; Nokia + GSM siren combo recommended
 - [x] ✅ Phase 2 P0.4-P0.5 — `alerting_service/notifiers/physical_pager.py` — alerting-service@e5c8084
 - [x] ✅ Phase 3 P0.7-P0.9 — 5 closed-set trigger conditions + router rule — alerting-service@06c48c4
 - [x] ✅ Phase 4 P0.10 — Twilio voice bridge wiring — alerting-service@06c48c4 provider_in_fallback_mode param
@@ -226,7 +229,7 @@ pager closes the residual gap.
 
 - Operator ping doc → `plans/active/_agent_pings.md` 2026-05-23 ikenna-slot-1 → operator entry
 - 22 incident runbooks → `codex/15-runbooks/incidents/` (RB-INC/RECON/RISK/CONN/DEPLOY/INFRA/ALERT)
-- Game-day protocol → `codex/15-runbooks/incidents/game_day_protocol.md`
+- Game-day protocol → `/codex/15-runbooks/incidents/game_day_protocol.md`
 - Alerting Tier-5 → `alerting-service@e5c8084` (5 new gateway/notifier modules)
 - Strategy Tier-5 → `strategy-service@3b0f7397` (2 configs + close-all + helper)
 - Execution Tier-5 → `execution-service@a6fa7c501` (recovery_event_helper)

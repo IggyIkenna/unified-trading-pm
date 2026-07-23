@@ -10,42 +10,147 @@ repos: [market-tick-data-service]
 scope: [engineer, admin]
 tags: []
 related: []
-created: '2026-05-07'
+created: "2026-05-07"
 epic: epic-code-completion
 priority: P1
 parent: master_to_live_defi_2026_05_23
 locked_by: live-defi-rollout
 locked_since: 2026-05-07
 last_updated: 2026-05-07
-completion_gates: {code: C5, deployment: D3, business: none}
+completion_gates: { code: C5, deployment: D3, business: none }
 repo_gates:
-- {repo: market-tick-data-service, code: C0, deployment: none, business: none}
-- {repo: unified-trading-library, code: C0, deployment: none, business: none}
+  - { repo: market-tick-data-service, code: C0, deployment: none, business: none }
+  - { repo: unified-trading-library, code: C0, deployment: none, business: none }
 depends_on: []
 todos:
-- {id: phase-1-path-streaming, content: "- [x] [AGENT] P1. Phase 1 — Stream Databento `get_range` to a tempfile and iterate `to_df(count=N)` chunks. (market-tick-data-service@d8358f9 — `_fetch_and_stream_chunks` helper + chunk_rows config + 5 unit tests in `tests/unit/test_databento_path_streaming.py` all green; QG Pass 1 lint+tests clean, codex violations all on pre-existing files per workspace QG-failure-attribution rule.)\n\nSite (the prior agent's audit narrowed the exact lines):\n`market-tick-data-service/.../adapters/databento_adapter.py:509-517` calls\n`client.timeseries.get_range(...)` WITHOUT a `path=` kwarg → entire zstd-compressed DBN response\nmaterialises in `BytesIO`. Then at line 777 `dbn_store.to_df()` decodes + materialises the FULL\nDataFrame in RAM before partitioning. For a CME GLBX.MDP3 trades day across ~150 ES.OPT roots this is\nhundreds of MB peak, sometimes >1GB on heavy days.\n\nThe Databento SDK already supports the streaming-to-disk pattern; MTDS just isn't using\
-    \ it:\n\n- SDK `databento/common/http.py:116-152` ALWAYS uses `requests.post(..., stream=True)` and\n  `iter_content(HTTP_STREAMING_READ_SIZE)` under the hood — chunked HTTP is already free.\n- `client.timeseries.get_range(..., path=<file>)` writes the zstd DBN to disk instead of holding it\n  in memory.\n- `dbn_store.to_df(count=N)` returns a chunked iterator yielding ≤ N-row DataFrames, decoded lazily\n  as the file is read.\n- Async variant `client.timeseries.get_range_async(...)` exists too — relevant for Phase 2 below.\n\nMigration:\n1. At the call site, replace the bare `get_range(...)` with `tempfile.NamedTemporaryFile(suffix=\".dbn.zst\", delete=False)`\n   (NOT hardcoded `/tmp` — workspace Bandit B108 / temp paths rule; use `tempfile.gettempdir()` via\n   `NamedTemporaryFile` which already honours `TMPDIR` / macOS `/var/folders/...`).\n2. Pass `path=tmpfile.name` to `get_range(...)` so the SDK streams to disk.\n3. Open the resulting `dbn_store` via `databento.DBNStore.from_file(tmpfile.name)`.\n\
-    4. Replace the `dbn_store.to_df()` materialisation with a `for chunk_df in dbn_store.to_df(count=N): ...`\n   loop. The chunk size `N` is config-driven — default 50_000 rows per chunk, override via\n   `MTDS_DATABENTO_CHUNK_ROWS`. 50k × ~32 cols × ~80 bytes/cell ≈ 130MB working set per chunk, well under\n   any reasonable VM tier.\n5. Per-chunk: route into the existing partitioner (`raw_tick_hive.py` per-day / per-root split). The\n   partitioner already supports incremental writes — verify by inspection that no callsite assumes\n   \"I will be called once with the entire dataframe.\"\n6. After the iterator is exhausted, finalize per-shard parquets + emit `record_captured` (or\n   `record_empty` / `record_failed` per the writegate-honest-coverage three-category rule).\n7. `try/finally` around the tempfile so it's deleted on every exit path (success, exception, async\n   cancellation). Do NOT use `delete=True` on the NamedTemporaryFile — Windows / some Linux configs\n   can't reopen the\
-    \ file while it's held by the SDK.\n\nTests `market-tick-data-service/tests/unit/test_databento_path_streaming.py`:\n(1) Mock the Databento client to write a synthetic 1M-row DBN to the tempfile path; assert the\n    adapter's `to_df(count=N)` iterator yields exactly ceil(1M/N) chunks, each ≤ N rows, and the\n    partitioner is called incrementally.\n(2) Peak memory regression — `tracemalloc` snapshot diff between chunk 1 and chunk 5 of a synthetic\n    5M-row stream; assert delta < 1.5 × per-chunk budget.\n(3) Tempfile cleanup — the file under `tempfile.gettempdir()` is deleted on success AND on\n    mid-iteration exception.\n(4) Resume safety — the existing manifest concurrency principle (read-once + per-date freshness +\n    write-time CAS) still applies; if a concurrent worker has already captured the (root, day) shard\n    while we were streaming, our finalize step skips the write. Mock a manifest that flips to\n    `captured` after chunk 3 of 5 → assert we exit cleanly without\
-    \ writing a partial parquet.\n(5) Bundled-shard cluster validation — for `options_chain` data_type, assert `record_captured` is\n    called with `expected_root_clusters` + `cluster_extractor` kwargs (writegate Phase 1A enforcement\n    must NOT regress through this migration).\n\nQG: `cd market-tick-data-service && bash scripts/quality-gates.sh` clean. Push directly to\n`live-defi-rollout`.\n", status: todo, note: ''}
-- {id: phase-2-outer-loop-parallel, content: "- [x] [AGENT] P2. Phase 2 (OPTIONAL) — Parallelise the outer (data_type, dataset) loop via `asyncio.gather`. **DEFERRED-PER-PLAN 2026-05-16 (slot-3)**: plan body explicitly states \"Land Phase 1 first; Phase 2 only if backfill wall-clock is a bottleneck for the May 23 deadline.\" Slot-5 TradFi backfill VM `mtds-backfill-tradfi-slot5-20260515b` completed 24,944 records in 96 minutes with 0 errors — wall-clock acceptable. No bottleneck observed → P2 OPTIONAL conditional triggers DEFERRED-PER-PLAN status.\n\nAudit finding from prior agent: MTDS today runs trades + ohlcv_1m + tbbo serially per (venue, day) —\ni.e. `for data_type in data_types: for dataset in datasets: fetch + write`. Each fetch is independent\nmodulo the shared rate-limit semaphore.\n\n`databento_base_client.py:259` already has `Semaphore(100)` bounding total concurrent in-flight calls,\nso parallelising via `asyncio.gather([fetch(dt, ds) for dt in data_types for ds in datasets])`\
-    \ is safe\nagainst rate-limit thrash — the semaphore caps it.\n\nMigration:\n1. Switch the call site to `client.timeseries.get_range_async(...)` (already in the SDK).\n2. Wrap each (data_type, dataset) fetch in a coroutine; `asyncio.gather(*coros, return_exceptions=True)`\n   so one shard's failure doesn't kill siblings (shard-level failure isolation).\n3. Per-coro typed-error routing: `classify_venue_error(exc)` + `record_failed(...)` on exception, never\n   `raise` out of the gather block.\n4. Concurrency cap is the existing semaphore — do NOT add a second cap layer.\n\nTests `market-tick-data-service/tests/unit/test_databento_outer_parallel.py`:\n(1) gather with N=3 data_types × M=2 datasets emits 6 fetches concurrently, all complete with\n    captured-row asserts.\n(2) one fetch raising does NOT prevent the other 5 from completing; the failed one routes to\n    `record_failed`.\n(3) semaphore is still respected — patch the SDK semaphore to `Semaphore(2)` and assert max 2\n    in-flight\
-    \ at any time.\n\n**Why P2:** Phase 1 alone is the path-streaming win that retires the OOM risk. Phase 2 is a\nthroughput win (~3× wall-clock per VM-day for a 3-data_type backfill) but doesn't touch correctness.\nLand Phase 1 first; Phase 2 only if backfill wall-clock is a bottleneck for the May 23 deadline.\n", status: todo, note: ''}
-- {id: phase-3-utl-helper, content: "- [x] [AGENT] P2. Phase 3 (OPTIONAL — only if a shared pattern emerges) — Lift the path-streaming bridge into UTL. **DEFERRED-PER-PLAN 2026-05-16 (slot-3)**: plan body explicitly states \"only land Phase 3 if a SECOND adapter would consume the helper. If at the time Phase 1+2 land we still only have Databento, skip Phase 3 and leave the pattern inlined in `databento_adapter.py` — premature abstraction is worse than copy-paste.\" No second consumer materialised. Skipped per plan body conditional.\n\nHypothesis: the Phase 1 pattern (`get_range(path=tmp)` → `DBNStore.from_file(tmp)` → `to_df(count=N)`\n→ partition + write each chunk via `StreamingParquetWriter.write_chunk`) is reusable across any\nexternal-API source that returns a large compressed binary blob with a row-iterator decoder. Today\nthat's Databento; future candidates: Tardis (large parquet downloads via `tardis-client`), Polygon\nflatfiles, CME archived order-book replays.\n\nDecision criterion\
-    \ (don't lift prematurely): only land Phase 3 if a SECOND adapter would consume the\nhelper. If at the time Phase 1+2 land we still only have Databento, skip Phase 3 and leave the pattern\ninlined in `databento_adapter.py` — premature abstraction is worse than copy-paste of a 30-line bridge.\n\nIf a second consumer materialises:\n\n- Add `unified_trading_library/streaming_dbn_writer.py` (or `streaming_path_writer.py` if the pattern\n  generalises beyond DBN to any compressed-archive-with-row-iterator source).\n- Public API:\n  `stream_external_to_parquet(*, fetch_to_path: Callable[[Path], None], iter_rows: Callable[[Path], Iterator[pd.DataFrame]], partition_key_fn: Callable[[pd.DataFrame], Iterable[tuple[str, pd.DataFrame]]], writer_factory: Callable[[tuple[str, ...]], StreamingParquetWriter], manifest_writer: ManifestWriter, attempted_at: datetime) -> StreamResult`\n- The helper owns the tempfile lifecycle, the chunk loop, the per-shard writer dispatch, and the\n  manifest finalize\
-    \ (record_captured / record_empty / record_failed). Adapter authors only supply\n  the fetch + iter + partition fns.\n- 8-10 unit tests covering: success, fetch failure, iter exception mid-stream, partition fn raising,\n  per-shard manifest finalize correctness, tempfile cleanup on every exit, idempotent re-run.\n- Migrate the Phase 1 Databento callsite to use the helper. Keep this commit small + pure refactor.\n\nQG: UTL + MTDS quality-gates.sh both clean; integration smoke-test that a real Databento backfill VM\nusing the helper produces byte-identical output to the inlined Phase 1 version.\n", status: todo, note: ''}
-- {id: phase-4-validation, content: "- [x] [AGENT] P1. Phase 4 — End-to-end validation on a real Databento backfill VM. **VALIDATED 2026-05-16\n  (slot-3)**: slot-5 launched `mtds-backfill-tradfi-slot5-20260515b` (asia-northeast1-c, TERMINATED-completed\n  2026-05-16) which used the Phase 1 path-streaming code (TradFi Databento adapter) end-to-end:\n  24,944 session-stamp records migrated in 96 min with 0 errors per orchestrator message\n  `PM@040c77a1`. Recent Databento-related fixes shipped on top of path-streaming (`MTDS@f19ff5f`\n  `pretty_ts=False`, `MTDS@741eb5d` NamedTemporaryFile unlink, `MTDS@0b373a6` test fixture) confirm the path\n  is in active production use. Peak-memory + byte-for-byte parquet diff verification deferred to next\n  Databento backfill cycle (not blocking May-23; this is regression safety, not correctness).\n\n1. Launch a TradFi CME ES.OPT 1-day backfill VM (the canonical heavy day per the prior agent's audit —\n   ~150 roots, hundreds of MB peak under the eager\
-    \ path).\n2. Tail events via the deployment-UI live-tail endpoint (not SSH): assert STARTED → per-(data_type,\n   dataset) progress events with chunk counts and row counts → STOPPED. The \"no fire-and-forget VM\n   launches\" rule applies — verify per-chunk progress events emit BEFORE STOPPED.\n3. Verify peak resident memory on the VM (via `gcloud compute instances describe` + the VM's\n   metadata-server `/proc/meminfo` snapshot in events) stays under the chunk budget × small constant\n   (≤ 500MB for `MTDS_DATABENTO_CHUNK_ROWS=50000`).\n4. Bundled-shard cluster validation: ES.OPT 11-cluster taxonomy is honoured — manifest row for the\n   `options_chain` shard has `expected_root_clusters` matched (no partial-bundle `attempted_failed`\n   from cluster underflow).\n5. Compare output parquets byte-for-byte against a reference backfill from before the migration on\n   the same date — must be identical (path-streaming must be a strict refactor, not a behaviour\n   change).\n6. Smoke a CeFi\
-    \ backfill (perp ohlcv_1m) and a TradFi futures backfill (MET / MBT) to confirm the\n   migration didn't regress the non-options paths.\n\nSuccess criteria: VM completes the day, peak rss% well under threshold, output bytes match reference.\n", status: todo, note: ''}
+  - { id: phase-1-path-streaming, content: "- [x] [AGENT] P1. Phase 1 — Stream Databento `get_range` to a tempfile and
+        iterate `to_df(count=N)` chunks. (market-tick-data-service@d8358f9 — `_fetch_and_stream_chunks` helper +
+        chunk_rows config + 5 unit tests in `tests/unit/test_databento_path_streaming.py` all green; QG Pass 1
+        lint+tests clean, codex violations all on pre-existing files per workspace QG-failure-attribution rule.)\n\nSite
+        (the prior agent's audit narrowed the exact
+        lines):\n`market-tick-data-service/.../adapters/databento_adapter.py:509-517`
+        calls\n`client.timeseries.get_range(...)` WITHOUT a `path=` kwarg → entire zstd-compressed DBN
+        response\nmaterialises in `BytesIO`. Then at line 777 `dbn_store.to_df()` decodes + materialises the
+        FULL\nDataFrame in RAM before partitioning. For a CME GLBX.MDP3 trades day across ~150 ES.OPT roots this
+        is\nhundreds of MB peak, sometimes >1GB on heavy days.\n\nThe Databento SDK already supports the
+        streaming-to-disk pattern; MTDS just isn't using\
+        \ it:\n\n- SDK `databento/common/http.py:116-152` ALWAYS uses `requests.post(..., stream=True)`
+        and\n  `iter_content(HTTP_STREAMING_READ_SIZE)` under the hood — chunked HTTP is already free.\n-
+        `client.timeseries.get_range(..., path=<file>)` writes the zstd DBN to disk instead of holding it\n  in
+        memory.\n- `dbn_store.to_df(count=N)` returns a chunked iterator yielding ≤ N-row DataFrames, decoded
+        lazily\n  as the file is read.\n- Async variant `client.timeseries.get_range_async(...)` exists too — relevant
+        for Phase 2 below.\n\nMigration:\n1. At the call site, replace the bare `get_range(...)` with
+        `tempfile.NamedTemporaryFile(suffix=\".dbn.zst\", delete=False)`\n   (NOT hardcoded `/tmp` — workspace Bandit
+        B108 / temp paths rule; use `tempfile.gettempdir()` via\n   `NamedTemporaryFile` which already honours `TMPDIR`
+        / macOS `/var/folders/...`).\n2. Pass `path=tmpfile.name` to `get_range(...)` so the SDK streams to disk.\n3.
+        Open the resulting `dbn_store` via `databento.DBNStore.from_file(tmpfile.name)`.\n\
+        4. Replace the `dbn_store.to_df()` materialisation with a `for chunk_df in dbn_store.to_df(count=N):
+        ...`\n   loop. The chunk size `N` is config-driven — default 50_000 rows per chunk, override
+        via\n   `MTDS_DATABENTO_CHUNK_ROWS`. 50k × ~32 cols × ~80 bytes/cell ≈ 130MB working set per chunk, well
+        under\n   any reasonable VM tier.\n5. Per-chunk: route into the existing partitioner (`raw_tick_hive.py` per-day
+        / per-root split). The\n   partitioner already supports incremental writes — verify by inspection that no
+        callsite assumes\n   \"I will be called once with the entire dataframe.\"\n6. After the iterator is exhausted,
+        finalize per-shard parquets + emit `record_captured` (or\n   `record_empty` / `record_failed` per the
+        writegate-honest-coverage three-category rule).\n7. `try/finally` around the tempfile so it's deleted on every
+        exit path (success, exception, async\n   cancellation). Do NOT use `delete=True` on the NamedTemporaryFile —
+        Windows / some Linux configs\n   can't reopen the\
+        \ file while it's held by the SDK.\n\nTests
+        `market-tick-data-service/tests/unit/test_databento_path_streaming.py`:\n(1) Mock the Databento client to write
+        a synthetic 1M-row DBN to the tempfile path; assert the\n    adapter's `to_df(count=N)` iterator yields exactly
+        ceil(1M/N) chunks, each ≤ N rows, and the\n    partitioner is called incrementally.\n(2) Peak memory regression
+        — `tracemalloc` snapshot diff between chunk 1 and chunk 5 of a synthetic\n    5M-row stream; assert delta < 1.5
+        × per-chunk budget.\n(3) Tempfile cleanup — the file under `tempfile.gettempdir()` is deleted on success AND
+        on\n    mid-iteration exception.\n(4) Resume safety — the existing manifest concurrency principle (read-once +
+        per-date freshness +\n    write-time CAS) still applies; if a concurrent worker has already captured the (root,
+        day) shard\n    while we were streaming, our finalize step skips the write. Mock a manifest that flips
+        to\n    `captured` after chunk 3 of 5 → assert we exit cleanly without\
+        \ writing a partial parquet.\n(5) Bundled-shard cluster validation — for `options_chain` data_type, assert
+        `record_captured` is\n    called with `expected_root_clusters` + `cluster_extractor` kwargs (writegate Phase 1A
+        enforcement\n    must NOT regress through this migration).\n\nQG: `cd market-tick-data-service && bash
+        scripts/quality-gates.sh` clean. Push directly to\n`live-defi-rollout`.\n", status: todo, note: "" }
+  - { id: phase-2-outer-loop-parallel, content: "- [x] [AGENT] P2. Phase 2 (OPTIONAL) — Parallelise the outer
+        (data_type, dataset) loop via `asyncio.gather`. **DEFERRED-PER-PLAN 2026-05-16 (slot-3)**: plan body explicitly
+        states \"Land Phase 1 first; Phase 2 only if backfill wall-clock is a bottleneck for the May 23 deadline.\"
+        Slot-5 TradFi backfill VM `mtds-backfill-tradfi-slot5-20260515b` completed 24,944 records in 96 minutes with 0
+        errors — wall-clock acceptable. No bottleneck observed → P2 OPTIONAL conditional triggers DEFERRED-PER-PLAN
+        status.\n\nAudit finding from prior agent: MTDS today runs trades + ohlcv_1m + tbbo serially per (venue, day)
+        —\ni.e. `for data_type in data_types: for dataset in datasets: fetch + write`. Each fetch is independent\nmodulo
+        the shared rate-limit semaphore.\n\n`databento_base_client.py:259` already has `Semaphore(100)` bounding total
+        concurrent in-flight calls,\nso parallelising via `asyncio.gather([fetch(dt, ds) for dt in data_types for ds in
+        datasets])`\
+        \ is safe\nagainst rate-limit thrash — the semaphore caps it.\n\nMigration:\n1. Switch the call site to
+        `client.timeseries.get_range_async(...)` (already in the SDK).\n2. Wrap each (data_type, dataset) fetch in a
+        coroutine; `asyncio.gather(*coros, return_exceptions=True)`\n   so one shard's failure doesn't kill siblings
+        (shard-level failure isolation).\n3. Per-coro typed-error routing: `classify_venue_error(exc)` +
+        `record_failed(...)` on exception, never\n   `raise` out of the gather block.\n4. Concurrency cap is the
+        existing semaphore — do NOT add a second cap layer.\n\nTests
+        `market-tick-data-service/tests/unit/test_databento_outer_parallel.py`:\n(1) gather with N=3 data_types × M=2
+        datasets emits 6 fetches concurrently, all complete with\n    captured-row asserts.\n(2) one fetch raising does
+        NOT prevent the other 5 from completing; the failed one routes to\n    `record_failed`.\n(3) semaphore is still
+        respected — patch the SDK semaphore to `Semaphore(2)` and assert max 2\n    in-flight\
+        \ at any time.\n\n**Why P2:** Phase 1 alone is the path-streaming win that retires the OOM risk. Phase 2 is
+        a\nthroughput win (~3× wall-clock per VM-day for a 3-data_type backfill) but doesn't touch correctness.\nLand
+        Phase 1 first; Phase 2 only if backfill wall-clock is a bottleneck for the May 23 deadline.\n", status: todo, note: "" }
+  - { id: phase-3-utl-helper, content: "- [x] [AGENT] P2. Phase 3 (OPTIONAL — only if a shared pattern emerges) — Lift
+        the path-streaming bridge into UTL. **DEFERRED-PER-PLAN 2026-05-16 (slot-3)**: plan body explicitly states
+        \"only land Phase 3 if a SECOND adapter would consume the helper. If at the time Phase 1+2 land we still only
+        have Databento, skip Phase 3 and leave the pattern inlined in `databento_adapter.py` — premature abstraction is
+        worse than copy-paste.\" No second consumer materialised. Skipped per plan body conditional.\n\nHypothesis: the
+        Phase 1 pattern (`get_range(path=tmp)` → `DBNStore.from_file(tmp)` → `to_df(count=N)`\n→ partition + write each
+        chunk via `StreamingParquetWriter.write_chunk`) is reusable across any\nexternal-API source that returns a large
+        compressed binary blob with a row-iterator decoder. Today\nthat's Databento; future candidates: Tardis (large
+        parquet downloads via `tardis-client`), Polygon\nflatfiles, CME archived order-book replays.\n\nDecision
+        criterion\
+        \ (don't lift prematurely): only land Phase 3 if a SECOND adapter would consume the\nhelper. If at the time
+        Phase 1+2 land we still only have Databento, skip Phase 3 and leave the pattern\ninlined in
+        `databento_adapter.py` — premature abstraction is worse than copy-paste of a 30-line bridge.\n\nIf a second
+        consumer materialises:\n\n- Add `unified_trading_library/streaming_dbn_writer.py` (or `streaming_path_writer.py`
+        if the pattern\n  generalises beyond DBN to any compressed-archive-with-row-iterator source).\n- Public
+        API:\n  `stream_external_to_parquet(*, fetch_to_path: Callable[[Path], None], iter_rows: Callable[[Path],
+        Iterator[pd.DataFrame]], partition_key_fn: Callable[[pd.DataFrame], Iterable[tuple[str, pd.DataFrame]]],
+        writer_factory: Callable[[tuple[str, ...]], StreamingParquetWriter], manifest_writer: ManifestWriter,
+        attempted_at: datetime) -> StreamResult`\n- The helper owns the tempfile lifecycle, the chunk loop, the
+        per-shard writer dispatch, and the\n  manifest finalize\
+        \ (record_captured / record_empty / record_failed). Adapter authors only supply\n  the fetch + iter + partition
+        fns.\n- 8-10 unit tests covering: success, fetch failure, iter exception mid-stream, partition fn
+        raising,\n  per-shard manifest finalize correctness, tempfile cleanup on every exit, idempotent re-run.\n-
+        Migrate the Phase 1 Databento callsite to use the helper. Keep this commit small + pure refactor.\n\nQG: UTL +
+        MTDS quality-gates.sh both clean; integration smoke-test that a real Databento backfill VM\nusing the helper
+        produces byte-identical output to the inlined Phase 1 version.\n", status: todo, note: "" }
+  - { id: phase-4-validation, content: "- [x] [AGENT] P1. Phase 4 — End-to-end validation on a real Databento backfill
+        VM. **VALIDATED 2026-05-16\n  (slot-3)**: slot-5 launched `mtds-backfill-tradfi-slot5-20260515b`
+        (asia-northeast1-c, TERMINATED-completed\n  2026-05-16) which used the Phase 1 path-streaming code (TradFi
+        Databento adapter) end-to-end:\n  24,944 session-stamp records migrated in 96 min with 0 errors per orchestrator
+        message\n  `PM@040c77a1`. Recent Databento-related fixes shipped on top of path-streaming
+        (`MTDS@f19ff5f`\n  `pretty_ts=False`, `MTDS@741eb5d` NamedTemporaryFile unlink, `MTDS@0b373a6` test fixture)
+        confirm the path\n  is in active production use. Peak-memory + byte-for-byte parquet diff verification deferred
+        to next\n  Databento backfill cycle (not blocking May-23; this is regression safety, not correctness).\n\n1.
+        Launch a TradFi CME ES.OPT 1-day backfill VM (the canonical heavy day per the prior agent's audit —\n   ~150
+        roots, hundreds of MB peak under the eager\
+        \ path).\n2. Tail events via the deployment-UI live-tail endpoint (not SSH): assert STARTED →
+        per-(data_type,\n   dataset) progress events with chunk counts and row counts → STOPPED. The \"no
+        fire-and-forget VM\n   launches\" rule applies — verify per-chunk progress events emit BEFORE STOPPED.\n3.
+        Verify peak resident memory on the VM (via `gcloud compute instances describe` + the VM's\n   metadata-server
+        `/proc/meminfo` snapshot in events) stays under the chunk budget × small constant\n   (≤ 500MB for
+        `MTDS_DATABENTO_CHUNK_ROWS=50000`).\n4. Bundled-shard cluster validation: ES.OPT 11-cluster taxonomy is honoured
+        — manifest row for the\n   `options_chain` shard has `expected_root_clusters` matched (no partial-bundle
+        `attempted_failed`\n   from cluster underflow).\n5. Compare output parquets byte-for-byte against a reference
+        backfill from before the migration on\n   the same date — must be identical (path-streaming must be a strict
+        refactor, not a behaviour\n   change).\n6. Smoke a CeFi\
+        \ backfill (perp ohlcv_1m) and a TradFi futures backfill (MET / MBT) to confirm the\n   migration didn't regress
+        the non-options paths.\n\nSuccess criteria: VM completes the day, peak rss% well under threshold, output bytes
+        match reference.\n", status: todo, note: "" }
 isProject: false
 estimate_class: design
 estimate_baseline_ai_days: 2
 estimate_calibrated_ai_days: 1.2
-estimate_calibration_note: 'No explicit AI-day estimates found in plan body during 2026-05-11 sweep; class inferred from filename (design, multiplier 0.6×).
+estimate_calibration_note: "No explicit AI-day estimates found in plan body during 2026-05-11 sweep; class inferred from
+  filename (design, multiplier 0.6×).
 
-  Owner agent: fill baseline + multiply × 0.6 per codex/08-workflows/estimation-calibration.md. Refine class if dominant work-class differs.
+  Owner agent: fill baseline + multiply × 0.6 per /codex/08-workflows/estimation-calibration.md. Refine class if
+  dominant work-class differs.
 
-  '
+  "
 parent_epic: mtds_mdps_master
 ---
 

@@ -17,7 +17,12 @@ priority: P2
 estimate_class: infra
 estimate_baseline_ai_days: 4.0
 estimate_calibrated_ai_days: 3.2
-source: [operator design direction 2026-06-10 ("ci_status commit noise — what's a side store + how are races handled"), 'inspection 2026-06-10: ~57% of an 80-commit PM-LDR window was bot/CI churn; `ci: update ci_status …[skip ci]` was the single biggest class (21/80), each a commit per repo per CI-status transition.']
+source:
+  [
+    operator design direction 2026-06-10 ("ci_status commit noise — what's a side store + how are races handled"),
+    "inspection 2026-06-10: ~57% of an 80-commit PM-LDR window was bot/CI churn; `ci: update ci_status …[skip ci]` was
+    the single biggest class (21/80), each a commit per repo per CI-status transition.",
+  ]
 locked_by: live-defi-rollout
 locked_since: 2026-06-10
 ---
@@ -230,9 +235,9 @@ manifest fallback — NOT raw `get_all()`, which would blank repos Firestore has
 
 ## Codex SSOT updates
 
-`codex/08-workflows/ci-cd-flow.md` (ci_status is a Firestore side store, doc-per-repo + CAS-on-rank; manifest copy is a
-snapshot), `codex/04-architecture/agent-orchestrator-overview.md` (dashboard reads the store),
-`codex/05-infrastructure/manifest-consolidator-ssot.md` (the snapshot consolidator reuses this infra). CLAUDE.md § "CI
+`/codex/08-workflows/ci-cd-flow.md` (ci_status is a Firestore side store, doc-per-repo + CAS-on-rank; manifest copy is a
+snapshot), `/codex/04-architecture/agent-orchestrator-overview.md` (dashboard reads the store),
+`/codex/05-infrastructure/manifest-consolidator-ssot.md` (the snapshot consolidator reuses this infra). CLAUDE.md § "CI
 Verification" / "ci_status" pointer.
 
 ## Out of scope (named successors)

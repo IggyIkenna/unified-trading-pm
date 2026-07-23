@@ -11,7 +11,7 @@ stage: [meta]
 repos: [unified-trading-pm, market-tick-data-service]
 scope: [engineer]
 tags: [dependency, security, quality-gates, hygiene, fleet-wide]
-related: [v2_engine_venue_buildout_2026_06_15.md]
+related: [/plans/active/v2_engine_venue_buildout_2026_06_15.md]
 created: 2026-07-13
 parent_epic: strategy_master
 assigned_vm: planning

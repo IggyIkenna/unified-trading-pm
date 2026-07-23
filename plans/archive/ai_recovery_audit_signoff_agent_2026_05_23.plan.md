@@ -9,25 +9,31 @@ stage: [meta]
 repos: [agent-orchestrator, alerting-service, deployment-service, e2e-testing, execution-service, strategy-service]
 scope: [engineer, admin]
 tags: []
-related: [incident_gateway_and_state_machine_2026_05_23.md, agent_recovery_controller_layer0_deterministic_2026_05_23.md, audit_acknowledgement_sla_and_state_2026_05_23.md]
-created: '2026-05-23'
+related:
+  [
+    incident_gateway_and_state_machine_2026_05_23.md,
+    /plans/archive/2026_05/agent_recovery_controller_layer0_deterministic_2026_05_23.md,
+    /plans/archive/2026_05/audit_acknowledgement_sla_and_state_2026_05_23.md,
+  ]
+created: "2026-05-23"
 parent_epic: observability_master
 assigned_vm: vm-cross-cutting
 priority: P0
 estimate_class: brand-new
 estimate_baseline_ai_days: 12
 estimate_calibrated_ai_days: 12.0
-estimate_calibration_note: 'Brand-new class. New `agent-orchestrator/agents/recovery-audit.md` agent template + new RecoveryAuditSignoff UAC
+estimate_calibration_note: "Brand-new class. New `agent-orchestrator/agents/recovery-audit.md` agent template + new
+  RecoveryAuditSignoff UAC
 
   schema + scoped script-execution authority. Baseline 12 = ~1 day per phase across 5 phases of careful safety-critical
 
   work. No multiplier — operator-added requirement; not in original target model.
 
-  '
+  "
 parent: master_to_live_defi_2026_05_23
 locked_since: 2026-05-23
 depends_on: [incident_gateway_and_state_machine_2026_05_23, agent_recovery_controller_layer0_deterministic_2026_05_23]
-gates: ['master_to_live_defi_2026_05_23:Group-F']
+gates: ["master_to_live_defi_2026_05_23:Group-F"]
 ---
 
 ## Deferred work — migrated to:
@@ -106,7 +112,7 @@ backup actuator.
 
 - [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0.4. New `agent-orchestrator/agents/recovery-audit.md` — modelled on
       `monitor.md`. Sections: - STEP 0: read `agents/RULES.md` +
-      `codex/04-architecture/recovery-defence-in-depth-layers.md`. - STEP 1: register as
+      `/codex/04-architecture/recovery-defence-in-depth-layers.md`. - STEP 1: register as
       `role: custom, label: recovery-audit-signoff` on the machine running this Claude session. - STEP 2: subscribe to
       PubSub `agent-recovery-actions` topic (via gateway audit-store polling — every 30s). - STEP 3: for each new
       `AgentActionEvent`, fetch the parent IncidentEnvelope; read recent context (incident history, runbook,
@@ -197,7 +203,7 @@ what the LLM audits and invokes).
 
 ## Codex SSOT updates
 
-- NEW: `codex/04-architecture/recovery-defence-in-depth-layers.md` — Layer-1 is this agent; Layer-1.5 is the backup
+- NEW: `/codex/04-architecture/recovery-defence-in-depth-layers.md` — Layer-1 is this agent; Layer-1.5 is the backup
   actuator path.
 - UPDATE: `agent-orchestrator/agents/RULES.md` — add `recovery-audit-signoff` to the canonical role list with
   scope-limited authority callout.
@@ -289,7 +295,7 @@ what the LLM audits and invokes).
 
 - Operator ping doc → `plans/active/_agent_pings.md` 2026-05-23 ikenna-slot-1 → operator entry
 - 22 incident runbooks → `codex/15-runbooks/incidents/` (RB-INC/RECON/RISK/CONN/DEPLOY/INFRA/ALERT)
-- Game-day protocol → `codex/15-runbooks/incidents/game_day_protocol.md`
+- Game-day protocol → `/codex/15-runbooks/incidents/game_day_protocol.md`
 - Alerting Tier-5 → `alerting-service@e5c8084` (5 new gateway/notifier modules)
 - Strategy Tier-5 → `strategy-service@3b0f7397` (2 configs + close-all + helper)
 - Execution Tier-5 → `execution-service@a6fa7c501` (recovery_event_helper)

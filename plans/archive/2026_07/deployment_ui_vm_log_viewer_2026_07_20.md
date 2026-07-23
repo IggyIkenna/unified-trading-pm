@@ -17,9 +17,9 @@ repos: [unified-trading-library, deployment-service, deployment-api, deployment-
 scope: [engineer]
 tags: [deployment-ui, logs, gcs, observability]
 related:
-  - deployment_ui_observability_ux_tracker_2026_07_17.md
-  - deployment_ui_cost_per_day_accuracy_2026_07_20.md
-  - deployment_ui_date_range_filter_and_search_2026_07_20.md
+  - /plans/active/deployment_ui_observability_ux_tracker_2026_07_17.md
+  - /plans/archive/2026_07/deployment_ui_cost_per_day_accuracy_2026_07_20.md
+  - /plans/archive/2026_07/deployment_ui_date_range_filter_and_search_2026_07_20.md
 created: "2026-07-20"
 last_updated: "2026-07-20"
 parent_epic: observability_master
@@ -234,8 +234,8 @@ source:
       todos' verification already confirmed was green.
 - [x] ✅ [REVIEW] P2. Post-phase codex audit — document the log-path resolution contract (live-first/archive-fallback,
       final-snapshot writer contract, no date-guessing), the size/tail/download endpoints, and the events-vs-logs panel
-      distinction in `codex/05-infrastructure/deployment-observability.md` +
-      `codex/05-infrastructure/gcs-object-operations.md`. — `unified-trading-pm@ae9151289`. Added a "Run.log viewer —
+      distinction in `/codex/05-infrastructure/deployment-observability.md` +
+      `/codex/05-infrastructure/gcs-object-operations.md`. — `unified-trading-pm@ae9151289`. Added a "Run.log viewer —
       resolution contract, endpoints, events-vs-logs distinction" section to `deployment-observability.md` (grounded in
       the actual shipped code: `_run_log_resolution.py`, `_run_log_tail.py`,
       `HeartbeatDaemon._write_final_log_snapshot`, the SIGKILL shell fallback, and the metadata/tail/download
@@ -342,8 +342,8 @@ source:
 
 ## Codex SSOTs
 
-- `codex/05-infrastructure/deployment-observability.md` — deployment inventory + (to add) the log-path resolution
+- `/codex/05-infrastructure/deployment-observability.md` — deployment inventory + (to add) the log-path resolution
   contract and the final-snapshot writer contract.
-- `codex/05-infrastructure/gcs-object-operations.md` — GCS ops via UTL wrappers (`gcs_describe_object`, byte-range
+- `/codex/05-infrastructure/gcs-object-operations.md` — GCS ops via UTL wrappers (`gcs_describe_object`, byte-range
   reads, signed URLs) — no subprocess `gcloud`/`gsutil` in application code.
-- `codex/06-coding-standards/ui-testing-layers.md` — the UI gate (pw:L2 + cited spec) for both panels.
+- `/codex/06-coding-standards/ui-testing-layers.md` — the UI gate (pw:L2 + cited spec) for both panels.

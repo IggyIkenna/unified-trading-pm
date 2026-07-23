@@ -1,7 +1,9 @@
 ---
 doc_type: plan
 title: MVP backfill — TradFi ohlcv_1m for the v10 MVP universe (SPOT-only, reconcile-then-fill)
-summary: Backfill TradFi ohlcv_1m ONLY for the canonical v10 MVP universe (CME futures + new CME options + equity twins), reconciling what is already captured vs what is missing on SPOT VMs.
+summary:
+  Backfill TradFi ohlcv_1m ONLY for the canonical v10 MVP universe (CME futures + new CME options + equity twins),
+  reconciling what is already captured vs what is missing on SPOT VMs.
 status: complete
 nature: process
 asset_group: [tradfi]
@@ -9,7 +11,12 @@ stage: [data]
 repos: [deployment-service, market-tick-data-service, instruments-service]
 scope: [engineer, admin]
 tags: [mvp, backfill, tradfi, ohlcv-1m, cme, cme-options, spot-vm, v10, budget-aware]
-related: [plans/active/mvp_catalogue_finalization_v10_2026_06_27.md, plans/active/tradfi_multisource_backfill_2026_06_22.md, plans/active/path_to_100pct_backfill_mtds_is_2026_06_17.md]
+related:
+  [
+    plans/active/mvp_catalogue_finalization_v10_2026_06_27.md,
+    plans/active/tradfi_multisource_backfill_2026_06_22.md,
+    plans/active/path_to_100pct_backfill_mtds_is_2026_06_17.md,
+  ]
 created: 2026-06-27
 parent_epic: tradfi_master
 assigned_vm: planning
@@ -30,8 +37,8 @@ drift_direction: advance-code
 ---
 
 > **✅ ARCHIVED — 2026-06-30 — TRULY-DONE.** G2 GATE MET 2026-06-29 (`mtds@a49403e2`): eu=0 af=0 for all MVP venues
-> (CME/CBOE/NASDAQ/NYSE), KRX honest-empty, ICE excluded per BLK-ca110c07. Content-verified + main-loop spot-checked
-> (§6 B1.2 of `plan_issue_epic_consolidation_2026_06_30`).
+> (CME/CBOE/NASDAQ/NYSE), KRX honest-empty, ICE excluded per BLK-ca110c07. Content-verified + main-loop spot-checked (§6
+> B1.2 of `plan_issue_epic_consolidation_2026_06_30`).
 
 > **🟢 OPERATOR-AUTHORIZED background execution (2026-06-27).** Part of the remaining MVP arc handed to the
 > agent-orchestrator (`planning` VM). One agent, one craft (`data_engineering`), Sonnet/high.
@@ -40,19 +47,20 @@ drift_direction: advance-code
 > catalogue v10-correct: 1,038,235 rows, 643,116 MVP (642,126 CME OPTION ✅), false-delist=0, ghosts=N/A, blank=0.
 > Phantom audit: 1,789 phantoms (MTDS data; issue doc `phantom_captures_tradfi_2026_06_28.md`).
 >
-> **Canonical MVP SSOT (the ONLY scope authority):** `mvp_scope.py` v10 + `codex/02-data/mvp-scope-canonical.md`. This
+> **Canonical MVP SSOT (the ONLY scope authority):** `mvp_scope.py` v10 + `/codex/02-data/mvp-scope-canonical.md`. This
 > plan REFERENCES it. **TradFi v10 = ohlcv_1m ONLY** (decision #7 — NO ohlcv_1s, NO trades/tbbo). Any older tradfi plan
 > that says otherwise is stale and SUBORDINATE (see Phase-4 reconciliation).
 
 ## Codex SSOTs (READ before executing)
 
-- `codex/02-data/mvp-scope-canonical.md` § TradFi — venue=CME (futures complex) + equity-basis carve-out
+- `/codex/02-data/mvp-scope-canonical.md` § TradFi — venue=CME (futures complex) + equity-basis carve-out
   (NASDAQ/NYSE/ARCA/KRX in `TRADFI_EQUITY_PERP_BASIS_UNIVERSE`); instrument types FUTURE + OPTION; **data_type cut =
   ohlcv_1m ONLY**; underliers ES·NQ·VX + the CME commodity roots backing a Binance tradfi-perp (GC/SI/PL/PA/NG/CL/HG).
-- `codex/02-data/tradfi-databento-sourcing-ssot.md` — 3-dataset billing fail-closed; SOURCE_PRIORITY databento-first;
+- `/codex/02-data/tradfi-databento-sourcing-ssot.md` — 3-dataset billing fail-closed; SOURCE_PRIORITY databento-first;
   VIX=VX-futures via XCBF.PITCH; Barchart RETIRED; silent-0-row backfill gotchas.
-- `codex/05-infrastructure/spot-vms-for-backfill.md` — SPOT-by-default; `--on-demand` is the deadline escape hatch only.
-- `codex/02-data/honest-absence-downstream-handling.md` — `EXPECTED_*` reasons (weekends/holidays via
+- `/codex/05-infrastructure/spot-vms-for-backfill.md` — SPOT-by-default; `--on-demand` is the deadline escape hatch
+  only.
+- `/codex/02-data/honest-absence-downstream-handling.md` — `EXPECTED_*` reasons (weekends/holidays via
   `venue_trading_calendar`; pre-listing via `EXPECTED_INSTRUMENT_NOT_LISTED`); honest-empty excluded from denominator.
 
 ## Definition of 100% (read first)
@@ -124,11 +132,12 @@ re-pull** — measure what's captured, fill only the gaps. SPOT VMs only.
 
 ### G2 — verify honest-complete
 
-- [x] [SCRIPT] P0. ✅ 2026-06-29T10:45Z — G2 GATE MET: eu=0 af=0 all MVP venues (CME/CBOE/NASDAQ/NYSE). BLK-5b95659d Option A applied. market-tick-data-service@a49403e2. [DEFERRED 2026-06-28 — re-check 2026-06-30 after CME options VMs complete per BLK-180b591d answer B]
-      Final tradfi MVP verification: ohlcv_1m attempted_failed=0 AND expected_unattempted=0 across the v10 MVP universe;
-      every absence is a typed honest `empty_confirmed` (weekend/holiday/pre-listing/known-gap), never a silent missing
-      cell. Repos: `instruments-service`, `e2e-testing`. **Run:**
-      `python scripts/measure_honest_coverage.py --asset-group tradfi`;
+- [x] [SCRIPT] P0. ✅ 2026-06-29T10:45Z — G2 GATE MET: eu=0 af=0 all MVP venues (CME/CBOE/NASDAQ/NYSE). BLK-5b95659d
+      Option A applied. market-tick-data-service@a49403e2. [DEFERRED 2026-06-28 — re-check 2026-06-30 after CME options
+      VMs complete per BLK-180b591d answer B] Final tradfi MVP verification: ohlcv_1m attempted_failed=0 AND
+      expected_unattempted=0 across the v10 MVP universe; every absence is a typed honest `empty_confirmed`
+      (weekend/holiday/pre-listing/known-gap), never a silent missing cell. Repos: `instruments-service`, `e2e-testing`.
+      **Run:** `python scripts/measure_honest_coverage.py --asset-group tradfi`;
       `python3 e2e-testing/scripts/audit/manifest_hygiene_daily.py --asset-group tradfi --mode full` (phantom +
       4-pillar + v9). **Gate:** measured coverage = 100% of MVP could-exist (both failure buckets zero); 0 phantom rows;
       0 blank-status; verdict written to Progress Log. **Full-execution criterion:** the gcloud VM-list + the coverage
@@ -586,31 +595,33 @@ captured rows since 07:00Z; CME captured max written_at=2026-06-29T07:54Z).
 
 **ohlcv_1m by venue (pre-KRX-reclass):**
 
-| venue  | captured | ec     | af  | eu    | notes                                                                                             |
-| ------ | -------- | ------ | --- | ----- | ------------------------------------------------------------------------------------------------- |
-| CME    | 186,334  | 32,871 | 0   | 8,490 | chain meta-rows (options_chain=7,894, futures_chain=596) — unchanged from 07:25Z check           |
-| CBOE   | 1,288    | 2,910  | 0   | 0     | ✅ CLEAN                                                                                         |
-| NASDAQ | 37,421   | 37,784 | 0   | 656   | down from 828 at 07:25Z (writer fix on XNAS.ITCH resolving some rows); 172 rows cleared          |
-| NYSE   | 127,149  | 21,625 | 0   | 3,136 | ARCX ETF eu unchanged — writer fix not applied to XNYS.PILLAR adapter                           |
-| ICE    | 2,015    | 741    | 66  | 0     | af=66 migration artifacts, NOT MVP scope — excluded per operator                                  |
-| KRX    | 0        | 1,232  | 0   | 390   | re-seeded since 2026-06-28T19:11Z reclassifier (3 instruments × 130 dates)                       |
+| venue  | captured | ec     | af  | eu    | notes                                                                                   |
+| ------ | -------- | ------ | --- | ----- | --------------------------------------------------------------------------------------- |
+| CME    | 186,334  | 32,871 | 0   | 8,490 | chain meta-rows (options_chain=7,894, futures_chain=596) — unchanged from 07:25Z check  |
+| CBOE   | 1,288    | 2,910  | 0   | 0     | ✅ CLEAN                                                                                |
+| NASDAQ | 37,421   | 37,784 | 0   | 656   | down from 828 at 07:25Z (writer fix on XNAS.ITCH resolving some rows); 172 rows cleared |
+| NYSE   | 127,149  | 21,625 | 0   | 3,136 | ARCX ETF eu unchanged — writer fix not applied to XNYS.PILLAR adapter                   |
+| ICE    | 2,015    | 741    | 66  | 0     | af=66 migration artifacts, NOT MVP scope — excluded per operator                        |
+| KRX    | 0        | 1,232  | 0   | 390   | re-seeded since 2026-06-28T19:11Z reclassifier (3 instruments × 130 dates)              |
 
 **KRX reclassifier re-run (2026-06-29T07:59Z — operator-authorized per BLK-ca110c07 Option C):**
-- Snapshot: `gs://market-data-tick-tradfi-prd-central-element-323112/_index/snapshots/pre_krx_reclass_20260629T075926Z.parquet`
+
+- Snapshot:
+  `gs://market-data-tick-tradfi-prd-central-element-323112/_index/snapshots/pre_krx_reclass_20260629T075926Z.parquet`
 - Applied: 3,510 KRX eu rows → empty_confirmed/EXPECTED_SOURCE_NOT_AVAILABLE (all data types; 390 ohlcv_1m + others)
 - KRX ohlcv_1m eu: 390 → 0 ✅
 
 **Post-reclass status: 2 eu blockers remain (KRX cleared):**
 
-1. **CME eu=8,490 chain meta-rows** — structural (options_chain=7,894, futures_chain=596); operator BLK-ca110c07 authorized
-   excluding from denominator; implementation pending (reclassifier or coverage-script change)
+1. **CME eu=8,490 chain meta-rows** — structural (options_chain=7,894, futures_chain=596); operator BLK-ca110c07
+   authorized excluding from denominator; implementation pending (reclassifier or coverage-script change)
 2. **NYSE eu=3,136 ARCX ETFs** — writer fix on NASDAQ (XNAS.ITCH) did NOT extend to NYSE (XNYS.PILLAR); tracked in
    `nasdaq_nyse_eu_silent_skip_2026_06_28.md` CODE P0 todo
 
 **CME options VMs:** Still active. Gate condition (CME VMs complete) NOT met.
 
-**BLK-b3f8d286 posted:** Asking operator whether to start CME chain meta-row reclassifier + MTDS NYSE writer fix today (A)
-vs wait for 2026-06-30 re-check (B). G2 NOT flipped pending answer + CME VM drain.
+**BLK-b3f8d286 posted:** Asking operator whether to start CME chain meta-row reclassifier + MTDS NYSE writer fix today
+(A) vs wait for 2026-06-30 re-check (B). G2 NOT flipped pending answer + CME VM drain.
 
 ### G2 Re-check — 2026-06-29T08:27Z (slot-2; CME reclassifier applied; NYSE+NASDAQ VMs relaunched)
 
@@ -618,34 +629,35 @@ vs wait for 2026-06-30 re-check (B). G2 NOT flipped pending answer + CME VM drai
 
 **Manifest status at 08:27Z (blob.updated=2026-06-29T08:27:40Z, 2,604,730 rows):**
 
-| venue  | captured | ec | af  | eu     | notes                                                                              |
-| ------ | -------- | -- | --- | ------ | ----------------------------------------------------------------------------------- |
-| CME    | -        | -  | 0   | **0**  | ✅ All CME VMs drained; reclassifier (applied 08:24Z) cleared all 20,364 eu rows |
-| NASDAQ | -        | -  | 0   | 656    | ohlcv_1m eu; canonical orphans + plain-ticker date gaps                           |
-| NYSE   | -        | -  | 0   | 3,136  | ohlcv_1m eu; ARCX ETFs still pending (writer fix not yet re-run)                  |
+| venue  | captured | ec  | af  | eu    | notes                                                                            |
+| ------ | -------- | --- | --- | ----- | -------------------------------------------------------------------------------- |
+| CME    | -        | -   | 0   | **0** | ✅ All CME VMs drained; reclassifier (applied 08:24Z) cleared all 20,364 eu rows |
+| NASDAQ | -        | -   | 0   | 656   | ohlcv_1m eu; canonical orphans + plain-ticker date gaps                          |
+| NYSE   | -        | -   | 0   | 3,136 | ohlcv_1m eu; ARCX ETFs still pending (writer fix not yet re-run)                 |
 
 **CME eu=0 ✅** — all CME chain meta-rows reclassified to `empty_confirmed/EXPECTED_CHAIN_AGGREGATE`. Chain meta-row
 reclassifier (`reclass_cme_chain_meta_rows.py`, market-tick-data-service@ecb7bd3e) applied 20,364 rows across all data
 types (ohlcv_1m=8,490, trades=9,058, ohlcv_1s=1,652, tbbo=1,164) and cleared after CME VMs drained overnight.
 
-**UAC EXPECTED_CHAIN_AGGREGATE** (unified-api-contracts@9a73d906) added to `OUT_OF_COVERAGE_WINDOW_REASONS` —
-excludes CME chain-level aggregate rows from coverage denominator.
+**UAC EXPECTED_CHAIN_AGGREGATE** (unified-api-contracts@9a73d906) added to `OUT_OF_COVERAGE_WINDOW_REASONS` — excludes
+CME chain-level aggregate rows from coverage denominator.
 
-**Tarball rebuild (08:32Z):** Core tarballs rebuilt + uploaded to
-`gs://deployment-scripts-central-element-323112/code/` with latest code:
+**Tarball rebuild (08:32Z):** Core tarballs rebuilt + uploaded to `gs://deployment-scripts-central-element-323112/code/`
+with latest code:
+
 - `mtds-code@ecb7bd3e` (includes market-tick-data-service@307ffa05 NYSE ETF fix)
 - `unified-api-contracts-code@6f0c4bf8`
 - `unified-trading-library-code@da437eb8`
 
-Prerequisite: old `tradfi-bf-nyse-ohlcv-1m-2026-20260629-081752` VM (launched with stale tarball pre-307ffa05)
-deleted. New VMs launched with fresh tarballs:
+Prerequisite: old `tradfi-bf-nyse-ohlcv-1m-2026-20260629-081752` VM (launched with stale tarball pre-307ffa05) deleted.
+New VMs launched with fresh tarballs:
 
 - **NYSE 2026 VM:** `tradfi-bf-nyse-ohlcv-1m-2026-20260629-083558` — RUNNING (SPOT, 278 tickers, 2026-01-01..06-29,
-  `VM_FORCE=true`). Tarball=ecb7bd3e includes 307ffa05 (NYSE _resolve_by_dataset ETF fix). Expected: NYSE ohlcv_1m
-  eu drops 3,136 → 0 for ARCX ETFs (SPY/IWM/DIA/GLD/SLV/USO/UNG/XLE) + canonical orphan rows.
+  `VM_FORCE=true`). Tarball=ecb7bd3e includes 307ffa05 (NYSE _resolve_by_dataset ETF fix). Expected: NYSE ohlcv_1m eu
+  drops 3,136 → 0 for ARCX ETFs (SPY/IWM/DIA/GLD/SLV/USO/UNG/XLE) + canonical orphan rows.
 - **NASDAQ 2026 VM:** `tradfi-bf-nasdaq-ohlcv-1m-2026-20260629-083841` — RUNNING (SPOT, 338 tickers, 2026-01-01..06-29,
-  `VM_FORCE=true`). Expected: NASDAQ ohlcv_1m eu drops 656 → ~0 for plain-ticker date gaps (220 rows).
-  Residual ~216 genuine gaps (QQQ/SMH/WMT) + ~220 canonical orphan rows may need reclassifier.
+  `VM_FORCE=true`). Expected: NASDAQ ohlcv_1m eu drops 656 → ~0 for plain-ticker date gaps (220 rows). Residual ~216
+  genuine gaps (QQQ/SMH/WMT) + ~220 canonical orphan rows may need reclassifier.
 
 **Remaining eu blockers (ohlcv_1m) — G2 still pending VM completion:**
 
@@ -657,59 +669,63 @@ deleted. New VMs launched with fresh tarballs:
 
 ### G2 Monitor — 2026-06-29T08:30Z (slot-4 data_engineering; CME reclassifier second pass + status check)
 
-**Complementary CME reclassifier applied (instrument_type filter):**
-Slot-2 ran `reclass_cme_chain_meta_rows.py` at 08:24Z using blank `instrument_id` filter. Slot-4 ran
-`reclass_cme_chain_metarows_eu_not_downloadable.py` at 08:26Z using `instrument_type in (options_chain, futures_chain)`
-filter — caught 20,364 CME eu rows (15,788 options_chain + 4,576 futures_chain, all CME eu remaining at that time).
-Both passes together ensure CME eu=0 regardless of whether instrument_id was blank or populated.
-Snapshot: `_index/snapshots/pre_cme_chain_reclass_20260629T082603Z.parquet`
+**Complementary CME reclassifier applied (instrument_type filter):** Slot-2 ran `reclass_cme_chain_meta_rows.py` at
+08:24Z using blank `instrument_id` filter. Slot-4 ran `reclass_cme_chain_metarows_eu_not_downloadable.py` at 08:26Z
+using `instrument_type in (options_chain, futures_chain)` filter — caught 20,364 CME eu rows (15,788 options_chain +
+4,576 futures_chain, all CME eu remaining at that time). Both passes together ensure CME eu=0 regardless of whether
+instrument_id was blank or populated. Snapshot: `_index/snapshots/pre_cme_chain_reclass_20260629T082603Z.parquet`
 Shipped: market-tick-data-service@8fbe29ad
 
 **VM status at 08:30Z:**
-| VM | Status | Notes |
-|---|---|---|
-| tradfi-bf-nyse-ohlcv-1m-2026-20260629-083558 | RUNNING | slot-2 launch with ecb7bd3e tarball (includes 307ffa05 ETF fix) |
-| tradfi-bf-nasdaq-ohlcv-1m-2026-20260629-083841 | RUNNING | slot-2 launch |
-| tradfi-bf-cme-ohlcv-1m-{gc,hg,ng,nq,pl,si}-{2025,2026} × 6 | RUNNING | CME options VMs |
+
+| VM                                                         | Status  | Notes                                                           |
+| ---------------------------------------------------------- | ------- | --------------------------------------------------------------- |
+| tradfi-bf-nyse-ohlcv-1m-2026-20260629-083558               | RUNNING | slot-2 launch with ecb7bd3e tarball (includes 307ffa05 ETF fix) |
+| tradfi-bf-nasdaq-ohlcv-1m-2026-20260629-083841             | RUNNING | slot-2 launch                                                   |
+| tradfi-bf-cme-ohlcv-1m-{gc,hg,ng,nq,pl,si}-{2025,2026} × 6 | RUNNING | CME options VMs                                                 |
 
 My earlier NYSE VM (tradfi-bf-nyse-ohlcv-1m-2026-20260629-081752, launched 08:17Z with pre-tarball-rebuild code) was
 superseded and deleted by slot-2's relaunch with the correct tarball.
 
 **ohlcv_1m manifest state at 08:29Z (2,604,730 rows):**
+
 - CME eu=0 ✅ | NYSE eu=3,136 (VMs running) | NASDAQ eu=656 (VMs running)
-- af=82: ICE=66 (SCHEMA_VALIDATION_FAILED migration artifacts, authorized excluded per BLK-ca110c07) + 16 phantom
-  rows (blank/UNKNOWN venue, blank instrument_id, 2026-01-02/2026-04-10) — structural garbage, not in MVP universe
+- af=82: ICE=66 (SCHEMA_VALIDATION_FAILED migration artifacts, authorized excluded per BLK-ca110c07) + 16 phantom rows
+  (blank/UNKNOWN venue, blank instrument_id, 2026-01-02/2026-04-10) — structural garbage, not in MVP universe
 
 **Residual eu projection after VMs drain (ohlcv_1m):**
-- NYSE: plain-ticker eu → empty_confirmed via 307ffa05 + writer fix; canonical orphan eu (~1,546) may persist
-- NASDAQ: plain non-trading-day eu (~253: 230 weekends + 23 Memorial Day) + QQQ/SMH/WMT plain (~75) + canonical
-  orphan eu (~328) may persist after VM
 
-**Next action:** Wait for all VMs to TERMINATE → run final G2 verification → address any residual eu/af with
-targeted reclassifiers (canonical orphans need operator decision if they persist).
+- NYSE: plain-ticker eu → empty_confirmed via 307ffa05 + writer fix; canonical orphan eu (~1,546) may persist
+- NASDAQ: plain non-trading-day eu (~253: 230 weekends + 23 Memorial Day) + QQQ/SMH/WMT plain (~75) + canonical orphan
+  eu (~328) may persist after VM
+
+**Next action:** Wait for all VMs to TERMINATE → run final G2 verification → address any residual eu/af with targeted
+reclassifiers (canonical orphans need operator decision if they persist).
 
 ### G2 Status Check — 2026-06-29T08:51Z (slot-13 data_engineering)
 
 Direct manifest query (blob.updated=2026-06-29T08:50:46Z, 2,604,730 rows; 465,055 ohlcv_1m rows).
 
-**VM fleet:** 9 VMs RUNNING (7 CME options: gc-2025, hg-2025, ng-2025, nq-2025, nq-2026, pl-2026, si-2025; 1 NYSE-2026; 1 NASDAQ-2026), 1 TERMINATED (es-2020 from prior session).
+**VM fleet:** 9 VMs RUNNING (7 CME options: gc-2025, hg-2025, ng-2025, nq-2025, nq-2026, pl-2026, si-2025; 1 NYSE-2026;
+1 NASDAQ-2026), 1 TERMINATED (es-2020 from prior session).
 
 **ohlcv_1m by venue × capture_status:**
 
-| venue  | captured | empty_confirmed | af  | eu    | status                                                   |
-| ------ | -------- | --------------- | --- | ----- | -------------------------------------------------------- |
-| CME    | 186,334  | 41,361          | 0   | **0** | ✅ CME eu=0 — reclassifier from 08:24Z confirmed clear   |
-| CBOE   | 1,288    | 2,910           | 0   | 0     | ✅ CLEAN                                                 |
-| KRX    | 0        | 1,622           | 0   | 0     | ✅ KRX eu=0 — reclassifier from 07:59Z confirmed clear   |
-| NASDAQ | 37,421   | 37,784          | 0   | 656   | VMs running (083841), eu pending VM completion            |
-| NYSE   | 127,149  | 21,625          | 0   | 3,136 | VMs running (083558), eu pending VM completion            |
-| ICE    | 2,015    | 741             | 66  | 0     | af=66 migration artifacts, NOT MVP scope — excluded per BLK-ca110c07 |
-| blank  | —        | —               | 14  | 0     | structural garbage (blank venue), NOT MVP scope           |
-| UNKNOWN| —        | —               | 2   | 0     | NOT MVP scope                                             |
+| venue   | captured | empty_confirmed | af  | eu    | status                                                               |
+| ------- | -------- | --------------- | --- | ----- | -------------------------------------------------------------------- |
+| CME     | 186,334  | 41,361          | 0   | **0** | ✅ CME eu=0 — reclassifier from 08:24Z confirmed clear               |
+| CBOE    | 1,288    | 2,910           | 0   | 0     | ✅ CLEAN                                                             |
+| KRX     | 0        | 1,622           | 0   | 0     | ✅ KRX eu=0 — reclassifier from 07:59Z confirmed clear               |
+| NASDAQ  | 37,421   | 37,784          | 0   | 656   | VMs running (083841), eu pending VM completion                       |
+| NYSE    | 127,149  | 21,625          | 0   | 3,136 | VMs running (083558), eu pending VM completion                       |
+| ICE     | 2,015    | 741             | 66  | 0     | af=66 migration artifacts, NOT MVP scope — excluded per BLK-ca110c07 |
+| blank   | —        | —               | 14  | 0     | structural garbage (blank venue), NOT MVP scope                      |
+| UNKNOWN | —        | —               | 2   | 0     | NOT MVP scope                                                        |
 
 **MVP af=0 ✅ for all MVP venues (CME/CBOE/NASDAQ/NYSE). Gate NOT met: NASDAQ eu=656, NYSE eu=3,136 remain.**
 
-**Decision:** NOT flipping G2 today. Gate requires eu=0 AND af=0 for all MVP venues. VMs still active — re-check once NASDAQ-2026 and NYSE-2026 VMs terminate. Posting /blocked (BLK pending).
+**Decision:** NOT flipping G2 today. Gate requires eu=0 AND af=0 for all MVP venues. VMs still active — re-check once
+NASDAQ-2026 and NYSE-2026 VMs terminate. Posting /blocked (BLK pending).
 
 ### G2 Monitor — 2026-06-29T10:05Z (slot-4 data_engineering; context continuation; watchdog armed)
 
@@ -719,18 +735,19 @@ Direct manifest query (2,604,730 rows, ohlcv_1m=465,055 rows).
 
 **ohlcv_1m state (unchanged from 08:51Z for NASDAQ/NYSE):**
 
-| venue  | eu    | af | notes                                                                           |
-| ------ | ----- | -- | ------------------------------------------------------------------------------- |
-| CME    | 0     | 0  | ✅ reclassified 08:24Z                                                          |
-| CBOE   | 0     | 0  | ✅ CLEAN                                                                        |
-| KRX    | 0     | 0  | ✅ reclassified 07:59Z                                                          |
-| NASDAQ | 656   | 0  | eu breakdown: 328 canonical orphan + 328 plain-ticker (2026-02-20→06-29)       |
-| NYSE   | 3,136 | 0  | eu breakdown: 1,546 canonical orphan + 1,590 plain-ticker (2026-02-20→06-29)   |
-| ICE    | 0     | 66 | af=66 migration artifacts, NOT MVP scope (excluded BLK-ca110c07)               |
+| venue  | eu    | af  | notes                                                                        |
+| ------ | ----- | --- | ---------------------------------------------------------------------------- |
+| CME    | 0     | 0   | ✅ reclassified 08:24Z                                                       |
+| CBOE   | 0     | 0   | ✅ CLEAN                                                                     |
+| KRX    | 0     | 0   | ✅ reclassified 07:59Z                                                       |
+| NASDAQ | 656   | 0   | eu breakdown: 328 canonical orphan + 328 plain-ticker (2026-02-20→06-29)     |
+| NYSE   | 3,136 | 0   | eu breakdown: 1,546 canonical orphan + 1,590 plain-ticker (2026-02-20→06-29) |
+| ICE    | 0     | 66  | af=66 migration artifacts, NOT MVP scope (excluded BLK-ca110c07)             |
 
 **MVP af=0 ✅ confirmed** (ICE/blank/UNKNOWN af rows outside MVP scope).
 
 **G2 eu remaining: 3,792 total (NASDAQ=656, NYSE=3,136):**
+
 - 1,874 canonical orphan eu (instrument_id has ":") — needs reclassifier (BLK-33c61313 ✅ operator auth received)
 - 1,918 plain-ticker eu (no ":") — will resolve when VMs write captured/ec for those dates
   - NASDAQ plain-ticker eu: 328 (2026-02-20→06-29)
@@ -740,16 +757,16 @@ Direct manifest query (2,604,730 rows, ohlcv_1m=465,055 rows).
 captured max written_at=2026-06-28 20:13Z (yesterday) — captured rows for 2026 not yet consolidated.
 
 **Reclassifier extended (Case B):** `reclass_nasdaq_nyse_eu_format_mismatch.py` extended to handle Case B
-(eu→empty_confirmed when plain-ticker ec exists) — shipped as market-tick-data-service@c5f31e25 this session.
-Operator auth: BLK-33c61313 (Answer A).
+(eu→empty_confirmed when plain-ticker ec exists) — shipped as market-tick-data-service@c5f31e25 this session. Operator
+auth: BLK-33c61313 (Answer A).
 
-**Watchdog armed:** background process (PID 1187619) polling every 5 min for VM TERMINATE. Will auto-run
-reclassifier --apply immediately on termination. Next action after watchdog fires: final G2 coverage verification.
+**Watchdog armed:** background process (PID 1187619) polling every 5 min for VM TERMINATE. Will auto-run reclassifier
+--apply immediately on termination. Next action after watchdog fires: final G2 coverage verification.
 
 ### G2 Root-Cause Analysis — 2026-06-29T10:40Z (slot-2; VM output analysis; /blocked BLK-5b95659d)
 
-**VM status:** NASDAQ-2026 (083841) RUNNING | NYSE-2026 (083558) RUNNING | 5 CME options VMs RUNNING.
-**eu unchanged from 10:05Z:** NASDAQ=656, NYSE=3,136. VMs running ~2h10m, eu NOT decreasing.
+**VM status:** NASDAQ-2026 (083841) RUNNING | NYSE-2026 (083558) RUNNING | 5 CME options VMs RUNNING. **eu unchanged
+from 10:05Z:** NASDAQ=656, NYSE=3,136. VMs running ~2h10m, eu NOT decreasing.
 
 **Root cause: VMs write EXPECTED_WEEKEND/EXPECTED_HOLIDAY at date level (blank instrument_id), not per-instrument.**
 
@@ -758,6 +775,7 @@ weekends/holidays by writing a SINGLE blank-instrument_id `empty_confirmed` row 
 those same dates are never stamped. Two distinct categories of unresolved eu result:
 
 **Category 1 — Weekend/holiday eu for regular equities (AAPL, MSFT, NVDA, etc.)**
+
 - AAPL has 11 eu rows; ALL 11 are weekends: 2026-05-09,10 (Sat/Sun), 05-16,17, 05-23,24,25 (Memorial Day), 05-30,31,
   06-06,07 — NOT trading days
 - 23 NASDAQ plain-ticker instruments × ~14 weekend dates = ~328 eu rows (matches NASDAQ plain-ticker eu count)
@@ -766,6 +784,7 @@ those same dates are never stamped. Two distinct categories of unresolved eu res
   `empty_confirmed/EXPECTED_WEEKEND` or `EXPECTED_HOLIDAY`
 
 **Category 2 — ARCX ETF eu for ALL dates (trading days + weekends)**
+
 - DIA: 130 eu rows spanning 2026-02-20→2026-06-29 (EVERY date, trading + non-trading)
 - DIA total rows = 130 eu, 0 captured, 0 ec — NEVER attempted by any VM
 - ARCX ETFs (DIA, IWM, GLD, SLV, USO, UNG, XLE, SPY, SMH, IBIT, ETHA) not in XNYS.PILLAR scope
@@ -774,56 +793,59 @@ those same dates are never stamped. Two distinct categories of unresolved eu res
 
 **Current state (manifest, 2026-06-29T10:40Z):**
 
-| venue  | eu    | af | notes                                                                 |
-| ------ | ----- | -- | --------------------------------------------------------------------- |
-| CME    | 0     | 0  | ✅                                                                    |
-| CBOE   | 0     | 0  | ✅                                                                    |
-| KRX    | 0     | 0  | ✅                                                                    |
-| NASDAQ | 656   | 0  | 328 canonical orphan + 328 plain-ticker (weekend dates only)         |
-| NYSE   | 3,136 | 0  | 1,546 canonical orphan + 1,590 plain-ticker (ARCX ETF + weekends)   |
-| ICE    | 0     | 66 | af=66 excluded BLK-ca110c07                                          |
+| venue  | eu    | af  | notes                                                             |
+| ------ | ----- | --- | ----------------------------------------------------------------- |
+| CME    | 0     | 0   | ✅                                                                |
+| CBOE   | 0     | 0   | ✅                                                                |
+| KRX    | 0     | 0   | ✅                                                                |
+| NASDAQ | 656   | 0   | 328 canonical orphan + 328 plain-ticker (weekend dates only)      |
+| NYSE   | 3,136 | 0   | 1,546 canonical orphan + 1,590 plain-ticker (ARCX ETF + weekends) |
+| ICE    | 0     | 66  | af=66 excluded BLK-ca110c07                                       |
 
 **Options posted to operator (BLK-5b95659d):**
-- A: Reclassifier for weekend eu (match blank-instrument_id ec → stamp per-instrument as ec/EXPECTED_WEEKEND) +
-  ARCX ETF reclassifier (DIA/IWM/GLD/SLV/USO/UNG/XLE/SPY/SMH/IBIT/ETHA → ec/EXPECTED_SOURCE_NOT_AVAILABLE for
-  trading-day eu rows). Analogous to KRX reclassifier pattern. Resolves all 3,792 eu rows without code changes.
+
+- A: Reclassifier for weekend eu (match blank-instrument_id ec → stamp per-instrument as ec/EXPECTED_WEEKEND) + ARCX ETF
+  reclassifier (DIA/IWM/GLD/SLV/USO/UNG/XLE/SPY/SMH/IBIT/ETHA → ec/EXPECTED_SOURCE_NOT_AVAILABLE for trading-day eu
+  rows). Analogous to KRX reclassifier pattern. Resolves all 3,792 eu rows without code changes.
 - B: Fix VM code to write per-instrument ec rows for weekend/holiday dates AND add ARCX ETF stamping. Requires
   relaunching NASDAQ/NYSE VMs again with new tarball. Longer path.
 - C: Accept these eu rows as structural (like CME chain meta-rows) and reclassify as `empty_confirmed` with appropriate
   reason codes without waiting for VMs.
 
 **Recommendation: Option A.** Reclassifier is the most immediate and safe path — analogous to already-approved KRX
-(BLK-33c61313) and CME chain meta-row patterns. Can apply as two passes:
-  Pass 1: per-instrument weekend/holiday eu → ec (all venues, where blank-instrument_id ec exists for that date)
-  Pass 2: ARCX ETF trading-day eu → ec/EXPECTED_SOURCE_NOT_AVAILABLE
+(BLK-33c61313) and CME chain meta-row patterns. Can apply as two passes: Pass 1: per-instrument weekend/holiday eu → ec
+(all venues, where blank-instrument_id ec exists for that date) Pass 2: ARCX ETF trading-day eu →
+ec/EXPECTED_SOURCE_NOT_AVAILABLE
 
 **G2 gate cannot be met by waiting for current VMs.** /blocked posted: BLK-5b95659d (awaiting answer).
 
 ### G2 FINAL VERIFICATION — 2026-06-29T10:45Z (slot-2; ALL THREE RECLASSIFIERS APPLIED; GATE MET ✅)
 
 **BLK-5b95659d answered — Option A APPROVED** (received via /progress at 10:43Z):
+
 > "Two-pass reclassifier approved. Ship today. Do NOT choose B."
 
 **Three reclassifier passes applied (sequential):**
-1. **Pass 1** `reclass_per_instrument_weekend_holiday_eu.py --apply` (10:43Z):
-   3,714 eu → ec (EXPECTED_WEEKEND/EXPECTED_HOLIDAY, all venues/data_types)
-2. **Pass 2** `reclass_oos_equity_eu_not_in_dataset.py --apply` (10:43Z):
-   10,077 eu → ec (EXPECTED_SOURCE_NOT_AVAILABLE, OOS trading-day equities)
-3. **Canonical orphan** `reclass_nasdaq_nyse_eu_format_mismatch.py --apply` (10:45Z):
-   8,315 eu → ec (Case B: canonical → plain-ticker ec; 6,380 unresolved = other data_types, not ohlcv_1m)
+
+1. **Pass 1** `reclass_per_instrument_weekend_holiday_eu.py --apply` (10:43Z): 3,714 eu → ec
+   (EXPECTED_WEEKEND/EXPECTED_HOLIDAY, all venues/data_types)
+2. **Pass 2** `reclass_oos_equity_eu_not_in_dataset.py --apply` (10:43Z): 10,077 eu → ec (EXPECTED_SOURCE_NOT_AVAILABLE,
+   OOS trading-day equities)
+3. **Canonical orphan** `reclass_nasdaq_nyse_eu_format_mismatch.py --apply` (10:45Z): 8,315 eu → ec (Case B: canonical →
+   plain-ticker ec; 6,380 unresolved = other data_types, not ohlcv_1m)
 
 **G2 FINAL STATE — ohlcv_1m (465,055 rows, 2026-06-29T10:45Z):**
 
-| venue  | eu | af | captured | ec     | notes                               |
-| ------ | -- | -- | -------- | ------ | ----------------------------------- |
-| CME    | 0  | 0  | 186,334  | 41,361 | ✅                                  |
-| CBOE   | 0  | 0  | 1,288    | 2,910  | ✅                                  |
-| NASDAQ | 0  | 0  | 37,421   | 38,440 | ✅ Pass1+2+canonical applied        |
-| NYSE   | 0  | 0  | 127,149  | 24,761 | ✅ Pass1+2+canonical applied        |
-| ICE    | 0  | 66 | 2,015    | 741    | af=66 excluded BLK-ca110c07 ✅      |
-| KRX    | 0  | 0  | 0        | 1,622  | ec=EXPECTED_SOURCE_NOT_AVAILABLE ✅  |
+| venue  | eu  | af  | captured | ec     | notes                               |
+| ------ | --- | --- | -------- | ------ | ----------------------------------- |
+| CME    | 0   | 0   | 186,334  | 41,361 | ✅                                  |
+| CBOE   | 0   | 0   | 1,288    | 2,910  | ✅                                  |
+| NASDAQ | 0   | 0   | 37,421   | 38,440 | ✅ Pass1+2+canonical applied        |
+| NYSE   | 0   | 0   | 127,149  | 24,761 | ✅ Pass1+2+canonical applied        |
+| ICE    | 0   | 66  | 2,015    | 741    | af=66 excluded BLK-ca110c07 ✅      |
+| KRX    | 0   | 0   | 0        | 1,622  | ec=EXPECTED_SOURCE_NOT_AVAILABLE ✅ |
 
 **MVP scope (CME+CBOE+NASDAQ+NYSE): eu=0, af=0** ✅
 
-**G2 GATE MET.** Scripts shipped: market-tick-data-service@a49403e2.
-G2 checkbox flipped. Plan status updated to complete.
+**G2 GATE MET.** Scripts shipped: market-tick-data-service@a49403e2. G2 checkbox flipped. Plan status updated to
+complete.

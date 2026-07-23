@@ -42,7 +42,7 @@ source:
     "operator decision 2026-06-22 — Delete-when is MANDATORY-PRESENT (NA for permanent) so every script is greppable;
     marker becomes QG-ENFORCED (last item, after all repos stamped); reassigned to harsh_pc as the live AO fleet-test
     plan",
-    convention SSOT codex/06-coding-standards/script-homes.md § "Lifecycle marker",
+    convention SSOT /codex/06-coding-standards/script-homes.md § "Lifecycle marker",
     fleet characterization plans/audit/results/repo_scripts_characterization_2026_06_18.md,
   ]
 assigned_role: infra
@@ -75,7 +75,7 @@ drift_direction: correct-codex
 
 ## Cold-start context for the worker (read before stamping a repo)
 
-1. **The convention SSOT** — `codex/06-coding-standards/script-homes.md` § "Lifecycle marker". The marker:
+1. **The convention SSOT** — `/codex/06-coding-standards/script-homes.md` § "Lifecycle marker". The marker:
    ```
    # Epic: <epic-slug>                            # owning epic (validated vs the orchestrator_vm_registry) — REQUIRED
    # Lifecycle: permanent | campaign | oneoff     # REQUIRED
@@ -103,7 +103,7 @@ drift_direction: correct-codex
 
 ## Phase 0 — fix the convention SSOT FIRST (one worker, do before any stamping)
 
-- [x] ✅ [SCRIPT] P0. Update `codex/06-coding-standards/script-homes.md` § "Lifecycle marker" to the corrected rule
+- [x] ✅ [SCRIPT] P0. Update `/codex/06-coding-standards/script-homes.md` § "Lifecycle marker" to the corrected rule
       (operator 2026-06-22): all 3 fields MANDATORY + PRESENT; `Delete-when` carries **`NA`** for `permanent` (never
       omitted) so `grep -rL '^# Delete-when:' */scripts/` is empty fleet-wide; and state the marker is **QG-ENFORCED**
       (ratchet) once the rollout completes. Replace the old "permanent omits it" wording + the "No `Delete-when`"
@@ -205,8 +205,8 @@ drift_direction: correct-codex
       `orchestrator_vm_registry.yaml`'s epic set, or a non-`permanent` carrying `Delete-when: NA`. Wire it into the
       PM-sourced `base-service.sh` + `base-library.sh` so it rides fleet-wide with NO per-repo rollout (mirror STEP
       5.94/5.95). The operator unblocks this ONLY after confirming `grep -rL '^# Delete-when:' */scripts/` is empty
-      fleet-wide. Update `codex/06-coding-standards/quality-gates.md` + `script-homes.md` § "What gates a scripts/ file"
-      in the same unit. Target: **unified-trading-pm** (checker + base wiring) → fleet. — **FOLDED OUT** to
+      fleet-wide. Update `/codex/06-coding-standards/quality-gates.md` + `script-homes.md` § "What gates a scripts/
+      file" in the same unit. Target: **unified-trading-pm** (checker + base wiring) → fleet. — **FOLDED OUT** to
       plans/active/repo_scripts_governance_audit_2026_06_18.md (2026-07-15, plan-reconcile §6 operator ruling); tracked
       there, not here.
 

@@ -35,9 +35,9 @@ priority: P1
 > (B1–B5, still open, referenced by multiple plans) — this plan's touched files are QG-clean and its C4 explicitly
 > delegates the repo-wide red to that issue. The issue doc correctly stays open; it is not owned by this plan.
 >
-> **Codex SSOTs verified aligned (archival step 3)**: `codex/05-infrastructure/manifest-consolidator-ssot.md` §
+> **Codex SSOTs verified aligned (archival step 3)**: `/codex/05-infrastructure/manifest-consolidator-ssot.md` §
 > "Liveness + health contract" (watchdog status corrected pending→deployed) +
-> `codex/02-data/availability-manifest-and-data-status.md` § 7 read-path fail-fast cross-link. CLAUDE.md § "Manifest
+> `/codex/02-data/availability-manifest-and-data-status.md` § 7 read-path fail-fast cross-link. CLAUDE.md § "Manifest
 > consolidator runtime" updated with the live liveness-contract invariant (archival step 4).
 
 ## What this fixes
@@ -114,8 +114,8 @@ Models to reuse: `monitors/freshness_monitor.py::FreshnessMonitor.check_and_emit
       0 changed / 0 destroyed. **Verified live 2026-06-01**: manual execution `...-qgd8z` succeeded (succeededCount=1,
       `Container called exit(0)` — module loads, all heartbeats fresh).
 - [x] ✅ [DOC] P2. codex@8ef8f7be8 — **Codex SSOT**: new "Liveness + health contract" section in
-      `codex/05-infrastructure/manifest-consolidator-ssot.md` (heartbeat-every-cycle + watchdog + loud-fail-default +
-      preflight gate) + cross-link from `codex/02-data/availability-manifest-and-data-status.md` § "Read path
+      `/codex/05-infrastructure/manifest-consolidator-ssot.md` (heartbeat-every-cycle + watchdog + loud-fail-default +
+      preflight gate) + cross-link from `/codex/02-data/availability-manifest-and-data-status.md` § "Read path
       fail-fast".
 
 ## Success criteria

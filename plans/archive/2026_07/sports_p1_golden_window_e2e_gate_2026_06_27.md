@@ -61,11 +61,11 @@ the window across all three surfaces — manifest, catalogue, alerts.
 
 ## Codex SSOTs
 
-- `codex/02-data/availability-manifest-and-data-status.md` — `expected_unattempted_pending_fetch == 0`, phantom =
+- `/codex/02-data/availability-manifest-and-data-status.md` — `expected_unattempted_pending_fetch == 0`, phantom =
   captured-without-parquet
-- `codex/05-infrastructure/manifest-consolidator-ssot.md` — consolidator freshness (loud-fail-on-stale)
-- `codex/05-infrastructure/data-pipeline-alerts.md` (+ `.registry.yaml`) — DP\_\* taxonomy + drive-to-zero
-- `codex/05-infrastructure/deployment-observability.md` — active-dp-alerts blobs + RESOLVED bookend
+- `/codex/05-infrastructure/manifest-consolidator-ssot.md` — consolidator freshness (loud-fail-on-stale)
+- `/codex/05-infrastructure/data-pipeline-alerts.md` (+ `.registry.yaml`) — DP\_\* taxonomy + drive-to-zero
+- `/codex/05-infrastructure/deployment-observability.md` — active-dp-alerts blobs + RESOLVED bookend
 
 ## Todos
 

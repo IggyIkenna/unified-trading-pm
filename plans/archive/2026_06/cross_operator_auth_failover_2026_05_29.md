@@ -9,7 +9,11 @@ stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer, admin]
 tags: []
-related: [issues/cross_operator_auth_failover_2026_05_29.md, ../../codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md]
+related:
+  [
+    issues/cross_operator_auth_failover_2026_05_29.md,
+    /codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md,
+  ]
 created: 2026-05-29
 parent_epic: orchestrator_master
 assigned_vm: vm-orchestrator
@@ -19,7 +23,7 @@ archived: 2026-06-01
 estimate_class: refactor
 estimate_baseline_ai_days: 2
 estimate_calibrated_ai_days: 0.8
-estimate_calibration_note: 'Refactor (0.4×): rotation logic exists (_pick_next_account); changes are removing
+estimate_calibration_note: "Refactor (0.4×): rotation logic exists (_pick_next_account); changes are removing
 
   any operator-boundary filter, adding an auth-fail detection path (no-heartbeat-
 
@@ -29,7 +33,7 @@ estimate_calibration_note: 'Refactor (0.4×): rotation logic exists (_pick_next_
 
   branch + one alert template.
 
-  '
+  "
 supersedes: [harsh_account_pool_expansion_2026_05_29.md]
 ---
 
@@ -163,7 +167,7 @@ why + reproduction.
 
 ## Phase 4 — Codex SSOT updates (P1)
 
-- [x] ✅ [AGENT] P1. Update `codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md` to document: -
+- [x] ✅ [AGENT] P1. Update `/codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md` to document: -
       Shared-pool design (any account can serve any operator). - Rotation triggers (`rate_limit`, `auth_failed`,
       `operator_directed`). - The 180s spawn-heartbeat watchdog. - The Slack alert schema for rotation events. **DONE
       2026-05-30** — new §§ "Cross-operator shared account pool" + "Rotation across accounts — three triggers" added

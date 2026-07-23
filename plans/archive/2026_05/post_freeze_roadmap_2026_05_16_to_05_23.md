@@ -1,6 +1,7 @@
 ---
 doc_type: plan
-title: Post-freeze roadmap — 2026-05-16 → 2026-06-04 (cutover + paper-trade + live + 7-day monitor + post-cutover kickoff)
+title:
+  Post-freeze roadmap — 2026-05-16 → 2026-06-04 (cutover + paper-trade + live + 7-day monitor + post-cutover kickoff)
 summary:
 status: complete
 nature: record
@@ -99,7 +100,7 @@ draft paste-ready continuation prompts based on actual end-of-cycle-1 state. For
 | --- | ---------- | ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 1   | 2026-05-20 | **12.A — Paper-trade smoke kickoff** | `carry_staked_basis` + `leveraged_funding_arb` archetypes run on testnet against post-Phase-11 features. Strategy / risk / position / alerting / reconciliation wired identically to live shape. STARTED + ≥1 progress event/hour. |
 | 2   | 2026-05-21 | **12.B — Batch-vs-live recon**       | Run `batch_live_reconciler` (UTL@908b1647 helper, shipped Cycle 1). Compare batch P&L vs live P&L over the paper-trade window. **Delta < 5bps tolerance** (master plan F21).                                                       |
-| 3   | 2026-05-22 | **12.C — Ratchet lock-in**           | `measure-honest-coverage.py` re-runs against post-backfill manifest. Lock ratchet in `codex/02-data/honest_coverage_baseline_2026_05.md` with ±0.5pp tolerance + monthly cadence + 99% floor.                                      |
+| 3   | 2026-05-22 | **12.C — Ratchet lock-in**           | `measure-honest-coverage.py` re-runs against post-backfill manifest. Lock ratchet in `/codex/02-data/honest_coverage_baseline_2026_05.md` with ±0.5pp tolerance + monthly cadence + 99% floor.                                     |
 
 **Per-slot allocation**:
 

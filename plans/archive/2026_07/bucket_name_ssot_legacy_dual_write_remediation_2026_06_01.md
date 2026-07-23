@@ -24,9 +24,9 @@ scope: [engineer, admin]
 tags: [canonicalisation, migration, single-walk, manifest, pipeline-mode, data-correctness, infrastructure]
 related:
   [
-    solana_defi_legacy_migration_2026_05_27.md,
-    pipeline_mode_implementation_2026_05_28.md,
-    defi_manifest_canonicalisation_2026_06_01.md,
+    /plans/archive/2026_07/solana_defi_legacy_migration_2026_05_27.md,
+    /plans/archive/2026_06/pipeline_mode_implementation_2026_05_28.md,
+    /plans/archive/2026_07/defi_manifest_canonicalisation_2026_06_01.md,
   ]
 created: 2026-06-01
 parent_epic: mtds_mdps_master
@@ -103,7 +103,7 @@ drift_direction: advance-code
 > `data_source_provenance_all_asset_groups_2026_06_01.md` (`source`-column backfill) must NOT open a third walk — its
 > row-backfill rides defi_manifest's C0 single-walk. Coordination owner: epic `mtds_mdps_master`. Banner-remove when the
 > DeFi `_index` is canonical + seeded (defi_manifest C-GREEN). **CANONICAL NAMING (operator-locked 2026-06-01) —
-> `codex/02-data/defi-canonical-naming-ssot.md`**: the DeFi seed + the L6 **legacy DELETE this plan owns (Phase 7)**
+> `/codex/02-data/defi-canonical-naming-ssot.md`**: the DeFi seed + the L6 **legacy DELETE this plan owns (Phase 7)**
 > MUST use the canonical forms (pool data_type `dex_pool_state`/ `dex_pool_swaps` — NOT `dex_pools`; `pipeline_mode=`
 > path; chain `HYPERLIQUID`). **What ends (HARD)**: the DeFi legacy-bucket DELETE runs **ONLY AFTER** defi_manifest C0
 > RD4 is GREEN per bucket (canonical proven complete + consumers re-pointed) — never before. Delete-before-C-GREEN =
@@ -562,7 +562,7 @@ removal), @eb5f660 (bucket resource + import removal); `terraform state list` po
       (sentinel 5d2c8533) — unified-trading-library@75c001ec. Fixes the T0→T4 tier inversion + sibling-walk fragility.
 - [x] ✅ [SCRIPT] P2. **Flip the consumers: deployment-service + PM consume the UAC canonical, not own it.** UAC is now
       named the canonical SSOT in `cursor-configs/CLAUDE.md` § Bucket-name SSOT +
-      `codex/02-data/bucket-naming-and-config.md` (deployment-service = authoring/env_substitutor read, PM =
+      `/codex/02-data/bucket-naming-and-config.md` (deployment-service = authoring/env_substitutor read, PM =
       byte-identical mirror). Synced the **stale PM mirror** `unified-trading-pm/configs/cloud-providers.yaml` (was 110
       lines / wrong format) to byte-match the 366-line canonical. deployment-service's copy already matched (the
       relocation copied from it). **Decided AGAINST symlinks** — a symlink to a sibling breaks standalone CI clones (the

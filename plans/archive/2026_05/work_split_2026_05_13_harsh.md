@@ -21,7 +21,8 @@ estimate_class: design
 estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 1.8
 effective_concurrent_slots: 10
-estimate_calibration_note: 'Work-split itself (design class). Scope it schedules = ~18-20 cal AI-days across 10 slots on 1 calendar day.
+estimate_calibration_note: 'Work-split itself (design class). Scope it schedules = ~18-20 cal AI-days across 10 slots on
+  1 calendar day.
 
   Ikenna-side at zero today (operator on 2 connecting flights, 12h+1h+2h sequence, signal sporadic). Harsh-side
 
@@ -48,7 +49,7 @@ annotations next to each `- [ ]` item in body for the specific successor / block
 > (2 days from today). May-23 = live-DeFi cutover (10 days).
 >
 > **🟢 ESTIMATE CALIBRATION** — applies workspace-wide per
-> [`codex/08-workflows/estimation-calibration.md`](../../codex/08-workflows/estimation-calibration.md). All slot AI-day
+> [`/codex/08-workflows/estimation-calibration.md`](/codex/08-workflows/estimation-calibration.md). All slot AI-day
 > budgets below are CALIBRATED.
 
 ## Why this split

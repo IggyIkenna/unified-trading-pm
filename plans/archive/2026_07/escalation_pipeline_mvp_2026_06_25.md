@@ -134,9 +134,9 @@ to the agent-orchestrator resolution surface (defer-unify per the `agent_operati
 
 ## Codex SSOT updates
 
-- `codex/04-architecture/escalation-pipeline.md` (NEW — **never created**; this plan was archived with the code unbuilt,
-  so the epic inherits this deliverable) — the role-agnostic record + state machine + scoped-link contract; cross-links
-  the auto-recovery matrix (self-heal vs escalate) + the broker.
+- `/codex/04-architecture/escalation-pipeline.md` (NEW — **never created**; this plan was archived with the code
+  unbuilt, so the epic inherits this deliverable) — the role-agnostic record + state machine + scoped-link contract;
+  cross-links the auto-recovery matrix (self-heal vs escalate) + the broker.
 - `/codex/04-architecture/agent-orchestrator-overview.md` — note the generalized escalation record beside `BlockedRow`.
 
 ## Progress Log

@@ -9,7 +9,7 @@ stage: [meta]
 repos: [deployment-service, market-data-processing-service, unified-api-contracts]
 scope: [engineer, admin]
 tags: []
-related: [mdps_filter_pushdown_memory_audit_and_fix_2026_05_28.md]
+related: [/plans/archive/2026_06/mdps_filter_pushdown_memory_audit_and_fix_2026_05_28.md]
 created: 2026-05-28
 parent_epic: mtds_mdps_master
 assigned_vm: vm-ml
@@ -25,7 +25,8 @@ locked_since: 2026-05-28
 
 # MDPS architectural audit — long-running multi-shard execution
 
-> **✅ ARCHIVED 2026-06-21 — all phases complete + codex-aligned (Phase 6 documented in codex/05-infrastructure/manifest-consolidator-ssot.md); 0 deferred work. [unlock-plan]**
+> **✅ ARCHIVED 2026-06-21 — all phases complete + codex-aligned (Phase 6 documented in
+> /codex/05-infrastructure/manifest-consolidator-ssot.md); 0 deferred work. [unlock-plan]**
 
 ## Codex audit (run 2026-05-28 before starting Phase 0)
 
@@ -354,7 +355,7 @@ Concrete questions to answer + corresponding redesigns to ship:
 - [x] ✅ [AGENT] P1. **3.4 Update the launcher pass-through documentation** in `launch-mdps-backfill-vm.sh` to recommend
       canonical form. The bare-symbol form should be tagged as legacy. **DONE 2026-05-30** — deployment-service@28aadd8:
       expanded `--instrument-ids` header comment with RECOMMENDED/LEGACY labels, hive-path segment explanation, codex
-      SSOT cross-link (`codex/06-coding-standards/cli-convention.md §Instrument Identity and CLI Granularity`), and UAC
+      SSOT cross-link (`/codex/06-coding-standards/cli-convention.md §Instrument Identity and CLI Granularity`), and UAC
       import hint (`from unified_api_contracts.canonical import parse_instrument_key`).
 
 ## Phase 4 — Implement the chosen execution + engine model
@@ -422,23 +423,23 @@ start implementation against an unconfirmed shape.
 The codex audit above named the exact docs that need to land. Phase 6 is the close-out for each finding.
 
 - [x] ✅ [AGENT] P2. **6.1 (Finding A — cleanup discipline)** Add a new §15 to
-      [`codex/06-coding-standards/service-orchestration-patterns.md`](../../codex/06-coding-standards/service-orchestration-patterns.md):
+      [`/codex/06-coding-standards/service-orchestration-patterns.md`](/codex/06-coding-standards/service-orchestration-patterns.md):
       "Batch Service Lifecycle: Setup, Work, Cleanup". Pre-existing at PM@d53aff6b — section 15 already codified at
       2026-05-28 with full "Why", anti-pattern example, correct pattern (try/finally), state audit table, reference
       implementation (orchestration_base.py + orchestration_service.py), reference incident (2026-05-28 OOM), and
       "Composes with" cross-links. No new content needed. Checkbox flip only. 2026-05-30.
 - [x] ✅ [AGENT] P2. **6.2 (Finding B — instrument_id contract)** Add a new section to
-      [`codex/06-coding-standards/cli-convention.md`](../../codex/06-coding-standards/cli-convention.md): "Instrument
+      [`/codex/06-coding-standards/cli-convention.md`](/codex/06-coding-standards/cli-convention.md): "Instrument
       Identity and CLI Granularity". Pre-existing at PM@d53aff6b — section "Instrument Identity and CLI Granularity
       (HARD RULE — codified 2026-05-28)" at line 108 of cli-convention.md covers canonical form, venue derivability,
       data_type independence, atomic shard definition. No new content needed. Checkbox flip only. 2026-05-30.
 - [x] ✅ [AGENT] P2. **6.3 (Finding C — VM lifecycle reconciliation)** Extend
-      [`codex/05-infrastructure/vm-tarball-deployment.md`](../../codex/05-infrastructure/vm-tarball-deployment.md) §
-      "The invariants" with multi-shard cleanup invariant. Pre-existing at PM@d53aff6b — invariant 10 "Per-shard cleanup
+      [`/codex/05-infrastructure/vm-tarball-deployment.md`](/codex/05-infrastructure/vm-tarball-deployment.md) § "The
+      invariants" with multi-shard cleanup invariant. Pre-existing at PM@d53aff6b — invariant 10 "Per-shard cleanup
       discipline for multi-shard VMs (HARD RULE, codified 2026-05-28)" at line 121 of vm-tarball-deployment.md covers
       EPHEMERAL_BATCH multi-shard cleanup requirement. No new content needed. Checkbox flip only. 2026-05-30.
 - [x] ✅ [AGENT] P2. **6.4 (Finding D — data engine)** Add a new doc at
-      `codex/06-coding-standards/data-engine-selection.md`. Pre-existing at PM@d53aff6b — full doc exists with Rule,
+      `/codex/06-coding-standards/data-engine-selection.md`. Pre-existing at PM@d53aff6b — full doc exists with Rule,
       Why, decision tree, banned anti-patterns (Polars→Pandas→Polars), low_memory guidance. No new content needed.
       Checkbox flip only. 2026-05-30.
 

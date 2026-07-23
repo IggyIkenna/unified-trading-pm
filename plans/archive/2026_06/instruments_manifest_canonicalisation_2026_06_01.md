@@ -1,6 +1,8 @@
 ---
 doc_type: plan
-title: Instruments-service manifest + data canonicalisation (audit-first single-walk) — L3 owner for the instruments I/O surface
+title:
+  Instruments-service manifest + data canonicalisation (audit-first single-walk) — L3 owner for the instruments I/O
+  surface
 summary:
 status: complete
 nature: record
@@ -19,7 +21,11 @@ estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 2.4
 locked_by: NA
 locked_since: 2026-06-01
-source: [defi_manifest_canonicalisation_2026_06_01.md §MASTER (per-service canonicalisation axis — instruments was uncovered), canonical_form_cross_service_audit_checklist.md (CF-1…CF-12 — the invariants this walk lands)]
+source:
+  [
+    defi_manifest_canonicalisation_2026_06_01.md §MASTER (per-service canonicalisation axis — instruments was uncovered),
+    canonical_form_cross_service_audit_checklist.md (CF-1…CF-12 — the invariants this walk lands),
+  ]
 master: defi_manifest_canonicalisation_2026_06_01.md (cross-plan canonical-SSOT coordinator)
 ---
 
@@ -165,7 +171,7 @@ VM. Runs behind the pre-migration drain.
 > `--workers`/`--start-date`/`--end-date` (date-shardable across VMs — no dead args) + `gcs_copy_object` for path-only
 > moves (server-side ~250×) / download+transform+upload only for content changes + unbuffered progress logging
 > (`python -u`, counter every ~1000) + per-object `try/except…continue` isolation + idempotent re-runs. SSOT:
-> `codex/05-infrastructure/gcs-object-operations.md` § "Migration-script performance contract".
+> `/codex/05-infrastructure/gcs-object-operations.md` § "Migration-script performance contract".
 
 - [ ] [DATA] P0. C0 ONE bundled walk per non-sports instruments bucket: `category=`→`asset_group=` (paths + rows,
       CF-2) + `pipeline_mode=` partition (CF-3, RIDER — satisfies `pipeline_mode_partition_migration` instruments row) +
@@ -234,6 +240,6 @@ VM. Runs behind the pre-migration drain.
 
 ## Codex SSOTs
 
-- `codex/02-data/availability-manifest-and-data-status.md` — instruments canonical form.
+- `/codex/02-data/availability-manifest-and-data-status.md` — instruments canonical form.
 - `plans/audit/instructions/canonical_form_cross_service_audit_checklist.md` — the CF checklist this walk lands +
   `instruments_master_audit_instructions.md` Canonical-form coverage section.

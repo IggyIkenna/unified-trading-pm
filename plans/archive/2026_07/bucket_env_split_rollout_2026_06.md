@@ -34,7 +34,7 @@ supersedes:
 superseded_by: bucket_estate_consolidation_to_sub100_2026_07_13
 depends_on:
 source:
-Codex SSOTs: [codex/05-infrastructure/bucket-isolation-model.md]
+Codex SSOTs: [/codex/05-infrastructure/bucket-isolation-model.md]
 drift_direction: advance-code
 ---
 
@@ -73,7 +73,7 @@ drift_direction: advance-code
   `features-mtf`, `strategy-store`, `execution-store`, `ml-artifacts`, `ml-training-artifacts` — **env-split ROLLED
   BACK** in `cloud-providers.yaml` (non-env-split `…-cefi-{pid}` shapes) because the env-split buckets were
   empty/non-existent at the 2026-05-19 inventory.
-- **Codex drift**: [bucket-isolation-model.md](../../codex/05-infrastructure/bucket-isolation-model.md) §4 says "staging
+- **Codex drift**: [bucket-isolation-model.md](/codex/05-infrastructure/bucket-isolation-model.md) §4 says "staging
   shares the dev tier" (3-tier) — stale vs the resolver's distinct `-stg-`. Fixed in P4.
 
 ## Why it matters
@@ -100,43 +100,43 @@ the env-tiered shape.
 
       **Findings (GCP prod `central-element-323112`):**
 
-              All Group B flat buckets exist. `resolve_bucket_name` currently emits flat (rolled-back) names; with
-              `${DEPLOYMENT_ENV_SHORT}` re-added to the YAML it would emit canonical `…-{ag}-prd-{pid}` for prod.
+                                                                                                                          All Group B flat buckets exist. `resolve_bucket_name` currently emits flat (rolled-back) names; with
+                                                                                                                          `${DEPLOYMENT_ENV_SHORT}` re-added to the YAML it would emit canonical `…-{ag}-prd-{pid}` for prod.
 
-              **FLAT buckets WITH DATA (need migration in P1.2):**
-              | Bucket | Objects (est.) | Notes |
-              |--------|----------------|-------|
-              | `features-delta-one-cefi-{pid}` | ~1 (index only) | |
-              | `features-delta-one-defi-{pid}` | ~3 (index only) | |
-              | `features-onchain-defi-{pid}` | ~712 | ⚠️ tiered `features-onchain-defi-prd-{pid}` ALSO has ~76 objects — reconcile before migrate |
-              | `features-mtf-cefi-{pid}` | ~1 (index only) | |
-              | `strategy-store-{pid}` | ~23 | backtests/hedge_ratio/strategy_instructions/tracer_runs |
-              | `ml-training-artifacts-{pid}` | ~74 | experiments/ |
-              | `execution-store-cefi-{pid}` | ~6142 | largest; fills/configs/deployment_history/spreads |
+                                                                                                                          **FLAT buckets WITH DATA (need migration in P1.2):**
+                                                                                                                          | Bucket | Objects (est.) | Notes |
+                                                                                                                          |--------|----------------|-------|
+                                                                                                                          | `features-delta-one-cefi-{pid}` | ~1 (index only) | |
+                                                                                                                          | `features-delta-one-defi-{pid}` | ~3 (index only) | |
+                                                                                                                          | `features-onchain-defi-{pid}` | ~712 | ⚠️ tiered `features-onchain-defi-prd-{pid}` ALSO has ~76 objects — reconcile before migrate |
+                                                                                                                          | `features-mtf-cefi-{pid}` | ~1 (index only) | |
+                                                                                                                          | `strategy-store-{pid}` | ~23 | backtests/hedge_ratio/strategy_instructions/tracer_runs |
+                                                                                                                          | `ml-training-artifacts-{pid}` | ~74 | experiments/ |
+                                                                                                                          | `execution-store-cefi-{pid}` | ~6142 | largest; fills/configs/deployment_history/spreads |
 
-              **FLAT buckets EMPTY (provision-only; no migration data):**
-              `features-delta-one-{tradfi,pred,sports}`, all `features-volatility-*`, `features-onchain-cefi`,
-              all `features-xinstrument-*`, `features-mtf-{defi,tradfi,pred,sports}`,
-              `execution-store-{defi,tradfi,sports}`, `ml-artifacts`.
+                                                                                                                          **FLAT buckets EMPTY (provision-only; no migration data):**
+                                                                                                                          `features-delta-one-{tradfi,pred,sports}`, all `features-volatility-*`, `features-onchain-cefi`,
+                                                                                                                          all `features-xinstrument-*`, `features-mtf-{defi,tradfi,pred,sports}`,
+                                                                                                                          `execution-store-{defi,tradfi,sports}`, `ml-artifacts`.
 
-              **Stale wrong-form tiered buckets (old long `prod`/`staging` env strings, all EMPTY — delete in P2.1):**
-              `execution-store-{cefi,defi,tradfi}-{prod,staging,dev}-{pid}`,
-              `strategy-store-{cefi,defi,tradfi}-{prod,staging,dev}-{pid}`.
+                                                                                                                          **Stale wrong-form tiered buckets (old long `prod`/`staging` env strings, all EMPTY — delete in P2.1):**
+                                                                                                                          `execution-store-{cefi,defi,tradfi}-{prod,staging,dev}-{pid}`,
+                                                                                                                          `strategy-store-{cefi,defi,tradfi}-{prod,staging,dev}-{pid}`.
 
-              **`resolve_bucket_name` tiered-form mapping (DEPLOYMENT_ENV=prod → `prd`):**
-              - `features-delta-one/{ag}` → `features-delta-one-{ag}-prd-{pid}` (cefi/defi/tradfi/sports/pred)
-              - `features-volatility/{ag}` → `features-volatility-{ag}-prd-{pid}`
-              - `features-onchain/{cefi,defi}` → `features-onchain-{ag}-prd-{pid}`
-              - `features-xinstrument/{ag}` → `features-xinstrument-{ag}-prd-{pid}`
-              - `features-mtf/{ag}` → `features-mtf-{ag}-prd-{pid}`
-              - `execution-store/{cefi,defi,tradfi,sports}` → `execution-store-{ag}-prd-{pid}`
-              - `strategy-store` → `strategy-store-prd-{pid}` (flat string kind needs env-split re-add)
-              - `ml-artifacts` → `ml-artifacts-prd-{pid}`
-              - `ml-training-artifacts` → `ml-training-artifacts-prd-{pid}`
+                                                                                                                          **`resolve_bucket_name` tiered-form mapping (DEPLOYMENT_ENV=prod → `prd`):**
+                                                                                                                          - `features-delta-one/{ag}` → `features-delta-one-{ag}-prd-{pid}` (cefi/defi/tradfi/sports/pred)
+                                                                                                                          - `features-volatility/{ag}` → `features-volatility-{ag}-prd-{pid}`
+                                                                                                                          - `features-onchain/{cefi,defi}` → `features-onchain-{ag}-prd-{pid}`
+                                                                                                                          - `features-xinstrument/{ag}` → `features-xinstrument-{ag}-prd-{pid}`
+                                                                                                                          - `features-mtf/{ag}` → `features-mtf-{ag}-prd-{pid}`
+                                                                                                                          - `execution-store/{cefi,defi,tradfi,sports}` → `execution-store-{ag}-prd-{pid}`
+                                                                                                                          - `strategy-store` → `strategy-store-prd-{pid}` (flat string kind needs env-split re-add)
+                                                                                                                          - `ml-artifacts` → `ml-artifacts-prd-{pid}`
+                                                                                                                          - `ml-training-artifacts` → `ml-training-artifacts-prd-{pid}`
 
-              `execution-store/prediction` is NOT in the YAML (no prediction entry); needs adding if required.
-              `features-onchain-defi-prd-{pid}` already provisioned with data → **no `terraform apply` needed for this one**;
-              other `-prd-` buckets exist but are empty (provisioned but unpopulated).
+                                                                                                                          `execution-store/prediction` is NOT in the YAML (no prediction entry); needs adding if required.
+                                                                                                                          `features-onchain-defi-prd-{pid}` already provisioned with data → **no `terraform apply` needed for this one**;
+                                                                                                                          other `-prd-` buckets exist but are empty (provisioned but unpopulated).
 
 - [x] ✅ [INFRA] P0.2. Confirm Group A tiered shape is consistent across all consumers (no NO-ENV fallback survives —
       see the defi cross-AG dead-bucket finding in `defi_manifest_canonicalisation_2026_06_01.md`). —
@@ -190,10 +190,10 @@ the env-tiered shape.
 
 ### Phase 4 — Codex alignment
 
-- [x] ✅ [DOCS] P4. Update [bucket-isolation-model.md](../../codex/05-infrastructure/bucket-isolation-model.md): tier
-      set = `dev`/`stg`/`prd` (+`test`) via `resolve_bucket_name`; staging is its own `-stg-` tier; `mock` is
-      mode-based. Reconciled stale `get_bucket_environment` 3-tier framing; SSOT pointer updated from UCI to UTL. —
-      pm@<sha> (2026-06-29).
+- [x] ✅ [DOCS] P4. Update [bucket-isolation-model.md](/codex/05-infrastructure/bucket-isolation-model.md): tier set =
+      `dev`/`stg`/`prd` (+`test`) via `resolve_bucket_name`; staging is its own `-stg-` tier; `mock` is mode-based.
+      Reconciled stale `get_bucket_environment` 3-tier framing; SSOT pointer updated from UCI to UTL. — pm@<sha>
+      (2026-06-29).
 
 ## Success criteria
 

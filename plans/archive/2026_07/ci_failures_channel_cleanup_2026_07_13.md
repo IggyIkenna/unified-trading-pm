@@ -17,7 +17,7 @@ stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]
 tags: [alerts, slack, ci-cd, ci-failures, dedup, observability, notifications]
-related: [agent_orchestrator_alert_channel_cleanup_2026_07_13.md, observability_master.md]
+related: [/plans/active/agent_orchestrator_alert_channel_cleanup_2026_07_13.md, /plans/epics/observability_master.md]
 created: "2026-07-13"
 last_updated: 2026-07-13
 parent_epic: observability_master
@@ -153,8 +153,8 @@ dispatches to PM — it does NOT emit these alerts, so it is untouched.)
 
 ## Codex SSOTs
 
-- `codex/08-workflows/ci-cd-flow.md` (promotion flow, `*/15` LDR→main, ci_status Firestore-SSOT). Post-implementation,
-  add the dedup/cooldown contract for the CI alert carrier there (or a new `codex/04-architecture/ci-alerting.md`
+- `/codex/08-workflows/ci-cd-flow.md` (promotion flow, `*/15` LDR→main, ci_status Firestore-SSOT). Post-implementation,
+  add the dedup/cooldown contract for the CI alert carrier there (or a new `/codex/04-architecture/ci-alerting.md`
   sibling to the AO one) — WS-4.
 - `notify-slack.yml` is the shared dedup carrier (`dedup_key` + `cooldown_min` + the green/INFO suppression gate).
 
@@ -184,13 +184,13 @@ dispatches to PM — it does NOT emit these alerts, so it is untouched.)
 - [x] 3. ✅ [INFRA] P2. WS-2: gated `ci-status-update.yml` `notify` on `status == 'FAILING'` so only regressions page;
       the green CI-RECOVERED / SIT-pass all-clears drop from Slack (Firestore + GCS ledger writes unchanged) per D3.
       PM-local (fires from `main`). — unified-trading-pm@e4b494356.
-- [x] 4. ✅ [REVIEW] P3. WS-4 (doc): wrote the CI-alert dedup/cooldown SSOT `codex/04-architecture/ci-alerting.md` — the
-      `notify-slack.yml` carrier contract (read-back dedup, `dedup_key`+`cooldown_min`, `recovery`-gating, fail-open),
-      the per-reporter key/cooldown table (branch-health lag/AR, `notify-qg-fail`, `ci-status-update`), the 3-way-count
-      explainer (per-run vs per-transition vs hourly), and the "cooldown tracks MEASURED cadence not declared cron"
-      rule. Cross-linked from `ci-cd-flow.md` § CI-health + the CLAUDE.md Slack-notifications bullet. Also fixed a stale
-      SHA-based dedup comment in `python-quality-gates-v2.yml` left by WS-3 (actionlint clean). Frontmatter + size-cap +
-      prettier green. — unified-trading-pm (this commit).
+- [x] 4. ✅ [REVIEW] P3. WS-4 (doc): wrote the CI-alert dedup/cooldown SSOT `/codex/04-architecture/ci-alerting.md` —
+      the `notify-slack.yml` carrier contract (read-back dedup, `dedup_key`+`cooldown_min`, `recovery`-gating,
+      fail-open), the per-reporter key/cooldown table (branch-health lag/AR, `notify-qg-fail`, `ci-status-update`), the
+      3-way-count explainer (per-run vs per-transition vs hourly), and the "cooldown tracks MEASURED cadence not
+      declared cron" rule. Cross-linked from `ci-cd-flow.md` § CI-health + the CLAUDE.md Slack-notifications bullet.
+      Also fixed a stale SHA-based dedup comment in `python-quality-gates-v2.yml` left by WS-3 (actionlint clean).
+      Frontmatter + size-cap + prettier green. — unified-trading-pm (this commit).
 - [x] [REVIEW] P3. WS-4 (verify): re-pull a 24–48 h `#ci-failures` window post-rollout and confirm the volume drop
       (promotion-lag re-reminds ~2 h not hourly, no green all-clears, QG failures dedup per-branch); drop the evidence
       jsonl in `alerts_audit/`. (Pure observation window — same 24–48 h wait as AO WS-E.) — **FOLDED OUT** to
@@ -215,11 +215,11 @@ dispatches to PM — it does NOT emit these alerts, so it is untouched.)
   new **D4** (raise threshold 60→120); (b) re-remind must be age-based; (c) the self-triggered-scheduler stretch item is
   now evidence-backed. **D1 resolved: 2 h re-remind cooldown** (operator). D2/D3/D4 open.
 - **2026-07-13 (WS-4 doc + stretch dropped)** — Operator: do WS-4, drop the WS-1 stretch. Wrote the CI-alert SSOT
-  `codex/04-architecture/ci-alerting.md` (carrier dedup/cooldown contract + per-reporter table + 3-way-count explainer +
-  measured-cadence rule), cross-linked from `ci-cd-flow.md` § CI-health and the CLAUDE.md Slack-notifications bullet,
-  and fixed a stale SHA-based dedup comment WS-3 left in `python-quality-gates-v2.yml` (the key is `ref_name` now;
-  actionlint clean). **Deleted the WS-1-stretch todo** (self-triggered AO scheduler) per operator — not pursuing. Only
-  the WS-4 verification re-pull (24–48 h observation) remains open, matching the AO-plan WS-E wait.
+  `/codex/04-architecture/ci-alerting.md` (carrier dedup/cooldown contract + per-reporter table + 3-way-count
+  explainer + measured-cadence rule), cross-linked from `ci-cd-flow.md` § CI-health and the CLAUDE.md
+  Slack-notifications bullet, and fixed a stale SHA-based dedup comment WS-3 left in `python-quality-gates-v2.yml` (the
+  key is `ref_name` now; actionlint clean). **Deleted the WS-1-stretch todo** (self-triggered AO scheduler) per operator
+  — not pursuing. Only the WS-4 verification re-pull (24–48 h observation) remains open, matching the AO-plan WS-E wait.
 - **2026-07-13 (WS-5: sit-unlock icon contradiction)** — Operator flagged a `#ci-failures` alert showing
   `:white_check_mark: CRITICAL — sit-unlock | result: OK (success)` with body "SIT Failed — staging unlocked." Root
   cause: `sit-unlock.yml`'s notify passed `conclusion: needs.unlock-staging.result` — the UNLOCK job's mechanical result

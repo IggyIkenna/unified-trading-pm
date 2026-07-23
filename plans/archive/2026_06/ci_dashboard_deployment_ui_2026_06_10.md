@@ -1,7 +1,10 @@
 ---
 doc_type: plan
-title: CI/CD repo dashboard — deployment-ui repo dropdown + branch×SHA matrix + stuck PRs + SIT state + image deploy signal
-summary: 'Build a CI/CD Repos surface in deployment-ui: fleet matrix with branch SHA history, quality-gate-v2 status, stuck PR detection, and SIT state.'
+title:
+  CI/CD repo dashboard — deployment-ui repo dropdown + branch×SHA matrix + stuck PRs + SIT state + image deploy signal
+summary:
+  "Build a CI/CD Repos surface in deployment-ui: fleet matrix with branch SHA history, quality-gate-v2 status, stuck PR
+  detection, and SIT state."
 status: complete
 nature: process
 asset_group: [cross-cutting]
@@ -9,7 +12,11 @@ stage: [meta]
 repos: [agent-orchestrator, deployment-api, deployment-ui, features-service, greeks-service, ml-service]
 scope: [engineer, admin]
 tags: [cicd, dashboard, deployment-ui, repos, branch-matrix, stuck-prs, sit-state, observability]
-related: [plans/active/monitoring_control_plane_master_2026_06_10.md, plans/active/ci_status_firestore_side_store_2026_06_10.md]
+related:
+  [
+    plans/active/monitoring_control_plane_master_2026_06_10.md,
+    plans/active/ci_status_firestore_side_store_2026_06_10.md,
+  ]
 created: 2026-06-10
 parent_epic: observability_master
 assigned_vm: NA
@@ -25,8 +32,8 @@ supersedes:
 superseded_by:
 depends_on:
 source:
-- {operator direction 2026-06-10 (parent: plans/active/monitoring_control_plane_master_2026_06_10.md)}
-- operator adds 2026-06-10 — stuck PRs first-class; stuck-in-SIT visible
+  - { operator direction 2026-06-10 (parent: plans/active/monitoring_control_plane_master_2026_06_10.md) }
+  - operator adds 2026-06-10 — stuck PRs first-class; stuck-in-SIT visible
 assigned_role: backend-engineer
 drift_direction: advance-code
 ---
@@ -93,9 +100,8 @@ so the Firestore side-store (Phase 2 of `ci_status_firestore_side_store_2026_06_
       Don't-redo-those-tabs honored (react-router `Link`, no surface re-build).
 - [x] ✅ [CODE] P1. DONE 2026-06-10 — deployment-api@093f80a (trigger-list + latest-builds reuse, 300 s cache,
       image*stale; AWS side = honest-unknown pending cloud-toggle todo). Was: **Image deploy signal (image-level v1)** —
-      reuse
-      `\_cloud_builds*\*`plumbing: last build per repo (status, sha, branch) + manifest`deployed_versions`; flag     `image_stale:
-      main_head_sha != last_successful_build_sha`.
+      reuse `\_cloud_builds*\*`plumbing: last build per repo (status, sha, branch) + manifest`deployed_versions`; flag
+      `image_stale:     main_head_sha != last_successful_build_sha`.
 - [x] ✅ [CODE] P1. DONE 2026-06-10 — deployment-api@15fc1e4 (PR #46) | split `_latest_builds_by_repo` →
       `_gcp_builds_by_repo`/`_aws_builds_by_repo`, dispatched on `is_aws_provider()` (parity with the Cloud Builds tab);
       AWS reuses `_code_builds_aws.py` (CodeBuild projects), GCP reuses `_cloud_builds_trigger/_cloud_builds_history`;
@@ -147,7 +153,7 @@ so the Firestore side-store (Phase 2 of `ci_status_firestore_side_store_2026_06_
       fabricate a meaningless ratio (a banned pattern). Taught STEP 5.90 (`check_data_status_endpoint_canonical.sh`) to
       honor an additive `# QG-allow: data-status-no-coverage` marker (negative-tested: still fails real unmarked
       coverage endpoints, exempts marked); annotated the Tardis endpoint + dropped a dead `_cfg`; documented the
-      exemption in `codex/06-coding-standards/data-status-endpoint-contract.md`. Diagnosed gate-wrong (not code-wrong);
+      exemption in `/codex/06-coding-standards/data-status-endpoint-contract.md`. Diagnosed gate-wrong (not code-wrong);
       QG green.
 - [x] ✅ [CODE] P1. DONE 2026-06-10 — deployment-api@6d6fdce (`tests/conftest.py`). **Flaky-test isolation fix**: 6
       tests (`test_tarball_staleness` ×5, `test_vm_events::test_malformed_jsonl_skipped`) failed order-dependently in
@@ -273,9 +279,12 @@ so the Firestore side-store (Phase 2 of `ci_status_firestore_side_store_2026_06_
       fixed: (1) stale uvicorn predating the `_normalize_epic_ref` path-form fix → restart (21 false orphans); (2) API
       read `ref=main` → promotion-lag window false-orphaned freshly-parented plans → now reads `ref=live-defi-rollout`
       (LDR is the plan SSOT; `_REF` constant, github*url blobs follow); (3) housekeeping files
-      (`INDEX.md`/`task_template.md`/`README.md`/`*\*`) listed as plans → `\_is_plan_md`filter +`TestIsPlanMd`unit     tests; (4) 2 plans (ci_status_firestore / fleet_git_health) had YAML-INVALID frontmatter     (unquoted`key:
-      value`- shaped source strings) → consumers' `yaml.safe_load`got`{}`→ blank parent_epic, while     grep-based `check_frontmatter.sh`stayed green (field-presence ≠ parseability) → quoted both + NEW hygiene gate     `check_frontmatter_yaml.py`(strict safe_load, wired into check_frontmatter.sh, verified both directions).     Post-fix:`/api/epics/plans`
-      orphan_count=0.
+      (`INDEX.md`/`task_template.md`/`README.md`/`*\*`) listed as plans → `\_is_plan_md`filter +`TestIsPlanMd`unit
+      tests; (4) 2 plans (ci_status_firestore / fleet_git_health) had YAML-INVALID frontmatter
+      (unquoted`key:     value`- shaped source strings) → consumers' `yaml.safe_load`got`{}`→ blank parent_epic, while
+      grep-based `check_frontmatter.sh`stayed green (field-presence ≠ parseability) → quoted both + NEW hygiene gate
+      `check_frontmatter_yaml.py`(strict safe_load, wired into check_frontmatter.sh, verified both directions).
+      Post-fix:`/api/epics/plans` orphan_count=0.
 
 ## Phase 3 — playwright gate (pw:L2 — HARD, deployment-ui is in the gated repo set)
 
@@ -309,9 +318,9 @@ sub-plan's deployment-api/ui items: full e2e control-plane validation + **MainAg
       `breaking_pending` repos render the SIT chip; runtime-verified per the runtime-verification rule (run, wait, read
       logs, grep errors).
 - [x] ✅ [DOCS] P2. DONE 2026-06-10 — unified-trading-pm@8b23c4745 (+ ci-cd-flow.md cascade/SIT-loop updates
-      @197b4373a). Was: Codex: write `codex/03-observability/monitoring-control-plane.md` (master-plan obligation; this
+      @197b4373a). Was: Codex: write `/codex/03-observability/monitoring-control-plane.md` (master-plan obligation; this
       plan contributes the CI-dashboard + data-architecture sections); pointer line in
-      `codex/08-workflows/ci-cd-flow.md`.
+      `/codex/08-workflows/ci-cd-flow.md`.
 
 ## Success criteria
 
@@ -360,7 +369,7 @@ BLOCKED-OPERATOR items that live OUTSIDE this plan (Vercel app uninstall — git
 - 2026-07-01: **Plan COMPLETE — archiving.** Validated: ZERO open checkboxes (final autonomous run 2026-06-11 closed the
   last 5); Phase 3 playwright gate met by real deployment-ui specs (`tests/smoke/repos-tab.spec.ts`,
   `tests/e2e/repos-stuck-panel.spec.ts`, 164/164); Phase 4 codex written —
-  `codex/03-observability/monitoring-control-plane.md` (PM@8b23c4745) + ci-cd-flow.md cascade (@197b4373a); cited
+  `/codex/03-observability/monitoring-control-plane.md` (PM@8b23c4745) + ci-cd-flow.md cascade (@197b4373a); cited
   commits resolve (deployment-ui@3998a4d/@630059c, deployment-api@0d9b482). The 7 control-plane findings were migrated
   to `monitoring_control_plane_master_2026_06_10` (their SSOT). **Operator flag:** the minted `ORCHESTRATOR_API_TOKEN`
   (JWT) expires **2026-07-01** — renew + add a new SM version in both clouds (the only operator follow-up; out-of-plan).

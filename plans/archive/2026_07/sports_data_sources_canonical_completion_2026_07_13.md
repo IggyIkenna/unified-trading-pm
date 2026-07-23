@@ -563,10 +563,10 @@ report written in this plan's Progress Log.
 
 # 3. Codex SSOTs
 
-- `codex/02-data/availability-manifest-and-data-status.md`, `…/honest-absence-downstream-handling.md`
-- `codex/02-data/external-data-always-available-rule.md` (mdps_odds_horizon_bucket todo)
-- `codex/05-infrastructure/manifest-consolidator-ssot.md`
-- `codex/04-architecture/instruments-service-as-ssot-for-mtds.md`
+- `/codex/02-data/availability-manifest-and-data-status.md`, `…/honest-absence-downstream-handling.md`
+- `/codex/02-data/external-data-always-available-rule.md` (mdps_odds_horizon_bucket todo)
+- `/codex/05-infrastructure/manifest-consolidator-ssot.md`
+- `/codex/04-architecture/instruments-service-as-ssot-for-mtds.md`
 
 ## Progress Log
 
@@ -902,7 +902,7 @@ report written in this plan's Progress Log.
     suspiciously sparse" line, though that source's `ODDS_SNAPSHOT`/`ODDS_MOVEMENT`/`ARBITRAGE` sub-types were
     separately confirmed genuinely credential-gated in the prior entry above — the raw `trades` numerator itself is NOT
     credential-gated and DOES exist, just in the other bucket) live in two different physical manifests that nothing
-    ever merges — `codex/05-infrastructure/manifest-consolidator-ssot.md`'s Cloud Run consolidator jobs consolidate
+    ever merges — `/codex/05-infrastructure/manifest-consolidator-ssot.md`'s Cloud Run consolidator jobs consolidate
     SHARDS WITHIN a bucket, not ACROSS the instruments-store/market-data-tick pair.
   - **Not a deferred/intentional design gap** — no plan or issue doc marks this as known;
     `sports_predictions_e2e_2026_05_05` (archived 2026-05-05, `status: in_progress` at archive time) explicitly called
@@ -947,7 +947,7 @@ report written in this plan's Progress Log.
     6 rows are the write-safety gate **correctly rejecting** an attempted odds_api write for the generic `ODDS`
     data_type (which `SOURCE_PRIORITY` reserves for footystats — see the 2026-07-15 correction immediately below), and
     recording that rejection honestly as `attempted_failed`. This is the manifest doing exactly what it's supposed to do
-    (per `codex/02-data/availability-manifest-and-data-status.md` — "never silent placeholders," trust the actual
+    (per `/codex/02-data/availability-manifest-and-data-status.md` — "never silent placeholders," trust the actual
     distribution) — **not a defect to patch.**
   - **CORRECTION 2026-07-15 (premise was false when written; the CONCLUSION STANDS).** The parenthetical above — _"which
     `SOURCE_PRIORITY` reserves for footystats"_ — was **factually false on 2026-07-13**, the day it was written:
@@ -1018,7 +1018,7 @@ report written in this plan's Progress Log.
     `instruments-service/scripts/ backfill_orphan_class_e.py`/`backfill_orphan_class_e_sports.py`), below-materiality
     (6-row) record of the gate correctly rejecting a mismatched odds_api write for the footystats-owned generic `ODDS`
     data_type — relabeling or erasing them would itself violate the honest-manifest rule
-    (`codex/02-data/availability-manifest-and-data-status.md`). 0 dedup groups (clean). **Nothing left open on this
+    (`/codex/02-data/availability-manifest-and-data-status.md`). 0 dedup groups (clean). **Nothing left open on this
     todo; no further action warranted.**
 
 - **2026-07-13 (slot-3, interactive session, correction to the api_football investigation's "453,961
@@ -1456,7 +1456,7 @@ report written in this plan's Progress Log.
       confirm no canonical twin at the real identity, DIRECT REWRITE — never a shard-merge write, which cannot collapse
       a `service_name`-keyed dedup group). New one-off script
       `instruments-service/scripts/restamp_orphan_mtds_player_stats_rows_2026_07_13.py` (Epic/Lifecycle/Delete-when
-      markers per `codex/06-coding-standards/script-homes.md`), dry-run-by-default, `--apply` re-verifies at run time
+      markers per `/codex/06-coding-standards/script-homes.md`), dry-run-by-default, `--apply` re-verifies at run time
       (re-derives the twin-check live rather than trusting the prior investigation's numbers) before writing. Ran
       dry-run (confirmed 88 eligible, 0 excluded) then `--apply`: **all 88 rows re-stamped
       `service_name: market-tick-data-service → instruments-service`, `asset_group: "" → "sports"`. Verified post-apply:
@@ -1739,7 +1739,7 @@ report written in this plan's Progress Log.
     showed the target back at the EXACT pre-migration baseline (4,988,148 rows / 2,667 `odds_api`) — the object's own
     `consolidator_run_at`/`consolidator_content_write_at` custom metadata proved the LIVE `instruments-store-sports`
     manifest consolidator (GCP Cloud Run Job, Cloud Scheduler cron `*/1 * * * *` UTC, confirmed via
-    `codex/05-infrastructure/manifest-consolidator-ssot.md`) silently overwrote the write within one cycle — its
+    `/codex/05-infrastructure/manifest-consolidator-ssot.md`) silently overwrote the write within one cycle — its
     read-merge-write started before this script's write landed and finished after, clobbering it with a merge computed
     from the stale snapshot. **Fix**: rewrote the `--apply` path to use the UTL generation-precondition CAS primitive
     (`StorageClient.download_bytes_with_generation` / `.conditional_upload_bytes(if_generation_match=...)`,
@@ -3109,7 +3109,7 @@ it's new adapter work, not a data-audit residual).
   - **Pre-launch fix #1 — launcher had NO SPOT provisioning at all (bug, not just missing polish).** Read the launcher
     end-to-end before using it (per the mandatory grep-then-READ rule) and found it called
     `gcloud compute instances create` with zero `--provisioning-model` flag — silently defaulting every VM to on-demand,
-    a direct violation of `codex/05-infrastructure/spot-vms-for-backfill.md`'s HARD RULE. Fixed:
+    a direct violation of `/codex/05-infrastructure/spot-vms-for-backfill.md`'s HARD RULE. Fixed:
     `deployment-service@0e7d771` adds
     `--provisioning-model=SPOT --instance-termination-action=DELETE --no-restart-on-failure` by default with a
     `--on-demand`/`ON_DEMAND=true` opt-out, mirroring `launch-mdps-backfill-vm.sh`'s existing convention exactly.
@@ -3372,11 +3372,11 @@ it's new adapter work, not a data-audit residual).
       given the real answer was sitting in GCP the whole time.
 
       _Original todo text + Progress Log preserved below for the record:_ every scheduled
-          driver fixed today is hours-old and has only been confirmed via a single manual `gcloud run jobs execute --wait`
-          trigger, never a real unattended cron fire. Before calling ANY of these "fixed for good," confirm they actually
-          self-fire correctly on their own schedule at least once (ideally through one full overnight cycle + the next day's
-          live matches, per the operator's explicit ask — "let's wait for that overnight cycle... mark plan to check the run
-          tonight or tomorrow"). Check ALL of the following on the next session touching this plan:
+                                                                                                                      driver fixed today is hours-old and has only been confirmed via a single manual `gcloud run jobs execute --wait`
+                                                                                                                      trigger, never a real unattended cron fire. Before calling ANY of these "fixed for good," confirm they actually
+                                                                                                                      self-fire correctly on their own schedule at least once (ideally through one full overnight cycle + the next day's
+                                                                                                                      live matches, per the operator's explicit ask — "let's wait for that overnight cycle... mark plan to check the run
+                                                                                                                      tonight or tomorrow"). Check ALL of the following on the next session touching this plan:
   - `uts-prod-sports-enrichment-footystats-daily` / `uts-prod-sports-enrichment-soccer-football-info-daily` /
     `uts-prod-sports-enrichment-transfermarkt-daily` (new today, `deployment-service@5da4b620`/`@0f862b6e`) — check
     `gcloud scheduler jobs describe <job> --project=central-element-323112 --location=asia-northeast1` for
@@ -3668,7 +3668,7 @@ it's new adapter work, not a data-audit residual).
   - **Root cause (same structural bug for BOTH classes, confirmed via live manifest inspection, not assumed)**: every
     row in both stuck sets carried a **blank/`None` `league_id`** — a "date-level aggregate" shard key
     (`(date, data_type)`, no league dimension) that predates the per-league sharding architecture
-    (`codex/04-architecture/shard-level-failure-isolation.md`) the rest of the sports_reference write path now uses
+    (`/codex/04-architecture/shard-level-failure-isolation.md`) the rest of the sports_reference write path now uses
     exclusively. Once such a row exists, **no current write path can ever supersede it** — `record_captured` /
     `record_empty` / `record_failed` in the success paths all key on a REAL canonical `league_id` — so the row sits
     `attempted_failed` FOREVER even after every expected league for that date is genuinely (re-)captured. The
@@ -3894,7 +3894,7 @@ it's new adapter work, not a data-audit residual).
     `error_reason=UNCLASSIFIED_ADAPTER_ERROR`, `attempted_at` clustered in a single ~36-hour window (2026-06-25 to
     2026-06-26) — a one-time historical incident, not an ongoing/live bug. Pattern is consistent with a batch run over
     those 92 specific `date` values each hitting api-football's fail-loud `DependencyError` pre-flight gate (per
-    `codex/02-data/sports-adapter-dependency-order.md` — T1 adapters depend on T0 api-football's fixtures parquet
+    `/codex/02-data/sports-adapter-dependency-order.md` — T1 adapters depend on T0 api-football's fixtures parquet
     existing for that date), with a shared exception handler writing one synthetic failure row per blocked T1 adapter
     but mislabeling `source=api_football` (the blocking dependency) instead of the actual T1 adapter attempting the
     fetch — a hypothesis, not yet confirmed against the exact code location.

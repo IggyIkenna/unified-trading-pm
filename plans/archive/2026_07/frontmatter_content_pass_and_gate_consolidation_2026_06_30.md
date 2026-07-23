@@ -21,7 +21,7 @@ related:
     ../2026_06/frontmatter_full_corpus_coverage_2026_06_30.md,
     ../2026_06/doc_frontmatter_schema_and_validator_2026_06_24.md,
     ../../epics/agent_operating_framework_master.md,
-    ../../../codex/11-project-management/doc-frontmatter-schema.md,
+    /codex/11-project-management/doc-frontmatter-schema.md,
   ]
 created: 2026-06-30
 parent_epic: agent_operating_framework_master
@@ -52,7 +52,7 @@ source:
 > behind the single BLOCKING gate. 5-step archival ritual executed 2026-07-06: **(1)** deferred residuals homed in the
 > parent epic (see "Deferred work after 2026-07-06" below — nothing dropped); **(2)** this banner; **(3)**
 > codex-alignment verified — the cited SSOT
-> [`doc-frontmatter-schema.md`](../../../codex/11-project-management/doc-frontmatter-schema.md) is in lockstep with
+> [`doc-frontmatter-schema.md`](/codex/11-project-management/doc-frontmatter-schema.md) is in lockstep with
 > `scripts/docs/docspec.py` (NATURE 8 incl. `issue`, `implementation_status` elective, doc_type↔path HARD check);
 > **(4)** new durable contracts homed in their codex SSOTs (schema doc + `per-tab-worktrees.md`), no CLAUDE.md/sub-agent
 > staleness introduced; **(5)** no lock to clear (`locked_by` was empty). Superseding follow-on rides the epic
@@ -74,8 +74,8 @@ urgent.
 
 ## Codex SSOTs
 
-- [`codex/11-project-management/doc-frontmatter-schema.md`](../../codex/11-project-management/doc-frontmatter-schema.md)
-  — the universal-core + per-type fields + the two-checks lifecycle this plan executes.
+- [`/codex/11-project-management/doc-frontmatter-schema.md`](/codex/11-project-management/doc-frontmatter-schema.md) —
+  the universal-core + per-type fields + the two-checks lifecycle this plan executes.
 - Validator engine: `scripts/docs/docspec.py` (`validate_frontmatter` — SOFT vs HARD); the surviving gate must call it,
   not reimplement it.
 

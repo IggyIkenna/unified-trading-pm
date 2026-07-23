@@ -18,7 +18,7 @@ priority: P1
 estimate_class: brand-new
 estimate_baseline_ai_days: 10
 estimate_calibrated_ai_days: 10
-estimate_calibration_note: 'brand-new (1.0×): neither a read-once/resample I/O path nor a registry-driven
+estimate_calibration_note: "brand-new (1.0×): neither a read-once/resample I/O path nor a registry-driven
 
   feature-correctness harness exists. Bulk is net-new: the candle-read refactor +
 
@@ -26,7 +26,7 @@ estimate_calibration_note: 'brand-new (1.0×): neither a read-once/resample I/O 
 
   lookahead + dimension/label/config audit) across ~thousands of features.
 
-  '
+  "
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
 ---
@@ -374,8 +374,8 @@ primitive.
       `app/calculators/aggregation_rules.py` (the most canonical recipe) → market-data-processing-service@2cd31c7. All
       gated green (full delta_one 1382-spec + registry + cross-TF + distribution suites; MDPS writer-schema-preservation
       suite) + symbol-verified on LDR. **The polars mechanics are INTENTIONALLY kept** (a pandas-UTL rewrite would
-      regress the proven Phase-1.1 22× read-once win + add a polars↔pandas conversion per shard) — the unification is
-      at the RECIPE-SSOT layer (one UAC source), not a single mechanical function (forced-tradeoff, documented in the
+      regress the proven Phase-1.1 22× read-once win + add a polars↔pandas conversion per shard) — the unification is at
+      the RECIPE-SSOT layer (one UAC source), not a single mechanical function (forced-tradeoff, documented in the
       report below). **The `FeatureCalculator`/`_FeatureCalculatorStatsMixin` CLASS de-fork is NOT done here — it is
       OWNED by `utl_uac_reuse_consolidation_remediation_2026_06_10.md`**, whose considered call is "delta_one base.py —
       surgical, not wholesale: `FeatureCalculator(ABC)` validate/enrich pipeline STAYS LOCAL (only `_boxcox_transform`
@@ -409,8 +409,9 @@ primitive.
       CONSOLIDATION** (the deferred 1.3b: 24h→yearly, 4h/1h→monthly objects) which cuts GET-count without losing the
       materialised coarse TFs — that is the named successor, NOT base-only. Decision recorded; no profiling script
       needed (the 1.0/1.1a numbers are decisive).
-- [x] ✅ [CLEANUP] [NOT-A-BUG] P3. **3.G (DISCOVERY 2026-06-12, DIAGNOSED → CLEANUP SHIPPED market-data-processing-service@bde44fd) MDPS `COLUMN_AGG_RULES["vwap"] = "mean"` is a
-      dead intermediate — the OUTPUT vwap is already correct.** Diagnosis (read both sides): after the group-by roll-up,
+- [x] ✅ [CLEANUP] [NOT-A-BUG] P3. **3.G (DISCOVERY 2026-06-12, DIAGNOSED → CLEANUP SHIPPED
+      market-data-processing-service@bde44fd) MDPS `COLUMN_AGG_RULES["vwap"] = "mean"` is a dead intermediate — the
+      OUTPUT vwap is already correct.** Diagnosis (read both sides): after the group-by roll-up,
       `app/calculators/fast_candle_aggregation.py:253-255` **recomputes** `vwap = pv_sum / volume` (volume-guarded),
       OVERWRITING whatever the `"mean"` rule produced. `pv_sum = Σ(tick_price·tick_size)` is accumulated at the TICK
       grain (`fast_candle_aggregation.py:113` + `trades_adapter.py:263`), so the rolled-up `vwap = Σ(pv_sum)/Σ(volume)`
@@ -501,10 +502,11 @@ Phase-1.1 perf win.
 
 ## Codex SSOT updates (HARD RULE)
 
-- `codex/06-coding-standards/session-aware-feature-calculator-pattern.md` — the read-once + candle-resample
-  I/O-efficiency calc pattern that shipped. (The deeper deferred I/O items — in-memory DAG handoff, one-parquet-per-(day,fg,tf)
-  consolidation, read-time column pruning — are tracked in `colocated_feature_pipeline_in_memory_handoff_2026_06_21.md`.)
-- `codex/02-data/feature-formula-versioning.md` — feature registry + formula-version correctness (the ta-lib-equality +
+- `/codex/06-coding-standards/session-aware-feature-calculator-pattern.md` — the read-once + candle-resample
+  I/O-efficiency calc pattern that shipped. (The deeper deferred I/O items — in-memory DAG handoff,
+  one-parquet-per-(day,fg,tf) consolidation, read-time column pruning — are tracked in
+  `colocated_feature_pipeline_in_memory_handoff_2026_06_21.md`.)
+- `/codex/02-data/feature-formula-versioning.md` — feature registry + formula-version correctness (the ta-lib-equality +
   lookahead + edge-fixture verification rides the registry's `feature_column_versions` footer metadata).
 
 ## Notes / cross-refs

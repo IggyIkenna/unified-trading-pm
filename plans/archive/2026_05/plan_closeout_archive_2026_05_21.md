@@ -17,7 +17,7 @@ locked_since: 2026-05-21
 estimate_class: infra
 estimate_baseline_ai_days: 170
 estimate_calibrated_ai_days: 136
-estimate_calibration_note: 'Wave 1 (S2-S8): ~72 cal. Wave 2 (S2B-S6B): ~64 cal additional. Total ~136 cal.
+estimate_calibration_note: "Wave 1 (S2-S8): ~72 cal. Wave 2 (S2B-S6B): ~64 cal additional. Total ~136 cal.
 
   Mixed class; dominant work is infra (0.8×) from aws_migration Phases 3-6 (~35 cal),
 
@@ -27,7 +27,7 @@ estimate_calibration_note: 'Wave 1 (S2-S8): ~72 cal. Wave 2 (S2B-S6B): ~64 cal a
 
   S2=2  S3=35  S4=10  S5=8  S6=8  S7=7  S8=3  = 73 cal before trivial-sweep bonus (~5-10).
 
-  '
+  "
 parent_epic: orchestrator_master
 assigned_vm: vm-operator-ops
 priority: P1
@@ -344,10 +344,10 @@ gcloud run services describe agent-orchestrator-staging \
 
 These are lightweight updates that any slot can fold into their commit if they touch the relevant doc:
 
-- `codex/02-data/availability-manifest-and-data-status.md` — Note `expected_unattempted_propagation_chain` runtime
+- `/codex/02-data/availability-manifest-and-data-status.md` — Note `expected_unattempted_propagation_chain` runtime
   propagation complete; validation pending Phase 3 prod run window.
-- `codex/06-coding-standards/quality-gates.md` — Note QG Cluster C green status post slot 7.
-- `codex/04-architecture/agent-orchestrator-overview.md` — Note Slack notifications wired (after Slot 8 P0).
+- `/codex/06-coding-standards/quality-gates.md` — Note QG Cluster C green status post slot 7.
+- `/codex/04-architecture/agent-orchestrator-overview.md` — Note Slack notifications wired (after Slot 8 P0).
 
 ---
 

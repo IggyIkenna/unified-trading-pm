@@ -9,8 +9,14 @@ stage: [meta]
 repos: [execution-service, features-service, greeks-service, ml-service, strategy-service, trading-agent-service]
 scope: [engineer, admin]
 tags: []
-related: [plans/epics/features_and_ml_master.md, plans/epics/strategy_master.md, plans/epics/trading_agent_master.md, plans/epics/execution_master.md]
-created: '2026-05-29'
+related:
+  [
+    plans/epics/features_and_ml_master.md,
+    plans/epics/strategy_master.md,
+    plans/epics/trading_agent_master.md,
+    plans/epics/execution_master.md,
+  ]
+created: "2026-05-29"
 parent_epic: features_and_ml_master
 priority: P1
 model_tier: opus-required
@@ -19,25 +25,27 @@ estimate_class: brand-new
 estimate_baseline_ai_days: 18
 estimate_calibrated_ai_days: 18
 assigned_vm: vm-ml
-priority_history: 'P2→P1 2026-05-30 (operator: feed dispatch)'
+priority_history: "P2→P1 2026-05-30 (operator: feed dispatch)"
 locked_by: live-defi-rollout
 locked_since: 2026-05-29
-completion_gates: {code: C5, deployment: D3, business: B4}
+completion_gates: { code: C5, deployment: D3, business: B4 }
 repo_gates:
-- {repo: features-service, code: C0, deployment: none, business: none}
-- {repo: ml-service, code: C0, deployment: none, business: none}
-- {repo: strategy-service, code: C0, deployment: none, business: none}
-- {repo: trading-agent-service, code: C0, deployment: none, business: none}
-- {repo: execution-service, code: C0, deployment: none, business: none}
-- {repo: greeks-service, code: C0, deployment: none, business: none}
-- {repo: market-tick-data-service, code: C0, deployment: none, business: none}
-- {repo: market-data-processing-service, code: C0, deployment: none, business: none}
-- {repo: unified-api-contracts, code: C0, deployment: none, business: none}
+  - { repo: features-service, code: C0, deployment: none, business: none }
+  - { repo: ml-service, code: C0, deployment: none, business: none }
+  - { repo: strategy-service, code: C0, deployment: none, business: none }
+  - { repo: trading-agent-service, code: C0, deployment: none, business: none }
+  - { repo: execution-service, code: C0, deployment: none, business: none }
+  - { repo: greeks-service, code: C0, deployment: none, business: none }
+  - { repo: market-tick-data-service, code: C0, deployment: none, business: none }
+  - { repo: market-data-processing-service, code: C0, deployment: none, business: none }
+  - { repo: unified-api-contracts, code: C0, deployment: none, business: none }
 ---
 
 # Regime Clustering + Proximity → Factor-Targeted Structure Allocator
 
-> **✅ ARCHIVED 2026-06-21 — all phases done; codex regime-clustering-structure-allocator.md aligned. Deferred: LedgerRow vanna/volga emission = small epic-owned follow-up (features_and_ml_master); Tardis hist sub → issues/cefi_tardis_historical_blocked_credentials. [unlock-plan]**
+> **✅ ARCHIVED 2026-06-21 — all phases done; codex regime-clustering-structure-allocator.md aligned. Deferred:
+> LedgerRow vanna/volga emission = small epic-owned follow-up (features_and_ml_master); Tardis hist sub →
+> issues/cefi_tardis_historical_blocked_credentials. [unlock-plan]**
 
 > **Provenance**: distilled from a design conversation (Ikenna ↔ external collaborator "Kade"/Blue Flame, 2026-05-29).
 > The "best of both worlds" merge: our existing PIT-guarded, walk-forward, batch=live infra **+** the genuinely good
@@ -284,7 +292,7 @@ Five-step pipeline, mapped onto what already exists vs what is new:
 - [x] ✅ [TEST] P1. All fitting under purged+embargoed walk-forward; report deflated OOS Sharpe per regime + abstain
       coverage on OOD live states. `purge_embargo_split()` + `WalkForwardReport` + `RegimeOosReport`. 20 unit tests.
       strategy-service@cbd9660.
-- [x] ✅ [CODEX] P2. Write `codex/04-architecture/regime-clustering-structure-allocator.md` (pipeline, batch=live seam,
+- [x] ✅ [CODEX] P2. Write `/codex/04-architecture/regime-clustering-structure-allocator.md` (pipeline, batch=live seam,
       abstain semantics, discrete-grid execution contract, three-layer policy/construction/risk decision matrix) +
       update `features_and_ml_master` related_plans. — unified-trading-pm (codex doc created; features_and_ml_master
       related_plans updated).
@@ -293,13 +301,13 @@ Five-step pipeline, mapped onto what already exists vs what is new:
 
 ## Success criteria (B3 KPIs)
 
-| KPI                                | Target                                                             |
-| ---------------------------------- | ------------------------------------------------------------------ |
+| KPI                               | Target                                                             |
+| --------------------------------- | ------------------------------------------------------------------ |
 | Backtest↔paper P&L tracking error | within declared bps band (B4)                                      |
-| Per-regime structure OOS edge      | Deflated Sharpe > 0 / PBO below threshold                          |
-| OOD coverage                       | 100% of no-confident-regime live states route to abstain/min-size  |
-| Risk-gate veto                     | 100% of limit-breaching structures vetoed regardless of conviction |
-| Look-ahead                         | 0 violations (PIT gate + fit-in-fold)                              |
+| Per-regime structure OOS edge     | Deflated Sharpe > 0 / PBO below threshold                          |
+| OOD coverage                      | 100% of no-confident-regime live states route to abstain/min-size  |
+| Risk-gate veto                    | 100% of limit-breaching structures vetoed regardless of conviction |
+| Look-ahead                        | 0 violations (PIT gate + fit-in-fold)                              |
 
 ## Decision matrix (policy / construction / risk) — maps the external "three-tier" design
 

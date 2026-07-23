@@ -15,7 +15,7 @@ repos: [deployment-api, deployment-ui]
 scope: [engineer]
 tags: [deployment-ui, cost, billing, observability]
 related:
-  - deployment_ui_observability_ux_tracker_2026_07_17.md
+  - /plans/active/deployment_ui_observability_ux_tracker_2026_07_17.md
 created: "2026-07-20"
 last_updated: "2026-07-20"
 parent_epic: observability_master
@@ -140,10 +140,10 @@ principle, wrong in aggregation.
       the plan-flip confirmation itself.
 - [x] ✅ [REVIEW] P2. Post-phase codex audit — document the Cost/day attribution contract (three definitions,
       active-days average, 24h basis, GCP-name/AWS-ARN join, `cost_basis` colour convention) in
-      `codex/05-infrastructure/deployment-observability.md`. — unified-trading-pm: added "Cost/day attribution contract"
-      section (the three `ResourceDailyCost` definitions, the active-days-average fix, the GCP-name/AWS-ARN join via the
-      EC2 census, the best-effort-never-breaks-census enrichment, and the amber-only `cost_basis` colour convention);
-      frontmatter `code_refs`/`tags`/`related`/`last_reviewed` updated.
+      `/codex/05-infrastructure/deployment-observability.md`. — unified-trading-pm: added "Cost/day attribution
+      contract" section (the three `ResourceDailyCost` definitions, the active-days-average fix, the GCP-name/AWS-ARN
+      join via the EC2 census, the best-effort-never-breaks-census enrichment, and the amber-only `cost_basis` colour
+      convention); frontmatter `code_refs`/`tags`/`related`/`last_reviewed` updated.
 
 ## Success criteria
 
@@ -183,9 +183,9 @@ principle, wrong in aggregation.
   already committed and pushed to `origin/live-defi-rollout` in both `deployment-api` (HEAD `de1f680`) and
   `deployment-ui` (HEAD `6a32408`, since fast-forwarded to `e4f893e` by an unrelated sibling-plan push) — confirmed zero
   unpushed commits in either repo before flipping this checkbox. Remaining open todo: the P2 post-phase codex audit of
-  `codex/05-infrastructure/deployment-observability.md`.
+  `/codex/05-infrastructure/deployment-observability.md`.
 - **2026-07-21** — [REVIEW] P2 post-phase codex audit picked up (slot 2). Added a "Cost/day attribution contract"
-  section to `codex/05-infrastructure/deployment-observability.md` documenting: the three `ResourceDailyCost`
+  section to `/codex/05-infrastructure/deployment-observability.md` documenting: the three `ResourceDailyCost`
   definitions read off the live `service.py`/`models.py` docstrings; the active-days-average fix (`len(day_net)`, not
   fixed window); the 24h basis (complete-day, partial-day-normalised fallback with `hours_billed` floored at 1h); the
   GCP-name/AWS-ARN join (`_aws_instance_id_from_resource_id` + the EC2-census `instance_id_by_name` map threaded through
@@ -195,6 +195,6 @@ principle, wrong in aggregation.
 
 ## Codex SSOTs
 
-- `codex/05-infrastructure/deployment-observability.md` — deployment inventory + (to add) the cost-attribution contract
+- `/codex/05-infrastructure/deployment-observability.md` — deployment inventory + (to add) the cost-attribution contract
   (three definitions, active-days average, 24h basis, GCP-name/AWS-ARN join, `cost_basis` colour convention).
-- `codex/06-coding-standards/ui-testing-layers.md` — the UI gate (pw:L2 + cited spec) for the `CostCell` change.
+- `/codex/06-coding-standards/ui-testing-layers.md` — the UI gate (pw:L2 + cited spec) for the `CostCell` change.

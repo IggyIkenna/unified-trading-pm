@@ -9,8 +9,14 @@ stage: [meta]
 repos: [execution-service, unified-api-contracts, unified-trading-pm]
 scope: [engineer, admin]
 tags: []
-related: [mega_audit_and_plan_beefup_progression_2026_05_20.md, is_mtds_contract_audit_2026_05_20.md, issues/extended_starknet_historical_data_path_2026_05_20.md, issues/lint_sweep_774602ea8_regression_audit_2026_05_20.md]
-created: '2026-05-20'
+related:
+  [
+    /plans/archive/issues/mega_audit_and_plan_beefup_progression_2026_05_20.md,
+    /plans/audit/is_mtds_contract_audit_2026_05_20.md,
+    issues/extended_starknet_historical_data_path_2026_05_20.md,
+    issues/lint_sweep_774602ea8_regression_audit_2026_05_20.md,
+  ]
+created: "2026-05-20"
 locked_by: live-defi-rollout
 locked_since: 2026-05-20
 priority: P3
@@ -19,7 +25,7 @@ estimate_class: refactor
 estimate_baseline_ai_days: 4
 estimate_calibrated_ai_days: 1.6
 parent_epic: data_correctness
-codex_ssots: [codex/02-data/contracts-scope-and-layout.md, codex/02-data/availability-manifest-and-data-status.md]
+codex_ssots: [/codex/02-data/contracts-scope-and-layout.md, /codex/02-data/availability-manifest-and-data-status.md]
 ---
 
 > **ARCHIVED 2026-05-21** — Phases 1-5 core complete (schema + validators + QG STEP 5.85 + codex, uac@6e2f569 +
@@ -226,17 +232,17 @@ Phase A2 oracle.
 - [x] ✅ **P0. Test** — 16 tests in `test_expected_coverage_source_start.py`: isolated test capabilities +
       real-declaration smoke tests (hyperliquid/polymarket/binance). Confirms EXPECTED_PRE_SOURCE_COVERAGE_START signal
       correct for dates before/after venue's `coverage_start[data_type]`. — uac@11227f95 (2026-05-20)
-- [x] ✅ **P1. Document the integration** in `codex/02-data/availability-manifest-and-data-status.md` — linked
+- [x] ✅ **P1. Document the integration** in `/codex/02-data/availability-manifest-and-data-status.md` — linked
       `SourceCapability.coverage_start` to `EXPECTED_PRE_SOURCE_COVERAGE_START`, documents
       `is_before_source_coverage_start()` as SSOT consumer and co-existence with `venue_launch_dates.py`. — PM@6c84cb472
       (2026-05-20)
 
 ### Phase 5 — Codex SSOT + post-migration cleanup
 
-- [x] ✅ **P0. Update** `codex/02-data/contracts-scope-and-layout.md` — added capability registry table for
+- [x] ✅ **P0. Update** `/codex/02-data/contracts-scope-and-layout.md` — added capability registry table for
       chain/kind/mandatory_user_agent/coverage_start fields with canonical values, kind taxonomy, QG STEP 5.85, and
       consumer function. — PM@6c84cb472 (2026-05-20)
-- [x] ✅ **P0. Update** `codex/06-coding-standards/quality-gates.md` — STEP 5.85 row added to QG table after STEP 5.83.
+- [x] ✅ **P0. Update** `/codex/06-coding-standards/quality-gates.md` — STEP 5.85 row added to QG table after STEP 5.83.
       — PM@6c84cb472 (2026-05-20)
 - [x] ✅ **[DEFERRED-POST-CUTOVER — named successor: uac_venue_metadata_gap_fill_2026_06_xx.md]** **P1. Prune duplicated
       info** in capability_declarations docstrings — remove now-redundant `chain: ...` / `kind: ...` lines from
@@ -320,7 +326,7 @@ is small (~0.2 each).
 ## Foundation-completion-gate alignment
 
 This plan is layer-1 (IS hardening) work — `SourceCapability` is the canonical reference declaration consumed by every
-downstream layer. Per `codex/11-project-management/foundation-completion-gate-discipline.md`:
+downstream layer. Per `/codex/11-project-management/foundation-completion-gate-discipline.md`:
 
 - Layer 1 (reference) green criterion: C0/C1/C2/C3 audits green
 - This plan **strengthens** layer 1's contract by structuring metadata that was previously informal
@@ -339,8 +345,8 @@ downstream layer. Per `codex/11-project-management/foundation-completion-gate-di
 
 ## Codex SSOT updates (mandatory per CLAUDE.md "Post-Plan-Phase Codex Audit")
 
-- `codex/02-data/contracts-scope-and-layout.md` — add 4 new fields to SourceCapability section
-- `codex/02-data/availability-manifest-and-data-status.md` — link `coverage_start` to existing
+- `/codex/02-data/contracts-scope-and-layout.md` — add 4 new fields to SourceCapability section
+- `/codex/02-data/availability-manifest-and-data-status.md` — link `coverage_start` to existing
   `EXPECTED_PRE_SOURCE_COVERAGE_START` reason
-- `codex/06-coding-standards/quality-gates.md` — STEP 5.85 entry
+- `/codex/06-coding-standards/quality-gates.md` — STEP 5.85 entry
 - `CLAUDE.md` — NO update (rule already covered by item (8) Foundation-Completion-Gate Discipline)

@@ -21,8 +21,10 @@ estimate_baseline_ai_days: 3.0
 estimate_calibrated_ai_days: 1.8
 last_updated: 2026-06-01
 archived: 2026-06-01
-codex_ssots: [codex/04-architecture/agent-orchestrator-overview.md, codex/12-agent-workflow/orchestrator-multi-vm-topology.md]
-migrated_from: orchestrator_master P2 deferred backlog (multi_backend_fleet_connectivity_2026_05_22) — operator go-ahead 2026-06-01
+codex_ssots:
+  [/codex/04-architecture/agent-orchestrator-overview.md, /codex/12-agent-workflow/orchestrator-multi-vm-topology.md]
+migrated_from:
+  orchestrator_master P2 deferred backlog (multi_backend_fleet_connectivity_2026_05_22) — operator go-ahead 2026-06-01
 ---
 
 ## ✅ ARCHIVED 2026-06-01 — ES256 fleet-wide + HS256 retired
@@ -109,5 +111,5 @@ doc updated; ≥48h clean RS256 traffic.
 
 ## Composes with
 
-`codex/04-architecture/agent-orchestrator-overview.md` § "two-secret model" + the Phase-4 connectivity seam in
+`/codex/04-architecture/agent-orchestrator-overview.md` § "two-secret model" + the Phase-4 connectivity seam in
 `server.py::proxy_to_vm`.

@@ -18,7 +18,13 @@ estimate_class: infra
 estimate_baseline_ai_days: 3.0
 estimate_calibrated_ai_days: 2.4
 locked_by: live-defi-rollout
-source: [operator design direction 2026-06-09 ("why are we locking to minor versions… ranges >0.0.1<1… only major bumps force uv lock changes… major bumps trigger full SIT in dep order else escalate to vm-planning"), plans/active/cicd_contract_hardening_2026_06_01.md § "CORRECTION + ADDENDUM 2026-06-09" (UAC 0.1.20-vs-0.2.1 split that surfaced this)]
+source:
+  [
+    operator design direction 2026-06-09 ("why are we locking to minor versions… ranges >0.0.1<1… only major bumps force
+    uv lock changes… major bumps trigger full SIT in dep order else escalate to vm-planning"),
+    plans/active/cicd_contract_hardening_2026_06_01.md § "CORRECTION + ADDENDUM 2026-06-09" (UAC 0.1.20-vs-0.2.1 split
+    that surfaced this),
+  ]
 ---
 
 > **⚠️ SUPERSEDED 2026-06-24 → [cicd_consolidated_remaining_2026_06_24.md](cicd_consolidated_remaining_2026_06_24.md)**
@@ -58,7 +64,7 @@ any lockfile change.
   to vm-planning** (the orchestrator) to resolve.
 - **What counts as MAJOR vs MINOR is decided by the breaking-change matrix** — the AST public-surface differ
   (`scripts/cicd/detect_breaking_change.py`) + a plan-documented schema/API-contract matrix, refined deliberately (not a
-  version-phase heuristic). SSOT for "breaking = public-surface change": `codex/08-workflows/ci-cd-flow.md` § "Breaking
+  version-phase heuristic). SSOT for "breaking = public-surface change": `/codex/08-workflows/ci-cd-flow.md` § "Breaking
   = public-surface change, NOT version phase".
 
 **How the range is honored (the part that IS still work):** with editable internal deps + range pins, a minor/patch
@@ -246,21 +252,20 @@ one):**
       normal drain (fail-safe during transition — the old staging-direct copy on `main` keeps working until the new one
       lands). First organic internal-dep bump post-promotion validates it lands on LDR not staging. Repo:
       unified-trading-pm (template ✅) + 24 repo copies (rollout ✅).
-- [CI] P2. **Finding (2026-06-18 flow audit): `major-bump-issue-handler.yml:183` is a second staging-direct writer**
-      — the 1.0.0-graduation handler (`/approve`-gated) clones the target at `--branch staging` (`:155`), bumps the
-      repo's own `version =` field, and `git push origin staging` (`:183`). Same divergence CLASS as 1.5a but a
-      different axis (package **version**, not a dep **floor**) — lower-risk (rare human-gated event; a bare `version =`
-      bump rarely conflicts so the hourly `staging-backmerge-to-ldr` usually rescues it cleanly). Reroute to
-      `live-defi-rollout` (`--branch live-defi-rollout` + `git push origin HEAD:live-defi-rollout`) for consistency with
-      the LDR-is-SSOT model. NOT folded into the 1.5a change to keep that blast radius scoped to the dep-floor fan-out.
-      Repo: unified-trading-pm (template + roll out).
-- [SCRIPT] P3. **Finding (2026-06-18): stale duplicate
-      `scripts/propagation/templates/update-dependency-version.yml`** — a SECOND copy of the workflow with OLD line
-      numbers (`ref: staging` `:49` / `push origin staging` `:213` / `--base staging` `:251`), separate from the rollout
-      SSOT `scripts/workflow-templates/`. No consumer found in a `grep -rn 'propagation/templates' scripts/`, so it
-      appears orphaned — but if a repo-bootstrap path reads it, it would re-introduce the staging-direct behavior on a
-      new repo. Confirm it is dead and **delete it** (delete-deprecated-code rule), or if a bootstrap consumes it, point
-      that consumer at the `workflow-templates/` SSOT. Repo: unified-trading-pm.
+- [CI] P2. **Finding (2026-06-18 flow audit): `major-bump-issue-handler.yml:183` is a second staging-direct writer** —
+  the 1.0.0-graduation handler (`/approve`-gated) clones the target at `--branch staging` (`:155`), bumps the repo's own
+  `version =` field, and `git push origin staging` (`:183`). Same divergence CLASS as 1.5a but a different axis (package
+  **version**, not a dep **floor**) — lower-risk (rare human-gated event; a bare `version =` bump rarely conflicts so
+  the hourly `staging-backmerge-to-ldr` usually rescues it cleanly). Reroute to `live-defi-rollout`
+  (`--branch live-defi-rollout` + `git push origin HEAD:live-defi-rollout`) for consistency with the LDR-is-SSOT model.
+  NOT folded into the 1.5a change to keep that blast radius scoped to the dep-floor fan-out. Repo: unified-trading-pm
+  (template + roll out).
+- [SCRIPT] P3. **Finding (2026-06-18): stale duplicate `scripts/propagation/templates/update-dependency-version.yml`** —
+  a SECOND copy of the workflow with OLD line numbers (`ref: staging` `:49` / `push origin staging` `:213` /
+  `--base staging` `:251`), separate from the rollout SSOT `scripts/workflow-templates/`. No consumer found in a
+  `grep -rn 'propagation/templates' scripts/`, so it appears orphaned — but if a repo-bootstrap path reads it, it would
+  re-introduce the staging-direct behavior on a new repo. Confirm it is dead and **delete it** (delete-deprecated-code
+  rule), or if a bootstrap consumes it, point that consumer at the `workflow-templates/` SSOT. Repo: unified-trading-pm.
 - [x] ✅ [SCRIPT] P2. ~~Close the mtds rollout gap (`staging-backmerge-to-ldr.yml`)~~ — **DONE / STALE: verified
       2026-06-18 `market-tick-data-service/.github/workflows/staging-backmerge-to-ldr.yml` is PRESENT** (rolled out
       since the 2026-06-17 finding). The gap is closed; back-merge is still FF-only by design (it can't rescue a
@@ -301,94 +306,97 @@ one):**
 - [x] ✅ [CI] P1. **DONE — PM@PR#398 (merged main 2026-06-18).** CI `uv sync` → `uv sync --frozen`. **No 24-repo rollout
       needed:** the per-repo `.tmpl` workflows `uses:` the SINGLE reusable
       `unified-trading-pm/.github/workflows/python-quality-gates-v2.yml@live-defi-rollout`, so the flip in that one
-      reusable workflow (line 461) covers the whole fleet's CI. `--frozen` NOT `--locked` (tolerates the semver `version =` bump).
+      reusable workflow (line 461) covers the whole fleet's CI. `--frozen` NOT `--locked` (tolerates the semver
+      `version =` bump).
 - [x] ✅ [SCRIPT] P1. **DONE — PM@PR#397 (merged main 2026-06-18).** `base-service.sh` + `base-library.sh`
       `uv pip install -e .` → `uv sync --frozen`, placed BEFORE the editable-sibling loop (prune-immune; smoke-validated
-      on greeks: siblings → workspace-root editable, externals → locked working pin, tooling kept). LOCAL == CI byte-for-byte.
+      on greeks: siblings → workspace-root editable, externals → locked working pin, tooling kept). LOCAL == CI
+      byte-for-byte.
 - [x] ✅ [CI] P1. **REPLACED per operator Harsh 2026-06-18 — floor-vs-pin guardrail, NOT `uv lock --check`** (which
       treadmills on the semver CI-side `version =` bump). PM@PR#397 ships
       `scripts/quality_gates/check_lock_satisfies_pyproject.py` (BLOCKING in `base-*.sh`): every external lock pin must
-      satisfy its pyproject range; skips editable/internal sources; validated (synthetic catch + 22-repo no-false-positive
-      + exercised in-QG across Mode-B).
+      satisfy its pyproject range; skips editable/internal sources; validated (synthetic catch + 22-repo
+      no-false-positive + exercised in-QG across Mode-B).
 - [x] ✅ [DOCS] P1. **DONE — PM@PR#397.** `cursor-configs/CLAUDE.md`: "CI **and local `quality-gates.sh`** install via
       `uv sync --frozen` (1.5b local↔CI parity, the lock is the install SSOT)."
-- [DOCS] P3. **Stale codex value (found in the 2026-06-18 flow audit):** `codex/08-workflows/ci-cd-flow.md:460`
-      states the back-merge drift-tick is `schedule: */20`, but the **deployed** `main-backmerge-to-ldr.yml:42` (+
-      template) is `cron "0 * * * *"` (hourly, relaxed 2026-06-11 to cut Actions spend). Root CLAUDE.md already matches
-      hourly; fix the codex doc body line.
+- [DOCS] P3. **Stale codex value (found in the 2026-06-18 flow audit):** `/codex/08-workflows/ci-cd-flow.md:460` states
+  the back-merge drift-tick is `schedule: */20`, but the **deployed** `main-backmerge-to-ldr.yml:42` (+ template) is
+  `cron "0 * * * *"` (hourly, relaxed 2026-06-11 to cut Actions spend). Root CLAUDE.md already matches hourly; fix the
+  codex doc body line.
 
 > **1.5b SHIPPED (2026-06-18, slot-3) — Mode-B green (16/22 pass, the rest pre-existing/remediated); PM-core PR#397 +
 > CI-v2 PR#398 MERGED to `main`; **15/15 repo caps** + e2e/SIT stale-lock fixes on LDR. The features GCP unit-test bug
 > was FIXED (mock the loader) so its cap shipped too → `check-dependency-alignment.py` is `aligned: true` (0 issues).**
-> Option-A cap + frozen
-> flip executed. (a) Capped fastapi `>=0.115.0,<0.137.0` + starlette `>=1.1.0,<1.3.0` in the **15 declaring repos'**
-> `[project.dependencies]` (14 fastapi ∪ trading-agent-service for starlette — trading-agent was MISSING from the earlier
-> 14-list; enumerated from the real dep arrays, not assumed), in `workspace-constraints.toml`, and regenerated
-> `canonical-dependency-manifest.json` from the capped constraints (generator reads constraints). (b) `uv lock` (plain,
-> keep-pins) on all 15 → every pin lands <0.137 / <1.3.0 (rc=0; UTL starlette 1.3.1→1.1.0, fastapi pins 0.134–0.136.3
-> kept; incidental in-range type-stub/patch freshening on a few stale locks, benign + QG-gated). (c) Flipped
-> `uv pip install -e .` → `uv sync --frozen` in `base-service.sh` + `base-library.sh` (sync BEFORE the editable-sibling
-> loop — **prune-immune**: a typecheck-only sibling absent from the lock would otherwise be pruned right after install)
-> and `python-quality-gates-v2.yml:459`. (d) Smoke-validated on greeks: `uv sync --frozen` synced the venv to the locked
-> working pins (starlette 1.1.0 / fastapi 0.136.3 / pytest 9.0.3 — downgraded the upgraded leftovers), siblings stayed
-> editable-local (dep-content gate intact), QG green 66 s. (e) Full tier-ordered Mode-B QG running across the fleet.
+> Option-A cap + frozen flip executed. (a) Capped fastapi `>=0.115.0,<0.137.0` + starlette `>=1.1.0,<1.3.0` in the **15
+> declaring repos'** `[project.dependencies]` (14 fastapi ∪ trading-agent-service for starlette — trading-agent was
+> MISSING from the earlier 14-list; enumerated from the real dep arrays, not assumed), in `workspace-constraints.toml`,
+> and regenerated `canonical-dependency-manifest.json` from the capped constraints (generator reads constraints). (b)
+> `uv lock` (plain, keep-pins) on all 15 → every pin lands <0.137 / <1.3.0 (rc=0; UTL starlette 1.3.1→1.1.0, fastapi
+> pins 0.134–0.136.3 kept; incidental in-range type-stub/patch freshening on a few stale locks, benign + QG-gated). (c)
+> Flipped `uv pip install -e .` → `uv sync --frozen` in `base-service.sh` + `base-library.sh` (sync BEFORE the
+> editable-sibling loop — **prune-immune**: a typecheck-only sibling absent from the lock would otherwise be pruned
+> right after install) and `python-quality-gates-v2.yml:459`. (d) Smoke-validated on greeks: `uv sync --frozen` synced
+> the venv to the locked working pins (starlette 1.1.0 / fastapi 0.136.3 / pytest 9.0.3 — downgraded the upgraded
+> leftovers), siblings stayed editable-local (dep-content gate intact), QG green 66 s. (e) Full tier-ordered Mode-B QG
+> running across the fleet.
 
 - [SCRIPT] P2. **FINDING (1.5b, 2026-06-18): `propagate-canonical-versions.py` silently SKIPS ceiling-first specs.**
-      `_replace_dep_spec` (`scripts/propagation/propagate-canonical-versions.py:93-107`) loops separators
-      `[">=","<=","!=","==",">","<","~="]` and **`return line` on the FIRST separator found with `idx>0`, even when the
-      parsed pkg_name is wrong**. For a ceiling-first spec `"fastapi<1.0.0,>=0.115.0"` it finds `>=` first → pkg_name
-      `fastapi<1.0.0,` → not in constraints → returns the line UNCHANGED, never trying `<` (which would correctly parse
-      `fastapi`). Impact: propagation would NOT cap fastapi in the ~11 fleet repos that write it ceiling-first (dry-run
-      flagged only 9 of 15 declarers). 1.5b used a scoped `sed` instead, so the cap is complete; this is a latent silent
-      gap for any FUTURE canonical rollout. Fix: parse the package name at the EARLIEST operator position across all
-      operators (`idx = min((i for s in seps if (i := spec.find(s)) > 0), default=-1)`), not iterate-and-return-on-first.
-      Repo: unified-trading-pm.
-- [INFRA] P2. **FINDING (1.5b, 2026-06-18): canonical-dependency alignment is ADVISORY + has pre-existing drift.**
-      TWO canonical sources — `workspace-constraints.toml` (read by `propagate-canonical-versions.py`) and
-      `canonical-dependency-manifest.json` (read by `check-dependency-alignment.py`, generated FROM constraints by
-      `generate_canonical_dependency_manifest.py`) — silently drift if one is edited without regenerating the other (1.5b
-      hit this: capped constraints, manifest stale until regenerated). `check-dependency-alignment.py` reports
-      `aligned: false` with misalignments NOT caused by 1.5b: **pyarrow** `>=23.0.1,<24.0.0` in 5 repos (unified-api-contracts,
-      execution-service, features-service, market-data-processing-service, ml-service), **python-multipart**
-      `>=0.0.31,<1.0.0` in fund-administration-service (the failure-mode-B CVE case this very plan describes), + starlette
-      floors (resolved by the 1.5b cap). The checker also reads TRANSITIVE starlette specifiers from `uv.lock` (`>=1.0.1`),
-      not just `[project.dependencies]`, so some reports are noisy. PM is actively pushed with alignment red → the "never
-      push PM unless aligned" rule is advisory, not hard-enforced today. A focused alignment-hygiene pass (cap-fix pyarrow
-      + python-multipart, fix the propagation bug above, reconcile the two sources, decide if alignment should hard-block)
-      is its own follow-up — OUT of 1.5b scope (scoped-change discipline: do not mass-sweep pyarrow under the uv banner).
-      Repo: unified-trading-pm + the 5 pyarrow repos + fund-administration-service.
+  `_replace_dep_spec` (`scripts/propagation/propagate-canonical-versions.py:93-107`) loops separators
+  `[">=","<=","!=","==",">","<","~="]` and **`return line` on the FIRST separator found with `idx>0`, even when the
+  parsed pkg_name is wrong**. For a ceiling-first spec `"fastapi<1.0.0,>=0.115.0"` it finds `>=` first → pkg_name
+  `fastapi<1.0.0,` → not in constraints → returns the line UNCHANGED, never trying `<` (which would correctly parse
+  `fastapi`). Impact: propagation would NOT cap fastapi in the ~11 fleet repos that write it ceiling-first (dry-run
+  flagged only 9 of 15 declarers). 1.5b used a scoped `sed` instead, so the cap is complete; this is a latent silent gap
+  for any FUTURE canonical rollout. Fix: parse the package name at the EARLIEST operator position across all operators
+  (`idx = min((i for s in seps if (i := spec.find(s)) > 0), default=-1)`), not iterate-and-return-on-first. Repo:
+  unified-trading-pm.
+- [INFRA] P2. **FINDING (1.5b, 2026-06-18): canonical-dependency alignment is ADVISORY + has pre-existing drift.** TWO
+  canonical sources — `workspace-constraints.toml` (read by `propagate-canonical-versions.py`) and
+  `canonical-dependency-manifest.json` (read by `check-dependency-alignment.py`, generated FROM constraints by
+  `generate_canonical_dependency_manifest.py`) — silently drift if one is edited without regenerating the other (1.5b
+  hit this: capped constraints, manifest stale until regenerated). `check-dependency-alignment.py` reports
+  `aligned: false` with misalignments NOT caused by 1.5b: **pyarrow** `>=23.0.1,<24.0.0` in 5 repos
+  (unified-api-contracts, execution-service, features-service, market-data-processing-service, ml-service),
+  **python-multipart** `>=0.0.31,<1.0.0` in fund-administration-service (the failure-mode-B CVE case this very plan
+  describes), + starlette floors (resolved by the 1.5b cap). The checker also reads TRANSITIVE starlette specifiers from
+  `uv.lock` (`>=1.0.1`), not just `[project.dependencies]`, so some reports are noisy. PM is actively pushed with
+  alignment red → the "never push PM unless aligned" rule is advisory, not hard-enforced today. A focused
+  alignment-hygiene pass (cap-fix pyarrow + python-multipart, fix the propagation bug above, reconcile the two sources,
+  decide if alignment should hard-block) is its own follow-up — OUT of 1.5b scope (scoped-change discipline: do not
+  mass-sweep pyarrow under the uv banner). Repo: unified-trading-pm + the 5 pyarrow repos + fund-administration-service.
 - [SCRIPT] P3. **FINDING (1.5b, 2026-06-18): the `--ignore-vuln` block is DUPLICATED across `base-service.sh` +
-      `base-library.sh` and had DRIFTED.** `base-service.sh:1198` already carried the two starlette CVEs
-      (CVE-2026-54283/-54282, added in the 2026-06-15 advisory batch) but `base-library.sh` did NOT — so when the 1.5b
-      cap lowered the starlette floor 1.3.1→1.1.0 (re-exposing them), every LIBRARY repo with starlette went red in QG
-      while service repos stayed green (incident: UTL Mode-B fail; UAC passed only because it declares no starlette).
-      FIXED 2026-06-18 by syncing base-library.sh to base-service.sh (+ a comment). Root hazard remains: two hand-kept
-      copies of a ~20-entry ignore list silently diverge. Extract the `--ignore-vuln` argument list to a SINGLE shared
-      shell constant (e.g. `qg-common.sh` `PIP_AUDIT_IGNORE_VULNS`) sourced by both bases, so a CVE add/lift edits ONE
-      place. Repo: unified-trading-pm (`scripts/quality-gates-base/`).
+  `base-library.sh` and had DRIFTED.** `base-service.sh:1198` already carried the two starlette CVEs
+  (CVE-2026-54283/-54282, added in the 2026-06-15 advisory batch) but `base-library.sh` did NOT — so when the 1.5b cap
+  lowered the starlette floor 1.3.1→1.1.0 (re-exposing them), every LIBRARY repo with starlette went red in QG while
+  service repos stayed green (incident: UTL Mode-B fail; UAC passed only because it declares no starlette). FIXED
+  2026-06-18 by syncing base-library.sh to base-service.sh (+ a comment). Root hazard remains: two hand-kept copies of a
+  ~20-entry ignore list silently diverge. Extract the `--ignore-vuln` argument list to a SINGLE shared shell constant
+  (e.g. `qg-common.sh` `PIP_AUDIT_IGNORE_VULNS`) sourced by both bases, so a CVE add/lift edits ONE place. Repo:
+  unified-trading-pm (`scripts/quality-gates-base/`).
 - [x] ✅ [TEST] **P1 DONE (2026-06-18) — FIXED + shipped → alignment GREEN (`aligned: true`, 0 issues, 15/15 capped).**
       The proper fix: the `orchestrator` fixture in `test_calendar_orchestrator_capture_status.py` now mocks
-      `EconomicCalendarLoader` (`load_all_events()` → `{}`) so the unit test never builds a real GCP client — 5 tests pass
-      under `--block-network`, full features QG green (378 s); the test-fix + cap were quickmerged to features LDR.
-      **Original diagnosis retained:** features-service cap can't ship → fleet PM-quickmerge alignment block (1.5b, 2026-06-18).
-      14/15 caps are on LDR + the manifest cap is MERGED (PR#397). features-service's cap (pyproject `fastapi<0.137.0`)
-      is correct + ready in the slot tree but CANNOT quickmerge: its Pass-1 QG is red on a PRE-EXISTING bug —
-      `tests/calendar/unit/test_calendar_orchestrator_capture_status.py` (a *unit* test) makes `CalendarOrchestrationService`
-      init a real GCP client that authenticates to the GCP metadata server (`192.178.211.95`) under `--block-network`
-      (the test mocks storage but NOT the GCP auth → ~27 `SocketConnectBlockedError` + a gRPC `_InactiveRpcError`). The
-      cap FIXED features' starlette `_IncludedRouter` break; this GCP-auth debt is orthogonal (present in the
-      `--upgrade`-era log too) and features-service has NO `requires_credentials` skip hook (so marking won't skip it).
-      **CONSEQUENCE:** `check-dependency-alignment.py` (the PM-quickmerge `aligned:true` gate — no baseline) flags features
-      fastapi (committed-uncapped vs merged-capped manifest) → **BLOCKS PM script/manifest quickmerges fleet-wide** until
-      features' cap lands. **Resolution options:** (a) **proper** — mock the GCP client (or route it through the
-      cloud-agnostic `get_storage_client`/`UnifiedCloudConfig` wrapper) in the test → quickmerge features' cap
-      [features-service work]; (b) **interim** — direct-push features' cap (pyproject+lock) to LDR (provenance-exempt: no
-      `.py`/`.ts` source change), re-aligning the gate; features' own staging CI stays red on the pre-existing bug, but
-      features was already blocked; (c) operator/coordination call. The cap is re-derivable from the merged canonical
-      regardless. Repo: features-service (test) + unified-trading-pm (alignment).
+      `EconomicCalendarLoader` (`load_all_events()` → `{}`) so the unit test never builds a real GCP client — 5 tests
+      pass under `--block-network`, full features QG green (378 s); the test-fix + cap were quickmerged to features LDR.
+      **Original diagnosis retained:** features-service cap can't ship → fleet PM-quickmerge alignment block (1.5b,
+      2026-06-18). 14/15 caps are on LDR + the manifest cap is MERGED (PR#397). features-service's cap (pyproject
+      `fastapi<0.137.0`) is correct + ready in the slot tree but CANNOT quickmerge: its Pass-1 QG is red on a
+      PRE-EXISTING bug — `tests/calendar/unit/test_calendar_orchestrator_capture_status.py` (a _unit_ test) makes
+      `CalendarOrchestrationService` init a real GCP client that authenticates to the GCP metadata server
+      (`192.178.211.95`) under `--block-network` (the test mocks storage but NOT the GCP auth → ~27
+      `SocketConnectBlockedError` + a gRPC `_InactiveRpcError`). The cap FIXED features' starlette `_IncludedRouter`
+      break; this GCP-auth debt is orthogonal (present in the `--upgrade`-era log too) and features-service has NO
+      `requires_credentials` skip hook (so marking won't skip it). **CONSEQUENCE:** `check-dependency-alignment.py` (the
+      PM-quickmerge `aligned:true` gate — no baseline) flags features fastapi (committed-uncapped vs merged-capped
+      manifest) → **BLOCKS PM script/manifest quickmerges fleet-wide** until features' cap lands. **Resolution
+      options:** (a) **proper** — mock the GCP client (or route it through the cloud-agnostic
+      `get_storage_client`/`UnifiedCloudConfig` wrapper) in the test → quickmerge features' cap [features-service work];
+      (b) **interim** — direct-push features' cap (pyproject+lock) to LDR (provenance-exempt: no `.py`/`.ts` source
+      change), re-aligning the gate; features' own staging CI stays red on the pre-existing bug, but features was
+      already blocked; (c) operator/coordination call. The cap is re-derivable from the merged canonical regardless.
+      Repo: features-service (test) + unified-trading-pm (alignment).
 
-> **HOLD until 1.5a lands:** do NOT run a fleet-wide `uv sync` + commit-lock pass — it re-diverges LDR↔staging locks
-> and restarts the runaways. Stop any active runaway the convergence-safe way (match pyproject to staging on LDR; do not
+> **HOLD until 1.5a lands:** do NOT run a fleet-wide `uv sync` + commit-lock pass — it re-diverges LDR↔staging locks and
+> restarts the runaways. Stop any active runaway the convergence-safe way (match pyproject to staging on LDR; do not
 > touch the lock).
 
 ### Phase 2 — MAJOR bump triggers a CASCADE of quality gates (full SIT in dependency order) — P1
@@ -591,11 +599,11 @@ clean slate). End state:
       NON-breaking. Added `_is_enum_base()` + enum-member capture into `fields` (keyed `Class.MEMBER`, value = the
       literal), so member removal AND value-change now trip the removed/changed-field breaking checks; a NEW member
       stays additive (non-breaking), and a non-Enum class constant is NOT tracked (no false trips). 4 regression tests
-      added (`test_detect_breaking_change.py`, 12 pass). Matrix documented in `codex/08-workflows/ci-cd-flow.md` §
+      added (`test_detect_breaking_change.py`, 12 pass). Matrix documented in `/codex/08-workflows/ci-cd-flow.md` §
       "Breaking = public-surface change".
-- [x] ✅ [DOCS] P3. DONE 2026-06-12 — added a **Scope boundary** bullet to `codex/08-workflows/ci-cd-flow.md` §
+- [x] ✅ [DOCS] P3. DONE 2026-06-12 — added a **Scope boundary** bullet to `/codex/08-workflows/ci-cd-flow.md` §
       "Breaking = public-surface change" cross-linking the two non-code contract surfaces to their own SSOTs: manifest
-      `schema_version` → `codex/02-data/availability-manifest-and-data-status.md`; GCS path/partition keys
+      `schema_version` → `/codex/02-data/availability-manifest-and-data-status.md`; GCS path/partition keys
       (`pipeline_mode=`/`asset_group=`/`feature_group_version=`) → `pipeline-mode-partition.md` +
       `feature-formula-versioning.md`. Boundary now explicit (these are real contract changes but do NOT trip the CODE
       differ — coordinate via the data-track SSOT + single-walk migration). No differ change.
@@ -679,8 +687,8 @@ commit baked in = a deterministic single-SHA provenance chain, with zero `uv.loc
       went in (provenance). This is the operator's answer to both "reproducible cloud builds" and "reverse-engineer the
       code version in a build". [DESIGN SHARPENED 2026-06-10: STEP 5.79 (base-service.sh:2361-2413) is currently
       TOOTHLESS against the canonical FROM lines — the line-2395 `${` exemption skips every FROM that uses
-      `${PROJECT_ID}`. Sound mechanism: (1) each consumer Dockerfile carries a checked-in `ARG
-      BASE_IMAGE_DIGEST=sha256:<digest>` default consumed in FROM; (2) digest freshness rides the existing
+      `${PROJECT_ID}`. Sound mechanism: (1) each consumer Dockerfile carries a checked-in
+      `ARG     BASE_IMAGE_DIGEST=sha256:<digest>` default consumed in FROM; (2) digest freshness rides the existing
       dependency-update fan-out (update-repo-version.yml → per-repo update-dependency-version.yml PRs rewrite the ARG
       line on base-image publish); (3) THEN narrow 5.79: registry FROMs must carry @sha256 literally or via an ARG
       BASE_IMAGE_DIGEST default in the same Dockerfile — closing the blanket `${` skip. Sequencing hard requirement:
@@ -708,11 +716,11 @@ commit baked in = a deterministic single-SHA provenance chain, with zero `uv.loc
       operator-ratified]**: the final 5.79 hard-fail flip is GATED on a REAL cloud build (Cloud Build / buildspec)
       proving the @${BASE_IMAGE_DIGEST} FROM path end-to-end — docker build --check is NOT sufficient; flipping first
       could block the fleet on an unproven build shape.
-- [SCRIPT] P2. **Registry-poller for the rebuild-without-bump edge** — the digest fan-out hooks UTL VERSION bumps;
-      an image rebuild with no version bump (infra-only rebuild) never refreshes consumer digests. Add a `*/6h` PM
-      workflow: gcloud-resolve `:latest` digest → dispatch `dependency-update` with `base_image_digest` to UTL consumers
-      (stateless — consumer sed is idempotent, unchanged digest → no PR). Reuse the WIF/SA-key auth pattern from
-      `update-repo-version.yml`.
+- [SCRIPT] P2. **Registry-poller for the rebuild-without-bump edge** — the digest fan-out hooks UTL VERSION bumps; an
+  image rebuild with no version bump (infra-only rebuild) never refreshes consumer digests. Add a `*/6h` PM workflow:
+  gcloud-resolve `:latest` digest → dispatch `dependency-update` with `base_image_digest` to UTL consumers (stateless —
+  consumer sed is idempotent, unchanged digest → no PR). Reuse the WIF/SA-key auth pattern from
+  `update-repo-version.yml`.
 - [x] ✅ **[DONE 2026-06-12 — `deployment-service/deployment_service/bom.py` exists, `DeploymentRegistryEntry` carries
       the BoM fields, and `VersionRegistry.register_version` is now WIRED on the live-deploy path
       (`live_deployment.py`); shipped `deployment-service@f9c0920`. Code present on LDR. (Follow-up: surface in GET
@@ -757,8 +765,8 @@ commit baked in = a deterministic single-SHA provenance chain, with zero `uv.loc
 
 ## Codex SSOT updates
 
-`codex/08-workflows/ci-cd-flow.md` (dependency-promotion model + the lock-gate internal-exemption),
-`codex/06-coding-standards/quality-gates.md` (uv.lock gate behavior + STEP 5.79 dockerfile-base-pin as the
+`/codex/08-workflows/ci-cd-flow.md` (dependency-promotion model + the lock-gate internal-exemption),
+`/codex/06-coding-standards/quality-gates.md` (uv.lock gate behavior + STEP 5.79 dockerfile-base-pin as the
 reproducibility/provenance lever), CLAUDE.md § Dependencies+builds (range pins absorb minor/patch; only major forces
 rebuild; base-image `@sha256` digest — not `uv.lock` — is the rollback/provenance pin),
-`codex/05-infrastructure/vm-tarball-deployment.md` (deployment-registry BoM: image digest + git commit + dep versions).
+`/codex/05-infrastructure/vm-tarball-deployment.md` (deployment-registry BoM: image digest + git commit + dep versions).

@@ -10,12 +10,12 @@ repos: []
 scope: [engineer, admin]
 tags: []
 related: []
-created: '2026-02-28'
+created: "2026-02-28"
 ---
 
 # VCR Cassette Recording Plan — External API Credentials
 
-**SSOT for secret names/env vars:** `unified-trading-codex/07-security/secrets-management.md` **SSOT for VCR cassette
+**SSOT for secret names/env vars:** `unified-trading-/codex/07-security/secrets-management.md` **SSOT for VCR cassette
 definitions:** `api-contracts/api_contracts/vcr_endpoints.py` — each venue entry has `key_env` (env var name) and
 `cassette_name`. Empty `[]` = no cassette defined yet. **Record script:**
 `api-contracts/scripts/record_vcr_cassettes.py`
@@ -151,4 +151,4 @@ The `sports-betting-services/` repo uses raw `os.getenv()` — must migrate to `
 - Phase 4 WS: architectural decision made on WS cassette tooling
 - Phase 5: sports-betting-services migrated to `get_secret_client`
 
-Codex SSOT: `unified-trading-codex/07-security/secrets-management.md#data-vendor-api-keys`
+Codex SSOT: `unified-trading-/codex/07-security/secrets-management.md#data-vendor-api-keys`

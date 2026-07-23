@@ -45,8 +45,8 @@ source:
 
 > **🟢 This backfill runs LOCALLY on the orchestrator host as a detached process — NOT a SPOT VM. This is a deliberate,
 > operator-approved, ONE-OFF exception to the `Backfill VMs default to SPOT (HARD RULE)`
-> (`codex/05-infrastructure/spot-vms-for-backfill.md`). It applies to THIS understat backfill ONLY; every other backfill
-> MUST still use the VM launchers.**
+> (`/codex/05-infrastructure/spot-vms-for-backfill.md`). It applies to THIS understat backfill ONLY; every other
+> backfill MUST still use the VM launchers.**
 
 **Why local is correct here (not laziness):** understat is a single-origin public scraper with **no bulk shot endpoint**
 — XG_SHOTS is ~19,000 individual `getMatchData` calls, all from ONE source IP. A fleet of VMs gives **zero** parallelism
@@ -281,7 +281,7 @@ The driver **reuses the shipped per-date capture path** (`_fetch_understat_xg` +
       credentials this session (a login was created + handed over), authenticated against
       `https://api.agent-orchestrator.odum-research.com` (the documented external path — `13.113.200.22:8765` was never
       reachable by design, it's loopback-only behind an nginx proxy; SSOT
-      `codex/05-infrastructure/agent-orchestrator-api-host.md`), and queried the LIVE `/api/backlog` directly (106
+      `/codex/05-infrastructure/agent-orchestrator-api-host.md`), and queried the LIVE `/api/backlog` directly (106
       tasks, fresh pull). Searched the full JSON for any occurrence of `understat-vm-xg-complete` anywhere (not just
       `prereqs.conditions` — a raw substring search across every field): **0 matches**. This reconfirms, for the 4th+
       time across sessions (2026-07-06, 2026-07-08, 2026-07-12, now 2026-07-13), that this dependency was never
@@ -333,11 +333,11 @@ machine-encoded) — tracked as its own new todo above pending a planning-VM-res
 
 ## 5. Codex SSOTs (check the plan against these — plan↔codex drift is review-blocking)
 
-- `codex/02-data/availability-manifest-and-data-status.md` (4-state capture_status; shard atom).
-- `codex/02-data/honest-absence-downstream-handling.md` (empty vs failed vs captured).
-- `codex/05-infrastructure/manifest-consolidator-ssot.md` (Cloud Run jobs; do not hand-run vs the deployed cron).
-- `codex/05-infrastructure/spot-vms-for-backfill.md` (the HARD RULE this backfill is the documented exception to).
-- `codex/12-agent-workflow/async-wait-and-poll-discipline.md` (monitor on a progress metric; no fire-and-forget).
+- `/codex/02-data/availability-manifest-and-data-status.md` (4-state capture_status; shard atom).
+- `/codex/02-data/honest-absence-downstream-handling.md` (empty vs failed vs captured).
+- `/codex/05-infrastructure/manifest-consolidator-ssot.md` (Cloud Run jobs; do not hand-run vs the deployed cron).
+- `/codex/05-infrastructure/spot-vms-for-backfill.md` (the HARD RULE this backfill is the documented exception to).
+- `/codex/12-agent-workflow/async-wait-and-poll-discipline.md` (monitor on a progress metric; no fire-and-forget).
 
 ## Progress Log
 
@@ -544,18 +544,19 @@ machine-encoded) — tracked as its own new todo above pending a planning-VM-res
   `expected_universe_v2_daily` → Cloud Run Job `expected-universe-v2-sports` →
   `instruments-service/scripts/enumerate_expected_universe.py`); (2) the counter-typing script
   (`type_understat_eu_no_provider_coverage.py`) is **NOT scheduled anywhere in the workspace** — ad-hoc only, which IS
-  the lag; (3) the sports consolidator runs every 1 minute (`codex/05-infrastructure/manifest-consolidator-ssot.md`) but
-  has an ADMITTED, never-root-caused gap (flagged in `sports_manifest_null_vs_empty_dedup_double_count_2026_06_21.md`,
-  "Update 2026-07-08") where its incremental cycles don't reliably apply the NULL/`''` dedup fix in production; (4) the
-  fresh XG dup is most likely a recurrence of this same standing gap, not a new bug. Added four new todos to this plan
-  (schedule the typing script + long-term writer fix; re-run + root-cause the recurring instrument_type dedup; verify
-  the 6-parked-sports-tasks backlog.yaml unblock from a planning-VM-resident session; final literal-100% re-verify) and
-  corrected §4's DoD to no longer claim RESOLVED. **Could not dispatch directly to the orchestrator from this session**
-  — `13.113.200.22:8765` (agent-orchestrator API) is unreachable from this interactive slot (connection refused), and
-  `backlog.yaml` is gitignored host-state not present in this clone. The plan is already `assigned_vm: planning` /
-  `status: active`, so these new todos are queued for the standard plan→backlog regen mechanism
-  (`regen_backlog_from_plan.py`) rather than a manual API push; flagging for the operator/a planning-VM session to
-  confirm the regen picks these up. No code shipped this session — plan-doc update only.
+  the lag; (3) the sports consolidator runs every 1 minute (`/codex/05-infrastructure/manifest-consolidator-ssot.md`)
+  but has an ADMITTED, never-root-caused gap (flagged in
+  `sports_manifest_null_vs_empty_dedup_double_count_2026_06_21.md`, "Update 2026-07-08") where its incremental cycles
+  don't reliably apply the NULL/`''` dedup fix in production; (4) the fresh XG dup is most likely a recurrence of this
+  same standing gap, not a new bug. Added four new todos to this plan (schedule the typing script + long-term writer
+  fix; re-run + root-cause the recurring instrument_type dedup; verify the 6-parked-sports-tasks backlog.yaml unblock
+  from a planning-VM-resident session; final literal-100% re-verify) and corrected §4's DoD to no longer claim RESOLVED.
+  **Could not dispatch directly to the orchestrator from this session** — `13.113.200.22:8765` (agent-orchestrator API)
+  is unreachable from this interactive slot (connection refused), and `backlog.yaml` is gitignored host-state not
+  present in this clone. The plan is already `assigned_vm: planning` / `status: active`, so these new todos are queued
+  for the standard plan→backlog regen mechanism (`regen_backlog_from_plan.py`) rather than a manual API push; flagging
+  for the operator/a planning-VM session to confirm the regen picks these up. No code shipped this session — plan-doc
+  update only.
 - 2026-07-13 (slot-3, interactive session, continued — operator provided agent-orchestrator credentials and directed "do
   them from here to not lose time"): closed all 4 of this session's new todos directly rather than waiting on
   planning-VM dispatch. **-001 (close the lag)**: shipped `deployment-service@7c68e77` — a new Cloud Run Job + daily

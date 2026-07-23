@@ -24,9 +24,9 @@ tags:
   [deployment-observability, cockpit, cost, provenance, unmanaged-vms, leaked-resources, deployment-api, deployment-ui]
 related:
   [
-    deployment_obs_backend_kinds_health_2026_07_09.md,
-    deployment_obs_ui_popover_health_2026_07_09.md,
-    deployment_observability_expansion_2026_07_08.md,
+    /plans/archive/2026_07/deployment_obs_backend_kinds_health_2026_07_09.md,
+    /plans/archive/2026_07/deployment_obs_ui_popover_health_2026_07_09.md,
+    /plans/archive/2026_07/deployment_observability_expansion_2026_07_08.md,
   ]
 created: "2026-07-09"
 last_updated: "2026-07-09"
@@ -50,7 +50,7 @@ source: deployment_observability_expansion_2026_07_08.md
 # Full-estate deployment visibility — unmanaged VMs, launched-by provenance, leaked-resource + cost catch
 
 > **✅ ARCHIVED 2026-07-13 — COMPLETE.** Every todo shipped. Codex aligned (`launched_by`/`control-plane` provenance in
-> `codex/05-infrastructure/deployment-observability.md`). The one DEFERRED item (`managed_by_label`, a launcher-label
+> `/codex/05-infrastructure/deployment-observability.md`). The one DEFERRED item (`managed_by_label`, a launcher-label
 > echo) is migrated to `plans/active/issues/managed_by_label_launcher_standardization_2026_07_13.md`. Frozen record.
 
 > **LOCAL / human plan** (`assigned_vm: NA`, `execution_scope: local-only` — NOT AO-dispatched, never ingested).
@@ -103,14 +103,14 @@ cloud, invisible in the deployments tab:
 ## Codex SSOTs (READ before touching each area — plan↔codex drift is review-blocking)
 
 - Inventory contract + classification + composite health: `deployment-api/.../routes/deployments_inventory.py`;
-  `codex/05-infrastructure/deployment-observability.md`.
+  `/codex/05-infrastructure/deployment-observability.md`.
 - VM launchers + labels/tags (provenance): `deployment-service/scripts/vm/launch-*.sh`;
-  `codex/05-infrastructure/vm-launcher-runbook.md`, `…/vm-tarball-deployment.md`.
+  `/codex/05-infrastructure/vm-launcher-runbook.md`, `…/vm-tarball-deployment.md`.
 - GCE resource reads (disks/IPs already partly built): `deployment-api/deployment_api/vm_utils.py`
   (`get_vm_instance_details`, `get_disk_details`, `list_unattached_disk_names`).
 - Shard-level failure isolation (per-kind/region honest degradation):
-  `codex/04-architecture/shard-level-failure-isolation.md`.
-- UI testing layers: `codex/06-coding-standards/ui-testing-layers.md`.
+  `/codex/04-architecture/shard-level-failure-isolation.md`.
+- UI testing layers: `/codex/06-coding-standards/ui-testing-layers.md`.
 
 ## Existing surfaces to REUSE — audited 2026-07-10 (do NOT rebuild these)
 
@@ -118,13 +118,14 @@ A live audit of the deployment-ui cockpit found **three already-built surfaces t
 building parallel duplicates is review-blocking.
 
 1. **`FleetOrphans` (`GET /api/fleet/orphans`, `FleetOrphansContent`, Fleet tab)** — already renders stopped/terminated
-   VMs with **boot-disk GB + $/mo**, a **reap verdict** (`reap`/`keep_within_grace`/`keep_not_ephemeral`/
-   `keep_retained`/`keep_no_timestamp`), rollup cards (**Idle disk $/mo**, **Reclaimable $/mo**), and **bulk-reap
-   (dry-run first) + per-instance delete** (`POST /api/fleet/reap`, `DELETE /api/fleet/instances/{name}`). This ALREADY
-   covers most of the leaked-boot-disk cost catch. **Genuine gaps to target:** data disks / regional PDs (only the boot
-   disk today), **static IPs** (none), **truly-orphaned disks/IPs with no owning VM** (it's VM-keyed), and surfacing the
-   leak as a **red badge on the Deployments inventory row + the running→leaked→rest sort** (today it's a Fleet-tab-only
-   panel).
+   VMs with **boot-disk GB +
+   $/mo**, a **reap verdict** (`reap`/`keep_within_grace`/`keep_not_ephemeral`/
+   `keep_retained`/`keep_no_timestamp`), rollup cards (**Idle disk $/mo**,
+   **Reclaimable $/mo**), and **bulk-reap (dry-run first) + per-instance delete** (`POST /api/fleet/reap`,
+   `DELETE /api/fleet/instances/{name}`). This ALREADY covers most of the leaked-boot-disk cost catch. **Genuine gaps to
+   target:** data disks / regional PDs (only the boot disk today), **static IPs** (none), **truly-orphaned disks/IPs
+   with no owning VM** (it's VM-keyed), and surfacing the leak as a **red badge on the Deployments inventory row + the
+   running→leaked→rest sort** (today it's a Fleet-tab-only panel).
 2. **Fleet reconciliation (`GET /api/fleet/reconciliation`, FleetTab cards)** — already detects unmanaged VMs:
    "**Unknown (running, unregistered)**" (= `launched_by=adhoc`) + "Expected-missing (registered, not running)",
    unioning registry vs. live GCE cross-cloud. The full-census + `launched_by` work below must **reuse this union as the
@@ -226,14 +227,17 @@ full-census state field is already present, and the per-row cost column already 
       (credits-agnostic): GKE clusters/node-pools, Cloud SQL, Dataflow/Composer, AWS RDS / EBS volumes / NAT gateways /
       Elastic IPs. Diff against the tab; add the materially-costly missing kinds as census rows (**materiality default ≈
       ≥$5–10/mo per resource-class, operator-agreed 2026-07-10**; file the rest as a follow-up with the measured
-      $/month each). **$/month per principle 8:** use the billing-export figure where one exists (deterministic-real);
+      $/month
+      each).
+      **$/month per principle 8:** use the billing-export figure where one exists (deterministic-real);
       otherwise a realistic list-rate estimate that is **visibly marked "inferred / refresh periodically"\*\* — never a
       fake-exact number. Deliverable: a one-shot report of "running-but-invisible" per cloud. ✅ **DONE (local)** —
       `scripts/audit_running_but_invisible.py`: enumerates the WHOLE GCP estate via **Cloud Asset Inventory** (REST +
       ADC, the complete credits-agnostic source, no new dep) + diffs vs the 10 covered asset types (VM / Run job+service
       / Function / Disk / Address / Scheduler), reporting every running-but-invisible class + count. Lifecycle-marked
       one-shot; the operator runs it in live mode + files any material class as a follow-up (asset-inventory gives
-      type+count, the $/mo materiality is a manual billing-export pass per flagged class).
+      type+count, the $/mo
+      materiality is a manual billing-export pass per flagged class).
 
 ### Scheduled-job liveness — "did it fire? on time?" (deployments = liveness lens; "did it produce data" is the consolidator's, see hand-off)
 
@@ -302,16 +306,19 @@ full-census state field is already present, and the per-row cost column already 
       `DeploymentMatrix`: `RUNNING` → non-running-WITH-unreleased-resources (red rows spotted immediately, per operator
       ask) → everything else. `pw:L2` regression pins the three-band order.
 - [x] [UI] P2. **Leaked-cost surfacing (per-row cost already renders)** — the `Cost/day` column off `cost_per_day_usd`
-      already exists, so the net-new is: the **leaked disk/IP monthly $** on the red unreleased-resources badge, and an
+      already exists, so the net-new is: the **leaked disk/IP monthly
+      $** on the red unreleased-resources badge, and an
       **estate-total "stranded cost"** number (sum of leaked + orphaned rows) so the money at stake is visible at a
       glance. Reuse the orphans endpoint's `monthly_idle_usd`/`monthly_reapable_usd` rollup where the VM overlaps.
       **Overlap (2026-07-10 cross-plan audit):** the Cost tab (`cost_obs_ui_unified_breakdown_2026_07_08`, shipped)
       already surfaces "idle-IP and orphaned-disk cost-waste" from the billing exports — REUSE that computation as the $
-      source, don't re-derive. Division of labour: the Cost tab owns the $ breakdown/analytics; the Deployments row owns
+      source, don't re-derive. Division of labour: the Cost tab owns the
+      $ breakdown/analytics; the Deployments row owns
       the operational red badge + reap action. **Cost provenance (principle 8):** prefer the billing-export figure
-      (deterministic-real) for the leaked $; where only the orphans list-rate estimate exists (e.g. `monthly_idle_usd` =
-      "asia-northeast1 list rates"), render it **visibly marked "est. / refresh periodically"** — never as an exact
-      figure. `pw:L2` on the stranded-total + leaked-cost cell rendering **+ the inferred-cost marker**.
+      (deterministic-real) for the leaked $;
+      where only the orphans list-rate estimate exists (e.g. `monthly_idle_usd` = "asia-northeast1 list rates"), render
+      it **visibly marked "est. / refresh periodically"** — never as an exact figure. `pw:L2` on the stranded-total +
+      leaked-cost cell rendering **+ the inferred-cost marker**.
 
 ### Region reconciliation + cockpit UX hierarchy (operator follow-ups, 2026-07-10)
 

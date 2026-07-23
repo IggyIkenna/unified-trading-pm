@@ -63,14 +63,14 @@ drift_direction: advance-code
 
 ## Codex SSOTs (READ before executing — plan↔codex drift is review-blocking)
 
-- `codex/02-data/mvp-scope-canonical.md` — the canonical MVP definition per asset_group × venue × data_type.
+- `/codex/02-data/mvp-scope-canonical.md` — the canonical MVP definition per asset_group × venue × data_type.
 - `unified-api-contracts/.../canonical/crosscutting/mvp_scope.py` — code SSOT (**`MVP_SCOPE_CONFIG_VERSION = 12` live**;
   was 10 at this plan's 2026-06-27 run — see the [v12 NOTE] banner; the delta is DeFi-only).
-- `codex/02-data/availability-manifest-and-data-status.md` — 4-state `capture_status`, honest-absence write side.
-- `codex/02-data/honest-absence-downstream-handling.md` — reason taxonomy; DERIBIT-COMBO + HL/ASTER honest-absence.
-- `codex/05-infrastructure/manifest-consolidator-ssot.md` — consolidator-on-fixed-image; MANIFEST_ALLOW_STALE_FALLBACK.
-- `codex/05-infrastructure/spot-vms-for-backfill.md` — SPOT-by-default backfill standard.
-- `codex/04-architecture/instruments-service-as-ssot-for-mtds.md` — IS owns reference data / universe. **[A20 NOTE,
+- `/codex/02-data/availability-manifest-and-data-status.md` — 4-state `capture_status`, honest-absence write side.
+- `/codex/02-data/honest-absence-downstream-handling.md` — reason taxonomy; DERIBIT-COMBO + HL/ASTER honest-absence.
+- `/codex/05-infrastructure/manifest-consolidator-ssot.md` — consolidator-on-fixed-image; MANIFEST_ALLOW_STALE_FALLBACK.
+- `/codex/05-infrastructure/spot-vms-for-backfill.md` — SPOT-by-default backfill standard.
+- `/codex/04-architecture/instruments-service-as-ssot-for-mtds.md` — IS owns reference data / universe. **[A20 NOTE,
   resolved 2026-07-15]** the codex flip is now shipped — the doc's own banner records the registry-consolidation as
   "shipped 2026-06-29 → 2026-07-03" (venue lists + venue→adapter-key routing are UAC data; IS is the thin resolver); the
   tracking plan `instrument_universe_registry_consolidation_2026_06_29.md` is archived, status `completed`. The codex

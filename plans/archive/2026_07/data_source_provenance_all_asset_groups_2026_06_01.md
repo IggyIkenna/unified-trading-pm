@@ -325,7 +325,7 @@ column is RED, not exempt.
       item j, write-time stamping), `manifest_master` (item i, the `source`-column schema home + registry-driven gate).
       The defi/mtds_mdps/manifest edits were layered on top of an in-flight "zero-rows = silent lie" sweep
       (operator-acked 2026-06-01 as ready-to-ship → bundled).
-- [x] ✅ [CODEX] P1. Generalised `codex/02-data/contracts-scope-and-layout.md` (new § "Generalised beyond TradFi —
+- [x] ✅ [CODEX] P1. Generalised `/codex/02-data/contracts-scope-and-layout.md` (new § "Generalised beyond TradFi —
       `source` is universal across ALL asset groups") + `honest-absence-downstream-handling.md` (§ "Multi-source cell
       consumer policy" banner generalised to all groups + read-path-finding note) — PM slot ref. Documents auto-stamp +
       computed-exempt + the generic resolver/read-path status.
@@ -335,11 +335,12 @@ column is RED, not exempt.
       writer `orchestrator.py:3298-3305` (`record_captured_from_counts(..., asset_group="prediction")`) AND the BATCH
       `rebuild_prediction_manifest.py:456` (re-confirmed this session by the ⑪ keystone commit mtds@202f5e0b, which
       reads the same emit). `MARKET_LIFECYCLE` resolves `polymarket_gamma_api` via SOURCE*PRIORITY (utl@01ca49ea removed
-      the POLYMARKET venue-override). Kalshi lands born-canonical
-      (`kalshi*\*`) as a venue addition. **Historical     `\_index` re-consolidation folds into`prediction_manifest_canonicalisation_2026_06_01.md`C-source rider** (its     single bundled walk owns the prediction`\_index`, GATED `--apply`
-      — do NOT open a separate prediction source walk).
+      the POLYMARKET venue-override). Kalshi lands born-canonical (`kalshi*\*`) as a venue addition. **Historical
+      `\_index` re-consolidation folds into`prediction_manifest_canonicalisation_2026_06_01.md`C-source rider** (its
+      single bundled walk owns the prediction`\_index`, GATED `--apply` — do NOT open a separate prediction source
+      walk).
 - [x] ✅ [CODEX] P2. **Document the prediction invariant precisely — DONE (slot-5 2026-06-04).** Added a "Source vs
-      Venue invariant (HARD)" section to `codex/02-data/prediction-data-types-catalog.md`: stamping `source` ≠ treating
+      Venue invariant (HARD)" section to `/codex/02-data/prediction-data-types-catalog.md`: stamping `source` ≠ treating
       venues as sources — Polymarket/Kalshi stay separate **venues** (cross-venue dispersion is a feature-layer concern,
       Kalshi lands as a venue addition), AND each venue cell stamps its own provider `source`
       (`polymarket_clob`/`polymarket_gamma_api`/`kalshi_*`); same-venue-different-source example (Polymarket
@@ -348,8 +349,12 @@ column is RED, not exempt.
 - [x] ✅ [MTDS] P1. **A12c — DeFi `source=` provenance write-path CONFIRMED shipped** (audit 2026-06-04 slot-2): the
       multi-source DeFi cells already thread `source=` at every `record_captured` — `oracle_prices_handler`
       (`pyth_hermes`/`chainlink`) + `native_staking_handler` (`solana_rpc`/`helius_rpc`); every other DeFi data*type is
-      single-source per UAC
-      `SOURCE_PRIORITY[(defi,*)]`(all entries present) → the UTL`ManifestWriter.add()`gate     auto-stamps via`default\*source`/ raises`MissingSourceError`on a blank multi-source cell. Added the MTDS     integration guard exercising the REAL writer gate through`DefiManifestRecorder`(single-source auto-stamp +     multi-source blank-raise + multi-source explicit-stamp) —`market-tick-data-service`@     `tests/unit/test_defi_manifest_recorder.py::test_defi_recorder_real_writer\**`. UAC + UTL gate tests already exist     (`test*manifest_writer_source.py::test_record_captured_defi\*\_`).
+      single-source per UAC `SOURCE_PRIORITY[(defi,*)]`(all entries present) → the UTL`ManifestWriter.add()`gate
+      auto-stamps via`default\*source`/ raises`MissingSourceError`on a blank multi-source cell. Added the MTDS
+      integration guard exercising the REAL writer gate through`DefiManifestRecorder`(single-source auto-stamp +
+      multi-source blank-raise + multi-source explicit-stamp) —`market-tick-data-service`@
+      `tests/unit/test_defi_manifest_recorder.py::test_defi_recorder_real_writer\**`. UAC + UTL gate tests already exist
+      (`test*manifest_writer_source.py::test_record_captured_defi\*\_`).
 - [ ] [MTDS] P1. **A12a — wire the upstream instruments-service DeFi-catalog PREFLIGHT into the REMAINING DeFi collect
       handlers** (shared gate landed 2026-06-04 slot-2: UAC `PreflightTrigger.DEFI_COLLECT_DAILY` +
       `INSTRUMENTS_PREFLIGHT_REQUIREMENTS[(DEFI,"defi_market_data")]` → `instrument-catalog` within 24h, exported from
@@ -367,7 +372,7 @@ column is RED, not exempt.
       `orca_whirlpool_state_handler`, `raydium_classic_amm_handler`, `drift_v2_historical_handler`,
       `solana_defi_handler`, `evm_defi_handler`. (Existing handler tests that call `process()` must patch
       `assert_defi_catalog_fresh` → True, as done for dex_pools/lst_rates.) **Codex SSOT**: add a DeFi row to the
-      instruments-preflight-chain doc (`codex/04-architecture/instruments-preflight-chain.md`).
+      instruments-preflight-chain doc (`/codex/04-architecture/instruments-preflight-chain.md`).
 
 ### Phase 7 — Prod data-state verification (P1, post-enforcement)
 
@@ -459,9 +464,9 @@ Scope exemptions (by design, not gaps): features-service / strategy / execution 
 
 ## Codex SSOTs
 
-- `codex/02-data/contracts-scope-and-layout.md` — generalise dual-source `source` column section beyond tradfi
-- `codex/02-data/honest-absence-downstream-handling.md` — generalise multi-source consumer policy
-- `codex/02-data/availability-manifest-and-data-status.md` — `source` field semantics across asset groups
+- `/codex/02-data/contracts-scope-and-layout.md` — generalise dual-source `source` column section beyond tradfi
+- `/codex/02-data/honest-absence-downstream-handling.md` — generalise multi-source consumer policy
+- `/codex/02-data/availability-manifest-and-data-status.md` — `source` field semantics across asset groups
 
 ## Provenance
 

@@ -17,10 +17,10 @@ scope: [engineer, admin]
 tags: [deployment-observability, cockpit, vm-health, cloud-run, ecs, lambda, cost, mock-first, heartbeat]
 related:
   [
-    cost_observability_ui_2026_07_08.md,
-    deployment_observability_parity_live_batch_paper_2026_06_22.md,
-    deployment_obs_backend_kinds_health_2026_07_09.md,
-    deployment_obs_ui_popover_health_2026_07_09.md,
+    /plans/archive/2026_07/cost_observability_ui_2026_07_08.md,
+    /plans/archive/2026_07/deployment_observability_parity_live_batch_paper_2026_06_22.md,
+    /plans/archive/2026_07/deployment_obs_backend_kinds_health_2026_07_09.md,
+    /plans/archive/2026_07/deployment_obs_ui_popover_health_2026_07_09.md,
   ]
 created: "2026-07-08"
 last_updated: "2026-07-08"
@@ -81,15 +81,15 @@ Cloud Run jobs.
 
 - Deployment inventory contract + classification: `deployment-api/.../routes/deployments_inventory.py`
   (`DeploymentItem`, `classify_deployment_target`, `CLOUD_RUN_JOBS`, AWS census seam).
-- Deployment observability / VM tarball / no-fire-and-forget: `codex/05-infrastructure/deployment-observability.md`,
+- Deployment observability / VM tarball / no-fire-and-forget: `/codex/05-infrastructure/deployment-observability.md`,
   `…/vm-tarball-deployment.md`.
 - Heartbeat daemon + wrapper: `deployment-service/scripts/vm/vm-exec-with-gcs-tee.sh`,
   `deployment-service/deployment_service/vm/heartbeat_cli.py`, `unified_trading_library.lifecycle`.
 - Availability manifest / honest-absence (bucket ground-truth cross-check):
-  `codex/02-data/availability-manifest-and-data-status.md`.
-- Cost/billing (cost-per-target reuse): `codex/05-infrastructure/billing-cost-observability.md`,
+  `/codex/02-data/availability-manifest-and-data-status.md`.
+- Cost/billing (cost-per-target reuse): `/codex/05-infrastructure/billing-cost-observability.md`,
   `cost_observability_ui_2026_07_08.md`.
-- UI testing gate (playwright L2): `codex/06-coding-standards/ui-testing-layers.md`.
+- UI testing gate (playwright L2): `/codex/06-coding-standards/ui-testing-layers.md`.
 
 ---
 

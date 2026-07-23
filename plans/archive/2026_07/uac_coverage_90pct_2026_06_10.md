@@ -36,7 +36,7 @@ drift_direction: advance-code
 > **🟡 SUPERSEDED BY LATER WORK (correction 2026-07-12, finding 32, §A2 "50 reclassified" blanket ruling)**: this plan's
 > internal 89.82%-vs-"≥90%" dispute (Context below vs. the Phase 3/closing-table figures) is moot — a subsequent Phase 5
 > (not tracked in this plan) raised the UAC coverage gate again, **90 → 94, on 2026-06-20**, and combined coverage
-> actually reached **94.62%**. Verified live: `codex/06-coding-standards/quality-gates.md` line 505-506 ("UAC special
+> actually reached **94.62%**. Verified live: `/codex/06-coding-standards/quality-gates.md` line 505-506 ("UAC special
 > target — 94% combined (raised 90→94 2026-06-20, Phase 5 tests + `gcp/protocols.py` omit reaching 94.62%)") and
 > `unified-api-contracts/pyproject.toml` line 364 (`fail_under = 94`, not 90). Neither of this plan's two disputed
 > numbers (89.82% or "≥90%") reflects current reality — treat this plan as historical; do not use it to reason about
@@ -60,7 +60,7 @@ Three levers identified (operator acked 2026-06-10):
 - **Lever 3** — Improve branch coverage on the 40 packages currently at 80-99% statement coverage by adding edge-case
   and error-path tests.
 
-Codex SSOT: `codex/06-coding-standards/quality-gates.md` § coverage targets.
+Codex SSOT: `/codex/06-coding-standards/quality-gates.md` § coverage targets.
 
 ## Audit — package classification (2026-06-10)
 
@@ -142,10 +142,10 @@ additional action needed.
 
 ### Phase 4 — Codex + threshold lock (DONE 2026-06-10)
 
-- [x] ✅ [DOCS] P2. Updated `codex/06-coding-standards/quality-gates.md` § "Coverage by repo type" with UAC 90% combined
-      target + omit rationale — `unified-trading-pm`
+- [x] ✅ [DOCS] P2. Updated `/codex/06-coding-standards/quality-gates.md` § "Coverage by repo type" with UAC 90%
+      combined target + omit rationale — `unified-trading-pm`
 - [x] ✅ [QG] P2. **CLOSED-SUPERSEDED (2026-07-13)** — not run: moot per the supersession banner above. Independently
-      re-verified live: `codex/06-coding-standards/quality-gates.md:505-507` already documents the 90→94 raise + 94.62%
+      re-verified live: `/codex/06-coding-standards/quality-gates.md:505-507` already documents the 90→94 raise + 94.62%
       actual, and `unified-api-contracts/pyproject.toml:364` already has `fail_under = 94` (not 90). Both landed via the
       untracked Phase 5 work, so there is no "plan flip + codex update" left for THIS plan to confirm —
       `unified-trading-pm`

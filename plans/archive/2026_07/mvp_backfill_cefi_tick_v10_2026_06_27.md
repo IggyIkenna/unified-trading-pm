@@ -46,7 +46,7 @@ drift_direction: advance-code
 > in `mvp_mode`). **DERIBIT is UNCHANGED in v11** (perp/future keep trades+book5; options stay options_chain-only — NO
 > Deribit override). Action for this plan's remaining waves: Coinbase shards capture `trades` ONLY — do NOT
 > launch/relaunch any COINBASE book_snapshot_5 VM; 2 in-flight Coinbase book5 VMs stopped 2026-06-28 (spend saved).
-> Codex SSOT: `codex/02-data/mvp-scope-canonical.md` (v11 row).
+> Codex SSOT: `/codex/02-data/mvp-scope-canonical.md` (v11 row).
 >
 > **🟢 G1 COMPLETE 2026-06-28T03:20Z** — 7 SPOT VMs opt-deribit-{2020..2026} self-completed + self-deleted by 03:33Z (13
 > min); SPOT capacity confirmed via probe VM; VMs self-deleted per VM_SHUTDOWN_ON_COMPLETION=true (most Deribit
@@ -98,25 +98,25 @@ drift_direction: advance-code
 > `phantom_captures_cefi_2026_06_28.md` — apply reconcile before G0 gap analysis).
 >
 > **Canonical MVP SSOT (the ONLY scope authority):** `mvp_scope.py` v12 (`MVP_SCOPE_CONFIG_VERSION`) +
-> `codex/02-data/mvp-scope-canonical.md`. This plan REFERENCES it. **The single most important cut (canonical since v10,
-> in force at v12): CeFi OPTION = `options_chain` ONLY** (Deribit BTC/ETH); per-strike trades + book_snapshot_5 are
+> `/codex/02-data/mvp-scope-canonical.md`. This plan REFERENCES it. **The single most important cut (canonical since
+> v10, in force at v12): CeFi OPTION = `options_chain` ONLY** (Deribit BTC/ETH); per-strike trades + book_snapshot_5 are
 > EXCLUDED — this collapses the heavy-instrument count ~275K→~14K. Any older cefi plan that says options need
 > trades+book5, or that lists BINANCE-DELIVERY, or LIGHTER/EXTENDED/PACIFICA as DeFi, is stale and SUBORDINATE (see
 > Phase-4 reconciliation).
 
 ## Codex SSOTs (READ before executing)
 
-- `codex/02-data/mvp-scope-canonical.md` § CeFi — venues (incl. LIGHTER-ZKSYNC/EXTENDED-STARKNET/PACIFICA-SOLANA);
+- `/codex/02-data/mvp-scope-canonical.md` § CeFi — venues (incl. LIGHTER-ZKSYNC/EXTENDED-STARKNET/PACIFICA-SOLANA);
   data_type cut (trades + book_snapshot_5 + funding for spot/perp/dated-future/equity-perp; **OPTION = options_chain
   ONLY**); the **perp-gate** (`is_in_mvp_capture_universe`/`has_perp_for_base` — a SPOT/dated-FUTURE is in the capture
   universe ONLY IF the venue lists a perp for the base; PERP/EQUITY_PERP self-qualify; UPBIT spot +
   `STAKING_SPOT_EXCEPTION` carve-outs); **NOT MVP = BINANCE-DELIVERY**; deferred-no-source = HL trades pre-2025-03-22,
   ASTER book5+liquidations.
-- `codex/02-data/cefi-capture-universe.md` — the perp-gate layer.
-- `codex/02-data/honest-absence-downstream-handling.md` — 401≠honest-absence; expiry-window pre-filter for dated
+- `/codex/02-data/cefi-capture-universe.md` — the perp-gate layer.
+- `/codex/02-data/honest-absence-downstream-handling.md` — 401≠honest-absence; expiry-window pre-filter for dated
   futures/options; DERIBIT-COMBO historical = `EXPECTED_SOURCE_DOES_NOT_OFFER_DATA_TYPE` (do NOT re-attempt); HL/ASTER
   deferred-no-source reasons.
-- `codex/05-infrastructure/spot-vms-for-backfill.md` — SPOT-by-default.
+- `/codex/05-infrastructure/spot-vms-for-backfill.md` — SPOT-by-default.
 - `plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md` — HL/ASTER honest-absence treatment (already
   shipped).
 
@@ -2621,7 +2621,7 @@ this race) — only the `--apply` write-back needs a clean, VM-free window.
    the MVP window. Synthetic derivation from legs remains the fallback.
 2. **Tardis concurrency HARD RULE: max 3 concurrent Tardis VMs (both clouds), lease does NOT lift the cap** — enforced
    in code (deployment-service `tardis-concurrency-guard.sh`, wired into the cefi GCP/AWS sharded launchers +
-   `launch-mtds-backfill-vm.sh`), hard-ruled in `codex/05-infrastructure/vm-launcher-runbook.md` (§ Tardis cap) +
+   `launch-mtds-backfill-vm.sh`), hard-ruled in `/codex/05-infrastructure/vm-launcher-runbook.md` (§ Tardis cap) +
    workspace CLAUDE.md. Correction to the 2026-07-14T10:55Z lockout-issue entry: the surviving N=3 wave runs WITH the
    lease (VM metadata verified `TARDIS_CONCURRENCY_LEASE=1`) — the 403 churn is lease-rotation handoff; the N=6 collapse
    was lease-OFF. No lease-OFF multi-VM datapoint works.
@@ -2904,7 +2904,7 @@ threshold, the cold-start kill window (lease-wait 1800s == old stall 1800s) is c
 tool logs `Layer-1 INCOMPLETE — Layer-2 coverage is a LOWER BOUND` whenever it is True. So every prior cefi number,
 including the 99.33% and this plan's long history of ~91-99% G4 readings, was an explicitly-labelled LOWER BOUND
 measured against an incomplete denominator with eu not yet materialised. Codex SSOT
-(`codex/02-data/honest-coverage-model.md`, echoed in CLAUDE.md): "a Layer-2 % is trustworthy ONLY at Layer-1 == 100%
+(`/codex/02-data/honest-coverage-model.md`, echoed in CLAUDE.md): "a Layer-2 % is trustworthy ONLY at Layer-1 == 100%
 (`denominator_complete==True`); no flat '100% coverage' without the gate."
 
 Layer-1 reaching 100% (the DERIBIT spot_pair tuples finally landing rows + the all-venues sweep) flipped the gate: the

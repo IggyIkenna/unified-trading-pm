@@ -16,8 +16,8 @@ repos: [deployment-api, deployment-ui, unified-trading-library]
 scope: [engineer]
 tags: [deployment-ui, filters, search, date-range, observability]
 related:
-  - deployment_ui_observability_ux_tracker_2026_07_17.md
-  - deployment_ui_cost_per_day_accuracy_2026_07_20.md
+  - /plans/active/deployment_ui_observability_ux_tracker_2026_07_17.md
+  - /plans/archive/2026_07/deployment_ui_cost_per_day_accuracy_2026_07_20.md
 created: "2026-07-20"
 last_updated: "2026-07-20"
 parent_epic: observability_master
@@ -209,10 +209,10 @@ Full audit transcript available on request; the load-bearing facts:
       unified-trading-library) worktrees are clean, `ahead=0`/`behind=0`. Nothing left to ship.
 - [x] ✅ [REVIEW] P2. Post-phase codex audit — document the per-kind date-filter support matrix, the approx-colour
       convention reuse, the always-on-service treatment, and the 7-day-cap-bypass/30-day-floor behaviour in
-      `codex/05-infrastructure/deployment-observability.md`. — unified-trading-pm (this commit): added a new "Date-range
-      filter, kind multi-select, always-on treatment" section with the verified (not assumed) per-kind support-matrix
-      table, the `_REAP_STALE_HOURS=6` threshold, the exact `ALWAYS_ON_KINDS` / `_SINGLE_TIMESTAMP_KINDS` sets, the
-      amber-vs-cyan colour-convention distinction, the 29-day archive floor + out-of-range banner fields, the
+      `/codex/05-infrastructure/deployment-observability.md`. — unified-trading-pm (this commit): added a new
+      "Date-range filter, kind multi-select, always-on treatment" section with the verified (not assumed) per-kind
+      support-matrix table, the `_REAP_STALE_HOURS=6` threshold, the exact `ALWAYS_ON_KINDS` / `_SINGLE_TIMESTAMP_KINDS`
+      sets, the amber-vs-cyan colour-convention distinction, the 29-day archive floor + out-of-range banner fields, the
       multi-select `kind` filter, and the `CLOUD_RUN_SERVICE.last_deployed_at` fix (sourced from the Service resource's
       own `update_time`, not a per-revision RPC — corrected from the plan's "revision create_time" framing after reading
       the actual code). `code_refs` extended with the extracted filter/sort primitive files. All facts independently
@@ -243,9 +243,9 @@ Full audit transcript available on request; the load-bearing facts:
 
 ## Codex SSOTs
 
-- `codex/05-infrastructure/deployment-observability.md` — deployment inventory + (to add) the per-kind date-filter
+- `/codex/05-infrastructure/deployment-observability.md` — deployment inventory + (to add) the per-kind date-filter
   support matrix, approx-colour convention, always-on-service treatment.
-- `codex/06-coding-standards/ui-testing-layers.md` — the UI gate (pw:L2 + cited spec) for the date-picker, multi-select,
-  and filter additions.
-- `codex/02-data/availability-manifest-and-data-status.md` — single-walk discipline (bounded day-partitioned archive
+- `/codex/06-coding-standards/ui-testing-layers.md` — the UI gate (pw:L2 + cited spec) for the date-picker,
+  multi-select, and filter additions.
+- `/codex/02-data/availability-manifest-and-data-status.md` — single-walk discipline (bounded day-partitioned archive
   reads only).

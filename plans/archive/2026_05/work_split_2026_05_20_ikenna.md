@@ -6,11 +6,26 @@ status: complete
 nature: record
 asset_group: [infrastructure]
 stage: [meta]
-repos: [agent-orchestrator, execution-service, features-service, instruments-service, market-data-processing-service, market-tick-data-service]
+repos:
+  [
+    agent-orchestrator,
+    execution-service,
+    features-service,
+    instruments-service,
+    market-data-processing-service,
+    market-tick-data-service,
+  ]
 scope: [engineer, admin]
 tags: []
-related: [mtds_mdps_master.md, issues/strategy_archetype_logic_audit_2026_05_20.md, strategy_repo_consolidation_2026_05_19.md, ml_repo_consolidation_2026_05_19.md, issues/mega_audit_and_plan_beefup_progression_2026_05_20.md]
-created: '2026-05-20'
+related:
+  [
+    /plans/epics/mtds_mdps_master.md,
+    issues/strategy_archetype_logic_audit_2026_05_20.md,
+    /plans/archive/2026_05/strategy_repo_consolidation_2026_05_19.md,
+    /plans/archive/2026_05/ml_repo_consolidation_2026_05_19.md,
+    issues/mega_audit_and_plan_beefup_progression_2026_05_20.md,
+  ]
+created: "2026-05-20"
 locked_by: live-defi-rollout
 locked_since: 2026-05-20
 supersedes: work_split_2026_05_19_ikenna.md
@@ -172,7 +187,7 @@ Plan-of-record: plans/active/work_split_2026_05_20_ikenna.md § Slot 11.
 - Con: ~10min provisioning step (SSH to VM, run `setup-tab-worktrees.sh --add-slot 9/10/11` on the VM's worktree set).
 
 **Recommendation**: Option B for tonight (Harsh's offline window = perfect chance to verify VM workers). Codex covers
-the setup at `codex/05-infrastructure/agent-orchestrator-deploy.md § EC2 VM deploy`.
+the setup at `/codex/05-infrastructure/agent-orchestrator-deploy.md § EC2 VM deploy`.
 
 ### Hand-off when Harsh wakes up
 

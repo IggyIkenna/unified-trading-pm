@@ -9,7 +9,12 @@ stage: [meta]
 repos: [agent-orchestrator, unified-trading-pm]
 scope: [engineer, admin]
 tags: []
-related: [plans/active/autospawn_idle_vms_2026_05_30.md, plans/active/agent_orchestrator_backlog_state_alignment_2026_05_29.md, plans/active/harsh_pc_dispatch_failover_2026_05_30.md]
+related:
+  [
+    plans/active/autospawn_idle_vms_2026_05_30.md,
+    plans/active/agent_orchestrator_backlog_state_alignment_2026_05_29.md,
+    plans/active/harsh_pc_dispatch_failover_2026_05_30.md,
+  ]
 created: 2026-06-01
 parent_epic: plans/epics/orchestrator_master.md
 assigned_vm: vm-orchestrator
@@ -19,7 +24,8 @@ estimate_baseline_ai_days: 2.5
 estimate_calibrated_ai_days: 1.0
 last_updated: 2026-06-01
 archived: 2026-06-01
-codex_ssots: [codex/04-architecture/agent-orchestrator-overview.md, codex/04-architecture/agent-orchestrator-autospawn.md]
+codex_ssots:
+  [/codex/04-architecture/agent-orchestrator-overview.md, /codex/04-architecture/agent-orchestrator-autospawn.md]
 ---
 
 ## ✅ ARCHIVED 2026-06-01
@@ -57,11 +63,18 @@ AutoSpawnLoop then respawns a fresh worker on the next 60s tick.
 
 A tmux session is **killed** when ANY of:
 
-| Pattern              | Detection signal                                                                                         | Threshold                                | False-positive guard                                                             |
-| -------------------- | -------------------------------------------------------------------------------------------------------- | ---------------------------------------- | -------------------------------------------------------------------------------- | ------------- | ---------- | -------------------------------------- |
-| **Stuck-at-prompt**  | `tmux capture-pane -p` shows non-empty text after `❯ ` prompt + no change for N consecutive ticks        | N=3 ticks at 60s = 180s of no pane delta | Skip if pane content matches `Crunched for                                       | Cogitated for | Worked for | Baked for` (indicates active thinking) |
-| **Heartbeat-silent** | `slot.last_heartbeat_at` older than threshold AND `tmux has-session=True` AND `slot.status != 'blocked'` | >900s (15 min)                           | Skip if `slot.status == 'blocked'` (worker legitimately waiting for `/messages`) |
-| **Context-full**     | Pane content matches `/clear to save .{1,10}k tokens`                                                    | Immediate (1 tick)                       | Per-slot daily cap of 3 kills (operator-visible alert if exceeded)               |
+| Pattern | Detection signal | Threshold | False-positive guard | | -------------------- |
+
+| -------------------------------------------------------------------------------------------------------- |
+| -------------------------------------------------------------------------------------------------------- |
+| --------------------------------------------------------------------------------                         | -------------                            | ----------                                                          |
+| --------------------------------------                                                                   |                                          | **Stuck-at-prompt**                                                 | `tmux capture-pane -p` shows non-empty text after `❯ `                        |
+| prompt + no change for N consecutive ticks                                                               | N=3 ticks at 60s = 180s of no pane delta | Skip if pane content matches                                        |
+| `Crunched for                                                                                            | Cogitated for                            | Worked for                                                          | Baked for` (indicates active                                                  |
+| thinking)                                                                                                |                                          | **Heartbeat-silent**                                                | `slot.last_heartbeat_at` older than threshold AND `tmux has-session=True` AND |
+| `slot.status != 'blocked'`                                                                               | >900s (15 min)                           | Skip if `slot.status == 'blocked'` (worker legitimately waiting for |
+| `/messages`)                                                                                             |                                          | **Context-full**                                                    | Pane content matches `/clear to save .{1,10}k tokens`                         | Immediate (1 tick) |
+| Per-slot daily cap of 3 kills (operator-visible alert if exceeded)                                       |
 
 Anti-thrash:
 
@@ -87,7 +100,7 @@ Observation captured during operator's 2026-05-30/06-01 manual kill cycles. Two 
 ### Phase 1 — Design
 
 - [x] ✅ [DESIGN] P0. Document `WorkerLivenessWatchdog` design in
-      `codex/04-architecture/agent-orchestrator-worker-liveness.md` (new doc): three trigger contracts (table above),
+      `/codex/04-architecture/agent-orchestrator-worker-liveness.md` (new doc): three trigger contracts (table above),
       anti-thrash gates (cooldown + daily cap), pane-content regex anchors (`Crunched for|Cogitated for|Worked for` for
       legitimate-thinking allow-list; `/clear to save .{1,10}k tokens` for context-full kill), interaction with
       AutoSpawnLoop (kill triggers tmux_pruner clear → next AutoSpawnLoop tick respawns), Slack alert paths. Collision
@@ -171,7 +184,7 @@ which reads activity*log entries `watchdog_killed*\*` across the fleet.
       ORCHESTRATOR_WORKER_WATCHDOG_ENABLED=true is the default everywhere. Operator should not need to manually kill
       tmux sessions to restore velocity."** Cross-link this plan. Collision group: none. Estimate: 0.05 AI-day. ✅ DONE
       2026-06-01 — unified-trading-pm@a4a9297c.
-- [x] ✅ [DOCS] P1. Codex doc `codex/04-architecture/agent-orchestrator-worker-liveness.md` — full architecture (was
+- [x] ✅ [DOCS] P1. Codex doc `/codex/04-architecture/agent-orchestrator-worker-liveness.md` — full architecture (was
       drafted in Phase 1; promote to final). Collision group: none. Estimate: 0.1 AI-day. ✅ —
       unified-trading-pm@f0d1a7d7 (dict names, event names, env vars, Slack sig, slot status aligned with impl)
 - [x] ✅ [QG] P0. PM PR via fast-path (docs change → targets `main`). Collision group: none. Estimate: 0.05 AI-day. ✅

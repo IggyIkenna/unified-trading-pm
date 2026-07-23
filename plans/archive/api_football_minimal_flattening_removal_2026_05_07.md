@@ -9,26 +9,37 @@ stage: [meta]
 repos: [deployment-ui, features-service, instruments-service, unified-api-contracts, unified-trading-pm]
 scope: [engineer, admin]
 tags: []
-related: [sports_uac_schema_contracts_registration_2026_04_24.plan.md (archived), data_status_drilldown_shard_atom_alignment_2026_05_07.md]
-created: '2026-05-07'
-overview: Stop dropping nested API-Football payloads at write time. Today FIXTURE_STATS / FIXTURE_EVENTS / FIXTURE_LINEUPS / INJURIES persist only `fixture_id + data_available_at` over what FIXTURES already has — every per-team / per-event / per-player field in the payload is dropped during ingest. Flatten at the UAC normalizer level so the parquets carry the actual signal (xG, shots, possession, cards, formations, lineup grids, injury reasons).
+related:
+  [
+    sports_uac_schema_contracts_registration_2026_04_24.plan.md (archived),
+    /plans/archive/data_status_drilldown_shard_atom_alignment_2026_05_07.md,
+  ]
+created: "2026-05-07"
+overview:
+  Stop dropping nested API-Football payloads at write time. Today FIXTURE_STATS / FIXTURE_EVENTS / FIXTURE_LINEUPS /
+  INJURIES persist only `fixture_id + data_available_at` over what FIXTURES already has — every per-team / per-event /
+  per-player field in the payload is dropped during ingest. Flatten at the UAC normalizer level so the parquets carry
+  the actual signal (xG, shots, possession, cards, formations, lineup grids, injury reasons).
 type: code
 epic: epic-code-completion
-completion_gates: {code: C5, deployment: D3, business: none}
+completion_gates: { code: C5, deployment: D3, business: none }
 repo_gates:
-- {repo: unified-api-contracts, code: C2, deployment: none, business: none}
-- {repo: instruments-service, code: C2, deployment: none, business: none}
-- {repo: features-service (sports family), code: C2, deployment: none, business: none}
-- {repo: unified-trading-pm, code: C2, deployment: none, business: none}
+  - { repo: unified-api-contracts, code: C2, deployment: none, business: none }
+  - { repo: instruments-service, code: C2, deployment: none, business: none }
+  - { repo: features-service (sports family), code: C2, deployment: none, business: none }
+  - { repo: unified-trading-pm, code: C2, deployment: none, business: none }
 depends_on: []
 todos: []
 isProject: false
 estimate_class: refactor
 estimate_baseline_ai_days: 8
 estimate_calibrated_ai_days: 3.2
-estimate_calibration_note: 'Backfilled 2026-05-13: 16 todos, 13 done (near complete; 3 left). Reclassified design→refactor — mechanical UAC normalizer flatten + adapter writer updates + downstream feature consumers; per-payload-key column additions, not closed-set design calls. Baseline 8 (16 todos × ~0.5 mech), × 0.4 = 3.2. # operator-confirm class — borderline refactor/design.
+estimate_calibration_note: "Backfilled 2026-05-13: 16 todos, 13 done (near complete; 3 left). Reclassified
+  design→refactor — mechanical UAC normalizer flatten + adapter writer updates + downstream feature consumers;
+  per-payload-key column additions, not closed-set design calls. Baseline 8 (16 todos × ~0.5 mech), × 0.4 = 3.2. #
+  operator-confirm class — borderline refactor/design.
 
-  '
+  "
 ---
 
 > **ARCHIVED 2026-05-20** — 100% complete (all 16 items shipped + DEFERRED resolved 2026-05-20 slot-8); preserved for
@@ -159,7 +170,7 @@ rows survive until features-sports needs them. Decide post-Phase-3.
 **unified-trading-pm**:
 
 - This plan in `plans/ai/` until user-approved → `plans/active/`.
-- Codex doc `codex/02-data/sports-data-source-coverage-matrix.md` — note the per-data_type column-count expectation so
+- Codex doc `/codex/02-data/sports-data-source-coverage-matrix.md` — note the per-data_type column-count expectation so
   future audits catch a regression.
 
 ## Phased execution DAG
@@ -259,7 +270,7 @@ Phase 3 depends on both. Phase 4 is independent, can defer indefinitely.
 
 ### Phase 5 — Codex doc + plan close
 
-- [x] ✅ [unified-trading-pm] P2. `codex/02-data/sports-data-source-coverage-matrix.md` adds an explicit "expected
+- [x] ✅ [unified-trading-pm] P2. `/codex/02-data/sports-data-source-coverage-matrix.md` adds an explicit "expected
       column count per data_type" so a future audit catches a regression to the minimal-flattening shape. (PM@36c40a10 —
       shipped in the original DONE-2026-05-08 cycle; checkbox was inadvertently not flipped at that time. Flipped now.)
 - [x] ✅ [unified-trading-pm] P2. Plan closes out: all phases shipped. 3.B live-API smoke ✅ (2026-05-16, slot 4); 3.C
@@ -339,7 +350,7 @@ Code commits:
   shape); drops the now-unused Canonical\* imports.
 - `unified-trading-pm@36c40a10` — plan(api_football_minimal_flattening): flip Phase 1+2+3+5 + ship codex
   regression-guard. Adds "Expected column counts per API-Football data_type" sub-section under §2.1 of
-  `codex/02-data/sports-data-source-coverage-matrix.md` (5-row table + footnote + 2026-05-08 changelog entry); flips
+  `/codex/02-data/sports-data-source-coverage-matrix.md` (5-row table + footnote + 2026-05-08 changelog entry); flips
   shipped checkboxes in this plan body with commit-sha + brief evidence; marks the 2 Phase 3 smoke-test items as
   `**DEFERRED**` with a hand-back note for operator-driven live-API + EPL forward-poll verification.
 

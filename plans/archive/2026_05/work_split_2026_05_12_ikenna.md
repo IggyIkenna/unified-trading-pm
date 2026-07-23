@@ -21,7 +21,8 @@ estimate_class: design
 estimate_baseline_ai_days: 8
 estimate_calibrated_ai_days: 4.8
 effective_concurrent_slots: 8
-estimate_calibration_note: 'Work-split itself (the coordination artefact, not the execution scope it schedules) is design class.
+estimate_calibration_note: "Work-split itself (the coordination artefact, not the execution scope it schedules) is
+  design class.
 
   Scope it schedules below = ~120 AI-days/side over the 4-day cycle (the actual workspace burn). Wall-clock
 
@@ -29,7 +30,7 @@ estimate_calibration_note: 'Work-split itself (the coordination artefact, not th
 
   freeze gate at 2026-05-15 is the hard constraint).
 
-  '
+  "
 ---
 
 # Ikenna's daily work-split — 2026-05-12 (density push)
@@ -38,7 +39,7 @@ estimate_calibration_note: 'Work-split itself (the coordination artefact, not th
 > are mirrored in both files; edit one, mirror the other.
 >
 > **🟢 ESTIMATE CALIBRATION** — applies workspace-wide per
-> [`codex/08-workflows/estimation-calibration.md`](../../codex/08-workflows/estimation-calibration.md). All slot AI-day
+> [`/codex/08-workflows/estimation-calibration.md`](/codex/08-workflows/estimation-calibration.md). All slot AI-day
 > budgets below are CALIBRATED (post-class-multiplier). Baseline numbers would be ~1.7× larger.
 
 ## Why this split — anchored to corrected throughput baseline (2026-05-11)
@@ -48,7 +49,7 @@ Risk analysis 2026-05-11 (operator + main-orch session), **post-correction of th
 - **Remaining scope to May-23**: ~870 calibrated AI-days (all active plans + epics + issues, net of ~25% already
   shipped/in-flight; ±20% uncertainty from 34 TBD-baseline plans).
 - **Measured workspace throughput (2026-05-11)**: ~130 cal AI-days/day workspace = ~65/side, commit-derived (343 commits
-  × commit-class weighting; see [retrospective ledger](../../codex/08-workflows/estimation-retrospective-ledger.md)).
+  × commit-class weighting; see [retrospective ledger](/codex/08-workflows/estimation-retrospective-ledger.md)).
 - **Runway**: 12 days to 2026-05-23.
 - **At measured pace**: 130 × 12 = ~1560 cal AI-days deliverable = **~1.8× headroom** vs 870 remaining. **No density
   push needed** — sustain current pace, May-23 is comfortable.
@@ -57,7 +58,7 @@ Risk analysis 2026-05-11 (operator + main-orch session), **post-correction of th
 the daily work-split, not _delivered throughput_. Scheduled budget understates real workspace burn ~7× because it
 doesn't count coordination commits + plan flips + governance work + sub-agent fan-out delivery — all of which are real
 cal AI-days. See
-[estimation-calibration.md § Workspace ceiling sanity check](../../codex/08-workflows/estimation-calibration.md#workspace-ceiling-sanity-check-corrected-2026-05-11).
+[estimation-calibration.md § Workspace ceiling sanity check](/codex/08-workflows/estimation-calibration.md#workspace-ceiling-sanity-check-corrected-2026-05-11).
 
 **This split is sized at ~25-30 cal AI-days/side/day** (~100-120 per side per 4-day cycle, ~200-240 workspace) — that's
 roughly the 7-day measured average (~100/day workspace = ~50/side), slightly above to push toward the demonstrated

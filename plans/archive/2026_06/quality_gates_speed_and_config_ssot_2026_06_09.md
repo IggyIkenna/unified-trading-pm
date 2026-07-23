@@ -9,7 +9,13 @@ stage: [meta]
 repos: [agent-orchestrator, alerting-service, deployment-api, deployment-ui, execution-service, features-service]
 scope: [engineer, admin]
 tags: []
-related: [plans/active/qg_commit_quality_boundary_and_slot_ff_push_2026_06_03.md, plans/active/ci_local_qg_parity_2026_06_08.md, plans/active/cicd_contract_hardening_2026_06_01.md, plans/archive/2026_06/quality_gates_resource_contention_speedup_2026_06_02.md]
+related:
+  [
+    plans/active/qg_commit_quality_boundary_and_slot_ff_push_2026_06_03.md,
+    plans/active/ci_local_qg_parity_2026_06_08.md,
+    plans/active/cicd_contract_hardening_2026_06_01.md,
+    plans/archive/2026_06/quality_gates_resource_contention_speedup_2026_06_02.md,
+  ]
 created: 2026-06-09
 parent_epic: infrastructure_master
 assigned_vm: vm-cross-cutting
@@ -20,8 +26,8 @@ estimate_class: infra
 estimate_baseline_ai_days: 4.0
 estimate_calibrated_ai_days: 3.2
 source:
-- operator design discussion 2026-06-09 (Harsh) — single-core wall-time + change-scoped gate + config-SSOT drift
-- {discovery: MTDS MIN_COVERAGE=28 (stub) vs fail_under=71 (pyproject) — toml silently shadowed by --cov-fail-under}
+  - operator design discussion 2026-06-09 (Harsh) — single-core wall-time + change-scoped gate + config-SSOT drift
+  - { discovery: MTDS MIN_COVERAGE=28 (stub) vs fail_under=71 (pyproject) — toml silently shadowed by --cov-fail-under }
 ---
 
 # Quality-gates: faster (change-scoped, single-core) + one config home (toml)
@@ -34,7 +40,7 @@ source:
 > Axis-B config-SSOT **shadow elimination** done: `--cov-fail-under` dropped (toml `fail_under` is the single coverage
 > home), bandit `-c pyproject.toml` added; pytest test-dir kept (functional narrowing, not a shadow). Drift baseline
 > regenerated from full-run data + `measure-qg-baseline.sh` sentinel-skip bug fixed. Codex SSOT
-> `codex/06-coding-standards/quality-gates.md` updated.
+> `/codex/06-coding-standards/quality-gates.md` updated.
 >
 > ## Deferred work — migrated to / out-of-scope:
 >
@@ -407,7 +413,7 @@ per-repo pip-audit ignore-CVE lists. No toml home → these are the `[tool.quali
   entries must be EXCLUDED (they stay ratchet-only via STEP 5.95) OR per-repo per-file-ignores baselines must ship FIRST
   — otherwise every repo's plain ruff lint step hard-fails on the ~180 DTZ + ~211 TID251 pre-existing sites (instant
   fleet redness; the exact failure mode the ratchet design avoids).
-- [x] ✅ [DOCS] P1. `codex/06-coding-standards/quality-gates.md` § config-SSOT updated (2026-06-17): toml `fail_under`
+- [x] ✅ [DOCS] P1. `/codex/06-coding-standards/quality-gates.md` § config-SSOT updated (2026-06-17): toml `fail_under`
       is the single coverage home, the "base must never shadow toml on the CLI" rule, bandit `-c`, and the TIER-B
       `[tool.quality-gates]` won't-do decision (no drift → not worth the migration). Same change as the Phase-5 docs
       item.
@@ -607,7 +613,7 @@ per-repo pip-audit ignore-CVE lists. No toml home → these are the `[tool.quali
 - [~] [REFACTOR] P1. ~~Per-repo stub slimming + toml reconciliation~~ — **WON'T-DO (closed 2026-06-17)**: same decision
   as the `[tool.quality-gates]` table — the TIER-A duplicate that mattered (cov-fail-under shadow) was fixed at the
   base; TIER-B knobs have a single home (stub, no drift); a 22-repo stub migration isn't worth the risk.
-- [x] ✅ [DOCS] P1. Codex SSOT updated — `codex/06-coding-standards/quality-gates.md` § config-SSOT documents the
+- [x] ✅ [DOCS] P1. Codex SSOT updated — `/codex/06-coding-standards/quality-gates.md` § config-SSOT documents the
       single-home rule (toml `fail_under` is the coverage gate, bandit `-c`, the TIER-B/`[tool.quality-gates]` won't-do
       decision) + the "merge tier is authoritative / fast tier won't-build" outcome. (2026-06-17)
 
@@ -624,7 +630,7 @@ per-repo pip-audit ignore-CVE lists. No toml home → these are the `[tool.quali
 
 ## Codex SSOT updates (required)
 
-- `codex/06-coding-standards/quality-gates.md` — config-SSOT rule, two-tier gate, `[tool.quality-gates]` contract,
+- `/codex/06-coding-standards/quality-gates.md` — config-SSOT rule, two-tier gate, `[tool.quality-gates]` contract,
   per-step cost guidance.
 
 ## Success criteria — OUTCOME (revised 2026-06-17 to match what shipped)
@@ -660,9 +666,9 @@ Dated index of what landed today — detail lives in the cited sections/plans, n
   stale 2026-06-10 matrix). Reproducer `scripts/quality_gates/qg_config_audit.py` authored.
 - ✅ **Finding #1 — all 6 coverage drifts RECONCILED** (Option A, operator 2026-06-15 — behavior-preserving, `uv.lock`
   untouched): settled each repo's `[tool.coverage.report] fail_under` to the currently-enforced stub `MIN_COVERAGE` so
-  toml ↔ stub agree (the prerequisite the Phase-1 TIER-A item calls for — a bare flag-drop would silently loosen
-  uta/SIT and red mdps/alerting). alerting-service@fc47adc (78→76) · unified-trading-api@0816399 (70→77, stub-stricter
-  raise) · market-data-processing-service@5635686 (85→70) · market-tick-data-service@57740ac (79.7→79) ·
+  toml ↔ stub agree (the prerequisite the Phase-1 TIER-A item calls for — a bare flag-drop would silently loosen uta/SIT
+  and red mdps/alerting). alerting-service@fc47adc (78→76) · unified-trading-api@0816399 (70→77, stub-stricter raise) ·
+  market-data-processing-service@5635686 (85→70) · market-tick-data-service@57740ac (79.7→79) ·
   system-integration-tests@5214d65 (0→2, stub-stricter raise) · unified-trading-pm@283b98ec (70→69, PR #333→main). No
   ratchet-up taken (operator chose not to surface strict-coverage gaps). **The flag-drop (TIER-A P0) is now unblocked.**
 - ✅ **Finding #2 — all 4 standalone configs consolidated into toml** (→ § "Phase-1 todos from this refresh"):

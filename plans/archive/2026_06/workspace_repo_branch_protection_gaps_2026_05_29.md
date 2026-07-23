@@ -6,10 +6,15 @@ status: complete
 nature: record
 asset_group: cross-cutting
 stage: [meta]
-repos: [batch-live-reconciliation-service, deployment-ui, features-service, unified-trading-api, unified-trading-system-ui]
+repos:
+  [batch-live-reconciliation-service, deployment-ui, features-service, unified-trading-api, unified-trading-system-ui]
 scope: [engineer, admin]
 tags: []
-related: [plans/active/ci_canonical_v2_migration_2026_05_29.md, plans/active/issues/workspace_qg_ci_startup_failure_2026_05_26.md]
+related:
+  [
+    plans/active/ci_canonical_v2_migration_2026_05_29.md,
+    plans/active/issues/workspace_qg_ci_startup_failure_2026_05_26.md,
+  ]
 created: 2026-05-29
 parent_epic: infrastructure_master
 assigned_vm: vm-cross-cutting
@@ -19,13 +24,13 @@ estimate_class: infra
 estimate_baseline_ai_days: 1
 estimate_calibrated_ai_days: 1
 owner: ikenna
-completion_gates: {code: C5}
+completion_gates: { code: C5 }
 repo_gates:
-- {repo: unified-trading-system-ui, code: C0}
-- {repo: user-management-ui, code: C0}
-- {repo: features-service, code: C0}
-- {repo: batch-live-reconciliation-service, code: C0}
-- {repo: unified-trading-api, code: C0}
+  - { repo: unified-trading-system-ui, code: C0 }
+  - { repo: user-management-ui, code: C0 }
+  - { repo: features-service, code: C0 }
+  - { repo: batch-live-reconciliation-service, code: C0 }
+  - { repo: unified-trading-api, code: C0 }
 ---
 
 # Workspace repos lacking branch protection — UI + 3 others
@@ -100,7 +105,7 @@ discovered during another workstream, not a critical-path blocker, but worth fix
       statusCheckRollup `quality-gates-v2` IN_PROGRESS ⇒ not mergeable until the check passes AND the branch is
       up-to-date under strict mode). PR closed + branch deleted after verification (no churn left behind). —
       batch-live-reconciliation-service PR #11 | 2026-06-01
-- [x] ✅ [CODEX] P1. `codex/06-coding-standards/feature-branch-workflow.md` updated with per-repo required-check matrix
+- [x] ✅ [CODEX] P1. `/codex/06-coding-standards/feature-branch-workflow.md` updated with per-repo required-check matrix
       (this turn) — includes archived user-management-ui exception, features-service LDR-as-default exception, and the
       2-context check-staging-lock+quality-gates-v2 model for execution/instruments/deployment-ui.
 - [x] ✅ [PLAN] P1. Pre-archival 5-step audit per CLAUDE.md HARD RULE — operator clarified 2026-05-30 that
@@ -127,8 +132,8 @@ discovered during another workstream, not a critical-path blocker, but worth fix
 
 ## Codex SSOTs
 
-- `codex/06-coding-standards/feature-branch-workflow.md` (Phase 3 — per-repo required-check matrix)
-- `codex/06-coding-standards/ui-testing-layers.md` (referenced for UI repo gate)
+- `/codex/06-coding-standards/feature-branch-workflow.md` (Phase 3 — per-repo required-check matrix)
+- `/codex/06-coding-standards/ui-testing-layers.md` (referenced for UI repo gate)
 
 ## Out of scope (deferred — named successors required)
 

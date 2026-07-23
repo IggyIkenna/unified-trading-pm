@@ -15,7 +15,8 @@ stage: [meta]
 repos: [deployment-api]
 scope: [engineer]
 tags: [billing, cost, observability, bigquery, athena, sku, breakdown, deployment-api]
-related: [cost_observability_ui_2026_07_08.md, billing-cost-observability.md]
+related:
+  [/plans/archive/2026_07/cost_observability_ui_2026_07_08.md, /codex/05-infrastructure/billing-cost-observability.md]
 created: "2026-07-08"
 last_updated: "2026-07-08"
 parent_epic: deployment_and_user_management_master
@@ -39,7 +40,7 @@ source: cost_observability_ui_2026_07_08.md
 # Cost Observability — SKU/usage data foundation + breakdown enrichment (backend)
 
 > **✅ ARCHIVED 2026-07-10 — COMPLETE.** Every todo shipped (see the Progress Log below). Codex aligned
-> (`codex/05-infrastructure/billing-cost-observability.md`: label dimension + real GitHub provider). Moved to
+> (`/codex/05-infrastructure/billing-cost-observability.md`: label dimension + real GitHub provider). Moved to
 > `plans/archive/2026_07/`.
 
 > **AO-DISPATCHED backend plan.** The backend half of the operator-requested cost-breakdown enrichment. Full design
@@ -57,8 +58,8 @@ source: cost_observability_ui_2026_07_08.md
 
 ## Codex SSOTs (read before touching)
 
-- `codex/05-infrastructure/billing-cost-observability.md` — the two exports + the net/gross/credit contract; **update it
-  in task 10** with the new SKU/usage/waste/volume fields.
+- `/codex/05-infrastructure/billing-cost-observability.md` — the two exports + the net/gross/credit contract; **update
+  it in task 10** with the new SKU/usage/waste/volume fields.
 - `codex/06-coding-standards/` — no raw `boto3` / `google.cloud` (UTL wrappers), no `os.getenv`, UTC datetimes; run
   `bash scripts/quality-gates.sh` before every commit; ship via quickmerge.
 
@@ -130,7 +131,7 @@ source: cost_observability_ui_2026_07_08.md
       replaced with the full `BreakdownRow` field set (gross/credit, waste flags,
       storage_gb/storage_class_gb/cost_per_gb, purchase_option, machine_type/vcpu/memory_gb), the AWS net+invoice
       reconciliation note, the `zone` dimension, and the extended `CostRecord` tuple, in
-      `codex/05-infrastructure/billing-cost-observability.md`.
+      `/codex/05-infrastructure/billing-cost-observability.md`.
 - [x] ✅ [BACKEND] P3. **Release the UI plan (draft-gate)** — unified-trading-pm (this commit). All 10 prior backend
       tasks (incl. the codex contract update, completed adjacent to this task after discovering it was marked done but
       never actually finished) are shipped and checked off; flipped

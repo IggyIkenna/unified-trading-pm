@@ -186,7 +186,7 @@ Checked all ~50 open todos. **No hard conflicts.** Interactions:
         gate) + `[hotfix-main]` marker + operator env `QUICKMERGE_HOTFIX_TO_MAIN_OK=1` (agents cannot self-authorize).
         Until built, the operator uses the manual relax→push→re-enable path. **Does NOT script a protection bypass.**
 - [x] ✅ [DOCS] P1. **codex SSOT update — codex DONE, CLAUDE.md deferred.** Added a "LDR-trunk decoupling" subsection to
-      `codex/08-workflows/ci-cd-flow.md` § Two-Pass (land-on-LDR, hotfix-scoped gates, 30min drain, A1 inheritance, D1
+      `/codex/08-workflows/ci-cd-flow.md` § Two-Pass (land-on-LDR, hotfix-scoped gates, 30min drain, A1 inheritance, D1
       provenance gate, `[hotfix]` marker, `--hotfix-to-main` not-yet-shipped). — unified-trading-pm@305014936
   - [x] ✅ **CLAUDE.md DONE** — added an LDR-trunk pointer blockquote to the "Strict quickmerge" section of
         `cursor-configs/CLAUDE.md` (land-on-LDR, 15min drain, hotfix-scoped gates + `[hotfix]` marker, A1 inheritance,

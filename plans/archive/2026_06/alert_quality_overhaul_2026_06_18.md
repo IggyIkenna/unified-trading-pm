@@ -19,7 +19,11 @@ locked_by: live-defi-rollout
 estimate_class: infra
 estimate_baseline_ai_days: 4
 estimate_calibrated_ai_days: 3.2
-source: [2026-06-18 operator design session — Slack alerts repeated/low-info; want error-pointer alerts, 'plans/audit/results/alert_quality_audit_2026_06_18.md (Opus audit, 4 background agents)']
+source:
+  [
+    2026-06-18 operator design session — Slack alerts repeated/low-info; want error-pointer alerts,
+    "plans/audit/results/alert_quality_audit_2026_06_18.md (Opus audit, 4 background agents)",
+  ]
 priority: P2
 ---
 
@@ -123,12 +127,13 @@ event.
 
 **Cost (operator question, answered):** Slack itself is **free** — incoming webhooks have no per-message charge (Slack
 bills per user-seat), so re-nagging more costs **$0** on Slack. The real $ is **GitHub Actions minutes** burned by the
-_detector_ cron workflows (~$0.008/min Linux/private beyond the free tier — the same lever behind the earlier
-`*/20→hourly` / `*/15→*/30` cron relaxations). Re-nag adds **≈$0** because it re-decides at an **already-running**
-`*/15` tick (posting is free); it would only cost more if we tightened a cron. We deliberately keep fleet-jam re-nag on
-the existing `*/15` watcher (billing block) and leave promotion-lag on `*/30` — **no cron is tightened**. The GCS dedup
-ledger is a few small read/append ops per tick (Cloud Storage Class A/B) → **pennies/month**; the AO-side alerts run on
-the always-on central VM → zero marginal cost.
+_detector_ cron workflows
+(~$0.008/min Linux/private beyond the free tier — the same lever behind the earlier
+`*/20→hourly` / `*/15→*/30` cron relaxations). Re-nag adds **≈$0**
+because it re-decides at an **already-running** `*/15` tick (posting is free); it would only cost more if we tightened a
+cron. We deliberately keep fleet-jam re-nag on the existing `*/15` watcher (billing block) and leave promotion-lag on
+`*/30` — **no cron is tightened**. The GCS dedup ledger is a few small read/append ops per tick (Cloud Storage Class
+A/B) → **pennies/month**; the AO-side alerts run on the always-on central VM → zero marginal cost.
 
 - [x] ✅ [SCRIPT] P1. `ci-failure-watcher`: emit a per-condition `alerts` JSON output (one item per currently-open
       condition: failing workflow / stuck PR / billing block / recovered / resolved), each carrying `dedup_key`,
@@ -191,8 +196,8 @@ the always-on central VM → zero marginal cost.
 
 ## Codex SSOT updates
 
-- `codex/08-workflows/ci-cd-flow.md` — record the carrier-dedup contract + the stuck-PR SSOT consolidation.
-- `codex/04-architecture/agent-orchestrator-overview.md` — record persisted-dedup + the error-pointer message standard.
+- `/codex/08-workflows/ci-cd-flow.md` — record the carrier-dedup contract + the stuck-PR SSOT consolidation.
+- `/codex/04-architecture/agent-orchestrator-overview.md` — record persisted-dedup + the error-pointer message standard.
 
 ## Progress Log
 

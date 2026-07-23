@@ -1,15 +1,42 @@
 ---
 doc_type: plan
 title: SIT full-coverage — every ldr_main repo on the cross-repo breaking gate (Option A) + SIT-rehome hardening
-summary: 'Hand-off plan (operator going offline 2026-06-27): drive the WS-L SIT-rehome from the shipped Option-B+ safe interim (5 of 21 ldr_main repos cross-repo-gated) to the FULL end-state — EVERY ldr_main repo on SIT, with a genuine cross-repo invariant per repo, the LDR->main breaking gate trusting all of them, each proven by a deliberately-breaking-change test. Also: verify/finish the Cloud Build hatch-vcs version regression unblock, and close the deferred SIT-rehome hardening findings (cross-repo-combination fingerprint, per-SHA immutable promote ref, SIT per-invariant isolation). Full E2E, no shortcuts, no matter the length.'
+summary:
+  "Hand-off plan (operator going offline 2026-06-27): drive the WS-L SIT-rehome from the shipped Option-B+ safe interim
+  (5 of 21 ldr_main repos cross-repo-gated) to the FULL end-state — EVERY ldr_main repo on SIT, with a genuine
+  cross-repo invariant per repo, the LDR->main breaking gate trusting all of them, each proven by a
+  deliberately-breaking-change test. Also: verify/finish the Cloud Build hatch-vcs version regression unblock, and close
+  the deferred SIT-rehome hardening findings (cross-repo-combination fingerprint, per-SHA immutable promote ref, SIT
+  per-invariant isolation). Full E2E, no shortcuts, no matter the length."
 status: superseded
 nature: process
 asset_group: cross-asset
 stage: [meta]
-repos: [system-integration-tests, unified-trading-pm, agent-orchestrator, alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-service, deployment-ui, execution-service, fund-administration-service, greeks-service, market-data-processing-service, ml-service, trading-agent-service, unified-trading-api, unified-trading-library, unified-trading-system-ui]
+repos:
+  [
+    system-integration-tests,
+    unified-trading-pm,
+    agent-orchestrator,
+    alerting-service,
+    batch-live-reconciliation-service,
+    client-reporting-api,
+    deployment-api,
+    deployment-service,
+    deployment-ui,
+    execution-service,
+    fund-administration-service,
+    greeks-service,
+    market-data-processing-service,
+    ml-service,
+    trading-agent-service,
+    unified-trading-api,
+    unified-trading-library,
+    unified-trading-system-ui,
+  ]
 scope: [engineer, admin]
 tags: [cicd, WS-L, SIT, SIT-rehome, cross-repo-invariants, breaking-gate, ldr_main, full-coverage, handoff]
-related: [plans/active/cicd_retire_staging_branch_2026_06_27.md, plans/active/issues/sit_rehome_safety_gate_gaps_2026_06_27.md]
+related:
+  [plans/active/cicd_retire_staging_branch_2026_06_27.md, plans/active/issues/sit_rehome_safety_gate_gaps_2026_06_27.md]
 created: 2026-06-27
 superseded_by: cicd_mvp_ldr_to_main_pipeline_2026_06_30.md
 assigned_vm: planning
@@ -25,7 +52,11 @@ last_updated: 2026-06-30
 locked_by: live-defi-rollout
 locked_since: 2026-06-27
 depends_on: [cicd_retire_staging_branch_2026_06_27]
-source: [plans/active/issues/sit_rehome_safety_gate_gaps_2026_06_27.md, codex/08-workflows/ci-cd-flow.md (§ "WS-L SIT-rehome — the LDR→main cross-repo breaking gate")]
+source:
+  [
+    plans/active/issues/sit_rehome_safety_gate_gaps_2026_06_27.md,
+    /codex/08-workflows/ci-cd-flow.md (§ "WS-L SIT-rehome — the LDR→main cross-repo breaking gate"),
+  ]
 ---
 
 # SIT full-coverage — every ldr_main repo on the cross-repo breaking gate (Option A)
@@ -39,7 +70,7 @@ source: [plans/active/issues/sit_rehome_safety_gate_gaps_2026_06_27.md, codex/08
 >
 > **READ FIRST (the shipped design + the deferred findings):**
 >
-> - `codex/08-workflows/ci-cd-flow.md` § "WS-L SIT-rehome — the LDR→main cross-repo breaking gate (Option B+ safe
+> - `/codex/08-workflows/ci-cd-flow.md` § "WS-L SIT-rehome — the LDR→main cross-repo breaking gate (Option B+ safe
 >   interim)" — the producer/store/consumer/frozen-head contract you are extending.
 > - `plans/active/issues/sit_rehome_safety_gate_gaps_2026_06_27.md` — the adversarial findings (2 CRITICALs already
 >   fixed; the deferred HIGH items this plan closes).
@@ -59,9 +90,9 @@ source: [plans/active/issues/sit_rehome_safety_gate_gaps_2026_06_27.md, codex/08
 
 ## Codex SSOTs
 
-- `codex/08-workflows/ci-cd-flow.md` (the SIT-rehome contract — UPDATE it as coverage expands: when all 21 are covered,
+- `/codex/08-workflows/ci-cd-flow.md` (the SIT-rehome contract — UPDATE it as coverage expands: when all 21 are covered,
   remove the "Option B+ interim / 5 of 21" framing and document the full-coverage end-state).
-- `codex/06-coding-standards/integration-testing-layers.md` (the SIT/integration-test layer model — add the per-repo
+- `/codex/06-coding-standards/integration-testing-layers.md` (the SIT/integration-test layer model — add the per-repo
   cross-repo-invariant pattern here as the durable SSOT once the first few land).
 
 ## Phase 0 — Unblock the fleet: Cloud Build hatch-vcs version regression (P0, prerequisite for ANY promote)
@@ -171,125 +202,119 @@ source: [plans/active/issues/sit_rehome_safety_gate_gaps_2026_06_27.md, codex/08
       run_cross_repo_invariants.sh) + PM@workspace-manifest (sit_cross_repo_validated_repos += unified-trading-library).
       All three gate sections green.
 - [x] ✅ [WORKFLOW] P1. **execution-service** — invariant: its published interface/contract (orders, fills, the
-      `unified-execution-interface` if any) matches strategy/trading-agent consumers. **Gate:** per the per-repo Gate.
-      — uac@6ed75ce7 (test_execution_service_cross_repo_invariant.py: 4 tests — models symbols, orders symbols,
+      `unified-execution-interface` if any) matches strategy/trading-agent consumers. **Gate:** per the per-repo Gate. —
+      uac@6ed75ce7 (test_execution_service_cross_repo_invariant.py: 4 tests — models symbols, orders symbols,
       strategy_instructions symbols, UAC InstructionType SSOT; sibling guard skips in per-repo CI; shipped as part of
       Coverage flip-to-full item)
 - [x] ✅ [WORKFLOW] P1. **ml-service** — invariant: its model/feature contract matches features-service + strategy
-      consumers. **Gate:** per the per-repo Gate.
-      — unified-api-contracts@d336fed4 (test_ml_service_cross_repo_invariant.py: 4 tests — AST engine symbols,
-      AST PredictionSnapshot fields, AST CascadePredictionEvent fields, UAC runtime import check; sibling guard
-      skips in per-repo CI, fails LOUD in full-workspace SIT); system-integration-tests@2ebf60b7 (ml-service
-      added to REQUIRED_SIBLINGS + invariant #9 wired to run_cross_repo_invariants.sh);
-      unified-trading-pm@b3c81dd6 (workspace-manifest.json sit_cross_repo_validated_repos += ml-service,
-      drift-guard in sync: REQUIRED_SIBLINGS == manifest list).
+      consumers. **Gate:** per the per-repo Gate. — unified-api-contracts@d336fed4
+      (test_ml_service_cross_repo_invariant.py: 4 tests — AST engine symbols, AST PredictionSnapshot fields, AST
+      CascadePredictionEvent fields, UAC runtime import check; sibling guard skips in per-repo CI, fails LOUD in
+      full-workspace SIT); system-integration-tests@2ebf60b7 (ml-service added to REQUIRED_SIBLINGS + invariant #9 wired
+      to run_cross_repo_invariants.sh); unified-trading-pm@b3c81dd6 (workspace-manifest.json
+      sit_cross_repo_validated_repos += ml-service, drift-guard in sync: REQUIRED_SIBLINGS == manifest list).
 - [x] ✅ [WORKFLOW] P1. **greeks-service** — invariant: its greeks/risk output contract matches consumers. **Gate:** per
-      the per-repo Gate.
-      — unified-api-contracts@85d2fad5 (test_greeks_service_cross_repo_invariant.py: 4 AST + 1 UAC import tests, 5 green);
-      system-integration-tests@73cbe00 (greeks-service added to REQUIRED_SIBLINGS + invariant -6 wired);
-      unified-trading-pm (workspace-manifest.json sit_cross_repo_validated_repos updated, drift-guard in sync).
-- [x] ✅ [WORKFLOW] P1. **market-data-processing-service** — invariant: its MDPS output contract (vs MTDS input + feature
-      consumers). **Gate:** per the per-repo Gate.
-      — unified-api-contracts@31cc0c09 (test_mdps_cross_repo_invariant.py: 5 tests — AST schemas symbols,
-      AST CandleOutput core fields, AST MarketState values, AST DataType values, UAC runtime import check;
-      sibling guard skips in per-repo CI, fails LOUD in full-workspace SIT);
-      system-integration-tests@1de7b3f9 (market-data-processing-service added to REQUIRED_SIBLINGS + invariant
-      #10 wired to run_cross_repo_invariants.sh);
-      unified-trading-pm@9f254c99 (workspace-manifest.json sit_cross_repo_validated_repos += market-data-processing-service,
-      drift-guard in sync: REQUIRED_SIBLINGS == manifest list at 11 repos).
+      the per-repo Gate. — unified-api-contracts@85d2fad5 (test_greeks_service_cross_repo_invariant.py: 4 AST + 1 UAC
+      import tests, 5 green); system-integration-tests@73cbe00 (greeks-service added to REQUIRED_SIBLINGS + invariant -6
+      wired); unified-trading-pm (workspace-manifest.json sit_cross_repo_validated_repos updated, drift-guard in sync).
+- [x] ✅ [WORKFLOW] P1. **market-data-processing-service** — invariant: its MDPS output contract (vs MTDS input +
+      feature consumers). **Gate:** per the per-repo Gate. — unified-api-contracts@31cc0c09
+      (test_mdps_cross_repo_invariant.py: 5 tests — AST schemas symbols, AST CandleOutput core fields, AST MarketState
+      values, AST DataType values, UAC runtime import check; sibling guard skips in per-repo CI, fails LOUD in
+      full-workspace SIT); system-integration-tests@1de7b3f9 (market-data-processing-service added to
+      REQUIRED_SIBLINGS + invariant #10 wired to run_cross_repo_invariants.sh); unified-trading-pm@9f254c99
+      (workspace-manifest.json sit_cross_repo_validated_repos += market-data-processing-service, drift-guard in sync:
+      REQUIRED_SIBLINGS == manifest list at 11 repos).
 - [x] ✅ [WORKFLOW] P1. **trading-agent-service** — invariant: its directive-pipeline contract vs execution + strategy.
-      **Gate:** per the per-repo Gate.
-      — unified-api-contracts@1cf0261b (test_trading_agent_service_cross_repo_invariant.py: 4 tests — AST
-      MicroLoopOrchestrator, AST AllocationDirectiveLoop symbols, AST ArchetypeAllocationDirective Pydantic fields,
-      UAC runtime importability; sibling guard skips in per-repo CI, fails LOUD in full-workspace SIT);
-      system-integration-tests@0ba2ea5c (trading-agent-service added to REQUIRED_SIBLINGS + invariant #11 wired);
-      unified-trading-pm@4e0490c6 (workspace-manifest.json sit_cross_repo_validated_repos += trading-agent-service,
-      drift-guard in sync: REQUIRED_SIBLINGS == manifest list at 12 repos).
-- [x] ✅ [WORKFLOW] P1. **batch-live-reconciliation-service** — invariant: its reconciliation contract (the four-ledger /
-      paper==batch==live shapes). **Gate:** per the per-repo Gate.
-      — unified-api-contracts@e7b49329 (test_blrs_cross_repo_invariant.py: 5 tests — AST orchestrator entry point,
-      ReconciliationDimension 12 values, ReconciliationAgeFields age-tracking fields, RECON_GREEN_THRESHOLDS per-archetype
-      keys, UAC runtime importability; sibling guard skips in per-repo CI, fails LOUD in full-workspace SIT);
-      system-integration-tests@38bb4d1c (batch-live-reconciliation-service added to REQUIRED_SIBLINGS + invariant #12);
-      unified-trading-pm@70898f375 (workspace-manifest.json sit_cross_repo_validated_repos += batch-live-reconciliation-service,
-      drift-guard in sync: REQUIRED_SIBLINGS == manifest list at 13 repos).
+      **Gate:** per the per-repo Gate. — unified-api-contracts@1cf0261b
+      (test_trading_agent_service_cross_repo_invariant.py: 4 tests — AST MicroLoopOrchestrator, AST
+      AllocationDirectiveLoop symbols, AST ArchetypeAllocationDirective Pydantic fields, UAC runtime importability;
+      sibling guard skips in per-repo CI, fails LOUD in full-workspace SIT); system-integration-tests@0ba2ea5c
+      (trading-agent-service added to REQUIRED_SIBLINGS + invariant #11 wired); unified-trading-pm@4e0490c6
+      (workspace-manifest.json sit_cross_repo_validated_repos += trading-agent-service, drift-guard in sync:
+      REQUIRED_SIBLINGS == manifest list at 12 repos).
+- [x] ✅ [WORKFLOW] P1. **batch-live-reconciliation-service** — invariant: its reconciliation contract (the four-ledger
+      / paper==batch==live shapes). **Gate:** per the per-repo Gate. — unified-api-contracts@e7b49329
+      (test_blrs_cross_repo_invariant.py: 5 tests — AST orchestrator entry point, ReconciliationDimension 12 values,
+      ReconciliationAgeFields age-tracking fields, RECON_GREEN_THRESHOLDS per-archetype keys, UAC runtime importability;
+      sibling guard skips in per-repo CI, fails LOUD in full-workspace SIT); system-integration-tests@38bb4d1c
+      (batch-live-reconciliation-service added to REQUIRED_SIBLINGS + invariant #12); unified-trading-pm@70898f375
+      (workspace-manifest.json sit_cross_repo_validated_repos += batch-live-reconciliation-service, drift-guard in sync:
+      REQUIRED_SIBLINGS == manifest list at 13 repos).
 - [x] ✅ [WORKFLOW] P1. **deployment-api** — invariant: its `/repos` + deploy/launch response shapes vs deployment-ui +
-      deployment-service consumers. **Gate:** per the per-repo Gate.
-      — unified-api-contracts@5b535dc1 (test_deployment_api_cross_repo_invariant.py: 4 tests — DeployRequest fields,
-      DeploymentResult fields, repo-ci routes, UAC canonical types RuntimeProfile/DeploymentStatus/ComputeType; 4 passed);
-      system-integration-tests@ae32581 (invariant #13 added to Tier B runner; deployment-api already in REQUIRED_SIBLINGS
-      from task -027).
+      deployment-service consumers. **Gate:** per the per-repo Gate. — unified-api-contracts@5b535dc1
+      (test_deployment_api_cross_repo_invariant.py: 4 tests — DeployRequest fields, DeploymentResult fields, repo-ci
+      routes, UAC canonical types RuntimeProfile/DeploymentStatus/ComputeType; 4 passed);
+      system-integration-tests@ae32581 (invariant #13 added to Tier B runner; deployment-api already in
+      REQUIRED_SIBLINGS from task -027).
 - [x] ✅ [WORKFLOW] P1. **deployment-service** — invariant: its VM/infra + topic/contract surface vs deployment-api +
-      launchers. **Gate:** per the per-repo Gate.
-      — unified-api-contracts@03489515 (test_deployment_service_cross_repo_invariant.py: 6 tests — classification
-      surface classify_deployment_target/UnclassifiedDeploymentError, deployments_registry ACTIVE_PREFIX/ARCHIVE_PREFIX/
+      launchers. **Gate:** per the per-repo Gate. — unified-api-contracts@03489515
+      (test_deployment_service_cross_repo_invariant.py: 6 tests — classification surface
+      classify_deployment_target/UnclassifiedDeploymentError, deployments_registry ACTIVE_PREFIX/ARCHIVE_PREFIX/
       DEFAULT_BUCKET/DeploymentRegistryEntry/vm_run_log_rolling_uri, CLOUD_RUN_JOBS, api/main.py include_router calls,
-      state.py HTTP routes, vm_zombie_watchdog.py VM_PREFIX_TO_BUCKET; 6 passed);
-      system-integration-tests@5db2a5c (deployment-service added to REQUIRED_SIBLINGS + invariant #14);
-      unified-trading-pm (workspace-manifest.json sit_cross_repo_validated_repos += deployment-service, now 14 repos).
+      state.py HTTP routes, vm_zombie_watchdog.py VM_PREFIX_TO_BUCKET; 6 passed); system-integration-tests@5db2a5c
+      (deployment-service added to REQUIRED_SIBLINGS + invariant #14); unified-trading-pm (workspace-manifest.json
+      sit_cross_repo_validated_repos += deployment-service, now 14 repos).
 - [x] ✅ [WORKFLOW] P1. **unified-trading-api** — invariant: its public API contract vs UI + client consumers. **Gate:**
-      per the per-repo Gate.
-      — unified-api-contracts@80ddf783 (test_unified_trading_api_cross_repo_invariant.py: 3 AST tests, all green;
-      guards route module imports + route prefix registrations in main.py);
+      per the per-repo Gate. — unified-api-contracts@80ddf783 (test_unified_trading_api_cross_repo_invariant.py: 3 AST
+      tests, all green; guards route module imports + route prefix registrations in main.py);
       system-integration-tests@a29d15d (unified-trading-api added to REQUIRED_SIBLINGS + invariant 7 wired);
       unified-trading-pm (workspace-manifest.json sit_cross_repo_validated_repos updated, drift-guard in sync).
-- [x] ✅ [WORKFLOW] P1. **alerting-service** — invariant: its alert/notification contract vs consumers. **Gate:** per the
-      per-repo Gate.
-      — unified-api-contracts@fd7acd90 (test_alerting_service_cross_repo_invariant.py: 4 tests — alert SSE+recent-alerts
-      routes, safety-ops routes /incidents+/audit-ack-queue+/signoffs, api/main.py router registrations, UAC
-      AlertCode/AlertEvent/AlertSeverity/LIVE_ALERT_RULES importability; 4 passed);
-      system-integration-tests@bafb8fb (alerting-service added to REQUIRED_SIBLINGS + invariant #15);
-      unified-trading-pm (workspace-manifest.json sit_cross_repo_validated_repos += alerting-service, now 15 repos).
+- [x] ✅ [WORKFLOW] P1. **alerting-service** — invariant: its alert/notification contract vs consumers. **Gate:** per
+      the per-repo Gate. — unified-api-contracts@fd7acd90 (test_alerting_service_cross_repo_invariant.py: 4 tests —
+      alert SSE+recent-alerts routes, safety-ops routes /incidents+/audit-ack-queue+/signoffs, api/main.py router
+      registrations, UAC AlertCode/AlertEvent/AlertSeverity/LIVE_ALERT_RULES importability; 4 passed);
+      system-integration-tests@bafb8fb (alerting-service added to REQUIRED_SIBLINGS + invariant #15); unified-trading-pm
+      (workspace-manifest.json sit_cross_repo_validated_repos += alerting-service, now 15 repos).
 - [x] [WORKFLOW] P1. **client-reporting-api** — invariant: its reporting contract vs UI/client consumers. **Gate:** per
-      the per-repo Gate.
-      13. ✅ [WORKFLOW] P1. **client-reporting-api** — uac@0ae797d5 (6 tests: router registrations, clients/trades prefix,
-      /pnl+/performance routes, /summary+/positions+/balances+/coin-breakdown, UAC LedgerRow/PositionLedgerRow/EventType/
-      TradeFillRecord importability; 6 passed);
-      system-integration-tests@5798da8 (client-reporting-api added to REQUIRED_SIBLINGS + invariant #16);
-      unified-trading-pm (workspace-manifest.json sit_cross_repo_validated_repos += client-reporting-api, now 16 repos).
+      the per-repo Gate. 13. ✅ [WORKFLOW] P1. **client-reporting-api** — uac@0ae797d5 (6 tests: router registrations,
+      clients/trades prefix, /pnl+/performance routes, /summary+/positions+/balances+/coin-breakdown, UAC
+      LedgerRow/PositionLedgerRow/EventType/ TradeFillRecord importability; 6 passed); system-integration-tests@5798da8
+      (client-reporting-api added to REQUIRED_SIBLINGS + invariant #16); unified-trading-pm (workspace-manifest.json
+      sit_cross_repo_validated_repos += client-reporting-api, now 16 repos).
 - [x] [WORKFLOW] P1. **fund-administration-service** — invariant: its fund-admin contract (respecting client-funds
-      isolation — funds NEVER cross clients). **Gate:** per the per-repo Gate.
-      14. ✅ [WORKFLOW] P1. **fund-administration-service** — uac@14373b00 (5 tests: subscription lifecycle routes,
-      redemption lifecycle routes, allocation routes, UAC fund-admin domain types, no-cross-client-transfer guard;
-      5 passed); system-integration-tests@d04a382 (fund-administration-service added to REQUIRED_SIBLINGS + invariant #17);
-      unified-trading-pm (workspace-manifest.json sit_cross_repo_validated_repos += fund-administration-service, now 17 repos).
+      isolation — funds NEVER cross clients). **Gate:** per the per-repo Gate. 14. ✅ [WORKFLOW] P1.
+      **fund-administration-service** — uac@14373b00 (5 tests: subscription lifecycle routes, redemption lifecycle
+      routes, allocation routes, UAC fund-admin domain types, no-cross-client-transfer guard; 5 passed);
+      system-integration-tests@d04a382 (fund-administration-service added to REQUIRED_SIBLINGS + invariant #17);
+      unified-trading-pm (workspace-manifest.json sit_cross_repo_validated_repos += fund-administration-service, now 17
+      repos).
 - [x] [WORKFLOW] P1. **agent-orchestrator** — invariant: its role-registry / dispatch contract + the JWT/proxy surfaces
-      consumers depend on. **Gate:** per the per-repo Gate.
-      15. ✅ [WORKFLOW] P1. **agent-orchestrator** — uac@7bc662f4 (6 tests: critical routers registered, slot worker
-      lifecycle routes, /api/roles, /api/state+/api/healthz, RoleSpec dispatch fields, auth.py present; 6 passed);
-      system-integration-tests@108e135 (agent-orchestrator added to REQUIRED_SIBLINGS + invariant #18);
-      unified-trading-pm (workspace-manifest.json sit_cross_repo_validated_repos += agent-orchestrator, now 18 repos).
+      consumers depend on. **Gate:** per the per-repo Gate. 15. ✅ [WORKFLOW] P1. **agent-orchestrator** — uac@7bc662f4
+      (6 tests: critical routers registered, slot worker lifecycle routes, /api/roles, /api/state+/api/healthz, RoleSpec
+      dispatch fields, auth.py present; 6 passed); system-integration-tests@108e135 (agent-orchestrator added to
+      REQUIRED_SIBLINGS + invariant #18); unified-trading-pm (workspace-manifest.json sit_cross_repo_validated_repos +=
+      agent-orchestrator, now 18 repos).
 - [x] [UI][WORKFLOW] P1. **unified-trading-system-ui** — UI repo: the cross-repo invariant is API-contract CONSUMPTION
       (the UI's expected response shapes match unified-trading-api / deployment-api). Use the UI testing layers (tsc +
       the contract types), not Python. **Gate:** per the per-repo Gate (negative control = a breaking API-shape change
-      is caught) + `pw:L2` where applicable.
-      16. ✅ [UI][WORKFLOW] P1. **unified-trading-system-ui** — uac@ec0e1266 (4 tests: PaginatedResponse stable,
-      LaunchResult+MlExperimentParams+StrategyBacktestParams in deployment-launch-client, /api/promote+/demote in
-      promote-client, safety-ops-proxy.ts present; 4 passed); system-integration-tests@b7a003a (unified-trading-system-ui
-      added to REQUIRED_SIBLINGS + invariant #19);
-      unified-trading-pm (workspace-manifest.json sit_cross_repo_validated_repos += unified-trading-system-ui, 19 repos).
+      is caught) + `pw:L2` where applicable. 16. ✅ [UI][WORKFLOW] P1. **unified-trading-system-ui** — uac@ec0e1266 (4
+      tests: PaginatedResponse stable, LaunchResult+MlExperimentParams+StrategyBacktestParams in
+      deployment-launch-client, /api/promote+/demote in promote-client, safety-ops-proxy.ts present; 4 passed);
+      system-integration-tests@b7a003a (unified-trading-system-ui added to REQUIRED_SIBLINGS + invariant #19);
+      unified-trading-pm (workspace-manifest.json sit_cross_repo_validated_repos += unified-trading-system-ui, 19
+      repos).
 - [x] ✅ [UI][WORKFLOW] P1. **deployment-ui** — UI repo: API-contract consumption invariant vs deployment-api. **Gate:**
-      per the per-repo Gate (+ `pw:L2` where applicable).
-      — unified-api-contracts@b4470f8e (test_deployment_ui_cross_repo_invariant.py: 3 AST tests green;
-      guards route module imports, file existence, and route prefix registrations in deployment_api/main.py);
-      system-integration-tests@1a70722 (deployment-api added to REQUIRED_SIBLINGS + invariant 8 wired);
-      unified-trading-pm (workspace-manifest.json sit_cross_repo_validated_repos updated to 9 repos, drift-guard in sync).
+      per the per-repo Gate (+ `pw:L2` where applicable). — unified-api-contracts@b4470f8e
+      (test_deployment_ui_cross_repo_invariant.py: 3 AST tests green; guards route module imports, file existence, and
+      route prefix registrations in deployment_api/main.py); system-integration-tests@1a70722 (deployment-api added to
+      REQUIRED_SIBLINGS + invariant 8 wired); unified-trading-pm (workspace-manifest.json sit_cross_repo_validated_repos
+      updated to 9 repos, drift-guard in sync).
 
 - [x] ✅ [WORKFLOW] P1. **Coverage flip-to-full.** When all 16 above are in `REQUIRED_SIBLINGS` +
       `sit_cross_repo_validated_repos` (21/21 ldr_main covered): remove the "Option B+ interim / NOT SIT-covered →
       BLOCK" branch from `ldr-to-main-promote-fleet.yml` (now every ldr_main repo is covered, so the conservative block
-      is dead code) and update `codex/08-workflows/ci-cd-flow.md` to the full-coverage end-state. **Gate:** grep proves
+      is dead code) and update `/codex/08-workflows/ci-cd-flow.md` to the full-coverage end-state. **Gate:** grep proves
       no ldr_main repo is outside `sit_cross_repo_validated_repos`; the consumer no longer has a "NOT SIT-covered" path;
-      actionlint clean; QG green.
-      — **execution-service**: uac@6ed75ce7 (test_execution_service_cross_repo_invariant.py: 4 tests — models symbols,
-      orders symbols, strategy_instructions symbols, UAC InstructionType SSOT; sibling guard skips in per-repo CI);
-      system-integration-tests@fede096 (execution-service + deployment-ui added to REQUIRED_SIBLINGS + invariants #20-21;
-      deployment-ui TypeScript source tests added to test_deployment_ui_cross_repo_invariant.py);
-      unified-trading-pm@b28bf78e3 (workspace-manifest.json sit_cross_repo_validated_repos += deployment-ui +
-      execution-service, now 21/21 ldr_main). **Coverage flip-to-full**: pm@[this commit] (ldr-to-main-promote-fleet.yml
-      "NOT SIT-covered → BLOCK" branch removed; codex/08-workflows/ci-cd-flow.md updated to full-coverage end-state);
-      grep gate: 21/21 ldr_main in sit_cross_repo_validated_repos, 0 NOT-covered; fleet workflow: no "NOT SIT-covered"
-      path remains; QG green.
+      actionlint clean; QG green. — **execution-service**: uac@6ed75ce7 (test_execution_service_cross_repo_invariant.py:
+      4 tests — models symbols, orders symbols, strategy_instructions symbols, UAC InstructionType SSOT; sibling guard
+      skips in per-repo CI); system-integration-tests@fede096 (execution-service + deployment-ui added to
+      REQUIRED_SIBLINGS + invariants #20-21; deployment-ui TypeScript source tests added to
+      test_deployment_ui_cross_repo_invariant.py); unified-trading-pm@b28bf78e3 (workspace-manifest.json
+      sit_cross_repo_validated_repos += deployment-ui + execution-service, now 21/21 ldr_main). **Coverage
+      flip-to-full**: pm@[this commit] (ldr-to-main-promote-fleet.yml "NOT SIT-covered → BLOCK" branch removed;
+      /codex/08-workflows/ci-cd-flow.md updated to full-coverage end-state); grep gate: 21/21 ldr_main in
+      sit_cross_repo_validated_repos, 0 NOT-covered; fleet workflow: no "NOT SIT-covered" path remains; QG green.
 
 ## Phase 2 — SIT-rehome hardening (close the deferred HIGH findings)
 
@@ -308,52 +333,58 @@ source: [plans/active/issues/sit_rehome_safety_gate_gaps_2026_06_27.md, codex/08
       previously-failing step) passes; OVERALL build SUCCESS confirmed via `gcloud builds describe`. Evidence:
       cloudbuild=1f728778-62a7-4d93-8e3d-2bb3db50cef8
 
-- [x] ✅ [SCRIPT] P1. **Cross-repo COMBINATION fingerprint (HIGH-1).** The per-repo `sit_validated_tree` cannot express the
-      sibling-version COMBINATION SIT validated (repo R validated against UAC v1 can promote after UAC v2 lands). Add a
-      `sit_validated_workspace_digest` (hash of all assembled sibling LDR trees) emitted by the producer + checked by
-      the consumer, OR require the whole assembled ldr_main set to be jointly SIT-validated before promoting any member.
-      **Gate:** a breaking change to a DEPENDENCY (e.g. UAC) that lands after a dependent was validated BLOCKS the
-      dependent's promote until re-validated together; unit/integration test proving it; QG green.
-      — pm@2cc9ffdbb + sit@071e254 (workspace_digest.py + ci_status_store.py sit_validated_workspace_digest store/carry-forward/stale-carve-out + full-workspace-sit.yml compute+emit workspace digest + ldr-to-main-promote-fleet.yml parallel 21-repo compute + combination gate + ci-status-update.yml pass digest from payload + 12 new tests; QG green; PR #698)
+- [x] ✅ [SCRIPT] P1. **Cross-repo COMBINATION fingerprint (HIGH-1).** The per-repo `sit_validated_tree` cannot express
+      the sibling-version COMBINATION SIT validated (repo R validated against UAC v1 can promote after UAC v2 lands).
+      Add a `sit_validated_workspace_digest` (hash of all assembled sibling LDR trees) emitted by the producer + checked
+      by the consumer, OR require the whole assembled ldr_main set to be jointly SIT-validated before promoting any
+      member. **Gate:** a breaking change to a DEPENDENCY (e.g. UAC) that lands after a dependent was validated BLOCKS
+      the dependent's promote until re-validated together; unit/integration test proving it; QG green. — pm@2cc9ffdbb +
+      sit@071e254 (workspace_digest.py + ci_status_store.py sit_validated_workspace_digest
+      store/carry-forward/stale-carve-out + full-workspace-sit.yml compute+emit workspace digest +
+      ldr-to-main-promote-fleet.yml parallel 21-repo compute + combination gate + ci-status-update.yml pass digest from
+      payload + 12 new tests; QG green; PR #698)
 - [x] ✅ [WORKFLOW] P1. **Per-SHA immutable promote ref (the originally-specced design).** Replace the mutable per-repo
       `promote/<repo>` ref with an immutable `promote/<repo>/<shortsha>` created per validated SHA + deleted on merge
       (`gh pr merge --delete-branch`), closing the residual head-drift window the mutable ref leaves. Handle stale-PR
       cleanup (close superseded promote PRs). **Gate:** a promote PR's head SHA never changes after creation; the ref is
-      deleted post-merge; no orphan `promote/*` ref accumulation (verified over several cycles); QG green.
-      — pm@5a343ce75 (promote/<repo>/<sha> immutable ref + POST-only create + superseded PR close+ref delete + --delete-branch on all merge arms; QG green; PR #700)
-- [x] ✅ [WORKFLOW] P2. **SIT per-invariant isolation + operator escape hatch.** Today one red invariant (any covered repo)
-      makes the whole SIT job red → NO repo gets SIT_VALIDATED (fleet-wide breaking-promote stall). Add per-invariant
-      isolation so an unrelated red invariant doesn't block a validated repo, + a documented manual-stamp escape hatch
-      (`ci_status_store.py <repo> SIT_VALIDATED live-defi-rollout <sha> --sit-validated-tree <tree>`). **Gate:** a
-      deliberately-red invariant for repo B does not block repo A's SIT_VALIDATED; runbook documents the escape hatch.
-      — sit@f01643d (run_cross_repo_invariants.sh: per-repo REPO_PASS map + _mark_fail() + repos_csv arg on helpers; full-workspace-sit.yml: stamp step if:always() + reads /tmp/sit_per_repo_results.json + stamps only PASS repos; escape hatch already in ci_status_store.py __main__; QG green)
+      deleted post-merge; no orphan `promote/*` ref accumulation (verified over several cycles); QG green. —
+      pm@5a343ce75 (promote/<repo>/<sha> immutable ref + POST-only create + superseded PR close+ref delete +
+      --delete-branch on all merge arms; QG green; PR #700)
+- [x] ✅ [WORKFLOW] P2. **SIT per-invariant isolation + operator escape hatch.** Today one red invariant (any covered
+      repo) makes the whole SIT job red → NO repo gets SIT_VALIDATED (fleet-wide breaking-promote stall). Add
+      per-invariant isolation so an unrelated red invariant doesn't block a validated repo, + a documented manual-stamp
+      escape hatch (`ci_status_store.py <repo> SIT_VALIDATED live-defi-rollout <sha> --sit-validated-tree <tree>`).
+      **Gate:** a deliberately-red invariant for repo B does not block repo A's SIT_VALIDATED; runbook documents the
+      escape hatch. — sit@f01643d (run_cross_repo_invariants.sh: per-repo REPO_PASS map + _mark_fail() + repos_csv arg
+      on helpers; full-workspace-sit.yml: stamp step if:always() + reads /tmp/sit_per_repo_results.json + stamps only
+      PASS repos; escape hatch already in ci_status_store.py **main**; QG green)
 - [x] ✅ [WORKFLOW] P3. **Fix `gh api POST` syntax (pre-existing).** In `ldr-to-main-promote-fleet.yml` the label-check
       status post uses `gh api POST <path>` (wrong — must be `gh api -X POST`), so the `semver-agent/label-check` commit
       status is never written (silently swallowed by `|| true`). **Gate:** the commit status appears on the LDR head;
-      actionlint clean.
-      — pm@567e32e (2 occurrences of `gh api POST` → `gh api -X POST` at lines 549+558; QG green; PR #702)
+      actionlint clean. — pm@567e32e (2 occurrences of `gh api POST` → `gh api -X POST` at lines 549+558; QG green; PR
+      #702)
 
 ## Phase 3 — End-state proof + codex + workspace QG (final phase — MANDATORY)
 
 - [x] ✅ [VERIFY] P1. **Live breaking-change proof per dependency tier.** Land a deliberately-breaking public-surface
       change on a covered repo in each tier (a lib, a service, a UI), confirm: SIT-on-LDR CATCHES it → the LDR→main
       promote BLOCKS until SIT-validated → after the fix/validation it promotes with EXACTLY ONE gating v2. **Gate:**
-      documented run links for each tier proving caught-then-promoted.
-      — Verified via local full-workspace SIT runs (WORKSPACE_ROOT=.tabs/14, all 9 REQUIRED_SIBLINGS assembled):
-      **Baseline**: 8/8 invariants PASS.
-      **Tier 1 (lib — UTL)**: Removed `UnifiedCloudConfig` from UTL `__init__.py` →
-        `test_utl_public_api_surface_stable FAILED: ['UnifiedCloudConfig']`; restored → PASS.
-      **Tier 2 (service — greeks-service)**: Removed `delta` from `GreekResult.__slots__` in `black_scholes.py` →
-        `test_greeks_service_greek_result_slots_stable FAILED: ['delta']`; restored → PASS.
-      **Tier 3 (API/UI — deployment-api)**: Commented out `services` import in `deployment_api/main.py` →
-        `test_deployment_api_route_modules_present FAILED: ['services']`; restored → full-workspace SIT GREEN.
-      Detection mechanism confirmed operational for all 3 tiers. The SIT-on-LDR wire
-      (full-workspace-sit.yml; nightly + on-promotion repository_dispatch) extends these local proofs to CI.
-- [x] ✅ [WORKFLOW] P1. **Codex SSOT update + workspace-wide QG.** Update `codex/08-workflows/ci-cd-flow.md` (full-coverage
-      end-state) + `codex/06-coding-standards/integration-testing-layers.md` (the per-repo cross-repo-invariant
-      pattern). Run `quality-gates.sh` green in every touched repo. **Gate:** codex reflects 21/21 coverage; all touched
-      repos QG-green; this plan's success criteria all met.
-      — pm@97df5b254 (ci-cd-flow.md: immutable per-SHA ref + combination fingerprint full-coverage docs; integration-testing-layers.md: Layer 4 cross-repo invariant pattern; QG green)
+      documented run links for each tier proving caught-then-promoted. — Verified via local full-workspace SIT runs
+      (WORKSPACE_ROOT=.tabs/14, all 9 REQUIRED_SIBLINGS assembled): **Baseline**: 8/8 invariants PASS. **Tier 1 (lib —
+      UTL)**: Removed `UnifiedCloudConfig` from UTL `__init__.py` →
+      `test_utl_public_api_surface_stable FAILED: ['UnifiedCloudConfig']`; restored → PASS. **Tier 2 (service —
+      greeks-service)**: Removed `delta` from `GreekResult.__slots__` in `black_scholes.py` →
+      `test_greeks_service_greek_result_slots_stable FAILED: ['delta']`; restored → PASS. **Tier 3 (API/UI —
+      deployment-api)**: Commented out `services` import in `deployment_api/main.py` →
+      `test_deployment_api_route_modules_present FAILED: ['services']`; restored → full-workspace SIT GREEN. Detection
+      mechanism confirmed operational for all 3 tiers. The SIT-on-LDR wire (full-workspace-sit.yml; nightly +
+      on-promotion repository_dispatch) extends these local proofs to CI.
+- [x] ✅ [WORKFLOW] P1. **Codex SSOT update + workspace-wide QG.** Update `/codex/08-workflows/ci-cd-flow.md`
+      (full-coverage end-state) + `/codex/06-coding-standards/integration-testing-layers.md` (the per-repo
+      cross-repo-invariant pattern). Run `quality-gates.sh` green in every touched repo. **Gate:** codex reflects 21/21
+      coverage; all touched repos QG-green; this plan's success criteria all met. — pm@97df5b254 (ci-cd-flow.md:
+      immutable per-SHA ref + combination fingerprint full-coverage docs; integration-testing-layers.md: Layer 4
+      cross-repo invariant pattern; QG green)
 
 ## Success criteria
 
@@ -363,7 +394,7 @@ source: [plans/active/issues/sit_rehome_safety_gate_gaps_2026_06_27.md, codex/08
 - Cross-repo COMBINATION is enforced (a dependency break re-blocks dependents) and the promote ref is immutable per-SHA.
 - A deliberately-breaking change in each tier is proven caught-then-promoted on real cycles.
 - Cloud Build is green fleet-wide (the hatch-vcs regression closed); no promotion-lag.
-- `codex/08-workflows/ci-cd-flow.md` documents the full-coverage end-state (no "Option B+ interim" framing).
+- `/codex/08-workflows/ci-cd-flow.md` documents the full-coverage end-state (no "Option B+ interim" framing).
 
 ## Progress Log
 
@@ -434,13 +465,12 @@ source: [plans/active/issues/sit_rehome_safety_gate_gaps_2026_06_27.md, codex/08
   baselined to ratchet legacy claims to evidence). + agent-orchestrator `agents/review.md` patched so the persistent
   UAT/QA review agent RUNS the build verification (triggers/polls + `describe → SUCCESS`) and gates plan-checkbox flips,
   not only diffs.
-- 2026-06-29 slot-3 (task 021 — SIT per-invariant isolation): **Phase 2 P2 CLOSED.** Added per-repo
-  `REPO_PASS` associative array to `run_cross_repo_invariants.sh` + `_mark_fail "all"|"<repos_csv>"`
-  helper; updated both runner helpers (`run_pytest_invariant`, `run_shell_invariant`) to take `repos_csv`
-  as second arg so each invariant marks only its specific repos on failure (shared invariants 1-4 use
-  "all"; per-repo invariants 5-21 name their repo(s)). Script writes `/tmp/sit_per_repo_results.json`
-  before exit regardless of pass/fail. Changed `full-workspace-sit.yml` stamp step from `if: success()` →
-  `if: always()`; reads JSON; filters COVERED to those with PASS result; stamps SIT_VALIDATED only for
-  those repos. Escape hatch already implemented in `ci_status_store.py __main__`:
-  `python3 scripts/cicd/ci_status_store.py <repo> SIT_VALIDATED live-defi-rollout <sha> --sit-validated-tree <tree>`.
-  QG green; sit@f01643d.
+- 2026-06-29 slot-3 (task 021 — SIT per-invariant isolation): **Phase 2 P2 CLOSED.** Added per-repo `REPO_PASS`
+  associative array to `run_cross_repo_invariants.sh` + `_mark_fail "all"|"<repos_csv>"` helper; updated both runner
+  helpers (`run_pytest_invariant`, `run_shell_invariant`) to take `repos_csv` as second arg so each invariant marks only
+  its specific repos on failure (shared invariants 1-4 use "all"; per-repo invariants 5-21 name their repo(s)). Script
+  writes `/tmp/sit_per_repo_results.json` before exit regardless of pass/fail. Changed `full-workspace-sit.yml` stamp
+  step from `if: success()` → `if: always()`; reads JSON; filters COVERED to those with PASS result; stamps
+  SIT_VALIDATED only for those repos. Escape hatch already implemented in `ci_status_store.py __main__`:
+  `python3 scripts/cicd/ci_status_store.py <repo> SIT_VALIDATED live-defi-rollout <sha> --sit-validated-tree <tree>`. QG
+  green; sit@f01643d.

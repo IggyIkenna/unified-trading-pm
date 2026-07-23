@@ -29,9 +29,9 @@ This document drives the surgical plan-file edit pass that follows (commit 2:
 
 ## Sports SSOT — register location correction
 
-The dispatch prompt referenced `codex/09-strategy/cross-cutting/12-sports-trading.md` as the canonical sports register.
+The dispatch prompt referenced `/codex/09-strategy/cross-cutting/12-sports-trading.md` as the canonical sports register.
 **That file does NOT exist.** The canonical sports register is
-[`codex/02-data/sports-scheduling-and-sharding.md`](../../codex/02-data/sports-scheduling-and-sharding.md) §12.0 "Live
+[`/codex/02-data/sports-scheduling-and-sharding.md`](/codex/02-data/sports-scheduling-and-sharding.md) §12.0 "Live
 progress register". Last register audit: 2026-04-22 late.
 
 ### §12.0 register vs plans/active/ checkbox state (verified 2026-04-25)
@@ -230,7 +230,7 @@ These have unambiguous superseder declarations already in their frontmatter — 
   role
 - duplication_partners: features_sports_pipeline_deployment_2026_04_21,
   instruments_service_write_gate_validation_2026_04_22, apifootball_enrichment_historical_backfill_2026_04_21
-- register_drift (sports): yes — codex/02-data/sports-scheduling-and-sharding.md is live SSOT; this consolidator never
+- register_drift (sports): yes — /codex/02-data/sports-scheduling-and-sharding.md is live SSOT; this consolidator never
   updated
 - recommended_action: superseded marker pointing at sports register codex + 5 active sports plans
 
@@ -780,7 +780,7 @@ These have unambiguous superseder declarations already in their frontmatter — 
 ### playbook_ssot_stage_3_infra_spec_2026_04_19.md
 
 - frontmatter: status=active, P0, locked_by=live-defi-rollout,
-  supersedes_on_completion=codex/14-playbooks/roadmap/next-waves.md
+  supersedes_on_completion=/codex/14-playbooks/roadmap/next-waves.md
 - checkboxes: 0/25 (0%)
 - evidence: a7aa782c; G1.6 derivation-engine ship per Option-X memory; G2.x refactor wave (eef08911, f5c9d80a, 0bed08bc)
 - candidate_classification: partial
@@ -1345,7 +1345,7 @@ These have unambiguous superseder declarations already in their frontmatter — 
 | **DeFi data pipeline**                               | consolidated_defi_data_pipeline_2026_04_15, defi_data_types_completeness_2026_04_24, defi_full_coverage_expansion_2026_04_09, defi_instrument_pipeline_and_rewards_2026_04_01, mtds_defi_data_normalization_2026_04_14, mev_protection_and_execution_enhancements_2026_04_01                                                                                                                                          | **consolidated_defi_data_pipeline_2026_04_15** (designated consolidator) + **defi_data_types_completeness_2026_04_24** (newest active) | 4 source plans declare `remaining_todos_consolidated_into: consolidated_defi_data_pipeline`                                 |
 | **ML pipeline**                                      | consolidated_ml_advanced_pipeline_2026_04_15, ml_pipeline_revolution_2026_04_11, domain_agnostic_ml_framework_2026_04_11, ml_pipeline_ui_integration_2026_04_16, live_frontend_integration_e2e_audit_2026_04_15                                                                                                                                                                                                       | **consolidated_ml_advanced_pipeline_2026_04_15**                                                                                       | 2 source plans declare consolidation marker                                                                                 |
 | **Coverage / QG**                                    | coverage_ratchet_policy_2026_04_19, coverage_uplift_bottom5_2026_04_19, honest_coverage_metrics_2026_04_19, proper_coverage_roadmap_2026_04_20, full_qg_sweep_all_services_2026_03_28                                                                                                                                                                                                                                 | **proper_coverage_roadmap_2026_04_20** (most recent + most comprehensive)                                                              | full_qg_sweep is owner=human and pre-dates the wave                                                                         |
-| **Sports prediction pipeline**                       | consolidated_sports_prediction_pipeline_2026_04_15, sports_batch_pipeline_end_to_end_2026_03_25, sports_integration_01-06 (6 plans), polymarket_prediction_pipeline_2026_03_25                                                                                                                                                                                                                                        | **consolidated_sports_prediction_pipeline_2026_04_15** + codex/02-data/sports-scheduling-and-sharding.md §12.0 register                | 8 source plans declare consolidation marker; codex §12.0 has now superseded the consolidator's tracking role                |
+| **Sports prediction pipeline**                       | consolidated_sports_prediction_pipeline_2026_04_15, sports_batch_pipeline_end_to_end_2026_03_25, sports_integration_01-06 (6 plans), polymarket_prediction_pipeline_2026_03_25                                                                                                                                                                                                                                        | **consolidated_sports_prediction_pipeline_2026_04_15** + /codex/02-data/sports-scheduling-and-sharding.md §12.0 register               | 8 source plans declare consolidation marker; codex §12.0 has now superseded the consolidator's tracking role                |
 | **Sports comprehensive umbrellas**                   | sports_data_completeness_2026_04_14, sports_data_pipeline_comprehensive_2026_04_16, sports_data_migration_mapping_plan_2026_03_26, sports_feature_completion_2026_04_10, sports_e2e_validation_2026_03_27                                                                                                                                                                                                             | **sports_roadmap_master_execution_2026_04_21** (live SSOT for §12.0)                                                                   | None of these are in §12.0 register; roadmap_master is the carrier                                                          |
 | **DART UI**                                          | dart_ui_strategy_filtering_and_onboarding_2026_04_24, dart_exclusive_subscription_research_fork_2026_04_21, dashboard_services_grid_collapse_2026_04_21, consolidated_strategy_and_ui_2026_04_15                                                                                                                                                                                                                      | **dart_ui_strategy_filtering_and_onboarding** (live in_progress, biggest scope)                                                        | consolidated_strategy_and_ui is now superseded by these 3 child plans                                                       |
 | **DeFi strategy testing trio**                       | defi-strategy-e2e-automation, defi-strategy-testing-quickstart, defi-strategy-ui-verification                                                                                                                                                                                                                                                                                                                         | **defi-strategy-ui-verification** (only one with checkboxes)                                                                           | Other 2 are workflow guides → relocate to codex/                                                                            |
@@ -1361,7 +1361,7 @@ These have unambiguous superseder declarations already in their frontmatter — 
 | defi-strategy-e2e-automation.md                                       | 446-line workflow guide, no checkboxes/frontmatter  | codex/14-playbooks/ or codex/08-workflows/                  |
 | defi-strategy-testing-quickstart.md                                   | 301-line quickstart guide, no checkboxes            | codex/08-workflows/                                         |
 | five_space_ia_audit_matrix_2026_04_17.md                              | 64-line audit table input                           | codex/05-infrastructure/ or plans/audits/                   |
-| portal_local_smoke_checklist_2026_04_19.md                            | Repeatable checklist with ☐/☑ glyphs               | codex/14-playbooks/ or scripts/                             |
+| portal_local_smoke_checklist_2026_04_19.md                            | Repeatable checklist with ☐/☑ glyphs                | codex/14-playbooks/ or scripts/                             |
 | hybrid_sampler_5s_resolution_2026_03_30.md                            | Stalled since 2026-03-30; no commits matching scope | candidate archive                                           |
 | ml_pipeline_ui_e2e_browser_validation_AGENT_PROMPT.md                 | Pure agent dispatch prompt                          | archive                                                     |
 | ml_pipeline_ui_integration_2026_04_16_AGENT_PROMPT.md                 | Pure agent dispatch prompt                          | archive                                                     |

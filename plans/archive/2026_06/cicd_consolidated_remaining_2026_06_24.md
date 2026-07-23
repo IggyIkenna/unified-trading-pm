@@ -1,12 +1,22 @@
 ---
 doc_type: plan
 title: CI/CD — consolidated REMAINING work (single SSOT; supersedes the 7 prior cicd/dep-promotion/starvation plans)
-summary: 'Single SSOT consolidating all remaining CI/CD work: version-out-of-source (D13), promotion pipeline, quality gates, release machinery, and staging-branch retirement.'
+summary:
+  "Single SSOT consolidating all remaining CI/CD work: version-out-of-source (D13), promotion pipeline, quality gates,
+  release machinery, and staging-branch retirement."
 status: superseded
 nature: process
 asset_group: cross-asset
 stage: [meta]
-repos: [agent-orchestrator, alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-service]
+repos:
+  [
+    agent-orchestrator,
+    alerting-service,
+    batch-live-reconciliation-service,
+    client-reporting-api,
+    deployment-api,
+    deployment-service,
+  ]
 scope: [engineer, admin]
 tags: [cicd, consolidation, version-out-of-source, promotion-pipeline, quality-gates, sit, ldr_main]
 related: []
@@ -21,10 +31,30 @@ estimate_calibrated_ai_days: 20.8
 last_updated: 2026-06-30
 locked_by: live-defi-rollout
 locked_since: 2026-06-24
-supersedes: [cicd_promotion_pipeline_2026_06_18 (open items migrated here; done items + decision log preserved in source), cicd_quality_gates_2026_06_18 (idem), cicd_release_machinery_2026_06_18 (idem), cicd_sit_and_fleet_2026_06_18 (idem), cicd_docs_and_consolidation_2026_06_18 (fully DONE — pure supersede), dependency_promotion_range_pins_and_major_bump_sit_2026_06_09 (remaining 7 items migrated here), issues/staging_to_main_promotion_starvation_2026_06_19 (remaining items migrated here), 'issues/staging_main_version_line_divergence_2026_06_22 (the version-line conflict class — resolved at the ROOT by D13 version-out-of-source / WS-L, 2026-06-25)', issues/staging_main_version_line_dual_lineage_2026_06_22 (idem — D13 / WS-L), issues/version_line_autoresolve_pr_orphan_cleanup_2026_06_24 (the version-line autoresolve band-aid is obsoleted by D13 / WS-L)]
+supersedes:
+  [
+    cicd_promotion_pipeline_2026_06_18 (open items migrated here; done items + decision log preserved in source),
+    cicd_quality_gates_2026_06_18 (idem),
+    cicd_release_machinery_2026_06_18 (idem),
+    cicd_sit_and_fleet_2026_06_18 (idem),
+    cicd_docs_and_consolidation_2026_06_18 (fully DONE — pure supersede),
+    dependency_promotion_range_pins_and_major_bump_sit_2026_06_09 (remaining 7 items migrated here),
+    issues/staging_to_main_promotion_starvation_2026_06_19 (remaining items migrated here),
+    "issues/staging_main_version_line_divergence_2026_06_22 (the version-line conflict class — resolved at the ROOT by
+    D13 version-out-of-source / WS-L, 2026-06-25)",
+    issues/staging_main_version_line_dual_lineage_2026_06_22 (idem — D13 / WS-L),
+    issues/version_line_autoresolve_pr_orphan_cleanup_2026_06_24 (the version-line autoresolve band-aid is obsoleted by
+    D13 / WS-L),
+  ]
 superseded_by: cicd_mvp_ldr_to_main_pipeline_2026_06_30.md
 depends_on:
-source: ['the 7 plans above (second-level consolidation; the first-level 2026-06-18 fold collapsed ~13 plans + 11 issues into 5 themed plans, most of which are now done)', parallel rationale-extraction sweep 2026-06-24 (slot-2) — open items + decision context harvested verbatim from each source]
+source:
+  [
+    "the 7 plans above (second-level consolidation; the first-level 2026-06-18 fold collapsed ~13 plans + 11 issues into
+    5 themed plans, most of which are now done)",
+    parallel rationale-extraction sweep 2026-06-24 (slot-2) — open items + decision context harvested verbatim from each
+    source,
+  ]
 assigned_role: infra
 drift_direction: advance-code
 ---
@@ -274,7 +304,7 @@ retarget / a WS-B promotion-correctness item), or **Opus burning on a Sonnet-bul
 SWITCHES** the model if the runtime permits a self-switch (e.g. `/model`), then proceeds on the correct tier; ELSE (b)
 **STOPS at the gate and signals the operator** to change the model before continuing. **NEVER cross a gate on a
 mismatched model.** This extends the workspace task-start self-check
-(`codex/06-coding-standards/model-tier-selection.md`) to a PER-GATE check, because this plan's phases deliberately span
+(`/codex/06-coding-standards/model-tier-selection.md`) to a PER-GATE check, because this plan's phases deliberately span
 tiers — so the correct model CHANGES between gates within a single execution, and an under-tier model on a
 high-blast-radius gate (or an over-tier model wasting cost on the bulk) must be corrected AT the gate.
 
@@ -899,8 +929,8 @@ Cure-B's in-place resolve.
 - [x] ✅ [SCRIPT] P3. Stale duplicate `scripts/propagation/templates/update-dependency-version.yml` — **ALREADY DONE
       (verified 2026-06-24 slot-2)**: the file is ABSENT (already deleted); no `scripts/propagation/templates/` consumer
       remains for it. Nothing to do. (dependency_promotion)
-- [x] ✅ [DOCS] P3. Stale codex value `codex/08-workflows/ci-cd-flow.md` drift-tick `*/20` — **ALREADY CORRECT (verified
-      2026-06-24 slot-2)**: the doc already says hourly (`0 * * * *`) at lines 504-505 ("relaxed from `*/20`
+- [x] ✅ [DOCS] P3. Stale codex value `/codex/08-workflows/ci-cd-flow.md` drift-tick `*/20` — **ALREADY CORRECT
+      (verified 2026-06-24 slot-2)**: the doc already says hourly (`0 * * * *`) at lines 504-505 ("relaxed from `*/20`
       2026-06-11"); no line asserts the drift-tick IS `*/20`. The `:460` reference was stale. Nothing to do.
       (dependency_promotion)
 
@@ -1476,7 +1506,7 @@ Cure-B's in-place resolve.
 - [ ] [CICD] P2. deployment-service CodeBuild BUILD exit 127 (uv/image not found) — live infra red, non-blocking
       (CodeBuild not a required v2 check); needs CodeBuild image rebase. (quality_gates)
 - [x] ✅ [DOCS] P2. Migrate `docs/repo-management/CI-CD-FLOW.md`'s unique bootstrap/venv/dep-alignment/mock-infra
-      content → `codex/05-infrastructure/workspace-setup.md` (correct stale sync-to-main/force-push/three-tier bits to
+      content → `/codex/05-infrastructure/workspace-setup.md` (correct stale sync-to-main/force-push/three-tier bits to
       as-built LDR-trunk), then delete the stale doc (already bannered NOT-the-SSOT). (quality_gates) —
       unified-trading-pm@77328998c
 - [x] ✅ [SCRIPT] P3. Remove now-redundant local PYSEC-2024-277/2025-183/2026-161 entries from: alerting-service,
@@ -1493,8 +1523,8 @@ Cure-B's in-place resolve.
 - [ ] [DESIGN] P3. LATER — crons self-pull from a QG-v2-gated ref (successor hardening; the bare FF-pull is safe today).
       (quality_gates ▸ qg_commit)
 - [x] ✅ [DOCS] P3. Repoint the ~18 residual references off the 4 retired CI/CD docs →
-      `codex/08-workflows/ci-cd-flow.md` (cursor rules + infra docs + scripts; drop dead `§7`/`§2` anchors). Cleanliness
-      — stubs already self-redirect. (quality_gates) — unified-trading-pm@fbda58ef4
+      `/codex/08-workflows/ci-cd-flow.md` (cursor rules + infra docs + scripts; drop dead `§7`/`§2` anchors).
+      Cleanliness — stubs already self-redirect. (quality_gates) — unified-trading-pm@fbda58ef4
 - [ ] [DOCS] P3. Physical archive-move of the 7 superseded source plans
       (`cicd_promotion_pipeline`/`cicd_quality_gates`/`cicd_release_machinery`/`cicd_sit_and_fleet`/`cicd_docs_and_consolidation`/`dependency_promotion_range_pins_and_major_bump_sit`/`issues/staging_to_main_promotion_starvation`)
       → `plans/archive/2026_06/`. Status flipped active→superseded + banners present (slot-2 2026-06-25, PM@a237bff34) —
@@ -1787,10 +1817,10 @@ Cure-B's in-place resolve.
       `test_auth_s2s_and_timeline_builder.py` patches the local `_get_service_auth_token` & asserts 403s without
       mock-mode) **+ deployment-api** (operator-decision; pinged Ikenna 2026-06-24, recommend leave-as-is).
       (promotion_pipeline ▸ contract_hardening #3)
-- [x] ✅ [DOCS] P3. DONE 2026-06-25 (slot-2) — `codex/07-security/service-to-service-auth.md` updated: the **UTL factory
-      `create_s2s_auth_dependency(service_name)`** is now declared the canonical receiver implementation (verified
-      against UTL source — import path, ~5-line binding, mock-mode bypass, 403-on-mismatch, `S2S_AUTH_FAILURE` event,
-      non-optional `Request` for fastapi≥0.136); the hand-rolled per-service `verify_service_token` is marked the
+- [x] ✅ [DOCS] P3. DONE 2026-06-25 (slot-2) — `/codex/07-security/service-to-service-auth.md` updated: the **UTL
+      factory `create_s2s_auth_dependency(service_name)`** is now declared the canonical receiver implementation
+      (verified against UTL source — import path, ~5-line binding, mock-mode bypass, 403-on-mismatch, `S2S_AUTH_FAILURE`
+      event, non-optional `Request` for fastapi≥0.136); the hand-rolled per-service `verify_service_token` is marked the
       **retiring anti-pattern**; the enrolled-services table reflects the 17-already-migrated reality + the 3 remaining
       (strategy=done, execution=pending, deployment-api=operator-decision); cross-refs repointed at the factory.
       Prettier-clean. **unified-trading-pm@b63ec7d0a** → LDR. (quality_gates ▸ contract_hardening #3 follow-up)
@@ -1867,12 +1897,12 @@ remaining work, and are flipped in their source during supersession:
 
 ## Codex SSOT updates (on phase completion)
 
-- `codex/08-workflows/ci-cd-flow.md` — the engineer SSOT; update on every WS-A/B/C/D phase landing (esp. the
+- `/codex/08-workflows/ci-cd-flow.md` — the engineer SSOT; update on every WS-A/B/C/D phase landing (esp. the
   ci_status-Firestore one-liner + the `*/20`→hourly drift-tick fix in WS-C).
-- `codex/05-infrastructure/workspace-setup.md` — receives the migrated bootstrap/venv content (WS-D).
-- `codex/06-coding-standards/quality-gates.md` — config-SSOT + parity items (WS-D).
+- `/codex/05-infrastructure/workspace-setup.md` — receives the migrated bootstrap/venv content (WS-D).
+- `/codex/06-coding-standards/quality-gates.md` — config-SSOT + parity items (WS-D).
 - CLAUDE.md — one-liner when ci_status becomes Firestore-backed (WS-A Phase-4).
-- `codex/08-workflows/ci-cd-flow.md` + CLAUDE.md — on WS-L landing: `main` promotes DIRECTLY from `live-defi-rollout`
+- `/codex/08-workflows/ci-cd-flow.md` + CLAUDE.md — on WS-L landing: `main` promotes DIRECTLY from `live-defi-rollout`
   (Option-B fleet-wide; `staging` = SIT/v2 sandbox only, `staging→main` squash retired), and the version label is
   REGISTRY-resolved (git-tags canonical + Firestore mirror), not a `pyproject.toml` source line. Retire the
   conflict-fallback + auto-collapse SPEC docs once fleet-cut.

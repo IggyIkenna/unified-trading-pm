@@ -32,7 +32,7 @@ drift_direction: advance-code
 
 > **✅ ARCHIVED 2026-07-14 [unlock-plan] (operator ruling 2026-07-14, sports plan-set bulk archival).** All todos `[x]`
 > complete (0 open; audited complete 2026-07-13). The durable rule this plan pioneered is codified as the workspace-wide
-> "Backfill VMs default to SPOT" HARD RULE — SSOT `codex/05-infrastructure/spot-vms-for-backfill.md` (+ CLAUDE.md
+> "Backfill VMs default to SPOT" HARD RULE — SSOT `/codex/05-infrastructure/spot-vms-for-backfill.md` (+ CLAUDE.md
 > one-liner). No unmigrated durable contract found. Lock cleared per the ruling; historical/frozen.
 
 > **Coordinator**: `sports_pipeline_to_100pct_golden_window_first_2026_06_27.md` (Phase 0). Forces every sports VM the
@@ -60,10 +60,10 @@ a reclaimed VM relaunches and resumes where it left off. The one real risk is th
 
 ## Codex SSOTs
 
-- `codex/05-infrastructure/vm-tarball-deployment.md` — VM launcher conventions; `VM_PREFIX_TO_BUCKET` /
+- `/codex/05-infrastructure/vm-tarball-deployment.md` — VM launcher conventions; `VM_PREFIX_TO_BUCKET` /
   `lifecycle_class`
-- `codex/05-infrastructure/deployment-observability.md` — `DP_VM_GONE_NO_CAPTURE` / exit-code + heartbeat monitors (must
-  not false-fire on preemption)
+- `/codex/05-infrastructure/deployment-observability.md` — `DP_VM_GONE_NO_CAPTURE` / exit-code + heartbeat monitors
+  (must not false-fire on preemption)
 
 ## Todos
 
@@ -120,4 +120,4 @@ a reclaimed VM relaunches and resumes where it left off. The one real risk is th
 
 - `deployment-service/scripts/vm/launch-mtds-dex-pools-backfill-vm.sh` — the existing
   `--preemptible --no-restart-on-failure` pattern to mirror
-- `codex/05-infrastructure/deployment-observability.md` — the monitor contract this must not regress
+- `/codex/05-infrastructure/deployment-observability.md` — the monitor contract this must not regress

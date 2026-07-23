@@ -47,17 +47,17 @@ drift_direction: correct-codex
 > agent-orchestrator (`planning` VM). One agent, one craft (`data_engineering`), Sonnet/high.
 > `drift_direction: correct-codex` — this plan fixes stale docs/plans TOWARD the canonical v10 scope.
 >
-> **Canonical MVP SSOT (the ONLY scope authority):** `mvp_scope.py` v10 + `codex/02-data/mvp-scope-canonical.md`. Per
+> **Canonical MVP SSOT (the ONLY scope authority):** `mvp_scope.py` v10 + `/codex/02-data/mvp-scope-canonical.md`. Per
 > the workspace HARD RULE the SSOT is a codex doc / code, NEVER a plan. **Direction of reconciliation: where any
 > existing active plan's MVP/scope CONFLICTS with v10, fix the PLAN to v10 — never the reverse.** This plan is the
 > single place that enumerates + closes every such conflict so background agents cannot follow a stale definition.
 
 ## Codex SSOTs (READ before executing)
 
-- `codex/02-data/mvp-scope-canonical.md` (v10) — the authority everything reconciles to.
-- `codex/05-infrastructure/manifest-consolidator-ssot.md` — MANIFEST_ALLOW_STALE_FALLBACK escape-hatch contract.
-- `codex/02-data/honest-absence-downstream-handling.md` — HL/ASTER + DERIBIT-COMBO honest-absence; reason taxonomy.
-- `codex/02-data/mvp-scope-canonical.md` § Prediction — Kalshi IN MVP; data_types trades / cqg / market_lifecycle.
+- `/codex/02-data/mvp-scope-canonical.md` (v10) — the authority everything reconciles to.
+- `/codex/05-infrastructure/manifest-consolidator-ssot.md` — MANIFEST_ALLOW_STALE_FALLBACK escape-hatch contract.
+- `/codex/02-data/honest-absence-downstream-handling.md` — HL/ASTER + DERIBIT-COMBO honest-absence; reason taxonomy.
+- `/codex/02-data/mvp-scope-canonical.md` § Prediction — Kalshi IN MVP; data_types trades / cqg / market_lifecycle.
 - `plans/PLAN_FORMAT.md` — Archive Criteria gate table + Plan Locking mechanics (NOT the 5-step archival ritual sequence
   itself); `plans/epics/README.md` — epic-reorg "Migration discipline" (a distinct 6-step list for reorganising epics,
   not plan archival). The 5-step ritual (migrate DEFERRED → banner → codex-alignment check → update CLAUDE.md/codex →
@@ -143,8 +143,8 @@ drift_direction: correct-codex
       N/A (decision) / SPOT if a new backfill launcher is built+run.
 - [x] ✅ [SCRIPT] P1. HL/ASTER honest-absence docs confirmed current vs v10. Repos: `unified-trading-pm` (codex),
       cross-check `market-tick-data-service`. **Context:** already shipped + documented —
-      `codex/02-data/mvp-scope-canonical.md` L36 (deferred-no-source) +
-      `codex/02-data/honest-absence-downstream-handling.md` L613 + issue doc
+      `/codex/02-data/mvp-scope-canonical.md` L36 (deferred-no-source) +
+      `/codex/02-data/honest-absence-downstream-handling.md` L613 + issue doc
       `plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md` (HL trades pre-2025-03-22 →
       `EXPECTED_PRE_SOURCE_COVERAGE_START`; ASTER book5+liquidations → `EXPECTED_SOURCE_DOES_NOT_OFFER_DATA_TYPE`;
       manifest purge of 48,701 stale cells DONE). **Action:** verify the manifest still shows HL/liquidations=0,
@@ -167,8 +167,8 @@ drift_direction: correct-codex
       `bash scripts/plan-hygiene/run_hygiene_sweep.sh --ci` (frontmatter / todo-format / runbook / orphan-count=0) and
       `python3 scripts/plans/regenerate_active_plan_inventory.py`; confirm the 4 new v10 plans + this plan resolve
       `assigned_vm: planning` in `orchestrator_vm_registry.yaml` and are ingested (`status: active`, not draft). Update
-      `codex/02-data/mvp-scope-canonical.md` `last_reviewed` only if a contract changed. **Gate:** hygiene sweep PASS (0
-      orphans, 0 hard failures); inventory regenerated; codex↔plan drift = 0. SPOT N/A.
+      `/codex/02-data/mvp-scope-canonical.md` `last_reviewed` only if a contract changed. **Gate:** hygiene sweep PASS
+      (0 orphans, 0 hard failures); inventory regenerated; codex↔plan drift = 0. SPOT N/A.
 
 ---
 
@@ -302,8 +302,8 @@ plan + code shipped."
 - All 5 v10 plans (`mvp_catalogue_finalization`, `mvp_backfill_tradfi_ohlcv1m`, `mvp_backfill_cefi_tick`,
   `mvp_backfill_defi_onchain`, `mvp_reconciliation_closeout`) confirmed `status: active` + `assigned_vm: planning`.
 - All 4 v10 backfill+catalogue plans confirmed ingested in orchestrator backlog (`/api/backlog` shows tasks from each).
-- `codex/02-data/mvp-scope-canonical.md` `last_reviewed: 2026-06-27` — already current; no contract change in this phase
-  (G1.2 code change is instruments-service internal; scope definition unchanged). No update needed.
+- `/codex/02-data/mvp-scope-canonical.md` `last_reviewed: 2026-06-27` — already current; no contract change in this
+  phase (G1.2 code change is instruments-service internal; scope definition unchanged). No update needed.
 - Codex↔plan drift = 0.
 
 No code change required. Plan checkbox flipped.
@@ -354,9 +354,9 @@ Checkbox flipped (gate: 0 plans archived, 0 open non-superseded todos archived).
 **Gate met — codex matches code; manifest re-verified live:**
 
 - **Codex docs accurate:**
-  - `codex/02-data/mvp-scope-canonical.md` L36: HL trades pre-2025-03-22 → `EXPECTED_PRE_SOURCE_COVERAGE_START`; ASTER
+  - `/codex/02-data/mvp-scope-canonical.md` L36: HL trades pre-2025-03-22 → `EXPECTED_PRE_SOURCE_COVERAGE_START`; ASTER
     `book_snapshot_5` + `liquidations` → LIVE-ONLY (no historical endpoint).
-  - `codex/02-data/honest-absence-downstream-handling.md` L613: ASTER `book_snapshot_5` + HL `liquidations` →
+  - `/codex/02-data/honest-absence-downstream-handling.md` L613: ASTER `book_snapshot_5` + HL `liquidations` →
     `EXPECTED_SOURCE_DOES_NOT_OFFER_DATA_TYPE`.
 - **Live manifest re-verified (2026-06-28):** Read
   `market-data-tick-cefi-prd-central-element-323112/_index/availability_index.parquet` (5,036,781 rows). Filtered for:

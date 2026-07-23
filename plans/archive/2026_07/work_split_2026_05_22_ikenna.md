@@ -13,17 +13,17 @@ scope: [engineer, admin]
 tags: [work-split, autonomous, ikenna, orchestration, session-plan]
 related:
   [
-    aws_cloud_toggle_and_backfill_parity_2026_05_22.md,
-    aws_migration_defi_first_2026_05_07.md,
+    /plans/archive/2026_05/aws_cloud_toggle_and_backfill_parity_2026_05_22.md,
+    /plans/archive/2026_05/aws_migration_defi_first_2026_05_07.md,
     instruments_backfill_phase3_2026_05_22.md,
     mtds_backfill_phase3_2026_05_22.md,
     mdps_backfill_phase3_2026_05_22.md,
-    features_backfill_phase3_2026_05_22.md,
-    strategy_execution_contract_remediation_2026_05_20.md,
-    batch_live_symmetry_2026_05_10.md,
-    promote_workflow_may23_cli_path_2026_05_10.md,
-    cme_polymarket_arb_2026_05_08.md,
-    config_grid_archetype_extend_2026_05_20.md,
+    /plans/archive/2026_05/features_backfill_phase3_2026_05_22.md,
+    /plans/archive/2026_05/strategy_execution_contract_remediation_2026_05_20.md,
+    /plans/archive/2026_05/batch_live_symmetry_2026_05_10.md,
+    /plans/archive/2026_05/promote_workflow_may23_cli_path_2026_05_10.md,
+    /plans/archive/2026_05/cme_polymarket_arb_2026_05_08.md,
+    /plans/archive/2026_05/config_grid_archetype_extend_2026_05_20.md,
   ]
 created: 2026-05-22
 parent_epic: orchestrator_master
@@ -62,7 +62,7 @@ drift_direction: advance-code
 > [`kalshi_live_capture_regression_and_drift_2026_07_13.md`](../active/issues/kalshi_live_capture_regression_and_drift_2026_07_13.md)
 > (a live regression re-reintroducing the pre-migration Kalshi host into e2e-testing, plus possible stalled prediction
 > tick capture). No codex SSOT required updating — the single-VM pivot this doc's own 2026-07-12 annotation describes is
-> already codified in `codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`. Unlocked via operator
+> already codified in `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`. Unlocked via operator
 > grant 2026-07-13 (was `locked_by: live-defi-rollout`). Do not dispatch further work from this doc.
 
 # Ikenna work-split 2026-05-22 (8-hour autonomous run)
@@ -221,7 +221,7 @@ update `ALERT_THRESHOLDS` in UAC with quietness-VM baseline values (VM auto-shut
 
 > **[2026-07-12 annotation — finding 221, §A2 B-queue ruling]** The `vm-prediction` / `vm-cross-cutting` named-VM
 > dispatch model below is HISTORICAL. The single-VM pivot (2026-06-27, per
-> `codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`) retired the per-epic VM fleet; current
+> `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`) retired the per-epic VM fleet; current
 > dispatch is role-based via a plan's `assigned_role` frontmatter on the ONE central orchestrator VM (id `planning`, EIP
 > `13.113.200.22`). (Was: this section, unedited since 2026-05-22, prescribes spawning main-orchestrators onto named
 > `vm-prediction`/`vm-cross-cutting` VMs — do not action that framing today; this plan's OWN frontmatter already carries

@@ -15,9 +15,9 @@ scope: [engineer]
 tags: [billing, cost, observability, bigquery, athena, cur, deployment-ui, cockpit]
 related:
   [
-    billing-cost-observability.md,
-    cost_obs_backend_sku_usage_enrichment_2026_07_08.md,
-    cost_obs_ui_unified_breakdown_2026_07_08.md,
+    /codex/05-infrastructure/billing-cost-observability.md,
+    /plans/archive/2026_07/cost_obs_backend_sku_usage_enrichment_2026_07_08.md,
+    /plans/archive/2026_07/cost_obs_ui_unified_breakdown_2026_07_08.md,
   ]
 created: "2026-07-08"
 last_updated: "2026-07-09"
@@ -125,10 +125,10 @@ business-context fast-follow (asset_group via labels/tags), deliberately out of 
 
 ## Codex SSOTs (read before touching the relevant task — plan references, does not duplicate)
 
-- `codex/05-infrastructure/billing-cost-observability.md` — GCP BQ export + AWS CUR/Athena backends, table names,
+- `/codex/05-infrastructure/billing-cost-observability.md` — GCP BQ export + AWS CUR/Athena backends, table names,
   workgroup, and the read-only IAM grants. **Authoritative for the backends.** Post-Phase-C audit updates it with the UI
   consumer + endpoint contract.
-- `codex/06-coding-standards/ui-testing-layers.md` — the Playwright L2 gate (no `[UI]` tick without `pw:L2 ✓` + a cited
+- `/codex/06-coding-standards/ui-testing-layers.md` — the Playwright L2 gate (no `[UI]` tick without `pw:L2 ✓` + a cited
   regression spec).
 - `codex/06-coding-standards/` — no raw `boto3` / `google.cloud` (use UTL wrappers), no `os.getenv`, UTC datetimes.
 
@@ -230,21 +230,25 @@ on the resource table + the running backend endpoints (last-30d window).
 
 - [x] ✅ [BACKEND+UI] P1. **GCP showed GROSS, not NET of credits — FIXED.** `credit` was fetched into `CostRecord`
       (`providers.py:96`) but **never read** — every aggregation summed `r.cost`. Live proof (resource table, last 30d):
-      gross **$15,134.51** − credits **$2,541.19** = net **$12,593.32** → page had **overstated GCP ~17%**; credits are
-      mostly **active PROMOTION** (−$2,487/30d), so the codex "promo exhausted ~2026-06-20" note was stale. Fix:
-      `_net(r)=cost+credit` summed across summary / breakdown / timeseries; `SummaryResponse`+`CloudSummary` expose
-      `gross`+`credit`; the KPI band leads with net + a "(gross − credits)" derivation (GCP tiles + grand; AWS/GitHub
-      have none). Corrected the codex note. **deployment-api@`f10b0914`** + **deployment-ui@`0f653068`** — both full QGs
-      green (backend pytest incl. a credit-netting test; vitest 911 + a pw:L2 derivation regression); live `:5183` net
+      gross **$15,134.51** − credits **$2,541.19** = net
+      **$12,593.32** → page had **overstated GCP ~17%**; credits are
+      mostly **active PROMOTION** (−$2,487/30d), so
+      the codex "promo exhausted ~2026-06-20" note was stale. Fix: `_net(r)=cost+credit` summed across summary /
+      breakdown / timeseries; `SummaryResponse`+`CloudSummary` expose `gross`+`credit`; the KPI band leads with net + a
+      "(gross − credits)" derivation (GCP tiles + grand; AWS/GitHub have none). Corrected the codex note.
+      **deployment-api@`f10b0914`** + **deployment-ui@`0f653068`** — both full QGs green (backend pytest incl. a
+      credit-netting test; vitest 911 + a pw:L2 derivation regression); live `:5183` net
       **$12,593.31** reconciles to the bq probe **$12,593.32**.
 - [x] ✅ [BACKEND] P2. **AWS shows unblended usage-only, not net / not invoice-total.** _(SHIPPED →
       **deployment-api@`f914cc4`** — AWS now reports net-of-credits with Tax/Fee/Credit line-items. NB the earlier
       `301ccfc` net_unblended_cost + invoice-reconciliation attempt was **REVERTED** — that column is absent from this
       CUR's crawler schema and silently zeroed the AWS tab; `f914cc4` is the live fix)_ `aws_facts_sql` sums
       `line_item_unblended_cost` and filters `line_item_type IN ('Usage','DiscountedUsage')` — excludes Tax / Credit /
-      Fee / RIFee / SavingsPlan\* and ignores `line_item_net_unblended_cost`. So the AWS total (~$213/30d) is usage
+      Fee / RIFee / SavingsPlan\* and ignores `line_item_net_unblended_cost`. So the AWS total
+      (~$213/30d) is usage
       spend, not the AWS invoice. Decide net-of-discounts (`net_unblended_cost`) + a tax/fee line so it reconciles; at
-      minimum label it "usage spend". (AWS is ~1.4% of total, so lower $ impact than the GCP item.)
+      minimum label it "usage spend". (AWS is ~1.4% of total, so lower $
+      impact than the GCP item.)
 - ➡️ **Migrated 2026-07-10 → issues/cost_observability_deferred_followups_2026_07_10.md** — [BACKEND] P3. **Provisional
   flag is trailing-2-days for BOTH clouds**, but AWS re-trues the whole current month (6th–7th). Early-current-month AWS
   days render as final though they aren't — make the AWS cutoff month-aware.
@@ -292,16 +296,22 @@ CUR (2026-07-09). Operator decisions captured inline.
       frontend `usd()` hardcodes `$`, so every GCP figure is a **pound value wearing a dollar sign** (the "GCP
       $12,593/30d" is really £12,593). Proven 3 independent ways: (a) `currency='GBP'`, zero USD rows; (b)
       `currency_conversion_rate` = **0.7413–0.756** (≠ 1.0 ⇒ non-USD account); (c) currency-blind — Coldline Iowa unit
-      cost £0.002956 vs GCP's public USD list $0.004 = ratio 0.739, matching the rate column. AWS is USD
-      (`line_item_currency_code=USD`; 157 CUR columns, **none** a conversion rate), so today's cross-cloud grand total
-      **sums GBP + USD under one `$`** = invalid. **FIX — convert GCP→USD at query time using GCP's OWN embedded per-day     rate (no external FX feed):** in `gcp_facts_sql`, `cost`→`SUM(SAFE_DIVIDE(cost,
-      currency_conversion_rate))`and     the credit line divides the`UNNEST(credits)`sum by the same outer-row`currency_conversion_rate`; usage amounts     untouched; AWS/GitHub paths unchanged. Verified: Jul3–9 gross £2,708.12 → **$3,581.93** (rate 0.756), flows     per-service (Cloud Run £1,264.84→$1,672.96). Whole page becomes genuinely USD → the `$`label +`usd()`become     correct and the cross-cloud total valid. Add a unit test asserting the`/rate`split; update    `codex/05-infrastructure/billing-cost-observability.md`
-      (GCP GBP-native, USD at query time). NB reports the **USD list-equivalent** (comparable to AWS), NOT the GBP
-      invoice cash figure.
-      - ✅ **2026-07-10 — deployment-api@`782c988`.** `gcp_facts_sql` now divides both `cost` and each row's credit sum
-        by `IFNULL(NULLIF(currency_conversion_rate, 0), 1)` (per-source-row, guarded no-op for a USD account); usage
-        untouched. Verified vs live BQ for the current window to the penny: backend GCP gross **$2,978.18** =
-        `SUM(cost/rate)`, credit **−$1,719.36**, net **$1,258.82** (usd_per_gbp = 1.3227). Unit test
+      cost £0.002956 vs GCP's public USD list $0.004
+      = ratio 0.739, matching the rate column. AWS is USD (`line_item_currency_code=USD`; 157 CUR columns, **none** a
+      conversion rate), so today's cross-cloud grand total **sums GBP + USD under one `$`** = invalid. **FIX — convert
+      GCP→USD at query time using GCP's OWN embedded per-day rate (no external FX feed):** in `gcp_facts_sql`,
+      `cost`→`SUM(SAFE_DIVIDE(cost,     currency_conversion_rate))`and the credit line divides the`UNNEST(credits)`sum
+      by the same outer-row`currency_conversion_rate`; usage amounts untouched; AWS/GitHub paths unchanged. Verified:
+      Jul3–9 gross £2,708.12 → **$3,581.93** (rate 0.756), flows     per-service (Cloud Run £1,264.84→$1,672.96). Whole
+      page becomes genuinely USD → the `$`label +`usd()`become correct and the cross-cloud total valid. Add a unit test
+      asserting the`/rate`split; update `/codex/05-infrastructure/billing-cost-observability.md` (GCP GBP-native, USD at
+      query time). NB reports the **USD list-equivalent** (comparable to AWS), NOT the GBP invoice cash figure. - ✅
+      **2026-07-10 — deployment-api@`782c988`.** `gcp_facts_sql` now divides both `cost` and each row's credit sum by
+      `IFNULL(NULLIF(currency_conversion_rate, 0), 1)` (per-source-row, guarded no-op for a USD account); usage
+      untouched. Verified vs live BQ for the current window to the penny: backend GCP gross
+      **$2,978.18** =
+        `SUM(cost/rate)`, credit **−$1,719.36**, net
+      **$1,258.82** (usd_per_gbp = 1.3227). Unit test
         `test_gcp_facts_sql_converts_gbp_to_usd_via_conversion_rate` added; 52/52 cost-obs tests + full backend QG green.
         Codex `billing-cost-observability.md` updated (Currency bullet). No UI change needed — the existing `usd()`/`$`
       is now correct. GBP tally view is the next todo (P2).
@@ -323,13 +333,14 @@ CUR (2026-07-09). Operator decisions captured inline.
       UI QG green. Codex `billing-cost-observability.md` Currency bullet updated.
 - ➡️ **Migrated 2026-07-10 → issues/cost_observability_deferred_followups_2026_07_10.md** — [BACKEND/INFRA] P2. **AWS
   Athena holds July-2026 only — investigate a CUR historical backfill.** Per-month probe:
-  `aws_billing.cur_uts_cost_usage` contains ONLY `2026-07` (gross $792.89) — the CUR delivery started in July, so
+  `aws_billing.cur_uts_cost_usage` contains ONLY `2026-07` (gross
+  $792.89) — the CUR delivery started in July, so
   `/ops/costs` structurally cannot show any pre-July AWS spend. The operator's AWS CSV is Jan–Jun (Cost Explorer, ~14mo
-  retention; $8,584 gross), **zero temporal overlap** with the CUR. Also: AWS is **fully credited** — every July day
-  gross≈−credit → **net $0** (~$98/day gross visible). **Investigate** a backfill: CUR "include historical data" on
-  report re-creation, or a one-off Cost Explorer `GetCostAndUsage` import into a side table. If feasible → backfill
-  full-year AWS history; else document the AWS tab as **July-2026-onward** (operator: acceptable). Not a code bug — a
-  data-source coverage gap.
+  retention; $8,584
+  gross), **zero temporal overlap** with the CUR. Also: AWS is **fully credited** — every July day gross≈−credit → **net
+  $0** (~$98/day gross visible). **Investigate** a backfill: CUR "include historical data" on report re-creation, or a
+  one-off Cost Explorer `GetCostAndUsage` import into a side table. If feasible → backfill full-year AWS history; else
+  document the AWS tab as **July-2026-onward** (operator: acceptable). Not a code bug — a data-source coverage gap.
 - [x] ✅ [UI] P3. **Top-of-page tooltip: GCP console = Pacific day boundary, export = UTC.** Not a bug — it's why a
       console CSV won't tie to the penny. Same Jul3–9 window/currency: console gross £2,509.38 vs export(UTC) £2,708.12;
       re-windowing the export on Pacific midnight (07:00 UTC) → £2,549.07, within £40 (1.6%) of console (residual =
@@ -376,8 +387,8 @@ the earlier Tier-1 selector / Tier-2 multi-source-config / AWS cost-allocation-t
 or in the near future). The current shared-account tenant split (Odum vs the account owner in `427895769566`) is moot —
 Odum migrates to its own fresh accounts rather than splitting the legacy one.
 
-**Codex SSOTs:** `codex/05-infrastructure/billing-cost-observability.md` (exports + GitHub provider contract — update
-when the real provider lands), `codex/06-coding-standards/ui-testing-layers.md` (Playwright L2 gate),
+**Codex SSOTs:** `/codex/05-infrastructure/billing-cost-observability.md` (exports + GitHub provider contract — update
+when the real provider lands), `/codex/06-coding-standards/ui-testing-layers.md` (Playwright L2 gate),
 `codex/06-coding-standards/` (no `os.getenv` — GitHub token via config).
 
 ## Resource-detail enrichment + unified breakdown (operator-requested 2026-07-08)
@@ -415,20 +426,23 @@ not sourced elsewhere.** Confirm exact field/label names at implementation time 
       VM from the billing `system_labels` (`compute.googleapis.com/machine_spec`, + `cores` / `memory`) — no Compute
       API. Plus the **cost-waste the operator actually wants** (their case: a static IP billed unused for ~4 months):
       **idle static-IP cost** — the `Static Ip Charge` SKU is a reserved IP billed while NOT attached (distinct from
-      `External IP Charge on a Standard VM` = in-use), keyed by `resource.name` (verified live: `harsh-static-ip` $5.95,
-      `deployment-dashboard-ip` $3.35, `grafana` $2.24 …); and **orphaned-disk cost** — `… PD Capacity` SKUs keyed by
+      `External IP Charge on a Standard VM` = in-use), keyed by `resource.name` (verified live: `harsh-static-ip`
+      $5.95,
+      `deployment-dashboard-ip` $3.35, `grafana`
+      $2.24 …); and **orphaned-disk cost** — `… PD Capacity` SKUs keyed by
       disk `resource.name`, flag disks with no matching running VM (verified: `ikenna-windows-tokyo-restored` SSD
-      **$68.62/30d**). AWS analog = idle Elastic-IP + unattached-EBS usage-types in the CUR. **All billing-native.**
-      (Dropped, per operator: the live IP _address_ / current disk from the Compute API — they want the _cost of idle
-      resources_, not network config, and not running-VM detail.)
+      **$68.62/30d**).
+      AWS analog = idle Elastic-IP + unattached-EBS usage-types in the CUR. **All billing-native.** (Dropped, per
+      operator: the live IP _address_ / current disk from the Compute API — they want the _cost of idle resources_, not
+      network config, and not running-VM detail.)
 - [x] ✅ [UI] P3. **Dimension-aware columns + leaf tables.** _(SHIPPED → UI@88c4b70)_ Merged table = label · [bar+cost]
       · net (· gross · credit) · share by default; add bucket columns when `dimension=bucket` / VM columns when
       `dimension=resource` (vm rows). Apply the same detail columns to the `LeafPanel` "Top compute instances" / "Top
       storage buckets" tables (their natural home too). Detail columns scroll horizontally on narrow widths. `[UI]`
       gate: `pw:L2` + a cited spec.
 
-**Codex SSOTs:** `codex/05-infrastructure/billing-cost-observability.md` (exports + net/gross/credit contract),
-`codex/06-coding-standards/ui-testing-layers.md` (Playwright L2 gate).
+**Codex SSOTs:** `/codex/05-infrastructure/billing-cost-observability.md` (exports + net/gross/credit contract),
+`/codex/06-coding-standards/ui-testing-layers.md` (Playwright L2 gate).
 
 ### Breakdown UX: By-label dimension, per-tab filter, pagination & resizable table (2026-07-10 — operator)
 
@@ -460,8 +474,8 @@ switching dimensions + sorting all derive from that cache — a "Refresh" is the
 coverage — only if the By-label view proves valuable. Probe: labels already in the export (`purpose` 56k rows, `venue`
 23k, `managed-by` 19k, `category`), but `asset_group` is ~unpopulated.
 
-**Codex SSOTs:** `codex/05-infrastructure/billing-cost-observability.md`,
-`codex/06-coding-standards/ui-testing-layers.md`.
+**Codex SSOTs:** `/codex/05-infrastructure/billing-cost-observability.md`,
+`/codex/06-coding-standards/ui-testing-layers.md`.
 
 ## Progress Log
 
@@ -502,16 +516,12 @@ _(Session findings go here — agent memory writes are BANNED. Append dated note
 - 2026-07-08 — **UI redesign to mockup fidelity (follow-up).** Operator feedback on the first pass: "nowhere close to
   the mock in terms of UI." Rebuilt `pages/CostObservability.tsx` on the real deployment-ui tokens to match the
   reference mockup — non-sticky page header (gradient icon tile + `/ops/costs` subtitle; no duplicate site-chrome or
-  theme-toggle since the app `<Header/>` owns those), corner-sparkline KPI cards (**anchored to a $0 baseline** so a
+  theme-toggle since the app `<Header/>` owns those), corner-sparkline KPI cards (**anchored to a
+  $0 baseline** so a
   near-flat series like GitHub reads flat instead of a full-height zig-zag), a **custom SVG** stacked-area (gridded,
   crisp via `ResizeObserver`, crosshair + per-cloud+total tooltip, faint amber **provisional band** over the trailing
-  unreconciled day so today's not-yet-reported `$0` reads as "pending", not "crashed") + custom SVG donut, tighter
-  `Panel` density, refined bars + sortable tables, a two-column GitHub placeholder, and a source-attribution footer
-  (BigQuery / Athena table names + last-updated). **recharts dropped on this page** (chart-theme.ts stays for other
-  pages). Every `data-testid` + button label preserved, so vitest + Playwright stayed green with only the recharts mock
-  removed. **deployment-ui@`8a56b6b`** — tsc + ESLint + vitest 4/4 + Playwright L2 4/4 + full UI QG green; re-verified
-  on `:5183` in **both themes** (0 console errors; real total `$15,367.85`). Mockup HTML kept untracked — delete once
-  the page fully supersedes it.
+  unreconciled day so today's not-yet-reported `$0`reads as "pending", not "crashed") + custom SVG donut, tighter`Panel`density, refined bars + sortable tables, a two-column GitHub placeholder, and a source-attribution footer (BigQuery / Athena table names + last-updated). **recharts dropped on this page** (chart-theme.ts stays for other pages). Every`data-testid` + button label preserved, so vitest + Playwright stayed green with only the recharts mock removed. **deployment-ui@`8a56b6b`** — tsc + ESLint + vitest 4/4 + Playwright L2 4/4 + full UI QG green; re-verified on `:5183`in **both themes** (0 console errors; real total`$15,367.85`).
+  Mockup HTML kept untracked — delete once the page fully supersedes it.
 - 2026-07-08 — **Segmented-control boundaries (operator feedback).** "7d/30d/90d buttons are not separated properly … no
   clear boundaries." The shared `Segmented` (range / cloud-filter / breakdown-dimension) now renders a bordered
   container with **`border-emphasis` dividers between every cell** + a filled active cell, so options read as distinct
@@ -586,14 +596,14 @@ _(Session findings go here — agent memory writes are BANNED. Append dated note
 - 2026-07-08 — **NET-of-credits (audit finding P1) — the page was overstating GCP spend ~17%.** Operator: "add this so
   we have the actual cost we have to pay, but show all 3 — actual $ then in bracket (gross − credit)." Root cause (from
   the data-fidelity audit): `CostRecord.credit` was fetched but **never read**, so every view summed pre-credit gross.
-  - **Backend (`deployment-api@`f10b0914`):** `_net(r)=cost+credit` now summed across summary / breakdown / timeseries
-    (net is canonical everywhere, so trend / donut / tables all reconcile to the headline); `SummaryResponse` +
-    `CloudSummary` gained `gross` + `credit`. GCP populates credit; AWS/GitHub carry 0 (net==gross). New pytest asserts
-    net = gross + credit end-to-end. Existing tests unaffected (their fixtures have credit 0).
-  - **Frontend (`deployment-ui@`0f653068`):** KPI band leads with **net** (what you pay) and, when credits apply, shows
-    the derivation **"(gross − credits)"** — grand total + GCP tiles; AWS/GitHub (no credits) render no line. Credits in
-    green. `deploymentApi.ts` types + the frontend mock (GCP ~20% promo credit) updated; vitest + a **pw:L2** regression
-    assert the split renders (and is absent without credits).
+  - **Backend
+    (`deployment-api@`f10b0914`):** `_net(r)=cost+credit`now summed across summary / breakdown / timeseries (net is canonical everywhere, so trend / donut / tables all reconcile to the headline);`SummaryResponse`+`CloudSummary`gained`gross`+`credit`.
+    GCP populates credit; AWS/GitHub carry 0 (net==gross). New pytest asserts net = gross + credit end-to-end. Existing
+    tests unaffected (their fixtures have credit 0).
+  - **Frontend
+    (`deployment-ui@`0f653068`):** KPI band leads with **net** (what you pay) and, when credits apply, shows the derivation **"(gross − credits)"** — grand total + GCP tiles; AWS/GitHub (no credits) render no line. Credits in green. `deploymentApi.ts`
+    types + the frontend mock (GCP ~20% promo credit) updated; vitest + a **pw:L2** regression assert the split renders
+    (and is absent without credits).
   - **Verify:** both full QGs green (backend 71s; UI tsc+ESLint+vitest 911+build); Playwright cost smoke **6/6**. Live
     `:5183` net **$12,593.31** matches the bq probe **$12,593.32** (1-cent rounding) — the fix is correct against the
     source. Corrected the codex's stale "promo exhausted ~2026-06-20" note (promo is **active**, ~$2.5k/30d). The other
@@ -633,14 +643,15 @@ _(Session findings go here — agent memory writes are BANNED. Append dated note
     (Usage/DiscountedUsage/Tax/Fee) + credit (`Credit` line-items) via conditional aggregation and `aws_facts` populates
     `CostRecord.credit`.
   - **Bug 2 — unified-trading-library@`999383e`:** `AWSAnalyticsClient.execute_query` fetched only the first Athena
-    `GetQueryResults` page (no `NextToken`) → truncated at ~1000 rows; the new usage_type+zone columns pushed the query
-    to 4266 groups → 999 returned (~$48 of ~$752). Now paginates via `paginate_athena_result_rows` (extracted to
+    `GetQueryResults` page (no `NextToken`) → truncated at ~~1000 rows; the new usage_type+zone columns pushed the query
+    to 4266 groups → 999 returned (~~$48 of ~$752). Now paginates via `paginate_athena_result_rows` (extracted to
     `_aws_sdk_protocols.py` to keep `aws.py` <900L, per that module's role). Unit test covers 2-page accumulation + the
     `NextToken` pass-through.
-  - **Verify:** backend QG + full UTL QG green; live via the real service path (paginated): AWS **net $0.00 / gross
-    $752.29 / credit -$752.29**. AWS now reads **$0 net** WITH the ($752.29 gross − $752.29 credits) split — honest
-    "fully credited", plus a heads-up that the real AWS bill lands when those credits run out. Corrected the AWS-net
-    task's stale `net_unblended_cost` premise.
+  - **Verify:** backend QG + full UTL QG green; live via the real service path (paginated): AWS **net
+    $0.00 / gross
+    $752.29 / credit -$752.29**. AWS now reads **$0 net** WITH the ($752.29 gross − $752.29 credits)
+    split — honest "fully credited", plus a heads-up that the real AWS bill lands when those credits run out. Corrected
+    the AWS-net task's stale `net_unblended_cost` premise.
   - **Note (pre-existing, FLAGGED not fixed):** `test_event_sink_factory::TestGcpEventSink` is order-fragile under
     pytest-xdist — a stale `GCP_PROJECT_ID=test-project` leaks through a cache `clear_client_caches()` misses, so it
     intermittently reads the wrong project. Surfaced (not caused) by the extra AWS test shifting the xdist distribution;
@@ -697,13 +708,14 @@ _(Session findings go here — agent memory writes are BANNED. Append dated note
 - 2026-07-10 — **GitHub real billing is LIVE (token landed, verified end-to-end).** Operator (Ikenna) minted the
   Plan-scoped fine-grained PAT (Account → Plan → Read-only, owner `IggyIkenna`), stored it as Secret Manager
   `github-billing-token` in `central-element-323112` and granted read to `github-token-sa`. Pointed the config default
-  at that secret; live-verified the whole path: `github_facts` now returns **real** usage — 30d **gross $1,415.98,
-  credit −$98.29, net $1,317.69** (GitHub Actions, 832 paid line items across the repos, `placeholder=False`, HTTP 200
-  on both month queries). The live response confirmed the field names + `net=cost+credit` mapping; prettified lowercase
-  products (`actions`→`Actions`); RFC3339 `date`→day. UI dummy-note + source-footer now gate on `is_placeholder`
-  (mock/pw stays dummy → 16/16 green; real data shows a "Live" note + "GitHub — Enhanced Billing" footer). Shipped
-  deployment-api@`c4549daa` + deployment-ui@`89d5b276`; both full QGs green. **Only AWS CUR backfill go/no-go remains
-  open on this plan.**
+  at that secret; live-verified the whole path: `github_facts` now returns **real** usage — 30d **gross
+  $1,415.98,
+  credit −$98.29, net $1,317.69** (GitHub Actions, 832 paid line items across the repos,
+  `placeholder=False`, HTTP 200 on both month queries). The live response confirmed the field names + `net=cost+credit`
+  mapping; prettified lowercase products (`actions`→`Actions`); RFC3339 `date`→day. UI dummy-note + source-footer now
+  gate on `is_placeholder` (mock/pw stays dummy → 16/16 green; real data shows a "Live" note + "GitHub — Enhanced
+  Billing" footer). Shipped deployment-api@`c4549daa` + deployment-ui@`89d5b276`; both full QGs green. **Only AWS CUR
+  backfill go/no-go remains open on this plan.**
 - 2026-07-10 — **Verified the parallel-agent reconcile of this superseded plan (operator asked "check it was done
   properly").** Another agent's `169b44b74` flipped this checkpoint 19→8 open (11 done items, each SHA-cited) and the
   deployment `expansion` parent 35→11. Audited the 11 cost flips against the LIVE code + the children's evidence: 10 are

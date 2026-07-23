@@ -299,9 +299,10 @@ drift_direction: advance-code
       five-slot asset-group split). **TODO (each non-defi AG slot, this plan):** confirm the MDPS candle-builder
       raw-tick read + features-onchain `data_loader` read resolve the `pipeline_mode=` path PRIMARY for the **non-defi**
       AGs too (cefi/tradfi/prediction) — i.e. they read via the pipeline_mode-aware MTDS reader /
-      `candidate_parquet_paths` / `manifest_reader_fallback`, NOT a direct
-      `build*\*\_partition_path`that would miss     migrated data after the legacy delete. If any direct base-builder read remains, switch it to the     pipeline_mode-aware path (same fix as the writer). This is the only PREP3 residual before the per-AG     G3`--apply`→delete;
-      the writer side + MTDS reader are done.
+      `candidate_parquet_paths` / `manifest_reader_fallback`, NOT a direct `build*\*\_partition_path`that would miss
+      migrated data after the legacy delete. If any direct base-builder read remains, switch it to the
+      pipeline_mode-aware path (same fix as the writer). This is the only PREP3 residual before the per-AG
+      G3`--apply`→delete; the writer side + MTDS reader are done.
 - [x] ✅ [CODE] P1. **tradfi reader residual CLOSED (slot-6 2026-06-03)** — audit found the features **volatility**
       (`volatility/engine/orchestrator.py`) + **cross_instrument** (`cross_instrument/engine/raw_data_loader.py`)
       readers resolved tradfi raw-tick via a direct `build_cefi_partition_path(...)` with NO `pipeline_mode=` → would
@@ -530,17 +531,17 @@ upstream data, run a PRE-FLIGHT DATA CHECK that:
       Matrix (C1 bucket / C2 v9-schema-assert / C3 missing-detect / C4 manifest-status / C5 live=batch):
 
       | Service | C1 | C2 | C3 | C4 | C5 |
-              |---|---|---|---|---|---|
-              | instruments-service | GREEN | GAP(writes-only) | GREEN | GREEN | GREEN |
-              | MTDS | GREEN | GAP | GREEN | GREEN | GREEN |
-              | MDPS | GREEN | GAP | GREEN | GREEN(batch)/**CRIT(live)** | **CRIT** |
-              | features-service | GREEN | GAP | GREEN | GREEN | PARTIAL(live startup) |
-              | strategy-service | GREEN | GAP | GREEN | GREEN(alloc)/GAP(live startup) | GAP |
-              | execution-service | N/A | N/A | **CRIT(freshness unwired)** | **CRIT(no upstream manifest preflight)** | N/A(live-only) |
+                                                                                                                          |---|---|---|---|---|---|
+                                                                                                                          | instruments-service | GREEN | GAP(writes-only) | GREEN | GREEN | GREEN |
+                                                                                                                          | MTDS | GREEN | GAP | GREEN | GREEN | GREEN |
+                                                                                                                          | MDPS | GREEN | GAP | GREEN | GREEN(batch)/**CRIT(live)** | **CRIT** |
+                                                                                                                          | features-service | GREEN | GAP | GREEN | GREEN | PARTIAL(live startup) |
+                                                                                                                          | strategy-service | GREEN | GAP | GREEN | GREEN(alloc)/GAP(live startup) | GAP |
+                                                                                                                          | execution-service | N/A | N/A | **CRIT(freshness unwired)** | **CRIT(no upstream manifest preflight)** | N/A(live-only) |
 
-              **Bucket resolution (C1) GREEN everywhere** (all via `resolve_bucket_name`; `category=` only as legacy param-names /
-              hive-agnostic read scans, NOT path construction). **Missing-detection (C3) + batch manifest-read (C4) GREEN.** Gaps
-              are concentrated in (a) v9-schema-column ASSERTION on read (C2) and (b) LIVE-mode pre-flight symmetry (C5).
+                                                                                                                          **Bucket resolution (C1) GREEN everywhere** (all via `resolve_bucket_name`; `category=` only as legacy param-names /
+                                                                                                                          hive-agnostic read scans, NOT path construction). **Missing-detection (C3) + batch manifest-read (C4) GREEN.** Gaps
+                                                                                                                          are concentrated in (a) v9-schema-column ASSERTION on read (C2) and (b) LIVE-mode pre-flight symmetry (C5).
 
 These 7 fixes (all pre-migration-required per operator "perfect"; CRITICALs are live-safety big findings):
 
@@ -738,7 +739,7 @@ anytime (read-only); the migration walk per bucket follows its input going C-GRE
 > `--workers`/`--start-date`/`--end-date` (date-shardable across VMs — no dead args) + `gcs_copy_object` for path-only
 > moves (server-side ~250×) / download+transform+upload only for content changes + unbuffered progress logging
 > (`python -u`, counter every ~1000) + per-object `try/except…continue` isolation + idempotent re-runs. (Corpus is small
-> here, but the contract still applies.) SSOT: `codex/05-infrastructure/gcs-object-operations.md` § "Migration-script
+> here, but the contract still applies.) SSOT: `/codex/05-infrastructure/gcs-object-operations.md` § "Migration-script
 > performance contract".
 
 - [ ] [DATA] P1. **MDPS** C-walk: bundle any `processed_candles/` debt into the SAME AG tick-bucket walk (no second walk
@@ -773,7 +774,7 @@ anytime (read-only); the migration walk per bucket follows its input going C-GRE
 ## Codex SSOTs
 
 - `plans/audit/instructions/canonical_form_cross_service_audit_checklist.md` — the CF checklist this plan audits.
-- `codex/02-data/availability-manifest-and-data-status.md` — downstream canonical form + source propagation.
+- `/codex/02-data/availability-manifest-and-data-status.md` — downstream canonical form + source propagation.
 
 ## Progress Log — autonomous session 2026-07-10 (Opus, /autonomous; append-only handoff per AUTONOMOUS_AGENT_RULES rule 6)
 

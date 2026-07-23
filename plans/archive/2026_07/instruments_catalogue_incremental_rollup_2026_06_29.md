@@ -50,13 +50,13 @@ drift_direction: advance-code
 
 ## Codex SSOTs (read these before touching this plan; update them in Phase 5)
 
-- `codex/02-data/instruments-foundation-and-catalogue-completeness.md` — the lifecycle-rollup mechanism map (§4) + the
+- `/codex/02-data/instruments-foundation-and-catalogue-completeness.md` — the lifecycle-rollup mechanism map (§4) + the
   G3 "scheduler actually runs it" gate. **Primary doc to update** (full-rebuild → incremental).
-- `codex/04-architecture/instrument-lifecycle-cache-delta-hot-reload.md` — the `INSTRUMENT_CACHE_REFRESH_TRIGGER` delta
+- `/codex/04-architecture/instrument-lifecycle-cache-delta-hot-reload.md` — the `INSTRUMENT_CACHE_REFRESH_TRIGGER` delta
   contract downstream of the catalogue write.
-- `codex/04-architecture/instruments-service-as-ssot-for-mtds.md` — IS owns reference data; the G3 gate description.
-- `codex/02-data/data-catalogue-schema.md` — catalogue artifact pattern + deploy chain.
-- `codex/05-infrastructure/manifest-consolidator-ssot.md` — the manifest consolidator already solved the _same_
+- `/codex/04-architecture/instruments-service-as-ssot-for-mtds.md` — IS owns reference data; the G3 gate description.
+- `/codex/02-data/data-catalogue-schema.md` — catalogue artifact pattern + deploy chain.
+- `/codex/05-infrastructure/manifest-consolidator-ssot.md` — the manifest consolidator already solved the _same_
   incremental-vs-full-scan problem (canonical + changed-shards anti-join); mirror its pattern + single-walk discipline.
 
 ## Problem (evidence)

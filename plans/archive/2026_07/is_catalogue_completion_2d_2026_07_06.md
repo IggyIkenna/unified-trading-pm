@@ -18,11 +18,11 @@ scope: [engineer]
 tags: [instruments, catalogue, could-exist, backfill, b0, b1, b2, mvp-universe, instruments-completion]
 related:
   [
-    instruments_completion_tracker_2026_07_06.md,
-    instruments_mtds_subset_consistency_remediation_2026_06_17.md,
-    instruments_catalogue_incremental_rollup_2026_06_29.md,
-    mvp_scope_catalogue_tagging_2026_06_08.md,
-    ../../codex/04-architecture/instruments-service-as-ssot-for-mtds.md,
+    /plans/active/instruments_completion_tracker_2026_07_06.md,
+    /plans/active/instruments_mtds_subset_consistency_remediation_2026_06_17.md,
+    /plans/archive/2026_07/instruments_catalogue_incremental_rollup_2026_06_29.md,
+    /plans/active/mvp_scope_catalogue_tagging_2026_06_08.md,
+    /codex/04-architecture/instruments-service-as-ssot-for-mtds.md,
   ]
 created: 2026-07-06
 last_updated: 2026-07-12 # was: 2026-07-06 -- corrected 2026-07-12, finding 112, §A2 B-queue ruling: all 10 todos verified [x] complete with sha evidence, status flipped active -> complete per finding 110, last_updated never bumped past creation date
@@ -64,9 +64,10 @@ source:
 
 ## Codex SSOTs (read before touching)
 
-- `codex/04-architecture/instruments-service-as-ssot-for-mtds.md` — IS owns reference data; catalogue = the could-exist
+- `/codex/04-architecture/instruments-service-as-ssot-for-mtds.md` — IS owns reference data; catalogue = the could-exist
   SSOT MTDS + data-status read.
-- `codex/02-data/honest-coverage-model.md` — Layer-1 denominator; do NOT derive the expected universe from the manifest.
+- `/codex/02-data/honest-coverage-model.md` — Layer-1 denominator; do NOT derive the expected universe from the
+  manifest.
 
 ## B0 → B1 → B2 (order matters — each task's `PREREQ:` is load-bearing)
 
@@ -260,7 +261,7 @@ source:
       `instrument-catalogue|CatalogueBuilder|catalogue_builder` in UAC returns only this one stale reference (other hits
       are the UAC-internal `scripts/generate_instrument_catalogue.py` artifact — different context, self-owned generator
       output, not a stale pointer to the deleted IS doc); (c) PM codex peer
-      `codex/02-data/availability-manifest-and-data-status.md:1398` claim verified — 0 hits in PM codex for
+      `/codex/02-data/availability-manifest-and-data-status.md:1398` claim verified — 0 hits in PM codex for
       `instrument-catalogue.md|instruments-service/docs/instrument-catalogue`, previously repointed. Full
       `scripts/quality-gates.sh` green in 254s; sentinel `.qg_last_passed_sha=0d47b50e70bfc97a6b004630720b51367c6dff81`
       written; `check_strict_quickmerge.py` clean (`no bypassed code commits in 720d5322..0d47b50e`); landed on
@@ -410,7 +411,7 @@ source:
   exactly the never-populated static-snapshot path this delete removes the writer for — same silent-fallback failure
   mode as the CeFi/TradFi peers before their fixes. **Doc-drift follow-on** captured as a new P3 in this plan (two stale
   cross-repo pointers at `unified-api-contracts/docs/canonical-instrument-ids.md:183-185` and
-  `codex/02-data/availability-manifest-and-data-status.md:1398`).
+  `/codex/02-data/availability-manifest-and-data-status.md:1398`).
 
 - **2026-07-06** — **B1 FLIPPED (slot-12 opus/max).** Verification-only close: task premise was stale — the daily
   `lifecycle-catalogue-regen-{cefi,defi,tradfi,sports,prediction}-daily` schedulers were already un-paused between

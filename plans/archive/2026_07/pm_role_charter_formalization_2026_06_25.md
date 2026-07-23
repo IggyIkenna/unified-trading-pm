@@ -12,7 +12,11 @@ stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer, admin]
 tags: [role-registry, project-management, orchestrator, charter, archived]
-related: [../epics/agent_operating_framework_master.md, role_registry_schema_and_broker_mvp_2026_06_25.md]
+related:
+  [
+    ../epics/agent_operating_framework_master.md,
+    /plans/archive/2026_07/role_registry_schema_and_broker_mvp_2026_06_25.md,
+  ]
 created: 2026-06-25
 parent_epic: agent_operating_framework_master
 assigned_vm: NA
@@ -57,8 +61,8 @@ row_: there is no machine-readable charter declaring PM's model/thinking/lifecyc
 on-demand capabilities are not packaged as named skills. Formalizing it (a) validates the spine
 (`role_registry_schema_and_broker_mvp`) against the one role we understand best, and (b) makes "ask the PM role X" a
 broker lookup like any other. This is additive — the live `main.md` keeps running; we add its charter + skills around
-it. SSOTs: `codex/04-architecture/agent-orchestrator-overview.md`, `codex/12-agent-workflow/canonical-plan-flow.md`,
-`codex/06-coding-standards/model-tier-selection.md`.
+it. SSOTs: `/codex/04-architecture/agent-orchestrator-overview.md`, `/codex/12-agent-workflow/canonical-plan-flow.md`,
+`/codex/06-coding-standards/model-tier-selection.md`.
 
 ## Locked design (operator, 2026-06-25)
 
@@ -110,9 +114,9 @@ it. SSOTs: `codex/04-architecture/agent-orchestrator-overview.md`, `codex/12-age
 
 ## Codex SSOT updates
 
-- `codex/04-architecture/agent-orchestrator-overview.md` — note PM as the reference role-registry row + its skills.
+- `/codex/04-architecture/agent-orchestrator-overview.md` — note PM as the reference role-registry row + its skills.
 - `unified-trading-pm/agents/main.md` is the PM worked-example registry row (`agent-role` schema enforced by
-  `scripts/docs/docspec.py`; the `codex/04-architecture/role-registry.md` doc was retired 2026-07-16, consolidated into
+  `scripts/docs/docspec.py`; the `/codex/04-architecture/role-registry.md` doc was retired 2026-07-16, consolidated into
   docspec + the charters).
 
 ## Progress Log
@@ -122,7 +126,7 @@ it. SSOTs: `codex/04-architecture/agent-orchestrator-overview.md`, `codex/12-age
   constraint. Human-driven (`assigned_vm: NA`). Depends on `role_registry_schema_and_broker_mvp`.
 - 2026-07-16: **ARCHIVED** (operator decision). PM charter (Phase 0) delivered + live — `agents/main.md` is the running
   PM agent's `agent-role` registry row (`role: project_management`, opus/high/persistent), loads in `role_registry.py`,
-  docspec-green (schema SSOT now `scripts/docs/docspec.py`; `codex/04-architecture/role-registry.md` deleted
+  docspec-green (schema SSOT now `scripts/docs/docspec.py`; `/codex/04-architecture/role-registry.md` deleted
   2026-07-16). Phase 1 skills shipped at MVP (documented boot-prompt commands in `main.md`); Phase 2 pattern documented
   in `main.md`. The fuller scope (backend light-JSON skill endpoints + standalone workflow-template doc) is NOT REQUIRED
   — deferred "real skill-dispatch framework" per `agent_operating_framework_master` (one of the 4 role pilots deferred

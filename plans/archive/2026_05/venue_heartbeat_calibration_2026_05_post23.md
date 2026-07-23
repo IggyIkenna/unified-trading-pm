@@ -10,7 +10,7 @@ repos: []
 scope: [engineer, admin]
 tags: []
 related: []
-created: '2026-05-19'
+created: "2026-05-19"
 archived: 2026-05-23
 estimate_class: research
 estimate_baseline_ai_days: 1.5
@@ -59,7 +59,7 @@ Current state: all values are empty (`{}`). `DEFAULT_HEARTBEAT_THRESHOLD_BY_CLAS
       too tight.
 
 - [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P1. **Codex update**: extend
-      `codex/04-architecture/live-pipeline-architecture.md` with a "Heartbeat threshold calibration" subsection
+      `/codex/04-architecture/live-pipeline-architecture.md` with a "Heartbeat threshold calibration" subsection
       documenting the P99 methodology + the `VENUE_HEARTBEAT_THRESHOLDS` constant.
 
 ## Target venues (initial set — expand as adapters roll out)

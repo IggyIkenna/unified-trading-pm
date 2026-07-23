@@ -6,21 +6,33 @@ status: complete
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [alerting-service, batch-live-reconciliation-service, deployment-api, deployment-service, deployment-ui, e2e-testing]
+repos:
+  [alerting-service, batch-live-reconciliation-service, deployment-api, deployment-service, deployment-ui, e2e-testing]
 scope: [engineer, admin]
 tags: []
-related: [plans/active/master_to_live_defi_2026_05_23.md, plans/questions/paper_vs_live_workflow_maturity_2026_05_08.md, plans/questions/api_keys_wallets_accounts_readiness_2026_05_08.md, plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md, plans/active/defi_master.md, plans/epics/strategy_and_dart_master_SUPERSEDED_2026_05_21.md]
+related:
+  [
+    plans/active/master_to_live_defi_2026_05_23.md,
+    plans/questions/paper_vs_live_workflow_maturity_2026_05_08.md,
+    plans/questions/api_keys_wallets_accounts_readiness_2026_05_08.md,
+    plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md,
+    plans/active/defi_master.md,
+    plans/epics/strategy_and_dart_master_SUPERSEDED_2026_05_21.md,
+  ]
 created: 2026-05-10
 archived: 2026-05-23
 last_updated: 2026-05-23
 estimate_class: design
 estimate_baseline_ai_days: 7.0
 estimate_calibrated_ai_days: 4.2
-estimate_calibration_note: 'Baseline auto-extracted from in-body AI-day mentions during 2026-05-11 sweep (~6-8). Class inferred from filename (design, multiplier 0.6×).
+estimate_calibration_note: "Baseline auto-extracted from in-body AI-day mentions during 2026-05-11 sweep (~6-8). Class
+  inferred from filename (design, multiplier 0.6×).
 
-  CAVEAT: auto-extract SUMS all in-body mentions; plans with both ''Total: X'' headlines AND per-phase line items will be double-counted. Owner agent: verify baseline, refine class per codex/08-workflows/estimation-calibration.md, recompute calibrated if either changes.
+  CAVEAT: auto-extract SUMS all in-body mentions; plans with both 'Total: X' headlines AND per-phase line items will be
+  double-counted. Owner agent: verify baseline, refine class per /codex/08-workflows/estimation-calibration.md,
+  recompute calibrated if either changes.
 
-  '
+  "
 parent_epic: dart_and_promote_master
 assigned_vm: vm-operator-ops
 priority: P1
@@ -289,7 +301,7 @@ paper/live deployment exists.
   - First JSONL = `event=="STARTED"`, last JSONL = `event in {"STOPPED","FAILED"}`.
 
 **Phase 1 QG**: workspace QG runs clean on deployment-service. Launcher bash-syntax check passes (per
-`codex/05-infrastructure/launcher-script-ssot.md`).
+`/codex/05-infrastructure/launcher-script-ssot.md`).
 
 ## Phase 1 smoke-gaps → Phase 2 todos (discovered 2026-05-12 smoke run)
 
@@ -419,7 +431,7 @@ Path-drift fix gates this — without canonical PATH_REGISTRY adherence, results
       [`execution-service/execution_service/custody/copper.py`](../../../execution-service/execution_service/custody/copper.py)
       HMAC-SHA256 sign + poll loop on testnet.
   - Probe: signed transaction returned within poll-interval; on-chain confirmation observed.
-- [x] [AGENT] P0. **Verify CEFFU stays STUB-status with explicit doc** in `codex/04-architecture/custody-providers.md`
+- [x] [AGENT] P0. **Verify CEFFU stays STUB-status with explicit doc** in `/codex/04-architecture/custody-providers.md`
       (per master plan Q&A 3 deferral). Manual handoff procedure for Binance flows documented.
   - (codex already has explicit STUB status at §2.4 with "⚪ DEFERRED to June-1+" banner + operator runbook in §2.4
     Onboarding flow; no code change needed — verified slot-4 2026-05-15)
@@ -597,7 +609,7 @@ shas, no model refs, no features manifest version — those are post-cutover Pha
 
 **U1 codex deliverables**:
 
-- NEW `codex/04-architecture/live-deployment-manifest.md` — minimal-shape SSOT for May-23; post-cutover Phase 2 extends
+- NEW `/codex/04-architecture/live-deployment-manifest.md` — minimal-shape SSOT for May-23; post-cutover Phase 2 extends
   with pinned shas. Cross-references both plans.
 
 **U1 done definition**:
@@ -755,28 +767,28 @@ from venue testnet.
 
 These codex docs ride with the phases that produce them — NOT batched at plan-end.
 
-- [x] [AGENT] P0. **NEW** `codex/09-strategy/operational/cli-promote-paths.md` — `run-paper.sh` + `run-live.sh` as CLI
+- [x] [AGENT] P0. **NEW** `/codex/09-strategy/operational/cli-promote-paths.md` — `run-paper.sh` + `run-live.sh` as CLI
       track SSOT; per-mode operator pre-flight checklist; ships with Phase 2. (pm@this-commit — created with dual-track
       overview, pre-flight checklists, VM launcher convention)
-- [x] [AGENT] P0. **NEW** `codex/04-architecture/promote-workflow-architecture.md` — covers BOTH May-23 tracks (CLI
+- [x] [AGENT] P0. **NEW** `/codex/04-architecture/promote-workflow-architecture.md` — covers BOTH May-23 tracks (CLI
       primary + minimal UI parallel); full UI consolidation + state-machine + cross-service auto-registration deferred
       to post-cutover plan; ships with Phase 7. (pm@this-commit — phase map, state machine, UTL events, deferred items
       table)
-- [x] [AGENT] P0. **NEW** `codex/05-infrastructure/strategy-vm-launcher-shape.md` — paper-VM + live-VM launcher
+- [x] [AGENT] P0. **NEW** `/codex/05-infrastructure/strategy-vm-launcher-shape.md` — paper-VM + live-VM launcher
       convention; ships with Phase 1. (already existed — created in prior slot session)
-- [x] [AGENT] P0. **NEW** `codex/04-architecture/live-deployment-manifest.md` — `MinimalCandidateManifest` shape (May-23
-      subset); post-cutover Phase 2 enriches with pinned shas; ships with Phase U1. (already existed — created with
-      Phase U1 work)
-- [x] [AGENT] P0. **NEW** `codex/14-customer-journeys/dart/mode-toggle.md` — DART 3-way + manual-trade gate flow; ships
+- [x] [AGENT] P0. **NEW** `/codex/04-architecture/live-deployment-manifest.md` — `MinimalCandidateManifest` shape
+      (May-23 subset); post-cutover Phase 2 enriches with pinned shas; ships with Phase U1. (already existed — created
+      with Phase U1 work)
+- [x] [AGENT] P0. **NEW** `/codex/14-customer-journeys/dart/mode-toggle.md` — DART 3-way + manual-trade gate flow; ships
       with Phase U5+U6. (already existed — created with Phase U5 work)
-- [x] [AGENT] P0. **NEW** `codex/14-customer-journeys/promote-pipeline-backend.md` —
+- [x] [AGENT] P0. **NEW** `/codex/14-customer-journeys/promote-pipeline-backend.md` —
       `/promote/{strategy_id}/{manifest_id}` API + minimal pre-flight gates (May-23 subset); post-cutover Phase 9
       extends with full pre-flight pipeline; ships with Phase U3. (pm@this-commit — endpoint spec, 5 gates, event
       emission, source location table)
-- [x] [AGENT] P0. **UPDATE** `codex/04-architecture/custody-providers.md` — populate Copper operational verification
+- [x] [AGENT] P0. **UPDATE** `/codex/04-architecture/custody-providers.md` — populate Copper operational verification
       result; CEFFU subsections explicitly DEFERRED with named successor (post-cutover plan); ships with Phase 4.A.
       (file already has Copper config table + CEFFU DEFERRED banner; Phase 4.A SCRIPT item pending operator)
-- [x] [AGENT] P0. **UPDATE** `codex/05-infrastructure/launcher-script-ssot.md` — add strategy-paper / strategy-live
+- [x] [AGENT] P0. **UPDATE** `/codex/05-infrastructure/launcher-script-ssot.md` — add strategy-paper / strategy-live
       launcher patterns; ships with Phase 1. (already updated — strategy-paper- / strategy-live- rows in launcher table,
       Phase 1 work)
 - [x] [AGENT] P0. **UPDATE** CLAUDE.md — add **"Promote Workflow Path"** key rule:
@@ -905,7 +917,7 @@ differs.
 | Phase 2 P0 — V2BatchHarness resolver aliases (`carry_staked_basis` + `leveraged_funding_arb`) | ✅ CODE SHIPPED (strategy-service@61dc112 + e2e-testing@8427dc0); NOT end-to-end VM-verified — smoke VM `strategy-paper-carry-staked-basis-20260512-200952` deleted per operator request before completion | Next session: re-run smoke VM with operator approval to verify resolver end-to-end                        |
 | Phase 2 P0 — Wire `ServiceBootstrap` into `colocated_engine.py`                               | ✅ DONE (e2e-testing@afd0c16 2026-05-13)                                                                                                                                                                   | setup_events()+log_event() used; full ServiceBootstrap incompatible with asyncio CLI                      |
 | Phase 2 P1 — Add self-delete `trap` on startup-script failure in `setup-data-pipeline-vm.sh`  | ✅ DONE (deployment-service@ab6bfd2 2026-05-13)                                                                                                                                                            | gcloud delete chained with ';' after VM_BACKFILL_CMD in strategy-paper/live block                         |
-| Phases 3–10                                                                                   | ⏭ DEFERRED                                                                                                                                                                                                | Require operator-approved actions (Copper sub-account, Tenderly fork, live rehearsal, etc.) per plan body |
+| Phases 3–10                                                                                   | ⏭ DEFERRED                                                                                                                                                                                                 | Require operator-approved actions (Copper sub-account, Tenderly fork, live rehearsal, etc.) per plan body |
 
 **Session notes (2026-05-12 harsh-promote-workflow-tab)**:
 

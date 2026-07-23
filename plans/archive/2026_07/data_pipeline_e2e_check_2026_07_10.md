@@ -167,11 +167,11 @@ already show what happens without this: `verify_parquet_written`/ `verify_manife
 
 ## Codex SSOTs
 
-`codex/05-infrastructure/vm-launcher-runbook.md`, `codex/05-infrastructure/spot-vms-for-backfill.md`,
-`codex/05-infrastructure/gcs-object-operations.md`, `codex/02-data/pipeline-mode-partition.md`,
-`codex/02-data/availability-manifest-and-data-status.md`, `codex/04-architecture/tier-and-import-architecture.md`,
-`codex/06-coding-standards/quality-gates.md`, `codex/06-coding-standards/script-homes.md` (lifecycle markers on the two
-new `pipeline_e2e_check.py` scripts), `codex/12-agent-workflow/async-wait-and-poll-discipline.md` (VM poll/verify
+`/codex/05-infrastructure/vm-launcher-runbook.md`, `/codex/05-infrastructure/spot-vms-for-backfill.md`,
+`/codex/05-infrastructure/gcs-object-operations.md`, `/codex/02-data/pipeline-mode-partition.md`,
+`/codex/02-data/availability-manifest-and-data-status.md`, `/codex/04-architecture/tier-and-import-architecture.md`,
+`/codex/06-coding-standards/quality-gates.md`, `/codex/06-coding-standards/script-homes.md` (lifecycle markers on the
+two new `pipeline_e2e_check.py` scripts), `/codex/12-agent-workflow/async-wait-and-poll-discipline.md` (VM poll/verify
 ticks). Plan-authoring SSOTs already read + honored: `plans/PLAN_FORMAT.md`, `plans/active/task_template.md`,
 `plans/audit/README.md`.
 
@@ -314,7 +314,7 @@ ticks). Plan-authoring SSOTs already read + honored: `plans/PLAN_FORMAT.md`, `pl
       Scheduler are already generic `for_each` blocks) but the wrong direction — this doc's own Coverage-gap section is
       actively trying to REDUCE cron count (10→5) for cost/complexity, and adding ~10 more permanent `*/1 * * * *` Cloud
       Run+Scheduler pairs for buckets that only see occasional smoke-check traffic moves the wrong way. Added a
-      "Coverage exemptions" section to `codex/05-infrastructure/manifest-consolidator-ssot.md` documenting the
+      "Coverage exemptions" section to `/codex/05-infrastructure/manifest-consolidator-ssot.md` documenting the
       decision + the real mitigation (`MANIFEST_ALLOW_STALE_FALLBACK=true`, already wired this session).
 
 - [x] 16. ✅ [SCRIPT] P2. MTDS had no `--mode live`-capable, test-bucket-routed, auto-shutdown launcher —
@@ -420,17 +420,17 @@ ticks). Plan-authoring SSOTs already read + honored: `plans/PLAN_FORMAT.md`, `pl
       confirm the live leg now reports a genuine verdict.
 
       **Separate, non-bug finding from the same pilot** (documented so it isn't re-investigated as a new gap during the
-                                      full sweep): `CEFI:ASTER:book_snapshot_5`'s **force/skip legs both correctly fail** with `no_parquet_under` — this
-                                      is NOT a tooling bug or an adapter regression.
-                                      `unified_api_contracts/canonical/crosscutting/_honest_coverage_empty_reasons.py` already documents this exact case
-                                      under `EXPECTED_SOURCE_DOES_NOT_OFFER_DATA_TYPE`: "ASTER's Binance-compatible REST exposes only a CURRENT-book
-                                      `/fapi/v1/depth` snapshot; there is NO historical order-book endpoint, so batch `book_snapshot_5` can never be
-                                      sourced (live-WS capture only)" — operator-confirmed 2026-06-22, SSOT
-                                      `plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md` BUG #3. The MTDS shard enumeration
-                                      (`get_expected_data_types_for_venue()`) does not distinguish "batch-servable" from "live-only" data_types, so the
-                                      full 344-shard sweep WILL hit more of these (at minimum the sibling documented case, HYPERLIQUID `liquidations`) —
-                                      the aggregator being built for the full-sweep report cross-references failures against this registry so a known,
-                                      pre-documented, architecturally-expected gap is labeled as such and not conflated with a genuinely new finding.
+                                                                                                                                                  full sweep): `CEFI:ASTER:book_snapshot_5`'s **force/skip legs both correctly fail** with `no_parquet_under` — this
+                                                                                                                                                  is NOT a tooling bug or an adapter regression.
+                                                                                                                                                  `unified_api_contracts/canonical/crosscutting/_honest_coverage_empty_reasons.py` already documents this exact case
+                                                                                                                                                  under `EXPECTED_SOURCE_DOES_NOT_OFFER_DATA_TYPE`: "ASTER's Binance-compatible REST exposes only a CURRENT-book
+                                                                                                                                                  `/fapi/v1/depth` snapshot; there is NO historical order-book endpoint, so batch `book_snapshot_5` can never be
+                                                                                                                                                  sourced (live-WS capture only)" — operator-confirmed 2026-06-22, SSOT
+                                                                                                                                                  `plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md` BUG #3. The MTDS shard enumeration
+                                                                                                                                                  (`get_expected_data_types_for_venue()`) does not distinguish "batch-servable" from "live-only" data_types, so the
+                                                                                                                                                  full 344-shard sweep WILL hit more of these (at minimum the sibling documented case, HYPERLIQUID `liquidations`) —
+                                                                                                                                                  the aggregator being built for the full-sweep report cross-references failures against this registry so a known,
+                                                                                                                                                  pre-documented, architecturally-expected gap is labeled as such and not conflated with a genuinely new finding.
 
 - [x] 23. ✅ [DATA] P0. **Re-pilot with the todo-22 fix surfaced 3 more real tooling bugs, all root-caused and fixed
       before the full sweep** (see Progress Log entry for full detail): (a) every skip leg crashed with
@@ -1140,7 +1140,7 @@ ticks). Plan-authoring SSOTs already read + honored: `plans/PLAN_FORMAT.md`, `pl
       literal is the point — drift is caught by the parity check, now exercised three times).
 - [x] 29. ✅ [DATA] P3. **`EXPECTED_SOURCE_DELIVERY_LAG` denominator classification — RULED (2026-07-14, under the
       operator's blanket /autonomous "decide+document" delegation): KEEP within-window, no out-of-window mechanism.**
-      Codified in `codex/02-data/honest-coverage-model.md` § Coverage formula ("Delivery-lag ruling"). Rationale: the
+      Codified in `/codex/02-data/honest-coverage-model.md` § Coverage formula ("Delivery-lag ruling"). Rationale: the
       reachable-coverage formula already EXCLUDES `empty_confirmed` from the reachable denominator, so the lag band
       never depressed reachable coverage — the trailing dip appears only in the all-shards completeness view (that
       view's purpose); an out-of-window mechanism would hide a genuinely-stuck capture inside the lag window; the band
@@ -1650,7 +1650,7 @@ ticks). Plan-authoring SSOTs already read + honored: `plans/PLAN_FORMAT.md`, `pl
   1. **Todo 28** — `unified-trading-pm@2d6aacc1d`: PM QG mirror `check_record_empty_reason_closed_set.py` KNOWN_REASONS
      brought to FULL 40/40 parity with UAC `EmptyConfirmedReason` (6 missing members added; verified programmatically).
   2. **Todo 29** — ruled KEEP within-window (no out-of-window denominator mechanism); codified in
-     `codex/02-data/honest-coverage-model.md` § Coverage formula. See the flipped todo for the 3-part rationale.
+     `/codex/02-data/honest-coverage-model.md` § Coverage formula. See the flipped todo for the 3-part rationale.
   3. **Todo 30** — `unified-api-contracts@7354de78` (ICE "index" added, chains kept — 4 tests proved real chain-grain
      rows; ICE start 2019-01-02). IS golden regen rides the IS RC#5 batch (regen gate requires UAC+UTL clones clean).
   4. **Todo 31 (all six letters)** — see the flipped todo for per-letter evidence: 31a `uac@cb61b42b` (CDE floor

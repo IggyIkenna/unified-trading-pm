@@ -1,6 +1,8 @@
 ---
 doc_type: plan
-title: Cloud-build dual-cloud parity — AWS CodeBuild reaches GCP Cloud Build feature-parity (router + per-repo triggers + ECR + in-image QG)
+title:
+  Cloud-build dual-cloud parity — AWS CodeBuild reaches GCP Cloud Build feature-parity (router + per-repo triggers + ECR
+  + in-image QG)
 summary:
 status: complete
 nature: record
@@ -20,7 +22,10 @@ estimate_baseline_ai_days: 3.0
 estimate_calibrated_ai_days: 2.4
 locked_by: live-defi-rollout
 source:
-- {chat/2026-06-10 operator: 'what about code builds for aws do we have this workflow generally working identically e2e?'}
+  - {
+      chat/2026-06-10 operator:
+        "what about code builds for aws do we have this workflow generally working identically e2e?",
+    }
 ---
 
 > **🗄️ ARCHIVED 2026-06-18 — superseded by the cicd consolidation; any open items were migrated to the 4 themed plans
@@ -120,12 +125,12 @@ not actually kept on either cloud.
       run the same `quality-gates.sh` invocation, (c) both push a tag derivable from `pyproject.version`, (d) both fire
       the `service-deployed` provenance dispatch. Lives in deployment-service QG (primary consumer). Target repo:
       deployment-service.
-- [ ] [DOC] P2. Codex SSOT: write/extend `codex/08-workflows/ci-cd-flow.md` § "Dual-cloud image builds" documenting the
+- [ ] [DOC] P2. Codex SSOT: write/extend `/codex/08-workflows/ci-cd-flow.md` § "Dual-cloud image builds" documenting the
       router → buildspec → in-image-QG → registry-push → provenance flow for BOTH clouds, with the GCP/AWS parity table.
 
 ## Codex SSOT updates (HARD RULE — enumerated)
 
-- `codex/08-workflows/ci-cd-flow.md` — new § "Dual-cloud image builds (GCP Cloud Build ≡ AWS CodeBuild)".
+- `/codex/08-workflows/ci-cd-flow.md` — new § "Dual-cloud image builds (GCP Cloud Build ≡ AWS CodeBuild)".
 - `codex/05-infrastructure/` — if an AWS router project is added, document its identity + trigger semantics.
 
 ## Success criteria
@@ -135,7 +140,7 @@ not actually kept on either cloud.
   by the build-images workstream), NOT by re-running QG in-image.
 - Every buildable repo has both a `cloudbuild.yaml` and a `buildspec.aws.yaml` (or is explicitly marked GCP-only).
 - A cross-cloud parity test is green and wired into deployment-service QG.
-- `codex/08-workflows/ci-cd-flow.md` documents the dual-cloud flow.
+- `/codex/08-workflows/ci-cd-flow.md` documents the dual-cloud flow.
 
 ## Temporary states + their canonical follow-up plans
 

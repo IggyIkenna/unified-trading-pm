@@ -9,7 +9,8 @@ stage: [meta]
 repos: [system-integration-tests]
 scope: [engineer, admin]
 tags: []
-related: [plans/active/ci_local_qg_parity_2026_06_08.md, plans/active/staging_clean_start_and_stale_pr_hygiene_2026_06_08.md]
+related:
+  [plans/active/ci_local_qg_parity_2026_06_08.md, plans/active/staging_clean_start_and_stale_pr_hygiene_2026_06_08.md]
 created: 2026-06-08
 parent_epic: infrastructure_master
 assigned_vm: vm-cross-cutting
@@ -105,7 +106,7 @@ heuristic.
 
 ## Codex SSOT updates
 
-`codex/08-workflows/ci-cd-flow.md` § "breaking = public-surface change, not version phase; SIT scope"; cross-link
+`/codex/08-workflows/ci-cd-flow.md` § "breaking = public-surface change, not version phase; SIT scope"; cross-link
 `ci_local_qg_parity` (SIT = the assembled-invariant layer, now breaking-gated).
 
 ## Progress / evidence (2026-06-08, slot-1 autonomous)
@@ -116,4 +117,4 @@ heuristic.
 - Differ scans CHANGED files + the package `__init__.py` only (fast: UAC 6.7s); export-anchored + bare-name keyed so a
   class MOVED between modules is NOT a false 'removed'. QG-v2 unchanged (still every staging PR). SIT now breaking-gated
   via `staging_status.breaking_pending`.
-- Codex SSOT update: see `codex/08-workflows/ci-cd-flow.md` § breaking=public-surface (folded in the docs pass).
+- Codex SSOT update: see `/codex/08-workflows/ci-cd-flow.md` § breaking=public-surface (folded in the docs pass).

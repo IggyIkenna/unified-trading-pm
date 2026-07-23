@@ -34,7 +34,11 @@ tags:
     log-hygiene,
     audit,
   ]
-related: [../epics/orchestrator_master.md, ao_task_lifecycle_done_gate_resume_and_slot_identity_2026_07_09.md]
+related:
+  [
+    ../epics/orchestrator_master.md,
+    /plans/archive/2026_07/ao_task_lifecycle_done_gate_resume_and_slot_identity_2026_07_09.md,
+  ]
 created: 2026-07-10
 last_updated: 2026-07-15
 parent_epic: orchestrator_master
@@ -481,13 +485,13 @@ Todo 1 (pending-operator visibility) SHIPPED — agent-orchestrator@f821840 + PM
 
 ## 4. Codex SSOTs (read before touching each area — plan↔codex drift is review-blocking)
 
-- `codex/04-architecture/agent-orchestrator-overview.md` — worker lifecycle + loops (update for the new boot mechanism;
+- `/codex/04-architecture/agent-orchestrator-overview.md` — worker lifecycle + loops (update for the new boot mechanism;
   PATH CORRECTED 2026-07-10 — the plan previously cited a non-existent `12-agent-workflow/` location)
-- `codex/04-architecture/agent-orchestrator-worker-liveness.md` +
-  `codex/12-agent-workflow/local-slot-host-symmetric-worker-model.md` — liveness triggers + the slot/worker model
+- `/codex/04-architecture/agent-orchestrator-worker-liveness.md` +
+  `/codex/12-agent-workflow/local-slot-host-symmetric-worker-model.md` — liveness triggers + the slot/worker model
   (replaces the non-existent `single-vm-architecture.md` cite)
 - **[2026-07-12 correction — findings 220/351/225, §A2 B-queue ruling]**
-  `codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` NOW EXISTS — created 2026-07-12 by operator
+  `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` NOW EXISTS — created 2026-07-12 by operator
   ruling (`plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` `codex-gap` row) as the SSOT for
   dispatch/regen/role-based single-VM topology. The "non-existent" characterization in the two bullets above (was: "the
   plan previously cited a non-existent `12-agent-workflow/` location" / "replaces the non-existent
@@ -498,9 +502,9 @@ Todo 1 (pending-operator visibility) SHIPPED — agent-orchestrator@f821840 + PM
   `ao_task_lifecycle_done_gate_resume_and_slot_identity_2026_07_09.md:153`, and
   `active/issues/ao_fleet_stall_opus_spawn_and_skip_thrash_2026_07_07.md:26` are now CORRECT and were left unedited (no
   fix needed there).
-- `codex/05-infrastructure/per-tab-worktrees.md` — Path-B clone model (the correct RULES.md text) + commit identity +
+- `/codex/05-infrastructure/per-tab-worktrees.md` — Path-B clone model (the correct RULES.md text) + commit identity +
   the read-from-root/operate-in-slot guardrail
-- `codex/04-architecture/runtime-deployment-topology.md` — central-VM + slots topology
+- `/codex/04-architecture/runtime-deployment-topology.md` — central-VM + slots topology
 - `../epics/orchestrator_master.md` (parent epic); `ao_task_lifecycle_done_gate_resume_and_slot_identity_2026_07_09.md`
   (sibling — the task-lifecycle half)
 

@@ -85,11 +85,11 @@ odds-api-only (211,299 captured / 0 failed at the 2026-06-24 measure). The remai
 
 ## Codex SSOTs
 
-- `codex/02-data/honest-absence-downstream-handling.md` — bookmaker-league coverage subset = honest absence;
+- `/codex/02-data/honest-absence-downstream-handling.md` — bookmaker-league coverage subset = honest absence;
   `EXPECTED_BOOKMAKER_NO_LEAGUE_COVERAGE`
-- `codex/02-data/availability-manifest-and-data-status.md` — sports ODDS cluster validation;
+- `/codex/02-data/availability-manifest-and-data-status.md` — sports ODDS cluster validation;
   `expected_unattempted_pending_fetch == 0`
-- `codex/02-data/pipeline-mode-partition.md` — `batch_odds_api` source-aware partition
+- `/codex/02-data/pipeline-mode-partition.md` — `batch_odds_api` source-aware partition
 
 ## Todos
 

@@ -43,8 +43,8 @@ drift_direction: advance-code
 
 > **✅ ARCHIVED 2026-07-14 [unlock-plan] (operator ruling 2026-07-14, sports plan-set bulk archival).** All todos `[x]`
 > complete (0 open; audited complete 2026-07-13). Golden-window / honest-coverage learnings were codified in the cited
-> Codex SSOTs during the work (`codex/02-data/availability-manifest-and-data-status.md`,
-> `codex/02-data/honest-absence-downstream-handling.md`, `codex/02-data/sports-gcs-path-ssot.md`) — no unmigrated
+> Codex SSOTs during the work (`/codex/02-data/availability-manifest-and-data-status.md`,
+> `/codex/02-data/honest-absence-downstream-handling.md`, `/codex/02-data/sports-gcs-path-ssot.md`) — no unmigrated
 > durable contract found. Lock cleared per the ruling; historical/frozen.
 
 > **Coordinator**: `sports_pipeline_to_100pct_golden_window_first_2026_06_27.md` (Phase 1). Drives every
@@ -75,11 +75,11 @@ monitors each for the 91-day window). SFI is single-stream (no chunking) per the
 
 ## Codex SSOTs
 
-- `codex/02-data/honest-absence-downstream-handling.md` — typed `EXPECTED_*` (off-season / no-fixture /
+- `/codex/02-data/honest-absence-downstream-handling.md` — typed `EXPECTED_*` (off-season / no-fixture /
   no-provider-coverage); SFI/understat per-league coverage subsets are honest absence
-- `codex/02-data/sports-gcs-path-ssot.md` — per-source layouts (`PER_DAY_BARE` weather/XG, `PER_DAY_PER_SEASON`
+- `/codex/02-data/sports-gcs-path-ssot.md` — per-source layouts (`PER_DAY_BARE` weather/XG, `PER_DAY_PER_SEASON`
   player_values, `PER_DAY_PER_LEAGUE` SFI/XG_SHOTS)
-- `codex/02-data/availability-manifest-and-data-status.md` — `expected_unattempted_pending_fetch == 0` target
+- `/codex/02-data/availability-manifest-and-data-status.md` — `expected_unattempted_pending_fetch == 0` target
 
 ## Todos
 

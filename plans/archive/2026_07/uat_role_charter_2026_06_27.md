@@ -16,8 +16,8 @@ tags: [role-registry, uat, qa, review, pr-gate, charter, archived]
 related:
   [
     ../epics/agent_operating_framework_master.md,
-    role_registry_schema_and_broker_mvp_2026_06_25.md,
-    pm_role_charter_formalization_2026_06_25.md,
+    /plans/archive/2026_07/role_registry_schema_and_broker_mvp_2026_06_25.md,
+    /plans/archive/2026_07/pm_role_charter_formalization_2026_06_25.md,
   ]
 created: 2026-06-27
 parent_epic: agent_operating_framework_master
@@ -66,7 +66,7 @@ escalation, and its on-demand review verb is not packaged as a named skill. Form
 (`role_registry_schema_and_broker_mvp`) against the QA boundary, and (b) makes "ask the review role to gate this PR" a
 broker lookup like any other. This is additive — the live reviewer keeps running; we add its charter + skill around it.
 SSOTs: `unified-trading-pm/agents/review.md` (the `review` registry row) + `scripts/docs/docspec.py` (`agent-role`
-schema; the `role-registry.md` codex doc was retired 2026-07-16), `codex/06-coding-standards/model-tier-selection.md`.
+schema; the `role-registry.md` codex doc was retired 2026-07-16), `/codex/06-coding-standards/model-tier-selection.md`.
 
 ## Locked design (operator, 2026-06-27)
 
@@ -137,8 +137,8 @@ schema; the `role-registry.md` codex doc was retired 2026-07-16), `codex/06-codi
 
 - `unified-trading-pm/agents/review.md` is the UAT/QA worked-example registry row (`role=review`, `model=sonnet`,
   `thinking=high`, `lifecycle=persistent`); the `agent-role` schema is enforced by `scripts/docs/docspec.py` and the
-  `codex/04-architecture/role-registry.md` doc was retired 2026-07-16.
-- `codex/06-coding-standards/model-tier-selection.md` — the opus-on-major-bump escalation is a model-tier decision; the
+  `/codex/04-architecture/role-registry.md` doc was retired 2026-07-16.
+- `/codex/06-coding-standards/model-tier-selection.md` — the opus-on-major-bump escalation is a model-tier decision; the
   heavy review tier follows the synthesis-layer opus policy.
 
 ## Progress Log
@@ -149,7 +149,8 @@ schema; the `role-registry.md` codex doc was retired 2026-07-16), `codex/06-codi
   Human-driven (`assigned_vm: NA`, `execution_scope: local-only`). Depends on `role_registry_schema_and_broker_mvp`.
 - 2026-07-16: **ARCHIVED** (operator decision). UAT/QA charter (Phase 0) delivered + live — `agents/review.md` is the
   running review agent's `agent-role` registry row (`role: review`, sonnet/high/persistent), loads in
-  `role_registry.py`, docspec-green (schema SSOT now `scripts/docs/docspec.py`; `codex/04-architecture/role-registry.md`
-  deleted 2026-07-16). Phase 1 `/pr-check` at MVP (documented command in `review.md`); Phase 2 two-tier decision
-  documented in `review.md`. Phase 3 regression spec = deferred pilot scope (next quarter, per
-  `agent_operating_framework_master`). No live gap — clean archive. Moved to `plans/archive/2026_07/`.
+  `role_registry.py`, docspec-green (schema SSOT now `scripts/docs/docspec.py`;
+  `/codex/04-architecture/role-registry.md` deleted 2026-07-16). Phase 1 `/pr-check` at MVP (documented command in
+  `review.md`); Phase 2 two-tier decision documented in `review.md`. Phase 3 regression spec = deferred pilot scope
+  (next quarter, per `agent_operating_framework_master`). No live gap — clean archive. Moved to
+  `plans/archive/2026_07/`.

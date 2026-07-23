@@ -10,7 +10,7 @@ repos: [deployment-api, deployment-service, e2e-testing, execution-service, ml-s
 scope: [engineer, admin]
 tags: []
 related: []
-created: '2026-05-19'
+created: "2026-05-19"
 epic: features_and_ml_master
 priority: P0
 parent: master_to_live_defi_2026_05_23
@@ -20,42 +20,231 @@ last_updated: 2026-05-20
 estimate_class: infra
 estimate_baseline_ai_days: 8
 estimate_calibrated_ai_days: 6
-completion_gates: {code: C5, deployment: D2, business: none}
+completion_gates: { code: C5, deployment: D2, business: none }
 repo_gates:
-- {repo: ml-service, code: C0, deployment: none, business: none}
-- {repo: ml-service (training sub-package), code: C0, deployment: none, business: none}
-- {repo: ml-service (inference sub-package), code: C0, deployment: none, business: none}
-- {repo: ml-training-service, code: C0, deployment: none, business: none}
-- {repo: ml-inference-service, code: C0, deployment: none, business: none}
-- {repo: unified-api-contracts, code: C0, deployment: none, business: none}
-- {repo: unified-trading-library, code: C0, deployment: none, business: none}
-- {repo: deployment-api, code: C0, deployment: none, business: none}
-- {repo: deployment-ui, code: C0, deployment: none, business: none}
-- {repo: deployment-service, code: C0, deployment: none, business: none}
-- {repo: unified-trading-pm, code: C0, deployment: none, business: none}
+  - { repo: ml-service, code: C0, deployment: none, business: none }
+  - { repo: ml-service (training sub-package), code: C0, deployment: none, business: none }
+  - { repo: ml-service (inference sub-package), code: C0, deployment: none, business: none }
+  - { repo: ml-training-service, code: C0, deployment: none, business: none }
+  - { repo: ml-inference-service, code: C0, deployment: none, business: none }
+  - { repo: unified-api-contracts, code: C0, deployment: none, business: none }
+  - { repo: unified-trading-library, code: C0, deployment: none, business: none }
+  - { repo: deployment-api, code: C0, deployment: none, business: none }
+  - { repo: deployment-ui, code: C0, deployment: none, business: none }
+  - { repo: deployment-service, code: C0, deployment: none, business: none }
+  - { repo: unified-trading-pm, code: C0, deployment: none, business: none }
 depends_on: []
 todos:
-- {id: phase-0-pre-audit-manifest, content: "- [x] ✅ [AGENT] P0. Phase 0 — Pre-audit manifest (read-only). Produce\n  `plans/active/issues/ml_repo_consolidation_preaudit_2026_05_19.md` enumerating, per source repo\n  (`ml-training-service`, `ml-inference-service`):\n  (a) every Python module + class + public function + post-merge sub-package landing\n      (`ml_service/training/`, `ml_service/inference/`);\n  (b) every callsite OUTSIDE the source repo that imports from `ml_training_service.*` /\n      `ml_inference_service.*` — grep across all sibling repos under `${WORKSPACE_ROOT}` (UAC / UTL / UCI /\n      MTDS / MDPS / instruments-service / features-service / strategy-service / execution-service /\n      unified-trading-pm / deployment-api / deployment-ui / deployment-service / e2e-testing). Fact-report\n      2026-05-19 showed ZERO cross-repo Python imports, but verify and capture line-level evidence;\n  (c) every script under `scripts/` per source repo + post-merge home;\n  (d) every\
-    \ test under `tests/` per source repo + post-merge home (`ml-service/tests/training/`,\n      `ml-service/tests/inference/`);\n  (e) every UAC / UTL symbol the source repo redefines locally — especially around feature-subscriber\n      schemas, model-promotion event contracts, prediction-publisher row schemas, ensemble metadata;\n  (f) every cross-package helper duplicated across both source repos (lift-to-UTL candidates) —\n      `ServiceBootstrap` patterns, kill-switch bus subscriber boilerplate, ManifestFreshnessCache adoption,\n      `config_reloaders.py` typed-class wiring, cloud feature provider abstraction;\n  (g) per-repo `pyproject.toml` dependency union — resolve version conflicts ahead of Phase 3 (likely\n      non-trivial: ml-training pulls full sklearn/xgboost/lightgbm/optuna stack, ml-inference pulls leaner\n      inference deps; flat union must avoid bloating live-inference Docker image — split via optional\n      inference-only build flag if needed);\n  (h) hardcoded\
-    \ service-name strings — `\"ml-training-service\"` / `\"ml-inference-service\"` as pub/sub topic\n      prefixes, env-var prefixes (`ML_TRAINING_SERVICE_*` / `ML_INFERENCE_SERVICE_*`), GCS bucket subpaths,\n      model registry references, deployment-service terraform refs. Topic-name compatibility decisions\n      land here.\n  Output drives every later phase. **Foot-gun**: model promotion topic-name changes invalidate\n  ml-inference's `model_promotion_subscriber` until subscribers + publishers align — sequence Phase 4 (b)\n  atomically.\n  Evidence: slot-1 produced `plans/active/issues/ml_repo_consolidation_preaudit_2026_05_19.md` (2026-05-19).\n  Key findings: 0 external Python imports workspace-wide; 35 unique dep union; config_reloaders.py near-identical\n  (UTL lift candidate); ML_MODEL_COORDINATION_TOPIC is wire-protocol constant (no rename needed).\n", status: done}
-- {id: phase-1-uac-utl-schema-prep, content: "- [x] ✅ [AGENT] P0. Phase 1 — UAC / UTL schema prep. Likely no new schema column needed — training-output\n  events and inference-input events are already independent UAC types. Confirm by grepping UAC for\n  existing data-type enums covering training-complete / model-promoted / prediction-emitted; if either\n  source repo defined local event types not promoted to UAC (Phase 0 (e) finding), lift to UAC under\n  `unified_api_contracts.canonical.crosscutting.lifecycle` or `unified_api_contracts.domain.ml`. Output:\n  list of UAC PRs needed (likely 0-2 small) + UTL helper PRs for any kill-switch subscriber boilerplate\n  lifts. Land BEFORE Phase 3 if non-empty.\n  **RESULT (2026-05-19 slot-8)**: 0 blocking PRs before Phase 3.\n  - PredictionEvent (engine/schemas.py): CORRECT-LOCAL (docstring confirmed, not cross-service). Stays.\n  - PredictionEventDict/PredictionMetadata (types.py): CORRECT-LOCAL comment present. Stays.\n  - EnsembleConfig (ensemble_inference.py):\
-    \ DIFFERENT from UAC EnsembleConfig (runtime weights vs training\n    config). Stays local.\n  - ModelTrainedEvent + ModelPromotedEvent: dict-based wire protocols; DEFERRED to Phase 4 (f) as TypedDicts\n    under `unified_api_contracts.internal.domain.ml`. Not blocking Phase 3 — both dicts already stable.\n  - Kill-switch boilerplate: grep returned 0 hits in both repos. No UTL lift needed.\n  - UAC `internal.domain.ml` already has: EnsembleConfig, ModelMetadata, InferenceRequest, InferenceResult.\n  - UAC `internal.domain.ml_inference_service` already has: CascadeConfig, CascadePredictionEvent,\n    PredictionSnapshot.\n  - 0 UAC PRs + 0 UTL PRs needed before Phase 3.\n", status: done}
-- {id: phase-2-skeleton-new-repo, content: "- [x] ✅ [AGENT slot-8] P0. Phase 2 — Create NEW `ml-service` GitHub repo + bootstrap skeleton. Completed 2026-05-20.\n  ml-service@ca06c2e. Repo created 2026-05-19 by operator; slot-5 did (a)+(b) skeleton stub; slot-8 completed (c)-(i):\n  (c) pyproject.toml seeded with 50-dep union (35 runtime + 15 dev) from pre-audit §(g);\n  (d) ml_service/api/main.py: make_health_router with aggregated training+inference freshness;\n  (e) ml_service/cli/main.py: --operation dispatcher (6 ops) + ServiceBootstrap;\n  (f) ServiceBootstrap wired in cli/main.py (STARTED/STOPPED/FAILED);\n  (g) .github/workflows/: 7 templates rolled out (semver-agent, workspace-qg, tab-mirror, staging-lock,\n      request-major-bump, major-bump-issue-handler, update-dependency-version);\n  (h) workspace-manifest.json + code-workspace already done by slot-5;\n  (i) pushed to live-defi-rollout, main, tab/ikennaigboaka/8 — CI triggered.\n", status: done, blocked_by: phase-1-uac-utl-schema-prep}
-- {id: phase-3-subtree-merge, content: "- [x] ✅ [AGENT slot-8] P0. Phase 3 — Subtree-merge both source repos into ml-service with full git history\n  preserved. Completed 2026-05-20. ml-service@739f3a3 (training) + @2c591c5 (inference).\n  ml-training-service/live-defi-rollout → ml_service/training/ + tests/training/ + scripts/training/ (739f3a3)\n  ml-inference-service/live-defi-rollout → ml_service/inference/ + tests/inference/ + scripts/inference/ (2c591c5)\n  Both merges used -s ours + read-tree with prefix. Skeleton __init__.py files replaced by source.\n", status: done, blocked_by: phase-2-skeleton-new-repo}
-- {id: phase-4-fix-imports-and-cli, content: "- [x] ✅ [AGENT slot-8] P0. Phase 4 — Fix internal imports + unify CLI + collapse `api/main.py` per sub-package. Completed 2026-05-20. ml-service@9f82e14.\n  (a) 157 files: ml_training_service.* → ml_service.training.*, ml_inference_service.* → ml_service.inference.*\n  (b) Top-level ml_service/cli/main.py dispatcher with --operation {6 ops} + ServiceBootstrap (from Phase 2)\n  (c) ml_service/api/main.py: aggregated freshness (from Phase 2); sub-pkg api/main.py preserved\n  Remaining Phase 4 items (d-h) handled by Phase 4 sub-items below.\n  (d) MlServiceConfig merge: DEFERRED to Phase 5 (config_reloaders UTL lift covers this)\n  (e) ServiceBootstrap consolidated into cli/main.py (done Phase 2)\n  (f) test conftest merge: DEFERRED to Phase 6 QG sweep\n  (g) config_reloaders.py near-identical: DEFERRED to Phase 5 UTL lift\n  (h) optional-dep split: DEFERRED to Phase 5\n  Evidence: replaced Phase 4 (a)(b)(c)(e) core items; 235-file commit.\n  (a)\
-    \ sed-rewrite every `from ml_training_service.*` → `from ml_service.training.*` and `from\n      ml_inference_service.*` → `from ml_service.inference.*` inside the merged tree;\n  (b) collapse 2 source `cli/main.py` entrypoints into `ml_service/cli/main.py` dispatcher keyed by\n      `--operation`; preserve every existing CLI flag verbatim;\n  (c) consolidate 2 source `api/main.py` Health-API routers into ml-service's router with sub-paths\n      (`/health/training`, `/health/inference`); per-surface `data_freshness` callbacks merge into single\n      `make_health_router` call;\n  (d) merge `config_reloaders.py` per source repo into ml-service's typed `MlServiceConfig` root (one\n      sub-namespace per surface);\n  (e) consolidate per-repo `ServiceBootstrap` invocations into ONE at ml-service top level;\n  (f) merge per-repo `tests/conftest.py` fixtures — prefix on collision (`training_<fixture>`,\n      `inference_<fixture>`);\n  (g) run `bash scripts/quality-gates.sh` in ml-service\
-    \ — STEP 5.61 ServiceBootstrap, STEP 5.62\n      api/main.py + make_health_router, STEP 5.34 typed config_reloaders, STEP 5.66 per-VM shard isolation,\n      STEP 5.69 bucket-name SSOT must all pass;\n  (h) **Single flat-deps Docker image** (operator decision 2026-05-19, Option 2 — hold the flat-deps line):\n      ONE `pyproject.toml` with one flat `[project.dependencies]` list (35 deps); ONE Docker image\n      (~1100-1200MB) regardless of `--operation`. NO conditional dep group, NO `INFERENCE_ONLY` build-arg.\n      Rationale: live-inference runs on long-lived VMs (not scale-to-zero serverless); cold-start is a\n      one-time cost per VM bringup, not per-prediction. 55-60% size win would not buy a meaningful\n      operational benefit on this topology. Flat-deps rule per CLAUDE.md `### Dependencies + builds`\n      preserved workspace-wide; no exceptions added. Image-size regression cap removed from Phase 6 parity.\n", status: formally-deferred, blocked_by: phase-3-subtree-merge}
-- {id: phase-5-lifts-to-utl, content: "- [x] **FORMALLY DEFERRED 2026-05-19 slot-5** [AGENT] P1. Phase 5 — Lift cross-cutting helpers to UTL where Phase 0 (f) audit identifies\n  cross-source duplication. Specifically: model registry abstraction (`MlModelRegistry`), cloud feature\n  provider (shared between training fit-time + inference predict-time), kill-switch bus subscriber for\n  model-promotion events. Each lift = UTL PR + ml-service PR removing local copy. Defer to post-cutover if\n  candidates <2 — lifts are correctness-neutral.\n", status: formally-deferred, blocked_by: phase-4-fix-imports-and-cli}
-- {id: phase-6-parity-test, content: "- [x] **FORMALLY DEFERRED 2026-05-19 slot-5** [AGENT] P0. Phase 6 — Symmetry / parity validation BEFORE archive. Three parity gates:\n  (1) **Boot parity**: ✅ COMPLETE 2026-05-20 slot-8 — ml-service@5fce11a. All 8 operations boot + emit ServiceRuntime/EventLogging STARTED. `python -m ml_service --operation <op> --asset-group <ag> --mode batch` boots for\n      every {operation × asset_group} pair the 2 source repos previously supported. STARTED captured per\n      case. Startup-time regression >2× is a stop.\n  (2) **QG parity**: ✅ COMPLETE 2026-05-20 slot-8 — ml-service@16865a3. 2162 passed, 0 failed, 6 skipped.\n      `bash scripts/quality-gates.sh` green in ml-service AND no regression vs source repos'\n      last-pre-archive QG runs (record baselines pre-merge; STEP-by-STEP comparison post-merge).\n  (3) **Functional parity**: ✅ COMPLETE 2026-05-20 slot-8 — ml-service@a6dd980. 4/4 checks GREEN.\n      `CLOUD_MOCK_MODE=true python scripts/dev/ml_parity_diff.py`:\
-    \ DataPreparation split\n      geometry (cross-repo train=336/test=264 match), FeatureSelector column parity (5 cols),\n      inference mock_data_provider (fallback=30, tradfi=20, sports=10), mock pipeline smoke\n      (60 predictions end-to-end). Phase 6 parity GREEN → archive MAY proceed.\n", status: formally-deferred, blocked_by: phase-4-fix-imports-and-cli}
-- {id: phase-7-archive-source-repos, content: "- [x] **FORMALLY DEFERRED 2026-05-19 slot-5** [HUMAN+AGENT] P0. Phase 7 — Archive both source repos. Per-repo sequence:\n  1. ✅ Add `DEPRECATION_NOTICE.md` banner: done — ml-training-service@d6f92f7, ml-inference-service@cb2307d.\n  2. ✅ Final commit pushed to live-defi-rollout for both repos.\n  3. **[OPERATOR REQUIRED]** `gh repo archive IggyIkenna/ml-training-service --yes` + `gh repo archive IggyIkenna/ml-inference-service --yes`. Operator ping filed in `_agent_pings.md`.\n  4. ✅ Removed both from `unified-trading-system-repos.code-workspace` folders list — PM@<pending>.\n  5. ✅ `workspace-manifest.json` updated: `status=consolidated-into-ml-service`, `archived_into=ml-service`, `archive_date=2026-05-20` — PM@<pending>.\n  6. ✅ `setup-tab-worktrees.sh` has no explicit enumeration of source repos — no change needed.\n  7. **[OPERATOR REQUIRED]** Verify `gh api repos/IggyIkenna/<repo> --jq .archived` returns `true` after step 3.\n", status: blocked-operator,
-  blocked_by: operator-archive-action}
-- {id: phase-8a-launcher-migration, content: "- [x] ✅ **COMPLETE 2026-05-20 slot-8** [AGENT] P0. Phase 8A — Launcher migration in `deployment-service/scripts/vm/`. `launch-ml-training-vm.sh`\n  + `launch-ml-inference-vm.sh` collapse into a single `launch-ml-vm.sh` parameterised by `--operation`.\n  Update `VM_PREFIX_TO_BUCKET` in `vm_zombie_watchdog.py` to drop ml-training / ml-inference prefixes and\n  add ml-service prefix. Update Cloud Build refresh-tarballs config to remove 2 source services.\n  — deployment-service@cb018c0. launch-ml-vm.sh created (python -m ml_service, prefix ml-); vm_zombie_watchdog.py\n  updated (\"ml-train-\" → \"ml-\"); create-code-tarballs.sh all arrays updated (CEFI/SPORTS/ML_TRAINING/ALL_SERVICE_REPOS).\n", status: complete}
-- {id: phase-8b-deployment-api-ui, content: "- [x] ✅ **COMPLETE 2026-05-20 slot-8** [AGENT] P0. Phase 8B — `deployment-api` + `deployment-ui` updates. Service registry endpoints update\n  to remove 2 source service IDs and expose per-operation health on ml-service. Topology nodes merged (MLTR+MLIN→ML).\n  — deployment-service@5fd84a2. Updated: catalog.py, shard_builder.py, dependencies.py, manifest_reader.py,\n  data_status.py (DYNAMIC_DIMENSION_SERVICES), _topology_nodes_upper.py, _topology_panels.py,\n  seed_mock_data.py, conftest.py, and 6 test files.\n", status: complete}
-- {id: phase-9-codex-ssot-updates, content: "- [x] ✅ **COMPLETE 2026-05-20 slot-8** [AGENT] P0. Phase 9 — Codex SSOT updates.\n  (a) ml-service-architecture.md status: stub → stable; migration history updated with Phase 1-9 evidence.\n  (b) SSOT-INDEX: ml-service entry updated to STABLE; cefi-ml-live-serving reference updated.\n  (c) 02-data/README.md: ml-training/ml-inference topics → ml-service (training/inference sub-package).\n  (f) vm-tarball-deployment.md: launch-ml-vm.sh section replaces launch-ml-training-vm.sh.\n  (g) cli-convention.md: --operation table for 8 ml-service operations added; violations row updated.\n  service-registry.yaml: ml-training-service + ml-inference-service → ml-service (consolidated).\n  deprecation-ledger.yaml: both source repos → status: archived, ready_to_delete: true, archive_date: 2026-05-20.\n  — PM@99955526c.\n", status: complete}
-- {id: phase-10-workspace-qg-sweep, content: "- [x] ✅ [AGENT] P0. Phase 10 — Workspace QG sweep + cross-plan coordination banner cleanup. Run QG in every\n  workspace repo touched. Run inventory regenerator. Remove \"\U0001F7E1 IN-FLIGHT REFACTOR\" banners added in\n  pre-plan-Phase-0 announcement. Verify deployment-service end-to-end smoke (ml-service VM boots,\n  completes `--operation train` + `--operation batch-inference` runs, STOPPED events emitted, manifest\n  rows written, model promoted into registry, downstream strategy-service pulls promoted model). Final\n  commit + push + plan-flip sweep.\n  Evidence: ml-service@1283910 (tests/unit stubs + scripts/setup.sh; QG 6 tests pass; pre-existing 15\n  codex violations documented — not introduced by consolidation). PM@842f2d3a9 (20 IN-FLIGHT REFACTOR\n  banners removed). E2E smoke BLOCKED-OPERATOR: requires real VM infra + credentials; filed in _agent_pings.md.\n  Plan complete 2026-05-20 slot-8.\n", status: done, blocked_by: null}
-- {id: phase-0-side-effect-soft-freeze-announcement, content: "- [x] ✅ [AGENT] P0. Phase 0 SIDE EFFECT — Cross-plan soft-freeze announcement on plans touching the 2\n  affected repos. Banner inserted to 20 plans (2026-05-19) — ml-training-service + ml-inference-service. Banner:\n  ```\n  > **\U0001F7E1 IN-FLIGHT REFACTOR — ml-repo-consolidation-2026-05-19** —\n  > ml-training-service + ml-inference-service are being merged into new `ml-service` repo\n  > 2026-05-19 → 2026-05-23. **Soft freeze**: NO new public-API surfaces, NO new top-level packages,\n  > NO module renames in either source repo until Phase 7 archive lands. Internal bugfixes + test work +\n  > plan-flip backfills continue.\n  ```\n  Banner-remove owned by this plan's Phase 10. Affected plan list per fact-report 2026-05-19 — enumerate\n  in Phase 0 pre-audit artifact and link from each banner.\n  Evidence: 20 plans patched 2026-05-19 (slot-8). Plans: AUDIT_2026_05_15_harsh_side_completion,\n  alerting_service_live_rules_2026_05_07,\
-    \ bucket_name_ssot_canonicalisation_2026_05_10,\n  codex_vs_citadel_infrastructure_audit_2026_05_10, compute_optimization_mock_data_2026_05_13,\n  continuation_prompts_2026_05_13_harsh, continuation_prompts_harsh_2026_05_15,\n  cross_cutting_may_23_deliverables_2026_05_08, deployment_and_qg_strategy_implementation_2026_05_13,\n  expected_unattempted_propagation_chain_2026_05_12, features_repo_consolidation_2026_05_08,\n  features_service_qg_cleanup_2026_05_11, master_to_live_defi_2026_05_23,\n  mock_data_pipeline_benchmarking_2026_05_10, ruff_workspace_cleanup_2026_05_12,\n  strategy_repo_consolidation_2026_05_19, work_split_2026_05_13_harsh, work_split_2026_05_18_ikenna,\n  work_split_2026_05_19_ikenna, writegate_honest_coverage_endtoend_2026_05_06.\n", status: done}
+  - { id: phase-0-pre-audit-manifest, content: "- [x] ✅ [AGENT] P0. Phase 0 — Pre-audit manifest (read-only).
+        Produce\n  `plans/active/issues/ml_repo_consolidation_preaudit_2026_05_19.md` enumerating, per source
+        repo\n  (`ml-training-service`, `ml-inference-service`):\n  (a) every Python module + class + public function +
+        post-merge sub-package landing\n      (`ml_service/training/`, `ml_service/inference/`);\n  (b) every callsite
+        OUTSIDE the source repo that imports from `ml_training_service.*` /\n      `ml_inference_service.*` — grep
+        across all sibling repos under `${WORKSPACE_ROOT}` (UAC / UTL / UCI /\n      MTDS / MDPS / instruments-service /
+        features-service / strategy-service / execution-service /\n      unified-trading-pm / deployment-api /
+        deployment-ui / deployment-service / e2e-testing). Fact-report\n      2026-05-19 showed ZERO cross-repo Python
+        imports, but verify and capture line-level evidence;\n  (c) every script under `scripts/` per source repo +
+        post-merge home;\n  (d) every\
+        \ test under `tests/` per source repo + post-merge home
+        (`ml-service/tests/training/`,\n      `ml-service/tests/inference/`);\n  (e) every UAC / UTL symbol the source
+        repo redefines locally — especially around feature-subscriber\n      schemas, model-promotion event contracts,
+        prediction-publisher row schemas, ensemble metadata;\n  (f) every cross-package helper duplicated across both
+        source repos (lift-to-UTL candidates) —\n      `ServiceBootstrap` patterns, kill-switch bus subscriber
+        boilerplate, ManifestFreshnessCache adoption,\n      `config_reloaders.py` typed-class wiring, cloud feature
+        provider abstraction;\n  (g) per-repo `pyproject.toml` dependency union — resolve version conflicts ahead of
+        Phase 3 (likely\n      non-trivial: ml-training pulls full sklearn/xgboost/lightgbm/optuna stack, ml-inference
+        pulls leaner\n      inference deps; flat union must avoid bloating live-inference Docker image — split via
+        optional\n      inference-only build flag if needed);\n  (h) hardcoded\
+        \ service-name strings — `\"ml-training-service\"` / `\"ml-inference-service\"` as pub/sub
+        topic\n      prefixes, env-var prefixes (`ML_TRAINING_SERVICE_*` / `ML_INFERENCE_SERVICE_*`), GCS bucket
+        subpaths,\n      model registry references, deployment-service terraform refs. Topic-name compatibility
+        decisions\n      land here.\n  Output drives every later phase. **Foot-gun**: model promotion topic-name changes
+        invalidate\n  ml-inference's `model_promotion_subscriber` until subscribers + publishers align — sequence Phase
+        4 (b)\n  atomically.\n  Evidence: slot-1 produced
+        `plans/active/issues/ml_repo_consolidation_preaudit_2026_05_19.md` (2026-05-19).\n  Key findings: 0 external
+        Python imports workspace-wide; 35 unique dep union; config_reloaders.py near-identical\n  (UTL lift candidate);
+        ML_MODEL_COORDINATION_TOPIC is wire-protocol constant (no rename needed).\n", status: done }
+  - { id: phase-1-uac-utl-schema-prep, content: "- [x] ✅ [AGENT] P0. Phase 1 — UAC / UTL schema prep. Likely no new
+        schema column needed — training-output\n  events and inference-input events are already independent UAC types.
+        Confirm by grepping UAC for\n  existing data-type enums covering training-complete / model-promoted /
+        prediction-emitted; if either\n  source repo defined local event types not promoted to UAC (Phase 0 (e)
+        finding), lift to UAC under\n  `unified_api_contracts.canonical.crosscutting.lifecycle` or
+        `unified_api_contracts.domain.ml`. Output:\n  list of UAC PRs needed (likely 0-2 small) + UTL helper PRs for any
+        kill-switch subscriber boilerplate\n  lifts. Land BEFORE Phase 3 if non-empty.\n  **RESULT (2026-05-19
+        slot-8)**: 0 blocking PRs before Phase 3.\n  - PredictionEvent (engine/schemas.py): CORRECT-LOCAL (docstring
+        confirmed, not cross-service). Stays.\n  - PredictionEventDict/PredictionMetadata (types.py): CORRECT-LOCAL
+        comment present. Stays.\n  - EnsembleConfig (ensemble_inference.py):\
+        \ DIFFERENT from UAC EnsembleConfig (runtime weights vs training\n    config). Stays local.\n  -
+        ModelTrainedEvent + ModelPromotedEvent: dict-based wire protocols; DEFERRED to Phase 4 (f) as
+        TypedDicts\n    under `unified_api_contracts.internal.domain.ml`. Not blocking Phase 3 — both dicts already
+        stable.\n  - Kill-switch boilerplate: grep returned 0 hits in both repos. No UTL lift needed.\n  - UAC
+        `internal.domain.ml` already has: EnsembleConfig, ModelMetadata, InferenceRequest, InferenceResult.\n  - UAC
+        `internal.domain.ml_inference_service` already has: CascadeConfig,
+        CascadePredictionEvent,\n    PredictionSnapshot.\n  - 0 UAC PRs + 0 UTL PRs needed before Phase 3.\n", status: done }
+  - {
+      id: phase-2-skeleton-new-repo,
+      content:
+        "- [x] ✅ [AGENT slot-8] P0. Phase 2 — Create NEW `ml-service` GitHub repo + bootstrap skeleton. Completed
+        2026-05-20.\n  ml-service@ca06c2e. Repo created 2026-05-19 by operator; slot-5 did (a)+(b) skeleton stub; slot-8
+        completed (c)-(i):\n  (c) pyproject.toml seeded with 50-dep union (35 runtime + 15 dev) from pre-audit
+        §(g);\n  (d) ml_service/api/main.py: make_health_router with aggregated training+inference freshness;\n  (e)
+        ml_service/cli/main.py: --operation dispatcher (6 ops) + ServiceBootstrap;\n  (f) ServiceBootstrap wired in
+        cli/main.py (STARTED/STOPPED/FAILED);\n  (g) .github/workflows/: 7 templates rolled out (semver-agent,
+        workspace-qg, tab-mirror, staging-lock,\n      request-major-bump, major-bump-issue-handler,
+        update-dependency-version);\n  (h) workspace-manifest.json + code-workspace already done by slot-5;\n  (i)
+        pushed to live-defi-rollout, main, tab/ikennaigboaka/8 — CI triggered.\n",
+      status: done,
+      blocked_by: phase-1-uac-utl-schema-prep,
+    }
+  - {
+      id: phase-3-subtree-merge,
+      content:
+        "- [x] ✅ [AGENT slot-8] P0. Phase 3 — Subtree-merge both source repos into ml-service with full git
+        history\n  preserved. Completed 2026-05-20. ml-service@739f3a3 (training) + @2c591c5
+        (inference).\n  ml-training-service/live-defi-rollout → ml_service/training/ + tests/training/ +
+        scripts/training/ (739f3a3)\n  ml-inference-service/live-defi-rollout → ml_service/inference/ + tests/inference/
+        + scripts/inference/ (2c591c5)\n  Both merges used -s ours + read-tree with prefix. Skeleton __init__.py files
+        replaced by source.\n",
+      status: done,
+      blocked_by: phase-2-skeleton-new-repo,
+    }
+  - { id: phase-4-fix-imports-and-cli, content: "- [x] ✅ [AGENT slot-8] P0. Phase 4 — Fix internal imports + unify CLI
+        + collapse `api/main.py` per sub-package. Completed 2026-05-20. ml-service@9f82e14.\n  (a) 157 files:
+        ml_training_service.* → ml_service.training.*, ml_inference_service.* → ml_service.inference.*\n  (b) Top-level
+        ml_service/cli/main.py dispatcher with --operation {6 ops} + ServiceBootstrap (from Phase 2)\n  (c)
+        ml_service/api/main.py: aggregated freshness (from Phase 2); sub-pkg api/main.py preserved\n  Remaining Phase 4
+        items (d-h) handled by Phase 4 sub-items below.\n  (d) MlServiceConfig merge: DEFERRED to Phase 5
+        (config_reloaders UTL lift covers this)\n  (e) ServiceBootstrap consolidated into cli/main.py (done Phase
+        2)\n  (f) test conftest merge: DEFERRED to Phase 6 QG sweep\n  (g) config_reloaders.py near-identical: DEFERRED
+        to Phase 5 UTL lift\n  (h) optional-dep split: DEFERRED to Phase 5\n  Evidence: replaced Phase 4 (a)(b)(c)(e)
+        core items; 235-file commit.\n  (a)\
+        \ sed-rewrite every `from ml_training_service.*` → `from ml_service.training.*` and
+        `from\n      ml_inference_service.*` → `from ml_service.inference.*` inside the merged tree;\n  (b) collapse 2
+        source `cli/main.py` entrypoints into `ml_service/cli/main.py` dispatcher keyed by\n      `--operation`;
+        preserve every existing CLI flag verbatim;\n  (c) consolidate 2 source `api/main.py` Health-API routers into
+        ml-service's router with sub-paths\n      (`/health/training`, `/health/inference`); per-surface
+        `data_freshness` callbacks merge into single\n      `make_health_router` call;\n  (d) merge
+        `config_reloaders.py` per source repo into ml-service's typed `MlServiceConfig` root (one\n      sub-namespace
+        per surface);\n  (e) consolidate per-repo `ServiceBootstrap` invocations into ONE at ml-service top
+        level;\n  (f) merge per-repo `tests/conftest.py` fixtures — prefix on collision
+        (`training_<fixture>`,\n      `inference_<fixture>`);\n  (g) run `bash scripts/quality-gates.sh` in ml-service\
+        \ — STEP 5.61 ServiceBootstrap, STEP 5.62\n      api/main.py + make_health_router, STEP 5.34 typed
+        config_reloaders, STEP 5.66 per-VM shard isolation,\n      STEP 5.69 bucket-name SSOT must all pass;\n  (h)
+        **Single flat-deps Docker image** (operator decision 2026-05-19, Option 2 — hold the flat-deps line):\n      ONE
+        `pyproject.toml` with one flat `[project.dependencies]` list (35 deps); ONE Docker image\n      (~1100-1200MB)
+        regardless of `--operation`. NO conditional dep group, NO `INFERENCE_ONLY` build-arg.\n      Rationale:
+        live-inference runs on long-lived VMs (not scale-to-zero serverless); cold-start is a\n      one-time cost per
+        VM bringup, not per-prediction. 55-60% size win would not buy a meaningful\n      operational benefit on this
+        topology. Flat-deps rule per CLAUDE.md `### Dependencies + builds`\n      preserved workspace-wide; no
+        exceptions added. Image-size regression cap removed from Phase 6 parity.\n", status: formally-deferred, blocked_by: phase-3-subtree-merge }
+  - {
+      id: phase-5-lifts-to-utl,
+      content:
+        "- [x] **FORMALLY DEFERRED 2026-05-19 slot-5** [AGENT] P1. Phase 5 — Lift cross-cutting helpers to UTL where
+        Phase 0 (f) audit identifies\n  cross-source duplication. Specifically: model registry abstraction
+        (`MlModelRegistry`), cloud feature\n  provider (shared between training fit-time + inference predict-time),
+        kill-switch bus subscriber for\n  model-promotion events. Each lift = UTL PR + ml-service PR removing local
+        copy. Defer to post-cutover if\n  candidates <2 — lifts are correctness-neutral.\n",
+      status: formally-deferred,
+      blocked_by: phase-4-fix-imports-and-cli,
+    }
+  - { id: phase-6-parity-test, content: "- [x] **FORMALLY DEFERRED 2026-05-19 slot-5** [AGENT] P0. Phase 6 — Symmetry /
+        parity validation BEFORE archive. Three parity gates:\n  (1) **Boot parity**: ✅ COMPLETE 2026-05-20 slot-8 —
+        ml-service@5fce11a. All 8 operations boot + emit ServiceRuntime/EventLogging STARTED. `python -m ml_service
+        --operation <op> --asset-group <ag> --mode batch` boots for\n      every {operation × asset_group} pair the 2
+        source repos previously supported. STARTED captured per\n      case. Startup-time regression >2× is a
+        stop.\n  (2) **QG parity**: ✅ COMPLETE 2026-05-20 slot-8 — ml-service@16865a3. 2162 passed, 0 failed, 6
+        skipped.\n      `bash scripts/quality-gates.sh` green in ml-service AND no regression vs source
+        repos'\n      last-pre-archive QG runs (record baselines pre-merge; STEP-by-STEP comparison post-merge).\n  (3)
+        **Functional parity**: ✅ COMPLETE 2026-05-20 slot-8 — ml-service@a6dd980. 4/4 checks
+        GREEN.\n      `CLOUD_MOCK_MODE=true python scripts/dev/ml_parity_diff.py`:\
+        \ DataPreparation split\n      geometry (cross-repo train=336/test=264 match), FeatureSelector column parity (5
+        cols),\n      inference mock_data_provider (fallback=30, tradfi=20, sports=10), mock pipeline smoke\n      (60
+        predictions end-to-end). Phase 6 parity GREEN → archive MAY proceed.\n", status: formally-deferred, blocked_by: phase-4-fix-imports-and-cli }
+  - {
+      id: phase-7-archive-source-repos,
+      content:
+        "- [x] **FORMALLY DEFERRED 2026-05-19 slot-5** [HUMAN+AGENT] P0. Phase 7 — Archive both source repos. Per-repo
+        sequence:\n  1. ✅ Add `DEPRECATION_NOTICE.md` banner: done — ml-training-service@d6f92f7,
+        ml-inference-service@cb2307d.\n  2. ✅ Final commit pushed to live-defi-rollout for both repos.\n  3.
+        **[OPERATOR REQUIRED]** `gh repo archive IggyIkenna/ml-training-service --yes` + `gh repo archive
+        IggyIkenna/ml-inference-service --yes`. Operator ping filed in `_agent_pings.md`.\n  4. ✅ Removed both from
+        `unified-trading-system-repos.code-workspace` folders list — PM@<pending>.\n  5. ✅ `workspace-manifest.json`
+        updated: `status=consolidated-into-ml-service`, `archived_into=ml-service`, `archive_date=2026-05-20` —
+        PM@<pending>.\n  6. ✅ `setup-tab-worktrees.sh` has no explicit enumeration of source repos — no change
+        needed.\n  7. **[OPERATOR REQUIRED]** Verify `gh api repos/IggyIkenna/<repo> --jq .archived` returns `true`
+        after step 3.\n",
+      status: blocked-operator,
+      blocked_by: operator-archive-action,
+    }
+  - {
+      id: phase-8a-launcher-migration,
+      content:
+        "- [x] ✅ **COMPLETE 2026-05-20 slot-8** [AGENT] P0. Phase 8A — Launcher migration in
+        `deployment-service/scripts/vm/`. `launch-ml-training-vm.sh`\n  + `launch-ml-inference-vm.sh` collapse into a
+        single `launch-ml-vm.sh` parameterised by `--operation`.\n  Update `VM_PREFIX_TO_BUCKET` in
+        `vm_zombie_watchdog.py` to drop ml-training / ml-inference prefixes and\n  add ml-service prefix. Update Cloud
+        Build refresh-tarballs config to remove 2 source services.\n  — deployment-service@cb018c0. launch-ml-vm.sh
+        created (python -m ml_service, prefix ml-); vm_zombie_watchdog.py\n  updated (\"ml-train-\" → \"ml-\");
+        create-code-tarballs.sh all arrays updated (CEFI/SPORTS/ML_TRAINING/ALL_SERVICE_REPOS).\n",
+      status: complete,
+    }
+  - {
+      id: phase-8b-deployment-api-ui,
+      content:
+        "- [x] ✅ **COMPLETE 2026-05-20 slot-8** [AGENT] P0. Phase 8B — `deployment-api` + `deployment-ui` updates.
+        Service registry endpoints update\n  to remove 2 source service IDs and expose per-operation health on
+        ml-service. Topology nodes merged (MLTR+MLIN→ML).\n  — deployment-service@5fd84a2. Updated: catalog.py,
+        shard_builder.py, dependencies.py, manifest_reader.py,\n  data_status.py (DYNAMIC_DIMENSION_SERVICES),
+        _topology_nodes_upper.py, _topology_panels.py,\n  seed_mock_data.py, conftest.py, and 6 test files.\n",
+      status: complete,
+    }
+  - {
+      id: phase-9-codex-ssot-updates,
+      content:
+        "- [x] ✅ **COMPLETE 2026-05-20 slot-8** [AGENT] P0. Phase 9 — Codex SSOT updates.\n  (a)
+        ml-service-architecture.md status: stub → stable; migration history updated with Phase 1-9 evidence.\n  (b)
+        SSOT-INDEX: ml-service entry updated to STABLE; cefi-ml-live-serving reference updated.\n  (c)
+        02-data/README.md: ml-training/ml-inference topics → ml-service (training/inference sub-package).\n  (f)
+        vm-tarball-deployment.md: launch-ml-vm.sh section replaces launch-ml-training-vm.sh.\n  (g) cli-convention.md:
+        --operation table for 8 ml-service operations added; violations row updated.\n  service-registry.yaml:
+        ml-training-service + ml-inference-service → ml-service (consolidated).\n  deprecation-ledger.yaml: both source
+        repos → status: archived, ready_to_delete: true, archive_date: 2026-05-20.\n  — PM@99955526c.\n",
+      status: complete,
+    }
+  - {
+      id: phase-10-workspace-qg-sweep,
+      content:
+        "- [x] ✅ [AGENT] P0. Phase 10 — Workspace QG sweep + cross-plan coordination banner cleanup. Run QG in
+        every\n  workspace repo touched. Run inventory regenerator. Remove \"\U0001F7E1 IN-FLIGHT REFACTOR\" banners
+        added in\n  pre-plan-Phase-0 announcement. Verify deployment-service end-to-end smoke (ml-service VM
+        boots,\n  completes `--operation train` + `--operation batch-inference` runs, STOPPED events emitted,
+        manifest\n  rows written, model promoted into registry, downstream strategy-service pulls promoted model).
+        Final\n  commit + push + plan-flip sweep.\n  Evidence: ml-service@1283910 (tests/unit stubs + scripts/setup.sh;
+        QG 6 tests pass; pre-existing 15\n  codex violations documented — not introduced by consolidation). PM@842f2d3a9
+        (20 IN-FLIGHT REFACTOR\n  banners removed). E2E smoke BLOCKED-OPERATOR: requires real VM infra + credentials;
+        filed in _agent_pings.md.\n  Plan complete 2026-05-20 slot-8.\n",
+      status: done,
+      blocked_by: null,
+    }
+  - { id: phase-0-side-effect-soft-freeze-announcement, content: "- [x] ✅ [AGENT] P0. Phase 0 SIDE EFFECT — Cross-plan
+        soft-freeze announcement on plans touching the 2\n  affected repos. Banner inserted to 20 plans (2026-05-19) —
+        ml-training-service + ml-inference-service. Banner:\n  ```\n  > **\U0001F7E1 IN-FLIGHT REFACTOR —
+        ml-repo-consolidation-2026-05-19** —\n  > ml-training-service + ml-inference-service are being merged into new
+        `ml-service` repo\n  > 2026-05-19 → 2026-05-23. **Soft freeze**: NO new public-API surfaces, NO new top-level
+        packages,\n  > NO module renames in either source repo until Phase 7 archive lands. Internal bugfixes + test
+        work +\n  > plan-flip backfills continue.\n  ```\n  Banner-remove owned by this plan's Phase 10. Affected plan
+        list per fact-report 2026-05-19 — enumerate\n  in Phase 0 pre-audit artifact and link from each
+        banner.\n  Evidence: 20 plans patched 2026-05-19 (slot-8). Plans:
+        AUDIT_2026_05_15_harsh_side_completion,\n  alerting_service_live_rules_2026_05_07,\
+        \ bucket_name_ssot_canonicalisation_2026_05_10,\n  codex_vs_citadel_infrastructure_audit_2026_05_10,
+        compute_optimization_mock_data_2026_05_13,\n  continuation_prompts_2026_05_13_harsh,
+        continuation_prompts_harsh_2026_05_15,\n  cross_cutting_may_23_deliverables_2026_05_08,
+        deployment_and_qg_strategy_implementation_2026_05_13,\n  expected_unattempted_propagation_chain_2026_05_12,
+        features_repo_consolidation_2026_05_08,\n  features_service_qg_cleanup_2026_05_11,
+        master_to_live_defi_2026_05_23,\n  mock_data_pipeline_benchmarking_2026_05_10,
+        ruff_workspace_cleanup_2026_05_12,\n  strategy_repo_consolidation_2026_05_19, work_split_2026_05_13_harsh,
+        work_split_2026_05_18_ikenna,\n  work_split_2026_05_19_ikenna, writegate_honest_coverage_endtoend_2026_05_06.\n", status: done }
 parent_epic: features_and_ml_master
 ---
 
@@ -210,7 +399,7 @@ All amendments bundle into slot 9's existing scope (~1.5 cal-day extension total
       subdirectories during subtree-merge. `git read-tree --prefix=ml_service/<sub>/` pulls package + tests + scripts
       only; `docs/` intentionally NOT merged (codex is workspace SSOT). Record in each archived source repo's
       `DEPRECATION_NOTICE.md` (Phase 7): "docs/ content not migrated — see
-      `codex/04-architecture/ml-service-architecture.md`."
+      `/codex/04-architecture/ml-service-architecture.md`."
 - [x] **FORMALLY DEFERRED 2026-05-19 slot-5** **P2 NEW** [AGENT slot 9] Phase 2 addendum + Phase 8A addendum — GitHub
       Actions workflows. Phase 2 (g) already runs `rollout-workflow-templates.sh` to seed ml-service with templated
       workflows. Add: enumerate any per-source-repo CUSTOM workflows (cron-scheduled checks, scheduled retraining jobs,

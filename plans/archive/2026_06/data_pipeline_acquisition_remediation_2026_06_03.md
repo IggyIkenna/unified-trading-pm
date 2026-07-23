@@ -9,8 +9,13 @@ stage: [meta]
 repos: [features-service, instruments-service, market-tick-data-service, strategy-service]
 scope: [engineer, admin]
 tags: []
-related: [plans/active/data_source_provenance_all_asset_groups_2026_06_01.md, plans/active/features_registry_status_versioning_2026_05_28.md, plans/active/funding_rate_apy_bps_multi_venue_2026_06.md]
-created: '2026-06-03'
+related:
+  [
+    plans/active/data_source_provenance_all_asset_groups_2026_06_01.md,
+    plans/active/features_registry_status_versioning_2026_05_28.md,
+    plans/active/funding_rate_apy_bps_multi_venue_2026_06.md,
+  ]
+created: "2026-06-03"
 parent_epic: mtds_mdps_master
 priority: P1
 execution_scope: orchestrator-agent
@@ -19,14 +24,15 @@ estimate_baseline_ai_days: 10
 estimate_calibrated_ai_days: 8
 locked_by: live-defi-rollout
 locked_since: 2026-06-03
-completion_gates: {code: C5, deployment: none, business: none}
+completion_gates: { code: C5, deployment: none, business: none }
 repo_gates:
-- {repo: market-tick-data-service, code: C0}
-- {repo: features-service, code: C0}
-- {repo: strategy-service, code: C0}
-- {repo: instruments-service, code: C0}
-- {repo: unified-api-contracts, code: C0}
-audit_results: [plans/audit/results/defi_master_audit_2026_06_03.md, plans/audit/results/cefi_master_audit_2026_06_03.md]
+  - { repo: market-tick-data-service, code: C0 }
+  - { repo: features-service, code: C0 }
+  - { repo: strategy-service, code: C0 }
+  - { repo: instruments-service, code: C0 }
+  - { repo: unified-api-contracts, code: C0 }
+audit_results:
+  [plans/audit/results/defi_master_audit_2026_06_03.md, plans/audit/results/cefi_master_audit_2026_06_03.md]
 ---
 
 # Data-pipeline acquisition-mechanics remediation (DeFi+CeFi)
@@ -161,6 +167,6 @@ and are explicitly OUT OF SCOPE — do NOT re-add them:**
 
 ## Codex SSOT updates (post-phase)
 
-- If Phase 2 adds live connectors: update `codex/02-data/mtds-data-source-coverage-matrix.md` `adapter (live / batch)`
+- If Phase 2 adds live connectors: update `/codex/02-data/mtds-data-source-coverage-matrix.md` `adapter (live / batch)`
   column for orca/raydium/non-HL-CeFi.
-- If Phase 4(b) de-advertises defi triggers: update `codex/04-architecture/instruments-live-architecture.md`.
+- If Phase 4(b) de-advertises defi triggers: update `/codex/04-architecture/instruments-live-architecture.md`.

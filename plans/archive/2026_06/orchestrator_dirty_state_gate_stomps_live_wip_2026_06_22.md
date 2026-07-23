@@ -1,6 +1,8 @@
 ---
 doc_type: plan
-title: 'Orchestrator dirty-state/orphan gate stomps a LIVE session''s uncommitted WIP (liveness-gating bypassed) — TWO variants: (1) commit-then-reset-on-push-reject, (2) git-stash on slot-removal'
+title:
+  "Orchestrator dirty-state/orphan gate stomps a LIVE session's uncommitted WIP (liveness-gating bypassed) — TWO
+  variants: (1) commit-then-reset-on-push-reject, (2) git-stash on slot-removal"
 summary:
 status: superseded
 nature: record
@@ -14,7 +16,16 @@ created: 2026-06-22
 parent_epic: orchestrator_master
 assigned_vm: harsh_pc
 priority: P2
-source: ['git reflog (agent-orchestrator slot-2 clone) 2026-06-22: HEAD@{17-19}', orphaned commit 2c774030b40e4527f57e0608eb9473ac9e2a8dc7 (chore(orphan-wip)), 'server/worktree_clean_check/_orphan.py::commit_and_push_dirty_repos (DirtyStateResolution.COMMIT_AND_PUSH)', 'Incident 2 (2026-06-23): stash ''slot-21-orphan-2026-06-23T13:26:17Z'' on the main clone after tmux kill-session of orch-slot-21/22/23; recovered → agent-orchestrator@cb082ed', 'CLAUDE.md § ''Inherited-dirty-WIP — liveness-gated, not identity-gated''', codex/05-infrastructure/per-tab-worktrees.md § respawn working-tree hygiene]
+source:
+  [
+    "git reflog (agent-orchestrator slot-2 clone) 2026-06-22: HEAD@{17-19}",
+    orphaned commit 2c774030b40e4527f57e0608eb9473ac9e2a8dc7 (chore(orphan-wip)),
+    "server/worktree_clean_check/_orphan.py::commit_and_push_dirty_repos (DirtyStateResolution.COMMIT_AND_PUSH)",
+    "Incident 2 (2026-06-23): stash 'slot-21-orphan-2026-06-23T13:26:17Z' on the main clone after tmux kill-session of
+    orch-slot-21/22/23; recovered → agent-orchestrator@cb082ed",
+    "CLAUDE.md § 'Inherited-dirty-WIP — liveness-gated, not identity-gated'",
+    /codex/05-infrastructure/per-tab-worktrees.md § respawn working-tree hygiene,
+  ]
 locked_by: live-defi-rollout
 ---
 
@@ -65,7 +76,7 @@ read as data loss and the work was needlessly re-done.
 1. **Enforce the liveness discriminator BEFORE COMMIT_AND_PUSH.** A slot with a provably-live session (fresh
    `.agent-claim`/heartbeat, OR any tracked file with mtime < 120 s) must be PROTECTED — never treated as "predecessor
    orphan WIP." Add the check at the gate's decision point (and/or inside `commit_and_push_dirty_repos` as a defensive
-   guard), per the CLAUDE.md rule + `codex/05-infrastructure/per-tab-worktrees.md`.
+   guard), per the CLAUDE.md rule + `/codex/05-infrastructure/per-tab-worktrees.md`.
 2. **Never `reset --hard`/`branch -f` away a local-only commit the gate just made.** If COMMIT_AND_PUSH's push is
    rejected (slot behind), the recovery must `pull --rebase --autostash` (replaying the orphan-wip commit onto origin)
    or push it to a `wip-preserve/slot-<N>` ref — so the commit stays reachable. A reset-to-origin that drops an unpushed

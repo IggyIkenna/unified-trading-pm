@@ -6,7 +6,15 @@ status: complete
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-service, deployment-ui]
+repos:
+  [
+    alerting-service,
+    batch-live-reconciliation-service,
+    client-reporting-api,
+    deployment-api,
+    deployment-service,
+    deployment-ui,
+  ]
 scope: [engineer, admin]
 tags: []
 related: []
@@ -21,7 +29,7 @@ estimate_class: design
 estimate_baseline_ai_days: 2
 estimate_calibrated_ai_days: 1.2
 effective_concurrent_slots: 8
-estimate_calibration_note: 'Work-split itself (design class). Scope it schedules = ~16-20 cal AI-days across 8 slots
+estimate_calibration_note: "Work-split itself (design class). Scope it schedules = ~16-20 cal AI-days across 8 slots
 
   on 1 calendar day — pure mechanical pickup from cycle-close deferrals + master-plan
 
@@ -31,7 +39,7 @@ estimate_calibration_note: 'Work-split itself (design class). Scope it schedules
 
   to Ikenna side per operator direction 2026-05-18 06:15 UTC.
 
-  '
+  "
 ---
 
 # Harsh's daily work-split — 2026-05-18 (mechanical-only)
@@ -49,7 +57,7 @@ estimate_calibration_note: 'Work-split itself (design class). Scope it schedules
 > 2026-05-18 05:31:38Z; VM monitoring handed to dedicated agent — main does NOT poll the VM).
 >
 > **🟢 ESTIMATE CALIBRATION** — applies workspace-wide per
-> [`codex/08-workflows/estimation-calibration.md`](../../codex/08-workflows/estimation-calibration.md). All slot AI-day
+> [`/codex/08-workflows/estimation-calibration.md`](/codex/08-workflows/estimation-calibration.md). All slot AI-day
 > budgets below are CALIBRATED.
 
 ## Why this split
@@ -357,9 +365,9 @@ smoke begins.
       ManifestPhantom mutation types; per-row scenario_id provenance; alerting-suppression rule; MANIFEST tap layer
       scope. Grep check: 6 files with scenario content — meets plan Phase 8 full-execution criterion (≥6 UPDATE docs).
 - [x] ✅ **25. simulation_scenarios Phase 8 B+C — 2 NEW codex docs** — PM@7a735152. Created 2 new docs: (8.B)
-      codex/04-architecture/scenario-outcome-assertions.md: 9-category OutcomeCategory enum table; 6-tuple assertion
+      /codex/04-architecture/scenario-outcome-assertions.md: 9-category OutcomeCategory enum table; 6-tuple assertion
       contract; PASS/FAIL/WARN semantics; matrix-red = cutover-block; scenario-fail vs real-fire (synthetic=True);
-      alerting wire pattern (log-only; paging suppressed); (8.C) codex/02-data/scenario-overlay-semantics.md: overlay
+      alerting wire pattern (log-only; paging suppressed); (8.C) /codex/02-data/scenario-overlay-semantics.md: overlay
       parquet schema (scenario_id/run_id/synthetic); GCS path; per-row provenance chain; available_at discipline
       (LOOKAHEAD_DOWNGRADE marker); manifest scenario_id column (post-cutover Phase 3.G). find codex -name "scenario-\*"
       | wc -l → 3 (meets plan Phase 8 NEW docs criterion).
@@ -703,7 +711,7 @@ smoke begins.
 
 - [x] ✅ **1. strategy_service_phase8_codex_drift (slot 6 item 2)** —
       [`plans/active/issues/strategy_service_phase8_codex_drift_2026_05_15.md`](issues/strategy_service_phase8_codex_drift_2026_05_15.md).
-      5 codex docstring/line-ref drifts in `codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md` +
+      5 codex docstring/line-ref drifts in `/codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md` +
       `arbitrage-price-dispersion.md`. Done-def: 5 drifts patched + codex matches shipped code. — PM@54b06a2c (slot 6,
       2026-05-15). Issue RESOLVED 2026-05-17. Checkbox backfill by slot-6 2026-05-18.
 - [x] ✅ **2. sit_may23_critical_path_coverage_gaps (slot 6 item 4)** —
@@ -731,12 +739,12 @@ smoke begins.
       path builds MEM_WRAP correctly; (b) macOS-simulated path emits warning + empty MEM_WRAP; (c) `QG_MEM_CAP=0`
       silences warning. Done-def: 3+ bash smoke tests + UTL QG green. — PM@263e25b6 (5/5 assertions pass;
       test-qg-mem-cap.sh added to quality-gates-base/tests/).
-- [x] ✅ **6. codex/06-coding-standards/quality-gates.md SSOT cross-link refresh (slot 6 item 9)** — verify
+- [x] ✅ **6. /codex/06-coding-standards/quality-gates.md SSOT cross-link refresh (slot 6 item 9)** — verify
       `quality-gates.md` cross-links to the new `quality-gates-memory-governance.md`. Sweep for stale references to the
       OLD `cpu_count // 4` default. Done-def: cross-link added + 0 stale references. — PM@782f5acc (Memory Governance
       subsection added; 0 stale cpu_count // 4 refs confirmed in quality-gates.md).
 - [x] ✅ **7. codify "VM verify at T+10min" rule** — drop new section in
-      `codex/05-infrastructure/vm-tarball-deployment.md` capturing the rule shipped via 2026-05-18 05:15 UTC ping
+      `/codex/05-infrastructure/vm-tarball-deployment.md` capturing the rule shipped via 2026-05-18 05:15 UTC ping
       (post-launch verification at T+10min before claiming VM "launched"). Done-def: codex section landed + cross-link
       from CLAUDE.md "no fire-and-forget VM launches" line. — PM@8adb0284 (T+10min section + CLAUDE.md cross-link).
 - [x] ✅ **8. REFILL — codex_vs_citadel_infrastructure_audit_2026_05_10 final items (91%, 30/33)** — added 2026-05-18 by
@@ -749,12 +757,12 @@ smoke begins.
       CONFIRMED: `## Findings` section has 0 unflipped sub-items (all 12 area issue docs show ✅ DONE). Remaining 3
       items (2.C/6.B/7.A) are operator-gated. Mechanical portion exhausted.
 - [x] ✅ **9. REFILL — alerting_service_live_rules_2026_05_07 residuals (77%, 50/65)** — added 2026-05-18 by slot-1
-      main. 15 items remaining. Pick codex-side ones (codex/04-architecture/alerting-batch-live.md +
-      codex/03-observability/lifecycle-events.md updates per shipped 44 LIVE_ALERT_RULES + 6 new AlertCodes). Plan path:
-      [`alerting_service_live_rules_2026_05_07.md`](alerting_service_live_rules_2026_05_07.md). Avoid alerting-service
-      runtime changes (slot 4 territory) — only codex hygiene side. — PM@441195b9 (alerting-batch-live.md: Slack
-      removed + Phase 1.E 8 DeFi codes section; lifecycle-events.md: kill-switch bus events subsection;
-      alert-code-taxonomy.md: ~63→~69 count + 5 kill-switch codes).
+      main. 15 items remaining. Pick codex-side ones (/codex/04-architecture/alerting-batch-live.md +
+      /codex/03-observability/lifecycle-events.md updates per shipped 44 LIVE_ALERT_RULES + 6 new AlertCodes). Plan
+      path: [`alerting_service_live_rules_2026_05_07.md`](alerting_service_live_rules_2026_05_07.md). Avoid
+      alerting-service runtime changes (slot 4 territory) — only codex hygiene side. — PM@441195b9
+      (alerting-batch-live.md: Slack removed + Phase 1.E 8 DeFi codes section; lifecycle-events.md: kill-switch bus
+      events subsection; alert-code-taxonomy.md: ~63→~69 count + 5 kill-switch codes).
 - [x] ✅ **10. REFILL — strategy_archetype_taxonomy_2026_05_12 residuals** — codex hygiene work matching slot 6's
       strategy-service-codex ownership. Sweep `codex/09-strategy/` for any drift surfaced by slot 3's Phase 8/10 codex
       audits or by recent commits this week. Done-def: 1-2 codex docs updated + grep-clean. — PM@5bb94de6
@@ -786,7 +794,7 @@ smoke begins.
       Done-def: 3+ docs audited + drift fixes. **~3 cal-days**. — PM@9874c794 (runtime-deployment-topology.md:
       unified-reference-data-interface phantom removed; batch-live-architecture.md: broken archive plan path fixed;
       cloud-agnostic-migration.md: no drift found). 3/3 docs audited, 2 fixes applied.
-- [x] ✅ **16. MEGA RESERVE — codex/02-data/honest-absence-downstream-handling.md hardening** — build on slot-5 item 1
+- [x] ✅ **16. MEGA RESERVE — /codex/02-data/honest-absence-downstream-handling.md hardening** — build on slot-5 item 1
       (writegate Phase 2.E.4 DOCS already shipped). Add cross-link examples per data_type + per asset_group
       consumer-class behaviour. Done-def: 2+ codex sections extended + grep-clean. **~2 cal-days**. — PM@2ce13809 (2
       section extensions: (1) "Cross-references for reason taxonomy" callout with Phase 3.D reconciler links; (2)

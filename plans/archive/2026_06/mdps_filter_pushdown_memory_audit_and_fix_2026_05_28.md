@@ -9,7 +9,11 @@ stage: [meta]
 repos: [deployment-service, features-service, market-data-processing-service, unified-trading-pm]
 scope: [engineer, admin]
 tags: []
-related: [features_calc_efficiency_and_correctness_2026_05_27.md, features_service_e2e_pipeline_test_2026_05_26.md]
+related:
+  [
+    /plans/archive/2026_06/features_calc_efficiency_and_correctness_2026_05_27.md,
+    /plans/active/features_service_e2e_pipeline_test_2026_05_26.md,
+  ]
 created: 2026-05-28
 parent_epic: mtds_mdps_master
 assigned_vm: vm-ml
@@ -356,7 +360,7 @@ Per operator 2026-05-28 EOD, the sequence is:
       discipline** — every batch service whose pipeline matches MDPS's shape (list raw → filter → load → process →
       write) MUST apply scope filters at the LIST stage, not the WRITE stage. Reference this plan + the 2026-05-28
       incident. (If no codex doc fits, write a stub.) — Doc already landed at PM commit `d52b0eb6`:
-      `codex/06-coding-standards/read-time-filter-pushdown.md`. Covers: rule, anti-pattern, correct pattern,
+      `/codex/06-coding-standards/read-time-filter-pushdown.md`. Covers: rule, anti-pattern, correct pattern,
       verification recipe, reference implementation (MDPS `e47205d`), incidents, cross-service generalization. Checkbox
       flip 2026-05-30.
 - [x] ✅ [AGENT] P2. **4.2 ~~Remove the now-stale workspace mitigations~~ Re-scope the TradFi mitigation in the sharded

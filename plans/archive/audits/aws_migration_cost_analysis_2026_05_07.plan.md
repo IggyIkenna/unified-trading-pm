@@ -6,17 +6,18 @@ status: superseded
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [alerting-service, deployment-api, deployment-service, strategy-service, unified-trading-library, unified-trading-pm]
+repos:
+  [alerting-service, deployment-api, deployment-service, strategy-service, unified-trading-library, unified-trading-pm]
 scope: [admin, engineer]
 tags: []
 related: []
-created: '2026-05-07'
+created: "2026-05-07"
 ---
 
 ## Status — superseded 2026-05-08 by codex_refactor Phase F.4
 
 This research deliverable was extracted to a per-resource cost snapshot at
-[`codex/05-infrastructure/aws-migration-cost-snapshot-2026-05-07.md`](../../../codex/05-infrastructure/aws-migration-cost-snapshot-2026-05-07.md)
+[`/codex/05-infrastructure/aws-migration-cost-snapshot-2026-05-07.md`](/codex/05-infrastructure/aws-migration-cost-snapshot-2026-05-07.md)
 and the original moved here for historical reference. The original "defer AWS to Q3 2026" recommendation was superseded
 earlier on 2026-05-07 by the dual-cloud decision in
 [`plans/active/aws_migration_defi_first_2026_05_07.md`](../../active/aws_migration_defi_first_2026_05_07.md). The
@@ -48,10 +49,10 @@ calculation appendix) preserved in this archive.
 
 The Unified Trading System currently runs on a single GCP project (`central-element-323112`, `asia-northeast1` Tokyo
 region). Running snapshot 2026-05-07: 24 GCE VMs, 239 GCS buckets, 24 BigQuery datasets, 62 Pub/Sub topics, 140 Secret
-Manager secrets, ~608 GB Artifact Registry, ~21 Cloud Run services, ~50 Cloud Functions (eventarc/firebase glue).
-Estimated monthly GCP run-rate is **~$8,300–$12,500/month** depending on storage growth and concurrent backfill VM
-hours. Equivalent AWS deployment in `ap-northeast-1` (Tokyo) lands at **~$8,800–$13,300/month** — **+5% to +7% on list
-pricing**, with a **one-time migration cost dominated by 5–25 TB of cross-cloud egress (~$450–$2,250) plus 4–8
+Manager secrets, ~~608 GB Artifact Registry, ~~21 Cloud Run services, ~~50 Cloud Functions (eventarc/firebase glue).
+Estimated monthly GCP run-rate is **~~$8,300–$12,500/month** depending on storage growth and concurrent backfill VM
+hours. Equivalent AWS deployment in `ap-northeast-1` (Tokyo) lands at **~~$8,800–$13,300/month** — **+5% to +7% on list
+pricing**, with a **one-time migration cost dominated by 5–25 TB of cross-cloud egress (~~$450–$2,250) plus 4–8
 engineer-weeks (~$60k–$120k loaded)**.
 
 12-month run-rate delta is roughly **+$6k to +$10k/year on list pricing**, well within the noise of sustained-use vs
@@ -165,7 +166,7 @@ odum-portal) are hot-path interactive.
 ### Firebase (Identity Platform + Firestore + Storage + Auth + Hosting)
 
 Used for the unified-trading-system-ui authentication tier (Tier 0 emulator suite + staging + prod). Documented across
-`codex/14-playbooks/authentication/firebase-local.md` + workspace dev tiers. Auto-included in the GCP project. Identity
+`/codex/14-playbooks/authentication/firebase-local.md` + workspace dev tiers. Auto-included in the GCP project. Identity
 Platform pricing kicks in above 50k MAU; Firestore charges per read/write/storage.
 
 ---
@@ -174,7 +175,7 @@ Platform pricing kicks in above 50k MAU; Firestore charges per read/write/storag
 
 | GCP service                               | AWS equivalent                                                             | Migration complexity | Semantic differences                                                                                                                                                                                                                                                                                                                                                                                            |
 | ----------------------------------------- | -------------------------------------------------------------------------- | -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| GCS (Standard)                            | S3 (Standard)                                                              | **Low**              | conditional generation match (`x-goog-if-generation-match`) ↔ S3 conditional puts (`If-Match` ETags); workspace `ManifestWriter` uses GCS-specific CAS. **Codex impact**: writegate-honest-coverage Layer 1 manifest writer needs an AWS abstraction layer or per-cloud branch. Egress + request pricing differs (S3 has more granular tiering).                                                               |
+| GCS (Standard)                            | S3 (Standard)                                                              | **Low**              | conditional generation match (`x-goog-if-generation-match`) ↔ S3 conditional puts (`If-Match` ETags); workspace `ManifestWriter` uses GCS-specific CAS. **Codex impact**: writegate-honest-coverage Layer 1 manifest writer needs an AWS abstraction layer or per-cloud branch. Egress + request pricing differs (S3 has more granular tiering).                                                                |
 | GCS (lifecycle to Coldline/Archive)       | S3 Glacier Instant / Deep Archive                                          | Low                  | rule equivalents; tier prices differ                                                                                                                                                                                                                                                                                                                                                                            |
 | GCE (e2 family)                           | EC2 (t3 / m6i / r6i families)                                              | **Low**              | spot pricing equivalent; AMI building required for each VM tarball image; startup-script semantics map cleanly to user-data                                                                                                                                                                                                                                                                                     |
 | GCE persistent disks                      | EBS (gp3 / io2)                                                            | Low                  | gp3 closest to pd-balanced                                                                                                                                                                                                                                                                                                                                                                                      |
@@ -312,7 +313,7 @@ Run). At current scale neither cloud has a decisive cost edge.
 
 1. Update `unified-trading-pm/plans/active/master_to_live_defi_2026_05_23.plan.md` work-stream-D items D.1–D.5: change
    status from "BLOCKED awaiting cost analysis" to "deferred Q3 2026 — see
-   `codex/05-infrastructure/aws_migration_cost_analysis_2026_05_07.md`". Cite this report.
+   `/codex/05-infrastructure/aws_migration_cost_analysis_2026_05_07.md`". Cite this report.
 2. Open a successor plan stub in `unified-trading-pm/plans/ai/` named `aws_migration_q3_2026.plan.md` with the migration
    phasing pulled from this report's service-map + risk register.
 3. Keep the `unified-cloud-interface` (UCI) abstraction discipline — every new service that lands between now and Q3
@@ -384,9 +385,9 @@ SUD-blended GCP and Savings-Plan-blended AWS for production estimates.**
 ## References
 
 - Workspace docs: CLAUDE.md (VM Naming Convention, manifest concurrency principle, batch=live),
-  `codex/04-architecture/cloud-agnostic-migration.md` (canonical SSOT),
-  `codex/05-infrastructure/deployment-clusters-live-vs-batch.md`,
-  `codex/02-data/availability-manifest-and-data-status.md`.
+  `/codex/04-architecture/cloud-agnostic-migration.md` (canonical SSOT),
+  `/codex/05-infrastructure/deployment-clusters-live-vs-batch.md`,
+  `/codex/02-data/availability-manifest-and-data-status.md`.
 - Master plan: `plans/active/master_to_live_defi_2026_05_23.plan.md` work-stream-D.
 - Audit anchor: commit `12ce828a` master plan audit.
 - Successor plan stub (proposed): `plans/ai/aws_migration_q3_2026.plan.md`.

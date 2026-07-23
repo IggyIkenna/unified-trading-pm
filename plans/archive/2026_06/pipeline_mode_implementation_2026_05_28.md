@@ -1,15 +1,30 @@
 ---
 doc_type: plan
-title: pipeline_mode — implement properly (column-fill + backfill + reconciliation; partition deferred to next migration window)
+title:
+  pipeline_mode — implement properly (column-fill + backfill + reconciliation; partition deferred to next migration
+  window)
 summary:
 status: complete
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [batch-live-reconciliation-service, deployment-api, deployment-ui, execution-service, features-service, instruments-service]
+repos:
+  [
+    batch-live-reconciliation-service,
+    deployment-api,
+    deployment-ui,
+    execution-service,
+    features-service,
+    instruments-service,
+  ]
 scope: [engineer, admin]
 tags: []
-related: [issues/pipeline_mode_implementation_decision_2026_05_28.md, cefi_venue_backfill_coverage_remediation_2026_05_27.md, archive/2026_05/live_pipeline_mtds_mdps_features_2026_05_08.md]
+related:
+  [
+    issues/pipeline_mode_implementation_decision_2026_05_28.md,
+    /plans/archive/cefi_venue_backfill_coverage_remediation_2026_05_27.md,
+    archive/2026_05/live_pipeline_mtds_mdps_features_2026_05_08.md,
+  ]
 created: 2026-05-28
 parent_epic: batch_live_symmetry_master
 assigned_vm: vm-cross-cutting
@@ -18,13 +33,13 @@ last_updated: 2026-05-28
 estimate_class: refactor
 estimate_baseline_ai_days: 6
 estimate_calibrated_ai_days: 2.4
-estimate_calibration_note: 'Refactor (0.4×): bulk is propagating an existing arg through known callsites + a one-shot
+estimate_calibration_note: "Refactor (0.4×): bulk is propagating an existing arg through known callsites + a one-shot
 
   derivation pass over the manifest. Net-new surface is small (one UTL helper + one StrEnum +
 
   one backfill script). Partition migration is explicitly deferred (Phase 5).
 
-  '
+  "
 locked_by: live-defi-rollout
 locked_since: 2026-05-28
 ---
@@ -165,9 +180,9 @@ impact, no walk needed now.
 
 ## Phase 6 — Codex SSOT updates
 
-- [x] ✅ [AGENT] P2. Write `codex/02-data/pipeline-mode-and-batch-live-reconciliation.md` documenting the canonical
+- [x] ✅ [AGENT] P2. Write `/codex/02-data/pipeline-mode-and-batch-live-reconciliation.md` documenting the canonical
       `PipelineMode` enum, the derivation table, the reconciliation pattern, and the deferred-partition note. Cross-link
-      from `codex/02-data/availability-manifest-and-data-status.md` + `codex/02-data/contracts-scope-and-layout.md`. —
+      from `/codex/02-data/availability-manifest-and-data-status.md` + `/codex/02-data/contracts-scope-and-layout.md`. —
       unified-trading-pm@58115ffc
 - [x] ✅ [AGENT] P2. EDIT `plans/active/cefi_venue_backfill_coverage_remediation_2026_05_27.md` §6I pipeline_mode item
       marked `[x] ✅ — resolved by pipeline_mode_implementation_2026_05_28.md`. Phase 3.2-3.4 execution noted as pending

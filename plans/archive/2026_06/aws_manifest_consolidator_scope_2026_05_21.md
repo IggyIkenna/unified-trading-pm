@@ -128,12 +128,12 @@ because EventBridge Scheduler does not support Batch as a direct target in ap-no
 
 ## Codex SSOT updates
 
-- UPDATE: `codex/05-infrastructure/manifest-consolidator-ssot.md` — add AWS section (Batch + EventBridge topology,
+- UPDATE: `/codex/05-infrastructure/manifest-consolidator-ssot.md` — add AWS section (Batch + EventBridge topology,
   bucket map, IAM pattern). Remove "not currently in scope" language from deprecated AWS path note.
 
 ## Composes with
 
-- `codex/05-infrastructure/manifest-consolidator-ssot.md` — canonical operational invariants (AWS port must match).
+- `/codex/05-infrastructure/manifest-consolidator-ssot.md` — canonical operational invariants (AWS port must match).
 - `deployment-service/terraform/modules/container-job/aws/` + `scheduler/aws/` — existing modules being wired.
 - `deployment-service/terraform/gcp/manifest_consolidator_scheduler.tf` — GCP reference implementation.
 

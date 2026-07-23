@@ -6,10 +6,23 @@ status: complete
 nature: record
 asset_group: [infrastructure]
 stage: [meta]
-repos: [deployment-api, deployment-service, execution-service, features-service, instruments-service, market-tick-data-service]
+repos:
+  [
+    deployment-api,
+    deployment-service,
+    execution-service,
+    features-service,
+    instruments-service,
+    market-tick-data-service,
+  ]
 scope: [engineer, admin]
 tags: []
-related: [plans/active/agent_context_and_memory_hygiene_2026_06_02.md, plans/active/agent_orchestrator_e2e_workflow_and_execution_scope_2026_06_02.md, plans/epics/plan_hygiene_master.md]
+related:
+  [
+    plans/active/agent_context_and_memory_hygiene_2026_06_02.md,
+    plans/active/agent_orchestrator_e2e_workflow_and_execution_scope_2026_06_02.md,
+    plans/epics/plan_hygiene_master.md,
+  ]
 created: 2026-06-02
 parent_epic: plan_hygiene_master
 priority: P2
@@ -24,7 +37,7 @@ estimate_calibrated_ai_days: 0.8
 > shipped PM@71a2e103b, fleet-live via PM-sourced base scripts (NO per-repo rollout — verified on deployment-service's
 > full QG). 18 unit tests; fire→clean proven; CLAUDE.md § "Imports + types" cites the enforcement. Incident caught at
 > verification: scoped `--update-baseline` zeroed unobserved repos' baselines — both checkers fixed + baselines restored
-> same day. Codex SSOT: `codex/06-coding-standards/quality-gates.md` § "STEP 5.94 + 5.95".
+> same day. Codex SSOT: `/codex/06-coding-standards/quality-gates.md` § "STEP 5.94 + 5.95".
 >
 > ## Deferred work — migrated to: none (per-repo pyproject `[tool.ruff]` IDE-sync is a non-enforcement nicety,
 >

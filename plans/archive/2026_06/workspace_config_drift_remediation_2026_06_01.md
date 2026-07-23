@@ -1,12 +1,21 @@
 ---
 doc_type: plan
-title: Workspace .code-workspace repo-list drift remediation (canonical commit + generator path-style fix + regression guard)
+title:
+  Workspace .code-workspace repo-list drift remediation (canonical commit + generator path-style fix + regression guard)
 summary:
 status: complete
 nature: record
 asset_group: [infrastructure]
 stage: [meta]
-repos: [deployment-service, execution-service, features-service, fund-administration-service, greeks-service, instruments-service]
+repos:
+  [
+    deployment-service,
+    execution-service,
+    features-service,
+    fund-administration-service,
+    greeks-service,
+    instruments-service,
+  ]
 scope: [engineer, admin]
 tags: []
 related: []
@@ -98,7 +107,7 @@ estimate_calibrated_ai_days: 1.2
       Detection logic is a standalone testable `scripts/dev/ff-starvation-detect.sh`. Added
       `tests/test_ff_starvation_detect.bats` (10 cases: collision→signal, non-colliding-dirty→no-signal,
       below-threshold→no-signal, clean/up-to-date→no-signal + syntax + arg-validation). Updated
-      `codex/05-infrastructure/per-tab-worktrees.md` § "Step 7" (troubleshooting row + dedicated watchdog subsection).
+      `/codex/05-infrastructure/per-tab-worktrees.md` § "Step 7" (troubleshooting row + dedicated watchdog subsection).
       **Landed on LDR** (same staging-632-behind deviation as Items 2/3). — code unified-trading-pm@899e36e92 | bats
       10/10 green | full PM QG `--no-fix` exit 0 (basedpyright ratchet held; new scripts are bash, no JSON-parsing
       python so no empty-fallback exclude needed).
@@ -189,6 +198,6 @@ stash-by-name + adjudicate judgment from the two-teammates HARD RULE — see Ite
 
 ## Codex SSOT updates
 
-- [x] `codex/05-infrastructure/per-tab-worktrees.md` — documented the canonical-vs-slot `.code-workspace` path-style
+- [x] `/codex/05-infrastructure/per-tab-worktrees.md` — documented the canonical-vs-slot `.code-workspace` path-style
       contract (Item 2) + the regression guard (Item 3) in a new "### `.code-workspace` path-style contract" subsection.
       Landed alongside Item 3.

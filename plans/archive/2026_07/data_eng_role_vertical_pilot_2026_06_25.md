@@ -14,8 +14,8 @@ tags: [role-registry, data-engineering, data-quality, daily-audit, triage, archi
 related:
   [
     ../epics/agent_operating_framework_master.md,
-    role_registry_schema_and_broker_mvp_2026_06_25.md,
-    escalation_pipeline_mvp_2026_06_25.md,
+    /plans/archive/2026_07/role_registry_schema_and_broker_mvp_2026_06_25.md,
+    /plans/active/escalation_pipeline_mvp_2026_06_25.md,
   ]
 created: 2026-06-25
 parent_epic: agent_operating_framework_master
@@ -58,7 +58,7 @@ drift_direction: advance-code
 > **Dispatch note (HISTORICAL — corrected 2026-07-12, doc-reconciliation autofix finding 8,
 > `plan_reconciliation_operator_decisions_2026_07_11.md` §A2 "50 reclassified" blanket ruling)**: this note was written
 > 2026-06-25, two days before the 2026-06-27 single-VM architecture retirement
-> (`codex/12-agent-workflow/orchestrator-multi-vm-topology.md`) fixed `assigned_vm` to `{planning, NA}` only — host-id
+> (`/codex/12-agent-workflow/orchestrator-multi-vm-topology.md`) fixed `assigned_vm` to `{planning, NA}` only — host-id
 > values like `harsh_pc` are no longer valid. It was never revisited after that retirement. The frontmatter
 > `assigned_vm: NA` (line 15) is therefore already correct under current rules; the text below is preserved as
 > historical dispatch context, not a live value. (was: `assigned_vm: harsh_pc` (the standalone fleet-dispatch test host
@@ -69,7 +69,7 @@ drift_direction: advance-code
 
 ## Why
 
-Data-pipeline correctness is the heartbeat (`codex/02-data/data-pipeline-correctness-hard-rule.md`). Today the Data-Eng
+Data-pipeline correctness is the heartbeat (`/codex/02-data/data-pipeline-correctness-hard-rule.md`). Today the Data-Eng
 _function_ exists as disconnected pieces (scout audit, 2026-06-25):
 
 - **Daily audit crons** (Cloud Run): `data_pipeline_daily_digest` (07:00), `manifest_hygiene_daily` (08:00 changed /
@@ -83,7 +83,7 @@ _function_ exists as disconnected pieces (scout audit, 2026-06-25):
 None of this is a _role_ — there is no charter, no on-demand "is my data healthy?" verb, no daily audit that an agent
 owns and escalates from. This plan makes Data-Eng a first-class registry row riding the spine, and proves
 trigger→agent→escalation→answer. SSOT for what's a real failure vs honest absence:
-`codex/02-data/availability-manifest-and-data-status.md`.
+`/codex/02-data/availability-manifest-and-data-status.md`.
 
 ## Locked design (operator, 2026-06-25)
 
@@ -145,9 +145,9 @@ trigger→agent→escalation→answer. SSOT for what's a real failure vs honest 
 
 ## Codex SSOT updates
 
-- `codex/02-data/availability-manifest-and-data-status.md` — cross-link the Data-Eng role + `/data-freshness` reader.
+- `/codex/02-data/availability-manifest-and-data-status.md` — cross-link the Data-Eng role + `/data-freshness` reader.
 - `unified-trading-pm/agents/data_engineering.md` is the Data-Eng worked-example registry row (`agent-role` schema
-  enforced by `scripts/docs/docspec.py`; the `codex/04-architecture/role-registry.md` doc was retired 2026-07-16,
+  enforced by `scripts/docs/docspec.py`; the `/codex/04-architecture/role-registry.md` doc was retired 2026-07-16,
   consolidated into docspec + the charters).
 
 ## Progress Log

@@ -1,6 +1,7 @@
 ---
 doc_type: plan
-title: unified-trading-library full quality-gates.sh → GREEN (B1 type-hardening campaign + imports/size/coverage backlog)
+title:
+  unified-trading-library full quality-gates.sh → GREEN (B1 type-hardening campaign + imports/size/coverage backlog)
 summary:
 status: complete
 nature: record
@@ -9,7 +10,11 @@ stage: [meta]
 repos: [unified-trading-library]
 scope: [engineer, admin]
 tags: []
-related: [plans/active/manifest_reader_fail_fast_on_stale_fallback_2026_05_28.md, plans/archive/2026_06/manifest_consolidator_liveness_health_2026_06_01.md]
+related:
+  [
+    plans/active/manifest_reader_fail_fast_on_stale_fallback_2026_05_28.md,
+    plans/archive/2026_06/manifest_consolidator_liveness_health_2026_06_01.md,
+  ]
 created: 2026-06-01
 parent_epic: plans/epics/infrastructure_master.md
 assigned_vm: vm-cross-cutting
@@ -21,7 +26,7 @@ estimate_calibrated_ai_days: 4.8
 last_updated: 2026-06-01
 locked_by: live-defi-rollout
 locked_since: 2026-06-01
-codex_ssots: [codex/06-coding-standards/quality-gates.md]
+codex_ssots: [/codex/06-coding-standards/quality-gates.md]
 source_issue: plans/archive/2026_06/utl_full_qg_red_backlog_2026_06_01.md
 ---
 
@@ -103,7 +108,7 @@ single plan owned it. This plan is that owner.
 
 **Codex SSOT audit (post-phase):** the stub strategy (pyarrow-stubs + boto3 extras) + the "narrow per-line exact-rule
 ignore for genuinely stub-limited boundaries, never blanket" exemption pattern should be recorded in
-`codex/06-coding-standards/quality-gates.md` — pending (do on the ship turn).
+`/codex/06-coding-standards/quality-gates.md` — pending (do on the ship turn).
 
 **Resume recipe (when staging unlocks):** in `.tabs/1/unified-trading-library`, re-run
 `bash scripts/quality-gates.sh --no-fix` (re-confirms green + sentinel), then
@@ -196,7 +201,7 @@ out-of-compliance local override. The campaign's order of operations minimises h
       `.qg_content_sentinel` (not `.qg_last_passed_sha`) — the SHA sentinel quickmerge `--agent` checks was written
       manually (base-library bug → follow-up filed). — @9e97e01b; shipped via PR #253 → staging.
 - [x] ✅ [DOC] P1. `manifest_reader_fail_fast_on_stale_fallback_2026_05_28` C4 flipped ✅ (cites this plan + @9e97e01b).
-- [x] ✅ [CODEX] P1. Post-phase codex audit done — `codex/06-coding-standards/quality-gates.md` updated with the stub
+- [x] ✅ [CODEX] P1. Post-phase codex audit done — `/codex/06-coding-standards/quality-gates.md` updated with the stub
       strategy (pyarrow-stubs + boto3 extras) + the narrow-per-line-exact-rule-exemption pattern + the base-library
       SHA-sentinel gap.
 
@@ -216,7 +221,7 @@ out-of-compliance local override. The campaign's order of operations minimises h
 
 ## Codex SSOTs
 
-- `codex/06-coding-standards/quality-gates.md` — STEP 5.21 strict-basedpyright policy + any documented exemption.
+- `/codex/06-coding-standards/quality-gates.md` — STEP 5.21 strict-basedpyright policy + any documented exemption.
 
 ## Provenance
 

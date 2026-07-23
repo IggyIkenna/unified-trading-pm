@@ -13,7 +13,8 @@ related: []
 created: 2026-05-14
 type: coordination-doc
 deadline: 2026-05-23 (live DeFi cutover)
-horizon: ~9 calendar days (14 May → 23 May); ~272 cal AI-days across 8 implementer slots (200 baseline + 72 v2 extension)
+horizon:
+  ~9 calendar days (14 May → 23 May); ~272 cal AI-days across 8 implementer slots (200 baseline + 72 v2 extension)
 companion_to: plans/active/work_split_2026_05_14_harsh.md
 locked_by: live-defi-rollout
 locked_since: 2026-05-14
@@ -748,7 +749,7 @@ slot 10.
    commercial subscription** (not academic tier). Actions: (a) docstring update at `tardis_stream_client.py:159` —
    VERIFIED on LDR at `MTDS@60c2e55`. (b) codex note at `interface-credential-convention.md` § Tardis — already present
    (lines 158-167). (c) error message at line 167 references
-   `codex/04-architecture/interface-credential-convention.md § Tardis` — verified. All 3 actions confirmed done.
+   `/codex/04-architecture/interface-credential-convention.md § Tardis` — verified. All 3 actions confirmed done.
    (research 1.2×, ~0.5 = 0.6 cal)
 4. ✅ **Sports scrapers `BLOCKED-OPERATOR-DECISION` cross-link verification** — per operator pick 2026-05-14 (B + light
    C): (a) `master_to_live_defi_2026_05_23.md` row — `dba80b61` on LDR ✅. (b) successor plan
@@ -827,8 +828,8 @@ If the item is already shipped by Harsh → flip absorbed item to `[x] (harsh-sh
 
 ## Cross-side handshakes (Ikenna ↔ Harsh)
 
-- **Ikenna slot 2 Phase A/B** ↔ Harsh slot 6 freeze-gate audit: if Harsh slot 6 surfaces a freeze-gate item that
-  depends on defi classifier crossref, slot 2 owner is paged via `_agent_pings.md`.
+- **Ikenna slot 2 Phase A/B** ↔ Harsh slot 6 freeze-gate audit: if Harsh slot 6 surfaces a freeze-gate item that depends
+  on defi classifier crossref, slot 2 owner is paged via `_agent_pings.md`.
 - **Ikenna slot 6+7 wallet_treasury Phase 1+3** (pulled forward to pre-May-15) is independent of Harsh today; ack-only.
 - **batch_live_symmetry** entirely Harsh slots 5+8; Ikenna does NOT touch. If Harsh files an Ikenna-touching UAC
   ratchet, slot 8 owner picks up via \_agent_pings.md.
