@@ -9,7 +9,7 @@ summary:
   failing — live-defi-rollout ITSELF is red on quality-gates-v2 (run 29674309292), so the standing ldr-to-main-promote
   cron re-mints a fresh promote PR every ~15min off a red LDR, each inheriting the same "QG slice (checks)" leg failure.
   Routine worker re-dispatch cannot clear it; the fix belongs on live-defi-rollout.
-status: open
+status: resolved
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -24,7 +24,7 @@ parent_epic: infrastructure_master
 priority: P1
 source: [review-agent escalation msg 1456 + main-agent gh investigation]
 assigned_vm:
-resolved_by:
+resolved_by: unified-trading-pm@26b16c83
 locked_by:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
@@ -88,3 +88,27 @@ differs run-to-run → environmental/flaky in the checks leg (harden the gate, n
 
 - Consolidated tracking: `ao_open_issues_consolidated_close_out_2026_07_17.md`.
 - Main↔review thread: orchestrator messages 1456 (review), 1458 (main reply with this diagnostic).
+
+## Resolution (2026-07-22) — suggestion #4 implemented
+
+`unified-trading-pm@26b16c83`. The historical #632-635 churn on market-tick-data-service is stale (resolved days ago);
+what remained open was suggestion #4 — making the promote automation skip re-minting while LDR itself is red.
+Investigation found this was **already partially built**: `ldr-to-main-promote-fleet.yml`'s Tier-A gate already blocks
+on `ci_status=FAILING`, but it read ONLY the `workspace-manifest.json` cache — the HOURLY consolidator projection
+(`codex/08-workflows/ci-cd-flow.md`: "manifest stays a fallback cache, read Firestore for live state"). That cache lag
+is exactly why 4 PRs got minted against a genuinely-red LDR: `ci_status` hadn't caught up yet. Fixed by adding a LIVE
+Firestore read (`ci_status_store.py get-doc --repo <repo>`, the SAME call the SIT gate a few lines down already trusts)
+alongside the cached read — Tier-A now blocks if EITHER signal is `FAILING`, degrading safely to the cache alone if
+Firestore is transiently unavailable (`get-doc` emits `{}` on failure, never silently reading as healthy). Verified:
+both files' YAML parses clean, the live `ci_status_store.py get-doc` call was smoke-tested directly (correctly emits
+`{}` + a logged warning when the Firestore SDK is unavailable, matching its documented fail-safe contract). Full PM
+`quality-gates.sh` green.
+
+**New finding, not fixed here (separate scope)**: `.github/workflows/ldr-to-main-promote-fleet.yml` (the deployed,
+executing copy) has drifted significantly from its own `scripts/self-hosted-runners/hosted-baseline/` template — the
+deployed copy is AHEAD by several undocumented-in-the-baseline fixes (self-hosted `[glue]` runner migration, the
+2026-07-20 `breaking_scan_dir` source-dir fix, the 2026-07-20 HEAD-REF pin fix, the 2026-07-21 SIGPIPE fix). This fix
+was applied identically to BOTH files to avoid adding to the drift, but the underlying baseline-staleness is the same
+class of risk as `cloudbuild_template_behind_repos_rollout_would_regress_fleet_2026_07_20.md` — a blind rollout from the
+baseline would regress 4 real fixes. Worth its own audit/reconciliation pass; not attempted here given the scope and the
+size of this specific workflow (~980 lines).

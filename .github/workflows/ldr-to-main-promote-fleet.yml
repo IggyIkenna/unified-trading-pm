@@ -446,11 +446,22 @@ jobs:
             # Read ci_status from manifest via jq. Fail-open on missing/unset.
             CI_STATUS=$(jq -r --arg r "$REPO" '.repositories[$r].ci_status // empty' \
               workspace-manifest.json 2>/dev/null || echo "")
-            if [ "$CI_STATUS" = "FAILING" ]; then
-              echo "GATE BLOCK $REPO: ci_status=FAILING — LDR CI is red; fix before LDR→main"
+            # LIVE Firestore overlay (2026-07-22, mtds_ldr_red_promote_churn_four_prs_2026_07_19): the
+            # manifest's ci_status is the HOURLY consolidator projection (codex/08-workflows/ci-cd-flow.md:
+            # "ci_status is Firestore-SSOT... manifest stays a fallback cache") — it can lag a genuinely
+            # fresh LDR quality-gates-v2 failure by up to an hour. Confirmed incident: 4 promote PRs were
+            # re-minted over ~4h against an ACTUALLY-red LDR because the cached ci_status had not caught up
+            # yet. Reuses the SAME ci_status_store.py the SIT gate below already trusts LIVE — read it here
+            # too and fail-CLOSED (block) if EITHER the live OR cached signal reads FAILING. Degrades to the
+            # cache alone if Firestore is transiently unavailable (get-doc emits `{}` on failure, so a read
+            # error never masquerades as a healthy live status).
+            CI_STATUS_LIVE=$(python3 "$GITHUB_WORKSPACE/scripts/cicd/ci_status_store.py" get-doc \
+              --repo "$REPO" 2>/dev/null | jq -r '.status // empty' 2>/dev/null || echo "")
+            if [ "$CI_STATUS" = "FAILING" ] || [ "$CI_STATUS_LIVE" = "FAILING" ]; then
+              echo "GATE BLOCK $REPO: ci_status=FAILING (cached='${CI_STATUS:-unset}', live='${CI_STATUS_LIVE:-unset}') — LDR CI is red; fix before LDR→main"
               _done BLOCKED; return 0
             fi
-            echo "TIER A PASS $REPO: ci_status='${CI_STATUS:-unset}'"
+            echo "TIER A PASS $REPO: ci_status cached='${CI_STATUS:-unset}' live='${CI_STATUS_LIVE:-unset}'"
 
             # ── Content gate: LDR tree vs main tree ─────────────────────────────────────
             # Tree-SHA equality == byte-identical content regardless of squash history.
