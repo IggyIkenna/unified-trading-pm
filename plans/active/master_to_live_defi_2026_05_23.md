@@ -193,6 +193,7 @@ epic._
 | [`codex_vs_repo_docs_ssot_audit_2026_06_01`](./codex_vs_repo_docs_ssot_audit_2026_06_01.md)                                                                 | master                                 | refactor  | 2/24       | 8%           | 2.9      | —        |
 | [`sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24`](./sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md) | master                                 | design    | 17/28      | 61%          | 2.8      | —        |
 | [`utl_uac_reuse_consolidation_remediation_2026_06_10`](./utl_uac_reuse_consolidation_remediation_2026_06_10.md)                                             | infrastructure_master                  | refactor  | 44/69      | 64%          | 2.6      | —        |
+| [`ao_issue_docs_consolidated_remediation_2026_07_23`](./ao_issue_docs_consolidated_remediation_2026_07_23.md)                                               | master                                 | refactor  | 0/28       | 0%           | 2.4      | —        |
 | [`sports_consolidated_audit_2026_07_19`](./sports_consolidated_audit_2026_07_19.md)                                                                         | master                                 | research  | —          | —            | 2.4      | —        |
 | [`data_completion_to_100_all_ag_2026_06_21`](./data_completion_to_100_all_ag_2026_06_21.md)                                                                 | client_isolation_and_governance_master | infra     | 164/224    | 73%          | 2.1      | —        |
 | [`sports_catalog_league_grain_only_scope_2026_07_08`](./sports_catalog_league_grain_only_scope_2026_07_08.md)                                               | master                                 | research  | 3/7        | 43%          | 2.1      | —        |
@@ -285,7 +286,7 @@ epic._
 | [`deployment_ui_fleet_tab_consolidation_2026_07_21`](./deployment_ui_fleet_tab_consolidation_2026_07_21.md)                                                 | master                                 | refactor  | 15/15      | 100%         | 0.0      | —        |
 | [`docs_retrieval_layer_reconcile_2026_07_23`](./docs_retrieval_layer_reconcile_2026_07_23.md)                                                               | master                                 | infra     | 7/7        | 100%         | 0.0      | —        |
 | [`sports_odds_bookmaker_coverage_enumeration_2026_06_20`](./sports_odds_bookmaker_coverage_enumeration_2026_06_20.md)                                       | master                                 | brand-new | 3/3        | 100%         | 0.0      | —        |
-| **TOTAL** (122 plans)                                                                                                                                       | 0 orphans, 0 TBD                       | —         | —          | **52% done** | **303**  | —        |
+| **TOTAL** (123 plans)                                                                                                                                       | 0 orphans, 0 TBD                       | —         | —          | **52% done** | **305**  | —        |
 
 <!-- AUTO-INVENTORY-END -->
 
