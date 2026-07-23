@@ -787,3 +787,24 @@ tarball once; always check the launcher's own freshness warning output, and if s
 - **2026-07-23 00:33 UTC (VM re-check — both still healthy)** — `mtds-lst-rates-20260722-181845`: manifest at ~22,951
   entries, now at `2025-10-29` (from `2025-07-20`, ~101 days in 30min), est. ~1.3h more to reach `2026-07-22`.
   `mtds-dex-swaps-backfill`: RSS stable ~1423-1596MiB, heartbeats fresh. Both correctly left running.
+
+- **2026-07-23 01:04 UTC (VM re-check — both still healthy, LST-rates getting close)** —
+  `mtds-lst-rates-20260722-181845`: manifest at 25,169 entries, now at `2026-02-02` (from `2025-10-29`, ~96 days in
+  30min), est. under 1h more to reach `2026-07-22`. `mtds-dex-swaps-backfill`: manifest at 62,147 entries, RSS stable
+  ~1161-1596MiB. Both correctly left running; next check should catch LST-rates finishing.
+
+- **2026-07-23 01:26 UTC (mtds-dex-swaps-backfill VM vanished — likely preempted, resumed)** — at the 01:25 check, the
+  VM was no longer in `gcloud compute instances list` output at all (confirmed via `get-serial-port-output` → "resource
+  ... not found", i.e. fully deleted, not just stopped). Its `run.log` showed no clean `DEPLOYMENT_COMPLETED`/exit_code
+  marker — last entries were healthy `RESOURCE_SAMPLE`s at 01:20:57, consistent with a SPOT preemption (no
+  graceful-shutdown message written) rather than a natural completion. Manifest was at 63,850+ entries
+  (`process_final=True` climbing steadily), well short of what a full `2023-01-01→2026-07-22` × ~20-shard run would
+  produce. **Resume approach differs from the LST-rates VM**: this collector processes per-SHARD full-date-range (not
+  day-sequential), and `dex_swaps_handler.py` has genuine per-day `ManifestFreshnessCache`/`is_now_skip_worthy` logic
+  (confirmed by reading the code, not assumed) — so the correct, safe resume is a PLAIN relaunch with the SAME
+  `--start 2023-01-01 --end 2026-07-22` (no `--force` needed, no date-math), relying on the collector's own
+  skip-if-already-captured behavior to avoid re-fetching the ~64k rows already written. Verified all 4 tarballs fresh
+  before launching (per the earlier session's tarball- staleness lesson). Relaunched: `mtds-dex-swaps-backfill` (same
+  name), SPOT, confirmed RUNNING at launch. T+few-min verification pending — will confirm the freshness-skip is
+  genuinely firing (log line "Pre-flight: ... fully covered" or the freshness-cache skip path) rather than blindly
+  re-fetching everything.
