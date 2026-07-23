@@ -152,21 +152,21 @@ yet, for ANY launcher family, not just candle-migration.
       a "close a total absence" sweep.
 
       **But the early-preemption blind spot this doc's fix closes (native GCE shutdown-script, available from t=0, vs
-          the shared seam's systemd unit which only activates once `setup-data-pipeline-vm.sh` progresses far enough to
-          install it) is REAL and independently corroborated**: `launch-mtds-dex-swaps-backfill-vm.sh` — confirmed via
-          direct grep to ALSO use the shared seam AND be registered in `launcher_registry.py` (so it SHOULD have had
-          coverage) — preempted 4 times in one session
-          (`lst_rate_honest_coverage_2026_07_21.md` Phase 5 #2) with zero auto-recovery firing (a different session,
-          independently caught + manually relaunched each time). This is consistent with the SAME early-preemption
-          pattern measured on TRADFI (18/20 shards preempted within 1-4 minutes of boot), not a separate coverage gap —
-          strengthening, not weakening, the case for rolling out the native-shutdown-script defense-in-depth more broadly.
+              the shared seam's systemd unit which only activates once `setup-data-pipeline-vm.sh` progresses far enough to
+              install it) is REAL and independently corroborated**: `launch-mtds-dex-swaps-backfill-vm.sh` — confirmed via
+              direct grep to ALSO use the shared seam AND be registered in `launcher_registry.py` (so it SHOULD have had
+              coverage) — preempted 4 times in one session
+              (`lst_rate_honest_coverage_2026_07_21.md` Phase 5 #2) with zero auto-recovery firing (a different session,
+              independently caught + manually relaunched each time). This is consistent with the SAME early-preemption
+              pattern measured on TRADFI (18/20 shards preempted within 1-4 minutes of boot), not a separate coverage gap —
+              strengthening, not weakening, the case for rolling out the native-shutdown-script defense-in-depth more broadly.
 
-          **Revised scoping question for item 9**: not "which launchers lack ANY coverage" (few, if any, genuinely do —
-          confirm with the passing test), but "which launchers run large concurrent SPOT fleets (more zone-contention
-          exposure, matching TRADFI's failure mode) or have a long `setup-data-pipeline-vm.sh` staging chain before their
-          task-specific work starts (wider blind-spot window)" — a smaller, evidence-driven list, not a blanket 100+-file
-          sweep. Candidates already identified: `launch-mtds-dex-swaps-backfill-vm.sh` (proven hit), any `*-sharded-*`/
-          `SHARD_OF`-fan-out launcher (same concurrency profile as candle-apply).
+              **Revised scoping question for item 9**: not "which launchers lack ANY coverage" (few, if any, genuinely do —
+              confirm with the passing test), but "which launchers run large concurrent SPOT fleets (more zone-contention
+              exposure, matching TRADFI's failure mode) or have a long `setup-data-pipeline-vm.sh` staging chain before their
+              task-specific work starts (wider blind-spot window)" — a smaller, evidence-driven list, not a blanket 100+-file
+              sweep. Candidates already identified: `launch-mtds-dex-swaps-backfill-vm.sh` (proven hit), any `*-sharded-*`/
+              `SHARD_OF`-fan-out launcher (same concurrency profile as candle-apply).
 
 - [ ] 9. [SCRIPT] P3. Apply the same 2-3 line pattern (`lc_write_preemption_signal_file` call + `--metadata-from-file`
       flag + verify `--instance-termination-action=DELETE`) to the launchers item 8's revised scoping identifies —
@@ -187,3 +187,33 @@ than the DEFI/PREDICTION/CEFI legs (~35-45min shards) — and this session alrea
 capacity-contention burst (18/20, vs CEFI's earlier 1/10 then 3/10) in the same zone within the same few hours. This is
 not a one-off; any future large SPOT fleet in this zone is exposed to the same silent-loss risk until items 1-4 ship,
 and the broader rollout (items 8-9) closes it for every other backfill/migration category too.
+
+## Corroborating observation (2026-07-23, concurrent session) — the STOP→DELETE flip observed live, plus a gap for the new `defi-rebuild`/`defi-pi-range` categories
+
+Running the DeFi manifest-rebuild leg of `defi_consolidated_closeout_2026_07_18.md` on this SAME
+`launch-canonical-migration-vm.sh` (via two new categories, `defi-rebuild`/`defi-pi-range`, added earlier this session
+from a stashed foreign-WIP merge — `deployment-service@065cf70`) independently reproduced exactly the item-3 fix
+mid-flight:
+
+- **VM #1** (`canonical-migration-defi-rebuild-20260722-193748`, launched before `a32360a` landed): SPOT-preempted, left
+  `TERMINATED` (a `stop` operation) — inspectable after the fact, resumed manually from its last-logged date.
+- **VM #2** (`canonical-migration-defi-rebuild-20260722-194751`, launched after `a32360a` had propagated into this
+  session's local `deployment-service` checkout via an unrelated `git pull`): preempted again, but this time fully
+  **deleted** (a `delete` operation by the compute default service account, confirmed via
+  `gcloud compute operations describe`) — no `EXIT_STATUS`, no graceful shutdown log lines, the instance simply
+  vanished. Only the `operations list` audit trail revealed what happened; without it this would have looked like an
+  unexplained disappearance rather than a preemption.
+
+This is independent field confirmation that item 3's `DELETE` change is real and already active, and that it changes the
+FORENSICS available after a preemption (a `STOP`'d instance survives for inspection; a `DELETE`'d one does not,
+audit-trail-only). Not itself a problem — `DELETE` is required for `RelaunchPreemptedVm` to reuse the VM name — but
+worth noting for anyone diagnosing a "VM vanished, no error" case going forward: check
+`gcloud compute operations list --filter="targetLink~<vm>"` before assuming something is wrong.
+
+**A gap this issue's scoping (items 8-9) doesn't yet cover**: the two new `defi-rebuild`/`defi-pi-range` categories have
+no `PROGRESS.json`-style checkpoint (confirmed — `gsutil stat` on the expected path 404s), unlike the
+`defi-per-instrument` category's year-chunked resume. So while the preemption-signal fix now lets the fleet's
+auto-recovery correctly _detect_ a preempted `defi-rebuild`/`defi-pi-range` VM, a `RelaunchPreemptedVm` replay would
+still restart from the ORIGINAL launch's `--start-date`, not the actual last-scanned date — safe (idempotent, manifest
+writer is upsert-safe) but wasteful for a multi-day rebuild. Not fixed here; flagging as a known residual gap for
+whoever picks up items 8-9, since these two categories didn't exist yet when this issue was first scoped.
