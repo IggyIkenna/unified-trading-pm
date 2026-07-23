@@ -1959,3 +1959,8 @@ prove on ONE caller → only then fan out._
     session: relying on the Bash tool's persistent cwd across separate tool calls to stay put after a plain `cd` (no
     `&&`) caused at least 3 commands to silently run in the WRONG repo. Fix going forward: always chain
     `cd /full/absolute/path && command` in the SAME call; never assume persisted cwd from a prior call.
+  - **LESSON: agent `memory/` writes are BANNED in this workspace (CLAUDE.md HARD RULE)** — mid-session I attempted to
+    write two feedback notes (the parallelize-retries point above, and a response-scope-matching point) to
+    `~/.claude/projects/.../memory/`; the operator rejected both tool calls. Per CLAUDE.md: agent memory is per-cwd,
+    never git-tracked, never reaches a teammate or VM — session-scoped findings belong in the active plan's Progress Log
+    (here), not in `memory/`. Go straight there next time instead of reaching for a memory write first.
