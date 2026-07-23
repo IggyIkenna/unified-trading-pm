@@ -11,7 +11,7 @@ summary:
   operator's cited 8.1M/3.7M, which almost certainly came from a stale cached artifact (same class of bug already
   root-caused in this plan's P7 stale-rollup-blob finding). No writer/consolidator fix required; a small optional
   venue-casing dedup is the only real cleanup surfaced.
-status: open
+status: resolved
 nature: process
 asset_group: [sports]
 stage: [meta]
@@ -25,6 +25,8 @@ priority: P3
 source: [operator P9 Q3 review 2026-07-16]
 assigned_vm: NA
 resolved_by:
+  re-verified live 2026-07-23, see RE-TRIAGE section re-triaged and verified live 2026-07-23 (see RE-TRIAGE section) --
+  root cause was already correctly diagnosed as not-a-bug on 2026-07-16
 locked_by:
 execution_scope: local-only
 drift_direction: advance-code
@@ -112,3 +114,33 @@ from (out of this issue's scope), but the two live-GCS reads above are authorita
   members, so they satisfy the "source is the vendor(-analog)" contract even though they are not third-party vendors).
 - `codex/05-infrastructure/manifest-consolidator-ssot.md` § "Two-writer model" (the same instruments-service-as-source
   pattern, generalized across asset groups).
+
+## RE-TRIAGE (2026-07-23)
+
+**Verdict: STILL OPEN, ACCURATE — root cause and "not leakage" verdict both confirmed on a fresh live GCS read.** Re-ran
+the equivalent live query against
+`gs://instruments-store-sports-prd-central-element-323112/_index/availability_index.parquet` (via
+`unified_trading_library.get_storage_client()` /
+`resolve_bucket_name(cloud="gcp", kind="instruments-store", asset_group="sports")`, same idiom as the doc's own
+methodology):
+
+- Total index rows: 5,523,146 (up from 5,465,414 on 2026-07-16 — normal ongoing growth, ~1% over 7 days).
+- `source=mdps_odds_horizon_bucket`: 360,167 rows (was 356,131) — `data_type` breakdown still dominated by
+  `odds_horizon_bucket` (354,845) + 1,774 each of `arbitrage_opportunity`/`odds_movement`/`odds_snapshot`, matching the
+  doc's characterization exactly. (Note: those 3 minor data_types were separately confirmed dead-code/zero-prod-object
+  candidates elsewhere today per `sports_mdps_derived_odds_products_zero_prod_objects_2026_07_23.md` — orthogonal to
+  this doc's "is it leakage" question, which is about `source=`, not liveness of those data_types.)
+- `source=instruments_service`: 100,472 rows — **exact match** to the doc's cited figure, `data_type` breakdown
+  unchanged (TRANSFERMARKT_LEAGUES 75,545 / SFI_LEAGUES 12,469 / LEAGUES 8,780 / VENUES 3,627 / SFI_STANDINGS 42).
+- Blank-source rows: 13,903 (was 13,997 — essentially flat, within noise).
+
+**Bonus finding — the doc's own "minor optional cleanup" (venue-casing dedup) is now ALREADY FIXED**, apparently as a
+side effect of today's unrelated K1/K2 casing-migration work (see this plan's background): live query shows
+`MDPS_ODDS_HORIZON_BUCKET`=0 / `ODDS_API`=0 / `FOOTYSTATS`=0 / `OPEN_METEO`=0 (all uppercase variants gone), with every
+row now living under the lowercase canonical key (`mdps_odds_horizon_bucket`=360,167, `odds_api`=573,875,
+`footystats`=683,411, `open_meteo`=261,096). The doc's proposed "small case-canonicalization migration" is no longer
+needed — it happened for free.
+
+Flipped `status: open` → `resolved` (the doc's own "Recommendation" section already said "close this finding as not a
+bug" — the frontmatter had just never been flipped to match) and filled `resolved_by:` to point at this re-verification.
+No new leakage, no contradiction with any other doc found.

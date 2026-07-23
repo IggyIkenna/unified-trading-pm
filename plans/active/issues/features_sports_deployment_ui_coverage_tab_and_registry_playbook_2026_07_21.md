@@ -9,7 +9,7 @@ summary: >-
   `deployment-api@acd2d25`, but the deployment-ui surface that would actually show a per-feature-group honest-coverage
   breakdown (Phase 8.A) and the codex playbook documenting how to register a new feature calculator against the
   Phase-1/2/3 architecture (Phase 8.C) were never built. No active plan references either deliverable.
-status: open
+status: resolved
 nature: issue
 asset_group: [sports]
 stage: [meta]
@@ -29,6 +29,9 @@ execution_scope: orchestrator-agent
 drift_direction: advance-code
 source: [pm_qg_plan_discipline_and_frontmatter_regression-004]
 resolved_by:
+  deployment-ui@d8def9c, deployment-api@47802dc5, unified-api-contracts@018c3ca6 deployment-ui@d8def9c,
+  unified-trading-pm@codex/02-data/sports-feature-calculator-registration-playbook.md, deployment-api@47802dc5,
+  unified-api-contracts@018c3ca6
 locked_by:
 depends_on: []
 ---
@@ -124,3 +127,21 @@ File as a P3 backlog item — neither is blocking, both are worth picking up opp
 ## Codex SSOTs
 
 `codex/02-data/availability-manifest-and-data-status.md`, `codex/02-data/honest-coverage-model.md`.
+
+## RE-TRIAGE (2026-07-23)
+
+**Verdict: RESOLVED BY LATER WORK.** All 3 todos were already checked `[x]` in this doc with cited commits — re-verified
+each deliverable actually exists in the current codebase (frontmatter `status` was simply never flipped to match):
+
+- `deployment-ui/src/components/SportsFeatureCoverageCard.tsx` +
+  `tests/unit/components/SportsFeatureCoverageCard.test.tsx`
+  - `tests/smoke/sports_feature_coverage_card.spec.ts` all present on disk; `git log -1 d8def9c` =
+    `feat(data-status): sports feature coverage card (Phase 8.A)`.
+- `codex/02-data/sports-feature-calculator-registration-playbook.md` present in this repo.
+- `deployment-api/deployment_api/scripts/coverage_drift_worker.py` +
+  `deployment_api/routes/data_status/_coverage_drift_run.py` present; `git log -1 47802dc5` (deployment-api) =
+  `feat(data-status): wire sports coverage-drift cron entrypoint + dashboard alert (Phase 8.B)`; `git log -1 018c3ca6`
+  (unified-api-contracts) = `feat(scheduler): register sports-coverage-drift Cloud Scheduler entry (Phase 8.B)`, and
+  `sports-coverage-drift` confirmed present in `unified_api_contracts/canonical/crosscutting/scheduler_registry.py`.
+
+Flipped `status: open` → `resolved` and filled `resolved_by:` accordingly. No new gap found.

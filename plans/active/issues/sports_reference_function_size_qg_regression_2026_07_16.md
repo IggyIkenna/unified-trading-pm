@@ -24,7 +24,7 @@ summary:
   own scoped test file); documented per the Findings-triage HARD RULE (outside every plan -> issue doc) rather than
   fixed inline, since decomposing 3 functions (up to 253L) in a sports/api_football domain the reporting agent does not
   own carries real regression risk without domain review."
-status: open
+status: resolved
 nature: issue
 asset_group: [sports]
 stage: [meta]
@@ -43,7 +43,7 @@ estimate_baseline_ai_days: 0.5
 estimate_calibrated_ai_days: 0.2
 assigned_role: backend_engineer
 drift_direction: advance-code
-resolved_by:
+resolved_by: instruments-service@ac22305c
 locked_by:
 source: >-
   discovered while executing a defence-in-depth P2 todo in data_status_page_ux_and_canonicalisation_2026_07_16.md § "P1
@@ -109,3 +109,33 @@ module.
       ratchet again.
 - [ ] [SCRIPT] P3. Re-run a FULL (non-sliced) `bash scripts/quality-gates.sh` and confirm phase 5's
       Function/class/method size check passes clean for these 2 files.
+
+## RE-TRIAGE (2026-07-23)
+
+**Verdict: RESOLVED BY LATER WORK.** Re-measured the 3 flagged functions directly against current `live-defi-rollout`
+HEAD in `instruments-service`:
+
+- `_AfManifestHooks.emit_empty_gaps_for_entity()` — now `sports_reference_core.py:221`, spans lines 221-246 (26 body
+  lines, well under the 50L method limit); originally 89L.
+- `_fetch_teams_and_standings()` — now `sports_reference_core.py:569`, spans lines 569-599 (31 lines, well under 200L);
+  originally 205L.
+- `_write_per_fixture_entities()` — now `sports_reference_fixtures.py:854`, spans to EOF at line 893 (~40 lines, well
+  under 200L); originally 253L.
+
+Root cause + fix: `instruments-service@ac22305c` ("fix(sports): decompose 3 oversized orchestrator functions past size
+gate", 2026-07-21) decomposed all 3 into 9 named helpers (`_fetch_and_cache_teams`/`_write_teams_and_venues`/
+`_fetch_and_cache_standings`/`_write_standings_per_league`; `_prepare_fixture_entity_df`/
+`_write_fixture_entity_per_league`/`_handle_empty_fixture_entity`; `_presence_guarded_captured_leagues`/
+`_emit_empty_gap_for_league`) and removed the two files from `FUNCTION_SIZE_EXTRA_EXCLUDES` again — confirmed the
+current `scripts/quality-gates.sh` comment block (lines ~191-200) documents this exact history and the files carry no
+active exclusion entry today.
+
+**New finding, flagged not fixed (outside this doc's 4 assigned files)**: this issue is a near-exact duplicate of
+`plans/active/issues/instruments_service_codex_compliance_ceiling_drift_2026_07_20.md`, which documents the identical 3
+functions with the identical line counts (89L/205L/253L) as a "regrowth by 2026-07-20." Both were resolved by the same
+`ac22305c` commit, but that other doc's `status:` is still `open` and its `resolved_by:` is still blank as of this
+re-triage — it was not in this agent's assigned slice so it was left untouched, but it should be re-triaged/closed too.
+
+Root-cause-of-the-gate-miss (this doc's 2nd acceptance item) was never separately investigated and remains open in
+spirit, though moot now that the exclusion-workaround path was abandoned in favor of an actual decomposition; the
+original `- [ ]` acceptance checkboxes are left unchanged per the additive-annotation instruction.
