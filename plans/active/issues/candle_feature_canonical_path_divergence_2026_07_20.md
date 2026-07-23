@@ -1091,7 +1091,32 @@ disjoint `datapoint-validation` results bucket, never `processed_candles/`). Not
 CEFI-relevant VM found.
 
 **Action**: launched 10 shards (`SHARD_OF=10`, `SHARD_INDEX=0..9`, same proven SHA pins, `WORKERS=16`, `MODE=full`)
-against CEFI's 940,606-object corpus. **STATUS: IN FLIGHT, NOT YET VERIFIED** — check `EXIT_STATUS` for all 10 before
-assuming done. Given the todo 14/18 classifier fix landed before this run, CEFI's real disposition mix (MIGRATE vs
-QUARANTINE_CORRUPT vs the new `NEEDS_CONTENT_CEFI_WIRE_ID`) will differ from the stale census table — record the ACTUAL
-post-apply outcome counts when verifying, don't assume the census numbers still hold.
+against CEFI's 940,606-object corpus.
+
+## Progress Log — 2026-07-22 (P7c: CEFI run 1 — 1 shard genuinely SPOT-preempted, 9 clean stragglers, combined retry launched)
+
+**Watchdog hit its 90-min ceiling with 9/10 terminal** — a real anomaly, not just slow, diagnosed before assuming
+anything. `gcloud compute instances describe` on the missing shard's VM
+(`canonical-migration-cefi-cdlap-20260722-215112`, shard 2/10) showed `status=TERMINATED`;
+`gcloud compute operations list --filter=targetLink~<vm>` confirmed a genuine `compute.instances.preempted` operation at
+21:15:15 UTC, matching exactly where its `run.log` progress stream stops (last line: 70,000/~94,000 processed,
+`MIGRATED: 58685`). This is expected SPOT behavior on this workspace's own terms (backfill VMs default SPOT, idempotent
+shards re-run on preemption) — not a script bug, not a hang.
+
+**The 9 completed shards all exited `rc=5`** — same "COMPLETE WITH STRAGGLER(S)" convention as DEFI, but a DIFFERENT
+root cause this time: `CRC32C_MISMATCH_KEPT_SRC` / `SIZE_MISMATCH_KEPT_SRC` (2-31 per shard, ~140 total) rather than
+DEFI's `ServiceUnavailable`/`GatewayTimeout`. This is the script's own post-copy integrity verification catching a
+checksum/size mismatch and safely KEEPING THE SOURCE rather than deleting it — a safety guard working as intended, not
+data corruption. The script's own log line treats it as retriable the same way ("re-run ... is safe (idempotent) and
+will retry them"). New disposition categories also appeared here (`CONTENT_REPAIR_UNRESOLVED_QUARANTINED`, ~13-14% of
+each shard) — this is the EXPECTED post-todo-14/18-fix quarantine bucket (genuinely-unresolvable content, distinct from
+the pre-fix over-quarantine bug), not a regression.
+
+**Action**: launched a single combined retry covering all 10 shards (same `SHARD_OF=10`/SHA pins/`WORKERS=16`) — this
+both mops up the ~140 CRC/size-mismatch stragglers across the 9 completed shards AND fully redoes the preempted shard 2
+from scratch (its ~59K already-migrated objects will short-circuit via `VERIFIED_INPLACE`, the remaining ~35K get
+freshly processed; checkpoint/mapping state does not survive a preemption or non-zero exit, same caveat as DEFI, so a
+full shard re-run — not a targeted resume — is the only available path). **STATUS: retry IN FLIGHT, NOT YET VERIFIED.**
+If the CRC/size mismatches persist (don't converge toward 0) after this retry, that would indicate a real
+(non-transient) content issue worth inspecting specific objects for, rather than blindly retrying again — apply the same
+2-3-attempt discipline established for DEFI before escalating.
