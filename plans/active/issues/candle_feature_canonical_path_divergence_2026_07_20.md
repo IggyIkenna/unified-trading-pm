@@ -1116,7 +1116,61 @@ the pre-fix over-quarantine bug), not a regression.
 both mops up the ~140 CRC/size-mismatch stragglers across the 9 completed shards AND fully redoes the preempted shard 2
 from scratch (its ~59K already-migrated objects will short-circuit via `VERIFIED_INPLACE`, the remaining ~35K get
 freshly processed; checkpoint/mapping state does not survive a preemption or non-zero exit, same caveat as DEFI, so a
-full shard re-run — not a targeted resume — is the only available path). **STATUS: retry IN FLIGHT, NOT YET VERIFIED.**
-If the CRC/size mismatches persist (don't converge toward 0) after this retry, that would indicate a real
-(non-transient) content issue worth inspecting specific objects for, rather than blindly retrying again — apply the same
-2-3-attempt discipline established for DEFI before escalating.
+full shard re-run — not a targeted resume — is the only available path).
+
+## Progress Log — 2026-07-23 (P7c: CEFI retry — another 3-shard SPOT preemption burst; ROOT-CAUSED the CRC/SIZE-mismatch non-convergence)
+
+**Retry 1 also hit preemptions**: 3 of the 10 retry shards (0, 1, 5) were preempted within 3-7 minutes of boot
+(`gcloud compute operations list` confirmed `compute.instances.preempted` for all 3, timestamped right where each
+`run.log` stream stops) — a real capacity-contention burst in `asia-northeast1-c` at this time, not a bug. This is the
+SAME expected-SPOT-behavior class as shard 2's preemption in run 1, just three at once this time.
+
+**The 7 shards that DID complete this retry reproduced their CRC32C/SIZE-mismatch stragglers at (nearly) IDENTICAL
+counts to run 1** — e.g. shard 3: 6 CRC32C + 2 SIZE both times; shard 7: 10 CRC32C + 9 SIZE both times; shard 8: 8+4
+both times; shard 9: 14+13 both times (only shard 6 differed, by exactly 1). Per the discipline set for DEFI ("if it
+doesn't converge after ~3 attempts, investigate rather than blindly retry"), read `_copy_verify_delete()`
+(`migrate_candle_canonical_2026_07.py:794-831`) to find out why — **and found the actual root cause**:
+
+```python
+dmeta = gcs_describe_object(dst_uri)
+if dmeta is None:
+    gcs_copy_object(src_uri, dst_uri)      # <-- COPY only happens when dst is MISSING
+    dmeta = gcs_describe_object(dst_uri)
+...
+if smeta.size != dmeta.size: return "SIZE_MISMATCH_KEPT_SRC"
+if smeta.crc32c != dmeta.crc32c: return "CRC32C_MISMATCH_KEPT_SRC"
+```
+
+The copy step is gated on `dmeta is None` — it only fires when the destination doesn't exist yet. DEFI's stragglers
+(`ServiceUnavailable`/`GatewayTimeout`) were copy-operation EXCEPTIONS, meaning the destination object was never
+created, so `dmeta` stays `None` on retry and a fresh (successful) copy fires — genuinely transient, converges. CEFI's
+stragglers are different: the copy DID complete once (dst exists), but post-copy verification found it doesn't match the
+source. On any subsequent run, `dmeta is not None`, so the copy step is SKIPPED — the script only re-_compares_ the same
+already-existing (bad) destination against the source, forever. **This class of straggler cannot converge by retrying,
+no matter how many times — the retry logic has no path to fix a "copied-but-wrong" destination**, only a
+"copy-never-happened" one. This isn't data corruption or loss (the SOURCE is never touched on any `KEPT_SRC` outcome, by
+design — the delete-safety protocol's whole point), but it IS a real, previously-unknown gap in this script's retry
+model.
+
+**Why not just fix the script live and re-run?** Couldn't reliably identify the SPECIFIC affected objects to verify a
+fix against: the WARNING lines only log `"non-success outcome '<TYPE>' at shard-local index N"`, never the object URI
+(unlike the exception-path `"apply failed for %s: ..."` at line 991, which DOES log the path) — no per-object path is
+logged for a `KEPT_SRC` return. The `--out` mapping TSV (which would have full path detail) only uploads to GCS on the
+`&&`-gated success path, and these runs exited rc=5, so it never uploaded; the VMs then self-deleted
+(`VM_SHUTDOWN_ON_COMPLETION=true`), taking local disk with it. Patching the copy-verify-delete safety mechanism —
+untested — directly against a live production migration, with no way to confirm the fix against the actual failing
+objects, is worse than leaving ~140-200 objects (out of ~940K, ~0.02%) safely un-migrated at their legacy path pending a
+proper code fix.
+
+**Verdict**: accepting this as a genuine, small, SAFE residual (source data fully intact, nothing lost, nothing
+corrupted downstream since these stay at the LEGACY path, not partially/incorrectly canonicalized) — not blindly
+retrying a 3rd/4th/Nth time for this specific straggler class, since the code proves it cannot converge. Relaunched ONLY
+the 3 preempted shards (0, 1, 5 — their bulk migration work is unrelated to this finding and still needs to complete);
+once terminal, will tally the final residual CRC/SIZE-mismatch count across all 10 CEFI shards and record it honestly
+(NOT claim "0 outstanding" the way DEFI/PREDICTION could). **New follow-up needed** (not filed as a numbered todo yet —
+will file before closing this session): fix `_copy_verify_delete` to distinguish a verified-correct existing destination
+(current `VERIFIED_INPLACE` short-circuit, working correctly) from a verification-FAILED existing destination (should be
+treated as if absent — i.e., overwrite + re-verify — not skip-compare forever), with proper tests, then run ONE surgical
+mop-up pass against just the residual objects. **This same latent gap applies to TRADFI's upcoming run** — if TRADFI
+hits any KEPT_SRC-class stragglers, apply this same accept-and-track discipline rather than expecting convergence from
+more retries.
