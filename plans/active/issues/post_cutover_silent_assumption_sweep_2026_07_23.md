@@ -123,6 +123,45 @@ Measured tag state — the fleet's newest tags:
 for ~4 weeks while `versions` in the manifest advances independently. `publish-package` has run 0 times in 7 days, which
 is consistent.
 
+### Measured blast radius (2026-07-23, corrects the "4-week-old code is deployed" reading)
+
+Probed the actual artifact estate rather than inferring from the tag state. **Deploys are NOT running stale code — the
+loss is IDENTITY, not freshness.** Both halves matter:
+
+**a) Artifact Registry `unified-libraries` (PYTHON) — the two shared libraries are frozen at the break date:**
+
+| package                   | newest version in AR | published  |
+| ------------------------- | -------------------- | ---------- |
+| `unified-api-contracts`   | 0.72.0               | 2026-06-27 |
+| `unified-trading-library` | 0.55.0               | 2026-06-27 |
+
+**b) But the Docker base image everyone builds FROM is rebuilt daily and re-tagged with the SAME frozen number.**
+`asia-northeast1-docker.pkg.dev/central-element-323112/unified-trading-library/unified-trading-library` has builds from
+`2026-07-23T14:42`, `14:27`, `14:05`, `12:55`… and today's carries tags **`0.55.0, latest`**. The service Dockerfile
+(`market-data-processing-service/Dockerfile:26,64`) does `FROM …unified-trading-library@${BASE_IMAGE_DIGEST}` then
+`uv pip install --system -e . --no-sources` — `--no-sources` disables the `[tool.uv.sources]` path overrides, so the
+container takes UTL/UAC from the base image (fresh) or AR (frozen), never from the sibling checkout.
+
+**Therefore: the tag `0.55.0` is MUTABLE and means a different tree every day.** "Roll back to 0.55.0" is undefined;
+"which UAC is in prod" is unanswerable from the version string.
+
+**c) Six services HAVE kept publishing — with hatch-vcs distance-from-tag versions**, which is the tagging gap made
+literal (the `devN` is the commit count since the last tag):
+
+| package                             | newest in AR (2026-07-23)  | commits past last tag |
+| ----------------------------------- | -------------------------- | --------------------- |
+| `features-service`                  | `0.66.1.dev191+g190a1c957` | **191**               |
+| `market-data-processing-service`    | `0.22.1.dev163+g5692f742e` | **163**               |
+| `ml-service`                        | `0.50.1.dev44+g055625238`  | 44                    |
+| `greeks-service`                    | `0.18.18.dev34+ga980f5000` | 34                    |
+| `batch-live-reconciliation-service` | `0.49.1.dev32+g6d542ab27`  | 32                    |
+| `fund-administration-service`       | `0.9.33.dev32+gb598d8743`  | 32                    |
+
+Ironically these `+g<sha>` versions are **more** traceable than the frozen `0.55.0` — they name their commit.
+
+**d) Worst case — total identity loss:** `instruments-service` published **`0.0.0.dev0`** on 2026-07-03. That is
+hatch-vcs's no-git-history fallback (shallow checkout / no tags reachable). It carries no version and no sha.
+
 ### ⚠ This CORRECTS `stale_staging_versions_manifest_2026_07_23.md`
 
 That issue framed `staging_versions` as the stale, harmful key. **The inverse is closer to the truth**: in all four
@@ -218,12 +257,25 @@ codex, or a future staging re-entry gets a dead pipeline.
 
 ## Resolution checklist
 
-- [ ] [OPERATOR] P0. **Rule on F1 (kill-switch).** Either implement the `halt-order-flow`/`resume-order-flow` listener
-      in execution-service, or delete the kill-switch call path — but do not leave a safety mechanism that reports
-      success while doing nothing. Needs a human call because it touches live trading behaviour.
+- [ ] [OPERATOR] P0→**DEFERRED (operator ruling 2026-07-23)**. **F1 (kill-switch).** Either implement the
+      `halt-order-flow`/`resume-order-flow` listener in execution-service, or delete the kill-switch call path — but do
+      not leave a safety mechanism that reports success while doing nothing. **Operator ruling 2026-07-23: KEEP TRACKED,
+      DO NOT FIX YET.** Rationale: not in production, and no execution-service is currently running — so the no-op
+      kill-switch cannot presently mask a real halt failure. To be fixed **when execution-service work starts**. ⚠️
+      **Re-entry gate: this item must be closed BEFORE execution-service handles live order flow** — the defect is
+      invisible at runtime (204 reads as success), so it will not resurface on its own. Whoever picks up
+      execution-service work owns this.
 - [ ] [INFRA] P1. **Fix F2**: make `reconcile_release_tags.py` read the version from the hatch-vcs source (or from the
       built dist / `hatch version`) instead of a static `version =` line. Then reconcile the ~4 weeks of missing tags.
       Verify by confirming new tags appear and `publish-package` runs again.
+- [ ] [INFRA] P1. **Stop re-pointing a released Docker tag at new content** (found by the F2 blast-radius probe): the
+      UTL base image is rebuilt daily and re-tagged `0.55.0`/`latest`, so `0.55.0` names a different tree every day and
+      rollback-by-version is undefined. Once tagging is fixed, each rebuild must get its own immutable version tag;
+      consider pinning service `FROM` lines by digest only. Verify by confirming two builds never share a version tag.
+- [ ] [INFRA] P2. **Fix `instruments-service`'s `0.0.0.dev0` publish** (2026-07-03, AR `unified-libraries`) —
+      hatch-vcs's no-git-history fallback, meaning that wheel carries neither a version nor a commit sha. Ensure the
+      publish build checks out with tags/history (`fetch-depth: 0`), and fail the build when the computed version is
+      `0.0.0.dev0` rather than publishing it.
 - [ ] [INFRA] P1. **Re-assess `stale_staging_versions_manifest_2026_07_23.md` in light of F2 before implementing its
       fix** — its premise is inverted (see the ⚠ box above). Do not action the two independently.
 - [ ] [INFRA] P1. **Make dispatch delivery observable.** A 204 cannot distinguish "delivered" from "nobody subscribed",
