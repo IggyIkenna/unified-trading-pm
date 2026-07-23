@@ -24,9 +24,7 @@ parent_epic: deployment_and_user_management_master
 priority: P3
 source: [operator P9 Q3 review 2026-07-16]
 assigned_vm: NA
-resolved_by:
-  re-triage-2026-07-23 re-verified live 2026-07-23, see RE-TRIAGE section re-triaged and verified live 2026-07-23 (see
-  RE-TRIAGE section) -- root cause was already correctly diagnosed as not-a-bug on 2026-07-16
+resolved_by: re-triaged-2026-07-23
 locked_by:
 execution_scope: local-only
 drift_direction: advance-code
