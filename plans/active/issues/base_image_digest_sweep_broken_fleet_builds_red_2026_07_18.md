@@ -34,6 +34,7 @@ repos:
     greeks-service,
     market-data-processing-service,
     trading-agent-service,
+    deployment-api,
   ]
 scope: [engineer, admin]
 tags: [ci, cloudbuild, base-image, digest, pip-audit, fleet, p1, deploy-blocker]
@@ -120,3 +121,34 @@ sweep cycle.
 Not fixed autonomously in this session: the token fix is a fleet CI-workflow change outside the bucket-fold dispatch
 (rule-11 blast-radius: a shared-workflow change wants its own verify pass across the fleet). Bucket-fold Phase-D
 redeploys handle their own repo's pin inline as they are reached.
+
+## Addendum 2026-07-23 — richer diagnosis of the SAME drift the 07-22 correction above already caught + fixed
+
+Found independently while building the `/ops/artifacts` observability page
+(`artifact_pipeline_observability_2026_07_17.md`), unaware of this doc until writing this addendum. **On reconstruction,
+this is almost certainly the SAME incident the 🟡 2026-07-22 severity-correction note above already fixed**
+(`deployment-api@2531d925`, digest `2854ae3d…`→`4edb1d8c…`) — my finding's timestamps (07-21 14:19–15:09 UTC) precede
+that note's fix, and the build that finally went green (`1e12246`, 07-23T05:06:47 UTC) is consistent with that bump
+reaching the deploy trigger. Recorded here as corroborating detail with the EXACT symptom + root cause, not as a new
+open incident:
+
+**What happened**: `deployment-api` commit `ecbe30c` (2026-07-21) added a `run.log`-viewer feature importing
+`gcs_read_object_range` from `unified_trading_library`. That symbol landed in UTL source at **13:12 UTC** the same day
+(`unified-trading-library@e22e40f1`, exported from `__init__.py`). Both `deployment-api-main-deploy` builds that
+followed (14:19 and 15:06 UTC — same commit, re-triggered because the branch-based deploy fire has no
+already-failed-this-SHA guard, so it kept rebuilding the stuck commit) failed identically at the operability-probe step:
+`ImportError: cannot import name 'gcs_read_object_range' from 'unified_trading_library'`. The image's baked-in UTL was
+older than 13:12 — i.e. `deployment-api`'s pinned base-image digest was stale relative to UTL HEAD, the exact failure
+mode this doc describes, just triggered by a missing symbol instead of the pip-audit ignore-list gap.
+
+**The genuinely open question, NOT resolved by either note**: `digest-drift-sweep.yml` already uses `GH_PAT` (commit
+`f6e98bbdd`, **2026-07-18 11:51:54**, same day as this doc, citing this issue's diagnosis) and `deployment-api` IS in
+its `IMAGE_REPOS` list (`:97`) — Option A (the durable fix) had ALREADY landed, and `deployment-api` was in scope, THREE
+DAYS before it drifted again on `ecbe30c`. Both the 07-22 note's fix and this addendum's confirmation are manual re-pins
+(Option B) — a point-fix, not evidence the sweep is actually preventing drift. Unchecked candidates for why an in-scope,
+auth-fixed sweep didn't catch this: its actual run history/dispatch log for `deployment-api` around 07-18→21 (did it
+fire? find an `ARG` to bump?); whether `BASE_IMAGE_DIGEST` is set via a Dockerfile `ARG` the sweep's regex can find, or
+a Cloud Build trigger substitution it can't see; whether it bumps on every UTL republish or a cadence slower than
+`e22e40f1`→`ecbe30c`'s same-day gap. Next session: read the sweep's own run logs before re-diagnosing from scratch, and
+check whether `deployment-api` has drifted a THIRD time since — if so, Option A is confirmed not actually working
+despite landing.
