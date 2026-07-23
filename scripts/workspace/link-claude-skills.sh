@@ -6,6 +6,7 @@
 #   1. top-level `<root>/CLAUDE.md`        → unified-trading-pm/cursor-configs/CLAUDE.md
 #   2. `<root>/.claude/skills`             → unified-trading-pm/cursor-configs/skills/   (ONE dir link)
 #   3. `<root>/.claude/settings.json`      → unified-trading-pm/cursor-configs/settings.json
+#   4. `<root>/.claude/hooks`              → unified-trading-pm/cursor-configs/hooks/   (ONE dir link)
 # so Claude Code (a) auto-loads the PM ruleset at startup when an agent's CWD is the root, and
 # (b) surfaces each `/<name>` slash-command, and (c) picks up team policy (permissions,
 # bypassPermissions default, MCP servers, the destructive-command hook) at the project-settings
@@ -71,6 +72,13 @@ WORKSPACE_ROOT="${1:-$(cd "${_self}/../../.." && pwd)}"
 PM_CFG="${WORKSPACE_ROOT}/unified-trading-pm/cursor-configs"
 SKILLS_SRC="${PM_CFG}/skills"
 
+# ── (0) Self-heal: personal keys (model/effortLevel/theme) don't belong in the team file ──
+# Runs BEFORE anything else touches settings.json — see migrate-personal-settings-keys.sh header
+# for the full story (plans/active/issues/claude_code_settings_symlink_chain_broken_2026_07_23.md).
+# Best-effort: that script never fails loudly, so no guard needed here.
+_migrate_script="${_self}/migrate-personal-settings-keys.sh"
+[ -x "$_migrate_script" ] && bash "$_migrate_script" "${PM_CFG}/settings.json"
+
 # ── (1) Top-level CLAUDE.md → PM SSOT (RELATIVE target; the startup-load point for agents) ──
 # Done first + independently of skills so a root with no skills dir still gets its rules.
 #
@@ -128,6 +136,60 @@ else
         echo "[link-claude-skills] ensured ${_settings_dest} → ${_settings_target}"
     else
         echo "[link-claude-skills] could not link ${_settings_dest} (non-blocking)" >&2
+    fi
+fi
+
+# ── (4) `<root>/.claude/hooks` → PM SSOT (ONE dir link, mirrors the skills pattern) ──
+# Promotes local-only Claude Code hook scripts (e.g. context-threshold-nudge.sh,
+# precompact-block-auto.sh) to a git-tracked, symlinked home so an edit propagates to every
+# root instead of living only on whichever machine authored it. Added 2026-07-23 — see
+# plans/active/issues/claude_code_settings_symlink_chain_broken_2026_07_23.md. Placed before
+# the skills block (same reason as the settings.json block above): the skills block has early
+# `exit 0` paths that would otherwise skip this.
+HOOKS_SRC="${PM_CFG}/hooks"
+_hooks_dest="${WORKSPACE_ROOT}/.claude/hooks"
+_hooks_target="../unified-trading-pm/cursor-configs/hooks"
+
+if [ ! -d "$HOOKS_SRC" ]; then
+    echo "[link-claude-skills] no ${HOOKS_SRC} — hooks dir-link step skipped"
+elif [ -L "$_hooks_dest" ]; then
+    if [ "$(readlink "$_hooks_dest")" = "$_hooks_target" ]; then
+        echo "[link-claude-skills] ${_hooks_dest} → ${_hooks_target} (already linked)"
+    elif rm -f "$_hooks_dest" 2>/dev/null && ln -sfn "$_hooks_target" "$_hooks_dest" 2>/dev/null; then
+        echo "[link-claude-skills] updated ${_hooks_dest} → ${_hooks_target}"
+    else
+        echo "[link-claude-skills] could not update ${_hooks_dest} (non-blocking)" >&2
+    fi
+elif [ -d "$_hooks_dest" ]; then
+    # Real dir → migrate to a symlink ONLY if every entry is content-identical to the SSOT
+    # copy (i.e. it's a prior local-only copy of exactly this content). Any mismatch or
+    # foreign file → refuse, leave the whole dir alone (never guess, never delete someone's
+    # local hook).
+    _foreign=0
+    for _e in "$_hooks_dest"/* "$_hooks_dest"/.[!.]*; do
+        [ -e "$_e" ] || continue
+        _name="$(basename "$_e")"
+        if [ ! -f "$_e" ] || ! cmp -s "$_e" "${HOOKS_SRC}/${_name}" 2>/dev/null; then
+            _foreign=1
+            echo "[link-claude-skills] FOREIGN or content-mismatched (left in place): ${_e}" >&2
+        fi
+    done
+    if [ "$_foreign" -eq 1 ]; then
+        echo "[link-claude-skills] ${_hooks_dest} holds local content that doesn't match ${HOOKS_SRC} → REFUSING to convert it to a dir symlink." >&2
+    else
+        rm -f "$_hooks_dest"/* "$_hooks_dest"/.[!.]* 2>/dev/null
+        if rmdir "$_hooks_dest" 2>/dev/null && ln -sfn "$_hooks_target" "$_hooks_dest" 2>/dev/null; then
+            echo "[link-claude-skills] migrated local ${_hooks_dest} → symlink → ${_hooks_target}"
+        else
+            echo "[link-claude-skills] could not migrate ${_hooks_dest} (non-blocking, dir left as-is)" >&2
+        fi
+    fi
+else
+    mkdir -p "${WORKSPACE_ROOT}/.claude" 2>/dev/null
+    if ln -sfn "$_hooks_target" "$_hooks_dest" 2>/dev/null; then
+        echo "[link-claude-skills] ensured ${_hooks_dest} → ${_hooks_target}"
+    else
+        echo "[link-claude-skills] could not link ${_hooks_dest} (non-blocking)" >&2
     fi
 fi
 
