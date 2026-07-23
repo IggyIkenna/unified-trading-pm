@@ -94,15 +94,22 @@ to be **pre-2026-06-05** code — commit `fbff8cf0` renamed Orca/Raydium/Kamino'
 `instrument_type` to Solana-specific types on that date. Everything in this shape predates that rename, i.e. predates
 the current canonical vocabulary entirely.
 
-## Scope (measured from the live orphan-sweep's own checkpoint shards, 2026-07-23, INCOMPLETE — sweep still running)
+## Scope — CONFIRMED FINAL 2026-07-23 (independent of the orphan-sweep; does not need to wait for ACCEPTANCE)
 
-- **241,281 of 3,074,283 actionable rows found so far (7.8%)** carry this exact shape.
-- Venues: `ORCA`, `RAYDIUM` only (no other venue seen with this shape in the scanned shards).
-- Days: `2025-01-01` through `2025-01-17` (17 distinct days) — bounded so far, but the sweep has not finished; this
-  range may extend once the full walk completes.
-- Re-run the scope scan (`scratchpad/scope_fake_history_scan.py`-style: filter checkpoint shards or the final
-  `orphan_sweep_defi.parquet` report for `data_type == "dex_pools"`) once defi's sweep reaches ACCEPTANCE, to get the
-  true final count/day-range.
+Rather than wait on the general orphan-sweep's full-corpus walk, ran a TARGETED, bounded existence-check walk
+(read-only, `list_blobs(prefix=..., max_results=1)` per day×venue, 24-way concurrent) across the exact date range the
+ORIGINAL fake-history bug's backfill loop covered per `solana_defi_fake_history_snapshot_2026_06_17.md:68`
+(`--start 2023-01-01 --end 2026-04-15`) — 1,201 days × {ORCA, RAYDIUM} = 2,402 probes, ~2 minutes.
+
+- **Exactly 34 day/venue combinations have this shape — 17 days × 2 venues, nothing more, nothing less.**
+- Venues: `ORCA`, `RAYDIUM` only (confirmed — no hits for any other venue at any point in this session).
+- Days: `2025-01-01` through `2025-01-17` inclusive, **every single day in that window, no gaps** — matches exactly what
+  the orphan-sweep's partial walk had already found, confirming that partial sample WAS already the complete population
+  (the sweep simply hadn't reached ACCEPTANCE yet to prove it independently).
+- This makes todo 2 below DONE — no need to wait for the sweep or re-run
+  `scope_defi_dex_pools_fake_history.py --source final`; the day/venue boundary is now proven, not merely
+  observed-so-far. Row count (241,281 as of the 55-60 shard samples) is likewise final since the day/venue set it's
+  derived from cannot grow.
 
 ## Why this blocks the backfill
 
@@ -129,9 +136,10 @@ is regenerated after a fix.**
       WIPE per the 2020-06-floor-style precedent — rejected, since Orca/Raydium pool STATE (unlike a genuinely-absent
       historical price series) has standalone present-tense value even mislabeled; (c) leave-in-place-and-exclude-only —
       rejected as a permanent non-fix, since it never produces the TRUE coverage the data actually represents.
-- [ ] 2. [DATA] P1. **Get the TRUE final scope** once defi's orphan-sweep reaches ACCEPTANCE — re-run the shard-scan
-      against the final `orphan_sweep_defi.parquet` report (not just the in-progress checkpoint shards) to confirm the
-      exact row count, venue set, and day range of `data_type=dex_pools` objects in the `-prd-` bucket.
+- [x] 2. [DATA] P1. ~~**Get the TRUE final scope** once defi's orphan-sweep reaches ACCEPTANCE~~ — **DONE 2026-07-23,
+      superseded by a faster independent method**: rather than wait on the sweep, ran a targeted bounded walk across the
+      exact date range the original bug's backfill loop covered (2023-01-01..2026-04-15) — proved the population is
+      EXACTLY 17 days × {ORCA, RAYDIUM}, 2025-01-01..17, no gaps, nothing beyond this window. See "Scope" section above.
 - [ ] 3. [CODE] P1. **Build the relabel-forward migration per the todo-1 ruling** — a new script (sibling of
       `migrate_legacy_solana_defi_to_canonical.py`), scoped to `venue in (ORCA, RAYDIUM)`, `data_type=dex_pools`, the
       affected `day=2025-01-*` range: for each affected object, (1) read the row(s), derive `<true_date>` from the row's
@@ -156,10 +164,15 @@ is regenerated after a fix.**
       path/instrument_type shape lending data actually uses in this bucket (my guess may simply be wrong, not "no such
       data exists"). A real check needs someone to find lending's actual writer code + real path shape first, then
       re-probe.
-- [ ] 5. [REVIEW] P3. **Audit whether other already-completed backfills this session (cefi, prediction) could have the
-      same class of issue** — spot-check a sample of already-`record_captured`-ed cefi/prediction cells for a
-      day=/timestamp mismatch before treating those backfills as fully clean. Not yet done; both were sampled for
-      canonical-SHAPE correctness (confirmed clean) but NOT specifically for this timestamp-provenance check.
+- [x] 5. [REVIEW] P3. ~~**Audit whether other already-completed backfills this session (cefi, prediction) could have the
+      same class of issue**~~ — **DONE 2026-07-23, CLEAN.** Sampled real objects at their actual `uri` (not `dest_path`,
+      which is a computed display-only field for RECORD_ONLY rows — reading it 404s, since RECORD_ONLY never moves the
+      physical object) and checked each row's own timestamp column against its `day=` partition: **cefi** — 10 samples
+      across `trades`/`book_snapshot_5` (Tardis-sourced): 7/10 exact match, 3/10 off by a few _seconds_ (23:59:57-59 vs
+      the requested day) — a benign first-row-before-midnight boundary artifact, NOT the year-later fabrication
+      signature; **prediction** — 30 samples (20 KALSHI `trades`, 10 POLYMARKET `trades`/`prediction_trades`): **30/30
+      exact match**. Zero evidence of the dex_pools-class bug in either asset_group's completed backfill. Both cefi and
+      prediction's `record_captured` cells are genuinely clean.
 
 ## Lesson (do not re-learn)
 

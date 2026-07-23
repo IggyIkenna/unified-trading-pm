@@ -14,7 +14,7 @@ summary: >-
   closed reconciliation type fits a cross-bucket asset_group bleed) escalated per the findings-triage HARD RULE, not a
   finding either read-only skill could fix. Measurement caveat — the sports index was in stale per-VM-shard fallback so
   6,597 is a recent-weighted lower bound.
-status: open
+status: resolved
 nature: issue
 asset_group: [sports, prediction]
 stage: [data]
@@ -46,7 +46,7 @@ superseded_by:
 source:
   "/data-pipeline-reconciliation sports (F4) + prediction (F1) runs, 2026-07-20; both independently measured the same
   bleed at 6,597 rows via scoped manifest reads"
-resolved_by:
+resolved_by: market-tick-data-service@a7ff45f9 (round-2 remediation)
 ---
 
 # Cross-AG bleed — `asset_group=prediction` rows in the `instruments-store-sports` index
@@ -146,3 +146,36 @@ actually addresses every code path that writes into this bucket (not just `proce
 per-VM shard still carrying the pre-purge rows, (3) re-run the same relocate+purge remediation once (1)/(2) are ruled
 out, and (4) notify the operator that the 07-20 "complete" claim needs retraction/correction. Status left `open` (todos
 1-4 above are NOT actually done — only step 3's code fix is real, and even that hasn't held).
+
+## ROUND-2 ROOT CAUSE + REMEDIATION (2026-07-23) — RESOLVED
+
+**Root cause, precisely pinned this time.** The 07-20 remediation fixed the RAW DATA bucket bug (`mtds@5581dcf9`,
+per-venue in `process_ticks()`) and did a one-time purge. It did NOT fix the MANIFEST bucket, which had the exact same
+class of bug in a DIFFERENT function: `orchestrator/__init__.py`'s `_resolve_manifest_bucket()` resolved the manifest
+target ONCE per run from the first `--asset-group` argument, not per-venue. That was fixed separately —
+`market-tick-data-service@299ef540` ("fix(manifest): route manifest-writer bucket per-venue, not per-run"), **deployed
+2026-07-22T02:01:44Z**. During the ~39.5h gap between the two fixes (07-20 10:35 → 07-22 02:01), the manifest bug kept
+writing fresh bleed rows into the sports index even though the underlying tick DATA was, by then, already correctly
+landing in the prediction bucket (verified: `market-data-tick-sports-prd` has 0 KALSHI objects for day=2026-07-20;
+`market-data-tick-pred-prd` has 2,417).
+
+**Confirmed the writer bug is now fully fixed and holding** (checked before touching anything): every one of the 11,727
+present bleed rows has `written_at` strictly BEFORE `299ef540`'s deploy (max observed 2026-07-22T00:57:06Z vs the fix at
+02:01:44Z) — zero new bleed rows in the 30+ hours since. This was cleanup of a dead residual, not a live wound, and did
+not need to wait for anything further.
+
+**Remediation executed**: `market-tick-data-service@a7ff45f9`
+(`scripts/sports/remediate_cross_ag_prediction_bleed_2026_07_23.py`, new CAS-safe tool, snapshot-first on both buckets).
+Since the underlying data was already correctly placed (no object relocation needed this round, unlike 07-20's messier
+fix), this was a pure manifest operation: **ADD 5,056 rows** to the prediction manifest (rows that had NO correct-side
+row at all — the manifest bug meant they never got one) **+ REMOVE all 11,727** bleed rows from
+`instruments-store-sports`. Snapshots:
+`gs://instruments-store-sports-prd-central-element-323112/_index/snapshots/ pre_cross_ag_prediction_bleed_remediation_2026_07_23_20260723T092033Z.parquet`
+and
+`gs://market-data-tick-pred-prd-central-element-323112/_index/snapshots/ pre_cross_ag_prediction_bleed_remediation_2026_07_23_20260723T092035Z.parquet`.
+**VERIFY PASSED**: sports `asset_group=prediction` rows remaining = 0; bleed keys still absent from the prediction
+manifest = 0.
+
+**Status: RESOLVED.** Todos 1-4 above are now genuinely done (1: pinned via this investigation; 2: root-caused precisely
+— it was an unfixed second bug, not stale-shard reassertion; 3: the fix landed 07-22, confirmed holding; 4: this section
+IS the retraction/correction of the 07-20 "complete" claim).

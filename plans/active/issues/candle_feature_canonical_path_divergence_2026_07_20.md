@@ -1301,3 +1301,23 @@ stragglers (CEFI's 149-object residual). Both original SPOT survivors (shards 7,
 finish undisturbed, then size the (likely-needed, per DEFI/CEFI precedent) retry pass AGGRESSIVELY — since a retry only
 touches the residual straggler count (small, per DEFI/CEFI history), high shard-count there is low-risk and buys real
 wall-clock savings without the contention downside.
+
+## Progress Log — 2026-07-23 (P7d: TRADFI run 1 COMPLETE — all 20 shards, 229/~7.6M transient stragglers, aggressive retry launched)
+
+All 20 shards reached `EXIT_STATUS=5` cleanly (no further preemptions — confirmed via the liveness-aware watchdog,
+`dead-no-exit=0/20` throughout). **Every shard's non-success breakdown is 100% `ERROR:ServiceUnavailable`/
+`ERROR:GatewayTimeout`** — the SAME transient-network-error class as DEFI (copy exception → destination never created →
+retry's `dmeta is None` check fires a fresh, successful copy), NOT CEFI's permanent `KEPT_SRC` class (todo 19). Total:
+**229 stragglers across all 20 shards, out of ~7.6M objects processed (~0.003%)** — genuinely expected to converge
+cleanly on retry, no todo-19 concerns here.
+
+**Per-shard straggler counts** (shard: count): 0:12, 1:18, 2:10, 3:8, 4:11, 5:14, 6:12, 7:7, 8:10, 9:13, 10:14, 11:4,
+12:13, 13:18, 14:11, 15:8, 16:13, 17:12, 18:10, 19:11.
+
+**Retry launched per the operator-agreed plan**: `SHARD_OF=50` (2.5x the original 20 — aggressive, justified because a
+retry's real GCS write-QPS is tiny at this residual size, ~229 real re-copies spread across 50 VMs ≈ ~4-5 each on
+average, so contention risk is genuinely low regardless of concurrency chosen here — unlike the ORIGINAL run where every
+object needed a real copy/content-repair). Same proven SHA pins, `WORKERS=16`, `MODE=full`, back on SPOT (now that
+`deployment-service@a32360a`'s native shutdown-script fix is live in this same clone — any preemption should be
+individually detectable + relaunchable the same way this session has already handled every prior storm). **STATUS: retry
+IN FLIGHT, NOT YET VERIFIED.**
