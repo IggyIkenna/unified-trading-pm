@@ -78,20 +78,63 @@ odds model entirely would be pointless at best and would mask this actual findin
 "decide explicitly" question from the original K2 todo has an honest, evidence-based answer instead of a silent scope
 narrowing.
 
-## What actually needs doing (not attempted in this pass -- real investigative work, own risk profile)
+## ROOT CAUSE FOUND + FIX SHIPPED (2026-07-23)
 
-1. Find the write-path that stamps `pipeline_mode=batch_api_football` + `data_type=trades`/`instrument_type=odds`
-   captures/attempts into the MTDS sports manifest (grep across `market_tick_data_service/` for the literal string
-   turned up only unrelated readers -- the writer likely constructs `pipeline_mode` from an enum/source variable rather
-   than a hardcoded literal, or lives in a script/cron not yet checked, e.g. an `af-backfill-*` VM fleet mirroring the
-   one named in `api_football_backfill_chronological_scan_never_reaches_pending_tail_2026_07_18.md`).
-2. Confirm whether it is still actively running today (last measured `attempted_at`=2026-07-13; re-check).
-3. Per the 2026-06-24 operator ruling (still standing, no reversal found for the MTDS-side wipe specifically -- unlike
-   the footystats ODDS decision which WAS reversed 2026-06-27, a different data_type/source pair), disable the write
-   path, then re-run (or extend) `wipe_api_football_sports_odds_2026_06_24.py` for the re-accumulated population.
-4. Decide the fate of the 7,248 genuinely `captured` rows specifically (real backfilled historical data, data-dates
-   2020-08-24..2025-04-11) -- wipe with the rest per the standing ruling, or carve out if there's a reason they're
-   legitimate.
+Not a live rogue writer -- diffed the current `source=api_football` population against the wipe's own pre-wipe snapshot
+(`_index/snapshots/pre_api_football_wipe_2026_06_24.parquet`): 686,124/1,266,874 keys are the EXACT SAME
+`(date,venue,league_id,data_type,instrument_type)` tuples as before the wipe (stale reassertion, not new activity),
+timestamped in a single ~2-minute burst (2026-07-13 23:54:39-23:56:48 UTC) -- the signature of a bulk expected-
+universe/sentinel regeneration pass, not per-row live fetching. Only 8,787 keys are genuinely new (7,250 `captured`, a
+real but much smaller tail, spread May-July not bursted).
+
+Traced the mechanism: MTDS's sentinel fan-out (`sentinels.py:228`) correctly requests
+`_resolve_pipeline_mode_for_sentinel(venue, "trades", default=PipelineMode.BATCH_ODDS_API)` -- but that function calls
+UTL's `derive_pipeline_mode_for_row()` FIRST, and returns whatever it gives back before ever consulting the caller's
+`default`. `derive_pipeline_mode_for_row()` tried `SOURCE_PRIORITY[("sports","trades")]` / `[("sports","TRADES")]` --
+**neither existed** (confirmed: `("sports","ODDS_SNAPSHOT"/"ODDS_MOVEMENT"/"ARBITRAGE")` all correctly map to
+`["odds_api"]`, but there was no `TRADES` sibling) -- so it fell through to
+`_ASSET_GROUP_FALLBACKS["sports"] = PipelineMode.BATCH_API_FOOTBALL`
+(`unified_trading_library/pipeline_mode_resolver.py:364`), silently shadowing the correct caller-supplied default for
+EVERY sports TRADES sentinel row. Confirmed end-to-end before/after:
+`derive_pipeline_mode_for_row(venue="PINNACLE", asset_group="sports", data_type="trades")` returned `batch_api_football`
+pre-fix, `batch_odds_api` post-fix. This is almost certainly the SAME underlying gap that produced the sibling IS-side
+finding in `sports_odds_ownership_registry_split_brain_and_bogus_api_football_ denominator_2026_07_15.md` (127,018 rows,
+"re-seeded nightly") -- one missing SOURCE_PRIORITY entry, two surfaces.
+
+**Fix shipped**: `unified-api-contracts@44623d25` -- added `("sports","TRADES"): ["odds_api"]` to `SOURCE_PRIORITY`
+(`_source_priority_data.py`), plus the two registries the test suite enforces symmetry with:
+`AVAILABILITY_AT_SEMANTICS[("sports","TRADES")] = "publication_time"` (matching its `ODDS_SNAPSHOT`/`ODDS_MOVEMENT`
+siblings) and `DATA_TYPES_BY_ASSET_GROUP["sports"]` gained the `"TRADES"` vocabulary member (mirroring how `"ODDS"` was
+already registered alongside `"odds"`). Also extended `VALID_DATA_TYPES_BY_AG_AND_INSTRUMENT_TYPE[("sports", "odds")]`
+to `frozenset({"trades","TRADES"})` -- the instrument_type axis is case-normalized before lookup, so this had to go into
+the VALUE set, not a separate uppercase key (a first attempt at a separate `("sports","ODDS")` key was dead code, caught
+by the reachability test). Full UAC QG green after 3 iterations chasing companion-registry symmetry requirements the
+test suite enforces.
+
+## What actually needs doing (root cause fixed; this is now cleanup + deploy verification)
+
+1. ~~Find the write-path~~ -- DONE, see above.
+2. ~~Fix the root cause~~ -- DONE, `uac@44623d25`.
+3. **Verify the fix has reached RUNNING MTDS instances before wiping** -- MTDS depends on UAC via a local path
+   (`pyproject.toml`: `unified-api-contracts>=0.33.0,<1.0.0`, `[tool.uv.sources] path = "../unified-api-contracts"`),
+   not a registry-pinned version, so this fix does NOT auto-propagate to deployed VMs/Cloud Run instances -- they need
+   their next tarball rebuild / redeploy cycle. **Wiping before that happens would just let the next sentinel- emission
+   cycle re-pollute the same 1.26M rows** (exactly what happened to the original 2026-06-24 wipe, whether via this same
+   mechanism or the shard-reassertion route below). Check `deployment-observability` / the sports sentinel cron's
+   last-run timestamp against the UAC version it has loaded before running the wipe.
+4. **Wipe the re-accumulated population, this time CAS-safe** -- the original
+   `wipe_api_football_sports_odds_ 2026_06_24.py` does a non-CAS, unprotected read-modify-write directly on
+   `_index/availability_index.parquet` (its own docstring: "Run with the manifest consolidator PAUSED to avoid a
+   read-modify-write race" -- an operational-discipline dependency, not a structural guarantee) and never touches the
+   underlying `_index/per_vm/*.parquet` shards, which is plausibly a SECOND contributing mechanism (shard-reassertion)
+   on top of the sentinel-mislabeling root cause -- both may need addressing. Reuse this session's
+   `manifest_swap_ 2026_07_22.py`-style snapshot+CAS-remove pattern (already proven working) rather than the old script,
+   scoped to `source=="api_football"` in the MTDS sports bucket (confirmed: api_football has zero legitimate business
+   writing into `market-data-tick-sports-prd` at all -- its sanctioned writes are fixtures/reference data in the
+   `instruments-store-sports` bucket).
+5. Decide the fate of the 7,248 (now 7,250, +2 since) genuinely `captured` rows specifically (real data, data-dates
+   2020-08-24..2025-04-11) -- wipe with the rest per the standing 2026-06-24 ruling, or carve out if there's a reason
+   they're legitimate. No evidence found suggesting they're legitimate; default is wipe-with-the-rest.
 
 ## Evidence (measured 2026-07-22, live MTDS sports index read)
 
