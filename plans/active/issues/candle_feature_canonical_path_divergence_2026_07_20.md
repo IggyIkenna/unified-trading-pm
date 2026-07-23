@@ -1271,3 +1271,13 @@ shards 7/8 alone (already >68% done, restarting from scratch would waste real pr
 either way, same caveat as DEFI/CEFI). **STATUS: 2 shards healthy on SPOT (7, 8), 18 shards launching on-demand, NOT YET
 VERIFIED.** If shards 7/8 get preempted later, relaunch just those 2 indices on-demand too rather than restarting the
 whole fleet.
+
+**Clarifying note (operator asked whether fleet auto-recovery should have handled this)**: it does not, for this VM
+family, by design. The workspace's general fleet auto-recovery (`RelaunchPreemptedVm` / `exit_code_fleet_monitor.py`)
+resumes from a shared `PROGRESS.json` checkpoint contract that day-frontier backfill categories participate in.
+`migrate_candle_canonical_2026_07.py`'s own docstring (line ~110/998) explicitly states its resume mechanism is "a NEW,
+self-contained mechanism, distinct from the workspace's general day-frontier `PROGRESS.json`" — and
+`launch-canonical-migration-vm.sh` has zero `PROGRESS.json` wiring for the `*-candle-apply` categories. So nothing in
+the fleet would have caught or relaunched these 18 dead shards automatically; the manual detection (real `run.log`
+spot-check, since the watchdog's `EXIT_STATUS`-only check couldn't see it) and relaunch above was necessary, not
+duplicate work.
