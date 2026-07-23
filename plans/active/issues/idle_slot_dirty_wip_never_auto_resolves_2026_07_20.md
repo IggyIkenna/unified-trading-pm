@@ -78,6 +78,27 @@ relying solely on the next spawn attempt:
 
 ## Codex SSOTs
 
-- `codex/05-infrastructure/per-tab-worktrees.md` § "Pre-spawn branch-state + liveness-gated dirty resolution" — the
+- `/codex/05-infrastructure/per-tab-worktrees.md` § "Pre-spawn branch-state + liveness-gated dirty resolution" — the
   existing FM8 mechanism this gap sits next to.
 - `agent-orchestrator/server/worktree_clean_check/_orphan.py`, `_liveness.py` — the code to reuse.
+
+## Todos (added 2026-07-23 — `/plan-reconcile`; this doc had NO todos and was tracked by no plan)
+
+> **Re-verified STILL-LIVE 2026-07-23.** Every caller of `resolve_dirty_state` / `commit_and_push_dirty_repos` was
+> enumerated: `server.py::spawn_slot`, `autospawn.py::_do_spawn`, `routes/slots_ops.py` pre-spawn gate, and
+> `worker_liveness/_respawn.py` — **all four are spawn/respawn-time triggers**. The watchdog's periodic passes
+> (`_reclaim_idle_lingering_sessions`, `_release_prereq_blocked_slots`) never call the dirty-resolution path, and no
+> cron does either. So a dirty slot nobody tries to spawn into stays dirty indefinitely. Neither of the two recent fixes
+> touches this: `agent-orchestrator@529b0dc` fixed the git-status DETECTOR's `(host, slot_id)` keying, and the
+> deployment-ui Fleet tab adds VISIBILITY — neither adds a resolution-side sweep.
+
+- [ ] [BACKEND] P2. **Add a periodic dirty-resolution sweep that does not depend on a spawn attempt.** Reuse the
+      existing `resolve_dirty_state` / `commit_and_push_dirty_repos` plus the FM8 liveness discriminator (dead or
+      expired `.agent-claim` → inherit + commit; live claim or mtime <120s → PROTECT), driven from a periodic tick
+      against slots that are dirty AND provably dead (no live tmux session). **Gate**: a deliberately-idle dirty slot
+      with no tmux and an expired claim is inherited within one sweep interval, evidenced by a
+      `slot_dirty_state_resolved`-class activity row with **no adjacent spawn/autospawn event**.
+- [ ] [OPERATOR] P3. **Spot-check the live fleet for a current instance before prioritising the above** — query
+      `/api/fleet/git-health` for any slot dirty >24h with no live session. If none exists, this is a structural gap
+      without an active incident (fine to sequence behind P1 work) — which is a reason to rank it, **not** a reason to
+      close it. **Gate**: the one-line finding recorded in this doc.

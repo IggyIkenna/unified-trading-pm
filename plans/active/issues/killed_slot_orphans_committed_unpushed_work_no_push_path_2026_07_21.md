@@ -25,8 +25,8 @@ related:
   [
     plans/active/ao_uniform_agent_liveness_contract_2026_07_20.md,
     plans/active/issues/git_health_phantom_dirty_flicker_ff_cron_race_2026_07_21.md,
-    codex/12-agent-workflow/async-wait-and-poll-discipline.md,
-    codex/04-architecture/autonomous-recovery-matrix.md,
+    /codex/12-agent-workflow/async-wait-and-poll-discipline.md,
+    /codex/04-architecture/autonomous-recovery-matrix.md,
   ]
 created: 2026-07-21
 priority: P2
@@ -83,14 +83,24 @@ it never reaches `origin/live-defi-rollout` on its own.
 
 - [ ] [INFRA] P2. Escalate the watchdog from soft-kick to hard-kill + respawn after N consecutive
       `post_kick_classification=frozen` observations (e.g. N=3, ~15-20 min) instead of soft-kicking indefinitely; the
-      daily hard-kill budget (50) is ample. SSOT: `codex/04-architecture/autonomous-recovery-matrix.md`.
+      daily hard-kill budget (50) is ample. SSOT: `/codex/04-architecture/autonomous-recovery-matrix.md`.
 - [ ] [INFRA] P2. Add a reclaim-and-push (or inherit) path for a killed/idle slot that git-health reports as
       ahead/diverged with `unpushed_plans`: either (a) AutoSpawn prioritises re-occupying a slot with a standing
       `drift_violation` even when the backlog is otherwise gated, tasking the fresh worker to rebase (if diverged) +
       push the orphaned commits; or (b) a dedicated reaper that inherits the commits onto a live slot. Committed work
       must not strand off-origin indefinitely.
-- [ ] [INFRA] P3. Make the `unpushed_plans_alert` re-remind (state-transition dedup) while the drift persists on a
-      **dead** slot, so a one-shot 06:02Z alert doesn't become the only signal for work that stays stranded for hours.
+- [x] [INFRA] P3. ✅ **DONE — the one-shot defect is resolved (verified 2026-07-23), with one wording correction.**
+      `server/worker_liveness/_git_alerts.py::maybe_alert_unpushed_plans` re-fires on a 1800s (30-min)
+      `persist_throttle`-backed cooldown for as long as `unpushed_plans` stays non-empty, and its caller in
+      `worker_liveness/__init__.py` runs it for EVERY `SlotRow` carrying `git_status_json` with **no liveness or status
+      filter** (docstring: "Coverage gap fixed 2026-07-14 … including slots with no live tmux worker") — so a dead slot
+      is covered, which is exactly what this todo asked for. Shipped 2026-07-14, before the 2026-07-21 incident.
+      **Correction to this todo's wording**: the re-remind is NOT a repeated Slack page — `notify_unpushed_plans` was
+      D11-downgraded to `logger.info` only (2026-06-25, "git housekeeping"), so the recurring signal is an
+      `unpushed_plans_alert_sent` activity event (AO log + dashboard) every 30 min. If a repeated PAGE was the intent,
+      that is a separate, still-unbuilt ask — file it rather than reopening this. Original item: make the
+      `unpushed_plans_alert` re-remind (state-transition dedup) while the drift persists on a **dead** slot, so a
+      one-shot 06:02Z alert doesn't become the only signal for work that stays stranded for hours.
 
 ## Triage
 

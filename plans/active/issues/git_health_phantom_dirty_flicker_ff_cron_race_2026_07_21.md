@@ -25,10 +25,11 @@ tags: [git-health, monitoring, false-positive, race-condition, ff-cron, per-tab-
 related:
   [
     plans/active/issues/slot5_deployment_api_dirty_false_positive_2026_07_13.md,
-    codex/05-infrastructure/per-tab-worktrees.md,
+    /codex/05-infrastructure/per-tab-worktrees.md,
   ]
 created: 2026-07-21
-priority: P1
+last_updated: 2026-07-23
+priority: P2 # (was: P1) DOWNGRADED 2026-07-23 — the P1 escalation was driven by "ongoing fleet-wide FF-pull starvation on live slots"; that is measured ABSENT today (all live non-clean rows on hk verified REAL, file-for-file), and agent-orchestrator@529b0dc (cross-host row clobber) is live. The remaining count-integrity defect is a monitoring-integrity concern, not an operational one.
 parent_epic: infrastructure_master
 source: "review(slot1) msgs 1530/1532/1534 to main orchestrator, 2026-07-21"
 assigned_vm: NA
@@ -39,6 +40,15 @@ resolved_by:
 locked_by:
 depends_on: []
 ---
+
+> **🟡 READ THIS FIRST (2026-07-23) — the diagnosis below evolved four times and two of its conclusions are now
+> retracted.** Live re-verification found: (a) the phantom does **NOT** reproduce — every non-clean row on `hk` matches
+> the real worktree file-for-file; (b) a fix this doc never knew about, `agent-orchestrator@529b0dc` (git-status keyed
+> by `(host, slot_id)` instead of `slot_id` alone), is **live** and plausibly explains the fleet-wide fabrication as a
+> cross-host row clobber; (c) none of the code fixes this doc prescribes has shipped. **Sections below are kept in
+> chronological order as the investigation record — several are self-superseding.** Jump to **§ VERIFICATION
+> 2026-07-23** for current state, and read the todos (5 of 9 are now closed as done/obsolete/falsified/superseded)
+> rather than the prose for what is actually left to do.
 
 ## What I found
 
@@ -71,8 +81,8 @@ Two-part, and the split matters:
 2. **Reporter-side race (the real defect)** — `unified-trading-pm/scripts/dev/slot-git-status-report.sh` runs
    `git status --porcelain` (~line 193) on its ~5-min cadence. When that read lands mid-fetch/merge of the concurrent
    5-min FF-pull cron (`slot-cron-ff-pull.sh`, which fetches/merges every worktree on a schedule — see
-   `codex/05-infrastructure/per-tab-worktrees.md`), mtime-churned-but-content-identical index entries read **dirty** for
-   that single poll, then clean again once the index settles. Same known class as
+   `/codex/05-infrastructure/per-tab-worktrees.md`), mtime-churned-but-content-identical index entries read **dirty**
+   for that single poll, then clean again once the index settles. Same known class as
    `slot5_deployment_api_dirty_false_positive_2026_07_13.md` (which is why `dirty_sample` — up to 5 raw porcelain lines
    — was added to the reporter, precisely to expose the phantom paths).
 
@@ -101,9 +111,11 @@ before POSTing.
 
 ## Open TODOs
 
-- [ ] [INFRA] P2. Attach `dirty_sample` raw porcelain lines captured at a flicker tick for slot3/slot4/slot16 (review
-      holds the direct-worktree evidence) — confirms the phantom paths are index-mtime churn, not real edits.
-      Reproduction is well-characterized enough to fix without this if a clean capture proves hard to grab.
+- [x] [INFRA] P2. ~~Attach `dirty_sample` raw porcelain lines captured at a flicker tick for slot3/slot4/slot16.~~
+      **CLOSED-OBSOLETE 2026-07-23 (not built, no longer needed).** Superseded twice over: review's msg-1673 `cat -A`
+      capture already answered the question it was asking (raw bytes were EMPTY, so the paths are neither mtime churn
+      nor real edits), and the phantom class does not reproduce on the live fleet (Verification §2). The doc's own
+      caveat applies — "reproduction is well-characterized enough to fix without this".
 - [ ] [INFRA] P2. Implement the `dirty_consecutive_ticks >= 2` gate on the `not_clean_since` clear + sync-nudge in
       `agent-orchestrator/server/routes/git_health.py`; add a unit test that a single clean poll between two dirty polls
       does NOT reset `not_clean_since`.
@@ -127,7 +139,12 @@ a real repo), but the mechanism is stale-row-survival / host-attribution, not a 
 look. Not orphan-WIP (nothing to inherit; the directory isn't there). No page — digest-class, consistent with the rest
 of this doc.
 
-- [ ] [INFRA] P2. Determine why a git-health dirty row is emitted/retained for a worktree absent on the reporting host
+- [x] [INFRA] P2. ✅ **ANSWERED 2026-07-23 — both branches of the question resolved.** (a) The "absent worktree" premise
+      was retracted by review msg-1677 below: slot 0 is not a `.tabs/0` worktree at all, it is the special-cased
+      `WORKSPACE_PATH` root sweep, and it exists. (b) The "row from another host attributed to this one" branch was REAL
+      and is FIXED — `agent-orchestrator@529b0dc` re-keys git-status by `(host, slot_id)` instead of `slot_id` alone,
+      ending the cross-host clobber (live on the VM, Verification §3). Original item retained below for the evidence
+      trail: determine why a git-health dirty row is emitted/retained for a worktree absent on the reporting host
       (`.tabs/0` on hk): is `slot-git-status-report.sh` reporting a stale cached prior result when the worktree dir is
       missing (should emit `absent`/skip, not a stale `dirty`), or is a row from another host being attributed to this
       one? Reporter should treat "worktree directory missing" as an explicit `absent` state, never carry forward a prior
@@ -184,13 +201,22 @@ the reporter bug, explicitly flagging the fleet-wide FF-pull-starvation risk on 
 (added to the main orchestrator's next-operator-contact list): a monitoring reporter bug is now silently degrading a
 real fleet operation (FF-pull currency) on live slots.
 
-- [ ] [INFRA] P1. Root-cause the **all-repos-simultaneous** false-dirty (identical `not_clean_since` across 24 repos on
-      one slot) in `slot-git-status-report.sh` — this points at a shared-precondition/shared-artifact race in the
-      reporter, not per-repo `git status` churn. Because it drives `ff_pull_last_result=skip:dirty` and thus starves the
-      FF-pull cron, the `dirty_consecutive_ticks >= 2` gate proposed above should also guard **the FF-pull skip
-      decision** (`slot-cron-ff-pull.sh`), not just `not_clean_since` clearing + sync-nudge — a one-tick phantom dirty
-      must not skip an FF-pull. Add a test that a single-tick all-repos-dirty observation neither clears/sets
-      `not_clean_since` nor causes an FF-pull skip.
+- [ ] [INFRA] P2. **NARROWED + DOWNGRADED 2026-07-23 (P1→P2): the root-cause half is probably already answered; the
+      guard half is the live work.** `agent-orchestrator@529b0dc` (live) ended the cross-host `(host, slot_id)` row
+      clobber, which is a complete mechanism for "all 24 repos flip dirty at one instant with an identical
+      `not_clean_since`" — another host's slot-N report overwriting this host's row wholesale. That fits the
+      shared-per-sweep-trigger fingerprint better than 24 independent per-repo races, and the phantom has not reproduced
+      since (Verification §2/§3). **Do NOT spend time re-hunting a reporter-internal race until a recurrence is observed
+      post-`529b0dc`** — if one is, that falsifies the clobber reading and the hunt resumes. **What REMAINS regardless
+      of cause**: the `dirty_consecutive_ticks >= 2` gate must also guard the **FF-pull skip decision**
+      (`slot-cron-ff-pull.sh`), not just `not_clean_since` clearing + sync-nudge — a one-tick phantom dirty must never
+      skip an FF-pull, whatever produced it. Original item: root-cause the all-repos-simultaneous false-dirty (identical
+      `not_clean_since` across 24 repos on one slot) in `slot-git-status-report.sh` — this points at a
+      shared-precondition/shared-artifact race in the reporter, not per-repo `git status` churn. Because it drives
+      `ff_pull_last_result=skip:dirty` and thus starves the FF-pull cron, the `dirty_consecutive_ticks >= 2` gate
+      proposed above should also guard **the FF-pull skip decision** (`slot-cron-ff-pull.sh`), not just
+      `not_clean_since` clearing + sync-nudge — a one-tick phantom dirty must not skip an FF-pull. Add a test that a
+      single-tick all-repos-dirty observation neither clears/sets `not_clean_since` nor causes an FF-pull skip.
 
 ### Sharper root cause 2026-07-22 (review msg 1666, 12:49Z + main code trace) — endpoint disagreement pins it to the fleet PROXY-MERGE layer, not a live reporter race
 
@@ -234,14 +260,19 @@ fabricated stale-dirty (and, per the `.tabs/0` follow-up above, that stale row f
 P1 retained: a fleet-health surface that fabricates all-repos-dirty + false drift signals is a real monitoring-integrity
 defect even with the operational impact bounded.
 
-- [ ] [INFRA] P1. Fix the fleet git-health **proxy-merge staleness**: `/api/fleet/git-health` scope=fleet must dedup
-      merged `(host, slot)` rows by freshest `reported_at` (drop/supersede a stale duplicate from a secondary backend
-      rather than appending + double-counting it), and/or a `SlotGitStatusRow` older than `_REPORTER_STALE_SECONDS` must
-      not contribute live `dirty`/`drift_violation` to the summary. **Discriminating check for whoever fixes it**:
-      confirm whether a duplicate `SlotGitStatusRow` for `(host=hk, slot=1)` exists across backends, and whether the hk
-      reporter's `ORCH_URL` differs from the backend serving the stale `scope=local` view (main traced the merge path
-      but did not enumerate live rows across backends). Add a test that a stale duplicate row does not surface
-      `dirty`/`drift_violation` in the merged fleet summary when a fresher clean row for the same `(host,slot)` exists.
+- [x] [INFRA] P1. ❌ **CLOSED-FALSIFIED 2026-07-23 (do NOT build).** This doc's own CORRECTION section already falsified
+      the premise: central's single-backend `scope=local` reproduced the stale-dirty with no HTTP fan-out, and
+      `backends.json` on hk lists exactly one backend — so there is no duplicate-row proxy merge to dedup. The real
+      per-`(host, slot)` keying it groped toward was implemented independently in `agent-orchestrator@529b0dc`. Original
+      item kept for the trail: fix the fleet git-health proxy-merge staleness: `/api/fleet/git-health` scope=fleet must
+      dedup merged `(host, slot)` rows by freshest `reported_at` (drop/supersede a stale duplicate from a secondary
+      backend rather than appending + double-counting it), and/or a `SlotGitStatusRow` older than
+      `_REPORTER_STALE_SECONDS` must not contribute live `dirty`/`drift_violation` to the summary. **Discriminating
+      check for whoever fixes it**: confirm whether a duplicate `SlotGitStatusRow` for `(host=hk, slot=1)` exists across
+      backends, and whether the hk reporter's `ORCH_URL` differs from the backend serving the stale `scope=local` view
+      (main traced the merge path but did not enumerate live rows across backends). Add a test that a stale duplicate
+      row does not surface `dirty`/`drift_violation` in the merged fleet summary when a fresher clean row for the same
+      `(host,slot)` exists.
 
 ## CORRECTION 2026-07-22 (main, DB + code investigation) — SUPERSEDES the proxy-merge theory AND the "bounded to one tick" note above
 
@@ -290,15 +321,23 @@ proxy merge. A phantom `dirty_files=1` (blank porcelain line counted by `wc -l` 
 git-health reporter and the FF-pull cron read the slot dirty; the reporter's faithful persistence + the FF-cron's
 skip-on-dirty then produce fabricated fleet-dirty **and** a real, self-reinforcing FF-pull starvation loop.
 
-- [ ] [INFRA] P1. Make `dirty_files` count only **non-blank** porcelain lines in BOTH
+- [x] [INFRA] P1. ⤴️ **CLOSED-SUPERSEDED 2026-07-23 (do NOT build this framing).** The Refinement section below
+      falsified its mechanism — review proved with `cat -A`/hexdump that the tree emits ZERO bytes while the reporter
+      posts `df=1`, and a lone blank line cannot be simultaneously `[[ -n ]]`-true and `[[ -z ]]`-skipped. Replaced by
+      the cause-agnostic single-source-of-truth todo further down, which is the one to build. Original framing kept for
+      the trail: make `dirty_files` count only non-blank porcelain lines in BOTH
       `unified-trading-pm/scripts/dev/slot-git-status-report.sh` (line 199 — count what the 208-225 loop actually keeps,
       i.e. derive `dirty_files` from a real non-blank line count / `grep -c .`, not raw `wc -l`) and the FF-cron dirty
       gate `slot-cron-ff-pull.sh:234` (`[[ -n "$(git status --porcelain … | grep -c .)" ]]`-equivalent so a blank
       payload never trips `[skip:dirty]`). Add a test that a `git status --porcelain` payload of a single
       blank/whitespace line yields `dirty_files=0` and `ff_pull_last_result != skip:dirty`. This is the real fix; it
       subsumes and replaces the (now-falsified) proxy-merge todo above.
-- [ ] [INFRA] P1. Final proof artifact (review, on hk): during a dirty tick, capture the RAW bytes of the phantom
-      payload — `git -C <repo> status --porcelain | cat -A | head` (or `| xxd | head`) — to confirm the counted line is
+- [x] [INFRA] P1. ✅ **DONE 2026-07-22 by review (msg 1673) — result recorded in the Refinement section below.** The
+      capture was taken while the reporter still showed the slot dirty(22): `git status --porcelain | cat -A` on 3
+      sampled repos returned **completely empty, zero bytes, hexdump-confirmed**. That answered the discriminating
+      question — it is NOT a blank-line miscount and NOT a real disposable file needing a carve-out. Original item:
+      final proof artifact (review, on hk): during a dirty tick, capture the RAW bytes of the phantom payload —
+      `git -C <repo> status --porcelain | cat -A | head` (or `| xxd | head`) — to confirm the counted line is
       blank/whitespace (vs a real disposable file the FF-cron carve-out at lines 226-285 doesn't cover). That
       distinguishes "blank-line miscount" (fix above) from "a real shared disposable file needs a carve-out."
 
@@ -334,6 +373,14 @@ without needing to first identify the exact wrapper trigger. Pair with **reporte
 so the next occurrence pins the trigger. Apply the same single-source count to the FF-cron dirty gate
 (`slot-cron-ff-pull.sh:234`).
 
+- [ ] [INFRA] P2. **NEW 2026-07-23 — one non-clean row could not be verified and looks wrong.** The live sweep
+      (Verification §2) shows host `ip-172-31-0-185` slot 0 reporting `unified-trading-pm` with **`dirty_files=2172`**,
+      `behind=1`, `not_clean_since=2026-07-23T12:52:01Z`, `ff_pull_last_result=skip:dirty`. Main verified every `hk` row
+      against the real trees but has no access to that host, so this one is UNVERIFIED. 2172 dirty files in a PM clone
+      is either a genuinely wrecked/unclean checkout (real, and its own problem — that clone can never FF while it stays
+      dirty) or the phantom surviving in a new magnitude. **Gate**: someone with access runs
+      `git -C <that clone> status --porcelain | wc -l` and states which it is. Cheap, decisive, and it either closes
+      this doc's last doubt or reopens the phantom hunt with a live repro.
 - [ ] [INFRA] P1. Re-derive `dirty_files` in `slot-git-status-report.sh` from the sample-loop's kept non-blank lines
       (single source of truth; `df` cannot exceed captured sample), + add the "`df>0` & empty-sample → log raw
       `porcelain | cat -A`" instrumentation to catch the wrapper trigger; mirror the count-integrity fix onto
@@ -378,6 +425,73 @@ Two confirmations, no new mechanism:
 
 No new fix lever (the count-integrity fix above already covers it); no page (review filed record-only). This is a
 recurrence data point, not a re-diagnosis — the mechanism stays as characterised in the CORRECTION/Refinement sections.
+
+## VERIFICATION 2026-07-23 (main, measured live) — phantom does NOT reproduce; a fix this doc never knew about is live
+
+Re-checked from scratch against the live fleet and the real trees, because every section above was written between
+2026-07-21 and 07-22 and the doc had no post-fix measurement.
+
+### 1. The prescribed code fixes have NOT shipped (verified in source, not assumed)
+
+`git log --since=2026-07-21 -- scripts/dev/slot-git-status-report.sh scripts/dev/slot-cron-ff-pull.sh` returns **zero
+commits**. The three exact lines this doc's todos name are unchanged:
+
+| Location                                 | Current code                                                  | Todo status |
+| ---------------------------------------- | ------------------------------------------------------------- | ----------- |
+| `slot-git-status-report.sh:199`          | `dirty_files=$(printf '%s\n' "${porcelain}" \| wc -l \| ...)` | NOT fixed   |
+| `slot-cron-ff-pull.sh:234`               | `if [[ -n "$(git status --porcelain 2>/dev/null)" ]]`         | NOT fixed   |
+| `git_health.py:88` (`is_clean_uptodate`) | clears `not_clean_since` on a SINGLE clean poll               | NOT fixed   |
+
+### 2. But the phantom does not reproduce — live fleet measured, rows verified against real trees
+
+`GET /api/fleet/git-health?scope=local` on central (2026-07-23 ~13:42Z): **860 repo rows, 11 non-clean.** Every
+non-clean row on the `hk` host was checked against the actual worktree:
+
+| Reported                                     | Direct `git status --porcelain`          | Verdict                                     |
+| -------------------------------------------- | ---------------------------------------- | ------------------------------------------- |
+| hk slot 0 · `unified-trading-pm` · df=**13** | **13**                                   | REAL — main's own uncommitted archival work |
+| hk slot 5 · `deployment-api` · df=**5**      | **5** (named `cost_observability` files) | REAL                                        |
+| hk slot 5 · `deployment-ui` · df=**4**       | **4** (named files)                      | REAL                                        |
+
+Exact count match with real paths in every case. **No `df=N`-on-a-clean-tree fingerprint anywhere on this host.** The
+`ff_pull_last_result=skip:dirty` on both slots is therefore CORRECT behaviour (genuine dirt → correctly skipped), not
+the self-reinforcing starvation loop described in the CORRECTION section.
+
+### 3. A related fix landed 2026-07-22 and is LIVE — and it likely explains the fleet-wide phantom
+
+`agent-orchestrator@529b0dc` — **"fix: key git-status by (host, slot_id), not slot_id alone"** (2026-07-22T07:55Z UTC).
+Confirmed live: deployed HEAD `3ea502b` on the central VM, `git merge-base --is-ancestor 529b0dc HEAD` → true. Its
+commit message names the mechanism verbatim:
+
+> host 'hk' and the planning VM both have a local slot 2 — whichever cron posted last silently clobbered the other every
+> ~5min tick
+
+**This is a mechanism no section of this doc considered.** The thread went: proxy-merge across backends (falsified by
+the CORRECTION) → "the reporter is genuinely POSTing dirty". But the CORRECTION's evidence for that conclusion was
+_"central's own `scope=local` shows hk slot 1 dirty while hk's trees are clean"_ — and under slot_id-only keying, that
+row could simply have been **the planning VM's own slot 1 clobbering hk's**. If so, the reporter never posted a phantom,
+and the `dirty_files=1` + empty-`dirty_files_sample` "DB fact" was a different host's row entirely.
+
+**This is a competing hypothesis, NOT a settled retraction** — proving it retroactively needs the deploy moment of
+`529b0dc` versus the 12:22:04Z incident, and the VM only exposes the current restart (2026-07-23T13:00:17Z UTC). It is
+testable going forward: rows can no longer collide, so a recurrence now would vindicate the reporter-bug reading.
+
+### 4. Measurement trap for whoever picks this up
+
+**`dirty_files_sample` is NOT exposed on `/api/fleet/git-health`.** The repo row carries exactly
+`name / state / dirty_files / ahead / behind / local_sha / not_clean_since / unpushed_plans / drift_violation`. A first
+pass of this verification read every row as "empty sample" and nearly reported 8 live phantoms — the field was simply
+absent from the payload. **Verify a suspected phantom against the real worktree, never against that field on this
+endpoint.**
+
+### 5. Operator surface now exists (operator, 2026-07-23)
+
+The **deployment-ui Fleet tab** (`src/pages/FleetGit.tsx`) now renders exactly the signals that block the FF cron —
+per-slot `dirty` / `behind` / `drift` / `reporter dead` / `ff-pull dead` badges, per-repo
+`dirty_files`/`ahead`/`behind`/ `DRIFT`, the raw `ff_pull_last_result`, and (`deployment-ui@509f3b9`) a per-slot
+snapshot timestamp shown relative + absolute. That last one directly mitigates this doc's "stale row presented as live
+because `reported_at` is fresh" complaint: the age is now visible on the surface. The **visibility** half of this issue
+is therefore covered; the **count-integrity** half (below) is not.
 
 ## Triage
 

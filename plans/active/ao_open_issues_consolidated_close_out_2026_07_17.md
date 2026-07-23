@@ -36,17 +36,17 @@ tags:
   ]
 related:
   [
-    issues/ao_skip_blind_spawn_budget_phantom_churn_2026_07_15.md,
+    ../archive/issues/ao_skip_blind_spawn_budget_phantom_churn_2026_07_15.md,
     issues/orchestrator_concurrent_qg_saturation_and_dispatch_divergence_2026_07_17.md,
     issues/orphaned_workers_on_tmux_loss_stale_dispatch_2026_07_17.md,
     issues/backlog_task_done_status_diverges_from_plan_checkbox_2026_07_16.md,
     issues/mvp_backfill_defi_v10_002_dispatch_thrash_2026_07_16.md,
     issues/regen_positional_task_ids_not_content_stable_2026_07_17.md,
-    issues/ao_service_clone_frozen_by_untracked_checkpoint_2026_07_16.md,
+    ../archive/issues/ao_service_clone_frozen_by_untracked_checkpoint_2026_07_16.md,
     issues/ao_residuals_after_dispatch_hardening_2026_07_17.md,
     issues/ao_recovery_audit_layer1_deleted_2026_07_15.md,
     issues/ao_docs_reconciliation_2026_07_15.md,
-    qg_host_adaptive_resource_governor_2026_07_14.md,
+    /plans/active/qg_host_adaptive_resource_governor_2026_07_14.md,
     ../epics/orchestrator_master.md,
   ]
 created: 2026-07-17
@@ -302,7 +302,7 @@ NOT AO and are deliberately out of scope here.
 
 ### Phase 4 — infra/ops hardening
 
-- [ ] [INFRA] P1. **State home = ONE in-repo source (`data/state/`); drop the two-places + the env overrides.** The
+- [x] [INFRA] P1. **State home = ONE in-repo source (`data/state/`); drop the two-places + the env overrides.** The
       wrong-DB GC incident + THREE bitten diagnostic sessions were the "one concept, two places" footgun:
       `ORCHESTRATOR_DB_PATH`/`ORCHESTRATOR_STATE_JSON` are set in the systemd unit (→ `/var/lib/orchestrator/…`, out of
       repo) while `config.py`'s default is in-repo `data/state/…`, so a CLI tool run as `ubuntu` without the unit env
@@ -317,8 +317,11 @@ NOT AO and are deliberately out of scope here.
       running `/var/lib/orchestrator/*.db` → `data/state/` on the VM, then restart. Source: doc #8 todo 2 + operator
       2026-07-18. **Gate**: `config.db_path()` as `ubuntu` with no env prints the in-repo path; service + a CLI audit
       tool resolve the SAME db; a simulated redeploy (FF-pull + `git clean -fd`) leaves `data/state/` intact. **➡️ MOVED
-      2026-07-20 to `ao_fleet_infra_hardening_2026_07_20.md` — do NOT action here.**
-- [ ] [INFRA] P2. **Duplicate-purpose env-var sweep (verify-consumer-then-remove).** Audit 2026-07-18: (1)
+      2026-07-20 to `ao_fleet_infra_hardening_2026_07_20.md` — do NOT action here.** **✅ DONE 2026-07-23 via
+      `ao_fleet_infra_hardening_2026_07_20.md` (archived 2026_07), todos 1+2** — the config change AND the
+      operator-gated live migration both landed; the running VM state now resolves in-repo `data/state/`. Verified at
+      flip: both child todos `- [x]` with evidence.
+- [x] [INFRA] P2. **Duplicate-purpose env-var sweep (verify-consumer-then-remove).** Audit 2026-07-18: (1)
       `ORCHESTRATOR_OPERATOR` is written `= ORCHESTRATOR_VM_ID` by `bootstrap_vm.sh` on every host, but
       `host_operator()` already DERIVES operator from `vm_id` when unset → pure redundancy; stop writing it in bootstrap
       (keep the field as an optional override). (2) `ORCHESTRATOR_DB_PATH`/`STATE_JSON` two-places — folded into the
@@ -328,18 +331,23 @@ NOT AO and are deliberately out of scope here.
       `WORKSPACE_ROOT`/`UNIFIED_TRADING_WORKSPACE_ROOT`/`ORCHESTRATOR_WORKSPACE_ROOT` trio is deliberately separate
       (own-config vs ambient passthrough, documented in `config.py`). **Gate**: `OPERATOR` no longer written by
       bootstrap + a host with only `VM_ID` set resolves the same operator; keep-decisions recorded in ENV_VARS.md. **➡️
-      MOVED 2026-07-20 to `ao_fleet_infra_hardening_2026_07_20.md` — do NOT action here.**
+      MOVED 2026-07-20 to `ao_fleet_infra_hardening_2026_07_20.md` — do NOT action here.** **✅ DONE 2026-07-23 via
+      `ao_fleet_infra_hardening_2026_07_20.md` (archived 2026_07), todo 3.** Verified at flip: child todo `- [x]`.
 - 🚫 **Per-repo freeze-streak alert (`slot-cron-ff-pull.sh` signal) + deployment-ui fleet-tab surface — DESCOPED
   2026-07-21 (operator).** Handed to the agent already working on the deployment-ui fleet tab; owned there, no longer
   our work. Was doc #7 todo 3 + operator 2026-07-18 (moved 2026-07-20 to `ao_fleet_infra_hardening` → then
   `monitoring_control_plane_master`, both now cleared). Removed as a `- [ ]` todo so it no longer reads as open work
   here; this line is the audit breadcrumb.
-- [ ] [INFRA] P2. **Fleet-wide frozen-clone sweep.** hk-host root repos measured behind=0 today, but the VM's SLOT
+- [x] [INFRA] P2. **Fleet-wide frozen-clone sweep.** hk-host root repos measured behind=0 today, but the VM's SLOT
       clones + any other hosts were not swept. One pass: every host's root + slot clones, `HEAD..origin/LDR > 0` with
       untracked-only dirt → unfreeze (plain FF, per the doc's recipe). Source: doc #7 todo 4. **Gate**: sweep output
       recorded; zero frozen clones remain. **➡️ MOVED 2026-07-20 to `ao_fleet_infra_hardening_2026_07_20.md` — do NOT
-      action here.**
-- [ ] [INFRA] P2. **Dispatch-time full-QG throttle (coordinate, don't duplicate).** The shared-host "≤2 full QG" cap is
+      action here.** **✅ DONE 2026-07-23 via `ao_fleet_infra_hardening_2026_07_20.md` (archived 2026_07), todo 4.** ⚠️
+      Note the gate's wording ("zero frozen clones remain") was CORRECTED in the child: the honest result is a measured
+      375-clone sweep of this host (worst clone 7 behind, no 249-behind cases; 42 clean clones FF'd, dirty ones
+      protected), not a proof that zero frozen clones exist fleet-wide forever. Read the child's todo for the measured
+      numbers before re-asserting the stronger claim.
+- [x] [INFRA] P2. **Dispatch-time full-QG throttle (coordinate, don't duplicate).** The shared-host "≤2 full QG" cap is
       unenforced at dispatch — 4-6 concurrent full-QG pytests saturated the VM on 07-17 (doc #2). The RAM/CPU admission
       governor (`qg_host_adaptive_resource_governor_2026_07_14`, active P1) is the natural enforcement point but was
       measured `MODE=token K=2` on this VM. Scope here: (a) record the requirement on the governor plan (dispatch-aware
@@ -347,7 +355,8 @@ NOT AO and are deliberately out of scope here.
       minimal dispatcher-side stagger (cap simultaneous ship-phase tasks per host). Do NOT build a second governor.
       Source: doc #2 fix-direction 1. **Gate**: concurrent full-QG on the VM measurably capped (via governor or
       stagger), evidence cited. **➡️ MOVED 2026-07-20 to `ao_fleet_infra_hardening_2026_07_20.md` — do NOT action
-      here.**
+      here.** **✅ DONE 2026-07-23 via `ao_fleet_infra_hardening_2026_07_20.md` (archived 2026_07), todo 5.** Verified
+      at flip: child todo `- [x]`.
 
 ### Phase 5 — doc close-outs + audits
 
@@ -408,7 +417,7 @@ NOT AO and are deliberately out of scope here.
       ✅ **DONE via `ao_failover_multi_vm_readiness_2026_07_20.md` (archived 2026_07); flipped 2026-07-20.** Its entire
       premise is cross-HOST re-routing ("a host e.g. harsh-pc goes offline and its soft-pinned tasks never dispatch"),
       but multi-VM dispatch was **deprecated 2026-06-27** in favour of the single central VM + role-based dispatch
-      (`codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`; `assigned_vm` ∈ `{planning,     NA}`).
+      (`/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`; `assigned_vm` ∈ `{planning,     NA}`).
       Live state agrees: failover is stopped, has never fired, and `fleet_registry_entries: 0` — it has no registry data
       to act on even if enabled. Per CLAUDE.md ("**Delete deprecated code** — no shims"), the honest resolution may be
       to DELETE the module + its config knobs rather than fix the paused-slot bug above. **Decide before doing the P2
@@ -419,7 +428,7 @@ NOT AO and are deliberately out of scope here.
       `ao_failover_multi_vm_readiness_2026_07_20.md`** — which also covers the larger risk this audit exposed: the
       re-route and rollback paths have NEVER executed in production (0 events for all time), so the resilience feature
       is unproven, not merely off. Do NOT action either here.
-- [ ] [BACKEND] P1. **plan_health cadence — MEASURED 21 dispatches in 5.5h (11:02→16:30Z), overlapping instances
+- [x] [BACKEND] P1. **plan_health cadence — MEASURED 21 dispatches in 5.5h (11:02→16:30Z), overlapping instances
       confirmed (`superseded-plan_health` exit reasons + one ACTIVE at probe time).** Operator policy: once per 4–8h
       unless CI-triggered — NOT every 15–30 min. Root cause found: `main-backmerge-to-ldr.yml` § "Ping plan-health
       agent" POSTs `/api/plan-health/dispatch` on EVERY LDR→main promotion that lands PM content (fleet promote runs
@@ -436,7 +445,9 @@ NOT AO and are deliberately out of scope here.
       exists — the worker just never confirms it), a per-boot noise line worth one look while in the file. **Gate**:
       measured dispatch rate ≤ 1 per interval over a 24h window with promotions still flowing; zero
       `superseded-plan_health` exits in that window. **➡️ MOVED 2026-07-20 to
-      `ao_fleet_observability_kpis_2026_07_20.md` — do NOT action here.**
+      `ao_fleet_observability_kpis_2026_07_20.md` — do NOT action here.** **✅ DONE 2026-07-23 via
+      `ao_fleet_observability_kpis_2026_07_20.md`, todo AF-2+Phase-6** (server-side min-interval gate + at-most-one-live
+      coalesce). Verified at flip: child todo `- [x]`.
 - [x] [BACKEND] P1. **Blocked-task redispatch cooldown + change-triggered re-eligibility + worker ETA (operator policy,
       ✅ **DONE via `ao_dispatch_cooldown_and_park_2026_07_20.md` (archived 2026_07); flipped 2026-07-20.** new
       mechanism).** Today a skip-as-blocked only blocks the SKIPPING slot (24h slot-scoped TTL); any other idle
@@ -460,7 +471,7 @@ NOT AO and are deliberately out of scope here.
       prereq flip → immediate re-eligibility; no change → 1h; ETA honoured); measured redispatch-of-declined-task rate
       drops to the policy curve on the live VM. **➡️ MOVED 2026-07-20 to `ao_dispatch_cooldown_and_park_2026_07_20.md` —
       do NOT action here.\*\*
-- [ ] [INFRA] P1. **plan_reconciler daily 01:00 UTC was NOT RUNNING — part (a) DONE 2026-07-18 window armed; (b)/(c) +
+- [x] [INFRA] P1. **plan_reconciler daily 01:00 UTC was NOT RUNNING — part (a) DONE 2026-07-18 window armed; (b)/(c) +
       two NEW defects remain.** **(a) ✅ RE-ENABLED 2026-07-17T18:03Z (operator request, this session)**: ran
       `install-plan-reconciler-timer.sh --operator ubuntu --time 01:00` via SSM; verified `is-enabled=enabled`,
       `NextElapseUSecRealtime=Sat 2026-07-18 01:04:12 UTC`, unit files on disk. The Persistent catch-up fired
@@ -499,7 +510,13 @@ NOT AO and are deliberately out of scope here.
       pushed `plan_reconciler/*` branch**. Until that is seen once, treat this subsystem as NEVER-VERIFIED, not merely
       "re-armed". **➡️ REMAINING WORK MOVED 2026-07-20 to `ao_scheduled_agent_hygiene_2026_07_20.md` (AO-dispatched) —
       the curl fix, the (b) liveness assertion and the end-to-end verification gate live there now. Do NOT action here;
-      this entry is kept as the audit record.**
+      this entry is kept as the audit record.** **✅ DONE 2026-07-23 — all remaining work landed or re-homed via
+      `ao_scheduled_agent_hygiene_2026_07_20.md` (archived 2026_07)**: the curl false-failure fix
+      (`agent-orchestrator@078c631`) and the (b) daily liveness assertion are both `- [x]` there. **The one residual —
+      the REAL end-to-end gate ("prove ONE reconcile run producing a `plan_health_result` + a pushed `plan_reconciler/*`
+      branch") — is NOT lost: it is tracked as its own Phase-8 todo below.** Flipping here removes double-tracking, it
+      does not close the gate. Until that Phase-8 item ticks, this subsystem stays NEVER-VERIFIED, exactly as this entry
+      warned.
 - [x] [BACKEND] P0. **The prereq-blocked reaper KILLS freshly-spawned agents that land on a previously-blocked slot ✅
       **DONE via `ao_dispatch_liveness_p0_2026_07_20.md` (archived 2026_07); flipped 2026-07-20.** (generic; it is what
       killed the 07-20 reconcile run).** `server/worker_liveness_watchdog.py:1180-1265` keeps
@@ -518,7 +535,7 @@ NOT AO and are deliberately out of scope here.
       plan_reconciler-kind agent is never selected by the reaper. Provenance: B4 audit 2026-07-20. **➡️ MOVED 2026-07-20
       to `ao_dispatch_liveness_p0_2026_07_20.md` (AO-dispatched) — do NOT action here; this entry is kept only as the
       provenance record.**
-- [ ] [BACKEND] P2. **The /boot read-confirmation gate demands `worker.md` from typed agents that were never pointed at
+- [x] [BACKEND] P2. **The /boot read-confirmation gate demands `worker.md` from typed agents that were never pointed at
       it — every plan_health/plan_reconciler boot is 428'd once.** `server/routes/slots_worker.py:80` calls
       `prompts.expected_read_files("worker", req.slot_role)` with the base role **hardcoded to `"worker"`**, so expected
       = `[RULES.md, worker.md, <craft>]`. A plan_health/plan_reconciler worker's boot stub points it at `RULES.md` +
@@ -530,8 +547,9 @@ NOT AO and are deliberately out of scope here.
       pass the ACTUAL agent kind (the spawn side already composes the right role), not the literal `"worker"`. **Gate**:
       a plan_reconciler boot confirms on the FIRST POST; `boot_read_unconfirmed` count drops to ~0 in a 24h window.
       Provenance: B4 audit 2026-07-20. **➡️ MOVED 2026-07-20 to `ao_scheduled_agent_hygiene_2026_07_20.md`
-      (AO-dispatched) — do NOT action here.**
-- [ ] [BACKEND] P2. **Sub-question left open by the B4 audit: why did the 07-15/17/18 reconcile runs die 7–7.5 min in?**
+      (AO-dispatched) — do NOT action here.** **✅ DONE 2026-07-23 via `ao_scheduled_agent_hygiene_2026_07_20.md`
+      (archived 2026_07), todo 3.** Verified at flip: child todo `- [x]`.
+- [x] [BACKEND] P2. **Sub-question left open by the B4 audit: why did the 07-15/17/18 reconcile runs die 7–7.5 min in?**
       Each was `plan_health_dispatched` then `tmux_session_lost … archived_lifecycle_complete: true` ~7 min later with
       no result (07-15 `agt-2d8441` is odder still — `finished_at` 07:30, 6h25m after a session that vanished at 01:12).
       The 07-20 kill has a NAMED cause (prereq reaper); these three do not, and 7 min is far too short for an opus/max
@@ -539,7 +557,11 @@ NOT AO and are deliberately out of scope here.
       them — verify by watching the next run, or by pulling those sessions' tmux/agent rows. **Gate**: each of the three
       has a named cause, or the next clean run proves the class is closed. **➡️ MOVED 2026-07-20 to
       `ao_scheduled_agent_hygiene_2026_07_20.md` — do NOT action here** (it was briefly duplicated in both plans; the
-      hygiene plan owns it because the end-to-end reconcile run there is what will resolve or refute the class).
+      hygiene plan owns it because the end-to-end reconcile run there is what will resolve or refute the class). **✅
+      DONE 2026-07-23 via `ao_scheduled_agent_hygiene_2026_07_20.md` (archived 2026_07), todo 5** — named cause for all
+      three via activity-log archaeology (identical signature: clean boot, real logged progress, then a clean death),
+      NOT assumed from the reaper fix. The gate asked for "a named cause or the next clean run proves the class closed";
+      the child answered with the former.
 
 ### Phase LAST — operator-sequenced
 
@@ -564,7 +586,7 @@ NOT AO and are deliberately out of scope here.
 > `scripts/quality-gates-base/`, not `scripts/dev/`); at the real path it answers `MODE=token K=2` (drift already
 > recorded on the governor plan, no new item).
 
-- [ ] [BACKEND] P1. **(AF-1) CI-wall escalator burn: 189 dispatches / 7d for 50 escalations, 83 UNRESOLVED (43%).**
+- [x] [BACKEND] P1. **(AF-1) CI-wall escalator burn: 189 dispatches / 7d for 50 escalations, 83 UNRESOLVED (43%).**
       Measured from `activity_log` (7d, wall_type=`ldr_qg_failure`): `escalation_queued=50`, `escalation_dispatched=189`
       (≈3.8 dispatches per escalation — redispatch churn), `escalation_resolved=108`, `escalation_unresolved=83`. Every
       dispatch is a full cicd agent session; nothing in any open issue doc tracks escalator EFFICACY — the alerting
@@ -578,8 +600,13 @@ NOT AO and are deliberately out of scope here.
       model tier vs escalate-to-operator).** **Gate**: the 83 are explained WITH a cause-class breakdown; redispatch per
       escalation capped; efficacy KPI visible; the prompt/context/model fix (whichever the classification points to) is
       applied or a follow-up filed. **➡️ MOVED 2026-07-20 to `ao_fleet_observability_kpis_2026_07_20.md` — do NOT action
-      here.**
-- [ ] [INFRA] P2. **(AF-2) plan_health true daily volume is 55 dispatches/24h — 13 of which produced NO result.**
+      here.** **✅ DONE 2026-07-23 via `ao_fleet_observability_kpis_2026_07_20.md`, todos AF-1a + AF-1b.** All four gate
+      clauses met: the 83 explained with a cause-class breakdown (65% NEVER_FOUND_ROOT_CAUSE / 33% FOUND_THEN_SILENT /
+      2% HIT_BLOCKED_QUESTION); redispatch capped on the shared cooldown store (`agent-orchestrator@5dd9bbc8`); efficacy
+      KPI visible via AF-5; and the classified fix applied (`unified-trading-pm@a35c6996`) **with the re-measure filed
+      as a follow-up** — that follow-up is the child plan's one remaining open todo, target ~2026-07-27. If the
+      re-measure shows no drop, AF-1a reopens there, not here.
+- [x] [INFRA] P2. **(AF-2) plan_health true daily volume is 55 dispatches/24h — 13 of which produced NO result.**
       `plan_health_dispatched=55`, `plan_health_result=42`, `plan_health_dispatch_failed=4` in the last 24h — worse than
       the 5.5h sample in Phase 6, and each run is a **haiku** worker (`agents/plan_health.md` `model: haiku` — NOT
       sonnet; the cheap radar) digesting ~449 plan skeletons. MEASURED 2026-07-18 (6-day activity_log): 288 dispatched /
@@ -587,8 +614,11 @@ NOT AO and are deliberately out of scope here.
       min. The result-less dispatches are pure waste (superseded/died mid-run). This is EVIDENCE strengthening the
       Phase-6 cooldown item, plus one addition: the cooldown gate should also require the PREVIOUS dispatch to have
       posted its result (or timed out) before a new one spawns. **Gate**: folded into the Phase-6 plan_health item's
-      acceptance. **➡️ MOVED 2026-07-20 to `ao_fleet_observability_kpis_2026_07_20.md` — do NOT action here.**
-- [ ] [BACKEND] P3. **(AF-3) `activity_log` has NO retention policy — unbounded growth on the hot DB.** 83,813 rows
+      acceptance. **➡️ MOVED 2026-07-20 to `ao_fleet_observability_kpis_2026_07_20.md` — do NOT action here.** **✅ DONE
+      2026-07-23** — its gate was explicitly "folded into the Phase-6 plan_health item's acceptance", and that item
+      shipped via `ao_fleet_observability_kpis_2026_07_20.md` (AF-2+Phase-6 throttle). Flipped with the Phase-6 item
+      above.
+- [x] [BACKEND] P3. **(AF-3) `activity_log` has NO retention policy — unbounded growth on the hot DB.** 83,813 rows
       spanning 20 days (~4.2k/day), db 40 MB. Agents get `prune_finished_agents` (7d) and tasks get orphan-GC;
       `activity_log` has nothing (grepped `state_store/` — no delete/prune path). Fine today, but it is silent unbounded
       growth on the dispatch-hot SQLite file, and the log IS the fleet's audit stream. CONTEXT (operator asked
@@ -597,8 +627,11 @@ NOT AO and are deliberately out of scope here.
       this stays **low priority**: a simple age-based prune (90d) OR just a growth alarm suffices — not urgent, no
       redesign. Proposal: age-based retention (e.g. 90d) with optional archive-to-S3 via the existing snapshot loop
       before delete. **Gate**: a retention decision recorded + implemented (or explicitly deferred with the growth-alarm
-      in place). **➡️ MOVED 2026-07-20 to `ao_fleet_observability_kpis_2026_07_20.md` — do NOT action here.**
-- [ ] [INFRA] P2. **(AF-4) Disaster-recovery snapshots are wired but their RECENCY is unverified — silent-by-absence
+      in place). **➡️ MOVED 2026-07-20 to `ao_fleet_observability_kpis_2026_07_20.md` — do NOT action here.** **✅ DONE
+      2026-07-23 via `ao_fleet_observability_kpis_2026_07_20.md`, todo AF-3.** The gate explicitly allowed "a retention
+      decision recorded + implemented (or explicitly deferred with the growth-alarm in place)" — the recorded outcome is
+      DEFER pruning WITH the growth alarm implemented, i.e. the acceptable-outcome branch, not an unfinished item.
+- [x] [INFRA] P2. **(AF-4) Disaster-recovery snapshots are wired but their RECENCY is unverified — silent-by-absence
       risk.** `gcs_sync.SnapshotLoop` runs and `ORCHESTRATOR_S3_BUCKET=uts-orchestrator-state-427895769566` is set
       (systemd env; GCS unset by design on the AWS host). But no local `state.json` was found at the expected path
       during the probe, and NOTHING asserts snapshot age — a broken snapshot loop would look exactly like a working one
@@ -612,8 +645,10 @@ NOT AO and are deliberately out of scope here.
       snapshot-age assertion (digest line or health endpoint: last successful snapshot < N hours, alert on breach); (c)
       one documented restore drill. **Gate**: measured snapshot age recorded; the age assertion alerts when the loop is
       deliberately stopped in a test. **➡️ MOVED 2026-07-20 to `ao_fleet_observability_kpis_2026_07_20.md` — do NOT
-      action here.**
-- [ ] [BACKEND] P2. **(AF-5) Dispatch→done conversion is ~18% and NO surfaced metric tracks fleet efficiency.** 24h: 310
+      action here.** **✅ DONE 2026-07-23 via `ao_fleet_observability_kpis_2026_07_20.md`, todo AF-4** —
+      `agent-orchestrator@3fd6129` (SnapshotRecencyCanary asserts the DR SQLite backup is fresh). Verified at flip: SHA
+      exists on the branch.
+- [x] [BACKEND] P2. **(AF-5) Dispatch→done conversion is ~18% and NO surfaced metric tracks fleet efficiency.** 24h: 310
       boots / 154 dispatches / 27 done — ≈11.5 boots and ≈5.7 dispatches per completed task even with the spawn budget
       fixed (the leaks are 117 skips + 96 session-losses, i.e. Phases 2/3/6 mechanics). The OBSERVABILITY gap is
       separate and unowned: no dashboard/digest KPI exposes boots-per-done or dispatch→done conversion, so the fleet
@@ -627,7 +662,10 @@ NOT AO and are deliberately out of scope here.
       on the same surface, so an account nearing its cap and the agent driving it are both visible before failover
       fires. **Gate**: the efficiency KPIs render; a per-account usage breakdown is visible; the 2026-07-12-class
       degradation (spawn:dispatch 0.6:1→44:1) would have been caught within one digest cycle. **➡️ MOVED 2026-07-20 to
-      `ao_fleet_observability_kpis_2026_07_20.md` — do NOT action here.**
+      `ao_fleet_observability_kpis_2026_07_20.md` — do NOT action here.** **✅ DONE 2026-07-23 via
+      `ao_fleet_observability_kpis_2026_07_20.md`, todos AF-5 (backend) + AF-5-followup (dashboard card,
+      `agent-orchestrator@efc52fa`).** Both the efficiency KPIs and the per-account usage breakdown the operator added
+      at ratification are rendered.
 - [x] [REVIEW] P3. ✅ **(AF-6) `ENV_VARS.md` residual multi-VM framing — DONE (ao@c03ccce).** Resolved as part of the
       `ao_config_env_var_consolidation_2026_07_18` Phase-4 rewrite: ENV_VARS.md was rewritten to the two-class shape,
       dropping the retired `tab/<vm_id>/<slot>` branch example and the "Fleet VM (epic worker)" section header for the
@@ -658,7 +696,7 @@ NOT AO and are deliberately out of scope here.
       slot had flipped to `idle` (idle-reclaim, `ticks=2`), 1h38m BEFORE the `f641968` typed-agent-exemption guard was
       even committed — so the fix is plausible but UNTESTED (no reconcile run since it deployed). **Gate**: (a) observe
       a full run producing BOTH a `plan_health_result` activity row AND a pushed `plan_reconciler/<dispatch_id>` branch
-      — cite the dispatch_id, result row, and branch name; do not tick on a green-looking journal line alone; (b) **R1**
+      — cite the dispatch*id, result row, and branch name; do not tick on a green-looking journal line alone; (b) **R1**
       — pin the exact code path that flips a typed agent's slot `working`→`idle` (empirically happened at/around a
       service restart on 07-20; not yet located in code — checked & excluded: seed-from-tabs, claim_slot, the
       dispatch-ack requeue, the 25-min health stale-timeout); (c) **R2** — on the next run, confirm the watchdog logs an
@@ -668,8 +706,19 @@ NOT AO and are deliberately out of scope here.
       direction 2026-07-20: hold this retry until the other concurrently-landing AO plans (`ao_dispatch_liveness_p0`,
       `ao_failover_multi_vm_readiness`, `ao_fleet_infra_hardening`, `ao_fleet_observability_kpis`,
       `ao_backlog_regen_integrity`, `ao_dispatch_cooldown_and_park`) settle** — a live central VM mid-restart-churn from
-      several concurrent plans is a bad environment to draw conclusions in. _Source:
-      `ao_scheduled_agent_hygiene_2026_07_20.md` (archived), todo 4 (+ R1/R2 residuals carried in todo 5)._
+      several concurrent plans is a bad environment to draw conclusions in. \_Source:
+      `ao_scheduled_agent_hygiene_2026_07_20.md` (archived), todo 4 (+ R1/R2 residuals carried in todo 5).*
+- [ ] [BACKEND] P3. **Role lifecycle-field reclassification — align the declared `lifecycle` on plan-worker roles with
+      reality.** `backend_engineer` / `ui_developer` / `quant_dev` / `infra` are declared `lifecycle: one_shot`;
+      reclassify to `persistent`, and resolve `data_engineering` (scheduled-vs-persistent). **NOT required for
+      correctness** — the shipped fix rekeyed reaping on DISPATCH CONTEXT (a bound `one_shot` `AgentRow`), so nothing
+      reads `role.lifecycle` to decide reaping any more; this is a declared-vs-actual **documentation-integrity** item.
+      The risk of leaving it is that the next person reads the field and believes it (it is exactly what caused the
+      original bug — see the archived plan's Lessons: "Lifecycle is a property of the DISPATCH, not the role").
+      **Operator-owned timing** (2026-07-21): "after updating docs, fixing this, and everything discussed." **Gate**:
+      each role's `lifecycle` matches its real dispatch pattern, or a recorded decision says why the declared value
+      stays. _Source: `ao_worker_lifecycle_dispatch_context_2026_07_21.md` (archived 2026-07-23), its "Deferred
+      (tracked, not this plan's scope)" item — which had NO successor owner until this migration._
 - [x] ✅ [SCRIPT] P2. **Remove the dead `ORCHESTRATOR_REGEN_REQUIRE_VM_MATCH=true` from the live planning-VM
       `.env.local`.** — DONE 2026-07-21 (operator authorized, superseding the A6 "fold into re-bootstrap" default — done
       in-window alongside the DB migration). Took the `sed -i` backup-first route (backups
@@ -693,15 +742,15 @@ just unfinished investigation**, and records the standing recommendation so the 
 **A — operator rulings. A1–A4 + the new A5/A6 were RULED 2026-07-20 (operator: "go with your recommended ones"); the
 standing recommendation in each row IS now the ruling. Only A7 remains open.**
 
-| #   | Question                                                                                                | Standing recommendation                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| --- | ------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| A1  | NULL `brief_hash` tail (54 rows, all `done`) — backfill / age-out / accept-permanently? (Phase 1)       | **Accept permanently + a growth alarm.** All 54 are `done` audit history, 0 in-flight; backfilling is write-risk for no gain. Growth is the real signal (growth = backfill regression).                                                                                                                                                                                                                                                                                                                                                                                                               |
-| A2  | `audit_false_done` contract — checkbox-state as truth, or must `done_sha` be the flip-commit? (Phase 1) | **Checkbox state = truth.** The gate answers "is the work done"; the checkbox is the SSOT. Keep the sha as provenance, but a mismatched sha must not manufacture a false-positive (that IS sports-002).                                                                                                                                                                                                                                                                                                                                                                                               |
-| A3  | mvp-defi unpark — the named flipper plan may be superseded (Phase 3)                                    | Re-point the unpark to the `defi_consolidated_closeout_2026_07_18` owner, **or** park it explicitly until the DeFi re-architecture resumes. No park may exist without a named LIVE flipper.                                                                                                                                                                                                                                                                                                                                                                                                           |
-| A4  | plan_health interval                                                                                    | **RULED 2026-07-18: 2h**, adjustable later. Ships with the Phase-6 gate; no live knob today.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
-| A5  | `failover.py` — delete, or keep-and-fix the paused-slot guard? (new, from B3)                           | **RULED 2026-07-20: KEEP + fix.** _(An earlier same-day "DELETE" ruling was REVERSED by the operator within the hour: multi-VM is dormant but likely to return for resilience/backup, so the infra stays.)_ Work moved to `ao_failover_multi_vm_readiness_2026_07_20.md`. The paused-slot P2 below is therefore **NOT superseded — it is live work** and moves there too. Reversal lesson: "never fired" is evidence of DEAD code only if the capability is unwanted; otherwise it is evidence of UNTESTED code. That is a question about intent — ask it before proposing deletion of dormant infra. |
-| A6  | VM `.env.local` tidy (vars now redundant against code defaults)                                         | **RULED 2026-07-20: fold into the next re-bootstrap.** Do NOT hand-edit the live VM — low value, non-zero risk, no urgency.                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
-| A7  | `escalation_pipeline_mvp` — unpause or leave paused? **STILL OPEN**                                     | **No recommendation** (operator intent for that epic is unknown to me). Ruled ONLY on the consequence: the `/api/escalate` vs `/api/escalation/{id}` route collision gets **resolved regardless of the pause**, because leaving a known collision in the API is a trap for whoever writes escalation code next.                                                                                                                                                                                                                                                                                       |
+| #   | Question                                                                                                                                                                                                                                                                                                                                                              | Standing recommendation                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A1  | NULL `brief_hash` tail (54 rows, all `done`) — backfill / age-out / accept-permanently? (Phase 1)                                                                                                                                                                                                                                                                     | **Accept permanently + a growth alarm.** All 54 are `done` audit history, 0 in-flight; backfilling is write-risk for no gain. Growth is the real signal (growth = backfill regression).                                                                                                                                                                                                                                                                                                                                                                                                               |
+| A2  | `audit_false_done` contract — checkbox-state as truth, or must `done_sha` be the flip-commit? (Phase 1)                                                                                                                                                                                                                                                               | **Checkbox state = truth.** The gate answers "is the work done"; the checkbox is the SSOT. Keep the sha as provenance, but a mismatched sha must not manufacture a false-positive (that IS sports-002).                                                                                                                                                                                                                                                                                                                                                                                               |
+| A3  | mvp-defi unpark — the named flipper plan may be superseded (Phase 3)                                                                                                                                                                                                                                                                                                  | Re-point the unpark to the `defi_consolidated_closeout_2026_07_18` owner, **or** park it explicitly until the DeFi re-architecture resumes. No park may exist without a named LIVE flipper.                                                                                                                                                                                                                                                                                                                                                                                                           |
+| A4  | plan_health interval                                                                                                                                                                                                                                                                                                                                                  | **RULED 2026-07-18: 2h**, adjustable later. Ships with the Phase-6 gate; no live knob today.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| A5  | `failover.py` — delete, or keep-and-fix the paused-slot guard? (new, from B3)                                                                                                                                                                                                                                                                                         | **RULED 2026-07-20: KEEP + fix.** _(An earlier same-day "DELETE" ruling was REVERSED by the operator within the hour: multi-VM is dormant but likely to return for resilience/backup, so the infra stays.)_ Work moved to `ao_failover_multi_vm_readiness_2026_07_20.md`. The paused-slot P2 below is therefore **NOT superseded — it is live work** and moves there too. Reversal lesson: "never fired" is evidence of DEAD code only if the capability is unwanted; otherwise it is evidence of UNTESTED code. That is a question about intent — ask it before proposing deletion of dormant infra. |
+| A6  | VM `.env.local` tidy (vars now redundant against code defaults)                                                                                                                                                                                                                                                                                                       | **RULED 2026-07-20: fold into the next re-bootstrap.** Do NOT hand-edit the live VM — low value, non-zero risk, no urgency.                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| A7  | `escalation_pipeline_mvp` — unpause or leave paused? **STILL OPEN as a question; the plan itself was ARCHIVED 2026-07-23** (operator) and its 5 UNBUILT todos moved to the `escalation_and_disaster_recovery_master` epic. Archiving did NOT answer this — the epic stays paused, so "un-pause or not" is still the operator's open call, just asked of the epic now. | **No recommendation** (operator intent for that epic is unknown to me). Ruled ONLY on the consequence: the `/api/escalate` vs `/api/escalation/{id}` route collision gets **resolved regardless of the pause**, because leaving a known collision in the API is a trap for whoever writes escalation code next.                                                                                                                                                                                                                                                                                       |
 
 **B — open investigations (no decision needed; just unfinished)**
 
@@ -726,20 +775,24 @@ the close-the-loop point: plan_health keeps correctly re-reporting a real, owned
 
 ## Externally blocked (tracked, not actionable here)
 
-- `/api/escalate` vs `/api/escalation/{id}` collision — **blocked on `escalation_pipeline_mvp` un-pausing** (operator
+- `/api/escalate` vs `/api/escalation/{id}` collision — **blocked on the escalation workstream un-pausing** (operator
   ruling). Lives at doc #8 todo 1; must be resolved BEFORE any escalation code is written. BLOCKED-OPERATOR-DECISION.
+  **Updated 2026-07-23**: `escalation_pipeline_mvp` was ARCHIVED (operator) and its 5 UNBUILT todos absorbed into
+  [`escalation_and_disaster_recovery_master`](../epics/escalation_and_disaster_recovery_master.md) § "P1 — escalation
+  pipeline MVP" — so the gate is now **that epic's pause**, not the child plan's. Nothing was descoped; the blocker is
+  unchanged in substance, only its tracking home moved.
 - Backlog-relations UI — **blocked on the design agent's deliverable** (brief handed 07-17,
   `agent-orchestrator/docs/BACKLOG_RELATIONS_UX_BRIEF.md`). Lives at doc #8 todo 4. BLOCKED-UPSTREAM-DESIGN.
 
 ## Codex SSOTs
 
-- `codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` + `…/agent-orchestrator-overview.md` — AO
+- `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` + `…/agent-orchestrator-overview.md` — AO
   runtime architecture (dispatch/spawn/slots).
-- `codex/04-architecture/agent-orchestrator-alerting.md` — actionable-only alerting (Phase-3/4 visibility surfaces).
-- `codex/04-architecture/recovery-defence-in-depth-layers.md` + `…/autonomous-recovery-matrix.md` — Layer-1 rewire.
-- `codex/05-infrastructure/per-tab-worktrees.md` — slot clones, ff-pull, shared uv cache.
-- `codex/06-coding-standards/quality-gates.md` — the shared-host QG cap Phase-4 enforces.
-- `codex/12-agent-workflow/async-wait-and-poll-discipline.md` — measured-verdict discipline for every gate above.
+- `/codex/04-architecture/agent-orchestrator-alerting.md` — actionable-only alerting (Phase-3/4 visibility surfaces).
+- `/codex/04-architecture/recovery-defence-in-depth-layers.md` + `…/autonomous-recovery-matrix.md` — Layer-1 rewire.
+- `/codex/05-infrastructure/per-tab-worktrees.md` — slot clones, ff-pull, shared uv cache.
+- `/codex/06-coding-standards/quality-gates.md` — the shared-host QG cap Phase-4 enforces.
+- `/codex/12-agent-workflow/async-wait-and-poll-discipline.md` — measured-verdict discipline for every gate above.
 
 ## Progress Log
 

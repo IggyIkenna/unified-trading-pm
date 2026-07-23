@@ -5,14 +5,18 @@ summary:
   Generalize the worker /blocked loop into a role-agnostic escalation record with open/in-progress/resolved state and a
   scoped Slack link — closing the three gaps between today's blocked loop and the
   one-alert/one-link/pre-researched-options vision.
-status: paused
+status: superseded
 nature: design
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [agent-orchestrator, alerting-service, deployment-ui]
 scope: [engineer, admin]
 tags: [escalation, blocked-questions, slack, alert-state, disaster-recovery]
-related: [../epics/escalation_and_disaster_recovery_master.md, role_registry_schema_and_broker_mvp_2026_06_25.md]
+related:
+  [
+    ../epics/escalation_and_disaster_recovery_master.md,
+    /plans/archive/2026_07/role_registry_schema_and_broker_mvp_2026_06_25.md,
+  ]
 created: 2026-06-25
 parent_epic: escalation_and_disaster_recovery_master
 assigned_vm: NA
@@ -21,17 +25,28 @@ priority: P1
 estimate_class: design
 estimate_baseline_ai_days: 5
 estimate_calibrated_ai_days: 3
-last_updated: 2026-07-16
+last_updated: 2026-07-23
 locked_by:
 locked_since:
 supersedes:
-superseded_by:
-depends_on: role_registry_schema_and_broker_mvp_2026_06_25
+superseded_by: ../epics/escalation_and_disaster_recovery_master.md
+depends_on: # (was: role_registry_schema_and_broker_mvp_2026_06_25 — that broker plan was ARCHIVED as NOT-REQUIRED
+  # 2026-07-16, superseded by `assigned_role` dispatch; the dependency was stale, not real)
 source:
 drift_direction: advance-code
 ---
 
 # Escalation pipeline MVP (role-agnostic, stateful, scoped-link)
+
+> **📦 ARCHIVED 2026-07-23 (operator instruction) — NOT because the work is done. All 5 todos were code-verified UNBUILT
+> on 2026-07-16 and remain wanted; they now live in the parent epic
+> [`escalation_and_disaster_recovery_master`](../epics/escalation_and_disaster_recovery_master.md) § "P1 — escalation
+> pipeline MVP", which is everlasting and carries the same pause banner.** This plan is archived as a redundant
+> container: 4 of its 5 todos were ALREADY mirrored verbatim in that epic section, so keeping both was duplicate
+> tracking of one workstream. The 5th (reply routing) was added to the epic during this archival, reworded per the
+> 2026-07-16 audit — it does NOT need the broker; the existing `POST /api/blocked/{id}/answer` → worker-poll path
+> already satisfies it. **Nothing was descoped; the epic is the single tracking home. Un-pause the epic to resume.**
+> Design content below (locked design, phased DAG, success criteria) stays as the reference the epic todos point at.
 
 > **⏸️ PAUSED per operator decision 2026-06-26** — the parent epic `escalation_and_disaster_recovery_master` carries a
 > pause banner deferring this whole workstream (together with W7/W8/W9 message-broker dependency) to next quarter per
@@ -60,8 +75,8 @@ the operator's vision (one alert → one scoped link → pre-researched options 
    DevOps CI-wall, QA UAT) uses to route a decision to the human with its own pre-researched options.
 
 The self-healing 95% is already covered (AutoSpawn / liveness / pruner + the auto-recovery matrix,
-`codex/04-architecture/autonomous-recovery-matrix.md`); this plan only sharpens the human-gated residue. SSOT for the
-runtime: `codex/04-architecture/agent-orchestrator-overview.md`.
+`/codex/04-architecture/autonomous-recovery-matrix.md`); this plan only sharpens the human-gated residue. SSOT for the
+runtime: `/codex/04-architecture/agent-orchestrator-overview.md`.
 
 ## Locked design (operator, 2026-06-25)
 
@@ -79,25 +94,34 @@ runtime: `codex/04-architecture/agent-orchestrator-overview.md`.
 
 ## Phased execution DAG
 
-### Phase 0 — Generalized escalation record [depends: spine broker]
+> **🔁 ALL 5 TODOS MIGRATED 2026-07-23** →
+> [`escalation_and_disaster_recovery_master`](../epics/escalation_and_disaster_recovery_master.md) § "P1 — escalation
+> pipeline MVP". Checkboxes are removed here so this archived plan cannot double-count them; the phase structure, gates
+> and dependency order below remain the authoritative design the epic todos execute against.
 
-- [ ] [CODE] P1. Escalation record generalizing `BlockedRow` (`role`, `domain`, `severity`, `state` added; `/blocked`
-      back-compat shim). **Gate**: existing blocked tests green; new fields persisted + readable.
-- [ ] [CODE] P1. State machine `open → in-progress → resolved` + a `claim` transition
-      (`POST /api/escalation/{id}/claim`). **Gate**: state transitions unit-tested; double-claim is rejected.
+### Phase 0 — Generalized escalation record [depends: none — see banner; the broker dep was stale]
+
+🔁 **MOVED → epic.** Escalation record generalizing `BlockedRow` (`role`, `domain`, `severity`, `state` added;
+`/blocked` back-compat shim). **Gate**: existing blocked tests green; new fields persisted + readable.
+
+🔁 **MOVED → epic.** State machine `open → in-progress → resolved` + a `claim` transition
+(`POST /api/escalation/{id}/claim`). **Gate**: state transitions unit-tested; double-claim is rejected.
 
 ### Phase 1 — Scoped Slack link + reply routing [depends: P0]
 
-- [ ] [CODE] P1. Slack alert links to `/escalation/{id}` (scoped) instead of `/#blocked`. **Gate**: a fired escalation's
-      Slack message opens the single-question page.
-- [ ] [CODE] P1. Resolution routes the answer back to the originating agent via the broker `reply_to`. **Gate**: an
-      answered escalation delivers the choice to a waiting agent (end-to-end test).
+🔁 **MOVED → epic.** Slack alert links to `/escalation/{id}` (scoped) instead of `/#blocked`. **Gate**: a fired
+escalation's Slack message opens the single-question page.
+
+🔁 **MOVED → epic (reworded).** Resolution routes the answer back to the originating agent. **The broker `reply_to` is
+NOT required** — per the 2026-07-16 audit the existing `POST /api/blocked/{id}/answer` → worker-reads-on-next-poll path
+already delivers this; the epic todo names that path. **Gate**: an answered escalation delivers the choice to a waiting
+agent (end-to-end test).
 
 ### Phase 2 — deployment-ui escalation surface [depends: P0]
 
-- [ ] [UI] P1. deployment-ui escalation tab: list with `open / in-progress / resolved` filter; each row deep-links to
-      the agent-orchestrator resolution surface (defer-unify per the `agent_operating_framework_master` UI decision,
-      2026-06-25). **Gate**: `pw:L2` spec — filter toggles + a deep-link click; cited regression spec.
+🔁 **MOVED → epic.** deployment-ui escalation tab: list with `open / in-progress / resolved` filter; each row deep-links
+to the agent-orchestrator resolution surface (defer-unify per the `agent_operating_framework_master` UI decision,
+2026-06-25). **Gate**: `pw:L2` spec — filter toggles + a deep-link click; cited regression spec.
 
 ## Success criteria
 
@@ -110,9 +134,10 @@ runtime: `codex/04-architecture/agent-orchestrator-overview.md`.
 
 ## Codex SSOT updates
 
-- `codex/04-architecture/escalation-pipeline.md` (NEW) — the role-agnostic record + state machine + scoped-link
-  contract; cross-links the auto-recovery matrix (self-heal vs escalate) + the broker.
-- `codex/04-architecture/agent-orchestrator-overview.md` — note the generalized escalation record beside `BlockedRow`.
+- `codex/04-architecture/escalation-pipeline.md` (NEW — **never created**; this plan was archived with the code unbuilt,
+  so the epic inherits this deliverable) — the role-agnostic record + state machine + scoped-link contract; cross-links
+  the auto-recovery matrix (self-heal vs escalate) + the broker.
+- `/codex/04-architecture/agent-orchestrator-overview.md` — note the generalized escalation record beside `BlockedRow`.
 
 ## Progress Log
 
@@ -120,6 +145,17 @@ runtime: `codex/04-architecture/agent-orchestrator-overview.md`.
   Human-driven (`assigned_vm: NA`) — it modifies live escalation plumbing, so operator-driven + additive. Closes the
   three scout-found gaps (scoped-link / alert-state / role-generalization). Depends on the broker
   (`role_registry_schema_and_broker_mvp`, W9).
+- 2026-07-23: **ARCHIVED per operator instruction — 5-step ritual run.** (1) The 5 open todos were NOT stranded: they
+  migrated to the parent epic's "P1 — escalation pipeline MVP" section, which already carried 4 of the 5 verbatim
+  (tagged `(E1)`) — this plan was duplicate tracking of one workstream. The 5th (reply routing) was ADDED to the epic,
+  reworded to drop the retired broker dependency per the 2026-07-16 audit. (2) No DEFERRED prose remains — the "Deferred
+  next step (operator, keep-for-now)" item from 2026-07-16 is discharged here: the stale
+  `depends_on: role_registry_schema_and_broker_mvp` is removed and Phase 1b is reworded to reuse `/blocked`. (3) Banner
+  - `status: superseded` + `superseded_by:` the epic. (4) **Codex-alignment: nothing to update** — the two SSOTs this
+    plan would have written (`codex/04-architecture/escalation-pipeline.md` NEW — never created, and the
+    `agent-orchestrator-overview.md` note beside `BlockedRow`) were contingent on the code landing, and the code is
+    unbuilt; the epic inherits those codex deliverables. (5) No lock to clear (`locked_by:` was empty). Inbound
+    references repointed at the archive path.
 - 2026-07-16: **Audited — KEPT (not archived); genuine unstarted work.** Code-verified all 5 todos are UNBUILT:
   `BlockedRow` (`server/orm.py:163`) is still bare (no `role`/`domain`/`severity`/`state`); no `EscalationRow`, no state
   machine, no `POST /api/escalation/{id}/claim`; no scoped `/escalation/{id}` Slack link (the alert still links to the

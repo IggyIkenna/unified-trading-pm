@@ -8,7 +8,7 @@ summary:
   AgentRow and reap on /done; plan-backlog workers have none and persist, draining the next ready task in one session
   and going idle (the reclaimer retires them) when none is ready. Conversational context-resume is an explicit non-goal
   (durable state is in the plan/Progress Log) — A1 (reap-by-dispatch-context) is the whole fix.
-status: active # operator-directed 2026-07-21 (slot-16). LOCAL execution — this session works it, backend STOPPED while it lands.
+status: complete # (was: active) ARCHIVED 2026-07-23 — all 4 P0 todos shipped + deployed + live-verified; the one [DEFERRED] P3 residual migrated to ao_open_issues_consolidated_close_out_2026_07_17.md Phase 8.
 nature: design
 asset_group: [cross-cutting]
 stage: [meta]
@@ -17,12 +17,12 @@ scope: [engineer]
 tags: [agent-orchestrator, liveness, dispatch, lifecycle, reaper, resume, backlog-drain]
 related:
   [
-    ao_uniform_agent_liveness_contract_2026_07_20.md,
-    ao_worker_lifecycle_reap_2026_07_20.md,
+    /plans/archive/2026_07/ao_uniform_agent_liveness_contract_2026_07_20.md,
+    /plans/archive/2026_07/ao_worker_lifecycle_reap_2026_07_20.md,
     ao_task_lifecycle_2026_07_09.md,
   ]
 created: 2026-07-21
-last_updated: 2026-07-21
+last_updated: 2026-07-23
 parent_epic: orchestrator_master
 assigned_vm: NA # LOCAL execution — operator-supervised, NOT AO-dispatched (core live-fleet dispatch/lifecycle code)
 execution_scope: local-only
@@ -44,6 +44,18 @@ source:
 
 # Worker lifecycle by dispatch-context
 
+> **✅ COMPLETE + ARCHIVED 2026-07-23 (operator instruction).** All 4 P0 todos shipped, deployed and live-verified
+> (`agent-orchestrator@c17bd4e` A1 + `@c255895` the resume-pass fix; clean restart MainPID 240795, 13:33 UTC 2026-07-21;
+> `role_one_shot` confirmed gone from the deployed `slots_worker.py`, `/health` 200, loops up). The single remaining
+> `[DEFERRED]` P3 item (role lifecycle-field reclassification) had **no successor owner** — it is migrated by this
+> archival to
+> [`ao_open_issues_consolidated_close_out_2026_07_17.md`](ao_open_issues_consolidated_close_out_2026_07_17.md) **Phase 8
+> — residuals inherited from ARCHIVED child plans**, which is that section's exact purpose. Nothing is descoped and
+> nothing is stranded. Codex SSOTs were updated in-plan (see the DOCS todo) and re-verified present at archival.
+>
+> **The 🟡 backend-STOPPED banner below is DISCHARGED** — the service was restarted at the deploy todo and verified
+> healthy; it is kept only as the historical record of how the change was landed. Do not read it as current state.
+
 > **Operator design decisions (2026-07-21, slot-16).** Reaping is a property of **who fired the worker**, not the static
 > role field. Plan-backlog workers **persist** (drain ready tasks in one session; go idle → the reclaimer retires them);
 > event-spawned crafts are **one-shot** (reap on `/done`). Conversational context-resume is an explicit **non-goal**
@@ -52,9 +64,9 @@ source:
 >
 > **Codex SSOTs (READ before touching code; plan↔codex drift is review-blocking):**
 >
-> - `codex/04-architecture/agent-orchestrator-worker-liveness.md` § "Dispatch-context-driven lifecycle" (THIS work's
+> - `/codex/04-architecture/agent-orchestrator-worker-liveness.md` § "Dispatch-context-driven lifecycle" (THIS work's
 >   SSOT)
-> - `codex/04-architecture/agent-orchestrator-worker-liveness.md` § "One-off / scheduled completion contract" (the
+> - `/codex/04-architecture/agent-orchestrator-worker-liveness.md` § "One-off / scheduled completion contract" (the
 >   `/done` → archive → reap contract that crafts already follow; unchanged)
 > - `plans/active/task_template.md` §4 (intra-plan concurrency: tasks are the unit, parallel by default,
 >   `sequential: true` serialises; prereqs from `sequential`/`depends_on`+`gate_on_depends`, enforced by
@@ -94,7 +106,7 @@ session-per-plan binding, no `target_slot` pinning of a plan to a slot. **Durabl
 Progress Log** (+ shipped commits); a fresh worker on a cleared blocked task re-reads those and continues — losing
 conversational memory re-reads a plan, it does not lose work. (The dead-worker `--resume` for a MID-task crash —
 `resume_lifecycle.py`, `ao_task_lifecycle` Phase B — is a separate mechanism and stays.) SSOT:
-`codex/04-architecture/agent-orchestrator-worker-liveness.md` § "Dispatch-context-driven lifecycle".
+`/codex/04-architecture/agent-orchestrator-worker-liveness.md` § "Dispatch-context-driven lifecycle".
 
 ## Todos
 
@@ -112,8 +124,8 @@ conversational memory re-reads a plan, it does not lose work. (The dead-worker `
       churn (the reap-per-task defect). Prompt-reap-at-`/done` was considered + dropped as unnecessary (the ~2-min
       reclaim is fine).
 - [x] [DOCS] P0. **Simplify the SSOTs to the shipped model.** ✅
-      `codex/04-architecture/agent-orchestrator-worker-liveness.md` § "Dispatch-context-driven lifecycle" +
-      `codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` reduced to the 3-case model + the
+      `/codex/04-architecture/agent-orchestrator-worker-liveness.md` § "Dispatch-context-driven lifecycle" +
+      `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` reduced to the 3-case model + the
       context-resume NON-GOAL; the resume / session-per-plan / `≤1`-wait content removed.
 - [x] [OPS] P0. **Deploy + live-verify.** ✅ Quickmerged A1 (`agent-orchestrator@c17bd4e`), synced the deployed
       checkout, clean `systemctl restart` (MainPID 240795, 13:33 UTC). Verified live: `role_one_shot` gone from the
@@ -130,12 +142,16 @@ conversational memory re-reads a plan, it does not lose work. (The dead-worker `
   necessity: durable state lives in the plan/Progress Log, so a fresh worker on a cleared task loses nothing that
   matters. (Built + reverted this session; **A1 is the whole fix.**)
 
-### Deferred (tracked, not this plan's scope)
+### Deferred (tracked, not this plan's scope) — MIGRATED OUT 2026-07-23
 
-- [ ] [DEFERRED] P3. **Role lifecycle-field reclassification** — align the declared `lifecycle` on plan-worker roles
-      (`backend_engineer`/`ui_developer`/`quant_dev`/`infra` `one_shot → persistent`; resolve `data_engineering`
-      scheduled-vs-persistent) with reality. NOT required for correctness (reaping keys on dispatch context, not the
-      field). Operator-owned timing: "after updating docs, fixing this, and everything discussed" (2026-07-21).
+🔁 **MOVED →
+[`ao_open_issues_consolidated_close_out_2026_07_17.md`](ao_open_issues_consolidated_close_out_2026_07_17.md) § "Phase 8
+— residuals inherited from ARCHIVED child plans".** Checkbox removed here so the archived plan cannot double-count it.
+
+**Role lifecycle-field reclassification** — align the declared `lifecycle` on plan-worker roles
+(`backend_engineer`/`ui_developer`/`quant_dev`/`infra` `one_shot → persistent`; resolve `data_engineering`
+scheduled-vs-persistent) with reality. NOT required for correctness (reaping keys on dispatch context, not the field).
+Operator-owned timing: "after updating docs, fixing this, and everything discussed" (2026-07-21).
 
 ## Progress Log
 
@@ -184,10 +200,12 @@ conversational memory re-reads a plan, it does not lose work. (The dead-worker `
 
 ## Deferred work — migrated to:
 
-**Not yet identified** — the "Role lifecycle-field reclassification" `[DEFERRED]` P3 item (align the declared
-`lifecycle` on plan-worker roles — `backend_engineer`/`ui_developer`/`quant_dev`/`infra` `one_shot → persistent`;
-resolve `data_engineering` scheduled-vs-persistent — with reality) is explicitly out of this plan's scope ("Deferred
-(tracked, not this plan's scope)") with operator-owned timing ("after updating docs, fixing this, and everything
-discussed", 2026-07-21), but no successor plan currently owns it — grepped `plans/active/` and `plans/epics/` for "role
-lifecycle"/"one_shot"/"persistent" reclassification with no hit. This plan remains the record of the deferral until a
-successor plan is authored.
+**RESOLVED 2026-07-23 (at archival):**
+[`ao_open_issues_consolidated_close_out_2026_07_17.md`](ao_open_issues_consolidated_close_out_2026_07_17.md) **§ "Phase
+8 — residuals inherited from ARCHIVED child plans"** now owns the "Role lifecycle-field reclassification" `[DEFERRED]`
+P3 item. That section exists precisely for calendar-time- or operator-gated residuals left by archived AO child plans,
+and the item carries its source citation back to this plan so the evidence trail survives.
+
+_(was: **Not yet identified** — grepping `plans/active/` and `plans/epics/` for "role lifecycle" / "one_shot" /
+"persistent" reclassification found no owner, so this plan remained the record of the deferral until a successor was
+authored. The archival supplied that successor rather than creating a new plan for one P3 item.)_

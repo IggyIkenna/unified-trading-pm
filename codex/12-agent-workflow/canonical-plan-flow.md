@@ -2,9 +2,9 @@
 doc_type: codex-ssot
 title: Canonical plan flow — audit → issue → plan → backlog → worker → ship
 summary:
-  SSOT for how operator-authored plans get autonomously picked up and shipped — the closed loop audit →
-  issue → plan → backlog → worker → ship, with the regen_backlog_from_plan.py parsing rules, the 4
-  silent-failure modes, the worker boot/done lifecycle, and the push-to-pickup latency budget (≤35 min).
+  SSOT for how operator-authored plans get autonomously picked up and shipped — the closed loop audit → issue → plan →
+  backlog → worker → ship, with the regen_backlog_from_plan.py parsing rules, the 4 silent-failure modes, the worker
+  boot/done lifecycle, and the push-to-pickup latency budget (≤35 min).
 status: current
 nature: ssot
 asset_group: [meta]
@@ -13,10 +13,24 @@ repos: [agent-orchestrator, unified-trading-pm]
 scope: [engineer, admin]
 tags: [orchestrator, plan-hygiene, role-registry, frontmatter, scripts]
 related:
-  [plans/PLAN_FORMAT.md, codex/12-agent-workflow/plan-hygiene.md, codex/12-agent-workflow/local-slot-host-symmetric-worker-model.md, codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md]
+  [
+    plans/PLAN_FORMAT.md,
+    /codex/12-agent-workflow/plan-hygiene.md,
+    /codex/12-agent-workflow/local-slot-host-symmetric-worker-model.md,
+    /codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md,
+  ]
 created: 2026-05-29
 authoritative_for: [canonical plan flow (audit-to-ship closed loop)]
-referenced_by: [codex/12-agent-workflow/async-wait-and-poll-discipline.md, codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md, codex/12-agent-workflow/commit-push-flip-rule.md, codex/12-agent-workflow/local-slot-host-symmetric-worker-model.md, codex/12-agent-workflow/plan-hygiene.md, codex/12-agent-workflow/stale-blocker-reaper.md, codex/12-agent-workflow/work-philosophy.md]
+referenced_by:
+  [
+    /codex/12-agent-workflow/async-wait-and-poll-discipline.md,
+    /codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md,
+    /codex/12-agent-workflow/commit-push-flip-rule.md,
+    /codex/12-agent-workflow/local-slot-host-symmetric-worker-model.md,
+    /codex/12-agent-workflow/plan-hygiene.md,
+    /codex/12-agent-workflow/stale-blocker-reaper.md,
+    /codex/12-agent-workflow/work-philosophy.md,
+  ]
 owner:
 last_reviewed:
 code_refs:
@@ -80,14 +94,23 @@ Each numbered step is described below with its current implementation, known gap
 
 ## [3] Plans — `plans/active/`
 
+> **CORRECTED 2026-07-23 (operator ruling, `/plan-reconcile` AO run).** This section previously mandated
+> `assigned_vm: vm-<id>` as REQUIRED and described `parent_epic` as routing "to the right VM via
+> `orchestrator_vm_registry.yaml`". **Both described the multi-VM fleet, deprecated 2026-06-27.** There is one central
+> orchestrator VM plus N slot workers, and work routes by **`assigned_role`** (skill-based), not by VM. The only valid
+> `assigned_vm` values are **`planning`** and **`NA`** (`human-planning` is a legacy alias accepted as `planning`). This
+> was `ao_docs_reconciliation_2026_07_15`'s own highest-priority codex hit and sat uncorrected for 8 days while agents
+> read it as current. SSOTs: `plans/PLAN_FORMAT.md`,
+> `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`.
+
 Canonical frontmatter (REQUIRED):
 
 ```yaml
 ---
 name: <slug>
 title: <human-readable title>
-parent_epic: <epic-slug> # REQUIRED — routes to the right VM via orchestrator_vm_registry.yaml
-assigned_vm: vm-<id> # REQUIRED — explicit VM assignment; QG STEP 5.x enforces
+parent_epic: <epic-slug> # REQUIRED — the owning epic (NOT a VM router; see the note below)
+assigned_vm: planning | NA # REQUIRED — `planning` = the central orchestrator VM executes it; `NA` = not AO-dispatched
 priority: P0 | P1 | P2 | P3
 status: active
 estimate_class: refactor | design | infra | brand-new | research
@@ -117,12 +140,14 @@ Hygiene scripts that catch malformed todos:
 
 - Use `bash scripts/quickmerge.sh "msg" --agent` for promotion-to-main flow.
 - Per Commit + Push + Flip HARD RULE: every shippable unit gets pushed per-unit + same-turn plan-flip.
-- Workers' slot worktrees are on `tab/<operator>/<N>` branches; pushes target LDR directly.
+- Workers' slot worktrees are checked out on **`live-defi-rollout` itself** (per-slot `git clone --reference`, each with
+  its own `.git`); pushes target LDR directly. _(Corrected 2026-07-23 — the `tab/<operator>/<N>` tab-branch model is
+  RETIRED. SSOT: `/codex/05-infrastructure/per-tab-worktrees.md`.)_
 
 ## [5] PM-pull cron on orchestrator host
 
 **Current implementation**: each slot's worktree is FF-pulled by `slot-cron-ff-pull.service` on the slot host (every 5
-min). See `codex/12-agent-workflow/local-slot-host-symmetric-worker-model.md`.
+min). See `/codex/12-agent-workflow/local-slot-host-symmetric-worker-model.md`.
 
 **🟡 Gap (2026-05-29)**: the **central orchestrator API host** and several per-VM orchestrator hosts do NOT have
 `slot-cron-ff-pull.service` installed at all — confirmed absent on `vm-orchestrator` (`i-007e8d99d12831578`).
@@ -172,9 +197,11 @@ The parser is **liberal**:
 
 `POST /api/slots/<N>/boot` returns the next eligible task per the dispatcher's filters:
 
-- Slot's `worktree` + `branch` (typically `tab/<operator>/<N>`).
+- Slot's `worktree` + `branch` — **always `live-defi-rollout`** (each slot is a `git clone --reference` with its own
+  `.git`; the `tab/<operator>/<N>` tab-branch model is RETIRED — corrected 2026-07-23 with the `assigned_vm` fix above).
 - Account health (rate-limited / auth-failed accounts skipped per `_pick_next_account` rotation).
-- Plan-level `assigned_vm` matches the slot's VM context.
+- Plan-level `assigned_vm` is `planning` (there is one VM; `NA` plans are never dispatched) and the task's
+  `assigned_role` matches the slot's role — **role-based dispatch replaced VM-context matching** on 2026-06-27.
 - Blocker dependencies cleared.
 
 Worker pulls task, FF-pulls repos, works, ships per Commit + Push + Flip discipline, calls `/done`, `/boot`s next.
@@ -214,7 +241,7 @@ Verified by the Phase 6 end-to-end test once it ships.
 
 - [PLAN_FORMAT.md](../../plans/PLAN_FORMAT.md) — todo schema, frontmatter, hygiene scripts.
 - [CLAUDE.md](../../cursor-configs/CLAUDE.md) — workspace rules incl. Commit + Push + Flip HARD RULE.
-- [agent-orchestrator-overview.md](../04-architecture/agent-orchestrator-overview.md) — orchestrator architecture
+- [agent-orchestrator-overview.md](/codex/04-architecture/agent-orchestrator-overview.md) — orchestrator architecture
   (parent context).
 - [local-slot-host-symmetric-worker-model.md](./local-slot-host-symmetric-worker-model.md) — slot-host vs VM-host
   parity.

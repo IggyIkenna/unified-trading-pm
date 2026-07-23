@@ -113,3 +113,29 @@ progress-signal half.
   suppression predicate before it dispatches.
 - Cross-cut: this is the same failure shape as the "heartbeat-alive-but-stalled" projection blind spot — the API
   projection (`last_msg`/`context_pct`) is not a liveness oracle; the OS/git layer is.
+
+## Todos (added 2026-07-23 — `/plan-reconcile`; this doc had NO todos and was tracked by no plan)
+
+> **Re-verified STILL-LIVE 2026-07-23 by reading the code.** `server/worker_liveness/_git_alerts.py`
+> (`maybe_alert_git_staleness`, `maybe_nudge_on_red_repos`) keys purely on `dirty_files` / `ahead` / `behind` plus
+> `not_clean_since` / `dirty_oldest_mtime` age. Grepping `server/worker_liveness/` + `git_health.py` for any progress
+> signal — `git log -1 --format=%ct`, `pgrep`, commit-recency, tool-use delta — returns **zero hits**. Worse,
+> `_git_surfaces_pass` runs **unconditionally for every slot with a snapshot**: its own docstring records that the
+> 2026-07-14 "coverage gap fix" deliberately REMOVED the live-worker "working" gate, so there is no exemption for a slot
+> that is actively committing. That is exactly the false-positive mechanism this doc describes. The nearby fix
+> `agent-orchestrator@5e0f67d` ("suppress GIT STATUS RED nudge on a stale git-status snapshot") solves a DIFFERENT
+> problem — a dead reporter cron freezing the snapshot — not liveness-by-progress.
+
+- [ ] [BACKEND] P2. **Gate the staleness/sync-nudge emitters on liveness-by-progress.** Suppress or soften
+      `maybe_alert_git_staleness` / `maybe_nudge_on_red_repos` when the worktree's last commit
+      (`git -C <worktree> log -1 --format=%ct`) is newer than the sustain window, or a live child process is running
+      under it (`pgrep -f <worktree>`). **Gate**: a regression test simulates a burst-committing worker (recent commit,
+      still dirty) and asserts the staleness alert does NOT fire, while the genuinely-stale-slot tests stay green.
+- [ ] [DOCS] P2. **Apply the same check to the review-role wedge heuristic** — `agents/review.md` step 3d still
+      classifies a long-dirty worktree as dead/stale from tmux-session and heartbeat state alone, the very signal that
+      produced the 2026-07-21 false positive. Add an explicit commit-recency + live-process check before recommending
+      escalation or recycle. **Gate**: the diff lands; the next long-dirty escalation cites a checked progress signal,
+      not just session state.
+- [ ] [REVIEW] P3. **Operator sign-off on the suppression predicate before it ships** — suppressing too broadly blinds
+      genuine wedge detection, the same safety class as the cross-role reply fix. **Gate**: approval recorded before the
+      P1/P2 code todo ships.

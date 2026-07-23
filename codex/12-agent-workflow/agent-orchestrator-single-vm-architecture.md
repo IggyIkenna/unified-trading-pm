@@ -199,8 +199,8 @@ dead worker's task or process stranded.
   so conversational context-resume is an explicit NON-GOAL). Only Class-B event-spawned crafts (which carry a
   one_shot/scheduled `AgentRow`) reap on `/done`. Full model:
   [worker-liveness.md § "Dispatch-context-driven lifecycle"](/codex/04-architecture/agent-orchestrator-worker-liveness.md) +
-  [`ao_worker_lifecycle_dispatch_context`](../../plans/active/ao_worker_lifecycle_dispatch_context_2026_07_21.md). This
-  corrects a live defect where four plan-worker roles declared `lifecycle: one_shot` were reaped per task via a
+  [`ao_worker_lifecycle_dispatch_context`](/plans/archive/2026_07/ao_worker_lifecycle_dispatch_context_2026_07_21.md).
+  This corrects a live defect where four plan-worker roles declared `lifecycle: one_shot` were reaped per task via a
   static-role gate (`role_one_shot`); the gate now keys on dispatch context, and role-field reclassification is
   deferred.
 - **Account failover**: usage-cap / auth-failure evicts a slot off a dead/exhausted account onto a headroom account
