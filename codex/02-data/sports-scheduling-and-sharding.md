@@ -38,11 +38,11 @@ last_updated: 2026-04-21
 
 # Sports Scheduling & Sharding
 
-> **⚠️ CORRECTION (2026-07-19).** (1) §9's diagram shows `entity=fixtures/fixtures.parquet` as the live write target —
-> stale: fixtures are now SPLIT into `entity=fixtures_schedule`/`entity=fixtures_outcomes` under `pipeline_mode=`, and
-> the bare entity is FROZEN (2026-05-23). (2) §12's "Roadmap — open plans (as of 2026-04-21)" is a stale historical
-> snapshot; those 13 plans are all shipped/archived. Live open sports work is tracked in
-> `plans/active/sports_consolidated_closeout_2026_07_19.md`, not §12.
+> **⚠️ CORRECTION (2026-07-19; §9 body fixed 2026-07-23).** §9's diagram + schema note now show the current split layout
+> (`entity=fixtures_schedule`/`entity=fixtures_outcomes` under `pipeline_mode=batch_api_football/`, bare
+> `entity=fixtures/fixtures.parquet` marked FROZEN/historical-only) — see §9, no further action needed there. §12's
+> "Roadmap — open plans (as of 2026-04-21)" is still a stale historical snapshot (13 plans, all shipped/archived); live
+> open sports work is tracked in `plans/active/sports_consolidated_closeout_2026_07_19.md`, not §12.
 
 <!-- MULTI_AXIS_CORRECTION_2026_05_06 -->
 
@@ -379,31 +379,48 @@ parquets. Non-fixture providers (Transfermarkt, SFI standings, OpenMeteo weather
 denormalised onto fixtures by features-service (sports family):
 
 ```
-Raw shards                                   Denormalised per-fixture table
------------                                  ------------------------------
-sports_reference/
-  by_date/day={D}/entity=fixtures/           af_fixture_id
-     fixtures.parquet           ─┐           ├─ timestamp, af_league_id, af_home_id/name, af_away_id/name
-                                 │           ├─ home_standing_position_pre (from SFI)
-  by_date/day={D}/entity=         │           ├─ away_standing_position_pre (from SFI)
-    standings/standings.parquet ─┤           ├─ home_team_value_as_of (from Transfermarkt)
-                                 ├── join ──►├─ away_team_value_as_of (from Transfermarkt)
-  player_values/                 │           ├─ kickoff_weather (from OpenMeteo)
-    player={P}/values.parquet   ─┤           └─ ... (xG, odds snapshots, etc.)
-                                 │
-  weather/                       │
-    venue={V}/day={D}/           │
-    weather.parquet             ─┘
+Raw shards                                       Denormalised per-fixture table
+-----------                                      ------------------------------
+sports_reference/by_date/day={D}/
+  pipeline_mode=batch_api_football/
+    entity=fixtures_schedule/      ─┐            af_fixture_id
+       fixtures_schedule.parquet    │            ├─ timestamp, af_league_id, af_home_id/name, af_away_id/name
+                                     │            ├─ round (from fixtures_schedule)
+    entity=fixtures_outcomes/       │            ├─ score / status (from fixtures_outcomes)
+       fixtures_outcomes.parquet   ─┤            ├─ home_standing_position_pre (from SFI)
+                                     │            ├─ away_standing_position_pre (from SFI)
+  by_date/day={D}/entity=           ├── join ───►├─ home_team_value_as_of (from Transfermarkt)
+    standings/standings.parquet    ─┤            ├─ away_team_value_as_of (from Transfermarkt)
+                                     │            ├─ kickoff_weather (from OpenMeteo)
+  player_values/                    │            └─ ... (xG, odds snapshots, etc.)
+    player={P}/values.parquet      ─┤
+                                     │
+  weather/                          │
+    venue={V}/day={D}/              │
+    weather.parquet                ─┘
+
+FROZEN — historical-only, never write/read for current data:
+  sports_reference/by_date/day={D}/entity=fixtures/fixtures.parquet
+  (bare entity, no pipeline_mode= segment; last real write 2026-05-23)
 ```
 
-> **Schema note (2026-04-28)**: `entity=fixtures/fixtures.parquet` is the 32-column flat `SPORTS_FIXTURES`
-> SchemaContract — `af_fixture_id`, `af_league_id`, `af_home_id`, `af_home_name`, `af_away_id`, `af_away_name`,
-> `af_winner_id`, `timestamp`, `date`, score breakdowns, etc. Match-stats (xG, possession, corners, …) live in the
-> sibling `entity=fixture_stats/fixture_stats.parquet` partition. The pre-2024 nested-struct schema (`league = {…}`,
-> `home_team = {…}`, `kickoff_utc`, inline match-stats) was retired by the
+> **Schema note (2026-07-23, supersedes the 2026-04-28 note it replaces)**: the live write targets are
+> `pipeline_mode=batch_api_football/entity=fixtures_schedule/fixtures_schedule.parquet` (schedule fields —
+> `af_fixture_id`, `af_league_id`, `af_home_id`, `af_home_name`, `af_away_id`, `af_away_name`, `timestamp`, `date`,
+> `round`, …) and the sibling `entity=fixtures_outcomes/fixtures_outcomes.parquet` (score/status fields —
+> `af_winner_id`, score breakdowns, fixture `status`, …). Match-stats (xG, possession, corners, …) still live in the
+> separate `entity=fixture_stats/fixture_stats.parquet` partition. The manifest `data_type` for this entity must record
+> `FIXTURES_SCHEDULE`/`FIXTURES_OUTCOMES`, not a `FIXTURES` umbrella. **The bare `entity=fixtures/fixtures.parquet` path
+> (no `pipeline_mode=` segment) is FROZEN as of 2026-05-23 (last real write) — it is historical-only.** Do not write to
+> it, and do not read it as a live source; any reader/writer still touching it live is a bug against this contract, not
+> a supported fallback (see
+> [`plans/active/sports_consolidated_closeout_2026_07_19.md`](../../plans/active/sports_consolidated_closeout_2026_07_19.md),
+> which as of 2026-07-23 found live artifacts still violating this freeze — that reconciliation, not this doc, is the
+> place to track those). The earlier pre-2024 nested-struct schema (`league = {…}`, `home_team = {…}`, `kickoff_utc`,
+> inline match-stats) was retired before the entity split, by the
 > [sports_fixtures_legacy_schema_migration_2026_04_28](../../plans/ai/sports_fixtures_legacy_schema_migration_2026_04_28.plan.md)
-> migration; archived legacy parquets are at `gs://instruments-store-sports-prd-{pid}/sports_reference_v1_archive/`
-> until 2026-05-05 then deleted.
+> migration; those archived legacy parquets are at
+> `gs://instruments-store-sports-prd-{pid}/sports_reference_v1_archive/`.
 
 The denormalisation happens at feature-compute time (features-service (sports family)), not at ingestion. The raw shards
 stay normalised (single source of truth per data class); the feature pipeline owns the join + as-of discipline.

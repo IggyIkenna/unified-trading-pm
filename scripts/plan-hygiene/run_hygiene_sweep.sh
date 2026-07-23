@@ -137,7 +137,7 @@ run_check "No prettier emphasis-mangling"    hard "$SCRIPT_DIR/check_prettier_ma
 # in the full sweep, not the staged-files-only --precommit path. Corpus proven clean (0 cycles,
 # 0 self-deps) before this was made hard. SSOT: check_depends_on_graph.py.
 run_check "depends_on DAG (cycles + self-deps)" hard python3 "$SCRIPT_DIR/check_depends_on_graph.py" --quiet
-run_check "Line caps (500 soft/1000 hard)"   soft "$SCRIPT_DIR/check_line_caps.sh"
+run_check "Line caps (500 soft/1000 hard/2000 umbrella)" soft "$SCRIPT_DIR/check_line_caps.sh"
 run_check "Estimate sanity (±20% drift)"     soft "$SCRIPT_DIR/check_estimate_sanity.sh"
 run_check "Superseded plans in active/"      soft "$SCRIPT_DIR/check_superseded_in_active.sh"
 run_check "Codex path refs resolve"          soft "$SCRIPT_DIR/check_codex_refs.sh"

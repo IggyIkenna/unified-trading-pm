@@ -7,8 +7,11 @@
 SSOT: codex/06-coding-standards/model-tier-selection.md. That doc says every plan
 should carry a `model_tier: sonnet-doable | opus-required` frontmatter field (added
 on next substantive touch, NOT mass-swept), and the decision rule escalates to Opus
-only for: main/master-orchestrator work, cross-repo architecture, large-migration
-pre-audit, trading-judgment, or provably >200k context.
+ONLY for three QUALITATIVE reasons: main/master-orchestrator role, genuine cross-repo
+architecture DESIGN JUDGMENT, or trading judgment calls. Context/plan SIZE is NOT a
+reason (operator ruling 2026-07-23 — Sonnet 5 has a 1M context window, same as Opus
+4.8) — every AO planning-VM-eligible plan defaults to Sonnet 5 at effort:max
+regardless of size.
 
 Reality this audit surfaces:
   1. Which active plans DECLARE model_tier (vs the silent Sonnet default).
@@ -30,9 +33,13 @@ import re
 import sys
 from pathlib import Path
 
-# Heuristic opus signals — title/name keywords that correlate with the SSOT's
-# opus-required criteria (cross-repo architecture / large migration / trading
-# judgment / master-orchestrator). Presence is a FLAG for human review, not a verdict.
+# Heuristic opus signals — title/name keywords that correlate with the SSOT's 3 QUALITATIVE
+# opus-required criteria (main-orchestrator role / cross-repo architecture JUDGMENT / trading
+# judgment — never plan size, per the 2026-07-23 ruling). Presence is a FLAG for human review,
+# not a verdict. "consolidat" REMOVED 2026-07-23: it matched every "*_consolidated_closeout"
+# large-tracker plan (sports/defi/tradfi/cefi/prediction) purely by name pattern, which is
+# exactly the size-driven false-positive class the ruling retired — a big tracker plan is a
+# Sonnet-5-at-max-effort case, not an opus one, regardless of "consolidated" being in its title.
 OPUS_KEYWORDS = (
     "master",
     "architecture",
@@ -47,14 +54,20 @@ OPUS_KEYWORDS = (
     "pre-audit",
     "cross-repo",
     "cross_repo",
-    "consolidat",
     "shard",
     "pnl",
     "attribution",
 )
-# estimate_class values that lean opus (design/research = synthesis-heavy).
+# estimate_class values that lean opus (design/research = synthesis-heavy) — a SOFT signal for
+# human review only, since design/research work is usually a genuine cross-repo-architecture
+# judgment call, not (as of 2026-07-23) a context-size argument.
 OPUS_ESTIMATE_CLASSES = ("design", "research")
-SIZE_OPUS_BYTES = 50_000  # SSOT: ">50KB + multiple full files" is an opus signal
+# SIZE_OPUS_BYTES REMOVED (operator ruling 2026-07-23): Sonnet 5 has a 1M context window — the
+# same size as Opus 4.8 — so plan/file SIZE is no longer a valid opus-escalation signal at all.
+# The old ">50KB + multiple full files" SSOT trigger this constant implemented is RETIRED; see
+# codex/06-coding-standards/model-tier-selection.md's 2026-07-23 ruling. Every AO planning-VM-
+# eligible plan defaults to Sonnet 5 at effort:max regardless of size — do NOT reintroduce a size
+# threshold here without a matching codex SSOT change.
 
 
 def parse_frontmatter(text: str) -> dict[str, str]:
@@ -72,6 +85,10 @@ def parse_frontmatter(text: str) -> dict[str, str]:
 
 
 def heuristic_opus(name: str, title: str, fm: dict[str, str], size: int) -> tuple[bool, list[str]]:
+    """Advisory ONLY — per the 2026-07-23 ruling, `size` is accepted for signature
+    compatibility but no longer used as an opus signal (kept as a param so callers don't need
+    to change; intentionally unused below)."""
+    del size  # no longer a signal — see the SIZE_OPUS_BYTES removal note above
     reasons: list[str] = []
     hay = f"{name} {title}".lower()
     hits = sorted({k for k in OPUS_KEYWORDS if k in hay})
@@ -79,8 +96,6 @@ def heuristic_opus(name: str, title: str, fm: dict[str, str], size: int) -> tupl
         reasons.append(f"keywords:{','.join(hits)}")
     if fm.get("estimate_class") in OPUS_ESTIMATE_CLASSES:
         reasons.append(f"estimate_class={fm.get('estimate_class')}")
-    if size > SIZE_OPUS_BYTES:
-        reasons.append(f"size={size // 1000}KB>50KB")
     if name.startswith("master_") or fm.get("type") == "epic":
         reasons.append("master/epic plan")
     return (len(reasons) > 0, reasons)
@@ -208,8 +223,10 @@ def main() -> int:
         print("\n  --- declared-vs-heuristic mismatches ---")
         for m in mismatches:
             print(f"    • {m}")
-    print("\nNOTE: heuristic is advisory. The SSOT decision rule (context-size + cross-repo synthesis)")
-    print("needs human judgment. Set model_tier on a plan's NEXT substantive touch (do not mass-sweep).")
+    print("\nNOTE: heuristic is advisory. The SSOT decision rule is PURELY QUALITATIVE (main-orchestrator")
+    print("role / cross-repo architecture judgment / trading judgment) — plan/context SIZE is never a reason")
+    print("(2026-07-23 ruling: Sonnet 5 has 1M context, same as Opus). Set model_tier on a plan's NEXT")
+    print("substantive touch (do not mass-sweep).")
     return 0
 
 

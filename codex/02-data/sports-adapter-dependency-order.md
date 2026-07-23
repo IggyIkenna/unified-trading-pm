@@ -2,9 +2,10 @@
 doc_type: codex-ssot
 title: Sports Adapter Dependency Order — SSOT
 summary:
-  api-football is T0 (canonical fixtures/leagues/teams) for every sports date; T1 enrichment adapters
-  (footystats/understat/transfermarkt/SFI/open-meteo/betfair) read its GCS parquet, gated by a factory-preflight
-  DependencyError.
+  api-football is T0 (canonical fixtures_schedule/fixtures_outcomes/leagues/teams) for every sports date; T1 enrichment
+  adapters (footystats/understat/transfermarkt/SFI/open-meteo/betfair) are INTENDED to read its GCS parquet via a
+  factory-preflight DependencyError gate — that gate does not fire in production (date kwarg never passed by any real
+  caller).
 status: current
 nature: ssot
 asset_group: [meta]
@@ -30,21 +31,17 @@ referenced_by:
     codex/15-runbooks/smoke-testing-playbook.md,
   ]
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-07-23
 code_refs:
 ---
 
 # Sports Adapter Dependency Order — SSOT
 
-> **⚠️ CORRECTION (2026-07-19) — two live drifts in this doc.** (1) **Entity split**: the T0 api-football writer and
-> every T1 reader now use `entity=fixtures_schedule` (+ `entity=fixtures_outcomes` for scores/status) under
-> `pipeline_mode=batch_api_football/`, NOT the bare `entity=fixtures` this doc's §1/§3 still show — the bare entity is
-> FROZEN (last real write 2026-05-23, measured). (2) **The §5 fail-loud dependency gate is UNREACHABLE in production**:
-> `check_api_football_dependency()` only fires `if date is not None`, and grep-verified that every real T1 call site
-> (`footystats.py`, `transfermarkt.py`, `understat.py`, `sfi.py`) omits `date=` — confirmed by live data (understat has
-> captured rows 2014-2017 where api-football has zero fixtures, impossible if the gate fired). See
-> `plans/active/issues/sports_t0_t1_dependency_gate_never_wired_2026_07_15.md` +
-> `plans/active/sports_consolidated_closeout_2026_07_19.md` (ENTITY-SPLIT / CODEX tracks).
+> **Note (2026-07-19, body rewritten 2026-07-23).** This doc previously described the pre-split bare `entity=fixtures`
+> shape and treated the T0/T1 pre-flight gate as an active safety net. Both are now fixed in place in §1/§3/§4.1/§5
+> below — this banner is a pointer, not a restatement. Background:
+> `plans/active/issues/ sports_t0_t1_dependency_gate_never_wired_2026_07_15.md`,
+> `plans/active/sports_consolidated_closeout_2026_07_19.md` (ENTITY-SPLIT / Track E).
 
 **Purpose**: canonical reference for the run-order of sports reference-data adapters inside instruments-service. Written
 2026-04-20 as part of Phase 3 of the `institutional_smoke_matrix_2026_04_20` plan after the SPORTS smoke incident
@@ -66,38 +63,61 @@ matrix below.
 
 ---
 
-## 1. The invariant — api-football is T0 for every sports date
+## 1. The invariant — api-football is T0 for every sports date (design intent; the gate does not enforce it)
 
 **api-football is the canonical source of fixture IDs, league definitions, team rosters, and kickoff times for the
-entire sports pipeline.** Every other sports adapter in instruments-service is an **enrichment** adapter that reads
-api-football's canonical output from GCS to resolve its own per-fixture / per-league joins. Without api-football's
-parquet in place for date `D`, none of the enrichment adapters can produce useful output — they either read empty
-results silently (historical behaviour) or, as of this plan, fail loud with `unified_trading_library.DependencyError` at
-the factory pre-flight.
+entire sports pipeline.** Every other sports adapter in instruments-service is an **enrichment** adapter that is
+INTENDED to read api-football's canonical output from GCS to resolve its own per-fixture / per-league joins. That is the
+design. What actually happens in production today is narrower — read the two caveats below before relying on anything
+else in this section.
 
-### Dependency graph
+**Caveat 1 — fixtures entity is SPLIT; the bare entity is FROZEN.** The T0 api-football writer no longer writes a single
+`entity=fixtures/` partition. Since **2026-05-23** (last real write to the bare entity, measured) it writes two entities
+side by side, both under a `pipeline_mode=batch_api_football/` hive segment:
+
+- `entity=fixtures_schedule/` — schedule fields (kickoff time, teams, round, venue_id, …) for every fixture, played or
+  not.
+- `entity=fixtures_outcomes/` — scores + status, populated once a fixture completes.
+
+Bare `entity=fixtures/` (no `pipeline_mode=` segment, no split) is **FROZEN** — nothing has landed there since
+2026-05-23. Any adapter, script, or doc still reading or writing bare `entity=fixtures/` is targeting a dead path.
+
+**Caveat 2 — the pre-flight dependency gate in §4-§5 does NOT fire in production.** `check_api_football_dependency()`
+only runs when the factory call site passes `date=`, and every real T1 call site (`footystats.py`, `transfermarkt.py`,
+`understat.py`, `sfi.py`, plus `open_meteo`/`betfair`) constructs its adapter via
+`create_sports_reference_adapter(venue)` — no `date=` kwarg — so the gate never executes. This is confirmed by live
+data: Understat has captured rows for 2014-2017 dates where api-football has zero fixtures, which the gate would have
+blocked had it fired. Treat the rest of this doc (including this section's own dependency graph) as the **intended
+contract**, not a description of an active safety net. Fixing the gate is scoped as Track E of
+`plans/active/sports_consolidated_closeout_2026_07_19.md` ("Wire the T0/T1 dependency gate for real") and tracked in
+`plans/active/issues/sports_t0_t1_dependency_gate_never_wired_2026_07_15.md`.
+
+### Dependency graph (intended — see caveats above)
 
 ```
-                      T0 (MUST run FIRST for each date)
+                T0 (INTENDED to run FIRST for each date — not enforced, see caveat 2 above)
                       ┌────────────────────┐
                       │   api-football     │
                       │ (canonical fixtures│
                       │   + leagues + teams│
                       │    + schedules)    │
                       └──────────┬─────────┘
-                                 │ writes
+                                 │ writes (pipeline_mode=batch_api_football/)
                                  ▼
-      sports_reference/by_date/day={date}/
-        entity=fixtures/fixtures.parquet
+      sports_reference/by_date/day={date}/pipeline_mode=batch_api_football/
+        entity=fixtures_schedule/...   (schedule incl. round — every fixture, played or not)
+        entity=fixtures_outcomes/...   (scores + status — completed fixtures only)
         entity=leagues/leagues.parquet
         entity=teams/teams.parquet
         entity=standings/...
         entity=injuries/...
+      [bare entity=fixtures/ — FROZEN 2026-05-23, do not target]
                                  │
           ┌──────┬──────┬────────┼────────┬──────┬──────┐
           │      │      │        │        │      │      │
           ▼      ▼      ▼        ▼        ▼      ▼      ▼
-        T1 (any order, parallel-safe AFTER T0 completes for the date)
+        T1 (any order, parallel-safe — INTENDED to run only AFTER T0 lands for the
+            date; nothing in production actually enforces this ordering, see caveat 2)
         ┌──────┐ ┌──────────┐ ┌────────┐ ┌─────────────┐ ┌──────┐ ┌──────┐
         │footy-│ │understat │ │trans-  │ │soccer_foot- │ │open_ │ │bet-  │
         │stats │ │(xG)      │ │fermarkt│ │ball_info    │ │meteo │ │fair  │
@@ -107,11 +127,12 @@ the factory pre-flight.
         └──────┘ └──────────┘ └────────┘ └─────────────┘ └──────┘ └──────┘
 ```
 
-### Why each T1 adapter depends on api-football
+### Why each T1 adapter is intended to depend on api-football
 
-Each enrichment adapter in the orchestrator's `_enrichment_providers` short- circuit reads
-`sports_reference/by_date/day={date}/entity=fixtures/fixtures.parquet` at the start of its fetch to resolve one or more
-of:
+Each enrichment adapter is INTENDED to read
+`sports_reference/by_date/day={date}/pipeline_mode=batch_api_football/entity=fixtures_schedule/...` (the split schedule
+entity — `entity=fixtures_outcomes/` too, wherever it needs scores/status) at the start of its fetch to resolve one or
+more of:
 
 - **FootyStats** — joins its `home_team` / `away_team` string columns on canonical fixture IDs (`build_fixture_id(...)`
   in `unified_api_contracts.sports`) to deduplicate against api-football's `af_fixture_id`. Without api-football
@@ -122,8 +143,8 @@ of:
   league triggers (`get_leagues_needing_refresh`) work standalone but its team-level joins require api-football's team
   IDs.
 - **SoccerFootball.info (SFI)** — league standings + progressive stats are keyed on api-football's league_id.
-- **Open-Meteo** — the weather adapter reads `entity=fixtures/fixtures.parquet` to extract the `venue_id` list (and
-  thence lat/long) before hitting the Open-Meteo API. Without fixtures, no weather is produced.
+- **Open-Meteo** — the weather adapter is intended to read `entity=fixtures_schedule/` to extract the `venue_id` list
+  (and thence lat/long) before hitting the Open-Meteo API. Without fixtures, no weather is produced.
 - **Betfair** — exchange odds rows are joined on canonical fixture IDs for feature calculation.
 
 ### What "T0 first" does NOT mean
@@ -131,10 +152,11 @@ of:
 - It does NOT mean api-football is a blocker for the entire run — each enrichment adapter can be re-run idempotently
   once api-football catches up.
 - It does NOT mean the adapters import api-football as Python code. The dependency is on the GCS parquet artefacts, not
-  on the adapter class. The factory pre-flight reads GCS, not Python state.
+  on the adapter class.
 - It does NOT apply to **per-venue shard-level failures inside the shard loop**. That is governed by
-  `codex/04-architecture/shard-level-failure-isolation.md`. This doc governs only the **pre-flight gate** that runs
-  BEFORE the shard loop starts.
+  `codex/04-architecture/shard-level-failure-isolation.md`. This doc governs only the **pre-flight gate** — and, per
+  caveat 2 above, that gate does not actually run in production, so there is currently no enforcement point BEFORE the
+  shard loop starts either. §4-§5 spell this out in detail.
 
 ---
 
@@ -170,22 +192,27 @@ inherit it.
 
 ## 3. Per-entity coverage matrix
 
-Each adapter writes to one or more `entity=` partitions under `sports_reference/by_date/day={date}/`. Cross-reference:
+Each adapter writes to one or more `entity=` partitions under
+`sports_reference/by_date/day={date}/pipeline_mode=batch_api_football/` (api-football's own entities carry the
+`pipeline_mode=` segment; T1 adapters write their own entities alongside it). Cross-reference:
 `codex/02-data/per-asset-group-bucket-layouts.md` § "instruments-service writes — SPORTS".
 
-| Adapter                       | Writes entity partitions                                                                                                       | Reads (dep)                                          |
-| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------- |
-| **api_football (T0)**         | `entity=fixtures` `entity=leagues` `entity=teams` `entity=standings` `entity=injuries` `entity=lineups` `entity=fixture_stats` | — (root of the tree)                                 |
-| **footystats (T1)**           | `entity=footystats_matches` `entity=footystats_odds` `entity=footystats_predictions`                                           | `entity=fixtures/fixtures.parquet`                   |
-| **understat (T1)**            | `entity=understat_xg`                                                                                                          | `entity=fixtures/fixtures.parquet`                   |
-| **transfermarkt (T1)**        | `entity=transfermarkt_leagues` `entity=transfermarkt_teams`                                                                    | `entity=teams/teams.parquet` (api-football)          |
-| **soccer_football_info (T1)** | `entity=sfi_leagues` `entity=sfi_standings` `entity=progressive_stats`                                                         | `entity=leagues/leagues.parquet` (api-football)      |
-| **open_meteo (T1)**           | `entity=weather`                                                                                                               | `entity=fixtures/fixtures.parquet` (venue_id column) |
-| **betfair (T1)**              | `entity=betfair_odds`                                                                                                          | `entity=fixtures/fixtures.parquet`                   |
+**The "Reads (dep)" column is the INTENDED join dependency, not an enforced one** — §1 (caveat 2) and §4-§5 explain why
+the factory pre-flight that is supposed to guarantee it never actually fires in production.
+
+| Adapter                       | Writes entity partitions                                                                                                                                                                                                                  | Reads (dep) — intended, not gate-enforced       |
+| ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- |
+| **api_football (T0)**         | `entity=fixtures_schedule` `entity=fixtures_outcomes` `entity=leagues` `entity=teams` `entity=standings` `entity=injuries` `entity=lineups` `entity=fixture_stats` — bare `entity=fixtures` is FROZEN since 2026-05-23, never write there | — (root of the tree)                            |
+| **footystats (T1)**           | `entity=footystats_matches` `entity=footystats_odds` `entity=footystats_predictions`                                                                                                                                                      | `entity=fixtures_schedule/`                     |
+| **understat (T1)**            | `entity=understat_xg`                                                                                                                                                                                                                     | `entity=fixtures_schedule/`                     |
+| **transfermarkt (T1)**        | `entity=transfermarkt_leagues` `entity=transfermarkt_teams`                                                                                                                                                                               | `entity=teams/teams.parquet` (api-football)     |
+| **soccer_football_info (T1)** | `entity=sfi_leagues` `entity=sfi_standings` `entity=progressive_stats`                                                                                                                                                                    | `entity=leagues/leagues.parquet` (api-football) |
+| **open_meteo (T1)**           | `entity=weather`                                                                                                                                                                                                                          | `entity=fixtures_schedule/` (venue_id column)   |
+| **betfair (T1)**              | `entity=betfair_odds`                                                                                                                                                                                                                     | `entity=fixtures_schedule/`                     |
 
 **Test-mode variants** write to the same entity paths inside the `-test-` suffixed bucket
-(`instruments-store-sports-prd-{project_id}-test`). The factory pre-flight reads whichever bucket `IS_TEST_RUN` resolves
-to — it does not duplicate data between prod and test.
+(`instruments-store-sports-prd-{project_id}-test`). Whichever bucket `IS_TEST_RUN` resolves to is where the (rarely
+invoked) pre-flight probe would read from too — it does not duplicate data between prod and test.
 
 ---
 
@@ -193,16 +220,25 @@ to — it does not duplicate data between prod and test.
 
 ### 4.1 api-football entirely missing for date `D`
 
-Downstream T1 adapters:
+**In production, neither branch below fires the way it was designed to** — see §1 caveat 2. Downstream T1 adapters:
 
 - **If called via `create_sports_reference_adapter(venue, date=D, ...)`**: factory raises
   `unified_trading_library.DependencyError` with the actionable remediation message below. The adapter is never
-  instantiated.
-- **If called via `create_sports_reference_adapter(venue)` without `date`**: legacy callers (unit tests,
-  reference-data-only dry runs) build the adapter. No pre-flight fires — the orchestrator is expected to gate the
-  dependency at its own pre-flight stage before it has a date.
+  instantiated. **This is the branch every real T1 call site would need to hit for the gate to do anything — none of
+  them do.**
+- **If called via `create_sports_reference_adapter(venue)` without `date`**: no pre-flight fires. This is NOT a rare
+  "legacy callers" fallback path as originally documented — grep across `footystats.py`, `transfermarkt.py`,
+  `understat.py`, `sfi.py`, `open_meteo`, and `betfair` shows this is the ONLY path every real production call site
+  uses. The adapter is always instantiated, whether or not api-football has landed for the date, and there is no other
+  pre-flight stage upstream that gates it either.
 
-The error message format (see `_build_remediation_message`):
+Net effect: when api-football is missing for date `D`, T1 adapters run anyway today and silently produce zero rows — the
+exact silent-failure mode this module's own docstring says the gate was built to replace. Fixing this is Track E of
+`plans/active/sports_consolidated_closeout_2026_07_19.md` ("Wire the T0/T1 dependency gate for real").
+
+The error message format the gate _would_ emit if a caller ever passed `date=` (see `_build_remediation_message`) — note
+it still names the FROZEN bare `entity=fixtures` path, a separate staleness in the message template itself, tracked in
+the same Track E item:
 
 ```text
 api-football reference data missing for date 2026-04-14 in
@@ -253,21 +289,31 @@ with `IS_TEST_RUN=true` first to populate the test bucket. Codified in smoke-mat
 
 ---
 
-## 5. Implementation — fail-loud boundary
+## 5. Implementation — fail-loud boundary (as designed; NOT what runs in production)
 
 The dependency gate is implemented as a pre-flight check at the **factory entry point**, not inside the per-venue shard
-loop. This is the ONE place in the sports pipeline where raising `DependencyError` is correct behaviour:
+loop. As designed, this would be the ONE place in the sports pipeline where raising `DependencyError` is correct
+behaviour. **As deployed, it is a known-broken safety net, not a working one** — `check_api_football_dependency()` only
+executes when the factory call site passes `date=`, and grep across every real T1 call site confirms none of them do (§1
+caveat 2, §4.1). Read the two bullets below as the intended design, then apply the caveat that follows.
 
 - Shard-level isolation (`codex/04-architecture/shard-level-failure-isolation.md`): inside the shard loop, all errors
-  are caught per-shard and logged as `VENUE_PROCESSING_FAILED` events. No `raise`. This keeps a bad shard from killing
-  the whole day's run.
-- **Pre-flight** (this doc): BEFORE the shard loop starts, if api-football is missing for the whole date, fail loud —
-  because every T1 shard would fail silently, corrupting the manifest's `capture_status` semantics. A single loud
-  `DependencyError` is cheaper to diagnose than N silent `empty_confirmed` rows that are actually "dep was missing".
+  are caught per-shard and logged as `VENUE_PROCESSING_FAILED` events. No `raise`. This part IS live in production and
+  unaffected by the gate's dead-code status — it keeps a bad shard from killing the whole day's run.
+- **Pre-flight** (this doc, as designed): BEFORE the shard loop starts, if api-football is missing for the whole date,
+  fail loud — because every T1 shard would otherwise fail silently, corrupting the manifest's `capture_status`
+  semantics. A single loud `DependencyError` is cheaper to diagnose than N silent `empty_confirmed` rows that are
+  actually "dep was missing". **In production this never triggers**: no `date=` reaches the factory, so T1 shards run
+  against a missing dependency and produce exactly the silent-failure outcome this bullet describes as prevented.
 
-The gate is deliberately permissive in one way: if the storage probe itself fails (transport error, auth failure), the
-gate still raises `DependencyError` rather than leaking the underlying exception. This keeps the error taxonomy
-consistent for the caller: "either the dep is there, or the gate tells you what to run to make it there".
+The gate's storage-probe fallback — if the probe itself fails (transport error, auth failure), raise `DependencyError`
+rather than leak the underlying exception — is still correct behaviour on the rare occasions the gate IS invoked with a
+`date` (unit tests, ad hoc scripts). It has no bearing on the production call path, where the gate is never invoked at
+all.
+
+**Do not cite this section as evidence the sports pipeline is protected against a missing api-football day — it is
+not**, until Track E of `plans/active/sports_consolidated_closeout_2026_07_19.md` ("Wire the T0/T1 dependency gate for
+real") lands.
 
 ---
 

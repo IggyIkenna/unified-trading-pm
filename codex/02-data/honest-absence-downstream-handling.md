@@ -49,6 +49,36 @@ code_refs:
 
 # Honest Absence — Downstream Handling SSOT
 
+> **⚠️ CORRECTION (2026-07-23).** The `SCHEDULE_DEFINING_DATA_TYPES` claim in **§ "Schedule-defining empties are
+> RESOLVED, not gaps"** below was stated as a live code fact without ever being checked against the live UAC source —
+> verified now by direct grep of `unified_api_contracts/canonical/crosscutting/_honest_coverage_logic.py:293`
+> (2026-07-23): the constant **is still exactly `frozenset({"FIXTURES"})`**, unchanged. The doc's _value_ claim is
+> accurate; what it never mentions is that sports fixtures reference-data has since been **entity-split**:
+> `entity=fixtures_schedule` (schedule fields) + `entity=fixtures_outcomes` (scores/status), both under
+> `pipeline_mode=batch_api_football/` — the legacy bare `entity=fixtures/` is **FROZEN** (no real write since
+> 2026-05-23; do not describe it as an active write target). **Today `SCHEDULE_DEFINING_DATA_TYPES` is NOT broken**: the
+> honest-coverage manifest `data_type` atom that `is_resolved_schedule_empty()` actually reads is _also_ still hardcoded
+> to the literal `"FIXTURES"` at every live call site (`process_write.py`, `sports_fixture_status_refresh.py`,
+> `sports_fixtures_daily_repoll.py`, plus the sports fixtures recovery/rescan/repair scripts) — so the constant and the
+> manifest atom are mutually consistent right now, and the 93.7%→100.0% golden-window resolution described below is NOT
+> currently regressed. **The bug is forward-looking and currently unaddressed**:
+> `plans/active/sports_consolidated_closeout_2026_07_19.md` Track C ("C1", P0, still open) is an already-planned
+> migration of that exact manifest atom from `"FIXTURES"` to the split `FIXTURES_SCHEDULE` / `FIXTURES_OUTCOMES` form
+> across 8 named call sites — and neither `SCHEDULE_DEFINING_DATA_TYPES` nor `is_resolved_schedule_empty()` is on C1's
+> file list. The moment C1 ships, every schedule-defining `empty_confirmed` row will carry a `data_type` the frozenset
+> no longer contains, `is_resolved_schedule_empty()` will silently start returning `False` for all of them, and the OOW
+> reclassification documented below regresses back to under-counting sports coverage — silently: a frozenset miss raises
+> nothing and logs nothing. **Flagged as a likely live-bug-in- waiting; C1 needs this constant + helper added to its
+> checklist before it ships.** No dedicated issue doc exists for this specific gap (checked `plans/active/issues/`
+> 2026-07-23 — nothing named for this constant); tracked instead as the Track C1 checklist gap called out here and in
+> the plan's own Canonical-target section. Also note: sports `data_type` casing is separately being reconciled to
+> LOWER-case for all types (2026-07-23 operator decision, reverting the 2026-07-18 UPPER call) — that revert had not
+> executed as of this correction, so `"FIXTURES"` (upper) is still the live literal today; don't assume a case-form for
+> whatever C1 lands on without re-checking.
+>
+> See `plans/active/sports_consolidated_closeout_2026_07_19.md` (Canonical target / Track C / Track E) for the full
+> reconciliation.
+
 **Companion doc to [`availability-manifest-and-data-status.md`](availability-manifest-and-data-status.md).** That doc is
 the SSOT for the **write side** of honest absence (when a service emits `record_empty(empty_confirmed)`). This doc is
 the SSOT for the **read / consume side** — what every downstream service (feature calculators, ML training, strategy
@@ -1696,9 +1726,22 @@ data_type is definitionally "empty == complete," because the schedule endpoint I
 is NOT schedule-defining** — FootyStats is fixture-PINNED (records `EXPECTED_NO_FIXTURE` when no API-Football fixture
 exists; a genuine FootyStats zero when a fixture DOES exist is a real enrichment gap). So **only `FIXTURES`** qualifies.
 
-- SSOT set: `unified_api_contracts.SCHEDULE_DEFINING_DATA_TYPES` (`frozenset({"FIXTURES"})`).
+- SSOT set: `unified_api_contracts.SCHEDULE_DEFINING_DATA_TYPES` (`frozenset({"FIXTURES"})` — **re-verified live
+  2026-07-23 against `_honest_coverage_logic.py:293`; still exactly this value**).
 - Helper: `unified_api_contracts.is_resolved_schedule_empty(data_type, reason)` — `True` iff `data_type` is
   schedule-defining AND `reason == "SOURCE_RETURNED_ZERO"`.
+- **Entity split vs. manifest atom (2026-07-23 addendum — read the correction banner at the top of this doc for the full
+  chain).** Sports fixtures reference-data storage is entity-split: `entity=fixtures_schedule` +
+  `entity=fixtures_outcomes` under `pipeline_mode=batch_api_football/` (legacy bare `entity=fixtures/` FROZEN since
+  2026-05-23). That split is a GCS **storage-layer** change made by instruments-service's reference-data writer — it is
+  a _different axis_ from the honest-coverage **manifest `data_type` atom** this section is about. As of 2026-07-23 the
+  manifest atom is STILL the un-split literal `"FIXTURES"` at every live call site, so `SCHEDULE_DEFINING_DATA_TYPES`
+  matching only `"FIXTURES"` is currently correct. It stops being correct the moment
+  `plans/active/sports_consolidated_closeout_2026_07_19.md` Track C1 migrates the manifest atom to
+  `FIXTURES_SCHEDULE`/`FIXTURES_OUTCOMES` — C1's own 8-file checklist does not include this constant or
+  `is_resolved_schedule_empty()`, so that migration will land without updating either, and the resolution this section
+  documents will silently regress. Whoever executes C1 must also update this frozenset (and re-verify this section's
+  golden-window numbers below still hold post-migration).
 - `is_out_of_coverage_window(reason, data_type=None)` now takes an **optional `data_type`** — when supplied, a
   schedule-defining FIXTURES `SOURCE_RETURNED_ZERO` resolves to `True` (out-of-window). Callers WITHOUT a `data_type`
   (legacy reason-only scope) get the unchanged reason-set behaviour, so the new path is purely additive.

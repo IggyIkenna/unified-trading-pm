@@ -1,15 +1,17 @@
 ---
 doc_type: codex-ssot
-title: Model Tier Selection — Sonnet 4.6 vs Opus 4.8
+title: Model Tier Selection — Sonnet 5 vs Opus 4.8
 summary: >-
   Model-tier + effort selection SSOT — model tier (sonnet/opus/fable) and effort (low<medium<high<xhigh<max) are
   INDEPENDENT axes (ground truth: agent-orchestrator/server/model_tier.py, 2026-07) — effort is the primary reasoning
   control on every adaptive-reasoning model (sonnet/opus/fable alike, Haiku excluded), NOT opus-gated. Model tier:
-  default Sonnet, Opus only for the main orchestrator / cross-repo architecture / provably >200k context. Effort: a plan
-  declaring no tier gets a todo-count-derived default (xhigh baseline, max past model_tier.LARGE_PLAN_TODO_THRESHOLD
-  open todos — operator ruling 2026-07-22), not a silent "medium". Covers the mandatory task-start self-check (model +
-  effort mismatch → STOP/FLAG), always-set sub-agent model=, and the orchestrator's frontmatter-driven autospawn tier
-  enforcement.
+  default Sonnet 5, Opus only for the main orchestrator / cross-repo architecture judgment / trading judgment — NOT for
+  raw context size (Sonnet 5 has 1M context, same as Opus; operator ruling 2026-07-23 retired the old ">200k ctx" /
+  ">50KB plan" opus triggers). **Every AO planning-VM-eligible plan (`assigned_vm: planning`) defaults to Sonnet 5 at
+  max effort** — that is the standard, not an exception. Effort: a plan declaring no tier gets a todo-count-derived
+  default (xhigh baseline, max past model_tier.LARGE_PLAN_TODO_THRESHOLD open todos — operator ruling 2026-07-22), not a
+  silent "medium". Covers the mandatory task-start self-check (model + effort mismatch → STOP/FLAG), always-set
+  sub-agent model=, and the orchestrator's frontmatter-driven autospawn tier enforcement.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -26,40 +28,53 @@ last_reviewed:
 code_refs:
 ---
 
-# Model Tier Selection — Sonnet 4.6 vs Opus 4.8
+# Model Tier Selection — Sonnet 5 vs Opus 4.8
 
-**Rule**: Default to Sonnet 4.6. Opus 4.8 is a deliberate exception requiring justification. Every work-split MUST
+**Rule**: Default to Sonnet 5. Opus 4.8 is a deliberate exception requiring justification. Every work-split MUST
 classify each plan/slot as Sonnet-doable or Opus-required before spawning agents.
+
+**Operator ruling (2026-07-23)**: Sonnet 5 has a **1M context window — the same size as Opus 4.8.** This retires context
+SIZE as an opus-escalation reason entirely: the old ">200k context provably required" and ">50KB plan + multiple full
+files" triggers below are **RETIRED**, not just softened. Opus is now a PURELY QUALITATIVE escalation (main orchestrator
+role, genuine cross-repo architecture judgment, trading judgment calls) — never a function of how large the plan or how
+many files are in context. **Every plan eligible for AO planning-VM dispatch (`assigned_vm: planning`) defaults to
+Sonnet 5 at `effort: max`** ("highest thinking") — this is the STANDARD configuration for AO-dispatched work, not a
+fallback. The `audit_model_tier.py` heuristic's size-based signal (`SIZE_OPUS_BYTES`) is removed to match.
 
 ---
 
 ## The two tiers
 
-| Tier           | Model               | Context | Cost          | Use when                                                                                        |
-| -------------- | ------------------- | ------- | ------------- | ----------------------------------------------------------------------------------------------- |
-| **Default**    | `claude-sonnet-4-6` | 200k    | Low           | Everything that fits in 200k context without multi-repo synthesis                               |
-| **Escalation** | `claude-opus-4-8`   | 1M      | High (~5-10×) | Main orchestrator, cross-repo architecture decisions, tasks whose context provably exceeds 200k |
+| Tier           | Model             | Context | Cost          | Use when                                                                        |
+| -------------- | ----------------- | ------- | ------------- | ------------------------------------------------------------------------------- |
+| **Default**    | `claude-sonnet-5` | **1M**  | Low           | Everything — including large plans/multi-file context. This is the AO standard. |
+| **Escalation** | `claude-opus-4-8` | 1M      | High (~5-10×) | ONLY main orchestrator role, cross-repo architecture judgment, trading judgment |
+
+Both tiers now have the same 1M context ceiling — Opus is never chosen because a plan is "too big to fit," only because
+the TASK itself is one of the three qualitative categories above.
 
 ---
 
 ## Decision rule (apply at work-split time, per slot)
 
 ```
-IF slot is main orchestrator (slot 1)     → Opus 4.8
-IF task requires simultaneous reading of  → Opus 4.8
-   >3 full service codebases OR
-   a plan >50KB + multiple full files OR
-   1M-context reasoning across the entire
-   workspace state
-OTHERWISE                                 → Sonnet 4.6
+IF slot is main orchestrator (slot 1)                          → Opus 4.8
+IF task IS a cross-repo architecture DESIGN DECISION requiring  → Opus 4.8
+   simultaneous judgment across UAC schema + UTL + 3+ services
+   (the judgment call itself, not merely "the files are large")
+IF task IS a trading judgment call (position sizing, risk       → Opus 4.8
+   limits, archetype topology)
+OTHERWISE (including large plans, multi-file context,           → Sonnet 5
+   AO planning-VM-eligible work of any size)                       (effort: max if large/complex)
 ```
 
-**When in doubt, use Sonnet 4.6 and escalate only if the agent hits a genuine context wall.** Do NOT pre-escalate "just
-in case" — that is money waste with no quality upside for bounded tasks.
+**When in doubt, use Sonnet 5 and escalate only for one of the three qualitative reasons above — never for size.**
+Pre-escalating to Opus because a plan is large is exactly the "just in case" anti-pattern this doc already banned; the
+2026-07-23 ruling just removes the one reason (context ceiling) that used to make size-based escalation look justified.
 
 ---
 
-## Sonnet 4.6 — default for all of these
+## Sonnet 5 — default for all of these
 
 - Mechanical sweeps (ruff cleanup, pipeline_mode callsite migration, import rename)
 - Single-repo implementation from a clear spec
@@ -79,17 +94,21 @@ in case" — that is money waste with no quality upside for bounded tasks.
 
 ## Opus 4.8 — only for these
 
-- **Slot 1 main orchestrator**: boot checklist, ledger sweep, cross-slot Q&A dispatch, plan curation, ping triage,
-  master plan refresh. Orchestrator context = entire workspace state → requires 1M window.
-- **Cross-repo architecture decisions**: design tasks that require simultaneously reading UAC schema + UTL helpers + 3+
-  service implementations + codex SSOT to make a coherent decision (e.g., new shard-atom design, new manifest column
-  rationale, signal-broadcast topology).
-- **Large migration design**: tasks where the full impact surface (all consumers across all repos) must be in context
-  simultaneously to avoid silent breakage (pre-audit manifests for public API changes).
-- **Trading judgment calls**: position sizing, risk-limit calibration, archetype topology decisions — requires holding
-  the entire live-pipeline architecture in context.
-- **>200k context provably required**: if the agent's plan-of-record + all referenced files + the task output provably
-  exceed 200k tokens, escalate. Document the reason in the spawn prompt: `OPUS-REQUIRED: <reason>`.
+**Purely qualitative, per the 2026-07-23 ruling — NEVER escalate because a plan/task is large; Sonnet 5's 1M context
+already holds it.** Only three categories:
+
+- **Slot 1 main orchestrator ROLE**: boot checklist, ledger sweep, cross-slot Q&A dispatch, plan curation, ping triage,
+  master plan refresh. The reason is the ROLE (orchestrating the whole fleet), not the context volume — Sonnet 5 could
+  technically hold the same context now, but this role is kept on Opus for judgment quality on fleet-wide tradeoffs.
+- **Cross-repo architecture JUDGMENT**: design tasks that require making a coherent DECISION across UAC schema + UTL
+  helpers + 3+ service implementations + codex SSOT (e.g., new shard-atom design, new manifest column rationale,
+  signal-broadcast topology, full-workspace impact pre-audit for a public API change). The escalation reason is the
+  judgment call itself — weighing tradeoffs across services — not merely that the files involved are numerous or large;
+  a mechanical multi-file sweep with no real design decision stays Sonnet 5 even if it touches every repo.
+- **Trading judgment calls**: position sizing, risk-limit calibration, archetype topology decisions — the escalation
+  reason is the JUDGMENT (irreversible-adjacent, high-stakes tradeoffs), not context volume.
+
+Document the reason in the spawn prompt either way: `OPUS-REQUIRED: <one of the three categories above>`.
 
 ---
 
@@ -98,15 +117,15 @@ in case" — that is money waste with no quality upside for bounded tasks.
 Every slot in `work_split_<YYYY_MM_DD>_<side>.md` MUST include a `model_tier` field:
 
 ```markdown
-| Slot | Theme               | Plan-of-record                  | model_tier     | Cal AI-days |
-| ---- | ------------------- | ------------------------------- | -------------- | ----------- |
-| 1    | Main orchestrator   | LEDGER.md                       | **Opus 4.8**   | continuous  |
-| 2    | defi_catalogue impl | defi_catalogue_chain_primitives | **Sonnet 4.6** | ~16         |
-| 3    | code_freeze audit   | code_freeze_migrate_backfill    | **Sonnet 4.6** | ~14         |
+| Slot | Theme               | Plan-of-record                  | model_tier   | Cal AI-days |
+| ---- | ------------------- | ------------------------------- | ------------ | ----------- |
+| 1    | Main orchestrator   | LEDGER.md                       | **Opus 4.8** | continuous  |
+| 2    | defi_catalogue impl | defi_catalogue_chain_primitives | **Sonnet 5** | ~16         |
+| 3    | code_freeze audit   | code_freeze_migrate_backfill    | **Sonnet 5** | ~14         |
 ```
 
 Classification is the **first thing** the operator or main-orch agent fills in when drafting the split. If model_tier is
-absent from a slot row, the agent MUST use Sonnet 4.6 and flag the omission.
+absent from a slot row, the agent MUST use Sonnet 5 and flag the omission.
 
 ---
 
@@ -114,19 +133,24 @@ absent from a slot row, the agent MUST use Sonnet 4.6 and flag the omission.
 
 When auditing `plans/active/` before drafting a work-split, classify each plan as one of:
 
-**`sonnet-doable`** — bounded scope, single-repo or clear cross-repo spec, fits in 200k:
+**`sonnet-doable`** — the default for everything, REGARDLESS of size (Sonnet 5's 1M context handles large plans and
+multi-file context natively — this is the standard for AO planning-VM-eligible work, not a fallback):
 
-- Mechanical refactors (ruff, pipeline_mode sweep, import rename)
-- Per-service impl (adapter, writer, test, codex doc)
+- Mechanical refactors (ruff, pipeline_mode sweep, import rename) — any size
+- Per-service impl (adapter, writer, test, codex doc) — any size
 - Script execution + verification
 - Single-plan phase implementation
+- Large trackers/umbrella plans with 100+ todos (e.g. `sports_consolidated_closeout`-style closeouts) — size alone is
+  never a reason to escalate; set `effort: max` instead
 
-**`opus-required`** — needs 1M context OR is main-orchestrator work:
+**`opus-required`** — is main-orchestrator ROLE work, OR is a genuine cross-repo architecture/trading JUDGMENT call
+(never "the plan is big" or "many files are involved" — those stay Sonnet 5 at high effort):
 
-- Master plan refresh + inventory regeneration (reads all 50+ active plans + codex)
-- Cross-repo architecture design (UAC schema + UTL + 3+ services simultaneously)
-- Full workspace impact pre-audit for a public API change
-- Work-split drafting itself (reads all plans to allocate scope)
+- Master plan refresh + inventory regeneration (main-orchestrator role)
+- Cross-repo architecture DESIGN DECISION (UAC schema + UTL + 3+ services — the tradeoff judgment, not the file count)
+- Full workspace impact pre-audit for a public API change, where assessing blast radius is itself the judgment call
+- Work-split drafting itself (main-orchestrator role — allocating scope across the fleet)
+- Trading judgment calls (position sizing, risk-limit calibration, archetype topology)
 
 Add `model_tier: sonnet-doable | opus-required` to each plan's frontmatter on the next substantive touch (same logical
 unit as the substantive change — do NOT mass-sweep, per Findings Triage).
@@ -160,18 +184,18 @@ Backfilled opus set (2026-06-01): `master_to_live_defi`, `mdps_long_running_mult
 
 ## Continuation prompt template (model tier enforcement)
 
-When spawning a Sonnet 4.6 agent, start the prompt with:
+When spawning a Sonnet 5 agent, start the prompt with:
 
 ```
-MODEL TIER: Sonnet 4.6 (200k context). This task is bounded and does not require Opus.
-If you hit a genuine context wall (cannot fit all needed files), stop and report — do NOT
-silently skip files or hallucinate from partial context.
+MODEL TIER: Sonnet 5 (1M context). This task does not require Opus — Sonnet 5's context matches
+Opus's, so size alone never justifies escalation; only a genuine main-orchestrator/cross-repo-
+architecture-judgment/trading-judgment reason would.
 ```
 
 When spawning Opus 4.8, state the reason:
 
 ```
-MODEL TIER: Opus 4.8 — REASON: [main orchestrator / cross-repo architecture / >200k context provably required].
+MODEL TIER: Opus 4.8 — REASON: [main orchestrator / cross-repo architecture judgment / trading judgment].
 ```
 
 ---
@@ -189,27 +213,28 @@ which model you are.
 
 From (in priority order):
 
-1. The spawn prompt: look for `MODEL TIER: Sonnet 4.6` or `MODEL TIER: Opus 4.8 — REASON: ...`
+1. The spawn prompt: look for `MODEL TIER: Sonnet 5` or `MODEL TIER: Opus 4.8 — REASON: ...`
 2. The work-split slot row: `model_tier: sonnet-doable | opus-required`
 3. The plan frontmatter: `model_tier:` field
 4. If none of the above: apply the decision rule (main orchestrator → Opus; everything else → Sonnet)
 
 ### Step 3 — check for mismatch and act
 
-| Running model  | Required tier     | Action                                                             |
-| -------------- | ----------------- | ------------------------------------------------------------------ |
-| Sonnet 4.6     | sonnet-doable     | ✅ Proceed                                                         |
-| Opus 4.8       | opus-required     | ✅ Proceed                                                         |
-| **Sonnet 4.6** | **opus-required** | 🔴 **STOP — flag to operator, do not proceed**                     |
-| **Opus 4.8**   | **sonnet-doable** | 🟡 **FLAG to operator, then proceed (don't block on money waste)** |
+| Running model | Required tier     | Action                                                             |
+| ------------- | ----------------- | ------------------------------------------------------------------ |
+| Sonnet 5      | sonnet-doable     | ✅ Proceed                                                         |
+| Opus 4.8      | opus-required     | ✅ Proceed                                                         |
+| **Sonnet 5**  | **opus-required** | 🔴 **STOP — flag to operator, do not proceed**                     |
+| **Opus 4.8**  | **sonnet-doable** | 🟡 **FLAG to operator, then proceed (don't block on money waste)** |
 
-**When Sonnet 4.6 detects opus-required task** — output this block and stop:
+**When Sonnet 5 detects opus-required task** — output this block and stop:
 
 ```
 ⚠️ WRONG MODEL — CANNOT PROCEED
-Task requires: Opus 4.8 (1M context)
-Running as: Sonnet 4.6 (200k context)
-Reason this task needs Opus: <state the reason from spawn prompt or decision rule>
+Task requires: Opus 4.8
+Running as: Sonnet 5
+Reason this task needs Opus: <state the QUALITATIVE reason — main orchestrator / cross-repo architecture
+judgment / trading judgment. NOT context size — Sonnet 5 also has 1M context.>
 
 ACTION REQUIRED: Please reopen this tab/slot on Opus 4.8.
 In Claude Code: use /model claude-opus-4-8 or restart with --model claude-opus-4-8
@@ -224,8 +249,8 @@ Task is: sonnet-doable
 Running as: Opus 4.8 (unnecessary — ~5-10× more expensive)
 Reason I'm not stopping: money waste doesn't break correctness; operator should know.
 
-ACTION FOR NEXT RUN: Use Sonnet 4.6 for this task.
-In Claude Code: /model claude-sonnet-4-6
+ACTION FOR NEXT RUN: Use Sonnet 5 for this task.
+In Claude Code: /model claude-sonnet-5
 Continuing now...
 ```
 
@@ -287,7 +312,8 @@ IF plan declares a tier explicitly (effort: / thinking_tier: / assigned_role) �
 Wired in `agent-orchestrator/server/regen_backlog_from_plan.py` (the fallback added right after the explicit-`effort:`
 override) and mirrored in `context_lifecycle.py`'s worker carve-out (same threshold — a large-plan worker gets pulled
 into proactive compact/checkpoint management, not just a higher effort default). Model tier is UNTOUCHED by this — still
-governed only by the existing three criteria below (main orchestrator / cross-repo arch / >200k context).
+governed only by the three QUALITATIVE criteria above (main orchestrator role / cross-repo architecture judgment /
+trading judgment — context size is NOT one of them as of the 2026-07-23 ruling).
 
 Still declare `effort:` (or `thinking_tier:`) explicitly on a work-split slot row when you know better than the default
 — the auto-default exists to raise the floor for plans that forgot to declare, not to discourage declaring.
@@ -423,4 +449,4 @@ one-line caveat in its first output ("proceeding at <tier> per operator override
 ---
 
 _Companion plan_: `plans/active/ruff_workspace_cleanup_*.md` (example of correctly classified Sonnet-suitable work).
-_Enforced by_: work-split review — any slot missing `model_tier` or `thinking` defaults to Sonnet 4.6 / medium.
+_Enforced by_: work-split review — any slot missing `model_tier` or `thinking` defaults to Sonnet 5 / medium.

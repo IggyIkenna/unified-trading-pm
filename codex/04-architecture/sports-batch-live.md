@@ -12,14 +12,30 @@ stage: [meta]
 repos: [execution-service, instruments-service]
 scope: [engineer, admin]
 tags: [sports, batch-live, manifest, pipeline-mode, odds]
-related: [batch-live-architecture.md, sports-integration-plan.md, sports-live-odds-connectivity.md, ../02-data/pipeline-mode-partition.md]
+related:
+  [
+    batch-live-architecture.md,
+    sports-integration-plan.md,
+    sports-live-odds-connectivity.md,
+    ../02-data/pipeline-mode-partition.md,
+  ]
 created: 2026-06-11
 authoritative_for: [sports asset-group batch/live architecture, sports fixture-dependent empty-reason taxonomy]
-referenced_by: [codex/04-architecture/batch-live-architecture.md, codex/04-architecture/prediction-batch-live.md, codex/04-architecture/sports-integration-plan.md, codex/04-architecture/sports-live-odds-connectivity.md, codex/04-architecture/tradfi-batch-live.md]
+referenced_by:
+  [
+    codex/04-architecture/batch-live-architecture.md,
+    codex/04-architecture/prediction-batch-live.md,
+    codex/04-architecture/sports-integration-plan.md,
+    codex/04-architecture/sports-live-odds-connectivity.md,
+    codex/04-architecture/tradfi-batch-live.md,
+  ]
 owner:
-last_reviewed: 2026-06-11
+last_reviewed: 2026-07-23
 code_refs:
-plan: plans/active/sports_manifest_canonicalisation_2026_06_01.md + pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md (R6-codex seam doc)
+plan:
+  plans/active/sports_manifest_canonicalisation_2026_06_01.md +
+  pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md (R6-codex seam doc) +
+  sports_consolidated_closeout_2026_07_19.md
 ---
 
 # Sports Batch/Live Architecture
@@ -31,6 +47,17 @@ plan: plans/active/sports_manifest_canonicalisation_2026_06_01.md + pipeline_mod
 > covers the sports-specific shape: source list, the fixture-pinned data model, batch-SSOT continuity, matcher pattern,
 > shard atomicity + the fixture-dependent empty-reason taxonomy.
 
+> **⚠️ CORRECTION (2026-07-23) — §1 source table was stale, no banner previously existed.** Two facts below were drifted
+> and are now fixed in place in §1: (1) **Fixtures entity is SPLIT** — `entity=fixtures_schedule` (schedule fields incl.
+> `round`) + `entity=fixtures_outcomes` (scores/status), both under `pipeline_mode=batch_api_football/` (split
+> 2026-05-23). Legacy bare `entity=fixtures/` is **FROZEN** (no real write since 2026-05-23) — never describe it as an
+> active write target. (2) **Sports `data_type` is being reconciled to LOWER-case for ALL types** (operator decision
+> 2026-07-23, reverting the 2026-07-18 UPPER K0-DECISION(b) and its since-shipped K1/K2 uppercase migration). The §1
+> table is corrected to the lower-case target forms; the actual data/code revert has **not** executed yet — this is a
+> documented decision only, not yet the on-disk/in-code reality. Most-current casing state:
+> [`../02-data/sports-data-types-catalog.md`](../02-data/sports-data-types-catalog.md). SSOT for both:
+> `plans/active/sports_consolidated_closeout_2026_07_19.md` (ENTITY-SPLIT / K-DECISIONS).
+
 ---
 
 ## §1 Sports sources in scope
@@ -39,16 +66,16 @@ Sports is fixture-centric, multi-source, and (today) has **no in-play live sourc
 archive or scheduled snapshot, and every source is **replay-capable** (historical endpoints + Secret-Manager keys
 already held), per UAC `SOURCE_MODE_CAPABILITY`:
 
-| Source                     | Role (data_types)                                                                                                                                        | `SOURCE_MODE_CAPABILITY` (UAC)           |
-| -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- |
-| `api_football`             | Primary fixture lifecycle: FIXTURES, FIXTURE_LINEUPS/EVENTS/STATS/PLAYER_STATS, INJURIES, RESULTS, STANDINGS, + reference (TEAMS/PLAYERS/VENUES/LEAGUES) | `{BATCH, REPLAY}`                        |
-| `footystats`               | MATCHES, ODDS, PREDICTIONS (+ deferred FIXTURES multi-source merge candidate)                                                                            | `{BATCH, REPLAY}`                        |
-| `odds_api`                 | ODDS_SNAPSHOT, ODDS_MOVEMENT, ARBITRAGE (multi-bookmaker odds)                                                                                           | `{BATCH, REPLAY}`                        |
-| `understat`                | UNDERSTAT_XG / XG / XG_SHOTS                                                                                                                             | `{BATCH, REPLAY}`                        |
-| `soccer_football_info`     | SFI_PROGRESSIVE_STATS                                                                                                                                    | `{BATCH, REPLAY}`                        |
-| `transfermarkt`            | TRANSFER_RECORDS, PLAYER_VALUES                                                                                                                          | `{BATCH, REPLAY}`                        |
-| `open_meteo`               | WEATHER / WEATHER_FORECAST (fixture-pinned)                                                                                                              | `{BATCH, REPLAY}`                        |
-| `mdps_odds_horizon_bucket` | Computed ODDS_HORIZON_BUCKET (internal service source)                                                                                                   | `{BATCH, LIVE, REPLAY}` (service source) |
+| Source                     | Role (data_types)                                                                                                                                                                                                                                                                        | `SOURCE_MODE_CAPABILITY` (UAC)           |
+| -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- |
+| `api_football`             | Primary fixture lifecycle: `fixtures_schedule`/`fixtures_outcomes` (split entity, 2026-05-23 — legacy bare `entity=fixtures/` FROZEN, never an active write target), fixture_lineups/events/stats/player_stats, injuries, results, standings, + reference (teams/players/venues/leagues) | `{BATCH, REPLAY}`                        |
+| `footystats`               | matches, odds, predictions (+ deferred `fixtures_schedule`/`fixtures_outcomes` multi-source merge candidate)                                                                                                                                                                             | `{BATCH, REPLAY}`                        |
+| `odds_api`                 | odds_snapshot, odds_movement, arbitrage (multi-bookmaker odds)                                                                                                                                                                                                                           | `{BATCH, REPLAY}`                        |
+| `understat`                | understat_xg / xg / xg_shots                                                                                                                                                                                                                                                             | `{BATCH, REPLAY}`                        |
+| `soccer_football_info`     | sfi_progressive_stats                                                                                                                                                                                                                                                                    | `{BATCH, REPLAY}`                        |
+| `transfermarkt`            | transfer_records, player_values                                                                                                                                                                                                                                                          | `{BATCH, REPLAY}`                        |
+| `open_meteo`               | weather / weather_forecast (fixture-pinned)                                                                                                                                                                                                                                              | `{BATCH, REPLAY}`                        |
+| `mdps_odds_horizon_bucket` | Computed odds_horizon_bucket (internal service source)                                                                                                                                                                                                                                   | `{BATCH, LIVE, REPLAY}` (service source) |
 
 A `live_<source>` capability lands only when a sports in-play live archetype exists — the capability matrix is the gate,
 not an aspiration (closed-set rule: a `live_<source>`/`replay_<source>` PipelineMode member exists iff

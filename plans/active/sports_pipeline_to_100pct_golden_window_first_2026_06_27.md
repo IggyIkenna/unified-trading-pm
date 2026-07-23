@@ -6,7 +6,7 @@ summary:
   2025-09-01..11-30 golden window to 100% across all 8 sources x data_types over the 94-league universe first (R1 zero
   expected-missing, R2 ML-ready features, R5 alerts-zero), prove the honest-coverage recipe, then expand to
   2015->present + daily-forward (R3) + catalogue daily rollup (R4).
-status: active
+status: superseded
 nature: process
 asset_group: [sports]
 stage: [meta]
@@ -20,6 +20,7 @@ related:
     plans/active/sports_reference_backfill_oom_2026_06_22.md,
     plans/active/instruments_foundation_completeness_2026_06_24.md,
     codex/02-data/honest-absence-downstream-handling.md,
+    plans/active/sports_consolidated_closeout_2026_07_19.md,
   ]
 created: 2026-06-27
 parent_epic: sports_master
@@ -29,16 +30,43 @@ priority: P0
 estimate_class: design
 estimate_baseline_ai_days: 2
 estimate_calibrated_ai_days: 1.2
-last_updated: 2026-06-27
+last_updated: 2026-07-23
 locked_by: live-defi-rollout
 locked_since: 2026-06-27
 supersedes:
-superseded_by:
+superseded_by: sports_consolidated_closeout_2026_07_19.md
 depends_on:
 source:
 assigned_role: data_engineering
 drift_direction: advance-code
 ---
+
+> **🔴 SUPERSEDED 2026-07-23 — folded into `sports_consolidated_closeout_2026_07_19.md`. Do NOT pick up further work
+> from this file; do NOT dispatch/re-dispatch any of its child plans from this doc.** Archived as part of the
+> operator-directed 4-plan fold-in pass (alongside `sports_manifest_canonicalisation_2026_06_01.md`,
+> `sports_odds_exchange_fixed_fork_2026_07_18.md`, `sports_p2_history_apifootball_2015_to_present_2026_06_27.md` — all 4
+> archived together, live content pulled into the closeout first per operator decision). This coordinator's genuinely
+> open items at time of archival (now tracked directly as closeout todos, not via this file or its child plans):
+>
+> - **P2a (AF history 2015→present) — not started.** Re-homed work stranded here: G1 non-canonical-league NOISE wipe
+>   (1,437 leagues, ~106k rows); G2 2015–2017 zero-captured diagnosis (subscription-limit vs backfill-bug); G2 40,041
+>   FIXTURES `attempted_failed` re-run (2018/2021/2023). **Note**: P2a's own dispatch target,
+>   `sports_p2_history_apifootball_2015_to_present_2026_06_27.md`, is ALSO being archived in this same batch — so this
+>   work has no surviving plan home other than the closeout; it must land there directly, not as a plan-to-plan pointer.
+> - **P2b (reference+odds history 2015→present) — not started.**
+> - **P2c (features history) — not started** (depends on P2a+P2b).
+> - **P2d (daily-forward + catalogue + final gate) — partial.** R3-daily/R4/R5 sub-items shipped (scheduler running,
+>   catalogue daily complete, alerts zero); R1/R2/R3-history remain BLOCKED on P2a/P2b/P2c; the final "STAMP DONE" was
+>   deliberately deferred pending P2a+P2b+P2c+its own task004.
+> - **Open TENSION flag (2026-07-14, doc-reconciliation vr2#116, never resolved)**: possible unacknowledged operator
+>   override of `instruments_foundation_completeness_2026_06_24.md`'s "sports doesn't start G1→G5 until cefi is DONE"
+>   rule — cefi's own G4/G5 gates were still open when this coordinator's G1 work executed. Needs an operator ruling,
+>   not asserted either way.
+> - Its `sports_manifest_canonicalisation_2026_06_01.md` "leans on" reference is stale (that plan is also archived in
+>   this same batch) — treat as folded into the closeout below, not as a live dependency.
+>
+> See `sports_consolidated_closeout_2026_07_19.md` (Track V "COVERAGE: backfill to honest-100%") for where this work is
+> now tracked.
 
 the 10 dispatchable children (this coordinator's DAG) ---
 
@@ -56,7 +84,9 @@ the 10 dispatchable children (this coordinator's DAG) ---
 
 # --- existing plans this set LEANS ON / re-homes from (do not duplicate) ---
 
-- plans/active/sports_manifest_canonicalisation_2026_06_01.md
+- plans/active/sports_consolidated_closeout_2026_07_19.md (superseded 2026-07-23: was
+  `plans/active/sports_manifest_canonicalisation_2026_06_01.md` — that plan is ALSO archived in this same fold-in batch,
+  so this "leans on" pointer is redirected here instead of to a now-archived plan)
 - plans/active/sports_reference_backfill_oom_2026_06_22.md
 - plans/active/instruments_foundation_completeness_2026_06_24.md
 - plans/active/data_completion_to_100_all_ag_2026_06_21.md
@@ -194,7 +224,9 @@ there → double-dispatch).
 
 **Pre-existing sports plans (in-DAG nodes; still carry the deprecated `vm-sports` — the operator's frontmatter migration
 re-tags them `NA` + role; do not re-home):** `sports_manifest_canonicalisation_2026_06_01` (manifest canonical E-walk;
-its E3–E8 production `--apply` is gated on the cross-AG `master_data_canonicalisation` G4 operator hard-stop) and
+its E3–E8 production `--apply` is gated on the cross-AG `master_data_canonicalisation` G4 operator hard-stop — **this
+plan is ALSO archived/superseded 2026-07-23 in the same fold-in batch as this coordinator; its still-open E3–E8 gate
+status is preserved via `sports_consolidated_closeout_2026_07_19.md`, not here**) and
 `sports_reference_backfill_oom_2026_06_22` (the OOM single-index-read fix that every P1b/P2b reference backfill depends
 on being shipped).
 
@@ -266,7 +298,9 @@ plans.
 
 ## References (lean on, do not duplicate)
 
-- `sports_manifest_canonicalisation_2026_06_01.md` — manifest canonical CF-1…CF-14 E-walk (vm-sports)
+- `sports_consolidated_closeout_2026_07_19.md` — superseded 2026-07-23 pointer, was
+  `sports_manifest_canonicalisation_2026_06_01.md` (manifest canonical CF-1…CF-14 E-walk, vm-sports); that plan is ALSO
+  archived in this same fold-in batch, so this reference now resolves to the closeout instead
 - `sports_reference_backfill_oom_2026_06_22.md` — OOM single-index-read fix (vm-sports)
 - `instruments_foundation_completeness_2026_06_24.md` — G0→G5 foundation gates (vm-cefi; sports slice re-homed here)
 - `data_completion_to_100_all_ag_2026_06_21.md` — the 3-month golden-window execution strategy (NA/local-only)
@@ -279,3 +313,8 @@ plans.
 - **2026-06-27** — Coordinator + 10 child plans authored (this set). Golden-window-first structure locked; stranded
   sports work re-homed off the deprecated epic VMs. Reassigned to `assigned_vm: NA` + `assigned_role` (role-based
   dispatch, single-VM architecture 2026-06-27) — no epic VM to start; children dispatch by role on the next regen tick.
+- **2026-07-23** — SUPERSEDED, folded into `sports_consolidated_closeout_2026_07_19.md` per operator-directed 4-plan
+  fold-in pass (archive all 4, no KEEP-ACTIVE exception). Still-open items at archival time (P2a/P2b/P2c not started,
+  P2d partial, the unresolved cefi-block TENSION flag) extracted and handed off for the closeout to carry forward — see
+  the banner at the top of this file. `sports_manifest_canonicalisation_2026_06_01.md` "leans on" reference redirected
+  to the closeout since that plan is archived in the same batch.

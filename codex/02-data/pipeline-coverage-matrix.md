@@ -24,11 +24,24 @@ created: 2026-05-06
 authoritative_for: [instruments-service/MTDS/MDPS pipeline coverage navigational matrix]
 referenced_by: [codex/02-data/defi-data-pipeline.md, codex/02-data/per-asset-group-bucket-layouts.md]
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-07-23
 code_refs:
 ---
 
 # Pipeline Coverage Matrix — instruments-service · MTDS · MDPS
+
+> **🟢 CONFIRMED (2026-07-23 reconciliation session) — sports `data_type` lower-case, no prior flag.** This doc's tables
+> (§§1-4) already showed sports `data_type` values lower-case throughout (`odds`, `odds_snapshot`, `odds_movement`,
+> `odds_horizon_bucket`) and that is the now-settled-correct answer — but the doc never acknowledged that the casing had
+> been disputed (a 2026-07-18 operator decision briefly made sports UPPER-case, shipped as K1/K2; a 2026-07-23 operator
+> decision reverted it back to lower-case for all sports types), so a reader had no way to know this content was
+> live-correct rather than merely never-updated. SSOT for the casing:
+> [`sports-data-types-catalog.md`](./sports-data-types-catalog.md) (2026-07-22 canonical correction, reaffirmed
+> 2026-07-23). No table values below need to change on this axis — this banner is a confirmation, not a correction. Two
+> adjacent staleness items were found and fixed in the same pass: the `league_id` column note (§0, schema table) now
+> flags the manifest-vs-registry namespace mismatch, and the SPORTS reference-entity note (§1) now names the split
+> `fixtures_schedule` / `fixtures_outcomes` entities instead of a bare umbrella label. See
+> `plans/active/sports_consolidated_closeout_2026_07_19.md` Track D for the reconciliation record.
 
 **Purpose:** single-page reference for "what does each service capture / produce, per (asset_group, venue, data_type)"
 across the three pipeline layers. Use this when scoping backfills, debugging missing shards, or reasoning about
@@ -132,6 +145,11 @@ brief recap.
   leave `instrument_id` empty; per-symbol shards do the inverse.
 - `quote_asset` + `margin_type` are **required** on DERIBIT v6 chain shards so
   `(date, venue, instrument_type, data_type, underlying, quote_asset, margin_type)` is unambiguous.
+- **`league_id` (sports) is NOT yet a clean canonical column.** Manifest rows carry the raw source string (e.g.
+  `PREMIER_LEAGUE`), which is a **different namespace** from the UAC registry key (e.g. `EPL`) that the rest of the
+  system treats as canonical. A historical migration (214,842 rows) to move manifest rows onto the registry namespace is
+  **in progress, not complete** — do not assume a manifest `league_id` value already matches `LEAGUE_REGISTRY`. SSOT:
+  `plans/active/issues/sports_league_id_namespace_migration_2026_07_20.md`.
 
 **Four states a shard can be in (v5/v6 encoding):**
 
@@ -211,6 +229,13 @@ CeFi options underlyings filtered to BTC/ETH only (`CEFI_OPTIONS_UNDERLYINGS`).
 > `api_football`, `footystats`, `understat`, `transfermarkt`, `soccer_football_info`, `open_meteo`.
 > Per-`(source, data_type)` overrides for SFI_PROGRESSIVE_STATS and api_football per-fixture data_types live in the same
 > canonical table.
+>
+> **Reference-entity naming**: fixtures reference data written by instruments-service is a **split entity**, not a
+> single umbrella `FIXTURES` label — `entity=fixtures_schedule` (schedule fields incl. `round`) and
+> `entity=fixtures_outcomes` (scores/status), both under `pipeline_mode=batch_api_football/`. The legacy bare
+> `entity=fixtures/` is **FROZEN** (no real write since 2026-05-23) — never describe it as an active write target. SSOT:
+> [`sports-fixtures-lifecycle.md`](./sports-fixtures-lifecycle.md),
+> `plans/active/sports_consolidated_closeout_2026_07_19.md` § "Fixtures entity split".
 
 ### PREDICTION
 

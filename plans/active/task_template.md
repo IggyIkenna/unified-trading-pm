@@ -3,7 +3,7 @@ doc_type: plan
 title: Task Template — How to Author a Plan
 summary:
   How to author a plan the fleet can execute. Pick a TRACK (LOCAL/human vs AO-dispatched), copy the matching
-  frontmatter, follow the todo format, and honour the AO rules (10–20 todos, intra-plan concurrency by default +
+  frontmatter, follow the todo format, and honour the AO rules (10-100 todos, intra-plan concurrency by default +
   when/how to serialise, split-into-plans for partial parallelism, draft-gated phases, per-task `[TAG]` roles). Read
   this BEFORE writing any plan. Dispatch + prerequisite mechanics (§4) are verified against `regen_backlog_from_plan.py`
   / `dispatch.py` so an author never relies on unbuilt behavior.
@@ -51,7 +51,7 @@ drift_direction: advance-code
 | `assigned_vm`      | `NA`                                                       | `planning`                               |
 | `execution_scope`  | `local-only`                                               | `orchestrator-agent`                     |
 | Ingested by regen? | **No** (never)                                             | **Yes** (when `status: active`)          |
-| Length             | any (not ingested)                                         | **10–20 todos — STRICT**                 |
+| Length             | any (not ingested)                                         | **10-100 todos — STRICT**                |
 | Use when           | operator-only work, design docs, trackers, dispatcher work | autonomous work you want the fleet to do |
 
 **Default is LOCAL** unless you intend the fleet to pick it up. **HARD RULE (CLAUDE.md): ask the operator before
@@ -124,8 +124,9 @@ ingested). Use for operator-only work, trackers, design docs, and dispatcher-sur
 
 ## 4. AO-DISPATCHED plans — STRICT rules
 
-- **10–20 todos, never more.** Fewer is fine; group RELATED items so we don't get hundreds of tiny plans. A 100-todo
-  monolith is banned for dispatch — it bloats the backlog and couples unrelated work. _(LOCAL plans are exempt.)_
+- **10–100 todos** (raised from 10-20, operator ruling 2026-07-23). Fewer is fine; group RELATED items so we don't get
+  hundreds of tiny plans. A plan over 100 todos is banned for dispatch — it bloats the backlog and couples unrelated
+  work. _(LOCAL plans are exempt.)_
 - **Intra-plan concurrency is REAL and often intended — the plan is your unit of parallelism** _(corrected 2026-07-21,
   verified via code read of `regen_backlog_from_plan.py` + `dispatch.py`: single-agent stickiness is NOT enforced —
   regen sets no slot affinity, `_task_is_routable_to` returns True for any free slot. The old "one plan = one agent /

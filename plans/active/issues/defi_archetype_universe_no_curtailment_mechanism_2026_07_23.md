@@ -197,10 +197,21 @@ run SEQUENTIALLY, not in parallel:
 - [x] [BACKEND] P1. Phase 0 (this session, prerequisite): `CARRY_STAKED_BASIS`'s STAKING_REWARD leg wired to real
       `lst_yields` index-ratio — `strategy-service@e93902d8`. New `CanonicalLstYieldsIndexProvider` is the reusable
       building block Phase 1 below reuses directly.
-- [ ] [BACKEND] P1. **Phase 1 — CARRY_STAKED_BASIS_DATED — BLOCKED 2026-07-23, not on data, on a deeper pre-existing
-      catalog/engine config-shape mismatch** (build agent held per its own STOP instruction; see addendum below for the
-      full finding + evidence — do not re-dispatch until the config-shape question is resolved, or the build agent will
-      hit the identical `ValueError` at `register_instance()` before it ever reaches the tick loader).
+- [ ] [BACKEND] P1. **Phase 1 — CARRY_STAKED_BASIS_DATED — config-shape blocker RESOLVED 2026-07-23
+      (`strategy-service@606f2fb5`); tick-loader wiring itself is a SEPARATE follow-on, still not started.** The
+      original block (catalog/engine config-key mismatch causing a `ValueError` at `register_instance()` in every
+      environment — see the BLOCKED addendum below for the full original finding) is fixed: `catalog_staked_basis.py`
+      now emits the engine's real key names, DROPPING a static `perp_instrument` entirely in favor of `dated_expiry`+
+      `roll_on_dte`, which `CarryStakedBasisEngine` now DYNAMICALLY resolves every tick via a new pure
+      `resolve_current_dated_contract()` (`carry_and_yield/dated_contract_resolver.py`) implementing Deribit's real
+      quarterly-roll rule (verified against real captured dated-future symbols, not assumed from convention) — the
+      engine now constructs without raising for a real `specs_for_archetype(CARRY_STAKED_BASIS_DATED)` spec, and
+      `on_tick` emits the correctly-rolled contract symbol. Full evidence + design rationale:
+      `defi_catalog_engine_config_key_contract_drift_2026_07_23.md`'s `CARRY_STAKED_BASIS_DATED` row. **What is still
+      NOT done** (this checkbox stays open for it): `_load_staked_basis_dated_ticks()` in `paper_run_handler.py` +
+      adding `CARRY_STAKED_BASIS_DATED` to `paper_universe.py`'s `_ENGINE_DRIVABLE_ARCHETYPES` — the ORIGINAL
+      tick-loader-wiring task this Phase was about, deliberately left for a follow-on dispatch (config-shape-fixing and
+      tick-loader-wiring were kept as separate changes per this doc's own build-plan discipline).
 - [x] [BACKEND] P1. **Phase 2 (= E3) — NARROWED to CARRY_RECURSIVE_STAKED only, 2026-07-23 — SHIPPED
       `strategy-service@23bd8b76`** (verified before dispatch, learning Phase 1's lesson):
       `CARRY_RECURSIVE_BORROW_LENDING_ONLY` and `CARRY_BASIS_PERP_INV` are **NOT buildable via a tick-loader at all** —
@@ -398,3 +409,29 @@ match `PARAM_SCHEMA_REGISTRY`/`REQUIRED_PARAMS` in the SAME change as the tick-l
 with no tick loader, would make the engine constructible but still produce zero paper runs — the archetype would just
 move from "crashes at registration" to "no ticks, honest-skip", i.e. exactly Phase 1's original scope, once the config
 shape is right).
+
+**RESOLVED 2026-07-23 (`strategy-service@606f2fb5`) — decisions (1) and (2) above, made**: (1) `dated_expiry` resolves
+to the CURRENT wire-executable Deribit symbol via a new pure `resolve_current_dated_contract()`
+(`carry_and_yield/dated_contract_resolver.py`), targeting the legacy-style `{ASSET}-{DD}{MON}{YY}` grammar (e.g.
+`ETH-25SEP26`) — this is the form `execution-service`'s real `deribit.py` order-placement adapter
+(`_canonical_to_deribit_symbol`/`_deribit_to_canonical_id`) round-trips today, NOT the newer decomposed wire-canonical
+MTDS/GCS filename form (`ETH-USD@INV-20260925`) — the two are orthogonal (data-storage convention vs order-placement
+convention) and this fix deliberately targets the latter, matching the plain archetype's existing
+opaque-`perp_instrument`-string contract. The rule itself: Deribit's real quarterly expiry is the LAST FRIDAY of
+March/June/September/December — verified against 4 independent real dated-future symbols (`ETH-27MAR20`, `ETH-26JUN20`,
+the 2026-07-15 `DERIBIT:FUTURE:ETH-USD@INV-20260925` wire object, and execution-service's own `BTC-29DEC23` docstring
+example), not assumed from convention alone. (2) Roll logic SHIPS NOW (not deferred): the resolver rolls `"q1"` forward
+to the next quarter once within `roll_on_dte` days (inclusive) of the held contract's expiry, and `"q2"` is always
+defined as "the quarter after whichever contract q1 currently resolves to" so the front/back-quarter strategy instances
+stay mutually consistent. Wired into `_extract_config` (gated on `dated_expiry` presence, so the plain archetype's
+static-literal path is untouched) and threaded through `on_tick` / `declare_leg_portfolio_state` /
+`react_to_equity_change`. Pure + deterministic: identical `(native_asset, dated_expiry_tag, now_utc, roll_on_dte)`
+always re-derives the identical symbol (a batch rerun over the same window re-derives the identical held-contract
+sequence a paper run saw). Catalog config keys fixed in the SAME change as this resolver (per this doc's own
+recommendation above) — `build_carry_staked_basis_dated()` now emits
+`staking_protocol`/`perp_venue`/`spot_venue`/`start_token` matching `REQUIRED_PARAMS`, with `perp_instrument` dropped in
+favor of `dated_expiry`+`roll_on_dte`. The paper-replay TICK-LOADER build itself (`_load_staked_basis_dated_ticks()` +
+`_ENGINE_DRIVABLE_ARCHETYPES` registration) is intentionally NOT part of this change — it is the remaining, still-open
+half of the Phase 1 checkbox above, now unblocked for a follow-on dispatch. Full test evidence:
+`tests/unit/engine/strategies/v2/test_carry_staked_basis_dated_contract_resolution.py` (golden dated-future values,
+roll-boundary + determinism proofs, and a real-catalog-spec construction/`on_tick` proof).
