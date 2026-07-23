@@ -58,9 +58,10 @@ related:
     master_data_canonicalisation_migration_catalogue_2026_06_07.md,
     data_pipeline_e2e_check_2026_07_10.md,
     consolidator_throughput_backlog_monitor_2026_07_09.md,
+    candle_feature_canonical_path_divergence_2026_07_20.md,
   ]
 created: 2026-07-18
-last_updated: 2026-07-18
+last_updated: 2026-07-23
 parent_epic: tradfi_master
 assigned_vm: NA
 execution_scope: local-only
@@ -517,6 +518,44 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
       (docs-reconciliation pass, `tradfi_docs_reconciliation_findings_2026_07_21.md`): C0/C-source/C-pipeline_mode
       RIDER/post-walk read/orphan-sweep/E4/E5/E7 flipped to `[x]` with evidence citing `tradfi_v9_stage1_finish`; the
       Massive-dependent gate-b/coverage-gap/dual-source paragraphs re-scoped or marked obsolete.
+
+### B.5 — Candle namespace quarantine backlog (`processed_candles/`, SEPARATE from Surfaces A-D above — different
+
+### bucket prefix, different script, different defect class: unresolvable leaf ids, not id-format canonicalization)
+
+> Folded in 2026-07-23 (operator directive: "human plan for tradfi under tradfi consolidated plan which exists already")
+> from `candle_feature_canonical_path_divergence_2026_07_20.md` todo 3. That doc's P6-P8 canonical-**path** migration
+> (`market-data-processing-service/scripts/migrate_candle_canonical_2026_07.py --apply`) is COMPLETE and independently
+> P8-verified for all 4 asset_groups (`data_pipeline_reconciliation_candles_tradfi_2026_07_23.md`) — 0 orphans, 0
+> malformed objects sitting in `processed_candles/`. What's NOT complete: of TradFi's original 7,646,831 candle objects,
+> only 534,679 (7%) resolved to canonical; **the other ~7.1M (93%) are quarantined** in `_quarantine/` (safe,
+> un-deleted) because their filename leaf id is an unresolvable migration artifact (e.g.
+> `E1AM2_C3950_migrated_20260419T133933Z.parquet` — sample confirmed 2026-07-23 as CME options, strike-coded, under
+> `venue=CME/data_type=ohlcv_15m`). Operator guidance (2026-07-23): genuinely-tiny irrecoverable loss is acceptable; the
+> priority is getting this resolved properly, with any new code change tracked here, not done ad hoc.
+
+- [ ] [DATA] P1. **Survey raw-tick source availability across the full quarantine population** (not just one sampled
+      day). Spot-check 2026-07-23 on `day=2022-06-05`, `venue=CME`, `data_type=ohlcv_15m`: `raw_tick_data/` has **zero**
+      objects under `batch_databento` (only `venue=FX` present that day), **zero** under `batch_massive`, **zero** under
+      `batch_yahoo` — i.e. no obvious raw source for THIS sample, unlike CEFI's equivalent bundle-collision case (a
+      different, already-verified-safe fix — out of scope for this TradFi plan) where raw ticks were confirmed intact.
+      Before deciding a fix strategy, enumerate the quarantine corpus's actual `(day, venue, data_type)` cells
+      (delimiter-descent, no full walk) and cross-check each against `raw_tick_data/` presence — this determines whether
+      "regenerate via MDPS backfill" is viable at all, versus needing per-object leaf-id content-repair (fragile, see
+      the migration script's `_content_resolve_tradfi`), versus some genuinely-unrecoverable slice (Massive was the
+      likely original CME-options source and was removed 2026-07-19 pending a gated GCS purge — check `batch_massive`
+      presence specifically before it's purged).
+- [ ] [DATA] P1. **Decide + execute the fix strategy per cell-class found above.** Likely NOT one uniform answer: cells
+      with intact raw ticks → delete the quarantined candle object + targeted MDPS `--force` backfill re-derivation
+      (clean, uses the already-correct writer, no per-object parquet surgery); cells with NO raw source → either accept
+      as permanent loss (operator-acceptable per the guidance above, if genuinely small) or escalate as
+      BLOCKED-OPERATOR-DECISION if the affected volume turns out to be large/systemic (e.g. if it turns out to be the
+      whole CME-options historical slice, not an isolated day). Do not delete anything from `_quarantine/` without first
+      confirming (a) it's genuinely unrecoverable and (b) the volume, so the loss is an informed operator decision, not
+      a default.
+- [ ] [DATA] P2. **Verify + close** `candle_feature_canonical_path_divergence_2026_07_20.md` todo 3 once the above lands
+      (update that issue doc's todo 3 status referencing this plan's resolution, per the "plan references codex/issue
+      docs, doesn't duplicate" rule — don't let the two documents drift on the same fact).
 
 ## Phase C — data-status + honest-coverage (gated on Phase B)
 
