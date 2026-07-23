@@ -22,7 +22,7 @@ summary: |
   direct-writes the index every ~1 minute (log history), permanently racing the per-minute consolidator cron — so any
   manifest re-emission fix is liable to be reverted again until this double-writer race is fixed. MDPS is unaffected
   (140 legacy-only cells, byte-identical to the operator-ACCEPTED phantom class; index row count 1,958,499 unchanged).
-status: open
+status: resolved
 nature: notes
 asset_group: [sports]
 stage: [data]
@@ -54,6 +54,8 @@ depends_on: []
 locked_by:
 locked_since:
 resolved_by:
+  unified-trading-library@45a43438, instruments-service@a25cf70d, unified-api-contracts@c280e1ff,
+  unified-trading-pm@10ad5d69a
 ---
 
 # IS sports canonical index: fixtures-job direct write erased 328k rows — L6 gate regressed 28 → 3,316
@@ -422,3 +424,23 @@ session.
       The re-emission covered the ODDS class (123 cells / 2,723 objects) among the 2,848; all 123 ODDS cells verified
       `captured` in the canonical index post-consolidation. The manifest-invisible-object anomaly is closed: zero
       deletions. Repo: instruments-service.
+
+## RE-TRIAGE (2026-07-23)
+
+**Verdict: RESOLVED BY LATER WORK.** This doc's own body already carried out and verified the full fix chain
+(2026-07-15); this pass re-verified the fix is STILL live in the current codebase and the live index has not regressed
+since.
+
+- **Shrink guard confirmed live today**: `unified_trading_library/manifest_writer/_writer.py` still carries
+  `_INDEX_SHRINK_GUARD_PCT`, `ManifestIndexShrinkRefusedError`, `allow_index_shrink` (grep against the current
+  `unified-trading-library` checkout).
+- **Completeness-fraction fix confirmed live today**: `instruments_service/engine/orchestrator/process_completeness.py`
+  still defines `_catalog_completeness_fraction` (intersection-over-expected).
+- **No regression recurrence**: live IS sports canonical index (`instruments-store-sports-prd-central-element-323112`)
+  read today shows **5,523,146 rows** — up from the doc's own last-measured 5,432,782 (2026-07-15 ~17:35Z), i.e.
+  monotonic growth over 8 days, not another shrink.
+- **Residual, still genuinely open (not blocking)**: the P1 forensics todo ("what wrote pre-launch captured rows into
+  the canonical such that 2026-07-14 audits read legacy-only=28") remains unchecked in this doc and was NOT investigated
+  this pass — flagging it stays accurate; it does not affect the resolved status of the core 328k-row finding since the
+  floors-amendment made the question moot for data-loss purposes (the rows are now legitimately present via the correct
+  mechanism regardless of how the earlier illegitimate rows got in).

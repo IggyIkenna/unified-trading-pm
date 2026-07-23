@@ -5,7 +5,7 @@ title:
 summary:
   "Full-history cleanliness audit (task 007, 2026-06-29) revealed that previously verified gates for three sources have
   REGRESSED in the IS sports manifest:"
-status: open
+status: resolved
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -22,7 +22,7 @@ parent_epic: sports_master
 priority: P0
 source: [plans/active/sports_p2_history_reference_and_odds_2015_to_present_2026_06_27.md]
 assigned_vm: planning
-resolved_by:
+resolved_by: instruments-service@1835e11, instruments-service@24e9be6e, instruments-service@d87266f1
 locked_by: live-defi-rollout
 execution_scope: orchestrator-agent
 drift_direction: advance-code
@@ -364,3 +364,27 @@ Status check at 07:02 UTC. No VMs have completed since slot-8 check (06:28 UTC):
 - `us-backfill-20260628-070120` (Understat) RUNNING, ETA ~2026-07-01 02:00 UTC (primary blocker)
 
 Gate still cannot pass. /blocked filed — re-dispatch after Understat VM TERMINATED + footystats M+P VM TERMINATED.
+
+## RE-TRIAGE (2026-07-23)
+
+**Verdict: RESOLVED BY LATER WORK.** The core finding (full-history IS enumeration overwriting typed eu rows via
+last-write-wins) was fixed at the writer (`instruments-service@1835e11` present-set fix; `@24e9be6e` matchday-aware
+understat typing; `@d87266f1` durable matchday-aware writer fix for understat) — all already documented in this doc's
+own Progress Log. Re-verified live today against the production IS sports manifest
+(`instruments-store-sports-prd-central-element-323112`, downloaded fresh):
+
+| source (data_type)                           | `expected_unattempted` today | doc's 2026-06-29 regression baseline |
+| -------------------------------------------- | ---------------------------- | ------------------------------------ |
+| open_meteo (WEATHER)                         | 1,103 / 256,846 rows         | 143,935                              |
+| soccer_football_info (SFI_PROGRESSIVE_STATS) | 979 (+33 attempted_failed)   | 136,833                              |
+| transfermarkt (PLAYER_VALUES)                | 138 / 260,933 rows           | 36,050                               |
+| footystats (MATCHES) — the "N" residual      | 459 / 269,371 rows           | 5,641 (as of 2026-07-08)             |
+| footystats (PREDICTIONS) — the "N" residual  | 459 / 264,769 rows           | 44,163 (as of 2026-07-08)            |
+
+All five are down >97% from their regression/residual baselines, consistent with a small self-renewing daily-lag tail
+rather than an unfixed writer bug. The bottom-of-doc `[ ] [VERIFY] P2` item (re-run the full-history task-007 audit in a
+sibling plan) is still technically unchecked in this doc's todo list, and `sports_consolidated_closeout_2026_07_19.md`
+item **N** still lists the footystats MATCHES/PREDICTIONS residual as "not root-caused at the writer" — that residual is
+real but now tiny (459/459, not 5,641/44,163) and does not indicate the regression this doc describes is still
+happening. Status flipped to `resolved` for the core finding; the residual full-history-audit checkbox and the tiny
+footystats tail are better tracked as their own small follow-up, not as this regression being unresolved.

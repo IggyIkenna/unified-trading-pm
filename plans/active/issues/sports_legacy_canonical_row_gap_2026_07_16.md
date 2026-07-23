@@ -25,7 +25,7 @@ summary:
   union restricted to player_stats (+ a fixture-coverage review of fixture_events), explicitly excluding the
   junk/snapshot-skew classes.** Class B is NOT a delete-blocker at the ~59% junk level, but it is NOT a false alarm
   either — the cutover is NOT unblocked as-is.'
-status: open
+status: resolved
 nature: issue
 asset_group: [sports]
 stage: [data]
@@ -56,6 +56,7 @@ locked_since:
 supersedes:
 superseded_by:
 resolved_by:
+  sports_legacy_bucket_cutover_2026_07_16.md T2.4 (player_stats union, 388,825 rows / 4,015 cells, DONE 2026-07-16)
 source: [operator ruling 2026-07-16 "investigate the row gap first", cutover runbook F-2 / OR-1]
 ---
 
@@ -309,3 +310,33 @@ carry no attribution.
 the `standings` signature reproduces the audited 91,380 exactly). Hypotheses (d) and (b) both DISPROVEN by direct
 measurement; (a) and (c) carry ~59%; a genuine ~37% `player_stats` residue survives. Recommendation: **OR-1 option D
 (partial, targeted, schema-aware)**. Zero mutations; scratch data deleted.
+
+## RE-TRIAGE (2026-07-23)
+
+**Verdict: RESOLVED BY LATER WORK.** This doc's own OR-1 option D recommendation was executed the SAME DAY it was
+written, as **T2.4** of `plans/active/sports_legacy_bucket_cutover_2026_07_16.md`:
+
+- **`player_stats` union — DONE**: T2.4 recovered **388,825** genuine legacy-only `(fixture_id, player_id)` rows across
+  **4,015 cells, 0 FAIL**, dedupe-on-write, upsert-safe (re-read rows == union rows == unique keys, all 4,015 cells
+  gated). T2.4's own progress log flags that this doc's 111,827 figure was a 10-day-sample extrapolation that
+  under-counted the true population by ~3.5× — the full global-containment pass found more recoverable data than
+  estimated here, not less.
+- **`fixture_events` re-fetch review — DONE (produced a re-fetch list, not a blind row-union)**: T2.4 confirms "zero
+  5-col degenerate stubs imported" and lists 40 cells / 1,542 fixtures for schema-upgrade re-fetch
+  (`t2_4_refetch_fixture_events.json`) — exactly this doc's recommended remedy ("re-fetch from api-football into the
+  canonical 13-column schema" rather than importing the unattributable stub).
+- **`standings` / `teams` / `player_values` — NO ACTION**, per this doc's own ruling. Matches exactly.
+- **Loose end #1 (canonical `player_stats` 2× duplicate defect) — FILED**:
+  `issues/canonical_player_stats_fixture_events_quality_2026_07_16.md` (also measures the full-corpus scale: 740,725
+  duplicate rows / 26%, T2.4's dedupe fixed only the 4,015 cells it touched, ~13,964 untouched cells still carry it).
+  **Loose ends #2 (standings/teams 2026-live-under-historical-`day=` partitioning) and #3 (640-row cartesian
+  `player_values` writer) — still genuinely unfiled**, confirmed by grep (no issue doc references either signature).
+
+**Genuinely new finding, flagged per the findings-triage HARD RULE — CONFLICTS WITH ANOTHER DOC.**
+`plans/active/sports_consolidated_closeout_2026_07_19.md`'s 2026-07-23 sweep section states (item **O**):
+_"`sports_legacy_canonical_row_gap` OR-1 Option D (player_stats-only union + fixture_events re-fetch) **never
+executed**"_ — this is **factually wrong**. T2.4 completed 2026-07-16, a full week before that sweep entry was written,
+and is recorded in-body in `sports_legacy_bucket_cutover_2026_07_16.md` with a full evidence trail (per-cell gates,
+evidence files, GCS backup paths). The sweep author appears not to have cross-checked the cutover plan's own T2.4 status
+before writing item O. This doc's status is flipped to `resolved` on that basis; the closeout plan's item O should be
+corrected in its own next pass (not done here — out of this task's scope, flagging only).
