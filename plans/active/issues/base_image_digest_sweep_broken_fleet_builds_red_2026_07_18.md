@@ -152,3 +152,11 @@ a Cloud Build trigger substitution it can't see; whether it bumps on every UTL r
 `e22e40f1`→`ecbe30c`'s same-day gap. Next session: read the sweep's own run logs before re-diagnosing from scratch, and
 check whether `deployment-api` has drifted a THIRD time since — if so, Option A is confirmed not actually working
 despite landing.
+
+**One more unverified observation, worth a look, not chased down here**: the live Deploy timeline data (same
+`/ops/artifacts` session) showed **`deployment-service`, `trading-agent-service`, `batch-live-reconciliation-service`,
+and `fund-administration-service` all failing to deploy within the same ~3-minute window, 2026-07-22 ~04:08–04:10 UTC**
+— all four are in THIS doc's original blast-radius list. Could be the same digest-drift class hitting several repos at
+once (a scheduled/fleet-wide redeploy sweep landing on a shared stale pin), or could be unrelated. Not investigated —
+flagging the timestamp cluster so it isn't lost; `gcp_cloud_run_revisions` /
+`/api/artifacts/deploys?days=30&change=fail` is the fastest way to re-pull it.
