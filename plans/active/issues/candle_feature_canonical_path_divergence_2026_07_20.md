@@ -630,6 +630,17 @@ this session; doesn't affect correctness (canonical leg's own `tf_canon` compari
       confirm whether the object path already writes `timeframe=1d` (making §3A's "RAW token" docstring stale the same
       way the data_type one was) or whether this is a genuine separate defect. Non-blocking; found during the todo-6
       real-infra verification 2026-07-22, `data_pipeline_e2e_check_mdps_2026_06_27.md`.
+- [ ] 19. [SCRIPT] P2. **Fix `_copy_verify_delete()`'s retry-idempotency gap**
+      (`migrate_candle_canonical_2026_07.py:794-831`) — a destination that exists but FAILS verification
+      (`SIZE_MISMATCH_KEPT_SRC`/`CRC32C_MISMATCH_KEPT_SRC`) is never re-copied on a subsequent run (the copy is gated on
+      `dmeta is None`), so this straggler class cannot converge no matter how many times the shard is re-run — proven
+      via reproduction on CEFI's P7c apply (7/10 shards hit near-identical mismatch counts across two independent runs,
+      2026-07-23). Fix: treat a verification-FAILED existing destination the same as an absent one (overwrite +
+      re-verify), with tests proving it against a synthetic bad-destination fixture before trusting it on prod. Then run
+      ONE surgical mop-up pass against CEFI's (and TRADFI's, if it hits the same class) residual objects. Source data
+      was never at risk (`KEPT_SRC` never deletes source) — this is a script gap, not a data-safety incident. Full
+      root-cause writeup in the Progress Log entry below ("CEFI retry — another 3-shard SPOT preemption burst;
+      ROOT-CAUSED...").
 
 ### 2026-07-22 — ✅ P0 census COMPLETE, all 4 asset_groups, real GCS enumeration — ~10.9M total objects, ORPHAN=0 everywhere
 
