@@ -876,3 +876,18 @@ tarball once; always check the launcher's own freshness warning output, and if s
   staying on SPOT + idempotent resume is correct. Relaunched again (same command), all tarballs fresh, RUNNING. Will
   keep resuming through preemptions as needed; flagging the elevated frequency here for visibility, not as an action
   item.
+
+- **2026-07-23 04:54 UTC (dex-swaps preempted a FOURTH time — switched to on-demand, evidence-based exception)** — the
+  04:33 relaunch never wrote a single new `run.log` line (`gsutil stat` confirms last update `04:05:49`, i.e. BEFORE
+  that relaunch — `TARBALL_PINS.json` updated `04:32:57` confirming the launch did happen, but the VM died before the
+  Python process logged anything). Confirmed via `gcloud compute operations list --filter="targetLink~mtds-dex-swaps"`:
+  **4 real `compute.instances.preempted` system events**, with time-to-preemption STRICTLY DECREASING each cycle —
+  ~7h15m (original launch, no preemption) → resumed, ~17min (1st preemption) → resumed, ~2h22m (2nd) → resumed,
+  **~2-3min (3rd, this one)**. This is a genuine, worsening SPOT capacity shortage for `e2-standard-4` in
+  `asia-northeast1-c` right now, not "bad luck" — the pattern of decreasing survival time is the tell. Per CLAUDE.md,
+  blindly switching to on-demand is normally the anti-pattern to avoid for backfills, but the launcher provides
+  `--on-demand`/`ON_DEMAND=true` as an explicit, sanctioned escape hatch for exactly this evidenced class of situation —
+  used it for THIS relaunch only, with the reasoning documented here rather than silently normalizing the deviation.
+  Relaunched: `launch-mtds-dex-swaps-backfill-vm.sh --start 2023-01-01 --end 2026-07-22 --on-demand`, confirmed
+  `PREEMPTIBLE` column empty (standard provisioning) at creation. Expect no further preemptions; will revert future
+  backfills to SPOT-by-default (this is a one-run exception, not a standing change).
