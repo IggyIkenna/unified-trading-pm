@@ -132,15 +132,37 @@ once promoted to `main` — landing on LDR alone does not stop a cron.
 
 ## Resolution checklist
 
-- [ ] [INFRA] P2. Disable the hourly `schedule:` in `scripts/workflow-templates/staging-backmerge-to-ldr.yml` (keep
-      `push:[staging]` + `workflow_dispatch`).
-- [ ] [INFRA] P2. Disable the `repository_dispatch:` trigger in `scripts/workflow-templates/staging-lock-check.yml`,
-      keeping the `pull_request` job that posts the required check.
-- [ ] [INFRA] P2. Disable the `schedule:` in PM's `staging-to-main.yml`, `staging-conflict-ldr-main-fallback.yml`,
-      `reconcile-staging-versions.yml`; disable the `repository_dispatch:` listener in `ldr-to-staging-promote.yml`.
-- [ ] [INFRA] P2. Roll the 2 templates out to all 24 repos (`rollout-workflow-templates.sh`) and ship each repo via its
-      own `quickmerge.sh --agent --files`.
-- [ ] [VERIFY] P2. Confirm run volume drops to ~0 after the changes reach `main` (default-branch gotcha — a `schedule:`
-      fires from the default branch, so LDR alone does not stop it).
-- [ ] [DOC] P2. Add "re-enable the staging workflows" to the staging re-entry path so the reversibility guarantee is not
-      half-true.
+- [x] [INFRA] P2. Disable the hourly `schedule:` in `scripts/workflow-templates/staging-backmerge-to-ldr.yml` (keep
+      `push:[staging]` + `workflow_dispatch`). — DONE `unified-trading-pm@a7b5cc27c`; YAML + `actionlint` clean,
+      surviving triggers verified `['push', 'workflow_dispatch']`.
+- [x] [INFRA] P2. Disable the `repository_dispatch:` trigger in `scripts/workflow-templates/staging-lock-check.yml`,
+      keeping the `pull_request` job that posts the required check. — DONE `unified-trading-pm@a7b5cc27c`; surviving
+      triggers verified `['pull_request']`, and `^  pull_request:` re-confirmed present in **all 24** rendered copies on
+      `origin/live-defi-rollout` — the required-check footgun is closed by measurement, not merely by intent.
+- [x] [INFRA] P2. Disable the `schedule:` in PM's `staging-to-main.yml`, `staging-conflict-ldr-main-fallback.yml`,
+      `reconcile-staging-versions.yml`; disable the `repository_dispatch:` listener in `ldr-to-staging-promote.yml`. —
+      DONE `unified-trading-pm@a7b5cc27c`. Each retains ≥1 live trigger (`workflow_dispatch`, plus
+      `repository_dispatch: [staging-validated]` on staging-to-main) so a real staging promotion still drains.
+- [x] [INFRA] P2. Roll the 2 templates out to all 24 repos (`rollout-workflow-templates.sh`) and ship each repo via its
+      own `quickmerge.sh --agent --files`. — DONE, **24/24 verified by reading CONTENT from
+      `origin/live-defi-rollout`**, not local state and not agent self-reports. SHAs: unified-api-contracts@9079f652 ·
+      deployment-ui@9b6f8f09 · unified-trading-system-ui@d0a9ed91 · unified-trading-library@7ce9c068 ·
+      agent-orchestrator@583800f8 · alerting-service@f1e8894d · batch-live-reconciliation-service@fcf7e5f9 ·
+      client-reporting-api@a3e92279 · deployment-service@c1b8a3d5 · execution-service@b7516ba8 ·
+      features-service@b88d0955 · fund-administration-service@01631495 · greeks-service@bf73930c ·
+      ibkr-gateway-infra@9fdebfc1 · instruments-service@ea60a28e · market-data-processing-service@4b583382 ·
+      market-tick-data-service@74938624 · ml-service@eed9fc9b · strategy-service@6c7a5673 ·
+      trading-agent-service@e500abac · unified-trading-api@1f41dba4 · deployment-api@bcc125e9 (landed by a PEER slot
+      concurrently — verified, not re-shipped) · e2e-testing@e4dae527 · system-integration-tests@1f86d524.
+- [ ] [VERIFY] P2. Confirm run volume drops to ~0 once the changes reach `main` (default-branch gotcha — a `schedule:`
+      fires from the DEFAULT branch, so landing on LDR alone does NOT stop a cron). **STATE 2026-07-23: PARTIAL, and
+      deliberately NOT ticked.** PM's copy IS on `main` already (verified:
+      `git show     origin/main:.github/workflows/staging-to-main.yml` carries the marker), but the 24 fleet repos still
+      read `0` on `main`, pending their `*/15` v2-gated LDR→main promote. Measured while pending:
+      `reconcile-staging-versions` last ran 07:24Z, `features-service` staging-backmerge last ran 07:02Z — both still
+      firing, exactly as predicted until promote lands. Re-check after a promote cycle; do NOT close this on the
+      strength of the shipped diff alone.
+- [x] [DOC] P2. Add "re-enable the staging workflows" to the staging re-entry path so the reversibility guarantee is not
+      half-true. — DONE: every disabled trigger carries an inline dated note naming exactly what to uncomment and the
+      `workspace-manifest.json` flip that constitutes re-entry; § "Method — reversible by construction" is the index.
+      Mirrored in `github_actions_ci_cost_reduction_2026_07_15.md` § Phase 6.
