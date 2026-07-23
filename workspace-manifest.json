@@ -1300,8 +1300,8 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "qg_red_reason": "pytest",
         "coverage_pct": 73.08,
+        "qg_red_reason": null,
         "warn_file_count": 0,
         "large_file_count": 0
       }
