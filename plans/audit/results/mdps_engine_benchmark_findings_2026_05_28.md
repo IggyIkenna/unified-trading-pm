@@ -189,7 +189,7 @@ engines need Layer 3 to bound the leak.
 ## What this means for Layer 0
 
 Lock the decision in: **pure Polars, end-to-end**. The codex
-[`data-engine-selection.md`](../codex/06-coding-standards/data-engine-selection.md) gets a cross-reference to this
+[`data-engine-selection.md`](../../../codex/06-coding-standards/data-engine-selection.md) gets a cross-reference to this
 benchmark; the architectural plan's Phase 2 (data engine) is now evidence-backed not aspiration-backed.
 
 What "pure polars" means concretely:

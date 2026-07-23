@@ -177,7 +177,7 @@ launches and codified-discipline (alerting rules + correlated-validation) for li
 - **Related codex SSOTs**: [`vm-tarball-deployment`](./vm-tarball-deployment.md) — VM tarball mechanics + three
   guarantees + exit codes. [`launcher-script-ssot`](./launcher-script-ssot.md) — launcher SSOT + watchdog dict
   registration + QG check policy.
-  [`../04-architecture/service-infrastructure-requirements`](../04-architecture/service-infrastructure-requirements.md)
+  [`../06-coding-standards/config-reloader-pattern`](../06-coding-standards/config-reloader-pattern.md)
   — `ServiceBootstrap` (STARTED/STOPPED/FAILED) + `make_health_router` requirements every service inherits.
   [`../02-data/honest-absence-downstream-handling`](../02-data/honest-absence-downstream-handling.md) — 1440-NaN
   reference framing + reason taxonomy for `record_empty`.

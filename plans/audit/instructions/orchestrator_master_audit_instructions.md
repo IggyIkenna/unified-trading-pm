@@ -43,16 +43,13 @@ cadence + completeness matters more than any single subsystem.
 
 - [`codex/04-architecture/agent-orchestrator-overview.md`](../../../codex/04-architecture/agent-orchestrator-overview.md)
   — overall architecture
-- [`codex/05-infrastructure/agent-orchestrator-worker-topology.md`](../../../codex/05-infrastructure/agent-orchestrator-worker-topology.md)
-  — current fleet IPs + bootstrap
+- [`codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`](../../../codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md)
+  — single-VM topology + fleet bootstrap + EIP/DNS (consolidated SSOT; worker-topology/dns-cutover/multi-vm-topology
+  deleted 2026-07-18)
 - [`codex/05-infrastructure/agent-orchestrator-deploy.md`](../../../codex/05-infrastructure/agent-orchestrator-deploy.md)
   — central API VM nginx/systemd
-- [`codex/05-infrastructure/agent-orchestrator-dns-cutover.md`](../../../codex/05-infrastructure/agent-orchestrator-dns-cutover.md)
-  — EIP + DNS recipe (Phase 11)
 - [`codex/05-infrastructure/agent-orchestrator-slack-notifications.md`](../../../codex/05-infrastructure/agent-orchestrator-slack-notifications.md)
   — notification inventory
-- [`codex/12-agent-workflow/orchestrator-multi-vm-topology.md`](../../../codex/12-agent-workflow/orchestrator-multi-vm-topology.md)
-  — multi-VM design
 - [`codex/12-agent-workflow/orchestrator-safety-mechanisms.md`](../../../codex/12-agent-workflow/orchestrator-safety-mechanisms.md)
   — stuck-detect + failover + git staleness
 - [`codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md`](../../../codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md)
@@ -255,9 +252,9 @@ cadence + completeness matters more than any single subsystem.
       `rg "AMI_ID" deployment-service/scripts/vm/launch-epic-vm-aws.sh deployment-service/scripts/vm/lib/aws_ec2_launch_lib.sh`
       — expect ≥2 hits.
 
-- [ ] **(h4) Packer README + codex DNS-cutover SSOT both link to current code paths.** Read
+- [ ] **(h4) Packer README + codex single-VM SSOT both link to current code paths.** Read
       [`deployment-service/packer/agent-orchestrator/README.md`](../../../../deployment-service/packer/agent-orchestrator/README.md)
-  - [`codex/05-infrastructure/agent-orchestrator-dns-cutover.md`](../../../codex/05-infrastructure/agent-orchestrator-dns-cutover.md)
+  - [`codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`](../../../codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md)
     — no dead pointers (every file path resolves).
 
 ### I. EIP + DNS rollout state (Phase 11)
@@ -272,7 +269,7 @@ cadence + completeness matters more than any single subsystem.
 
 - [ ] **(i3) DNS records exist OR the recipe is operator-deferred.** For each fleet VM, run
       `dig +short api-<vm>.agent-orchestrator.odum-research.com`. If no record exists, verify the
-      [DNS-cutover doc](../../../codex/05-infrastructure/agent-orchestrator-dns-cutover.md) still marks it
+      [single-VM SSOT](../../../codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md) still marks it
       operator-deferred ("DNS zone access — operator-only credentials").
 
 ### J. Codex doc alignment
@@ -292,9 +289,9 @@ cadence + completeness matters more than any single subsystem.
       to the actual `def notify_*` inventory in `server/notifications/`. Counts must match (13 slack / 9 telegram as of
       2026-06-01) AND each function's S/T column must match which module actually exports it.
 
-- [ ] **(j4) Fleet topology table in worker-topology doc matches `backends.json`.** Read
-      [`codex/05-infrastructure/agent-orchestrator-worker-topology.md`](../../../codex/05-infrastructure/agent-orchestrator-worker-topology.md)
-      § "Current fleet" — each VM's IP/instance ID matches `backends.json` (or backends.json says EIP — see check i2).
+- [ ] **(j4) Fleet topology table in the single-VM SSOT matches `backends.json`.** Read
+      [`codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`](../../../codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md)
+      § "Topology" — each VM's IP/instance ID matches `backends.json` (or backends.json says EIP — see check i2).
 
 ### K. Operational hygiene (operator-laptop slot hosts + crons)
 

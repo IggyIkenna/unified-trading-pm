@@ -96,13 +96,13 @@ Driven by what these 7 docs surfaced:
 
 All 7 findings are consistent with the four codex docs landed 2026-05-28:
 
-- [`codex/06-coding-standards/service-orchestration-patterns.md`](../../codex/06-coding-standards/service-orchestration-patterns.md)
+- [`codex/06-coding-standards/service-orchestration-patterns.md`](../../../codex/06-coding-standards/service-orchestration-patterns.md)
   § 15 — referenced by findings 1, 7.
-- [`codex/06-coding-standards/cli-convention.md`](../../codex/06-coding-standards/cli-convention.md) "Instrument
+- [`codex/06-coding-standards/cli-convention.md`](../../../codex/06-coding-standards/cli-convention.md) "Instrument
   Identity" — finding 3 is the implementation-side audit of this contract.
-- [`codex/05-infrastructure/vm-tarball-deployment.md`](../../codex/05-infrastructure/vm-tarball-deployment.md) invariant
+- [`codex/05-infrastructure/vm-tarball-deployment.md`](../../../codex/05-infrastructure/vm-tarball-deployment.md) invariant
   #10 — referenced by finding 5.
-- [`codex/06-coding-standards/data-engine-selection.md`](../../codex/06-coding-standards/data-engine-selection.md) —
+- [`codex/06-coding-standards/data-engine-selection.md`](../../../codex/06-coding-standards/data-engine-selection.md) —
   finding 2 is the implementation-side audit.
 
 No codex contradictions surfaced — these are gap-fills + first audits against newly-codified rules.
