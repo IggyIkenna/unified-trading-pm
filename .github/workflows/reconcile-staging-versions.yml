@@ -25,8 +25,22 @@ name: reconcile-staging-versions
 # are excluded.
 
 on:
-  schedule:
-    - cron: "35 * * * *" # hourly, offset from the other manifest crons
+  # STOPPED 2026-07-23 (operator ruling; staging-machinery shutdown). Ran 137×/week, 100%
+  # schedule/success — and every one a provable no-op: this job derives `staging_versions` from the
+  # staging-branch pyprojects, which have been FROZEN since 2026-06-27, so its last actual write was
+  # c2d6b1e7b (2026-06-27) and the source cannot change while staging is dormant. It is self-hosted
+  # ([self-hosted, glue]) so it cost $0 — but "free" is not a reason to keep re-writing the same
+  # values hourly: it still consumes glue-runner capacity and clutters the run log.
+  #
+  # KEPT REVERSIBLE: `workflow_dispatch` stays live; UNCOMMENT the two lines below when a repo is
+  # routed back THROUGH staging. NOTE: a `schedule:` fires from the DEFAULT branch, so this only
+  # takes effect once promoted to `main`.
+  # RELATED: the key it maintains is stale-vs-`versions` for 12 repos and still outranks `versions`
+  # in quickmerge's STAGE 1.6 dep gate —
+  # plans/active/issues/stale_staging_versions_manifest_2026_07_23.md.
+  # SSOT: plans/active/issues/staging_workflow_shutdown_2026_07_23.md
+  # schedule:
+  #   - cron: "35 * * * *" # hourly, offset from the other manifest crons
   workflow_dispatch: {}
 
 permissions:

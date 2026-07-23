@@ -25,8 +25,21 @@ on:
   # SHA-pinning re-SIT + dep-order gates) promote so populated staging_commits drain to main on the
   # same cadence as ldr-to-staging-promote (*/15) / ldr-to-main-promote (*/15) / main-backmerge (*/20).
   # Empty staging_commits → idempotent skip (cheap). Concurrency group below prevents overlap.
-  schedule:
-    - cron: "0 * * * *" # hourly (Phase-3 ci-cost 2026-07-17: fleet default is LDR→main DIRECT — staging is bypassed, this path is the kept-for-reversibility fallback; was */15)
+  # STOPPED 2026-07-23 (operator ruling; staging-machinery shutdown). The drain-tick above ran
+  # hourly (241 runs/week incl. dispatches, 100% success) and idempotent-skipped every time:
+  # `staging` is frozen at 2026-06-27 with ahead_by=0 vs live-defi-rollout in every repo, so
+  # `staging_commits` is empty and there has been nothing to drain for ~4 weeks. The promote job
+  # itself is self-hosted ([self-hosted, glue], $0); its only billed part was the notify-slack
+  # reusable job (~$6/mo), which is KEEP-D by design (the alert carrier stays GitHub-hosted so it
+  # can page when the VM is down) — stopping the tick stops that too, as a side effect.
+  #
+  # KEPT REVERSIBLE: `repository_dispatch: [staging-validated]` + `workflow_dispatch` below stay
+  # LIVE, so a real SIT-validated staging promotion still drains immediately without this tick.
+  # UNCOMMENT the two lines below to restore the hourly drain when a repo is routed back THROUGH
+  # staging. NOTE: a `schedule:` fires from the DEFAULT branch — only effective once on `main`.
+  # SSOT: plans/active/issues/staging_workflow_shutdown_2026_07_23.md
+  # schedule:
+  #   - cron: "0 * * * *" # hourly (Phase-3 ci-cost 2026-07-17: fleet default is LDR→main DIRECT — staging is bypassed, this path is the kept-for-reversibility fallback; was */15)
   workflow_dispatch:
     inputs:
       reason:

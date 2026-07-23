@@ -1,7 +1,11 @@
 ---
 doc_type: issue
-title: Hyperliquid cefi data stranded on retired pipeline_mode=batch_hyperliquid_rest — RESOLVED 2026-06-17 (defi was empty derived cells, not data)
-summary: Operator R4 (2026-06-07) retired the glued-transport `hyperliquid_rest` pipeline_mode → canonical `pipeline_mode=batch_hyperliquid` (vendor only) with `transport=rest` as a separate manifest column...
+title:
+  Hyperliquid cefi data stranded on retired pipeline_mode=batch_hyperliquid_rest — RESOLVED 2026-06-17 (defi was empty
+  derived cells, not data)
+summary:
+  Operator R4 (2026-06-07) retired the glued-transport `hyperliquid_rest` pipeline_mode → canonical
+  `pipeline_mode=batch_hyperliquid` (vendor only) with `transport=rest` as a separate manifest column...
 status: resolved
 nature: process
 asset_group: [cross-cutting]
@@ -18,12 +22,12 @@ related:
 created: 2026-06-17
 parent_epic: mtds_mdps_master
 priority: P2
-source: [2026-06-17 carry_staked_basis harness work — verifying HL funding read path surfaced the stranded pipeline_mode]
+source:
+  [2026-06-17 carry_staked_basis harness work — verifying HL funding read path surfaced the stranded pipeline_mode]
 assigned_vm:
 resolved_by: >-
-  mtds/scripts/migrate_hyperliquid_rest_pipeline_mode_2026_06_17.py (2026-06-17;
-  19,361 cefi objs batch_hyperliquid_rest to batch_hyperliquid, 0 remaining / 0
-  loss); manifest re-key N/A by construction; SSOT
+  mtds/scripts/migrate_hyperliquid_rest_pipeline_mode_2026_06_17.py (2026-06-17; 19,361 cefi objs batch_hyperliquid_rest
+  to batch_hyperliquid, 0 remaining / 0 loss); manifest re-key N/A by construction; SSOT
   plans/active/pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md
 locked_by: live-defi-rollout
 execution_scope: orchestrator-agent

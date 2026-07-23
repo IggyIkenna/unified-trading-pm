@@ -126,9 +126,9 @@ roll-up.
       `enumerate_expected_universe.py` / the consolidated producer); NO UAC change. The lending data_types are already
       declared. **Operator REJECTED all other adds:** CME `mbp_10` (Databento L2 30d-free billing cutoff — not in CME
       `expected_coverage`), CME `ohlcv_24h` (not a Databento schema — VIX/Barchart), KALSHI `book_snapshot_5`, defi
-      `pool
-      swaps_ohlcv*\*`. Net: **zero UAC expected-matrix additions**; every stray resolves via     billing/MVP cutoff, enumerator over-seed carve-out, or grain roll-up. Billing SSOT:     `codex/02-data/tradfi-databento-sourcing-ssot.md`
-      § schema-allowlist.
+      `pool     swaps_ohlcv*\*`. Net: **zero UAC expected-matrix additions**; every stray resolves via billing/MVP
+      cutoff, enumerator over-seed carve-out, or grain roll-up. Billing SSOT:
+      `codex/02-data/tradfi-databento-sourcing-ssot.md` § schema-allowlist.
 - [x] [CODE] P1. Resolve the class-2 ASTER carve-out contradiction. ✅ DONE 2026-07-03 — (a) enumerator fix
       `instruments-service@3bb7acd`: `_row_data_types` applies the `VENUE_DATA_TYPE_CAPABILITIES` carve-out at seeding
       (CEFI ONLY — tradfi deliberately ungated: its capability entries are the OHLCV-window MVP declaration, and the
