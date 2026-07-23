@@ -110,3 +110,117 @@ All findings above were verified directly against source (`grep`/`sed` reads of 
 `on_tick`/`__init__` methods in `strategy_service/engine/strategies/v2/{carry_and_yield,arbitrage_structural}/*.py`),
 not inferred from names or comments. `factory.py:59-92` (`ARCHETYPE_ENGINE_REGISTRY`) confirms every archetype above has
 ONE production engine registered — there is no separate "paper" vs "live" engine class.
+
+## Second-surface sweep: `archetype_slots_defi.py` (2026-07-23, full pass)
+
+While fixing `LIQUIDATION_CAPTURE`'s entry in `archetype_slots_defi.py` above, a build agent discovered this file is a
+**second, previously-unknown catalog surface** — a separate `DEFI_SLOTS: dict[str, ArchetypeSlotMapping]` registry
+(module docstring: "the canonical v2 construction surface") feeding `V2BatchHarness` / `archetype_slot_resolver.py` /
+`STRATEGY_TYPE_TO_SLOT`, distinct from the `target_universe/` catalog builders this doc's original sweep checked. That
+agent fixed only the one `LIQUIDATION_CAPTURE` row it found broken while working the tick-loader task; nobody had
+checked the other 27 entries in this file against this doc's same mechanical technique. This section closes that gap —
+every entry in `DEFI_SLOTS` was cross-checked against its registered v2 engine's real `str_param`/`decimal_param`/
+`REQUIRED_PARAMS`/`_extract_*` reads (`strategy_service/engine/strategies/v2/factory.py`'s `ARCHETYPE_ENGINE_REGISTRY`
+resolves the engine class per archetype).
+
+### Full classification (28 entries)
+
+| Slot key                      | Archetype                   | Verdict                                        | Notes                                                                                                                                                                    |
+| ------------------------------ | ---------------------------- | ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `AAVE_LENDING`                  | `YIELD_ROTATION_LENDING`     | ✅ CLEAN                                        | `asset`/`candidate_protocols` match `YieldRotationLendingEngine`'s reads exactly; `hold_policy` is a dead key (no engine anywhere reads it — pure catalog documentation). |
+| `ETH_LENDING`                   | `YIELD_ROTATION_LENDING`     | ✅ CLEAN                                        | Same as above.                                                                                                                                                            |
+| `BTC_LENDING`                   | `YIELD_ROTATION_LENDING`     | ✅ CLEAN                                        | Same as above.                                                                                                                                                            |
+| `SOL_LENDING`                   | `YIELD_ROTATION_LENDING`     | ✅ CLEAN                                        | Same as above.                                                                                                                                                            |
+| `MULTICHAIN_LENDING`            | `YIELD_ROTATION_LENDING`     | ✅ CLEAN                                        | `cross_chain_aware` is a dead key (not read); doesn't gate execution.                                                                                                     |
+| `BASIS_TRADE`                   | `CARRY_BASIS_PERP`           | ✅ CLEAN (no required params)                   | `CarryBasisPerpEngine.on_tick` only reads `entry_funding_bps`/`exit_funding_bps`/`stake_fraction`/`min_mid_price` (all optional, defaulted) — venue/instrument come from the tick call (resolved from `slot_label` by `V2BatchHarness._derive_venue_and_instrument`, not from `initial_config`). `spot_venue`/`perp_venue`/`spot_instrument`/`perp_instrument`/`hold_policy` are catalog-side documentation only; engine fires on defaults regardless. |
+| `BTC_BASIS`                     | `CARRY_BASIS_PERP`           | ✅ CLEAN (no required params)                   | Same as `BASIS_TRADE`.                                                                                                                                                    |
+| `SOL_BASIS`                     | `CARRY_BASIS_PERP`           | ✅ CLEAN (no required params)                   | Same.                                                                                                                                                                     |
+| `L2_BASIS`                      | `CARRY_BASIS_PERP`           | ✅ CLEAN (no required params)                   | Same.                                                                                                                                                                     |
+| `ENHANCED_BASIS_MULTI_VENUE`    | `CARRY_BASIS_PERP`           | ✅ CLEAN (no required params)                   | `mode`/`venues`/`bidirectional_funding` are dead keys — same simplification as the other `CARRY_BASIS_PERP` rows.                                                        |
+| `ENHANCED_BASIS_MULTI_COIN`     | `CARRY_BASIS_PERP`           | ✅ CLEAN (no required params)                   | Same.                                                                                                                                                                     |
+| `STAKED_BASIS`                  | `CARRY_STAKED_BASIS`         | ✅ CLEAN                                        | All of `CarryStakedBasisEngine.REQUIRED_PARAMS` (`staking_protocol`/`native_asset`/`lst_asset`/`perp_venue`/`spot_venue`) + a static `perp_instrument` are present.       |
+| `SOL_STAKED_BASIS`              | `CARRY_STAKED_BASIS`         | ✅ CLEAN                                        | Same; `staking_protocol=marinade` resolves to `chain=solana` ∈ `_ALLOWED_CHAINS`.                                                                                        |
+| `carry_staked_basis` (alias)    | `CARRY_STAKED_BASIS`         | ✅ CLEAN                                        | Identical config to `STAKED_BASIS`.                                                                                                                                      |
+| `ACTIVE_LP_ETH_USDC`            | `MARKET_MAKING_CONTINUOUS`   | ✅ CLEAN (no required params)                   | `MarketMakingContinuousEngine` has no `REQUIRED_PARAMS`; `pool_fee_bps`/`range_policy`/`gas_aware_rebalance` are dead keys (the engine is a simplified generic reference-price quoter, not a concentrated-liquidity range manager — a known simplification per the module docstring, not a contract bug). Fires every tick on `half_spread_bps`/`max_inventory_abs`/`refresh_cadence_ms`/`min_mid_price` defaults. |
+| `ACTIVE_LP_SOL_USDC`            | `MARKET_MAKING_CONTINUOUS`   | ✅ CLEAN (no required params)                   | Same; `pool_type`/`range_width_pct` dead keys.                                                                                                                            |
+| `AMM_LP`                        | `MARKET_MAKING_CONTINUOUS`   | ✅ CLEAN (no required params)                   | Same; `pool_fee_bps`/`range_width_pct`/`rebalance_trigger` dead keys.                                                                                                     |
+| `SOL_CONCENTRATED_LP`           | `MARKET_MAKING_CONTINUOUS`   | ✅ CLEAN (no required params)                   | Same; `pool_type`/`range_width_pct` dead keys.                                                                                                                            |
+| `APD` (alias)                   | `ARBITRAGE_PRICE_DISPERSION` | ✅ CLEAN                                        | `dispersion_type="funding-rate-dispersion"` explicitly set + `venue_universe` populated — bypasses the `candidate_venues` constructor gate entirely (that gate only fires on the default `price-dispersion` mode).       |
+| `arbitrage_price_dispersion` (alias) | `ARBITRAGE_PRICE_DISPERSION` | ✅ CLEAN                                   | Identical config to `APD`.                                                                                                                                               |
+| `LIQUIDATION_CAPTURE`           | `LIQUIDATION_CAPTURE`        | 🟡 Already fixed this session (unchanged here) | Re-verified against `LiquidationCaptureEngine.on_tick`'s real reads (`protocol`/`chain`/`debt_asset`/`collateral_asset`/`underwater_address`/`max_health_factor`) — confirmed still correctly renamed per the row's own NOTE comment; still structurally blocked on `debt_asset`/`underwater_address` (unchanged, no new finding here). |
+| **`RECURSIVE_STAKED_BASIS`**    | `CARRY_RECURSIVE_STAKED`     | 🔴 **BROKEN → FIXED**                          | Config had `lending_venue`/`staking_venue` (not read); `CarryRecursiveStakedEngine._extract_protocols` requires `staking_protocol`/`lending_protocol`/`native_asset`/`lst_asset` — **all four absent** → `on_tick` silently returned `[]` every tick, forever, in every environment. **Fixed**: added `lending_protocol="AAVE_V3_ETHEREUM"`, `staking_protocol="ETHERFI"`, `native_asset="ETH"`, `lst_asset="weETH"` alongside the kept `lending_venue`/`staking_venue` (mirrors the exact both-key-sets-present precedent already shipped in `catalog_carry.py::build_carry_recursive_staked()`, and matches `tests/unit/engine/strategies/v2/test_recursive_staked_governance_params.py`'s `_BASE_PARAMS` fixture verbatim). |
+| **`UNHEDGED_RECURSIVE`**        | `CARRY_RECURSIVE_STAKED`     | 🔴 **BROKEN → FIXED**                          | Identical bug + identical fix as `RECURSIVE_STAKED_BASIS`.                                                                                                               |
+| **`CROSS_CHAIN_YIELD_ARB`**     | `ARBITRAGE_PRICE_DISPERSION` | 🔴 **BROKEN (crashing) → FIXED**               | `ArbitragePriceDispersionEngine.__init__` hard-requires `candidate_venues` (≥ 2 tokens) whenever `dispersion_type` is unset (defaults to `"price-dispersion"`); this row only set `chains` → **constructor RAISED `ValueError`** on every registration attempt, not a silent no-op. **Fixed**: added `candidate_venues="ethereum,arbitrum,base,optimism,polygon"` (reusing the chain tokens as the dispersion venue set) + `dispersion_bps="100"` (carrying over the catalog author's `min_yield_diff_bps` intent, since the engine reads `dispersion_bps` not `min_yield_diff_bps`); `chains`/`protocol`/`min_yield_diff_bps` kept as-is (documentation). |
+| **`LENDING_PROTOCOL_ARB`**      | `ARBITRAGE_PRICE_DISPERSION` | 🔴 **BROKEN (crashing) → FIXED**               | Same crashing gap — only `long_protocol`/`short_protocol`/`chain`/`min_spread_bps` set, no `candidate_venues`. **Fixed**: added `candidate_venues="aave,compound"` (protocol names as venue tokens) + `dispersion_bps="200"` (from `min_spread_bps`). `long_protocol`/`short_protocol` kept (read by `paper_universe_metrics.py` + `scripts/trace_all_carry_archetypes.py` — a real second consumer, confirmed by grep). |
+| **`LENDING_PROTOCOL_ARB_ETH`**  | `ARBITRAGE_PRICE_DISPERSION` | 🔴 **BROKEN (crashing) → FIXED**               | Same crashing gap; no `min_spread_bps` on this row so `dispersion_bps` left at engine default (30bps) rather than inventing a value. **Fixed**: added `candidate_venues="aave,compound"`.                               |
+| **`LENDING_PROTOCOL_ARB_ARB`**  | `ARBITRAGE_PRICE_DISPERSION` | 🔴 **BROKEN (crashing) → FIXED**               | Same crashing gap. **Fixed**: added `candidate_venues="aave,morpho"`.                                                                                                     |
+| **`ETHENA_BENCHMARK`**          | `YIELD_STAKING_SIMPLE`       | 🔴 **BROKEN → FIXED**                          | Config had only `staked_token` (not read at all — the engine's LST-identity key is `lst_asset`) + `role`; `YieldStakingSimpleEngine._resolve_context` hard-requires `staking_protocol` + `asset` — **both absent** → `on_tick` silently returned `[]` every tick, forever. **Fixed**: renamed `staked_token`→`lst_asset` (no other consumer reads `staked_token` — confirmed by grep) and added `staking_protocol="ethena"`/`asset="USDE"`, mirroring the already-clean `catalog_yield_defi.py::build_yield_staking_simple()` ethena row exactly. |
+
+**NOT PRESENT in this file** (no entry at all — confirmed by grepping every `archetype=StrategyArchetype.*` line):
+`CARRY_STAKED_BASIS_DATED`, `CARRY_BASIS_DATED`, `CARRY_BASIS_DATED_INV`, `CARRY_RECURSIVE_BORROW_LENDING_ONLY`,
+`CARRY_BASIS_PERP_INV` — the five archetypes with the deepest problems in the original sweep (4 already-fixed +
+1 orchestrator-stub) simply have no row in this second catalog surface at all, so `V2BatchHarness`/`archetype_slot_resolver`
+cannot batch-test them via a `DEFI_SLOTS` key (only via `target_universe/` specs). This mirrors the note already on
+`LIQUIDATION_CAPTURE`'s row about `V2BatchHarness` coverage gaps but wasn't independently confirmed until this pass.
+
+### Summary: 7 of 28 entries were broken, 100% fixed
+
+- **4 crashing** (`ArbitragePriceDispersionEngine.__init__` raised `ValueError` at registration): `CROSS_CHAIN_YIELD_ARB`,
+  `LENDING_PROTOCOL_ARB`, `LENDING_PROTOCOL_ARB_ETH`, `LENDING_PROTOCOL_ARB_ARB`.
+- **3 silent** (`on_tick` returned `[]` every tick, forever, no error/warning): `RECURSIVE_STAKED_BASIS`,
+  `UNHEDGED_RECURSIVE`, `ETHENA_BENCHMARK`.
+- **18 clean** (fire correctly; several carry dead/unused catalog keys that are simplifications, not contract bugs).
+- **1 already fixed this session** (`LIQUIDATION_CAPTURE`, re-verified unchanged).
+- **5 archetypes have no row in this file at all** (`CARRY_STAKED_BASIS_DATED`/`CARRY_BASIS_DATED`/`CARRY_BASIS_DATED_INV`/
+  `CARRY_RECURSIVE_BORROW_LENDING_ONLY`/`CARRY_BASIS_PERP_INV`).
+
+All 7 fixes were empirically verified: constructed the real registered engine (`get_archetype_engine_class`) from the
+PRE-fix `DEFI_SLOTS` config → confirmed the exact failure mode (4× `ValueError` at construction, 3× `on_tick()` → `[]`
+with favorable feature data); re-ran identically against the POST-fix config → all 7 now emit exactly 1 real
+`StrategyInstructionEnvelope` (a 30-leg `AtomicInstruction` for the two recursive-loop rows, a 2-leg `LEADER_HEDGE`
+`AtomicInstruction` for the four dispersion rows, a `StakeInstruction` for `ETHENA_BENCHMARK`).
+
+### New finding (out of this task's scope, flagged not silently fixed): `target_universe/catalog_trading.py` has the SAME crashing bug
+
+While reading `ArbitragePriceDispersionEngine` to fix the 4 crashing `archetype_slots_defi.py` rows above, discovered
+that `strategy_service/engine/strategies/v2/target_universe/catalog_trading.py::build_arbitrage_price_dispersion()` —
+the **other**, not-yet-checked-in-this-doc catalog surface for this same archetype (flagged as unchecked in the
+"Not yet checked" section above: `ARBITRAGE_PRICE_DISPERSION` was one of the 7 already-`_ENGINE_DRIVABLE_ARCHETYPES`
+never re-verified) — has the **identical class of bug**, and worse, at larger scale:
+
+- **"Lending protocol arb" rows** (3 chains × 2 protocol-pairs = 6 rows): config sets `chain`/`long_protocol`/
+  `short_protocol`/`min_spread_bps`/`supports_flash_loans` — no `candidate_venues`. **Crashes at construction.**
+- **"Cross-chain yield arb" rows** (3 chain-pairs = 3 rows): config sets `protocol`/`long_chain`/`short_chain`/
+  `min_yield_diff_bps` — no `candidate_venues`. **Crashes at construction.**
+- **"CEX-CEX spot/perp spread arb" rows** (3 rows): config sets `venues` (not `candidate_venues`) + `instrument`
+  (not read — the tick's own `instrument` arg is used) + `min_spread_bps` (not `dispersion_bps`). **Crashes at
+  construction** (no `candidate_venues` key at all).
+
+That's **12 additional `ARBITRAGE_PRICE_DISPERSION` catalog rows in `target_universe/`** (the catalog the LIVE/batch
+promote path actually reads via `specs_for_archetype()`) that would raise `ValueError` at registration today, in
+every environment — the same bug class as the 4 crashing rows just fixed above, just in the sibling catalog surface.
+Confirmed by direct read of `catalog_trading.py:25-90`; NOT fixed here (out of this task's explicit scope, which named
+`archetype_slots_defi.py` only) — **new follow-up todo**: apply the identical `candidate_venues` fix (protocol/chain
+names as venue tokens, matching the fix pattern above) to all 12 rows in
+`catalog_trading.py::build_arbitrage_price_dispersion()`, plus re-run the "7 already-drivable, not yet checked" sweep
+this doc's Recommendation §3 calls for (`CARRY_FUNDING_DISPERSION`, `DEFI_LP_CONCENTRATED`, `DEFI_LP_POOL`,
+`DEFI_LP_VAULT` remain fully unchecked against either catalog surface).
+
+### Evidence
+
+`strategy-service@27e3456f` — `strategy_service/engine/strategies/v2/archetype_slots_defi.py` (7 rows fixed, in-code
+NOTE comments on each explaining the drift + fix + evidence source). Verification method: constructed
+`get_archetype_engine_class(archetype)(identity=..., target_equity=..., params=dict(initial_config))` directly from
+each `DEFI_SLOTS` row (pre- and post-fix) and called `on_tick(...)` with realistic feature data — same empirical
+prove-the-bug / prove-the-fix pattern as `LIQUIDATION_CAPTURE`'s fix (`strategy-service@267a224f`). Cross-referenced
+against `tests/unit/engine/strategies/v2/test_recursive_staked_governance_params.py` (`_BASE_PARAMS` fixture confirms
+the `CARRY_RECURSIVE_STAKED` fix's key names/values independently) and `catalog_yield_defi.py::build_yield_staking_
+simple()` (confirms the `ETHENA_BENCHMARK` fix's `staking_protocol`/`asset` values independently). Quality gates:
+`bash scripts/quality-gates.sh --no-fix` — no new violations from this change (pre-existing unrelated repo-wide
+findings: a `pip-audit` CVE in a transitive `pyasn1` dependency, `Pydantic BaseModel` domain-contract violations in
+`signal_broadcast/transport.py` + `api/operational_mode_router.py` + `api/restriction_profile_router.py`, inline HF/LTV
+literals in `risk/v2/greek_model.py` + `vol_trading/analog_execution_gate.py`, and a Production Readiness Validators
+failure tied to the sibling `unified-trading-pm` checkout's in-flight uncommitted doc-link-normalization sweep — none
+touch `archetype_slots_defi.py` and none were introduced by this change). Shipped via
+`quickmerge.sh --agent --files 'strategy_service/engine/strategies/v2/archetype_slots_defi.py'`, landed on
+`live-defi-rollout` at `27e3456f88cadb2c5756716bc2af77c4a2c89aa1`.
