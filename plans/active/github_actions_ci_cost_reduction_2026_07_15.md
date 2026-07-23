@@ -1018,11 +1018,14 @@ load-bearing before flipping them** — if it is, the fix is a second uv-managed
 ### Phase 6 — Staging-branch machinery shutdown (NEW, audit 2026-07-23; operator-gated)
 
 > **Audit finding**: `staging` is dead in every repo (frozen 2026-06-27, now **600–967 commits behind LDR**; PM has no
-> `staging` branch at all; **0 open PRs targeting staging fleet-wide**) — yet ~**6,900 GitHub-hosted runs/week** still
-> fire against it, ~**$180–195/mo**. Re-entry is **MANUAL** (`workspace-manifest.json` → `promotion_model: ldr_main` +
-> `staging_dormant_mode: true`; nothing auto-writes it; a breaking change does NOT auto-route to staging — that gate
-> moved to `ldr-to-main-promote-fleet.yml`), so stopping this sets **no silent trap**. Full evidence + per-workflow
-> verdicts in the Progress Log entry below.
+> `staging` branch at all; **0 open PRs targeting staging fleet-wide**) — yet ~~**6,900 runs/week** still fire against
+> it.
+> **~~$166/mo of that is billable, and ALL of it sits in the 2 fleet templates** (see the self-hosted correction in
+> the Progress Log: PM's 4 staging drivers are ALREADY on `[self-hosted, glue]` and cost $0).
+> Re-entry is **MANUAL** (`workspace-manifest.json` → `promotion_model: ldr_main` + `staging_dormant_mode: true`;
+> nothing auto-writes it; a breaking change does NOT auto-route to staging — that gate moved to
+> `ldr-to-main-promote-fleet.yml`), so stopping this sets **no silent trap**. Full evidence + per-workflow verdicts in
+> the Progress Log entry below.
 
 - [ ] [INFRA] P2. **Stop the two fleet templates' dead-branch triggers (~6,384 runs/wk ≈ 85% of the waste).**
       `staging-backmerge-to-ldr.yml` — comment out the hourly `schedule: "10 * * * *"` (keep `push:[staging]` +
@@ -2007,9 +2010,31 @@ prove on ONE caller → only then fan out._
     8s**) = ~6,384 runs/wk; PM-side drivers — `staging-to-main` 241 (hourly cron + `staging-validated` dispatch),
     `staging-conflict-ldr-main-fallback` 142 (hourly), `reconcile-staging-versions` 137 (hourly),
     `ldr-to-staging-promote` 39 (cron already off since 2026-06-28; fires only via `tier-ab-green` dispatch). **Total
-    ~6,900 runs/wk, all GitHub-hosted `ubuntu-latest`, ~$180–195/mo** at $0.006/min. **~85% of it is the
-    1-minute-minimum tax**: the two fleet templates run 8–13 SECONDS and bill a full minute each — the same fan-out
-    pathology this plan already fixed inside PM, just never swept on the staging axis.
+    ~6,900 runs/wk.** **Nearly all the billable part is the 1-minute-minimum tax**: the two fleet templates run 8–13
+    SECONDS and bill a full minute each — the same fan-out pathology this plan already fixed inside PM, just never swept
+    on the staging axis.
+  - **CORRECTION to this entry's first published figure (same day, before any action was taken).** I initially wrote
+    "~6,900 runs/wk, ALL GitHub-hosted,
+    ~$180–195/mo". **Wrong on both counts.** Checking `runs-on` (prompted by the
+    operator asking which of the 6 could move to the planning VM) shows PM's four staging drivers — `staging-to-main`,
+    `staging-conflict-ldr-main-fallback`, `reconcile-staging-versions`, `ldr-to-staging-promote` — are **ALREADY
+    `runs-on: [self-hosted, glue]`**, migrated 2026-07-17 as part of this plan's own STEP 2 (all four are in the MOVE
+    list — I failed to check the list this plan itself wrote). Verified zero-billed via `/timing` → `billable={}` on
+    `reconcile-staging-versions` + `staging-conflict-ldr-main-fallback`. **Corrected accounting**: the two fleet
+    templates ≈ 6,384 runs/wk ≈ **$166/mo**
+    (staging-backmerge ~~$84 + staging-lock-check ~$82); `staging-to-main` carries ONE residual hosted job — the
+    `notify-slack` reusable
+    (~~$6/mo), **KEEP-D by design** (the alert carrier must
+    stay hosted so it can page when the VM is down), not waste; the other three PM drivers are **$0**.
+    So **~97% of the billable staging waste sits in the 2 workflows that CANNOT move to the VM** — migration is not the
+    lever here, stopping them is. **Lesson**: `billable={}` (absence of the `UBUNTU` key) is the honest self-hosted
+    check on this account — `/timing`'s `total_ms` reads 0 for hosted jobs too and proves nothing on its own.
+  - **Why the two fleet templates CANNOT be self-hosted (asked + answered 2026-07-23)**: all 8 runners are registered to
+    **`unified-trading-pm` only** (measured: PM `actions/runners` total=**8**; features-service / unified-api-contracts
+    / market-tick-data-service / deployment-api each total=**0**; `orgs/IggyIkenna/actions/runners` → **404** — it is a
+    personal account, so there is no org-level pool). Flipping a fleet template's `runs-on` would make all 24 rendered
+    copies queue forever on a runner that does not exist for them — precisely why this plan classifies fleet templates
+    as **KEEP-T** ("flipping hangs ~24 repos"). Re-confirmed by measurement, not re-derived.
   - **Will stopping it break anything? NO — re-entry is MANUAL.** The toggle is a git-tracked JSON field
     (`workspace-manifest.json` `promotion_model` / `staging_dormant_mode`), **nothing writes it programmatically** —
     every hit in `scripts/**` is a read. A breaking/major bump does **not** auto-route through staging: per
