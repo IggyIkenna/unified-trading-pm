@@ -164,10 +164,15 @@ is regenerated after a fix.**
       path/instrument_type shape lending data actually uses in this bucket (my guess may simply be wrong, not "no such
       data exists"). A real check needs someone to find lending's actual writer code + real path shape first, then
       re-probe.
-- [ ] 5. [REVIEW] P3. **Audit whether other already-completed backfills this session (cefi, prediction) could have the
-      same class of issue** — spot-check a sample of already-`record_captured`-ed cefi/prediction cells for a
-      day=/timestamp mismatch before treating those backfills as fully clean. Not yet done; both were sampled for
-      canonical-SHAPE correctness (confirmed clean) but NOT specifically for this timestamp-provenance check.
+- [x] 5. [REVIEW] P3. ~~**Audit whether other already-completed backfills this session (cefi, prediction) could have the
+      same class of issue**~~ — **DONE 2026-07-23, CLEAN.** Sampled real objects at their actual `uri` (not `dest_path`,
+      which is a computed display-only field for RECORD_ONLY rows — reading it 404s, since RECORD_ONLY never moves the
+      physical object) and checked each row's own timestamp column against its `day=` partition: **cefi** — 10 samples
+      across `trades`/`book_snapshot_5` (Tardis-sourced): 7/10 exact match, 3/10 off by a few _seconds_ (23:59:57-59 vs
+      the requested day) — a benign first-row-before-midnight boundary artifact, NOT the year-later fabrication
+      signature; **prediction** — 30 samples (20 KALSHI `trades`, 10 POLYMARKET `trades`/`prediction_trades`): **30/30
+      exact match**. Zero evidence of the dex_pools-class bug in either asset_group's completed backfill. Both cefi and
+      prediction's `record_captured` cells are genuinely clean.
 
 ## Lesson (do not re-learn)
 
