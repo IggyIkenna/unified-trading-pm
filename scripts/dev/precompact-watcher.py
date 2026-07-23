@@ -48,7 +48,11 @@ _SPINNER_RE = re.compile(
 _PROMPT_RE = re.compile(r"^\s*❯\s*(.*?)\s*$", re.MULTILINE)  # noqa: RUF001 — U+276F is claude's real prompt glyph
 _AUTO_COMPACT_RE = re.compile(r"(\d+)\s*%\s*until\s+auto-compact", re.IGNORECASE)
 _TOKEN_USAGE_RE = re.compile(r"[↑↓]\s*([\d.]+)\s*k\s+tokens", re.IGNORECASE)  # up/down arrows
-_DEFAULT_CONTEXT_WINDOW_K = 200
+# Operator correction 2026-07-23: the workspace's actual context tier is 1M, not
+# 200K -- 200K over-reports pct-used badly enough to trigger the nudge/forced
+# path far too often (mirrors the same fix in agent-orchestrator/server/
+# worker_liveness/__init__.py::_DEFAULT_CONTEXT_WINDOW_K).
+_DEFAULT_CONTEXT_WINDOW_K = 1000
 
 # -- ported regexes (agent-orchestrator/server/tmux_spawn.py) ----------------------
 
@@ -313,7 +317,7 @@ def _parse_args(argv: list[str]) -> Config:
         "--context-window-k",
         type=int,
         default=_DEFAULT_CONTEXT_WINDOW_K,
-        help="context window in K tokens (default 200)",
+        help="context window in K tokens (default 1000 = 1M)",
     )
     ns = parser.parse_args(argv)
     # argparse.Namespace attributes are dynamically typed (Any) in the stubs even

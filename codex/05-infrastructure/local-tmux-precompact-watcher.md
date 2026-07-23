@@ -115,13 +115,13 @@ session is untouched.
 Two tiers, cooperative-first — it never interrupts an active turn, a non-empty input box, or a running child process (a
 build, a QG, a background command) under the pane's shell:
 
-| Flag                    | Default | Meaning                                                                  |
-| ----------------------- | ------- | ------------------------------------------------------------------------ |
-| `--guidance-pct`        | 50      | Context% at which it submits a one-time reminder to run `/pre-compact`   |
-| `--force-after-seconds` | 2700    | Seconds an unacked reminder waits before it starts force-injecting       |
-| `--idle-observations`   | 3       | Consecutive idle polls required before it will force-inject anything     |
-| `--poll-interval`       | 15      | Seconds between checks                                                   |
-| `--context-window-k`    | 200     | Context window size (K tokens) used for the token-usage-readout fallback |
+| Flag                    | Default | Meaning                                                                           |
+| ----------------------- | ------- | --------------------------------------------------------------------------------- |
+| `--guidance-pct`        | 50      | Context% at which it submits a one-time reminder to run `/pre-compact`            |
+| `--force-after-seconds` | 2700    | Seconds an unacked reminder waits before it starts force-injecting                |
+| `--idle-observations`   | 3       | Consecutive idle polls required before it will force-inject anything              |
+| `--poll-interval`       | 15      | Seconds between checks                                                            |
+| `--context-window-k`    | 1000    | Context window size (K tokens, i.e. 1M) used for the token-usage-readout fallback |
 
 Tier 1 (nudge): once, when context% crosses `--guidance-pct` and the pane is idle, it submits a plain reminder message
 asking Claude to run `/pre-compact` at its next natural checkpoint.

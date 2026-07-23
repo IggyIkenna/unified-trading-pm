@@ -1321,3 +1321,22 @@ object needed a real copy/content-repair). Same proven SHA pins, `WORKERS=16`, `
 `deployment-service@a32360a`'s native shutdown-script fix is live in this same clone — any preemption should be
 individually detectable + relaunchable the same way this session has already handled every prior storm). **STATUS: retry
 IN FLIGHT, NOT YET VERIFIED.**
+
+## Progress Log — 2026-07-23 (P7d-retry: THIRD severe SPOT storm this session — 36/50 preempted within ~1min of boot; recovering on-demand)
+
+The liveness-aware watchdog fired immediately: **36 of 50 retry shards preempted within under a minute of boot**
+(confirmed via `gcloud compute operations list` on 2 sampled VMs — both `compute.instances.preempted` at 48-55s after
+`insert`). This is now the **third** severe `asia-northeast1-c` SPOT contention event measured this session (CEFI: 1/10
+then 3/10; TRADFI run 1: 18/20; TRADFI retry: 36/50) — no longer plausibly a one-off fluke; this zone appears to be
+under sustained heavy external SPOT demand across this entire multi-hour window, independent of anything this migration
+itself is doing. **Confirms my own `deployment-service@a32360a` fix is working as designed**: these VMs now show EMPTY
+`gcloud compute instances describe` status (fully deleted) rather than `TERMINATED` (merely stopped) — the
+`--instance-termination-action=DELETE` change means a preempted VM's PREEMPTED-blob-writing shutdown-script still had
+time to fire (native mechanism, available from t=0) before full teardown; the watchdog correctly detected "gone" via an
+empty status rather than needing a `TERMINATED` string match.
+
+Recovered the exact 36 dead shard-indices (0,2,4,5,6,8,10,11,13,14,15,16,17,18,19,23,24,25,26,27,28,29,31,32,34,35,
+37,39,40,43,44,45,46,47,48,49 — cross-referenced from the launch log's shard→VM mapping against the watchdog's dead
+list, zero unmapped) with `ON_DEMAND=true`, same pattern as the original run's recovery. **STATUS: recovery IN FLIGHT.**
+The 14 shards that survived the storm should be checked for their own straggler counts once the recovery batch also
+completes — do not assume the surviving 14 converged to 0 just because they're not in the dead list.

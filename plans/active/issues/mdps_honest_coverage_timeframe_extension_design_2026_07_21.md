@@ -24,7 +24,7 @@ summary: >-
   honest-coverage numerator for any window spanning the 2026-07-21 data_type-axis cutover?). NOTHING HAS BEEN
   IMPLEMENTED. This doc exists so the verified design + the corroborated critical finding are not lost and don't need to
   be re-derived from scratch by whoever picks this up next.
-status: open
+status: resolved
 nature: design
 asset_group: [cefi, defi, tradfi]
 stage: [data]
@@ -40,11 +40,12 @@ tags:
     adversarial-review,
     service-threading-bug,
     corroborated-finding,
-    operator-decision-needed,
+    duplicate-finding,
   ]
 related:
   - mdps_generic_classifier_processed_regression_2026_07_21.md
   - plans/active/data_pipeline_check_mdps_features_2026_07_20.md
+  - plans/active/mtds_data_status_page_parity_2026_07_21.md
 created: "2026-07-21"
 parent_epic: defi_master
 assigned_vm: NA
@@ -56,7 +57,11 @@ estimate_calibrated_ai_days: 0.9
 assigned_role: backend_engineer
 drift_direction: advance-code
 depends_on: []
-resolved_by:
+resolved_by: >-
+  ALREADY SHIPPED under `plans/active/mtds_data_status_page_parity_2026_07_21.md` (same design, same corroborated
+  critical bug, same 2 minor bugs, same 2 open questions — all independently found + fixed + resolved there):
+  unified-api-contracts@a7798b93 + deployment-api@60a23ae (Tier-3 + service-threading fix), deployment-api@43f067e
+  (Tier-2 timeframe-awareness follow-up). See Resolution section below.
 locked_by:
 source: [self-investigation-2026-07-21, adversarial-review-x3-2026-07-21, promoted-from-scratchpad-2026-07-23]
 ---
@@ -234,3 +239,48 @@ directly affects a data-correctness number.
 
 **Recommended next item**: re-verify citations against the current tree, then fix the critical `service`-threading bug
 (cheapest, unblocks the rest), then bring Open Questions 1 and 2 to the operator before writing any new production code.
+
+# Resolution (2026-07-23) — the whole design was already implemented, ship-blocking bug and all
+
+While starting on the "recommended next item" above, reading `mtds.py`/`instrument_coverage.py`/
+`processed_data_dependencies.py` against the current tree showed the design is not merely re-derivable — **it has
+already been implemented, reviewed, and shipped**, under `plans/active/mtds_data_status_page_parity_2026_07_21.md`'s
+"MDPS parity" todos (the same parent effort this design's own provenance note names as where it was produced alongside).
+This doc's "rescue" from scratchpad on 2026-07-23 promoted a design that a different concurrent session had already
+carried all the way to production in the intervening two days — a genuine parallel-discovery collision, not wasted
+original work (the design + reviews were real and correct at the time they were written).
+
+Point-by-point, everything this doc flagged as blocking is resolved in the shipped work:
+
+- **The corroborated critical `service`-threading bug**: fixed exactly as this doc's own "Fix" section prescribed —
+  `service` now threads `manifest.py` → `_apply_mtds_honest_coverage` → `mtds_honest_coverage_for_venue` →
+  `get_expected_data_types_for_venue`. Shipped `unified-api-contracts@a7798b93` + `deployment-api@60a23ae`, verified by
+  an independent second agent re-reading the diff and re-running both test suites from scratch (977 deployment-api
+  - 44 UAC registry tests, zero regressions).
+- **The 2 non-blocking implementation bugs** (pandas index-misalignment; legacy-row-fallback gap): both fixed in the
+  same ship — `tf_str` now derived from the same masked slice, and the legacy fallback gained both a `len(timeframes)`
+  multiplier and an explicit `denominator_timeframe_aware: false` provenance marker.
+- **Open Question 1** (historical pre-cutover row visibility): resolved by direct production-data investigation, not a
+  coin-flip default — the live manifest has exactly 6 total MDPS rows, all a single 2026-04-16 smoke-test write, so
+  there is no real historical volume to backfill or reverse-map. Currently MOOT, with an explicit re-open trigger (real
+  MDPS production volume appearing in the manifest) rather than closed as permanently settled.
+- **Open Question 2** (per-timeframe start-date divergence): same investigation — sample size of 1 real row is too small
+  to prove or disprove anything; the shipped flat-uniform `MDPS_CANONICAL_TIMEFRAMES` default stands, unconfirmed but
+  unfalsified, with the same re-open trigger.
+- **Tier-2 (venue-level) timeframe-awareness**, explicitly out of this design's original scope: also since shipped as a
+  follow-up, `deployment-api@43f067e`.
+- **The sibling classifier regression** (this doc's own fact #7): confirmed independently resolved too — see the
+  `Resolution` section on `mdps_generic_classifier_processed_regression_2026_07_21.md`.
+
+**What is NOT a duplicate and is genuinely new, separate work**: the same parent plan's final `[UI]` P1 todo found that
+the backend `scope` param this work (and its sibling MVP-wiring todos) shipped had **zero UI-reachable consumer** —
+neither `getDataStatusManifest` nor `getDataStatusTurbo` in `deployment-ui/src/api/client.ts` ever sent a `scope` param,
+and there was no page-level toggle on the shared coverage grid. That gap has now been closed (2026-07-23): both client
+functions thread an optional `scope: CoverageScope` param, and `DataStatusTab.tsx` renders a page-level "Coverage Scope"
+toggle on all three services (instruments-service / market-tick-data-service / market-data-processing-service),
+live-verified via dev server + Playwright MCP, regression-locked in
+`deployment-ui/tests/smoke/mtds_mdps_data_status_parity_2026_07_22.spec.ts`. See
+`mtds_data_status_page_parity_2026_07_21.md`'s Progress Log for the shipped SHA.
+
+Nothing further to do on this design doc. Whoever next touches MDPS timeframe-aware honest coverage should start from
+the shipped code + `mtds_data_status_page_parity_2026_07_21.md`'s Progress Log, not from this design.
