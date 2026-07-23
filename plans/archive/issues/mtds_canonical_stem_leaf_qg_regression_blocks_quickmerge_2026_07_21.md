@@ -27,7 +27,11 @@ stage: [data]
 repos: [market-tick-data-service, unified-api-contracts]
 scope: [engineer]
 tags: [quality-gates, sentinel, quickmerge-blocked, canonical-stem, leaf-byte-match, regression, defi]
-related: [defi_fold_manifest_registration_pending_2026_07_21.md, defi_consolidated_closeout_2026_07_18.md]
+related:
+  [
+    /plans/archive/issues/defi_fold_manifest_registration_pending_2026_07_21.md,
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
+  ]
 created: "2026-07-21"
 parent_epic: defi_master
 priority: P1

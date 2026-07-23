@@ -124,4 +124,4 @@ See [`cross_cutting_may_23_2026.epic.md`](./cross_cutting_may_23_2026.epic.md). 
 
 - [`master_to_live_defi_2026_05_23`](../active/master_to_live_defi_2026_05_23.plan.md) — May-23 cutover master
 - CLAUDE.md "Prediction market lifecycle timing" + "Cluster validation MANDATORY" sections
-- [`codex/02-data/availability-manifest-and-data-status.md`](../../codex/02-data/availability-manifest-and-data-status.md)
+- [`/codex/02-data/availability-manifest-and-data-status.md`](/codex/02-data/availability-manifest-and-data-status.md)

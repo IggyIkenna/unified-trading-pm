@@ -45,9 +45,9 @@ tags:
 related:
   [
     ../data_pipeline_alerts_batch_remediation_2026_07_15.md,
-    tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md,
-    ../../../codex/02-data/availability-manifest-and-data-status.md,
-    ../../../codex/02-data/honest-absence-downstream-handling.md,
+    /plans/active/issues/tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/02-data/honest-absence-downstream-handling.md,
   ]
 created: 2026-07-15
 parent_epic: tradfi_master

@@ -17,7 +17,7 @@ stage: [meta]
 repos: [instruments-service]
 scope: [engineer, admin]
 tags: [data-correctness, manifest, instrument_type, migration, tradfi, availability-index]
-related: [data_status_page_ux_and_canonicalisation_2026_07_16.md]
+related: [/plans/active/data_status_page_ux_and_canonicalisation_2026_07_16.md]
 created: 2026-07-17
 last_updated: 2026-07-17
 parent_epic: instruments_master

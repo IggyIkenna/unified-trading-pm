@@ -11,7 +11,7 @@ summary: >-
   (`test_codex_markdown_has_section_for_every_registered_archetype`,
   `test_codex_markdown_family_groupings_match_uac_family_enum`,
   `test_codex_markdown_archetype_appears_under_correct_family_section`) resolve the PM's
-  `codex/09-strategy/architecture-v2/category-instrument-coverage.md` via `_find_codex_markdown()`, which checks
+  `/codex/09-strategy/architecture-v2/category-instrument-coverage.md` via `_find_codex_markdown()`, which checks
   `$UNIFIED_TRADING_WORKSPACE_ROOT` FIRST before falling back to an ancestor-directory walk from `__file__`. On this dev
   box `UNIFIED_TRADING_WORKSPACE_ROOT=/Users/ikennaigboaka/Code/unified-trading-system-repos` — the
   pre-per-slot-worktree ROOT checkout, not any `.tabs/N/` slot clone — and that root `unified-trading-pm` checkout is
@@ -31,7 +31,7 @@ stage: [meta]
 repos: [unified-api-contracts, unified-trading-pm]
 scope: [engineer, admin]
 tags: [tooling, ci-blind-spot, stale-checkout, workspace-root, archetype, codex-parity, false-failure]
-related: [sports_shard_enumeration_cartesian_blowup_2026_07_20.md]
+related: [/plans/active/issues/sports_shard_enumeration_cartesian_blowup_2026_07_20.md]
 created: 2026-07-22
 parent_epic: infrastructure_master
 assigned_vm: NA
@@ -61,8 +61,8 @@ source:
 `unified-api-contracts/tests/internal/unit/test_archetype_capability_manifest_parity.py::_find_codex_markdown()` checks
 `os.environ["UNIFIED_TRADING_WORKSPACE_ROOT"]` **before** falling back to an ancestor-walk from `__file__`. On this dev
 box that env var is set to the workspace root (`/Users/ikennaigboaka/Code/unified-trading-system-repos`), which predates
-the per-slot-worktree model (`codex/05-infrastructure/per-tab-worktrees.md`) and is not kept in sync with any `.tabs/N/`
-slot clone. Its `unified-trading-pm` copy is pinned at `017940b1` (2026-07-06); the live slot checkouts and
+the per-slot-worktree model (`/codex/05-infrastructure/per-tab-worktrees.md`) and is not kept in sync with any
+`.tabs/N/` slot clone. Its `unified-trading-pm` copy is pinned at `017940b1` (2026-07-06); the live slot checkouts and
 `origin/live-defi-rollout` are at `4780c40f` (2026-07-22, 16 days / ~30 archetypes ahead).
 
 ## Measured effect

@@ -28,8 +28,8 @@ tags: [sports, odds_api, intentional-scope, league-registry, smoke-test, data-co
 related:
   [
     ../data_pipeline_e2e_check_2026_07_10.md,
-    sports_league_id_out_of_universe_overcapture_2026_06_24.md,
-    mtds_is_full_adapter_smoketest_findings_2026_07_07.md,
+    /plans/archive/issues/sports_league_id_out_of_universe_overcapture_2026_06_24.md,
+    /plans/active/issues/mtds_is_full_adapter_smoketest_findings_2026_07_07.md,
   ]
 created: 2026-07-12
 parent_epic: sports_master

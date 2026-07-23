@@ -11,7 +11,7 @@ upstream_sha: 0c2e32a66e3b82fb3685678439d529e09b8ad762
 # C11 — Contract Audit: agent-orchestrator → all services
 
 > **Scope note**: agent-orchestrator is operator tooling, NOT a trading service. The codex explicitly documents this in
-> `codex/04-architecture/agent-orchestrator-overview.md` § "Difference vs trading services". Standard trading-service
+> `/codex/04-architecture/agent-orchestrator-overview.md` § "Difference vs trading services". Standard trading-service
 > contract patterns (Pattern 2–7 as written in the B1 template) do NOT apply to the orchestrator's own handlers.
 > However, several structural concerns specific to the orchestrator→services relationship exist and are audited here via
 > adapted patterns.
@@ -181,8 +181,8 @@ checks. The `_readiness_check` callback probes SQLite + backlog. Both per QG STE
 
 ServiceBootstrap exemption is correctly documented in:
 
-- `codex/04-architecture/agent-orchestrator-overview.md` § "Service bootstrap exemptions"
-- `codex/04-architecture/agent-orchestrator-overview.md` table § "Difference vs trading services"
+- `/codex/04-architecture/agent-orchestrator-overview.md` § "Service bootstrap exemptions"
+- `/codex/04-architecture/agent-orchestrator-overview.md` table § "Difference vs trading services"
 
 ---
 

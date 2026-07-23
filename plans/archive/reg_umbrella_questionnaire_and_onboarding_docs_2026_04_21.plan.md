@@ -10,7 +10,7 @@ repos: [unified-api-contracts, unified-trading-pm, unified-trading-system-ui]
 scope: [engineer, admin]
 tags: []
 related: []
-created: '2026-04-21'
+created: "2026-04-21"
 ---
 
 ---
@@ -362,7 +362,7 @@ todos:
 # ──────────────────────────────────────────────────────────────────────
 
 - id: p5-codex-questionnaire-flow content: |
-  - [x] [AGENT] P1. Create `codex/08-workflows/prospect-questionnaire-flow.md` documenting: _ The 13-axis questionnaire
+  - [x] [AGENT] P1. Create `/codex/08-workflows/prospect-questionnaire-flow.md` documenting: _ The 13-axis questionnaire
         (6 base + 7 reg-umbrella conditional) and its SSOT position in UAC. _ The access-code gate + session-sharing
         with /briefings. _ The admin playback loop: prospect submits → Firestore writes → /admin/organizations/{id} +
         /admin/ questionnaires surfaces show the response. _ The Phase 4 onboarding-doc flow: upload to GCS (prod) /

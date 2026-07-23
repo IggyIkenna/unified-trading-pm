@@ -77,4 +77,4 @@ document clearly that "green" is a weaker signal a waiter must still re-verify b
 
 ## Codex SSOTs
 
-`codex/12-agent-workflow/async-wait-and-poll-discipline.md`.
+`/codex/12-agent-workflow/async-wait-and-poll-discipline.md`.

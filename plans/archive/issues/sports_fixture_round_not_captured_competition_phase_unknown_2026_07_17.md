@@ -43,7 +43,7 @@ tags:
     regression,
     api-football,
   ]
-related: [data_status_page_ux_and_canonicalisation_2026_07_16.md]
+related: [/plans/active/data_status_page_ux_and_canonicalisation_2026_07_16.md]
 created: 2026-07-17
 source:
   - Operator questions 2026-07-17 ("why isnt round populating how are we gonna get that retrospectively for each fixture
@@ -176,7 +176,7 @@ So with `round=""`:
 - `competition_phase` = **UNKNOWN** for ~16.5k fixtures (~136k after the full-history rollup)
 - `is_promotion_relegation` = **`False`** — a **wrong value, not an honest null**. Relegation six-pointers and dead
   rubbers are currently indistinguishable from mid-table regular-season games in ML training data. This violates the
-  never-silent-placeholders rule (`codex/02-data/honest-absence-downstream-handling.md`): an absent value is being
+  never-silent-placeholders rule (`/codex/02-data/honest-absence-downstream-handling.md`): an absent value is being
   rendered as a confident `False`.
 
 ## Evidence — it is a REGRESSION, not a structural impossibility
@@ -420,7 +420,7 @@ scoped feature work belonging to that track, not a regression of the round-captu
 - [x] Downstream `competition_phase` / `is_promotion_relegation` verification — DONE (§ 3): `competition_phase` sane;
       `is_promotion_relegation` still flat but reassigned to Track F P2 (separate root cause, separate owner).
 - [x] Backfill-to-2019 scope — MOOT: the 2020-06-06 data floor wipe (2026-07-21,
-      `codex/02-data/sports-2020-06-data-floor.md`) deleted everything before the floor; nothing before 2020-06-06
+      `/codex/02-data/sports-2020-06-data-floor.md`) deleted everything before the floor; nothing before 2020-06-06
       exists to backfill.
 - No code shipped this session — both real defects in this issue's scope (`round`, `status_long`) were already fixed and
   are confirmed live; the only remaining downstream gap (`is_promotion_relegation`) belongs to a different,

@@ -20,7 +20,7 @@ stage: [meta]
 repos: [unified-trading-library, unified-trading-pm]
 scope: [engineer, admin]
 tags: [ci-cd, provenance, quickmerge, ldr-main, promotion, fleet-discipline]
-related: [sit_validated_tree_treadmill_blocks_breaking_promotes_2026_07_20.md]
+related: [/plans/active/issues/sit_validated_tree_treadmill_blocks_breaking_promotes_2026_07_20.md]
 created: 2026-07-21
 parent_epic: infrastructure_master
 assigned_vm: NA

@@ -29,8 +29,8 @@ scope: [engineer, admin]
 tags: [cefi, tardis, data-correctness, silent-data-loss, gcs, 429, honest-coverage, big-finding, backfill]
 related:
   [
-    cefi_tardis_throughput_collapse_350x_2026_07_17.md,
-    tardis_impossible_combinations_recorded_as_attempted_failed_2026_07_17.md,
+    /plans/archive/issues/cefi_tardis_throughput_collapse_350x_2026_07_17.md,
+    /plans/active/issues/tardis_impossible_combinations_recorded_as_attempted_failed_2026_07_17.md,
   ]
 created: 2026-07-17
 source:

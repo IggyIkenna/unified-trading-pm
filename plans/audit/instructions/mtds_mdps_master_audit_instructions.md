@@ -37,14 +37,14 @@ assigned_vm: vm-ml
 last_updated: 2026-06-03
 codex_ssots_to_check_drift_against:
   [
-    codex/04-architecture/instruments-service-as-ssot-for-mtds.md,
-    codex/02-data/availability-manifest-and-data-status.md,
-    codex/05-infrastructure/gcs-object-operations.md,
-    codex/06-coding-standards/service-orchestration-patterns.md,
-    codex/06-coding-standards/cli-convention.md,
-    codex/05-infrastructure/vm-tarball-deployment.md,
-    codex/06-coding-standards/data-engine-selection.md,
-    codex/06-coding-standards/read-time-filter-pushdown.md,
+    /codex/04-architecture/instruments-service-as-ssot-for-mtds.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/05-infrastructure/gcs-object-operations.md,
+    /codex/06-coding-standards/service-orchestration-patterns.md,
+    /codex/06-coding-standards/cli-convention.md,
+    /codex/05-infrastructure/vm-tarball-deployment.md,
+    /codex/06-coding-standards/data-engine-selection.md,
+    /codex/06-coding-standards/read-time-filter-pushdown.md,
   ]
 ---
 
@@ -158,8 +158,8 @@ absence taxonomy, batch=live adapter parity, single-engine discipline, per-shard
 - [ ] (k) **Per-venue acquisition-METHOD registry + verification (codified 2026-06-03)**: items (a)–(j) prove a cell is
       _recorded_ honestly; this item proves the _fetch itself_ is the right + complete method for every live venue ×
       data_type — the "which API / method per venue" dimension. Expected-method SSOT =
-      `codex/02-data/mtds-data-source-coverage-matrix.md` (the `adapter (live / batch)` column) +
-      `codex/02-data/mtds-download-api.md` + `codex/02-data/defi-venue-protocol-catalogue.md`. For **every** venue in
+      `/codex/02-data/mtds-data-source-coverage-matrix.md` (the `adapter (live / batch)` column) +
+      `/codex/02-data/mtds-download-api.md` + `/codex/02-data/defi-venue-protocol-catalogue.md`. For **every** venue in
       the coverage matrix, read the adapter/handler and verify, **per data_type** (classify each mismatch
       `aligned`/`codex-stale`/`code-bug` per the drift-register method): (1) **endpoint match** — the actual REST
       endpoint / RPC method / subgraph query / WebSocket channel called matches the documented source (Tardis bulk CSV,
@@ -374,7 +374,7 @@ Result file at `plans/audit/results/mtds_mdps_master_audit_YYYY_MM_DD.md`. Same 
 
 - [ ] (CF-19) **candle edge-timestamp convention is a STANDING check** — per external OHLCV/candle source × timeframe,
       confirm the STORED timestamp edge (left=open / right=close) matches
-      `codex/02-data/bar-boundary-candle-edge-convention.md` AND an independent reference bar; assert ONE normalization
+      `/codex/02-data/bar-boundary-candle-edge-convention.md` AND an independent reference bar; assert ONE normalization
       point and that batch == live agree on the edge. This is the steady-state CF-19 alias of the `(edge-1)…(edge-4)`
       leakage checks above — re-running it catches a NEW adapter reintroducing the open-edge ingestion bug (a uniform
       one-interval left-shift stays on-grid and is invisible to the MDPS alignment gate). Green: every external candle
@@ -406,7 +406,7 @@ Result file at `plans/audit/results/mtds_mdps_master_audit_YYYY_MM_DD.md`. Same 
       then read each writer callsite. Data-state: a cell whose true fetcher ≠ priority[0] (VX 15m = yahoo/barchart, not
       massive) must stamp the real fetcher. **Trap: `source` present + in-closed-set passes item (j)/CF-4 while being
       the WRONG vendor (the VX→`batch_massive` bug).** Composes with item (j); SSOT:
-      `codex/02-data/tradfi-databento-sourcing-ssot.md`.
+      `/codex/02-data/tradfi-databento-sourcing-ssot.md`.
 
 - [ ] (CF-27) **backfill coverage vs TARGET UNIVERSE across the WHOLE timeframe** — per
       `(asset_group, data_type, venue)` compute
@@ -460,7 +460,8 @@ obligations:
   post-MDPS@dcd7416 the residue is still 15.7 GB. Whatever the hook doesn't reach is a separate finding (likely the
   Polars/PyArrow arena retention from Concern D).
 
-Codex: composes with `codex/06-coding-standards/service-orchestration-patterns.md` § 15 (HARD RULE codified 2026-05-28).
+Codex: composes with `/codex/06-coding-standards/service-orchestration-patterns.md` § 15 (HARD RULE codified
+2026-05-28).
 
 ### Concern B — CLI granularity: a single canonical instrument_id should be sufficient to scope one cell
 
@@ -572,7 +573,7 @@ findings surface.**
 
 - [x] ✅ (E3) **Canonical instrument_id parser**: replace the substring matcher in
       `orchestration_scanner.py:_collect_matching_parquet_blobs` with the structured parser specified in
-      `codex/06-coding-standards/cli-convention.md` § "Instrument Identity and CLI Granularity". Add regression tests
+      `/codex/06-coding-standards/cli-convention.md` § "Instrument Identity and CLI Granularity". Add regression tests
       that pin canonical-form behaviour. Findings doc: `mdps_long_running_cli_granularity_2026_05_28.md`. — MDPS@9ea08c8
       2026-05-28 — added `parse_canonical_instrument_id()` + `blob_matches_canonical_instrument_id()` +
       `blob_matches_any_instrument_id()` in `path_parsing.py`; wired into `_collect_matching_parquet_blobs` (formerly

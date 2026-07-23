@@ -70,7 +70,7 @@ deferred MTDS work below).
 | UAC                 | `registry/capability_declarations/_defi_chain_data.py` | 539  | `SOLANA_DEFI_PROTOCOLS`            | ADD mango/zeta/flash entries |
 | UAC                 | `registry/capability_declarations/_defi_chain_data.py` | 41   | `SOLANA_PROTOCOL_DEPLOY_DATES`     | ADD mango/zeta/flash entries |
 | instruments-service | `scripts/backfill_drift_funding_2026_05_13.py`         | —    | backfill script                    | NEW — this plan              |
-| unified-trading-pm  | `codex/04-architecture/solana-defi-coverage.md`        | —    | codex SSOT                         | NEW — this plan Phase 6      |
+| unified-trading-pm  | `/codex/04-architecture/solana-defi-coverage.md`       | —    | codex SSOT                         | NEW — this plan Phase 6      |
 
 ## Phases
 

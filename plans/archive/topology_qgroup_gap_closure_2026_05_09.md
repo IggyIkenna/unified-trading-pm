@@ -15,17 +15,25 @@ type: sub-plan
 deadline: 2026-05-23
 author: ikenna
 parent_question_doc: plans/archive/topology_features_strategy_ml_execution_2026_05_08.plan.md
-consumes: [plans/epics/strategy_and_dart_master_2026_05_07.md, plans/epics/ml_and_features_master_2026_05_07.md, plans/active/master_to_live_defi_2026_05_23.md, plans/active/defi_master_2026_05_07.md]
+consumes:
+  [
+    plans/epics/strategy_and_dart_master_2026_05_07.md,
+    plans/epics/ml_and_features_master_2026_05_07.md,
+    plans/active/master_to_live_defi_2026_05_23.md,
+    plans/active/defi_master_2026_05_07.md,
+  ]
 locked_by: live-defi-rollout
 locked_since: 2026-05-09
 estimate_class: research
 estimate_baseline_ai_days: 8
 estimate_calibrated_ai_days: 9.6
-estimate_calibration_note: 'No explicit AI-day estimates found in plan body during 2026-05-11 sweep; class inferred from filename (research, multiplier 1.2×).
+estimate_calibration_note: "No explicit AI-day estimates found in plan body during 2026-05-11 sweep; class inferred from
+  filename (research, multiplier 1.2×).
 
-  Owner agent: fill baseline + multiply × 1.2 per codex/08-workflows/estimation-calibration.md. Refine class if dominant work-class differs.
+  Owner agent: fill baseline + multiply × 1.2 per /codex/08-workflows/estimation-calibration.md. Refine class if
+  dominant work-class differs.
 
-  '
+  "
 ---
 
 > **ARCHIVED 2026-05-16 — 100% done per inventory (slot-8 SWEEP-16 mechanical archive sweep)**
@@ -86,7 +94,7 @@ estimate_calibration_note: 'No explicit AI-day estimates found in plan body duri
       carry_staked_basis + ARBITRAGE_PRICE_DISPERSION (funding-rate-dispersion; renamed from legacy
       leveraged_funding_arb per Stream B canonicalisation 2026-05-07); CeFi VM hosts hedge legs). Multi-tenancy:
       dedicated ensemble per archetype within a VM, sharing position-balance + risk via VM-local IPC; no cross-archetype
-      mixing of strategy state. Done = `codex/04-architecture/strategy-ensemble-topology.md` lands + launcher-script
+      mixing of strategy state. Done = `/codex/04-architecture/strategy-ensemble-topology.md` lands + launcher-script
       registry in `deployment-service/scripts/vm/` updated + `strategy_and_dart_master_2026_05_07.md` Phase 1.9 has
       matching `- [ ]` todo flipped `- [x]`. **SHIPPED PM@369d8424 2026-05-14**
 - [x] [AGENT] P0. **GAP-2 + GAP-3**: Pin process-vs-in-proc shape — 4 services (strategy + position-balance + risk +
@@ -101,7 +109,7 @@ estimate_calibration_note: 'No explicit AI-day estimates found in plan body duri
       consumer + integration test + `strategy_and_dart_master` Phase 1.9 todo `- [x]`. **SHIPPED UAC@25d9a70 +
       strategy-service@c87f9c1 2026-05-14**
 - [x] [AGENT] P0. **GAP-12**: Enumerate matching-engine assumption surface in
-      `codex/04-architecture/matching-engine-assumptions.md` — per-matcher slippage model + commission schedule +
+      `/codex/04-architecture/matching-engine-assumptions.md` — per-matcher slippage model + commission schedule +
       latency model + venue-liquidity proxy. Configurable via UAC `MatchingEngineConfig`. Required for backtest fidelity
       per master plan Group F item 18. Done = codex doc + UAC config class + test verifying configurable assumptions per
       matcher + `strategy_and_dart_master` Phase 1.9 todo `- [x]`. **SHIPPED PM@369d8424 2026-05-14**
@@ -122,10 +130,10 @@ estimate_calibration_note: 'No explicit AI-day estimates found in plan body duri
 - [x] [AGENT] P0. **GAP-7**: Lift model-registry SSOT into UAC — `ModelArtifactRegistry` (`model_id`, `model_family`,
       `asset_group`, `version`, `gcs_uri`, `trained_at`). Codify selection logic + paper-snapshot semantics (paper run
       freezes model artifact at run-start) + live hot-reload cadence (weekly default, configurable per archetype) in
-      `codex/04-architecture/ml-lifecycle.md`. Done = UAC types + codex + ml-inference reads from registry +
+      `/codex/04-architecture/ml-lifecycle.md`. Done = UAC types + codex + ml-inference reads from registry +
       `ml_and_features_master` Phase 4D todo `- [x]`. **SHIPPED UAC@42da7d0 + PM@736f2ada 2026-05-14**
 - [x] [AGENT] P1. **GAP-8**: Codify "monolithic ML cluster ships May-23, per-asset-group sharding deferred post-cutover"
-      as explicit decision in `codex/04-architecture/ml-lifecycle.md`. Done = codex doc landed +
+      as explicit decision in `/codex/04-architecture/ml-lifecycle.md`. Done = codex doc landed +
       `ml_and_features_master` Phase 4D todo `- [x]`. (P1 because no code change required.) **SHIPPED PM@736f2ada
       2026-05-15**
 - [x] [AGENT] P0. **GAP-9**: Pin batch ML inference cadence — per-bar replay (NOT vectorized daily pass) to honor "Batch
@@ -148,7 +156,7 @@ ml-lifecycle.md landed; 5 todos flipped in ml_and_features_master.
 
 - [x] [AGENT] P0. **GAP-11**: Pin wallet private key custody for live DeFi VM — keys fetched per-request from Secret
       Manager via `ApiKeyReloader` pattern, NEVER held in process memory beyond single-request scope. Codify in
-      `codex/04-architecture/interface-credential-convention.md` (extension). Done = codex doc + execution-service
+      `/codex/04-architecture/interface-credential-convention.md` (extension). Done = codex doc + execution-service
       connector audit (verify `connect()` paths fetch fresh per call, never cache) + integration test asserts no
       in-memory persistence between requests + `defi_master_2026_05_07.md` security phase todo `- [x]` (or new phase if
       defi_master lacks one). **SHIPPED PM@736f2ada (interface-credential-convention.md extended) 2026-05-15**
@@ -165,7 +173,7 @@ ml-lifecycle.md landed; 5 todos flipped in ml_and_features_master.
       position-balance-monitor MUST split exposure tracking by mode. Decision between (a) separate sub-accounts per mode
       (cleaner but requires venue support), OR (b) virtual ledger overlay where paper positions are tracked off-chain
       (works on any venue but harder to audit). Decision + codex
-      (`codex/04-architecture/multi-mode-wallet-isolation.md`) + integration test gating the May-23 carry-live +
+      (`/codex/04-architecture/multi-mode-wallet-isolation.md`) + integration test gating the May-23 carry-live +
       funding-arb-paper ramp. Done = codex + position-balance-monitor schema/code + integration test +
       `master_to_live_defi_2026_05_23.md` Group F item 21 (or new sub-item) todo `- [x]`. **SHIPPED PM@736f2ada
       (multi-mode-wallet-isolation.md) 2026-05-15**
@@ -207,7 +215,7 @@ violates CLAUDE.md "LookaheadBiasError raised loud" rule.
 **Target ship:** 2026-05-21 (12 days). Per CLAUDE.md "Post-Plan-Phase Codex Audit" HARD RULE.
 
 - [x] [AGENT] P1. Walk parent Q-doc Sections 1-5 for every ✅ ANSWERED Q + verify the answer is reflected in
-      `codex/04-architecture/` or `codex/05-infrastructure/live-pipeline-architecture.md`. Add the answer if missing.
+      `codex/04-architecture/` or `/codex/05-infrastructure/live-pipeline-architecture.md`. Add the answer if missing.
       Done = audit checklist signed off in this plan body. **SIGNED OFF 2026-05-15:** - Q1.1.a (features DAG today) →
       `live-pipeline-architecture.md` ✅ - Q1.1.b (FeatureFamily enum) → UAC `canonical/domain/features/registry.py`
       ✅ - Q1.1.c (daily DAG via CLI) → `live-pipeline-architecture.md` + service CLI docs ✅ - Q1.1.d (Batch = Live) →
@@ -242,7 +250,7 @@ coverage + 2 at-risk items needing daily watch.
       guaranteeing 5 matcher classes (L0/L1/L2/AMM/ALPHA_ZERO) are wired to `OperationalMode` dispatch in
       execution-service. Acceptance: pytest covering each (mode, matcher) cell + integration test asserting BATCH mode
       routes through matching engine, LIVE mode routes through live connector. Done = pytest green + matrix documented
-      in `codex/04-architecture/matching-engine-mode-dispatch.md` + matching `- [ ]` todo flipped `- [x]` in
+      in `/codex/04-architecture/matching-engine-mode-dispatch.md` + matching `- [ ]` todo flipped `- [x]` in
       `strategy_and_dart_master_2026_05_07.md` Phase 1.9. **SHIPPED PM@736f2ada + execution-service@4bf6ec2c2
       2026-05-15**
 - [x] [AGENT] P0. **GAP-16 (Q4.2.b)**: Ship explicit `BenchmarkFillMode`-per-action contract — each of the 11
@@ -260,8 +268,8 @@ coverage + 2 at-risk items needing daily watch.
       wiring lives in
       [`disaster_recovery_circuit_breakers_2026_05_10.md`](disaster_recovery_circuit_breakers_2026_05_10.md) Phase 1.A +
       Phase 5.A. Two distinct AlertCodes: `KILL_SWITCH_AUTO_RECOVERED` + `KILL_SWITCH_MANUAL_UNKILLED`. Done = decision
-      recorded in `codex/04-architecture/kill-switch-circuit-breaker.md` (per Q8 ratification — both modes documented) +
-      pytest covering both states across all 4 BreakerAction × 2 BreakerRecoveryMode = 8 combos +
+      recorded in `/codex/04-architecture/kill-switch-circuit-breaker.md` (per Q8 ratification — both modes
+      documented) + pytest covering both states across all 4 BreakerAction × 2 BreakerRecoveryMode = 8 combos +
       `master_to_live_defi_2026_05_23.md` Group F item 22 todo `- [x]`. **SHIPPED execution-service@4bf6ec2c2
       (BreakerRecoveryMode tests) 2026-05-15**
 - [x] [AGENT] P0. **GAP-18 (Q5.c)**: Ship `batch-live-reconciliation-service` code-complete + cron + 7-day live-vs-batch

@@ -214,7 +214,7 @@ live odds.
 Folded from sports_e2e_validation Phase 3 (arb_calculator + spread_calculator + strategy-service arb backtest).
 
 - [ ] [CODE] P0. Implement (or verify shipped) `arb_calculator` in FSS: cross-bookmaker arb %, eligible pairs, duration.
-      SSOT: codex/14-playbooks/sports/arb-detection.md.
+      SSOT: /codex/14-playbooks/sports/arb-detection.md.
 - [ ] [CODE] P0. Implement (or verify shipped) `spread_calculator` in FSS: sharp-soft spread, vig, max-min.
 - [ ] [SCRIPT] P0. Run strategy-service arb backtest on Group D's 1-week dataset. Use execution-service "always fill"
       mode for strategy-alpha P&L (per CLAUDE.md "Batch = Live").

@@ -6,11 +6,19 @@ status: complete
 nature: record
 asset_group: tradfi
 stage: [meta]
-repos: [features-service, instruments-service, market-tick-data-service, strategy-service, unified-api-contracts, unified-trading-pm]
+repos:
+  [
+    features-service,
+    instruments-service,
+    market-tick-data-service,
+    strategy-service,
+    unified-api-contracts,
+    unified-trading-pm,
+  ]
 scope: [engineer, admin]
 tags: []
 related: [tradfi_master_2026_05_07, hard_schema_enforcement_2026_05_08]
-created: '2026-05-13'
+created: "2026-05-13"
 slug: tradfi_canonical_futures_contract_hard_required_fields_2026_05_13
 date: 2026-05-13
 deadline: 2026-05-23
@@ -225,7 +233,7 @@ cascade.
 
 ## Codex SSOT updates
 
-- Update `codex/02-data/contracts-scope-and-layout.md` — add `derivatives/futures.py` to canonical layout.
+- Update `/codex/02-data/contracts-scope-and-layout.md` — add `derivatives/futures.py` to canonical layout.
 - Update `tradfi_master_2026_05_07.md` Q1+Q2 todos with commit-sha evidence on Phase 1 land.
 - Cross-plan banner removal from `mdps_liquidity_baseline_and_live_tick_staleness_2026_05_08.md` once schema flip lands.
 

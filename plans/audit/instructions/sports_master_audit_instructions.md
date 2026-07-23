@@ -15,10 +15,10 @@ scope: [engineer, admin]
 tags: [audit, sports, footystats, odds, manifest, honest-coverage, canonicalisation]
 related:
   [
-    canonical_form_cross_service_audit_checklist.md,
+    /plans/audit/instructions/canonical_form_cross_service_audit_checklist.md,
     ../../active/master_data_canonicalisation_migration_catalogue_2026_06_07.md,
   ]
-created: '2026-05-22'
+created: "2026-05-22"
 tier: L0
 parent_epic: sports_master
 cadence: weekly (minimum)

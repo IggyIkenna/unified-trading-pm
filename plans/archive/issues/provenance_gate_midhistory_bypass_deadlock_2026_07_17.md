@@ -23,9 +23,9 @@ scope: [engineer, admin]
 tags: [ci-cd, quickmerge, provenance, promotion, governance, deadlock]
 related:
   [
-    provenance_gate_override_and_unenforced_quickmerge_hook_2026_07_17.md,
-    silent_failures_surfacing_as_generic_promotion_lag_2026_07_17.md,
-    ../../../codex/08-workflows/ci-cd-flow.md,
+    /plans/active/issues/provenance_gate_override_and_unenforced_quickmerge_hook_2026_07_17.md,
+    /plans/active/issues/silent_failures_surfacing_as_generic_promotion_lag_2026_07_17.md,
+    /codex/08-workflows/ci-cd-flow.md,
   ]
 created: 2026-07-17
 last_updated: 2026-07-17
@@ -102,7 +102,7 @@ landing sha + promote PR when it merges.)
 - [ ] [DEVOPS] P2. The LDR→main fleet-bot comment (`ldr-to-main-promote-fleet.yml`) still names only "re-ship via
       quickmerge or revert". Add the mid-history `reprovenance_bypass.sh` path there too (the lag-monitor alert text is
       already updated).
-- [ ] [DEVOPS] P3. Codex `codex/08-workflows/ci-cd-flow.md` § "D1 provenance gate" should document the re-provenance
+- [ ] [DEVOPS] P3. Codex `/codex/08-workflows/ci-cd-flow.md` § "D1 provenance gate" should document the re-provenance
       remedy so it is discoverable outside the alert.
 - [ ] [DEVOPS] P3. Root prevention: the direct code push that created 19ae5890 should have been blocked by the pre-push
       hook — confirm the hook is installed in the slot clone that pushed it (the 2026-07-17 rollout covered

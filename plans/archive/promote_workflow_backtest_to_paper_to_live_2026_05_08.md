@@ -42,10 +42,10 @@ spawned_plan: plans/active/promote_workflow_may23_cli_path_2026_05_10.md
 spawned_plan_post_cutover: plans/active/promote_workflow_post_cutover_ui_pipeline_2026_05_10.md
 related_codex:
   [
-    codex/09-strategy/architecture-v2/strategy-lifecycle-maturity.md,
-    codex/04-architecture/operational-modes.md,
-    codex/03-observability/lifecycle-events.md,
-    codex/05-infrastructure/launcher-script-ssot.md,
+    /codex/09-strategy/architecture-v2/strategy-lifecycle-maturity.md,
+    /codex/04-architecture/operational-modes.md,
+    /codex/03-observability/lifecycle-events.md,
+    /codex/05-infrastructure/launcher-script-ssot.md,
   ]
 ---
 
@@ -214,7 +214,7 @@ cutover-blocking subset.
 
 10. **Custody Copper has real implementation, never operationally verified.**
     [`execution-service/execution_service/custody/copper.py`](../../../execution-service/execution_service/custody/copper.py)
-    HMAC-SHA256, sandbox + prod endpoints, sign-poll loop. CEFFU is STUB (`codex/04-architecture/custody-providers.md`
+    HMAC-SHA256, sandbox + prod endpoints, sign-poll loop. CEFFU is STUB (`/codex/04-architecture/custody-providers.md`
     PENDING per master plan line 145+ / 515+). Master plan F19 `Last verified: NEVER`.
 
 11. **Risk + circuit breakers + kill-switch bus shipped + wired across 4 services** (strategy / risk-and-exposure /
@@ -501,7 +501,7 @@ cutover-blocking subset.
 - Today: cockpit shell + filters exist (mock-only); manual-trade gate is **aspirational, not implemented** (master plan
   G23 + line 1292 is `[ ]` checkbox).
 - `LiveConfirmDialog` is mode-toggle confirmation, NOT per-trade approval.
-- Codex `codex/14-customer-journeys/dart/mode-toggle.md` NEW (does not exist on disk yet).
+- Codex `/codex/14-customer-journeys/dart/mode-toggle.md` NEW (does not exist on disk yet).
 - **Gap**: P0 — `pvl-p23a/b/c` (3-way visualization + deployment-api `/strategy/{id}/runs` endpoint + per-trade
   manual-trade gate UI). Cutover blocker.
 
@@ -522,7 +522,7 @@ cutover-blocking subset.
 - `LIVE_DEPLOYMENT_STARTED` event type appears only in OpenAPI YAML — NOT in
   `unified_api_contracts.internal.events.LifecycleEventType`. Boot/shutdown via `ServiceBootstrap` standard
   STARTED/STOPPED/FAILED.
-- Codex `codex/05-infrastructure/live-deployment-monitoring.md` referenced as NEW work-stream B doc; not verified on
+- Codex `/codex/05-infrastructure/live-deployment-monitoring.md` referenced as NEW work-stream B doc; not verified on
   disk.
 - **Gap**: P0 — `launch-strategy-live-vm.sh` + register `strategy-live-` prefix; live-deployment event types in UAC;
   per-launch event-verification protocol per "no fire-and-forget VM launches" rule.
@@ -805,32 +805,32 @@ gettig us to full completion befroe 23rd may no shortcuts" → **plan-extraction
 - **Plan type**: mixed (code + infra + UI + ops + governance).
 - **Owner side**: Ikenna (cross-cutting design ≥3 repos + trading-judgment + governance per CLAUDE.md split principle).
 - **Codex SSOTs touched** (NEW + UPDATE):
-  - **NEW** `codex/04-architecture/promote-workflow-architecture.md` — pin operator-CLI-vs-UI distinction; H1-H7
+  - **NEW** `/codex/04-architecture/promote-workflow-architecture.md` — pin operator-CLI-vs-UI distinction; H1-H7
     cross-service registration model; 9-step flow; reference maturity ladder.
-  - **NEW** `codex/09-strategy/operational/cli-promote-paths.md` — `run-paper.sh` + `run-live.sh` as May-23 SSOT;
+  - **NEW** `/codex/09-strategy/operational/cli-promote-paths.md` — `run-paper.sh` + `run-live.sh` as May-23 SSOT;
     per-mode operator pre-flight checklist (custody / API keys / wallets / RPC / Tenderly / matching engine).
-  - **NEW** `codex/04-architecture/strategy-lifecycle-state-machine.md` — reconciled canonical state machine (replaces
+  - **NEW** `/codex/04-architecture/strategy-lifecycle-state-machine.md` — reconciled canonical state machine (replaces
     de-facto split).
-  - **NEW** `codex/04-architecture/live-deployment-manifest.md` — `LiveDeploymentManifest` shape + capture point +
+  - **NEW** `/codex/04-architecture/live-deployment-manifest.md` — `LiveDeploymentManifest` shape + capture point +
     rollback recipe.
-  - **NEW** `codex/05-infrastructure/live-deployment-monitoring.md` (master plan line 146 work-stream B).
-  - **NEW** `codex/14-customer-journeys/dart/mode-toggle.md` (`pvl-p23a/b/c`).
-  - **NEW** `codex/04-architecture/operational-modes.md` (`pvl-p17a-d`).
-  - **NEW** `codex/04-architecture/paper-vs-live-execution-seam.md`.
-  - **NEW** `codex/05-infrastructure/per-venue-paper-policy.md` (`paper_target_registry`).
-  - **NEW** `codex/05-infrastructure/strategy-vm-launcher-shape.md`.
-  - **NEW** `codex/14-customer-journeys/promote-pipeline-backend.md`.
-  - **NEW** `codex/09-strategy/architecture-v2/cross-cutting/backtest-persistence-and-ranking.md`.
-  - **NEW** `codex/09-strategy/architecture-v2/cross-cutting/backtest-run-manifest.md`.
-  - **NEW** `codex/09-strategy/architecture-v2/cross-cutting/strategy-config-drift-detection.md`.
-  - **UPDATE** `codex/09-strategy/architecture-v2/strategy-lifecycle-maturity.md` — fix `STRATEGY_LIFECYCLE_CHANGED`
+  - **NEW** `/codex/05-infrastructure/live-deployment-monitoring.md` (master plan line 146 work-stream B).
+  - **NEW** `/codex/14-customer-journeys/dart/mode-toggle.md` (`pvl-p23a/b/c`).
+  - **NEW** `/codex/04-architecture/operational-modes.md` (`pvl-p17a-d`).
+  - **NEW** `/codex/04-architecture/paper-vs-live-execution-seam.md`.
+  - **NEW** `/codex/05-infrastructure/per-venue-paper-policy.md` (`paper_target_registry`).
+  - **NEW** `/codex/05-infrastructure/strategy-vm-launcher-shape.md`.
+  - **NEW** `/codex/14-customer-journeys/promote-pipeline-backend.md`.
+  - **NEW** `/codex/09-strategy/architecture-v2/cross-cutting/backtest-persistence-and-ranking.md`.
+  - **NEW** `/codex/09-strategy/architecture-v2/cross-cutting/backtest-run-manifest.md`.
+  - **NEW** `/codex/09-strategy/architecture-v2/cross-cutting/strategy-config-drift-detection.md`.
+  - **UPDATE** `/codex/09-strategy/architecture-v2/strategy-lifecycle-maturity.md` — fix `STRATEGY_LIFECYCLE_CHANGED`
     PATCH-emit claim (line 245) + `STRATEGY_LIFECYCLE_DEMOTED` (line 46) + `STRATEGY_CIRCUIT_BREAKER` (line 46) +
     `audit_log` mirror claim (line 256). Codex/code drift cleanup.
-  - **UPDATE** `codex/03-observability/lifecycle-events.md` — extend canonical event taxonomy with strategy-lifecycle
+  - **UPDATE** `/codex/03-observability/lifecycle-events.md` — extend canonical event taxonomy with strategy-lifecycle
     event types + cross-service event-consumer matrix.
-  - **UPDATE** `codex/04-architecture/custody-providers.md` — populate CEFFU subsections per master plan line 515-516.
-  - **UPDATE** `codex/04-architecture/batch-live-architecture.md` — extend with paper-mode positioning.
-  - **UPDATE** `codex/05-infrastructure/path-registry.md` — pin canonical `backtest_results/` template, kill legacy
+  - **UPDATE** `/codex/04-architecture/custody-providers.md` — populate CEFFU subsections per master plan line 515-516.
+  - **UPDATE** `/codex/04-architecture/batch-live-architecture.md` — extend with paper-mode positioning.
+  - **UPDATE** `/codex/05-infrastructure/path-registry.md` — pin canonical `backtest_results/` template, kill legacy
     reader path.
   - **UPDATE** CLAUDE.md — add "Strategy Lifecycle State Machine SSOT" key rule pointing at the new codex doc + the
     canonical enum; add "Promote Workflow Path" key rule (CLI for May-23 / UI post-cutover).

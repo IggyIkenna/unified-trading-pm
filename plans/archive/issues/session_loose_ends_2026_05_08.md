@@ -12,7 +12,13 @@ tags: []
 related: []
 created: 2026-05-08
 author: ikenna-tab1-main
-execution: {owner: Tab 5 (governance) tomorrow + sub-owners per row, cadence: one-shot per row + daily Tab 5 sweep until all rows resolved, verifier: each row's "Resolution evidence" populated with commit sha + date, last_executed: '2026-05-08'}
+execution:
+  {
+    owner: Tab 5 (governance) tomorrow + sub-owners per row,
+    cadence: one-shot per row + daily Tab 5 sweep until all rows resolved,
+    verifier: each row's "Resolution evidence" populated with commit sha + date,
+    last_executed: "2026-05-08",
+  }
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
 ---
@@ -93,7 +99,7 @@ Governance HARD RULE retroactive sweeps shipped 2026-05-10 by Tab 5 (governance)
   `canonical.domain.client` Option-A revert, `ManifestWriter.add` pending_removal), `test_check_removed_symbols.py` (18
   unit tests covering manifest schema validation, 3 import patterns, attribute-access receiver matching, false-positive
   negative cases, walker venv exclusions, unparseable-file resilience), base-service.sh STEP 5.65 wired between 5.64 and
-  5.66, codex/06-coding-standards/quality-gates.md updated with cross-reference table row + dedicated section. Smoke
+  5.66, /codex/06-coding-standards/quality-gates.md updated with cross-reference table row + dedicated section. Smoke
   run: 0 ERROR (zero false positives), 1 genuine WARN at
   `market-tick-data-service/.../migrate_deribit_margin_split_v6.py:175` for `manifest_writer.add(...)` — already flagged
   by team via `# pyright: ignore[reportAttributeAccessIssue]` comment; pending_removal status correctly reflects

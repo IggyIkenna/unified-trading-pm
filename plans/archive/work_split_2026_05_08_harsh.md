@@ -208,8 +208,8 @@ Ikenna touches DeFi adapters), deployment-ui (instruments-live tab integration; 
 - [`plans/active/writegate_honest_coverage_endtoend_2026_05_06.md`](writegate_honest_coverage_endtoend_2026_05_06.md)
   Phase 3.D.5 Wave 3 (catalog-aware writer-guard work; archived parent
   [`instruments_and_market_tick_data_completion_2026_05_01.md`](../archive/instruments_and_market_tick_data_completion_2026_05_01.md))
-- [`codex/02-data/availability-manifest-and-data-status.md`](../../codex/02-data/availability-manifest-and-data-status.md)
-- [`codex/04-architecture/instrument-lifecycle-cache-delta-hot-reload.md`](../../codex/04-architecture/instrument-lifecycle-cache-delta-hot-reload.md)
+- [`/codex/02-data/availability-manifest-and-data-status.md`](/codex/02-data/availability-manifest-and-data-status.md)
+- [`/codex/04-architecture/instrument-lifecycle-cache-delta-hot-reload.md`](/codex/04-architecture/instrument-lifecycle-cache-delta-hot-reload.md)
 
 **Sub-agent fan-out**:
 
@@ -338,7 +338,7 @@ import paths to compile). Phase 3 column-pruning is independent and can fan out 
 | sa2.P4-perSource×N     | Per-source consumer migration (one sub-agent per source) — touches ONLY its source's calculator-call sites                         | Other sources' migration sites; new repo source                                                                               |
 | sa2.P5-uac-col         | UAC `feature_family` column add: `unified_api_contracts/canonical/feature/family.py` + tests                                       | Other UAC dirs (Ikenna T1 PROTOCOL_LAUNCH_DATES, Ikenna T6 strategy/, client/; Harsh T5 mechanical adds — all separate files) |
 | sa2.P6-deprec          | Deprecation banners on 8 source repos' `README.md` + final commit citing migration sha                                             | features-service/ source; consumer repos                                                                                      |
-| sa2.P7-codex           | `codex/04-architecture/features-service-consolidation.md` (NEW); update 5 existing codex docs per Post-Plan-Phase Audit            | Plan body; code repos                                                                                                         |
+| sa2.P7-codex           | `/codex/04-architecture/features-service-consolidation.md` (NEW); update 5 existing codex docs per Post-Plan-Phase Audit           | Plan body; code repos                                                                                                         |
 | sa2.PhaseAB×8          | Each of 8 services' compute-entry adds `assert_no_lookahead_for_feature_group` — ONE sub-agent per service                         | Other 7 services; UTL helper itself (already shipped); MDPS `base_adapter.py` live-pipeline layer (Ikenna T2)                 |
 | sa2.ColPrune           | `ml-training-service` parquet-read profiler + column-pruning patch + memory measurement                                            | features-service repos; UAC; UTL                                                                                              |
 | sa2.MLLive             | `features-service/src/features_service/ml_inference/handler.py` + integration test wiring (joint with Ikenna T2 design)            | Strategy-service archetype consumers; execution-service; alerting-service                                                     |
@@ -393,8 +393,8 @@ unified-config-interface (env-resolution), Firebase config files. **Hands off** 
   scripts), "Workflow Templates", "Deploy_missing UI" (in DeFi Execution Architecture context)
 - [`plans/active/deployment_ui_lifecycle_tabs_2026_05_08.md`](deployment_ui_lifecycle_tabs_2026_05_08.md)
 - [`plans/active/deploy_missing_auto_launch_2026_05_07.md`](deploy_missing_auto_launch_2026_05_07.md)
-- [`codex/14-customer-journeys/authentication/firebase-local.md`](../../codex/14-customer-journeys/authentication/firebase-local.md)
-- [`codex/05-infrastructure/runtime-tiers-and-deployment.md`](../../codex/05-infrastructure/runtime-tiers-and-deployment.md)
+- [`/codex/14-customer-journeys/authentication/firebase-local.md`](/codex/14-customer-journeys/authentication/firebase-local.md)
+- [`/codex/05-infrastructure/runtime-tiers-and-deployment.md`](/codex/05-infrastructure/runtime-tiers-and-deployment.md)
 
 **Sub-agent fan-out**:
 
@@ -695,7 +695,7 @@ implement-from-spec work — Ikenna T6 ships UAC SSOTs + DART codex spec, you co
 - [ ] [SCRIPT] P0. **Strategy catalogue row population** from Ikenna T6's UAC schema — enumerate every
       `(archetype, venue, instrument_type)` combination known to be feasible (full universe, including
       not-launching-this-cycle archetypes). Source: existing
-      [`codex/09-strategy/strategy-summary.md`](../../codex/09-strategy/strategy-summary.md) 8-family / 18-archetype
+      [`/codex/09-strategy/strategy-summary.md`](/codex/09-strategy/strategy-summary.md) 8-family / 18-archetype
       baseline + new archetypes from May-23 epics (3 carry sub-types, 3 price-arb sub-types, per-asset-group ML, 4
       prediction-market sub-types). Output: populated catalogue rows in UAC + per-archetype config defaults (collateral,
       hedge ratio, position cap, kill-switch thresholds). ~3 AI-days.
@@ -704,7 +704,7 @@ implement-from-spec work — Ikenna T6 ships UAC SSOTs + DART codex spec, you co
       `(client_id, account_id,     strategy_id)` tuple. Capital allocation matrix from Ikenna T6 enforced at
       execution-service entry (reject if computed position would breach allocation). ~2 AI-days.
 - [ ] [BUILD] P0. **DART manual-trade UI — 5 surfaces** per Ikenna T6's codex spec
-      ([`codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md`](../../codex/09-strategy/architecture-v2/cross-cutting/operational-modes-matrix.md)
+      ([`/codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md`](/codex/09-strategy/architecture-v2/cross-cutting/operational-modes-matrix.md)
       or extension): (a) DeFi swap / lend / borrow / stake actions per chain × protocol for `carry_staked_basis`; (b)
       CeFi order placement (limit / market / stop) across Bybit / Deribit / Binance / OKX; (c) ML training trigger
       (pause / resume / retrain) per ML archetype; (d) sports bet placement for backtest exec validation; (e)
@@ -727,8 +727,8 @@ lifecycle-tabs on shared route shell — different page routes, no overlap).
 - [`plans/epics/cross_cutting_may_23_2026.epic.md`](../epics/cross_cutting_may_23_2026.epic.md) — 5-deliverable scope
 - Ikenna T6 ship-block in `cross_cutting_may_23_deliverables_2026_05_08.md` `## Open questions` (wait for green before
   consuming)
-- [`codex/09-strategy/strategy-summary.md`](../../codex/09-strategy/strategy-summary.md) — existing catalogue baseline
-  (your enumeration source)
+- [`/codex/09-strategy/strategy-summary.md`](/codex/09-strategy/strategy-summary.md) — existing catalogue baseline (your
+  enumeration source)
 
 **Sub-agent fan-out**:
 
@@ -1037,7 +1037,7 @@ BEFORE doing anything else, read in order:
      with Ikenna Tab 6 — read `## Open questions` for Ikenna T6's UAC SSOT spec ship-blocks
      before consuming).
   5. plans/epics/cross_cutting_may_23_2026.epic.md — 5-deliverable scope (parent epic).
-  6. codex/09-strategy/strategy-summary.md — existing 8-family / 18-archetype catalogue
+  6. /codex/09-strategy/strategy-summary.md — existing 8-family / 18-archetype catalogue
      baseline (your enumeration source).
 
 Your agent-tag: cross-cutting-build-tab. Your tab number: 6.

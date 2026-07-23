@@ -95,7 +95,7 @@ differs run-to-run → environmental/flaky in the checks leg (harden the gate, n
 what remained open was suggestion #4 — making the promote automation skip re-minting while LDR itself is red.
 Investigation found this was **already partially built**: `ldr-to-main-promote-fleet.yml`'s Tier-A gate already blocks
 on `ci_status=FAILING`, but it read ONLY the `workspace-manifest.json` cache — the HOURLY consolidator projection
-(`codex/08-workflows/ci-cd-flow.md`: "manifest stays a fallback cache, read Firestore for live state"). That cache lag
+(`/codex/08-workflows/ci-cd-flow.md`: "manifest stays a fallback cache, read Firestore for live state"). That cache lag
 is exactly why 4 PRs got minted against a genuinely-red LDR: `ci_status` hadn't caught up yet. Fixed by adding a LIVE
 Firestore read (`ci_status_store.py get-doc --repo <repo>`, the SAME call the SIT gate a few lines down already trusts)
 alongside the cached read — Tier-A now blocks if EITHER signal is `FAILING`, degrading safely to the cache alone if

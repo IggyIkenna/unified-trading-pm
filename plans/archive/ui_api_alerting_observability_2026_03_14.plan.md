@@ -240,7 +240,7 @@ todos:
   - { id: p5-1-coordination-events, content: "- [x] [AGENT] P5. Document and wire coordination event subscribers.
         features-* -> DATA_READY -> ml-inference. ml-inference -> PREDICTIONS_READY -> strategy.
 
-        ", status: done, completion_note: "2026-03-16: unified-trading-codex/03-observability/coordination-events.md
+        ", status: done, completion_note: "2026-03-16: unified-trading-/codex/03-observability/coordination-events.md
         accurately documents all publisher/subscriber gaps. Only INSTRUMENTS_READY has both publisher
         (instruments-service) and subscriber (market-tick-data-service) wired. DATA_READY, FEATURES_READY,
         PREDICTIONS_READY, SIGNALS_READY are publish-only — downstream services use direct PubSub topics
@@ -262,7 +262,7 @@ todos:
 
         ", status: done }
   - { id: p5-8-otel-codex, content: "- [x] [AGENT] P5. OTel docs at
-        unified-trading-codex/04-architecture/opentelemetry.md. Env vars, canonical setup, anti-patterns, collector
+        unified-trading-/codex/04-architecture/opentelemetry.md. Env vars, canonical setup, anti-patterns, collector
         setup documented.
 
         ", status: done }

@@ -14,7 +14,7 @@ stage: [meta]
 repos: [unified-trading-api]
 scope: [engineer]
 tags: [pip-audit, dependency-vulnerability, quality-gates, repo-blocker]
-related: [utl_reuse_phase2_api_auth_dedup_2026_07_13.md]
+related: [/plans/archive/2026_07/utl_reuse_phase2_api_auth_dedup_2026_07_13.md]
 created: "2026-07-13"
 parent_epic: infrastructure_master
 priority: P1

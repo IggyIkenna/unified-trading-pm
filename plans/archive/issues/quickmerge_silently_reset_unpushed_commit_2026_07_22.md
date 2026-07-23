@@ -38,7 +38,7 @@ related:
   [
     plans/active/issues/quickmerge_agent_sentinel_race_vs_own_rebase_2026_07_16.md,
     plans/active/issues/quickmerge_sentinel_invalidated_by_its_own_autopull_2026_07_18.md,
-    codex/08-workflows/ci-cd-flow.md,
+    /codex/08-workflows/ci-cd-flow.md,
     plans/active/defi_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-07-22

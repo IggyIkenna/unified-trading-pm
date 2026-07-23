@@ -195,9 +195,9 @@ Make every reconciliation breach **age-tracked**, **dimensioned**, and **escalat
 
 ## Codex SSOT updates
 
-- UPDATE: `codex/04-architecture/autonomous-recovery-matrix.md` — extend "RECONCILIATION FAILURE" section with age-band
+- UPDATE: `/codex/04-architecture/autonomous-recovery-matrix.md` — extend "RECONCILIATION FAILURE" section with age-band
   escalation ladder.
-- NEW codex stub: `codex/04-architecture/reconciliation-age-tracking.md` — 12 dimensions, age fields, thresholds, 7
+- NEW codex stub: `/codex/04-architecture/reconciliation-age-tracking.md` — 12 dimensions, age fields, thresholds, 7
   immediate-overrides.
 
 ## Tier-1-4 implementation log (2026-05-23)
@@ -275,7 +275,7 @@ _(No Tier-5 items in this plan's scope.)_
 
 - Operator ping doc → `plans/active/_agent_pings.md` 2026-05-23 ikenna-slot-1 → operator entry
 - 22 incident runbooks → `codex/15-runbooks/incidents/` (RB-INC/RECON/RISK/CONN/DEPLOY/INFRA/ALERT)
-- Game-day protocol → `codex/15-runbooks/incidents/game_day_protocol.md`
+- Game-day protocol → `/codex/15-runbooks/incidents/game_day_protocol.md`
 - Alerting Tier-5 → `alerting-service@e5c8084` (5 new gateway/notifier modules)
 - Strategy Tier-5 → `strategy-service@3b0f7397` (2 configs + close-all + helper)
 - Execution Tier-5 → `execution-service@a6fa7c501` (recovery_event_helper)

@@ -6,65 +6,89 @@ status: complete
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [e2e-testing, execution-service, market-data-processing-service, strategy-service, unified-api-contracts, unified-trading-pm]
+repos:
+  [
+    e2e-testing,
+    execution-service,
+    market-data-processing-service,
+    strategy-service,
+    unified-api-contracts,
+    unified-trading-pm,
+  ]
 scope: [engineer, admin]
 tags: []
 related: []
-created: '2026-04-02'
-overview: Cross-cutting share class (ETH/USDT/BTC) architecture across UAC, strategy, execution, P&L, position, risk services + UI
+created: "2026-04-02"
+overview:
+  Cross-cutting share class (ETH/USDT/BTC) architecture across UAC, strategy, execution, P&L, position, risk services +
+  UI
 type: code
 epic: epic-code-completion
 locked_by: live-defi-rollout
 locked_since: 2026-04-01
-completion_gates: {code: C5, deployment: none, business: none}
+completion_gates: { code: C5, deployment: none, business: none }
 repo_gates:
-- {repo: unified-api-contracts, code: C0, deployment: none, business: none}
-- {repo: strategy-service, code: C0, deployment: none, business: none}
-- {repo: execution-service, code: C0, deployment: none, business: none}
-- {repo: pnl-attribution-service, code: C0, deployment: none, business: none}
-- {repo: position-balance-monitor-service, code: C0, deployment: none, business: none}
-- {repo: risk-and-exposure-service, code: C0, deployment: none, business: none}
-- {repo: unified-trading-system-ui, code: C0, deployment: none, business: none}
-- {repo: e2e-testing, code: C0, deployment: none, business: none}
-- {repo: market-data-processing-service, code: C0, deployment: none, business: none}
+  - { repo: unified-api-contracts, code: C0, deployment: none, business: none }
+  - { repo: strategy-service, code: C0, deployment: none, business: none }
+  - { repo: execution-service, code: C0, deployment: none, business: none }
+  - { repo: pnl-attribution-service, code: C0, deployment: none, business: none }
+  - { repo: position-balance-monitor-service, code: C0, deployment: none, business: none }
+  - { repo: risk-and-exposure-service, code: C0, deployment: none, business: none }
+  - { repo: unified-trading-system-ui, code: C0, deployment: none, business: none }
+  - { repo: e2e-testing, code: C0, deployment: none, business: none }
+  - { repo: market-data-processing-service, code: C0, deployment: none, business: none }
 depends_on: []
 todos:
-- {id: sc-1a-uac-types, content: '- [x] [AGENT] P0. Define ShareClass enum and share-class-aware types in UAC
+  - { id: sc-1a-uac-types, content: "- [x] [AGENT] P0. Define ShareClass enum and share-class-aware types in UAC
 
-    ', status: done, note: 'ShareClass enum exists. Added share_class, share_class_pnl, fx_attribution_pnl, lst_yield_pnl to PnLBreakdown. Added share_class, account_equity_share_class to RiskMetrics.'}
-- {id: sc-1b-uac-nav, content: '- [x] [AGENT] P0. Extend StrategyNAV with share class P&L and delta neutrality
+        ", status: done, note: "ShareClass enum exists. Added share_class, share_class_pnl, fx_attribution_pnl,
+        lst_yield_pnl to PnLBreakdown. Added share_class, account_equity_share_class to RiskMetrics." }
+  - { id: sc-1b-uac-nav, content: "- [x] [AGENT] P0. Extend StrategyNAV with share class P&L and delta neutrality
 
-    ', status: done, note: 'StrategyNAV already had all fields: nav_in_share_class, pnl_share_class, delta_vs_base, delta_rebalance_needed. ShareClassConfig also exists.'}
-- {id: sc-1c-uac-risk, content: '- [x] [AGENT] P0. Add share-class risk types to UAC risk taxonomy
+        ", status: done, note: "StrategyNAV already had all fields: nav_in_share_class, pnl_share_class, delta_vs_base,
+        delta_rebalance_needed. ShareClassConfig also exists." }
+  - { id: sc-1c-uac-risk, content: "- [x] [AGENT] P0. Add share-class risk types to UAC risk taxonomy
 
-    ', status: done, note: BASE_CURRENCY_DRIFT already in risk_metrics.py. MARGIN_CURRENCY_MISMATCH not yet added — tracked as Phase 3C.}
-- {id: sc-2a-strategy, content: '- [x] [AGENT] P0. Add share class config to strategy-service base + all DeFi strategies
+        ", status: done, note: BASE_CURRENCY_DRIFT already in risk_metrics.py. MARGIN_CURRENCY_MISMATCH not yet added —
+        tracked as Phase 3C. }
+  - { id: sc-2a-strategy, content: "- [x] [AGENT] P0. Add share class config to strategy-service base + all DeFi
+        strategies
 
-    ', status: done, note: 'Depends on sc-1a. share_class added to DeFiStrategyConfig and all DeFi strategies. 15 strategy YAML configs updated with share_class: USDT.'}
-- {id: sc-2b-rebalance, content: '- [x] [AGENT] P0. Implement share-class rebalancing logic in strategy-service
+        ", status: done, note: "Depends on sc-1a. share_class added to DeFiStrategyConfig and all DeFi strategies. 15
+        strategy YAML configs updated with share_class: USDT." }
+  - { id: sc-2b-rebalance, content: "- [x] [AGENT] P0. Implement share-class rebalancing logic in strategy-service
 
-    ', status: done, note: Delta neutrality relative to base currency. _compute_delta_vs_base() and _create_share_class_rebalance_instructions() implemented in DeFiBaseStrategy.}
-- {id: sc-3a-position, content: '- [x] [AGENT] P0. Add share class dimension to position-balance-monitor-service
+        ", status: done, note: Delta neutrality relative to base currency. _compute_delta_vs_base() and
+        _create_share_class_rebalance_instructions() implemented in DeFiBaseStrategy. }
+  - { id: sc-3a-position, content: "- [x] [AGENT] P0. Add share class dimension to position-balance-monitor-service
 
-    ', status: done, note: 'Already implemented: Position.share_class field, get_positions_by_share_class(), TreasuryMonitor.evaluate_per_share_class(), LST ratio tracking on Position model.'}
-- {id: sc-3b-pnl, content: '- [x] [AGENT] P0. Add share class dimension to pnl-attribution-service
+        ", status: done, note: "Already implemented: Position.share_class field, get_positions_by_share_class(),
+        TreasuryMonitor.evaluate_per_share_class(), LST ratio tracking on Position model." }
+  - { id: sc-3b-pnl, content: "- [x] [AGENT] P0. Add share class dimension to pnl-attribution-service
 
-    ', status: done, note: 'Wired compute_share_class_pnl into compute_pnl_breakdown. PnLBreakdown now has share_class_pnl, fx_attribution_pnl, lst_yield_pnl. 30 tests in test_share_class_pnl.py.'}
-- {id: sc-3c-risk, content: '- [x] [AGENT] P0. Add share class dimension to risk-and-exposure-service
+        ", status: done, note: "Wired compute_share_class_pnl into compute_pnl_breakdown. PnLBreakdown now has
+        share_class_pnl, fx_attribution_pnl, lst_yield_pnl. 30 tests in test_share_class_pnl.py." }
+  - { id: sc-3c-risk, content: "- [x] [AGENT] P0. Add share class dimension to risk-and-exposure-service
 
-    ', status: done, note: 'compute_risk_metrics now accepts share_class + share_class_fx_rate, populates account_equity_share_class. evaluate_base_currency_drift() added for ETH/BTC/USDT drift detection with WARNING/CRITICAL alerts. 16 tests in test_share_class_risk.py.'}
-- {id: sc-3d-mdps, content: '- [x] [AGENT] P1. Ensure market-data-processing-service provides FX rates for share class conversion
+        ", status: done, note: "compute_risk_metrics now accepts share_class + share_class_fx_rate, populates
+        account_equity_share_class. evaluate_base_currency_drift() added for ETH/BTC/USDT drift detection with
+        WARNING/CRITICAL alerts. 16 tests in test_share_class_risk.py." }
+  - { id: sc-3d-mdps, content: "- [x] [AGENT] P1. Ensure market-data-processing-service provides FX rates for share
+        class conversion
 
-    ', status: done, note: 'DefiFxRateAdapter already implemented at app/adapters/defi/fx_rate_adapter.py. Produces fx_rate_eth_usd, fx_rate_btc_usd, fx_rate_sol_usd features at candle frequency via LOCF from spot price ticks. Registered as MarketCategory.DEFI / fx_rates in CandleAdapterRegistry.'}
-- {id: sc-4a-ui, content: '- [x] [AGENT] P1. Add share class support to unified-trading-system-ui
+        ", status: done, note: "DefiFxRateAdapter already implemented at app/adapters/defi/fx_rate_adapter.py. Produces
+        fx_rate_eth_usd, fx_rate_btc_usd, fx_rate_sol_usd features at candle frequency via LOCF from spot price ticks.
+        Registered as MarketCategory.DEFI / fx_rates in CandleAdapterRegistry." }
+  - { id: sc-4a-ui, content: "- [x] [AGENT] P1. Add share class support to unified-trading-system-ui
 
-    ', status: done, note: ShareClass type added to lib/types/defi.ts. Mock data for all 3 share classes added to defi-risk.ts fixtures.}
-- {id: sc-5a-e2e, content: '- [x] [AGENT] P1. Add share class scenarios to e2e-testing
+        ", status: done, note: ShareClass type added to lib/types/defi.ts. Mock data for all 3 share classes added to
+        defi-risk.ts fixtures. }
+  - { id: sc-5a-e2e, content: "- [x] [AGENT] P1. Add share class scenarios to e2e-testing
 
-    ', status: done, note: 'share_class: USDT added to all 15 strategy YAML configs for backward compat.'}
-- {id: sc-6a-docs, content: '- [x] [AGENT] P1. Update codex docs for share class architecture
+        ", status: done, note: "share_class: USDT added to all 15 strategy YAML configs for backward compat." }
+  - { id: sc-6a-docs, content: "- [x] [AGENT] P1. Update codex docs for share class architecture
 
-    ', status: done, note: share-class-architecture.md created in codex/04-architecture/.}
+        ", status: done, note: share-class-architecture.md created in codex/04-architecture/. }
 isProject: false
 ---
 
@@ -87,9 +111,10 @@ DeFi and CeFi**:
 - **BTC share class**: Returns measured in BTC. Same principle as ETH — margin held in BTC, delta relative to BTC.
 
 **CeFi application**: CeFi strategies trade USDT-quoted instruments regardless of share class. The difference is that
-margin is held in BTC/ETH, so P&L must be measured relative to that margin currency. A $10K USD profit on an ETH share
-class where ETH moved up $500 is actually less impressive than $10K on a flat ETH day. Delta neutrality becomes "2 BTC"
-instead of "0 USD".
+margin is held in BTC/ETH, so P&L must be measured relative to that margin currency. A
+$10K USD profit on an ETH share
+class where ETH moved up $500 is actually less impressive than $10K on a flat ETH day.
+Delta neutrality becomes "2 BTC" instead of "0 USD".
 
 **Rebalancing principle**: When equity drifts from base currency denomination (e.g., USD profits accumulate on an
 ETH-denominated portfolio), strategy emits rebalancing instructions to convert back to base. This isn't continuous
@@ -418,7 +443,7 @@ Phase 5 (Docs)
 
 ## Phase 5: Documentation
 
-- [x] [AGENT] P1. Create `codex/04-architecture/share-class-architecture.md`:
+- [x] [AGENT] P1. Create `/codex/04-architecture/share-class-architecture.md`:
   - Definition of share classes
   - CeFi vs DeFi application
   - Delta neutrality per share class
@@ -426,7 +451,7 @@ Phase 5 (Docs)
   - P&L attribution with FX component
   - Cross-service data flow diagram
 
-- [x] [AGENT] P1. Update `codex/09-strategy/cross-cutting/pnl-attribution.md` with share class P&L factors
+- [x] [AGENT] P1. Update `/codex/09-strategy/cross-cutting/pnl-attribution.md` with share class P&L factors
   - Added: supported share classes table, FX rate source, conversion logic, delta target semantics
 
 ## Success Criteria

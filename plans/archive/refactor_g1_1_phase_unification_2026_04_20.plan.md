@@ -10,12 +10,17 @@ repos: [unified-trading-pm, unified-trading-system-ui]
 scope: [engineer, admin]
 tags: []
 related: []
-created: '2026-04-20'
+created: "2026-04-20"
 priority: P0
 owner: agent
 locked_by: live-defi-rollout
 locked_since: 2026-04-20
-depends_on: [codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md §1.1, codex/14-playbooks/_ssot-rules/03-same-system-principle.md, codex/09-strategy/TIER_ZERO_UI_DEMO_AND_PARITY.md]
+depends_on:
+  [
+    /codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md §1.1,
+    /codex/14-playbooks/_ssot-rules/03-same-system-principle.md,
+    /codex/09-strategy/TIER_ZERO_UI_DEMO_AND_PARITY.md,
+  ]
 ---
 
 ## Deferred work — migrated to:
@@ -29,7 +34,7 @@ incidental DEFERRED / post-cutover / out-of-scope tokens in the body are histori
 
 Stage 3E §1.1 mandates that research, paper, and live trading views must share one component tree; the only thing that
 branches is the data-source binding per phase. This flows from rule 03 same-system-principle sub-claims (b)–(e) and is
-operationalised in `codex/09-strategy/TIER_ZERO_UI_DEMO_AND_PARITY.md`. Today's UI has partial forking (separate
+operationalised in `/codex/09-strategy/TIER_ZERO_UI_DEMO_AND_PARITY.md`. Today's UI has partial forking (separate
 research/trading lifecycle-nav sections and some duplicated service-tabs); this refactor eliminates every fork and
 introduces a `phase: "research" | "paper" | "live"` prop that every phased component accepts, with pure data-source
 rewiring inside — never a cloned component tree.
@@ -49,14 +54,14 @@ rewiring inside — never a cloned component tree.
 - **Downstream consumer (Wave C):** refactor_g1_6_derivation_engine... — `access_control(user, route, item, phase)`
   formula takes phase as an input; this refactor is the UI-side producer.
 - **Rules:** `_ssot-rules/03-same-system-principle.md` (sub-claims b–e), `_ssot-rules/06-show-dont-show-discipline.md`
-- **Strategy v2 parity spec:** `codex/09-strategy/TIER_ZERO_UI_DEMO_AND_PARITY.md`
+- **Strategy v2 parity spec:** `/codex/09-strategy/TIER_ZERO_UI_DEMO_AND_PARITY.md`
 - **Parent stage plan:** `plans/active/playbook_ssot_stage_3_infra_spec_2026_04_19.plan.md` §3E
 
 ## Mandatory read-set
 
-1. `codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md` §1.1
-2. `codex/14-playbooks/_ssot-rules/03-same-system-principle.md`
-3. `codex/09-strategy/TIER_ZERO_UI_DEMO_AND_PARITY.md`
+1. `/codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md` §1.1
+2. `/codex/14-playbooks/_ssot-rules/03-same-system-principle.md`
+3. `/codex/09-strategy/TIER_ZERO_UI_DEMO_AND_PARITY.md`
 4. `unified-trading-system-ui/components/shell/lifecycle-nav.tsx`
 5. `unified-trading-system-ui/components/shell/service-tabs.tsx`
 6. `unified-trading-system-ui/components/shell/spaces-nav-sections.tsx`
@@ -183,9 +188,9 @@ of the G1 refactor; it has no dependencies on other G1 items and can run in para
 ```
 cd /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm
 git checkout live-defi-rollout && git pull
-ls codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md
-ls codex/14-playbooks/_ssot-rules/03-same-system-principle.md
-ls codex/09-strategy/TIER_ZERO_UI_DEMO_AND_PARITY.md
+ls /codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md
+ls /codex/14-playbooks/_ssot-rules/03-same-system-principle.md
+ls /codex/09-strategy/TIER_ZERO_UI_DEMO_AND_PARITY.md
 ls ../unified-trading-system-ui/components/shell/
 ```
 

@@ -18,7 +18,7 @@ stage: [meta]
 repos: [market-tick-data-service]
 scope: [engineer]
 tags: [quality-gates, file-size, repo-blocker, mtds]
-related: [fleet_hygiene_crypto_ghsa_mtds_baseline_2026_07_13.md]
+related: [/plans/archive/2026_07/fleet_hygiene_crypto_ghsa_mtds_baseline_2026_07_13.md]
 created: 2026-07-13
 parent_epic: infrastructure_master
 priority: P2

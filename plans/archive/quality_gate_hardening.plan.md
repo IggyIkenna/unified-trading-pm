@@ -83,7 +83,7 @@ todos:
   - {
       id: p2-codex-readme,
       content:
-        "Update codex/06-coding-standards/README.md TL;DR to document STEP 5.10+5.11 as hard gates. Done:
+        "Update /codex/06-coding-standards/README.md TL;DR to document STEP 5.10+5.11 as hard gates. Done:
         intent-level-api-pattern.md created; README.md updated (service_protocol_abstraction.md p5-codex-update,
         2026-03-05).",
       status: completed,
@@ -235,7 +235,7 @@ Pattern: `os\.getenv|os\.environ` Allowed ONLY in files with `# config-bootstrap
       scripts/quality-gates.sh from the codex template for every non-deprecated repo. Running `--rollout-first` in
       run-all-setup.sh handles propagation automatically. Confirmed execution-service, instruments-service,
       features-delta-one-service, market-data-processing-service all have the file — 2026-03-09.)_
-- [x] `p2-codex-readme` — Update `codex/06-coding-standards/README.md` TL;DR to document STEP 5.10 + 5.11 as hard gates
+- [x] `p2-codex-readme` — Update `/codex/06-coding-standards/README.md` TL;DR to document STEP 5.10 + 5.11 as hard gates
       _(Done: intent-level-api-pattern.md created; README.md updated — service_protocol_abstraction.md p5-codex-update,
       2026-03-05)_
 

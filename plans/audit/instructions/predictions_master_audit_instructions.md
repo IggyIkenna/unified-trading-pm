@@ -15,7 +15,7 @@ scope: [engineer, admin]
 tags: [audit, prediction, manifest, canonicalisation, strategy, data-correctness]
 related:
   [
-    canonical_form_cross_service_audit_checklist.md,
+    /plans/audit/instructions/canonical_form_cross_service_audit_checklist.md,
     ../../active/master_data_canonicalisation_migration_catalogue_2026_06_07.md,
   ]
 created: 2026-05-22

@@ -51,12 +51,12 @@ source:
 
 agent_operating_framework_master (verified 2026-07-21, batch-5 archived-plan discipline triage). Of the 7 open items:
 the 2 WS-D items are MOOT — human-planning VM migration is now established architecture (see
-`codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`), and the 37GB-OOM class was fixed via
-`earlyoom`/systemd `MemoryMax` (`codex/05-infrastructure/agent-orchestrator-api-host.md`) plus the exact per-slot-cgroup
-suggestion shipped in `plans/active/qg_host_adaptive_resource_governor_2026_07_14.md`. The 5 WS-E items (per-agent
-messaging foundation, fleet-vs-tab surface attribute, main-tab chats, fleet swarm list, retire the collapsed custom-role
-tab) are REAL and still unshipped (verified against current `agent-orchestrator` source) but were explicitly deferred to
-next quarter by the epic itself — revive from there, not a fresh doc.
+`/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`), and the 37GB-OOM class was fixed via
+`earlyoom`/systemd `MemoryMax` (`/codex/05-infrastructure/agent-orchestrator-api-host.md`) plus the exact
+per-slot-cgroup suggestion shipped in `plans/active/qg_host_adaptive_resource_governor_2026_07_14.md`. The 5 WS-E items
+(per-agent messaging foundation, fleet-vs-tab surface attribute, main-tab chats, fleet swarm list, retire the collapsed
+custom-role tab) are REAL and still unshipped (verified against current `agent-orchestrator` source) but were explicitly
+deferred to next quarter by the epic itself — revive from there, not a fresh doc.
 
 # Orchestrator / Escalation / Fleet-Ops — Consolidated Remaining Work
 
@@ -66,10 +66,9 @@ next quarter by the epic itself — revive from there, not a fresh doc.
 > deferred 37 GB python-OOM diagnosis) and **WS-E** (the 5 `[OPERATOR]`-gated per-agent-messaging / Fleet-UI items — now
 > downstream of the **deferred W9 broker**, so not actionable this quarter). The **Decision Log (D1–D12)** below is
 > preserved verbatim as the durable AO architecture rationale; the load-bearing decisions also live in
-> `codex/04-architecture/agent-orchestrator-overview.md`, the CLAUDE.md strict-dispatch rule, and
-> `codex/12-agent-workflow/work-philosophy.md`. Revive any deferred item by filing a new small single-role plan. SSOT
-> for the new direction:
-> [`codex/12-agent-workflow/work-philosophy.md`](../../codex/12-agent-workflow/work-philosophy.md).
+> `/codex/04-architecture/agent-orchestrator-overview.md`, the CLAUDE.md strict-dispatch rule, and
+> `/codex/12-agent-workflow/work-philosophy.md`. Revive any deferred item by filing a new small single-role plan. SSOT
+> for the new direction: [`/codex/12-agent-workflow/work-philosophy.md`](/codex/12-agent-workflow/work-philosophy.md).
 
 > **Why this plan exists.** Orchestrator work accumulated across 7 active plans + 4 issue docs. Those plans are now
 > mostly DONE, leaving a handful of open items scattered across 11 documents. This plan is the **single live SSOT for
@@ -234,7 +233,7 @@ work. ALIGNED → proceed. MISMATCHED — e.g. **Sonnet on an Opus-xhigh gate** 
 account-failover), or **Opus burning on a Sonnet-bulk downgrade** — then the agent: (a) **SELF-SWITCHES** the model if
 the runtime permits (e.g. `/model`), then proceeds on the correct tier; ELSE (b) **STOPS at the gate and signals the
 operator** to change the model before continuing. **NEVER cross a gate on a mismatched model.** Extends the workspace
-task-start self-check (`codex/06-coding-standards/model-tier-selection.md`) to a PER-GATE check, because this plan's
+task-start self-check (`/codex/06-coding-standards/model-tier-selection.md`) to a PER-GATE check, because this plan's
 items span tiers — the correct model CHANGES between gates within one execution.
 
 Reusable rule: novel-hard-design → Max; breadth / adversarial-verify-at-scale → workflow; intricate-or-high-blast-radius
@@ -588,11 +587,11 @@ Reusable rule: novel-hard-design → Max; breadth / adversarial-verify-at-scale 
 
 ## Codex SSOT updates
 
-- `codex/04-architecture/agent-orchestrator-overview.md` — dispatch strict-matcher + human/central VM split (already
+- `/codex/04-architecture/agent-orchestrator-overview.md` — dispatch strict-matcher + human/central VM split (already
   updated 2026-06-12); WS-A reprobe + WS-H liveness guard after those ship.
 - `codex/12-agent-workflow/` — regen strict-matching + reassignment/prune model (WS-G DOCS P1); fix stale
   "epic-delegation is the fix" docstring.
-- `codex/05-infrastructure/agent-orchestrator-worker-topology.md` — WS-D once operator migrates.
+- `/codex/05-infrastructure/agent-orchestrator-worker-topology.md` — WS-D once operator migrates.
 
 ---
 

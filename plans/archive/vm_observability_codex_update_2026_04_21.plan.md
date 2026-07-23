@@ -17,9 +17,9 @@ locked_by: live-defi-rollout
 locked_since: 2026-04-21
 type: business
 epic: none
-completion_gates: {code: none, deployment: none, business: B1}
+completion_gates: { code: none, deployment: none, business: B1 }
 repo_gates:
-- {repo: unified-trading-pm, business: B0}
+  - { repo: unified-trading-pm, business: B0 }
 depends_on: []
 isProject: false
 ---
@@ -49,14 +49,14 @@ Codex needs to document the guarantees + the machinery so future VM touchers kno
 ## Blast radius
 
 - **unified-trading-pm** (only):
-  - `codex/05-infrastructure/vm-tarball-deployment.md` — extend with an "Observability & Lifecycle" section covering
+  - `/codex/05-infrastructure/vm-tarball-deployment.md` — extend with an "Observability & Lifecycle" section covering
     heartbeat daemon, streaming GCS log, `/api/vm-deployments` registry entry, and self-delete on completion.
 
 ## Pre-audit manifest
 
 | File                                                        | Existing content                                    | Action                                                 |
 | ----------------------------------------------------------- | --------------------------------------------------- | ------------------------------------------------------ |
-| `codex/05-infrastructure/vm-tarball-deployment.md`          | Covers tarball refresh + launcher pattern.          | Add §"Observability & Lifecycle" at the end. No reorg. |
+| `/codex/05-infrastructure/vm-tarball-deployment.md`         | Covers tarball refresh + launcher pattern.          | Add §"Observability & Lifecycle" at the end. No reorg. |
 | `deployment-service/scripts/vm/vm-exec-with-gcs-tee.sh`     | Wrapper (uploaded to `gs://.../vm/`). Post-beaa2e5. | Read-only reference — link to the self-delete block.   |
 | `deployment-service/deployment_service/vm/heartbeat_cli.py` | Daemon implementation.                              | Read-only reference.                                   |
 | `deployment-api/deployment_api/routes/vm_deployments.py`    | `/api/vm-deployments` endpoint.                     | Cross-ref in codex: where to view registry entries.    |
@@ -117,9 +117,9 @@ historical backfill, forward-poll pre-fix) got stuck RUNNING indefinitely — ma
 
 ### §Cross-refs to land
 
-- `codex/02-data/sports-scheduling-and-sharding.md` §8 (Cloud Run vs VM — "VMs use the wrapper's heartbeat + self-delete
-  for any run >60s")
-- `codex/05-infrastructure/runtime-tiers-and-deployment.md` if that doc covers the same ground.
+- `/codex/02-data/sports-scheduling-and-sharding.md` §8 (Cloud Run vs VM — "VMs use the wrapper's heartbeat +
+  self-delete for any run >60s")
+- `/codex/05-infrastructure/runtime-tiers-and-deployment.md` if that doc covers the same ground.
 
 ## Success criteria
 
@@ -140,7 +140,7 @@ historical backfill, forward-poll pre-fix) got stuck RUNNING indefinitely — ma
 
 ### Phase 2: Cross-ref updates [PARALLEL]
 
-- [x] [AGENT] P1. Update `codex/02-data/sports-scheduling-and-sharding.md` §8 to cite the new section.
+- [x] [AGENT] P1. Update `/codex/02-data/sports-scheduling-and-sharding.md` §8 to cite the new section.
 - [x] [AGENT] P2. Sweep `codex/` for any mention of "SSH to tail log" or "manually gcloud delete" that predates the
       fixes. Replace with a pointer to the new section.
 
@@ -148,8 +148,8 @@ historical backfill, forward-poll pre-fix) got stuck RUNNING indefinitely — ma
 
 - [x] [AGENT] P0. `bash unified-trading-pm/scripts/quality-gates.sh` green (plan-health + codex compliance). **Note
       (2026-04-21):** PM QG blocks on 2 pre-existing `scope:` frontmatter omissions
-      (`codex/02-data/sports-scheduling-and-sharding.md`,
-      `codex/09-strategy/architecture-v2/dashboard-services-grid.md`) that pre-date this plan — neither file is in this
+      (`/codex/02-data/sports-scheduling-and-sharding.md`,
+      `/codex/09-strategy/architecture-v2/dashboard-services-grid.md`) that pre-date this plan — neither file is in this
       plan's blast radius. Plan-health + orphan-strategy warnings unrelated. Commit uses
       `[QG-BYPASS: pre-existing     scope frontmatter]` per `feedback_prek_patch_restore_race_use_no_verify.md` pattern.
 - [x] [AGENT] P0. Commit + quickmerge (`--agent`). **Note:** doc work already landed on `live-defi-rollout` as commit

@@ -99,7 +99,7 @@ individually with per-vault manifest `record_failed` rows.
 
 # Why this matters
 
-This is exactly the kind of silent gap `codex/02-data/data-pipeline-correctness-hard-rule.md` exists to catch — a
+This is exactly the kind of silent gap `/codex/02-data/data-pipeline-correctness-hard-rule.md` exists to catch — a
 handler that both looks "phase=pipeline"/wired-and-working from static code review AND has historical captured rows in
 the manifest/GCS (so a lookback query would show "yes, this venue has data") while actually being dead for the most
 recent ~4 weeks. It affects the ADD/DROP verdict framing for this audit too: FRAX's adapter itself verdicts ADD (real,

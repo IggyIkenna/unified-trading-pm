@@ -19,9 +19,9 @@ scope: [engineer, admin]
 tags: [vm-lifecycle, zombie-watchdog, cost, boot-disk, orphan, self-delete, reaper, infrastructure, resolved]
 related:
   [
-    ../../../codex/05-infrastructure/deployment-observability.md,
-    ../../../codex/05-infrastructure/vm-tarball-deployment.md,
-    ../../../codex/05-infrastructure/spot-vms-for-backfill.md,
+    /codex/05-infrastructure/deployment-observability.md,
+    /codex/05-infrastructure/vm-tarball-deployment.md,
+    /codex/05-infrastructure/spot-vms-for-backfill.md,
   ]
 created: 2026-06-30
 parent_epic: infrastructure_master

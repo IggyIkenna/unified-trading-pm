@@ -48,11 +48,11 @@ crons), `deployment_and_user_management_master` (deploy/promote API), and `obser
 monitoring), and **no single audit verified the contract end-to-end** — exactly the blind spot that let `staging` drift
 ~1 month undetected (see `plans/active/issues/full_cicd_sit_target_state_2026_05_24.md`).
 
-Codex SSOTs: `codex/05-infrastructure/vm-tarball-deployment.md`, `codex/05-infrastructure/per-tab-worktrees.md`,
-`codex/05-infrastructure/gcs-object-operations.md`, `plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md`,
-`codex/08-workflows/ci-cd-flow.md` (engineer SSOT), `codex/08-workflows/deployment-flow.md` (operator SSOT),
-`codex/05-infrastructure/deployment-and-qg-strategy.md` (tarball-vs-image + 4-tier QG enforcement),
-`codex/06-coding-standards/quality-gates.md` (two-pass model + sentinel)
+Codex SSOTs: `/codex/05-infrastructure/vm-tarball-deployment.md`, `/codex/05-infrastructure/per-tab-worktrees.md`,
+`/codex/05-infrastructure/gcs-object-operations.md`, `plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md`,
+`/codex/08-workflows/ci-cd-flow.md` (engineer SSOT), `/codex/08-workflows/deployment-flow.md` (operator SSOT),
+`/codex/05-infrastructure/deployment-and-qg-strategy.md` (tarball-vs-image + 4-tier QG enforcement),
+`/codex/06-coding-standards/quality-gates.md` (two-pass model + sentinel)
 
 ## Triggers
 
@@ -115,7 +115,7 @@ Codex SSOTs: `codex/05-infrastructure/vm-tarball-deployment.md`, `codex/05-infra
       `--skip-tests|--skip-typecheck|--skip-codex|--quick` do NOT reach the write.
 - [ ] (h3) **quickmerge never force-pushes.** Grep:
       `rg -n "push .*--force|--force-with-lease|push -f\b" scripts/quickmerge.sh` — expect **0** real hits (comment
-      keywords like `enforce-*` are fine). Cross-check `codex/08-workflows/ci-cd-flow.md` § "Conditional Push Protocol"
+      keywords like `enforce-*` are fine). Cross-check `/codex/08-workflows/ci-cd-flow.md` § "Conditional Push Protocol"
       still bans force-push to LDR.
 - [ ] (h4) **Human commits auto-PR to `staging` with auto-merge.** Grep:
       `rg -n "gh pr (create|merge).*(staging|--auto)" scripts/quickmerge.sh` — PR base is `staging` for human commits,
@@ -259,7 +259,7 @@ Result file at `plans/audit/results/infrastructure_master_audit_YYYY_MM_DD.md`. 
 
 ## Linked Results
 
-| Date       | Result file                                                                                                     | Status                                                                                                                  |
-| ---------- | --------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| 2026-06-01 | [infrastructure_master_audit_2026_06_01.md](../results/infrastructure_master_audit_2026_06_01.md)               | First CI/CD-contract run — RED on branch-protection consistency (i)                                                     |
+| Date       | Result file                                                                                                     | Status                                                                                                                 |
+| ---------- | --------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| 2026-06-01 | [infrastructure_master_audit_2026_06_01.md](../results/infrastructure_master_audit_2026_06_01.md)               | First CI/CD-contract run — RED on branch-protection consistency (i)                                                    |
 | 2026-06-17 | [cicd_pipeline_vs_plans_drift_audit_2026_06_17.md](../results/cicd_pipeline_vs_plans_drift_audit_2026_06_17.md) | Pipeline↔plans drift audit — 0 live regressions; 25 drift findings (3 need a decision, mostly doc/SSOT lag) for triage |

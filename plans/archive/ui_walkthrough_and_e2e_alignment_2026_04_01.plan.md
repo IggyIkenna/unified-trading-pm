@@ -10,54 +10,71 @@ repos: [e2e-testing, execution-service, strategy-service, unified-trading-pm, un
 scope: [engineer, admin]
 tags: []
 related: []
-created: '2026-04-03'
+created: "2026-04-03"
 remaining_todos_consolidated_into: consolidated_strategy_and_ui_2026_04_15
 superseded_by: [consolidated_strategy_and_ui_2026_04_15.md]
 reconciliation_status: superseded_by_consolidator
 reconciliation_date: 2026-04-25
-overview: UI full strategy walkthrough capability (all strategies manually executable in mock), E2E testing for all modes, batch=live alignment
+overview:
+  UI full strategy walkthrough capability (all strategies manually executable in mock), E2E testing for all modes,
+  batch=live alignment
 type: code
 epic: epic-code-completion
 locked_by: live-defi-rollout
 locked_since: 2026-04-01
-completion_gates: {code: C5, deployment: none, business: none}
+completion_gates: { code: C5, deployment: none, business: none }
 repo_gates:
-- {repo: unified-trading-system-ui, code: C0, deployment: none, business: none}
-- {repo: e2e-testing, code: C0, deployment: none, business: none}
-- {repo: strategy-service, code: C0, deployment: none, business: none}
-- {repo: execution-service, code: C0, deployment: none, business: none}
-- {repo: pnl-attribution-service, code: C0, deployment: none, business: none}
-- {repo: position-balance-monitor-service, code: C0, deployment: none, business: none}
-- {repo: risk-and-exposure-service, code: C0, deployment: none, business: none}
-depends_on: [share-class-architecture, defi-instrument-pipeline-and-rewards, token-wrapping-venue-collateral, client-config-and-defi-risk, ui-sync-hardening, platform-strategy-families-and-haruko-gaps]
+  - { repo: unified-trading-system-ui, code: C0, deployment: none, business: none }
+  - { repo: e2e-testing, code: C0, deployment: none, business: none }
+  - { repo: strategy-service, code: C0, deployment: none, business: none }
+  - { repo: execution-service, code: C0, deployment: none, business: none }
+  - { repo: pnl-attribution-service, code: C0, deployment: none, business: none }
+  - { repo: position-balance-monitor-service, code: C0, deployment: none, business: none }
+  - { repo: risk-and-exposure-service, code: C0, deployment: none, business: none }
+depends_on:
+  [
+    share-class-architecture,
+    defi-instrument-pipeline-and-rewards,
+    token-wrapping-venue-collateral,
+    client-config-and-defi-risk,
+    ui-sync-hardening,
+    platform-strategy-families-and-haruko-gaps,
+  ]
 todos:
-- {id: ui-1a-walkthrough-audit, content: '- [ ] [AGENT] P0. Audit UI for every strategy walkthrough — can client manually execute each step?
+  - { id: ui-1a-walkthrough-audit, content: "- [ ] [AGENT] P0. Audit UI for every strategy walkthrough — can client
+        manually execute each step?
 
-    ', status: todo, note: Every strategy must be walkable in mock mode}
-- {id: ui-1b-lending-walkthrough, content: '- [x] [AGENT] P0. Ensure AAVE lending strategy is fully walkable (deposit, monitor yield, withdraw)
+        ", status: todo, note: Every strategy must be walkable in mock mode }
+  - { id: ui-1b-lending-walkthrough, content: "- [x] [AGENT] P0. Ensure AAVE lending strategy is fully walkable
+        (deposit, monitor yield, withdraw)
 
-    ', status: done, note: ''}
-- {id: ui-1c-staking-walkthrough, content: '- [x] [AGENT] P0. Ensure staking strategy is fully walkable (stake, monitor weETH, claim rewards, sell rewards)
+        ", status: done, note: "" }
+  - { id: ui-1c-staking-walkthrough, content: "- [x] [AGENT] P0. Ensure staking strategy is fully walkable (stake,
+        monitor weETH, claim rewards, sell rewards)
 
-    ', status: done, note: ''}
-- {id: ui-1d-basis-walkthrough, content: '- [x] [AGENT] P0. Ensure basis trade is fully walkable (spot buy, perp short, funding collection, rebalance, unwind)
+        ", status: done, note: "" }
+  - { id: ui-1d-basis-walkthrough, content: "- [x] [AGENT] P0. Ensure basis trade is fully walkable (spot buy, perp
+        short, funding collection, rebalance, unwind)
 
-    ', status: done, note: ''}
-- {id: ui-1e-recursive-walkthrough, content: '- [x] [AGENT] P0. Ensure recursive staking is fully walkable (flash loan bundle, HF monitoring, emergency exit)
+        ", status: done, note: "" }
+  - { id: ui-1e-recursive-walkthrough, content: "- [x] [AGENT] P0. Ensure recursive staking is fully walkable (flash
+        loan bundle, HF monitoring, emergency exit)
 
-    ', status: done, note: ''}
-- {id: ui-2a-batch-live, content: '- [ ] [AGENT] P0. Verify batch=live alignment across all services for all strategies
+        ", status: done, note: "" }
+  - { id: ui-2a-batch-live, content: "- [ ] [AGENT] P0. Verify batch=live alignment across all services for all
+        strategies
 
-    ', status: todo, note: ''}
-- {id: ui-2b-e2e-all-strategies, content: '- [ ] [AGENT] P0. Create E2E test suite covering all strategies in all modes (batch/paper/live)
+        ", status: todo, note: "" }
+  - { id: ui-2b-e2e-all-strategies, content: "- [ ] [AGENT] P0. Create E2E test suite covering all strategies in all
+        modes (batch/paper/live)
 
-    ', status: todo, note: ''}
-- {id: ui-3a-demo-scripts, content: '- [ ] [AGENT] P1. Create demo walkthrough scripts for client presentations
+        ", status: todo, note: "" }
+  - { id: ui-3a-demo-scripts, content: "- [ ] [AGENT] P1. Create demo walkthrough scripts for client presentations
 
-    ', status: todo, note: ''}
-- {id: ui-4a-docs, content: '- [ ] [AGENT] P1. Update codex + handover docs
+        ", status: todo, note: "" }
+  - { id: ui-4a-docs, content: "- [ ] [AGENT] P1. Update codex + handover docs
 
-    ', status: todo, note: ''}
+        ", status: todo, note: "" }
 isProject: false
 ---
 
@@ -522,13 +539,13 @@ risk-and-exposure-service
   - Add share class switching instructions
   - Add mock data descriptions
 
-- [ ] [AGENT] P1. Create `codex/08-workflows/defi-demo-runbook.md`:
+- [ ] [AGENT] P1. Create `/codex/08-workflows/defi-demo-runbook.md`:
   - Full demo script from start to finish
   - What to show for each strategy
   - How to handle questions about gaps (strategy rotation = future, documented)
   - Emergency scenarios to demonstrate (HF drop, depeg)
 
-- [ ] [AGENT] P1. Update `codex/08-workflows/local-dev.md`:
+- [ ] [AGENT] P1. Update `/codex/08-workflows/local-dev.md`:
   - Add DeFi-specific local dev instructions
   - E2E testing setup
   - Demo mode vs full mode

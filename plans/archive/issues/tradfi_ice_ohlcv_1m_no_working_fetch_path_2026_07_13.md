@@ -53,10 +53,10 @@ tags:
 related:
   [
     ../data_pipeline_e2e_check_2026_07_10.md,
-    krx_intraday_ohlcv_registry_vs_adapter_mismatch_2026_07_12.md,
-    tradfi_databento_ohlcv_silent_zero_rows_2026_07_12.md,
-    ../../../codex/02-data/honest-coverage-model.md,
-    ../../../codex/02-data/tradfi-databento-sourcing-ssot.md,
+    /plans/archive/issues/krx_intraday_ohlcv_registry_vs_adapter_mismatch_2026_07_12.md,
+    /plans/archive/issues/tradfi_databento_ohlcv_silent_zero_rows_2026_07_12.md,
+    /codex/02-data/honest-coverage-model.md,
+    /codex/02-data/tradfi-databento-sourcing-ssot.md,
   ]
 created: 2026-07-13
 parent_epic: infrastructure_master

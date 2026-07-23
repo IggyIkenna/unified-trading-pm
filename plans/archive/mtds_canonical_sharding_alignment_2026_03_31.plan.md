@@ -70,7 +70,7 @@ Canonical: `by_date/day={date}/feature_group={feature_group}/features.parquet` A
 | market-data-processing-service | config.py                          | `get_processed_path()` → use PATH_REGISTRY instead of hardcoded template          |
 | unified-trading-library        | config_interface/paths/registry.py | Verify specs are correct (already exist)                                          |
 | unified-trading-library        | manifest_writer.py                 | reconcile_manifest prefix must handle multi-dimension shards                      |
-| unified-trading-pm             | codex/02-data/partitioning.md      | Verify spec matches PATH_REGISTRY                                                 |
+| unified-trading-pm             | /codex/02-data/partitioning.md     | Verify spec matches PATH_REGISTRY                                                 |
 
 ## Dependency DAG
 
@@ -90,7 +90,7 @@ Phase 4: E2E validation (full pipeline run)
       `["date", "data_type", "instrument_type", "venue"]`, file_template = `{instrument_key}.parquet`
 - [x] [AGENT] P0. Read PATH_REGISTRY processed_candles spec — confirm partition_keys =
       `["date", "timeframe", "data_type", "instrument_type", "venue"]`, file_template = `{instrument_id}.parquet`
-- [x] [AGENT] P0. Read `codex/02-data/partitioning.md` — confirm both specs match PATH_REGISTRY
+- [x] [AGENT] P0. Read `/codex/02-data/partitioning.md` — confirm both specs match PATH_REGISTRY
 - [x] [AGENT] P0. Verify `build_path("raw_tick_data", ...)` and `build_path("processed_candles", ...)` produce correct
       hive paths
 - [ ] [AGENT] P1. Clean up legacy `PathRegistry` class constants (MARKET*TICK_RAW, MARKET_CANDLE*\*) that use old flat
@@ -160,7 +160,7 @@ Phase 4: E2E validation (full pipeline run)
 
 ## Success Criteria
 
-- All GCS paths match `codex/02-data/partitioning.md` and PATH_REGISTRY specs exactly
+- All GCS paths match `/codex/02-data/partitioning.md` and PATH_REGISTRY specs exactly
 - `build_path()` is the sole path construction method — no hardcoded path templates in service code
 - Legacy `PathRegistry` class constants cleaned up or deleted
 - MTDS manifest tracks `(date, venue, data_type)` — skip-if-exists works per data_type

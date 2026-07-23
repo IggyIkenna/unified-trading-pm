@@ -6,11 +6,19 @@ status: superseded
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [deployment-service, instruments-service, market-tick-data-service, system-integration-tests, unified-trading-library, unified-trading-pm]
+repos:
+  [
+    deployment-service,
+    instruments-service,
+    market-tick-data-service,
+    system-integration-tests,
+    unified-trading-library,
+    unified-trading-pm,
+  ]
 scope: [engineer, admin]
 tags: []
 related: []
-created: '2026-04-21'
+created: "2026-04-21"
 superseded_by: [universe_ssot_fix_2026_04_20.md]
 reconciliation_status: superseded
 reconciliation_date: 2026-04-25
@@ -78,7 +86,7 @@ todos:
         pending
 
 - id: phase-a-path-layout-ssot-reconcile content: |
-  - [ ] [AGENT] P0. `codex/02-data/per-category-bucket-layouts.md` SSOT says MTDS writes under
+  - [ ] [AGENT] P0. `/codex/02-data/per-category-bucket-layouts.md` SSOT says MTDS writes under
         `raw_tick_data/by_date/day=...` but actual 2026-04-20 canary landed 131 parquet at FLAT
         `day=.../category=.../venue=.../     instrument_type=.../data_type=.../{id}.parquet` (no
         `raw_tick_data/by_date/` prefix). Either docs are wrong OR MTDS lost the prefix somewhere. Audit MTDS write path
@@ -116,7 +124,7 @@ todos:
         Update `launch-canonical-smoke-vm.sh` machine-type if (a). status: pending
 
 - id: phase-a-tier-semantic-doc content: |
-  - [ ] [AGENT] P1. Update `codex/02-data/availability-manifest-and-data-status.md` (manifest v5 SSOT) with Tier-0 vs
+  - [ ] [AGENT] P1. Update `/codex/02-data/availability-manifest-and-data-status.md` (manifest v5 SSOT) with Tier-0 vs
         Tier-1 semantic difference observed 2026-04-20: _ Tier-0 (instruments-service) rows have `data_type=''`
         (universe row spans all data_types for that (date, venue)) _ Tier-1/Tier-2 rows have `data_type` populated
         per-shard Plus: manifest has no `category` column; category is bucket-level. Update SIT

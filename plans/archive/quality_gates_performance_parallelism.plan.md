@@ -1,6 +1,6 @@
 ---
 doc_type: plan
-title: '07: Quality Gates Performance'
+title: "07: Quality Gates Performance"
 summary:
 status: complete
 nature: record
@@ -10,7 +10,7 @@ repos: [deployment-service, instruments-service, market-data-processing-service]
 scope: [engineer, admin]
 tags: []
 related: []
-created: '2026-02-25'
+created: "2026-02-25"
 ---
 
 # 07: Quality Gates Performance
@@ -444,7 +444,7 @@ If optimizations cause issues:
 ## 📚 Related Documentation
 
 - ChatGPT conversation: Lines 167-171 (quality gates performance)
-- Quality gates guide: `unified-trading-codex/06-coding-standards/quality-gates.md`
+- Quality gates guide: `unified-trading-/codex/06-coding-standards/quality-gates.md`
 - Quality gate optimization: `.cursor/rules/quality-gate-optimization.mdc`
 - pytest-xdist docs: https://pytest-xdist.readthedocs.io
 

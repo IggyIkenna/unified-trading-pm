@@ -10,8 +10,8 @@ repos: [unified-api-contracts, unified-trading-library]
 scope: [engineer, admin]
 tags: []
 related: []
-created: '2026-03-05'
-overview: 'Establish a verified baseline across all repos before any hardening work begins.
+created: "2026-03-05"
+overview: "Establish a verified baseline across all repos before any hardening work begins.
 
   Every repo must meet minimum standards (coverage, file/function/method/class size,
 
@@ -23,18 +23,63 @@ overview: 'Establish a verified baseline across all repos before any hardening w
 
   before any hardening work starts. Run in tier order (T0 first), parallel within each tier.
 
-  '
+  "
 todos:
-- {id: p0-t0-parallel, content: 'Run all 5 checks (quality-gates.sh, basedpyright, os.getenv scan, Any scan, cloud-agnostic scan) on all 6 T0 repos in parallel: unified-api-contracts, unified-internal-contracts, unified-cloud-interface, unified-events-interface, unified-reference-data-interface, matching-engine-library. Fix trivial violations immediately; document bypasses.', status: done}
-- {id: p0-t1-parallel, content: 'Run all 5 checks on all 4 T1 repos in parallel (after T0 passes): unified-config-interface, unified-trading-library, execution-algo-library, unified-feature-calculator-library. Fix trivial violations immediately; document bypasses.', status: done}
-- {id: p0-t2-parallel, content: 'Run all 5 checks on all T2 repos in parallel (after T1 passes): unified-market-interface, unified-trade-execution-interface, unified-ml-interface, unified-position-interface, unified-defi-execution-interface, unified-sports-execution-interface. Fix trivial violations immediately; document bypasses.', status: done}
-- {id: p0-t3, content: 'Run all 5 checks on T3 repo: unified-domain-client. Fix trivial violations immediately; document bypasses.', status: done}
-- {id: p0-services-batch1, content: 'Run all 5 checks on services batch 1 (matches Phase 3 DAG order, batch 1). Fix or document.', status: done}
-- {id: p0-services-batch2, content: Run all 5 checks on services batch 2. Fix or document., status: done}
-- {id: p0-services-batch3, content: Run all 5 checks on services batch 3. Fix or document., status: done}
-- {id: p0-services-batch4, content: Run all 5 checks on services batch 4. Fix or document., status: done}
-- {id: p0-bypass-audit-update, content: 'Ensure QUALITY_GATE_BYPASS_AUDIT.md is up to date in every repo that required a bypass. Gate: zero undocumented suppressions.', status: done}
-- {id: p0-gate-check, content: 'Final gate check: all repos have quality-gates.sh passing (or bypass documented), basedpyright strict passing (or bypass documented), zero os.getenv in production source, zero Any in public API (or bypass documented), pyproject.toml has requires-python = ">=3.13,<3.14", QUALITY_GATE_BYPASS_AUDIT.md up to date.', status: done}
+  - {
+      id: p0-t0-parallel,
+      content:
+        "Run all 5 checks (quality-gates.sh, basedpyright, os.getenv scan, Any scan, cloud-agnostic scan) on all 6 T0
+        repos in parallel: unified-api-contracts, unified-internal-contracts, unified-cloud-interface,
+        unified-events-interface, unified-reference-data-interface, matching-engine-library. Fix trivial violations
+        immediately; document bypasses.",
+      status: done,
+    }
+  - {
+      id: p0-t1-parallel,
+      content:
+        "Run all 5 checks on all 4 T1 repos in parallel (after T0 passes): unified-config-interface,
+        unified-trading-library, execution-algo-library, unified-feature-calculator-library. Fix trivial violations
+        immediately; document bypasses.",
+      status: done,
+    }
+  - {
+      id: p0-t2-parallel,
+      content:
+        "Run all 5 checks on all T2 repos in parallel (after T1 passes): unified-market-interface,
+        unified-trade-execution-interface, unified-ml-interface, unified-position-interface,
+        unified-defi-execution-interface, unified-sports-execution-interface. Fix trivial violations immediately;
+        document bypasses.",
+      status: done,
+    }
+  - {
+      id: p0-t3,
+      content:
+        "Run all 5 checks on T3 repo: unified-domain-client. Fix trivial violations immediately; document bypasses.",
+      status: done,
+    }
+  - {
+      id: p0-services-batch1,
+      content: "Run all 5 checks on services batch 1 (matches Phase 3 DAG order, batch 1). Fix or document.",
+      status: done,
+    }
+  - { id: p0-services-batch2, content: Run all 5 checks on services batch 2. Fix or document., status: done }
+  - { id: p0-services-batch3, content: Run all 5 checks on services batch 3. Fix or document., status: done }
+  - { id: p0-services-batch4, content: Run all 5 checks on services batch 4. Fix or document., status: done }
+  - {
+      id: p0-bypass-audit-update,
+      content:
+        "Ensure QUALITY_GATE_BYPASS_AUDIT.md is up to date in every repo that required a bypass. Gate: zero undocumented
+        suppressions.",
+      status: done,
+    }
+  - {
+      id: p0-gate-check,
+      content:
+        'Final gate check: all repos have quality-gates.sh passing (or bypass documented), basedpyright strict passing
+        (or bypass documented), zero os.getenv in production source, zero Any in public API (or bypass documented),
+        pyproject.toml has requires-python = ">=3.13,<3.14", QUALITY_GATE_BYPASS_AUDIT.md up to date.',
+      status: done,
+    }
 isProject: true
 ---
 
@@ -161,7 +206,7 @@ Phase 0 is complete when ALL repos have:
 > ordering is mandatory and is NOT implied by `blockedBy` alone — must be explicitly followed.
 
 - Feeds into: `phase1_foundation_prep.md`, `phase2_library_tier_hardening.md`
-- Standards SSOT: `unified-trading-codex/06-coding-standards/quality-gates.md`
+- Standards SSOT: `unified-trading-/codex/06-coding-standards/quality-gates.md`
 - Cursor rules: `.cursor/rules/core/no-type-any-use-specific.mdc`, `strict-quality-gates.mdc`, `cloud-agnostic.mdc`
 
 > **Phase 0 gate note:** `p0-gate-check: done` means the enforcement scan and initial baseline was established

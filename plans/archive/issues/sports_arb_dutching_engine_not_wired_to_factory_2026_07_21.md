@@ -21,7 +21,7 @@ tags: [strategy-service, sports, arbitrage, archetype, factory, engine-dispatch,
 related:
   [
     plans/active/issues/sports_predictions_live_mode_and_backtest_execution_orphaned_2026_07_21.md,
-    codex/09-strategy/architecture-v2/archetypes/ml-directional-event-settled.md,
+    /codex/09-strategy/architecture-v2/archetypes/ml-directional-event-settled.md,
   ]
 created: "2026-07-21"
 parent_epic: sports_master
@@ -139,5 +139,5 @@ Needs an architecture decision, not a mechanical fix — filing the facts + opti
 
 ## Codex SSOTs
 
-`codex/09-strategy/architecture-v2/archetypes/ml-directional-event-settled.md` (sibling archetype doc pattern to follow
+`/codex/09-strategy/architecture-v2/archetypes/ml-directional-event-settled.md` (sibling archetype doc pattern to follow
 if Option A ships a new archetype doc).

@@ -30,7 +30,10 @@ repos:
 scope: [engineer, admin]
 tags: [multi-agent-safety, data-loss, git, per-tab-worktrees, incident]
 related:
-  [codex/05-infrastructure/per-tab-worktrees.md, plans/active/issues/slot11_silent_branch_reset_data_loss_2026_07_13.md]
+  [
+    /codex/05-infrastructure/per-tab-worktrees.md,
+    plans/active/issues/slot11_silent_branch_reset_data_loss_2026_07_13.md,
+  ]
 created: 2026-07-13
 parent_epic: infrastructure_master
 priority: P1
@@ -94,7 +97,7 @@ diverged / detached").
 ## Recommended decision
 
 1. Identify the actual process doing this (search server-side / VM-side for anything running `git checkout -B` or
-   `git branch -f` against `.tabs/*/` worktrees — candidates per `codex/05-infrastructure/per-tab-worktrees.md`: the
+   `git branch -f` against `.tabs/*/` worktrees — candidates per `/codex/05-infrastructure/per-tab-worktrees.md`: the
    orchestrator's structural pre-spawn branch-state gate (`worktree_clean_check.check_slot_branch_state`, described in
    `unified-trading-pm/agents/worker.md` as "repairs a stale upstream + FFs when behind and QUARANTINES a
    detached/wrong-branch/diverged clone") is the most likely candidate given it explicitly "repairs" branch state, and
@@ -136,8 +139,8 @@ diverged / detached").
       claim/tmux liveness that defines "in-flight" is precisely what false-negatives a live worker (UPDATE 7) — gating
       on it would blind the canary to the case it exists to catch. 7 unit tests (`tests/test_head_backward_canary.py`),
       full `quality-gates.sh` green (1276 passed, sentinel `4319e577`). Alerting SSOT
-      `codex/04-architecture/agent-orchestrator-alerting.md` updated (new PAGE row). This was the last open todo in this
-      doc — both P1 (Todo-1 realign guard) and this P2 (Todo-2 detection canary) are now shipped.
+      `/codex/04-architecture/agent-orchestrator-alerting.md` updated (new PAGE row). This was the last open todo in
+      this doc — both P1 (Todo-1 realign guard) and this P2 (Todo-2 detection canary) are now shipped.
 
 ## Progress Log
 

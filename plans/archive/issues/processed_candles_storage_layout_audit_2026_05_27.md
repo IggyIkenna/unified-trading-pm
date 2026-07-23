@@ -164,7 +164,7 @@ parallelism: current = 70 min, optimal = 10 min. Even with concurrency this is t
 
 **Manifest shard SSOT:**
 
-- `codex/02-data/availability-manifest-and-data-status.md` — declares shard atom as `(date, instrument)`. Any partition
+- `/codex/02-data/availability-manifest-and-data-status.md` — declares shard atom as `(date, instrument)`. Any partition
   change requires a codex update here.
 - `plans/active/gcs_migration_bundle_pipeline_mode_2026_05_08.md` — the single-walk-discipline HARD RULE document.
 

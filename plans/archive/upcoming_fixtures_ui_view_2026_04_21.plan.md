@@ -17,11 +17,11 @@ locked_by: live-defi-rollout
 locked_since: 2026-04-21
 type: code
 epic: none
-completion_gates: {code: C5, deployment: none, business: none}
+completion_gates: { code: C5, deployment: none, business: none }
 repo_gates:
-- {repo: deployment-api, code: C4}
-- {repo: deployment-ui, code: C4}
-- {repo: unified-trading-system-ui, code: C0}
+  - { repo: deployment-api, code: C4 }
+  - { repo: deployment-ui, code: C4 }
+  - { repo: unified-trading-system-ui, code: C0 }
 depends_on: []
 isProject: false
 ---
@@ -64,7 +64,7 @@ No UI consumes this data today. This plan surfaces upcoming fixtures in both UIs
 | `deployment-ui/src/api/client.ts`                                 | API client — add `fetchUpcomingFixtures` + types.                       |
 | `deployment-ui/src/components/DataStatusTab.tsx`                  | Where to slot the new UpcomingFixtures component (or sibling route).    |
 | `unified-trading-system-ui/src/`                                  | Audit: does a sports/markets tab exist? If yes, add here. If no, defer. |
-| `codex/02-data/sports-scheduling-and-sharding.md` §4              | Contract on what dates are available in the forward-poll window.        |
+| `/codex/02-data/sports-scheduling-and-sharding.md` §4             | Contract on what dates are available in the forward-poll window.        |
 
 ## Data shape
 

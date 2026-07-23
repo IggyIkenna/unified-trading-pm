@@ -219,12 +219,12 @@ with manifest captured rows ≥ 90% of expected date range.
 
 ## Codex SSOT updates
 
-- [x] [codex] P1. Update `codex/02-data/defi-data-type-taxonomy.md` when Phase 5 ships: add `native_staking_rates` to
+- [x] [codex] P1. Update `/codex/02-data/defi-data-type-taxonomy.md` when Phase 5 ships: add `native_staking_rates` to
       the Solana data-type table. (PM@this-commit — added Native Staking family + SOLANA-NATIVE-SOLANA coverage row +
       per-protocol matrix entry)
-- [x] [codex] P1. Update `codex/02-data/instrument-pipeline-defi.md` to add SANCTUM + SOLBLAZE to the Solana LST adapter
-      table. (PM@this-commit — sanctum.py + solblaze.py + solana_native_staking in adapter list; 7 Solana LST instrument
-      keys added)
+- [x] [codex] P1. Update `/codex/02-data/instrument-pipeline-defi.md` to add SANCTUM + SOLBLAZE to the Solana LST
+      adapter table. (PM@this-commit — sanctum.py + solblaze.py + solana_native_staking in adapter list; 7 Solana LST
+      instrument keys added)
 
 ---
 

@@ -10,12 +10,16 @@ repos: [strategy-service, unified-api-contracts, unified-trading-pm, unified-tra
 scope: [engineer, admin]
 tags: []
 related: []
-created: '2026-04-20'
+created: "2026-04-20"
 priority: P0
 owner: agent
 locked_by: live-defi-rollout
 locked_since: 2026-04-20
-depends_on: [codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md §1.8, codex/09-strategy/architecture-v2/uac-registry-gaps.md (gap]
+depends_on:
+  [
+    /codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md §1.8,
+    /codex/09-strategy/architecture-v2/uac-registry-gaps.md (gap,
+  ]
 ---
 
 ## Deferred work — migrated to:
@@ -27,7 +31,7 @@ incidental DEFERRED / post-cutover / out-of-scope tokens in the body are histori
 
 ## Context
 
-Stage 3E §1.8 ships UAC gap #1 from `codex/09-strategy/architecture-v2/uac-registry-gaps.md`: **`ArchetypeCapabilityV2`
+Stage 3E §1.8 ships UAC gap #1 from `/codex/09-strategy/architecture-v2/uac-registry-gaps.md`: **`ArchetypeCapabilityV2`
 — queryable archetype → (category, instrument) support map**. Today, each v2 archetype declares its own `valid_pairs`
 (category × instrument_type) inline in the archetype module under
 `strategy-service/strategy_service/engine/strategies/v2/`. Consumers (pricing engine, derivation engine, UI catalogue,
@@ -51,9 +55,9 @@ archetype's declaration, so pricing engine (G1.2 → G1.6) and derivation engine
 - **Wave C consumers:** refactor_g1_2_instruction_schema_validation_service,
   refactor_g1_6_derivation_engine_ship_to_strategy_service_availability
 - **Wave D consumer:** refactor_g1_11_service_family_scope_rules
-- **UAC gap source:** `codex/09-strategy/architecture-v2/uac-registry-gaps.md` — Gap #1 ("ArchetypeCapabilityV2 —
+- **UAC gap source:** `/codex/09-strategy/architecture-v2/uac-registry-gaps.md` — Gap #1 ("ArchetypeCapabilityV2 —
   queryable archetype → (category, instrument) support map")
-- **Architecture-v2 README:** `codex/09-strategy/architecture-v2/README.md` — 8 families × 18 archetypes × 7 axes, 10
+- **Architecture-v2 README:** `/codex/09-strategy/architecture-v2/README.md` — 8 families × 18 archetypes × 7 axes, 10
   cross-cutting concerns
 - **V2 code (source of truth — read only):** `strategy-service/strategy_service/engine/strategies/v2/`
 - **Existing UAC pattern to follow:**
@@ -62,9 +66,9 @@ archetype's declaration, so pricing engine (G1.2 → G1.6) and derivation engine
 
 ## Mandatory read-set
 
-1. `codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md` §1.8
-2. `codex/09-strategy/architecture-v2/uac-registry-gaps.md` — especially Gap #1 in full
-3. `codex/09-strategy/architecture-v2/README.md` — 18 archetypes + 8 families + 7 axes
+1. `/codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md` §1.8
+2. `/codex/09-strategy/architecture-v2/uac-registry-gaps.md` — especially Gap #1 in full
+3. `/codex/09-strategy/architecture-v2/README.md` — 18 archetypes + 8 families + 7 axes
 4. Every archetype declaration in `strategy-service/strategy_service/engine/strategies/v2/`:
    - `strategy-service/strategy_service/engine/strategies/v2/ml_directional/`
    - `strategy-service/strategy_service/engine/strategies/v2/rules_directional/`
@@ -149,12 +153,12 @@ archetype's declaration, so pricing engine (G1.2 → G1.6) and derivation engine
       hook line**:
 
       ```bash
-      # G1.8 — archetype-capability UAC <-> UI coverage.ts parity.
-      SYNC_ARCHETYPE_CAPABILITY="${WORKSPACE_ROOT}/unified-trading-pm/scripts/propagation/sync-archetype-capability-to-ui.sh"
-      if [[ -f "$SYNC_ARCHETYPE_CAPABILITY" ]]; then
-        bash "$SYNC_ARCHETYPE_CAPABILITY" --check || exit 1
-      fi
-      ```
+                                                              # G1.8 — archetype-capability UAC <-> UI coverage.ts parity.
+                                                              SYNC_ARCHETYPE_CAPABILITY="${WORKSPACE_ROOT}/unified-trading-pm/scripts/propagation/sync-archetype-capability-to-ui.sh"
+                                                              if [[ -f "$SYNC_ARCHETYPE_CAPABILITY" ]]; then
+                                                                bash "$SYNC_ARCHETYPE_CAPABILITY" --check || exit 1
+                                                              fi
+                                                              ```
 
 - [x] [AGENT] P0. `lib/architecture-v2/coverage.ts` regenerated via `--write` — now carries the AUTO-GENERATED banner,
       matches the UAC manifest byte-for-byte.
@@ -350,7 +354,7 @@ in-repo discoverability.
 
 Plan prose (§Context, §Phase 8A, §Verification) assumed each v2 archetype declares `valid_pairs` inline in Python —
 `rg valid_pairs strategy-service/.../v2/` returns **0 hits**. v2 classes only declare `ARCHETYPE` + `FAMILY` class vars.
-The real matrix lives in `codex/09-strategy/architecture-v2/category-instrument-coverage.md` + UI
+The real matrix lives in `/codex/09-strategy/architecture-v2/category-instrument-coverage.md` + UI
 `lib/architecture-v2/coverage.ts`.
 
 **Operator confirmed: Python SSOT inline in UAC `archetype_capability.py`.** UI `coverage.ts` becomes a downstream

@@ -6,25 +6,102 @@ status: complete
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [alerting-service, client-reporting-api, deployment-api, deployment-service, execution-service, instruments-service]
+repos:
+  [alerting-service, client-reporting-api, deployment-api, deployment-service, execution-service, instruments-service]
 scope: [engineer, admin]
 tags: []
 related: []
-created: '2026-03-06'
-overview: 'Comprehensive audit of all schema/model definitions across all 60+ repos. Enforces that every schema lives in unified-api-contracts (external API) or unified-internal-contracts (internal/domain), with no exceptions. Produces a violation catalogue covering: misplaced schemas, duplicates, conflicts, orphaned schemas, and tier boundary issues. Feeds Plans #11 (orphan utilization) and #11b (UAC normalization). Outputs: audit document + codex/cursor rules updates. Remediation plan follows separately.'
+created: "2026-03-06"
+overview:
+  "Comprehensive audit of all schema/model definitions across all 60+ repos. Enforces that every schema lives in
+  unified-api-contracts (external API) or unified-internal-contracts (internal/domain), with no exceptions. Produces a
+  violation catalogue covering: misplaced schemas, duplicates, conflicts, orphaned schemas, and tier boundary issues.
+  Feeds Plans #11 (orphan utilization) and #11b (UAC normalization). Outputs: audit document + codex/cursor rules
+  updates. Remediation plan follows separately."
 todos:
-- {id: agent1-contract-repos, content: 'Agent 1: Deep inventory of UAC and UIC — all schema definitions, UAC/UIC duplicates, orphaned schemas in both, existing UIC→UAC import boundary.', status: completed}
-- {id: agent2-t0-libs, content: 'Agent 2: T0 libs (UEI, UCI-cloud, execution-algo, matching-engine) — find schemas that should be in UIC; verify no forbidden UAC/UIC imports.', status: completed}
-- {id: agent3-t1-libs, content: 'Agent 3: T1 libs (URDI, config-interface, trading-library) — classify schemas, check cross-import graph, identify MISPLACE-UIC candidates.', status: completed}
-- {id: agent4-t2-market-exec, content: 'Agent 4: T2 libs (market-interface, trade-execution-interface) — all adapter Pydantic models → MISPLACE-UAC; check for duplicates already in UAC.', status: completed}
-- {id: agent5-t2-t3-rest, content: 'Agent 5: T2/T3 libs (ml-interface, feature-calc-lib, position-interface, defi-exec, sports-exec, domain-client) — same as Agent 4; check InstrumentKey cross-import scope.', status: completed}
-- {id: agent6-services-a, content: 'Agent 6: Services A (execution-service, strategy-service, strategy-validation-service, risk-and-exposure-service, alerting-service) — all schemas are now MISPLACE-UIC; document target UIC subdirectory per schema.', status: completed}
-- {id: agent7-services-b, content: 'Agent 7: Services B (market-data-processing-service, market-tick-data-service, market-data-api, instruments-service, features-calendar-service).', status: completed}
-- {id: agent8-services-c, content: 'Agent 8: Services C (features-delta-one, features-volatility, features-cross-instrument, features-multi-timeframe, features-onchain, features-sports-service).', status: completed}
-- {id: agent9-services-d, content: 'Agent 9: Services D + APIs (ml-inference, ml-training, pnl-attribution, position-balance-monitor, execution-results-api, client-reporting-api, deployment-api, deployment-service).', status: completed}
-- {id: agent10-codex-rules, content: 'Agent 10: Codex + cursor rules audit — all existing schema placement rules; gaps vs master rules; schema-governance.md service-owned pattern to be retired; produce diff of needed changes.', status: completed}
-- {id: compile-audit-doc, content: Compile all agent findings into unified-trading-pm/plans/active/SCHEMA_CONTRACTS_AUDIT.md., status: completed}
-- {id: update-codex-cursor-rules, content: 'Update codex docs and cursor rules based on audit findings (new .mdc rules + updates to contracts-scope-and-layout.md, TIER-ARCHITECTURE.md, schema-governance.md).', status: completed}
+  - {
+      id: agent1-contract-repos,
+      content:
+        "Agent 1: Deep inventory of UAC and UIC — all schema definitions, UAC/UIC duplicates, orphaned schemas in both,
+        existing UIC→UAC import boundary.",
+      status: completed,
+    }
+  - {
+      id: agent2-t0-libs,
+      content:
+        "Agent 2: T0 libs (UEI, UCI-cloud, execution-algo, matching-engine) — find schemas that should be in UIC; verify
+        no forbidden UAC/UIC imports.",
+      status: completed,
+    }
+  - {
+      id: agent3-t1-libs,
+      content:
+        "Agent 3: T1 libs (URDI, config-interface, trading-library) — classify schemas, check cross-import graph,
+        identify MISPLACE-UIC candidates.",
+      status: completed,
+    }
+  - {
+      id: agent4-t2-market-exec,
+      content:
+        "Agent 4: T2 libs (market-interface, trade-execution-interface) — all adapter Pydantic models → MISPLACE-UAC;
+        check for duplicates already in UAC.",
+      status: completed,
+    }
+  - {
+      id: agent5-t2-t3-rest,
+      content:
+        "Agent 5: T2/T3 libs (ml-interface, feature-calc-lib, position-interface, defi-exec, sports-exec, domain-client)
+        — same as Agent 4; check InstrumentKey cross-import scope.",
+      status: completed,
+    }
+  - {
+      id: agent6-services-a,
+      content:
+        "Agent 6: Services A (execution-service, strategy-service, strategy-validation-service,
+        risk-and-exposure-service, alerting-service) — all schemas are now MISPLACE-UIC; document target UIC
+        subdirectory per schema.",
+      status: completed,
+    }
+  - {
+      id: agent7-services-b,
+      content:
+        "Agent 7: Services B (market-data-processing-service, market-tick-data-service, market-data-api,
+        instruments-service, features-calendar-service).",
+      status: completed,
+    }
+  - {
+      id: agent8-services-c,
+      content:
+        "Agent 8: Services C (features-delta-one, features-volatility, features-cross-instrument,
+        features-multi-timeframe, features-onchain, features-sports-service).",
+      status: completed,
+    }
+  - {
+      id: agent9-services-d,
+      content:
+        "Agent 9: Services D + APIs (ml-inference, ml-training, pnl-attribution, position-balance-monitor,
+        execution-results-api, client-reporting-api, deployment-api, deployment-service).",
+      status: completed,
+    }
+  - {
+      id: agent10-codex-rules,
+      content:
+        "Agent 10: Codex + cursor rules audit — all existing schema placement rules; gaps vs master rules;
+        schema-governance.md service-owned pattern to be retired; produce diff of needed changes.",
+      status: completed,
+    }
+  - {
+      id: compile-audit-doc,
+      content: Compile all agent findings into unified-trading-pm/plans/active/SCHEMA_CONTRACTS_AUDIT.md.,
+      status: completed,
+    }
+  - {
+      id: update-codex-cursor-rules,
+      content:
+        "Update codex docs and cursor rules based on audit findings (new .mdc rules + updates to
+        contracts-scope-and-layout.md, TIER-ARCHITECTURE.md, schema-governance.md).",
+      status: completed,
+    }
 isProject: true
 ---
 
@@ -192,5 +269,5 @@ Sections:
 - `unified-trading-pm/workspace-manifest.json` — tier structure for formalization
 - `unified-trading-pm/cursor-rules/imports/contracts-integration.mdc` — existing rule to update
 - `unified-trading-pm/cursor-rules/core/schema-service-owned.mdc` — rule to retire
-- `unified-trading-codex/02-data/contracts-scope-and-layout.md` — codex to update
-- `unified-trading-codex/04-architecture/TIER-ARCHITECTURE.md` — tier docs to update
+- `unified-trading-/codex/02-data/contracts-scope-and-layout.md` — codex to update
+- `unified-trading-/codex/04-architecture/TIER-ARCHITECTURE.md` — tier docs to update

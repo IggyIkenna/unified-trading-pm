@@ -27,7 +27,7 @@ locked_since: 2026-05-26
 > **ARCHIVED 2026-06-01.** All 5 phases complete; cron health operator-verified live 2026-05-30T04:00Z (0 signal-9/OOM
 > over 24h, per-cycle 31-45s). DuckDB merge shipped `unified-trading-library@7a72049`; codex-compliance + bandit
 > violations it introduced cleared `unified-trading-library@73209d50`. Codex SSOT
-> (`codex/05-infrastructure/manifest-consolidator-ssot.md` § "Merge engine") verified to reflect what shipped.
+> (`/codex/05-infrastructure/manifest-consolidator-ssot.md` § "Merge engine") verified to reflect what shipped.
 >
 > ## Deferred work — migrated to:
 >
@@ -236,7 +236,7 @@ one huge "changed" shard can exceed `memory_limit`; that case uses a `--force` s
 
 ### Phase 3 — Codex SSOT ✅ DONE
 
-- [x] [DOC] P1. ✅ Updated `codex/05-infrastructure/manifest-consolidator-ssot.md` — new "Merge engine — memory-bounded
+- [x] [DOC] P1. ✅ Updated `/codex/05-infrastructure/manifest-consolidator-ssot.md` — new "Merge engine — memory-bounded
       DuckDB" section (anti-join incremental vs `--force` window, `memory_limit` sizing, the "window doesn't spill in
       1.5.x → joins spill, size memory_limit" caveat, validation numbers) + tied invariant #5 to the
       schema_version-preservation / enumerator-NULL nuance.

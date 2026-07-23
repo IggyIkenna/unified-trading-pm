@@ -14,7 +14,7 @@ stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]
 tags: [quality-gates, evidence-backed-completion, governance, false-positive]
-related: [pm_qg_plan_discipline_and_frontmatter_regression_2026_07_21.md]
+related: [/plans/active/issues/pm_qg_plan_discipline_and_frontmatter_regression_2026_07_21.md]
 created: "2026-07-21"
 parent_epic: agent_operating_framework_master
 priority: P2

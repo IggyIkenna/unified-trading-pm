@@ -35,8 +35,8 @@ Per-client subprocess isolation (`multiprocessing.Process` under `StrategySuperv
 reconciliation, UAC schema governance (no `Any` types). 6 BLOCKING gaps from 2026-05-20 retroactive audit must be
 tracked to completion.
 
-Codex SSOTs: `codex/04-architecture/client-funds-isolation.md`,
-`codex/04-architecture/per-client-isolation-architecture.md`, `codex/04-architecture/client-lifecycle-event-bus.md`
+Codex SSOTs: `/codex/04-architecture/client-funds-isolation.md`,
+`/codex/04-architecture/per-client-isolation-architecture.md`, `/codex/04-architecture/client-lifecycle-event-bus.md`
 
 ## Triggers
 

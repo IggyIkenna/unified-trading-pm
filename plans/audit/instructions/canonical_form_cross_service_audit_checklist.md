@@ -16,7 +16,7 @@ tags: [audit, canonicalisation, manifest, data-correctness, ssot-audit, pipeline
 related:
   [
     ../../active/master_data_canonicalisation_migration_catalogue_2026_06_07.md,
-    batch_live_symmetry_master_audit_instructions.md,
+    /plans/audit/instructions/batch_live_symmetry_master_audit_instructions.md,
   ]
 created: 2026-06-01
 tier: L0
@@ -107,7 +107,7 @@ manifest-v8 lesson: a constant said v8 while 0% of 7.4M rows were v8), and **whi
 | CF-16 | **Catalogue-seeded denominator at ZERO captured data** — a `(venue, data_type, instrument_type)` with instruments listed but no market data shows a fully-enumerated `expected_unattempted` denominator (NOT silent absence); CeFi + Prediction enumerators FULL (not STUB)                                                                                                                                                             | pick a venue/data_type with 0 captured rows; assert the could-exist universe still materialises `expected_unattempted` rows from the IS catalogue. CeFi/Prediction non-stub.                              | instruments → mtds/mdps/features denominators                                                                        |
 | CF-17 | **Bidirectional manifest ≡ GCS + full bucket prefix taxonomy** — `phantom_count==0` (manifest→GCS) AND `orphan_class_E==0` (GCS→manifest: real data with no row); EVERY bucket prefix labelled {service-data, manifest-infra, logs, run-artifact, terraform, tarball, unknown}; non-data paths (VM logs etc.) understood + NEVER deleted; byte/object sizing rolled up                                                                  | run the orphan sweep (GCS→manifest) + phantom reconciler (manifest→GCS); assert both zero; assert 0 `unknown` prefixes; emit the sizing rollup. Non-data ≠ delete.                                        | every service with a data bucket                                                                                     |
 | CF-18 | **Schema-attribute completeness — no silent column truncation** — every column the SOURCE/legacy parquet physically carries is represented in the v9 canonical contract OR explicitly operator-acked-dropped; zero silent attribute loss (invisible to row-count/schema checks)                                                                                                                                                         | sample recent source parquets per (AG, data_type, venue); union their footer columns; diff vs the v9 UAC contract; any uncarried column is RED until carried or acked.                                    | mtds · mdps · instruments · features                                                                                 |
-| CF-19 | **Candle edge-timestamp convention** — every external OHLCV/candle source is left-edge (open) vs right-edge (close) labelled per `codex/02-data/bar-boundary-candle-edge-convention.md`; one normalization point; batch==live agree                                                                                                                                                                                                     | per external OHLCV source × timeframe, confirm the stored timestamp edge vs the SSOT + an independent reference bar; a 1-interval shift is invisible to row/schema checks.                                | mtds · mdps (external candle ingest)                                                                                 |
+| CF-19 | **Candle edge-timestamp convention** — every external OHLCV/candle source is left-edge (open) vs right-edge (close) labelled per `/codex/02-data/bar-boundary-candle-edge-convention.md`; one normalization point; batch==live agree                                                                                                                                                                                                    | per external OHLCV source × timeframe, confirm the stored timestamp edge vs the SSOT + an independent reference bar; a 1-interval shift is invisible to row/schema checks.                                | mtds · mdps (external candle ingest)                                                                                 |
 | CF-20 | **Data-status / deployment-UI render the v9 manifest correctly** — coverage % + 4-state + could-exist denominator + pipeline_mode/source drilldowns render from a clean read of the canonical `_index` (composes with the G3 UNION view)                                                                                                                                                                                                | point data-status at the canonical (or projected) v9 `_index`; assert coverage %, denominator, drilldowns match the manifest (no re-derived genesis/launch).                                              | deployment-api · deployment-ui                                                                                       |
 | CF-21 | **Verified-delete safety for legacy/duplicate objects** — a legacy-shape object is deleted ONLY if its canonical twin is in the manifest (`captured`) AND `crc32c(legacy)==crc32c(canonical)`; never delete the only copy of real data; non-data paths exempt                                                                                                                                                                           | dry-run the legacy-twin cleanup; assert every delete candidate passes the in-manifest + crc32c-identity gate; 0 deletes of class (C)/(C2)/(E).                                                            | mtds · mdps · instruments (migration cleanup)                                                                        |
 
@@ -141,9 +141,9 @@ manifest-v8 lesson: a constant said v8 while 0% of 7.4M rows were v8), and **whi
 > caught by re-running. Per-service ownership: **manifest_master** (cross-cutting home: CF-22/CF-23/CF-26/CF-27
 > data-state) · **infrastructure_master** (CF-24 4-pillar RUN) · **mtds_mdps_master** + **instruments_master**
 > (CF-22/CF-23/CF-26/CF-27 producer-side) · **tradfi_master** (CF-26 VX precedent) · **the migration-cleanup owner**
-> (CF-25). SSOT cross-refs: `codex/02-data/availability-manifest-and-data-status.md`,
-> `codex/02-data/pipeline-mode-partition.md`, `codex/02-data/tradfi-databento-sourcing-ssot.md`, and the shard-4-pillar
-> SSOT in `plans/epics/infrastructure_master.md`.
+> (CF-25). SSOT cross-refs: `/codex/02-data/availability-manifest-and-data-status.md`,
+> `/codex/02-data/pipeline-mode-partition.md`, `/codex/02-data/tradfi-databento-sourcing-ssot.md`, and the
+> shard-4-pillar SSOT in `plans/epics/infrastructure_master.md`.
 
 > **CF-13 + CF-14 (added 2026-06-07) are the ⑨ + ⑧ readiness checks** from
 > `plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md` (the data-layer coordinator). Their
@@ -193,5 +193,5 @@ declaring this checklist green.
 ## Composes with
 
 - `defi_manifest_canonicalisation_2026_06_01.md` §MASTER — the cross-plan coordinator this checklist audits.
-- `codex/02-data/availability-manifest-and-data-status.md` — the canonical 4-state manifest contract.
+- `/codex/02-data/availability-manifest-and-data-status.md` — the canonical 4-state manifest contract.
 - Single-walk discipline + Data-Pipeline-Correctness HARD RULE (CLAUDE.md).

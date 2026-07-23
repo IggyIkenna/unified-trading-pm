@@ -47,9 +47,9 @@ axis. Owned by `infrastructure_master` because the shared engine (`unified_tradi
 cross-service infra, and the VM launchers it drives (`launch-instruments-backfill-vm.sh`, `launch-mtds-backfill-vm.sh`)
 are already-registered `VM_PREFIX_TO_BUCKET` entries this epic owns.
 
-Codex SSOTs: `codex/05-infrastructure/vm-launcher-runbook.md`, `codex/05-infrastructure/spot-vms-for-backfill.md`,
-`codex/05-infrastructure/gcs-object-operations.md`, `codex/02-data/pipeline-mode-partition.md`,
-`codex/02-data/availability-manifest-and-data-status.md`, `codex/04-architecture/tier-and-import-architecture.md`.
+Codex SSOTs: `/codex/05-infrastructure/vm-launcher-runbook.md`, `/codex/05-infrastructure/spot-vms-for-backfill.md`,
+`/codex/05-infrastructure/gcs-object-operations.md`, `/codex/02-data/pipeline-mode-partition.md`,
+`/codex/02-data/availability-manifest-and-data-status.md`, `/codex/04-architecture/tier-and-import-architecture.md`.
 
 ## Triggers
 

@@ -23,7 +23,7 @@ stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]
 tags: [cicd, quickmerge, quality-gates, sentinel, multi-agent, shipping, throughput, livelock]
-related: [cicd_mvp_ldr_to_main_pipeline_2026_06_30.md]
+related: [/plans/active/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md]
 created: 2026-07-18
 parent_epic: infrastructure_master
 assigned_vm: NA

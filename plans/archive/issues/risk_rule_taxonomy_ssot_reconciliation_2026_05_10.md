@@ -1,6 +1,8 @@
 ---
 doc_type: issue
-title: Spawned plan risk_simulations_limits_alerting_2026_05_10 introduces RiskRuleConsequence enum without § 7 reconciliation against 5 existing canonical risk SSOTs
+title:
+  Spawned plan risk_simulations_limits_alerting_2026_05_10 introduces RiskRuleConsequence enum without § 7
+  reconciliation against 5 existing canonical risk SSOTs
 summary:
 status: resolved
 nature: record
@@ -12,7 +14,16 @@ tags: []
 related: []
 created: 2026-05-10
 author: main-orchestrator-agent
-source: ['plans/active/risk_simulations_limits_alerting_2026_05_10.md (spawned plan, Phase 1 Day 2-3)', 'plans/questions/risk_simulations_limits_alerting_2026_05_08.md (question doc, first-pass reconstruction PM@6e504f0b)', codex/09-strategy/architecture-v2/cross-cutting/risk-gates.md (canonical SSOT), codex/04-architecture/kill-switch-circuit-breaker.md (canonical SSOT), codex/04-architecture/autonomous-recovery-matrix.md (canonical SSOT), plans/active/alerting_service_live_rules_2026_05_07.md (UAC@d00326d AlertCode SSOT)]
+source:
+  [
+    "plans/active/risk_simulations_limits_alerting_2026_05_10.md (spawned plan, Phase 1 Day 2-3)",
+    "plans/questions/risk_simulations_limits_alerting_2026_05_08.md (question doc, first-pass reconstruction
+    PM@6e504f0b)",
+    /codex/09-strategy/architecture-v2/cross-cutting/risk-gates.md (canonical SSOT),
+    /codex/04-architecture/kill-switch-circuit-breaker.md (canonical SSOT),
+    /codex/04-architecture/autonomous-recovery-matrix.md (canonical SSOT),
+    plans/active/alerting_service_live_rules_2026_05_07.md (UAC@d00326d AlertCode SSOT),
+  ]
 locked_by: live-defi-rollout
 locked_since: 2026-05-10
 ---
@@ -37,18 +48,18 @@ RiskRuleConsequence = BLOCK | SCALE_DOWN | MONITOR | TEST_ONLY
 The plan body **does not reference** any of these 5 existing canonical workspace SSOTs:
 
 1. **4-layer risk-gates model**
-   ([`codex/09-strategy/architecture-v2/cross-cutting/risk-gates.md`](../../codex/09-strategy/architecture-v2/cross-cutting/risk-gates.md))
+   ([`/codex/09-strategy/architecture-v2/cross-cutting/risk-gates.md`](/codex/09-strategy/architecture-v2/cross-cutting/risk-gates.md))
    — Layer 1 strategy self-check / Layer 2 risk-and-exposure-service pre-flight / Layer 3 execution-service pre-trade /
    Layer 4 venue-side. Each layer emits canonical events on veto: `INSTRUCTION_REJECTED_SELF_CHECK`,
    `INSTRUCTION_REJECTED_RISK`, `ORDER_REJECTED_EXECUTION`, `ORDER_REJECTED_VENUE`.
 2. **3 canonical circuit-breaker actions** per
    [`alerting_service_live_rules_2026_05_07.md`](../alerting_service_live_rules_2026_05_07.md) — `stop_new_signals` /
    `force_exit_only` / `halt_strategy`. Per-venue adaptive state machine (CLOSED / DEGRADED / OPEN / HALF_OPEN) per
-   [`codex/04-architecture/kill-switch-circuit-breaker.md`](../../codex/04-architecture/kill-switch-circuit-breaker.md).
+   [`/codex/04-architecture/kill-switch-circuit-breaker.md`](/codex/04-architecture/kill-switch-circuit-breaker.md).
 3. **5 kill-switch trigger types** — DISABLED / DAILY_LOSS_BREACH / MAX_DRAWDOWN_BREACH / DATA_STALE /
    KILL_SWITCH_TRIGGERED + 4 strategy kill-switch behaviours (STOP_NEW_ONLY / FAST_UNWIND / SLOW_UNWIND / DELTA_HEDGE).
 4. **ErrorAction taxonomy** per
-   [`codex/04-architecture/autonomous-recovery-matrix.md`](../../codex/04-architecture/autonomous-recovery-matrix.md) —
+   [`/codex/04-architecture/autonomous-recovery-matrix.md`](/codex/04-architecture/autonomous-recovery-matrix.md) —
    RETRY / RECONNECT / SKIP / FAIL via `classify_venue_error()`.
 5. **39-code closed-set AlertCode + AlertSeverity + AlertChannel** at UAC@d00326d per the alerting plan; with per-rule
    `triggers_kill_switch: bool` flag in `AlertRule`.

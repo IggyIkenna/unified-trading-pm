@@ -26,9 +26,9 @@ scope: [engineer]
 tags: [enumerator-hygiene, honest-coverage, v2-completion, deferred, cross-repo-cleanup]
 related:
   [
-    cefi_layer1_denominator_gaps_2026_07_03.md,
-    honest_coverage_v2_instrument_denominator_2026_06_28.md,
-    ../../codex/02-data/honest-coverage-model.md,
+    /plans/active/issues/cefi_layer1_denominator_gaps_2026_07_03.md,
+    /plans/archive/2026_07/honest_coverage_v2_instrument_denominator_2026_06_28.md,
+    /codex/02-data/honest-coverage-model.md,
   ]
 created: 2026-07-06
 last_updated: 2026-07-09
@@ -159,14 +159,14 @@ dependency and clear the way for a safe delete + cross-repo cleanup.
       per-protocol pass to avoid the ~142k `venue=<PROTOCOL>` phantom class).
 
       Renamed `_drop_v2_tradfi_venue_grain(rows)` → generic `_drop_v2_venue_grain(rows)` in the unit test file and
-          applied it to ~30 per-instrument cefi/defi tests so their per-instrument row-count assertions stay focused
-          (venue-grain rows have blank `instrument_type`/id — filter matches the existing tradfi convention). Regression
-          tests added in
-          `tests/integration/test_enumerate_v2_superset_property.py::test_{cefi,defi,prediction}_v2_covers_v1_pre_venue_launch_cells_with_empty_catalog`
-          — assert v2 covers every v1 venue-grain pre-launch cell with `catalog=[]`. Fixed pre-existing filter bug in
-          `test_defi_v2_covers_v1_pre_genesis_chain_cells` (v1 emits `venue=<PROTOCOL>` bare per the 2026-05 canonical
-          naming SSOT, NOT `<PROTOCOL>-<CHAIN>` — filter now matches). Full `bash scripts/quality-gates.sh` green (110s);
-          126 v2 unit tests + 92 catalogue/wiring tests + 8 superset property tests pass.
+                                                                  applied it to ~30 per-instrument cefi/defi tests so their per-instrument row-count assertions stay focused
+                                                                  (venue-grain rows have blank `instrument_type`/id — filter matches the existing tradfi convention). Regression
+                                                                  tests added in
+                                                                  `tests/integration/test_enumerate_v2_superset_property.py::test_{cefi,defi,prediction}_v2_covers_v1_pre_venue_launch_cells_with_empty_catalog`
+                                                                  — assert v2 covers every v1 venue-grain pre-launch cell with `catalog=[]`. Fixed pre-existing filter bug in
+                                                                  `test_defi_v2_covers_v1_pre_genesis_chain_cells` (v1 emits `venue=<PROTOCOL>` bare per the 2026-05 canonical
+                                                                  naming SSOT, NOT `<PROTOCOL>-<CHAIN>` — filter now matches). Full `bash scripts/quality-gates.sh` green (110s);
+                                                                  126 v2 unit tests + 92 catalogue/wiring tests + 8 superset property tests pass.
 
 - [x] ✅ [INFRA] P2. **Retire deployment-service v1 launcher path** — remove
       `launch-expected-universe-enumerator-vm.sh`, delete the `"expected-universe-enum-"` entry from

@@ -28,9 +28,9 @@ scope: [engineer, admin]
 tags: [gcs, buckets, terraform, config-drift, cleanup-regression, lifecycle, data-pipeline-correctness]
 related:
   [
-    gcs_bucket_estate_cleanup_2026_07_10.md,
-    defi_dedicated_bucket_shared_migration_2026_07_13.md,
-    bucket_env_split_rollout_2026_06.md,
+    /plans/archive/2026_07/gcs_bucket_estate_cleanup_2026_07_10.md,
+    /plans/active/defi_dedicated_bucket_shared_migration_2026_07_13.md,
+    /plans/archive/2026_07/bucket_env_split_rollout_2026_06.md,
   ]
 created: "2026-07-13"
 parent_epic: infrastructure_master
@@ -103,7 +103,7 @@ resolved_by: "2026-07-19 bucket_fold_closeout tail-item sweep — all GCP direct
 3. **Out-of-band lifecycle drift**: live metadata (admin-credential read, 2026-07-13) shows STANDARD→COLDLINE@14d on 78
    buckets incl. all 5 `-prd` tick buckets and 106 buckets with versioning enabled. No in-repo applier produces
    COLDLINE@14 (closest is the unapplied `docs/GCS_LIFECYCLE_AGGRESSIVE_STRATEGY.md` proposal);
-   `codex/05-infrastructure/gcs-lifecycle-policies.md:97-98` claims tick buckets are intentionally NOT lifecycle'd.
+   `/codex/05-infrastructure/gcs-lifecycle-policies.md:97-98` claims tick buckets are intentionally NOT lifecycle'd.
    Cost-relevant: backfill/reader re-reads of >14-day-old tick objects now pay COLDLINE retrieval.
 4. **e2e fixture polluter**: `e2e-testing/scripts/common/setup-gcp-fixtures.sh:39-53` `gsutil mb`'s transposed
    non-canonical names (`market-tick-data-store-defi-…`, `processed-market-data-store-defi-…`, `pnl-store-…`).

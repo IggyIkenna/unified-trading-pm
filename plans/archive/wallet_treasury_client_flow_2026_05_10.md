@@ -9,7 +9,14 @@ stage: [meta]
 repos: [client-reporting-api, deployment-api, deployment-service, deployment-ui, execution-service, strategy-service]
 scope: [engineer, admin]
 tags: []
-related: [plans/active/master_to_live_defi_2026_05_23.md, plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md, plans/active/client_reporting_pnl_attribution_mvp_2026_05_10.md, plans/active/disaster_recovery_circuit_breakers_2026_05_10.md, plans/active/risk_simulations_limits_alerting_2026_05_10.md]
+related:
+  [
+    plans/active/master_to_live_defi_2026_05_23.md,
+    plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md,
+    plans/active/client_reporting_pnl_attribution_mvp_2026_05_10.md,
+    plans/active/disaster_recovery_circuit_breakers_2026_05_10.md,
+    plans/active/risk_simulations_limits_alerting_2026_05_10.md,
+  ]
 created: 2026-05-10
 type: plan
 deadline: 2026-05-23
@@ -18,15 +25,23 @@ companion_to: master_to_live_defi_2026_05_23.md (Group F item 19 Copper+CEFFU tr
 locked_by: live-defi-rollout
 locked_since: 2026-05-10
 spawned_from: plans/questions/wallet_treasury_client_flow_post_trade_readiness_2026_05_08.md
-related_codex: [codex/04-architecture/interface-credential-convention.md, codex/04-architecture/capital-efficiency-patterns.md, codex/04-architecture/flash-loan-receiver.md]
+related_codex:
+  [
+    /codex/04-architecture/interface-credential-convention.md,
+    /codex/04-architecture/capital-efficiency-patterns.md,
+    /codex/04-architecture/flash-loan-receiver.md,
+  ]
 estimate_class: design
 estimate_baseline_ai_days: 14.8
 estimate_calibrated_ai_days: 8.8
-estimate_calibration_note: 'Baseline auto-extracted from in-body AI-day mentions during 2026-05-11 sweep (~0.5, ~1.5, ~3, ~2, + 7 more). Class inferred from filename (design, multiplier 0.6×).
+estimate_calibration_note: "Baseline auto-extracted from in-body AI-day mentions during 2026-05-11 sweep (~0.5, ~1.5,
+  ~3, ~2, + 7 more). Class inferred from filename (design, multiplier 0.6×).
 
-  CAVEAT: auto-extract SUMS all in-body mentions; plans with both ''Total: X'' headlines AND per-phase line items will be double-counted. Owner agent: verify baseline, refine class per codex/08-workflows/estimation-calibration.md, recompute calibrated if either changes.
+  CAVEAT: auto-extract SUMS all in-body mentions; plans with both 'Total: X' headlines AND per-phase line items will be
+  double-counted. Owner agent: verify baseline, refine class per /codex/08-workflows/estimation-calibration.md,
+  recompute calibrated if either changes.
 
-  '
+  "
 ---
 
 ## Deferred work — migrated to:
@@ -75,27 +90,25 @@ compliance + tax reporting deferred post-cutover.
 11. Real-VM cutover-archetype dry-run: full lifecycle for demo client end-to-end including ≥1 automated withdrawal + ≥1
     perf-fee crystallization event.
 12. **Native-gas-token treasury reservation + auto-provision** (added 2026-05-12 per operator carry-staked-basis
-    discipline; codified in
-    [`pnl-attribution.md`](../../codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md) HARD RULE #6 "Gas
-    fees"): every DeFi strategy preflight verifies the wallet's native-gas-token balance per chain (ETH on Ethereum /
-    Arbitrum / Optimism / Base; SOL on Solana; BNB on BSC; MATIC on Polygon; AVAX on Avalanche; GNO on Gnosis) exceeds a
-    configured threshold. When below threshold, auto-provision routes `native_gas_reservation_pct` (default **1.0%** of
-    starting capital per DeFi strategy; tunable per chain via
+    discipline; codified in [`pnl-attribution.md`](/codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md)
+    HARD RULE #6 "Gas fees"): every DeFi strategy preflight verifies the wallet's native-gas-token balance per chain
+    (ETH on Ethereum / Arbitrum / Optimism / Base; SOL on Solana; BNB on BSC; MATIC on Polygon; AVAX on Avalanche; GNO
+    on Gnosis) exceeds a configured threshold. When below threshold, auto-provision routes `native_gas_reservation_pct`
+    (default **1.0%** of starting capital per DeFi strategy; tunable per chain via
     `default_basis_trade.yaml::native_gas_reservation_pct_by_chain`) into the native gas token via the spot venue. Hard
     block — strategy emits `record_failed(GAS_INSUFFICIENT)` instead of attempting a tx that will revert at validator
     level. **Treasury accounting**: native-gas reserves are NON-DEPLOYABLE — must be tracked as a separate
     `gas_reserve_balance_native` column in the per-(client, chain, wallet) treasury balance snapshot, excluded from
     `available_capital_usd` for archetype-allocation purposes.
 13. **aToken / debt-token treasury discipline** (added 2026-05-12 per operator carry-staked-basis discipline; codified
-    in [`pnl-attribution.md`](../../codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md) HARD RULE #4
-    "DeFi lending/borrowing yield ... never APY"): Aave V3 / Compound V3 / Spark / Radiant supply positions tracked as
-    actual `aToken_balance_native` per (chain, protocol, asset); borrow positions tracked as
-    `debt_token_balance_native`. Position-balance-monitor reads on-chain `balanceOf(aToken_addr, wallet)` per block —
-    the balance growth IS the yield (no APY proxy). Treasury balance snapshot extends with per-(chain, protocol, asset)
-    aToken + debt-token rows alongside the underlying token rows; pnl-attribution-service consumes the snapshots'
-    index-growth delta as CARRY_LENDING_SUPPLY / CARRY_LENDING_BORROW. **Banned**: tracking lending positions as the
-    underlying token's USD value with an APY-multiplier — discards the on-chain growth signal + introduces
-    discretization error.
+    in [`pnl-attribution.md`](/codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md) HARD RULE #4 "DeFi
+    lending/borrowing yield ... never APY"): Aave V3 / Compound V3 / Spark / Radiant supply positions tracked as actual
+    `aToken_balance_native` per (chain, protocol, asset); borrow positions tracked as `debt_token_balance_native`.
+    Position-balance-monitor reads on-chain `balanceOf(aToken_addr, wallet)` per block — the balance growth IS the yield
+    (no APY proxy). Treasury balance snapshot extends with per-(chain, protocol, asset) aToken + debt-token rows
+    alongside the underlying token rows; pnl-attribution-service consumes the snapshots' index-growth delta as
+    CARRY_LENDING_SUPPLY / CARRY_LENDING_BORROW. **Banned**: tracking lending positions as the underlying token's USD
+    value with an APY-multiplier — discards the on-chain growth signal + introduces discretization error.
 
 ### Non-goals (post-cutover)
 
@@ -313,11 +326,11 @@ emitted daily including HWM section.
 
 ## Phase 8 — Codex SSOTs (Day 12, ~0.5 AI-day)
 
-- [x] [AGENT] P0. **8.A NEW `codex/04-architecture/client-lifecycle-state-machine.md`.** Onboarding states +
+- [x] [AGENT] P0. **8.A NEW `/codex/04-architecture/client-lifecycle-state-machine.md`.** Onboarding states +
       transitions. (pm@d99ce232 — 7-state machine, Mermaid diagram, evidence table, idempotency contract, UAC/UTL
       cross-refs)
-- [x] [AGENT] P0. **8.B NEW `codex/04-architecture/treasury-custody-flow.md`.** Custody-source taxonomy, pre-trade ping,
-      sub-account allocation. (pm@d99ce232 — 6-source taxonomy, ping sequence diagram, withdrawal state machine,
+- [x] [AGENT] P0. **8.B NEW `/codex/04-architecture/treasury-custody-flow.md`.** Custody-source taxonomy, pre-trade
+      ping, sub-account allocation. (pm@d99ce232 — 6-source taxonomy, ping sequence diagram, withdrawal state machine,
       reconciliation invariant)
 - [x] [AGENT] P0. **8.C UPDATE `interface-credential-convention.md`** — custody endpoint credentials via registry.
       (pm@d99ce232 — "Custody endpoint credentials" section added; CopperEndpoint/CEFFUEndpoint/DefiWalletKeyMaterial

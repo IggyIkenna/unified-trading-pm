@@ -85,8 +85,8 @@ manifest read.
 | ------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------- | ------------- |
 | `execution_service/strategy_instructions/gcs.py`                               | ✅ Reads via `download_instructions_df()` + fallback 404 handling                                                    | lines 127-165 |
 | `execution_service/strategy_instructions/loader.py`                            | ✅ Validates `benchmark_price` for executable instructions; raises `InvalidBenchmarkPriceError` on NaN/zero/negative | lines 140-179 |
-| `execution_service/utils/dependency_checker.py::DependencyChecker`             | ⚠ Blob-existence check only — does NOT consult strategy manifest; no `record_captured` status check                 | lines 207-230 |
-| `execution_service/cli/backtest_checks.py::check_dependencies()`               | ⚠ Calls `DependencyChecker.check_dependencies()` which checks prefix existence, NOT per-`strategy_id` blob          | lines 48-95   |
+| `execution_service/utils/dependency_checker.py::DependencyChecker`             | ⚠ Blob-existence check only — does NOT consult strategy manifest; no `record_captured` status check                  | lines 207-230 |
+| `execution_service/cli/backtest_checks.py::check_dependencies()`               | ⚠ Calls `DependencyChecker.check_dependencies()` which checks prefix existence, NOT per-`strategy_id` blob           | lines 48-95   |
 | `execution_service/utils/dependency_checker.py::check_strategy_instructions()` | ✅ Checks per-`strategy_id` + date blob existence; raises `DependencyError` on miss (required=True)                  | lines 466-484 |
 | `execution_service/utils/dependency_checker.py::validate_config_can_run()`     | ✅ Calls `check_strategy_instructions()` + `check_market_tick_data()` + `check_instrument_definitions()`             | lines 619-662 |
 
@@ -102,7 +102,7 @@ specific `strategy_id` is missing.
 | Component                                                                    | Status                                                                                                          | Evidence      |
 | ---------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- | ------------- |
 | `strategy_service/engine/core/gcs_storage_service.py::write_instructions()`  | ❌ **ZERO manifest emission** — writes parquet to GCS with NO `record_captured/record_empty/record_failed` call | lines 159-198 |
-| `strategy_service/cli/handlers/batch_handler.py` (batch completeness check)  | ⚠ Calls `validate_batch_completeness()` only; no manifest recorder used                                        | lines 492-510 |
+| `strategy_service/cli/handlers/batch_handler.py` (batch completeness check)  | ⚠ Calls `validate_batch_completeness()` only; no manifest recorder used                                         | lines 492-510 |
 | `execution_service/strategy_instructions/gcs.py::download_instructions_df()` | ❌ **ZERO manifest emission** — reads file; 404 → empty DataFrame with no `record_empty`                        | lines 127-165 |
 | `execution_service/utils/dependency_checker.py`                              | ❌ **ZERO manifest emission** — checks blob existence with no manifest record                                   | lines 318-370 |
 
@@ -356,7 +356,7 @@ Phase Q — QG enforcement
    ─ Extend no_adapter_contract_regression.sh to execution read path
 
 Phase D — Codex doc update
-   ─ Update codex/04-architecture/defi-execution-overview.md to note manifest handoff contract
+   ─ Update /codex/04-architecture/defi-execution-overview.md to note manifest handoff contract
 ```
 
 **Foundation-completion-gate rule**: Phase 3 preflight-gate fix MUST NOT ship before Phase 1+2 manifest emission fixes.

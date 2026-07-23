@@ -12,7 +12,12 @@ tags: []
 related: []
 created: 2026-05-19
 author: ikenna-main (flagged from ~15:15 UTC Slack discussion)
-source: ['Ikenna ↔ Harsh Slack thread 2026-05-19 ~15:11-15:15 UTC', paper defi was ambitious it didnt even chekc it has features data it needed. backfill last 30 days hasnt run etc and needs live streaming of the data pipeline]
+source:
+  [
+    "Ikenna ↔ Harsh Slack thread 2026-05-19 ~15:11-15:15 UTC",
+    paper defi was ambitious it didnt even chekc it has features data it needed. backfill last 30 days hasnt run etc and
+    needs live streaming of the data pipeline,
+  ]
 locked_by: live-defi-rollout
 ---
 
@@ -62,7 +67,7 @@ Add a **PaperRunDataReadinessCheck** gate to `e2e-testing/scripts/defi/run-paper
    (live-streaming proxy).
 3. If ANY required cluster fails: exit 2 BEFORE launching the paper VM with a clear error message listing missing
    clusters + recommended fix (backfill command, MTDS stream status).
-4. Document the gate in `codex/09-strategy/operational/cli-promote-paths.md`
+4. Document the gate in `/codex/09-strategy/operational/cli-promote-paths.md`
    - add a runbook checkbox `paper_run_data_readiness_check_landed`.
 
 **Estimated work**: ~1-2 AI-days. `infra` class (0.8× multiplier) → ~0.8-1.6 calibrated AI-days.

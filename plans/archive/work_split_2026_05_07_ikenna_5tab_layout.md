@@ -102,8 +102,8 @@ deployment-api / UTL / MDPS to other agents.
 **Read-first**:
 
 - [`plans/active/alerting_service_live_rules_2026_05_07.plan.md`](alerting_service_live_rules_2026_05_07.plan.md)
-- [`codex/14-playbooks/alerting/alert-code-taxonomy.md`](../../codex/14-playbooks/alerting/alert-code-taxonomy.md)
-  (codex SSOT expects the StrEnum to land at the spec'd location)
+- [`/codex/14-playbooks/alerting/alert-code-taxonomy.md`](/codex/14-playbooks/alerting/alert-code-taxonomy.md) (codex
+  SSOT expects the StrEnum to land at the spec'd location)
 - Audit §3 #5 in [`_AUDIT_2026_05_07_dependency_graph.md`](_AUDIT_2026_05_07_dependency_graph.md) (AAVE bps ambiguity)
 - Existing UAC StrEnum patterns (e.g. `LifecycleEventType`, `PreflightSkipReason`) for shape consistency
 
@@ -163,7 +163,7 @@ deployment-api + deployment-ui + MDPS + base-service.sh — all ONE plan, builds
       badge. Plan:
       [`writegate_honest_coverage_endtoend_2026_05_06`](writegate_honest_coverage_endtoend_2026_05_06.plan.md) Phase
       4.A. Repos: UTL + deployment-api + deployment-ui. Per-asset-group consumer-class judgment lives in
-      [`codex/02-data/honest-absence-downstream-handling.md`](../../codex/02-data/honest-absence-downstream-handling.md).
+      [`/codex/02-data/honest-absence-downstream-handling.md`](/codex/02-data/honest-absence-downstream-handling.md).
       **DONE 2026-05-07** — deployment-ui@`a7384a0` (TypedReasonBadges + FailurePillarStack components + 24 unit tests +
       client.ts TurboSubDimension extension) + deployment-ui@`621f0b3` (DataStatusTab venue summary line wiring) + Phase
       4.A.3 leaf-stats endpoint (PM@`fa9b5f43`) + Phase 4.B.1 + 4.B.2 flips (PM@`0c2a0cca` / `21f8a277`). Closed-set
@@ -174,7 +174,7 @@ deployment-api + deployment-ui + MDPS + base-service.sh — all ONE plan, builds
     for the 11-cluster ES.OPT surface.
 - [ ] [GOVERNANCE] P0. writegate Phase 5 — workspace QG honest-coverage % gate + per-(asset_group, data_type) ratchet
       schedule. Plan: writegate Phase 5. Repos: UTL + base-service.sh. Codex SSOT to populate:
-      [`codex/02-data/honest_coverage_baseline_2026_05.md`](../../codex/02-data/honest_coverage_baseline_2026_05.md)
+      [`/codex/02-data/honest_coverage_baseline_2026_05.md`](/codex/02-data/honest_coverage_baseline_2026_05.md)
       (currently a stub).
 
 **Repos owned (collision boundary)**: UTL (writegate paths only — `legacy_reason_classifier.py`, write-gate helper,
@@ -187,8 +187,8 @@ agents.
 
 - [`plans/active/writegate_honest_coverage_endtoend_2026_05_06.plan.md`](writegate_honest_coverage_endtoend_2026_05_06.plan.md)
   — entire plan
-- [`codex/02-data/honest-absence-downstream-handling.md`](../../codex/02-data/honest-absence-downstream-handling.md)
-- [`codex/02-data/availability-manifest-and-data-status.md`](../../codex/02-data/availability-manifest-and-data-status.md)
+- [`/codex/02-data/honest-absence-downstream-handling.md`](/codex/02-data/honest-absence-downstream-handling.md)
+- [`/codex/02-data/availability-manifest-and-data-status.md`](/codex/02-data/availability-manifest-and-data-status.md)
 - CLAUDE.md sections: "Three-category empty-output decision", "Honest absence vs fake placeholders", "Cluster validation
   MANDATORY", "Manifest migration, NOT fallback"
 - Existing UTL `legacy_reason_classifier.py` (Tier 3D.2 shipped 2026-05-07, your Phase 4.A wires it through)
@@ -203,9 +203,9 @@ agents.
   three-category decision, (b) MDPS cluster-coverage wiring per adapter family (ES.OPT 11-cluster being the flagship).
   Master reviews before the `_write_manifest_records` deletion (irreversible — verify all consumers migrated first).
 - Phase 5: one general-purpose sub-agent to populate
-  [`codex/02-data/honest_coverage_baseline_2026_05.md`](../../codex/02-data/honest_coverage_baseline_2026_05.md) by
-  walking the current manifest + computing per-(asset_group, data_type) honest-coverage %; master designs the ratchet
-  schedule + writes the QG step.
+  [`/codex/02-data/honest_coverage_baseline_2026_05.md`](/codex/02-data/honest_coverage_baseline_2026_05.md) by walking
+  the current manifest + computing per-(asset_group, data_type) honest-coverage %; master designs the ratchet schedule +
+  writes the QG step.
 
 **Collision risk**:
 
@@ -265,8 +265,8 @@ Hands off other deployment-service launchers to Agent 4 (DeFi launch).
 
 - [`plans/active/_HANDOFF_expected_universe_enumerator_2026_05_07.md`](_HANDOFF_expected_universe_enumerator_2026_05_07.md)
   — entire doc
-- [`codex/02-data/availability-manifest-and-data-status.md`](../../codex/02-data/availability-manifest-and-data-status.md)
-  § "Rollup-vs-drilldown denominator divergence (codified 2026-05-07)"
+- [`/codex/02-data/availability-manifest-and-data-status.md`](/codex/02-data/availability-manifest-and-data-status.md) §
+  "Rollup-vs-drilldown denominator divergence (codified 2026-05-07)"
 - Existing [`launch-defi-phantom-recon-vm.sh`](../../../deployment-service/scripts/vm/launch-defi-phantom-recon-vm.sh)
   as launcher template
 - CLAUDE.md sections: "VM launcher script SSOT", "VM Naming Convention", "No fire-and-forget VM launches", "Cross-Plan
@@ -336,7 +336,7 @@ launch, launch informs AWS bucket-naming, all three feed paper-trade smoke.
 - [x] [INFRA-DESIGN] P1. aws_migration Phase 2 — dual-bucket setup + Storage Transfer Service config + bucket-naming
       SSOT discipline. Plan: [`aws_migration_defi_first_2026_05_07`](aws_migration_defi_first_2026_05_07.plan.md)
       Phase 2. Repos: deployment-service + UCI. Codex SSOT to populate:
-      [`codex/05-infrastructure/cloud-agnostic-script-pattern.md`](../../codex/05-infrastructure/cloud-agnostic-script-pattern.md).
+      [`/codex/05-infrastructure/cloud-agnostic-script-pattern.md`](/codex/05-infrastructure/cloud-agnostic-script-pattern.md).
       **SHIPPED 2026-05-07** by Agent 4: deployment-service@7da2f3d (cloud-providers.yaml +10 keys both gcp.storage +
       aws.storage; `scripts/aws/setup-defi-buckets.sh` idempotent provisioning), PM@bd8d272b (codex SSOT 7 sections
       populated). Operator next step: `bash scripts/aws/setup-defi-buckets.sh --apply` from authenticated AWS session.

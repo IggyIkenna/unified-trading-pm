@@ -6,7 +6,15 @@ status: DONE
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [alerting-service, execution-service, instruments-service, market-tick-data-service, strategy-service, system-integration-tests]
+repos:
+  [
+    alerting-service,
+    execution-service,
+    instruments-service,
+    market-tick-data-service,
+    strategy-service,
+    system-integration-tests,
+  ]
 scope: [engineer, admin]
 tags: []
 related: []
@@ -174,7 +182,7 @@ P3.6; P1.9 → P4.3 candles proxy; P2.1 removes otel_setup.py atomically — nev
 
 ## SSOT References
 
-- [unified-trading-codex/03-observability/lifecycle-events.md](../../unified-trading-codex/03-observability/lifecycle-events.md)
+- [unified-trading-/codex/03-observability/lifecycle-events.md](../../unified-trading-/codex/03-observability/lifecycle-events.md)
 - [unified-trading-codex/06-coding-standards/quality-gates-service-template.sh](../../unified-trading-codex/06-coding-standards/quality-gates-service-template.sh)
 - [unified-trading-library/unified_trading_library/core/memory_monitor.py](../../unified-trading-library/unified_trading_library/core/memory_monitor.py)
 - [system-integration-tests/tests/conftest.py](../../system-integration-tests/tests/conftest.py)

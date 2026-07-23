@@ -13,8 +13,8 @@ summary:
   keys; `source` column == `ODDS_API` on both sides). Canonical migrated (1,815 days) is a **superset** of legacy G1
   (3,816 objects / 386 days). **Every one of the 16,969 is mis-stamped**: `pipeline_mode=batch_footystats` on
   16,969/16,969 while carrying `venue=ODDS_API` + `data_type=odds` + a `source` column of `ODDS_API` — **zero are
-  footystats data**. Per `codex/02-data/pipeline-mode-partition.md` (`{mode}_{source}`, source=VENDOR) the correct stamp
-  is `batch_odds_api`. **Why the recompute starves**: `reprocess_sports_odds.py` lists ONLY
+  footystats data**. Per `/codex/02-data/pipeline-mode-partition.md` (`{mode}_{source}`, source=VENDOR) the correct
+  stamp is `batch_odds_api`. **Why the recompute starves**: `reprocess_sports_odds.py` lists ONLY
   `pipeline_mode={batch_odds_api,live_odds_api}` prefixes and its `_is_consumable_trades_blob` is
   `name.endswith("ticks.parquet") and "_migrated_" not in name` — the migrated files are `ticks_migrated_*.parquet`
   under `batch_footystats/`, so they fail **both** filters. The skip is deliberate and documented
@@ -79,7 +79,7 @@ source:
   [
     "OR-5b(a) G1 recovery leg dispatch 2026-07-16 — premise re-measured and refused",
     "./sports_canonical_raw_truncated_rederive_destroys_corpus_2026_07_16.md",
-    "codex/02-data/pipeline-mode-partition.md",
+    "/codex/02-data/pipeline-mode-partition.md",
   ]
 ---
 
@@ -158,7 +158,7 @@ unique on those days.
 
 ### 2. The mis-stamp is an SSOT violation, not a cosmetic one
 
-`codex/02-data/pipeline-mode-partition.md` defines `pipeline_mode = {mode}_{source}` where **`source` is the VENDOR**.
+`/codex/02-data/pipeline-mode-partition.md` defines `pipeline_mode = {mode}_{source}` where **`source` is the VENDOR**.
 These rows' own `source` column is `ODDS_API` on every sampled row ⇒ the correct stamp is **`batch_odds_api`**. They are
 stamped **`batch_footystats`**. 16,969 objects assert a vendor they did not come from — a live data-correctness defect
 independent of the recompute, and the direct cause of the prefix miss.

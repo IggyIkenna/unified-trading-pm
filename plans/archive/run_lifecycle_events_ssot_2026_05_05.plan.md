@@ -172,7 +172,7 @@ Audit method: grep + read frontmatter / `if __name__ == "__main__"` blocks acros
 - [ ] [ANALYSIS] P0. Sort by criticality (heavy-traffic services first: MTDS migrates, MDPS reprocessors,
       instruments-service backfill orchestrator, deployment-service scheduler).
 - [ ] [DOC] P1. Document the SSOT (helper API + naming convention) in
-      `codex/06-coding-standards/observability-run-lifecycle.md` so new code lands compliant.
+      `/codex/06-coding-standards/observability-run-lifecycle.md` so new code lands compliant.
 
 Exit gates: audit table committed, top-20 critical entry-points identified.
 
@@ -218,7 +218,7 @@ Infrastructure Requirements"). New STEP:
       holds the cross-repo gates).
 - [ ] [TEST] P0. Unit test for the structural check: a script with `setup_events` but no `run_lifecycle` fails the gate;
       a script with `run_lifecycle` passes.
-- [ ] [DOC] P1. Update `codex/06-coding-standards/observability-run-lifecycle.md` with the QG-enforced status.
+- [ ] [DOC] P1. Update `/codex/06-coding-standards/observability-run-lifecycle.md` with the QG-enforced status.
 
 Exit gates: base-service.sh STEP 5.63 fires correctly on every Phase-3-affected repo, and a synthetic broken-script test
 fails it.

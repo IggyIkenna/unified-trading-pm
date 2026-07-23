@@ -20,7 +20,7 @@ related:
   [
     plans/active/issues/batch4_strategy_ui_archived_plan_residuals_2026_07_21.md,
     plans/archive/ui_quality_gates_parity_2026_03_16.plan.md,
-    codex/06-coding-standards/ui-testing-layers.md,
+    /codex/06-coding-standards/ui-testing-layers.md,
   ]
 created: "2026-07-21"
 parent_epic: agent_operating_framework_master
@@ -123,4 +123,4 @@ at whichever root is actually present, then clean up the violations the gate wou
 
 ## Codex SSOTs
 
-`codex/06-coding-standards/ui-testing-layers.md`, `codex/06-coding-standards/quality-gates.md`.
+`/codex/06-coding-standards/ui-testing-layers.md`, `/codex/06-coding-standards/quality-gates.md`.

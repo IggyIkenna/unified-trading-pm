@@ -136,8 +136,8 @@ This is the **primary focus** of C8, per the task description.
 
 #### CeFi CCXT adapters (GAP — no classify_venue_error)
 
-| Component                                          | Status                                                                      | Evidence                 |
-| -------------------------------------------------- | --------------------------------------------------------------------------- | ------------------------ |
+| Component                                          | Status                                                                     | Evidence                 |
+| -------------------------------------------------- | -------------------------------------------------------------------------- | ------------------------ |
 | **`trade_execution/adapters/binance_ccxt.py`**     | **⚠ UNKNOWN_VENUE_ERROR_RECEIVED emitted but NO `classify_venue_error()`** | lines 281, 317, 465, 577 |
 | **`trade_execution/adapters/hyperliquid_ccxt.py`** | **⚠ NO `classify_venue_error()` — `ccxt.BaseError` caught bare**           | lines 186, 332, 443      |
 | **`trade_execution/adapters/bybit_ccxt.py`**       | **⚠ NO `classify_venue_error()`**                                          | all except blocks        |
@@ -169,8 +169,8 @@ application-level error types.
 
 #### TradFi adapters
 
-| Component                                                                                            | Status                                                       | Evidence                                                            |
-| ---------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------------- |
+| Component                                                                                            | Status                                                      | Evidence                                                            |
+| ---------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- | ------------------------------------------------------------------- |
 | `trade_execution/adapters/ibkr_tradfi.py`                                                            | **⚠ NO `classify_venue_error()` — `except Exception` bare** | multiple `except Exception as exc` blocks with `# pragma: no cover` |
 | `trade_execution/adapters/cboe_adapter.py`, `cme_adapter.py`, `nasdaq_adapter.py`, `nyse_adapter.py` | **⚠ Inherit from `IbkrTradFiAdapter` — same gap**           | N/A                                                                 |
 
@@ -184,7 +184,7 @@ application-level error types.
 | `defi_execution/protocols/aave.py`                            | ✅ `DefiErrorCode` mapping table + typed error code returned; error strings classified via `_classify_aave_error()`                | lines 42-100                                                                                   |
 | `defi_execution/orchestrators/recursive_loop_orchestrator.py` | ✅ `DefiErrorCode` used for RECURSIVE_LOOP_ABORTED_HF, GAS_BUDGET_EXCEEDED, FLASH_RECEIVER_NOT_FOUND, FLASH_REPAYMENT_INSUFFICIENT | confirmed                                                                                      |
 | `defi_execution/protocols/cctp.py`                            | ✅ `DefiErrorCode` codes embedded in error messages (CCTP_UNSUPPORTED_CHAIN, CCTP_BURN_FAILED etc.)                                | confirmed                                                                                      |
-| **`adapters/defi_adapter.py`**                                | **⚠ NO `classify_venue_error()` or `DefiErrorCode` in retry loop**                                                                | `execute_instruction()` retry loop catches bare `Exception` and retries without classification |
+| **`adapters/defi_adapter.py`**                                | **⚠ NO `classify_venue_error()` or `DefiErrorCode` in retry loop**                                                                 | `execute_instruction()` retry loop catches bare `Exception` and retries without classification |
 | `cli/handlers/live_execution_handler.py`                      | ✅ `classify_and_emit_error()` wraps DeFi execution errors at CLI boundary                                                         | confirmed                                                                                      |
 
 **DeFiAdapter gap detail**: `DeFiAdapter.execute_instruction()` (lines 169-195) runs up to `max_retries=3` with
@@ -202,8 +202,8 @@ before propagating.
 | `sports_execution/adapters/exchanges/matchbook.py`           | ✅ `classify_venue_error()` + `ADAPTER_FETCH_FAILED`                              | lines 201-207               |
 | `sports_execution/adapters/aggregator/odds_api.py`           | ✅ `classify_venue_error()` + `ADAPTER_FETCH_FAILED`                              | confirmed                   |
 | `sports_execution/adapters/bookmaker_api/api_football.py`    | ✅ `classify_venue_error()` + `ADAPTER_FETCH_FAILED`                              | confirmed                   |
-| **`sports_execution/adapters/exchanges/polymarket_clob.py`** | **⚠ NO `classify_venue_error()`**                                                | all except blocks           |
-| **`sports_execution/adapters/bookmaker_api/onexbet.py`**     | **⚠ NO `classify_venue_error()`**                                                | not confirmed — likely bare |
+| **`sports_execution/adapters/exchanges/polymarket_clob.py`** | **⚠ NO `classify_venue_error()`**                                                 | all except blocks           |
+| **`sports_execution/adapters/bookmaker_api/onexbet.py`**     | **⚠ NO `classify_venue_error()`**                                                 | not confirmed — likely bare |
 
 ---
 
@@ -330,8 +330,8 @@ This C8 audit confirms:
 | A6 BATCH_ONLY venue                                                    | Execution adapter status                                                   | Live execution path                                                          |
 | ---------------------------------------------------------------------- | -------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
 | aster (liquidations, trades)                                           | `AsterConnector` in `defi_execution/protocols/aster.py`                    | Live: `classify_venue_error()` ✅; live order execution via `_place_order()` |
-| deribit (trades)                                                       | `DeribitCCXTAdapter` in `trade_execution/adapters/deribit_ccxt.py`         | Live: CCXT adapter wired; `classify_venue_error()` ⚠ GAP (C8-P0-1)          |
-| hyperliquid (book_snapshot_5, derivative_ticker, liquidations, trades) | `HyperliquidCCXTAdapter` in `trade_execution/adapters/hyperliquid_ccxt.py` | Live: CCXT adapter wired; `classify_venue_error()` ⚠ GAP (C8-P0-1)          |
+| deribit (trades)                                                       | `DeribitCCXTAdapter` in `trade_execution/adapters/deribit_ccxt.py`         | Live: CCXT adapter wired; `classify_venue_error()` ⚠ GAP (C8-P0-1)           |
+| hyperliquid (book_snapshot_5, derivative_ticker, liquidations, trades) | `HyperliquidCCXTAdapter` in `trade_execution/adapters/hyperliquid_ccxt.py` | Live: CCXT adapter wired; `classify_venue_error()` ⚠ GAP (C8-P0-1)           |
 
 **The A6 BATCH_ONLY cells are MTDS market-data gaps, not execution gaps.** The execution-service already has live
 order-routing adapters for aster, deribit, and hyperliquid. The D7 plan should target MTDS live-mode WebSocket handlers,
@@ -441,9 +441,9 @@ orchestrator.
 
 ## Codex SSOT updates required
 
-- `codex/04-architecture/defi-execution-overview.md`: add section on `DeFiAdapter` retry logic and requirement to route
+- `/codex/04-architecture/defi-execution-overview.md`: add section on `DeFiAdapter` retry logic and requirement to route
   `FAIL`/`RETRY`/`SKIP` via `classify_venue_error()` before retrying. Cross-ref `DefiErrorCode` taxonomy.
-- `codex/04-architecture/defi-execution-overview.md`: clarify that A6 BATCH_ONLY gaps are in MTDS (market-data layer),
+- `/codex/04-architecture/defi-execution-overview.md`: clarify that A6 BATCH_ONLY gaps are in MTDS (market-data layer),
   not execution-service. Execution already has live adapters for aster/deribit/hyperliquid.
 - `codex/06-coding-standards/` (adapter conventions): document that CCXT adapters MUST call
   `classify_venue_error(self.venue_name, _extract_ccxt_code(exc))` in every except block — `ccxt.BaseError` and

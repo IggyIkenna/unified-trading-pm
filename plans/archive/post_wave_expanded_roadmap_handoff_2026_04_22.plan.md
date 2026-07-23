@@ -6,7 +6,8 @@ status: complete
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [deployment-api, deployment-service, deployment-ui, instruments-service, market-tick-data-service, strategy-service]
+repos:
+  [deployment-api, deployment-service, deployment-ui, instruments-service, market-tick-data-service, strategy-service]
 scope: [engineer, admin]
 tags: []
 related: []
@@ -16,7 +17,7 @@ owner: human + agent
 archived: 2026-04-24
 type: mixed
 epic: none
-completion_gates: {code: none, deployment: none, business: none}
+completion_gates: { code: none, deployment: none, business: none }
 repo_gates: []
 depends_on: []
 isProject: true
@@ -36,7 +37,7 @@ executing 11/12/13 + VM-based sports-scheduler + QG residuals + 3 orthogonal fol
 This file is the **session-spanning handoff roadmap** — a single document that captures every open workstream as of
 2026-04-22, so a fresh-context Claude can pick up without re-reading 10 sub-agent transcripts.
 
-**SSOT for sports-specific work**: `codex/02-data/sports-scheduling-and-sharding.md` §12. **SSOT for master execution
+**SSOT for sports-specific work**: `/codex/02-data/sports-scheduling-and-sharding.md` §12. **SSOT for master execution
 pattern**: `plans/active/sports_roadmap_master_execution_2026_04_21.md`. **SSOT for session memory**:
 `/Users/ikennaigboaka/.claude/projects/-Users-ikennaigboaka-Code-unified-trading-system-repos/memory/MEMORY.md`.
 **Active feature branch**: `live-defi-rollout` (read from `workspace-manifest.json`).
@@ -195,7 +196,7 @@ landed substantive work before this handoff was written.
 
 If context runs out during wave-3 completion:
 
-1. **Source of truth for sports roadmap**: `codex/02-data/sports-scheduling-and-sharding.md` §12.
+1. **Source of truth for sports roadmap**: `/codex/02-data/sports-scheduling-and-sharding.md` §12.
 2. **Master execution plan**: `plans/active/sports_roadmap_master_execution_2026_04_21.md`.
 3. **Post-wave handoff (this file)**: `plans/active/post_wave_expanded_roadmap_handoff_2026_04_22.md`.
 4. **Memory file**:

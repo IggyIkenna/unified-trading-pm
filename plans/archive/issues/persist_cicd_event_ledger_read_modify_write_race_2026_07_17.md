@@ -30,7 +30,7 @@ related:
   [
     plans/active/github_actions_ci_cost_reduction_2026_07_15.md,
     plans/active/issues/d13_orphaned_version_readers_and_manifest_drift_2026_07_17.md,
-    codex/02-data/honest-absence-downstream-handling.md,
+    /codex/02-data/honest-absence-downstream-handling.md,
   ]
 created: 2026-07-17
 parent_epic: deployment_and_user_management_master
@@ -89,7 +89,7 @@ Three independent reasons, and they compound:
 2. **The healthy output and the lossy output are the same string.** `Persisted event to gs://…` prints either way.
    Exactly the shape this epic has now found four times (`digest-drift-sweep`'s `Dispatched: 0`,
    `reconcile-release-tags`' `created 0 tag(s)`, `cassette-drift-check`'s green no-op). See
-   `codex/02-data/honest-absence-downstream-handling.md` — the same principle, applied to automation rather than data.
+   `/codex/02-data/honest-absence-downstream-handling.md` — the same principle, applied to automation rather than data.
 3. **Nothing reconciles the ledger against a known count.** A dropped row leaves no hole anyone looks for.
 
 ## Scale (measured where stated, estimated where stated)

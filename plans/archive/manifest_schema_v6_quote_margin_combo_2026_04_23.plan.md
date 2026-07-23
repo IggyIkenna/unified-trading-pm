@@ -527,7 +527,7 @@ On-origin commits:
   - Test lock: 57/57 Tardis + v6 tests green, 628 MTDS unit + adapter tests green.
 - deployment-service `1c2282f` — Phase 3C `scripts/vm/reap-zombies.sh`: reusable `tail -10`-based reaper with run.log
   silence + no-log-after-N-sec detection. Exits 2 on any delete failure.
-- PM `<this-commit>` — Phase 6 codex doc `codex/02-data/shard-granularity-cefi.md` documenting the v6 shard key matrix,
+- PM `<this-commit>` — Phase 6 codex doc `/codex/02-data/shard-granularity-cefi.md` documenting the v6 shard key matrix,
   venue-symbol parser, downstream impact, and non-goals.
 
 Phase 2c (`build_instrument_id` + quote/margin kwargs) is DEFERRED: the canonical instrument*id stays v5-shaped for

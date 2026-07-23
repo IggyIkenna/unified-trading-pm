@@ -10,12 +10,19 @@ repos: [strategy-service, unified-api-contracts, unified-trading-pm, unified-tra
 scope: [engineer, admin]
 tags: []
 related: []
-created: '2026-04-20'
+created: "2026-04-20"
 priority: P0
 owner: agent
 locked_by: live-defi-rollout
 locked_since: 2026-04-20
-depends_on: [codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md §1.11, codex/14-playbooks/_ssot-rules/04-dart-commercial-axes.md, codex/14-playbooks/shared-core/same-system-principle.md, codex/09-strategy/TIER_ZERO_UI_DEMO_AND_PARITY.md, refactor_g1_6_derivation_engine_ship_to_strategy_service_availability_2026_04_20.md]
+depends_on:
+  [
+    /codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md §1.11,
+    /codex/14-playbooks/_ssot-rules/04-dart-commercial-axes.md,
+    /codex/14-playbooks/shared-core/same-system-principle.md,
+    /codex/09-strategy/TIER_ZERO_UI_DEMO_AND_PARITY.md,
+    refactor_g1_6_derivation_engine_ship_to_strategy_service_availability_2026_04_20.md,
+  ]
 ---
 
 ## Deferred work — migrated to:
@@ -74,7 +81,7 @@ lifts them into an explicit rule file + enforcement in `access_control`.
 - **Shared-core:** `shared-core/same-system-principle.md`, `shared-core/client-reporting-demo-walkthrough.md`,
   `shared-core/org-fund-client-entity-model.md`, `shared-core/shared-reporting-core.md`
 - **Cross-cutting:** `cross-cutting/sma-vs-pooled.md`
-- **Strategy v2 TIER_ZERO:** `codex/09-strategy/TIER_ZERO_UI_DEMO_AND_PARITY.md`
+- **Strategy v2 TIER_ZERO:** `/codex/09-strategy/TIER_ZERO_UI_DEMO_AND_PARITY.md`
 - **Strategy v2 archetype declarations (read-only):** `strategy-service/strategy_service/engine/strategies/v2/` —
   informs which archetypes surface to which service families
 - **v2 cross-cutting:** `codex/09-strategy/architecture-v2/cross-cutting/`
@@ -82,15 +89,15 @@ lifts them into an explicit rule file + enforcement in `access_control`.
 
 ## Mandatory read-set
 
-1. `codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md` §1.11
-2. `codex/14-playbooks/_ssot-rules/04-dart-commercial-axes.md` (full)
-3. `codex/14-playbooks/_ssot-rules/03-same-system-principle.md`
-4. `codex/14-playbooks/shared-core/same-system-principle.md`
-5. `codex/14-playbooks/shared-core/client-reporting-demo-walkthrough.md`
-6. `codex/14-playbooks/shared-core/org-fund-client-entity-model.md`
-7. `codex/14-playbooks/shared-core/shared-reporting-core.md`
-8. `codex/14-customer-journeys/playbook-concepts/sma-vs-pooled.md`
-9. `codex/09-strategy/TIER_ZERO_UI_DEMO_AND_PARITY.md` (full)
+1. `/codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md` §1.11
+2. `/codex/14-playbooks/_ssot-rules/04-dart-commercial-axes.md` (full)
+3. `/codex/14-playbooks/_ssot-rules/03-same-system-principle.md`
+4. `/codex/14-playbooks/shared-core/same-system-principle.md`
+5. `/codex/14-playbooks/shared-core/client-reporting-demo-walkthrough.md`
+6. `/codex/14-playbooks/shared-core/org-fund-client-entity-model.md`
+7. `/codex/14-playbooks/shared-core/shared-reporting-core.md`
+8. `/codex/14-customer-journeys/playbook-concepts/sma-vs-pooled.md`
+9. `/codex/09-strategy/TIER_ZERO_UI_DEMO_AND_PARITY.md` (full)
 10. `codex/09-strategy/architecture-v2/cross-cutting/` (all files)
 11. `strategy-service/strategy_service/engine/strategies/v2/` (read-only — archetype-by-archetype check of which
     families the archetype surfaces to)
@@ -163,7 +170,7 @@ All Phase 11A-11E shipped in 3 commits. Option X carry-through (UAC host). Rule 
       excludes: []
   ```
 
-- [x] [AGENT] P0. Write `codex/14-playbooks/_ssot-rules/11-service-family-scope-rules.md` — prose rule doc explaining
+- [x] [AGENT] P0. Write `/codex/14-playbooks/_ssot-rules/11-service-family-scope-rules.md` — prose rule doc explaining
       each row with rationale + cross-refs to shared-core + TIER_ZERO docs.
 
 ### Phase 11B — Implement `check_service_family_scope`
@@ -200,11 +207,11 @@ All Phase 11A-11E shipped in 3 commits. Option X carry-through (UAC host). Rule 
 
 ## Critical files to be modified
 
-- `codex/14-playbooks/_ssot-rules/11-service-family-scope-rules.md` — NEW
+- `/codex/14-playbooks/_ssot-rules/11-service-family-scope-rules.md` — NEW
 - `codex/14-playbooks/_ssot-rules/11-service-family-scope-rules.yaml` — NEW
 - `codex/14-playbooks/_ssot-rules/_tools/validate_scope_yaml.py` — NEW
 - `codex/00-SSOT-INDEX.md` — MODIFY
-- `codex/14-playbooks/_ssot-rules/04-dart-commercial-axes.md` — MODIFY (cross-ref)
+- `/codex/14-playbooks/_ssot-rules/04-dart-commercial-axes.md` — MODIFY (cross-ref)
 - `strategy-service/strategy_service/availability/service_family_scope.py` — NEW
 - `strategy-service/strategy_service/availability/derivation.py` — MODIFY (wire pre-check in `access_control`)
 - `strategy-service/tests/availability/test_service_family_scope.py` — NEW (≥ 30 cases)

@@ -10,7 +10,7 @@ repos: [unified-trading-pm, unified-trading-system-ui]
 scope: [engineer, admin]
 tags: []
 related: []
-created: '2026-04-21'
+created: "2026-04-21"
 ---
 
 ## Deferred work — migrated to:
@@ -260,7 +260,7 @@ todos:
 # ──────────────────────────────────────────────────────────────────────
 
 - id: p6-codex-strategy-catalogue-3tier-doc content: |
-  - [x] [AGENT] P1. `codex/09-strategy/architecture-v2/strategy-catalogue-3tier.md` — 3 tiers + per-persona matrix +
+  - [x] [AGENT] P1. `/codex/09-strategy/architecture-v2/strategy-catalogue-3tier.md` — 3 tiers + per-persona matrix +
         Reality/FOMO split + allocation-request flow. §9 amended post-Plan-A-Phase-2 from "scaffold handoff" to "data
         wiring" documenting catalogue/variants/enums live + maturity/routing synthesised + Plan-C overlay pending.
         status: done

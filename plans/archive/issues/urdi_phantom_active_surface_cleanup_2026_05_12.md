@@ -12,7 +12,13 @@ tags: []
 related: []
 created: 2026-05-12
 author: ikenna-slot8
-source: [cursor-configs/CLAUDE.md line 479 (FIXED this session), 'codex/GLOSSARY.md:99-100 (correct — declares URDI ELIMINATED 2026-03-26)', workspace-manifest.json (no URDI repo; sports-reference-data-service merged into instruments-service 2026-03-01), SP-5 / SP-10 / SP-12 sub-agent confusion (operator-flagged 2026-05-12)]
+source:
+  [
+    cursor-configs/CLAUDE.md line 479 (FIXED this session),
+    "codex/GLOSSARY.md:99-100 (correct — declares URDI ELIMINATED 2026-03-26)",
+    workspace-manifest.json (no URDI repo; sports-reference-data-service merged into instruments-service 2026-03-01),
+    SP-5 / SP-10 / SP-12 sub-agent confusion (operator-flagged 2026-05-12),
+  ]
 locked_by: live-defi-rollout
 locked_since: 2026-05-12
 ---
@@ -39,12 +45,12 @@ locked_since: 2026-05-12
      "sports reference → `instruments-service`" + explicit phantom-name annotation).
    - `codex/GLOSSARY.md` ✅ already correct (declares ELIMINATED 2026-03-26).
    - `codex/10-audit/repos/unified-reference-data-interface.yaml` — STALE repo-readiness yaml for a non-existent repo.
-   - `codex/06-coding-standards/feature-service-pattern.md` — T1-library table lists URDI as active 🟡 STALE.
-   - `codex/06-coding-standards/service-orchestration-patterns.md` — present-tense "URDI adapters read their own URLs"
+   - `/codex/06-coding-standards/feature-service-pattern.md` — T1-library table lists URDI as active 🟡 STALE.
+   - `/codex/06-coding-standards/service-orchestration-patterns.md` — present-tense "URDI adapters read their own URLs"
      🟡 STALE.
-   - `codex/07-security/testing-with-api-keys.md` — needs verification.
+   - `/codex/07-security/testing-with-api-keys.md` — needs verification.
    - `codex/10-audit/REPO_READINESS_CHECKLIST.yaml` — needs verification.
-   - `codex/06-coding-standards/integration-testing-layers.md` ✅ already uses "formerly URDI" framing (correct).
+   - `/codex/06-coding-standards/integration-testing-layers.md` ✅ already uses "formerly URDI" framing (correct).
    - ~25 more refs across active plans + codex docs — mostly historical-ok but mixed.
 
 ## Why it matters

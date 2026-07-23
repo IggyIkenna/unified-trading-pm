@@ -27,7 +27,7 @@ scope: [engineer]
 tags: [backfill, vm-hang, reliability, shard-level-failure-isolation, gcsfs, thread-pool, canonical-migration, defi]
 related:
   - plans/active/defi_consolidated_closeout_2026_07_18.md
-  - mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md
+  - /plans/active/issues/mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md
 created: 2026-07-22
 parent_epic: infrastructure_master
 assigned_vm: NA

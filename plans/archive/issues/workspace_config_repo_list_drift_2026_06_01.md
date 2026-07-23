@@ -12,7 +12,14 @@ tags: []
 related: []
 created: 2026-06-01
 author: ikennaigboaka (slot 5, interactive)
-source: [slot-5 interactive session 2026-06-01 (VS Code "risk-and-exposure-service does not appear to be a git repository" error), .tabs/*/unified-trading-system-repos.code-workspace, unified-trading-pm/cursor-configs/unified-trading-system-repos.code-workspace, unified-trading-pm/scripts/dev/setup-tab-worktrees.sh]
+source:
+  [
+    slot-5 interactive session 2026-06-01 (VS Code "risk-and-exposure-service does not appear to be a git repository"
+    error),
+    .tabs/*/unified-trading-system-repos.code-workspace,
+    unified-trading-pm/cursor-configs/unified-trading-system-repos.code-workspace,
+    unified-trading-pm/scripts/dev/setup-tab-worktrees.sh,
+  ]
 parent_epic: infrastructure_master
 assigned_vm: planning-vm
 priority: P2
@@ -32,7 +39,7 @@ resolved: 2026-06-01
 >   `FAILING` flip was stale; dropped slot-5 `stash@{0}` (operator-acked); slot-5 PM tree unblocked.
 > - Item 5 (FF-pull starvation watchdog): spec delivered in the remediation plan (wiring is an optional P3 follow-up).
 >
-> Codex `codex/05-infrastructure/per-tab-worktrees.md` documents the canonical-vs-slot `.code-workspace` path-style
+> Codex `/codex/05-infrastructure/per-tab-worktrees.md` documents the canonical-vs-slot `.code-workspace` path-style
 > contract + guard. Archived per the issue-doc lifecycle (acked ⇒ archive immediately).
 
 > **Provenance**: Surfaced while cleaning slot-5 working trees on 2026-06-01. The operator saw VS Code report

@@ -121,7 +121,7 @@ ever waiting for A's acquire() to actually resolve, and without holding the leas
 ## Why it matters
 
 - **Actively wastes the hard-capped 3-VM Tardis fleet's quota** (operator 2026-07-14 HARD cap,
-  `codex/05-infrastructure/vm-launcher-runbook.md` § Tardis cap) on requests that get 403'd and land as
+  `/codex/05-infrastructure/vm-launcher-runbook.md` § Tardis cap) on requests that get 403'd and land as
   `attempted_failed` in the manifest — real API calls burned for zero data, on a resource explicitly capped because it's
   scarce/contention-prone.
 - **Silently degrades the honest-coverage gate the parent plan
@@ -260,7 +260,7 @@ already-verified CAS/GCS lease mechanics or the (unrelated, working) download co
   - **Todo (3) — the corpus-wide apply-flip**: main's answer additionally required "consolidator quiesced;
     evidence-verify" before running `--apply`, since `_flip_to_expected_unattempted()` does a direct read-modify-write
     of the FULL merged canonical (`_index/availability_index.parquet`), not a per-VM-shard write — exactly the race
-    pattern the same-day HARD RULE in `codex/05-infrastructure/manifest-consolidator-ssot.md` § "Writers: per-VM shard
+    pattern the same-day HARD RULE in `/codex/05-infrastructure/manifest-consolidator-ssot.md` § "Writers: per-VM shard
     mode is the ONLY sanctioned standing write path" warns about (reference incident: 2026-07-15 sports IS canonical
     lost 328,292 rows / 5.7% to a legacy-mode direct write racing the consolidator). The script's
     `MANIFEST_PER_VM_SHARDS=true`/`VM_NAME` env-var gate is validated but never actually used to route the write through

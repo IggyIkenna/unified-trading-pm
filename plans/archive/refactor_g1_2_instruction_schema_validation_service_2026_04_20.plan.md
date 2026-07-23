@@ -6,16 +6,32 @@ status: complete
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [execution-service, strategy-service, unified-api-contracts, unified-trading-library, unified-trading-pm, unified-trading-system-ui]
+repos:
+  [
+    execution-service,
+    strategy-service,
+    unified-api-contracts,
+    unified-trading-library,
+    unified-trading-pm,
+    unified-trading-system-ui,
+  ]
 scope: [engineer, admin]
 tags: []
 related: []
-created: '2026-04-20'
+created: "2026-04-20"
 priority: P0
 owner: agent
 locked_by: live-defi-rollout
 locked_since: 2026-04-20
-depends_on: [codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md §1.2, codex/14-playbooks/infra-spec/stage-3b-instruction-schema-contract.md, codex/14-playbooks/infra-spec/stage-3b-uac-combo-rules.md, codex/14-playbooks/infra-spec/stage-3b-combo-rules-schema.yaml, codex/14-playbooks/_ssot-rules/10-strategy-instruction-schema-principles.md, refactor_g1_8_uac_archetype_capability_v2_2026_04_20.md]
+depends_on:
+  [
+    /codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md §1.2,
+    /codex/14-playbooks/infra-spec/stage-3b-instruction-schema-contract.md,
+    /codex/14-playbooks/infra-spec/stage-3b-uac-combo-rules.md,
+    codex/14-playbooks/infra-spec/stage-3b-combo-rules-schema.yaml,
+    /codex/14-playbooks/_ssot-rules/10-strategy-instruction-schema-principles.md,
+    refactor_g1_8_uac_archetype_capability_v2_2026_04_20.md,
+  ]
 ---
 
 ## Deferred work — migrated to:
@@ -56,12 +72,12 @@ preferential pricing and validation behaviour.
 
 ## Mandatory read-set
 
-1. `codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md` §1.2
-2. `codex/14-playbooks/infra-spec/stage-3b-instruction-schema-contract.md` — full
-3. `codex/14-playbooks/infra-spec/stage-3b-uac-combo-rules.md` — full
+1. `/codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md` §1.2
+2. `/codex/14-playbooks/infra-spec/stage-3b-instruction-schema-contract.md` — full
+3. `/codex/14-playbooks/infra-spec/stage-3b-uac-combo-rules.md` — full
 4. `codex/14-playbooks/infra-spec/stage-3b-combo-rules-schema.yaml` — full
-5. `codex/14-playbooks/infra-spec/stage-3b-downstream-analytics-capability-matrix.md`
-6. `codex/14-playbooks/_ssot-rules/10-strategy-instruction-schema-principles.md`
+5. `/codex/14-playbooks/infra-spec/stage-3b-downstream-analytics-capability-matrix.md`
+6. `/codex/14-playbooks/_ssot-rules/10-strategy-instruction-schema-principles.md`
 7. `unified-api-contracts/unified_api_contracts/internal/architecture_v2/archetype_capability.py` (landed by G1.8)
 8. `strategy-service/strategy_service/engine/strategies/v2/` (read-only, for sanity-checking validator against source of
    truth)
@@ -325,7 +341,7 @@ Never `--dep-branch`, never `git reset --hard`.
 | 6   | Line 93 (Phase 2B): "the 10 block-list groups in `category-instrument-coverage.md` (BL-1 through BL-10)" | G1.8 codex parity test enforces these 10 groups exist in codex md; block_list_refs live on `ArchetypeCapabilityCell.block_list_refs`                                            | Validator does NOT re-check BL-\* groups directly — it asks `archetypes_for_pair()` (which respects blocks already baked into manifest by G1.8). Unit tests spot-check each BL-1..BL-10 group produces the right `FieldError`. Don't duplicate G1.8's invariants.                                                                                                               |
 
 Stage-3B richer schema reference (read-only SSOT for validator field-level checks):
-`codex/14-playbooks/infra-spec/stage-3b-instruction-schema-contract.md` defines the 8 required fields
+`/codex/14-playbooks/infra-spec/stage-3b-instruction-schema-contract.md` defines the 8 required fields
 (instrument_venue_context, intended_action, size_or_target_exposure, timeframe_urgency, order_constraints,
 strategy_instruction_id, lifecycle_replace_cancel, risk_and_allocation_constraints) — the validator mirrors this
 structurally with Pydantic models.

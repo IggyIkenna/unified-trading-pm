@@ -103,7 +103,7 @@ This plan closes that gap with 3 new adapters + Jito Restaking verification.
 
 ## Phase 5 — Codex SSOT
 
-- [x] [DOCS] P0. Extend `codex/04-architecture/solana-defi-coverage.md` with `## Restaking layer` section.
+- [x] [DOCS] P0. Extend `/codex/04-architecture/solana-defi-coverage.md` with `## Restaking layer` section.
 
 ## Phase 6 — Quality gates
 
@@ -140,7 +140,7 @@ The values used here are best-guess from on-chain explorers.
 - Plan B (Solana perp DEX): `plans/active/solana_perp_dex_adapters_2026_05_13.md`
 - Plan C (Solana AMM): `plans/active/solana_amm_coverage_expansion_2026_05_13.md`
 - Jito Restaking (already shipped, Plan A): `instruments-service@jito_restaking.py` (commit: 5624624)
-- Codex SSOT: `codex/04-architecture/solana-defi-coverage.md`
+- Codex SSOT: `/codex/04-architecture/solana-defi-coverage.md`
 - UAC SSOT: `unified_api_contracts/registry/capability_declarations/_defi_chain_data.py` § `SOLANA_DEFI_PROTOCOLS`
 
 ## Deferred work

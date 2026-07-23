@@ -2,11 +2,10 @@
 doc_type: audit-instruction
 title: strategy_master_audit_instructions
 summary:
-  Weekly audit checklist for strategy-service post-consolidation — 8 checks (53
-  archetypes registered, portfolio_allocator determinism, zero stale
-  strategy-and-dart-service refs, batch=live signal identity, shard-level
-  no-raise) plus CF-1/2/5/8/9/12 canonical-form checks on the strategy-output
-  _index and batch→paper→live e2e goal posts.
+  Weekly audit checklist for strategy-service post-consolidation — 8 checks (53 archetypes registered,
+  portfolio_allocator determinism, zero stale strategy-and-dart-service refs, batch=live signal identity, shard-level
+  no-raise) plus CF-1/2/5/8/9/12 canonical-form checks on the strategy-output _index and batch→paper→live e2e goal
+  posts.
 status: active
 nature: process
 asset_group: [cross-cutting]
@@ -16,8 +15,8 @@ scope: [engineer, admin]
 tags: [audit, strategy, reconciliation, data-correctness, ssot-audit, quality-gates]
 related:
   [
-    canonical_form_cross_service_audit_checklist.md,
-    ../../../codex/04-architecture/shard-level-failure-isolation.md,
+    /plans/audit/instructions/canonical_form_cross_service_audit_checklist.md,
+    /codex/04-architecture/shard-level-failure-isolation.md,
     ../../../codex/09-strategy/architecture-v2/archetypes/,
   ]
 created: 2026-05-22
@@ -39,7 +38,7 @@ last_updated: 2026-05-22
 strategy-service post-consolidation: 53 archetypes across all asset_groups, `portfolio_allocator`, risk manager,
 position tracker, PnL calculator, and batch=live code path identity. Shard-level failure isolation required.
 
-Codex SSOTs: `codex/09-strategy/architecture-v2/archetypes/`, `codex/04-architecture/shard-level-failure-isolation.md`,
+Codex SSOTs: `codex/09-strategy/architecture-v2/archetypes/`, `/codex/04-architecture/shard-level-failure-isolation.md`,
 `plans/active/defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md`
 
 ## Triggers

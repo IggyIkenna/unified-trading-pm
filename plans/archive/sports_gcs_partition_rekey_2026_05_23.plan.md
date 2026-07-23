@@ -136,7 +136,7 @@ consolidator shows `asset_group=sports` rows in consolidated manifest.
 
 ## Codex SSOT updates
 
-- `codex/02-data/availability-manifest-and-data-status.md` — update Sports GCS partition key status table.
+- `/codex/02-data/availability-manifest-and-data-status.md` — update Sports GCS partition key status table.
 - `plans/audit/instructions/sports_master_audit_instructions.md` — item (f) migration completion evidence.
 
 ## Temporary states + their canonical follow-up plans

@@ -15,7 +15,7 @@ scope: [engineer, admin]
 tags: [audit, instruments, catalogue, mtds, uac, canonicalisation, registry]
 related:
   [
-    canonical_form_cross_service_audit_checklist.md,
+    /plans/audit/instructions/canonical_form_cross_service_audit_checklist.md,
     ../../active/master_data_canonicalisation_migration_catalogue_2026_06_07.md,
   ]
 created: 2026-05-22
@@ -48,7 +48,7 @@ instruments-service as the reference data SSOT: venue URL ownership, instrument 
 schema, and the IS→MTDS contract enforced by QG STEP 5.70 (three scripts). MTDS handlers derive all venue URLs and
 universes from IS — never hardcoded.
 
-Codex SSOT: `codex/04-architecture/instruments-service-as-ssot-for-mtds.md`
+Codex SSOT: `/codex/04-architecture/instruments-service-as-ssot-for-mtds.md`
 
 ## Triggers
 

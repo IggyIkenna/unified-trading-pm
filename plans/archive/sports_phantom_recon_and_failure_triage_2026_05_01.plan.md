@@ -81,8 +81,8 @@ manifest contract — those are correct, not action items. The 9,328 `attempted_
 `_index/availability_index.parquet` with no compare-and-swap, no `if_generation_match`, no sentinel-lock. The
 consolidator daemon writes to the same file every 60s using a sentinel-lock. Running recon non-dry-run while the
 consolidator (or any per-VM merge) is active risks losing whatever the consolidator just merged (see
-[vm-tarball-deployment.md § Manifest consolidator daemon](../../codex/05-infrastructure/vm-tarball-deployment.md) for
-the consolidator's lock pattern).
+[vm-tarball-deployment.md § Manifest consolidator daemon](/codex/05-infrastructure/vm-tarball-deployment.md) for the
+consolidator's lock pattern).
 
 **Options to fix:**
 
@@ -101,23 +101,23 @@ Dry-run is always safe (read-only).
       attempted_failed in the manifest). Detail by data_type:
 
       | data_type             | new phantoms | currently captured | phantom%   |
-              | --------------------- | -----------: | -----------------: | ---------: |
-              | INJURIES              |        9,872 |             10,559 |  **48.3%** |
-              | PLAYER_VALUES         |        3,814 |                979 |  **79.6%** |
-              | STANDINGS             |       13,022 |            183,709 |       6.6% |
-              | PLAYER_STATS          |        3,053 |             20,758 |      12.8% |
-              | FIXTURE_LINEUPS       |        2,842 |             30,997 |       8.4% |
-              | FIXTURE_STATS         |        2,629 |             36,685 |       6.7% |
-              | FIXTURE_EVENTS        |          555 |             35,045 |       1.6% |
-              | TEAMS                 |          383 |            103,138 |       0.4% |
-              | SFI_LEAGUES           |          207 |             13,006 |       1.6% |
-              | ODDS                  |          204 |             26,171 |       0.8% |
-              | PREDICTIONS           |          189 |             26,353 |       0.7% |
-              | (others)              |            0 |                  — |       0.0% |
+                                                                      | --------------------- | -----------: | -----------------: | ---------: |
+                                                                      | INJURIES              |        9,872 |             10,559 |  **48.3%** |
+                                                                      | PLAYER_VALUES         |        3,814 |                979 |  **79.6%** |
+                                                                      | STANDINGS             |       13,022 |            183,709 |       6.6% |
+                                                                      | PLAYER_STATS          |        3,053 |             20,758 |      12.8% |
+                                                                      | FIXTURE_LINEUPS       |        2,842 |             30,997 |       8.4% |
+                                                                      | FIXTURE_STATS         |        2,629 |             36,685 |       6.7% |
+                                                                      | FIXTURE_EVENTS        |          555 |             35,045 |       1.6% |
+                                                                      | TEAMS                 |          383 |            103,138 |       0.4% |
+                                                                      | SFI_LEAGUES           |          207 |             13,006 |       1.6% |
+                                                                      | ODDS                  |          204 |             26,171 |       0.8% |
+                                                                      | PREDICTIONS           |          189 |             26,353 |       0.7% |
+                                                                      | (others)              |            0 |                  — |       0.0% |
 
-              **Critical interpretation: 79.6% of `PLAYER_VALUES` and 48.3% of `INJURIES` "captured" rows are lying.** These
-              manifest entries claim parquet exists; recon's bulk GCS list says it doesn't. This is a much bigger problem than
-              the initial 9k flagged failures.
+                                                                      **Critical interpretation: 79.6% of `PLAYER_VALUES` and 48.3% of `INJURIES` "captured" rows are lying.** These
+                                                                      manifest entries claim parquet exists; recon's bulk GCS list says it doesn't. This is a much bigger problem than
+                                                                      the initial 9k flagged failures.
 
 - [x] [AGENT] P0. Per-source breakdown of ALL 6 sports sources (api-football / footystats / understat / transfermarkt /
       sfi / open-meteo) — see "Per-source findings" section below.
@@ -215,7 +215,7 @@ Phantom flip races with the consolidator. Don't run until either (a) all sports 
      `if_generation_match` on upload). Pre-audit: search workspace for other writers to canonical
      `_index/availability_index.parquet`.
   2. Operational workaround — stop the consolidator daemon, run recon, restart consolidator. Documented in
-     [vm-tarball-deployment.md § Manifest consolidator daemon](../../codex/05-infrastructure/vm-tarball-deployment.md).
+     [vm-tarball-deployment.md § Manifest consolidator daemon](/codex/05-infrastructure/vm-tarball-deployment.md).
 - [ ] [HUMAN] P0. Run real recon (scoped to footystats first):
       `     cd instruments-service     .venv/bin/python scripts/reconcile_phantom_manifest_rows.py \       --data-types MATCHES,PREDICTIONS,ODDS     `
       Re-run with `--dry-run` afterwards; should report 0 phantom flips (idempotent).
@@ -264,5 +264,5 @@ finish. Each source has its own data_types; reuse the breakdown query.
   pre-2019 dates must stay `empty_confirmed` per cutoff).
 - VIX futures, mbp_10, and other deferred items from the parent epic plan.
 - Architectural decision on `ODDS_LIVE` vs `ODDS_HIST` split (see
-  [sports-data-source-coverage-matrix.md §4](../../codex/02-data/sports-data-source-coverage-matrix.md)) — design
-  question, not data-quality work.
+  [sports-data-source-coverage-matrix.md §4](/codex/02-data/sports-data-source-coverage-matrix.md)) — design question,
+  not data-quality work.

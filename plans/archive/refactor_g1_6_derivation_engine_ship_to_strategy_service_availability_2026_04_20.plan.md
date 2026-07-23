@@ -10,12 +10,18 @@ repos: [strategy-service, unified-api-contracts, unified-trading-pm, unified-tra
 scope: [engineer, admin]
 tags: []
 related: []
-created: '2026-04-20'
+created: "2026-04-20"
 priority: P0
 owner: agent
 locked_by: live-defi-rollout
 locked_since: 2026-04-20
-depends_on: [codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md §1.6, codex/14-playbooks/infra-spec/stage-3c-derivation-engine.md, codex/09-strategy/architecture-v2/uac-registry-gaps.md (gaps, refactor_g1_8_uac_archetype_capability_v2_2026_04_20.md]
+depends_on:
+  [
+    /codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md §1.6,
+    /codex/14-playbooks/infra-spec/stage-3c-derivation-engine.md,
+    /codex/09-strategy/architecture-v2/uac-registry-gaps.md (gaps,
+    refactor_g1_8_uac_archetype_capability_v2_2026_04_20.md,
+  ]
 ---
 
 ## Deferred work — migrated to:
@@ -79,19 +85,19 @@ access-control middleware.
   `access_control` consumes it
 - **Downstream Wave D:** `refactor_g1_7_restriction_profile_engine_2026_04_20.md` (consumer),
   `refactor_g1_11_service_family_scope_rules_2026_04_20.md` (consumer)
-- **Stage 3C infra spec:** `codex/14-playbooks/infra-spec/stage-3c-derivation-engine.md` — the 4 formulas
-- **UAC gaps:** `codex/09-strategy/architecture-v2/uac-registry-gaps.md` #1, #11, #12
+- **Stage 3C infra spec:** `/codex/14-playbooks/infra-spec/stage-3c-derivation-engine.md` — the 4 formulas
+- **UAC gaps:** `/codex/09-strategy/architecture-v2/uac-registry-gaps.md` #1, #11, #12
 - **Strategy v2 code (read-only):** `strategy-service/strategy_service/engine/strategies/v2/` — for `valid_pairs`
   reference and `archetype_build_registry.py`
 
 ## Mandatory read-set
 
-1. `codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md` §1.6
-2. `codex/14-playbooks/infra-spec/stage-3c-derivation-engine.md` — full, especially the 4 formula definitions
-3. `codex/09-strategy/architecture-v2/uac-registry-gaps.md` — gaps #1, #11, #12 in full
-4. `codex/09-strategy/architecture-v2/README.md` — 8 families × 18 archetypes
-5. `codex/09-strategy/architecture-v2/category-instrument-coverage.md` — master matrix + 10 block-list groups
-6. `codex/09-strategy/architecture-v2/cross-cutting/strategy-availability-and-locking.md`
+1. `/codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md` §1.6
+2. `/codex/14-playbooks/infra-spec/stage-3c-derivation-engine.md` — full, especially the 4 formula definitions
+3. `/codex/09-strategy/architecture-v2/uac-registry-gaps.md` — gaps #1, #11, #12 in full
+4. `/codex/09-strategy/architecture-v2/README.md` — 8 families × 18 archetypes
+5. `/codex/09-strategy/architecture-v2/category-instrument-coverage.md` — master matrix + 10 block-list groups
+6. `/codex/09-strategy/architecture-v2/cross-cutting/strategy-availability-and-locking.md`
 7. `strategy-service/strategy_service/engine/strategies/v2/` — all top-level files + 18 archetype subdirs (valid_pairs
    declarations)
 8. `strategy-service/strategy_service/engine/strategies/v2/archetype_build_registry.py` — Phase-2 build registry

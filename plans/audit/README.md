@@ -9,7 +9,7 @@ name: audit-readme
 # Audit — SSOT for the audit lifecycle
 
 **This file is the SSOT** for how audits are structured, run, linked to epics, and archived. It is referenced by
-`codex/11-project-management/epic-execution-with-sub-agents.md` and `plans/epics/README.md`. When the audit workflow
+`/codex/11-project-management/epic-execution-with-sub-agents.md` and `plans/epics/README.md`. When the audit workflow
 evolves, update this file first; codex docs and the epics README are pointers.
 
 ---
@@ -203,7 +203,7 @@ Run at each planning-VM session start:
 ## Cross-references
 
 - `plans/epics/README.md` — full audit → active plan → epic flow diagram; `## Audit instructions per epic` section
-- `codex/11-project-management/epic-execution-with-sub-agents.md` — codex-level summary with audit lifecycle table
-- `codex/11-project-management/issue-doc-lifecycle.md` — how pre-audit diagnostics in issues/ should be handled (archive
-  once acked into a plan)
+- `/codex/11-project-management/epic-execution-with-sub-agents.md` — codex-level summary with audit lifecycle table
+- `/codex/11-project-management/issue-doc-lifecycle.md` — how pre-audit diagnostics in issues/ should be handled
+  (archive once acked into a plan)
 - `plans/PLAN_FORMAT.md` — plan format for active plans created from audit gap items

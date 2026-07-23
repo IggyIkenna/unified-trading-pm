@@ -22,8 +22,8 @@ scope: [engineer]
 tags: [quality-gates, empty-string-fallback, baseline-ratchet, ci-blocking, seed-bug]
 related:
   [
-    mtds_empty_string_fallback_codex_gate_blocking_pushes_2026_07_08.md,
-    manifest_writer_dry_run_gcs_write_leak_2026_07_08.md,
+    /plans/active/issues/mtds_empty_string_fallback_codex_gate_blocking_pushes_2026_07_08.md,
+    /plans/archive/issues/manifest_writer_dry_run_gcs_write_leak_2026_07_08.md,
   ]
 created: 2026-07-08
 parent_epic: agent_operating_framework_master
@@ -77,10 +77,10 @@ baseline). Verified: `check_no_empty_string_fallback.py --scope unified-trading-
       [`mtds_empty_string_fallback_codex_gate_blocking_pushes_2026_07_08.md`](mtds_empty_string_fallback_codex_gate_blocking_pushes_2026_07_08.md)
       **Todo 3** (`[VERIFY] P2. Check whether other repos have the same latent gap`), which is `status: open`, P1, and
       unlocked. Carrying the same ask under a `resolved` doc is the dual-tracking anti-pattern
-      [`codex/11-project-management/issue-doc-lifecycle.md`](../../../codex/11-project-management/issue-doc-lifecycle.md)
-      bans. **The work is NOT done** — it is tracked in exactly one place now (the mtds doc), where the 2026-07-16
-      fleet-wide measurement has been recorded. ~~Re-run `check_no_empty_string_fallback.py` workspace-wide (no
-      `--scope`) against every repo's seeding commit the same way this issue did.~~ (repo: unified-trading-pm)
+      [`/codex/11-project-management/issue-doc-lifecycle.md`](/codex/11-project-management/issue-doc-lifecycle.md) bans.
+      **The work is NOT done** — it is tracked in exactly one place now (the mtds doc), where the 2026-07-16 fleet-wide
+      measurement has been recorded. ~~Re-run `check_no_empty_string_fallback.py` workspace-wide (no `--scope`) against
+      every repo's seeding commit the same way this issue did.~~ (repo: unified-trading-pm)
 
 ## Reconciliation 2026-07-16 — named problem genuinely fixed; residual todo was a duplicate
 

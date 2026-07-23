@@ -13,8 +13,18 @@ related: []
 created: 2026-05-15
 author: slot-3
 resolved: 2026-05-17
-resolution: SHIPPED — both drifts. Drift 1 (eligible_venues silent fallthrough) diagnosed + WARN-fix at `execution-service@7957371d` + 3 unit tests. Drift 2 (defi_lp/mev subdir family-map alignment) test at `strategy-service@f01d12d` + 4 unit tests.
-source: [codex/04-architecture/backtest-groups.md, codex/09-strategy/architecture-v2/axes/venue-eligibility.md, strategy-service/strategy_service/engine/backtest/runner.py, strategy-service/strategy_service/engine/strategies/v2/orchestrator.py, unified-api-contracts/unified_api_contracts/internal/architecture_v2/schemas.py]
+resolution:
+  SHIPPED — both drifts. Drift 1 (eligible_venues silent fallthrough) diagnosed + WARN-fix at
+  `execution-service@7957371d` + 3 unit tests. Drift 2 (defi_lp/mev subdir family-map alignment) test at
+  `strategy-service@f01d12d` + 4 unit tests.
+source:
+  [
+    /codex/04-architecture/backtest-groups.md,
+    /codex/09-strategy/architecture-v2/axes/venue-eligibility.md,
+    strategy-service/strategy_service/engine/backtest/runner.py,
+    strategy-service/strategy_service/engine/strategies/v2/orchestrator.py,
+    unified-api-contracts/unified_api_contracts/internal/architecture_v2/schemas.py,
+  ]
 locked_by: live-defi-rollout
 ---
 

@@ -93,9 +93,9 @@ Repo: `strategy-service`. Scaffold landed on `live-defi-rollout` at `strategy-se
       repo, so no retirement needed here (UI still has its own `strategy-registry.ts` — that retirement belongs to Phase
       9).
 - [x] [CODE] P1. Config registry with content-hash + monotonic version per slot — `ConfigRegistry` in `registry.py`
-      (SHA-256 truncated to 16 hex per `codex/06-coding-standards/strategy-identity-versioning.md`).
+      (SHA-256 truncated to 16 hex per `/codex/06-coding-standards/strategy-identity-versioning.md`).
 - [x] [CODE] P1. Slot-label parser + validator matching grammar from
-      `codex/06-coding-standards/strategy-identity-versioning.md` —
+      `/codex/06-coding-standards/strategy-identity-versioning.md` —
       `strategy_service/engine/strategies/v2/slot_label.py`. `SlotLabelParts` now exposes typed `venue_tokens` +
       `instrument_tokens` (split via UAC `split_scope_tokens` from `unified-api-contracts@2ccb356`) with a back-compat
       `scope_tokens` property. Covered by 4 dedicated tests (multi-venue, Unity sports, stat-arb basket, unknown-first
@@ -222,7 +222,7 @@ Repos: `features-onchain-service`, `features-ohlc-service`, `features-sports-ser
 - [ ] [CODE] P1. Artifact registry emission on publish (`ARTIFACT_PUBLISHED` event)
 - [ ] [CODE] P1. Content-hash + monotonic version per feature group
 - [ ] [CODE] P1. Content-hash + monotonic version per model; model family naming per
-      `codex/06-coding-standards/artifact-naming.md`
+      `/codex/06-coding-standards/artifact-naming.md`
 - [ ] [CODE] P1. Consumer-pin `@v{N}` resolution at feature/model fetch time
 - [ ] [CODE] P1. Dependency graph (strategy config → model → feature groups) queryable via registry
 - [ ] [CODE] P1. Attestations: emit `(model_version, feature_group_versions)` back on inference so they ride on

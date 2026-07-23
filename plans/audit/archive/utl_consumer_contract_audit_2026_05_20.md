@@ -222,8 +222,8 @@ Additional inline `gs://` references found in scripts:
 
 | Service                             | ServiceBootstrap                     | setup_events                                             | make_health_router              | Manifest API                                                        | ApiKeyReloader                              | Overall |
 | ----------------------------------- | ------------------------------------ | -------------------------------------------------------- | ------------------------------- | ------------------------------------------------------------------- | ------------------------------------------- | ------- |
-| `market-tick-data-service`          | ✅                                   | ✅ (18 hits)                                             | ✅                              | ✅ `record_captured` (main); ⚠ legacy in scripts                   | ✅                                          | YELLOW  |
-| `instruments-service`               | ✅                                   | ✅ (10 hits)                                             | ✅                              | ✅ `record_captured`/`record_empty` dominant                        | ⚠ preflight one-shot (acceptable)          | GREEN   |
+| `market-tick-data-service`          | ✅                                   | ✅ (18 hits)                                             | ✅                              | ✅ `record_captured` (main); ⚠ legacy in scripts                    | ✅                                          | YELLOW  |
+| `instruments-service`               | ✅                                   | ✅ (10 hits)                                             | ✅                              | ✅ `record_captured`/`record_empty` dominant                        | ⚠ preflight one-shot (acceptable)           | GREEN   |
 | `execution-service`                 | ✅                                   | ✅ (12 hits)                                             | ✅                              | ❌ P0-2: `ManifestWriter.add()` in live data_sink + save_operations | n/a                                         | RED     |
 | `strategy-service`                  | ✅                                   | ✅ (3 hits)                                              | ✅                              | ❌ P0-3: `ManifestWriter.add()` in PnL + risk sink                  | ✅ (12 hits)                                | RED     |
 | `features-service`                  | ✅                                   | ✅ (2 hits)                                              | ✅ (9 hits)                     | ✅ `record_captured`/`record_empty`                                 | ✅ (24 hits)                                | GREEN   |
@@ -400,7 +400,7 @@ Phase Q — QG enforcement (wire new gates)
   └── Wire record_empty(reason="") rg check as new QG STEP
 
 Phase D — Codex doc update
-  └── Update codex/06-coding-standards/config-reloader-pattern.md to clarify
+  └── Update /codex/06-coding-standards/config-reloader-pattern.md to clarify
       preflight one-shot vs ApiKeyReloader hot-reload boundary
 ```
 

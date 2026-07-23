@@ -6,11 +6,19 @@ status: complete
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [execution-service, strategy-service, unified-api-contracts, unified-trading-api, unified-trading-pm, unified-trading-system-ui]
+repos:
+  [
+    execution-service,
+    strategy-service,
+    unified-api-contracts,
+    unified-trading-api,
+    unified-trading-pm,
+    unified-trading-system-ui,
+  ]
 scope: [engineer, admin]
 tags: []
 related: []
-created: '2026-04-21'
+created: "2026-04-21"
 ---
 
 ## Deferred work — migrated to:
@@ -263,13 +271,13 @@ todos:
 # ──────────────────────────────────────────────────────────────────────
 
 - id: p4-codex-strategy-lifecycle-doc content: |
-  - [x] [AGENT] P1. Create `codex/09-strategy/architecture-v2/strategy-lifecycle-maturity.md`: §1 9-phase enum +
+  - [x] [AGENT] P1. Create `/codex/09-strategy/architecture-v2/strategy-lifecycle-maturity.md`: §1 9-phase enum +
         transition rules, §2 Product routing, §3 Venue-set variants (Elysium worked example), §4 Share class, §5
         odum-paper client-zero, §6 UAC→UI sync pattern, §7 Admin editor flow. Cross-ref `strategy-registry-v2.md` (v2
         slot-labels) + `dashboard-services-grid.md`. status: done
 
 - id: p4-codex-odum-paper-doc content: |
-  - [x] [AGENT] P1. Create `codex/14-playbooks/shared-core/odum-paper-client-zero.md`: rationale + lifecycle + capital
+  - [x] [AGENT] P1. Create `/codex/14-playbooks/shared-core/odum-paper-client-zero.md`: rationale + lifecycle + capital
         seeding + retention + reality-vs-expected monitoring. status: done
 
 # ────────────────────────────────────────────────────────────────────────────

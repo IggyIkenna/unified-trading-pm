@@ -6,39 +6,145 @@ status: complete
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [client-reporting-api, deployment-api, execution-service, instruments-service, market-data-processing-service, strategy-service]
+repos:
+  [
+    client-reporting-api,
+    deployment-api,
+    execution-service,
+    instruments-service,
+    market-data-processing-service,
+    strategy-service,
+  ]
 scope: [engineer, admin]
 tags: []
 related: []
-created: '2026-03-10'
-overview: Eliminate all .basedpyright-baseline.json suppressions across every repo so basedpyright runs with 0 errors and empty/absent baseline files.
+created: "2026-03-10"
+overview:
+  Eliminate all .basedpyright-baseline.json suppressions across every repo so basedpyright runs with 0 errors and
+  empty/absent baseline files.
 type: code
 epic: epic-code-completion
-completion_gates: {code: C5, deployment: none, business: none}
+completion_gates: { code: C5, deployment: none, business: none }
 repo_gates:
-- {repo: execution-service, code: C4, deployment: none, business: none, readiness_note: 'DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off required for a code plan.'}
-- {repo: deployment-api, code: C4, deployment: none, business: none, readiness_note: 'DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off required for a code plan.'}
-- {repo: market-data-processing-service, code: C4, deployment: none, business: none, readiness_note: 'DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off required for a code plan.'}
-- {repo: ml-training-service, code: C4, deployment: none, business: none, readiness_note: 'DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off required for a code plan.'}
-- {repo: features-sports-service, code: C4, deployment: none, business: none, readiness_note: 'DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off required for a code plan.'}
-- {repo: strategy-service, code: C4, deployment: none, business: none, readiness_note: 'DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off required for a code plan.'}
-- {repo: execution-results-api, code: C4, deployment: none, business: none, readiness_note: 'DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off required for a code plan.'}
-- {repo: unified-trade-execution-interface, code: C4, deployment: none, business: none, readiness_note: 'DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off required for a code plan.'}
+  - {
+      repo: execution-service,
+      code: C4,
+      deployment: none,
+      business: none,
+      readiness_note:
+        "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
+        required for a code plan.",
+    }
+  - {
+      repo: deployment-api,
+      code: C4,
+      deployment: none,
+      business: none,
+      readiness_note:
+        "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
+        required for a code plan.",
+    }
+  - {
+      repo: market-data-processing-service,
+      code: C4,
+      deployment: none,
+      business: none,
+      readiness_note:
+        "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
+        required for a code plan.",
+    }
+  - {
+      repo: ml-training-service,
+      code: C4,
+      deployment: none,
+      business: none,
+      readiness_note:
+        "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
+        required for a code plan.",
+    }
+  - {
+      repo: features-sports-service,
+      code: C4,
+      deployment: none,
+      business: none,
+      readiness_note:
+        "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
+        required for a code plan.",
+    }
+  - {
+      repo: strategy-service,
+      code: C4,
+      deployment: none,
+      business: none,
+      readiness_note:
+        "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
+        required for a code plan.",
+    }
+  - {
+      repo: execution-results-api,
+      code: C4,
+      deployment: none,
+      business: none,
+      readiness_note:
+        "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
+        required for a code plan.",
+    }
+  - {
+      repo: unified-trade-execution-interface,
+      code: C4,
+      deployment: none,
+      business: none,
+      readiness_note:
+        "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
+        required for a code plan.",
+    }
 depends_on: [position_precision_pnl_hardening_2026_03_11]
 todos:
-- {id: phase9-type-ignore-triage, content: 'Phase 9: enumerate and triage remaining # type: ignore in production source; fix fixable ones', status: done, note: 'All fixable type:ignore resolved 2026-03-11'}
-- {id: phase9-funding-recon-severity, content: 'execution-service/services/funding_recon_engine.py:214 — fix severity arg-type with AlertSeverity enum', status: done, note: 'Fixed 2026-03-11: narrowed _publish_alert severity param to Literal type (Phase C confirmed done)'}
-- {id: phase9-yield-recon-severity, content: 'execution-service/services/yield_recon_engine.py:280 — same severity arg-type pattern', status: done, note: 'Fixed 2026-03-11: narrowed _publish_alert severity param to Literal type'}
-- {id: phase9-instruments-override, content: 'instruments-service/instrument_processing_handlers.py:71 — # type: ignore[override] UTL-DEC-02 mixin', status: done, note: 'Already fixed (no type:ignore present)'}
-- {id: phase9-client-reporting-pnl-reader, content: 'client-reporting-api/core/pnl_reader.py:63 — df.to_dict cast to list[dict[str, object]]', status: done, note: 'Fixed 2026-03-11: replaced type:ignore with cast()'}
-- {id: phase9-deployment-api-state, content: 'deployment-api/services/deployment_state.py:269,293,324,358,436 — _reportPrivateUsage on sync helpers', status: done, note: 'Fixed 2026-03-11: renamed 5 _sync functions to public in routes/deployment_state.py; updated imports in services + tests'}
+  - {
+      id: phase9-type-ignore-triage,
+      content: "Phase 9: enumerate and triage remaining # type: ignore in production source; fix fixable ones",
+      status: done,
+      note: "All fixable type:ignore resolved 2026-03-11",
+    }
+  - {
+      id: phase9-funding-recon-severity,
+      content: "execution-service/services/funding_recon_engine.py:214 — fix severity arg-type with AlertSeverity enum",
+      status: done,
+      note: "Fixed 2026-03-11: narrowed _publish_alert severity param to Literal type (Phase C confirmed done)",
+    }
+  - {
+      id: phase9-yield-recon-severity,
+      content: "execution-service/services/yield_recon_engine.py:280 — same severity arg-type pattern",
+      status: done,
+      note: "Fixed 2026-03-11: narrowed _publish_alert severity param to Literal type",
+    }
+  - {
+      id: phase9-instruments-override,
+      content: "instruments-service/instrument_processing_handlers.py:71 — # type: ignore[override] UTL-DEC-02 mixin",
+      status: done,
+      note: "Already fixed (no type:ignore present)",
+    }
+  - {
+      id: phase9-client-reporting-pnl-reader,
+      content: "client-reporting-api/core/pnl_reader.py:63 — df.to_dict cast to list[dict[str, object]]",
+      status: done,
+      note: "Fixed 2026-03-11: replaced type:ignore with cast()",
+    }
+  - {
+      id: phase9-deployment-api-state,
+      content: "deployment-api/services/deployment_state.py:269,293,324,358,436 — _reportPrivateUsage on sync helpers",
+      status: done,
+      note:
+        "Fixed 2026-03-11: renamed 5 _sync functions to public in routes/deployment_state.py; updated imports in
+        services + tests",
+    }
 isProject: false
 ---
 
 # Zero Baseline Typecheck — Full Remediation Plan
 
 **Created:** 2026-03-10 **Completed:** 2026-03-11 **Status:** ALL PHASES COMPLETE ✅ **SSOT-INDEX:** register under
-`08-type-safety` **Linked codex section:** `unified-trading-codex/06-coding-standards/README.md`
+`08-type-safety` **Linked codex section:** `unified-trading-/codex/06-coding-standards/README.md`
 
 > ⚠️ **M3 SEQUENCING NOTE (2026-03-11):** Phase 9 TODO items in `funding_recon_engine.py:214` and
 > `yield_recon_engine.py:280` (severity arg-type fixes) depend on `position_precision_pnl_hardening` Phase C being
@@ -229,7 +335,7 @@ class NautilusEngineProtocol(Protocol):
 - [ ] Run basedpyright in each repo — 0 errors required
 - [ ] Delete or verify-empty `.basedpyright-baseline.json` in all 8 repos
 - [ ] Run `bash scripts/quality-gates.sh` in each repo
-- [ ] Update `unified-trading-codex/06-coding-standards/README.md`: baseline files must be absent
+- [ ] Update `unified-trading-/codex/06-coding-standards/README.md`: baseline files must be absent
 - [ ] Add CI enforcement: QG fails if baseline has entries (all 8 repos)
 - [ ] Register this plan completion in `unified-trading-codex/00-SSOT-INDEX.md`
 - [ ] Commit: `chore: enforce zero baseline policy in CI + codex SSOT`

@@ -6,11 +6,19 @@ status: complete
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [deployment-api, deployment-service, execution-service, strategy-service, unified-api-contracts, unified-trading-library]
+repos:
+  [
+    deployment-api,
+    deployment-service,
+    execution-service,
+    strategy-service,
+    unified-api-contracts,
+    unified-trading-library,
+  ]
 scope: [engineer, admin]
 tags: []
 related: []
-created: '2026-04-20'
+created: "2026-04-20"
 priority: P0
 owner: agent
 depends_on: [path_to_100m_finalization_2026_04_20]
@@ -34,8 +42,8 @@ incidental DEFERRED / post-cutover / out-of-scope tokens in the body are histori
 ## Context
 
 Path-to-$100M finalisation (2026-04-20) locked Signal Leasing as the **fourth commercial path** (alongside DART, IM, Reg
-Umbrella). Two counterparties are already interested; targeted go-live **September 2026** at ~$5k/month combined revenue
-to start.
+Umbrella). Two counterparties are already interested; targeted go-live **September 2026** at ~$5k/month
+combined revenue to start.
 
 Per user direction 2026-04-20: Signal Leasing requires a **heavy cross-repo refactor** so that `strategy-service` can
 **externally broadcast strategy instructions to counterparties who execute on their own infrastructure**. This is a
@@ -98,11 +106,11 @@ alongside the public marketing page. Specifically:
 ## Cross-references
 
 - [path_to_100m_finalization_2026_04_20.md](path_to_100m_finalization_2026_04_20.md) — parent context
-- `codex/14-playbooks/commercial-model/signal-leasing.md` — commercial framing (already shipped)
-- `codex/14-playbooks/_ssot-rules/04-dart-commercial-axes.md` — notes Signal Leasing as fourth path
-- `codex/14-playbooks/shared-core/dart-pricing-axes.md` — pricing dimensions
-- `codex/04-architecture/shard-level-failure-isolation.md` — D10 rule anchor
-- `codex/04-architecture/interface-credential-convention.md` — authentication pattern reuse
+- `/codex/14-playbooks/commercial-model/signal-leasing.md` — commercial framing (already shipped)
+- `/codex/14-playbooks/_ssot-rules/04-dart-commercial-axes.md` — notes Signal Leasing as fourth path
+- `/codex/14-playbooks/shared-core/dart-pricing-axes.md` — pricing dimensions
+- `/codex/04-architecture/shard-level-failure-isolation.md` — D10 rule anchor
+- `/codex/04-architecture/interface-credential-convention.md` — authentication pattern reuse
 
 ## Out of scope (explicit)
 
@@ -324,9 +332,9 @@ admin surface + counterparty-persona integration. Previously-listed marketing st
 
 ### Phase 6 — codex docs + CLAUDE.md + memory + cursor rules
 
-- [x] [AGENT] P0. New codex doc: `codex/14-playbooks/shared-core/signal-broadcast-architecture.md` — implementation
+- [x] [AGENT] P0. New codex doc: `/codex/14-playbooks/shared-core/signal-broadcast-architecture.md` — implementation
       map + failure isolation pattern + auth model. Shipped PM `c641ee38`.
-- [x] [AGENT] P0. Update `codex/14-playbooks/commercial-model/signal-leasing.md` with Sept 2026 go-live + 2-client
+- [x] [AGENT] P0. Update `/codex/14-playbooks/commercial-model/signal-leasing.md` with Sept 2026 go-live + 2-client
       anchor + reference to this plan. Shipped PM `e53590d8`.
 - [x] [AGENT] P0. Update `_ssot-rules/04-dart-commercial-axes.md` — brief note Signal Leasing fourth path references
       this plan. Shipped PM (this commit).
@@ -349,15 +357,17 @@ admin surface + counterparty-persona integration. Previously-listed marketing st
       or add a signal-leasing detail to reflect Sept 2026 go-live + $5k/mo. Shipped UI `9c1c6c6`.
 - [x] [AGENT] P0. Update `board-presentation-data.ts` slide 8 Signal Leasing entry to be more concrete ("2
       counterparties live Sept 2026, $5k/mo combined, target 4-6 counterparties by end-2027"). Shipped UI `9c1c6c6`.
-- [x] [AGENT] P0. Update `codex/14-playbooks/commercial-model/revenue-projection-2026-monthly.md` monthly table — scale
+- [x] [AGENT] P0. Update `/codex/14-playbooks/commercial-model/revenue-projection-2026-monthly.md` monthly table — scale
       Sept-Dec signal-leasing revenue from £12k+ down to £4k/mo (≈$5k) combined. Shipped PM `f6531e32` — monthly P&L +
       cumulative cash table + sensitivity scenarios all revised; year-end cash £464k → £413k.
 - [x] [AGENT] P0. Update `commercial-model/cash-deployment-plan.md` — minor revenue revision cascades year-end cash
       projection down from ~£464k to ~£429k. Still healthy; no funding implication. Shipped PM `f6531e32` — actual
       year-end land is £413k (profit-share cascade factored through the 10%-of-revenue line).
-- [x] [AGENT] P0. **Phase 7 success gate**: decks + revenue projection consistent with the $5k/mo anchor. **PASSED** —
+- [x] [AGENT] P0. **Phase 7 success gate**: decks + revenue projection consistent with the
+      $5k/mo anchor. **PASSED** —
       all 4 surfaces (plan-presentation, board-presentation, revenue-projection-2026-monthly, cash-deployment-plan)
-      self-consistent at £4k/mo (≈$5k) combined Sept-Dec 2026 anchor with cascaded year-end cash £413k.
+      self-consistent at £4k/mo (≈$5k)
+      combined Sept-Dec 2026 anchor with cascaded year-end cash £413k.
 
 ### Phase 8 — quality gates + integration test + handoff
 
@@ -618,7 +628,7 @@ preserved when one counterparty is down.
    `deployment-service/scripts/smoke-signal-broadcast.sh` output: provision SM secrets → `terraform apply` → fire manual
    signal emission → confirm staging webhook POSTs within 5s.
 2. **Counterparty-persona JWT claim wiring** — Phase 5 shipped the admin persona stub (`d7d9e9b`); full
-   `counterparty:{id}` scoped JWT claims flow is roadmap item under `codex/14-playbooks/roadmap/next-waves.md`
+   `counterparty:{id}` scoped JWT claims flow is roadmap item under `/codex/14-playbooks/roadmap/next-waves.md`
    (org-scoped JWT + per-client API-key issuance wave).
 3. **Plan unlock** — plan is `locked_by: live-defi-rollout`. All 8 phases done. Requires human `[unlock-plan]` commit
    tag to archive.

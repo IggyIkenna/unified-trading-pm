@@ -44,9 +44,9 @@ tags:
 related:
   [
     ../data_pipeline_e2e_check_2026_07_10.md,
-    cefi_manifest_consolidator_14day_stale_recovered_2026_07_13.md,
-    tardis_concurrent_ip_lockout_2026_07_12.md,
-    ../../../codex/02-data/availability-manifest-and-data-status.md,
+    /plans/archive/issues/cefi_manifest_consolidator_14day_stale_recovered_2026_07_13.md,
+    /plans/active/issues/tardis_concurrent_ip_lockout_2026_07_12.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
   ]
 created: 2026-07-13
 parent_epic: infrastructure_master
