@@ -211,6 +211,45 @@ NOT wire staking PnL to it until the audit confirms which, and that we have the 
 running:** workflow `wf_268532e0-323` builds the availability matrix (token × 4 sources × coverage + source-of-truth);
 its result is NOT yet on disk — process it when it lands.
 
+### Partial resolution 2026-07-23 — code-traced which rate MTDS's `lst_rates` actually is, per chain
+
+This does NOT replace `wf_268532e0-323` (that audit's availability matrix is broader — all 4 sources × all tokens), but
+directly answers "is `lst_yields.exchange_rate` really #4?" for the tokens that matter TODAY (the only currently
+perp-eligible LST is stETH, per E1) — traced by reading the actual collector code, not inferring:
+
+- **EVM side (stETH, rETH, weETH, cbETH, mETH, swETH, ETHx, osETH, ankrETH, pufETH, wstETH) — CONFIRMED genuine #4, for
+  EVERY historical date, not just "today".** `market-tick-data-service/.../lst_rates_handler.py`'s
+  `_EVM_LST_ABI_METADATA` calls each token's OWN protocol contract method directly (stETH→ `getPooledEthByShares`,
+  rETH→`getExchangeRate`, weETH→`getRate`, etc. — one canonical redemption/exchange-rate function per protocol).
+  Critically, `_query_rate()` (line 834) takes an explicit `block_number: int` ("Historical block number to query at"),
+  resolved per-date via `alchemy_client.get_block_by_timestamp(noon_ts, chain= "ETHEREUM")`, then calls
+  `web3.eth.call(..., block_identifier=block_number)` — a genuine on-chain read AT THAT HISTORICAL BLOCK, confirmed live
+  in this session's own backfill run.log ("Querying LST rates for 2025-04-15 at block 22274244"). This is NOT a
+  current-state proxy — it's true protocol-redemption fair value, accurate for every historical day. **Confidence: high
+  — the STAKING leg's data source for stETH (today's only perp-eligible LST) is genuinely #4, and E1's FUNDING-leg build
+  can proceed to a STAKING-leg build on the same footing whenever that's scoped**, without waiting on the SOL-side
+  caveat below.
+- **Solana side (jitoSOL, mSOL, bSOL, sanctumSOL) — CONFIRMED NOT #4 for historical dates; a market-derived proxy
+  instead.** `solana_lst_archival.py`'s Tier 1 (`_tier1_*_alchemy`, the genuine on-chain SPL stake-pool decode — the
+  true Solana analog of `getPooledEthByShares`) is explicitly gated `if today and rpc_url:` in every fetch function
+  (`_fetch_jito_rate`/`_fetch_bsol_rate`/`_fetch_sanctum_rate`) — correctly, because Solana's `getAccountInfo` JSON-RPC
+  call has no historical-block parameter in this codebase's usage (always returns CURRENT state), so Tier 1 can only
+  ever answer for the actual present day, never a backfill date. Tier 2 (The Graph subgraph) is a confirmed permanent
+  no-op today (no Solana subgraph IDs registered in UAC). Tier 3 (each protocol's own REST API) is ALSO explicitly gated
+  to `today`-only in the code (its own docstring: "Only valid for the current day... there is no per-day series").
+  **This means every single historical day of Solana `lst_rates` data (i.e. all of this session's
+  `2021-08-17→2026-07-22` Solana backfill except the literal last day) came from Tier 4 — `coins.llama.fi` DefiLlama
+  historical price ratio (LST-USD / SOL-USD)**, which is a MARKET-DERIVED price (closer to rate #1/#2, an aggregated
+  spot-price ratio) — NOT the protocol's own redemption rate. Not a bug (the code's own honest-absence/tier-gating
+  design correctly prevents mislabeling current-state as historical — verified no date-mislabeling occurs), but a real,
+  now-confirmed caveat: if a Solana LST ever becomes perp-eligible again (none are today per E1 — DRIFT was removed),
+  its STAKING leg would need this caveat accounted for before wiring, since `lst_yields.exchange_rate` for those tokens
+  is NOT rate #4 historically, unlike the EVM side.
+- **Not yet checked**: rsETH/ezETH/wBETH (the `_lst_extended_rates.py` extended-EVM roster, distinct from
+  `lst_rates_handler.py`'s core roster above) and the Aave-oracle (#3) / CEX-spot (#1) / DEX-pool (#2) sourcing for any
+  of these tokens — out of scope for this pass since none of them are in `_STAKED_BASIS_ETH_LSTS` today. Leave to
+  `wf_268532e0-323`'s broader matrix.
+
 ## Progress / in-flight (fresh-session resume point)
 
 - **RULED:** engine = spine (option A), scope = A2 (LENDING + STAKING). Economics per operator recorded above.
