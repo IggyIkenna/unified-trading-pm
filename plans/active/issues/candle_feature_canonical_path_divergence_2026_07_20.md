@@ -370,7 +370,19 @@ DECLARED template as a **separate** `content_check=non_canonical` verdict collec
       fixed). NOTE for future agents — a naive `read_availability_index()` call can return 0 rows on a COLD first
       invocation (transient cache/download artifact); a clean re-run returns the full 10.36M (+~3,940 from the per-VM
       merge). The reader is NOT broken — do not chase a phantom reader bug; the real defect is candle-manifest
-      under-population.
+      under-population. **CROSS-AG CONFIRMATION 2026-07-23** (prompted by an operator question during P8 close-out: did
+      the migration also clean up stale manifest entries? Checked directly — first confirmed the migration script itself
+      contains ZERO manifest-writing code, only its own internal tracking TSV, so it could not have touched manifest
+      state either way; then downloaded + queried all 4 buckets' `_index/availability_index.parquet` locally, filtering
+      `service_name=="market-data-processing-service"`): **defi 0** rows (of 23,471,601 total) despite 1,123,415 live
+      candle objects; **cefi 6** rows (of 10,581,647) — identical to the 2026-07-20 measurement above, unchanged by the
+      migration, still the same degenerate `date=2026-04-14` one-off; **tradfi 73** rows (of 5,881,228), all with
+      `instrument_type=''` (empty — pre-dates the migration's manifest re-key), despite 534,679 live candle objects;
+      **prediction 168** rows (of 758,961), all `instrument_type='PREDICTION_MARKET'`/`captured`, despite 583,228 live
+      candle objects. **Confirms this is a genuine, pre-existing, cross-AG gap** (not cefi-specific), and confirms the
+      P6-P8 path migration neither created nor fixed it — there was nothing migration-adjacent to clean up because the
+      manifest was never tracking the candle namespace to begin with. Skip- if-fresh is moot for candles fleet-wide, not
+      just cefi, until this is fixed.
 - [x] 8. ✅ [DATA] P1. **Fix the bundled-name rule** (going-forward writer): `candle_leaf_filename` now decides the leaf
       by "is this write bundled by `underlying=`?" (→ `ticks.parquet`) rather than the data_type-in-set check. Shipped
       `mdps@752eaff`. **Repair/purge of EXISTING empty-stem objects is still pending P5/P7** (backward migration).
