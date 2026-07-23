@@ -200,12 +200,30 @@ run SEQUENTIALLY, not in parallel:
       catalog/engine config-shape mismatch** (build agent held per its own STOP instruction; see addendum below for the
       full finding + evidence — do not re-dispatch until the config-shape question is resolved, or the build agent will
       hit the identical `ValueError` at `register_instance()` before it ever reaches the tick loader).
-- [ ] [BACKEND] P1. **Phase 2 (= E3) — CARRY_RECURSIVE_STAKED + CARRY_RECURSIVE_BORROW_LENDING_ONLY +
-      CARRY_BASIS_PERP_INV**. All three share the same new building block: an Aave `borrow_index` sample-to-sample
-      accrual leg (mirrors the already-built `index_ratio_accrual()` primitive, just fed the borrow index instead of the
-      LST exchange-rate index). This IS the previously-tracked "E3" follow-on from
-      [[pnl_interest_accrual_wrong_engine_and_banned_formula_2026_07_21]] — build it once, wire into all 3 archetypes
-      (they differ only in whether they ALSO have a staking leg or a perp hedge on top).
+- [ ] [BACKEND] P1. **Phase 2 (= E3) — NARROWED to CARRY_RECURSIVE_STAKED only, 2026-07-23** (verified before dispatch,
+      learning Phase 1's lesson): `CARRY_RECURSIVE_BORROW_LENDING_ONLY` and `CARRY_BASIS_PERP_INV` are **NOT buildable
+      via a tick-loader at all** — both set `staking_yield_enabled=false` in their catalog config, and the shared engine
+      `CarryRecursiveStakedEngine.on_tick()` (`recursive_staked.py:194-199`) explicitly returns `[]` unconditionally
+      whenever that flag is false, with an in-code comment: "execution via RecursiveLoopOrchestrator landed in Phase 5.
+      Stub returns [] until orchestrator wiring is in place." Grepped the ENTIRE repo for `RecursiveLoopOrchestrator` —
+      it exists NOWHERE except this one comment; no class, no file, no partial impl. **These two archetypes are
+      non-functional in every environment today (paper, batch, live), not merely paper-replay-unwired.** Building a tick
+      loader for them would feed real data into an engine guaranteed to no-op — do NOT do this; it would look like
+      progress and be nothing. Filed as its own tracked gap below. `CARRY_RECURSIVE_STAKED` itself is verified SAFE to
+      build (its catalog rows don't set `staking_yield_enabled`, defaulting true → real `on_tick` logic runs; config
+      keys independently verified correctly dual-injected — `_RECURSIVE_STAKED_LST`/`_RECURSIVE_STAKED_LEND` lookup
+      dicts inject `staking_protocol`/`lending_protocol`/ `native_asset`/`lst_asset` alongside the
+      `staking_venue`/`lending_venue` keys, per the catalog's own comment "Both key sets must be present" — this is NOT
+      the Phase-1 class of bug). Phase 2 now = wire `CARRY_RECURSIVE_STAKED`'s tick loader + the new Aave `borrow_index`
+      sample-to-sample accrual leg (mirrors `index_ratio_accrual()`, fed the borrow index instead of the LST
+      exchange-rate index) for its lending/debt side — this IS the previously-tracked "E3" follow-on from
+      [[pnl_interest_accrual_wrong_engine_and_banned_formula_2026_07_21]].
+- [ ] [BACKEND] P2. **NEW finding 2026-07-23 — `RecursiveLoopOrchestrator` does not exist; 2 archetypes are production
+      no-ops.** `CARRY_RECURSIVE_BORROW_LENDING_ONLY` and `CARRY_BASIS_PERP_INV` need real execution logic built from
+      scratch (the "Phase 5" the in-code comment references was never actually shipped, or the comment is
+      aspirational/stale — not determined which). This is materially bigger than a tick-loader wiring task — it's new
+      production strategy-execution logic, live-path-affecting. Needs its own scoping pass before any build; do not fold
+      into the "complete the orphaned archetypes" tick-builder effort.
 - [ ] [BACKEND] P2. **Phase 3 — CARRY_BASIS_DATED + CARRY_BASIS_DATED_INV**. New data source: the
       `paired_price_dispersion` calculator (features-cross-instrument-service) for dated-futures-vs-cash/ETF basis. Note
       `catalog_carry.py`'s own comment flags some rows as `status=databento_pending` placeholders — confirm real data
