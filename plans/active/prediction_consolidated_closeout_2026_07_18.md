@@ -56,7 +56,9 @@ related:
     /plans/active/data_completion_prediction_2026_07_15.md,
     /plans/archive/2026_07/prediction_canonical_identity_migration_2026_07_08.md,
     /plans/active/prediction_capture_incident_remediation_2026_07_06.md,
-    /plans/active/prediction_venue_perps_and_live_clob_depth_2026_06_20.md,
+    /plans/active/prediction_perps_kalshi_polymarket_parked_2026_07_24.md,
+    /plans/active/prediction_live_clob_depth_capture_2026_07_24.md,
+    /plans/active/prediction_cross_venue_arb_and_coverage_2026_07_24.md,
     /plans/active/predictions_ml_walk_forward_and_arb_2026_06_20.md,
     /plans/active/predictions_other_bucket_and_ui_drilldown_2026_06_20.md,
     /plans/archive/2026_07/data_pipeline_e2e_check_2026_07_10.md,
@@ -238,8 +240,13 @@ fixture-linked before MVP backfill.
 ### A3 — Venue-perps + live CLOB depth residuals (fold)
 
 - [ ] [BACKEND] P1. **Close the 12 residuals on Kalshi/Polymarket perpetual futures + live CLOB depth/quotes** (funding
-      / basis / dispersion arb inputs). `prediction_venue_perps_and_live_clob_depth_2026_06_20.md` (12 open of 85).
-      (repos: market-tick-data-service, unified-api-contracts, features-service)
+      / basis / dispersion arb inputs). `prediction_venue_perps_and_live_clob_depth_2026_06_20.md` (12 open of 85) —
+      **split + archived 2026-07-24** (plan line-cap remediation) into
+      `prediction_perps_kalshi_polymarket_parked_2026_07_24.md` (1 open),
+      `prediction_live_clob_depth_capture_2026_07_24.md` (2 open), and
+      `prediction_cross_venue_arb_and_coverage_2026_07_24.md` (9 open + 2 in-progress); the residual-fold above should
+      now target those 3 successors, not the archived original. (repos: market-tick-data-service, unified-api-contracts,
+      features-service)
 
 ### A4 — Fixture-attribute WRITERS (Phase E depends on this landing before the Phase-D re-backfill)
 
@@ -523,7 +530,10 @@ fixture-linked before MVP backfill.
   `issues/polymarket_book_snapshot_5_dead_stream_2026_06_26.md` (done-evidence).
 - **Canonicalisation / data-completion**: `data_completion_prediction_2026_07_15.md` (primary open data track),
   `prediction_canonical_identity_migration_2026_07_08.md`.
-- **Venue-perps / CLOB depth**: `prediction_venue_perps_and_live_clob_depth_2026_06_20.md`.
+- **Venue-perps / CLOB depth**: split + archived 2026-07-24 (was
+  `prediction_venue_perps_and_live_clob_depth_2026_06_20.md`) into
+  `prediction_perps_kalshi_polymarket_parked_2026_07_24.md`, `prediction_live_clob_depth_capture_2026_07_24.md`,
+  `prediction_cross_venue_arb_and_coverage_2026_07_24.md`.
 - **UI / bucket**: `predictions_other_bucket_and_ui_drilldown_2026_06_20.md`.
 - **ML / arb (downstream, gated)**: `predictions_ml_walk_forward_and_arb_2026_06_20.md`.
 - **Cross-cutting (shared w/ sports)**: `issues/dp_catalog_not_running_sports_prediction_2026_07_15.md`; sports feeder
