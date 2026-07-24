@@ -27,7 +27,7 @@ tags: [defi, strategy, pnl, backtest, strategy-service, index, entry-point]
 related:
   [
     /plans/active/defi_consolidated_closeout_2026_07_18.md,
-    /plans/active/defi_consolidated_closeout_history_2026_07_18.md,
+    /plans/archive/2026_07/defi_consolidated_closeout_history_2026_07_18.md,
     /plans/active/lst_rate_honest_coverage_2026_07_21.md,
     /plans/active/distinct_values_noncanonical_audit_2026_07_20.md,
     /plans/active/issues/pnl_interest_accrual_wrong_engine_and_banned_formula_2026_07_21.md,

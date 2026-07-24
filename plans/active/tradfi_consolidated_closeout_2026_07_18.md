@@ -259,14 +259,14 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
       Regenerate catalogue + manifest so the name lands live; verify the Catalogue Explorer shows `SK Hynix` /
       `Samsung Electronics` next to the code. (repos: instruments-service, market-tick-data-service, deployment-api,
       deployment-ui)
-- [ ] 🚧 **BLOCKED-PLAN2** [VERIFY] P0. **Certify tradfi Layer-1** — post the v9 migration + rebuild + IS catalogue
-      (Plan 2), record the fresh tradfi denominator + %. Gate: tradfi number recorded; all 5 AGs now
-      canonical-and-measured. **STILL BLOCKED 2026-07-21 (only PARTIALLY unblocked)**: the v9 manifest migration/rebuild
-      are done (task 10, 2026-07-16), but the served catalogue has not yet been rebuilt/promoted for the +409 MVP
-      expansion (`uac@afa2dd64`→`22e6a534`) — so the fresh tradfi denominator this todo must record is not yet final.
-      Gated on the pending catalogue rebuild + promote (see `tradfi_consolidated_closeout_2026_07_18.md` "FINAL STEP"),
-      not cleanly runnable yet. (FOLDED IN from layer1_remeasure_and_certify_2026_07_06, 2026-07-15, plan-reconcile §6
-      operator ruling)
+- [ ] [VERIFY] P0. 🚧 BLOCKED-PLAN2 — **Certify tradfi Layer-1** — post the v9 migration + rebuild + IS catalogue (Plan
+      2), record the fresh tradfi denominator + %. Gate: tradfi number recorded; all 5 AGs now canonical-and-measured.
+      **STILL BLOCKED 2026-07-21 (only PARTIALLY unblocked)**: the v9 manifest migration/rebuild are done (task 10,
+      2026-07-16), but the served catalogue has not yet been rebuilt/promoted for the +409 MVP expansion
+      (`uac@afa2dd64`→`22e6a534`) — so the fresh tradfi denominator this todo must record is not yet final. Gated on the
+      pending catalogue rebuild + promote (see `tradfi_consolidated_closeout_2026_07_18.md` "FINAL STEP"), not cleanly
+      runnable yet. (FOLDED IN from layer1_remeasure_and_certify_2026_07_06, 2026-07-15, plan-reconcile §6 operator
+      ruling)
 
   **Note (2026-07-24)**: relocated verbatim from `tradfi_v9_stage1_finish_2026_07_06.md`'s "Folded-in scope 2026-07-15"
   section during the plan-hygiene line-cap remediation (that plan is now archived, 0 remaining open todos). The "FINAL
@@ -313,6 +313,28 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
   `features_delta_one_tradfi_mdps_dependency_gap_2026_06_24.md`.
 - **Skills**: `data_pipeline_e2e_check_2026_07_10.md` + the `data-pipeline-check-mtds` / `data-pipeline-check-is`
   skills.
+- **TradFi-specific residuals**: `issues/cme_combo_underlying_extraction_garbage_2026_07_19.md` (CME combo-leg
+  underlying parse), `issues/instruments_service_fx_adapter_key_unresolved_2026_07_23.md` (FX adapter-key gap),
+  `issues/tradfi_ohlcv_attempted_failed_cluster_2026_07_23.md` (OHLCV attempted_failed cluster),
+  `tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24.md` (human-signoff-gated legacy-twin bucket delete, forked from
+  `tradfi_v9_stage1_finish_2026_07_06.md` in the 2026-07-24 line-cap remediation),
+  `instruments_tradfi_g1_g5_gate_execution_2026_07_24.md` (tradfi slice of the instruments-foundation G1-G5 gate
+  execution split).
+- **Cross-cutting infra / audit (shared across asset groups, tradfi-relevant)**:
+  `candle_canonical_path_migration_execution_2026_07_24.md` (MDPS candle canonical-path migration, cross-AG),
+  `data_pipeline_check_mdps_features_2026_07_20.md`, `mdps_features_reduced_artifact_tracker_2026_06_28.md`,
+  `issues/adapter_findings_gcs_manifest_deployment_api_reconciliation_gap_2026_07_08.md`,
+  `issues/backfill_smoke_write_path_canonical_audit_2026_07_20.md`,
+  `issues/canonical_closeout_open_questions_2026_07_18.md`,
+  `issues/canonical_path_oracle_blind_to_filename_stem_2026_07_20.md`, `issues/estate_orphan_assessment_2026_07_21.md`,
+  `issues/instruments_docs_audit_outstanding_items_2026_07_08.md`,
+  `issues/manifest_completeness_full_corpus_map_build_2026_07_20.md`,
+  `issues/mdps_features_deadcode_consolidation_2026_07_20.md`,
+  `issues/mdps_prior_seed_context_thread_unsafe_2026_07_20.md`,
+  `issues/phantom_audit_estate_coverage_gap_2026_07_10.md`, `issues/pipeline_e2e_check_vm_name_collision_2026_07_12.md`,
+  `issues/tarball_rotation_breaks_vm_recovery_2026_07_20.md`,
+  `issues/ui_coverage_ts_venue_category_v2_rename_gap_2026_07_10.md`,
+  `issues/vm_backfill_data_correctness_findings_2026_06_29.md`.
 
 ## Progress Log — condensed milestone summary (2026-07-24, replaces the pre-split ~1700-line tick-by-tick log)
 
