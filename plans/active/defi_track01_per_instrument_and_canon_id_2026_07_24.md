@@ -592,11 +592,16 @@ instruments in one `instruments.parquet` with `available_from/to`).
       be written. The 12 EXISTING glued rows already in the manifest from before the fix still need a targeted
       re-verify/reclassify pass — tracked at Track 1's line 712-equivalent item below, not a distinct gap. (repo:
       market-tick-data-service)
-- [ ] [DATA] P1. **Verify the fake-history relabel-forward migration to actual completion** (todo 3,
-      `/plans/active/issues/defi_solana_dex_pools_fake_history_recurrence_prd_bucket_2026_07_23.md`) — script shipped +
-      a real 429-crash bug found+fixed (`market-tick-data-service@b48a0a4d`), relaunched on ON_DEMAND after 2
-      SPOT-related losses, NOT yet verified complete. Monitor via the real GCS destination-object count
-      (`day=2026-05-04/05` canonical `dex_pool_state`), not VM presence. (repo: market-tick-data-service)
+- [x] ✅ [DATA] P1. **Verify the fake-history relabel-forward migration to actual completion** (todo 3,
+      `/plans/active/issues/defi_solana_dex_pools_fake_history_recurrence_prd_bucket_2026_07_23.md`) — **VERIFIED
+      COMPLETE 2026-07-24 ~12:09 UTC**: all 4 ON_DEMAND VMs (`d01to05v3`/`d06to09v3`/`d10to13v3`/`d14to17v3`) terminated
+      cleanly, `run.log` ends `done. objects processed = N (apply=True)` + `exit_code=0` for each, sum = 241,281 exactly
+      matching the measured source population (no shard under-ran). **Re-confirmed independently in this session** via a
+      fresh `gcloud storage ls` count against the live `-prd-` bucket: `day=2026-05-04` = 14,104 ORCA + 119 RAYDIUM,
+      `day=2026-05-05` = 14,099 ORCA + 113 RAYDIUM, sum = 28,435 distinct canonical `dex_pool_state` objects, exactly
+      matching the issue doc's cited final count. Pending-delete audit report
+      (`_index/audit/dex_pools_fake_history_pending_delete.parquet`) confirmed present in GCS for the later human
+      delete-review step. (repo: market-tick-data-service)
 - [ ] [DATA] P2. **File + fix the `staking_yields_handler.py` / `lst_rates_handler.py` gap found during the 2026-07-22
       C2–C12 scoping pass** — `staking_yields_handler.py` hardcodes the legacy `_DATA_TYPE="staking_yields"` and is
       registered in the CLI but has ZERO scheduled Cloud Scheduler jobs (appears dead in production); separately,
