@@ -178,7 +178,9 @@ entry). UTC datetimes only. `quality-gates.sh`-green before each commit; commit 
       deployment-service@e726aab. Full detail in Progress Log.
 - [ ] [INFRA] P1. **Link 3 — grant the VM service account Firestore write IAM.** VMs write GCS only today; Firestore
       writes need `roles/datastore.user` (or equivalent) on the VM SA. **UNVERIFIED** — must be checked before the soak,
-      because of the silent-degradation catch below.
+      because of the silent-degradation catch below. — CODE SHIPPED, APPLY BLOCKED-CREDENTIALS:
+      deployment-service@2018d39 adds the Terraform resource (default compute SA, `roles/datastore.user`); actually
+      applying it needs operator-run credentials not available in this session. See Progress Log.
 - [ ] [INFRA] P1. **Link 4 — confirm `google-cloud-firestore` actually lands in the VM venv.**
       `build_deployment_registry_store` lazily imports `google.cloud.firestore`; the VM installs deployment-service with
       `--no-deps` and UTL normally, so whether the SDK is present on a VM is **UNVERIFIED**. Same reason as link 3.
@@ -255,6 +257,35 @@ entry). UTC datetimes only. `quality-gates.sh`-green before each commit; commit 
 - No `os.getenv`; UTC datetimes; reaper never raises into the sync loop; QG green on both repos.
 
 ## Progress Log
+
+- **2026-07-24 (slot 2, infra) — [INFRA] P1 "Link 3 — grant the VM SA Firestore write IAM" — CODE SHIPPED, APPLY
+  BLOCKED-CREDENTIALS. Checkbox left UNCHECKED — the IAM grant has NOT actually taken effect on live GCP.** Identified
+  the VM service account: 155/156 launchers under `deployment-service/scripts/vm/launch-*.sh` pass no
+  `--service-account=`, so `gcloud compute instances create` falls back to the project's DEFAULT compute SA
+  (`{project_number}-compute@developer.gserviceaccount.com`, project number `1060025368044` for
+  `central-element-323112`) — NOT `unified-trading-sa` (which only 1 launcher uses explicitly, and which is
+  deployment-api's Cloud Run runtime identity, a different grant target already covered by the existing
+  `unified_trading_*` Terraform resources). Confirmed this repo manages project IAM as Terraform code
+  (`terraform/gcp/main.tf`'s `google_project_iam_member` resources, e.g. `unified_trading_artifactregistry_reader`)
+  rather than ad-hoc `gcloud` grants, and that no CI workflow runs `terraform apply` automatically (grepped
+  `.github/workflows/` for "terraform apply"/"terraform plan" — zero hits) — applying IS a manual, credentialed step in
+  this workspace. Added `google_project_iam_member.default_compute_sa_datastore_user` (`roles/datastore.user`) following
+  the exact same pattern as the existing `unified_trading_*` grants, referencing the already-established
+  `var.project_number` local used identically in `alerting_relay_pubsub.tf`/`catalogue_regen_scheduler.tf` for the same
+  default-SA targeting. **Could NOT run `terraform apply`**: neither credential available in this session has the needed
+  permission — `github-actions-deploy@central-element-323112.iam.gserviceaccount.com` (the active `gcloud` account) got
+  `PERMISSION_DENIED` on `resourcemanager.projects.getIamPolicy` itself (confirmed via
+  `gcloud projects get-iam-policy central-element-323112`, real API call, not a guess); `ikenna@odum-research.com` (the
+  other credentialed account) needs an interactive re-auth (`gcloud auth login`) this non-interactive session cannot
+  perform. This IS the exact silent-degradation failure mode the plan's own `[VERIFY]` todo warns about (link 3 failing
+  does NOT error loudly — `_maybe_build_registry_store()` degrades to GCS-only + a swallowed warning), so leaving the
+  checkbox unchecked until the grant is verified LIVE is the correct call, not over-caution. Shipped:
+  `deployment-service@2018d39` (Terraform resource only, QG green 76s, quickmerge --agent). **BLOCKED-CREDENTIALS —
+  operator action needed**: either (a) run `cd deployment-service/terraform/gcp && terraform apply` (or `tofu apply`)
+  with credentials that hold `resourcemanager.projects.setIamPolicy`, or (b) grant that permission to
+  `github-actions-deploy@...` so a future agent session can apply it directly. Once applied, re-verify via
+  `gcloud projects get-iam-policy central-element-323112 --flatten="bindings[].members" --filter="bindings.role:roles/datastore.user"`
+  showing the default compute SA, THEN flip this checkbox.
 
 - **2026-07-24 (slot 2, infra) — [INFRA] P1 "Link 2 — wire the dual-write flag into the VM launch env" — SHIPPED.**
   Traced the metadata→env mechanism `setup-data-pipeline-vm.sh` already uses for `DEPLOYMENT_ENV` (`_meta KEY default`
