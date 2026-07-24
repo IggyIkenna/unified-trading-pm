@@ -269,13 +269,22 @@ EXEMPT_BASENAMES = frozenset(
     {"README.md", "INDEX.md", "ROADMAP.md", "roadmap.md", "PLAN_FORMAT.md", "RULES.md", "task_template.md"}
 )  # RULES.md = shared agent boot-rules meta (the agents/ analogue of CLAUDE.md), not a role charter
 
+# Directory-prefix exemptions (relative to PM root) — a whole family of scratch/spec docs whitelisted
+# as data, same rationale as EXEMPT_BASENAMES but keyed on location rather than filename. Scenario
+# design specs (scratch_scenarios_day1/*.md) are structured tables feeding the scenario-injection
+# harness (codex/04-architecture/scenario-injection-architecture.md), not tracked plans with
+# priorities/todos — already treated as frontmatter-free by scripts/plan-hygiene/fix_reference_paths.py.
+EXEMPT_DIR_PREFIXES = ("plans/active/scratch_scenarios_day1/",)
+
 
 def is_exempt(path: str) -> bool:
     name = Path(path).name
+    rel = str(path).replace("\\", "/")
     return (
         name in EXEMPT_BASENAMES
         or name.startswith("_")  # ledgers / pings (e.g. _agent_pings.md) — data, not docs
         or name.upper().endswith("INDEX.MD")  # navigational index docs (INDEX.md, 00-SSOT-INDEX.md)
+        or any(prefix in rel for prefix in EXEMPT_DIR_PREFIXES)
     )
 
 

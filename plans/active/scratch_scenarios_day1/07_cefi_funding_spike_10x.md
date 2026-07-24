@@ -80,6 +80,6 @@ SCALE_DOWN action default is auto_cooldown — matches funding-spike operational
   UAC@`86851ab`).
 - DR plan § Phase 1.B `BreakerConfig` seed for `arbitrage_price_dispersion`.
 - Risk plan § ArchetypeRules: per-archetype funding-cost ceiling.
-- `unified-trading-pm/plans/active/master_to_live_defi_2026_05_23.md` — `ARBITRAGE_PRICE_DISPERSION` is the funding-arb
-  archetype rename per Stream B canonicalisation 2026-05-07.
+- `unified-trading-pm/plans/archive/2026_07/master_to_live_defi_2026_05_23.md` — `ARBITRAGE_PRICE_DISPERSION` is the
+  funding-arb archetype rename per Stream B canonicalisation 2026-05-07.
 - Historical: Bybit ETHUSDT 2024-04-12, Hyperliquid 2025-01, Binance BTCUSDT 2022-11-08.

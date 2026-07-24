@@ -330,37 +330,37 @@ Discriminator = **does a manifest row exist**.
       CLAUSE SUPERSEDED — see the ⛔ correction banner directly above.**
 
       **2026-07-22 findings + fix.** The historical bare-`0x<address>.parquet` batch writer suspected by
-                                                                                                                                                                                      `issues/defi_dexpool_second_writer_path_and_zero_capture_2026_07_10.md` was already fixed 2026-07-09
-                                                                                                                                                                                      (`mtds@0713c01a`/`0ce28623`) — confirmed dead via a narrow live-GCS read (`day=2026-07-18` CURVE
-                                                                                                                                                                                      `dex_pool_state` objects are real `TOKEN0-TOKEN1.parquet` symbol names, not addresses). The ACTUAL live
-                                                                                                                                                                                      second writer: `market_tick_data_service.live.websocket_runner.live_tick_blob_path` (`mtds@3043f2dc1`,
-                                                                                                                                                                                      2026-06-26) spliced `chain=` BEFORE `venue=` for every non-cefi asset_group — the reverse of the canonical
-                                                                                                                                                                                      batch order (`unified_api_contracts.build_defi_partition_path`: `venue={V}/chain={C}/...`) — for the SAME
-                                                                                                                                                                                      (asset_group=defi, venue, chain, data_type, day) shard. Undetected for ~1 month because
-                                                                                                                                                                                      `canonical_path_violations` parsed partition segments into a `key→value` dict and never validated ORDER
-                                                                                                                                                                                      (only presence/values) — proven empirically (a hand-built reversed-order path returned the identical
-                                                                                                                                                                                      violation list as the correct order).
+                                                                                                                                                                                          `issues/defi_dexpool_second_writer_path_and_zero_capture_2026_07_10.md` was already fixed 2026-07-09
+                                                                                                                                                                                          (`mtds@0713c01a`/`0ce28623`) — confirmed dead via a narrow live-GCS read (`day=2026-07-18` CURVE
+                                                                                                                                                                                          `dex_pool_state` objects are real `TOKEN0-TOKEN1.parquet` symbol names, not addresses). The ACTUAL live
+                                                                                                                                                                                          second writer: `market_tick_data_service.live.websocket_runner.live_tick_blob_path` (`mtds@3043f2dc1`,
+                                                                                                                                                                                          2026-06-26) spliced `chain=` BEFORE `venue=` for every non-cefi asset_group — the reverse of the canonical
+                                                                                                                                                                                          batch order (`unified_api_contracts.build_defi_partition_path`: `venue={V}/chain={C}/...`) — for the SAME
+                                                                                                                                                                                          (asset_group=defi, venue, chain, data_type, day) shard. Undetected for ~1 month because
+                                                                                                                                                                                          `canonical_path_violations` parsed partition segments into a `key→value` dict and never validated ORDER
+                                                                                                                                                                                          (only presence/values) — proven empirically (a hand-built reversed-order path returned the identical
+                                                                                                                                                                                          violation list as the correct order).
 
-                                                                                                                                                                                      **Shipped**: `market-tick-data-service@0fcfa803` — reordered `live_tick_blob_path` to venue-before-chain +
-                                                                                                                                                                                      pinned the `_PER_AG_SHARD_COUNTS["DEFI"]` regression test (2673→2592, drifted by the unrelated concurrent
-                                                                                                                                                                                      METEORA/LIFINITY/PHOENIX phase-downgrade commit `uac@9a047a31`) + a new live/batch path-order regression
-                                                                                                                                                                                      test. Full `quality-gates.sh` green (6814 passed), pushed to `live-defi-rollout`.
+                                                                                                                                                                                          **Shipped**: `market-tick-data-service@0fcfa803` — reordered `live_tick_blob_path` to venue-before-chain +
+                                                                                                                                                                                          pinned the `_PER_AG_SHARD_COUNTS["DEFI"]` regression test (2673→2592, drifted by the unrelated concurrent
+                                                                                                                                                                                          METEORA/LIFINITY/PHOENIX phase-downgrade commit `uac@9a047a31`) + a new live/batch path-order regression
+                                                                                                                                                                                          test. Full `quality-gates.sh` green (6814 passed), pushed to `live-defi-rollout`.
 
-                                                                                                                                                                                      **UAC half SHIPPED `unified-api-contracts@1cd27478` (2026-07-23)**: the paired defi-scoped structural check
-                                                                                                                                                                                      added to `unified_api_contracts.canonical_path_violations` (venue-before-chain, lowercase
-                                                                                                                                                                                      `instrument_type`, `pipeline_mode=` position) so this drift class fails loud going forward — proven safe
-                                                                                                                                                                                      against the real writer (its template is unconditional/fixed; verified zero violations across every
-                                                                                                                                                                                      pipeline_mode × instrument_type × data_type combination + the fixed live path) and covered by 4 new
-                                                                                                                                                                                      regression tests (126 total passing). The blocking pre-existing defect
-                                                                                                                                                                                      (`tests/internal/unit/test_archetype_capability_manifest_parity.py`, 3 false failures) was ALREADY
-                                                                                                                                                                                      resolved by unrelated concurrent work by the time this shipped — `uac@68c4c371` fixed the parity test's
-                                                                                                                                                                                      root-cause path resolution (it resolved via ancestor walk before `UNIFIED_TRADING_WORKSPACE_ROOT`,
-                                                                                                                                                                                      which had been reading a stale outer-root PM checkout — the codex markdown sections were never
-                                                                                                                                                                                      actually missing, the test was just looking in the wrong place); no codex-doc content edit was needed.
-                                                                                                                                                                                      Verified: `bash scripts/quality-gates.sh --no-fix` full green (`.qg_last_passed_sha` == HEAD
-                                                                                                                                                                                      `824b1b7d` pre-ship), all 17 archetype-parity tests + all 89 `test_partition_path_is_canonical.py`
-                                                                                                                                                                                      tests passing, shipped via `quickmerge.sh --agent --files 'unified_api_contracts/canonical/partition_paths.py
-                                                                                                                                                                                      tests/unit/test_partition_path_is_canonical.py'`. (repos: market-tick-data-service, unified-api-contracts)
+                                                                                                                                                                                          **UAC half SHIPPED `unified-api-contracts@1cd27478` (2026-07-23)**: the paired defi-scoped structural check
+                                                                                                                                                                                          added to `unified_api_contracts.canonical_path_violations` (venue-before-chain, lowercase
+                                                                                                                                                                                          `instrument_type`, `pipeline_mode=` position) so this drift class fails loud going forward — proven safe
+                                                                                                                                                                                          against the real writer (its template is unconditional/fixed; verified zero violations across every
+                                                                                                                                                                                          pipeline_mode × instrument_type × data_type combination + the fixed live path) and covered by 4 new
+                                                                                                                                                                                          regression tests (126 total passing). The blocking pre-existing defect
+                                                                                                                                                                                          (`tests/internal/unit/test_archetype_capability_manifest_parity.py`, 3 false failures) was ALREADY
+                                                                                                                                                                                          resolved by unrelated concurrent work by the time this shipped — `uac@68c4c371` fixed the parity test's
+                                                                                                                                                                                          root-cause path resolution (it resolved via ancestor walk before `UNIFIED_TRADING_WORKSPACE_ROOT`,
+                                                                                                                                                                                          which had been reading a stale outer-root PM checkout — the codex markdown sections were never
+                                                                                                                                                                                          actually missing, the test was just looking in the wrong place); no codex-doc content edit was needed.
+                                                                                                                                                                                          Verified: `bash scripts/quality-gates.sh --no-fix` full green (`.qg_last_passed_sha` == HEAD
+                                                                                                                                                                                          `824b1b7d` pre-ship), all 17 archetype-parity tests + all 89 `test_partition_path_is_canonical.py`
+                                                                                                                                                                                          tests passing, shipped via `quickmerge.sh --agent --files 'unified_api_contracts/canonical/partition_paths.py
+                                                                                                                                                                                          tests/unit/test_partition_path_is_canonical.py'`. (repos: market-tick-data-service, unified-api-contracts)
 
 - [x] ✅ [INFRA] P1. **Correct the STALE codex path docs — checklist item was itself stale; both docs were ALREADY fixed
       (verified 2026-07-21).** Re-read both target docs in full + re-derived from this plan's own "Path template
@@ -705,16 +705,24 @@ Discriminator = **does a manifest row exist**.
 - [ ] [SCRIPT] P3. **Root-cause `quickmerge.sh` silently resetting an unpushed commit** (observed 2026-07-22, 2
       hypotheses ruled out, cause not confirmed, non-reproducible on retry). Needs a `bash -x`/`set -x` trace the next
       time it recurs. (repo: unified-trading-pm)
-- [ ] [OPERATOR] P1. **Run `delete_migrated_defi_markers_2026_07_23.py --apply`** once pushed (blocked on
-      `issues/mtds_deployment_env_monkeypatch_leak_blocks_quickmerge_2026_07_23.md`, or pull the local
-      `market-tick-data-service` commit directly) — prod-bucket delete, human-gated per
-      `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`.
-- [ ] [DATA] P2. **21 glued-id rows found in the 2026-07-23 manifest rebuild**: 9 ORCA/SOLANA `dex_pool_state` cells
-      (2025-12-23..12-31) need the higher-timeout/parallel-write migration retry (tracked in
-      `issues/mtds_defi_migration_cell_stall_untimed_gcs_read_2026_07_22.md`'s addendum); 12 fresh `liquidations`
-      bundles (`20260723_013349`, AAVE_V3/COMPOUND_V3/GMX/FLUID/SPARK × 8 chains) suggest that handler's forward-write
-      path may still use the pre-R1 bundled convention — confirm whether it needs the same per-instrument fix
-      `write_defi_rows()` already got.
+- [ ] [OPERATOR] P1. **Run `delete_migrated_defi_markers_2026_07_23.py --apply`** — CODE-SHIP HALF DONE
+      (`market-tick-data-service@a65117eb`, confirmed on `origin/live-defi-rollout` — the blocking flaky-test issue was
+      worked around via the serial-pytest mitigation, not fixed at root; see
+      `issues/mtds_deployment_env_monkeypatch_leak_blocks_quickmerge_2026_07_23.md`, reopened 2026-07-24). Exact
+      operator command:
+      `cd market-tick-data-service && .venv/bin/python     scripts/one_offs/delete_migrated_defi_markers_2026_07_23.py --apply`.
+      **Still gated on 712 below** — re-verify 0 glued ids before running; the fix that stops NEW glued rows shipped
+      (`f2e3ad41`) but the 12 pre-existing liquidations rows found 2026-07-23 have not yet been re-verified clean.
+      Prod-bucket delete, human-gated per `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` — an agent must
+      never run `--apply` itself.
+- [ ] [DATA] P2. **21 glued-id rows found in the 2026-07-23 manifest rebuild — writer fix SHIPPED, re-verify pending.**
+      9 ORCA/SOLANA `dex_pool_state` cells (2025-12-23..12-31) still need the higher-timeout/parallel-write migration
+      retry (tracked in `issues/mtds_defi_migration_cell_stall_untimed_gcs_read_2026_07_22.md`'s addendum — root-caused
+      as a genuine large fan-out, not a bug; safe to retry, source bundles left intact). The 12 `liquidations` bundles
+      question is ANSWERED: root-caused + fixed 2026-07-24 (`market-tick-data-service@f2e3ad41` — a daily cron was
+      writing timestamp-glued empty markers across 6 handlers; `70b9a81a` promoted the verify tool to
+      `scripts/one_offs/verify_defi_glued_ids_2026_07_24.py`). **Remaining**: run the 9-cell ORCA retry + re-run the
+      verify script for a fresh 0-glued-ids reading before todo 708's `--apply` proceeds.
 - [ ] [DATA] P1. **~16.7M-row LENDING→A_TOKEN/DEBT_TOKEN migration** — gated on lending-writer-retire todos 7/8/10/11
       (per-data_type target mapping + atomic 3-repo wave + runtime proof), see
       `defi_lending_writer_retire_prerequisite_2026_07_20.md`.
@@ -760,12 +768,14 @@ Discriminator = **does a manifest row exist**.
       `instruments-service/scripts/scope_defi_dex_pools_fake_history.py` once the orphan-sweep VM's final report is in.
 - [ ] [DATA] P2. **cefi/prediction timestamp-provenance audit** — cefi/prediction backfills were only sampled for
       canonical-SHAPE, not this specific `available_at` timestamp mismatch class.
-- [ ] [BACKEND] P2. **Solana AMM symbol-collision code fix** — verified CLEAN (zero shards corrupted, collector paused
-      since before the rename), added as an explicit pre-resume gate on `collect-solana-defi`, but the actual fix (wire
-      the fee/tick-spacing discriminator into `_solana_row_symbol`/`write_defi_rows`) is unwritten — genuinely
-      correctness-sensitive live-write-path code, do as its own focused pass (same caution as the async-fan-out item
-      above). Rejected approach (don't retry): MTDS calling instruments-service's `build_pool_identity` directly at
-      write time — violates the T4 tier-import rule.
+- [x] ✅ [BACKEND] P2. **Solana AMM symbol-collision code fix — SHIPPED 2026-07-24 (checkbox was stale — this todo's
+      text describing the fix as "unwritten" was overtaken by events, never flipped).**
+      `market-tick-data-service@0d83a8a9` wires the fee/tick-spacing discriminator into `solana_defi_handler.py`,
+      confirmed ancestor of `origin/live-defi-rollout`. Full remaining scope (already-shipped fix,
+      migration-of-existing-data check DONE clean, manifest-impact doc note, naming-doc update, and the SEPARATE cruder
+      `dex_pools_handler.py` writer's own collision exposure) tracked in
+      `defi_track01_per_instrument_and_canon_id_2026_07_24.md` (§ "Per-instrument re-architecture", the Solana
+      pool-symbol todo) — not duplicated here.
 - [ ] [BACKEND] P3. **`dex_pools_handler.py`'s parallel Solana writer — still scheduled?** Unverified whether this
       second, cruder (always-bare-address) writer is still actively cron'd alongside `solana_defi_handler.py` — needs a
       quick read of `main.py`'s CLI dispatch table.
