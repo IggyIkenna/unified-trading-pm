@@ -108,6 +108,58 @@ is already blank in these collisions). **NOT** a row_count tie-break (both under
 "pick the bigger" merge would silently discard one entirely). Also individually check the non-DERIBIT lossy venues
 (BYBIT/ASTER/BINANCE-FUTURES) before assuming they share this exact cause.
 
+## Finding 5 (2026-07-24, later same session) — the fix SHIPPED; non-DERIBIT venues are TWO further, DIFFERENT causes, not the same one
+
+`instruments-service@654d694f` ("fix(cefi): fold underlying+chain into the manifest dedup key so chain-BUNDLE/on-chain-
+venue duplicates aren't silently merged") — `_effective_dedup_key()` (new, in the v1 script, reused by both
+`_dedup_blob` and v2's `_chain_merge_safety`) extends PIN_ATOM with:
+
+1. `underlying`, but ONLY for blank-`instrument_id` + `instrument_type∈{FUTURE,OPTION}` (the POST-canonicalisation
+   values the raw `FUTURES_CHAIN`/`OPTIONS_CHAIN` leaked-itype normalises to — `_dedup_blob` runs AFTER
+   `_canonicalize_blob`, so checking the raw leaked value at dedup time would match nothing). Fixes the DERIBIT
+   chain-BUNDLE population from Finding 2.
+2. `chain`, unconditionally (blank-filled — a no-op for the ~99% of rows without a chain value). Checked the non-DERIBIT
+   venues as this finding required, by re-running the (real, prod, full-corpus) dry-run after the Finding-2-only fix:
+   **3304 → 92 lossy groups**, i.e. the underlying-fold alone closed ~97% of the original defect. Drilled into the
+   residual 92 directly (`investigate_residual_lossy_20260724.py`, session scratchpad): **64 groups were ASTER**
+   (`PERPETUAL`, `data_type=trades`) — two CAPTURED rows sharing an identical PIN_ATOM but DIFFERING `chain` (blank vs.
+   `"ASTER"`) and differing real `row_count` (e.g. `ASTER:PERPETUAL:BCH-USDT@LIN` 2024-01-01: 3909 rows chain=blank vs.
+   1000 rows chain="ASTER") — almost certainly a writer chain-tagging transition (blank before, `"ASTER"` after) that
+   produced a SECOND manifest row instead of updating the first, not a chain-bundle/underlying issue at all. The CEFI
+   CANONICAL SPEC (parent plan) already lists `[chain]` as part of the shard atom for on-chain/perp-DEX venues, so
+   folding it into the key (rather than `--keep-chain`, which only controls whether the `chain` COLUMN survives in the
+   WRITTEN output — it does **not** change the dedup key, so it would NOT have prevented this exact merge) is the
+   correct, symmetric fix.
+
+**28 groups (56 rows) remain even after both folds — BITFINEX-SPOT (26 groups: 13 consecutive dates
+2024-06-02..2024-06-14 × `{book_snapshot_5, trades}`) + BYBIT-SPOT (2 groups: 2024-01-01 × `{book_snapshot_5, trades}`)
+— a THIRD, genuinely different population**: blank `instrument_id` + blank `underlying` + blank `chain`
+(market-wide-aggregate shards, e.g. `BITFINEX-SPOT SPOT_PAIR book_snapshot_5 2024-06-05`: 12,560,083 vs. 1,822,749
+rows), with literally no column left to disambiguate the two real CAPTURED rows in the pair. The contiguous-date-range
+shape (13 straight June-2024 days for BITFINEX-SPOT) strongly suggests a re-backfill that wrote a second manifest row
+instead of superseding the first — plausible, not yet root-caused to a specific writer/consolidator event. **Decision
+(forced tradeoff, documented per autonomous rule 1): accepted as a small, explicit, LOGGED tolerance**
+(`_CHAIN_LOSSY_TOLERANCE_MAX = 50` in the v2 script, measured residual 28 — comfortable but not loose headroom; a future
+blow-past means a different/unreviewed population appeared, diagnose rather than just raise the number), NOT a silent
+pass — the STOP block now WARN-logs the exact offending rows every time it's in the tolerated band. Added a
+`row_count`-descending secondary sort key to `_dedup_blob`'s existing best-status-wins tie-break, so a same-status
+collision keeps the LARGER (more-complete) capture instead of an arbitrary original-row-order pick — verified via a fast
+local synthetic-data test (`unit_verify_dedup_fix_20260724.py`, session scratchpad, built from the real extracted rows)
+that this keeps 92,448,219 over 76,978,052 for the BYBIT-SPOT pair, and that DERIBIT/ASTER pairs both fully survive (no
+data discarded) while the tiny BITFINEX-SPOT/BYBIT-SPOT pairs correctly fall into the tolerated band.
+
+**Full-corpus re-verification was attempted 3 more times to get a clean end-to-end confirmation and every attempt was
+killed (signal 143/SIGTERM) at a different, inconsistent elapsed point (8min, 17min, 20min) — NOT the same root cause as
+earlier in this session (that was GCS connectivity; this is host resource contention, "20 users" logged in concurrently,
+`free -h` showed 11Gi/15Gi used at one failure point).** Rather than keep burning ~15-20min per attempt against that
+flakiness, confidence here rests on: (a) the ORIGINAL full-corpus run showing 3304→92 (real, completed, exit 0), (b) a
+full-corpus INVESTIGATION run (not the whole v2 script, just the diagnostic — smaller/faster) that DID complete cleanly
+post-fix and produced the exact 28-group breakdown above with a full CSV dump (`residual_lossy_full_20260724.csv`,
+session scratchpad — will not survive session end, re-generate if needed), and (c) the fast local synthetic-data test
+exercising the exact real row shapes end-to-end. A clean full `--apply`-path dry-run re-confirmation (the
+`V2 SUMMARY`/`chain_lossy` log line reading exactly 28, `TOLERATED` not `STOP`) is still recommended as the FIRST step
+before the actual Surface C `--apply`, ideally at a quieter host-load moment.
+
 ## Finding 3 — consolidator cron was mistakenly left PAUSED for ~16 hours
 
 `gcloud scheduler jobs describe uts-prod-manifest-consolidator-market-data-cefi-cron --location=asia-northeast1` showed
@@ -142,23 +194,23 @@ individual tasks), so all further heavy-I/O work should run from there.
 
 ## What's left (unchanged from the parent plan's last-known Deferred-work table, ~13:35Z revision)
 
-| #   | Item                                                                                                   | State              | Notes                                                                                                                       |
-| --- | ------------------------------------------------------------------------------------------------------ | ------------------ | --------------------------------------------------------------------------------------------------------------------------- |
-| 2b  | LATE colliding-venue renames                                                                           | Not done           | Needs a properly-scoped (`--start-date`/`--venue`) run — the unscoped attempt above was killed; run from the migrated VM    |
-| 2c  | MID window (KRAKEN-SPOT `ADA/USD.parquet` spurious hive-segment) + colon_wire (1,697) + loop-until-dry | Not done           | Next after 2b                                                                                                               |
-| 3   | Surface C v2 manifest apply                                                                            | Not done           | Blocked on the Finding-2 fix (DERIBIT `underlying`-key) landing first — do NOT `--keep-chain` or force past 8074/3304 blind |
-| 6   | LIGHTER-ZKSYNC numeric-stem GCS rename backfill (~11,283 objects)                                      | Not done           | Resolver code SHIPPED (`mtds@8835b899`); dry-run + apply itself never attempted                                             |
-| 9   | Final 4-surface done-state re-proof + plan archival                                                    | Cannot be done yet | Gated on 2b/2c/3/6 all landing                                                                                              |
+| #   | Item                                                                                                   | State                            | Notes                                                                                                                                                                                                                                                                                                              |
+| --- | ------------------------------------------------------------------------------------------------------ | -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 2b  | LATE colliding-venue renames                                                                           | Not done                         | Needs a properly-scoped (`--start-date`/`--venue`) run — the unscoped attempt above was killed; run from the migrated VM                                                                                                                                                                                           |
+| 2c  | MID window (KRAKEN-SPOT `ADA/USD.parquet` spurious hive-segment) + colon_wire (1,697) + loop-until-dry | Not done                         | Next after 2b                                                                                                                                                                                                                                                                                                      |
+| 3   | Surface C v2 manifest apply                                                                            | Code-level UNBLOCKED (Finding 5) | The `underlying`+`chain` key-fold fix is SHIPPED (`instruments-service@654d694f`) — chain-drop invariant now fully understood (0 DERIBIT/ASTER, 28 tolerated BITFINEX-SPOT/BYBIT-SPOT, see Finding 5). The apply itself (pause cron → fresh dry-run → `--apply` → verify → resume) has NOT run yet — do that next. |
+| 6   | LIGHTER-ZKSYNC numeric-stem GCS rename backfill (~11,283 objects)                                      | Not done                         | Resolver code SHIPPED (`mtds@8835b899`); dry-run + apply itself never attempted                                                                                                                                                                                                                                    |
+| 9   | Final 4-surface done-state re-proof + plan archival                                                    | Cannot be done yet               | Gated on 2b/2c/3/6 all landing                                                                                                                                                                                                                                                                                     |
 
 Items 1 / 2a / 4 / 4b / 5 / 7c from the parent plan are DONE (unchanged, see the parent's own last-committed revision,
 commit `6cb36c9d2`, for that history). Item 7 (DERIBIT combo partition-move) and item 8 (`slot-cron-ff-pull.sh` audit)
 remain operator-owned / out of `/autonomous` scope, unchanged.
 
-## Recommended next (once resumed, on the migrated VM)
+## Recommended next
 
-1. Fix the DERIBIT chain-BUNDLE `underlying`-key gap (Finding 2's P0) and re-verify the dry-run shows a genuinely
-   understood number (0/0, or a correctly-scoped nonzero).
-2. Surface C v2 apply: pause consolidator → dry-run → apply → verify → resume.
+1. ~~Fix the DERIBIT chain-BUNDLE `underlying`-key gap~~ — **DONE, see Finding 5** (`instruments-service@654d694f`).
+2. Surface C v2 apply: pause consolidator → fresh dry-run (confirm `chain_lossy` reads exactly 28, `TOLERATED` not
+   `STOP`) → `--apply` → verify → resume.
 3. LATE colliding-venue renames, properly scoped this time (`--start-date` near the actual regression onset, not the
    full 2019 corpus — the fresh 4-surface reverify from ~01:05Z today pinpoints 2025-12-15/2026-02-01/2026-05-01 as the
    low-canonical-fraction dates).
