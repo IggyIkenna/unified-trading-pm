@@ -150,7 +150,14 @@ sports_reference/by_date/day=2026-04-14/pipeline_mode=batch_api_football/entity=
       — flagging so it isn't mistaken for part of THIS incident's fix scope. - Net: real root cause (the specific
       script/job) still not found — leaving this todo open, as slot 5 did — but the corrected timeline
       (write=2026-07-16, not April) is a materially different fact than what the issue doc's "Recommended decision"
-      section assumes, and should inform anyone else picking this up.
+      section assumes, and should inform anyone else picking this up. **IN PROGRESS (2026-07-24, slot 11)**: picked up
+      from slot 4's "recommended next step" — dispatched a read-only Explore sub-agent to search the full workspace
+      (current code + `git log --all -S` history) for the "COUNTRY_LEAGUENAME" full-name convention
+      (`ENGLAND_CHAMPIONSHIP`, `SAUDI_ARABIA_PRO_LEAGUE`, etc.) against every non-api_football sports adapter, any
+      DeFi/CeFi naming that might coincidentally match, and any fast in-memory loop script that could explain an 85-file
+      <1s write burst. **Result NOT YET COLLECTED as of this note** — session paused for a context-compaction checkpoint
+      before the sub-agent's report came back. Next session: check for the agent's completion notification / re-dispatch
+      the same investigation if it did not survive the pause. No PROD writes attempted, nothing at risk from the pause.
 - [x] ✅ [CODE] P1. Fix the write-path bug so no future run can write a non-fixtures schema under
       `entity=fixtures_schedule/` (repo: instruments-service). **Done when**: a regression test reproduces the old
       bad-path resolution and asserts the fix. — Could not pin the EXACT historical bug (see the DIAG todo above), so
