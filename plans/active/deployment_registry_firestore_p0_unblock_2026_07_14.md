@@ -258,7 +258,7 @@ entry). UTC datetimes only. `quality-gates.sh`-green before each commit; commit 
 - **2026-07-24 (slot 2, infra) — [INFRA] P1 "Link 1 — rebuild the VM code tarballs" — VERIFIED, no code change needed.**
   The rebuild trigger question: there is **no automated CI trigger** for `create-code-tarballs.sh` — grepped every
   `.github/workflows/*.yml` across the workspace for the script name, zero hits. It is a manual step per
-  `codex/05-infrastructure/vm-tarball-deployment.md` § "The tarball refresh cycle" (git push → run the script → VMs
+  `/codex/05-infrastructure/vm-tarball-deployment.md` § "The tarball refresh cycle" (git push → run the script → VMs
   launched after pick up the fresh tarball). This session's slot-2 worktree tracks `live-defi-rollout` directly (Path-B
   topology), so a run from here builds **from LDR**, which already carries both fix commits — no `main` promote
   dependency for this step. Found the tarballs at

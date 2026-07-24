@@ -344,7 +344,7 @@ runaway backstop). QG is never run below 16 GB, so no host ever needs the oversi
       with the default, passed cleanly once `PYRIGHT_TIMEOUT=600` was set. Several slots already work around this ad-hoc
       (`PYRIGHT_TIMEOUT=300`/`480`/`600` set per-invocation) with no shared fix or documented guidance. Raise the
       default (scaled by repo size / measured baseline, same spirit as the RAM/CPU admission work above) or at minimum
-      document the override in `codex/06-coding-standards/quality-gates.md` so slots stop rediscovering it
+      document the override in `/codex/06-coding-standards/quality-gates.md` so slots stop rediscovering it
       independently.
 
 ## Progress Log
