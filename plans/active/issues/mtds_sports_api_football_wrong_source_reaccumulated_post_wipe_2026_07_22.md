@@ -37,7 +37,7 @@ scope: [engineer, admin]
 tags: [api-football, wrong-source, sports, mtds, manifest, operator-ruling, data-correctness, re-accumulation]
 related:
   [
-    plans/active/sports_master_closeout_2026_07_21.md,
+    plans/archive/2026_07/sports_master_closeout_2026_07_21.md,
     plans/active/issues/sports_odds_ownership_registry_split_brain_and_bogus_api_football_denominator_2026_07_15.md,
     plans/active/issues/mtds_sports_api_football_blank_source_2026_06_28.md,
     plans/active/issues/api_football_reverify_attempted_failed_and_asset_group_2026_07_14.md,

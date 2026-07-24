@@ -7,8 +7,8 @@ summary: >-
   K2 historical casing migration, phantom-row prune) extracted for line-cap compliance (plan-hygiene remediation
   2026-07-24, `plan_line_cap_remediation_2026_07_23.md` row 26). Zero todos — pure narrative/evidence record; the parent
   plan remains the single live source of truth for all open work, gaps, and the `/autonomous` prompt.
-status: active
-nature: process
+status: complete
+nature: record
 asset_group: [sports]
 stage: [data]
 repos:
@@ -24,7 +24,7 @@ scope: [engineer]
 tags: [sports, canonical, honest-coverage, data-floor, wipe, league-id, relocation, progress-log, history, close-out]
 related:
   [
-    /plans/active/sports_master_closeout_2026_07_21.md,
+    /plans/archive/2026_07/sports_master_closeout_2026_07_21.md,
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
     /plans/active/issues/plan_line_cap_remediation_2026_07_23.md,
   ]
@@ -40,7 +40,7 @@ estimate_calibrated_ai_days: 0
 locked_by:
 locked_since:
 supersedes:
-superseded_by:
+superseded_by: sports_consolidated_closeout_2026_07_19
 depends_on:
 source:
   plan-hygiene remediation 2026-07-24 — extracted from sports_master_closeout_2026_07_21.md per
@@ -50,6 +50,12 @@ drift_direction: advance-code
 ---
 
 # Sports MASTER close-out — Progress Log companion
+
+> **ARCHIVED 2026-07-24, alongside its parent.** The parent doc,
+> `/plans/archive/2026_07/sports_master_closeout_2026_07_21.md`, was archived per operator ruling: its 6 open todos
+> moved into the canonical `/plans/active/sports_consolidated_closeout_2026_07_19.md`. This companion has 0 open todos
+> of its own (pure narrative history) and archives alongside its parent for the same reason — orphaned once the parent
+> left `plans/active/`. Nothing below was rewritten; it remains the verbatim historical Progress Log.
 
 > **This is a companion history doc, not the live plan.** It holds the verbatim historical Progress Log extracted from
 > `plans/active/sports_master_closeout_2026_07_21.md` (plan-hygiene line-cap remediation, 2026-07-24 — see

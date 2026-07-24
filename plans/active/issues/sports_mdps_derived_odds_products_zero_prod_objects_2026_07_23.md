@@ -29,7 +29,7 @@ scope: [engineer, admin]
 tags: [mdps, sports, candle-adapter, honest-coverage, dead-code, silent-empty, odds-movement, odds-snapshot, arbitrage]
 related:
   [
-    plans/active/sports_master_closeout_2026_07_21.md,
+    plans/archive/2026_07/sports_master_closeout_2026_07_21.md,
     plans/active/issues/mtds_sports_api_football_wrong_source_reaccumulated_post_wipe_2026_07_22.md,
   ]
 created: 2026-07-23

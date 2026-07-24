@@ -21,7 +21,7 @@ tags: [sports, plan-reconcile, docs-reconcile, contradiction, codex-alignment, a
 related:
   [
     plans/active/sports_consolidated_closeout_2026_07_19.md,
-    plans/active/sports_master_closeout_2026_07_21.md,
+    plans/archive/2026_07/sports_master_closeout_2026_07_21.md,
     plans/active/sports_consolidated_audit_2026_07_19.md,
     plans/epics/sports_master.md,
   ]

@@ -351,3 +351,94 @@ a small number of unusually large cells.
   pattern in the DeFi collect-* handlers as needing the same treatment).
 - These 9 residual cells do **not** block the manifest rebuild — errored cells simply aren't in the fresh manifest yet;
   their untouched source bundles make a future retry idempotent and safe whenever the timeout/parallelism fix lands.
+
+## Addendum 2026-07-24 (tick 3) — the 9 cells migrated clean (errors=0); manifest still shows the stale glued ids (root-caused, NOT the same defect)
+
+**Code**: `--stall-timeout-seconds` CLI/env override was shipped (`market-tick-data-service@5218837e`,
+`feat(scripts): add --stall-timeout-seconds override for the DeFi per-instrument migration cell stall guard`) with a
+regression test (`TestCellStallAbandonment` monkeypatches the timeout down to 0.2s). In parallel, a SEPARATE, more
+fundamental fix landed for the actual mechanism causing these 9 cells to stall: `_process_cell`'s per-instrument write
+fan-out was sequential; three follow-up commits parallelized it — `2ba4226e` (parallelize per-leaf writes), `57c05125`
+(one shared leaf-write pool instead of a fresh pool per cell — fixed a re-stall under concurrent large cells),
+`826cd6c1` (chunk per-leaf submission onto the shared pool — fixed unfair FIFO head-of-line blocking across concurrent
+large cells). The timeout override shipped but was **not what ultimately unblocked these 9 cells** — the
+leaf-parallelization fix was.
+
+**Sequencing check (this pass)**: confirmed via
+`gcloud compute instances list --filter="name~canonical-migration-defi" --project=central-element-323112` (only one
+match, `canonical-migration-defi-gluedcheck-final-233636`, status TERMINATED) and an AWS `describe-instances` sweep of
+`ap-northeast-1` for the same name pattern (zero matches) — no competing migration VM was live. Clear to proceed. In the
+event, no NEW VM launch was needed this pass — the migration had already been driven to completion by prior turns in
+this same session, discovered via the VM's own GCS logs
+(`gs://deployment-scripts-central-element-323112/vm-logs/canonical-migration-defi-pi-range-*`), not re-executed.
+
+**Migration retry chain, reconstructed from `run.log`/`LAUNCH_PARAMS.json` per VM** (`defi-pi-range` launcher mode,
+`deployment-service@065cf70`+ later leaf-parallel commits):
+
+| VM (suffix)               | Scope (start..end) | Result                                                                                                                                                             |
+| ------------------------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `...-210748-leafparallel` | 2025-12-23..12-23  | `DONE cells=1 errors=0` — 12-23 cleared                                                                                                                            |
+| `...-223711-lpar2`        | 2025-12-24..12-31  | no `run.log` (setup failure, superseded)                                                                                                                           |
+| `...-230120-lpar3`        | 2025-12-24..12-31  | STALL, all 8 abandoned, `errors=8` — still pre-leaf-parallel-fix tarball                                                                                           |
+| `...-010200-lpar4`        | 2025-12-24..12-31  | no `run.log` (setup failure, superseded)                                                                                                                           |
+| `...-010546-lpar5`        | 2025-12-24..12-31  | `DONE cells=3 errors=5` — 12-27/12-29/12-30 cleared; 12-24/25/26/28/31 stall                                                                                       |
+| `...-101443-lpar6`        | 2025-12-24..12-31  | STALL, same 5 abandoned, `errors=5` — stale tarball (pre-`826cd6c1`)                                                                                               |
+| `...-104957-lpar7`        | 2025-12-24..12-31  | `DONE cells=5 files_split=5 instruments_written=70465 rows=70465 errors=0` (idempotent-skipped the 3 already-done days; only the 5 still-stuck ones did real work) |
+
+Cumulative: 1 (leafparallel) + 3 (lpar5) + 5 (lpar7) = **all 9 target cells migrated, 0 residual errors**, confirmed
+2026-07-24 10:20:53 UTC. Source bundles for all 9 renamed to `_migrated_*` (not deleted, per the tool's own convention).
+A scoped manifest rebuild followed (`canonical-migration-defi-rebuild-20260724-113048-rbverify`,
+`rebuild_defi_manifest.py --start-date 2025-12-23 --end-date 2025-12-31`, exit 0, 226,884 shards scanned, 0 write-error
+rows for ORCA) at 10:33-10:48 UTC.
+
+**Fresh `verify_defi_glued_ids_2026_07_24.py` run (this pass, 2026-07-24, ~11 min wall — the manifest is 982MB and
+growing)**: **`GLUED-ID ROWS FOUND: 21`** — UNCHANGED from the "last known 21" this task started from. By venue: ORCA 9,
+COMPOUND_V3 4, AAVE_V3 4, GMX 2, FLUID 1, SPARK 1. By data_type: `liquidations` 12, `dex_pool_state` 9. By year: 2025
+(9, the ORCA rows) / 2026 (12, the liquidations rows, all dated `2026-07-22` — pre-dating the `f2e3ad41` writer fix,
+exactly the "12 EXISTING glued rows... still need a targeted re-verify/reclassify pass" the plan already flagged as a
+separate, already-understood gap). The 9 ORCA rows are **still the exact same 9 glued ids** (`orca_SOLANA_2025-12-23` ..
+`orca_SOLANA_2025-12-31`) as before the migration ran.
+
+**This is NOT a regression of the migration — it's a different, previously-undocumented gap in the manifest-retraction
+chain, root-caused by reading the actual code (not inferred):**
+
+- `rebuild_defi_manifest.py::scan_and_rebuild()` explicitly **skips every `_`-prefixed leaf** (`_migrated_*`,
+  `_needs_attribution`) so it never re-emits a NEW row keyed on the old glued id going forward (comment: "R3 defect A
+  ... skip every `_`-prefixed leaf" — this was ALREADY fixed, 2026-07-23, per `35c87d66`). Confirmed working: no new
+  glued row seeded by today's rebuild.
+- But the rebuild's "CF-11 dedup" (`covered_keys`, keyed on
+  `(date, venue, data_type, instrument_type, instrument_id, chain)`) only supersedes a prior **NON-captured
+  (honest-absence)** `_index` row sharing that EXACT key when a captured object is now found for it. The OLD glued row
+  (`instrument_id=orca_SOLANA_2025-12-23`, `capture_status=captured`, real data) has a **DIFFERENT** `instrument_id`
+  than any of the ~126,837 newly-written per-instrument ORCA rows for this window — so it is never a candidate for
+  supersession by anything in the object-scan pass. Nothing in the pipeline (migration script, scoped rebuild, or
+  `delete_migrated_defi_markers_2026_07_23.py`, whose own docstring confirms it deletes ONLY the GCS `_migrated_*`
+  marker OBJECTS and never touches the manifest) actually **retracts** the pre-migration manifest row once its source
+  object is renamed away. It simply persists forever alongside the new correct rows, unless something explicitly purges
+  it.
+- **Not tested this pass**: whether a FULL (non-scoped, whole-corpus) `rebuild_defi_manifest.py` run behaves differently
+  (e.g., truncate-and-regenerate the whole index rather than upsert-only) — the scoped 9-day `rbverify` run used here is
+  additive by construction (`ManifestWriter: per-VM shard updated ... N new` log lines throughout), so this addendum
+  does NOT claim a full rebuild would have the same gap, only that THIS scoped one does.
+
+**Consequence for the operator-gated `delete_migrated_defi_markers_2026_07_23.py --apply` handoff**: running it would
+**not** clear these 9 rows even after this migration — that script is GCS-object-only. A distinct manifest-row-level
+retraction (not yet built) is needed before the glued-id count for ORCA can reach 0. **Not executed this pass** — out of
+this task's scope (verify + document, not build new tooling); flagged as the concrete next step below.
+
+**Recommended next step (not executed, not authorized this pass)**: either (a) a small follow-up one-off that deletes
+the specific 9 stale `_index` rows keyed on the old glued `instrument_id`s (read-only discovery + human-gated `--apply`,
+same safety posture as the existing delete-marker tool), or (b) confirm whether a full-corpus
+`rebuild_defi_manifest.py --start-date 2020-01-01 --end-date 2026-12-31` (no `--start-date`/`--end-date` scoping)
+regenerates the index from scratch rather than upserting, which would resolve this as a side effect. Either way, this is
+new work, not a re-run of anything already built — flagged, not built.
+
+**Doc-update note**: the corresponding lines in `plans/active/defi_consolidated_closeout_2026_07_18.md` (the "21
+glued-id rows" todo) and `plans/active/defi_track01_per_instrument_and_canon_id_2026_07_24.md` (the delete-marker
+`--apply` handoff readiness note) could not be updated in this pass for `defi_consolidated_closeout_2026_07_18.md`
+specifically — that file is 1546 lines, over the `scripts/plan-hygiene/check_line_caps.sh` 1000-line HARD cap
+(`plans/active/issues/plan_line_cap_remediation_2026_07_23.md` already tracks this exact file, row 11, as needing a real
+split), and the prek pre-commit hook hard-blocks ANY staged commit touching it regardless of the edit's own size —
+confirmed by running `bash scripts/plan-hygiene/check_line_caps.sh` directly against it. The intended replacement text
+for that plan's todo is captured verbatim above in this addendum; apply it once the plan is split/trimmed under cap.
+`defi_track01_per_instrument_and_canon_id_2026_07_24.md` (656 lines, under cap) WAS updated directly — see its own todo.

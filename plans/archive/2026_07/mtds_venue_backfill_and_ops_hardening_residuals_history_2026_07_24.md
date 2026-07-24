@@ -1,27 +1,50 @@
 ---
 doc_type: plan
-title: MTDS venue onboarding + ops-hardening residuals — historical Progress Log (archive-bound record)
+title: MTDS venue onboarding + ops-hardening residuals — Shipped History (2026-06-19..2026-07-13)
 summary: >-
-  Archive-bound extraction (2026-07-24 line-cap remediation) of the fully-completed, zero-open-todo Progress Log
-  sections from plans/active/mtds_venue_backfill_and_ops_hardening_residuals_2026_07_24.md, which was itself over the
-  1000-line cap (~1238 lines, 45 open todos before this split). Content below is moved VERBATIM, in original
-  chronological order: the sports E2E FINAL REPORT + independent LIVE re-certification (2026-06-19), the sports legacy
-  DELETE execution + credential live-test, the tradfi IS-defs VM fan-out + close-out/LIVE-certification drive + honest
-  NOT-100% list, the close-out continuation, the gas-fees FIX VERIFIED + sfi relaunch note, and the TradFi ICE/CME +
-  DeFi EIGENLAYER legacy chain-tail fixes. No open todos live in this file — every still-open residual todo from the
-  source sections stayed in the parent. This file is a record, not a work queue.
+  Archive-bound Progress Log history extracted verbatim from
+  mtds_venue_backfill_and_ops_hardening_residuals_2026_07_24.md's 2026-07-24 line-cap remediation (over its own
+  1000-line cap). Covers the fully-shipped, dated Progress Log narrative and closed-checkbox items spanning
+  2026-06-19..2026-07-13 — the SPORTS E2E audit/twin-migration/twin-coverage/legacy-delete drive (IS+MTDS,
+  operator-authorized delete), the tradfi IS-defs 9-VM sharded fan-out + close-out certification, the gas-fees/SFI
+  ops-hardening diagnosis (consolidator coverage, parallelization, rate-limit-vs-internal-throttle root-causing), the
+  Kalshi enablement + Q&A canonical parser, and the TradFi ICE/CME + DeFi EIGENLAYER legacy chain-tail verify-and-delete
+  operations. Every item in this file is already checked-off `[x]` or pure completed narrative — zero open todos.
 status: complete
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [deployment-api, deployment-service, e2e-testing, instruments-service, market-tick-data-service]
+repos:
+  [
+    deployment-api,
+    deployment-service,
+    e2e-testing,
+    instruments-service,
+    market-tick-data-service,
+    unified-api-contracts,
+    unified-trading-system-ui,
+  ]
 scope: [engineer, admin]
-tags: [instruments, mtds, venue-onboarding, ops-hardening, backfill, manifest, sports, defi, tradfi, history, archive]
+tags:
+  [
+    instruments,
+    mtds,
+    venue-onboarding,
+    ops-hardening,
+    backfill,
+    manifest,
+    sports,
+    defi,
+    tradfi,
+    kalshi,
+    history,
+    plan-split,
+    archive-bound,
+  ]
 related:
   [
     /plans/active/mtds_venue_backfill_and_ops_hardening_residuals_2026_07_24.md,
-    /plans/active/instruments_mtds_subset_consistency_remediation_2026_06_17.md,
-    /plans/active/issues/plan_line_cap_remediation_2026_07_23.md,
+    instruments_mtds_subset_consistency_remediation_2026_06_17,
   ]
 created: "2026-07-24"
 parent_epic: instruments_master
@@ -40,26 +63,141 @@ superseded_by:
 depends_on: []
 source:
   [
-    "plans/active/mtds_venue_backfill_and_ops_hardening_residuals_2026_07_24.md (line-cap remediation,
-    historical-section extraction, 2026-07-24)",
+    "Forked 2026-07-24 from mtds_venue_backfill_and_ops_hardening_residuals_2026_07_24.md's Progress Log body during the
+    line-cap remediation trim (that plan was itself split 3 of 3 from
+    instruments_mtds_subset_consistency_remediation_2026_06_17.md on 2026-07-24, then grew back over its own 1000-line
+    cap).",
     "plans/active/issues/plan_line_cap_remediation_2026_07_23.md",
   ]
-drift_direction: none
+drift_direction: advance-code
 ---
 
-# MTDS venue onboarding + ops-hardening residuals — historical Progress Log (archive-bound record)
+> **🟢 2026-07-24 history extraction** — this file holds Progress Log content moved VERBATIM out of
+> `plans/active/mtds_venue_backfill_and_ops_hardening_residuals_2026_07_24.md` (8 contiguous heading-bounded sections,
+> 2026-06-19 through 2026-07-13, each verified to contain zero open `- [ ]` checkboxes before extraction) to bring that
+> plan back under its 1000-line cap. Every line below already existed in the parent unchanged — no content was altered,
+> only relocated. All items here are shipped/`[x]`/pure narrative; there are no open todos in this file. See the parent
+> plan for current status and the still-open items (which remained there specifically because they share a heading block
+> with at least one open todo).
 
-> **Extraction provenance (2026-07-24).** This file holds Progress Log sections extracted VERBATIM (no rewriting, no
-> summarization) from `/plans/active/mtds_venue_backfill_and_ops_hardening_residuals_2026_07_24.md`, which was over the
-> 1000-line hard-fail cap (~1238 lines, 45 open todos) per
-> `/plans/active/issues/plan_line_cap_remediation_2026_07_23.md`. Every section here was verified to carry **zero open
-> (`- [ ]`) todo lines** at extraction time — all still-open residual todos stayed in the parent plan. This is a
-> **record**, not a dispatched work queue: `status: complete`, `assigned_vm: NA`, `execution_scope: local-only`. Three
-> original line ranges from the parent are concatenated here, in original order: L584-847 (sports FINAL REPORT +
-> independent re-certification + legacy DELETE + credential live-test + tradfi IS-defs VM fan-out +
-> close-out/LIVE-certification + honest NOT-100% list + close-out continuation), L892-913 (gas-fees FIX VERIFIED + sfi
-> relaunch), L1074-1223 (TradFi ICE/CME legacy chain-tail + DeFi EIGENLAYER combined-venue legacy fix). For any
-> still-open residual todo referenced anywhere in this record, see the parent plan.
+# MTDS venue onboarding + ops-hardening residuals — Shipped History
+
+## SPORTS E2E audit + twin-migration drive (2026-06-19, autonomous dispatch) — Progress Log
+
+> Operator `/autonomous` 2026-06-19: full e2e sports audit+remediation for IS+MTDS (catalogue, data-status, manifest v9,
+> canonical schemas/paths) + **make canonical twins for ALL sports data lacking one across BOTH buckets so the
+> operator-gated delete loses nothing**. Coordinating: concurrent agent af95b962 fills IS coverage gaps (do NOT
+> double-fetch). Delete stays operator-gated. This log = the loop's handoff memory.
+
+**LIVE-STATE AUDIT (read-only, 2026-06-19):**
+
+- **MTDS `market-data-tick-sports-prd` `_index` = FULLY v9** ✅: 803,796 rows 100% schema_version=9,
+  pipeline_mode/source/asset_group 100% populated (api_football 599k / mdps_odds_horizon_bucket 111k / polymarket_clob
+  59k / footystats 35k / odds_api 8). capture_status: captured 202,087 / empty 584,257 / **NA(blank) 17,288 (=N9)** /
+  attempted_failed 164. **N3b (NULL-source) = 0 (RESOLVED on live)**. Writer idle since 2026-06-11 (`_index`
+  written_at).
+- **MTDS remnants (OPEN)**: `UNIBET_EU`(11 captured) + `UNKNOWN`(3 captured) carry `pipeline_mode=batch_api_football`
+  but are odds bookmaker venues → should be `batch_odds_api`. captured NULL-league = **32,707** (F4 subset =
+  ODDS_API/ODDS 2,127 + odds_horizon_bucket 1,813; rest = bookmaker `trades` per-book rows). N9 17,288 blank-status NA
+  rows.
+- **IS `instruments-store-sports-prd` `_index`**: blank_status=0 + dup=0 ✅ (the "v9-canonical" canonicalize DID run).
+  BUT **schema_version MIXED** (v8 1.59M / v6 762k / v5 173k / **v9 only 75k** / v4 9k) + **source ABSENT (0
+  populated)** + asset_group 13,176/2.6M + pipeline_mode 0. **THE PLAN'S "instruments-store \_index v9-canonical for ALL
+  5 AGs — DONE" OVERCLAIMS** — it only ran blank/dedup; the v9-COLUMN population (schema_version=9 + source +
+  asset_group) was NEVER run for ANY AG. **VERIFIED FLEET-WIDE**: cefi (sv 4/8/9 mixed, source=0/36k, asset_group
+  ABSENT), tradfi (source=0), defi (source=0); only prediction has source 298/791. So this is a FLEET-WIDE
+  instruments-store gap (the IS analogue of N9c which was the MTDS gap), NOT sports-specific. (af95b962 actively writes
+  IS → in-place `_index` rewrite would race.)
+
+**TWIN-COVERAGE (operator's core ask) — characterised across BOTH sports buckets:**
+
+- **MD `legacy_dup_delete_list_sports.parquet`**: 252,318 objs = 248,502 SAFE-TO-DELETE (canonical_twin_verified) +
+  **3,816 MIGRATE-FIRST** (`source=ODDS_API[/league]/ticks.parquet` 3,245 + `venue=ODDS_API[/league]/ticks.parquet` 571;
+  reason=no_venue_or_data_type_in_path). Prior content-aware verifier sampled these TWIN-VERIFIED-SAFE (58,910/58,910
+  ids in canonical) — confirm + write authoritative verify parquet.
+- **IS `instruments_store_legacy_delete_list_sports.parquet`**: **9,723 UNMAPPABLE / twin_exists=False** = 9,721
+  `instrument_availability/by-date/day-{D}/{soccer_slug}/instruments.parquet` (legacy dash-separator odds-api INSTRUMENT
+  definitions: instrument_key/venue/bookmaker_key/odds_api_market_id/market/selection/line/home_team/away_team/
+  market_start_time) + 2 bare `day=2026-03-21/venue=BETFAIR/*.parquet`.
+  - **DECISIVE (corrects the plan's "superseded, MIGRATE-FIRST=0" verdict)**: canonical `venue=odds_api` in the `_index`
+    = 3,548 rows ALL `empty_confirmed`, dates only 2018-01-01..**2020-06-05**. The dash objects carry REAL data
+    2020-06-06..2025-12-15 (838/197/634 rows/obj, 9-bookmaker universe: pinnacle/betfair/onexbet/paddypower/bovada/
+    matchbook/coral/betsson/skybet). Recent canonical IS days (2026-05-13) carry `venue=API_FOOTBALL` ONLY — **no
+    canonical odds_api instruments exist**. → the odds-api instrument universe is GENUINELY-UNIQUE legacy data (backs
+    the odds-api MARKET data in market-data-tick-sports) → **must be MIGRATED (canonical twin), not declared
+    unmappable**.
+  - **Migration = PATH canonicalisation** (data is fine):
+    `instrument_availability/by-date/day-{D}/{soccer_slug}/ instruments.parquet` → canonical hive
+    `instrument_availability/by_date/day={D}/league={canonical_league}/ venue=ODDS_API/instruments.parquet` (canonical
+    IS shape confirmed = `by_date/day={D}/league={L}/venue={V}/`), via a soccer_slug→canonical-league map (the-odds-api
+    sport_keys). Untranslatable slugs preserved (no data loss). Then re-audit → 0 migrate-first → operator-gated delete
+    is safe.
+
+**CREDENTIALED SOURCES (C)**: SFI (`SoccerFootballInfoAdapter`, RapidAPI, SFI_PROGRESSIVE_STATS active) + Transfermarkt
+(`TransfermarktAdapter`, RapidAPI/Apify dual, PLAYER_VALUES active) BOTH have REAL adapter scaffolds + unit tests
+(test_sfi_adapter_coverage 35 / test_transfermarkt_adapter_coverage 33). Secrets `soccer-football-info-api-key` +
+`transfermarkt-api-key` EXIST in SM. cov 0.000 ⇒ keys likely expired/invalid → BLOCKED-CREDENTIALS (validate/rotate),
+NOT build. SFI_LEAGUES/SFI_STANDINGS/TRANSFERMARKT_LEAGUES are RETIRED data_types (runtime-only UAC catalog, cov-0
+by-design — not a gap).
+
+**REMAINING DRIVE (this dispatch):** [twin-migrate IS 9,721 + MD 3,816 → 0 migrate-first] → [MTDS UNIBET/UNKNOWN +
+F4/N3a NULL-league + N9 classify] → [IS v9-column populate sports (coordinate af95b962)] → [credential asks] →
+[shard-atom D] → [report + flips].
+
+### Sports drive — Progress update (2026-06-19, autonomous tick 2)
+
+**SHIPPED + VERIFIED:**
+
+- **IS odds-api legacy twin-migration COMPLETE (operator's "make twins so delete loses nothing" ask)** — all **9,723**
+  legacy `instruments-store-sports` objects now have a verified canonical twin (delete-safe, OPERATOR-GATED). The dash
+  shape was a legacy PATH (not bad data); copied to canonical
+  `instrument_availability/by_date/day={D}/league={L}/ venue=ODDS_API/instruments.parquet`. **52/52 slugs mapped via UAC
+  SSOT** (`provider_league_ids.ODDS_API_DISPLAY_TO_ CANONICAL` +
+  `LEAGUE_CLASSIFICATION_DATA_A/B[*]["odds_api_league_name"]`; added 4 missing display-name variants to the UAC dict —
+  Liga-Profesional-Argentina/MLS/Superliga/accented-Primera-DivisiÃ³n). 7,721 twins (2,002 collisions = same-league
+  two-source pairs with DISJOINT instrument_keys → read+concat+drop_dup UNION, no row loss; 2 bare BETFAIR
+  hash-stem-preserved). 45/45 twins verified present+sized, 3/3 parity. Migration parquet
+  `gs://instruments-store-sports-prd-…/_index/audit/sports_legacy_oddsapi_twin_migration_2026_06_19.parquet` (every
+  delete-list legacy_path twinned). Shipped UAC@2224818 + instruments-service@308013f. **CORRECTS the plan's earlier
+  "9,723 unmappable/superseded, MIGRATE-FIRST=0" verdict** — they were genuinely-unique odds-api INSTRUMENT data (canon
+  `venue=odds_api` was empty_confirmed-only to 2020-06-05) backing the odds-api MARKET data → migrated, not abandoned.
+- **MTDS sports `_index` recovery COMPLETE** (N3a/F4/N9/N3b/UNIBET) — mtds@ba21ee5, APPLIED+verified to live
+  `market-data-tick-sports-prd`: captured **202,087 → 346,498** (per-league grain recovered/exploded from GCS, 177,118
+  new backed per-league cells), **captured-null-league 32,707 → 0**, **blank capture_status 17,288 → 0**, NULL-source 0,
+  schema_version 100% v9. Snapshot pre_sports_league_recovery_20260619. The recovery scans BOTH raw_tick_data
+  (per-bookmaker) + processed (odds_horizon_bucket aggregate) + footystats `league=`/lowercase-`odds`, supersedes empty
+  shadows with recovered captured, and routes only genuinely object-free cells to honest `empty_confirmed`.
+  Independently verified: 30/30 new captured backed, 30/30 honest-absence object-free.
+
+**STILL OPEN (this tick → next):** MD 3,816 twin-verify (sub-agent parked — finishing); IS sports `_index` v9-column
+populate (schema_version=9 + source + asset_group — FLEET-WIDE gap, coordinate af95b962); IS
+catalogue/MVP/total_universe read-only verify; SFI/Transfermarkt BLOCKED-CREDENTIALS asks; shard-atom (D) verify.
+
+### Sports MD (market-data-tick-sports) twin-coverage — verify + fan-out (2026-06-19, autonomous tick 5)
+
+Operator "make twins for ALL sports data lacking one so the delete loses nothing" — the MD bucket half.
+
+- [x] ✅ [DATA] P1. **MD legacy MIGRATE-FIRST twin-verification** — DONE 2026-06-19 (e2e-testing@1b07bcb
+      `verify_sports_md_unmappable_twins_2026_06_19.py`, ran full). The 3,816 MIGRATE-FIRST odds-api bundles
+      content-verified per-object against same-day canonical (raw_tick_data `pipeline_mode=` + processed) UNION: **3,116
+      TWIN-VERIFIED-SAFE** (content already canonical → delete-safe) + **700 MIGRATE-NEEDED** (genuinely-unique odds-api
+      odds, days 2022-03..2023-04, where the day carries ONLY the legacy `source=ODDS_API` shape — the v9 fan-out never
+      covered those days; verified day=2022-09-10 has 0 canonical/0 pipeline_mode objects). Verdict parquet
+      `_index/audit/sports_md_unmappable_verify_2026_06_19.parquet`. **CORRECTS the prior "all 3,816 TWIN-VERIFIED-SAFE
+      (58,910/58,910 sampled)" — that was a 6-file sample; the FULL run found the 700 gap.** — e2e-testing
+- [x] ✅ [DATA] P1. **MD 700 MIGRATE-NEEDED content-aware fan-out to canonical** — DONE 2026-06-19 (e2e-testing@1b07bcb
+      `migrate_sports_md_unmappable_to_canonical_2026_06_19.py --apply`, RAN: 700/700 objects → 41,206 canonical cells /
+      10,111,734 rows written). **RE-VERIFIED: the full twin-verifier now reports 3,816 TWIN-VERIFIED-SAFE / 0
+      MIGRATE-NEEDED / 1,962,770 of 1,962,770 ids covered (100.0%)** → every MD legacy object is delete-safe. fans the
+      700 genuinely-unique odds objects → canonical
+      `raw_tick_data/by_date/day={D}/pipeline_mode=batch_odds_api/     asset_group=sports/venue={V}/league_id={L}/instrument_type=odds/data_type=trades/ticks.parquet`
+      (41,206 cells / 10.1M rows; legacy schema == canonical minus 4 derivable cols; union-dedup on instrument_id, never
+      overwrite-lose, never delete legacy). On completion re-run the verify → MIGRATE-NEEDED must reach 0 → all 3,816
+      delete-safe. Flip once re-verify == 0. — e2e-testing
+
+**MD twin-coverage end-state (operator-gated delete-readiness):** 248,502 SAFE-TO-DELETE (path-twin-verified) + 3,116
+TWIN-VERIFIED-SAFE (content-twin-verified) + 700 fanned-out-to-canonical = ALL 252,318 MD legacy objects delete-safe
+once the fan-out completes + re-verifies. **Delete stays OPERATOR-GATED — never executed by the agent.**
 
 ## SPORTS E2E audit + remediation — FINAL REPORT (rule 9, autonomous run COMPLETE 2026-06-19)
 
@@ -325,6 +463,34 @@ verifier already covers most of it, see "Migration unmappable residue" above). s
   operator-gated (cefi MTDS billing; Extended placeholder; Kalshi RSA-PSS wire; ~7 bespoke launchers) or
   honest-absence-by-design (low defi/tradfi MTDS coverage = expected_unattempted 4th state).
 
+## gas-fees + sfi backfill diagnosis (2026-06-19 ~20:50Z) — Progress Log
+
+The operator-flagged "frozen" gas-fees + sfi VMs were re-investigated to a definitive root cause (NOT the prior
+"climbing on fixed streamer" reading — that was the gsutil-tee daemon firing every 60s while the _work process_ was
+silent; the run.log object mtime stayed frozen at 19:58 — 4min post-launch — for 46+min on BOTH).
+
+- **gas-fees — ROOT-CAUSED + FIXED.** The collector writes per-VM shards to the dedicated
+  `gas-fees-central-element-323112` reference bucket and read-preflights it via `assert_consolidator_healthy()`, but
+  **no consolidator job covered that bucket** (35 jobs exist; gas-fees absent) → the index was always >120s stale →
+  `ManifestConsolidatorStaleError` raised (the earlier run 151404 shows the identical traceback after reaching
+  2021-01-26; the close-out agent's "non-fatal warning" claim was WRONG — it is fatal). **Fix:
+  deployment-service@f0f7ded** adds `"gas-fees" = "gas-fees-${var.project_id}"` to
+  `manifest_consolidator_buckets_extended` in `terraform/gcp/manifest_consolidator_scheduler.tf` (the `for_each`
+  provisions both the Cloud Run job + the `*/1` cron; ~13 \_index shards → default 4vCPU/16Gi/300s).
+- **ð© OPERATOR FLAG — foreign TF blocks ALL gcp IaC apply.** `tofu plan/apply` in `deployment-service/terraform/gcp/`
+  currently errors `Duplicate local value definition: blrs_image` — defined in BOTH `audit03_cron_provisioning.tf:17`
+  (on LDR) AND `paper_week_determinism_scheduler.tf:63` (**untracked WIP**, the citadel paper-batch-determinism work).
+  This is a foreign agent's in-flight file (hands-off per multi-agent rules) but it breaks every GCP terraform apply,
+  including the deployment pipeline's. The gas-fees consolidator fix (and any other gcp IaC) cannot apply until the
+  owner removes the duplicate `blrs_image` local from `paper_week_determinism_scheduler.tf` (reference the existing one
+  in `audit03_cron_provisioning.tf`).
+- **sfi-chunk-3of4 — hung, different cause.** Log frozen 46min at the same 19:58 (was actively skipping off-season dates
+  at 19:57:33, then stopped mid-processing — a hang, not a startup crash). It writes to the consolidated sports bucket
+  (consolidator IS covered) so it is NOT the gas-fees failure mode; root cause unknown (likely a hung SFI API request or
+  a manifest-write stall). The SFI _key itself works_ (200, 50 leagues, honest-absence empties for off-season) — this is
+  a runtime hang, not blocked-credentials.
+- Both hung VMs DELETED (STOPPING) to stop compute waste.
+
 ## gas-fees FIX VERIFIED + sfi relaunch (2026-06-19 ~21:18Z) — Progress Log
 
 - **Foreign TF blocker RESOLVED by its owner** — `paper_week_determinism_scheduler.tf`'s duplicate `blrs_image` local
@@ -346,6 +512,109 @@ verifier already covers most of it, see "Migration unmappable residue" above). s
   (systemic fix = the already-filed silent-worker watchdog); re-freeze at the same point = a date/data-specific
   reproducer to root-cause** (NOT HTTP). Honest status: sfi root cause is NOT yet pinned to a code defect — relaunch is
   the reproduce-or-clear step, not a claimed fix.
+
+## Backfill "freeze" ROOT CAUSE + fix shipped; rate-limit-vs-internal verdict (2026-06-19 ~21:45Z) — Progress Log
+
+**Definitive root cause (local faulthandler repro, per operator "run local, VM is slow"):** the "frozen backfill log" is
+NOT a hang — it is slow work + sparse logging. `gas_fee_client.get_historical_fees` sampled ~288 blocks STRICTLY
+SEQUENTIALLY (one blocking `eth_feeHistory` RPC each) and logged only every 200, so on an underpowered e2-standard-2/4
+VM the long silent gap looked frozen. Local BSC 2021-01-01 completed in 86s; faulthandler caught the main thread mid-RPC
+at `_sample_one_block`.
+
+**Operator's question — rate-limited vs internally self-slowed — answered with evidence:**
+
+- **defi/gas = INTERNAL self-throttle (sequential), NOT rate-limited.** Parallel run hit 16 concurrent with ZERO 429s
+  and scaled ~14Ã (86s→6s). FIXED in code.
+- **sfi = GENUINELY rate-limit bound (external).** VM log shows repeated
+  `Rate limited (429) ... sleeping 60s to next minute` EVEN at the adapter's 0.34s self-pace → ~one 60s sleep/minute, ~a
+  handful of matches/min effective. Parallelizing would worsen it; fix is a higher RapidAPI tier.
+
+**Fix shipped:** `gas_fee_client.get_historical_fees` parallelized — `ThreadPoolExecutor(max_workers=16)` (I/O-bound
+fleet default), first-block probe preserves the `use_fallback` mode, logs every 50, output sorted by block.
+**market-tick-data-service@7421693** on LDR (QG-green, sentinel 6b9af8f; ruff+basedpyright clean; local re-run 86s→6s
+verified). Direct-pushed because quickmerge was blocked by a FOREIGN dirty dep (UTL `honest_coverage_ratchet` WIP), not
+this change. **Fleet QG unblock:** MTDS pip-audit was failing fleet-wide on a new vcrpy CVE `GHSA-rpj2-4hq8-938g` (YAML
+cassette loader) absent from the ignore-block; added it (non-exploitable — own fixtures, vcrpy pinned by aiohttp-3.14
+deadlock). **unified-trading-pm@78a4615d2**.
+
+## sfi EFFICIENCY — corrected root cause (2026-06-19 ~22:18Z) — Progress Log
+
+Operator clarified the SFI RapidAPI limits: **4 req/s (max 6), 100k/day**. This INVALIDATES the "needs a higher tier"
+framing — 4→6 rps is negligible and the per-day 100k is the true ceiling. The real bug: **the chunk-parallel backfill
+ran 4 VMs against ONE shared RapidAPI key**, so 4 Ã the per-instance 2.94/s ≈ 11.8/s vs a 4/s ACCOUNT limit → 429 storms
+→ 60s back-offs → effective throughput far BELOW a single clean stream. (Verified: all 4 chunks of run 211603 were
+RUNNING and each logging 429s.) The progressive loop itself is correctly sequential + incremental-skip-aware;
+over-fetching was never the issue.
+
+**Fix applied:** killed the 4 colliding chunks; relaunched a **single** stream `sfi-backfill-20260619-221723` (2.94/s,
+under the 4/s cap → no collisions). The chunk-parallel approach is fundamentally wrong for a per-account-rate-limited
+vendor.
+
+## Autonomous batch (2026-06-20 ~00:10Z) — gross-now + Kalshi + residuals
+
+**gross-now (paper-trading dashboard):** the panel showed a single "Gross exposure" (planned ceiling) with no live
+counterpart while net had both (max)+(now). Verified against the live engine JSON: `margin.net_usd_now` == Î£ signed
+`target_usd` over `positions` (MATCH), and Î£|target*usd| = the live gross. The paper engine (`paper_engine.py`, a
+deployed Cloud Run job — **source NOT in the workspace**, the foreign paper-determinism work) emits only a single
+`gross_usd` that flips planned-ceiling↔live with no gross*\*\_now split. **Fix (UI-derive):** added "Gross exposure
+(now)" = Î£|position notional| derived in `app/paper-trading/page.tsx` (relabelled the engine value "Gross exposure
+(max)"), `data-testid=pt-gross-now`, symmetric with net-now. tsc clean; **pw:L2 paper-trading smoke 2/2 green**
+(regression: tests/smoke/paper-trading.smoke.spec.ts). ✅ SHIPPED unified-trading-system-ui@f4afdd83 (UI QG green:
+tsc+ESLint+285 tests+build). **Kalshi:** the adapter was already built and uses **PUBLIC** read endpoints
+(markets/trades — no auth/RSA-PSS; signing is trading-only), and the MTDS factory routes `kalshi → KalshiAdapter`. The
+only gap was the prediction launcher hardcoding POLYMARKET. **Fix:** `launch-mtds-prediction-backfill-vm.sh` now takes
+`--venue POLYMARKET|KALSHI` (deployment-service@0a7c3f8). **Launched** `mtds-prediction-kalshi-20260620-000833` — but it
+hit a DEEPER gap ("No active venues", see below): KALSHI was hardcoded-disabled in `get_venues_for_asset_groups`. ✅
+FIXED market-tick-data-service@ebf947b. "RSA-PSS wire" residual was a false premise (market data needs no signing).
+VM-deploy (tarball rebuild) pending foreign-tree-clean.
+
+### Residuals status (operator-gated / foreign — NOT agent-fixable)
+
+- **cefi MTDS (801K failed)** — billing-blocked; enabling billing is operator-only. No code fix.
+- **Extended Finance** — NOT a blocker for the data pipeline (corrected 2026-06-22): public `/info/*` market data
+  (markets/candles/funding) needs NO API key; verified live. The stark key is execution-only (post-cutover). IS genesis
+  adapter fixed + shipped (instruments-service@9bb7cdfd); the public backfill is unblocked (P2 above).
+- **MTDS STEP 5.88b** — the smoke-matrix agent's `quality-gates.sh` wiring is foreign uncommitted WIP, blocked on the
+  foreign dirty UTL tree (`honest_coverage_ratchet`/`run_writer`) being committed by its owner. Not mine to ship.
+
+## Kalshi — deeper root cause found + fixed (2026-06-20 ~00:35Z)
+
+The first Kalshi launch (mtds-prediction-kalshi-000833) COMPLETED exit-0 but logged "No active venues for date=X
+asset_groups=['PREDICTION']" for all 91 dates → zero data. Root cause (deeper than the launcher):
+`get_venues_for_asset_groups` in `market_tick_data_service/engine/orchestrator/__init__.py` hardcoded
+PREDICTION→[POLYMARKET] with a stale "KALSHI disabled — requires API key + US jurisdiction" note, so `--venues KALSHI`
+intersected to empty. The note was WRONG for market data (KALSHI read endpoints are PUBLIC; RSA-PSS is trading-only; UAC
+registers KALSHI launch 2021-07-30 so the availability filter passes). **Fixed: added KALSHI to the prediction venue
+list — market-tick-data-service@ebf947b** (MTDS QG green). Combined with the launcher --venue param (0a7c3f8), Kalshi is
+now FULLY code-enabled.
+
+**VM-deploy gap (deployment nuance):** backfill VMs install service code from GCS tarballs (`create-code-tarballs.sh`),
+NOT fresh LDR git — so the get_venues fix (and the earlier gas parallelization mtds@7421693) reach a VM only after a
+tarball rebuild. The rebuild is currently BLOCKED: its per-repo dirty-tree gate trips on FOREIGN uncommitted WIP in the
+shared clone (MTDS `scripts/quality-gates.sh` = smoke-agent STEP 5.88b; UTL `honest_coverage_ratchet`/`run_writer`).
+Forcing `--allow-dirty-tarball` would bundle another agent's WIP into the deployed tarball (unsafe). Completes cleanly
+on the next routine tarball build once those foreign trees commit.
+
+## Kalshi Q&A canonical parser — SHIPPED (2026-06-20, operator-requested)
+
+Operator: "build the [Kalshi] parser for market grouping/reconciliation same way as polymarket; map same markets to same
+canonicals for arb." DONE:
+
+- **unified-api-contracts@c3bf51d**: `KALSHI_TICKER_PREFIX_TO_GROUP` (72 rule entries, full KX*
+  crypto/equity-index/commodity/FX/macro families); `classify_kalshi_to_canonical_group` upgraded override-only → 3-tier
+  (exact override → longest-prefix → OTHER); +25 tests (63 total) incl. the **cross-venue arb invariant** (Kalshi KX*
+  and Polymarket slugs for the same real-world question resolve to the SAME `CanonicalQuestionGroup`:
+  `BTC_UP_DOWN_DAILY`, `SPX_UP_DOWN_DAILY`, `FED_RATE_DECISION_PER_FOMC`, `CPI_PRINT_PER_MONTH`,
+  `NONFARM_PAYROLLS_PER_MONTH`). UAC QG green (sentinel 04822f65).
+- **instruments-service@b313b0e**: classifier docstring + 3 prediction tests updated. Shipped via the carve-out
+  (Quickmerge: agent trailer) because a pre-existing CeFi test (`test_cefi_yields_no_rows_for_post_all_venue_launches`)
+  blocked the sentinel — that failure is from the SEPARATE Kalshi/Polymarket PERPS venue addition (KALSHI-PERP CeFi
+  launch date), tracked in `prediction_perps_kalshi_polymarket_parked_2026_07_24.md` (successor to
+  `prediction_venue_perps_and_live_clob_depth_2026_06_20.md`, split + archived 2026-07-24), owned by the perps build.
+
+Now Kalshi prediction-Q&A markets bucket to canonical groups (was OTHER) AND share canonicals with Polymarket →
+cross-venue dispersion arb works at the canonical layer. Next: IS Kalshi discover + MTDS download (once the VM tarball
+unblocks) to flow the actual data into those canonical buckets.
 
 ## TradFi ICE/CME pre-cutover legacy chain-tail — PRESERVE+RESHAPE — DONE (2026-07-13, operator ruling)
 

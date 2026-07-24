@@ -277,3 +277,14 @@ host-contention theory above: **investigate quickmerge's cascade/pull step itsel
 checkout state) as the one concrete variable that differed between their clean direct run and their dirty quickmerge
 runs — not further pytest-internal instrumentation. Both docs should be read together; do not duplicate further
 investigation, extend whichever is picked up first.
+
+**Cross-reference (2026-07-24, 8th/9th occurrence) — another independent session, another cascade-triggering push.**
+Shipping `scripts/sports/remediate_cross_ag_prediction_bleed_round3_2026_07_24.py` (a new, isolated one-off script, zero
+overlap with either failing test) via `quickmerge.sh --agent`, the identical 2 tests failed with the identical
+`AssertionError: ...-dev-...` signature on 2 consecutive attempts, both immediately AFTER this same quickmerge's STAGE 0
+cascade step pulled `unified-api-contracts` (a real, unrelated, just-landed venue-registry fix in that repo) onto
+`live-defi-rollout` in this repo's dependency tree. This is circumstantial but adds a data point FOR the
+`mtds_deployment_env_race_survives_single_worker_2026_07_23.md` cascade-step theory over the host-contention theory:
+both of this session's failures coincided with a cascade pull of a genuinely-changed ancestor repo, not merely
+concurrent host load (not independently measured this session, so not ruled out either). Not investigated further here —
+out of scope for a data-correctness remediation session; retrying with spacing per this doc's own guidance.

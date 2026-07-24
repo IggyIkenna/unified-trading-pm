@@ -26,7 +26,7 @@ scope: [engineer, admin]
 tags: [sports, mtds, odds-api, scheduling, deployment, data-freshness, dormant-pipeline]
 related:
   [
-    plans/active/sports_master_closeout_2026_07_21.md,
+    plans/archive/2026_07/sports_master_closeout_2026_07_21.md,
     plans/active/issues/mtds_sports_api_football_wrong_source_reaccumulated_post_wipe_2026_07_22.md,
     plans/active/issues/sports_mdps_derived_odds_products_zero_prod_objects_2026_07_23.md,
   ]

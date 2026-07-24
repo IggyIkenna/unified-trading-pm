@@ -29,7 +29,7 @@ related:
     /codex/02-data/honest-coverage-model.md,
     /codex/02-data/honest-absence-downstream-handling.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
-    ../../plans/active/sports_master_closeout_2026_07_21.md,
+    ../../plans/archive/2026_07/sports_master_closeout_2026_07_21.md,
   ]
 created: 2026-07-21
 authoritative_for:
@@ -112,7 +112,7 @@ the recovery net; `instruments-store-sports-prd` has soft-delete=0, so its wipe 
 to end with a GCS-walk manifest rebuild (`deployment-service/scripts/rebuild_sports_manifest.py`) so no phantom
 pre-floor rows survive — **that rebuild has NOT run for this campaign yet; do not read this doc as claiming the manifest
 is phantom-free.** Status, split by surface (verified 2026-07-21 in
-[`sports_master_closeout_2026_07_21.md`](/plans/active/sports_master_closeout_2026_07_21.md)):
+[`sports_master_closeout_2026_07_21.md`](/plans/archive/2026_07/sports_master_closeout_2026_07_21.md), now archived):
 
 - **DONE — GCS-object-level wipe.** `features-sports-prd sports_features/by_date/` = 212,519 objects
   (2017-01-01…2020-06-05 deleted) and `instruments-store-sports-prd` = 437,124 objects (`sports_reference/by_date`
