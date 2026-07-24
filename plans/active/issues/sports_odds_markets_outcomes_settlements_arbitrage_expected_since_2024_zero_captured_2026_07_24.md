@@ -113,7 +113,36 @@ data_types) explains both findings at once.
 - [ ] [DIAG] P1. For each of ODDS_API/PINNACLE/BETFAIR, determine whether ANY capture code path exists for
       `markets`/`outcomes`/`settlements`/`arbitrage_opportunity` (repo: instruments-service, market-tick-data-service).
       **Done when**: a written conclusion states, per venue and data_type, whether a capture path exists and if so
-      whether it is currently scheduled/enabled.
+      whether it is currently scheduled/enabled. **IN PROGRESS (2026-07-24, slot 12) — session ended mid-investigation
+      (context-limit checkpoint), NOT a completed conclusion; groundwork below saves the next picker-upper a
+      re-discovery pass:** -
+      `instruments-service/instruments_service/reference_data/adapters/sports/adapters/betfair.py` — a
+      `BetfairReferenceDataAdapter` exists and fetches Betfair's `listMarketCatalogue` (markets + runners) as generic
+      `InstrumentRecord`s. This is a REFERENCE-DATA/catalogue path (which markets exist), not an
+      odds/outcomes/settlements CAPTURE path — doesn't obviously map to any of the 4 data_types in question. -
+      `market-tick-data-service/market_tick_data_service/market_interface/adapters/sports/odds_api_adapter.py` (841
+      lines) — a real, apparently-functional `ODDS_API` adapter with `get_markets()`/`get_prices()` methods that DOES
+      fetch bookmaker markets/outcomes data (incl. Pinnacle as one of `REQUESTED_ODDS_API_BOOKMAKERS`, line ~125 —
+      **Pinnacle is NOT a separate venue integration; it's one bookmaker inside the ODDS_API aggregated response** —
+      worth checking whether the UAC capability declaration for a standalone `PINNACLE` venue is itself the stale part).
+      Every captured row seen so far stamps `"data_type": "ODDS"` (line ~761) — NOT
+      `markets`/`outcomes`/`settlements`/`arbitrage_opportunity` as distinct data_types. Not yet confirmed whether this
+      adapter's captured rows EVER land under those 4 literal data_type values anywhere, or whether everything collapses
+      into the single `ODDS` data_type (which WOULD have captured rows — needs checking against the manifest, separate
+      from this repo grep). -
+      `market-tick-data-service/market_tick_data_service/market_interface/adapters/sports/betfair_adapter.py` (313
+      lines) — a real `BetfairAdapter` with `get_markets()`/`get_prices()` (via `listMarketCatalogue`/
+      `listMarketBook`), same open question: does its output ever get stamped with the 4 specific data_types, or does it
+      also collapse to a generic type. - **Not yet done**: (a) confirm whether
+      `markets`/`outcomes`/`settlements`/`arbitrage_opportunity` appear as literal `data_type=` stamps ANYWHERE in
+      either repo (the grep so far found the WORDS as JSON-payload keys — `market.outcomes`, `bm.markets` — not as
+      manifest `data_type=` values; this distinction matters a lot: if these words only ever appear as raw-API-response
+      field names and never as a `record_captured(data_type=...)` literal, that's strong evidence for root cause 1,
+      stale declaration); (b) whether either adapter is wired into a scheduled job/CLI operation that actually runs in
+      production, or exists but is dead code / never invoked; (c) a git-history check for whether these 4 data_types
+      were EVER captured and stopped (vs never). A fresh Explore pass should start by grepping BOTH repos for the
+      literal strings `"markets"`, `"outcomes"`, `"settlements"`, `"arbitrage_opportunity"` specifically as `data_type=`
+      / `DataType.` enum-member usages (not JSON-key usages), which is the fastest way to settle (a).
 - [ ] [DECISION] P1. Based on the above, decide: implement + schedule real capture for these 12 (venue, data_type)
       tuples, or retire the capability declaration (operator sign-off required — changes the sports coverage
       denominator). **Done when**: an explicit decision is recorded with rationale.
