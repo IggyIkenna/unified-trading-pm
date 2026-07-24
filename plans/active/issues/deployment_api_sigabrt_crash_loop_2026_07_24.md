@@ -98,6 +98,15 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
       `preload_app = False` and re-measure the SIGABRT rate over the following 3 days (repo: deployment-api). —
       INVESTIGATED 2026-07-24 (slot 2). Full detail in Progress Log — deployment-api@1adf54b (faulthandler
       instrumentation shipped; root cause narrowed but NOT yet 100% confirmed, see log).
+- [ ] [REVIEW] P1. Once `deployment-api@1adf54b` (faulthandler instrumentation) has been live for at least a few hours
+      (verify via `gh pr list`/the promote workflow that it actually reached the deployed revision — this repo is
+      `staging`-first, not direct-to-main), `gcloud logging read` the `run.googleapis.com%2Fstderr` stream for
+      `uts-shared-deployment-api` around the next `Uncaught signal: 6` timestamp and confirm whether a
+      `Fatal Python error`/`Current thread` faulthandler dump appears. Cross-reference the stuck frame against
+      `deployment-api@6f6a389` (the sibling issue doc's Gap-2 `_compute_inventory` cold-path fix, already shipped) — if
+      the dump names that same code path, the SIGABRT loop should now be resolved by that fix and the crash rate should
+      drop; if the dump names something else, file a fresh evidence-backed BACKEND todo here with the exact stuck call
+      site rather than re-guessing. (repo: deployment-api)
 
 ## Progress Log
 
