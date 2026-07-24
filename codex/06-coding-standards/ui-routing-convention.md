@@ -82,7 +82,8 @@ deployment-ui (`deployment-ui@079b29e`, 2026-07-21) retired its `/cockpit?tab={h
 scheme (10 tabs) down to plain top-level routes, deleting `searchParams.get("tab")` / `VALID_TABS` / `onTabChange` and
 the `embedded ?` dual-path in `Deployments.tsx` (7 branches) — proof: the deep-link assertions in
 `deployments-page.spec.ts` pass unweakened, where they previously failed honestly under the tab scheme. Full history:
-[`deployment_ui_plain_routes_retire_cockpit_tabs_2026_07_17.md`](/plans/archive/2026_07/deployment_ui_plain_routes_retire_cockpit_tabs_2026_07_17.md).
+[`deployment_ui_plain_routes_retire_cockpit_tabs_2026_07_17.md`](/plans/active/deployment_ui_plain_routes_retire_cockpit_tabs_2026_07_17.md)
+(not yet archived as of 2026-07-24 — corrected from a premature archive-path reference).
 
 `unified-trading-system-ui` has not needed this migration as of this doc's authoring — this convention applies to it too
 if a similar query-param-gated view scheme grows there.

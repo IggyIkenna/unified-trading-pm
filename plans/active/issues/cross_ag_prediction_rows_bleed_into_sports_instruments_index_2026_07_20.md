@@ -221,19 +221,20 @@ pre-remediation row set, verbatim, reappearing with no new growth.
 
 **Next steps (do NOT guess-fix; this needs its own investigation before any further remediation is attempted):**
 
-1. Read `unified-trading-library`'s manifest consolidator (`manifest_consolidator.py`, referenced elsewhere in this
-   epic) to find every input surface it merges from when rebuilding `instruments-store-sports`'s
-   `availability_index.parquet` — confirm whether one of them still carries the pre-remediation rows.
-2. Check whether the round-2 remediation script (`scripts/sports/remediate_cross_ag_prediction_bleed_2026_07_23.py`)
-   wrote its REMOVE anywhere the consolidator does NOT read from (e.g. it may have edited a snapshot copy or a different
-   index path than the one the live consolidator treats as authoritative).
-3. Confirm whether a consolidation cycle has actually run since the 2026-07-23 remediation (check the consolidated
-   index's own `written`/generation metadata) — if the index literally hasn't been rebuilt since remediation, the
-   presence of 11,727 rows would instead mean the REMOVE never actually took effect on the LIVE index in the first place
-   (a different root cause than a rebuild-time reversion).
-4. Once (1)-(3) pin the actual mechanism, re-run the remediation (or fix the consolidator input the remediation missed)
-   and verify **across at least one full consolidation cycle** (not just an immediate post-write read) before re-closing
-   this doc.
+- [ ] 5. [DATA] P0. Read `unified-trading-library`'s manifest consolidator (`manifest_consolidator.py`, referenced
+      elsewhere in this epic) to find every input surface it merges from when rebuilding `instruments-store-sports`'s
+      `availability_index.parquet` — confirm whether one of them still carries the pre-remediation rows.
+- [ ] 6. [DATA] P0. Check whether the round-2 remediation script
+      (`scripts/sports/remediate_cross_ag_prediction_bleed_2026_07_23.py`) wrote its REMOVE anywhere the consolidator
+      does NOT read from (e.g. it may have edited a snapshot copy or a different index path than the one the live
+      consolidator treats as authoritative).
+- [ ] 7. [DATA] P0. Confirm whether a consolidation cycle has actually run since the 2026-07-23 remediation (check the
+      consolidated index's own `written`/generation metadata) — if the index literally hasn't been rebuilt since
+      remediation, the presence of 11,727 rows would instead mean the REMOVE never actually took effect on the LIVE
+      index in the first place (a different root cause than a rebuild-time reversion).
+- [ ] 8. [DATA] P0. Once todos 5-7 pin the actual mechanism, re-run the remediation (or fix the consolidator input the
+      remediation missed) and verify **across at least one full consolidation cycle** (not just an immediate post-write
+      read) before re-closing this doc.
 
-Do not re-flip this doc's `status` to `resolved` or re-attribute `resolved_by` until a round-4 pass confirms the fix
-holds across a real consolidation cycle, not just an immediate verify.
+Do not re-flip this doc's `status` to `resolved` or re-attribute `resolved_by` until todo 8 confirms the fix holds
+across a real consolidation cycle, not just an immediate verify.
