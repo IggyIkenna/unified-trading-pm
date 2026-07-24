@@ -111,12 +111,32 @@ todos concurrently.
       the root cause implies. **Done when**: either a written root-cause conclusion + the backfill has run and the
       manifest shows non-trivial row counts, or (if the cause is a genuine external blocker) the finding is filed as its
       own issue doc with the blocker named.
-- [ ] [DATA] P1. Purge/backup-delete the 27 leaked legacy-path (no `pipeline_mode=` prefix) T-0 shards for
+- [x] [DATA] P1. ✅ Purge/backup-delete the leaked legacy-path (no `pipeline_mode=` prefix) T-0 shards for
       2025-12-18/24/31 (100% post-kickoff captures) via `unified_trading_library`'s `gcs_copy_object`/
       `gcs_delete_object` (never subprocess `gsutil`) — snapshot first (GCS soft-delete gives a 7-day recovery window,
       the safety net for this NOT being `[OPERATOR]`-tagged). First confirm no live reader consumes the unprefixed path
       — if one does, fix that reader before deleting, don't delete out from under a live consumer. **Done when**: a
-      listing for those 27 known object paths returns none, and the confirmed-no-reader check is documented.
+      listing for those 27 known object paths returns none, and the confirmed-no-reader check is documented. — **DONE
+      2026-07-24.** Bounded listing (3 known dates, not a corpus walk) under
+      `gs://market-data-tick-sports-prd-central-element-323112/processed/by_date/day={date}/data_type=odds_horizon_bucket/`
+      found **28** legacy `timeframe=T-0/bucketed.parquet` shards (9 for 12-18, 10 for 12-24, 9 for 12-31), not 27 as
+      estimated — measured directly, every shard sampled at 100% `bm_minutes_to_kickoff < 0` (post-kickoff), matching
+      the finding. **Reader check**: `features-service`'s `read_bucketed_odds()`
+      (`features_service/sports/data/gcs_reader.py:568`) DOES fall back to this exact legacy prefix when no canonical
+      `pipeline_mode=batch_mdps_odds_horizon_bucket` shard exists — confirmed 0 canonical shards for all 3 dates before
+      deletion, so this reader was live-consuming the leaked T-0 data (feeding contaminated post-kickoff rows into
+      `odds_features` at the T-0 model horizon). No reader FIX was needed: the reader lists+concatenates every
+      `bucketed.parquet` under whichever prefix wins and already handles a missing horizon as honest absence
+      (`_find_best_snapshot` → `None` → skipped) — removing only the T-0 shard leaves the other, uncontaminated
+      per-(league,horizon) shards for those dates intact and correctly still reachable via the same fallback. Snapshot:
+      confirmed `soft_delete_policy.retentionDurationSeconds=604800` (7-day) live on the bucket before deleting (the
+      task's own stated safety net); recorded every object's `(name, generation, size)` pre-delete for the 7-day
+      recovery window. Deleted all 28 via `unified_trading_library.cloud_interface.gcs_delete_object` (0 failures).
+      Post-delete listing for `day=2025-12-18/24/31` under `data_type=odds_horizon_bucket/` returns **0 objects** —
+      confirms these 3 dates held ONLY the contaminated T-0 shards (consistent with the B2 finding that every other
+      horizon returned `ADAPTER_RETURNED_EMPTY_OUTPUT` on those dates), so the date now correctly reads as honest
+      absence end-to-end, not a partial purge. No code change required (pure data op); manifest coarse-row correction
+      for these 3 dates is the separate P0 todo above (`reprocess_sports_odds.py --force`), not duplicated here.
 - [ ] [DIAG] P1. Root-cause why `reason`/`error_code`/`empty_reason`/`classified_error` read back blank for the sports
       odds manifest (a schema gap vs. a silent-empty write bug) — this unblocks two other diagnoses (the
       `attempted_failed` triplet root-cause and the `empty_confirmed` emitter identification) that stay out of this
