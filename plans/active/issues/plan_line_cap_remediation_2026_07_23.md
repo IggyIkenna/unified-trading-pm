@@ -436,3 +436,16 @@ exposed 9 files that were always real debt but never counted — baseline re-see
 None of these were triaged in the same depth as the original 30 (no per-file bucket classification, no proposed
 child-plan slugs) — that is real remaining work for a future pass, not done here. `umbrella: true` frontmatter left in
 place on these files (inert now, harmless) rather than stripped from 10 files as an out-of-scope cleanup.
+
+**Escalation, 2026-07-24 ~18:30Z — `cefi_consolidated_closeout_2026_07_18.md` is now HARD-BLOCKED for edits, not just
+flagged.** Hit this live, not hypothetically: tried to append a routine Progress Log DELTA to that file (now 1522L, up
+from the 1421L in the table above — normal session growth) and the pre-commit `check_line_caps.sh` hook refused
+unconditionally. Confirmed this is not baseline-tolerant like full-corpus mode: the **targeted/staged-file check has no
+tolerance at all** — "a file THIS commit touches must not be over its tier's cap, full stop," regardless of diff size.
+Practical effect: **no agent can currently land even a one-line fix in this file** until it is split or promoted to
+`plans/epics/`. Its sibling `cefi_4surface_migration_execution_log_2026_07_24.md` (1635L) is in the identical state —
+the "mirror the post-split content into the child" instruction this parent file itself carries cannot currently be
+honored either, since the child is equally blocked. Worked around it this session by writing new findings to a
+standalone `plans/active/issues/` doc instead (`cefi_chain_drop_root_cause_and_heavy_io_vm_rule_2026_07_24.md`) rather
+than fighting the gate — that is a workaround, not a fix. **Recommends prioritizing this specific pair (parent + child)
+in the next remediation pass**, since it is actively blocking in-flight work, not just carrying debt.
