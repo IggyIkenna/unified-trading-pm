@@ -222,13 +222,10 @@ ongoing problem) — **zero** new glued objects on every single day. The cited "
 either an empty-marker file (the one case `file_name` still applies to — cosmetic, not a data-loss bug) or a stale read;
 either way, no REAL captured data has landed under a glued filename since `4ca2640d`.
 
-**Residual (P3, cosmetic, not blocking anything)**: the empty-marker case (`rows=[]` → `write_defi_rows` uses
-`file_name or "empty.parquet"` verbatim) still gets a wall-clock name from the ~11 handlers that pass
-`file_name=f"{...}_{ts_label}.parquet"`, so a genuinely-empty shard writes a NEW empty marker object every run instead
-of reusing one stable "no data" sentinel. This wastes a handful of tiny objects per empty day, does NOT affect
-instrument-id correctness, capture_status, or the manifest, and does NOT reproduce this issue's core defect. Fixing it
-(drop `ts_label` from the `file_name=` argument in each handler, or pass `None` and let the `"empty.parquet"` default
-apply) is a genuine but low-value cleanup — safe to defer indefinitely, no urgency.
+**Residual (WAS marked P3/cosmetic — that call was WRONG, see "Update 2026-07-24 (session 2)" below)**: the empty-marker
+case (`rows=[]` → `write_defi_rows` uses `file_name or "empty.parquet"` verbatim) still gets a wall-clock name from the
+~11 handlers that pass `file_name=f"{...}_{ts_label}.parquet"`, so a genuinely-empty shard writes a NEW empty marker
+object every run instead of reusing one stable "no data" sentinel.
 
 **`reshard_glued_defi_ids_2026_07_21.py`'s own `Delete-when` marker** ("0 glued ids remain in the defi _index + the
 write-path forward-fix has shipped") is now satisfied on BOTH conditions once the manifest rebuild (RESUME step 2, in
@@ -300,3 +297,62 @@ distinct problem needing its own fix.
 **Conclusion**: the write-path/historical-backlog fix for these 34 rows is DONE and verified at the GCS level. The
 manifest index will only show 0 for this regex once the phantom-row purge runs (it folds these 34 in with the rest) —
 that purge is the correct next step, not another rebuild cycle.
+
+## Update 2026-07-24 (session 2) — the "P3 cosmetic, does NOT affect the manifest" call above was WRONG; found + fixed
+
+The closeout plan's 6-VM full-corpus rebuild (`defi_consolidated_closeout_2026_07_18.md`, completed 2026-07-24) gave
+another fresh recount. Result: **21 glued rows, not 0** — 9 are the ORCA/SOLANA `dex_pool_state` cells tracked
+separately (another concurrent session's active parallel-write-timeout fix, unrelated to this doc). **The other 12 are
+NEW**: all `data_type=liquidations`, all sharing the literal instrument_id suffix `_20260723_013349` (one batch run,
+2026-07-23 01:33:49 UTC), all `date=2026-07-22`, across AAVE_V3/COMPOUND_V3/GMX/SPARK/FLUID on multiple chains.
+
+This directly falsifies the "Residual (P3, cosmetic)" call two sections up ("does NOT affect instrument-id correctness,
+capture_status, or the manifest"). It does, via a mechanism that call missed:
+
+1. **Writer**: `liquidations_handler.py::_write_liquidations_shard` passed
+   `file_name=f"{protocol}_{chain}_{ts_label}.parquet"` for the empty-marker case. `collect-liquidations` runs on a
+   **daily Cloud Scheduler cron** (`deployment-service/terraform/gcp/defi_collection_scheduler.tf`, `30 1 * * *` UTC) —
+   every day a venue/chain shard has zero liquidations, this writes a FRESH, distinctly-timestamped empty-marker object.
+   Not a one-time artifact — a live, currently-still-running source of new glued objects, one batch per day, for as long
+   as it shipped unfixed.
+2. **Manifest**: `rebuild_defi_manifest.py::parse_hive_path` sets `instrument_id` from the raw filename stem
+   unconditionally, and `emit_captured` stamps `capture_status=CAPTURED` on file PRESENCE alone (`row_count=0` sentinel,
+   no parquet opened) for any data_type outside `ROWCOUNT_VERIFIED_DATA_TYPES` — which `liquidations` was NOT in. So a
+   full-corpus rebuild (exactly what this session ran) blindly re-derives a glued `instrument_id` from the empty
+   marker's wall-clock filename and stamps it CAPTURED. This is the SAME 0-row-parquet defect the N5 fix
+   (`_rebuild_defi_n5.py`) already solved for `vault_share_price` — `liquidations` (and, it turns out, several siblings)
+   just weren't in that set.
+
+**Distinguishing this from the 34-row phantom-index case directly above**: those 34 rows are STALE — the underlying GCS
+objects were already fixed (resharded, retired to `_migrated_`) and the manifest's append/UPSERT-only index simply never
+dropped the old row for a now-gone path; no further rebuild can fix that, only the separate phantom-row purge. These 12
+rows are the OPPOSITE: the underlying glued objects still genuinely exist on GCS right now (the cron wrote them
+yesterday and nothing had touched them since), so once the fix below ships and the shard reprocesses, the SAME object
+gets correctly reclassified via UPSERT — no purge dependency.
+
+**Full sweep + fix (both sides, all genuinely-reachable call sites)**: grepped every DeFi handler for this exact
+`file_name=f"..._{ts_label|noon_ts}.parquet"` empty-marker pattern (9 files, 13 call sites total). Traced each site's
+caller for an early-return-on-empty guard to separate genuinely-reachable sites from dead code:
+
+- **Genuinely reachable (fixed — dropped the timestamp from `file_name=`, letting `write_defi_rows` fall back to its own
+  stable `"empty.parquet"` default)**: `liquidations_handler.py:554`, `risk_params_handler.py:643`,
+  `dex_swaps_handler.py:516`, `evm_defi_handler.py:207`, `lending_indices_handler.py:866`, `lst_rates_handler.py:566`
+  (`_write_empty_lst_marker` — this function's entire purpose IS the empty marker, was unconditionally reached),
+  `vault_share_price_handler.py:275` (`_emit_empty_marker_and_manifest` — same shape; already had manifest-side N5
+  protection, but the object churn at the source is now also stopped).
+- **Confirmed dead-for-empty (left untouched — the caller early-returns on `df.empty`/`grouped.setdefault` before
+  `write_defi_rows` can ever be reached with zero rows, so `file_name` here was already inert per the empty-only clause
+  in its own docstring)**: `_dex_pools_subgraph.py:365,550`, `lending_indices_handler.py:430`,
+  `oracle_prices_handler.py:381`, `lst_rates_handler.py:687`, `vault_share_price_handler.py:578`.
+- **Manifest-side (`_rebuild_defi_n5.py`)**: `ROWCOUNT_VERIFIED_DATA_TYPES` expanded from `{vault_share_price}` to
+  `{vault_share_price, liquidations, lending_indices, lst_rates, risk_params, dex_pool_swaps}` — the exact set of
+  data_types with a genuinely-reachable empty-marker writer above. `vault_share_price_absence_reason`'s pre-launch check
+  stays vault_share_price-only (a new `_LAUNCH_DATE_CHECKED_DATA_TYPES` set) since that registry's semantics were only
+  validated for VSP; the universal 0-row check now applies to all six.
+- Added regression tests: `test_rebuild_defi_manifest.py` (0-row liquidations shard → `SOURCE_RETURNED_ZERO`, no
+  launch-date check applied) and `test_liquidations_handler.py` (two cron runs with different `ts_label` on the same
+  empty shard write the SAME stable path, not two glued objects).
+
+**Not yet done**: the 12 CURRENT glued objects need one more targeted rebuild pass (single-day, `2026-07-22`, cheap —
+not a new whole-corpus walk) once this fix ships, to reclassify them via the now-fixed N5 path. Re-verify 0 glued ids
+(excluding the 9 known ORCA rows, which are a separate owner's in-flight fix) after that.

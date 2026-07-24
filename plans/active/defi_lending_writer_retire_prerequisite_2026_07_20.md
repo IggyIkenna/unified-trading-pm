@@ -208,12 +208,11 @@ This plan is **green** — and only then may step 2 (the ~16.7M-row migration) b
       EVM, or it is explicitly OUT of scope with a stated reason. Leaving it undecided reproduces the "interim that
       nobody ruled" state that produced this whole contradiction. Escalate as an option-set if it is not decidable from
       the naming SSOT.
-- [ ] 7. [CODE] P0. **Define the per-data_type target mapping** — for each of `lending_indices`, `liquidation_events`,
-      `flash_loan_events`, `position_data`, `risk_params`, `liquidations`, state which of `A_TOKEN`/`DEBT_TOKEN` each
-      row resolves to and from which row column. The reversal's own diagnosis was that these are "DIVERSE data_types
-      with no clean single A_TOKEN mapping" (`defi_consolidated_closeout_2026_07_18.md:1494-1495`) — so this mapping is
-      the genuine design work, and a blanket `→ A_TOKEN` is the failure mode to avoid. Two-sided data_types
-      (`position_data`) need both legs.
+- [x] ✅ 7. [CODE] P0. **Define the per-data_type target mapping — DESIGN COMPLETE, session-2 Progress Log ("Todo 7 —
+      per-data_type A_TOKEN/DEBT_TOKEN target mapping (REFINED, SOLANA out)").** Full table shipped: `lending_indices` +
+      `position_data` are FAN-OUT (both legs, per-row); `liquidation_events`/`flash_loan_events`/`risk_params`/
+      `liquidations` are relabel-only (A_TOKEN). This is design-complete, NOT implementation — todo 8 remains open to
+      apply it in code as part of the atomic 3-repo wave.
 - [ ] 8. [CODE] P0. **Ship the retire atomically across all three repos in ONE wave** — UAC
       (`canonical_id_builder.py:186` `UNSUPPORTED_BY_DESIGN` gains `LENDING`), MTDS (all 8 writers on their new
       mapping), UTL (`_derive_instrument_id.py:76-77` `_DISPATCH[('defi','lending')]`/`[('defi','lending_position')]`,
