@@ -151,7 +151,7 @@ up that DIAG item has this data point.
       already-shipped `flip_sports_odds_captured_leak_to_attempted_failed.py --apply` survives >=2 consolidator cycles
       without reverting. Re-run `--dry-run` first to confirm scope is still exactly the 31 target rows (no drift). Repo:
       instruments-service (script) + deployment-service or infra (if Option A2's cron-pause is picked). — RESOLVED,
-      Option A2, instruments-service@\<next-sha\> (script hardened to the codex §519 paused-consolidator CAS recipe).
+      Option A2, instruments-service@d5e80b32 (script hardened to the codex §519 paused-consolidator CAS recipe).
       Sequence: (1) paused `uts-prod-manifest-consolidator-instruments-sports-cron` via Cloud Scheduler API, (2) found +
       waited out 2 ALREADY-IN-FLIGHT overlapping executions (one ran 7m47s — matches the documented sports slow-cycle
       class) since pausing the scheduler doesn't kill a running execution, (3) re-ran `--dry-run` (still exactly 31
