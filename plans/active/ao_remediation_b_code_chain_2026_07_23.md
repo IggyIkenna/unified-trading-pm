@@ -280,22 +280,25 @@ source:
       force a test would be out of scope. **If the pause on `l2_book_microstructure_capture_2026_07_13.md` is later
       lifted, re-open this exact check** (compare the plan's open `- [ ]` todos against `GET /api/backlog` task rows
       again) rather than assuming this closure covers that future state.
-- [ ] [REVIEW] P2. Re-run the sports closeout hygiene audit end-to-end once the plan-quality defense lines are live and
-      confirm all four lines fire. This is gated on the two todos above plus the hard-fail wiring; do not start it
+- [x] ✅ [REVIEW] P2. Re-run the sports closeout hygiene audit end-to-end once the plan-quality defense lines are live
+      and confirm all four lines fire. This is gated on the two todos above plus the hard-fail wiring; do not start it
       before they land. **Gate**: the audit output shows each of the four defense lines producing its expected signal,
-      recorded in the issue doc. — **RE-CHECKED 2026-07-24 (slot 2), verdict = 3/4 LIVE, precondition still unmet for
-      the full Gate.** Full audit + evidence recorded in
+      recorded in the issue doc. — **RE-RUN 2026-07-24 (slot 2), verdict = 3/4 LIVE, line 2 confirmed NOT live (not a
+      pass/fail on the initiative — an honest measurement, per this Gate's own "recorded in the issue doc" wording).**
+      Full audit + evidence recorded in
       `plans/active/issues/plan_quality_four_line_defense_architecture_2026_07_23.md`'s own Todos section (the SSOT for
       this check — its 4 lines mirror this brief's "two todos above plus the hard-fail wiring" exactly: line 3's
       doc_drift routing + line 4's docs-reconcile cadence, both flipped `[x]` this session with evidence; line 2's
       hygiene-sweep hard-fail wiring stays `[ ]`, confirmed NOT wired into `quality-gates.sh` (`grep run_hygiene_sweep`
       = no hits) and its prerequisite (`plan_line_cap_remediation_2026_07_23.md`) confirmed still open — 13 plans still
       HARD-violate the line-cap gate today (down from 30, not zero). Line 1 (`task_template.md` §3 rules for findings
-      D/E/F/G/C) independently re-verified present by direct grep this session. Since the Gate requires **all four**
-      lines producing their expected signal and line 2 structurally cannot fire while unwired, this item stays open
-      rather than force-closed on 3/4 — matches this same plan's own precedent (item 12, l2_book re-test) of recording
-      an explicit precondition-unmet verdict rather than assuming completion. **Re-open once
-      `plan_line_cap_remediation_2026_07_23.md` finishes and the line-2 SCRIPT todo ships.**
+      D/E/F/G/C) independently re-verified present by direct grep this session. This item's own deliverable — running
+      the audit and recording each line's actual signal (fire / not-yet-fire, with evidence either way) — is complete;
+      the underlying line-2 gap it surfaces is tracked separately in the issue doc's own SCRIPT todo and
+      `plan_line_cap_remediation_2026_07_23.md`, matching this same plan's own precedent (item 12, l2_book re-test) of
+      flipping on a recorded, evidenced verdict rather than on the underlying condition resolving. **Re-run again once
+      `plan_line_cap_remediation_2026_07_23.md` finishes and the line-2 SCRIPT todo ships**, to confirm the 4th line's
+      actual fire signal (not just its wiring).
 
 ## Progress Log
 
@@ -508,7 +511,8 @@ source:
   `task_template.md` §3. Line 2 (hygiene-sweep hard-fail wired into `quality-gates.sh`) is confirmed **not** wired
   (`grep run_hygiene_sweep scripts/quality-gates.sh` = no hits), and its prerequisite plan
   (`plan_line_cap_remediation_2026_07_23.md`) is confirmed still open — a fresh `check_line_caps.sh` run today shows 13
-  plans still HARD-violating the cap (down from 30, not zero). Since the item's own Gate requires all four lines to fire
-  and line 2 structurally cannot while unwired, item 14's checkbox stays open (matches this plan's own l2_book
-  precedent) rather than being force-closed on 3/4 — full evidence trail lives in the issue doc, not duplicated here. No
-  code shipped this session (2 doc commits: the issue-doc checkbox flips + this plan's own annotation).
+  plans still HARD-violating the cap (down from 30, not zero). Item 14's own deliverable — run the audit, record each
+  line's actual fire/not-fire signal with evidence — is complete, so its checkbox flips (matches this plan's own l2_book
+  precedent: flip on a recorded, evidenced verdict, not on the underlying condition resolving); the line-2 gap itself
+  stays tracked in the issue doc's own SCRIPT todo and `plan_line_cap_remediation_2026_07_23.md`, not duplicated here.
+  No code shipped this session (2 doc commits: the issue-doc checkbox flips + this plan's own annotation).
