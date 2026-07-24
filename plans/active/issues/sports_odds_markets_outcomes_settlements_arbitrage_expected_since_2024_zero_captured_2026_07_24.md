@@ -144,7 +144,7 @@ data_types) explains both findings at once.
       tuples, or retire the capability declaration (operator sign-off required — changes the sports coverage
       denominator). **Done when**: an explicit decision is recorded with rationale. ✅ — recommendation recorded below;
       operator sign-off requested via /blocked (slot 5, 2026-07-24).
-- [ ] [DIAG] P1. **Discriminator investigation requested by main (2026-07-24, INTERIM guidance on BLK-c545ae54, operator
+- [x] [DIAG] P1. **Discriminator investigation requested by main (2026-07-24, INTERIM guidance on BLK-c545ae54, operator
       sign-off STILL PENDING)** — the RETIRE recommendation collides with the external-data-always-available HARD RULE
       (`codex/02-data/external-data-always-available-rule.md`): exhausting/absent a capture path is a credential/build
       ask, NOT a descope; zero adapter code is EQUALLY consistent with (a) a mechanical/erroneous phantom declaration
@@ -159,7 +159,78 @@ data_types) explains both findings at once.
       markets/settlements/arbitrage are documented as WANTED; (3) confirm per-venue endpoint availability +
       auth/credential requirements for ODDS_API/PINNACLE/BETFAIR's markets/results/settlement APIs. This evidence turns
       RETIRE-vs-SCAFFOLD from a judgment call into a determinable one for the operator (repo: unified-trading-pm,
-      docs-only — this todo is itself the discriminator work, not the final decision).
+      docs-only — this todo is itself the discriminator work, not the final decision). **RESOLVED (slot 10, 2026-07-24)
+      — pushes decisively toward (a) RETIRE, not (b) scaffold.** Findings below.
+
+### DISCRIMINATOR findings (2026-07-24, slot 10) — answers main's (a) vs (b) question
+
+**(1) Provenance — mechanical, no originating design doc, confirmed by exact-line `git blame`:**
+
+- `markets`/`outcomes`/`settlements` for ALL THREE venues (ODDS_API, PINNACLE, BETFAIR) trace to the exact same commit,
+  `unified-api-contracts@7511207a1` (2026-05-23, `semver-rollout[bot]`,
+  `fix(registry): canonicalize DeFi/prediction/ tradfi data type names + add missing types`). The commit message body
+  enumerates DeFi/tradfi/prediction registry renames and additions — it never mentions ODDS_API/PINNACLE/BETFAIR,
+  markets, outcomes, or settlements by name. The actual diff hunk shows PINNACLE/BETFAIR's capability dict jumping
+  straight from a 1-line `{"odds_snapshot": ..., "odds_movement": ...}` to a 5-key dict with
+  `markets`/`outcomes`/`settlements` bolted on, with zero adapter/CLI/dispatch changes anywhere else in the same commit
+  (verified via `git show --stat`) — the pattern of a broad "fill in missing enum members" mechanical sweep, not a
+  deliberate feature addition.
+- `arbitrage_opportunity` (ODDS_API only) traces to an earlier commit, `unified-api-contracts@1a05a8724` (2026-04-12,
+  `feat: add league fixture calendar and prediction league ID helpers`). Same pattern: the diff adds
+  `arbitrage_opportunity` as part of a large `NEEDS_CANDLE_PROCESSING` registry-completeness dict (bundled alongside
+  unrelated DeFi `rate_indices`/`oracle_prices` entries and Prediction `POLYMARKET`/`KALSHI` entries), not alongside any
+  arbitrage-computation code. This dict flags `arbitrage_opportunity: True` as something requiring MDPS candle-adapter
+  processing — i.e., even at its origin, `arbitrage_opportunity` was modeled as a **derived/computed** product, not a
+  raw venue capture — which is exactly the sibling MDPS finding's "registered but never scheduled" pattern
+  (`sports_mdps_derived_odds_products_zero_prod_objects_2026_07_23.md`), now traced one level deeper to its origin
+  commit. No PR description, design doc, or commit message anywhere in the ancestry states product intent for these 4
+  data_types on these 3 venues.
+
+**(2) Product intent — sports arbitrage/market-making IS a real, documented strategy family, but it does NOT consume
+these 4 data_types as raw captured inputs:**
+
+- `codex/09-strategy/` extensively documents real, intended sports arbitrage + market-making strategies (`SPORTS_ARB`,
+  `ARBITRAGE_PRICE_DISPERSION`, `MARKET_MAKING_EVENT_SETTLED` on Betfair/Smarkets/Matchbook/Unity, cross-book
+  Pinnacle-vs-Betfair arb) — so the STRATEGY CONCEPT is genuinely wanted, not phantom.
+- But every strategy doc's declared data dependency is `odds` (per-bookmaker, per-feed) / `odds_movement` /
+  `back_price`/`lay_price` / `line_opening_odds` — i.e. the data_types that already exist and ARE captured under
+  ODDS_API (`ODDS`/`odds`). None of the ~15 strategy docs grepped reference `markets`, `outcomes`, `settlements`, or
+  `arbitrage_opportunity` as a literal required data feed. `arbitrage_opportunity` and settlement/outcome resolution are
+  described as things the STRATEGY/candle-adapter layer _computes from_ raw odds + fixture data, not raw inputs a venue
+  adapter needs to fetch and stamp as their own `data_type=`.
+- Grep of `codex/14-customer-journeys/` for the same terms returns no hits describing these 4 data_types as a customer-
+  facing requirement.
+
+**(3) External endpoint reality — for ODDS_API specifically, `markets`/`outcomes` are not even a separate resource to
+fetch; they are nested fields INSIDE the single odds payload already captured:**
+
+- `unified-api-contracts/unified_api_contracts/external/odds_api/schemas.py` — the actual Pydantic contract for The Odds
+  API v4 (`https://api.the-odds-api.com/v4`, ref'd directly in `odds_api_adapter.py`/`odds_api_ws.py`) — models
+  `OddsApiFixture.bookmakers: list[OddsApiBookmaker]`, `OddsApiBookmaker.markets: list[OddsApiMarket]`,
+  `OddsApiMarket.outcomes: list[OddsApiOutcome]`. "Markets" and "outcomes" are NESTED FIELDS of the single
+  `/v4/sports/ {sport}/odds` response already captured under `data_type=ODDS`/`odds` — there is no separate
+  markets/outcomes endpoint to call. Declaring them as standalone top-level `data_type=` capabilities is a schema-shape
+  misunderstanding on top of being unimplemented — capturing "ODDS" already captures the markets/outcomes structure; a
+  distinct `data_type=markets` capture would be redundant with, not additive to, what's already live.
+- No `scores`/settlement/results endpoint is referenced anywhere in `odds_api_adapter.py`, `odds_api_ws.py`, or their
+  tests — confirms zero wiring, corroborating the DIAG todo's adapter-registry findings above.
+- PINNACLE has no dedicated schema, adapter file, or base URL anywhere in `market-tick-data-service` or
+  `unified-api-contracts` (re-confirms prior DIAG finding) — it is purely a bookmaker key inside ODDS_API's fan-out, so
+  a standalone "PINNACLE markets/outcomes/settlements" capability can't be scaffolded without first inventing a
+  PINNACLE-as-venue integration that doesn't exist in any design doc.
+- BETFAIR: the only real adapter (`BetfairReferenceDataAdapter`, instruments-service) is REFERENCE-DATA (instrument
+  catalogue), not an odds/markets/settlements capture path, and is `BLOCKED-CREDENTIALS` with zero prod rows (prior
+  finding, re-confirmed unchanged).
+
+**Net conclusion on main's (a) vs (b) question**: (a) — mechanical/erroneous phantom declaration, retire is legitimate.
+Not just "unbuilt" (which would trigger the external-data-always-available scaffold-don't-descope rule) — for ODDS_API
+specifically, `markets`/`outcomes` describe data STRUCTURE that is already captured under the existing `ODDS`/`odds`
+data_type; there is nothing incremental to scaffold. For PINNACLE/BETFAIR and for `settlements`/`arbitrage_opportunity`
+everywhere, zero design-doc or strategy-doc evidence of intent to capture these as raw venue data_types exists, and the
+one commit that modeled `arbitrage_opportunity` at all treated it as a downstream-computed product, not a raw capture
+target. This does not contradict the external-data-always-available rule (that rule protects against descoping a
+genuinely wanted, credential-blocked feature) — it establishes these were never a real capture target to begin with.
+
 - [ ] [CODE] P2. Execute the FINAL decided fix (retire OR scaffold-with-BLOCKED-CREDENTIALS, per the operator's answer
       to the discriminator investigation above) — either wire up + schedule real capture (or scaffold the adapters and
       mark `BLOCKED-CREDENTIALS` per the external-data-always-available rule), or retire/adjust
