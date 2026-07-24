@@ -283,7 +283,19 @@ source:
 - [ ] [REVIEW] P2. Re-run the sports closeout hygiene audit end-to-end once the plan-quality defense lines are live and
       confirm all four lines fire. This is gated on the two todos above plus the hard-fail wiring; do not start it
       before they land. **Gate**: the audit output shows each of the four defense lines producing its expected signal,
-      recorded in the issue doc.
+      recorded in the issue doc. — **RE-CHECKED 2026-07-24 (slot 2), verdict = 3/4 LIVE, precondition still unmet for
+      the full Gate.** Full audit + evidence recorded in
+      `plans/active/issues/plan_quality_four_line_defense_architecture_2026_07_23.md`'s own Todos section (the SSOT for
+      this check — its 4 lines mirror this brief's "two todos above plus the hard-fail wiring" exactly: line 3's
+      doc_drift routing + line 4's docs-reconcile cadence, both flipped `[x]` this session with evidence; line 2's
+      hygiene-sweep hard-fail wiring stays `[ ]`, confirmed NOT wired into `quality-gates.sh` (`grep run_hygiene_sweep`
+      = no hits) and its prerequisite (`plan_line_cap_remediation_2026_07_23.md`) confirmed still open — 13 plans still
+      HARD-violate the line-cap gate today (down from 30, not zero). Line 1 (`task_template.md` §3 rules for findings
+      D/E/F/G/C) independently re-verified present by direct grep this session. Since the Gate requires **all four**
+      lines producing their expected signal and line 2 structurally cannot fire while unwired, this item stays open
+      rather than force-closed on 3/4 — matches this same plan's own precedent (item 12, l2_book re-test) of recording
+      an explicit precondition-unmet verdict rather than assuming completion. **Re-open once
+      `plan_line_cap_remediation_2026_07_23.md` finishes and the line-2 SCRIPT todo ships.**
 
 ## Progress Log
 
@@ -485,3 +497,18 @@ source:
   the plan stays un-ingested, so the checkbox stays open rather than being force-closed; lifting the 19-plan pause is an
   operator/main decision, not something this slot should do unilaterally to make the item testable. No code change; this
   is a verification-only re-check, recorded so the next pass doesn't have to re-derive the same evidence from scratch.
+
+- **2026-07-24 (slot 2)**: Worked item 14 (sports-closeout defense-line audit, citation inline on its checkbox above).
+  Plan A's own two prerequisite todos are confirmed shipped (docs-reconciler timer live + dispatch proof), so this
+  item's own narrower gate ("two todos above plus the hard-fail wiring") maps onto
+  `plan_quality_four_line_defense_architecture_2026_07_23.md`'s own Todos, where I independently re-verified and flipped
+  the two functionally-done-but-unflipped checkboxes (line 3's doc_drift→blocked-queue routing at
+  `agent-orchestrator@18f262e`, confirmed present in the live checkout; line 4's docs-reconcile 24h cadence, confirmed
+  via `systemctl status docs-reconciler.timer` = active/enabled). Line 1 re-verified present by direct grep of
+  `task_template.md` §3. Line 2 (hygiene-sweep hard-fail wired into `quality-gates.sh`) is confirmed **not** wired
+  (`grep run_hygiene_sweep scripts/quality-gates.sh` = no hits), and its prerequisite plan
+  (`plan_line_cap_remediation_2026_07_23.md`) is confirmed still open — a fresh `check_line_caps.sh` run today shows 13
+  plans still HARD-violating the cap (down from 30, not zero). Since the item's own Gate requires all four lines to fire
+  and line 2 structurally cannot while unwired, item 14's checkbox stays open (matches this plan's own l2_book
+  precedent) rather than being force-closed on 3/4 — full evidence trail lives in the issue doc, not duplicated here. No
+  code shipped this session (2 doc commits: the issue-doc checkbox flips + this plan's own annotation).
