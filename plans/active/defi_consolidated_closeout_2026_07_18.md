@@ -410,14 +410,17 @@ Discriminator = **does a manifest row exist**.
         bug in the first script version (matching the full 45-char subgraph id) initially found 0 because the manifest's
         `error_reason` column truncates at 80 chars; fixed to match the untruncated message prefix, then confirmed
         against an independent raw pandas count of the same 144 rows.
-  - [ ] `--apply` NOT YET RUN — blocked by the just-landed heavy-I/O hard rule (manifest-index read-transform-write over
-        the whole `_index` must run on a VM in-region, never the operator's local machine,
-        `/codex/05-infrastructure/vm-launcher-runbook.md`). Launch via the generic `canonical-migration` `VM_TASK`/
-        `VM_MIGRATION_CMD` dispatch in `deployment-service/scripts/vm/setup-data-pipeline-vm.sh` with
-        `VM_SERVICE=instruments_service`, running
-        `python scripts/reclassify_defi_curve_optimism_subgraph_deindexed_2026_07_24.py --apply`, or extend
-        `launch-canonical-migration-vm.sh`'s category table with a new one-off entry. Full detail:
+  - [ ] `--apply` NOT YET RUN — 2 VM-launch attempts 2026-07-24 both FAILED differently; stopped (stall-safety) rather
+        than blind-retry a 3rd time. **Attempt 1** rc=2 file-not-found — root cause: `setup-data-pipeline-vm.sh`'s
+        `canonical-migration` branch (`:1187`) hardcodes `cd "$WORKSPACE/mtds"` regardless of `VM_SERVICE`, so this
+        instruments-service script can't be found; a real launcher bug (new follow-up below), not user error.
+        **Attempt 2** (workaround: `bash -c 'cd .../instruments && python ...'`): `run.log` never got created at all —
+        likely the nested quoting breaking the startup script's own `python`→venv-python substitution. Population
+        still tiny (144 rows) and low-growth — safe to leave open. Full detail:
         `issues/defi_curve_optimism_subgraph_no_allocations_2026_07_15.md`.
+- [ ] [INFRA] P2. **NEW 2026-07-24 — fix the `canonical-migration` `VM_TASK` mtds-hardcoded `cd` bug** found above
+      (`setup-data-pipeline-vm.sh:1187`) — mirror the `VM_SERVICE`-keyed `cd "$WORKSPACE/instruments"` pattern other
+      branches already use (e.g. `:1224`). (repo: deployment-service)
   - [x] `spot_asset`/`spot_pair` reconciliation investigated + resolved via live re-measurement (see the P0 item's
         footnote above) — both were stale/non-issues, not a coding task.
 - [x] ✅ [DATA] P1. **DeFi catalogue `available_to` false-delisting — DONE (2026-07-20).** Root fix SHIPPED + VERIFIED
@@ -533,10 +536,14 @@ Discriminator = **does a manifest row exist**.
       fetch+upload via UTL `ParallelPerSymbolRunner` with `manifest_writer=None`, then apply
       `record_captured`/`record_zero_rows`/`record_failed` + the heartbeat SEQUENTIALLY over the gathered results in
       original iteration order (preserves today's manifest-write/heartbeat semantics exactly while parallelizing the
-      slow I/O). The 3 `service_config.py` knobs (`defi_max_concurrent_fetches`/`defi_max_inflight_tasks`/
-      `defi_max_concurrent_uploads`, mirroring the Tardis 3-knob block) are a trivial, un-risky first step.
-      **Separately**: the 2-VM TheGraph canary is operator-owned ("ship code + I run the canary") — do not launch VMs
-      for it. (repo: market-tick-data-service)
+      slow I/O). ~~The 3 `service_config.py` knobs are a trivial, un-risky first step~~ — **CORRECTED 2026-07-24
+      (sub-agent investigation): WRONG per this item's own cited source** —
+      `plans/archive/2026_07/defi_consolidated_closeout_history_2026_07_18.md:617` states the knobs (none of the 3
+      exist yet — confirmed via grep) are "inert alone — 0% gain, 3 unread fields — ship knobs+fanout+executors as ONE
+      commit or not at all." `plans/active/issues/defi_mvp_backfill_optimization_ready_2026_07_20.md` (open,
+      locked_by: live-defi-rollout) already carries the correctly-bundled todo; nothing shipped standalone. **Separately**:
+      the 2-VM TheGraph canary is operator-owned ("ship code + I run the canary") — do not launch VMs for it. (repo:
+      market-tick-data-service)
 - [ ] [DATA] P1. **Confirm the launcher + parallelization plan for the DeFi-MVP full-history MDPS candle backfill**
       (gate-audit §6, 2026-07-24 — gated on `candle_canonical_path_migration_execution_2026_07_24.md` reaching P8).
       Determine which launcher runs it (single-VM vs. cross-VM sharded) and whether `max_workers` lets concurrent writes
@@ -746,12 +753,11 @@ the Track 7 culled-venue ruling.
       Track-1/2 + migration-VM gates above like the rest. A 2026-07-23 GCS sample (every 3 days, both venues) had found
       ZERO `dex_pool_state` objects for ORCA/RAYDIUM, confirming the bug hadn't yet corrupted data before the fix
       landed. (repos: deployment-service, market-tick-data-service)
-- [ ] [BACKEND] P2. **`dex_pools_handler.py` (CLI op `collect-dex-pools`, cron `uts-prod-mtds-collect-dex-pools-cron`,
-      currently PAUSED — confirmed still registered, not retired, zero immediate risk while paused) shares Track 1's
-      Solana-AMM-pool symbol-collision gap in a MORE severe form** (`_dex_pools_subgraph.py::_collect_solana_dex` never
-      attempts symbol resolution at all, always falls back to the bare pool address) and is **NOT covered by
-      `market-tick-data-service@0d83a8a9`** (that fix only touches `_solana_row_symbol`, which this handler never
-      calls). Needs its own fix, or an explicit retire decision, before its cron is safe to resume too. (repo:
+- [x] ✅ [BACKEND] P2. **Stale duplicate — RESOLVED elsewhere 2026-07-24, synced here.** Already answered in
+      `defi_track01_per_instrument_and_canon_id_2026_07_24.md`'s "Second Solana writer" item: `_dex_pools_subgraph.py::_collect_solana_dex`
+      keys its manifest row AND leaf filename off the pool **ADDRESS**, never a derived symbol — structurally immune
+      to the token-pair collision this item worried about (addresses are inherently unique). No fix/retire decision
+      needed on collision grounds; only gap is optional readability. (repo:
       market-tick-data-service)
 
 ## Open follow-ups (carried forward from the pre-2026-07-24 Progress Log's "Deferred work after 2026-07-22/23" tables)
@@ -814,13 +820,9 @@ the Track 7 culled-venue ruling.
 - [ ] [DATA] P2. **Purge 1.79M dup + ~219.5K phantom + seed ~63.9M `expected_unattempted`** (incl. 812,055
       solana-pool-vocab rows, 215,864 non-POOL EU rows) — large data op, sequence AFTER the glued-id manifest rebuild
       (both touch the same consolidated index).
-- [ ] [BACKEND] P2. **Async fan-out + executor-offload for the DeFi write path** (`solana_defi_handler.py`,
-      `dex_pools_handler.py`, `_dex_pools_subgraph.py` — 4 upload sites total) — investigated, correctness-sensitive
-      (shard isolation, `record_captured` grain, heartbeat monotonicity all load-bearing), needs a dedicated focused
-      session, not a squeezed turn. Design sketch (UTL `ParallelPerSymbolRunner` with `manifest_writer=None`, then
-      sequential `record_captured`/heartbeat over gathered results) recorded in the history doc. The 3
-      `service_config.py` knobs (`defi_max_concurrent_fetches`/`defi_max_inflight_tasks`/`defi_max_concurrent_uploads`)
-      are a trivial, un-risky first step.
+- [ ] [BACKEND] P2. **Async fan-out + executor-offload for the DeFi write path — duplicate of the Track 5 item above**
+      (same 4 upload sites, same design sketch, same 2026-07-24 correction re: the knobs NOT being a safe standalone
+      step — see that item for full evidence). (repo: market-tick-data-service)
 - [ ] [OPERATOR] P2. **2-VM TheGraph canary** — code-only so far per the original session's instructions; launching the
       canary VMs is operator-owned (Q3 ruling: "ship code + I run the canary").
 - [ ] [DATA] P1. **Resume paused DeFi crons** (4 collect + 3 forward = 7 schedulers) + fix the honest-coverage-nightly
