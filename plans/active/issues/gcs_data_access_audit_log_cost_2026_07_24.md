@@ -141,6 +141,22 @@ data), that audit posture stays fully intact; only the Cloud Logging cost/volume
 
 - **Enable Cloud Billing API + configure a BigQuery billing export now** — approved by operator, see § Attempted below
   for why this session couldn't execute it directly.
+- **The "why" is ruled closed by assumption, not discovery (2026-07-24, third round): treat `DATA_WRITE` on
+  `storage.googleapis.com` as an accidental/unneeded default and remove it, not just exclude it downstream.** Operator:
+  "I dunno why it's turned on so assume was a mistake if no need for it." Due diligence before accepting that: grepped
+  all of `unified-trading-pm/codex/` for any documented compliance/business reason for GCS Data Access auditing — zero
+  real hits (only unrelated `DATA_READY` event-name false positives). No `google_project_iam_audit_config` terraform
+  resource anywhere (established earlier). No operator/team member on record knows the reason. On that basis: **remove
+  the `{"service": "storage.googleapis.com", "auditLogConfigs": [{"logType": "DATA_WRITE"}]}` entry from the project's
+  IAM `auditConfigs` entirely**, rather than leaving a silently-excluded-but-still-configured control in place. This is
+  a distinct, MORE sensitive action than the exclusion filter already applied: the exclusion filter only stops Cloud
+  Logging from storing/billing the entries (reversible, sink-scoped); this removes the source IAM Audit Config itself
+  via a full-project `setIamPolicy` write — needs a careful read-modify-write (fetch the live policy immediately before
+  writing, change only the one `auditConfigs` entry, preserve every other binding/`etag` untouched) to avoid clobbering
+  unrelated IAM state. See the new P2 todo below — this session's identity cannot even read the policy this time (weaker
+  than before: impersonation itself is denied, `iam.serviceAccounts.getAccessToken` blocked), so it needs the same class
+  of escalation as the P1 handoff, but is NOT urgent since the exclusion filter already fully solved the cost problem —
+  this is a correctness/hygiene cleanup, not a cost fix.
 
 ## App-logging architecture check (operator question, 2026-07-24 — answered)
 
@@ -214,6 +230,22 @@ which neither available credential in this session has.** One handoff covers all
       see Progress Log), queried directly. $52.92
       total Cloud Logging cost for 2026-07-01 through 2026-07-24 (all under SKU "Log Storage cost"), tracking the burst
       days identified earlier ($23.18 on 07-19, $5.48 on 07-22).
+- [ ] [DEVOPS] P2. **Remove the `storage.googleapis.com` / `DATA_WRITE` entry from the project's IAM `auditConfigs`**
+      (operator ruling 2026-07-24: assume it was an unneeded/accidental default, no known reason found — see § Operator
+      decisions). Not urgent — the exclusion filter (todo above, already live) already fully stops the Cloud Logging
+      cost; this is a source-level correctness cleanup, not a cost fix. Needs an identity with
+      `resourcemanager.projects.setIamPolicy` (a step beyond the read-only `getIamPolicy` + `logging.admin`/`editor`
+      impersonation chain that resolved the P1 todo — confirmed neither covers a policy WRITE). Hand off with: 1.
+      `gcloud projects get-iam-policy central-element-323112 --format=json > policy.json` — fetch the LIVE policy
+      immediately before writing (do not reuse the `auditConfigs` block already quoted in this doc — re-fetch to avoid a
+      stale-etag clobber of any binding changed since 2026-07-24). 2. Edit `policy.json`: remove ONLY the
+      `{"service": "storage.googleapis.com", "auditLogConfigs": [{"logType":        "DATA_WRITE"}]}` entry from the
+      `auditConfigs` array. Leave every `bindings` entry and the `etag` untouched. 3.
+      `gcloud projects set-iam-policy central-element-323112 policy.json` — apply. 4. Verify:
+      `gcloud projects get-iam-policy central-element-323112 --format='json(auditConfigs)'` returns an empty (or absent)
+      `auditConfigs` for `storage.googleapis.com`. Done-when: verified removed, and the exclusion filter on `_Default`
+      (already redundant at that point for GCS Data Access specifically, since the source stops generating it) can stay
+      or be cleaned up later — not this todo's scope.
 
 ## Progress Log
 
@@ -315,3 +347,18 @@ which neither available credential in this session has.** One handoff covers all
   suggesting, not adding scope unprompted): check back in a few days via the now-confirmed-live billing export to see
   whether the Cloud Logging cost trend actually drops post-filter, as the closing confirmation this issue was filed to
   get.
+
+- **2026-07-24 (third round — "why" ruled closed by assumption)** — Operator: "I dunno why it's turned on so assume was
+  a mistake if no need for it." Before accepting that, grepped all of `unified-trading-pm/codex/` for any documented
+  reason for GCS Data Access auditing — clean (only unrelated `DATA_READY` event-name matches). Ruling recorded in §
+  Operator decisions: treat `storage.googleapis.com`/`DATA_WRITE` as unneeded and remove it at the source, not just
+  exclude it downstream — added as new P2 todo (not urgent; the already-live exclusion filter fully covers the cost
+  angle, this is a correctness cleanup). Attempted directly this session first: `unified-trading-sa` still can't read
+  the policy (`PERMISSION_DENIED`, as before), and this time impersonation is ALSO denied
+  (`iam.serviceAccounts.getAccessToken` on `central-element-323112@appspot.gserviceaccount.com` — the exact chain that
+  worked for the P1 handoff, but that used a different identity/`gcloud` configuration
+  (`1060025368044-compute@developer.gserviceaccount.com` under a `research-and-development` config) not available in
+  this session. Removing an `auditConfigs` entry needs `resourcemanager.projects.setIamPolicy`, a full-policy WRITE —
+  meaningfully more sensitive than the read (`getIamPolicy`) that handoff already proved, and more sensitive than the
+  Cloud Logging sink exclusion (which doesn't touch project IAM policy at all). Needs its own escalation with the
+  explicit read-modify-write safety steps in the new todo.
