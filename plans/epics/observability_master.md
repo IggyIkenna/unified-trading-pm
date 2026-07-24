@@ -45,7 +45,7 @@ related_plans:
   - ../active/data_pipeline_ag_residual_backfill_decisions_2026_07_24.md
   - ../active/data_pipeline_alert_substrate_residual_2026_07_24.md
   - ../active/data_pipeline_alerts_batch_remediation_2026_07_15.md
-  - ../active/data_pipeline_alerts_batch_remediation_closeout_2026_07_24.md
+  - ../archive/2026_07/data_pipeline_alerts_batch_remediation_closeout_2026_07_24.md
   - ../active/data_pipeline_hardening_self_monitoring_2026_06_22.md
   - ../active/data_pipeline_self_healing_completion_residual_2026_07_24.md
   - ../active/deployment_registry_firestore_migration_2026_07_14.md
@@ -103,11 +103,6 @@ first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 **status**: active · **estimate**: 1.6 cal AI-days (class: infra) **title**: Data-pipeline alerts batch remediation —
 drive #data-pipeline-alerts to a clean/accurate state
-
-### [`data_pipeline_alerts_batch_remediation_closeout_2026_07_24`](../active/data_pipeline_alerts_batch_remediation_closeout_2026_07_24.md)
-
-**status**: active · **estimate**: 1.6 cal AI-days (class: infra) **title**: Data-pipeline alerts batch remediation —
-closeout & historical narrative (2026-07-15 to 2026-07-16)
 
 ### [`deployment_registry_firestore_migration_2026_07_14`](../active/deployment_registry_firestore_migration_2026_07_14.md)
 
@@ -209,6 +204,13 @@ _(no plans currently assigned at this priority)_
       2026-07-21, source plan archived)
 
 ## Archived plans
+
+### [`data_pipeline_alerts_batch_remediation_closeout_2026_07_24`](../archive/2026_07/data_pipeline_alerts_batch_remediation_closeout_2026_07_24.md)
+
+**status**: ✅ ARCHIVED 2026-07-24 — closeout & historical narrative for
+[`data_pipeline_alerts_batch_remediation_2026_07_15`](../active/data_pipeline_alerts_batch_remediation_2026_07_15.md);
+all 14 todos it carried are `[x]`, 0 open. Moved from `plans/active/` to `plans/archive/2026_07/` the same day it was
+extracted (plan line-cap remediation) since it was already fully-closed history, not just an over-cap trim.
 
 ### [`alerting_service_live_rules_2026_05_07`](../archive/2026_05/alerting_service_live_rules_2026_05_07.md)
 

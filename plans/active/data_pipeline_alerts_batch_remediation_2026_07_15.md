@@ -69,9 +69,10 @@ stopping to ask. `/autonomous` was explicitly invoked. This is a LOCAL plan (`as
 > **2026-07-24 — plan line-cap remediation**: the full historical narrative (ground-truth detail, the complete original
 > todo list, every Progress Log entry, and every operator-reconciliation / adversarial-verification round through the
 > 2026-07-16 close) was extracted verbatim to
-> `plans/active/data_pipeline_alerts_batch_remediation_closeout_2026_07_24.md` — see it for the full record. This parent
-> now carries only the condensed ground truth, the genuinely-still-open todos, and 2 todos this history shows were
-> closed later but never had their checkbox flipped here.
+> `plans/archive/2026_07/data_pipeline_alerts_batch_remediation_closeout_2026_07_24.md` — see it for the full record.
+> That child was itself fully-closed history (all 14 todos `[x]`, 0 open) so it was archived outright the same day
+> rather than left in `plans/active/`. This parent now carries only the condensed ground truth, the genuinely-still-open
+> todos, and 2 todos this history shows were closed later but never had their checkbox flipped here.
 
 ## Ground truth (condensed — see the closeout child for the full version)
 
