@@ -64,6 +64,15 @@ instead of duplicating that skill's work here.
   format, and notify the operator. Inherits every safety rule (`cursor-configs/AUTONOMOUS_AGENT_RULES.md` when under
   `/autonomous`).
 
+**Scheduled cadence (ao_remediation_a_independent_fixes_2026_07_23 #8):** runs automatically once a DAY, autonomous
+mode, via `docs-reconciler.timer` on the central orchestrator VM —
+`agent-orchestrator/scripts/install-docs-reconcile- timer.sh` installs it (default 02:00 UTC, staggered 1h after
+`plan-reconciler.timer`'s 01:00 UTC so the two daily deep audits never contend for the same free slot). The timer POSTs
+`{"mode": "docs_reconcile"}` to `/api/plan-health/dispatch`, which spawns `agents/docs_reconciler.md` (opus / effort max
+/ thinking on) on a free Max-plan slot to run this skill end-to-end; its "result" is the worker's `/done` evidence
+string carrying the Phase-5 report summary (this skill reports as chat text, not a structured findings payload). Still
+directly invocable interactively any time — the timer is additive, not a replacement for an on-demand run.
+
 **ASK > PARK when the operator is reachable** (same calibration as `/plan-reconcile`, added there 2026-07-15 from a real
 failure): parking is for an operator who is genuinely gone, not for a mode flag. If the operator is in the session — and
 especially the moment they reply to anything — switch to interactive and ASK, even mid-autonomous-run. Re-evaluate every

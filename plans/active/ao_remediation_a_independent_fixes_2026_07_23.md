@@ -110,8 +110,8 @@ source:
       still current — only the Host Behaviour Matrix row and the interactive-session bullet named the retired
       `tab/<operator>/<N>` branch convention. Both now describe the current Path-B reference-clone model (own `.git` on
       `live-defi-rollout`); the surviving mention of `tab/<operator>/<N>` is explicitly labeled RETIRED.
-      `rg -n 'tab/<operator>|tab/<op>' codex/12-agent-workflow/local-slot-host-symmetric-worker-model.md` shows only the
-      banner line.
+      `rg -n 'tab/<operator>|tab/<op>' /codex/12-agent-workflow/local-slot-host-symmetric-worker-model.md` shows only
+      the banner line.
 - [x] ✅ [REVIEW] P3. Re-annotate or reopen the agent-orchestrator line in
       `plans/active/codex_vs_repo_docs_ssot_audit_2026_06_01.md` that is still marked SHIPPED with no note about the
       post-pivot re-drift. A `[x]` that predates an architecture pivot reads as current coverage when it is not.
@@ -135,7 +135,28 @@ source:
       alongside `agent-orchestrator/scripts/install-plan-reconciler-timer.sh`, and state the cadence in both skills' own
       docs. No docs-reconciler timer or cron exists anywhere in the repo today — the skill is operator-triggered only.
       **Gate**: `systemctl list-timers` on the orchestrator VM shows the docs-reconcile timer with a computed
-      next-elapse, and one run posts a result.
+      next-elapse, and one run posts a result. — PARKED (BLK-f09e9ca9, main interim ruling C, 2026-07-24): code is
+      shipped and QG-green (`agent-orchestrator@329571e` — `mode="docs_reconcile"` wired into `plan_health.dispatch()`,
+      `agents/docs_reconciler.md`, `scripts/install-docs-reconcile-timer.sh`, both skills' SKILL.md cadence-documented,
+      `_SINGLETON_AGENT_KINDS` extended), but the checkbox stays `[ ]` per the runtime-verification HARD RULE — the Gate
+      needs the timer LIVE on the orchestrator VM, which needs two operator/root actions this worker's sandbox cannot
+      perform: (1) `sudo bash scripts/install-docs-reconcile-timer.sh` (writes `/etc/systemd/system/*` as root), and (2)
+      the live root clone at `/home/ubuntu/unified-trading-system-repos/agent-orchestrator` is on `f52b223`, BEHIND
+      `329571e`, so `/api/plan-health/dispatch` won't accept `mode=docs_reconcile` until it pulls +
+      `orchestrator.service` restarts (a fleet-wide bounce main will not do unilaterally). Resolves naturally on the
+      next routine orchestrator deploy/restart, or the operator can run it now:
+      `git pull --ff-only origin live-defi-rollout && sudo systemctl     restart orchestrator.service && sudo bash scripts/install-docs-reconcile-timer.sh`,
+      then verify via `systemctl     list-timers` + `sudo systemctl start docs-reconciler.service`. — RE-VERIFIED
+      2026-07-24 (slot-3, re-dispatched the same todo): blocker (2) is now RESOLVED on its own — the live root clone is
+      at `867b173` (descendant of `329571e`) and `orchestrator.service` (`ExecMainStartTimestamp` 06:45:14 UTC) started
+      AFTER `329571e` landed (06:25:05 UTC), so the running server is serving the `mode=docs_reconcile`-aware code
+      already; no operator action needed for that half. Blocker (1) is CONFIRMED STILL OPEN and is the only remaining
+      step: `systemctl list-timers` on this VM shows `plan-reconciler.timer` live but `docs-reconciler.timer` "could not
+      be found", and this slot's sandbox has no root (`sudo -n true` → "no new privileges flag is set" — containerized,
+      no escalation path exists from a worker session). Skipping this task back to the queue with `reason_code=PARKED`
+      rather than re-attempting — only `sudo bash scripts/install-docs-reconcile-timer.sh` (+ a
+      `sudo systemctl start docs-reconciler.service` kick, or wait for its first natural elapse) remains, and it is
+      root-only exactly as BLK-f09e9ca9 already found.
 
 ## Progress Log
 
