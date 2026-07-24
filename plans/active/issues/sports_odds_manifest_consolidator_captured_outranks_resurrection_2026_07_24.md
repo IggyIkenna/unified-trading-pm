@@ -12,6 +12,7 @@ summary:
   `sports-fixtures-job.parquet`) holds the stale row, so the resurrection source is not the documented
   `_legacy_guard`-exempted path — root cause not yet isolated.
 status: open
+sequential: true # real dependency chain: isolate source (DIAG -001) -> fix (CODE -002) -> re-verify (DATA -003)
 nature: issue
 asset_group: [sports]
 stage: [data]
