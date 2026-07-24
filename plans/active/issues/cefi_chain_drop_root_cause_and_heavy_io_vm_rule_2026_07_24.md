@@ -34,7 +34,10 @@ code_refs:
   [
     instruments-service/scripts/complete_cefi_manifest_canonical_dedup_2026_07_17.py,
     instruments-service/scripts/complete_cefi_manifest_canonical_dedup_v2_2026_07_20.py,
+    instruments-service/scripts/investigate_cefi_dedup_residual_lossy_2026_07_24.py,
+    instruments-service/scripts/verify_cefi_dedup_key_fold_2026_07_24.py,
     market-tick-data-service/scripts/migrate_cefi_tardis_filename_canonical_2026_07_17.py,
+    deployment-service/scripts/vm/launch-canonical-migration-vm.sh,
   ]
 execution_scope: orchestrator-agent
 drift_direction: advance-code
@@ -160,6 +163,53 @@ exercising the exact real row shapes end-to-end. A clean full `--apply`-path dry
 `V2 SUMMARY`/`chain_lossy` log line reading exactly 28, `TOLERATED` not `STOP`) is still recommended as the FIRST step
 before the actual Surface C `--apply`, ideally at a quieter host-load moment.
 
+## Finding 6 (2026-07-24, later still) — direct in-session `--apply` attempts were killed by shared-host `earlyoom`; moved to an isolated VM; the VM attempt then OOM'd too (exit 137) even on e2-standard-8 (32GB) — needs a bigger machine
+
+**Root cause of the repeated signal-143 kills on direct in-session dry-run/`--apply` attempts** (4 total, at
+inconsistent elapsed points 4-20min): this shared multi-agent host runs `earlyoom -m 10 -s 10` (SIGTERM-first OOM
+daemon; confirmed via `systemctl list-units` + `ps aux | grep earlyoom`) — a multi-GB-RSS pandas run competing with ~20
+other concurrent agent sessions for the host's 15Gi RAM crosses earlyoom's 10% threshold and gets SIGTERM'd. NOT a code
+bug; independently confirmed via (a) a full-corpus dry-run that DID complete cleanly (exit 0) both before and after the
+fix, (b) a full-corpus investigation run that also completed cleanly, and (c) a fast local synthetic-data test — see
+Finding 5.
+
+**Fix: moved the apply itself onto isolated, dedicated infra** rather than keep retrying on the contended shared host,
+per the workspace's own heavy-I/O-on-VM rule (Finding 4). Added a new `cefi-dedup-apply` category to
+`deployment-service/scripts/vm/launch-canonical-migration-vm.sh` (`deployment-service@66298d43`) — mirrors the existing
+`tradfi-catalogue-canon` category's `VM_SERVICE=instruments_service` re-homing trick, reuses ALL the launcher's existing
+safety machinery (tarball-freshness pre-check, SPOT-preemption signal + relaunch params, pin registry,
+fleet-observability labels) rather than hand-rolling a bespoke `gcloud compute instances create`. Verified the floating
+instruments-service tarball actually contained the shipped fix
+(`lc_verify_tarball_freshness ... LC_TARBALL_FRESHNESS=enforce` → fresh at `b92fd53d7312`, confirmed
+`git merge-base --is-ancestor 654d694f b92fd53d7312`) before launching for real.
+
+**The VM launch itself worked correctly** (STARTED <60s, dependencies verified OK, `PIPELINE_HEARTBEAT` every 60s,
+`DEPLOYMENT_STARTED` event registered) — but the actual `--apply` run inside it was killed at `22:11:04Z` (~2.5 min
+after the python process started, right after the `CULL PACIFICA-SOLANA` log line — the SAME early point several of the
+shared-host dry-run attempts also died at) with `bash: line 1: 7242 Killed` / `[vm-exec] command exited rc=137` — **exit
+137 = SIGKILL, not the SIGTERM/143 pattern from the shared host.** This is a DIFFERENT failure mode: a genuine OOM on a
+DEDICATED `e2-standard-8` (32GB RAM, zero other tenants) VM. Root cause: `--apply` loads `columns=None` (the FULL
+manifest schema, every column) vs. the dry-run's `_DRYRUN_COLS` projection (~11 columns) — evidently more than 32GB once
+combined with `_canonicalize_blob`'s per-unique-tuple pure-Python classification loop + the new
+`_effective_dedup_key`/`_dedup_blob` string-concat/sort overhead. **NOT a code correctness issue** — the
+STOP-ON-SURPRISE gates + snapshot/write never even run before this point, so **zero mutation occurred** (confirmed: no
+"Backed up original index"/"Wrote canonicalised index" log lines).
+
+**Fix for next attempt**: relaunch `cefi-dedup-apply` in `full` mode with `MACHINE_TYPE=e2-standard-16` (64GB — matches
+this exact launcher's own documented precedent, "TradFi v9 migration... OOM-killed on e2-standard-8... per-year
+chunking + 64GB is the fix"). If that ALSO OOMs, `e2-standard-32` (128GB) is the next step up, or chunk the apply itself
+(not yet needed — untried at 64GB).
+
+**Process near-miss caught by this exact `/pre-compact` audit (do not repeat)**: the VM's `--apply` was launched at
+`22:06:01Z` while the consolidator cron was **ENABLED** (resumed earlier this session after a prior failed direct
+attempt, and never re-paused before the VM launch) — i.e. the drain gate was NOT in place for this attempt. **No actual
+harm** (the run OOM'd before reaching any snapshot/write code path, verified above), but this is a real process gap,
+structurally the same class of mistake as Finding 3 ("a safety-critical external state must be checked directly every
+time it matters"). **MANDATORY for every future attempt**:
+`gcloud scheduler jobs pause uts-prod-manifest-consolidator-market-data-cefi-cron --location=asia-northeast1`, verify
+`PAUSED` via `gcloud scheduler jobs describe`, **THEN** launch/relaunch the VM — never launch first and pause "after" or
+"in parallel."
+
 ## Finding 3 — consolidator cron was mistakenly left PAUSED for ~16 hours
 
 `gcloud scheduler jobs describe uts-prod-manifest-consolidator-market-data-cefi-cron --location=asia-northeast1` showed
@@ -194,13 +244,13 @@ individual tasks), so all further heavy-I/O work should run from there.
 
 ## What's left (unchanged from the parent plan's last-known Deferred-work table, ~13:35Z revision)
 
-| #   | Item                                                                                                   | State                            | Notes                                                                                                                                                                                                                                                                                                              |
-| --- | ------------------------------------------------------------------------------------------------------ | -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| 2b  | LATE colliding-venue renames                                                                           | Not done                         | Needs a properly-scoped (`--start-date`/`--venue`) run — the unscoped attempt above was killed; run from the migrated VM                                                                                                                                                                                           |
-| 2c  | MID window (KRAKEN-SPOT `ADA/USD.parquet` spurious hive-segment) + colon_wire (1,697) + loop-until-dry | Not done                         | Next after 2b                                                                                                                                                                                                                                                                                                      |
-| 3   | Surface C v2 manifest apply                                                                            | Code-level UNBLOCKED (Finding 5) | The `underlying`+`chain` key-fold fix is SHIPPED (`instruments-service@654d694f`) — chain-drop invariant now fully understood (0 DERIBIT/ASTER, 28 tolerated BITFINEX-SPOT/BYBIT-SPOT, see Finding 5). The apply itself (pause cron → fresh dry-run → `--apply` → verify → resume) has NOT run yet — do that next. |
-| 6   | LIGHTER-ZKSYNC numeric-stem GCS rename backfill (~11,283 objects)                                      | Not done                         | Resolver code SHIPPED (`mtds@8835b899`); dry-run + apply itself never attempted                                                                                                                                                                                                                                    |
-| 9   | Final 4-surface done-state re-proof + plan archival                                                    | Cannot be done yet               | Gated on 2b/2c/3/6 all landing                                                                                                                                                                                                                                                                                     |
+| #   | Item                                                                                                   | State                                                  | Notes                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| --- | ------------------------------------------------------------------------------------------------------ | ------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2b  | LATE colliding-venue renames                                                                           | Not done                                               | Needs a properly-scoped (`--start-date`/`--venue`) run — the unscoped attempt above was killed; run from the migrated VM                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| 2c  | MID window (KRAKEN-SPOT `ADA/USD.parquet` spurious hive-segment) + colon_wire (1,697) + loop-until-dry | Not done                                               | Next after 2b                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| 3   | Surface C v2 manifest apply                                                                            | Code-level UNBLOCKED; infra attempt failed (Finding 6) | The `underlying`+`chain` key-fold fix is SHIPPED (`instruments-service@654d694f`) — chain-drop invariant fully understood (0 DERIBIT/ASTER, 28 tolerated BITFINEX-SPOT/BYBIT-SPOT). A dedicated-VM `--apply` attempt (`cefi-dedup-apply` category, `deployment-service@66298d43`) OOM'd (exit 137) on `e2-standard-8` (32GB) — the full-schema `columns=None` load is heavier than the dry-run's projection. Zero mutation occurred. **Next: relaunch with `MACHINE_TYPE=e2-standard-16`, cron PAUSED first (verify via `gcloud scheduler jobs describe` before AND after) — see Finding 6.** |
+| 6   | LIGHTER-ZKSYNC numeric-stem GCS rename backfill (~11,283 objects)                                      | Not done                                               | Resolver code SHIPPED (`mtds@8835b899`); dry-run + apply itself never attempted                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| 9   | Final 4-surface done-state re-proof + plan archival                                                    | Cannot be done yet                                     | Gated on 2b/2c/3/6 all landing                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
 
 Items 1 / 2a / 4 / 4b / 5 / 7c from the parent plan are DONE (unchanged, see the parent's own last-committed revision,
 commit `6cb36c9d2`, for that history). Item 7 (DERIBIT combo partition-move) and item 8 (`slot-cron-ff-pull.sh` audit)
@@ -209,8 +259,13 @@ remain operator-owned / out of `/autonomous` scope, unchanged.
 ## Recommended next
 
 1. ~~Fix the DERIBIT chain-BUNDLE `underlying`-key gap~~ — **DONE, see Finding 5** (`instruments-service@654d694f`).
-2. Surface C v2 apply: pause consolidator → fresh dry-run (confirm `chain_lossy` reads exactly 28, `TOLERATED` not
-   `STOP`) → `--apply` → verify → resume.
+2. Surface C v2 apply, on the `cefi-dedup-apply` VM category (Finding 6), IN THIS EXACT ORDER: (a) pause
+   `uts-prod-manifest-consolidator-market-data-cefi-cron`, verify `PAUSED` directly; (b)
+   `bash deployment-service/scripts/vm/launch-canonical-migration-vm.sh cefi-dedup-apply <today> <today> full MACHINE_TYPE=e2-standard-16`
+   (bump further to `e2-standard-32` if this ALSO OOMs); (c) watch
+   `gs://deployment-scripts-central-element-323112/vm-logs/<vm>/run.log` for `V2 SUMMARY`/`chain_lossy` (expect ~28,
+   `TOLERATED`) then `V2 APPLY COMPLETE + GATE GREEN`; (d) verify via a fresh dry-run; (e) resume the cron, verify
+   `ENABLED` directly.
 3. LATE colliding-venue renames, properly scoped this time (`--start-date` near the actual regression onset, not the
    full 2019 corpus — the fresh 4-surface reverify from ~01:05Z today pinpoints 2025-12-15/2026-02-01/2026-05-01 as the
    low-canonical-fraction dates).
