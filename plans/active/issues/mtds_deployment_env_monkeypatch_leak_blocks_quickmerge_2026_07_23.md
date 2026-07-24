@@ -23,7 +23,7 @@ summary: >-
   (pytest-xdist worker-teardown edge case vs an async/asyncio-mode interaction -- this test file's surrounding warnings
   included multiple "coroutine was never awaited" RuntimeWarnings, which is at least circumstantially suggestive of
   async-fixture-teardown fragility, but this was NOT confirmed as the mechanism).
-status: resolved
+status: open
 nature: issue
 asset_group: [meta]
 stage: [data]
@@ -50,12 +50,7 @@ source: >-
   unrelated, isolated new file with zero import/call overlap with either failing test's code path) — see
   plans/active/defi_consolidated_closeout_2026_07_18.md "Glued-id manifest rebuild verify + delete `_migrated_` markers"
   row for the parent task.
-resolved_by: >-
-  market-tick-data-service@bc5d1490 (structural fix: PYTEST_WORKERS=1) + market-tick-data-service@a65117eb (the
-  originally-blocked delete-tool one-off, rebased/landed alongside). See "Resolution (2026-07-23, follow-up session)"
-  below — the exact leak MECHANISM was NOT conclusively pinned despite extensive further investigation; what shipped is
-  a structural workaround (serialize pytest) that removes multi-worker concurrency, the one condition every observed
-  failure shared, not a root-cause code fix.
+resolved_by:
 ---
 
 ## What was observed (measured, not inferred)
@@ -229,3 +224,43 @@ directly.
 - Whether OTHER tests beyond these 2 could be silently affected by whatever this mechanism is (any test relying on
   `DEPLOYMENT_ENV` unset/prod-default under `-n 2`) was still not swept this session — out of scope for a
   quickmerge-unblock task, worth a dedicated audit if the repo ever re-enables multi-worker pytest.
+
+## Update 2026-07-24 — REOPENED: 5 consecutive quickmerge attempts hit the identical failure UNDER CONFIRMED SERIAL
+
+## EXECUTION, disproving the "PYTEST_WORKERS=1 is a structural, mechanism-independent guarantee" claim above
+
+Attempting to ship an unrelated, independently-verified-green DeFi fix (`liquidations_handler.py` + 5 sibling handlers'
+timestamp-glued empty-marker defect — `defi_lst_oracle_timestamp_glued_instrument_id_2026_07_20.md`) via
+`bash scripts/quickmerge.sh --agent --files ...`, the identical 2 tests
+(`test_prediction_stays_prod_without_is_test_run`, `test_adapter_resolves_canonical_cefi_bucket_is_test_run_aware`)
+FAILED **5 consecutive times**, with the SAME `AssertionError: market-data-tick-pred-dev-test-project` signature as
+every prior occurrence. Each run's timing (`135.61s`-`177.37s`) is consistent with genuine serial execution (matches
+this doc's own previously-measured `~150-162s` serial baseline, not the `~85-110s` `-n 2` baseline) — confirmed
+`PYTEST_WORKERS=${PYTEST_WORKERS:-1}` was still correctly pinned in `scripts/quality-gates.sh` throughout (checked
+directly, not assumed).
+
+**This directly falsifies the prior "structural guarantee" framing** ("removing multi-worker concurrency removes a
+NECESSARY precondition for the bug... this is a structural guarantee, not a probabilistic improvement"). It is neither —
+the bug reproduced 5/5 times under the exact configuration that was supposed to make it structurally impossible.
+
+**New correlated observation (not yet proven causal)**: `ps aux` + `uptime` during these failures showed genuinely heavy
+CONCURRENT host load — multiple OTHER agent slots (`.tabs/2`, `.tabs/3`) running their own full `quality-gates.sh`
+(pytest, across market-tick-data-service, execution-service, and unified-trading-pm simultaneously) at the same time,
+load average 5.5-7.5 on what were previously idle-ish measurements. This is consistent with, but does not prove, the
+"genuine cross-PROCESS or cross-worker-timing effect" theory this doc's original session already flagged as "most
+consistent with" (line ~205 above) — now with 5 more real occurrences all coinciding with confirmed heavy host
+contention, this is the strongest evidence yet for a contention-correlated (not xdist-specific) mechanism, but still not
+a controlled, isolated reproduction.
+
+**Status reopened to `open`** (was `resolved`) — the practical impact (quickmerge blocked) is NOT resolved; it recurred
+worse than before. `PYTEST_WORKERS=1` is kept for now (removing it would be a further regression, not a fix — no
+evidence it made things worse), but nobody should cite it as a structural fix going forward. The DeFi fix commit itself
+(`market-tick-data-service@84914ff2`) is safe — committed locally, verified against an EARLIER genuinely-clean
+standalone `quality-gates.sh` run this session (6849 passed, 0 failed, before any of these 5 failures) — the failures
+are in files this commit never touches. Shipping is paced to retry with real spacing between attempts (not back-to-back,
+to let host contention actually clear) rather than continuing to burn cycles on immediate retries.
+
+**Recommended next step for whoever picks this up**: if this keeps recurring, the next diagnostic is a CONTROLLED
+reproduction — deliberately generate host contention (e.g., a busy-loop or a second concurrent `quality-gates.sh`
+invocation in the SAME repo) while running just these 2 tests in a tight loop, to test the contention-correlation theory
+directly instead of relying on organic/observed-in-passing contention.
