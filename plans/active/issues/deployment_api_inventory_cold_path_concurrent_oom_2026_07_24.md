@@ -140,12 +140,11 @@ lines appear, AND that both calls return real (non-empty) data, before closing t
 
 ## Todos
 
-- [ ] [BACKEND] P0. Re-bound total concurrent full-census fan-out in `deployment_api/routes/deployments_inventory.py` so
-      2+ different cache-key cold/stale-refresh computations can no longer run truly concurrently (pick one of the 4
-      candidate approaches above, or a better one) — reproduce THIS doc's exact trigger (a default-region poll, then
-      ~45s later an `all_regions=true` poll) against the fix and confirm no `Memory limit ... exceeded` /
-      `Container terminated on signal 9` log lines, and that both calls return real non-empty data (repo:
-      deployment-api).
+- [x] ✅ [BACKEND] P0. Re-bound total concurrent full-census fan-out in `deployment_api/routes/deployments_inventory.py`
+      so 2+ different cache-key cold/stale-refresh computations can no longer run truly concurrently —
+      deployment-api@91dc53c (candidate approach 1: `_inventory_refresh_pool` `max_workers=2` → `max_workers=1`) + 2 new
+      regression tests proving serialization at the pool level (unit-level reproduction; the live Cloud Run
+      re-verification is the `[REVIEW]` todo below, now gated behind this one).
 - [ ] [REVIEW] P1. Once the todo above ships, re-run the full
       `deployment_registry_reaper_not_draining_stale_entries_2026_07_24.md` verification again (active/ count
       before/after, 3 consecutive inventory calls incl. a cold one) — only then consider flipping that plan's `[REVIEW]`
@@ -166,3 +165,21 @@ lines appear, AND that both calls return real (non-empty) data, before closing t
   prerequisite existed. Fixed the plan-authoring gap: flipped `sequential: true` above so future regens correctly gate
   this doc's `[REVIEW]` todo behind its `[BACKEND]` todo. Released task `-002` back to the queue via
   `/skip-current-task` (not attempted — there is nothing to verify yet) so it gets picked up once `-001` ships.
+- **2026-07-24 (slot-6, backend_engineer)**: Shipped candidate approach 1 —
+  `_inventory_refresh_pool = ThreadPoolExecutor(max_workers=2, ...)` → `max_workers=1` in
+  `deployment_api/routes/deployments_inventory.py`, restoring the OLD code's process-wide serialization of cold/stale
+  census computations (only one in flight at a time) while keeping the NEW per-caller 45s bound in `_load_inventory`
+  untouched — the two properties are orthogonal, confirmed by inspecting `_kick_background_refresh`/`_load_inventory`
+  (the bound wait is on `future.result(timeout=...)`, independent of pool size). Added two regression tests in
+  `tests/unit/test_route_deployments_inventory.py`: `test_inventory_refresh_pool_is_bounded_to_one_worker` (pins the
+  pool size) and `test_inventory_refresh_pool_serializes_different_cache_keys` (submits two blocking tasks to the ACTUAL
+  production pool object and proves the second never starts until the first releases — the direct unit-level
+  reproduction of "2 different cache-key refreshes overlap" without needing live GCP/Cloud Run infra). SCOPE SPLIT: this
+  BACKEND todo ships the code fix + the closest feasible non-live reproduction; the `[REVIEW]` P1 todo below (now
+  correctly gated behind this one via `sequential: true`) is the LIVE reproduction against the deployed Cloud Run
+  revision and stays open until that rollout happens. ALSO FLAGGING (not fixed, out of this todo's scope): a sibling
+  pool in `deployment_api/routes/vm_deployments.py` (`_vm_deployments_refresh_pool`, still `max_workers=2`,
+  `tests/unit/test_vm_deployments_cache.py`) follows the identical stale-while-revalidate pattern this issue doc's own
+  summary says was mirrored FROM — same theoretical OOM shape (2 different cache keys' full registry+Compute-API census
+  fanning out concurrently), just not yet confirmed live. Worth its own follow-up todo before it reproduces in prod the
+  same way.
