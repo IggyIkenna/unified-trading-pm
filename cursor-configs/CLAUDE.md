@@ -349,8 +349,12 @@ everything else. SSOT: `/codex/11-project-management/doc-frontmatter-schema.md` 
   403s + **37,212 FALSE `attempted_failed` rows** (manifest corruption, not just waste) + coverage going BACKWARD; N=1
   measured ZERO 403s. Scale on the ONE IP — `SINGLE_VM_QUEUE=1` bundling + `TARDIS_MAX_CONCURRENT_DOWNLOADS` /
   `TARDIS_BOOK_SNAPSHOT_MAX_CONCURRENT` (defaults 16/4 leave the box ~93% idle) — NEVER more VMs. Non-Tardis venues
-  (HYPERLIQUID/ASTER/LIGHTER/EXTENDED) are exempt. SSOTs: `/codex/05-infrastructure/vm-launcher-runbook.md` (§ Tardis
-  cap), `…/spot-vms-for-backfill.md`, `…/vm-tarball-deployment.md`, `…/deployment-observability.md`.
+  (HYPERLIQUID/ASTER/LIGHTER/EXTENDED) are exempt. **Regularly check every running VM for preemption-without-auto-
+  recovery and for silent `attempted_failed` billing-waste** (a non-retriable error re-attempted forever costs real
+  money every wave) — run `/vm-preemption-billing-waste-audit`; every agent watching VMs should use it, not just when an
+  incident is already suspected. SSOTs: `/codex/05-infrastructure/vm-launcher-runbook.md` (§ Tardis cap),
+  `…/spot-vms-for-backfill.md`, `…/vm-tarball-deployment.md`, `…/deployment-observability.md`,
+  `…/vm-preemption-and-billing-waste-monitoring.md`.
 - **Working on DeFi EXECUTION?** Credential convention; `DefiErrorCode` (35 codes);
   IS→MTDS→features-onchain→strategy→execution; removed providers (Elysium/Arkham/Bloxroute/Infura/Kaiko) — do NOT
   reference (**Massive (formerly Polygon.io) REMOVED as a tradfi source 2026-07-19** — operator ruling: Databento =

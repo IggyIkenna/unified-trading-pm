@@ -18,6 +18,7 @@ related:
     /codex/02-data/availability-manifest-and-data-status.md,
     /codex/02-data/honest-absence-downstream-handling.md,
     /codex/05-infrastructure/deployment-observability.md,
+    /codex/05-infrastructure/vm-preemption-and-billing-waste-monitoring.md,
   ]
 created: 2026-06-22
 authoritative_for:

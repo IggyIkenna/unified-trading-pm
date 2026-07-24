@@ -18,6 +18,7 @@ related:
     /codex/05-infrastructure/vm-log-archival.md,
     /codex/05-infrastructure/spot-vms-for-backfill.md,
     /codex/05-infrastructure/launcher-script-ssot.md,
+    /codex/05-infrastructure/vm-preemption-and-billing-waste-monitoring.md,
   ]
 created: 2026-05-15
 authoritative_for: [VM launcher per-script usage runbook]

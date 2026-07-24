@@ -31,7 +31,13 @@ tags:
     ao-dispatch,
     background-agent,
   ]
-related: [plans/active/task_template.md, plans/PLAN_FORMAT.md, plans/active/sports_consolidated_closeout_2026_07_19.md]
+related:
+  [
+    plans/active/task_template.md,
+    plans/PLAN_FORMAT.md,
+    plans/active/sports_consolidated_closeout_2026_07_19.md,
+    /plans/active/data_pipeline_e2e_milestones_gate_2026_07_24.md,
+  ]
 created: "2026-07-23"
 parent_epic: agent_operating_framework_master
 priority: P1
@@ -144,13 +150,23 @@ without inventing a second spec. Finding C (stale checkboxes) was already Phase 
       fixed directly: tradfi/defi got real `depends_on`+`gate_on_depends` wiring; cefi's Track 7 delete-after- verify
       todo (a genuine prod-GCS permanent-data-loss risk if it raced ahead of its own verify step under AO's
       same-priority concurrent-dispatch default) got tagged `[OPERATOR]` per finding F. `pm@<commit-pending>`.
-- [ ] [SCRIPT] P1. **Operator ruling 2026-07-23: hard-fail on EVERY check (not the hard/soft split), gated on a
-      prerequisite** — wire the full `run_hygiene_sweep.sh` into `quality-gates.sh` for `unified-trading-pm` with ALL
-      checks (including the currently-"soft" ones: line caps, estimate sanity, superseded-in-active, codex refs,
-      parent-epic alignment, CLAUDE↔SUB_AGENT parity) blocking the commit, matching the sweep's `--ci` exit-1 behavior
-      but extended past just the 7 currently-hard checks. **Prerequisite, NOT done here**: the sweep scans the WHOLE
-      `plans/active/` corpus, not just a commit's touched files — measured 2026-07-23, 30 pre-existing plans already
-      violate `check_line_caps.sh`'s own internal hard threshold (23 non-umbrella >1000L, 7 umbrella >2000L, e.g.
+- [x] [SCRIPT] P1. ✅ **DONE 2026-07-24 — `pm@0bba96586`** ("flip check_line_caps.sh from advisory to a real hard
+      gate"), landed by a concurrent session. The line-caps prerequisite this todo was gated on ALSO resolved the same
+      day via a broader path than "trim all 30 first": the operator ruled the three-tier umbrella-exemption model out
+      entirely (flat 1000L active-plan / 2000L epic cap, no exceptions), which is a simpler, stricter policy than what
+      this todo originally described — `check_line_caps.sh`'s SCOPED mode (the prek pre-commit hook) now hard-fails on
+      any staged over-cap plan/epic; FULL-CORPUS mode uses a shrinking-ratchet baseline (`line_caps_baseline.yaml`) so
+      pre-existing debt doesn't retroactively block unrelated commits. All 4 lines of the architecture are confirmed
+      live as of this update — see the acceptance-test todo below for the one remaining verification step. Original todo
+      text preserved below for the historical record.
+- [x] [SCRIPT] P1. ✅ **[HISTORICAL DETAIL for the DONE todo above — not a separate open item]** Operator ruling
+      2026-07-23: hard-fail on EVERY check (not the hard/soft split), gated on a prerequisite** — wire the full
+      `run_hygiene_sweep.sh` into `quality-gates.sh` for `unified-trading-pm` with ALL checks (including the
+      currently-"soft" ones: line caps, estimate sanity, superseded-in-active, codex refs, parent-epic alignment,
+      CLAUDE↔SUB_AGENT parity) blocking the commit, matching the sweep's `--ci` exit-1 behavior but extended past just
+      the 7 currently-hard checks. **Prerequisite, NOT done here**: the sweep scans the WHOLE `plans/active/` corpus,
+      not just a commit's touched files — measured 2026-07-23, 30 pre-existing plans already violate
+      `check_line_caps.sh`'s own internal hard threshold (23 non-umbrella >1000L, 7 umbrella >2000L, e.g.
       `sports_manifest_canonicalisation_2026_06_01.md` at 4733L; full list via
       `bash scripts/plan-hygiene/check_line_caps.sh`), plus 19 more in the 500-1000L soft range — a blanket flip today
       would immediately block every future plan-touching commit workspace-wide on debt nobody just created. **Operator
@@ -221,8 +237,17 @@ without inventing a second spec. Finding C (stale checkboxes) was already Phase 
       run today confirms the current state: 0 hard failures / 1 soft warning (line caps), matching the prerequisite's
       own "0 corpus violations on the other 6 currently-soft checks, line-caps is the sole blocker" framing. Since the
       Gate requires **all four** lines producing their expected signal and line 2 structurally cannot fire while
-      unwired, this item stays open rather than being force-closed on 3/4 — **re-open this exact check once
-      `plan_line_cap_remediation_2026_07_23.md` finishes and this SCRIPT todo ships.**
+      unwired, this item stayed open rather than being force-closed on 3/4. **UPDATE 2026-07-24 (later same day): line 2
+      IS NOW LIVE** — a concurrent session shipped `pm@0bba96586` ("flip check_line_caps.sh from advisory to a real hard
+      gate") plus a broader same-day operator ruling REMOVING the `umbrella: true` exemption entirely (flat 1000L
+      active-plan / 2000L epic cap, no exceptions — `scripts/plan-hygiene/check_line_caps.sh`'s header comment is now
+      the authoritative statement of this policy, superseding the three-tier umbrella model this todo's own text above
+      describes as still-pending). All 4 lines are now confirmed live — the acceptance-test re-run itself is the one
+      remaining step before this todo can flip. Separately, **`data_pipeline_e2e_milestones_gate_2026_07_24.md`** was
+      authored this same day as a companion, DATA-PIPELINE-CONTENT-correctness gate (14 cross-AG criteria) alongside
+      this doc's PLAN-FORMAT-correctness scope — line 3 (`/plan-reconcile`)'s hunter list was extended with a 6th class
+      ("data-pipeline-milestones drift") to check it going forward, so the "runs automatically" guarantee this
+      architecture provides for format now also covers that content.
 
 ## Codex SSOTs
 
