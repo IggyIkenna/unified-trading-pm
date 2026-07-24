@@ -628,6 +628,20 @@ instruments in one `instruments.parquet` with `available_from/to`).
       be written. The 12 EXISTING glued rows already in the manifest from before the fix still need a targeted
       re-verify/reclassify pass — tracked at Track 1's line 712-equivalent item below, not a distinct gap. (repo:
       market-tick-data-service)
+
+      **RE-VERIFIED 2026-07-24 (this pass) — the `--apply` handoff is still NOT unblocked; NOT 0 glued ids.** The 9
+          ORCA `dex_pool_state` cells (2025-12-23..12-31) finished migrating clean this session (all 9 confirmed
+          `errors=0` across a retry chain: `leafparallel`+`lpar5`+`lpar7` VMs, cumulative `cells=1+3+5=9`) and a scoped
+          manifest rebuild ran after — but a fresh `verify_defi_glued_ids_2026_07_24.py` run still shows **21 glued-id
+          rows** (unchanged: the same 9 ORCA + the same 12 liquidations). Root cause (code-read, not inferred): neither
+          the migration, the scoped rebuild, nor this delete-marker script (GCS-objects-only, confirmed via its own
+          docstring) ever **retracts** a pre-existing manifest row once its source object is renamed to `_migrated_*` —
+          the old glued-id row and the new per-instrument rows have different `instrument_id`s, so upsert never
+          supersedes the old one. Full findings + recommended next step (a manifest-row-level purge, not yet built):
+          `plans/archive/issues/mtds_defi_migration_cell_stall_untimed_gcs_read_2026_07_22.md` addendum "tick 3"
+          (2026-07-24). **The `--apply` operator handoff at the parent plan (line 708) stays gated — do not consider it
+          unblocked by the 9 ORCA cells finishing; a separate manifest-side fix is still required first.**
+
 - [x] ✅ [DATA] P1. **Verify the fake-history relabel-forward migration to actual completion** (todo 3,
       `/plans/active/issues/defi_solana_dex_pools_fake_history_recurrence_prd_bucket_2026_07_23.md`) — **VERIFIED
       COMPLETE 2026-07-24 ~12:09 UTC**: all 4 ON_DEMAND VMs (`d01to05v3`/`d06to09v3`/`d10to13v3`/`d14to17v3`) terminated
@@ -645,12 +659,24 @@ instruments in one `instruments.parquet` with `available_from/to`).
       (`gs://{bucket}/lst_rates/date=.../lst_rates_{ts}.parquet`), bypassing `canonical_write.py`'s
       `asset_group=`/`pipeline_mode=` layout entirely — a genuinely separate gap from C2/C9, flagged but never filed as
       its own issue. (repo: market-tick-data-service)
-- [ ] [BACKEND] P2. **Cherry-pick the unshipped `is_defi_force_include_pool` wiring from instruments-service
-      `stash@{0}`** (diff-confirmed 2026-07-22 vs HEAD — NOT fully redundant with already-shipped work). The UAC-side
-      predicate (`unified_api_contracts.registry.defi_major_assets.is_defi_force_include_pool`,
-      `DEFI_FORCE_INCLUDE_POOLS`) exists and is exported but is called from NOWHERE in current instruments-service (0
-      hits). Wire it into `filter_defi_instruments_by_relevance` (`orchestrator/defi.py`) + `_add_force_include`
-      (`scripts/build_instrument_catalogue.py`) — this is the high-TVL Raydium pool force-include behavior R5 flagged
-      (32 legacy-only pools incl. XMR/USDC $47M, BNB/USDC $18M). Discard the rest of the stash
-      (venue-list/factory-registration/golden hunks are already superseded by current HEAD). Full evidence:
-      `/plans/archive/issues/uac_is_defi_oracle_dex_adapter_drift_2026_07_20.md`. (repo: instruments-service)
+- [x] ✅ [BACKEND] P2. **Cherry-pick the unshipped `is_defi_force_include_pool` wiring — SHIPPED 2026-07-24
+      `instruments-service@4e97a82e`** ("wire is_defi_force_include_pool into DEX relevance filter + catalogue
+      force_include"), confirmed ancestor of `origin/live-defi-rollout`. The UAC-side predicate is now wired into
+      `filter_defi_instruments_by_relevance` + `_add_force_include`, covering the high-TVL Raydium pool force-include
+      behavior R5 flagged (32 legacy-only pools incl. XMR/USDC $47M, BNB/USDC $18M). (repo: instruments-service)
+
+- [ ] [DOC] P1. **`defi_consolidated_closeout_2026_07_18.md` is over the line-cap hard gate (1546L vs the 1000L hard
+      cap, `check_line_caps.sh` — the `umbrella: true` exemption was removed 2026-07-24, two-tier policy now: 2000L for
+      real `plans/epics/*.md` only, flat 1000L hard for everything in `plans/active/`).** Discovered 2026-07-24
+      (session 3) when a checkbox-flip commit to that file was blocked by the scoped prek hook (files a commit touches
+      must be under cap, no ratchet tolerance for pre-existing debt on a file you're editing). At least 2 pending edits
+      (a cefi/prediction audit checkbox flip + an orchestration Progress Log entry) could not land as a result — both
+      got lost to concurrent working-tree churn on the same file before this todo was filed, but the underlying facts
+      survive elsewhere (committed independently: the audit's own issue doc
+      `issues/cefi_available_at_wallclock_despite_deterministic_row_timestamp_2026_07_24.md`, and the orphan-sweep
+      finding in `issues/estate_orphan_assessment_2026_07_21.md`) — nothing load-bearing was actually lost, but the
+      parent plan itself needs a proper split/trim pass (mirroring this file's own 2026-07-24 extraction from the same
+      parent) before it can accept further edits at all. Candidates to extract: the "Aggregated source docs" section
+      (large, mostly reference material) and/or the "Contradiction resolution (pre-SSOT) — archived, 95% closed" section
+      (historical, arguably belongs entirely in the already-existing
+      `defi_consolidated_closeout_history_2026_07_18.md`). (repo: unified-trading-pm)
