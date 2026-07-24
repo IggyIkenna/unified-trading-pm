@@ -43,6 +43,12 @@ drift_direction: advance-code
 
 # Docs retrieval-layer reconcile
 
+> **✅ COMPLETE / ARCHIVED — verified-done by plan_reconciler `agt-468155` (2026-07-24).** All 7 todos shipped in
+> `unified-trading-pm@fdbad80ab` (PR #1384), sha reachable on `origin/live-defi-rollout`; all four claimed artifacts
+> verified live in the tree (`scripts/quality_gates/check_doc_retrieval_layer_parity.py`,
+> `cursor-configs/skills/docs-reconcile/SKILL.md`, the AGENTS.md "Doc retrieval" section, and the `quality-gates.sh`
+> post-gate wiring). No un-migrated deferrals. Archived to `plans/archive/2026_07/`.
+
 ## Why
 
 Slack thread (harsh → ikenna, forwarded 2026-07-23): harsh built the grep-native L0→L1→L2→L3 doc-retrieval design
@@ -108,3 +114,9 @@ or a per-type field gets renamed — nothing currently catches that class of dri
   slots landing `docs(plans):` commits every ~20-30s), each attempt racing `check-branch-drift` against quickmerge's own
   ~1-2min internal pass; resolved via the documented pull-`--ff-only`-then-retry loop (never the human-only
   `SKIP_BRANCH_DRIFT` override) until a gap opened.
+
+## Deferred work — migrated to:
+
+none — all 7 todos shipped and verified; the two adjacent findings surfaced during the run (`settings.json` hardcoded
+path; the 12-attempt quickmerge race) were resolved outside this plan per findings-triage and are not open deferrals.
+Archived clean by plan_reconciler `agt-468155` (2026-07-24).
