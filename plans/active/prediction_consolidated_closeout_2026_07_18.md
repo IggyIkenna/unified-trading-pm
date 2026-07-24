@@ -196,6 +196,34 @@ atom). Representative rows:
 Phase-D verify gate MUST assert the atom key is `canonical_question_group` (bundle) / per-CID `instrument_id` (raw),
 never `underlying`.
 
+## Distinct Values / axis-value census (2026-07-20 measured — no standalone census doc exists under that name)
+
+No doc named `distinct_values_noncanonical_audit_2026_07_20.md` exists in the corpus (checked directly) — this section
+cites the real measured run instead: the 2026-07-20 `/data-pipeline-reconciliation` four-surface pass against
+`asset_group=prediction`, full doc at `/plans/audit/results/data_pipeline_reconciliation_prediction_2026_07_20.md`.
+
+- **Prediction's own `instrument_type` axis** (745,136-row manifest census): `PREDICTION_MARKET` 741,029 (99.46%,
+  canonical-cased) · `prediction_market` (lower) 4,001 (0.54%, **C2a REFUSED** — unruled axis, no migration proposed) ·
+  `prediction` 76 + `None` 30 (F2 — malformed VALUE, not casing — **106/745,136 = 0.014%**).
+- **Cross-AG comparison, each AG's own 2026-07-20 reconciliation result doc (not a joint census — categories aren't
+  always the same measurement)**:
+  - cefi: C2a `PERPETUAL` 7,220,102 vs `perpetual` 9,146 (0.127% lower-case tail); separately, 130,130 rows (1.27% of
+    10,282,640) carry a BLANK `instrument_type` (the malformed-VALUE-not-casing analogue of prediction's F2).
+  - tradfi: C2a `EQUITY` 1,685,476 vs `equity` 81,145 (**4.59%** lower-case tail — the largest measured casing tail of
+    the AGs compared here).
+  - defi: both `LENDING`/`lending`, `POOL`/`pool`, `PERPETUAL`/`perpetual` forms present same sampled day — no
+    corpus-wide % measured (single-day sample scope only).
+  - sports: `instrument_type` is not the sports axis of record (keyed on `entity`/`league`/`day` instead) — its own
+    report does not carry a comparable corpus-wide `instrument_type` casing %.
+- **Reading**: on the two axes that WERE measured corpus-wide for more than one AG (malformed-value rate: prediction
+  0.014% vs cefi 1.27%; casing-tail rate: tradfi 4.59% vs cefi 0.127% vs prediction 0.54%), prediction's malformed-VALUE
+  rate is the lowest measured — this is the "prediction already measures cleanest" fact referenced elsewhere in this
+  plan's gap analysis, now cited with its actual numbers rather than left undocumented. This is NOT an unqualified
+  "prediction is cleanest on every axis" claim — the casing-tail axis alone would rank cefi below prediction.
+- [ ] [DATA] P3. Re-run `/data-pipeline-reconciliation prediction` after Phase B's canonicalisation migration lands and
+      record the new run's F2/C2a percentages against the 2026-07-20 baseline above. Done when: the new numbers are
+      cited in this section (or a new dated sub-section) with the new report's path — not just "re-ran, looks fine."
+
 ## MVP universe (the Phase-D / Phase-E readiness target)
 
 - **Venues**: POLYMARKET + KALSHI (`VENUES_BY_ASSET_GROUP["prediction"]`).
@@ -206,6 +234,11 @@ never `underlying`.
   `POLYMARKET_PREDICTION_LEAGUES` (23 football leagues) ∩ Kalshi `KALSHI_SPORTS_TICKER_PREFIXES` (6 football: EPL,
   Bundesliga, La Liga, Serie A, Ligue 1, Champions League) against the 33 API-Football Prediction leagues + ~20
   bookmakers via the Odds API. Start where all three overlap (EPL, top-5 European leagues).
+- **Codex SSOTs (MVP-readiness, batch=live=paper)**: `/codex/09-strategy/operational/paper-batch-live-reconciliation.md`
+  (batch=live determinism spine — paper(W) must equal batch-rerun(W) trade-for-trade, ε=0 PROOF — applies to
+  prediction's MVP backfill the same as every other AG) plus `/codex/04-architecture/prediction-batch-live.md` (already
+  cited in the main Codex SSOTs section above; repeated here because this MVP-universe section previously had no Codex
+  SSOTs list of its own).
 
 Everything below is scoped so these cells are captured, canonical, honestly-covered, smoke-tested green, and (Phase E)
 fixture-linked before MVP backfill.
@@ -237,6 +270,23 @@ fixture-linked before MVP backfill.
 > evidence/prose dropped). Docs with 0 open todos say so explicitly. >8-open docs list every P0/P1 in full and cap P2/P3
 > with a `+N more` marker — nothing is silently dropped. Re-verified 2026-07-24 against the live corpus.
 
+- **This plan's own Phase A-E children (2026-07-24 fork — were listed in the Split-notice table above but not repeated
+  here; added so this index is the single place every source doc lives, including this plan's own forks)**:
+  - **[BACKEND] P0.**
+    [`prediction_phase_ab_residuals_2026_07_24.md`](/plans/active/prediction_phase_ab_residuals_2026_07_24.md) — 9 open
+    (all P0/P1). Top: finish the prediction capture-incident remediation; kill the dead Kalshi `trading-api.kalshi.com`
+    host.
+  - **[UI] P0.**
+    [`prediction_phase_c_data_status_ui_2026_07_24.md`](/plans/active/prediction_phase_c_data_status_ui_2026_07_24.md) —
+    4 open. Top: RE-ADD the data-status "dimensions enumeration" view to deployment-ui/api.
+  - **[DATA] P0.**
+    [`prediction_phase_d_formal_smoke_and_backfill_2026_07_24.md`](/plans/active/prediction_phase_d_formal_smoke_and_backfill_2026_07_24.md)
+    — 3 open (all P0). Top: run `data-pipeline-check-is` for prediction-only, all shards, post-migration; run
+    `data-pipeline-check-mtds` for prediction-only, all shards, post-migration.
+  - **[BACKEND] P1.**
+    [`prediction_phase_e_football_arb_live_2026_07_24.md`](/plans/active/prediction_phase_e_football_arb_live_2026_07_24.md)
+    — 3 open (all P1). Top: verify the end-to-end fixture link on Polymarket + Kalshi soccer; wire the arb engine to
+    CONSUME `af_fixture_id`.
 - **Capture / correctness**:
   - [`plans/active/prediction_capture_incident_remediation_2026_07_06.md`](/plans/active/prediction_capture_incident_remediation_2026_07_06.md)
     (9 open total)
@@ -584,6 +634,41 @@ this section)**:
 - [`plans/active/issues/prediction_arb_live_execution_bridge_2026_07_20.md`](/plans/active/issues/prediction_arb_live_execution_bridge_2026_07_20.md)
   — 0 open todos (closed/archived/record-only)
 
+## Queued audits + reviews (2026-07-24 — distributed from `data_pipeline_e2e_milestones_gate_2026_07_24.md`)
+
+These are new bounded todos for a future dispatched worker — none require the multi-file cross-repo audit itself to be
+done in THIS session; each names a determinable done-when so a worker can pick it up cold.
+
+- [ ] [BACKEND] P2. Audit instruments-service's and market-tick-data-service's prediction adapters (kalshi.py,
+      polymarket/) for dead code, silent fallback branches, and duplicated logic, per
+      `/codex/06-coding-standards/adapter-dead-code-and-fallback-ban.md`. Exact paths:
+      `instruments_service/reference_data/adapters/prediction/kalshi.py` + `.../adapters/prediction/polymarket/`
+      (instruments-service), `.../adapters/prediction/` (market-tick-data-service). Done when: every adapter file in
+      scope has either a filed finding (a new `plans/active/issues/<slug>.md`, one per distinct defect class found) or
+      an explicit "0 findings" line recorded in this plan's Progress Log — not silence.
+- [ ] [DATA] P2. Run `data-pipeline-check-is --asset-group prediction` twice more — a pre-Phase-B baseline checkpoint
+      and a Phase-B mid-migration spot-check — to reach the 3x cadence `task_template.md` finding K requires (checkpoint
+      3, the post-migration final gate, is already the P0 todo in
+      `prediction_phase_d_formal_smoke_and_backfill_2026_07_24.md`). Done when: both runs' report paths + dates are
+      cited in this plan's Progress Log.
+- [ ] [DATA] P2. Run `data-pipeline-check-mtds --asset-group prediction` twice more — the same pre-Phase-B baseline +
+      Phase-B mid-migration checkpoints as the `-is` todo above — to reach the 3x cadence (checkpoint 3 is the sibling
+      P0 todo already in `prediction_phase_d_formal_smoke_and_backfill_2026_07_24.md`). Done when: both runs' report
+      paths + dates are cited in this plan's Progress Log.
+- [ ] [DATA] P2. Verify whether a `/data-pipeline-reconciliation prediction` run predating the confirmed 2026-07-20 one
+      exists in the corpus, then run enough additional dated passes (1 or 2, depending on that answer) to reach 3 total,
+      including one post-Phase-B-migration final-gate pass diffed against the 2026-07-20 baseline. Confirmed baseline:
+      `/plans/audit/results/data_pipeline_reconciliation_prediction_2026_07_20.md`. Done when: 3 dated runs' report
+      paths are cited together in this plan's Progress Log.
+- [ ] [REVIEW] P2. Run the same adversarial AO-dispatch-readiness pass sports's Track Y ran (method: the archived
+      `sports_consolidated_closeout_history_2026_07_24.md`'s "Track Y — PLAN-QUALITY REMEDIATION" section) against this
+      plan, checking for bare `§X` shorthand, ambiguous verbs (absorb/incorporate/handle/address), delete-tagging
+      inconsistency, missing definition-of-done, stale checkboxes, and unsafe digest-checkbox syntax. A same-session
+      self-check while authoring this section found no obvious instance of any of these 6 defect classes as of
+      2026-07-24 (see this plan's 2026-07-24 Progress Log entry) — that was incidental, not an exhaustive pass; this
+      todo is for the real one. Done when: findings (or an explicit "0 findings") are recorded in this plan's Progress
+      Log, mirroring Track Y's format.
+
 ## Deferred work after 2026-07-18 (HELD — unblock when the concurrent tradfi/cefi migrations free the shared files / a drain window opens)
 
 The autonomous slot-2 pass (operator: "prediction-specific files only") shipped every prediction-specific-file-safe
@@ -628,3 +713,11 @@ drain window, or an operator decision. They are ordered, not abandoned — each 
 - **2026-07-24** — Plan line-cap remediation: 4 Phase children extracted (A+B, C, D, E), full Progress Log archived
   verbatim to `prediction_consolidated_closeout_history_2026_07_18.md`, this parent condensed to a lean coordination
   index with an enriched Aggregated source docs index covering every active prediction + prediction-touching plan/issue.
+- **2026-07-24 (later same day)** — Distributed 6 gate-doc todos from `data_pipeline_e2e_milestones_gate_2026_07_24.md`
+  into this file: added a "Distinct Values / axis-value census" section (cites the real 2026-07-20
+  `/data-pipeline-reconciliation` run, since no doc named `distinct_values_noncanonical_audit_2026_07_20.md` exists);
+  added the 4 Phase A-E children to the Aggregated source docs index (previously only in the Split-notice table); added
+  a Codex SSOTs bullet to "MVP universe" citing `/codex/09-strategy/operational/paper-batch-live-reconciliation.md`; and
+  added a new "Queued audits + reviews" section with 5 bounded todos (adapter dead-code audit, -is/-mtds/reconciliation
+  3x-checkpoint top-up, and an adversarial AO-dispatch-readiness pass mirroring sports's Track Y) for a future
+  dispatched worker — none executed in this pass, per the distributing task's scope (documentation placement only).

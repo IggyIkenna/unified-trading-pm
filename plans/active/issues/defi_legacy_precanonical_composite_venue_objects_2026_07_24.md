@@ -100,15 +100,22 @@ it.
   separate legacy tree the foundational migration didn't sweep — not traced.
 - A fix design — this issue is the finding + scoping, not a remediation plan.
 
-## Suggested next steps (not started)
+## Todos
 
-1. Measure true scale: either extend `rebuild_defi_manifest`'s own `unparseable` counter into a logged sample of the
-   actual unparseable paths (cheap — the counter already exists, it just isn't currently surfacing WHICH paths hit it),
-   or a manifest-driven cross-check (days/venues with real GCS presence per a bounded listing vs. zero manifest rows for
-   that venue/day).
-2. Decide fold-vs-migrate: these are 1-row-scale oracle_prices-shaped objects in the sample seen — likely candidates for
-   a small, targeted migration script (parse the LEGACY path + open the parquet's own `instrument_key`/`data_type`
-   columns to re-derive the correct canonical path, rather than trying to infer it from the non-existent path segments)
-   rather than a delete (the content is real, valid data).
-3. File as a proper migration plan once scale is known — this issue doc is the scoping step per CLAUDE.md's findings
-   triage ("audit-scope → wrapper plan").
+- [ ] [DATA] P1. Measure the true scale of this legacy population — either extend `rebuild_defi_manifest`'s own
+      `unparseable` counter into a logged sample of the actual unparseable paths (cheap — the counter already exists, it
+      just isn't currently surfacing WHICH paths hit it), or run a manifest-driven cross-check (days/venues with real
+      GCS presence per a bounded listing vs. zero manifest rows for that venue/day). Definition-of-done: a real count
+      (or a tight bounded estimate) of how many objects across the full date range carry this legacy composite- venue
+      shape, cited against the method used (not a fresh whole-corpus GCS walk — single-walk discipline applies).
+- [ ] [DIAG] P1. Gather the fact needed for the fold-vs-migrate decision below: for a sample of objects in this legacy
+      shape (beyond the single ETHENA example already confirmed), read the parquet content directly and confirm whether
+      they are all small (1-row-scale) valid-data objects like the ETHENA sample, or whether some carry substantial
+      historical data. Definition-of-done: a stated distribution (e.g. "N of M sampled objects are single-row", or a
+      size histogram) that the decision todo below can be answered against.
+- [ ] [OPERATOR] P1. **Decision needed**: fold (migrate each object onto its correct canonical path, parsing the
+      parquet's own `instrument_key`/`data_type` columns to re-derive it) vs. some other disposition — gated on the
+      scale + sample-distribution facts from the two todos above. This is a genuine judgment call, not a mechanical fix
+      (per task_template.md's bounded-outcome rule) — do not execute a fold/migrate without this decision.
+- [ ] [PM] P2. File a proper migration plan once scale + the fold-vs-migrate decision are both in hand — this issue doc
+      is the scoping step per CLAUDE.md's findings triage ("audit-scope → wrapper plan"), not the execution surface.

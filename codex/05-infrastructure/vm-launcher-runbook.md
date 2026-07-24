@@ -517,6 +517,9 @@ no sharded/parallel variant is a gap — file it against the owning consolidated
 
 - `/codex/05-infrastructure/launcher-script-ssot.md` — naming, CODE_BUCKET, tarball patterns
 - `/codex/05-infrastructure/vm-tarball-deployment.md` — tarball creation + deployment
+- `/codex/05-infrastructure/vm-preemption-and-billing-waste-monitoring.md` — regular preemption + `attempted_failed`
+  billing-waste audit contract (`/vm-preemption-billing-waste-audit` skill); run it against every VM class this runbook
+  launches
 - `plans/audit/results/vm_event_emission_audit_2026_05_15.md` — event emission chain
 - `plans/audit/results/vm_security_audit_2026_05_15.md` — shellcheck security audit
 - `deployment-service/deployment_service/vm/vm_zombie_watchdog.py` — VM_PREFIX_TO_BUCKET registry

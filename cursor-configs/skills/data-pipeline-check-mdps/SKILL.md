@@ -172,6 +172,13 @@ cd market-data-processing-service && python3 scripts/pipeline_e2e_check.py \
 them out of the emitted report and feed them to the canonical-migration todo. A clean canonical leg across all AGs is
 what "no orphaned / non-canonical candle data" means.
 
+> **Known gap, not yet implemented (found 2026-07-24, `data_pipeline_e2e_milestones_gate_2026_07_24.md` §5)**: the
+> canonical leg verifies path/id SHAPE but does not currently cross-check, per MVP `(asset_group, data_type)` shard,
+> that MDPS's actual write behavior (candle-processed vs. passthrough) matches the data_type's declared
+> `NEEDS_CANDLE_PROCESSING` value in UAC. Todo: add a check asserting a `NEEDS_CANDLE_PROCESSING=True` shard's output
+> actually went through the candle pipeline (not a bare passthrough) and vice versa — this is a real code change to
+> `market-data-processing-service/scripts/pipeline_e2e_check.py`'s canonical-leg verifier, not a doc-only fix.
+
 ### 3b. What is enumerated per asset_group
 
 - **cefi / defi / tradfi** — `mdps_mvp_universe(ag)` gives the canonical `(venue, instrument_type)` set; data_types come

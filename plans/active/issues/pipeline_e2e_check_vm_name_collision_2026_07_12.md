@@ -113,6 +113,15 @@ truncated + a random 4-char suffix) to `_vm_name()`, keeping the total under 63 
 `vm_zombie_watchdog.py`'s `VM_PREFIX_TO_BUCKET` prefix-match (`name~"^mtds-backfill-{category}-"`) — a suffix change is
 safe there since matching is prefix-only, not confirmed against any other exact-name assumption.
 
+## Todos
+
+- [ ] [CODE] P2. Add a collision-resistant component (e.g. an 8-hex slug of `hash(venue, data_type)`) to
+      `pipeline_e2e_check.py::_vm_name()`, keeping the total name under GCE's 63-char instance-name limit. Verify the
+      change against `vm_zombie_watchdog.py`'s `VM_PREFIX_TO_BUCKET` prefix-match (prefix-only, so a suffix addition is
+      safe) and add a regression test asserting two same-asset_group, same-second shard launches produce distinct VM
+      names. Definition-of-done: the test passes and a real concurrent re-launch of the two documented collision pairs
+      (POLYMARKET book_snapshot_5/trades, KRX trades/corporate_action_confirmed) produces two distinct VMs.
+
 ## Progress log
 
 - 2026-07-12: Filed after reproducing twice independently while re-verifying `data_pipeline_e2e_check_2026_07_10.md`

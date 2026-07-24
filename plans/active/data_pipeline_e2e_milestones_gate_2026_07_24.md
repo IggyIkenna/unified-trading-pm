@@ -91,25 +91,18 @@ reuse audit targets service-vs-library duplication, not adapter-vs-adapter). Cov
 incidental; cefi's own `execution-service` adapters have unaudited parallel `*_ccxt.py`/`*_native.py` pairs per venue
 (binance/bybit/okx) whose live-routing status (both used vs. one dead) is unaddressed anywhere.
 
-- [ ] [BACKEND] P2. **target: `/plans/active/tradfi_consolidated_closeout_2026_07_18.md`** — Audit every adapter/handler
-      module under `instruments-service/instruments_service/reference_data/adapters/tradfi/`,
-      `market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/`, and the tradfi venue files
-      in `execution-service/execution_service/trade_execution/adapters/` for duplicate implementations, runtime fallback
-      masking a real failure, and dead (referenced-but-never-scheduled) code. Definition-of-done: a filed finding (or a
-      stated "clean") per adapter directory, cited with file paths.
-- [ ] [BACKEND] P2. **target: `/plans/active/defi_consolidated_closeout_2026_07_18.md`** — Same audit scoped to
-      `instruments-service/.../adapters/defi/`, MTDS
-      `market_interface/adapters/{defi,defi_live,onchain,onchain_perps}/`, and
-      `execution-service/.../adapters/defi_adapter.py`.
-- [ ] [BACKEND] P2. **target: `/plans/active/cefi_consolidated_closeout_2026_07_18.md`** — Same audit scoped to
-      `instruments-service/.../adapters/cefi/tardis/`, MTDS `.../adapters/cefi/`, and every cefi venue file in
-      `execution-service/.../trade_execution/adapters/` — **specifically resolve the `*_ccxt.py`/`*_native.py`
-      parallel-file question for binance/bybit/okx** (both live-routed by design, or one dead?).
-- [ ] [BACKEND] P2. **target: `/plans/active/prediction_consolidated_closeout_2026_07_18.md`** — Same audit scoped to
-      `instruments-service/.../adapters/prediction/` (`kalshi.py`, `polymarket/`) and MTDS `.../adapters/prediction/`.
-- [ ] [BACKEND] P2. **target: `/plans/active/sports_consolidated_closeout_2026_07_19.md`** — Same audit scoped to
-      `instruments-service/.../adapters/sports/adapters/`, MTDS `.../adapters/sports/`, and
-      `execution-service/.../sports_execution/adapters/`.
+- [x] [BACKEND] P2. ✅ **DONE 2026-07-24** — target: `/plans/active/tradfi_consolidated_closeout_2026_07_18.md`. Added
+      as a bounded dispatchable audit todo (Track A2), citing the new adapter-dead-code-and-fallback-ban SSOT.
+      `pm@<commit-pending>`.
+- [x] [BACKEND] P2. ✅ **DONE 2026-07-24** — target: `/plans/active/defi_consolidated_closeout_2026_07_18.md`. Added as
+      a bounded dispatchable audit todo. `pm@<commit-pending>`.
+- [x] [BACKEND] P2. ✅ **DONE 2026-07-24** — target: `/plans/active/cefi_consolidated_closeout_2026_07_18.md`. Added as
+      a bounded dispatchable audit todo (Track 5), including the ccxt/native binance/bybit/okx question.
+      `pm@<commit-pending>`.
+- [x] [BACKEND] P2. ✅ **DONE 2026-07-24** — target: `/plans/active/prediction_consolidated_closeout_2026_07_18.md`.
+      Added as a bounded dispatchable audit todo. `pm@<commit-pending>`.
+- [x] [BACKEND] P2. ✅ **DONE 2026-07-24** — target: `/plans/active/sports_consolidated_closeout_2026_07_19.md`. Added
+      as a bounded dispatchable audit todo (Track X/CLEANUP). `pm@<commit-pending>`.
 - [x] [DOC] P3. ✅ **DONE 2026-07-24** — target: `/codex/06-coding-standards/README.md`. Fixed the broken Document Map
       link (repointed to the new doc below) and authored
       `/codex/06-coding-standards/adapter-dead-code-and-fallback-ban.md` (new codex-ssot) stating the no-dead-code /
@@ -124,30 +117,29 @@ only sports states a durable "census reads 0" terminal checkpoint; tradfi's own 
 already shipped (stale "re-add it" todo); prediction is silent despite measuring near-0 already; the cross-cutting
 audit's ground-truth table is stale relative to today's state.
 
-- [ ] [DATA] P1. **target: `/plans/active/issues/distinct_values_noncanonical_audit_2026_07_20.md`** — Re-run the
-      distinct-value census for all 5 asset_groups against the current nightly rollup + manifest, refresh the stale
-      2026-07-20 ground-truth table.
-- [ ] [REVIEW] P1. **target: `/plans/active/tradfi_consolidated_closeout_2026_07_18.md`** — Replace the stale "re-add
-      the dimensions enumeration view" todo — it already shipped live (`GET /distinct-values/{asset_group}`,
-      `GET /axis-value-census`) — with a real "run it, verify 0 non-canonical" checkpoint.
-- [ ] [REVIEW] P2. **target: `/plans/active/prediction_consolidated_closeout_2026_07_18.md`** — Add a Distinct Values /
-      axis-value census section (prediction already measures cleanest of the 5 AGs — just undocumented here).
-- [ ] [DATA] P1. **target: `/plans/active/cefi_consolidated_closeout_2026_07_18.md`** Track 6 — Add a terminal
-      checkpoint todo: once the Track-1 cutover drain-gate lifts and
-      `complete_cefi_manifest_canonical_dedup_2026_07_17.py     --apply` actually runs, re-run the census and require 0
-      (or only explicitly-accepted exceptions).
-- [ ] [DATA] P1. **target: `/plans/active/defi_consolidated_closeout_2026_07_18.md`** Track 6 — Its "Close-out
-      criterion" only requires the distinct-values VIEW to be live (feature-shipped bar, not canonicalization-complete
-      bar) — re-run the census against current state and require 0.
+- [x] [DATA] P1. ✅ **DONE 2026-07-24** — target: `/plans/active/distinct_values_noncanonical_audit_2026_07_20.md`
+      (corrected path — it lives directly under `plans/active/`, not `plans/active/issues/`). Added a dispatchable todo
+      to re-run the census and refresh the stale ground-truth table (the live measurement itself needs a real script
+      run, not performed in this distribution pass). `pm@<commit-pending>`.
+- [x] [REVIEW] P1. ✅ **DONE 2026-07-24** — target: `/plans/active/tradfi_consolidated_closeout_2026_07_18.md`. Replaced
+      the stale "re-add the dimensions enumeration view" todo with a real "run it, verify 0 non-canonical" checkpoint
+      (Phase C). `pm@<commit-pending>`.
+- [x] [REVIEW] P2. ✅ **DONE 2026-07-24** — target: `/plans/active/prediction_consolidated_closeout_2026_07_18.md`.
+      Added a Distinct Values/axis-value census section. `pm@<commit-pending>`.
+- [x] [DATA] P1. ✅ **DONE 2026-07-24** — target: `/plans/active/cefi_consolidated_closeout_2026_07_18.md` Track 6.
+      Added the terminal checkpoint todo gated on the Track-1 drain-gate + `--apply` run. `pm@<commit-pending>`.
+- [x] [DATA] P1. ✅ **DONE 2026-07-24** — target: `/plans/active/defi_consolidated_closeout_2026_07_18.md` Track 6.
+      Rewrote the close-out criterion in place to require a fresh census re-run returning 0, not just the view being
+      live. `pm@<commit-pending>`.
 - [x] [REVIEW] P2. ✅ **DONE 2026-07-24** — target: `/codex/02-data/reconciliation-finding-taxonomy.md`. Reconciled the
       C2a instrument_type-casing `migration_pending` suppression scope discrepancy: code-read
       `deployment-api/deployment_api/routes/data_status/_distinct_values.py::_comparison_set()` confirmed defi's
       instrument_type casing is a SEPARATE, permanent, already-settled rule (canonical LOWERCASE, folded always) — NOT
       part of the same migration_pending population as cefi/tradfi's D1 UPPERCASE-target ruling. Added a scope
       correction to taxonomy.md §5.1. `pm@<commit-pending>`.
-- [ ] [REVIEW] P2. **target: new issue doc under `plans/active/issues/`** — Written inventory (no code changes): does an
-      equivalent census exist for strategy catalogue, features catalogue, fixtures catalogue, and UAC registries beyond
-      the 4 axes `_distinct_values.py`/`_axis_census.py` already cover?
+- [x] [REVIEW] P2. ✅ **DONE 2026-07-24** — target: new issue doc under `plans/active/issues/`. Created
+      `catalogue_census_equivalents_inventory_2026_07_24.md` with the bounded inventory todo (the investigation itself
+      is future dispatch work). `pm@<commit-pending>`.
 
 ## 3. GCS paths/filenames canonical — migrated non-canonical content ACTUALLY DELETED, not duplicated
 
@@ -157,22 +149,24 @@ where applied — but only ONE AG-scale case (defi `dex_pools`/`lending_indices`
 contradictory numbers for the same population in the corpus (a stale "~1.2M orphan objects, delete the whole bucket"
 todo vs. a fresh 2026-07-22 measurement of 6).
 
-- [ ] [REVIEW] P1. **target: `/plans/active/tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24.md`** — Verify (or
-      correct) the claim "cefi + sports already done" — sports's own measurement shows 0 of 34,385 `B_legacy_duplicate`
-      rows pass the 5-part proof yet.
-- [ ] [DATA] P2. **target: `/plans/active/issues/estate_orphan_assessment_2026_07_21.md`** — Check current state of the
-      defi orphan-sweep VM (last known: 6th attempt, healthy, 11.75M+ objects swept, no ETA); if finished, record the
-      final numbers.
-- [ ] [DATA] P2. **target: `/plans/active/issues/estate_orphan_assessment_2026_07_21.md`** — Measure prediction's
-      `B_legacy_duplicate` population (never reported anywhere in the corpus; only `E_orphan_real=3,137,183` exists).
-- [ ] [DATA] P1. **target: `/plans/active/tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24.md`** — Run the
-      already-named-but-unexecuted next step:
-      `cleanup_legacy_twins.py --asset-group tradfi --report-uri     _index/audit/orphan_sweep_tradfi.parquet --dry-run`
-      (never `--apply` without explicit operator sign-off — hard stop per
-      `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3).
-- [ ] [REVIEW] P1. **target: `/plans/active/sports_consolidated_closeout_2026_07_19.md`** — Re-verify the K1/K2
-      delete-candidate object list is still the correct target given the casing migration (lowercase→UPPER-case) that
-      landed since the list was built.
+- [x] [REVIEW] P1. ✅ **DONE 2026-07-24** — target:
+      `/plans/active/tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24.md`. Added a todo to verify/correct the
+      "cefi + sports already done" claim, citing the 0-of-34,385 gap. `pm@<commit-pending>`.
+- [x] [DATA] P2. ✅ **ALREADY SATISFIED (found 2026-07-24, no new todo needed)** — target:
+      `/plans/active/issues/estate_orphan_assessment_2026_07_21.md`. A concurrent session's own extensive Progress Log
+      updates (session 3-4) already carry the defi orphan-sweep VM far past this ask: sweep COMPLETED (15,865,384
+      orphan_class_E, 2026-07-23), dry-run COMPLETED (real remaining population 637,738 rows after re-verify), and
+      `--apply` LAUNCHED 2026-07-24 19:06 UTC. Per task_template.md finding C (don't duplicate a todo the doc's own
+      later section already answers), no new checkbox added — the doc's own history is the record.
+- [x] [DATA] P2. ✅ **DONE 2026-07-24** — target: `/plans/active/issues/estate_orphan_assessment_2026_07_21.md`. Added
+      todo 8: measure prediction's `B_legacy_duplicate` population from the already-durable sweep report (genuinely not
+      yet measured anywhere in the corpus). `pm@<commit-pending>`.
+- [x] [DATA] P1. ✅ **DONE 2026-07-24** — target:
+      `/plans/active/tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24.md`. Added a dispatchable todo for the dry-run
+      step (never `--apply` without explicit operator sign-off — hard stop per
+      `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3). `pm@<commit-pending>`.
+- [x] [REVIEW] P1. ✅ **DONE 2026-07-24** — target: `/plans/active/sports_consolidated_closeout_2026_07_19.md`. Added
+      the K1/K2 re-verify todo in Track C, next to the existing casing-migration revert todo. `pm@<commit-pending>`.
 
 ## 4. VM preemption + attempted_failed billing-waste monitoring — new skill needed
 
@@ -182,28 +176,24 @@ failures?" `DP_RUN_MOSTLY_EMPTY`/`check_high_attempted_failed` is a real alert b
 structurally non-retriable (FAIL-classified) shard — `record_failed()` retries it by default forever absent a human
 manually marking it dead.
 
-- [ ] [DOC] P1. **target: new `/codex/05-infrastructure/vm-preemption-and-billing-waste-monitoring.md`** — Full
-      codex-ssot frontmatter
-      (`authoritative_for: [VM preemption + attempted_failed billing-waste monitoring     contract]`). Content:
-      summarize the existing PROGRESS-checkpoint preemption-resume contract (`spot-vms-for-backfill.md`), define
-      "transient/should-retry" vs. "genuine/should-count-as-failed" via `classify_venue_error()`, state the monitoring
-      cadence.
-- [ ] [SCRIPT] P1. **target: new skill `cursor-configs/skills/vm-preemption-billing-waste-audit/`** — Trigger
-      `/vm-preemption-billing-waste-audit`. Checklist: (1) regular preemption scan both clouds
-      (`gcloud compute operations list --filter="operationType=compute.instances.preempted"` + AWS spot-interruption
-      equivalent) cross-referenced against auto-recovery evidence; (2) investigate any non-auto-recovered preemption;
-      (3) audit `attempted_failed` rows for non-retriable errors that should have been excluded from billing/denominator
-      but weren't; (4) verify Slack/data-pipeline alerts actually catch both classes — harden if not.
-- [ ] [DOC] P2. **target: 5 existing infra docs** — Cross-reference the new codex doc from `vm-launcher-runbook.md`,
-      `spot-vms-for-backfill.md`, `deployment-observability.md`, `data-pipeline-alerts.md`, and CLAUDE.md's VM-launcher
-      section (one-line pointer, per the size-budget rule).
-- [ ] [SCRIPT] P1. **target: run the new skill** — First live run against both clouds' fleets, 30-day lookback. File
-      findings for any launcher missing the preemption-signal contract or any confirmed billing-wasting
-      `attempted_failed` cluster.
-- [ ] [BACKEND] P2. **target: new cross-cutting design doc** — Design + wire a cross-run pre-flight gate: an
-      `action=FAIL` verdict from `classify_venue_error()` (or N consecutive identical-`error_reason` failures across
-      waves) routes the shard to a "known-dead, do not re-attempt" manifest-level marker instead of silent infinite
-      retry.
+- [x] [DOC] P1. ✅ **ALREADY DONE (prior session, verified 2026-07-24)** — target:
+      `/codex/05-infrastructure/vm-preemption-and-billing-waste-monitoring.md`. Confirmed present with full codex-ssot
+      frontmatter (`authoritative_for: [VM preemption + attempted_failed billing-waste monitoring     contract]`) and
+      all the specified content (PROGRESS-checkpoint summary, transient-vs-genuine classification via
+      `classify_venue_error()`, monitoring cadence).
+- [x] [SCRIPT] P1. ✅ **ALREADY DONE (prior session, verified 2026-07-24)** — target: new skill
+      `cursor-configs/skills/vm-preemption-billing-waste-audit/`. Confirmed present (`SKILL.md`) with the full 4-part
+      checklist matching this todo's spec.
+- [x] [DOC] P2. ✅ **DONE 2026-07-24** — target: 5 existing infra docs. 4 of 5 already had the cross-reference
+      (`spot-vms-for-backfill.md`, `deployment-observability.md`, `data-pipeline-alerts.md` via `related:` frontmatter;
+      CLAUDE.md's VM-launcher section already names the skill). Added the missing 5th to `vm-launcher-runbook.md`'s
+      References section. `pm@<commit-pending>`.
+- [x] [SCRIPT] P1. ✅ **DONE 2026-07-24 (tracked, not yet run)** — target: run the new skill. Added a dispatchable todo
+      in the new `plans/active/issues/vm_billing_waste_first_audit_and_preflight_gate_design_2026_07_24.md` — the actual
+      live run against both clouds' fleets is execution work for a future dispatch, not this distribution pass.
+      `pm@<commit-pending>`.
+- [x] [BACKEND] P2. ✅ **DONE 2026-07-24 (tracked, not yet designed)** — target: new cross-cutting design doc. Same new
+      issue doc as above carries the pre-flight-gate design todo. `pm@<commit-pending>`.
 
 ## 5. MDPS canonicalization for ALL data types incl. candles, resolution-floor logic
 
@@ -217,14 +207,19 @@ enumerate it despite claiming to.
       "§1a Resolution-floor invariant" section stating the cross-AG rule + a per-AG native-floor table (tradfi:
       Databento-native tick/MBP; cefi: `book_snapshot_5`; defi: dex-swap/pool-snapshot cadence; prediction: native tick
       cadence; sports: `odds_snapshot` interval). `pm@<commit-pending>`.
-- [ ] [DATA] P2. **target: new `/codex/02-data/cefi-data-types-catalog.md`** — Create following the exact table
-      structure of `tradfi-data-types-catalog.md`'s NEEDS_CANDLE_PROCESSING section, covering all 6 CeFi data types.
-- [ ] [DATA] P2. **target: `/codex/02-data/defi-data-types-catalog.md`** — Audit against the ~24 DeFi entries in UAC's
-      `market_data_categories.py` NEEDS_CANDLE_PROCESSING dict (currently mentioned once vs. README's "comprehensive"
-      claim).
-- [ ] [DATA] P1. **target: `/data-pipeline-check-mdps` skill** — Extend the canonical leg to verify, per MVP
-      (asset_group, data_type) shard, that MDPS's actual write behavior matches the declared NEEDS_CANDLE_PROCESSING
-      value.
+- [x] [DATA] P2. ✅ **DONE 2026-07-24 (stub + todo, not the full audit)** — target: new
+      `/codex/02-data/cefi-data-types-catalog.md`. Created following `tradfi-data-types-catalog.md`'s exact table
+      structure, with a `_TBD_`-marked placeholder table + a bounded todo to fill in the real values against UAC's live
+      dict (that live lookup needs tool access this distribution pass didn't have — genuine investigation, not
+      formatting). `pm@<commit-pending>`.
+- [x] [DATA] P2. ✅ **DONE 2026-07-24 (gap flagged + todo added, not the full audit)** — target:
+      `/codex/02-data/defi-data-types-catalog.md`. Added a banner flagging the README's stale "comprehensive" claim
+      (only 1 of ~24 DeFi data_types has a documented NEEDS_CANDLE_PROCESSING value) + a todo to audit the rest against
+      UAC's live dict. `pm@<commit-pending>`.
+- [x] [DATA] P1. ✅ **DONE 2026-07-24 (gap documented, not implemented)** — target: `/data-pipeline-check-mdps` skill.
+      Added a "Known gap" note under §3a (Canonical-paths principle) describing the needed extension — a real code
+      change to `pipeline_e2e_check.py`'s canonical-leg verifier, out of scope for this doc-distribution pass.
+      `pm@<commit-pending>`.
 
 ## 6. Parallelization for long-running (multi-hour) VMs
 
@@ -237,15 +232,13 @@ both a serial (4-8h) and a parallel (1-2h) launcher available.
       Parallelization Threshold for Long-Running VMs" section stating the generic rule (any VM run expected/observed to
       exceed a few hours must be cross-machine-sharded and/or intra-machine-parallelized, unless I/O-bound against a
       single shared external resource — the Tardis exception generalized). `pm@<commit-pending>`.
-- [ ] [DATA] P1. **target: `/plans/active/defi_consolidated_closeout_2026_07_18.md`** — For the DeFi-MVP full-history
-      MDPS candle backfill (gated on `candle_canonical_path_migration_execution_2026_07_24.md` reaching P8), confirm
-      which launcher is planned: single-VM or the cross-VM sharded one — and whether `max_workers` actually overlaps GCS
-      writes (up to ~8x ETA impact suspected, unconfirmed).
-- [ ] [DATA] P2. **target: `/plans/active/sports_consolidated_closeout_2026_07_19.md`** — Determine which launcher was
-      used for the most recent sports features backfill (serial `launch-features-sports-backfill-vm.sh` vs. parallel
-      `launch-features-sports-parallel-backfill-vm.sh`); add a todo requiring the parallel one going forward.
-- [ ] [DATA] P3. **target: `/plans/active/cefi_consolidated_closeout_2026_07_18.md`** — Sweep for any non-Tardis cefi VM
-      class with multi-hour+ single-VM runtime not already cross-machine-sharded.
+- [x] [DATA] P1. ✅ **DONE 2026-07-24** — target: `/plans/active/defi_consolidated_closeout_2026_07_18.md`. Added the
+      launcher-confirmation todo in Track 5, gated on `candle_canonical_path_migration_execution_2026_07_24.md` reaching
+      P8. `pm@<commit-pending>`.
+- [x] [DATA] P2. ✅ **DONE 2026-07-24** — target: `/plans/active/sports_consolidated_closeout_2026_07_19.md`. Added the
+      launcher-determination todo naming both the serial and parallel launchers. `pm@<commit-pending>`.
+- [x] [DATA] P3. ✅ **DONE 2026-07-24** — target: `/plans/active/cefi_consolidated_closeout_2026_07_18.md`. Added the
+      non-Tardis multi-hour VM sweep todo, exempting Tardis VMs per the codex cap. `pm@<commit-pending>`.
 
 ## 7. Every issue doc has a clear, bounded todo — even research
 
@@ -254,11 +247,15 @@ definition-of-done clauses). 2/10 FAIL: `defi_legacy_precanonical_composite_venu
 section at all, only a "Suggested next steps (not started)" list with an undecided judgment call ("Decide
 fold-vs-migrate") presented as a step.
 
-- [ ] [DOCS] P2. **target: corpus-wide sweep, `plans/active/issues/`** — Sweep every `status: open` issue doc referenced
-      by the 5 closeouts for zero-checkbox docs; classify + fix each genuine gap.
-- [ ] [DOCS] P2. **target: 3 named zero-checkbox issue docs** (`pipeline_e2e_check_vm_name_collision_2026_07_12.md` + 2
-      others found by the sweep above) — Convert prose deferrals into real, bounded `- [ ] [TAG] Pn.` todos (text-only,
-      no re-investigation, no implementation).
+- [x] [DOCS] P2. ✅ **DONE 2026-07-24 (both known instances fixed; full corpus sweep tracked as a todo)** — target:
+      corpus-wide sweep, `plans/active/issues/`. Created
+      `plans/active/issues/issue_docs_zero_checkbox_sweep_2026_07_24.md` tracking this; the remaining full-corpus sweep
+      (beyond the original 10-doc sample) is its own dispatchable todo there. `pm@<commit-pending>`.
+- [x] [DOCS] P2. ✅ **DONE 2026-07-24** — target: 3 named zero-checkbox issue docs. Both known instances converted:
+      `pipeline_e2e_check_vm_name_collision_2026_07_12.md` (real `[CODE] P2` todo added) and
+      `defi_legacy_precanonical_composite_venue_objects_2026_07_24.md` (4 real todos, splitting the undecided
+      fold-vs-migrate judgment call into fact-gathering + a separate `[OPERATOR]` decision todo). The gate doc's own
+      citation had a typo (`2026_07-24` → corrected to `2026_07_24`). `pm@<commit-pending>`.
 
 ## 8. Features service catalogue completeness across all AGs, every adapter smoke-tested
 
@@ -267,10 +264,10 @@ fold-vs-migrate") presented as a step.
 and absent entirely for 3 (`commodity`, `performance_features`, `strategy_pnl_archetype` — no catalogue module at all,
 confirmed by directory listing).
 
-- [ ] [DIAG] P2. **target: new issue doc** — Inventory catalogue completeness across all 9 features-service modules:
-      does a per-feature declarative registry exist, does it have status/formula_version, per module.
-- [ ] [DIAG] P2. **target: new issue doc** — Empirically test whether the family-level smoke check can mask a broken
-      individual external-data-source adapter (scope: the ~16 real vendor adapters across commodity/calendar families).
+- [x] [DIAG] P2. ✅ **DONE 2026-07-24 (both tracked in one new doc)** — target: new issue doc. Created
+      `plans/active/issues/features_service_catalogue_completeness_inventory_2026_07_24.md` with both the
+      catalogue-completeness inventory and the smoke-check-masking test as bounded todos. `pm@<commit-pending>`.
+- [x] [DIAG] P2. ✅ **DONE 2026-07-24** — same new doc as above (see previous item).
 - [x] [SCRIPT] P3. ✅ **DONE 2026-07-24** — target: `/codex/04-architecture/artifact-versioning.md`. Fixed the stale
       registry-SSOT claim — the "Feature groups" row now states the registry is PER-FAMILY (delta_one's `registry.py`
       vs. onchain's own `BUILDER_REGISTRY`/`BuilderEntry` in `feature_builder_registry.py`), not a single shared file.
@@ -283,13 +280,12 @@ confirmed by directory listing).
 MDPS, or features-service) and ASPIRATIONAL elsewhere. instruments-service's `--operation download` entrypoint has no
 `--shard-key`/`--instrument-type`/`--day`/`--root` at all.
 
-- [ ] [BACKEND] P1. **target: new issue doc** — Audit CLI shard-split flag coverage across instruments-service, MDPS,
-      and every features-service family CLI against the codex 6-tuple convention; file the gap list per service.
-- [ ] [BACKEND] P2. **target: new issue doc** — Enumerate every chain-scoping CLI flag on instruments-service's download
-      entrypoint (baseline found: `--gas-fee-chains`, `--evm-defi-chains`, `--lending-chains`, `--risk-params-chains`)
-      and confirm features-service's onchain family CLI accepts the same set.
-- [ ] [BACKEND] P2. **target: `/plans/active/sports_consolidated_closeout_2026_07_19.md`** — Confirm whether any primary
-      entrypoint (not a one-off script) exposes a genuine fixture-level targeting flag; if not, todo to add one.
+- [x] [BACKEND] P1. ✅ **DONE 2026-07-24 (both tracked in one new doc)** — target: new issue doc. Created
+      `plans/active/issues/cli_shard_split_flag_coverage_audit_2026_07_24.md` with both the 6-tuple audit and the
+      chain-scoping-flag enumeration as bounded todos. `pm@<commit-pending>`.
+- [x] [BACKEND] P2. ✅ **DONE 2026-07-24** — same new doc as above (see previous item).
+- [x] [BACKEND] P2. ✅ **DONE 2026-07-24** — target: `/plans/active/sports_consolidated_closeout_2026_07_19.md`. Added
+      the fixture-level-targeting-flag confirmation todo. `pm@<commit-pending>`.
 
 ## 10. Honest-coverage 100% backfill math — empty_confirmed symmetry, 0 attempted_failed after billing-exclusion
 
@@ -301,14 +297,19 @@ in deployment-api. Part (c) — CONFIRMED real gap: no mechanism excludes billin
 
 - [x] [DOC] P2. ✅ **DONE 2026-07-24** — target: `/codex/02-data/honest-coverage-model.md`. Added the explicit
       symmetric-inclusion invariant statement to § "Coverage formula". `pm@<commit-pending>`.
-- [ ] [AUDIT] P2. **target: new issue doc** — Grep every repo (start deployment-api) for coverage-percent computations
-      referencing `empty_confirmed`; classify each against the invariant; file any asymmetric violation.
-- [ ] [VERIFY] P2. **target:
-      `/plans/active/issues/tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md`** —
-      Resolve the open `[VERIFY] P3` todo tracing MTDS's classification path for a billing-guard-hit Databento request.
-- [ ] [CODE] P2. **target: `/plans/active/tradfi_consolidated_closeout_2026_07_18.md`** — Wire a durable "billing-gated,
-      not a real failure" classification for Databento L2/L3 lookback/entitlement-guard hits so they never count as
-      `attempted_failed`.
+- [x] [AUDIT] P2. ✅ **DONE 2026-07-24** — target: new issue doc. Created
+      `plans/active/issues/coverage_percent_symmetric_inclusion_audit_2026_07_24.md` with the bounded grep+classify
+      todo. `pm@<commit-pending>`.
+- [x] [VERIFY] P2. ✅ **CHECKED 2026-07-24 — already correctly homed, no distribution action needed.** target:
+      `/plans/active/issues/tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md`. The
+      cited `- [ ] [VERIFY] P3.` todo (tracing how a `_DATABENTO_SUPPORTED_DATA_TYPES`-filtered-out data_type gets
+      recorded — `attempted_failed` vs. `empty_confirmed`) already exists in that file, already correctly formatted per
+      task_template.md (tagged, scoped, states what closing it requires). This gate-doc item asked to actually RESOLVE
+      the trace, not just place a todo — that's a genuine code investigation across `market-tick-data-service`'s
+      orchestrator/sentinel layer, out of scope for this mechanical-distribution pass; left open for a future dispatched
+      worker with full tool access.
+- [x] [CODE] P2. ✅ **DONE 2026-07-24** — target: `/plans/active/tradfi_consolidated_closeout_2026_07_18.md`. Added the
+      billing-gated-classification todo to Phase C, next to the existing honest-coverage bullet. `pm@<commit-pending>`.
 
 ## 11. Checkpoint cadence — the 5 data-pipeline-check skills + reconciliation, 3x per AG plan
 
@@ -320,14 +321,14 @@ sports's shard atoms.
 
 - [x] [PM] P2. ✅ **DONE 2026-07-24** — target: `/plans/active/task_template.md`. Added finding K (new §3 bullet)
       stating the explicit checkpoint-cadence rule. `pm@<commit-pending>`.
-- [ ] [DATA] P1. **target: `/plans/active/defi_consolidated_closeout_2026_07_18.md`** — Add data-pipeline-check-is and
-      -mtds RUN checkpoint todos (currently zero references to either skill anywhere in defi's corpus).
-- [ ] [DATA] P1. **target: `/plans/active/cefi_consolidated_closeout_2026_07_18.md`** — Add genuine RUN checkpoint todos
-      for -is and -mtds (the one existing -mtds reference is a skill-upgrade todo, not a run).
-- [ ] [DATA] P1. **target: `/plans/active/sports_consolidated_closeout_2026_07_19.md`** — Add RUN checkpoint todos for
-      all 4 check skills (zero real ones exist today despite all 4 already supporting sports's shard atoms).
-- [ ] [DATA] P2. **target: `/plans/active/prediction_consolidated_closeout_2026_07_18.md`** — Top up toward 3x for -is,
-      -mtds, and reconciliation (currently 1 open todo each for -is/-mtds, 2 historical reconciliation runs).
+- [x] [DATA] P1. ✅ **DONE 2026-07-24** — target: `/plans/active/defi_consolidated_closeout_2026_07_18.md`. Added one
+      combined `data-pipeline-check-is`/`-mtds` checkpoint-cadence todo in Track 5. `pm@<commit-pending>`.
+- [x] [DATA] P1. ✅ **DONE 2026-07-24** — target: `/plans/active/cefi_consolidated_closeout_2026_07_18.md`. Added a new
+      "Checkpoint cadence" subsection with 6 genuine RUN todos (3x each for -is/-mtds). `pm@<commit-pending>`.
+- [x] [DATA] P1. ✅ **DONE 2026-07-24** — target: `/plans/active/sports_consolidated_closeout_2026_07_19.md`. Added one
+      combined RUN-checkpoint todo naming all 4 check skills. `pm@<commit-pending>`.
+- [x] [DATA] P2. ✅ **DONE 2026-07-24** — target: `/plans/active/prediction_consolidated_closeout_2026_07_18.md`. Added
+      3 topping-up checkpoint todos for -is/-mtds/reconciliation. `pm@<commit-pending>`.
 - [x] [DATA] P2. ✅ **DONE 2026-07-24** — target: `/plans/active/tradfi_phase_d_terminal_gate_2026_07_24.md`. Added a
       post-full-backfill reconciliation RUN checkpoint todo (both raw-tick and candles layers) as the terminal gate's
       final verification step. `pm@<commit-pending>`.
@@ -340,14 +341,17 @@ referenced in prose 3 times ("tracked under X below") without X ever actually ap
 4 Phase children are in the Split-notice table but not repeated in the Aggregated-source-docs section; sports has one
 low-severity miss (a 0-open-todo doc).
 
-- [ ] [DOC] P2. **target: `/plans/active/tradfi_consolidated_closeout_2026_07_18.md`** — Add 3 missing digested entries
-      for today-dated tradfi plans a fresh `grep -l '^asset_group:.*tradfi'` finds but the section doesn't link.
-- [ ] [DOC] P1. **target: `/plans/active/defi_consolidated_closeout_2026_07_18.md`** — Add the real digested entry for
-      `defi_track01_per_instrument_and_canon_id_2026_07_24.md` (18 open todos) — currently a broken forward-reference.
-- [ ] [DOC] P2. **target: `/plans/active/prediction_consolidated_closeout_2026_07_18.md`** — Add the 4 Phase A-E
-      children to the Aggregated-source-docs section (currently only in the Split-notice table).
-- [ ] [DOC] P3. **target: `/plans/active/sports_consolidated_closeout_2026_07_19.md`** — Add
-      `data_completion_sports_history_2026_07_24.md` (0 open todos) as a bulleted entry.
+- [x] [DOC] P2. ✅ **DONE 2026-07-24** — target: `/plans/active/tradfi_consolidated_closeout_2026_07_18.md`. Added a
+      "Child plans" digest group under Aggregated source docs for the 3 missing today-dated plans.
+      `pm@<commit-pending>`.
+- [x] [DOC] P1. ✅ **DONE 2026-07-24** — target: `/plans/active/defi_consolidated_closeout_2026_07_18.md`. Added the
+      real digested entry for `defi_track01_per_instrument_and_canon_id_2026_07_24.md`, fixing the broken
+      forward-reference. `pm@<commit-pending>`.
+- [x] [DOC] P2. ✅ **DONE 2026-07-24** — target: `/plans/active/prediction_consolidated_closeout_2026_07_18.md`. Added
+      the 4 Phase A-E children as digest bullets in the Aggregated-source-docs section. `pm@<commit-pending>`.
+- [x] [DOC] P3. ✅ **DONE 2026-07-24** — target: `/plans/active/sports_consolidated_closeout_2026_07_19.md`. Added
+      `data_completion_sports_history_2026_07_24.md` as a bulleted entry (via a pointer, per the agent's report — the
+      Aggregated-source-docs content lives in a separate extracted file). `pm@<commit-pending>`.
 
 ## 13. AO-dispatch-readiness — zero contradictions, no open-ended items, crystal-clear for a cold Sonnet-5 worker
 
@@ -357,17 +361,20 @@ findings A-G) — and even it has one un-flagged prose-only ordering dependency.
 stale/broken cross-todo citation plus a self-contradiction about whether a fix already shipped; cefi has an open-ended
 judgment-call todo with no bounded scope. Prediction has had no adversarial pass at all.
 
-- [ ] [DOC] P2. **target: `/plans/active/sports_consolidated_closeout_2026_07_19.md`** — Add a machine-gate caveat to
-      Track C's EXCHANGE_ODDS/FIXED_ODDS fork sequence — no machine gate enforces its stated ordering constraints.
-- [ ] [DOC] P1. **target: `/plans/active/defi_consolidated_closeout_2026_07_18.md`** — Fix the broken citation in
-      "Resume the paused DeFi crons" (lines 673-689) and resolve the self-contradiction about whether the fix shipped.
-- [ ] [BACKEND] P2. **target: `/plans/active/cefi_consolidated_closeout_2026_07_18.md`** — Resolve the open-ended
-      "decide + remove if..." judgment call at line 234 — violates task_template.md's bounded-outcome rule.
-- [ ] [REVIEW] P2. **target: `/plans/active/tradfi_consolidated_closeout_2026_07_18.md`** — Run the same adversarial
-      AO-dispatch-readiness pass sports's Track Y ran (bare `§X`, ambiguous verbs, delete-tagging, definition-of-done,
-      stale checkboxes, digest-checkbox safety).
-- [ ] [REVIEW] P2. **target: `/plans/active/prediction_consolidated_closeout_2026_07_18.md`** — Same adversarial pass
-      (prediction has had zero adversarial review to date).
+- [x] [DOC] P2. ✅ **DONE 2026-07-24** — target: `/plans/active/sports_consolidated_closeout_2026_07_19.md`. Added a
+      machine-gate caveat to Track C's EXCHANGE_ODDS/FIXED_ODDS fork sequence. `pm@<commit-pending>`.
+- [x] [DOC] P1. ✅ **DONE 2026-07-24** — target: `/plans/active/defi_consolidated_closeout_2026_07_18.md`. Fixed the
+      broken citation + resolved the self-contradiction in "Resume the paused DeFi crons" (the fix has, in fact, shipped
+      — the todo now says so). `pm@<commit-pending>`.
+- [x] [BACKEND] P2. ✅ **DONE 2026-07-24** — target: `/plans/active/cefi_consolidated_closeout_2026_07_18.md`. Resolved
+      the open-ended judgment call by splitting it into a bounded audit todo + a separate `[OPERATOR]` decision todo.
+      `pm@<commit-pending>`.
+- [x] [REVIEW] P2. ✅ **DONE 2026-07-24** — target: `/plans/active/tradfi_consolidated_closeout_2026_07_18.md`. Added
+      the adversarial-pass todo (mirroring sports Track Y); did a same-session spot-check that found no obvious instance
+      of the 6 defect classes, recorded inline. `pm@<commit-pending>`.
+- [x] [REVIEW] P2. ✅ **DONE 2026-07-24** — target: `/plans/active/prediction_consolidated_closeout_2026_07_18.md`.
+      Added the adversarial-pass todo; same-session spot-check found no obvious instance, recorded inline.
+      `pm@<commit-pending>`.
 
 ## 14. MVP vs non-MVP data distinction + batch=live=paper wiring symmetry
 
@@ -378,18 +385,22 @@ doc says this scoping out loud; (2) "daily block" translation isn't documented v
 split across 2 docs under different names); (3) none of the 5 AG plans' own "MVP universe" sections state which MVP
 cells have actually been proven wired through backfill=paper=live, vs. just declared in-scope.
 
-- [ ] [DOC] P1. **target: new cross-cutting investigation** — Code-read (not assumption) whether the paper/live strategy
-      universe resolver actually restricts itself to UAC's `MVP_SCOPE` canonical definition.
-- [ ] [DATA] P2. **target: `/plans/active/tradfi_consolidated_closeout_2026_07_18.md`** — Extend "## MVP universe" with
-      which MVP cells have actually been proven through backfill=paper=live, not just declared in-scope.
-- [ ] [DATA] P2. **target: `/plans/active/defi_consolidated_closeout_2026_07_18.md`** — Add an "## MVP universe" section
-      (none exists — closest is Track 5) stating which DeFi MVP cells are proven wired.
-- [ ] [DATA] P2. **target: `/plans/active/cefi_consolidated_closeout_2026_07_18.md`** — Add an "## MVP universe" section
-      (none exists — MVP only in a scattered per-venue list) referencing `/codex/02-data/mvp-scope-canonical.md`.
-- [ ] [DATA] P2. **target: `/plans/active/prediction_consolidated_closeout_2026_07_18.md`** — Extend "## MVP universe"
-      to cite `/codex/09-strategy/operational/paper-batch-live-reconciliation.md` in its Codex SSOTs list.
-- [ ] [DATA] P2. **target: `/plans/active/sports_consolidated_closeout_2026_07_19.md`** — Add an "## MVP universe"
-      section (none exists) referencing `/codex/02-data/mvp-scope-canonical.md` § Sports.
+- [x] [DOC] P1. ✅ **DONE 2026-07-24** — target: new cross-cutting investigation. Created
+      `plans/active/issues/mvp_scope_resolver_code_read_2026_07_24.md` with the bounded code-read todo (the
+      investigation itself is future dispatch work). `pm@<commit-pending>`.
+- [x] [DATA] P2. ✅ **DONE 2026-07-24** — target: `/plans/active/tradfi_consolidated_closeout_2026_07_18.md`. Extended
+      "## MVP universe" with a real per-cell proven-wired-vs-declared table + an honest gap finding.
+      `pm@<commit-pending>`.
+- [x] [DATA] P2. ✅ **DONE 2026-07-24** — target: `/plans/active/defi_consolidated_closeout_2026_07_18.md`. Added a new
+      "## MVP universe" section stating no cell is yet proven wired backfill=paper=live. `pm@<commit-pending>`.
+- [x] [DATA] P2. ✅ **DONE 2026-07-24** — target: `/plans/active/cefi_consolidated_closeout_2026_07_18.md`. Added a new
+      "## MVP universe" section referencing `/codex/02-data/mvp-scope-canonical.md`, consolidating the scattered
+      per-venue list + a table. `pm@<commit-pending>`.
+- [x] [DATA] P2. ✅ **DONE 2026-07-24** — target: `/plans/active/prediction_consolidated_closeout_2026_07_18.md`.
+      Extended "## MVP universe" with a Codex SSOTs bullet citing
+      `/codex/09-strategy/operational/paper-batch-live-reconciliation.md`. `pm@<commit-pending>`.
+- [x] [DATA] P2. ✅ **DONE 2026-07-24** — target: `/plans/active/sports_consolidated_closeout_2026_07_19.md`. Added a
+      new "## MVP universe" section referencing `/codex/02-data/mvp-scope-canonical.md` § Sports. `pm@<commit-pending>`.
 
 ## Codex SSOTs
 
@@ -401,9 +412,10 @@ cells have actually been proven wired through backfill=paper=live, vs. just decl
 
 ## Deferred work after 2026-07-24
 
-| Item                                                          | State       | Blocked on                                                      |
-| ------------------------------------------------------------- | ----------- | --------------------------------------------------------------- |
-| All 64 todos above distributed into their target files        | Not started | Nobody — mechanical, next session's primary work                |
-| Todo #4's new skill + codex doc actually authored             | Not started | Nobody — self-contained, no dependencies                        |
-| Todo #4's first live 30-day audit run                         | Not started | The skill existing (prior row)                                  |
-| Point 3's tradfi/defi/prediction orphan-sweep re-measurements | Not started | Nobody — some are already-running VMs, just need a status check |
+| Item                                                                             | State                                                                                                     | Blocked on                                                                                                                                                                                |
+| -------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| All 64 todos above distributed into their target files                           | **Done 2026-07-24**                                                                                       | — (33 by 5 parallel Agent-tool workers on the 5 consolidated closeouts, 8 direct, 23 as new stub issue docs/dispatchable todos where the ask was a genuine investigation, not formatting) |
+| Todo #4's new skill + codex doc actually authored                                | **Done** (confirmed pre-existing, prior session)                                                          | —                                                                                                                                                                                         |
+| Todo #4's first live 30-day audit run                                            | Not started                                                                                               | Tracked in `plans/active/issues/vm_billing_waste_first_audit_and_preflight_gate_design_2026_07_24.md`                                                                                     |
+| Point 3's tradfi/defi/prediction orphan-sweep re-measurements                    | Partially done (defi/prediction measured by a concurrent session; tradfi/cefi/sports already had numbers) | Prediction's `B_legacy_duplicate` count still open — tracked in `estate_orphan_assessment_2026_07_21.md` todo 8                                                                           |
+| The ~15 sub-investigations this session stubbed as new issue docs (not executed) | Not started                                                                                               | Nobody — each is now a bounded, dispatchable todo in its own issue doc (see §2/§4/§5/§7/§8/§9/§10/§14 above)                                                                              |
