@@ -129,7 +129,7 @@ source:
 
 **Per-child open-todo snapshot (2026-07-24 — so the split itself is AO-legible without opening each child):**
 
-- [`prediction_phase_ab_residuals_2026_07_24.md`](/plans/active/prediction_phase_ab_residuals_2026_07_24.md) — **9
+- [`prediction_phase_ab_residuals_2026_07_24.md`](/plans/active/prediction_phase_ab_residuals_2026_07_24.md) — **10
   open** (all P0/P1, no P2/P3). Top: [BACKEND] P0. Finish the prediction capture-incident remediation — harden the
   capture path; [BACKEND] P0. Kill the dead Kalshi `trading-api.kalshi.com` host reintroduced into the smoke matrix.
 - [`prediction_phase_c_data_status_ui_2026_07_24.md`](/plans/active/prediction_phase_c_data_status_ui_2026_07_24.md) —
@@ -196,11 +196,13 @@ atom). Representative rows:
 Phase-D verify gate MUST assert the atom key is `canonical_question_group` (bundle) / per-CID `instrument_id` (raw),
 never `underlying`.
 
-## Distinct Values / axis-value census (2026-07-20 measured — no standalone census doc exists under that name)
+## Distinct Values / axis-value census (2026-07-20 measured)
 
-No doc named `distinct_values_noncanonical_audit_2026_07_20.md` exists in the corpus (checked directly) — this section
-cites the real measured run instead: the 2026-07-20 `/data-pipeline-reconciliation` four-surface pass against
-`asset_group=prediction`, full doc at `/plans/audit/results/data_pipeline_reconciliation_prediction_2026_07_20.md`.
+The corpus-wide SSOT tracker is `/plans/active/distinct_values_noncanonical_audit_2026_07_20.md` — its 2026-07-20
+ground-truth table already shows prediction clean on every axis (non-canonical/total distinct:
+`venues 0/2, instrument_types 0/1, data_types 0/4, chains 0/1`). This section adds a second, independent corroborating
+source: the same-day `/data-pipeline-reconciliation` four-surface pass against `asset_group=prediction`, full doc at
+`/plans/audit/results/data_pipeline_reconciliation_prediction_2026_07_20.md`.
 
 - **Prediction's own `instrument_type` axis** (745,136-row manifest census): `PREDICTION_MARKET` 741,029 (99.46%,
   canonical-cased) · `prediction_market` (lower) 4,001 (0.54%, **C2a REFUSED** — unruled axis, no migration proposed) ·
@@ -273,7 +275,7 @@ fixture-linked before MVP backfill.
 - **This plan's own Phase A-E children (2026-07-24 fork — were listed in the Split-notice table above but not repeated
   here; added so this index is the single place every source doc lives, including this plan's own forks)**:
   - **[BACKEND] P0.**
-    [`prediction_phase_ab_residuals_2026_07_24.md`](/plans/active/prediction_phase_ab_residuals_2026_07_24.md) — 9 open
+    [`prediction_phase_ab_residuals_2026_07_24.md`](/plans/active/prediction_phase_ab_residuals_2026_07_24.md) — 10 open
     (all P0/P1). Top: finish the prediction capture-incident remediation; kill the dead Kalshi `trading-api.kalshi.com`
     host.
   - **[UI] P0.**
@@ -714,10 +716,13 @@ drain window, or an operator decision. They are ordered, not abandoned — each 
   verbatim to `prediction_consolidated_closeout_history_2026_07_18.md`, this parent condensed to a lean coordination
   index with an enriched Aggregated source docs index covering every active prediction + prediction-touching plan/issue.
 - **2026-07-24 (later same day)** — Distributed 6 gate-doc todos from `data_pipeline_e2e_milestones_gate_2026_07_24.md`
-  into this file: added a "Distinct Values / axis-value census" section (cites the real 2026-07-20
-  `/data-pipeline-reconciliation` run, since no doc named `distinct_values_noncanonical_audit_2026_07_20.md` exists);
-  added the 4 Phase A-E children to the Aggregated source docs index (previously only in the Split-notice table); added
-  a Codex SSOTs bullet to "MVP universe" citing `/codex/09-strategy/operational/paper-batch-live-reconciliation.md`; and
-  added a new "Queued audits + reviews" section with 5 bounded todos (adapter dead-code audit, -is/-mtds/reconciliation
-  3x-checkpoint top-up, and an adversarial AO-dispatch-readiness pass mirroring sports's Track Y) for a future
-  dispatched worker — none executed in this pass, per the distributing task's scope (documentation placement only).
+  into this file: added a "Distinct Values / axis-value census" section (cites the corpus-wide SSOT tracker
+  `/plans/active/distinct_values_noncanonical_audit_2026_07_20.md`, whose ground-truth table already shows prediction
+  clean on every axis, plus the corroborating same-day `/data-pipeline-reconciliation` run; **correction 2026-07-24
+  same-session**: an earlier draft of this entry wrongly claimed no such tracker doc existed — it does, this entry now
+  cites it directly); added the 4 Phase A-E children to the Aggregated source docs index (previously only in the
+  Split-notice table); added a Codex SSOTs bullet to "MVP universe" citing
+  `/codex/09-strategy/operational/paper-batch-live-reconciliation.md`; and added a new "Queued audits + reviews" section
+  with 5 bounded todos (adapter dead-code audit, -is/-mtds/reconciliation 3x-checkpoint top-up, and an adversarial
+  AO-dispatch-readiness pass mirroring sports's Track Y) for a future dispatched worker — none executed in this pass,
+  per the distributing task's scope (documentation placement only).

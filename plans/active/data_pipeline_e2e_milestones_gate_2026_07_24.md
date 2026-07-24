@@ -349,9 +349,12 @@ low-severity miss (a 0-open-todo doc).
 - [x] [DOC] P2. ✅ **DONE 2026-07-24** — target: `/plans/active/tradfi_consolidated_closeout_2026_07_18.md`. Added a
       "Child plans" digest group under Aggregated source docs for the 3 missing today-dated plans.
       `pm@<commit-pending>`.
-- [x] [DOC] P1. ✅ **DONE 2026-07-24** — target: `/plans/active/defi_consolidated_closeout_2026_07_18.md`. Added the
-      real digested entry for `defi_track01_per_instrument_and_canon_id_2026_07_24.md`, fixing the broken
-      forward-reference. `pm@<commit-pending>`.
+- [x] [DOC] P1. ✅ **DONE 2026-07-24 (digest bullet + a new fix-it todo added — the target's own 3 dangling refs are NOT
+      yet fixed)** — target: `/plans/active/defi_consolidated_closeout_2026_07_18.md`. Added a digest bullet for
+      `defi_track01_per_instrument_and_canon_id_2026_07_24.md` under Aggregated source docs, plus a new
+      `- [ ] [DOC]     P1.` todo to actually apply it into `defi_consolidated_closeout_aggregated_sources_2026_07_24.md`
+      and fix that file's 3 dangling "tracked under X below" references (verified 2026-07-24: still unresolved there as
+      of this correction). `pm@<commit-pending>`.
 - [x] [DOC] P2. ✅ **DONE 2026-07-24** — target: `/plans/active/prediction_consolidated_closeout_2026_07_18.md`. Added
       the 4 Phase A-E children as digest bullets in the Aggregated-source-docs section. `pm@<commit-pending>`.
 - [x] [DOC] P3. ✅ **DONE 2026-07-24** — target: `/plans/active/sports_consolidated_closeout_2026_07_19.md`. Added

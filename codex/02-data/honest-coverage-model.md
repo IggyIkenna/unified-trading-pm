@@ -239,13 +239,16 @@ interpretable steady-state. Same precedent as TradFi T+1 vendor lags (NASDAQ/NYS
 > into the numerator, masking real holes.
 
 **Symmetric-inclusion invariant (made explicit 2026-07-24, `data_pipeline_e2e_milestones_gate_2026_07_24.md` §10)**:
-`empty_confirmed` must appear in a coverage formula's numerator and denominator together, or in neither — never one
-without the other. `reachable_coverage` correctly excludes it from both (numerator never counts it as "captured",
-denominator never counts it as "expected"); `all_shards_coverage` correctly includes it in both (denominator only, since
-a legitimate absence still isn't `captured`). The two SSOT formulas above satisfy this by construction, not by an
-enforced check — any THIRD coverage-percent formula written elsewhere in the codebase (e.g. a service-local convenience
-helper) must be audited against this invariant before being trusted; see
-`data_pipeline_e2e_milestones_gate_2026_07_24.md` §10 for the audit todo covering this.
+`empty_confirmed` must never appear in a coverage formula's **numerator without also appearing in its denominator** —
+crediting a legitimate absence as "covered" while not counting it as part of the expected total would silently inflate
+the percentage. It MAY appear in the denominator without the numerator (the deliberate, conservative
+`all_shards_coverage` completeness-view choice — a legitimate absence still isn't `captured`, so it never belongs in the
+numerator, but the completeness view still counts it as part of the universe), or be excluded from both (the deliberate,
+optimistic `reachable_coverage` choice, which drops it from the universe entirely). The forbidden case is numerator-only
+inclusion. The two SSOT formulas above satisfy this by construction, not by an enforced check — any THIRD
+coverage-percent formula written elsewhere in the codebase (e.g. a service-local convenience helper) must be audited
+against this invariant before being trusted; see `data_pipeline_e2e_milestones_gate_2026_07_24.md` §10 for the audit
+todo covering this.
 
 ---
 
