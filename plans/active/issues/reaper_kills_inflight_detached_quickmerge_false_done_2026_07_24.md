@@ -37,6 +37,7 @@ estimate_class: refactor
 drift_direction: advance-code
 resolved_by:
 locked_by:
+depends_on: []
 ---
 
 # Reaper kills in-flight detached quickmerge → false-done + orphaned unpushed commit
