@@ -110,9 +110,11 @@ incidental; cefi's own `execution-service` adapters have unaudited parallel `*_c
 - [ ] [BACKEND] P2. **target: `/plans/active/sports_consolidated_closeout_2026_07_19.md`** — Same audit scoped to
       `instruments-service/.../adapters/sports/adapters/`, MTDS `.../adapters/sports/`, and
       `execution-service/.../sports_execution/adapters/`.
-- [ ] [DOC] P3. **target: `/codex/06-coding-standards/README.md`** — Fix the broken Document Map link ("Forbidden code
-      patterns" → `STANDARDS.md`, which does not exist) and author a new codex SSOT stating the no-dead-code /
-      no-runtime-fallback / no-duplicate-adapter rule explicitly, cross-linked from `quality-gates.md`.
+- [x] [DOC] P3. ✅ **DONE 2026-07-24** — target: `/codex/06-coding-standards/README.md`. Fixed the broken Document Map
+      link (repointed to the new doc below) and authored
+      `/codex/06-coding-standards/adapter-dead-code-and-fallback-ban.md` (new codex-ssot) stating the no-dead-code /
+      no-runtime-fallback / no-duplicate-adapter rule explicitly, cross-linked from `quality-gates.md`'s vulture
+      section. `pm@<commit-pending>`.
 
 ## 2. Manifest/catalogue/registry canonicalization — Distinct Values census reads 0 everywhere
 
@@ -137,9 +139,12 @@ audit's ground-truth table is stale relative to today's state.
 - [ ] [DATA] P1. **target: `/plans/active/defi_consolidated_closeout_2026_07_18.md`** Track 6 — Its "Close-out
       criterion" only requires the distinct-values VIEW to be live (feature-shipped bar, not canonicalization-complete
       bar) — re-run the census against current state and require 0.
-- [ ] [REVIEW] P2. **target: `/codex/02-data/reconciliation-finding-taxonomy.md`** — Reconcile the C2a
-      instrument_type-casing `migration_pending` suppression scope discrepancy against
-      `reconciliation-census-and-compute-tiers.md` §1.5.
+- [x] [REVIEW] P2. ✅ **DONE 2026-07-24** — target: `/codex/02-data/reconciliation-finding-taxonomy.md`. Reconciled the
+      C2a instrument_type-casing `migration_pending` suppression scope discrepancy: code-read
+      `deployment-api/deployment_api/routes/data_status/_distinct_values.py::_comparison_set()` confirmed defi's
+      instrument_type casing is a SEPARATE, permanent, already-settled rule (canonical LOWERCASE, folded always) — NOT
+      part of the same migration_pending population as cefi/tradfi's D1 UPPERCASE-target ruling. Added a scope
+      correction to taxonomy.md §5.1. `pm@<commit-pending>`.
 - [ ] [REVIEW] P2. **target: new issue doc under `plans/active/issues/`** — Written inventory (no code changes): does an
       equivalent census exist for strategy catalogue, features catalogue, fixtures catalogue, and UAC registries beyond
       the 4 axes `_distinct_values.py`/`_axis_census.py` already cover?
@@ -208,10 +213,10 @@ statement of the "native resolution is the floor, never synthesize finer" invari
 `NEEDS_CANDLE_PROCESSING` catalog doc (codex's own README already flags this); defi's catalog doc doesn't actually
 enumerate it despite claiming to.
 
-- [ ] [DATA] P1. **target: `/codex/02-data/mdps-candle-canonical-reconciliation.md`** — New "§ Resolution-floor
-      invariant" section stating the cross-AG rule (input resolution is the floor, aggregate coarser only), grounded in
-      the existing code-level guard + tradfi's Databento-specific precedent; name each AG's native floor (cefi:
-      book_snapshot_5 interval; defi: dex-swap/pool-snapshot cadence; sports: odds_snapshot interval).
+- [x] [DATA] P1. ✅ **DONE 2026-07-24** — target: `/codex/02-data/mdps-candle-canonical-reconciliation.md`. Added new
+      "§1a Resolution-floor invariant" section stating the cross-AG rule + a per-AG native-floor table (tradfi:
+      Databento-native tick/MBP; cefi: `book_snapshot_5`; defi: dex-swap/pool-snapshot cadence; prediction: native tick
+      cadence; sports: `odds_snapshot` interval). `pm@<commit-pending>`.
 - [ ] [DATA] P2. **target: new `/codex/02-data/cefi-data-types-catalog.md`** — Create following the exact table
       structure of `tradfi-data-types-catalog.md`'s NEEDS_CANDLE_PROCESSING section, covering all 6 CeFi data types.
 - [ ] [DATA] P2. **target: `/codex/02-data/defi-data-types-catalog.md`** — Audit against the ~24 DeFi entries in UAC's
@@ -228,9 +233,10 @@ are size-triggered or reactive-to-hangs, not proactive). tradfi/defi both have c
 measured-but-unapplied parallelization todos. Sports has zero tracked coverage of this concern at all despite having
 both a serial (4-8h) and a parallel (1-2h) launcher available.
 
-- [ ] [DOC] P2. **target: `/codex/05-infrastructure/vm-launcher-runbook.md`** — State the generic rule: any VM run
-      expected/observed to exceed a few hours must be cross-machine-sharded and/or intra-machine-parallelized, unless
-      I/O-bound against a single shared external resource (the Tardis exception generalized).
+- [x] [DOC] P2. ✅ **DONE 2026-07-24** — target: `/codex/05-infrastructure/vm-launcher-runbook.md`. Added new "§
+      Parallelization Threshold for Long-Running VMs" section stating the generic rule (any VM run expected/observed to
+      exceed a few hours must be cross-machine-sharded and/or intra-machine-parallelized, unless I/O-bound against a
+      single shared external resource — the Tardis exception generalized). `pm@<commit-pending>`.
 - [ ] [DATA] P1. **target: `/plans/active/defi_consolidated_closeout_2026_07_18.md`** — For the DeFi-MVP full-history
       MDPS candle backfill (gated on `candle_canonical_path_migration_execution_2026_07_24.md` reaching P8), confirm
       which launcher is planned: single-VM or the cross-VM sharded one — and whether `max_workers` actually overlaps GCS
@@ -265,8 +271,10 @@ confirmed by directory listing).
       does a per-feature declarative registry exist, does it have status/formula_version, per module.
 - [ ] [DIAG] P2. **target: new issue doc** — Empirically test whether the family-level smoke check can mask a broken
       individual external-data-source adapter (scope: the ~16 real vendor adapters across commodity/calendar families).
-- [ ] [SCRIPT] P3. **target: `/codex/04-architecture/artifact-versioning.md`** — Fix the stale registry-SSOT claim (line
-      ~76) that doesn't match onchain's actual `BuilderEntry`-based registry.
+- [x] [SCRIPT] P3. ✅ **DONE 2026-07-24** — target: `/codex/04-architecture/artifact-versioning.md`. Fixed the stale
+      registry-SSOT claim — the "Feature groups" row now states the registry is PER-FAMILY (delta_one's `registry.py`
+      vs. onchain's own `BUILDER_REGISTRY`/`BuilderEntry` in `feature_builder_registry.py`), not a single shared file.
+      `pm@<commit-pending>`.
 
 ## 9. CLI shard-level splits (day, chain, league, fixture, instrument_type) for all AGs/services
 
@@ -291,8 +299,8 @@ codex, though the 2 SSOT formulas happen to satisfy it by construction; a 3rd, u
 in deployment-api. Part (c) — CONFIRMED real gap: no mechanism excludes billing-gated Databento L2/L3 cells from
 `attempted_failed`; the current design does the opposite (a billing 4xx propagates straight to failure).
 
-- [ ] [DOC] P2. **target: `/codex/02-data/honest-coverage-model.md`** — Add the explicit symmetric-inclusion invariant
-      statement to § "Coverage formula" (~line 216-240).
+- [x] [DOC] P2. ✅ **DONE 2026-07-24** — target: `/codex/02-data/honest-coverage-model.md`. Added the explicit
+      symmetric-inclusion invariant statement to § "Coverage formula". `pm@<commit-pending>`.
 - [ ] [AUDIT] P2. **target: new issue doc** — Grep every repo (start deployment-api) for coverage-percent computations
       referencing `empty_confirmed`; classify each against the invariant; file any asymmetric violation.
 - [ ] [VERIFY] P2. **target:
@@ -310,9 +318,8 @@ prediction (1 open todo each); **defi has ZERO references to either skill anywhe
 run-todos for either; sports has zero real run-todos for any of the 4 check skills despite all 4 already supporting
 sports's shard atoms.
 
-- [ ] [PM] P2. **target: `/plans/active/task_template.md`** — Add the explicit checkpoint-cadence rule: every AG
-      consolidated-closeout plan carries 3 distinct dated RUN checkpoints per data-pipeline-check-{is,mtds,mdps,
-      features} + reconciliation (pre-backfill baseline / mid-backfill spot-check / post-backfill final gate).
+- [x] [PM] P2. ✅ **DONE 2026-07-24** — target: `/plans/active/task_template.md`. Added finding K (new §3 bullet)
+      stating the explicit checkpoint-cadence rule. `pm@<commit-pending>`.
 - [ ] [DATA] P1. **target: `/plans/active/defi_consolidated_closeout_2026_07_18.md`** — Add data-pipeline-check-is and
       -mtds RUN checkpoint todos (currently zero references to either skill anywhere in defi's corpus).
 - [ ] [DATA] P1. **target: `/plans/active/cefi_consolidated_closeout_2026_07_18.md`** — Add genuine RUN checkpoint todos
@@ -321,8 +328,9 @@ sports's shard atoms.
       all 4 check skills (zero real ones exist today despite all 4 already supporting sports's shard atoms).
 - [ ] [DATA] P2. **target: `/plans/active/prediction_consolidated_closeout_2026_07_18.md`** — Top up toward 3x for -is,
       -mtds, and reconciliation (currently 1 open todo each for -is/-mtds, 2 historical reconciliation runs).
-- [ ] [DATA] P2. **target: `/plans/active/tradfi_phase_d_terminal_gate_2026_07_24.md`** — Add a post-full-backfill
-      reconciliation RUN checkpoint (both raw-tick and candles layers) as the terminal gate's final verification step.
+- [x] [DATA] P2. ✅ **DONE 2026-07-24** — target: `/plans/active/tradfi_phase_d_terminal_gate_2026_07_24.md`. Added a
+      post-full-backfill reconciliation RUN checkpoint todo (both raw-tick and candles layers) as the terminal gate's
+      final verification step. `pm@<commit-pending>`.
 
 ## 12. Cross-linking — verify today's "Aggregated source docs" enrichment is actually complete
 

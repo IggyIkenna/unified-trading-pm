@@ -582,6 +582,16 @@ re-opening a settled ruling.
 > **Gate (blocking).** The honest-coverage harness MUST be made case-robust BEFORE the migration flips writers, or the
 > flip breaks it:
 > `plans/active/issues/honest_coverage_harness_instrument_type_case_break_on_d1_migration_2026_07_20.md`.
+>
+> **Scope correction (2026-07-24, `data_pipeline_e2e_milestones_gate_2026_07_24.md` §2): defi is OUT of the D1/C2a
+> UPPERCASE-migration population.** The "mixed on disk — defi both cases present" measurement above should NOT be read
+> as defi sharing cefi/tradfi's migration_pending casing drift. Ground truth
+> (`deployment-api/deployment_api/routes/data_status/_distinct_values.py` `_comparison_set()`): DeFi's manifest
+> `instrument_type` column is canonically **LOWERCASE** by a SEPARATE, already- settled operator ruling (unrelated to
+> D1), so defi is compared case-insensitively **permanently**, not as a migration-window accommodation — "no defi casing
+> noise" (`reconciliation-census-and-compute-tiers.md` §1.5) is the correct, PERMANENT state, not a temporary
+> suppression that lapses when D1's migration completes. Only cefi/tradfi (and prediction, whose canonical is genuinely
+> uppercase-target) are in-scope for the C2a/D1 migration_pending population this subsection otherwise describes.
 
 **Documentary background — why a ruling was needed (retained as history; the RULED stance above supersedes the old
 "Required behaviour").**

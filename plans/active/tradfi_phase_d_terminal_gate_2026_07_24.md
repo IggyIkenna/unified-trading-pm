@@ -95,6 +95,13 @@ source:
       Databento IP, throughput-fixed) and verify manifest-counted canonical rows for each MVP cell. **Still blocked** —
       Phase D is not literally green per the note above; do not start this until the chain-bundle follow-up is resolved
       or the operator explicitly accepts the current evidence as sufficient.
+- [ ] [DATA] P1. **Post-full-backfill reconciliation RUN checkpoint (both raw-tick and candles layers)** — after the MVP
+      backfill readiness gate above goes green, run `/data-pipeline-reconciliation --asset-group tradfi` against PROD as
+      this terminal gate's final verification step (added per
+      `/plans/active/data_pipeline_e2e_milestones_gate_2026_07_24.md` §11's checkpoint-cadence requirement — the
+      terminal gate currently ends at the MVP backfill readiness gate with no reconciliation run cited). Definition of
+      done: a dated reconciliation report path cited, covering both the raw-tick and candles layers, with any finding
+      either resolved or explicitly carried forward as a new tracked todo.
 
 ## Codex SSOTs (read before touching this workstream)
 

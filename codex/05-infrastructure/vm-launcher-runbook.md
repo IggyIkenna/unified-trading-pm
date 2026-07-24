@@ -485,6 +485,18 @@ env raises/lowers the cap explicitly. Intra-VM stream concurrency is a separate 
 default 16/VM + `TARDIS_BOOK_SNAPSHOT_MAX_CONCURRENT` 4/VM) — keep the fleet total ≲60 streams (operator guidance
 2026-07-14: bundle more shards per VM rather than more VMs).
 
+## Parallelization Threshold for Long-Running VMs (generic rule, 2026-07-24)
+
+**Any VM run expected or observed to exceed a few hours wall-clock must be cross-machine-sharded and/or
+intra-machine-parallelized**, unless it is genuinely I/O-bound against a single shared external resource that itself
+caps concurrency (the Tardis exception above, generalized — bundling more shards onto fewer VMs beats adding VMs when
+the bottleneck is a shared upstream connection limit, not local CPU/GCS-write throughput). This closes a real gap: prior
+to this rule, the parallelization obligation only showed up as size-triggered or reactive-to-a-hang callouts on specific
+launchers (tradfi/defi both have concrete, measured-but-unapplied parallelization todos — see their consolidated
+closeouts), never as a standing runbook-level expectation. A launcher whose typical run exceeds this threshold and has
+no sharded/parallel variant is a gap — file it against the owning consolidated-closeout plan (see
+`data_pipeline_e2e_milestones_gate_2026_07_24.md` §6 for the per-AG audit todos this rule was written to satisfy).
+
 ## Common Failure Patterns (All Launchers)
 
 | Failure                                                          | Diagnosis                                                                               | Fix                                                                                     |

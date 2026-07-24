@@ -238,6 +238,15 @@ interpretable steady-state. Same precedent as TradFi T+1 vendor lags (NASDAQ/NYS
 > Compare to v1 formula: `coverage = (captured + empty_confirmed) / expected_universe` — this mixed legitimate-absence
 > into the numerator, masking real holes.
 
+**Symmetric-inclusion invariant (made explicit 2026-07-24, `data_pipeline_e2e_milestones_gate_2026_07_24.md` §10)**:
+`empty_confirmed` must appear in a coverage formula's numerator and denominator together, or in neither — never one
+without the other. `reachable_coverage` correctly excludes it from both (numerator never counts it as "captured",
+denominator never counts it as "expected"); `all_shards_coverage` correctly includes it in both (denominator only, since
+a legitimate absence still isn't `captured`). The two SSOT formulas above satisfy this by construction, not by an
+enforced check — any THIRD coverage-percent formula written elsewhere in the codebase (e.g. a service-local convenience
+helper) must be audited against this invariant before being trusted; see
+`data_pipeline_e2e_milestones_gate_2026_07_24.md` §10 for the audit todo covering this.
+
 ---
 
 ## Bounded coverage exclusions — out-of-bounds ranges (evidence-gated)
