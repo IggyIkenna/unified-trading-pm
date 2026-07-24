@@ -228,6 +228,81 @@ domain-contract violations in `signal_broadcast/transport.py` + `api/operational
 `quickmerge.sh --agent --files 'strategy_service/engine/strategies/v2/archetype_slots_defi.py'`, landed on
 `live-defi-rollout` at `27e3456f88cadb2c5756716bc2af77c4a2c89aa1`.
 
+### `catalog_trading.py` finding — FIXED (2026-07-24), and it was bigger than the 12 rows flagged above
+
+The 12-row `catalog_trading.py::build_arbitrage_price_dispersion()` follow-up flagged above is now fixed — **and a
+same-file, same-bug-class sweep of the REST of this function during the fix found 5 MORE broken rows the original "12
+additional rows" count missed** (the flagging pass above stopped after the 3 named sub-families and didn't check the
+other loops later in the same function, which use the identical archetype/engine): "Sports cross-book arb" (2 rows,
+`venues="unity,betfair,matchbook"`, no `candidate_venues`), "Prediction market arb Polymarket vs sports books" (1 row,
+`venues="polymarket,betfair"`, no `candidate_venues`), and the Phase-9 "cross-venue dated futures arb" CME-vs- Deribit
+rows (2 rows, `long_venue`/`short_venue`, no `candidate_venues`). Verified empirically (constructed
+`ArbitragePriceDispersionEngine` directly from every one of the 30 rows `build_arbitrage_price_dispersion()` emits,
+pre-fix): **17 of 30 rows raised `ValueError` at construction**, not 12 — the 10-row "DEX cross-venue spot dispersion"
+sub-family (already correct) and the 3-row "cross-venue prediction dispersion" sub-family
+(`dispersion_type="cross-venue-prediction-dispersion"`, bypasses the `candidate_venues` gate entirely) were the only 13
+clean rows.
+
+**Fix** (mirrors the exact `archetype_slots_defi.py` convention, `strategy-service@27e3456f`, ADD not rename — a real
+second consumer, `scripts/trace_all_carry_archetypes.py::_resolve_arbitrage_price_dispersion`, reads the original
+`venues`/`long_chain`/`short_chain`/`long_protocol`/`short_protocol` keys directly off `slot.initial_config`):
+
+- Lending-protocol-arb (6 rows): `candidate_venues=f"{long_protocol},{short_protocol}"` + `dispersion_bps` from this
+  row's own `min_spread_bps` ("100" for all 6).
+- Cross-chain-yield-arb (3 rows): `candidate_venues=f"{long_chain},{short_chain}"` (the row's own 2-chain pair, not a
+  5-chain list — unlike the `archetype_slots_defi.py` `CROSS_CHAIN_YIELD_ARB` row, this catalog surface's rows each
+  scope a single chain pair) + `dispersion_bps` from `min_yield_diff_bps` ("50").
+- CEX-CEX spread-arb (3 rows): `candidate_venues` = the row's own already-computed `venues` value (added, not renamed) +
+  `dispersion_bps` from `min_spread_bps` ("3").
+- Sports cross-book arb (2 rows, newly discovered): `candidate_venues` = the row's own `venues` value. No
+  `dispersion_bps` added — `min_margin_pct` is a fraction/different edge-method metric (overround, not a two-venue bps
+  spread), left unconverted rather than inventing a value from an incompatible unit (engine falls back to its 30bps
+  default).
+- Prediction-market arb (1 row, newly discovered): same pattern as sports rows — `candidate_venues` from `venues`, no
+  `dispersion_bps` (`min_edge_pct` is a fraction, incompatible unit).
+- CME-vs-Deribit dated-futures arb (2 rows, newly discovered): `candidate_venues=f"{long_venue},{short_venue}"` (=
+  `"cme,deribit"`) + `dispersion_bps` from `min_spread_bps` ("20", a compatible unit).
+
+**Verified empirically, both directions**: pre-fix, 17/30 rows raised `ValueError` at `ArbitragePriceDispersionEngine`
+construction; post-fix, all 30 rows construct cleanly, and all 27 rows on the default price-dispersion path (the 3
+cross-venue-prediction-dispersion rows use a different feature shape) emit exactly 1 real instruction from `on_tick()`
+given a plausible, generously-dispersed `mid_price_<venue>` feature set. New regression test:
+`tests/unit/engine/strategies/v2/test_arbitrage_price_dispersion_catalog_config_contract.py` (mirrors
+`test_basis_dated_catalog_config_contract.py`'s pattern — constructs every real catalogued price-dispersion-path spec
+via `specs_for_archetype()` and asserts non-crashing construction + real instruction emission).
+
+**Side effect found and handled**: `strategy_service/cli/handlers/paper_universe.py`'s static
+`_dex_dispersion_config_satisfiable()` gate (used by `resolve_paper_universe()` to decide which specs the paper-replay
+harness runs) checks config SHAPE only (`candidate_venues` + a top-level `instrument` key + `dispersion_type`), not data
+SOURCE — it does not distinguish "dex" vs "cex" venues. Since the 3 CEX-CEX rows already carried a top-level
+`instrument` key and now carry `candidate_venues` too, they newly pass this gate and are selected into the paper
+universe (previously they were statically skipped as `non_dex_dispersion_config`). Verified this is safe, not a
+silent-wrong-data risk: per `paper_run_handler.py::_load_dex_dispersion_ticks`, the real tick loader reads the canonical
+`dex-pools` corpus filtered by DEX venue names — a CEX-CEX row's `candidate_venues` (e.g. `"binance,okx"`) will never
+match any `dex_pool_state` observation's venue, so every day honestly runtime-skips (`< 2 candidate-venue mids`) rather
+than fabricating data; this only means the 3 CEX-CEX rows get selected into `sel.selected` and then produce zero ticks
+at runtime (wasted static-gate pass, not a correctness bug). Updated
+`tests/unit/cli/handlers/test_paper_universe.py::test_dex_pool_archetypes_are_drivable_and_selected` (and the
+`test_non_drivable_archetypes_are_honestly_skipped_not_faked` comment) to assert the new, correct partition (10
+DEX-spot + 3 CEX-CEX rows selected; the other 14 rows — lending/cross-chain-yield/sports/prediction/cme-deribit, which
+lack a top-level `instrument` key — remain skipped). Whether the paper-replay tick-loader wiring should be extended with
+a real CEX mid-price provider for these 3 rows is a separate, not-yet-scoped follow-on (same category as the
+"Paper-replay tick-loader wiring... SEPARATE, not-yet-attempted follow-on" already noted elsewhere in this doc) — not
+addressed here.
+
+Quality gates: `bash scripts/quality-gates.sh --no-fix` (repo `.venv`) — full suite green (5407 passed, 206 skipped, 0
+failed, re-confirmed on two consecutive clean runs) plus a scoped, isolated re-run of every
+`arbitrage_price_dispersion`-adjacent test file (80 passed) to rule out cross-contamination from a concurrent sibling
+agent's live, uncommitted WIP on `paper_run_handler.py`/`batch_rerun.py`/`paper_run_attribution.py`/
+`paper_run_passive.py` in the same shared checkout during this fix (that WIP was left untouched — staged and shipped
+only this fix's 3 files, by name). Shipped via
+`quickmerge.sh --agent --files 'strategy_service/engine/strategies/v2/target_universe/catalog_trading.py tests/unit/cli/handlers/test_paper_universe.py tests/unit/engine/strategies/v2/test_arbitrage_price_dispersion_catalog_config_contract.py'`,
+landed on `live-defi-rollout` at `strategy-service@05c0b2edb6397dcc5fa97ea08b6bcb675ea47272`.
+
+Still open from the original Recommendation §3 sweep: the "7 already-drivable, not yet checked" archetypes
+(`CARRY_FUNDING_DISPERSION`, `DEFI_LP_CONCENTRATED`, `DEFI_LP_POOL`, `DEFI_LP_VAULT`) remain fully unchecked against
+either catalog surface.
+
 ## Live liquidation-candidate feed: exhaustive workspace search (2026-07-24, investigation-only, no code changed)
 
 Continuation task, read-only investigation across `execution-service`, `market-tick-data-service`, `features-service`,
