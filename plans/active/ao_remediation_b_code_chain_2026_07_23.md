@@ -69,13 +69,18 @@ source:
 
 ## Todos (execute in this order — sequential)
 
-- [ ] [INFRA] P1. Re-derive `dirty_files` in `scripts/dev/slot-git-status-report.sh` from the sample loop's kept
+- [x] ✅ [INFRA] P1. Re-derive `dirty_files` in `scripts/dev/slot-git-status-report.sh` from the sample loop's kept
       non-blank lines so the count can never exceed the captured sample. Build the count from the same array the sample
       loop populates (single source of truth), not an independent `wc -l` on the raw capture — this makes the observed
       `dirty_files=1` + empty-`dirty_files_sample` fingerprint structurally impossible regardless of what upstream
       artifact injects a stray count. Cause-agnostic by design: review proved with `cat -A`/hexdump that the tree emits
       ZERO bytes while the reporter posts 1, so do NOT chase the blank-line theory. **Gate**: a unit/bats test asserting
-      a clean tree can never yield `dirty_files>0`, and that `dirty_files` always equals the captured sample length.
+      a clean tree can never yield `dirty_files>0`, and that `dirty_files` always equals the captured sample length. —
+      unified-trading-pm@d2b588688: `dirty_files` now derives from `sample_list`'s length in `classify_repo()` (the
+      independent `wc -l` was removed); trade-off documented inline — repos with >5 dirty files now report 5 (capped)
+      since every server-side consumer only tests `dirty_files >0/==0`. Gate:
+      `tests/test_slot_git_status_dirty_count.bats` (clean/1-file/3-file/7-file-over-cap cases); confirmed the 7-file
+      case fails against the pre-fix `wc -l` path and passes against the fix.
 - [ ] [INFRA] P2. Add the `df>0 with an empty sample` instrumentation to `scripts/dev/slot-git-status-report.sh` — when
       the computed count is non-zero but the sample array is empty, log the raw captured porcelain bytes via `cat -A` to
       the reporter's own log so the next occurrence pins the wrapper trigger. This is the diagnostic half of the todo
