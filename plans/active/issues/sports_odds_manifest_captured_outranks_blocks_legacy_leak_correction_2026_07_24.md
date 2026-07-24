@@ -22,7 +22,7 @@ summary: |
   correction (`instruments-service/scripts/flip_phantom_to_attempted_failed.py`) is a bespoke, reviewed,
   backup-then-write script that edits `_index/availability_index.parquet` directly — a materially different,
   higher-privilege action than "run the real script," and out of this todo's stated scope without a decision.
-status: open
+status: resolved
 nature: notes
 asset_group: [sports]
 stage: [data]
@@ -33,12 +33,13 @@ related:
   - /plans/active/sports_closeout_batch1_ao_ready_2026_07_24.md
   - /plans/active/sports_consolidated_closeout_2026_07_19.md
   - /plans/active/issues/sports_index_recency_masked_captured_atoms_2026_07_13.md
+  - /plans/active/issues/sports_odds_manifest_consolidator_captured_outranks_resurrection_2026_07_24.md
 created: "2026-07-24"
 parent_epic: sports_master
 priority: P1
 source: sports_closeout_batch1_ao_ready-003 execution (slot 5, 2026-07-24)
 assigned_vm: planning
-resolved_by: ""
+resolved_by: "slot 4, 2026-07-24 — codex §519 paused-consolidator CAS recipe, applied verbatim, holds durably"
 locked_by: ""
 execution_scope: orchestrator-agent
 drift_direction: advance-code
@@ -146,10 +147,27 @@ up that DIAG item has this data point.
       a direct canonical hand-edit. Checked off because the SCRIPT (the todo's literal deliverable) shipped and was
       proven correctly targeted (see the scoping fix below) — but the underlying manifest is NOT yet durably corrected;
       see the new todo below for the follow-up.
-- [ ] [DATA] P0. Land Option A2/B2/C2 (whichever the operator/main picks, see "Critical new finding" below) so the
+- [x] [DATA] P0. Land Option A2/B2/C2 (whichever the operator/main picks, see "Critical new finding" below) so the
       already-shipped `flip_sports_odds_captured_leak_to_attempted_failed.py --apply` survives >=2 consolidator cycles
       without reverting. Re-run `--dry-run` first to confirm scope is still exactly the 31 target rows (no drift). Repo:
-      instruments-service (script) + deployment-service or infra (if Option A2's cron-pause is picked).
+      instruments-service (script) + deployment-service or infra (if Option A2's cron-pause is picked). — RESOLVED,
+      Option A2, instruments-service@\<next-sha\> (script hardened to the codex §519 paused-consolidator CAS recipe).
+      Sequence: (1) paused `uts-prod-manifest-consolidator-instruments-sports-cron` via Cloud Scheduler API, (2) found +
+      waited out 2 ALREADY-IN-FLIGHT overlapping executions (one ran 7m47s — matches the documented sports slow-cycle
+      class) since pausing the scheduler doesn't kill a running execution, (3) re-ran `--dry-run` (still exactly 31
+      rows, confirming no drift), (4) `--apply --i-have-paused-the-consolidator-cron`: snapshotted generation to
+      `_index/snapshots/pre_sports_odds_captured_leak_20260724-205611.parquet`, Arrow-schema-preserving edit, CAS write
+      (generation 1784926487218742 -> 1784926602209245) — succeeded first try, (5) `consolidate(bucket, force=True)` to
+      re-stamp the `consolidator_content_write_at`/`consolidator_run_at` markers the CAS write can't carry — first
+      attempt hit a local DuckDB OOM (this sandbox's `/tmp` is a 2GB tmpfs; unrelated to PROD, the CAS write itself
+      already lands before the merge step), retried with `TMPDIR` on the 99GB-free root disk — succeeded (5,526,420 rows
+      in = 5,526,420 rows out, both markers confirmed stamped via direct GCS metadata REST read), (6) resumed the cron
+      (confirmed ENABLED), (7) waited 8 min (>=2 real cycles — generation advanced from normal cron activity in that
+      window), **final check: all 31 rows still `attempted_failed`, both via `ManifestWriter.lookup()` and a direct
+      raw-index read.** DURABLE. Root cause was a genuine read-modify-write race with the live consolidator (not a
+      mystery third source) — main's parallel diagnostic framing (see
+      `sports_odds_manifest_consolidator_captured_outranks_resurrection_2026_07_24.md`) is answered: the codex §519
+      paused-CAS recipe, applied verbatim, HOLDS.
 
 ## Critical new finding (2026-07-24, post-Option-A-authorization)
 

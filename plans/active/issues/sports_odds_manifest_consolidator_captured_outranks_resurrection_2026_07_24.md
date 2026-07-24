@@ -192,3 +192,18 @@ rather than shard provenance.
 - [ ] [DATA] P0. Once the fix lands, re-run `reprocess_sports_odds.py --force` for 2025-12-18/12-24/12-31 and verify the
       manifest read is STABLE across at least 2 consolidator cycles (not just an immediate post-write check) before
       flipping `sports_closeout_batch1_ao_ready_2026_07_24.md` todo 3. (repo: market-data-processing-service)
+
+**Cross-slot note (slot 4, 2026-07-24 21:15 UTC)**: independently landed the durable fix via the codex §519
+paused-consolidator CAS recipe (see
+`/plans/active/issues/sports_odds_manifest_captured_outranks_blocks_legacy_leak_correction_2026_07_24.md` todo 2, now
+resolved) — same root-cause diagnosis as this doc's own conclusion above (write-time race with the live `*/1` cron, not
+a tie-break/merge-logic defect against clean inputs). Sequence: paused
+`uts-prod-manifest-consolidator-instruments-sports-cron`, confirmed no in-flight execution, CAS-wrote the 31 target
+rows, ran `consolidate(bucket, force=True)` myself to re-stamp the consolidator markers, resumed the cron, verified
+STABLE across >=2 real cycles (raw-index generation advanced from normal cron activity; all 31 rows still
+`attempted_failed`). This is process-level evidence for your [CODE] P1 todo's re-scoped recommendation ("make the
+correction write itself resilient... e.g. hold `_index/consolidator.lock`... or a paused-window") — a paused-cron CAS
+window is sufficient and durable with NO tie-break code change needed; whether to still land a proof-gated-override
+mechanism as defense-in-depth for FUTURE correctors (so they don't each need to rediscover/repeat this pause-cron dance)
+is a judgment call for main/operator, not something I'm deciding unilaterally on your doc. Leaving your [CODE]/[DATA]
+todos as-is for main to disposition.
