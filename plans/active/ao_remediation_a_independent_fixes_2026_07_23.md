@@ -110,8 +110,8 @@ source:
       still current — only the Host Behaviour Matrix row and the interactive-session bullet named the retired
       `tab/<operator>/<N>` branch convention. Both now describe the current Path-B reference-clone model (own `.git` on
       `live-defi-rollout`); the surviving mention of `tab/<operator>/<N>` is explicitly labeled RETIRED.
-      `rg -n 'tab/<operator>|tab/<op>' codex/12-agent-workflow/local-slot-host-symmetric-worker-model.md` shows only the
-      banner line.
+      `rg -n 'tab/<operator>|tab/<op>' /codex/12-agent-workflow/local-slot-host-symmetric-worker-model.md` shows only
+      the banner line.
 - [x] ✅ [REVIEW] P3. Re-annotate or reopen the agent-orchestrator line in
       `plans/active/codex_vs_repo_docs_ssot_audit_2026_06_01.md` that is still marked SHIPPED with no note about the
       post-pivot re-drift. A `[x]` that predates an architecture pivot reads as current coverage when it is not.
