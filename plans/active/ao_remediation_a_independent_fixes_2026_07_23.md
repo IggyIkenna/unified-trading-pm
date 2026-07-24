@@ -71,31 +71,50 @@ source:
       EVERY polled message regardless of `from_role`, and the interim mitigation was done ad hoc in one live session and
       never written down. **Gate**: the diff lands and the next live cross-role exchange shows a `to_agent` message in
       the recipient's poll.
-- [ ] [BACKEND] P2. Repoint or remove the five dead documentation references in `agent-orchestrator/server/` that point
-      at files deleted by `agent-orchestrator@19766e7`. The targets are `docs/AUDIT_FINDINGS_2026_05_18.md`,
+- [x] ✅ [BACKEND] P2. Repoint or remove the five dead documentation references in `agent-orchestrator/server/` that
+      point at files deleted by `agent-orchestrator@19766e7`. The targets are `docs/AUDIT_FINDINGS_2026_05_18.md`,
       `docs/PLAN.md` and `docs/MAIN_AGENT_CUTOVER_REVIEW.md`, all confirmed absent, cited from `bootstrap.py`,
       `models/__init__.py`, `db.py`, `orm.py` and `routes/slots_worker.py`. Point each at the surviving SSOT or delete
       the dangling clause if the docstring stands alone — do NOT resurrect the deleted files. **Gate**:
       `rg -n 'AUDIT_FINDINGS_2026_05_18|docs/PLAN\.md|MAIN_AGENT_CUTOVER_REVIEW' agent-orchestrator/server/` returns
-      zero hits and every replacement pointer resolves to a file that exists.
-- [ ] [DOCS] P3. Replace `agent-orchestrator/README.md`'s "Files in This Directory" tree with a pointer, and fix its two
-      inline `agents/*.md` links. The tree still lists an `agents/` directory and seven files under it that no longer
-      exist — the directory was removed in `agent-orchestrator@5eaea29` and role prompts now live in
-      `unified-trading-pm/agents/`. Use a pointer rather than re-listing files that will drift again. **Gate**: every
-      path in the README tree resolves and no link targets a nonexistent `agents/` file.
-- [ ] [DOCS] P3. Correct the branch-flow sentence in `agent-orchestrator/docs/REPO_PROVENANCE.md` to the current model —
-      per-slot clones on `live-defi-rollout`, then LDR to `main` DIRECT with staging bypassed by the per-repo `ldr_main`
-      toggle. It still describes the retired `tab -> live-defi-rollout -> staging -> main` flow. SSOT:
-      `/codex/08-workflows/ci-cd-flow.md`. **Gate**: no `tab ->` flow description remains in the file.
-- [ ] [DOCS] P3. Add a SUPERSEDED banner (or fix the text) in
+      zero hits and every replacement pointer resolves to a file that exists. — `agent-orchestrator@3672522` (slot-4,
+      landed on LDR before this todo was picked up here): `bootstrap.py` now points at
+      `unified-trading-pm/agents/RULES.md` § "Backlog-edit hygiene"; `db.py`'s dangling `docs/PLAN.md` clause dropped
+      (docstring stands alone); `models/__init__.py` repointed to `dashboard/API_REFERENCE.md`; `orm.py` repointed to
+      `docs/SLOTS_AGENTS_AND_FLEET.md` (confirmed exists); `routes/slots_worker.py`'s
+      `docs/AUDIT_FINDINGS_2026_05_18.md` cite replaced with an inline pointer to `server/verify.py`. Verified:
+      `rg -n     'AUDIT_FINDINGS_2026_05_18|docs/PLAN\.md|MAIN_AGENT_CUTOVER_REVIEW' server/` returns zero hits on
+      `agent-orchestrator` HEAD; this todo's checkbox was the only outstanding piece.
+- [x] ✅ [DOCS] P3. Replace `agent-orchestrator/README.md`'s "Files in This Directory" tree with a pointer, and fix its
+      two — agent-orchestrator@f52b223 inline `agents/*.md` links. The tree still lists an `agents/` directory and seven
+      files under it that no longer exist — the directory was removed in `agent-orchestrator@5eaea29` and role prompts
+      now live in `unified-trading-pm/agents/`. Use a pointer rather than re-listing files that will drift again.
+      **Gate**: every path in the README tree resolves and no link targets a nonexistent `agents/` file.
+- [x] ✅ [DOCS] P3. Correct the branch-flow sentence in `agent-orchestrator/docs/REPO_PROVENANCE.md` to the current
+      model — agent-orchestrator@5d8cdc8 per-slot clones on `live-defi-rollout`, then LDR to `main` DIRECT with staging
+      bypassed by the per-repo `ldr_main` toggle. It still describes the retired
+      `tab -> live-defi-rollout -> staging -> main` flow. SSOT: `/codex/08-workflows/ci-cd-flow.md`. **Gate**: no
+      `tab ->` flow description remains in the file.
+- [x] ✅ [DOCS] P3. Add a SUPERSEDED banner (or fix the text) in
       `/codex/12-agent-workflow/local-slot-host-symmetric-worker-model.md`, which still carries live
       `tab/<operator>/<N>` references to the RETIRED tab-branch model with no banner. Same class as the
       `canonical-plan-flow.md` correction already applied 2026-07-23. **Gate**: no unbannered tab-branch instruction
-      remains in the file.
-- [ ] [REVIEW] P3. Re-annotate or reopen the agent-orchestrator line in
+      remains in the file. — `unified-trading-pm@7a3cc1289`: fixed the text (inline correction, same style as
+      `canonical-plan-flow.md`) rather than a whole-doc banner, since the doc's core symmetric-worker-model content is
+      still current — only the Host Behaviour Matrix row and the interactive-session bullet named the retired
+      `tab/<operator>/<N>` branch convention. Both now describe the current Path-B reference-clone model (own `.git` on
+      `live-defi-rollout`); the surviving mention of `tab/<operator>/<N>` is explicitly labeled RETIRED.
+      `rg -n 'tab/<operator>|tab/<op>' codex/12-agent-workflow/local-slot-host-symmetric-worker-model.md` shows only the
+      banner line.
+- [x] ✅ [REVIEW] P3. Re-annotate or reopen the agent-orchestrator line in
       `plans/active/codex_vs_repo_docs_ssot_audit_2026_06_01.md` that is still marked SHIPPED with no note about the
       post-pivot re-drift. A `[x]` that predates an architecture pivot reads as current coverage when it is not.
-      **Gate**: the line carries either a re-verification date or an explicit reopen.
+      **Gate**: the line carries either a re-verification date or an explicit reopen. — **SHIPPED
+      `unified-trading-pm@f58d85a48`**: reopened the line (`[x]`→`[ ]`) with a REOPENED 2026-07-24 annotation — the
+      2026-06-22 verification predates the 2026-06-27 single-VM pivot, and the "multi-vm-topology" doc + "multi-vm auth
+      diagram" it reconciled no longer exist under those names (current SSOTs:
+      `agent-orchestrator-single-vm-architecture.md`, `runtime-deployment-topology.md`). Kept the original SHIPPED note
+      as history (marked superseded) rather than deleting it.
 - [x] ✅ [INFRA] P1. Route `plan_health.py::record_result()`'s `doc_drift` findings through `notify_slot_blocked` so
       drift reaches a worker's blocked queue instead of only a Slack WARN. Today `doc_drift` routes solely to
       `slack_notify.notify_plan_health_findings`, and `notify_slot_blocked` is never invoked from `plan_health.py`.

@@ -190,11 +190,20 @@ from scope).
 - [ ] [DOCS] P1. **strategy-service** (15) — archetype/promote docs vs `codex/09-strategy`, `codex/04-architecture`.
 - [ ] [DOCS] P1. **unified-trading-library** (15) — events/cloud/bucket docs.
 - [ ] [DOCS] P1. **e2e-testing** (21) — defi/sports/prediction runbooks vs `codex/08-workflows`, `codex/15-runbooks`.
-- [x] ✅ [DOCS] P1. **agent-orchestrator** (10) — vs `codex/12-agent-workflow`, `codex/04-architecture`. — **SHIPPED
-      `unified-trading-pm@c6b2d9eb1` 2026-06-22**: reconciled 5 codex docs against the live code (PlanRegenLoop cadence
-      6h→30min; AutoSpawn ceilings 50/80→95/95 + env-name fixes; backend port 8026→8765 across overview/worker-liveness/
-      multi-vm-topology; ES256 internal-token + HS256-retired in the multi-vm auth diagram). Verified the failover /
-      worker-liveness / backlog-model / base-branch docs already-accurate.
+- [ ] [DOCS] P1. **agent-orchestrator** (10) — vs `codex/12-agent-workflow`, `codex/04-architecture`. — **REOPENED
+      2026-07-24** (was marked SHIPPED `unified-trading-pm@c6b2d9eb1` 2026-06-22, but that verification predates the
+      single-VM architecture pivot 2026-06-27 — a `[x]` from before a pivot reads as current coverage when it isn't).
+      Concrete drift found on re-check: the "multi-vm-topology" doc + "multi-vm auth diagram" the 2026-06-22 pass
+      reconciled no longer exist under those names —
+      `codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` and
+      `codex/04-architecture/runtime-deployment-topology.md` are the current SSOTs (multi-VM dispatch deprecated
+      2026-06-27; single central orchestrator VM + role-based dispatch replaced it). The "backlog-model / base-branch
+      docs already-accurate" claim also needs re-checking against Path-B (per-slot `git clone --reference` on
+      `live-defi-rollout`, no `tab/<op>/N` branch — the tab-branch model this audit pass may have verified against is
+      itself RETIRED). Needs a fresh audit pass against current code before it can re-close. — **SHIPPED (superseded)
+      `unified-trading-pm@c6b2d9eb1` 2026-06-22**: reconciled 5 codex docs against the live code as of that date
+      (PlanRegenLoop cadence 6h→30min; AutoSpawn ceilings 50/80→95/95 + env-name fixes; backend port 8026→8765 across
+      overview/worker-liveness/multi-vm-topology; ES256 internal-token + HS256-retired in the multi-vm auth diagram).
 - [ ] [DOCS] P2. **deployment-api** (8) / **client-reporting-api** (8) / **alerting-service** (8).
 - [ ] [DOCS] P2. **trading-agent-service** (7) / **ibkr-gateway-infra** (4) / **batch-live-reconciliation-service** (1)
       / **system-integration-tests** (1).

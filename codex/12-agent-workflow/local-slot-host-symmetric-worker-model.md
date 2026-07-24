@@ -49,21 +49,22 @@ laptop, or Harsh's laptop.
 
 ## Host Behaviour Matrix
 
-| Behavior                                  | VM  | Operator laptop | Harsh laptop       |
-| ----------------------------------------- | --- | --------------- | ------------------ |
-| `slot-cron-ff-pull.sh` every 5 min        | ✓   | ✓               | ✓ (post-migration) |
-| `slot-git-status-report.sh` every 5 min   | ✓   | ✓               | ✓ (post-migration) |
-| Per-slot worktree on `tab/<operator>/<N>` | ✓   | ✓               | ✓                  |
-| Commit + Push + Flip same-turn HARD RULE  | ✓   | ✓               | ✓                  |
-| Spawn workers via `/api/slots/<N>/spawn`  | ✓   | optional        | optional           |
-| Interactive Claude Code chat as a slot    | ✓   | ✓               | ✓                  |
+| Behavior                                               | VM  | Operator laptop | Harsh laptop       |
+| ------------------------------------------------------ | --- | --------------- | ------------------ |
+| `slot-cron-ff-pull.sh` every 5 min                     | ✓   | ✓               | ✓ (post-migration) |
+| `slot-git-status-report.sh` every 5 min                | ✓   | ✓               | ✓ (post-migration) |
+| Per-slot Path-B reference-clone on `live-defi-rollout` | ✓   | ✓               | ✓                  |
+| Commit + Push + Flip same-turn HARD RULE               | ✓   | ✓               | ✓                  |
+| Spawn workers via `/api/slots/<N>/spawn`               | ✓   | optional        | optional           |
+| Interactive Claude Code chat as a slot                 | ✓   | ✓               | ✓                  |
 
 ## Interactive Sessions Count as Slots
 
 **Operator's interactive session counts as a slot.** When the operator works in `.tabs/<N>/<repo>/` from a Cursor /
 Claude Code window, they ARE slot N for the purposes of:
 
-- The slot's branch convention (`tab/<operator>/<N>`)
+- The slot's Path-B reference-clone convention (own `.git`, checked out on `live-defi-rollout`; the `tab/<operator>/<N>`
+  tab-branch model is RETIRED — corrected 2026-07-23, same as `/codex/12-agent-workflow/canonical-plan-flow.md`)
 - The Commit + Push + Flip plan checkbox HARD RULE (no 9-hour-old uncommitted WIP; ship per shippable unit)
 - The git-status reporter (their dirty state shows on the dashboard alongside spawned workers)
 - The FF-pull cron (their worktree gets FF-pulled the same as a worker's)
