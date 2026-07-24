@@ -14,7 +14,7 @@ related:
   [
     /plans/archive/2026_05/defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md,
     defi_master_2026_05_07.md,
-    /plans/active/master_to_live_defi_2026_05_23.md,
+    /plans/archive/2026_07/master_to_live_defi_2026_05_23.md,
   ]
 created: "2026-05-09"
 overview:
@@ -372,41 +372,41 @@ in plan order).
       `archetype_slot_resolver.py:780-819`. Checkbox was stale-unchecked.
 
       ```python
-                                                                                                                  Slot(
-                                                                                                                      archetype=StrategyArchetype.ARBITRAGE_PRICE_DISPERSION,
-                                                                                                                      slot_label="ARBITRAGE_PRICE_DISPERSION@multi-perp-funding-rate-dispersion-btc-usdt-prod",
-                                                                                                                      asset_group=MarketAssetGroup.CEFI,  # all 6 perp venues are CEFI
-                                                                                                                      config={
-                                                                                                                          # Q1 + Q2 — dispersion type + venue universe
-                                                                                                                          "dispersion_type": "funding-rate-dispersion",
-                                                                                                                          "asset": "BTC",
-                                                                                                                          "quote_currency": "USDT",
-                                                                                                                          "venue_universe": ["bybit", "deribit", "binance", "okx", "hyperliquid", "aster"],
-                                                                                                                          "venue_selection_mode": "dynamic-best-long-short",  # per funding cycle (~8h)
-                                                                                                                          # Layer 1 — within-slot pair selection (3 modes ship from day 1; default = single-best)
-                                                                                                                          "pair_selection_mode": "single-best",        # single-best | top-k | all-above-threshold
-                                                                                                                          "pair_selection_k": "3",                      # only consumed when mode == top-k
-                                                                                                                          "min_spread_threshold_bps": "5.0",            # operator-confirmed 2026-05-09
-                                                                                                                          "max_concurrent_pairs_per_slot": "5",         # cap when top-k / all-above-threshold engaged
-                                                                                                                          "pair_cost_estimator": "round_trip_perp",
-                                                                                                                          "pair_selection_refresh_seconds": "28800",    # 8h funding cycle
-                                                                                                                          # Q3 — leverage cap
-                                                                                                                          "target_leverage": "5.0",
-                                                                                                                          # Q4 — vol-cap clamp using short-term realised-vol features
-                                                                                                                          "vol_cap_clamp_feature": "realized_vol_20",            # 20-bar annualized close-to-close
-                                                                                                                          "vol_cap_clamp_timeframe": "1h",                       # 1h candles → ~20h trailing window
-                                                                                                                          "vol_cap_clamp_threshold_pct": "80.0",                 # raw rv threshold
-                                                                                                                          "vol_cap_clamp_zscore_feature": "vol_regime_zscore_20",
-                                                                                                                          "vol_cap_clamp_zscore_threshold": "2.0",               # 2σ above 60-bar mean
-                                                                                                                          "vol_cap_clamp_combine": "any",                        # OR — clamp if EITHER breached
-                                                                                                                          "vol_cap_clamp_target_leverage": "1.0",
-                                                                                                                          # Q5 — bidirectional funding capture
-                                                                                                                          "bidirectional_funding": "true",
-                                                                                                                          # Q6 — sign-match entry filter
-                                                                                                                          "entry_filter_sign_match": "price_spread == funding_spread",
-                                                                                                                      },
-                                                                                                                  ),
-                                                                                                                  ```
+                                                                                                                          Slot(
+                                                                                                                              archetype=StrategyArchetype.ARBITRAGE_PRICE_DISPERSION,
+                                                                                                                              slot_label="ARBITRAGE_PRICE_DISPERSION@multi-perp-funding-rate-dispersion-btc-usdt-prod",
+                                                                                                                              asset_group=MarketAssetGroup.CEFI,  # all 6 perp venues are CEFI
+                                                                                                                              config={
+                                                                                                                                  # Q1 + Q2 — dispersion type + venue universe
+                                                                                                                                  "dispersion_type": "funding-rate-dispersion",
+                                                                                                                                  "asset": "BTC",
+                                                                                                                                  "quote_currency": "USDT",
+                                                                                                                                  "venue_universe": ["bybit", "deribit", "binance", "okx", "hyperliquid", "aster"],
+                                                                                                                                  "venue_selection_mode": "dynamic-best-long-short",  # per funding cycle (~8h)
+                                                                                                                                  # Layer 1 — within-slot pair selection (3 modes ship from day 1; default = single-best)
+                                                                                                                                  "pair_selection_mode": "single-best",        # single-best | top-k | all-above-threshold
+                                                                                                                                  "pair_selection_k": "3",                      # only consumed when mode == top-k
+                                                                                                                                  "min_spread_threshold_bps": "5.0",            # operator-confirmed 2026-05-09
+                                                                                                                                  "max_concurrent_pairs_per_slot": "5",         # cap when top-k / all-above-threshold engaged
+                                                                                                                                  "pair_cost_estimator": "round_trip_perp",
+                                                                                                                                  "pair_selection_refresh_seconds": "28800",    # 8h funding cycle
+                                                                                                                                  # Q3 — leverage cap
+                                                                                                                                  "target_leverage": "5.0",
+                                                                                                                                  # Q4 — vol-cap clamp using short-term realised-vol features
+                                                                                                                                  "vol_cap_clamp_feature": "realized_vol_20",            # 20-bar annualized close-to-close
+                                                                                                                                  "vol_cap_clamp_timeframe": "1h",                       # 1h candles → ~20h trailing window
+                                                                                                                                  "vol_cap_clamp_threshold_pct": "80.0",                 # raw rv threshold
+                                                                                                                                  "vol_cap_clamp_zscore_feature": "vol_regime_zscore_20",
+                                                                                                                                  "vol_cap_clamp_zscore_threshold": "2.0",               # 2σ above 60-bar mean
+                                                                                                                                  "vol_cap_clamp_combine": "any",                        # OR — clamp if EITHER breached
+                                                                                                                                  "vol_cap_clamp_target_leverage": "1.0",
+                                                                                                                                  # Q5 — bidirectional funding capture
+                                                                                                                                  "bidirectional_funding": "true",
+                                                                                                                                  # Q6 — sign-match entry filter
+                                                                                                                                  "entry_filter_sign_match": "price_spread == funding_spread",
+                                                                                                                              },
+                                                                                                                          ),
+                                                                                                                          ```
 
 - [x] [strategy-service] P1. Slot consumed by `ArbitragePriceDispersionEngine` factory entry at
       [`factory.py:66`](../../../strategy-service/strategy_service/engine/strategies/v2/factory.py#L66). **Architectural
@@ -421,43 +421,43 @@ in plan order).
       `StrategyInstructionEnvelope` emission.
 
       Why this shape (not a subclass): (1) factory invariant — single engine class per archetype enum; (2) System-First
-                                                                                                                  / No-Double-SSOT — extend the existing engine rather than introduce a parallel class; (3) feature consumption is
-                                                                                                                  identical (engine reads `features` dict in both paths), only the selection logic differs.
+                                                                                                                          / No-Double-SSOT — extend the existing engine rather than introduce a parallel class; (3) feature consumption is
+                                                                                                                          identical (engine reads `features` dict in both paths), only the selection logic differs.
 
-                                                                                                                  **Engine 8-step loop** (consumes ALL slot config knobs — no hardcoded thresholds in code):
-                                                                                                                  1. Read per-venue funding-rate snapshot from features-perp-funding (latest tick per venue in `venue_universe`).
-                                                                                                                  2. Read latest mid-prices for every venue in `venue_universe` from MTDS perp tick data.
-                                                                                                                  3. Read `realized_vol_<window>` + `vol_regime_zscore_<window>` from features-volatility for the asset (window
-                                                                                                                     from slot config `vol_cap_clamp_feature` / `vol_cap_clamp_zscore_feature`).
-                                                                                                                  4. Enumerate candidate venue pairs per `pair_selection_mode` (all 3 modes ship from day 1):
-                                                                                                                     - `single-best`: `[(argmax(funding), argmin(funding))]` — one pair.
-                                                                                                                     - `top-k`: top-K pairs ranked by `|funding_spread| − pair_cost_estimator(pair)`, K from `pair_selection_k`.
-                                                                                                                     - `all-above-threshold`: every pair with `|funding_spread| − pair_cost_estimator(pair) >
-                                                                                                                       min_spread_threshold_bps`.
-                                                                                                                     All modes additionally enforce `max_concurrent_pairs_per_slot` as a final cap.
-                                                                                                                  5. Per-pair filter — drop pairs failing **sign-match (Q6)**: keep only pairs where
-                                                                                                                     `sign(price_spread) == sign(funding_spread)`. Emit `SIGN_MISMATCH_SKIP` trace event per dropped pair (so
-                                                                                                                     tracer + pnl-attribution can count skipped cycles).
-                                                                                                                  6. Per-pair filter — drop pairs failing **min-spread threshold**: keep only pairs where net-of-cost spread >
-                                                                                                                     `min_spread_threshold_bps` (5bps default). Emit `BELOW_MIN_SPREAD_SKIP` trace event per dropped pair.
-                                                                                                                  7. **Vol-cap clamp (Q4):** for every surviving pair, if `realized_vol_<window> > vol_cap_clamp_threshold_pct`
-                                                                                                                     OR `vol_regime_zscore_<window> > vol_cap_clamp_zscore_threshold` (combined per `vol_cap_clamp_combine`),
-                                                                                                                     clamp `target_leverage` → `vol_cap_clamp_target_leverage`. Emit `VOL_CAP_CLAMPED` trace event with both raw
-                                                                                                                     + clamped values.
-                                                                                                                  8. Emit each surviving pair via `LegController.update` per the May-2026 leg-controller refactor with the
-                                                                                                                     clamp-adjusted leverage. The cross-slot allocator (Layer 2) sees N pairs per slot per cycle and ranks +
-                                                                                                                     allocates capital across them.
+                                                                                                                          **Engine 8-step loop** (consumes ALL slot config knobs — no hardcoded thresholds in code):
+                                                                                                                          1. Read per-venue funding-rate snapshot from features-perp-funding (latest tick per venue in `venue_universe`).
+                                                                                                                          2. Read latest mid-prices for every venue in `venue_universe` from MTDS perp tick data.
+                                                                                                                          3. Read `realized_vol_<window>` + `vol_regime_zscore_<window>` from features-volatility for the asset (window
+                                                                                                                             from slot config `vol_cap_clamp_feature` / `vol_cap_clamp_zscore_feature`).
+                                                                                                                          4. Enumerate candidate venue pairs per `pair_selection_mode` (all 3 modes ship from day 1):
+                                                                                                                             - `single-best`: `[(argmax(funding), argmin(funding))]` — one pair.
+                                                                                                                             - `top-k`: top-K pairs ranked by `|funding_spread| − pair_cost_estimator(pair)`, K from `pair_selection_k`.
+                                                                                                                             - `all-above-threshold`: every pair with `|funding_spread| − pair_cost_estimator(pair) >
+                                                                                                                               min_spread_threshold_bps`.
+                                                                                                                             All modes additionally enforce `max_concurrent_pairs_per_slot` as a final cap.
+                                                                                                                          5. Per-pair filter — drop pairs failing **sign-match (Q6)**: keep only pairs where
+                                                                                                                             `sign(price_spread) == sign(funding_spread)`. Emit `SIGN_MISMATCH_SKIP` trace event per dropped pair (so
+                                                                                                                             tracer + pnl-attribution can count skipped cycles).
+                                                                                                                          6. Per-pair filter — drop pairs failing **min-spread threshold**: keep only pairs where net-of-cost spread >
+                                                                                                                             `min_spread_threshold_bps` (5bps default). Emit `BELOW_MIN_SPREAD_SKIP` trace event per dropped pair.
+                                                                                                                          7. **Vol-cap clamp (Q4):** for every surviving pair, if `realized_vol_<window> > vol_cap_clamp_threshold_pct`
+                                                                                                                             OR `vol_regime_zscore_<window> > vol_cap_clamp_zscore_threshold` (combined per `vol_cap_clamp_combine`),
+                                                                                                                             clamp `target_leverage` → `vol_cap_clamp_target_leverage`. Emit `VOL_CAP_CLAMPED` trace event with both raw
+                                                                                                                             + clamped values.
+                                                                                                                          8. Emit each surviving pair via `LegController.update` per the May-2026 leg-controller refactor with the
+                                                                                                                             clamp-adjusted leverage. The cross-slot allocator (Layer 2) sees N pairs per slot per cycle and ranks +
+                                                                                                                             allocates capital across them.
 
-                                                                                                                  Document the chosen branch (a vs b) inline in the commit message + the slot doc-string.
+                                                                                                                          Document the chosen branch (a vs b) inline in the commit message + the slot doc-string.
 
-                                                                                                                  **DONE-2026-05-09 (agent-arb-fundrate-c3)**: shipped at strategy-service@04c0d52
-                                                                                                                  ("feat(strategies): funding-rate-dispersion engine wire-in — 8-step loop with sign-match + min-spread + vol-clamp").
-                                                                                                                  Engine 8-step loop replaces the Commit 1 stub at `_on_tick_funding_rate_dispersion`; 5 helper methods
-                                                                                                                  (`_read_funding_rate_inputs`, `_select_funding_rate_pairs`, `_log_drops`, `_apply_clamp_to_survivors`,
-                                                                                                                  `_build_instructions_for_clamped_pairs`) keep the top-level dispatch under the McCabe-7 complexity gate. Trace
-                                                                                                                  events for `SIGN_MISMATCH_SKIP` / `BELOW_MIN_SPREAD_SKIP` / `VOL_CAP_CLAMPED` go via `logger.info` since the v2
-                                                                                                                  base engine has no separate event-emission helper; per-cycle drop/clamp counts also stamped onto each emitted
-                                                                                                                  `AtomicInstruction`'s `attestations` field.
+                                                                                                                          **DONE-2026-05-09 (agent-arb-fundrate-c3)**: shipped at strategy-service@04c0d52
+                                                                                                                          ("feat(strategies): funding-rate-dispersion engine wire-in — 8-step loop with sign-match + min-spread + vol-clamp").
+                                                                                                                          Engine 8-step loop replaces the Commit 1 stub at `_on_tick_funding_rate_dispersion`; 5 helper methods
+                                                                                                                          (`_read_funding_rate_inputs`, `_select_funding_rate_pairs`, `_log_drops`, `_apply_clamp_to_survivors`,
+                                                                                                                          `_build_instructions_for_clamped_pairs`) keep the top-level dispatch under the McCabe-7 complexity gate. Trace
+                                                                                                                          events for `SIGN_MISMATCH_SKIP` / `BELOW_MIN_SPREAD_SKIP` / `VOL_CAP_CLAMPED` go via `logger.info` since the v2
+                                                                                                                          base engine has no separate event-emission helper; per-cycle drop/clamp counts also stamped onto each emitted
+                                                                                                                          `AtomicInstruction`'s `attestations` field.
 
 - [x] [strategy-service] P1. **A.7 — verify `ArbitragePriceDispersionRankAllocator` handles multi-pair-per-slot**. Audit
       [`portfolio_allocator/archetypes.py:678,729`](../../../strategy-service/strategy_service/portfolio_allocator/archetypes.py#L678).
@@ -471,29 +471,29 @@ in plan order).
       from day 1.
 
       Tests: `tests/unit/portfolio_allocator/test_arbitrage_price_dispersion_rank_allocator.py` covering all 4 weight
-                                                                                                                  modes (`spread-proportional` / `rank-proportional` / `winner-takes-all` / `equal-weight`) + per-slot + per-pair
-                                                                                                                  caps + rebalance-threshold-bps churn suppression.
+                                                                                                                          modes (`spread-proportional` / `rank-proportional` / `winner-takes-all` / `equal-weight`) + per-slot + per-pair
+                                                                                                                          caps + rebalance-threshold-bps churn suppression.
 
-                                                                                                                  **DONE-2026-05-09 (agent-arb-fundrate-c3) — branch (b) shipped at strategy-service@de9b4b0**
-                                                                                                                  ("feat(allocator): ArbitragePriceDispersionRankAllocator multi-opportunity-per-slot wiring (branch b)"). Audit
-                                                                                                                  verdict: pre-A.7 the allocator handled exactly 1 opportunity per slot (one `StrategyInputSeries` row per
-                                                                                                                  `strategy_instance_id`); branch (b) extends it. Universe representation: each (slot, pair) row carries a
-                                                                                                                  composite id `"<slot_id>::<long>__<short>"`. Single-row-per-slot legacy callers (no `::`) still work — the slot
-                                                                                                                  id is the full `strategy_instance_id` and the per-slot cap is a no-op. New constructor knobs (operator-direction
-                                                                                                                  defaults, all overridable):
-                                                                                                                  - `weight_mode` ∈ {`spread-proportional`, `rank-proportional`, `winner-takes-all`, `equal-weight`}; default
-                                                                                                                    `spread-proportional` preserves prior behaviour.
-                                                                                                                  - `max_capital_pct_per_slot` (operator default 40%) — HARD-bound sum of weights for one slot's pairs; residual to
-                                                                                                                    cash, no renormalisation.
-                                                                                                                  - `max_capital_pct_per_pair` (operator default 25%) — HARD-bound on any individual pair's weight.
-                                                                                                                  - `rebalance_threshold_bps` + `previous_weights` — churn suppression: when max delta vs `previous_weights` stays
-                                                                                                                    at or below the threshold (in bps), the allocator returns the previous weights unchanged.
+                                                                                                                          **DONE-2026-05-09 (agent-arb-fundrate-c3) — branch (b) shipped at strategy-service@de9b4b0**
+                                                                                                                          ("feat(allocator): ArbitragePriceDispersionRankAllocator multi-opportunity-per-slot wiring (branch b)"). Audit
+                                                                                                                          verdict: pre-A.7 the allocator handled exactly 1 opportunity per slot (one `StrategyInputSeries` row per
+                                                                                                                          `strategy_instance_id`); branch (b) extends it. Universe representation: each (slot, pair) row carries a
+                                                                                                                          composite id `"<slot_id>::<long>__<short>"`. Single-row-per-slot legacy callers (no `::`) still work — the slot
+                                                                                                                          id is the full `strategy_instance_id` and the per-slot cap is a no-op. New constructor knobs (operator-direction
+                                                                                                                          defaults, all overridable):
+                                                                                                                          - `weight_mode` ∈ {`spread-proportional`, `rank-proportional`, `winner-takes-all`, `equal-weight`}; default
+                                                                                                                            `spread-proportional` preserves prior behaviour.
+                                                                                                                          - `max_capital_pct_per_slot` (operator default 40%) — HARD-bound sum of weights for one slot's pairs; residual to
+                                                                                                                            cash, no renormalisation.
+                                                                                                                          - `max_capital_pct_per_pair` (operator default 25%) — HARD-bound on any individual pair's weight.
+                                                                                                                          - `rebalance_threshold_bps` + `previous_weights` — churn suppression: when max delta vs `previous_weights` stays
+                                                                                                                            at or below the threshold (in bps), the allocator returns the previous weights unchanged.
 
-                                                                                                                  14 tests cover all 4 modes against a 9-row (3 slot × 3 pair) universe, the single-pair backward-compat path,
-                                                                                                                  per-pair cap (winner-takes-all clamp + spread-proportional dominator clamp), per-slot cap (no-bind happy path +
-                                                                                                                  slot-dominator binding), churn suppression (within-threshold suppress + above-threshold pass-through +
-                                                                                                                  no-baseline disabled), invalid `weight_mode` fail-loud, and `min_apy_bps` threshold. Total allocator suite: 63
-                                                                                                                  tests green.
+                                                                                                                          14 tests cover all 4 modes against a 9-row (3 slot × 3 pair) universe, the single-pair backward-compat path,
+                                                                                                                          per-pair cap (winner-takes-all clamp + spread-proportional dominator clamp), per-slot cap (no-bind happy path +
+                                                                                                                          slot-dominator binding), churn suppression (within-threshold suppress + above-threshold pass-through +
+                                                                                                                          no-baseline disabled), invalid `weight_mode` fail-loud, and `min_apy_bps` threshold. Total allocator suite: 63
+                                                                                                                          tests green.
 
 - [x] [strategy-service] P1. **Mode-coverage tests for the engine** —
       `tests/unit/engine/strategies/v2/test_arbitrage_price_dispersion_funding_rate_engine.py` exercises all 3
@@ -545,7 +545,7 @@ in plan order).
       all owned files. CSV at `/tmp/funding_rate_dispersion_coverage.csv`.
 
       Re-run QG. Commit + push as a separate `feat(strategies):` commit. (Probe script is reusable for future
-                                                                                                                  asset universe expansions.)
+                                                                                                                          asset universe expansions.)
 
 **Code gates**: C4 — `bash strategy-service/scripts/quality-gates.sh` Pass 1 green (basedpyright + ruff + tests). C5 —
 landed on `live-defi-rollout` per workspace dirty-deps rule (`git push origin live-defi-rollout` directly).
@@ -566,14 +566,14 @@ prints non-None Slot.
       `--asset-group defi|cefi` (the archetype spans both per the slot taxonomy)
 
       The script runs the archetype's signal generation through the unified pipeline (per CLAUDE.md "Batch = Live")
-                                                                                                                  and emits per-fixture/per-day P&L + signal trace rows for operator inspection. **DONE-2026-05-10
-                                                                                                                  (agent-arb-fundrate-tracer)**: shipped at strategy-service@2fdf7e8 — 658-line tracer drives the SSOT
-                                                                                                                  `funding_rate_dispersion` helpers (the same pure-function primitives `ArbitragePriceDispersionEngine`
-                                                                                                                  consumes at runtime) over every funding-rate-dispersion slot in `archetype_slot_resolver.STRATEGY_TYPE_TO_SLOT`,
-                                                                                                                  emits per-pair CSVs + a top-level `all_slots_summary.csv` with status (EMIT / SIGN_MISMATCH_SKIP /
-                                                                                                                  BELOW_MIN_SPREAD_SKIP / MISSING_MID_PRICE_SKIP), funding/price spread, leverage, was_clamped, simulated_pnl_usd.
-                                                                                                                  Real GCS sources: Tardis `derivative_ticker` in `market-data-tick-cefi-{pid}` (binance / bybit / okx-swap /
-                                                                                                                  deribit / kraken / bitget / bitfinex / hyperliquid) + `perp-funding-{pid}` handler bucket (aster / gmx).
+                                                                                                                          and emits per-fixture/per-day P&L + signal trace rows for operator inspection. **DONE-2026-05-10
+                                                                                                                          (agent-arb-fundrate-tracer)**: shipped at strategy-service@2fdf7e8 — 658-line tracer drives the SSOT
+                                                                                                                          `funding_rate_dispersion` helpers (the same pure-function primitives `ArbitragePriceDispersionEngine`
+                                                                                                                          consumes at runtime) over every funding-rate-dispersion slot in `archetype_slot_resolver.STRATEGY_TYPE_TO_SLOT`,
+                                                                                                                          emits per-pair CSVs + a top-level `all_slots_summary.csv` with status (EMIT / SIGN_MISMATCH_SKIP /
+                                                                                                                          BELOW_MIN_SPREAD_SKIP / MISSING_MID_PRICE_SKIP), funding/price spread, leverage, was_clamped, simulated_pnl_usd.
+                                                                                                                          Real GCS sources: Tardis `derivative_ticker` in `market-data-tick-cefi-{pid}` (binance / bybit / okx-swap /
+                                                                                                                          deribit / kraken / bitget / bitfinex / hyperliquid) + `perp-funding-{pid}` handler bucket (aster / gmx).
 
 - [x] [strategy-service] P1. Cross-reference: extend `trace_all_carry_archetypes.py` to optionally invoke
       `trace_arbitrage_price_dispersion.py` for the cross-venue funding-spread variant. Don't fold the dispersion tracer
@@ -717,26 +717,26 @@ Phase E may run in parallel with Phases B/C (no upstream dependency on artefacts
       the slot is **multi-venue universe + dynamic-best-pair selection**, NOT a fixed venue pair:
 
       ```
-                                                                                                                  Funding-rate dispersion (multi-venue universe + dynamic best-long/best-short — Stream B 2026-05-07):
-                                                                                                                    ARBITRAGE_PRICE_DISPERSION@multi-perp-funding-rate-dispersion-btc-usdt-prod
-                                                                                                                    ARBITRAGE_PRICE_DISPERSION@multi-perp-funding-rate-dispersion-eth-usdt-prod
-                                                                                                                    # config (operator-confirmed 2026-05-09):
-                                                                                                                    #   venue_universe         = [bybit, deribit, binance, okx, hyperliquid, aster]
-                                                                                                                    #   venue_selection_mode   = dynamic-best-long-short        (per funding cycle, ~8h)
-                                                                                                                    #   target_leverage        = 5.0
-                                                                                                                    #   vol_cap_clamp_feature  = realized_vol_20 (1h candles)   (short-term, NOT 60-day)
-                                                                                                                    #   vol_cap_clamp_threshold_pct = 80.0  OR  vol_regime_zscore_20 > 2.0  (any breach → clamp)
-                                                                                                                    #   vol_cap_clamp_target_leverage = 1.0
-                                                                                                                    #   bidirectional_funding  = true                           (capture both spread signs)
-                                                                                                                    #   entry_filter_sign_match = price_spread == funding_spread (skip cycle if signs differ)
-                                                                                                                  ```
+                                                                                                                          Funding-rate dispersion (multi-venue universe + dynamic best-long/best-short — Stream B 2026-05-07):
+                                                                                                                            ARBITRAGE_PRICE_DISPERSION@multi-perp-funding-rate-dispersion-btc-usdt-prod
+                                                                                                                            ARBITRAGE_PRICE_DISPERSION@multi-perp-funding-rate-dispersion-eth-usdt-prod
+                                                                                                                            # config (operator-confirmed 2026-05-09):
+                                                                                                                            #   venue_universe         = [bybit, deribit, binance, okx, hyperliquid, aster]
+                                                                                                                            #   venue_selection_mode   = dynamic-best-long-short        (per funding cycle, ~8h)
+                                                                                                                            #   target_leverage        = 5.0
+                                                                                                                            #   vol_cap_clamp_feature  = realized_vol_20 (1h candles)   (short-term, NOT 60-day)
+                                                                                                                            #   vol_cap_clamp_threshold_pct = 80.0  OR  vol_regime_zscore_20 > 2.0  (any breach → clamp)
+                                                                                                                            #   vol_cap_clamp_target_leverage = 1.0
+                                                                                                                            #   bidirectional_funding  = true                           (capture both spread signs)
+                                                                                                                            #   entry_filter_sign_match = price_spread == funding_spread (skip cycle if signs differ)
+                                                                                                                          ```
 
-                                                                                                                  **DONE-2026-05-10 (agent-arb-fundrate-tracer)**: shipped at PM@5fe5eabd. Note: the slot label canonicalised
-                                                                                                                  in codex uses the actual strategy-service shape
-                                                                                                                  `ARBITRAGE_PRICE_DISPERSION@bybit-deribit-binance-okx-hyperliquid-aster-funding-rate-disp-btc-usdt-v5-prod`
-                                                                                                                  (per `_funding_rate_dispersion_slot()` builder in `archetype_slot_resolver.py`), not the abstract
-                                                                                                                  `multi-perp-funding-rate-dispersion-btc-usdt-prod` placeholder used in the plan body. The codex example block
-                                                                                                                  at `arbitrage-price-dispersion.md:161-172` matches the live resolver.
+                                                                                                                          **DONE-2026-05-10 (agent-arb-fundrate-tracer)**: shipped at PM@5fe5eabd. Note: the slot label canonicalised
+                                                                                                                          in codex uses the actual strategy-service shape
+                                                                                                                          `ARBITRAGE_PRICE_DISPERSION@bybit-deribit-binance-okx-hyperliquid-aster-funding-rate-disp-btc-usdt-v5-prod`
+                                                                                                                          (per `_funding_rate_dispersion_slot()` builder in `archetype_slot_resolver.py`), not the abstract
+                                                                                                                          `multi-perp-funding-rate-dispersion-btc-usdt-prod` placeholder used in the plan body. The codex example block
+                                                                                                                          at `arbitrage-price-dispersion.md:161-172` matches the live resolver.
 
 - [x] [codex] P1. Touch-check
       [`/codex/09-strategy/architecture-v2/category-instrument-coverage.md § 11`](/codex/09-strategy/architecture-v2/category-instrument-coverage.md):

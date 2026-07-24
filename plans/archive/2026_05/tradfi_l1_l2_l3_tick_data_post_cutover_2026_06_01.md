@@ -10,7 +10,10 @@ repos: [deployment-service, market-tick-data-service, unified-api-contracts]
 scope: [engineer, admin]
 tags: []
 related:
-  [/plans/archive/2026_05/tradfi_ohlcv_only_mvp_backfill_2026_05_15.md, /plans/active/master_to_live_defi_2026_05_23.md]
+  [
+    /plans/archive/2026_05/tradfi_ohlcv_only_mvp_backfill_2026_05_15.md,
+    /plans/archive/2026_07/master_to_live_defi_2026_05_23.md,
+  ]
 created: "2026-05-17"
 parent_epic: tradfi_master
 priority: P2

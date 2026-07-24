@@ -10,7 +10,7 @@ repos:
   [agent-orchestrator, deployment-api, deployment-service, execution-service, features-service, instruments-service]
 scope: [engineer, admin]
 tags: []
-related: [/plans/audit/is_mtds_contract_audit_2026_05_20.md, /plans/active/master_to_live_defi_2026_05_23.md]
+related: [/plans/audit/is_mtds_contract_audit_2026_05_20.md, /plans/archive/2026_07/master_to_live_defi_2026_05_23.md]
 created: 2026-05-20
 source:
   [

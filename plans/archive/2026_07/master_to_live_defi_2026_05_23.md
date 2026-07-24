@@ -2149,7 +2149,7 @@ Agent 5):
 
 ## Tracking surface
 
-- [x] Plan promoted to `unified-trading-pm/plans/active/master_to_live_defi_2026_05_23.md` (this file)
+- [x] Plan promoted to `unified-trading-pm/plans/archive/2026_07/master_to_live_defi_2026_05_23.md` (this file)
 - [x] Audit companion at `unified-trading-pm/codex/10-audit/MASTER_READINESS_LIVE_DEFI_2026_05_23.md` (pointer + drift
       table mirror)
 - [x] Referenced from `CLAUDE.md` so every agent session loads it

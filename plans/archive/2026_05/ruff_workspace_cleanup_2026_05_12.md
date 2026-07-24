@@ -9,7 +9,7 @@ stage: [meta]
 repos: [agent-orchestrator, alerting-service, deployment-api, deployment-service, execution-service, features-service]
 scope: [engineer, admin]
 tags: []
-related: [/plans/active/master_to_live_defi_2026_05_23.md]
+related: [/plans/archive/2026_07/master_to_live_defi_2026_05_23.md]
 created: "2026-05-21"
 parent_epic: infrastructure_master
 priority: P1

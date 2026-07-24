@@ -920,8 +920,7 @@ _(no plans currently assigned at this priority)_
 
 ### [`bigquery_feature_ml_compute_engine_option_2026_06_08`](../active/bigquery_feature_ml_compute_engine_option_2026_06_08.md)
 
-**status**: active · **estimate**: 4.2 cal AI-days (class: design) **title**: BigQuery as an optional feature/ML compute
-engine over the hive-partitioned GCS corpus — scale path alongside in-process polars/DuckDB
+**status**: active · **estimate**: 4.2 cal AI-days (class: design)
 
 ## P3 — backlog; revisit quarterly
 

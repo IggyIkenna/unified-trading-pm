@@ -37,12 +37,19 @@ related_plans:
   - ../active/data_completion_cefi_2026_07_15.md
   - ../active/data_completion_defi_2026_07_15.md
   - ../active/data_completion_prediction_2026_07_15.md
+  - ../active/data_completion_sports_2026_07_24.md
   - ../active/data_completion_tradfi_2026_07_15.md
   - ../active/data_pipeline_reconciliation_skill_2026_07_20.md
+  - ../active/defi_migration_audit_log_2026_07_24.md
+  - ../active/defi_venue_lst_rates_residual_2026_07_24.md
   - ../active/distinct_values_noncanonical_audit_2026_07_20.md
+  - ../active/infra_ops_residual_migration_verification_2026_07_24.md
+  - ../active/is_catalogue_g1_root_audit_log_2026_07_24.md
   - ../active/master_data_canonicalisation_migration_catalogue_2026_06_07.md
   - ../active/migration_verification_orphan_safety_2026_06_10.md
   - ../active/mtds_available_at_cross_asset_backfill_2026_07_13.md
+  - ../active/prediction_cqg_residual_2026_07_24.md
+  - ../active/sports_prelaunch_cf5_verify_residual_2026_07_24.md
 last_updated: 2026-05-21
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
@@ -117,7 +124,7 @@ Full archaeology: [`manifest_evolution_SUPERSEDED_2026_05_21.md`](manifest_evolu
 
 ## Assigned active plans
 
-_9 active plans declare `parent_epic: manifest_master` in their frontmatter. Workers pick up in priority order (P0
+_16 active plans declare `parent_epic: manifest_master` in their frontmatter. Workers pick up in priority order (P0
 first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ## P0 — must complete before next foundation gate
@@ -137,6 +144,11 @@ canonicalisation + backfill (split from M-1)
 **status**: active · **estimate**: 2 cal AI-days (class: infra) **title**: Data completion to 100% — Prediction manifest
 canonicalisation + backfill (split from M-1)
 
+### [`data_completion_sports_2026_07_24`](../active/data_completion_sports_2026_07_24.md)
+
+**status**: active · **estimate**: 2 cal AI-days (class: infra) **title**: Data completion to 100% — Sports manifest
+canonicalisation + backfill (parity sibling of M-1)
+
 ### [`data_completion_tradfi_2026_07_15`](../active/data_completion_tradfi_2026_07_15.md)
 
 **status**: active · **estimate**: 2 cal AI-days (class: infra) **title**: Data completion to 100% — TradFi manifest
@@ -147,6 +159,24 @@ canonicalisation + backfill (split from M-1)
 **status**: active · **estimate**: 3.6 cal AI-days (class: design) **title**: /data-pipeline-reconciliation —
 per-asset-group four-surface canonicalisation reconciliation skill
 
+### [`defi_migration_audit_log_2026_07_24`](../active/defi_migration_audit_log_2026_07_24.md)
+
+**status**: active · **estimate**: 0.6 cal AI-days (class: design)
+
+### [`defi_venue_lst_rates_residual_2026_07_24`](../active/defi_venue_lst_rates_residual_2026_07_24.md)
+
+**status**: active · **estimate**: 0.6 cal AI-days (class: design) **title**: DeFi venue hygiene + lst-rates aggregation
+residual — forked from migration_verification_orphan_safety_2026_06_10
+
+### [`infra_ops_residual_migration_verification_2026_07_24`](../active/infra_ops_residual_migration_verification_2026_07_24.md)
+
+**status**: active · **estimate**: 1.8 cal AI-days (class: design) **title**: Infra/ops residual tail — forked from
+migration_verification_orphan_safety_2026_06_10
+
+### [`is_catalogue_g1_root_audit_log_2026_07_24`](../active/is_catalogue_g1_root_audit_log_2026_07_24.md)
+
+**status**: active · **estimate**: 0.6 cal AI-days (class: design)
+
 ### [`master_data_canonicalisation_migration_catalogue_2026_06_07`](../active/master_data_canonicalisation_migration_catalogue_2026_06_07.md)
 
 **status**: active · **estimate**: 3.6 cal AI-days (class: design)
@@ -154,6 +184,16 @@ per-asset-group four-surface canonicalisation reconciliation skill
 ### [`migration_verification_orphan_safety_2026_06_10`](../active/migration_verification_orphan_safety_2026_06_10.md)
 
 **status**: active · **estimate**: 6.6 cal AI-days (class: design)
+
+### [`prediction_cqg_residual_2026_07_24`](../active/prediction_cqg_residual_2026_07_24.md)
+
+**status**: active · **estimate**: 0.9 cal AI-days (class: design) **title**: Prediction cqg-classifier coverage
+residual — forked from migration_verification_orphan_safety_2026_06_10
+
+### [`sports_prelaunch_cf5_verify_residual_2026_07_24`](../active/sports_prelaunch_cf5_verify_residual_2026_07_24.md)
+
+**status**: active · **estimate**: 0.9 cal AI-days (class: design) **title**: Sports pre-launch-window + CF-5 relabel
+residual — forked from migration_verification_orphan_safety_2026_06_10
 
 ## P1 — important; post-current-gate
 

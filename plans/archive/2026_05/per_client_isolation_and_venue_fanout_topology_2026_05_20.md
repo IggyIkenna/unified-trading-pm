@@ -11,7 +11,7 @@ scope: [engineer, admin]
 tags: []
 related:
   [
-    /plans/active/master_to_live_defi_2026_05_23.md,
+    /plans/archive/2026_07/master_to_live_defi_2026_05_23.md,
     /plans/archive/2026_05/strategy_repo_consolidation_2026_05_19.md,
     /plans/archive/2026_05/promote_workflow_may23_cli_path_2026_05_10.md,
     /plans/archive/2026_05/api_keys_wallets_accounts_readiness_2026_05_10.md,

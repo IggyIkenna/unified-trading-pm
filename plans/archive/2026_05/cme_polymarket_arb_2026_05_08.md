@@ -13,7 +13,7 @@ related:
   [
     /plans/archive/2026_05/trading_agent_service_architecture_unlock_2026_05_22.md,
     /plans/archive/2026_05/tradfi_ohlcv_only_mvp_backfill_2026_05_15.md,
-    /plans/active/master_to_live_defi_2026_05_23.md,
+    /plans/archive/2026_07/master_to_live_defi_2026_05_23.md,
   ]
 created: "2026-05-08"
 parent_epic: tradfi_master

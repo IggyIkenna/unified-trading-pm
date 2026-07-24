@@ -19,7 +19,7 @@ scope: [engineer, admin]
 tags: []
 related:
   [
-    unified-trading-pm/plans/active/master_to_live_defi_2026_05_23.md,
+    unified-trading-pm/plans/archive/2026_07/master_to_live_defi_2026_05_23.md,
     unified-trading-pm/plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md,
     unified-trading-pm/plans/active/gcs_migration_bundle_pipeline_mode_2026_05_08.md,
     unified-trading-pm/plans/active/features_repo_consolidation_2026_05_08.md,

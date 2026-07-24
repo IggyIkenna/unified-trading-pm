@@ -9,7 +9,8 @@ stage: [meta]
 repos: [deployment-api, deployment-service, instruments-service]
 scope: [engineer, admin]
 tags: []
-related: [/plans/active/master_to_live_defi_2026_05_23.md, /plans/archive/2026_05/d1_is_hardening_2026_05_20.md]
+related:
+  [/plans/archive/2026_07/master_to_live_defi_2026_05_23.md, /plans/archive/2026_05/d1_is_hardening_2026_05_20.md]
 created: "2026-05-21"
 parent_epic: instruments_master
 priority: P1
