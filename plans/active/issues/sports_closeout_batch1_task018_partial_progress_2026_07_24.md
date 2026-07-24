@@ -97,13 +97,13 @@ QG did not confirm green for either repo before this session had to checkpoint o
       `quickmerge --agent --files 'unified_api_contracts/canonical/domain/sports/canonical_ids.py tests/unit/sports/test_canonical_ids_junk_guard.py'`.
       **Done when**: `unified-api-contracts@<sha>` lands on `live-defi-rollout` and this doc's sub-part 2 is cited with
       that sha.
-- [ ] [CODE] P3. Diagnose + fix (or confirm someone else already fixed) the
-      `active_plan_inventory_dashboard_2026_07_24.md` stale-row validator failure blocking `instruments-service` QG
-      (repo: unified-trading-pm) — likely just needs `regenerate_active_plan_inventory.py` re-run once the referenced
-      plan's archival has actually landed. Then commit the already-staged `docs/SPORTS_INSTRUMENTS.md` fix in
-      `instruments-service` (diff already written — see this doc's item 1) via
-      `quickmerge --agent --files 'docs/SPORTS_INSTRUMENTS.md'`. **Done when**: `instruments-service@<sha>` lands and
-      this doc's sub-part 1 is cited with that sha.
+- [x] [CODE] P3. ✅ Confirmed already fixed: `python3 scripts/run_validators.py --scope all` now reports "OK: No broken
+      links in plans/active/*.md" clean (the stale row referencing
+      `data_pipeline_alerts_batch_remediation_closeout_2026_07_24.md` is gone — a subsequent inventory regen by another
+      slot resolved it; that target plan file no longer exists anywhere, active or archived, confirming the archival
+      completed). Recreated the staged `docs/SPORTS_INSTRUMENTS.md` diff (slot 10's fix lived only in its own `.tabs/10`
+      worktree, not visible to this slot) verbatim in this slot's worktree (diffed byte-identical against slot 10's
+      staged content before shipping), QG green, shipped `instruments-service@97fbea22`.
 - [ ] [DATA] P3. Locate the actual GCS bucket/path for the frozen 2018-2020 `markets`/`outcomes`/`settlements`/
       `arbitrage_opportunity` scaffolding (bounded listing, not a corpus walk), confirm no live reader/writer (mirror
       the diligence already done for the dead dimension-groups purge in `sports_closeout_batch1_ao_ready_2026_07_24.md`
@@ -116,3 +116,6 @@ QG did not confirm green for either repo before this session had to checkpoint o
 
 - 2026-07-24 (slot 10): staged both code changes (sub-parts 1+2 of 3), QG unconfirmed on both for the reasons above;
   filed this doc rather than leave the state undocumented at session checkpoint.
+- 2026-07-24 (slot-6): worked the recommended-next-steps item 2 (validator + SPORTS_INSTRUMENTS.md sub-part 1) — see the
+  flipped checkbox above. Sub-part 2 (the junk-symbol guard in unified-api-contracts) and sub-part 3 (locating the
+  2018-2020 GCS scaffolding) remain open for whoever picks this up next.
