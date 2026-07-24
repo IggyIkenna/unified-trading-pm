@@ -2,9 +2,19 @@
 scope: [admin, engineer]
 last_reviewed: 2026-05-23
 authoritative_for: [incidents-runbook-index]
-referenced_by: [codex/15-runbooks/incidents/rb_alert_001.md, codex/15-runbooks/incidents/rb_alert_002.md, codex/15-runbooks/incidents/rb_alert_003.md, codex/15-runbooks/incidents/rb_conn_001.md, codex/15-runbooks/incidents/rb_conn_002.md, codex/15-runbooks/incidents/rb_conn_003.md, codex/15-runbooks/incidents/rb_conn_004.md, codex/15-runbooks/incidents/rb_conn_005.md]
-  - codex/04-architecture/incident-gateway-state-machine.md
-  - plans/active/incident_runbooks_and_evidence_store_2026_05_23.md
+referenced_by:
+  [
+    /codex/15-runbooks/incidents/rb_alert_001.md,
+    /codex/15-runbooks/incidents/rb_alert_002.md,
+    /codex/15-runbooks/incidents/rb_alert_003.md,
+    /codex/15-runbooks/incidents/rb_conn_001.md,
+    /codex/15-runbooks/incidents/rb_conn_002.md,
+    /codex/15-runbooks/incidents/rb_conn_003.md,
+    /codex/15-runbooks/incidents/rb_conn_004.md,
+    /codex/15-runbooks/incidents/rb_conn_005.md,
+    /codex/04-architecture/incident-gateway-state-machine.md,
+    /plans/active/incident_runbooks_and_evidence_store_2026_05_23.md,
+  ]
 ---
 
 # Incident Runbooks Index
