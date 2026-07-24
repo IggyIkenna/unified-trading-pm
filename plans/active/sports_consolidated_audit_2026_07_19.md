@@ -263,7 +263,10 @@ ask.
 - **§ U** — 489 in-window (league,season) pairs / 10,869 blank-round rows in leagues **absent from the UAC registry**:
   extend the registry or stop capturing them. "Sports backfilled 100%" can't be asserted until settled.
 - **§ T** — pre-2019 blank-round rows (122,864) are outside the stated 2019→2026 window: confirm whether 2013–2018 is in
-  scope.
+  scope. **RESOLVED — ANSWERED 2026-07-20 (decision 3, `sports_consolidated_closeout_2026_07_19.md` Track V)**: pre-2019
+  (2013–2018) is intentionally OUT OF SCOPE — an operator-decided scope boundary, no further api-football spend. This is
+  a deliberate exclusion, not an unexplained gap: the remaining-blanks arithmetic elsewhere in this audit should be read
+  against the 2019→2026 in-scope window only, with the 122,864 pre-2019 rows excluded by design.
 - **§ 2.3 cross-AG bleed** and **§ 2.5 attempted_failed triplet** — both are notify-class; root-cause before any
   relabel.
 
