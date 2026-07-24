@@ -414,8 +414,35 @@ run SEQUENTIALLY, not in parallel:
       mechanical pre-flight sweep across ALL remaining archetypes (grep each engine's actual `params.get(...)`/
       `str_param(...)` calls vs its catalog's emitted config dict keys) to find every landmine BEFORE building any more
       tick loaders, rather than discovering them one expensive agent-dispatch at a time.
-- [ ] [BACKEND] P2. **Phase 4 — YIELD_ROTATION_LENDING + YIELD_STAKING_SIMPLE**. Pure yield archetypes (no hedge leg) —
-      reuse `lending_rates`/`lst_yields` readers already established.
+- [x] [BACKEND] P2. **Phase 4a — YIELD_STAKING_SIMPLE — SHIPPED 2026-07-24, `strategy-service@5cc6e98b`.** Config keys
+      (`staking_protocol`/`asset`) were pre-verified CLEAN this session (no catalog/engine contract-drift bug, unlike
+      Phases 1/3's landmines) — a genuine tick-loader-wiring task. Real data-coverage finding: the catalog's 6th row
+      (`ethena`) is DELIBERATELY EXCLUDED from this build, not a "couldn't find it" punt — sUSDe (UAC
+      `LST_TOKEN_TO_PROTOCOL_ASSET`'s `ETHENA`/`USDE` token) was REMOVED from MTDS's `lst_rates` collector 2026-07-23
+      (`lst_venue_registry_gap_and_cron_crash_loop_2026_07_22.md`, same day as this doc) because it is an ERC-4626
+      yield-bearing vault share, not a genuine staking-derivative redemption rate; its real, current data home is
+      `vault_share_price_handler.py`'s `vault_share_price` feature group (a DIFFERENT corpus from `lst_yields`), already
+      consumed by DEFI_LP_VAULT's own `ethena`/`sUSDe` catalog row (`catalog_yield_defi.py::     build_defi_lp_vault()`)
+      — no proxying attempted, held out with a static, typed `paper_universe.py` skip reason
+      (`missing_lst_yields_coverage:staking_protocol=ethena`, visible in `skipped_specs.json`). Shipped the other 5 rows
+      (lido/rocketpool/etherfi/jito/marinade): `_load_yield_staking_simple_ticks()` +
+      `_build_yield_staking_simple_tick()` (`paper_run_handler.py`, single-leg — no `leg_state` needed, a
+      `StakeInstruction`/`UnstakeInstruction` fill reads the snapshot's top-level fields directly), a new
+      `YIELD_STAKING_SIMPLE_LST_ASSET` static protocol→token map + `_yield_staking_simple_config_satisfiable()` gate
+      (`paper_universe.py`, since this archetype's catalog carries no `lst_asset` key at all — only
+      `staking_protocol`/`asset` — unlike the other LST archetypes), `YIELD_STAKING_SIMPLE` added to
+      `_ENGINE_DRIVABLE_ARCHETYPES`, and dedicated minimal single-leg passive/attribution producers
+      (`build_yield_staking_simple_passive`/`build_yield_staking_simple_attribution` — ONE `STAKING_REWARD`/`CARRY` leg
+      only, no lending/funding leg exists for this archetype, reusing `CanonicalLstYieldsIndexProvider` +
+      `index_ratio_accrual` unchanged). Quality gates: lint/basedpyright clean on every touched file; 121 new/updated
+      unit tests green (satisfiability gate, tick-loader honest-absence + determinism, passive/attribution single-leg
+      shape). In passing, fixed a PRE-EXISTING, unrelated empty-string-fallback ratchet regression (2 lines,
+      `pnl_input_builder.py:293`/`signal_broadcast/transport.py:369`, both genuinely-safe optional-field cases —
+      `# noqa: qg-empty-fallback` added) that had pushed `strategy-service` from 166 to 168 sites (baseline 166),
+      blocking `quality-gates.sh` STEP 5.101 for the whole repo regardless of archetype.
+- [ ] [BACKEND] P2. **Phase 4b — YIELD_ROTATION_LENDING (not started)**. Pure yield archetype (no hedge leg) — reuse
+      `lending_rates` reader already established. NOT config-verified yet — check for the Phase-1/Phase-3 class of
+      catalog/engine key-mismatch bug BEFORE dispatching a build agent.
 - [ ] [BACKEND] P2. **Phase 5 — LIQUIDATION_CAPTURE**. New data source: on-chain liquidation-cascade feed +
       `health_factor_trigger`.
 - [ ] [BACKEND] P1. **After Phases 1-5**: build the Layer-3 curtailment mechanism (`PaperUniverseConfig` venue/currency
