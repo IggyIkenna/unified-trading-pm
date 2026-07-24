@@ -209,9 +209,6 @@ epic._
 | [`orchestrator_vm_e2e_hardening_2026_07_24`](./orchestrator_vm_e2e_hardening_2026_07_24.md)                                                                 | master           | design    | 27/30      | 90%          | 0.1      | —        |
 | [`deployment_ui_plain_routes_retire_cockpit_tabs_2026_07_17`](./deployment_ui_plain_routes_retire_cockpit_tabs_2026_07_17.md)                               | master           | refactor  | 11/12      | 92%          | 0.1      | —        |
 | [`data_pipeline_alerts_batch_remediation_closeout_2026_07_24`](./data_pipeline_alerts_batch_remediation_closeout_2026_07_24.md)                             | master           | infra     | 14/14      | 100%         | 0.0      | —        |
-| [`deployment_alerts_ingestion_completeness_2026_07_20`](./deployment_alerts_ingestion_completeness_2026_07_20.md)                                           | master           | infra     | 13/13      | 100%         | 0.0      | —        |
-| [`deployment_ui_alerts_page_rebuild_2026_07_20`](./deployment_ui_alerts_page_rebuild_2026_07_20.md)                                                         | master           | infra     | 9/9        | 100%         | 0.0      | —        |
-| [`deployment_ui_fleet_tab_consolidation_2026_07_21`](./deployment_ui_fleet_tab_consolidation_2026_07_21.md)                                                 | master           | refactor  | 15/15      | 100%         | 0.0      | —        |
 | [`docs_retrieval_layer_reconcile_2026_07_23`](./docs_retrieval_layer_reconcile_2026_07_23.md)                                                               | master           | infra     | 7/7        | 100%         | 0.0      | —        |
 | [`github_actions_staging_machinery_shutdown_2026_07_24`](./github_actions_staging_machinery_shutdown_2026_07_24.md)                                         | master           | infra     | 3/3        | 100%         | 0.0      | —        |
 | [`migration_verification_orphan_safety_2026_06_10`](./migration_verification_orphan_safety_2026_06_10.md)                                                   | master           | design    | 25/25      | 100%         | 0.0      | —        |
@@ -219,7 +216,7 @@ epic._
 | [`sports_legacy_bucket_cutover_2026_07_16`](./sports_legacy_bucket_cutover_2026_07_16.md)                                                                   | master           | infra     | 45/45      | 100%         | 0.0      | —        |
 | [`sports_master_closeout_progress_log_2026_07_24`](./sports_master_closeout_progress_log_2026_07_24.md)                                                     | master           | infra     | —          | —            | 0.0      | —        |
 | [`sports_odds_bookmaker_coverage_enumeration_2026_06_20`](./sports_odds_bookmaker_coverage_enumeration_2026_06_20.md)                                       | master           | brand-new | 3/3        | 100%         | 0.0      | —        |
-| **TOTAL** (163 plans)                                                                                                                                       | 0 orphans, 0 TBD | —         | —          | **48% done** | **357**  | —        |
+| **TOTAL** (160 plans)                                                                                                                                       | 0 orphans, 0 TBD | —         | —          | **47% done** | **357**  | —        |
 
 <!-- AUTO-INVENTORY-END -->
 

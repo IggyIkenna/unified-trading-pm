@@ -12,7 +12,7 @@ summary: >-
   read-modify-write row-drop race, retention wide enough for a real date range, and persistence for the zombie-watchdog
   webhook that currently records nothing. Agent-orchestrator alerts are explicitly DEFERRED (AO has its own alert
   machinery + UI). The page rebuild is Plan B, gated on this.
-status: active
+status: complete # (was: active) 2026-07-24 archival: all 12 todos [x], evidence cited inline on each checkbox
 nature: process
 asset_group: [meta]
 stage: [meta]
@@ -21,10 +21,10 @@ scope: [engineer]
 tags: [alerts, observability, ingestion, deployment-ui]
 related:
   - /plans/active/deployment_ui_observability_ux_tracker_2026_07_17.md
-  - /plans/active/deployment_ui_alerts_page_rebuild_2026_07_20.md
-  - issues/persist_cicd_event_ledger_read_modify_write_race_2026_07_17.md
+  - /plans/archive/2026_07/deployment_ui_alerts_page_rebuild_2026_07_20.md
+  - /plans/archive/issues/persist_cicd_event_ledger_read_modify_write_race_2026_07_17.md
 created: "2026-07-20"
-last_updated: "2026-07-20"
+last_updated: "2026-07-24"
 parent_epic: observability_master
 assigned_vm: NA
 execution_scope: orchestrator-agent
@@ -78,7 +78,7 @@ in the UI. This is not about making the page page you; AO and PagerDuty already 
   `persistence/storage_store.py:72-77`), **29 date partitions current through 2026-07-20**, ~20 alert classes, feeding
   `#uts-live-alerts` / `#data-pipeline-alerts` / PagerDuty / Twilio. Nothing in deployment-api reads it
   (grep-confirmed). This is exactly the "already on Slack, cheap to copy" population — it's an existing durable store;
-  we just read it. Its ~20 classes: consolidator-down, data-status RED / DP_* watchers, VM preemption/exit-nonzero,
+  we just read it. Its ~20 classes: consolidator-down, data-status RED / DP\_\* watchers, VM preemption/exit-nonzero,
   recon freeze/drift, risk-rule fired, margin events, service circuit-open / SERVICE_ERROR, CeFi ML staleness, DeFi
   feature (AAVE/funding/weETH/stale), and more.
 - **Defect — `repo` is the emitting repo, not the subject.** A `unified-trading-library` CI regression is stored
@@ -423,7 +423,7 @@ Notes worth surfacing beyond the matrix:
 - **2026-07-21** — Todo 2 (alerting-service persist full payload) shipped, `alerting-service@d2f585c`. Scope note for
   the todo-11 post-ingestion coverage re-measure: `alerting_service/rules/data_pipeline_rules.py` documents an EXISTING,
   INTENTIONAL design contract (from `data_pipeline_hardening_self_monitoring_2026_06_22.md`) that INFO/WARN
-  DP__/DEPLOYMENT__ alerts are Slack-**channel-only** — `_route_data_pipeline_event()` never calls
+  DP**/DEPLOYMENT** alerts are Slack-**channel-only** — `_route_data_pipeline_event()` never calls
   `_persist_delivery_record()` for them; only `severity == CRITICAL` reaches the incident path that persists. Only
   `AlertStore.record_fired()` (a separate, apparently-unwired decision-record path off `api/routes/alerts.py`) and
   CRITICAL-tier deliveries write to `alerting/history/` today. This wasn't in scope to change here (a persistence-gate

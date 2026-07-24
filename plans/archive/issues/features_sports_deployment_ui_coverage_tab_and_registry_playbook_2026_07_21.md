@@ -18,8 +18,8 @@ scope: [engineer]
 tags: [features-sports, deployment-ui, coverage, honest-coverage, codex, playbook, orphaned-work, plan-debt]
 related:
   [
-    plans/archive/features_sports_honest_coverage_2026_05_05.plan.md,
-    plans/active/issues/pm_qg_plan_discipline_and_frontmatter_regression_2026_07_21.md,
+    /plans/archive/features_sports_honest_coverage_2026_05_05.plan.md,
+    /plans/active/issues/pm_qg_plan_discipline_and_frontmatter_regression_2026_07_21.md,
   ]
 created: "2026-07-21"
 parent_epic: sports_master

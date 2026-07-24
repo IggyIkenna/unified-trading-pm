@@ -48,12 +48,9 @@ related_plans:
   - ../active/data_pipeline_alerts_batch_remediation_closeout_2026_07_24.md
   - ../active/data_pipeline_hardening_self_monitoring_2026_06_22.md
   - ../active/data_pipeline_self_healing_completion_residual_2026_07_24.md
-  - ../active/deployment_alerts_ingestion_completeness_2026_07_20.md
   - ../active/deployment_registry_firestore_migration_2026_07_14.md
   - ../active/deployment_registry_firestore_p0_unblock_2026_07_14.md
   - ../active/deployment_registry_firestore_p3_cutover_2026_07_14.md
-  - ../active/deployment_ui_alerts_page_rebuild_2026_07_20.md
-  - ../active/deployment_ui_fleet_tab_consolidation_2026_07_21.md
   - ../active/deployment_ui_plain_routes_retire_cockpit_tabs_2026_07_17.md
   - ../active/monitoring_control_plane_master_2026_06_10.md
   - ../active/orchestrator_vm_e2e_hardening_2026_07_24.md
@@ -97,7 +94,7 @@ See [`README.md`](README.md) for the canonical epic frontmatter schema + body st
 
 ## Assigned active plans
 
-_18 active plans declare `parent_epic: observability_master` in their frontmatter. Workers pick up in priority order (P0
+_15 active plans declare `parent_epic: observability_master` in their frontmatter. Workers pick up in priority order (P0
 first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ## P0 — must complete before next foundation gate
@@ -111,11 +108,6 @@ drive #data-pipeline-alerts to a clean/accurate state
 
 **status**: active · **estimate**: 1.6 cal AI-days (class: infra) **title**: Data-pipeline alerts batch remediation —
 closeout & historical narrative (2026-07-15 to 2026-07-16)
-
-### [`deployment_alerts_ingestion_completeness_2026_07_20`](../active/deployment_alerts_ingestion_completeness_2026_07_20.md)
-
-**status**: active · **estimate**: 2.8 cal AI-days (class: infra) **title**: deployment alerts — ingestion completeness
-(WS-5 Plan A — mirror the Slack alert sources to the ledger)
 
 ### [`deployment_registry_firestore_migration_2026_07_14`](../active/deployment_registry_firestore_migration_2026_07_14.md)
 
@@ -138,11 +130,6 @@ active feed self-healing
 
 **status**: active · **estimate**: 2.4 cal AI-days (class: infra) **title**: Deployment registry Firestore migration —
 Phase 3 — cutover to Firestore-only + decommission the GCS registry
-
-### [`deployment_ui_alerts_page_rebuild_2026_07_20`](../active/deployment_ui_alerts_page_rebuild_2026_07_20.md)
-
-**status**: active · **estimate**: 2 cal AI-days (class: infra) **title**: deployment-ui — Alerts page rebuild (WS-5
-Plan B — filters, sort, date-range, drill-down)
 
 ### [`monitoring_control_plane_master_2026_06_10`](../active/monitoring_control_plane_master_2026_06_10.md)
 
@@ -185,11 +172,6 @@ Hardening (forked from the hardening/self-monitoring plan)
 
 **status**: active · **estimate**: 2 cal AI-days (class: infra) **title**: Data-Pipeline Self-Healing Completion —
 Residual Actuator Wiring (forked from the hardening/self-monitoring plan)
-
-### [`deployment_ui_fleet_tab_consolidation_2026_07_21`](../active/deployment_ui_fleet_tab_consolidation_2026_07_21.md)
-
-**status**: active · **estimate**: 1.6 cal AI-days (class: refactor) **title**: deployment-ui — Fleet tab consolidation
-(strip to git-health, merge orphans + VM census into Deployments)
 
 ### [`deployment_ui_plain_routes_retire_cockpit_tabs_2026_07_17`](../active/deployment_ui_plain_routes_retire_cockpit_tabs_2026_07_17.md)
 

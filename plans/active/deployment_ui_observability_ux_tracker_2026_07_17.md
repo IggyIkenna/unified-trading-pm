@@ -27,8 +27,8 @@ related:
   - /plans/archive/2026_07/deployment_ui_cost_per_day_accuracy_2026_07_20.md
   - /plans/archive/2026_07/deployment_ui_date_range_filter_and_search_2026_07_20.md
   - /plans/archive/2026_07/deployment_ui_vm_log_viewer_2026_07_20.md
-  - /plans/active/deployment_alerts_ingestion_completeness_2026_07_20.md
-  - /plans/active/deployment_ui_alerts_page_rebuild_2026_07_20.md
+  - /plans/archive/2026_07/deployment_alerts_ingestion_completeness_2026_07_20.md
+  - /plans/archive/2026_07/deployment_ui_alerts_page_rebuild_2026_07_20.md
 created: "2026-07-17"
 last_updated: "2026-07-17"
 parent_epic: observability_master
@@ -319,13 +319,14 @@ tail should show only the last **~200–500 lines** so the UI doesn't crash. The
 
 > **✅ SPLIT 2026-07-20** — coverage + UX audits run live; reframed from "add filters" to "the ledger is starved." Split
 > into TWO gated plans (both `status: draft`, dispatch held pending AO settling):
-> [`deployment_alerts_ingestion_completeness_2026_07_20.md`](deployment_alerts_ingestion_completeness_2026_07_20.md)
+> [`deployment_alerts_ingestion_completeness_2026_07_20.md`](/plans/archive/2026_07/deployment_alerts_ingestion_completeness_2026_07_20.md)
 > (Plan A, P0 — mirror the Slack alert sources into the ledger) and
-> [`deployment_ui_alerts_page_rebuild_2026_07_20.md`](deployment_ui_alerts_page_rebuild_2026_07_20.md) (Plan B, gated on
-> A — filters/sort/date-range/drill-down). Audit headline: **181 alert rows lifetime vs thousands of real Slack alerts
-> in a 10-day window**; the entire alerting-service plane (~20 classes) is invisible to deployment-api. Operator
-> reframed the page as a **diagnostic surface** (mirror cheap-to-copy Slack sources), and **deferred all
-> agent-orchestrator alerts** (AO has its own alert machinery + UI). Section below stays as the pre-audit record.
+> [`deployment_ui_alerts_page_rebuild_2026_07_20.md`](/plans/archive/2026_07/deployment_ui_alerts_page_rebuild_2026_07_20.md)
+> (Plan B, gated on A — filters/sort/date-range/drill-down). Audit headline: **181 alert rows lifetime vs thousands of
+> real Slack alerts in a 10-day window**; the entire alerting-service plane (~20 classes) is invisible to
+> deployment-api. Operator reframed the page as a **diagnostic surface** (mirror cheap-to-copy Slack sources), and
+> **deferred all agent-orchestrator alerts** (AO has its own alert machinery + UI). Section below stays as the pre-audit
+> record.
 
 ### Operator ask (2026-07-17, near-verbatim)
 
@@ -406,7 +407,7 @@ and catch outliers / OOM / disk hiccups. Requirements dictated —
   (the same class of problem that broke the registry census at ~3k blobs) — per-sample objects would be 2,880
   objects/VM/day; batching cuts it to 24–288. Any reader must honour single-walk discipline.
 - **(b) Event-spine** — samples ride the existing UTL `EventTransport`/Pub/Sub path (the daemon already publishes
-  DEPLOYMENT_* events) → a native BigQuery subscription lands them queryable with NO consolidator to own; TTL =
+  DEPLOYMENT\_\* events) → a native BigQuery subscription lands them queryable with NO consolidator to own; TTL =
   declarative partition expiration (no lifecycle cron); query by vm/service/asset_group/mode/time is a WHERE clause;
   dual-cloud via the same facade. (CLAUDE.md "live = batch event-log spine" makes this the architecturally aligned
   option.)

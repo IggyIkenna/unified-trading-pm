@@ -19,7 +19,7 @@ related:
     /codex/08-workflows/ci-cd-flow.md,
     /codex/04-architecture/agent-orchestrator-alerting.md,
     /codex/05-infrastructure/quickmerge-architecture.md,
-    ../../plans/active/deployment_alerts_ingestion_completeness_2026_07_20.md,
+    /plans/archive/2026_07/deployment_alerts_ingestion_completeness_2026_07_20.md,
   ]
 created: 2026-07-13
 authoritative_for:
