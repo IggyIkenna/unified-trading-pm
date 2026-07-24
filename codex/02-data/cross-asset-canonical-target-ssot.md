@@ -325,6 +325,17 @@ Detail + per-protocol table: `instruments-service/docs/DEFI_INSTRUMENTS.md` §Le
 > `migration_pending`, not a fresh non-canonical finding. Reconcilers stop emitting the [C2a]
 > `REFUSED — awaiting operator ruling` verdict from
 > [`reconciliation-finding-taxonomy.md`](reconciliation-finding-taxonomy.md) §5.1 and enforce UPPERCASE for the column.
+>
+> **DeFi carve-out, 2026-07-24 (operator, `adb28421d`,
+> `plans/active/issues/cross_ag_instrument_type_casing_100pct_directive_2026_07_24.md`) — "enforce UPPERCASE for the
+> column" above does NOT apply to defi.** DeFi's corpus was measured genuinely mixed (not close-to-one-direction like
+> cefi/tradfi/prediction), so its target is decided per-`instrument_type`-value, least-migration-cost: whichever casing
+> already dominates for a given value becomes that value's target, the minority migrates — hard constraint, casing must
+> be 100% internally consistent within each `(instrument_type, asset_group=defi)` pair post-migration, different values
+> MAY land on different casings from each other. See `reconciliation-finding-taxonomy.md` §5.1 for the full correction
+> chain. Execution: `plans/active/defi_track01_per_instrument_and_canon_id_2026_07_24.md` "Manifest instrument_type case
+>
+> - venue-spelling unify" todo.
 
 - **case — three independent legs, stated separately (do not collapse them):**
   - **manifest `instrument_type` COLUMN**: **UPPERCASE**. _(⛔ corrected 2026-07-20, operator ruling D1 — ~~was

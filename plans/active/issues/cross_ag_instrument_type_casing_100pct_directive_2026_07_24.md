@@ -129,12 +129,14 @@ DeFi-only; the other four asset_groups' per-value target is uniformly UPPERCASE.
   not a pure casing drift), but its target vocabulary (`ODDS_API_MARKET_TO_CANONICAL`) is already UPPER on `market_key`,
   so fixing the content bug lands on the same 100%-UPPERCASE casing target as the other three without a separate casing
   migration.
-- **defi**: `plans/active/defi_track01_per_instrument_and_canon_id_2026_07_24.md`, the "Manifest instrument_type case
-  - venue-spelling unify" todo (P0) — carries the full per-value least-resistance decision and the required first step
-    (a per-`instrument_type` UPPER-vs-lower census; the 2026-07-21 audit measured only the UPPERCASE-side counts for
-    `POOL`/`LENDING`/`PERPETUAL`, not the matching lowercase-side counts needed to actually pick a direction per value —
-    do not assume UPPER is dominant for any value without running the census). Also noted, lighter-touch, on the parent
-    `plans/active/defi_consolidated_closeout_2026_07_18.md`'s "Operator decisions applied" section.
+- **defi**: ✅ **RESOLVED 2026-07-24** (autonomous session) —
+  `plans/active/defi_track01_per_instrument_and_canon_id_2026_07_24.md`, the "Manifest instrument_type case +
+  venue-spelling unify" todo. The required census ran live: all 11 distinct `instrument_type` values are already 100%
+  one casing (lowercase, 0 exceptions) — least-migration-cost target = each value's already-unanimous casing, no
+  migration needed. Venue-spelling half also closed as a no-op for a different reason: 3 of 5 named pairs are already
+  zero-residual, and the other 2 (`AAVE`, `MORPHOVAULTS`) turned out to be genuinely distinct, deliberately-registered
+  venues (not spelling drift) per a 2026-07-21 UAC registration this todo's source audits predate — collapsing them
+  would have been a regression. Full evidence in the child plan.
 
 ## Why this is a standalone issue doc, not inline in 3 of the plans
 
@@ -151,6 +153,18 @@ is the durable record; the 5 per-AG plans' execution-item pointers above are how
 
 ## Open todo
 
+- [x] ✅ [DOC] P1. **DONE 2026-07-24 (autonomous session).** Found + corrected a stale-SSOT chain this directive left
+      behind: `reconciliation-finding-taxonomy.md` §5.1 carried an EARLIER-same-day "scope correction" (commit
+      `4f81d0139`, 19:11:01 UTC — an agent's inference from `_comparison_set()`'s case-insensitive vocabulary-matching
+      grain rule) declaring defi permanently lowercase and OUT of any casing-migration population; this directive's own
+      commit (`adb28421d`, 19:31:37 UTC — ~20 min later) already superseded that by putting defi back in scope for the
+      per-value least-migration-cost convergence, but no doc ever recorded the supersession, and
+      `canonical-cutover-register.md` §3c/§7 + `cross-asset-canonical-target-ssot.md` §7 still separately carried the
+      ORIGINAL (2026-07-20) blanket-UPPER-for-defi-too framing, predating both corrections. Added dated correction
+      banners to all three codex docs pointing at this directive as authoritative, without deleting the superseded text
+      (matches the existing struck-through-banner convention). No operator input needed — resolved by commit timestamp +
+      the fact that one side is an explicit fresh operator statement and the other an agent's inference from unrelated
+      code.
 - [ ] [DATA] P2. When any of `cefi_consolidated_closeout_2026_07_18.md` / `defi_consolidated_closeout_2026_07_18.md` /
       `tradfi_manifest_content_recovery_completion_2026_07_24.md` is next split under
       `plan_line_cap_remediation_2026_07_23.md`, fold this doc's cefi/defi/tradfi-specific "target = 100%" /

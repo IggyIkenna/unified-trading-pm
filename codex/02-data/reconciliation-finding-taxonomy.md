@@ -592,6 +592,22 @@ re-opening a settled ruling.
 > noise" (`reconciliation-census-and-compute-tiers.md` §1.5) is the correct, PERMANENT state, not a temporary
 > suppression that lapses when D1's migration completes. Only cefi/tradfi (and prediction, whose canonical is genuinely
 > uppercase-target) are in-scope for the C2a/D1 migration_pending population this subsection otherwise describes.
+>
+> **⛔ FURTHER CORRECTED 2026-07-24, ~20 minutes later (operator, `adb28421d`,
+> `plans/active/issues/cross_ag_instrument_type_casing_100pct_directive_2026_07_24.md`) — supersedes the "defi is OUT of
+> scope, permanently lowercase" framing immediately above.** The scope correction above was an agent's INFERENCE from
+> `_comparison_set()`'s case-insensitive vocabulary-matching grain rule — that rule only governs whether a raw value
+> (`pool` vs `POOL`) is recognised as a member of the `InstrumentType` enum for census purposes; it says nothing about
+> what casing the on-disk manifest COLUMN must converge to. It is not itself an operator ruling on the casing TARGET.
+> The operator's own, later, explicit directive puts DeFi back in scope for a real casing convergence, on different
+> terms than cefi/tradfi/prediction's blanket UPPERCASE: **per-`instrument_type`-value, least-migration-cost** —
+> whichever casing is already dominant for that specific value becomes its target, the minority migrates — with a **hard
+> constraint** that casing be 100% internally consistent within each `(instrument_type, asset_group=defi)` pair
+> post-migration. `_comparison_set()`'s case-insensitive census comparison is unaffected and remains correct (vocabulary
+> tolerance, not a licence for permanent mixed casing); it will simply stop finding anything to fold once the per-value
+> migration converges each value to one casing. Execution + the per-value census/target table:
+> `plans/active/defi_track01_per_instrument_and_canon_id_2026_07_24.md` "Manifest instrument_type case + venue-spelling
+> unify" todo.
 
 **Documentary background — why a ruling was needed (retained as history; the RULED stance above supersedes the old
 "Required behaviour").**

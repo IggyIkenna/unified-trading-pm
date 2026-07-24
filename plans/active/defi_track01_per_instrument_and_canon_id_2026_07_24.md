@@ -293,32 +293,54 @@ instruments in one `instruments.parquet` with `available_from/to`).
       v4–v8→v9; C9 object paths still carrying `category=`/no `pipeline_mode=`; C11 phantom walk; C12 `{VENUE}_V{N}`
       underscore canonicalisation (`TRADER_JOE_V2`/`VELODROME_V2`/`AERODROME_V3`). (repos: market-tick-data-service,
       instruments-service)
-- [ ] [DATA] P0. **Manifest instrument_type case + venue-spelling unify** (from the live distinct-values audit): **⛔
-      CASE DIRECTION FURTHER REFINED 2026-07-24 (operator) — supersedes the 2026-07-20 D1 blanket-UPPERCASE framing for
-      DeFi specifically.** D1 ruled the manifest COLUMN target UPPERCASE cross-AG, but DeFi was the ONE asset_group D1's
-      own measurement flagged as genuinely mixed ("both cases present"), unlike cefi/prediction/tradfi which were
-      already ~99%+ UPPERCASE at ruling time (those three + sports get a straight 100%-UPPERCASE target — see their own
-      consolidated plans). **For DeFi: casing is decided PER `instrument_type` value, on a least-migration-cost basis —
-      whichever casing is already dominant for that specific value becomes its canonical target; the minority migrates
-      to match.** Hard constraint: within one `instrument_type` value the casing must be 100% consistent (no mixed
-      upper/lower for the same value) — different `instrument_type` values ARE allowed to land on different canonical
-      casings from each other. **First step (not yet done): a per-`instrument_type` census** — for each of
-      `POOL`/`LENDING`/`PERPETUAL`/`YIELD_BEARING`/`STAKING`/`SPOT_PAIR`, count the UPPER-cased vs lower-cased row
-      population and pick whichever is larger as that value's canonical target. The 2026-07-21 audit already measured
-      the UPPERCASE-side counts for three values (`POOL` 13,868 · `LENDING` 179,164 · `PERPETUAL` 4,221) but NOT their
-      lowercase-side counts or the other values' splits — do not assume UPPER is dominant for any value without the
-      matching lowercase count; run the census before picking a direction per value. Prefer a VM-side or
-      column-projected/predicate-pushdown read over a local full-manifest pull (bandwidth-conscious — do not download
-      the whole `_index` to a local machine). The GCS path segment stays lowercase and the id middle segment stays UPPER
-      regardless of this refinement — neither is in question. Note the `LENDING`→`A_TOKEN/DEBT_TOKEN` full retire
-      (ruling D2) is a separate `migration_pending` axis gated on the MTDS lending-writer fix — do not conflate the
-      case-fold with the retire.** collapse venue-spelling dups (`AAVEV3`/`AAVE`→`AAVE_V3` 64,218 ·
-      `MORPHOVAULTS`→`MORPHO` 50,266 · `COMPOUND`→`COMPOUND_V3` 13,904 · `YEARNV3`→`YEARN_V3` ·
-      `KAMINO_LENDING`→`KAMINO`); resolve `''`/`NULL` instrument_type (4.49M) from the id/grain. **Done when**: every
-      DeFi `instrument_type` value is internally 100% one casing (no mixed upper/lower within a value) AND the
-      deployment-ui data-status Distinct Values panel shows 0 case-duplicate `instrument_type` entries for defi — not
-      necessarily all-UPPERCASE, since some values may canonicalize lower per the least-cost rule above. (repos:
-      market-tick-data-service, unified-trading-library)
+- [x] ✅ [DATA] P0. **Manifest instrument_type case + venue-spelling unify — RESOLVED 2026-07-24 (autonomous session,
+      fresh live census, no migration needed for either half).** ~~CASE DIRECTION FURTHER REFINED 2026-07-24
+      (operator)~~ — the per-`instrument_type` census this todo called for (never previously run — the 2026-07-21 audit
+      only had the UPPERCASE-side counts) was run live against a fresh post-consolidation read of
+      `gs://market-data-tick-defi-prd-central-element-323112/_index/availability_index.parquet` (24,123,783 rows,
+      `latest.json.last_run_at=2026-07-24T19:46:31Z`, DuckDB out-of-core query — never a full pandas load, given the
+      host's tight memory headroom; the 3 outstanding `_index/per_vm/*.parquet` shards were independently checked too,
+      same result). **Result: EVERY one of the 11 live `instrument_type` values is already 100% one casing — lowercase —
+      with ZERO uppercase rows anywhere in the manifest**: `pool` 15,762,504 · `solana_amm_pool` 7,508,473 · `lending`
+      396,009 · `perpetual` 204,279 · `spot_asset` 132,781 · `lst` 71,493 · `a_token` 29,835 · `yield_bearing` 7,311 ·
+      `solana_vault` 1,026 · `staking` 669 · `solana_lending` 103 (+9,300 NULL/blank, a separate,
+      much-smaller-than-the-plan's-cited-4.49M residual — out of this todo's casing/venue scope, tracked under the
+      existing Wave-D id/grain-resolution item, not duplicated here). Per the least-migration-cost rule
+      (`plans/active/issues/cross_ag_instrument_type_casing_100pct_directive_2026_07_24.md`), lowercase is trivially
+      each value's target since it is the ONLY casing present (no near-50/50 split anywhere — the HARD-STOP condition
+      for an ambiguous split never fires). **This also reconciles the stale-SSOT chain found in the same pass**: an
+      intermediate same-day agent note (`4f81d0139`, 19:11 UTC) had inferred from `_comparison_set()`'s case-INSENSITIVE
+      vocabulary-matching grain rule that defi is permanently lowercase and out of scope for any casing work; the
+      operator's own later directive (`adb28421d`, 19:31 UTC) corrected that to per-value least-migration-cost — and
+      this census shows the two land on the identical PRACTICAL outcome (lowercase, unanimously) via different
+      reasoning, so there is no remaining tension. Corrected the resulting stale banners in
+      `codex/02-data/reconciliation-finding-taxonomy.md` §5.1, `canonical-cutover-register.md` §3c/§7, and
+      `cross-asset-canonical-target-ssot.md` §7 (dated correction banners added, nothing deleted, per this corpus's own
+      convention). **Venue-spelling half — also resolved, ALSO no-op, for a different reason: the named collapse targets
+      are either already-zero or were never drift.** Live check of the same index: `AAVEV3`/`COMPOUND`
+      (bare)/`YEARNV3`/`KAMINO_LENDING` — **0 rows for all four**, already fully migrated or never present in that form.
+      The remaining two named pairs are **NOT spelling drift** — they are genuinely distinct, DELIBERATELY registered
+      DeFi venues, confirmed by both the UAC registry and the live data's own `data_type`/date fingerprint: **`AAVE`
+      (5,568 rows) is 100% `data_type=oracle_prices`** (2023-01-27→2026-07-22), matching the `AAVE-ETHEREUM`
+      on-chain-oracle venue (`AaveOracle.getAssetPrice()`, `governance_events`+`oracle_prices` capabilities) registered
+      in `unified-api-contracts/unified_api_contracts/registry/defi_venues.py` (phase flipped pipeline→live 2026-07-21
+      per `lst_rate_honest_coverage_2026_07_21.md` Phase 1) + `defi_venue_capabilities.py:252` — genuinely distinct from
+      `AAVE_V3` (the lending-pool venue); **`MORPHOVAULTS` (1,614 rows) is 100% `data_type=vault_share_price`**
+      (2024-01-04→2026-07-23, exactly matching its registered `coverage_start` in `defi_venue_capabilities.py:276`), the
+      MetaMorpho ERC-4626 vault product — genuinely distinct from `MORPHO` (core Morpho Blue lending markets, a separate
+      5-chain venue family). **Collapsing either into its "sibling" would have been a data-correctness REGRESSION**
+      (conflating two real, differently-typed DeFi products under one venue label), not a fix — the plan's collapse
+      targets were accurate as of the 2026-05-25/2026-07-20 audit snapshots they trace to
+      (`data_quality_backfill_status_audit_instructions.md` DQ-04, `data_pipeline_reconciliation_defi_2026_07_20.md`)
+      but were superseded by the 2026-07-21 deliberate re-registration, which those older docs predate. No script was
+      written or run against the live manifest — a real, evidence-checked no-op is not the same as skipping the work,
+      and forcing a write here would have been the regression. **Done-when, verified**: every DeFi `instrument_type`
+      value is internally 100% one casing (TRUE, 0 exceptions, live-verified) — the deployment-ui data-status Distinct
+      Values panel already reflects 0 case-duplicate `instrument_type` entries for defi by construction
+      (`deployment-api/deployment_api/routes/data_status/_distinct_values.py:108-113`'s `_comparison_set()` compares
+      defi instrument_type case-insensitively; with the underlying data now PROVEN unanimous rather than merely
+      tolerated, that comparison has nothing left to fold). (repos: market-tick-data-service, unified-trading-library —
+      no code changes needed in either; the fix was verifying the premise, not writing a migration)
 - [ ] [DATA] P1. **perp_funding → `derivative_ticker`** as the canonical raw-funding home for ALL perps (drop the
       Drift-only 24h/7d/30d window aggregates). Ratify enum-member DeFi grains (`lst`/`staking`/`yield_bearing`) as
       canonical (case-fold only, already `InstrumentType` members). (repos: market-tick-data-service,
@@ -644,17 +666,17 @@ instruments in one `instruments.parquet` with `available_from/to`).
       market-tick-data-service)
 
       **RE-VERIFIED 2026-07-24 (this pass) — the `--apply` handoff is still NOT unblocked; NOT 0 glued ids.** The 9
-                                                              ORCA `dex_pool_state` cells (2025-12-23..12-31) finished migrating clean this session (all 9 confirmed
-                                                              `errors=0` across a retry chain: `leafparallel`+`lpar5`+`lpar7` VMs, cumulative `cells=1+3+5=9`) and a scoped
-                                                              manifest rebuild ran after — but a fresh `verify_defi_glued_ids_2026_07_24.py` run still shows **21 glued-id
-                                                              rows** (unchanged: the same 9 ORCA + the same 12 liquidations). Root cause (code-read, not inferred): neither
-                                                              the migration, the scoped rebuild, nor this delete-marker script (GCS-objects-only, confirmed via its own
-                                                              docstring) ever **retracts** a pre-existing manifest row once its source object is renamed to `_migrated_*` —
-                                                              the old glued-id row and the new per-instrument rows have different `instrument_id`s, so upsert never
-                                                              supersedes the old one. Full findings + recommended next step (a manifest-row-level purge, not yet built):
-                                                              `plans/archive/issues/mtds_defi_migration_cell_stall_untimed_gcs_read_2026_07_22.md` addendum "tick 3"
-                                                              (2026-07-24). **The `--apply` operator handoff at the parent plan (line 708) stays gated — do not consider it
-                                                              unblocked by the 9 ORCA cells finishing; a separate manifest-side fix is still required first.**
+                                                                      ORCA `dex_pool_state` cells (2025-12-23..12-31) finished migrating clean this session (all 9 confirmed
+                                                                      `errors=0` across a retry chain: `leafparallel`+`lpar5`+`lpar7` VMs, cumulative `cells=1+3+5=9`) and a scoped
+                                                                      manifest rebuild ran after — but a fresh `verify_defi_glued_ids_2026_07_24.py` run still shows **21 glued-id
+                                                                      rows** (unchanged: the same 9 ORCA + the same 12 liquidations). Root cause (code-read, not inferred): neither
+                                                                      the migration, the scoped rebuild, nor this delete-marker script (GCS-objects-only, confirmed via its own
+                                                                      docstring) ever **retracts** a pre-existing manifest row once its source object is renamed to `_migrated_*` —
+                                                                      the old glued-id row and the new per-instrument rows have different `instrument_id`s, so upsert never
+                                                                      supersedes the old one. Full findings + recommended next step (a manifest-row-level purge, not yet built):
+                                                                      `plans/archive/issues/mtds_defi_migration_cell_stall_untimed_gcs_read_2026_07_22.md` addendum "tick 3"
+                                                                      (2026-07-24). **The `--apply` operator handoff at the parent plan (line 708) stays gated — do not consider it
+                                                                      unblocked by the 9 ORCA cells finishing; a separate manifest-side fix is still required first.**
 
 - [x] ✅ [DATA] P1. **Verify the fake-history relabel-forward migration to actual completion** (todo 3,
       `/plans/active/issues/defi_solana_dex_pools_fake_history_recurrence_prd_bucket_2026_07_23.md`) — **VERIFIED
