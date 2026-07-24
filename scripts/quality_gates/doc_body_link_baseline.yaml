@@ -122,8 +122,6 @@ known_broken:
   - "plans/active/INDEX.md::defi-strategy-e2e-automation.md"
   - "plans/active/INDEX.md::instruments_to_100pct_eod_2026_05_04.md"
   - "plans/active/INDEX.md::market_tick_data_to_100pct_2026_05_05.md"
-  - "plans/active/cefi_4surface_migration_execution_log_2026_07_24.md::/plans/archive/2026_07/cefi_4surface_migration_execution_log_history_part1_2026_07_24.md"
-  - "plans/active/cefi_4surface_migration_execution_log_2026_07_24.md::/plans/archive/2026_07/cefi_4surface_migration_execution_log_history_part2_2026_07_24.md"
   - "plans/active/issues/human_led_audit_pool_2026_05_21.md::../mtds_mdps_master.md"
   - "plans/audit/instructions/defi_master_audit_instructions.md::../../active/solana_basis_trading_mvp_2026_06_01.md"
   - "plans/audit/results/archive/AUDIT_2026_05_15_harsh_side_completion.md::../../harsh_orchestrator/pings/slot_2.md"
