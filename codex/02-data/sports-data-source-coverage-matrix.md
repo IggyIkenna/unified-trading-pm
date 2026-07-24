@@ -32,23 +32,34 @@ referenced_by:
     /codex/02-data/sports-scheduling-and-sharding.md,
   ]
 owner:
-last_reviewed: 2026-07-08
+last_reviewed: 2026-07-24
 code_refs:
 ---
 
 # Sports Data Source — Coverage Matrix SSOT
 
-> **Note (2026-07-19, casing banner corrected 2026-07-24).** FIXTURES now writes across two entities —
-> `entity=fixtures_schedule` + `entity=fixtures_outcomes` (2026-05-23) — and the fixtures **manifest atom** is still the
-> legacy `data_type="FIXTURES"` umbrella (migration pending, closeout Track C1). **Casing doctrine has reversed twice
-> since this note's original K0-(b) UPPER claim**: 2026-07-22 (K1/K2) migrated `data_type`/`instrument_type` UP to
-> UPPER-case; 2026-07-23 the closeout doc's Track C **reversed that decision fully to LOWER-case, for ALL sports
-> data_types** — this is the current, canonical target, including instruments-service-side reference data_types
+> **Note (2026-07-19, fixtures-migration status corrected 2026-07-24).** FIXTURES now writes across two entities —
+> `entity=fixtures_schedule` + `entity=fixtures_outcomes` (2026-05-23) — and the fixtures **manifest atom** migration
+> off the legacy `data_type="FIXTURES"` umbrella onto `FIXTURES_SCHEDULE`/`FIXTURES_OUTCOMES` **shipped for the CODE
+> path** 2026-07-24 (`instruments-service@e19c5a7a` + `@47c1ffb3` — every writer/reader call site, including the
+> previously missed `sports_fixture_status_refresh.py` trigger). **Historical backfill is still pending**: a read-only
+> prod census (2026-07-24) found 337,464 pre-existing rows still stamped the legacy `FIXTURES` label — tracked as its
+> own dispatchable todo in `sports_closeout_batch1_ao_ready_2026_07_24.md`, full analysis in
+> `plans/active/issues/fixtures_manifest_legacy_backfill_2026_07_24.md`. Until that backfill lands, expect BOTH labels
+> live in the manifest for historical dates. **Casing doctrine has reversed twice since this note's original K0-(b)
+> UPPER claim**: 2026-07-22 (K1/K2) migrated `data_type`/`instrument_type` UP to UPPER-case; 2026-07-23 the closeout
+> doc's Track C **reversed that decision fully to LOWER-case, for ALL sports data_types** — this is the operator-ruled,
+> still-`migration_pending` target, including instruments-service-side reference data_types
 > (FIXTURES/INJURIES/TEAMS/STANDINGS), not just the 9 MTDS/MDPS ones (operator ruling 2026-07-24, resolving the
-> ambiguity `sports-batch-live.md`/`sports-data-types-catalog.md` left open). The 2026-07-22 K1/K2 UPPER migration is
-> itself now `SUPERSEDED, MUST BE REVERTED` per the closeout — do not treat any UPPER-cased sports `data_type`/
-> `instrument_type` value as canonical. See `sports_consolidated_closeout_2026_07_19.md` Track C for the live revert
-> todo, and `sports_master_closeout_2026_07_21.md` for the K1/K2 execution history (superseded, not current truth).
+> ambiguity `sports-batch-live.md`/`sports-data-types-catalog.md` left open). **Live data as of 2026-07-24 is still 100%
+> UPPER-case for instruments-service sports reference data_types** (read-only prod census, same census that found the
+> 337,464 legacy FIXTURES rows above — zero lowercase variants observed) — the lower-case target has NOT yet been
+> executed for this bucket; every UPPER-cased `data_type` in §2 below is an accurate representation of CURRENT live
+> data, not stale content, even though it will need re-casing once that migration is scoped and run. The 2026-07-22
+> K1/K2 UPPER migration is itself now `SUPERSEDED, MUST BE REVERTED` per the closeout — do not treat any UPPER-cased
+> sports `data_type`/`instrument_type` value as the FUTURE canonical target (it remains the CURRENT live value). See
+> `sports_consolidated_closeout_2026_07_19.md` Track C for the live revert todo, and
+> `sports_master_closeout_2026_07_21.md` for the K1/K2 execution history (superseded, not current truth).
 
 **Status:** canonical — consumed by deployment-api data-status aggregator, instruments-service adapter audits, and
 downstream coverage dashboards.
@@ -73,21 +84,24 @@ Cross-refs:
 - UAC: `unified_api_contracts.canonical.domain.sports.league_registry` —
   `LeagueDefinition.data_sources: frozenset[str]`.
 
-## 1. Expected-league counts per source (observed 2026-04-20)
+## 1. Expected-league counts per source (re-verified live 2026-07-24, originally observed 2026-04-20)
 
-These counts are live-derived from `LEAGUE_REGISTRY` and are the authoritative denominator for data-status coverage %:
+These counts are live-derived from `LEAGUE_REGISTRY` and are the authoritative denominator for data-status coverage %.
+**Re-verified 2026-07-24** directly against the live `LEAGUE_REGISTRY` — the registry has grown since the 2026-04-20
+snapshot; `odds_api`/`open_meteo`/`soccer_football_info`/`understat` are unchanged, `api_football`/`footystats`/
+`transfermarkt`/the total drifted (see changelog):
 
 | `data_sources` key     | Leagues expecting this source | Classification breakdown                                      |
 | ---------------------- | ----------------------------: | ------------------------------------------------------------- |
-| `api_football`         |                            95 | PREDICTION 33 + FEATURES 22 + REFERENCE 40                    |
-| `footystats`           |                            46 | PREDICTION 28 + FEATURES 18                                   |
+| `api_football`         |                            96 | PREDICTION 33 + FEATURES 24 + REFERENCE 39                    |
+| `footystats`           |                            48 | PREDICTION 28 + FEATURES 20                                   |
 | `odds_api`             |                            33 | PREDICTION 33                                                 |
 | `open_meteo`           |                            33 | PREDICTION 33 (weather on fixture dates)                      |
 | `soccer_football_info` |                            33 | PREDICTION 33                                                 |
-| `transfermarkt`        |                            55 | PREDICTION 33 + FEATURES 22                                   |
+| `transfermarkt`        |                            56 | PREDICTION 32 + FEATURES 24                                   |
 | `understat`            |                             5 | PREDICTION 5 (EPL / LA_LIGA / BUNDESLIGA / SERIE_A / LIGUE_1) |
 
-Totals: `LEAGUE_REGISTRY = 102` leagues (PREDICTION 33 + FEATURES 22 + REFERENCE 40 + NON_FOOTBALL 7). Query helpers
+Totals: `LEAGUE_REGISTRY = 103` leagues (PREDICTION 33 + FEATURES 24 + REFERENCE 39 + NON_FOOTBALL 7). Query helpers
 live at `UAC/canonical/domain/sports/league_data.py`.
 
 ## 2. data_type → source → coverage axis matrix
@@ -103,7 +117,7 @@ Every row is authoritative for:
 
 ### 2.1 API-Football-sourced entities (source key = `api_football`)
 
-Expected leagues: `get_leagues_by_classification("Prediction") ∪ ("Features") ∪ ("Reference")` = 95 leagues. Expected
+Expected leagues: `get_leagues_by_classification("Prediction") ∪ ("Features") ∪ ("Reference")` = 96 leagues. Expected
 dates resolved per league via `get_league_fixture_calendar(league_id, start, end)` unless the axis is season-scoped.
 
 | data_type         | Coverage axis                          | Expected shards per day                                        | `record_empty` expected                                                                          |
@@ -142,8 +156,8 @@ field) require updating both the SchemaContract and this table in lockstep.
 
 ### 2.2 FootyStats-sourced entities (source key = `footystats`)
 
-Expected leagues: `[l for l in LEAGUE_REGISTRY.values() if "footystats" in l.data_sources]` = 46 (PREDICTION 28 +
-FEATURES 18). Note PRED_NO_FOOTYSTATS preset excludes some PREDICTION leagues (subscription limit).
+Expected leagues: `[l for l in LEAGUE_REGISTRY.values() if "footystats" in l.data_sources]` = 48 (PREDICTION 28 +
+FEATURES 20). Note PRED_NO_FOOTYSTATS preset excludes some PREDICTION leagues (subscription limit).
 
 | data_type     | Coverage axis                 | Expected shards per day                                         | `record_empty` expected |
 | ------------- | ----------------------------- | --------------------------------------------------------------- | ----------------------- |
@@ -187,7 +201,7 @@ Expected leagues: 5 PREDICTION only — EPL, LA_LIGA, BUNDESLIGA, SERIE_A, LIGUE
 
 ### 2.4 Transfermarkt-sourced (source key = `transfermarkt`)
 
-Expected leagues: 55 (PREDICTION 33 + FEATURES 22). Reference leagues NOT covered.
+Expected leagues: 56 (PREDICTION 32 + FEATURES 24). Reference leagues NOT covered.
 
 **2026-07-08 correction**: `PLAYER_VALUES`'s axis below was stale — it previously read
 `per-league × periodic (weekly cadence)`, describing pre-2026-04-29 behavior. The 2026-04-29 reconciliation
@@ -209,8 +223,8 @@ currently-active data_type.
 
 | data_type               | Coverage axis                                                                                                              | Expected shards per day                                                 | `record_empty` expected |
 | ----------------------- | -------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- | ----------------------- |
-| `PLAYER_VALUES`         | per-league × trigger-date (season-start + transfer-window-open + transfer-window-close, via `get_reference_refresh_dates`) | 55 leagues × ~3-4 trigger-dates/year (NOT daily/weekly cadence-sampled) | Yes                     |
-| `TRANSFERMARKT_LEAGUES` | per-league × periodic (weekly cadence) — RETIRED 2026-05-05                                                                | 55 leagues × cadence-dates (historical only)                            | Yes                     |
+| `PLAYER_VALUES`         | per-league × trigger-date (season-start + transfer-window-open + transfer-window-close, via `get_reference_refresh_dates`) | 56 leagues × ~3-4 trigger-dates/year (NOT daily/weekly cadence-sampled) | Yes                     |
+| `TRANSFERMARKT_LEAGUES` | per-league × periodic (weekly cadence) — RETIRED 2026-05-05                                                                | 56 leagues × cadence-dates (historical only)                            | Yes                     |
 
 ### 2.5 Soccer-Football-Info (SFI) — source key = `soccer_football_info`
 
@@ -312,6 +326,18 @@ adapter _tried_ and _recorded_ the legitimate zero — that's the whole point of
   dedup bug is fixed.
 
 ## 5. Changelog
+
+- **2026-07-24** — Stale-under-banner verification pass (`sports_closeout_batch1_ao_ready_2026_07_24.md` [DOC] P2):
+  every claim in the top banner re-checked against a fresh read-only prod census. Corrected the FIXTURES-migration
+  status claim (code path shipped `instruments-service@e19c5a7a`/`@47c1ffb3`, historical backfill of 337,464 legacy rows
+  tracked separately — was stale-claiming "migration pending" for the whole thing). Clarified the LOWER-case casing
+  target is still `migration_pending`, NOT yet live — a fresh census confirmed 100% UPPER-case live data for
+  instruments-service sports reference `data_type`s, so the body's §2 UPPER-case examples are current-accurate, not
+  stale. §1's expected-league-count table (LEAGUE_REGISTRY-derived) had drifted since its 2026-04-20 snapshot —
+  re-verified live: `api_football` 95→96, `footystats` 46→48, `transfermarkt` 55→56, total registry 102→103
+  (`odds_api`/`open_meteo`/`soccer_football_info`/`understat` unchanged at 33/33/33/5); propagated the corrected counts
+  through §2.1/§2.2/§2.4's inline restatements too. Fixed the 5(now-7)-broken `related:` paths in `sports_master.md`
+  (files archived from `active/` to dated `archive/` subdirs without their referrer being updated).
 
 - **2026-07-08** — §2.4 `PLAYER_VALUES` axis corrected from stale `per-league × periodic (weekly cadence)` to the real,
   currently-shipped `per-league × trigger-date` axis (deployment-api commit `6b7aa696`, landed 2026-06-11 — this doc had
