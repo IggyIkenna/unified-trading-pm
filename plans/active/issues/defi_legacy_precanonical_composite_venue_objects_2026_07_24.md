@@ -16,7 +16,7 @@ summary: >-
   honest-absence). A bounded prefix probe on this ONE day found 8 sibling venues with the same composite-venue shape
   (AAVEV3-ETHEREUM, CURVE-ETHEREUM, ETHERFI-ETHEREUM, LIDO-ETHEREUM, MORPHO-ETHEREUM, UNISWAPV2/V3/V4-ETHEREUM) — this
   is a systemic pattern, not a one-off. The structural blind spot is already documented
-  (`codex/02-data/orphan-object-detection.md` §2d, "Blind spot 3") but this concrete population was never enumerated or
+  (`/codex/02-data/orphan-object-detection.md` §2d, "Blind spot 3") but this concrete population was never enumerated or
   swept.
 status: open
 nature: issue
@@ -26,10 +26,10 @@ repos: [market-tick-data-service, unified-trading-pm]
 scope: [engineer]
 tags: [defi, canonicalisation, legacy, unparseable, orphan-objects, manifest-coverage, data-correctness]
 related:
-  - plans/active/defi_consolidated_closeout_2026_07_18.md
-  - codex/02-data/orphan-object-detection.md
-  - plans/active/issues/canonical_path_oracle_blind_to_filename_stem_2026_07_20.md
-  - plans/active/issues/defi_lst_oracle_timestamp_glued_instrument_id_2026_07_20.md
+  - /plans/active/defi_consolidated_closeout_2026_07_18.md
+  - /codex/02-data/orphan-object-detection.md
+  - /plans/active/issues/canonical_path_oracle_blind_to_filename_stem_2026_07_20.md
+  - /plans/active/issues/defi_lst_oracle_timestamp_glued_instrument_id_2026_07_20.md
 created: 2026-07-24
 parent_epic: defi_master
 assigned_vm: NA

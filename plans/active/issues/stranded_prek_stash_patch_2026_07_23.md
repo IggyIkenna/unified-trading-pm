@@ -45,9 +45,9 @@ triggered prek's `fix-commit-identity` hook, which needed to stash unstaged chan
 followed failed:
 
 ```
-error: patch failed: codex/09-strategy/_archived_pre_v2/defi/aave-lending.md:1
-error: patch failed: codex/14-customer-journeys/experience/regulatory-umbrella-briefing.md:14
-error: patch failed: codex/14-customer-journeys/playbook-concepts/catalogue-execution-algo.md:12
+error: patch failed: /codex/09-strategy/_archived_pre_v2/defi/aave-lending.md:1
+error: patch failed: /codex/14-customer-journeys/experience/regulatory-umbrella-briefing.md:14
+error: patch failed: /codex/14-customer-journeys/playbook-concepts/catalogue-execution-algo.md:12
 error: patch failed: plans/archive/2026_06/orchestrator_dirty_state_gate_stomps_live_wip_2026_06_22.md:1
 error: patch failed: plans/archive/consolidated_remaining_work.plan.md:10
 error: patch failed: plans/archive/defi_instrument_pipeline_and_rewards_2026_04_01.plan.md:6
