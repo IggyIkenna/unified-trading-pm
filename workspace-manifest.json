@@ -342,9 +342,9 @@
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
         "warn_file_count": 14,
+        "coverage_pct": 82.63,
         "qg_red_reason": null,
-        "large_file_count": 6,
-        "coverage_pct": null
+        "large_file_count": 6
       }
     },
     "deployment-service": {
