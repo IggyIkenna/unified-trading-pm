@@ -7,26 +7,37 @@ summary:
   every other slot's orphans were multi-day-old debris, not actively recurring. The reap mechanism now catches these
   within minutes regardless, so there is no active harm, but something specific to slot 4's spawn/teardown path is
   producing orphans at a rate no other slot shows.
-status: open
+status: resolved
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer]
 tags: [agent-orchestrator, worker-lifecycle, tmux, orphan-process, slot4]
-related: [/plans/archive/2026_07/ao_worker_lifecycle_reap_2026_07_20.md]
+related:
+  [
+    /plans/archive/2026_07/ao_worker_lifecycle_reap_2026_07_20.md,
+    /plans/archive/2026_07/ao_remediation_b_code_chain_2026_07_23.md,
+  ]
 created: 2026-07-20
 parent_epic: orchestrator_master
 priority: P3
 source: [agent-orchestrator central VM activity_log, 2026-07-20 11:15-11:30 UTC]
 assigned_vm: NA # filled 2026-07-23 (plan-reconcile Phase 0) — was EMPTY, which is not a valid value; every sibling AO issue doc is NA and this doc is not AO-dispatched
-resolved_by:
+resolved: 2026-07-24
+resolved_by: ao_remediation_b_code_chain_2026_07_23 item 10
 locked_by:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
 last_updated: 2026-07-24
 ---
+
+> **🟢 ACKED-INTO-PLAN, RESOLVED 2026-07-24** — absorbed by
+> [`ao_remediation_b_code_chain_2026_07_23`](/plans/archive/2026_07/ao_remediation_b_code_chain_2026_07_23.md) item 10.
+> Verdict: "just cadence" — slot 4 ranks 9th of 15 slots by normalised short-lived-orphan rate, not the fleet outlier;
+> no code change indicated. Full methodology in § "Resolution" below. Archived per issue-doc-lifecycle
+> (`/codex/11-project-management/issue-doc-lifecycle.md`) now that its sole todo is closed with a recorded verdict.
 
 # slot 4 repeatedly spawns claude processes that go orphan within minutes
 

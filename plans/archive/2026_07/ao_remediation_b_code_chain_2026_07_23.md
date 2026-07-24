@@ -7,7 +7,7 @@ summary:
   common, plus the shared-doc measurement recorders — so the whole plan runs sequentially to avoid file collisions. It
   is depends_on Plan A because its final sports-closeout audit needs Plan A's plan_health doc_drift routing and the
   docs-reconcile timer to be live first. Zero P0s; the two safety-sensitive backend todos are HELD (Q2).
-status: active
+status: complete # (was: active) 2026-07-24 archival: all 14 todos [x], evidence cited inline on each checkbox
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -17,7 +17,7 @@ tags: [agent-orchestrator, git-health, worker-liveness, plan-hygiene, plan-recon
 related:
   [
     /plans/active/ao_issue_docs_consolidated_remediation_2026_07_23.md,
-    /plans/active/ao_remediation_a_independent_fixes_2026_07_23.md,
+    /plans/archive/2026_07/ao_remediation_a_independent_fixes_2026_07_23.md,
     /plans/active/issues/git_health_phantom_dirty_flicker_ff_cron_race_2026_07_21.md,
     /plans/active/issues/idle_slot_dirty_wip_never_auto_resolves_2026_07_20.md,
     /plans/active/issues/killed_slot_orphans_committed_unpushed_work_no_push_path_2026_07_21.md,
@@ -222,7 +222,7 @@ source:
       symptom within ~60s, so this is about knowing whether slot 4 is structurally different. **Gate**: either a fixed
       cause (code diff plus a measured 24h orphan-rate drop) or a recorded cadence verdict citing the per-dispatch
       comparison. Silence is not an outcome. — **RESOLVED, "just cadence" (unified-trading-pm, this commit)**: full
-      methodology + per-slot table in `/plans/active/issues/slot4_recurring_short_lived_orphans_2026_07_20.md` §
+      methodology + per-slot table in `/plans/archive/issues/slot4_recurring_short_lived_orphans_2026_07_20.md` §
       "Resolution (2026-07-24, slot 5)". Queried the live `activity_log` directly (this session has network access to
       the central VM's `localhost:8765`). Normalised short-lived-orphan rate (age<1h orphan reaps ÷ task_dispatched)
       over the matched ~4-day window: slot 4 = 0.517, ranked **9th of 15** active slots — NOT the fleet outlier (slots
@@ -403,7 +403,7 @@ source:
   test standalone before trusting it, not by the fail-before/pass-after pass alone).
 
 - **2026-07-24 (slot 5)**: Item 10 shipped (verdict-only, no code change — the todo's stated gate accepts either path).
-  Full writeup in `/plans/active/issues/slot4_recurring_short_lived_orphans_2026_07_20.md` § "Resolution (2026-07-24,
+  Full writeup in `/plans/archive/issues/slot4_recurring_short_lived_orphans_2026_07_20.md` § "Resolution (2026-07-24,
   slot 5)", citation inline on its checkbox above. Queried the live `activity_log` directly via `GET /api/activity` /
   `GET /api/activity/rollup?by_slot=true` (this session has direct network access to the central VM's `localhost:8765`,
   so no SSM detour was needed). Verdict: slot 4's short-lived-orphan rate normalised per dispatch (0.517) ranks 9th of
@@ -414,10 +414,10 @@ source:
   **Correction to the "HELD per Q2" note below (this entry)**: the previous Deferred-work table (slot 2/3, below)
   labeled items 10 and 12 as "HELD per Q2 (operator-decision)". That was a mislabeling — the actual 2 Q2-held todos
   (liveness-by-progress gate in `_git_alerts.py` + cross-role `/reply` routing in `agents.py`) were split into their own
-  plan, `/plans/active/ao_held_safety_fixes_dispatch_2026_07_24.md`, per operator ruling 2026-07-24, and **both already
-  shipped** there (slots 4 and 6) — unrelated to this plan's items 10/12. Item 10 was in fact legitimately dispatchable
-  and is now done (above); item 12 remains open and is NOT Q2-held either — it is simply next in this plan's sequential
-  order, same as any other open item.
+  plan, `/plans/archive/2026_07/ao_held_safety_fixes_dispatch_2026_07_24.md`, per operator ruling 2026-07-24, and **both
+  already shipped** there (slots 4 and 6) — unrelated to this plan's items 10/12. Item 10 was in fact legitimately
+  dispatchable and is now done (above); item 12 remains open and is NOT Q2-held either — it is simply next in this
+  plan's sequential order, same as any other open item.
 
   ## Deferred work after 2026-07-24
 

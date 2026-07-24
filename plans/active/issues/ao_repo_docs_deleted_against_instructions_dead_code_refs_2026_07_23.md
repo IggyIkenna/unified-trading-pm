@@ -110,8 +110,8 @@ person re-checking.
       as fleet-wide proof. **Gate**: the entry names which commits swept what, and links this doc for the batch it
       missed. — **DONE (unified-trading-pm, this commit)**: the tracker's 2026-07-18 entry now carries a dated
       CORRECTION naming `ao@19766e7` (the deleting commit) vs `ao@3d2c0e6`/`ao@63d8284` (the different batch the sweep
-      actually swept) and links this doc. Duplicate todo in `ao_remediation_b_code_chain_2026_07_23.md` flipped
-      alongside (same finding, one fix).
+      actually swept) and links this doc. Duplicate todo in
+      `/plans/archive/2026_07/ao_remediation_b_code_chain_2026_07_23.md` flipped alongside (same finding, one fix).
 
 ## Lesson
 

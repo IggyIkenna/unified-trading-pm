@@ -16,8 +16,8 @@ scope: [engineer]
 tags: [agent-orchestrator, held, blocked, plan-reconcile]
 related:
   [
-    /plans/active/ao_remediation_a_independent_fixes_2026_07_23.md,
-    /plans/active/ao_remediation_b_code_chain_2026_07_23.md,
+    /plans/archive/2026_07/ao_remediation_a_independent_fixes_2026_07_23.md,
+    /plans/archive/2026_07/ao_remediation_b_code_chain_2026_07_23.md,
     /plans/active/issues/wedge_detector_lacks_liveness_by_progress_false_positive_2026_07_21.md,
     /plans/active/issues/agent_reply_cannot_address_a_different_role_silent_cross_role_blind_spot_2026_07_22.md,
   ]
@@ -43,8 +43,9 @@ source: "/plan-reconcile AO-scope run 2026-07-23"
 # AO issue-docs remediation — held + blocked residual
 
 > The 22 dispatchable todos from the 2026-07-23 `/plan-reconcile` sweep were offloaded into two child plans:
-> [`ao_remediation_a_independent_fixes_2026_07_23`](/plans/active/ao_remediation_a_independent_fixes_2026_07_23.md) (8
-> parallel) and [`ao_remediation_b_code_chain_2026_07_23`](/plans/active/ao_remediation_b_code_chain_2026_07_23.md) (14
+> [`ao_remediation_a_independent_fixes_2026_07_23`](/plans/archive/2026_07/ao_remediation_a_independent_fixes_2026_07_23.md)
+> (8 parallel) and
+> [`ao_remediation_b_code_chain_2026_07_23`](/plans/archive/2026_07/ao_remediation_b_code_chain_2026_07_23.md) (14
 > sequential, gated behind A). **This doc holds only the work that is NOT dispatchable yet** — `assigned_vm: NA`, so
 > regen never ingests it. Each item below moves to a child plan (or a new one) once the operator rules or its blocker
 > clears.
@@ -52,10 +53,10 @@ source: "/plan-reconcile AO-scope run 2026-07-23"
 ## Held for operator review (operator ruling Q2, 2026-07-23) — MOVED 2026-07-24
 
 > **Both dispatched 2026-07-24** to
-> [`ao_held_safety_fixes_dispatch_2026_07_24`](/plans/active/ao_held_safety_fixes_dispatch_2026_07_24.md) — operator
-> ruling: confirmed neither touches a file `ao_remediation_b_code_chain_2026_07_23` touches, so both run now rather than
-> waiting for Plan B to finish. The regression-test gate stated in each todo, plus green `quality-gates.sh`, IS the
-> review mechanism the Q2 hold was waiting on.
+> [`ao_held_safety_fixes_dispatch_2026_07_24`](/plans/archive/2026_07/ao_held_safety_fixes_dispatch_2026_07_24.md) —
+> operator ruling: confirmed neither touches a file `ao_remediation_b_code_chain_2026_07_23` touches, so both run now
+> rather than waiting for Plan B to finish. The regression-test gate stated in each todo, plus green `quality-gates.sh`,
+> IS the review mechanism the Q2 hold was waiting on.
 
 ## Non-dispatchable — operator decision / upstream-blocked
 

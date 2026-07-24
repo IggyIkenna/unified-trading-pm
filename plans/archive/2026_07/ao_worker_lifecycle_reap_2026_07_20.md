@@ -122,7 +122,7 @@ WOULD kill, and get approval before any real reap.**
       task `sports_p2_history_apifootball_2015_to_present-001` — untouched with a fresh ping seconds after the sweep,
       service `NRestarts=0`). **Follow-up filed, not actioned this session**: slot 4 producing short-lived orphans
       repeatedly (2 fresh ones within ~15 min of the sweep going live) suggests a root cause on that slot specifically,
-      beyond this plan's scope — tracked at `plans/active/issues/slot4_recurring_short_lived_orphans_2026_07_20.md`.
+      beyond this plan's scope — tracked at `/plans/archive/issues/slot4_recurring_short_lived_orphans_2026_07_20.md`.
 - ➡️ **MIGRATED 2026-07-20 → `ao_open_issues_consolidated_close_out_2026_07_17.md` § Phase 8. NOT done; not owned
   here.** Original item, for the record: [BACKEND] P1. **Stale-dispatch invariant (Defect A), resume-path aware.** The
   pruner's requeue (`ao@5b07bd3`) releases on a "requeue" verdict, but a `resume-pending` verdict keeps the task bound —
