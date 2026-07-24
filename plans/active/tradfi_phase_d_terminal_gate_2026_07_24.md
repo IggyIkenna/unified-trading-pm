@@ -329,6 +329,24 @@ tracked below as follow-up, not blocking this plan's core migration/manifest-rec
   (wasted Databento calls), not a checker-only artifact. Fixed to match against both the raw captured set and its
   pre-`|` base form; 2 new regression tests
   (`tests/unit/test_preflight_atom_coverage.py::test_composite_quote_margin_atom_*`).
+
+  **CORRECTION (2026-07-23, later same day) — this fix was necessary but NOT sufficient for CBOE**: live post-fix
+  re-verification against a rebuilt VM code tarball STILL showed the identical symptom (object rewritten on skip).
+  Root-caused via `run.log` ground truth: the checker sampled `--instrument-ids VXU26` (a specific dated VIX contract)
+  instead of the bundled root `VIX`, because `_is_bundled_chain_shard("TRADFI", "CBOE", "ohlcv_1s"/"ohlcv_1m")` returned
+  `False` — CBOE is a MIXED venue (`_VENUE_INSTRUMENT_TYPE["CBOE"] == "index"`, correct for the Treasury-yield
+  `ohlcv_24h` majority, but silently wrong for the VX-futures `ohlcv_1s`/`ohlcv_1m` minority — there was no
+  data_type-level override, unlike `options_chain`/`futures_chain`'s literal-name override). So this shard never even
+  reached the atom-coverage code the first fix touched. **FIXED**: `_is_bundled_chain_shard` now special-cases
+  `CBOE`+`ohlcv_1s`/`ohlcv_1m` → `True`, plus a `CBOE` → `"VIX"` entry in `_CHAIN_UNDERLYING_FALLBACK`. Production fix
+  shipping is being blocked intermittently by a pre-existing, unrelated pytest race — see
+  `plans/active/issues/mtds_deployment_env_race_survives_single_worker_2026_07_23.md` (this session's counter-evidence
+  that the race survives `PYTEST_WORKERS=1`, contradicting another slot's same-day "structural fix" claim). 3 new
+  regression tests (`tests/unit/test_pipeline_e2e_check.py::TestIsBundledChainShardCboeCorrection`) proven correct via
+  isolated `pytest` runs (3/3 pass) but deliberately NOT shipped alongside the production fix — adding them to the full
+  suite deterministically (if intermittently) triggers that same pre-existing pollution bug.
+
+- `- [ ] [SCRIPT] P3. Add TestIsBundledChainShardCboeCorrection (3 tests, verified passing in isolation) to tests/unit/test_pipeline_e2e_check.py once mtds_deployment_env_race_survives_single_worker_2026_07_23.md is resolved.`
 - `~~- [ ] [SCRIPT] P3. Fix IS's FX force/skip status label~~` — **SUPERSEDED 2026-07-23**: rather than relabel the
   honest-absence status, built the actual missing adapter. `instruments-service` had zero reference-data adapter for FX
   (`NO_ADAPTER_YET`) even though MTDS already has a fully-working Yahoo-sourced FX tick/OHLCV path — a research agent
