@@ -57,7 +57,7 @@ of the hardcoded `"FIXTURES"` literal — `sports_reference_fixtures.py`, `proce
 **Corpus census (read-only, 2026-07-24)**: invoked the sanctioned `deployment-api` axis-value-census logic directly
 (`build_bucket_name("instruments-service", "sports")` + `read_availability_index(bucket, columns=[...])` — the same
 bounded, column-pruned single read the `/data-status/axis-value-census` endpoint performs, single-walk-exempt per
-`codex/02-data/reconciliation-census-and-compute-tiers.md` §1.1) against the real prod bucket
+`/codex/02-data/reconciliation-census-and-compute-tiers.md` §1.1) against the real prod bucket
 `instruments-store-sports-prd-central-element-323112` (`row_count=5,526,420`). `data_type` axis result (relevant rows):
 
 - `FIXTURES`: **337,464** (legacy atom — should be zero per the todo's Done-when clause)
