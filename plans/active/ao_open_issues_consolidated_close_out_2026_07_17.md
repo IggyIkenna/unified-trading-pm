@@ -891,11 +891,21 @@ the close-the-loop point: plan_health keeps correctly re-reporting a real, owned
   deleted `host-offline-failover.md` (codex) + `OPERATIONS.md` (repo) per operator ruling; purged
   OPERATIONS/tab-mirror/\_agent_pings/vm-orchestrator/:8026/post-P5/Cloud-Run-as-live refs across the AO codex + repo
   doc set; made the codex e2e-operator-runbook self-contained (was an OPERATIONS.md wrapper). Shipped pm@20f06b2b7 +
-  pm@e0c796e3c + pm@071652432 (codex), ao@3d2c0e6 + ao@63d8284 (repo). Final state: 0 dead links, 0 refs to any of the
-  12 deleted AO docs, 0 misleading-as-live markers. NB: the earlier 3 "harshkantariya [main·harsh_pc]" AO-doc-cleanup
-  commits (13c25d2e5/fca8d2643/19766e7) were from a SECOND Claude process bound to this same session on the office VS
-  Code — verified correct + complete, then that duplicate process was terminated. AF-6 (ENV_VARS residual) is the only
-  open item from this sweep, operator-decision-pending.
+  pm@e0c796e3c + pm@071652432 (codex), ao@3d2c0e6 + ao@63d8284 (repo, both ~2026-07-18T10:28-10:35Z). Final state: 0
+  dead links, 0 refs to any of the 12 deleted AO docs, 0 misleading-as-live markers **— scoped to what THIS sweep swept
+  (`OPERATIONS.md` + the tab-mirror/\_agent_pings/vm-orchestrator/:8026/post-P5/Cloud-Run-as-live ref set), not
+  fleet-wide.** NB: the earlier 3 "harshkantariya [main·harsh_pc]" AO-doc-cleanup commits (13c25d2e5/fca8d2643/19766e7)
+  were from a SECOND Claude process bound to this same session on the office VS Code — verified correct + complete, then
+  that duplicate process was terminated. AF-6 (ENV_VARS residual) is the only open item from this sweep,
+  operator-decision-pending. **CORRECTION (2026-07-24, per
+  `plans/active/issues/ao_repo_docs_deleted_against_instructions_dead_code_refs_2026_07_23.md`)**: `ao@19766e7`
+  (2026-07-18T00:43:10+0530, same "duplicate process" commit chain noted above) deleted `AUDIT_FINDINGS_2026_05_18.md`,
+  `PLAN.md`, and `MAIN_AGENT_CUTOVER_REVIEW.md` against `ao_docs_reconciliation_2026_07_15.md` Tier-6's explicit
+  per-file keep/banner/repoint instructions for those three — a DIFFERENT batch this entry's sweep (`3d2c0e6`/`63d8284`,
+  ~10h later) never touched. That left 5 dead doc-references live in shipped server code (`bootstrap.py`, `db.py`,
+  `orm.py`, `models/__init__.py`, `routes/slots_worker.py`) at the time this Progress Log line was written — so the "0
+  dead links, 0 refs to any of the 12 deleted AO docs" claim above was NOT true fleet-wide, only for the OPERATIONS.md
+  batch. See the linked issue doc for the fix todos and current status.
 - **2026-07-17 (final)** — Phase 7 added: five INDEPENDENT agent-audit findings (AF-1..AF-5) from a fresh pass over the
   AO code, live DB/activity-log, and codex spot-checks — kept separate from the issue-doc-derived phases per operator
   instruction, pending operator review. Headlines: 189 CI-escalator dispatches/7d with 83 unresolved (43%); plan_health

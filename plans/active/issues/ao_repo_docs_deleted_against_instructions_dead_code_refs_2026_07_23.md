@@ -105,10 +105,13 @@ person re-checking.
 - [ ] [DOCS] P3. **Correct `REPO_PROVENANCE.md`'s branch-flow sentence** to the current model (per-slot clones →
       `live-defi-rollout`; LDR → `main` direct, staging bypassed by the per-repo `ldr_main` toggle). SSOT:
       `/codex/08-workflows/ci-cd-flow.md`. **Gate**: no `tab ->` flow description remains in the file.
-- [ ] [REVIEW] P2. **Correct the tracker's "0 dead links" Progress Log claim** in
+- [x] ✅ [REVIEW] P2. **Correct the tracker's "0 dead links" Progress Log claim** in
       `ao_open_issues_consolidated_close_out_2026_07_17.md` to state the sweep's ACTUAL scope, so the line stops reading
       as fleet-wide proof. **Gate**: the entry names which commits swept what, and links this doc for the batch it
-      missed.
+      missed. — **DONE (unified-trading-pm, this commit)**: the tracker's 2026-07-18 entry now carries a dated
+      CORRECTION naming `ao@19766e7` (the deleting commit) vs `ao@3d2c0e6`/`ao@63d8284` (the different batch the sweep
+      actually swept) and links this doc. Duplicate todo in `ao_remediation_b_code_chain_2026_07_23.md` flipped
+      alongside (same finding, one fix).
 
 ## Lesson
 
