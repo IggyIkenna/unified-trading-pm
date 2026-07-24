@@ -81,6 +81,11 @@ drift_direction: correct-codex
 > file and add/apply the todo there** (most targets are the 5 consolidated closeouts or a codex doc) — this gate doc is
 > the index, not a duplicate execution surface. `[cross-cutting]`-tagged todos have no single AG target; they create/fix
 > a shared codex doc, skill, or corpus-wide sweep.
+>
+> **Evidence note (2026-07-24 distribution pass)**: every `pm@<commit-pending>` citation below resolved on push to
+> either `pm@4f81d0139` (the 8 direct-authorable items) or `pm@37e74aaf0` (the remaining 56, incl. all 5 AG-agent
+> batches + new issue/codex docs) — both on `origin/live-defi-rollout`. Run `git log --oneline -- <target-file>` on the
+> cited target for the exact commit if the distinction matters.
 
 ## 1. Full code E2E canonical — no dead code / fallbacks / duplicate SSOTs (all adapters)
 
@@ -419,3 +424,15 @@ cells have actually been proven wired through backfill=paper=live, vs. just decl
 | Todo #4's first live 30-day audit run                                            | Not started                                                                                               | Tracked in `plans/active/issues/vm_billing_waste_first_audit_and_preflight_gate_design_2026_07_24.md`                                                                                     |
 | Point 3's tradfi/defi/prediction orphan-sweep re-measurements                    | Partially done (defi/prediction measured by a concurrent session; tradfi/cefi/sports already had numbers) | Prediction's `B_legacy_duplicate` count still open — tracked in `estate_orphan_assessment_2026_07_21.md` todo 8                                                                           |
 | The ~15 sub-investigations this session stubbed as new issue docs (not executed) | Not started                                                                                               | Nobody — each is now a bounded, dispatchable todo in its own issue doc (see §2/§4/§5/§7/§8/§9/§10/§14 above)                                                                              |
+
+## Lesson (2026-07-24, not yet elsewhere in codex — worth carrying)
+
+Dispatching 5 concurrent background Agent-tool workers (one per consolidated closeout) filled this session's host tmpfs
+(`/tmp/claude-1000/.../tasks/`, where background-task output/transcripts land) and blocked the MAIN session's own `Bash`
+tool for an extended stretch (every command failed `ENOSPC`, incl. `echo hi`) — and 3 of the 5 sub-agents independently
+hit the identical Bash lockout partway through their own runs, confirmed via their own final reports. Read/Edit/Write
+tools kept working throughout; both the main session and the affected sub-agents worked around it by switching to
+Read-only investigation + Edit (no `grep`/`wc -l`/git ops) for the remainder. Not yet reflected in
+`/codex/12-agent-workflow/async-wait-and-poll-discipline.md`'s parallel-agent guidance — worth a note there if this
+recurs: **more than ~3-5 concurrent background agents in one session risk exhausting the shared tmpfs**, degrading Bash
+for everyone until agents finish and free space, not just a risk for the dispatching session.
