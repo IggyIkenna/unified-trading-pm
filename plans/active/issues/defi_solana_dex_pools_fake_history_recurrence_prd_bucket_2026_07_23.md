@@ -212,13 +212,22 @@ is regenerated after a fix.**
       (`d01to05v3`/`d06to09v3`/`d10to13v3`/`d14to17v3`, non-SPOT) specifically to remove the preemption-driven
       monitoring-gap risk for the remainder of an unattended autonomous run — this is a deliberate, reasoned exception
       to the SPOT-default HARD RULE (modest ~4-VM job, no one present to promptly relaunch on preemption during a
-      multi-hour unattended window), not an oversight. **STILL IN PROGRESS as of 2026-07-24 ~10:28 UTC — full-scale
-      completion NOT yet verified.** Next session/check: re-run the day=2026-05-04/05 ORCA+RAYDIUM destination-object
-      count above and compare against progress; if still short, the v3 VMs are ON_DEMAND so they should NOT disappear
-      without a real completion/crash signal this time — check
-      `gcloud compute instances list --filter="name~'defi-relabel-2026072[4-9]'"` first. Once genuinely complete, the
-      pending-delete report (`_index/audit/dex_pools_fake_history_pending_delete.parquet`) needs HUMAN review before any
-      old-object cleanup (never automated).
+      multi-hour unattended window), not an oversight. **STRONG PROGRESS as of 2026-07-24 ~10:44 UTC**: all 4 v3 VMs
+      still `RUNNING` (no disappearances this time — ON_DEMAND is holding), and the real destination-object count has
+      grown to 28,398 (day=2026-05-04: 14,096 ORCA + 109 RAYDIUM; day=2026-05-05: 14,094 ORCA + 99 RAYDIUM) — this
+      essentially SATURATES the ~14,193-object theoretical ceiling (14,094 ORCA + 99 RAYDIUM per true-date) that the "17
+      fake-day copies converge on the same true date" hypothesis predicted, confirming that hypothesis largely holds
+      (the count exceeding a single true-date's 14,094+99 by summing across BOTH 05-04 and 05-05 is expected — there are
+      two distinct true dates, not one). **Practical implication**: the real migration OUTCOME (correct data existing
+      under the true historical dates) is very likely already close to fully achieved even though the script still has
+      to walk all 241,281 source rows (redundant duplicates included) before it reports done — full-scale completion of
+      the SCRIPT RUN is still NOT yet verified, but the underlying DATA CORRECTNESS goal looks nearly met already.
+      **Full-scale completion NOT yet formally verified.** Next check: re-run the day=2026-05-04/05 ORCA+RAYDIUM
+      destination-object count above (should stop growing once genuinely done) and check VM status via
+      `gcloud compute instances list --filter="name~'defi-relabel-2026072[4-9]'"` (ON_DEMAND VMs should only disappear
+      on a real completion/crash, not silently). Once genuinely complete, the pending-delete report
+      (`_index/audit/dex_pools_fake_history_pending_delete.parquet`) needs HUMAN review before any old-object cleanup
+      (never automated).
 - [x] 4. [REVIEW] P2. ~~Check whether the SAME bug shape exists for Kamino~~ — **PARTIALLY DONE 2026-07-23**:
       `venue=KAMINO/chain=SOLANA/instrument_type=pool/data_type=dex_pools/` has **zero objects** in the `-prd-` bucket
       across 6 sampled days (both inside and outside the affected window) — moot for the AMM-pool shape this issue
