@@ -22,7 +22,11 @@ stage: [data]
 repos: [unified-api-contracts, market-data-processing-service]
 scope: [engineer, admin]
 tags: [data-correctness, schema-contract, candles, cefi, deribit, futures]
-related: [../candle_feature_canonical_path_divergence_2026_07_20.md, ../data_pipeline_check_mdps_features_2026_07_20.md]
+related:
+  [
+    /plans/active/issues/candle_feature_canonical_path_divergence_2026_07_20.md,
+    ../data_pipeline_check_mdps_features_2026_07_20.md,
+  ]
 created: 2026-07-21
 last_updated: 2026-07-21
 parent_epic: infrastructure_master

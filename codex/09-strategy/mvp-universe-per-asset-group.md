@@ -271,8 +271,8 @@ These archetypes MUST have a runnable 2-year backtest config-grid by 2026-05-23.
 
 **Both archetypes**:
 
-- **Owner plan**: [`plans/active/defi_master.md`](../../plans/active/defi_master.md) Fork 1 (DeFi master owns the
-  archetype family even though it spans cross-asset — single owner avoids cross-plan ambiguity).
+- **Owner plan**: [`plans/active/defi_master.md`](/plans/epics/defi_master.md) Fork 1 (DeFi master owns the archetype
+  family even though it spans cross-asset — single owner avoids cross-plan ambiguity).
 - **Shared infrastructure**: `paired_price_dispersion` calculator in `features-cross-instrument-service` powers BOTH
   (per defi_master line ~342). Catalog pair specs at UAC
   `unified_api_contracts.internal.architecture_v2.paired_dispersion_catalog`.

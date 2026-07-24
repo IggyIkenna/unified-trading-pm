@@ -9,7 +9,7 @@ stage: [meta]
 repos: []
 scope: [engineer, admin]
 tags: [plan-hygiene, ssot-audit, verification, docspec]
-related: [../epics/plan_hygiene_master.md]
+related: [/plans/epics/plan_hygiene_master.md]
 created: 2026-06-25
 parent_epic: plan_hygiene_master
 priority: P2

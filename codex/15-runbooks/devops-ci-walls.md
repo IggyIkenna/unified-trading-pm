@@ -14,7 +14,7 @@ tags: [runbook, devops, cicd, escalation, walls, quality-gates-v2, promotion]
 related:
   [
     /codex/08-workflows/ci-cd-flow.md,
-    unified-trading-pm/agents/cicd.md,
+    /agents/cicd.md,
     agent-orchestrator/server/ci_status.py,
     agent-orchestrator/server/escalation.py,
   ]
@@ -47,10 +47,10 @@ execution:
 
 # DevOps CI walls — recovery recipes (cicd role)
 
-The **DevOps role = the `cicd` one-shot worker** (`unified-trading-pm/agents/cicd.md`): dispatched per wall via
-`POST /api/escalate`, fixes the wall on the integration branch, exits. Wall routing: `merge_conflict` +
-`stuck_promotion_pr` → the **conflict_resolver** prompt; `data_pipeline_failure` → its own prompt; everything else
-(`ldr_qg_failure`, `sit_failure`, `main_ci_red`, `label_mismatch`) → the generic **cicd** prompt (`server/escalation.py`
+The **DevOps role = the `cicd` one-shot worker** (`/agents/cicd.md`): dispatched per wall via `POST /api/escalate`,
+fixes the wall on the integration branch, exits. Wall routing: `merge_conflict` + `stuck_promotion_pr` → the
+**conflict_resolver** prompt; `data_pipeline_failure` → its own prompt; everything else (`ldr_qg_failure`,
+`sit_failure`, `main_ci_red`, `label_mismatch`) → the generic **cicd** prompt (`server/escalation.py`
 `_prompt_template_for`; regression-tested in `tests/test_escalation.py`).
 
 **Triage entry point — ALWAYS first**: from the agent-orchestrator repo root,

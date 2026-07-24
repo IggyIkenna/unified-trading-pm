@@ -20,8 +20,8 @@ scope: [engineer, admin]
 tags: [agent-orchestrator, reconciliation, plan-hygiene, drift, supersession, codex-drift, epic-alignment, audit]
 related:
   [
-    ../epics/orchestrator_master.md,
-    ../epics/agent_operating_framework_master.md,
+    /plans/epics/orchestrator_master.md,
+    /plans/epics/agent_operating_framework_master.md,
     /plans/archive/issues/ao_skip_blind_spawn_budget_phantom_churn_2026_07_15.md,
     /plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md,
   ]

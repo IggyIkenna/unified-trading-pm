@@ -50,7 +50,7 @@ The epic-flow SSOT lives at `plans/epics/README.md`. It covers:
 - Lifecycle (active / paused / cancelled — NEVER "complete")
 - Migration discipline (splits / consolidates / renames)
 
-Full VM topology details: [`../../plans/active/orchestrator_master.md`](../../plans/active/orchestrator_master.md).
+Full VM topology details: [`/plans/epics/orchestrator_master.md`](/plans/epics/orchestrator_master.md).
 
 ---
 

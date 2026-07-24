@@ -20,7 +20,7 @@ tags: [mvp, tradfi, dead-code, cli, p2]
 related:
   [
     ../../docs-mirror/instruments-service/TRADFI_INSTRUMENTS.md,
-    ../audit/results/canonical_instrument_id_audit_2026_07_08.md,
+    /plans/audit/results/canonical_instrument_id_audit_2026_07_08.md,
   ]
 created: 2026-07-08
 parent_epic: instruments_master

@@ -100,7 +100,7 @@ Read these before any doc edit + before any code change in the affected scopes:
   — Polymarket + Kalshi shard migration to canonical_question_group; UAC `CanonicalQuestionGroup` enum + classifier with
   stability hash; per-market lifecycle timestamps in instruments-service; MTDS adapter migration with cluster
   validation; GCS migration of existing per-base_asset parquets.
-- [`_writegate_plan_rationale_and_followup_design_2026_05_06.md`](plans/active/_writegate_plan_rationale_and_followup_design_2026_05_06.md)
+- [`_writegate_plan_rationale_and_followup_design_2026_05_06.md`](/plans/ai/_writegate_plan_rationale_and_followup_design_2026_05_06.md)
   — meta document explaining design rationale + 4-plan packaging (A=predictions, B=UTL/UAC lift triple, C=pre-flight +
   concurrency, D=multi-source merge) + end-to-end production-grade execution requirements + anti-patterns this
   work-package rejects.

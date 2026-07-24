@@ -14,7 +14,7 @@ tags: [monitoring, slack, observability, self-healing, backfill, spot-vm, data-p
 related:
   [
     ../data_completion_to_100_all_ag_2026_06_21.md,
-    ../epics/infrastructure_master.md,
+    /plans/epics/infrastructure_master.md,
     /plans/archive/issues/deadman_monitor_log_event_crash_2026_06_23.md,
   ]
 created: "2026-06-23"

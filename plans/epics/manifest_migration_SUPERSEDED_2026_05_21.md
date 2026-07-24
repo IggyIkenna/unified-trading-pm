@@ -344,7 +344,7 @@ This is the operator-visible view — what the human needs to do, when, in what 
 - Sports rename (Stage 1): [`sports_master.md`](./sports_master.md) § Sports `data_available_at` → `available_at`
   rename.
 - Predictions Phase 3 migration: [`predictions_master.md`](./predictions_master.md).
-- Final rescan: [`defi_master.md`](../active/defi_master.md) § mtds-s4-10.
+- Final rescan: [`defi_master.md`](/plans/epics/defi_master.md) § mtds-s4-10.
 - Raw tables + `_ensure_timestamp` deletion: [`infrastructure_master.md`](./infrastructure_master.md).
 - Workspace rule: CLAUDE.md `§ Manifest migration, NOT fallback` — when manifest drifts from canonical shape, write a
   one-time migration script and **remove** the fallback reader. No compat shims.

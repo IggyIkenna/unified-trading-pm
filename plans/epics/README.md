@@ -90,8 +90,8 @@ EPIC stays put (everlasting). ACTIVE PLAN archives on completion. AUDIT DOC arch
 ```
 
 VM orchestrator + worker + review agents work the items continuously per
-[`../active/orchestrator_master.md`](../active/orchestrator_master.md). Ikenna + Harsh continuously feed the loop by
-running audits + spinning new plans/epics from issues identified.
+[`/plans/epics/orchestrator_master.md`](/plans/epics/orchestrator_master.md). Ikenna + Harsh continuously feed the loop
+by running audits + spinning new plans/epics from issues identified.
 
 **Rule**: no orphan active plans. Every file in `plans/active/*.md` declares `parent_epic:` in frontmatter. The
 inventory regenerator flags orphans as review-blocking.
@@ -242,7 +242,7 @@ Multiple epics can share a VM if workload is bounded; one epic never spans multi
 | `vm-orchestrator`  | `orchestrator_master`                                                                                                   | Self-managing                                     |
 
 Registry SSOT: [`../../orchestrator_vm_registry.yaml`](../../orchestrator_vm_registry.yaml). Full VM topology spec:
-[`../active/orchestrator_master.md`](../active/orchestrator_master.md).
+[`/plans/epics/orchestrator_master.md`](/plans/epics/orchestrator_master.md).
 
 ## Filename rules
 
