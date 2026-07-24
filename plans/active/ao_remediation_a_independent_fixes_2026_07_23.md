@@ -85,11 +85,11 @@ source:
       `docs/AUDIT_FINDINGS_2026_05_18.md` cite replaced with an inline pointer to `server/verify.py`. Verified:
       `rg -n     'AUDIT_FINDINGS_2026_05_18|docs/PLAN\.md|MAIN_AGENT_CUTOVER_REVIEW' server/` returns zero hits on
       `agent-orchestrator` HEAD; this todo's checkbox was the only outstanding piece.
-- [ ] [DOCS] P3. Replace `agent-orchestrator/README.md`'s "Files in This Directory" tree with a pointer, and fix its two
-      inline `agents/*.md` links. The tree still lists an `agents/` directory and seven files under it that no longer
-      exist — the directory was removed in `agent-orchestrator@5eaea29` and role prompts now live in
-      `unified-trading-pm/agents/`. Use a pointer rather than re-listing files that will drift again. **Gate**: every
-      path in the README tree resolves and no link targets a nonexistent `agents/` file.
+- [x] ✅ [DOCS] P3. Replace `agent-orchestrator/README.md`'s "Files in This Directory" tree with a pointer, and fix its
+      two — agent-orchestrator@f52b223 inline `agents/*.md` links. The tree still lists an `agents/` directory and seven
+      files under it that no longer exist — the directory was removed in `agent-orchestrator@5eaea29` and role prompts
+      now live in `unified-trading-pm/agents/`. Use a pointer rather than re-listing files that will drift again.
+      **Gate**: every path in the README tree resolves and no link targets a nonexistent `agents/` file.
 - [x] ✅ [DOCS] P3. Correct the branch-flow sentence in `agent-orchestrator/docs/REPO_PROVENANCE.md` to the current
       model — agent-orchestrator@5d8cdc8 per-slot clones on `live-defi-rollout`, then LDR to `main` DIRECT with staging
       bypassed by the per-repo `ldr_main` toggle. It still describes the retired
