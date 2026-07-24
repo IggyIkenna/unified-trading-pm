@@ -108,6 +108,102 @@ as a plausible-looking trap.
 `_SPOT_VENUES_STAKED` union should match `catalog_staked_basis.py`'s output — but nothing enforces that at build time;
 it's an unchecked cross-repo assumption. If the two ever diverge, nothing would catch it.
 
+### Addendum 2026-07-24 — Finding 3 reconciliation-direction analysis (investigation only, not actioned)
+
+Sub-agent investigation into HOW to reconcile the two registries (per this doc's own Finding-3 open question). Read in
+full: `codex/04-architecture/tier-and-import-architecture.md`, `strategy-service`'s `target_universe/catalog*.py` (all 5
+family files + `catalog.py`'s dispatcher), and UAC's `archetype_leg_spec_seeds.py` (1644 lines, full file).
+
+**1. Tier constraint — CONFIRMED, no ambiguity.** `unified_api_contracts` (UAC) is `T0-base` — "true leaves, no
+workspace imports … stdlib + pydantic ONLY — zero unified-\* imports, not even in tests" (tier doc line 93-96, 216-217).
+`strategy-service` is `T4` (Services). Import rule #2: "Higher tiers may import from SAME or LOWER tiers only" + "No
+service ↔ service imports" — T4 may import T0-3, never the reverse, and UAC may NEVER import a service regardless of
+tier direction (T0-base's own rule is even stricter: zero workspace imports at all, full stop). So any design where
+UAC's `archetype_leg_spec_seeds.py` reads `strategy-service`'s catalog live is a hard architecture violation, not just a
+style preference — confirms the premise driving this whole analysis.
+
+**2. The two structures are NOT the same granularity of fact — confirmed by reading both, and this is the load-bearing
+finding.** `strategy-service`'s catalog builders (`build_carry_basis_perp()`, `build_carry_staked_basis()`, etc.) emit
+**one `TargetInstanceSpec` per fully-resolved DEPLOYABLE INSTANCE** — a concrete
+`(venue × coin × share_class × capital_budget × engine-specific config-key literals)` combo with a unique `slot_label`
+(`CARRY_BASIS_PERP@binance-btc-1h-usdt-v3-prod` etc.) that gets registered with the live engine factory. E.g.
+`build_carry_basis_perp()` alone emits 130 rows just for its "single-venue netted" bundle (10 venue bundles × 13 coins),
+each carrying literal `spot_venue`/`perp_venue`/`instrument`/`coin`/`hold_policy`/`target_funding_bps` string values.
+UAC's `ArchetypeLegStructure` (`archetype_leg_spec_seeds.py`) is **one structure per ARCHETYPE, not per instance** — a
+coarse leg-role MODEL (`leg_id`, `role` enum, `instrument_types` enum tuple, `asset_groups` enum tuple,
+`eligible_venue_ids` — a hand-curated UNION across all rows for that leg, not tied to any specific coin/capital/
+instance, `constraints` describing atomic-bundling/collateral semantics, `execution_coupling` mode). It has **no concept
+of coin, capital budget, share class, or engine config values at all** — those simply have no field to live in.
+Conversely, the catalog's flat `initial_config: dict[str,str]` has **no concept of leg role, atomicity constraint, or
+execution-coupling mode** — those are baked into engine `_build_legs()`/`on_tick()` logic, never surfaced as catalog
+data. Each side structurally cannot express what the other captures — this is not a "same fact, different format"
+mismatch, it's two genuinely different facts (instance provisioning data vs. archetype capability metadata) that happen
+to overlap on ONE shared sub-fact: which venues are eligible per leg role.
+
+**3. That shared sub-fact has ALREADY silently diverged — found by direct comparison, not theoretical.** Comparing UAC's
+`_basis_perp_structure()` (CARRY_BASIS_PERP) `eligible_venue_ids` against `catalog_carry.py`'s
+`_CARRY_BASIS_PERP_VENUE_BUNDLES` (the catalog's actual live venue set):
+
+- UAC's **perp leg** lists `(binance, bitget, bybit, deribit, gmx_v2, hyperliquid, kraken, okx)` — **missing `aster`,
+  `kalshi-perp`, and `polymarket-perp`**, all three of which are live rows in the catalog's
+  `_CARRY_BASIS_PERP_VENUE_BUNDLES` today (kalshi-perp "live from 2026-05-29" per the catalog's own comment). Also a
+  naming drift: catalog emits bare `"gmx"`, UAC's seed has `"gmx_v2"`.
+- UAC's **spot leg** lists `(binance, bitfinex, bitget, bybit, coinbase, hyperliquid, kraken, okx, uniswap_v3)` —
+  **missing `deribit` and `aster`** (both are live catalog spot-leg venues in the netted-bundle form), while including
+  `coinbase` (only appears in the catalog's separate "cross-venue" rows, not the netted-bundle rows the perp leg draws
+  from).
+
+This is exactly the risk Finding 3 flagged in the abstract — confirmed concretely for the very first archetype checked,
+same-day as this addendum. Zero effort was spent hunting for this; it fell out of the first side-by-side read. This
+raises confidence that a systematic diff would find more.
+
+**4. Recommendation: (A), the diff/gate-fail variant — NOT full regeneration, and NOT (B).**
+
+- **(A) wins because of point 2**: only the `eligible_venue_ids` field is even mechanically derivable from the catalog
+  (via a per-archetype mapping of config-keys → leg role, e.g. `spot_venue`→SPOT leg, `perp_venue`→PERP leg,
+  `staking_venue`→STAKE leg, `lending_venue`→LEND leg). Everything else in `ArchetypeLegStructure` (leg roles,
+  `instrument_types`, `constraints`, `execution_coupling`) is sourced from reading the ENGINE's actual `_build_legs`/
+  `on_tick` code + codex docs (per the seed file's own docstring) — work that is not catalog-derivable at all, so full
+  auto-regeneration (A-a) can only ever repopulate one field of the structure regardless of effort spent. That collapses
+  A-a and A-b into practically the same shape of fix: **a script that computes the per-archetype per-leg-role venue
+  union from `TARGET_UNIVERSE` and asserts catalog-venues ⊆ UAC eligible_venue_ids** (one-directional containment, not
+  equality — UAC's list may legitimately be broader, e.g. citing a codex-documented venue not yet live in the catalog),
+  failing the gate on any catalog venue absent from UAC's set. This would have caught the aster/kalshi/polymarket/gmx_v2
+  drift above today.
+- **(B) — SSOT inversion — is NOT actually a full inversion once you account for point 2.** Even under (B), UAC's schema
+  would need **new fields it doesn't have today** (coin/capital-budget/share-class/hold-policy/engine-config- literal
+  equivalents) to become the catalog's real source, because `ArchetypeLegStructure` currently models
+  capability/eligibility, not provisioning. Without those new fields, "invert the SSOT" only ever means "catalog reads
+  UAC's venue-eligibility union and layers everything else on top itself" — which is functionally closer to (A) than a
+  true single-source model. A true (B) would require designing and shipping a materially bigger UAC schema first
+  (schema-design risk, version bump, migration), THEN rewriting **all ~18-19 DeFi/carry catalog builder functions**
+  across 3 files (`catalog_carry.py` — 7 builders, `catalog_staked_basis.py` — 2 builders, `catalog_yield_defi.py` — 9
+  builders; `catalog_trading.py`'s `build_arbitrage_price_dispersion` is the 19th if counted per this doc's own
+  DeFi-touching scope) to consume it instead of hardcoding tuples, while preserving every archetype's idiosyncratic
+  per-engine config-key contract (e.g. `CARRY_STAKED_BASIS_DATED`'s `dated_expiry`+`roll_on_dte` vs the plain
+  archetype's static `perp_instrument`; `CARRY_RECURSIVE_BORROW_LENDING_ONLY`'s 7-field per-cell
+  lender/chain/collateral/debt/mode tuples) — exactly the class of catalog↔engine key-mismatch bug this same doc's Phase
+  1 and Phase 3 addenda ALREADY found twice, independently, in unrelated work this week. Rewriting 18-19 builder
+  functions at once meaningfully raises the odds of reintroducing that bug class at scale, for an architectural
+  cleanliness gain that (per point 2) is smaller than it first appears — the instance-level facts would still need a
+  home, and that home is legitimately `strategy-service` (a T4/provisioning concern), not UAC (a T0/schema concern).
+
+**Sizing**: **(A) is roughly a half-day-to-1-day script** — the per-archetype config-key→leg-role mapping is the fiddly
+part (~19 archetypes, key names vary per engine, as evidenced by the Phase-1/Phase-3 key-naming bugs already found), the
+containment-check + CI wiring itself is small. **(B) is a multi-day refactor, realistically 3-5+ AI-days minimum** — new
+UAC schema fields + a version bump + migration + rewriting 18-19 builder functions + full regression against
+`test_target_universe_disjoint_from_legacy` and every engine's `REQUIRED_PARAMS`, with real risk of reintroducing the
+same silent config-key-mismatch bug class this doc already tracks twice. **Recommend (A).**
+
+**What was surprising**: that the two registries had ALREADY diverged (not just "could diverge in theory") — three live
+venues (aster, kalshi-perp, polymarket-perp) missing from UAC's CARRY_BASIS_PERP perp-leg union, found on the very first
+archetype spot-checked, with zero targeted search. Also surprising: how thin the actual schema overlap between the two
+structures is once read side-by-side — they share almost nothing except venue-id strings; the "two unreconciled
+registries" framing undersells how differently-shaped they are, which argues strongly against a naive full-diff or
+full-regeneration approach and toward the narrower per-leg-role venue-containment check.
+
+---
+
 ## Recommendation (operator decision needed — not actioned)
 
 - Decide whether to build the curtailment layer now (design sketch above), and at what scope (all 19 archetypes, or
@@ -198,18 +294,18 @@ run SEQUENTIALLY, not in parallel:
       `lst_yields` index-ratio — `strategy-service@e93902d8`. New `CanonicalLstYieldsIndexProvider` is the reusable
       building block Phase 1 below reuses directly.
 - [x] [BACKEND] P1. **Phase 1 — CARRY_STAKED_BASIS_DATED — FULLY SHIPPED 2026-07-23.** Config-shape blocker resolved
-      (`strategy-service@606f2fb5`): `catalog_staked_basis.py` now emits the engine's real key names, DROPPING a
-      static `perp_instrument` entirely in favor of `dated_expiry`+`roll_on_dte`, which `CarryStakedBasisEngine` now
+      (`strategy-service@606f2fb5`): `catalog_staked_basis.py` now emits the engine's real key names, DROPPING a static
+      `perp_instrument` entirely in favor of `dated_expiry`+`roll_on_dte`, which `CarryStakedBasisEngine` now
       DYNAMICALLY resolves every tick via a new pure `resolve_current_dated_contract()`
       (`carry_and_yield/dated_contract_resolver.py`) implementing Deribit's real quarterly-roll rule (verified against
       real captured dated-future symbols, not assumed from convention). Paper-replay tick-loader wiring shipped
-      separately, same day (`strategy-service@795fa10c`): `_load_staked_basis_dated_ticks()` in `paper_run_handler.py`
-      + a new `CanonicalDatedFutureMarkProvider` (`engine/core/canonical_dated_future_mark_provider.py`) reading real
-      Deribit dated-`FUTURE` `book_snapshot_5` mid-prices per day for whichever contract the resolver says is
-      currently held (handles both the legacy `{ASSET}-{DD}{MON}{YY}` and wire-canonical
-      `DERIBIT:FUTURE:{ASSET}-{QUOTE}@{INV|LIN}-{YYYYMMDD}` naming conventions, tried in a fixed deterministic
-      priority order) + passive/attribution wiring for the STAKING leg (reusing `CanonicalLstYieldsIndexProvider`,
-      identical to the plain archetype) and the dated-futures mark-to-market leg + `CARRY_STAKED_BASIS_DATED` added to
+      separately, same day (`strategy-service@795fa10c`): `_load_staked_basis_dated_ticks()` in `paper_run_handler.py` +
+      a new `CanonicalDatedFutureMarkProvider` (`engine/core/canonical_dated_future_mark_provider.py`) reading real
+      Deribit dated-`FUTURE` `book_snapshot_5` mid-prices per day for whichever contract the resolver says is currently
+      held (handles both the legacy `{ASSET}-{DD}{MON}{YY}` and wire-canonical
+      `DERIBIT:FUTURE:{ASSET}-{QUOTE}@{INV|LIN}-{YYYYMMDD}` naming conventions, tried in a fixed deterministic priority
+      order) + passive/attribution wiring for the STAKING leg (reusing `CanonicalLstYieldsIndexProvider`, identical to
+      the plain archetype) and the dated-futures mark-to-market leg + `CARRY_STAKED_BASIS_DATED` added to
       `paper_universe.py`'s `_ENGINE_DRIVABLE_ARCHETYPES`. Full evidence trail:
       `defi_catalog_engine_config_key_contract_drift_2026_07_23.md`'s `CARRY_STAKED_BASIS_DATED` row + this session's
       chat record.
