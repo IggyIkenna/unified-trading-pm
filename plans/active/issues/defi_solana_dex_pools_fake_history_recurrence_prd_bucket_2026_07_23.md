@@ -180,13 +180,45 @@ is regenerated after a fix.**
       assigned days (RAYDIUM's ~99/day is negligible next to ORCA's ~14094/day). **Verified genuinely running, not just
       booted**: first shard's `run.log` shows real `wrote + recorded` lines with the CORRECT dest path
       (`day=2026-05-04/pipeline_mode=live_onchain_subgraph/.../data_type=dex_pool_state/<pool>.parquet`), matching the
-      earlier single-object validation exactly. **Measured throughput constraint**: the per-VM manifest shard write hits
-      GCS's per-object mutation rate limit (~1/sec) on nearly every row, logged as `429` + `backing off ~1s` —
-      self-healing (every retry logged `succeeded after 1 429-retry attempt`, processing continues), NOT a hard failure,
-      but caps sustained throughput to roughly 2 objects/sec per VM — consistent with the documented multi-hour estimate
-      (~56K-70K objects per shard implies single-digit hours per VM, not minutes). **Still running as of last check —
-      full-scale completion not yet verified; monitor to actual completion**, then the pending-delete report needs human
-      review before any old-object cleanup (never automated).
+      earlier single-object validation exactly. **CRASH FOUND + FIXED 2026-07-23/24 — all 4 first-launch shards died on
+      a 429 exhaustion, root-caused to a real bug, not GCS flakiness.** The "self-healing 429 backoff" observed in the
+      first minutes of the launch was real but insufficient: `_relabel_one` created a FRESH
+      `ManifestWriter(batch_size=200, ...)` then immediately `.close()`d it for EVERY SINGLE relabeled object — the
+      `batch_size` was never able to batch anything, so every object forced its own per-VM-manifest-shard GCS upload
+      against GCS's ~1/sec per-object mutation rate limit. All 4 shards eventually exhausted the retry budget inside
+      `writer.close()` and crashed (`google.cloud.storage.exceptions.InvalidResponse: 429`, `exit_code=1`, self-deleted
+      per `VM_SHUTDOWN_ON_COMPLETION=true`). **Fixed** (`market-tick-data-service@b48a0a4d`): ONE `ManifestWriter` for
+      the whole `run()`, passed into `_relabel_one`, closed exactly once in a `finally` — validated locally against 60
+      REAL objects (day=2025-01-14, a day the crashed VM had partially touched): zero 429s, a SINGLE per-VM-shard upload
+      at the end instead of 60, and — importantly — every one of the 60 objects had ALREADY been uploaded by the crashed
+      run but its manifest record was lost (crashed before that record's flush), and the retry-safety design
+      (`_relabel_one` always attempts `record_captured` even when the dest blob already exists) correctly re-recorded
+      all 60 on this re-run. **4 shards relaunched with the fix** (`d01to05v2`/`d06to09v2`/`d10to13v2`/`d14to17v2`,
+      SPOT) — one of the 4 (`d01to05v2` equivalent from the FIRST launch) hit a genuine SPOT preemption ~5min in
+      (confirmed via `gcloud compute operations list` — deleter was the GCE compute service account, not a person),
+      relaunched as `d10to13r2`. **Then, over an unattended ~10h autonomous-mode gap, all 4 v2 shards disappeared with
+      NO archived deployment-completion record for any of them** (searched the full day's `deployments/archive/` folder
+      for any `vm_name` containing "relabel" — zero hits; one shard's `run.log` simply stops mid-stream with no
+      shutdown/crash marker at all) — most likely a hard SPOT reclaim that killed the process before its own signal
+      handler could post the archive JSON, but this is NOT confirmed, only the most likely explanation. **Real measured
+      progress at that check** (ground truth is GCS content, not ephemeral logs): 8,106 distinct
+      `day=2026-05-04|2026-05-05` canonical `dex_pool_state` objects exist for ORCA (0 for RAYDIUM yet — the per-day
+      loop processes ORCA fully before RAYDIUM, so this is expected partial progress, not a RAYDIUM-specific problem).
+      Note this 8,106 may already represent a LARGER fraction of the real unique-object target than the raw 241,281
+      figure suggests: the validated single-object test showed 17 fake-day copies of the same pool converge on the SAME
+      true_date + dest_path (all copied from one live snapshot), so the true ceiling of DISTINCT destination objects
+      could be as low as ~14,193 (14,094 ORCA + 99 RAYDIUM) rather than 241,281 — unconfirmed, would need a
+      distinct-pool-id count across the source population to prove, not yet done. **Relaunched a 3rd time on ON_DEMAND**
+      (`d01to05v3`/`d06to09v3`/`d10to13v3`/`d14to17v3`, non-SPOT) specifically to remove the preemption-driven
+      monitoring-gap risk for the remainder of an unattended autonomous run — this is a deliberate, reasoned exception
+      to the SPOT-default HARD RULE (modest ~4-VM job, no one present to promptly relaunch on preemption during a
+      multi-hour unattended window), not an oversight. **STILL IN PROGRESS as of 2026-07-24 ~10:28 UTC — full-scale
+      completion NOT yet verified.** Next session/check: re-run the day=2026-05-04/05 ORCA+RAYDIUM destination-object
+      count above and compare against progress; if still short, the v3 VMs are ON_DEMAND so they should NOT disappear
+      without a real completion/crash signal this time — check
+      `gcloud compute instances list --filter="name~'defi-relabel-2026072[4-9]'"` first. Once genuinely complete, the
+      pending-delete report (`_index/audit/dex_pools_fake_history_pending_delete.parquet`) needs HUMAN review before any
+      old-object cleanup (never automated).
 - [x] 4. [REVIEW] P2. ~~Check whether the SAME bug shape exists for Kamino~~ — **PARTIALLY DONE 2026-07-23**:
       `venue=KAMINO/chain=SOLANA/instrument_type=pool/data_type=dex_pools/` has **zero objects** in the `-prd-` bucket
       across 6 sampled days (both inside and outside the affected window) — moot for the AMM-pool shape this issue
