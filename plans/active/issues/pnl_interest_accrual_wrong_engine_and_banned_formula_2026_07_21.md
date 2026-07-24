@@ -473,12 +473,43 @@ unwired since the earlier pass (`index_ratio_accrual.py` + its test) are now com
 
 **Next open item / follow-up (tracked here since this doc has no separate active plan):**
 
-- [ ] [BACKEND] P1. E4's already-ruled row-set (csb row-set = {STAKING via LST index, FUNDING via real perp};
-      LENDING/BASIS DROPPED entirely, not just left on the old formula) is NOT YET implemented —
-      `LENDING_INTEREST`/`BASIS` still emit every day at the old `rate_spread/365` form. This is a smaller,
-      already-decided change (no new operator ruling needed, E4 already ruled the target shape) — implement it as its
-      own small build, then re-verify the passive/attribution row counts (2 rows/day post-drop: STAKING_REWARD +
-      FUNDING_ACCRUAL, not 3).
+- [x] [BACKEND] P1. E4's already-ruled row-set (csb row-set = {STAKING via LST index, FUNDING via real perp};
+      LENDING/BASIS DROPPED entirely, not just left on the old formula) — **SHIPPED `strategy-service@a90e85eb`**
+      (`live-defi-rollout`, quickmerge landed, `quality-gates.sh --no-fix` green — a genuine fresh run with the
+      content-sentinel cleared to force real re-execution, not a cached skip: 5407 tests passed incl. 6 new/updated test
+      files for this build, 0 failed, Codex compliance within the pre-existing 4-violation tolerance). - **Scope-checked
+      before touching anything (per this doc's own caution):** `build_paper_run_passive`/ `build_paper_run_attribution`
+      (`strategy_service/engine/backtest/paper_run_passive.py` / `paper_run_attribution.py`) are NOT
+      `carry_staked_basis`-exclusive — they are the SAME shared producer the `run_paper` handler's generic branch also
+      calls for `CARRY_BASIS_PERP`, `CARRY_FUNDING_DISPERSION`, and the DEX-pool/dispersion archetypes
+      (`DEFI_LP_CONCENTRATED`/`DEFI_LP_POOL`/`ARBITRAGE_PRICE_DISPERSION`) — for those archetypes the
+      LENDING_INTEREST/BASIS row is a GENUINE leg (fee APY / dispersion basis), not a mismodeling.
+      `CARRY_RECURSIVE_STAKED` (its own dedicated `build_recursive_staked_passive`/ `_attribution` — real Aave
+      borrow-index debt leg, E3, already shipped) and `CARRY_STAKED_BASIS_DATED` (its own dedicated
+      `build_staked_basis_dated_passive`/`_attribution`) were confirmed UNTOUCHED — neither reuses the two functions
+      this build changed. - **Fix**: added a new `emit_lending_leg: bool = True` parameter to both shared producers (+
+      the `emit_paper_run_attribution` thin bridge) — default `True` preserves the exact pre-existing 3-row/3-factor
+      shape for every caller that doesn't pass it (every archetype above). Wired
+      `emit_lending_leg = (archetype !=       CARRY_STAKED_BASIS)` at the ONE call site in
+      `paper_run_handler.py::run_paper`'s generic branch (shared by attribution + passive) and the equivalent passive
+      re-derivation loop in `batch_rerun.py` (which does not call attribution at all — pre-existing, confirmed unrelated
+      to this fix). The row is DROPPED entirely when `False` (removed from the `day_accruals`/`day_rows` list before
+      emission) — never a zero-amount row. - **Row count verified**: `carry_staked_basis`'s passive tape is now 2
+      rows/held-day (STAKING_REWARD + FUNDING_ACCRUAL, not 3) and its attribution rows are CARRY + FUNDING (+ FEES),
+      BASIS dropped — confirmed via new tests (`test_emit_lending_leg_false_drops_lending_interest_row_entirely` /
+      `_drops_basis_row_entirely`) plus a paper↔batch parity test at both producers. Every other archetype's
+      default-`True` row count is UNCHANGED (pinned by new
+      `test_emit_lending_leg_default_true_preserves_three_row_shape`/`_factor_shape` tests alongside the pre-existing
+      3-row assertions, which needed no edits since the default is unchanged). - **Big finding (not this task's to fix,
+      noted for the record):** this checkout is a SHARED working tree — mid-build, a concurrent agent's own WIP on
+      `catalog_trading.py`/`test_paper_universe.py` (`ARBITRAGE_PRICE_DISPERSION` candidate-venues fix) landed as
+      `strategy-service@05c0b2ed` while this build was in progress, and separately another concurrent agent was actively
+      editing `strategy_service/{types.py,engine/core/config_loader.py}` + several `configs/*.yaml` + their test files
+      DURING this session — confirmed those diffs are unrelated to this task and were left untouched (never staged,
+      never reverted). A first quality-gate pass (run before `05c0b2ed` landed) surfaced one transient failure in
+      `test_dex_pool_archetypes_are_drivable_and_selected`, isolated (single-test + isolated-diff reruns) to that
+      concurrent WIP's own in-flight state, not this change — the final fresh full-suite run (after their commit landed)
+      is 100% green.
 - [x] [BACKEND] P2. `recursive_staking`'s borrow leg (`aave_borrow_index` wiring, E3) — **SHIPPED
       `strategy-service@23bd8b76` (2026-07-23)**, done as part of
       [[defi_archetype_universe_no_curtailment_mechanism_2026_07_23]]'s Phase 2 (also wired `CARRY_RECURSIVE_STAKED`'s
