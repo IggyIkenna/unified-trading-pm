@@ -99,10 +99,15 @@ source:
       `live-defi-rollout`); the surviving mention of `tab/<operator>/<N>` is explicitly labeled RETIRED.
       `rg -n 'tab/<operator>|tab/<op>' codex/12-agent-workflow/local-slot-host-symmetric-worker-model.md` shows only the
       banner line.
-- [ ] [REVIEW] P3. Re-annotate or reopen the agent-orchestrator line in
+- [x] ✅ [REVIEW] P3. Re-annotate or reopen the agent-orchestrator line in
       `plans/active/codex_vs_repo_docs_ssot_audit_2026_06_01.md` that is still marked SHIPPED with no note about the
       post-pivot re-drift. A `[x]` that predates an architecture pivot reads as current coverage when it is not.
-      **Gate**: the line carries either a re-verification date or an explicit reopen.
+      **Gate**: the line carries either a re-verification date or an explicit reopen. — **SHIPPED
+      `unified-trading-pm@f58d85a48`**: reopened the line (`[x]`→`[ ]`) with a REOPENED 2026-07-24 annotation — the
+      2026-06-22 verification predates the 2026-06-27 single-VM pivot, and the "multi-vm-topology" doc + "multi-vm auth
+      diagram" it reconciled no longer exist under those names (current SSOTs:
+      `agent-orchestrator-single-vm-architecture.md`, `runtime-deployment-topology.md`). Kept the original SHIPPED note
+      as history (marked superseded) rather than deleting it.
 - [x] ✅ [INFRA] P1. Route `plan_health.py::record_result()`'s `doc_drift` findings through `notify_slot_blocked` so
       drift reaches a worker's blocked queue instead of only a Slack WARN. Today `doc_drift` routes solely to
       `slack_notify.notify_plan_health_findings`, and `notify_slot_blocked` is never invoked from `plan_health.py`.
