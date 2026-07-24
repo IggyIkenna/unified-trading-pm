@@ -90,10 +90,18 @@ source:
       finalized. Item 1 made this combination structurally unreachable through `classify_repo()`'s own control flow, so
       the Gate is satisfied by calling the function directly with a forced, contrived (dirty_files, sample_len) pair —
       `tests/test_slot_git_status_dirty_count.bats` now has 7 cases incl. forced-fire + no-false-positive.
-- [ ] [INFRA] P2. Mirror the same single-source count-integrity fix onto the FF-cron dirty gate in
+- [x] ✅ [INFRA] P2. Mirror the same single-source count-integrity fix onto the FF-cron dirty gate in
       `scripts/dev/slot-cron-ff-pull.sh` so a phantom count can never trip `[skip:dirty]` and starve FF-pull. The cron
       computes dirt with the same `git status --porcelain` pattern as the reporter, so it hits the same phantom
-      independently. **Gate**: a test where a clean tree yields `ff_pull_last_result != skip:dirty`.
+      independently. **Gate**: a test where a clean tree yields `ff_pull_last_result != skip:dirty`. —
+      unified-trading-pm@7f37f723b: added `_filter_nonblank_porcelain()` (mirrors item 1's `sample_list` filter), wired
+      into `ff_one()`'s dirty gate instead of the raw `[[ -n ... ]]` check; `LOCK_FILE` made overridable via
+      `SLOT_FF_PULL_LOCK_FILE` so a test can safely source the function defs (the script has no clean
+      point-at-an-empty-workspace off-switch — sourced only lines 1-563, none of the driver).
+      `tests/test_slot_cron_ff_pull_dirty_gate.bats`: filter unit cases + an end-to-end clean/synced-tree case
+      confirming `ff_pull_last_result != skip:dirty`, plus a genuinely-dirty-tree case confirming it still IS
+      `skip:dirty`. Drive-by: fixed an unrelated pre-existing `setup-tab-worktrees.sh --help` truncation
+      (unified-trading-pm@1004373ac) found while running the sibling bats suite.
 - [ ] [INFRA] P2. Gate the `not_clean_since` CLEAR and the sync-nudge in `server/routes/git_health.py` on
       `dirty_consecutive_ticks >= 2` so one clean blip cannot reset the age a genuinely long-dirty repo has accumulated.
       The reporter already sends the field; this is a server-side change using data that already arrives. **Gate**: a
