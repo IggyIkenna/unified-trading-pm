@@ -411,7 +411,48 @@ run SEQUENTIALLY, not in parallel:
       — per the workspace's dispatch-scope-eligibility rule, an open-ended "invent the trading logic and its risk
       thresholds" task is a human design decision wearing a todo's clothes, not a checkable, worker-determinable
       outcome. Remains parked pending an operator design/scoping session (which SHOULD now be materially faster given
-      execution-service's readiness is confirmed and the exact missing piece is precisely named, not vague).
+      execution-service's readiness is confirmed and the exact missing piece is precisely named, not vague). **Operator
+      correction 2026-07-24 (chat) + a bigger self-caught correction while verifying it — read before dispatching either
+      build, this changes the scoping above for BOTH archetypes, not just one.** The paragraph above treats
+      `CARRY_RECURSIVE_BORROW_LENDING_ONLY` and `CARRY_BASIS_PERP_INV` as one pair needing the same "new recursive-loop
+      decision logic." Operator clarified `CARRY_BASIS_PERP_INV` specifically is NOT a recursive/looping structure — it
+      is `CARRY_BASIS_PERP` with both legs inverted: instead of long spot / short perp, it is **short spot (funded by
+      borrowing the asset via the lending leg) / long perp**. Verifying that against the code surfaced a bigger fact
+      this doc had wrong: I initially drafted (below, now corrected) that `CARRY_RECURSIVE_BORROW_LENDING_ONLY` "DOES
+      carry `max_loops`" to justify treating it differently — **that was false, caught by re-checking rather than
+      asserting.** `grep -c max_loops catalog_carry.py` returns exactly **one** hit, in `build_carry_recursive_staked()`
+      only. NEITHER `build_carry_recursive_borrow_lending_only()` NOR `build_carry_basis_perp_inv()` sets `max_loops` OR
+      `target_leverage` anywhere. `CarryRecursiveStakedEngine`'s real recursive-loop pipeline
+      (`_preflight()`/`_build_loop_legs()`, `recursive_staked.py`) is built entirely around a `target_leverage` scalar
+      (default 2.5x) driving a `STAKE → LEND → BORROW → STAKE → ...` loop to reach it — a parameter neither archetype's
+      catalog config carries at all. **So BOTH archetypes are single-position structures, not iterative loops, despite
+      the "RECURSIVE" family name and the shared engine class** — the "recursive" framing likely describes the
+      EXECUTION-layer mechanics `RecursiveLoopOrchestrator` may use internally to reach a single target position (an
+      implementation detail of how it fills, not a strategy-level loop-count parameter), not something either strategy
+      config needs to specify. `CARRY_RECURSIVE_BORROW_LENDING_ONLY`'s actual shape (`perp_leg_enabled: "false"`, no
+      perp keys at all): a single borrow of `debt_asset` against `collateral_asset` at `ltv_mode`,
+      `target_net_delta: "0"` — a plain lending-rate-differential carry, no staking leg, no perp, no loop.
+      `CARRY_BASIS_PERP_INV`'s shape is the SAME lending structure PLUS `perp_leg_enabled: "true"` +
+      `perp_venue`/`perp_pair` — matching the operator's description exactly. `CarryBasisPerpEngine` (`basis_perp.py`,
+      the plain `CARRY_BASIS_PERP`'s real, already- shipped engine) is itself **perp-leg-only by design** — its own
+      docstring: "Spot hedge leg is expected to be wired separately by the orchestrator... the engine here is perp-side
+      only — delta hedging is the orchestrator's concern." It reads `funding_rate_annualised_bps`, flips direction on
+      sign (`funding>0` → SHORT perp; `funding<0` → LONG perp), and declares a `LegPortfolioState`/`LeveragedLeg` for
+      downstream leg composition — so `CARRY_BASIS_PERP_INV`'s real shape looks much closer to a **sign-inverted variant
+      of `CarryBasisPerpEngine`** (same funding-driven perp-direction logic, inverted, plus a lending-borrow leg
+      declared instead of a bought-spot leg) than to `CarryRecursiveStakedEngine`'s loop-building machinery — **the
+      current engine mapping in `factory.py` (`StrategyArchetype.CARRY_BASIS_PERP_INV: CarryRecursiveStakedEngine`) is
+      very likely a misassignment**, not just a missing-logic gap; the same may hold for
+      `CARRY_RECURSIVE_BORROW_LENDING_ONLY` given its config is equally non-recursive, though no equally-close existing
+      engine analog has been identified for the no-perp case yet. **Net effect: this narrows (does NOT eliminate) the
+      "new trading logic, operator judgment needed" verdict for both** — the funding/direction signal for the
+      perp-enabled one is now well-understood and likely not a fresh design question; what remains genuinely open for
+      both is how the lending-borrow leg (`lending_protocol`/`collateral_asset`/`debt_asset`) gets declared/triggered,
+      and (for `CARRY_RECURSIVE_BORROW_LENDING_ONLY`) what signal drives entry/exit for a leg-less pure lending-carry
+      position. Plausibly a materially smaller build for both than previously scoped, but NOT yet re-scoped or
+      dispatched — pending a closer read of `declare_leg_portfolio_state()`'s multi-leg composition contract and how the
+      orchestrator (execution-service) resolves a lending-leg vs. a spot-buy leg from the SAME `LegPortfolioState`
+      shape, and pending operator input on the still-genuinely-open signal/threshold questions.
 - [x] [BACKEND] P1. **Phase 3 — CARRY_BASIS_DATED / CARRY_BASIS_DATED_INV — SHIPPED 2026-07-24,
       `strategy-service@b280d27a`.** The config-key mismatch this entry originally flagged (catalog emitting
       `cash_venue`/`dated_venue`/`instrument` vs the engine's `spot_venue`/`future_venue`/`spot_instrument`/
