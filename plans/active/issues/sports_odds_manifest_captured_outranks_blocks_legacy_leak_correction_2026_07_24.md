@@ -129,11 +129,90 @@ up that DIAG item has this data point.
 
 ## Todos
 
-- [ ] [DATA] P1. Implement Option A (or whichever the operator/main picks): a one-off backup-then-write script
+- [x] [DATA] P1. Implement Option A (or whichever the operator/main picks): a one-off backup-then-write script
       re-stamping the 2025-12-18/24/31 coarse + per-league T-0 `captured` rows in
       `instruments-store-sports-prd-{project}/_index/availability_index.parquet` to `attempted_failed`, mirroring
       `instruments-service/scripts/flip_phantom_to_attempted_failed.py`'s snapshot-then-write pattern. Verify via
       `ManifestWriter.lookup()` immediately AND after >=2 consolidator cycles (per the 2026-07-14 adjudication's own
       verification recipe) so a transient read isn't mistaken for a durable fix. Repo: instruments-service or
       unified-trading-library (whichever owns the correction-script home per
-      `/codex/06-coding-standards/script-homes.md`).
+      `/codex/06-coding-standards/script-homes.md`). — instruments-service@139d10b5 (script shipped, QG-clean). Live
+      PROD run applied 2026-07-24 ~20:27 UTC (30 rows flipped, backup at
+      `gs://instruments-store-sports-prd-central-element-323112/_index/availability_index.20260724-202648.bak.parquet`),
+      immediate `ManifestWriter.lookup()` verified `attempted_failed` for all 3 dates — **but the durability check
+      after >=2 consolidator cycles (5 min later) found ALL 31 rows reverted back to `captured` with the ORIGINAL
+      2026-07-14 `attempted_at`/blank `error_reason`** (see "Critical new finding" below). The fix as scoped does NOT
+      survive — same failure mode as the original `reprocess_sports_odds.py --force` attempt, now proven to also defeat
+      a direct canonical hand-edit. Checked off because the SCRIPT (the todo's literal deliverable) shipped and was
+      proven correctly targeted (see the scoping fix below) — but the underlying manifest is NOT yet durably corrected;
+      see the new todo below for the follow-up.
+- [ ] [DATA] P0. Land Option A2/B2/C2 (whichever the operator/main picks, see "Critical new finding" below) so the
+      already-shipped `flip_sports_odds_captured_leak_to_attempted_failed.py --apply` survives >=2 consolidator cycles
+      without reverting. Re-run `--dry-run` first to confirm scope is still exactly the 31 target rows (no drift). Repo:
+      instruments-service (script) + deployment-service or infra (if Option A2's cron-pause is picked).
+
+## Critical new finding (2026-07-24, post-Option-A-authorization)
+
+**The captured-outranks-recency tie-break is not the only thing standing between a correction write and durability —
+there is also a live read-modify-write RACE between any one-off direct-editor of `_index/availability_index.parquet` and
+the always-running `*/1 * * * *` consolidator cron (`uts-prod-manifest-consolidator-instruments-sports`).**
+
+Evidence, in order:
+
+1. A dry-run of the Option A script (venue=ODDS_API, data_type=odds_horizon_bucket, date in the 3 target dates,
+   capture_status='captured') matched **87 rows**, not the ~31 expected. Investigation found 56 of them were written by
+   **`market-tick-data-service`** (2026-07-13T06:1x, uppercase `league_id`, blank `timeframe`, `instrument_count=1`) and
+   **`instruments-service`** (2026-07-13T23:4x-23:5x, uppercase `league_id`, literal-string `timeframe='None'`,
+   `instrument_count=1`) — a day EARLIER, for an unrelated purpose, sharing the same
+   `(venue, data_type, date, league_id)` key space by coincidence. The script was narrowed to also filter
+   `service_name == "market-data-processing-service"` (matching `reprocess_sports_odds.py`'s own `_SERVICE_NAME`), which
+   correctly narrowed the match to exactly 31 rows, all dated 2026-07-14T04:1x:xx. **This scoping bug would have
+   silently corrupted 56 unrelated, presumably-correct manifest rows belonging to two other services had it shipped as
+   originally drafted — flagging in case the same key-space collision affects any other
+   venue=ODDS_API/data_type=odds_horizon_bucket tooling.**
+2. Applying the (correctly-scoped) fix at ~20:27:18 UTC flipped 30 rows (the 31st, the 2025-12-18 coarse row, was
+   already independently `attempted_failed` at read time — apparently a concurrent process, possibly another agent, had
+   already re-run `reprocess_sports_odds.py --force` for that date at 20:25:31 UTC). Immediate `ManifestWriter.lookup()`
+   for all 3 dates confirmed `attempted_failed`.
+3. A durability check 5 minutes later (>=2 consolidator cycles at the documented 1/min cadence) found **all 31 rows,
+   including the independently-fixed 2025-12-18 row, reverted to `capture_status='captured'` with the blank
+   `error_reason` and original `2026-07-14T04:1x:xx` `attempted_at`** — i.e. reverted to the EXACT pre-correction state,
+   not a new write. `_index/availability_index.parquet`'s GCS generation had advanced (new `last_modified`, confirming a
+   real consolidator write happened), but there is no per-VM shard source for the reverted `captured` data:
+   `_index/per_vm/` holds only 2 small, unrelated shards (`_legacy_seed.parquet`, `sports-fixtures-job.parquet` —
+   neither touches ODDS_API/odds_horizon_bucket). No `manifest-consolidator` GCE VM is running (`compute.googleapis.com`
+   aggregated-list query returned empty), so this is not the archived
+   `instruments_sports_manifest_consolidator_lock_livelock_2026_07_15.md` failure mode (that one made the index go
+   STALE; this one makes it refresh too eagerly, clobbering a fresh write with a stale read) —
+   `_index/consolidator.lock` is currently absent (not held), consistent with a normal cycle having completed and
+   released it.
+4. Best-evidenced explanation: the consolidator's incremental merge reads the FULL canonical baseline near cycle-start
+   (`/codex/05-infrastructure/manifest-consolidator-ssot.md`'s own documented "Recovery when a deployed consolidator is
+   on a bad image" section confirms canonical-baseline-read is a real step in its merge, and separately notes real
+   cycles can run long on a big corpus), then writes the merged result back at cycle-end. If a cycle's baseline READ
+   happens BEFORE an external direct-writer's write, and the cycle's own WRITE happens AFTER, the external write is
+   silently lost — a classic TOCTOU race, not (or not only) the captured-outranks tie-break. This would affect ANY
+   backup-then-write correction script using this pattern against a bucket with a live consolidator cron, including the
+   precedent `instruments-service/scripts/flip_phantom_to_attempted_failed.py` (unverified whether ITS 100,431-row flip
+   actually raced a live cycle — it may have gotten lucky, or its target bucket's consolidator may have been paused/idle
+   at the time).
+
+**No data was lost or corrupted** — the manifest reverted to its EXACT prior (buggy) state, not a mangled intermediate
+one; the backup snapshot + this script remain valid and re-runnable.
+
+### Recommended decision (new)
+
+- **Option A2 (recommended)**: pause the sports instruments-store consolidator's Cloud Scheduler cron
+  (`uts-prod-manifest-consolidator-instruments-sports`, `*/1 * * * *`) for the duration of the write, matching the codex
+  SSOT's own documented recipe ("pause its cron → snapshot the canonical → write → re-enable the cron"), then re-run
+  this script's `--apply`, verify durability with the cron still paused (no race possible), THEN re-enable the cron.
+  Requires infra-level authority to pause/resume a live production Cloud Scheduler job (broader blast radius than the
+  original ask: no sports odds manifest writes consolidate for the pause window) — flagging for operator/infra sign-off
+  rather than self-authorizing.
+- **Option B2**: retry-the-write-in-a-loop until it survives 2 consecutive durability checks with no revert (wins the
+  race by chance/repetition rather than eliminating it) — pragmatic but not a clean fix, and could still race
+  indefinitely if consolidator cycles are frequent/long relative to the retry cadence.
+- **Option C2**: escalate to the manifest-consolidator/reader owners as a systemic race-condition finding (affects every
+  direct-canonical-hand-edit script workspace-wide, not just this one) and have them add a write-time
+  optimistic-concurrency guard (e.g. `if_generation_match` on the canonical write, or acquire `_index/consolidator.lock`
+  before an external write) rather than re-solving it per-script.

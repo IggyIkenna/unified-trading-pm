@@ -233,10 +233,13 @@ scarcest capacity on the Opus plan first.
   "fix" it by re-tiering plans to make the queue uniform. `model_tier` is a plan's declared requirement, and downgrading
   it to smooth the queue makes the worker's own SSOT self-check STOP on "Sonnet on opus-required".
 
-STEP 2.5 — blocked-queue sweep (every tick — you are the FIRST responder):
+STEP 2.5 — blocked-queue sweep (every tick — you are the FIRST responder). The `/api/state` field is **`blocked_queue`**
+(NOT `blocked` — there is no `blocked` key; `.get('blocked', [])` silently returns `[]` every tick and you will miss
+every worker question — invisible-wait bug, caught 2026-07-24). Each entry with `answered_at: null` is unanswered;
+`authority` tells you whether it is yours (`main_agent`) or operator-only:
 
 ```bash
-BLOCKED=$(curl -sS $SERVER_URL/api/state | python3 -c "import sys,json; print(json.dumps(json.load(sys.stdin).get('blocked', [])))")
+BLOCKED=$(curl -sS $SERVER_URL/api/state | python3 -c "import sys,json; print(json.dumps(json.load(sys.stdin).get('blocked_queue', [])))")
 ```
 
 For EACH unanswered question:

@@ -7,9 +7,11 @@ description:
   cross-agent-instruction gaps (a retrieval rule living in only one of the three agent-facing files when it's meant to
   govern all), authoritative_for collisions (two codex-ssot docs both claiming to be THE SSOT for the same topic,
   defeating "grep lands on the one right doc"), placeholder/near-empty summary: fields that make the L2 grep-and-
-  read-summary step useless, and broken links — both frontmatter path-references (related/codex_ssots/supersedes/etc,
+  read-summary step useless, broken links — both frontmatter path-references (related/codex_ssots/supersedes/etc,
   via docspec.validate_doc_references()) and inline markdown body links (`[text](../foo.md)`, via
-  check_doc_body_links.py) that silently break the "jump doc→doc" retrieval flow. Deterministic checks first (the QG
+  check_doc_body_links.py) that silently break the "jump doc→doc" retrieval flow — and a doc contradicting ITSELF
+  (an invariant/formula paragraph undercutting its own claim mid-sentence, a heading/bold-span bracket breaking across
+  a blank line). Deterministic checks first (the QG
   scripts), then a multi-agent semantic sweep for what structure alone can't catch, adversarially verified, then
   reconciled — auto-fix the mechanical classes, route authority calls to the operator. Out of scope: plan-lifecycle
   contradictions and done-but-unchecked todos (that's /plan-reconcile's corpus). Trigger on /docs-reconcile, "check the
@@ -48,6 +50,14 @@ hard-blocking since 2026-07-04). This skill covers what THAT gate cannot see:
    tolerated, only NEW breakage fails) — a link resolving under NONE of doc-dir-relative / PM-root-relative / a
    `plans/archive/**` basename fallback is broken; a `/codex/...`-style leading-slash target is PM-root-relative, not
    filesystem-absolute (see check_doc_body_links.py's `_resolve()` for why that distinction matters).
+6. **Internal self-consistency + structural well-formedness** — added 2026-07-24 after an adversarial verification pass
+   on a plans-corpus distribution found the SAME defect class already live in a codex doc: `honest-coverage-model.md`'s
+   newly-added "symmetric-inclusion invariant" paragraph asserted a claim then, three words later, contradicted it in
+   the same sentence — and contradicted the formula the doc itself showed two paragraphs above. No existing check here
+   catches a doc contradicting ITSELF (every check above is cross-doc: schema-vs- generator, collision-vs-collision,
+   link-vs-target) — a doc can pass every one of them and still be internally wrong. Also covers markdown structural
+   breaks in the same class (a heading/bold-span/parenthetical whose bracket closes on an orphaned line after a
+   blank-line break, rendering broken even though nothing else is "wrong").
 
 **Out of scope (that's `/plan-reconcile`'s corpus):** plan-lifecycle contradictions, done-but-unchecked plan todos, plan
 archival/consolidation. If a finding is actually about a plan contradicting another plan or its epic, route it there
@@ -132,6 +142,16 @@ spawn; set `model=` explicitly, default sonnet):
    genuine dead reference with no clear successor — surface as a P1/P2 finding for someone to either fix the prose or
    delete the dead link, this is NOT an authority question so it does not need an operator ruling the way an
    `authoritative_for` collision does.
+6. **Internal self-consistency + structural-integrity hunters** — added 2026-07-24 (item 6 above). Scope to codex docs
+   touched since the last clean run (or, on a full sweep, any doc whose body was edited in the last 24h — checking the
+   whole corpus every run is not the point, catching what just landed is). For each: (a) **structural well-formedness**
+   — every `(`/`` ` ``/`**`/`[` opened on a heading or bold-span line must close on the SAME physical line, never split
+   across a blank line (`grep -n` the raw file, not the rendered preview — a floating orphaned `)` two lines after a
+   heading is the tell); (b) **internal self-consistency** — any newly-added paragraph stating a rule/invariant/formula
+   must be re-derived against an example or formula the SAME doc shows elsewhere, and checked for self-contradiction
+   within one sentence (read it once as a skeptic hunting for the word that undercuts the clause before it). Piggyback
+   this on whichever hunter already opens that doc's full body (item 2's summary-quality read is the natural host) — no
+   new dedicated pass needed, just an explicit item on the checklist so it isn't assumed as a side-effect of reading.
 
 Candidate contract: `<relpath>` + verbatim quote ≤200 chars + why it's a finding; severity P0 (breaks retrieval
 correctness — collision, generator crash) / P1 (degrades retrieval — dead summary, stale doctrine ref, broken link with
