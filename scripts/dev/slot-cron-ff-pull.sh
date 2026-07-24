@@ -121,13 +121,27 @@ fi
 # atomic across the parallel workers); aggregated worst-of at sweep end.
 FF_RESULT_FILE="${SLOT_FF_PULL_RESULT_FILE:-${TMPDIR:-/tmp}/slot-cron-ff-pull.result.json}"
 FF_TOKENS_FILE="$(mktemp -t ffpulltokens.XXXXXX 2>/dev/null || echo "${TMPDIR:-/tmp}/ffpulltokens.$$")"
-trap 'rm -f "${FF_TOKENS_FILE}" 2>/dev/null || true' EXIT
+# Per-repo dirty/clean observations for THIS sweep (cross_repo_dirty_gate_contamination
+# fix, below) — a SEPARATE file from FF_TOKENS_FILE (which stays the host/sweep-wide
+# outcome list, unchanged) because the per-repo confirm-gate needs to know which SPECIFIC
+# repo produced which observation, not just the sweep's worst-of.
+FF_REPO_TICKS_FILE="$(mktemp -t ffpullrepoticks.XXXXXX 2>/dev/null || echo "${TMPDIR:-/tmp}/ffpullrepoticks.$$")"
+trap 'rm -f "${FF_TOKENS_FILE}" "${FF_REPO_TICKS_FILE}" 2>/dev/null || true' EXIT
 # Consecutive-dirty alert (plan L1603): emit [WARN:dirty-streak-N] when every repo
 # in the sweep has been [skip:dirty] for ≥ this many consecutive cron ticks.
 FF_DIRTY_STREAK_THRESHOLD="${FF_DIRTY_STREAK_THRESHOLD:-3}"
 
 # Record one per-repo outcome token: ok | skip:dirty | conflict | fail.
 _ff_record() { printf '%s\n' "$1" >> "${FF_TOKENS_FILE}" 2>/dev/null || true; }
+
+# Record THIS repo's own dirty/clean observation for the current tick, keyed by repo_key
+# (see ff_one() — the repo's own resolved absolute path, so two DIFFERENT repos sharing the
+# same basename across different slots/clones — e.g. every slot's "unified-trading-pm" —
+# never collide). "dirty" = tracked dirt seen this tick (whether confirmed or not yet);
+# "clean" = dirty-checked this tick and had none. A repo that never reaches the dirty check
+# this tick (e.g. [skip:detached]) records nothing and simply carries its prior streak
+# forward unchanged at merge time (_write_ff_result).
+_record_repo_dirty_state() { printf '%s\t%s\n' "$1" "$2" >> "${FF_REPO_TICKS_FILE}" 2>/dev/null || true; }
 
 # Single-source-of-truth dirt filter (ao_remediation_b_code_chain_2026_07_23.md item 3;
 # mirrors slot-git-status-report.sh's classify_repo() fix, item 1). This cron computes
@@ -147,10 +161,14 @@ _filter_nonblank_porcelain() {
     done <<< "${raw}"
 }
 
-# Read the sweep-aggregate dirty_consecutive_ticks field out of a result-file JSON
-# (0 if the file is absent/unparseable). Shared by the pre-sweep read (gates ff_one()'s
-# skip decision, item 5) and the post-sweep write (_write_ff_result below) so both sides
-# agree on the same value with one implementation.
+# Read the sweep/host-wide aggregate dirty_consecutive_ticks field out of a result-file
+# JSON (0 if the file is absent/unparseable). This is a COARSE, ACROSS-ALL-REPOS signal —
+# consumed by slot-git-status-report.sh, which forwards it to agent-orchestrator's
+# git_health.py as an independent cross-check against that server's OWN per-repo
+# not_clean_since streak (ao_remediation_b_code_chain_2026_07_23.md item 4; deliberately
+# NOT a per-repo counter for that consumer — see the plan's 2026-07-24 Progress Log entry).
+# _write_ff_result below still maintains this field exactly as before. It is NOT what
+# ff_one()'s own confirm-gate reads any more — see _read_repo_dirty_ticks for that.
 _read_dirty_consecutive_ticks() {
     local f="$1"
     if [[ -s "${f}" ]]; then
@@ -162,6 +180,33 @@ try:
 except Exception:
     print(0)
 " "${f}" 2>/dev/null || echo 0
+    else
+        echo 0
+    fi
+}
+
+# Read ONE repo's OWN dirty_consecutive_ticks out of the result-file JSON's per-repo map
+# (0 if the file/repo/field is absent or unparseable). This is the per-repo counterpart of
+# _read_dirty_consecutive_ticks's host-wide aggregate above: ff_one()'s confirm-gate reads
+# THIS, keyed by the repo's own resolved path (repo_key in ff_one()), so one repo's already-
+# confirmed dirty streak can never be misread as another, unrelated repo's streak (the
+# cross-repo FF-pull starvation bug: a --all-slots sweep walks every repo on the host in ONE
+# pass, so a single shared/aggregate counter meant repo X's confirmed skip:dirty silently
+# confirmed repo Y's genuinely-first dirty tick too, reintroducing the exact starvation class
+# the confirm-gate (item 5) was built to prevent). FF_RESULT_FILE is read-only for the
+# duration of a sweep (only _write_ff_result, run once at sweep end, mutates it), so this is
+# safe to call per-repo, including from parallel forked --all-slots workers.
+_read_repo_dirty_ticks() {
+    local f="$1" repo_key="$2"
+    if [[ -s "${f}" ]]; then
+        python3 -c "
+import json, sys
+try:
+    d = json.load(open(sys.argv[1]))
+    print(int(d.get('repo_dirty_ticks', {}).get(sys.argv[2], 0)))
+except Exception:
+    print(0)
+" "${f}" "${repo_key}" 2>/dev/null || echo 0
     else
         echo 0
     fi
@@ -183,12 +228,14 @@ _write_ff_result() {
             worst="dirty:unconfirmed"
         fi
     fi
-    # Consecutive-dirty-tick counter (plan L1603). Read the previous count, increment
-    # when this sweep saw ANY dirt (confirmed skip:dirty OR a not-yet-confirmed single
-    # tick — both need the streak to climb so a second consecutive tick can confirm,
-    # ao_remediation_b_code_chain_2026_07_23.md item 5), reset otherwise. Emit a visible
-    # [WARN] line when the streak reaches the threshold so operators / log monitors see
-    # the stale-WIP signal.
+    # Consecutive-dirty-tick counter (plan L1603) — the host/sweep-wide AGGREGATE, kept
+    # bit-for-bit as before (see _read_dirty_consecutive_ticks's comment: this feeds the
+    # reporter's cross-check + the [WARN] streak line, not ff_one()'s own gate any more).
+    # Read the previous count, increment when this sweep saw ANY dirt (confirmed skip:dirty
+    # OR a not-yet-confirmed single tick — both need the streak to climb so a second
+    # consecutive tick can confirm, ao_remediation_b_code_chain_2026_07_23.md item 5), reset
+    # otherwise. Emit a visible [WARN] line when the streak reaches the threshold so
+    # operators / log monitors see the stale-WIP signal.
     prev_ticks="$(_read_dirty_consecutive_ticks "${FF_RESULT_FILE}")"
     if [[ "${worst}" == "skip:dirty" || "${worst}" == "dirty:unconfirmed" ]]; then
         new_ticks=$(( prev_ticks + 1 ))
@@ -200,8 +247,53 @@ _write_ff_result() {
     fi
     now="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
     tmp="$(mktemp -t ffpullresult.XXXXXX 2>/dev/null || echo "${FF_RESULT_FILE}.tmp.$$")"
-    printf '{"ff_pull_last_run":"%s","ff_pull_last_result":"%s","dirty_consecutive_ticks":%d}\n' \
-        "${now}" "${worst}" "${new_ticks}" > "${tmp}"
+    # Per-repo confirm-gate streak (cross-repo starvation fix, above): merge THIS sweep's
+    # per-repo dirty/clean observations (FF_REPO_TICKS_FILE) into the PRIOR per-repo map, so
+    # a repo never even dirty-checked this tick (e.g. [skip:detached]) keeps its last-known
+    # streak untouched, a repo observed dirty this tick increments its OWN counter, and a
+    # repo observed clean resets its OWN counter — all independent of every OTHER repo in
+    # the sweep. Done in python3 (already a hard dependency here) rather than reinventing a
+    # JSON merge in bash. Falls back to the plain (no per-repo map) JSON on any python3
+    # failure so a bug here can never jam the cron (mirrors every other `|| true` in this
+    # file).
+    if ! python3 -c "
+import json, sys
+
+result_path, repo_ticks_path, now, worst, new_ticks, out_path = sys.argv[1:7]
+try:
+    prev = json.load(open(result_path))
+except Exception:
+    prev = {}
+repo_map = dict(prev.get('repo_dirty_ticks', {}))
+try:
+    with open(repo_ticks_path) as fh:
+        lines = fh.read().splitlines()
+except Exception:
+    lines = []
+for line in lines:
+    if '\t' not in line:
+        continue
+    repo, state = line.split('\t', 1)
+    if state == 'dirty':
+        repo_map[repo] = int(repo_map.get(repo, 0)) + 1
+    else:
+        repo_map[repo] = 0
+out = {
+    'ff_pull_last_run': now,
+    'ff_pull_last_result': worst,
+    'dirty_consecutive_ticks': int(new_ticks),
+    'repo_dirty_ticks': repo_map,
+}
+# Compact separators (no space after ':'/',') to byte-match the hand-rolled printf format
+# this replaces — consumers (this file's own tests, slot-git-status-report.sh) substring-
+# match on e.g. '\"ff_pull_last_result\":\"ok\"', which json.dump's default spaced
+# separators would silently break.
+with open(out_path, 'w') as fh:
+    json.dump(out, fh, separators=(',', ':'))
+" "${FF_RESULT_FILE}" "${FF_REPO_TICKS_FILE}" "${now}" "${worst}" "${new_ticks}" "${tmp}" 2>/dev/null; then
+        printf '{"ff_pull_last_run":"%s","ff_pull_last_result":"%s","dirty_consecutive_ticks":%d}\n' \
+            "${now}" "${worst}" "${new_ticks}" > "${tmp}"
+    fi
     mv -f "${tmp}" "${FF_RESULT_FILE}" 2>/dev/null || true
 }
 
@@ -226,8 +318,15 @@ ff_one() {
     local do_fetch="${2:-1}"
     pushd "${repo_dir}" >/dev/null
 
-    local repo_name branch local_sha remote_sha merge_base ahead behind int_branch
+    local repo_name repo_key branch local_sha remote_sha merge_base ahead behind int_branch
     repo_name=$(basename "${repo_dir}")
+    # Per-repo identity for the dirty-streak confirm-gate (repo_name/basename alone is NOT
+    # enough — every slot's PM clone is named "unified-trading-pm", every slot's clone of
+    # any other repo shares that repo's name too, so basename would re-collapse the
+    # per-repo counters back into a per-repo-NAME one, silently reintroducing the same
+    # class of cross-clone contamination this fix removes for cross-REPO contamination).
+    # The resolved cwd (post-pushd) is a stable, unique identity for THIS physical clone.
+    repo_key="$(pwd)"
     branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "DETACHED")
     int_branch="$(branch_for_repo "${repo_name}")"
 
@@ -404,25 +503,40 @@ ff_one() {
     # item 5, mirrors item 4's server-side git_health.py gate): a SINGLE tick of tracked
     # dirt must not itself skip the FF — whatever produced it (reporter phantom, a
     # transient race, or genuine WIP), one observation is not yet distinguishable from a
-    # one-tick phantom. PREV_DIRTY_CONSECUTIVE_TICKS is the sweep-aggregate streak read
-    # ONCE before this sweep started (see bottom of file); >=1 there means a PRIOR sweep
-    # already saw dirt (this sweep is confirming, not originating) — only then does the
-    # skip actually fire. On the unconfirmed (first) tick the FF is allowed to proceed —
-    # git's own --ff-only refuses if the dirty file genuinely collides with the incoming
-    # diff (same reasoning as the untracked-dirt case below), so this never clobbers real
-    # WIP; it only stops treating one stray tick as gospel.
+    # one-tick phantom. The streak is tracked PER REPO (keyed by repo_key, this clone's own
+    # resolved path) — NOT as a single sweep-wide/host-wide aggregate. A --all-slots sweep
+    # walks every repo on the host in ONE pass, so a shared aggregate meant repo A's own
+    # confirmed dirty streak silently confirmed repo B's genuinely-first dirty tick too,
+    # reintroducing the exact cross-repo FF-pull starvation class this confirm-gate exists
+    # to prevent (found in a post-hoc audit of this fix — the aggregate is still exactly
+    # right for _read_dirty_consecutive_ticks's OTHER consumer, the reporter cross-check;
+    # see that function's comment). _read_repo_dirty_ticks reads THIS repo's own prior
+    # count; >=1 there means a PRIOR tick already saw THIS repo dirty (confirming, not
+    # originating) — only then does the skip actually fire. On the unconfirmed (first)
+    # tick the FF is allowed to proceed — git's own --ff-only refuses if the dirty file
+    # genuinely collides with the incoming diff (same reasoning as the untracked-dirt case
+    # below), so this never clobbers real WIP; it only stops treating one stray tick as
+    # gospel. _record_repo_dirty_state persists this tick's dirty/clean observation for
+    # THIS repo so the NEXT sweep's read sees it (merged into the result file by
+    # _write_ff_result at sweep end, never written mid-sweep — see that function).
     _tracked_dirt="$(_filter_nonblank_porcelain "$(git status --porcelain --untracked-files=no 2>/dev/null)")"
     if [[ -n "${_tracked_dirt}" ]]; then
-        if [[ "${PREV_DIRTY_CONSECUTIVE_TICKS:-0}" -ge 1 ]]; then
-            log "[skip:dirty] ${repo_name} (${branch}) — uncommitted changes (confirmed, dirty_consecutive_ticks>=2)"
+        local _prev_repo_dirty_ticks
+        _prev_repo_dirty_ticks="$(_read_repo_dirty_ticks "${FF_RESULT_FILE}" "${repo_key}")"
+        if [[ "${_prev_repo_dirty_ticks:-0}" -ge 1 ]]; then
+            log "[skip:dirty] ${repo_name} (${branch}) — uncommitted changes (confirmed, this repo's own dirty_consecutive_ticks>=2)"
             _ff_record "skip:dirty"
+            _record_repo_dirty_state "${repo_key}" "dirty"
             popd >/dev/null
             return 0
         else
             log "[dirty:unconfirmed] ${repo_name} (${branch}) — uncommitted changes on a single tick; not yet confirmed, FF proceeds this tick"
             _ff_record "dirty:unconfirmed"
+            _record_repo_dirty_state "${repo_key}" "dirty"
             # fall through — do NOT return; the FF attempt below proceeds.
         fi
+    else
+        _record_repo_dirty_state "${repo_key}" "clean"
     fi
     if [[ -z "${_tracked_dirt}" ]] && [[ -n "$(git status --porcelain 2>/dev/null)" ]]; then
         # Untracked-only (no tracked dirt at all, so the dirty:unconfirmed branch above
@@ -596,13 +710,6 @@ prefetch_main_clones() {
     done
     log_quiet "prefetch: ${fetched} fetched, ${failed} failed"
 }
-
-# Sweep-aggregate dirty-tick streak, read ONCE before this sweep touches anything
-# (ao_remediation_b_code_chain_2026_07_23.md item 5). ff_one()'s dirty-confirm gate reads
-# this global; forked parallel workers (--all-slots) inherit it via fork, no export
-# needed. Must be read before _write_ff_result() runs at sweep end, which overwrites
-# FF_RESULT_FILE with THIS sweep's outcome.
-PREV_DIRTY_CONSECUTIVE_TICKS="$(_read_dirty_consecutive_ticks "${FF_RESULT_FILE}")"
 
 # Resolve starting slot dir.
 cwd="$(pwd)"

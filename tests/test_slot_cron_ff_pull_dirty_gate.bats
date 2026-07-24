@@ -11,10 +11,10 @@
 #
 # slot-cron-ff-pull.sh has NO clean "point it at an empty workspace" off-switch like
 # slot-git-status-report.sh: the very first top-level statements after the LAST
-# function definition (prefetch_main_clones, ending line 598) immediately resolve cwd,
+# function definition (prefetch_main_clones, ending line 712) immediately resolve cwd,
 # call walk_slot on it with a REAL fetch, and `exit 0` — so a full `source` of the real
 # file is unsafe (it would walk whatever directory the test happens to run from). We
-# therefore source only lines 1-598 (every function def, none of the driver) into a
+# therefore source only lines 1-712 (every function def, none of the driver) into a
 # fresh bash subprocess (via `run bash -c`), with SLOT_FF_PULL_LOCK_FILE and
 # SLOT_FF_PULL_RESULT_FILE pointed at per-test tmp paths so the lock/result-file side
 # effects stay hermetic, then call ff_one()/_write_ff_result() directly.
@@ -23,7 +23,7 @@
 # Run all: bats tests/
 
 FF_CRON="unified-trading-pm/scripts/dev/slot-cron-ff-pull.sh"
-FN_DEFS_END_LINE=598
+FN_DEFS_END_LINE=712
 
 setup() {
     WS_ROOT="$(git rev-parse --show-toplevel)/.."
@@ -57,20 +57,37 @@ _make_synced_repo() {
 
 # Call ff_one() (do_fetch=0 — no network, the fixture already has origin/live-defi-
 # rollout cached) then _write_ff_result(), and print the resulting result-file JSON.
-# PREV_DIRTY_CONSECUTIVE_TICKS is computed from RESULT_PATH first, mirroring the real
-# driver's pre-sweep read (bottom of the real script, not part of the sourced FN_DEFS
-# function-only block) — so calling this twice against the SAME RESULT_PATH reproduces
-# two consecutive cron ticks for the confirm-gate (item 5).
+# The per-repo confirm-gate reads its own prior streak straight out of RESULT_PATH inside
+# ff_one() itself now (repo_dirty_ticks, keyed by repo_key) — no separate pre-sweep global
+# to seed here any more — so calling this twice against the SAME RESULT_PATH reproduces two
+# consecutive cron ticks for the confirm-gate (item 5) purely via the file on disk.
 _run_ff_one() {
     local repo="$1"
     SLOT_FF_PULL_LOCK_FILE="${LOCK_PATH}" SLOT_FF_PULL_RESULT_FILE="${RESULT_PATH}" \
         bash -c '
             source "'"${FN_DEFS}"'" --quiet
-            PREV_DIRTY_CONSECUTIVE_TICKS="$(_read_dirty_consecutive_ticks "'"${RESULT_PATH}"'")"
             ff_one "'"${repo}"'" 0
             _write_ff_result
             cat "'"${RESULT_PATH}"'"
         '
+}
+
+# Multi-repo variant: runs ff_one() for EVERY repo passed, all within ONE simulated sweep
+# (mirrors --all-slots: walk_slot() calls ff_one() once per repo, then ONE
+# _write_ff_result() fires after every repo in the sweep has been walked), then dumps the
+# result-file JSON. Needed to reproduce/verify the cross-repo dirty-gate bug, which only
+# manifests when more than one repo shares a single sweep — a sweep containing exactly one
+# repo (as _run_ff_one models) can never exercise cross-repo contamination.
+_run_ff_multi() {
+    SLOT_FF_PULL_LOCK_FILE="${LOCK_PATH}" SLOT_FF_PULL_RESULT_FILE="${RESULT_PATH}" \
+        bash -c '
+            source "'"${FN_DEFS}"'" --quiet
+            for repo in "$@"; do
+                ff_one "${repo}" 0
+            done
+            _write_ff_result
+            cat "'"${RESULT_PATH}"'"
+        ' _ "$@"
 }
 
 @test "slot-cron-ff-pull.sh has valid bash syntax" {
@@ -126,7 +143,7 @@ _run_ff_one() {
     run _run_ff_one "${repo}"          # tick 1: unconfirmed
     [ "$status" -eq 0 ]
     [[ "$output" != *'"ff_pull_last_result":"skip:dirty"'* ]]
-    run _run_ff_one "${repo}"          # tick 2: PREV_DIRTY_CONSECUTIVE_TICKS now >= 1 -> confirmed
+    run _run_ff_one "${repo}"          # tick 2: this repo's own prior streak now >= 1 -> confirmed
     [ "$status" -eq 0 ]
     [[ "$output" == *'"ff_pull_last_result":"skip:dirty"'* ]]
     [[ "$output" == *'"dirty_consecutive_ticks":2'* ]]
@@ -143,4 +160,36 @@ _run_ff_one() {
     [ "$status" -eq 0 ]
     [[ "$output" != *'"ff_pull_last_result":"skip:dirty"'* ]]
     [[ "$output" == *'"dirty_consecutive_ticks":0'* ]]
+}
+
+@test "cross-repo isolation: repo Y's first-ever dirty tick is NOT confirmed by repo X's already-confirmed streak" {
+    # Reproduces the cross-repo FF-pull starvation bug: the confirm-gate used to read a
+    # SINGLE sweep-wide/host-wide PREV_DIRTY_CONSECUTIVE_TICKS value shared by every repo
+    # walked in a sweep, so once repo X's OWN streak confirmed (skip:dirty), that confirmed
+    # state silently applied to every OTHER repo in the same (or the very next) sweep too --
+    # repo Y's genuinely-first-ever dirty tick would incorrectly confirm-skip instead of
+    # getting the one-tick grace (dirty:unconfirmed) it is entitled to on its own.
+    repoX="$(_make_synced_repo)"
+    repoY="$(_make_synced_repo)"
+
+    # Tick 1 (sweep 1): only repo X is dirty -> unconfirmed (repo X's own first tick).
+    printf 'v2\n' > "${repoX}/tracked.txt"
+    run _run_ff_multi "${repoX}"
+    [ "$status" -eq 0 ]
+    [[ "$output" == *"[dirty:unconfirmed]"* ]]
+    [[ "$output" != *"[skip:dirty]"* ]]
+
+    # Tick 2 (sweep 2, same result file -> state carries forward): repo X is dirty AGAIN
+    # (its own second consecutive tick -> correctly confirms) AND, in the SAME sweep, repo Y
+    # -- a different, previously-clean repo -- becomes dirty for the very first time ever.
+    printf 'v2\n' > "${repoY}/tracked.txt"
+    run _run_ff_multi "${repoX}" "${repoY}"
+    [ "$status" -eq 0 ]
+    # repo X: correctly confirmed on its own second consecutive dirty tick.
+    [[ "$output" == *"[skip:dirty]"* ]]
+    # repo Y: must get its OWN one-tick grace (dirty:unconfirmed) on this, its first dirty
+    # tick -- independent of repo X's already-confirmed state in the SAME sweep. The bug
+    # instead fires [skip:dirty] for repo Y here too (no [dirty:unconfirmed] line at all),
+    # because the confirm-gate can't tell repo Y's history apart from repo X's.
+    [[ "$output" == *"[dirty:unconfirmed]"* ]]
 }

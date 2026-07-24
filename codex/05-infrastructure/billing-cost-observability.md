@@ -17,14 +17,24 @@ related:
     /codex/05-infrastructure/spot-vms-for-backfill.md,
     /codex/05-infrastructure/aws-cloudtrail-cost-optimization-2026-06-20.md,
     /codex/05-infrastructure/aws-iam-matrix.md,
+    /plans/active/deployment_api_cache_oom_and_ui_latency_remediation_2026_07_13.md,
   ]
 created: 2026-06-27
 authoritative_for:
-  [deployment-UI billing/cost-observability backends (GCP BQ export + AWS CUR/Athena) and their read-only access grants]
+  [
+    deployment-UI billing/cost-observability backends (GCP BQ export + AWS CUR/Athena) and their read-only access grants,
+    the DuckDB-over-GCS-parquet cost snapshot read path,
+  ]
 referenced_by: []
 owner:
-last_reviewed: 2026-07-08
+last_reviewed: 2026-07-24
 code_refs:
+  [
+    deployment-api/deployment_api/scripts/cost_snapshot_worker.py,
+    deployment-api/deployment_api/services/cost_observability/snapshot.py,
+    deployment-api/deployment_api/services/cost_observability/service.py,
+    deployment-api/deployment_api/services/cost_observability/aws_wif.py,
+  ]
 type: infrastructure
 execution:
   owner: "deployment-platform"
@@ -159,11 +169,61 @@ The exports are consumed by the **cost-observability service** in `deployment-ap
   float.
 
 Both native schemas are normalized into one `CostRecord`
-(`cloud, day, service, resource_id, resource_kind, region, cost, credit, sku, usage_amount, usage_unit, zone, purchase_option, machine_type, vcpu, memory_gb, is_provisional, is_placeholder`);
-every view derives from a **daily-refresh-cached** window fetch (billing data is ~daily-lagged, so per-load re-queries
-buy nothing — and avoid Athena's no-free-tier cost). Per-cloud failure is isolated (one cloud down ≠ blank page). Source
-table/db/region/bucket are config (`GCP_BILLING_DATASET/RESOURCE_TABLE`, `AWS_CUR_DATABASE/TABLE/REGION`,
-`AWS_ATHENA_OUTPUT_BUCKET`), defaulting to the values above.
+(`cloud, day, service, resource_id, resource_kind, region, cost, credit, sku, usage_amount, usage_unit, zone, purchase_option, machine_type, vcpu, memory_gb, is_provisional, is_placeholder`).
+Per-cloud failure is isolated (one cloud down ≠ blank page). Source table/db/region/bucket are config
+(`GCP_BILLING_DATASET/RESOURCE_TABLE`, `AWS_CUR_DATABASE/TABLE/REGION`, `AWS_ATHENA_OUTPUT_BUCKET`), defaulting to the
+values above.
+
+**⚠️ SUPERSEDED (2026-07-14) — read path is now snapshot-first, not per-request BQ/Athena.** The line above used to read
+"every view derives from a daily-refresh-cached window fetch" — that in-process cache called BigQuery/Athena directly on
+every cache-miss, which is what drove `/ops/costs` to +1.9GB RSS / 55–65s cold (98,542 full-grain BQ rows materialized
+as Python `CostRecord` objects per window). See § "Cost snapshot — DuckDB over GCS parquet" below for the replacement
+architecture and § "AWS Athena credential — WIF, not a stale deploy" for the AWS-side fix shipped in the same pass.
+
+## Cost snapshot — DuckDB over GCS parquet (2026-07-14)
+
+Root cause + option analysis: `deployment_api_cache_oom_and_ui_latency_remediation_2026_07_13.md` § 4b. Chosen design
+(Option B over a coarse-BQ-query alternative) — reuses two patterns already proven elsewhere in this repo rather than
+inventing a third: DuckDB (`unified-trading-library/manifest_consolidator.py`) and the worker→GCS-snapshot shape
+(`deployment_api/scripts/data_status_rollup_worker.py`).
+
+- **Snapshot worker** (`deployment-api@d7c0356`, `deployment_api/scripts/cost_snapshot_worker.py`, Cloud Run Job on a
+  **~12h** Cloud Scheduler cadence) — for each cloud (GCP/AWS/GitHub) scans the billing export ONCE over the full
+  available window (only ~90 days exist in the export; ~168K aggregated rows ≈ ~20–40MB), normalizes to `CostRecord` via
+  the same provider adapters the live path used, and writes one parquet per cloud to
+  `gs://unified-deployment-state-{project}/cost-snapshots/{cloud}.parquet` (deployment-api's existing state bucket — no
+  dedicated cost bucket). Per-cloud isolation: one cloud's snapshot failing (e.g. AWS pending its perms fix, below)
+  never blocks another cloud's write.
+- **Read path** (`CostObservabilityService._load_window_table`, `services/cost_observability/service.py`) —
+  **snapshot-first, live-fallback**: `_snapshot_table()` downloads the small per-cloud parquet(s) via
+  `CostSnapshotStore` (`services/cost_observability/snapshot.py`), refreshing them from GCS if stale
+  (`store.ensure_fresh()`), and answers the request via a **DuckDB** `GROUP BY` over the in-memory Arrow table — no
+  BigQuery/Athena scan, no Python row materialization, a ~3MB local read instead of a 55–64s remote query. Falls through
+  to the live BQ/Athena providers only when no snapshot is present yet (fresh deploy, unprovisioned bucket, or any
+  snapshot/DuckDB read error — degrades to live, never a 5xx) or in `is_mock_mode()`. This is why the summary /
+  breakdown / timeseries endpoints below stayed unchanged — the swap is entirely inside `_load_window_table`, every view
+  still calls the same `_window_table()` → DuckDB `aggregate_arrow()` shape it always did, just over a snapshot-backed
+  table instead of a live-query-backed one.
+- **Why this fixes the memory number**: the 1.9GB RSS was **6 overlapping day-windows** (7/30/90 × current+prior) each
+  separately materialized as ~2KB-class Python `CostRecord` objects (6 × ~168K rows × ~2KB ≈ ~2GB). One ~30MB parquet,
+  queried per-window via DuckCB `GROUP BY`, never materializes the raw rows in Python at all — every window is a cheap
+  re-filter of the same in-memory table.
+
+## AWS Athena credential — WIF, not a stale deploy (2026-07-14)
+
+AWS cost data showed correctly when queried locally but returned nothing from the deployed service ("1 cloud" on the
+health tile). **Root-caused precisely, not assumed**: `AWSAnalyticsClient._boto3_client` (`unified-trading-library`)
+used a bare `boto3.Session()` — there is no ambient AWS credential source in a GCP Cloud Run container at all, so every
+Athena call failed silently in prod regardless of IAM grants or deploy freshness.
+
+Fixed (`deployment-api@d8add54` + `fc53899`) by mirroring the already-proven keyless GCP→AWS WIF pattern this repo uses
+for the CodeBuild reader (`_code_builds_aws.py::_assume_codebuild_reader_role`) —
+`deployment_api/services/cost_observability/aws_wif.py`, config field `aws_athena_reader_role_arn` / env
+`AWS_ATHENA_READER_ROLE_ARN`, threaded through `aws_facts(...)` into the Athena client. A new scoped AWS IAM role was
+provisioned to receive it: `arn:aws:iam::427895769566:role/gcp-cloudrun-athena-cost-reader` (read-only; trusts the same
+`unified-trading-sa` GCP SA the CodeBuild reader already trusts; scoped to exactly the CUR data + `uts-billing`
+workgroup + results bucket). Wired into the Cloud Run deploy env via `cloudbuild.yaml`'s
+`--update-env-vars WORKERS=2,AWS_ATHENA_READER_ROLE_ARN=...`.
 
 `sku` / `usage_amount` / `usage_unit` come straight from each export — GCP `sku.description` +
 `usage.amount_in_pricing_units` + `usage.pricing_unit`; AWS `line_item_usage_type` (as `sku`) +
