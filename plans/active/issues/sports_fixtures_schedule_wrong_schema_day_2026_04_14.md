@@ -153,11 +153,37 @@ sports_reference/by_date/day=2026-04-14/pipeline_mode=batch_api_football/entity=
       section assumes, and should inform anyone else picking this up. **IN PROGRESS (2026-07-24, slot 11)**: picked up
       from slot 4's "recommended next step" — dispatched a read-only Explore sub-agent to search the full workspace
       (current code + `git log --all -S` history) for the "COUNTRY_LEAGUENAME" full-name convention
-      (`ENGLAND_CHAMPIONSHIP`, `SAUDI_ARABIA_PRO_LEAGUE`, etc.) against every non-api_football sports adapter, any
-      DeFi/CeFi naming that might coincidentally match, and any fast in-memory loop script that could explain an 85-file
-      <1s write burst. **Result NOT YET COLLECTED as of this note** — session paused for a context-compaction checkpoint
-      before the sub-agent's report came back. Next session: check for the agent's completion notification / re-dispatch
-      the same investigation if it did not survive the pause. No PROD writes attempted, nothing at risk from the pause.
+      (`ENGLAND_CHAMPIONSHIP`, `SAUDI_ARABIA_PRO_LEAGUE`, etc.). **MECHANISM FOUND (2026-07-24, slot 11) — resolves the
+      "why do the 85 folder names not match any UAC registry" mystery, verified by direct code read (not just the
+      sub-agent's report):** 1. `unified-api-contracts/.../canonical_ids.py::build_league_id(country, league_name)`
+      returns `f"{_slug(country)}_{_slug(league_name)}"` — a straight uppercase-slug concatenation, **never an
+      abbreviation**. Its own docstring example (`"England"` → `"ENG"`) is simply WRONG on its face — `_slug("England")`
+      == `"ENGLAND"`. There is no abbreviation step anywhere in this function. 2.
+      `unified-api-contracts/.../external/api_football/normalize.py:137` feeds this function the RAW vendor
+      `country`/`league.name` strings (`build_league_id(raw.league.country, raw.league.name)`) for EVERY normalized
+      fixture — so `CanonicalFixture.league.league_id` is BORN as `"ENGLAND_CHAMPIONSHIP"`-shaped, never the abbreviated
+      `ENG_CHAMPIONSHIP` UAC-registry form (`league_data_prediction.py:33`). The 85 folder names are not a mystery
+      convention at all — they're this exact, always-unabbreviated computation, which is why they never appear as a
+      literal string anywhere in code/git history (confirmed clean by the sub-agent's `git log --all -S` sweep) — the
+      string is COMPUTED at runtime, never hardcoded. 3.
+      `instruments-service/.../adapters/sports/adapters/api_football_reference.py::_canonical_fixture_to_instrument()`
+      converts a `CanonicalFixture` (carrying that raw league_id) into an `InstrumentRecord` with fields
+      `instrument_key, venue="API_FOOTBALL", raw_symbol, instrument_type, base_asset, quote_asset, status,        tick_size, min_size, contract_size, expiry, available_from_datetime, available_to_datetime, strike,        option_type`
+      — **column-for-column identical to the corrupted shards' schema.** 4.
+      `instruments-service/.../engine/orchestrator/writers.py:254-257` (the SHARED generic instrument-catalogue write
+      path, `_write_venue`/`_gated_sink_write` — the same choke point the real fixtures_schedule writer
+      `sports_fixtures.py` also funnels through) explicitly maps `venue == "API_FOOTBALL"` →
+      `data_type =        FIXTURES_SCHEDULE`. So this ONE shared writer cannot distinguish "a real API-Football
+      fixtures_schedule write" from "an API-Football-venue `InstrumentRecord` write" — both resolve to the identical
+      `data_type=FIXTURES_SCHEDULE` target. If `ApiFootballReferenceDataAdapter.get_instruments()`'s output (or any
+      DataFrame shaped like it) was ever routed through `_write_venue`, this mapping alone would silently misfile it
+      into the fixtures_schedule GCS path — exactly the corruption observed, exact schema, exact venue-derived
+      data_type. **Not yet found**: the specific CALLER that invoked `get_instruments()` and fed its output to
+      `_write_venue` on 2026-07-16/07-12 — `get_instruments()` doesn't call `_write_venue` directly from anywhere in
+      `engine/orchestrator/`, so the connecting caller is likely a URDI-registration/reference-data-sync job outside the
+      files checked here. Next step for whoever picks this up: trace what calls
+      `ApiFootballReferenceDataAdapter.get_instruments()` workspace-wide (the class docstring calls it a "URDI adapter")
+      and where THAT caller's output gets written.
 - [x] ✅ [CODE] P1. Fix the write-path bug so no future run can write a non-fixtures schema under
       `entity=fixtures_schedule/` (repo: instruments-service). **Done when**: a regression test reproduces the old
       bad-path resolution and asserts the fix. — Could not pin the EXACT historical bug (see the DIAG todo above), so
