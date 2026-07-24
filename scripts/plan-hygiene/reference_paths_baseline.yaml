@@ -9,13 +9,6 @@
 #
 # SSOT: codex/11-project-management/cross-reference-path-convention.md,
 # plans/active/issues/reference_path_convention_2026_07_23.md.
-note: >-
-  Seeded 2026-07-23 pre-migration (12,021 / 630), then corrected same day once the corpus-wide reformat
-  (scripts/plan-hygiene/fix_reference_paths.py, ~2,150 files) landed as its own follow-up commit: format_count drops to
-  176 (the ratchet's whole point). existence_count RISES to 1,285 — not a regression: most refs weren't in the checkable
-  leading-slash form at all pre-migration, so the pre-migration 630 undercounted how many are actually dangling;
-  completing the migration measures the corpus honestly for the first time, it doesn't create new breakage. See
-  plans/active/issues/reference_path_convention_2026_07_23.md for the full cleanup backlog (both counts' remaining
-  entries).
-format_count: 176
-existence_count: 1285
+note: Seeded 2026-07-23 — corpus-wide migration via fix_reference_paths.py.
+format_count: 173
+existence_count: 1251

@@ -13,7 +13,7 @@ scope: [engineer, admin]
 tags: [plan-hygiene, plan-inventory, orphan-detection, estimation-calibration, dashboard, quickmerge]
 related:
   [
-    plan-hygiene.md,
+    /codex/11-project-management/plan-hygiene.md,
     /codex/08-workflows/estimation-calibration.md,
     /codex/08-workflows/estimation-retrospective-ledger.md,
     ../../plans/active/master_to_live_defi_2026_05_23.md,
