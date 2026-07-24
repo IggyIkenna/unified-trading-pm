@@ -234,3 +234,30 @@ one; the backup snapshot + this script remain valid and re-runnable.
   direct-canonical-hand-edit script workspace-wide, not just this one) and have them add a write-time
   optimistic-concurrency guard (e.g. `if_generation_match` on the canonical write, or acquire `_index/consolidator.lock`
   before an external write) rather than re-solving it per-script.
+
+## Todos (continued)
+
+- [x] [CODE] P0. Implement Option C2 as the permanent, systemic fix (complementary to the A2 immediate correction above,
+      which fixed these 3 rows but requires a manual cron-pause dance for every future correction): close the
+      consolidator's own read-modify-write TOCTOU race so no future direct-writer correction needs a paused-cron window
+      at all. Root cause confirmed in `unified_trading_library.manifest_consolidator._write_consolidated`: the CAS
+      write's `if_generation_match` came from a fresh `blob.reload()` taken right before the upload, not the generation
+      the merge's own canonical read actually saw — a late reload always reflects whatever is CURRENT at that moment, so
+      it trivially matches itself and lets the write through even when an external writer landed a change in the merge's
+      (90-120s in production) read-to-write window. Fix: `_duckdb_merge_payload`/`_download_canonical_with_generation`
+      now capture the canonical's generation via `download_bytes_with_generation` at the SAME read that produces the
+      merge payload, and `_write_consolidated` uses THAT captured value (not a fresh reload) as the CAS token on every
+      attempt (including retries) — any intervening external write now correctly fails the CAS check and drives the
+      existing re-merge retry loop instead of being silently clobbered. Also hardened the canonical read to never trust
+      the caller's `canonical_present` mtime-probe hint blindly (a stale-False-negative surfaced by
+      `test_consolidate_idempotent`'s second cycle during this fix) — the CAS token now always reflects the OBSERVED
+      generation, not a possibly-stale hint. — **unified-trading-library@14301571** (full `quality-gates.sh` green;
+      98/98 `test_manifest_consolidator.py` + 60/60 `test_manifest_writer_per_vm.py` passing, including the existing
+      lost-update-race regression test and 3 other consolidator test files updated for the new 4-tuple
+      `_duckdb_merge_payload` return shape). Reaches the live consolidator automatically per
+      `/codex/05-infrastructure/manifest-consolidator-ssot.md` (the UTL base image auto-republishes on every LDR push;
+      Cloud Run jobs resolve `:latest` on their next ~1-min invocation) — **deployment propagation + a fresh live
+      durability re-verification (a NEW direct-writer correction surviving >=2 consolidator cycles without any cron
+      pause) is not yet confirmed post-deploy**; that confirmation is deferred to whoever next needs to run a similar
+      direct-canonical correction (or a dedicated verification pass), since the 3 dates this issue doc exists for are
+      already durably fixed via A2 and don't need re-touching.
