@@ -242,15 +242,59 @@ cover this job class — no new launcher script needed for the remaining work be
 **Operator is now migrating the whole interactive session to run from a VM** (not just dispatching worker VMs for
 individual tasks), so all further heavy-I/O work should run from there.
 
+## Finding 7 (2026-07-24, later still) — Surface C v2 `--apply` SUCCEEDED on `e2-standard-16`; a second tarball-staleness near-miss caught and fixed BEFORE launch; verified via a clean second dry-run; cron resumed
+
+**Pre-launch near-miss #2 (distinct from Finding 6's cron-ordering near-miss)**: the first `cefi-dedup-apply` launch
+attempt this round hit `lc_verify_tarball_freshness` WARNINGS for BOTH `instruments-service` (`manifest=4412e57608b5`
+vs. `repo=1511b6722720`) and `deployment-service` (`manifest=4dce3348fdd4` vs. `repo=e726aabeae2c`) — the floating
+tarballs predated Finding 5/6's shipped fix and launcher category. Caught the warning BEFORE it could matter: deleted
+the just-created VM immediately (`gcloud compute instances delete`), verified via GCS that it never got far enough to
+run (`vm-logs/<vm>/` held only `LAUNCH_PARAMS.json`/`TARBALL_PINS.json`, no `run.log` — the boot/tarball-fetch phase,
+before any Python executed), republished both tarballs
+(`bash scripts/vm/create-code-tarballs.sh --include instruments-service --include deployment-service`), then confirmed
+via `git merge-base --is-ancestor 654d694f/63c6962c/66298d43 <published-sha>` (all three: YES) before relaunching.
+**Zero mutation occurred from the stale-tarball attempt.** Lesson for next time: `lc_verify_tarball_freshness`'s WARN
+(not ENFORCE) default means a launch can proceed on stale code silently unless the operator/agent actually reads the
+warning text — for any `--apply`/`full`-mode launch touching code changed this session, either republish proactively
+before the first launch attempt, or set `LC_TARBALL_FRESHNESS=enforce` to make staleness a hard block instead of a
+warning.
+
+**The apply itself, relaunched on fresh tarballs (`canonical-migration-cefi-dedup-apply-20260724-231529` deleted;
+`canonical-migration-cefi-dedup-apply-20260724-232055` succeeded)**: `V2 SUMMARY across 2 blob(s)` — chain-lossy
+groups=28 (exactly the predicted/tolerated residual from Finding 5, `TOLERATED` not `STOP`),
+`[INVARIANT] CAPTURED rows in the v2 drop set: 0`, `[FAIL-HARD] CAPTURED rows still marker-less AFTER transform: 0`,
+canonical-fraction 99.24%. Snapshotted before write (`snapshots/pre_d4_20260724T232332Z/`), wrote
+`availability_index.parquet` (9,069,094 rows) + `per_vm/_legacy_seed.parquet` (320,344 rows), post-apply gate
+`GATE PASSED: 0 further-resolvable captured rows; 0 eu/captured 5-col collisions`, final line
+`V2 APPLY COMPLETE + GATE GREEN`, `command exited rc=0`, VM self-deleted per `VM_SHUTDOWN_ON_COMPLETION=true`.
+
+**Verification dry-run** (`canonical-migration-cefi-dedup-apply-20260724-233207`, same VM category, `dry` mode, launched
+immediately after on already-fresh tarballs): `chain-lossy groups=0` (down from 28 — proves the tolerated groups
+actually collapsed to one row each during the apply, not left as live duplicates), `marker_added=0` (all 2,307,835
+markers from the apply already landed — nothing left for a second pass to add), all invariants still 0/0,
+canonical-fraction unchanged at 99.24%. This run's `STOP-ON-SURPRISE: marker_added=0 outside band [1500000,3000000]`
+(`exit rc=1`) is a **benign false trip, not a real problem** — that guard's sanity band was written assuming every
+dry-run is pre-apply and doesn't have a code path for "second run against an already-applied corpus, zero _new_ work is
+the CORRECT answer." Worth a future enhancement (detect zero-marker-added-because-already-clean vs.
+zero-marker-added-because-something-broke), but not blocking — the surrounding invariants (0 lossy, 0 drop-set, 0
+marker-less) are the actual proof of correctness, and they're clean.
+
+**Cron resumed and verified**:
+`gcloud scheduler jobs resume uts-prod-manifest-consolidator-market-data-cefi-cron --location=asia-northeast1` →
+`gcloud scheduler jobs describe ... --format='value(state)'` → `ENABLED`, confirmed directly per Finding 3/6's own
+lesson.
+
+**Surface C is now DONE.** Item 3 in the Deferred-work table below is closed.
+
 ## What's left (unchanged from the parent plan's last-known Deferred-work table, ~13:35Z revision)
 
-| #   | Item                                                                                                   | State                                                  | Notes                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
-| --- | ------------------------------------------------------------------------------------------------------ | ------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 2b  | LATE colliding-venue renames                                                                           | Not done                                               | Needs a properly-scoped (`--start-date`/`--venue`) run — the unscoped attempt above was killed; run from the migrated VM                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| 2c  | MID window (KRAKEN-SPOT `ADA/USD.parquet` spurious hive-segment) + colon_wire (1,697) + loop-until-dry | Not done                                               | Next after 2b                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
-| 3   | Surface C v2 manifest apply                                                                            | Code-level UNBLOCKED; infra attempt failed (Finding 6) | The `underlying`+`chain` key-fold fix is SHIPPED (`instruments-service@654d694f`) — chain-drop invariant fully understood (0 DERIBIT/ASTER, 28 tolerated BITFINEX-SPOT/BYBIT-SPOT). A dedicated-VM `--apply` attempt (`cefi-dedup-apply` category, `deployment-service@66298d43`) OOM'd (exit 137) on `e2-standard-8` (32GB) — the full-schema `columns=None` load is heavier than the dry-run's projection. Zero mutation occurred. **Next: relaunch with `MACHINE_TYPE=e2-standard-16`, cron PAUSED first (verify via `gcloud scheduler jobs describe` before AND after) — see Finding 6.** |
-| 6   | LIGHTER-ZKSYNC numeric-stem GCS rename backfill (~11,283 objects)                                      | Not done                                               | Resolver code SHIPPED (`mtds@8835b899`); dry-run + apply itself never attempted                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| 9   | Final 4-surface done-state re-proof + plan archival                                                    | Cannot be done yet                                     | Gated on 2b/2c/3/6 all landing                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| #   | Item                                                                                                   | State                | Notes                                                                                                                                                                                                                                                                                                                                                                                                           |
+| --- | ------------------------------------------------------------------------------------------------------ | -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2b  | LATE colliding-venue renames                                                                           | Not done             | Needs a properly-scoped (`--start-date`/`--venue`) run — the unscoped attempt above was killed; run from the migrated VM                                                                                                                                                                                                                                                                                        |
+| 2c  | MID window (KRAKEN-SPOT `ADA/USD.parquet` spurious hive-segment) + colon_wire (1,697) + loop-until-dry | Not done             | Next after 2b                                                                                                                                                                                                                                                                                                                                                                                                   |
+| 3   | Surface C v2 manifest apply                                                                            | **DONE** (Finding 7) | Applied successfully on `cefi-dedup-apply` / `e2-standard-16`: `V2 APPLY COMPLETE + GATE GREEN`, chain-lossy=28 (`TOLERATED`, as predicted), 0 invariant violations. Verified via a clean second dry-run (chain-lossy=0, all markers already landed). Cron paused before / resumed + verified `ENABLED` after. See Finding 7 for the full record, incl. a second tarball-staleness near-miss caught pre-launch. |
+| 6   | LIGHTER-ZKSYNC numeric-stem GCS rename backfill (~11,283 objects)                                      | Not done             | Resolver code SHIPPED (`mtds@8835b899`); dry-run + apply itself never attempted                                                                                                                                                                                                                                                                                                                                 |
+| 9   | Final 4-surface done-state re-proof + plan archival                                                    | Cannot be done yet   | Gated on 2b/2c/3/6 all landing                                                                                                                                                                                                                                                                                                                                                                                  |
 
 Items 1 / 2a / 4 / 4b / 5 / 7c from the parent plan are DONE (unchanged, see the parent's own last-committed revision,
 commit `6cb36c9d2`, for that history). Item 7 (DERIBIT combo partition-move) and item 8 (`slot-cron-ff-pull.sh` audit)
@@ -259,13 +303,8 @@ remain operator-owned / out of `/autonomous` scope, unchanged.
 ## Recommended next
 
 1. ~~Fix the DERIBIT chain-BUNDLE `underlying`-key gap~~ — **DONE, see Finding 5** (`instruments-service@654d694f`).
-2. Surface C v2 apply, on the `cefi-dedup-apply` VM category (Finding 6), IN THIS EXACT ORDER: (a) pause
-   `uts-prod-manifest-consolidator-market-data-cefi-cron`, verify `PAUSED` directly; (b)
-   `bash deployment-service/scripts/vm/launch-canonical-migration-vm.sh cefi-dedup-apply <today> <today> full MACHINE_TYPE=e2-standard-16`
-   (bump further to `e2-standard-32` if this ALSO OOMs); (c) watch
-   `gs://deployment-scripts-central-element-323112/vm-logs/<vm>/run.log` for `V2 SUMMARY`/`chain_lossy` (expect ~28,
-   `TOLERATED`) then `V2 APPLY COMPLETE + GATE GREEN`; (d) verify via a fresh dry-run; (e) resume the cron, verify
-   `ENABLED` directly.
+2. ~~Surface C v2 apply~~ — **DONE, see Finding 7**. Applied on `e2-standard-16`, verified via a clean second dry-run,
+   cron resumed + verified `ENABLED`.
 3. LATE colliding-venue renames, properly scoped this time (`--start-date` near the actual regression onset, not the
    full 2019 corpus — the fresh 4-surface reverify from ~01:05Z today pinpoints 2025-12-15/2026-02-01/2026-05-01 as the
    low-canonical-fraction dates).
