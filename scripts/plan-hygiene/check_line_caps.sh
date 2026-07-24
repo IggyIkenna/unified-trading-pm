@@ -71,6 +71,15 @@ for f in "${TARGETS[@]}"; do
   [[ "$name" == *.HANDOVER.md ]] && continue
   [[ "$name" == *_SUPERSEDED_*.md ]] && continue   # frozen-in-place, not live
   [ -f "$f" ] || continue                   # a staged file can be a deletion (no longer on disk)
+  # This check is scoped to plans/active/ + plans/epics/ ONLY (see the policy comment at the top
+  # of this file) -- full-corpus mode's own glob already enforces that, but SCOPED mode (the prek
+  # pre-commit hook, called with the staged file list as args) iterates whatever paths it's given
+  # with no directory filter, so staging a plans/archive/ record doc alongside an active plan wrongly
+  # subjected the archive doc to the same 1000L active-plan cap it was never meant to carry -- the
+  # entire point of extracting a Progress Log/history section INTO plans/archive/ is to get it OUT
+  # of the enforced-cap flow (status: complete / nature: record docs are unbounded by design). Caught
+  # 2026-07-24 when a legitimate archive-bound history file failed this gate.
+  [[ "$f" != *"plans/active/"* && "$f" != *"plans/epics/"* ]] && continue
 
   lines=$(wc -l < "$f")
   todos=$(grep -c "^- \[.\]" "$f" 2>/dev/null || true)

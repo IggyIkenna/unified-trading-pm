@@ -1128,3 +1128,385 @@ end-to-end (paper run on real GCS data → ε=0 reconcile → operator dashboard
 > [`plans/active/crypto_alpha_research_2026_07_24.md`](/plans/active/crypto_alpha_research_2026_07_24.md), per
 > `plans/active/issues/plan_line_cap_remediation_2026_07_23.md` (operator-approved unlock + extract, 2026-07-24). See
 > that plan's Progress Log for the full moved history (this was the tail of this plan's own Progress Log).
+
+---
+
+## Addendum (2026-07-24, second extraction slice — line-cap remediation)
+
+> **Extracted 2026-07-24**: the parent plan (`plans/active/citadel_paper_batch_live_reconciliation_2026_06_19.md`) was
+> still over its 1000-line cap after the first Progress-Log extraction above. A second pass moved every FULLY-CLOSED
+> phase section (100% `[x]` — zero open `- [ ]` items within the section) verbatim below: Phase 0 (contract), Phase 1
+> (fill model), Phase 3 (four ledgers), Phase 4 (recon harness), Phase 5 (views), Phase 6 (Slack log), the "Codex SSOT
+> updates" section, and Phase 10 (monitoring-completeness dashboard wave). Phases 2, 7, 9, and 11 stayed in the parent
+> because each still carries at least one open `- [ ]` todo (P2.1/P2.2, P2.7.3, P9.2, and several `P2.11.*`/`P1.6`/P2.14
+> items respectively). Per `plans/active/issues/plan_line_cap_remediation_2026_07_23.md` (row 5 / bucket-d).
+
+## Phase 0 — Pin the determinism contract
+
+- [x] ✅ [DESIGN] P0.0. **Pre-audit manifest** — DONE: 4 read-only Explore agents mapped every consumer of the fill
+      engines / event format / ledger routes; the EXISTS/MISSING inventory is embedded in the codex SSOT §2+§7.
+- [x] ✅ [SCHEMA] P0.1. **`RunManifest` UAC type** — `unified-api-contracts@12597d8`: `RunManifest` (run_id, window,
+      mode, client_id, strategy_ids, `code_shas{}`, `market_data_days[]`, `feature_group_versions{}`,
+      `captured_tick_stream`, `fill_model`, `ledger_root`, `parent_run_id`) + `TradingMode`/`FillModel` StrEnums in
+      `internal/reconciliation.py`. The two-fill-realities rule is encoded in `FillModel` (BENCHMARK + LIVE_VENUE only).
+      20 tests, QG green.
+- [x] ✅ [SCHEMA] P0.2. **`PositionLedger` schema + GCS path** — `unified-api-contracts@12597d8`: `PositionLedgerRow`
+      (the `Σ delta GROUP BY (account, asset, venue, instrument)` derived view; per-venue/instrument/share_class
+      balance + realised/unrealised PnL) in `canonical/crosscutting/ledger/_position_ledger.py`, `ledger_type=position`
+      partition, exported root + crosscutting + ledger facades.
+- [x] ✅ [SCHEMA] P0.3. **Per-trade key + recon report** — `unified-api-contracts@12597d8`:
+      `make_trade_key(     instrument_key, strategy_instruction_id, tick_timestamp)` (deterministic, UTC-normalised) +
+      `TradeFillRecord` (the keyed per-trade fill carrying correlation_id/client_order_id) + `TradeDeviation` +
+      `DailyReconReport` (DETERMINISM/EXECUTION/COMPOSITE verdicts + `DeterminismBugClass`). `LedgerRow.trade_id`
+      carries the key.
+
+## Phase 1 — Unify the fill model (G1, the core fix)
+
+- [x] ✅ [CODE] P1.1. **Make `BenchmarkFillEngine` the single simulation SSOT** — DONE (`strategy-service@b136f70e` +
+      `batch-live-reconciliation-service@1a12500`, both QG-green). The strategy-service
+      `BenchmarkFillEngine._resolve_trade_benchmark` now builds the flat `BenchmarkPricingContext` from the typed
+      `MarketStateSnapshot` (pre-computing TWAP/VWAP; ARRIVAL_MID None-fallback to mid preserved) and delegates to the
+      UAC `benchmark_fill_price` SSOT (`unified-api-contracts@bc4c756`) — so strategy-service Group B +
+      execution-service Group C / paper price the benchmark through ONE function and cannot drift. **PASSIVE_BBO
+      convention CORRECTED**: a LONG passive maker now fills at the BID, a SHORT at the ASK (UAC `_passive_bbo`:
+      `bid if side > 0 else ask`) — previously LONG→ask / SHORT→bid, the latent paper-vs-batch drift. strategy-service
+      tests updated to the corrected convention (`_long_uses_bid` + new `_short_uses_ask`). **Shipped WITH the
+      `reconcile_day` proof (build-order rule)**: BLRS
+      `test_corrected_passive_bbo_benchmark_reconciles_deterministically` asserts ε=0 paper≡batch on the corrected
+      prices, and `test_passive_bbo_drift_is_a_fill_model_bug` asserts the OLD convention is classified
+      `FILL_MODEL_DRIFT` (not accepted as "within tolerance"). Prior shipped pieces: ✅ UAC pricing SSOT
+      (`unified-api-contracts@bc4c756`, 7 modes / 7 tests) + ✅ execution-service thin adapter
+      (`execution-service@e11854e5`, duplicate primitives deleted).
+- [x] ✅ [CODE] P1.2. **Batch runs the SAME execution-service smart matching as paper** — STRUCTURALLY DONE via P1.4
+      (`execution-service@d36b751f`): the Group C smart-matching layer now exists for EVERY action, so batch CAN run the
+      same matching paper books via `PaperMatchingEngine`. The remaining piece is purely the strategy-service
+      GroupBRunner→GroupCRunner engine HANDOFF wiring (call Group C after Group B with the same data) — a thin
+      integration tracked under the P4.3/P7 batch-rerun path which already replays through the unified matching layer;
+      the linchpin (the matching layer itself) is shipped. Do NOT remove paper's matching (it is correct).
+- [x] ✅ [CODE] P1.3. **Retire the APY-haircut shortcut** — `run_2yr_config_grid_backtest.py` now runs the real
+      `GCSFeatureProvider` (synthetic LCG fallback only on GCS miss) and records raw `_approximate_per_day_apy_bps`
+      without the `slippage_cap_bps*4/365` haircut; `get_storage_client()` replaces the direct `google.cloud.storage`
+      import; lifecycle-marker header added. (The haircut was a crude third fill model — deleted.) —
+      strategy-service@4f5d294d | QG exit 0 (--no-fix) | BLOCKED-GCS-CREDS (P1.4) for live parquet reads in CI.
+- [x] ✅ [CODE] P1.4. **Complete `GroupCRunner` — THE LINCHPIN** — DONE (`execution-service@d36b751f`, QG green, 17
+      tests incl. a Group-C determinism proof). `backtest_v2/action_handlers.resolve_settlement` is the polymorphic
+      dispatch: EVERY action (TRADE/SWAP/LEND/BORROW/STAKE/UNSTAKE/QUOTE/TRANSFER/BRIDGE/ATOMIC) now resolves a
+      deterministic benchmark settlement so the matching-engine fill it is paired with yields a measurable
+      `execution_alpha_bps` — batch runs the SAME execution-service smart-matching layer paper has (was TRADE-only,
+      deferring the rest with `Phase4NotReadyError`). DeFi yield legs are rate-matched (principal @ 1.0); CANCEL is
+      control-plane (no fill); a genuinely-new action raises `UnhandledActionError` (no silently-dropped fills) —
+      `Phase4NotReadyError`/`errors.py` DELETED. The runner's `run()` settles all variants; `test_group_c_scaffold.py`
+      carries the ε=0 determinism proof (identical instructions+fills → byte-identical records).
+- [x] ✅ [DOC] P1.5. **Codify the two-fill-realities HARD RULE** — DONE (`unified-trading-pm@2673bf04a`): the rule lives
+      in CLAUDE.md § "Batch = Live" ("Two fill realities only: canonical-sim … + real-venue … — a third fill model on
+      the batch/paper path is review-blocking") AND the codex SSOT §4.2 design rule (lines 174–176). The `FillModel`
+      StrEnum (`unified-api-contracts@12597d8`, BENCHMARK + LIVE_VENUE only) is the structural enforcement.
+
+## Phase 3 — Materialise the four ledgers from fills (G3)
+
+- [x] ✅ [CODE] P3.1. **`InstructionLedger` writer-from-fills (library helper)** — DONE
+      (`unified-trading-library@41d50461`): `ledger/materialize.py::ledger_row_from_trade_fill()` maps a
+      `TradeFillRecord` →
+      `LedgerRow(event_origin=INSTRUCTION, event_type=TRADE, trade_id=trade_key, delta=±qty signed by side, price,     fees)`.
+      ⏳ wiring the strategy-service engine to CALL it on each fill (+ the GCS emit) rides Phase 2 (the engine emits
+      keyed fills) — the pure helper is shipped + tested.
+- [x] ✅ [CODE] P3.2. **`PassiveLedger` synthesiser** — DONE (`unified-trading-library@09885861`, 16 tests):
+      `ledger/materialize.py::passive_ledger_row()` builds
+      `LedgerRow(event_origin=PASSIVE, event_type=FUNDING_ACCRUAL/     STAKING_REWARD/LENDING_INTEREST, delta=±accrued, accrual_period_*, the matching rate column)` +
+      `accrue_funding(     notional, rate)` (payer-debited sign: a LONG paying positive funding gets a negative
+      accrual). For carry/funding strategies these accruals ARE the P&L. ⏳ the engine wiring (emit accruals per period)
+      rides Phase 2/5. (Closes the "PassiveLedger not-yet-implemented" gap the global-ledger architecture flagged.)
+- [x] ✅ [CODE] P3.3. **`PositionLedger` materialiser (avg-cost P&L)** — DONE (`unified-trading-library@41d50461`):
+      `ledger/materialize.py::materialize_position_ledger()` —
+      `Σ delta GROUP BY (account, client, venue,     asset_canonical_id)` with **average-cost accounting** (VWAP on
+      opens, realised on closes, cross-through-zero re-open, unrealised = net_qty·(mark−avg_cost)); emits
+      `PositionLedgerRow` per group with share_class rollup + realised/unrealised PnL. 23 tests (incl.
+      cross-through-zero both directions, fees, multi-instrument). This is the as-if-filled positions/balances surface —
+      pure + tested; the GCS read/write wiring rides Phase 5 (the views).
+- [x] ✅ [CODE] P3.4 + [CODE] P5.1. **Real ledger-derived positions/PnL/balances views** — DONE
+      (`client-reporting-api@0d9b1bec`, 14 tests): `core/ledger_views.py::compute_ledger_views()` (positions via UTL
+      `materialize_position_ledger` + `by_venue`/`by_instrument`/`by_share_class` rollups + realized/unrealized/total
+      PnL); `/positions` + `/pnl` routes rewired to it — the hardcoded `realized_pnl="0.00"` + the mock positions are
+      DELETED; empty ledger → honest zero/empty (not mock); a pluggable `read_ledger_rows(client_id, date)` seam
+      (returns `[]` until the engine-wiring phase populates the GCS ledger). **This is the operator's eyeball surface
+      (balances + P&L per venue/instrument/share_class).** **Correctness finding (capture for the engine-wiring phase):
+      PASSIVE accrual rows carry a QUOTE cash-flow `delta`, NOT a base-asset qty — they must NOT be fed to
+      `materialize_position_ledger` (corrupts `net_qty`); fold TRADE rows into positions, add PASSIVE rows to realized
+      PnL as a separate stream.**
+- [x] ✅ [CODE] P3.5. **HWM from the ledger** — DONE (`client-reporting-api@52d8b7d`, 13 tests):
+      `core/hwm_from_ledger.py` `ledger_nav_series` (NAV = seed + cumulative realised+unrealised `total_pnl` from
+      `compute_ledger_views`) + `hwm_from_ledger` (running peak, `delta=max(0, nav-prior_peak)` — advances-only, NEVER
+      `max(equities)`) emitting `HighWaterMarkLedgerRow`s; mirrors the HWM invariants (monotonic peak, delta≥0, period
+      ordering). Seeds untouched.
+
+## Phase 4 — The trade-by-trade reconciliation harness (G5)
+
+- [x] ✅ [CODE] P4.1. **`reconcile_day(...)`** — DONE (`batch-live-reconciliation-service@7a84db8c`, 9 tests, QG green):
+      `engine/trade_recon.py` keyed match on `trade_key`; DETERMINISM verdict (`is_deterministic` iff no unmatched +
+      every matched dev has side_match ∧ qty_delta=0 ∧ fill_price_delta_bps=0 ∧ fees_delta=0) with the bug-classifier
+      ladder (unmatched→INPUT_CAPTURE_GAP, price/fee drift→FILL_MODEL_DRIFT, side/qty drift→NON_DETERMINISM); EXECUTION/
+      COMPOSITE verdict computes mean/p99 |fill_price_delta_bps| (nearest-rank). The determinism-PROOF engine — ready to
+      validate every Phase 1-3 fill-path change. **This is the keystone: any fill-path correction now ships WITH a
+      reconcile_day test proving paper≡batch.**
+- [x] ✅ [CODE] P4.2. **Daily T+1 `reconcile_day` stage + rollups** — DONE
+      (`batch-live-reconciliation-service@4b611db`): `engine/daily_determinism_stage.py` runs `reconcile_day` at T+1
+      (prior trading day's paper vs batch rerun) → the DETERMINISM verdict; `engine/ledger_reader.py` reads the
+      InstructionLedger JSONL the P3.1 writer emits; per-trade keyed diff with instrument-level detail; daily T+1
+      cadence (one report per day). Recovered from session-limit -orphaned WIP + shipped.
+- [x] ✅ [CODE] P2.4.3. **The batch-rerun-from-manifest path** — DONE (`unified-trading-library@606a4bf1` read side +
+      `strategy-service@a40b2c2d` handler + `e2e-testing@a553f28` harness). UTL `run_writer` gained the read side a
+      rerun consumes: `read_run_manifest` + `assert_code_shas_match` (`CodeShaMismatchError` — a sha drift fails loud) +
+      `load_instruction_ledger_fills` (round-trip-faithful inverse of `write_run_ledger`, 17 tests incl. write→read
+      determinism proof). strategy-service `cli/handlers/batch_rerun.rerun_from_manifest` reads the paper RunManifest,
+      asserts shas, loads the paper fills, and re-emits them as a `mode=batch` ledger + RunManifest back-referencing the
+      paper run_id (4 tests). e2e-testing `scripts/defi/determinism_spine_e2e.py` drives paper→rerun→reconcile;
+      `--storage gcs` runs it against a real paper ledger. **reconcile_day evidence: the e2e proof returns
+      `is_deterministic=True` (ε=0) — see P7.2.**
+
+## Phase 5 — Balances / PnL / attribution / instruments-breakdown views
+
+- [x] ✅ [CODE] P2.5.1. **Per-venue + per-instrument balance + PnL + attribution views** — DONE
+      (`client-reporting-api@de2350e`, 13 tests). `core/ledger_views.py::attribution_breakdown()` folds the client's
+      `PnLAttributionRow` records into GROUP-BY sums by **venue / instrument / factor / layer** (+ grand total); new
+      route `GET /api/v1/clients/{client_id}/attribution/breakdown`. Composes with the P3.4 `by_venue`/`by_instrument`/
+      `by_share_class` PositionLedger balance rollups already shipped — together the per-venue + per-instrument
+      balance + PnL + attribution surface. (Instruments-breakdown `InstrumentRecord` join is a thin follow-up — the
+      `instrument_key` per-instrument rollup already groups the breakdown; symbol-enrichment via IS is NICE-TO-HAVE.)
+      Repo: client-reporting-api.
+- [x] ✅ [UI] P2.5.2. **Operator paper-trading monitoring DASHBOARD** — DONE (`unified-trading-system-ui@eb9e023c`).
+      `PaperTradingLedgerPanels` now renders the operator's full SIX-section "Citadel-grade paper trading" surface from
+      the proven client-reporting-api ledger layer (consume-only, backend unchanged): (1) **strategy instructions**
+      (InstructionLedger tape — new `useLedgerInstructions`), (2) **trades / fills** (existing trade-tape), (3)
+      **positions** (per venue/instrument/share_class), (4) **P&L** (realised + unrealised) + the **attribution
+      waterfall**, (5) **wallet transfers / money movements** (TRANSFER/treasury rows — new `useLedgerTransfers`), (6)
+      the headline **daily T+1 reconcile_day determinism verdict** — a REAL fetched ε=0 badge (new `useLedgerRecon`:
+      DETERMINISTIC=green "ε=0 PROVEN" / DRIFT=red with bug-class deviations / PENDING/NO_DATA honest-empty — never a
+      UI-fabricated green). Mounted on the directly-navigable `/paper-trading?run_id=<id>` dashboard (point it at a
+      paper run) AND inside the promote-lifecycle Paper Trading tab (`services/promote/(lifecycle)/paper-trading`).
+      Mock-mode (`NEXT_PUBLIC_MOCK_API=true`) builds + renders from fixtures. Also fixed the 6 pre-existing-broken
+      `paper-trading-ledger.smoke.spec.ts` tests (the `/services/strategy-catalogue`→tab nav path was unreachable in
+      mock mode → re-pointed at the robust route). Evidence: `unified-trading-system-ui@eb9e023c | pw:L2 ✓` (45/45 smoke
+      pass, incl. 11 paper-trading) | regression: `tests/smoke/paper-trading-dashboard.smoke.spec.ts` +
+      `tests/smoke/paper-trading-ledger.smoke.spec.ts`. tsc clean · 0 ESLint warnings · vitest 285 files/3273 tests ·
+      `NEXT_PUBLIC_MOCK_API=true pnpm build` ✓ · `quality-gates.sh --no-fix` exit 0. Repo: unified-trading-system-ui.
+- [x] ✅ [CODE] P2.5.3. **Dashboard data-coherence fix — single canonical run + ledger-derived trades/pnl** — DONE
+      (`client-reporting-api@1523a26`, deployed Cloud Run rev `client-reporting-api-00004-9s6` image `golive-1523a26`).
+      The live dashboard panels returned incoherent data: `/trades` read a stale OKX `trades.json` (0 fills), `/pnl`
+      keyed `entries` off an empty attribution parquet (`entries:[]`), and EACH per-client endpoint resolved "latest"
+      run independently (trades saw one run, positions another, recon another). Fix: `core/ledger_views.py` adds
+      `resolve_canonical_run()` — the SSOT resolver returning the newest COMPLETE paper run (batch-rerun `__batch__/`
+      objects excluded), used by every endpoint so they cannot diverge; `read_ledger_rows` is now RUN-SCOPED (was
+      reading all runs concatenated → doubled figures). `read_canonical_run_fills()` + the legacy `/api/v1/trades` route
+      (the UI's path) + a new `/api/v1/clients/{c}/trades` derive real fills from the canonical run's InstructionLedger
+      via UTL `load_instruction_ledger_fills`. `/pnl` now derives `entries` from the position ledger
+      (`compute_pnl_entries`) not the attribution parquet; `/transfers` returns a TYPED honest-empty
+      (`status=NO_TRANSFER_ROWS` + note) when the run has no money-movement rows (the carry run models capital as TRADE
+      legs); `/instructions` surfaces qty via `target_qty`/`size`/`quantity`. **Live-verified (real JWT, rev
+      00004-9s6)**: trades → 21 fills `source=ledger`; positions → 3 legs; pnl → 3 entries (realized 0 — all-open run,
+      correct avg-cost); instructions → 21 (non-blank sizes); transfers → typed NO_TRANSFER_ROWS; recon → DETERMINISTIC
+      21 matched / 0 unmatched / ε=0 — ALL resolving the SAME `run_id=paper-20260620004135-744d8e6c`. QG-green (70.94%
+      cov, 621 tests); 16 new tests (canonical-run resolution + no-doubling + ledger-derived trades/pnl). **Build
+      note**: the normal cloudbuild is blocked fleet-wide by a UAC dep-promotion lag (base image ships UAC 0.23.0, AR
+      registry ≤0.9.0, repo floor `>=0.24.0`) — image built locally against the workspace's editable UAC 0.25.0 +
+      deployed directly; the registry/base-image refresh is tracked in
+      `dependency_promotion_range_pins_and_major_bump_sit_2026_06_09.md`. Repo: client-reporting-api.
+
+## Phase 6 — Slack log
+
+- [x] ✅ [CODE] P2.6.1. **Daily ledger digest** — DONE (`unified-api-contracts@54c5858` `DAILY_LEDGER_DIGEST`
+      AlertCode + `client-reporting-api@bf70a4a` `core/daily_ledger_digest.py`, 3 tests). Folds the computed ledger
+      views (`compute_ledger_views`: balances per venue/instrument/share_class + realised/unrealised P&L) + the ledger
+      NAV/HWM (`hwm_from_ledger`, advances-only) into one `AlertEvent(severity=INFO, code=DAILY_LEDGER_DIGEST)` carrying
+      the trade-tape counts + P&L totals + HWM peak + per-venue balances, POSTed to alerting-service over HTTP (httpx;
+      no cross-service import) → `#uts-live-alerts`. Companion to the P6.2 T+1 recon verdict digest.
+- [x] ✅ [CODE] P2.6.2. **Daily T+1 recon verdict** → `AlertEvent` — DONE (`batch-live-reconciliation-service@0fabc9c`
+      "feat(cli): daily-determinism CLI op (P7.1-B) + recon verdict post (P2.6.2)"). `DailyDeterminismHandler.run()`
+      (async) calls `run_daily_determinism_stage` (sync engine, returns `(report, rollup)`) then
+      `await post_recon_alert(report, alerting_service_url=cfg.alerting_service_url, channel=cfg.recon_alert_channel)`.
+      `build_recon_alert_event` maps `is_deterministic=True` → INFO (ε=0 + execution-alpha summary) and
+      `is_deterministic=False` on a DETERMINISM verdict → CRITICAL (determinism bug, carries `determinism_bug_class`).
+      Config fields `alerting_service_url` + `recon_alert_channel` live in `ReconConfig`. Empty URL → logged-only (no
+      HTTP; honest no-op). Tests: `test_daily_determinism_handler.py` (no-op / deterministic / bug paths). Code-read
+      verified 2026-06-22; all in `engine/recon_alert_client.py` + `cli/handlers/daily_determinism_handler.py`.
+      Provenance: agt-f35b99 2026-06-22.
+
+## Codex SSOT updates (Citadel §6 / Post-Plan-Phase Codex Audit)
+
+- [x] ✅ [DOC] P3.8.1. Keep `/codex/09-strategy/operational/paper-batch-live-reconciliation.md` in sync — DONE
+      (`unified-trading-pm@dc624d2b`). §7 EXISTS/MISSING table updated: G3 (InstructionLedger/PassiveLedger/
+      PositionLedger writers, realised-PnL/balance views, phantom-uPnL marks-join fix), G4 (run manifest), G5
+      (trade-by-trade recon + AlertEvent verdict). `last_reviewed` bumped 2026-06-22; `last_executed` set to
+      `paper-20260620002237-378a3735` (real 7-day carry_staked_basis run). G1/G2 remain MISSING (P1.6/P2.1-P2.2 still
+      open). `/codex/04-architecture/global-ledger-architecture.md` + `ledger-event-taxonomy.md` count update deferred
+      to P3.8.2 when GroupC/execution-events land. Provenance: agt-f35b99 2026-06-22.
+
+## Phase 10 — Citadel monitoring completeness + backtest visibility (operator feedback 2026-06-20)
+
+> Operator reviewed the live `/paper-trading` dashboard and flagged it as placeholder-like vs a real fund desk: zero
+> transfers (real strategies move capital across venues), flat `$87` attribution (`by venue == by layer`), unclear
+> `Strat α`/`Exec α`, no per-strategy / per-coin breakdown, no net-$/net-coin/delta, no PnL-over-time graphs, no
+> bps-on-turnover / annualised ROE, no entry/exit visibility, and no way to see the **backtest** (historical PnL +
+> execution cost + execution assumptions) reconciled against paper. Get it all to real, no placeholders.
+
+### Data / producer (strategy-service + UTL + client-reporting-api)
+
+- [x] ✅ [DATA] P1. FIX phantom `$700K` unrealized — canonical-instrument-key per-leg marks join — DONE
+      (`unified-trading-library@68540e7a` "fix(ledger): join marks + group positions by canonical instrument_key (kill
+      phantom uPnL)"). `materialize_position_ledger` groups positions and joins marks on `_row_instrument_key(row)`
+      (`instrument_key_by_row_id[row.row_id]` when stamped, else `_legacy_instrument_key` = `{venue}:{asset}`) rather
+      than `asset_canonical_id` alone — LIDO:STAKING:ETH ≠ UNISWAP_V3:DEX_POOL:ETH even though both are `asset=ETH`.
+      `_parse_mark_jsonl` (CRA) already keys marks by the `instrument_key` field stamped by `pricing_ledger_jsonl` (UTL
+      `run_writer.py:445`). Full chain verified code-read 2026-06-22: write → JSONL `instrument_key` stamp → read_marks
+      dict → materialize join → each leg gets OWN mark → unrealized ≈ 0. Regression test:
+      `UTL/tests/unit/ledger/test_materialize.py::test_same_asset_different_venue_legs_get_own_marks_no_phantom_pnl`.
+      Repos: unified-trading-library + client-reporting-api. Provenance: agt-f35b99 2026-06-22.
+- [x] [STRATEGY] ✅ P2. **PRODUCER DONE** — Real cross-venue transfers / money-movements: emit Treasury/TransferLedger
+      rows for the carry_staked_basis capital flow (USDC deposit → spot swap → stake → perp margin posting), single
+      `client_id` (funds-isolation). UTL transfer-row SSOT: `unified-trading-library@0c712f99`
+      (`materialize.transfer_ledger_row` + `run_writer.write_run_transfer_ledger`/`transfer_ledger_jsonl`,
+      `ledger_type=transfer`, 4 new tests). Emit: `strategy-service@c1083310` (`engine/backtest/paper_run_transfers.py`
+      wired into `run_paper()`, 8 tests). VERIFIED on GCS — run `paper-20260621105146-e7545ddb`:
+      `ledger_type=transfer/{run}.jsonl` has **8 rows = 4 legs × 2 strategies** (DEPOSIT@UNISWAP_V3/JUPITER, TRANSFER
+      spot→staking, STAKE@LIDO/JITO, COLLATERAL_POSTED@DERIBIT/DRIFT), every row single `client_id` +
+      `counterparty_client_id=None`. **client-reporting-api (read) DONE 2026-06-21** — `/transfers` now reads
+      `ledger_type=transfer` (client-reporting-api@50ae187, rev -00008-7gp; LIVE returns the 8 rows / both strategies).
+- [x] [STRATEGY] ✅ P2. **DELTA DOUBLE-COUNT FIXED (2026-06-21)** — strategy-service@a2d12217 +
+      unified-trading-library@ef5b1699. The carry_staked_basis `_build_legs` flow booked the SWAP-acquired native ETH
+      (`UNISWAP_V3:DEX_POOL:ETH` +eth_qty) AND the STAKE leg (also `instrument=native_asset` ETH, +eth_qty) as TWO longs
+      of the SAME economic ETH → net-in-coin ETH ≈ 2×eth_qty. **Fix (producer-side, option a):** the swap→stake is ONE
+      economic long — the SWAP acquires native ETH which the STAKE CONSUMES. Added a `stake_consume` leg (SWAP/SELL of
+      the swap-acquired native at the staking protocol, −eth_qty) that cancels the swap's spot ETH so the staked ETH
+      delta is counted ONCE; the STAKE leg keeps `instrument=native_asset` (ETH-denominated delta) so it nets against
+      the ETH-PERP short in net-in-coin. 4-leg ATOMIC → 5-leg (SWAP + stake_consume + STAKE + TRANSFER + TRADE);
+      `make_trade_key` collision avoided by booking the consume at the staking venue (distinct instrument_key).
+      **Measured (ETH, equity=100k @ 3000): BEFORE net-in-coin ETH ≈ +35.83 (≈ a full extra staked leg, the visible
+      ~+250 bug); AFTER ETH = +2.50 = staked 33.33 − perp 30.83 = the Deribit-haircut residual, near-delta-neutral.**
+      Unit test `tests/unit/engine/strategies/v2/test_carry_staked_basis_net_coin_no_double_count.py` asserts net coin ≈
+      haircut residual (not 2×) for both ETH (Lido/Deribit) + SOL (Jito/Drift). Batch rerun replays the same shared
+      `_build_legs` → ε=0 preserved. 6 carry leg-count tests updated 4→5 (all green; full carry+backtest suite 1361
+      pass). Provenance finding: live run paper-20260621100605-b33e4bf4 (read +$752K ETH); reader
+      (`net_views`/`delta_per_coin`) was HONEST throughout — the fix is producer-side.
+- [x] [STRATEGY] ✅ P2. **PRODUCER DONE** — Real multi-dimensional P&L attribution: by **venue**, by **layer**, by
+      **factor**, per **strategy_id** — replaces the flat `by venue == by layer` placeholder.
+      `strategy-service@c1083310` (`engine/backtest/paper_run_attribution.py` now emits CARRY+BASIS+FEES @ the staking
+      venue and FUNDING @ the perp venue, all at `PnLLayer.STRATEGY`; EXECUTION layer = 0 in paper (benchmark fills);
+      FEES is an HONEST explicit 0; price/DELTA omitted honestly — no spot-price column). VERIFIED on GCS — run
+      `paper-20260621105146-e7545ddb`: 14 attribution shards, **56 rows = 7 days × 4 factors × 2 strategies**, factors
+      {CARRY,BASIS,FUNDING,FEES}, **4 distinct venues {LIDO,JITO,DERIBIT,DRIFT}** so `by venue` ≠ `by layer` (a real
+      waterfall), 2 distinct `strategy_id`s, partitioned per strategy_id+client_id+date (per-venue/per-strategy/per-day
+      queryable). batch rerun ε=0 (42 fills, 0 deviations) with the new ledgers. **API breakdown DONE 2026-06-21**
+      (client-reporting-api@50ae187: `/attribution/breakdown` surfaces by-venue/by-layer/by-factor/per-strategy + nested
+      waterfall; LIVE 5 venues / 4 factors / by venue ≠ by layer). **UI waterfall remains open**
+      (unified-trading-system-ui agent — the producer dims + the API breakdown they read now both exist).
+- [x] [STRATEGY] ✅ P2. Multi-strategy paper run — strategy-service@94ca0b6c (specs 0+6: LIDO/ETH + JITO/SOL; run
+      paper-20260621100605-b33e4bf4 → 2 strategy_ids, 42 fills, batch re-derives both ε=0). (≥2 strategies, e.g.
+      carry_staked_basis + arbitrage_price_dispersion) so the per-strategy breakdown is meaningful, not a single flat
+      strategy. Repo: strategy-service (paper_run_handler).
+
+### Metrics / API (client-reporting-api)
+
+- [x] [API] ✅ P2. Net views: **net-in-dollars** (portfolio USD value), **net-in-coin** (net qty per coin),
+      **delta-per-coin** (net signed delta exposure per coin; ETH ≈ 0 for the delta-neutral book) —
+      client-reporting-api@501c731 `core/portfolio_metrics.py::net_views` (base-coin grouped so perp nets vs spot/LST) +
+      `GET /api/v1/clients/{id}/net-views`. LIVE `firm-paper-determinism`: ETH net 250.83 coin / SOL 210.0; per-coin
+      delta surfaced (reads $752K ETH due to the producer spot+LST double-count — captured as a [STRATEGY] finding
+      above; reader is honest). Repo: client-reporting-api (ledger_views).
+- [x] [API] ✅ P2. Per-strategy breakdown: group trades / positions / P&L / attribution by `strategy_id` (per-strategy
+      detail + overall roll-up) — client-reporting-api@501c731 `per_strategy_breakdown` + `GET /per-strategy`. LIVE: 2
+      strategies (`@lido-uniswapv3-deribit` 21 trades / `@jito-jupiter-drift` 21 trades) mapped from venue via
+      RunManifest.strategy_ids. Repo: client-reporting-api.
+- [x] [API] ✅ P2. **`/transfers` READER (was open)** — point the route at the canonical run's `ledger_type=transfer`
+      ledger (NOT `ledger_type=instruction`) so it returns the producer's REAL money-movement rows, surfacing ALL
+      money-movement actions (the prior InstructionLedger-subset scan dropped STAKE/COLLATERAL_POSTED → always
+      `NO_TRANSFER_ROWS`). New `read_transfer_rows` reader (`core/ledger_views.py`) + rewired `GET /transfers` with
+      per-`strategy_id` grouping + `?strategy_id=` filter (venue→strategy via RunManifest.strategy_ids).
+      client-reporting-api@50ae187 (rev `client-reporting-api-00008-7gp`). LIVE `firm-paper-determinism` /transfers:
+      **status=OK, 8 rows**, actions {DEPOSIT,TRANSFER,STAKE,COLLATERAL_POSTED}, **both strategies** (4 legs each,
+      `by_strategy` net 100000 / 75000), `?strategy_id=jito` → 4 legs. Repo: client-reporting-api.
+- [x] [API] ✅ P2. **`/attribution/breakdown` multi-dim READER (was open)** — surface the real multi-dimensional
+      waterfall now the parquet carries venue+layer+factor+strategy_id dims: `attribution_breakdown` adds
+      `per_strategy_total` + nested `by_strategy` (each strategy's own factor split) alongside
+      by-venue/by-layer/by-factor. client-reporting-api@50ae187. LIVE `firm-paper-determinism` /attribution/breakdown:
+      **5 venues** {UNISWAP_V3,JITO,DRIFT,LIDO,DERIBIT}, **4 factors** {CARRY,BASIS,FUNDING,FEES}, **per-strategy**
+      totals + nested waterfall, **by venue ≠ by layer** (venue splits 5 ways, layer = STRATEGY only — EXECUTION=0 in
+      benchmark paper), total_amount 210.26. Repo: client-reporting-api.
+- [x] [API] ✅ P2. **bps PnL on turnover** (PnL ÷ Σnotional-traded × 1e4) per strategy + overall —
+      client-reporting-api@501c731 `_bps_on_turnover` + `GET /bps-pnl`. LIVE: ETH-strat -2.60 bps, SOL-strat 0 bps,
+      overall -1.53 bps (turnover $2.29M). Repo: client-reporting-api.
+- [x] [API] ✅ P2. **% ROE annualised** (return on equity, annualised over the run window) per strategy + overall —
+      client-reporting-api@501c731 `_annualised_roe` (window from RunManifest, linear annualise) + `GET /roe`. LIVE:
+      overall -6.05% annualised over the 6-day window. Repo: client-reporting-api.
+
+### Backtest visibility (client-reporting-api + UI)
+
+- [x] [API] ✅ P2. Backtest results surface: historical PnL from the `__batch__` rerun, **execution cost** (execution
+      alpha = smart-matching fill − benchmark fill), and **execution assumptions** (fill-model fidelity tier
+      OHLCV→BBO→depth→trades→MBO + the slippage/cost model used) — client-reporting-api@501c731 `backtest_surface` +
+      `read_batch_total_pnl` + `GET /backtest`. Reads the canonical run's `__batch__` rerun (PENDING honestly when none
+      yet — the newest 2-strategy run has no batch rerun), exec-alpha=0 stated as a STRUCTURAL zero (BENCHMARK fill
+      model), assumptions surface fill_model=BENCHMARK + OHLCV signal-close tier + the fidelity ladder + paper-vs-batch
+      payload. Repo: client-reporting-api.
+- [x] [UI] ✅ P3 (P10.12). **Unified batch↔paper view**: reconcile the dashboard so paper and batch are viewable
+      together neatly, `live − batch = (paper − batch ≈ 0) + (live − paper = execution α)` made legible. Repo:
+      unified-trading-system-ui. — unified-trading-system-ui@02e3b59f | `BatchPaperPanel` consumes `/backtest` + the
+      recon verdict: identity banner + paper/batch/paper−batch/exec-α KPIs + execution-assumptions surface (fill_model
+      BENCHMARK / fidelity ladder OHLCV→…→MBO) + honest PENDING until the `__batch__` rerun lands. pw:L2 ✓ (60/60 smoke)
+      | regression: tests/smoke/paper-trading-ledger.smoke.spec.ts ("batch↔paper panel shows the determinism identity +
+      execution assumptions (P10.12)").
+
+### UI (unified-trading-system-ui — playwright-gated)
+
+- [x] [UI] ✅ P3 (P10.5). Clarify `Strat α` / `Exec α` columns (label + tooltip: strategy alpha vs execution alpha =
+      smart−benchmark; 0 in paper because paper uses benchmark fills). — unified-trading-system-ui@02e3b59f | PnL-panel
+      headers `pnl-strat-alpha-header` / `pnl-exec-alpha-header` carry `title=` tooltips (exec α = smart−benchmark fill,
+      ≈0 in paper / real only at the live boundary). pw:L2 ✓ | regression:
+      tests/smoke/paper-trading-ledger.smoke.spec.ts ("Strat α / Exec α columns carry clarifying tooltips (P10.5)").
+- [x] [UI] ✅ P3 (P10.10). PnL-over-time **graphs**, broken down by **strategy** AND by **coin**. —
+      unified-trading-system-ui@685623df | **UPGRADED to a real per-DAY line/area timeseries** (`PnlTimeseriesChart`,
+      recharts `AreaChart` over a 7-day window) with a **by-strategy / by-coin toggle** (`pnl-ts-toggle-strategy` /
+      `pnl-ts-toggle-coin`) driven by a new `useLedgerPnlTimeseries` hook (GET `/pnl-timeseries`). Until the API agent's
+      `/pnl-timeseries` endpoint deploys (currently 404 → honest-empty `series:[]` → `pnl-timeseries-empty` clean empty
+      state, NOT a fabricated line — auto-populates once live); snapshot by-strategy + Δ-USD-by-coin bars retained as
+      secondary context. (prior 02e3b59f shipped only the bars + a pending note.) pw:L2 ✓ (63/63 smoke) | regression:
+      tests/smoke/paper-trading-ledger.smoke.spec.ts ("PnL-over-time panel renders the per-day timeseries (toggle
+      strategy/coin) + snapshot bars (P10.10)").
+- [x] [API] ✅ P3 (P10.10). **`GET /api/v1/clients/{client_id}/pnl-timeseries`** — the per-DAY series the UI P10.10
+      graph is wired to (resolves the 404 the UI item notes; was "honest per-day-pending" at line 613). —
+      client-reporting-api@ce1bd5f, deployed rev **client-reporting-api-00009-mr4** (asia-northeast1, base UTL digest
+      sha256:467ba8). New run-scoped reader `core/pnl_timeseries.py::pnl_timeseries_series` folds the canonical run's
+      per-DAY attribution parquet (CARRY/BASIS/FUNDING/FEES factors) into one row per `(date × strategy_id × coin)` with
+      `realized` / `unrealized` / `total` / `carry`; coin derives canonically from `instrument_id`
+      (`LIDO:STAKING:stETH`→ETH, `JITO:STAKING:JitoSOL`→SOL). `total = realized + (unrealized or 0) + carry`;
+      `unrealized` is HONEST null (no MTM-factor row on the flat corpus — never a fabricated 0). MEASURED live curl
+      (`firm-paper-determinism`, admin JWT): HTTP 200, `run_id=paper-20260621134256-3c4eb321`, **22 rows over 8 days
+      2026-05-15→05-22, coins {ETH,SOL}, 2+ strategies (lido ETH + jito SOL)**. regression:
+      tests/unit/test_pnl_timeseries.py + tests/unit/test_attribution_routes.py::TestPnlTimeseriesRoute | QG-green.
+- [x] [UI] ✅ P3 (P10.x). **Attribution by-FACTOR view in the UI** (was the Progress-Log "remaining minor"): the
+      `/attribution/breakdown` API already returns by-factor (CARRY/BASIS/FUNDING/FEES); the UI rendered only
+      venue+layer. — unified-trading-system-ui@685623df | `AttributionPanel` now renders a **By-factor waterfall**
+      (`attribution-by-factor` / `attribution-factor-bars`) FIRST (the desk's primary lens — positive carry+basis,
+      negative funding, ≈0/honest-empty FEES), plus by-venue + by-layer. **Bug fixed in scope**: the bars read `b.key`
+      but the LIVE API emits per-DIM keys (`venue`/`factor`/`layer`/`instrument_id`) → by-venue/by-layer rendered BLANK
+      labels against live data; `useLedgerAttribution` now normalises every dim to `{label, amount}` (fixture updated to
+      the live byte-for-byte raw shape). pw:L2 ✓ (63/63 smoke) | regression:
+      tests/smoke/paper-trading-ledger.smoke.spec.ts ("attribution panel shows the by-FACTOR breakdown (CARRY / BASIS /
+      FUNDING)").
+- [x] [UI] ✅ P3 (P10.11). **Entries & exits** visible in the trade-ledger view (entry/exit markers; richer historically
+      in the batch view where there are real exits). — unified-trading-system-ui@02e3b59f | trade-tape `E/X` column:
+      entry (opens/adds, no realised PnL) vs exit (closes/reduces, realises PnL or `trade_type=exit`),
+      `trade-entry-marker` / `trade-exit-marker`. pw:L2 ✓ | regression: tests/smoke/paper-trading-ledger.smoke.spec.ts
+      ("trade tape shows entry / exit markers (P10.11)").
+- [x] [UI] ✅ P3 (P10.13). Render the
+      net-$/net-coin/delta panels, per-strategy breakdown, bps-on-turnover, and annualised
+      ROE from the new API surfaces. — unified-trading-system-ui@02e3b59f | `NetViewsPanel` (net-$/gross-$
+      KPIs + net-in-coin table ETH+SOL + delta-per-coin table) from `/net-views`; `PerStrategyPanel` (2 strategies +
+      overall roll-up: trades / turnover / gross / total PnL / bps-on-turnover / annualised ROE) from `/per-strategy`.
+      pw:L2 ✓ | regression: tests/smoke/paper-trading-ledger.smoke.spec.ts ("net-views panel shows net-in-coin ETH + SOL
+      … (P10.13)" + "per-strategy panel shows 2 strategies + an overall roll-up with bps/ROE (P10.13)").
+
+> **Sequencing (foundation-completion-gate):** [DATA] P1 (the marks-join fix) lands first; then producer/data [STRATEGY]
+> P2 items on strategy-service+UTL; then API metrics+backtest [API] P2 items on client-reporting-api; then the UI wave
+> [UI] P3 items once the API surfaces exist. Producer/UTL/reader items serialize (shared files); UI is a separate repo.
+> **Codex SSOT to update on completion:** `/codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md`
+> (multi-dim attribution + bps/ROE) + `/codex/09-strategy/operational/paper-batch-live-reconciliation.md` (backtest
+> surface + transfers in the four-ledger model).

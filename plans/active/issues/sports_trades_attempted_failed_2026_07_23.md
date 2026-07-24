@@ -55,7 +55,7 @@ tags:
 related:
   [
     /plans/active/issues/sports_trades_venue_fetch_failed_2026_07_15.md,
-    ../sports_master_closeout_2026_07_21.md,
+    ../../archive/2026_07/sports_master_closeout_2026_07_21.md,
     ../sports_consolidated_closeout_2026_07_19.md,
     ../data_pipeline_alerts_batch_remediation_2026_07_15.md,
     ../../archive/issues/dp_run_mostly_empty_no_recurring_dedup_2026_07_15.md,
@@ -217,7 +217,7 @@ population, and not evidence anything broke.**
       cell's `DP_RUN_MOSTLY_EMPTY` ratio purely as a denominator side-effect. Not urgent (the underlying cell being
       dead/already-tracked means no action was actually needed here), but worth a one-line runbook note so a future
       on-call doesn't re-diagnose this from scratch. Repo: `deployment-service`.
-- [ ] [VERIFY] P3. Once `sports_master_closeout_2026_07_21.md`'s K1/K2 work is fully flipped to done and the DELETE of
-      old non-canonical objects eventually executes (operator-gated), re-check this cell's ratio settles back down as
-      expected once the legacy lowercase `data_type=="trades"` population's dead-residue rows are themselves
+- [ ] [VERIFY] P3. Once `sports_master_closeout_2026_07_21.md`'s (archived) K1/K2 work is fully flipped to done and the
+      DELETE of old non-canonical objects eventually executes (operator-gated), re-check this cell's ratio settles back
+      down as expected once the legacy lowercase `data_type=="trades"` population's dead-residue rows are themselves
       migrated/purged rather than left as an orphaned denominator-shrunk remnant.

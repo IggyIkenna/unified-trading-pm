@@ -63,7 +63,7 @@ Tier 1 (in-session, no VM) — no Tier-2 100%-corpus per-datapoint validation di
 
 **Context**: this reconciliation ran at the end of a long same-day session that executed the league_id relocation's
 manifest-swap (`mtds@250d377b`), a full MDPS `odds_horizon_bucket` reprocess (2,236 days), and a coverage-registry
-refresh (`uac@8e8d2e5b`) — see `plans/active/sports_master_closeout_2026_07_21.md` Progress Log for the full trail.
+refresh (`uac@8e8d2e5b`) — see `sports_master_closeout_2026_07_21.md` (archived) Progress Log for the full trail.
 Several of the findings below are direct, live confirmations of gaps already surfaced during that work.
 
 ## Bucket paths
@@ -119,13 +119,14 @@ the odds/trades family specifically — narrower and more current than that plan
 **league_id — RESIDUAL non-canonical rows found, matches an ALREADY-OPEN todo, not a new finding**: within the
 odds/trades shape, **6,110 rows** still carry a raw lowercase `soccer_*` league_id (e.g. `soccer_epl`: 341 rows,
 `soccer_spain_la_liga`: 336, ... — full long-tail), all dated **2025-07-31 .. 2025-12-31**. This is the
-`mtds_t2_6_league_case_duplicate_population` phantom-row population named in `sports_master_closeout_2026_07_21.md`'s
-still-open todo ("Prune the twin-delete phantom manifest rows" — the underlying GCS objects were already
-crc-verified-identical to their `SOCCER_*` twins and DELETED; these are now manifest-only phantom rows). **Progress
-since that todo was last measured**: it cited 7,295 rows; live count today is 6,110 — ~1,185 were incidentally cleaned
-by this session's relocation manifest-swap CAS-remove pass, but the todo's own full prune did not run and remains
-genuinely open. Elsewhere in the manifest, league_id is fully canonical for the odds/trades shape (0 other non-uppercase
-values found beyond this known population).
+`mtds_t2_6_league_case_duplicate_population` phantom-row population named in `sports_master_closeout_2026_07_21.md`
+(archived)'s still-open todo, now folded into `sports_consolidated_closeout_2026_07_19.md` Track S ("Prune the
+twin-delete phantom manifest rows" — the underlying GCS objects were already crc-verified-identical to their `SOCCER_*`
+twins and DELETED; these are now manifest-only phantom rows). **Progress since that todo was last measured**: it cited
+7,295 rows; live count today is 6,110 — ~1,185 were incidentally cleaned by this session's relocation manifest-swap
+CAS-remove pass, but the todo's own full prune did not run and remains genuinely open. Elsewhere in the manifest,
+league_id is fully canonical for the odds/trades shape (0 other non-uppercase values found beyond this known
+population).
 
 **Cross-AG bleed** (`asset_group=prediction` rows physically in the `instruments-store-sports-prd` index) — re-measured
 this session (see `sports_master_closeout_2026_07_21.md` Progress Log): **11,727 rows**, growth halted as of the writer

@@ -57,7 +57,7 @@ related:
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
     /codex/02-data/sports-2020-06-data-floor.md,
     /codex/02-data/sports-gcs-path-ssot.md,
-    ../sports_master_closeout_2026_07_21.md,
+    /plans/archive/2026_07/sports_master_closeout_2026_07_21.md,
     ../migration_verification_orphan_safety_2026_06_10.md,
   ]
 created: 2026-07-22
@@ -333,9 +333,9 @@ Recommended next steps, in priority order:
       classify `C3_pre_launch_window` instead of `B_legacy_duplicate` (mirrors the fix already shipped for the `E` class
       in `sports_pre_floor_fixtures_orphan_misclassification_2026_07_22.md`, `unified-api-contracts@46d865df` — this is
       the same bug on a different branch of the same function, not yet fixed there).
-- [ ] 5. [REVIEW] P3. Cross-file `sports_master_closeout_2026_07_21.md`'s pending "MANIFEST prune" deferred task — the
-      944,776 phantom pre-floor manifest rows it already tracks are the root cause of §2's misclassification here too;
-      pruning them removes the `is_covered_sports` false-positive at the source.
+- [ ] 5. [REVIEW] P3. Cross-file `sports_master_closeout_2026_07_21.md`'s (archived) pending "MANIFEST prune" deferred
+      task — the 944,776 phantom pre-floor manifest rows it already tracks are the root cause of §2's misclassification
+      here too; pruning them removes the `is_covered_sports` false-positive at the source.
 
 ## Artifacts (durable, read-only, mirror the sweep's own audit-parquet convention)
 

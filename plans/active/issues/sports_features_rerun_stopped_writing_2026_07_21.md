@@ -21,7 +21,7 @@ related:
   [
     /plans/active/issues/sports_derived_features_fabricated_corpus_scope_2026_07_20.md,
     ../sports_consolidated_closeout_2026_07_19.md,
-    ../sports_master_closeout_2026_07_21.md,
+    ../../archive/2026_07/sports_master_closeout_2026_07_21.md,
   ]
 created: "2026-07-21"
 source: Track F pre-purge safety census (2026-07-21)

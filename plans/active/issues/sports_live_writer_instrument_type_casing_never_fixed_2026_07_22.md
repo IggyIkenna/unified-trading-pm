@@ -39,7 +39,7 @@ related:
   [
     ../sports_consolidated_closeout_2026_07_19.md,
     /plans/active/issues/sports_league_id_namespace_migration_2026_07_20.md,
-    ../sports_master_closeout_2026_07_21.md,
+    /plans/archive/2026_07/sports_master_closeout_2026_07_21.md,
     /codex/02-data/canonical-cutover-register.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
   ]
@@ -197,8 +197,8 @@ partially done.
 - [ ] 3. [REVIEW] P2. Once shipped + deployed, re-verify empirically: capture a live day post-fix, confirm the new GCS
       objects AND manifest rows are `ODDS`/`TRADES` (not just code-reviewed).
 - [ ] 4. [DATA] P2. Only after todos 1-3 land AND are verified live: re-scope the "gated delete of old non-canonical
-      objects" in `sports_master_closeout_2026_07_21.md` to a genuinely one-time historical cleanup (today, the delete
-      candidate set grows by 1 day's worth of new non-canonical objects every day this fix is not live).
+      objects" in `sports_master_closeout_2026_07_21.md` (archived) to a genuinely one-time historical cleanup (today,
+      the delete candidate set grows by 1 day's worth of new non-canonical objects every day this fix is not live).
 
 ## RE-TRIAGE (2026-07-23)
 
