@@ -164,12 +164,30 @@ source:
       is skipped untouched, a live claim from a DIFFERENT session is protected, a clean tree is a no-op, a missing
       worktree doesn't raise. Every inherit test confirmed the resolved activity row carries NO adjacent spawn-family
       event. Full `quality-gates.sh` green (1626 tests, ruff + basedpyright clean) before shipping via quickmerge.
-- [ ] [INFRA] P2. Escalate the liveness watchdog from soft-kick to hard-kill plus respawn after N consecutive frozen
+- [x] ✅ [INFRA] P2. Escalate the liveness watchdog from soft-kick to hard-kill plus respawn after N consecutive frozen
       observations, and make the counter survive the reset that defeated it. `kick_escalation_threshold` already exists
       and shipped 2026-07-09, but the 2026-07-21 incident (55 kicks in 3h, only 7 counted as `worker_kick_failed`) is
       live proof it did not trip — `ping_advanced`/`post_class=="working"` kept resetting `_consecutive_kick_failures`
       to 0 before it reached the threshold. Fix the reset condition, not the threshold value. **Gate**: a test where a
-      worker that keeps answering pings while making no progress still escalates to hard-kill.
+      worker that keeps answering pings while making no progress still escalates to hard-kill. —
+      agent-orchestrator@2a48eda2f: decoupled the escalation streak from the OR-based `kick_ok` verdict in
+      `server/worker_liveness/__init__.py::_tick_once`. `kick_ok`/`event_type` stay OR-based
+      (`post_class=="working" or     ping_advanced`) for the activity-log only; `_consecutive_kick_failures` now resets
+      — and the auto-respawn check is only skipped — on `post_class=="working"` ALONE (a verified pane spinner), never
+      on `ping_advanced` alone. The escalate-check itself moved out from behind `if not kick_ok:` to
+      `if not genuinely_recovered:`, since the old gating skipped the auto-respawn call entirely on every ping-advanced
+      tick regardless of streak length. Also cleared the streak on a genuinely-working pane observed via the ordinary
+      top-of-tick classification branch (not just the post-kick verify window), so a worker that fully recovers doesn't
+      carry a stale near-threshold count into an unrelated later blip — a correctness gap the original
+      reset-on-`kick_ok` design would have re-introduced the moment `ping_advanced` stopped being trusted.
+      `tests/test_worker_liveness.py`: updated `test_ping_advance_counts_as_kick_success` (ping-advance alone no longer
+      suppresses the non-forced auto-respawn call, only forced escalation) + 2 new tests —
+      `test_worker_that_keeps_pinging_without_progress_still_escalates_to_hard_kill` (3 consecutive ping-advanced,
+      never-working ticks → `force=True` on the 3rd, matching `kick_escalation_threshold`) and
+      `test_confirmed_working_pane_clears_stale_kick_failure_streak` (2 failures → 1 genuine top-branch working
+      observation clears the streak → next failure starts over at 1, not 3). All 3 confirmed FAILING against the pre-fix
+      code (`git stash` on the source file only) and PASSING against the fix before shipping. Full `quality-gates.sh`
+      green (1617 passed, 1 skipped, ruff + basedpyright clean) on the shipped SHA.
 - [ ] [INFRA] P2. Add a reclaim-and-push path for a killed or idle slot whose worktree holds committed-but-unpushed
       work. `orphan_reap.py` reaps processes and tmux only — its own docstring says so, and it contains no git logic —
       while `_maybe_send_sync_nudge` merely enqueues a slot message, which is a no-op on a dead worker. Note
@@ -271,3 +289,26 @@ source:
   `slot_dirty_state_resolved` activity row tagged `trigger: "watchdog_sweep"` and NO adjacent spawn event (the gate); a
   live-own-tmux slot is skipped untouched; a live claim from a different session is protected; a clean tree is a no-op;
   a missing worktree doesn't raise. Full `quality-gates.sh` green (1626 tests) before quickmerge.
+
+- **2026-07-24 (slot 3)**: Item 8 shipped (`agent-orchestrator@2a48eda2f`, citation inline on its checkbox above) — the
+  kick-escalation streak (`_consecutive_kick_failures`) is now reset, and the auto-respawn check now short-circuited,
+  ONLY on a verified `post_class=="working"` pane; `ping_advanced` alone no longer does either. Root cause confirmed by
+  reading `_tick_once`: `kick_ok = post_class=="working" or ping_advanced` gated BOTH the counter reset AND (via
+  `if not kick_ok:`) whether the auto-respawn/escalation check ran at all — so a worker satisfying `ping_advanced` on
+  nearly every tick (answering heartbeats while never actually resuming work) never even reached the escalation check,
+  exactly the 2026-07-21 incident signature (55 kicks/3h, only 7 counted `worker_kick_failed`). Fix scope stayed
+  strictly to the reset condition per the todo's instruction (threshold value `kick_escalation_threshold` untouched).
+  Also closed a latent correctness gap the narrow fix would otherwise have introduced: added the same streak-clear to
+  the ordinary top-of-tick "working" classification branch (not just the post-kick verify window), so a worker that
+  fully recovers for a long stretch doesn't carry a stale near-threshold count into a later, unrelated single blip. Gate
+  discipline: 3 tests in `tests/test_worker_liveness.py` (1 updated, 2 new), each confirmed FAILING against the pre-fix
+  source (via `git stash push` scoped to the source file only, keeping the test file) and PASSING after restoring the
+  fix — not just "passes now." Full `quality-gates.sh` green (1617 passed, 1 skipped, ruff + basedpyright clean) on the
+  shipped SHA before quickmerge.
+
+  ## Deferred work after 2026-07-24
+
+  | Item  | State    | Blocked-on                                                                                  |
+  | ----- | -------- | ------------------------------------------------------------------------------------------- |
+  | 9     | Not done | Nobody; sequential continuation — natural next dispatch pickup                              |
+  | 10-14 | Not done | Nobody; sequential continuation (items 10 + 12 `[BACKEND]` HELD per Q2 — operator-decision) |
