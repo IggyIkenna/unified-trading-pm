@@ -130,6 +130,20 @@ without inventing a second spec. Finding C (stale checkboxes) was already Phase 
       definition-of-done), and C (check-before-adding a stale-checkbox pre-write habit); A and B were already
       well-covered (line-1-truncation §3, `sequential:`/`depends_on` ordering §4) — verified by re-reading both before
       editing, not assumed. `pm@<commit-pending>`.
+- [x] [DOC] P1. ✅ **DONE 2026-07-24 (2 new findings, H/I) — surfaced by manually building + then AO-flip-safety-
+      auditing the 5 asset-group consolidated close-outs (tradfi/defi/cefi/prediction/sports), a pattern §3/§4 didn't
+      yet cover.** `task_template.md` §3 now also has: **finding H** — a digest of ANOTHER plan's todos (the
+      "referenced, not duplicated" discoverability pattern an umbrella coordinator plan uses) must NEVER use real
+      `- [ ]` checkbox syntax, verified via direct code read of `regen_backlog_from_plan.py`'s `_UNCHECKED_RE`
+      (indentation-agnostic — a nested digest checkbox parses exactly like a real dispatchable one, risking double-
+      dispatch + cap-busting + drift the moment the plan is flipped to `assigned_vm: planning`); use a bold
+      `- **[TAG] P<n>.**` marker instead. **finding I** — forking a section out of an over-cap plan into a child plan
+      (the `umbrella: true` split pattern) must encode the real ordering constraint as `depends_on:` +
+      `gate_on_depends: true` in the SAME edit, not leave it as header prose ("gated on T1→T3") that's invisible to the
+      dispatcher. Both found live (unencoded) in 3 of the 5 consolidated close-outs during this session's audit and
+      fixed directly: tradfi/defi got real `depends_on`+`gate_on_depends` wiring; cefi's Track 7 delete-after- verify
+      todo (a genuine prod-GCS permanent-data-loss risk if it raced ahead of its own verify step under AO's
+      same-priority concurrent-dispatch default) got tagged `[OPERATOR]` per finding F. `pm@<commit-pending>`.
 - [ ] [SCRIPT] P1. **Operator ruling 2026-07-23: hard-fail on EVERY check (not the hard/soft split), gated on a
       prerequisite** — wire the full `run_hygiene_sweep.sh` into `quality-gates.sh` for `unified-trading-pm` with ALL
       checks (including the currently-"soft" ones: line caps, estimate sanity, superseded-in-active, codex refs,
@@ -147,7 +161,16 @@ without inventing a second spec. Finding C (stale checkboxes) was already Phase 
       `run_hygiene_sweep.sh --ci --no-regen`) and can flip to hard-fail immediately, independent of the line-caps
       prerequisite. **Progress check 2026-07-24 (slot 2)**: re-ran `bash scripts/plan-hygiene/check_line_caps.sh` — down
       to **13 plans still HARD** (from 30), so `plan_line_cap_remediation_2026_07_23.md` (still `status: open`) has made
-      real progress but the prerequisite is not yet clear. This todo still cannot ship.
+      real progress but the prerequisite is not yet clear. This todo still cannot ship. **Progress check 2026-07-24
+      (later same day, tradfi/defi/cefi/prediction/sports consolidated-closeout remediation session)**:
+      `bash scripts/plan-hygiene/check_line_caps.sh` now shows **10 plans still HARD** (down from 13) — this session
+      trimmed/umbrella-exempted the 5 asset-group consolidated close-outs, which were among the over-cap set. Still not
+      zero; `plan_line_cap_remediation_2026_07_23.md` remains the tracked owner of the remaining 10. Also found and
+      fixed a real blind spot in `check_estimate_sanity.sh` while re-running the full sweep: it silently skipped a plan
+      whose `estimate_class` was set but one of `estimate_baseline_ai_days` / `estimate_calibrated_ai_days` was
+      genuinely blank (only ever compared two numbers that were both already present) — now reports these as a `MISSING`
+      finding (still soft/exit-0, matching this check's own documented behavior; corpus-wide re-run after the fix: 0
+      missing, 2 pre-existing >20% drift, unrelated to this session's files) — `pm@<commit-pending>`.
 - [x] [INFRA] P0. ✅ **Research DONE 2026-07-23 — line 3 is MOSTLY ALREADY BUILT; extend, do not rebuild.** Found:
       `scripts/self-hosted-runners/hosted-baseline/plan-health-agent.yml` (+ its rollout-committed twin
       `.github/workflows/plan-health-agent.yml`) is a GHA workflow (daily cron `0 2 * * *` + PR gate) whose own header

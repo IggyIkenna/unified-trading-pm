@@ -108,8 +108,27 @@ honest", 2026-07-21) — the day-partition (`day=<D>` with `D < 2020-06-06`) is 
 PATH (not `time_created`, which is `None` via the UTL list client). `features-sports-prd` has GCS soft-delete (7d) as
 the recovery net; `instruments-store-sports-prd` has soft-delete=0, so its wipe is scoped to the day-partitioned
 `by_date/` fabrication subtree only (the current-state reference registries — `teams_in_league/`, `mappings/`,
-`master/`, `standings/` — are NOT per-day fabrication and are left untouched). Every delete pass ends with a GCS-walk
-manifest rebuild (`deployment-service/scripts/rebuild_sports_manifest.py`) so no phantom pre-floor rows survive.
+`master/`, `standings/` — are NOT per-day fabrication and are left untouched). The protocol calls for every delete pass
+to end with a GCS-walk manifest rebuild (`deployment-service/scripts/rebuild_sports_manifest.py`) so no phantom
+pre-floor rows survive — **that rebuild has NOT run for this campaign yet; do not read this doc as claiming the manifest
+is phantom-free.** Status, split by surface (verified 2026-07-21 in
+[`sports_master_closeout_2026_07_21.md`](/plans/active/sports_master_closeout_2026_07_21.md)):
+
+- **DONE — GCS-object-level wipe.** `features-sports-prd sports_features/by_date/` = 212,519 objects
+  (2017-01-01…2020-06-05 deleted) and `instruments-store-sports-prd` = 437,124 objects (`sports_reference/by_date`
+  398,240 · `sports_reference/fixtures` 4,735 · `instrument_availability/by_date` 34,149); tick bucket was already
+  floor-clean. This is confirmed deleted + spot-verified.
+- **DEFERRED — manifest-row-level phantom prune.** The manifest index still carries **131,426 phantom pre-floor rows**
+  (features) + **944,776 phantom pre-floor rows** (instruments-store) pointing at the now-deleted objects above. The
+  GCS-walk rebuild that would clear them is explicitly NOT done — the index has an active consolidator lock and is
+  rebuilt from `_index/per_vm/` shards, so a hand-edit is the corruption the protocol forbids. Floor enforcement (§
+  below) keeps these phantom rows outside the reported honest-coverage denominator in the meantime, but they physically
+  still exist in the manifest.
+- **ALSO STILL OPEN — a separate, not-yet-wiped GCS population.** **83,541 pre-floor (2014-01-01…2020-06-05)
+  `FIXTURES_SCHEDULE`/`FIXTURES_OUTCOMES` objects** in the reference bucket (found by the orphan-sweep audit, distinct
+  from the `sports_reference/fixtures` count above) are awaiting disposition ruling + wipe execution — open as of
+  2026-07-23 in [`sports_consolidated_closeout_2026_07_19.md`](/plans/active/sports_consolidated_closeout_2026_07_19.md)
+  (decision 14, still `- [ ]`).
 
 ## What is MOOT after the floor
 

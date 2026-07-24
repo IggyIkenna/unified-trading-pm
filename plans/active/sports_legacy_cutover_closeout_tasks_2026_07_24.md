@@ -69,12 +69,18 @@ source:
 
 ## Todos
 
-- [ ] [REVIEW] P1. **T6.7 — Post-phase codex audit (HARD RULE).** _Mechanism_: update
-      `/codex/02-data/sports-gcs-path-ssot.md` (legacy shape is now GONE — no reader should special-case it),
-      `/codex/02-data/bucket-naming-and-config.md` (the last no-env Group-A twin is retired),
-      `/codex/05-infrastructure/manifest-consolidator-ssot.md` (legacy consolidator entries permanently removed);
-      SUPERSEDED-banner anything the cutover invalidated. _Gate_: every codex path named here is either updated or
-      explicitly confirmed unaffected. _ABORT_: none (review-blocking if skipped).
+- [x] [REVIEW] P1. ✅ **T6.7 — Post-phase codex audit (HARD RULE) — DONE 2026-07-24.** All 3 named codex paths resolved:
+      `/codex/02-data/sports-gcs-path-ssot.md` UPDATED (its "SPORTS-CANON ALIGNMENT" note rewritten to past tense,
+      citing both bucket deletions — `instruments-store-sports-central-element-323112` DELETED 2026-07-16T19:52Z,
+      968,927 objects + 34,596 versions purged, `describe` → 404; `market-data-tick-sports-central-element-323112`
+      DELETED 2026-07-17T~16:50Z, 342,629 objects/versions purged, `describe` → 404);
+      `/codex/02-data/bucket-naming-and-config.md` CONFIRMED UNAFFECTED (it's a SUPERSEDED redirect stub about the
+      unrelated legacy `{bucket_prefix}-{gcp_project_id}` env-var naming pattern; grepped for both deleted bucket names,
+      zero hits, never framed their deletion as future work); `/codex/05-infrastructure/manifest-consolidator-ssot.md`
+      CONFIRMED UNAFFECTED (its only "legacy bucket" mention is a general workspace-wide `[PENDING DECOMMISSION]` note
+      covering ALL asset groups gated on a per-AG L3 single-walk reaching C-GREEN, not sports-specific and doesn't name
+      either deleted sports bucket — still accurate as written). No SUPERSEDED-banner needed beyond what's already
+      correct. Gate satisfied: every named codex path is either updated or explicitly confirmed unaffected.
 - [ ] [INFRA] P2. **T6.8 — Retire the one-offs + the dead knob + the false-progress tick.** _Mechanism_: per each file's
       own `Delete-when` (all satisfied once T5.4 lands + orphan-sweep = 0): delete `migrate_sports_canonical_v9.py`,
       `migrate_legacy_tick_buckets_to_canonical.py`, `patch_l6_legacy_manifest_{is,mtds}_2026_06_29.py`, and the ~26

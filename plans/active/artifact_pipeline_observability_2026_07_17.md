@@ -230,8 +230,12 @@ CI files in Ikenna's active area → **parked, not fixed.** **RE-VERIFIED 2026-0
 2026-07-20) and filed:** `plans/active/issues/build_deploy_pipeline_provenance_and_aws_deferred_gaps_2026_07_21.md`.
 Most of the 2026-07-17 list resolved itself — see the issue doc for the full verified status. Summary:
 
-1. `version` never sent → image tags SHA-only ~late June. **STILL OPEN but root-cause UNCONFIRMED** (could be
-   intentional SHA-only tagging) — issue doc #1.
+1. `version` never sent → image tags SHA-only ~late June. **RESOLVED — root cause CONFIRMED 2026-07-24 (operator)**: the
+   semver-agent that would compute + send `version` in the build dispatch payload is **dead, deliberately** — "we have
+   kept it dead deliberately." SHA-only tagging is the expected, intentional consequence, not a defect. **Not a bug** —
+   the issue doc's #1 (`build_deploy_pipeline_provenance_and_aws_deferred_gaps_2026_07_21.md`) still frames this as
+   open/unconfirmed and needs the same correction as a follow-up (out of this plan's direct scope; flagging here so it
+   isn't lost).
 2. `REPO_NAME` vs `_REPO_NAME` build-history blind spot. **NOT A BUG** — never reproduced; code asserts `REPO_NAME`
    universal, manual path gained a `_SERVICE_NAME` fallback. Dropped.
 3. GCP build events never carry `build_id` into the GCS ledger. **LOW-confidence / minor** — issue doc #3.
@@ -406,10 +410,10 @@ this: a top banner (GCP active / AWS parked), a Health `deferred` tier (blue, "n
 - [x] [UI] P1. ✅ Vitest (19 for the page, 1097 total) + `pw:L2` smoke spec (10 cases) covering all five views, the
       running-drift flags, the deploy change-type, the failure drawer, and per-column sort/filter/multi-select on every
       table. No UI tick without `pw:L2 ✓` + a cited regression spec — both satisfied.
-- [ ] [UI] P2. **NEW (2026-07-23) — revisit "default view = What's running."** The plan locked this shape 2026-07-17
-      (line 127); it was never implemented because Pipeline shipped first and nothing since has flipped
-      `useState<TabId>` back. Now that What's running is live, either flip the default or explicitly re-decide with the
-      operator — don't let a stale shape decision silently persist.
+- [ ] [UI] P2. **DECIDED 2026-07-24 (operator): default view = What's running — implement it.** The plan locked this
+      shape 2026-07-17 (line 127); it was never implemented because Pipeline shipped first and nothing since had flipped
+      `useState<TabId>` back. Re-confirmed 2026-07-24 ("keep this one") rather than re-opened — the remaining work is
+      purely mechanical: flip the default tab state in `ArtifactPipeline.tsx` to `running`, no further decision needed.
 - [x] [UI] P1. ✅ **NEW (operator ask 2026-07-23) — per-column sort + filter on every live table, multi-select on each
       view's identity column.** `deployment-ui@3126b1b` (Pipeline + Deploy timeline) + `@3210bb5` (Artifacts, What's
       running, Health). Shared `ColumnHeader`/`MultiSelectFilter`/`TextFilterInput` primitives, client-side over the
@@ -474,10 +478,16 @@ this: a top banner (GCP active / AWS parked), a Health `deferred` tier (blue, "n
       boot", **not an attestation of the running bytes** (the `*/30` refresh cron can land between the tarball and
       manifest `gsutil cp` calls). (6) Keep inferred values out of this field. (7) Do NOT touch the AWS lane in the same
       change. **VERIFICATION GATE — no existing CI covers this file** (bash uploaded straight to GCS, never executed in
-      CI; `deployment-service/quality-gates.sh` will NOT catch a `set -e` regression). Must verify with a **live
-      launch**: fire one cheap `EPHEMERAL_BATCH` VM, run the codex T+10min check, and assert a registry row appears in
-      `deployments/active/` with a **non-empty `git_commit`**. Add a unit test that `resolve_deployment_bom` reads
-      `GIT_COMMIT` from env (covers the Python half; the real risk is the shell half).
+      CI; `deployment-service/quality-gates.sh` will NOT catch a `set -e` regression) — see the dedicated verification
+      todo below; add a unit test that `resolve_deployment_bom` reads `GIT_COMMIT` from env alongside the shell change
+      (covers the Python half; the real risk the live-launch todo below covers is the shell half).
+- [ ] [INFRA] P1. **NEW (2026-07-24) — the live-launch verification step itself, split out as its own todo** (was
+      previously only a note inside the code-change todo above; called out separately so it can't be silently skipped
+      once the shell edit lands). Once the (A) shell change above ships: (1) fire one cheap `EPHEMERAL_BATCH` VM via the
+      normal launcher; (2) run the codex T+10min post-launch check; (3) assert a registry row appears in
+      `deployments/active/` with a **non-empty `git_commit`**; (4) spot-check the value against the VM's own boot log /
+      manifest `commit_sha` to confirm it's the right SHA, not just non-empty; (5) only then flip this todo — a green
+      unit test alone does NOT satisfy this gate, per the VERIFICATION GATE note above (no CI executes this shell file).
 
 > ❌ **Option (B) — inferred-from-manifest-timeline — is DROPPED** (operator decision 2026-07-17). Rationale recorded
 > under "Honest gaps" above. Pre-(A) VMs render as ⚪ **unknown with the reason**, and age out as the fleet recycles. Do
@@ -496,15 +506,22 @@ this: a top banner (GCP active / AWS parked), a Health `deferred` tier (blue, "n
 > (`deployment-ui@797180c`/`deployment-api@72a0108`, Phase 3 above, "a launch IS the tarball-lane deploy") — that half
 > of the tarball story is live. The gap is specifically the BUILD/ARTIFACT half: the tarball's own creation/upload event
 > (Pipeline tab) and its registry-style inventory (Artifacts tab).
+>
+> **⚠️ Bucket path needs live confirmation before implementation (operator, 2026-07-24)**: the bucket path cited below
+> comes from `code_tarball_refresh_scheduler.tf`'s comment, cross-checked against the Data-feasibility table's
+> 2026-07-17 measurement — the operator flagged uncertainty whether this is actually the same bucket tarballs get
+> uploaded to today ("there is a bucket where tarballs are uploaded, not sure if you are referring to that one"). **Do
+> NOT start Phase 3d's backend todo below from this citation alone** — first `gsutil ls`/`gcloud storage ls` the live
+> bucket and diff its actual contents against the cited path before writing the provider.
 
 - [ ] [BACKEND] P1. **`gcp_tarball_manifests()` provider** — read the GCS tarball-manifest bucket
-      (`gs://{code-bucket}/code/*-code.tar.gz`, per `code_tarball_refresh_scheduler.tf`; the Data-feasibility table
-      above already measured **4064 manifests / 163 tarballs** from this exact source, free to read) and normalize each
-      manifest into a `BuildFact`-shaped record with `lane=LANE_TARBALL`: commit_sha, pyproject_version, created_at,
-      git_status_clean are all already carried per-manifest (see the Data-feasibility table). Mirror
-      `gcp_cloud_builds()`'s shape so `service.builds()` needs no new logic beyond appending this provider's output —
-      `_all_build_facts()`'s docstring already anticipates this ("AWS CodeBuild + the tarball-lane builds land in later
-      increments — each `_safe`").
+      (`gs://{code-bucket}/code/*-code.tar.gz`, per `code_tarball_refresh_scheduler.tf` — **UNCONFIRMED live, see the
+      caveat above; verify before use**; the Data-feasibility table above already measured **4064 manifests / 163
+      tarballs** from this exact source as of 2026-07-17, free to read) and normalize each manifest into a
+      `BuildFact`-shaped record with `lane=LANE_TARBALL`: commit_sha, pyproject_version, created_at, git_status_clean
+      are all already carried per-manifest (see the Data-feasibility table). Mirror `gcp_cloud_builds()`'s shape so
+      `service.builds()` needs no new logic beyond appending this provider's output — `_all_build_facts()`'s docstring
+      already anticipates this ("AWS CodeBuild + the tarball-lane builds land in later increments — each `_safe`").
 - [ ] [BACKEND] P1. **Fold tarball manifests into `_all_image_facts()` / `service.images()`** so the Artifacts tab's
       "AR + ECR + tarball bucket" promise (line 148) is actually true — one row per tarball "repo" (i.e. per service
       name in the `code/` prefix), image_count → manifest_count, tags → the pinned/floating SHA suffix ladder already
@@ -610,16 +627,15 @@ this: a top banner (GCP active / AWS parked), a Health `deferred` tier (blue, "n
       I/O starved between requests). **Paused 2026-07-24 by operator ask** ("let's not worry about the deployed version
       for now, let's check the locally running one first") before testing `--no-cpu-throttling` — resume here when the
       operator wants to come back to it.
-- [ ] [REVIEW] P2. **Separate finding, surfaced while investigating (not yet filed as its own issue doc)**: this
-      project's Cloud Logging ingestion is dominated by GCS Data Access audit logs — MEASURED 151 GB over one 7-day
-      sample (project-wide, all resources), spiking to 76.5 GB on 2026-07-19 and 37.6 GB on 2026-07-22, both days
-      correlating with a large `canonical-migration-{cefi,defi,tradfi,prediction}-*` VM campaign (200+ VMs in a single
-      day) doing bulk per-object GCS operations against the `market-data-tick-{defi,cefi}-prd` buckets. This is
-      legitimate, expected migration work — the cost is a side effect of GCS Data Access audit logging being enabled
-      project-wide, not a bug in the migration itself. Unmitigated as of today; the standing fix (a Cloud Logging
-      exclusion filter scoped to `logName="cloudaudit.googleapis.com/data_access" AND resource.type="gcs_bucket"`) was
-      discussed but not applied — needs its own issue doc + operator decision (touches logging/audit posture, not just
-      cost).
+- [x] [REVIEW] P2. ✅ **Separate finding, surfaced while investigating — issue doc FILED 2026-07-24.** This project's
+      Cloud Logging ingestion is dominated by GCS Data Access audit logs — MEASURED 151 GB over one 7-day sample
+      (project-wide, all resources), spiking to 76.5 GB on 2026-07-19 and 37.6 GB on 2026-07-22, both days correlating
+      with a large `canonical-migration-{cefi,defi,tradfi,prediction}-*` VM campaign (200+ VMs in a single day) doing
+      bulk per-object GCS operations against the `market-data-tick-{defi,cefi}-prd` buckets. This is legitimate,
+      expected migration work — the cost is a side effect of GCS Data Access audit logging being enabled project-wide,
+      not a bug in the migration itself. Filed at the operator's request:
+      `plans/active/issues/gcs_data_access_audit_log_cost_2026_07_24.md` — the exclusion-filter decision (touches
+      logging/audit posture, not just cost) lives there now, routed to Ikenna (or the operator, Monday).
 
 ## Progress log
 
@@ -845,10 +861,12 @@ this: a top banner (GCP active / AWS parked), a Health `deferred` tier (blue, "n
     compounding with this service's independently-discovered crash-looping (`Uncaught signal: 6` recurring, one real OOM
     at 05:35 UTC) to lose whatever log output hadn't flushed (`deployment-api@6518e82`, `ENV PYTHONUNBUFFERED=1`). Both
     deployment-api fixes promoted LDR→main via the fleet `*/5` auto-promote cron (NOT the "staging-first" path
-    quickmerge's own messaging still claims — **that messaging is now STALE**: staging was shut down fleet-wide
-    2026-07-23, WS-L operator ruling, and this repo is actually on the direct `ldr_main` model like every other repo;
-    worth a quickmerge.sh fix separately) → Cloud Build (`_DEPLOY=true`) → fresh Cloud Run revisions (`00267-c2k` then
-    `00268-d2l`).
+    quickmerge's own messaging still claims — that messaging is stale: staging was retired since June end and its
+    workflows were only actually stopped recently, per operator 2026-07-24; this repo is actually on the direct
+    `ldr_main` model like every other repo) → Cloud Build (`_DEPLOY=true`) → fresh Cloud Run revisions (`00267-c2k` then
+    `00268-d2l`). **RESOLVED — no action needed (operator 2026-07-24)**: "keep it in quickmerge if it's not creating any
+    issues" — the stale console message is cosmetic only (the actual promotion path is unaffected), so it's
+    intentionally left as-is unless it starts causing real confusion or problems later.
   - **Root cause #3's investigation is still open** — even with all three fixes verifiably baked into the live image
     (confirmed by pulling the exact deployed digest and inspecting it directly, not by trusting the build log), the prod
     endpoint stayed silent AND empty on a brand-new revision. Reproduced the EXACT deployed image locally via
@@ -873,8 +891,35 @@ this: a top banner (GCP active / AWS parked), a Health `deferred` tier (blue, "n
     cost for an unrelated reason — checking whether the logging fix would be expensive). This project's Cloud Logging
     ingestion is dominated by GCS Data Access audit logs on the MTDS prod buckets, driven by the canonical-migration VM
     campaigns' bulk per-object operations — MEASURED 151 GB / 7 days, real recurring cost, not a defect in the migration
-    itself. Not yet filed as its own issue doc (see Phase 7's second open item) — out of this plan's scope but worth a
-    standalone doc + operator decision on the logging-exclusion-filter fix.
+    itself. Filed as its own issue doc same day, see below.
+- **2026-07-24 (later) — operator review of the open-decisions list; 6 items resolved/clarified, 1 issue doc filed, 1
+  new todo split out.** Walked the operator through every open decision and unclear item from the earlier audit; folded
+  each answer into the plan rather than leaving them in chat:
+  - **GCS Data Access cost finding → issue doc filed**, at the operator's explicit request "so Ikenna can pick this up":
+    `plans/active/issues/gcs_data_access_audit_log_cost_2026_07_24.md`. Operator: will route it to Ikenna, or pick it up
+    personally Monday.
+  - **"Default view = What's running" — DECIDED, not re-opened.** Operator: "keep this one" — confirms the original
+    2026-07-17 lock stands; the remaining work is a mechanical `useState<TabId>` flip in `ArtifactPipeline.tsx`, no
+    further decision needed. Phase 3 todo + Deferred-work table updated to reflect DECIDED rather than "re-decide with
+    the operator."
+  - **Phase 3c's live-launch verification split into its own todo** (operator: "add a todo item to launch and do the
+    steps necessary to verify this") — previously just a note inside the shell-edit todo; now a standalone `[INFRA] P1`
+    item so it can't be silently skipped once the code change ships.
+  - **Bug #1 (image tags SHA-only) — root cause CONFIRMED, not a bug.** Operator: "the semver-agent that was supposed to
+    write the version is dead right now and we have kept it dead deliberately. audited that one." Updated the "Pipeline
+    bugs found" summary from "root-cause UNCONFIRMED" to resolved; flagged that the sibling issue doc
+    (`build_deploy_pipeline_provenance_and_aws_deferred_gaps_2026_07_21.md`) still needs the same correction as a
+    follow-up (out of today's scope — not edited).
+  - **Stale "Staging-first" quickmerge.sh messaging — resolved as no-action-needed.** Operator: staging has been retired
+    since June end, its workflows were only actually stopped recently; "keep it in quickmerge if it's not creating any
+    issues." Cosmetic-only, intentionally left as-is.
+  - **Phase 3d's tarball bucket path flagged as unconfirmed, not fact.** Operator: "there is a bucket where tarballs are
+    uploaded, not sure if you are referring to that one" — added an explicit warning ahead of the
+    `gcp_tarball_manifests()` todo that the cited path (from a `.tf` comment + a 2026-07-17 measurement) must be
+    live-verified against the actual bucket before implementation starts, not trusted as-is.
+  - **Not addressed this round** (still open, no new instruction given): the CPU-throttling test itself (still paused)
+    and the "no documented fallback if CPU-throttling isn't the answer" gap — both remain exactly as Phase 7 already
+    states them.
 
 ## Lessons this session (so they are not re-learned the hard way)
 
@@ -976,23 +1021,25 @@ version as well i cannot see anything in tarball lane" surfaced today, and unlik
 a new provider. **Phase 3b cross-links** (Deployments URL-param filter + console deep-links) remains audited-cheap and
 ready whenever picked back up.
 
-| Item                                                                                   | State / why deferred                                                                                                                                                         | Blocked on                             |
-| -------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------- |
-| Tarball-bucket provider (Phase 3d) — Pipeline/Artifacts/Running tarball rows           | **Not started** — NEW 2026-07-24, confirmed structural gap (no provider ever read the GCS tarball-manifest bucket, in local OR prod, unrelated to today's IAM/logging bugs)  | —                                      |
-| Phase 7 — prod-vs-local parity: root causes #1/#2/#3 (IAM/logging/buffering)           | ✅ **FIXED 2026-07-24** — `deployment-service@74306a1`, `deployment-api@f27a8f1`/`@6518e82` — but prod endpoint STILL empty on a fresh revision after all 3                  | —                                      |
-| Phase 7 — CPU-throttling test (leading untested hypothesis for the still-open symptom) | **Paused 2026-07-24 — operator ask** ("let's check the locally running one first")                                                                                           | operator resume                        |
-| GCS Data Access audit-log cost finding (Cloud Logging, ~151 GB/7d, MTDS buckets)       | **Not started** — surfaced 2026-07-24 as a side investigation, needs its own issue doc + operator decision on an exclusion filter                                            | operator decision + issue doc          |
-| Whole-mock sign-off, all 5 tabs, tarball stamp scope                                   | ✅ **DONE 2026-07-21** — operator: "good to start … on all the tabs 1 to 5"; DO-NOT-START banner lifted (`pm@161200196`)                                                     | —                                      |
-| Pipeline (builds) view — backend + live UI tab                                         | ✅ **DONE** — `deployment-api@8eda1f8`/`0a920c2`, `deployment-ui@47e6379`/`038038e`                                                                                          | —                                      |
-| Deploy timeline view — backend + live UI tab                                           | ✅ **DONE 2026-07-23** — `deployment-api@72a0108`, `deployment-ui@797180c`                                                                                                   | —                                      |
-| Date-range picker + 7d default (both windowed live views)                              | ✅ **DONE 2026-07-23** — operator ask, same turn as the Deploy timeline ship (`deployment-ui@797180c`)                                                                       | —                                      |
-| **What's running** view (the headline runtime join + drift classifier)                 | ✅ **DONE 2026-07-23** — `deployment-api@a13c667`, `deployment-ui@3210bb5`. Scoped to the Cloud Run (image) lane; `fragmented` always 0 for now (no traffic-split detection) | —                                      |
-| Artifacts (registry inventory) view                                                    | ✅ **DONE 2026-07-23** — `deployment-api@a13c667`, `deployment-ui@3210bb5`. GCP AR only; AWS ECR stays parked/unread                                                         | —                                      |
-| Health (measured conditions) view                                                      | ✅ **DONE 2026-07-23** — `deployment-api@a13c667`, `deployment-ui@3210bb5`. Derives every condition from the other four views' own facts, zero new cloud calls               | —                                      |
-| Per-column sort + filter + multi-select on every live table                            | ✅ **DONE 2026-07-23** — operator ask, same day as the last 3 views; `deployment-ui@3126b1b` + `@3210bb5`                                                                    | —                                      |
-| Snapshot worker (GCS parquet + DuckDB, the OOM-safe long-window read path)             | **Not started** — the live-scan cache (300s TTL) covers today's needs; the worker is for long-history + concurrent-load headroom                                             | —                                      |
-| (A) tarball commit stamp (Phase 3c Option A)                                           | **Cannot be done yet** — audit-cleared YES-WITH-CONDITIONS; verify via a live EPHEMERAL_BATCH launch (no CI covers the shell file)                                           | a deliberate operator-scheduled launch |
-| Phase 3b cross-links (Deployments URL-param filter, console deep-links)                | 🟢 **UNBLOCKED, next recommended** — audited cheap (2-line + reuse `consoleUrl()`); its one gate (Running view landing) is now clear                                         | —                                      |
-| "Default view = What's running" (locked 2026-07-17, never implemented)                 | **Not started** — page still defaults to Pipeline; re-decide with the operator or just flip it now that Running is live                                                      | operator confirmation (or just do it)  |
-| Issue doc for the pipeline bugs                                                        | ✅ **DONE 2026-07-21** — `issues/build_deploy_pipeline_provenance_and_aws_deferred_gaps_2026_07_21.md`; only #4/#7 (AWS-deferred) + #1/#3 (GCP) open                         | Ikenna (his active CI files)           |
-| AWS resume (App Runner + ECS + ECR)                                                    | **Cannot be done yet — operator-owned** — AWS intentionally parked; deferred until AWS credits are available                                                                 | AWS credits                            |
+| Item                                                                                   | State / why deferred                                                                                                                                                                                                                                                                              | Blocked on                             |
+| -------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------- |
+| Tarball-bucket provider (Phase 3d) — Pipeline/Artifacts/Running tarball rows           | **Not started** — NEW 2026-07-24, confirmed structural gap (no provider ever read the GCS tarball-manifest bucket, in local OR prod, unrelated to today's IAM/logging bugs)                                                                                                                       | —                                      |
+| Phase 7 — prod-vs-local parity: root causes #1/#2/#3 (IAM/logging/buffering)           | ✅ **FIXED 2026-07-24** — `deployment-service@74306a1`, `deployment-api@f27a8f1`/`@6518e82` — but prod endpoint STILL empty on a fresh revision after all 3                                                                                                                                       | —                                      |
+| Phase 7 — CPU-throttling test (leading untested hypothesis for the still-open symptom) | **Paused 2026-07-24 — operator ask** ("let's check the locally running one first")                                                                                                                                                                                                                | operator resume                        |
+| GCS Data Access audit-log cost finding (Cloud Logging, ~151 GB/7d, MTDS buckets)       | ✅ **Issue doc FILED 2026-07-24** — `issues/gcs_data_access_audit_log_cost_2026_07_24.md`; operator to route to Ikenna (or pick up Monday)                                                                                                                                                        | Ikenna / operator                      |
+| Whole-mock sign-off, all 5 tabs, tarball stamp scope                                   | ✅ **DONE 2026-07-21** — operator: "good to start … on all the tabs 1 to 5"; DO-NOT-START banner lifted (`pm@161200196`)                                                                                                                                                                          | —                                      |
+| Pipeline (builds) view — backend + live UI tab                                         | ✅ **DONE** — `deployment-api@8eda1f8`/`0a920c2`, `deployment-ui@47e6379`/`038038e`                                                                                                                                                                                                               | —                                      |
+| Deploy timeline view — backend + live UI tab                                           | ✅ **DONE 2026-07-23** — `deployment-api@72a0108`, `deployment-ui@797180c`                                                                                                                                                                                                                        | —                                      |
+| Date-range picker + 7d default (both windowed live views)                              | ✅ **DONE 2026-07-23** — operator ask, same turn as the Deploy timeline ship (`deployment-ui@797180c`)                                                                                                                                                                                            | —                                      |
+| **What's running** view (the headline runtime join + drift classifier)                 | ✅ **DONE 2026-07-23** — `deployment-api@a13c667`, `deployment-ui@3210bb5`. Scoped to the Cloud Run (image) lane; `fragmented` always 0 for now (no traffic-split detection)                                                                                                                      | —                                      |
+| Artifacts (registry inventory) view                                                    | ✅ **DONE 2026-07-23** — `deployment-api@a13c667`, `deployment-ui@3210bb5`. GCP AR only; AWS ECR stays parked/unread                                                                                                                                                                              | —                                      |
+| Health (measured conditions) view                                                      | ✅ **DONE 2026-07-23** — `deployment-api@a13c667`, `deployment-ui@3210bb5`. Derives every condition from the other four views' own facts, zero new cloud calls                                                                                                                                    | —                                      |
+| Per-column sort + filter + multi-select on every live table                            | ✅ **DONE 2026-07-23** — operator ask, same day as the last 3 views; `deployment-ui@3126b1b` + `@3210bb5`                                                                                                                                                                                         | —                                      |
+| Snapshot worker (GCS parquet + DuckDB, the OOM-safe long-window read path)             | **Not started** — the live-scan cache (300s TTL) covers today's needs; the worker is for long-history + concurrent-load headroom                                                                                                                                                                  | —                                      |
+| (A) tarball commit stamp (Phase 3c Option A)                                           | **Cannot be done yet** — audit-cleared YES-WITH-CONDITIONS; verify via a live EPHEMERAL_BATCH launch (no CI covers the shell file)                                                                                                                                                                | a deliberate operator-scheduled launch |
+| Phase 3b cross-links (Deployments URL-param filter, console deep-links)                | 🟢 **UNBLOCKED, next recommended** — audited cheap (2-line + reuse `consoleUrl()`); its one gate (Running view landing) is now clear                                                                                                                                                              | —                                      |
+| "Default view = What's running" (locked 2026-07-17, DECIDED 2026-07-24)                | 🟢 **DECIDED, not yet implemented** — operator re-confirmed 2026-07-24 ("keep this one"); page still defaults to Pipeline, purely mechanical `useState<TabId>` flip remains                                                                                                                       | —                                      |
+| Phase 3d live-launch verification step (split out as its own todo, 2026-07-24)         | **Cannot be done yet** — needs (A)'s shell edit to ship first, then a live `EPHEMERAL_BATCH` launch + T+10min check                                                                                                                                                                               | (A) shell edit landing first           |
+| Issue doc for the pipeline bugs                                                        | ✅ **DONE 2026-07-21** — `issues/build_deploy_pipeline_provenance_and_aws_deferred_gaps_2026_07_21.md`; only #4/#7 (AWS-deferred) + #3 (GCP, minor) open — **#1 RESOLVED 2026-07-24** (semver-agent confirmed deliberately dead; issue doc itself still needs the same correction as a follow-up) | Ikenna (his active CI files)           |
+| Stale "Staging-first" quickmerge.sh messaging                                          | ✅ **RESOLVED — no action needed (operator 2026-07-24)**: cosmetic only, left as-is unless it starts causing real problems                                                                                                                                                                        | —                                      |
+| AWS resume (App Runner + ECS + ECR)                                                    | **Cannot be done yet — operator-owned** — AWS intentionally parked; deferred until AWS credits are available                                                                                                                                                                                      | AWS credits                            |

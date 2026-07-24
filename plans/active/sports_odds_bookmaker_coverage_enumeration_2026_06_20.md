@@ -36,6 +36,15 @@ assigned_role: data_engineering
 drift_direction: advance-code
 ---
 
+> **🔒 NOT a clean auto-archive candidate (flagged 2026-07-24, plan-reconcile audit)** — do not archive this doc, do not
+> change its `locked_by:`, and do not run an `[unlock-plan]` step against it without an explicit operator ruling. Two
+> reasons: (1) frontmatter `locked_by: live-defi-rollout` (`locked_since: 2026-06-20`) contradicts the "unlocked"
+> premise a prior archive-check assumed; (2) as of 2026-07-24 the "Gap analysis from P1c Todo 4" section's four
+> follow-ups are now tracked as todos under "P1 — gap-analysis follow-ups" near the end of this doc (previously orphaned
+> prose, now checkbox-tracked) and remain OPEN / unaddressed — plus a flagged regression-test-deletion discrepancy on
+> Todo 2/Todo 3 below (P0 section) that also needs an operator call before those checkboxes can be trusted at face
+> value. See `plans/active/issues/sports_plan_and_docs_reconcile_findings_2026_07_24.md` for the full audit findings.
+
 > **⚠️ SCOPE OVERLAP — read `sports_consolidated_closeout_2026_07_19.md` before acting on any league_id work in this
 > doc** (flagged 2026-07-23, orphan-plan reconciliation audit): this plan's own text (see "Input from P1c golden-window
 > audit" and "Gap analysis from P1c Todo 4" below) labels raw manifest strings like `PREMIER_LEAGUE`, `BUNDESLIGA`,
@@ -93,6 +102,23 @@ empirical-expected-set + NaN-fill is the honest fix for that gap.
       CLAUDE.md "Cluster validation MANDATORY at record_captured for bundled data_types"). Repo: instruments-service. —
       instruments-service@e1a3988 | SP-10-ODDS regression guard in test_orchestrator_sports.py | bridge: per-fixture ≥1
       row floor (→ len(EXPECTED_BOOKMAKER_MARKET_SETS[tier]) once item 1 ships)
+
+> **⚠️ Regression-test discrepancy flagged 2026-07-24** (plan-reconcile audit; NOT auto-corrected — needs operator
+> judgment, checkboxes intentionally left as-is): Todo 2's cited `TestFootystatsOddsNanFill` (4 tests, added
+> instruments-service@33c0796c) and Todo 3's cited `SP-10-ODDS regression guard` (added instruments-service@e1a3988b)
+> were BOTH deleted from `tests/unit/test_orchestrator_sports.py` by instruments-service@6404abd6 ("feat(sports): #6
+> ODDS=MTDS removal — remove footystats odds fetch from IS orchestrator", 2026-06-25). When the ODDS fetch path was
+> later restored by instruments-service@3d4f1a19 ("feat: restore footystats ODDS capture path (operator reversal
+> 2026-06-27)"), it added back `TestFetchFootystatsOdds` / `TestLoadScheduledFootystatsFixtureMap` but NOT
+> `TestFootystatsOddsNanFill` or the SP-10-ODDS test under the same or an equivalent name — confirmed absent from
+> `tests/unit/test_orchestrator_sports.py` as of 2026-07-24 (`grep` for both markers returns zero hits). The underlying
+> FUNCTIONALITY did survive: the "FootyStats odds NaN-fill" logic and the `expected_root_clusters=` cluster-validation
+> kwargs are still present in current `instruments_service/engine/orchestrator/footystats.py` — only the dedicated
+> regression-test coverage is gone. The one adjacent test that does exist,
+> `tests/unit/test_footystats_odds_kickoff_serialization.py`, covers a narrower `kickoff_utc` string-serialization bug
+> fix, not a restoration of the original 4-test class or the cluster-validation regression. A human should decide
+> whether to (a) restore equivalent regression tests under the original names/scope, or (b) accept current coverage and
+> update the citations — do NOT flip Todo 2 / Todo 3 back to `- [ ]` without that decision.
 
 > **Already shipped (downstream consumer guidance) — flipped in the epic, NOT re-opened here**: features-sports
 > arbitrage/odds-movement NaN-row handling + the `/codex/02-data/honest-absence-downstream-handling.md` § "ODDS NaN-fill
@@ -167,3 +193,31 @@ SOCCER_SWITZERLAND_SUPERLEAGUE, SOCCER_TURKEY_SUPER_LEAGUE, SOCCER_USA_MLS, SUPE
 4. Note: `data_type=trades` is NOT in `BUNDLED_DATA_TYPES` (see `_honest_coverage_clusters.py`) — cluster validation at
    `record_captured` does not fire for historical `trades` data; only `odds_snapshot`, `odds_movement`,
    `arbitrage_opportunity` are enforced. The validation gate for `trades` relies on this static audit path.
+
+## P1 — gap-analysis follow-ups (tracked 2026-07-24)
+
+> **Scope-overlap caveat**: these four todos formalize the "Required follow-up actions" prose in the Gap Analysis
+> section above (P1c Todo 4 cluster validation, 2026-06-27) — no new technical detail invented, just made
+> checkbox-tracked. Per the SCOPE OVERLAP banner near the top of this doc, the league_id-mapping todos below (1-2)
+> overlap `sports_consolidated_closeout_2026_07_19.md` Track C / Track V — check that doc's current Track state before
+> executing them, since it may already own this work or resolve the canonical-namespace question differently.
+
+- [ ] [SCRIPT] P1. **Add a `LEAGUE_ID_TO_TIER` mapping (function or dict) to UAC that routes each of the 51 observed
+      league_ids to a `LeagueTier` key in `EXPECTED_BOOKMAKER_MARKET_SETS`** — without it, runtime cluster-validation
+      code cannot determine which expected bookmaker set applies to a given manifest row.
+- [ ] [AGENT] P1. **Extend `EXPECTED_BOOKMAKER_MARKET_SETS` to cover the 28 unmapped league_ids** (A-LEAGUE,
+      ALLSVENSKAN, EKSTRAKLASA, ELITESERIEN, J1_LEAGUE, K_LEAGUE_1, LIGA_MX, MLS, PREMIERSHIP,
+      SOCCER_ARGENTINA_PRIMERA_DIVISION, SOCCER_AUSTRALIA_ALEAGUE, SOCCER_AUSTRIA_BUNDESLIGA, SOCCER_CHINA_SUPERLEAGUE,
+      SOCCER_DENMARK_SUPERLIGA, SOCCER_GREECE_SUPER_LEAGUE, SOCCER_JAPAN_J_LEAGUE, SOCCER_KOREA_KLEAGUE1,
+      SOCCER_MEXICO_LIGAMX, SOCCER_NORWAY_ELITESERIEN, SOCCER_POLAND_EKSTRAKLASA, SOCCER_RUSSIA_PREMIER_LEAGUE,
+      SOCCER_SWEDEN_ALLSVENSKAN, SOCCER_SWITZERLAND_SUPERLEAGUE, SOCCER_TURKEY_SUPER_LEAGUE, SOCCER_USA_MLS, SUPERLIGA,
+      SUPER_LEAGUE, SUPER_LIG) — or add a `tier_3_global` / `no_expectation` tier for non-EU leagues the empirical audit
+      determines have inconsistent bookmaker coverage.
+- [ ] [SCRIPT] P0. **Fix `fixture_id=NULL` propagation in the odds_api backfill path** — golden window `trades` data has
+      all fixture_ids as NULL, which blocks per-fixture cluster validation entirely (this is the P1c Todo 4 gate
+      blocker).
+- [ ] [AGENT] P2. **Decide + implement the `trades` cluster-validation gap**: `data_type=trades` is not in
+      `BUNDLED_DATA_TYPES` (see `_honest_coverage_clusters.py`), so cluster validation at `record_captured` does not
+      fire for historical `trades` data — only `odds_snapshot`, `odds_movement`, `arbitrage_opportunity` are enforced.
+      Either register `trades` in `BUNDLED_DATA_TYPES` for live enforcement, or formally accept that the validation gate
+      for `trades` relies on this static audit path instead.

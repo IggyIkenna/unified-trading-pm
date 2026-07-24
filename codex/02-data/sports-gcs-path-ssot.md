@@ -159,12 +159,16 @@ Sports paths use the canonical hive vocabulary per CLAUDE.md "Asset-group vocabu
 
 The resolver writes canonical for new paths; reader fallback is hive-key-agnostic for backward compat.
 
-> **🔎 SPORTS-CANON ALIGNMENT (2026-06-01):** After the `sports_manifest_canonicalisation_2026_06_01.md` C0 walk
-> completes, the legacy no-env `instruments-store-sports-central-element-323112` bucket (which holds `category=` paths)
-> will be **migrated to `instruments-store-sports-prd-…` and DELETED** — the legacy reader-fallback path for the
-> instruments surface becomes redundant at that point. The `market-data-tick-sports-{no-env}` bucket will similarly be
-> deleted. SSOT for the delete schedule: `bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md` §L6 + §L7. Do
-> NOT write new code that depends on the legacy no-env sports buckets existing after the C-GREEN hand-off.
+> **✅ SPORTS-CANON ALIGNMENT (2026-06-01) — bucket deletion CLOSED 2026-07-16/17.** The legacy no-env
+> `instruments-store-sports-central-element-323112` bucket (which held `category=` paths) was migrated onto
+> `instruments-store-sports-prd-central-element-323112` and **DELETED 2026-07-16T19:52Z** (968,927 objects + 34,596
+> versions purged, 0 errors; `describe` → 404; no-resurrection proved by a clean `tofu plan`). The
+> `market-data-tick-sports-central-element-323112` bucket was similarly **DELETED 2026-07-17T~16:50Z** (342,629
+> objects/versions purged, 0 errors; `describe` → 404). Both legacy no-env sports buckets no longer exist — do NOT write
+> new code that depends on them. Evidence: `plans/active/sports_legacy_bucket_cutover_2026_07_16.md` § "FINAL STATUS"
+> (T5.4); full detail in `plans/archive/2026_07/sports_legacy_bucket_cutover_history_2026_07_24.md`. The post-phase
+> codex audit of this SSOT (confirming no reader still special-cases the legacy shape) is tracked as **T6.7**, still
+> open P1, in `plans/active/sports_legacy_cutover_closeout_tasks_2026_07_24.md`.
 
 ## Cross-references
 

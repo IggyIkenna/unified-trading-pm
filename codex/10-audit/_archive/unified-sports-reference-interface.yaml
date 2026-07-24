@@ -9,8 +9,14 @@ arch_tier: "2"
 deployment_modes: null
 business_modes: null
 version: "0.1.0"
-status: "active"
-last_updated: "2026-03-18"
+status: "eliminated"
+elimination_note:
+  "USRI merged into unified-reference-data-interface (sports/ sub-package) at the 2026-03-01 sports consolidation;
+  unified-reference-data-interface was itself ELIMINATED 2026-03-26 and folded into instruments-service. Final
+  destination: instruments-service (sports/ sub-package). Confirmed by /codex/00-SSOT-INDEX.md and
+  /codex/04-architecture/tier-and-import-architecture.md (also corroborated by
+  /codex/04-architecture/asset-class-ownership.md and /codex/04-architecture/data-ownership-principles.md)."
+last_updated: "2026-03-26"
 
 # ==============================================================================
 # CODE READINESS

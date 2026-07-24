@@ -11,7 +11,7 @@ stage: [meta]
 repos: [instruments-service]
 scope: [engineer, admin]
 tags: [sports, canonical-universe, api-football, reference, over-capture, instruments, league-registry]
-related: []
+related: [/plans/active/sports_consolidated_closeout_2026_07_19.md]
 created: 2026-06-24
 parent_epic: sports_master
 assigned_vm: NA
@@ -20,7 +20,7 @@ priority: P2
 estimate_class: design
 estimate_baseline_ai_days: 12
 estimate_calibrated_ai_days: 7.2
-last_updated: 2026-06-27
+last_updated: 2026-07-24
 locked_by: live-defi-rollout
 locked_since: 2026-06-24
 supersedes:
@@ -32,6 +32,18 @@ drift_direction: correct-codex
 ---
 
 # Sports canonical universe + API-Football reference expansion
+
+> **🟡 STATUS CHECK (2026-07-24, `/plan-reconcile` audit)**: This plan is `status: active` with real open work below —
+> it is **NOT** archived or superseded. Track V of `/plans/active/sports_consolidated_closeout_2026_07_19.md` (the
+> canonical, single actionable sports execution plan) previously carried a false "both archived/superseded into this
+> closeout" claim about this doc — corrected 2026-07-24 (see
+> `/plans/active/issues/sports_plan_and_docs_reconcile_findings_2026_07_24.md`). This doc's own ~9-11 open `- [ ]` todos
+> (UAC canonical registry build/refine, the curated ~300-league reference set + backfill
+>
+> - residual drop, bare/legacy dual-layout cleanup, retention-floor cleanup, the E8 legacy-delete stub, etc.) are NOT
+>   duplicated inside the closeout — this remains a satellite plan the closeout references (see this doc in the
+>   closeout's `related:` list + its Track V reconciliation todo) rather than folds in. Do not re-archive this doc
+>   without first migrating/tracking this open work.
 
 > Captures the operator architecture spec (2026-06-24) after the over-capture diagnosis. Refine the existing codex / UAC
 > / code rather than reinvent — this is mostly cleanup + consolidation of forms we already have through migrations.
