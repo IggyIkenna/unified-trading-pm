@@ -248,6 +248,29 @@ entry). UTC datetimes only. `quality-gates.sh`-green before each commit; commit 
 
 ## Progress Log
 
+- **2026-07-24 (slot 2, review) — [REVIEW] P0 "verify the drain end-to-end" attempted; checkbox left UNCHECKED, findings
+  filed.** Verified live against the deployed `uts-shared-deployment-api-00268-d2l` (image `deployment-api:e476c73`,
+  confirmed a descendant of `8660e9e`). **Good news — the core prod-outage bug is fixed**: `active/` object count 3,304
+  (2026-07-14 baseline) → **404, re-measured 403** today; `GET /api/deployments/inventory` (no `status` filter — the
+  real query shape a UI sends) → HTTP 200 in 0.4–1.0s warm, `total=2518`, `vm_count=2228`, 127 `running` items (sample:
+  `mtds-dex-pools-backfill` running, heartbeat_age=22s). **Two residual gaps found, NOT part of the original P0 scope,
+  filed as new todos + full detail in
+  [issues/deployment_registry_reaper_not_draining_stale_entries_2026_07_24.md](issues/deployment_registry_reaper_not_draining_stale_entries_2026_07_24.md):**
+  (1) the reaper isn't actually draining `active/` toward the live-VM count — a 30-entry random sample were ALL already
+  self-classified `status="stale"` by the inventory endpoint (heartbeat 3-7 days old) yet remain unreaped; Cloud Run
+  logs show the reaper tick's `run_in_executor` call being repeatedly interrupted by `CancelledError` during container
+  shutdown, and neither the reaper's own "archived N" log line nor even the one-time background-task-started log line
+  appears anywhere in 7-30 days of logs — root cause not yet diagnosed. (2) `_load_inventory`'s COLD path
+  (`deployments_inventory.py:2040-2073`) computes synchronously under a lock with NO timeout; since the cache is
+  in-process (not shared across Cloud Run's `minScale=1`/`maxScale=20` instances), a freshly-scaled instance pays this
+  cost on its first request — one such cold "no filter" call measured **>55s** (didn't reproduce on 3 follow-up
+  attempts, so lower-confidence). Also noted (not a defect): the plan's own literal verification instruction
+  (`?status=all`) always returns 0 items by design — `status` has no `"all"` bypass in `_filter_items` unlike `region`;
+  the deployment-ui already deliberately omits the param instead of sending it literally (`Deployments.tsx:1412`,
+  `deploymentApi.ts:654`), so a reviewer following the plan text verbatim gets a false-empty result. **Leaving the
+  `[REVIEW]` checkbox above unchecked** per the plan's own Success Criteria ("active/ object count ≈ running-VM count")
+  not yet being met — recommend re-verifying once the two new BACKEND todos in the issue doc ship.
+
 - **2026-07-24 (slot 3, .tabs/3 worktree) — flipped back to AO.** Operator explicitly instructed reallocation after
   reviewing the remaining 9 todos: `assigned_vm: NA`→`planning`, `execution_scope: local-only`→`orchestrator-agent`
   (`sequential: true` was already set from the plan's original authoring — unchanged, confirmed still present). Live AO
