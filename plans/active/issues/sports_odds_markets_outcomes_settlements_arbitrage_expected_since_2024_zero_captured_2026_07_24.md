@@ -144,11 +144,30 @@ data_types) explains both findings at once.
       tuples, or retire the capability declaration (operator sign-off required — changes the sports coverage
       denominator). **Done when**: an explicit decision is recorded with rationale. ✅ — recommendation recorded below;
       operator sign-off requested via /blocked (slot 5, 2026-07-24).
-- [ ] [CODE] P2. Execute the decided fix — either wire up + schedule real capture, or retire/adjust
+- [ ] [DIAG] P1. **Discriminator investigation requested by main (2026-07-24, INTERIM guidance on BLK-c545ae54, operator
+      sign-off STILL PENDING)** — the RETIRE recommendation collides with the external-data-always-available HARD RULE
+      (`codex/02-data/external-data-always-available-rule.md`): exhausting/absent a capture path is a credential/build
+      ask, NOT a descope; zero adapter code is EQUALLY consistent with (a) a mechanical/erroneous phantom declaration
+      never in product scope (retire legitimate) or (b) a genuinely-wanted-but-unbuilt feature (rule says scaffold +
+      `BLOCKED-CREDENTIALS`, never retire). Pinnacle/Betfair/The Odds API do offer markets/odds/settlement endpoints, so
+      external data availability likely holds — pushing toward (b) unless intent says otherwise. **Done when**, captured
+      in this doc (no denominator change yet): (1) provenance check — is `VENUE_DATA_TYPE_CAPABILITIES`'s
+      markets/outcomes/settlements/arbitrage_opportunity entries hand-authored-with-intent vs. mechanically
+      auto-generated/copied (already partly answered by the DIAG findings' git-blame — `@7511207a` is a broad mechanical
+      cross-asset-group sweep — but check for an originating design doc/PR description that states intent either way);
+      (2) product-intent check — grep `codex/09-strategy/` + `codex/14-customer-journeys/` for whether sports-odds
+      markets/settlements/arbitrage are documented as WANTED; (3) confirm per-venue endpoint availability +
+      auth/credential requirements for ODDS_API/PINNACLE/BETFAIR's markets/results/settlement APIs. This evidence turns
+      RETIRE-vs-SCAFFOLD from a judgment call into a determinable one for the operator (repo: unified-trading-pm,
+      docs-only — this todo is itself the discriminator work, not the final decision).
+- [ ] [CODE] P2. Execute the FINAL decided fix (retire OR scaffold-with-BLOCKED-CREDENTIALS, per the operator's answer
+      to the discriminator investigation above) — either wire up + schedule real capture (or scaffold the adapters and
+      mark `BLOCKED-CREDENTIALS` per the external-data-always-available rule), or retire/adjust
       `VENUE_DATA_TYPE_CAPABILITIES` for these tuples (repo: unified-api-contracts and/or instruments-service /
       market-tick-data-service depending on the decision). **Done when**: the expected-universe golden regression
       (`tests/unit/scripts/goldens/expected_universe/sports.json`) is updated to match the new reality and the
-      honest-coverage denominator reflects it. **Gated on operator sign-off of the recommended decision below.**
+      honest-coverage denominator reflects it. **Gated on the operator's FINAL decision (not just the DECISION todo's
+      recommendation above) — do NOT touch `VENUE_DATA_TYPE_CAPABILITIES` or the golden regression until then.**
 
 ### DIAG findings (2026-07-24, slot 5) — corroborating a second, independent investigation
 

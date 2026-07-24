@@ -174,7 +174,7 @@ flipping the checkbox.
       Fixed by bumping the grace period 5s→20s (within gunicorn's `graceful_timeout=30`). Also filed, separately,
       `/plans/active/issues/deployment_api_sigabrt_crash_loop_2026_07_24.md` (an independent, undiagnosed SIGABRT
       crash-loop ~35×/day likely compounding the same interruption problem — not root-caused in this session).
-- [ ] [BACKEND] P1. Bound or async-ify `_load_inventory`'s cold-cache path
+- [x] [BACKEND] P1. Bound or async-ify `_load_inventory`'s cold-cache path
       (`deployment_api/routes/deployments_inventory.py:2040-2073`) — today it computes `_compute_inventory`
       synchronously under `_inventory_lock` with NO timeout when `_inventory_cache` has no entry for the
       `(cloud, region_scope)` key. Since `_inventory_cache` is in-process (not shared across Cloud Run instances,
@@ -182,7 +182,13 @@ flipping the checkbox.
       same stale-while-revalidate treatment already used for the TTL-expired path (return a fast placeholder + kick
       `_kick_background_refresh`), or at minimum wrap the synchronous compute in the existing
       `_PROVIDER_CENSUS_TIMEOUT_SEC` bound so a cold hit degrades gracefully instead of blocking indefinitely (repo:
-      deployment-api).
+      deployment-api). ✅ — **deployment-api@6f6a389**: cold path now calls the SAME `_kick_background_refresh`
+      submission the TTL-expired path uses (in-flight guard collapses concurrent first-polls to ONE census — never
+      double-submits) and bound-waits on it via `future.result(timeout=_PROVIDER_CENSUS_TIMEOUT_SEC)`; a census that
+      doesn't finish in time degrades to an honest empty placeholder (never fabricated data) while the compute keeps
+      running in the background and warms the cache for the next poll. `_refresh_inventory`/`_kick_background_refresh`
+      now return the computed items/Future so the cold path can consume the same in-flight compute instead of a separate
+      synchronous block. quality-gates.sh green; shipped via quickmerge --agent.
 - [ ] [REVIEW] P1. Once both todos above ship, re-run this same end-to-end verification: `active/` object count
       before/after (must be ≈ live-VM count this time, not just "much smaller"), plus 3 consecutive
       `GET /api/deployments/inventory` (no `status` filter) calls each <45s including a genuinely cold one (e.g. right
