@@ -142,7 +142,7 @@ source:
       confirmed phantom fingerprint in the issue doc (always nonzero-count + EMPTY sample), on the operator's own
       interactive human-planning VM where genuine WIP is unremarkable. Full writeup + caveats (the literal "2172" figure
       is not retroactively recoverable — item 1's fix now caps reported `dirty_files` at 5) in
-      `plans/active/issues/git_health_phantom_dirty_flicker_ff_cron_race_2026_07_21.md` § "7. RESOLVED 2026-07-24 (slot
+      `/plans/active/issues/git_health_phantom_dirty_flicker_ff_cron_race_2026_07_21.md` § "7. RESOLVED 2026-07-24 (slot
       3)".
 - [ ] [BACKEND] P2. Add a periodic dirty-resolution sweep to the worker-liveness watchdog that runs independently of any
       spawn attempt. Every caller of `resolve_dirty_state`/`commit_and_push_dirty_repos` today is spawn or respawn time
@@ -231,19 +231,20 @@ source:
   reporter's own git status vs. the FF-cron's), not as a same-repo streak; this is worth re-reading before touching item
   5, which extends the identical signal to a different consumer.
 
-- **2026-07-24 (slot 3)**: Item 6 resolved (issue doc: `git_health_phantom_dirty_flicker_ff_cron_race_2026_07_21.md` §
-  "7. RESOLVED 2026-07-24 (slot 3)"). Slot 2 had already independently discovered the same task was blocked on
-  interactive-box access and filed `/blocked BLK-c83c6bdd` + skipped; that blocker still holds (re-verified live: same
-  `ikenna-worker` SSM `AccessDeniedException`, same host resolution to the human-planning VM `i-0dd9812a96cdda5dc`).
-  Rather than re-file the identical blocked-question, found an alternate verification path that doesn't need box access:
-  the orchestrator's own `GET /api/slots/{id}/git-status?host=<host>` debug endpoint returns the raw stored row
-  including `dirty_files_sample`, which the summarized fleet view drops. That row shows a live-updating (behind 59→60
-  across two polls seconds apart), non-empty, named 5-file sample for `unified-trading-pm` — the opposite fingerprint
-  from every confirmed phantom instance in this issue doc (always nonzero-count + empty-sample). Verdict: **REAL**, not
-  phantom. Caveat carried into the issue doc: the literal "2172" figure can't be retroactively confirmed since item 1's
-  own fix now caps the reporter's `dirty_files` at the 5-entry sample length — the verdict rests on the sample's
-  non-emptiness and stability, not on reproducing the exact original count. Lesson for whoever picks up item 7 next:
-  when a prior slot's `/blocked` note says a resource is unreachable, re-verify the blocker live before accepting it
-  (things can change), but also check whether the SERVER ITSELF already has richer data than the summary view exposes
-  before concluding a task is truly stuck — `/api/fleet/git-health` and the per-slot `/api/slots/{id}/git-status?host=`
-  debug endpoint are NOT the same payload (the latter keeps `dirty_files_sample`).
+- **2026-07-24 (slot 3)**: Item 6 resolved (issue doc:
+  `/plans/active/issues/git_health_phantom_dirty_flicker_ff_cron_race_2026_07_21.md` § "7. RESOLVED 2026-07-24 (slot
+  3)"). Slot 2 had already independently discovered the same task was blocked on interactive-box access and filed
+  `/blocked BLK-c83c6bdd` + skipped; that blocker still holds (re-verified live: same `ikenna-worker` SSM
+  `AccessDeniedException`, same host resolution to the human-planning VM `i-0dd9812a96cdda5dc`). Rather than re-file the
+  identical blocked-question, found an alternate verification path that doesn't need box access: the orchestrator's own
+  `GET /api/slots/{id}/git-status?host=<host>` debug endpoint returns the raw stored row including `dirty_files_sample`,
+  which the summarized fleet view drops. That row shows a live-updating (behind 59→60 across two polls seconds apart),
+  non-empty, named 5-file sample for `unified-trading-pm` — the opposite fingerprint from every confirmed phantom
+  instance in this issue doc (always nonzero-count + empty-sample). Verdict: **REAL**, not phantom. Caveat carried into
+  the issue doc: the literal "2172" figure can't be retroactively confirmed since item 1's own fix now caps the
+  reporter's `dirty_files` at the 5-entry sample length — the verdict rests on the sample's non-emptiness and stability,
+  not on reproducing the exact original count. Lesson for whoever picks up item 7 next: when a prior slot's `/blocked`
+  note says a resource is unreachable, re-verify the blocker live before accepting it (things can change), but also
+  check whether the SERVER ITSELF already has richer data than the summary view exposes before concluding a task is
+  truly stuck — `/api/fleet/git-health` and the per-slot `/api/slots/{id}/git-status?host=` debug endpoint are NOT the
+  same payload (the latter keeps `dirty_files_sample`).
