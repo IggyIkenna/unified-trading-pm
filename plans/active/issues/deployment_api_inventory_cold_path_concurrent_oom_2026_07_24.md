@@ -42,7 +42,7 @@ source:
   ([REVIEW] P1) todo, against the deployed uts-shared-deployment-api-00270-2l9 / deployment-api:366154d, 2026-07-24."
 execution_scope: orchestrator-agent
 drift_direction: advance-code
-sequential: false
+sequential: true
 depends_on: []
 locked_by:
 locked_since:
@@ -160,3 +160,9 @@ lines appear, AND that both calls return real (non-empty) data, before closing t
   unchanged (403–404) and reproduced a container OOM-kill via 2 concurrent cold/stale-refresh census computations. Filed
   this doc + updated the parent issue doc's Progress Log. NOT fixed in this session (review-only pass; a fix needs a
   BACKEND worker's design call between the 4 candidate approaches above).
+- **2026-07-24 (slot-5, review)**: Auto-dispatched task `-002` (the `[REVIEW]` todo below) while `-001` (the `[BACKEND]`
+  fix) was still `[ ]` and actively in-progress on slot 6 — this doc's prose ordering ("once the todo above ships") was
+  never machine-enforced (`sequential: false`, no `depends_on`), so the dispatcher offered `-002` before its real
+  prerequisite existed. Fixed the plan-authoring gap: flipped `sequential: true` above so future regens correctly gate
+  this doc's `[REVIEW]` todo behind its `[BACKEND]` todo. Released task `-002` back to the queue via
+  `/skip-current-task` (not attempted — there is nothing to verify yet) so it gets picked up once `-001` ships.
