@@ -1012,8 +1012,8 @@
       "ldr_ci_status": "GREEN",
       "codebase_health": {
         "qg_red_reason": null,
+        "coverage_pct": null,
         "large_file_count": 5,
-        "coverage_pct": 85.82,
         "warn_file_count": 10
       }
     },
