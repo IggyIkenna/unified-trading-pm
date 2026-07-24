@@ -16,7 +16,7 @@ related: [mtds_uac_adapter_contract_baseline_regression_2026_07_09, lint_sweep_7
 created: 2026-07-24
 parent_epic: sports_master
 assigned_vm: planning
-resolved_by: unified-trading-pm@<pending-sha>
+resolved_by: unified-trading-pm@c7af81ffa
 source:
   [
     market-data-processing-service quality-gates.sh STEP 5.70 check_adapter_contract_regression (warn-only post-gate,
@@ -75,7 +75,7 @@ a real regression). Non-urgent (warn-only, does not block QG/commits), but shoul
       `market-data-processing-service` — git-bisect the commit that dropped the count, then regenerate the baseline or
       restore the missing call. **Done when**: a written conclusion states which, with the commit SHA cited, and
       `check_adapter_contract_regression` reads clean (or the baseline is regenerated to the new correct count) for this
-      file. ✅ — unified-trading-pm@\<pending-sha\>
+      file. ✅ — unified-trading-pm@c7af81ffa
 
 ## Resolution
 
