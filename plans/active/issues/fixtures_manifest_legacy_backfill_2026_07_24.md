@@ -118,14 +118,23 @@ Operator/main-agent decision needed on:
 4. Once (1)-(3) are decided, this becomes a properly-scoped, AO-dispatchable backfill todo (idempotent, SPOT-VM-eligible
    per the backfill HARD RULE) — file it as a new plan/todo at that point.
 
+## Resolution (main, 2026-07-24, re BLK-61c182dc)
+
+Main resolved the design autonomously (rapid-dev — these are codex-grounded data-architecture calls, not operator-owned;
+operator wakes only for plan-unlock): (1) scope-confirm is a worker grep-then-read folded into the backfill pre-flight;
+(2) outcomes-row convention = **mirror the live writer** (outcomes row only for completed fixtures,
+`home_score_regulation.notna()`) — a stub row for an unplayed fixture is an honest-absence HARD-RULE violation, so the
+choice is codex-dictated, not open; (3) mechanism = **re-derive both rows from the on-disk
+`FIXTURES_SCHEDULE`/`FIXTURES_OUTCOMES` GCS objects**, extending `migrate_fixtures_split.py` with
+`ManifestWriter.record_captured()` only where the object-split hasn't run. The backfill is now a **dispatchable
+`[DATA] P0` todo** in `/plans/active/sports_closeout_batch1_ao_ready_2026_07_24.md` (SPLIT out of that plan's code todo,
+which is flipped ✅ for the shipped code scope). This issue doc stays the full analysis; the two todos below are
+SUPERSEDED by that plan todo.
+
 ## Todos
 
-- [ ] [DATA] P1. BLOCKED-OPERATOR-DECISION — confirm whether any live code path still writes legacy
-      `data_type="FIXTURES"` manifest rows today (grep + read `instruments-service` sports writers for any remaining
-      un-migrated call site), then decide the outcomes-row convention (§ "Recommended decision" items 1-2 above) so the
-      backfill can be scoped. (repo: instruments-service)
-- [ ] [DATA] P1. BLOCKED-OPERATOR-DECISION — once the convention is decided, scope + write the manifest backfill (extend
-      `migrate_fixtures_split.py` with `ManifestWriter.record_captured()` calls for both split shards, OR a separate
-      manifest-only backfill reading existing split GCS objects) as its own plan/todo; run on a SPOT VM per the backfill
-      HARD RULE; verify via a follow-up corpus-wide manifest census showing zero `data_type="FIXTURES"` rows. (repo:
-      instruments-service)
+- [x] [DATA] P1. ✅ SUPERSEDED (main 2026-07-24) — scope-confirm + convention are resolved above; folded into the
+      dispatchable backfill todo's pre-flight in `/plans/active/sports_closeout_batch1_ao_ready_2026_07_24.md`.
+- [x] [DATA] P1. ✅ SUPERSEDED (main 2026-07-24) — the manifest backfill is scoped + dispatchable as the `[DATA] P0`
+      todo in `/plans/active/sports_closeout_batch1_ao_ready_2026_07_24.md` (main-resolved design; SPOT-VM; census-zero
+      Done-when). Run + verify there.
