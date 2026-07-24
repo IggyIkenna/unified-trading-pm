@@ -115,7 +115,7 @@ SLOT_NUM=""
 OPERATOR_EXPLICIT=0   # set to 1 only when --operator is passed (gates persisted read-back)
 
 usage() {
-    sed -n '2,30p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
+    sed -n '2,51p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
     exit "${1:-1}"
 }
 
