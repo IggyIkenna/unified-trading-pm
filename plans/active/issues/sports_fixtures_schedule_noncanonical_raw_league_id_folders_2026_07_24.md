@@ -86,6 +86,63 @@ resolves the canonical league_id lookup to the raw af_id instead, and writes the
 Confirmed `league=169` (CHINA_SUPER_LEAGUE) alone accounts for 36 of the 86; the remaining ~50 are spread across the
 other affected pairs (not yet individually enumerated — see todo below).
 
+## Root-cause conclusion (2026-07-24, slot 5)
+
+**Confirmed: a registry-growth / write-time-lookup-miss bug, not a runtime race or a code defect in the canonicalizer's
+logic itself — the canonicalizer behaves exactly as designed, but "designed" includes a silent, non-loud fallback that
+this bug exploits.**
+
+The write path is `instruments_service.engine.orchestrator.sports_reference_fixtures.py:692`
+(`partition={"entity": entity_name, "league": _orch._canonical_league_id(_pf_lid_str)}`), which calls
+`_canonical_league_id()` (`instruments_service/engine/orchestrator/sports.py:57-85`):
+
+```python
+def _canonical_league_id(lid_raw: object) -> str:
+    s = str(lid_raw).strip()
+    # Pass 1: numeric -> canonical via api_football id lookup
+    if s and s.isdigit():
+        league = _orch.get_league_by_api_football_id(int(s))
+        s = league.league_id if league is not None else s   # <-- SILENT FALLBACK
+    # Pass 2: strip provider-id suffix via UAC canonicalizer
+    return _orch._uac_canonicalize_league_id(s)
+```
+
+When `get_league_by_api_football_id(int(s))` returns `None` (a lookup miss), `s` is left as the **raw numeric string**,
+UNCHANGED — no exception, no log, no retry. Pass 2 (`_uac_canonicalize_league_id`) cannot rescue it either: a bare
+numeric string has no provider-id suffix to strip, so it also passes through unchanged. The unresolved numeric string is
+then used directly as the GCS partition's `league=` path segment — this is the exact mechanism that produces
+`league=169` instead of `league=CHINA_SUPER_LEAGUE`.
+
+`get_league_by_api_football_id()` (`unified_api_contracts/canonical/domain/sports/league_data.py:424-429`) is a **plain,
+static, in-process dict lookup** (`_API_FOOTBALL_ID_TO_LEAGUE.get(api_football_id)` → `LEAGUE_REGISTRY.get(lid)`) built
+once at import time from whatever UAC package version is installed in that process — there is no cache-warming delay, no
+async race, nothing time-dependent about the lookup itself. The only way it returns `None` for an af_id that IS
+registered **today** is if the WRITING PROCESS was running an **older UAC version whose registry did not yet contain
+that league** at the moment of the write.
+
+**This is exactly what happened, with a dated, git-verifiable proof**: `CHINA_SUPER_LEAGUE` (`api_football_id=169`) was
+added to the UAC registry in `unified-api-contracts@beec78aa` ("feat(sports): add China Super League + Russia Premier
+League to the canonical registry"), committed **2026-07-21**
+(`unified_api_contracts/canonical/domain/sports/league_data_other.py:290-299`). The non-canonical `league=169` shards
+this issue doc found are dated `day=2026-05-05` and `day=2026-05-06` — **nearly 2 months BEFORE the registry gained this
+league**. At write time, `get_league_by_api_football_id(169)` legitimately returned `None` (169 was not yet in
+`LEAGUE_REGISTRY`), so `_canonical_league_id` silently fell through to `"169"`, and the shard landed under the wrong
+path. Writes for the SAME af_id AFTER 2026-07-21 correctly resolve to `league=CHINA_SUPER_LEAGUE` (consistent with the
+doc's own finding that the canonical folder for this pair is "already fully populated"), which is why the corpus is
+split between the two path shapes for the exact same league.
+
+**Generalizes to every affected (league, season) pair, not just CHINA_SUPER_LEAGUE**: any af_league_id added to the UAC
+registry AFTER fixtures_schedule writes had already occurred for that league will show this same split — a non-canonical
+`league=<raw_id>` folder holding the pre-registration writes, and a canonical `league=<CANONICAL_ID>` folder holding
+everything written after. The registry growing over time (new leagues added as coverage expands) is routine and
+expected; the bug is that the writer has no mechanism to correct ALREADY-WRITTEN shards once a league joins the
+registry, and no loud signal (log/metric/exception) fires at write time to surface that a lookup missed — so this class
+of split silently recurs every time a new league is onboarded mid-corpus.
+
+**Unblocks todo 3 (the fix)**: the writer's silent-fallback-to-raw-id branch needs to fail loud (or trigger a
+documented, tested re-resolution/migration hook) instead of quietly writing under a divergent path — see the `[CODE] P1`
+todo below.
+
 ## Recommended decision
 
 1. Enumerate every non-canonical `league=<numeric>` / bare-day folder in the fixtures_schedule corpus (single walk, not
@@ -99,10 +156,19 @@ other affected pairs (not yet individually enumerated — see todo below).
 
 ## Todos
 
-- [ ] [DIAG] P1. Root-cause why the sports fixtures_schedule writer sometimes resolves the canonical league_id lookup to
-      the raw `af_league_id` instead of the registered string, and writes the shard under `league=<raw_id>` (repo:
+- [x] ✅ [DIAG] P1. Root-cause why the sports fixtures_schedule writer sometimes resolves the canonical league_id lookup
+      to the raw `af_league_id` instead of the registered string, and writes the shard under `league=<raw_id>` (repo:
       instruments-service). **Done when**: a written conclusion cites the specific writer code path and the
-      lookup-miss/fallback condition that triggers it.
+      lookup-miss/fallback condition that triggers it. — See "Root-cause conclusion (2026-07-24, slot 5)" above. Writer
+      code path: `instruments_service/engine/orchestrator/sports.py:57-85`'s `_canonical_league_id()`, called from
+      `sports_reference_fixtures.py:692`. Condition: a silent fallback in Pass 1 — when
+      `get_league_by_api_football_id()` (a static UAC registry dict lookup) misses, the raw numeric af_league_id string
+      is used unchanged as the `league=` path segment, no exception/log/retry. Root cause of the MISS: registry growth
+      over time — dated proof via `unified-api-contracts@beec78aa` (2026-07-21, added `CHINA_SUPER_LEAGUE` af_id=169 to
+      the registry) vs. the non-canonical `league=169` shards dated `day=2026-05-05`/`2026-05-06` (~2 months earlier,
+      when 169 legitimately wasn't registered yet). Generalizes to every affected pair: any league added to the registry
+      AFTER writes had already occurred for it produces this same split, with no mechanism to correct already-written
+      shards and no loud signal when a lookup misses.
 - [ ] [DIAG] P2. Enumerate the full non-canonical (`league=<numeric>` / bare) population across the whole
       fixtures_schedule corpus, not just the 10 pairs this task sampled (repo: instruments-service). **Done when**: a
       corpus-wide census reports the total row count and the set of affected (league, season) pairs.
