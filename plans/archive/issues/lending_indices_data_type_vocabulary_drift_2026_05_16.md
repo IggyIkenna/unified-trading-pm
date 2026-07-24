@@ -12,8 +12,22 @@ tags: []
 related: []
 created: 2026-05-16
 author: ikenna-slot-2
-source: ['gs://lending-indices-central-element-323112/_index/availability_index.parquet', 'gs://oracle-prices-central-element-323112/_index/availability_index.parquet', 'gs://lst-rates-central-element-323112/_index/availability_index.parquet', 'gs://perp-funding-central-element-323112/_index/availability_index.parquet', 'gs://dex-swaps-central-element-323112/_index/availability_index.parquet', 'gs://dex-pools-central-element-323112/_index/availability_index.parquet', 'gs://gas-fees-central-element-323112/_index/availability_index.parquet (CLEAN — gas_fees snake-only)', 'gs://liquidations-central-element-323112/_index/availability_index.parquet (CLEAN — liquidations base-form)', market-tick-data-service/market_tick_data_service/cli/handlers/*_handler.py (per-handler canonical constants), codex/02-data/availability-manifest-and-data-status.md (3K update — canonical type names)]
-severity: P1 — affects 6 DeFi asset_group manifests' queryability; any downstream filter on one form silently misses ~30-60% of rows
+source:
+  [
+    "gs://lending-indices-central-element-323112/_index/availability_index.parquet",
+    "gs://oracle-prices-central-element-323112/_index/availability_index.parquet",
+    "gs://lst-rates-central-element-323112/_index/availability_index.parquet",
+    "gs://perp-funding-central-element-323112/_index/availability_index.parquet",
+    "gs://dex-swaps-central-element-323112/_index/availability_index.parquet",
+    "gs://dex-pools-central-element-323112/_index/availability_index.parquet",
+    "gs://gas-fees-central-element-323112/_index/availability_index.parquet (CLEAN — gas_fees snake-only)",
+    "gs://liquidations-central-element-323112/_index/availability_index.parquet (CLEAN — liquidations base-form)",
+    market-tick-data-service/market_tick_data_service/cli/handlers/*_handler.py (per-handler canonical constants),
+    /codex/02-data/availability-manifest-and-data-status.md (3K update — canonical type names),
+  ]
+severity:
+  P1 — affects 6 DeFi asset_group manifests' queryability; any downstream filter on one form silently misses ~30-60% of
+  rows
 locked_by: live-defi-rollout
 locked_since: 2026-05-16
 ---
@@ -72,7 +86,7 @@ confirmed via `gsutil ls`. **Only the manifest `data_type` column carries the ke
 2. **3-LENDING.5 reconciler scope**: the in-flight slot-2 sub-agent (dispatch `a8d9a9f29f77e0c48`,
    `instruments-service/scripts/reconcile_lending_indices_phantom.py`) must accept BOTH forms in its row-key match
    logic. A naive `df.query("data_type=='lending_indices'")` filter would miss 24,976 rows (54% of manifest).
-3. **3K codex update accuracy**: `codex/02-data/availability-manifest-and-data-status.md` § "Phase 1A DeFi bundled
+3. **3K codex update accuracy**: `/codex/02-data/availability-manifest-and-data-status.md` § "Phase 1A DeFi bundled
    data_types" lists `lending_indices` (snake) as the canonical type. Operator should ratify which form is canonical so
    the drift can be reconciled in one direction.
 4. **Hive path vs manifest column inconsistency**: the actual GCS hive segment is `data_type=lending_indices` (snake,
@@ -186,12 +200,12 @@ groupby (data_type, chain) returns 1×N matrix (canonical form only, fully-popul
 - 3-LENDING.5 reconciler in-flight: sub-agent `a8d9a9f29f77e0c48` writing
   `instruments-service/scripts/reconcile_lending_indices_phantom.py`
 - Spec source: `plans/active/defi_catalogue_chain_primitives_2026_05_10.md` § Phase 3 todo `3-LENDING.5`
-- 3K codex update: `codex/02-data/availability-manifest-and-data-status.md` (PM@`aab47b12`)
+- 3K codex update: `/codex/02-data/availability-manifest-and-data-status.md` (PM@`aab47b12`)
 
 execution: owner: "operator decision on Option A/B/C; ikenna-slot-2 ships the migration once decided" cadence: "one-shot
 operator decision + one-shot migration" verifier: "lending-indices manifest groupby data_type returns 1 row (canonical
-form only)" <<<<<<< Updated upstream last_executed: "2026-05-16 19:44 UTC — Option A applied workspace-wide (slot 4
-cross-slot pickup + slot 2 parallel script)"
+form only)" last_executed: "2026-05-16 19:44 UTC — Option A applied workspace-wide (slot 4 cross-slot pickup + slot 2
+parallel script)"
 
 ## RESOLVED — 2026-05-16 (slot 4 cross-slot pickup + slot 2 collision)
 
@@ -259,4 +273,3 @@ single batch on 2026-04-13 (legacy one-shot, no active drift):
 
 3. **Phase C (validation)**: re-run audit to confirm zero kebab rows + zero empty-chain rows across all 6 buckets.
    Optional: add QG STEP scanning canonical manifests for non-snake `data_type` values (workspace ratchet).
-   > > > > > > > Stashed changes
