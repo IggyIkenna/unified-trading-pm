@@ -254,10 +254,18 @@ residual decay, not the original cliff-to-51/s failure (which is resolved).
       load. Not proven to be the residual-decay's cause (the preemption may be unrelated timing), but a plausible
       contributor worth checking before further profiling — untested, filed as a follow-up rather than blocking this
       doc's closeout.
-- [ ] 7. [CODE] P3. Genuinely stream `_load_manifested_cells()`'s parquet read (row-group batches via
-      `download_bytes_range`/the `GcsRangeFile` pattern already used in
-      `market-tick-data-service/scripts/verify_cefi_canonical_4surface_2026_07_20.py`) instead of relying on a bigger
-      machine type — the machine-type fix works today but doesn't scale if cefi's index keeps growing.
+- [x] 7. [CODE] P3. ~~Genuinely stream `_load_manifested_cells()`'s parquet read~~ — **the predicted risk materialized
+      for real 2026-07-24**, for defi rather than cefi: its manifest index grew to 23,977,316 rows / 41 columns / 988
+      MiB in ~24h (production capture never stopped) and stalled a `backfill-orphan-e-defi` dry-run for 19+ minutes on
+      an `e2-highmem-8` — the machine-type fix genuinely stopped scaling, exactly as this todo warned. **Fixed**
+      (`instruments-service@444baab4`, simpler than the originally-proposed row-group streaming): column-projected the
+      read via `pyarrow.parquet` to the 6 fields `build_covered_index()` actually uses
+      (`date`/`venue`/`data_type`/`chain`/`instrument_type`/`capture_status`) instead of a full 41-column
+      `pd.read_parquet` — never materialises the wide unused columns (`instrument_id`/`error_reason`/
+      `service_name`/...) that were the real memory cost, not the row count itself. 3 new regression tests, full
+      `quality-gates.sh` green. Full incident + numbers: `plans/active/issues/estate_orphan_assessment_2026_07_21.md`
+      (session 4 progress log). Row-group streaming remains a further future option if column projection alone stops
+      being enough as the index keeps growing, but is no longer blocking.
 
 ## Lesson (do not re-learn)
 
