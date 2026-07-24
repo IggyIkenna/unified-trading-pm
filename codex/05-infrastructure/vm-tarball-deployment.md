@@ -233,7 +233,6 @@ Use this table to decide which startup pattern to use when writing a new `launch
 | `launch-cefi-fwd-daily-cron-vm.sh`               | `MANIFEST_PER_VM_SHARDS` | Cron daemon; no direct manifest writes                                       |
 | `launch-tradfi-fwd-daily-cron-vm.sh`             | `MANIFEST_PER_VM_SHARDS` | Cron daemon; no direct manifest writes                                       |
 | `launch-planning-vm.sh`                          | `MANIFEST_PER_VM_SHARDS` | Orchestrator daemon; no manifest writes                                      |
-| `launch-epic-vm.sh`                              | startup-script-url       | Agent-orchestrator epic VM; boots long-lived orchestrator service            |
 | `launch-vm-zombie-watchdog.sh`                   | startup-script-url       | Always-on daemon; polls GCS heartbeats every 5 min                           |
 | `launch-prediction-features-vm.sh`               | startup-script-url       | SUPERSEDED by Pattern-A `launch-features-vm.sh`; keep until archived         |
 | `launch-features-sports-parallel-backfill-vm.sh` | startup-script-url       | SUPERSEDED by Pattern-A `launch-features-vm.sh`; keep until archived         |

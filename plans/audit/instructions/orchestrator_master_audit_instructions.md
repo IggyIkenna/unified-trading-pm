@@ -249,8 +249,9 @@ cadence + completeness matters more than any single subsystem.
       `rg "/etc/orchestrator-ami-version\|IS_PREBAKED" agent-orchestrator/scripts/bootstrap_vm.sh` — expect ≥3 hits.
 
 - [ ] **(h3) Launch script supports `AMI_ID` override.** Grep:
-      `rg "AMI_ID" deployment-service/scripts/vm/launch-epic-vm-aws.sh deployment-service/scripts/vm/lib/aws_ec2_launch_lib.sh`
-      — expect ≥2 hits.
+      `rg "AMI_ID" deployment-service/scripts/vm/launch-central-brain-aws.sh deployment-service/scripts/vm/lib/aws_ec2_launch_lib.sh`
+      — expect ≥2 hits. (Was `launch-epic-vm-aws.sh`, REMOVED 2026-07-24 with the rest of the per-epic-VM code —
+      `launch-central-brain-aws.sh` is the surviving AMI_ID-accepting launcher, for the central/planning box.)
 
 - [ ] **(h4) Packer README links to current code paths.** Read
       [`deployment-service/packer/agent-orchestrator/README.md`](../../../../deployment-service/packer/agent-orchestrator/README.md)

@@ -66,15 +66,19 @@ source: "/plan-reconcile AO-scope run 2026-07-23"
       `vm_prefix_registry.py`. Per-epic VMs were deprecated 2026-06-27 and CLAUDE.md says delete deprecated code with no
       shims, but the failover module received an explicit KEEP ruling on the multi-VM-may-return argument, so this is a
       judgment call rather than a cleanup. Operator direction 2026-07-23 was to file it and decide later. **Gate**: a
-      recorded keep-or-delete ruling; if KEEP, the named single-VM scenario that still needs it. — **RULED 2026-07-24:
-      KEEP.** Named scenario — **workload/blast-radius isolation for a single high-stakes epic**: if a future epic (e.g.
-      live-capital-at-risk automation) needs guaranteed isolated compute that must never contend for slots with the
-      shared general-purpose fleet, a dedicated epic-VM provides isolation the single-VM model cannot express. Distinct
-      from the already-KEPT host-failover resilience case
-      ([`ao_failover_multi_vm_readiness_2026_07_20`](/plans/archive/2026_07/ao_failover_multi_vm_readiness_2026_07_20.md),
-      archived complete) — that ruling keeps `FailoverLoop` for a SECOND HOST taking over if the central orchestrator VM
-      goes offline, which is a different axis from one-VM-per-epic workload allocation; the two rulings are not the same
-      argument and should not be conflated.
+      recorded keep-or-delete ruling; if KEEP, the named single-VM scenario that still needs it. — **RULED 2026-07-24
+      (REVISED, same day): DELETE.** First pass recorded KEEP with a named workload-isolation scenario; operator then
+      overruled it — don't want the code debt right now, recreate from git history if the per-epic model ever returns.
+      **Shipped `deployment-service@7438ec5`**: deleted `launch-epic-vm.sh` + `launch-epic-vm-aws.sh`, removed all 10
+      `agent-orch-vm-*` entries from `vm_prefix_registry.py` and the mirrored relaunch table in
+      `data_pipeline_monitors/launcher_registry.py`, fixed the 2 dependent tests (`test_vm_launcher_scripts.py`'s stale
+      EXEMPT entry, `test_vm_serial_capture_cron.py`'s spot-check) and the packer README (repointed at the surviving
+      `launch-central-brain-aws.sh`), full QG green. **What KEEPS the failover story whole**: the operator's actual ask
+      is single-VM DISASTER RECOVERY, not per-epic isolation — `launch-central-brain-aws.sh` already does a from-scratch
+      relaunch of the CENTRAL/PLANNING box with EIP reassociation (near-instant, DNS stays valid) — confirmed it never
+      depended on the epic-VM scripts. The one gap found: that relaunch does NOT re-provision the self-hosted GitHub
+      Actions "glue" runner pool (`scripts/self-hosted-runners/`, ~39 workflows in this repo route through it) that also
+      lives on this VM — tracked as a new finding, not resolved here.
 - [x] ✅ [OPERATOR] P3. Spot-check the live fleet for a slot dirty over 24h with no live session, to rank the periodic
       dirty-resolution sweep. If none exists this is a structural gap with no active incident — a reason to sequence it
       behind P1 work, NOT a reason to close it. **Gate**: the one-line finding recorded in the issue doc. — **CHECKED
