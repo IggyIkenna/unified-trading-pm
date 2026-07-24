@@ -65,12 +65,18 @@ source:
 
 ## Todos
 
-- [ ] [DOCS] P2. Codify the peer-versus-operator reply branch in `unified-trading-pm/agents/main.md` STEP 2B so the
+- [x] ✅ [DOCS] P2. Codify the peer-versus-operator reply branch in `unified-trading-pm/agents/main.md` STEP 2B so the
       procedure is not folklore. Rule to state: `from_role == "operator"` uses `/reply`; any other `from_role` uses
       `POST /api/agents/by-role/<from_role>/message` with `from_agent_id`. The doc currently says to POST a reply for
       EVERY polled message regardless of `from_role`, and the interim mitigation was done ad hoc in one live session and
       never written down. **Gate**: the diff lands and the next live cross-role exchange shows a `to_agent` message in
-      the recipient's poll.
+      the recipient's poll. — **SHIPPED `unified-trading-pm@026b79fff`**: STEP 2B now branches explicitly on `from_role`
+      with both curl examples (verified against `agent-orchestrator/server/routes/agents.py:604-715` — `/reply`
+      hardcodes `direction=from_agent` to the caller's own role; `by-role/<role>/message` is the only channel that posts
+      `direction=to_agent`, reachable via the peer's `/poll`). STEP 2A's redelivery sentence also updated to point at
+      the branch. Also filed the identical gap in `agents/review.md` STEP 2 as a new todo on the source issue doc
+      (different file, out of this todo's scope). Gate gets its first live proof on the next real cross-role exchange;
+      the diff-lands half is satisfied now.
 - [x] ✅ [BACKEND] P2. Repoint or remove the five dead documentation references in `agent-orchestrator/server/` that
       point at files deleted by `agent-orchestrator@19766e7`. The targets are `docs/AUDIT_FINDINGS_2026_05_18.md`,
       `docs/PLAN.md` and `docs/MAIN_AGENT_CUTOVER_REVIEW.md`, all confirmed absent, cited from `bootstrap.py`,
