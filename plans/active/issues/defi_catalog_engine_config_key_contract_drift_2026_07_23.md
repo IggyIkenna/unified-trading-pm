@@ -94,14 +94,22 @@ times), each internally consistent with itself, but never cross-checked against 
    direction per-archetype (rename the catalog's keys to match the engine, or vice versa — needs the archetype's
    original author/design intent, since either the catalog or the engine could be the "wrong" side) — this is real,
    scoped, mechanical work once each decision is made, not a design question.
-2. **Systemic**: add a cheap CI-level or QG-level check that, for every `StrategyArchetype` with a catalog builder,
-   constructs the engine against a real catalog spec and asserts it doesn't immediately no-op/raise — this is the kind
-   of test gap that let 5 archetypes silently rot. A single parametrized test over `specs_for_archetype(a)` for every
-   catalogued archetype, asserting the engine can be constructed AND that `on_tick` doesn't universally `return []`
-   given plausible feature data, would have caught all 5 of these at write-time.
+2. **Systemic**: ✅ SHIPPED 2026-07-24 — see "Systemic guardrail shipped" section below for the full closure writeup
+   (`strategy-service@238fb797` + `@03310bdf`). add a cheap CI-level or QG-level check that, for every
+   `StrategyArchetype` with a catalog builder, constructs the engine against a real catalog spec and asserts it doesn't
+   immediately no-op/raise — this is the kind of test gap that let 5 archetypes silently rot. A single parametrized test
+   over `specs_for_archetype(a)` for every catalogued archetype, asserting the engine can be constructed AND that
+   `on_tick` doesn't universally `return []` given plausible feature data, would have caught all 5 of these at
+   write-time.
 3. **Sweep the remaining unchecked archetypes** (the 3 MEV + the 6 other already-"drivable" ones) with the same cheap
    mechanical check before assuming they're fine just because they have a working tick-loader — a working tick-loader
-   proves ticks get built, not that the engine does anything useful with them.
+   proves ticks get built, not that the engine does anything useful with them. ✅ DONE 2026-07-24 as a side effect of
+   the systemic test (§2 above) — all 3 MEV archetypes confirmed construction-clean (allow-listed for firing, by
+   design); `CARRY_BASIS_PERP` (170 rows across `target_universe/` + `DEFI_SLOTS`), `CARRY_FUNDING_DISPERSION` (78
+   rows), `ARBITRAGE_PRICE_DISPERSION` (30 rows, already fixed earlier in this doc), `DEFI_LP_CONCENTRATED`/`_POOL`/
+   `_VAULT` (3 rows each) all confirmed firing cleanly, zero silent-degradation found. The sweep additionally found 5
+   MORE broken archetypes outside this original "6 already-drivable" list (CeFi/TradFi/Sports directional + vol +
+   market-making archetypes never previously checked by anyone) — see "Systemic guardrail shipped" section below.
 
 ## Evidence
 
@@ -610,3 +618,89 @@ Read directly: `unified_api_contracts/internal/architecture_v2/{schemas.py,enums
 Grepped (then read every promising hit): `RecursiveLoopOrchestrator`, `RecursiveLoopRequest`, `ATOMIC_ON_CHAIN`,
 `ltv_mode`, `n_loops` across `execution-service` and `strategy-service`. No code changed in either repo; this section is
 investigation + scoping only.
+
+## Systemic guardrail shipped (2026-07-24) — Recommendation §2 closed, plus 7 more NEW archetype bugs found
+
+Built the single comprehensive parametrized test Recommendation §2 asked for:
+`tests/unit/engine/strategies/v2/test_all_catalogued_archetypes_construct_and_fire.py` (`strategy-service@03310bdf`). It
+enumerates **every one of the 32 archetypes** in `target_universe/catalog.py`'s `_BUILDERS_BY_ARCHETYPE` dispatch
+registry (not just the DeFi ones this doc's original sweep covered — the doc's own Recommendation §2 asked for "every
+`StrategyArchetype` with a catalog builder", which spans CeFi/TradFi/Sports too) — 531 total catalog rows — **plus** all
+28 entries in `archetype_slots_defi.py`'s `DEFI_SLOTS` (the second catalog surface this doc's earlier section
+discovered). For every row: constructs the real registered engine (`factory.py`'s `ARCHETYPE_ENGINE_REGISTRY`) from that
+row's actual `initial_config`, asserts construction doesn't raise, then calls `on_tick` with a plausible,
+engine-appropriate synthetic tick (feature keys derived from the row's own config where the engine keys them
+per-venue/per-protocol/per-outcome) and asserts a real, non-empty instruction — unless the archetype is on one of two
+small, explicit, named allow-lists:
+
+- **`_ALLOWED_EMPTY_ARCHETYPES`** (6 archetypes, legitimate + permanent, construction-only) — exactly the set this doc
+  already named: `CARRY_RECURSIVE_BORROW_LENDING_ONLY` + `CARRY_BASIS_PERP_INV` (orchestrator-stub,
+  `staking_yield_enabled=false`), `LIQUIDATION_CAPTURE` + `ARBITRAGE_MEV_LIQUIDATION_BUNDLE` (no live
+  liquidation-candidate feed exists anywhere, confirmed above), `ARBITRAGE_MEV_JIT_LIQUIDITY` + `ARBITRAGE_MEV_BACKRUN`
+  (opportunistic/mempool-driven by design, no static currency universe).
+- **`_KNOWN_BROKEN_ARCHETYPES`** (5 archetypes — see "NEW bugs found" below) — wired via
+  `pytest.mark.xfail(strict=True, ...)`, one line of reason each. `strict=True` means the row is asserted to fail TODAY
+  (visible XFAIL in the test report, not a silent pass) — the moment a future fix makes it pass, the suite turns that
+  into an XPASS **failure**, forcing whoever fixes the archetype to also delete its allow-list entry, so this file can
+  never quietly drift stale in either direction.
+
+Any row not on either list that returns `[]` fails the test outright — the guardrail this doc's Recommendation §2 asked
+for.
+
+**Wiring**: `strategy-service/scripts/quality-gates.sh` sets `PYTEST_UNIT_DIR="tests/"` (confirmed by reading the
+script, not assumed) — the new file lives under `tests/unit/engine/strategies/v2/`, so it is automatically part of every
+future `quality-gates.sh` run, no extra wiring needed.
+
+### 2 mechanical catalog fixes shipped alongside (same bug class, found by this test's own construction)
+
+While building the test, its OWN construction run found 2 more archetypes silently no-op'ing forever via the exact same
+catalog/engine config-key-drift bug class — but these two were unambiguous, same-file renames (no design judgment
+required), so fixed immediately per the same triage this doc already used for the DeFi fixes above
+(`strategy-service@238fb797`, `target_universe/catalog_trading.py`):
+
+- **`STAT_ARB_PAIRS_FIXED`** (7 rows) — catalog set `leg_a`/`leg_b`/`venue`; `StatArbPairsFixedEngine._load_pair_config`
+  reads `long_instrument`/`short_instrument`/`long_venue` (confirmed by grep: no other consumer reads `leg_a`/`leg_b`
+  for this catalog surface — kept as documentation). Added the real keys alongside.
+- **`STAT_ARB_CROSS_SECTIONAL`** (3 rows) — catalog set `basket`; `StatArbCrossSectionalEngine._parse_universe` reads
+  `universe`. Added `universe` (same value) alongside `basket`.
+
+Both verified empirically (constructed the real engine from the pre-fix row → confirmed `on_tick` returned `[]` forever;
+post-fix → real instruction). Both now covered by the systemic test's must-fire assertion (not allow-listed).
+
+### 5 NEW, still-unfixed bugs found (NOT silently allow-listed — flagged per the sub-agent task's explicit instruction)
+
+The remaining 5 broken rows this test's construction found require real trading-parameter/design judgment to fix
+correctly (which threshold values, which outcome-id convention, which option strike/expiry rule) — not a mechanical
+rename — so they were **not** fixed here, and are **not** silently swept into the legitimate allow-list. Each is
+`xfail(strict=True)` with a one-line reason in the test file itself (also summarized here for visibility):
+
+| Archetype                         | Rows | Catalog sets                                                                               | Engine actually reads                                                                                     | Why not mechanical                                                                                                                                                                                                                                    |
+| --------------------------------- | ---- | ------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `RULES_DIRECTIONAL_CONTINUOUS`    | 19   | `entry_zscore`/`exit_zscore`/`window_size`/`signal`                                        | `long_feature`/`long_threshold`/`short_feature`/`short_threshold`                                         | Catalog encodes z-score mean-reversion (distinct entry/exit); engine is a single static-threshold rule model with no reversion/exit concept — no mechanical mapping exists.                                                                           |
+| `RULES_DIRECTIONAL_EVENT_SETTLED` | 9    | `edge_method`/`min_drift_edge`/`features`, or `staking_method`/`stake_size`, or `category` | dynamically-named `rule_<name> = "<feat>:<op>:<val>,...\|<outcome>\|<stake_frac>\|<max_odds>"` DSL string | Needs real per-row threshold/outcome/stake values invented, not renamed.                                                                                                                                                                              |
+| `ML_DIRECTIONAL_EVENT_SETTLED`    | 15   | `venue`/`league`/`market`/`edge_method`/`staking_method`                                   | `outcome_order` (comma-sep outcome_ids indexed by `predicted_class`)                                      | `market` (1X2/halftime_1x2/match_winner/moneyline) suggests a plausible ordering, but the exact outcome-id strings the upstream ML model + features pipeline emit is a convention decision on a money-path archetype — escalated rather than guessed. |
+| `MARKET_MAKING_EVENT_SETTLED`     | 6    | `venue`/`league`/`market`/`spread_ticks`                                                   | `back_instrument`+`lay_instrument`                                                                        | Real per-exchange market/selection instrument ids, not derivable from league+market alone.                                                                                                                                                            |
+| `VOL_TRADING_OPTIONS`             | 14   | `underlying`/`expression`/`edge_method`/`iv_percentile_*`                                  | `call_instrument`+`put_instrument`                                                                        | Needs an actual strike+expiry selection rule (ATM straddle selection) — a genuine build task, same class of gap as `CARRY_STAKED_BASIS_DATED`'s dated-contract resolver, not a rename.                                                                |
+
+**Total new-bug footprint found by this systemic test**: 66 rows across these 5 archetypes, on top of the 5 archetypes
+(across ~40 rows) already fixed earlier in this doc — confirming the doc's own prediction that this bug class was
+systemic, not DeFi-specific. **Follow-up needed** (new, not yet scoped as todos elsewhere): a human design decision per
+archetype above (rule-threshold values / outcome-id convention / option strike-expiry rule), after which the mechanical
+catalog fix + removing the corresponding `xfail` entry is a scoped, AO-dispatchable todo.
+
+**Verification**: `bash scripts/quality-gates.sh --no-fix` — full suite green: 5510 passed, 206 skipped, **5 xfailed**
+(exactly the 5 archetypes above, confirmed by name in the pytest summary — zero unexpected failures, zero XPASS).
+Re-confirmed via a plain-python dry-run harness mirroring the exact same construct+fire logic across all 531 catalog
+rows + 28 `DEFI_SLOTS` rows (0 unexpected failures, 0 unexpected passes) before and after shipping.
+
+**Shipped**: `strategy-service@03310bdf` (new test file, 540 lines) + `strategy-service@238fb797` (the 2 mechanical
+`catalog_trading.py` fixes — landed as a separate follow-up commit after a quickmerge stash-interaction in a heavily
+concurrent shared checkout dropped it from the first attempt; verified both commits are on `origin/live-defi-rollout`
+and the working tree matches origin exactly with zero drift).
+
+**Incidental fix, unblocked shipping fleet-wide**: while shipping, `run_validators.py`'s plans/active/\*.md link checker
+(which every repo's `quickmerge.sh` re-gate runs regardless of target repo) was failing on a stale link in
+`master_to_live_defi_2026_05_23.md` → a `github_actions_ci_cost_reduction_2026_07_15.md` deleted by an unrelated,
+in-flight 3-way plan split that missed updating this one referrer — blocking every repo's quickmerge, not just this one.
+Fixed via the sanctioned path (re-ran `scripts/plans/regenerate_active_plan_inventory.py`, the auto-generated section's
+own owner script, rather than hand-editing the table) — `unified-trading-pm@1e13d425a`.
