@@ -231,11 +231,16 @@ source:
       (`sports_p2_history_apifootball_2015_to_present-*`, etc.) and its orphan rate — the elevated churn tracks the
       TASK, not the slot. No code change indicated; accepted as cadence, self-mitigated by the already-live periodic
       orphan sweep.
-- [ ] [REVIEW] P2. Correct the "0 dead links" claim in `ao_open_issues_consolidated_close_out_2026_07_17.md`'s
+- [x] ✅ [REVIEW] P2. Correct the "0 dead links" claim in `ao_open_issues_consolidated_close_out_2026_07_17.md`'s
       2026-07-18 Progress Log to state the sweep's actual scope. The cited sweep commits landed roughly ten hours AFTER
       the commit that deleted these files and covered different documents, so the line reads as fleet-wide proof when it
       is not — which is exactly what stops the next person re-running the one-second grep. **Gate**: the entry names
-      which commits swept what and links the issue doc for the batch it missed.
+      which commits swept what and links the issue doc for the batch it missed. — **DONE (unified-trading-pm, this
+      commit)**: `ao_open_issues_consolidated_close_out_2026_07_17.md`'s 2026-07-18 entry now has a dated CORRECTION
+      naming `ao@19766e7` (00:43:10, the actual deleting commit) vs `ao@3d2c0e6`/`ao@63d8284` (~10:28-10:35, the
+      OPERATIONS.md/env-var batch the sweep actually covered) and links
+      `plans/active/issues/ao_repo_docs_deleted_against_instructions_dead_code_refs_2026_07_23.md` for the missed
+      batch + its fix todos. Duplicate todo in that issue doc flipped alongside (same finding, one fix).
 - [ ] [BACKEND] P3. Root-cause the 2026-07-12 degradation onset — `worker_polling_dead` going 0 to 587 and the
       spawn-to-dispatch ratio moving from 0.6:1 to 44:1 on that date — or record an explicit not-worth-excavating
       decision. The mechanism itself is fixed; what was never explained is why it STARTED that day, which means a
