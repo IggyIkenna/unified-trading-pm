@@ -146,6 +146,24 @@ ingested). Use for operator-only work, trackers, design docs, and dispatcher-sur
   plan sometimes already recorded a todo's resolution — e.g. a Progress Log entry — while the checkbox up top stayed
   unflipped; a fresh reviewer skimming top-to-bottom re-investigates an already-solved problem)._ When editing a plan,
   grep the rest of the doc for the todo's subject before adding or leaving it open.
+- **A digest of ANOTHER plan's todos is never real checkbox syntax** _(finding H, 2026-07-24: a coordination/umbrella
+  plan that lists "referenced, not duplicated" todos from other plans for discoverability MUST NOT format those digest
+  lines as `- [ ] [TAG] P<n>. ...` — verified via direct code read of `regen_backlog_from_plan.py`'s `_UNCHECKED_RE`,
+  which is indentation-agnostic, so a NESTED digest checkbox is parsed exactly like a real one. If this plan is ever
+  flipped to `assigned_vm: planning`, regen would dispatch the digest as a stub task duplicating the SAME work already
+  tracked — with full context — in the referenced plan, going stale the moment that plan's real todo changes, and very
+  likely blowing the 10-100 todo cap below. Format a digest line as `- **[TAG] P<n>.** ...` (bold, no `[ ]` brackets) —
+  same information, same visual weight, structurally un-ingestable. This is a discoverability index, not a second copy
+  of the dispatch surface; the referenced plan's OWN file is still the one place that todo actually ships from)._
+- **A plan gated on a FORKED-OUT child's work states it as `depends_on` + `gate_on_depends: true`, not just prose**
+  _(finding I, 2026-07-24: splitting an over-cap plan into an umbrella parent + child plans is now a routine pattern —
+  see `check_line_caps.sh`'s `umbrella: true` exemption — and it is easy to leave the real ordering constraint as header
+  prose only, e.g. "Track 5 (C-GREEN gated on T1→T3)" after Track 1 moved to a separate child plan. Prose alone is
+  invisible to the dispatcher: if the parent is ever flipped to `assigned_vm: planning`, the gated track's todos would
+  be dispatchable immediately, concurrently with the child's still-open prerequisite work)._ The SAME edit that forks a
+  section out to a child plan must ALSO add that child's slug to the parent's `depends_on:` frontmatter (+
+  `gate_on_depends: true` if the parent has any remaining todo that genuinely can't start before the child finishes) —
+  do not defer this to a follow-up.
 
 ---
 
