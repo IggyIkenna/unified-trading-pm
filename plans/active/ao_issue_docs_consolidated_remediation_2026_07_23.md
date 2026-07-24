@@ -82,9 +82,13 @@ source: "/plan-reconcile AO-scope run 2026-07-23"
       shims, but the failover module received an explicit KEEP ruling on the multi-VM-may-return argument, so this is a
       judgment call rather than a cleanup. Operator direction 2026-07-23 was to file it and decide later. **Gate**: a
       recorded keep-or-delete ruling; if KEEP, the named single-VM scenario that still needs it.
-- [ ] [OPERATOR] P3. Spot-check the live fleet for a slot dirty over 24h with no live session, to rank the periodic
+- [x] ✅ [OPERATOR] P3. Spot-check the live fleet for a slot dirty over 24h with no live session, to rank the periodic
       dirty-resolution sweep. If none exists this is a structural gap with no active incident — a reason to sequence it
-      behind P1 work, NOT a reason to close it. **Gate**: the one-line finding recorded in the issue doc.
+      behind P1 work, NOT a reason to close it. **Gate**: the one-line finding recorded in the issue doc. — **CHECKED
+      2026-07-24** (live query, all 17 slots' `git_status_json`, all repos): **zero repos dirty fleet-wide right now** —
+      no slot matches dirty>24h+no-live-session. No active incident; Plan B todo #7 (the periodic dirty-resolution
+      sweep) stays exactly as prioritized — this result doesn't argue for deprioritizing it, since the gap is structural
+      (no watchdog owns this today) regardless of today's snapshot.
 - [ ] [BACKEND] P2. BLOCKED-OPERATOR-DECISION — resolve the `/api/escalate` versus proposed `/api/escalation/{id}` route
       collision before ANY escalation code is written. `/api/escalate` already exists as the GHA-to-orchestrator CI-wall
       judgment dispatch; the proposed route is operator escalation. Whoever implements the second without noticing the
