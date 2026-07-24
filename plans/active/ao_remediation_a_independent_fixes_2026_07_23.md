@@ -146,7 +146,17 @@ source:
       `orchestrator.service` restarts (a fleet-wide bounce main will not do unilaterally). Resolves naturally on the
       next routine orchestrator deploy/restart, or the operator can run it now:
       `git pull --ff-only origin live-defi-rollout && sudo systemctl     restart orchestrator.service && sudo bash scripts/install-docs-reconcile-timer.sh`,
-      then verify via `systemctl     list-timers` + `sudo systemctl start docs-reconciler.service`.
+      then verify via `systemctl     list-timers` + `sudo systemctl start docs-reconciler.service`. — RE-VERIFIED
+      2026-07-24 (slot-3, re-dispatched the same todo): blocker (2) is now RESOLVED on its own — the live root clone is
+      at `867b173` (descendant of `329571e`) and `orchestrator.service` (`ExecMainStartTimestamp` 06:45:14 UTC) started
+      AFTER `329571e` landed (06:25:05 UTC), so the running server is serving the `mode=docs_reconcile`-aware code
+      already; no operator action needed for that half. Blocker (1) is CONFIRMED STILL OPEN and is the only remaining
+      step: `systemctl list-timers` on this VM shows `plan-reconciler.timer` live but `docs-reconciler.timer` "could not
+      be found", and this slot's sandbox has no root (`sudo -n true` → "no new privileges flag is set" — containerized,
+      no escalation path exists from a worker session). Skipping this task back to the queue with `reason_code=PARKED`
+      rather than re-attempting — only `sudo bash scripts/install-docs-reconcile-timer.sh` (+ a
+      `sudo systemctl start docs-reconciler.service` kick, or wait for its first natural elapse) remains, and it is
+      root-only exactly as BLK-f09e9ca9 already found.
 
 ## Progress Log
 
