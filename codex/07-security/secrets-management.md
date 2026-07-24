@@ -277,8 +277,9 @@ api_key = get_secret_client(
 | `aavescan-api-key`                                              | `AAVESCAN_API_KEY`  | Aavescan DeFi analytics                                                                                                                                                       | ✅ Yes                      | `KEY_IN_SM` — no cassette                                 |
 | `aws-hyperliquid-s3`                                            | n/a                 | AWS IAM credentials (JSON: `aws_access_key_id`, `aws_secret_access_key`, `region`) for Hyperliquid requester-pays S3 archives (`hyperliquid-archive`, `hl-mainnet-node-data`) | ✅ Yes — **ACTIVE, in use** | `NO_VCR` (S3/boto3, not HTTP API)                         |
 
-> **`graph-api-key`** also exists in SM — this is the **deprecated** old name. Use `thegraph-api-key`. Delete
-> `graph-api-key` once all consumers are confirmed to use the new name.
+> **`graph-api-key`** — **DELETED 2026-07-23**. It was the deprecated old name; confirmed zero live consumers
+> workspace-wide (only a stale `features-service` doc example referenced it, now fixed) and deleted from GCP. Use
+> `thegraph-api-key` (9-key rotation pool, `-2`..`-9`).
 
 > **Env var fix required:** `uniswapv2_adapter.py` and `uniswapv4_adapter.py` use `THEGRAPH_API_KEY` — must be changed
 > to `THE_GRAPH_API_KEY`.
