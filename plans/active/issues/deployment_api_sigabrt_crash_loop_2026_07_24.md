@@ -88,11 +88,70 @@ While diagnosing the reaper-drain P0, I queried live Cloud Logging for `uts-shar
 File as its own P1 BACKEND/INFRA investigation (not bundled into the reaper-drain P0, which is scoped to the
 cancellation-timeout fix and already shipped). Suggested next steps for whoever picks this up:
 
-- [ ] [BACKEND] P1. Root-cause the `Uncaught signal: 6` crash-loop on `uts-shared-deployment-api` (project
+- [x] ✅ [BACKEND] P1. Root-cause the `Uncaught signal: 6` crash-loop on `uts-shared-deployment-api` (project
       `central-element-323112`, region `asia-northeast1`): correlate SIGABRT timestamps (`gcloud logging read` on
       `run.googleapis.com%2Fvarlog%2Fsystem`) against per-instance request volume / `containerConcurrency=80` load, and
       audit every module reachable from `deployment_api.main` for an EAGER (import-time, not lazily-constructed)
       gRPC-based client (Firestore, Pub/Sub, Secret Manager) that `preload_app = True`
       (`deployment_api/gunicorn.conf.py`) would construct in the gunicorn MASTER before fork — the classic
       gRPC-post-fork-abort hazard. If found, either make that construction lazy (per-worker, post-fork) or set
-      `preload_app = False` and re-measure the SIGABRT rate over the following 3 days (repo: deployment-api).
+      `preload_app = False` and re-measure the SIGABRT rate over the following 3 days (repo: deployment-api). —
+      INVESTIGATED 2026-07-24 (slot 2). Full detail in Progress Log — deployment-api@1adf54b (faulthandler
+      instrumentation shipped; root cause narrowed but NOT yet 100% confirmed, see log).
+
+## Progress Log
+
+- **2026-07-24 (slot 2, backend_engineer)** — Correlated + audited per the todo, then went further once the named
+  hypothesis was refuted.
+  - **Correlation (live `gcloud logging read` against `uts-shared-deployment-api`, project `central-element-323112`)**:
+    pulled every `Uncaught signal: 6` entry from `run.googleapis.com%2Fvarlog%2Fsystem` over the last 3 days, then
+    cross-referenced the `run.googleapis.com%2Frequests` stream in ±2min and ±6min windows around several crashes (e.g.
+    `2026-07-24T22:31:25Z`, revision `uts-shared-deployment-api-00269-t66`, pid=188). Found **zero correlated heavy/slow
+    traffic** — the only requests nearby are trivial `/health` and `/api/health` probes at 3-7ms latency. `pid`s within
+    one revision climb monotonically over many hours (e.g. `00268-d2l`: 28 → 2874 across ~8h), meaning the crash hits
+    individual gunicorn **workers** repeatedly within the SAME long-lived container, not the master and not a full
+    container restart.
+  - **Eager-gRPC-client audit (the named hypothesis)**: grepped every route module reachable from `deployment_api.main`
+    for module-level (import-time) `firestore.Client(`/`pubsub_v1.*Client(`/ `SecretManagerServiceClient(` construction.
+    **None found** — every gRPC-based client construction in the repo (`health_routes.py`'s
+    `_check_pubsub`/`_check_secret_manager`/`_check_deployment_events`; `_ci_status_firestore_store.py`'s
+    `firestore_module_factory`) is inside a function, called lazily at request time, several with an explicit "lazy
+    cloud-SDK boundary" comment for exactly this reason. `_cfg = DeploymentApiConfig()` at `main.py:30` (module level)
+    is a pydantic-settings object with no client construction in `__init__`. **This hypothesis is REFUTED** —
+    `preload_app = True` is not planting a poisoned gRPC channel across the fork in this codebase today.
+  - **New evidence, mechanistic match**: read the installed `gunicorn/arbiter.py` directly
+    (`.venv/lib/python3.13/site-packages/gunicorn/arbiter.py:489-508`, `murder_workers()`) — confirmed gunicorn's own
+    Arbiter sends **exactly `signal.SIGABRT`** (`self.kill_worker(pid, signal.SIGABRT)`) to any worker whose heartbeat
+    file (`worker.tmp.last_update()`) is older than `timeout` (300s here, `deployment_api/gunicorn.conf.py:41`, "5
+    minutes for turbo data-status"). This is a 1:1 mechanistic match for the observed "signal 6" — it explains why
+    individual WORKER pids die (not the master), and it's consistent with per-worker heartbeat starvation rather than a
+    fork-time poisoned resource. **NOT fully confirmed**: the `WORKER TIMEOUT (pid:%s)` critical-level log line
+    gunicorn's arbiter emits immediately before the kill (`self.log.critical(...)`, same function) does **not** appear
+    anywhere in 7 days of Cloud Run logs (checked all log streams, not just stderr) — so this remains the leading,
+    evidence-backed hypothesis, not a closed case. (Confirmed separately: gunicorn's own logging pipeline DOES reach
+    Cloud Run stderr in general — e.g. an unrelated `asyncio.CancelledError` traceback from `_cancel_background_tasks`
+    inside `lifespan.py` shows up cleanly at `2026-07-24T13:30:43Z` — so the absence isn't a blanket "gunicorn logs
+    never reach Cloud Run" explanation; it's specifically the arbiter's own critical-log call that's unaccounted for.)
+  - **Most likely trigger for the >300s heartbeat gap**: cross-referencing the SIBLING issue doc
+    ([`deployment_registry_reaper_not_draining_stale_entries_2026_07_24.md`](deployment_registry_reaper_not_draining_stale_entries_2026_07_24.md))
+    Gap 2 — `_load_inventory`'s COLD path (`deployment_api/routes/deployments_inventory.py:2040-2073`) computes
+    `_compute_inventory` **synchronously under a lock, with no timeout and no `run_in_executor` wrap**, unlike the
+    reaper tick and the main sync loop (both already offloaded to a `ThreadPoolExecutor`). A synchronous call NOT
+    wrapped in an executor blocks the single asyncio event loop thread directly — which is exactly what would prevent
+    `UvicornWorker`'s heartbeat-notify callback (itself scheduled on that same event loop) from firing, starving the
+    gunicorn arbiter's heartbeat file past the 300s cutoff. That gap already has its own tracked `[BACKEND] P1` todo in
+    the sibling issue doc (todo 2, not yet shipped) — not duplicated here; flagging the connection is the useful
+    addition from this session's evidence.
+  - **Shipped**: `deployment-api@1adf54b` — `faulthandler.enable()` added to gunicorn's `post_fork` hook
+    (`deployment_api/gunicorn.conf.py`), so every worker now dumps a full all-threads Python stack trace to stderr on
+    ANY fatal signal (SIGABRT included) before dying. This is additive-only (no behavior change to request handling),
+    directly targets the exact diagnostic gap found above (today's crash leaves zero Python-level trace), and will
+    either confirm the arbiter-timeout hypothesis or reveal the true cause definitively on the next occurrence (expected
+    within ~20-40 min of deploy, per the measured cadence). `bash scripts/quality-gates.sh --no-fix` green (130s),
+    shipped via `quickmerge --agent --files`.
+  - **Handoff**: once the deploy carrying `1adf54b` reaches prod (LDR→staging promote per this repo's `staging` toggle —
+    NOT direct-to-main; verify via `gh pr list` / the promote workflow) and the next SIGABRT fires,
+    `gcloud logging read` the stderr stream for the `Fatal Python error` / `Current thread` faulthandler dump and update
+    this doc with the confirmed stuck call site. If it names `_compute_inventory`'s cold path, that directly validates
+    (and raises confidence on) the sibling issue doc's Gap-2 todo as the fix. If it names something else entirely, file
+    a fresh, evidence-backed BACKEND todo here with the exact stuck frame.
