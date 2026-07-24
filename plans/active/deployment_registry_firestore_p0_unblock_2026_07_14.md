@@ -155,18 +155,20 @@ entry). UTC datetimes only. `quality-gates.sh`-green before each commit; commit 
 > prerequisites of the `[DATA]` enable-todo below, in order. Links 1 + 2 are real work; 3 + 4 are probably fine but fail
 > SILENTLY (see the VERIFY todo) — which is exactly why they are tracked rather than assumed.
 
-- [ ] [INFRA] P1. **Link 1 — rebuild the VM code tarballs so a newly launched VM actually carries the fix.** VMs never
-      pull git: `setup-data-pipeline-vm.sh` downloads prebuilt tarballs (`NEEDED_TARBALLS` = unified-api-contracts-code,
-      unified-trading-library-code, deployment-service-code) built by `scripts/vm/create-code-tarballs.sh`. Until a
-      rebuild carries deployment-service@0676ba12 + unified-trading-library@7b0dc3be, **a VM launched today still boots
-      the stale fork** — the launch date is irrelevant, the TARBALL's build date is what counts. Determine what triggers
-      the rebuild and from which ref (LDR vs `main` — the fix landed on LDR; if tarballs build from `main`, the promote
-      must land first), then confirm the published tarball CONTAINS `unified_trading_library/deployment_registry.py`
-      with `_mirror_firestore` and does NOT contain `deployment_service/deployments_registry.py`. Evidence: the tarball
-      object's build timestamp + a grep of its extracted contents. While in there, also confirm the tarball contains
-      `unified-trading-library@90170713`+ (D.1 `HOST_METRICS_WINDOW_KEY`, 2026-07-09) and `deployment-service@a6881d1`+
-      (`HostMetricsSampler()` wiring) — both predate the fork fix so any rebuild after 2026-07-09 should already carry
-      them, but confirm rather than assume; this is the other half of the Resources-column gap folded in below.
+- [x] ✅ [INFRA] P1. **Link 1 — rebuild the VM code tarballs so a newly launched VM actually carries the fix.** VMs
+      never pull git: `setup-data-pipeline-vm.sh` downloads prebuilt tarballs (`NEEDED_TARBALLS` =
+      unified-api-contracts-code, unified-trading-library-code, deployment-service-code) built by
+      `scripts/vm/create-code-tarballs.sh`. Until a rebuild carries deployment-service@0676ba12 +
+      unified-trading-library@7b0dc3be, **a VM launched today still boots the stale fork** — the launch date is
+      irrelevant, the TARBALL's build date is what counts. Determine what triggers the rebuild and from which ref (LDR
+      vs `main` — the fix landed on LDR; if tarballs build from `main`, the promote must land first), then confirm the
+      published tarball CONTAINS `unified_trading_library/deployment_registry.py` with `_mirror_firestore` and does NOT
+      contain `deployment_service/deployments_registry.py`. Evidence: the tarball object's build timestamp + a grep of
+      its extracted contents. While in there, also confirm the tarball contains `unified-trading-library@90170713`+ (D.1
+      `HOST_METRICS_WINDOW_KEY`, 2026-07-09) and `deployment-service@a6881d1`+ (`HostMetricsSampler()` wiring) — both
+      predate the fork fix so any rebuild after 2026-07-09 should already carry them, but confirm rather than assume;
+      this is the other half of the Resources-column gap folded in below. — VERIFIED 2026-07-24 (slot 2). Full detail in
+      Progress Log.
 - [ ] [INFRA] P1. **Link 2 — wire `DEPLOYMENT_REGISTRY_FIRESTORE_DUALWRITE` into the VM launch env.** Measured
       2026-07-17: **zero** launchers reference the flag. `_maybe_build_registry_store()` reads it off
       `UnifiedCloudConfig` (pydantic `AliasChoices` → process env), while launchers pass config via GCE metadata
@@ -252,6 +254,36 @@ entry). UTC datetimes only. `quality-gates.sh`-green before each commit; commit 
 - No `os.getenv`; UTC datetimes; reaper never raises into the sync loop; QG green on both repos.
 
 ## Progress Log
+
+- **2026-07-24 (slot 2, infra) — [INFRA] P1 "Link 1 — rebuild the VM code tarballs" — VERIFIED, no code change needed.**
+  The rebuild trigger question: there is **no automated CI trigger** for `create-code-tarballs.sh` — grepped every
+  `.github/workflows/*.yml` across the workspace for the script name, zero hits. It is a manual step per
+  `codex/05-infrastructure/vm-tarball-deployment.md` § "The tarball refresh cycle" (git push → run the script → VMs
+  launched after pick up the fresh tarball). This session's slot-2 worktree tracks `live-defi-rollout` directly (Path-B
+  topology), so a run from here builds **from LDR**, which already carries both fix commits — no `main` promote
+  dependency for this step. Found the tarballs at
+  `gs://deployment-scripts-central-element-323112/code/{unified-trading-library,deployment-service}-code.tar.gz` already
+  rebuilt at `2026-07-24T22:30:53Z` (via `gcloud storage ls -l`; `gsutil` itself is broken by a snap-confine permissions
+  issue on this host — used `/home/ubuntu/google-cloud-sdk/bin/gcloud storage` instead, which has working ADC) — this
+  predates my read of this task, so a prior incarnation of this same slot-2 session (before the spawn-heartbeat-timeout
+  respawn noted in this session's boot message) must have already run the rebuild. Verified rather than assumed:
+  downloaded + extracted both tarballs and confirmed **all four** required facts hold:
+  1. Manifest `commit_sha` for both tarballs (UTL `ad51f00`, deployment-service `4dce334`) —
+     `git merge-base --is-ancestor` in the local (LDR-fresh-pulled) worktrees confirms both are descendants of the fix
+     commits (`unified-trading-library@7b0dc3be`, `deployment-service@0676ba12`) AND exactly equal to local HEAD (fully
+     fresh, not just "new enough"). Both manifests report `git_status_clean: true` (no dirty-tree override was
+     needed/used).
+  2. `unified_trading_library/deployment_registry.py` is present in the UTL tarball and contains `_mirror_firestore` (5
+     references).
+  3. `deployment_service/deployments_registry.py` (the stale 583-line fork) is **absent** from the deployment-service
+     tarball — confirms the 2026-07-17 re-land (deletion) shipped through.
+  4. Both named predecessor commits are present: `HOST_METRICS_WINDOW_KEY` greps in 4 files inside the UTL tarball
+     (`daemon.py`, `lifecycle/__init__.py`, `deployment_registry.py`, top-level `__init__.py`); `HostMetricsSampler`
+     greps in `deployment_service/vm/heartbeat_cli.py` + its test. `git merge-base --is-ancestor` confirms local HEAD
+     descends from both `unified-trading-library@90170713` and `deployment-service@a6881d1`. No code changes required
+     for this todo — it was pure verification of an already-completed rebuild. Link 2 (wire the dual-write flag into VM
+     launch env), Link 3 (IAM), Link 4 (SDK-in-venv) remain open below; a NEWLY LAUNCHED VM now correctly boots the
+     fixed code path, but nothing yet turns the flag on for it.
 
 - **2026-07-24 (slot 2, review) — [REVIEW] P0 "verify the drain end-to-end" — PARTIAL PASS, findings filed.** Verified
   live against the deployed `uts-shared-deployment-api-00268-d2l` (image `deployment-api:e476c73`, confirmed a
