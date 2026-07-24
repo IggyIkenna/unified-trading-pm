@@ -103,23 +103,44 @@ on project `central-element-323112`.
 
 ## The actual open decision
 
-**Add a Cloud Logging exclusion filter** on the `_Default` sink, scoped to
-`logName="cloudaudit.googleapis.com/data_access" AND resource.type="gcs_bucket"` (or narrower — see options below). An
-exclusion filter stops the matched entries from being billed/stored in Cloud Logging **without** touching the underlying
-IAM Audit Config that generates them — so if Data Access logging was turned on for a real reason (e.g. a compliance
-requirement to track who reads/writes trading data), that audit posture stays fully intact; only the Cloud Logging
-cost/volume goes away. Two open questions block scoping this, in order:
+**Add a Cloud Logging exclusion filter** on the `_Default` sink. An exclusion filter stops the matched entries from
+being billed/stored in Cloud Logging **without** touching the underlying IAM Audit Config that generates them — so if
+Data Access logging was turned on for a real reason (e.g. a compliance requirement to track who reads/writes trading
+data), that audit posture stays fully intact; only the Cloud Logging cost/volume goes away.
 
-1. **Why is Data Access audit logging enabled on this project at all?** Nobody currently on record (this investigation
-   included) established whether it's an intentional compliance/security control, an accidental default left on, or
-   something set at the org level rather than per-project. This has to be answered first — excluding an
-   intentionally-required audit trail would be the wrong fix.
-2. **If it's safe to exclude, how broad should the exclusion be?** A blanket `resource.type="gcs_bucket"` exclusion is
-   simplest but loses Data Access visibility on every bucket project-wide, including anything more sensitive than
-   market-data tick buckets. A narrower exclusion scoped to just the high-volume buckets (`market-data-tick-*-prd-*`,
-   maybe the other canonical-migration targets) keeps auditing on lower-volume/higher-sensitivity buckets while killing
-   the actual cost driver. (Admin Activity logs — bucket create/delete, IAM changes — are separate, always free, and
-   unaffected either way.)
+## Operator decisions (2026-07-24 — continued session)
+
+- **Don't block on the "why" — proceed with a scoped filter now, escalate the "why" in parallel.** The blast-radius
+  check above (§ App-logging architecture) already shows Cloud Logging is not load-bearing for anything in-repo, and no
+  `google_project_iam_audit_config` resource exists in our own terraform (grepped clean workspace-wide) — weak evidence
+  it isn't a deliberately-codified control here, though not proof. Scoping the filter to buckets (not a blanket
+  `logName` exclusion) keeps this low-risk even if the "why" answer turns out to matter elsewhere.
+- **Scope is broader than the 2 known buckets — pattern-match every prod DATA bucket, not just market-data-tick.**
+  Operator's read: backfill/live campaigns will eventually hit every canonical prod bucket the same way (features,
+  instruments, strategy, execution — not just market-tick), so scoping narrowly to today's 2 offenders just means
+  refiling this issue again next quarter for the next bucket. Per
+  [/codex/05-infrastructure/bucket-isolation-model.md](/codex/05-infrastructure/bucket-isolation-model.md) §§1-3, EVERY
+  canonical prod bucket (Group A: `market-data-tick-{ag}`, `instruments-store-{ag}`, `features-calendar`; Group B:
+  `features-{ag}`, `ml-store`, `execution-store`, `strategy-store`, `portfolio-state`) shares one naming convention —
+  `{prefix}-{ag}-prd-central-element-323112` or `{prefix}-prd-central-element-323112` — so a single suffix-pattern
+  filter covers the whole family in one rule instead of enumerating buckets:
+
+  ```
+  logName="cloudaudit.googleapis.com/data_access"
+  AND resource.type="gcs_bucket"
+  AND resource.labels.bucket_name=~"-prd-central-element-323112$"
+  AND NOT resource.labels.bucket_name="trading-audit-records-prd-central-element-323112"
+  ```
+
+  **Required carve-out, verified via terraform**: `trading-audit-records-{env}-{project_id}`
+  (`deployment-service/terraform/gcp/main.tf:745`) ALSO carries the `-prd-` suffix (it resolves to
+  `trading-audit-records-prd-central-element-323112`) — it is the 7-year Retention-Lock compliance execution audit
+  trail, explicitly must stay fully Data-Access-audited, so the pattern above excludes it by exact name. Whoever applies
+  the filter should re-grep `-prd-central-element-323112` bucket names at apply-time in case a new compliance-sensitive
+  bucket was added since 2026-07-24, and add it to the `NOT` clause the same way.
+
+- **Enable Cloud Billing API + configure a BigQuery billing export now** — approved by operator, see § Attempted below
+  for why this session couldn't execute it directly.
 
 ## App-logging architecture check (operator question, 2026-07-24 — answered)
 
@@ -157,32 +178,48 @@ self-managed, do those already have a retention cycle? Checked via full-workspac
 
 ## What could not be established in-session
 
-- **The actual dollar figure.** `gcloud billing accounts list`/`gcloud billing projects describe` both fail with
-  `SERVICE_DISABLED` — the Cloud Billing API has never been enabled on this project. No BigQuery billing export dataset
-  exists either (`bq ls` returns zero datasets). The Billing Console (browser UI) was not reachable from this session.
-  Whoever picks this up should check Billing Console → Reports, filtered to Service = Cloud Logging, grouped by SKU, for
-  the authoritative number — and consider enabling the Cloud Billing API + a BigQuery export as a small separate fix so
-  this doesn't require manual reconstruction next time.
-- **Whether Data Access logging is an org-level policy** (would need org-level IAM/policy access this session's
-  credentials didn't have) or a project-level Audit Config entry (checkable via `gcloud projects get-iam-policy` →
-  `auditConfigs`, which also failed with a permission error in-session — the available service account lacked
-  `resourcemanager.projects.getIamPolicy`).
+Re-attempted directly 2026-07-24 (continued session) with live `gcloud` access, both available identities:
+
+- **`auditConfigs` read** — `gcloud projects get-iam-policy central-element-323112 --format=json` as
+  `unified-trading-sa@central-element-323112.iam.gserviceaccount.com`: `PERMISSION_DENIED` (lacks
+  `resourcemanager.projects.getIamPolicy`). Retried as `ikenna@odum-research.com`: fails with
+  `Reauthentication failed — cannot prompt during non-interactive execution` (cached creds expired, needs an interactive
+  `gcloud auth login` this session can't do). Org-policy list (`gcloud resource-manager org-policies list`) returned 0
+  items, but that's a different mechanism from IAM Audit Config and doesn't settle this.
+- **Cloud Billing API enable** — `gcloud services enable cloudbilling.googleapis.com --project=central-element-323112`:
+  `PERMISSION_DENIED` / `AUTH_PERMISSION_DENIED` (`unified-trading-sa` lacks `serviceusage.services.enable`).
+- **New this session**: `gcloud logging sinks list`/`describe` DID succeed (unlike the above) — confirmed the `_Default`
+  sink exists with an existing exclusion precedent (`debug-filter`:
+  `severity <= "DEBUG" AND NOT resource.type="cloud_run_job"`), and that Data Access logs route through `_Default` (not
+  `_Required`, which is Activity/SystemEvent/AccessTransparency only). So applying the exclusion filter itself is NOT
+  blocked the same way — only the "why" read and the billing-API enable are. Reading actual Data Access log entries is
+  still blocked separately (`gcloud logging read ... data_access ...` returns `[]` with no error — consistent with
+  needing `roles/logging.privateLogViewer`, matches the original finding).
+
+**All three blockers need the same thing: an identity with IAM-policy-read + `serviceusage.admin`/billing-admin scope,
+which neither available credential in this session has.** One handoff covers all three — see the escalation todo below.
 
 ## Todos
 
-- [ ] [DEVOPS] P2. Determine why GCS Data Access audit logging is enabled on `central-element-323112` — check the
-      project's IAM Audit Config (`gcloud projects get-iam-policy central-element-323112` → `auditConfigs`) and/or any
-      org-level audit policy, and ask whether it was a deliberate compliance decision.
-- [ ] [DEVOPS] P2. Once the "why" is answered, add the appropriately-scoped Cloud Logging exclusion filter (blanket vs
-      bucket-specific — see options above); the `_Default`/`_Required` sink is NOT managed in this repo's terraform (
-      confirmed 2026-07-24, zero `google_logging_project_sink`/`google_logging_metric` resources found workspace-wide) —
-      this will need a new terraform resource or a console/`gcloud` change, not an edit to an existing one. Before
-      flipping live, verify the filter does NOT also match `deployment-api/deployment_api/routes/client_treasury.py`'s
-      `_emit_cloud_audit_log` compliance write, which logs to the same `cloudaudit.googleapis.com/data_access` log name
-      (a `resource.type="gcs_bucket"`-scoped filter should be safe; a blanket `logName`-only filter would not be).
-- [ ] [DEVOPS] P3. Get the authoritative current $ figure from Billing Console → Reports (Cloud Logging service, Log
-      Volume SKU) and consider enabling the Cloud Billing API + a BigQuery billing export for this project so future
-      cost questions don't require manual metric reconstruction.
+- [ ] [DEVOPS] P1. **Hand off to an operator/agent session with elevated IAM permissions** (interactive
+      `ikenna@odum-research.com` login, or another admin-scoped identity) to run, against project
+      `central-element-323112`: 1. `gcloud projects get-iam-policy central-element-323112 --format='json(auditConfigs)'`
+      — report the full `auditConfigs` block verbatim; specifically whether `storage.googleapis.com` (or `allServices`)
+      has `DATA_READ`/`DATA_WRITE` configured, and at what level (this project vs inherited from an org/folder policy —
+      if the project-level block is empty, check org-level, since it may not be a project Audit Config entry at all). 2.
+      `gcloud services enable cloudbilling.googleapis.com --project=central-element-323112`, then configure a BigQuery
+      billing export (Billing Console → Billing export → "Detailed usage cost", or the terraform equivalent) —
+      operator-approved 2026-07-24. Report the resulting dataset name. 3. Once (1) confirms it's safe (or the operator
+      explicitly says proceed regardless of the answer), apply the Cloud Logging exclusion filter to the `_Default` sink
+      using the pattern in § Operator decisions above (suffix-matches every `-prd-central-element-323112` bucket,
+      explicit `NOT` carve-out for `trading-audit-records-prd-central-element-323112`). Verify via a preview/dry-run
+      that it does not also match `deployment-api/deployment_api/routes/client_treasury.py`'s `_emit_cloud_audit_log`
+      compliance write (same log name, different `resource.type` — should be unaffected by the
+      `resource.type="gcs_bucket"` scoping, but confirm before applying). Done-when: all three sub-items report back
+      into this doc's Progress Log with the actual values (auditConfigs content, BigQuery dataset name, filter-applied
+      confirmation).
+- [ ] [DEVOPS] P3. Once the BigQuery export is live, pull the authoritative current $ figure for Cloud Logging (Log
+      Volume SKU) so this issue closes with a real number instead of the `byte_count` proxy.
 
 ## Progress Log
 
@@ -193,3 +230,12 @@ self-managed, do those already have a retention cycle? Checked via full-workspac
   mechanism (Data Access audit billing, not migration waste) → confirmed the actual $ figure and the audit-config
   rationale are both unavailable with this session's access. No fix applied — this doc exists so the two open decisions
   above get an owner.
+- **2026-07-24 (continued)** — Answered the operator's app-logging-vs-Cloud-Logging question (§ App-logging architecture
+  check): self-managed GCS pipeline, Cloud Logging not load-bearing for anything in-repo. Operator then ruled on both
+  remaining decisions: proceed now with a scoped filter (don't block on the "why") while escalating the "why" in
+  parallel; broaden the exclusion scope to ALL `-prd-` canonical data buckets via a suffix pattern (not just the 2 known
+  offenders), with an explicit carve-out for the compliance-locked `trading-audit-records` bucket; enable Cloud Billing
+  API + BigQuery export now. Re-attempted all three directly this session — confirmed all three are blocked on the same
+  permission gap (`unified-trading-sa` lacks `resourcemanager.projects.getIamPolicy` + `serviceusage.services.enable`;
+  the human `ikenna@odum-research.com` credential is present but needs an interactive re-login this session can't
+  perform) — consolidated into one P1 handoff todo instead of three separate blockers.
