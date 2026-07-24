@@ -101,11 +101,33 @@ QG did not confirm green for either repo before this session had to checkpoint o
       completed). Recreated the staged `docs/SPORTS_INSTRUMENTS.md` diff (slot 10's fix lived only in its own `.tabs/10`
       worktree, not visible to this slot) verbatim in this slot's worktree (diffed byte-identical against slot 10's
       staged content before shipping), QG green, shipped `instruments-service@97fbea22`.
-- [ ] [DATA] P3. Locate the actual GCS bucket/path for the frozen 2018-2020 `markets`/`outcomes`/`settlements`/
-      `arbitrage_opportunity` scaffolding (bounded listing, not a corpus walk), confirm no live reader/writer (mirror
-      the diligence already done for the dead dimension-groups purge in `sports_closeout_batch1_ao_ready_2026_07_24.md`
-      todo 12's sibling), snapshot first, then purge. **Done when**: a listing for the scaffolding prefix returns 0
-      objects post-purge, with the pre-purge snapshot location cited.
+- [ ] [DATA] P3. **NOT LOCATED after a real bounded search — genuinely stuck, not a guess-avoidance punt.** Checked and
+      ruled out, all negative: (1) code — no adapter/module in `instruments-service`, `market-tick-data-service`, or
+      `market-data-processing-service` declares a `data_type`/`entity` literal `markets`/`outcomes`/`settlements` (only
+      1 hit anywhere: a placeholder string in `market-data-processing-service`'s own
+      `tests/unit/test_smoke_matrix.py:265`, not a real production value); MDPS's sports adapter dir
+      (`app/adapters/sports/`) has exactly 5 files, none named markets/outcomes/settlements — `arbitrage_adapter.py`'s
+      `outcome_name` is a per-row COLUMN inside already-known odds tick data, not a separate top-level entity. (2)
+      buckets — top-2-levels-deep bounded listing (not a corpus walk) of all 6 sports buckets
+      (`market-data-tick-sports-{prd,test}`, `instruments-store-sports-{prd,test}`, `features-sports-{prd,test}`):
+      `market-data-tick-sports-prd`'s `processed/`+`raw_tick_data/`+`_legacy_migrated_processed/` all start at
+      `day=2020-06-06` (the data-floor date — already floor-clamped, nothing pre-floor survives there);
+      `instruments-store-sports-prd`'s `legacy_football/` prefix (the one plausible "old scaffolding" candidate) is a
+      DIFFERENT legacy ETL dump (fixtures/teams/players/odds-by-league-id parquets from a consolidated multi-source
+      migration) with zero markets/outcomes/settlements/arbitrage_opportunity files inside either of its two subdirs.
+      (3) no older flat/pre-consolidation bucket name (`market-data-sports-{project}`,
+      `market-data-tick-sports-{project}` without `-prd-`, `sports-market-data-{project}`) exists — all 404, so this
+      isn't a bucket that already got swept by the unrelated `bucket_estate_consolidation_to_sub100` cleanup either
+      (that closeout doc has zero mentions of these terms). **Recommendation**: either (a) ask the operator directly —
+      this may be institutional memory from 2018-2020 that predates every current source's floor and isn't discoverable
+      from current code/bucket state at all, or (b) escalate to a proper Tier-2 reconciliation-style single-walk (per
+      `/data-pipeline-reconciliation` conventions) across the sports buckets' FULL prefix tree (not just 2 levels deep)
+      on a dedicated VM — genuinely warranted here since a shallow bounded listing already came up empty and a deeper
+      walk is the documented next step for exactly this situation, not a shortcut around it. Doing a deeper corpus-wide
+      walk in-session was correctly avoided per the single-walk-discipline HARD RULE. **Done when**: unchanged from the
+      original — a listing for the scaffolding prefix returns 0 objects post-purge, with the pre-purge snapshot location
+      cited — this todo is NOT closeable yet, only the negative-search-space is now documented so the next attempt
+      doesn't repeat it.
 - [ ] [DOC] P3. Once all 3 sub-parts above are shipped, flip `sports_closeout_batch1_ao_ready_2026_07_24.md`'s
       `[CLEANUP] P3` todo (currently still `[ ]`) to `[x]` citing all 3 SHAs, and close this issue doc.
 
@@ -118,3 +140,7 @@ QG did not confirm green for either repo before this session had to checkpoint o
   2018-2020 GCS scaffolding) remain open for whoever picks this up next.
 - 2026-07-24 (slot 10, same session, continued past the checkpoint): shipped sub-part 2 —
   `unified-api-contracts@a6346f95`. Only sub-part 3 (the GCS scaffolding purge) remains open.
+- 2026-07-24 (slot-6): spent a bounded search effort on sub-part 3 — see the updated todo above for the full
+  negative-result writeup (code search, 6-bucket 2-levels-deep listing, historical bucket-name check, all ruled out).
+  Genuinely not locatable from this slot's tooling; recommending operator input or a Tier-2 reconciliation walk rather
+  than continuing to guess. Todo left open, not closed.
