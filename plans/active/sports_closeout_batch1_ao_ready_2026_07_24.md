@@ -144,39 +144,42 @@ todos concurrently.
       write-path code reference. — unified-trading-pm@(this commit)
 
       **Conclusion: SCHEMA GAP, not a silent-empty write bug.** None of `reason`/`error_code`/`empty_reason`/
-          `classified_error` is a manifest COLUMN — confirmed against the live production schema itself: a targeted
-          single-file read of `gs://market-data-tick-sports-prd-central-element-323112/_index/availability_index.parquet`
-          (563,384 rows, 2026-07-24) lists 39 real columns and the only reason-bearing one is `error_reason`; none of the
-          other 4 names appear. The manifest's `AvailabilityRecord` schema
-          (`unified-trading-library/unified_trading_library/manifest_writer/_rows.py:284-346`) declares exactly one field
-          for this info — `error_reason: str = ""` — and every `record_*` write path
-          (`unified-trading-library/unified_trading_library/manifest_writer/_writer_record.py`) funnels into it via
-          `_record_status(..., error_reason=...)`. The 4 task-title names are each a DIFFERENT adjacent symbol that a
-          reader could mistake for a manifest column: `reason` is the kwarg name on `record_empty()`/`record_zero_rows()`
-          (`_writer_record.py:99,420,524` — its VALUE is what lands in `error_reason`, not a stored column name);
-          `error_code` is the attribute on `VenueErrorClassification`, the object `classify_venue_error()` returns
-          (`unified-api-contracts/unified_api_contracts/canonical/crosscutting/errors/__init__.py:47`); `empty_reason` is a
-          dict KEY in deployment-api's UI-facing `compute_empty_reason_counts()` breakdown
-          (`deployment-api/deployment_api/services/data_status/coverage_metrics.py:255`, which itself reads
-          `df["error_reason"]` correctly — line 283); `classified_error` is a local Python variable inside
-          `market-tick-data-service/market_tick_data_service/engine/orchestrator/sentinels.py:221-227`
-          (`_emit_sports_tier2_sentinels`) holding the string before it's passed as `record_failed(error=
-          sports_classified_error)`. Every sanctioned sports call site reviewed (`sentinels.py`, `sports_reference_core.py`,
-          `process_zero_records.py`, `process_preflight.py`, `footystats.py`, `manifest_recorder.py`) passes an explicit
-          `reason=`/`error=` argument; `record_failed()` additionally hard-raises `ValueError` on an empty `error` string
-          (`_writer_record.py:481-482`). Live-data confirmation: today's 21,920 `empty_confirmed` sports rows are 0.00%
-          blank on `error_reason` (100% carry `SOURCE_RETURNED_ZERO`); the earlier `attempted_failed` BETFAIR/MATCHBOOK/
-          PINNACLE triplet was independently confirmed non-blank (`VENUE_FETCH_FAILED` / an `EmptyFromLiveInstrumentError`
-          guard message) by `issues/sports_trades_attempted_failed_2026_07_23.md`'s own live query before that population
-          was wiped same-day (`market-tick-data-service@e9d9dec0`). **Unblocks**: both downstream diagnoses should query the
-          real `error_reason` column (grouped by `source`/`pipeline_mode`/`venue`) — the data needed for both is present and
-          populated, not missing.
+              `classified_error` is a manifest COLUMN — confirmed against the live production schema itself: a targeted
+              single-file read of `gs://market-data-tick-sports-prd-central-element-323112/_index/availability_index.parquet`
+              (563,384 rows, 2026-07-24) lists 39 real columns and the only reason-bearing one is `error_reason`; none of the
+              other 4 names appear. The manifest's `AvailabilityRecord` schema
+              (`unified-trading-library/unified_trading_library/manifest_writer/_rows.py:284-346`) declares exactly one field
+              for this info — `error_reason: str = ""` — and every `record_*` write path
+              (`unified-trading-library/unified_trading_library/manifest_writer/_writer_record.py`) funnels into it via
+              `_record_status(..., error_reason=...)`. The 4 task-title names are each a DIFFERENT adjacent symbol that a
+              reader could mistake for a manifest column: `reason` is the kwarg name on `record_empty()`/`record_zero_rows()`
+              (`_writer_record.py:99,420,524` — its VALUE is what lands in `error_reason`, not a stored column name);
+              `error_code` is the attribute on `VenueErrorClassification`, the object `classify_venue_error()` returns
+              (`unified-api-contracts/unified_api_contracts/canonical/crosscutting/errors/__init__.py:47`); `empty_reason` is a
+              dict KEY in deployment-api's UI-facing `compute_empty_reason_counts()` breakdown
+              (`deployment-api/deployment_api/services/data_status/coverage_metrics.py:255`, which itself reads
+              `df["error_reason"]` correctly — line 283); `classified_error` is a local Python variable inside
+              `market-tick-data-service/market_tick_data_service/engine/orchestrator/sentinels.py:221-227`
+              (`_emit_sports_tier2_sentinels`) holding the string before it's passed as `record_failed(error=
+              sports_classified_error)`. Every sanctioned sports call site reviewed (`sentinels.py`, `sports_reference_core.py`,
+              `process_zero_records.py`, `process_preflight.py`, `footystats.py`, `manifest_recorder.py`) passes an explicit
+              `reason=`/`error=` argument; `record_failed()` additionally hard-raises `ValueError` on an empty `error` string
+              (`_writer_record.py:481-482`). Live-data confirmation: today's 21,920 `empty_confirmed` sports rows are 0.00%
+              blank on `error_reason` (100% carry `SOURCE_RETURNED_ZERO`); the earlier `attempted_failed` BETFAIR/MATCHBOOK/
+              PINNACLE triplet was independently confirmed non-blank (`VENUE_FETCH_FAILED` / an `EmptyFromLiveInstrumentError`
+              guard message) by `issues/sports_trades_attempted_failed_2026_07_23.md`'s own live query before that population
+              was wiped same-day (`market-tick-data-service@e9d9dec0`). **Unblocks**: both downstream diagnoses should query the
+              real `error_reason` column (grouped by `source`/`pipeline_mode`/`venue`) — the data needed for both is present and
+              populated, not missing.
 
-- [ ] [CODE] P1. Fix `AG_STALENESS_BUDGET_SEC["sports"]` in `unified-trading-library`'s
+- [x] ✅ [CODE] P1. Fix `AG_STALENESS_BUDGET_SEC["sports"]` in `unified-trading-library`'s
       `manifest_writer/_staleness_budget.py` to **≥1800s**, merging two previously-conflicting recommendations (sweep
       §J's rejected 180-240s figure and the issue doc's own already-correct 1800s target) into the single correct value
       — matches the observed ~11-minute blob-age refresh cadence. **Done when**: the constant reads ≥1800 and a
-      staleness-budget unit test (existing or new) asserts it.
+      staleness-budget unit test (existing or new) asserts it. — unified-trading-library@fd87daa1: added
+      `"sports": 1800` to `AG_STALENESS_BUDGET_SEC`, updated the module docstring with the sports cadence note, and
+      added `tests/unit/test_manifest_writer_staleness_budget.py` (4 tests asserting the value + resolver behavior). QG
+      green (287s), quickmerge shipped to live-defi-rollout.
 - [ ] [DATA] P1. Run the round-derivation residual backfill for the reachable in-window (cup-vs-league resolved,
       registry-member, post-2019) blank-`round` pairs, using the round-derivation mechanism the 2026-07-18 sweep already
       confirmed terminal. **Done when**: a corpus-wide census shows 0 remaining blank-round rows in the in-window,
