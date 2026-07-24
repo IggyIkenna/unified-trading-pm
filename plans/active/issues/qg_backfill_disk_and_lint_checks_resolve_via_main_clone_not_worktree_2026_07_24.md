@@ -134,9 +134,51 @@ instance of the same class of bug, not necessarily limited to the two steps caug
 
 ## Todos
 
-- [ ] [DIAG] P2. Independently confirm the root-cause mechanism (the `WORKSPACE_ROOT` pre-export hypothesis above, or
-      something else) by reproducing the original finding fresh: seed a dirty/untracked disk-provisioning-relevant or
-      lint-relevant file in the bare MAIN clone, run `quality-gates.sh` from a worktree, and confirm whether it is
-      picked up. (repo: deployment-service + unified-trading-pm)
+- [x] [DIAG] P2. ✅ **Root cause CONFIRMED via controlled before/after repro** — the `WORKSPACE_ROOT` pre-export
+      hypothesis is correct, and the blast radius is WIDER than originally scoped (not just "reads MAIN's copy of the
+      same repo" — under the failure condition, the whole shared QG framework can misidentify which REPO it's even
+      targeting). Reproduction (in `.tabs/6/deployment-service`, seeded files relocated out of MAIN afterward via `mv`,
+      not deleted — `rm`/`git clean`/`find -delete` are guardrail-blocked for autonomous workers): 1. **Baseline
+      (WORKSPACE_ROOT unset, the default)**: seeded a download-heavy launcher
+      (`scripts/vm/launch-qg-repro-test-backfill-vm.sh`, no `--boot-disk-type`, matching the `backfill` NAME_MARKER)
+      directly in the bare MAIN `deployment-service` clone. Ran
+      `python3 scripts/quality_gates/check_backfill_vm_disk_provisioning.py` from the WORKTREE — the seeded MAIN file
+      was **NOT flagged**; the check correctly scoped to the worktree's own `scripts/vm/`. Same result for
+      `ruff check deployment_service/` against an unused-import file seeded in MAIN. This matches the source session's
+      own note that a fresh check of `$WORKSPACE_ROOT` found it unset — confirms the bug is NOT a universal
+      default-condition failure. 2. **Explicit stale export**:
+      `export WORKSPACE_ROOT=/home/ubuntu/unified-trading-system-repos` (the bare MAIN root, no `/deployment-service` or
+      `.tabs/N` suffix), then ran the SAME check invoked exactly as `deployment-service/scripts/quality-gates.sh`
+      invokes it
+      (`python3 "${WORKSPACE_ROOT}/deployment-service/scripts/quality_gates/check_backfill_vm_disk_provisioning.py"`) —
+      this time the seeded MAIN launcher WAS flagged (`download-heavy VM with NO --boot-disk-type` +
+      `boot disk 100GB < 250GB minimum`), proving `${WORKSPACE_ROOT}/deployment-service/...` literally invokes **MAIN's
+      copy of the check script itself** (not the worktree's), whose `Path(__file__).resolve().parents[2]` then naturally
+      resolves to MAIN's own `scripts/vm/` — this is "wrong script binary gets executed", not a read-path leak from a
+      correctly-invoked worktree script. 3. **Wider blast radius, found while tracing the LINT step**:
+      `deployment-service/scripts/quality-gates.sh` SOURCES
+      `${WORKSPACE_ROOT}/unified-trading-pm/scripts/quality-gates-base/base-service.sh`, which in turn sources
+      `qg-common.sh` via `${BASH_SOURCE[0]%/*}` (i.e., wherever ITS OWN sourced location was). Under the same stale
+      `WORKSPACE_ROOT`, sourcing `qg-common.sh` derives `PROJECT_ROOT` via `_qg_walk_up_to_pyproject($QG_SCRIPT_DIR)`
+      starting from MAIN's `unified-trading-pm/scripts/quality-gates-base` — which walks up to MAIN's
+      **`unified-trading-pm`** root, not `deployment-service`'s. Empirically confirmed: the resulting banner prints
+      `[quality-gates] unified-trading-pm @        .../unified-trading-system-repos/unified-trading-pm` — i.e., under
+      this failure condition the shared QG framework doesn't just read MAIN instead of the worktree for the SAME repo,
+      it can silently believe it is gating an entirely DIFFERENT repo (`unified-trading-pm` instead of
+      `deployment-service`). `deployment-service`'s own `quality-gates.sh` never sets `PROJECT_ROOT` itself before
+      sourcing `base-service.sh`, so there is no earlier value protecting against this fallback. **Conclusion**: the
+      vulnerability is real and precisely characterized, but conditional — it requires `WORKSPACE_ROOT` to already be
+      exported (stale/wrong) in the invoking shell BEFORE `quality-gates.sh` runs; the default (unset) path derives
+      correctly per-invocation and is safe. No evidence found of anything in this workspace currently exporting
+      `WORKSPACE_ROOT` persistently (checked `.bashrc`/`.profile`/shell-snapshots — none do). The original session's 2
+      reproductions were therefore most likely caused by a stale export specific to that session's shell/tmux, not a
+      structural per-invocation bug — but the underlying `${WORKSPACE_ROOT:-...}` / `${BASH_SOURCE[0]%/*}`-relative
+      sourcing PATTERN remains a latent landmine: any future tooling, wrapper script, or persistent shell profile that
+      exports `WORKSPACE_ROOT` (even for an unrelated reason) will silently reactivate this exact failure class
+      workspace-wide, for every repo, for every QG step built on this pattern. Recommend **Option A** from this doc's
+      own "Recommended decision": derive `PROJECT_ROOT`/`WORKSPACE_ROOT` fresh every invocation from
+      `git rev-parse --show-toplevel` and NEVER honor an inherited env value for this specific computation, rather than
+      Option B's after-the-fact self-check (prevention over detection). Left as todo 2 below (a CODE fix, out of this
+      DIAG todo's scope).
 - [ ] [CODE] P2. Once confirmed, fix the path derivation so every QG step is provably worktree-scoped — Option A or B
       above. (repo: unified-trading-pm, deployment-service)
