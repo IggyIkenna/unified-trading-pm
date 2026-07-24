@@ -1,14 +1,13 @@
 ---
 doc_type: issue
-title: sports_closeout_batch1_ao_ready-018 (CLEANUP P3) — 2 of 3 sub-parts staged, 1 blocked on a foreign QG red
+title: sports_closeout_batch1_ao_ready-018 (CLEANUP P3) — 2 of 3 sub-parts SHIPPED, 1 (GCS scaffolding purge) still open
 summary:
-  "Slot 10 worked the compound [CLEANUP] P3 todo (drop frozen 2018-2020 markets/outcomes/settlements/
-  arbitrage_opportunity GCS scaffolding + correct SPORTS_INSTRUMENTS.md's stale lineups-strip claim + add a non-ASCII
-  junk-symbol guard for fixture names). 2 of 3 sub-parts are done and staged (uncommitted — QG did not confirm green
-  before the session had to checkpoint on high context usage): the SPORTS_INSTRUMENTS.md doc correction
-  (instruments-service) and the junk-symbol guard + tests (unified-api-contracts). The 3rd sub-part (locating + purging
-  the frozen 2018-2020 GCS scaffolding) was not started — the exact bucket/path was not quickly locatable via grep and a
-  live-bucket delete needs real confirmation, not a guess under time pressure."
+  "Compound [CLEANUP] P3 todo (drop frozen 2018-2020 markets/outcomes/settlements/arbitrage_opportunity GCS scaffolding
+  + correct SPORTS_INSTRUMENTS.md's stale lineups-strip claim + add a non-ASCII junk-symbol guard for fixture names). 2
+  of 3 sub-parts SHIPPED: SPORTS_INSTRUMENTS.md doc correction (instruments-service@97fbea22) and the junk-symbol guard
+  + tests (unified-api-contracts@a6346f95). The 3rd sub-part (locating + purging the frozen 2018-2020 GCS scaffolding)
+  remains open — the exact bucket/path was not quickly locatable via grep and a live-bucket delete needs real
+  confirmation, not a guess under time pressure."
 status: open
 nature: record
 asset_group: [sports]
@@ -91,12 +90,10 @@ QG did not confirm green for either repo before this session had to checkpoint o
 
 ## Recommended decision / next steps
 
-- [ ] [CODE] P3. Re-run `bash scripts/quality-gates.sh` fresh in `unified-api-contracts` for the staged
-      `canonical_ids.py` junk-symbol guard + `test_canonical_ids_junk_guard.py` (2 staged files, diff already written —
-      see this doc). If green, ship via
-      `quickmerge --agent --files 'unified_api_contracts/canonical/domain/sports/canonical_ids.py tests/unit/sports/test_canonical_ids_junk_guard.py'`.
-      **Done when**: `unified-api-contracts@<sha>` lands on `live-defi-rollout` and this doc's sub-part 2 is cited with
-      that sha.
+- [x] [CODE] P3. ✅ Re-ran `bash scripts/quality-gates.sh` fresh in `unified-api-contracts` for the junk-symbol guard +
+      test file — first attempt hit a trivial import-order lint (fixed via `uv run ruff check --fix`), re-run passed
+      clean (428s; the `partition_paths.py` 900-line flag seen mid-run is warn-only, does not gate exit code — confirmed
+      pre-existing, untouched by this diff). Shipped `unified-api-contracts@a6346f95`.
 - [x] [CODE] P3. ✅ Confirmed already fixed: `python3 scripts/run_validators.py --scope all` now reports "OK: No broken
       links in plans/active/*.md" clean (the stale row referencing
       `data_pipeline_alerts_batch_remediation_closeout_2026_07_24.md` is gone — a subsequent inventory regen by another
@@ -119,3 +116,5 @@ QG did not confirm green for either repo before this session had to checkpoint o
 - 2026-07-24 (slot-6): worked the recommended-next-steps item 2 (validator + SPORTS_INSTRUMENTS.md sub-part 1) — see the
   flipped checkbox above. Sub-part 2 (the junk-symbol guard in unified-api-contracts) and sub-part 3 (locating the
   2018-2020 GCS scaffolding) remain open for whoever picks this up next.
+- 2026-07-24 (slot 10, same session, continued past the checkpoint): shipped sub-part 2 —
+  `unified-api-contracts@a6346f95`. Only sub-part 3 (the GCS scaffolding purge) remains open.
