@@ -79,7 +79,13 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-depends_on:
+depends_on: [tradfi_manifest_content_recovery_completion_2026_07_24, tradfi_backfill_throughput_followups_2026_07_24]
+gate_on_depends:
+  true # Phase C (data-status/honest-coverage) is gated on Phase B, which forked to
+  # tradfi_manifest_content_recovery_completion_2026_07_24; the BLOCKED-PLAN2 "Certify tradfi Layer-1" todo is gated on
+  # the catalogue rebuild+promote, which forked to tradfi_backfill_throughput_followups_2026_07_24 — both were real,
+  # un-machine-enforced cross-plan gates found by the 2026-07-24 AO-flip-safety audit; encoded here so a future
+  # `assigned_vm: planning` flip can't dispatch Phase C or BLOCKED-PLAN2 before their real prerequisites land.
 source:
   Operator, 2026-07-18 — after spotting DERIBIT:FUTURE:AVAX@LIN-20260718 missing its quote and then seeing raw symbols
   in tradfi parquet names, manifest entries, and the instruments data-status page/catalogue, directed a single one-pass
@@ -116,6 +122,17 @@ source:
 > | [`tradfi_manifest_content_recovery_completion_2026_07_24.md`](tradfi_manifest_content_recovery_completion_2026_07_24.md) | Phase A1 residual + Phase B/B.5 — the catalogue/manifest/GCS-filename/tick-content id-canonicalisation completion work (the biggest of the 3) |
 > | [`tradfi_backfill_throughput_followups_2026_07_24.md`](tradfi_backfill_throughput_followups_2026_07_24.md)               | Phase A3/A3.1 — download/backfill throughput follow-ups (DNS-starvation fix, T+1 job, OOM hardening, Databento e2e throughput optimization)   |
 > | [`tradfi_phase_d_terminal_gate_2026_07_24.md`](tradfi_phase_d_terminal_gate_2026_07_24.md)                               | Phase D — the post-migration all-shards re-smoke-test terminal gate                                                                           |
+>
+> **Per-child open-todo digest (2026-07-24, so this split is AO-legible without opening the children)**:
+>
+> - `tradfi_manifest_content_recovery_completion_2026_07_24.md` — **11 open** (5×P0, 5×P1, 1×P2). Top P0s: (1) Migrate
+>   the catalogue (Surface A) via `canonicalize_tradfi_catalogue_usd_lin_*.py`; (2) Enumeration-driven migration (SINGLE
+>   SOURCE OF TRUTH, operator 2026-07-18) — must be driven by the full distinct dimension-value set, not sampled shapes.
+> - `tradfi_backfill_throughput_followups_2026_07_24.md` — **11 open** (0×P0, 8×P1, 3×P2). Top P1s: (1) Backfill-VM
+>   startup OOM rc137 + OOM remediation baked default + consolidator throughput/backlog monitor (3 sub-issues bundled);
+>   (2) TradFi has NO working T+1 forward-fill job — add source-scoped `…-tradfi-databento-t1-recon` Cloud Run job.
+> - `tradfi_phase_d_terminal_gate_2026_07_24.md` — **1 open** (1×P0). The P0: MVP backfill readiness gate — run the
+>   tradfi MVP backfills only after A-D are green; **still blocked** on the chain-bundle sampler follow-up.
 >
 > **Retained here**: the ground-truth verdict + MVP universe (foundational context for all 3 children), Phase A2
 > (adapter/registry correctness), Phase C (data-status + honest-coverage), the aggregated Codex SSOT + source-doc index,
@@ -283,58 +300,398 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
 
 ## Aggregated source docs (referenced, not duplicated)
 
-- **ID-format**: `canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md`,
-  `instrument_id_format_canonicalization_2026_07_08.md`, `tradfi_cme_options_chain_legacy_layout_2026_07_10.md` (done),
-  `canonical_id_builder_retrofit_checklist_2026_07_08.md`,
-  `master_data_canonicalisation_migration_catalogue_2026_06_07.md`.
-- **Manifest / v9 / status**: `tradfi_v9_stage1_finish_2026_07_06.md`,
-  `tradfi_manifest_row_loss_regression_2026_07_12.md` (done),
-  `tradfi_manifest_cf4_source_and_cf7_phantom_gaps_2026_07_07.md` (done),
-  `tradfi_manifest_consolidator_row_count_varchar_crash_2026_07_12.md` (done),
-  `tradfi_expected_reason_attempted_failed_misclassification_2026_07_15.md`, `phantom_captures_tradfi_2026_06_28.md`,
-  `cross_cutting_manifest_canonicalisation_findings_2026_07_11.md`,
-  `mtds_available_at_cross_asset_backfill_2026_07_13.md`.
-- **Coverage / sourcing**: `data_completion_tradfi_2026_07_15.md` (stale fork),
-  `tradfi_multisource_backfill_2026_06_22.md`, `tradfi_massive_dual_source_2026_05_28.md`,
-  `tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md`,
-  `tradfi_databento_ohlcv_silent_zero_rows_2026_07_12.md` (done),
-  `tradfi_ice_ohlcv_1m_no_working_fetch_path_2026_07_13.md` (done),
-  `tradfi_eu_not_draining_source_axis_drift_2026_06_24.md`.
-- **Throughput / jobs / VMs**: `databento_default_executor_dns_starvation_risk_2026_07_17.md`,
-  `mtds_backfill_vm_startup_oom_rc137_2026_07_14.md`, `tradfi_backfill_oom_remediation_2026_06_24.md`,
-  `consolidator_throughput_backlog_monitor_2026_07_09.md`, `tradfi_t1_no_working_mtds_job_2026_07_17.md`,
-  `group_c_cloud_run_job_failures_triage_2026_07_16.md`.
-- **Coverage/data-status/honest**: `honest_coverage_out_of_window_expected_unattempted_not_clipped_2026_07_16.md`,
-  `honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md`,
-  `coverage_floor_registries_no_cross_propagation_2026_07_17.md`,
-  `data_status_page_ux_and_canonicalisation_2026_07_16.md`,
-  `deployment_api_legacy_instrument_availability_venue_lookup_gap_2026_07_13.md`.
-- **ML/backtest readiness (downstream, orthogonal)**: `tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md`,
-  `features_delta_one_tradfi_mdps_dependency_gap_2026_06_24.md`.
-- **Skills**: `data_pipeline_e2e_check_2026_07_10.md` + the `data-pipeline-check-mtds` / `data-pipeline-check-is`
-  skills.
-- **TradFi-specific residuals**: `issues/cme_combo_underlying_extraction_garbage_2026_07_19.md` (CME combo-leg
-  underlying parse), `issues/instruments_service_fx_adapter_key_unresolved_2026_07_23.md` (FX adapter-key gap),
-  `issues/tradfi_ohlcv_attempted_failed_cluster_2026_07_23.md` (OHLCV attempted_failed cluster),
-  `tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24.md` (human-signoff-gated legacy-twin bucket delete, forked from
-  `tradfi_v9_stage1_finish_2026_07_06.md` in the 2026-07-24 line-cap remediation),
-  `instruments_tradfi_g1_g5_gate_execution_2026_07_24.md` (tradfi slice of the instruments-foundation G1-G5 gate
-  execution split).
+> Each doc below carries its real repo-root-relative path + a condensed digest of its currently-OPEN top-level todos
+> (unchecked `- [ ]` only), so an AO worker can dispatch off THIS doc without opening a dozen others. Digests generated
+> 2026-07-24 via `grep -n '^- \[ \]'` per file; docs with 0 hits are closed/archived/record-only. Docs with >8 open
+> todos list every P0/P1 in full and cap P2/P3 with a `+N more` marker (never a silent drop).
+
+- **ID-format**:
+  - [`plans/active/canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md`](/plans/active/canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md)
+    - **[SCRIPT] P2.** Extend the 1-4 leg hard cap + logged-drop behavior to Deribit's existing combo builders
+    - **[SCRIPT] P3.** Extend UAC's `build_leg()` with an opt-in venue-omission mode
+  - [`plans/active/issues/instrument_id_format_canonicalization_2026_07_08.md`](/plans/active/issues/instrument_id_format_canonicalization_2026_07_08.md)
+    - **[SCRIPT] P2.** DEX-pool catalog regeneration (finding 2, all 13 protocols)
+    - **[DECISION] P2.** Confirm exact target quote-currency per on-chain-perp venue (finding 4)
+  - [`plans/archive/issues/tradfi_cme_options_chain_legacy_layout_2026_07_10.md`](/plans/archive/issues/tradfi_cme_options_chain_legacy_layout_2026_07_10.md)
+    (done) — 0 open todos (closed/archived/record-only)
+  - [`plans/active/canonical_id_builder_retrofit_checklist_2026_07_08.md`](/plans/active/canonical_id_builder_retrofit_checklist_2026_07_08.md)
+    (9 open — capped)
+    - **[DATA] P1.** Retrofit the ~48 DeFi adapters that build `instrument_key` as an ad hoc f-string
+    - **[DATA] P1.** Resolve the non-canonical TYPE-token question before retrofitting todo 1
+    - **[DATA] P1.** Fix the real "no VENUE:TYPE: wrap at all" gap in both Prediction adapters
+    - +6 more (P2/P3) — see file for the rest
+  - [`plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md`](/plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md)
+    - **[DATA] P0.** slot 6 (TradFi) — G4 `--apply` (databento/massive; daily listing)
+    - **[DATA] P0.** R8-sports/pred gates (sports done 2026-06-11; prediction regen remains)
+    - **[UAC] [IS] P1.** G1-ENUM present-set asymmetry — combo/chain underlyings get PHANTOM `expected_unattempted`
+      seeds
+    - **[CODE] P1.** slot 7 — post-apply consumer cleanups (execution-service defi loader, deployment-api
+      FLAG-1/3/dedup)
+    - **[INFRA] P1.** R5-fix-5 — restore manifest consolidator for `instruments-store-*` (+ defi data buckets)
+    - **[CODE] P2.** WAVE 5 / live-side (gated, after batch migration)
+    - **[DATA] P2.** R5-fix-7 — re-probe defi `lst_rates` + `dex_pools` post-R4 catalog re-promote
+
+- **Manifest / v9 / status**:
+  - [`plans/archive/2026_07/tradfi_v9_stage1_finish_2026_07_06.md`](/plans/archive/2026_07/tradfi_v9_stage1_finish_2026_07_06.md)
+    — 0 open todos (closed/archived/record-only)
+  - [`plans/archive/issues/tradfi_manifest_row_loss_regression_2026_07_12.md`](/plans/archive/issues/tradfi_manifest_row_loss_regression_2026_07_12.md)
+    (done) — 0 open todos (closed/archived/record-only)
+  - [`plans/archive/issues/tradfi_manifest_cf4_source_and_cf7_phantom_gaps_2026_07_07.md`](/plans/archive/issues/tradfi_manifest_cf4_source_and_cf7_phantom_gaps_2026_07_07.md)
+    (done) — 0 open todos (closed/archived/record-only)
+  - [`plans/archive/issues/tradfi_manifest_consolidator_row_count_varchar_crash_2026_07_12.md`](/plans/archive/issues/tradfi_manifest_consolidator_row_count_varchar_crash_2026_07_12.md)
+    (done) — 0 open todos (closed/archived/record-only)
+  - [`plans/archive/issues/tradfi_expected_reason_attempted_failed_misclassification_2026_07_15.md`](/plans/archive/issues/tradfi_expected_reason_attempted_failed_misclassification_2026_07_15.md)
+    (archived, `status: resolved` — 2 residual open items below)
+    - **[DESIGN] P3.** Taxonomy decision: add `EXPECTED_SOURCE_NOT_AVAILABLE`/`EXPECTED_CHAIN_META_ROW_NOT_DOWNLOADABLE`
+      to UAC's closed-set `EmptyConfirmedReason` enum
+    - **[INVESTIGATE] P3.** The actual writer that produced the original 34,260 misclassified rows was never identified
+  - [`plans/active/issues/phantom_captures_tradfi_2026_06_28.md`](/plans/active/issues/phantom_captures_tradfi_2026_06_28.md)
+    - **[CODE] P2.** Diagnose tradfi phantom root cause (ICE/FX 309 phantoms predate billing lockdown; blank data_type
+      1,083 pre-v9 rows)
+  - [`plans/active/issues/cross_cutting_manifest_canonicalisation_findings_2026_07_11.md`](/plans/active/issues/cross_cutting_manifest_canonicalisation_findings_2026_07_11.md)
+    — 0 open todos (closed/archived/record-only)
+  - [`plans/active/mtds_available_at_cross_asset_backfill_2026_07_13.md`](/plans/active/mtds_available_at_cross_asset_backfill_2026_07_13.md)
+    (9 open — capped)
+    - **[OPERATOR] P0.** BLOCKED-OPERATOR-DECISION — coordinate a maintenance window for the prediction + tradfi
+      consolidator crons before pausing either
+    - **[DATA] P1.** BLOCKED-OPERATOR-DECISION — Snapshot the prediction canonical manifest index and pause its
+      consolidator cron
+    - **[DATA] P1.** BLOCKED-OPERATOR-DECISION — Apply `rebuild_prediction_manifest.py` (full date range),
+      force-consolidate, re-verify fill rate
+    - **[DATA] P1.** BLOCKED-OPERATOR-DECISION — Resume the prediction consolidator cron; record before/after fill-rate
+      evidence
+    - **[DATA] P1.** BLOCKED-OPERATOR-DECISION — Snapshot the tradfi canonical manifest index and pause its consolidator
+      cron
+    - **[DATA] P1.** BLOCKED-OPERATOR-DECISION — Apply `rebuild_tradfi_manifest.py` (full date range),
+      force-consolidate, verify fill rate + guardrail
+    - **[DATA] P1.** BLOCKED-OPERATOR-DECISION — Resume the tradfi consolidator cron; record evidence in the Progress
+      Log
+    - +2 more (P2/P3) — see file for the rest
+
+- **Coverage / sourcing**:
+  - [`plans/active/data_completion_tradfi_2026_07_15.md`](/plans/active/data_completion_tradfi_2026_07_15.md) (stale
+    fork; 20 open — capped)
+    - **[DATA] P0.** Phase 0 — layout audit (MANDATORY, blocking) — enumerate ALL top-level trees + nested layouts
+      before the walk
+    - **[DATA] P0.** G1.run `--apply-write` for tradfi — GATED, NOT runnable this wave
+    - **[DATA] P1.** Verify the corpus venue / data_type strings are underscore-canonical (relabel `UNKNOWN`/blank
+      drift)
+    - **[DATA] P1.** E6 CF-7 relabel: `UNKNOWN`/blank venue + blank data_type → canonical
+    - **[DATA] P1.** COVERAGE GAP → IN PROGRESS — tradfi equities/ETF (NYSE/NASDAQ) originally never genuinely ingested
+    - **[CODE] P1.** tradfi could-exist denominator seed — build the `--catalog-path` parquet from the tradfi IS catalog
+    - **[INFRA] P1.** Wire the tradfi `build_instrument_catalogue.py` daily rollup scheduler (GATED on gate-b capture
+      restore)
+    - **[DATA] P1.** R1 RUNBOOK — the tradfi `migrate_tradfi_to_v9_canonical --apply` MUST include `--also-legacy`
+    - **[DATA] P1.** R2 DELETE-AFTER sweep — after the tradfi v9 `--apply` + G7 byte-verify, run the gated delete of
+      old-format source paths
+    - **[BLOCKED-CREDENTIALS] P1.** EIA live fetch + cassette recording — needs the free EIA API key
+    - **[OPERATOR-DECISION] P1.** `altdata` home — revive `altdata` as a real `asset_group` vs model macro as a SHARED
+      cross-asset axis
+    - +9 more (P2/P3) — see file for the rest
+  - [`plans/active/tradfi_multisource_backfill_2026_06_22.md`](/plans/active/tradfi_multisource_backfill_2026_06_22.md)
+    - **[BACKFILL] P1.** Run the FX yahoo backfill to completion (operational)
+    - **[TEST] P3.** NICE-TO-HAVE — deployment-service test skip resolves service name from worktree dirname
+  - [`plans/active/tradfi_massive_dual_source_2026_05_28.md`](/plans/active/tradfi_massive_dual_source_2026_05_28.md)
+    (`status: superseded`; 10 open — capped; most items below tagged OBSOLETE/WONTFIX in-doc but checkbox not yet
+    flipped)
+    - **❌ [UTL] P0.** OBSOLETE. Manifest consolidator dedup key omits `source` — no Massive fetches exist, moot
+    - **[MTDS] P1.** Equity/ETF tick-level `trades`+`tbbo` — OPERATOR DECISION RESOLVED: NOT needed for TradFi MVP
+      (connector must still implement)
+    - **[UAC] [UTL] P1.** EXTRA Massive fields — DECISION FOR IKENNA (flag at plan-push)
+    - **❌ [MTDS] P1.** OBSOLETE/WONTFIX. Add retry/backoff/rate-limit handling to `_get`/`_get_paginated` — no
+      paid-tier fetch path to protect
+    - **❌ [SCRIPT] P1.** OBSOLETE. Build the S3 flat-files bulk-backfill ingester — Massive removed as a tradfi source
+    - **❌ [SCRIPT] P1.** OBSOLETE (no-longer-massive-relevant). Fix `backfill_tradfi_source_column.py` walk prefix
+    - +4 more (P2) — see file for the rest
+  - [`plans/active/issues/tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md`](/plans/active/issues/tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md)
+    - **[DESIGN] P2.** Decide whether real aggregated `ohlcv_15m`/`ohlcv_24h` TradFi bars are wanted (not just alert
+      silence)
+    - **[VERIFY] P3.** Trace the orchestrator/sentinel classification layer for `attempted_failed` vs `empty_confirmed`
+  - [`plans/archive/issues/tradfi_databento_ohlcv_silent_zero_rows_2026_07_12.md`](/plans/archive/issues/tradfi_databento_ohlcv_silent_zero_rows_2026_07_12.md)
+    (done) — 0 open todos (closed/archived/record-only)
+  - [`plans/archive/issues/tradfi_ice_ohlcv_1m_no_working_fetch_path_2026_07_13.md`](/plans/archive/issues/tradfi_ice_ohlcv_1m_no_working_fetch_path_2026_07_13.md)
+    (done) — 0 open todos (closed/archived/record-only)
+  - [`plans/active/issues/tradfi_eu_not_draining_source_axis_drift_2026_06_24.md`](/plans/active/issues/tradfi_eu_not_draining_source_axis_drift_2026_06_24.md)
+    - **[SCRIPT] P2.** Stale `barchart` manifest rows (4,655) — fully-retired source, same orphan class as massive
+
+- **Throughput / jobs / VMs**:
+  - [`plans/active/issues/databento_default_executor_dns_starvation_risk_2026_07_17.md`](/plans/active/issues/databento_default_executor_dns_starvation_risk_2026_07_17.md)
+    - **[CODE] P1.** Give the Databento chunk pull a dedicated executor (mirror
+      `tardis_csv_transport._get_parse_executor`)
+    - **[AUDIT] P2.** Sweep the repo for other `run_in_executor(None, ...)` call sites doing network-blocking work
+    - **[CODE] P2.** Consider an `aiodns`/`AsyncResolver` for aiohttp sessions
+  - [`plans/active/issues/mtds_backfill_vm_startup_oom_rc137_2026_07_14.md`](/plans/active/issues/mtds_backfill_vm_startup_oom_rc137_2026_07_14.md)
+    — 0 open todos (closed/archived/record-only)
+  - [`plans/active/issues/tradfi_backfill_oom_remediation_2026_06_24.md`](/plans/active/issues/tradfi_backfill_oom_remediation_2026_06_24.md)
+    - **[INFRA] P2.** After the next deployment-service image rebuild, drop the runtime `TRADFI_OHLCV_MACHINE` env
+      override
+    - **[TRADFI] P2.** memray the ~15 GB per-date transient footprint
+  - [`plans/active/consolidator_throughput_backlog_monitor_2026_07_09.md`](/plans/active/consolidator_throughput_backlog_monitor_2026_07_09.md)
+    - **[REVIEW] P1.** Local verify now; Cloud Build deploy DEFERRED (operator 2026-07-10 — local-dev-only)
+    - **[BACKEND] P1.** Per-run output-production verdict endpoint (the seam deployments links to)
+    - **[REVIEW] P1.** QG both repos green + LOCAL verify the seam resolves live
+  - [`plans/active/issues/tradfi_t1_no_working_mtds_job_2026_07_17.md`](/plans/active/issues/tradfi_t1_no_working_mtds_job_2026_07_17.md)
+    — 0 open todos (closed/archived/record-only)
+  - [`plans/active/issues/group_c_cloud_run_job_failures_triage_2026_07_16.md`](/plans/active/issues/group_c_cloud_run_job_failures_triage_2026_07_16.md)
+    - **[INFRA] P1.** Decide + implement a default-to-yesterday date bridge for MTDS's batch CLI
+
+- **Coverage/data-status/honest**:
+  - [`plans/archive/issues/honest_coverage_out_of_window_expected_unattempted_not_clipped_2026_07_16.md`](/plans/archive/issues/honest_coverage_out_of_window_expected_unattempted_not_clipped_2026_07_16.md)
+    — 0 open todos (closed/archived/record-only)
+  - [`plans/active/issues/honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md`](/plans/active/issues/honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md)
+    (14 open — capped)
+    - **[DESIGN] P1.** Fix the mockup's leaf model everywhere it still needs it (Finding 1) — CEFI/TRADFI/DEFI
+      leaf3/proto builders
+    - **[DESIGN] P1.** Design the CEFI instrument-definition parquet resharding (Finding 2, decided)
+    - **[CODE] P1.** Widen the writer-fix scope to Solana DeFi + CURVE-OPTIMISM (blank `instrument_type` bug)
+    - **[CODE] P1.** Pull the real per-instrument_type breakdown for DERIBIT live
+    - **[CODE] P1.** Add `missing_dates`/`dates_found_list` to the per-instrument_type and per-underlying breakdown
+      entries
+    - **[CODE] P1.** Move `market_metadata` off the MTDS `per_venue_per_data_type_daily` axis
+    - **[VERIFY] P1.** Raw-parquet spot-check the 5 additional CeFi venues flagged by the pre-audit's registry read
+    - **[CODE] P1.** Backfill historical CeFi/TradFi manifest rows with the corrected per-instrument_type split
+    - +6 more (P2/P3) — see file for the rest
+  - [`plans/active/issues/coverage_floor_registries_no_cross_propagation_2026_07_17.md`](/plans/active/issues/coverage_floor_registries_no_cross_propagation_2026_07_17.md)
+    - **[CODE] P1.** Add a falsifier test that fails CI when a venue/source key disagrees between `coverage_starts.py`
+      and `venue_mapping.py`
+    - **[DATA] P1.** Resolve the 8 confirmed multi-year/multi-month CeFi mismatches (BITFINEX, KRAKEN, COINBASE-SPOT,
+      etc.)
+    - **[DATA] P2.** Resolve the CME mismatch — `coverage_starts.py`'s 2010-01-01 vs `venue_mapping.py`'s 2020-01-01
+    - **[DATA] P2.** Resolve the POLYMARKET mismatch (CLOB-launch vs first-actual-instrument)
+    - **[DATA] P3.** Resolve the small 1-21 day DeFi protocol drifts + AAVE_V3 chain-axis question
+    - **[DATA] P3.** Publish an explicit key-mapping table between `coverage_starts.py` and `venue_mapping.py` keys
+  - [`plans/active/data_status_page_ux_and_canonicalisation_2026_07_16.md`](/plans/active/data_status_page_ux_and_canonicalisation_2026_07_16.md)
+    - **[DATA] P3.** DECIDED (operator 2026-07-18) — `InstrumentRecord` silently swallows unknown kwargs,
+      `extra='forbid'` fix
+  - [`plans/archive/issues/deployment_api_legacy_instrument_availability_venue_lookup_gap_2026_07_13.md`](/plans/archive/issues/deployment_api_legacy_instrument_availability_venue_lookup_gap_2026_07_13.md)
+    — 0 open todos (closed/archived/record-only)
+
+- **ML/backtest readiness (downstream, orthogonal)**:
+  - [`plans/active/tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md`](/plans/active/tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md)
+    (9 open — capped)
+    - **[AGENT] P0.** BLOCKED-OPERATOR-DECISION — Run MDPS `--operation build-continuous --root ES` after process VM
+      completes
+    - **[AGENT] P0.** BLOCKED-OPERATOR-DECISION — Run `features-delta-one-service` for tradfi/ES across its calculators
+    - **[AGENT] P0.** Run `features-volatility-service` for tradfi/ES + tradfi/CBOE-VIX (realized-vol + skew)
+    - +6 more (P2/P3) — see file for the rest
+  - [`plans/archive/issues/features_delta_one_tradfi_mdps_dependency_gap_2026_06_24.md`](/plans/archive/issues/features_delta_one_tradfi_mdps_dependency_gap_2026_06_24.md)
+    — 0 open todos (closed/archived/record-only)
+
+- **Skills**:
+  [`plans/archive/2026_07/data_pipeline_e2e_check_2026_07_10.md`](/plans/archive/2026_07/data_pipeline_e2e_check_2026_07_10.md)
+  — 0 open todos (closed/archived/record-only; superseded by the `data-pipeline-check-mtds`/`data-pipeline-check-is`
+  skills, no bare `.md` todo tracker to check).
+
+- **TradFi-specific residuals**:
+  - [`plans/active/issues/cme_combo_underlying_extraction_garbage_2026_07_19.md`](/plans/active/issues/cme_combo_underlying_extraction_garbage_2026_07_19.md)
+    — 0 open todos (closed/archived/record-only)
+  - [`plans/active/issues/instruments_service_fx_adapter_key_unresolved_2026_07_23.md`](/plans/active/issues/instruments_service_fx_adapter_key_unresolved_2026_07_23.md)
+    (`status: resolved`) — 0 open todos (closed/archived/record-only)
+  - [`plans/active/issues/tradfi_ohlcv_attempted_failed_cluster_2026_07_23.md`](/plans/active/issues/tradfi_ohlcv_attempted_failed_cluster_2026_07_23.md)
+    - **[INVESTIGATE] P1.** Root-cause the actual `WithinBoundsTradfiSourceZero` trigger for the live, active
+      `ohlcv_1s`/`ohlcv_1m` population
+    - **[DATA] P2.** Purge or reclassify the 1,242 dead CBOE `ohlcv_15m` rows (frozen since 2026-07-07)
+    - **[DESIGN] P2.** Give `check_high_attempted_failed` a way to mark a cell "known-dead, expected-coverage-narrowed"
+  - [`plans/active/tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24.md`](/plans/active/tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24.md)
+    - **[DATA] P1.** BLOCKED-OPERATOR-DECISION — legacy-twin bucket DELETES (defi/tradfi/pred), Ikenna's migration
+      sign-off gates this
+  - [`plans/active/instruments_tradfi_g1_g5_gate_execution_2026_07_24.md`](/plans/active/instruments_tradfi_g1_g5_gate_execution_2026_07_24.md)
+    (15 open — capped)
+    - **[DATA] P0.** ES CME futures ohlcv 1s+1m — IN FLIGHT (`tradfi-bf-cme-ohlcv-1m-es-{2020,2025,2026}` RUNNING)
+    - **[DATA] P0.** ES CME OPTIONS (ES_OPT) ohlcv 1s+1m — NOT yet launched (singleton Databento lock held by futures
+      fleet)
+    - **[INFRA] P1.** tradfi — same gates; Databento universe (GLBX/DBEQ/XCBF) + Yahoo (KRX/FX)
+    - **[DATA] P1.** FINDING — IS `by_date` capture frozen ~2026-05-21 fleet-wide; tradfi degraded from ~2026-05-04
+    - **[DATA] P1.** FINDING — ICE futures + CME futures-options not on Massive → BLOCKED-CREDENTIALS
+    - **[DATA] P1.** tradfi CME futures reference gap from 2026-06-08 — Massive `/futures/vX/{products,contracts}` 404
+    - **[IS] P1.** Backfill the IS CME (GLBX.MDP3) catalog for 2019-01-01→present
+    - **[SCRIPT] P1.** (→ M-1) MTDS tradfi market-data backfill across all 3 datasets (GLBX.MDP3 + DBEQ.BASIC + CFE)
+    - **[SCRIPT] P1.** instruments-service — post tradfi-v9 close-out, tombstone dropped Databento instruments
+    - **[UAC] P1.** Unit tests for `databento_subscription_allowlist`
+    - **[PM] P1.** QG grep-ratchet — no raw `batch.submit_job` outside the guarded `submit_batch_job`
+    - +4 more (P2/P3) — see file for the rest
+
 - **Cross-cutting infra / audit (shared across asset groups, tradfi-relevant)**:
-  `candle_canonical_path_migration_execution_2026_07_24.md` (MDPS candle canonical-path migration, cross-AG),
-  `data_pipeline_check_mdps_features_2026_07_20.md`, `mdps_features_reduced_artifact_tracker_2026_06_28.md`,
-  `issues/adapter_findings_gcs_manifest_deployment_api_reconciliation_gap_2026_07_08.md`,
-  `issues/backfill_smoke_write_path_canonical_audit_2026_07_20.md`,
-  `issues/canonical_closeout_open_questions_2026_07_18.md`,
-  `issues/canonical_path_oracle_blind_to_filename_stem_2026_07_20.md`, `issues/estate_orphan_assessment_2026_07_21.md`,
-  `issues/instruments_docs_audit_outstanding_items_2026_07_08.md`,
-  `issues/manifest_completeness_full_corpus_map_build_2026_07_20.md`,
-  `issues/mdps_features_deadcode_consolidation_2026_07_20.md`,
-  `issues/mdps_prior_seed_context_thread_unsafe_2026_07_20.md`,
-  `issues/phantom_audit_estate_coverage_gap_2026_07_10.md`, `issues/pipeline_e2e_check_vm_name_collision_2026_07_12.md`,
-  `issues/tarball_rotation_breaks_vm_recovery_2026_07_20.md`,
-  `issues/ui_coverage_ts_venue_category_v2_rename_gap_2026_07_10.md`,
-  `issues/vm_backfill_data_correctness_findings_2026_06_29.md`.
+  - [`plans/active/candle_canonical_path_migration_execution_2026_07_24.md`](/plans/active/candle_canonical_path_migration_execution_2026_07_24.md)
+    (16 open — nearly all P0, listed in full per the "never silently drop a P0/P1" rule)
+    - **[DATA] P0.** Rebuild code tarballs (`refresh_code_tarballs.sh`) for the 4 already-shipped repos
+    - **[DATA] P0.** VERIFY on `-test-` via `/data-pipeline-check-mdps` (force+skip+canonical legs) that the writer now
+      emits canonically
+    - **[DATA] P0.** VERIFY readers dual-read correctly (features-service delta_one + volatility, unified-trading-api)
+    - **[SCRIPT] P0.** Run the sanctioned Tier-2 spot-VM single-walk census
+    - **[SCRIPT] P0.** Build the migration executor (P5)
+    - **[SCRIPT] P0.** Implement the path transform in the executor (backward-add `instrument_type=`)
+    - **[SCRIPT] P0.** Implement DEDUP in the executor for the split-brain candle layout
+    - **[SCRIPT] P0.** Implement PURGE of empty-stem objects
+    - **[SCRIPT] P0.** Implement QUARANTINE (never guess) for unresolvable legacy TradFi leaf ids
+    - **[SCRIPT] P0.** Wire manifest re-record to the SOURCE-keyed row (via `record_captured`, path-independent)
+    - **[SCRIPT] P0.** Upgrade the executor's pre-delete verification from SIZE-only to crc32c checksum
+    - **[DATA] P0.** Extend `launch-canonical-migration-vm.sh` for this migration's per-AG SPOT fleet launch
+    - **[DATA] P1.** P6 drain+snapshot: coordinate with the running `canonical-migration-cefi-wp*` raw_tick VMs
+    - **[DATA] P0.** P7 per-AG SPOT migration apply, in order defi→prediction→cefi→tradfi (tradfi last)
+    - **[DATA] P0.** P8 verify/reconcile: 4-surface reconciliation + extend the UAC canonical-path-violations oracle
+    - **[DATA] P1.** Root-cause + close the candle object↔manifest disconnect (6 degenerate MDPS manifest rows vs 20k+
+      objects)
+  - [`plans/active/data_pipeline_check_mdps_features_2026_07_20.md`](/plans/active/data_pipeline_check_mdps_features_2026_07_20.md)
+    (28 open — capped; P0/P1 listed in full, P2/P3 capped)
+    - **[DATA] P0.** RUN + VALIDATE `/data-pipeline-check-mdps` e2e: auto-select high-coverage day per AG, prove
+      force+skip for every MVP candle shard
+    - **[DATA] P0.** RUN + VALIDATE `/data-pipeline-check-features` e2e: multi-day input window per family, prove
+      force+skip
+    - **[DATA] P0.** Cross-repo orphan/lineage audit (MTDS→MDPS→features→ml/strategy) + MIGRATE existing candle/feature
+      data to zero orphans
+    - **[DATA] P0.** Produce concrete ETA to backfill all remaining DeFi MVP
+    - **[DATA] P0.** Verify whether MDPS `max_workers` (8 on e2-standard-8) actually OVERLAPS the GCS writes
+    - **[DATA] P0.** Enumerate the candle-coverage GAP per (asset_group, venue, data_type, timeframe)
+    - **[DATA] P0.** Run `/data-pipeline-check-mdps` across all relevant AGs NOT already in candles
+    - **[DATA] P0.** Run `/data-pipeline-check-features` across ALL shards (8 families x valid AGs)
+    - **[DATA] P0.** VERIFY the prod projection on a real prod-bucket MDPS run before sizing the win (biggest unknown in
+      the ETA)
+    - **[SCRIPT] P0.** Implement F1+F2 (UTL `manifest_completeness.py`) + F3 (MDPS `_publish_emission_check`)
+    - **[DATA] P0.** Audit every `read_availability_index` caller on defi for a missing column/filter projection (1.58
+      GB index OOM risk)
+    - **[SCRIPT] P0.** Fix the shared seed context (per-call immutable value object + collision-proof frame-cache key)
+    - **[SCRIPT] P0.** Implement R1 (concurrent date-subprocesses) — the months->weeks lever that is SAFE today
+    - **[DATA] P0.** Real-VM re-measure of end-to-end per-instrument-day rate against a PROD-sized index
+    - **[DATA] P1.** Steady-state benchmark VMs (250GB disk) per representative shard-type
+    - **[SCRIPT] P1.** Backfill-processing path (download→process→upload) code-ready + OPTIMIZED learning from cefi
+    - **[DATA] P1.** Full DeFi-MVP candle backfill on real infra — GATED on
+      `candle_canonical_path_migration_execution_2026_07_24.md` P8
+    - **[SCRIPT] P1.** Add the all-NaN-parquet-vs-`captured` assertion to `/data-pipeline-check-mdps`
+    - **[DOC] P1.** Correct `/codex/05-infrastructure/spot-vms-for-backfill.md`: preemption signal now installed via
+      systemd unit
+    - **[SCRIPT] P1.** Close residual risk 1 — make arg-required launchers relaunchable (features especially)
+    - **[DATA] P1.** Blast radius: did any PAST prod MDPS run use `max_workers>1` over a heterogeneous list
+    - **[SCRIPT] P1.** Implement R1: bounded-concurrent `_run_date_as_subprocess` dispatch (gated on the seed-context
+      fix)
+    - +6 more (P2/P3) — see file for the rest
+  - [`plans/active/mdps_features_reduced_artifact_tracker_2026_06_28.md`](/plans/active/mdps_features_reduced_artifact_tracker_2026_06_28.md)
+    (`status: draft`) — 0 open todos (closed/archived/record-only; not yet flipped `active`)
+  - [`plans/active/issues/adapter_findings_gcs_manifest_deployment_api_reconciliation_gap_2026_07_08.md`](/plans/active/issues/adapter_findings_gcs_manifest_deployment_api_reconciliation_gap_2026_07_08.md)
+    - **[VERIFY] P1.** Check whether manifest regeneration is automatic or requires an explicit re-enumeration trigger
+    - **[VERIFY] P2.** Spot-check 2-3 more findings from the smoke-test doc across all 3 layers
+    - **[DECISION] P2.** Once the pilot trace (AAVE_V3) lands, decide the reconciliation cadence for the remaining 58
+      findings
+  - [`plans/active/issues/backfill_smoke_write_path_canonical_audit_2026_07_20.md`](/plans/active/issues/backfill_smoke_write_path_canonical_audit_2026_07_20.md)
+    - **[DATA] P1.** instruments-service: canonicalise the `instrument_availability` write via the sink PREFIX mechanism
+    - **[DATA] P1.** market-tick-data-service: rule on and fix the cefi chain tail (`partitioned_writer.py:291-293`)
+    - **[DOCS] P2.** instruments-service + market-tick-data-service: correct three in-repo comments asserting hive
+      layout
+    - **[SCRIPT] P2.** unified-trading-pm: add a Phase-0 `-test-` assertion on the resolved WRITE bucket
+    - **[DOCS] P2.** unified-trading-pm: add an explicit "never pass `--allow-live-prod-writes`" prohibition to the
+      skill doc
+    - **[DATA] P3.** instruments-service: decide whether `market_lifecycle`/`futures_contracts` are in the canonical
+      shard grammar's scope
+  - [`plans/active/issues/canonical_closeout_open_questions_2026_07_18.md`](/plans/active/issues/canonical_closeout_open_questions_2026_07_18.md)
+    — 0 open todos (closed/archived/record-only)
+  - [`plans/active/issues/canonical_path_oracle_blind_to_filename_stem_2026_07_20.md`](/plans/active/issues/canonical_path_oracle_blind_to_filename_stem_2026_07_20.md)
+    - **[DATA] P1.** Re-run CeFi surface-A reconciliation with the fixed oracle and restate the verdict
+    - **[DATA] P2.** The legitimately-unresolvable objects need a quarantine/honest-absence disposition (separate
+      design)
+  - [`plans/active/issues/estate_orphan_assessment_2026_07_21.md`](/plans/active/issues/estate_orphan_assessment_2026_07_21.md)
+    - **[INFRA] P1.** Run the orphan sweep for defi/cefi/tradfi/prediction on a VM
+    - **[CODE] P2.** Make the manifest load resumable/streamed in `migration_orphan_sweep.py`
+    - **[CODE] P2.** Give `backfill_orphan_class_e.py --apply` a batched-incremental `record_cells()` call
+    - **[CODE] P3.** `GcsEventSink` never `.shutdown()`s its background `ThreadPoolExecutor`
+  - [`plans/active/issues/instruments_docs_audit_outstanding_items_2026_07_08.md`](/plans/active/issues/instruments_docs_audit_outstanding_items_2026_07_08.md)
+    — 0 open todos (closed/archived/record-only)
+  - [`plans/active/issues/manifest_completeness_full_corpus_map_build_2026_07_20.md`](/plans/active/issues/manifest_completeness_full_corpus_map_build_2026_07_20.md)
+    - **[DATA] P0.** VERIFY the prod projection before sizing the win (is `_publish_emission_check` firing on prod MDPS
+      backfills)
+    - **[DATA] P0.** The 1.58 GB defi-prd index is its own P0 — audit every `read_availability_index` caller for OOM
+      risk
+    - **[DOC] P2.** Record in codex that the per-VM manifest flush is ALREADY debounced (50 entries/5.0s)
+  - [`plans/active/issues/mdps_features_deadcode_consolidation_2026_07_20.md`](/plans/active/issues/mdps_features_deadcode_consolidation_2026_07_20.md)
+    - **[SCRIPT] P1.** S1-c — `mdps-sports-<year>-<ts>` emitted but registered in NEITHER registry → invisible to zombie
+      watchdog
+    - **[SCRIPT] P2.** S1-a — `launch-prediction-features-vm.sh` BROKEN (packages removed, import-verify
+      ModuleNotFounds)
+    - **[SCRIPT] P2.** S1-b — `launch-mdps-features-live.sh` non-runnable but registered in `vm_prefix_registry.py`
+    - **[SCRIPT] P3.** S2-a — trim `launch-features-backfill-vm.sh` to the redirect stub (dead body)
+    - **[SCRIPT] P3.** S2-b — delete the 8 stale `features_*_service` keys in `setup-data-pipeline-vm.sh`
+      SERVICE_TARBALLS
+    - **[SCRIPT] P3.** S3-a — delete MDPS one-offs past `Delete-when` after verifying each condition
+    - **[SCRIPT] P3.** S3-c — repoint `features-service/scripts/sports/smoke_matrix.py` SSOT citations
+    - **[SCRIPT] P3.** S3-b — sports dual entrypoint operator/design adjudication (fold submodule behind family flag OR
+      bless it)
+  - [`plans/active/issues/mdps_prior_seed_context_thread_unsafe_2026_07_20.md`](/plans/active/issues/mdps_prior_seed_context_thread_unsafe_2026_07_20.md)
+    - **[DATA] P1.** Assess blast radius on EXISTING candle data — any past MDPS run with `max_workers>1` over a
+      heterogeneous file list
+  - [`plans/active/issues/phantom_audit_estate_coverage_gap_2026_07_10.md`](/plans/active/issues/phantom_audit_estate_coverage_gap_2026_07_10.md)
+    — 0 open todos (closed/archived/record-only)
+  - [`plans/active/issues/pipeline_e2e_check_vm_name_collision_2026_07_12.md`](/plans/active/issues/pipeline_e2e_check_vm_name_collision_2026_07_12.md)
+    — 0 open todos (closed/archived/record-only)
+  - [`plans/active/issues/tarball_rotation_breaks_vm_recovery_2026_07_20.md`](/plans/active/issues/tarball_rotation_breaks_vm_recovery_2026_07_20.md)
+    — 0 open todos (closed/archived/record-only)
+  - [`plans/active/issues/ui_coverage_ts_venue_category_v2_rename_gap_2026_07_10.md`](/plans/active/issues/ui_coverage_ts_venue_category_v2_rename_gap_2026_07_10.md)
+    — 0 open todos (closed/archived/record-only)
+  - [`plans/active/issues/vm_backfill_data_correctness_findings_2026_06_29.md`](/plans/active/issues/vm_backfill_data_correctness_findings_2026_06_29.md)
+    — 0 open todos (closed/archived/record-only)
+
+- **Newly discovered (2026-07-24 completeness sweep — `grep -l '^asset_group:.*tradfi'` hits not previously named in
+  this section; several were already mentioned inline in the Phase A2 prose above but never carried a real entry
+  here)**:
+  - [`plans/active/issues/instrument_availability_hive_canonicalisation_2026_07_21.md`](/plans/active/issues/instrument_availability_hive_canonicalisation_2026_07_21.md)
+    - **[DATA] P1.** PROVE the fixed writers green on one real day, then migrate the historical flat objects UP into
+      full hive
+    - **[REVIEW] P1.** On writer ship, record the `instrument_availability` full-hive cutover date in the
+      canonical-cutover-register
+  - [`plans/active/issues/instruments_remaining_work_audit_2026_07_10.md`](/plans/active/issues/instruments_remaining_work_audit_2026_07_10.md)
+    — 0 open todos (closed/archived/record-only)
+  - [`plans/active/issues/mtds_is_full_adapter_smoketest_findings_2026_07_07.md`](/plans/active/issues/mtds_is_full_adapter_smoketest_findings_2026_07_07.md)
+    - **[VERIFY] P1.** NEW (2026-07-14) — FLUID lending_indices silently returns 0 rows for ~18 months of its own
+      declared availability window
+    - **[VERIFY] P1.** Root-cause the 273 mistagged DERIBIT/COMBO rows (open question #1) — not attempted this session
+    - **[CODE] P2.** Update both drilldown mockups — not attempted this session
+  - [`plans/active/issues/tradfi_canonical_path_migration_design_2026_07_19.md`](/plans/active/issues/tradfi_canonical_path_migration_design_2026_07_19.md)
+    — 0 open todos (closed/archived/record-only; design doc superseded by
+    `candle_canonical_path_migration_execution_2026_07_24.md`)
+  - [`plans/active/issues/tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md`](/plans/active/issues/tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md)
+    — 0 open todos (closed/archived/record-only; the follow-up `tradfi_phase_d_terminal_gate_2026_07_24.md` P0 gates on
+    this finding)
+  - [`plans/active/issues/tradfi_docs_reconciliation_findings_2026_07_21.md`](/plans/active/issues/tradfi_docs_reconciliation_findings_2026_07_21.md)
+    (uses a line-referenced audit-finding format, not `[TAG] P<N>.` — quoted as-is)
+    - **P1 (L97).** Ground-truth verdict header needs a supersede banner inserted (superseded by later migration
+      progress)
+    - **P1 (L460).** Phase B migration items still shown unchecked in a stale copy — flip the four false-negative boxes
+    - **P1 (L237).** §4 closing paragraph needs rewriting to match the current migration state
+  - [`plans/active/issues/tradfi_manifest_rebuild_deletion_resurrection_gap_2026_07_20.md`](/plans/active/issues/tradfi_manifest_rebuild_deletion_resurrection_gap_2026_07_20.md)
+    - **[BACKEND] P1.** Add a manifest-vs-disk consistency check so a `captured` row with no object on disk fails loudly
+  - [`plans/active/issues/tradfi_manifest_writer_legacy_id_regression_2026_07_21.md`](/plans/active/issues/tradfi_manifest_writer_legacy_id_regression_2026_07_21.md)
+    — 0 open todos (closed/archived/record-only)
+  - [`plans/active/issues/tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md`](/plans/active/issues/tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md)
+    - **[DECISION] P2.** Decide whether `mvp_mode` should ever be wired live
+    - **[SCRIPT] P2.** Implement the chosen direction (wire a real caller, or remove the dead path cleanly)
+    - **[SCRIPT] P2.** Ship via quickmerge, quality-gates green in both market-tick-data-service and
+      unified-api-contracts
+  - [`plans/active/issues/tradfi_todo_cells_below_vendor_discovery_floor_2026_07_20.md`](/plans/active/issues/tradfi_todo_cells_below_vendor_discovery_floor_2026_07_20.md)
+    - **[DATA] P1.** Re-measure and break down the 182,407 by (venue, data_type, year)
+    - **[BACKEND] P1.** Teach the sentinel/enumerator path the discovery floor
+    - **[DATA] P1.** Run the corrective reclassification over the existing 182,407 cells, writer-side
+    - **[BACKEND] P2.** Assert the invariant in the aggregator's fairness checks
+    - **[DATA] P2.** Sweep the other tradfi venues for the same class (CBOE 2020-06-01, CME 2020-01-01)
+  - [`plans/active/issues/uac_data_type_validity_combinator_fragmentation_2026_07_07.md`](/plans/active/issues/uac_data_type_validity_combinator_fragmentation_2026_07_07.md)
+    - **[CODE] P2.** Fix `_L5_VENUES` (finding 4) — RESOLVED-BY-DELETION 2026-07-18 per in-doc note, checkbox not yet
+      flipped
+    - **[CODE] P2.** Add the missing `book_snapshot`/`market_metadata`/`fills` declarations to
+      `VENUE_DATA_TYPE_CAPABILITIES`
+    - **[DESIGN] P2.** New finding, 2026-07-10 — 31 DeFi (venue, data_type) pairs declare a genesis start-date in Layer
+      2
+    - **[SCRIPT] P3.** Delete confirmed-dead code: `MVP_VENUE_DATA_TYPES`, DeFi's emptied `DEFI_VENUE_AXIS_OVERRIDES`
+  - [`plans/active/issues/candle_feature_canonical_path_divergence_2026_07_20.md`](/plans/active/issues/candle_feature_canonical_path_divergence_2026_07_20.md)
+    (already in this plan's `related:` frontmatter; not previously given a digest entry here)
+    - **[DATA] P0.** Root-cause the object↔manifest disconnect (20,734 cefi candle objects on 2026-04-14 vs 6 MDPS
+      manifest rows)
+    - **[DATA] P1.** Corpus-wide count of zero-length-stem candle objects; purge or repair
+    - **[DATA] P1.** Canonicalise TradFi candle leaf ids (`E1AF0_C3200_migrated_*` → `VENUE:TYPE:SYMBOL`) — 84.8% of the
+      corpus needs this
+    - **[DATA] P1.** Split-brain candle layout (addendum iii-a) — quantify the corpus-wide split, fold into the A/B/C
+      migration
+    - **[SCRIPT] P2.** Fix `_copy_verify_delete()`'s retry-idempotency gap
+    - **[DATA] P3.** `ProvisionalTargetIndex` keys lack a bucket component (cosmetic, fix before trusting the split
+      count)
+    - **[DOC] P3.** `build_canonical_candle_path()` docstring example still shows superseded semantics
+    - **[SCRIPT] P3.** Investigate why `CEFI:DERIBIT:trades:24h`'s force-leg classification shows `off_template=29`
 
 ## Progress Log — condensed milestone summary (2026-07-24, replaces the pre-split ~1700-line tick-by-tick log)
 
