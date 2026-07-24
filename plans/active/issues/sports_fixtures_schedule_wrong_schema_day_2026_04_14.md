@@ -102,12 +102,36 @@ sports_reference/by_date/day=2026-04-14/pipeline_mode=batch_api_football/entity=
 - [ ] [DIAG] P1. Identify the batch job/writer that ran for `day=2026-04-14` and produced instrument-catalogue-shaped
       output under the `entity=fixtures_schedule` path (repo: instruments-service). **Done when**: a written root-cause
       conclusion cites the specific writer code path and why its target resolved to the fixtures_schedule prefix.
-- [ ] [CODE] P1. Fix the write-path bug so no future run can write a non-fixtures schema under
+      **ATTEMPTED, DEAD END (2026-07-24, slot 5)**: checked the current `_write_fixture_entity_per_league` /
+      `_gated_sink_write` write path — it faithfully writes whatever `df` it's given, so the bug (if still present)
+      would be in a CALLER passing the wrong DataFrame, not this function itself. Checked
+      `scripts/migrate_sports_per_league.py` (landed `instruments-service@6b5952ba`, 2026-04-15 — the day AFTER the
+      incident date, plausible timing) — but its `ALL_ENTITIES` list never includes `fixtures`/`fixtures_schedule`, so
+      it cannot be the direct writer either. `git log` on the affected files/callers around 2026-04-10..04-18 shows no
+      commits — the code active on 2026-04-14 predates the later `engine/orchestrator.py` cohesion-module split, and no
+      archived run logs from that exact day are available in-session. Could not pin the exact historical call site with
+      the tools available; NOT closing this todo — leaving it open for whoever has access to that era's deployment/run
+      logs. The CODE P1/P2 todos below don't depend on finding it: a structural guard that rejects this CLASS of mix-up
+      regardless of cause was shipped instead (see below).
+- [x] ✅ [CODE] P1. Fix the write-path bug so no future run can write a non-fixtures schema under
       `entity=fixtures_schedule/` (repo: instruments-service). **Done when**: a regression test reproduces the old
-      bad-path resolution and asserts the fix.
+      bad-path resolution and asserts the fix. — Could not pin the EXACT historical bug (see the DIAG todo above), so
+      implemented the structural fix instead: `instruments-service@b3cb6f8c` adds
+      `_assert_not_cross_domain_contamination()` at `_gated_sink_write` (the single choke point every sports_reference
+      entity write funnels through), scoped via UAC's `_SPORTS_ENTITY_TO_PIPELINE_MODE` registry so it only fires for
+      genuine sports entities (NOT the shared choke point's other callers — the real CeFi/TradFi/DeFi
+      instrument-catalogue writers, whose rows legitimately carry these same columns; the first, unscoped cut of this
+      broke `test_orchestrator_process.py`/`test_orchestrator_futures_contracts.py`/`test_new_orchestrator.py`, caught
+      by the full `quality-gates.sh` run before shipping). Regression test
+      `tests/unit/test_sports_reference_cross_domain_contamination_guard.py` replays the exact day=2026-04-14 shape
+      (`instrument_key`/`tick_size`/`base_asset`/... columns) through `_gated_sink_write` for `entity=fixtures_schedule`
+      and asserts it raises before reaching the sink, plus asserts real fixtures data still passes and non-sports
+      entities remain unaffected. `quality-gates.sh` green.
 - [ ] [DATA] P2. Snapshot + re-fetch the real `day=2026-04-14` fixtures content for the 85 affected leagues (repo:
       instruments-service). **Done when**: all 85 `league=<L>/fixtures_schedule.parquet` shards for `day=2026-04-14`
       read with the correct fixtures schema.
-- [ ] [CODE] P2. Add a schema assertion (column-set check) at the fixtures_schedule writer so a future mismatch fails
+- [x] ✅ [CODE] P2. Add a schema assertion (column-set check) at the fixtures_schedule writer so a future mismatch fails
       loud instead of silently producing an unreadable-by-projection shard (repo: instruments-service). **Done when**: a
-      unit test feeds a wrong-schema DataFrame into the writer and asserts a loud failure.
+      unit test feeds a wrong-schema DataFrame into the writer and asserts a loud failure. — Same commit as the P1 todo
+      above (`instruments-service@b3cb6f8c`) — the guard + its regression test satisfy both todos; not duplicating the
+      work under a second commit.
