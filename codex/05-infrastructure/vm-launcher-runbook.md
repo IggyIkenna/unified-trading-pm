@@ -468,8 +468,8 @@ SUPERSEDES the 2026-07-14 cap of 3**, which was measured while VMs re-walked alr
 barely touch Tardis, so contention looked survivable. It never held for real fetching. Before launching ANY VM that
 touches Tardis (cefi sharded backfills, `cefi-queue-*` combined VMs, `mtds-backfill-cefi-*` backfill/pipelinecheck), the
 launcher MUST count the running fleet — the shared guard `deployment-service/scripts/vm/tardis-concurrency-guard.sh`
-does this (GCP + best-effort AWS) and refuses when `running + planned > 3`. Agents launching manually MUST run the same
-check.
+does this (GCP + best-effort AWS) and refuses when `running + planned > 1` (the `TARDIS_MAX_CONCURRENT_VMS` default).
+Agents launching manually MUST run the same check.
 
 Empirical basis (2026-07-16, SSOT: `plans/archive/2026_07/cefi_completion_program_2026_07_15.md`): every N>1 datapoint
 is a mutual-403 storm once VMs do REAL fetching. N=6 lease-OFF (2026-07-13): all six starved below the 1800s stall

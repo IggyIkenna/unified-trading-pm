@@ -79,9 +79,8 @@ A script (`unified-trading-pm/scripts/plans/regenerate_active_plan_inventory.py`
    `<!-- AUTO-INVENTORY-END -->` markers in the master plan.
 6. Emits an aggregate row: total plans + orphan count + TBD count + % done + total cal AI-days left.
 
-**Idempotent**: only rewrites content between markers. Errors out if markers absent (operator adds the section
-
-- markers once).
+**Idempotent**: only rewrites content between markers. Errors out if markers absent (operator adds the section markers
+once).
 
 **Skipped files**: `INDEX.md`, `task_template.md`, `work_split_*`, `_agent_pings.md`, `continuation_prompts_*`,
 `_AUDIT_*`, `_HANDOFF_*`, `_SESSION_HANDOFF_*` (all ephemeral or coordination-doc files, not real plans).

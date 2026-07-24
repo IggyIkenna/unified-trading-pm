@@ -201,7 +201,7 @@ history for CeFi/TradFi/Sports):
 | DeFi        |                                                ~12 LST + 4 AMM venues |                 730 |       ~15-20 |                            ~10K |
 | CeFi        |                                              30 coins × 6 perp venues |            **1825** |       ~15-20 | **~125-160K** (2.5× prior 2-yr) |
 | TradFi      | ~10 instruments (ES + crypto-ETF + futures + commodities; **no SPY**) |            **1825** |       ~10-15 |   **~18-27K** (2.5× prior 2-yr) |
-| Sports      |                       ~1000 fixtures/yr × 5 leagues × 4 markets × 5yr | **5×fixture-bound** |          ~10 |    **~400K-1M** (5× prior 2-yr) |
+| Sports      |                       ~1000 fixtures/yr × 5 leagues × 4 markets × 5yr | **5×fixture-bound** |          ~10 |  **~400K-1M** (2.5× prior 2-yr) |
 | Prediction  |                           Polymarket subset (~50 questions/day × 2yr) |                 730 |          ~10 |                         ~30-40K |
 
 **Total backtest scope**: ~580K-1.3M worker-runs across the cutover-window config-grid (CeFi/TradFi at 5yr ×

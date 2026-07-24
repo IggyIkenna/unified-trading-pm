@@ -2,8 +2,8 @@
 doc_type: codex-ssot
 title: Sports Data Source — Coverage Matrix SSOT
 summary:
-  Per-sports-data_type coverage matrix — responsible source, expected-league denominators (api_football 95, footystats
-  46, understat 5, …), coverage axis, and record_empty expectations feeding the v5 honest-coverage aggregator.
+  Per-sports-data_type coverage matrix — responsible source, expected-league denominators (api_football 96, footystats
+  48, understat 5, …), coverage axis, and record_empty expectations feeding the v5 honest-coverage aggregator.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -122,15 +122,15 @@ dates resolved per league via `get_league_fixture_calendar(league_id, start, end
 
 | data_type         | Coverage axis                          | Expected shards per day                                        | `record_empty` expected                                                                          |
 | ----------------- | -------------------------------------- | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
-| `FIXTURES`        | per-league × per-fixture-date          | 95 leagues, but only dates inside each league's active season  | Yes — off-season dates write `capture_status=empty_confirmed` (or excluded via fixture calendar) |
+| `FIXTURES`        | per-league × per-fixture-date          | 96 leagues, but only dates inside each league's active season  | Yes — off-season dates write `capture_status=empty_confirmed` (or excluded via fixture calendar) |
 | `FIXTURE_EVENTS`  | per-league × per-fixture-date          | subset of (league, date) pairs with `FIXTURES` rows present    | Yes — a fixture with 0 events (rare) writes empty_confirmed                                      |
 | `FIXTURE_LINEUPS` | per-league × per-fixture-date          | subset of (league, date) pairs with `FIXTURES` rows present    | Yes                                                                                              |
 | `FIXTURE_STATS`   | per-league × per-fixture-date          | subset of (league, date) pairs with `FIXTURES` rows present    | Yes — tier-2+ leagues without stats support still write empty_confirmed                          |
 | `PLAYER_STATS`    | per-league × per-fixture-date          | subset of (league, date) pairs with `FIXTURES` rows present    | Yes                                                                                              |
-| `INJURIES`        | per-league × daily                     | 95 leagues × active-season dates (daily refresh)               | Yes — no injuries on a date = empty_confirmed                                                    |
+| `INJURIES`        | per-league × daily                     | 96 leagues × active-season dates (daily refresh)               | Yes — no injuries on a date = empty_confirmed                                                    |
 | `LEAGUES`         | global × daily snapshot                | 1 shard/day (no league_id — this IS the league reference list) | N/A — daily snapshot; empty means API outage                                                     |
-| `TEAMS`           | per-league × trigger-date              | 95 leagues × trigger dates (season-start + transfer windows)   | Yes — off-season / non-trigger date per league = empty_confirmed                                 |
-| `STANDINGS`       | per-league × periodic (weekly cadence) | 95 leagues × cadence dates inside active season                | Yes — off-season = empty_confirmed                                                               |
+| `TEAMS`           | per-league × trigger-date              | 96 leagues × trigger dates (season-start + transfer windows)   | Yes — off-season / non-trigger date per league = empty_confirmed                                 |
+| `STANDINGS`       | per-league × periodic (weekly cadence) | 96 leagues × cadence dates inside active season                | Yes — off-season = empty_confirmed                                                               |
 | `VENUES`          | global × season                        | 1 shard per season                                             | N/A                                                                                              |
 
 #### Expected column counts per API-Football data_type (regression guard, codified 2026-05-08)

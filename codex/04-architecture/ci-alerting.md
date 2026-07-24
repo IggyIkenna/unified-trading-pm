@@ -113,11 +113,17 @@ Per-run ⊇ per-transition (a branch can fail many runs in one red episode), and
 4. **RESOLVED bookend cooldown < open-condition cooldown** (or use a distinct key) so closure is never swallowed.
 5. **Dedup is fail-open** — never rely on it to suppress; it exists to reduce noise, and it drops to post-anyway on any
    ledger/auth error.
-6. **Cooldown tracks the REAL cadence of the condition, not the declared cron.** GitHub throttles `schedule:` crons to
-   ≈37% of the declared rate — the promote gate declares `*/15` but the **measured** cadence over 60 runs was avg **41.5
-   min** (median 33, max 93). So a promotion-lag that is merely waiting for a throttled promote should not re-page
-   hourly: the 120-min cooldown ≈ 3 real promote cycles. When picking a cooldown, measure the condition's true period
-   first (`gh api …/actions/workflows/<wf>/runs`), don't assume the cron.
+6. **Cooldown tracks the REAL cadence of the condition, not the declared cron.** An earlier measurement put GitHub's
+   `schedule:` cron throttle at ≈37% of the declared rate — the promote gate declares `*/15` but the **measured**
+   cadence over 60 runs was avg **41.5 min** (median 33, max 93). A later, broader re-measurement
+   (`github_actions_self_hosted_runner_migration_2026_07_15.md`,
+   `github_actions_operator_gated_followups_2026_07_17.md`, both 2026-07-17) found hourly crons landing 9/10 and `*/30`
+   landing 16/20 — **≈80-90% delivery, not ≈37%** — and flagged the 37% figure as likely stale, though it did NOT
+   independently re-verify the `*/15` promote-gate's specific 41.5-min figure (both docs recommend re-checking it before
+   tuning any cooldown to it). So a promotion-lag that is merely waiting for a throttled promote should not re-page
+   hourly: the 120-min cooldown was sized against the OLDER, likely-too-pessimistic 41.5-min figure — re-measure before
+   relying on it. When picking a cooldown, measure the condition's true period first
+   (`gh api …/actions/workflows/<wf>/runs`), don't assume the cron.
 
 ## The unified alerts ledger (`/alerts` page) — a diagnostic surface, not a paging surface
 

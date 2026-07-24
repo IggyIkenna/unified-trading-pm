@@ -210,23 +210,19 @@ The following codex docs have a banner at top pointing here. The banner does NOT
 — only that there are sections that contradict the post-plan reality. Read the banner + this doc + the active plans
 before believing anything specific in the linked doc.
 
-## | Doc | Stale because | | -------------------------------------------------- |
-
-| ------------------------------------- | | `02-data/availability-manifest-and-data-status.md` | Doesn't reflect
-4-pillar write-gate (row-count + NaN-ratio + schema + cluster-coverage), `record_empty` / `record_failed` typed reasons,
-per-VM shard isolation rule, per-fixture sharding for sports | | `02-data/per-asset-group-bucket-layouts.md` | Uses
-`category=` legacy hive vocab. `asset_group=` is canonical; `category=` is legacy-preserved. | |
-`02-data/sports-scheduling-and-sharding.md` | Pre-(per-fixture sharding) — needs update to reflect
-`(source, data_type, league_id, fixture_id                                                                                                       | day-aggregate, day)`
-v5/v6 shard atom | | `02-data/sports-data-source-coverage-matrix.md` | Pre-`SOURCE_PRIORITY` registry; doesn't list
-multi-source merge rules | | `02-data/mtds-data-source-coverage-matrix.md` | Same — missing `SOURCE_PRIORITY` SSOT
-reference | | `02-data/canonical-schema-groups.md` | Doesn't list `available_at` as a required column on every row | |
-`02-data/prediction-schema-paths.md` | Pre-canonical_question_group; describes per-base_asset Polymarket sharding | |
-`04-architecture/sports-integration-plan.md` | Pre-(per-fixture sharding) | | `04-architecture/asset-class-ownership.md`
-| Sports section pre-(per-fixture sharding) | | `06-coding-standards/validation-and-errors.md` | Merged 2026-05-08 (D.5)
-— supersedes the legacy `error-handling.md` / `validation-patterns.md` / `schema-validation.md`. 4-category empty-output
-decision + cluster validation pillar both included. | | `00-SSOT-INDEX.md` | Top-level pointer doc — needs to surface
-this post-plan doc + the active plans |
+| Doc                                                | Stale because                                                                                                                                                                                         |
+| -------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `02-data/availability-manifest-and-data-status.md` | Doesn't reflect 4-pillar write-gate (row-count + NaN-ratio + schema + cluster-coverage), `record_empty` / `record_failed` typed reasons, per-VM shard isolation rule, per-fixture sharding for sports |
+| `02-data/per-asset-group-bucket-layouts.md`        | Uses `category=` legacy hive vocab. `asset_group=` is canonical; `category=` is legacy-preserved.                                                                                                     |
+| `02-data/sports-scheduling-and-sharding.md`        | Pre-(per-fixture sharding) — needs update to reflect `(source, data_type, league_id, fixture_id \| day-aggregate, day)` v5/v6 shard atom                                                              |
+| `02-data/sports-data-source-coverage-matrix.md`    | Pre-`SOURCE_PRIORITY` registry; doesn't list multi-source merge rules                                                                                                                                 |
+| `02-data/mtds-data-source-coverage-matrix.md`      | Same — missing `SOURCE_PRIORITY` SSOT reference                                                                                                                                                       |
+| `02-data/canonical-schema-groups.md`               | Doesn't list `available_at` as a required column on every row                                                                                                                                         |
+| `02-data/prediction-schema-paths.md`               | Pre-canonical_question_group; describes per-base_asset Polymarket sharding                                                                                                                            |
+| `04-architecture/sports-integration-plan.md`       | Pre-(per-fixture sharding)                                                                                                                                                                            |
+| `04-architecture/asset-class-ownership.md`         | Sports section pre-(per-fixture sharding)                                                                                                                                                             |
+| `06-coding-standards/validation-and-errors.md`     | Merged 2026-05-08 (D.5) — supersedes the legacy `error-handling.md` / `validation-patterns.md` / `schema-validation.md`. 4-category empty-output decision + cluster validation pillar both included.  |
+| `00-SSOT-INDEX.md`                                 | Top-level pointer doc — needs to surface this post-plan doc + the active plans                                                                                                                        |
 
 ---
 

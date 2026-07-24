@@ -521,12 +521,12 @@ catalog+batch_handler (11→10), MDPS canonical_writer+live_workers (10→7), ex
 statement + branch metric) with `fail_under = 94` (the `[tool.coverage.report]` toml is the SSOT; the floor was raised
 above the original 90% target as coverage improved). The combined metric is
 `(lines_covered + branches_covered) / (lines_valid + branches_valid)` — lower than statement-only because branch
-coverage is harder. The 90% target is maintained via: (a) targeted tests for all logic modules, and (b) a curated omit
+coverage is harder. The 94% target is maintained via: (a) targeted tests for all logic modules, and (b) a curated omit
 list of pure Pydantic stub packages that have no conditional logic (vendored schema shapes whose coverage adds no signal
 — e.g. `external/socket/*`, `external/venus/*`, `external/skybet/*`). See the `[tool.coverage.run] omit` list in
 `unified-api-contracts/pyproject.toml` for the canonical omit set. Adding a new stub package to the omit list is
 legitimate if: (1) `grep -c "def \|if \|for \|while \|match " <file>` returns 0 (no branching logic), AND (2) the
-package has 0 branch hits in `coverage.xml`. Plan: `plans/active/uac_coverage_90pct_2026_06_10.md`.
+package has 0 branch hits in `coverage.xml`. Plan: `plans/archive/2026_07/uac_coverage_90pct_2026_06_10.md`.
 
 **`market-data-processing-service` (MDPS) special target — 85% combined (2026-06-10)**: MDPS is a **service** repo (70%
 floor) self-elevated to **85% combined** (statement+branch, `branch=True`, `fail_under = 85`). Unlike UAC, MDPS has
