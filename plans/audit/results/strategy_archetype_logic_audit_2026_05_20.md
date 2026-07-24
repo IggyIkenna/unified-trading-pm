@@ -1578,25 +1578,24 @@ Key paths cited throughout this audit (for fast navigation):
 
 **Codex SSOTs**:
 
-- [codex/09-strategy/architecture-v2/](../../../unified-trading-pm/codex/09-strategy/architecture-v2/) — strategy
-  architecture v2
-- [codex/09-strategy/architecture-v2/archetypes/](../../../unified-trading-pm/codex/09-strategy/architecture-v2/archetypes/)
-  — per-archetype design SSOTs (28+ docs)
-- [/codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md](../../../unified-trading-pm/codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md)
+- [codex/09-strategy/architecture-v2/](/codex/09-strategy/architecture-v2/) — strategy architecture v2
+- [codex/09-strategy/architecture-v2/archetypes/](/codex/09-strategy/architecture-v2/archetypes/) — per-archetype design
+  SSOTs (28+ docs)
+- [/codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md](/codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md)
   — `PnLAttributionRow` + factor enum
-- [/codex/09-strategy/architecture-v2/cross-cutting/portfolio-allocator.md](../../../unified-trading-pm/codex/09-strategy/architecture-v2/cross-cutting/portfolio-allocator.md)
+- [/codex/09-strategy/architecture-v2/cross-cutting/portfolio-allocator.md](/codex/09-strategy/architecture-v2/cross-cutting/portfolio-allocator.md)
   — 8 allocator archetypes
-- [/codex/09-strategy/architecture-v2/axes/share-class.md](../../../unified-trading-pm/codex/09-strategy/architecture-v2/axes/share-class.md)
-- [/codex/04-architecture/promote-workflow-architecture.md](../../../unified-trading-pm/codex/04-architecture/promote-workflow-architecture.md)
-- [/codex/04-architecture/custody-providers.md](../../../unified-trading-pm/codex/04-architecture/custody-providers.md)
-- [/codex/04-architecture/interface-credential-convention.md](../../../unified-trading-pm/codex/04-architecture/interface-credential-convention.md)
-- [/codex/04-architecture/client-funds-isolation.md](../../../unified-trading-pm/codex/04-architecture/client-funds-isolation.md)
-- [/codex/04-architecture/treasury-custody-flow.md](../../../unified-trading-pm/codex/04-architecture/treasury-custody-flow.md)
-- [/codex/04-architecture/wallet-hierarchy-and-capital-flow.md](../../../unified-trading-pm/codex/04-architecture/wallet-hierarchy-and-capital-flow.md)
-- [/codex/04-architecture/defi-execution-overview.md](../../../unified-trading-pm/codex/04-architecture/defi-execution-overview.md)
-- [/codex/04-architecture/flash-loan-receiver.md](../../../unified-trading-pm/codex/04-architecture/flash-loan-receiver.md)
-- [/codex/04-architecture/trading-agent-service-directive-pipeline.md](../../../unified-trading-pm/codex/04-architecture/trading-agent-service-directive-pipeline.md)
-- [/codex/09-strategy/operational/cli-promote-paths.md](../../../unified-trading-pm/codex/09-strategy/operational/cli-promote-paths.md)
-- [/codex/04-architecture/shard-level-failure-isolation.md](../../../unified-trading-pm/codex/04-architecture/shard-level-failure-isolation.md)
+- [/codex/09-strategy/architecture-v2/axes/share-class.md](/codex/09-strategy/architecture-v2/axes/share-class.md)
+- [/codex/04-architecture/promote-workflow-architecture.md](/codex/04-architecture/promote-workflow-architecture.md)
+- [/codex/04-architecture/custody-providers.md](/codex/04-architecture/custody-providers.md)
+- [/codex/04-architecture/interface-credential-convention.md](/codex/04-architecture/interface-credential-convention.md)
+- [/codex/04-architecture/client-funds-isolation.md](/codex/04-architecture/client-funds-isolation.md)
+- [/codex/04-architecture/treasury-custody-flow.md](/codex/04-architecture/treasury-custody-flow.md)
+- [/codex/04-architecture/wallet-hierarchy-and-capital-flow.md](/codex/04-architecture/wallet-hierarchy-and-capital-flow.md)
+- [/codex/04-architecture/defi-execution-overview.md](/codex/04-architecture/defi-execution-overview.md)
+- [/codex/04-architecture/flash-loan-receiver.md](/codex/04-architecture/flash-loan-receiver.md)
+- [/codex/04-architecture/trading-agent-service-directive-pipeline.md](/codex/04-architecture/trading-agent-service-directive-pipeline.md)
+- [/codex/09-strategy/operational/cli-promote-paths.md](/codex/09-strategy/operational/cli-promote-paths.md)
+- [/codex/04-architecture/shard-level-failure-isolation.md](/codex/04-architecture/shard-level-failure-isolation.md)
 
 **Plans (spine — 10 most important)**: see §"Active plans inventory" above.
