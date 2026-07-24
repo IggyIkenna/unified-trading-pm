@@ -63,6 +63,7 @@ related:
     /plans/active/predictions_ml_walk_forward_and_arb_2026_06_20.md,
     /plans/active/predictions_other_bucket_and_ui_drilldown_2026_06_20.md,
     /plans/archive/2026_07/data_pipeline_e2e_check_2026_07_10.md,
+    /plans/active/data_pipeline_e2e_milestones_gate_2026_07_24.md,
   ]
 created: 2026-07-18
 last_updated: 2026-07-18
@@ -159,10 +160,15 @@ marked "A0 live read" carry the measured correction (see Progress Log § A0). Wh
 | Football fixture ↔ Kalshi market          | **NONE**                                                                     | Kalshi titles are city-level ("Seattle vs Cleveland") with no team registry → no fixture id at all; per-venue Kalshi↔Polymarket sports pairing needs a title-map the schema doesn't persist → honestly absent                                                                                                                                                                                                                             |
 | Cross-venue arb code                      | **two disconnected paths**                                                   | features-service `cross_venue_arb_detector` (Kalshi↔Polymarket, crypto-oriented in practice) + e2e `live_arb_scanner.py` (bookmakers+Betfair+Polymarket, NO Kalshi, prototype); neither keys on `af_fixture_id`                                                                                                                                                                                                                           |
 
-**Conclusion**: prediction is NOT MVP-backfill-ready — the CQG cluster atom is being wiped from the manifest, capture
-only just recovered, MTDS prediction has no test-bucket isolation, and the football fixture identity that would enable
-live-odds-vs-Polymarket-vs-Kalshi arb is threaded onto Polymarket-as-a-string only and onto Kalshi not at all. This plan
-scopes the full end-to-end.
+**Conclusion**: prediction is NOT YET MVP-backfill-ready, but two of the four blockers above are RESOLVED, not open —
+the CQG cluster atom is no longer being wiped (A0 live-read corrected the row above: 17,352 `captured` rows; the
+phantom-wipe issue is downgraded to verify-not-fix) and MTDS prediction `-test-` bucket isolation is FIXED end-to-end
+(`prediction_phase_d_formal_smoke_and_backfill_2026_07_24.md`, 2026-07-18: `market-tick-data-service@b06d1e6b` /
+`@2e50851d` / `@86d70de9`). What remains genuinely open: capture only just recovered and its hardening is still in
+flight (`prediction_phase_ab_residuals_2026_07_24.md`), the formal post-migration smoke-green + MVP backfill gate itself
+has not yet run (Phase D's remaining P0 todos), and the football fixture identity that would enable
+live-odds-vs-Polymarket-vs-Kalshi arb is still threaded onto Polymarket-as-a-string only and onto Kalshi not at all
+(`prediction_phase_e_football_arb_live_2026_07_24.md`, all 3 items open). This plan scopes the full end-to-end.
 
 ### Shard atom for prediction (SSOT-canonical — key is `canonical_question_group`, NOT `(instrument_id OR underlying)`)
 

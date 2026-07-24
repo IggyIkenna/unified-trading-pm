@@ -139,9 +139,8 @@ ingested). Use for operator-only work, trackers, design docs, and dispatcher-sur
 - **Delete-risk tagging must be consistent within one plan** _(finding F: one plan had a prod-GCS-deleting todo tagged
   plainly while a sibling delete todo in the same doc was `[OPERATOR]` + cited the delete-safety protocol — reads as an
   oversight, not a decision)._ Any todo that deletes/overwrites prod data (GCS objects, manifest rows, DB rows): tag
-  `[OPERATOR]` and cite `/codex/05-infrastructure/gcs-and-manifest-delete-safety-protocol.md` UNLESS you state
-  explicitly why this specific delete is lower-risk (e.g. genuinely soft-delete/reversible) — silence reads as an
-  oversight, not a ruling.
+  `[OPERATOR]` and cite `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` UNLESS you state explicitly why this
+  specific delete is lower-risk (e.g. genuinely soft-delete/reversible) — silence reads as an oversight, not a ruling.
 - **State the definition-of-done** _(finding G: several todos stated the problem/goal but not what evidence proves it's
   done — e.g. "wire the dependency gate for real" with no acceptance check)._ End each todo (or its first continuation
   line) with the concrete evidence a done-claim must cite — a passing check, a specific query returning zero rows, a

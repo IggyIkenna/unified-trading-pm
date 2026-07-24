@@ -28,7 +28,11 @@ repos:
 scope: [engineer, admin]
 tags: [defi, discoverability, index, aggregated-source-docs, plan-hygiene]
 related:
-  [/plans/active/defi_consolidated_closeout_2026_07_18.md, /plans/active/issues/plan_line_cap_remediation_2026_07_23.md]
+  [
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
+    /plans/active/issues/plan_line_cap_remediation_2026_07_23.md,
+    /plans/active/data_pipeline_e2e_milestones_gate_2026_07_24.md,
+  ]
 created: "2026-07-24"
 parent_epic: defi_master
 assigned_vm: NA
@@ -475,10 +479,10 @@ drift_direction: none
     this becomes a real todo.
   - [`plans/active/issues/deployment_ui_capability_bundle_stale_drift_pacifica_2026_07_16.md`](/plans/active/issues/deployment_ui_capability_bundle_stale_drift_pacifica_2026_07_16.md)
     — 0 open todos (closed/archived/record-only).
-  - [`plans/active/issues/defi_legacy_precanonical_composite_venue_objects_2026_07_24.md`](/plans/active/issues/defi_legacy_precanonical_composite_venue_objects_2026_07_24.md)
-    — 0 open todos (closed/archived/record-only) — its scope (legacy `dex_pools/`/`lending_indices/` fold + the
-    glued-venue flat tree inside `raw_tick_data/`) is tracked as live todos under
-    `defi_track01_per_instrument_and_canon_id_2026_07_24.md` below.
+  - **[`plans/active/issues/defi_legacy_precanonical_composite_venue_objects_2026_07_24.md`](/plans/active/issues/defi_legacy_precanonical_composite_venue_objects_2026_07_24.md)**
+    — 4 open (3 P1, 1 P2) — scale-measurement + content-sample todos gating an OPERATOR fold-vs-migrate decision on
+    whether this legacy glued-venue composite population should be folded onto its correct canonical path or given some
+    other disposition.
 
 - **Cross-AG / infra / process**:
   - [`plans/active/canonical_id_builder_retrofit_checklist_2026_07_08.md`](/plans/active/canonical_id_builder_retrofit_checklist_2026_07_08.md)

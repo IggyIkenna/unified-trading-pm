@@ -528,7 +528,7 @@ drift_direction: advance-code
       the futures curve).
     - +8 more P2 — see file for the rest.
   - [`plans/active/data_completion_cefi_2026_07_15.md`](/plans/active/data_completion_cefi_2026_07_15.md) (status:
-    active, 24 open — 18 P0/P1 shown, 6 P2/P3 capped; mostly MIGRATED FROM
+    active, 26 open — 20 P0/P1 (18 shown, 2 folded into the row above), 6 P2/P3 capped; mostly MIGRATED FROM
     `cefi_manifest_canonicalisation_2026_06_01.md`)
     - **[DATA] P0.** ⑧ IS cefi reference-universe gap — root-cause code fix shipped; operational backfill re-run + CLOB
       sub-part remain.

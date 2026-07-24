@@ -15,7 +15,6 @@ summary:
   closed.
 status: active
 nature: process
-umbrella: true
 asset_group: [tradfi]
 stage: [meta]
 repos:
@@ -81,11 +80,14 @@ supersedes:
 superseded_by:
 depends_on: [tradfi_manifest_content_recovery_completion_2026_07_24, tradfi_backfill_throughput_followups_2026_07_24]
 gate_on_depends:
-  true # Phase C (data-status/honest-coverage) is gated on Phase B, which forked to
-  # tradfi_manifest_content_recovery_completion_2026_07_24; the BLOCKED-PLAN2 "Certify tradfi Layer-1" todo is gated on
+  true # mechanism note: regen_backlog_from_plan.py's gate_on_depends holds the WHOLE plan (every todo, incl. the
+  # otherwise-unrelated Phase A2 adapter/registry todos), not just the 2 todos this was written for — Phase C
+  # (data-status/honest-coverage) is gated on Phase B, which forked to
+  # tradfi_manifest_content_recovery_completion_2026_07_24; the BLOCKED-INFRA "Certify tradfi Layer-1" todo is gated on
   # the catalogue rebuild+promote, which forked to tradfi_backfill_throughput_followups_2026_07_24 — both were real,
   # un-machine-enforced cross-plan gates found by the 2026-07-24 AO-flip-safety audit; encoded here so a future
-  # `assigned_vm: planning` flip can't dispatch Phase C or BLOCKED-PLAN2 before their real prerequisites land.
+  # `assigned_vm: planning` flip can't dispatch Phase C or BLOCKED-INFRA before their real prerequisites land (the
+  # whole-plan gate is broader than intended but is the accepted cost of the mechanism, not restructured here).
 source:
   Operator, 2026-07-18 — after spotting DERIBIT:FUTURE:AVAX@LIN-20260718 missing its quote and then seeing raw symbols
   in tradfi parquet names, manifest entries, and the instruments data-status page/catalogue, directed a single one-pass
@@ -97,8 +99,8 @@ source:
   (slot-3, 2026-07-18). **On 2026-07-24** the doc was trimmed + split 3 ways per the operator-approved plan-hygiene
   line-cap remediation (`plans/active/issues/plan_line_cap_remediation_2026_07_23.md` row 29) — this doc had grown to
   2549 lines (over the 2000L umbrella ceiling) via an ~1700-line tick-by-tick Progress Log; content moved verbatim to
-  the 3 children in the related list above, and this parent now carries the umbrella flag as a trimmed coordination
-  index.
+  the 3 children in the related list above, and this parent is now a trimmed coordination index (the `umbrella=true`
+  frontmatter key that carried this was later stripped 2026-07-24, ruled inert workspace-wide).
 ---
 
 # TradFi consolidated close-out — one pass to MVP-backfill-ready
@@ -115,7 +117,8 @@ source:
 > `/plans/active/issues/plan_line_cap_remediation_2026_07_23.md` (row 29). The 3-way split was overwhelmingly driven by
 > an ~1700-line tick-by-tick Progress Log sitting next to a small tail of genuinely open todos — every todo and every
 > Progress Log line was moved **verbatim** to its destination, nothing was summarized, rewritten, or dropped. This
-> parent now carries `umbrella: true` and stays under the 2000-line umbrella ceiling as a trimmed coordination index.
+> parent stays under the 2000-line umbrella ceiling as a trimmed coordination index (the `umbrella=true` frontmatter key
+> was later stripped 2026-07-24, ruled inert workspace-wide and absent from PLAN_FORMAT.md's schema).
 >
 > | Child plan                                                                                                               | Carries                                                                                                                                       |
 > | ------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -227,17 +230,22 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
 
 - [ ] [BACKEND] P1. **CME `mbp_10`/`trades`/`tbbo` `VENUE_DATA_TYPE_CAPABILITIES` restoration** + no `ohlcv_15m/24h`
       aggregation writer exists (leaves `vix_features` unfed) —
-      `tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md`. (repos:
-      market-tick-data-service, unified-api-contracts)
+      `tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md`. Gate:
+      `VENUE_DATA_TYPE_CAPABILITIES` verified to declare mbp_10/trades/tbbo as billing-gated (per the "Data-type ×
+      source priority" note above — declared possible, not chased to full L3 history), and a recorded decision on
+      whether an `ohlcv_15m/24h` aggregation writer ships to feed `vix_features`. (repos: market-tick-data-service,
+      unified-api-contracts)
 - [ ] [BACKEND] P2. **KRX/KRW intraday registry-vs-adapter mismatch**
       (`krx_intraday_ohlcv_registry_vs_adapter_mismatch_2026_07_12.md`, RESOLVED — verify it holds for the KRW MVP
       cell). **IBKR `_SEC_TYPE_MAP` / Databento `_resolve_product_root` / combo-leg** — DONE in code
-      (`canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md`); flip its stale single-leg todo. **`mvp_mode`
-      dead gate** decision (`tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md`). (repos: instruments-service,
-      market-tick-data-service)
+      (`canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md`, single-leg todo already `[x]`). **`mvp_mode`
+      dead gate** decision (`tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md`). Gate: KRX/KRW mismatch re-verified
+      still resolved for the KRW MVP cell, and the `mvp_mode` dead-gate decision (wire a real caller or remove) is made
+      and recorded. (repos: instruments-service, market-tick-data-service)
 - [ ] [BACKEND] P2. **Full MTDS+IS adapter smoke findings** — `mtds_is_full_adapter_smoketest_findings_2026_07_07.md`,
       `instruments_remaining_work_audit_2026_07_10.md` (tradfi slice),
-      `uac_data_type_validity_combinator_fragmentation_2026_07_07.md`.
+      `uac_data_type_validity_combinator_fragmentation_2026_07_07.md`. Gate: every open finding in the 3 cited docs
+      re-verified current against live tradfi state or re-filed as its own tracked todo.
 - [ ] [BACKEND] P2. Audit every adapter/handler module under
       `instruments-service/instruments_service/reference_data/adapters/tradfi/`,
       `market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/`, and the tradfi venue files
@@ -252,7 +260,9 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
 - [ ] [BACKEND] P1. **Honest-coverage for tradfi**: out-of-window `expected_unattempted` clipping
       (`honest_coverage_out_of_window_expected_unattempted_not_clipped_2026_07_16.md`, RESOLVED — verify for tradfi);
       reference-data shard-dimension model (`honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md`);
-      coverage-floor registry cross-propagation (`coverage_floor_registries_no_cross_propagation_2026_07_17.md`).
+      coverage-floor registry cross-propagation (`coverage_floor_registries_no_cross_propagation_2026_07_17.md`). Gate:
+      all 3 cited findings re-verified against live tradfi data (clipping holds, shard-dimension model applied,
+      coverage-floor registries cross-propagate) with the results recorded.
 - [ ] [CODE] P2. **Billing-gated Databento L2/L3 cells must not count as `attempted_failed`.** Databento tradfi's
       billing entitlement is 1-month L3 + 1-year L1 (see the "Data-type × source priority" note above), so
       `mbp_10`/`trades`/`tbbo` lookback/entitlement-guard rejections are EXPECTED, not real failures — but no
@@ -265,7 +275,10 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
       (repos: unified-api-contracts, market-tick-data-service)
 - [ ] [BACKEND] P1. **Data-status page renders canonical tradfi** (the "Upcoming expiries" + instruments/catalogue
       views) — `data_status_page_ux_and_canonicalisation_2026_07_16.md`; deployment-api legacy venue-lookup gap
-      (`deployment_api_legacy_instrument_availability_venue_lookup_gap_2026_07_13.md`, RESOLVED — verify tradfi).
+      (`deployment_api_legacy_instrument_availability_venue_lookup_gap_2026_07_13.md`, RESOLVED — verify tradfi). Gate:
+      the "Upcoming expiries" widget + catalogue view render canonical ids for a live sample row (no raw
+      `E3AN6     C7960`-style output per the Ground-truth verdict table above), and the venue-lookup gap fix is
+      confirmed to hold for tradfi.
 - [ ] [REVIEW] P1. **Run the already-shipped distinct-values/axis-value census for tradfi and verify 0 non-canonical**
       (supersedes the prior "RE-ADD the dimensions enumeration view" todo — that view already shipped live:
       deployment-api `GET /distinct-values/{asset_group}` + `GET /axis-value-census`, code at
@@ -281,7 +294,8 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
 - [ ] [BACKEND] P2. **Denominator / catalogue-completeness + new untracked findings** — 875 tradfi atoms with narrowed
       historical objects + 153 duplicate KRX row_keys
       (`tradfi_instrument_type_migration_read_stale_legacy_object_2026_07_17.md`); phantom captures
-      (`phantom_captures_tradfi_2026_06_28.md`); expected_reason misclassification P3s.
+      (`phantom_captures_tradfi_2026_06_28.md`); expected_reason misclassification P3s. Gate: each of the 3 cited
+      findings re-verified against live tradfi state (counts re-measured or explained as stale) and recorded.
 - [x] [BACKEND] P1. **KRX (Korean) equities carry a human-readable NAME across catalogue + manifest + data-status
       (operator, 2026-07-20)** — **instruments-service@6780f10e** (the 4th and last code surface; gate green **4712
       passed / 0 failed / 3 skipped**, `.qg_last_passed_sha == 9267e0ea` at ship time). _**CODE 4/4 LANDED 2026-07-20**
@@ -301,8 +315,10 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
       is@9267e0ea (goldens regenerated). This deliverable deliberately did NOT touch either: no guard was weakened,
       excluded, or baselined, and no foreign golden was regenerated to force green. Ship gate at is@9267e0ea: **4712
       passed / 0 failed / 3 skipped, exit 0**. Residual DeFi coverage-honesty finding (3 live venues with measured-dead
-      upstreams + `expected_coverage` not phase-gated) is documented in
-      `plans/active/issues/uac_is_defi_oracle_dex_adapter_drift_2026_07_20.md` and is owned by DeFi T2, NOT this plan.
+      upstreams + `expected_coverage` not phase-gated), tracked in
+      `/plans/archive/issues/uac_is_defi_oracle_dex_adapter_drift_2026_07_20.md`, was NOT this plan's to fix and is now
+      RESOLVED — 2026-07-22, `uac@9a047a31` + `instruments-service@52a1cb53` (defi_consolidated_closeout_2026_07_18.md
+      session), narrowed the 3 dead-upstream venues to `phase="pipeline"` + dropped their `expected_coverage.py` rows.
       **Verified on a SAMPLE (no full regen):** `_add_instrument_name` stamps `KRX:EQUITY:005930`→"Samsung Electronics",
       `KRX:EQUITY:000660`→"SK Hynix", `KRX:EQUITY:005380`→"Hyundai Motor", and also catches the legacy
       `KRX:EQUITY:005930.KS-USD` variant (same `base_asset`); non-KRX rows stay honestly blank. Live tradfi
@@ -325,7 +341,7 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
       Regenerate catalogue + manifest so the name lands live; verify the Catalogue Explorer shows `SK Hynix` /
       `Samsung Electronics` next to the code. (repos: instruments-service, market-tick-data-service, deployment-api,
       deployment-ui)
-- [ ] [VERIFY] P0. 🚧 BLOCKED-PLAN2 — **Certify tradfi Layer-1** — post the v9 migration + rebuild + IS catalogue (Plan
+- [ ] [VERIFY] P0. 🚧 BLOCKED-INFRA — **Certify tradfi Layer-1** — post the v9 migration + rebuild + IS catalogue (Plan
       2), record the fresh tradfi denominator + %. Gate: tradfi number recorded; all 5 AGs now canonical-and-measured.
       **STILL BLOCKED 2026-07-21 (only PARTIALLY unblocked)**: the v9 manifest migration/rebuild are done (task 10,
       2026-07-16), but the served catalogue has not yet been rebuilt/promoted for the +409 MVP expansion

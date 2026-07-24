@@ -67,12 +67,15 @@ locked_since:
 supersedes:
 superseded_by:
 depends_on:
+sequential: true
 source: >-
   Split from `prediction_consolidated_closeout_2026_07_18.md` (Phase A section, lines 177-266, and Phase B section,
   lines 267-343, of that doc as of 2026-07-18/2026-07-24) per the operator-approved line-cap remediation triage
   `plans/active/issues/plan_line_cap_remediation_2026_07_23.md` (row 22, "4-way split along the plan's own Phase A-E
   boundaries"). Content moved verbatim, not summarized. Phase A and Phase B are combined into one child per the triage's
-  specific guidance for this plan ("Phase A-B residuals").
+  specific guidance for this plan ("Phase A-B residuals"). `sequential: true` added 2026-07-24 (plan audit finding) to
+  encode this doc's own "Phase B — run the migrations (gated on Phase A green)" header text as a real ordering — this is
+  a WITHIN-plan A-before-B ordering, not a cross-plan gate, so `sequential` (not `depends_on`) is the correct mechanism.
 ---
 
 # Prediction Phase A-B residuals — code-ready writers + manifest migration follow-through
