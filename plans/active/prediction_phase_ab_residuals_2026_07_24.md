@@ -261,7 +261,7 @@ source: >-
 - [ ] [DATA] P0. **Re-verify + close the `instrument_type` casing/canonicalisation gap to literal 100% (operator,
       2026-07-24) — the historical numbers in this doc DISAGREE and need reconciling, not just re-citing.** The tick-18
       `--apply` (line 229 above) measured `instrument_type` 11.80%→100% live on 2026-07-19; but the cross-AG D1 ruling
-      snapshot (`codex/02-data/reconciliation-finding-taxonomy.md` §5.1) measured prediction at only 99.46% UPPER one
+      snapshot (`/codex/02-data/reconciliation-finding-taxonomy.md` §5.1) measured prediction at only 99.46% UPPER one
       day later (2026-07-20) — the two don't agree, most likely because ongoing captures between the two reads
       re-introduced non-canonical rows (the durability gap items 2+3 above were still open at the 07-19 apply and only
       closed at tick 21). **Done when**: a FRESH live manifest read today shows literal 0 non-canonical

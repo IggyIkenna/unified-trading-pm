@@ -402,8 +402,8 @@ session:
 - `plans/active/task_template.md` §3 gained a proactive rule (finding J): extract completed Progress Log sections as a
   plan crosses ~500L, don't wait for a remediation pass.
 - Promoted 2 of this issue doc's own lessons to their codex SSOT so they survive this doc's eventual archival: the
-  `Workflow()` silent-stop failure mode → `codex/12-agent-workflow/async-wait-and-poll-discipline.md` (new section, next
-  to the sibling "dispatched sub-agent is not a reliable wake" rule); the gitleaks allowlist-must-match-the-
+  `Workflow()` silent-stop failure mode → `/codex/12-agent-workflow/async-wait-and-poll-discipline.md` (new section,
+  next to the sibling "dispatched sub-agent is not a reliable wake" rule); the gitleaks allowlist-must-match-the-
   captured-secret gotcha → a header comment in `.gitleaks.toml` itself, where the next person adding an entry will
   actually see it.
 - `cursor-configs/CLAUDE.md` § "Plans — format + authoring discipline" now states line-caps is a real hard gate (was

@@ -5,7 +5,7 @@ title:
   per-instrument_type exception"
 summary: >-
   Operator directive (2026-07-24), sharpening operator ruling D1 (2026-07-20,
-  `codex/02-data/reconciliation-finding-taxonomy.md` §5.1: manifest `instrument_type` COLUMN canonical target is
+  `/codex/02-data/reconciliation-finding-taxonomy.md` §5.1: manifest `instrument_type` COLUMN canonical target is
   UPPERCASE). D1 measured tradfi/cefi/prediction as already near-uniform (tradfi 3.3M UPPERCASE re-stamps applied; cefi
   ~99.41% UPPER; prediction 99.46% UPPER) and DeFi as genuinely mixed ("both cases present"). Operator ruling this
   session: tradfi, cefi, prediction, and sports all target literal 100% (not "substantially complete" / the historical
@@ -73,7 +73,7 @@ depends_on: []
 
 ## The standing D1 ruling (context, not re-litigated here)
 
-`codex/02-data/reconciliation-finding-taxonomy.md` §5.1, operator ruling D1 (2026-07-20): the canonical TARGET for the
+`/codex/02-data/reconciliation-finding-taxonomy.md` §5.1, operator ruling D1 (2026-07-20): the canonical TARGET for the
 manifest `instrument_type` COLUMN is **UPPERCASE** (the catalogue enum:
 `{FUTURE, OPTION, EQUITY, ETF, INDEX, COMBO, SPOT_PAIR}`). Two things are separately, permanently ruled and **never in
 question** regardless of anything in this doc: the **GCS path segment** stays lowercase, and the **id middle segment**
