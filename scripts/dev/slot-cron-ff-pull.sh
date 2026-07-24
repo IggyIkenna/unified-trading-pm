@@ -147,9 +147,29 @@ _filter_nonblank_porcelain() {
     done <<< "${raw}"
 }
 
+# Read the sweep-aggregate dirty_consecutive_ticks field out of a result-file JSON
+# (0 if the file is absent/unparseable). Shared by the pre-sweep read (gates ff_one()'s
+# skip decision, item 5) and the post-sweep write (_write_ff_result below) so both sides
+# agree on the same value with one implementation.
+_read_dirty_consecutive_ticks() {
+    local f="$1"
+    if [[ -s "${f}" ]]; then
+        python3 -c "
+import json, sys
+try:
+    d = json.load(open(sys.argv[1]))
+    print(int(d.get('dirty_consecutive_ticks', 0)))
+except Exception:
+    print(0)
+" "${f}" 2>/dev/null || echo 0
+    else
+        echo 0
+    fi
+}
+
 # Aggregate the run's worst outcome + write the result file atomically (tmp+mv).
-# Worst-of precedence: conflict > fail > skip:dirty > ok (an empty run = ok, the
-# cron ran and had nothing stuck).
+# Worst-of precedence: conflict > fail > skip:dirty > dirty:unconfirmed > ok (an empty
+# run = ok, the cron ran and had nothing stuck).
 _write_ff_result() {
     local worst="ok" now tmp prev_ticks new_ticks
     if [[ -s "${FF_TOKENS_FILE}" ]]; then
@@ -159,25 +179,20 @@ _write_ff_result() {
             worst="fail"
         elif grep -q '^skip:dirty$' "${FF_TOKENS_FILE}" 2>/dev/null; then
             worst="skip:dirty"
+        elif grep -q '^dirty:unconfirmed$' "${FF_TOKENS_FILE}" 2>/dev/null; then
+            worst="dirty:unconfirmed"
         fi
     fi
     # Consecutive-dirty-tick counter (plan L1603). Read the previous count, increment
-    # when this sweep is also dirty, reset otherwise. Emit a visible [WARN] line when
-    # the streak reaches the threshold so operators / log monitors see the stale-WIP signal.
-    prev_ticks=0
-    if [[ -s "${FF_RESULT_FILE}" ]]; then
-        prev_ticks=$(python3 -c "
-import json, sys
-try:
-    d = json.load(open(sys.argv[1]))
-    print(int(d.get('dirty_consecutive_ticks', 0)))
-except Exception:
-    print(0)
-" "${FF_RESULT_FILE}" 2>/dev/null || echo 0)
-    fi
-    if [[ "${worst}" == "skip:dirty" ]]; then
+    # when this sweep saw ANY dirt (confirmed skip:dirty OR a not-yet-confirmed single
+    # tick — both need the streak to climb so a second consecutive tick can confirm,
+    # ao_remediation_b_code_chain_2026_07_23.md item 5), reset otherwise. Emit a visible
+    # [WARN] line when the streak reaches the threshold so operators / log monitors see
+    # the stale-WIP signal.
+    prev_ticks="$(_read_dirty_consecutive_ticks "${FF_RESULT_FILE}")"
+    if [[ "${worst}" == "skip:dirty" || "${worst}" == "dirty:unconfirmed" ]]; then
         new_ticks=$(( prev_ticks + 1 ))
-        if [[ "${new_ticks}" -ge "${FF_DIRTY_STREAK_THRESHOLD}" ]]; then
+        if [[ "${worst}" == "skip:dirty" && "${new_ticks}" -ge "${FF_DIRTY_STREAK_THRESHOLD}" ]]; then
             log "[WARN:dirty-streak-${new_ticks}] ff-pull has skipped ${new_ticks} consecutive tick(s) (skip:dirty) — uncommitted WIP is blocking integration-branch updates. Investigate: git -C <repo> status && git diff --stat"
         fi
     else
@@ -384,16 +399,36 @@ ff_one() {
     # on whether the file actually blocks; pre-emptively guessing "dirty ⇒ skip" is what turned a
     # harmless stray file into a permanent outage. Verified empirically 2026-07-16: untracked-only
     # → FF succeeds and the file survives; tracked dirt → still skips; real collision → git refuses.
+    #
+    # dirty_consecutive_ticks confirm-gate (ao_remediation_b_code_chain_2026_07_23.md
+    # item 5, mirrors item 4's server-side git_health.py gate): a SINGLE tick of tracked
+    # dirt must not itself skip the FF — whatever produced it (reporter phantom, a
+    # transient race, or genuine WIP), one observation is not yet distinguishable from a
+    # one-tick phantom. PREV_DIRTY_CONSECUTIVE_TICKS is the sweep-aggregate streak read
+    # ONCE before this sweep started (see bottom of file); >=1 there means a PRIOR sweep
+    # already saw dirt (this sweep is confirming, not originating) — only then does the
+    # skip actually fire. On the unconfirmed (first) tick the FF is allowed to proceed —
+    # git's own --ff-only refuses if the dirty file genuinely collides with the incoming
+    # diff (same reasoning as the untracked-dirt case below), so this never clobbers real
+    # WIP; it only stops treating one stray tick as gospel.
     _tracked_dirt="$(_filter_nonblank_porcelain "$(git status --porcelain --untracked-files=no 2>/dev/null)")"
     if [[ -n "${_tracked_dirt}" ]]; then
-        log "[skip:dirty] ${repo_name} (${branch}) — uncommitted changes"
-        _ff_record "skip:dirty"
-        popd >/dev/null
-        return 0
+        if [[ "${PREV_DIRTY_CONSECUTIVE_TICKS:-0}" -ge 1 ]]; then
+            log "[skip:dirty] ${repo_name} (${branch}) — uncommitted changes (confirmed, dirty_consecutive_ticks>=2)"
+            _ff_record "skip:dirty"
+            popd >/dev/null
+            return 0
+        else
+            log "[dirty:unconfirmed] ${repo_name} (${branch}) — uncommitted changes on a single tick; not yet confirmed, FF proceeds this tick"
+            _ff_record "dirty:unconfirmed"
+            # fall through — do NOT return; the FF attempt below proceeds.
+        fi
     fi
-    if [[ -n "$(git status --porcelain 2>/dev/null)" ]]; then
-        # Untracked-only: proceed. Logged (not silent) so scratch accumulation stays visible and
-        # the following FF is attributable if git DOES refuse on a collision.
+    if [[ -z "${_tracked_dirt}" ]] && [[ -n "$(git status --porcelain 2>/dev/null)" ]]; then
+        # Untracked-only (no tracked dirt at all, so the dirty:unconfirmed branch above
+        # never fired for this repo this tick): proceed. Logged (not silent) so scratch
+        # accumulation stays visible and the following FF is attributable if git DOES
+        # refuse on a collision.
         log "[untracked-ok] ${repo_name} (${branch}) — untracked-only dirt; FF proceeds (git rejects a real collision)"
     fi
 
@@ -561,6 +596,13 @@ prefetch_main_clones() {
     done
     log_quiet "prefetch: ${fetched} fetched, ${failed} failed"
 }
+
+# Sweep-aggregate dirty-tick streak, read ONCE before this sweep touches anything
+# (ao_remediation_b_code_chain_2026_07_23.md item 5). ff_one()'s dirty-confirm gate reads
+# this global; forked parallel workers (--all-slots) inherit it via fork, no export
+# needed. Must be read before _write_ff_result() runs at sweep end, which overwrites
+# FF_RESULT_FILE with THIS sweep's outcome.
+PREV_DIRTY_CONSECUTIVE_TICKS="$(_read_dirty_consecutive_ticks "${FF_RESULT_FILE}")"
 
 # Resolve starting slot dir.
 cwd="$(pwd)"
