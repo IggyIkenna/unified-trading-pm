@@ -102,8 +102,8 @@ source:
       **Gate**: a doc_drift finding produces a blocked-queue entry visible via the backlog API, with the existing Slack
       path unchanged. — `agent-orchestrator@18f262e`: each NEW `doc_drift` key now also gets a synthetic `BlockedRow`
       (`slot_id=0`, the same "plan-level, no worker slot" sentinel `bootstrap.py` uses for operator-gated todos, since
-      there is no originating worker task) via `state_store.add_blocked`, visible through
-      `GET /api/state ->     blocked_queue` / `/api/blocked/*`, plus a `notify_slot_blocked` Slack ping — additive,
+      there is no originating worker task) via `state_store.add_blocked`, visible through the `blocked_queue` returned
+      by `GET /api/state` / `/api/blocked/*`, plus a `notify_slot_blocked` Slack ping — additive,
       `notify_plan_health_findings` unchanged. 7 new tests in `tests/test_plan_health.py`; `quality-gates.sh` green
       (1597 passed).
 - [ ] [INFRA] P2. Wire `/docs-reconcile` onto the same 24h cadence as the plan-reconciler by adding an installer timer
