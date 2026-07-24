@@ -192,23 +192,28 @@ the duplicate/phantom rows. Fix = **fetch bulk, write per-instrument** (the id i
       MUST cover ALL block-height ranges** — the running R3 VM is pinned to the OLD regex so it misses ≤7-digit gas_fees
       in EVERY year; the new-code re-run is idempotent over the already-split ≥8-digit ones. (repo:
       market-tick-data-service)
-- [ ] [DATA] P0. **⚠️ Legacy `dex_pools/`/`lending_indices/` = PARTIAL-OVERLAP, FOLD-not-delete (the verify OVERTURNED
-      the DUP verdict — a delete would have LOST real data).** Only 8 objects/2.4 MiB (SOLANA/2026-04-14; `lst_rates/`
-      already gone), but content-verify found **`dex_pools/raydium/SOLANA/2026-04-14` has 32 legacy-only high-TVL pools
-      ABSENT from canon** (XMR/USDC $47M, BNB/USDC $18M, USD1/USDC $9.9M, ZEC/USDC $7.5M, …; legacy=98 pools, canon=99,
-      intersection only 66). Canon was re-materialised 2026-07-13 from a DIVERGENT subgraph snapshot that dropped them.
-      **UNION-merge each legacy cell into canon** (per-instrument symbolic leaf, address-in-column; keep canon's richer
-      59-col schema on the 66-intersection, ADD the 32 legacy-only, keep canon's 33 extras); the 2 known-UNIQUE cells
-      (solend lending, kamino dex_pool) fold too. **DELETE legacy ONLY after the union is content-verified present in
-      canon + manifest-registered — NEVER blind-delete.** (repo: market-tick-data-service)
-- [ ] [DATA] P0. **Legacy GLUED-VENUE FLAT tree INSIDE `raw_tick_data/` — R3 never sees it.**
-      `raw_tick_data/by_date/day=<D>/asset_group=defi/venue=<VENUE>-<CHAIN>/ticks_migrated_<ISO8601>.parquet` (e.g.
-      `venue=UNISWAPV3-ETHEREUM/`, `AAVEV3-ETHEREUM/`) — pipeline_mode MISSING, venue+chain GLUED, FLAT (no
-      chain=/instrument_type=/data_type=), leaf = a `ticks_migrated_*` batch dump.
-
-      `parse_defi_object._PAT_DEFI` requires the hive segments → returns None → R3 discovery=0. FIRST determine if
-                                                                                                                                                                                                                                                                                                                                              these are superseded `_migrated_` leftovers (a prior migration already split them → delete-after-verify) or
-                                                                                                                                                                                                                                                                                                                                              un-split sources (→ parse + split to canonical). (repo: market-tick-data-service)
+- [x] ✅ [DATA] P0. **Legacy `dex_pools/`/`lending_indices/` — FOLDED + DELETED (checkbox was stale; work completed
+      2026-07-21/22, never flipped).** Confirmed via
+      `plans/archive/issues/defi_fold_manifest_registration_pending_2026_07_21.md` (`status: resolved`, "All 3 todos
+      complete"): all 748 folded rows for `day=2026-04-14` (the 32 legacy-only raydium pools + solend/kamino unique
+      cells) union-merged into canon, manifest-registered (`market-tick-data-service@ae6fccef` +
+      `unified-trading-library@b9534230`), and verified `capture_status=captured` via a live manifest read. Legacy
+      `dex_pools/`/`lending_indices/` prefixes subsequently prod-deleted by the operator 2026-07-21 (0 objects remain).
+      (repo: market-tick-data-service)
+- [x] ✅ [DATA] P0. **Legacy GLUED-VENUE FLAT tree INSIDE `raw_tick_data/` — INVESTIGATED 2026-07-24, confirmed UN-SPLIT
+      SOURCES (not superseded leftovers), issue filed, not yet migrated.** Sampled directly (operator flagged one
+      specific object): `venue=ETHENA-ETHEREUM/ticks_migrated_20260418T162244Z.parquet` holds 1 REAL row
+      (`data_type=oracle_prices`, `instrument_key=ETHENA-ETHEREUM:YIELD_BEARING:sUSDe` — a validly-formed canonical id
+      STRING inside the content, just not reflected in the PATH) — this is genuine un-split source data, not a migration
+      leftover. `parse_hive_path()` returns `None` for it → `rebuild_defi_manifest.py` counts it `unparseable` → **zero
+      manifest representation of any kind** (worse than the timestamp-glued-id defect, which at least gets a wrong
+      CAPTURED row). A bounded single-day sample (day=2025-08-06) found 9 sibling composite-venue directories
+      (AAVEV3/CURVE/ETHENA/ETHERFI/LIDO/MORPHO/UNISWAPV2/V3/V4-ETHEREUM) — systemic, not a one-off; true corpus-wide
+      scale NOT yet measured (single-walk discipline — no fresh whole-corpus GCS walk run for this). Filed
+      `/plans/active/issues/defi_legacy_precanonical_composite_venue_objects_2026_07_24.md` with full evidence +
+      suggested next steps (parse the legacy path + re-derive canonical path from the parquet's own `instrument_key`
+      column, fold-not-delete since content is real). **Remaining**: scale measurement + a targeted migration script —
+      tracked in that issue doc, not re-duplicated here. (repo: market-tick-data-service)
 
 - [ ] [DATA] P1. **Divergence RCA** — why did the 2026-07-13 canon re-materialisation drop 32 raydium pools vs the
       2026-04-14 legacy capture? Determines whether canon dex_pool_state is trustworthy for OTHER raydium/DEX days or
@@ -575,16 +580,18 @@ instruments in one `instruments.parquet` with `available_from/to`).
 > genuinely still-open (not "done"/duplicate-of-above) as of the last tick and are carried forward here rather than
 > archived silently.
 
-- [ ] [DATA] P1. **Ship the blocked `market-tick-data-service@952618d1` (`delete_migrated_defi_markers_2026_07_23.py`)
-      past the quickmerge test-flake**
-      (`/plans/active/issues/mtds_deployment_env_monkeypatch_leak_blocks_quickmerge_2026_07_23.md` — a
-      `monkeypatch.setenv` leak from `test_prediction_universe_prod_catalogue_gating.py` under `pytest-xdist`, unrelated
-      to the script itself), then have a **human/operator** run `--apply` (prod-bucket delete, human-only hard stop) to
-      retire the 356,314 already-verified-safe `_migrated_*` markers. Separately confirm whether the 12 NEW
-      `liquidations`-bundle glued objects found mid-verify (2026-07-23 `20260723_013349` capture run,
-      AAVE_V3/COMPOUND_V3/GMX/FLUID/SPARK × 8 chains, still bundled-batch shape) mean the `liquidations` handler's
-      forward-write path still needs the same per-instrument fix `write_defi_rows()` already got, or whether a future
-      scheduled R3 pass will simply pick them up as-is. (repo: market-tick-data-service)
+- [x] ✅ [DATA] P1. **Ship the `delete_migrated_defi_markers_2026_07_23.py` script — DONE (cited sha `952618d1` was
+      stale/pre-rebase; actual shipped sha `market-tick-data-service@a65117eb`, confirmed ancestor of
+      `origin/live-defi-rollout`).** The named blocker
+      (`mtds_deployment_env_monkeypatch_leak_blocks_quickmerge_2026_07_23.md`) was worked around via the serial-pytest
+      mitigation (`bc5d1490`, `PYTEST_WORKERS=1` — reduces but does not eliminate exposure per that issue doc's reopened
+      findings) and the script landed. **Remaining: only the `--apply` run itself, [OPERATOR]-tagged at the parent plan
+      (line 708) — prod-bucket delete, human-only hard stop, not an agent action.** The 12-liquidations-bundle question
+      is ANSWERED (writer half): the daily-cron timestamp-glued-empty-marker defect across 6 handlers that produced them
+      is root-caused + fixed this session (`market-tick-data-service@f2e3ad41`) — no FUTURE liquidations glued rows will
+      be written. The 12 EXISTING glued rows already in the manifest from before the fix still need a targeted
+      re-verify/reclassify pass — tracked at Track 1's line 712-equivalent item below, not a distinct gap. (repo:
+      market-tick-data-service)
 - [ ] [DATA] P1. **Verify the fake-history relabel-forward migration to actual completion** (todo 3,
       `/plans/active/issues/defi_solana_dex_pools_fake_history_recurrence_prd_bucket_2026_07_23.md`) — script shipped +
       a real 429-crash bug found+fixed (`market-tick-data-service@b48a0a4d`), relaunched on ON_DEMAND after 2
