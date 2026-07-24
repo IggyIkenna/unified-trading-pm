@@ -112,7 +112,45 @@ sports_reference/by_date/day=2026-04-14/pipeline_mode=batch_api_football/entity=
       archived run logs from that exact day are available in-session. Could not pin the exact historical call site with
       the tools available; NOT closing this todo — leaving it open for whoever has access to that era's deployment/run
       logs. The CODE P1/P2 todos below don't depend on finding it: a structural guard that rejects this CLASS of mix-up
-      regardless of cause was shipped instead (see below).
+      regardless of cause was shipped instead (see below). **FOLLOW-UP (2026-07-24, slot 12) — the premise "incident
+      date = 2026-04-14" is WRONG; the actual write happened 2026-07-16, not April.** `git log`-based investigation
+      (above) necessarily assumed the corrupted objects were WRITTEN around their `day=` partition value. They were not
+      — GCS object metadata (`gcs_describe_object`/`list_blobs` via UTL, read-only, no corpus walk — single-day,
+      single-league bounded listings) tells a different story: - All 85 corrupted `league=<L>/fixtures_schedule.parquet`
+      objects under `day=2026-04-14/pipeline_mode=batch_api_football/entity=fixtures_schedule/` carry `updated`
+      timestamps clustered in a **<1-second window**: `2026-07-16T09:59:21.462Z` through `2026-07-16T09:59:22.039Z`
+      (verified by listing all 117 objects under that day's `entity=fixtures_schedule/` prefix and sorting by
+      `updated`). Sizes are uniform (~8.0–9.5 KB), consistent with the instrument-catalogue shape, not the ~26 KB real
+      fixtures shape seen elsewhere in the same listing. - A 118th object
+      (`league=WORLD_WORLD_CUP_WOMEN_QUALIFICATION_EUROPE`, not in the original 85-count sample) is ALSO
+      instrument-catalogue-shaped (confirmed by downloading + `pd.read_parquet` — same `instrument_key`/
+      `tick_size`/`venue`/... columns), written even earlier at `2026-07-12T23:10:14Z` — so the true affected count for
+      this one day is at least 86, and the corruption event was not a single atomic write. - A <1-second burst writing
+      85 files is not a live production writer (no api-football HTTP calls would clear that fast, even with zero
+      rate-limiting) — this is the signature of an **in-memory script/migration loop** that iterated something
+      league-shaped and wrote the same (or per-item) instrument-catalogue-derived DataFrame to each `league=` partition,
+      not the real per-league fixtures fetch path. - `instruments_service/reference_data/adapters/sports/__init__.py:21`
+      has a literal `date="2026-04-14"` — but it's a **module-docstring usage example**, not executable code; several
+      unit tests (`test_sports_dependency_enforcement.py`, `test_sports_dependency_bucket.py`) also hardcode this exact
+      date as a fixture-parameter constant, always paired with an explicit `-test-` bucket. None of these are wired to
+      run against the prod bucket, so none is directly implicated — but the shared literal supports the theory that
+      `2026-04-14` is an arbitrary/canonical **test-fixture date**, not evidence of a real April incident. - Checked
+      `scripts/smoke_matrix.py` (an instrument-catalogue-cell smoke-test harness that DOES iterate many cells fast,
+      matching the burst signature) — it resolves its target via `resolve_test_bucket()` (always a `-test-`-suffixed
+      bucket name), so it is not an obvious match either, though a silent test-bucket-resolution fallback to prod was
+      not exhaustively ruled out. - Cloud Logging: `resource.type="gcs_bucket"` Data Access entries for this bucket in
+      the `2026-07-16T09:58–10:01Z` window returned **zero entries** — Data Access audit logging is not enabled for this
+      bucket, so the calling identity/job cannot be recovered from GCP audit trail. This is a genuine dead end for
+      identifying WHO ran it, not just an exhausted search. - **Separately** (worth a follow-up, not this todo's scope):
+      the SAME `day=2026-04-14/entity=fixtures_schedule/` prefix also holds 11 correctly-fixtures-shaped (~26 KB),
+      CORRECTLY-shaped objects under duplicate ALIAS league codes (`ENG_CHAMPIONSHIP` vs `ENGLAND_CHAMPIONSHIP`, `UCL`
+      vs `WORLD_UEFA_CHAMPIONS_LEAGUE`, `SERIE_B` vs `ITALY_SERIE_B`, etc.), written even later — a slower burst
+      spanning `2026-07-19T04:23–06:22Z` (~1 write/minute, consistent with a real per-league re-fetch). This looks like
+      a SEPARATE bug (duplicate/legacy league-code writes) coexisting in the same prefix; not investigated further here
+      — flagging so it isn't mistaken for part of THIS incident's fix scope. - Net: real root cause (the specific
+      script/job) still not found — leaving this todo open, as slot 5 did — but the corrected timeline
+      (write=2026-07-16, not April) is a materially different fact than what the issue doc's "Recommended decision"
+      section assumes, and should inform anyone else picking this up.
 - [x] ✅ [CODE] P1. Fix the write-path bug so no future run can write a non-fixtures schema under
       `entity=fixtures_schedule/` (repo: instruments-service). **Done when**: a regression test reproduces the old
       bad-path resolution and asserts the fix. — Could not pin the EXACT historical bug (see the DIAG todo above), so
