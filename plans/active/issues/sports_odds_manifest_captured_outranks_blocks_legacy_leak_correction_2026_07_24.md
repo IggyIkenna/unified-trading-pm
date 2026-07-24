@@ -136,4 +136,4 @@ up that DIAG item has this data point.
       `ManifestWriter.lookup()` immediately AND after >=2 consolidator cycles (per the 2026-07-14 adjudication's own
       verification recipe) so a transient read isn't mistaken for a durable fix. Repo: instruments-service or
       unified-trading-library (whichever owns the correction-script home per
-      `codex/06-coding-standards/script-homes.md`).
+      `/codex/06-coding-standards/script-homes.md`).

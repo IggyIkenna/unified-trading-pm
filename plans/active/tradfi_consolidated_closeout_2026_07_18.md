@@ -131,8 +131,9 @@ source:
 > - `tradfi_backfill_throughput_followups_2026_07_24.md` — **11 open** (0×P0, 8×P1, 3×P2). Top P1s: (1) Backfill-VM
 >   startup OOM rc137 + OOM remediation baked default + consolidator throughput/backlog monitor (3 sub-issues bundled);
 >   (2) TradFi has NO working T+1 forward-fill job — add source-scoped `…-tradfi-databento-t1-recon` Cloud Run job.
-> - `tradfi_phase_d_terminal_gate_2026_07_24.md` — **1 open** (1×P0). The P0: MVP backfill readiness gate — run the
->   tradfi MVP backfills only after A-D are green; **still blocked** on the chain-bundle sampler follow-up.
+> - `tradfi_phase_d_terminal_gate_2026_07_24.md` — **2 open** (1×P0, 1×P1). The P0: MVP backfill readiness gate — run
+>   the tradfi MVP backfills only after A-D are green; **still blocked** on the chain-bundle sampler follow-up. The P1:
+>   post-full-backfill `/data-pipeline-reconciliation` RUN checkpoint, gated on the P0.
 >
 > **Retained here**: the ground-truth verdict + MVP universe (foundational context for all 3 children), Phase A2
 > (adapter/registry correctness), Phase C (data-status + honest-coverage), the aggregated Codex SSOT + source-doc index,
@@ -269,8 +270,8 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
       (supersedes the prior "RE-ADD the dimensions enumeration view" todo — that view already shipped live:
       deployment-api `GET /distinct-values/{asset_group}` + `GET /axis-value-census`, code at
       `deployment-api/deployment_api/routes/data_status/_distinct_values.py` + `_axis_census.py`; tracked corpus-wide in
-      `plans/active/issues/distinct_values_noncanonical_audit_2026_07_20.md`). Call both endpoints for
-      `asset_group=tradfi` against the current nightly rollup + manifest and confirm every distinct
+      `/plans/active/distinct_values_noncanonical_audit_2026_07_20.md`). Call both endpoints for `asset_group=tradfi`
+      against the current nightly rollup + manifest and confirm every distinct
       `instrument_type`/`data_type`/`chain`/`source`/`pipeline_mode`/`venue` value is canonical (0 non-canonical, or
       only explicitly-accepted exceptions per the cutover register) — the exact dupes the 2026-07-18 audit found
       (`FUTURE`/`future`/`FUTURES`, `EQUITY`/`equity`, stale `barchart`) must be 0 or explained. Definition-of-done: a
@@ -341,8 +342,11 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
 
 ## Plan-quality — AO-dispatch-readiness pass (owed)
 
-- [ ] [REVIEW] P2. Run the same adversarial AO-dispatch-readiness pass that produced sports's Track Y findings A-G (see
-      `/plans/active/sports_consolidated_closeout_2026_07_19.md`'s Track Y section for the method) against this entire
+- [ ] [REVIEW] P2. Run the same adversarial AO-dispatch-readiness pass that produced sports's Track Y findings A-G (the
+      6 defect classes: bare section shorthand, ambiguous verbs, delete-tagging inconsistency, missing
+      definition-of-done, stale checkboxes, digest-checkbox misuse — see
+      `/plans/archive/2026_07/sports_consolidated_closeout_history_2026_07_24.md`'s "Track Y — PLAN-QUALITY REMEDIATION"
+      section for the original method, extracted there by sports's own line-cap-remediation split) against this entire
       plan file: check for bare `§X` cross-doc shorthand used as a todo's sole meaning, ambiguous non-literal verbs
       (`absorb`/`incorporate`/`handle`/`address`), inconsistent delete-risk `[OPERATOR]` tagging, todos missing a stated
       definition-of-done, and stale checkboxes a later section already shows resolved. Definition-of-done: a filed
@@ -382,9 +386,11 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
       Run job
     - +9 more (P1/P2) — see file for the rest
   - [`plans/active/tradfi_phase_d_terminal_gate_2026_07_24.md`](/plans/active/tradfi_phase_d_terminal_gate_2026_07_24.md)
-    (1 open)
+    (2 open)
     - **[DATA] P0.** MVP backfill readiness gate — run the tradfi MVP backfills only after A-D are green; still blocked
       on the chain-bundle sampler follow-up
+    - **[DATA] P1.** Post-full-backfill reconciliation RUN checkpoint (both raw-tick and candles layers), gated on the
+      P0 above going green
 
 - **ID-format**:
   - [`plans/active/canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md`](/plans/active/canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md)

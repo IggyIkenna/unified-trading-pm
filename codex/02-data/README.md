@@ -251,13 +251,13 @@ if df["price"].min() <= 0 or df["price"].max() > 1_000_000:
 Per-asset-group canonical references for every data type: methodology, sources, schema fields, shard key, base
 granularity, NEEDS_CANDLE flag, handler class, and status.
 
-| Asset group | Catalog doc                                                                   | Completeness                                      |
-| ----------- | ----------------------------------------------------------------------------- | ------------------------------------------------- |
-| DeFi        | [defi-data-types-catalog.md](defi-data-types-catalog.md)                      | ✅ Comprehensive (14 types)                       |
-| TradFi      | [tradfi-data-types-catalog.md](tradfi-data-types-catalog.md)                  | ✅ Comprehensive (9 types)                        |
-| Sports      | [sports-data-types-catalog.md](sports-data-types-catalog.md)                  | ✅ Comprehensive (8 types)                        |
-| Prediction  | [prediction-data-types-catalog.md](prediction-data-types-catalog.md)          | ✅ Comprehensive (3 types)                        |
-| CeFi        | [mtds-data-source-coverage-matrix.md](mtds-data-source-coverage-matrix.md) §2 | 🟡 Partial (coverage axes; no standalone catalog) |
+| Asset group | Catalog doc                                                                                                                                                                   | Completeness                                                                           |
+| ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| DeFi        | [defi-data-types-catalog.md](defi-data-types-catalog.md)                                                                                                                      | ✅ Comprehensive (14 types)                                                            |
+| TradFi      | [tradfi-data-types-catalog.md](tradfi-data-types-catalog.md)                                                                                                                  | ✅ Comprehensive (9 types)                                                             |
+| Sports      | [sports-data-types-catalog.md](sports-data-types-catalog.md)                                                                                                                  | ✅ Comprehensive (8 types)                                                             |
+| Prediction  | [prediction-data-types-catalog.md](prediction-data-types-catalog.md)                                                                                                          | ✅ Comprehensive (3 types)                                                             |
+| CeFi        | [cefi-data-types-catalog.md](cefi-data-types-catalog.md) (NEEDS_CANDLE table) + [mtds-data-source-coverage-matrix.md](mtds-data-source-coverage-matrix.md) §2 (coverage axes) | 🟡 Stub — NEEDS_CANDLE_PROCESSING values are `_TBD_`, open todo tracks filling them in |
 
 Related: [defi-data-type-taxonomy.md](defi-data-type-taxonomy.md) (cluster validation matrix),
 [defi-venue-protocol-catalogue.md](defi-venue-protocol-catalogue.md) (protocol × chain coverage),
@@ -276,6 +276,7 @@ Related: [defi-data-type-taxonomy.md](defi-data-type-taxonomy.md) (cluster valid
 ├── contracts-scope-and-layout.md   # UAC scope + canonical data type names + banned aliases
 ├── defi-data-types-catalog.md      # DeFi: 14 data types with methodology + schema
 ├── tradfi-data-types-catalog.md    # TradFi: 9 data types with methodology + schema
+├── cefi-data-types-catalog.md      # CeFi: NEEDS_CANDLE_PROCESSING table (stub — values TBD)
 ├── sports-data-types-catalog.md    # Sports: 8 data types with methodology + schema
 ├── prediction-data-types-catalog.md # Prediction: 3 data types with methodology + schema
 ├── availability-manifest-and-data-status.md  # Manifest v8 schema + coverage semantics
