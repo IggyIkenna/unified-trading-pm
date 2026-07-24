@@ -16,7 +16,7 @@ related:
   [
     /codex/05-infrastructure/cloud-agnostic-audit-2026-05-07.md,
     /codex/05-infrastructure/cloud-agnostic-build-lineage.md,
-    /codex/04-architecture/unified-cloud-interface.md,
+    /codex/04-architecture/cloud-agnostic-migration.md,
   ]
 created: 2026-05-07
 authoritative_for:

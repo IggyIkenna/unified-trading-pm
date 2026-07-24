@@ -23,7 +23,7 @@ tags: [cross-repo, breaking-change, canonical-id, build_instrument_id, quarantin
 related:
   [
     /plans/active/issues/cefi_chain_tail_v6_canonicalisation_2026_07_21.md,
-    /codex/06-coding-standards/tier-and-import-architecture.md,
+    /codex/04-architecture/tier-and-import-architecture.md,
   ]
 created: 2026-07-21
 last_updated: 2026-07-21

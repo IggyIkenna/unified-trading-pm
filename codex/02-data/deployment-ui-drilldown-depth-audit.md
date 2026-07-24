@@ -13,7 +13,7 @@ stage: [meta]
 repos: [deployment-api, deployment-ui]
 scope: [engineer, admin]
 tags: [ui, data-status, manifest, audit, defi, single-walk]
-related: [/codex/02-data/availability-manifest-and-data-status.md, /codex/04-architecture/shard-granularity-ssot.md]
+related: [/codex/02-data/availability-manifest-and-data-status.md, /codex/02-data/cross-asset-canonical-target-ssot.md]
 created: 2026-05-07
 authoritative_for: [deployment-ui data-status drilldown depth audit]
 referenced_by: [plans/epics/infrastructure_master.md, plans/ai/data_status_drilldown_shard_atom_alignment_2026_05_07.md]
@@ -61,7 +61,9 @@ exposes a per-asset-group set of columns that does not always reach those leaves
 - **Plan(s) implementing this:** [`infrastructure_master`](../../plans/epics/infrastructure_master.md),
   [`data_status_drilldown_shard_atom_alignment`](../../plans/active/data_status_drilldown_shard_atom_alignment_2026_05_07.md).
 - **Related codex SSOTs:** [`availability-manifest-and-data-status`](./availability-manifest-and-data-status.md),
-  `shard-granularity-ssot` (TBD lift from CLAUDE.md).
+  [`cross-asset-canonical-target-ssot`](./cross-asset-canonical-target-ssot.md) (the shard-atom grain matrix this doc's
+  "shard-key matrix" referred to; the CLAUDE.md "Shard-granularity SSOT" section it was originally slated to be lifted
+  from no longer exists verbatim — this 2026-07-18 cross-asset-group consolidation is the doc that superseded it).
 - **Code:** `deployment-ui/src/pages/data-status/`, `deployment-api/deployment_api/services/data_status.py`.
 
 ## Open questions

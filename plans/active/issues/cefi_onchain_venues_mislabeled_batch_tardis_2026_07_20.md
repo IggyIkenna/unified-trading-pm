@@ -24,7 +24,7 @@ related:
   [
     /codex/02-data/pipeline-mode-partition.md,
     /codex/02-data/availability-manifest-and-data-status.md,
-    /codex/05-infrastructure/gcs-and-manifest-delete-safety-protocol.md,
+    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
   ]
 created: 2026-07-20
 priority: P1
