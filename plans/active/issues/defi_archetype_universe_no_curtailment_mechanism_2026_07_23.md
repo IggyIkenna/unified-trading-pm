@@ -457,8 +457,44 @@ run SEQUENTIALLY, not in parallel:
       (and separately-scoped) piece of work.
 - [x] [BACKEND] P2. Side-decision 1 — **DELETED 2026-07-24, `strategy-service@813ec66b`** (dead code, Finding 2 above;
       whole class was dead, not just `allowed_venues` — see Finding 2's resolution note).
-- [ ] [BACKEND] P2. Side-decision 2 (not started): reconcile strategy-service's catalog vs UAC's
-      `archetype_leg_spec_seeds.py` (Finding 3 above, two unreconciled registries).
+- [x] [BACKEND] P2. Side-decision 2 — **SHIPPED 2026-07-24, `unified-api-contracts@211e0d05` + `e2e-testing@0000f5d8`**.
+      Built the addendum's recommended (A) — a one-directional containment gate (catalog TargetInstanceSpec venues ⊆ UAC
+      eligible_venue_ids per leg role, NOT equality) — and ran it against the REAL current corpus for all 19 in-scope
+      archetypes (`e2e-testing/scripts/defi/archetype_venue_containment.py`, 531 real `TargetInstanceSpec` rows
+      scanned). Found 17 distinct (archetype, leg, venue) violations beyond the addendum's 2 already-known ones
+      (CARRY_BASIS_PERP's aster/kalshi-perp/polymarket-perp on the perp leg + deribit/aster on the spot leg) — ALL
+      genuine catalog-has-it-UAC-doesn't gaps, none triaged away: missing `etherfi` (CARRY_STAKED_BASIS/_DATED stake
+      leg + CARRY_RECURSIVE_STAKED loop_stake), missing `compound_v3` (CARRY_RECURSIVE_STAKED
+      loop_collateral/loop_borrow), missing `ice`/`cme`/`nymex`/`cboe` (CARRY_BASIS_DATED(_INV) spot leg — the
+      commodity/equity-index TradFi rows), missing `aster`/`kalshi_perp`/`polymarket_perp` (CARRY_FUNDING_DISPERSION),
+      missing `ethena` (YIELD_STAKING_SIMPLE), missing `spark` (YIELD_ROTATION_LENDING), missing `aerodrome`/`raydium`
+      (LIQUIDATION_CAPTURE swap leg), missing `ethena`/`maker` (DEFI_LP_VAULT), missing `raydium` (CARRY_BASIS_PERP's
+      cross-venue-DEX spot row), and — the largest cluster — ARBITRAGE_PRICE_DISPERSION's buy/sell legs missing
+      `aave_v3`/`compound_v3`/`morpho` (lending-protocol-arb sub-family), `betfair`/`matchbook`/ `kalshi` (bare
+      event-market ids, distinct from the routing-specific `betfair_direct`/`kalshi_perp` already cited), `cme`
+      (cross-venue dated-futures-arb sub-family), and `camelot_v3`/`pancakeswap_v3`/`orca`/`raydium`/`phoenix`/
+      `aerodrome_v3`/`sushiswap_v3` (the DEX cross-venue spot-dispersion sub-family — 10 DEX pairs read off
+      `unified-api-contracts/.../archetype_leg_spec_seeds.py`'s `_price_dispersion_structure()`). Fixed every one
+      directly in `archetype_leg_spec_seeds.py` (never touched strategy-service's catalog — containment direction is
+      catalog→UAC only). **gmx/gmx_v2 naming question resolved as legitimately-different, NOT a bug**: grepped both
+      systems' consumers — UAC's OWN `registry/` layer (`venue_collateral.py`, `venue_adapter_keys.py`,
+      `defi_venues.py`) canonically keys this perp DEX as bare `GMX` (matching what the catalog emits), while UAC's
+      `architecture_v2/` layer (`archetype_leg_spec_seeds.py` + 4 sibling modules — `collateral_registry.py`,
+      `jurisdiction_overlay.py`, `order_semantics.py`, `simulation_assumptions.py`, `liquidation_bonus_schedule.py`)
+      independently, consistently uses `gmx_v2` for the SAME real venue (GMX's V2 contracts per
+      `venue_launch_dates.py`'s own comment). Kept `gmx_v2` as-is (consistent with its own module family); the
+      containment check aliases `gmx`↔`gmx_v2` (+ `aave`↔`aave_v3`, `compound`↔`compound_v3`, `uniswap`↔`uniswap_v3`,
+      `balancer`↔`balancer_v2` — same catalog-short-token-vs-UAC-versioned-token pattern, each verified via
+      `venue_adapter_keys.VENUE_PREFIX_TO_PROTOCOL` before aliasing, never guessed). **Homed in `e2e-testing`
+      (`scripts/defi/archetype_venue_containment.py`), not either repo it checks**: `unified_api_contracts` is T0-base —
+      zero workspace imports, not even in tests (`/codex/04-architecture/tier-and-import-architecture.md`, re-verified,
+      not just cited) — so a check importing both strategy-service (T4) and UAC (T0) can never live in UAC, and putting
+      it in strategy-service would make one T4 service arbiter of a T0 schema; e2e-testing already declares editable
+      deps on both. 36 unit tests (`e2e-testing/tests/unit/test_archetype_venue_containment.py`) cover the containment
+      LOGIC itself on synthetic catalog/UAC fixtures (pass/fail/alias/CSV-split/excluded-token/UAC-broader-is-fine
+      cases) PLUS a real-corpus regression test (`test_real_corpus_is_currently_contained`) that is now the ongoing CI
+      gate catching this class of drift automatically going forward. Both repos' `quality-gates.sh --no-fix` green;
+      pushed + verified reachable on `origin/live-defi-rollout` (`git merge-base --is-ancestor` both shas).
 
 **Lesson recorded**: an audit that maps only the PRODUCTION side of a question ("what does the catalog declare") can
 miss a real gap that only shows up by diffing against the EXPLORATORY/backtest side ("what did we already prove out that
