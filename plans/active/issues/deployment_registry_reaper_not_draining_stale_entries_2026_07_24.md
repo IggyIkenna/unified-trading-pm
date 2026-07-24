@@ -189,7 +189,32 @@ flipping the checkbox.
       running in the background and warms the cache for the next poll. `_refresh_inventory`/`_kick_background_refresh`
       now return the computed items/Future so the cold path can consume the same in-flight compute instead of a separate
       synchronous block. quality-gates.sh green; shipped via quickmerge --agent.
-- [ ] [REVIEW] P1. Once both todos above ship, re-run this same end-to-end verification: `active/` object count
+- [x] [REVIEW] P1. Once both todos above ship, re-run this same end-to-end verification: `active/` object count
       before/after (must be ≈ live-VM count this time, not just "much smaller"), plus 3 consecutive
       `GET /api/deployments/inventory` (no `status` filter) calls each <45s including a genuinely cold one (e.g. right
-      after a fresh deploy/revision rollout). Only then flip the plan's original `[REVIEW]` P0 checkbox.
+      after a fresh deploy/revision rollout). Only then flip the plan's original `[REVIEW]` P0 checkbox. — **RE-VERIFIED
+      2026-07-24 (slot-4, review): STILL NOT MET, plus a new P0 regression found.** Both fixes confirmed deployed
+      (content-diffed against `deployment-api:366154d`, revision `uts-shared-deployment-api-00270-2l9`). `active/`
+      count: still 403–404, unchanged from the pre-fix baseline, both ~1h45m after the P0 reaper fix went live and
+      ~10min after the P1 cold-cache fix went live — vs ~9 actually-running VMs. Do NOT flip the plan's original
+      `[REVIEW]` checkbox. Full detail + a NEW P0 finding (the P1 cold-cache fix removed the old global serialization on
+      cold census computations — 2 concurrent cache-key computations OOM-killed the whole container, 17,002MiB used vs
+      16,384MiB limit, `Container terminated on signal 9`, a MORE SEVERE failure mode than the bug it fixed) in
+      [issues/deployment_api_inventory_cold_path_concurrent_oom_2026_07_24.md](deployment_api_inventory_cold_path_concurrent_oom_2026_07_24.md).
+
+- **2026-07-24 (slot-4, review)**: Re-ran the end-to-end verification per the todo above, against the freshly deployed
+  `uts-shared-deployment-api-00270-2l9` (`deployment-api:366154d`) — confirmed via `gcloud builds log` (Cloud Build
+  `b9005961`, SUCCESS) and content-diff (`git show 366154d:<path> | grep`, not just ancestry-check — the LDR→main
+  promote path squash-commits, so `git merge-base --is-ancestor` alone under-reports) that both shipped fixes AND the
+  sibling issue doc's faulthandler instrumentation are present in the deployed image. Result: `active/` object count
+  unchanged at 403–404 vs ~9 actually-running VMs (7 GCE + 2 AWS EC2), both long after the P0 fix and shortly after the
+  P1 fix went live — the plan's success criterion is NOT met. Additionally reproduced a NEW P0 regression: the P1
+  cold-cache fix's `_kick_background_refresh` mechanism dropped the old code's full serialization of cold census
+  computations (previously one global lock held for the whole compute; now a 2-worker pool lets different cache keys run
+  concurrently), and 2 concurrent census computations (default-region stale-refresh + an `all_regions=true` cold poll)
+  OOM-killed the container (17,002MiB vs 16,384MiB limit, `signal 9`) — plausibly the SAME mechanism behind the
+  still-unconfirmed SIGABRT crash-loop in the sibling issue doc. Filed
+  [issues/deployment_api_inventory_cold_path_concurrent_oom_2026_07_24.md](deployment_api_inventory_cold_path_concurrent_oom_2026_07_24.md)
+  (P0, BACKEND) with a concrete reproduction + 4 candidate fix approaches. Did NOT flip this plan's original `[REVIEW]`
+  checkbox — leaving it as-is with its existing partial-pass note, now additionally pointing at the new issue doc. No
+  code changes made this session (review-only pass).
