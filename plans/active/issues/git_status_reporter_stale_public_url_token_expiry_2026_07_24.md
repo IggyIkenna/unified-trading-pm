@@ -42,6 +42,7 @@ estimate_class: refactor
 drift_direction: advance-code
 resolved_by:
 locked_by:
+depends_on: []
 ---
 
 # git-health reporter goes silent host-wide on ~/.orch_token expiry
