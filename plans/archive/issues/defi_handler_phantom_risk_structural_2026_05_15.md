@@ -1,13 +1,20 @@
 ---
-title: "DeFi handler phantom risk — structural write-before-manifest gap in 4 handlers (evm_defi, gas_fee, solana_defi, lst_rates)"
+title:
+  "DeFi handler phantom risk — structural write-before-manifest gap in 4 handlers (evm_defi, gas_fee, solana_defi,
+  lst_rates)"
 created: 2026-05-15
 author: harsh-slot-9 (Day-4 MTDS handler readiness audit)
 resolved: 2026-05-16
-resolution: SHIPPED — all 4 handlers structurally hardened by `MTDS@f657431` (lst_rates) + `MTDS@c1e6963` (evm_defi / gas_fee / solana_defi recorder.close() in finally). Re-verified by slot-3 2026-05-16: every (protocol, chain) shard now wraps upload + record_captured in the same try block; upload exception → record_failed; `recorder.close()` in finally; eigenlayer_rewards pattern matched. Safe to launch DeFi backfill VMs (features-onchain-defi-backfill-20260516-220052 launched on this basis).
+resolution: >
+  SHIPPED — all 4 handlers structurally hardened by `MTDS@f657431` (lst_rates) + `MTDS@c1e6963` (evm_defi / gas_fee /
+  solana_defi recorder.close() in finally). Re-verified by slot-3 2026-05-16: every (protocol, chain) shard now wraps
+  upload + record_captured in the same try block; upload exception → record_failed; `recorder.close()` in finally;
+  eigenlayer_rewards pattern matched. Safe to launch DeFi backfill VMs (features-onchain-defi-backfill-20260516-220052
+  launched on this basis).
 source:
   - "slot-9 Day-4 item 4: MTDS handler readiness audit for DeFi backtests"
-  - "companion to plans/active/issues/b_015_smoke_vms_phantom_manifest_silent_skip_2026_05_15.md"
-severity: P1 (systemic: affects all DeFi backfill VMs; P0 instance already confirmed in lst_rates)
+  - "companion to /plans/active/issues/b_015_smoke_vms_phantom_manifest_silent_skip_2026_05_15.md"
+severity: "P1 (systemic: affects all DeFi backfill VMs; P0 instance already confirmed in lst_rates)"
 locked_by: live-defi-rollout
 locked_since: 2026-05-15
 ---
@@ -94,7 +101,7 @@ even after Ikenna's apply-flips clears the backlog.
 - Companion P0 issue: `plans/active/issues/b_015_smoke_vms_phantom_manifest_silent_skip_2026_05_15.md`
 - Phantom audit: `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py`
 - Safe pattern reference: `market_tick_data_service/cli/handlers/eigenlayer_rewards_handler.py`
-- Shard-level failure isolation SSOT: `codex/04-architecture/shard-level-failure-isolation.md`
+- Shard-level failure isolation SSOT: `/codex/04-architecture/shard-level-failure-isolation.md`
 
 execution: owner: harsh-slot-9 (Phase 1 lst_rates hardening) + TBD sweep (Phase 2) cadence: one-shot (Phase 1 before
 B-015 re-smoke; Phase 2 within next cycle) verifier: QG green + re-smoke with zero phantom rows in manifest (4-pillar
@@ -104,6 +111,5 @@ check) last_executed: NEVER
 
 ## Triage — 2026-05-18
 
-**Status**: CLOSED — SHIPPED  
-**Triaged by**: slot-8 triage sweep  
-**Reason**: Resolved 2026-05-16; MTDS@f657431 + c1e6963 hardened
+**Status**: CLOSED — SHIPPED **Triaged by**: slot-8 triage sweep **Reason**: Resolved 2026-05-16; MTDS@f657431 + c1e6963
+hardened

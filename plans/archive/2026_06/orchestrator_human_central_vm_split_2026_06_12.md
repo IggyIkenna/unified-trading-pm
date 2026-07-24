@@ -9,7 +9,8 @@ execution_scope: local-only
 estimate_class: infra
 estimate_baseline_ai_days: 1.0
 estimate_calibrated_ai_days: 0.8
-status: supersededlocked_by: live-defi-rollout
+status: superseded
+locked_by: live-defi-rollout
 source:
   - operator decision 2026-06-12 — "one VM for humans (Ikenna + Harsh), another for the VM playing agent orchestrator
     (CI escalation etc.)"
@@ -48,9 +49,9 @@ artifact — the central VM is NOT the human box (that is `human-planning`).
       `human-planning-vm → 35.76.120.160`. **DONE 2026-06-12 — `orchestrator_vm_registry.yaml`; `regen --check` green
       (11 vm-ids).**
 - [x] [DOC] P0. Align topology docs (no regression): CLAUDE.md "LIVE orchestrator",
-      `codex/04-architecture/     agent-orchestrator-overview.md`,
-      `codex/05-infrastructure/agent-orchestrator-worker-topology.md`,
-      `codex/12-agent-workflow/orchestrator-multi-vm-topology.md`, `plans/epics/orchestrator_master.md`. **DONE
+      `/codex/04-architecture/agent-orchestrator-overview.md`,
+      `/codex/05-infrastructure/agent-orchestrator-worker-topology.md`,
+      `/codex/12-agent-workflow/orchestrator-multi-vm-topology.md`, `/plans/epics/orchestrator_master.md`. **DONE
       2026-06-12.**
 - [ ] [OPERATOR] P1. **Migrate at your pace** (no forced session loss — provisioning did NOT touch the central VM): on
       the central VM, commit/push the WIP in your 2 open Claude Code tabs, then close them; `ssh human-planning-vm` and
@@ -96,5 +97,6 @@ low (~15%) because it was memory-thrash, not CPU.
 
 ## Codex SSOT updates
 
-`codex/04-architecture/agent-orchestrator-overview.md` · `codex/05-infrastructure/agent-orchestrator-worker-topology.md`
-· `codex/12-agent-workflow/orchestrator-multi-vm-topology.md` — all updated to the two-VM split (see DOC P0 above).
+`/codex/04-architecture/agent-orchestrator-overview.md` ·
+`/codex/05-infrastructure/agent-orchestrator-worker-topology.md` ·
+`/codex/12-agent-workflow/orchestrator-multi-vm-topology.md` — all updated to the two-VM split (see DOC P0 above).

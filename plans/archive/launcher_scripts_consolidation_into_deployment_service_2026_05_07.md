@@ -1,9 +1,9 @@
 ---
 name: launcher_scripts_consolidation_into_deployment_service_2026_05_07
-overview:
-  Consolidate the 29 ad-hoc VM launcher scripts scattered across e2e-testing/ + features-service (sports family)/ into the
-  deployment-service/scripts/vm/ SSOT, and audit deployment-api data-status / drilldown / deploy_missing services for
-  GCS-only call sites that need the unified cloud storage facade. Premise: deployment-UI is the eventual SSOT for
+overview: >
+  Consolidate the 29 ad-hoc VM launcher scripts scattered across e2e-testing/ + features-service (sports family)/ into
+  the deployment-service/scripts/vm/ SSOT, and audit deployment-api data-status / drilldown / deploy_missing services
+  for GCS-only call sites that need the unified cloud storage facade. Premise: deployment-UI is the eventual SSOT for
   launching VMs; today's ad-hoc scripts exist because deployment-UI hasn't been mature.
 type: code
 epic: epic-deployment
@@ -39,9 +39,9 @@ repo_gates:
 depends_on:
   - aws_migration_defi_first_2026_05_07.md
 related:
-  - aws_migration_defi_first_2026_05_07.md
-  - data_status_drilldown_shard_atom_alignment_2026_05_07.md
-  - deploy_missing_auto_launch_2026_05_07.md
+  - /plans/archive/2026_05/aws_migration_defi_first_2026_05_07.md
+  - /plans/archive/data_status_drilldown_shard_atom_alignment_2026_05_07.md
+  - /plans/archive/deploy_missing_auto_launch_2026_05_07.md
 todos: []
 isProject: false
 estimate_class: refactor
@@ -49,7 +49,7 @@ estimate_baseline_ai_days: 4
 estimate_calibrated_ai_days: 1.6
 estimate_calibration_note: |
   No explicit AI-day estimates found in plan body during 2026-05-11 sweep; class inferred from filename (refactor, multiplier 0.4×).
-  Owner agent: fill baseline + multiply × 0.4 per codex/08-workflows/estimation-calibration.md. Refine class if dominant work-class differs.
+  Owner agent: fill baseline + multiply × 0.4 per /codex/08-workflows/estimation-calibration.md. Refine class if dominant work-class differs.
 ---
 
 > **ARCHIVED 2026-05-18 (slot 10)** — 100% complete (15/15 checkboxes flipped per slot-2 Wave 3 closeout 2026-05-13;
@@ -303,7 +303,7 @@ and doesn't affect Deploy-Missing UI registry coverage).
 - [x] [audit] P0. Document the rename mapping in `unified-trading-pm/codex/05-infrastructure/launcher-script-ssot.md` §
       "Per-launcher migration table" (folded in from the deleted `launcher-script-consolidation-2026-05-07.md` tracker
       via codex_refactor Phase C.3). Each row: old path → new path → action (move / merge / delete). (evidence:
-      PM@1d74f617 — CLAUDE.md governance HARD RULES + codex/05-infrastructure/launcher-script-ssot.md migration table
+      PM@1d74f617 — CLAUDE.md governance HARD RULES + /codex/05-infrastructure/launcher-script-ssot.md migration table
       shipped Tab 1 main 2026-05-08 per `../archive/issues/vm_launcher_consolidation_audit_2026_05_08.md` § "ALL PHASES
       COMPLETE".)
 
@@ -360,19 +360,19 @@ and doesn't affect Deploy-Missing UI registry coverage).
       migrated launchers still run from operator workstation manually.
 
       **Downstream consumers waiting on this Phase 2 to ship (added 2026-05-10 cross-plan audit fix)** — these plans
-      ship NEW launchers that need Deploy-Missing UI registration before operators can deploy via the UI button instead
-      of running scripts manually. Until Phase 2 lands, all are acceptable manual-launch cases (not blockers); when
-      Phase 2 executes, the executor MUST register these:
-        - [`promote_workflow_may23_cli_path_2026_05_10.md`](promote_workflow_may23_cli_path_2026_05_10.md) Phase 1 —
-          ships `launch-strategy-paper-vm.sh` + `launch-strategy-live-vm.sh`. Sub-todo `1.Y
-          DEFERRED-AFTER-CONSOLIDATION-PHASE2` already pinned in promote Phase 1 + cross-plan banner at top of promote
-          plan.
-        - **Quick scan recipe at Phase 2 execution time**: `grep -rln "deployment-service/scripts/vm/launch-.*-vm\.sh"
-          plans/active/*.md plans/epics/*.md` — for every NEW (post-2026-05-10) launcher referenced, verify whether its
-          owner plan needs Deploy-Missing UI surfacing; if yes, add to `_SERVICE_LAUNCHER_SCRIPTS` in this Phase 2.
+                  ship NEW launchers that need Deploy-Missing UI registration before operators can deploy via the UI button instead
+                  of running scripts manually. Until Phase 2 lands, all are acceptable manual-launch cases (not blockers); when
+                  Phase 2 executes, the executor MUST register these:
+                    - [`promote_workflow_may23_cli_path_2026_05_10.md`](promote_workflow_may23_cli_path_2026_05_10.md) Phase 1 —
+                      ships `launch-strategy-paper-vm.sh` + `launch-strategy-live-vm.sh`. Sub-todo `1.Y
+                      DEFERRED-AFTER-CONSOLIDATION-PHASE2` already pinned in promote Phase 1 + cross-plan banner at top of promote
+                      plan.
+                    - **Quick scan recipe at Phase 2 execution time**: `grep -rln "deployment-service/scripts/vm/launch-.*-vm\.sh"
+                      plans/active/*.md plans/epics/*.md` — for every NEW (post-2026-05-10) launcher referenced, verify whether its
+                      owner plan needs Deploy-Missing UI surfacing; if yes, add to `_SERVICE_LAUNCHER_SCRIPTS` in this Phase 2.
 
-      (deployment-api@538e11b — `strategy-paper` + `strategy-live` registered; 3-test suite green; promote Phase 1.Y
-      sub-todo resolved.)
+                  (deployment-api@538e11b — `strategy-paper` + `strategy-live` registered; 3-test suite green; promote Phase 1.Y
+                  sub-todo resolved.)
 
 - [x] [deployment-api] P0. Unit-test coverage: assert every script registered in `_SERVICE_LAUNCHER_SCRIPTS` exists on
       disk under `deployment-service/scripts/vm/` (pre-flight catches typos before a panic-time deploy-missing click).
@@ -397,11 +397,11 @@ and doesn't affect Deploy-Missing UI registry coverage).
 
 ### Phase 4 — Codex docs + plan close
 
-- [x] [unified-trading-pm] P2. ~~New codex doc `codex/05-infrastructure/launcher-script-consolidation-2026-05-07.md`~~
+- [x] [unified-trading-pm] P2. ~~New codex doc `/codex/05-infrastructure/launcher-script-consolidation-2026-05-07.md`~~
       documenting the consolidated launcher registry as the workspace SSOT — landed as
-      `codex/05-infrastructure/launcher-script-ssot.md` (the standalone tracker was folded back in via codex_refactor
+      `/codex/05-infrastructure/launcher-script-ssot.md` (the standalone tracker was folded back in via codex_refactor
       Phase C.3 to keep one canonical SSOT). Add a "deployment-UI is the SSOT for launching VMs" principle to
-      `codex/05-infrastructure/vm-tarball-deployment.md`.
+      `/codex/05-infrastructure/vm-tarball-deployment.md`.
 - [x] [unified-trading-pm] P2. Plan flip closeout once Phases 0-3 ship + workspace-wide grep confirms no remaining
       `gcloud compute instances create` outside `deployment-service/scripts/vm/`. (PM@<this-commit> — 2026-05-10
       governance hygiene sweep flipped Phases 0+1+4 closed; Phase 2 + Phase 3 carry DEFERRED-PER-AUDIT /

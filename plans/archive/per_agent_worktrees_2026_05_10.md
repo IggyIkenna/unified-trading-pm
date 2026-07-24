@@ -1,6 +1,6 @@
 ---
 name: per-tab-worktrees-2026-05-10
-overview:
+overview: >
   Roll out per-TAB worktree isolation across each operator's local clones, with sub-agents fanning out INSIDE each tab's
   worktree (master agent coordinates non-overlapping code surface + reconciles at push boundary). Worktrees are
   PERSISTENT FIXED SLOTS (`.tabs/1/`..`.tabs/N/`), not ephemeral per-theme spin-ups — slot is the durable identity,
@@ -22,8 +22,8 @@ last_updated: 2026-05-10
 deadline: 2026-05-23
 parent: codex_vs_citadel_infrastructure_audit_2026_05_10
 related_plans:
-  - plans/active/codex_vs_citadel_infrastructure_audit_2026_05_10.md
-  - plans/active/issues/codex_vs_citadel_blocks_cdef_audit_findings_2026_05_10.md
+  - /plans/active/codex_vs_citadel_infrastructure_audit_2026_05_10.md
+  - /plans/active/issues/codex_vs_citadel_blocks_cdef_audit_findings_2026_05_10.md
 related_codex:
   - cursor-configs/CLAUDE.md
 locked_by: live-defi-rollout
@@ -33,7 +33,7 @@ estimate_baseline_ai_days: 6.0
 estimate_calibrated_ai_days: 3.6
 estimate_calibration_note: |
   Baseline auto-extracted from in-body AI-day mentions during 2026-05-11 sweep (~5-7). Class inferred from filename (design, multiplier 0.6×).
-  CAVEAT: auto-extract SUMS all in-body mentions; plans with both 'Total: X' headlines AND per-phase line items will be double-counted. Owner agent: verify baseline, refine class per codex/08-workflows/estimation-calibration.md, recompute calibrated if either changes.
+  CAVEAT: auto-extract SUMS all in-body mentions; plans with both 'Total: X' headlines AND per-phase line items will be double-counted. Owner agent: verify baseline, refine class per /codex/08-workflows/estimation-calibration.md, recompute calibrated if either changes.
 ---
 
 ## Deferred work — migrated to:
@@ -270,7 +270,7 @@ master-resolved      sanity
 - [x] [SCRIPT] P0. Shipped `tests/test_tab_worktrees.bats` (PM@<this-commit>) — 13 bats tests covering bash syntax of
       all three scripts, `--help` rendering, arg-validation (missing mode / missing required flag / unknown arg),
       `--list` idempotency, and teardown idempotency on missing slot. All 13 pass locally.
-- [x] [SCRIPT] P0. Shipped `codex/05-infrastructure/per-tab-worktrees.md` (PM@c56e98dc) — canonical SSOT for the 3-tier
+- [x] [SCRIPT] P0. Shipped `/codex/05-infrastructure/per-tab-worktrees.md` (PM@c56e98dc) — canonical SSOT for the 3-tier
       model + slot-vs-theme decoupling + bootstrap recipe + slot-reset discipline + foot-gun mitigation table + Path A/B
       mechanism. Cross-link to plan-aware-merge-resolution.md included.
 
@@ -305,7 +305,7 @@ master-resolved      sanity
 
 ## Phase 3 — Plan-aware merge resolution protocol (1d, 1 agent) — ✅ COMPLETE 2026-05-10
 
-- [x] [SCRIPT] P0. Shipped `codex/05-infrastructure/plan-aware-merge-resolution.md` (PM@c56e98dc) — canonical SSOT for
+- [x] [SCRIPT] P0. Shipped `/codex/05-infrastructure/plan-aware-merge-resolution.md` (PM@c56e98dc) — canonical SSOT for
       slot-master reconciliation. Closed conflict-shape taxonomy (Shape A append-section auto-union / Shape B
       checkbox-flip dual-evidence / Shape C paragraph-rewrite escalate / Shape D code-conflict escalate) + 4-step
       procedure + escalation format via plan-of-record `## Open questions` section.
@@ -313,8 +313,8 @@ master-resolved      sanity
       `[CONFLICT]` blocks classifying shape via heuristic (looks at markdown `- [x]` markers, bullet-list structure,
       file extension for code-vs-markdown distinction). `--all` walks every repo in the current slot. Smoke-tested:
       clean rebase reports CLEAN with ahead-by count; conflict path emits structured report.
-- [x] [SCRIPT] P0. Cross-linked from `codex/05-infrastructure/per-tab-worktrees.md` § "Reconciliation — plan-aware merge
-      resolution" → `plan-aware-merge-resolution.md` (PM@c56e98dc, both docs ship together).
+- [x] [SCRIPT] P0. Cross-linked from `/codex/05-infrastructure/per-tab-worktrees.md` § "Reconciliation — plan-aware
+      merge resolution" → `plan-aware-merge-resolution.md` (PM@c56e98dc, both docs ship together).
 
 ## Phase 4 — CLAUDE.md trim + within-slot discipline note (1d, 1 agent) — ✅ COMPLETE 2026-05-10
 
@@ -370,7 +370,7 @@ master-resolved      sanity
       `/clear` + "rebase, read your ping doc" for _both_ same-theme-continue AND re-theme, instead of `--reset-slot <N>`
       for the re-theme case — adopting this makes "`--reset-slot <N>` = the re-theme op (worktree + ping doc together)"
       the rule. **Affected SSOTs**: `cursor-configs/CLAUDE.md` § "Per-Tab Worktrees" + § "Daily Work-Split Process" (the
-      Daily-reset checklist + the ping-ledger-bifurcation paragraph), `codex/05-infrastructure/per-tab-worktrees.md` §
+      Daily-reset checklist + the ping-ledger-bifurcation paragraph), `/codex/05-infrastructure/per-tab-worktrees.md` §
       slot-reset discipline, `scripts/dev/setup-tab-worktrees.sh --reset-slot` (add the truncate step),
       `tests/test_tab_worktrees.bats` (assert the truncate). **Owner**: whoever picks it up after Ikenna weighs in —
       Ikenna owns the per-tab-worktrees model SSOT, so he should sanity-check the shape (esp. (3) — does the daily-reset
@@ -434,7 +434,7 @@ master-resolved      sanity
   harsh-main when ready to land. Concrete deliverables: (i) extend `--reset-slot <N>` with truncate-to-stub +
   `[reset-slot]` commit tag; (ii) write read-time-rollup helper at
   `unified-trading-pm/scripts/agents/rollup_resolved_pings.py` (callable from slot main's boot sequence); (iii) ship
-  Ikenna-side migration script + run it once; (iv) update CLAUDE.md + `codex/05-infrastructure/per-tab-worktrees.md`;
+  Ikenna-side migration script + run it once; (iv) update CLAUDE.md + `/codex/05-infrastructure/per-tab-worktrees.md`;
   (v) add `tests/test_tab_worktrees.bats` assertions for both the truncate step + the migration.
 
   **Existing ping ledger state pre-implementation** — preserved at HEAD: `ikenna_orchestrator/_agent_pings.md` (single
@@ -505,7 +505,7 @@ migrates.)
 
 | Item                                                        | Status as of 2026-05-13  | Evidence / successor                                                                                                 |
 | ----------------------------------------------------------- | ------------------------ | -------------------------------------------------------------------------------------------------------------------- |
-| Phase 2 — Harsh `--init --slots M`                          | ✅ DONE (PM@2f710f9a)    | Harsh running tab/hk/1..10 continuously since Wave 1. LEDGER slot↔theme table confirmed backed by real worktrees.   |
+| Phase 2 — Harsh `--init --slots M`                          | ✅ DONE (PM@2f710f9a)    | Harsh running tab/hk/1..10 continuously since Wave 1. LEDGER slot↔theme table confirmed backed by real worktrees.    |
 | Phase 2 — 1-week burn-in vs cross-slot foot-guns #1-#4      | ✅ DONE (PM@2f710f9a)    | 0 cross-slot incidents across 3+ waves. Within-slot drift identified correctly as foreign ruff drift, not foot-gun.  |
 | Phase 4 — full ~150-line trim of pre-commit-check section   | `deferred-after-burn-in` | Burn-in confirmed 0 incidents; full trim deferred to avoid disruption mid-cycle. Tracked in future plan touch.       |
 | Phase 5 — burn-in foot-gun count in master plan Group E row | ✅ DONE implicitly       | Burn-in complete; master plan Group E row already updated with burn-in completion evidence (PM@2f710f9a annotation). |
@@ -517,9 +517,9 @@ workspace-bootstrap.sh hint + bats tests + Ikenna's slot provisioning + ping-doc
 
 1. `setup-tab-worktrees.sh` ships with `--init`, `--add-slot`, `--reset-slot` sub-commands + idempotent + tested.
    `teardown-tab-worktrees.sh --slot <N>` companion ships.
-2. `codex/05-infrastructure/per-tab-worktrees.md` ships as canonical SSOT for the 3-tier hierarchy + fixed-slot model
+2. `/codex/05-infrastructure/per-tab-worktrees.md` ships as canonical SSOT for the 3-tier hierarchy + fixed-slot model
    - slot-vs-theme decoupling + slot-reset discipline.
-3. `codex/05-infrastructure/plan-aware-merge-resolution.md` ships as canonical SSOT for slot-master reconciliation.
+3. `/codex/05-infrastructure/plan-aware-merge-resolution.md` ships as canonical SSOT for slot-master reconciliation.
 4. Both operators' slots provisioned with documented slot↔theme mapping in their orchestrator LEDGERs. Slot counts
    declared (Ikenna N, Harsh M).
 5. Daily work-split plan template requires slot↔theme assignment table per [`plans/PLAN_FORMAT.md`](../PLAN_FORMAT.md).
@@ -617,5 +617,5 @@ workspace-bootstrap.sh hint + bats tests + Ikenna's slot provisioning + ping-doc
 - ✅ CLAUDE.md trim commit shipped + diff shows ~120 lines removed from the pre-commit-check section.
   - **Verification**: `git -C unified-trading-pm log --stat --oneline cursor-configs/CLAUDE.md` shows the trim commit.
 - ✅ Plan-aware merge resolution doc shipped + cross-linked from the per-tab-worktrees codex doc.
-  - **Verification**: `cat codex/05-infrastructure/plan-aware-merge-resolution.md` returns the protocol; CLAUDE.md
+  - **Verification**: `cat /codex/05-infrastructure/plan-aware-merge-resolution.md` returns the protocol; CLAUDE.md
     "Daily Work-Split Process" references it.

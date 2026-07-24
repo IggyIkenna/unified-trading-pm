@@ -2,7 +2,8 @@
 doc_type: plan
 title: Agent-Orchestrator Dashboard Monitoring — agent-type visibility · activity feed · escalations
 summary:
-status: supersedednature: process
+status: superseded
+nature: process
 stage: [meta]
 repos: [agent-orchestrator, deployment-ui]
 scope: [engineer, admin]
@@ -27,10 +28,10 @@ source:
     2026-06-18 operator design session — orchestrator UI = agents/orchestrator lens,
     2026-06-19 operator decision — split monitoring_surfaces_overhaul into two single-surface plans (agent-orchestrator
     dashboard here; deployment-ui pane → deployment_ui_monitoring_pane_2026_06_19.md),
-    "plans/audit/results/monitoring_surfaces_audit_2026_06_18.md (Opus audit, 4 background agents)",
+    "/plans/audit/results/monitoring_surfaces_audit_2026_06_18.md (Opus audit, 4 background agents)",
   ]
-plan_of_record: plans/active/monitoring_control_plane_master_2026_06_10.md
-audit_ref: plans/audit/results/monitoring_surfaces_audit_2026_06_18.md
+plan_of_record: /plans/active/monitoring_control_plane_master_2026_06_10.md
+audit_ref: /plans/audit/results/monitoring_surfaces_audit_2026_06_18.md
 ---
 
 # Agent-Orchestrator Dashboard Monitoring
@@ -147,7 +148,7 @@ missing. Full evidence + per-ask current-state/gap/change-list:
 
 ## Codex SSOT updates
 
-- `codex/04-architecture/agent-orchestrator-overview.md` — AgentTypesPanel + agent-retention + messaging path.
+- `/codex/04-architecture/agent-orchestrator-overview.md` — AgentTypesPanel + agent-retention + messaging path.
 
 ## Progress Log
 
