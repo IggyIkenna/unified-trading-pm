@@ -128,7 +128,7 @@ minutes in (day 14 of 2,674, zero mutation — pure discovery read).
 The operator separately flagged being abroad on paid roaming data, unable to afford heavy egress/ingress to/from their
 laptop — which is where this local session runs. Confirmed via `AskUserQuestion` to move all heavy I/O to a GCP VM
 in-region instead. **Shipped as a durable workspace HARD RULE** (not just a one-off decision), per explicit operator
-request: `unified-trading-pm@dce4e0657` — `codex/05-infrastructure/vm-launcher-runbook.md` § "heavy I/O NEVER runs from
+request: `unified-trading-pm@dce4e0657` — `/codex/05-infrastructure/vm-launcher-runbook.md` § "heavy I/O NEVER runs from
 the operator's local machine" + a compact pointer in `cursor-configs/CLAUDE.md`'s "Launching VMs / infra?" bullet.
 **Scoped per operator correction: does NOT apply to the human-planning VM or the AO central-orchestrator `planning` VM**
 (both already cloud-hosted with fast/cheap connectivity) — the rule targets the operator's own hardware specifically.

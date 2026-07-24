@@ -184,6 +184,15 @@ ingested). Use for operator-only work, trackers, design docs, and dispatcher-sur
   (`status: complete`, `nature: record`, 0 open todos, lives in `plans/archive/2026_07/` or the current month) and leave
   a one-line pointer behind. This is cheap (minutes) done incrementally; it is expensive (a dedicated remediation plan)
   done as a 30-file backlog.
+- **Every AG consolidated-closeout plan carries a 3x checkpoint cadence for each of the 5
+  `data-pipeline-check-{is, mtds,mdps,features}` skills + `/data-pipeline-reconciliation`** _(finding K, 2026-07-24:
+  `data_pipeline_e2e_milestones_gate_2026_07_24.md` §11 found execution reality varying sharply across the 5 AGs — defi
+  and cefi had ZERO real RUN-todos for `-is`/`-mtds` despite both skills already supporting their shard atoms, and no
+  doc anywhere stated the cadence was even expected)._ For each of the 4 check skills + reconciliation, a
+  consolidated-closeout plan should carry 3 distinct DATED run checkpoints: a pre-backfill baseline run, a mid-backfill
+  spot-check, and a post-backfill final gate. A todo that only ever ran the skill once, or references the skill by name
+  without a dated run, does not satisfy this — cite the actual run (report path / dispatch_id / date) as the
+  definition-of-done, same as any other evidence-backed completion claim.
 
 ---
 

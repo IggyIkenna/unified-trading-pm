@@ -183,6 +183,19 @@ in 3c and must not be conflated with it. Grammar SSOT:
 > finding. **Gate**: the honest-coverage harness must be made case-robust BEFORE the migration flips writers — see
 > [`../../plans/active/issues/honest_coverage_harness_instrument_type_case_break_on_d1_migration_2026_07_20.md`](../../plans/active/issues/honest_coverage_harness_instrument_type_case_break_on_d1_migration_2026_07_20.md).
 > The pre-ruling table + "binding consequence" text below is HISTORY — do not act on it.
+>
+> **⛔ DeFi carve-out, 2026-07-24 (operator, `adb28421d`,
+> `plans/active/issues/cross_ag_instrument_type_casing_100pct_directive_2026_07_24.md`) — DeFi is NOT part of the
+> blanket-UPPERCASE population this subsection and the §7 table row otherwise describe.** DeFi's corpus was measured
+> genuinely mixed (not close-to-one-direction like cefi/tradfi/prediction), so DeFi's target is decided
+> **per-`instrument_type`-value, least-migration-cost** (whichever casing already dominates for a given value becomes
+> that value's target; the minority migrates), with a hard constraint that casing be 100% internally consistent within
+> each `(instrument_type, asset_group=defi)` pair post-migration — different values MAY land on different casings from
+> each other. (An intermediate same-day agent note briefly mis-read this as "defi is permanently lowercase,
+> out-of-scope" — that note is itself superseded by this later, explicit operator directive; see
+> `reconciliation-finding-taxonomy.md` §5.1 for the full chain.) Execution:
+> `plans/active/defi_track01_per_instrument_and_canon_id_2026_07_24.md` "Manifest instrument_type case + venue-spelling
+> unify" todo.
 
 | Side          | Claim                                                        | Citation                                             |
 | ------------- | ------------------------------------------------------------ | ---------------------------------------------------- |
@@ -389,13 +402,13 @@ is NOT owned by this reconciliation-skill plan.
 
 ## §7 — Summary table
 
-| asset_group | require_pipeline_mode                 | instrument_type PATH | instrument_type COLUMN                        | chain tail                                 | defi leaf                    | sports data_type case  |
-| ----------- | ------------------------------------- | -------------------- | --------------------------------------------- | ------------------------------------------ | ---------------------------- | ---------------------- |
-| cefi        | 2026-05-19                            | lower · UNKNOWN date | ✅ UPPER target · migration_pending (D1, §3c) | ✅ v6 target · migration_pending (R3, §6c) | n/a                          | n/a                    |
-| tradfi      | 2026-05-19                            | lower · UNKNOWN date | ✅ UPPER target · migration_pending (D1, §3c) | **2026-07-19**                             | n/a                          | n/a                    |
-| defi        | 2026-05-19                            | lower · UNKNOWN date | ✅ UPPER target · migration_pending (D1, §3c) | n/a                                        | UNKNOWN (writer not resumed) | n/a                    |
-| prediction  | 2026-05-19                            | lower · UNKNOWN date | ✅ UPPER target · migration_pending (D1, §3c) | n/a                                        | n/a                          | n/a                    |
-| sports      | 2026-05-19 (+ BLK-d48acae4 exception) | n/a                  | ✅ UPPER target · migration_pending (D1, §3c) | n/a                                        | n/a                          | UNKNOWN (K1 unshipped) |
+| asset_group | require_pipeline_mode                 | instrument_type PATH | instrument_type COLUMN                                                                | chain tail                                 | defi leaf                    | sports data_type case  |
+| ----------- | ------------------------------------- | -------------------- | ------------------------------------------------------------------------------------- | ------------------------------------------ | ---------------------------- | ---------------------- |
+| cefi        | 2026-05-19                            | lower · UNKNOWN date | ✅ UPPER target · migration_pending (D1, §3c)                                         | ✅ v6 target · migration_pending (R3, §6c) | n/a                          | n/a                    |
+| tradfi      | 2026-05-19                            | lower · UNKNOWN date | ✅ UPPER target · migration_pending (D1, §3c)                                         | **2026-07-19**                             | n/a                          | n/a                    |
+| defi        | 2026-05-19                            | lower · UNKNOWN date | ⚠ PER-VALUE target, not blanket UPPER · migration_pending (2026-07-24 carve-out, §3c) | n/a                                        | UNKNOWN (writer not resumed) | n/a                    |
+| prediction  | 2026-05-19                            | lower · UNKNOWN date | ✅ UPPER target · migration_pending (D1, §3c)                                         | n/a                                        | n/a                          | n/a                    |
+| sports      | 2026-05-19 (+ BLK-d48acae4 exception) | n/a                  | ✅ UPPER target · migration_pending (D1, §3c)                                         | n/a                                        | n/a                          | UNKNOWN (K1 unshipped) |
 
 > **⛔ corrected 2026-07-20, operator ruling D1 — RE-RECONCILED 2026-07-20 (acceptance review).** The
 > `instrument_type COLUMN` cells above read "🔴 UNRULED (§3c)" until the 2026-07-20 ruling, then briefly "RULED

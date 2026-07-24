@@ -91,7 +91,7 @@ todos concurrently.
       `SCHEDULE_DEFINING_DATA_TYPES` constant (a 9th call site found 2026-07-23, easy to miss since it's a different
       repo). **Done when**: a corpus-wide manifest census for sports returns zero rows with `data_type="FIXTURES"` (only
       `FIXTURES_SCHEDULE`/`FIXTURES_OUTCOMES` remain) and `SCHEDULE_DEFINING_DATA_TYPES` matches the new atom.
-- [ ] [CODE] P0. Fix 3 asset_group-blind positional-parse bugs in `market-data-processing-service`'s
+- [x] [CODE] P0. ✅ Fix 3 asset_group-blind positional-parse bugs in `market-data-processing-service`'s
       `canonical_writer_shaping.py` (`_type_token_from_canonical_id`, `_infer_chain`) and its call sites
       (`live_workers.py`, `live_workers_chain.py`, `batch_workers.py`, `candle_write_mixin.py`), plus
       `instruments-service`'s `build_instrument_catalogue.py`'s `_instrument_type_from_id`: for sports, `venue` must
@@ -101,7 +101,22 @@ todos concurrently.
       every fix on `asset_group` so CeFi/DeFi/TradFi/prediction parsing is untouched. Do NOT touch the intentional
       `mdps_odds_horizon_bucket` `venue=ODDS_API` aggregate (a different, deliberate identity). **Done when**: the
       deployment-ui sports Distinct Values panel reads 0 non-canonical `venue`/`instrument_type` values from fresh
-      writes, and `chain` is null on every new sports row.
+      writes, and `chain` is null on every new sports row. — **market-data-processing-service@51502c3**,
+      **instruments-service@f46e553e**. Added asset_group-gated `_venue_token_from_canonical_id` /
+      `_resolve_empty_failed_shard_tuple` helpers alongside the fixed `_type_token_from_canonical_id`/`_infer_chain`;
+      threaded `asset_group` through every listed call site + `canonical_writer.py`/`canonical_writer_streaming.py`'s
+      production write paths; every non-sports asset_group verified byte-identical (parameter defaults preserve old
+      behaviour). Evidence: both repos' `quality-gates.sh` green (MDPS 87s, IS 152s); 6 new unit-test cases exercising
+      the exact sports id shape (`SPORT:BOOKMAKER:MARKET:LEAGUE:SEASON:HOME-AWAY::SELECTION`) across
+      `_type_token_from_canonical_id`/`_venue_token_from_canonical_id`/`_infer_instrument_type`/`_infer_chain`/
+      `_resolve_empty_failed_shard_tuple` (MDPS) + `_instrument_type_from_id` (IS), all passing; MDPS's 103/103 full
+      unit suite for the touched test files green (no regressions). **Not independently verified**: the literal
+      done-when (deployment-ui Distinct Values panel on FRESH LIVE writes) — that needs an actual live/backfill sports
+      write to land after this ships; the instruments-service `_instrument_type_from_id` gate is confirmed
+      defensive/inert today (no reachable sports call path through `build_catalogue_dataframe`, per code-path trace) so
+      its half of the done-when doesn't apply until that path exists. Surfaced + filed (NOT caused by this fix — see the
+      doc for the pre/post-diff proof): `mdps_canonical_writer_adapter_contract_baseline_regression_2026_07_24.md`
+      (pre-existing STEP 5.70 warn-only baseline drift on `canonical_writer.py`, 17<18).
 - [ ] [DATA] P0. Run `reprocess_sports_odds.py --force` for 2025-12-18, 2025-12-24, and 2025-12-31 through the real
       script (not a hand-edit) so the manifest's coarse row flips off the stale `captured` state (a legacy-path capture
       leak) to the honest verdict: `attempted_failed` for 12-18/12-31, `empty_confirmed` for 12-24. **Done when**: a
@@ -111,30 +126,95 @@ todos concurrently.
       the root cause implies. **Done when**: either a written root-cause conclusion + the backfill has run and the
       manifest shows non-trivial row counts, or (if the cause is a genuine external blocker) the finding is filed as its
       own issue doc with the blocker named.
-- [ ] [DATA] P1. Purge/backup-delete the 27 leaked legacy-path (no `pipeline_mode=` prefix) T-0 shards for
+- [x] [DATA] P1. ✅ Purge/backup-delete the leaked legacy-path (no `pipeline_mode=` prefix) T-0 shards for
       2025-12-18/24/31 (100% post-kickoff captures) via `unified_trading_library`'s `gcs_copy_object`/
       `gcs_delete_object` (never subprocess `gsutil`) — snapshot first (GCS soft-delete gives a 7-day recovery window,
       the safety net for this NOT being `[OPERATOR]`-tagged). First confirm no live reader consumes the unprefixed path
       — if one does, fix that reader before deleting, don't delete out from under a live consumer. **Done when**: a
-      listing for those 27 known object paths returns none, and the confirmed-no-reader check is documented.
-- [ ] [DIAG] P1. Root-cause why `reason`/`error_code`/`empty_reason`/`classified_error` read back blank for the sports
-      odds manifest (a schema gap vs. a silent-empty write bug) — this unblocks two other diagnoses (the
+      listing for those 27 known object paths returns none, and the confirmed-no-reader check is documented. — **DONE
+      2026-07-24.** Bounded listing (3 known dates, not a corpus walk) under
+      `gs://market-data-tick-sports-prd-central-element-323112/processed/by_date/day={date}/data_type=odds_horizon_bucket/`
+      found **28** legacy `timeframe=T-0/bucketed.parquet` shards (9 for 12-18, 10 for 12-24, 9 for 12-31), not 27 as
+      estimated — measured directly, every shard sampled at 100% `bm_minutes_to_kickoff < 0` (post-kickoff), matching
+      the finding. **Reader check**: `features-service`'s `read_bucketed_odds()`
+      (`features_service/sports/data/gcs_reader.py:568`) DOES fall back to this exact legacy prefix when no canonical
+      `pipeline_mode=batch_mdps_odds_horizon_bucket` shard exists — confirmed 0 canonical shards for all 3 dates before
+      deletion, so this reader was live-consuming the leaked T-0 data (feeding contaminated post-kickoff rows into
+      `odds_features` at the T-0 model horizon). No reader FIX was needed: the reader lists+concatenates every
+      `bucketed.parquet` under whichever prefix wins and already handles a missing horizon as honest absence
+      (`_find_best_snapshot` → `None` → skipped) — removing only the T-0 shard leaves the other, uncontaminated
+      per-(league,horizon) shards for those dates intact and correctly still reachable via the same fallback. Snapshot:
+      confirmed `soft_delete_policy.retentionDurationSeconds=604800` (7-day) live on the bucket before deleting (the
+      task's own stated safety net); recorded every object's `(name, generation, size)` pre-delete for the 7-day
+      recovery window. Deleted all 28 via `unified_trading_library.cloud_interface.gcs_delete_object` (0 failures).
+      Post-delete listing for `day=2025-12-18/24/31` under `data_type=odds_horizon_bucket/` returns **0 objects** —
+      confirms these 3 dates held ONLY the contaminated T-0 shards (consistent with the B2 finding that every other
+      horizon returned `ADAPTER_RETURNED_EMPTY_OUTPUT` on those dates), so the date now correctly reads as honest
+      absence end-to-end, not a partial purge. No code change required (pure data op); manifest coarse-row correction
+      for these 3 dates is the separate P0 todo above (`reprocess_sports_odds.py --force`), not duplicated here.
+- [x] ✅ [DIAG] P1. Root-cause why `reason`/`error_code`/`empty_reason`/`classified_error` read back blank for the
+      sports odds manifest (a schema gap vs. a silent-empty write bug) — this unblocks two other diagnoses (the
       `attempted_failed` triplet root-cause and the `empty_confirmed` emitter identification) that stay out of this
       batch until this one lands. **Done when**: a written conclusion states which mechanism it is, with the specific
-      write-path code reference.
-- [ ] [CODE] P1. Fix `AG_STALENESS_BUDGET_SEC["sports"]` in `unified-trading-library`'s
+      write-path code reference. — unified-trading-pm@(this commit)
+
+      **Conclusion: SCHEMA GAP, not a silent-empty write bug.** None of `reason`/`error_code`/`empty_reason`/
+                      `classified_error` is a manifest COLUMN — confirmed against the live production schema itself: a targeted
+                      single-file read of `gs://market-data-tick-sports-prd-central-element-323112/_index/availability_index.parquet`
+                      (563,384 rows, 2026-07-24) lists 39 real columns and the only reason-bearing one is `error_reason`; none of the
+                      other 4 names appear. The manifest's `AvailabilityRecord` schema
+                      (`unified-trading-library/unified_trading_library/manifest_writer/_rows.py:284-346`) declares exactly one field
+                      for this info — `error_reason: str = ""` — and every `record_*` write path
+                      (`unified-trading-library/unified_trading_library/manifest_writer/_writer_record.py`) funnels into it via
+                      `_record_status(..., error_reason=...)`. The 4 task-title names are each a DIFFERENT adjacent symbol that a
+                      reader could mistake for a manifest column: `reason` is the kwarg name on `record_empty()`/`record_zero_rows()`
+                      (`_writer_record.py:99,420,524` — its VALUE is what lands in `error_reason`, not a stored column name);
+                      `error_code` is the attribute on `VenueErrorClassification`, the object `classify_venue_error()` returns
+                      (`unified-api-contracts/unified_api_contracts/canonical/crosscutting/errors/__init__.py:47`); `empty_reason` is a
+                      dict KEY in deployment-api's UI-facing `compute_empty_reason_counts()` breakdown
+                      (`deployment-api/deployment_api/services/data_status/coverage_metrics.py:255`, which itself reads
+                      `df["error_reason"]` correctly — line 283); `classified_error` is a local Python variable inside
+                      `market-tick-data-service/market_tick_data_service/engine/orchestrator/sentinels.py:221-227`
+                      (`_emit_sports_tier2_sentinels`) holding the string before it's passed as `record_failed(error=
+                      sports_classified_error)`. Every sanctioned sports call site reviewed (`sentinels.py`, `sports_reference_core.py`,
+                      `process_zero_records.py`, `process_preflight.py`, `footystats.py`, `manifest_recorder.py`) passes an explicit
+                      `reason=`/`error=` argument; `record_failed()` additionally hard-raises `ValueError` on an empty `error` string
+                      (`_writer_record.py:481-482`). Live-data confirmation: today's 21,920 `empty_confirmed` sports rows are 0.00%
+                      blank on `error_reason` (100% carry `SOURCE_RETURNED_ZERO`); the earlier `attempted_failed` BETFAIR/MATCHBOOK/
+                      PINNACLE triplet was independently confirmed non-blank (`VENUE_FETCH_FAILED` / an `EmptyFromLiveInstrumentError`
+                      guard message) by `issues/sports_trades_attempted_failed_2026_07_23.md`'s own live query before that population
+                      was wiped same-day (`market-tick-data-service@e9d9dec0`). **Unblocks**: both downstream diagnoses should query the
+                      real `error_reason` column (grouped by `source`/`pipeline_mode`/`venue`) — the data needed for both is present and
+                      populated, not missing.
+
+- [x] ✅ [CODE] P1. Fix `AG_STALENESS_BUDGET_SEC["sports"]` in `unified-trading-library`'s
       `manifest_writer/_staleness_budget.py` to **≥1800s**, merging two previously-conflicting recommendations (sweep
       §J's rejected 180-240s figure and the issue doc's own already-correct 1800s target) into the single correct value
       — matches the observed ~11-minute blob-age refresh cadence. **Done when**: the constant reads ≥1800 and a
-      staleness-budget unit test (existing or new) asserts it.
+      staleness-budget unit test (existing or new) asserts it. — unified-trading-library@fd87daa1: added
+      `"sports": 1800` to `AG_STALENESS_BUDGET_SEC`, updated the module docstring with the sports cadence note, and
+      added `tests/unit/test_manifest_writer_staleness_budget.py` (4 tests asserting the value + resolver behavior). QG
+      green (287s), quickmerge shipped to live-defi-rollout.
 - [ ] [DATA] P1. Run the round-derivation residual backfill for the reachable in-window (cup-vs-league resolved,
       registry-member, post-2019) blank-`round` pairs, using the round-derivation mechanism the 2026-07-18 sweep already
       confirmed terminal. **Done when**: a corpus-wide census shows 0 remaining blank-round rows in the in-window,
       registry-member population.
-- [ ] [CODE] P1. Promote the existing sports golden window (2025-09-01…11-30) into a shared "right days" SSOT module
+- [x] ✅ [CODE] P1. Promote the existing sports golden window (2025-09-01…11-30) into a shared "right days" SSOT module
       that both the sports smoke tests (`SPORTS_SMOKE_DATES`) and backfill launchers import, instead of each hardcoding
       its own copy. **Done when**: both consumers import from the new module and no duplicate date literal remains in
-      either.
+      either. — unified-api-contracts@a02a71e0 + instruments-service@a80b3ad2 + features-service@00547173
+
+      New SSOT: `unified_api_contracts/canonical/domain/sports/right_days.py`
+          (`SPORTS_SMOKE_DATES` + `SPORTS_GOLDEN_WINDOW_START`/`SPORTS_GOLDEN_WINDOW_END`, re-exported at the
+          `canonical.domain.sports` package level per the existing `X as X` convention). Two real, literal-constant
+          duplicates found in a full-workspace search (both other "golden window" hits were docstrings/comments, not code
+          constants): `features-service`'s `scripts/sports/smoke_matrix.py` (`SPORTS_SMOKE_DATES` dict — busy/thin/
+          known_buggy_* dates) now imports from the UAC module instead of defining its own copy; `instruments-service`'s
+          `scripts/verify_golden_window_parquet_presence_2026_07_14.py` (`_WINDOW_START`/`_WINDOW_END` string literals) now
+          imports `SPORTS_GOLDEN_WINDOW_START`/`SPORTS_GOLDEN_WINDOW_END` instead of hardcoding. Verified both imports
+          resolve (`unified_api_contracts.canonical.domain.sports.right_days`, both repos already carry UAC as a `uv`
+          path dependency) and both files still parse; `quality-gates.sh` green on all 3 repos.
+
 - [ ] [CODE] P1. Build a sports pipeline-check for the instruments-service → market-tick-data-service →
       market-data-processing-service → features-service middle leg that asserts CONTENT (not just presence) at each
       stage — no such check exists today for sports, unlike CeFi/TradFi's `/data-pipeline-check-mtds`/

@@ -2253,6 +2253,11 @@ read. It runs automatically in both `base-service.sh` and `base-library.sh` when
 Confidence threshold: `--min-confidence 80` (ignores low-confidence guesses such as `__all__` entries and
 `abstractmethod` implementations).
 
+**Blind spot — registered-but-never-scheduled adapter code**: vulture cannot see a duplicate adapter implementation that
+IS referenced (e.g. registered in a factory/dispatch table) but never actually invoked at runtime — that class of dead
+code, plus the adjacent runtime-fallback and duplicate-implementation risks specific to adapters, is covered by
+[adapter-dead-code-and-fallback-ban.md](adapter-dead-code-and-fallback-ban.md), not by this gate.
+
 ### Installing vulture
 
 ```bash

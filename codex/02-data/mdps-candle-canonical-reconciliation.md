@@ -100,6 +100,26 @@ Deltas from the raw-tick atom ([`four-surface-reconciliation-procedure.md`](four
   candles use `instrument_type=` as the terminal axis IN PLACE OF `venue=`
   ([`per-asset-group-bucket-layouts.md`](per-asset-group-bucket-layouts.md)).
 
+## 1a. Resolution-floor invariant (2026-07-24)
+
+**The input's native resolution is the floor — MDPS aggregates coarser timeframes from it, and never synthesizes a finer
+one than the source actually delivers.** This rule was implicit in the code (the aggregation direction only ever
+coarsens) and in tradfi's Databento-specific precedent, but had no single cross-AG codex statement before this addition
+(gap found via `/plans/active/data_pipeline_e2e_milestones_gate_2026_07_24.md` §5). Each AG's native floor, the SOURCE
+`data_type` its candles derive from (§1 above):
+
+| Asset group | Native floor interval                | Source `data_type`                             |
+| ----------- | ------------------------------------ | ---------------------------------------------- |
+| tradfi      | Databento-native tick/MBP resolution | `trades` / MBP-derived types                   |
+| cefi        | `book_snapshot_5` interval           | `book_snapshot_5`                              |
+| defi        | dex-swap / pool-snapshot cadence     | `dex_pool_swaps`                               |
+| prediction  | native order-book/trade tick cadence | `trades` / `derivative_ticker`                 |
+| sports      | `odds_snapshot` interval             | `odds_snapshot` (via the sports odds pipeline) |
+
+A request for a timeframe finer than an AG's native floor is a genuine defect (fabrication-by-interpolation), not a
+migration_pending or "not yet implemented" gap — it should be refused/flagged the same way the sports 2020-06 data floor
+is (`/codex/02-data/sports-2020-06-data-floor.md`), not silently upsampled.
+
 ## 2. The four surfaces (candles)
 
 - **S1 — GCS path** under `processed_candles/by_date/` (sports: `processed/`). TARGET grammar (operator-ruled

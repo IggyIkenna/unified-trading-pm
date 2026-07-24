@@ -66,6 +66,18 @@ restated here.
 
 ## Todo
 
+- [ ] [REVIEW] P1. **Verify (or correct) the "cefi + sports already done" claim in this plan's summary/banner** —
+      `data_pipeline_e2e_milestones_gate_2026_07_24.md` §3 found sports's OWN measurement shows 0 of 34,385
+      `B_legacy_duplicate` rows pass the 5-part delete proof yet, contradicting this plan's "cefi + sports already done"
+      framing. Definition-of-done: either find the evidence that actually closes sports's 34,385 rows (cite it here) and
+      leave the claim as-is, or correct the summary/banner to state sports is NOT yet done and file the real current
+      state.
+- [ ] [DATA] P1. **Run the dry-run (not the delete) as the safe next step**:
+      `cleanup_legacy_twins.py --asset-group tradfi --report-uri _index/audit/orphan_sweep_tradfi.parquet --dry-run`
+      against the 995 legacy-B candidate rows (see "Where the dry-run evidence already lives" above). This is NOT the
+      operator-gated delete — `--apply` stays hard-stopped on Ikenna's sign-off per the banner above; this todo only
+      produces the verified-delete candidate list + byte-verify evidence the BLOCKED todo below needs to post.
+      Definition-of-done: dry-run output cited (report path + row count), ready for the sign-off ask.
 - [ ] [DATA] P1. **BLOCKED-OPERATOR-DECISION — legacy-twin bucket DELETES (defi / tradfi / pred).** After the tradfi
       apply + orphan-sweep E=0 + a byte-verify, the legacy-path twin objects can be deleted in a quiet window (cefi +
       sports already done). **Ikenna's migration sign-off GATES this — bucket deletes are never-autonomous

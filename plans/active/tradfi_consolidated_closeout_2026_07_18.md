@@ -185,6 +185,33 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
 > → `ohlcv_24h`/`ohlcv_1d`. This DE-SCOPES the A2 "mbp_10/trades/tbbo restoration" item to "declaration reflects the
 > documented billing reality" (verify, don't chase L3 full history).
 
+### MVP cells — proven wired (backfill=paper=live) vs. declared in-scope only
+
+| MVP cell                                      | Declared in-scope                | Backfill proven (this plan's Phase-D condensed summary above)                                                            | Paper/live wiring proven  |
+| --------------------------------------------- | -------------------------------- | ------------------------------------------------------------------------------------------------------------------------ | ------------------------- |
+| S&P index futures (ES)                        | yes                              | partial — `instruments_tradfi_g1_g5_gate_execution_2026_07_24.md` shows the ohlcv 1s+1m backfill IN FLIGHT, not complete | NOT VERIFIED IN THIS PASS |
+| S&P index options                             | yes                              | not launched — singleton Databento lock held by the futures fleet (same doc)                                             | NOT VERIFIED IN THIS PASS |
+| Delta-one single-stock equities               | yes                              | filenames already canonical; id-column verification still open (Phase A2)                                                | NOT VERIFIED IN THIS PASS |
+| CME BTC/ETH/MBT/MET futures                   | yes (+409 expansion, 2026-07-21) | backfill fleet launched at scale (2026-07-21 Progress Log); completion not re-confirmed                                  | NOT VERIFIED IN THIS PASS |
+| Daily Treasuries + daily KRW (Yahoo)          | yes                              | KRX equities gap closed 2026-07-22 (new Yahoo-daily launcher); Treasuries backfill status not re-confirmed               | NOT VERIFIED IN THIS PASS |
+| VIX FUTURE (CBOE) + CBOE yield INDEX + FX KRW | yes (+409 expansion)             | part of the same 2026-07-21 backfill fleet launch; completion not re-confirmed                                           | NOT VERIFIED IN THIS PASS |
+
+> **Honest finding (this pass, 2026-07-24)**: every "Backfill proven" cell above is sourced from this plan's own
+> Progress Log / child-plan digests — none is a fresh re-verification. The "Paper/live wiring proven" column is entirely
+> unpopulated: nothing in this plan, its 3 children, or the Aggregated-source-docs index references a paper-trading
+> ledger, live-trading ledger, or the epsilon=0 batch=live=paper determinism proof
+> (`/codex/09-strategy/operational/paper-batch-live-reconciliation.md`) for ANY tradfi MVP cell — this plan's scope is
+> data-backfill readiness only, and the paper/live wiring question has not been investigated by any tradfi doc found in
+> this pass.
+
+- [ ] [DATA] P2. Determine, per MVP cell in the table above, whether it has actually been proven wired through
+      backfill=paper=live — cite the actual paper-trading ledger / live-trading ledger / batch-rerun determinism proof
+      (epsilon=0 per `/codex/09-strategy/operational/paper-batch-live-reconciliation.md`) per cell, or state plainly
+      that no such proof exists yet for that cell. Also re-verify each "Backfill proven" cell against a fresh
+      `data-pipeline-check-is`/`data-pipeline-check-mtds` run rather than the last-recorded Progress Log entry.
+      Definition-of-done: 0 remaining "NOT VERIFIED IN THIS PASS" cells in the table, each replaced with a real
+      verdict + evidence citation (report path / ledger query / dispatch_id).
+
 ---
 
 ## Remaining in this coordinator — Phase A2 (adapter/registry correctness) + Phase C (data-status/honest-coverage)
@@ -210,6 +237,14 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
 - [ ] [BACKEND] P2. **Full MTDS+IS adapter smoke findings** — `mtds_is_full_adapter_smoketest_findings_2026_07_07.md`,
       `instruments_remaining_work_audit_2026_07_10.md` (tradfi slice),
       `uac_data_type_validity_combinator_fragmentation_2026_07_07.md`.
+- [ ] [BACKEND] P2. Audit every adapter/handler module under
+      `instruments-service/instruments_service/reference_data/adapters/tradfi/`,
+      `market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/`, and the tradfi venue files
+      under `execution-service/execution_service/trade_execution/adapters/` for duplicate implementations, a runtime
+      fallback masking a real failure, and dead (referenced-but-never-scheduled) code, per the rule in
+      `/codex/06-coding-standards/adapter-dead-code-and-fallback-ban.md`. Definition-of-done: a filed finding (or a
+      stated "clean" verdict) per adapter directory, cited with file paths, recorded in this plan's Progress Log or a
+      new `plans/active/issues/` doc. (repos: instruments-service, market-tick-data-service, execution-service)
 
 ## Phase C — data-status + honest-coverage (gated on Phase B)
 
@@ -217,18 +252,31 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
       (`honest_coverage_out_of_window_expected_unattempted_not_clipped_2026_07_16.md`, RESOLVED — verify for tradfi);
       reference-data shard-dimension model (`honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md`);
       coverage-floor registry cross-propagation (`coverage_floor_registries_no_cross_propagation_2026_07_17.md`).
+- [ ] [CODE] P2. **Billing-gated Databento L2/L3 cells must not count as `attempted_failed`.** Databento tradfi's
+      billing entitlement is 1-month L3 + 1-year L1 (see the "Data-type × source priority" note above), so
+      `mbp_10`/`trades`/`tbbo` lookback/entitlement-guard rejections are EXPECTED, not real failures — but no
+      classification mechanism currently excludes them, so a hit outside the entitlement window records
+      `attempted_failed` today. Wire a durable classification (a new UAC `classify_venue_error()` outcome or
+      `expected_reason` value) that recognizes the billing-entitlement-guard rejection and routes it to
+      `empty_confirmed`/`expected_unattempted` instead of `attempted_failed`. Definition-of-done: a unit test asserting
+      a simulated entitlement-guard rejection for `mbp_10`/`trades`/`tbbo` on a Databento tradfi shard yields 0
+      `attempted_failed` rows, plus a live manifest spot-check showing the count trending down after the fix ships.
+      (repos: unified-api-contracts, market-tick-data-service)
 - [ ] [BACKEND] P1. **Data-status page renders canonical tradfi** (the "Upcoming expiries" + instruments/catalogue
       views) — `data_status_page_ux_and_canonicalisation_2026_07_16.md`; deployment-api legacy venue-lookup gap
       (`deployment_api_legacy_instrument_availability_venue_lookup_gap_2026_07_13.md`, RESOLVED — verify tradfi).
-- [ ] [BACKEND] P1. **RE-ADD the data-status "dimensions enumeration" view to deployment-ui/api (operator, 2026-07-18 —
-      "I really need to add it back").** Per asset_group, list every distinct `instrument_type` / `data_type` / `chain`
-      / `source` / `pipeline_mode` / `venue` present in the manifest/GCS (the honest-coverage rollup) with counts, so
-      non-canonical naming + duplications are VISIBLE (the exact dupes the 2026-07-18 audit found:
-      `FUTURE`/`future`/`FUTURES`, `EQUITY`/`equity`, stale `barchart`). This existed, was REMOVED — restore it as the
-      standing canonical-drift detector (it is how we catch the next drift without a manual parquet read). Backend =
-      deployment-api endpoint over the availability_index distinct-values; UI = a dimensions panel on the data-status
-      page. Find where it was removed (git log deployment-api/deployment-ui for the removed enumeration endpoint/view).
-      (repos: deployment-api, deployment-ui)
+- [ ] [REVIEW] P1. **Run the already-shipped distinct-values/axis-value census for tradfi and verify 0 non-canonical**
+      (supersedes the prior "RE-ADD the dimensions enumeration view" todo — that view already shipped live:
+      deployment-api `GET /distinct-values/{asset_group}` + `GET /axis-value-census`, code at
+      `deployment-api/deployment_api/routes/data_status/_distinct_values.py` + `_axis_census.py`; tracked corpus-wide in
+      `plans/active/issues/distinct_values_noncanonical_audit_2026_07_20.md`). Call both endpoints for
+      `asset_group=tradfi` against the current nightly rollup + manifest and confirm every distinct
+      `instrument_type`/`data_type`/`chain`/`source`/`pipeline_mode`/`venue` value is canonical (0 non-canonical, or
+      only explicitly-accepted exceptions per the cutover register) — the exact dupes the 2026-07-18 audit found
+      (`FUTURE`/`future`/`FUTURES`, `EQUITY`/`equity`, stale `barchart`) must be 0 or explained. Definition-of-done: a
+      recorded run (date + endpoint response, or a link to the refreshed
+      `distinct_values_noncanonical_audit_2026_07_20.md` ground-truth table) showing the tradfi row. (repos:
+      deployment-api)
 - [ ] [BACKEND] P2. **Denominator / catalogue-completeness + new untracked findings** — 875 tradfi atoms with narrowed
       historical objects + 153 duplicate KRX row_keys
       (`tradfi_instrument_type_migration_read_stale_legacy_object_2026_07_17.md`); phantom captures
@@ -291,6 +339,19 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
   backfill completion — rebuild+promote the served catalogue so `mvp=True` reflects the +409 expansion), not on this
   parent directly — see that child for the current status.
 
+## Plan-quality — AO-dispatch-readiness pass (owed)
+
+- [ ] [REVIEW] P2. Run the same adversarial AO-dispatch-readiness pass that produced sports's Track Y findings A-G (see
+      `/plans/active/sports_consolidated_closeout_2026_07_19.md`'s Track Y section for the method) against this entire
+      plan file: check for bare `§X` cross-doc shorthand used as a todo's sole meaning, ambiguous non-literal verbs
+      (`absorb`/`incorporate`/`handle`/`address`), inconsistent delete-risk `[OPERATOR]` tagging, todos missing a stated
+      definition-of-done, and stale checkboxes a later section already shows resolved. Definition-of-done: a filed
+      finding list (or a stated "clean" verdict) covering all 6 categories, with any fixes applied directly or filed as
+      follow-up todos. **Same-session spot-check (2026-07-24, this pass)**: no bare `§X`-as-sole-meaning or banned-verb
+      instances found among this file's real (non-digest) `- [ ]` todos; delete-risk tagging on the real todos is
+      consistent (no untagged prod-delete todo exists in this file); a full stale-checkbox + definition-of-done sweep
+      across every real todo is still owed.
+
 ## Codex SSOTs (read before touching a phase)
 
 `/codex/02-data/tradfi-databento-sourcing-ssot.md`, `/codex/02-data/availability-manifest-and-data-status.md`,
@@ -304,6 +365,26 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
 > (unchecked `- [ ]` only), so an AO worker can dispatch off THIS doc without opening a dozen others. Digests generated
 > 2026-07-24 via `grep -n '^- \[ \]'` per file; docs with 0 hits are closed/archived/record-only. Docs with >8 open
 > todos list every P0/P1 in full and cap P2/P3 with a `+N more` marker (never a silent drop).
+
+- **Child plans (forked from this parent, 2026-07-24 split — digested here too so this section alone is complete without
+  needing the Split-notice table above)**:
+  - [`plans/active/tradfi_manifest_content_recovery_completion_2026_07_24.md`](/plans/active/tradfi_manifest_content_recovery_completion_2026_07_24.md)
+    (11 open — capped)
+    - **[DATA] P0.** Migrate the catalogue (Surface A) via `canonicalize_tradfi_catalogue_usd_lin_*.py`
+    - **[DATA] P0.** Enumeration-driven migration (SINGLE SOURCE OF TRUTH, operator 2026-07-18) — must be driven by the
+      full distinct dimension-value set, not sampled shapes
+    - +9 more (P0/P1/P2) — see file for the rest
+  - [`plans/active/tradfi_backfill_throughput_followups_2026_07_24.md`](/plans/active/tradfi_backfill_throughput_followups_2026_07_24.md)
+    (11 open — capped)
+    - **[INFRA] P1.** Backfill-VM startup OOM rc137 + OOM remediation baked default + consolidator throughput/backlog
+      monitor (3 sub-issues bundled)
+    - **[DATA] P1.** TradFi has NO working T+1 forward-fill job — add source-scoped `…-tradfi-databento-t1-recon` Cloud
+      Run job
+    - +9 more (P1/P2) — see file for the rest
+  - [`plans/active/tradfi_phase_d_terminal_gate_2026_07_24.md`](/plans/active/tradfi_phase_d_terminal_gate_2026_07_24.md)
+    (1 open)
+    - **[DATA] P0.** MVP backfill readiness gate — run the tradfi MVP backfills only after A-D are green; still blocked
+      on the chain-bundle sampler follow-up
 
 - **ID-format**:
   - [`plans/active/canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md`](/plans/active/canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md)

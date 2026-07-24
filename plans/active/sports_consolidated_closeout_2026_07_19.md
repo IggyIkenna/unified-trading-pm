@@ -186,7 +186,13 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
     explicitly-removed venue (SMARKETS — deleted from all repos per codex, no new rows should ever appear); 2 are the
     venue-from-parts[0] bug above (FOOTBALL, UNKNOWN). **Target: by the end of this closeout, the deployment-ui's sports
     Distinct Values panel (venues / instrument_types / data_types / chains) reads 0 non-canonical across all four
-    axes.**
+    axes.** **Cross-AG note (operator, 2026-07-24)**: this target already implies literal 100% canonical
+    `instrument_type` for sports, consistent with the cross-AG standard applied to tradfi/cefi/prediction (see
+    `plans/active/issues/cross_ag_instrument_type_casing_100pct_directive_2026_07_24.md`) — the
+    `ODDS_API_MARKET_TO_CANONICAL` target vocabulary this fix resolves through is already UPPER on `market_key` (line
+    above), so no separate casing migration is needed here once the parts[]-index bug itself is fixed; this is a
+    content-correctness fix that happens to land on the same casing target, not a distinct casing todo. DeFi is the sole
+    exception to the 100%-UPPERCASE standard (genuinely mixed per-instrument_type) — sports is NOT exempt.
 
 ---
 
@@ -288,16 +294,16 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
       (`npx playwright test     --project=chromium tests/smoke/`) + a cited regression spec per CLAUDE.md UI
       playwright-gate HARD RULE; on a fleet VM with no dev server, keep `[BLOCKED-PLAYWRIGHT]`.
       <!-- BLOCKED-UPSTREAM evidence (2026-06-24 slot-23):
-                                                                                                                                                                                                                                                                                                                                                               GCS check: entity=fixtures_schedule + entity=fixtures_outcomes DO NOT EXIST in
-                                                                                                                                                                                                                                                                                                                                                               gs://instruments-store-sports-prd-central-element-323112/sports_reference/by_date/ — only entity=fixtures.
-                                                                                                                                                                                                                                                                                                                                                               Q5/Q6 columns absent from ALL sampled parquets: EPL 2026-05-17, Ligue1 2026-05-17, SerieA 2026-05-09,
-                                                                                                                                                                                                                                                                                                                                                               LaLiga 2026-05-09, Bundesliga 2026-05-10, Norway 2026-06-21 (written 2026-05-23 before Q5/Q6 deploy).
-                                                                                                                                                                                                                                                                                                                                                               Root cause: entity-split writer commit 254fb843 ("entity-split fixtures→fixtures_schedule+fixtures_outcomes;
-                                                                                                                                                                                                                                                                                                                                                               writegate strict mode") is on origin/live-defi-rollout as of 2026-06-24 but NOT yet on main.
-                                                                                                                                                                                                                                                                                                                                                               Q5/Q6 additive write path (48c54805, 2026-06-05) IS on main — but existing entity=fixtures parquets
-                                                                                                                                                                                                                                                                                                                                                               were all written before 2026-06-05 and the "old-path-copy" branch does not re-process them.
-                                                                                                                                                                                                                                                                                                                                                               Unblock: 254fb843 promotes main → IS Docker rebuild + VM relaunch → migrate_fixtures_split.py runs
-                                                                                                                                                                                                                                                                                                                                                               on real sports buckets → new entity=fixtures_schedule+fixtures_outcomes paths appear → re-run VERIFY. --> (FOLDED
+                                                                                                                                                                                                                                                                                                                                                                                                       GCS check: entity=fixtures_schedule + entity=fixtures_outcomes DO NOT EXIST in
+                                                                                                                                                                                                                                                                                                                                                                                                       gs://instruments-store-sports-prd-central-element-323112/sports_reference/by_date/ — only entity=fixtures.
+                                                                                                                                                                                                                                                                                                                                                                                                       Q5/Q6 columns absent from ALL sampled parquets: EPL 2026-05-17, Ligue1 2026-05-17, SerieA 2026-05-09,
+                                                                                                                                                                                                                                                                                                                                                                                                       LaLiga 2026-05-09, Bundesliga 2026-05-10, Norway 2026-06-21 (written 2026-05-23 before Q5/Q6 deploy).
+                                                                                                                                                                                                                                                                                                                                                                                                       Root cause: entity-split writer commit 254fb843 ("entity-split fixtures→fixtures_schedule+fixtures_outcomes;
+                                                                                                                                                                                                                                                                                                                                                                                                       writegate strict mode") is on origin/live-defi-rollout as of 2026-06-24 but NOT yet on main.
+                                                                                                                                                                                                                                                                                                                                                                                                       Q5/Q6 additive write path (48c54805, 2026-06-05) IS on main — but existing entity=fixtures parquets
+                                                                                                                                                                                                                                                                                                                                                                                                       were all written before 2026-06-05 and the "old-path-copy" branch does not re-process them.
+                                                                                                                                                                                                                                                                                                                                                                                                       Unblock: 254fb843 promotes main → IS Docker rebuild + VM relaunch → migrate_fixtures_split.py runs
+                                                                                                                                                                                                                                                                                                                                                                                                       on real sports buckets → new entity=fixtures_schedule+fixtures_outcomes paths appear → re-run VERIFY. --> (FOLDED
       IN from sports_fixtures_schema_split_completion_2026_06_20, 2026-07-15, plan-reconcile §6 operator ruling)
       **MERGED here 2026-07-24** (plan-hygiene line-cap remediation, `plan_line_cap_remediation_2026_07_23.md` decision
       #6) from `sports_p2_features_history_to_ml_ready_2026_06_27.md`'s "Folded-in scope 2026-07-15" section — this
@@ -333,6 +339,10 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
       rows K1/K2 moved to uppercase back to lower-case (GCS copy + manifest-swap + VERIFY, mirroring K1/K2's own
       procedure in reverse). **Done when**: a corpus-wide `data_type` census for sports returns zero UPPER-case values
       and the QG assertion todo below passes.
+- [ ] [REVIEW] P1. Re-verify any existing K1/K2 delete-candidate GCS object list against the CURRENT casing state before
+      it's used — it may predate the lowercase→UPPER-case K1/K2 migration (itself now slated for revert above) and could
+      be stale either way. **Done when**: a fresh object-level census confirms the candidate list matches the corpus's
+      actual casing as of the check date, or a corrected list is produced.
 - [ ] [CODE] P0. **NEW — fix 3 asset_group-blind positional-parse bugs in `market-data-processing-service` (F1/F2
       SHARPENED 2026-07-23: 3 bugs, not 2): gate venue/instrument_type/chain on asset_group.** For sports: venue ←
       `parts[1]` (the bookmaker token — not the SPORT token `parts[0]` it wrongly reads today); `instrument_type` ← the
@@ -392,6 +402,11 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
         under `odds` and a full corpus re-read confirms parity.
   - [ ] [REVIEW] P2. Post-phase codex audit: update `availability-manifest-and-data-status.md` + the sports
         canonical-naming doc with the new instrument_types + migration order.
+  - **Ordering caveat** (task_template.md §4 "Verify an Ordering note" rule): the 9 steps above state a strict sequence
+    (confirm mapping → drain writers → contracts-first → dual-read → GCS move → dependency_checker update → manifest
+    reconcile → cutover → retire legacy) but no machine gate enforces it — this plan is `assigned_vm: NA`, not currently
+    AO-dispatched, so this prose ordering is not a dispatch gate. If any step here is ever extracted into an
+    AO-dispatched child plan, encode the real ordering via `sequential: true` rather than relying on this note.
 - [ ] [REVIEW] P1. QG assertion: sports `data_type` ∈ the UAC lower-case sports vocabulary (no UPPER entries once the
       revert above ships), `venue` ∈ the UAC venue registry (never a vendor casing variant, never a prediction-market
       venue, never a deleted venue), `instrument_type` ∈ the declared sports vocabulary (never a bookmaker name),
@@ -584,6 +599,10 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
       round-derivation sweep — the catalogue snapshot predates all of them.
 - [ ] [CODE] P2. Upgrade the catalogue `player` grain from `entity=injuries` (injured-only) to `entity=fixture_lineups`
       (full roster, now carries 100% player/coach identity).
+- [ ] [DATA] P2. Determine which launcher ran the most recent sports features backfill — serial
+      `launch-features-sports-backfill-vm.sh` or parallel `launch-features-sports-parallel-backfill-vm.sh` — via VM
+      launch history/logs; if serial, file a follow-up todo requiring the parallel launcher for every future sports
+      features backfill. **Done when**: the launcher used is named with its citing VM log/dispatch record.
 
 ## Track K — SMOKE + SPEED + right-days · P1
 
@@ -603,6 +622,15 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
       just presence (none exists today, unlike cefi/tradfi's `/data-pipeline-check-mtds`/`/data-pipeline-check-mdps`).
       **Done when**: the check fails on a real "right days" busy date (`2025-12-20`) if any leg's output is empty or
       shape-wrong, not just missing.
+- [ ] [BACKEND] P2. Confirm whether any primary sports entrypoint (not a one-off script) exposes a genuine fixture-level
+      targeting flag for shard-splitting a backfill run; if none does, file a todo to add one to the primary
+      features/MDPS backfill CLI. **Done when**: either a cited flag + file is named, or the add-flag todo exists with a
+      named target CLI.
+- [ ] [DATA] P1. Run + cite 3 dated checkpoints (pre-backfill baseline, mid-backfill spot-check, post-backfill final
+      gate) for EACH of the 4 check skills (`data-pipeline-check-is`/`-mtds`/`-mdps`/`-features`) against sports —
+      currently ZERO real run-todos exist for any of the 4 despite all 4 already supporting sports's shard atoms
+      (task_template.md §3 finding K). **Done when**: each of the 4 skills has 3 dated runs cited by report
+      path/dispatch_id, baseline through final.
 
 ## Track D — CODEX: doc alignment · P1
 
@@ -701,6 +729,14 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
       correct `SPORTS_INSTRUMENTS.md` stale "Known gaps" (lineups player-id strip claim is false); add a junk-symbol
       guard for non-ASCII characters in fixture names (the "§D" pointer this line originally cited could not be
       recovered — dropped rather than carried forward bare, per finding D; the action itself is fully stated above).
+- [ ] [BACKEND] P2. Audit adapters under instruments-service's `.../adapters/sports/adapters/`, market-tick-data-
+      service's `.../adapters/sports/`, and execution-service's `.../sports_execution/adapters/` for dead code, silent
+      fallbacks, and duplicated logic — cite `/codex/06-coding-standards/adapter-dead-code-and-fallback-ban.md`. **Done
+      when**: a written per-repo finding list (or an explicit "none found") exists, each finding citing a symbol.
+- [ ] [DOC] P3. Add `data_completion_sports_history_2026_07_24.md` (0 open todos) as a bulleted entry to
+      `/plans/active/sports_consolidated_closeout_aggregated_sources_2026_07_24.md`'s Aggregated-source-docs index — it
+      is not currently listed there. **Done when**: the entry appears in that file's index with its open-todo count
+      noted.
 
 **Folded in from archived `sports_master_closeout_2026_07_21.md` (2026-07-24)** — the 3 remaining open todos from that
 doc with no existing equivalent elsewhere in this closeout (the other 3 of its original 6 were folded into existing
@@ -867,6 +903,11 @@ it is extraction + tracking only:
 > `/plans/active/sports_consolidated_closeout_aggregated_sources_2026_07_24.md`. Nothing was dropped or summarized — see
 > those two docs for full content. This parent retains every genuinely open Track (F/C/S/E/O/H/V/K/D/X/S2), the Codex
 > SSOTs, and the still-open "Operator decisions needed (blocking)" section.
+
+## MVP universe
+
+Sports MVP scope is canonically defined at `/codex/02-data/mvp-scope-canonical.md` § Sports — read it before scoping any
+backfill/coverage/ML-ready claim in this closeout as "done."
 
 ## Codex SSOTs (read before touching a track)
 
