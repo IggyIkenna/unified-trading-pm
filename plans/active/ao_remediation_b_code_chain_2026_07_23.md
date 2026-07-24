@@ -102,10 +102,17 @@ source:
       confirming `ff_pull_last_result != skip:dirty`, plus a genuinely-dirty-tree case confirming it still IS
       `skip:dirty`. Drive-by: fixed an unrelated pre-existing `setup-tab-worktrees.sh --help` truncation
       (unified-trading-pm@1004373ac) found while running the sibling bats suite.
-- [ ] [INFRA] P2. Gate the `not_clean_since` CLEAR and the sync-nudge in `server/routes/git_health.py` on
+- [x] ✅ [INFRA] P2. Gate the `not_clean_since` CLEAR and the sync-nudge in `server/routes/git_health.py` on
       `dirty_consecutive_ticks >= 2` so one clean blip cannot reset the age a genuinely long-dirty repo has accumulated.
       The reporter already sends the field; this is a server-side change using data that already arrives. **Gate**: a
-      unit test proving a single clean poll between two dirty polls does NOT reset `not_clean_since`.
+      unit test proving a single clean poll between two dirty polls does NOT reset `not_clean_since`. —
+      agent-orchestrator@296673a: added `dirty_consecutive_ticks` to `GitStatusPostRequest` (the reporter already sends
+      it; the server was silently dropping it); `_propagate_not_clean_since` now only clears when
+      `dirty_consecutive_ticks < 2`, and `_maybe_send_sync_nudge` now requires `>= 2` before escalating — symmetric
+      gates using the FF-cron's independent observation as a cross-check.
+      `tests/test_git_health_dirty_consecutive_ticks_gate.py` (4 cases, driving the real `post_slot_git_status`
+      endpoint): confirmed 2 fail against the pre-fix code (blip-preservation + nudge-suppression) and pass against the
+      fix; 2 control cases (normal clear, normal nudge) pass either way.
 - [ ] [INFRA] P2. Extend that same `dirty_consecutive_ticks >= 2` gate to the FF-pull skip decision in
       `scripts/dev/slot-cron-ff-pull.sh` so a one-tick phantom dirty can never skip an FF-pull whatever produced it. Do
       NOT re-hunt a reporter-internal race first — `agent-orchestrator@529b0dc` (cross-host row clobber, live) is a
