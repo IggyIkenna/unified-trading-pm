@@ -16,7 +16,7 @@ summary: >-
   agent has dirty/untracked lint- or disk-provisioning-relevant files sitting in the shared MAIN clone — this blocked 2
   of the source session's own verified-correct, parked changes and was independently hit by 4 sub-agents in that session
   alone.
-status: open
+status: resolved
 nature: issue
 asset_group: [meta]
 stage: [meta]
@@ -27,11 +27,12 @@ related:
   [
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
     /plans/active/sports_closeout_batch1_ao_ready_2026_07_24.md,
+    /plans/active/issues/qg_workspace_root_template_drift_12_repos_2026_07_24.md,
   ]
 created: "2026-07-24"
 parent_epic: infrastructure_master
 assigned_vm: planning
-resolved_by:
+resolved_by: "unified-trading-pm@e70a0d18e (worktree-identity guard in qg-common.sh), 2026-07-24"
 source:
   "sports_consolidated_closeout_2026_07_19.md Track V (originally surfaced there, filed as its own doc per that plan's
   own outstanding [DATA] P3 todo, executed via sports_closeout_batch1_ao_ready_2026_07_24.md)"
@@ -180,5 +181,31 @@ instance of the same class of bug, not necessarily limited to the two steps caug
       `git rev-parse --show-toplevel` and NEVER honor an inherited env value for this specific computation, rather than
       Option B's after-the-fact self-check (prevention over detection). Left as todo 2 below (a CODE fix, out of this
       DIAG todo's scope).
-- [ ] [CODE] P2. Once confirmed, fix the path derivation so every QG step is provably worktree-scoped — Option A or B
-      above. (repo: unified-trading-pm, deployment-service)
+- [x] [CODE] P2. ✅ Once confirmed, fix the path derivation so every QG step is provably worktree-scoped — Option A or B
+      above. (repo: unified-trading-pm, deployment-service) — **unified-trading-pm@e70a0d18e.** Shipped **Option B**
+      (the diagnostic's own preferred Option A — derive fresh every invocation — remains a valid, stronger follow-up;
+      chose B for lower blast-radius/risk on a script this widely shared, verified working within the session, see
+      caveat below): a fail-loud **worktree-identity guard** added to the SHARED `qg-common.sh` (used by every base
+      script — service/library/UI/codex), right after `PROJECT_ROOT`/`REPO_ROOT` are derived. It compares both against
+      `git rev-parse --show-toplevel` for the invoking cwd, and separately validates `WORKSPACE_ROOT` against the actual
+      worktree's parent — hard-exits with a clear diagnostic + this issue-doc's path on ANY mismatch, opt-out via
+      `QG_SKIP_WORKTREE_IDENTITY_GUARD=1`. **Verified live** (not just unit-level): ran real
+      `bash     scripts/quality-gates.sh` invocations against `greeks-service` (Python service), `deployment-ui`
+      (UI/node), `unified-trading-library` (library) — all pass through silently in the normal case; injecting
+      `PROJECT_ROOT=<MAIN clone path>` correctly fails loud with the exact diagnosed mismatch. **Known bootstrapping
+      caveat** (found during verification, not swept under the rug): a STALE `WORKSPACE_ROOT` specifically (not
+      `PROJECT_ROOT`) redirects the sourcing of `base-service.sh`/`qg-common.sh` ITSELF to MAIN's copy — so a run under
+      that exact condition loads MAIN's (currently un-fixed) `qg-common.sh`, bypassing this guard entirely until MAIN's
+      clone is updated with this fix. This is inherent to Option B fixing the file that itself needs to be the one
+      loaded; Option A (fixing the top-level `WORKSPACE_ROOT="${WORKSPACE_ROOT:-...}"` assignment in each repo's OWN
+      `quality-gates.sh`, BEFORE `base-service.sh` gets sourced) would close this specific gap and remains the
+      recommended follow-up if the residual risk matters enough to justify touching more files. Confirmed a matching,
+      separate, ALREADY-drifted instance of this exact class while scoping the fix: `quality-gates-service-template.sh`
+      /`quality-gates-library-template.sh` already use the SAFE fresh-derivation pattern
+      (`WORKSPACE_ROOT="$(cd "$(git rev-parse --show-toplevel)/.." && pwd)"`, no inheritance), but 12 repos' DEPLOYED
+      copies (`client-reporting-api`, `deployment-api`, `deployment-service`, `deployment-ui`, `features-service`,
+      `fund-administration-service`, `greeks-service`, `market-data-processing-service`, `market-tick-data-service`,
+      `ml-service`, `trading-agent-service`, `unified-trading-system-ui`) still carry the OLDER, vulnerable
+      `${WORKSPACE_ROOT:-...}` inheritance pattern — filed as a follow-up issue doc + todo since bringing 12 repos'
+      copies back in sync with their own already-correct templates is out of this todo's named-repo scope:
+      `/plans/active/issues/qg_workspace_root_template_drift_12_repos_2026_07_24.md`.
