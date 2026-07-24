@@ -74,6 +74,13 @@ drift_direction: advance-code
 > in M-1 rather than moved here, so this file stays 100% closed). See `data_completion_to_100_all_ag_2026_06_21.md` for
 > the live program (measured snapshot, per-AG launch matrix, current Progress Log, cross-cutting open work).
 
+## Deferred work — migrated to: N/A (no open deferrals)
+
+This file's one "DEFERRED" mention (the hard no-blank-`asset_group` QG ratchet, in the asset_group writer-bug saga
+section below) describes a 2026-06-22 design decision, not a currently-open deferral — the deferred item itself was
+already built and shipped (`pm@7a7346084`, STEP 5.96) and its own checkbox is `[x]` immediately below the mention.
+Nothing in this closed historical record needs migrating anywhere.
+
 ## 12-HOUR TARGET — mass-parallel sharding (operator 2026-06-21)
 
 Goal: ALL data downloaded within **12h** via fan-out, not serial single-VMs. Quota is NOT the constraint —
