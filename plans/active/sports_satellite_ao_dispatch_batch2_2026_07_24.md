@@ -373,7 +373,7 @@ source: >-
       added to the batch-capture emission path; unit tests added and passing; a fresh production run no longer produces
       new masking rows of the observed pattern. Source:
       `issues/sports_index_recency_masked_captured_atoms_2026_07_13.md`.
-- [ ] [INFRA] P3. **Downgrade, don't drop, the original "redeploy expected-universe-v2-sports" todo** — that image IS
+- [x] [INFRA] P3. **Downgrade, don't drop, the original "redeploy expected-universe-v2-sports" todo** — that image IS
       current (`:latest` confirmed to contain `ba306543` as of 2026-07-23T08:07:36Z) and Cloud Run Jobs re-pull a
       mutable tag per execution, so no redeploy is likely needed; the doc's own 2026-07-23 second-pass trace found the
       actual masking writer is a DIFFERENT job entirely (`uts-prod-instruments-service-sports-fixtures`) — do NOT
@@ -381,7 +381,12 @@ source: >-
       verification only). **Done when**: `gcloud run jobs describe expected-universe-v2-sports` confirms the job pulls a
       mutable `:latest` tag; verification result recorded; this todo (and the superseded original redeploy todo) marked
       resolved with no further action, or a follow-up filed if pinned. Source:
-      `issues/sports_index_recency_masked_captured_atoms_2026_07_13.md`.
+      `issues/sports_index_recency_masked_captured_atoms_2026_07_13.md`. — ✅ 2026-07-24 VERIFIED:
+      `gcloud run jobs describe expected-universe-v2-sports --project=central-element-323112 --region=asia-northeast1`
+      confirms the container image is `...instruments-service:latest` (mutable tag, not pinned); 3 most-recent
+      executions (2026-07-22/23/24, all 01:30Z) completed successfully. No redeploy needed. Both this todo and the
+      original redeploy todo marked resolved in
+      `plans/active/issues/sports_index_recency_masked_captured_atoms_2026_07_13.md`.
 
 ### From `issues/sports_odds_stale_fixture_reinjection_2026_07_14.md`
 
