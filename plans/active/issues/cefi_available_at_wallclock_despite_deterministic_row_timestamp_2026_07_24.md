@@ -144,3 +144,14 @@ determinism regression.
 Filed 2026-07-24 executing `defi_consolidated_closeout_2026_07_18.md` line 761 (`[DATA] P2` audit todo). Code fix is
 explicitly out of scope for this dispatch — routed to `cefi_consolidated_closeout_2026_07_18.md` Track 6 (cefi
 data-correctness/hygiene) as the owning plan.
+
+**Known gap, 2026-07-24**: the intended checkbox flip on `defi_consolidated_closeout_2026_07_18.md` line 761 and the
+Track 6 cross-reference on `cefi_consolidated_closeout_2026_07_18.md` were written into both plan files' working trees
+at audit time, but neither could be committed — both plans are pre-existing violations of the corpus-wide hard line-cap
+gate (`scripts/plan-hygiene/check_line_caps.sh`, no-exceptions two-tier policy shipped 2026-07-24; `plans/active/*.md`
+is a flat 1000L hard cap in SCOPED/staged mode, no baseline tolerance), tracked separately in
+`issues/plan_line_cap_remediation_2026_07_23.md`. This is a genuine, documented impossibility for this dispatch, not a
+skipped step — the next agent that lands a split/trim of either plan under cap should also verify and land these two
+edits (search each plan for `cefi_available_at_wallclock_despite_deterministic_row_timestamp_2026_07_24` — if already
+present in the working tree when that split happens, just commit it through; if missing, re-add per this doc's summary
+and the "Recommended fix" section above).
