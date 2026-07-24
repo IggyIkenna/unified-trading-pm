@@ -241,8 +241,10 @@ migration (W7 for codex; W3 for plans) splits it:
 
 `README.md` (every level) · roadmap / index files (`INDEX.md`, `*INDEX*.md`) · **ledgers / pings** (`_*.md`, e.g.
 `_agent_pings.md`) · format-spec docs (`PLAN_FORMAT.md`, this file's siblings) · repo-root meta (`CLAUDE.md`,
-`.cursorrules`) · generated artifacts. These are whitelisted in the validator (`scripts/docs/docspec.py` `is_exempt`)
-and the L0 index generator; adding frontmatter to them is NOT required.
+`.cursorrules`) · generated artifacts · **`plans/active/scratch_scenarios_day1/*.md`** (structured scenario-design specs
+feeding `/codex/04-architecture/scenario-injection-architecture.md` — tables, not tracked plans with priorities/todos).
+These are whitelisted in the validator (`scripts/docs/docspec.py` `is_exempt`, basename set `EXEMPT_BASENAMES` +
+directory-prefix set `EXEMPT_DIR_PREFIXES`) and the L0 index generator; adding frontmatter to them is NOT required.
 
 ## 10. Machine validator (docspec — W2 Phase 2)
 
