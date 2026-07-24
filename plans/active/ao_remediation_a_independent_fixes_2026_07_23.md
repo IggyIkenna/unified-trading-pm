@@ -88,11 +88,17 @@ source:
       bypassed by the per-repo `ldr_main` toggle. It still describes the retired
       `tab -> live-defi-rollout -> staging -> main` flow. SSOT: `/codex/08-workflows/ci-cd-flow.md`. **Gate**: no
       `tab ->` flow description remains in the file.
-- [ ] [DOCS] P3. Add a SUPERSEDED banner (or fix the text) in
+- [x] ✅ [DOCS] P3. Add a SUPERSEDED banner (or fix the text) in
       `/codex/12-agent-workflow/local-slot-host-symmetric-worker-model.md`, which still carries live
       `tab/<operator>/<N>` references to the RETIRED tab-branch model with no banner. Same class as the
       `canonical-plan-flow.md` correction already applied 2026-07-23. **Gate**: no unbannered tab-branch instruction
-      remains in the file.
+      remains in the file. — `unified-trading-pm@7a3cc1289`: fixed the text (inline correction, same style as
+      `canonical-plan-flow.md`) rather than a whole-doc banner, since the doc's core symmetric-worker-model content is
+      still current — only the Host Behaviour Matrix row and the interactive-session bullet named the retired
+      `tab/<operator>/<N>` branch convention. Both now describe the current Path-B reference-clone model (own `.git` on
+      `live-defi-rollout`); the surviving mention of `tab/<operator>/<N>` is explicitly labeled RETIRED.
+      `rg -n 'tab/<operator>|tab/<op>' codex/12-agent-workflow/local-slot-host-symmetric-worker-model.md` shows only the
+      banner line.
 - [ ] [REVIEW] P3. Re-annotate or reopen the agent-orchestrator line in
       `plans/active/codex_vs_repo_docs_ssot_audit_2026_06_01.md` that is still marked SHIPPED with no note about the
       post-pivot re-drift. A `[x]` that predates an architecture pivot reads as current coverage when it is not.
