@@ -189,18 +189,18 @@ todo below.
       the enumerated list again.
 
       **🔴 CORRECTS the prior "registry-growth timing lag" root cause — that mechanism accounts for <0.4% of this
-              population, not the bulk.** Cross-checked all 485 affected league_ids against
-              `get_league_by_api_football_id()` LIVE (the exact function the writer calls): only **2 of 485** ids
-              (25 of 6,678 rows) are NOW resolvable in the registry — consistent with the CHINA_SUPER_LEAGUE
-              timing-lag story (a league added to the registry after writes had already occurred, self-healing on the next
-              write). The other **483 league_ids (6,653 rows, 99.6%) are STILL unresolvable today** — these are not a
-              registry catching up, they are af_league_ids that were fetched and WRITTEN despite never being registered at
-              all. This means the writer (or something upstream of it) is fetching fixtures for leagues far outside the
-              ~100 PREDICTION-tier registry scope this workspace is supposed to track — a fetch-side scoping gap, not (only)
-              a write-side canonicalization timing bug. **This is a bigger, different, and more actionable finding than the
-              todo's own done-when asked for** — filed as a new follow-up todo below rather than silently folded into the
-              "fix the writer" todo, since the fix for THAT todo (fail loud on lookup-miss) would not address why these 483
-              leagues are being fetched in the first place.
+                  population, not the bulk.** Cross-checked all 485 affected league_ids against
+                  `get_league_by_api_football_id()` LIVE (the exact function the writer calls): only **2 of 485** ids
+                  (25 of 6,678 rows) are NOW resolvable in the registry — consistent with the CHINA_SUPER_LEAGUE
+                  timing-lag story (a league added to the registry after writes had already occurred, self-healing on the next
+                  write). The other **483 league_ids (6,653 rows, 99.6%) are STILL unresolvable today** — these are not a
+                  registry catching up, they are af_league_ids that were fetched and WRITTEN despite never being registered at
+                  all. This means the writer (or something upstream of it) is fetching fixtures for leagues far outside the
+                  ~100 PREDICTION-tier registry scope this workspace is supposed to track — a fetch-side scoping gap, not (only)
+                  a write-side canonicalization timing bug. **This is a bigger, different, and more actionable finding than the
+                  todo's own done-when asked for** — filed as a new follow-up todo below rather than silently folded into the
+                  "fix the writer" todo, since the fix for THAT todo (fail loud on lookup-miss) would not address why these 483
+                  leagues are being fetched in the first place.
 
 - [ ] [DIAG] P1. **NEW (2026-07-24, slot-6)** — investigate why fixtures_schedule fetches are happening for 483
       af_league_ids that are NOT in the UAC sports league registry at all (confirmed live via
@@ -215,8 +215,29 @@ todo below.
 - [ ] [CODE] P1. Fix the writer so it never falls back to writing under a raw-id folder — fail loud (or resolve via a
       documented, tested fallback) instead (repo: instruments-service). **Done when**: a regression test reproduces the
       old lookup-miss condition and asserts the fix.
-- [ ] [DATA] P2. Fold every non-canonical shard's rows into its canonical counterpart (merge by `af_fixture_id`,
-      snapshot first, delete the non-canonical original after verification), same pattern as the DeFi
-      `dex_pools`/`lending_indices` fold (repo: instruments-service). **Done when**: a post-fold corpus census shows
-      zero non-canonical `league=<numeric>`/bare fixtures_schedule shards remain, and every previously non-canonical row
-      is present (verified by `af_fixture_id`) in its canonical folder.
+- [ ] [DATA] P2. **NOT EXECUTABLE AS ORIGINALLY SCOPED — 483 of 485 leagues have no canonical folder to fold into.**
+      This todo's premise (fold every non-canonical shard into "its canonical counterpart") only holds for a league that
+      HAS a canonical id; the corpus-wide census above (todo 2) found 483 of 485 affected league_ids are still
+      unresolvable via `get_league_by_api_football_id()` today — there is no `league=<CANONICAL_ID>` folder for them to
+      fold into. Attempting a full fold now would mean either fabricating a placeholder canonical id (wrong) or silently
+      deferring 483 leagues while claiming the todo done (false progress). **This todo is gated on the new P1 DIAG above
+      (why are 483 unregistered leagues being fetched at all) — its conclusion determines whether each league should be
+      (i) added to the registry then folded, or (ii) confirmed out-of-scope and deleted outright (a different operation
+      than "fold").**
+
+      **The narrow, SAFE, immediately-executable portion** (verified this session, ready for a fresh-context worker
+          to execute — not done here to avoid a risky prod GCS copy+delete sequence on a near-exhausted context budget):
+          the 2 now-registered leagues — `af_id=169` → `CHINA_SUPER_LEAGUE` (23 rows: `day=2026-05-05, 05-06, 05-19,
+          05-20, 05-29, 05-30, 06-26, 06-27, 06-28, 07-03, 07-04, 07-05`) and `af_id=235` → `RUSSIA_PREMIER_LEAGUE` (2
+          rows: `day=2026-05-20`). Confirmed via a direct listing check: **no canonical sibling exists for ANY of these
+          13 (date, league) pairs** — this is a pure MOVE (copy `league=<raw_id>/fixtures_schedule.parquet` content to
+          `league=<CANONICAL_ID>/fixtures_schedule.parquet`, no merge-by-`af_fixture_id` conflict to resolve), not a
+          merge. Recipe: for each of the 13 shards — (1) snapshot the non-canonical object (copy to a
+          `_purge_backups/` or dated snapshot path, 7-day soft-delete is the safety net per the DeFi-fold precedent),
+          (2) `gcs_copy_object` the content to the canonical path, (3) call `ManifestWriter.record_captured()` for the
+          canonical `(date, FIXTURES_SCHEDULE, league_id=<CANONICAL_ID>)` row_key so the round-derivation backfill can
+          see it, (4) verify the canonical object + manifest row both landed, THEN (5) `gcs_delete_object` the
+          non-canonical original. The remaining 483 leagues' non-canonical shards must NOT be touched until the P1 DIAG
+          above resolves. **Done when** (revised, narrower scope): the 13 (date, league) pairs above are folded per the
+          recipe, a post-fold check shows both `league=169` and `league=235` empty and their canonical siblings present,
+          AND the 483-league question is tracked as blocked on the new P1 DIAG (not silently dropped).
