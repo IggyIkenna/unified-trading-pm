@@ -144,13 +144,26 @@ source:
       is not retroactively recoverable — item 1's fix now caps reported `dirty_files` at 5) in
       `/plans/active/issues/git_health_phantom_dirty_flicker_ff_cron_race_2026_07_21.md` § "7. RESOLVED 2026-07-24 (slot
       3)".
-- [ ] [BACKEND] P2. Add a periodic dirty-resolution sweep to the worker-liveness watchdog that runs independently of any
-      spawn attempt. Every caller of `resolve_dirty_state`/`commit_and_push_dirty_repos` today is spawn or respawn time
-      (`spawn_slot`, `_do_spawn`, the `slots_ops` pre-spawn gate, `_respawn`), so a dirty slot nobody tries to spawn
-      into stays dirty forever. Reuse those same helpers plus the liveness discriminator — dead or expired
+- [x] ✅ [BACKEND] P2. Add a periodic dirty-resolution sweep to the worker-liveness watchdog that runs independently of
+      any spawn attempt. Every caller of `resolve_dirty_state`/`commit_and_push_dirty_repos` today is spawn or respawn
+      time (`spawn_slot`, `_do_spawn`, the `slots_ops` pre-spawn gate, `_respawn`), so a dirty slot nobody tries to
+      spawn into stays dirty forever. Reuse those same helpers plus the liveness discriminator — dead or expired
       `.agent-claim` means inherit and commit; a live claim or mtime under 120s means PROTECT. **Gate**: a
       deliberately-idle dirty slot with no tmux and an expired claim is inherited within one sweep interval, evidenced
-      by a resolution activity row with NO adjacent spawn event.
+      by a resolution activity row with NO adjacent spawn event. — agent-orchestrator@de44b255f: added
+      `WorkerLivenessWatchdog._sweep_dirty_slots()`, wired unconditionally into `_tick_once()` alongside
+      `_release_prereq_blocked_slots()` etc. Enumerates ALL `SlotRow`s (not just active/idle-status subsets); skips any
+      slot whose own tmux session is alive (some other path already owns it); calls
+      `resolve_dirty_state(...,     replacing_session=None, ...)` for every other slot so `classify_maker_liveness`
+      purely reflects claim-file state (no claim / expired claim → inherit+commit+push; a claim owned by a still-live
+      different session, or a recent-mtime dirty file → `protected_live_peer`) — reuses 100% of the existing FM2/FM3/FM8
+      machinery, no new liveness logic. Logs the same `slot_dirty_state_resolved` activity event tagged
+      `trigger: "watchdog_sweep"` so it's distinguishable from the 4 existing spawn-time call sites.
+      `tests/test_watchdog_dirty_sweep.py` (6 cases, real git repos + bare remotes, in-memory SQLite session, same
+      pattern as `test_prereq_blocked_release.py`): idle+no-claim inherits, idle+expired-claim inherits, live-own-tmux
+      is skipped untouched, a live claim from a DIFFERENT session is protected, a clean tree is a no-op, a missing
+      worktree doesn't raise. Every inherit test confirmed the resolved activity row carries NO adjacent spawn-family
+      event. Full `quality-gates.sh` green (1626 tests, ruff + basedpyright clean) before shipping via quickmerge.
 - [ ] [INFRA] P2. Escalate the liveness watchdog from soft-kick to hard-kill plus respawn after N consecutive frozen
       observations, and make the counter survive the reset that defeated it. `kick_escalation_threshold` already exists
       and shipped 2026-07-09, but the 2026-07-21 incident (55 kicks in 3h, only 7 counted as `worker_kick_failed`) is
@@ -248,3 +261,13 @@ source:
   check whether the SERVER ITSELF already has richer data than the summary view exposes before concluding a task is
   truly stuck — `/api/fleet/git-health` and the per-slot `/api/slots/{id}/git-status?host=` debug endpoint are NOT the
   same payload (the latter keeps `dirty_files_sample`).
+
+- **2026-07-24 (slot 2, continued)**: Item 7 shipped (`agent-orchestrator@de44b255f`, citation inline on its checkbox
+  above) — `WorkerLivenessWatchdog._sweep_dirty_slots()`, an unconditional per-tick pass (added to `_tick_once()`
+  alongside `_release_prereq_blocked_slots()` etc.) that enumerates every `SlotRow`, skips any with a live tmux session,
+  and calls `resolve_dirty_state(..., replacing_session=None, ...)` on the rest — reusing the existing FM2/FM3/FM8
+  coordinator and liveness discriminator verbatim, no new liveness logic. `tests/test_watchdog_dirty_sweep.py` (6 cases,
+  real git repos + bare remotes) confirmed: idle+no-claim and idle+expired-claim both inherit with a
+  `slot_dirty_state_resolved` activity row tagged `trigger: "watchdog_sweep"` and NO adjacent spawn event (the gate); a
+  live-own-tmux slot is skipped untouched; a live claim from a different session is protected; a clean tree is a no-op;
+  a missing worktree doesn't raise. Full `quality-gates.sh` green (1626 tests) before quickmerge.
