@@ -80,7 +80,7 @@ locked_since: 2026-05-07
 > strategy-service, UI). Pre-cutover Phases 1-9 carried in `defi_recursive_borrow_archetypes_2026_05_10.md`.
 > Credentials: `tenderly-api-key`, `tenderly-fork-rpc-url`, `hyperliquid-testnet-trade-key`, `bybit-api-key`,
 > `bybit-api-secret` all vaulted (unblocked 2026-05-15; renamed from underscored `bybit_api_key`/`bybit_api_secret`
-> 2026-07-23, see `codex/05-infrastructure/secret-manager-naming.md`). Check the post-cutover plan for Phase 10+ status
+> 2026-07-23, see `/codex/05-infrastructure/secret-manager-naming.md`). Check the post-cutover plan for Phase 10+ status
 > before modifying any recursive-borrow scope here. Banner updated 2026-05-18 slot 3 to reflect post-cutover successor
 > plan.**
 
@@ -97,8 +97,8 @@ locked_since: 2026-05-07
 > receiver: paper-mode wiring goes through `paper_target_registry[chain]` — don't hardcode fork URLs or testnet
 > endpoints. SSOT: [`master_to_live_defi_2026_05_23.md`](./master_to_live_defi_2026_05_23.md) § "Folded paper-vs-live
 > workflow maturity" +
-> [`codex/05-infrastructure/per-venue-paper-policy.md`](../../codex/05-infrastructure/per-venue-paper-policy.md).
-> Question doc (retired 2026-05-09 PM@5d2d74c1; folded into
+> [`/codex/05-infrastructure/per-venue-paper-policy.md`](/codex/05-infrastructure/per-venue-paper-policy.md). Question
+> doc (retired 2026-05-09 PM@5d2d74c1; folded into
 > [`master_to_live_defi_2026_05_23.md`](master_to_live_defi_2026_05_23.md) § "Folded paper-vs-live workflow maturity").
 
 > **📋 RELATED PLAN — Promote workflow (May-23 dual-track + post-cutover, spawned 2026-05-10)**: the May-23 cutover for
@@ -120,30 +120,30 @@ locked_since: 2026-05-07
 This plan implements / extends the following codex documents (read these BEFORE making code changes; drift between code
 and these docs is a review-blocking failure per `doc → plan → code`):
 
-- [`codex/02-data/availability-manifest-and-data-status.md`](../../codex/02-data/availability-manifest-and-data-status.md)
-  — manifest v5 schema + DeFi `chain` first-class shard axis + `EXPECTED_PRE_GENESIS_CHAIN` /
-  `EXPECTED_PRE_VENUE_LAUNCH` reasons + DeFi protocol-launch-date pre-skip semantics
-- [`codex/02-data/honest-absence-downstream-handling.md`](../../codex/02-data/honest-absence-downstream-handling.md) —
+- [`/codex/02-data/availability-manifest-and-data-status.md`](/codex/02-data/availability-manifest-and-data-status.md) —
+  manifest v5 schema + DeFi `chain` first-class shard axis + `EXPECTED_PRE_GENESIS_CHAIN` / `EXPECTED_PRE_VENUE_LAUNCH`
+  reasons + DeFi protocol-launch-date pre-skip semantics
+- [`/codex/02-data/honest-absence-downstream-handling.md`](/codex/02-data/honest-absence-downstream-handling.md) —
   per-asset-group `empty_confirmed` legitimacy rule (DeFi: only venue-level reasons legit; instrument-day source-zero
   must flip to `attempted_failed`); DeFi pre-genesis chain reasons + downstream NaN handling
-- [`codex/02-data/per-asset-group-bucket-layouts.md`](../../codex/02-data/per-asset-group-bucket-layouts.md) — DeFi GCS
+- [`/codex/02-data/per-asset-group-bucket-layouts.md`](/codex/02-data/per-asset-group-bucket-layouts.md) — DeFi GCS
   bucket layout + `chain=` hive partition axis + per-protocol shard atom
-- [`codex/02-data/instrument-pipeline-defi.md`](../../codex/02-data/instrument-pipeline-defi.md) — DeFi
-  instruments-service catalog (per-(chain, protocol, instrument_id) lifecycle) + LST_TOKEN_TO_PROTOCOL_ASSET SSOT
-- [`codex/02-data/defi-data-types-catalog.md`](../../codex/02-data/defi-data-types-catalog.md) — DeFi data_type
-  enumeration (lending_rates / lst_yields / oracle_prices / vault_share_prices / perp_funding / ohlcv / dex_swaps)
-- [`codex/04-architecture/batch-live-architecture.md`](../../codex/04-architecture/batch-live-architecture.md) —
-  batch=live unified pipeline (same shard atom, same fields, same `available_at` semantics); applies to DeFi end-to-end
-- [`codex/04-architecture/flash-loan-receiver.md`](../../codex/04-architecture/flash-loan-receiver.md) — Aave V3 flash
-  loan deployment + `connect()` validation; required for `carry_staked_basis` recursive-staking unwind path
-- [`codex/04-architecture/interface-credential-convention.md`](../../codex/04-architecture/interface-credential-convention.md)
+- [`/codex/02-data/instrument-pipeline-defi.md`](/codex/02-data/instrument-pipeline-defi.md) — DeFi instruments-service
+  catalog (per-(chain, protocol, instrument_id) lifecycle) + LST_TOKEN_TO_PROTOCOL_ASSET SSOT
+- [`/codex/02-data/defi-data-types-catalog.md`](/codex/02-data/defi-data-types-catalog.md) — DeFi data_type enumeration
+  (lending_rates / lst_yields / oracle_prices / vault_share_prices / perp_funding / ohlcv / dex_swaps)
+- [`/codex/04-architecture/batch-live-architecture.md`](/codex/04-architecture/batch-live-architecture.md) — batch=live
+  unified pipeline (same shard atom, same fields, same `available_at` semantics); applies to DeFi end-to-end
+- [`/codex/04-architecture/flash-loan-receiver.md`](/codex/04-architecture/flash-loan-receiver.md) — Aave V3 flash loan
+  deployment + `connect()` validation; required for `carry_staked_basis` recursive-staking unwind path
+- [`/codex/04-architecture/interface-credential-convention.md`](/codex/04-architecture/interface-credential-convention.md)
   — DeFi connector credentials (`connector.connect(config={"wallet_private_key": pk, "rpc_url": url})`); contrasts CeFi
   `get_order_adapter(api_key, api_secret)` shape
-- [`codex/05-infrastructure/launcher-script-ssot.md`](../../codex/05-infrastructure/launcher-script-ssot.md) — DeFi VM
+- [`/codex/05-infrastructure/launcher-script-ssot.md`](/codex/05-infrastructure/launcher-script-ssot.md) — DeFi VM
   launchers MUST live under `deployment-service/scripts/vm/` (forward-poll + backfill + per-chain replay launchers)
-- [`codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md`](../../codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md)
+- [`/codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md`](/codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md)
   — May-23 lead archetype (recursive LST staking + perp short hedge)
-- [`codex/09-strategy/architecture-v2/archetypes/arbitrage-price-dispersion.md`](../../codex/09-strategy/architecture-v2/archetypes/arbitrage-price-dispersion.md)
+- [`/codex/09-strategy/architecture-v2/archetypes/arbitrage-price-dispersion.md`](/codex/09-strategy/architecture-v2/archetypes/arbitrage-price-dispersion.md)
   — May-23 hedge archetype: `ARBITRAGE_PRICE_DISPERSION` with `funding-rate-dispersion` config variant (cross-venue
   funding-rate dispersion; renamed from legacy `leveraged_funding_arb` per Stream B canonicalisation 2026-05-07)
 
@@ -271,7 +271,7 @@ Covers:
 - **MTDS DeFi slice to 100%**: per-(asset_group=defi, chain, venue/protocol, data_type, instrument_id, day). Chain is a
   first-class shard axis.
 - **Multi-chain oracle prices**: Pyth (Solana, unbanned 2026-05-06) + Chainlink (EVM Arb/Base/Polygon).
-- **Custody integration**: Copper wired DeFi-side per `codex/04-architecture/custody-providers.md` § 2.3 (single SSOT —
+- **Custody integration**: Copper wired DeFi-side per `/codex/04-architecture/custody-providers.md` § 2.3 (single SSOT —
   Copper / CEFFU / LocalKey / Mock).
 
 **Current data-status** (from deployment-ui 2026-05-07): 49138/295744 shards = **73.5%**, 988 dates missing. Tail chains
@@ -610,10 +610,10 @@ these venues.
       `captured` for ~370 (Lighter) + ~310 (Pacifica) day-symbol shards.
 
       ```bash
-                                      gcloud storage ls "gs://market-data-tick-cefi-central-element-323112/raw_tick_data/by_date/day=2025-*/asset_group=cefi/venue=LIGHTER-ZKSYNC/instrument_type=perpetual/data_type=ohlcv_1m/" | wc -l
-                                      ```
+                                                  gcloud storage ls "gs://market-data-tick-cefi-central-element-323112/raw_tick_data/by_date/day=2025-*/asset_group=cefi/venue=LIGHTER-ZKSYNC/instrument_type=perpetual/data_type=ohlcv_1m/" | wc -l
+                                                  ```
 
-                                      [AUDIT 2026-05-07: FRESH — HANDOVER Item F; operational verification]
+                                                  [AUDIT 2026-05-07: FRESH — HANDOVER Item F; operational verification]
 
 ### Tail-chain / mid-tier protocol coverage (DeFi data-status — 988 dates missing)
 
@@ -666,8 +666,8 @@ these venues.
 > correction. Re-verification by walking ALL DeFi buckets shows the original plan numbers are defensible — the misread
 > was reading only ONE bucket (the asset-group canonical) instead of the 10+ per-data_type buckets where Arb/Base/
 > Polygon data actually lives. Codex now documents the multi-bucket DeFi layout to prevent repeat misreads — see
-> [`codex/02-data/availability-manifest-and-data-status.md`](../../codex/02-data/availability-manifest-and-data-status.md)
-> § "DeFi has 10+ separate manifest buckets — checking only one gives the wrong picture".
+> [`/codex/02-data/availability-manifest-and-data-status.md`](/codex/02-data/availability-manifest-and-data-status.md) §
+> "DeFi has 10+ separate manifest buckets — checking only one gives the wrong picture".
 
 **Verified DeFi bucket layout (2026-05-07)** — full list with `_index/availability_index.parquet` confirmed present:
 
@@ -903,13 +903,13 @@ Do this verification BEFORE assuming the VM is producing useful data based on ev
 > FIREBLOCKS_MPC on client-provided creds"; see
 > [`plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md`](../active/issues/plan_reconciliation_operator_decisions_2026_07_11.md)
 > §A2 finding 376). Operator-action checklist:
-> [`codex/15-runbooks/custody-onboarding-checklist.md`](../../codex/15-runbooks/custody-onboarding-checklist.md).
-> Per-wallet schema:
+> [`/codex/15-runbooks/custody-onboarding-checklist.md`](/codex/15-runbooks/custody-onboarding-checklist.md). Per-wallet
+> schema:
 > [`WalletProvisioningConfig`](../../unified-api-contracts/unified_api_contracts/internal/domain/defi/wallet_config.py)
 > (UAC@`d721b6a`).
 
 - [x] ✅ [AGENT] P1. Copper sandbox integration test — validate `CopperCustodyProvider` (in execution-service) per
-      `codex/04-architecture/custody-providers.md` § 2.3 CopperCustodyProvider. [AUDIT 2026-05-07: FRESH — actionable,
+      `/codex/04-architecture/custody-providers.md` § 2.3 CopperCustodyProvider. [AUDIT 2026-05-07: FRESH — actionable,
       P0-relevant for May 23 Group F] DONE 2026-05-20 slot 7: 25 unit tests (mock-based, all pass) + integration
       scaffold in `tests/integration/test_copper_custody_provider.py` (BLOCKED-CREDENTIALS —
       copper-sandbox-api-key/secret/org-id not in SM; skips gracefully). execution-service@0cc58c56. Sandbox creds ping
@@ -972,7 +972,7 @@ exist at a 5th layout the prober doesn't know about (extend the prober + the aud
       `bash scripts/vm/launch-defi-phantom-recon-vm.sh defi --apply` to flip the 2,931 phantoms to `attempted_failed`,
       then re-run the affected MTDS DeFi backfills (eigen_rewards via `mtds-perp-funding`/equivalent and morpho/yearn
       `vault_share_price` via `launch-mtds-vault-share-price-backfill-vm.sh`).
-- [x] [DOC] P0. Updated `codex/02-data/availability-manifest-and-data-status.md` § "Phantom audit — re-runnable recipe"
+- [x] [DOC] P0. Updated `/codex/02-data/availability-manifest-and-data-status.md` § "Phantom audit — re-runnable recipe"
       to enumerate 7 drift axes (was 5); added rollup-side metric inconsistency finding under § "Rollup-side metric
       inconsistency (deployment-api `_data_status_rollup_worker`) — open finding 2026-05-07"; updated history benchmark
       with the 2026-05-07 AAVE_V3 29782 → 0 reduction.
@@ -1157,16 +1157,16 @@ shipping with the Fork-1 prep batches below).
       then dies).
 
       Blocks `create-code-tarballs.sh --asset-group DEFI` from `.tabs` worktrees (which have `features-service` not
-                                      `features-service (onchain family)`). Workaround for Priority #5: none needed — the deployed `mtds-code.tar.gz`
-                                      (2026-05-10) already has MTDS@`c6bdf96` (pre-floor-date short-circuit) + the latest lending_indices code, so the
-                                      VM ran current code without a refresh.
+                                                  `features-service (onchain family)`). Workaround for Priority #5: none needed — the deployed `mtds-code.tar.gz`
+                                                  (2026-05-10) already has MTDS@`c6bdf96` (pre-floor-date short-circuit) + the latest lending_indices code, so the
+                                                  VM ran current code without a refresh.
 
-                                      Fix: (a) update the repo lists to post-consolidation names (`features-service` instead of `features-service
-                                      (onchain family)`/`features-defi-service`/etc.); (b) make the missing-repo case actually `continue` past
-                                      `set -e` (e.g. `if [[ -d "$path" ]]; then create_tarball ...; else log "SKIP ..."; fi`).
+                                                  Fix: (a) update the repo lists to post-consolidation names (`features-service` instead of `features-service
+                                                  (onchain family)`/`features-defi-service`/etc.); (b) make the missing-repo case actually `continue` past
+                                                  `set -e` (e.g. `if [[ -d "$path" ]]; then create_tarball ...; else log "SKIP ..."; fi`).
 
-                                      Owner: features-\* consolidation follow-up — coordinate with `features_repo_consolidation_2026_05_08`
-                                      (archived?) or `infrastructure_master`. **MIGRATE** to whichever owns the features-\* consolidation tail.
+                                                  Owner: features-\* consolidation follow-up — coordinate with `features_repo_consolidation_2026_05_08`
+                                                  (archived?) or `infrastructure_master`. **MIGRATE** to whichever owns the features-\* consolidation tail.
 
 - [x] ✅ [SCRIPT] P1. **Wire `ManifestFreshnessCache` into `lending_indices_handler` + sibling MTDS DeFi backfill
       handlers (no manifest-freshness skip → backfill re-downloads already-`captured` days; slot-3 finding
@@ -1401,7 +1401,7 @@ Per `defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07` Stream E corr
   do NOT accept ETH-LST as margin and cannot host the carry_staked_basis hedge leg.
 - **`ARBITRAGE_PRICE_DISPERSION`** — all 6 venues (Bybit, Deribit, Binance, OKX, Hyperliquid, Aster) for cross-venue
   funding spread.
-- Strategy playbook: `codex/16-strategy-playbooks/defi/venue-collateral-2026-05-07.md`
+- Strategy playbook: `/codex/16-strategy-playbooks/defi/venue-collateral-2026-05-07.md`
 
 References throughout this plan that say "6 venues" for `carry_staked_basis` are imprecise — read as "3 LST-margin
 venues for the carry leg; 6 venues for funding-arb archetype." Canonical venue matrix: UAC `venue_collateral.py` SSOT.
@@ -1525,7 +1525,7 @@ hedge legs span CME + CeFi + DeFi spot/perp/future combos and the live infra is 
       proof; full-scale AWS NOT required).
 - [ ] **Gas / lending / staking discipline live + verified** (added 2026-05-12 per operator carry-staked-basis cycle;
       codified in
-      [`codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md`](../../codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md)
+      [`/codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md`](/codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md)
       HARD RULES #4-#6): (a) gas — real per-block `gas_fees` MTDS captures across all 7 DeFi chains (Ethereum / Arbitrum
       / Optimism / Polygon / Base / Avalanche / Solana / BSC / Gnosis) drive both strategy-decision preflight + P&L
       attribution as the `GAS` factor; (b) lending — `liquidity_index` / `variable_borrow_index` captured per-block from
@@ -1686,7 +1686,7 @@ work goes into the next agent's commit batch with per-pair entries flipped here 
 - **Pyth UNBANNED for Solana** (2026-05-06): use Hermes (batch) + PythNet (live). Other chains stay on Chainlink. See
   CLAUDE.md "Removed providers" → "Pyth — UNBANNED" entry.
 - **Live = batch**: same code path; matching engine for backtests. See
-  `codex/04-architecture/batch-live-architecture.md` (single SSOT).
+  `/codex/04-architecture/batch-live-architecture.md` (single SSOT).
 - **`chain` is a first-class shard axis** for DeFi (per CLAUDE.md per-asset-group shard-key matrix).
 
 ## Assigned active plans
@@ -1735,7 +1735,7 @@ _(no plans currently assigned at this priority)_
 - Sibling asset_group umbrellas: `cefi_master`, `tradfi_master`, `sports_master`, `predictions_master`.
 - Carry tracer pipeline handoff: `plans/ai/carry_tracer_pipeline_handoff_2026_05_06.md` (in-flight Phase 9 catalog).
 - Honest-coverage % surface: `GET /api/data-status/honest-coverage` + `HonestCoverageCard` (deployment-ui). SSOT:
-  [`codex/03-deployment/data-status-ui-surface.md`](../../codex/03-deployment/data-status-ui-surface.md). Phase 7F per
+  [`/codex/03-deployment/data-status-ui-surface.md`](/codex/03-deployment/data-status-ui-surface.md). Phase 7F per
   `cross_asset_group_catalogue_audit_2026_05_10.md`.
 - Canonical asset_group registry: `unified_api_contracts.canonical.crosscutting.asset_group_registry` (Phase 5C/5D).
 
@@ -1777,7 +1777,7 @@ gate MET.
 - **Telegram per-env tokens (OPERATOR ACTION)**: Scaffold shipped; operator must provision 3 bots + set GitHub secrets
   `TELEGRAM_BOT_TOKEN_PROD/STAGING/DEV`.
 - **GitHub WIF upgrade (OPERATOR ACTION)**: GCP WIF pool + GitHub App creation needed. Runbook at
-  `codex/07-security/gha-wif-migration.md`.
+  `/codex/07-security/gha-wif-migration.md`.
 - **Credential probe 100% pass (OPERATOR ACTION)**: Provision 10 wrapped wallet keys + 11 canonical SM name aliases from
   GCE VM with trading SA.
 
@@ -1828,7 +1828,7 @@ pushed). 3 items deferred per blockers below.
 3. **Item 3 — Stream A DERIBIT/BYBIT/OKX ETH-LST collateral acceptance flips** ✅
    - `unified-api-contracts@92eab58` — 6 venue_collateral.py rows flipped (DERIBIT stETH 7.5%; BYBIT
      stETH/wstETH/USDe/sUSDe; OKX wstETH 10%; OKX stETH unchanged-False asymmetric). 28 unit tests pass.
-   - NEW codex doc `codex/16-strategy-playbooks/defi/venue-collateral-2026-05-07.md` captures evidence trail per row +
+   - NEW codex doc `/codex/16-strategy-playbooks/defi/venue-collateral-2026-05-07.md` captures evidence trail per row +
      caveats + pending-live-API-probe follow-up.
    - `unified-trading-pm@15e9b1a3` — plan-flip + codex doc commit.
 

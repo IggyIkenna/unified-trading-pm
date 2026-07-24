@@ -2,11 +2,10 @@
 doc_type: codex-ssot
 title: Deployment UI Drilldown Depth Audit
 summary: >-
-  Per-asset-group drilldown depth audit of the deployment-ui Data Status panel — compares the columns the UI
-  exposes today against the target leaf atom per the codex shard-key matrix (DeFi needs first-class chain,
-  options needs root/instrument_type, prediction needs canonical_question_group, sports needs league_id) and
-  tracks the remediation backlog so every asset_group can drill to its proper leaf. Stub — body to be filled as
-  the alignment plan executes.
+  Per-asset-group drilldown depth audit of the deployment-ui Data Status panel — compares the columns the UI exposes
+  today against the target leaf atom per the codex shard-key matrix (DeFi needs first-class chain, options needs
+  root/instrument_type, prediction needs canonical_question_group, sports needs league_id) and tracks the remediation
+  backlog so every asset_group can drill to its proper leaf. Stub — body to be filled as the alignment plan executes.
 status: draft
 nature: ssot
 asset_group: [meta]
@@ -14,7 +13,7 @@ stage: [meta]
 repos: [deployment-api, deployment-ui]
 scope: [engineer, admin]
 tags: [ui, data-status, manifest, audit, defi, single-walk]
-related: [codex/02-data/availability-manifest-and-data-status.md, codex/04-architecture/shard-granularity-ssot.md]
+related: [/codex/02-data/availability-manifest-and-data-status.md, /codex/04-architecture/shard-granularity-ssot.md]
 created: 2026-05-07
 authoritative_for: [deployment-ui data-status drilldown depth audit]
 referenced_by: [plans/epics/infrastructure_master.md, plans/ai/data_status_drilldown_shard_atom_alignment_2026_05_07.md]

@@ -2,25 +2,30 @@
 doc_type: codex-ssot
 title: Secret Naming Convention
 summary: >-
-  SUPERSEDED 2026-07-23 — merged into codex/05-infrastructure/secret-manager-naming.md (§ 1.1), which had the same
+  SUPERSEDED 2026-07-23 — merged into /codex/05-infrastructure/secret-manager-naming.md (§ 1.1), which had the same
   authoritative_for claim (a retrieval-layer collision this merge resolves). Content retained below for history.
 status: superseded
-superseded_by: ../05-infrastructure/secret-manager-naming.md
+superseded_by: /codex/05-infrastructure/secret-manager-naming.md
 nature: ssot
 asset_group: [meta]
 stage: [meta]
 repos: [execution-service, unified-trading-pm]
 scope: [engineer, admin]
 tags: [secrets, execution, cefi, ssot-audit]
-related: [secrets-management.md, client-credentials.md, ../05-infrastructure/secret-manager-naming.md]
+related:
+  [
+    /codex/07-security/secrets-management.md,
+    /codex/07-security/client-credentials.md,
+    /codex/05-infrastructure/secret-manager-naming.md,
+  ]
 created: 2026-03-27
 authoritative_for:
 referenced_by:
   [
-    codex/04-architecture/data-tranches.md,
-    codex/07-security/client-credentials.md,
-    codex/07-security/secrets-management.md,
-    codex/07-security/service-to-service-auth.md,
+    /codex/04-architecture/data-tranches.md,
+    /codex/07-security/client-credentials.md,
+    /codex/07-security/secrets-management.md,
+    /codex/07-security/service-to-service-auth.md,
   ]
 owner:
 last_reviewed: 2026-07-23
@@ -31,9 +36,9 @@ code_refs:
 
 > # ⛔ SUPERSEDED 2026-07-23 (doc-reconciliation, operator-approved "merge both")
 >
-> **Live SSOT: [`../05-infrastructure/secret-manager-naming.md`](../05-infrastructure/secret-manager-naming.md) § 1.1.**
-> This doc and that one both carried `authoritative_for: [Secret Manager naming convention]` verbatim — an agent
-> grepping that topic got a coin flip.
+> **Live SSOT: [`/codex/05-infrastructure/secret-manager-naming.md`](/codex/05-infrastructure/secret-manager-naming.md)
+> § 1.1.** This doc and that one both carried `authoritative_for: [Secret Manager naming convention]` verbatim — an
+> agent grepping that topic got a coin flip.
 >
 > **The pattern below, `exec-{client}-{venue}-{account_type}`, was itself wrong** — no secret with that shape exists. A
 > follow-up pass queried the live GCP Secret Manager inventory directly (194 secrets, project `central-element-323112`)

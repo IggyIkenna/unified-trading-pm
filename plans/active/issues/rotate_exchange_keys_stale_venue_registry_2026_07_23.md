@@ -3,7 +3,7 @@ doc_type: issue
 title: rotate-exchange-keys registry lists ~15 venue secret names that don't match live GCP naming
 summary:
   deployment-service/functions/rotate-exchange-keys/main.py's CEFI_KEY_PATTERNS-style venue list predates the two-axis
-  secret-naming model (codex/05-infrastructure/secret-manager-naming.md) — most entries (binance-api-key,
+  secret-naming model (/codex/05-infrastructure/secret-manager-naming.md) — most entries (binance-api-key,
   deribit-api-key, okx-api-key, hyperliquid-api-key, etc.) don't match any real GCP secret, so key rotation likely
   silently no-ops for those venues. Found as a byproduct of the 2026-07-23 secret-naming migration; needs its own
   dedicated per-venue verification pass, not a drive-by fix.
@@ -80,8 +80,8 @@ Reasons:
       / Cloud Function trigger config) — if it's dead/unwired like the Polymarket/Kalshi adapter stubs were, severity
       drops; if it's live, this is a real rotation gap needing prompt attention.
 - [ ] [SCRIPT] P2. **Fix the corrected venue list** in `rotate-exchange-keys/main.py` once verified, matching the
-      two-axis model in `codex/05-infrastructure/secret-manager-naming.md`.
+      two-axis model in `/codex/05-infrastructure/secret-manager-naming.md`.
 
 ## Codex SSOTs
 
-- `codex/05-infrastructure/secret-manager-naming.md` — the two-axis naming model this registry needs to match.
+- `/codex/05-infrastructure/secret-manager-naming.md` — the two-axis naming model this registry needs to match.

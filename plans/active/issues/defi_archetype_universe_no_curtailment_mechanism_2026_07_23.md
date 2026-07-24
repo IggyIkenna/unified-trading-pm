@@ -130,8 +130,8 @@ it's an unchecked cross-repo assumption. If the two ever diverge, nothing would 
 ### Addendum 2026-07-24 — Finding 3 reconciliation-direction analysis (investigation only, not actioned)
 
 Sub-agent investigation into HOW to reconcile the two registries (per this doc's own Finding-3 open question). Read in
-full: `codex/04-architecture/tier-and-import-architecture.md`, `strategy-service`'s `target_universe/catalog*.py` (all 5
-family files + `catalog.py`'s dispatcher), and UAC's `archetype_leg_spec_seeds.py` (1644 lines, full file).
+full: `/codex/04-architecture/tier-and-import-architecture.md`, `strategy-service`'s `target_universe/catalog*.py` (all
+5 family files + `catalog.py`'s dispatcher), and UAC's `archetype_leg_spec_seeds.py` (1644 lines, full file).
 
 **1. Tier constraint — CONFIRMED, no ambiguity.** `unified_api_contracts` (UAC) is `T0-base` — "true leaves, no
 workspace imports … stdlib + pydantic ONLY — zero unified-\* imports, not even in tests" (tier doc line 93-96, 216-217).

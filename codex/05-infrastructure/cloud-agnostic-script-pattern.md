@@ -12,9 +12,17 @@ stage: [meta]
 repos: [deployment-service, execution-service, instruments-service, strategy-service, unified-trading-library]
 scope: [engineer, admin]
 tags: [migration, aws-migration, infrastructure, canonicalisation, bucket]
-related: [codex/05-infrastructure/cloud-agnostic-audit-2026-05-07.md, codex/05-infrastructure/cloud-agnostic-build-lineage.md, codex/04-architecture/unified-cloud-interface.md]
+related:
+  [
+    /codex/05-infrastructure/cloud-agnostic-audit-2026-05-07.md,
+    /codex/05-infrastructure/cloud-agnostic-build-lineage.md,
+    /codex/04-architecture/unified-cloud-interface.md,
+  ]
 created: 2026-05-07
-authoritative_for: The mandatory pattern every workspace script that touches cloud resources must follow — `--cloud {gcp,aws}` flag default from `CLOUD_PROVIDER` env, no direct gcloud/gsutil/google.cloud.storage without an AWS branch, UCI factory pattern for SDK construction.
+authoritative_for:
+  The mandatory pattern every workspace script that touches cloud resources must follow — `--cloud {gcp,aws}` flag
+  default from `CLOUD_PROVIDER` env, no direct gcloud/gsutil/google.cloud.storage without an AWS branch, UCI factory
+  pattern for SDK construction.
 referenced_by: [plans/active/aws_migration_defi_first_2026_05_07.md]
 owner:
 last_reviewed: 2026-05-17

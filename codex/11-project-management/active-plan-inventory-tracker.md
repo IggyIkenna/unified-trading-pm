@@ -11,10 +11,22 @@ stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]
 tags: [plan-hygiene, plan-inventory, orphan-detection, estimation-calibration, dashboard, quickmerge]
-related: [plan-hygiene.md, ../08-workflows/estimation-calibration.md, ../08-workflows/estimation-retrospective-ledger.md, ../../plans/active/master_to_live_defi_2026_05_23.md]
+related:
+  [
+    plan-hygiene.md,
+    /codex/08-workflows/estimation-calibration.md,
+    /codex/08-workflows/estimation-retrospective-ledger.md,
+    ../../plans/active/master_to_live_defi_2026_05_23.md,
+  ]
 created: 2026-05-12
 authoritative_for: [active plan inventory dashboard, plan done-vs-left tracking, plan orphan detection]
-referenced_by: [codex/11-project-management/citadel-grade-planning-standards.md, codex/11-project-management/epic-execution-with-sub-agents.md, codex/12-agent-workflow/commit-push-flip-rule.md, plans/epics/README.md]
+referenced_by:
+  [
+    /codex/11-project-management/citadel-grade-planning-standards.md,
+    /codex/11-project-management/epic-execution-with-sub-agents.md,
+    /codex/12-agent-workflow/commit-push-flip-rule.md,
+    plans/epics/README.md,
+  ]
 owner: pm-orchestrator
 last_reviewed: 2026-05-17
 code_refs:
@@ -139,16 +151,16 @@ Resolves paths relative to the script's location; no `cd` required. Stdout repor
 - **Per-phase progress within a plan**: the dashboard rolls up to plan level. Phase-level state lives in the plan body's
   checkbox tree + `## Open questions` section.
 - **Effort vs wall-clock prediction**: the inventory shows cal AI-days (effort) remaining, not wall-clock prediction.
-  Multiply through the parallelism axis per `codex/08-workflows/estimation-calibration.md` § "Parallelism axis" for
+  Multiply through the parallelism axis per `/codex/08-workflows/estimation-calibration.md` § "Parallelism axis" for
   wall-clock floor.
 
 ---
 
 ## Composes with
 
-- **Estimate Calibration framework** (CLAUDE.md HARD RULE + `codex/08-workflows/estimation-calibration.md`) — the
+- **Estimate Calibration framework** (CLAUDE.md HARD RULE + `/codex/08-workflows/estimation-calibration.md`) — the
   `estimate_class` + `estimate_calibrated_ai_days` frontmatter is what the inventory reads.
-- **Retrospective Ledger** (`codex/08-workflows/estimation-retrospective-ledger.md`) — workspace-wide throughput
+- **Retrospective Ledger** (`/codex/08-workflows/estimation-retrospective-ledger.md`) — workspace-wide throughput
   observations feed the realistic-pace number used in cutover projections.
 - **Plan Filename Convention + 3-Layer Model** (CLAUDE.md) — the inventory respects the layer model: master at top,
   epics in middle, granular sub-plans below.
@@ -187,13 +199,13 @@ once after workspace setup; idempotent (safe to re-run).
 
 ### What they check (per staged `plans/**` file)
 
-| Check                                                  | Script                        | What it catches                                                         |
-| ------------------------------------------------------ | ----------------------------- | ----------------------------------------------------------------------- |
-| Frontmatter validity                                   | `check_frontmatter.sh`        | Missing `---` delimiters, deprecated fields                             |
-| Frontmatter schema                                     | `check_frontmatter_schema.py` | Missing/empty required fields (`status`, `priority`, etc.)              |
-| Todo format                                            | `check_todo_format.sh`        | Todos without `[CATEGORY] P<n>.` prefix                                 |
-| Conflict markers                                       | `check_conflict_markers.sh`   | Unresolved `<<<<<<<`/`=======`/`>>>>>>>` (incl. prettier-mangled forms) |
-| Runbook fields (if `codex/15-runbooks/incidents/*.md`) | `check_runbook_fields.py`     | Missing `owner`/`cadence`/`verifier`/`last_executed`                    |
+| Check                                                  | Script                        | What it catches                                                      |
+| ------------------------------------------------------ | ----------------------------- | -------------------------------------------------------------------- |
+| Frontmatter validity                                   | `check_frontmatter.sh`        | Missing `---` delimiters, deprecated fields                          |
+| Frontmatter schema                                     | `check_frontmatter_schema.py` | Missing/empty required fields (`status`, `priority`, etc.)           |
+| Todo format                                            | `check_todo_format.sh`        | Todos without `[CATEGORY] P<n>.` prefix                              |
+| Conflict markers                                       | `check_conflict_markers.sh`   | Unresolved git-merge conflict markers (incl. prettier-mangled forms) |
+| Runbook fields (if `codex/15-runbooks/incidents/*.md`) | `check_runbook_fields.py`     | Missing `owner`/`cadence`/`verifier`/`last_executed`                 |
 
 Checks run **ONLY on staged files** (blast-radius safety — a pre-existing violation in another agent's WIP plan never
 blocks your commit). Exit 1 on any hard failure; auto-fix advice is printed.

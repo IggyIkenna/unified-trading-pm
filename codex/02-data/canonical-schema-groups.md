@@ -12,7 +12,7 @@ stage: [meta]
 repos: [instruments-service, unified-api-contracts]
 scope: [engineer, admin]
 tags: [uac, canonicalisation, catalogue, instruments, data-pipeline]
-related: [/codex/02-data/contracts-scope-and-layout.md, data-catalogue-schema.md]
+related: [/codex/02-data/contracts-scope-and-layout.md, /codex/02-data/data-catalogue-schema.md]
 created: 2026-03-27
 authoritative_for: [canonical schema group catalogue (Canonical* field tables)]
 referenced_by:

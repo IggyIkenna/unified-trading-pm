@@ -96,6 +96,6 @@ determinable from code or docs alone — flagging for a decision, not prescribin
 
 ## Codex SSOTs
 
-- `codex/05-infrastructure/secret-manager-naming.md` § 2.2 — the live read/trade/write split pattern for
+- `/codex/05-infrastructure/secret-manager-naming.md` § 2.2 — the live read/trade/write split pattern for
   Binance/Deribit, and the note distinguishing this real pooled/house pattern from the dead per-client
   `exec-{client}-{venue}-{read,trade,withdraw}-*` design the archived plan originally also described.

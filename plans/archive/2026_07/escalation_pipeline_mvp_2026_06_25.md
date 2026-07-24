@@ -152,7 +152,7 @@ to the agent-orchestrator resolution surface (defer-unify per the `agent_operati
   next step (operator, keep-for-now)" item from 2026-07-16 is discharged here: the stale
   `depends_on: role_registry_schema_and_broker_mvp` is removed and Phase 1b is reworded to reuse `/blocked`. (3) Banner
   - `status: superseded` + `superseded_by:` the epic. (4) **Codex-alignment: nothing to update** — the two SSOTs this
-    plan would have written (`codex/04-architecture/escalation-pipeline.md` NEW — never created, and the
+    plan would have written (`/codex/04-architecture/escalation-pipeline.md` NEW — never created, and the
     `agent-orchestrator-overview.md` note beside `BlockedRow`) were contingent on the code landing, and the code is
     unbuilt; the epic inherits those codex deliverables. (5) No lock to clear (`locked_by:` was empty). Inbound
     references repointed at the archive path.

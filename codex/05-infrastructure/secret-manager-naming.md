@@ -3,13 +3,13 @@ doc_type: codex-ssot
 title: Secret Manager naming convention — SSOT
 summary: >-
   Secret Manager naming-convention SSOT — merged 2026-07-23 with the former
-  codex/07-security/secret-naming-convention.md (superseded, redirects here). States the two-axis model verified against
-  real GCP inventory — private/client-owned execution credentials use exec-{client}-{venue}-{field} (client, venue, api
-  all present — confirmed live for OKX's 8 clients + Binance's 2 clients); public market-data and pooled/house
-  credentials share one key per venue, no client segment (read/trade-split for Binance/Deribit, single unscoped key for
-  Bybit/Aster, wallet-style for Hyperliquid). Also covers the <class>-<surface>-<env>-<role>-<version> provisioning
-  pattern for custody/CMK/wrapped-wallet/data/aux secrets, the AWS mirror, and the bybit_api_key/bybit_api_secret
-  underscore-violation fix (cloned to bybit-api-key/ bybit-api-secret 2026-07-23).
+  /codex/07-security/secret-naming-convention.md (superseded, redirects here). States the two-axis model verified
+  against real GCP inventory — private/client-owned execution credentials use exec-{client}-{venue}-{field} (client,
+  venue, api all present — confirmed live for OKX's 8 clients + Binance's 2 clients); public market-data and
+  pooled/house credentials share one key per venue, no client segment (read/trade-split for Binance/Deribit, single
+  unscoped key for Bybit/Aster, wallet-style for Hyperliquid). Also covers the <class>-<surface>-<env>-<role>-<version>
+  provisioning pattern for custody/CMK/wrapped-wallet/data/aux secrets, the AWS mirror, and the
+  bybit_api_key/bybit_api_secret underscore-violation fix (cloned to bybit-api-key/ bybit-api-secret 2026-07-23).
 status: current
 nature: ssot
 asset_group: [meta]
@@ -19,24 +19,24 @@ scope: [engineer, admin]
 tags: [secret-manager, security, canonicalisation, credentials, defi, cefi, execution]
 related:
   [
-    ../15-runbooks/credential-rotation-runbook.md,
-    credentials-matrix.md,
-    ../04-architecture/custody-providers.md,
-    ../07-security/secret-naming-convention.md,
-    ../07-security/client-credentials.md,
-    ../07-security/service-to-service-auth.md,
+    /codex/15-runbooks/credential-rotation-runbook.md,
+    /codex/05-infrastructure/credentials-matrix.md,
+    /codex/04-architecture/custody-providers.md,
+    /codex/07-security/secret-naming-convention.md,
+    /codex/07-security/client-credentials.md,
+    /codex/07-security/service-to-service-auth.md,
   ]
 created: 2026-05-11
 authoritative_for: [Secret Manager secret naming convention]
 referenced_by:
   [
-    codex/05-infrastructure/aws-iam-matrix.md,
-    codex/05-infrastructure/credentials-matrix.md,
-    codex/05-infrastructure/hsm-wallet-signing.md,
-    codex/05-infrastructure/per-archetype-wallet-isolation.md,
-    codex/15-runbooks/credential-rotation-runbook.md,
-    codex/14-customer-journeys/authentication/firebase-local.md,
-    codex/15-runbooks/per-source-credential-rotation-runbook.md,
+    /codex/05-infrastructure/aws-iam-matrix.md,
+    /codex/05-infrastructure/credentials-matrix.md,
+    /codex/05-infrastructure/hsm-wallet-signing.md,
+    /codex/05-infrastructure/per-archetype-wallet-isolation.md,
+    /codex/15-runbooks/credential-rotation-runbook.md,
+    /codex/14-customer-journeys/authentication/firebase-local.md,
+    /codex/15-runbooks/per-source-credential-rotation-runbook.md,
   ]
 owner:
 last_reviewed: 2026-07-23
@@ -59,7 +59,7 @@ code_refs:
 > Phase 9.C. Codifies the workspace naming pattern for every secret in GCP Secret Manager + AWS Secrets Manager.
 >
 > **Merged 2026-07-23** (doc-reconciliation, operator-approved) with the former
-> [`codex/07-security/secret-naming-convention.md`](../07-security/secret-naming-convention.md) — both docs carried
+> [`/codex/07-security/secret-naming-convention.md`](/codex/07-security/secret-naming-convention.md) — both docs carried
 > `authoritative_for: [Secret Manager secret naming convention]` verbatim, a retrieval-layer collision. That doc is now
 > `status: superseded` and redirects here.
 >
@@ -100,8 +100,8 @@ Two independent axes decide a credential's shape. Get these right and the name f
   see § 1.2's rename below). Aster: `aster-api-key` / `aster-secret-key`.
 - **Wallet-style**: Hyperliquid — `hyperliquid-trade-key`, but note this is the ONE exception to "one key per venue =
   flat string": the secret VALUE is a JSON blob (`private_key`, `wallet_address`, `main_wallet` — agent wallet
-  authorized by a main wallet for EIP-712 signing; see `codex/07-security/secrets-management.md` § On-Chain/DeFi for the
-  field meanings), verified live 2026-07-23. A first pass at wiring this into
+  authorized by a main wallet for EIP-712 signing; see `/codex/07-security/secrets-management.md` § On-Chain/DeFi for
+  the field meanings), verified live 2026-07-23. A first pass at wiring this into
   `execution-service/execution_service/cli/handlers/live_execution_handler.py` assumed a flat private-key string
   (matching every other venue's shape) and had to be corrected after fetching the real secret and finding it parses as
   JSON — don't repeat that assumption.
@@ -360,13 +360,13 @@ before merging.
 
 - [`credentials-matrix.md`](credentials-matrix.md) — workspace credential SSOT (which secrets each mode + archetype
   consumes).
-- [`../15-runbooks/custody-onboarding-checklist.md`](../15-runbooks/custody-onboarding-checklist.md) — operator-action
-  provisioning runbook.
+- [`/codex/15-runbooks/custody-onboarding-checklist.md`](/codex/15-runbooks/custody-onboarding-checklist.md) —
+  operator-action provisioning runbook.
 - [`fireblocks-integration-spec.md`](fireblocks-integration-spec.md) — Fireblocks-specific naming (RSA PEM + vault
   account).
 - [`per-archetype-wallet-isolation.md`](per-archetype-wallet-isolation.md) — per-wallet wrapped PK naming pattern
   derivation.
-- [`../07-security/secret-naming-convention.md`](../07-security/secret-naming-convention.md) — superseded by this doc
-  (2026-07-23); retained for history.
+- [`/codex/07-security/secret-naming-convention.md`](/codex/07-security/secret-naming-convention.md) — superseded by
+  this doc (2026-07-23); retained for history.
 - `unified-trading-library/unified_trading_library/cloud_interface/credentials_registry.py` — the real
   `CredentialsRegistry` implementation backing § 1.1.
