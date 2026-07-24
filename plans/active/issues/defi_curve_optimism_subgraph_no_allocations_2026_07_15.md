@@ -53,7 +53,7 @@ estimate_calibrated_ai_days: 0.24
 assigned_role: data_engineering
 drift_direction: unknown
 depends_on: []
-last_updated: 2026-07-15
+last_updated: 2026-07-24
 locked_by:
 locked_since:
 supersedes:
@@ -126,22 +126,41 @@ not wired into the batch `dex_swaps_handler.py` cascade for `dex_pool_swaps`.
 
 ## Recommended decision
 
-1. **[SCRIPT] P2.** In `dex_swaps_handler.py`, recognize a 200-status GraphQL response whose `errors[]` message matches
-   `subgraph not found: no allocations` (or more generally, any non-schema-drift GraphQL-level error that repeats across
-   all 5 cascade schemas) as a **distinct, terminal condition** — do not raise the generic `RuntimeError`; instead
-   raise/return a typed `_SubgraphNotFoundError`-equivalent (or a new `_SubgraphDeindexedError`) so the manifest writer
-   can record an honest absence (e.g. `EXPECTED_SUBGRAPH_DEINDEXED`) instead of `attempted_failed`, matching this
-   workspace's honest-absence-vs-attempted-failed convention (`/codex/02-data/honest-absence-downstream-handling.md`).
-   Repo: `market-tick-data-service`.
-2. **[DESIGN] P3.** Evaluate wiring the existing `curve_adapter.py`/`api.curve.fi` REST path into the batch
-   `dex_pool_swaps` collection for CURVE/OPTIMISM (mirroring the "ARB/POLY only on hosted service" precedent already
-   noted in UAC `_defi.py`) so this cell can actually capture real data instead of staying a permanent honest absence.
-   Not urgent — `dex_pool_swaps` coverage for every OTHER venue is unaffected, and 952 rows is a small fraction of the
-   asset_group's total gap. Repo: `market-tick-data-service`.
-3. **[SCRIPT] P3.** Do the same live-subgraph-health spot-check for the remaining un-investigated long-tail buckets
-   (`UNISWAP_V3` `TimeoutError`×25, `UNISWAP_V3`/POLYGON schema-drift×24, and the handful of 1-8-row buckets) —
-   plausibly genuine transient/schema issues (all 5 sampled subgraphs from this session were healthy), but not confirmed
-   row-by-row. Repo: `market-tick-data-service`.
+> **🟢 2026-07-24 — reason taxonomy + historical reclassification SHIPPED** (see Progress log). The numbered list below
+> was the original recommendation; converted to checkboxes here so future todo-counters (grep-based, `- [ ]` only) don't
+> silently miss this doc's open items the way the closeout plan's own audit did (it counted this doc as "0 open todos
+> (closed)" purely because it used a numbered list, not checkboxes — that miscount is the reason this conversion
+> exists).
+
+- [x] [BACKEND] P1. **Add the `EXPECTED_SUBGRAPH_DEINDEXED` reason** to `EmptyConfirmedReason` (unified-api-contracts)
+      so a permanently-deindexed subgraph can be recorded as honest `empty_confirmed` instead of `attempted_failed`.
+      **SHIPPED** `unified-api-contracts@e893e5c9` — repo: `unified-api-contracts`.
+- [x] [DATA] P1. **Retroactively reclassify the CURVE/OPTIMISM `dex_pool_swaps` `attempted_failed` rows** →
+      `empty_confirmed[EXPECTED_SUBGRAPH_DEINDEXED]` via a one-shot manifest script (mirrors
+      `reclassify_defi_reference_only_eu_2026_07_21.py`'s pattern: consolidated index + per_vm shards,
+      backup-then-write, idempotent). **Script SHIPPED + dry-run VERIFIED** — `instruments-service@73100d4e`,
+      `scripts/reclassify_defi_curve_optimism_subgraph_deindexed_2026_07_24.py`. **`--apply` still pending** (blocked by
+      the heavy-I/O hard rule — must run on a VM, not locally). Full result + evidence in "Verified live (2026-07-24)"
+      below.
+- [ ] [SCRIPT] P2. In `dex_swaps_handler.py`, recognize a 200-status GraphQL response whose `errors[]` message matches
+      `subgraph not found: no allocations` (or more generally, any non-schema-drift GraphQL-level error that repeats
+      across all 5 cascade schemas) as a **distinct, terminal condition** at FETCH TIME — do not raise the generic
+      `RuntimeError`; instead raise/return a typed `_SubgraphNotFoundError`-equivalent (or a new
+      `_SubgraphDeindexedError`) so the manifest writer calls `record_empty(reason=EXPECTED_SUBGRAPH_DEINDEXED)` going
+      forward instead of `record_failed`. **Still OPEN** — the reason now exists (item 1 above), but the writer-side
+      detection to USE it at capture time has not shipped; without this, the next backfill VM run against CURVE/OPTIMISM
+      will re-create fresh `attempted_failed` rows that item 2's retroactive script would then need to re-run to clean
+      up again. Repo: `market-tick-data-service` (out of scope for the 2026-07-24 dispatch that shipped items 1-2 — that
+      dispatch was scoped to unified-api-contracts + instruments-service only).
+- [ ] [DESIGN] P3. Evaluate wiring the existing `curve_adapter.py`/`api.curve.fi` REST path into the batch
+      `dex_pool_swaps` collection for CURVE/OPTIMISM (mirroring the "ARB/POLY only on hosted service" precedent already
+      noted in UAC `_defi.py`) so this cell can actually capture real data instead of staying a permanent honest
+      absence. Not urgent — `dex_pool_swaps` coverage for every OTHER venue is unaffected, and 952 rows is a small
+      fraction of the asset_group's total gap. Repo: `market-tick-data-service`.
+- [ ] [SCRIPT] P3. Do the same live-subgraph-health spot-check for the remaining un-investigated long-tail buckets
+      (`UNISWAP_V3` `TimeoutError`×25, `UNISWAP_V3`/POLYGON schema-drift×24, and the handful of 1-8-row buckets) —
+      plausibly genuine transient/schema issues (all 5 sampled subgraphs from this session were healthy), but not
+      confirmed row-by-row. Repo: `market-tick-data-service`.
 
 ## Verified live (2026-07-15, ~12:57Z)
 
@@ -150,3 +169,32 @@ not wired into the batch `dex_swaps_handler.py` cascade for `dex_pool_swaps`.
 - 5 comparison subgraphs (BALANCER/POLYGON, UNISWAP_V3/POLYGON, PANCAKESWAP_V3/BSC, UNISWAP_V3/BASE,
   UNISWAP_V3/ETHEREUM) all returned live `_meta.block` data — confirms the dead-subgraph condition is isolated to this
   one (protocol, chain) pair, not a gateway-wide or API-key issue.
+
+## Verified live (2026-07-24) — reclassification script shipped, `--apply` still pending
+
+Direct pandas inspection of prod `_index/availability_index.parquet` (23,932,764 rows,
+`market-data-tick-defi-prd- central-element-323112`) today: **144** rows currently match `venue=CURVE`,
+`chain=OPTIMISM`, `data_type=dex_pool_swaps`, `capture_status=attempted_failed`, `error_reason` starting with
+`"All 5 cascade schemas returned GraphQL errors for curve/OPTIMISM"` — down from the 952 measured 2026-07-15. Not
+re-investigated why the count shrank (plausibly consolidator dedup / an intervening backfill VM run re-attempting and
+re-failing a subset with a fresh `attempted_at` that then got superseded) — out of scope for this dispatch; the script
+is idempotent and safe to re-run whenever, so the exact live count at apply-time is authoritative regardless.
+
+**Bug found + fixed during verification**: the first version of
+`scripts/reclassify_defi_curve_optimism_subgraph_deindexed_2026_07_24.py` matched `error_reason` against the FULL
+45-character subgraph id (`CXDZPduZE6nWuWEkSzWkRoJSSJ6CneSqiDxdnhhURShX`) and found **0** rows on `--dry-run` — not
+because the condition had resolved, but because the manifest's `error_reason` column is **truncated at 80 characters**
+on write (confirmed: every real row's stored value ends exactly at `"...(subgraph=CXDZP"`, i.e. only 5 of the 45
+subgraph-id characters survive). Fixed to match the untruncated prefix
+`"All 5 cascade schemas returned GraphQL errors for curve/OPTIMISM"` instead, then re-confirmed against an independent
+raw-pandas count of the same 144 rows. This 80-char truncation is a general manifest-writer characteristic worth knowing
+for ANY future `error_reason`-substring-matching script in this workspace, not specific to this issue.
+
+**`--apply` NOT run** — the newly-landed heavy-I/O hard rule (`/codex/05-infrastructure/vm-launcher-runbook.md` § heavy
+I/O) classifies this operation ("a manifest-index read-transform-write over the whole `_index`") as heavy I/O that must
+run on a VM in-region, never the operator's local machine. Follow-up (mechanical, no design work needed): launch via the
+generic `canonical-migration` `VM_TASK`/ `VM_MIGRATION_CMD` dispatch in
+`deployment-service/scripts/vm/setup-data-pipeline-vm.sh` (`VM_SERVICE=instruments_service`, command
+`python scripts/reclassify_defi_curve_optimism_subgraph_deindexed_2026_07_24.py --apply`), or add a new one-off category
+to `launch-canonical-migration-vm.sh`'s dispatch table. Shipped: `unified-api-contracts@e893e5c9` (reason),
+`instruments-service@73100d4e` (script).
