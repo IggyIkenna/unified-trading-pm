@@ -129,12 +129,21 @@ source:
       confirms `skip:dirty` (ticks=2); a clean tick after an unconfirmed dirty tick resets the streak to 0.
       `not_clean_since` itself is server-side (git_health.py, already gated by item 4) — unaffected by this script-side
       change.
-- [ ] [INFRA] P2. Verify the unexplained `dirty_files=2172` row for `unified-trading-pm` on host `ip-172-31-0-185` slot
-      0 by running `git status --porcelain | wc -l` in that clone and recording which it is. Every non-clean row on the
-      `hk` host was verified REAL file-for-file, but this host was unreachable from the audit session, so it is the one
-      open doubt — either a genuinely wrecked checkout (its own problem, since that clone can never FF while dirty) or
-      the phantom surviving at a new magnitude. **Gate**: the measured count recorded in the issue doc with an explicit
-      real-or-phantom verdict.
+- [x] ✅ [INFRA] P2. Verify the unexplained `dirty_files=2172` row for `unified-trading-pm` on host `ip-172-31-0-185`
+      slot 0 by running `git status --porcelain | wc -l` in that clone and recording which it is. Every non-clean row on
+      the `hk` host was verified REAL file-for-file, but this host was unreachable from the audit session, so it was the
+      one open doubt — either a genuinely wrecked checkout or the phantom surviving at a new magnitude. **Gate**: the
+      measured count recorded in the issue doc with an explicit real-or-phantom verdict. — literal box access
+      independently reconfirmed blocked (same `ikenna-worker` SSM `AccessDeniedException` slot 2 hit, on both the target
+      host and the orchestrator VM — a blanket fleet-role IAM gap, not instance-specific). Closed instead via the
+      orchestrator's own per-slot debug endpoint (`GET /api/slots/0/git-status?host=ip-172-31-0-185`), which retains
+      `dirty_files_sample` (the fleet-summary view drops it). **Verdict: REAL** — the row shows a stable, live-updating
+      (confirmed via `behind` incrementing across two polls), non-empty 5-file named sample, the exact opposite of every
+      confirmed phantom fingerprint in the issue doc (always nonzero-count + EMPTY sample), on the operator's own
+      interactive human-planning VM where genuine WIP is unremarkable. Full writeup + caveats (the literal "2172" figure
+      is not retroactively recoverable — item 1's fix now caps reported `dirty_files` at 5) in
+      `plans/active/issues/git_health_phantom_dirty_flicker_ff_cron_race_2026_07_21.md` § "7. RESOLVED 2026-07-24 (slot
+      3)".
 - [ ] [BACKEND] P2. Add a periodic dirty-resolution sweep to the worker-liveness watchdog that runs independently of any
       spawn attempt. Every caller of `resolve_dirty_state`/`commit_and_push_dirty_repos` today is spawn or respawn time
       (`spawn_slot`, `_do_spawn`, the `slots_ops` pre-spawn gate, `_respawn`), so a dirty slot nobody tries to spawn
@@ -209,7 +218,7 @@ source:
 
   | Item | State    | Blocked-on                                                                                               |
   | ---- | -------- | -------------------------------------------------------------------------------------------------------- |
-  | 6-7  | Not done | Nobody; sequential continuation — natural next dispatch pickup                                           |
+  | 7    | Not done | Nobody; sequential continuation — natural next dispatch pickup                                           |
   | 8-14 | Not done | Nobody; sequential continuation (2 `[BACKEND]` items HELD per Q2 — operator-decision, do not auto-start) |
 
   Lessons worth carrying forward: (a) this environment hit repeated transient SSH-connect stalls to github.com mid-hook
@@ -221,3 +230,20 @@ source:
   a per-repo counter — the gate design deliberately uses it as a cross-check between two independent observers (the
   reporter's own git status vs. the FF-cron's), not as a same-repo streak; this is worth re-reading before touching item
   5, which extends the identical signal to a different consumer.
+
+- **2026-07-24 (slot 3)**: Item 6 resolved (issue doc: `git_health_phantom_dirty_flicker_ff_cron_race_2026_07_21.md` §
+  "7. RESOLVED 2026-07-24 (slot 3)"). Slot 2 had already independently discovered the same task was blocked on
+  interactive-box access and filed `/blocked BLK-c83c6bdd` + skipped; that blocker still holds (re-verified live: same
+  `ikenna-worker` SSM `AccessDeniedException`, same host resolution to the human-planning VM `i-0dd9812a96cdda5dc`).
+  Rather than re-file the identical blocked-question, found an alternate verification path that doesn't need box access:
+  the orchestrator's own `GET /api/slots/{id}/git-status?host=<host>` debug endpoint returns the raw stored row
+  including `dirty_files_sample`, which the summarized fleet view drops. That row shows a live-updating (behind 59→60
+  across two polls seconds apart), non-empty, named 5-file sample for `unified-trading-pm` — the opposite fingerprint
+  from every confirmed phantom instance in this issue doc (always nonzero-count + empty-sample). Verdict: **REAL**, not
+  phantom. Caveat carried into the issue doc: the literal "2172" figure can't be retroactively confirmed since item 1's
+  own fix now caps the reporter's `dirty_files` at the 5-entry sample length — the verdict rests on the sample's
+  non-emptiness and stability, not on reproducing the exact original count. Lesson for whoever picks up item 7 next:
+  when a prior slot's `/blocked` note says a resource is unreachable, re-verify the blocker live before accepting it
+  (things can change), but also check whether the SERVER ITSELF already has richer data than the summary view exposes
+  before concluding a task is truly stuck — `/api/fleet/git-health` and the per-slot `/api/slots/{id}/git-status?host=`
+  debug endpoint are NOT the same payload (the latter keeps `dirty_files_sample`).

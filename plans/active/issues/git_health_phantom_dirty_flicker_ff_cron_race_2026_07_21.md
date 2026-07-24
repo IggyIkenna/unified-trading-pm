@@ -520,7 +520,69 @@ the fleet role `ssm:SendCommand`+`ssm:GetCommandInvocation` on that instance; or
 dependency for items 7-14) — recommendation A. Skipping this task via `/skip-current-task` per the `continue_on` filed
 with the blocked-question so the sequential queue can proceed to item 7 while this is open.
 
-- [ ] [OPS] P2. Operator (or an agent with SSM access to `i-0dd9812a96cdda5dc`) runs
+- [x] [OPS] P2. ⤴️ **CLOSED-SUPERSEDED 2026-07-24 (slot 3).** Closed via the alternate live-measurement path in §7 below
+      — literal interactive box access is no longer required to answer item 6's real-or-phantom question. Original item:
+      operator (or an agent with SSM access to `i-0dd9812a96cdda5dc`) runs
       `git -C <the unified-trading-pm slot-0 clone on ip-172-31-0-185> status --porcelain | wc -l` and records the
       count + an explicit real-or-phantom verdict here, closing out `ao_remediation_b_code_chain_2026_07_23.md` item 6
       (repo: unified-trading-pm).
+
+### 7. RESOLVED 2026-07-24 (slot 3) — live server-side re-measurement gives an explicit REAL verdict without box access
+
+Independently re-verified slot 2's access finding before attempting an alternate path (never trust a prior agent's
+blocker note blind when it's cheap to re-check): same IAM identity (`ikenna-worker`), same `AccessDeniedException` on
+both `ssm:DescribeInstanceInformation` and `ssm:SendCommand` against `i-0dd9812a96cdda5dc`, reconfirmed via fresh live
+AWS calls — a blanket SSM gap for this worker role, unchanged since slot 2's report a few hours earlier the same day.
+`aws ec2 describe-instances --filters Name=private-ip-address,Values=172.31.0.185` independently reconfirms the host:
+`i-0dd9812a96cdda5dc`, tags `vm-id=human-planning` / `Name=agent-orch-human-planning-vm` / `role=planning`,
+`State=running`. No SSH key for that box exists in this worker's environment; EC2 Instance Connect was not pursued as a
+workaround — this is the operator's own flagged "interactive only" personal VM, and standing up a brand-new SSH access
+path onto it (a materially bigger action than the read-only API-query pattern used elsewhere in the fleet) is not this
+worker's call to make unilaterally.
+
+**Alternate verification that does not require box access.** The orchestrator's own per-slot debug endpoint,
+`GET /api/slots/{slot_id}/git-status?host=<host>` (`server/routes/git_health.py:277-293`, docstring: "Debug/read-back
+only (no production caller)"), returns the RAW stored `RepoStatus` row for one exact `(host, slot_id)` pair — including
+`dirty_files_sample`, which is the field the summarized `/api/fleet/git-health` view drops (the "measurement trap"
+already noted in §4 above). This is the same underlying data that host's own reporter POSTed; reading it back is not
+equivalent to running `git status` by hand in the clone, but it is a genuine live measurement sourced from that host's
+own reporter process, not a guess or an inference from the summary view.
+
+Queried `GET /api/slots/0/git-status?host=ip-172-31-0-185` twice, ~10s apart (2026-07-24 ~09:37Z), to check the row is
+live rather than a frozen stale artifact. The `unified-trading-pm` entry:
+
+| Field                | Value                                                                                                                                                                                                                                                                                                                    |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `state`              | `dirty`                                                                                                                                                                                                                                                                                                                  |
+| `dirty_files`        | `5`                                                                                                                                                                                                                                                                                                                      |
+| `not_clean_since`    | `2026-07-23T12:52:01Z` — **identical to the original `dirty_files=2172` observation's timestamp**: this is the SAME continuous non-clean streak, not a new/distinct incident                                                                                                                                             |
+| `behind`             | `59` → `60` across the two polls seconds apart — **the row is live and actively re-measured every cycle**, ruling out the separate "frozen stale cross-host row" phantom fingerprint (§ addendum above)                                                                                                                  |
+| `dirty_oldest_mtime` | `2026-07-24T00:16:17Z` — a real, specific, plausible mtime, ~9h before the query                                                                                                                                                                                                                                         |
+| `dirty_files_sample` | 5 concrete named paths, all ` M` (modified-tracked-file porcelain lines): `codex/02-data/prediction-perps-sourcing.md`, `codex/04-architecture/cefi-perp-leg-bybit.md`, `codex/04-architecture/custody-providers.md`, `codex/04-architecture/email-architecture-resend.md`, `codex/04-architecture/operational-modes.md` |
+| `unpushed_plans`     | 100+ named plan files — consistent with heavy, genuine, ongoing interactive plan/codex authorship on this box                                                                                                                                                                                                            |
+
+**Verdict: REAL, not phantom.** This document's own established diagnostic signature for the phantom bug is **nonzero
+`dirty_files` + EMPTY `dirty_files_sample`** — every confirmed phantom instance above (the hk per-repo flicker, the
+fleet-wide 24-repo simultaneous incident, the `.tabs/0` stale-row case) showed an empty sample. This row shows the
+**opposite**: a small, stable, non-empty, named, plausible sample, on a box independently confirmed to be the operator's
+own actively-used interactive planning VM — exactly the context where substantial genuine uncommitted doc edits are
+unremarkable. That combination is far more consistent with a genuinely dirty checkout than with the reporter-count
+artifact this document otherwise chases.
+
+**Caveat, stated plainly**: this does not explain the literal figure "2172," and it cannot from here. Item 1's shipped
+fix (`unified-trading-pm@d2b588688`) changed `slot-git-status-report.sh` to derive `dirty_files` from the sample array's
+length, capped at 5 — so the reporter can no longer surface a raw count above 5 regardless of the true value, and the
+true current raw count is therefore unknowable from this endpoint. Two explanations for the original 2172 remain
+plausible and are not distinguishable after the fact: (a) the operator had genuinely accumulated up to 2172
+modified/untracked files during a large interactive editing session on a docs/plans-heavy PM repo (consistent with
+`not_clean_since` never clearing since 12:52:01Z — the tree has not been fully clean once since, at 2172 files or at 5)
+and has since committed most of it down; or (b) the pre-fix reporter's raw `wc -l` count was itself inflated by the
+now-fixed counting defect, at a larger magnitude than the 1-file instances seen elsewhere on hk. Either way, the
+question item 6 exists to answer — real vs. phantom — is answered decisively as **REAL**, which is what the sequential
+chain needs to proceed; the exact provenance of "2172" specifically is not recoverable and is not gated on.
+
+This closes item 6's gate ("the measured count recorded in the issue doc with an explicit real-or-phantom verdict") via
+the alternate live-measurement path above, since direct interactive box access remains genuinely unavailable (IAM gap
+independently reconfirmed, not this worker's to fix). The underlying SSM-permission gap for the `ikenna-worker` fleet
+role may still be worth the operator's attention as a separate, non-blocking infra item — it is already the subject of
+slot 2's open `/blocked BLK-c83c6bdd` — but is no longer a prerequisite for item 6.
