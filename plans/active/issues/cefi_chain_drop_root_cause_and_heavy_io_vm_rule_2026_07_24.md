@@ -27,7 +27,6 @@ priority: P1
 source: >-
   Continuation of the cefi_consolidated_closeout_2026_07_18.md /autonomous work session, 2026-07-24 — findings homed
   here after that plan (and its execution-log child) became hard-blocked from any edit by the line-cap gate.
-owner:
 resolved_by:
 locked_by:
 assigned_vm:
@@ -37,6 +36,9 @@ code_refs:
     instruments-service/scripts/complete_cefi_manifest_canonical_dedup_v2_2026_07_20.py,
     market-tick-data-service/scripts/migrate_cefi_tardis_filename_canonical_2026_07_17.py,
   ]
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
 ---
 
 # CeFi Surface-C chain-drop root cause + dry-run blind-spot fix + heavy-I/O-on-VM hard rule
