@@ -110,38 +110,113 @@ data_types) explains both findings at once.
 
 ## Todos
 
-- [x] ✅ [DIAG] P1. For each of ODDS_API/PINNACLE/BETFAIR, determine whether ANY capture code path exists for
+- [x] [DIAG] P1. For each of ODDS_API/PINNACLE/BETFAIR, determine whether ANY capture code path exists for
       `markets`/`outcomes`/`settlements`/`arbitrage_opportunity` (repo: instruments-service, market-tick-data-service).
       **Done when**: a written conclusion states, per venue and data_type, whether a capture path exists and if so
-      whether it is currently scheduled/enabled. — **RESOLVED (2026-07-24, slot 12): root cause is (1), stale
-      declaration — no capture code exists for any of the 12 (venue, data_type) tuples.** | Venue | data_type | Verdict
-      | |---|---|---| | ODDS_API | markets/outcomes/settlements/arbitrage_opportunity | NO capture code, ever — UAC
-      `venue_adapter_keys.py:195` `"ODDS_API": NO_ADAPTER_YET`; MTDS's only sports write path
-      (`venue_fetch.py::_process_sports_venue_with_leagues`) hardcodes `data_type=TRADES`, structurally cannot emit
-      these 4 | | PINNACLE | markets/outcomes/settlements/arbitrage_opportunity | NO capture code, ever — no dedicated
-      Pinnacle adapter anywhere (Pinnacle is one bookmaker string inside ODDS_API's fan-out,
+      whether it is currently scheduled/enabled. — **RESOLVED, corroborated by TWO independent investigations (slot 12
+      then slot 5, 2026-07-24): root cause is (1), stale declaration — no capture code exists for any of the 12 (venue,
+      data_type) tuples.** | Venue | data_type | Verdict | |---|---|---| | ODDS_API |
+      markets/outcomes/settlements/arbitrage_opportunity | NO capture code, ever — UAC `venue_adapter_keys.py:195`
+      `"ODDS_API": NO_ADAPTER_YET`; MTDS's only sports write path (`venue_fetch.py::_process_sports_venue_with_leagues`)
+      hardcodes `data_type=TRADES`; the manifest-facing adapter (`odds_api_adapter.py:761`) only ever stamps
+      `data_type="ODDS"` — structurally cannot emit these 4 | | PINNACLE |
+      markets/outcomes/settlements/arbitrage_opportunity | NO capture code, ever — **no dedicated Pinnacle adapter file
+      exists anywhere in market-tick-data-service** (Pinnacle is one bookmaker string inside ODDS_API's fan-out,
       `REQUESTED_ODDS_API_BOOKMAKERS`); UAC doesn't even declare `arbitrage_opportunity` for PINNACLE | | BETFAIR |
       markets/outcomes/settlements/arbitrage_opportunity | NO writer ever stamps these — a real
       `BetfairReferenceDataAdapter` (instruments-service) exists but is `BLOCKED-CREDENTIALS`, zero prod rows ever, and
       even if unblocked produces instrument-catalogue data (`InstrumentRecord`s), not a `data_type=` manifest stamp for
-      these 4 | Full evidence chain (adapter registries, the hardcoded `TRADES` write path, git history showing a real
+      these 4; `venue_fetch.py:85`'s `_VENUE_TO_DATA_SOURCE` doesn't recognize bare `BETFAIR` at all — real Betfair
+      capture happens under sub-venue names `BETFAIR_SB_UK`/`BETFAIR_EX_UK`/`BETFAIR_EX_EU`, none of which are declared
+      either | Full evidence chain: adapter registries, the hardcoded `TRADES` write path, git history showing a real
       Pinnacle/OddsApi adapter existed 2026-03-27→2026-04-11 and was deleted as dead code with no
       `get_outcomes`/`get_settlements`/`get_arbitrage` method ever written even then, the disconnected
-      `configs/venue_data_types.yaml` aspirational declaration with zero runtime readers, and the matching MDPS-side
-      "declared but never scheduled" pattern in `sports_mdps_derived_odds_products_zero_prod_objects_2026_07_23.md`) is
-      preserved in this session's sub-agent transcript; a fresh investigator re-deriving this should start from
-      `unified-api-contracts/unified_api_contracts/registry/venue_adapter_keys.py:189-201` (`NO_ADAPTER_YET` for
-      ODDS_API/PINNACLE) and `market-tick-data-service/.../venue_fetch.py::_process_sports_venue_with_leagues`
-      (hardcoded `data_type=TRADES`). **Recommendation for the DECISION todo below**: retire the
-      `markets`/`outcomes`/`settlements`/`arbitrage_opportunity` capability declarations for these 3 venues from UAC's
-      `VENUE_DATA_TYPE_CAPABILITIES` (and reconcile MTDS's matching `venue_data_types.yaml` entries) rather than build
-      12 tuples of net-new capture code speculatively — pending operator sign-off (retiring changes the sports coverage
-      denominator).
-- [ ] [DECISION] P1. Based on the above, decide: implement + schedule real capture for these 12 (venue, data_type)
+      `configs/venue_data_types.yaml` aspirational declaration with zero runtime readers, a SECOND authoritative
+      registry (`expected_coverage.py`'s `_SPORTS` table) that never declared these 4 data_types either, the UAC
+      capability entries' own git provenance (`unified-api-contracts@7511207a`, a broad mechanical cross-asset-group
+      registry sweep with zero corresponding adapter changes), and the matching MDPS-side "declared but never scheduled"
+      pattern in `sports_mdps_derived_odds_products_zero_prod_objects_2026_07_23.md`. Start points for a fresh
+      re-derivation: `unified-api-contracts/unified_api_contracts/registry/venue_adapter_keys.py:189-201`
+      (`NO_ADAPTER_YET` for ODDS_API/PINNACLE),
+      `market-tick-data-service/.../venue_fetch.py::_process_sports_venue_with_leagues` (hardcoded `data_type=TRADES`),
+      and `unified_api_contracts/registry/expected_coverage.py:458-466` (`_SPORTS`).
+- [x] [DECISION] P1. Based on the above, decide: implement + schedule real capture for these 12 (venue, data_type)
       tuples, or retire the capability declaration (operator sign-off required — changes the sports coverage
-      denominator). **Done when**: an explicit decision is recorded with rationale.
-- [ ] [CODE] P2. Execute the decided fix — either wire up + schedule real capture, or remove/adjust
+      denominator). **Done when**: an explicit decision is recorded with rationale. ✅ — recommendation recorded below;
+      operator sign-off requested via /blocked (slot 5, 2026-07-24).
+- [ ] [CODE] P2. Execute the decided fix — either wire up + schedule real capture, or retire/adjust
       `VENUE_DATA_TYPE_CAPABILITIES` for these tuples (repo: unified-api-contracts and/or instruments-service /
       market-tick-data-service depending on the decision). **Done when**: the expected-universe golden regression
       (`tests/unit/scripts/goldens/expected_universe/sports.json`) is updated to match the new reality and the
-      honest-coverage denominator reflects it.
+      honest-coverage denominator reflects it. **Gated on operator sign-off of the recommended decision below.**
+
+### DIAG findings (2026-07-24, slot 5) — corroborating a second, independent investigation
+
+Followed up on slot 12's open question — grepped both repos specifically for `markets`/`outcomes`/`settlements`/
+`arbitrage_opportunity` as `data_type=`/`DataType.` enum-member usages (not JSON-key usages). **No real capture code
+path exists for any of the 12 tuples** — this settles root cause 1 (stale/never-implemented declaration), not root cause
+2 (built-but-unscheduled):
+
+- **Adapters only ever stamp `data_type="ODDS"`.** Confirmed: `odds_api_adapter.py:761` and the Betfair adapter's
+  equivalent write site are the ONLY manifest `record_captured(data_type=...)` calls in either repo for these venues.
+  The `markets`/`outcomes` string hits are exclusively raw-API-response JSON keys (`market.outcomes`, `bm.markets`),
+  never a `data_type=` literal — settling slot 12's open question directly.
+- **No PINNACLE adapter file exists anywhere in market-tick-data-service** (`find -iname '*pinnacle*'` empty). Confirms
+  slot 12's suspicion: PINNACLE is not a separate venue integration, just a bookmaker key nested inside ODDS_API's
+  response — so a standalone `"PINNACLE"` capability entry is itself part of the stale declaration.
+- **Venue dispatch tables don't recognize bare `BETFAIR`/`PINNACLE`.** `venue_fetch.py:85` (`_VENUE_TO_DATA_SOURCE`) has
+  only `"ODDS_API": "odds_api"`; real Betfair capture happens under sub-venue names
+  `BETFAIR_SB_UK`/`BETFAIR_EX_UK`/`BETFAIR_EX_EU`, which `VENUE_DATA_TYPE_CAPABILITIES` doesn't declare either.
+  `settlements`/`arbitrage_opportunity` have zero adapter methods, zero dispatch wiring, zero CLI operations anywhere in
+  either repo.
+- **A second, authoritative registry already disagrees with `VENUE_DATA_TYPE_CAPABILITIES` and excludes these 4
+  data_types.** `unified_api_contracts/registry/expected_coverage.py:458-466` (`_SPORTS`, feeds
+  `EXPECTED_COVERAGE_BY_ASSET_GROUP`) declares only `ODDS_API: ["ODDS"]`, `PINNACLE: ["trades"]`,
+  `BETFAIR_SB_UK/EX_UK/EX_EU: ["trades"]` — none of the 4 data_types in question. `VENUE_DATA_TYPE_CAPABILITIES` is a
+  separate, broader table that `expected_universe.py`'s `_expected_sports()` reads from directly (bypassing
+  `expected_coverage.py`), which is exactly why this gap wasn't caught by the other registry.
+- **Git provenance confirms mechanical, non-deliberate origin.** `markets`/`outcomes`/`settlements` for all 3 venues
+  were added in `unified-api-contracts@7511207a` (2026-05-23, `semver-rollout[bot]`, "canonicalize DeFi/prediction/
+  tradfi data type names + add missing types") — a broad cross-asset-group registry sweep with generic placeholder
+  comments ("Market metadata", "Outcome results", "Settlement records — pass-through") and zero corresponding
+  adapter/CLI changes in the same commit. `arbitrage_opportunity` for ODDS_API predates that (`@1a05a8724`, 2026-04-12,
+  "add league fixture calendar and prediction league ID helpers") — also unrelated to any adapter work.
+- **Not a silent-empty-dispatch bug**: when an adapter is called for an unsupported data_type it raises
+  `NotImplementedError`, which `orchestrator/__init__.py:875-880` explicitly treats as "a capability signal, not a
+  failure" — never becomes `attempted_failed`. Consistent with zero manifest rows AND zero error rows, i.e. these
+  capture paths are never invoked at all, not invoked-and-failing.
+
+### DECISION (recommended, pending operator sign-off — 2026-07-24, slot 5)
+
+**Recommendation: retire the capability declaration** — remove the `markets`/`outcomes`/`settlements`/
+`arbitrage_opportunity` entries for ODDS_API/PINNACLE/BETFAIR from `VENUE_DATA_TYPE_CAPABILITIES`
+(`unified-api-contracts/unified_api_contracts/registry/market_data_categories.py`) rather than building real capture.
+
+**Rationale**:
+
+1. This is a stale/mechanical declaration (DIAG finding above), not a deliberately-built-then-abandoned feature — there
+   is no adapter code, no CLI path, no dispatch wiring, and (for PINNACLE) no adapter file at all to "re-enable."
+   Implementing real capture from scratch means net-new PINNACLE adapter work, new markets/results/ settlement endpoint
+   integrations on 3 venues, and — for `arbitrage_opportunity` specifically — building a cross-bookmaker
+   margin-comparison engine that doesn't exist anywhere in the codebase today (`brand-new` estimate class, likely
+   multi-day, not a P2-sized fix).
+2. `expected_coverage.py`'s `_SPORTS` table — the OTHER, arguably more-authoritative expected-coverage registry — was
+   never updated to include these tuples, meaning even the workspace's own registries disagree about whether this
+   capability is real. Retiring `VENUE_DATA_TYPE_CAPABILITIES` brings the two registries back into agreement rather than
+   requiring `expected_coverage.py` to be extended to match a declaration nothing implements.
+3. This directly parallels the sibling MDPS finding
+   (`sports_mdps_derived_odds_products_zero_prod_objects_2026_07_23.md`, RESOLVED) — `odds_movement`/`odds_snapshot`/
+   `arbitrage_opportunity` candle adapters were registered but never scheduled, root-caused as dead/aspirational
+   registration rather than a live bug. Same pattern here, one layer up the stack (raw capture vs. derived candles).
+4. Retiring is the lower-risk fix: it makes the honest-coverage denominator match the system's actual current
+   capabilities immediately, with no new capture surface to build, test, and operate. If real sports markets/outcomes/
+   settlements/arbitrage products become a genuine product priority later, that is a fresh, deliberately-scoped
+   `brand-new` feature effort (new plan), not a "restore what was there" fix — because nothing usable was ever there.
+5. Confidence is high: slot 12 and slot 5 investigated independently (different starting points —
+   `venue_adapter_keys.py` +git-history vs. `expected_coverage.py`+`data_type=` literal grep) and converged on the
+   identical root cause and the identical retire recommendation.
+
+**Why sign-off is still required before execution** (per this issue's own todo 2 note): retiring shrinks the sports
+honest-coverage denominator, which changes what "100% coverage" reports for sports going forward — an operator-visible
+metric change, not a pure implementation detail. Posted as a `/blocked` question (slot 5, 2026-07-24) requesting
+confirmation to proceed with retirement; todo 3 (CODE) is gated on that answer.
