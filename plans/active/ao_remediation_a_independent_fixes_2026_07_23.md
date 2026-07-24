@@ -71,13 +71,19 @@ source:
       EVERY polled message regardless of `from_role`, and the interim mitigation was done ad hoc in one live session and
       never written down. **Gate**: the diff lands and the next live cross-role exchange shows a `to_agent` message in
       the recipient's poll.
-- [ ] [BACKEND] P2. Repoint or remove the five dead documentation references in `agent-orchestrator/server/` that point
-      at files deleted by `agent-orchestrator@19766e7`. The targets are `docs/AUDIT_FINDINGS_2026_05_18.md`,
+- [x] ✅ [BACKEND] P2. Repoint or remove the five dead documentation references in `agent-orchestrator/server/` that
+      point at files deleted by `agent-orchestrator@19766e7`. The targets are `docs/AUDIT_FINDINGS_2026_05_18.md`,
       `docs/PLAN.md` and `docs/MAIN_AGENT_CUTOVER_REVIEW.md`, all confirmed absent, cited from `bootstrap.py`,
       `models/__init__.py`, `db.py`, `orm.py` and `routes/slots_worker.py`. Point each at the surviving SSOT or delete
       the dangling clause if the docstring stands alone — do NOT resurrect the deleted files. **Gate**:
       `rg -n 'AUDIT_FINDINGS_2026_05_18|docs/PLAN\.md|MAIN_AGENT_CUTOVER_REVIEW' agent-orchestrator/server/` returns
-      zero hits and every replacement pointer resolves to a file that exists.
+      zero hits and every replacement pointer resolves to a file that exists. — `agent-orchestrator@3672522`:
+      `bootstrap.py` now points at `unified-trading-pm/agents/RULES.md` § "Backlog-edit hygiene" (slot-affinity routing
+      levels); `db.py`'s dangling `docs/PLAN.md § Concurrency Model` clause removed (the docstring stands alone);
+      `orm.py` repointed to `docs/SLOTS_AGENTS_AND_FLEET.md`; `models/__init__.py` repointed to
+      `dashboard/API_REFERENCE.md`; `routes/slots_worker.py`'s dangling `docs/AUDIT_FINDINGS_2026_05_18.md` clause
+      removed (`server/verify.py`, the surviving pointer, documents the M2/M3/M5/M8 cluster inline). Gate command
+      returns zero hits; `quality-gates.sh` green (1586 passed, 0 lint/type errors).
 - [ ] [DOCS] P3. Replace `agent-orchestrator/README.md`'s "Files in This Directory" tree with a pointer, and fix its two
       inline `agents/*.md` links. The tree still lists an `agents/` directory and seven files under it that no longer
       exist — the directory was removed in `agent-orchestrator@5eaea29` and role prompts now live in
@@ -118,3 +124,4 @@ source:
   (split for parallelism) + Q2 (hold the 2 safety-sensitive backend todos). Born `status: active`,
   `assigned_vm: planning` — dispatchable to the AO fleet. The parent plan is retained as the holding/index doc for the 6
   non-dispatched items.
+- **2026-07-24**: [BACKEND] P2 todo (dead docs refs in `server/`) shipped — `agent-orchestrator@3672522`.
