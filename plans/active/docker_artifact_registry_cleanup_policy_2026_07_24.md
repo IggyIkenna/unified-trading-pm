@@ -136,7 +136,7 @@ explicit per-SHA key accumulation, not GCS object-version buildup.
   - to stop the growth, not for cost.
 - **Different mechanism** — it is a GCS bucket, so the fix is a **GCS lifecycle rule** (age-based delete of old `@sha`
   copies), governed by
-  [/codex/05-infrastructure/gcs-and-manifest-delete-safety-protocol.md](/codex/05-infrastructure/gcs-and-manifest-delete-safety-protocol.md)
+  [/codex/02-data/gcs-and-manifest-delete-safety-protocol.md](/codex/02-data/gcs-and-manifest-delete-safety-protocol.md)
   (human-gated prod delete), NOT an AR cleanup policy.
 - **What must survive** — the current-pointer `<repo>-code.tar.gz` per repo (that is what a VM downloads by
   `VM_SERVICE`) and any `@sha` tarball a live VM / launcher / deployment-registry JSON still references. Same
@@ -225,7 +225,7 @@ human-only.
 
 - [ ] 8. [OPERATOR] P2. Flip `unified-trading-system`'s policy live — human-only, permanent, no AR soft-delete/undelete;
       same human-gate discipline as
-      [/codex/05-infrastructure/gcs-and-manifest-delete-safety-protocol.md](/codex/05-infrastructure/gcs-and-manifest-delete-safety-protocol.md).
+      [/codex/02-data/gcs-and-manifest-delete-safety-protocol.md](/codex/02-data/gcs-and-manifest-delete-safety-protocol.md).
       Done-when: `gcloud artifacts repositories describe unified-trading-system --format="yaml(cleanupPolicies)"` shows
       the live policy.
 - [ ] 9. [INFRA] P2. Re-run the storage audit at T+2 days (cleanup runs as a ~daily background job) and confirm the
@@ -304,7 +304,7 @@ Review of the original "keep-5 + delete-older-than-3d" proposal. All are address
   image-only prod deploys + "all prod VMs on pinned image SHA" gate.
 - [/codex/04-architecture/artifact-versioning.md](/codex/04-architecture/artifact-versioning.md) — "permanent retention
   for replay" applies to DATA/model artifacts, NOT Docker images; the new stub must not conflict.
-- [/codex/05-infrastructure/gcs-and-manifest-delete-safety-protocol.md](/codex/05-infrastructure/gcs-and-manifest-delete-safety-protocol.md)
+- [/codex/02-data/gcs-and-manifest-delete-safety-protocol.md](/codex/02-data/gcs-and-manifest-delete-safety-protocol.md)
   — human-gated-delete discipline the AR image deletes follow.
 - **To create (todo 14):** `/codex/05-infrastructure/artifact-registry-cleanup-policy.md`.
 

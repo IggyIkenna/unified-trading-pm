@@ -74,12 +74,10 @@ single option click does NOT call `onAnswer`, only the Submit action does).
 
 ## Open todos
 
-- [ ] [UI] P0. Change `BlockedCard` (`agent-orchestrator/dashboard/src/layout.tsx`) so option-button clicks only set a
-      `selectedOption` (or equivalent) state and visually mark the selected option, and add an explicit Submit control
-      that calls `onAnswer`/`submit()` with the currently-selected option. Add a `dashboard/src/layout.test.ts` case
-      that fails against the current code (clicking an option alone must NOT invoke the `onAnswer` callback) and passes
-      once the fix lands (clicking an option then Submit invokes it exactly once with the selected option). **Gate**:
-      the new test demonstrably fails on the pre-fix code and passes post-fix; `npm run build`/`tsc` clean.
+**ACKED-INTO-PLAN 2026-07-24**: the live, actionable todo for this finding is Phase 7 of
+[`ao_open_issues_consolidated_close_out_2026_07_17`](../ao_open_issues_consolidated_close_out_2026_07_17.md#phase-7--operator-reported-dashboard-bug-2026-07-24)
+(per direct operator instruction to track this in an active plan, not a standalone issue doc). This doc stays open as
+the finding write-up; do not duplicate a second open todo here — track completion against the plan.
 
 ## Progress Log
 
