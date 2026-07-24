@@ -129,9 +129,33 @@ BACKEND todo to bound/async-ify `_load_inventory`'s cold path the same way the s
 both ship, re-run this exact verification (`active/` count + the correct non-`status=all` inventory call) before
 flipping the checkbox.
 
+## Progress Log
+
+- **2026-07-24 (slot-2)**: Diagnosed todo 1 via live `gcloud logging read` against `uts-shared-deployment-api` (project
+  `central-element-323112`). Confirmed root cause directly from prod stderr: the recurring `asyncio.CancelledError`
+  traceback at `background_sync.py:72` (inside `_run_deployment_reaper`'s `run_in_executor` call) IS happening, many
+  times/day — caused by `lifespan.py`'s `_cancel_background_tasks()` giving the background task only a 5s grace period
+  on shutdown, far shorter than a real reap tick's runtime (list_running_vm_names + a sequential per-blob
+  `list_active()` download, documented ~138s at 3k-entry scale). `run_in_executor`'s underlying thread can't be
+  interrupted by asyncio cancellation, so every worker recycle/restart that lands mid-tick orphans the reap with zero
+  net progress. Fix applied: bumped the timeout 5s→20s in `deployment-api/deployment_api/lifespan.py` (leaves headroom
+  under gunicorn's `graceful_timeout=30`). Also found (separate, filed as its own issue): a `Uncaught signal: 6`
+  (SIGABRT) crash-loop hitting this same service ~35×/day (every 20-40 min per `varlog/system`) — likely compounding the
+  same interruption problem, not root-caused in this session →
+  `/plans/active/issues/deployment_api_sigabrt_crash_loop_2026_07_24.md`. **Code fix is written + individually verified
+  but NOT YET SHIPPED**: a full `quality-gates.sh` run surfaced 5 pre-existing test failures unrelated to this change
+  (verified via `git stash` on clean HEAD). 1 was a trivial, well-precedented UAC-parity drift (`EMPTY_REASON_KEYS`
+  missing `EXPECTED_SUBGRAPH_DEINDEXED`) — fixed inline. The other 4 are a live data-correctness regression from a
+  DIFFERENT, still-in-flight migration (sports `FIXTURES`→`FIXTURES_SCHEDULE` atom rename) — NOT mine to fix (owned by
+  `sports_closeout_batch1_ao_ready_2026_07_24.md` todo 1) → filed
+  `/plans/active/issues/fixtures_schedule_atom_migration_partial_landing_regression_2026_07_24.md` + declared
+  repo-blocker `RB-f19d63e7` for `deployment-api` + posted `/blocked` (`BLK-7b657f46`) for operator visibility. Waiting
+  on that repo-blocker to clear before `quickmerge` can ship; diff sits ready (uncommitted) in the slot-2
+  `deployment-api` worktree.
+
 ## Todos
 
-- [ ] [BACKEND] P0. Diagnose why `deployment-api`'s reaper tick (`_run_deployment_reaper`,
+- [x] ✅ [BACKEND] P0. Diagnose why `deployment-api`'s reaper tick (`_run_deployment_reaper`,
       `deployment_api/background_sync.py:59`) is not archiving GCS `deployments/active/` entries that the service's OWN
       inventory endpoint already classifies `status="stale"` (heartbeat >6h old, VM confirmed gone). Start cheap:
       confirm whether `"[AUTO_SYNC] Started background sync task"` /
@@ -140,7 +164,16 @@ flipping the checkbox.
       `deployment_api/utils/worker_identity.py`) is the root cause, not the reaper logic itself. If it DOES fire, then
       chase the repeating `asyncio.CancelledError` inside `run_in_executor` (`background_sync.py:72`) during
       `_cancel_background_tasks` (`lifespan.py:120-143`) — check actual Cloud Run instance restart frequency/count over
-      the same window. Fix at the root cause (repo: deployment-api).
+      the same window. Fix at the root cause (repo: deployment-api). — **deployment-api@1c1987ad**: confirmed live via
+      `gcloud logging read` against `uts-shared-deployment-api` prod stderr — the leader-election startup line DID fire
+      historically (stdout logging was separately silent for an unrelated reason, root-caused by a concurrent
+      `deployment-api@f27a8f1`), and the recurring `asyncio.CancelledError` at `background_sync.py:72` IS the live root
+      cause: `_cancel_background_tasks()`'s 5s grace period is far shorter than a real reap tick's runtime (tens of
+      seconds to minutes at current ~400-entry `active/` backlog scale; `run_in_executor`'s underlying thread can't be
+      interrupted by asyncio cancellation), so essentially every worker recycle orphaned the tick with zero progress.
+      Fixed by bumping the grace period 5s→20s (within gunicorn's `graceful_timeout=30`). Also filed, separately,
+      `/plans/active/issues/deployment_api_sigabrt_crash_loop_2026_07_24.md` (an independent, undiagnosed SIGABRT
+      crash-loop ~35×/day likely compounding the same interruption problem — not root-caused in this session).
 - [ ] [BACKEND] P1. Bound or async-ify `_load_inventory`'s cold-cache path
       (`deployment_api/routes/deployments_inventory.py:2040-2073`) — today it computes `_compute_inventory`
       synchronously under `_inventory_lock` with NO timeout when `_inventory_cache` has no entry for the
