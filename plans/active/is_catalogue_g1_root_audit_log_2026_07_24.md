@@ -372,3 +372,10 @@ migration) · cefi/tradfi/prediction reference surfaces — all sub-items of
 `instruments_manifest_canonicalisation_2026_06_01` (the per-service all-AG plan) + each AG's
 `*_manifest_canonicalisation` §H slice. **G2 (an AG's MTDS/data walk) must NOT be trusted as denominator-complete until
 that AG's G1 (IS catalogue + UAC) is GREEN** — the audit's ⑧ enforces this.
+
+## Deferred work — migrated to:
+
+- G1.run-prediction (per-conditionId grain BLOCKED-OPERATOR-DECISION): migrated to `predictions_master` Phase 3 (cqg
+  could-exist decision).
+- G1.run-full-history (extend bounded-window seed to full 2018→today): N/A — no migration, named successor is this same
+  item (gated on operator review of the 190M index-size blow-up), still owned + open in this plan.

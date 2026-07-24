@@ -1036,3 +1036,9 @@ full-sweep `--entity` flag (deployment-service@4caeaf3) for fixtures-first phasi
 operator upgrading to 1.5M/day; per-minute 1.2k is the binding constraint — no agent can exceed the API ceiling, but 2
 VMs use it FULLY without thrash). Odds backfill (7 VMs, separate ODDS-API key, no contention) + live (footystats +
 scheduler) continue. Background monitor armed: fixtures-complete → auto-launch enrichment.
+
+## Deferred work — migrated to:
+
+- Stale `features_sports_service`-tarball class bug (2 other launchers, line ~709): N/A — no migration. Already fixed +
+  shipped within this plan (deployment-service@5075a3e + e2e-testing@fbcdc45, QG green); "DEFERRED" in the item text
+  describes the discovery, not an open gap.

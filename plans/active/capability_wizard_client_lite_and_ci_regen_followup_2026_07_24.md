@@ -111,6 +111,12 @@ lost, per the same DEFERRED item carried forward verbatim below.
 one's `parent_epic`, since the internal wizard (Phases 0-6 + Wave-2) is now fully hardened and this was the explicit
 precondition named by the parent plan.
 
+## Deferred work — migrated to:
+
+- P3 (client-lite wizard mode, use case 4): N/A — no migration. This plan IS the named successor/owner-of-record for the
+  item (see "Context" above); it stays open here until the internal wizard precondition is met and the build sub-plan is
+  authored under this plan's `parent_epic`.
+
 ## Out of scope (inherited from the parent, unchanged)
 
 - Replacing the public strategy questionnaire — it stays as demand capture; the wizard supersedes it only for

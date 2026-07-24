@@ -439,3 +439,9 @@ Sandbox-only caveat (NOT a fleet bug — do not chase): repeated worker-session 
 sharing the laptop's `~/.claude/.credentials.json` across concurrent claude sessions (refresh-token rotation conflict)
 because no setup-token exists on this host — exactly the failure mode CLAUDE.md § "accounts auth via setup-tokens only"
 bans. Fleet VMs (setup-token env files) are unaffected.
+
+## Deferred work — migrated to:
+
+- Live-spawn verification (DEFERRED-BY-HEADROOM, line ~337): N/A — no migration. Not a gap in the fix (code + unit tests
+  shipped); live observation is expected to surface naturally on the next real dispatch once any account has headroom
+  (`skips={'queue_satisfied': N}` in the tick log is the confirming signal).

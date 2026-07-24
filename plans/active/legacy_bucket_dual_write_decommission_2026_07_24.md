@@ -185,3 +185,12 @@ drift_direction: advance-code
 HashiCorp-registry version — the local `tofu` runs swap it to the opentofu mirror, but that swap is a tool artifact
 (CI/`terraform` operators use the HashiCorp registry) and was reverted before commit. **(MIGRATED FROM:
 `bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+
+## Deferred work — migrated to:
+
+- Instruments-store env-LESS readers item (line ~62, MTDS orchestrator + `_instruments_metadata.py`): N/A — no
+  migration, still owned + open in this plan.
+- P2 (BQ `feature_external` external tables terraform fix): migrated to
+  `bigquery_feature_ml_compute_engine_option_2026_06_08.md` (named owning plan).
+- P3 (migrate-first/retire decision for unmanaged legacy prod resources): N/A — no migration, still owned + open in this
+  plan.

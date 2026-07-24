@@ -163,3 +163,8 @@ source: >-
 
 - 2026-07-24 — plan forked from `migration_verification_orphan_safety_2026_06_10.md` (line-cap remediation split); no
   further work done yet beyond what the parent's archived Progress Log already recorded.
+
+## Deferred work — migrated to:
+
+- P3 (re-stamp legacy schema_version tails): N/A — no migration, still owned + open in this plan. Deferred per operator
+  2026-06-22 pending the active backfill fleet finishing; trigger-to-resume condition documented inline.
