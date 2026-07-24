@@ -1,13 +1,15 @@
 ---
 doc_type: issue
 title:
-  strategy-service catalog/engine config-key contract has no validation — 6 of 9 checked DeFi archetypes cannot execute
-  a single real trade
+  strategy-service catalog/engine config-key contract has no validation — 14 archetypes workspace-wide cannot execute a
+  single real trade (DeFi, sports/ML-directional, market-making, vol-options)
 summary:
-  A mechanical pre-flight sweep (catalog-emitted config keys vs each engine's actual params.get/str_param reads) across
-  the "orphaned archetype" build found that most DeFi archetypes checked so far are functionally dead in every
-  environment today — three distinct bug classes (a crashing config-key mismatch, a silent config-key mismatch, and an
-  intentionally-stubbed unbuilt dependency), none of which any test or gate catches.
+  A mechanical pre-flight sweep (catalog-emitted config keys vs each engine's actual params.get/str_param reads),
+  followed by a systemic parametrized guardrail test covering all 32 catalogued archetypes across both catalog surfaces,
+  found 14 archetypes total are functionally dead in every environment today — three distinct bug classes (a crashing
+  config-key mismatch, a silent config-key mismatch, and an intentionally-stubbed unbuilt dependency). 9 DeFi archetypes
+  were found and mostly fixed first; the guardrail test itself then found 5 more entirely outside DeFi
+  (sports/ML-directional, market-making, vol-options), correctly held as visible xfail rather than force-fixed.
 status: open
 nature: issue
 asset_group: defi
