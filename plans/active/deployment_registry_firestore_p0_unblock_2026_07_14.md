@@ -18,7 +18,7 @@ related:
   - /plans/active/deployment_registry_firestore_migration_2026_07_14.md
   - /codex/05-infrastructure/deployment-observability.md
 created: "2026-07-14"
-last_updated: "2026-07-14"
+last_updated: "2026-07-24"
 parent_epic: observability_master
 assigned_vm: NA
 execution_scope: local-only
@@ -155,7 +155,10 @@ entry). UTC datetimes only. `quality-gates.sh`-green before each commit; commit 
       the rebuild and from which ref (LDR vs `main` — the fix landed on LDR; if tarballs build from `main`, the promote
       must land first), then confirm the published tarball CONTAINS `unified_trading_library/deployment_registry.py`
       with `_mirror_firestore` and does NOT contain `deployment_service/deployments_registry.py`. Evidence: the tarball
-      object's build timestamp + a grep of its extracted contents.
+      object's build timestamp + a grep of its extracted contents. While in there, also confirm the tarball contains
+      `unified-trading-library@90170713`+ (D.1 `HOST_METRICS_WINDOW_KEY`, 2026-07-09) and `deployment-service@a6881d1`+
+      (`HostMetricsSampler()` wiring) — both predate the fork fix so any rebuild after 2026-07-09 should already carry
+      them, but confirm rather than assume; this is the other half of the Resources-column gap folded in below.
 - [ ] [INFRA] P1. **Link 2 — wire `DEPLOYMENT_REGISTRY_FIRESTORE_DUALWRITE` into the VM launch env.** Measured
       2026-07-17: **zero** launchers reference the flag. `_maybe_build_registry_store()` reads it off
       `UnifiedCloudConfig` (pydantic `AliasChoices` → process env), while launchers pass config via GCE metadata
@@ -194,14 +197,67 @@ entry). UTC datetimes only. `quality-gates.sh`-green before each commit; commit 
       makes links 3+4 fail silently and would make a parity diff of an empty collection look like a clean run. (FOLDED
       IN from deployment_registry_firestore_p1_dualwrite_2026_07_14, 2026-07-15, plan-reconcile §6 operator ruling)
 
+## Folded-in scope 2026-07-24 (inline Resources column never wired — discovered during AO-readiness review)
+
+> Answering "once this plan lands, will the UI show it?" surfaced a THIRD gap, independent of the Firestore migration
+> and independent of the four links above: the `/deployments` tab's inline **Resources** column
+> (`deployment-ui/src/pages/Deployments.tsx:764,785-797`, `ResourceCell` reading `item.cpu_pct`/`mem_pct`/ `disk_pct`)
+> has never been wired on the backend. Only the per-VM **detail popover** (`GET /deployments/{name}/detail` →
+> `DeploymentDetailResponse`,
+> [`deployments_inventory.py:2296-2303`](../../deployment-api/deployment_api/routes/deployments_inventory.py)) sets
+> these fields, from `entry.cpu_pct` etc. — the thin-list builder `_vm_item()`
+> ([`deployments_inventory.py:719`](../../deployment-api/deployment_api/routes/deployments_inventory.py)) has the SAME
+> `entry` in hand and never copies them into the `DeploymentItem` it returns; the model doesn't even declare the fields.
+> The frontend TS type already declares them with a comment flagging exactly this gap
+> (`deployment-ui/src/api/deploymentApi.ts:1071-1075`: "recommended backend addition (plan Progress Log 2026-07-09)" —
+> that recommendation was never converted into a todo until now). Deployment-ui's **mock mode** already populates this
+> column (`mock-api.ts:1285`), which is why casual/local testing never caught the gap — a green pw:L2 run against mock
+> data is NOT evidence this works against the real API.
+>
+> Net: completing Links 1–4 + `[VERIFY]` + `[DATA]` above makes VMs write host metrics into the registry (Firestore or
+> GCS) — it does NOT by itself populate this column. Both gaps have to close for the column to show real data
+> end-to-end, which is why this plan isn't "done" for the operator's actual question until both are.
+
+- [ ] [BACKEND] P2. Add `cpu_pct: float | None = None` / `mem_pct` / `mem_slope` / `disk_pct` fields to the
+      `DeploymentItem` model (`deployments_inventory.py:362`) — currently absent from the class entirely, not just unset
+      — then forward them from `entry.cpu_pct`/`entry.mem_pct`/`entry.mem_slope`/`entry.disk_pct` inside `_vm_item()`'s
+      `DeploymentItem(...)` construction (`deployments_inventory.py:762-801`), mirroring the four lines already correct
+      in the detail endpoint (lines 2296-2299). Deliberately do NOT add `host_metrics_window` to the list item — that
+      stays detail-only by existing design (keeps the ~200-target list payload small; see the docstring above
+      `DeploymentDetailResponse`). No frontend change needed — `Deployments.tsx`'s `ResourceCell` and the TS type
+      already expect these fields. Unit-test: a VM entry with `cpu_pct` set produces a `DeploymentItem` carrying the
+      same value (today it would silently drop it). Ship+flip.
+- [ ] [REVIEW] P2. Verify against the DEPLOYED API with REAL (non-mock) data — confirm the inline Resources column on
+      `/deployments` shows a real cpu/mem/disk% for at least one live VM whose registry entry carries D.1 metrics, not
+      just the mock fixture and not just the detail popover. If it still shows `—` for every live VM once the backend
+      fix above ships, the next suspect is whether `HostMetricsSampler` is actually running on the CURRENTLY DEPLOYED VM
+      tarball — check that alongside Link 1's own tarball-content grep (amended above) rather than opening a fourth
+      investigation from scratch.
+
 ## Success criteria
 
 - prod Deployments tab (deployed API) returns the live fleet within 45s; `active/` object count ≈ running-VM count.
 - SPOT-preempted backfill VMs archive themselves on SIGTERM (verified by test), so `active/` no longer accumulates
   ghosts between reaper ticks.
+- The `/deployments` inline Resources column shows real cpu/mem/disk% for at least one live VM — not mock data, not just
+  the detail popover.
 - No `os.getenv`; UTC datetimes; reaper never raises into the sync loop; QG green on both repos.
 
 ## Progress Log
+
+- **2026-07-24 (slot 3, .tabs/3 worktree — local execution)** — Operator asked, on live Firestore state (confirmed 0
+  docs, matching the 2026-07-17 measurement unchanged one week later): "once this plan is done, will the UI show it —
+  there's already a Resources column at `/deployments`." Traced the actual read path rather than assuming: the deploy
+  that was pending verification in the 2026-07-14 entries below HAS since landed (`uts-shared-deployment-api-00268-d2l`,
+  image `deployment-api:e476c73`, confirmed a descendant of `8660e9e` via `git merge-base --is-ancestor` — the
+  still-open `[REVIEW]` "verify the drain end-to-end" todo above is unblocked and can close with a fresh before/after
+  check whenever picked up). Separately, traced the "Resources" column itself and found it is **not gated on this plan
+  at all** — `Deployments.tsx`'s inline `ResourceCell` reads `item.cpu_pct`/`mem_pct`/`disk_pct` off the thin list, but
+  `_vm_item()` (the thin-list builder) never forwards those fields from the registry `entry` it already holds, and the
+  `DeploymentItem` model doesn't even declare them — only the detail-popover endpoint does. Folded in as new scope below
+  (2 todos + a Success-criteria bullet + a Link-1 amendment) so the plan is complete end-to-end against the operator's
+  actual question, not just against the original Firestore-scale framing. No code changed this session — plan/doc edit
+  only.
 
 - **2026-07-17 (slot 5, Opus — local execution)** — **Found and fixed the REAL dual-write blocker: a stale registry fork
   on the VM write path.** Prompted by the operator asking "are the VMs writing to Firestore now?", measured rather than
