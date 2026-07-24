@@ -295,34 +295,50 @@ Per the execute-phase instructions already in this issue's parent request:
    `check_line_caps.sh` must no longer list the touched file(s).
 6. Commit with `docs(plans):` prefix, one commit per plan or logical batch, never `git add -A`.
 
-**Execution status (2026-07-24): 21 of 30 DONE, 3 of the remaining 9 fixed, 6 + 1 outstanding.** Operator approved all
-30 rows via interactive Q&A on 2026-07-24; execution ran as two workflows (`wf_65688dca-5ac` then a targeted fix pass
-`wf_22001490-e9b`). Shipped: `unified-trading-pm@67e47f9b` (21 plans: 2 archived, 2 closed out whole, 5 split clean, 9
-split-after-unlock, 3 duplicate-file bugs fixed, 13 reference-path fixes, 6 invalid `assigned_role` values fixed, 1
-`.gitleaks.toml` false-positive allowlisted) + `unified-trading-pm@5a47210fe` (3 more:
-`cefi_consolidated_closeout_2026_07_18`, `github_actions_ci_cost_reduction_2026_07_15`,
-`data_pipeline_alerts_batch_remediation_2026_07_15` — all now well under the 1000L cap, verified clean).
+**Execution status (2026-07-24, updated): 21 of 30 DONE in the original batch, +5 more fixed in a wave-2 pass, +1 more
+(`defi_consolidated_closeout_2026_07_18.md`, `unified-trading-pm@f6ac7f5f0`) landed by a concurrent session — 10 of the
+original 30 remain HARD-flagged, see the table below.** Operator approved all 30 rows via interactive Q&A on 2026-07-24;
+execution ran across several workflow passes plus direct hand-verification. Shipped: `unified-trading-pm@67e47f9b` (21
+plans) + `unified-trading-pm@5a47210fe` (3 more) + `unified-trading-pm@240a0564e` (closed
+`master_to_live_defi_2026_05_23.md` whole — 0 open todos, archived, resolved a stale plans/active/ duplicate;
+regenerated 23 epic bodies + inventory) + `unified-trading-pm@1a3a267d2` (wave 2: fully resolved
+`data_pipeline_check_mdps_features_2026_07_20.md` (1299→669L) and `sports_legacy_bucket_cutover_2026_07_16.md`
+(2802→128L, all 45 of its own todos were already done, moved wholesale to archive-bound history); partially trimmed
+`citadel_paper_batch_live_reconciliation_2026_06_19.md` (2660→1143L, still ~150L over),
+`data_pipeline_hardening_self_monitoring_2026_06_22.md` (2545→1856L, still ~850L over),
+`data_status_page_ux_and_canonicalisation_2026_07_16.md` (2133→1971L, still ~30L over) — each extraction independently
+conservation-checked (every removed todo line traced to its matching child/history file, cross-referenced against
+origin's total todo count) before committing).
 
-## Deferred work after 2026-07-24
+**A second wave-2 fix-workflow (`whc9v11bw` / `wf_87a8f203-aa1`) was ALSO silently stopped mid-run with no completion
+record** (same failure class as the first one, `wf_22001490-e9b`, recorded below in Lessons carried forward) — its
+partial progress on the 5 files above was real and was recovered by direct measurement (line/todo counts, not the
+self-report), verified, and shipped. The other 8 of its 13 assigned files never started.
 
-| Item                                                                                                                                                                                                                                                                           | State              | Blocked on                                                                                                                                                                                                                                                                                                                      |
-| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `defi_consolidated_closeout_2026_07_18.md` still not trimmed (3385L, was supposed to shrink after `defi_strategy_pnl_axis_index_2026_07_24.md` + `defi_consolidated_closeout_history_2026_07_18.md` were extracted — children exist and are correct, parent was never trimmed) | Not done           | Nobody — pick up directly: diff parent vs the 2 children, remove the now-duplicated Strategy/PnL section + historical Progress Log + 75-finding audit narrative from the parent                                                                                                                                                 |
-| `data_pipeline_check_mdps_features_2026_07_20.md` partially trimmed (1299→1200L, not enough — child `candle_canonical_path_migration_execution_2026_07_24.md` is correct)                                                                                                      | Not done           | Nobody — the Option-A migration section (8-phase epic detail) is still sitting in the parent, remove it                                                                                                                                                                                                                         |
-| `data_status_page_ux_and_canonicalisation_2026_07_16.md` barely changed (2133→2078L)                                                                                                                                                                                           | Not done           | Nobody — per the original fix-job hint, most of this file's length is LEGITIMATE historical record that should stay; only the small duplicated P6-phase-2/P10-B slice needs removing, verify against `data_status_catalogue_true_source_phase2_2026_07_24.md` + `sports_fixtures_browser_single_catalogue_source_2026_07_24.md` |
-| `prediction_consolidated_closeout_2026_07_18.md` untouched (1486L)                                                                                                                                                                                                             | Not done           | Nobody — 4 children exist and are correct (`prediction_phase_{c,ab,d,e}_*_2026_07_24.md`), parent Progress Log + Phase A-E bodies need condensing/removing                                                                                                                                                                      |
-| `citadel_paper_batch_live_reconciliation_2026_06_19.md` untouched (2194L)                                                                                                                                                                                                      | Not done           | Nobody — child `crypto_alpha_research_2026_07_24.md` is correct, more alpha-research Progress Log content still duplicated in parent needs removing                                                                                                                                                                             |
-| `data_pipeline_hardening_self_monitoring_2026_06_22.md` untouched (2182L)                                                                                                                                                                                                      | Not done           | Nobody — 4 children exist and are correct, bulk historical Progress Log (~60% of file) still duplicated in parent needs removing                                                                                                                                                                                                |
-| `distinct_values_noncanonical_audit_2026_07_20.md` re-scoped re-dispatch never started (still 1627L, unchanged)                                                                                                                                                                | Not done           | Nobody — fork ONLY the MTDS lending-restamp workstream into `market_tick_data_service_lending_instrument_type_historical_restamp_2026_07_24.md`; leave the RESTAKING content in place (already fully shipped, git-verified, not open work)                                                                                      |
-| `check_todo_regression.sh` still flags plans in this batch as having "lost" todos vs origin                                                                                                                                                                                    | Cannot be done yet | Needs either a script fix (teach it about intentional cross-file splits, e.g. a manifest) or continued per-commit manual reconciliation — not a blocker, just a known-noisy gate                                                                                                                                                |
+## Deferred work after 2026-07-24 (updated)
 
-**Recommended next item**: resume the fix-workflow exactly where it left off —
-`Workflow({scriptPath: "/home/ubuntu/.claude/projects/-home-ubuntu-unified-trading-system-repos-unified-trading-pm/bf7b63d8-82c9-458e-bec5-f4738124ec0c/workflows/scripts/plan-line-cap-fix-trims-wf_22001490-e9b.js", resumeFromRunId: "wf_22001490-e9b"})`
-— completed agent() calls (the 3 already fixed + verified) return cached instantly; only the 6 unfinished + the rescoped
-distinct_values redispatch re-run live. After it completes: re-verify each parent's line count actually dropped (do not
-trust the self-report alone — this exact class of bug, a job claiming success without actually trimming the parent, is
-what caused this deferred-work list to exist), re-run `check_reference_paths.py` + `run_hygiene_sweep.sh`, then commit +
-push per plan/logical batch.
+| Item                                                                                                                                                                                       | State     | Blocked on                                                                                                                                                                                   |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `citadel_paper_batch_live_reconciliation_2026_06_19.md` still ~1143L (cap 1000-2000 depending on exemption)                                                                                | Not done  | Nobody — history child `citadel_paper_batch_live_reconciliation_history_2026_07_24.md` (archived) already took one slice; a bit more completed Progress Log content needs the same treatment |
+| `data_pipeline_hardening_self_monitoring_2026_06_22.md` still ~1856L (cap 1000, no longer umbrella-exempt — todos dropped under 100)                                                       | Not done  | Nobody — history child (archived) already took one slice; the bulk of the remaining historical Progress Log still needs extracting                                                           |
+| `data_status_page_ux_and_canonicalisation_2026_07_16.md` still ~1971L (cap 2000, close — only ~30L over)                                                                                   | Not done  | Nobody — trivial, one more small dated section into the existing archived history file or a new one                                                                                          |
+| `prediction_consolidated_closeout_2026_07_18.md` untouched (1488L; 4 children `prediction_phase_{c,ab,d,e}_*_2026_07_24.md` exist and are correct)                                         | Not done  | Nobody — replace each inline Phase A-E body with a pointer to its child, condense the historical Progress Log                                                                                |
+| `distinct_values_noncanonical_audit_2026_07_20.md` re-scoped re-dispatch never started (1627L, unchanged)                                                                                  | Not done  | Nobody — fork ONLY the MTDS lending-restamp workstream into a new child; leave RESTAKING content in place (already fully shipped, git-verified, not open work)                               |
+| `data_completion_sports_2026_07_24.md` untouched (1044L, only ~44-100L over cap)                                                                                                           | Not done  | Nobody — trivial, extract a small slice of its oldest fully-completed Progress Log entries                                                                                                   |
+| `data_completion_to_100_all_ag_2026_06_21.md` untouched (2303L; children `legacy_bucket_dual_write_decommission_2026_07_24.md` + `data_source_provenance_enforcement_2026_07_24.md` exist) | Not done  | Nobody — verify the children already carry the relevant todos, then remove the duplicated content from the parent                                                                            |
+| `mtds_venue_backfill_and_ops_hardening_residuals_2026_07_24.md` untouched (1238L) — itself a wave-1 CHILD plan, now over its own cap                                                       | Not done  | Nobody — extract its 2026-06-18-to-2026-07-13 fully-completed historical Progress Log sections to an archive-bound history child                                                             |
+| `prediction_cross_venue_arb_and_coverage_2026_07_24.md` untouched (1439L) — itself a wave-1 CHILD plan, now over its own cap                                                               | Not done  | Nobody — extract its oldest (2026-06-20 through 2026-06-24) fully-completed Progress Log entries to an archive-bound history child                                                           |
+| `mvp_backfill_defi_onchain_v10_operational_log_2026_07_24.md` untouched (4780L) — itself a wave-1 CHILD plan, pure operational VM log, 1 todo total, way over its 2000L cap                | Not done  | Nobody — chronological 3-way chunk split (keep filename for part 1, add part2/part3), pure division, nothing to lose since it is almost entirely a dated status log                          |
+| `check_todo_regression.sh` still flags plans in this batch as having "lost" todos vs origin                                                                                                | Known gap | Needs either a script fix (teach it about intentional cross-file splits) or continued per-commit manual reconciliation — not a blocker, just a known-noisy gate                              |
+
+**Recommended next item**: dispatch a fresh fix-workflow (or work through by hand) against these 11 files. Given TWO
+independent workflow runs targeting this exact tail have now been silently lost mid-run with no completion record
+(`wf_22001490-e9b`, then `wf_87a8f203-aa1`) — both times with real, uncommitted, unverified partial progress sitting in
+the working tree that had to be discovered by direct measurement — the next session should NOT assume a launched
+workflow will be observed to completion in the same session. Recovery drill each time: `wc -l` every target file vs
+`git show HEAD:<path> | wc -l`, `grep -cE '^- \[[ xX]\]'` every target file + every claimed child/history file, confirm
+the removed-todo lines from the parent's diff are each present in a child/history file via `grep -F` (a snippet of each
+removed line), THEN commit — never trust the returned summary text alone.
 
 **Lessons carried forward** (so the next session does not re-learn these):
 
@@ -338,3 +354,15 @@ push per plan/logical batch.
 - **Todo-conservation checks need the SAME regex as the enforcing gate.** Different counting methods (nested vs
   top-level checkboxes) produced different totals for the same file; always reconcile using `check_todo_regression.sh`'s
   own `^- \[[ xX]\]` regex, not an ad hoc count.
+- **A `.gitleaks.toml` global allowlist `regexes` entry must match gitleaks' captured "Secret" substring, not just any
+  substring of the source line.** A false positive on `client-reporting-api:golive-9968cb1` (a Cloud Build image tag,
+  not a credential) kept failing after adding an allowlist regex requiring the `client-reporting-api:` prefix, because
+  gitleaks' `generic-api-key` rule only captured `golive-9968cb1` as the "Secret" — the allowlist regex must match that
+  narrower captured string, not the full line. Verify any new allowlist entry with the EXACT invocation the hook uses
+  (`gitleaks protect --staged --config .gitleaks.toml`, after actually staging the offending file — an empty stage
+  trivially reports "no leaks found" and is not a real test) before assuming a fix landed.
+- **A workflow silently stopping mid-run is not a one-off — it recurred a second time on the same task.** Two
+  independent background `Workflow()` runs against this exact remediation's tail were both later reported "stopped" with
+  no completion record. Both times the partial progress was real and recoverable, but only by direct measurement. Do not
+  assume a launched Workflow will run to completion just because the prior one eventually did after recovery — budget
+  for having to recover it again.
