@@ -42,7 +42,7 @@ related_plans:
   - ../active/ao_fleet_observability_kpis_2026_07_20.md
   - ../active/ao_open_issues_consolidated_close_out_2026_07_17.md
   - ../archive/2026_07/ao_worker_lifecycle_dispatch_context_2026_07_21.md
-  - ../active/master_to_live_defi_2026_05_23.md
+  - ../archive/2026_07/master_to_live_defi_2026_05_23.md
 last_updated: 2026-07-16
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
@@ -319,7 +319,7 @@ first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 **status**: active · **estimate**: 1.2 cal AI-days (class: refactor) **title**: Worker lifecycle by dispatch-context —
 persistent plan-backlog drain vs event-spawned one-shots
 
-### [`master_to_live_defi_2026_05_23`](../active/master_to_live_defi_2026_05_23.md)
+### [`master_to_live_defi_2026_05_23`](../archive/2026_07/master_to_live_defi_2026_05_23.md)
 
 **status**: active · **estimate**: 3.6 cal AI-days (class: design) **title**: May-23 Cutover Master — Live DeFi Trading
 by 2026-05-23

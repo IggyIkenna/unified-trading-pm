@@ -81,7 +81,7 @@ tags:
   ]
 related:
   [
-    /plans/active/sports_p2_features_history_to_ml_ready_2026_06_27.md,
+    /plans/archive/2026_07/sports_p2_features_history_to_ml_ready_2026_06_27.md,
     /plans/archive/2026_07/sports_fixtures_schema_split_completion_2026_06_20.md,
     /codex/02-data/honest-absence-downstream-handling.md,
   ]
@@ -402,7 +402,8 @@ depends_on: []
 
 - `plans/archive/2026_07/sports_fixtures_schema_split_completion_2026_06_20.md` — the migration plan; "Already shipped"
   section names the UTL helper as already covering consumers (it does not, per finding #4 above).
-- `plans/active/sports_p2_features_history_to_ml_ready_2026_06_27.md` — the task this was discovered under (Todo 1).
+- `plans/archive/2026_07/sports_p2_features_history_to_ml_ready_2026_06_27.md` — the task this was discovered under
+  (Todo 1).
 - `instruments-service/instruments_service/engine/orchestrator/sports_fixtures.py` — the writer (no dual-write).
 - `unified-trading-library/unified_trading_library/fixtures/joined_reader.py` — the stale, unwired reader-side flip
   point.

@@ -163,7 +163,7 @@ Expected Agents panel after setup: `Agents · 3/3 online — [main 1] [review 1]
 
 From the dashboard Agents panel → `main` chat tab, send:
 
-> Read `plans/active/master_to_live_defi_2026_05_23.md` and add the next 20 tasks to the backlog. Use
+> Read `plans/archive/2026_07/master_to_live_defi_2026_05_23.md` and add the next 20 tasks to the backlog. Use
 > `/api/backlog/reload` after editing.
 
 The main agent edits `data/config/backlog.yaml` and replies when done. Workers pick up new tasks on their next

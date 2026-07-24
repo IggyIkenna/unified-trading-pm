@@ -14,7 +14,10 @@ repos: [execution-service, unified-api-contracts, unified-trading-pm]
 scope: [engineer]
 tags: [defi, cefi, execution, uac, deribit, bybit, strategy, verification]
 related:
-  [plans/active/defi_master.md (Fork 1 carry_staked_basis), plans/active/master_to_live_defi_2026_05_23.md Group F]
+  [
+    plans/active/defi_master.md (Fork 1 carry_staked_basis),
+    plans/archive/2026_07/master_to_live_defi_2026_05_23.md Group F,
+  ]
 created: 2026-05-08
 authoritative_for: [2026-05-07 CEX perp-venue LST + stablecoin-LST collateral-acceptance reverification evidence]
 referenced_by:

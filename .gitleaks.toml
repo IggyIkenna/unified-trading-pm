@@ -88,6 +88,12 @@ regexes = [
 ]
 
 [[allowlists]]
+description = "Internal blocker-reference IDs (BLK-<8-hex>) quoted verbatim in plan/issue-doc history — an internal tracking token, not a credential; confirmed already present in a previously-committed archived doc (plans/archive/issues/defi_catalogue_available_to_false_delisting_2026_07_20.md) without incident"
+regexes = [
+  '''BLK-[0-9a-fA-F]{8}\b''',
+]
+
+[[allowlists]]
 description = "GCP project-specific patterns already revoked and in history-rewrite scope"
 # These are documented in plans/active/issues/gcp_sa_private_key_in_git_history_*
 # Remove this allowlist after history rewrite (git filter-repo) completes.

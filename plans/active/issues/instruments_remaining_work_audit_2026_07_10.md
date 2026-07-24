@@ -371,10 +371,10 @@ Manifest correctness / denominator / honest-coverage work (excludes pure backfil
    walk, pipeline_mode/source riders, post-walk verify, E3 writer-drain confirm, E4 dry+full VM run, E7 CF-audit, E8
    legacy-bucket delete handoff, cross-AG v2-enumerator rollout, QG import-pattern gate finding.
 
-6. **tradfi_v9_stage1_finish — AO Plan 2** `plans/active/tradfi_v9_stage1_finish_2026_07_06.md` was: 6 of 11 unchecked
-   incl. orphan sweep (blocked on manifest rebuild ordering) — corrected 2026-07-12, finding 107, §A2 B-queue ruling:
-   this entry was authored earlier the same 2026-07-10 day than the plan's own task-2 orphan-sweep gate-flip (🎯 GATE
-   MET 2026-07-10 17:17:22 UTC, `orphan_class_E=0`, checkbox flipped). As of 2026-07-12 the plan shows **5 of 11
+6. **tradfi_v9_stage1_finish — AO Plan 2** `plans/archive/2026_07/tradfi_v9_stage1_finish_2026_07_06.md` was: 6 of 11
+   unchecked incl. orphan sweep (blocked on manifest rebuild ordering) — corrected 2026-07-12, finding 107, §A2 B-queue
+   ruling: this entry was authored earlier the same 2026-07-10 day than the plan's own task-2 orphan-sweep gate-flip (🎯
+   GATE MET 2026-07-10 17:17:22 UTC, `orphan_class_E=0`, checkbox flipped). As of 2026-07-12 the plan shows **5 of 11
    unchecked** (manifest rebuild, E7 verify, schema-tail restamp, legacy-bucket deletes, scheduler-resume runbook);
    orphan sweep is no longer open and is no longer blocked on manifest-rebuild ordering. Remaining open items: manifest
    rebuild 99.77% not 100% (13,971-row v4 tail + 42K blank-pipeline_mode gap), E7 CF-audit 2 genuine REDs, schema-tail
@@ -648,12 +648,15 @@ Tooling / infra / ML-training / strategy-research items that don't fit the above
     exactly one real caller workspace-wide) — moved to the big canonicalization effort per operator.
 
 11. **prediction_venue_perps_and_live_clob_depth** — 12 unchecked + 2 partial of 85
-    `plans/active/prediction_venue_perps_and_live_clob_depth_2026_06_20.md` Highest-priority live item: POLYMARKET
-    instrument lifecycle `available_from`/`available_to` never populated → manifest emits `empty_confirmed` outside a
-    market's real life instead of honest blank (P0 honest-absence bug). Also open: Polymarket-perp reference-data
-    adapter BLOCKED-UPSTREAM (no public perps API), residual lowercase/blank/UNKNOWN `venue` rows splitting the Kalshi
-    denominator, 1,454-row v4 schema tail, UAC politics/geo cross-venue canonicalization + same-event arb-pairing design
-    gaps.
+    `plans/active/prediction_venue_perps_and_live_clob_depth_2026_06_20.md` — **split + archived 2026-07-24** (plan
+    line-cap remediation) into `plans/active/prediction_perps_kalshi_polymarket_parked_2026_07_24.md` (perps-venue
+    residuals below), `plans/active/prediction_live_clob_depth_capture_2026_07_24.md` (live capture residuals), and
+    `plans/active/prediction_cross_venue_arb_and_coverage_2026_07_24.md` (honest-absence + manifest residuals below).
+    Highest-priority live item: POLYMARKET instrument lifecycle `available_from`/`available_to` never populated →
+    manifest emits `empty_confirmed` outside a market's real life instead of honest blank (P0 honest-absence bug). Also
+    open: Polymarket-perp reference-data adapter BLOCKED-UPSTREAM (no public perps API), residual
+    lowercase/blank/UNKNOWN `venue` rows splitting the Kalshi denominator, 1,454-row v4 schema tail, UAC politics/geo
+    cross-venue canonicalization + same-event arb-pairing design gaps.
 
 12. **carry_staked_basis_funding_scan_experiment** — 49 unchecked of 54, exploratory research harness
     `plans/active/carry_staked_basis_funding_scan_experiment_2026_06_16.md` Mostly strategy-research backlog (live venue
@@ -661,8 +664,8 @@ Tooling / infra / ML-training / strategy-research items that don't fit the above
     code bugs buried in it worth flagging separately: `lending-indices`/`lst-rates` writer targets a legacy un-suffixed
     bucket key instead of the canonical one (lines 236, 497) — a GCS_BUCKET_MIGRATION-class bug.
 
-13. **master_to_live_defi — May-23 cutover master** `plans/active/master_to_live_defi_2026_05_23.md` Only 4 of 172
-    unchecked, all nested under one already-`✅ DEFERRED-FUTURE-WORK`-tagged parent: DART terminal manual-trade lane
+13. **master_to_live_defi — May-23 cutover master** `plans/archive/2026_07/master_to_live_defi_2026_05_23.md` Only 4 of
+    172 unchecked, all nested under one already-`✅ DEFERRED-FUTURE-WORK`-tagged parent: DART terminal manual-trade lane
     (real-time archetype rendering, manual trade entry through execution-service, monitored window, automation-toggle
     gate). Real unbuilt UI/execution work, explicitly deferred beyond May-23 scope, not urgent.
 

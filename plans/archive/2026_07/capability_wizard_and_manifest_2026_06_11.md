@@ -9,7 +9,7 @@ summary: >-
   each dropdown IS the availability answer. Four use cases: visibility, end-to-end parameterization, two-sided code
   audit (logical vs unbuilt dead-ends), client-lite configurator. Manifest exporter is a new PM openapi-family
   generator; static capability stays separate from runtime data-status.
-status: active
+status: complete
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -31,11 +31,11 @@ priority: P1
 estimate_class: brand-new
 estimate_baseline_ai_days: 24.0
 estimate_calibrated_ai_days: 24.0
-last_updated: 2026-06-27
-locked_by: live-defi-rollout
-locked_since: 2026-06-11
+last_updated: 2026-07-24
+locked_by:
+locked_since:
 supersedes:
-superseded_by:
+superseded_by: [capability_wizard_client_lite_and_ci_regen_followup_2026_07_24]
 depends_on:
 source:
   [
@@ -46,6 +46,16 @@ drift_direction: advance-code
 ---
 
 # Capability wizard + manifest
+
+> **🟢 COMPLETE 2026-07-24 — ARCHIVED.** 65/67 todos done (97%) — Phases 0-6 + Wave-2 (all 12 enhancements) fully
+> shipped across 7 repos; see the Progress Log below for the full build history. The 2 remaining residual items (the
+> CI-runner-blocked `generate-unified-openapi.sh` full regen, F12/F14; and the explicitly-DEFERRED "client-lite wizard"
+> successor, use case 4) were FORKED VERBATIM into
+> [`capability_wizard_client_lite_and_ci_regen_followup_2026_07_24.md`](/plans/active/capability_wizard_client_lite_and_ci_regen_followup_2026_07_24.md)
+> per the operator-approved plan line-cap remediation (`plans/active/issues/plan_line_cap_remediation_2026_07_23.md`).
+> This doc's Phases/Waves + Progress Log below are frozen historical record; the 2 forked todos read "FORKED 2026-07-24
+> → ..." in place of their original checkbox lines. All other content (65 done todos, Progress Log, findings-discipline
+> pointers) is unchanged. This plan carries no further open scope — `superseded_by` points at the follow-up plan above.
 
 ## Scope
 
@@ -143,20 +153,12 @@ backfilled). Phase 4 UI work is PARALLEL across the two repos.
       `extract_architecture_v2_capability_registry()`. Verified output: StrategyArchetype 57 values (count grew from
       audited 53 — 4 new archetypes landed), StrategyFamily 9 values, ARCHETYPE_CAPABILITY_REGISTRY 22 archetypes / 98
       cells, total UIC enums 227 (up from single-digits).
-- [ ] [SCRIPT] P1. Fresh full run of `generate-unified-openapi.sh`; commit regenerated outputs; verify
-      `check_openapi_drift.py` quality gate is green and actually fires on synthetic drift. **PARTIAL 2026-06-11
-      (capability-exporter, slot-4):** UAC-importable outputs regenerated + committed — `ui-reference-data.json`
-      (byte-identical to committed = already current post-Phase-0), `capability-manifest.json` (new,
-      unified-api-contracts@1bc2f07). **STILL BLOCKED ON-HOST:** `config-registry.json` +
-      `unified-trading-system.openapi.json` need every service importable in ONE interpreter (`.venv-workspace`), which
-      is ABSENT on this host — `generate_config_registry.py` extracts 0/32 and would EMPTY the registry if committed
-      (restored via `git checkout`; finding F12). The per-service `.venv`s exist (the capability exporter uses them via
-      subprocess), but the aggregate spec generator does not yet do per-service-venv extraction. Full run must happen on
-      the laptop / CI runner with `.venv-workspace`; the `uic-openapi-sync` CI regenerates TS types on its runner
-      regardless. **CI-REGEN UNIT 3 (2026-06-12):** No workflow runs `generate-unified-openapi.sh` on any CI runner.
-      `uic-openapi-sync` (uts-ui + fund-admin-service) ships TS types ONLY from `*.openapi.json/yaml`. No new CI
-      infrastructure built per mandate. Annotated as F14-confirmed: blocked until `.venv-workspace` is provisioned on a
-      CI runner (operator action). See findings file for full F14 annotation.
+
+> **FORKED 2026-07-24 → `/plans/active/capability_wizard_client_lite_and_ci_regen_followup_2026_07_24.md`** — the "fresh
+> full run of `generate-unified-openapi.sh`" todo (verbatim text preserved there, incl. its 2026-06-11/06-12
+> PARTIAL/CI-REGEN-UNIT-3 annotations and the F12/F14 findings) was still open (CI-runner-blocked) at archival time;
+> that plan now carries it forward. See it for live status; this parent is `status: complete` and frozen.
+
 - [x] ✅ [VERIFY] P0. Drift CI gate: `_validate_service_coverage()` now exits nonzero on mismatch (fail-on-drift
       implemented in-run). DONE 2026-06-11 — unified-trading-pm@50bdbcd36. Scheduled workflow is a Phase 1 item
       (deferred — fail-on-run counts as the enforcement gate for now).
@@ -407,7 +409,10 @@ post-config (combinatorial explosion is avoided because the wizard fixed the con
       data-availability precheck via deployment-api. DONE 2026-06-11 — e2e-testing@194d66b
       (backtest_from_wizard_config.py; GroupBRunner wired; honest data precheck; PRECHECK_UNAVAILABLE{cloud data
       unavailable on this host} verdict confirmed on apd_price_dispersion_btc.json).
-- [ ] [DEFERRED] P3. Client-lite wizard mode (use case 4) — named successor plan once internal wizard is hardened.
+
+> **FORKED 2026-07-24 → `/plans/active/capability_wizard_client_lite_and_ci_regen_followup_2026_07_24.md`** — the
+> "client-lite wizard mode (use case 4)" DEFERRED todo (verbatim text preserved there) was still open at archival time;
+> that plan now carries it forward. See it for live status; this parent is `status: complete` and frozen.
 
 ## Phase 6 — exhaustive combinatorics, parity gates, data-availability wiring (operator direction 2026-06-12)
 
@@ -1085,8 +1090,9 @@ for every agent on this plan:
 
 ## Deferred work — migrated to:
 
-**Not yet identified** — "Client-lite wizard mode (use case 4)" (`[DEFERRED] P3`, Phase 5) is explicitly deferred
-pending "a named successor plan once internal wizard is hardened" and is already tracked verbatim in this doc's own "##
-Out of scope / named successors" section ("Client-facing lite wizard + alpha-curtailment tiers (use case 4) — successor
-plan"). Grepped `plans/active/` and `plans/epics/` for "client-lite wizard" with no hit — no successor plan exists yet.
-This plan remains the owner of record until one is authored and named.
+**RESOLVED 2026-07-24** — `/plans/active/capability_wizard_client_lite_and_ci_regen_followup_2026_07_24.md` is now the
+named successor plan for "Client-lite wizard mode (use case 4)" (`[DEFERRED] P3`, Phase 5), forked there verbatim as
+part of this plan's archival (plan line-cap remediation, `plans/active/issues/plan_line_cap_remediation_2026_07_23.md`).
+The same follow-up plan also carries the sole other residual (the CI-runner-blocked `generate-unified-openapi.sh` full
+regen, F12/F14). This plan is no longer the owner of record for either item — see the follow-up plan and the FORKED
+banners above.

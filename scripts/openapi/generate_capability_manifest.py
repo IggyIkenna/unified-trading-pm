@@ -22,7 +22,7 @@ manifest_version: ``1.0.0``.  ``generated_from_commit`` = UAC HEAD sha (read via
 git — no timestamps, determinism rule).
 
 SSOT for how this fits other UI sync paths: ``unified-trading-pm/docs/ui-alignment-ssot.md``
-Plan: ``plans/active/capability_wizard_and_manifest_2026_06_11.md`` Phase 1.
+Plan: ``plans/archive/2026_07/capability_wizard_and_manifest_2026_06_11.md`` Phase 1.
 
 Usage:
     python generate_capability_manifest.py [--output-dir PATH] [--workspace-root PATH]
@@ -271,9 +271,7 @@ def main() -> None:
     # Fold the orphan/dead-end headline counts into the serialised gaps block.
     _gaps_raw = canonical.get("gaps", {})  # noqa: qg-empty-fallback
     gaps_block: dict[str, int] = (
-        {str(k): int(v) for k, v in _gaps_raw.items() if isinstance(v, int)}
-        if isinstance(_gaps_raw, dict)
-        else {}
+        {str(k): int(v) for k, v in _gaps_raw.items() if isinstance(v, int)} if isinstance(_gaps_raw, dict) else {}
     )
     gaps_block["orphan_nodes"] = len(orphans)
     gaps_block["unbuilt_dead_ends"] = len(unbuilt)

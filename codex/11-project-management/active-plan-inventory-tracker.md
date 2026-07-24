@@ -16,7 +16,7 @@ related:
     plan-hygiene.md,
     /codex/08-workflows/estimation-calibration.md,
     /codex/08-workflows/estimation-retrospective-ledger.md,
-    ../../plans/active/master_to_live_defi_2026_05_23.md,
+    ../../plans/archive/2026_07/master_to_live_defi_2026_05_23.md,
   ]
 created: 2026-05-12
 authoritative_for: [active plan inventory dashboard, plan done-vs-left tracking, plan orphan detection]
@@ -46,6 +46,16 @@ last_executed: 2026-05-17
 ---
 
 # Active Plan Inventory + Done-vs-Left Dashboard
+
+> **🟡 HOST PLAN ARCHIVED 2026-07-24** — `master_to_live_defi_2026_05_23.md` closed out (98% done, May-23 target ~2
+> months past) and moved to `plans/archive/2026_07/master_to_live_defi_2026_05_23.md` per
+> `plans/active/issues/plan_line_cap_remediation_2026_07_23.md` #2. The dashboard table + markers still physically exist
+> in that file, but `scripts/plans/regenerate_active_plan_inventory.py`'s `MASTER_FILE` constant still hardcodes the old
+> `plans/active/` path, so **the auto-regen step now errors `MASTER_FILE not found` on every run** (daily via
+> `run_hygiene_sweep.sh`'s default regen step / `hygiene_sweep_scheduler.tf`) until a human either repoints
+> `MASTER_FILE` at a new host doc (e.g. `plans/active/INDEX.md`) or retires this feature outright now that the May-23
+> cutover it was built for is over. Not resolved as part of the archival — needs an owner decision, not a mechanical
+> fix.
 
 > SSOT for the auto-tracked workspace-wide plan inventory that lives inside `master_to_live_defi_2026_05_23.md`. Shipped
 > 2026-05-12 (PM@ab1a471f) to solve two coupled problems surfaced in the calibration thread:
@@ -80,8 +90,8 @@ A script (`unified-trading-pm/scripts/plans/regenerate_active_plan_inventory.py`
 
 ## Where the dashboard lives
 
-`unified-trading-pm/plans/active/master_to_live_defi_2026_05_23.md` § **Active plan inventory + Done-vs-Left dashboard
-(auto-tracked)**, between the "Epics index" section and "What this plan is".
+`unified-trading-pm/plans/archive/2026_07/master_to_live_defi_2026_05_23.md` § **Active plan inventory + Done-vs-Left
+dashboard (auto-tracked)**, between the "Epics index" section and "What this plan is".
 
 Columns: `Plan | Owner | Class | Checkboxes | % done | Cal left | Deadline`.
 

@@ -51,7 +51,7 @@ evidence an archetype defaults HONESTLY to ``backtest-only`` (we never claim
 The pass is deterministic (registry is a static tuple; tiers resolved by a
 fixed precedence) → two runs are byte-identical.
 
-SSOT: ``plans/active/capability_wizard_and_manifest_2026_06_11.md`` Wave-2 #2.
+SSOT: ``plans/archive/2026_07/capability_wizard_and_manifest_2026_06_11.md`` Wave-2 #2.
 """
 
 from __future__ import annotations

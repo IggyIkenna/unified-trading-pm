@@ -27,7 +27,7 @@ Usage:
                                                 [--emit-todos] [--top-n N] [--tracker PATH]
                                                 [--dry-run]
 
-SSOT: plans/active/capability_wizard_and_manifest_2026_06_11.md Wave-2 #1.
+SSOT: plans/archive/2026_07/capability_wizard_and_manifest_2026_06_11.md Wave-2 #1.
 """
 
 from __future__ import annotations

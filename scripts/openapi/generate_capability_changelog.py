@@ -21,7 +21,7 @@ already-generated manifest JSON, so it runs anywhere (no ``.venv-workspace``)
 and is deterministic. ``--update-baseline`` rewrites the baseline from the
 current manifest (run after an intentional, reviewed capability change).
 
-SSOT: ``plans/active/capability_wizard_and_manifest_2026_06_11.md`` Wave-2 #5.
+SSOT: ``plans/archive/2026_07/capability_wizard_and_manifest_2026_06_11.md`` Wave-2 #5.
 """
 
 from __future__ import annotations

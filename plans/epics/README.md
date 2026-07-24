@@ -218,8 +218,8 @@ spanned `L0`–`L5` (six distinct tiers); the pre-existing "5 tiers" phrasing un
 - [ ] [SCRIPT] P2. Script this regeneration (scripts/plan-hygiene or scripts/docs) so the registry can't drift again —
       wire into the hygiene sweep.
 
-**Cutover master (NOT an epic)**: `plans/active/master_to_live_defi_2026_05_23.md` is a dated, one-shot plan tracking
-the May-23 live DeFi rollout across all 20 epics. Archives after cutover. Not in `plans/epics/`.
+**Cutover master (NOT an epic)**: `plans/archive/2026_07/master_to_live_defi_2026_05_23.md` is a dated, one-shot plan
+tracking the May-23 live DeFi rollout across all 20 epics. Archives after cutover. Not in `plans/epics/`.
 
 > SUPERSEDED — see top banner (single-VM, role-based-dispatch architecture, 2026-06-27; no per-epic VMs)
 
@@ -319,8 +319,8 @@ epic. They never archive on a deadline — there is always more work as audits s
 Active plans under an epic cycle normally — they archive when complete. The epic itself stays put and accumulates new
 active plan references in its `related_plans:` frontmatter over time.
 
-The May-23 cutover master (`plans/active/master_to_live_defi_2026_05_23.md`) is the only dated, one-shot plan tracking
-cross-epic readiness — it archives after May-23 cutover. Epics persist.
+The May-23 cutover master (`plans/archive/2026_07/master_to_live_defi_2026_05_23.md`) is the only dated, one-shot plan
+tracking cross-epic readiness — it archives after May-23 cutover. Epics persist.
 
 ## Migration discipline (when reorganising epics)
 

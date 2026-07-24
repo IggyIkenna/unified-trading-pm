@@ -121,5 +121,6 @@ where `i` is the `ALERT_FIRED` assertion index.
 - Recovery validation: [`autonomous-recovery-matrix.md`](autonomous-recovery-matrix.md) — § "Scenario-driven recovery
   validation"
 - Backtest groups: [`backtest-groups.md`](backtest-groups.md) — § "Scenario-overlay mode" (fourth axis)
-- Master plan gate: `plans/active/master_to_live_defi_2026_05_23.md` Group F item 17.5 (scenario regression matrix)
+- Master plan gate: `plans/archive/2026_07/master_to_live_defi_2026_05_23.md` Group F item 17.5 (scenario regression
+  matrix)
 - Plan driving Phase 12: `plans/active/simulation_scenarios_post_cutover_2026_06_01.md`

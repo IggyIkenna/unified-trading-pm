@@ -25,7 +25,7 @@ tags: [manifest, consolidator, data-correctness, regression, production-outage, 
 related:
   [
     /plans/archive/issues/tradfi_manifest_row_loss_regression_2026_07_12.md,
-    /plans/active/tradfi_v9_stage1_finish_2026_07_06.md,
+    /plans/archive/2026_07/tradfi_v9_stage1_finish_2026_07_06.md,
     /plans/archive/issues/defi_manifest_consolidator_duplicate_race_2026_07_10.md,
   ]
 created: 2026-07-12

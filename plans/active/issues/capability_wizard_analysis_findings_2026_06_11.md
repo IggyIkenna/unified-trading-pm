@@ -12,7 +12,10 @@ repos: [agent-orchestrator, deployment-service, deployment-ui, e2e-testing, exec
 scope: [engineer, admin]
 tags: [strategy, ssot-audit, registry, execution, ui, uac, data-correctness]
 related:
-  [/plans/active/issues/capability_wizard_gap_discovery_2026_06_11.md, ../capability_wizard_and_manifest_2026_06_11.md]
+  [
+    /plans/active/issues/capability_wizard_gap_discovery_2026_06_11.md,
+    ../../archive/2026_07/capability_wizard_and_manifest_2026_06_11.md,
+  ]
 created: 2026-06-11
 parent_epic: strategy_master
 priority: P2
@@ -32,8 +35,9 @@ last_updated: 2026-06-27
 distinct from the [gap tracker](capability_wizard_gap_discovery_2026_06_11.md) (which tracks missing
 _capabilities/registries_). This doc tracks: **bugs in code**, **gaps in understanding**, **conflicting truths** (two
 sources disagree about reality), and **dual-but-different implementations** of the same concept. Every agent working the
-[capability wizard plan](../capability_wizard_and_manifest_2026_06_11.md) appends findings here as they surface
-(Findings-Triage rule still applies: fix-in-place when ≤30 min and in-scope; log here regardless so nothing is lost).
+[capability wizard plan](../../archive/2026_07/capability_wizard_and_manifest_2026_06_11.md) appends findings here as
+they surface (Findings-Triage rule still applies: fix-in-place when ≤30 min and in-scope; log here regardless so nothing
+is lost).
 
 Format per entry: `### F<N> — <title>` + status (`OPEN | FIXED <repo>@<sha> | TRIAGED → <plan/issue>`), what was found,
 why it matters, evidence paths.

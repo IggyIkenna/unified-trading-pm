@@ -56,7 +56,8 @@ should be retired so the ceiling can ratchet back toward zero.
       capability files in `unified-trading-pm` so they are strict-clean (resolve the +6 `reportAny`/`reportUnknown*`
       errors), then ratchet `BASEDPYRIGHT_MAX_ERRORS` in `scripts/quality-gates.sh` back down to 1511 (or lower). The
       1517 ceiling is the interim clear. Verify with `cd unified-trading-pm && .venv/bin/basedpyright scripts/` (count
-      must be at-or-below the new ceiling). Related: `plans/active/capability_wizard_and_manifest_2026_06_11.md`.
+      must be at-or-below the new ceiling). Related:
+      `plans/archive/2026_07/capability_wizard_and_manifest_2026_06_11.md`.
 - [ ] [SCRIPT] P3. **NICE-TO-HAVE** Opportunistically annotate the other long-standing untyped PM scripts
       (`check-repo-readiness.py`, `cicd/check_ci_status_bot_only.py`, `generate-cicd-diagram.py`,
       `feature_parity_diff.py`) to drive the ceiling materially below 1511 over time, one PR per file (provenance: same

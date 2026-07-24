@@ -36,7 +36,7 @@ related:
   [
     ../sports_legacy_bucket_cutover_2026_07_16.md,
     ../sports_data_sources_canonical_completion_2026_07_13.md,
-    ../sports_manifest_canonicalisation_2026_06_01.md,
+    ../../archive/2026_07/sports_manifest_canonicalisation_2026_06_01.md,
     ../../epics/sports_master.md,
   ]
 created: 2026-07-16

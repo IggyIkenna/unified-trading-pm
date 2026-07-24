@@ -3107,6 +3107,12 @@ the Progress Log. Nothing in codex/ is edited without your explicit per-item rul
 
 #### [P2] active/prediction_venue_perps_and_live_clob_depth_2026_06_20.md ↔ epics/predictions_master.md
 
+> NOTE (2026-07-24): the cited plan was subsequently split 3 ways + archived per the plan line-cap remediation — see
+> `plans/archive/2026_07/prediction_venue_perps_and_live_clob_depth_2026_06_20.md` (frozen) and its 3 successors
+> (`prediction_perps_kalshi_polymarket_parked_2026_07_24.md`, `prediction_live_clob_depth_capture_2026_07_24.md`,
+> `prediction_cross_venue_arb_and_coverage_2026_07_24.md`, all `parent_epic: predictions_master`). The finding below is
+> a historical citation against the pre-split file and its line numbers are not updated.
+
 - finding ids: 232
 - **Epic child-plan index omits an entire P2 plan declaring it as parent_epic** — `epics/predictions_master.md:888-930`:
   “"Assigned active plans \_Active plans declaring `parent_epic: predictions_master`... Auto-populated... the script

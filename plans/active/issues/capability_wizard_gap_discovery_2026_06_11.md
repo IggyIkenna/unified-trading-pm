@@ -15,7 +15,7 @@ tags: [strategy, registry, ssot-audit, execution, ml, ui, uac]
 related:
   [
     /plans/active/issues/capability_wizard_analysis_findings_2026_06_11.md,
-    ../capability_wizard_and_manifest_2026_06_11.md,
+    ../../archive/2026_07/capability_wizard_and_manifest_2026_06_11.md,
   ]
 created: 2026-06-11
 parent_epic: strategy_master
@@ -35,7 +35,8 @@ last_updated: 2026-06-27
 **Purpose**: running pool of gaps surfaced by the capability wizard/manifest work (operator rule 2026-06-11: as much as
 possible scripted; issues found get tests built around them; agents only when scripts cannot answer). Items here are
 UNACKED scope — they graduate into todos on
-[`capability_wizard_and_manifest_2026_06_11.md`](../capability_wizard_and_manifest_2026_06_11.md) or successor plans.
+[`capability_wizard_and_manifest_2026_06_11.md`](../../archive/2026_07/capability_wizard_and_manifest_2026_06_11.md) or
+successor plans.
 
 **Gap taxonomy**: `missing_registry` (no declarative source of truth) · `missing_extraction` (registry exists,
 generators don't walk it) · `needs_code_scan` (answer only derivable by reading code → agent-orchestrator candidate) ·

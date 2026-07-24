@@ -23,7 +23,7 @@ priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 2.5
 estimate_calibrated_ai_days: 2
-last_updated: 2026-07-15
+last_updated: 2026-07-24 # (was: 2026-07-15 -- folded in the TradFi-lane Progress Log entries from M-1 per plan line-cap remediation)
 locked_by:
 locked_since:
 supersedes:
@@ -413,3 +413,242 @@ Re-audited 2026-07-21:
   WS-L #1014)" block, ~line 1467-1484) — the exact fix this item describes has landed separately. **Already resolved** —
   the checklist item text is stale (left un-flipped by whoever shipped the sentinel-parity fix); no successor plan
   needed, no further code action required.
+
+## Progress Log
+
+> **Folded in 2026-07-24** from the M-1 coordinator's (`data_completion_to_100_all_ag_2026_06_21.md`) shared Progress
+> Log (plan line-cap remediation, `plans/active/issues/plan_line_cap_remediation_2026_07_23.md` bucket-(d) split,
+> operator-approved) — every TradFi-lane-tagged dated entry, moved verbatim, in original chronological order. M-1
+> retains the cross-cutting/multi-AG entries; read M-1's Progress Log too for the full program-level narrative.
+
+### 2026-06-21 ~23:00 — DEPLOYED + VERIFIED: live_databento (prod-confirmed) + equity ohlcv_1s (capturing) + MDPS batching
+
+Operator said "do both" (live_databento deploy + MDPS batching) + fetch equity 1s. Executed all three end-to-end with
+clean tarball rebuilds (from origin/LDR worktrees, NOT the peer-WIP workspace) + VM relaunches:
+
+1. **live_databento — DEPLOYED + PROD-CONFIRMED.** Rebuilt UAC tarball (UAC@1205ae44) + relaunched the live producer
+   (`mtds-live-tradfi-cme-trades-20260621-224032`). Verified the actual per-VM manifest rows:
+   `pipeline_mode = {'live_databento': 4}` (was live_massive). ✅
+
+2. **equity ohlcv_1s — DEPLOYED + CAPTURING.** Added ohlcv_1s to `VENUE_DATA_TYPE_CAPABILITIES`+`expected_coverage`
+   NASDAQ/NYSE (UAC@87c60b50) → pre-flight now fetches it. Launched NASDAQ+NYSE 1s year-shard backfill (8 VMs).
+   Verified: `dt=ohlcv_1s … captured=45` (NASDAQ), `captured=158` (NYSE). ✅
+
+3. **MDPS 429 batching — 2 fixes shipped, residual deeper issue diagnosed.** UTL per-VM write-debounce (UTL@94d9de30) +
+   MTDS finalize batch_size 1→500 (MTDS@d0f42ba), both deployed via fresh tarballs + MDPS relaunch
+   (`mdps-backfill-tradfi-20260621-225740`). 429s PERSIST — root cause refined: CONCURRENT per-unit finalize threads
+   race-write the shared per-VM shard with `final=True` (non-monotonic counts 54→65→56), which `batch_size`
+   (per-instance) can't fix. NOT a correctness blocker (retries succeed, consolidator still merges 15m/24h). Deeper fix
+   (serialize per-VM shard write + coalesce final=True) captured as a todo. The UTL debounce DID fix the live producer's
+   `final=False` writes (fleet-wide benefit).
+
+All shipped via isolated-worktree promotion (UAC/MTDS had concurrent live peer WIP — preserved, never bundled).
+
+### 2026-06-21 ~22:00 — tradfi `live_databento` source-stamp FIXED + 2 manifest cleanups actioned
+
+**`live_massive` -> `live_databento` (root cause FIXED, UAC@1205ae44).** The relaunched live producer
+`mtds-live-tradfi-cme-trades-20260621-213416` CONNECTS + authenticates (`session_id` issued) + streams real databento
+ticks - but stamped `pipeline_mode=live_massive`. Root cause (corrected after reading both sides):
+`live_source_for_venue` resolved tradfi live via the BATCH `SOURCE_PRIORITY[0]=massive`. First instinct (remove
+massive's `Mode.LIVE`) was WRONG - `test_massive_and_databento_are_live_and_replay_capable` documents an explicit
+**operator 2026-06-05** decision that massive (Polygon.io 15-min REST) IS live-capable; reverted that. Real fix: the
+SOLE tradfi live **WS producer** is `databento_tradfi_ws`, so a `tradfi` branch in `live_source_for_venue` returns
+`databento` (mirrors `_PREDICTION_LIVE_SOURCE_FOR_VENUE`); batch path unchanged. Verified
+`live_pipeline_mode_for_venue(tradfi,*)=live_databento`
+
+- 48/48 tests green. Shipped via **isolated-worktree promotion** (UAC had a concurrent LIVE peer editing
+  `_source_priority_data.py`/cefi-perp venues; preserved their WIP, never bundled it). Codex SSOT + CLAUDE.md corrected
+  (my earlier bug-#1/#2 framing was inaccurate: the key resolves fine - verified 32-char secret; massive is not
+  "batch-only"). **Deploy pending:** live VM bakes UAC from a GCS tarball -> running producer keeps `live_massive` until
+  a `create-code-tarballs.sh` rebuild from clean LDR + relaunch (tracked todo added; daily cron reuses the old tarball).
+
+**2 manifest cleanups (operator "DO THAT too"):** (1) **MDPS 15m/24h** - LAUNCHED `mdps-backfill-tradfi-20260621-213646`
+(RUNNING) re-aggregating the 1m corpus -> ohlcv_15m/24h. (2) **equity `ohlcv_1s`** - investigated: NOT a clean phantom.
+DBEQ ALLOWS ohlcv-1s (allowlist) + the validity matrix lists it, but `expected_coverage` deliberately excludes it ->
+genuine opposite-direction OPERATOR DECISION (fetch-it vs deliberate-exclude); reframed `[DATA-OPERATOR]` rather than
+blindly dropping or backfilling. honest-cov now **14.3%** (323,836 captured, up from 5.3% baseline).
+
+### 2026-06-21 — TRADFI lane: launcher bugs diagnosed + fixed; CME-2026 canary verifying
+
+Measured (consolidated v9 `_index`, `market-data-tick-tradfi-prd-…`): **1.94M rows, 99.7% v9** (only 6444 at v4). The
+dispatch's "v9 46.6%" is the **instruments-store (IS)** index, NOT the MTDS market-data index — MTDS tradfi is already
+v9. Capture: 102936 captured / 1.007M empty / 10013 failed / **818k expected_unattempted** (5.3% honest-cov).
+**Fillable-gap reality (3-dataset subscription):** only `ohlcv_1s`/`ohlcv_1m` on GLBX.MDP3(CME) /
+DBEQ.BASIC(NASDAQ,NYSE) / XCBF.PITCH(CBOE) are batch-fillable; the unattempted ohlcv_1s/1m is **ALL 2026-YTD** (CME
+160767, NYSE 48270, NASDAQ 14184, CBOE 212; pre-2026 already attempted=empty/captured). The remaining ~595k unattempted
+is genuine honest absence under the subscription: `trades`/`tbbo` (L1, >1yr free window), `mbp_10` (L2, >1mo),
+`ohlcv_15m`/`24h` (DERIVED, aggregated not fetched), and `ICE`/`BARCHART`/`YAHOO`/`FX` venues (off the 3-dataset
+allowlist; ICE→IFUS.IMPACT not subscribed). Adapter `_get_dataset_for_exchange` correctly maps NASDAQ/NYSE→DBEQ.BASIC,
+CBOE→XCBF.PITCH (launcher header comments mentioning XNAS.ITCH are stale; routing is on-allowlist). **Two launcher bugs
+(root-caused via T+10min run.log verify — both rc=0/1 with 0 rows = SILENT FAILURE):**
+
+1. Wrapper bare-`python3` UAC enumeration (ModuleNotFoundError) — **already fixed by peer @e31817b** (uses
+   `${WORKSPACE_ROOT}/.venv-workspace/bin/python3`; verified UAC-importable). No action.
+2. **`VM_TASK=cefi-backfill` (copy-paste) + no `--source`** → routed AWAY from the chunked MTDS-download branch; handler
+   raised `--source databento|massive is REQUIRED` on every payload. FIX (deployment-service): lib
+   `_tradfi-ohlcv-launcher-lib.sh` → `VM_TASK=mtds-backfill` + `VM_SOURCE=${OHLCV_SOURCE:-databento}`;
+   `setup-data-pipeline-vm.sh` reads `VM_SOURCE` + adds `--source $VM_SOURCE` in the mtds-backfill BASE_CLI. (UAC
+   `_VENUE_SOURCE_EXCLUSIONS` excludes only `massive` for CBOE → `databento` is capable for every tradfi OHLCV venue.)
+   Plus end-date clipped to **yesterday** (Databento T+1). GCS startup re-uploaded with the fix (reset/collision-proof).
+   **CME-2026 canary `tradfi-bf-cme-ohlcv-1m-es-2026-145146` relaunched + watcher armed.** ⚠️ Peer concurrently adding
+   the `mtds-live` branch to the SAME `setup-data-pipeline-vm.sh` (live, dispatch item 3) — non-overlapping hunks.
+
+- [x] ✅ [DATA] P0. **tradfi fan-out after canary-green**: NASDAQ + NYSE full DBEQ year-shards (2023-04-15→2026,
+      force-window re-attempts wrongly-empty equity history) + CBOE/XCBF (needs a CBOE wrapper — VX-futures universe) +
+      CME 2026. Repo: deployment-service. — deployment-service@f243eb4 | CBOE wrapper created
+      (`launch-tradfi-bf-cboe-ohlcv-1m.sh`, XCBF.PITCH/VX.FUT, 2026-01-01 floor) + forward-poll fixed
+      (VM_TASK=mtds-backfill + VM_SOURCE=databento + VM_NAME + MANIFEST_PER_VM_SHARDS). All 17 VMs RUNNING.
+- [x] ✅ [SCRIPT] P1. **deployment-service: launcher fix committed durably** — deployment-service@9aca3a5 (lib
+      `VM_TASK=mtds-backfill` + `VM_SOURCE=databento` + yesterday-end; startup `--source $VM_SOURCE` in mtds-backfill
+      BASE_CLI). Shipped via isolated-worktree promotion (peer's relentless reset of the shared tree + the dirty-deps
+      carve-out blocked normal quickmerge); QG-green 51s; GCS startup re-uploaded with the fix. CME-2026 canary PROVEN
+      capturing (`GLBX.MDP3/ohlcv_1m → batch_databento` parquets + per-VM manifest shard).
+
+### 2026-06-21 15:18 — TRADFI batch fan-out LIVE + PROVEN (15 VMs capturing)
+
+Launcher fix committed ds@9aca3a5 (isolated-worktree promotion past peer collision). **15 tradfi-bf VMs all confirmed
+capturing** `→ batch_databento` parquets + per-VM manifest shards: CME-2026 (7 roots, GLBX.MDP3), NASDAQ full-history
+2023-26 (4, DBEQ.BASIC), NYSE full-history 2023-26 (4, DBEQ). NASDAQ-2024 proven writing REAL equity data (SNPS/INTU/…
+613/529/… rows) → the prior equity `empty_confirmed` history WAS wrongly-empty; the force-window DBEQ re-run fills it
+(big honest-cov lever). Monitoring the drain (VMs self-delete on completion); will re-measure honest-cov + relaunch any
+failure on wave completion. REMAINING tradfi: CBOE/XCBF (VX-futures wrapper — small gap), IS v9 canonicalisation
+(instruments-store index 46.6%→100%; the `canonicalize_instruments_store_index.py` N2/F5/N4 dedup + asset_group/source/
+pipeline_mode bump — overlaps peer's UAC source_priority work), LIVE forward-poll (peer building `mtds-live` branch).
+
+### 2026-06-21 15:42 — TRADFI lane: ALL 3 dispatch items launched/done
+
+- ✅ [IS] **IS tradfi v9 canonicalisation DONE** (sub-agent, verified on live blob): `instruments-store-tradfi-prd`
+  `_index` now **schema_version 100% v9** (was 46.6%), **asset_group 100% `tradfi`** (was absent), **source 0% blank**
+  (`instruments_service`), **pipeline_mode 0% blank** (`batch_instruments_service`), capture_status 14045/581 unchanged
+  (no fabrication). Mechanism = `instruments-service/scripts/populate_is_index_v9_2026_06_19.py --apply` (the
+  column-bump walk; the named `canonicalize_instruments_store_index.py` is dedup-only). Pre-apply snapshot written.
+- ✅ [DATA] **LIVE forward-poll wired** — fixed `launch-tradfi-forward-poll.sh` (same cefi-backfill/no-`--source` bug):
+  ds-commit (VM_TASK=mtds-backfill + VM_SOURCE=databento + VM_DATA_TYPES=ohlcv_1m). Launched the **daily-cron host VM**
+  `tradfi-fwd-daily-cron-20260621-154132` (RUNNING, fires 06:00 UTC daily → `launch-tradfi-forward-poll.sh` T-1) + an
+  immediate T-1 forward-poll. Fixed launcher uploaded to the cron's GCS path. This is the tradfi LIVE/recurring
+  mechanism (markets are T+1; daily forward-poll = the live keep-current path).
+- ✅ [DATA] **CBOE/XCBF launched** (3rd subscribed dataset) — peer had committed a `launch-tradfi-bf-cboe-ohlcv-1m.sh`
+  (better 2026-floor scope); I accidentally clobbered it then **restored their version + fixed a real venue bug**
+  (`XCBF`→`CBOE`: the adapter maps CBOE→XCBF.PITCH; `XCBF` is unmapped→GLBX default). Launched CBOE-2026 (VX.FUT). Keep-
+  both-sides reconcile (ds@f43f50a restore + @3bed824 venue fix).
+- Batch fan-out (15 VMs CME/NASDAQ/NYSE) still draining + capturing `batch_databento`. CBOE + forward-poll capture
+  verification in flight. The 3-dataset tradfi batch (GLBX+DBEQ+XCBF) is now ALL launched.
+
+### 2026-06-21 16:25 — ohlcv_1s added (CME+CBOE only; equities don't support it)
+
+Operator: grab ohlcv_1s. Shipped ds@47c56d7 — lib + forward-poll default VM_DATA_TYPES now `ohlcv_1m;ohlcv_1s`
+(OHLCV_DATA_TYPES env override). **Key correction:** ohlcv_1s is expected ONLY for **CME + CBOE (futures)** per UAC
+`expected_coverage` (`CME:[trades,ohlcv_1s,ohlcv_1m,tbbo]`, `CBOE:[ohlcv_15m,ohlcv_1s,ohlcv_1m]`); **NASDAQ/NYSE list
+`[ohlcv_1m]` only** — equities (DBEQ.BASIC) have NO 1s, and the MTDS pre-flight correctly drops it
+(`dropping data_types not supported per UAC: ['ohlcv_1s']`). So equity-1s is NOT a gap. Deleted the 8 no-op equity-1s
+VMs; launched **CME-1s full-history** (7 roots × 2019-2026) + CBOE-1s. The default-both is harmless for equities
+(pre-flight drops 1s, fetches 1m). Operational health verified: 0 real rate-limit events fleet-wide, 0 code failures,
+liquid tickers captured.
+
+### 2026-06-21 16:40 — CME event contracts (binary/event markets) — IS + MTDS
+
+Operator: capture CME event markets. The 9 CME event-contract roots (ECES/ECBTC/ECRTY/ECYM/ECGC/ECCL/ECNG/EC6E/ECNQ,
+GLBX.MDP3 .OPT parents, Databento coverage from 2025-09-28, classified EVENT_CONTRACT). On-allowlist (GLBX subscribed);
+UAC has `CME:{...,EVENT_CONTRACT}`. Findings:
+
+- **IS index had ZERO event-contract instruments** — `launch-tradfi-event-contract-backfill.sh` (VM_TASK=instruments-
+  backfill, `--operation instruments`, no `--source` needed) had **never run**. Launched it
+  (`tradfi-event-contract-backfill-20260621-163633`); verifying EC instrument definitions land in
+  `instruments-store-tradfi-prd` `_index`.
+- **MTDS had 1438 captured EC\* cells** (all 9 roots, 2025-09-28→2026-06-17: trades 1296, ohlcv_1m 124, ohlcv_1s 18) —
+  ohlcv sparse because the EC roots weren't in the CME OHLCV backfill. Launched a dedicated **MTDS EC\* OHLCV backfill**
+  (9 EC roots, 2025-09-28→yesterday, ohlcv_1m+1s) to complete it.
+- ohlcv_1s health re-confirmed: CME-1s capturing (es-2024 `data_type=ohlcv_1s`); **0 rate-limit events across 38 VMs**
+  (no self-cap needed). CME-1s full-history wave was timeout-killed partway → relaunched the remaining roots
+  (CL/GC/ES_OPT + MNQ tail) in background.
+
+### 2026-06-21 17:49 — TRADFI LIVE producer launched (live_databento; live==batch)
+
+Operator probe: the forward-poll = `batch_databento` (T-1 download), NOT real-time `live_databento` → tradfi LIVE rows
+still 0. Launched the genuine live producer: `mtds-live-tradfi-cme-trades-20260621-174904` (e2-standard-8,
+LONG*LIVED_LIVE) via
+`launch-mtds-live.sh --asset-group tradfi --shard-spec tradfi:CME:trades --instrument-ids "ES;NQ;CL;GC"`. The
+`databento_tradfi_ws` connector subscribes `schema=trades`, `SType.PARENT`, aggregates → live candles stamped
+`live_databento` (live==batch: same schema/data_types, pipeline_mode=`live*<source>`). Uses the existing
+`databento-api-key` (in Secret Manager). US markets OPEN (17:49 UTC). Verifying it connects to Databento **Live**
+streaming (the one open question = whether the account's subscription includes Real-Time/Live; if not → genuine
+BLOCKED-CREDENTIALS, the only acceptable non-completion). Watcher armed.
+
+- [x] ✅ [SCRIPT] P2. **deployment-service: harden the VM log-uploader thread** — on the CME-1s VMs the GCS run.log
+      uploader froze ~16:35 (large 1s logs) while the run + heartbeat + shard-writes continued fine (heartbeat fresh, no
+      premature watchdog kill). Cosmetic (can't tail those logs) but worth a try/except + re-arm in the uploader loop.
+      Repo: deployment-service (setup-data-pipeline-vm.sh uploader daemon). — unified-trading-library@5ed6824c
+      (lifecycle/uploader.py: daemon-thread + 90s join timeout caps blocking upload_bytes();
+      test_blocking_upload_does_not_freeze_loop added)
+
+### 2026-06-21 17:55 — TRADFI live_databento: diagnosed (3 bugs + subscription unknown) — FLAGGED not stomped
+
+Launched a real tradfi live producer (`mtds-live-tradfi-cme-trades`) to test live==batch. It FAILED — 3 precisely
+root-caused bugs in the (peer's, in-flight) `mtds-live` / `databento_tradfi_ws` live scaffold + 1 vendor unknown.
+**Deleted the broken VM** (it wrote 4 wrong `live_massive` empty rows). Bugs (filed for the live-pipeline lane; NOT
+fixed here — the UAC file is actively peer-edited + needs a tarball rebuild + the subscription is unconfirmable):
+
+- [x] ✅ [SCRIPT] P1. **mtds: `databento_tradfi_ws._get_api_key()` reads the raw Pydantic field
+      `cfg.databento_api_key`** (None unless `DATABENTO_API_KEY` env set) → logs
+      `no API key — connection skipped (BLOCKED-CREDENTIALS)`. The BATCH path resolves the key from the
+      `databento-api-key` **secret** via the secret client (works). Fix: `_get_api_key` fallback-resolves
+      `databento_secret_name` via `get_secret_client()` like batch. Repo: market-tick-data-service. —
+      market-tick-data-service@e532105
+- [x] ✅ [SCRIPT] P1. **UAC: `live_source_for_venue(tradfi,…)` mis-stamped live rows `live_massive`** — resolved tradfi
+      live/replay via the BATCH `SOURCE_PRIORITY[0]=massive`. **CORRECTION** to the original framing: `massive` IS
+      live-capable (operator 2026-06-05, Polygon.io 15-min REST — NOT batch-only; do NOT remove its `Mode.LIVE`). Real
+      root cause: the SOLE tradfi live **WS producer** is `databento_tradfi_ws` (massive/yahoo/barchart have no live WS
+      connector). Fix = a `tradfi` branch in `live_source_for_venue` → `databento` (mirrors
+      `_PREDICTION_LIVE_SOURCE_FOR_VENUE`); batch path unchanged (`get_primary_source(tradfi,*)=massive`). —
+      unified-api-contracts@1205ae44 | verified `live_pipeline_mode_for_venue(tradfi,*)=live_databento` + 48/48
+      `test_source_priority_pipeline_mode.py` green | isolated-worktree promotion (concurrent peer WIP on
+      `_source_priority_data.py` preserved, not bundled).
+- [x] ✅ [DATA] P1. **launch-mtds-live.sh tradfi instrument-ids format** —
+      `CME:FUTURES:ES;CME:FUTURES:NQ;CME:FUTURES:CL;CME:FUTURES:GC` (`_parse_instrument_id` needs
+      `venue:type:underlying`). — relaunched `mtds-live-tradfi-cme-trades-20260621-213416` → CONNECTED + authenticated
+      (`session_id` issued) + streaming live ticks.
+- [x] ✅ [DATA-OPERATOR] P0. **Databento Real-Time/Live subscription CONFIRMED** (operator 2026-06-21: the usage-based
+      plan includes Live data + 1yr L1 / 1mo L2-L3 history — the live WS is NOT subscription-blocked). The producer
+      connects + authenticates against `wss://live.databento.com`.
+- [x] ✅ [DATA] P1. **Deploy the `live_databento` stamp fix (UAC@1205ae44) to the running live producer** — the live VM
+      bakes UAC from a GCS **tarball** (working-tree tar), so `mtds-live-tradfi-cme-trades-*` keeps `live_massive` until
+      a `create-code-tarballs.sh` rebuild **from a clean LDR checkout** (NOT this peer-WIP dev workspace) + relaunch.
+      The daily forward-poll cron relaunches but REUSES the existing tarball — a tarball rebuild is the gating step.
+      Repo: deployment-service. Provenance: this Progress Log. NOTE: the dispatch's tradfi LIVE item (forward-poll T-1 +
+      daily-cron host) IS done (`batch_databento`); `live_databento` websocket is beyond-dispatch peer-domain work, now
+      fully diagnosed for them. — slot-4@vm-planning | tarball rebuilt from UAC@04ca4647 (incl 1205ae44 fix) | old VM
+      deleted | new VM `mtds-live-tradfi-cme-trades-20260621-223242` RUNNING | T+5min manifest:
+      pipeline_mode=live_databento ✓
+
+### 2026-06-21 19:40 — TRADFI honest-cov re-measured: 5.3% → 13.8% (captured TRIPLED), still climbing
+
+Consolidated `_index`: captured **102,936 → 310,180** (3×), `ohlcv_1s` **3,187 → 48,656** (15×), schema 99.7% v9.
+Landed: NYSE ohlcv_1m **125,915** (full DBEQ equity history — was ~0/wrongly-empty), CME ohlcv_1m 68,729 + ohlcv_1s
+49,171, NASDAQ 36,295, CBOE 135. **0 failures from this backfill** (the 9,998 `attempted_failed` are STALE 2026-04-30→
+05-26 pre-existing runs). 12 CME-1s VMs still finishing (re-armed finalizer). The flat 818k `expected_unattempted` is
+**structural honest-absence**, not a gap: trades/tbbo/mbp_10 (L1/L2 window-bound, un-backfillable historically),
+ohlcv_15m/24h (MDPS-DERIVED not MTDS-fetched), ICE (off-allowlist). Two real manifest items found:
+
+- [x] ✅ [DATA] P2. **NYSE/NASDAQ `ohlcv_1s` — OPERATOR CHOSE FETCH (option A), DEPLOYED + CAPTURING (2026-06-21).**
+      Investigated: DBEQ.BASIC serves equity 1s (allowlist allows) but
+      `expected_coverage`+`VENUE_DATA_TYPE_CAPABILITIES` had NASDAQ/NYSE=[ohlcv_1m] only → pre-flight dropped 1s.
+      Operator confirmed equity 1s is in-scope. Fix: added `ohlcv_1s` (start 2023-04-15) to BOTH
+      `VENUE_DATA_TYPE_CAPABILITIES[NASDAQ/NYSE]` (pre-flight fetches it) AND `expected_coverage[tradfi][NASDAQ/NYSE]`
+      (denominator) — unified-api-contracts@87c60b50. Rebuilt UAC tarball from clean LDR + launched NASDAQ+NYSE
+      `ohlcv_1s` year-shard backfill (`OHLCV_DATA_TYPES=ohlcv_1s`, 2023→2026, 8 VMs). VERIFIED CAPTURING in prod:
+      `tradfi-bf-nasdaq-ohlcv-1m-2025` log `dt=ohlcv_1s … captured=45`, NYSE `captured=158`.
+- [ ] [DATA] P2. **ohlcv_15m/24h conversion — 429 FIXED but NOT done; 4-part diagnosis (corrected 2026-06-22, I had
+      prematurely flipped this ✅).** The 429 storm IS fixed (UTL per-VM shard lock+coalesce @6b6d53bd + MTDS batch_size
+      @d0f42ba: 429 1060→64, monotonic counts) — but that only UNMASKED that MDPS's manifest writes FAIL VALIDATION, so
+      0 CME/NASDAQ/NYSE 15m/24h convert. Four parts: (1) ✅ MDPS row_key passed `instrument_id=''` for aggregated
+      candles → MalformedRowKeyError — FIXED (omit instrument_id for non-per-instrument shards,
+      market-data-processing-service); (2) ✅ MDPS missing `source=` for multi-source tradfi → manifest write rejected —
+      FIXED (thread source from the input `pipeline_mode`); both in canonical_writer, tests green, DEPLOY PENDING
+      (tarball+relaunch). (3) ❌ ~64k of the 1m corpus is OLD migrated data with malformed
+      `instrument_id='ticks_migrated_20260418T143552Z'` → StreamingParquet partition_mismatch on the aggregated DATA
+      write (the 167k databento 1m are clean + aggregate fine; only the 64k massive-migrated fail) — needs the migrated
+      1m re-keyed/re-backfilled. (4) ❌ the 15m/24h `expected_unattempted` is seeded `source=massive`/blank (legacy —
+      massive used to serve aggregated bars) but the real path is now databento→MDPS (`source=databento`), so databento
+      15m/24h captures land as NEW rows and the massive-keyed unattempted (103,651 cells) never converts — PHANTOM seeds
+      needing reconcile to databento (IS enumerator). Repo: market-data-processing-service +
+      unified-api-contracts/instruments-service (seeding). Provenance: this Progress Log.

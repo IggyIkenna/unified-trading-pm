@@ -32,7 +32,9 @@ code_refs:
 > SSOT for the **crypto perpetual-futures** product on the prediction venues — distinct from the binary YES/NO
 > prediction markets. Kalshi and Polymarket each launched CFTC-regulated crypto perps in 2026 (Kalshi 2026-05-29,
 > Polymarket 2026-04-21). These are **`cefi` asset_group** instruments (regulated crypto perps), NOT `prediction`.
-> Plan-of-record: `plans/active/prediction_venue_perps_and_live_clob_depth_2026_06_20.md`.
+> Plan-of-record: `plans/active/prediction_perps_kalshi_polymarket_parked_2026_07_24.md` (successor to
+> `prediction_venue_perps_and_live_clob_depth_2026_06_20.md`, split + archived 2026-07-24 per the plan line-cap
+> remediation).
 
 ## Venue tokens (UAC `registry/venue_constants.py` — already registered)
 

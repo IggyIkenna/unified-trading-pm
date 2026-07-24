@@ -14,7 +14,7 @@ Baseline categories tracked:
   - ``orphan_docs``       : codex docs without enum entry (b)
   - ``legs_in_prose``     : legs-in-prose drift (d)
 
-SSOT: plans/active/capability_wizard_and_manifest_2026_06_11.md section 6B parity quality gates.
+SSOT: plans/archive/2026_07/capability_wizard_and_manifest_2026_06_11.md section 6B parity quality gates.
 
 Exit-code semantics: 0 = at/below baseline (green); 1 = regression (new findings); 2 = arg/IO error.
 """
@@ -86,9 +86,7 @@ def _run_audit() -> dict[str, int]:
 
 
 def _parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(
-        description="Two-sided prospectus vs codex audit (baselined ratchet gate)"
-    )
+    parser = argparse.ArgumentParser(description="Two-sided prospectus vs codex audit (baselined ratchet gate)")
     parser.add_argument(
         "--baseline-path",
         type=Path,
@@ -120,6 +118,7 @@ def main() -> int:
     except Exception as exc:  # pylint: disable=broad-except
         print(f"ERROR: audit failed -- {exc}", file=sys.stderr)
         import traceback
+
         traceback.print_exc()
         return 2
 
@@ -154,13 +153,10 @@ def main() -> int:
         current = counts[key]
         base = baseline[key]
         if current > base:
-            regressions.append(
-                f"  {label}: {current} > baseline {base} (+{current - base} new)"
-            )
+            regressions.append(f"  {label}: {current} > baseline {base} (+{current - base} new)")
         elif current < base:
             print(
-                f"  improvement: {label}: {current} < baseline {base} -- "
-                "re-baseline with --baseline-write to codify."
+                f"  improvement: {label}: {current} < baseline {base} -- re-baseline with --baseline-write to codify."
             )
 
     if regressions:

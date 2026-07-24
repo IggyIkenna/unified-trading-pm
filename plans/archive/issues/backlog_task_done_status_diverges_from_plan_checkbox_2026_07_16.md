@@ -53,7 +53,7 @@ tags:
 related:
   [
     plans/active/issues/sports_travel_calculator_tz_aware_kickoff_crash_2026_07_14.md,
-    plans/active/sports_p2_features_history_to_ml_ready_2026_06_27.md,
+    plans/archive/2026_07/sports_p2_features_history_to_ml_ready_2026_06_27.md,
     codex/11-project-management/,
   ]
 created: 2026-07-16

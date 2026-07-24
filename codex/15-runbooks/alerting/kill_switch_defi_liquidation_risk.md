@@ -31,7 +31,8 @@ authoritative_for:
   Operator response when the DeFi liquidation-risk kill-switch fires. Halts execution-service DeFi connectors + paper-
   trade strategies + auto-deleverages collateral when health-factor approaches 1.0. Highest-impact alert in the live-
   DeFi pipeline; tier-1 page + circuit-breaker propagation.
-referenced_by: [plans/active/alerting_service_live_rules_2026_05_07.md, plans/active/master_to_live_defi_2026_05_23.md]
+referenced_by:
+  [plans/active/alerting_service_live_rules_2026_05_07.md, plans/archive/2026_07/master_to_live_defi_2026_05_23.md]
 execution:
   {
     owner: on-call operator (Ikenna / Harsh by rotation),

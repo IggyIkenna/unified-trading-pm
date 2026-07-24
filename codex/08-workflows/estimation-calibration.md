@@ -28,7 +28,7 @@ referenced_by:
     /codex/08-workflows/estimation-retrospective-ledger.md,
     /codex/11-project-management/active-plan-inventory-tracker.md,
     /codex/11-project-management/epic-execution-with-sub-agents.md,
-    plans/active/master_to_live_defi_2026_05_23.md,
+    plans/archive/2026_07/master_to_live_defi_2026_05_23.md,
     plans/epics/README.md,
   ]
 owner:

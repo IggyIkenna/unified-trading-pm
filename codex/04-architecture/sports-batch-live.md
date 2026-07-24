@@ -33,7 +33,7 @@ owner:
 last_reviewed: 2026-07-23
 code_refs:
 plan:
-  plans/active/sports_manifest_canonicalisation_2026_06_01.md +
+  plans/archive/2026_07/sports_manifest_canonicalisation_2026_06_01.md +
   pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md (R6-codex seam doc) +
   sports_consolidated_closeout_2026_07_19.md
 ---
@@ -225,5 +225,5 @@ There is no sports live stream today (capability matrix, §1). The timing rules 
   [`/codex/06-coding-standards/mode-axis-discipline.md`](/codex/06-coding-standards/mode-axis-discipline.md)
 - **Sports odds connectivity**: [`sports-live-odds-connectivity.md`](sports-live-odds-connectivity.md) +
   [`sports-integration-plan.md`](sports-integration-plan.md)
-- **Sports canonicalisation walk**: `plans/active/sports_manifest_canonicalisation_2026_06_01.md`
+- **Sports canonicalisation walk**: `plans/archive/2026_07/sports_manifest_canonicalisation_2026_06_01.md`
 - **Sports epic**: `plans/epics/sports_master.md`

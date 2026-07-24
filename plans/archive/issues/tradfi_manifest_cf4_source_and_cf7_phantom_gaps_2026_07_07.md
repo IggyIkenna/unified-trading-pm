@@ -20,7 +20,7 @@ scope: [engineer]
 tags: [tradfi, manifest, cf4, cf7, source, phantom-audit, canonical-form]
 related:
   [
-    /plans/active/tradfi_v9_stage1_finish_2026_07_06.md,
+    /plans/archive/2026_07/tradfi_v9_stage1_finish_2026_07_06.md,
     /plans/archive/2026_07/tradfi_manifest_canonicalisation_2026_06_01.md,
   ]
 created: 2026-07-07

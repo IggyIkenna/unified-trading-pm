@@ -17,7 +17,7 @@ supersedes: [sports_batch_pipeline_end_to_end_2026_03_25.plan.md]
 reconciliation_supersedes_added: 2026-04-25
 ---
 
-## Deferred work — migrated to: `plans/active/sports_p2_features_history_to_ml_ready_2026_06_27.md`,
+## Deferred work — migrated to: `plans/archive/2026_07/sports_p2_features_history_to_ml_ready_2026_06_27.md`,
 
 `plans/archive/2026_07/sports_features_readiness_for_predictions_2026_06_20.md` — successor:
 sports_p2_features_history_to_ml_ready_2026_06_27 (Phase 2 MTDS/MDPS/FSS bucket-validation goal, now on the 8-bucket ML

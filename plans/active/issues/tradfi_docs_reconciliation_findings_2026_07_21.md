@@ -238,7 +238,7 @@ the post-`--apply` id-form reality (nuance: paths/catalogue canonical since this
       migration). TradFi single-leg @LIN/@INV-YYYYMMDD extension for FUTURE/OPTION — IMPLEMENTED vi — applied
       unified-trading-pm@935de9424
 
-### `plans/active/tradfi_v9_stage1_finish_2026_07_06.md` — 1 (P2)
+### `plans/archive/2026_07/tradfi_v9_stage1_finish_2026_07_06.md` — 1 (P2)
 
 - [x] **[P2 L439]** - [ ] [DATA] P0. BLOCKED-PREREQUISITES (2026-07-13, slot-5). E7 verify — cf_manifest_audit ...
       CF-1..CF-12 all GREEN ... 2 genuine REDs remain (CF-1 v4 tail + C → FIX: Line 439 (E7-verify todo): reconcile the

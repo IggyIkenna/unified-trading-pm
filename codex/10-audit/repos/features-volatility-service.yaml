@@ -326,7 +326,7 @@ code_audit_items:
 live_defi_readiness:
   schema_version: "1.0"
   last_updated: "2026-05-23"
-  plan_ref: "plans/active/master_to_live_defi_2026_05_23.md"
+  plan_ref: "plans/archive/2026_07/master_to_live_defi_2026_05_23.md"
 
   group_rollup: # snapshot from service readiness matrix 2026-05-23
     A_code_health: "partial" # items 1-3 (see code_readiness)

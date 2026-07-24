@@ -23,7 +23,7 @@ scope: [engineer, admin]
 tags: [data-correctness, cf-8, available-at, regression, manifest-consolidator, sports]
 related:
   [
-    plans/active/sports_manifest_canonicalisation_2026_06_01.md,
+    plans/archive/2026_07/sports_manifest_canonicalisation_2026_06_01.md,
     /codex/02-data/availability-manifest-and-data-status.md,
     /codex/05-infrastructure/manifest-consolidator-ssot.md,
   ]

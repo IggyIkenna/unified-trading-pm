@@ -8,8 +8,8 @@ last_reviewed: 2026-05-18
 PM methodology standards, scope specifications (epics), architecture decision records, and domain reference data.
 
 **This section contains:** durable standards, ADRs, and scope specs. **For active task tracking:**
-`plans/active/master_to_live_defi_2026_05_23.md` (auto-inventory between `<!-- AUTO-INVENTORY-START/END -->` markers;
-regenerate via `python3 scripts/plans/regenerate_active_plan_inventory.py`). SSOT for tracker:
+`plans/archive/2026_07/master_to_live_defi_2026_05_23.md` (auto-inventory between `<!-- AUTO-INVENTORY-START/END -->`
+markers; regenerate via `python3 scripts/plans/regenerate_active_plan_inventory.py`). SSOT for tracker:
 `/codex/11-project-management/active-plan-inventory-tracker.md`. **For active plans and roadmaps:**
 `unified-trading-pm/plans/`
 
@@ -77,8 +77,8 @@ archaeology only — do NOT add new entries there.
 | ------------------------------------ | ----------------- | ----------------------------------------------------------- |
 | `plans/epics/orchestrator_master.md` | `vm-orchestrator` | agent-orchestrator multi-VM stack + planning VM + dashboard |
 
-**Cutover master (NOT an epic)**: `plans/active/master_to_live_defi_2026_05_23.md` is a dated, one-shot plan tracking
-May-23 cutover across all 19 epics. Archives after cutover. Not in `plans/epics/`.
+**Cutover master (NOT an epic)**: `plans/archive/2026_07/master_to_live_defi_2026_05_23.md` is a dated, one-shot plan
+tracking May-23 cutover across all 19 epics. Archives after cutover. Not in `plans/epics/`.
 
 ---
 

@@ -273,11 +273,12 @@ callers only (4 hits: the already-fixed `understat_eu_residual_closer_2026_07_08
   to the exact atexit race for the per-VM shard specifically. Swapped `manifest.flush()` → `manifest.close()` so the
   guaranteed drain runs explicitly, in-loop. **This script is NOT dead despite its own `Delete-when` marker and parent
   plan (`sports_fixtures_truthset_recovery_2026_05_06.md`) being archived** — it's actively referenced as a
-  still-to-be-re-run recovery tool in the current active plan
-  `plans/active/sports_p2_history_apifootball_2015_to_present_2026_06_27.md` (line ~487: "generate a fresh truthset ...
-  → run `recover_fixtures_from_truthset.py --flip-empty-attempts`"). Worth flagging: don't trust a script's own
-  `Lifecycle`/`Delete-when` header as proof of deadness — grep for its filename across `plans/active/` before assuming
-  it's safe to skip or delete.
+  still-to-be-re-run recovery tool in the plan (now archived, superseded by
+  `sports_consolidated_closeout_2026_07_19.md`)
+  `plans/archive/2026_07/sports_p2_history_apifootball_2015_to_present_2026_06_27.md` (line ~487: "generate a fresh
+  truthset ... → run `recover_fixtures_from_truthset.py --flip-empty-attempts`"). Worth flagging: don't trust a script's
+  own `Lifecycle`/`Delete-when` header as proof of deadness — grep for its filename across `plans/active/` before
+  assuming it's safe to skip or delete.
 
 **Checked, not fixed** — `scripts/recover_fixtures_from_truthset.py`'s own sibling from the same Phase-1/Phase-2
 recovery effort has no other asyncio-based counterparts; no other candidate scripts were found once the `asyncio.run(`

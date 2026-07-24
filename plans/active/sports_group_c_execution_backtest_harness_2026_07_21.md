@@ -90,7 +90,7 @@ CLI wiring, same shape as the 3 domains that already have it.
 - Is `backend_engineer` the right craft for the CLI wiring, or does the fixture/data-layer portion belong to `quant_dev`
   (same split question the sibling arb-decay-window design plan flagged for its own data-plumbing todo)?
 - Priority: this stays P3 given sports/predictions' explicit backtest-only, not-on-critical-path status per
-  `plans/active/master_to_live_defi_2026_05_23.md`'s readiness ladder — confirm no reason to raise it.
+  `plans/archive/2026_07/master_to_live_defi_2026_05_23.md`'s readiness ladder — confirm no reason to raise it.
 
 ## Codex SSOTs
 

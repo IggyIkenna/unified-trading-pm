@@ -39,7 +39,7 @@ updated: 2026-05-15
 locked_by: live-defi-rollout
 locked_since: 2026-05-09
 spawned_from: plans/questions/paper_vs_live_workflow_maturity_2026_05_08.md
-implements_in: plans/active/master_to_live_defi_2026_05_23.md
+implements_in: plans/archive/2026_07/master_to_live_defi_2026_05_23.md
 ---
 
 # Per-venue paper-mode policy

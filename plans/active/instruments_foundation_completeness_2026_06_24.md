@@ -5,7 +5,9 @@ summary:
   Gated (G0->G5, operator sign-off each gate) rebuild of the instruments foundation cefi-first then defi/tradfi/sports
   -- honest 4-state capture, expected_unattempted seeded by the IS writer, catalogue available_to from venue-truth (not
   last-seen) to kill mass false-delisting, Honest-Coverage v2 two-layer coverage via compute_honest_coverage, every
-  backfill a registered observable BATCH deployment.
+  backfill a registered observable BATCH deployment. SLIMMED 2026-07-24 (plan line-cap remediation, 4-way split) into a
+  process SSOT + rolling-status index over 4 children -- Phase-0 cross-cutting foundations, cefi G1->G5 gate execution,
+  tradfi G1->G5 gate execution (all 3 new), plus the pre-existing defi/sports per-AG delegated plans.
 status: active
 nature: process
 asset_group: [cross-cutting]
@@ -33,10 +35,14 @@ tags:
     sports,
     manifest,
     foundation,
+    umbrella,
   ]
 related:
   [
     /codex/02-data/instruments-foundation-and-catalogue-completeness.md,
+    instruments_foundation_phase0_cross_cutting_2026_07_24,
+    instruments_cefi_g1_g5_gate_execution_2026_07_24,
+    instruments_tradfi_g1_g5_gate_execution_2026_07_24,
     plans/active/defi_instrument_catalogue_and_capture_pipeline_2026_06_23.md,
     plans/active/sports_fixture_completeness_oracle_2026_06_24.md,
     plans/active/instruments_mtds_subset_consistency_remediation_2026_06_17.md,
@@ -48,10 +54,11 @@ assigned_vm: NA
 execution_scope: local-only # was: orchestrator-agent — corrected 2026-07-14, verify-rerun finding 113, per the finding-9 operator ruling precedent (two-track model stands): assigned_vm NA => local-only; AO regen ignores NA plans regardless, so ingestion semantics unchanged
 priority: P0
 estimate_class: design
-estimate_baseline_ai_days: 32
-estimate_calibrated_ai_days: 19
-last_updated: 2026-07-13 # was: 2026-06-27 — corrected 2026-07-14, doc-reconciliation vr2#118: body carries dated entries through 2026-07-13 (G4 SIGN-OFF CONTESTED annotation) + 2026-07-06 (G2-G5 SIGNED-OFF entries) that were never reflected in frontmatter
-locked_by: live-defi-rollout
+estimate_baseline_ai_days: 6
+estimate_calibrated_ai_days: 3
+assigned_role: monitor
+last_updated: "2026-07-24" # was: 2026-07-13 — updated 2026-07-24, plan-line-cap remediation 4-way split (plans/active/issues/plan_line_cap_remediation_2026_07_23.md row #14): Phase-0/cefi/tradfi gate-execution content + the 945-line historical Progress Log extracted to 3 new child plans; this file slimmed to a process SSOT + rolling-status index; locked_by/locked_since cleared per operator-approved unlock.
+locked_by:
 locked_since:
 supersedes:
 superseded_by:
@@ -61,11 +68,23 @@ source:
     operator directive 2026-06-24 (foundation-first reset; ask-every-gate; observability mandatory; coverage in-line
     with UI),
     cefi instruments ground-truth audit 2026-06-24 (read-only; see §Starting state),
+    "plan-hygiene 4-way split 2026-07-24 (operator-approved, see
+    plans/active/issues/plan_line_cap_remediation_2026_07_23.md row #14)",
   ]
 drift_direction: advance-code
 ---
 
 # Instruments Foundation & Catalogue Completeness — gated rebuild
+
+> **🟢 SLIMMED 2026-07-24 (plan line-cap remediation, 4-way split, operator-approved unlock+split-as-is — see
+> `plans/active/issues/plan_line_cap_remediation_2026_07_23.md` row #14).** This file is now the **process SSOT +
+> rolling status index**. The G1→G5 gate-execution work + the ~945-line historical Progress Log that used to live inline
+> here moved verbatim into 3 new child plans (Phase-0 cross-cutting foundations, cefi G1→G5, tradfi G1→G5); defi and
+> sports were **already delegated** to their own per-AG plans in the pre-split text and are unchanged. See "Related
+> execution plans" below for the full set of 4 children + the 2 already-delegated per-AG plans, and "Condensed rolling
+> status table" for the current gate state of each. **`locked_by`/`locked_since` cleared** on this file as part of the
+> operator-approved unlock (the 3 new children + this slimmed umbrella are NOT locked; the historical G2-G5 SIGNED-OFF
+> record and the GATE 0/G1/G4 sign-off tensions flagged 2026-07-14 are accepted AS-IS, not re-litigated by this split).
 
 **Codex SSOT (the standard this plan executes):** `/codex/02-data/instruments-foundation-and-catalogue-completeness.md`.
 
@@ -75,6 +94,8 @@ Rebuild it in the **gated order**, **operator sign-off at every gate** (ask ever
 backfill/roll-up/job must be a **registered, observable BATCH deployment** in the cockpit (no fire-and-forget). Every
 coverage number flows through the **`compute_honest_coverage` SSOT** so the deployment-UI shows the same real number.
 **cefi first**, then defi · tradfi · sports — same process.
+
+---
 
 ## Starting state — cefi ground-truth audit (read-only, 2026-06-24)
 
@@ -119,432 +140,41 @@ operator ruling rather than asserting either reading.]**
 > (children `sports_p0_*` … `sports_p2_*`). **Do NOT dispatch the sports G-gates from THIS plan.** This plan's sports
 > section is audit/context only.
 
----
+### Sports audit + manifest-correctness pre-staging (2026-06-24, moved here from the historical Progress Log 2026-07-24)
 
-## Near-term target — cefi + defi daily instrument pipeline live (operator 2026-06-26)
-
-The concrete first outcome for cefi **and** defi together (do them as one workstream — same producer, same aggregator):
-
-1. **Daily instrument-definition backfill complete, both AGs, with the RIGHT missing reasons.** Rebuild the dead daily
-   producer (see Phase 0 / the folded `[INFRA] P0 "Rebuild the IS daily definition producer"`), then fill the freeze gap
-   (cefi `by_date` frozen ~2026-05-21 → present; defi ~2026-05-07 → present) so each day is captured. **Honest 4-state
-   reasons (HARD):** missing/un-attempted days seeded `expected_unattempted` (gap reads 0%, not absent); genuine empty →
-   typed `EmptyConfirmedReason` (never blank); fetch-failure → `attempted_failed`, NOT `empty_confirmed` (the CF-11
-   swallow class — writer-fix so future daily writes are honest). DoD: no silent day-gaps for cefi/defi; every
-   non-captured cell carries a typed reason; the daily producer runs green on a schedule (no fire-and-forget —
-   registered observable BATCH job).
-2. **Daily catalogue aggregator live + green, both AGs.** The lifecycle roll-up (`build_instrument_catalogue.py` →
-   `{env}/catalog.parquet`) runs on a daily per-AG schedule. Remaining work (folded `[INFRA] P1` items):
-   `terraform apply` of `lifecycle_catalogue_scheduler.tf` (deployment@98bee4b) **+ fix the cloud regen job's
-   fast-fail** (add stdout bisection logging, localize the job-only failure, fix it). DoD: the cefi + defi catalogue
-   regenerates daily from the fresh `by_date` definitions, monotonic-guard ACCEPT, click-through-able in the cockpit; a
-   manual T+10min and a next-day T+24h execution both verified.
-
-Gate: this target is the cefi+defi half of G0→G1; **stop here for operator sign-off before the per-AG G2+ gates.**
-Coverage is the verification lens — every number flows through `compute_honest_coverage` (Phase 0 below).
-
-### Findings + todos from Sonnet dispatch #1 (2026-06-26, live GCP-verified)
-
-- [x] [CODE] P0. ✅ **IS writer seeds `expected_unattempted` pre-capture — SHIPPED instruments-service@f739a41.** Seeder
-      in `process_write.py::_seed_expected_unattempted_for_target_universe` (runs in `_write_all_venues` before
-      `manifest.close()`, same per-run manifest, no extra GCS walk); row-key parity with the capture writer via the
-      shared `writers.py::_canonical_manifest_venue_chain` helper; seeds only in-universe venue-grain cells not already
-      captured/failed (`lookup() is None`, never overwrites attempted_failed → honest 4-state intact); pre-launch venues
-      stay absent. QG-green (3810 passed), 9 unit tests; runtime-verified: synthetic cefi gap day → 24 EU cells = 0.0%
-      honest gap. (Original finding below.) The IS instruments manifest has ZERO `expected_unattempted` rows → missing
-      days are silently absent, so `day_coverage ≈ 99.9%` is a dishonest blind number (this is THE G1-honesty blocker).
-      The v2 enumerator seeds only the MTDS market-data manifest, not the IS instruments manifest. Per the codex HARD
-      RULE ("`expected_unattempted` materialised by the WRITER, never re-derived"), extend the IS daily producer so that
-      BEFORE attempting capture it seeds `expected_unattempted` for its configured could-exist universe at the IS grain
-      (venue × day) — so a missing day reads 0%, not absent. Repo: instruments-service (+ UTL writer if needed). DoD:
-      cefi+defi IS manifest shows real `expected_unattempted` counts; a synthetic gap day reads 0%.
-- [x] [INFRA] P0. ✅ **defi prod daily producer CREATED + verified** — created `uts-prod-instruments-service-t1-recon`
-      (the name the 00:00 scheduler already targets), cloned cefi's spec, pointed at `--asset-group=DEFI`; one run
-      **wrote 53 defi venue parquets for `day=2026-06-26`** (AAVE_V3 ×8 chains, …). defi `by_date` was frozen ~05-07
-      because this prod job never existed. NOTE: the all-AG no-`--asset-group` form **crashes** (exit 1) — see new
-      finding; job is defi-scoped for now. Was: only `uts-prod-instruments-service-cefi-t1-recon` existed.
-- [x] [INFRA] P0. ✅ **cefi producer de-hardcoded + verified** — removed the fixed `--start-date/--end-date=2026-06-23`
-      override; CLI now self-defaults to today. One run **succeeded (count=1) + wrote 24 cefi venue parquets for
-      `day=2026-06-26`** (BINANCE-SPOT/FUTURES, BYBIT, BITGET, ASTER, …). The blank counts were the stale fixed-date
-      re-runs; now genuinely completing. Was: `--start-date=2026-06-23 --end-date=2026-06-23` re-running one day
-      forever.
-- [ ] [INFRA] P1. **Disable/update the dead-CLI legacy daily Workflow.** `services/instruments-service/gcp/main.tf`
-      `instruments-service-daily` (09:00 UTC) uses the dead CLI `--operation instrument` (singular) +
-      `--CEFI/--TRADFI/--DEFI` flags; current CLI is `--operation instruments --asset-group <ag>`. If still scheduled it
-      silently fails daily. Disable or update. Repo: instruments-service / deployment-service.
-- [x] [INFRA] P1. ✅ **Catalogue-regen fast-fail diagnosis — IS bisection SHIPPED @f739a41; terraform + apply pending.**
-      The 6 `[BISECT-*]` markers in `build_instrument_catalogue.py` landed in instruments-service@f739a41. REMAINING:
-      ship the `PYTHONUNBUFFERED=1` add to `lifecycle_catalogue_scheduler.tf` (deployment-service) → `terraform apply` →
-      one manual run → read the last `[BISECT-*]` marker → fix the real cloud failure. Repo: deployment-service.
-      _(Cross-ref 2026-07-03: SUPERSEDED by `instruments_catalogue_incremental_rollup_2026_06_29.md` Phase 3 — the cloud
-      failure was diagnosed (full-history walk > 3600s timeout, 3 of 5 AGs), the durable fix is the incremental rollup
-      @b0596d0c, and its terraform apply carries `PYTHONUNBUFFERED=1` (already in the tf) + the weekly full self-heal
-      jobs. Verify there before re-doing work here.)_ — instruments-service@f739a41d + deployment-service@c1d2e3e6 (both
-      reachable on origin/live-defi-rollout); terraform/gcp/lifecycle_catalogue_scheduler.tf carries
-      `PYTHONUNBUFFERED = 1`.
-- [ ] [INFRA] P1. **NEW (2026-06-26): the all-AG no-`--asset-group` producer path crashes (exit 1, ~1 min, no
-      traceback).** Same image/spec as cefi but omitting `--asset-group` → instant exit 1. The "all" path
-      (`instruments_handler.py:367` is_all → SPORTS/CEFI/DEFI/TRADFI) is broken. Fix it so one 00:00 job can capture all
-      AGs; until then the 00:00 job is defi-scoped and **sports/tradfi/prediction have NO working prod daily producer**
-      (a separate gap to stand up). Repo: instruments-service.
-- [ ] [INFRA] P1. **NEW (2026-06-26): the t1-recon Cloud Run JOB specs have no IaC source.** terraform manages only the
-      schedulers (`t1_batch_scheduler.tf`); the JOB definitions (image/args) are imperative — which is how the cefi
-      date-drift and the missing all-AG job went invisible. Codify the job specs (terraform or a tracked deploy script)
-      so they can't silently rot. Repo: deployment-service.
-- [ ] [SCRIPT] P2. **Registry gap:** `lifecycle-catalogue-regen-prediction` is in the TF `for_each` (5 AGs) but not in
-      `cloud_run_job_registry.py::_LIFECYCLE_CATALOGUE_JOBS` (4 AGs, "no prediction"). Reconcile so the guard test
-      doesn't flag drift. Repo: deployment-service.
-
-> **Verified OK (no CF-11 swallow on the IS side):** fetch-failure → `record_failed`/`attempted_failed`
-> (`process_completeness.py::_finalize_completeness`) and genuine-empty handling are correct. The only honesty gap is
-> the `expected_unattempted` seeding above. Slot-hygiene note: the IS clone Sonnet #1 used is 83 commits behind LDR (3
-> stale VIX-cash tests fail) — `git pull --ff-only origin live-defi-rollout` before shipping IS code.
-
-### Progress Log — autonomous run 2026-06-26 (cefi+defi catalogues to done)
-
-> **🟢 VMs RUNNING (instruments-definition freeze-gap backfill, asia-northeast1-c):** `cefi-instr-all-20260626-120626`
-> (cefi 2026-05-21→06-25, all venues, skip-existing) + `instr-backfill-defi-targeted-20260625` (defi 2026-05-07→06-25,
-> e2-standard-8). Per-VM shard isolation + consolidator merge. Verify written rows land in the `-prd` bucket the
-> catalogue reads (launcher echoes a legacy non-`prd` name — VM resolves via DEPLOYMENT_ENV=prod).
-
-- **cefi producer** ✅ de-hardcoded + verified (24 venues, day=2026-06-26, succeeded=1).
-- **defi producer** ✅ created `uts-prod-instruments-service-t1-recon`→DEFI + verified (53 venues, day=2026-06-26).
-- **EU-seeding** ✅ SHIPPED instruments-service@f739a41 (QG-green, runtime-verified) — promoting LDR→staging.
-- **catalogue-regen bisection** ✅ SHIPPED in @f739a41 (IS side); deployment-service `PYTHONUNBUFFERED` +
-  `terraform apply` NEXT.
-- **freeze-gap backfills** 🟢 launched (both VMs RUNNING) — fills the no-gap history; monitor to completion.
-- **catalogue PYTHONUNBUFFERED** ✅ applied live + codified deployment-service@c90cf97.
-
-#### Actual gap shape (manifest-measured 2026-06-26) — gaps are SMALL + recent, not a months freeze
-
-- **cefi**: 59,485 captured, 26 venues, history to 2019 (re-written 06-24). Cell grain = `date×venue` (data_type is
-  empty for cefi defs; instrument class lives in `instrument_type` inside the parquet, NOT a manifest cell). Gaps: **5
-  absent days** (06-19/20/21/24/25) + 5 thin days (06-12→16) + 2 straggler venues (COINBASE/OKX bare aliases) + 44
-  attempted_failed. 0 expected_unattempted yet (EU runs once the image carries f739a41).
-- **defi**: 169,541 captured, 31 venues, 11 chains, 2 data_types (defs + `instrument-catalog`). Gaps: **4 absent days**
-  (06-22→25) + 3 straggler venues (CAMELOT_V3-ARBITRUM/EXTENDED/UNISWAP_V3-BASE) + 1,269 attempted_failed.
-- **The instrument backfill fills `days×venues(×chains)` — NOT data_types.** `data_types` (ohlcv_1s/1m, trades, swaps)
-  are the MTDS market-data layer (separate; the tradfi ES ask below).
-
-#### Expanded scope (operator 2026-06-26): tradfi CME + ES ohlcv + Yahoo FX/Treasuries/DXY
-
-- [x] [INFRA] P0. ✅ **tradfi instrument-definition backfill LAUNCHED** — `launch-tradfi-is-defs-sharded.sh` 9-shard
-      fleet RUNNING (`instr-backfill-tradfi-{cboe,nasdaq,…}-*`), covers CME + all tradfi venue defs (current: 14,192
-      captured, CME 3,532 rows 2020→06-24).
-- [ ] [DATA] P0. **ES CME futures ohlcv 1s+1m — IN FLIGHT** (`tradfi-bf-cme-ohlcv-1m-es-{2020,2025,2026}` RUNNING;
-      launcher lib defaults to BOTH `ohlcv_1m;ohlcv_1s`). REMAINING: confirm ALL years 2020-2026 covered (only
-      2020/25/26 VMs seen — verify 2021-24 done or launch), manifest-verify per-year. Billing-fail-closed (Databento
-      PAYG, shared singleton lock).
-- [ ] [DATA] P0. **ES CME OPTIONS (ES_OPT) ohlcv 1s+1m — NOT yet launched** (singleton Databento lock held by the
-      futures fleet). Launch `launch-tradfi-bf-cme-ohlcv-1m.sh --only-root ES_OPT` once the lock frees (11-cluster
-      ES_OPT_PARENTS set).
-- [x] [DATA] P1. ✅ **Yahoo FX / Treasuries / DXY instruments — universe COMPLETE.** Treasuries (all 5 tenors:
-      US3M/US2Y/US5Y/US10Y/US30Y → ^IRX/2YY=F/^FVX/^TNX/^TYX) + DXY (DX-Y.NYB) were ALREADY enumerated in UAC
-      `YAHOO_INDICES`. Gap was FX (only KRW/USD) → added the **10 G10 FX majors** (EUR/GBP/JPY/AUD/CAD/CHF/NZD crosses +
-      USD/MXN). Shipped `UAC@526f3c83` + `instruments-service@97cdf92`, QG-green, runtime-verified (16 records
-      enumerate). FX ohlcv backfill running (`tradfi-bf-fx-ohlcv-24h-2026`); existing FX/DXY/treasury defs captured by
-      the running tradfi backfill; the NEW G10 FX majors capture once the image carries UAC@526f3c83.
-- NEXT: monitor all backfill fleets to completion (climbing metric = captured days/cells); launch ES_OPT when lock
-  frees; once instrument backfills done + image carries f739a41 → regen cefi+defi catalogues + verify honest coverage;
-  the all-AG producer crash (sports/tradfi/pred have no daily producer) stays a tracked finding.
-
-#### Checkpoint 12:40 — ALL-5-AG foundation drive (operator: complete instruments+catalogue+coverage+MTDS for every AG)
-
-- **Daily-producer truth (live GCP):** cefi has 06:00 job ✅; defi = repurposed 00:00 job ✅; **tradfi/sports/prediction
-  have NO prod daily producer** (sports only `uts-dev-…-sports-fixtures`). The durable fix = the all-AG crash fix (agent
-  a81f8) → restore the 00:00 `uts-prod-instruments-service-t1-recon` to no-`--asset-group` (covers SPORTS/DEFI/TRADFI;
-  PREDICTION is separate per `is_all` — agent to confirm). Until then today's capture is covered by the backfill fleets.
-- **IMAGE BUILD is MANUAL + STALE** (`image:latest` last built 2026-06-23 via `instruments-service/cloudbuild.yaml`, NO
-  auto-trigger on main). f739a41 reached main 12:33 but the cloud jobs still run 06-23 code. **DO NOT build yet:** the
-  IS working tree is dirty with two agents' WIP (Yahoo universe a80ad + all-AG crash fix a81f8). **SEQUENCE: agents land
-  their IS code → backfills done → build the image ONCE (`gcloud builds submit --config cloudbuild.yaml`) from a CLEAN
-  f739a41+ tree → redeploy cloud producer/catalogue jobs → re-run producers (seed EU) → regen catalogues → verify.** Do
-  NOT run producer/catalogue LOCALLY from the current dirty tree either.
-- **In flight:** cefi+defi instrument backfills (verified writing: defi wrote 6285 rows/52 venues for 05-19, honest
-  attempted_failed for 2 dead venues; cefi gap days 06-22/23 now present). tradfi IS-defs 9-shard fleet. tradfi CME
-  ohlcv ES 1s+1m (es-2020/25/26) + CL/GC/HG/NG/NQ/SI + FX/NASDAQ/NYSE. 3 agents: Yahoo (a80ad), all-AG-crash (a81f8),
-  sports+prediction backfills (a8c9).
-- **Loop drivers:** watchdog b9ermg8qr (Databento lock → ES_OPT) + the 3 agents' completion notifications.
-
-## Phase 0 — cross-cutting foundations (block G2; build once, reused by every AG)
-
-- [ ] [INFRA] P0. **Observability wiring (§0.5) for every instruments/MTDS backfill VM + roll-up job** — register as a
-      classified `DeploymentTarget` (`classify_deployment_target` + `cloud_run_job_registry` / VM `lifecycle_class`),
-      `ServiceBootstrap` + `log_event` + 60s `PIPELINE_HEARTBEAT` + ≥1 progress/hr, error→`#data-pipeline-alerts`,
-      terminal `exit_code` + log-mtime persisted, **appears in `/deployments` BATCH tab with click-through to logs**.
-      DoD: a launched job is click-through-able in the cockpit; SSH not required. SSOT:
-      `/codex/05-infrastructure/deployment-observability.md`.
-- [ ] [SCRIPT] P0. **Layered coverage via the SSOT (Honest-Coverage v2 — two-layer, NOT a v1 single-layer script)** —
-      **[v2 ALIGN 2026-06-30, A12/A13/C12]** this MUST be the Honest-Coverage **v2** model per
-      `/codex/02-data/honest-coverage-model.md` (the SSOT, written `@unified-trading-pm@842ddb93e`), produced by
-      `instruments-service/scripts/measure_honest_coverage.py` emitting **`coverage.json` `schema_version == 2`** — do
-      NOT build a fresh single-layer day/depth script. v2 contract: **Layer-1 (instrument-denominator completeness)
-      GATES Layer-2 (download coverage)** — a Layer-2 % is trustworthy ONLY at Layer-1 == 100%
-      (`denominator_complete==True`); no flat "100% coverage" without the gate. The "day + depth" axes map to v2's
-      `by_day` (time view) + `by_venue_instrument_type[_data_type]` (shard/entity view);
-      `instrument_gates_download`/`denominator_complete`/ `layer1_completeness_pct` on each AG cell. Expected-universe
-      is materialised by the SINGLE producer `build_expected(asset_group)` (folded into
-      `honest_coverage_v2_instrument_denominator` Phase 1, blocked on registry-consolidation Ph 1-2). Surface BOTH
-      layers per-AG/per-venue in manifest → `/data-status` → deployment-API → deployment-UI. **No ad-hoc coverage
-      scripts** that diverge from the v2 SSOT. DoD: UI shows the two-layer v2 number (Layer-2 gated on Layer-1); a
-      synthetic gap drags the right layer down; output is `coverage.json` v2.
-- [ ] [SCRIPT] P0. **Cumulative-drawdown health metric (§1.2)** — per venue, the cumulative-instruments-ever-seen
-      series; any negative day-over-day delta = a hard defect (flag + block). Active-count drops must net to a typed
-      reason (cefi/tradfi delisting; DeFi delisting OR `NOT_ENOUGH_TVL`). DoD: drawdown count per venue surfaced; target
-      zero.
-- [ ] [DESIGN] P1. **Expected-universe ORACLE design (§2.1)** — the `depth_coverage` denominator: (a) per-instrument
-      true genesis from **venue truth** (not circular first-seen); (b) **time-varying futures expiry/listing rules** per
-      venue, versioned by effective-date, in UAC. Ship **Tier-A proxy** first (labelled), **Tier-B truth** is the
-      completion bar. DoD: design doc + the UAC rule-registry shape; sourcing decision for venue-truth genesis.
-- [ ] [SCRIPT] P0. **Consolidation reconcile (§2.2)** — incremental for steady-state + **scoped `--force`/reconcile**
-      after any backfill + periodic, reconciling **actual shards vs the materialised expected-universe** to _discover_
-      unexpected-missing shards (→ 0% in day_coverage + re-fetch queue). Never a blind whole-corpus `--force` (clip the
-      window; purge discipline vs the 32Gi OOM). DoD: a deleted/absent expected shard is surfaced as a gap, not silently
-      merged-around.
-- [ ] [SCRIPT] P0. **Drilldown-correctness guard (§2.3)** — (1) UI renders the SSOT value, never recomputes; (2)
-      **reconciliation guard**: independent raw-GCS recompute == manifest/SSOT/UI (ε=0), wired as a QG step + watchdog →
-      `#data-pipeline-alerts` on drift; (3) manifest-freshness watchdog + per-cell click→GCS traceability. DoD: a seeded
-      manifest/raw divergence trips the guard; cockpit number is proven == ground-truth.
-- [ ] [SCRIPT] P0. **Verification discipline — captured↔expected KEY-OVERLAP, not raw count (§6.1/§6.3)** — the G5/
-      backfill success signal is `expected_unattempted` DROPS / the captured∩expected per-(instrument,day) overlap
-      CLIMBS, proven by grepping actual captured key-tuples against the expected set — NEVER `captured++` (captures can
-      land as net-new cells keyed differently than the EU seeds — the 2026-06-24 DeFi stall). "Done" = the **metric
-      moved in prod**, cross-checked vs the run.log terminal `exit_code` — never "job exited 0 / tests green" (the
-      exit-0-but-empty blind spot). DoD: an overlap-vs-expected check is the wired completion verdict, not VM-gone/pass.
-- [ ] [SCRIPT] P0. **Silent-cap source audit + FetchEvidence enforcement (§6.2/§6.5)** — for EVERY source, find + page
-      PAST the truncating cap (Graph `skip`≤5000 → timestamp-cursor [done mtds@08b45468]; top-N daily snapshot →
-      explicit instrument filter; REST page limit; vendor free-tier window). A cap that truncates the universe is a
-      G1/G2 capture-correctness defect; its missing rows are **never** recorded `NOT_ENOUGH_TVL`/`SOURCE_RETURNED_ZERO`
-      — the keystone `FetchEvidence`/`UnprovenHonestAbsenceError` gate enforced at every empty-write. DoD: per-source
-      cap audited + paged-past; keystone gate green fleet-wide.
-- [ ] [SCRIPT] P0. **Depth-aware re-fetch trigger (§7.5) — NOT blanket `--force`, NOT just unexpected-missing** —
-      re-fetch ONLY `{missing/EU, attempted_failed, captured-but-instrument_count < expected_depth}` (the
-      shallow-capture a plain skip-if-exists misses); needs the §2.1 depth oracle for `expected_depth`; the §2.2
-      reconcile-vs-expected pass _discovers_ the set. DoD: a synthetic shallow `captured` cell is re-queued, a good full
-      cell skipped, no blind whole-corpus `--force`.
-- [ ] [DESIGN] P1. **Cost/entitlement-boundary reason class (§6.4)** — cells deliberately unfetched for cost (TradFi
-      beyond-free Databento window, ~241k clipped) are a typed `KNOWN_SOURCE_GAP`/cost-boundary EXPECTED state in the
-      §2.1 oracle — not `attempted_failed`, not silent absence — so coverage shows "available-but-intentionally-
-      unfetched". DoD: reason class exists + the denominator accounts for it.
-- [ ] [DATA] P0. **Canonical-form single-SoT GCS migration (IS + MTDS, every AG) — NO two sources of truth (operator
-      2026-06-24).** Any GCS data in a non-canonical **schema** (`schema_version` < v9 / drifted fields), **path**
-      (missing `pipeline_mode={mode}_{source}/`/`asset_group=` keys, legacy sibling trees, glued `PROTOCOL-CHAIN`), or
-      **naming** (asset_group not in `{cefi,defi,tradfi,sports,prediction}` lowercase · venue/chain not canonical — defi
-      `venue=PROTOCOL`+`chain=X` · instrument_id not canonical) is **MIGRATED to the one canonical form** — never a
-      dual-write / legacy tree left beside the canonical one. The **manifest (`_index/availability_index`) must line up
-      with the coverage SSOT ↔ `/data-status` ↔ deployment-UI** (the §2.3 reconciliation guard proves it ε=0).
-      **Single-walk discipline** — bundle schema/path/rename into ONE corpus walk per AG (a new whole-corpus walk is
-      review-blocking otherwise). **defi is the DONE exemplar** (this session: glued→canonical `_index` reconcile +
-      legacy `dex_pools/`/`lending_indices/` sweep + the catalogue-filter cell-key alignment). Generalise to cefi ·
-      tradfi · sports + instruments-service. Reconcile with the existing canonicalisation cluster (don't fork):
-      `pipeline_mode_partition_migration` · `*_manifest_canonicalisation_2026_06_01` ·
-      `master_data_canonicalisation_migration_catalogue_2026_06_07` · `migration_verification_orphan_safety_2026_06_10`.
-      DoD per AG: schema_version distribution == v9 (measured, not the constant) · a path-prober finds **0**
-      legacy-shape objects · asset_group/ venue/chain/instrument_id canonical · 0 dual-SoT sibling trees ·
-      manifest↔index↔data-status↔UI ε=0 (§2.3 guard green). **Runs per-AG inside G1→G3** (the manifest must be
-      canonical + aligned BEFORE its coverage number means anything) — this is foundation-correctness, not cleanup.
-
-🚦 **GATE 0 — NOT RECORDED SIGNED OFF** (operator sign-off on Phase 0 before any backfill launches; all ten Phase 0
-items above remain `- [ ]` and no "GATE 0 SIGNED OFF" line exists anywhere in this doc — only recurring "Awaiting GATE 0
-sign-off"). **(was: unannotated — corrected 2026-07-14, doc-reconciliation vr2#119: the Progress Log nonetheless records
-the freeze-gap backfill VMs launched under the narrower operator 2026-06-26 near-term-target directive, plus the much
-larger G2-G4 backfills below reconciled as SIGNED OFF 2026-07-06 — i.e. downstream gates crossed while this prerequisite
-gate was never recorded satisfied. Flagging the sequencing gap for an operator ruling rather than asserting a GATE 0
-sign-off that isn't evidenced.)**
+- 2026-06-24 — **sports audit + manifest-correctness pre-staging (this session).** Operator clarified the sports model
+  (fixtures = instruments; ~101 canonical MVP leagues; per-source coverage = a subset → honest absence; **odds = MTDS
+  not IS**, the footystats exception being in-house `PREDICTIONS`). Read-only audit found the G1/G2 holes (1,531-vs-101
+  league noise; 2015–2017 zero-captured; 40k FIXTURES failures) — now §3 of the standard + the sports todos above.
+  Shipped this session (manifest-correctness, ahead of the gated rebuild): #1 phantom pipeline_mode fix, #2 understat
+  2-way 404, #3 api_football MTDS odds wipe (1.4M rows / 231,532 objects; trades 100%/0-failed), #4
+  DP_HIGH_ATTEMPTED_FAILED alert. Standard updated (codex §3 sports) + the fixture-completeness oracle plan filed.
+  **Sports G1→G5 still gated behind cefi DONE.** OPEN: MVP-scope delete of the 1,437 non-canonical leagues; 2015–2017
+  real-vs-bug diagnosis; 40k-failure re-run; #5 candidate_parquet_paths path-shape fix (unblocks the 3,164-phantom
+  heal); #6 IS-odds wipe.
 
 ---
 
-## Phase 1 — cefi (FIRST), gated G1→G5
+## Gated rebuild — phase index (2026-07-24 split)
 
-- [ ] [SCRIPT] P0. **G1 — instruments-service correct per-day** (mtds/instruments-service): code right + deterministic +
-      on LDR + QG-green; single-day re-run byte-reproducible; **junk/test symbols rejected** at capture; per-instrument
-      fields (available_from, type, symbol, MVP, universe-tag) correct. DoD: a sample day audited cell-correct.
+The near-term cefi+defi kickoff work, the cross-cutting Phase 0 foundations, and the cefi Phase 1 (G1→G5) gate-execution
+detail that used to live inline in this section now live in dedicated child plans (content moved verbatim, nothing
+dropped):
 
-  > **🔴 G1 VERIFICATION (2026-06-26/27, opus cefi agent — read-only duckdb on live `prod/catalog.parquet` 349,156
-  > rows + `_index/availability_index.parquet` 83,851 rows). VERDICT: G1 is NOT done — 4 live correctness defects. The
-  > day-axis IS fixed (✅ no day-gaps: 2,646/2,646 days genesis→06-26, 0 missing; ✅ expected-universe materialised:
-  > 20,580 `empty_confirmed` rows, was 0; ✅ MVP tags + schema_version=9). The four blocking defects below MUST clear
-  > before GATE G1.** Each is a concrete G1 todo:
-  - [x] ✅ [SCRIPT] P0. **G1.1 — catalogue `available_to` mass FALSE-DELISTING (§7.3) — DONE, PROD-VERIFIED 2026-06-27**
-        (code instruments-service@8261203; prod catalogue re-audit: 8,520-cluster 8,520→302, BINANCE-FUTURES 47→671,
-        total active 4,410→9,025, EXTENDED/PACIFICA/LIGHTER not mass-delisted — see final Progress Log entry). FIX
-        LANDED (LDR): `build_catalogue_dataframe` now derives `available_to` from VENUE TRUTH — (1) explicit
-        `delisted_at`, (2) dated FUTURE/OPTION/COMBO `expiry` (both pulled into `_extract_meta` +
-        `_InstrumentAggregate`), (3) else perp/spot active (None) iff present on its OWN venue's last FULL trading day
-        via new `_venue_last_full_day` (per-venue, thin-day-aware: a day < 50% of the venue's 14-day median count is
-        SKIPPED so a partial capture can't mass-delist), else last-seen fallback. Replaces the global
-        `latest_day = max(all_days)` + last-seen rule. **ONE fix covers cefi G1.1 AND slot-3 tradfi G1.h** (shared file;
-        checked git log 665966b clean before+after edit). 6 new regression tests + 1 existing test corrected
-        (empty-latest-day no longer false-delists); QG-green (102s), all 54 roll-up tests pass. REMAINING DoD (gated on
-        the in-flight cefi `_index` remediation completing — must NOT regen against a mutating manifest): rebuild the
-        image to carry @8261203, re-run `lifecycle-catalogue-regen-cefi`, re-download `prod/catalog.parquet`, confirm
-        the 8,520 06-25 cluster GONE + per-venue active ≈ real listed count + a sampled Deribit/dated-future
-        `available_to` == venue-truth expiry. Live baseline (prod-verified 2026-06-27, the bug this moves):
-        active=4,410/349,156; BINANCE-FUTURES 47 active; 8,520 stamped available_to=2026-06-25. `prod/catalog.parquet`
-        (rebuilt 06-27 01:23) stamps **8,520 instruments `available_to=2026-06-25`** across EVERY venue (KRAKEN-SPOT 829
-        · OKX-SPOT 762 · BINANCE-SPOT 700 · BINANCE-FUTURES 631 · …); per-venue **active counts collapsed** (catalogue
-        shows BINANCE-FUTURES ≈47 active vs ~600+ real). ROOT CAUSE (confirmed): **06-26 was a PARTIAL capture**
-        (BINANCE-FUTURES manifest `instrument_count` 678@06-25 → **47@06-26**; parquet 47 KB→30 KB; OKX-FUT 81→32;
-        BINANCE-SPOT 767→67; BYBIT 652→652 stable) AND the **last-seen-not-venue-truth + global-`latest_day`** bug
-        (§7.3) → a thin/lagging latest day mass-delists. 06-27 recovered to full (47 KB) but the bad catalogue is live →
-        **MTDS G4 would filter against a catalogue that thinks Binance has ~47 instruments.** FIX = §7.3 `available_to`
-        = venue-truth expiry/`last_trading_date` (Deribit/dated-futures) + venue delisting (perps/spot), per-venue
-        trading-day-aware `latest_day`, and IGNORE a thin/partial latest day (don't delist off it). **SHARED FILE
-        `build_instrument_catalogue.py` with slot-3's tradfi G1.h — coordinate, ONE fix covers both AGs, do NOT
-        double-edit.** DoD: re-run catalogue → BINANCE-FUTURES active ≈ real listed count; the 8,520 06-25 cluster gone;
-        a sample Deribit option/dated-future `available_to` == venue-truth expiry.
-  - [~] [SCRIPT] P0. **G1.2 — capture-STABILITY: §1.2 drawdown/thin-day METRIC SHIPPED instruments-service@cc81cad;
-    capture-time `record_failed` routing + 06-26 re-capture REMAINING.** SHIPPED the cefi cumulative-drawdown + thin-day
-    guard (`scripts/cefi_cumulative_drawdown_guard_2026_06_27.py`, generalising the defi one): per cefi venue it builds
-    the daily active `instrument_count` series, flags day-over-day drops AND thin-day collapses (count < `--thin-frac`
-    0.5 × the venue's 14-day trailing median). **PROD-RUN VERIFIED it surfaces the canonical case**: BINANCE-FUTURES
-    max-drop **−631** (the 678→47), thin-days flagged at count 33–47 vs median ~600 across many dates (2025-12 →
-    2026-06) — exactly the partial-capture cells that must route to `attempted_failed`. REMAINING: (a) wire the thin-day
-    verdict into the capture path so a partial venue day records `attempted_failed` (not a thinned `captured`) at write
-    time — a `_finalize_completeness`/`process_completeness` change comparing the day's count vs the venue's trailing
-    median; (b) re-capture 06-26 full (the partial day) once the producer image carries the fixes. DoD: a partial venue
-    response → `attempted_failed`; 06-26 full; the metric flags >X% drops without a typed delisting. NB this composes
-    with the G1.1 fix (the thin-day SKIP in the catalogue `_venue_last_full_day`) — same thin-day definition (50% of
-    trailing median), one on capture, one on roll-up.
-  - [x] ✅ [DATA] P0. **G1.3 — canonical-form pollution in the cefi `_index` — DONE (prod-verified 2026-06-27).** The
-        ~234 schema-misaligned rows (CHAIN-in-schema_version + leaked-source) + the 250-stale + the masked cells were
-        cleaned by the in-flight remediation agent af80e015 (verified: `_index` now 83,646 rows, **0 blank
-        capture_status, all schema_version=9, 0 SOLANA/ZKSYNC**; pre-prune snapshot
-        `_index/snapshots/pre_cefi_stale_prune_2026_06_27.parquet`). I completed THE PART af80e015 DID NOT do: **WRITER
-        root-fix instruments-service@24c0dd5** — `_canonical_manifest_venue_chain` no longer defi-splits on-chain CeFi
-        perp venues (LIGHTER-ZKSYNC/PACIFICA-SOLANA/EXTENDED-STARKNET ∈ `_CEFI_VENUES`); they now write
-        `asset_group=cefi` not defi (3 regression tests) — stops the 320-row contamination at source. **DATA re-stamp
-        applied (prod, local force-correct — the consolidator is broken+PAUSED, so wrote the canonical DIRECTLY, NOT a
-        per_vm shard; snapshot-first `_index/snapshots/pre_g13_restamp_2026_06_27.parquet`):** 320 defi-tagged
-        (LIGHTER/PACIFICA) + 1,108 blank-asset_group 2019 (OKX-{SWAP,SPOT,FUTURES}/COINBASE-SPOT) → asset_group=cefi.
-        **LIVE VERIFY: `_index` = 83,646 rows 100% asset_group=cefi, 0 defi, 0 blank, 0 blank capture_status, all
-        schema_version=9.** `source` carries only valid sources (the 320 had source=instruments_service; blank-source on
-        producer rows is correct per the C-#6 contract). **FOLLOW-UP FINDING (filed below):** the on-chain-cefi-perp
-        venue FORM differs across surfaces (by_date PATH=glued `LIGHTER-ZKSYNC`; `_index`+catalogue=split
-        `venue=LIGHTER chain=ZKSYNC`); kept `_index` SPLIT to stay aligned with the catalogue (§2.3 ε=0); the
-        glued-vs-split canonicalization is a separate alignment item.
-  - [x] ✅ [SCRIPT] P0. **G1.4 — junk/test-symbol rejection — DONE, PROD-VERIFIED 2026-06-27** (capture guard
-        instruments-service@326589c + 9-CJK by_date purge applied [709 files / 1,430 rows, backup
-        `_index/backups/g14_cjk_purge_2026_06_27/`] + `_index` 0 non-ASCII + **catalogue re-audit 0 non-ASCII** — all 4
-        §8 retirement legs clean). CODE (LDR): `reject_junk_instruments` (new in `venue_core.py`, re-exported + wired
-        into `process_fetch._filter_and_enrich_records` right after the date filter, EVERY AG) drops any record whose
-        `base_asset`/`raw_symbol`/`instrument_key` carries a NON-ASCII char (catches 龙虾/币安人生/我踏马来了) or a
-        known ASCII test base (TEST/DUMMY/…) at capture time, so junk never enters `by_date/`. 5 regression tests (CJK
-        reject / non-ascii-in-raw_symbol / known-test-base / legit-passthrough incl. AAPL/XAU / mixed-batch), QG-green,
-        69 helper tests pass. REMAINING (the `_index`/GCS purge leg — now unblocked, runs in the §2.2 local
-        force-rebuild batch below): surgically purge the 9 existing CJK symbols on all 4 retirement legs (by_date
-        parquet row-filter + the `_index` rows + catalogue + surfaces, §8). DoD: 0 non-ASCII/test instrument_ids in a
-        fresh capture AND the catalogue. The 9 live junk: `BITGET-FUTURES:PERPETUAL:龙虾-USDT` ·
-        `BINANCE-SPOT:SPOT_PAIR:币安人生-USDT/USDC` · `ASTER:PERP:我踏马来了USDT` · `ASTER:PERP:龙虾USDT` ·
-        `BINANCE-FUTURES:PERPETUAL:龙虾-USDT/我踏马来了-USDT/币安人生-USDT` · `ASTER:PERP:币安人生USDT`.
-  - [ ] [DATA] P1. **FINDING (G1.3 follow-up, 2026-06-27) — on-chain-CeFi-perp venue FORM is inconsistent across
-        surfaces.** LIGHTER/PACIFICA/EXTENDED appear as: by_date PATH = GLUED `venue=LIGHTER-ZKSYNC` (the SoT) ·
-        `_index` + `prod/catalog.parquet` = SPLIT `venue=LIGHTER chain=ZKSYNC`. The writer fix @24c0dd5 now emits
-        GLUED+cefi for NEW `_index` rows → future captures will DESYNC from the catalogue's split form (and from the
-        re-stamped historical `_index` rows kept split for current alignment). RESOLVE: pick ONE canonical form for
-        on-chain cefi perps (recommend GLUED `LIGHTER-ZKSYNC`, matching `_CEFI_VENUES` + the by_date PATH) and align all
-        three — `build_catalogue_dataframe` must stop splitting these (they're cefi, not defi pools) + a one-time
-        `_index` venue re-glue. Until aligned, the §2.3 reconciliation guard must treat split↔glued as equivalent for
-        these 3 venues. Repo: instruments-service (`build_instrument_catalogue.py` + a `_index` re-glue). Provenance:
-        G1.3 re-stamp diagnosis 2026-06-27.
+- **Phase 0 — cross-cutting foundations** (observability wiring, Honest-Coverage v2, cumulative-drawdown metric,
+  expected-universe oracle design, consolidation reconcile, drilldown-correctness guard, verification discipline,
+  silent-cap audit, depth-aware re-fetch, cost/entitlement reason class, canonical-form single-SoT GCS migration; 🚦
+  GATE 0) — **`instruments_foundation_phase0_cross_cutting_2026_07_24.md`**.
+- **cefi — near-term target + Phase 1, gated G1→G5** (the 2026-06-26 "cefi+defi daily pipeline live" near-term-target
+  work, the Sonnet-dispatch-#1 findings, and the full G1→G5 gate sequence incl. G1.1-G1.4 catalogue-correctness fixes) —
+  **`instruments_cefi_g1_g5_gate_execution_2026_07_24.md`** (`depends_on` the Phase-0 child for GATE 0).
 
-- 🚦 **GATE G1 — NOT RECORDED SIGNED OFF** (was: bare "sign-off." placeholder — corrected 2026-07-14, doc-reconciliation
-  vr2#115/vr2#214: no entry anywhere in this doc records an operator G1 sign-off — the 2026-06-27 GATE-BOUNDARY HOLD
-  below (§ "a coordinator relayed an operator greenlight") explicitly requested it and got none, and later text (lines
-  ~1086/~1208) still reads "Awaiting G1 sign-off"/"request GATE-G1 sign-off." G2/G3/G4 immediately below are nonetheless
-  marked SIGNED OFF 2026-07-06 as RECONCILE-class "already-run, not a redo" entries — an open G1→G2 sequencing gap
-  against this plan's own "no gate crossed without sign-off" rule (§ "Operator gates" below). Flagging for an operator
-  ruling rather than asserting a G1 sign-off that isn't evidenced.)
-- [x] ✅ [INFRA] P0. **G2 — backfill cefi all venues × all days × all years — SIGNED OFF 2026-07-06** (RECONCILE:
-      already-run, not a redo). Evidence: (1) day-axis GAP-FREE — cefi by_date 2,646/2,646 days genesis→2026-06-26, 0
-      missing (2026-06-27 audit); 20,580 `empty_confirmed` materialised in the IS instruments manifest, was 0
-      (`instruments-service@f739a41` EU-seeder; 06-19/20/21/24 gap-days filled 2026-06-26 via the freeze-gap backfill
-      fleet). (2) Observable BATCH registered — cefi 06:00 `uts-prod-instruments-service-cefi-t1-recon` (de-hardcoded
-      instruments-service@[date-drift fix]), the per-AG daily scheduler LIVE (deployment-service@9d0e457 split all-AG
-      OOM into per-AG t1-recon jobs, all SUCCEEDED). (3) Cumulative monotonic guard SHIPPED + PROD-RUN —
-      `scripts/cefi_cumulative_drawdown_guard_2026_06_27.py` (instruments-service@cc81cad, generalising the defi guard);
-      surfaced the BINANCE-FUTURES 678→47 thin-day (canonical case), fed into the §7.3 catalogue fix. (4) Universe depth
-      — catalogue re-audited 2026-06-27 349,156 rows / **9,025 active** (post-G1.1 fix; was 4,410 pre-fix;
-      BINANCE-FUTURES 47→671 active). (5) Cockpit click-through — `classify_deployment_target` +
-      `cloud_run_job_registry.CLOUD_RUN_JOBS`
-      (`lifecycle-catalogue-regen-cefi`/`manifest-consolidator-cefi`/`expected-universe-v2-cefi` BATCH registered);
-      alert coverage complete (deadman multi-layer + stale-image DP-VM-007 + CI-fail). Follow-ups tracked separately:
-      the 486→0 within-window silent-gap drain landed 2026-06-26 (`cefi-instr-all-20260626-161800`);
-      MVP-capture-perp-gated backfill in-flight under `plans/archive/2026_07/mvp_backfill_cefi_tick_v10_2026_06_27.md`
-      (separate, waves G1→G4 already SIGNED there). — instruments-service@f739a41 + @cc81cad +
-      deployment-service@9d0e457.
-- 🚦 **GATE G2 — SIGNED OFF 2026-07-06** (evidence above).
-- [x] ✅ [SCRIPT] P0. **G3 — aggregate + verify the scheduler runs the latest code — SIGNED OFF 2026-07-06** (RECONCILE:
-      already-run). Evidence: (1) `lifecycle-catalogue-regen-cefi` at 01:00 UTC in the per-AG daily scheduler
-      (deployment-service@9d0e457) — ordering confirmed: T+1 producers 00:00-06:00 → MTDS FAST 00:30 → catalogue-regen
-      01:00 (monotonic guard, 35-min buffer). (2) Cloud Run image AUTO-BUILD on main FIXED 2026-06-27 —
-      `instruments-service-prod` trigger switched to `repositoryEventConfig push:branch=^main$` (matches MTDS pattern;
-      no router/IAM dependency); `instruments-service:latest` now sha256:d9418e6e (tag 0.87.0, built 2026-06-27 10:58);
-      Cloud Run t1-recon + lifecycle-catalogue-regen reference `:latest` → fresh image next run. Router
-      `cloud-build-router.yml@c3a113e94` PERMISSION_DENIED→exit 3 + `notify-permission-denied` CRITICAL Slack job so IAM
-      gaps always surface. (3) Today's `catalog.parquet` produced — cefi 2026-06-27 349,156 rows / 9,025 active
-      (post-G1.1 fix live); regen monotonic ACCEPT. (4) Incremental rollup for durable freshness —
-      instruments-service@b0596d0 (trailing-window + frozen-tail, `--mode incremental` default; self-widening window;
-      supersedes the SIGKILL-on-3600s cloud-regen failure). (5) Staleness gate — instruments-service@5d31994
-      (CATALOGUE_STALE_BY_DATE warning, coverage-horizon check) + @4979429 (clamp day<=today so future-dated prediction
-      settlement partitions don't blind the gate). — instruments-service@d9418e6e image (0.87.0) +
-      deployment-service@9d0e457 (per-AG scheduler) + instruments-service@b0596d0 + @5d31994 + @4979429.
-- [x] ✅ [SCRIPT] P0. **G3b — cefi DATED instruments: `available_to`=venue-truth + expiry oracle — SIGNED OFF
-      2026-07-06** (RECONCILE: shipped as G1.1/G1.h). Evidence: `build_catalogue_dataframe` now derives `available_to`
-      from VENUE TRUTH — (1) explicit `delisted_at`, (2) dated FUTURE/OPTION/COMBO `expiry` (both pulled into
-      `_extract_meta` + `_InstrumentAggregate`), (3) else perp/spot active (None) iff present on its OWN venue's last
-      FULL trading day via `_venue_last_full_day` (per-venue, thin-day-aware: a day < 50% of the venue's 14-day median
-      count SKIPPED so a partial capture can't mass-delist). Replaces the global `latest_day = max(all_days)` last-seen
-      rule that caused the §7.3 false-delistings. **PROD-VERIFIED 2026-06-27**: 8,520 06-25 available_to cluster
-      **8,520→302**; BINANCE-FUTURES active **47→671**; total active **4,410→9,025**; EXTENDED 103/103, PACIFICA 10/10,
-      LIGHTER 213/213 active (on-chain perp-DEXs no longer mass-delisted). ONE edit covers cefi AND tradfi (shared
-      file). 6 new regression tests. **Follow-up (§2.1 formal rule-registry versioned by effective-date) is a
-      longer-horizon DESIGN item** — the shipped venue-truth expiry oracle covers G3b's DoD (Deribit/dated-future expiry
-      == venue-truth; no false delistings from a lagging venue `latest_day`). — instruments-service@8261203.
-- 🚦 **GATE G3 — SIGNED OFF 2026-07-06** (evidence above; G3 + G3b both closed).
-- [x] ✅ [SCRIPT] P0. **G4 — MTDS filters the catalogue per-day — SIGNED OFF 2026-07-06** (RECONCILE: code-complete +
-      wave-1 verified). Evidence: (1) `CeFiCatalogReader` + `catalog_list_instruments("cefi", date, date)` in MTDS
-      `sentinels.py` reads `prod/catalog.parquet`, filters active-on-day + MVP-perp-gate — the mechanism BUG #4 fix
-      landed 2026-06-22 (probe {prod,staging,dev}/catalog.parquet + canonical `available_from`/`available_to`); the
-      analogous tradfi bug fixed market-tick-data-service@dda5040d (2026-06-25 — dead-prefix + legacy col-name → real
-      catalogue read). (2) With the G3b catalogue fix live (BINANCE-FUTURES 47→671 active), G4's filter now runs against
-      a trustworthy universe — the pre-fix "MTDS-G4 would filter against a catalogue that thinks Binance has ~47
-      instruments" risk is closed. (3) Honest-absence classification wired at G4-gate: MTDS
-      `reclass_cefi_futures_chain_no_tardis_source` (market-tick-data-service@fccb1961, 2026-07-03) reclassifies 66,007
-      attempted_failed → empty_confirmed/EXPECTED_SOURCE_DOES_NOT_OFFER_DATA_TYPE (BINANCE-FUTURES 41K, BYBIT 14K,
-      DERIBIT 10K) — the "captured or typed-empty for out-of-source rows" invariant. Idempotent, safe to re-run. (4)
-      Spot-check DoD MET via the MVP backfill (`mvp_backfill_cefi_tick_v10_2026_06_27.md`) where G1→G4 waves have their
-      own operator-tracked SIGNED gates: G1 complete 2026-06-28T03:20Z (7 SPOT VMs opt-deribit self-completed); G2+G3
-      wave-1 launched 2026-06-28T03:47Z (24 SPOT VMs); G4-gate reclass 2026-07-03. — market-tick-data-service@fccb1961 +
-      @dda5040d (analogue for tradfi) + BUG #4 fix (`sentinels.py` catalog_list_instruments).
-- 🚦 **GATE G4 — OPEN, pending D2** (was: primary banner read "SIGNED OFF 2026-07-06" — corrected 2026-07-14,
-  doc-reconciliation vr2#114: that framing let a "GATE G4" grep land on a stale-crossed reading even though the very
-  next clause already contested it. **[SIGN-OFF CONTESTED 2026-07-13, verify-rerun finding 105: the standing operator
-  ruling C4(a) (2026-07-03, instruments_completion_tracker_2026_07_06.md:137, never reversed) states G4 enforces Layer-1
-  AND Layer-2 and CANNOT close until D2 (cefi_layer1_denominator_gaps) lands; cefi Layer-1 measured INCOMPLETE
-  (72.60-73.61%) on/after the sign-off date, and the MVP-backfill's own G4 checkbox remains [ ]. Treat G4 as OPEN
-  pending D2 unless the operator re-rules.]** Mechanism is functional and spot-check DoD was met via MVP-backfill
-  G4-gate reclass, but that does NOT constitute a crossed gate. cefi MTDS backfill IS OPERATIONALLY RESUMED under
-  `mvp_backfill_cefi_tick_v10_2026_06_27.md`.
-- [~] [SCRIPT] P0. **G5 — verify cefi MTDS coverage rises** (day+depth via SSOT) day-by-day; residual gaps each have a
-  typed understood reason. DoD: coverage trends up; no new unexplained honest-absence/failed. **PARTIAL 2026-07-06** —
-  G5 SUB-SIGNED (mechanism + typed-reason discipline) but full "coverage climbs day-by-day to steady state" evidence
-  still accruing under the MVP backfill; NOT SIGNED HERE. Live status: (a) Layered coverage SSOT SHIPPED `UAC@755c40515`
-  (Unit-1, `LayeredCoverage` NamedTuple + `compute_layered_coverage(day_counts, depth_counts)` via the single
-  `compute_honest_coverage` — day/depth cannot diverge). (b) MVP backfill (`mvp_backfill_cefi_tick_v10_2026_06_27.md`)
-  is IN FLIGHT — coverage 2026-06-28 cefi=11.68% (716,159/6,133,155); 4 wave-1 VMs COMPLETED at T+2h40min; wave-2 gated
-  on wave-1 completion + phantom reconcile. (c) Typed-reason discipline wired at the writer via
-  `instruments-service@9e6dab5` (pre-genesis/no-activity/weekend/failed → typed empty_confirmed/attempted_failed) +
-  G4-gate reclass @fccb1961. (d) UAC↔writer matrix reconciliation `instruments-service@3bb7acd` (cefi venue-suffix fold,
-  ASTER carve-out) → residual gaps have UAC-derived typed reasons. (e) Full-history honest-coverage backfill CULMINATION
-  2026-06-26: empty_confirmed cefi 0→20,580; every representable shard×day represented (captured / empty_confirmed-typed
-  / attempted_failed / EU). **REMAINING for GATE G5 sign-off**: (i) MVP backfill waves 1–N drive to done (climbing
-  metric = captured cells / day for MVP perp universe); (ii) verify Layer-2 SSOT number rises + Layer-1 remains 100% via
-  cockpit; (iii) residual gaps audit → every remaining EU/failed/empty carries a typed reason (no unexplained holes).
-  Tracked in the MVP backfill plan — cross-linked here, not duplicated. — UAC@755c40515 (SSOT) +
-  instruments-service@9e6dab5 + @3bb7acd + market-tick-data-service@fccb1961.
-- 🚦 **GATE G5 — SUB-SIGNED 2026-07-06** (mechanism + typed-reason discipline SHIPPED); full sign-off (cefi DONE) held
-  until the MVP backfill waves drive coverage to steady state (owned by `mvp_backfill_cefi_tick_v10_2026_06_27.md`).
+**Operator gates status (as of the pre-split state, 2026-07-14 doc-reconciliation pass — see each child for anything
+newer):** GATE 0 NOT RECORDED SIGNED OFF · GATE G1 NOT RECORDED SIGNED OFF · GATE G2 SIGNED OFF 2026-07-06 · GATE G3
+SIGNED OFF 2026-07-06 · GATE G4 OPEN pending D2 (sign-off contested 2026-07-13) · GATE G5 SUB-SIGNED 2026-07-06. Two
+open sequencing tensions were flagged 2026-07-14 (GATE 0/G1 never recorded signed off despite G2-G4 crossing) and are
+**accepted AS-IS by this split** per the operator's 2026-07-23 unlock ruling — not re-litigated here. See the cefi
+child's Phase 1 section for the full gate-by-gate detail.
 
 ---
 
@@ -569,21 +199,20 @@ sign-off that isn't evidenced.)**
         creation timestamp). DoD: per (protocol,chain) completeness % surfaced in the drilldown; 100% = complete; any
         &lt;100% is a typed gap. A venue/AG is NOT "complete" until this Tier-B oracle is green — never assert
         completeness from our own capture.
-- [ ] [INFRA] P1. **tradfi** — same gates; Databento universe (GLBX/DBEQ/XCBF) + Yahoo (KRX/FX). ("tradfi perps" =
-      Binance single-stocks/commodities are **cefi**.) DeFi-distinct tradfi work (§7): **billable-venue guard** —
-      enumerated venues == subscribed allowlist (ICE non-billable, 8,856→1; §7.1); **fail-closed per-venue calendars +
-      sessions** (KRX in NO calendar SSOT → 24/7 default mis-handles Seollal/Chuseok; FX is the declared 24/7 exception;
-      §7.2); **`available_to` per-venue + trading-day-aware** (global-`latest_day` falsely delists lagging KRX; §7.3);
-      **equities pre-2023-04-15 silently absent**; **depth oracle** (NASDAQ ~41 / NYSE ~224 shallow); verify the tradfi
-      daily-capture trigger isn't PAUSED. Baseline §9.
-  - **Already-fixed G1 code (this session, IS `50bf1c8`, QG-green, 7/7 venues now write):** KRX→databento routing
-    (`CANONICAL_VENUE_TO_ADAPTER`) + the `AssetClass("cefi")` crash on NASDAQ/NYSE equities (`_resolve_asset_group`
-    guarded so domain values fall through to the dataset-default EQUITY). **Remaining G1 refinements (NOT yet done):**
-    (i) the cefi-domain equity-perp singles (NVDA/MSFT/AAPL…, `DatabentoInstrumentDef.asset_group="cefi"`) currently
-    resolve to EQUITY and **stay in the tradfi pipeline** — per the registry-comment intent ("keeps them out of the
-    tradfi data pipeline") they must be **EXCLUDED** from the tradfi adapter (they belong to cefi), not just un-crashed;
-    (ii) `_DATASET_TO_asset_group["XCBF.PITCH"]=EQUITY` + XCBF absent from `_FUTURES_DATASETS` — VX are FUTURE (the
-    `instrument_type` lands FUTURE, but the asset-class map is wrong → fix to FUTURE/COMMODITY).
+
+> **Folded-in defi residual** (from I-1 consolidation 2026-06-26, `defi_venue_name_canonicalisation_and_reth_2026_06_17`
+> archived; 4/5 done — moved here verbatim 2026-07-24):
+
+- [ ] [REGISTRY] P2. **NICE-TO-HAVE — add cbETH as `COINBASE-ETHEREUM` to the DeFi LST universe** (full new-venue add:
+      `ALL_DEFI_VENUES` + `DEFI_VENUE_PHASE` + `defi_venue_capabilities.py` lst_rates/oracle_prices genesis 2022-08-26 +
+      chain-qualified `LEGACY_DEFI_VENUE_ALIASES` + catalogue DEFI genesis). Care: `COINBASE` name collides with the
+      CeFi spot exchange — use a chain-qualified alias only. Repo: unified-api-contracts + unified-trading-pm. (MIGRATED
+      FROM: `defi_venue_name_canonicalisation_and_reth_2026_06_17`.)
+
+**tradfi** — same gates; Databento universe (GLBX/DBEQ/XCBF) + Yahoo (KRX/FX). MOVED (2026-07-24 split, content moved
+verbatim, nothing dropped) to `instruments_tradfi_g1_g5_gate_execution_2026_07_24.md` — includes the "Already-fixed G1
+code" detail + the tradfi historical progress log; `depends_on` the Phase-0 child for GATE 0.
+
 - [ ] [INFRA] P1. **sports** — same gates; **fixtures ARE the instruments**, universe = the **~101 canonical MVP
       leagues** (`LEAGUE_REGISTRY`); api_football is the fixture-catalogue source + genesis; enrichment sources
       (footystats/ understat/transfermarkt/open_meteo/sfi) layer OFF the canonical fixtures (per-source coverage = a
@@ -654,964 +283,41 @@ across gates within an AG.
   `foundation-completion-gate-discipline.md` · `defi-canonical-naming-ssot.md` (defi) ·
   `tradfi-databento-sourcing-ssot.md` (tradfi allowlist).
 
-## Related execution plans (per-AG detail lives here; this plan is the cross-AG umbrella)
+---
 
-This plan is the gated umbrella standard. The per-AG execution detail — where an AG has its own active plan — lives in:
+## Related execution plans (per-AG detail lives in 4 children as of 2026-07-24; this plan is the cross-AG umbrella)
 
+This plan is the gated umbrella standard + rolling status index. The per-AG / cross-cutting execution detail lives in:
+
+- **Phase 0 (cross-cutting)** — `instruments_foundation_phase0_cross_cutting_2026_07_24.md` (NEW 2026-07-24 split).
+- **cefi** — `instruments_cefi_g1_g5_gate_execution_2026_07_24.md` (NEW 2026-07-24 split; `depends_on` Phase-0).
+- **tradfi** — `instruments_tradfi_g1_g5_gate_execution_2026_07_24.md` (NEW 2026-07-24 split; `depends_on` Phase-0).
 - **defi** — `plans/active/defi_instrument_catalogue_and_capture_pipeline_2026_06_23.md` (the G4 catalogue-as-filter
-  exemplar + the live skip-cap/cursor + per-pool capture work).
+  exemplar + the live skip-cap/cursor + per-pool capture work). Already delegated pre-split — unchanged.
 - **sports** — `plans/active/sports_pipeline_to_100pct_golden_window_first_2026_06_27.md` (was: pointing to
   `sports_fixture_completeness_oracle_2026_06_24.md` + `sports_golden_window_attempted_failed_remediation_2026_06_24.md`
   — corrected 2026-07-14, doc-reconciliation vr2#117: both moved (the former to `archive/2026_06/`, the latter to
   `active/issues/`) when the 2026-06-27 RE-HOMED banner above handed ALL sports G1→G5 dispatch to the coordinator plan;
-  this section had not been updated to match).
-- **cefi / tradfi** — detail is inline above (no separate active plan).
+  this section had not been updated to match). Already delegated pre-split — unchanged.
 
 Per-AG plans MUST stay consistent with this umbrella's gates (G0→G5) + §0–§9 of the standard; this plan is the SSOT for
 the _process_, those for the _AG-specific execution_.
 
-## Progress log
+---
 
-- 2026-06-25 — **Takeover#2 EXECUTION begins (operator "run it to the end" mandate, 8 phases).** PHASE 1 (cefi
-  reclassification) code-complete in instruments-service, QG-validating: moved EXTENDED/PACIFICA/LIGHTER out of the defi
-  capture path → cefi. Edits: `engine/orchestrator/defi.py` (removed PACIFICA from `_SOLANA_DEFI_VENUES`; deleted
-  `_L2_DEX_PERP_VENUES` = EXTENDED+LIGHTER + its `__init__.py` export + the `_build_defi_venues` extend) +
-  `engine/orchestrator/venue_core.py` (added the 3 to `_CEFI_VENUES`, next to HYPERLIQUID/ASTER) +
-  `reference_data/ factory.py` (3 adapter imports repathed defi→cefi, ruff-sorted into the cefi block) + `git mv`
-  adapters `adapters/defi/{extended,pacifica,lighter}.py`→`adapters/cefi/` (relative imports
-  `...base_adapter`/`...schemas` resolve unchanged — same depth) + test `git mv`
-  `test_lighter_extended_pacifica_coverage.py` defi→cefi + repath + `tests/unit/test_is_adapter_fetch_failure_raises.py`
-  repath. The expected-universe enumerator + its tests ALREADY treated the 3 as cefi
-  (`test_cefi_yields_..._for_lighter`, `_make_cefi_entry`) — only the IS capture path had drifted, now aligned. Codex
-  `defi-canonical-naming-ssot.md` got an "on-chain perp CLOBs are CeFi" section;
-  `availability- manifest-and-data-status.md` already documented the cefi-instrument shape for these. They ride the
-  **cefi backfill** like HL/ASTER (`_CEFI_VENUES`); no special path. NOTE: only EXTENDED has a UAC cefi
-  `SourceCapability` — PACIFICA/ LIGHTER MTDS-cefi market-data capture is a separate cefi-track gap (IS
-  instrument-reference is now cefi-correct for all 3). The §3 subgraph investigation (background agent) returned a lead:
-  TRADER_JOE_V2-AVALANCHE (empty), UNISWAP_V4 + VELODROME_V2 (not-yet-collected), ORCA/KAMINO/RAYDIUM (Solana-REST, not
-  subgraphs — "6 subgraphs" is a partial misnomer; RAYDIUM also carries the 1970 genesis bug) — to verify against live
-  coverage at §3. The MTDS-breakdown agent mapped the IS §6 gap: IS lacks the 4-state `capture_status` per (venue,chain)
-  shard that MTDS records.
+## Condensed rolling status table (2026-07-24 — replaces the ~945-line historical Progress Log, moved verbatim to the
 
-- 2026-06-25 — **DeFi takeover #2 (opus) — verified handoff baseline, corrected it on 3 points, got 2 operator
-  decisions, built+ran the §1.2 monotonic guard.** Prober re-run confirms the banked baseline EXACTLY (IS-PRD/MTDS/
-  catalogue/per_vm 0 glued; ENVLESS 75,649; by_date PATH 56/day; by_date COL 2,620/15; UAC registry 156). Reader audit
-  (10 sites / 5 repos) + the canonical SSOT (governs `raw_tick_data`+manifest ONLY — both already canonical) established
-  the IS `instrument_availability/by_date/venue={glued}/` snapshot PATH is a SEPARATE reference key, not an SSOT
-  violation.
-  - **OPERATOR DECISION 1 — by_date glued PATH + UAC registry = DOCUMENT as canonical internal key** (NOT migrate). The
-    5-repo physical migration (10 readers + 2,345-day rewrite) is rejected; instead scope the prober's glued-ban to
-    `manifest`+`raw_tick_data` and document the IS-snapshot/registry glued exception in the canonical SSOT. **Path
-    structure is uniform**: ALL asset_groups write ONE shape `instrument_availability/by_date/day=/venue=/<file>` (glued
-    is just the defi VALUE of the single `venue=` key); the second IS plane
-    `sports_reference/by_date/.../entity=/ [league=]/` is a different data category → legitimately different.
-  - **OPERATOR DECISION 2 — EXTENDED = CeFi; PURGE the defi contaminant** (REVERSED from the initial "adopt as defi"
-    once full evidence surfaced). EXTENDED-STARKNET is **already a fully-registered CeFi on-chain perp**: cefi
-    `SourceCapability` (`_cefi.py:754` `_EXTENDED`, source="extended", `api.starknet.extended.exchange` REST+WS, SM
-    keys, plan `extended_starknet_historical_data_path_2026_05_20.md`) + 6 more cefi registries
-    (venue_mapping=extended_api, venue_instrument_config=PERPETUAL, venue_launch_dates 2024-09-01,
-    market_data_categories, data_type_capability grouped with PACIFICA/LIGHTER). Same class as HYPERLIQUID/ASTER
-    (`venue_constants→"cefi"`). STARKNET is NOT in UAC `KNOWN_CHAINS` (prober's local set has it → why it flagged
-    EXTENDED-STARKNET "glued"). So the **119 cefi rows are CORRECT**; the **603 defi rows (556 catalog + 47 blank) are
-    contamination** from the **misplaced `adapters/defi/extended.py`** (a cefi perp adapter in the defi folder feeding
-    the defi instrument-catalog). Plan: **purge the 603 defi `_index` rows (snapshot-first) + retire/relocate the
-    misplaced adapter**; EXTENDED cefi-completeness is a **cefi-track** item (defi scope = contaminant cleanup only).
-    Initial "adopt-as-defi" checked ONLY defi registries + saw the misplaced defi adapter — the 7 cefi registrations
-    were the missing evidence.
-  - **ROOT CAUSE FOUND + finding BROADENED to 3 venues (EXTENDED + PACIFICA + LIGHTER), 1,802 contaminant defi rows.**
-    UAC `market_data_categories.VENUE_TO_ASSET_GROUP` correctly maps all three → **cefi** (lines 258-260), but the IS
-    **defi capture path** `engine/orchestrator/defi.py` carries them in its OWN static lists: `_SOLANA_DEFI_VENUES`
-    (`PACIFICA-SOLANA`) + `_L2_DEX_PERP_VENUES` (`LIGHTER-ZKSYNC`, `EXTENDED-STARKNET`) → `_build_defi_venues()` →
-    captured as defi (ongoing, up to 06-21). `_index` contamination: **EXTENDED 603 defi (+119 cefi correct), PACIFICA
-    357 defi (0 cefi), LIGHTER 842 defi (0 cefi)**. NONE are in the IS cefi enumeration → removing from defi without
-    cefi pickup leaves PACIFICA/LIGHTER uncaptured (acceptable: **cefi is PAUSED** pending this foundation; they'll
-    capture correctly as cefi when it resumes). Adapters `adapters/defi/{extended,pacifica,lighter}.py` are misplaced
-    (cefi perps in the defi folder; HYPERLIQUID/ASTER correctly live in `adapters/cefi/`). Tied surfaces: tests
-    `tests/unit/reference_data/adapters/defi/test_lighter_extended_pacifica_coverage.py` +
-    `test_enumerate_expected_universe*` (LIGHTER assertions) + the expected-universe seeder (seeds these as defi).
-  - [x] ✅ [SCRIPT] P0. **Phase-1 CODE: reclassify EXTENDED/PACIFICA/LIGHTER defi→cefi** — IS@2f7d454: removed the 3
-        from `defi.py` `_SOLANA_DEFI_VENUES`/`_L2_DEX_PERP_VENUES` (+ `__init__.py` export); added to
-        `venue_core._CEFI_VENUES` (ride the cefi backfill like HYPERLIQUID/ASTER); relocated adapters
-        `adapters/defi/`→`adapters/cefi/`; moved+repathed tests; adapter-contract baseline keys renamed (count=3
-        **preserved**, NOT regenerated, PM@8ef0dffe8) + extended test now ASSERTS the `ADAPTER_FETCH_FAILED` emit; codex
-        on-chain-perp-is-cefi note. QG-green (94s); peer's concurrent VIX test fix reconciled (autostash conflict, took
-        peer's canonical version, my defi changes intact).
-  - [x] ✅ [SCRIPT] P0. **Phase-2 DATA: purged the 1,802 contaminant defi `_index` rows** (EXTENDED 603 + PACIFICA 357 +
-        LIGHTER 842) — `scripts/purge_cefi_perp_defi_contamination_2026_06_25.py --apply`, snapshot-first
-        (`_index/snapshots/pre_phase2_purge_2026_06_25.parquet` + `.phase2.bak`). VERIFIED live: \_index
-        176,186→174,384, defi-3venue=0, cefi-3venue=119 preserved; monotonic guard defi venues 31→28 (3 dropped),
-        drop-days 182→180. Catalogue (asset_group-AGNOSTIC, venue-keyed instrument defs) left intact. REMAINING (minor):
-        the orphaned by_date defi snapshots for the 3 venues (~3/day, no longer enumerated after Phase 1) + stop the
-        expected-universe seeder from seeding them as defi — tracked below.
-  - [ ] [CEFI-TRACK] P1. **EXTENDED violates the CF-11 honest-absence contract** — on fetch failure it emits
-        `ADAPTER_FETCH_FAILED` but FALLS BACK to a hardcoded market list instead of raising, so a real outage records
-        `captured` (stale fallback) not `attempted_failed` (the A8 false-complete pattern). Its sibling on-chain perps
-        (HYPERLIQUID/ASTER/LIGHTER) raise. Decide: make EXTENDED raise-on-fetch-failure (honest) vs keep the fallback.
-        Target repo: instruments-service `adapters/cefi/extended.py`. Cefi-track (behaviour change w/ manifest
-        implications).
-  - [ ] [SCRIPT] P2. **Phase-2 tail: purge orphaned by_date defi snapshots for EXTENDED/PACIFICA/LIGHTER** (~3/day
-        across history, un-enumerated after Phase 1) + ensure the expected-universe seeder no longer seeds these as defi
-        `expected_unattempted`. DoD: 0 `venue=EXTENDED-STARKNET|PACIFICA-SOLANA|LIGHTER-ZKSYNC` by_date defi blobs.
-  - [ ] [CEFI-TRACK] P1. **MTDS-cefi capability for PACIFICA/LIGHTER** — only EXTENDED has a UAC cefi `SourceCapability`
-        (`_cefi.py`); PACIFICA/LIGHTER have none, so their cefi market-data capture is unbuilt (IS instrument-reference
-        is now cefi-correct for all 3). Build their MTDS cefi capture when cefi resumes. Target repo:
-        market-tick-data-service.
-  - **§1.2 MONOTONIC GUARD BUILT + RUN** (`instruments-service/scripts/defi_cumulative_drawdown_guard_2026_06_25.py`):
-    per-venue daily active instrument_count from the `_index`, flags day-over-day drops. Result: **182 venue drop-days
-    across 30 defi venues** (UNISWAP_V3 −1759, BALANCER −2101, PANCAKESWAP_V3 −493, MORPHO −431, …). **EXTENDED is
-    GUARD-CLEAN** (1 drop-day, −1) → safe to adopt. CAVEAT: for DEX top-N-by-TVL venues most active-count drops are
-    legitimate top-N churn; the hard-defect invariant is the cumulative-ever-seen UNION (needs instrument-lifecycle
-    modeling), so the 182 need delisting-vs-missing classification — the full §1.2 reconciliation P0.
-  - **GENESIS diagnosed** — the 15 RAYDIUM `1970-01-01` rows are in the CATALOGUE (`prod/catalog.parquet`), are STALE
-    legacy roll-up rows (live by_date RAYDIUM snapshot has NO `available_from` col, 0×1970) with EMPTY `pool_address` →
-    no RPC genesis-oracle resolution possible. Current adapter already floors to `get_protocol_floor_date('raydium')` =
-    `2021-02-21` (RAYDIUM AMM mainnet launch). Fix = patch the 15 to the floor (the honest conservative the live code
-    produces) + confirm regen-durable.
-  - **ENVLESS redundancy PROVEN** — chain-agnostic, 39,512/40,115 ENVLESS cells are in `-prd-`; the 603 residual are ALL
-    `EXTENDED-STARKNET` glued-form twins of `-prd-`'s split form (only "missing" because my splitter skips the
-    unsanctioned EXTENDED venue). Identical date ranges (2020-01-20..2026-06-21). ENVLESS is genuinely redundant → safe
-    to snapshot-then-delete. (Corrects the first-pass "39,240 missing" which was a chain-blank-vs-populated artifact.)
-  - **FINDING (sports track, not defi) — file as todo:** IS writes sports instruments at
-    `instrument_availability/by_date/.../venue=API_FOOTBALL/` with NO `league=` segment, but deployment-api's reader
-    (`_instruments.py:251`) constructs `.../league={league}/venue={venue}/` → reader/writer path mismatch.
-  - **REMAINING (decided, executing):** (a) ship EXTENDED UAC adoption + purge 119 cefi; (b) genesis floor-patch (15
-    RAYDIUM); (c) ENVLESS snapshot-then-delete; (d) prober tighten + SSOT document the glued internal-key exception; (e)
-    §1.2 full reconciliation of the 182 drops (delisting-vs-missing); (f) recency 06-22→today + 6 subgraphs + clean
-    backfill. Scripts banked: `defi_cumulative_drawdown_guard_2026_06_25.py`, `diagnose_*_2026_06_25.py` (read-only).
-- 2026-06-25 — **DeFi foundation migration STARTED (opus autonomous, full operator authority; DeFi drained — verified 0
-  running defi backfill VMs, only cefi-live/tradfi/prediction/watchdog run, none write the defi buckets).** Ground-truth
-  re-audit (read-only) corrected several stated-start figures: the IS PRD `_index` is **187,850 rows** (NOT 7,362 — that
-  was the catalogue), with TWO populations — `data_type=instrument-catalog` (145,467 venue-day rows) + blank-data_type
-  (42,383 per-instrument-type rows, stale-stops 2025-02-01, incl. **119 cefi `EXTENDED-STARKNET` contaminants**). The
-  ENVLESS dual bucket (145,467) is exactly PRD's instrument-catalog subset (stale projection). **Canonical-form conflict
-  RESOLVED** (Findings-Triage big): UAC `ALL_DEFI_VENUES` is glued-only, but the deployment-api drilldown
-  (`data_status/defi.py`) splits each registry entry into `(PROTOCOL,CHAIN)` and matches the manifest's **bare
-  `venue=PROTOCOL`+`chain=X`** (its `_is_legacy_defi_venue_row` drops glued+blank-chain as legacy) → **bare+chain is
-  unambiguously canonical**; the registry does NOT need flipping; `canonicalize_defi_manifest_venue_2026_06_14.py`
-  (canonicalizes to GLUED) is SUPERSEDED by this collapse.
-  - **Step 1 SNAPSHOT ✅** — IS PRD/ENVLESS `_index` + catalogue + MTDS defi `_index` →
-    `_index/snapshots/ pre_migration_2026_06_25.parquet` (+ `prod/snapshots/catalog.pre_migration_2026_06_25.parquet`).
-    Regression baseline fingerprints (per venue×data_type captured counts) recorded. KEY INVARIANT: IS PRD captured
-    **cells** = 174,926.
-  - **Step 2 COLLAPSE ALL drift → bare canonical ✅ APPLIED**
-    (`instruments-service/scripts/ collapse_defi_drift_to_canonical_2026_06_25.py`, ruff-green; per-blob
-    `.driftcanon.bak`). before→after, live prod: `_index` 187,850→176,186 rows, **glued 76,904→0, ghost 0→0**, chain
-    100% populated, captured **cells** 174,926→174,926 (ε=0; 11,664 dropped rows were glued+bare twins of the SAME
-    canonical cell, merged captured-wins); `prod/catalog.parquet` glued 1,001→0, ghost 197→0, chain 100% populated;
-    `_index/per_vm/_legacy_seed` glued/ghost→0. Caught+fixed a dedup bug mid-build (first version kept BOTH captured
-    twins → duplicate canonical cells; fixed to one-row-per-cell, status-priority captured>empty>failed>EU, richest
-    instrument_count; ε=0 asserted on captured CELLS).
-  - **EMITTER ROOT-FIX SHIPPED** (IS@92084d5c3, QG-green 95s, quickmerged): the glued treadmill is the by_date snapshot
-    — the daily writer writes the parquet `venue` column GLUED (`AAVE_V3-ARBITRUM`) with NO `chain` column for non-pool
-    rows, and the GCS path is `venue=AAVE_V3-ARBITRUM/` (no chain= segment). The MANIFEST column split
-    (`writers.py::_write_venue` parse_defi_venue → bare+chain) is ALREADY correct in current code (so the live glued
-    manifest rows were LEGACY accumulation, cleaned by Step 2). The CATALOGUE was re-drifting because
-    `build_instrument_catalogue.py` only split venue for POOL rows; non-pool DeFi (lending/lst/staking/perp) passed the
-    glued parquet venue through. **Fix**: `_canonical_bare_venue_chain` (ghost-fix + known-chain-suffix split) on the
-    non-pool fallthrough — no-op for bare-canonical + non-DeFi (BINANCE-FUTURES/API_FOOTBALL untouched, verified).
-    **VERIFIED (coordinator #3):** a bounded catalogue regen from the actual glued by_date snapshots → **0 glued / 0
-    ghost, chain 100% populated**. Treadmill broken on the catalogue side.
-  - **NO-REGRESSION PROVEN (coordinator #1):** the "+30,719" was a wrong-baseline compare (vs stale ENVLESS 145,467, not
-    true PRD 187,850). Against the snapshot: 187,850→176,186 (DECREASE of 11,664 = glued+bare twins merged); snapshot
-    CAPTURED rows collapsed to canonical keys = **174,926 distinct canonical captured cells == live 174,926** (ε=0); 0
-    live captured cells absent from snapshot; 0 snapshot canonical captured cells lost; 0 duplicate canonical-cell rows
-    post-apply. attempted_failed 1,260 preserved exactly.
-  - **STILL TODO** (remaining sequence): junk `1970-01-01` genesis = **15 RAYDIUM POOL rows** (epoch-zero from a missing
-    on-chain creation ts) → Step 4 venue-truth genesis (don't mask with a hasty proxy). `available_from` already uniform
-    ISO-string (no mixed-type defect; the sort-crash was `available_to` str+None). Step 3 one-bucket: ENVLESS `_index`
-    is a stale SUBSET of `-prd-` (no env-less-only data) BUT retiring needs every reader confirmed on `-prd-` first (the
-    DURABLE gotcha #1 + MTDS `check_reader_writer_bucket_parity` gate) — code-verify before delete. Then: venue-truth
-    genesis · recency 06-22→today · 6 uncovered-venue subgraphs · GCS by_date path-split (Step 5, writers.py:113) · cefi
-    `EXTENDED-STARKNET` (119) purge (retirement) · clean backfill.
-- 2026-06-25 — **SESSION HANDOFF (clean boundary, NO destructive op half-applied; snapshots intact). Banked + verified
-  this session; next session resumes from this + the prober ground-truth.**
-  - **Step 3 reader-parity VERIFIED (code, read-only):** every defi instruments READER resolves env-short `-prd-` via
-    `resolve_bucket_name(kind="instruments-store", asset_group="defi")` — `_defi_manifest.py` (via
-    `assert_reader_writer_bucket_parity`, the gotcha-#1 fix is LIVE), `_instruments_metadata.py` (3 sites),
-    `_catalogue_filter.py`, `defi_catalog_reader.py`. **0 readers on env-less.** So the ENVLESS bucket DELETE is
-    unblocked BUT NOT YET DONE (left for the fresh session per handoff — it's a destructive 70,151-by_date-obj delete;
-    must first prove those objs are redundant-vs-`-prd-`, then snapshot-then-delete). ENVLESS `_index` (145,467 rows /
-    75,649 glued) is moot once deleted.
-  - **MTDS `_index` glued FIXED ✅** (`--target market-data` venue-only-no-dedup; 6 `UNISWAP_V4-ETHEREUM`→`UNISWAP_V4`
-    +chain=ETHEREUM, rows UNCHANGED 7,390,534, captured 1,971,546 preserved, per-blob `.driftcanon.bak`). **CRITICAL
-    SAFETY CATCH:** the generic IS-tuned `collapse_frame` dedup applied to MTDS would have dropped **345,219 rows** —
-    the MTDS `_index` natural key is WIDER (pipeline_mode varies in 27,116 dup-groups, capture_status in 345,015) → a
-    venue-ONLY rewrite (no dedup) is the only safe op there. Never run the IS dedup on the MTDS manifest.
-  - **ZERO-GLUED PROBER baseline (record — run `scripts/audit_defi_zero_glued_2026_06_25.py` to refresh):** | surface |
-    glued | ghost | state | |---|---|---|---| | IS-PRD `_index` | 0 | 0 | ✅ Step 2 | | IS-PRD catalogue | 0 | 0 | ✅
-    Step 2 | | IS-PRD per_vm seed | 0 | 0 | ✅ Step 2 | | MTDS defi `_index` | 0 | 0 | ✅ this session | | MTDS
-    raw_tick_data PATH | 0 | 0 | ✅ already canonical (MTDS writer fixed earlier) | | IS-ENVLESS `_index` | 75,649 | 0 |
-    → Step 3 DELETE (stale bucket) | | **IS by_date PATH** (`venue=AAVE_V3-ARBITRUM/`) | 56/day (ALL) | 0 | **REMAINING
-    — Step 5 path-migration** | | **IS by_date COLUMN** (in-file `venue`, no chain col on non-pool) |
-    2,620/15-file-sample | 0 | **REMAINING — Step 5** | | **UAC `ALL_DEFI_VENUES`** | 156 | 0 | **REMAINING — glued-form
-    registry; flip-or-document decision** |
-  - **REMAINING for the fresh session** (NONE started; no half-applied destructive op): (a) **Step 3** ENVLESS bucket
-    delete (readers verified `-prd-`; snapshot-then-delete after redundancy proof). (b) **Step 4** venue-truth genesis
-    (15 RAYDIUM `1970-01-01` + scan for other epoch-zero). (c) **Step 5** the by_date PATH+COLUMN migration (the big
-    one: 2,345 days × ~56 venues, glued path→`venue=PROTOCOL/chain=X/` + in-file venue→bare + add chain col) AND the
-    `writers.py:113` path-split EMITTER fix (the catalogue-read-side fix shipped IS@1e97931; the writer path-split is
-    NOT done — by_date still WRITES glued). (d) **UAC registry** flip-to-bare-or-document (operator bar = no glued
-    vocabulary; the drilldown splits it to `(PROTOCOL,CHAIN)` pairs so it's an internal join key, not a path/manifest/UI
-    surface — decision pending). (e) recency 06-22→today · 6 uncovered subgraphs · `EXTENDED-STARKNET` 119 cefi purge ·
-    clean backfill. **Snapshots intact** (`_index/snapshots/pre_migration_2026_06_25.parquet` in all 3 buckets +
-    per-blob `.driftcanon.bak`). Banked this session: IS@1e97931 (Step-2 collapse + catalogue emitter fix), IS HEAD
-    (MTDS venue-only collapse + prober).
-- 2026-06-24 — Reset to foundation-first (operator). cefi MTDS paused. cefi + tradfi instruments ground-truth audits
-  done (read-only). Codex standard drafted + heavily enriched (gated order · observability precondition · layered
-  coverage · expected-universe oracle · cumulative-drawdown · DeFi-TVL · §6 cross-AG borrows · §7 tradfi/cefi-dated
-  nuances · §8 retirement · §9 tradfi baseline). This plan filed + completed to match the standard (Phase-0
-  §6/§7.5/cost-boundary items; cefi G3b dated-instruments; expanded defi/tradfi/sports + retirement; tradfi+defi
-  starting state). **Awaiting GATE 0 sign-off.**
-- 2026-06-24 — defi: catalogue/manifest correctness-clean + the skip-cap cursor fix shipped (mtds@08b45468); G4
-  catalogue-as-filter implementation IN FLIGHT (overlap-flat until it lands) — tracked in the DeFi plan, the G4 exemplar
-  for this standard.
-- 2026-06-24 — **tradfi audit + the foundation-first PIVOT (this session).** Started as the KRX/equities OPS pass; the
-  operator's "how do we know instruments is honestly at coverage" probe surfaced the foundation gaps → reset to
-  audit-first. **Shipped G1 code:** KRX routing + the cefi-`AssetClass` crash (IS `50bf1c8`, 7/7 venues write). **Audit
-  findings** (now §9 + the tradfi todos above): ICE non-billable yet enumerated (8,856→1); CBOE pollution (91 SPOT_PAIR
-  - 5 un-deleted VIX-INDEX); KRX 96% silently absent + no Korea calendar; `available_to` false-delistings (global
-    `latest_day`); equities pre-2023 absent; shallow NASDAQ/NYSE. **PAUSED everything** (operator "no point wasting time
-    and money"): catalogue-regen execution **cancelled** (it would have baked false KRX delistings, §7.3),
-    `uts-prod-tradfi-wave-launcher-cron` **paused**, the 18 `tradfi-bf` OHLCV VMs **deleted**; live producer +
-    non-tradfi VMs left. **Nothing builds downstream until G1 fixes land + GATE-0/G1 sign-off.** (Separate + still LIVE:
-    the tradfi market-data EU-drain fix — massive purged, EU collapsed 1.08M→1,349 MVP, durable — not part of this
-    foundation gate.)
-- 2026-06-24 — **sports audit + manifest-correctness pre-staging (this session).** Operator clarified the sports model
-  (fixtures = instruments; ~101 canonical MVP leagues; per-source coverage = a subset → honest absence; **odds = MTDS
-  not IS**, the footystats exception being in-house `PREDICTIONS`). Read-only audit found the G1/G2 holes (1,531-vs-101
-  league noise; 2015–2017 zero-captured; 40k FIXTURES failures) — now §3 of the standard + the sports todos above.
-  Shipped this session (manifest-correctness, ahead of the gated rebuild): #1 phantom pipeline_mode fix, #2 understat
-  2-way 404, #3 api_football MTDS odds wipe (1.4M rows / 231,532 objects; trades 100%/0-failed), #4
-  DP_HIGH_ATTEMPTED_FAILED alert. Standard updated (codex §3 sports) + the fixture-completeness oracle plan filed.
-  **Sports G1→G5 still gated behind cefi DONE.** OPEN: MVP-scope delete of the 1,437 non-canonical leagues; 2015–2017
-  real-vs-bug diagnosis; 40k-failure re-run; #5 candidate_parquet_paths path-shape fix (unblocks the 3,164-phantom
-  heal); #6 IS-odds wipe.
-- 2026-06-25 — **cefi Phase-0 execution session START (this session, opus autonomous).** Re-confirmed clean LDR across
-  IS/MTDS/UAC/UTL/deployment-{service,api,ui}/PM. Mapped the 6 Phase-0 surfaces (read-only) + GCS ground-truth (duckdb
-  on the live cefi manifest + catalogue). **Findings that pin the cefi build:**
-  - **day-gaps WIDENED:** cefi instruments `by_date/` day-dirs = 0 for **06-19/20/21 AND 06-24** (and 06-25 in progress)
-    — the audit's 3 gaps are now 4; the daily 08:30 trigger is still paused. Even "present" days are partial (06-15/16 =
-    8 venue-rows; 06-22 = 18; 06-23 = 20; vs ~21 full) — capture is unreliable, not just gappy.
-  - **expected-universe is NOT materialised in the cefi INSTRUMENTS manifest** (`_index/availability_index.parquet`,
-    62,137 rows, grain = per-(venue,day) with `instrument_count`): capture_status = 62,091 `captured` + 46
-    `attempted_failed`, **ZERO `expected_unattempted` / ZERO `empty_confirmed`**. So the gap days are simply ABSENT (not
-    seeded 0%), and coverage = captured/(captured+failed) ≈ 99.9% = the dishonest blind number. **day_coverage fix =
-    seed expected_unattempted for every (venue, missing-day) genesis→today.** (NB: the expected-universe-v2-cefi
-    enumerator seeds the MTDS market-data manifest, not this instruments-capture manifest — IS day_coverage needs its
-    own venue-day EU seeding.)
-  - **canonical-form (operator directive) — cefi INSTRUMENTS manifest is already largely canonical:** asset_group=all
-    `cefi`, schema_version=all `9`, venue=UPPER, pipeline_mode=`batch_instruments_service`,
-    service_name=`instruments- service`. Gaps: 24 blank-`source` rows; `data_type` all-blank (confirm intended for the
-    instruments venue-day grain). **market-tick-data cefi bucket NOT yet audited for canonical form** — next.
-  - **§7.3 false-delistings are LIVE in the catalogue** (`prod/catalog.parquet`, 227,576 rows, built 06-24T01:09 when
-    global `latest_day`=06-23): `available_to=2026-06-18` stamped on **1,118** instruments (+943 @06-11, +long tail) —
-    instruments last-seen on the last full day before the gap, falsely delisted by last-seen + global-latest_day.
-    Confirms §7.3 bug A (last-seen not venue-truth) + B (global not per-venue latest_day). instrument_type: OPTION 146k
-    / COMBO 67k / FUTURE 5.8k / SPOT_PAIR 4.8k / PERPETUAL 3.9k; mvp 157,092 T / 70,484 F.
-  - **deployment-observability is largely BUILT** — `classify_deployment_target`,
-    `cloud_run_job_registry.CLOUD_RUN_JOBS` (has
-    `lifecycle-catalogue-regen-cefi`/`manifest-consolidator-cefi`/`expected-universe-v2-cefi` BATCH),
-    `VM_PREFIX_TO_BUCKET` (`instr-backfill-cefi-`/`mtds-backfill-cefi-` EPHEMERAL_BATCH), `dp-exit-code-monitor`/
-    `dp-heartbeat-watcher`/`dp-meta-watchers`, `/api/deployments/inventory`+`umbrella/{u}/summary`. Phase-0
-    observability item = VERIFY the cefi launchers actually emit
-    ServiceBootstrap/log_event/heartbeat/persist-exit_code + click-through in the cockpit (not assumed).
-  - **G4 catalogue-as-filter for cefi is already substantially built** — `CeFiCatalogReader` +
-    `catalog_list_instruments("cefi",date,date)` in MTDS `sentinels.py` reads `prod/catalog.parquet`, filters
-    active-on-day + MVP-perp-gate; DeFi `_catalogue_filter.py` exemplar exists. G4 is mostly validation, not new build.
-  - **compute_honest_coverage SSOT = single float** (`CaptureStatusCounts`→numerator/denominator, out_of_window clip);
-    **no day/depth split, no reconciliation guard** → both are Phase-0 net-new. UI renders the SSOT value verbatim (no
-    client recompute) ✓. **Build sequence (bottom-up T0→consumers):** (1) layered coverage SSOT day+depth in UAC +
-    surface deployment-api/UI; (2) IS expected-universe DAY seeding (venue-day) + depth-expected; (3)
-    cumulative-drawdown metric; (4) §7.3 available_to venue-truth + per-venue latest_day fix; (5) consolidation
-    reconcile-vs-expected; (6) drilldown-correctness guard; (7) observability verify; (8) canonical-form audit
-    MTDS-cefi. Driving unit-by-unit, QG+quickmerge+flip each, surfacing at GATE 0. **Awaiting GATE 0 sign-off before any
-    backfill launch.**
-- 2026-06-25 — **TRADFI track dispatched directly (operator), slot-3.** Sequencing: tradfi G1→G5 driven NOW (ahead of
-  cefi-first ordering — the documented intent for this dispatch); reversible work driven to done, expensive/irreversible
-  (G2 fleet launch, real-GCS purge) HARD-PAUSE for operator confirm. Composes with the Phase-0 canonical-form single-SoT
-  migration item (above) — tradfi is one AG of it.
-  - **Read-only audit of `prod/catalog.parquet` (814,011 rows) + `by_date/` + code — full tradfi pollutant inventory,
-    root-caused, each fix STOPS it at source; stale rows = retirement (operator-confirm GCS purge):** daily-capture is
-    BROKEN (`by_date/day=2026-06-24/` = ONLY `venue=CME`, 1 of 7 venues). Pollutants (cumulative catalogue counts): ICE
-    COMBO+FUTURE BRN-Brent **16,157** (stale avail_to=2023-12-21; IFEU/IFUS non-billable maps) · ICE INDEX DXY **1** ·
-    CBOE OPTION OPRA-SPX `O:SPX…` **33,258** (stale; OPRA non-billable) · CBOE SPOT_PAIR VX-spreads
-    `VX/F1:1:S - VX/G1:1:B` **4,216** (ACTIVE; XCBF class-S→SPOT_PAIR) · CBOE INDEX **6** (^VIX, I:VIX,
-    ^IRX/^FVX/^TNX/^TYX) · NASDAQ/NYSE SPOT_PAIR **102/216** (ACTIVE; DBEQ class-S equity-spot mis-typed) · cefi-singles
-    in EQUITY (NVDA/MSFT/AAPL/CRCL/INTC/GOOGL/AMD/ TSLA/AMZN/META/HOOD/BABA, mvp=True; 50bf1c8 fixed only the crash NOT
-    exclusion) · VX FUTURE asset_group=EQUITY **82** (should be COMMODITY) · `available_to`
-    global-`latest_day`/last-seen bug (all →2026-06-23; VX/F7 falsely active) · MVP broken (895/814,011 True; VX futures
-    all False) · KRX/FX in NO calendar SSOT (`is_non_trading_day` fails-OPEN → silent 24/7 → Korean holidays
-    mishandled).
-  - **MACRO-INDEX / CURRENCY decision (operator clarifications 2026-06-25):** (1) "DXY canonical along with KRWUSD as
-    the currencies daily from Yahoo, **not one-offs**" → **KEEP + canonicalise** DXY (re-home venue ICE→**FX**,
-    asset_group=fx)
-    - KRWUSD (already FX) + the treasury-yield rate indices ^IRX/^FVX/^TNX/^TYX (Yahoo daily macro rates, venue=CBOE
-      issuer-correct, asset_group=fixed_income). Yahoo daily series have NO billing issue → they stay (the §7.1
-      yahoo-allowlist generalises beyond `{KRX,FX}` to the canonical Yahoo daily currency/macro series — codex §7.1 to
-      update). (2) **REMOVE only VIX cash** (^VIX Yahoo + I:VIX OPRA) — redundant, VX futures cover VIX-15m
-      (`is_vix_15m_gap_date` always False). (3) "**ICE is databento billing-blocked → purge EVERYWHERE**" → the ICE
-      Databento BRN-Brent (16,158) purged across by_date + manifest + catalogue + surfaces; DXY moves off ICE so ICE
-      venue is GONE. (This REVERSES the earlier "drop all YAHOO_INDICES" reading — DXY/treasuries/KRWUSD are
-      canonical-keep.) DEPTH todo: expand the Yahoo currencies universe beyond DXY/KRWUSD ("not just one-offs").
-  - **TRADFI G1 code checklist (slot-3; tradfi-databento files = NON-colliding with the cefi agent; the AG-agnostic
-    `build_instrument_catalogue.py` §7.3 `available_to`/per-venue-`latest_day` fix is the cefi agent's item 4 — SHARED,
-    coordinate, one fix covers both AGs):**
-    - [x] ✅ [SCRIPT] P0. **G1.a billable-venue guard (§7.1)** — IS@92084d5c QG-green. Stripped non-billable datasets
-          (IFEU/IFUS/OPRA/XNAS.ITCH/XNAS.BASIC/XNYS.PILLAR) from `_DATASET_TO_VENUE`/`_DATASET_TO_asset_group`/
-          `_FUTURES_DATASETS` (now only the 3 billable) + exclusion-marker comments; the
-          `assert_databento_request_allowed` fetch gate was already present (adapter.py L424). Regression:
-          `test_g1a_billable_dataset_maps_only_three`. **Follow-up todos filed below**: router.py + massive.py still
-          reference non-billable datasets (the latter is the actual OPRA/I:VIX pollution source).
-    - [x] ✅ [SCRIPT] P0. **G1.b exclude cefi-domain equity singles** — IS@92084d5c. `get_instruments` filters curated
-          defs to `asset_group ∈ frozenset(AssetClass)` → the 12 cefi-singles (asset_group="cefi") not enumerated as
-          tradfi; SP500-overlap tickers still enter via the SP500 path. Regression:
-          `test_g1b_cefi_singles_excluded_from_tradfi_enumeration`.
-    - [x] ✅ [SCRIPT] P0. **G1.c XCBF.PITCH = COMMODITY + outright-only** — UAC@256dfc4a (`_CFE_FUTURES` VX.FUT
-          "equity"→"commodity" + UAC regression test) + IS@92084d5c (`_DATASET_TO_asset_group["XCBF.PITCH"]`→COMMODITY;
-          drop XCBF class-S VX spreads in `_parse_row_to_record`). Regression:
-          `test_g1c_xcbf_outright_only_drops_vx_spreads` (IS) + `test_vx_future_asset_group_is_commodity` (UAC). The
-          IS↔UAC test coupling was DECOUPLED (UAC content asserted in UAC's suite, not IS) to avoid false-fails under
-          UAC promotion lag.
-    - [x] ✅ [SCRIPT] P0. **G1.d DBEQ.BASIC class-S → EQUITY** — IS@92084d5c. Equity-spot rows no longer mis-typed
-          SPOT_PAIR. Regression: `test_g1d_dbeq_class_s_is_equity_not_spot_pair`.
-    - [x] ✅ [SCRIPT] P0. **G1.e calendars+sessions FAIL-CLOSED** — IS@92084d5c. Declared KRX (XKRX cal + KST hours) +
-          FX (24/7 explicit) + `is_non_trading_day` raises `UndeclaredTradfiVenueError` for an undeclared tradfi venue
-          (was silent 24/7). ICE re-DECLARED in sessions pending the whole-venue retirement (so no spurious raise
-          mid-transition; curated enumeration already drops ICE instruments). Regression:
-          `test_g1e_krx_uses_korean_calendar` + `test_g1e_fx_is_24_7` + `test_g1e_undeclared_venue_fail_closed`; updated
-          the prior fail-open test.
-    - [ ] [SCRIPT] P0. **G1.f macro/currency canonicalise** — PARTIAL (operator-reshaped 2026-06-25): VIX cash-index
-          REMOVED from UAC `YAHOO_INDICES` ✅ (uac@43db03f8 + databento VIX-USD tests IS@fb13355e); DXY KEEPS venue=ICE
-          ✅ (operator REVERSED the planned ICE→FX — DXY IS the ICE/NYBOT US Dollar Index, Yahoo-sourced, the ONLY
-          retained ICE exception, documented in-registry; ICE→FX key-migration CANCELLED). REMAINING split into G1.f.2
-          (VIX-15m index removal) + G1.f.3 (treasuries actually reach the catalogue) below.
-    - [x] ✅ [SCRIPT] P1. **G1.f.2 — retire the VIX-15m INDEX (superseded by VX futures 1s OHLCV; operator 2026-06-25)**
-          — remove `CBOE:INDEX:VIX-USD` ohlcv_15m as a distinct index. 3-repo, consumers-first. VX.FUT futures
-          (`CBOE:FUTURE:VX`, XCBF.PITCH ohlcv-1s/1m, aggregated downstream) is KEPT — it IS the VIX-vol source;
-          features=0 consumers of the VIX-15m index. **STAGE 1 — MTDS DONE ✅ mtds@833fa14c (QG-green):** removed
-          `fetch_yahoo_vix_15m` (`_umi_yahoo.py`) + the CBOE+ohlcv_15m→Yahoo routing (`umi_tick_provider.py`) +
-          `download_vix_15m` + the `VIX_INDEX_INSTRUMENT` special-case in `YahooFinanceAdapter.fetch_instruments` (→
-          `[]`). A direct `(CBOE, ohlcv_15m)` fetch now returns empty (no Yahoo, no error) — VERIFIED. Tests: deleted
-          `test_vix_15m_source_layering.py`; dropped the obsolete Yahoo-routing tests; `CBOE+ohlcv_15m` asserts
-          empty-no-Yahoo. **STAGE 2 — MDPS DONE ✅ mdps@79fbb16:** deleted `_record_vix_gap_empty` + its
-          `orchestration_service.py` caller block + the unused VIX UAC imports (`VIX_INSTRUMENT_KEY`,
-          `is_vix_15m_gap_date`, `PipelineMode`, `MarketAssetGroup`) + module docstring cleanup. Deleted
-          `TestRecordVixGapEmptyPipelineMode` test class. **STAGE 3 — UAC DONE ✅ uac@599acf93 (QG-green, breaking):**
-          removed `get_vix_15m_source` / `is_vix_15m_gap_date` / `get_yahoo_vix_15m_start` / `VIX_15M_SOURCE_HISTORY` /
-          `YAHOO_VIX_15M_WINDOW_DAYS` / `DATABENTO_VX_FUTURES_FIRST_DATE` / `VIX_PROD_BUCKET` / `VIX_DEV_BUCKET` /
-          `VIX_INSTRUMENT_KEY` / `VIX_DATA_TYPE` / `VIX_TYPE_PREFIX` from `data_source_continuity.py`; removed
-          `VIX_INDEX_INSTRUMENT` + `VIX_INSTRUMENT` from `tradfi_symbology.py`; removed VIX-USD entry from
-          `TRADFI_INSTRUMENTS`/`TRADFI_DATA_BINDINGS`; removed all 13 VIX symbols from `registry/__init__.py`
-          re-exports. Also fixed pre-existing backward-compat docstring in `events/__init__.py` (QG sentinel unblock).
-          Tests updated (6 files). Staged → LDR; Tier-C drain ≤15min → staging; detect_breaking_change.py fires SIT
-          (~30min). **NB (data-correctness, verify at G2): VIX-15m now depends on `CBOE:FUTURE:VX` being captured at
-          ohlcv-1s/1m + the downstream 1s/1m→15m aggregation — confirm that path is wired so removing the Yahoo fetch
-          leaves no silent 15m gap.** Provenance: operator 2026-06-25.
-    - [x] ✅ [SCRIPT] P0. **G1.f.3 — CBOE treasury-yield INDICES into the daily instrument definitions (operator
-          2026-06-25)** — DONE uac@0b8a775c + IS@2536d9b4. **US2Y ADDED** to UAC `YAHOO_INDICES` as
-          `CBOE:INDEX:US2Y-USD` via Yahoo `2YY=F` (operator: "use Yahoo, don't care which ticker"; the only Yahoo 2Y is
-          the 2YY=F future — no ^-series cash 2Y exists) + the shared treasury source-resolver + genesis 2018-08-13 (CME
-          yield-futures launch, best-estimate — VERIFY at backfill; honest-absence surfaces freshness since 2YY=F was
-          noted stale). Target curve = **3M / 2Y / 5Y / 10Y** (operator) + 30Y KEPT (the features
-          `treasury_yields_calculator` depends on it; operator curve is a subset). US5Y/US10Y/US3M/US30Y already in the
-          registry. Tests updated (UAC `_TREASURY_TENORS` + resolver-coverage gate; IS `_create_yahoo_index_records`
-          loop). **Catalogue population is OPERATIONAL, not a code gap**: CBOE IS in `_TRADFI_VENUES`
-          (venue_core.py:138) + `build_instrument_catalogue.py` rolls up from the written
-          `instrument_availability/venue=CBOE/` parquets WITHOUT filtering INDEX — so the treasuries reach the catalogue
-          once a CBOE instruments-backfill writes the `CBOE:INDEX:USxY-USD` records (rides **G2**). The operator's
-          "never in the catalogue" = no CBOE-index backfill has run since the yahoo-index path landed, not a code
-          exclusion. **FOLLOW-UP (features): `treasury_yields_calculator.py` builds the curve from 5Y/10Y/30Y — wiring
-          it to consume the new 2Y/3M points is a features-track todo (not blocking the instrument-definition add).**
-          Provenance: operator 2026-06-25.
-    - [ ] [SCRIPT] P1. **G1.g MVP tags on the tradfi MVP universe** (VX futures + basis tickers).
-    - [x] ✅ [SCRIPT] P0. **G1.h §7.3 `available_to` venue-truth + per-venue `latest_day`** — SHIPPED
-          instruments-service@8261203 (the SHARED `build_instrument_catalogue.py` fix; ONE edit covers tradfi G1.h AND
-          cefi G1.1 — checked git log 665966b clean before+after, no double-edit). `build_catalogue_dataframe` now uses
-          a PER-VENUE thin-day-aware last-full-trading-day (`_venue_last_full_day`) instead of the global `latest_day`
-          (so a lagging KRX/divergent-calendar venue is no longer falsely delisted off a CME-fuller day) + venue-truth
-          `expiry`/`delisted_at` for dated instruments. QG-green, 54 roll-up tests pass. NOTE: tradfi prod-regen verify
-          rides tradfi G3 (catalogue-regen-tradfi is operator-PAUSED pending tradfi G1 retirement/sign-off — do NOT
-          regen it before the §9 retirement purge or it re-bakes the ICE/OPRA pollutants).
-    - [ ] [INFRA] P0. **G1 retirement (§8, 4 legs) — OPERATOR-CONFIRM before purge** — ICE (whole venue, 16,158) · CBOE
-          OPRA OPTION (33,258) · CBOE VX-spread SPOT_PAIR (4,216) · VIX-cash INDEX (^VIX+I:VIX) · NASDAQ/NYSE mis-class
-          SPOT_PAIR (318) · cefi-singles. Pause consolidator→snapshot→filter→resume; verify gone all 4 legs.
-    - [x] ✅ [SCRIPT] P1. **G1.a.2 §7.1 follow-up — massive.py (the OPRA/I:VIX pollution source)** — DONE
-          instruments-service@1198549 (LDR). massive KEPT as the tradfi FALLBACK (operator 2026-06-25); endpoint
-          `https://api.polygon.io` VERIFIED correct (Polygon.io→Massive 2025-10-30 rebrand kept the host). Removed the
-          two pollution-fetch paths the databento §7.1 guard (G1.a) does not touch: `_fetch_indices` (CBOE cash-index /
-          VIX-cash over YAHOO*INDICES) + `_fetch_index_options` (OPRA SPX/VIX cash-index OPTION chains) — both retired
-          (VX vol rides Databento XCBF.PITCH) — plus ICE from `_FUTURES_VENUES` (ICE \_commodity* FUTURES = Brent/Gasoil
-          via IFEU/IFUS are Databento-billing-blocked, no canonical source — that subscription ask stands. NB ICE _DXY_
-          index DOES have a canonical source now: Yahoo `DX-Y.NYB`, shipped `uac@5480f5d5`, 2026-06-27 — only the
-          futures are blocked). massive now fetches NASDAQ/NYSE equities + FX + CME futures ONLY, ending CBOE-OPTION
-          (33,258) / VIX-cash / ICE-futures catalogue pollution at source. Regression:
-          `test_cboe_and_ice_filters_yield_no_pollution` (CBOE+ICE venue filters yield zero records); dead index/option
-          fixtures + coverage-boost tests removed. QG-green, 58 tests pass, basedpyright 0. NOTE: this is the SOURCE fix
-          (stop writing pollution); the GCS PURGE of the already-written CBOE-OPTION/VIX-cash/ICE parquets stays in the
-          operator-gated G1 retirement (§9). Actual method names were `_fetch_indices`/`_fetch_index_options` (plan's
-          earlier `_fetch_opra_options`/ `_fetch_index_universe` were guesses). Provenance: slot-3 G1.a diagnosis
-          2026-06-25.
-    - [x] ✅ [SCRIPT] P2. **G1.a.3 §7.1 follow-up — router.py dead non-billable dataset config** — DONE
-          instruments-service@5ef1958f (LDR). DELETED (not realigned) the whole dead path: the databento adapter
-          resolves each instrument's dataset PER-INSTRUMENT from the curated `TRADFI_DATABENTO_INSTRUMENTS` registry
-          (§7.1 billable allowlist DBEQ.BASIC / GLBX.MDP3 / XCBF.PITCH), so the router's `_DATABENTO_VENUE_DATASETS`
-          venue→dataset map (nasdaq/nyse/apple/binance→XNAS.ITCH/XNYS.PILLAR + cboe_options→OPRA.PILLAR, all
-          non-billable) + `_resolve_databento_datasets` resolver + `_route_databento`'s resolve-and-pass + the unused
-          `datasets=` ctor param (all callers kwargs-only) were 100% dead. Removed all four + the misleading docstring
-          annotations. Routing behaviour unchanged (databento still → DatabentoReferenceDataAdapter); only the dead
-          non-billable annotation is gone. Tests: removed `TestResolveDatabentoDatasetsRouter` + dead import;
-          `test_router` routing assertions unchanged (still pass — they assert isinstance, not datasets). QG-green, 68
-          tests pass, basedpyright 0. Provenance: slot-3 G1.a diagnosis 2026-06-25.
-- 2026-06-25 — **cefi VM-drain for the canonical-form migration (operator-directed, this session).** Operator flagged
-  cefi backfills running before the foundation code lands (G4/G5-before-G1–G3 + would write against the buggy catalogue
-  - race the canonical-form migration). **STOPPED (graceful, reversible — process killed, not deleted):**
-    `cefi-binance-futures-2020-heavy-20260624-222326` (cefi MTDS market-data backfill) ·
-    `cefi-hyperliquid-2024-20260623-113700` (cefi MTDS backfill, 1.5d-running) · `mtds-perp-funding-backfill` (tagged
-    `VM_ASSET_GROUP=DEFI`/`defi-backfill` but cefi-named + servicing cefi funding — the cross-AG-servicing-cefi case).
-    Operator decision: **cefi-scoped drain + any cross-AG VM servicing cefi stopped + per-AG VMs only going forward.**
-    LEFT RUNNING (other active agents' single-AG work, per cefi-scope): ~15 `mtds-live-cefi-*` LIVE producers (decide
-    after auditing whether cefi market-data bucket needs migration — they write it continuously), 16 `tradfi-bf-*` +
-    `tradfi-fwd-daily-cron` (slot-3 tradfi track), `instr-backfill-defi` + `defi-fwd-oracle-prices-poll` + `mtds-dex-*`
-    (defi agent), `prediction-live-*`, `sports-ref-v3-*`. **Finding (per-AG VM hygiene):** `mtds-perp-funding-backfill`
-    (DEFI metadata, cefi-name, no AG prefix) + the untagged `defi-fwd-*`/ `tradfi-fwd-*`/`mtds-dex-*` pollers (no
-    `VM_ASSET_GROUP`) are the cross-AG/untagged anti-pattern the operator named — launchers must set `VM_ASSET_GROUP` +
-    an AG-prefixed name; tracked under the canonical-form/observability items.
-- 2026-06-25 — **cefi Unit-1 (UAC layered coverage SSOT) built.** `LayeredCoverage` NamedTuple +
-  `compute_layered_coverage(day_counts, depth_counts)` — both layers via the single `compute_honest_coverage` so day +
-  depth can never diverge from the formula the UI renders (instruments-foundation §2). Re-exported through
-  `honest_coverage.py` + root `__init__.py` + `__all__`; 3 unit tests (both-via-SSOT, day-green/depth-low thin-day
-  signal, missing-days-drag-day-coverage). Also fixed a PRE-EXISTING UAC-LDR red blocking ALL UAC (T0) promotion:
-  `kalshi_trades_ws`/`polymarket_trades_ws` WS connectors landed without a `_CONNECTOR_TO_VENUE` entry → 2 failing
-  coexistence tests; added the 2 mechanical map entries (both venues already carry a `*_ws.yaml`). Shipping next.
-- 2026-06-25 — **cefi Unit-1 SHIPPED + cefi canonical-form audit + market-data dual-SoT cleanup.** Unit-1 (UAC
-  layered-coverage SSOT + UAC-LDR red fix) landed **UAC@755c40515** on live-defi-rollout (strict-quickmerge clean;
-  Tier-C drain → staging ≤15min). **Canonical-form audit (operator directive — cefi instruments + market-data GCS):**
-  - **cefi INSTRUMENTS** (`instruments-store-cefi-prd`): manifest already canonical (asset_group=cefi · schema_version=9
-    · venue UPPER · pipeline_mode=batch_instruments_service); residual = 24 blank-`source` rows + `data_type` all-blank
-    (likely intended for the instruments venue-day grain — confirm). Raw path
-    `instrument_availability/by_date/day={D}/venue={V}/instruments.parquet` carries no `pipeline_mode=`/`asset_group=`
-    path-key — but for reference-data (one bucket per AG, single source `batch_instruments_service`) that is
-    canonical-by-design (the keys are manifest COLUMNS). No instruments migration needed.
-  - **cefi MARKET-DATA** (`market-data-tick-cefi-prd`): **canonical tree is CORRECT** —
-    `raw_tick_data/by_date/day={D}/pipeline_mode={mode}_{source}/asset_group=cefi/venue={V}/…` (live_binance/bybit/
-    deribit/hyperliquid/kraken/okx + batch modes); `processed_candles/by_date/day=…` clean (0 orphans). \*\*DUAL-SoT
-    FOUND
-    - FIXED:** 9 stray flat `raw_tick_data/by_date/<symbol>.parquet` (AVAXUSDT/BTC-28MAR25/BTC-PERPETUAL/BTCUSDT/
-      ETH-PERPETUAL/ETH-USD-250328/KRW-LINK/SOL-ETH/TRX-USDT), all stamped **2026-05-12T17:01** = the pre-`day=`/
-      `pipeline_mode=` flat layout that the ~05-12 path migration rewrote into the canonical tree but **never deleted
-      the source** (manifest-invisible → never in coverage). **Snapshotted →
-      `_index/backups/orphan_flat_files_pre_sot_ cleanup_2026_06_25/` then PURGED\*\* → 0 flat orphans remain, 2,645
-      canonical `day=` dirs intact. Single-SoT restored.
-  - Remaining canonical-form work (the tracked Phase-0 single-SoT item, runs in cefi G1–G3): full schema_version
-    distribution of the 144MB market-data `_index` (measured, not the constant) · venue/instrument_id casing across the
-    market-data manifest · the §2.3 ε=0 reconciliation guard wiring · the 24 blank-source / all-blank-data_type
-    instruments residual. cefi canonical-form is otherwise GREEN (no further dual-SoT pollution found).
-- 2026-06-25 — **TRADFI G1.a–e SHIPPED + tradfi compute fully stopped (slot-3).** **Code (QG-green, both repos):**
-  UAC@256dfc4a (`_CFE_FUTURES` VX.FUT "equity"→"commodity" + UAC regression test) + instruments-service@92084d5c
-  (symbology billable-venue map cleanup → only the 3 billable datasets; `get_instruments` excludes cefi-domain singles;
-  XCBF class-S VX spreads dropped + XCBF→COMMODITY; DBEQ class-S→EQUITY; KRX XKRX-calendar + FX-24/7 + fail-closed
-  `UndeclaredTradfiVenueError`; ICE re-declared in sessions pending the whole-venue retirement; **8 regression tests**
-  in `test_databento_tardis_adapter.py::TestTradfiG1FoundationRegression` + the IS↔UAC VX assertion DECOUPLED into UAC's
-  suite to avoid UAC-promotion-lag false-fails). These STOP the active catalogue pollution at source (4,216 VX-spread
-  SPOT_PAIR + 318 equity-spot mis-class + cefi-singles + VX=EQUITY); stale rows (ICE 16,158 / OPRA 33,258 / VIX-cash)
-  are the operator-gated retirement. **Findings filed** (above): OPRA/I:VIX pollution actually comes from massive.py
-  (G1.a.2); router.py dead non-billable config (G1.a.3). **Awaiting G1 sign-off.**
-  - **Tradfi compute STOPPED (operator P0 2026-06-25 — "another track relaunched the tradfi-bf fleet overnight despite
-    the pause"):** killed the 18 RUNNING `tradfi-bf-*` OHLCV backfills (the ~6 KRX ones had self-completed); deleted the
-    `tradfi-fwd-daily-cron` launcher host (was a 06:00 forward-poll launcher — same gate-jump class);
-    `uts-prod-tradfi- wave-launcher-cron` + `instruments-daily-backfill` schedulers confirmed PAUSED (the automated
-    relaunch path — it never actually fired; the overnight launch was external/manual). Also paused
-    **`lifecycle-catalogue-regen-tradfi-daily` (01:00)** + **`instrument-catalogue-regen-nightly` (02:00)** at 01:38 UTC
-    — protective, before the 02:00 fire would re-bake the §7.3 false-delistings into the tradfi catalogue SSOT. **Left
-    running** (per dispatch "leave the live producer"): `mtds-live-tradfi-cme-trades` (live `databento` WS) — flagged
-    for the operator. **Cross-AG flag:** the other AGs' `lifecycle-catalogue-regen-{cefi,defi,sports,prediction}`
-    (01:00) + `catalogue-regen-nightly` (04:30) are still ENABLED (cefi has the same §7.3 bug) — operator to decide a
-    fleet-wide catalogue-regen pause.
-  - **G1.f / G1.h / retirement sequencing:** G1.f (macro/currency: VIX-cash removal + DXY venue ICE→FX) is a canonical
-    key-migration (UAC `YAHOO_INDICES` + `data_source_continuity._SOURCE_RESOLVERS`
-    `ICE:INDEX:DXY-USD`→`FX:INDEX:DXY-USD`
-    - EU enumerator + massive + the existing DXY market-data GCS re-key) → done COORDINATED with the operator-gated
-      retirement/canonical-migration (a standalone code change would create the exact dual-SoT the operator banned).
-      Operator clarified DXY+KRWUSD+treasuries are canonical Yahoo-daily KEEP (not one-offs); only VIX-cash is removed.
-      G1.h §7.3 `available_to`/per-venue-`latest_day` is the cefi agent's item-4 (AG-agnostic
-      `build_instrument_catalogue.py`) — coordinate, one fix both AGs.
-- 2026-06-25 — **G4 catalogue-as-filter BUG fixed (tradfi) — market-tick-data-service@dda5040d (QG-green).**
-  Read-verified the MTDS catalogue-as-filter and found a real bug: `TradFiCatalogReader` probed a DEAD prefix
-  `reference_data/instruments/asset_group=tradfi/` (absent in the bucket — only `prod/catalog.parquet` exists) AND read
-  the legacy `available_*_datetime` column names (the roll-up uses un-suffixed `available_from`/`available_to`), so it
-  ALWAYS returned an empty iterator → the MTDS sentinel fan-out silently fell back to the UAC ("BTC"/"ETH") MVP seed and
-  never filtered the real tradfi catalogue. Fixed: probe `{prod,staging,dev}/catalog.parquet` + canonical
-  `available_from`/`available_to` (mirrors the `CeFiCatalogReader` BUG #4 fix, 2026-06-22) + 2 regression tests. **G4
-  mechanism is now functional** (active-on-date window filter + FUTURE/OPTION root dedup); the gate's DoD (MTDS attempts
-  == catalogue-active-for-day) becomes verifiable once the catalogue is clean (post-retirement + §7.3). NB the
-  `catalog_list_instruments(ag)` sentinel path (sentinels.py) is a SEPARATE Tier-1 reader from this Tier-3 chain reader.
-- 2026-06-25 — **Reversible drivable work remaining (no operator gate): G1.g MVP tags; G1.a.2 massive.py §7.1 (the
-  actual OPRA/I:VIX pollution source); G1.a.3 router.py dead non-billable config. Operator-gated: retirement GCS purge ·
-  G2 fleet · G1.f DXY key-migration. cefi-coordinated: G1.h §7.3 `available_to`/per-venue-`latest_day` (still the cefi
-  agent's unstarted item-4; AG-agnostic, blocks G3 for both AGs). CI-verified: IS#629 merged-staging-green; UAC + MTDS
-  Tier-C-draining.**
+cefi/tradfi/Phase-0 children; see each child's own "Historical progress log" section for full detail + evidence)
 
-- 2026-06-26 — **G1.f.2 (VIX-15m INDEX retirement) COMPLETE — all 3 stages shipped.** MDPS mdps@79fbb16 (Stage 2:
-  `_record_vix_gap_empty` deleted + test class); UAC uac@599acf93 (Stage 3 breaking: 13 VIX public symbols removed +
-  backward-compat docstring fix that unblocked QG sentinel). Plan flip committed pm@7f5932caf. CI fires via Tier-C drain
-  (UAC breaking → detect_breaking_change.py → SIT ~30min). **Data-correctness finding (P2, zero live impact):** two
-  stale capability registrations remain post-retirement — `expected_coverage.py` CBOE `ohlcv_15m` entry + a
-  `DataTypeCapability(venue="CBOE", data_type="ohlcv_15m", instrument_type="")` entry in `data_type_capability.py` both
-  reference the now-deleted VIX cash INDEX. Zero downstream consumers of CBOE ohlcv_15m (features=0). Filed as a plan
-  todo under G1.f.2 post-retirement cleanup above. Notify operator if a 15m VX-futures consumer is added before cleanup.
+| AG / track              | Gate status (as of last verified pass)                                                                                                                                                                                                                                                                                        | Full detail lives in                                                        |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| Phase 0 (cross-cutting) | GATE 0 NOT RECORDED SIGNED OFF — 11 items still `- [ ]` (observability, Honest-Coverage v2, canonical-form single-SoT migration, etc.)                                                                                                                                                                                        | `instruments_foundation_phase0_cross_cutting_2026_07_24.md`                 |
+| cefi                    | G1 NOT RECORDED SIGNED OFF (G1.1/G1.3/G1.4 prod-verified 2026-06-27; G1.2 partial) · G2 SIGNED OFF 2026-07-06 · G3/G3b SIGNED OFF 2026-07-06 · G4 OPEN pending D2 (contested 2026-07-13) · G5 SUB-SIGNED 2026-07-06, full sign-off held for MVP-backfill steady state                                                         | `instruments_cefi_g1_g5_gate_execution_2026_07_24.md`                       |
+| tradfi                  | G1.a-e/G1.h SHIPPED 2026-06-25/27 (billable-venue guard, calendars, XCBF/DBEQ class fixes, `available_to` venue-truth) · G1.f.2 (VIX-15m retirement) COMPLETE 2026-06-26 · G1 retirement (ICE/OPRA/CBOE purge) OPERATOR-CONFIRM pending · G4 catalogue-as-filter bug FIXED 2026-06-25 · KRX/ICE mis-sourcing FIXED 2026-06-27 | `instruments_tradfi_g1_g5_gate_execution_2026_07_24.md`                     |
+| defi                    | G4 catalogue-as-filter is the exemplar; live capture/skip-cap work in progress                                                                                                                                                                                                                                                | `plans/active/defi_instrument_catalogue_and_capture_pipeline_2026_06_23.md` |
+| sports                  | G1/G2 RE-HOMED to the golden-window-first coordinator; sports G1→G5 gated behind cefi DONE                                                                                                                                                                                                                                    | `plans/active/sports_pipeline_to_100pct_golden_window_first_2026_06_27.md`  |
 
-- 2026-06-27 — **cefi G1 correctness (opus autonomous) — G1.1/G1.h `available_to` false-delisting CODE SHIPPED + prod
-  baseline re-verified; `_index`-mutating G1.2-G1.4 steps SEQUENCED behind the in-flight cefi remediation agent.**
-  - **PROD RE-VERIFIED (read-only duckdb/pyarrow on live `instruments-store-cefi-prd…/prod/catalog.parquet`):** the
-    false-delisting is REAL — 349,156 catalogue rows, **active (available_to=None) = 4,410**; **8,520 stamped
-    available_to=2026-06-25** (next cluster 772 @03-28); BINANCE-FUTURES **47 active** (by_date day=2026-06-24 shows 679
-    real → 47 is ~7% = a thin-day false-delist); DERIBIT 3,588 of the 4,410 active. by_date schema CONFIRMED the
-    venue-truth fields exist: `expiry` populated 100% on FUTURE(80/80)+OPTION(3010/3010), partial COMBO(220/441), empty
-    on PERP/SPOT (correct); `delisted_at` present-but-empty this snapshot.
-  - **G1.1 + G1.h FIX SHIPPED instruments-service@8261203 (QG-green 102s, 54 roll-up tests):** rewrote
-    `build_catalogue_dataframe`'s `available_to` — venue-truth `delisted_at` → dated `expiry` → per-venue thin-day-aware
-    last-FULL-trading-day liveness (`_venue_last_full_day`: a day < 50% of the venue's 14-day median count is skipped) →
-    last-seen fallback. Replaces the global `latest_day = max(all_days)` that mass-delisted off a thin latest day.
-    `_extract_meta`/`_InstrumentAggregate` now carry `expiry`+`delisted_at`. 6 new regression tests
-    (thin-day-no-false-delist, venue-truth-expiry, delisted_at-priority, per-venue-independence, genuine-delisting-
-    still-stamped) + corrected the existing empty-latest-day test (it encoded the bug). ONE fix covers cefi+tradfi
-    (shared file; checked git log 665966b clean before+after — no double-edit with slot-3). PROD-REGEN DoD pending the
-    image rebuild + `lifecycle-catalogue-regen-cefi` re-run (sequenced — see coordination below).
-  - **COORDINATION / sequencing (HARD — multi-agent shared clone):** an in-flight cefi remediation agent (other Cursor
-    sessions, this same instruments-service clone) is actively landing the G1.3 schema_version writer-bug + stale-row
-    prune + gap re-enumeration — it just committed instruments-service@0f1f3b5 (the schema_version-integer regression
-    test) during this session. Per the dispatch HARD rule I did NOT mutate the cefi `_index` (G1.2 06-26 re-capture,
-    G1.3 asset_group re-stamp of the 320 defi-tagged + 1,108 blank-2019 rows, G1.4 CJK purge) — those are sequenced
-    AFTER that agent finishes + the manifest is stable (concurrent canonical-manifest mutation corrupts it). The G1.1
-    catalogue fix was SAFE to ship now (`prod/catalog.parquet` is a different artifact; no `_index` write). The host is
-    memory-pressured (heavy concurrent jobs OOM-killed 2 read-only probes) — re-capture/regen must run on a VM
-    (EPHEMERAL_BATCH) or memory-bounded chunks, never an unbounded local subprocess.
-  - **NEXT (this loop):** (a) build the IS image once the IS tree is clean at @8261203+ → redeploy
-    `lifecycle-catalogue-regen-cefi` → re-run → re-audit (the G1.1 prod DoD); (b) when the in-flight `_index`
-    remediation completes (verify the manifest stable), execute G1.2 (06-26 full re-capture + drawdown-guard wiring),
-    G1.3 (asset_group re-stamp at the writer), G1.4 (junk-rejection adapter + 9-CJK 4-leg purge); (c) surface at 🚦 GATE
-    G1.
-  - **UPDATE 2026-06-27 (later this session) — G1.3 + G1.4-code DONE; consolidator coordination noted.** The in-flight
-    remediation agent **af80e015 COMPLETED** (verified `_index` 83,646 rows, 0 blank status, all schema_version=9, 0
-    SOLANA/ZKSYNC; snapshot `pre_cefi_stale_prune_2026_06_27.parquet`). I then shipped the parts it didn't: **G1.4
-    capture-time junk guard** instruments-service@326589c (`reject_junk_instruments`, wired into `process_fetch`, every
-    AG; 5 tests). **G1.3 WRITER root-fix** instruments-service@24c0dd5 (`_canonical_manifest_venue_chain` skips
-    `_CEFI_VENUES` on-chain perps → no more defi-tagging; 3 tests). **G1.3 DATA re-stamp APPLIED to prod** (local
-    force-correct, snapshot `pre_g13_restamp_2026_06_27.parquet`): 320 defi-tagged + 1,108 blank-2019 → cefi;
-    **LIVE-VERIFIED `_index` 100% cefi / 0 blank-status / all v9**. **CONSOLIDATOR COORDINATION (coordinator relay,
-    independently noted):** the Cloud Run `uts-prod-manifest-consolidator-instruments-cefi-cron` is BROKEN (stale
-    pre-fix image → positional-UNION-ALL col-misalignment corrupts the canonical) and PAUSED; a deploy agent (aedb16f0)
-    is redeploying the fixed image. So I did the `_index` mutation as a DIRECT local canonical write (workspace UTL has
-    dd17ce23 stale-drop + 6b0520a6 col-order — verified ancestors of HEAD), NOT a per_vm shard. I did NOT re-enable the
-    cron (stays paused until aedb16f0 lands AND all `_index` mutations finish). REMAINING THIS LOOP: G1.4 9-CJK by_date
-    purge + catalogue regen (G1.1 prod DoD) + G1.2 capture-stability; verify cron re-enabled before GATE G1.
-  - **CHECKPOINT 2026-06-27 (4 of 4 G1 defects code-shipped; prod-DoD validation = catalogue regen pending):** shipped
-    this session — G1.1 catalogue fix `is@8261203`, G1.2 drawdown/thin-day guard `is@cc81cad` (prod-run surfaced the
-    678→47, max-drop −631), G1.3 writer-fix `is@24c0dd5` + prod `_index` re-stamp (LIVE 100% cefi), G1.4 capture guard
-    `is@326589c`. **G1.4 9-CJK by_date PURGE: dry-run found 709 by_date files / 1,430 junk rows across the 4 venues'
-    catalogue date-ranges (ASTER from 2023-07-22, BINANCE-FUTURES/SPOT/BITGET-FUTURES from 2025-10/2026-01/03); applying
-    now (backup-per-blob → `_index/backups/g14_cjk_purge_2026_06_27/`).** The `_index` already has 0 non-ASCII
-    (verified) so G1.4 leg-3 is already clean; the catalogue (leg-4) drops them on the next regen. **OPEN — catalogue
-    regen is the shared G1.1+G1.4 prod-DoD validation**: needs the producer/catalogue to run the new code. The IS image
-    build is MANUAL+STALE (plan note) so the live `lifecycle-catalogue-regen-cefi` still runs old code; options for the
-    regen = (A) rebuild the IS image (clean tree) → re-run the Cloud Run job [RECOMMENDED, prod path], (B) a
-    memory-bounded local `run_rollup("cefi", allow_shrink=True)` (the 9-row purge + the re-stamp make the catalogue
-    SHRINK + active jump up, so `--allow-shrink` is REQUIRED). After regen: re-audit prod/catalog.parquet — the 8,520
-    06-25 cluster GONE, per-venue active ≈ real, 0 non-ASCII. **Then verify the consolidator cron re-enabled (deploy
-    agent aedb16f0) before requesting GATE G1.**
-  - **UPDATE 2026-06-27 (later) — G1.4 by_date PURGE DONE + VERIFIED; catalogue regen IN FLIGHT; doc cleanups shipped.**
-    G1.4 9-CJK by*date purge APPLIED (709 files / 1,430 junk rows filtered, backup
-    `_index/backups/g14_cjk_purge_2026_06_27/`); **VERIFIED by_date now 0 non-ASCII** across sampled affected files
-    (BINANCE-FUTURES 2026-06-25 = 675 real rows post-purge — proving the "47 active" was the false-delist, not a thin
-    real universe). `_index` already 0 non-ASCII (G1.4 leg-3 clean). Doc cleanups SHIPPED: codex §7.3 thin-day-aware
-    nuance + the shipped-@8261203 banner (`pm@e7c148bf5`); plan KRX/ICE=Yahoo stale-framing corrections — KRX=Yahoo
-    KOSPI + ICE-DXY=Yahoo both DONE, ICE \_commodity* futures the only genuine Databento ask (`pm@e7c148bf5`); UAC
-    `venue_mapping.py:451` docstring ICE→Yahoo fix (shipping). **IN FLIGHT:** a memory-bounded local dry-run
-    `run_rollup("cefi", --allow-catalogue-shrink --dry-run)` to validate the corrected catalogue before the real write
-    (full 2,647-day by*date walk, ~25min, RSS-bounded ~700MB). **POST-REGEN AUDIT will additionally verify
-    EXTENDED-STARKNET/PACIFICA-SOLANA/LIGHTER-ZKSYNC show a SANE active count** (coordinator flag: EXTENDED appeared
-    defunct at 14/103 active — the false-delist class; EXTENDED-STARKNET and LIGHTER-ZKSYNC are live/KEPT cefi
-    perp-DEXs, must not be mass-delisted). **(2026-07-16: PACIFICA-SOLANA was CULLED/purged — it is NOT a kept venue;
-    disregard the PACIFICA references in this audit intent, only EXTENDED-STARKNET/LIGHTER-ZKSYNC remain.)** Report
-    their active counts in the final validation. NB the \_real* by_date universe for these is genuinely SMALL (06-26:
-    EXTENDED-STARKNET 14, PACIFICA-SOLANA 4 instruments listed — pre-cull) — so a low active count may be CORRECT, not a
-    false-delist; the test is whether the EXTENDED rows currently stamped `available_to` are genuine churn vs the
-    thin-day false-delist my G1.1 fix un-delists.
-  - **GATE-BOUNDARY HOLD 2026-06-27 — a coordinator relayed an operator "greenlight" for the cefi 8-venue
-    instrument-DEFINITION backfill (spot VMs, instruments-only, MTDS-still-gated). I did NOT launch it.** Reason: this
-    dispatch's STANDING instruction is "this is G1 correctness (pre-GATE-G1)… request GATE-G1 sign-off before crossing
-    to G2/backfill" + "Do NOT relaunch a cefi backfill before sign-off." A **coordinator-relayed greenlight is NOT
-    operator confirmation** (only the operator's own message is). Launching a VM fleet (real spend) on a relay before
-    GATE-G1 would violate the gate. **DECISION (autonomous rule 12f — decide-and-document a relay that contradicts the
-    documented record of intent): HOLD the backfill; surface to the operator for direct GATE-G1 sign-off.** The backfill
-    is otherwise READY (the 8 venues' genuine within-window gaps are enumerated; the producer is
-    `process_instruments --asset-group CEFI`; spot-VM + instruments-only + MTDS-gated scoping noted). On the OPERATOR's
-    direct go-ahead it can launch immediately. The coordinator offered to dispatch a separate agent — that too needs
-    operator authority, not a relay.
-  - **UPDATE 2026-06-27 (final) — G1.1/G1.4 prod DoD MET; a separate spot-backfill's `_index` REGRESSION FIXED.** A
-    separate agent's cefi 8-venue SPOT backfill DID run (independent of my hold; landed LIGHTER 0→201, PACIFICA 0→391,
-    BINANCE-DELIVERY +684 captured) and regenned the catalogue. **G1.1/G1.4 PROD VERDICTS (re-audited live
-    prod/catalog.parquet 2026-06-27):** ✅ the 8,520-instrument available_to=2026-06-25 false-delist cluster GONE
-    (8,520→**302**); ✅ per-venue active ≈ real (BINANCE-FUTURES **47→671**, total active **4,410→9,025**); ✅ **0
-    non-ASCII/CJK** instrument_ids (G1.4 purge held); ✅ EXTENDED 103/103 · ~~PACIFICA 10/10~~ · LIGHTER 213/213 active
-    (the KEPT on-chain perp-DEXs EXTENDED-STARKNET/LIGHTER-ZKSYNC NOT mass-delisted — the false-delist class resolved).
-    **NOTE (2026-07-16): PACIFICA-SOLANA was subsequently CULLED/purged from the registry — the "10/10 active" above is
-    a stale-as-of-2026-06-27 count; the target-state count is 0 (removed), NOT a kept/active venue.** **BUT that
-    backfill REGRESSED the cefi `_index`** (its regen merged an OLD pre-prune baseline → the 21,952 stale
-    schema_version=4 blank-capture_status rows came BACK; `_index` 83,646→108,878). **FIXED (independently verified +
-    re-pruned, snapshot-first `_index/snapshots/pre_g13b_reprune_2026_06_27.parquet`):** dropped exactly the 21,952
-    stale rows (dd17ce23 predicate = capture_status ∉ the 4 valid states, == sv=4 == blank-ag, all three sets identical
-    — fail-closed verified) while PRESERVING all v9 incl. the new backfill (LIGHTER 888 / PACIFICA 782 /
-    BINANCE-DELIVERY 2,171 captured). **LIVE `_index` now 86,926 rows, 100% schema_version=9, 100% asset_group=cefi, 0
-    blank/invalid capture_status.** Catalogue stays 9,025 active (the prune is `_index`-only).
-  - [ ] [INFRA] P2. **FINDING — `MANIFEST_ALLOW_STALE_FALLBACK=true` baked into
-        `deployment-service/scripts/vm/launch-cefi-instruments-backfill.sh:138` (+ the GCS-uploaded
-        `setup-data-pipeline-vm.sh`) by the backfill agent — REVERT once the consolidator is healthy, NOT permanent.**
-        This is the documented INTERIM-recovery escape-hatch (UTL `_state.py`; codex
-        `availability-manifest-and-data-status.md` §): the read/record path loud-fails by DEFAULT
-        (`ManifestConsolidatorStaleError`) precisely to SURFACE a DOWN consolidator and avoid the per-VM-merge OOM on
-        large buckets. Leaving it `true` permanently MASKS consolidator outages + re-exposes the OOM risk. It was set to
-        unblock the backfill while the consolidator was paused/broken (legit interim use). **Action: remove it from the
-        launcher once the cefi consolidator is confirmed redeployed on the fixed (dd17ce23) image + re-enabled.** Repo:
-        deployment-service. (Annotated, not fixed by me — it's the backfill agent's launcher + a live-recovery file;
-        collision risk while the consolidator redeploy settles.)
-
-## Deferred work after 2026-06-26
-
-| #   | Item                                                                                                                                              | Repo       | Priority | Blocked on                  |
-| --- | ------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | -------- | --------------------------- |
-| 1   | Clean stale CBOE ohlcv_15m capability entries (expected_coverage.py + data_type_capability.py + MDPS adapter docstring) post VIX-INDEX retirement | UAC + MDPS | P2       | Nothing (no live consumers) |
-| 2   | Verify UAC uac@599acf93 SIT passes (~30min Tier-C drain → staging → quality-gates-v2)                                                             | UAC        | P1       | CI auto                     |
-| 3   | G1.f (partial — DXY key migration ICE→FX) — operator-gated (ICE kept per 2026-06-25 operator reversal)                                            | UAC + IS   | P1       | Operator decision           |
-| 4   | G1.g MVP tags; G1.a.2 massive.py §7.1; G1.a.3 router.py dead config                                                                               | IS + MTDS  | P1/P2    | None                        |
-
-## Folded-in (I-1 consolidation 2026-06-26)
-
-> Open todos migrated here from 3 archived plans during the instruments/MTDS plan consolidation
-> (`instruments_mtds_plan_consolidation_2026_06_26.md`). Bullets are condensed to the actionable essence + provenance;
-> **full detail lives in the archived source** under `archive/2026_06/`. This survivor (I-1) is now the live home for
-> instruments-foundation + catalogue-completeness + tradfi-universe-lockdown + DeFi-LST-universe work.
-
-### From `proper_instrument_catalogue_lifecycle_rollup_2026_06_04` (archived)
-
-- [ ] [INFRA] P0. **Rebuild the IS daily definition producer** — resumed schedulers point at dead infra; recreate the
-      Cloud Run job / repoint `instruments-service-daily` Workflow at a CURRENT image + CLI
-      (`--operation instruments --mode batch --asset-group …`), per-VM shard env, post-2026-06-10 cloud-providers.yaml.
-      Until this lands the dailies only "succeed" at the scheduler layer. Repo: deployment-service +
-      instruments-service. assigned_vm: vm-cross-cutting. (MIGRATED FROM:
-      `proper_instrument_catalogue_lifecycle_rollup_2026_06_04`.)
-- [x] [INFRA] P1. ✅ **Wire the lifecycle roll-up to trigger on every IS instruments update (per-AG).** TF authored
-      (deployment@98bee4b, `lifecycle_catalogue_scheduler.tf`); REMAINING = `terraform apply` + T+10min per-AG execution
-      verify. (MIGRATED FROM: `proper_instrument_catalogue_lifecycle_rollup_2026_06_04`.) — deployment-service@c1d2e3e6
-      (weekly self-heal + terraform apply landed, reachable on origin/live-defi-rollout); per-AG apply verified per
-      `instruments_catalogue_incremental_rollup_2026_06_29.md`.
-- [x] [INFRA] P1. ✅ **Make the cloud lifecycle-catalogue-regen job log, then fix the real error** — add
-      `print(..., flush=True)` bisection markers per `run_rollup` phase (or bootstrap stdout logging), localize the
-      job-only failure (suspect grpc/pyarrow/GCS native init or a job-env gap), fix it. Until fixed the catalogue
-      refreshes via the local-run path. Repo: instruments-service + deployment-service (job env). (MIGRATED FROM: same —
-      supersedes the earlier "diagnose fast-fail" bullet.) — RESOLVED: root cause was full-history-walk timeout, not a
-      grpc/pyarrow init bug; fixed by instruments-service@b0596d0c incremental engine (reachable on
-      origin/live-defi-rollout).
-- [ ] [CODE] P1. **All asset groups adopt the proper catalogue.** cefi/tradfi/defi catalogues APPLIED 2026-06-05; G1
-      shape-aware enumerator DONE (is@6ea46565). REMAINING = granularity-aware producer for **prediction** (per-cqg
-      grain) + **sports** (per-league vs per-fixture), and per-AG `_enumerate_v2_*` verify emits `expected_unattempted`
-      against the real universe. Per-AG slices ride the sibling AG masters. (MIGRATED FROM: same.)
-- [ ] [DATA] P1. **FINDING — IS `by_date` capture frozen ~2026-05-21 fleet-wide; tradfi degraded from ~2026-05-04.**
-      Applied catalogues are honest snapshots-as-of-freeze (cefi usable; tradfi marks ~651K "delisted" → liveness not
-      trustworthy until tradfi capture fixed + catalogue regenerated). Diagnose the tradfi 16K→2/day anomaly (slot-6 /
-      tradfi vertical) + add a coverage-horizon staleness check to producer/audit. (MIGRATED FROM: same.)
-- [ ] [DATA] P1. **FINDING — ICE futures + CME futures-options not on Massive → BLOCKED-CREDENTIALS.** Massive covers
-      CME-group only, no options-on-futures product; old databento ~16-18K/day was CME ES futures-options. **Operator
-      ask**: an ICE-futures + CME-futures-options reference source, or unblock Databento billing. Repo:
-      instruments-service. assigned_vm: vm-tradfi. (MIGRATED FROM: same.)
-- [ ] [DATA] P1. **tradfi CME futures reference gap from 2026-06-08** — Massive `/futures/vX/{products,contracts}` 404
-      (worked 2026-06-07). `BLOCKED-UPSTREAM-OUTAGE`: re-probe, on restore re-run
-      `--asset-group TRADFI --source massive` for missing days so `venue=CME` refills, then regen the tradfi catalogue.
-      Repo: instruments-service. (MIGRATED FROM: same.)
-- [ ] [CODE] P2. **FINDING — MTDS Massive connector uses the wrong futures endpoint.**
-      `massive_tradfi_rest_connector.py` maps futures→`/v3/reference/futures/contracts` (404s); working path is
-      `/futures/vX/contracts` (+ `/futures/vX/products` for contract size). Repo: market-tick-data-service. assigned_vm:
-      vm-tradfi. (MIGRATED FROM: same.)
-
-### From `tradfi_databento_subscription_universe_lockdown_2026_06_18` (archived; 26/33 done — universe lockdown + billing guards SHIPPED)
-
-- [ ] [IS] P1. **Backfill the IS CME (GLBX.MDP3) catalog for 2019-01-01→present** (the IS-side universe producer — owned
-      HERE) so the tradfi OHLCV download has a per-date instrument universe (definition schema is L0/free, 16y). CME
-      futures expire daily — never copy definitions between dates. Repo: instruments-service. **The downstream MTDS
-      market-data download is M-1's** (`path_to_100pct_backfill_mtds_is`); the CME EC\* event-contract slice is the
-      tradfi-domain plan-of-record `tradfi_cme_event_contract_backfill_2026_06_20` (tradfi_master) — coordinate, don't
-      duplicate. (MIGRATED FROM: `tradfi_databento_subscription_universe_lockdown_2026_06_18`.)
-- [ ] [SCRIPT] P1. **(→ M-1) MTDS tradfi market-data backfill across all 3 datasets** (GLBX.MDP3 + DBEQ.BASIC + CFE) ×
-      the L0 16y window, sharded; verify per-dataset manifest coverage (captured + honest-absence); confirm equity cells
-      re-routed to DBEQ.BASIC and CFE/VX cells exist. **EXECUTE UNDER M-1** (`path_to_100pct_backfill_mtds_is`, which
-      owns MTDS market-data backfill-to-100% and already ran the Databento OHLCV pass 2026-06-19) — gated on the IS CME
-      catalog backfill above. Listed here only as the cross-link. (MIGRATED FROM: same.)
-- [ ] [SCRIPT] P1. **instruments-service — post tradfi-v9 close-out, tombstone dropped Databento instruments.** Run
-      `reconcile_manifest_after_entity_change.py --mode remove --asset-group tradfi` for the dropped ICE roots
-      (BRN/G/DX, softs CT/CC/KC/SB/OJ; datasets IFEU.IMPACT/IFUS.IMPACT) → `REMOVED_ENTITY_TOMBSTONE` (dry-run → audit
-      CSV → apply), then a phantom sweep. Repo: instruments-service. (MIGRATED FROM: same.)
-- [ ] [UAC] P1. **Unit tests for `databento_subscription_allowlist`** (allowed/blocked dataset, banned OHLCV schema,
-      per-level lookback floor boundaries, batch ban, break-glass, enum-repr normalization). Repo:
-      unified-api-contracts. (MIGRATED FROM: same.)
-- [ ] [PM] P1. **QG grep-ratchet** — no raw `batch.submit_job` outside the guarded `submit_batch_job`; no off-allowlist
-      dataset string literal in tradfi fetch paths. Wire into market-tick-data-service `quality-gates.sh`. Repo: PM +
-      market-tick-data-service. (MIGRATED FROM: same.)
-- [ ] [SCRIPT] P2. **instruments-service — re-fetch a sample of old tradfi dates whose `instrument_count` changed**
-      (equity ETFs XNAS.ITCH→DBEQ.BASIC; CME cells now include EC\* event contracts) to confirm the new parquet's
-      instrument set matches the new universe; enumerate the un-refetched range. Repo: instruments-service. (MIGRATED
-      FROM: same.)
-- [ ] [SCRIPT] P3. **OPTIONAL physical-GCS cleanup of old ICE-Databento instrument parquets** once tombstone
-      reconciliation confirms 0 consumers (twin-verify; operator-gated delete, never blind). Repo: deployment-service +
-      instruments-service. (MIGRATED FROM: same.)
-
-### G1.f.2 post-retirement cleanup (2026-06-26)
-
-- [ ] [UAC] P2. **Clean up stale CBOE `ohlcv_15m` capability registrations post VIX-INDEX retirement.** Two stale
-      artifacts remain in UAC after G1.f.2: (a) `expected_coverage.py` line 135 still says "CBOE provides VIX 15m" and
-      line 156 still includes `"ohlcv_15m"` in CBOE's list — the comment is stale (that entry was the now-deleted VIX
-      cash INDEX source; VX futures are `ohlcv_1s`/`ohlcv_1m` only); (b) `data_type_capability.py` has a
-      `DataTypeCapability(venue="CBOE", data_type="ohlcv_15m", instrument_type="")` with empty instrument_type — this
-      entry was for the INDEX type and has no live source post-retirement. Also: `TradfiOhlcv15mAdapter` docstring ("for
-      15-minute OHLCV data (Barchart VIX)") in MDPS `ohlcv_passthrough.py` is stale. Current impact = **zero**
-      (features=0 consumers; 15m VX-futures data was never requested downstream — VX futures are used at 1s/1m
-      granularity). Cleanup path: remove `ohlcv_15m` from CBOE's `expected_coverage` + remove the stale CBOE `ohlcv_15m`
-      `DataTypeCapability` + update the MDPS adapter docstring. IMPORTANT: if a consumer of `CBOE:FUTURE:VX ohlcv_15m`
-      is added in the future, the 1s/1m→15m aggregation path must be wired first (MDPS `TradfiOhlcv1sAdapter` comment
-      says "Coarser bars aggregate downstream" but NO aggregation code exists — that's a doc-ahead-of-implementation
-      gap). Repos: unified-api-contracts + market-data-processing-service. **Operator notification**: retiring VIX-INDEX
-      left stale `ohlcv_15m` entries in UAC and MDPS; zero live impact but cleanup needed before adding any 15m VX
-      futures consumer.
-
-### From `defi_venue_name_canonicalisation_and_reth_2026_06_17` (archived; 4/5 done — venue canonicalisation + rETH SHIPPED)
-
-- [ ] [REGISTRY] P2. **NICE-TO-HAVE — add cbETH as `COINBASE-ETHEREUM` to the DeFi LST universe** (full new-venue add:
-      `ALL_DEFI_VENUES` + `DEFI_VENUE_PHASE` + `defi_venue_capabilities.py` lst_rates/oracle_prices genesis 2022-08-26 +
-      chain-qualified `LEGACY_DEFI_VENUE_ALIASES` + catalogue DEFI genesis). Care: `COINBASE` name collides with the
-      CeFi spot exchange — use a chain-qualified alias only. Repo: unified-api-contracts + unified-trading-pm. (MIGRATED
-      FROM: `defi_venue_name_canonicalisation_and_reth_2026_06_17`.)
-
-## Autonomous run results — 2026-06-26 (5-AG instrument foundation)
-
-**Shipped:** EU-seeding `instruments-service@f739a41` · Yahoo G10 FX `UAC@526f3c83`/`IS@97cdf92` (Treasuries+DXY already
-existed) · all-AG producer crash fix `IS@d279615` · Databento concurrency-cap (singleton→cap 20) `deployment@96be3dc` ·
-catalogue PYTHONUNBUFFERED `deployment@c90cf97` · tradfi cleanup batch (`UAC@4ad54282`, `deployment@62a6645`,
-`MDPS@91192b9`, `MTDS@dd313086`).
-
-**Producers (daily):** cefi 06:00 de-hardcoded ✅; defi 00:00 (`uts-prod-instruments-service-t1-recon`→DEFI) ✅. The
-all-AG crash is fixed in `d279615` but the cloud image is STALE (06-23) and the IMAGE BUILD is IAM-BLOCKED for the agent
-identity (`gcloud builds submit` forbidden from `central-element-323112_cloudbuild`). So restoring the 00:00 job to
-all-AG (→ tradfi/sports/prediction daily producers) + EU-seeding on daily cloud runs are BLOCKED on an operator/CI image
-rebuild. Interim daily capture covered by today's backfills.
-
-**Per-AG (instrument DEFINITIONS + CATALOGUE):**
-
-- **cefi** ✅ DONE — backfill gap-free (0 absent June days) + catalogue regenerated `prod/catalog.parquet` 345,920 rows
-  (MVP 271,673), monotonic ACCEPT, promoted 13:34Z.
-- **defi** — backfill gap-free ✅; catalogue regen RUNNING (`bztf6gn3r`).
-- **tradfi** — 9-shard def fleet + CME ohlcv ES 2020-2026 (futures+options 1s+1m) + CL/GC/HG/NG/NQ/SI + FX/NASDAQ/NYSE
-  running under the cap; catalogue regen pending def-backfill (`--asset-group tradfi`).
-- **sports** ✅ IS defs current to 06-26 (+3,097; historical 2014-2020 VMs ETA 06-27). Catalogue needs the
-  granularity-aware producer (`--by-date-prefix`). MTDS odds BLOCKED-SCHEMA (manifest missing v9 `available_at` →
-  `sports_manifest_canonicalisation_2026_06_01`).
-- **prediction** ✅ IS defs current to 06-26 (+300; PM 1269 + Kalshi 262); MTDS Polymarket → 06-25 ✅. Catalogue needs
-  per-cqg producer. Kalshi MTDS historical BLOCKED-STRUCTURAL (Kalshi IS writes `canonical_question_group` paths, not
-  `day/venue=KALSHI`). PREDICTION excluded from producer `cleanup()` flush_groups (pre-existing — track).
-
-**NEXT:** verify defi catalogue → cefi+defi DONE (priority); tradfi catalogue when def-backfill finishes;
-sports/prediction catalogues need granularity-aware producers; operator/CI image rebuild to unblock all-AG daily
-producer + cloud EU-seeding.
-
-### Catalogues — ALL 5 AG regenerated + promoted (2026-06-26, monotonic ACCEPT)
-
-cefi 345,920 · defi 7,416 (100% MVP-tagged via defi tag-all `instruments-service@665966b`) · tradfi 814,012 · sports
-1,608 · prediction 1,204,816. Sports/prediction need NO special flag (builder auto-handles league/cqg grain). FLAGS:
-prediction MVP=0 (UAC `is_mvp` gates on a `market_group` column the catalogue doesn't carry — UAC gap); tradfi MVP 895 /
-sports MVP 2 (narrow screens).
-
-### Rigorous cefi/defi SILENT-GAP audit (per venue×day / venue×chain×day, inception→present)
-
-cefi: 486 absent cells — REAL gap 2026-03-01→05-20 (BYBIT-SPOT/COINBASE-FUTURES/DERIBIT-COMBO, backfill
-`cefi-instr-all-20260626-161800` launched) + COINBASE/OKX bare-alias artifacts (116d ea) + small
-(LIGHTER/EXTENDED-STARKNET/PACIFICA). defi: 2293 absent — mostly stray-genesis artifacts (SUSHISWAP_V3-BASE genesis-2021
-vs Base-2023; TRADER_JOE_V2 genesis-2020) + subgraph-blocked stragglers (EXTENDED/CAMELOT_V3/UNISWAP_V3-BASE → should be
-attempted_failed). Agent af6f764 driving genuine-gap→0 + reconciling artifacts; "gap-free" bar = every shard×day
-represented (captured or correctly-typed empty), NOT just recent-month.
-
-### Standing requirements (operator 2026-06-26)
-
-- Images MUST auto-build on main + auto-deploy (today: manual → stale; CI-build agent a9cd863 wiring main-trigger
-  build→push :latest→update Cloud Run jobs, failures→#data-pipeline-alerts). IMAGE REBUILD IAM-blocked for agent
-  identity → CI is the fix + bypass.
-- All batch data-pipeline deployments (instruments catalogue jobs, instruments data-grabbing, MTDS) must be ALERT-FREE
-  (deadman coverage CONFIRMED complete; stale-image alert being added by a118550) AND running LATEST code.
-- Daily scheduler: T+1 producer (00:00) slightly before catalogue aggregation (01:00), monotonic guard — terraform
-  exists; gated on image so cloud jobs run latest code. ALL AG.
-
-### Daily scheduler COMPLETE + robust (2026-06-26) — per-AG split (deployment-service@9d0e457)
-
-all-AG 00:00 job OOM'd (signal 9) even at 8cpu/32Gi → SPLIT into per-AG t1-recon jobs (verified no-OOM, all ran
-SUCCEEDED today): cefi 06:00 (existing) · defi 00:00 · tradfi 00:10 · prediction 00:20 · sports via sports-fixtures.
-Retired the all-AG `instruments` scheduler entry. ORDERING confirmed: per-AG T+1 producers 00:00-00:20 → MTDS FAST 00:30
-→ lifecycle-catalogue-regen 01:00 (monotonic guard, 35-min buffer). This is the operator's "daily T+1 backfill slightly
-before aggregation, monotonicity, all AG" design — DONE.
-
-### Session net-state (2026-06-26 autonomous run)
-
-DONE: all 5 catalogues regenerated+promoted · daily scheduler (per-AG producers→aggregation, monotonic, all AG) ·
-auto-build on main + auto-deploy + build-fail→#data-pipeline-alerts (a9cd863, fixed the missing instruments-service-prod
-trigger) · alert coverage complete (deadman multi-layer + stale-image DP-VM-007 + CI-fail) · writer honest-absence
-9e6dab5 (pre-genesis/no-activity/weekend/failed→typed empty_confirmed/attempted_failed) · Yahoo FX(G10)/Treasuries/DXY
-universe · defi MVP tag-all · sports MTDS available_at fix · cefi+defi backfill gap-free + catalogues. RUNNING
-(multi-hour): full-history honest-coverage backfills all 5 AGs since inception (empty_confirmed climbing: cefi 0→20k+,
-defi →37k+, pred 0→480; fleet draining 57→~30) → drives every shard×day to represented (zero silent-absent).
-OPERATOR-BLOCKED: ~~tradfi ICE/FX (Databento allowlist), KRX (adapter)~~ [SUPERSEDED 2026-06-27: KRX=Yahoo KOSPI +
-ICE-DXY=Yahoo, both SHIPPED `uac@5480f5d5`+`is@dc0d99a` — NOT blocked; only ICE _commodity_ futures remain a Databento
-ask], KALSHI historical IS (API), 9e6dab5 cloud-image catch-up (auto on next main promotion → re-resolve cloud jobs).
-
-### CULMINATION — all 5 AGs honest-coverage (2026-06-26)
-
-Writer honest-absence applied across full history: cefi/defi/prediction full-history backfills (empty_confirmed 0→20,580
-/ →~40k / 0→600) + tradfi reconciliation `instruments-service@104607f` (flipped 2,445 lookback-artifact non-trading-day
-cells captured→empty_confirmed; tradfi empty_confirmed 406→2,851; EXPECTED_WEEKEND/HOLIDAY, calendar-driven, snapshot
-`_index/snapshots/pre_nontrade_flip_2026_06_26.parquet`). Every shard×day now represented as one of the 4 states by the
-correct reason. Writer code: 9e6dab5 (pre-genesis/no-activity/weekend) + d3908c3 (tradfi weekend unreachable-guard +
-DBEQ-lookback) + 104607f (historical reconcile). REMAINING (wall-clock/auto/operator): tradfi 9-shard full-history VMs
-still capturing 2010-2026 trading days (long); cloud image auto-catch-up of 9e6dab5/d3908c3/104607f on next main
-promotion → re-resolve t1-recon + catalogue-regen jobs; OPERATOR-BLOCKED: ~~tradfi ICE/FX (Databento allowlist), KRX
-(adapter)~~ [SUPERSEDED 2026-06-27: KRX=Yahoo KOSPI + ICE-DXY=Yahoo, both SHIPPED — NOT blocked; only ICE _commodity_
-futures (IFEU/IFUS Brent/Gasoil) remain a Databento subscription ask], KALSHI historical IS (API access).
-
-### FINAL — instruments foundation honest-complete (2026-06-27)
-
-tradfi silent-absent fully classified + filled (`scripts/fill_tradfi_silent_absent_cells_2026_06_27.py @9571361`): 878
-weekend/holiday cells → empty_confirmed (snapshot `_index/snapshots/pre_silent_absent_fill_2026_06_27.parquet`). All 5
-AGs now represent every REPRESENTABLE shard×day (captured / empty_confirmed-typed / attempted_failed / EU). CLOUD now on
-latest honest-absence code: main caught up (promotion drain unstuck after the GH-billing/Actions outage), image rebuilt
-from 104607f (`sha256:15a28711`), all 10 prod jobs (5 t1-recon + 5 catalogue-regen) re-resolved. Per-AG daily
-scheduler + auto-build + full alert coverage live. REMAINING = OPERATOR-GATED ONLY:
-
-- tradfi residual silent-absent = 1,836 GENUINE-GAPs: KRX 1,795 + ICE 32 + ~11 today/yesterday transient. **[SUPERSEDED
-  2026-06-27 — see "CORRECTION + closeout" below]:** this was MIS-FRAMED as needing a "KRX-capable adapter" / "Databento
-  subscription allowlist". Reality: KRX = daily KOSPI via **Yahoo Finance** (`^KS11`/`^KS200`) and ICE = DXY via **Yahoo
-  Finance** (DX-Y.NYB) — both SHIPPED (`uac@5480f5d5` + `is@dc0d99a`), NOT operator-blocked. The only genuine remaining
-  ICE ask is the ICE _commodity_ futures (Brent/Gasoil, IFEU/IFUS) which DO need a Databento subscription — but that is
-  NOT the DXY/index data this residual refers to.
-- Auto-build self-sufficiency: grant `github-cloudbuild-trigger@` `roles/cloudbuild.builds.editor` (unconditional) —
-  agent identity is IAM-forbidden; operator running it.
-
-### CORRECTION + closeout — KRX/ICE were MIS-SOURCING (not operator-gated) (2026-06-27)
-
-Operator corrected the prior "OPERATOR-BLOCKED tradfi ICE/FX/KRX" framing: KRX = daily KOSPI from **Yahoo Finance** (not
-a special adapter); ICE is **not** a Databento dataset we subscribe to — ICE data we want comes from Yahoo. So the 1,795
-KRX + 32 ICE residual silent-absent cells were a **sourcing/config bug**, not a credential block. FIXED + shipped:
-
-- `unified-api-contracts@5480f5d5`: KOSPI (`^KS11`) + KOSPI200 (`^KS200`) added to `YAHOO_INDICES` (venue=KRX,
-  first_available 2019-01-02); `get_krx_index_daily_source()` resolver; ICE removed from `venue_to_databento`, added
-  `venue_to_data_provider["ICE"]="yahoo_finance"`. 11 unit tests. QG-green, runtime-verified
-  (`_create_yahoo_index_records(venue_filter='KRX')` → KRX:INDEX:KOSPI-USD/^KS11; ICE no longer in venue_to_databento).
-- `instruments-service@dc0d99a`: KRX KOSPI Yahoo-enumeration + ICE-not-in-databento regression guards (4 tests).
-
-Manifest VERIFICATION (market-data-tick-tradfi `_index`): CME OHLCV is honest-complete for the EXPECTED window —
-expected universe floor = **2020-01-01** (not 2010; 2018-2019 = empty_confirmed EXPECTED_INSTRUMENT_NOT_LISTED), both
-1s+1m captured every year 2020-2026, futures+options present (ES.FUT/ES.OPT/MES.FUT/MES.OPT). No silent absence.
-2025/2026 expected_unattempted (853/1341) draining via ~13 running tradfi-bf VMs.
-
-DISPATCHED (2 sonnet agents, in-flight):
-
-- KRX/ICE instruments-history re-run — apply the shipped fix to the instruments manifest (close 1,795 KRX + 32 ICE
-  absent instrument-def cells → captured/honest empty_confirmed). KRX single-stock breadth = BLOCKED-OPERATOR-DECISION
-  (operator wanted the index, which this closes).
-- CME ohlcv_1m 2020-Q1 writer fix — 3,355 attempted_failed (venue=CME, 2020-01..03) are a real writer bug:
-  StreamingParquetWriter pre-write validation rejects space-containing CME option symbols (`CME:E1AG0 C3240`,
-  `CME:ESM0`) landing in instrument_type=UNKNOWN → SCHEMA_VALIDATION_FAILED. Root-cause fix (normalize→canonical
-  InstrumentKey + classify OPTION/FUTURE) + re-run 2020 Q1. NOT a transient retry (attempted_at 06-22..06-24, running VM
-  keeps failing).
-
-### Manifest audit — stale-row cruft + within-window gaps (2026-06-27)
-
-Post KRX/ICE rebuild, audited canonical tradfi instruments index (`instruments-store-tradfi` `_index`). Found: 16,556
-valid schema_v9 rows (all 4-state, 0 invalid) + **15,781 STALE rows** (schema_version 4 [10,396] or '' [5,385]; blank
-capture_status + blank data_type; written_at ≤ 2026-04-15) co-residing. Per-venue v9 genesis floors confirmed correct vs
-UAC: CME/FX/ICE/CBOE 2020-01-01, NASDAQ/NYSE 2023-04-15 (DBEQ discovery API empty before — NOT a gap), KRX 2019-01-02.
-Of stale-only (date,venue) cells, **907 are ≥ genesis = genuine within-window instrument-def gaps** (CME 332, FX 244,
-ICE 167, CBOE 160, NASDAQ/NYSE 2 ea); the rest (~14.9k) are pre-genesis cruft. RESUMED agent to: (1) re-enumerate the
-907 via genesis+calendar-aware v9 producer → captured/empty_confirmed; (2) prune all 15,781 stale rows (snapshot
-`pre_stale_v4_prune_2026_06_27.parquet`); (3) harden UTL manifest_consolidator to DROP sub-canonical-schema/blank-status
-rows at UNION ALL (root cause: old per_vm shards carried forward). UTL column-order consolidator fix already shipped
-(UTL@6b0520a6). KRX/ICE history closed: KRX 1,796→0 absent (3,187 captured + 876 holiday EC), ICE 33→0.
-
-### CME ohlcv_1m 2020-Q1 writer fix — shipped + corrective re-run (2026-06-27)
-
-Root cause of the 3,355 attempted_failed (CME ohlcv_1m, 2020-01..03): MTDS used `stype_out="raw_symbol"` on the
-Databento GLBX.MDP3 fetch (stype_in=parent) → HTTP 422 → empty iid→raw map → fell back to a `symbol` column carrying
-malformed option symbols (`CME:ESM0`, `CME:E1AG0 C3240`) → classified instrument_type=UNKNOWN → StreamingParquetWriter
-partition_mismatch/SCHEMA_VALIDATION_FAILED. FIX (MTDS): `dc8075da` revert stype_out→instrument_id + post-fetch
-`_build_iid_to_raw_symbol_map()`; `b35ecb74` paginate symbology.resolve in 2000-symbol batches (ES.FUT+ES.OPT ~2075/7d
-window exceeds the 422 cap). 16 unit tests. Corrective VM `…es-2020-20260627-090849` (dc8075da) verified 0-failed
-(2020-01-02 36,335 / 01-03 52,329 / 01-06 42,664 records). Tarball rebuilt @b35ecb74 for future launches. Cleanup:
-deleted broken VM `…083324` + old-code DUPLICATE `…090019` (MTDS d8778cee, pre-fix — would have re-stamped
-attempted_failed and raced the consolidator). PENDING: full-2020-Q1 manifest verify (0 attempted_failed) at VM
-completion (~1-2h); if dc8075da's no-pagination 422-fallback leaves residue, relaunch on b35ecb74.
-
-### Auto-build deploy fix — IS image was silently stale (2026-06-27)
-
-Operator flagged images must auto-build on main. Found instruments-service prod image STALE at 01:33 (sha256:15a28711,
-missing today's KRX/ICE dc0d99a) while MTDS/UTL auto-rebuilt 10:28-30. Root cause (4-link): IS `-build` trigger's
-push:main removed 06-26 (switch to router-invoked `-prod`); `-prod` was a manual sourceToBuild (no push event); GHA SA
-`github-actions-deploy@` lacks `roles/cloudbuild.builds.editor` → router `gcloud builds triggers run` got
-PERMISSION_DENIED; router error-classification only handled quota/region/503 → misclassified PERMISSION_DENIED as
-"not-configured" + SILENTLY dropped (build_triggered=false, no alert). FIX: (1) `instruments-service-prod` trigger →
-`repositoryEventConfig push:branch=^main$` (auto-fires on main, no router/IAM dependency — matches MTDS pattern); (2)
-router `cloud-build-router.yml@c3a113e94` PERMISSION_DENIED→exit 3 + new `notify-permission-denied` CRITICAL Slack job
-(IAM gaps always surface). VERIFIED: build 4be77e5b SUCCESS 11:02; `instruments-service:latest` now sha256:d9418e6e
-(10:58, tag 0.87.0); Cloud Run t1-recon + lifecycle-catalogue-regen reference :latest → fresh image next run; next main
-push auto-builds without manual intervention. MTDS image 5126ab57 (10:30, CME writer fix), UTL 10:28 (consolidator
-hardening) both already fresh.
-
-### cefi/defi honest-coverage audit + cefi remediation (2026-06-27)
-
-Ran the same masked-gap lens (stale rows hiding within-window gaps) on cefi+defi instruments manifests + catalogues:
-
-- **defi: CLEAN / 100%** — 215,916 rows, 100% schema_v9, 0 stale, 0 masked gaps; chains continuous (BASE/BSC/LINEA
-  "gaps" are genesis-explained pre-launch). Catalogue CURRENT `prod/catalog.parquet` 2026-06-26 (7,416 instr / 6,469
-  active). Cosmetic only: 74 ZKSYNC/LIGHTER rows mis-filed into defi catalogue (belong to cefi); 15 epoch-zero RAYDIUM
-  delisted rows.
-- **cefi: catalogue CURRENT** `prod/catalog.parquet` 2026-06-27 (349,156 instr / 4,410 active), **but manifest NOT
-  clean** — 250 stale/blank rows (incl. legacy writer bug leaking chain names SOLANA/ZKSYNC into schema_version field);
-  22 masked (date,venue) cells across 8 venues (Dec-2023 + Mar-2025 clusters); 8 venues with large NO-ROW gaps from
-  2023-12-17 (BINANCE-DELIVERY 721d, DERIBIT-COMBO 475, PACIFICA 448, BITGET-SPOT/FUT 327, COINBASE-FUTURES 319,
-  EXTENDED-STARKNET 289, LIGHTER 236) — mix of genuine gaps + un-seeded pre-launch venues.
-- NOTE: the tiny `_catalogue/instruments-service/day=*/manifest.json` pointers (mtime 2026-05-12) are SUPERSEDED legacy
-  artifacts; the real catalogue is `{env}/catalog.parquet` (per build_instrument_catalogue.py).
-
-DISPATCHED cefi remediation agent (mirrors tradfi a71): per-venue genesis-vs-genuine split for the 8 gaps; fix the
-schema_version-holds-chain writer bug (+test); re-enumerate genuine gaps via calendar/genesis-aware CEFI producer ON A
-VM (host memory-constrained by the tradfi backfill); seed pre-launch stretches as empty_confirmed(PRE_VENUE_LAUNCH);
-prune the 250 stale rows (or rely on consolidator dd17ce23 auto-drop). Verify continuity genesis→today.
-
-### cefi G1 catalogue-correctness VERIFICATION (2026-06-27, opus cefi agent) — operator asked "is cefi instruments 100%?"
-
-**VERDICT: NOT done.** The day-axis IS fixed (✅ 2,646/2,646 days genesis→06-26, 0 missing; ✅ 20,580 `empty_confirmed`
-materialised, was 0; ✅ MVP + schema_v9), but 4 live G1-correctness defects remain — now todos **G1.1–G1.4** under the
-Phase-1 cefi G1 item above. **Crucially, the 06-27 audit just above treated the catalogue as "CURRENT / 4,410 active"
-and did NOT flag that 4,410-active is the BUG** — so the catalogue defects are NEW/uncovered:
-
-- **G1.1 (NEW, uncovered, P0-urgent): catalogue `available_to` mass FALSE-DELISTING (§7.3).** `prod/catalog.parquet`
-  (06-27 01:23) stamps **8,520 instruments `available_to=2026-06-25`** across every venue; active collapsed to **4,410
-  of 349,156** (BINANCE-FUTURES ≈47 active vs ~600+ real). Root cause confirmed: **06-26 was a PARTIAL capture**
-  (BINANCE-FUTURES instrument*count 678@06-25→47@06-26; BINANCE-SPOT 767→67; OKX-FUT 81→32; BYBIT 652→652 stable;
-  parquet 47KB→30KB) × the last-seen/global-`latest_day` bug. 06-27 recovered to full but the bad catalogue is live →
-  **MTDS-G4 would filter against a catalogue that thinks Binance lists ~47 instruments.** Shared
-  `build_instrument* catalogue.py` fix with slot-3 tradfi G1.h.
-- **G1.2 (NEW): capture-stability** — a thin/partial venue day must `record_failed`, never overwrite a full prior day
-  (the 06-26 partial is what drove G1.1). Canonical test for the §1.2 drawdown metric (678→47).
-- **G1.3 (OVERLAPS the dispatched cefi remediation agent above): canonical-form pollution** — 320 `asset_group=defi`
-  (LIGHTER 202 + PACIFICA 118, the "74 ZKSYNC/LIGHTER mis-filed" finding but it's a single-SoT violation not "cosmetic")
-  · 1,108 blank-asset_group (2019 OKX/Coinbase) · ~234 schema-misaligned (the 250-stale / schema_version-holds-chain
-  writer bug the remediation agent owns). COORDINATE — don't double-fix the schema-bug/stale-prune (theirs); the cefi
-  agent owns the defi-mistag re-stamp + the 2019 blanks if they don't.
-- **G1.4 (NEW): junk-symbol rejection NOT implemented** — 9 CJK/meme test symbols live (`龙虾`/`币安人生`/`我踏马来了`
-  on BINANCE/BITGET/ASTER). Reject at the venue adapter + surgical purge.
-
-Evidence is read-only duckdb on the live parquets (numbers reproduce). G1.1 is the priority (catalogue is actively
-wrong).
+**All 5 catalogues were regenerated + promoted 2026-06-26** (cefi 345,920 · defi 7,416 · tradfi 814,012 · sports 1,608 ·
+prediction 1,204,816 rows; monotonic ACCEPT) and the per-AG daily scheduler (T+1 producers → catalogue aggregation,
+monotonic guard) went live the same day (deployment-service@9d0e457) — see the cefi child's historical log for the full
+autonomous-run narrative and the Phase-0 child's "Autonomous run results" section for the cross-AG summary.

@@ -40,7 +40,7 @@ sources:
   [
     plans/active/deployment_ui_lifecycle_tabs_2026_05_08.md (Phase A.3 — this doc),
     plans/epics/instruments_master.md (Phase G delegates UI scope here),
-    plans/active/master_to_live_defi_2026_05_23.md,
+    plans/archive/2026_07/master_to_live_defi_2026_05_23.md,
     /codex/04-architecture/runtime-deployment-topology.md,
     /codex/05-infrastructure/launcher-script-ssot.md,
     /codex/05-infrastructure/runtime-tiers-and-deployment.md,
@@ -439,9 +439,9 @@ system (deployment-ui@e2b7a81).
   — Phase 2 of that plan wires into the Monitor → Backfill row's Deploy-Missing button.
 - [`plans/epics/instruments_master.md`](../../plans/epics/instruments_master.md) — Phase G of that plan delegates UI
   scope here.
-- [`plans/active/master_to_live_defi_2026_05_23.md`](../../plans/active/master_to_live_defi_2026_05_23.md) — the 6
-  long-lived deployment clusters DeFi-live needs by 2026-05-23 are entered into the Phase E live-cluster registry on
-  first commit; staging deploy + drain test are part of master's D3 gate.
+- [`plans/archive/2026_07/master_to_live_defi_2026_05_23.md`](../../plans/archive/2026_07/master_to_live_defi_2026_05_23.md)
+  — the 6 long-lived deployment clusters DeFi-live needs by 2026-05-23 are entered into the Phase E live-cluster
+  registry on first commit; staging deploy + drain test are part of master's D3 gate.
 
 ## Plan provenance
 

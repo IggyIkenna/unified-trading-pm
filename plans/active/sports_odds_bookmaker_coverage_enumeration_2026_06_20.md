@@ -14,7 +14,7 @@ tags: [sports, odds, bookmaker, coverage, nan-fill, enumeration, validation]
 related:
   [
     ../epics/sports_master.md,
-    ./sports_manifest_canonicalisation_2026_06_01.md,
+    ../archive/2026_07/sports_manifest_canonicalisation_2026_06_01.md,
     ./sports_consolidated_closeout_2026_07_19.md,
   ]
 created: "2026-06-12"

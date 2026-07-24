@@ -19,7 +19,7 @@ Self-contained (no cross-dir import) so it type-checks cleanly under the
 ``generate_capability_changelog.diff_statuses`` (kept trivially in sync via the
 shared baseline file + the test suite).
 
-SSOT: ``plans/active/capability_wizard_and_manifest_2026_06_11.md`` Wave-2 #5.
+SSOT: ``plans/archive/2026_07/capability_wizard_and_manifest_2026_06_11.md`` Wave-2 #5.
 Mirrors the baselined-ratchet pattern of ``check_two_sided_audit.py``.
 """
 

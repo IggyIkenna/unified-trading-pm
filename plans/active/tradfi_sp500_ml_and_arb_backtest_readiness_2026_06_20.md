@@ -16,7 +16,7 @@ related:
     ../epics/tradfi_master.md,
     ./data_completion_tradfi_2026_07_15.md,
     ./tradfi_v9_stage1_finish_2026_07_06.md,
-    ../active/master_to_live_defi_2026_05_23.md,
+    ../archive/2026_07/master_to_live_defi_2026_05_23.md,
   ]
 created: "2026-06-12"
 parent_epic: tradfi_master

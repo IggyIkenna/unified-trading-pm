@@ -410,8 +410,8 @@ reconciling + signing off, not redoing.)_
       rather than flipped — the checkbox governs the item AS CURRENTLY WRITTEN (including the widen-scope addendum), and
       that portion is not evidenced done; a bare flip would overclaim. NOT auto-fixable to `[x]` under the REFUSAL
       CONTRACT (re-read partially contradicts the auto_note's "unambiguous" framing for this item).
-- [ ] [CODE] P1. prediction live token-universe fix (owned by `prediction_venue_perps_and_live_clob_depth_2026_06_20`;
-      live=0 today)
+- [ ] [CODE] P1. prediction live token-universe fix (owned by `prediction_live_clob_depth_capture_2026_07_24`, successor
+      to `prediction_venue_perps_and_live_clob_depth_2026_06_20` which was split + archived 2026-07-24; live=0 today)
 
 ## Stage 6 — Hygiene (run in parallel; non-blocking)
 

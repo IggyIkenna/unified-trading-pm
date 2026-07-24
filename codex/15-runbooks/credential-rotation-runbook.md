@@ -244,8 +244,8 @@ Pre-cutover acceptance:
   `gcloud kms keys get-iam-policy`).
 
 Operator sign-off recorded in
-[`plans/active/master_to_live_defi_2026_05_23.md`](../../plans/active/master_to_live_defi_2026_05_23.md) Group F
-continuous-verification column.
+[`plans/archive/2026_07/master_to_live_defi_2026_05_23.md`](../../plans/archive/2026_07/master_to_live_defi_2026_05_23.md)
+Group F continuous-verification column.
 
 ---
 

@@ -21,7 +21,7 @@ scope: [engineer, admin]
 tags: [api-football, backfill, efficiency, chronological-scan, manifest, sports, prune-dont-scan]
 related:
   [
-    plans/active/sports_p2_history_apifootball_2015_to_present_2026_06_27.md,
+    plans/archive/2026_07/sports_p2_history_apifootball_2015_to_present_2026_06_27.md,
     plans/active/issues/zombie_watchdog_relaunch_reaped_live_backfills_2026_06_23.md,
   ]
 created: "2026-07-18"

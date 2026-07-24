@@ -32,7 +32,7 @@ scope: [engineer]
 tags: [sports, odds, mdps, data-correctness, honest-absence, ml-readiness, stale-cache]
 related:
   [
-    plans/active/sports_p2_features_history_to_ml_ready_2026_06_27.md,
+    plans/archive/2026_07/sports_p2_features_history_to_ml_ready_2026_06_27.md,
     plans/active/sports_features_readiness_for_predictions_2026_06_20.md,
     /codex/02-data/honest-absence-downstream-handling.md,
   ]

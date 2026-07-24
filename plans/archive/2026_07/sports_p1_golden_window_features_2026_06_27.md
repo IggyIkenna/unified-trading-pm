@@ -44,9 +44,10 @@ drift_direction: advance-code
 
 > **✅ ARCHIVED 2026-07-14 [unlock-plan] (operator ruling 2026-07-14, sports plan-set bulk archival).** All todos `[x]`
 > complete (0 open; audited complete 2026-07-13; Progress Log through 2026-07-12 ML-ready verify). Full-history features
-> continuation is owned by the ACTIVE successor `plans/active/sports_p2_features_history_to_ml_ready_2026_06_27.md`.
-> Feature-versioning / honest-absence learnings were codified in the cited Codex SSOTs during the work — no unmigrated
-> durable contract found. Lock cleared per the ruling; historical/frozen.
+> continuation is owned by the ACTIVE successor
+> `plans/archive/2026_07/sports_p2_features_history_to_ml_ready_2026_06_27.md`. Feature-versioning / honest-absence
+> learnings were codified in the cited Codex SSOTs during the work — no unmigrated durable contract found. Lock cleared
+> per the ruling; historical/frozen.
 
 > **Coordinator**: `sports_pipeline_to_100pct_golden_window_first_2026_06_27.md` (Phase 1). Computes the **derived
 > features** (R2) on the golden window to ML-ready, AFTER all upstream sources are 100% on the window (P1a+P1b+P1c). One
