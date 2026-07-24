@@ -81,11 +81,15 @@ source:
       since every server-side consumer only tests `dirty_files >0/==0`. Gate:
       `tests/test_slot_git_status_dirty_count.bats` (clean/1-file/3-file/7-file-over-cap cases); confirmed the 7-file
       case fails against the pre-fix `wc -l` path and passes against the fix.
-- [ ] [INFRA] P2. Add the `df>0 with an empty sample` instrumentation to `scripts/dev/slot-git-status-report.sh` — when
-      the computed count is non-zero but the sample array is empty, log the raw captured porcelain bytes via `cat -A` to
-      the reporter's own log so the next occurrence pins the wrapper trigger. This is the diagnostic half of the todo
-      above; it must survive even after the count is made structurally safe. **Gate**: forcing the condition in a test
-      emits the raw-bytes log line.
+- [x] ✅ [INFRA] P2. Add the `df>0 with an empty sample` instrumentation to `scripts/dev/slot-git-status-report.sh` —
+      when the computed count is non-zero but the sample array is empty, log the raw captured porcelain bytes via
+      `cat -A` to the reporter's own log so the next occurrence pins the wrapper trigger. This is the diagnostic half of
+      the todo above; it must survive even after the count is made structurally safe. **Gate**: forcing the condition in
+      a test emits the raw-bytes log line. — unified-trading-pm@bad1318f2: added standalone
+      `log_df_sample_mismatch_if_any()`, wired into `classify_repo()` right after `dirty_files`/`dirty_sample` are
+      finalized. Item 1 made this combination structurally unreachable through `classify_repo()`'s own control flow, so
+      the Gate is satisfied by calling the function directly with a forced, contrived (dirty_files, sample_len) pair —
+      `tests/test_slot_git_status_dirty_count.bats` now has 7 cases incl. forced-fire + no-false-positive.
 - [ ] [INFRA] P2. Mirror the same single-source count-integrity fix onto the FF-cron dirty gate in
       `scripts/dev/slot-cron-ff-pull.sh` so a phantom count can never trip `[skip:dirty]` and starve FF-pull. The cron
       computes dirt with the same `git status --porcelain` pattern as the reporter, so it hits the same phantom
