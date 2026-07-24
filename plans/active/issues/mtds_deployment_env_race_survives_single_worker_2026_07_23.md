@@ -90,3 +90,23 @@ underlying leak is root-caused AND independently verified fixed under -n 2" fram
 already fully safe — it is not. Next investigation should focus on quickmerge's cascade/pull step specifically (its
 interaction with ancestor-repo state), not further pytest-internal instrumentation, since that's the one concrete
 difference this session's bisection identified between clean and dirty runs.
+
+## Update (2026-07-24, same continuation, later) — stronger evidence for the cascade-step correlation
+
+Shipping the same CBOE fix hit this **5 more times in a row** via `quickmerge.sh` (identical 2-test signature,
+`1/1 worker` confirmed serial each time). Ruled out as a lead: grepped both `market-tick-data-service` and
+`unified-trading-library` for any raw `os.environ["DEPLOYMENT_ENV"] = ...` write that bypasses `monkeypatch` (the only
+kind that could survive a test's teardown) — found none; the sole hit
+(`unified-trading-library/tests/cloud_interface/unit/test_bucket_naming.py:580`) is prose in a docstring describing a
+_historical banned pattern_, not live code, and that test itself uses `monkeypatch.setenv`. No `conftest.py` autouse
+fixture sets `DEPLOYMENT_ENV` in MTDS either.
+
+**New, cleaner bisection**: immediately after the 5th quickmerge failure, ran `bash scripts/quality-gates.sh --no-fix`
+directly (bypassing quickmerge entirely, same uncommitted tree, same process) → **clean** (exit 0, full green, 6888-item
+suite). Retried `quickmerge.sh` again immediately after (same tree, no code change) → **landed clean** on this 6th
+attempt. So the pattern across this session is now 5 dirty-via-quickmerge / 1 clean-via-quickmerge / 1
+clean-via-direct-QG — reinforcing, not just suggesting, that whatever quickmerge's cascade/pull step does differently
+from a bare `quality-gates.sh --no-fix` run is the actual trigger surface, not generic pytest flakiness. This session
+did not have time to instrument the cascade step itself (e.g. diffing `os.environ` before/after `STAGE 0: Cascade`
+completes, or checking whether the ancestor repos' own `setup.sh`/dependency-install step executes any Python in the
+same shell) — that instrumentation is the concrete next step, not another blind retry loop.
