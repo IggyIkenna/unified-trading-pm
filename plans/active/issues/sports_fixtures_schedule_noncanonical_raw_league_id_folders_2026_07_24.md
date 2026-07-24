@@ -1,12 +1,16 @@
 ---
 doc_type: issue
-title: Sports fixtures_schedule — some writes land under a raw af_league_id folder instead of the canonical league_id
-summary:
-  86 in-window, registry-member blank-round rows sit under non-canonical `league=<raw_af_league_id>` (numeric-string) or
-  bare day-level `fixtures_schedule.parquet` shards instead of the canonical `league=<CANONICAL_ID>` folder — these are
-  structurally invisible to the canonical-folder-scoped round-derivation backfill mechanism
-  (`backfill_sports_fixture_round_2026_07_17.py`'s `_league_blob_index()` keys off the canonical folder name via the UAC
-  registry `universe` dict), so they can never be closed by that mechanism regardless of how many times it runs.
+title:
+  Sports fixtures_schedule — 6,678 rows across 485 leagues under raw af_league_id folders; 99.6% are for leagues NOT in
+  the registry at all (corrects the original "registry-growth timing lag" theory)
+summary: >-
+  Originally — 86 in-window, registry-member blank-round rows sit under non-canonical `league=<raw_af_league_id>`
+  (numeric-string) folders instead of the canonical `league=<CANONICAL_ID>` folder, invisible to the canonical-folder-
+  scoped round-derivation backfill. A 2026-07-24 corpus-wide manifest census (single read, not a walk) found the REAL
+  population is far larger — 6,678 rows / 485 distinct league_ids — and, critically, only 2 of those 485 leagues are
+  explained by the original "registry hadn't caught up yet" theory; the other 483 (99.6% of rows) are af_league_ids that
+  are STILL not in the UAC registry today, meaning fixtures are being fetched/written for leagues far outside the
+  tracked scope — a fetch-side scoping question, not just a write-side canonicalization timing bug.
 status: open
 nature: issue
 asset_group: [sports]
@@ -183,6 +187,31 @@ todo below.
       list of the 485 affected numeric league_ids is in this session's tool output, not reproduced inline here (too
       large for the line-cap budget) — re-derivable in ~10s via the exact census query above if todo 4 (the fold) needs
       the enumerated list again.
+
+      **🔴 CORRECTS the prior "registry-growth timing lag" root cause — that mechanism accounts for <0.4% of this
+              population, not the bulk.** Cross-checked all 485 affected league_ids against
+              `get_league_by_api_football_id()` LIVE (the exact function the writer calls): only **2 of 485** ids
+              (25 of 6,678 rows) are NOW resolvable in the registry — consistent with the CHINA_SUPER_LEAGUE
+              timing-lag story (a league added to the registry after writes had already occurred, self-healing on the next
+              write). The other **483 league_ids (6,653 rows, 99.6%) are STILL unresolvable today** — these are not a
+              registry catching up, they are af_league_ids that were fetched and WRITTEN despite never being registered at
+              all. This means the writer (or something upstream of it) is fetching fixtures for leagues far outside the
+              ~100 PREDICTION-tier registry scope this workspace is supposed to track — a fetch-side scoping gap, not (only)
+              a write-side canonicalization timing bug. **This is a bigger, different, and more actionable finding than the
+              todo's own done-when asked for** — filed as a new follow-up todo below rather than silently folded into the
+              "fix the writer" todo, since the fix for THAT todo (fail loud on lookup-miss) would not address why these 483
+              leagues are being fetched in the first place.
+
+- [ ] [DIAG] P1. **NEW (2026-07-24, slot-6)** — investigate why fixtures_schedule fetches are happening for 483
+      af_league_ids that are NOT in the UAC sports league registry at all (confirmed live via
+      `get_league_by_api_football_id()` — 0 hits for any of them), accounting for 6,653 of the 6,678 non-canonical rows
+      found by the census above. Candidates: (a) the fetch layer pulls a broader league set than the registry scopes
+      (e.g. a bulk "all leagues in a country" call not filtered down to the PREDICTION tier before fetching), (b) these
+      leagues were deliberately fetched for a reason not reflected in the current registry (a stale/removed scope), or
+      (c) a genuine bug letting arbitrary af_league_ids through. **Done when**: a written conclusion identifies the
+      actual fetch-scoping mechanism and states whether these 483 leagues should be (i) added to the registry (if
+      genuinely in-scope), (ii) have their fetches stopped (if genuinely out-of-scope, wasting API quota), or (iii)
+      something else — with the reasoning, not a guess. (repo: instruments-service)
 - [ ] [CODE] P1. Fix the writer so it never falls back to writing under a raw-id folder — fail loud (or resolve via a
       documented, tested fallback) instead (repo: instruments-service). **Done when**: a regression test reproduces the
       old lookup-miss condition and asserts the fix.
