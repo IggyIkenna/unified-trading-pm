@@ -53,19 +53,37 @@ drift_direction: advance-code
 
 ## Todos
 
-- [ ] [REVIEW] P1. **Reconcile parent + resolve spun-off issues.** For each of
-      `sports_closeout_batch1_ao_ready_2026_     07_24.md`'s 20 now-done todos: (1) flip the corresponding checkbox in
-      `sports_consolidated_closeout_2026_07_19.md` (the parent umbrella plan) to `[x]`, citing the batch-1 commit(s)
-      that shipped it as evidence — do not just copy batch-1's own evidence line, verify the actual shipped commit
-      exists (`git log`/`git show`) before citing it. (2) Check whether each todo referenced or was directed to create
-      its own issue doc (at minimum: todo 20 explicitly creates a NEW issue doc for the QG structural finding — that doc
-      should exist and stay `status: open` since it documents a still-real, unfixed workspace-infra bug, NOT resolved by
-      this reconciliation pass; todo 4's `sfi_progressive_features` investigation may have spun off its own issue doc if
-      the root cause needed one — check). For any PRE-EXISTING issue doc a batch-1 todo's scope fully closes (re-verify
-      0 open todos remain in that doc, don't just trust the batch-1 todo's own claim), flip it `status: resolved` with
-      `resolved_by` citing the closing commit. **Done when**: all 20 parent checkboxes are flipped with verified
-      evidence, and every issue doc touched by batch-1's scope has an accurate, re-verified `status` (resolved only
-      where genuinely 0 open todos remain — do not blanket-resolve).
+- [x] [REVIEW] P1. ✅ **Reconciled parent + resolved spun-off issues** — `unified-trading-pm@20915879b`. **Correction**:
+      `sports_closeout_batch1_ao_ready_2026_07_24.md` actually carries **21** top-level done todos, not 20 (verified by
+      grepping `^- \[x\]`) — its own frontmatter/description says "20 todos hand-picked", but todo 1 was split
+      mid-execution (2026-07-24, `f5e38cb25`) into a CODE todo + a new DATA backfill todo, growing the real count to 21.
+      Both map to the SAME parent checkbox (Track C's C1), so exactly 20 parent checkboxes were flipped — the "20 parent
+      checkboxes" half of this todo's own done-when is still exactly met. (1) All 20 corresponding checkboxes flipped
+      `[x]` in `sports_consolidated_closeout_2026_07_19.md` (Tracks F/C/O/H/V/K/D/X + the sports_master_closeout fold-in
+      section), each citing evidence. Every cited commit SHA independently verified via `git log` across 9 repos
+      (instruments-service, unified-api-contracts, market-data-processing-service, unified-trading-library,
+      features-service, deployment-service, market-tick-data-service, unified-trading-pm) BEFORE citing — not copied
+      from batch-1's own evidence lines; one citation (`features-service@4639106a`) was independently confirmed to NOT
+      exist in the repo, matching batch-1's own note that it never reached origin (corrected citation `7ea10aaa` used
+      instead). (2) Every issue doc referenced by a batch-1 todo re-verified for accurate `status` + open-todo count
+      (not trusted from batch-1's own claims): `fixtures_manifest_duplicate_collision_residual_2026_07_24.md` (open, 1
+      open — correct), `fixtures_manifest_legacy_backfill_2026_07_24.md` (open, 1 open — correct),
+      `mdps_canonical_writer_adapter_contract_baseline_regression_2026_07_24.md` (resolved, 0 open — correct),
+      `sports_odds_manifest_consolidator_captured_outranks_resurrection_2026_07_24.md` (resolved, 0 open — correct),
+      `sports_odds_manifest_captured_outranks_blocks_legacy_leak_correction_2026_07_24.md` (resolved, 0 open — correct),
+      `sports_fixtures_schedule_wrong_schema_day_2026_04_14.md` (open, 1 open — correct),
+      `sports_fixtures_schedule_noncanonical_raw_league_id_folders_2026_07_24.md` (open, 1 open — correct),
+      `sports_closeout_batch1_task018_partial_progress_2026_07_24.md` (resolved, 0 open — correct),
+      `manifest_reader_silent_empty_on_missing_project_id_2026_07_24.md` (open, 1 open — correct). **One finding this
+      todo's own premise got wrong**: it asserted the QG structural-finding issue doc
+      (`qg_backfill_disk_and_lint_checks_resolve_via_main_clone_not_worktree_2026_07_24.md`) "should exist and stay
+      `status: open`... NOT resolved by this reconciliation pass" — that premise is STALE. The doc is genuinely
+      `status: resolved` (0 open todos, re-verified), root-caused + fixed by SEPARATE, later work not part of batch-1's
+      own scope: `unified-trading-pm@e70a0d18e` (a worktree-identity guard in `qg-common.sh`, verified via `git log`).
+      Left it `resolved` (documenting reality, not force-reverting a premise that turned out wrong) — a correctly-open
+      follow-up remains: `qg_workspace_root_template_drift_12_repos_2026_07_24.md` (open, 2 open todos). No issue doc
+      needed flipping — every one was already accurately maintained by prior workers. **Done-when met**: all 20 parent
+      checkboxes flipped with independently-verified evidence; every touched issue doc's `status` re-verified accurate.
 - [ ] [DOC] P2. **Archive `sports_closeout_batch1_ao_ready_2026_07_24.md`** via the standard 6-step ritual (per
       CLAUDE.md's plan-archival rule): migrate any DEFERRED items to a tracked todo elsewhere (there should be none —
       batch 1 was scoped to have zero dependencies left dangling, but verify) → add the archive banner → run the
