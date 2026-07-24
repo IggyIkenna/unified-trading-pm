@@ -32,6 +32,7 @@ scope: [engineer]
 tags: [ci, testing, pytest-xdist, flake, quickmerge-blocker, test-isolation, monkeypatch]
 related:
   - plans/active/defi_consolidated_closeout_2026_07_18.md
+  - plans/active/issues/mtds_deployment_env_race_survives_single_worker_2026_07_23.md
 created: 2026-07-23
 parent_epic: infrastructure_master
 assigned_vm: NA
@@ -264,3 +265,15 @@ to let host contention actually clear) rather than continuing to burn cycles on 
 reproduction — deliberately generate host contention (e.g., a busy-loop or a second concurrent `quality-gates.sh`
 invocation in the SAME repo) while running just these 2 tests in a tight loop, to test the contention-correlation theory
 directly instead of relying on organic/observed-in-passing contention.
+
+**Cross-reference (2026-07-24) — a separate concurrent session independently found the SAME falsification, with a
+sharper lead.** `mtds_deployment_env_race_survives_single_worker_2026_07_23.md` (a different slot, same day) documents
+an INDEPENDENT bisection: a direct standalone `bash scripts/quality-gates.sh --no-fix` on an unrelated 2-line fix ran
+CLEAN, but the SAME tree via `quickmerge.sh`'s own re-gate (which pulls + cascades ancestor repos
+`unified-api-contracts`/`unified-trading-library` before re-running MTDS's suite) hit the identical 2-test failure
+TWICE, then passed clean on a third quickmerge retry with no code change — dirty/dirty/clean, non-deterministic even
+serially, matching this doc's own 5-(now 7-)consecutive-failure pattern. Their doc's recommendation is sharper than the
+host-contention theory above: **investigate quickmerge's cascade/pull step itself** (its interaction with ancestor-repo
+checkout state) as the one concrete variable that differed between their clean direct run and their dirty quickmerge
+runs — not further pytest-internal instrumentation. Both docs should be read together; do not duplicate further
+investigation, extend whichever is picked up first.

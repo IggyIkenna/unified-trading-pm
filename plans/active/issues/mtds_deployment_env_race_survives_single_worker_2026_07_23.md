@@ -24,7 +24,11 @@ stage: [meta]
 repos: [market-tick-data-service, unified-trading-library]
 scope: [engineer]
 tags: [pytest, flake, deployment-env, test-pollution, ci, cross-agent-followup]
-related: [pytest_posixpath_str_drv_attributeerror_flake_2026_07_17]
+related:
+  [
+    pytest_posixpath_str_drv_attributeerror_flake_2026_07_17,
+    mtds_deployment_env_monkeypatch_leak_blocks_quickmerge_2026_07_23,
+  ]
 created: 2026-07-23
 parent_epic: infrastructure_master
 priority: P2
