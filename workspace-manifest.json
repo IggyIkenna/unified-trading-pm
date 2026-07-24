@@ -1515,10 +1515,10 @@
       ],
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
-        "large_file_count": 9,
-        "qg_red_reason": null,
+        "large_file_count": 10,
+        "warn_file_count": 6,
         "coverage_pct": null,
-        "warn_file_count": 7
+        "qg_red_reason": null
       },
       "ldr_ci_status": "GREEN",
       "breaking_scan_dir": "server"
