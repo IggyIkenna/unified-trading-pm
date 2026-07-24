@@ -27,7 +27,8 @@ code_refs:
 authoritative_for:
   Operator response when one of the 6 perp hedge venues (Bybit, Deribit, Binance, OKX, Hyperliquid, Aster) loses
   connectivity for sustained period. Halts the affected archetype's signal generation; positions become unhedged risk.
-referenced_by: [plans/active/alerting_service_live_rules_2026_05_07.md, plans/active/master_to_live_defi_2026_05_23.md]
+referenced_by:
+  [plans/active/alerting_service_live_rules_2026_05_07.md, plans/archive/2026_07/master_to_live_defi_2026_05_23.md]
 ---
 
 # `KILL_SWITCH_VENUE_DISCONNECT` Runbook

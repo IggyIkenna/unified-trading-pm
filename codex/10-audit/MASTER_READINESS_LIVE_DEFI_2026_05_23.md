@@ -22,7 +22,7 @@ scope: [engineer, admin]
 tags: [defi, live-trading, mvp, data-correctness, readiness, cefi]
 related:
   [
-    plans/active/master_to_live_defi_2026_05_23.md,
+    plans/archive/2026_07/master_to_live_defi_2026_05_23.md,
     codex/10-audit/REPO_READINESS_CHECKLIST.yaml,
     codex/POST_PLAN_REALITY_2026_05_06.md,
   ]
@@ -42,8 +42,8 @@ refresh_note:
 # Master Readiness — Live DeFi Trading by 2026-05-23
 
 **Status:** Active companion SSOT for the master plan. **Working plan (authoritative for current state + todos):**
-[`plans/active/master_to_live_defi_2026_05_23.md`](../../plans/active/master_to_live_defi_2026_05_23.md) **Created:**
-2026-05-06 **Locked to:** `live-defi-rollout`
+[`plans/archive/2026_07/master_to_live_defi_2026_05_23.md`](../../plans/archive/2026_07/master_to_live_defi_2026_05_23.md)
+**Created:** 2026-05-06 **Locked to:** `live-defi-rollout`
 
 This file is the **codex SSOT companion** to the master plan. It owns the durable bits (readiness model, doc-touchpoint
 map, drift audit pattern). The plan owns the working bits (current state, Q&A, risk register, week-by-week DAG, todos).
@@ -170,8 +170,8 @@ Drift between any of (codex doc, sub-plan, code) is a review-blocking failure.
 ## Plan ↔ Doc ↔ Code drift audit (mirror)
 
 The full table with current `⚠` flags and resolution paths lives in
-[the working plan](../../plans/active/master_to_live_defi_2026_05_23.md#plan--doc--code-drift-audit). Update both when a
-row resolves.
+[the working plan](../../plans/archive/2026_07/master_to_live_defi_2026_05_23.md#plan--doc--code-drift-audit). Update
+both when a row resolves.
 
 **Audit guideline going forward.** Whenever an agent touches a row in this table, the PR includes a one-line "drift
 status: resolved / unchanged / new-drift" note in the description. New drift = a new row added to the table.
@@ -238,7 +238,8 @@ features-service (delta-one family) · features-service (commodity family).
 
 ## Cross-references
 
-- Working plan: [`plans/active/master_to_live_defi_2026_05_23.md`](../../plans/active/master_to_live_defi_2026_05_23.md)
+- Working plan:
+  [`plans/archive/2026_07/master_to_live_defi_2026_05_23.md`](../../plans/archive/2026_07/master_to_live_defi_2026_05_23.md)
 - Repo readiness SSOT: [`REPO_READINESS_CHECKLIST.yaml`](./REPO_READINESS_CHECKLIST.yaml)
 - Per-service yamls: [`repos/`](./repos/)
 - Cross-cutting principles: [`POST_PLAN_REALITY_2026_05_06.md`](../POST_PLAN_REALITY_2026_05_06.md)

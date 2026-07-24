@@ -22,7 +22,7 @@ Output: unified-api-contracts/openapi/venue-coverage-report.md
 Usage:
     python audit_venue_coverage.py [--output-dir PATH] [--workspace-root PATH]
 
-Plan: plans/active/capability_wizard_and_manifest_2026_06_11.md Phase 6A (F39)
+Plan: plans/archive/2026_07/capability_wizard_and_manifest_2026_06_11.md Phase 6A (F39)
 """
 
 from __future__ import annotations
@@ -258,11 +258,7 @@ def build_venue_rows(
     # adapter inventory canonical IDs.  Some adapters serve venues not yet in the
     # registry (e.g. FX, BITFINEX-SPOT, KRAKEN-*) — include them so the audit
     # captures every adapter-backed venue regardless of registry coverage.
-    all_venue_ids: set[str] = (
-        set(venue_category_map.keys())
-        | endpoint_registry_venues
-        | set(_ADAPTER_INVENTORY.keys())
-    )
+    all_venue_ids: set[str] = set(venue_category_map.keys()) | endpoint_registry_venues | set(_ADAPTER_INVENTORY.keys())
 
     for venue_id in sorted(all_venue_ids):
         uid = venue_id.upper()
@@ -280,9 +276,7 @@ def build_venue_rows(
         has_adapter = len(adapter_files) > 0
 
         # ENDPOINT_REGISTRY: case-insensitive match
-        in_er = uid in endpoint_registry_venues or venue_id.lower() in {
-            v.lower() for v in endpoint_registry_venues
-        }
+        in_er = uid in endpoint_registry_venues or venue_id.lower() in {v.lower() for v in endpoint_registry_venues}
 
         # Leg eligibility: lowercase/base match
         lc = venue_id.lower()

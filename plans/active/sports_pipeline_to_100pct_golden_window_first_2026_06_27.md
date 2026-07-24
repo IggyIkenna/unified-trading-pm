@@ -79,7 +79,7 @@ the 10 dispatchable children (this coordinator's DAG) ---
 - plans/active/sports_p1_golden_window_e2e_gate_2026_06_27.md
 - plans/active/sports_p2_history_apifootball_2015_to_present_2026_06_27.md
 - plans/active/sports_p2_history_reference_and_odds_2015_to_present_2026_06_27.md
-- plans/active/sports_p2_features_history_to_ml_ready_2026_06_27.md
+- plans/archive/2026_07/sports_p2_features_history_to_ml_ready_2026_06_27.md
 - plans/archive/2026_07/sports_p2_daily_forward_catalogue_and_final_gate_2026_06_27.md
 
 # --- existing plans this set LEANS ON / re-homes from (do not duplicate) ---

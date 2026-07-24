@@ -20,8 +20,8 @@ Usage:
 The default manifest path is the canonical output location in UAC.
 The default tracker path is relative to the PM repo root.
 
-SSOT: plans/active/capability_wizard_and_manifest_2026_06_11.md Phase 5.
-Plan: unified-trading-pm/plans/active/capability_wizard_and_manifest_2026_06_11.md
+SSOT: plans/archive/2026_07/capability_wizard_and_manifest_2026_06_11.md Phase 5.
+Plan: unified-trading-pm/plans/archive/2026_07/capability_wizard_and_manifest_2026_06_11.md
 """
 
 from __future__ import annotations

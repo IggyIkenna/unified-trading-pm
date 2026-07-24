@@ -317,9 +317,11 @@ normally.
       and `features_service_e2e_pipeline_test_2026_05_26`), **qualifier-tag-pointer** (the established `f6df716e7`
       precedent banner, for plans genuinely dominated by formal `DEFERRED-<QUALIFIER>` tags, e.g.
       `master_to_live_defi_2026_05_23`'s ~100+ tagged hits; `prediction_venue_perps_and_live_clob_depth_2026_06_20`'s
-      `DEFERRED-CROSS-DEP`), and **not-yet-identified** (honest "no successor exists yet, this plan remains the owner"
-      for genuinely unowned items, e.g. `mtds_file_size_refactor_2026_06_08`,
-      `migration_verification_orphan_safety_2026_06_10`) — never fabricated a successor that doesn't exist. Verified via
+      `DEFERRED-CROSS-DEP` — that plan was split + archived 2026-07-24 per the plan line-cap remediation, the
+      `DEFERRED-CROSS-DEP` item now lives in `plans/active/prediction_live_clob_depth_capture_2026_07_24.md`), and
+      **not-yet-identified** (honest "no successor exists yet, this plan remains the owner" for genuinely unowned items,
+      e.g. `mtds_file_size_refactor_2026_06_08`, `migration_verification_orphan_safety_2026_06_10`) — never fabricated a
+      successor that doesn't exist. Verified via
       `.venv/bin/python scripts/quality_gates/check_plan_discipline.py --strict`: **0 violations** (down from the
       19-plan baseline; re-baselined 19 → 0 via `--baseline-write`, closing this entire issue doc — both original todos
       plus every P3 follow-up are now done). (repo: unified-trading-pm)

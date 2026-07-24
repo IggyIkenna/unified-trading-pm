@@ -34,7 +34,9 @@ co_operators:
 codex_ssots:
 related_plans:
   - ../active/prediction_consolidated_closeout_2026_07_18.md
-  - ../active/prediction_venue_perps_and_live_clob_depth_2026_06_20.md
+  - ../active/prediction_perps_kalshi_polymarket_parked_2026_07_24.md
+  - ../active/prediction_live_clob_depth_capture_2026_07_24.md
+  - ../active/prediction_cross_venue_arb_and_coverage_2026_07_24.md
   - ../active/predictions_ml_walk_forward_and_arb_2026_06_20.md
   - ../active/predictions_other_bucket_and_ui_drilldown_2026_06_20.md
 last_updated: 2026-07-12
@@ -431,7 +433,7 @@ inline todo block below maps to one of these homes — nothing dropped, nothing 
 | Model 2A walk-forward; acceptance metrics (log-loss/calibration/AUC); training-config sanity; Group-F AUC≥0.55/calib≤5% gate; FSS `arb_calculator`; model-registry persistence; predictions MTDS completion-% slice — all the predictions ML half of `sports_predictions_e2e` (sports_master line 148 confirms these belong here, NOT sports). GATED ON `sports_master:Group E` (FSS ≥95% non-NULL).                                                                                                                                | **EXTRACTED (net-new)**                                                                                                                                                      | [`predictions_ml_walk_forward_and_arb_2026_06_20`](../active/predictions_ml_walk_forward_and_arb_2026_06_20.md)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | Writer-rebundling (`Replace POLYMARKET writer`) + manifest/parquet canonicalisation + reflip + reconcilers + `category=→asset_group=` migration + `_index` v9 rebuild + CF-7 relabel                                                                                                                                                                                                                                                                                                                                                | **OWNED ELSEWHERE — do not duplicate (corrected 2026-07-15, plan-reconcile: FOLDED into M-1 + archived per mtds_mdps_master.md's 2026-07-13 CONSOLIDATION EXECUTED banner)** | [`prediction_manifest_canonicalisation_2026_06_01`](../archive/2026_07/prediction_manifest_canonicalisation_2026_06_01.md) (SUPERSEDED — folded verbatim into `data_completion_to_100_all_ag_2026_06_21` M-1's "Folded-in scope 2026-07-13" section per operator ruling 2026-07-13, `plans/archive/2026_07/mtds_consolidation_foldin_mapping_2026_07_12.md`; was: slot-5 Prediction master orchestrator single-walk legacy→canonical migration E1–E8 + writer rebundle by `canonical_question_group` + `record_captured_from_counts` atom). The epic's own resolved Open-Questions Q1/A1 + Q2/A2 (UTL@ef47c81b / MTDS@a2f8d80) are this plan's design decisions. |
 | Lifecycle-bounded `available_at` stamping for Polymarket + Kalshi adapters (`available_at = max(tick_ts, market_created_at)`, refuse rows past `market_settlement_time`)                                                                                                                                                                                                                                                                                                                                                            | **OWNED ELSEWHERE — do not duplicate**                                                                                                                                       | [`available_at_lookahead_bias_completion_2026_05_08`](../archive/2026_05/available_at_lookahead_bias_completion_2026_05_08.md) Phase 1 (distinct from the FEATURE-COMPUTE per-market gate, which is in the lookahead child plan above)                                                                                                                                                                                                                                                                                                                                                                                                                           |
-| May-23 deliverable success criteria (Polymarket/Kalshi backtest, data pipeline clean, cross-asset features, cluster-validation, strategy+execution progressed)                                                                                                                                                                                                                                                                                                                                                                      | **ROUTED TO MASTER**                                                                                                                                                         | [`master_to_live_defi_2026_05_23`](../active/master_to_live_defi_2026_05_23.md) — predictions readiness ladder = "BACKTEST only / features-pipeline-running (no ML this cycle)"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| May-23 deliverable success criteria (Polymarket/Kalshi backtest, data pipeline clean, cross-asset features, cluster-validation, strategy+execution progressed)                                                                                                                                                                                                                                                                                                                                                                      | **ROUTED TO MASTER**                                                                                                                                                         | [`master_to_live_defi_2026_05_23`](../archive/2026_07/master_to_live_defi_2026_05_23.md) — predictions readiness ladder = "BACKTEST only / features-pipeline-running (no ML this cycle)"                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
 | Opinion Trade backtest + CME event-futures arb backtest                                                                                                                                                                                                                                                                                                                                                                                                                                                                             | **ROUTED TO MASTER as OUT/post-cutover**                                                                                                                                     | Both CONTRADICTED by this epic's own resolved Open-Questions ("OUT for May-23" — Opinion Trade has no integration this cycle; CME event-contracts need a separate adapter + catalog, deferred). Not active work.                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 
 The blocks below are the **frozen May-07/08 source snapshot**, retained for archaeology only. They are SUPERSEDED by the
@@ -816,8 +818,8 @@ before CME arb can link.
 ## May-23 deliverable (folded from `prediction_markets_may_23_2026.epic` 2026-05-08) — SUPERSEDED 2026-06-20 (routed to master; history only)
 
 > **ROUTED TO MASTER**: the May-23 success criteria below are cutover gates owned by
-> [`master_to_live_defi_2026_05_23`](../active/master_to_live_defi_2026_05_23.md) (predictions readiness ladder =
-> "BACKTEST only / features-pipeline-running, no ML this cycle"). The **Opinion Trade backtest** + **CME event-futures
+> [`master_to_live_defi_2026_05_23`](../archive/2026_07/master_to_live_defi_2026_05_23.md) (predictions readiness ladder
+> = "BACKTEST only / features-pipeline-running, no ML this cycle"). The **Opinion Trade backtest** + **CME event-futures
 > arb backtest** criteria are CONTRADICTED by this section's own resolved Open-Questions (both **OUT for May-23 /
 > post-cutover**) — they are NOT active work. Do NOT dispatch from here. Retained below for context only.
 
@@ -921,10 +923,17 @@ canonical-question-group bucket + deployment-ui 3-level drilldown
 
 ## P2 — useful; opportunistic
 
-### [`prediction_venue_perps_and_live_clob_depth_2026_06_20`](../active/prediction_venue_perps_and_live_clob_depth_2026_06_20.md)
+### `prediction_venue_perps_and_live_clob_depth_2026_06_20` — SPLIT 2026-07-24, see 3 successors
 
-**status**: active · **estimate**: 8 cal AI-days (class: brand-new) **title**: Kalshi + Polymarket perpetual futures +
-live CLOB depth/quotes (funding/basis/dispersion arb)
+> Archived (frozen) at `../archive/2026_07/prediction_venue_perps_and_live_clob_depth_2026_06_20.md` per the plan
+> line-cap remediation (`../active/issues/plan_line_cap_remediation_2026_07_23.md` row 23). Split 3 ways:
+
+- [`prediction_perps_kalshi_polymarket_parked_2026_07_24`](../active/prediction_perps_kalshi_polymarket_parked_2026_07_24.md)
+  — **status**: active · **estimate**: 8 cal AI-days (class: brand-new) — parked KALSHI_PERP/POLYMARKET_PERP track
+- [`prediction_live_clob_depth_capture_2026_07_24`](../active/prediction_live_clob_depth_capture_2026_07_24.md) —
+  **status**: active · **estimate**: 8 cal AI-days (class: brand-new) — live+batch CLOB depth capture infra
+- [`prediction_cross_venue_arb_and_coverage_2026_07_24`](../active/prediction_cross_venue_arb_and_coverage_2026_07_24.md)
+  — **status**: active · **estimate**: 8 cal AI-days (class: brand-new) — cross-venue arb + honest-coverage
 
 ## P3 — backlog; revisit quarterly
 
@@ -972,7 +981,7 @@ _(no plans currently assigned at this priority)_
 
 ## Cross-references
 
-- Master plan: [`master_to_live_defi_2026_05_23.md`](../active/master_to_live_defi_2026_05_23.md).
+- Master plan: [`master_to_live_defi_2026_05_23.md`](../archive/2026_07/master_to_live_defi_2026_05_23.md).
 - Sibling asset_group umbrellas: `cefi_master`, `defi_master`, `tradfi_master`, `sports_master`.
 - Sports half of e2e: `sports_master.md` (288M ODDS_API row migration + MDPS bucketing + FSS).
 - Honest-coverage % surface: `GET /api/data-status/honest-coverage` + `HonestCoverageCard` (deployment-ui). SSOT:

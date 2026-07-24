@@ -31,7 +31,7 @@ scope: [engineer]
 tags: [manifest, consolidator, manifest-writer, lost-update, data-correctness, sports, l6-legacy-only, e8-gate]
 related:
   [
-    plans/active/sports_manifest_canonicalisation_2026_06_01.md,
+    plans/archive/2026_07/sports_manifest_canonicalisation_2026_06_01.md,
     plans/active/issues/legacy_seed_captured_outranks_resurrection_risk_2026_07_15.md,
     plans/active/issues/sports_index_recency_masked_captured_atoms_2026_07_13.md,
     plans/active/issues/sports_cf8_available_at_backfill_regression_2026_07_13.md,

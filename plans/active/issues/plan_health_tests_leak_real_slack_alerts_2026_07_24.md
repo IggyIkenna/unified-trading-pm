@@ -108,31 +108,42 @@ runs QG on a host where that env var happens to be set.
 (`"BLK-abc123"`, `"BLK-xyz"`, `"BLK-1"`, `"BLK-2"`) — **none of these correspond to a real row.** An operator clicking
 through to answer one would find nothing to answer.
 
-## Not yet confirmed (same bug class, needs its own audit pass)
+## Confirmed + FIXED: dispatch-failure mechanism (was "not yet confirmed")
 
-The `tmux unavailable` / `session already exists (raced by another spawn path)` dispatch-failure messages (14 each, same
-cadence) are **also** literal test fixtures (`test_plan_health.py:153,251`; `test_escalation.py:375`) for
-`notify_plan_health_dispatch_failed`. One relevant test (`test_alert_dispatch_failed_serializes_concurrent_calls`) DOES
-correctly patch `server.notifications.slack.notify_plan_health_dispatch_failed` — so the actual leaking call site (if
-any) is a **different** test using these same fixture strings, not yet identified. Needs the same audit pass as above
-across `test_plan_health.py` AND `test_escalation.py` before concluding this is the same bug (strong circumstantial
-match, not yet mechanism-confirmed like the doc_drift case above).
+The `tmux unavailable` / `session already exists (raced by another spawn path)` dispatch-failure messages (14 each) were
+confirmed as the SAME bug class, in a different function: `test_dispatch_spawn_failure_raises` and
+`test_dispatch_exhausted_retries_drops_benign_label` (`test_plan_health.py`) each drive `dispatch()` into the
+`_alert_dispatch_failed()` path without mocking `server.notifications.slack.notify_plan_health_dispatch_failed` — a live
+spy proof (real webhook env var set, `_post` spied) caught exactly 2 real posts, matching both templates 1:1.
+
+## Full scope: 11 leaking tests, not 4 — every flood count reconciled exactly
+
+Tracing `record_result()`'s actual control flow (not just the 4 originally suspected tests) showed ANY test passing a
+NEW `doc_drift` finding without mocking **both** `notify_plan_health_findings` AND `notify_slot_blocked` leaks — since
+`new_blocked` (and therefore the `notify_slot_blocked` call) is populated regardless of whether `add_blocked` itself is
+mocked. Reconciling every leaking test's fire-count against the original flood evidence table matches **exactly**: claim
+`"x"` = 5 tests × 1 fire = n=70/14 runs; `"y"` = 1 test = n=14; `"already seen"` = 1 test (1 of 2 calls, deduped) =
+n=14; `"drift Z"` = 1 test × 2 fires (of 3 calls) = n=28; `"rule X contradicted"` = 1 test = n=14;
+`"tab-branch retired"` = 1 test = n=14; `"tmux unavailable"` + `"session already exists"` = 1 test each = n=14 each. All
+9 doc_drift tests + 2 dispatch-failure tests fixed in one commit — proof re-run showed 0 real `_post` calls across the
+whole suite (1609 passed).
 
 ## Open todos
 
-- [ ] [BACKEND] P0. Add the missing `patch("server.notifications.slack.notify_slot_blocked")` (and
-      `notify_plan_health_findings` where absent) to the 4 identified doc_drift tests in `test_plan_health.py`.
-      **Gate**: running each test with the REAL `AGENT_ORCHESTRATOR_SLACK_WEBHOOK` env var set (or a spy asserting zero
-      real HTTP calls) proves no outbound request fires.
-- [ ] [BACKEND] P0. Audit `test_plan_health.py` + `test_escalation.py` for every other call into `record_result`,
-      `_alert_dispatch_failed`, `dispatch`, or any function that reaches `server.notifications.slack.*`, and confirm
-      each test that exercises a real Slack-firing path patches the relevant `notify_*` function. Specifically resolve
-      the `tmux unavailable`/`session already exists` open question above.
-- [ ] [BACKEND] P1. Add a project-wide `autouse` conftest fixture that blocks real outbound Slack sends by default (e.g.
-      patch `server.notifications.slack._post` to a no-op, or assert `AGENT_ORCHESTRATOR_SLACK_WEBHOOK` is unset in the
-      test environment) — defense-in-depth mirroring the existing `_isolated_state_dir` autouse fixture in
-      `tests/conftest.py`, so a future missing per-test mock can't leak into production again. **Gate**: temporarily
-      un-mock one of the 4 tests above and confirm the new fixture still prevents a real send.
+- [x] [BACKEND] P0. Add the missing `notify_slot_blocked`/`notify_plan_health_findings` mocks — scope widened from the
+      original 4 to all 9 leaking doc_drift tests once the full `record_result()` control flow was traced. —
+      `agent-orchestrator@a545800`. **Gate met**: scoped spy run (`AGENT_ORCHESTRATOR_SLACK_WEBHOOK` set + `_post`
+      spied) across `test_plan_health.py` + `test_escalation.py` → 129 passed, 0 real `_post` calls.
+- [x] [BACKEND] P0. Audited both files for every other Slack-reaching call; found + fixed the 2 dispatch-failure tests
+      (`test_dispatch_spawn_failure_raises`, `test_dispatch_exhausted_retries_drops_benign_label`) missing
+      `notify_plan_health_dispatch_failed` mocks — resolves the "not yet confirmed" section above. —
+      `agent-orchestrator@a545800`.
+- [x] [BACKEND] P1. Added `_no_real_slack_webhook` autouse fixture to `tests/conftest.py` — defaults
+      `server.notifications.slack._WEBHOOK_URL` to `""` for every test (mirrors `_isolated_state_dir`); a test that
+      exercises `_post`'s real retry/backoff logic (`test_slack_notifications.py`) overrides it itself, unaffected. —
+      `agent-orchestrator@a545800`. **Gate met**: a throwaway test with a live-looking webhook URL AND zero notify
+      mocking (the exact "forgot the mock" scenario) still made 0 real `httpx.Client` calls — the fixture alone blocks
+      it, independent of the per-test mock. Full suite (1609 passed, 1 skipped) unaffected.
 - [ ] [OPERATOR] P2. Decide whether to also verify why `AGENT_ORCHESTRATOR_SLACK_WEBHOOK` is visible inside a worker's
       `quality-gates.sh` pytest run at all (is it exported at the shell/profile level for all subprocesses on the
       central VM, not just the systemd-managed `orchestrator.service`?) — informs whether the fix belongs ONLY in the
@@ -161,3 +172,14 @@ match, not yet mechanism-confirmed like the doc_drift case above).
   Confirmed the doc_drift mechanism precisely (missing `notify_slot_blocked` mock, verified 0 fake rows in the real
   `blocked_queue`); flagged the dispatch-failed mechanism as same-class-but-unconfirmed. Not fixed yet — filed P0 for
   next pickup, this is an active, ongoing production Slack flood as of filing.
+- **2026-07-24 (later same day)**: Re-pulled the channel — the original 51-minute burst (168 messages) had already gone
+  quiet ~41 minutes before this pass (last flood message 09:13:36 UTC; re-pull at 09:55 UTC clean), confirming the flood
+  is bursty (tracks fleet-wide QG sweeps) rather than continuous, but guaranteed to recur on the next full-suite run
+  anywhere the webhook env var is visible. Traced `record_result()`'s full control flow (not just the 4 originally
+  suspected tests) and found the true leaking set was **11 tests**: every count in the original evidence table (70, 28,
+  14×6) reconciles EXACTLY against a specific leaking test once all of them are accounted for — see "Full scope" above.
+  Fixed all 11 (the 9 doc_drift tests in `test_plan_health.py` + the 2 `_alert_dispatch_failed` dispatch-failure tests),
+  added the P1 autouse `_no_real_slack_webhook` conftest fixture as defense-in-depth, and proved both with a real spy
+  (fake `AGENT_ORCHESTRATOR_SLACK_WEBHOOK` set, `_post`/`httpx.Client` spied — 0 real calls, 1609/1609 passed full
+  suite). Shipped `agent-orchestrator@a545800` via quickmerge (landed on LDR). 3 todos remain open (operator env-
+  var-scope decision, the deferred script fallback, and the unrelated ratchet breach) — none block the production fix.

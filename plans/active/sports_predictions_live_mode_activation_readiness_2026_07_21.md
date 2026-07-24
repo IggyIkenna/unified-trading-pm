@@ -27,7 +27,7 @@ related:
     plans/active/issues/sports_predictions_live_mode_and_backtest_execution_orphaned_2026_07_21.md,
     plans/active/sports_arb_decay_window_and_alpha_gate_design_2026_07_21.md,
     plans/active/sports_odds_feature_naming_canonicalization_2026_07_21.md,
-    plans/active/master_to_live_defi_2026_05_23.md,
+    plans/archive/2026_07/master_to_live_defi_2026_05_23.md,
     /codex/04-architecture/batch-live-architecture.md,
     /codex/04-architecture/sports-batch-live.md,
     /codex/04-architecture/sports-live-odds-connectivity.md,
@@ -76,7 +76,7 @@ drift_direction: advance-code
 ## Why this plan exists, and what it is NOT
 
 This is a **readiness/scoping plan**, not an activation plan. Per the operator's own asset-group readiness ladder
-(`plans/active/master_to_live_defi_2026_05_23.md:688-699`), sports and prediction sit BELOW live trading today:
+(`plans/archive/2026_07/master_to_live_defi_2026_05_23.md:688-699`), sports and prediction sit BELOW live trading today:
 
 | Asset group    | Current rung (May-23 ladder) | Rungs still ahead                                                      |
 | -------------- | ---------------------------- | ---------------------------------------------------------------------- |

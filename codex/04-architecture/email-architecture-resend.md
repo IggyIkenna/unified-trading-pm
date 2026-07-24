@@ -140,6 +140,6 @@ defaults to localhost which triggers sandbox routing automatically.
 ## Cross-references
 
 - Original implementation plan (archived): `plans/archive/resend_email_architecture_2026_04_23.plan.md`.
-- Master plan: `plans/active/master_to_live_defi_2026_05_23.md` — email is a Tier-2 service surface (UTS-UI).
+- Master plan: `plans/archive/2026_07/master_to_live_defi_2026_05_23.md` — email is a Tier-2 service surface (UTS-UI).
 - Dev secrets: `unified-trading-system-ui/scripts/load-dev-secrets.sh`.
 - Deployment env vars: `unified-trading-system-ui/docs/core/DEPLOYMENT.md`.

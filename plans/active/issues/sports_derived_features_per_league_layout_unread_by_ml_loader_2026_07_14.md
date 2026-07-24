@@ -28,7 +28,7 @@ scope: [engineer]
 tags: [sports, features, manifest, data-correctness, ml-training, shard-atom, canonicalisation]
 related:
   [
-    plans/active/sports_p2_features_history_to_ml_ready_2026_06_27.md,
+    plans/archive/2026_07/sports_p2_features_history_to_ml_ready_2026_06_27.md,
     plans/active/issues/sports_gw_enrichment_false_empty_manifest_and_dropped_rows_2026_07_14.md,
     /codex/02-data/availability-manifest-and-data-status.md,
   ]

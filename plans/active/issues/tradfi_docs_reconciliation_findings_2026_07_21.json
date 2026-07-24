@@ -160,7 +160,7 @@
     "fix": "In line 117-118, drop the stale VIX-cash-index sourcing sub-claim and the nonexistent CLAUDE.md quote. Keep the real, still-standing MDPS-gap blocker (futures_chain/options_chain data_types absent from the TRADFI MTDS bucket), but replace the \\\"Additionally BLOCKED on VIX data ... VIX features require VIX OHLCV from Barchart/Yahoo; those are not in the IS-driven features pipeline (CLAUDE.md: 'VIX 15m: Barchart preload + Yahoo rolling 60d')\\\" text with a pointer to the already-resolved ruling: VIX cash index was deleted 2026-06-23; VIX exposure = VX futures via XCBF.PITCH (CFE), and VIX FUTURE is now an MVP instrument (uac@22e6a534). Route compute_vix_features() off the existing VX futures OHLCV per the P2 items at lines 131-147, and note Barchart is a retired source (CLAUDE.md: 'VIX=VX-futures via XCBF.PITCH, Barchart RETIRED'). This keeps the P0 todo consistent with the plan's own later resolution."
   },
   {
-    "doc": "plans/active/tradfi_v9_stage1_finish_2026_07_06.md",
+    "doc": "plans/archive/2026_07/tradfi_v9_stage1_finish_2026_07_06.md",
     "line": 439,
     "severity": "P2",
     "claim": "- [ ] [DATA] P0. BLOCKED-PREREQUISITES (2026-07-13, slot-5). E7 verify \u2014 cf_manifest_audit ... CF-1..CF-12 all GREEN ... 2 genuine REDs remain (CF-1 v4 tail + CF-3/CF-4 blank pipeline_mode/source), gated on task 10's fleet-drain + re-stamp.",

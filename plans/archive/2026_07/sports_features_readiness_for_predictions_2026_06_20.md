@@ -37,8 +37,8 @@ drift_direction: advance-code
 > flipped complete 2026-07-10). **Successors:** the golden-window FSS-run items were absorbed by
 > `sports_p1_golden_window_features_2026_06_27.md` (archived alongside this plan, same ruling), and the FULL-HISTORY
 > execution criterion (FSS over the real 5+ year bucketed GCS dataset with the ≥95% non-NULL gate measured on real rows)
-> is absorbed and owned by the ACTIVE `plans/active/sports_p2_features_history_to_ml_ready_2026_06_27.md`. Lock cleared
-> per the ruling; historical/frozen.
+> is absorbed and owned by the ACTIVE `plans/archive/2026_07/sports_p2_features_history_to_ml_ready_2026_06_27.md`. Lock
+> cleared per the ruling; historical/frozen.
 
 > **Provenance**: extracted 2026-06-20 from the inline `sports_master` epic body during the asset-group-umbrella
 > restructure. Migrated from the epic's "Sports half of `sports_predictions_e2e` — 288M ODDS_API row migration" section

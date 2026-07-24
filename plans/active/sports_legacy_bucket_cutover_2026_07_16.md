@@ -24,9 +24,11 @@ scope: [engineer, admin]
 tags: [migration, bucket-canonicalisation, cutover, gcs, terraform, manifest, sports, destructive]
 related:
   [
-    /plans/active/sports_manifest_canonicalisation_2026_06_01.md,
+    /plans/archive/2026_07/sports_manifest_canonicalisation_2026_06_01.md,
     /plans/archive/2026_07/sports_data_sources_canonical_completion_2026_07_13.md,
     ../epics/sports_master.md,
+    /plans/active/sports_mtds_odds_trades_index_correctness_followup_2026_07_24.md,
+    /plans/active/sports_legacy_cutover_closeout_tasks_2026_07_24.md,
   ]
 created: 2026-07-16
 last_updated: 2026-07-16
@@ -832,44 +834,12 @@ budget). **This estimate is NOT a delete-gate.** T2.6 finishes the exact pass.
       footystats reference data; `_SPORTS_REF_SOURCE_OVERRIDE` is empty because the path key `footystats_odds` already
       strips to the correct source `footystats`, not because ODDS was removed). _Gate_: comment matches the live
       registries; `quality-gates.sh` green. _ABORT_: none (comment-only).
-- [ ] [DATA] P0. **T2.9 — MDT `(sports, odds, trades)` schema contract is DRIFTED from reality (BIG FINDING, T2.7).**
-      _Mechanism_: the registered contract requires
-      `ts_event, fixture_id, market_type, outcome, odds_decimal, broker,     client, data_source`; the REAL canonical
-      data carries `bm_time, market_key, outcome_name, price, fetch_utc, …`. **Canonical's OWN native live-written
-      objects FAIL the same contract** (verified directly, not inferred) — so this is contract-vs-reality drift, not a
-      defect in the moved objects. With `_resolve_strict_validation(None)==True`, any caller that validates these cells
-      RAISES. Decide: fix the contract to match the real schema, or fix the writers to emit the contracted schema. T2.7
-      wrote its 6,110 rows in documented warn-only mode (mismatch LOGGED, row truthfully reflects a crc32c-verified
-      object) rather than let a stale contract assert a false absence. _Gate_: contract and real data agree on ≥1 native
-      canonical object. _ABORT_: none (analysis).
-- [ ] [DATA] P0. **T2.10 — 47,253 phantom `api_football × trades` `captured` rows in the MDT canonical index (BIG
-      FINDING, T2.7). Same class as T3.1's 123,149 `api_football × ODDS`, other bucket, no todo owns it.** _Mechanism_:
-      canonical MDT holds **ZERO** `batch_api_football` trades objects (only `batch_odds_api` 252,163 + `live_odds_api`
-      8), yet the index carries 47,253 `api_football × trades` rows with `capture_status=captured` and **nonzero**
-      `instrument_count` — i.e. the index claims captured data no object backs. **5,584 of them are superseded/corrected
-      in place by T2.7's MDT shard at T6.1** (same dedup key, corrected `source`/`pipeline_mode`); the remaining
-      **~41,669 need a purge decision** mirroring T3.1's predicate (`source=='api_football' AND data_type=='trades'`,
-      source filter MANDATORY — `odds_api × trades` 362,746 must survive UNTOUCHED). Related: UAC declares **no
-      `('sports','trades')` availability semantic** though `cefi`/`tradfi`/`prediction` all map
-      `trades →     tick_timestamp`; registering it blind would switch the availability gate ON for the LIVE MDT sports
-      fleet — the exact hazard `57bcc7c5` refused for `PLAYER_STATS` and filed for a ruling. **Feeds OR-5b.** _Gate_: a
-      written disposition for all 47,253. _ABORT_: purging without the `source` filter → destroys the real `odds_api`
-      population → STOP.
 
-> **🔬 SLOT-3 FINDING 2026-07-17 — T2.10 is NOT a T3.1-style merged-index purge; the seed re-introduces the phantoms.
-> STILL BLOCKED (entangled with `_legacy_seed`/OR-4/OR-5b).** Measured directly with DuckDB over fresh downloads of BOTH
-> `market-data-tick-sports-prd` `_index` objects: the phantom `api_football × trades`
-> captured+nonzero-`instrument_count` rows live in the **live `_index/per_vm/_legacy_seed.parquet` shard** (SEED =
-> **37,114**; MERGED-INDEX = **38,329**), and the consolidator re-merges that seed EVERY cycle (index generation was
-> seconds-fresh at measurement). ⇒ a merged-index-only rewrite (T3.1's mechanism, which the todo above says to "mirror")
-> is **NOT durable** here — the next consolidator cycle re-adds the 37,114 from the seed. This is exactly why T3.1's
-> ODDS purge held (`api_football × ODDS` is **0** in BOTH the seed and the merged index — nothing to re-introduce) but a
-> trades purge would **silently regress**. The consolidators are ENABLED (Phase 6 done), so there is no QUIET window now
-> either. **Durable fix must strip the 37,114 phantom captured-trades rows from the SEED itself** (source filter
-> MANDATORY — the seed also holds **211,313** real `odds_api × trades` that must survive), then let the consolidator
-> re-merge — i.e. it must be done as part of the `_legacy_seed.parquet` / R-8 / OR-4 resolution, which is the live OR-5b
-> investigation and gates the MDT-bucket delete. A merged-index purge alone is a **false-progress trap**. _(Not executed
-> — read-only measurement; zero objects mutated.)_
+> **T2.9 + T2.10 (open) forked out 2026-07-24** — the MDT `(sports, odds, trades)` schema-drift finding and the
+> phantom-trades-rows purge decision (plus the 2026-07-17 SLOT-3 investigation note), moved **verbatim** to
+> [`sports_mtds_odds_trades_index_correctness_followup_2026_07_24.md`](/plans/active/sports_mtds_odds_trades_index_correctness_followup_2026_07_24.md)
+> per the plan-hygiene line-cap remediation (`plans/active/issues/plan_line_cap_remediation_2026_07_23.md`, row 24,
+> bucket (c)). Nothing was deleted — see that plan for the full text.
 
 ### PHASE 3 — CLEAN (the index is QUIET — the ONLY safe window)
 
@@ -1491,27 +1461,12 @@ budget). **This estimate is NOT a delete-gate.** T2.6 finishes the exact pass.
       name implies cefi/tradfi, NOT sports) or delete the job + scheduler if the recon leg is dead. **Harmless today**
       (it fails closed, writes nothing, touches no legacy bucket — T4.5 proved this), so it is a correctness/noise bug,
       not a data risk. _Gate_: the daily execution exits 0, or the job is gone. _ABORT_: none.
-- [ ] [REVIEW] P1. **T6.7 — Post-phase codex audit (HARD RULE).** _Mechanism_: update
-      `/codex/02-data/sports-gcs-path-ssot.md` (legacy shape is now GONE — no reader should special-case it),
-      `/codex/02-data/bucket-naming-and-config.md` (the last no-env Group-A twin is retired),
-      `/codex/05-infrastructure/manifest-consolidator-ssot.md` (legacy consolidator entries permanently removed);
-      SUPERSEDED-banner anything the cutover invalidated. _Gate_: every codex path named here is either updated or
-      explicitly confirmed unaffected. _ABORT_: none (review-blocking if skipped).
-- [ ] [INFRA] P2. **T6.8 — Retire the one-offs + the dead knob + the false-progress tick.** _Mechanism_: per each file's
-      own `Delete-when` (all satisfied once T5.4 lands + orphan-sweep = 0): delete `migrate_sports_canonical_v9.py`,
-      `migrate_legacy_tick_buckets_to_canonical.py`, `patch_l6_legacy_manifest_{is,mtds}_2026_06_29.py`, and the ~26
-      legacy-reading `instruments-service/scripts/**` one-offs. **Also delete the doubly-broken gate**
-      `market-tick-data-service/market_tick_data_service/scripts/verify_v1_archive_row_coverage_2026_06_27.py` — see
-      RISK-9; leaving it is a trap that re-issues a false COVERED verdict. **Retire the now-dead
-      `include_legacy_archive` knob** from UAC `gcs_paths.py`/`partition_paths.py`
-      (`rg 'include_legacy_archive\s*=\s*True'` → **zero hits** workspace-wide; the workspace bans shims). **Un-tick /
-      annotate** the plan item `- [x] ✅ [DATA] P0.     v1_archive ROW-coverage gate` in
-      `plans/active/sports_manifest_canonicalisation_2026_06_01.md` — it was ticked on _"GATE SCRIPT SHIPPED"_ evidence
-      (`market-tick-data-service@18ca0e23`), i.e. on **shipping a script, never on a verified run of it**; that is
-      exactly the false-progress class the commit+flip rule targets. Also correct that plan's standing claim that
-      v1_archive is _"COLUMN-superseded by the union of understat_xg + v2 fixtures + v2 fixture_stats"_ —
-      wrong-but-harmless: it is superseded by **v2 fixtures ALONE**, because the columns that supposedly required the
-      union are 100% empty. _Gate_: `rg -c 'sports-central-element-323112'` workspace-wide → 0. _ABORT_: none.
+
+> **T6.7 + T6.8 (open) forked out 2026-07-24** — the post-phase codex audit and the one-off/dead-knob retirement, moved
+> **verbatim** to
+> [`sports_legacy_cutover_closeout_tasks_2026_07_24.md`](/plans/active/sports_legacy_cutover_closeout_tasks_2026_07_24.md)
+> per the plan-hygiene line-cap remediation (`plans/active/issues/plan_line_cap_remediation_2026_07_23.md`, row 24,
+> bucket (c)). Nothing was deleted — see that plan for the full text.
 
 ---
 

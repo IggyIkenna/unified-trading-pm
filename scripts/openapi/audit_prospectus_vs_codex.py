@@ -24,7 +24,7 @@ Usage:
     python audit_prospectus_vs_codex.py [--output-dir PATH] \
         [--workspace-root PATH] [--uac-root PATH] [--no-side-effects]
 
-Plan: plans/active/capability_wizard_and_manifest_2026_06_11.md Phase 3
+Plan: plans/archive/2026_07/capability_wizard_and_manifest_2026_06_11.md Phase 3
 """
 
 from __future__ import annotations

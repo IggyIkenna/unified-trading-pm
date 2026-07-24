@@ -15,7 +15,7 @@ tags: [cefi, defi, bybit, execution, strategy, kill-switch]
 related:
   [
     plans/active/defi_recursive_borrow_archetypes_post_cutover_2026_06_01.md Phase 10,
-    plans/active/master_to_live_defi_2026_05_23.md Group F (Family 2 perp leg),
+    plans/archive/2026_07/master_to_live_defi_2026_05_23.md Group F (Family 2 perp leg),
   ]
 created: 2026-05-15
 authoritative_for: [Bybit Family-2 perp hedge-leg topology]

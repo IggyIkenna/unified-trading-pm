@@ -719,7 +719,7 @@ GCP|AWS toggle button live, 8 AWS backfill launcher scripts created + QG green. 
 
 ## Cross-references
 
-- Master plan: [`master_to_live_defi_2026_05_23.md`](../active/master_to_live_defi_2026_05_23.md).
+- Master plan: [`master_to_live_defi_2026_05_23.md`](../archive/2026_07/master_to_live_defi_2026_05_23.md).
 - Write-gate cluster:
   [`writegate_honest_coverage_endtoend_2026_05_06.md`](../active/writegate_honest_coverage_endtoend_2026_05_06.md).
 - Asset_group vocabulary:

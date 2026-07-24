@@ -1,0 +1,277 @@
+---
+doc_type: plan
+title: Data-Pipeline AG Residual Backfill Decisions — TradFi + DeFi (forked from the hardening/self-monitoring plan)
+summary: |
+  The residual per-asset-group data-backfill/scope decisions forked out of
+  data_pipeline_hardening_self_monitoring_2026_06_22.md's "TradFi pending work" section + the DeFi/TradFi correctness
+  items surfaced during per-AG hardening dispatch, during the 2026-07-24 line-cap remediation split. Covers retrying
+  the tradfi attempted_failed cells, fixing the UAC image-packaging bug biting tradfi builds, fixing alerting-service
+  app-log visibility (tradfi-adjacent), threading real HTTP-status evidence into DeFi's clean-path fetch-evidence
+  calls, resolving the tradfi ohlcv_15s spurious-aggregation-tier bug, and the tracked defi DIVERGENT_EMPTY per-venue
+  backfill-vs-scope campaign (name-drift reconciliation + never-collected/out-of-MVP triage — operator HARD RULE: no
+  flat clip).
+status: active
+nature: process
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [agent-orchestrator, alerting-service, client-reporting-api, deployment-api, deployment-service, deployment-ui]
+scope: [engineer, admin]
+tags: [data-pipeline, tradfi, defi, backfill, divergent-empty, plan-split, residual]
+related:
+  [
+    /plans/active/data_pipeline_hardening_self_monitoring_2026_06_22.md,
+    /plans/active/data_pipeline_alert_substrate_residual_2026_07_24.md,
+    /plans/active/data_pipeline_self_healing_completion_residual_2026_07_24.md,
+    /plans/active/issues/plan_line_cap_remediation_2026_07_23.md,
+    /plans/active/data_completion_to_100_all_ag_2026_06_21.md,
+  ]
+created: "2026-07-24"
+last_updated: "2026-07-24"
+parent_epic: observability_master
+assigned_vm: NA
+execution_scope: orchestrator-agent
+priority: P2
+estimate_class: infra
+estimate_baseline_ai_days: 2
+estimate_calibrated_ai_days: 1.6
+assigned_role: data_engineering
+drift_direction: advance-code
+supersedes:
+superseded_by:
+depends_on:
+source:
+  [
+    "Forked 2026-07-24 from data_pipeline_hardening_self_monitoring_2026_06_22.md per the plan line-cap remediation
+    triage (plans/active/issues/plan_line_cap_remediation_2026_07_23.md, row 9, 'AG backfill decisions' fork) — operator
+    approved unlock+split via interactive Q&A.",
+  ]
+locked_by:
+locked_since:
+---
+
+# Data-Pipeline AG Residual Backfill Decisions — TradFi + DeFi
+
+> **Forked 2026-07-24** from
+> [`data_pipeline_hardening_self_monitoring_2026_06_22.md`](/plans/active/data_pipeline_hardening_self_monitoring_2026_06_22.md)
+> as 1 of a 4-way split (+ 1 excise) approved by the operator via the plan line-cap remediation triage
+> (`plans/active/issues/plan_line_cap_remediation_2026_07_23.md`, row 9). Unlike the sibling forks (alert substrate,
+> self-healing completion), everything here is a **per-asset-group data decision**, not systemic-guard code — moved
+> **verbatim** from the parent's "TradFi pending work" section and its per-AG hardening dispatch. Sibling forks:
+> `data_pipeline_alert_substrate_residual_2026_07_24.md`,
+> `data_pipeline_self_healing_completion_residual_2026_07_24.md`. **Operator HARD RULE carried forward from the
+> parent**: no flat clip on the defi DIVERGENT_EMPTY residual — every venue/data_type gets a per-pair backfill-vs-scope
+> decision, not a blanket reclassification.
+
+## TradFi pending work — NOT yet done (tracked 2026-06-22, slot-0·human-planning)
+
+Status after the 3-deploy /autonomous run: alerting consumer LIVE (`dp-alerting-subscriber`, fix `8897e91`), daily-audit
+jobs LIVE. tradfi = **84.1% cell-complete** (13 failed cells; 31% rows still `expected_unattempted`). Remaining tradfi
+items:
+
+> **✅ Tradfi EU universe-correction APPLIED 2026-06-23 (addresses caveat (a) below — the completion oracle now reads a
+> real fetchable target).** The live tradfi `_index` over-seeded `expected_unattempted` with unfillable cells; the
+> in-place row-preserving reclass (`instruments-service/scripts/correct_tradfi_universe_floor_clip_and_vix_index.py`,
+> instruments-service@e9e5128) moved **EU 1,466,157 → 1,084,542** (−381,615: floor-clipped out-of-rolling-window L1
+> trades/tbbo + L2 mbp_10 = 241,085 → `EXPECTED_OUT_OF_COVERAGE_WINDOW`; derived ohlcv_15m = 140,530 →
+> `EXPECTED_OUTSIDE_PROCESSING_SCOPE`). captured 733,338 + attempted_failed 16,358 UNCHANGED (absolute gate). Honest
+> coverage (captured/(captured+failed+EU)) 33.1% → 39.98%. Plan-of-record + full evidence:
+> `tradfi_multisource_backfill_2026_06_22.md` § "VIX-index DELETE + Databento universe floor-clip". The remaining EU is
+> now the genuine fetchable backfill target (ohlcv_1s/1m within the 16y L0 floor + in-window trades/tbbo/mbp_10 +
+> corporate_action/earnings refdata).
+
+- [x] ✅ [INFRA] P0. **Autonomous wave-launcher → tradfi 100% — LIVE 2026-06-22** (`deployment-service@ebfe6e3`
+      `scripts/wave_launcher.py`). Reads the tradfi index, groups gap cells by root×year×data_type (BOTH
+      `expected_unattempted` AND `attempted_failed` — the P1 retry is FOLDED IN), caps at `WAVE_MAX_CONCURRENT=12` (hard
+      ceiling 20, `budget=cap-running`), drops cells running VMs own, launches via the per-venue
+      `launch-tradfi-bf-*-ohlcv-1m.sh`. **LIVE-PROVEN**: a controlled tick launched NYSE-2023/NASDAQ-2024/NYSE-2024
+      (fleet 8→11, cap-respected, 1 expected fail = CBOE-2025-no-shards). **Automated** via a `0 */3 * * *` cron on the
+      planning host (gcloud+workspace+venv present; needs `WORKSPACE_ROOT` so the launchers resolve UAC). **Caveats /
+      follow-ups**: (a) CBOE-2025 + ICE + YAHOO cells are permanently un-backfillable (no databento shards /
+      out-of-subscription) → they stay `expected_unattempted` forever, so the completion target must EXCLUDE unfillable
+      cells or it never reads 100% (refine the completion oracle). (b) host-cron is the immediate autonomy; the durable
+      cloud-native form is a Cloud Scheduler → gcloud-equipped ephemeral runner (a Cloud Run Job can't launch VMs — no
+      gcloud) — follow-up. (c) wave events emit mode='local' (DP_TRADFI_WAVE_LAUNCHED isn't registered in the alert
+      registry, so wouldn't route anyway; the VMs it launches ARE covered by the exit_code/heartbeat monitors). The
+      alerting is now live so launcher failures alert. **(was: trailing "— NOT DONE (the building agent hit the session
+      limit at 22:10 UTC reset). Need `deployment-service/scripts/wave_launcher.py` (reads tradfi `expected_unattempted`
+      gaps by root×year×data_type, launches `launch-tradfi-backfill-vm.sh` waves, HARD cap `MAX_CONCURRENT≤12`
+      never >20, dry-run-first, completion at expected_unattempted=0) + a Cloud Scheduler firing every 2-3h. Without it
+      the 8-VM manual wave stalls; tradfi never reaches 100% autonomously." — corrected 2026-07-14, doc-reconciliation
+      verify-rerun-2 finding 178: this same-bullet tail was stale leftover text from a pre-build session that hit the
+      limit before the launcher existed; it directly contradicted this bullet's own checked `[x]` + "LIVE-PROVEN"
+      framing above, and later sections of this doc (§ "wave-launcher multi-source" + the auto-kill heartbeat-stalled-VM
+      section) already treat the wave-launcher as live, functioning infrastructure with no correction of this tail.)** —
+      deployment-service
+- [x] ✅ [DATA] P1. **tradfi schema-drift — `DP_NOT_V9=13670` RESOLVED 2026-06-22**
+      (`populate_v9_index_columns_inplace --asset-group tradfi --apply`: the 13,670 rows were `schema_version=4` legacy;
+      derived pipeline_mode/source in-place + bumped to 9; ALSO filled 903k blank pipeline_mode + 1.4M blank source on
+      already-v9 rows. Written index = 100% v9 / 6.81M rows, captures UNCHANGED (734102), GATE-passed, snapshot kept).
+      **(was: unqualified "100% v9" — corrected 2026-07-14, doc-reconciliation verify-rerun-2 finding 180: a 2026-06-27
+      audit — `active/issues/data_pipeline_alerts_dp_not_v9_and_rate_limited_false_positives_2026_06_27.md`, after
+      fixing an unrelated string-vs-int display bug that had been masking the true count — found a genuine ~98,476-row
+      (~4%) tradfi non-v9 residual (legacy `'4'` + empty `''` + instrument-key-contaminated `schema_version` values)
+      still present 5 days after this "100% v9" claim. That audit's operator-decision item to clean the residual was
+      still `- [ ]` open as of this correction; the "100% v9" completeness claim above does not hold as stated.)**
+      **`DP_NOT_V9`** originally (13,670 tradfi rows NOT at canonical schema_version=9), surfaced by the now-live
+      `manifest_hygiene_daily` audit. Re-walk/canonicalise those rows to v9. — market-tick-data-service
+- [ ] [DATA] P1. **Retry the tradfi `attempted_failed`** (13 cells / ~12.5k rows) — surfaced by the digest. Re-run the
+      backfill for the failed (venue,data_type,day) cells. — market-tick-data-service
+- [ ] [INFRA] P2. **UAC image-packaging bug** (bites tradfi image builds too): image builds drop
+      `unified_api_contracts/registry/data/*.json` (crashed the alerting service startup → worked around with a thin
+      `dp-subscriber-datafix` image) AND the UAC WHEEL in AR predates the `build_fetch_evidence` export (ImportError in
+      wheel-based fleet builds). Fix the cloudbuild context / republish the UAC wheel; then rebuild the alerting image
+      cleanly + drop the datafix layer. — unified-api-contracts, deployment-service
+- [ ] [INFRA] P3. **alerting-service app-logs not reaching Cloud Run** (the `dp-alerting-subscriber` service runs but
+      its INFO/route logs don't surface in Cloud Logging → no observability into routing; the webhook still fires). Fix
+      the logging handler/stdout config. — alerting-service
+
+## Blank `asset_group` re-blank class (C3 sibling — stale-tarball producer) — FIXED 2026-06-22
+
+- [x] ✅ [CODE] P0. **Consolidator self-heals blank/absent `asset_group` from the per-AG market-data bucket** —
+      `unified-trading-library@7b2306c3` (QG green 110s, sentinel==HEAD; 3 new regression tests, 31/31 consolidator
+      tests pass). **Root cause**: 73.9k defi (`onchain_subgraph`/`onchain_rpc` DEX swaps) + 2.3k cefi (`hyperliquid`)
+      `captured` rows read BLANK `asset_group` in the consolidated index, re-blanked every consolidation tick. The
+      `mdps-defi-2025-20260622-074035` VM launched **07:41 UTC** on a pre-v9 UTL tarball whose `record_captured`
+      predates the `asset_group` ROW COLUMN (landed UTL `4bd9487e` **13:59 UTC** — ~6h after launch) → its per-VM shard
+      has the column ABSENT → `union_by_name` fills NULL → canonical reads blank. `asset_group` is NOT a dedup key, so a
+      one-shot canonical re-stamp is re-blanked by the still-column-less shard on the next cycle. **Fix (systemic,
+      durable)**: `manifest_consolidator._asset_group_for_market_data_bucket(bucket)` derives the single AG a per-AG
+      `market-data-tick-{cefi|defi|tradfi|sports|pred}-` bucket holds; the DuckDB merge now `COALESCE`s a
+      blank/NULL/absent `asset_group` to that AG at merge time (both incremental + full-rebuild branches; `REPLACE` when
+      the column is present-but-blank, projected-`AS` when absent) — heals ANY stale-producer shard every cycle, no
+      per-VM coordination. The current `record_captured` already emits the column correctly (this is a
+      stale-running-VM + missing-consolidator-guard class, not a writer bug). **Operational re-stamp (guarded)**:
+      snapshotted both consolidated indexes to `_index/snapshots/pre_mdps_ag_restamp_2026_06_22.parquet`, re-stamped
+      defi 79,689 + cefi 2,297 blank rows → bucket-AG (rowcount + captured-count preserved; `blank_after=0` both) AND
+      the per-VM shards (mdps-defi-2025 + both `_legacy_seed`) so even the pre-deploy Cloud Run consolidator keeps the
+      column. **Residual (bounded, self-healing)**: the still-running pre-v9 `mdps-defi-2025` VM appends NEW column-less
+      rows until it finishes/self-deletes; the consolidator fix heals them every `*/1` cycle once the consolidator image
+      rebuilds from `main` (the durable guarantee — no manual re-stamp needed thereafter). — unified-trading-library
+  - **✅ RE-ACCRUAL VERIFIED + DURABLE SELF-HEAL PROVEN ON LIVE DATA (2026-06-22 ~23:08Z resume-run,
+    slot·human-planning, Opus 4.8):** ran the prompt's "VERIFY no re-accrual after a consolidator tick" check.
+    **Re-accrual IS occurring as predicted**: the consolidated defi `_index` had **30,236 blank/NULL `asset_group` rows
+    among captured** (UNISWAP_V3/V4/V2 + BALANCER/CURVE/SUSHI swaps_ohlcv\_\*, source `onchain_subgraph`/`onchain_rpc`,
+    `attempted_at` up to 23:05Z = minutes-fresh) because the pre-v9 `mdps-defi-2025-20260622-074035` VM is STILL RUNNING
+    (`purpose=mdps-sharded-backfill`, year 2025, launched 07:41Z ~15.5h ago — a LEGITIMATE bounded backfill, NOT a
+    zombie, so NOT stopped) and keeps appending column-less rows, AND the SCHEDULED Cloud Run consolidator
+    (`uts-prod-manifest-consolidator-execution-defi`, last ran 23:07Z) is on the OLD image (the UTL@7b2306c3 self-heal
+    is on LDR but the consolidator image rebuild is **gated by the same fleet-wide GitHub Actions outage** as items
+    3/5).
+
+    **Durable fix proven**: ran the FIXED consolidator from the workspace UTL (7b2306c3 IS ancestor of HEAD —
+    `_asset_group_for_market_data_bucket` COALESCE at `manifest_consolidator.py:1289`) `--force` against live
+    `market-data-tick-defi-prd-…` → success, 4,108,810 rows out, 6.3s → **BLANK now 0 / 100% `asset_group=defi` verified
+    by re-read**. Also healed tradfi (12→0, 6.81M rows) for completeness; cefi/sports/prediction already 0. **All 5 AG
+    consolidated indexes now 0 blank `asset_group`.** **Bounded residual (self-healing, no action owed):** between now
+    and (a) the backfill VM finishing OR (b) the consolidator image rebuilding from `main` (Actions-gated — unblocks
+    with items 3/5), the scheduled consolidator will re-blank defi each `*/1` cycle from the running VM's new shards;
+    once the image carries 7b2306c3 it self-heals every cycle with no manual run. The manual `--force` run above keeps
+    coverage honest in the interim. — unified-trading-library
+
+- **2026-06-22 unfillable-cell reclassification (slot-0·human-planning, Opus 4.8)** — operator: "class unfillable or
+  mass-enter as `empty_confirmed` with reason." Investigated the tradfi `expected_unattempted` by venue + the databento
+  3-dataset allowlist (GLBX.MDP3/DBEQ.BASIC/XCBF.PITCH). **ICE (530,600 cells) is genuinely unfillable** (out of
+  subscription — no databento dataset, not Barchart/Yahoo) → in-place re-classified to
+  `empty_confirmed`/`error_reason=EXPECTED_NO_PROVIDER_COVERAGE` (snapshot `pre_ice_reclassify_2026_06_22.parquet`,
+  GATE-passed: rows + captured unchanged). **Honest coverage 68.4%→76.2%** (cell-grain ~84%→higher). Deliberately LEFT:
+  CME/NYSE/NASDAQ (databento-fillable gaps the wave-launcher works), **CBOE (1,930 = VIX/SPX _index_ cells, fillable by
+  Barchart/Yahoo — a different source, not databento)**, **FX (3,228 spot pairs, already source-stamped
+  massive/databento — ambiguous, marking would hide a real gap)**. **RESIDUAL**: the wave-launcher (databento-only)
+  can't fill CBOE-index/FX (~5,158 cells), so its `expected_unattempted==0` completion check should SCOPE to
+  databento-fillable venues (or those get their own Barchart/Yahoo backfill) — else it never reads 0. Follow-up. —
+  market-tick-data-service
+
+- **2026-06-22 multi-source backfill RESOLVED (slot-0·human-planning, Opus 4.8)** — agent built the
+  venue→source→fillable matrix + wired it. **Massive does NOT have ICE** (probed S3:
+  crypto/forex/us_futures-CME/indices/options/stocks prefixes, no ICE; `_MASSIVE_FUTURES_VENUES={CME}`) — so per
+  operator ICE flipped → `empty_confirmed`/`EXPECTED_NO_PROVIDER_COVERAGE` (530,600; snapshot
+  `pre_ice_final_reclass_2026_06_22.parquet`; credential-ask on file if ever wanted). **CBOE cash-index** (1,614
+  VIX/SPX) → `empty_confirmed` (not in any databento dataset; VX futures via XCBF.PITCH ARE captured + preserved) —
+  `market-tick-data-service@2c6425b`. **FX-spot** (USD/KRW) → yahoo daily `launch-tradfi-bf-fx-ohlcv-24h.sh` +
+  **wave-launcher multi-source** (`LAUNCHER_FOR_VENUE`+FX, per-venue data_types, ICE excluded) —
+  `deployment-service@eab5aeb`. NASDAQ/NYSE confirmed DBEQ.BASIC equities (correctly databento). **Net: honest coverage
+  76.2%, remaining FILLABLE eu=1,607,003 (all databento/yahoo) = the wave-launcher's reachable 100% target.** Plan:
+  `tradfi_multisource_backfill_2026_06_22.md`.
+
+- **2026-06-23 follow-ups RESOLVED (slot-0·human-planning, Opus 4.8)** — (P1) UAC image-packaging: clean alerting image
+  now bundles `registry/data/*.json`; `dp-alerting-subscriber` RE-DEPLOYED clean (rev 00008-csc, NO datafix layer);
+  published UAC wheel 0.48.0 exports `build_fetch_evidence` (fleet ImportError gone). (P3) FX→yahoo FIXED (3 bugs:
+  launcher var-order/databento-misroute, D+1/D+2 timestamp-bias zeroing rows, --source gate) + verified a live Yahoo FX
+  row — `deployment-service@6dbce30` `mtds@bf19ab8/5272143`. (P4) CBOE-316 options_chain (SPX/VIX OPRA options, no
+  provider) → `empty_confirmed/EXPECTED_NO_PROVIDER_COVERAGE` (`mtds@b3f67ac`, GATE-passed). (P2) alerting app-logs:
+  code FIXED (stdout handler + consume/route/POST INFO logs, `alerting@9b6d429/8e511d4/9e52751`) verified LOCALLY, but
+  the DEPLOYED instance still surfaces 0 app-logs in Cloud Logging (Cloud-Run stdout-ingestion quirk; webhook still
+  fires — alerting works, only visibility impacted) → `[INFRA] P2`. **NEW FINDING**: an FX cell marked `captured` with
+  NO backing parquet — possible pre-existing manifest/data mismatch → audit follow-up. **Backfill** running at cap=20,
+  ~11k captured/day (~85% rate), consolidator current; multi-day grind on the 1.6M backlog, monitor `bvcaydjvf` armed.
+
+## Residual from Phase 3 (defi DIVERGENT_EMPTY, closes C2/C3)
+
+- [ ] [CODE] P1. **Residual defi DIVERGENT_EMPTY real-gaps (13,760, 2 classes) — backfill OR handler↔oracle data_type
+      reconciliation (C2/C3)** — **RE-VERIFIED 2026-06-22 (post-coverage_start-fix re-run of
+      `detect_manifest_divergence.py --asset-group defi` on the live prod `_index`): 22,140 → 13,760 confirmed (−8,380
+      clip by UAC@bfe6736b), MAX DATE 2025-11-18, ZERO in the operational window (≥2025-11-19) — all historical, NOT
+      blocking. The 13,760 are exactly the two classes: name-drift [AAVE_V3
+      `position_data`/`liquidation_events`/`flash_loan_events` ×1063 each, MORPHO
+      `risk_params`/`position_data`/`liquidation_events`/`lending_indices`, COMPOUND_V3] + never-collected/out-of-MVP
+      [STAKEWISE/STADER `staking_yields`, STARGATE/ACROSS `bridge_events`, ALCHEMY `token_transfers`/`gas_fees`,
+      ASTER/GMX `perp_funding`, FLASHBOTS `mev_events`, PYTH `oracle_prices`, AAVE `governance_events`]. Candidate CSV
+      regenerated: `plans/audit/results/divergence_2026-06-22.csv` (filter classification=DIVERGENT_EMPTY). Stays a
+      tracked campaign (per-venue backfill-vs-scope decision; operator HARD RULE = NO flat clip).**
+
+      — the 2026-06-22 triage (divergence CSV + measured first-capture cross-ref) split the post-`coverage_start`
+                                                                                                          residual into two REAL classes, all historical (≤2025-11-18, 0 in operational window): **(a) data_type
+                                                                                                          NAME-DRIFT (~5–6k cells)** — AAVE_V3/MORPHO/COMPOUND_V3/FLUID lending: the oracle scope
+                                                                                                          (`_DEFI_LENDING_*_PAIRS`) expects `liquidation_events`/`position_data`/`risk_params`/`flash_loan_events`/
+                                                                                                          `lending_indices` but the manifest CAPTURED `liquidations`/`rate_indices`/`utilization` (legacy
+                                                                                                          `liquidations_handler.py` still exists alongside `liquidation_events_handler.py`; MORPHO subgraph emits
+                                                                                                          `rate_indices`/`utilization` not the AAVE-style names). The data EXISTS under a different data_type name →
+                                                                                                          diagnose both sides + reconcile (either retire the legacy handler/data_type names → the canonical scope, or
+                                                                                                          correct the oracle scope to the names the handlers actually emit). NOT a flat clip. **(b) NEVER-COLLECTED real
+                                                                                                          gaps (~7k cells)** — venues with ZERO captured rows for ANY scoped data_type: STARGATE/ACROSS `bridge_events`,
+                                                                                                          PYTH `oracle_prices`, FLASHBOTS `mev_events`, ASTER/GMX `perp_funding`, FLUID lending, AAVE `governance_events`,
+                                                                                                          ALCHEMY `token_transfers`, STAKEWISE/STADER/SWELL `staking_yields` — the adapter never ran a historical backfill,
+                                                                                                          OR the data_type is out-of-MVP-archetype scope (bridge/mev/governance/flash-loan are NOT in the
+                                                                                                          `carry_staked_basis`/`arbitrage_price_dispersion` data needs). Decision per venue: real-MVP-need → defi MTDS
+                                                                                                          historical backfill (per-VM shards, canonical venue+chain, PER-CHAIN launch dates); out-of-MVP → move to
+                                                                                                          `EMPTY_OR_DEPRECATED_DEFI_VENUES`/`DEFI_INSTRUMENTS_NOT_YET_COLLECTED` or trim the oracle scope. Candidate CSV:
+                                                                                                          `plans/audit/results/divergence_2026-06-22.csv` (filter classification=DIVERGENT_EMPTY). —
+                                                                                                          **unified-api-contracts, market-tick-data-service**
+
+                                                                                                          **RE-VERIFIED AGAIN 2026-06-22 resume-run** (fresh `detect_manifest_divergence.py --asset-group defi` on live
+                                                                                                          prod `_index`, 2,436,439 cells): **DIVERGENT_EMPTY = 13,760 EXACTLY (stable — auto-flip reclassifier holding it,
+                                                                                                          not growing); max date 2025-11-18; ZERO in the operational window (≥2025-11-19) — all historical, NOT
+                                                                                                          blocking.** Breakdown re-confirmed = the two classes (name-drift-suspect lending + never-collected/out-of-MVP).
+                                                                                                          **Sub-finding (refines class-a):** the `dex_pool_swaps` DIVERGENT_EMPTY cells (UNISWAP_V3 350 / BALANCER 355 /
+                                                                                                          CURVE 43) are NOT name-drift — `dex_pool_swaps` IS actively captured (4,392 OK_CAPTURED cells), so these are
+                                                                                                          genuine date-specific historical swap gaps on those venues → resolve via per-venue historical DEX-swaps backfill
+                                                                                                          (PER-CHAIN launch dates), not an oracle rename. Stays the tracked per-venue backfill-vs-scope campaign (operator
+                                                                                                          HARD RULE: NO flat clip).
+
+## Residual from per-AG hardening dispatch (DeFi agent)
+
+- [ ] [CODE] P2. **DeFi evidence-fidelity (was folded into the DeFi P0)**: thread the ACTUAL subgraph/RPC HTTP status
+      into the defi handlers' clean-path `record_zero_rows`/`record_empty(SOURCE_RETURNED_ZERO)` calls (vs the
+      recorder's synthesized `clean_fetch_evidence`). Nicety — the danger-class is already closed (errors →
+      `record_failed`). — market-tick-data-service
+
+## Later-surfaced tradfi bug (2026-06-23 REAL OUTAGE triage)
+
+- [ ] [CODE] P1. **tradfi `ohlcv_15s` is a SPURIOUS aggregation tier (do NOT add a contract — it would MASK the bug)** —
+      `mdps-backfill-tradfi` spews CRITICAL
+      `No SchemaContract registered for asset_group='tradfi' instrument_type='UNKNOWN' data_type='ohlcv_15s' venue='CME'`.
+      Diagnosis (2026-06-23): tradfi OHLCV is `ohlcv_1s`/ `ohlcv_1m` (fetched) → aggregated to
+      `ohlcv_15m`/`ohlcv_1h`/`ohlcv_24h`; a 15-**second** tradfi tier is NOT valid (`ohlcv_15s` appears only as a CeFi
+      example). The processing service is aggregating tradfi to a 15s tier it shouldn't — fix the aggregation **tier
+      list** for tradfi in market-data-processing-service (drop 15s for tradfi), NOT by adding an `ohlcv_15s`
+      CONTRACT_REGISTRY entry (which would legitimise a bogus tier). Shard-isolated (the VM stays alive), so P1 not P0.
+      (market-data-processing-service)
+
+## Success criteria
+
+- All open todos above ticked `- [x]` with evidence (commit sha / QG sentinel / deploy verification per PLAN_FORMAT.md §
+  8b for any runtime-infra claim).
+- The defi DIVERGENT_EMPTY campaign resolves per-venue (backfill OR documented out-of-MVP/name-drift reconciliation) —
+  no flat clip, per the operator HARD RULE.
+- `bash scripts/plan-hygiene/check_line_caps.sh` no longer flags this file, and
+  `bash scripts/plan-hygiene/run_hygiene_sweep.sh` shows 0 hard failures across the 4-way split.

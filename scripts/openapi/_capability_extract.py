@@ -13,7 +13,7 @@ extracted in a per-service subprocess (their own ``.venv``) by
 ``_capability_services.py``; the results land here as plain dict rows.
 
 Codex SSOT: ``codex/09-strategy/architecture-v2/capability-wizard.md``
-Plan: ``plans/active/capability_wizard_and_manifest_2026_06_11.md`` Phase 1.
+Plan: ``plans/archive/2026_07/capability_wizard_and_manifest_2026_06_11.md`` Phase 1.
 """
 
 from __future__ import annotations

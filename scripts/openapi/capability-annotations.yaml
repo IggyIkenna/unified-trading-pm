@@ -19,8 +19,8 @@
 # Agent auto-appends using emit_capability_gap_todos.py; hand edits also
 # permitted provided source_evidence is cited.
 #
-# SSOT: plans/active/capability_wizard_and_manifest_2026_06_11.md Phase 5
-# Plan: unified-trading-pm/plans/active/capability_wizard_and_manifest_2026_06_11.md
+# SSOT: plans/archive/2026_07/capability_wizard_and_manifest_2026_06_11.md Phase 5
+# Plan: unified-trading-pm/plans/archive/2026_07/capability_wizard_and_manifest_2026_06_11.md
 
 annotations:
   # F17 — kill/stop predicates are runtime-fired; backtest sim_assumptions

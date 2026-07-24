@@ -14,7 +14,7 @@ tags: [cefi, ml, directional, live-trading, okx, binance, bybit, execution]
 related:
   [
     ../epics/cefi_master.md,
-    ../active/master_to_live_defi_2026_05_23.md,
+    ../archive/2026_07/master_to_live_defi_2026_05_23.md,
     ../archive/2026_05/trading_agent_service_architecture_unlock_2026_05_22.md,
   ]
 created: "2026-06-12"

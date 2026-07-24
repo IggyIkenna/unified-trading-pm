@@ -57,8 +57,8 @@ Every playbook in this section MUST:
 3. If a playbook describes a customer-visible flow (onboarding, demo, restriction-profile), link to the corresponding
    flow in [`codex/14-customer-journeys/`](/codex/14-customer-journeys/README.md).
 4. For DeFi playbooks, cross-link to the master plan readiness items in
-   [`plans/active/master_to_live_defi_2026_05_23.md`](../../plans/active/master_to_live_defi_2026_05_23.md) so the
-   playbook ties to the May-23 cutover criterion.
+   [`plans/archive/2026_07/master_to_live_defi_2026_05_23.md`](../../plans/archive/2026_07/master_to_live_defi_2026_05_23.md)
+   so the playbook ties to the May-23 cutover criterion.
 
 ## How to add a new playbook
 

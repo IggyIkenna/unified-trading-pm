@@ -1,0 +1,160 @@
+---
+doc_type: plan
+title:
+  Prediction Phase E — football cross-venue arb enablement, live path (split from
+  prediction_consolidated_closeout_2026_07_18)
+summary:
+  Phase E of the prediction consolidated close-out, split out verbatim (line-cap remediation, 2026-07-24) — the
+  af_fixture_id identity chain (Polymarket + Kalshi soccer, ~0%→~100% team-name matching) and the 3-venue
+  Kalshi/Polymarket/Betfair PAPER arb (signal + execution bridge) are shipped and verified; residual open work is
+  verifying the end-to-end fixture link in-season, the 3-way arb correctness guards, and the operator-gated live
+  odds/execution decisions (E3). Gated on the Phase A-B residuals plan (carries the Phase-B fixture-attribute backfill)
+  and the Phase D plan (carries the formal smoke-green gate), per the parent plan's own stated "Phase E (gated on B+D)".
+status: active
+nature: process
+asset_group: [prediction]
+stage: [meta]
+repos:
+  [
+    instruments-service,
+    market-tick-data-service,
+    unified-api-contracts,
+    unified-trading-library,
+    deployment-service,
+    deployment-api,
+    deployment-ui,
+    features-service,
+    e2e-testing,
+    unified-trading-pm,
+  ]
+scope: [engineer, admin]
+tags:
+  [
+    prediction,
+    close-out,
+    cross-venue-arb,
+    sports-fixtures,
+    football,
+    af-fixture-id,
+    betfair,
+    execution-bridge,
+    live-gate,
+  ]
+related:
+  [
+    /plans/active/prediction_consolidated_closeout_2026_07_18.md,
+    /plans/active/prediction_phase_c_data_status_ui_2026_07_24.md,
+    /plans/active/prediction_phase_ab_residuals_2026_07_24.md,
+    /plans/active/prediction_phase_d_formal_smoke_and_backfill_2026_07_24.md,
+    /plans/active/issues/prediction_arb_live_execution_bridge_2026_07_20.md,
+    /plans/active/issues/plan_line_cap_remediation_2026_07_23.md,
+  ]
+created: "2026-07-24"
+last_updated: "2026-07-24"
+parent_epic: predictions_master
+assigned_vm: NA
+execution_scope: local-only
+priority: P1
+estimate_class: infra
+estimate_baseline_ai_days: 3.0
+estimate_calibrated_ai_days: 2.4
+assigned_role: data_engineering
+drift_direction: none
+locked_by:
+locked_since:
+supersedes:
+superseded_by:
+depends_on: [prediction_phase_ab_residuals_2026_07_24, prediction_phase_d_formal_smoke_and_backfill_2026_07_24]
+gate_on_depends: true
+source: >-
+  Split from `prediction_consolidated_closeout_2026_07_18.md` (Phase E section, lines 438-499 of that doc as of
+  2026-07-18/2026-07-24) per the operator-approved line-cap remediation triage
+  `plans/active/issues/plan_line_cap_remediation_2026_07_23.md` (row 22, "4-way split along the plan's own Phase A-E
+  boundaries — one depends_on-gated: Phase E gated on B+D"). Content moved verbatim, not summarized. The `depends_on` +
+  `gate_on_depends: true` on the Phase A-B residuals and Phase D sibling plans encodes the parent plan's own Phase-E
+  header text ("gated on B+D") as a real dispatch gate.
+---
+
+# Prediction Phase E — football (soccer) cross-venue arb enablement, live path
+
+> **Split from `prediction_consolidated_closeout_2026_07_18.md` (2026-07-24).** This is the Phase E section of that
+> close-out, moved verbatim. **Gated** (`depends_on` + `gate_on_depends: true`) on
+> `prediction_phase_ab_residuals_2026_07_24.md` (carries the Phase-B fixture-attribute backfill this phase's E1 depends
+> on) and `prediction_phase_d_formal_smoke_and_backfill_2026_07_24.md` (carries the formal post-migration smoke-green
+> gate) — matching the parent plan's own Phase-E header, "football (soccer) cross-venue arb enablement (the originating
+> ask; gated on B+D)". For the full historical execution narrative (Progress Log, ticks 1-31, especially ticks 24-31
+> which cover nearly all of this phase's shipped work) and shared cross-phase context (the Ground-truth verdict table,
+> the prediction shard-atom definition, the MVP universe scope), see the parent doc. Sibling phase children:
+> `prediction_phase_c_data_status_ui_2026_07_24.md` (Phase C), `prediction_phase_ab_residuals_2026_07_24.md` (Phase
+> A-B).
+
+## Phase E — football (soccer) cross-venue arb enablement (the originating ask; gated on B+D)
+
+> Makes live-odds-API-vs-Polymarket-vs-Kalshi football arb possible on a CANONICAL basis. Depends on the A4 writers +
+> the Phase-B fixture-attribute backfill landing. SSOTs:
+> `/codex/04-architecture/cross-venue-prediction-arb-detection.md`,
+> `/codex/16-strategy-playbooks/strategy/cme-polymarket-arb.md`, `instruments-service/docs/SPORTS_INSTRUMENTS.md`.
+
+### E1 — Thread the fixture id onto BOTH prediction venues (Leg 1)
+
+- [ ] [BACKEND] P1. **Verified end-to-end fixture link on Polymarket + Kalshi soccer** — confirm A4/B produced a
+      resolved `af_fixture_id` (or `build_fixture_id` string) on Polymarket soccer markets, and BUILT the same for
+      Kalshi (which has none today). Keep the prediction canonical naming; the fixture id is an ADDITIVE attribute.
+      Acceptance: a Polymarket market and a Kalshi market for the same real fixture resolve to the SAME `af_fixture_id`,
+      and both resolve to the same odds-tick `af_fixture_id`. (repos: instruments-service, market-tick-data-service,
+      unified-api-contracts)
+
+### E2 — Close the team-name matching gap to ~0% (Leg 2)
+
+- [x] ✅ [BACKEND] P1. **Fixture matching to the ~0% gap — DONE (Kalshi + South-American).** (b) ✅ Kalshi soccer team
+      resolution SHIPPED: parser `instruments-service@ec8633ac` (`parse_kalshi_soccer_participants` → A4's
+      `PredictionFixtureResolver` via the shared `validate_team_resolution` index, no new GCS walk) + 8 aliases
+      `unified-api-contracts@e7ed754e` → **~0% → 82.6%→~100%** on 92 live Kalshi fixtures. (a) ✅ SHIPPED South-American
+      club aliases `unified-api-contracts@98d757f9` (Chile/Argentina — Universidad Católica (CHI), Audax Italiano,
+      Estudiantes L.P., Argentinos JRS, Central Córdoba de Santiago, Colo-Colo, O'Higgins, …), each verified against the
+      API-Football FIXTURES parquet `af_home_name`; canonical ids pre-existed → closes the odds-side ~66% cap. Kalshi
+      home/away title-order caveat ✅ CLOSED `instruments-service@ba3528d4` (order-robust lookup: probes both orderings,
+      home/away from the matched fixture). (repos: instruments-service ✅, unified-api-contracts ✅ / South-American
+      remaining))
+
+### E3 — Unify the two arb paths onto the shared fixture identity (Leg 3)
+
+- [ ] [BACKEND] P1. **Wire the arb engine to CONSUME `af_fixture_id` — VERIFIED the NEXT GAP (trace 2026-07-19).** The 6
+      materialized columns (`uac@e7ed754e` + `is@e3ffc613`) are an UNCONSUMED landing spot — the `InstrumentRecord`
+      docstring says materialization is "downstream + deferred", and strategy-service + features-service
+      `cross_instrument/` READ ZERO of them; `price_dispersion.py` (`ARBITRAGE_PRICE_DISPERSION`) pairs on VENUE NAME
+      (`candidate_venues`) and just ASSUMES "same instrument". Concrete 3-step gap (dependency order): **(1)**
+      features-service `prediction_cross_venue_dispatch.py::_records_from_universe` (L173-214) reads only
+      key/symbol/expiry → add the 6 `_COL_*` + populate `InstrumentRecord.af_fixture_id` / `af_league_id` / home+away
+      canonical ids / `fixture_date` / `af_fixture_match_status` (today they stay `None` even when the parquet has
+      them). **(2)** UAC `predictions/cross_venue_mapping.py::match_key` (L376-409) — accept + PREFER `af_fixture_id` as
+      the sports `canonical_event_id` join key (exact/deterministic) over the fuzzy `SportsFixtureKey.pairing_key()`
+      team-name/title parse, when `af_fixture_match_status==MATCHED` — this is the single point a Polymarket + Kalshi
+      row for one fixture collapse to one `xv_instrument_id`. **(3)** 3rd venue (bookmaker odds): generalize
+      `build_cross_venue_mapping` beyond its pairwise Kalshi↔Polymarket shape, OR resolve `SportsArbDutchingEngine`'s
+      `decimal_odds_<outcome>_<venue>` features per `af_fixture_id`, so live-odds ∧ Polymarket ∧ Kalshi pair on ONE
+      fixture. Also: the ONLY wired prediction-arb slots today are CRYPTO (`btc/eth/spx UP_DOWN_DAILY`) — a FOOTBALL
+      prediction-arb slot must be added. Fold: `predictions_ml_walk_forward_and_arb_2026_06_20.md`. (repos:
+      features-service, unified-api-contracts, strategy-service, e2e-testing)
+- [ ] [BACKEND] P2. **3-way arb correctness guards** — prediction-market "lay" is the NO-side complement, not a real
+      exchange lay (exclude from back-lay arbs; include in 3-way with exchange_meta validation); keep the honest gate
+      that a real two-sided book must exist on BOTH venues before emitting an arb row.
+      `/codex/04-architecture/cross-venue-prediction-arb-detection.md`. (repos: features-service)
+- [x] ✅ [BACKEND] P2. **Venue-derivation for prediction/sports `instrument_id`s in execution-service — BOTH sites FIXED
+      (2026-07-18).** The naive `split(":")[0]` returned the TYPE/SPORT for TYPE-first ids. (1) ✅
+      `validation/instrument_format.py::get_venue_from_instrument_id` `execution-service@e3707472` (latent, no prod
+      caller). (2) ✅ the production-critical sibling `utils/instruction_type.py::extract_venue`
+      `execution-service@730fcd1c0` — it had the identical bug but is HEAVILY USED (~40 call sites: matching engines,
+      preflight_gate, `infer_instruction_type`, `get_asset_group_from_instrument_id`) and HARD-CRASHED
+      (`UnknownVenueError`) on a type-first id. Both use the SAME additive robust-parse via UAC `VENUE_CATEGORY_MAP`
+      (venue-first byte-unchanged for cefi/defi/tradfi; type-first → `parts[1]`); QG-green, tests cover both. (repos:
+      execution-service ✅)
+
+## Progress Log
+
+- **2026-07-24 (plan-hygiene split) — forked from `prediction_consolidated_closeout_2026_07_18.md`.** This plan carries
+  forward the Phase E section verbatim (5 todos total: 2 done / 3 open at split time). See the parent's Progress Log
+  (ticks 24-31 — the identity-wiring trace, the 3-venue Betfair signal build, the execution-bridge build, and the
+  net-of-fees entry gate + paper proofs) for the full session-by-session history of what is already shipped here,
+  including the live-execution-bridge P1 issue (`issues/prediction_arb_live_execution_bridge_2026_07_20.md`) opened
+  along the way. Future work on this plan logs new entries below.

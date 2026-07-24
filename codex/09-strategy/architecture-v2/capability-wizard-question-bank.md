@@ -19,7 +19,7 @@ referenced_by:
   [
     /codex/09-strategy/architecture-v2/README.md,
     /codex/09-strategy/architecture-v2/capability-wizard.md,
-    plans/active/capability_wizard_and_manifest_2026_06_11.md,
+    plans/archive/2026_07/capability_wizard_and_manifest_2026_06_11.md,
   ]
 owner:
 last_reviewed: 2026-06-11
@@ -159,6 +159,6 @@ option combo, and is ref pricing delta-adjusted or fixed?
 
 - Concept SSOT: [`capability-wizard.md`](capability-wizard.md)
 - Plan:
-  [`plans/active/capability_wizard_and_manifest_2026_06_11.md`](../../../plans/active/capability_wizard_and_manifest_2026_06_11.md)
+  [`plans/archive/2026_07/capability_wizard_and_manifest_2026_06_11.md`](../../../plans/archive/2026_07/capability_wizard_and_manifest_2026_06_11.md)
 - Gap tracker:
   [`plans/active/issues/capability_wizard_gap_discovery_2026_06_11.md`](../../../plans/active/issues/capability_wizard_gap_discovery_2026_06_11.md)

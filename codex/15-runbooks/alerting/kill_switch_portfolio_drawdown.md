@@ -28,7 +28,8 @@ code_refs:
 authoritative_for:
   Operator response when total-portfolio drawdown crosses the kill-switch threshold. Halts all strategies + execution-
   service order entry; positions roll to flat-only mode pending operator review.
-referenced_by: [plans/active/alerting_service_live_rules_2026_05_07.md, plans/active/master_to_live_defi_2026_05_23.md]
+referenced_by:
+  [plans/active/alerting_service_live_rules_2026_05_07.md, plans/archive/2026_07/master_to_live_defi_2026_05_23.md]
 execution:
   {
     owner: on-call operator (Ikenna / Harsh by rotation),

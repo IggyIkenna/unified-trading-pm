@@ -21,7 +21,7 @@ related:
   [
     plans/active/prediction_capture_incident_remediation_2026_07_06.md,
     plans/archive/2026_07/instruments_catalogue_incremental_rollup_2026_06_29.md,
-    plans/active/prediction_venue_perps_and_live_clob_depth_2026_06_20.md,
+    plans/active/prediction_perps_kalshi_polymarket_parked_2026_07_24.md,
     plans/active/issues/is_daily_enum_prediction_sports_fail_despite_coercion_2026_07_06.md,
   ]
 created: 2026-07-06

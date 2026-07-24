@@ -30,14 +30,14 @@ related:
     /plans/active/sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md,
     /plans/active/defi_consolidated_closeout_2026_07_18.md,
     /plans/active/sports_master_closeout_2026_07_21.md,
-    /plans/active/sports_manifest_canonicalisation_2026_06_01.md,
+    /plans/archive/2026_07/sports_manifest_canonicalisation_2026_06_01.md,
     /plans/active/sports_pipeline_to_100pct_golden_window_first_2026_06_27.md,
     /plans/active/sports_odds_exchange_fixed_fork_2026_07_18.md,
-    /plans/active/sports_p2_history_apifootball_2015_to_present_2026_06_27.md,
+    /plans/archive/2026_07/sports_p2_history_apifootball_2015_to_present_2026_06_27.md,
     /plans/active/sports_catalog_league_grain_only_scope_2026_07_08.md,
     /plans/active/sports_odds_bookmaker_coverage_enumeration_2026_06_20.md,
     /plans/active/sports_odds_feature_naming_canonicalization_2026_07_21.md,
-    /plans/active/sports_p2_features_history_to_ml_ready_2026_06_27.md,
+    /plans/archive/2026_07/sports_p2_features_history_to_ml_ready_2026_06_27.md,
     /plans/active/sports_predictions_live_mode_activation_readiness_2026_07_21.md,
   ]
 created: "2026-07-19"
@@ -252,6 +252,34 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
       currently-firing one): if C1 ships the 8-file migration without also updating this constant +
       `is_resolved_schedule_empty()`'s consumers, `SCHEDULE_DEFINING_DATA_TYPES` silently stops matching anything
       post-migration. Add as a 9th call site.
+- [ ] [VERIFY] P0. **BLOCKED-UPSTREAM (2026-06-24 — slot-23 GCS spot-check)**: After the writer populates Q5/Q6
+      columns + the entity-split lands, confirm `FIXTURES_SCHEDULE` carries the 9 HT/ET/PEN phase-timestamp columns and
+      `FIXTURES_OUTCOMES` carries the 11 score-distinction columns populated for completed fixtures (regulation /
+      ET-only / ET+PEN cases; NEVER collapse pen-shootout score into a single field). Spot-check on real GCS rows for a
+      completed matchweek across the Top-5 EU leagues. **[VERIFY][UI]** the deployment-ui schema modal renders both
+      entity schemas — this touches a UI repo, so any tick requires `pw:L2 ✓`
+      (`npx playwright test     --project=chromium tests/smoke/`) + a cited regression spec per CLAUDE.md UI
+      playwright-gate HARD RULE; on a fleet VM with no dev server, keep `[BLOCKED-PLAYWRIGHT]`.
+      <!-- BLOCKED-UPSTREAM evidence (2026-06-24 slot-23):
+                                                                                                                                                                                                                                                                                                   GCS check: entity=fixtures_schedule + entity=fixtures_outcomes DO NOT EXIST in
+                                                                                                                                                                                                                                                                                                   gs://instruments-store-sports-prd-central-element-323112/sports_reference/by_date/ — only entity=fixtures.
+                                                                                                                                                                                                                                                                                                   Q5/Q6 columns absent from ALL sampled parquets: EPL 2026-05-17, Ligue1 2026-05-17, SerieA 2026-05-09,
+                                                                                                                                                                                                                                                                                                   LaLiga 2026-05-09, Bundesliga 2026-05-10, Norway 2026-06-21 (written 2026-05-23 before Q5/Q6 deploy).
+                                                                                                                                                                                                                                                                                                   Root cause: entity-split writer commit 254fb843 ("entity-split fixtures→fixtures_schedule+fixtures_outcomes;
+                                                                                                                                                                                                                                                                                                   writegate strict mode") is on origin/live-defi-rollout as of 2026-06-24 but NOT yet on main.
+                                                                                                                                                                                                                                                                                                   Q5/Q6 additive write path (48c54805, 2026-06-05) IS on main — but existing entity=fixtures parquets
+                                                                                                                                                                                                                                                                                                   were all written before 2026-06-05 and the "old-path-copy" branch does not re-process them.
+                                                                                                                                                                                                                                                                                                   Unblock: 254fb843 promotes main → IS Docker rebuild + VM relaunch → migrate_fixtures_split.py runs
+                                                                                                                                                                                                                                                                                                   on real sports buckets → new entity=fixtures_schedule+fixtures_outcomes paths appear → re-run VERIFY. --> (FOLDED
+      IN from sports_fixtures_schema_split_completion_2026_06_20, 2026-07-15, plan-reconcile §6 operator ruling)
+      **MERGED here 2026-07-24** (plan-hygiene line-cap remediation, `plan_line_cap_remediation_2026_07_23.md` decision
+      #6) from `sports_p2_features_history_to_ml_ready_2026_06_27.md`'s "Folded-in scope 2026-07-15" section — this
+      closeout now owns the item going forward (it's the identical migration this Track's C1 targets). The source plan
+      is archived, zero live work remaining, at
+      `/plans/archive/2026_07/sports_p2_features_history_to_ml_ready_2026_06_27.md`, with its own copy of this todo
+      flipped closed and pointing back here. This also resolves the §Track-S2 "Reconcile
+      `sports_p2_features_history_to_ml_ready_2026_06_27.md`" todo below (its overlap concern is now moot — the item is
+      merged, not duplicated).
 - [x] [CODE] P0. ✅⏪ **K1 — emit UPPER at the LIVE writer SHIPPED + VERIFIED (2026-07-22) — SUPERSEDED 2026-07-23, MUST
       BE REVERTED.** (was: fix `_build_sports_shard_path` (`venue_fetch.py:871-900`) + the sentinel row-key builders per
       the dual-accept pre-step ordering this todo specified). The dual-accept pre-step shipped first as designed
@@ -584,11 +612,17 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
         `sports_odds_feature_naming_canonicalization_2026_07_21.md` already has a DECIDED (2026-07-23) naming scheme +
         scoped 3-repo migration in flight — a fresh agent shouldn't re-litigate the naming decision or start a duplicate
         migration.
-  - [ ] [PLAN] P2. Reconcile `sports_p2_features_history_to_ml_ready_2026_06_27.md` against this closeout: its
-        `last_updated` is stale against its own Progress Log; it carries an open P0 VERIFY todo re-confirming
-        `FIXTURES_SCHEDULE`/`FIXTURES_OUTCOMES` column population post-split — the IDENTICAL migration Track C1/F claim
-        as canonical target — and documents live paths still using `data_type=odds_horizon_bucket` (dead cohort) and
-        raw-form `league_id=SOCCER_RUSSIA_PREMIER_LEAGUE` (same class as Track V's unresolved P0).
+  - [x] [PLAN] P2. ✅ **DONE 2026-07-24 (plan-hygiene line-cap remediation)** — Reconcile
+        `sports_p2_features_history_to_ml_ready_2026_06_27.md` against this closeout: its `last_updated` was stale
+        against its own Progress Log; it carried an open P0 VERIFY todo re-confirming `FIXTURES_SCHEDULE`/
+        `FIXTURES_OUTCOMES` column population post-split — the IDENTICAL migration Track C1/F claims as canonical target
+        — and documented live paths still using `data_type=odds_horizon_bucket` (dead cohort) and raw-form
+        `league_id=SOCCER_RUSSIA_PREMIER_LEAGUE` (same class as Track V's unresolved P0). Resolution: the VERIFY todo is
+        now merged verbatim into Track C above (immediately after C1); the `odds_horizon_bucket` dead-cohort concern was
+        already independently tracked (Track V's "Purge the 1,337 dead `odds_horizon_bucket_{15m,1h,4h,1d}` manifest
+        rows" todo); the raw-form `league_id` concern is already independently tracked under Track V's
+        league_id-namespace migration. Nothing new to action — the source plan is archived at
+        `/plans/archive/2026_07/sports_p2_features_history_to_ml_ready_2026_06_27.md`.
   - [ ] [REVIEW] P1. Confirm the cross-AG `asset_group=prediction` bleed-bug fix (`mtds@a7ff45f9`, root cause
         `@299ef540`) is durable, not just verified-once, as an explicit pre-req gate before
         `sports_predictions_live_mode_activation_readiness_2026_07_21.md` proceeds past its go-live todo — that plan is
@@ -946,27 +980,27 @@ All four resolved in interactive chat. These are now actionable, not gated:
       manifest's `league_id` namespace does NOT match the canonical registry's:
 
       | manifest `league_id` (raw) | canonical registry key |
-                                                                                                                                                                                                                                                                                  | -------------------------- | ---------------------- |
-                                                                                                                                                                                                                                                                                  | `PREMIER_LEAGUE`           | `EPL`                  |
-                                                                                                                                                                                                                                                                                  | `CHAMPIONSHIP`             | `ENG_CHAMPIONSHIP`     |
-                                                                                                                                                                                                                                                                                  | `PRIMERA_DIVISION`         | `LA_LIGA`              |
-                                                                                                                                                                                                                                                                                  | `2._BUNDESLIGA`            | `BUNDESLIGA_2`         |
-                                                                                                                                                                                                                                                                                  | `FIRST_DIVISION_A`         | (no registry entry)    |
+                                                                                                                                                                                                                                                                                              | -------------------------- | ---------------------- |
+                                                                                                                                                                                                                                                                                              | `PREMIER_LEAGUE`           | `EPL`                  |
+                                                                                                                                                                                                                                                                                              | `CHAMPIONSHIP`             | `ENG_CHAMPIONSHIP`     |
+                                                                                                                                                                                                                                                                                              | `PRIMERA_DIVISION`         | `LA_LIGA`              |
+                                                                                                                                                                                                                                                                                              | `2._BUNDESLIGA`            | `BUNDESLIGA_2`         |
+                                                                                                                                                                                                                                                                                              | `FIRST_DIVISION_A`         | (no registry entry)    |
 
-                                                                                                                                                                                                                                                                                  Measured: **328,999 manifest rows carry a `league_id` absent from `LEAGUE_REGISTRY`, and 265,134 of them were
-                                                                                                                                                                                                                                                                                  written ON/AFTER the 2026-07-13 gate ruling** (statuses: captured 213,861 / empty_confirmed 50,975 /
-                                                                                                                                                                                                                                                                                  attempted_failed 298). Verified there is NO alias — `PREMIER_LEAGUE`/`PRIMERA_DIVISION`/`2._BUNDESLIGA`/
-                                                                                                                                                                                                                                                                                  `FIRST_DIVISION_A` appear nowhere in any registry entry's definition (only `CHAMPIONSHIP` partially matches
-                                                                                                                                                                                                                                                                                  `ENG_CHAMPIONSHIP`/`SCOTTISH_CHAMPIONSHIP`/`USL_CHAMPIONSHIP` as a substring, which is itself ambiguous).
+                                                                                                                                                                                                                                                                                              Measured: **328,999 manifest rows carry a `league_id` absent from `LEAGUE_REGISTRY`, and 265,134 of them were
+                                                                                                                                                                                                                                                                                              written ON/AFTER the 2026-07-13 gate ruling** (statuses: captured 213,861 / empty_confirmed 50,975 /
+                                                                                                                                                                                                                                                                                              attempted_failed 298). Verified there is NO alias — `PREMIER_LEAGUE`/`PRIMERA_DIVISION`/`2._BUNDESLIGA`/
+                                                                                                                                                                                                                                                                                              `FIRST_DIVISION_A` appear nowhere in any registry entry's definition (only `CHAMPIONSHIP` partially matches
+                                                                                                                                                                                                                                                                                              `ENG_CHAMPIONSHIP`/`SCOTTISH_CHAMPIONSHIP`/`USL_CHAMPIONSHIP` as a substring, which is itself ambiguous).
 
-                                                                                                                                                                                                                                                                                  **⛔ CONSEQUENCE: executing decision 2's "purge the non-registry rows" against the SYMBOLIC `league_id` would
-                                                                                                                                                                                                                                                                                  DELETE core trading data — Premier League, La Liga, the Championship.** Those are not out-of-universe leagues;
-                                                                                                                                                                                                                                                                                  they are in-universe leagues recorded under a different naming convention. The purge MUST NOT run until the
-                                                                                                                                                                                                                                                                                  namespace is reconciled.
+                                                                                                                                                                                                                                                                                              **⛔ CONSEQUENCE: executing decision 2's "purge the non-registry rows" against the SYMBOLIC `league_id` would
+                                                                                                                                                                                                                                                                                              DELETE core trading data — Premier League, La Liga, the Championship.** Those are not out-of-universe leagues;
+                                                                                                                                                                                                                                                                                              they are in-universe leagues recorded under a different naming convention. The purge MUST NOT run until the
+                                                                                                                                                                                                                                                                                              namespace is reconciled.
 
-                                                                                                                                                                                                                                                                                  NOTE this is a DIFFERENT axis from §U's 489-pair finding, which compared NUMERIC `af_league_id` against the
-                                                                                                                                                                                                                                                                                  registry's `api_football_id` set (sound, numeric-vs-numeric). Both are real; do not conflate them. This is the
-                                                                                                                                                                                                                                                                                  §C2 "league_id namespace reconciliation" item, now measured and escalated to P0.
+                                                                                                                                                                                                                                                                                              NOTE this is a DIFFERENT axis from §U's 489-pair finding, which compared NUMERIC `af_league_id` against the
+                                                                                                                                                                                                                                                                                              registry's `api_football_id` set (sound, numeric-vs-numeric). Both are real; do not conflate them. This is the
+                                                                                                                                                                                                                                                                                              §C2 "league_id namespace reconciliation" item, now measured and escalated to P0.
 
 - [x] [CODE] P0. ✅ **WRITE PATH CANONICALISED — operator chose canonicalise-at-write (2026-07-20); shipped
       market-tick-data-service@ad4f1872.** `_canonical_league_id()` resolves via the NUMERIC `api_football_id`; all 30

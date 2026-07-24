@@ -88,7 +88,7 @@ former inline todo block below maps to one of these homes — nothing dropped, n
 | Instrument / MTDS / MDPS data-clean, per-venue completion %, manifest v9 + pipeline_mode canonicalisation, phantom-audit per-cluster residual triage (L344-367, L584-588)                                                      | **OWNED ELSEWHERE — do not duplicate**                                                          | [`tradfi_manifest_canonicalisation_2026_06_01`](../archive/2026_07/tradfi_manifest_canonicalisation_2026_06_01.md) (ARCHIVED/superseded — canonical migration COMPLETE; superseded_by `data_completion_to_100_all_ag_2026_06_21`, the live owner)                                |
 | Per-adapter `available_at` stamping (L556, tagged 🟡 TRACKED-ELSEWHERE)                                                                                                                                                        | **OWNED ELSEWHERE — do not duplicate**                                                          | [`available_at_lookahead_bias_completion_2026_05_08`](../archive/2026_05/available_at_lookahead_bias_completion_2026_05_08.md) (single-owner stamping plan; archived — runtime stamping shipped)                                                                                 |
 | `InstrumentRecord.expiry` nullable→required type-flip (L452, DEFERRED P3, MIGRATED FROM hard_schema_enforcement)                                                                                                               | **OWNED ELSEWHERE — do not duplicate**                                                          | hard-schema-enforcement workstream; runtime enforcement already shipped (uac@80aef10) — only the residual Pydantic type-flip remains, blocked on the live GCS migration. Point only; do NOT re-dispatch.                                                                         |
-| "End-state at May 23" success criteria for deliverable A (S&P prediction, L581-595) + deliverable B (price arbitrage, L632-640) + price-arb open questions (L652-654); backtest-harness item 17/18 fidelity + cutover gating   | **ROUTED TO MASTER**                                                                            | [`master_to_live_defi_2026_05_23`](../active/master_to_live_defi_2026_05_23.md) Group F. The data-clean + ES-feature subset is referenced from `tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20`; the cutover gating + backtest-harness fidelity live in master.           |
+| "End-state at May 23" success criteria for deliverable A (S&P prediction, L581-595) + deliverable B (price arbitrage, L632-640) + price-arb open questions (L652-654); backtest-harness item 17/18 fidelity + cutover gating   | **ROUTED TO MASTER**                                                                            | [`master_to_live_defi_2026_05_23`](../archive/2026_07/master_to_live_defi_2026_05_23.md) Group F. The data-clean + ES-feature subset is referenced from `tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20`; the cutover gating + backtest-harness fidelity live in master.  |
 | Already-shipped market-hours / session-type / futures-expiry-schema / S&P ML readiness items (mostly `- [x]` with evidence)                                                                                                    | **DONE (in-place)** — flipped with repo@sha evidence in the inline blocks below; no re-dispatch | —                                                                                                                                                                                                                                                                                |
 
 The blocks below are the **frozen May-07/08 source snapshot**, retained for archaeology only. They are SUPERSEDED by the
@@ -669,8 +669,8 @@ the unblocking move) lands in tradfi_master scope here; Phases 1-5 (structural f
 ## May-23 deliverable A — S&P prediction (folded from `sp_prediction_may_23_2026.epic` 2026-05-08) — SUPERSEDED 2026-06-20 (extracted + routed; history only)
 
 > **ROUTED**: the "End-state at May 23" success criteria are routed to
-> [`master_to_live_defi_2026_05_23`](../active/master_to_live_defi_2026_05_23.md) Group F (cutover gating + backtest
-> harness item 18); the TradFi-data + ES-feature execution slice is extracted to
+> [`master_to_live_defi_2026_05_23`](../archive/2026_07/master_to_live_defi_2026_05_23.md) Group F (cutover gating +
+> backtest harness item 18); the TradFi-data + ES-feature execution slice is extracted to
 > [`tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20`](../active/tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md).
 > Open questions below are all RESOLVED. Do NOT dispatch from here. Retained for context only.
 
@@ -726,8 +726,8 @@ of the data pipeline must work end-to-end in batch; bugs/backfills/schema fixes 
 ## May-23 deliverable B — Price arbitrage (folded from `price_arbitrage_may_23_2026.epic` 2026-05-08) — SUPERSEDED 2026-06-20 (extracted + routed; history only)
 
 > **ROUTED**: the "End-state at May 23" success criteria + the open questions (cross-venue ETF universe, backtest
-> window) are routed to [`master_to_live_defi_2026_05_23`](../active/master_to_live_defi_2026_05_23.md) Group F (item 17
-> backtest fidelity + cutover gating); the TradFi-data + ES-feature execution slice is extracted to
+> window) are routed to [`master_to_live_defi_2026_05_23`](../archive/2026_07/master_to_live_defi_2026_05_23.md) Group F
+> (item 17 backtest fidelity + cutover gating); the TradFi-data + ES-feature execution slice is extracted to
 > [`tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20`](../active/tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md).
 > Do NOT dispatch from here. Retained for context only.
 
@@ -842,7 +842,7 @@ DeFi-first cutover + operator Databento PAYG spend sign-off). · **estimate**: 1
 
 ## Cross-references
 
-- Master plan: [`master_to_live_defi_2026_05_23.md`](../active/master_to_live_defi_2026_05_23.md).
+- Master plan: [`master_to_live_defi_2026_05_23.md`](../archive/2026_07/master_to_live_defi_2026_05_23.md).
 - Sibling asset_group umbrellas: `cefi_master`, `defi_master`, `sports_master`, `predictions_master`.
 - VIX 15m layering: CLAUDE.md "VIX 15m source layering" workspace-wide rule.
 - Venue trading calendar: `unified_api_contracts.canonical.crosscutting.venue_trading_calendar`.

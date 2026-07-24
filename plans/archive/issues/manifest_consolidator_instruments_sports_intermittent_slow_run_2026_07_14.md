@@ -33,7 +33,7 @@ tags:
   ]
 related:
   [
-    plans/active/sports_p2_features_history_to_ml_ready_2026_06_27.md,
+    plans/archive/2026_07/sports_p2_features_history_to_ml_ready_2026_06_27.md,
     plans/active/issues/instruments_sports_manifest_consolidator_lock_livelock_2026_07_15.md,
   ]
 created: 2026-07-14

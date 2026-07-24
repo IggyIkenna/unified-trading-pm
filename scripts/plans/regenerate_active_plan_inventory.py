@@ -35,7 +35,12 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 PM_ROOT = SCRIPT_DIR.parent.parent
 PLANS_DIR = PM_ROOT / "plans" / "active"
 EPICS_DIR = PM_ROOT / "plans" / "epics"
-MASTER_FILE = PLANS_DIR / "master_to_live_defi_2026_05_23.md"
+MASTER_FILE = PLANS_DIR / "active_plan_inventory_dashboard_2026_07_24.md"
+# The inventory TABLE lives in MASTER_FILE (above), but the ~175-sub-plan cross-reference
+# corpus that "master"-attribution substring-matches against stayed behind in the archived
+# cutover doc when the table was extracted out 2026-07-24 (plan_line_cap_remediation_2026_07_23.md
+# op #2) -- read-only reference, included in the "master" attribution search but never written to.
+MASTER_HISTORICAL_ARCHIVE = PM_ROOT / "plans" / "archive" / "2026_07" / "master_to_live_defi_2026_05_23.md"
 
 SKIP_FILES = {"INDEX.md", "task_template.md", "_agent_pings.md"}
 SKIP_PREFIXES = ("work_split_", "continuation_prompts_", "_AUDIT_", "_HANDOFF_", "_SESSION_HANDOFF_")
@@ -77,11 +82,11 @@ def parse_cal(value: str) -> float | None:
         return None
 
 
-def find_owner(plan_stem: str, ref_corpus: dict[str, str]) -> str:
+def find_owner(plan_stem: str, ref_corpus: dict[str, str], master_keys: set[str]) -> str:
     """Return 'master' / '<epic-name>' / 'orphan' based on first reference found."""
     for ref_name in sorted(ref_corpus.keys()):
         if plan_stem in ref_corpus[ref_name]:
-            if ref_name == "master_to_live_defi_2026_05_23.md":
+            if ref_name in master_keys:
                 return "master"
             return ref_name.replace(".epic.md", "").replace(".md", "")
     return "**orphan**"
@@ -146,6 +151,11 @@ def main() -> int:
         return 2
 
     ref_corpus = {MASTER_FILE.name: master_text}
+    master_keys = {MASTER_FILE.name}
+    if MASTER_HISTORICAL_ARCHIVE.exists():
+        archive_key = f"{MASTER_HISTORICAL_ARCHIVE.name} (archived)"
+        ref_corpus[archive_key] = MASTER_HISTORICAL_ARCHIVE.read_text()
+        master_keys.add(archive_key)
     for epic in sorted(EPICS_DIR.glob("*.md")):
         ref_corpus[epic.name] = epic.read_text()
 
@@ -162,7 +172,7 @@ def main() -> int:
         pct = (done / total * 100) if total > 0 else 0.0
         cal_cal = parse_cal(fm.get("estimate_calibrated_ai_days", ""))
         cal_left = (cal_cal * todo / total) if (cal_cal is not None and total > 0) else cal_cal
-        owner = find_owner(plan.stem, ref_corpus)
+        owner = find_owner(plan.stem, ref_corpus, master_keys)
         rows.append(
             {
                 "name": plan.stem,

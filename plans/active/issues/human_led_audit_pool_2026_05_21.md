@@ -19,7 +19,7 @@ scope: [engineer, admin]
 tags: [audit, plan-hygiene, orchestrator, strategy, ml, execution, reconciliation]
 related:
   [
-    /plans/active/master_to_live_defi_2026_05_23.md,
+    /plans/archive/2026_07/master_to_live_defi_2026_05_23.md,
     /plans/archive/issues/mega_audit_and_plan_beefup_progression_2026_05_20.md,
     /plans/audit/results/strategy_archetype_logic_audit_2026_05_20.md,
     /plans/epics/mtds_mdps_master.md,

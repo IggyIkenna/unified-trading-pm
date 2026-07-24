@@ -26,7 +26,7 @@ scope: [engineer, admin]
 tags: [sports, features, data-correctness, travel-calculator, honest-absence, timezone, silent-failure]
 related:
   [
-    plans/active/sports_p2_features_history_to_ml_ready_2026_06_27.md,
+    plans/archive/2026_07/sports_p2_features_history_to_ml_ready_2026_06_27.md,
     plans/active/issues/sports_venue_id_numeric_coercion_data_loss_2026_07_13.md,
     /codex/02-data/honest-absence-downstream-handling.md,
   ]

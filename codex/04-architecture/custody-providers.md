@@ -849,6 +849,6 @@ SSOT" invariant + slot 8 audit PB-19 deferred QG ratchet).
 - [Wallet Hierarchy and Capital Flow](wallet-hierarchy-and-capital-flow.md) -- treasury/trading wallet architecture
 - [Interface Credential Convention](interface-credential-convention.md) -- how services get API keys
 - [Flash Loan Receiver](flash-loan-receiver.md) -- DeFi atomic execution
-- [`../../plans/active/master_to_live_defi_2026_05_23.md`](../../plans/active/master_to_live_defi_2026_05_23.md) Group F
-  item 19 — live-trading prereq tracking (CEFFU integration)
+- [`../../plans/archive/2026_07/master_to_live_defi_2026_05_23.md`](../../plans/archive/2026_07/master_to_live_defi_2026_05_23.md)
+  Group F item 19 — live-trading prereq tracking (CEFFU integration)
 - [`../../plans/active/defi_master.md`](../../plans/active/defi_master.md) Fork 1 — Binance perp hedging-leg ownership

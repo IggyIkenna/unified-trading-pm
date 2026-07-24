@@ -18,7 +18,7 @@ related:
     /plans/epics/client_isolation_and_governance_master.md,
     /plans/epics/infrastructure_master.md,
     /plans/epics/observability_master.md,
-    ../active/master_to_live_defi_2026_05_23.md,
+    ../archive/2026_07/master_to_live_defi_2026_05_23.md,
   ]
 created: 2026-05-08
 name: cross-cutting-may-23-2026
@@ -203,7 +203,7 @@ trading goal directly.
 
 ## See also
 
-- [`master_to_live_defi_2026_05_23`](../active/master_to_live_defi_2026_05_23.md) — May-23 cutover master
+- [`master_to_live_defi_2026_05_23`](../archive/2026_07/master_to_live_defi_2026_05_23.md) — May-23 cutover master
 - [`/codex/04-architecture/cloud-agnostic-migration.md`](/codex/04-architecture/cloud-agnostic-migration.md)
 - [`/codex/05-infrastructure/launcher-script-ssot.md`](/codex/05-infrastructure/launcher-script-ssot.md)
 - [`/codex/09-strategy/strategy-summary.md`](/codex/09-strategy/strategy-summary.md) — 9-family / 53-archetype catalogue

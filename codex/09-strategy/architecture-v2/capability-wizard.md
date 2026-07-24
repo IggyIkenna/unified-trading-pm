@@ -23,7 +23,7 @@ referenced_by:
   [
     /codex/09-strategy/architecture-v2/README.md,
     /codex/09-strategy/architecture-v2/capability-wizard-question-bank.md,
-    plans/active/capability_wizard_and_manifest_2026_06_11.md,
+    plans/archive/2026_07/capability_wizard_and_manifest_2026_06_11.md,
   ]
 owner:
 last_reviewed: 2026-06-11
@@ -97,7 +97,7 @@ The capability wizard is three artifacts over one data model:
 - Question bank (every wizard question pinned to its code anchor):
   [`capability-wizard-question-bank.md`](capability-wizard-question-bank.md)
 - Plan:
-  [`plans/active/capability_wizard_and_manifest_2026_06_11.md`](../../../plans/active/capability_wizard_and_manifest_2026_06_11.md)
+  [`plans/archive/2026_07/capability_wizard_and_manifest_2026_06_11.md`](../../../plans/archive/2026_07/capability_wizard_and_manifest_2026_06_11.md)
 - Gap tracker:
   [`plans/active/issues/capability_wizard_gap_discovery_2026_06_11.md`](../../../plans/active/issues/capability_wizard_gap_discovery_2026_06_11.md)
 - Archetype taxonomy:
@@ -152,7 +152,7 @@ Open work: wizard stepper stage, registry backfills, Wave-2 enhancements (operat
 ## Plan of record + trackers
 
 - Plan:
-  [`plans/active/capability_wizard_and_manifest_2026_06_11.md`](../../../plans/active/capability_wizard_and_manifest_2026_06_11.md)
+  [`plans/archive/2026_07/capability_wizard_and_manifest_2026_06_11.md`](../../../plans/archive/2026_07/capability_wizard_and_manifest_2026_06_11.md)
   (append-only Progress Log = build history)
 - Capability gaps:
   [`plans/active/issues/capability_wizard_gap_discovery_2026_06_11.md`](../../../plans/active/issues/capability_wizard_gap_discovery_2026_06_11.md)

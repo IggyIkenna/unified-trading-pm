@@ -4,7 +4,7 @@ title: Sports P2c — derived features history to ML-ready (2015→present)
 summary:
   Compute derived sports features over full history (2015→present) to ML-ready after upstream history reaches
   zero-missing.
-status: active
+status: complete
 nature: process
 asset_group: [cross-cutting]
 stage: [features]
@@ -25,11 +25,11 @@ priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 2.5
 estimate_calibrated_ai_days: 2
-last_updated: 2026-06-27
-locked_by: live-defi-rollout
-locked_since: 2026-06-27
+last_updated: "2026-07-24"
+locked_by:
+locked_since:
 supersedes:
-superseded_by:
+superseded_by: sports_consolidated_closeout_2026_07_19
 depends_on:
   [
     sports_p0_spot_vm_launchers_2026_06_27,
@@ -40,6 +40,16 @@ source:
 assigned_role: data_engineering
 drift_direction: advance-code
 ---
+
+> **🔴 SUPERSEDED 2026-07-24 — folded into `sports_consolidated_closeout_2026_07_19.md`. Do NOT pick up further work
+> from this file.** Archived as part of the plan-hygiene line-cap remediation
+> (`plans/active/issues/plan_line_cap_remediation_2026_07_23.md`, decision #6, operator-approved). This plan's sole
+> remaining open todo — the Q5/Q6 `FIXTURES_SCHEDULE`/`FIXTURES_OUTCOMES` schema VERIFY under "Folded-in scope
+> 2026-07-15" below, which is the SCOPE-OVERLAP conflict the banner right below this one flags — has been copied
+> verbatim into the closeout's Track C (immediately after C1, the identical migration it targets) before this banner was
+> added; treat the closeout as the SSOT for it going forward. The copy of the todo below is flipped closed with a
+> pointer to that same location. All 5 other todos in this plan were already ✅ done at archive time — no other live
+> work existed. See the Progress Log below for full history; this banner does not repeat it.
 
 > **🔶 2026-07-23 — SCOPE-OVERLAP NOTICE (plan-reconcile audit): this plan overlaps
 > `sports_consolidated_closeout_2026_07_19.md` and was discovered as an orphan (never linked to it) during that audit.**
@@ -168,25 +178,29 @@ ML-ready = one row per `(fixture × bucket)`; NaN only where honest-absence (`OU
 
 ## Folded-in scope 2026-07-15 (plan-reconcile §6)
 
-- [ ] [VERIFY] P0. **BLOCKED-UPSTREAM (2026-06-24 — slot-23 GCS spot-check)**: After the writer populates Q5/Q6
-      columns + the entity-split lands, confirm `FIXTURES_SCHEDULE` carries the 9 HT/ET/PEN phase-timestamp columns and
-      `FIXTURES_OUTCOMES` carries the 11 score-distinction columns populated for completed fixtures (regulation /
-      ET-only / ET+PEN cases; NEVER collapse pen-shootout score into a single field). Spot-check on real GCS rows for a
-      completed matchweek across the Top-5 EU leagues. **[VERIFY][UI]** the deployment-ui schema modal renders both
-      entity schemas — this touches a UI repo, so any tick requires `pw:L2 ✓`
+- [x] ⏪ **MOVED 2026-07-24** — merged verbatim into `sports_consolidated_closeout_2026_07_19.md`'s Track C (immediately
+      after C1, the identical migration this item targets); that plan now owns it going forward (plan-hygiene line-cap
+      remediation, decision #6). Kept here, checkbox flipped, as the historical record — the original todo text is
+      unchanged below (no longer its own checkbox, folded into this one as continuation text so it isn't double-counted
+      as a second open item). Original: [VERIFY] P0. **BLOCKED-UPSTREAM (2026-06-24 — slot-23 GCS spot-check)**: After
+      the writer populates Q5/Q6 columns + the entity-split lands, confirm `FIXTURES_SCHEDULE` carries the 9 HT/ET/PEN
+      phase-timestamp columns and `FIXTURES_OUTCOMES` carries the 11 score-distinction columns populated for completed
+      fixtures (regulation / ET-only / ET+PEN cases; NEVER collapse pen-shootout score into a single field). Spot-check
+      on real GCS rows for a completed matchweek across the Top-5 EU leagues. **[VERIFY][UI]** the deployment-ui schema
+      modal renders both entity schemas — this touches a UI repo, so any tick requires `pw:L2 ✓`
       (`npx playwright test     --project=chromium tests/smoke/`) + a cited regression spec per CLAUDE.md UI
       playwright-gate HARD RULE; on a fleet VM with no dev server, keep `[BLOCKED-PLAYWRIGHT]`.
       <!-- BLOCKED-UPSTREAM evidence (2026-06-24 slot-23):
-                                                                                                                                                                                                                                                                                       GCS check: entity=fixtures_schedule + entity=fixtures_outcomes DO NOT EXIST in
-                                                                                                                                                                                                                                                                                       gs://instruments-store-sports-prd-central-element-323112/sports_reference/by_date/ — only entity=fixtures.
-                                                                                                                                                                                                                                                                                       Q5/Q6 columns absent from ALL sampled parquets: EPL 2026-05-17, Ligue1 2026-05-17, SerieA 2026-05-09,
-                                                                                                                                                                                                                                                                                       LaLiga 2026-05-09, Bundesliga 2026-05-10, Norway 2026-06-21 (written 2026-05-23 before Q5/Q6 deploy).
-                                                                                                                                                                                                                                                                                       Root cause: entity-split writer commit 254fb843 ("entity-split fixtures→fixtures_schedule+fixtures_outcomes;
-                                                                                                                                                                                                                                                                                       writegate strict mode") is on origin/live-defi-rollout as of 2026-06-24 but NOT yet on main.
-                                                                                                                                                                                                                                                                                       Q5/Q6 additive write path (48c54805, 2026-06-05) IS on main — but existing entity=fixtures parquets
-                                                                                                                                                                                                                                                                                       were all written before 2026-06-05 and the "old-path-copy" branch does not re-process them.
-                                                                                                                                                                                                                                                                                       Unblock: 254fb843 promotes main → IS Docker rebuild + VM relaunch → migrate_fixtures_split.py runs
-                                                                                                                                                                                                                                                                                       on real sports buckets → new entity=fixtures_schedule+fixtures_outcomes paths appear → re-run VERIFY. --> (FOLDED
+                                                                                                                                                                                                                                                                                                   GCS check: entity=fixtures_schedule + entity=fixtures_outcomes DO NOT EXIST in
+                                                                                                                                                                                                                                                                                                   gs://instruments-store-sports-prd-central-element-323112/sports_reference/by_date/ — only entity=fixtures.
+                                                                                                                                                                                                                                                                                                   Q5/Q6 columns absent from ALL sampled parquets: EPL 2026-05-17, Ligue1 2026-05-17, SerieA 2026-05-09,
+                                                                                                                                                                                                                                                                                                   LaLiga 2026-05-09, Bundesliga 2026-05-10, Norway 2026-06-21 (written 2026-05-23 before Q5/Q6 deploy).
+                                                                                                                                                                                                                                                                                                   Root cause: entity-split writer commit 254fb843 ("entity-split fixtures→fixtures_schedule+fixtures_outcomes;
+                                                                                                                                                                                                                                                                                                   writegate strict mode") is on origin/live-defi-rollout as of 2026-06-24 but NOT yet on main.
+                                                                                                                                                                                                                                                                                                   Q5/Q6 additive write path (48c54805, 2026-06-05) IS on main — but existing entity=fixtures parquets
+                                                                                                                                                                                                                                                                                                   were all written before 2026-06-05 and the "old-path-copy" branch does not re-process them.
+                                                                                                                                                                                                                                                                                                   Unblock: 254fb843 promotes main → IS Docker rebuild + VM relaunch → migrate_fixtures_split.py runs
+                                                                                                                                                                                                                                                                                                   on real sports buckets → new entity=fixtures_schedule+fixtures_outcomes paths appear → re-run VERIFY. --> (FOLDED
       IN from sports_fixtures_schema_split_completion_2026_06_20, 2026-07-15, plan-reconcile §6 operator ruling)
 
 ## Success criteria
@@ -3370,7 +3384,8 @@ overflow leaves partial state that is worse than no run). `/skip-current-task` t
 
 **Handoff note for the fresh slot that picks this up next**:
 
-- Plan file: `plans/active/sports_p2_features_history_to_ml_ready_2026_06_27.md` (this file).
+- Plan file: `plans/archive/2026_07/sports_p2_features_history_to_ml_ready_2026_06_27.md` (this file; archived
+  2026-07-24, see the SUPERSEDED banner at top).
 - Task text: line 80 `[ ] [DATA] P0. Compute features 2015→present …` — un-flipped, no year chunks executed yet (only
   `day=2020-01-01/feature_group=sfi_progressive/` present per slot-12 GCS check 2026-06-27).
 - Environment state: NO VM running for this task on slot-10. No partial writes attributable to this session. FSS bucket

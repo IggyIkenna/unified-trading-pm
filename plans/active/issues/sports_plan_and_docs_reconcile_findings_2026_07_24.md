@@ -46,6 +46,33 @@ task-output files and this chat — this doc promotes them to a durable, committ
 `/tmp/claude-1000/.../tasks/wo01k4tbr.output` (plan-reconcile) and `w611hekte.output` (docs-reconcile) — do not rely on
 these surviving; this doc is now the source of truth for the findings.
 
+## Operator rulings (2026-07-24) — RECORDED, not yet applied
+
+The operator answered the 4 genuine judgment-call questions this doc's findings raised. These are decisions, not
+findings — capturing them here so a fresh session doesn't have to re-ask or re-derive them. **None of the dependent
+fixes below have been applied yet** (blocked mid-execution by an unrelated `/tmp` disk-full incident); the todos in this
+doc still reflect pre-ruling wording until someone applies these.
+
+1. **League_id migration** (P0 item below): operator did NOT pick a side — asked instead for a live GCP/manifest check
+   before ruling. That live verification was in progress (24/24 relocation shard reports downloaded from
+   `gs://deployment-scripts-central-element-323112/canonical-migration-sports-reloc/reports/`, aggregation not yet run)
+   when the disk-full incident interrupted it. **Still needs finishing**: aggregate the 24 shard reports' verify counts,
+   cross-check against the live `market-data-tick-sports-prd-central-element-323112` manifest for whether canonical
+   league_id rows are present and old raw-keyed rows still exist (confirming delete-not-yet-run), then rule whether
+   Track V's "214,842 rows... still needs scheduling" is the SAME work as master_closeout's executed COPY+SWAP (275,136
+   objects, mtds@b2a49317, 2026-07-22) or genuinely separate.
+2. **Casing doctrine scope**: ruled **ALL sports data_types** (including instruments-service-side reference data_types
+   like FIXTURES/INJURIES/TEAMS/STANDINGS), not just the 9 MTDS/MDPS ones. Apply: update
+   `/codex/02-data/sports-data-source-coverage-matrix.md`'s stale UPPER-case K0-DECISION(b) banner to reflect the
+   2026-07-23 all-lower reversal.
+3. **Venue vocabulary**: ruled **doc is stale, update it**. Apply: widen `/codex/01-domain/sports-instruments.md`'s
+   "active venues" note (currently lists only 3: ODDS_API/PINNACLE/BETFAIR) to reflect the current UAC venue registry
+   (~15+ individually-registered bookmaker venues live in prod).
+4. **Epic yaml policy** (workspace-wide, not sports-specific): ruled **scrub the eliminated entries**. Apply: remove the
+   `unified-sports-execution-interface` / `unified-defi-execution-interface` `required_repos` lines from all 4 affected
+   epic yaml files (`codex/11-project-management/epics/{sports,defi,cefi,tradfi}-epic.yaml`) — their function is already
+   covered by the separately-required `execution-service` entry in each.
+
 ## Canonical-doc question — RESOLVED, but see P5
 
 The operator's hypothesis was confirmed: `sports_consolidated_closeout_2026_07_19.md` is the canonical, single

@@ -22,7 +22,8 @@ created: 2026-05-07
 authoritative_for:
   How Docker images, VM tarballs, and code tarballs are built, tagged, and tracked across BOTH GCP Artifact Registry and
   AWS ECR so that a single git SHA produces parity-verified artifacts on both clouds.
-referenced_by: [plans/active/master_to_live_defi_2026_05_23.md, plans/active/aws_migration_defi_first_2026_05_07.md]
+referenced_by:
+  [plans/archive/2026_07/master_to_live_defi_2026_05_23.md, plans/active/aws_migration_defi_first_2026_05_07.md]
 owner:
 last_reviewed: 2026-05-17
 code_refs:
@@ -69,7 +70,7 @@ running in production must trace back to a known git SHA + builder run on both c
 ## Cross-references
 
 - **Plan(s) implementing this:**
-  [`master_to_live_defi_2026_05_23`](../../plans/active/master_to_live_defi_2026_05_23.md) work-stream F,
+  [`master_to_live_defi_2026_05_23`](../../plans/archive/2026_07/master_to_live_defi_2026_05_23.md) work-stream F,
   [`aws_migration_defi_first`](../../plans/active/aws_migration_defi_first_2026_05_07.md).
 - **Related codex SSOTs:** [`vm-tarball-deployment`](./vm-tarball-deployment.md),
   [`launcher-script-ssot`](./launcher-script-ssot.md),

@@ -229,7 +229,7 @@ their plan bodies.
 - **DeFi archetype owner**: [`plans/active/defi_master.md`](../../plans/active/defi_master.md) Fork 1
 - **ML training**: [`plans/epics/features_and_ml_master.md`](../../plans/epics/features_and_ml_master.md)
 - **Master umbrella**:
-  [`plans/active/master_to_live_defi_2026_05_23.md`](../../plans/active/master_to_live_defi_2026_05_23.md)
+  [`plans/archive/2026_07/master_to_live_defi_2026_05_23.md`](../../plans/archive/2026_07/master_to_live_defi_2026_05_23.md)
 
 ### Master plan Group F items — sequencing ownership
 

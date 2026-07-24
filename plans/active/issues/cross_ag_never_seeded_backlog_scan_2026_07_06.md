@@ -23,7 +23,8 @@ related:
   [
     /plans/archive/2026_07/foundation_gates_and_capture_to_100_2026_07_06.md,
     /plans/active/data_completion_to_100_all_ag_2026_06_21.md,
-    /plans/active/prediction_venue_perps_and_live_clob_depth_2026_06_20.md,
+    /plans/active/prediction_cross_venue_arb_and_coverage_2026_07_24.md,
+    /plans/active/prediction_live_clob_depth_capture_2026_07_24.md,
     /plans/active/prediction_capture_incident_remediation_2026_07_06.md,
     /plans/archive/2026_07/mvp_backfill_cefi_tick_v10_2026_06_27.md,
     /plans/active/instruments_foundation_completeness_2026_06_24.md,
@@ -140,7 +141,10 @@ resolved_by:
    moved 5.3% → 13.8% (source: `data_completion*…#L2516`). No further DeFi-scale canonical re-seed appears warranted at
    the enumerator layer; the residual backlog is the two items above.
 
-### prediction (owning plans = `prediction_venue_perps_and_live_clob_depth_2026_06_20.md` + `prediction_capture_incident_remediation_2026_07_06.md`)
+### prediction (owning plans = `prediction_cross_venue_arb_and_coverage_2026_07_24.md` [successor to
+
+`prediction_venue_perps_and_live_clob_depth_2026_06_20.md`, split + archived 2026-07-24] +
+`prediction_capture_incident_remediation_2026_07_06.md`)
 
 1. **Token-id `instrument_availability` lane NOT SEEDED — `lifecycle-catalogue-regen-prediction-daily` job PAUSED**
    (source: `data_completion_…#L911`). The `expected-universe-v2-prediction` Cloud Run job only seeds `_index`
@@ -153,11 +157,11 @@ resolved_by:
    1,007k / failed 10,013 / `expected_unattempted` 818k, source `data_completion_…#L2320`) — the 818k EU is
    CQG-bundle-scoped; the token-id lane is a separate off-manifest dimension.
 2. **Kalshi launcher gap** (source: `data_completion_…#L3275`, P1 open). `KalshiAdapter` is wired (per plan +
-   `prediction_venue_perps_and_live_clob_depth_2026_06_20`) but `launch-mtds-prediction-backfill-vm.sh` does not
-   currently launch a Kalshi backfill VM → Kalshi cells never move out of `expected_unattempted` (or fail to be seeded
-   for pre-adapter days). Quantum: Kalshi resolved-market coverage × trades/`book_snapshot_5` `data_types` × per-day
-   (per plan progress log: `kalshi book_snapshot_5 = 2,107 parquets/06-26` shows current capture; the historical seed is
-   the gap).
+   `prediction_live_clob_depth_capture_2026_07_24`, successor to `prediction_venue_perps_and_live_clob_depth_2026_06_20`
+   split + archived 2026-07-24) but `launch-mtds-prediction-backfill-vm.sh` does not currently launch a Kalshi backfill
+   VM → Kalshi cells never move out of `expected_unattempted` (or fail to be seeded for pre-adapter days). Quantum:
+   Kalshi resolved-market coverage × trades/`book_snapshot_5` `data_types` × per-day (per plan progress log:
+   `kalshi book_snapshot_5 = 2,107 parquets/06-26` shows current capture; the historical seed is the gap).
 3. **Decision-338 per-conditionId exclusion** (source:
    `instruments-service/scripts/enumerate_expected_universe.py:1737-1747`). `_enumerate_v2_prediction` explicitly
    filters to cqg-bundle-grain rows when the catalogue contains any, EXCLUDING the per-conditionId trades /
@@ -351,12 +355,13 @@ resolved_by:
 - [x] ✅ [DOC] P3. prediction decision-338 documentation-only affirmation — no seed; keep the per-conditionId exclusion
       in `_enumerate_v2_prediction` and the >50M-row inflation risk visible in the docstring so a future re-open reads
       the rationale first (repo: instruments-service; owning plan:
-      `plans/active/prediction_venue_perps_and_live_clob_depth_2026_06_20.md` — cross-reference marker only). —
-      **CROSS-REFERENCE MARKER CLOSED 2026-07-06** (Opus, slot-12·planning, `data_engineering`). **Verified current
-      state (this session):** (1) The decision-338 per-conditionId exclusion is IN PLACE in `_enumerate_v2_prediction`
-      at `instruments-service/scripts/enumerate_expected_universe.py:1745-1753` — filter logic keeps ONLY the
-      cqg-bundle-grain rows (`_cqg_rows = [c for c in catalog if c.data_type == _PREDICTION_CQG_DATA_TYPE]`) with an
-      explicit
+      `plans/active/prediction_cross_venue_arb_and_coverage_2026_07_24.md` [successor to
+      `plans/active/prediction_venue_perps_and_live_clob_depth_2026_06_20.md`, split + archived 2026-07-24] —
+      cross-reference marker only). — **CROSS-REFERENCE MARKER CLOSED 2026-07-06** (Opus, slot-12·planning,
+      `data_engineering`). **Verified current state (this session):** (1) The decision-338 per-conditionId exclusion is
+      IN PLACE in `_enumerate_v2_prediction` at `instruments-service/scripts/enumerate_expected_universe.py:1745-1753` —
+      filter logic keeps ONLY the cqg-bundle-grain rows
+      (`_cqg_rows = [c for c in catalog if c.data_type == _PREDICTION_CQG_DATA_TYPE]`) with an explicit
       `logger.info("prediction v2: cqg-bundle-grain filter active — %d cqg rows kept of %d catalogue rows (per-conditionId trades/market_lifecycle EXCLUDED; decision 338)", …)`
       runtime log tag. (2) The >50M-row catastrophic denominator-inflation risk is VISIBLE in the function docstring at
       `enumerate_expected_universe.py:1728-1738` — "**cqg-bundle grain ONLY (decision 338, 2026-06-19).** … Seeding
@@ -366,16 +371,17 @@ resolved_by:
       fall-through preserved: "If the catalogue has NO cqg-bundle rows (legacy / test), fall through to all rows
       unchanged (never silently drop a whole AG)" — the exclusion is data-dependent (fires only when cqg-bundle rows
       exist), so a catalogue evolution that removes the bundle grain doesn't silently zero-seed the AG. (4) Owning plan
-      `plans/active/prediction_venue_perps_and_live_clob_depth_2026_06_20.md` is the tracking anchor per the scan
-      contract; no owning-plan flip performed here (scan contract line 76 + § Recommended-decision line 170-173 —
-      documentation-only affirmation, no code change). (5) Plan 5's `foundation_gates_and_capture_to_100_2026_07_06.md`
-      task -008 gate ALREADY reads `[x] ✅` "quantified + filed" (line 207-227) with explicit prediction bullet at line
-      221-223 naming "decision-338 per-conditionId intentional exclusion (>50M-row inflation risk documented)".
-      Cross-reference marker's purpose is fulfilled: filed + documented + tracked. No new code shipped here — this is a
-      **documentation-only** affirmation per the item text ("no seed; keep the per-conditionId exclusion … the >50M-row
-      inflation risk visible in the docstring"). — evidence:
-      `instruments-service/scripts/enumerate_expected_universe.py:1728-1738` (docstring §"cqg-bundle grain ONLY
-      (decision 338, 2026-06-19)" with the >50M-row risk narrative),
+      `plans/active/prediction_cross_venue_arb_and_coverage_2026_07_24.md` (successor to
+      `plans/active/prediction_venue_perps_and_live_clob_depth_2026_06_20.md`, split + archived 2026-07-24) is the
+      tracking anchor per the scan contract; no owning-plan flip performed here (scan contract line 76 + §
+      Recommended-decision line 170-173 — documentation-only affirmation, no code change). (5) Plan 5's
+      `foundation_gates_and_capture_to_100_2026_07_06.md` task -008 gate ALREADY reads `[x] ✅` "quantified + filed"
+      (line 207-227) with explicit prediction bullet at line 221-223 naming "decision-338 per-conditionId intentional
+      exclusion (>50M-row inflation risk documented)". Cross-reference marker's purpose is fulfilled: filed +
+      documented + tracked. No new code shipped here — this is a **documentation-only** affirmation per the item text
+      ("no seed; keep the per-conditionId exclusion … the >50M-row inflation risk visible in the docstring"). —
+      evidence: `instruments-service/scripts/enumerate_expected_universe.py:1728-1738` (docstring §"cqg-bundle grain
+      ONLY (decision 338, 2026-06-19)" with the >50M-row risk narrative),
       `instruments-service/scripts/enumerate_expected_universe.py:1745-1753` (filter code with
       `_PREDICTION_CQG_DATA_TYPE` predicate + decision-338 logger.info tag),
       `foundation_gates_and_capture_to_100_2026_07_06.md#L221-223` (Plan 5 -008 gate DONE with prediction bullet).

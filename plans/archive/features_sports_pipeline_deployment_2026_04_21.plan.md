@@ -35,7 +35,7 @@ isProject: false
 
 ## Deferred work — migrated to: `plans/active/features_sports_service_consolidation_deploy_2026_07_15.md`,
 
-`plans/active/sports_p2_features_history_to_ml_ready_2026_06_27.md` — successor:
+`plans/archive/2026_07/sports_p2_features_history_to_ml_ready_2026_06_27.md` — successor:
 features_sports_service_consolidation_deploy_2026_07_15, sports_p2_features_history_to_ml_ready_2026_06_27 (the T-1h
 trigger-fire test and coverage audit are absorbed by the first plan's live-fire proof + service rename
 (`features-sports-service` → `features-service-sports-job`); the FIXTURE_FEATURES coverage audit is superseded by the

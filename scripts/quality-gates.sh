@@ -791,7 +791,7 @@ fi
 
 
 # -- Post-gates: Two-sided prospectus vs codex audit (Phase 6B) -- baselined ratchet --
-# SSOT: plans/active/capability_wizard_and_manifest_2026_06_11.md section 6B parity quality gates.
+# SSOT: plans/archive/2026_07/capability_wizard_and_manifest_2026_06_11.md section 6B parity quality gates.
 # Baseline (2026-06-12): 1 venue-category contradiction + 2 orphan docs + 0 legs-in-prose drift.
 # NEW findings (above baseline) fail the gate. Re-baseline with --baseline-write only for
 # accepted debt. Checks: (c) venue-category contradictions, (b) orphan codex docs, (d) legs-in-prose.
@@ -808,7 +808,7 @@ if [ -f "$TWO_SIDED_AUDIT" ]; then
 fi
 
 # ── Post-gates: Capability-regression gate (Wave-2 #5) — baselined ratchet ──
-# SSOT: plans/active/capability_wizard_and_manifest_2026_06_11.md Wave-2 #5.
+# SSOT: plans/archive/2026_07/capability_wizard_and_manifest_2026_06_11.md Wave-2 #5.
 # FAILS when a capability edge regressed available -> not_available/not_registered
 # vs scripts/openapi/capability-edge-status-baseline.json, unless acked in
 # capability_regression_acks.yaml with a plan reference. Improvements never fail.

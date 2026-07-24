@@ -55,15 +55,16 @@ code_refs:
 > [`plans/epics/dart_and_promote_master.md`](../../../../plans/epics/dart_and_promote_master.md) (absorbed from
 > `cross_cutting_may_23_SUPERSEDED_2026_05_21.epic.md` 2026-05-21 — use `dart_and_promote_master` for all new
 > cross-references). **Live-only success criterion**:
-> [`master_to_live_defi_2026_05_23.md`](../../../../plans/active/master_to_live_defi_2026_05_23.md) Group G item 23
-> (DART manual-trade gate).
+> [`master_to_live_defi_2026_05_23.md`](../../../../plans/archive/2026_07/master_to_live_defi_2026_05_23.md) Group G
+> item 23 (DART manual-trade gate).
 
 ## 1. Why this doc exists
 
 The cross-cutting epic frames deliverable #4 as: _"the UI needs to be able to replicate everything that we're doing"_ —
 every automated archetype on the May-23 critical path must have a DART manual-fallback surface that exercises the SAME
 code path as the automated lane. The operator-confirmed bar from
-[`master_to_live_defi_2026_05_23.md`](../../../../plans/active/master_to_live_defi_2026_05_23.md) Group G item 23 is:
+[`master_to_live_defi_2026_05_23.md`](../../../../plans/archive/2026_07/master_to_live_defi_2026_05_23.md) Group G item
+23 is:
 
 > _"DART terminal in UTS-UI visualizes the strategy archetype end-to-end; operator first puts trades on manually →
 > backend executes through the same path as automation → monitor for the gate window → flip switch to automation."_
@@ -303,8 +304,8 @@ them and so the cross-cutting plan body can flip its [DESIGN] checkbox without a
 - [`plans/epics/dart_and_promote_master.md`](../../../../plans/epics/dart_and_promote_master.md) — current parent epic
   (supersedes `cross_cutting_may_23_SUPERSEDED_2026_05_21.epic.md`; 5 non-negotiable deliverables for May-23 +
   post-cutover roadmap).
-- [`plans/active/master_to_live_defi_2026_05_23.md`](../../../../plans/active/master_to_live_defi_2026_05_23.md) Group G
-  item 23 — live-only success criterion (DART manual-trade gate).
+- [`plans/archive/2026_07/master_to_live_defi_2026_05_23.md`](../../../../plans/archive/2026_07/master_to_live_defi_2026_05_23.md)
+  Group G item 23 — live-only success criterion (DART manual-trade gate).
 - [`plans/active/issues/cross_cutting_strategy_catalogue_already_shipped_2026_05_08.md`](../../../plans/active/issues/cross_cutting_strategy_catalogue_already_shipped_2026_05_08.md)
   — Tab 6.A finding that strategy_id grammar is already shipped (this spec consumes whichever grammar lands
   post-triage).

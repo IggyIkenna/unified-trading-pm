@@ -23,7 +23,7 @@ priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 2.5
 estimate_calibrated_ai_days: 2
-last_updated: 2026-07-15
+last_updated: 2026-07-24 # (was: 2026-07-15 -- folded in the CeFi-lane Progress Log entries from M-1 per plan line-cap remediation)
 locked_by:
 locked_since:
 supersedes:
@@ -351,3 +351,47 @@ MTDS consolidation ruling.)**
       on coordinator G0** (source-aware pipeline_mode). Re-run `cf_manifest_audit instruments-store-cefi-prd-…`
       post-walk → all-CF GREEN. Provenance: slot-3 G1 cf-audit 2026-06-07. parent_epic: mtds_mdps_master. **(MIGRATED
       FROM: `cefi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+
+## Progress Log
+
+> **Folded in 2026-07-24** from the M-1 coordinator's (`data_completion_to_100_all_ag_2026_06_21.md`) shared Progress
+> Log (plan line-cap remediation, `plans/active/issues/plan_line_cap_remediation_2026_07_23.md` bucket-(d) split,
+> operator-approved) — every CeFi-lane-tagged dated entry, moved verbatim, in original chronological order. M-1 retains
+> the cross-cutting/multi-AG entries; read M-1's Progress Log too for the full program-level narrative.
+
+### 2026-06-21 — CEFI lane: live producer unblocked (missing lifecycle topic — fleet-wide finding)
+
+First-ever operational live MTDS launch crashed: `NotFound: 404 … market-tick-data-service-events`. UTL
+`_sink_factory.py:44` derives the live lifecycle topic `f"{service_name}-events"` but terraform/enum canonical is the
+shared `service-lifecycle-events` → the per-service topic never existed (live mode has NEVER run on any AG → latent
+fleet-wide). **Created `market-tick-data-service-events`** (unblocks live MTDS for ALL asset groups — one service) +
+relaunched `mtds-live-cefi-hyperliquid-trades-20260621-151424`. Systemic fix (UTL sink → `service-lifecycle-events`, or
+terraform per-service topics; also hits MDPS/features/strategy/execution live) filed:
+`plans/active/issues/live_mode_event_sink_topic_missing_2026_06_21.md`. Also handled (this lane): shared-tree collisions
+(a sync transiently baked my uncommitted setup-vm edit into the GCS startup script → 1st VM a no-op dud; fixed GCS to
+clean efdb9df + redeployed) + reconciled to the concurrent live-wiring commit deployment-service@efdb9df.
+
+Coverage snapshot above (measured, not memory). Kalshi seed VM re-launched (runner set-u fix mtds@74e228c). Fleet
+launch + monitoring loop starting (this plan is the path-to-100% plan-of-record).
+
+### 2026-06-21 — CEFI lane (/autonomous, Opus): triage measured + live-path diagnosed
+
+Measured cefi from consolidated v9 `_index` (3.87M rows; cov 33.9% = 1.31M cap / 1.28M empty / 802k failed / 482k
+unatt). **802k failed triage (measured):** source=tardis 753,341 + 22,519 `batch_tardis` phantoms = **775,860
+Tardis-gated (96.7%)** → historical re-fetch is billing-gated (operator EXCLUDED) → BLOCKED-CREDENTIALS. Free-venue
+re-fetchable = hyperliquid 30,835 + aster 17,675 = **48,510** (native, no Tardis). Top `error_reasons`:
+`UNCLASSIFIED_ADAPTER_ERROR` 689,899 / `VENUE_FETCH_FAILED` 83,923 / `phantom_no_parquet` 22,700 / `HTTP_429` 3,652.
+**IS cefi VERIFIED 99.9% (36,062/36,084, all v9) — done.**
+
+**BIG FINDING — live path:** operator named `launch-cefi-forward-poll.sh`/`launch-cefi-onchain-forward-poll.sh` for the
+live stream, but BOTH run `--mode batch` → BILLED Tardis replay + `batch_<source>` rows (would violate the
+Tardis-billing exclusion AND not produce `live_<source>`). The genuine FREE live path =
+`launch-mtds-live.sh --asset-group cefi` (`--operation websocket-streaming --mode live`, real-time exchange-WS proxy; 18
+cefi connectors registered since the 2026-05-17 Phase 3.5 rollout — the handler's "registry empty at Phase 3.1"
+docstring is STALE).
+
+Gap: `setup-data-pipeline-vm.sh` has NO `live_websocket` branch (generic fall-through hardcodes `--mode batch`), and the
+handler needs `--shard-spec` + `--instrument-ids` + `streaming_redis_url`. **Plan: wire the live branch + local redis
+into setup-data-pipeline-vm.sh → launch mtds-live cefi → verify ≥1 live row** (reusable for all AGs — live=0
+fleet-wide). Then year-shard the 48.5k free-venue failed re-fetch + file the BLOCKED-CREDENTIALS ask for the 775.9k
+Tardis-gated.

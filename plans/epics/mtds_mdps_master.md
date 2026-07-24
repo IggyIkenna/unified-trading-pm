@@ -75,7 +75,7 @@ codex_ssots:
 related_plans:
   - ../active/data_completion_to_100_all_ag_2026_06_21.md
   - ../active/pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md
-  - ../active/sports_manifest_canonicalisation_2026_06_01.md
+  - ../archive/2026_07/sports_manifest_canonicalisation_2026_06_01.md
 last_updated:
   2026-07-15 # (was: 2026-06-26 — corrected 2026-07-14, doc-reconciliation finding 174: body carried
   # dated 2026-07-12/2026-07-13 banners weeks after this field was last bumped; corrected 2026-07-15,
@@ -729,7 +729,7 @@ batch + live, manifest v9 (MTDS + IS)
 
 **status**: active · **estimate**: 9.6 cal AI-days (class: infra)
 
-### [`sports_manifest_canonicalisation_2026_06_01`](../active/sports_manifest_canonicalisation_2026_06_01.md)
+### [`sports_manifest_canonicalisation_2026_06_01`](../archive/2026_07/sports_manifest_canonicalisation_2026_06_01.md)
 
 **status**: active · **estimate**: 2.4 cal AI-days (class: infra)
 

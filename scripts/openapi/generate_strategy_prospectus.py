@@ -29,7 +29,7 @@ Usage:
     python generate_strategy_prospectus.py [--archetype <id>] \
         [--output-dir PATH] [--workspace-root PATH]
 
-Plan: plans/active/capability_wizard_and_manifest_2026_06_11.md Phase 3
+Plan: plans/archive/2026_07/capability_wizard_and_manifest_2026_06_11.md Phase 3
 """
 
 from __future__ import annotations

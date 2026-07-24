@@ -31,7 +31,7 @@ referenced_by:
     /codex/08-workflows/cutover-window-dependency-order.md,
     plans/active/_agent_pings.md,
     plans/active/issues/vm_backfill_data_correctness_findings_2026_06_29.md,
-    plans/active/master_to_live_defi_2026_05_23.md,
+    plans/archive/2026_07/master_to_live_defi_2026_05_23.md,
     plans/epics/cefi_master.md,
     plans/epics/cross_cutting_may_23_SUPERSEDED_2026_05_21.md,
   ]

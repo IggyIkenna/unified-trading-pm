@@ -144,25 +144,77 @@ source:
       is not retroactively recoverable — item 1's fix now caps reported `dirty_files` at 5) in
       `/plans/active/issues/git_health_phantom_dirty_flicker_ff_cron_race_2026_07_21.md` § "7. RESOLVED 2026-07-24 (slot
       3)".
-- [ ] [BACKEND] P2. Add a periodic dirty-resolution sweep to the worker-liveness watchdog that runs independently of any
-      spawn attempt. Every caller of `resolve_dirty_state`/`commit_and_push_dirty_repos` today is spawn or respawn time
-      (`spawn_slot`, `_do_spawn`, the `slots_ops` pre-spawn gate, `_respawn`), so a dirty slot nobody tries to spawn
-      into stays dirty forever. Reuse those same helpers plus the liveness discriminator — dead or expired
+- [x] ✅ [BACKEND] P2. Add a periodic dirty-resolution sweep to the worker-liveness watchdog that runs independently of
+      any spawn attempt. Every caller of `resolve_dirty_state`/`commit_and_push_dirty_repos` today is spawn or respawn
+      time (`spawn_slot`, `_do_spawn`, the `slots_ops` pre-spawn gate, `_respawn`), so a dirty slot nobody tries to
+      spawn into stays dirty forever. Reuse those same helpers plus the liveness discriminator — dead or expired
       `.agent-claim` means inherit and commit; a live claim or mtime under 120s means PROTECT. **Gate**: a
       deliberately-idle dirty slot with no tmux and an expired claim is inherited within one sweep interval, evidenced
-      by a resolution activity row with NO adjacent spawn event.
-- [ ] [INFRA] P2. Escalate the liveness watchdog from soft-kick to hard-kill plus respawn after N consecutive frozen
+      by a resolution activity row with NO adjacent spawn event. — agent-orchestrator@de44b255f: added
+      `WorkerLivenessWatchdog._sweep_dirty_slots()`, wired unconditionally into `_tick_once()` alongside
+      `_release_prereq_blocked_slots()` etc. Enumerates ALL `SlotRow`s (not just active/idle-status subsets); skips any
+      slot whose own tmux session is alive (some other path already owns it); calls
+      `resolve_dirty_state(...,     replacing_session=None, ...)` for every other slot so `classify_maker_liveness`
+      purely reflects claim-file state (no claim / expired claim → inherit+commit+push; a claim owned by a still-live
+      different session, or a recent-mtime dirty file → `protected_live_peer`) — reuses 100% of the existing FM2/FM3/FM8
+      machinery, no new liveness logic. Logs the same `slot_dirty_state_resolved` activity event tagged
+      `trigger: "watchdog_sweep"` so it's distinguishable from the 4 existing spawn-time call sites.
+      `tests/test_watchdog_dirty_sweep.py` (6 cases, real git repos + bare remotes, in-memory SQLite session, same
+      pattern as `test_prereq_blocked_release.py`): idle+no-claim inherits, idle+expired-claim inherits, live-own-tmux
+      is skipped untouched, a live claim from a DIFFERENT session is protected, a clean tree is a no-op, a missing
+      worktree doesn't raise. Every inherit test confirmed the resolved activity row carries NO adjacent spawn-family
+      event. Full `quality-gates.sh` green (1626 tests, ruff + basedpyright clean) before shipping via quickmerge.
+- [x] ✅ [INFRA] P2. Escalate the liveness watchdog from soft-kick to hard-kill plus respawn after N consecutive frozen
       observations, and make the counter survive the reset that defeated it. `kick_escalation_threshold` already exists
       and shipped 2026-07-09, but the 2026-07-21 incident (55 kicks in 3h, only 7 counted as `worker_kick_failed`) is
       live proof it did not trip — `ping_advanced`/`post_class=="working"` kept resetting `_consecutive_kick_failures`
       to 0 before it reached the threshold. Fix the reset condition, not the threshold value. **Gate**: a test where a
-      worker that keeps answering pings while making no progress still escalates to hard-kill.
-- [ ] [INFRA] P2. Add a reclaim-and-push path for a killed or idle slot whose worktree holds committed-but-unpushed
+      worker that keeps answering pings while making no progress still escalates to hard-kill. —
+      agent-orchestrator@2a48eda2f: decoupled the escalation streak from the OR-based `kick_ok` verdict in
+      `server/worker_liveness/__init__.py::_tick_once`. `kick_ok`/`event_type` stay OR-based
+      (`post_class=="working" or     ping_advanced`) for the activity-log only; `_consecutive_kick_failures` now resets
+      — and the auto-respawn check is only skipped — on `post_class=="working"` ALONE (a verified pane spinner), never
+      on `ping_advanced` alone. The escalate-check itself moved out from behind `if not kick_ok:` to
+      `if not genuinely_recovered:`, since the old gating skipped the auto-respawn call entirely on every ping-advanced
+      tick regardless of streak length. Also cleared the streak on a genuinely-working pane observed via the ordinary
+      top-of-tick classification branch (not just the post-kick verify window), so a worker that fully recovers doesn't
+      carry a stale near-threshold count into an unrelated later blip — a correctness gap the original
+      reset-on-`kick_ok` design would have re-introduced the moment `ping_advanced` stopped being trusted.
+      `tests/test_worker_liveness.py`: updated `test_ping_advance_counts_as_kick_success` (ping-advance alone no longer
+      suppresses the non-forced auto-respawn call, only forced escalation) + 2 new tests —
+      `test_worker_that_keeps_pinging_without_progress_still_escalates_to_hard_kill` (3 consecutive ping-advanced,
+      never-working ticks → `force=True` on the 3rd, matching `kick_escalation_threshold`) and
+      `test_confirmed_working_pane_clears_stale_kick_failure_streak` (2 failures → 1 genuine top-branch working
+      observation clears the streak → next failure starts over at 1, not 3). All 3 confirmed FAILING against the pre-fix
+      code (`git stash` on the source file only) and PASSING against the fix before shipping. Full `quality-gates.sh`
+      green (1617 passed, 1 skipped, ruff + basedpyright clean) on the shipped SHA.
+- [x] ✅ [INFRA] P2. Add a reclaim-and-push path for a killed or idle slot whose worktree holds committed-but-unpushed
       work. `orphan_reap.py` reaps processes and tmux only — its own docstring says so, and it contains no git logic —
       while `_maybe_send_sync_nudge` merely enqueues a slot message, which is a no-op on a dead worker. Note
       `agent-orchestrator@529b0dc` does NOT cover this: it is a git-status keying fix, not a push path. **Gate**: a slot
       killed with local commits ahead of origin has them pushed (or inherited) without a human touching the box,
-      evidenced by the commits appearing on `origin/live-defi-rollout`.
+      evidenced by the commits appearing on `origin/live-defi-rollout`. — agent-orchestrator@8aaf928a0: confirmed
+      `resolve_dirty_state`/`commit_and_push_dirty_repos` are keyed on `git status --porcelain` — an EMPTY porcelain
+      (clean tree) short-circuits to `action="clean"` before ANY ahead/behind check runs, so a predecessor who committed
+      properly (per the QG-before-commit HARD RULE) but was killed before running quickmerge left those commits unpushed
+      forever. New `push_or_preserve_ahead_commits` (`server/worktree_clean_check/_ahead_push.py`): for a clean repo
+      with HEAD ahead of `origin/<base>` (not also behind — diverged stays FM5's problem), verifies a matching
+      `.qg_last_passed_sha` sentinel (the SAME sentinel `quickmerge --agent` itself trusts) as objective proof the
+      commit was QG-clean; only then mirrors `quickmerge.sh`'s own already-committed-clean-tree path (stamp the
+      `Quickmerge:` trailer if missing, push straight to `origin/<base>` — the local `check_strict_quickmerge.py`
+      pre-push hook is the existing safety net either way). No matching sentinel → never guess: falls back to a
+      content-addressed `wip-preserve/` ref (same naming scheme as the orphan-WIP path) without touching local HEAD, so
+      work is preserved but unverified code never lands on the shared branch. FM8 liveness-gated with the same
+      discriminator `resolve_dirty_state` uses. Wired as `WorkerLivenessWatchdog._sweep_unpushed_slots()`, called from
+      `_tick_once()` alongside `_sweep_dirty_slots()` (item 7) — same enumerate-all-slots/skip-live-tmux loop, kept as
+      its own method since the git check is a different concern (ahead-of-origin on a clean tree, not dirty-state
+      resolution). `tests/test_watchdog_unpushed_sweep.py` (7 cases, real git repo + bare remote, same harness as
+      `test_watchdog_dirty_sweep.py`): sentinel-verified push lands on `origin/live-defi-rollout` with the trailer
+      stamped (the gate scenario); missing sentinel falls back to `wip-preserve/` with local HEAD untouched; live tmux /
+      live claim peer / dirty repo / not-ahead / missing-worktree all correctly no-op. All 7 confirmed FAILING against
+      the pre-fix code (`AttributeError: no _sweep_unpushed_slots`, both git-stash and `_ahead_push.py` removed) and
+      PASSING against the fix. Full `quality-gates.sh` green (1624 passed, 1 skipped, ruff + basedpyright clean) on the
+      shipped SHA.
 - [ ] [BACKEND] P3. Root-cause slot 4's elevated short-lived-orphan rate, or record an explicit accept-as-cadence
       verdict with the comparison data. Compare `slot_resume_respawned`, `autospawn_failed`, `watchdog_slot_killed` and
       `tmux_session_lost` rates for slot 4 against the other slots NORMALISED PER DISPATCH — raw counts are misleading
@@ -248,3 +300,54 @@ source:
   check whether the SERVER ITSELF already has richer data than the summary view exposes before concluding a task is
   truly stuck — `/api/fleet/git-health` and the per-slot `/api/slots/{id}/git-status?host=` debug endpoint are NOT the
   same payload (the latter keeps `dirty_files_sample`).
+
+- **2026-07-24 (slot 2, continued)**: Item 7 shipped (`agent-orchestrator@de44b255f`, citation inline on its checkbox
+  above) — `WorkerLivenessWatchdog._sweep_dirty_slots()`, an unconditional per-tick pass (added to `_tick_once()`
+  alongside `_release_prereq_blocked_slots()` etc.) that enumerates every `SlotRow`, skips any with a live tmux session,
+  and calls `resolve_dirty_state(..., replacing_session=None, ...)` on the rest — reusing the existing FM2/FM3/FM8
+  coordinator and liveness discriminator verbatim, no new liveness logic. `tests/test_watchdog_dirty_sweep.py` (6 cases,
+  real git repos + bare remotes) confirmed: idle+no-claim and idle+expired-claim both inherit with a
+  `slot_dirty_state_resolved` activity row tagged `trigger: "watchdog_sweep"` and NO adjacent spawn event (the gate); a
+  live-own-tmux slot is skipped untouched; a live claim from a different session is protected; a clean tree is a no-op;
+  a missing worktree doesn't raise. Full `quality-gates.sh` green (1626 tests) before quickmerge.
+
+- **2026-07-24 (slot 3)**: Item 8 shipped (`agent-orchestrator@2a48eda2f`, citation inline on its checkbox above) — the
+  kick-escalation streak (`_consecutive_kick_failures`) is now reset, and the auto-respawn check now short-circuited,
+  ONLY on a verified `post_class=="working"` pane; `ping_advanced` alone no longer does either. Root cause confirmed by
+  reading `_tick_once`: `kick_ok = post_class=="working" or ping_advanced` gated BOTH the counter reset AND (via
+  `if not kick_ok:`) whether the auto-respawn/escalation check ran at all — so a worker satisfying `ping_advanced` on
+  nearly every tick (answering heartbeats while never actually resuming work) never even reached the escalation check,
+  exactly the 2026-07-21 incident signature (55 kicks/3h, only 7 counted `worker_kick_failed`). Fix scope stayed
+  strictly to the reset condition per the todo's instruction (threshold value `kick_escalation_threshold` untouched).
+  Also closed a latent correctness gap the narrow fix would otherwise have introduced: added the same streak-clear to
+  the ordinary top-of-tick "working" classification branch (not just the post-kick verify window), so a worker that
+  fully recovers for a long stretch doesn't carry a stale near-threshold count into a later, unrelated single blip. Gate
+  discipline: 3 tests in `tests/test_worker_liveness.py` (1 updated, 2 new), each confirmed FAILING against the pre-fix
+  source (via `git stash push` scoped to the source file only, keeping the test file) and PASSING after restoring the
+  fix — not just "passes now." Full `quality-gates.sh` green (1617 passed, 1 skipped, ruff + basedpyright clean) on the
+  shipped SHA before quickmerge.
+
+- **2026-07-24 (slot 3, continued)**: Item 9 shipped (`agent-orchestrator@8aaf928a0`, citation inline on its checkbox
+  above) — `push_or_preserve_ahead_commits` (`server/worktree_clean_check/_ahead_push.py`) closes the gap confirmed by
+  reading `resolve_dirty_state`: it is keyed on `git status --porcelain`, so a CLEAN tree (predecessor already
+  committed) short-circuits to `action="clean"` before any ahead/behind check runs — nothing ever pushed a properly-
+  committed-but-unpushed predecessor commit. The new path verifies the `.qg_last_passed_sha` sentinel (proving the
+  commit was QG-clean) before mirroring `quickmerge.sh`'s own already-committed-clean-tree behavior (stamp the
+  `Quickmerge:` trailer, push straight to `origin/<base>`); no sentinel match → preserve on a `wip-preserve/` ref
+  without touching local HEAD, never guessing. Wired into `WorkerLivenessWatchdog._tick_once()` as
+  `_sweep_unpushed_slots()`, sibling to item 7's `_sweep_dirty_slots()` (same loop shape, kept separate since the git
+  check is orthogonal). Gate: `tests/test_watchdog_unpushed_sweep.py` (7 cases, real git repo + bare remote) — the
+  literal gate scenario (sentinel-verified push lands on `origin/live-defi-rollout` with the trailer stamped) plus 6
+  guard cases (no-sentinel fallback, live tmux, live claim peer, dirty repo, not-ahead, missing worktree), all confirmed
+  FAILING pre-fix (`AttributeError`) and PASSING post-fix. Full `quality-gates.sh` green (1624 passed, 1 skipped) on the
+  shipped SHA. Lesson for whoever picks up item 10 next: the test harness needed its own `.gitignore` for
+  `.qg_last_passed_sha` (mirroring the real repo's `.gitignore:93`) — without it the sentinel file itself reads as an
+  untracked dirty file and trips the porcelain-clean check, silently producing zero results (caught by running the new
+  test standalone before trusting it, not by the fail-before/pass-after pass alone).
+
+  ## Deferred work after 2026-07-24
+
+  | Item  | State    | Blocked-on                                                                         |
+  | ----- | -------- | ---------------------------------------------------------------------------------- |
+  | 10    | Not done | `[BACKEND]` HELD per Q2 (operator-decision) — next in sequence, not auto-startable |
+  | 11-14 | Not done | Nobody; sequential continuation (item 12 `[BACKEND]` also HELD per Q2)             |

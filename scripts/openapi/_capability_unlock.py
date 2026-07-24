@@ -44,7 +44,7 @@ of the related nodes:
 The keyword classifier is a deterministic, ordered match over the lower-cased
 reason text; the FIRST matching family wins so the mapping is stable.
 
-SSOT: ``plans/active/capability_wizard_and_manifest_2026_06_11.md`` Wave-2 #1.
+SSOT: ``plans/archive/2026_07/capability_wizard_and_manifest_2026_06_11.md`` Wave-2 #1.
 """
 
 from __future__ import annotations
@@ -368,8 +368,7 @@ def render_markdown(manifest_commit: str, entries: list[UnlockEntry], top_n: int
         pieces = ", ".join(f"`{p}`" for p in u.missing_pieces)
         edge = f"`{u.from_node_id}` --{u.relation}--> `{u.to_node_id}`"
         top_lines.append(
-            f"{i}. {edge} — status `{u.status}`, unlock_distance **{u.unlock_distance}**, "
-            f"missing {pieces}, demand 0"
+            f"{i}. {edge} — status `{u.status}`, unlock_distance **{u.unlock_distance}**, missing {pieces}, demand 0"
         )
     out.extend(_section(f"Closest-to-unlock — top {len(top)} (highest-leverage)", top_lines))
 

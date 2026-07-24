@@ -24,7 +24,7 @@ authoritative_for:
   Per-archetype event cadence + heartbeat thresholds + cross-cloud event-stream parity expectations for live (non-batch)
   trading deployments. Defines the contract between a running VM/Cloud Run service and the unified-events-interface so
   silent stalls are visible within minutes.
-referenced_by: [plans/active/master_to_live_defi_2026_05_23.md]
+referenced_by: [plans/archive/2026_07/master_to_live_defi_2026_05_23.md]
 owner:
 last_reviewed: 2026-05-12
 code_refs:
@@ -182,7 +182,7 @@ launches and codified-discipline (alerting rules + correlated-validation) for li
 ## Cross-references
 
 - **Plan(s) implementing this**:
-  [`master_to_live_defi_2026_05_23`](../../plans/active/master_to_live_defi_2026_05_23.md) work-stream B.
+  [`master_to_live_defi_2026_05_23`](../../plans/archive/2026_07/master_to_live_defi_2026_05_23.md) work-stream B.
 - **Related codex SSOTs**: [`vm-tarball-deployment`](./vm-tarball-deployment.md) — VM tarball mechanics + three
   guarantees + exit codes. [`launcher-script-ssot`](./launcher-script-ssot.md) — launcher SSOT + watchdog dict
   registration + QG check policy.

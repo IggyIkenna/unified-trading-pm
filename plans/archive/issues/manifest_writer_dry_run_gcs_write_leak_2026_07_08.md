@@ -29,7 +29,7 @@ scope: [engineer]
 tags: [manifest, dry-run, data-correctness, ssot-contradiction, cross-repo, ucI, gcs]
 related:
   [
-    /plans/active/sports_p2_features_history_to_ml_ready_2026_06_27.md,
+    /plans/archive/2026_07/sports_p2_features_history_to_ml_ready_2026_06_27.md,
     /codex/02-data/availability-manifest-and-data-status.md,
   ]
 created: 2026-07-08
