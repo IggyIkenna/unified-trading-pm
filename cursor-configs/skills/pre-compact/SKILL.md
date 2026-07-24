@@ -87,8 +87,9 @@ the #1 source of false progress and the next session will redo it.
 
 ## Step 5 — The `## Deferred work after <date>` table
 
-Required for any non-final multi-item session. The value is **not** the list — it is separating the kinds of "not done",
-because they need different responses:
+**Run Step 7's "finish it, THEN ship" attempt on every uncommitted item BEFORE it lands here** — this table is for what
+genuinely can't be finished in minutes, not a shortcut around trying. Required for any non-final multi-item session. The
+value is **not** the list — it is separating the kinds of "not done", because they need different responses:
 
 | Kind                   | Meaning                                                                 |
 | ---------------------- | ----------------------------------------------------------------------- |
@@ -110,10 +111,29 @@ The part everyone drops. Write down what would otherwise be re-learned the hard 
 - **Invariants** discovered ("X is the real guarantee, not Y").
 - **Rejected approaches + why** — stops the next session re-walking a dead end.
 
-## Step 7 — Ship and VERIFY
+## Step 7 — Finish it, THEN ship, THEN verify
 
-Pre-commit is MANDATORY: `git status && git diff --cached --stat` with **no path arg**; `git restore --staged` anything
-not yours; stage **by name**, never `git add .` / `-A`. Push. Then **prove it**:
+**Do this BEFORE Step 5 writes anything into the deferred table.** Deferred-but-uncommitted is exactly the loss this
+ritual exists to prevent — a `- [ ]` with no sha is a promise, a pushed commit is proof. For every uncommitted item:
+
+1. **Attempt real completion first, including light finishing (minutes, not new work)**: a failing QG that's actually a
+   transient/foreign-session artifact (re-run it standalone to confirm), a small missing test, a one-line fix the
+   finding itself already specifies — do it now rather than parking it half-done. This is bounded: if closing the gap
+   needs new design, new data that doesn't exist, or a human decision, that's genuinely Step-5 material — but "I could
+   finish this in the next few minutes" is not.
+2. **Retry discipline on a blocked quickmerge**: on a shared/multi-session checkout, expect several DIFFERENT transient
+   failures in a row (foreign branch drift, a foreign session's mid-flight doc churn, a stale lock) — each is a real
+   gate result, not a bug in your commit, until proven otherwise. Diagnose the SPECIFIC violation each time (run the
+   failing checker script standalone, e.g. `check_plan_discipline.py`) before deciding whether to retry (transient /
+   someone else's problem, not yours to fix) or fix it yourself (a genuine, narrowly-scoped, safe infra bug blocking
+   everyone — fix it, don't just work around your own commit). Two **identical** consecutive failures (not just "another
+   failure") is the signal the condition is stable, not flapping — stop blind-retrying and either diagnose deeper or log
+   it as genuinely blocked.
+3. **Pre-commit is MANDATORY**: `git status && git diff --cached --stat` with **no path arg** — on a shared checkout a
+   stash-pop or rebase-conflict recovery can leave FAR more than your own file staged (another session's in-progress
+   revert, a giant unrelated diff). `git restore --staged .` then re-`git add` **by name** is the safe fix — it only
+   unstages, never touches working-tree content, so it can't destroy anyone's WIP. Never `git add .` / `-A`.
+4. Push. Then **prove it**:
 
 ```bash
 git rev-list --count origin/<branch>..HEAD    # MUST be 0
