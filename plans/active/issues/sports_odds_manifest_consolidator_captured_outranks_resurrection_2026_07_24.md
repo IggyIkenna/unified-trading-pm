@@ -11,7 +11,7 @@ summary:
   Reproduced 3x independently across ~25 minutes. Neither per-VM shard (`_legacy_seed.parquet`,
   `sports-fixtures-job.parquet`) holds the stale row, so the resurrection source is not the documented
   `_legacy_guard`-exempted path — root cause not yet isolated.
-status: blocked
+status: open
 nature: issue
 asset_group: [sports]
 stage: [data]
@@ -40,7 +40,7 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-last_updated: 2026-06-27
+last_updated: 2026-07-24
 ---
 
 # Sports odds manifest — consolidator resurrects stale `captured` row, blocking honest correction
