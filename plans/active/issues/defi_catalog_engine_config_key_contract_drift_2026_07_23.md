@@ -390,3 +390,148 @@ read every promising hit, per workspace grep-then-READ discipline): `underwater`
 `liquidation_candidate`, `candidate_ids`, `liq_candidate`, `position_data` across `execution-service`,
 `strategy-service`, `features-service`, `market-tick-data-service`, `market-data-processing-service`,
 `unified-api-contracts`, `instruments-service`, and `unified-trading-pm/plans/`.
+
+## `CARRY_RECURSIVE_BORROW_LENDING_ONLY` / `CARRY_BASIS_PERP_INV` orchestrator-stub: exhaustive investigation, scoped not built (2026-07-24)
+
+Continuation of the `staking_yield_enabled=false` finding above (`recursive_staked.py:194-199`). Read-only + design
+investigation across `strategy-service`, `execution-service`, `unified-api-contracts`, `unified-trading-library`, and
+the `unified-trading-pm/plans/` corpus. **No code changed** — this closes with a precise scope, not a build, per the
+explicit "scope, don't invent" branch for this exact class of gap.
+
+### Step 1 finding: the real dispatch pattern, and where it does/doesn't reach
+
+The UAC shared contract (`unified_api_contracts/internal/architecture_v2/schemas.py` + `enums.py`) has no dedicated
+"open/unwind a recursive loop" `InstructionActionV2` — the established archetype models a recursive loop as an
+`AtomicInstruction` (`execution_mode=ATOMIC_ON_CHAIN`) whose `legs: list[AtomicLeg]` walk the loop steps. This is
+exactly what the plain `CARRY_RECURSIVE_STAKED` path already builds via `_build_loop_legs`/`_build_instruction`
+(STAKE→LEND→BORROW, repeated).
+
+Execution-service's real, working dispatch for this shape is **generic and mode-agnostic**, not archetype-specific:
+
+- `V2InstructionRouter` (`execution_service/v2/router.py`) dispatches by `instruction.action` to
+  `ACTION_HANDLER_REGISTRY` (`execution_service/v2/handlers.py`). `InstructionActionV2.ATOMIC` → `AtomicHandler`, which
+  handles `ATOMIC_ON_CHAIN`/`LEADER_HEDGE`/`SEQUENCED_WITH_PACING` identically — thin bookkeeping (leg description
+  strings + a benchmark-mode mapping), explicitly deferring "real execution... to the existing engine/handlers/
+  implementations... or later, to a v2-native algo."
+- The paper=batch determinism-spine settlement path
+  (`execution_service/backtest_v2/action_handlers.py::resolve_settlement()`, docstring: "P1.4 — the linchpin") resolves
+  **any** `AtomicInstruction` (any `execution_mode`) to a benchmark fill generically — `_atomic_notional()` just sums
+  `leg.size_units` across legs. It does not special-case recursive-loop vs. any other atomic bundle.
+
+So for **PAPER/BATCH**, this is genuinely the "real integration point already exists, archetype-agnostic" branch — the
+exact same path the already-shipped, "CLEAN" plain `CARRY_RECURSIVE_STAKED` relies on. No execution-service change is
+needed there for whatever legs strategy-side emits.
+
+For **LIVE on-chain execution** specifically, `RecursiveLoopOrchestrator.open()/.unwind()`
+(`execution_service/defi_execution/orchestrators/recursive_loop_orchestrator.py`) is real, unit-tested, but **completely
+unwired** — grepped every reference to `RecursiveLoopOrchestrator` across all of `execution-service`: it appears only in
+its own module, its own unit test (`tests/defi_execution/unit/test_recursive_loop_orchestrator.py`), and one **prose
+docstring mention** in `execution_service/matching_engine/defi/gas_cost_model.py` ("The caller (batch backtest replay /
+RecursiveLoopOrchestrator) passes `gas_price_gwei`...") — not an actual call site. Nothing in `v2/router.py`,
+`v2/handlers.py`, or anywhere under `defi_execution/` constructs a `RecursiveLoopRequest` and calls `.open()`/
+`.unwind()`. This is true even for the **already-"CLEAN" plain `CARRY_RECURSIVE_STAKED` archetype** — its "CLEAN"
+verdict above only ever assessed the catalog/engine config-key contract (does `on_tick()` emit a non-empty instruction
+list), never live-execution wiring to a real on-chain connector.
+
+Critically, `RecursiveLoopOrchestrator`'s actual input — `RecursiveLoopRequest`
+(`unified_api_contracts/internal/architecture_v2/recursive_loop_orchestrator.py`) — is **not** a
+`StrategyInstructionEnvelope`/`AtomicInstruction` variant at all (never part of the `StrategyInstructionV2` union). It
+is a separate, purpose-built Pydantic model: `correlation_id`, `start_amount`, `share_class_coin`, `n_loops` (int,
+1-15), `ltv_per_loop` (numeric decimal), `slippage_tolerance_bps`, `opening_mode` (`PERSISTENT`/`FLASH` enum),
+`lending_protocol` (enum `AAVE_V3`/`SPARK`/`MORPHO_BLUE`/`COMPOUND_V3`), and for Family 2 an optional `perp_leg_config`
+(`perp_venue`, `perp_pair`, `target_net_delta`, `usdc_margin_buffer_min_pct`). It never flows through
+`V2InstructionRouter`. So even a working LIVE dispatcher would need a **translation layer** (atomic legs →
+`RecursiveLoopRequest` fields), not a drop-in new registry case — this is exactly the "execution-service needs a new
+case, out of scope" branch this task anticipated.
+
+### Step 2 finding: the strategy-side design itself is also genuinely undecided, not just unwired — escalating rather than inventing
+
+This is the deciding factor for BUILD vs. SCOPE. The catalog config for both archetypes
+(`strategy_service/engine/strategies/v2/target_universe/catalog_carry.py:476-574`) already carries fields that closely
+mirror `RecursiveLoopRequest`'s shape (`lending_protocol`, `chain`, `collateral_asset`, `debt_asset`, and for Family 2
+`perp_venue`/`perp_pair`/`target_net_delta`/`usdc_margin_buffer_min_pct` — verbatim matches), suggesting the catalog was
+authored anticipating this exact integration. But three concrete, load-bearing pieces of that shape are **absent
+everywhere in strategy-service, with zero prior design decision**:
+
+1. **No numeric LTV resolution.** The catalog sets `ltv_mode` (a label: `"emode_eth"` / `"market_0945"` /
+   `"market_086"`), not `RecursiveLoopRequest`'s numeric `ltv_per_loop`. Grepped `ltv_mode` across `strategy-service`:
+   it is read NOWHERE (not in `recursive_staked.py`, not in `param_schema.py`, not anywhere).
+   `unified_trading_library.governance_params.read_governance_params_asof(protocol, chain, asset, asof)` (the plain
+   archetype's own LTV-override mechanism) has no e-mode/isolated-market axis at all — read its full signature,
+   confirmed. Resolving `"emode_eth"` → a numeric LTV requires either extending that governance-params contract or
+   hand-picking a reviewed constant — a design decision, not a rename.
+2. **No recursion-depth (`n_loops`) convention.** The plain path never configures a loop count either — it derives one
+   algorithmically from `target_leverage` + `effective_ltv` via a capped convergence loop in `_build_loop_legs`
+   (`max_loops=10`). Family 1/2's catalog sets neither `target_leverage` nor any depth signal, and `param_schema.py` has
+   no `"CARRY_RECURSIVE_BORROW_LENDING_ONLY"`/`"CARRY_BASIS_PERP_INV"` entries at all (only a shared
+   `"CARRY_RECURSIVE_STAKED"` entry, which both engines read via `staking_yield_enabled` but which was never extended
+   for Family 1/2's actual params). The pure closed-form tracer helpers
+   (`carry_and_yield/defi_carry_recursive_staked_decision_trace.py::net_apr_recursive`/`net_apr_with_perp_funding`,
+   exercised only by `tests/unit/engine/strategies/v2/test_carry_recursive_borrow_archetypes.py`'s formula-arithmetic
+   tests) already take `ltv`/`n_loops` as direct numeric args — confirming these values were always meant to be resolved
+   somewhere — but grepped every call site: none exist in production code.
+3. **No acquisition/hedge-sizing precedent for the non-staking case.** Family 1/2 has no `staking_protocol`, so the
+   plain path's SWAP→STAKE bootstrap (turning starting capital into the held LST) has no analogue — modelling how equity
+   denominated in the share-class coin becomes the held `collateral_asset` (wstETH/weETH/cbETH/sUSDe) is an
+   unprecedented shape. For Family 2's perp-short leg, the one existing basis-hedge precedent in this codebase
+   (`staked_basis.py::compute_dynamic_hedge_ratio`) is explicitly LST-native-rate-based (staking-specific) and has no
+   non-staking equivalent.
+
+**Confirmed the `on_tick()==[]` stub is a deliberate, tracked placeholder, not an oversight**:
+`test_carry_recursive_borrow_archetypes.py`'s own docstring calls it "Phase 5 stub"; the original build plan
+(`plans/archive/2026_05/defi_recursive_borrow_archetypes_2026_05_10.md`, Phase 5/9/12) and its successor
+(`..._post_cutover_2026_06_01.md`) show the INTENDED validation path for these two archetypes was always a _separate_
+harness (Tenderly-fork + "slot 6 PoolMatcher fixtures", Phase 12), not the generic
+`AtomicInstruction`/`V2InstructionRouter`/Group-C path every other archetype uses. That harness was never built:
+`tests/integration/test_recursive_borrow_scenarios.py::test_cell_scenario` is
+`@pytest.mark.skip(reason="... BLOCKED-CREDENTIALS: Tenderly fork + PoolMatcher fixtures required ...")`, and its runner
+`_run_backtest_stub()` literally `raise NotImplementedError(...)`. This is the same "money-path archetype is
+architecturally incomplete, not just missing a key rename" pattern already documented for the liquidation-feed gap above
+— not this task's key-rename bug class.
+
+**Why this is SCOPE, not BUILD**: writing leg-construction code now would require inventing (1) a numeric
+LTV-per-mode-label mapping, (2) a recursion-depth policy, and (3) an unprecedented acquisition + (Family 2) hedge-sizing
+shape — three real design decisions on a leveraged DeFi money-path archetype, none of them a mechanical rename. A
+wrong-but-non-empty instruction here is worse than the current honest `[]`: it could pass a shallow "does `on_tick` emit
+something" check while being economically incorrect, whereas `[]` is at least visibly inert. Per the
+SUB_AGENT_MANDATORY_RULES escalation clause for a money-path architectural ambiguity, this is reported rather than
+guessed.
+
+**Minor incidental finding (not fixed, outside this task's file scope)**:
+`tests/integration/test_recursive_borrow_scenarios.py` imports `_build_carry_recursive_staked` (the **plain**
+archetype's catalog builder) aliased as `_build_carry_recursive_borrow_perp_hedged` for its Family-2 registry, instead
+of `build_carry_basis_perp_inv` — so that file's `FAMILY_2_CELL_IDS` is actually built from the wrong catalog (10
+plain-archetype rows, not `CARRY_BASIS_PERP_INV`'s real 10-row catalog). Harmless today (both happen to satisfy the same
+`len(...) >= 5` assertion) but should be fixed alongside whichever future work actually touches this test file.
+
+### What's still needed (new scoped follow-up, not built here)
+
+1. **Human design decision, strategy-service**: numeric LTV resolution per lending-market mode (extend
+   `read_governance_params_asof`'s governance-params store with an e-mode/isolated-market axis, or hand-pick a reviewed
+   constant table), a recursion-depth policy for Family 1/2, and a Family-2 perp-hedge sizing formula. Only once these
+   are decided does "mirror `_build_loop_legs`'s established SUPPLY→BORROW→[SWAP-if-cross-asset] pattern into a real
+   `AtomicInstruction`" become a mechanical, AO-dispatchable todo (and, per Step 1, needs no new execution-service code
+   to settle correctly in PAPER/BATCH once built).
+2. **Execution-service (out of this task's scope regardless of #1's outcome)**: `RecursiveLoopOrchestrator` needs a real
+   caller — none exists today for ANY archetype, staking or not — and since `RecursiveLoopRequest` is
+   schema-incompatible with `AtomicInstruction`/`AtomicLeg`, that caller needs an explicit translation layer, not a
+   registry-case addition.
+3. The already-scoped Phase 9 (matching-engine DeFi gas-cost model, appears shipped) + Phase 12 (Tenderly-fork +
+   PoolMatcher backtest harness, `BLOCKED-CREDENTIALS`, `NotImplementedError` stub) remain the original plan's own
+   stated intended validation path for these two archetypes and are unrelated to strategy-service's `on_tick` gap above
+   — surfaced here for completeness, not re-scoped.
+
+### Evidence (this section)
+
+Read directly: `unified_api_contracts/internal/architecture_v2/{schemas.py,enums.py,recursive_loop_orchestrator.py}`;
+`execution_service/v2/{router.py,handlers.py,atomic_leg_executor.py}`;
+`execution_service/backtest_v2/action_handlers.py`;
+`execution_service/defi_execution/orchestrators/recursive_loop_orchestrator.py`;
+`execution_service/matching_engine/defi/gas_cost_model.py`; `unified_trading_library/governance_params.py`;
+`strategy_service/engine/strategies/v2/{param_schema.py,carry_and_yield/{recursive_staked.py,staked_basis.py,defi_carry_recursive_staked_decision_trace.py},target_universe/{catalog.py,catalog_carry.py}}`;
+`tests/unit/engine/strategies/v2/test_carry_recursive_borrow_archetypes.py`;
+`tests/integration/test_recursive_borrow_scenarios.py`;
+`plans/archive/2026_05/{defi_recursive_borrow_archetypes_2026_05_10.md,defi_recursive_borrow_archetypes_post_cutover_2026_06_01.md}`.
+Grepped (then read every promising hit): `RecursiveLoopOrchestrator`, `RecursiveLoopRequest`, `ATOMIC_ON_CHAIN`,
+`ltv_mode`, `n_loops` across `execution-service` and `strategy-service`. No code changed in either repo; this section is
+investigation + scoping only.
