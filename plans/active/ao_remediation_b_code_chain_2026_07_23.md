@@ -113,12 +113,22 @@ source:
       `tests/test_git_health_dirty_consecutive_ticks_gate.py` (4 cases, driving the real `post_slot_git_status`
       endpoint): confirmed 2 fail against the pre-fix code (blip-preservation + nudge-suppression) and pass against the
       fix; 2 control cases (normal clear, normal nudge) pass either way.
-- [ ] [INFRA] P2. Extend that same `dirty_consecutive_ticks >= 2` gate to the FF-pull skip decision in
+- [x] ✅ [INFRA] P2. Extend that same `dirty_consecutive_ticks >= 2` gate to the FF-pull skip decision in
       `scripts/dev/slot-cron-ff-pull.sh` so a one-tick phantom dirty can never skip an FF-pull whatever produced it. Do
       NOT re-hunt a reporter-internal race first — `agent-orchestrator@529b0dc` (cross-host row clobber, live) is a
       complete mechanism for the all-repos-simultaneous fingerprint and the phantom has not reproduced since. **Gate**:
       a test asserting a single-tick all-repos-dirty observation neither clears `not_clean_since` nor causes an FF-pull
-      skip.
+      skip. — unified-trading-pm@dd172d6b7: `ff_one()`'s tracked-dirt check now reads a sweep-aggregate
+      `PREV_DIRTY_CONSECUTIVE_TICKS` (read once before the sweep from the same `FF_RESULT_FILE` field item 4 already
+      populates) — a single dirty tick logs `dirty:unconfirmed` and lets the FF attempt proceed (git's own `--ff-only`
+      refuses on a real collision, same reasoning as the pre-existing untracked-dirt case); only once a PRIOR tick was
+      already dirty (`>=1`) does this tick confirm and emit `skip:dirty`. `_write_ff_result`'s worst-of precedence and
+      tick-increment now recognize both `skip:dirty` and `dirty:unconfirmed` as "saw dirt this sweep" so the streak
+      still climbs to confirm on the second tick. `tests/test_slot_cron_ff_pull_dirty_gate.bats`: single-tick dirty →
+      `dirty:unconfirmed` (not `skip:dirty`, ticks=1); two consecutive dirty ticks on the same repo → second tick
+      confirms `skip:dirty` (ticks=2); a clean tick after an unconfirmed dirty tick resets the streak to 0.
+      `not_clean_since` itself is server-side (git_health.py, already gated by item 4) — unaffected by this script-side
+      change.
 - [ ] [INFRA] P2. Verify the unexplained `dirty_files=2172` row for `unified-trading-pm` on host `ip-172-31-0-185` slot
       0 by running `git status --porcelain | wc -l` in that clone and recording which it is. Every non-clean row on the
       `hk` host was verified REAL file-for-file, but this host was unreachable from the audit session, so it is the one
@@ -186,17 +196,21 @@ source:
   item's bats/pytest gate was verified to FAIL against the pre-fix code and PASS against the fix (not just "passes now"
   — a real regression-test confirmation). Both repos pushed clean (`ahead=0`/`behind=0`) as of this entry.
 
+- **2026-07-24 (slot 2, continued)**: Item 5 shipped (`unified-trading-pm@dd172d6b7`, citation inline on its checkbox
+  above) — extended the `dirty_consecutive_ticks >= 2` confirm-gate to the FF-pull skip decision in
+  `slot-cron-ff-pull.sh`, reusing the SAME sweep-aggregate counter item 4 already populates. Gate verified:
+  `tests/test_slot_cron_ff_pull_dirty_gate.bats` extended with 3 new cases (unconfirmed single tick, confirmed second
+  tick, streak-reset-on-clean); all 7 cases in the suite plus the sibling `test_slot_git_status_dirty_count.bats` suite
+  confirmed passing locally (no local bats runner exists in `quality-gates.sh` — only CI installs bats-core — so a local
+  `bats-core` v1.12.0 install into the scratchpad is how these were actually run and confirmed, not just read).
+  `bash -n` syntax-checked.
+
   ## Deferred work after 2026-07-24
 
-  | Item | State                               | Blocked-on                                                                                               |
-  | ---- | ----------------------------------- | -------------------------------------------------------------------------------------------------------- |
-  | 5    | Not done — natural next in sequence | Nobody; next dispatch should pick this up (FF-pull skip gate)                                            |
-  | 6-7  | Not done                            | Nobody; sequential continuation                                                                          |
-  | 8-14 | Not done                            | Nobody; sequential continuation (2 `[BACKEND]` items HELD per Q2 — operator-decision, do not auto-start) |
-
-  Recommended next item: **#5** (extend the `dirty_consecutive_ticks >= 2` gate to the FF-pull skip decision in
-  `slot-cron-ff-pull.sh`) — it is the direct continuation of items 1/3/4's theme and the plan is `sequential: true`, so
-  it is the only unblocked item until it lands.
+  | Item | State    | Blocked-on                                                                                               |
+  | ---- | -------- | -------------------------------------------------------------------------------------------------------- |
+  | 6-7  | Not done | Nobody; sequential continuation — natural next dispatch pickup                                           |
+  | 8-14 | Not done | Nobody; sequential continuation (2 `[BACKEND]` items HELD per Q2 — operator-decision, do not auto-start) |
 
   Lessons worth carrying forward: (a) this environment hit repeated transient SSH-connect stalls to github.com mid-hook
   (`git fetch` stuck in `SYN-SENT`) during this session — not a code bug, resolved on retry/backgrounding each time, no
