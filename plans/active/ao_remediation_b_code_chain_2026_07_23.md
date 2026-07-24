@@ -264,7 +264,19 @@ source:
       `assigned_vm: planning`, confirming every open todo gets a task row. The original measurement is currently VOID,
       not resolved — that plan is `assigned_vm: NA` after the fleet-wide dispatch pause, so absent task rows are correct
       behaviour rather than the reopen-drop defect. If the BLOCKED todos are again absent while the plan IS ingested,
-      the defect is live. **Gate**: the per-todo task-row comparison recorded with an explicit live-or-clear verdict.
+      the defect is live. **Gate**: the per-todo task-row comparison recorded with an explicit live-or-clear verdict. ⏳
+      **RE-CHECKED 2026-07-24 (slot 4), still gated — NOT closable yet**: re-read the plan's live frontmatter
+      (`plans/active/l2_book_microstructure_capture_2026_07_13.md`) — still `assigned_vm: NA`, unchanged since the
+      2026-07-23 18:01:52 +0530 pause commit (`unified-trading-pm@468a0f580`, "pause AO dispatch on 19 active plans",
+      main·harsh_pc). `git log --follow` on the plan file confirms no `assigned_vm` edit since that commit — the pause
+      has not been lifted. Live backlog cross-check (`GET /api/backlog`) still shows exactly **1** `l2_book%` task row
+      (`l2_book_microstructure_capture-001`, `done`, now flagged `orphan — no longer in backlog.yaml` since regen
+      stopped deriving from a paused plan), while the plan file itself still carries its **2** open `- [ ]` todos
+      (`BLOCKED-OPERATOR-DECISION` / `BLOCKED-DATA-CORRECTNESS`, both unchanged). **The precondition for this todo's own
+      Gate is still unmet — a live-or-clear verdict on the reopen-drop defect cannot be produced while the plan stays
+      unignested.** This is an operator/main-owned pause spanning 19 plans, not an infra-fixable condition — the correct
+      action is to leave this open and re-check, not to flip `assigned_vm` myself or claim a false resolution. Re-test
+      only when `l2_book_microstructure_capture_2026_07_13.md` actually returns to `assigned_vm: planning`.
 - [ ] [REVIEW] P2. Re-run the sports closeout hygiene audit end-to-end once the plan-quality defense lines are live and
       confirm all four lines fire. This is gated on the two todos above plus the hard-fail wiring; do not start it
       before they land. **Gate**: the audit output shows each of the four defense lines producing its expected signal,
@@ -460,3 +472,13 @@ source:
   (`agent-orchestrator@fc9ac53`); no further code change indicated. This item's own NOTE said to close or collapse the
   duplicate in `ao_open_issues_consolidated_close_out_2026_07_17.md` Phase 5 first — done in the same commit, its entry
   now points back here rather than carrying its own investigation.
+
+- **2026-07-24 (slot 4)**: Re-checked the l2_book task-row-divergence re-test item (citation inline on its checkbox
+  above). Verified live: `plans/active/l2_book_microstructure_capture_2026_07_13.md` is still `assigned_vm: NA`
+  (`git log --follow` on the file shows no `assigned_vm` edit since the 2026-07-23 18:01:52+0530 fleet-wide pause commit
+  `unified-trading-pm@468a0f580`); live `GET /api/backlog` still shows exactly 1 `l2_book%` task row
+  (`l2_book_microstructure_capture-001`, `done`, orphaned out of `backlog.yaml`) against the plan's 2 still-open `- [ ]`
+  todos. The todo's own Gate — "a live-or-clear verdict on the reopen-drop defect" — genuinely cannot be produced while
+  the plan stays un-ingested, so the checkbox stays open rather than being force-closed; lifting the 19-plan pause is an
+  operator/main decision, not something this slot should do unilaterally to make the item testable. No code change; this
+  is a verification-only re-check, recorded so the next pass doesn't have to re-derive the same evidence from scratch.
