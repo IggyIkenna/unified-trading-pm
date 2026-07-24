@@ -95,6 +95,25 @@ Anyone setting `allowed_venues` in a strategy config today, believing it constra
 inert. Per the workspace's "delete deprecated code, no shims" rule this should be wired up for real or removed, not left
 as a plausible-looking trap.
 
+**RESOLVED 2026-07-24 (`strategy-service@813ec66b`) — DELETED, not wired up.** Re-verified before deleting: the class
+has exactly two fields (`enabled`, `allowed_venues`) and BOTH have zero consumers repo-wide (grepped
+`smart_order_routing` across all `.py`/`.yaml`/`.md` — only definition sites, YAML config population, and one
+construction test, never an attribute read) — so the whole `SmartOrderRoutingConfig` class was dead, not just
+`allowed_venues` within an otherwise-live class. Removed: the `SmartOrderRoutingConfig` Pydantic model
+(`config_loader.py`) + its `smart_order_routing` field on `StrategyConfig`; `DeFiSORConfigDict` TypedDict + its
+`smart_order_routing` field on `DeFiStrategyConfigDict` (`types.py`); the `smart_order_routing:` block (both `enabled:`
+and `allowed_venues:` keys) from all 7 YAML configs that set it (`configs/liquidation_capture_eth.yaml`,
+`strategy_service/configs/{active_lp_eth_usdc,active_lp_sol_usdc,basis_trade_multi_coin,basis_trade_multi_venue, lending_arb_arbitrum,lending_arb_eth}.yaml`);
+the "Smart Order Routing (DeFi)" section + JSON example block from `docs/CONFIG_SCHEMA.md`; the
+`SmartOrderRoutingConfig` import + construction call from `tests/unit/test_config_loader.py`. **Correction to this doc's
+own file list**: `tests/unit/test_schema_robustness.py` was NOT touched — re-grepping found its `allowed_venues` tests
+exercise a completely different, UAC-defined `StrategyInstruction.allowed_venues` field
+(`unified_api_contracts.internal.domain.strategy_service.instruction`, re-exported via
+`strategy_service/models/instruction.py`), unrelated to `SmartOrderRoutingConfig`/`DeFiSORConfigDict` — same field name,
+different class/repo, real (not verified dead) execution-routing field on the instruction schema. Final grep for
+`SmartOrderRoutingConfig|DeFiSORConfigDict|smart_order_routing` across the repo: zero hits. Quality gates green (fresh
+foreground run, exit 0); pushed via quickmerge, landed on `live-defi-rollout`.
+
 ## Finding 3 — two independently-maintained "eligible venues per archetype" registries, no cross-check
 
 - `strategy-service`'s `target_universe` catalog files (hardcoded per-archetype tuples — what actually runs in
@@ -409,8 +428,8 @@ run SEQUENTIALLY, not in parallel:
       catalog-declared currency universe to build a day-partition tick loader against. Flagged, not silently dropped — a
       currency constraint for these three would need new logic inside the engines themselves, a materially different
       (and separately-scoped) piece of work.
-- [ ] [BACKEND] P2. Side-decision 1 (not started): wire `SmartOrderRoutingConfig.allowed_venues` for real, or delete it
-      (dead code, Finding 2 above).
+- [x] [BACKEND] P2. Side-decision 1 — **DELETED 2026-07-24, `strategy-service@813ec66b`** (dead code, Finding 2 above;
+      whole class was dead, not just `allowed_venues` — see Finding 2's resolution note).
 - [ ] [BACKEND] P2. Side-decision 2 (not started): reconcile strategy-service's catalog vs UAC's
       `archetype_leg_spec_seeds.py` (Finding 3 above, two unreconciled registries).
 
