@@ -19,11 +19,13 @@ related: [/plans/active/sports_closeout_batch1_ao_ready_2026_07_24.md]
 parent_epic: manifest_master
 priority: P3
 created: "2026-07-24"
-author: slot-6
 assigned_vm: NA
 source: [sports_closeout_batch1_ao_ready_2026_07_24.md todo 4]
 locked_by:
 resolved_by:
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
 ---
 
 # read_availability_index() silent-empty on missing GCP_PROJECT_ID
