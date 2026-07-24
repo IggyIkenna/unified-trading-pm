@@ -1,0 +1,88 @@
+---
+doc_type: plan
+title: AO held safety fixes — dispatch (liveness-by-progress gate + cross-role reply routing)
+summary:
+  The two safety-sensitive backend fixes held out of ao_remediation_a/B per operator ruling Q2 (2026-07-23), now
+  dispatched per operator ruling 2026-07-24 — checked and confirmed to touch NO file any ao_remediation_b_code_chain
+  todo touches, so they run in parallel now rather than waiting for Plan B to finish. Each already carries a stated
+  regression-test gate in its own todo text, which the operator confirmed IS the review mechanism (a gate + green QG) —
+  no extra PR-review ceremony required.
+status: active
+nature: process
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [agent-orchestrator]
+scope: [engineer]
+tags: [agent-orchestrator, worker-liveness, cross-role-messaging, plan-reconcile]
+related:
+  [
+    /plans/active/ao_issue_docs_consolidated_remediation_2026_07_23.md,
+    /plans/active/ao_remediation_a_independent_fixes_2026_07_23.md,
+    /plans/active/ao_remediation_b_code_chain_2026_07_23.md,
+    /plans/active/issues/wedge_detector_lacks_liveness_by_progress_false_positive_2026_07_21.md,
+    /plans/active/issues/agent_reply_cannot_address_a_different_role_silent_cross_role_blind_spot_2026_07_22.md,
+  ]
+created: 2026-07-24
+last_updated: 2026-07-24
+parent_epic: orchestrator_master
+assigned_vm: planning
+execution_scope: orchestrator-agent
+priority: P1
+estimate_class: refactor
+estimate_baseline_ai_days: 1
+estimate_calibrated_ai_days: 0.4
+assigned_role: backend_engineer
+drift_direction: advance-code
+locked_by:
+locked_since:
+supersedes:
+superseded_by:
+depends_on:
+source:
+  "Split from ao_issue_docs_consolidated_remediation_2026_07_23's 'Held for operator review (Q2)' section per operator
+  ruling 2026-07-24: no file collision with ao_remediation_b_code_chain_2026_07_23 -> dispatch now instead of waiting."
+---
+
+# AO held safety fixes — dispatch
+
+> **Split from
+> [`ao_issue_docs_consolidated_remediation_2026_07_23`](/plans/active/ao_issue_docs_consolidated_remediation_2026_07_23.md)'s
+> "Held for operator review" section.** Operator ruling 2026-07-23 (Q2) held these out of the original dispatch because
+> each touches machinery where a careless change is dangerous (at-least-once message delivery; genuine wedge detection).
+> Operator ruling 2026-07-24: dispatch both now, without waiting for
+> [`ao_remediation_b_code_chain_2026_07_23`](/plans/active/ao_remediation_b_code_chain_2026_07_23.md) to finish, **on
+> the condition that neither collides with Plan B's file set** — checked at authoring (below) and confirmed clear. The
+> stated regression-test gate on each todo, plus a green `quality-gates.sh`, IS the review mechanism; no separate
+> PR-review step is required.
+
+> **Parallel-safety proof (checked at authoring 2026-07-24):** todo 1 touches only
+> `server/worker_liveness/_git_alerts.py`; todo 2 touches only `server/routes/agents.py` + `server/models/agents.py`.
+> Plan B's 14 todos touch `scripts/dev/slot-git-status-report.sh`, `scripts/dev/slot-cron-ff-pull.sh`,
+> `server/routes/git_health.py`, `orphan_reap.py`, worker-liveness-watchdog kick-escalation logic, and shared-doc
+> recorders — no overlap with either file set here, and the two todos here don't share a file with each other either, so
+> both run concurrently.
+
+## Todos
+
+- [ ] [BACKEND] P2. Add a liveness-by-progress gate to `maybe_alert_git_staleness` and `maybe_nudge_on_red_repos` in
+      `server/worker_liveness/_git_alerts.py` so a burst-committing worker is not classified as wedged. Suppress or
+      soften when the worktree's last commit (`git log -1 --format=%ct`) is newer than the sustain window, or a live
+      child process runs under it (`pgrep -f <worktree>`). Today these key purely on `dirty_files`/`ahead`/`behind` plus
+      age, and `_git_surfaces_pass` runs unconditionally for every slot — its own docstring records that the 2026-07-14
+      coverage-gap fix REMOVED the live-worker gate, so an actively-working slot has no exemption. **Gate**: a
+      regression test where a recent-commit-but-still-dirty worker does NOT fire the staleness alert, with the
+      genuinely-stale-slot tests still green.
+- [ ] [BACKEND] P1. Route `agent_reply()` in `server/routes/agents.py` to the ORIGINATING role when the answered message
+      came from a peer, instead of always the replier's own thread. It currently calls `post_agent_message_by_role` with
+      `target_role=agent.role, direction="from_agent"` unconditionally, and `AgentReplyRequest` in
+      `server/models/agents.py` has no cross-role target field — so a reply to a peer lands on the replier's own thread
+      and the peer never sees it in its poll. When `in_reply_to` resolves to a message whose `from_role` differs, post
+      `direction="to_agent"` to that `from_role` plus the tmux nudge. **Gate**: a regression test proving a cross-role
+      reply lands in the target role's next `/poll` (not merely its `/history`), with the existing same-role reply-ack
+      tests still green.
+
+## Progress Log
+
+- **2026-07-24**: Authored by splitting the two Q2-held todos out of `ao_issue_docs_consolidated_remediation_2026_07_23`
+  per operator ruling — dispatch now, confirmed no file collision with Plan B. Born `status: active`,
+  `assigned_vm: planning` — dispatchable to the AO fleet.

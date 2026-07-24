@@ -173,6 +173,11 @@ fi
 #   reconciled against the actual file(s) instead of just a count
 #   (slot5_deployment_api_dirty_false_positive_2026_07_13.md — a bare "1 dirty file"
 #   with no path could never be cross-checked against a simultaneous manual `git status`).
+#   dirty_files is DERIVED from this same sample array's length (never an independent
+#   count) — see the note inline below — so for a repo with >5 dirty files dirty_files
+#   reads as 5 (capped), not the true total. Accepted trade-off: dirty_files and
+#   dirty_files_sample can never diverge (ao_remediation_b_code_chain_2026_07_23.md
+#   item 1); every consumer only ever tests dirty_files >0/==0, never an exact count.
 classify_repo() {
     local repo_dir="$1"
     local repo_name branch local_sha int_branch state dirty_files ahead behind dirty_oldest_iso unpushed_plans dirty_sample
@@ -196,7 +201,6 @@ classify_repo() {
     unpushed_plans=""
     dirty_sample=""
     if [[ -n "${porcelain}" ]]; then
-        dirty_files=$(printf '%s\n' "${porcelain}" | wc -l | tr -d ' ')
         # Find oldest mtime among dirty files; also collect unpushed plan files for
         # unified-trading-pm repos (paths matching plans/active/*.md or plans/active/issues/*.md).
         # Also capture up to 5 raw porcelain lines (status code + path) so a false-positive
@@ -223,6 +227,15 @@ classify_repo() {
                 oldest_epoch="${ep}"
             fi
         done <<< "${porcelain}"
+        # dirty_files is DERIVED from sample_list's length — the same array the loop
+        # above populates — never an independent `wc -l` on the raw capture. This is
+        # the single source of truth: the two numbers can no longer diverge, which is
+        # what made `dirty_files=1` with an empty `dirty_files_sample` possible before
+        # (git_health_phantom_dirty_flicker_ff_cron_race_2026_07_21.md — review proved
+        # via cat -A/hexdump the tree emitted ZERO bytes while the old wc-l-based count
+        # still posted 1). Cause-agnostic: whatever upstream artifact injects a stray
+        # byte, dirty_files can never exceed what this loop actually kept.
+        dirty_files="${#sample_list[@]}"
         dirty_oldest_iso=$(epoch_to_iso "${oldest_epoch}")
         # Build pipe-separated list of unpushed plan basenames.
         if [[ "${#plan_list[@]}" -gt 0 ]]; then
