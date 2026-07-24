@@ -22,12 +22,14 @@ related:
     /codex/05-infrastructure/live-deployment-monitoring.md,
     plans/active/deployment_ui_cost_per_day_accuracy_2026_07_20.md,
     /plans/archive/2026_07/deployment_ui_fleet_tab_consolidation_2026_07_21.md,
+    /plans/active/deployment_api_cache_oom_and_ui_latency_remediation_2026_07_13.md,
   ]
 created: 2026-06-22
 authoritative_for:
   [
     DeploymentUmbrella classification (live/batch/paper/experiment) + deployment-target inventory API + health/cockpit
     rollup,
+    deployment-api bounded-cache architecture + manifest live-build OOM guard,
   ]
 referenced_by:
   [
@@ -40,7 +42,7 @@ referenced_by:
     plans/active/issues/terminated_vm_disk_orphan_no_reaper_2026_06_30.md,
   ]
 owner:
-last_reviewed: 2026-07-21
+last_reviewed: 2026-07-24
 code_refs:
   [
     deployment-api/deployment_api/services/cost_observability/service.py,
@@ -48,6 +50,9 @@ code_refs:
     deployment-api/deployment_api/routes/deployments_inventory.py,
     deployment-api/deployment_api/routes/_run_log_resolution.py,
     deployment-api/deployment_api/routes/_run_log_tail.py,
+    deployment-api/deployment_api/utils/bounded_cache.py,
+    deployment-api/deployment_api/utils/worker_identity.py,
+    deployment-api/deployment_api/health_routes.py,
     unified-trading-library/unified_trading_library/deployment_registry.py,
     unified-trading-library/unified_trading_library/lifecycle/daemon.py,
     deployment-ui/src/pages/Deployments.tsx,
@@ -435,6 +440,67 @@ deployable service **fails deployment-service's `quality-gates-v2`** ("fails QG"
 per-repo bash check cannot read a CENTRALISED Python registry, so the centralised guard is the SSOT; `batch-service`
 repos register as Cloud Run JOBS, not here.)
 
+## deployment-api cache & memory architecture (2026-07-13/14 OOM remediation)
+
+`uts-shared-deployment-api` OOM-crash-looped repeatedly the week of 2026-07-13 (20 kills in 75 min on a 4GiB container).
+Full incident record, cache-island inventory (B1–B18), and the joint operator walkthrough that decided the fixes below
+live in
+[`deployment_api_cache_oom_and_ui_latency_remediation_2026_07_13.md`](/plans/active/deployment_api_cache_oom_and_ui_latency_remediation_2026_07_13.md)
+— this section is the durable architecture summary, not a duplicate of that narrative.
+
+**Root cause, in one line**: every in-process cache is per-gunicorn-worker (×4 by default), several were unbounded with
+lazy-only expiry, and the data-status manifest cell-grid compute path could allocate tens of GB in a single request — no
+worker-count or RAM-limit tuning fixes an unbounded allocator.
+
+**Bounded-cache primitive** — `deployment-api/deployment_api/utils/bounded_cache.py`: a `cachetools.TTLCache`-backed
+`BoundedCache` (max-entries + TTL + evict-on-set), registered by name in a process-wide registry so every cache's stats
+are enumerable via `GET /api/debug/cache-stats` (`health_routes.py`), plus a single periodic sweeper
+(`start_sweeper`/`stop_sweeper`, wired into `deployment_api.lifespan`) that proactively expires cold keys — a `TTLCache`
+only expires lazily on next-touch, so an unrepeated key would otherwise sit on expired memory forever between touches.
+Every previously-unbounded cache site was migrated onto this primitive in one commit (`deployment-api@0702aa3`): the
+data-status mega-cache now stores gzipped bytes (not live dicts) keyed without the `freshness_date` churn and serves a
+pre-truncated variant (killing the per-hit `deepcopy`), the drilldown/log/GitHub response caches gained bounds, one dead
+unbounded twin was deleted, and the in-memory tier of `UnifiedCache` was bounded while its unused GCS whole-blob-rewrite
+tier was deleted outright (confirmed zero callers) rather than fixed.
+
+**Manifest live-build OOM guard** (`deployment-api@030779f`) — the data-status cell-grid build is the actual memory
+elephant (measured 18GB for instruments-service / 81GB for MTDS / 56GB for a 3-month MDPS window — no RAM tier survives
+an unbounded compute of it). Two-layer defense on the live-build fallback path (the precomputed `full.json.gz` rollup
+blob is still the fast/cheap path when fresh — see the rollup-worker note below): (1) a pre-flight byte-budget estimator
+refuses or serves-stale before attempting a build sized to blow the container; (2) any build that passes the estimate
+still runs inside a `resource.setrlimit(RLIMIT_AS, ...)`-bounded child process, so an underestimate raises a catchable
+error in the child instead of OOM-killing the parent worker (and therefore every other in-flight request on it).
+
+**`/api/vm-deployments` SWR snapshot** (`deployment-api@3f1fc66`) — this endpoint was the single worst offender (94s
+avg, uncached, a full GCS registry + per-VM Compute API walk on every poll). Given the same 45s stale-while-revalidate
+single-flight pattern already proven on the inventory/umbrella endpoints: instant-after-first-load instead of a 94s
+wait, and concurrent first-pollers collapse onto one in-flight refresh rather than each firing their own walk.
+
+**Background sync — single loop, not one per worker** (`deployment-api@6d5a225` + `deployment-service@650e418`) —
+`auto_sync_running_deployments` used to start once per gunicorn worker (×4 duplicate GCS list+read loops per instance,
+contending on per-deployment locks). Now leader-elected via `worker_identity.py` (one loop per instance) plus an
+idle-skip when the scanned prefix is empty.
+
+**Worker count + container sizing** — `WORKERS=2` is applied via the `cloudbuild.yaml` deploy step's `--update-env-vars`
+(survives redeploys; not a manual live `gcloud` mutation) — halves the per-worker cache-copy baseline (~2.48GB → ~1.24GB
+idle at 4 workers → 2). **⚠️ SUPERSEDED note on the plan's own D2 decision** ("keep 4GiB"): the deployed container was
+bumped to **16Gi / 4CPU on 2026-07-17**, after this remediation landed — the data-status page mounts several heavy
+pandas/pyarrow-class dependencies on cold start, and a first-mount burst still packed multiple of them onto one 8Gi
+instance and OOM'd it (measured live; Cloud Run gen2 caps memory at 8Gi for 2 CPU, so 16Gi required bumping to 4 CPU
+too). The bounded-cache + OOM-guard work above is still what makes the _steady-state_ footprint small; 16Gi is headroom
+for the cold-start burst, not evidence the steady-state fixes didn't work.
+
+**Rollup-worker cost-stop** (`deployment-api@8d260ad` + `deployment-service@08d29b0`) — the separate
+`uts-prod-data-status-rollup-svc` (writes the `full.json.gz` blobs the fast path above reads) processed all 12 monitored
+services sequentially in one process; one service's build OOM-killed the whole container, so everything queued after it
+in the list never got a chance to write its blob. Fixed by giving each service's compute+write its own
+`multiprocessing.get_context("spawn")` child bounded by `RLIMIT_AS` — one oversized service now raises a catchable
+`MemoryError` in its own throwaway child instead of taking the other 11 down with it.
+
+**Debug + alerting** — `GET /api/debug/cache-stats` (entries/estimated-bytes per named `BoundedCache`) is the
+human-facing surface for the architecture above; the memory-utilization alert this feeds is documented in the alerting
+layer below.
+
 ## Out-of-band liveness + data-pipeline self-monitoring (2026-06-24)
 
 Three layers, each independent of the one it watches (so a dead watcher is never invisible):
@@ -478,15 +544,14 @@ Three layers, each independent of the one it watches (so a dead watcher is never
   (alerting-service is auth-gated → accept 403 = alive-but-protected). **No `notification_rate_limit`** (API rejects it
   for metric-threshold policies).
 - **deployment-api memory (2026-07-14, `deployment_api_memory_alert.tf`)** — `uts-shared-deployment-api`
-  OOM-crash-looped twice this week (4GiB container, unbounded per-worker caches); uptime checks (Layer 3 above) only
-  fire AFTER the service is already down, i.e. post-crash-loop. Closes that gap one step earlier:
+  OOM-crash-looped twice this week (4GiB container, unbounded per-worker caches — see § "deployment-api cache & memory
+  architecture" above for the full remediation); uptime checks (Layer 3 above) only fire AFTER the service is already
+  down, i.e. post-crash-loop. Closes that gap one step earlier:
   `google_monitoring_alert_policy.deployment_api_memory_high` fires on
   `run.googleapis.com/container/memory/utilizations` &gt;85% sustained 300s, reusing the SAME `monitoring_deadman_email`
-  channel as the uptime alert above (deliberately not a new channel). Remediation SSOT:
-  `plans/active/deployment_api_cache_oom_and_ui_latency_remediation_2026_07_13.md` (bounded-cache architecture, the
-  manifest live-build OOM guard, `WORKERS=2`). Applied live via targeted `tofu apply` 2026-07-14 (policy
-  `projects/central-element-323112/alertPolicies/10817162460883602732`) — remember **no auto-apply pipeline exists for
-  `terraform/gcp/`** (see the box below), a shipped `.tf` here is not live until someone runs `tofu apply`.
+  channel as the uptime alert above (deliberately not a new channel). Applied live via targeted `tofu apply` 2026-07-14
+  (policy `projects/central-element-323112/alertPolicies/10817162460883602732`) — remember **no auto-apply pipeline
+  exists for `terraform/gcp/`** (see the box below), a shipped `.tf` here is not live until someone runs `tofu apply`.
 
 > **No terraform-apply pipeline for `terraform/gcp/`** — there is NO auto-apply. New infra there (uptime checks,
 > schedulers) needs a deliberate `tofu apply` (remote GCS state `uts-terraform-state-{pid}`, prefix

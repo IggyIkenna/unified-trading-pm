@@ -569,9 +569,24 @@ Phase C — verification + guardrails:
       `google_monitoring_alert_policy.deployment_api_memory_high` (`>85%` sustained 300s,
       `run.googleapis.com/container/memory/utilizations`), reusing the existing `monitoring_deadman_email` channel
       already wired to this service's uptime alert (not a new channel) `deployment-service@c6c6c8f`.
-- [ ] [BACKEND] P2. Post-phase codex audit — update `/codex/05-infrastructure/deployment-observability.md` (cache
+- [x] ✅ [BACKEND] P2. Post-phase codex audit — update `/codex/05-infrastructure/deployment-observability.md` (cache
       architecture + stats endpoint + alert) and `/codex/04-architecture/runtime-deployment-topology.md` if worker
-      topology changed; SUPERSEDED-banner any invalidated statements.
+      topology changed; SUPERSEDED-banner any invalidated statements. **Resolved** — `unified-trading-pm@<pending>`.
+      `runtime-deployment-topology.md` checked (grepped for `WORKERS`/`gunicorn`/container-memory mentions): zero hits,
+      no stale statement existed there, no edit needed. `deployment-observability.md` gained a new "deployment-api cache
+      & memory architecture" section (the `bounded_cache.py` primitive + registry + sweeper,
+      `GET /api/debug/cache-stats`, the manifest live-build OOM guard's two layers, the `/api/vm-deployments` SWR
+      snapshot, background-sync leader-election, `WORKERS=2`) and a **SUPERSEDED note on this plan's own D2 decision** —
+      verified live via `cloudbuild.yaml` that the deployed container is actually **16Gi/4CPU** (bumped 2026-07-17,
+      after this plan's "keep 4GiB" decision), not the 4GiB this plan settled on; documented why (a cold-start burst on
+      the data-status page's heavy deps, not evidence the steady-state cache fixes failed).
+      `billing-cost-observability.md` (the plan's own §4b-designated SSOT, previously never updated for this) gained a
+      SUPERSEDED banner on its stale "daily-refresh-cached window fetch" claim plus two new sections: the
+      DuckDB-over-GCS-parquet snapshot architecture (verified against the actual `_load_window_table`
+      snapshot-first/live-fallback code, not just the plan's prose) and the AWS Athena WIF credential fix. All three
+      codex claims spot-verified against live code/config in the `.tabs/3` worktree before writing (commit SHAs resolve,
+      `cost_snapshot_worker.py`/`bounded_cache.py`/`aws_wif.py` exist, `WORKERS=2` + `16Gi` both present in
+      `cloudbuild.yaml`) rather than transcribed from the plan's own narrative.
 
 ## 6. Progress log
 
@@ -776,3 +791,17 @@ Phase C — verification + guardrails:
   `deployment-ui` (no open PRs) were both already clean. Two historical `quality-gates-v2` FAILUREs on deployment-api
   (11:30Z, 13:33Z) and one on deployment-service (14:35Z) were confirmed superseded by later green runs on the same
   branch — not open problems.
+- 2026-07-24 (slot-3, `.tabs/3` worktree per operator instruction to keep new work off the root clone): Closed the one
+  remaining todo — the Phase C post-phase codex audit. Read the full plan first, then spot-verified every claim against
+  live code in this worktree rather than transcribing the plan's own prose: all 5 cited commit SHAs resolve in
+  `deployment-api`; `bounded_cache.py`/`cost_snapshot_worker.py`/`aws_wif.py`/`worker_identity.py` all exist at the
+  cited paths; `GET /api/debug/cache-stats` is real (`health_routes.py:242`); `cloudbuild.yaml` confirms both
+  `WORKERS=2` AND, unexpectedly, `--memory 16Gi --cpu 4` (bumped 2026-07-17, three days after this plan's own D2 "keep
+  4GiB" decision) — flagged as a SUPERSEDED note rather than silently repeating the stale claim. Also found
+  `billing-cost-observability.md` (this plan's own §4b-designated SSOT) had **never** been touched despite the costs
+  DuckDB-snapshot architecture having shipped 10 days earlier — its "daily-refresh-cached window fetch" line was
+  actively describing the OLD per-request BQ/Athena path, not the shipped snapshot-first one; verified the real read
+  path in `service.py::_load_window_table` (snapshot-first via `CostSnapshotStore`, live-fallback only on
+  missing/stale/error) before writing the replacement section, rather than trusting the plan's §4b design narrative to
+  still match what actually shipped. `runtime-deployment-topology.md` grepped for `WORKERS`/`gunicorn`/memory — zero
+  hits, genuinely nothing stale there, no edit made. All todos in this plan are now done (18/18) — archive-eligible.
