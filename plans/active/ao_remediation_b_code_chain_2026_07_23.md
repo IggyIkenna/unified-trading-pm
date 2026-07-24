@@ -188,12 +188,33 @@ source:
       observation clears the streak → next failure starts over at 1, not 3). All 3 confirmed FAILING against the pre-fix
       code (`git stash` on the source file only) and PASSING against the fix before shipping. Full `quality-gates.sh`
       green (1617 passed, 1 skipped, ruff + basedpyright clean) on the shipped SHA.
-- [ ] [INFRA] P2. Add a reclaim-and-push path for a killed or idle slot whose worktree holds committed-but-unpushed
+- [x] ✅ [INFRA] P2. Add a reclaim-and-push path for a killed or idle slot whose worktree holds committed-but-unpushed
       work. `orphan_reap.py` reaps processes and tmux only — its own docstring says so, and it contains no git logic —
       while `_maybe_send_sync_nudge` merely enqueues a slot message, which is a no-op on a dead worker. Note
       `agent-orchestrator@529b0dc` does NOT cover this: it is a git-status keying fix, not a push path. **Gate**: a slot
       killed with local commits ahead of origin has them pushed (or inherited) without a human touching the box,
-      evidenced by the commits appearing on `origin/live-defi-rollout`.
+      evidenced by the commits appearing on `origin/live-defi-rollout`. — agent-orchestrator@8aaf928a0: confirmed
+      `resolve_dirty_state`/`commit_and_push_dirty_repos` are keyed on `git status --porcelain` — an EMPTY porcelain
+      (clean tree) short-circuits to `action="clean"` before ANY ahead/behind check runs, so a predecessor who committed
+      properly (per the QG-before-commit HARD RULE) but was killed before running quickmerge left those commits unpushed
+      forever. New `push_or_preserve_ahead_commits` (`server/worktree_clean_check/_ahead_push.py`): for a clean repo
+      with HEAD ahead of `origin/<base>` (not also behind — diverged stays FM5's problem), verifies a matching
+      `.qg_last_passed_sha` sentinel (the SAME sentinel `quickmerge --agent` itself trusts) as objective proof the
+      commit was QG-clean; only then mirrors `quickmerge.sh`'s own already-committed-clean-tree path (stamp the
+      `Quickmerge:` trailer if missing, push straight to `origin/<base>` — the local `check_strict_quickmerge.py`
+      pre-push hook is the existing safety net either way). No matching sentinel → never guess: falls back to a
+      content-addressed `wip-preserve/` ref (same naming scheme as the orphan-WIP path) without touching local HEAD, so
+      work is preserved but unverified code never lands on the shared branch. FM8 liveness-gated with the same
+      discriminator `resolve_dirty_state` uses. Wired as `WorkerLivenessWatchdog._sweep_unpushed_slots()`, called from
+      `_tick_once()` alongside `_sweep_dirty_slots()` (item 7) — same enumerate-all-slots/skip-live-tmux loop, kept as
+      its own method since the git check is a different concern (ahead-of-origin on a clean tree, not dirty-state
+      resolution). `tests/test_watchdog_unpushed_sweep.py` (7 cases, real git repo + bare remote, same harness as
+      `test_watchdog_dirty_sweep.py`): sentinel-verified push lands on `origin/live-defi-rollout` with the trailer
+      stamped (the gate scenario); missing sentinel falls back to `wip-preserve/` with local HEAD untouched; live tmux /
+      live claim peer / dirty repo / not-ahead / missing-worktree all correctly no-op. All 7 confirmed FAILING against
+      the pre-fix code (`AttributeError: no _sweep_unpushed_slots`, both git-stash and `_ahead_push.py` removed) and
+      PASSING against the fix. Full `quality-gates.sh` green (1624 passed, 1 skipped, ruff + basedpyright clean) on the
+      shipped SHA.
 - [ ] [BACKEND] P3. Root-cause slot 4's elevated short-lived-orphan rate, or record an explicit accept-as-cadence
       verdict with the comparison data. Compare `slot_resume_respawned`, `autospawn_failed`, `watchdog_slot_killed` and
       `tmux_session_lost` rates for slot 4 against the other slots NORMALISED PER DISPATCH — raw counts are misleading
@@ -306,9 +327,27 @@ source:
   fix — not just "passes now." Full `quality-gates.sh` green (1617 passed, 1 skipped, ruff + basedpyright clean) on the
   shipped SHA before quickmerge.
 
+- **2026-07-24 (slot 3, continued)**: Item 9 shipped (`agent-orchestrator@8aaf928a0`, citation inline on its checkbox
+  above) — `push_or_preserve_ahead_commits` (`server/worktree_clean_check/_ahead_push.py`) closes the gap confirmed by
+  reading `resolve_dirty_state`: it is keyed on `git status --porcelain`, so a CLEAN tree (predecessor already
+  committed) short-circuits to `action="clean"` before any ahead/behind check runs — nothing ever pushed a properly-
+  committed-but-unpushed predecessor commit. The new path verifies the `.qg_last_passed_sha` sentinel (proving the
+  commit was QG-clean) before mirroring `quickmerge.sh`'s own already-committed-clean-tree behavior (stamp the
+  `Quickmerge:` trailer, push straight to `origin/<base>`); no sentinel match → preserve on a `wip-preserve/` ref
+  without touching local HEAD, never guessing. Wired into `WorkerLivenessWatchdog._tick_once()` as
+  `_sweep_unpushed_slots()`, sibling to item 7's `_sweep_dirty_slots()` (same loop shape, kept separate since the git
+  check is orthogonal). Gate: `tests/test_watchdog_unpushed_sweep.py` (7 cases, real git repo + bare remote) — the
+  literal gate scenario (sentinel-verified push lands on `origin/live-defi-rollout` with the trailer stamped) plus 6
+  guard cases (no-sentinel fallback, live tmux, live claim peer, dirty repo, not-ahead, missing worktree), all confirmed
+  FAILING pre-fix (`AttributeError`) and PASSING post-fix. Full `quality-gates.sh` green (1624 passed, 1 skipped) on the
+  shipped SHA. Lesson for whoever picks up item 10 next: the test harness needed its own `.gitignore` for
+  `.qg_last_passed_sha` (mirroring the real repo's `.gitignore:93`) — without it the sentinel file itself reads as an
+  untracked dirty file and trips the porcelain-clean check, silently producing zero results (caught by running the new
+  test standalone before trusting it, not by the fail-before/pass-after pass alone).
+
   ## Deferred work after 2026-07-24
 
-  | Item  | State    | Blocked-on                                                                                  |
-  | ----- | -------- | ------------------------------------------------------------------------------------------- |
-  | 9     | Not done | Nobody; sequential continuation — natural next dispatch pickup                              |
-  | 10-14 | Not done | Nobody; sequential continuation (items 10 + 12 `[BACKEND]` HELD per Q2 — operator-decision) |
+  | Item  | State    | Blocked-on                                                                         |
+  | ----- | -------- | ---------------------------------------------------------------------------------- |
+  | 10    | Not done | `[BACKEND]` HELD per Q2 (operator-decision) — next in sequence, not auto-startable |
+  | 11-14 | Not done | Nobody; sequential continuation (item 12 `[BACKEND]` also HELD per Q2)             |
