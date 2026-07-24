@@ -338,6 +338,14 @@ runaway backstop). QG is never run below 16 GB, so no host ever needs the oversi
       GB and admitted runs' RSS ramps AFTER the admission-time valve check. Consider (a) prioritizing the runtime
       abort-monitor (directly addresses the post-admission ramp — matters most on small hosts) and/or (b) a lower
       `QG_MEM_SAFETY_FRAC` / effective concurrency on ≤ 32 GB hosts. No change needed while no OOM occurs.
+- [ ] [INFRA] P3. `PYRIGHT_TIMEOUT` default (120s in `base-service.sh`'s `run_timeout "${PYRIGHT_TIMEOUT:-120}"`) is too
+      low for a repo the size of features-service (hundreds of files) even under only moderate host load — observed
+      2026-07-24 on a ~30 GB/8-core shared host under multi-slot contention: TYPE CHECK killed at exit=143 (`Killed`)
+      with the default, passed cleanly once `PYRIGHT_TIMEOUT=600` was set. Several slots already work around this ad-hoc
+      (`PYRIGHT_TIMEOUT=300`/`480`/`600` set per-invocation) with no shared fix or documented guidance. Raise the
+      default (scaled by repo size / measured baseline, same spirit as the RAM/CPU admission work above) or at minimum
+      document the override in `codex/06-coding-standards/quality-gates.md` so slots stop rediscovering it
+      independently.
 
 ## Progress Log
 
