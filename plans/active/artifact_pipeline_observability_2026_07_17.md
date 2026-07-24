@@ -34,7 +34,7 @@ related:
     /plans/active/deployment_registry_firestore_migration_2026_07_14.md,
   ]
 created: "2026-07-17"
-last_updated: "2026-07-23"
+last_updated: "2026-07-24"
 parent_epic: observability_master
 assigned_vm: NA
 execution_scope: local-only
@@ -483,6 +483,54 @@ this: a top banner (GCP active / AWS parked), a Health `deferred` tier (blue, "n
 > under "Honest gaps" above. Pre-(A) VMs render as ⚪ **unknown with the reason**, and age out as the fleet recycles. Do
 > not reintroduce an inferred commit into `git_commit`.
 
+### Phase 3d — tarball-bucket provider (wire the GCS tarball lane into the views) — NEW 2026-07-24
+
+> Distinct from Phase 3c above: 3c stamps a commit SHA onto tarball VMs for provenance; this phase is the more basic gap
+> underneath it — **no provider anywhere reads the tarball-manifest GCS bucket at all**, so the tarball half of every
+> view that is supposed to show it (target shape, line 148: "Artifacts — AR + ECR **+ tarball bucket**") is silently
+> absent, not filtered/empty-on-purpose. CONFIRMED 2026-07-24 (operator: "in local version as well i cannot see anything
+> in tarball lane"): `_all_build_facts()`/`_all_image_facts()` in `service.py` only ever call the
+> Artifact-Registry/Cloud-Build (image-lane) providers; `LANE_TARBALL` is a real constant in `models.py` and the UI's
+> lane filter chips already offer "Tarball" (Pipeline tab), but zero rows can ever carry it. **What's already done, for
+> contrast — do not re-build**: Deploy timeline ALREADY treats a GCE VM launch as the tarball-lane deploy event
+> (`deployment-ui@797180c`/`deployment-api@72a0108`, Phase 3 above, "a launch IS the tarball-lane deploy") — that half
+> of the tarball story is live. The gap is specifically the BUILD/ARTIFACT half: the tarball's own creation/upload event
+> (Pipeline tab) and its registry-style inventory (Artifacts tab).
+
+- [ ] [BACKEND] P1. **`gcp_tarball_manifests()` provider** — read the GCS tarball-manifest bucket
+      (`gs://{code-bucket}/code/*-code.tar.gz`, per `code_tarball_refresh_scheduler.tf`; the Data-feasibility table
+      above already measured **4064 manifests / 163 tarballs** from this exact source, free to read) and normalize each
+      manifest into a `BuildFact`-shaped record with `lane=LANE_TARBALL`: commit_sha, pyproject_version, created_at,
+      git_status_clean are all already carried per-manifest (see the Data-feasibility table). Mirror
+      `gcp_cloud_builds()`'s shape so `service.builds()` needs no new logic beyond appending this provider's output —
+      `_all_build_facts()`'s docstring already anticipates this ("AWS CodeBuild + the tarball-lane builds land in later
+      increments — each `_safe`").
+- [ ] [BACKEND] P1. **Fold tarball manifests into `_all_image_facts()` / `service.images()`** so the Artifacts tab's
+      "AR + ECR + tarball bucket" promise (line 148) is actually true — one row per tarball "repo" (i.e. per service
+      name in the `code/` prefix), image_count → manifest_count, tags → the pinned/floating SHA suffix ladder already
+      documented in Tab-1's review notes (`x.tar.gz (floating) → x@sha.tar.gz (pinned)`), last_pushed → newest manifest
+      `created_at`, size → summed tarball bytes. Needs a `cloud`/`registry` value distinct from `gcp`/
+      `unified-trading-system` (e.g. `registry="gcs-tarball-bucket"`) so it doesn't collide with the AR rows in the
+      per-repo grouping key.
+- [ ] [BACKEND] P2. Once the two providers above land, **Health's tarball-lane condition needs a second look** — today
+      it always emits one static "VM-tarball-lane workloads carry no measured git commit yet" condition
+      (`service.py:650`, med, always-on) regardless of whether tarball DATA exists at all. After this phase, that
+      condition should only fire for tarball rows that genuinely lack a stamped commit (Phase 3c gap), not as a blanket
+      "the lane is unimplemented" placeholder — and a NEW condition should flag if the tarball provider itself fails
+      (`providers.safe()` swallowing an exception the same way the AR provider did before today's IAM fix — see Phase 7
+      below for exactly that failure mode).
+- [ ] [UI] P2. **Pipeline tab** — the `Tarball` filter chip already exists (`PipelineView`, per Phase 3's "All / Failed
+      / Image / Tarball / GCP / AWS" chips) but has never had a row to filter TO; verify it actually filters correctly
+      once real tarball `BuildFact` rows exist (no UI code change expected, but add it to the `pw:L2` regression spec so
+      it's not an assumed-working, never-tested path).
+- [ ] [UI] P2. **Artifacts tab** — extend the per-repo table to render tarball rows alongside AR/ECR rows (same columns:
+      tags, digest-or-manifest-hash, pushed, size, running?), and extend the `cloud`/`registry` filter chips to include
+      the new tarball source so it's distinguishable from GCP/AWS image rows at a glance.
+- [ ] [UI] P3. **What's running tab** — a tarball-lane version row can only ever show a real commit once Phase 3c's
+      stamp lands (today `git_commit` is `""` on every live VM); until then, tarball rows in Running should render
+      explicitly ⚪ **unknown, reason: "stamp not yet live (Phase 3c)"** rather than silently absent — this is the
+      "honest blank, never a fabricated value" principle the plan already commits to elsewhere (line 124).
+
 ### Phase 4 — absorb + retire
 
 - [ ] [UI] P2. Port the manual-trigger action into the new page; remove `CloudBuildsTab` from the per-service tab bar +
@@ -516,6 +564,62 @@ this: a top banner (GCP active / AWS parked), a Health `deferred` tier (blue, "n
       candidates (no matching build AND not running) — ties to the 1.5 TB and the cost page.
 - [ ] [INFRA] P3. _(stretch, optional)_ Deploy-churn / crash-loop signal (e.g. uts-shared-deployment-api redeployed ~14×
       in hours; ~40% config-only) surfaced as a health condition.
+
+### Phase 7 — production-vs-local parity audit: why prod showed empty when local showed real data — NEW 2026-07-24
+
+> Triggered by the operator noticing the Artifacts tab showed real data locally "yesterday" but nothing at all on the
+> deployed page. Framed as an audit, not a single fix — TWO independent root causes were found and fixed today, and a
+> THIRD symptom remains genuinely open after both fixes deployed. Full evidence trail in the Progress log below; this
+> section is the actionable todo list distilled from it.
+
+- [x] [BACKEND] P0. ✅ **Root cause #1 — missing IAM grant.** `unified-trading-sa` (deployment-api's prod Cloud Run
+      identity) never had `roles/artifactregistry.reader`; every `gcp_artifact_registry_images()` call in prod threw
+      `PermissionDenied`, caught by `providers.safe()`, degrading to `[]` — while local dev used the operator's own
+      broad personal ADC credentials, which already had access, so the gap was invisible locally. Fixed:
+      `deployment-service@74306a1` (added `google_project_iam_member.unified_trading_artifactregistry_reader` to
+      `terraform/gcp/main.tf`, mirroring the pre-existing grant on the dashboard's compute SA for the same need) +
+      applied directly against the prod GCS-backed state (`1 added, 0 changed, 0 destroyed`). Verified independently of
+      the app: impersonating `unified-trading-sa` and calling the exact same `ListDockerImagesRequest` returned real
+      data (20 repos) — the grant is unambiguously correct and live.
+- [x] [BACKEND] P0. ✅ **Root cause #2 — total logging silence, service-wide.** `deployment_api/main.py` never called
+      `logging.basicConfig()` (or any handler setup) anywhere — confirmed via `gcloud logging read` showing **zero**
+      application-level log lines had EVER reached Cloud Logging for this service, for any logger, at any severity (only
+      Cloud Run's own auto-generated HTTP access + system lifecycle logs existed). This meant root cause #1's
+      `providers.safe()` warning (`logger.warning("artifact-pipeline provider %s failed: %s", ...)`) was firing but
+      going nowhere — the exact evidence that would have made root cause #1 a 30-second diagnosis instead of a
+      multi-hour one. Fixed: `deployment-api@f27a8f1` — `logging.basicConfig(level=logging.INFO)`, mirroring
+      `unified_trading_library.service_framework.bootstrap.ServiceBootstrap._setup_logging()`'s existing pattern.
+- [x] [BACKEND] P0. ✅ **Root cause #3 — stdout buffering, compounding #2.** Even after #2 shipped, the images endpoint
+      was STILL empty and STILL silent. `PYTHONUNBUFFERED` was never set anywhere (Dockerfile / `gunicorn.conf.py` / app
+      code) — Python block-buffers stdout whenever it isn't a TTY (always true in a container), so log output could sit
+      in an unflushed ~8KB buffer. Combined with this service's independently-observed crash-looping
+      (`Uncaught signal: 6` recurring through the day, one real OOM kill at 05:35 UTC — found while investigating, not
+      the original question), a hard kill would discard whatever hadn't flushed yet. Fixed: `deployment-api@6518e82` —
+      `ENV PYTHONUNBUFFERED=1` in the `Dockerfile`. Verified BOTH fixes are genuinely baked into the live image (not a
+      stale-deploy illusion): pulled the exact running digest (`sha256:1df38dd2…`) via `docker pull` + inspected it
+      directly (`docker inspect` for the env var, `docker create`+`cat` for the `main.py` source) — both present.
+- [ ] [REVIEW] P0. **STILL OPEN — prod is silent even with all three fixes live on a fresh revision.** Ran the EXACT
+      deployed image locally via `docker run` (same digest, same env vars) — it logs completely correctly (full
+      gunicorn + app startup sequence, INFO/WARNING lines) once given ~15s to finish importing. This proves the image
+      itself is healthy; the remaining gap is something about the CLOUD RUN RUNTIME specifically, not the code. Also
+      ruled out: a stale/warm container (tested against a brand-new revision, same symptom) and a code/permission bug
+      (the exact service-path call, run locally with impersonated `unified-trading-sa` credentials, returned 20 real
+      repos with zero errors). **Leading untested hypothesis**: this Cloud Run service has no
+      `run.googleapis.com/cpu-throttling` override, i.e. it runs GCP's DEFAULT throttled-CPU mode (CPU only allocated
+      during active request handling) — a well-documented cause of exactly this class of symptom (background/deferred
+      I/O starved between requests). **Paused 2026-07-24 by operator ask** ("let's not worry about the deployed version
+      for now, let's check the locally running one first") before testing `--no-cpu-throttling` — resume here when the
+      operator wants to come back to it.
+- [ ] [REVIEW] P2. **Separate finding, surfaced while investigating (not yet filed as its own issue doc)**: this
+      project's Cloud Logging ingestion is dominated by GCS Data Access audit logs — MEASURED 151 GB over one 7-day
+      sample (project-wide, all resources), spiking to 76.5 GB on 2026-07-19 and 37.6 GB on 2026-07-22, both days
+      correlating with a large `canonical-migration-{cefi,defi,tradfi,prediction}-*` VM campaign (200+ VMs in a single
+      day) doing bulk per-object GCS operations against the `market-data-tick-{defi,cefi}-prd` buckets. This is
+      legitimate, expected migration work — the cost is a side effect of GCS Data Access audit logging being enabled
+      project-wide, not a bug in the migration itself. Unmitigated as of today; the standing fix (a Cloud Logging
+      exclusion filter scoped to `logName="cloudaudit.googleapis.com/data_access" AND resource.type="gcs_bucket"`) was
+      discussed but not applied — needs its own issue doc + operator decision (touches logging/audit posture, not just
+      cost).
 
 ## Progress log
 
@@ -730,6 +834,47 @@ this: a top banner (GCP active / AWS parked), a Health `deferred` tier (blue, "n
   before shipping, not just eyeballed in code. No test asserted on visual layout/DOM order, so both ships were zero-risk
   to the existing 19 Vitest + 10 `pw:L2` suite (all still pass unchanged) — a reminder that a pure-layout change needs a
   screenshot check precisely because the test suite can't catch it.
+- **2026-07-24 — production-vs-local parity investigation: 2 root causes found + fixed, 1 remains open; tarball-lane gap
+  confirmed structural (not today's bug); a real Cloud Logging cost finding surfaced as a side investigation.** Operator
+  reported the Artifacts tab showed real data locally the day before but nothing on the deployed page.
+  - **Root cause #1 (IAM) + #2 (logging silence) + #3 (stdout buffering)** — see Phase 7 above for the full todo-level
+    detail; summarized here for the timeline: `unified-trading-sa` lacked `artifactregistry.reader`
+    (`deployment-service@74306a1`, terraform-applied directly against prod state, verified via impersonated-credentials
+    reproduction); `deployment-api/main.py` never configured logging at all, so the resulting `providers.safe()` warning
+    was firing into the void (`deployment-api@f27a8f1`, `logging.basicConfig()`); and `PYTHONUNBUFFERED` was never set,
+    compounding with this service's independently-discovered crash-looping (`Uncaught signal: 6` recurring, one real OOM
+    at 05:35 UTC) to lose whatever log output hadn't flushed (`deployment-api@6518e82`, `ENV PYTHONUNBUFFERED=1`). Both
+    deployment-api fixes promoted LDR→main via the fleet `*/5` auto-promote cron (NOT the "staging-first" path
+    quickmerge's own messaging still claims — **that messaging is now STALE**: staging was shut down fleet-wide
+    2026-07-23, WS-L operator ruling, and this repo is actually on the direct `ldr_main` model like every other repo;
+    worth a quickmerge.sh fix separately) → Cloud Build (`_DEPLOY=true`) → fresh Cloud Run revisions (`00267-c2k` then
+    `00268-d2l`).
+  - **Root cause #3's investigation is still open** — even with all three fixes verifiably baked into the live image
+    (confirmed by pulling the exact deployed digest and inspecting it directly, not by trusting the build log), the prod
+    endpoint stayed silent AND empty on a brand-new revision. Reproduced the EXACT deployed image locally via
+    `docker run` — it logs perfectly there, ruling out the image/code as the remaining cause. Leading hypothesis
+    (untested): Cloud Run's default CPU-throttling (no `cpu-throttling` override on this service) starving background
+    log-flush work between requests. Operator paused this thread to focus on the local dev environment instead —
+    resume-point recorded in Phase 7.
+  - **Tarball lane confirmed empty for a structural, pre-existing reason, unrelated to today's bugs** — operator
+    independently noticed the local instance also shows nothing in the Tarball lane. Traced to `service.py`/
+    `providers.py`: `LANE_TARBALL` exists in the data model and the UI already has lane filter chips for it, but no
+    provider was ever written to read the GCS tarball-manifest bucket — confirmed via direct code read, reproduced live
+    locally (`/api/artifacts/builds` returns `lanes={'image'}` only, 33/33 rows). New Phase 3d above captures the
+    concrete todos to close this.
+  - **Local dev environment stood up from scratch in this clone** (`.tabs/2` had no `.env.local` at all — the summarized
+    prior session's local setup didn't carry over into this clone). Started `deployment-api` (`:8004`,
+    `DISABLE_AUTH=true` — the sanctioned local-dev auth bypass in `deployment_api/auth.py`, not a workaround) +
+    `deployment-ui` (`:5183`, a fresh `.env.local` pointed at `localhost:8004` instead of the prod URL the repo's
+    `.env.local.example` template does NOT default to). Confirmed working end-to-end with real data: 20 repos,
+    `market-tick-data-service` at 1961 images / 2.87 TB (a fresh, slightly-higher measurement than this plan's existing
+    "~1.5 TB" line — worth reconciling if that figure gets cited again).
+  - **A genuine, currently-unfiled cost finding surfaced as a side investigation** (operator asked about Cloud Logging
+    cost for an unrelated reason — checking whether the logging fix would be expensive). This project's Cloud Logging
+    ingestion is dominated by GCS Data Access audit logs on the MTDS prod buckets, driven by the canonical-migration VM
+    campaigns' bulk per-object operations — MEASURED 151 GB / 7 days, real recurring cost, not a defect in the migration
+    itself. Not yet filed as its own issue doc (see Phase 7's second open item) — out of this plan's scope but worth a
+    standalone doc + operator decision on the logging-exclusion-filter fix.
 
 ## Lessons this session (so they are not re-learned the hard way)
 
@@ -823,25 +968,31 @@ this: a top banner (GCP active / AWS parked), a Health `deferred` tier (blue, "n
 > `deployment-ui@3210bb5`), plus per-column sort/filter/multi-select workspace-wide on the page. This is the current
 > state.
 
-**Recommended NEXT: Phase 3b cross-links** (the Deployments URL-param filter + console deep-links) — it was explicitly
-gated on the Running view landing (the version row that deep-links out), which just shipped; the backend half is audited
-cheap (~2-line additive `DeploymentItem` field + reuse an existing `consoleUrl()` helper). The snapshot worker and the
-tarball commit stamp (Phase 3c) are the other two real remaining Phase-1/3 items but are lower-urgency (the live-scan
-cache already covers today's load; the tarball stamp needs a scheduled live VM launch to verify, not more code).
+**Recommended NEXT (updated 2026-07-24): Phase 7's CPU-throttling test** (toggle `--no-cpu-throttling` on deployment-api
+and re-verify the images endpoint) is the fastest path to closing out today's still-open production symptom, but is
+**operator-paused** as of 2026-07-24 ("let's check the locally running one first"). With that parked, **Phase 3d
+(tarball-bucket provider)** is the next-highest-value real gap — the other half of what the operator's own "in local
+version as well i cannot see anything in tarball lane" surfaced today, and unlike Phase 3c it needs no audit gate, just
+a new provider. **Phase 3b cross-links** (Deployments URL-param filter + console deep-links) remains audited-cheap and
+ready whenever picked back up.
 
-| Item                                                                       | State / why deferred                                                                                                                                                         | Blocked on                             |
-| -------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------- |
-| Whole-mock sign-off, all 5 tabs, tarball stamp scope                       | ✅ **DONE 2026-07-21** — operator: "good to start … on all the tabs 1 to 5"; DO-NOT-START banner lifted (`pm@161200196`)                                                     | —                                      |
-| Pipeline (builds) view — backend + live UI tab                             | ✅ **DONE** — `deployment-api@8eda1f8`/`0a920c2`, `deployment-ui@47e6379`/`038038e`                                                                                          | —                                      |
-| Deploy timeline view — backend + live UI tab                               | ✅ **DONE 2026-07-23** — `deployment-api@72a0108`, `deployment-ui@797180c`                                                                                                   | —                                      |
-| Date-range picker + 7d default (both windowed live views)                  | ✅ **DONE 2026-07-23** — operator ask, same turn as the Deploy timeline ship (`deployment-ui@797180c`)                                                                       | —                                      |
-| **What's running** view (the headline runtime join + drift classifier)     | ✅ **DONE 2026-07-23** — `deployment-api@a13c667`, `deployment-ui@3210bb5`. Scoped to the Cloud Run (image) lane; `fragmented` always 0 for now (no traffic-split detection) | —                                      |
-| Artifacts (registry inventory) view                                        | ✅ **DONE 2026-07-23** — `deployment-api@a13c667`, `deployment-ui@3210bb5`. GCP AR only; AWS ECR stays parked/unread                                                         | —                                      |
-| Health (measured conditions) view                                          | ✅ **DONE 2026-07-23** — `deployment-api@a13c667`, `deployment-ui@3210bb5`. Derives every condition from the other four views' own facts, zero new cloud calls               | —                                      |
-| Per-column sort + filter + multi-select on every live table                | ✅ **DONE 2026-07-23** — operator ask, same day as the last 3 views; `deployment-ui@3126b1b` + `@3210bb5`                                                                    | —                                      |
-| Snapshot worker (GCS parquet + DuckDB, the OOM-safe long-window read path) | **Not started** — the live-scan cache (300s TTL) covers today's needs; the worker is for long-history + concurrent-load headroom                                             | —                                      |
-| (A) tarball commit stamp (Phase 3c Option A)                               | **Cannot be done yet** — audit-cleared YES-WITH-CONDITIONS; verify via a live EPHEMERAL_BATCH launch (no CI covers the shell file)                                           | a deliberate operator-scheduled launch |
-| Phase 3b cross-links (Deployments URL-param filter, console deep-links)    | 🟢 **UNBLOCKED, next recommended** — audited cheap (2-line + reuse `consoleUrl()`); its one gate (Running view landing) is now clear                                         | —                                      |
-| "Default view = What's running" (locked 2026-07-17, never implemented)     | **Not started** — page still defaults to Pipeline; re-decide with the operator or just flip it now that Running is live                                                      | operator confirmation (or just do it)  |
-| Issue doc for the pipeline bugs                                            | ✅ **DONE 2026-07-21** — `issues/build_deploy_pipeline_provenance_and_aws_deferred_gaps_2026_07_21.md`; only #4/#7 (AWS-deferred) + #1/#3 (GCP) open                         | Ikenna (his active CI files)           |
-| AWS resume (App Runner + ECS + ECR)                                        | **Cannot be done yet — operator-owned** — AWS intentionally parked; deferred until AWS credits are available                                                                 | AWS credits                            |
+| Item                                                                                   | State / why deferred                                                                                                                                                         | Blocked on                             |
+| -------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------- |
+| Tarball-bucket provider (Phase 3d) — Pipeline/Artifacts/Running tarball rows           | **Not started** — NEW 2026-07-24, confirmed structural gap (no provider ever read the GCS tarball-manifest bucket, in local OR prod, unrelated to today's IAM/logging bugs)  | —                                      |
+| Phase 7 — prod-vs-local parity: root causes #1/#2/#3 (IAM/logging/buffering)           | ✅ **FIXED 2026-07-24** — `deployment-service@74306a1`, `deployment-api@f27a8f1`/`@6518e82` — but prod endpoint STILL empty on a fresh revision after all 3                  | —                                      |
+| Phase 7 — CPU-throttling test (leading untested hypothesis for the still-open symptom) | **Paused 2026-07-24 — operator ask** ("let's check the locally running one first")                                                                                           | operator resume                        |
+| GCS Data Access audit-log cost finding (Cloud Logging, ~151 GB/7d, MTDS buckets)       | **Not started** — surfaced 2026-07-24 as a side investigation, needs its own issue doc + operator decision on an exclusion filter                                            | operator decision + issue doc          |
+| Whole-mock sign-off, all 5 tabs, tarball stamp scope                                   | ✅ **DONE 2026-07-21** — operator: "good to start … on all the tabs 1 to 5"; DO-NOT-START banner lifted (`pm@161200196`)                                                     | —                                      |
+| Pipeline (builds) view — backend + live UI tab                                         | ✅ **DONE** — `deployment-api@8eda1f8`/`0a920c2`, `deployment-ui@47e6379`/`038038e`                                                                                          | —                                      |
+| Deploy timeline view — backend + live UI tab                                           | ✅ **DONE 2026-07-23** — `deployment-api@72a0108`, `deployment-ui@797180c`                                                                                                   | —                                      |
+| Date-range picker + 7d default (both windowed live views)                              | ✅ **DONE 2026-07-23** — operator ask, same turn as the Deploy timeline ship (`deployment-ui@797180c`)                                                                       | —                                      |
+| **What's running** view (the headline runtime join + drift classifier)                 | ✅ **DONE 2026-07-23** — `deployment-api@a13c667`, `deployment-ui@3210bb5`. Scoped to the Cloud Run (image) lane; `fragmented` always 0 for now (no traffic-split detection) | —                                      |
+| Artifacts (registry inventory) view                                                    | ✅ **DONE 2026-07-23** — `deployment-api@a13c667`, `deployment-ui@3210bb5`. GCP AR only; AWS ECR stays parked/unread                                                         | —                                      |
+| Health (measured conditions) view                                                      | ✅ **DONE 2026-07-23** — `deployment-api@a13c667`, `deployment-ui@3210bb5`. Derives every condition from the other four views' own facts, zero new cloud calls               | —                                      |
+| Per-column sort + filter + multi-select on every live table                            | ✅ **DONE 2026-07-23** — operator ask, same day as the last 3 views; `deployment-ui@3126b1b` + `@3210bb5`                                                                    | —                                      |
+| Snapshot worker (GCS parquet + DuckDB, the OOM-safe long-window read path)             | **Not started** — the live-scan cache (300s TTL) covers today's needs; the worker is for long-history + concurrent-load headroom                                             | —                                      |
+| (A) tarball commit stamp (Phase 3c Option A)                                           | **Cannot be done yet** — audit-cleared YES-WITH-CONDITIONS; verify via a live EPHEMERAL_BATCH launch (no CI covers the shell file)                                           | a deliberate operator-scheduled launch |
+| Phase 3b cross-links (Deployments URL-param filter, console deep-links)                | 🟢 **UNBLOCKED, next recommended** — audited cheap (2-line + reuse `consoleUrl()`); its one gate (Running view landing) is now clear                                         | —                                      |
+| "Default view = What's running" (locked 2026-07-17, never implemented)                 | **Not started** — page still defaults to Pipeline; re-decide with the operator or just flip it now that Running is live                                                      | operator confirmation (or just do it)  |
+| Issue doc for the pipeline bugs                                                        | ✅ **DONE 2026-07-21** — `issues/build_deploy_pipeline_provenance_and_aws_deferred_gaps_2026_07_21.md`; only #4/#7 (AWS-deferred) + #1/#3 (GCP) open                         | Ikenna (his active CI files)           |
+| AWS resume (App Runner + ECS + ECR)                                                    | **Cannot be done yet — operator-owned** — AWS intentionally parked; deferred until AWS credits are available                                                                 | AWS credits                            |
