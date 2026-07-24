@@ -18,9 +18,16 @@ summary: >-
   Mechanism narrowed to the per-VM-shard-carries-stale-content layer (remediation only ever cleaned the derived
   canonical index, never any per-VM shard); a genuinely real, independently-confirmed UAC venue-registry SSOT
   contradiction was found (KALSHI/POLYMARKET classified as both "sports" and "prediction" by two disagreeing live
-  registries) but is NOT yet proven to be the reintroduction's actual trigger. BLOCKED-OPERATOR-DECISION: needs sign-off
-  before any prod code/job change per the findings-triage HARD RULE (data-correctness / cross-repo /
-  SSOT-contradiction).
+  registries). **ROUND 6 update (2026-07-24, operator-authorized)**: the UAC registry contradiction is FIXED and shipped
+  (unified-api-contracts). A round-3 manifest REMOVE was executed but reverted within ~5 minutes — DEFINITIVE root cause
+  now pinned via Cloud Logging: a TOCTOU bug in `unified-trading-library`'s
+  `manifest_consolidator._write_consolidated()` — its CAS precondition re-fetches the object generation late
+  (`blob.reload()` right before upload) instead of using the generation the merge payload's content was actually read
+  from, so an external write landing during a slow (~7.5min observed) merge cycle gets silently overwritten with no
+  `PreconditionFailed` ever raised (the existing "lost-update fix" retry path never triggers, because no conflict is
+  ever detected). Fleet-wide blast radius (every asset_group's consolidator shares this write path), so the fix needs
+  its own careful implementation + test + deploy cycle, not a same-session patch — BLOCKED-OPERATOR-DECISION on
+  scheduling that work. Do NOT re-attempt manifest remediation until it ships.
 status: open
 nature: issue
 asset_group: [sports, prediction]
@@ -347,24 +354,106 @@ venue→asset_group registries both ship in `unified-api-contracts` today:
 
 ## ROUND 5 — next steps (do NOT guess-fix; needs either more instrumentation or operator sign-off)
 
-- [ ] 9. [DATA] P0. Catch a per-VM shard object WITH the bleed rows in hand, not after-the-fact: either poll
-      `_index/per_vm/*.parquet` in this bucket at short intervals around a known write window, or (cheaper) add
-      temporary instrumentation to `_flush_per_vm_pending`'s log line to report the merged frame's `asset_group` value
-      counts, redeploy briefly, and capture one real log line showing a shard flush WITH `asset_group=prediction`
-      entries in `merged`. This is the only remaining way to positively identify the carrier rather than inferring it.
-- [ ] 10. [BACKEND] P1. Fix the confirmed UAC SSOT contradiction regardless of todo 9's outcome — in
-      `unified-api-contracts/unified_api_contracts/registry/venue_constants.py`, after line 375, add explicit overrides
-      (same pattern as the existing `KALSHI_PERP`/`POLYMARKET_PERP` → `"cefi"` overrides at lines 372-373):
-      `VENUE_CATEGORY_MAP["KALSHI"] = "prediction"` and `VENUE_CATEGORY_MAP["POLYMARKET"] = "prediction"`. **Needs
-      operator sign-off first** — `SPORTS_BET_PLACEMENT_VENUES`/`SPORTS_PREDICTION_MARKET_VENUES` membership is a
-      semantic call (they do offer sports bet-placement) separate from the `asset_group` category fix; also grep
-      execution-service for every `get_venues_by_asset_group("sports")` caller and any place that caches its output at
-      process start (needs a restart/reload to pick up the fix).
-- [ ] 11. [DATA] P0. Once todo 9 pins the actual carrier, fix it at the source (not another index-only remediation —
-      that has now failed once already) and re-run the manifest cleanup, verifying **across at least one full
-      consolidation cycle** (not just an immediate post-write read) before re-closing this doc.
+- [x] 9. [DATA] P0. **DONE 2026-07-24 — superseded by ROUND 6's finding, see below.** Polled the one live per-VM shard
+      (`sports-fixtures-job.parquet`) for 4 minutes (multiple consolidator cycles): never caught it carrying
+      `asset_group=prediction` rows. This shard is NOT the carrier. The actual mechanism turned out to be a code-level
+      bug in the consolidator itself, not a stale shard — see ROUND 6.
+- [x] 10. [BACKEND] P1. **DONE 2026-07-24, operator-authorized.** `unified-api-contracts@<see commit>`:
+      `VENUE_CATEGORY_MAP["KALSHI"]`/`["POLYMARKET"]` overridden to `"prediction"` after the `SPORTS_VENUES` bulk
+      update, same pattern as the existing `KALSHI_PERP`/`POLYMARKET_PERP` → `"cefi"` overrides. Found and fixed the
+      full blast radius before shipping (all verified live + full UAC test suite, 11,833 passed): `venue_context.py`'s
+      sports-metadata gate (was `venue_category=="sports"` only — would have regressed KALSHI/POLYMARKET's derived
+      `execution_pattern` from `clob_api` to `data_only`), `instruction_constraints.py` + `INSTRUCTION_VALID_DOMAINS`
+      (`PREDICTION_BET` only allowed `venue_categories={"sports"}` — would have broken order validation), and 2 tests
+      that encoded the wrong side of the contradiction as expected behavior. This fix is independently correct and
+      shipped regardless of ROUND 6's finding below — it closes a real, separate cross-repo SSOT contradiction.
+- [x] 11. [DATA] P0. **ATTEMPTED 2026-07-24, REVERTED WITHIN ~5 MINUTES — root cause is now precisely pinned, see
+      ROUND 6.** Ran a round-3 remediation script (REMOVE-only, 0 ADD needed — round-2's ADD to the prediction manifest
+      had already persisted), snapshot-first, CAS-safe, immediate verify passed (0 remaining). A 10-minute / 20-check
+      follow-up poll (the "verify across a full consolidation cycle" this doc itself requires) caught the exact moment
+      it reverted: back to the EXACT pre-remediation state (5,526,420 total rows / 11,727 prediction rows) within ~5
+      minutes — far faster than round-2's ~30h43m, which is itself an important data point (see ROUND 6). **Status
+      intentionally left `open` — do NOT re-close.**
 
-Do not re-flip this doc's `status` to `resolved` or re-attribute `resolved_by` until todo 11 confirms the fix holds
-across a real consolidation cycle, not just an immediate verify. Do not re-run the 2026-07-23 remediation script again
-without todo 9 or 10 first — re-running the same index-only fix without closing the source already failed once (11,727
-rows came back in ~30h43m).
+## ROUND 6 — DEFINITIVE root cause: a TOCTOU bug in the manifest consolidator itself, not a stale shard (2026-07-24)
+
+**This supersedes ROUND 4/5's "which shard carries it" framing entirely.** The mechanism is not a shard carrying stale
+content forward — it is a live, reproducible concurrency bug in
+`unified-trading-library/unified_trading_library/manifest_consolidator.py::_write_consolidated()`.
+
+**How it was pinned**: after round-3's remediation reverted, Cloud Logging for the exact consolidator execution that
+overwrote it showed `phase=canonical_downloaded ... canon_rows=5526420` at `17:26:39Z` — **before** the remediation
+script even started (`17:28:22Z` snapshot). That execution took **455 seconds** (~7.5 min — an outlier vs. the usual ~9s
+"locked, skipping" no-op cycles logged every ~50s while it held the lock) and didn't write until `17:34:03Z`, **after**
+the remediation's write (`17:29:23Z` verify-passed). The live canonical object's own custom metadata at that point
+(`consolidator_run_at: 17:34:02`, `consolidator_content_write_at: 17:26:38`) confirms this exact execution produced the
+reverted state.
+
+**The bug, read directly in `_write_consolidated` (lines 3044-3166):**
+
+1. `merge_payload()` is called ONCE at the top (line 3071) — this is `_duckdb_merge_payload`, which downloads the
+   canonical and shards and computes the merged `payload` bytes. This can take minutes (confirmed: 455s twice in this
+   session's logs).
+2. The CAS write loop (lines 3116-3151) does `blob.reload()` (line 3120) to fetch the object's **current** generation
+   **immediately before uploading** — this happens AFTER the multi-minute merge, i.e., potentially minutes after
+   `merge_payload()` read the content the `payload` bytes were computed from.
+3. `blob.upload_from_string(payload, if_generation_match=generation)` (line 3133-3137) — uploads the (possibly stale)
+   `payload` from step 1, gated on the (freshly-reloaded) `generation` from step 2.
+
+**The gap**: `generation` (step 2) and the content `payload` was actually read from (step 1) are captured **at different
+times, by different mechanisms, with no correlation between them**. If an external writer (like the remediation script)
+changes the object's generation _after_ step 1's read but _before_ step 2's reload, the CAS precondition check passes
+cleanly — GCS sees "generation X, write if still X" and X genuinely IS current (it's the external writer's own
+generation) — so `upload_from_string` **succeeds**, silently persisting the stale pre-external-edit `payload`.
+**`PreconditionFailed` never fires**, so the documented "lost-update fix" retry path (lines 3154-3164, re-run
+`merge_payload()` against the new generation) never even triggers — there is no failure to retry from. This is NOT the
+lost-update race the code's own docstring/comments describe having fixed; it's a different, still-open gap in the same
+mechanism: the CAS precondition protects against "did the generation change between reload() and upload()" (a
+near-instantaneous window), not "did the generation change since the CONTENT was actually read" (the real,
+multi-minute-wide window that matters).
+
+**This exactly explains every observed symptom**: identical historical `written_at` values reappearing (the stale
+payload IS the old content, byte-for-byte re-derived, not fresh regrowth), zero new dates (nothing new is being
+generated, an old computed payload is just winning a write race), and — critically — this is **NOT a one-time residual
+event**. It can recur **every single time** a long consolidator cycle happens to overlap with an external CAS write to
+the same canonical object, which round-3's ~5-minute reversion (vs. round-2's ~30h43m) demonstrates: this is not bounded
+by "how long until the one bad shard gets consumed" — it can fire on the very next long cycle, with no advance warning
+of which cycles will be slow.
+
+**Why round-2's remediation "held" for 30h43m and round-3's held for only ~5min**: pure timing luck — whether a
+long-running cycle happened to be mid-flight (reading pre-edit content) at the moment each remediation's write landed.
+Round-2 got lucky; round-3 did not. **Re-running remediation again right now would have no better odds than either prior
+attempt** — this is a genuine race, not a fixable-by-retrying condition.
+
+**Scope note**: `_write_consolidated` is the write path for `unified_trading_library.manifest_consolidator`, used by
+`consolidate(bucket)` for **every asset_group's** manifest consolidation, not just sports — this bug's blast radius is
+fleet-wide (any external CAS-safe writer to any consolidator-managed canonical index, racing against a slow-enough
+cycle, is exposed to the same silent-clobber failure mode).
+
+## ROUND 7 — next steps (BLOCKED-OPERATOR-DECISION: this needs a proper fix + deploy cycle, not a same-session patch)
+
+- [ ] 12. [BACKEND] P0. Fix `_write_consolidated`'s CAS precondition to be correlated with the content read, not a late
+      `blob.reload()`: thread the canonical's generation OUT of `_duckdb_merge_payload` (capture it via
+      `download_bytes_with_generation` at the same point the canonical bytes are read, `manifest_consolidator.py` line
+      ~2334-2342) back up through the `_merge` closure (line 3032-3039) to `_write_consolidated`, and use THAT captured
+      generation for `if_generation_match` instead of `blob.reload()`'s late-fetched one. This makes a genuine conflict
+      actually raise `PreconditionFailed`, which makes the EXISTING "lost-update fix" retry path (lines 3154-3164)
+      finally reachable and correct. **Deliberately NOT attempted same-session**: this is a concurrency-safety fix to a
+      heavily-incident-scarred, fleet-wide-shared core library function (the file's own comments reference at least 3
+      prior hard-won incident fixes on this exact write path) — it needs its own careful test-writing (a regression test
+      that reproduces this exact overlap: start a merge, externally mutate the canonical mid-merge, assert the write
+      raises `PreconditionFailed` and retries against the new generation) and review, not a rushed patch riding on this
+      investigation's momentum.
+- [ ] 13. [BACKEND] P0. Once todo 12 ships, a new consolidator Cloud Run image needs to build+deploy before the fix
+      takes effect for `uts-prod-manifest-consolidator-instruments-sports` (and every other asset_group's consolidator
+      job) — confirm this happens via the normal CI/CD pipeline on merge (QG's `image-build-on-staging-merge` check
+      suggests it does) rather than needing a manual trigger.
+- [ ] 14. [DATA] P0. Only after todo 13's new image is confirmed deployed and serving: re-run
+      `remediate_cross_ag_prediction_bleed_round3_2026_07_24.py` (already shipped, reusable, REMOVE-only — 0 rows need
+      ADD, round-2's ADD already persisted) and verify it holds across a real consolidation cycle (the same
+      10-minute-poll pattern this round used) before re-closing this doc.
+
+Do not re-flip this doc's `status` to `resolved` or re-attribute `resolved_by` until todo 14 confirms the fix holds
+across a real consolidation cycle, not just an immediate verify. Do not re-run the remediation script again without todo
+12/13 (the consolidator TOCTOU fix + deploy) first — re-running the same index-only fix without closing the race has now
+failed twice (11,727 rows came back in ~30h43m the first time, ~5min the second).
