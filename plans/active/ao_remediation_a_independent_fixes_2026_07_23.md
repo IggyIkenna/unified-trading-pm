@@ -96,11 +96,16 @@ source:
       `plans/active/codex_vs_repo_docs_ssot_audit_2026_06_01.md` that is still marked SHIPPED with no note about the
       post-pivot re-drift. A `[x]` that predates an architecture pivot reads as current coverage when it is not.
       **Gate**: the line carries either a re-verification date or an explicit reopen.
-- [ ] [INFRA] P1. Route `plan_health.py::record_result()`'s `doc_drift` findings through `notify_slot_blocked` so drift
-      reaches a worker's blocked queue instead of only a Slack WARN. Today `doc_drift` routes solely to
+- [x] ✅ [INFRA] P1. Route `plan_health.py::record_result()`'s `doc_drift` findings through `notify_slot_blocked` so
+      drift reaches a worker's blocked queue instead of only a Slack WARN. Today `doc_drift` routes solely to
       `slack_notify.notify_plan_health_findings`, and `notify_slot_blocked` is never invoked from `plan_health.py`.
       **Gate**: a doc_drift finding produces a blocked-queue entry visible via the backlog API, with the existing Slack
-      path unchanged.
+      path unchanged. — `agent-orchestrator@18f262e`: each NEW `doc_drift` key now also gets a synthetic `BlockedRow`
+      (`slot_id=0`, the same "plan-level, no worker slot" sentinel `bootstrap.py` uses for operator-gated todos, since
+      there is no originating worker task) via `state_store.add_blocked`, visible through the `blocked_queue` returned
+      by `GET /api/state` / `/api/blocked/*`, plus a `notify_slot_blocked` Slack ping — additive,
+      `notify_plan_health_findings` unchanged. 7 new tests in `tests/test_plan_health.py`; `quality-gates.sh` green
+      (1597 passed).
 - [ ] [INFRA] P2. Wire `/docs-reconcile` onto the same 24h cadence as the plan-reconciler by adding an installer timer
       alongside `agent-orchestrator/scripts/install-plan-reconciler-timer.sh`, and state the cadence in both skills' own
       docs. No docs-reconciler timer or cron exists anywhere in the repo today — the skill is operator-triggered only.
