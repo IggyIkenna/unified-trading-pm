@@ -440,16 +440,74 @@ run SEQUENTIALLY, not in parallel:
       `pnl_input_builder.py:293`/`signal_broadcast/transport.py:369`, both genuinely-safe optional-field cases —
       `# noqa: qg-empty-fallback` added) that had pushed `strategy-service` from 166 to 168 sites (baseline 166),
       blocking `quality-gates.sh` STEP 5.101 for the whole repo regardless of archetype.
-- [ ] [BACKEND] P2. **Phase 4b — YIELD_ROTATION_LENDING (not started)**. Pure yield archetype (no hedge leg) — reuse
-      `lending_rates` reader already established. NOT config-verified yet — check for the Phase-1/Phase-3 class of
-      catalog/engine key-mismatch bug BEFORE dispatching a build agent.
+- [x] [BACKEND] P2. **Phase 4b — YIELD_ROTATION_LENDING — DONE 2026-07-24, `strategy-service@aa2abae3`.** The pre-check
+      found a real config-key mismatch (catalog's `rotation_min_delta_apy_bps` vs the engine's never-set
+      `min_apy_advantage_bps` — every row's real per-row threshold was silently discarded for a hardcoded 25bps
+      default); fixed by making the engine read the catalog's real key. Also fixed the dead cross-chain/bridge logic
+      (`current_chain` now falls back to the catalog's real `chain` key, exact for 11 of 12 rows; the one cross-chain
+      "meta-rotation" row's real bridge-routing decision is deliberately left unbuilt — a documented judgment call, not
+      a guess). New `CanonicalLendingSupplyApyProvider` reads real features-onchain `lending_rates` supply APY (verified
+      against real prod GCS, 2026-07-24): AAVE_V3/COMPOUND_V3/SPARK resolve for real coverage; MORPHO and KAMINO never
+      appear in the corpus at all (permanent data gaps, not transient) — the KAMINO-only catalog row is honestly
+      excluded via a new satisfiability gate, mirroring the Phase 4a precedent, rather than fed guaranteed-empty data.
 - [ ] [BACKEND] P2. **Phase 5 — LIQUIDATION_CAPTURE**. New data source: on-chain liquidation-cascade feed +
       `health_factor_trigger`.
-- [ ] [BACKEND] P1. **After Phases 1-5**: build the Layer-3 curtailment mechanism (`PaperUniverseConfig` venue/currency
-      allowlist) on the now-larger drivable-archetype set.
-- [ ] [BACKEND] P3. **Separate, NOT yet explicitly confirmed as in-scope**: fold Layer-1's dynamic ADV-ranked candidate
-      discovery into `CARRY_BASIS_PERP`/`CARRY_FUNDING_DISPERSION`'s catalogs, replacing the static 13-coin list — this
-      is the concrete first real consumer of Layer 1 once built.
+- [x] [BACKEND] P1. **After Phases 1-5 — Layer-3 curtailment mechanism SHIPPED 2026-07-24,
+      `strategy-service@f3e9d748`.** Built exactly the design sketch in this doc's Finding 1 + the RESUME POINT 3-layer
+      architecture: `PaperUniverseConfig` gains two sibling fields to the (still separately unwired) `archetypes` field
+      — `venue_allowlist: dict[StrategyArchetype, frozenset[str]] | None` and
+      `base_currency_allowlist: dict[StrategyArchetype, frozenset[str]] | None`, both `None`-default (byte-identical to
+      today when unset — verified by an explicit regression test comparing a default-constructed config against one with
+      both fields explicitly passed as `None`). Per-archetype key-role maps (`_VENUE_IDENTITY_KEYS` /
+      `_CURRENCY_IDENTITY_KEYS`, `paper_universe.py`) reconcile each archetype's own literal `initial_config` key names
+      for venue vs currency identity — read from all 4 catalog family files
+      (`catalog_carry.py`/`catalog_staked_basis.py`/`catalog_yield_defi.py`/`catalog_trading.py`) for the 11 archetypes
+      in `_ENGINE_DRIVABLE_ARCHETYPES` (e.g. `staking_protocol`+`perp_venue`+`spot_venue` for CARRY_STAKED_BASIS;
+      `candidate_venues`/`instrument` — both comma/`/`-delimited multi-value, split + ANDed — for
+      ARBITRAGE_PRICE_DISPERSION) plus the 2 MEV archetypes' `chain` key. The filter (`_curtailment_reason_for_spec` in
+      `paper_universe.py`) runs as a new, dedicated function called INSIDE `_resolve_drivable()` BEFORE
+      `_skip_reason_for_spec()` — a curtailed spec never reaches the paper-drivability gate at all — and reuses that
+      function's exact honest-skip convention with the new typed reason `curtailed_by_operator_constraint` (carrying
+      `axis=venue|currency` + the actual disallowed token(s), e.g.
+      `curtailed_by_operator_constraint:axis=venue,disallowed=ARBITRUM`). Semantics: per archetype+axis, EVERY identity
+      token a spec's `initial_config` carries must be within the operator's allow-list for the spec to survive (an "only
+      Lido + Deribit" constraint curtails a row that ALSO touches some other venue, not merely one that fails to touch
+      Lido/Deribit) — case-insensitive (catalog casing varies row-to-row, e.g. `"DERIBIT"` vs `"deribit"`). **The two
+      MEV archetypes' known limitation is handled explicitly, not silently**:
+      `ARBITRAGE_MEV_LIQUIDATION_BUNDLE`/`ARBITRAGE_MEV_BACKRUN` are mapped to an EXPLICIT empty tuple in
+      `_CURRENCY_IDENTITY_KEYS` (deliberate, not an omission) since both genuinely have no catalog-declared
+      base-currency key (`candidate_ids: ""`); a `base_currency_allowlist` entry for either is a documented,
+      logged-once-per-archetype NO-OP (`_warn_if_currency_axis_is_noop`) — never applied, never silently "succeeds",
+      never a crash (proven by a dedicated test asserting the run doesn't raise AND the skip reason stays the
+      pre-existing `engine_tick_builder_unwired`, never the curtailment one). Venue-axis filtering DOES apply to these
+      two — verified (not assumed) by reading both catalog builders: `chain` is a real, enumerable, per-row identity
+      value (ETHEREUM/ARBITRUM/BASE) — proven by a second dedicated test showing a `venue_allowlist` entry genuinely
+      curtails the non-matching chains' rows. 9 new unit tests (`tests/unit/cli/handlers/test_paper_universe.py`):
+      backward-compat no-op, single-axis narrowing (venue and currency each), AND-composition across both axes, an
+      unlisted archetype staying unconstrained, case-insensitive matching, and the two MEV no-op/does-apply proofs.
+      Quality gates green (`quality-gates.sh --no-fix`, fresh run, 5568 passed/206 skipped/5 xfailed — the xfails are
+      Phase-4/pre-existing catalog/engine contract-drift findings unrelated to this change; basedpyright clean on both
+      touched files; STEP 5.101 empty-string-fallback ratchet held, my one new `.get(key, "")` site carries
+      `# noqa: qg-empty-fallback` matching the established convention). **Deliberately NOT built (documented follow-on,
+      not silently claimed done)**: no CLI/operator-facing surface to actually SET these fields on a live `run_paper`
+      invocation. This doc's own Finding 1 already flags that `PaperUniverseConfig.archetypes` — the pre-existing,
+      already-shipped sibling field this todo explicitly builds alongside — has the identical gap (`service_entry.py`
+      calls `run_paper(...)` without ever passing `universe_config`); there is no existing `--archetypes`-style CLI flag
+      to mirror for the new fields, and inventing one from scratch (argparse plumbing + a flat-string encoding for a
+      `dict[StrategyArchetype, frozenset[str]]` structure, e.g.
+      `--venue-allowlist 'CARRY_STAKED_BASIS:DERIBIT,BINANCE'`) is a materially separate, bigger piece of work than the
+      mechanism itself, per this todo's own scope note ("build the mechanism, not necessarily full operator-facing
+      plumbing"). Follow-on, not filed as a new gap since it's the same pre-existing one Finding 1 already named.
+- [x] [BACKEND] P3. **DONE 2026-07-24, `strategy-service@3ad3f0b5`**. Layer-1 dynamic ADV-ranked candidate discovery
+      folded into `CARRY_BASIS_PERP`/`CARRY_FUNDING_DISPERSION`'s catalogs, replacing the static 13-coin list as an
+      opt-in (`ENABLE_DYNAMIC_CARRY_UNIVERSE`, default `False` — byte-identical to today's catalog, zero GCS I/O, when
+      unset; verified via `test_build_carry_basis_perp/_funding_dispersion_is_byte_identical_to_static_baseline`). New
+      `canonical_adv_ranked_universe_provider.py` independently re-implements the honest-absence-gated rolling-ADV read
+      (does NOT import features-service's `adv.py` — verified against real prod GCS that `adv.py`'s own documented
+      path/schema convention returns zero rows unconditionally today: wrong timeframe key `24h` vs real `1d`, a missing
+      `instrument_type=` path segment, a non-existent `quote_volume` column, and `derivative_ticker`'s hardcoded-zero
+      `volume` — flagged in-module for features-service's own owners, not fixed here). Falls back to the static list on
+      any read failure or empty ranked result.
 - [ ] [DOCS] P3. **Explicitly OUT of the tick-builder-wiring scope**: `ARBITRAGE_MEV_LIQUIDATION_BUNDLE`,
       `ARBITRAGE_MEV_JIT_LIQUIDITY`, `ARBITRAGE_MEV_BACKRUN` — architecturally opportunistic/runtime-mempool-driven, no
       catalog-declared currency universe to build a day-partition tick loader against. Flagged, not silently dropped — a
