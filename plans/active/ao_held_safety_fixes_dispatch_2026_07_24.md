@@ -72,17 +72,26 @@ source:
       coverage-gap fix REMOVED the live-worker gate, so an actively-working slot has no exemption. **Gate**: a
       regression test where a recent-commit-but-still-dirty worker does NOT fire the staleness alert, with the
       genuinely-stale-slot tests still green.
-- [ ] [BACKEND] P1. Route `agent_reply()` in `server/routes/agents.py` to the ORIGINATING role when the answered message
-      came from a peer, instead of always the replier's own thread. It currently calls `post_agent_message_by_role` with
-      `target_role=agent.role, direction="from_agent"` unconditionally, and `AgentReplyRequest` in
-      `server/models/agents.py` has no cross-role target field — so a reply to a peer lands on the replier's own thread
-      and the peer never sees it in its poll. When `in_reply_to` resolves to a message whose `from_role` differs, post
-      `direction="to_agent"` to that `from_role` plus the tmux nudge. **Gate**: a regression test proving a cross-role
-      reply lands in the target role's next `/poll` (not merely its `/history`), with the existing same-role reply-ack
-      tests still green.
+- [x] ✅ [BACKEND] P1. Route `agent_reply()` in `server/routes/agents.py` to the ORIGINATING role when the answered
+      message came from a peer, instead of always the replier's own thread. It currently calls
+      `post_agent_message_by_role` with `target_role=agent.role, direction="from_agent"` unconditionally, and
+      `AgentReplyRequest` in `server/models/agents.py` has no cross-role target field — so a reply to a peer lands on
+      the replier's own thread and the peer never sees it in its poll. When `in_reply_to` resolves to a message whose
+      `from_role` differs, post `direction="to_agent"` to that `from_role` plus the tmux nudge. **Gate**: a regression
+      test proving a cross-role reply lands in the target role's next `/poll` (not merely its `/history`), with the
+      existing same-role reply-ack tests still green. — **SHIPPED `agent-orchestrator@738b2d3`**: `agent_reply()` now
+      resolves `in_reply_to`'s origin message (new `ss.get_agent_message`); when its `from_role` is a genuine peer agent
+      role (not `operator`, not the replier's own role) it posts `direction="to_agent"` to that role + a best-effort
+      tmux nudge, else keeps the unchanged own-thread `from_agent` behavior. Regression coverage in
+      `tests/test_agent_reply_cross_role_routing.py` (4 tests: cross-role lands in the peer's next `/poll`, operator
+      replies stay own-thread, same-role `in_reply_to` isn't mistaken for cross-role, no-`in_reply_to` keeps default) —
+      full suite green (1595 passed, 1 skipped).
 
 ## Progress Log
 
 - **2026-07-24**: Authored by splitting the two Q2-held todos out of `ao_issue_docs_consolidated_remediation_2026_07_23`
   per operator ruling — dispatch now, confirmed no file collision with Plan B. Born `status: active`,
   `assigned_vm: planning` — dispatchable to the AO fleet.
+- **2026-07-24**: Slot 4 shipped the P1 cross-role `/reply` routing fix — `agent-orchestrator@738b2d3`, full QG green
+  (1595 passed, 1 skipped). Todo 2 flipped. The remaining P2 liveness-by-progress-gate todo and the P3 review sign-off
+  are still open.
