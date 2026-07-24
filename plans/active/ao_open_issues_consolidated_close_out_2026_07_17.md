@@ -792,8 +792,6 @@ the close-the-loop point: plan_health keeps correctly re-reporting a real, owned
       test covers this (`dashboard/src/layout.test.ts` has no `Blocked`-prefixed case). **Gate**: a new `layout.test.ts`
       case that fails against the current code (an option click alone must NOT invoke `onAnswer`) and passes once the
       fix lands (option click + Submit invokes it exactly once with the selected option); `npm run build`/`tsc` clean.
-      Full write-up:
-      [`blocked_question_option_click_immediately_submits_2026_07_24.md`](issues/blocked_question_option_click_immediately_submits_2026_07_24.md).
 
 ## Externally blocked (tracked, not actionable here)
 
