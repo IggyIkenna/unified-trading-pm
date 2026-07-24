@@ -106,6 +106,14 @@ auto-recovery matrix. This epic only routes to a human for the **`manual_unkill`
 - Per-role escalation _triggers_ (declared in each role's W6 charter — this epic owns the _pipeline_, not the triggers).
 - A new Slack OAuth app (E2, deferred — the MVP keeps the one-way webhook + dashboard-resolve, just scoped + stateful).
 
+## Design input awaiting scope (not yet folded into E1)
+
+- [`blocked_questions_ux_redesign_context_loss_and_scale_2026_07_24.md`](../active/issues/blocked_questions_ux_redesign_context_loss_and_scale_2026_07_24.md)
+  — operator-reported: insufficient context in question/options, scale (~30 open questions), duplicate questions across
+  agents/sessions, and the operator unable to reach the ORIGINATING agent for follow-up once it's dead. Bigger than E1's
+  scoped-link + state-machine work — read it before scoping E1 (or a wider blocked-questions redesign). Deliberately
+  deferred; not actioned.
+
 ## P1 — escalation pipeline MVP
 
 **This epic section is now the SINGLE tracking home for E1** (child plan archived 2026-07-23 as duplicate tracking — its
