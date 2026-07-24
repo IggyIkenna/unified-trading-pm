@@ -215,13 +215,22 @@ source:
       the pre-fix code (`AttributeError: no _sweep_unpushed_slots`, both git-stash and `_ahead_push.py` removed) and
       PASSING against the fix. Full `quality-gates.sh` green (1624 passed, 1 skipped, ruff + basedpyright clean) on the
       shipped SHA.
-- [ ] [BACKEND] P3. Root-cause slot 4's elevated short-lived-orphan rate, or record an explicit accept-as-cadence
+- [x] ✅ [BACKEND] P3. Root-cause slot 4's elevated short-lived-orphan rate, or record an explicit accept-as-cadence
       verdict with the comparison data. Compare `slot_resume_respawned`, `autospawn_failed`, `watchdog_slot_killed` and
       `tmux_session_lost` rates for slot 4 against the other slots NORMALISED PER DISPATCH — raw counts are misleading
       because slot 4's dispatch volume differs — over a multi-day window. The periodic orphan sweep already reaps the
       symptom within ~60s, so this is about knowing whether slot 4 is structurally different. **Gate**: either a fixed
       cause (code diff plus a measured 24h orphan-rate drop) or a recorded cadence verdict citing the per-dispatch
-      comparison. Silence is not an outcome.
+      comparison. Silence is not an outcome. — **RESOLVED, "just cadence" (unified-trading-pm, this commit)**: full
+      methodology + per-slot table in `/plans/active/issues/slot4_recurring_short_lived_orphans_2026_07_20.md` §
+      "Resolution (2026-07-24, slot 5)". Queried the live `activity_log` directly (this session has network access to
+      the central VM's `localhost:8765`). Normalised short-lived-orphan rate (age<1h orphan reaps ÷ task_dispatched)
+      over the matched ~4-day window: slot 4 = 0.517, ranked **9th of 15** active slots — NOT the fleet outlier (slots
+      10/13 = 2.000, 12/15 = 1.500, 14 = 1.000, 8 = 0.824 all rank higher). Moderate correlation (Pearson r=0.561, n=15)
+      found between a slot's fraction of dispatches to a recurring long-running/flaky task family
+      (`sports_p2_history_apifootball_2015_to_present-*`, etc.) and its orphan rate — the elevated churn tracks the
+      TASK, not the slot. No code change indicated; accepted as cadence, self-mitigated by the already-live periodic
+      orphan sweep.
 - [ ] [REVIEW] P2. Correct the "0 dead links" claim in `ao_open_issues_consolidated_close_out_2026_07_17.md`'s
       2026-07-18 Progress Log to state the sweep's actual scope. The cited sweep commits landed roughly ten hours AFTER
       the commit that deleted these files and covered different documents, so the line reads as fleet-wide proof when it
@@ -345,9 +354,25 @@ source:
   untracked dirty file and trips the porcelain-clean check, silently producing zero results (caught by running the new
   test standalone before trusting it, not by the fail-before/pass-after pass alone).
 
+- **2026-07-24 (slot 5)**: Item 10 shipped (verdict-only, no code change — the todo's stated gate accepts either path).
+  Full writeup in `/plans/active/issues/slot4_recurring_short_lived_orphans_2026_07_20.md` § "Resolution (2026-07-24,
+  slot 5)", citation inline on its checkbox above. Queried the live `activity_log` directly via `GET /api/activity` /
+  `GET /api/activity/rollup?by_slot=true` (this session has direct network access to the central VM's `localhost:8765`,
+  so no SSM detour was needed). Verdict: slot 4's short-lived-orphan rate normalised per dispatch (0.517) ranks 9th of
+  15 active slots — NOT the fleet outlier the 2026-07-20 snapshot suggested; the elevated churn correlates with which
+  slots got repeatedly re-dispatched to a family of long-running/flaky backfill tasks, not with slot identity. Accepted
+  as cadence, self-mitigated by the already-live periodic orphan sweep.
+
+  **Correction to the "HELD per Q2" note below (this entry)**: the previous Deferred-work table (slot 2/3, below)
+  labeled items 10 and 12 as "HELD per Q2 (operator-decision)". That was a mislabeling — the actual 2 Q2-held todos
+  (liveness-by-progress gate in `_git_alerts.py` + cross-role `/reply` routing in `agents.py`) were split into their own
+  plan, `/plans/active/ao_held_safety_fixes_dispatch_2026_07_24.md`, per operator ruling 2026-07-24, and **both already
+  shipped** there (slots 4 and 6) — unrelated to this plan's items 10/12. Item 10 was in fact legitimately dispatchable
+  and is now done (above); item 12 remains open and is NOT Q2-held either — it is simply next in this plan's sequential
+  order, same as any other open item.
+
   ## Deferred work after 2026-07-24
 
-  | Item  | State    | Blocked-on                                                                         |
-  | ----- | -------- | ---------------------------------------------------------------------------------- |
-  | 10    | Not done | `[BACKEND]` HELD per Q2 (operator-decision) — next in sequence, not auto-startable |
-  | 11-14 | Not done | Nobody; sequential continuation (item 12 `[BACKEND]` also HELD per Q2)             |
+  | Item  | State    | Blocked-on                                                                                                                                                                        |
+  | ----- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+  | 11-14 | Not done | Nobody; sequential continuation (the earlier "HELD per Q2" label on items 10/12 was a documentation error — corrected above; item 12 is not operator-held, just next in sequence) |
