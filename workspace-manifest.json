@@ -455,10 +455,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
+        "qg_red_reason": null,
         "warn_file_count": 20,
-        "large_file_count": 0,
-        "coverage_pct": 84.42,
-        "qg_red_reason": null
+        "coverage_pct": null,
+        "large_file_count": 0
       }
     },
     "features-service": {
@@ -881,10 +881,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "warn_file_count": 38,
-        "large_file_count": 0,
-        "coverage_pct": 83.44,
-        "qg_red_reason": null
+        "qg_red_reason": null,
+        "warn_file_count": 39,
+        "coverage_pct": null,
+        "large_file_count": 0
       }
     },
     "ml-service": {
@@ -1300,10 +1300,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
+        "qg_red_reason": null,
         "warn_file_count": 0,
-        "large_file_count": 0,
-        "coverage_pct": 73.08,
-        "qg_red_reason": "ruff"
+        "coverage_pct": null,
+        "large_file_count": 0
       }
     },
     "unified-trading-api": {
