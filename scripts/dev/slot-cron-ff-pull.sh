@@ -53,7 +53,7 @@ QUIET=0
 DRY_RUN=0
 PARALLEL_WORKERS="${SLOT_FF_PULL_WORKERS:-4}"
 DO_PREFETCH=1
-LOCK_FILE="${XDG_RUNTIME_DIR:-/tmp}/slot-cron-ff-pull.$(id -u).lock"
+LOCK_FILE="${SLOT_FF_PULL_LOCK_FILE:-${XDG_RUNTIME_DIR:-/tmp}/slot-cron-ff-pull.$(id -u).lock}"
 OVERRIDES_FILE="$(dirname "${BASH_SOURCE[0]}")/cron-branch-overrides.txt"
 
 # Per-repo branch overrides, loaded from OVERRIDES_FILE if present.
@@ -128,6 +128,24 @@ FF_DIRTY_STREAK_THRESHOLD="${FF_DIRTY_STREAK_THRESHOLD:-3}"
 
 # Record one per-repo outcome token: ok | skip:dirty | conflict | fail.
 _ff_record() { printf '%s\n' "$1" >> "${FF_TOKENS_FILE}" 2>/dev/null || true; }
+
+# Single-source-of-truth dirt filter (ao_remediation_b_code_chain_2026_07_23.md item 3;
+# mirrors slot-git-status-report.sh's classify_repo() fix, item 1). This cron computes
+# dirt with the exact same `git status --porcelain` pattern as the reporter, so it is
+# equally exposed to whatever phantom mechanism can inject a stray blank byte into the
+# capture even on a genuinely clean tree — the reporter's bug was trusting a count
+# independent of what a line-by-line pass actually kept; the parallel risk here is
+# trusting raw byte-non-emptiness (`[[ -n "$capture" ]]`) instead of whether the capture
+# contains any REAL (non-blank) line. Never gate on the raw capture directly — always
+# filter first and gate on that, so a phantom blank byte can never trip [skip:dirty] and
+# starve FF-pull. Pure (no I/O, no globals) — echoes only the kept non-blank lines.
+_filter_nonblank_porcelain() {
+    local raw="$1" line
+    while IFS= read -r line; do
+        [[ -z "${line}" ]] && continue
+        printf '%s\n' "${line}"
+    done <<< "${raw}"
+}
 
 # Aggregate the run's worst outcome + write the result file atomically (tmp+mv).
 # Worst-of precedence: conflict > fail > skip:dirty > ok (an empty run = ok, the
@@ -366,7 +384,7 @@ ff_one() {
     # on whether the file actually blocks; pre-emptively guessing "dirty ⇒ skip" is what turned a
     # harmless stray file into a permanent outage. Verified empirically 2026-07-16: untracked-only
     # → FF succeeds and the file survives; tracked dirt → still skips; real collision → git refuses.
-    _tracked_dirt="$(git status --porcelain --untracked-files=no 2>/dev/null)"
+    _tracked_dirt="$(_filter_nonblank_porcelain "$(git status --porcelain --untracked-files=no 2>/dev/null)")"
     if [[ -n "${_tracked_dirt}" ]]; then
         log "[skip:dirty] ${repo_name} (${branch}) — uncommitted changes"
         _ff_record "skip:dirty"
