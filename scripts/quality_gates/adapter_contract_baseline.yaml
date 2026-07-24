@@ -283,7 +283,7 @@ baseline:
   market-data-processing-service/market_data_processing_service/app/core/batch_workers.py:
     count: 9
   market-data-processing-service/market_data_processing_service/app/core/canonical_writer.py:
-    count: 18
+    count: 17
   market-data-processing-service/market_data_processing_service/app/core/canonical_writer_manifest.py:
     count: 13
   market-data-processing-service/market_data_processing_service/app/core/canonical_writer_stamping.py:
