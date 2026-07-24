@@ -499,3 +499,28 @@ Non-blocking, digest-class, no page. Outside every active plan → parked here p
 orchestrator on review(slot1)'s behalf after they consolidated the thread and stepped back from per-recurrence pings.
 2026-07-22 addendum appended by main from review msg 1650 (same subsystem — consolidated here rather than a duplicate
 doc).
+
+### 6. BLOCKED-OPERATOR (slot 2, 2026-07-24): item 6's `dirty_files=2172` measurement needs operator/interactive access
+
+`ao_remediation_b_code_chain_2026_07_23.md` item 6 asks to verify the unexplained `dirty_files=2172` row for
+`unified-trading-pm` on host `ip-172-31-0-185` slot 0 by running `git status --porcelain | wc -l` directly in that
+clone. Resolved `ip-172-31-0-185` via `aws ec2 describe-instances --filters Name=private-ip-address,Values=172.31.0.185`
+→ `i-0dd9812a96cdda5dc` (tag `agent-orch-human-planning-vm`, region `ap-northeast-1`) — this is the **human-planning
+VM** (`interactive only` per workspace `CLAUDE.md`), not the orchestrator VM (`i-0c9b283b31d6b5ca7`) that
+`check-ao-backlog-status.sh` targets.
+
+Tried the same SSM-send-command pattern that script uses (read-only `curl`/shell on the box, no inbound firewall
+change): both `aws ssm describe-instance-information --filters Key=InstanceIds,Values=i-0dd9812a96cdda5dc` and
+`aws ssm send-command --instance-ids i-0dd9812a96cdda5dc ...` returned `AccessDeniedException` for IAM user
+`ikenna-worker` (confirmed `ssm:SendCommand` is ALSO denied against the orchestrator instance `i-0c9b283b31d6b5ca7` from
+this identity — so this is a blanket SSM-permission gap for this worker role, not an instance-specific one). No SSH key
+or inbound HTTP path to that VM exists from this slot. Filed `/blocked` `BLK-c83c6bdd` on
+`ao_remediation_b_code_chain-005` dispatch (slot 2) with three options (operator runs the measurement directly; grant
+the fleet role `ssm:SendCommand`+`ssm:GetCommandInvocation` on that instance; or defer/skip item 6 since it has no code
+dependency for items 7-14) — recommendation A. Skipping this task via `/skip-current-task` per the `continue_on` filed
+with the blocked-question so the sequential queue can proceed to item 7 while this is open.
+
+- [ ] [OPS] P2. Operator (or an agent with SSM access to `i-0dd9812a96cdda5dc`) runs
+      `git -C <the unified-trading-pm slot-0 clone on ip-172-31-0-185> status --porcelain | wc -l` and records the
+      count + an explicit real-or-phantom verdict here, closing out `ao_remediation_b_code_chain_2026_07_23.md` item 6
+      (repo: unified-trading-pm).
