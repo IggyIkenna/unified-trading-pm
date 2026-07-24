@@ -19,7 +19,7 @@ scope: [engineer, admin]
 tags: []
 related:
   [
-    /plans/active/master_to_live_defi_2026_05_23.md,
+    /plans/archive/2026_07/master_to_live_defi_2026_05_23.md,
     /plans/archive/2026_05/gcs_migration_bundle_pipeline_mode_2026_05_08.md,
   ]
 created: "2026-05-07"

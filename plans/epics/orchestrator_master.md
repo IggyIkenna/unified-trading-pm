@@ -40,9 +40,11 @@ codex_ssots:
 related_plans:
   - ../active/agent_orchestrator_alert_channel_cleanup_2026_07_13.md
   - ../active/ao_fleet_observability_kpis_2026_07_20.md
+  - ../active/ao_held_safety_fixes_dispatch_2026_07_24.md
+  - ../active/ao_issue_docs_consolidated_remediation_2026_07_23.md
   - ../active/ao_open_issues_consolidated_close_out_2026_07_17.md
-  - ../archive/2026_07/ao_worker_lifecycle_dispatch_context_2026_07_21.md
-  - ../archive/2026_07/master_to_live_defi_2026_05_23.md
+  - ../active/ao_remediation_a_independent_fixes_2026_07_23.md
+  - ../active/ao_remediation_b_code_chain_2026_07_23.md
 last_updated: 2026-07-16
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
@@ -309,20 +311,12 @@ the single audit trail.
 
 ## Assigned active plans
 
-_5 active plans declare `parent_epic: orchestrator_master` in their frontmatter. Workers pick up in priority order (P0
+_7 active plans declare `parent_epic: orchestrator_master` in their frontmatter. Workers pick up in priority order (P0
 first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ## P0 — must complete before next foundation gate
 
-### [`ao_worker_lifecycle_dispatch_context_2026_07_21`](../archive/2026_07/ao_worker_lifecycle_dispatch_context_2026_07_21.md) — ✅ COMPLETE, ARCHIVED 2026-07-23
-
-**status**: active · **estimate**: 1.2 cal AI-days (class: refactor) **title**: Worker lifecycle by dispatch-context —
-persistent plan-backlog drain vs event-spawned one-shots
-
-### [`master_to_live_defi_2026_05_23`](../archive/2026_07/master_to_live_defi_2026_05_23.md)
-
-**status**: active · **estimate**: 3.6 cal AI-days (class: design) **title**: May-23 Cutover Master — Live DeFi Trading
-by 2026-05-23
+_(no plans currently assigned at this priority)_
 
 ## P1 — important; post-current-gate
 
@@ -335,9 +329,29 @@ by 2026-05-23
 **status**: active · **estimate**: 2.8 cal AI-days (class: infra) **title**: AO fleet observability — make efficiency,
 escalator efficacy and account burn visible
 
+### [`ao_held_safety_fixes_dispatch_2026_07_24`](../active/ao_held_safety_fixes_dispatch_2026_07_24.md)
+
+**status**: active · **estimate**: 0.4 cal AI-days (class: refactor) **title**: AO held safety fixes — dispatch
+(liveness-by-progress gate + cross-role reply routing)
+
+### [`ao_issue_docs_consolidated_remediation_2026_07_23`](../active/ao_issue_docs_consolidated_remediation_2026_07_23.md)
+
+**status**: active · **estimate**: 0.8 cal AI-days (class: refactor) **title**: AO issue-docs remediation — held +
+blocked residual (the parts NOT dispatched to AO)
+
 ### [`ao_open_issues_consolidated_close_out_2026_07_17`](../active/ao_open_issues_consolidated_close_out_2026_07_17.md)
 
 **status**: active · **estimate**: 4.8 cal AI-days (class: infra)
+
+### [`ao_remediation_a_independent_fixes_2026_07_23`](../active/ao_remediation_a_independent_fixes_2026_07_23.md)
+
+**status**: active · **estimate**: 0.8 cal AI-days (class: refactor) **title**: AO remediation A — independent fixes
+(parallel-safe, one distinct file each)
+
+### [`ao_remediation_b_code_chain_2026_07_23`](../active/ao_remediation_b_code_chain_2026_07_23.md)
+
+**status**: active · **estimate**: 1.6 cal AI-days (class: refactor) **title**: AO remediation B — git-health +
+worker-liveness code chain (sequential, gated behind Plan A)
 
 ## P2 — useful; opportunistic
 

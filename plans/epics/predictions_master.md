@@ -34,9 +34,13 @@ co_operators:
 codex_ssots:
 related_plans:
   - ../active/prediction_consolidated_closeout_2026_07_18.md
-  - ../active/prediction_perps_kalshi_polymarket_parked_2026_07_24.md
-  - ../active/prediction_live_clob_depth_capture_2026_07_24.md
   - ../active/prediction_cross_venue_arb_and_coverage_2026_07_24.md
+  - ../active/prediction_live_clob_depth_capture_2026_07_24.md
+  - ../active/prediction_perps_kalshi_polymarket_parked_2026_07_24.md
+  - ../active/prediction_phase_ab_residuals_2026_07_24.md
+  - ../active/prediction_phase_c_data_status_ui_2026_07_24.md
+  - ../active/prediction_phase_d_formal_smoke_and_backfill_2026_07_24.md
+  - ../active/prediction_phase_e_football_arb_live_2026_07_24.md
   - ../active/predictions_ml_walk_forward_and_arb_2026_06_20.md
   - ../active/predictions_other_bucket_and_ui_drilldown_2026_06_20.md
 last_updated: 2026-07-12
@@ -900,7 +904,7 @@ features predict.
 
 ## Assigned active plans
 
-_4 active plans declare `parent_epic: predictions_master` in their frontmatter. Workers pick up in priority order (P0
+_10 active plans declare `parent_epic: predictions_master` in their frontmatter. Workers pick up in priority order (P0
 first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ## P0 — must complete before next foundation gate
@@ -921,19 +925,39 @@ canonical-question-group bucket + deployment-ui 3-level drilldown
 
 **status**: active · **estimate**: 9.6 cal AI-days (class: infra)
 
+### [`prediction_phase_ab_residuals_2026_07_24`](../active/prediction_phase_ab_residuals_2026_07_24.md)
+
+**status**: active · **estimate**: 3.2 cal AI-days (class: infra)
+
+### [`prediction_phase_c_data_status_ui_2026_07_24`](../active/prediction_phase_c_data_status_ui_2026_07_24.md)
+
+**status**: active · **estimate**: 1.6 cal AI-days (class: infra) **title**: Prediction Phase C — data-status +
+honest-coverage UI (split from prediction_consolidated_closeout_2026_07_18)
+
+### [`prediction_phase_d_formal_smoke_and_backfill_2026_07_24`](../active/prediction_phase_d_formal_smoke_and_backfill_2026_07_24.md)
+
+**status**: active · **estimate**: 2.0 cal AI-days (class: infra)
+
+### [`prediction_phase_e_football_arb_live_2026_07_24`](../active/prediction_phase_e_football_arb_live_2026_07_24.md)
+
+**status**: active · **estimate**: 2.4 cal AI-days (class: infra)
+
 ## P2 — useful; opportunistic
 
-### `prediction_venue_perps_and_live_clob_depth_2026_06_20` — SPLIT 2026-07-24, see 3 successors
+### [`prediction_cross_venue_arb_and_coverage_2026_07_24`](../active/prediction_cross_venue_arb_and_coverage_2026_07_24.md)
 
-> Archived (frozen) at `../archive/2026_07/prediction_venue_perps_and_live_clob_depth_2026_06_20.md` per the plan
-> line-cap remediation (`../active/issues/plan_line_cap_remediation_2026_07_23.md` row 23). Split 3 ways:
+**status**: active · **estimate**: 8 cal AI-days (class: brand-new) **title**: Prediction cross-venue Kalshi↔Polymarket
+arb detection + honest-coverage correctness
 
-- [`prediction_perps_kalshi_polymarket_parked_2026_07_24`](../active/prediction_perps_kalshi_polymarket_parked_2026_07_24.md)
-  — **status**: active · **estimate**: 8 cal AI-days (class: brand-new) — parked KALSHI_PERP/POLYMARKET_PERP track
-- [`prediction_live_clob_depth_capture_2026_07_24`](../active/prediction_live_clob_depth_capture_2026_07_24.md) —
-  **status**: active · **estimate**: 8 cal AI-days (class: brand-new) — live+batch CLOB depth capture infra
-- [`prediction_cross_venue_arb_and_coverage_2026_07_24`](../active/prediction_cross_venue_arb_and_coverage_2026_07_24.md)
-  — **status**: active · **estimate**: 8 cal AI-days (class: brand-new) — cross-venue arb + honest-coverage
+### [`prediction_live_clob_depth_capture_2026_07_24`](../active/prediction_live_clob_depth_capture_2026_07_24.md)
+
+**status**: active · **estimate**: 8 cal AI-days (class: brand-new) **title**: Prediction (Kalshi/Polymarket) live +
+batch CLOB depth & trades capture infrastructure
+
+### [`prediction_perps_kalshi_polymarket_parked_2026_07_24`](../active/prediction_perps_kalshi_polymarket_parked_2026_07_24.md)
+
+**status**: active · **estimate**: 8 cal AI-days (class: brand-new) **title**: Kalshi + Polymarket perpetual futures —
+PARKED crypto-perp venue track
 
 ## P3 — backlog; revisit quarterly
 

@@ -13,7 +13,7 @@ related:
   [
     /plans/archive/2026_05/agent_orchestrator_dual_deployment_2026_05_19.md,
     agent_orchestrator_workers_on_vms_2026_05_19.md,
-    /plans/active/master_to_live_defi_2026_05_23.md,
+    /plans/archive/2026_07/master_to_live_defi_2026_05_23.md,
   ]
 created: "2026-05-19"
 parent_epic: orchestrator_master

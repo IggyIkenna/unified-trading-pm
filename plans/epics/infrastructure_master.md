@@ -31,12 +31,13 @@ co_operators:
 codex_ssots:
 related_plans:
   - ../active/aster_and_cefi_rolling_adv_feature_2026_07_21.md
-  - ../active/bucket_estate_consolidation_to_sub100_2026_07_13.md
+  - ../active/bucket_estate_consolidation_closeout_2026_07_24.md
   - ../active/bucket_fold_execution_strategy_2026_07_17.md
   - ../active/bucket_fold_features_2026_07_17.md
   - ../active/bucket_fold_ml_2026_07_17.md
   - ../active/bucket_fold_portfolio_state_2026_07_17.md
   - ../active/bucket_iam_write_protection_per_tier_2026_06_09.md
+  - ../active/candle_canonical_path_migration_execution_2026_07_24.md
   - ../active/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md
   - ../active/codex_violations_ratchet_to_five_2026_06_10.md
   - ../active/data_pipeline_check_mdps_features_2026_07_20.md
@@ -494,15 +495,15 @@ sub-plan; this section is a pointer.
 
 ## Assigned active plans
 
-_18 active plans declare `parent_epic: infrastructure_master` in their frontmatter. Workers pick up in priority order
+_19 active plans declare `parent_epic: infrastructure_master` in their frontmatter. Workers pick up in priority order
 (P0 first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ## P0 — must complete before next foundation gate
 
-### [`bucket_estate_consolidation_to_sub100_2026_07_13`](../active/bucket_estate_consolidation_to_sub100_2026_07_13.md)
+### [`bucket_estate_consolidation_closeout_2026_07_24`](../active/bucket_estate_consolidation_closeout_2026_07_24.md)
 
-**status**: active · **estimate**: 4.8 cal AI-days (class: infra) **title**: Bucket estate consolidation — 241 → <100
-(waves 0-3, single-migration env-split fold)
+**status**: active · **estimate**: 1.6 cal AI-days (class: infra) **title**: Bucket estate consolidation — closeout
+residuals (6 forked mop-up todos)
 
 ### [`bucket_fold_ml_2026_07_17`](../active/bucket_fold_ml_2026_07_17.md)
 
@@ -525,6 +526,10 @@ per-AG (features-{ag}-{env}-{pid})
 
 **status**: active · **estimate**: 2.4 cal AI-days (class: infra) **title**: Bucket IAM write-protection —
 per-tier/per-domain SAs replace the project-wide god-SA (§8 implementation)
+
+### [`candle_canonical_path_migration_execution_2026_07_24`](../active/candle_canonical_path_migration_execution_2026_07_24.md)
+
+**status**: active · **estimate**: 4.0 cal AI-days (class: infra)
 
 ### [`cicd_mvp_ldr_to_main_pipeline_2026_06_30`](../active/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md)
 

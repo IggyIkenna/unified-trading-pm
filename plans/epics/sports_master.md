@@ -50,13 +50,12 @@ related_plans:
   - ../active/sports_consolidated_closeout_2026_07_19.md
   - ../active/sports_group_c_execution_backtest_harness_2026_07_21.md
   - ../active/sports_legacy_bucket_cutover_2026_07_16.md
+  - ../active/sports_legacy_cutover_closeout_tasks_2026_07_24.md
   - ../active/sports_master_closeout_2026_07_21.md
+  - ../active/sports_master_closeout_progress_log_2026_07_24.md
+  - ../active/sports_mtds_odds_trades_index_correctness_followup_2026_07_24.md
   - ../active/sports_odds_bookmaker_coverage_enumeration_2026_06_20.md
-  - ../active/sports_odds_exchange_fixed_fork_2026_07_18.md
   - ../active/sports_odds_feature_naming_canonicalization_2026_07_21.md
-  - ../active/sports_p2_features_history_to_ml_ready_2026_06_27.md
-  - ../active/sports_p2_history_apifootball_2015_to_present_2026_06_27.md
-  - ../active/sports_pipeline_to_100pct_golden_window_first_2026_06_27.md
   - ../active/sports_predictions_live_mode_activation_readiness_2026_07_21.md
 last_updated: 2026-07-12 # was: 2026-06-24, stale vs 2026-06-27/2026-07-08 body edits — corrected per finding id 279
 locked_by: live-defi-rollout
@@ -764,10 +763,10 @@ The two data_types collide visually in the data-status panel without a clear dis
       `normalize_footystats_odds` for the full bookmaker-odds vs FootyStats-predictions distinction.
 
       Codex doc updated: `/codex/02-data/sports-data-source-coverage-matrix.md` §2.2 — added `PREDICTIONS vs ODDS —
-                                                                                                                      disambiguation` block under the §2.2 footystats data_types matrix. Calls out the FOUR concrete differences:
-                                                                                                                      (a) PREDICTIONS = MODEL OUTPUT (FootyStats's algorithm), (b) ODDS = MARKET DATA (real bookmaker quotes),
-                                                                                                                      (c) downstream consumers must NOT merge them (different statistical properties), (d) strategy-service must NOT
-                                                                                                                      use PREDICTIONS as input feature for a model targeting ODDS for the same fixture (same-source label leakage).
+                                                                                                                              disambiguation` block under the §2.2 footystats data_types matrix. Calls out the FOUR concrete differences:
+                                                                                                                              (a) PREDICTIONS = MODEL OUTPUT (FootyStats's algorithm), (b) ODDS = MARKET DATA (real bookmaker quotes),
+                                                                                                                              (c) downstream consumers must NOT merge them (different statistical properties), (d) strategy-service must NOT
+                                                                                                                              use PREDICTIONS as input feature for a model targeting ODDS for the same fixture (same-source label leakage).
 
 #### C.4 — Transfermarkt PLAYER_VALUES per-player flatten
 
@@ -892,13 +891,13 @@ follow-up flatten target; STANDINGS and MATCHES are probably already correct.
       via raw-payload sample).
 
       Migration: if downstream consumers tolerate NaN, no flip needed (just landing the new normalizer + re-fetching
-                                                                                                                  going forward writes populated columns from now on; historical rows stay None-populated and are NaN-tolerant);
-                                                                                                                  if any consumer explicitly checks column existence via `.dropna(subset=...)`, then full B.1-shape migration
-                                                                                                                  (flip + delete + re-fetch) is required. Cassette parity test catches the wire-up regression.
+                                                                                                                          going forward writes populated columns from now on; historical rows stay None-populated and are NaN-tolerant);
+                                                                                                                          if any consumer explicitly checks column existence via `.dropna(subset=...)`, then full B.1-shape migration
+                                                                                                                          (flip + delete + re-fetch) is required. Cassette parity test catches the wire-up regression.
 
-                                                                                                                  (UAC@4e23bd9 — added `home_goals_halftime`/halftime, `home_shots_on_target`, `home_yellow_cards`,
-                                                                                                                  `home_red_cards`, home_fouls, home_offsides + `away_*` variants to FootyStatsMatch; normalized to
-                                                                                                                  CanonicalFixture fields)
+                                                                                                                          (UAC@4e23bd9 — added `home_goals_halftime`/halftime, `home_shots_on_target`, `home_yellow_cards`,
+                                                                                                                          `home_red_cards`, home_fouls, home_offsides + `away_*` variants to FootyStatsMatch; normalized to
+                                                                                                                          CanonicalFixture fields)
 
 ### FIXTURES schema split — SCHEDULE + OUTCOMES (migrated from issue `fixtures_lookahead_bias_post_match_scores_2026_05_08`) — SUPERSEDED 2026-06-20 (history only; see § "Workstream routing")
 
@@ -1327,14 +1326,14 @@ Phases 1-3+5, C.6 report_time, MatchStatus SSOT item.
       denominate against).
 
       **DONE 2026-06-03 (deployment-api@96e7ac7)**: `TEAMS` was `global_periodic cadence_days=1` (~365/yr) and
-                                                                                                                  `PLAYER_VALUES` was `per_league_periodic cadence_days=90` (quarterly approx) — both WRONG (written at trigger
-                                                                                                                  dates only). Added `global_trigger_date` + `per_league_trigger_date` axes +
-                                                                                                                  `_sports_trigger_dates_for_{window,league}` helpers (union of `get_reference_refresh_dates` across leagues,
-                                                                                                                  clipped) reading from the UAC `LEAGUE_REGISTRY` (no GCS I/O, so it works before the IS write-path lands —
-                                                                                                                  coverage shows 0% until then, correctly).
+                                                                                                                          `PLAYER_VALUES` was `per_league_periodic cadence_days=90` (quarterly approx) — both WRONG (written at trigger
+                                                                                                                          dates only). Added `global_trigger_date` + `per_league_trigger_date` axes +
+                                                                                                                          `_sports_trigger_dates_for_{window,league}` helpers (union of `get_reference_refresh_dates` across leagues,
+                                                                                                                          clipped) reading from the UAC `LEAGUE_REGISTRY` (no GCS I/O, so it works before the IS write-path lands —
+                                                                                                                          coverage shows 0% until then, correctly).
 
-                                                                                                                  `TEAMS` → `global_trigger_date`, `PLAYER_VALUES` → `per_league_trigger_date`. 8 tests incl. the
-                                                                                                                  trigger-date≪daily-calendar invariant. QG exit 0.
+                                                                                                                          `TEAMS` → `global_trigger_date`, `PLAYER_VALUES` → `per_league_trigger_date`. 8 tests incl. the
+                                                                                                                          trigger-date≪daily-calendar invariant. QG exit 0.
 
 - [ ] [QG] P2. `bash scripts/quality-gates.sh` on deployment-api after A4.1.
 
@@ -1378,7 +1377,7 @@ Phases 1-3+5, C.6 report_time, MatchStatus SSOT item.
 
 ## Assigned active plans
 
-_15 active plans declare `parent_epic: sports_master` in their frontmatter. Workers pick up in priority order (P0
+_14 active plans declare `parent_epic: sports_master` in their frontmatter. Workers pick up in priority order (P0
 first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ## P0 — must complete before next foundation gate
@@ -1390,39 +1389,42 @@ current state across IS / tick / MDPS / features (2026-07-19)
 
 ### [`sports_consolidated_closeout_2026_07_19`](../active/sports_consolidated_closeout_2026_07_19.md)
 
-**status**: active · **estimate**: 9.6 cal AI-days (class: infra) **title**: Sports consolidated close-out — canonical,
-honestly-covered, leakage-free, ML-ready (one pass through features)
+**status**: active · **estimate**: 36.8 # 46 x 0.8 (infra multiplier, unchanged estimate_class) cal AI-days (class:
+infra) **title**: Sports consolidated close-out — canonical, honestly-covered, leakage-free, ML-ready (one pass through
+features)
 
 ### [`sports_legacy_bucket_cutover_2026_07_16`](../active/sports_legacy_bucket_cutover_2026_07_16.md)
 
 **status**: active · **estimate**: 4 cal AI-days (class: infra) **title**: Sports legacy bucket cutover — freeze, move,
 purge, delete, restore
 
+### [`sports_legacy_cutover_closeout_tasks_2026_07_24`](../active/sports_legacy_cutover_closeout_tasks_2026_07_24.md)
+
+**status**: active · **estimate**: 0.8 cal AI-days (class: infra) **title**: Sports legacy bucket cutover closeout —
+post-phase codex audit + one-off retirement
+
 ### [`sports_master_closeout_2026_07_21`](../active/sports_master_closeout_2026_07_21.md)
 
 **status**: active · **estimate**: 4.8 cal AI-days (class: infra)
+
+### [`sports_master_closeout_progress_log_2026_07_24`](../active/sports_master_closeout_progress_log_2026_07_24.md)
+
+**status**: active · **estimate**: 0 cal AI-days (class: infra) **title**: Sports MASTER close-out — Progress Log
+companion (six autonomous-session waves, 2026-07-21 to 2026-07-22)
+
+### [`sports_mtds_odds_trades_index_correctness_followup_2026_07_24`](../active/sports_mtds_odds_trades_index_correctness_followup_2026_07_24.md)
+
+**status**: active · **estimate**: 0.8 cal AI-days (class: infra) **title**: MTDS sports odds/trades index-correctness
+followup — T2.9 schema drift + T2.10 phantom rows
 
 ### [`sports_odds_bookmaker_coverage_enumeration_2026_06_20`](../active/sports_odds_bookmaker_coverage_enumeration_2026_06_20.md)
 
 **status**: active · **estimate**: 3 cal AI-days (class: brand-new) **title**: Sports ODDS bookmaker × market coverage
 enumeration + NaN-fill + cluster validation
 
-### [`sports_pipeline_to_100pct_golden_window_first_2026_06_27`](../active/sports_pipeline_to_100pct_golden_window_first_2026_06_27.md)
-
-**status**: active · **estimate**: 1.2 cal AI-days (class: design) **title**: Sports pipeline to 100% —
-golden-window-first (sports automation coordinator)
-
 ## P1 — important; post-current-gate
 
-### [`sports_p2_features_history_to_ml_ready_2026_06_27`](../active/sports_p2_features_history_to_ml_ready_2026_06_27.md)
-
-**status**: active · **estimate**: 2 cal AI-days (class: infra) **title**: Sports P2c — derived features history to
-ML-ready (2015→present)
-
-### [`sports_p2_history_apifootball_2015_to_present_2026_06_27`](../active/sports_p2_history_apifootball_2015_to_present_2026_06_27.md)
-
-**status**: active · **estimate**: 3.2 cal AI-days (class: infra) **title**: Sports P2a — API-Football history
-2015→present to zero-missing (+ league-noise wipe + 2015-17 diagnosis)
+_(no plans currently assigned at this priority)_
 
 ## P2 — useful; opportunistic
 
@@ -1451,11 +1453,6 @@ paper-trade alpha gate — design spec (no implementation)
 
 **status**: active · **estimate**: 1.2 cal AI-days (class: infra) **title**: Sports/predictions Group-C execution-alpha
 backtest harness — scope note
-
-### [`sports_odds_exchange_fixed_fork_2026_07_18`](../active/sports_odds_exchange_fixed_fork_2026_07_18.md)
-
-**status**: active · **estimate**: 1.6 cal AI-days (class: refactor) **title**: Sports odds instrument_type fork —
-EXCHANGE_ODDS / FIXED_ODDS (UAC contract fork + GCS migration)
 
 ### [`sports_predictions_live_mode_activation_readiness_2026_07_21`](../active/sports_predictions_live_mode_activation_readiness_2026_07_21.md)
 

@@ -12,10 +12,26 @@ tags: []
 related: []
 created: 2026-05-10
 author: agent-dart-mvp
-source: [unified-trading-pm/plans/active/cross_cutting_may_23_deliverables_2026_05_08.md (Phase 4 BUILD scope), unified-trading-pm/plans/active/master_to_live_defi_2026_05_23.md (Group G Item 23), unified-trading-pm/codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md, unified-trading-pm/codex/09-strategy/architecture-v2/cross-cutting/operational-modes-matrix.md, execution-service/execution_service/api/manual_instruction_api.py (existing 682-line backend), execution-service/execution_service/api/preview_routes.py (existing 320-line backend), unified-trading-system-ui/app/(platform)/services/dart/locked/page.tsx (UI stub)]
+source:
+  [
+    unified-trading-pm/plans/active/cross_cutting_may_23_deliverables_2026_05_08.md (Phase 4 BUILD scope),
+    unified-trading-pm/plans/archive/2026_07/master_to_live_defi_2026_05_23.md (Group G Item 23),
+    unified-trading-pm/codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md,
+    unified-trading-pm/codex/09-strategy/architecture-v2/cross-cutting/operational-modes-matrix.md,
+    execution-service/execution_service/api/manual_instruction_api.py (existing 682-line backend),
+    execution-service/execution_service/api/preview_routes.py (existing 320-line backend),
+    unified-trading-system-ui/app/(platform)/services/dart/locked/page.tsx (UI stub),
+  ]
 locked_by: live-defi-rollout
 locked_since: 2026-05-10
-execution: {owner: cross_cutting_may_23_deliverables Phase 4 — daily Tab assignment in next work-split, cadence: one-shot (build-out) + per-PR (regression smokes once shipped), verifier: Playwright e2e `dart-manual-trade-flow.spec.ts` GREEN against mock-API + integration smoke against Tier-2 stack, last_executed: NEVER}
+execution:
+  {
+    owner: cross_cutting_may_23_deliverables Phase 4 — daily Tab assignment in next work-split,
+    cadence: one-shot (build-out) + per-PR (regression smokes once shipped),
+    verifier:
+      Playwright e2e `dart-manual-trade-flow.spec.ts` GREEN against mock-API + integration smoke against Tier-2 stack,
+    last_executed: NEVER,
+  }
 ---
 
 # DART manual-trade UI — 5-surface MVP build (master Group G Item 23)

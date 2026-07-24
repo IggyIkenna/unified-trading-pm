@@ -210,6 +210,7 @@ Primary active SSOTs for this work:
 - `unified-trading-pm/plans/active/manifest_migration_master_2026_05_07.md` — manifest v6→v7 reader migration +
   reconcilers
 - `unified-trading-pm/plans/active/strategy_architecture_v2_finalization_2026_04_19.md` — strategy v2 closeouts
-- `unified-trading-pm/plans/active/master_to_live_defi_2026_05_23.md` — live cutover master + work-stream coordination
+- `unified-trading-pm/plans/archive/2026_07/master_to_live_defi_2026_05_23.md` — live cutover master + work-stream
+  coordination
 
 PM commit landing the consolidation: `2cd3bbaf` (plan: close session-2 handoff gaps in active plans).

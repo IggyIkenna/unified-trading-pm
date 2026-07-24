@@ -9,7 +9,7 @@ stage: [meta]
 repos: [deployment-service, execution-service, features-service, strategy-service]
 scope: [engineer, admin]
 tags: []
-related: [mock_data_pipeline_benchmarking_2026_05_10.md, /plans/active/master_to_live_defi_2026_05_23.md]
+related: [mock_data_pipeline_benchmarking_2026_05_10.md, /plans/archive/2026_07/master_to_live_defi_2026_05_23.md]
 created: "2026-05-21"
 parent_epic: infrastructure_master
 priority: P1

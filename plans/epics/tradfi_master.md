@@ -35,8 +35,11 @@ parent: master_to_live_defi_2026_05_23
 co_operators:
 codex_ssots:
 related_plans:
+  - ../active/tradfi_backfill_throughput_followups_2026_07_24.md
   - ../active/tradfi_consolidated_closeout_2026_07_18.md
+  - ../active/tradfi_manifest_content_recovery_completion_2026_07_24.md
   - ../active/tradfi_multisource_backfill_2026_06_22.md
+  - ../active/tradfi_phase_d_terminal_gate_2026_07_24.md
   - ../active/tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md
 last_updated: 2026-06-20
 locked_by: live-defi-rollout
@@ -795,7 +798,7 @@ operator 2026-05-08 and now lives in `live_defi_rollout` deliverable on `defi_ma
 
 ## Assigned active plans
 
-_3 active plans declare `parent_epic: tradfi_master` in their frontmatter. Workers pick up in priority order (P0 first).
+_6 active plans declare `parent_epic: tradfi_master` in their frontmatter. Workers pick up in priority order (P0 first).
 Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ## P0 — must complete before next foundation gate
@@ -807,15 +810,29 @@ readiness (ES feature runs + data-clean slice)
 
 ## P1 — important; post-current-gate
 
+### [`tradfi_backfill_throughput_followups_2026_07_24`](../active/tradfi_backfill_throughput_followups_2026_07_24.md)
+
+**status**: active · **estimate**: 2.4 cal AI-days (class: infra) **title**: TradFi backfill-throughput follow-ups —
+download/VM throughput residuals + T+1 job hardening
+
 ### [`tradfi_consolidated_closeout_2026_07_18`](../active/tradfi_consolidated_closeout_2026_07_18.md)
 
-**status**: active · **estimate**: 11.2 cal AI-days (class: infra) **title**: TradFi consolidated close-out — one-pass
+**status**: active · **estimate**: 2.4 cal AI-days (class: infra) **title**: TradFi consolidated close-out — one-pass
 code→migrations→coverage→smoke-test to MVP-backfill-ready
+
+### [`tradfi_manifest_content_recovery_completion_2026_07_24`](../active/tradfi_manifest_content_recovery_completion_2026_07_24.md)
+
+**status**: active · **estimate**: 4.8 cal AI-days (class: infra)
 
 ### [`tradfi_multisource_backfill_2026_06_22`](../active/tradfi_multisource_backfill_2026_06_22.md)
 
 **status**: active · **estimate**: 1.6 cal AI-days (class: infra) **title**: TradFi backfill multi-source — FX→yahoo,
 CBOE cash-index no-provider, ICE source-ask
+
+### [`tradfi_phase_d_terminal_gate_2026_07_24`](../active/tradfi_phase_d_terminal_gate_2026_07_24.md)
+
+**status**: active · **estimate**: 1.6 cal AI-days (class: infra) **title**: TradFi Phase-D terminal gate —
+post-migration all-shards re-smoke-test
 
 ## P2 — useful; opportunistic
 

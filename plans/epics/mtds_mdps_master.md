@@ -74,8 +74,9 @@ co_operators:
 codex_ssots:
 related_plans:
   - ../active/data_completion_to_100_all_ag_2026_06_21.md
+  - ../active/data_source_provenance_enforcement_2026_07_24.md
+  - ../active/legacy_bucket_dual_write_decommission_2026_07_24.md
   - ../active/pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md
-  - ../archive/2026_07/sports_manifest_canonicalisation_2026_06_01.md
 last_updated:
   2026-07-15 # (was: 2026-06-26 — corrected 2026-07-14, doc-reconciliation finding 174: body carried
   # dated 2026-07-12/2026-07-13 banners weeks after this field was last bumped; corrected 2026-07-15,
@@ -715,7 +716,7 @@ layer**, not a re-statement of the work.
 
 ## Assigned active plans
 
-_3 active plans declare `parent_epic: mtds_mdps_master` in their frontmatter. Workers pick up in priority order (P0
+_4 active plans declare `parent_epic: mtds_mdps_master` in their frontmatter. Workers pick up in priority order (P0
 first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ## P0 — must complete before next foundation gate
@@ -725,13 +726,19 @@ first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 **status**: active · **estimate**: 8 cal AI-days (class: infra) **title**: Data completion to 100% — all asset groups,
 batch + live, manifest v9 (MTDS + IS)
 
+### [`data_source_provenance_enforcement_2026_07_24`](../active/data_source_provenance_enforcement_2026_07_24.md)
+
+**status**: active · **estimate**: 2.4 cal AI-days (class: infra) **title**: Data-source provenance enforcement — all
+asset groups (split from M-1)
+
+### [`legacy_bucket_dual_write_decommission_2026_07_24`](../active/legacy_bucket_dual_write_decommission_2026_07_24.md)
+
+**status**: active · **estimate**: 2.4 cal AI-days (class: infra) **title**: Legacy tick-bucket dual-write remediation —
+decommission (split from M-1)
+
 ### [`pipeline_mode_source_batch_live_replay_standardisation_2026_06_05`](../active/pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md)
 
 **status**: active · **estimate**: 9.6 cal AI-days (class: infra)
-
-### [`sports_manifest_canonicalisation_2026_06_01`](../archive/2026_07/sports_manifest_canonicalisation_2026_06_01.md)
-
-**status**: active · **estimate**: 2.4 cal AI-days (class: infra)
 
 ## P1 — important; post-current-gate
 

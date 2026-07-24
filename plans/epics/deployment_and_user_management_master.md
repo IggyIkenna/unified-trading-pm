@@ -22,6 +22,7 @@ parent: master_to_live_defi_2026_05_23
 co_operators:
 codex_ssots:
 related_plans:
+  - ../active/data_status_catalogue_true_source_phase2_2026_07_24.md
   - ../active/data_status_cell_grid_rearchitecture_2026_07_18.md
   - ../active/data_status_page_ux_and_canonicalisation_2026_07_16.md
   - ../active/data_status_tab_and_downloads_remediation_2026_06_16.md
@@ -29,8 +30,10 @@ related_plans:
   - ../active/deployment_redesign_cherrypicks_2026_07_20.md
   - ../active/github_actions_ci_cost_reduction_2026_07_15.md
   - ../active/github_actions_cost_reduction_options_analysis_2026_07_15.md
-  - ../active/mtds_data_status_page_parity_2026_07_21.md
-  - ../active/test_fleet_image_builds_from_current_code_2026_06_17.md
+  - ../active/github_actions_operator_gated_followups_2026_07_17.md
+  - ../active/github_actions_staging_machinery_shutdown_2026_07_24.md
+  - ../active/sports_fixtures_browser_single_catalogue_source_2026_07_24.md
+  - ../active/sports_prediction_mvp_writetime_precompute_2026_07_24.md
 last_updated: 2026-07-14
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
@@ -88,7 +91,7 @@ Key deployment/user-management UI surfaces and their required layers:
 
 ## Assigned active plans
 
-_9 active plans declare `parent_epic: deployment_and_user_management_master` in their frontmatter. Workers pick up in
+_12 active plans declare `parent_epic: deployment_and_user_management_master` in their frontmatter. Workers pick up in
 priority order (P0 first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ## P0 — must complete before next foundation gate
@@ -105,15 +108,25 @@ remediation — bounded caching architecture that fits 4GB
 
 ## P1 — important; post-current-gate
 
+### [`data_status_catalogue_true_source_phase2_2026_07_24`](../active/data_status_catalogue_true_source_phase2_2026_07_24.md)
+
+**status**: active · **estimate**: 1.8 cal AI-days (class: design) **title**: Data-status catalogue explorer — Phase 2
+true-catalogue (expected-universe) source
+
 ### [`data_status_page_ux_and_canonicalisation_2026_07_16`](../active/data_status_page_ux_and_canonicalisation_2026_07_16.md)
 
 **status**: active · **estimate**: 5.4 cal AI-days (class: design) **title**: Data-status page — honest-coverage fix
 (shipped) + UX & canonicalisation follow-ups (P1–P8)
 
-### [`mtds_data_status_page_parity_2026_07_21`](../active/mtds_data_status_page_parity_2026_07_21.md)
+### [`sports_fixtures_browser_single_catalogue_source_2026_07_24`](../active/sports_fixtures_browser_single_catalogue_source_2026_07_24.md)
 
-**status**: active · **estimate**: 3.6 cal AI-days (class: design) **title**: MTDS data-status page parity — catalogue
-explorer, MVP coverage split, per-instrument download-day granularity
+**status**: active · **estimate**: 0.9 cal AI-days (class: design) **title**: Sports fixtures browser — switch to the
+single-file catalogue source (P10-B backend + follow-ups)
+
+### [`sports_prediction_mvp_writetime_precompute_2026_07_24`](../active/sports_prediction_mvp_writetime_precompute_2026_07_24.md)
+
+**status**: active · **estimate**: 0.9 cal AI-days (class: design) **title**: Sports/prediction MVP write-time
+precompute — manifest schema v9→10 stamp + historical backfill
 
 ## P2 — useful; opportunistic
 
@@ -137,10 +150,15 @@ self-host the glue, kill the minute-minimum tax, fix cron cadence
 **status**: active · **estimate**: 2 cal AI-days (class: design) **title**: GitHub Actions cost reduction — full options
 analysis & decision record
 
-### [`test_fleet_image_builds_from_current_code_2026_06_17`](../active/test_fleet_image_builds_from_current_code_2026_06_17.md)
+### [`github_actions_operator_gated_followups_2026_07_17`](../active/github_actions_operator_gated_followups_2026_07_17.md)
 
-**status**: active · **estimate**: 4.8 cal AI-days (class: research) **title**: Test fleet image builds from current
-code — local (amd64) → GCP → AWS, base-first, no-deploy
+**status**: active · **estimate**: 4 cal AI-days (class: infra) **title**: GitHub Actions CI cost reduction —
+operator-gated followups (D2/D3/D4 decisions, verification-pending items)
+
+### [`github_actions_staging_machinery_shutdown_2026_07_24`](../active/github_actions_staging_machinery_shutdown_2026_07_24.md)
+
+**status**: active · **estimate**: 4 cal AI-days (class: infra) **title**: GitHub Actions staging-branch machinery
+shutdown — dead-cron audit + escalation-dispatch bugfix (2026-07-23)
 
 ## P3 — backlog; revisit quarterly
 

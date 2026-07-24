@@ -36,8 +36,11 @@ parent: master_to_live_defi_2026_05_23
 co_operators:
 codex_ssots:
 related_plans:
-  - ../active/capability_wizard_and_manifest_2026_06_11.md
+  - ../active/capability_wizard_client_lite_and_ci_regen_followup_2026_07_24.md
   - ../active/carry_staked_basis_funding_scan_experiment_2026_06_16.md
+  - ../active/carry_strategy_ensemble_productionization_2026_07_24.md
+  - ../active/cross_venue_funding_reversion_research_2026_07_24.md
+  - ../active/crypto_alpha_research_2026_07_24.md
   - ../active/defi_collateral_sizing_and_wizard_full_parameterization_2026_06_17.md
   - ../active/l2_book_microstructure_capture_2026_07_13.md
   - ../active/v2_engine_venue_buildout_2026_06_15.md
@@ -105,7 +108,7 @@ archaeology: [`strategy_and_dart_master_SUPERSEDED_2026_05_21.md`](strategy_and_
 
 ## Assigned active plans
 
-_6 active plans declare `parent_epic: strategy_master` in their frontmatter. Workers pick up in priority order (P0
+_9 active plans declare `parent_epic: strategy_master` in their frontmatter. Workers pick up in priority order (P0
 first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ## P0 — must complete before next foundation gate
@@ -114,9 +117,15 @@ _(no plans currently assigned at this priority)_
 
 ## P1 — important; post-current-gate
 
-### [`capability_wizard_and_manifest_2026_06_11`](../active/capability_wizard_and_manifest_2026_06_11.md)
+### [`capability_wizard_client_lite_and_ci_regen_followup_2026_07_24`](../active/capability_wizard_client_lite_and_ci_regen_followup_2026_07_24.md)
 
-**status**: active · **estimate**: 24.0 cal AI-days (class: brand-new)
+**status**: active · **estimate**: 1.0 cal AI-days (class: brand-new) **title**: Capability wizard — client-lite
+successor + CI-runner openapi regen follow-up
+
+### [`crypto_alpha_research_2026_07_24`](../active/crypto_alpha_research_2026_07_24.md)
+
+**status**: active · **estimate**: 18 cal AI-days (class: research) **title**: Crypto Alpha Research — Book
+Construction, Signal Research & Paper-Trading POC
 
 ### [`vol_dvol_backtestable_engines_2026_07_13`](../active/vol_dvol_backtestable_engines_2026_07_13.md)
 
@@ -129,6 +138,16 @@ VOL_CARRY + VOL_ARB_RV_IV register-or-honest-absent
 
 **status**: active · **estimate**: 3.6 cal AI-days (class: research) **title**: carry_staked_basis funding-carry scan —
 exploratory analysis harness + journal
+
+### [`carry_strategy_ensemble_productionization_2026_07_24`](../active/carry_strategy_ensemble_productionization_2026_07_24.md)
+
+**status**: active · **estimate**: 3.6 cal AI-days (class: research) **title**: carry_staked_basis — ensemble
+orchestrator engine + strategy-service productionization
+
+### [`cross_venue_funding_reversion_research_2026_07_24`](../active/cross_venue_funding_reversion_research_2026_07_24.md)
+
+**status**: active · **estimate**: 2.4 cal AI-days (class: research) **title**: carry_staked_basis — cross-venue
+funding-reversion research (Pass-B reconciliation + deployable book)
 
 ### [`defi_collateral_sizing_and_wizard_full_parameterization_2026_06_17`](../active/defi_collateral_sizing_and_wizard_full_parameterization_2026_06_17.md)
 

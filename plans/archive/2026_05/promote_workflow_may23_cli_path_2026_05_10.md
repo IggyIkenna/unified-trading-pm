@@ -132,7 +132,7 @@ touches:
 | `alerting-service/alerting_service/notifiers/router.py` + Secret Manager paths       | alerting-service                  | UPDATE — Phase 4 paging targets wired (Phase 5.B)                                                                                    |
 | 13 codex docs (Phase 7)                                                              | unified-trading-pm                | NEW + UPDATE per Phase 7 enumeration                                                                                                 |
 | `unified-trading-pm/cursor-configs/CLAUDE.md`                                        | unified-trading-pm                | UPDATE — add "Promote Workflow Path" key rule (Phase 7)                                                                              |
-| `unified-trading-pm/plans/active/master_to_live_defi_2026_05_23.md`                  | unified-trading-pm                | UPDATE — `Last verified` columns + new pvl-p17e/p23d/p23e sub-todos + cross-reference (Phase 9)                                      |
+| `unified-trading-pm/plans/archive/2026_07/master_to_live_defi_2026_05_23.md`         | unified-trading-pm                | UPDATE — `Last verified` columns + new pvl-p17e/p23d/p23e sub-todos + cross-reference (Phase 9)                                      |
 
 ## Execution DAG (CLI track + UI track in parallel)
 

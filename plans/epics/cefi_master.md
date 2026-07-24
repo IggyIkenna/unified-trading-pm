@@ -32,6 +32,7 @@ parent: master_to_live_defi_2026_05_23
 co_operators:
 codex_ssots:
 related_plans:
+  - ../active/cefi_4surface_migration_execution_log_2026_07_24.md
   - ../active/cefi_consolidated_closeout_2026_07_18.md
   - ../active/cefi_deribit_binance_futures_bundle_verification_2026_06_20.md
   - ../active/cefi_ml_directional_continuous_live_2026_06_20.md
@@ -627,7 +628,7 @@ real capital. Distinct from DeFi rollout (rules-based, carry-family). Ships the 
 
 ## Assigned active plans
 
-_4 active plans declare `parent_epic: cefi_master` in their frontmatter. Workers pick up in priority order (P0 first).
+_5 active plans declare `parent_epic: cefi_master` in their frontmatter. Workers pick up in priority order (P0 first).
 Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ## P0 — must complete before next foundation gate
@@ -643,6 +644,11 @@ backfill verification + phantom-residual triage
 archetype end-to-end (OKX + Binance + Bybit)
 
 ## P1 — important; post-current-gate
+
+### [`cefi_4surface_migration_execution_log_2026_07_24`](../active/cefi_4surface_migration_execution_log_2026_07_24.md)
+
+**status**: active · **estimate**: 2.4 cal AI-days (class: infra) **title**: CeFi 4-surface canonicalization migration —
+execution log (extracted from cefi_consolidated_closeout)
 
 ### [`cefi_consolidated_closeout_2026_07_18`](../active/cefi_consolidated_closeout_2026_07_18.md)
 
