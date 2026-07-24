@@ -385,3 +385,26 @@ never trust the returned summary text alone.
   no completion record. Both times the partial progress was real and recoverable, but only by direct measurement. Do not
   assume a launched Workflow will run to completion just because the prior one eventually did after recovery — budget
   for having to recover it again.
+
+**Enforcement gap identified + closed (2026-07-24):** an audit found this remediation had cleaned up the SYMPTOM (30
+over-cap plans) but never shipped the actual PREVENTION the operator's own frontmatter-recorded ruling asked for —
+`check_line_caps.sh` was still soft/advisory everywhere (excluded from prek `--precommit`, absent from
+`quality-gates.sh`, downgraded to `soft` inside `run_hygiene_sweep.sh` so even CI's `plan-health-agent.yml` never
+hard-failed on it) — meaning nothing stopped the next plan from ballooning past cap exactly the same way. Closed this
+session:
+
+- `check_line_caps.sh` gained a shrinking-ratchet baseline (`line_caps_baseline.yaml`, same pattern as
+  `check_reference_paths.py`/`reference_paths_baseline.yaml`), seeded at the live count (8, matching the table above) —
+  and a `--precommit`-scoped mode (explicit file args, no baseline) for staged-plans-only checking.
+- `run_hygiene_sweep.sh` reclassifies the line-caps check `soft` → `hard` (ratchet-gated, so this does NOT immediately
+  fail CI over the 8 pre-existing violations) and adds it to the `--precommit` staged-plans gate (absolute bar, same
+  model as the frontmatter/todo-format checks beside it — same file, over cap, blocks the commit).
+- `plans/active/task_template.md` §3 gained a proactive rule (finding J): extract completed Progress Log sections as a
+  plan crosses ~500L, don't wait for a remediation pass.
+- Promoted 2 of this issue doc's own lessons to their codex SSOT so they survive this doc's eventual archival: the
+  `Workflow()` silent-stop failure mode → `codex/12-agent-workflow/async-wait-and-poll-discipline.md` (new section, next
+  to the sibling "dispatched sub-agent is not a reliable wake" rule); the gitleaks allowlist-must-match-the-
+  captured-secret gotcha → a header comment in `.gitleaks.toml` itself, where the next person adding an entry will
+  actually see it.
+- `cursor-configs/CLAUDE.md` § "Plans — format + authoring discipline" now states line-caps is a real hard gate (was
+  silent on this before).

@@ -24,7 +24,7 @@ authoritative_for: [agent async-wait and poll cadence discipline, background-tas
 referenced_by:
   [/codex/04-architecture/cross-venue-prediction-arb-detection.md, /codex/06-coding-standards/sub-agent-workflow.md]
 owner:
-last_reviewed: 2026-06-25
+last_reviewed: 2026-07-24
 code_refs:
 ---
 
@@ -316,6 +316,32 @@ that a single "dispatch and rely on sub-agent completion" pattern is missing.
 Composes with § "Watcher coverage" (terminal verdict every path) + § "Don't over-watch + no-sawtooth" (one bounded
 heartbeat that does REAL verification each tick, not many 5-min arm-check-arm cycles) + § "Wake sources"
 (`run_in_background` completion is reliable; a dispatched sub-agent's completion is NOT if it dies silently).
+
+## A background `Workflow()` run can be silently stopped mid-run with no completion record — verify by direct measurement, never trust self-report (codified 2026-07-24)
+
+`Workflow()` is documented as running in the background and delivering a `<task-notification>` on completion — but a run
+can be reported "stopped" with **no completion record and no indication of how much it actually finished**. This is not
+a one-off: `plan_line_cap_remediation_2026_07_23.md` hit it **twice independently** (`wf_22001490-e9b`, then a second
+run `wf_87a8f203-aa1` re-dispatched against the same remaining tail) — both times with real, uncommitted, unverified
+partial progress already sitting in the working tree, discovered only because the working tree was inspected directly,
+not because the tool reported it.
+
+**RULE:** when a `Workflow()` run comes back "stopped"/inconclusive (or you cannot otherwise confirm it ran to its
+declared completion), do NOT assume zero progress and do NOT assume the reported summary (if any) is complete or
+accurate. Recover by **direct measurement** of the actual target artifacts, e.g. for a file-editing workflow:
+
+1. `wc -l` every target file vs `git show HEAD:<path> | wc -l` (or the equivalent artifact-count/state check for a
+   non-file target) to find what actually changed on disk.
+2. For a conservation-sensitive edit (e.g. content moved, not deleted), confirm every removed unit landed somewhere real
+   — `grep -cE '^- \[[ xX]\]'` a before/after todo count, `grep -F` a snippet of removed content against every claimed
+   destination file — before trusting the change is safe to keep.
+3. Only THEN decide what to commit — partial-but-verified progress is real and should be kept; do not discard it because
+   the run "failed", and do not re-dispatch the same workflow assuming last time's failure was a fluke — budget for
+   having to run this same recovery drill again.
+
+This is the `Workflow()`-specific instance of the same principle as § "Dispatched sub-agent is NOT a reliable wake"
+above — a background task's own self-report (including "no report at all") is never sufficient evidence of what it did;
+only a fresh measurement of the target state is.
 
 ## Direct-check beats polling (operator 2026-06-23)
 

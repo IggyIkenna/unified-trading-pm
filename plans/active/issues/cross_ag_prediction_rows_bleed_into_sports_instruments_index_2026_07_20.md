@@ -13,12 +13,20 @@ summary: >-
   both estates' coverage denominators. Root cause was NOT located in either read-only run. This is a taxonomy gap (no
   closed reconciliation type fits a cross-bucket asset_group bleed) escalated per the findings-triage HARD RULE, not a
   finding either read-only skill could fix. Measurement caveat — the sports index was in stale per-VM-shard fallback so
-  6,597 is a recent-weighted lower bound.
+  6,597 is a recent-weighted lower bound. **ROUND 4 update (2026-07-24)**: row count is now 11,727 and a 2026-07-23
+  remediation that VERIFY-PASSED at 0-remaining reverted within ~30h43m to the exact pre-remediation population.
+  Mechanism narrowed to the per-VM-shard-carries-stale-content layer (remediation only ever cleaned the derived
+  canonical index, never any per-VM shard); a genuinely real, independently-confirmed UAC venue-registry SSOT
+  contradiction was found (KALSHI/POLYMARKET classified as both "sports" and "prediction" by two disagreeing live
+  registries) but is NOT yet proven to be the reintroduction's actual trigger. BLOCKED-OPERATOR-DECISION: needs sign-off
+  before any prod code/job change per the findings-triage HARD RULE (data-correctness / cross-repo /
+  SSOT-contradiction).
 status: open
 nature: issue
 asset_group: [sports, prediction]
 stage: [data]
-repos: [instruments-service, market-tick-data-service, unified-api-contracts]
+repos:
+  [instruments-service, market-tick-data-service, unified-api-contracts, execution-service, unified-trading-library]
 scope: [engineer, admin]
 tags: [data-correctness, cross-ag-bleed, manifest, asset-group, sports, prediction, denominator, taxonomy-gap]
 related:
@@ -26,13 +34,14 @@ related:
     data_pipeline_reconciliation_sports_2026_07_20,
     data_pipeline_reconciliation_prediction_2026_07_20,
     dp_catalog_not_running_sports_prediction_2026_07_15,
+    sports_is_index_fixtures_job_direct_write_328k_row_cut_2026_07_15,
   ]
 created: 2026-07-20
-last_updated: 2026-07-20
+last_updated: 2026-07-24
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
-priority: P1
+priority: P0
 estimate_class: research
 estimate_baseline_ai_days: 1
 estimate_calibrated_ai_days: 1.2
@@ -232,9 +241,130 @@ pre-remediation row set, verbatim, reappearing with no new growth.
       consolidated index's own `written`/generation metadata) — if the index literally hasn't been rebuilt since
       remediation, the presence of 11,727 rows would instead mean the REMOVE never actually took effect on the LIVE
       index in the first place (a different root cause than a rebuild-time reversion).
-- [ ] 8. [DATA] P0. Once todos 5-7 pin the actual mechanism, re-run the remediation (or fix the consolidator input the
-      remediation missed) and verify **across at least one full consolidation cycle** (not just an immediate post-write
-      read) before re-closing this doc.
+- [x] 5. [DATA] P0. **DONE 2026-07-24.** Read `manifest_consolidator.py` end-to-end (3266 lines). Every input surface
+      lives under `_index/` in the SAME bucket (canonical index, per-VM shards, lock/stall/latest-run blobs, a
+      `TemporaryDirectory` scratch space) — no BigQuery/Firestore/DB/other-bucket surface exists. The canonical index is
+      downloaded FRESH on every merge call (never a stale cached copy); the routine path is `force=False` incremental
+      merge, which anti-joins unchanged canonical rows straight through and only re-dedups keys touched by CHANGED
+      per-VM shards. **Conclusion: the consolidator's own logic does not discard/ignore the canonical wholesale on any
+      routine cycle** — ruling out a naive "full rebuild from a stale source" explanation.
+- [x] 6. [DATA] P0. **DONE 2026-07-24.** Read the remediation script + the consolidator's/`ManifestWriter`'s write
+      paths. **No path/bucket mismatch**: the remediation's REMOVE and every live reader/writer target the identical
+      object string `_index/availability_index.parquet` in `instruments-store-sports-prd-central-element-323112`
+      (verified via `resolve_bucket_name` live + terraform's `manifest_consolidator_buckets` map). Ruled out.
+- [x] 7. [DATA] P0. **DONE 2026-07-24.** Live `gcloud storage objects describe` on the canonical index: current
+      generation `1784909032736201`, updated `2026-07-24T16:03:52Z` — **~30h43m AFTER** remediation's snapshot
+      timestamps (`2026-07-23T09:20:33/35Z`), carrying `consolidator_run_at`/`consolidator_content_write_at` custom
+      metadata (i.e. written BY the consolidator, not a stale read of remediation's own write). Cloud Scheduler job
+      `uts-prod-manifest-consolidator-instruments-sports-cron` (`*/1 * * * *`, `asia-northeast1`) has run **~1,853**
+      successful executions since remediation finished, the first just 9 seconds after. **A consolidation cycle DID
+      run** (many times) — this rules out "the index was simply never rebuilt" and confirms the reintroduction is a real
+      reassertion, not a stale first-read.
 
-Do not re-flip this doc's `status` to `resolved` or re-attribute `resolved_by` until todo 8 confirms the fix holds
-across a real consolidation cycle, not just an immediate verify.
+## ROUND 4 — mechanism pinned to the per-VM shard layer; one causal claim CORRECTED, one independent SSOT defect CONFIRMED (2026-07-24)
+
+**Still `status: open` — do NOT re-close.** Two parallel multi-agent investigations (11 sub-agent runs total) plus my
+own follow-up reads converged on the following. This section supersedes round 3's "working hypothesis" with harder
+evidence, but stops short of a fix because the exact upstream origin of the reasserted rows is not yet pinned with
+certainty and this now touches a live, continuously-running prod job — per the findings-triage HARD RULE (big finding:
+data-correctness / cross-repo / SSOT-contradiction) this needs operator sign-off before any code/job change, not an
+autonomous patch.
+
+**Mechanically proven (high confidence, live-evidence-backed):**
+
+- Zero physical GCS data objects exist anywhere in the sports bucket for the bleed rows (checked 8 sampled
+  `(date, venue, data_type)` combos via the real UAC path-builder, both canonical and back-compat path forms, plus a
+  structural check that the bucket has no `raw_tick_data/` prefix at all). **This is a manifest/index-layer bug only —
+  no GCS delete-safety-protocol action applies; there is nothing to relocate or delete.**
+- The consolidator's incremental-merge design means any content already resident in a per-VM shard object persists
+  forward indefinitely across cycles — `unified_trading_library/manifest_writer/_writer_io.py::_flush_per_vm_pending`
+  does a **read-existing-shard → merge-with-new-rows → re-upload-the-WHOLE-shard** cycle on every flush. The 2026-07-23
+  remediation script edited ONLY the canonical `_index/availability_index.parquet` — it never touched any per-VM shard
+  object. If a shard already carried the bleed rows at remediation time, every subsequent flush of that shard (for ANY
+  reason, including entirely unrelated legitimate new writes) re-uploads the old rows unchanged, and the `*/1 * * * *`
+  consolidator folds them straight back into the canonical index. This exact failure class has a named precedent on this
+  bucket: `_writer_io.py`'s own comment cites "2026-07-15 sports 328k clobber"
+  (`sports_is_index_fixtures_job_direct_write_328k_row_cut_2026_07_15.md`).
+- `uts-prod-instruments-service-sports-fixtures` (Cloud Run Job, SA
+  `unified-trading-sa@central-element-323112.iam.gserviceaccount.com`, `--asset-group=SPORTS`) is confirmed writing
+  `_index/per_vm/sports-fixtures-job.parquet` in this bucket, ~815 times in the 30h43m window, picked up by the
+  consolidator within ~1 minute each time. It is one CANDIDATE carrier shard, not necessarily the only one or even the
+  right one (see correction below) — Data Access audit logs are OFF project-wide (confirmed empirically, not a false
+  negative), so no per-object `storage.objects.create` attribution exists; this job was identified via Cloud Run
+  execution history + its own application logs, not audit trail.
+- A live, targeted read of that exact shard object just now (2026-07-24, post-investigation) found **0**
+  `asset_group=prediction` rows in it (4,224 rows total: 2,800 empty asset_group + 1,424 `sports`) — i.e. THIS shard is
+  clean at this point in time. Given the object is rewritten/pruned roughly every minute, this is one snapshot, not
+  proof the shard was never the carrier — but it means the carrier (if a per-VM shard at all) has not been positively
+  caught red-handed with the bleed rows in hand; this remains circumstantial, not direct, evidence.
+
+**CORRECTION to a claim in the parallel investigation's synthesis — do not repeat this in a future session:** one
+sub-agent's root-cause narrative proposed that the sports-fixtures job's own per-date freshness check
+(`"missing=['PREDICTIONS']"` in its logs) was the trigger — i.e. that remediation deleting the derived index rows made
+this job see `PREDICTIONS` as missing and "legitimately re-fetch" data that then reintroduced the KALSHI/POLYMARKET
+rows. **This is WRONG.** Direct read of
+`instruments-service/instruments_service/engine/orchestrator/process_preflight.py` (lines 63-95,
+`_ENRICHMENT_ENTITY_VENUES = (("MATCHES","FOOTYSTATS"), ("PREDICTIONS","FOOTYSTATS"), ("ODDS","FOOTYSTATS"), ...)`)
+shows `"PREDICTIONS"` here is a **FootyStats football match-prediction entity** (win/draw/loss probability data for
+SPORTS fixtures, venue=FOOTYSTATS) — a name collision with the `asset_group="prediction"` (Kalshi/Polymarket)
+terminology, not the same thing. This job re-fetching "missing PREDICTIONS" means it is legitimately fetching FootyStats
+sports data, which has no logical path to writing KALSHI/POLYMARKET rows. The temporal correlation the sub-agent found
+(job flush ≈ same window as bleed reassertion) is real, but the proposed CAUSAL story for _why_ is not supported — the
+true link (if this job's shard is even the real carrier) is more likely the read-merge-reupload
+carrying-forward-stale-content mechanism described above, riding along with this job's legitimate PREDICTIONS/FootyStats
+writes, not a fetch of Kalshi/Polymarket data by this job itself. instruments-service's own write/classification code
+was independently checked and confirmed to use the CORRECT venue→asset_group registry (below) — it does not construct
+KALSHI/POLYMARKET fetches at all in its sports-fixtures path (grep for `VENUE_CATEGORY_MAP`/`SPORTS_VENUES`/
+`get_venues_by_asset_group` across all of instruments-service found zero hits outside an unrelated smoke-test script).
+
+**CONFIRMED, independently real (regardless of the above correction) — a live UAC SSOT contradiction:** two disagreeing
+venue→asset_group registries both ship in `unified-api-contracts` today:
+
+- `unified-api-contracts/unified_api_contracts/registry/venue_constants.py` line 375:
+  `VENUE_CATEGORY_MAP.update(dict.fromkeys(SPORTS_VENUES, "sports"))` stamps `VENUE_CATEGORY_MAP["KALSHI"]` and
+  `["POLYMARKET"]` to `"sports"` (inherited via
+  `SPORTS_VENUES ⊇ SPORTS_BET_PLACEMENT_VENUES ⊇ SPORTS_PREDICTION_MARKET_VENUES ⊇ {KALSHI, POLYMARKET, NOVIG, BETOPENLY, PROPHETX}`,
+  line 182) — runtime-verified.
+- `unified-api-contracts/unified_api_contracts/registry/market_data_categories.py`'s `VENUE_TO_ASSET_GROUP` (line 705)
+  and `unified_api_contracts/execution.py::get_venue_asset_group()` (lines 14-24) both correctly resolve KALSHI and
+  POLYMARKET to `"prediction"` — runtime-verified.
+- instruments-service's actual write path (`writers.py::_classify_venue_write` line 285, `process_write.py` line 455)
+  uses the CORRECT registry (`VENUE_TO_ASSET_GROUP`) — confirmed not the culprit for row-level tagging.
+- The one CONFIRMED live consumer of the WRONG registry:
+  `execution-service/execution_service/instruments/registry.py::get_venues_by_asset_group("sports")` returns KALSHI and
+  POLYMARKET in its result set (runtime-verified). Any future reconciliation/audit/enumeration tool that asks "which
+  venues are sports" via this path (or `VENUE_CATEGORY_MAP` directly) will keep re-deriving KALSHI/POLYMARKET as sports
+  venues, independent of any index/data cleanup. **This is a real, separate, cross-repo SSOT-contradiction defect that
+  should be fixed on its own merits**, whether or not it turns out to be wired into this specific reintroduction
+  mechanism.
+
+**Not yet pinned — genuinely open, do NOT guess further without new evidence:**
+
+- The exact carrier of the reasserted 11,727 rows (which per-VM shard object, or whether it's a still-unidentified
+  direct-write path) is not caught with the rows in hand — only circumstantial correlation exists.
+- Whether/how the confirmed UAC registry contradiction (above) actually connects to the reintroduction mechanism is
+  unproven — the one candidate link (the sports-fixtures job) was checked and does NOT consume the wrong registry.
+
+## ROUND 5 — next steps (do NOT guess-fix; needs either more instrumentation or operator sign-off)
+
+- [ ] 9. [DATA] P0. Catch a per-VM shard object WITH the bleed rows in hand, not after-the-fact: either poll
+      `_index/per_vm/*.parquet` in this bucket at short intervals around a known write window, or (cheaper) add
+      temporary instrumentation to `_flush_per_vm_pending`'s log line to report the merged frame's `asset_group` value
+      counts, redeploy briefly, and capture one real log line showing a shard flush WITH `asset_group=prediction`
+      entries in `merged`. This is the only remaining way to positively identify the carrier rather than inferring it.
+- [ ] 10. [BACKEND] P1. Fix the confirmed UAC SSOT contradiction regardless of todo 9's outcome — in
+      `unified-api-contracts/unified_api_contracts/registry/venue_constants.py`, after line 375, add explicit overrides
+      (same pattern as the existing `KALSHI_PERP`/`POLYMARKET_PERP` → `"cefi"` overrides at lines 372-373):
+      `VENUE_CATEGORY_MAP["KALSHI"] = "prediction"` and `VENUE_CATEGORY_MAP["POLYMARKET"] = "prediction"`. **Needs
+      operator sign-off first** — `SPORTS_BET_PLACEMENT_VENUES`/`SPORTS_PREDICTION_MARKET_VENUES` membership is a
+      semantic call (they do offer sports bet-placement) separate from the `asset_group` category fix; also grep
+      execution-service for every `get_venues_by_asset_group("sports")` caller and any place that caches its output at
+      process start (needs a restart/reload to pick up the fix).
+- [ ] 11. [DATA] P0. Once todo 9 pins the actual carrier, fix it at the source (not another index-only remediation —
+      that has now failed once already) and re-run the manifest cleanup, verifying **across at least one full
+      consolidation cycle** (not just an immediate post-write read) before re-closing this doc.
+
+Do not re-flip this doc's `status` to `resolved` or re-attribute `resolved_by` until todo 11 confirms the fix holds
+across a real consolidation cycle, not just an immediate verify. Do not re-run the 2026-07-23 remediation script again
+without todo 9 or 10 first — re-running the same index-only fix without closing the source already failed once (11,727
+rows came back in ~30h43m).

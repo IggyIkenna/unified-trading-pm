@@ -1,0 +1,22 @@
+# Baseline for check_line_caps.sh — plan line-count caps (500 soft / 1000 hard /
+# 2000 umbrella; operator ruling 2026-07-23).
+#
+# This is a SHRINKING ratchet, same pattern as reference_paths_baseline.yaml. hard_count
+# is the number of pre-existing HARD (over-cap) plans the gate tolerates. A live count
+# EXCEEDING this baseline fails the check — a NEW plan crossed the cap (or an existing
+# one got worse), fix it, don't grow the number. LOWER hard_count (re-run
+# `check_line_caps.sh --update-baseline`) the moment a flagged plan is split/trimmed
+# back under cap. NEVER hand-raise it.
+#
+# SSOT: codex/12-agent-workflow/plan-hygiene.md, codex/11-project-management/plan-hygiene.md,
+# plans/active/issues/plan_line_cap_remediation_2026_07_23.md.
+note: >-
+  Seeded 2026-07-24 at the tail of the plan_line_cap_remediation_2026_07_23.md cleanup: 21+3+5+3 of the original 30
+  flagged plans were fixed across that effort's several passes (some by concurrent sessions working the same backlog); 8
+  remain HARD-flagged as of this seed (7 from the original 30 still open, +1 new drift —
+  artifact_pipeline_observability_2026_07_17.md — found by re-running the checker, unrelated to the original batch).
+  This baseline exists so the check can be promoted from soft/advisory to a real hard gate (closing the enforcement gap
+  the remediation left open — see that issue doc's "Deferred work" table) WITHOUT immediately blocking the shared
+  CI/promotion pipeline over debt nobody has fixed yet. Lower this count as each of the 8 is resolved; it should reach
+  0.
+hard_count: 8

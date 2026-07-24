@@ -35,7 +35,7 @@ referenced_by:
     plans/active/issues/defi_code_codex_drift_2026_05_27.md,
   ]
 owner:
-last_reviewed: 2026-07-15
+last_reviewed: 2026-07-24
 code_refs:
 ---
 
@@ -121,8 +121,8 @@ per CLAUDE.md § "Bucket-name SSOT (b+)" — never inline `gs://...` / `s3://...
 
 | Field               | Value                                                                             |
 | ------------------- | --------------------------------------------------------------------------------- |
-| **CLI operation**   | (legacy evm_defi_handler / dex_swaps_handler)                                     |
-| **Sources**         | The Graph: Uniswap V2/V3/V4, Curve, Balancer, SushiSwap subgraphs                 |
+| **CLI operation**   | `collect-dex-swaps` (`dex_swaps_handler.DexSwapsHandler`)                         |
+| **Sources**         | The Graph, EVM-only (12 protocols, `_dex_swaps_queries._DEFAULT_PROTOCOLS`, verified against code 2026-07-24): `uniswap_v3`, `pancakeswap_v3`, `aerodrome_v3`, `camelot_v3`, `balancer`, `curve`, `sushiswap_v3`, `sushiswap`, `velodrome_v2`, `trader_joe_v2`, `uniswap_v4`, `uniswap_v2`. No Solana route (contrast `dex_pool_state` below) and no `gmx` (GMX has no traditional AMM swap feed). |
 | **Shard key**       | venue × chain × date                                                              |
 | **Instrument type** | `spot_asset`                                                                      |
 | **Status**          | Production                                                                        |
@@ -136,8 +136,8 @@ Captures AMM swap transactions. One row per swap event.
 
 | Field               | Value                                                                                                                                                  |
 | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **CLI operation**   | (legacy evm_defi_handler / dex_pools_handler)                                                                                                          |
-| **Sources**         | The Graph: uniswap_v3, pancakeswap_v3, sushiswap_v3, aerodrome_v3, camelot_v3, balancer, curve, sushiswap, gmx                                         |
+| **CLI operation**   | `collect-dex-pools` (`dex_pools_handler.DexPoolsHandler`)                                                                                              |
+| **Sources**         | 17 protocols total (`dex_pools_handler._DEFAULT_PROTOCOLS`, verified against code 2026-07-24) — **EVM via The Graph** (13): `uniswap_v3`, `pancakeswap_v3`, `sushiswap_v3`, `aerodrome_v3`, `camelot_v3`, `balancer`, `curve`, `sushiswap`, `gmx`, `velodrome_v2`, `trader_joe_v2`, `uniswap_v4`, `uniswap_v2`; **Solana via `_collect_solana_dex`** (4, routed by `_solana_defi_fetch.SOLANA_DEX_PROTOCOLS`, bypassing the subgraph cascade): `kamino`→`SOLANA_VAULT`, `orca`/`raydium`/`phoenix`→`SOLANA_AMM_POOL`. (`solana_defi_handler.py`'s separate `collect-solana-defi` CLI command additionally writes `dex_pool_state` for `meteora`/`lifinity` — a DIFFERENT dispatch path, not part of this `_DEFAULT_PROTOCOLS` list.) |
 | **Shard key**       | venue × chain × date                                                                                                                                   |
 | **Instrument type** | `spot_asset`                                                                                                                                           |
 | **Status**          | Production                                                                                                                                             |
