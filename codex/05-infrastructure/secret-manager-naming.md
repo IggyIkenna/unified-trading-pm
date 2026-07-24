@@ -196,13 +196,18 @@ deribit-read-api-key        deribit-trade-api-key        deribit-write-api-key
 deribit-read-api-key-secret deribit-trade-api-key-secret
 ```
 
-**NOT real for OKX, Bybit, or client-scoped secrets in general**: the earlier draft of this doc described a
+**NOT real for OKX, or client-scoped secrets in general**: the earlier draft of this doc described a
 `<venue>-{read,trade,withdraw}-{api-key,api-secret,passphrase}` design intended as a general **per-client** scope-
-separation model (the "R8" plan, `plans/archive/2026_05/api_keys_wallets_accounts_readiness_2026_05_10.md`) — a real,
-still-plausible security idea (a compromised read-key shouldn't be able to withdraw funds), whose enforcement half
-shipped (`execution-service`'s `ScopedCLOBAdapter`/`AdapterScope`) but whose Secret-Manager-provisioning half was
-deferred 2026-05-12 and never resumed. No client-scoped `exec-{client}-{venue}-{read,trade,withdraw}-*` secret exists in
-GCP. Do not confuse this dead per-client design with the real, live, non-client Binance/Deribit split above.
+separation model — mislabeled "the R8 plan" in an earlier pass of this doc; the actual source is
+`plans/archive/2026_05/api_keys_wallets_accounts_readiness_2026_05_10.md` Phase 2.A/2.C (R8 in that plan is an unrelated
+Pyth-on-Solana oracle smoke test) — a real, still-plausible security idea (a compromised read-key shouldn't be able to
+withdraw funds), whose enforcement half shipped (`execution-service`'s `ScopedCLOBAdapter`/`AdapterScope`) but whose
+Secret-Manager-provisioning half was deferred 2026-05-12 and mostly never resumed. No client-scoped
+`exec-{client}-{venue}-{read,trade,withdraw}-*` secret exists in GCP. Do not confuse this dead per-client design with
+the real, live, non-client Binance/Deribit split above. **Bybit is IN PROGRESS as of 2026-07-23**: `execution-service`'s
+`live_execution_handler.py` now prefers `bybit-trade-api-key`/`-secret` and falls back to the current unscoped
+`bybit-api-key`/`-secret` — see `plans/active/issues/per_venue_scope_key_provisioning_incomplete_2026_07_23.md` for the
+provisioning checklist. OKX still doesn't apply (client-scoped only, no pooled key to split).
 
 ### 2.3 Prediction venues
 
