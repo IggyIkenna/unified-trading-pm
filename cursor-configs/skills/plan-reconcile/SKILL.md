@@ -101,13 +101,15 @@ Write a throwaway script (scratchpad, NOT the repo; line-based frontmatter parse
   unblocked); **git conflict markers** (`<<<<<<<`/`=======`/`>>>>>>>`) left in a doc; `superseded_by` set while
   `status: active`; terminal status (`done`/`complete`/`superseded`) still sitting in `plans/active/`; **all todos `[x]`
   while `status: active`** (fully-done → archival candidate); **≤1 open todo remaining** (near-complete → consolidation
-  candidate); **body over the line-cap** — normal plans 500 soft / 1000 hard (per `run_hygiene_sweep.sh`), but
-  **long-lived master plans + epics (`plans/epics/*.md`, `*_master*`, living-inventory/hub plans) are EXEMPT from the
-  500/1000 caps** (they are intentionally long), with a **strict 5000-line ABSOLUTE ceiling on ANY file regardless of
-  type** (over 5000 = split finding, no exemption); `assigned_vm` outside `{planning, NA}` (`human-planning` = legacy
-  alias for `planning`, accepted); `parent_epic` naming a non-existent epic; duplicate titles; missing required
-  frontmatter per `plans/PLAN_FORMAT.md`. Emit per-doc **open/done checkbox counts** so the fully-done + near-complete
-  candidates are computed deterministically (they are candidates, still verified in Phase 2/3 before any archival).
+  candidate); **body over the line-cap** — TWO-TIER, no exceptions (2026-07-24 ruling, superseding the old
+  umbrella-exemption model below): a normal plan in `plans/active/` is 500 soft / 1000 hard; a REAL epic
+  (`plans/epics/*.md`) is 2000 hard flat. There is no longer an `umbrella: true`/`locked_by`+todos escape hatch that
+  lets a plan in `plans/active/` grow past 1000L unflagged — a genuinely large hub/coordinator doc either fits under
+  1000L, splits, or gets promoted to a real epic (which then gets the epic tier, not a free pass); `assigned_vm` outside
+  `{planning, NA}` (`human-planning` = legacy alias for `planning`, accepted); `parent_epic` naming a non-existent epic;
+  duplicate titles; missing required frontmatter per `plans/PLAN_FORMAT.md`. Emit per-doc **open/done checkbox counts**
+  so the fully-done + near-complete candidates are computed deterministically (they are candidates, still verified in
+  Phase 2/3 before any archival).
 
 Flags are CANDIDATES, not findings — a "dangling" ref often resolves to `plans/archive/` or codex (parser artifact).
 
@@ -269,14 +271,14 @@ sequencing; conflicting numbers **that no source of truth can settle** (if one s
 go check it); neither side has hard evidence; **ANY resolution that edits a codex SSOT doc** (plans→codex updates are in
 scope for this skill but NEVER autonomous — the operator rectifies BEFORE any agent touches an SSOT);
 **near-complete-plan consolidation** (which sibling/epic the remnant folds into); **archiving a `locked_by:` plan**
-(even fully-done); splitting a plan over its line-cap (a normal plan >1000, or ANY file — master/epic included — over
-the absolute 5000 ceiling); anything touching a `locked_by:` plan, kill-switch, funds isolation, or the May-23 critical
-path. Interactive format — batched questions ordered P0→P1 hitting the chat box directly; recurring classes get ONE
-class-level question with per-item exceptions; every question carries: the two quotes + locations, why they conflict,
-which doc looks authoritative and why, and options A/B/C with the recommendation marked (never open-ended —
-SUB_AGENT_MANDATORY_RULES escalation format). In autonomous/AO mode the same structured questions are raised as **AO
-operator alerts/escalations** (orchestrator dashboard escalation with the options block) so the operator can rule
-asynchronously; the worker proceeds with everything else and applies the ruled items on the next pass.
+(even fully-done); splitting a plan over its line-cap (a normal plan >1000, or an epic >2000); anything touching a
+`locked_by:` plan, kill-switch, funds isolation, or the May-23 critical path. Interactive format — batched questions
+ordered P0→P1 hitting the chat box directly; recurring classes get ONE class-level question with per-item exceptions;
+every question carries: the two quotes + locations, why they conflict, which doc looks authoritative and why, and
+options A/B/C with the recommendation marked (never open-ended — SUB_AGENT_MANDATORY_RULES escalation format). In
+autonomous/AO mode the same structured questions are raised as **AO operator alerts/escalations** (orchestrator
+dashboard escalation with the options block) so the operator can rule asynchronously; the worker proceeds with
+everything else and applies the ruled items on the next pass.
 
 ## Phase 5 — apply + commit
 
@@ -296,11 +298,12 @@ asynchronously; the worker proceeds with everything else and applies the ruled i
 - **Leave the corpus hygiene-canonical (green-gate — HARD).** After applying fixes: prettier every touched `.md`;
   regenerate the inventory (`regenerate_active_plan_inventory.py`); then re-run `run_hygiene_sweep.sh --ci` and confirm
   **0 hard failures** before finishing (frontmatter / todo-format / todo-regression / runbook-fields all green). A plan
-  you touched must never be left non-prettier, hygiene-red, or with malformed todos. Line-caps (tiered): a **normal
-  plan** over 1000 (hard) is a split finding (operator-gated — splitting a plan is a planning decision), over 500 (soft)
-  is a Phase-6 report note; **long-lived master plans + epics are exempt from the 500/1000 caps** (living hubs are meant
-  to be long); but the **5000-line ABSOLUTE ceiling is universal** — ANY file over 5000 lines (master/epic included) is
-  a split finding, no exemption. Canonical format is the contract, same as a `quality-gates.sh`-green tree for code.
+  you touched must never be left non-prettier, hygiene-red, or with malformed todos. Line-caps (two-tier, no exceptions,
+  2026-07-24): a **normal plan** in `plans/active/` over 1000 (hard) is a split finding (operator-gated — splitting a
+  plan is a planning decision), over 500 (soft) is a Phase-6 report note; a **REAL epic** (`plans/epics/*.md`) over 2000
+  (hard) is likewise a split finding. Neither tier has an exemption — a plan does not get to be a long-lived hub while
+  still counted as a plan; it either fits, splits, or gets promoted to a real epic. Canonical format is the contract,
+  same as a `quality-gates.sh`-green tree for code.
 - NEVER write agent memory; NEVER create `*_SUMMARY.md` — the final report is chat text.
 
 ## Phase 5.9 — the NO-MISS LEDGER (HARD — every one of these has actually been missed)
