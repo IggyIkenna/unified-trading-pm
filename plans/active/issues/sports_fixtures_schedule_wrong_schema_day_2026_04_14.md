@@ -241,13 +241,35 @@ longer "COUNTRY_LEAGUENAME" naming convention.** This means:
    fetch+write would NOT fix the shard this todo names; it would create a new, correctly-schemaed shard elsewhere while
    leaving the bad one exactly as broken as before.
 
-**Recommended next step**: before any PROD write, determine what the 85 folder-name strings actually correspond to —
-check if they match a NON-api_football provider's own league taxonomy (SoccerFootballInfo/Understat/Transfermarkt/
-FootyStats league-name constants), or a historical/renamed form of the UAC registry (git-blame `league_data*.py` for
-whether `ENG_CHAMPIONSHIP` was ever spelled `ENGLAND_CHAMPIONSHIP`). The recovery script
-(`scripts/recover_fixtures_schedule_wrong_schema_day_2026_04_14.py`, dry-run-verified-safe / apply-mode untested) is
-ready to reuse once the correct target-identification approach is confirmed — it was NOT run in `--apply` mode, no PROD
-object was touched or snapshotted.
+**Recommended next step (superseded by slot 11's mechanism finding above — see the `[DIAG] P1` todo)**: slot 11
+confirmed the 85 folder names are NOT a fixtures-domain naming convention at all — they're the raw, unabbreviated
+`build_league_id(country, league_name)` string a `CanonicalFixture.league.league_id` is born with, misrouted through the
+SHARED `_write_venue`/`_gated_sink_write` choke point's `venue=="API_FOOTBALL" → data_type=FIXTURES_SCHEDULE` mapping
+when fed an `InstrumentRecord`-shaped DataFrame instead of real fixtures data. **This means the recovery model in this
+todo (re-fetch fixtures and write them under these 85 literal names) is wrong regardless of naming — these 85 objects
+were never meant to exist as fixtures_schedule shards under ANY name; they are contamination, not misfiled-but-real
+fixtures data.** The correct remediation is now more likely: (1) verify whether real fixtures_schedule data for
+`day=2026-04-14` already exists under each affected league's CORRECT canonical folder (`league=ENG_CHAMPIONSHIP` etc. —
+the normal daily writer may be unaffected by this contamination bug and already have it), (2) only backfill via a normal
+re-fetch for any CANONICAL-folder gaps found, scoped to real canonical ids (not this doc's 85-name list), (3) delete the
+85 contaminated objects once their canonical counterparts are confirmed complete (same snapshot-before-delete discipline
+as any other prod object removal). The recovery script built this session
+(`scripts/recover_fixtures_schedule_wrong_schema_day_2026_04_14.py`, dry-run-only, `--apply` never run, no PROD object
+touched/snapshotted) implements the WRONG model (step 4 of its docstring, "writes real fixtures under the 85 literal
+names") and needs rewriting against this corrected understanding before any `--apply` run — do not treat it as
+ready-to-run without that fix.
+
+## Deferred work after 2026-07-24 (slot 4 session end)
+
+| Item                                                                                        | State / why deferred                                                                                                                                                               | Blocked on                                                                                                                                    |
+| ------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `[DATA] P2` — remediate the 85 contaminated `day=2026-04-14` shards                         | **Not done, not attempted against PROD.** Recovery model itself was wrong (see above) until slot 11's mechanism finding landed mid-session — needs a rewrite, not just an unblock. | Real work — pick up with the corrected 3-step remediation above once someone has capacity.                                                    |
+| `[DIAG] P1` — find the exact caller that fed `get_instruments()` output into `_write_venue` | **Not done**, but the MECHANISM is now fully understood (slot 11) — only the specific calling job/script is still unidentified.                                                    | Real work — trace `ApiFootballReferenceDataAdapter.get_instruments()` callers workspace-wide (named as the concrete next action in the todo). |
+
+**Recommended next item**: the DIAG P1 caller-trace (cheap, bounded, unblocks nothing else urgent) or the DATA P2 step-1
+canonical-folder verification (also cheap — a manifest/GCS check, no write) are both good next picks; the actual
+re-fetch+delete (steps 2-3) should wait until whichever of those two is done, so the blast radius of any write is fully
+understood first.
 
 - [x] ✅ [CODE] P2. Add a schema assertion (column-set check) at the fixtures_schedule writer so a future mismatch fails
       loud instead of silently producing an unreadable-by-projection shard (repo: instruments-service). **Done when**: a
