@@ -18,11 +18,11 @@ scope: [engineer]
 tags: [foundation-gate, capture, layer-2, cefi-first, handler-audit, risk-params, oracle, instruments-completion]
 related:
   [
-    instruments_completion_tracker_2026_07_06.md,
-    instruments_foundation_completeness_2026_06_24.md,
-    data_completion_to_100_all_ag_2026_06_21.md,
-    prediction_venue_perps_and_live_clob_depth_2026_06_20.md,
-    ../../codex/02-data/honest-coverage-model.md,
+    /plans/active/instruments_completion_tracker_2026_07_06.md,
+    /plans/active/instruments_foundation_completeness_2026_06_24.md,
+    /plans/active/data_completion_to_100_all_ag_2026_06_21.md,
+    /plans/active/prediction_venue_perps_and_live_clob_depth_2026_06_20.md,
+    /codex/02-data/honest-coverage-model.md,
   ]
 created: 2026-07-06
 last_updated: 2026-07-10 # (was: 2026-07-06 -- corrected 2026-07-15, plan-reconcile: Progress Log records a 2026-07-10 status-flip active->complete that postdated the recorded last_updated)
@@ -68,8 +68,8 @@ source:
 
 ## Codex SSOTs (read before touching)
 
-- `codex/02-data/honest-coverage-model.md` — two-layer / instrument-gates-download model.
-- `codex/02-data/availability-manifest-and-data-status.md` — 4-state `capture_status`; `source=` crosscutting; never
+- `/codex/02-data/honest-coverage-model.md` — two-layer / instrument-gates-download model.
+- `/codex/02-data/availability-manifest-and-data-status.md` — 4-state `capture_status`; `source=` crosscutting; never
   silent placeholders; single-walk discipline.
 
 ## Run EARLY + ungated (Plan 4 depends on this)
@@ -160,7 +160,7 @@ source:
 - [x] ✅ [DESIGN] P1. **DeFi completeness ORACLE design** — "do we have ALL instruments?" = on-chain truth (foundation
       §DeFi oracle). Gate: an oracle design that answers defi could-exist completeness from chain state, not the
       manifest. — **DONE 2026-07-06 (data_engineering, slot 5)**. Design SSOT lands as codex
-      `codex/02-data/defi-completeness-oracle.md` (authoritative*for the oracle contract + Tier-A/Tier-B policy + the
+      `/codex/02-data/defi-completeness-oracle.md` (authoritative*for the oracle contract + Tier-A/Tier-B policy + the
       `available_from = block_ts(creation_block)` genesis rule). Contract: per (protocol, chain) a `CompletenessProbe`
       returns `expected_count` from ON-CHAIN truth (DEX factory `poolCount` / lending registry / perps markets),
       `enumerated_count` from the IS catalogue, `completeness_pct`, `missing_delta`, `probe_kind` (Tier-A subgraph vs
@@ -334,7 +334,7 @@ source:
   `launch-mtds-risk- params-backfill-vm.sh` invocation — orthogonal to code delivery, not blocked on further code.
 
 - **2026-07-06** — **✅ DeFi completeness ORACLE DESIGN shipped** (Opus, slot-5, data*engineering). Item 5 flipped.
-  Design SSOT lands at `codex/02-data/defi-completeness-oracle.md` (authoritative_for oracle contract + Tier-A/B
+  Design SSOT lands at `/codex/02-data/defi-completeness-oracle.md` (authoritative_for oracle contract + Tier-A/B
   policy + genesis rule) — one page, 12 sections. Core contract: per (protocol, chain) a `CompletenessProbe` returns
   `expected_count` from ON-CHAIN truth (DEX factory `poolCount` / lending registry `getReservesList` / Morpho
   `marketsCount` / GMX `allWhitelistedTokens` / Hyperliquid REST `universe` / …), `enumerated_count` from the IS

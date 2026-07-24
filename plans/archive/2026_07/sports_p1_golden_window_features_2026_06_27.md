@@ -75,10 +75,10 @@ ML-ready = one row per `(fixture × bucket)`; NaN ONLY where honest-absence (the
 
 ## Codex SSOTs
 
-- `codex/02-data/feature-formula-versioning.md` — sports feature versioning (`CURRENT_FEATURE_VERSION`)
-- `codex/02-data/availability-manifest-and-data-status.md` — features use the SAME 4-state manifest; per-feature
+- `/codex/02-data/feature-formula-versioning.md` — sports feature versioning (`CURRENT_FEATURE_VERSION`)
+- `/codex/02-data/availability-manifest-and-data-status.md` — features use the SAME 4-state manifest; per-feature
   honest-coverage gate
-- `codex/02-data/honest-absence-downstream-handling.md` — NaN classification (`OUT_OF_COVERAGE` vs `UPSTREAM_MISSING`)
+- `/codex/02-data/honest-absence-downstream-handling.md` — NaN classification (`OUT_OF_COVERAGE` vs `UPSTREAM_MISSING`)
 
 ## Mechanics
 

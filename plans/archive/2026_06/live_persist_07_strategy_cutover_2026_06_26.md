@@ -1,6 +1,8 @@
 ---
 doc_type: plan
-title: Live-persist 07 — strategy-service cutover to the facade (consume features/MDPS via the envelope; bar-close determinism intact)
+title:
+  Live-persist 07 — strategy-service cutover to the facade (consume features/MDPS via the envelope; bar-close
+  determinism intact)
 summary:
 status: complete
 nature: record
@@ -32,7 +34,7 @@ Child #7 (PARALLEL with 06/08/09 once 01–05 land). **Single repo: strategy-ser
 ## Shared contract (recap)
 
 Consume the canonical envelope via the UTL facade (plan 02). Strategy signals stay **bar-close deterministic** (the
-benchmark-fill spine — `codex/09-strategy/operational/paper-batch-live-reconciliation.md`); the facade must yield the
+benchmark-fill spine — `/codex/09-strategy/operational/paper-batch-live-reconciliation.md`); the facade must yield the
 identical bar in paper / live / batch.
 
 ## Anchors (start here — grep, sub-agent if large)

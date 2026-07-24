@@ -6,18 +6,38 @@ status: ROOT-CAUSE FIXED ✅ (utl@93ff771); follow-ups documented for triage
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, instruments-service, market-tick-data-service]
+repos:
+  [
+    alerting-service,
+    batch-live-reconciliation-service,
+    client-reporting-api,
+    deployment-api,
+    instruments-service,
+    market-tick-data-service,
+  ]
 scope: [engineer, admin]
 tags: []
-related: [codex/06-coding-standards/quality-gates-memory-governance.md (today's MEM_WRAP cgroup cap), plans/active/issues/utl_qg_preexisting_failures_2026_05_14.md (slot 6's ongoing UTL QG cleanup)]
+related:
+  [
+    /codex/06-coding-standards/quality-gates-memory-governance.md (today's MEM_WRAP cgroup cap),
+    plans/active/issues/utl_qg_preexisting_failures_2026_05_14.md (slot 6's ongoing UTL QG cleanup),
+  ]
 created: 2026-05-15
 author: harsh-claude (forensic audit + reproduction + workspace sweep)
 resolved: 2026-05-15
-resolution: ROOT-CAUSE FIXED — utl@93ff771 fixes the 75GB OOM at persistence.py:388. P1-P3 follow-ups documented for triage.
+resolution:
+  ROOT-CAUSE FIXED — utl@93ff771 fixes the 75GB OOM at persistence.py:388. P1-P3 follow-ups documented for triage.
 severity: P0 fixed (root cause); P1-P3 follow-ups documented
 locked_by: live-defi-rollout
 locked_since: 2026-05-15
-sources: [kernel dmesg (OOM, controlled cgroup-capped reproduction confirming culprit + standalone repro at /tmp/oom_repro_minimal.py, workspace-wide pattern scan (Pattern A unbounded-while-on-mock; Pattern B sys.modules MagicMock pollution; Pattern C session-autouse fixtures), UTL full QG memory profiling (5.29 GB peak combined; pytest 636 MB / basedpyright 1.6 GB isolated)]
+sources:
+  [
+    kernel dmesg (OOM,
+    controlled cgroup-capped reproduction confirming culprit + standalone repro at /tmp/oom_repro_minimal.py,
+    workspace-wide pattern scan (Pattern A unbounded-while-on-mock; Pattern B sys.modules MagicMock pollution; Pattern C
+    session-autouse fixtures),
+    UTL full QG memory profiling (5.29 GB peak combined; pytest 636 MB / basedpyright 1.6 GB isolated),
+  ]
 ---
 
 # UTL OOM forensic + workspace audit + architecture review
@@ -398,6 +418,5 @@ drift is rare).
 
 ## Triage — 2026-05-18
 
-**Status**: CLOSED — SHIPPED  
-**Triaged by**: slot-8 triage sweep  
-**Reason**: Root-cause fixed; P1-P3 follow-ups documented in successor plans
+**Status**: CLOSED — SHIPPED **Triaged by**: slot-8 triage sweep **Reason**: Root-cause fixed; P1-P3 follow-ups
+documented in successor plans

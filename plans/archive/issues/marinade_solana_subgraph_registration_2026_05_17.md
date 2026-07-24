@@ -12,7 +12,11 @@ tags: []
 related: []
 created: 2026-05-17
 author: ikenna-slot-3
-source: [plans/active/issues/lst_apr_sourcing_method_validated_2026_05_14.md P2 follow-up action item, plans/active/solana_lst_native_staking_adapters_2026_05_14.md (companion)]
+source:
+  [
+    plans/active/issues/lst_apr_sourcing_method_validated_2026_05_14.md P2 follow-up action item,
+    plans/active/solana_lst_native_staking_adapters_2026_05_14.md (companion),
+  ]
 locked_by: live-defi-rollout
 locked_since: 2026-05-17
 resolved: 2026-05-20
@@ -84,7 +88,7 @@ Plan-flip lst_apr_sourcing P2 DESIGN item as `BLOCKED-OPERATOR-DECISION` until t
 
 - Parent: `plans/active/issues/lst_apr_sourcing_method_validated_2026_05_14.md` § "Plan-flip checkboxes"
 - Companion: `plans/active/solana_lst_native_staking_adapters_2026_05_14.md` (JitoSOL canonical path)
-- Codex archetype: `codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md` § "LST-margin venue table"
+- Codex archetype: `/codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md` § "LST-margin venue table"
 
 execution: owner: operator (Path decision) → slot-3 (wire-in once decided) cadence: one-shot verifier: mSOL APR parquet
 emitted to gs://lst-rates-{pid}/raw_tick_data/by_date/day=\*/asset_group=defi/venue=MARINADE/chain=SOLANA/...

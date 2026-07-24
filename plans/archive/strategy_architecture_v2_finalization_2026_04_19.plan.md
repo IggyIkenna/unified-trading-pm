@@ -49,7 +49,7 @@ happen before we can fully retire the pre-v2 code path.
 - Unity mock Feed Connector + stdin/stdout IPC + bridge pump (`execution-service@207f3266`)
 - Execution policy registry — artifact-versioned rule table (`execution-service@76499fa8` `v2/execution_policies.py`)
 - Shadow deployment policy — evaluator + registry + codex doc (`strategy-service@0b94e8c` +
-  `codex/04-architecture/shadow-deployment-pattern.md`)
+  `/codex/04-architecture/shadow-deployment-pattern.md`)
 - Legacy migration loader — 58 rows across 17 archetypes (`strategy-service@740f2ba`)
 - Target universe — 240 forward-looking instances across all 18 archetypes (`strategy-service@62721e7`)
 - Kelly fraction + allocator cadence firm-wide defaults (`strategy-service@28167d7`)
@@ -235,10 +235,10 @@ throws it away. Nothing is audit-traceable.
       `ARCHETYPE_PROMOTED_TO_PROD` / `ARCHETYPE_ROLLED_BACK` / `ARCHETYPE_BUILD_ARCHIVED`. Registered in
       `STANDARD_LIFECYCLE_EVENTS` side-effect set. Grouped `ARCHETYPE_PROMOTION_EVENT_TYPES` set follows existing
       `DEPLOYMENT_EVENT_TYPES` / `AGENT_EVENT_TYPES` pattern. Re-exported from the events package.
-- [x] [DOC] P1. New "Persistence" section in `codex/04-architecture/shadow-deployment-pattern.md` — authoritative stores
-      table (registry + ledger), call graph, JSONL row schema, SHADOW → PROD → ARCHIVED → ROLLED_BACK state machine, UTL
-      events table, atomicity notes (within-process only; cross-process CAS flagged as follow-up), and explicit
-      non-goals ("does not derive decisions, does not retry, does not time-travel").
+- [x] [DOC] P1. New "Persistence" section in `/codex/04-architecture/shadow-deployment-pattern.md` — authoritative
+      stores table (registry + ledger), call graph, JSONL row schema, SHADOW → PROD → ARCHIVED → ROLLED_BACK state
+      machine, UTL events table, atomicity notes (within-process only; cross-process CAS flagged as follow-up), and
+      explicit non-goals ("does not derive decisions, does not retry, does not time-travel").
 - [x] [TEST] P1. `tests/unit/engine/strategies/v2/test_archetype_build_registry.py` — 19 tests green. Covers monotonic
       version enforcement, PROD head tracking across multiple builds, rollback parent-restoration, archive transition,
       event emission on all 4 transitions, ledger append/accumulate/multi-build segregation, 20-thread concurrent-append
@@ -380,22 +380,22 @@ needed to make the matrix queryable at runtime.
 Without this SSOT there is no way to point at "what can't we build today and why" or "does X × Y arb exist?".
 
 - [x] [DOC] P1. Write
-      [`codex/09-strategy/architecture-v2/category-instrument-coverage.md`](../../codex/09-strategy/architecture-v2/category-instrument-coverage.md)
+      [`/codex/09-strategy/architecture-v2/category-instrument-coverage.md`](/codex/09-strategy/architecture-v2/category-instrument-coverage.md)
       — master matrix for all 18 archetypes × 4 categories × 8 instrument types with ~130 fully-spelled representative
       `slot_label` examples, 10 grouped block-list entries covering the 21 BLOCKED triples, 11 UAC registry
       implications. Includes the dated-future rolling-underlying convention and slot-label grammar (`-dated-` vs
       `-fixed-{contract}-`).
 - [x] [DOC] P1. Write
-      [`codex/09-strategy/architecture-v2/uac-registry-gaps.md`](../../codex/09-strategy/architecture-v2/uac-registry-gaps.md)
+      [`/codex/09-strategy/architecture-v2/uac-registry-gaps.md`](/codex/09-strategy/architecture-v2/uac-registry-gaps.md)
       — companion, 12 concrete UAC additions as Pydantic shapes with per-gap rationale, consumers, and unblocked cells.
       Six-PR phasing (A → F). Gap #11 `RepresentativeFutureRegistry` (feeds Phase 11) and gap #12
       `StrategyAvailabilityRegistry` (feeds Phase 10.5).
 - [x] [DOC] P1. Write
-      [`codex/09-strategy/architecture-v2/cross-cutting/futures-roll-and-combos.md`](../../codex/09-strategy/architecture-v2/cross-cutting/futures-roll-and-combos.md)
+      [`/codex/09-strategy/architecture-v2/cross-cutting/futures-roll-and-combos.md`](/codex/09-strategy/architecture-v2/cross-cutting/futures-roll-and-combos.md)
       — technical spec for the `-dated-` rolling-future mechanism (representative-future-service, event contract,
       `FUTURES_ROLL` ATOMIC instruction variant, combo auto-creation, synthetic-price guardrails, circuit breakers).
 - [x] [DOC] P1. Write
-      [`codex/09-strategy/architecture-v2/cross-cutting/strategy-availability-and-locking.md`](../../codex/09-strategy/architecture-v2/cross-cutting/strategy-availability-and-locking.md)
+      [`/codex/09-strategy/architecture-v2/cross-cutting/strategy-availability-and-locking.md`](/codex/09-strategy/architecture-v2/cross-cutting/strategy-availability-and-locking.md)
       — SSOT for the SaaS-vs-IM lock-state principle: one combinatoric universe, four availability states (`PUBLIC` /
       `INVESTMENT_MANAGEMENT_RESERVED` / `CLIENT_EXCLUSIVE` / `RETIRED`), RBAC enforcement, UI surface split. Paired
       with UAC gap #12.
@@ -513,7 +513,7 @@ The plan-restructure round-trip raised three open questions; the operator answer
 businesses. Gates the lock-state overlays on every catalogue-aware surface (Phase 10, Phase 10.6).
 
 **Codex reference:**
-[`codex/09-strategy/architecture-v2/cross-cutting/strategy-availability-and-locking.md`](../../codex/09-strategy/architecture-v2/cross-cutting/strategy-availability-and-locking.md)
+[`/codex/09-strategy/architecture-v2/cross-cutting/strategy-availability-and-locking.md`](/codex/09-strategy/architecture-v2/cross-cutting/strategy-availability-and-locking.md)
 — sub-agents implementing this MUST have that doc pasted into their prompt.
 
 **StrategyAvailabilityEntry carries TWO orthogonal dimensions** (per 2026-04-19 user direction):
@@ -712,16 +712,16 @@ terminal — it happens automatically since our system handles it."
 ## Phase 11 — Dated-future roll mechanism (representative-future-service + combo creation)
 
 **Goal:** implement block-list entry BL-10 from
-[`category-instrument-coverage.md`](../../codex/09-strategy/architecture-v2/category-instrument-coverage.md). Unblocks
-every `-dated-` slot across ML_DIRECTIONAL_CONTINUOUS, RULES_DIRECTIONAL_CONTINUOUS, STAT_ARB_PAIRS_FIXED,
+[`category-instrument-coverage.md`](/codex/09-strategy/architecture-v2/category-instrument-coverage.md). Unblocks every
+`-dated-` slot across ML_DIRECTIONAL_CONTINUOUS, RULES_DIRECTIONAL_CONTINUOUS, STAT_ARB_PAIRS_FIXED,
 STAT_ARB_CROSS_SECTIONAL, ARBITRAGE_PRICE_DISPERSION, EVENT_DRIVEN (macros), CARRY_BASIS_DATED (default).
 
 **Codex reference:**
-[`codex/09-strategy/architecture-v2/cross-cutting/futures-roll-and-combos.md`](../../codex/09-strategy/architecture-v2/cross-cutting/futures-roll-and-combos.md)
+[`/codex/09-strategy/architecture-v2/cross-cutting/futures-roll-and-combos.md`](/codex/09-strategy/architecture-v2/cross-cutting/futures-roll-and-combos.md)
 — full service-level spec. Paste into sub-agent prompt when implementing.
 
 - [ ] [CODE] P1. **UAC registry + event contract.** Implement gap #11 from
-      [`uac-registry-gaps.md`](../../codex/09-strategy/architecture-v2/uac-registry-gaps.md): `UnderlyingDeclaration`,
+      [`uac-registry-gaps.md`](/codex/09-strategy/architecture-v2/uac-registry-gaps.md): `UnderlyingDeclaration`,
       `RollTriggerPolicy`, `REPRESENTATIVE_FUTURE_REGISTRY` tuple. `RepresentativeFutureChangedEvent` in UAC. Constants
       in UTL `event_types.py`.
 - [ ] [CODE] P1. **`representative-future-service` scaffold.** New thin service (or sub-module of features-service —
@@ -810,11 +810,11 @@ Phase 8 (test flakes) — independent; low-priority debt.
   branch).
 - **Codex SSOT:** `codex/09-strategy/architecture-v2/` (README + MIGRATION + 18 archetypes + 7 axes + 11 cross-cutting +
   2 architecture docs).
-- **Migration audit:** `codex/09-strategy/architecture-v2/MIGRATION.md` — §8 legacy code mapping, §15 deletion schedule
+- **Migration audit:** `/codex/09-strategy/architecture-v2/MIGRATION.md` — §8 legacy code mapping, §15 deletion schedule
   (BLOCKED on factory cutover + shadow promotion).
-- **Shadow pattern:** `codex/04-architecture/shadow-deployment-pattern.md`.
+- **Shadow pattern:** `/codex/04-architecture/shadow-deployment-pattern.md`.
 - **Archive READMEs:**
-  - `codex/09-strategy/_archived_pre_v2/README.md` (doc archive)
+  - `/codex/09-strategy/_archived_pre_v2/README.md` (doc archive)
   - `strategy-service/strategy_service/engine/strategies/_archived_pre_v2/README.md` (code archive)
 - **Memory files:**
   - `memory/project_architecture_v2_all_13_phases_shipped_2026_04_18.md`

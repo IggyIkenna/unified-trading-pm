@@ -10,12 +10,18 @@ repos: [unified-trading-pm, unified-trading-system-ui]
 scope: [engineer, admin]
 tags: []
 related: []
-created: '2026-04-20'
+created: "2026-04-20"
 priority: P1
 owner: agent
 locked_by: live-defi-rollout
 locked_since: 2026-04-20
-depends_on: [codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md §3.6, refactor_g1_1_phase_unification_2026_04_20.md, refactor_g1_3_locked_visible_ui_service_tile_mode_2026_04_20.md, refactor_g1_4_persona_combinatorial_expansion_2026_04_20.md]
+depends_on:
+  [
+    /codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md §3.6,
+    refactor_g1_1_phase_unification_2026_04_20.md,
+    refactor_g1_3_locked_visible_ui_service_tile_mode_2026_04_20.md,
+    refactor_g1_4_persona_combinatorial_expansion_2026_04_20.md,
+  ]
 ---
 
 ## Deferred work — migrated to:
@@ -54,14 +60,14 @@ surfaces.
 
 ## Mandatory read-set
 
-1. `codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md` §3.6
+1. `/codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md` §3.6
 2. `refactor_g1_1_phase_unification_2026_04_20.md`
 3. `refactor_g1_3_locked_visible_ui_service_tile_mode_2026_04_20.md`
 4. `refactor_g1_4_persona_combinatorial_expansion_2026_04_20.md`
 5. `unified-trading-system-ui/tests/e2e/playbooks/visibility-slicing.spec.ts` — current state
 6. `unified-trading-system-ui/tests/e2e/playbooks/seed-persona.ts`
 7. `unified-trading-system-ui/lib/auth/personas.ts` — 15-20 personas post-G1.4
-8. `codex/14-customer-journeys/playbook-concepts/visibility-slicing.md`
+8. `/codex/14-customer-journeys/playbook-concepts/visibility-slicing.md`
 
 ## Out of scope
 

@@ -10,8 +10,10 @@ repos: [unified-api-contracts]
 scope: [engineer, admin]
 tags: []
 related: []
-created: '2026-03-06'
-overview: Complete specification for normalizing all external API contracts across 60+ venues into canonical formats, with full matrix generation, live/batch symmetry, and references for every data source and schema.
+created: "2026-03-06"
+overview:
+  Complete specification for normalizing all external API contracts across 60+ venues into canonical formats, with full
+  matrix generation, live/batch symmetry, and references for every data source and schema.
 todos: []
 isProject: false
 ---
@@ -218,15 +220,15 @@ def normalize_<provider>_<schema>(raw: ExternalSchema, venue: str = "...", symbo
 
 ## 8. References
 
-| Doc          | Path                                                           | Purpose                    |
-| ------------ | -------------------------------------------------------------- | -------------------------- |
-| GAPS Audit   | `docs/SCHEMA_NORMALIZATION_GAPS_AUDIT.md`                      | Full gap list, remediation |
-| Full Audit   | `docs/SCHEMA_NORMALIZATION_AUDIT_FULL.md`                      | Complete mapping table     |
-| Audit Matrix | `docs/SCHEMA_AUDIT_MATRIX.md`                                  | Generated SSOT             |
-| Rate Limits  | `docs/RATE_LIMIT_HANDLING_GAPS.md`                             | Rate limit normalization   |
-| Codex        | `unified-trading-codex/02-data/contracts-scope-and-layout.md`  | Architecture               |
-| Codex        | `unified-trading-codex/02-data/canonical-schema-groups.md`     | Canonical types            |
-| Batch-Live   | `unified-trading-codex/04-architecture/batch-live-symmetry.md` | Symmetry rules             |
+| Doc          | Path                                                            | Purpose                    |
+| ------------ | --------------------------------------------------------------- | -------------------------- |
+| GAPS Audit   | `docs/SCHEMA_NORMALIZATION_GAPS_AUDIT.md`                       | Full gap list, remediation |
+| Full Audit   | `docs/SCHEMA_NORMALIZATION_AUDIT_FULL.md`                       | Complete mapping table     |
+| Audit Matrix | `docs/SCHEMA_AUDIT_MATRIX.md`                                   | Generated SSOT             |
+| Rate Limits  | `docs/RATE_LIMIT_HANDLING_GAPS.md`                              | Rate limit normalization   |
+| Codex        | `unified-trading-/codex/02-data/contracts-scope-and-layout.md`  | Architecture               |
+| Codex        | `unified-trading-/codex/02-data/canonical-schema-groups.md`     | Canonical types            |
+| Batch-Live   | `unified-trading-/codex/04-architecture/batch-live-symmetry.md` | Symmetry rules             |
 
 ---
 

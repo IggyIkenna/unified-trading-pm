@@ -35,9 +35,9 @@ scope: [engineer, admin]
 tags: [cicd, provenance-gate, quickmerge, ldr-to-main, auto-merge, marker-bug]
 related:
   [
-    cicd_mvp_ldr_to_main_pipeline_2026_06_30.md,
-    provenance_gate_squash_perpetual_block_2026_06_17.md,
-    ../../codex/08-workflows/ci-cd-flow.md,
+    /plans/active/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md,
+    /plans/archive/issues/provenance_gate_squash_perpetual_block_2026_06_17.md,
+    /codex/08-workflows/ci-cd-flow.md,
   ]
 created: 2026-07-13
 last_updated: 2026-07-13

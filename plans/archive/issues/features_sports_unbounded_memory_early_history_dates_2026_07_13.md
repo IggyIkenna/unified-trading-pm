@@ -21,8 +21,8 @@ related:
   [
     plans/active/sports_p2_features_history_to_ml_ready_2026_06_27.md,
     plans/active/issues/sports_venue_id_numeric_coercion_data_loss_2026_07_13.md,
-    codex/02-data/feature-formula-versioning.md,
-    codex/02-data/honest-absence-downstream-handling.md,
+    /codex/02-data/feature-formula-versioning.md,
+    /codex/02-data/honest-absence-downstream-handling.md,
   ]
 created: 2026-07-13
 parent_epic: sports_master
@@ -159,8 +159,8 @@ Profiling scripts committed as reusable evidence/tooling (all `Lifecycle: tempor
   (features manifest clean over history — needs 0 blank-reason, 0 un-evidenced-failed) — any date the compute never
   actually captures will show up as `EXPECTED_UNATTEMPTED` (or missing entirely) rather than `captured`, and Todo 3's
   gate cannot be honestly closed while a known-reproducible crash is silently reported as success.
-- Per `codex/02-data/data-pipeline-correctness-hard-rule.md`, a data-correctness defect is fixed in full, not deferred —
-  this is exactly that class: a genuine compute failure that would otherwise be invisible to any monitor that only
+- Per `/codex/02-data/data-pipeline-correctness-hard-rule.md`, a data-correctness defect is fixed in full, not deferred
+  — this is exactly that class: a genuine compute failure that would otherwise be invisible to any monitor that only
   checks `EXIT_STATUS`.
 - Other early-history dates with similarly dense historical-snapshot lookbacks (many prior years, many league shards)
   may hit the same unbounded-growth path — 2018-06-17 is the one instance confirmed twice; it is very likely not unique.
@@ -650,8 +650,8 @@ root of BOTH slot-8's findings #1 (`read_venues`) and #2 (fixtures normalizer) �
 is ever fixed**. This is deliberately NOT the same as slot-8's suggested `.drop_duplicates(subset=["venue_id"])` —
 dedup-to-one-row would still let every fixture silently match the single arbitrary `""`-keyed venue row (bounded, but
 wrong data); dropping the blank key entirely gives honest-absence NaN instead, consistent with
-`codex/02-data/honest-absence-downstream-handling.md`. Also fixed two secondary allocation sites the same profiling pass
-surfaced in the same function: two `.groupby().apply(lambda...)` calls (home_win_pct, clean_sheet_rate) and a
+`/codex/02-data/honest-absence-downstream-handling.md`. Also fixed two secondary allocation sites the same profiling
+pass surfaced in the same function: two `.groupby().apply(lambda...)` calls (home_win_pct, clean_sheet_rate) and a
 raw-GroupBy-iteration dict comprehension (`_away_games_cache`) — all replaced with vectorized groupby aggregations.
 
 **Verified against real production GCS data** (not synthetic): `export_derived_features()` now completes fully for BOTH

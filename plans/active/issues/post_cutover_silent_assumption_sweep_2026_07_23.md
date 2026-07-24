@@ -338,7 +338,7 @@ classify them by conventional-commit prefix (the rules above), compute the next 
 4. **Do not backfill ~2,490 intermediate releases.** Those artifacts never existed; inventing them is fabrication. Each
    repo gets ONE tag capturing current `main`; the gap stays a gap.
 5. **Shared GitHub rate limit** — the reconciler authenticates as the same user the CI dep-clone steps use. See the
-   rate-limit caveat in `codex/08-workflows/ci-cd-flow.md`.
+   rate-limit caveat in `/codex/08-workflows/ci-cd-flow.md`.
 
 ### Sub-steps
 
@@ -350,7 +350,7 @@ classify them by conventional-commit prefix (the rules above), compute the next 
 - [ ] [INFRA] P2. Batch the manifest write to ONE commit per run (the whole point of B) — verify by confirming a single
       `chore(manifest):` commit after a multi-repo mint.
 - [ ] [INFRA] P2. First supervised drain: run with `--dry-run`, eyeball the 22 proposed versions, then mint.
-- [ ] [DOC] P2. Update `codex/08-workflows/ci-cd-flow.md` § "Release tag reconciler" once B ships — it currently
+- [ ] [DOC] P2. Update `/codex/08-workflows/ci-cd-flow.md` § "Release tag reconciler" once B ships — it currently
       documents B as _planned_.
 
 ## Docs (P2)

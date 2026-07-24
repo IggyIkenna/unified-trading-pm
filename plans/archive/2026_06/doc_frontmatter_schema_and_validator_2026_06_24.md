@@ -94,14 +94,14 @@ principle).
 ### Phase 0 — Decide homes (no code) — small operator confirmations
 
 - [x] ✅ [DOCS] P0. Homes DECIDED (operator delegated — 2026-06-24): (a) human SSOT =
-      `codex/11-project-management/doc-frontmatter-schema.md` (DRAFTED), `plans/PLAN_FORMAT.md` to cross-reference for
+      `/codex/11-project-management/doc-frontmatter-schema.md` (DRAFTED), `plans/PLAN_FORMAT.md` to cross-reference for
       the plan family; (b) machine validator = `scripts/docs/docspec.py` (universal across doc types, consumed by
       plan-hygiene + the W5 gate). — PM (unpushed, pending review).
 
 ### Phase 1 — Human SSOT [depends: P0]
 
 - [x] ✅ [DOCS] P0. Human SSOT written + operator-approved + shipped —
-      `codex/11-project-management/doc-frontmatter-schema.md` (PM@df7148c02; refined this pass: broadened exemptions ·
+      `/codex/11-project-management/doc-frontmatter-schema.md` (PM@df7148c02; refined this pass: broadened exemptions ·
       `scope` vs `audited_scope` · status-soft-during-soak).
 
 ### Phase 2 — Machine validator [depends: P1; parallel-ok with codex authoring]
@@ -134,15 +134,15 @@ principle).
 
 ## Codex SSOT updates
 
-- ✅ `codex/11-project-management/doc-frontmatter-schema.md` (NEW) — the human SSOT. Shipped PM@df7148c02; this pass
+- ✅ `/codex/11-project-management/doc-frontmatter-schema.md` (NEW) — the human SSOT. Shipped PM@df7148c02; this pass
   added §11 enforcement-sequencing (soak-then-gate).
-- ✅ `codex/11-project-management/plan-hygiene.md` — cross-references the universal core + the `docspec` validator
+- ✅ `/codex/11-project-management/plan-hygiene.md` — cross-references the universal core + the `docspec` validator
   (added 2026-07-01 under § "Required plan frontmatter fields").
 
 ## Progress Log
 
 - 2026-06-24: **W2 design pass — operator delegated the open calls; three decisions locked + the human SSOT DRAFTED** at
-  `codex/11-project-management/doc-frontmatter-schema.md` (`status: draft`, dogfoods its own schema). Decisions: (1)
+  `/codex/11-project-management/doc-frontmatter-schema.md` (`status: draft`, dogfoods its own schema). Decisions: (1)
   **codex `scope` = an AUDIENCE axis** (`engineer/admin/sales/prospect/investor`) — grounded in the measured 826-doc
   values, NOT pipeline-stage; KEPT as a distinct 4th search axis (don't retire/remap). (2) **cursor-rule keeps
   `description`** as its summary-equivalent (add only `doc_type`; no redundant `summary`). (3) **`doc_type` stays at 9**

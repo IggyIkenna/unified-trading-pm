@@ -5,7 +5,8 @@ title:
 created: 2026-06-25
 parent_epic: orchestrator_master
 assigned_vm: planning
-status: supersededpriority: P0
+status: superseded
+priority: P0
 locked_by: live-defi-rollout
 source:
   - "2026-06-25 ~01:1x UTC operator report — orchestrator UI activity feed escalation_dispatch_initiated → escalation
@@ -106,12 +107,12 @@ instead of the fleet starving silently.
       whole `spawn()` (not just the paste) when the session dies with no auth evidence. Target: `server/tmux_spawn.py`
       `_start_session`/`spawn`. — agent-orchestrator@6e6638a: added `_SPAWN_TRANSIENT_MAX_RETRIES=2`,
       `_is_transient_spawn_failure()` helper (bare "not alive" + no pane-tail → True; pane-tail present → False to
-      preserve auth-rotation path), and retry loop in `spawn()`+`spawn_named()` that kills orphan → sleeps 2s →
-      re-calls `_start_session` → retries dismiss+paste. 5 new unit tests (QG green, 903 passed).
+      preserve auth-rotation path), and retry loop in `spawn()`+`spawn_named()` that kills orphan → sleeps 2s → re-calls
+      `_start_session` → retries dismiss+paste. 5 new unit tests (QG green, 903 passed).
 
 ## Codex SSOT updates
 
-- [x] `codex/04-architecture/agent-orchestrator-overview.md` § Auto-spawn — added "Spawn-time auth-fail →
+- [x] `/codex/04-architecture/agent-orchestrator-overview.md` § Auto-spawn — added "Spawn-time auth-fail →
       drop-from-rotation" + the alert reframe + the failure-modes table rows. — PM@f1126e71
 
 ## Progress Log

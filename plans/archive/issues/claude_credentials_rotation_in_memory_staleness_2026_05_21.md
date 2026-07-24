@@ -1,6 +1,8 @@
 ---
 doc_type: issue
-title: Recurring `claude /login` prompts on VM + VS Code — refresh-token rotation, shared `.credentials.json`, in-memory staleness
+title:
+  Recurring `claude /login` prompts on VM + VS Code — refresh-token rotation, shared `.credentials.json`, in-memory
+  staleness
 summary:
 status: BLOCKED-OPERATOR
 nature: record
@@ -9,7 +11,12 @@ stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer, admin]
 tags: []
-related: [agent_orchestrator_per_spawn_account_isolation_2026_05_20.md, orchestrator_spawn_tmux_silent_failure_2026_05_20.md, master_to_live_defi_2026_05_23.md]
+related:
+  [
+    /plans/archive/2026_05/agent_orchestrator_per_spawn_account_isolation_2026_05_20.md,
+    /plans/archive/issues/orchestrator_spawn_tmux_silent_failure_2026_05_20.md,
+    /plans/active/master_to_live_defi_2026_05_23.md,
+  ]
 created: 2026-05-21
 updated: 2026-05-21
 priority: P1

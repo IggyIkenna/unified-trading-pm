@@ -69,7 +69,7 @@ drift_direction: advance-code
   Read in full before touching any todo below.
 - `unified-trading-pm/plans/active/issues/instrument_id_format_canonicalization_2026_07_08.md` finding 8 — the parent
   finding, now resolved-with-a-migration-scoped.
-- `codex/02-data/availability-manifest-and-data-status.md`, `codex/06-coding-standards/` — standard data-pipeline +
+- `/codex/02-data/availability-manifest-and-data-status.md`, `codex/06-coding-standards/` — standard data-pipeline +
   coding-standards rules apply (honest absence, no fabricated values, UAC SSOT types).
 
 ## Background (do not re-derive — read the doc)

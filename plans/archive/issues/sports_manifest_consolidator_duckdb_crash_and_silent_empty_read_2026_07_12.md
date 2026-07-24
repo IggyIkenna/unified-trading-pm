@@ -21,7 +21,7 @@ tags: [infrastructure, manifest-consolidator, sports, duckdb, oom, silent-placeh
 related:
   [
     plans/active/sports_p2_history_reference_and_odds_2015_to_present_2026_06_27.md,
-    codex/05-infrastructure/manifest-consolidator-ssot.md,
+    /codex/05-infrastructure/manifest-consolidator-ssot.md,
   ]
 created: 2026-07-12
 parent_epic: infrastructure_master
@@ -101,7 +101,7 @@ this session to isolate the exact branch (`_read_and_merge_per_vm_shards` return
 
 - Any consumer of `read_availability_index` for this bucket during the outage window silently sees "nothing has been
   captured" instead of a loud failure — the exact "silent placeholder" anti-pattern the workspace hard rules ban
-  (`codex/02-data/honest-absence-downstream-handling.md`). A backfill VM or gate-check reading this during the window
+  (`/codex/02-data/honest-absence-downstream-handling.md`). A backfill VM or gate-check reading this during the window
   could conclude a 100% gap and trigger unnecessary re-fetches, or a downstream service could report false
   zero-coverage.
 - The consolidator crash-looping for 15+ minutes (and counting) means EVERY in-flight sports data_engineering task right

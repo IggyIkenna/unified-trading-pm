@@ -6,10 +6,23 @@ status: complete
 nature: record
 asset_group: [infrastructure]
 stage: [meta]
-repos: [deployment-api, execution-service, features-service, fund-administration-service, greeks-service, instruments-service]
+repos:
+  [
+    deployment-api,
+    execution-service,
+    features-service,
+    fund-administration-service,
+    greeks-service,
+    instruments-service,
+  ]
 scope: [engineer, admin]
 tags: []
-related: [plans/active/cicd_contract_hardening_2026_06_01.md, plans/active/ci_canonical_v2_migration_2026_05_29.md, plans/epics/infrastructure_master.md]
+related:
+  [
+    plans/active/cicd_contract_hardening_2026_06_01.md,
+    plans/active/ci_canonical_v2_migration_2026_05_29.md,
+    plans/epics/infrastructure_master.md,
+  ]
 created: 2026-06-02
 parent_epic: infrastructure_master
 assigned_vm: vm-cross-cutting
@@ -20,57 +33,146 @@ estimate_baseline_ai_days: 3.0
 estimate_calibrated_ai_days: 2.4
 locked_by: live-defi-rollout
 source: [plans/archive/quality_gates_performance_parallelism.plan.md]
-completion_gates: {code: C5, deployment: none, business: none}
+completion_gates: { code: C5, deployment: none, business: none }
 repo_gates:
-- {repo: unified-trading-pm, code: C0}
-- {repo: instruments-service, code: C0}
+  - { repo: unified-trading-pm, code: C0 }
+  - { repo: instruments-service, code: C0 }
 todos:
-- {id: qg-bench-aggregate, content: '- [x] ✅ [SCRIPT] P0. Build an AGGREGATE-load benchmark harness (`unified-trading-pm/scripts/dev/benchmark-qg-under-load.sh`) that fires K slots'' `quality-gates.sh` concurrently and measures host CPU-steal, swap-in/out, load-average, and p50/p95 per-run wall-clock. The existing archived benchmark timed ONE repo sequentially and is structurally blind to the contention problem this plan exists to fix. Output a CSV + a one-line verdict (oversubscribed Y/N at K∈{1,2,4,8}). — DONE (slot 10, 2026-06-03): vmstat header-parsing bug fixed; K=1,2,4 run on vm-0 (16c/61GB); CSV committed (scripts/dev/qg-bench-under-load-20260603T134208Z.csv). Results: K=1 p95=30.5s → K=2 p95=30.7s (1.01×) → K=4 p95=53.1s (1.74×); swap_in=0 steal=0 at all K. Governor (K=4 tokens, floor(16/4)) serialises heavy phases — no memory thrash. K=8 not run (K=4 already exceeds the 1.5× ratio threshold without swap/steal, confirming the governor''s protection holds; K=8 would take ~6 min on
-    this host — deferred).
+  - { id: qg-bench-aggregate, content: "- [x] ✅ [SCRIPT] P0. Build an AGGREGATE-load benchmark harness
+        (`unified-trading-pm/scripts/dev/benchmark-qg-under-load.sh`) that fires K slots' `quality-gates.sh`
+        concurrently and measures host CPU-steal, swap-in/out, load-average, and p50/p95 per-run wall-clock. The
+        existing archived benchmark timed ONE repo sequentially and is structurally blind to the contention problem this
+        plan exists to fix. Output a CSV + a one-line verdict (oversubscribed Y/N at K∈{1,2,4,8}). — DONE (slot 10,
+        2026-06-03): vmstat header-parsing bug fixed; K=1,2,4 run on vm-0 (16c/61GB); CSV committed
+        (scripts/dev/qg-bench-under-load-20260603T134208Z.csv). Results: K=1 p95=30.5s → K=2 p95=30.7s (1.01×) → K=4
+        p95=53.1s (1.74×); swap_in=0 steal=0 at all K. Governor (K=4 tokens, floor(16/4)) serialises heavy phases — no
+        memory thrash. K=8 not run (K=4 already exceeds the 1.5× ratio threshold without swap/steal, confirming the
+        governor's protection holds; K=8 would take ~6 min on this host — deferred).
 
-    ', status: done}
-- {id: qg-perrepo-baseline, content: "- [x] ✅ [SCRIPT] P0. Per-repo QG resource baseline + 2× deviation guard (Harsh 2026-06-02). DONE (slot 10, 2026-06-03):\n      20-repo local baseline committed (scripts/dev/qg_resource_baseline.json; full-run, not --quick); 2× wall-clock\n      WARN guard wired in base-service.sh lines 2518-2529. VM side deferred — pending qg-cw-memory-agent bootstrap\n      (CW agent not yet installed on fleet VMs; vm key absent from JSON until that lands).\n", status: done}
-- {id: qg-cw-memory-agent, content: '- [x] ✅ [INFRA] P0. Install the CloudWatch agent (memory + swap + disk metrics) on the orchestrator fleet VMs — verified 2026-06-02 there are ZERO memory metrics published (only AWS/EC2 CPU), so every RAM/sizing decision below is currently blind. Add the agent + a minimal `amazon-cloudwatch-agent.json` (mem_used_percent, swap_used_percent, disk_used_percent) to `agent-orchestrator/scripts/bootstrap_vm.sh` (code-only, applies on next bootstrap — do NOT restart running VMs). This is the prerequisite for `qg-perrepo-baseline`''s VM measurement and the A/B/C sizing decision in the "Where QG + SIT actually run" section.
+        ", status: done }
+  - {
+      id: qg-perrepo-baseline,
+      content:
+        "- [x] ✅ [SCRIPT] P0. Per-repo QG resource baseline + 2× deviation guard (Harsh 2026-06-02). DONE (slot 10,
+        2026-06-03):\n      20-repo local baseline committed (scripts/dev/qg_resource_baseline.json; full-run, not
+        --quick); 2× wall-clock\n      WARN guard wired in base-service.sh lines 2518-2529. VM side deferred — pending
+        qg-cw-memory-agent bootstrap\n      (CW agent not yet installed on fleet VMs; vm key absent from JSON until that
+        lands).\n",
+      status: done,
+    }
+  - { id: qg-cw-memory-agent, content: '- [x] ✅ [INFRA] P0. Install the CloudWatch agent (memory + swap + disk metrics)
+        on the orchestrator fleet VMs — verified 2026-06-02 there are ZERO memory metrics published (only AWS/EC2 CPU),
+        so every RAM/sizing decision below is currently blind. Add the agent + a minimal `amazon-cloudwatch-agent.json`
+        (mem_used_percent, swap_used_percent, disk_used_percent) to `agent-orchestrator/scripts/bootstrap_vm.sh`
+        (code-only, applies on next bootstrap — do NOT restart running VMs). This is the prerequisite for
+        `qg-perrepo-baseline`''s VM measurement and the A/B/C sizing decision in the "Where QG + SIT actually run"
+        section.
 
-    ', status: todo}
-- {id: qg-cw-memory-agent, content: '- [x] ✅ [INFRA] P0. Install the CloudWatch agent (memory + swap + disk metrics) on the orchestrator fleet VMs — verified 2026-06-02 there are ZERO memory metrics published (only AWS/EC2 CPU), so every RAM/sizing decision below is currently blind. Add the agent + a minimal `amazon-cloudwatch-agent.json` (mem_used_percent, swap_used_percent, disk_used_percent) to `agent-orchestrator/scripts/bootstrap_vm.sh` (code-only, applies on next bootstrap — do NOT restart running VMs). This is the prerequisite for `qg-perrepo-baseline`''s VM measurement and the A/B/C sizing decision in the "Where QG + SIT actually run" section.
+        ', status: todo }
+  - { id: qg-cw-memory-agent, content: '- [x] ✅ [INFRA] P0. Install the CloudWatch agent (memory + swap + disk metrics)
+        on the orchestrator fleet VMs — verified 2026-06-02 there are ZERO memory metrics published (only AWS/EC2 CPU),
+        so every RAM/sizing decision below is currently blind. Add the agent + a minimal `amazon-cloudwatch-agent.json`
+        (mem_used_percent, swap_used_percent, disk_used_percent) to `agent-orchestrator/scripts/bootstrap_vm.sh`
+        (code-only, applies on next bootstrap — do NOT restart running VMs). This is the prerequisite for
+        `qg-perrepo-baseline`''s VM measurement and the A/B/C sizing decision in the "Where QG + SIT actually run"
+        section.
 
-    ', status: todo}
-- {id: qg-vm-rightsizing, content: '- [x] ✅ [INFRA] P1. Worker-VM right-sizing audit — DATA-DRIVEN off the per-repo baseline, not a guess (Harsh 2026-06-02). Current fleet = AWS `m7i.xlarge` (4 vCPU / 16 GB) × 8 slots/VM (~2 GB/slot) — already OOM-prone under parallel QG. Compute the floor = (peak per-run RSS × peak-concurrent-QG-under-the-governor) and compare to Harsh''s hypothesis (~64 GB / 8 vCPU). Decide machine type AND slots-per-VM together (a bigger box OR fewer slots — the governor caps concurrency either way; do not just throw RAM at 8 uncapped runs). If a change is warranted, update `deployment-service/scripts/vm/launch-epic-vm-aws.sh` + `orchestrator_vm_registry.yaml`. NOTE: fleet is currently consolidated to 2 running VMs — this is a scale-back-up decision.
+        ', status: todo }
+  - { id: qg-vm-rightsizing, content: "- [x] ✅ [INFRA] P1. Worker-VM right-sizing audit — DATA-DRIVEN off the per-repo
+        baseline, not a guess (Harsh 2026-06-02). Current fleet = AWS `m7i.xlarge` (4 vCPU / 16 GB) × 8 slots/VM (~2
+        GB/slot) — already OOM-prone under parallel QG. Compute the floor = (peak per-run RSS ×
+        peak-concurrent-QG-under-the-governor) and compare to Harsh's hypothesis (~64 GB / 8 vCPU). Decide machine type
+        AND slots-per-VM together (a bigger box OR fewer slots — the governor caps concurrency either way; do not just
+        throw RAM at 8 uncapped runs). If a change is warranted, update
+        `deployment-service/scripts/vm/launch-epic-vm-aws.sh` + `orchestrator_vm_registry.yaml`. NOTE: fleet is
+        currently consolidated to 2 running VMs — this is a scale-back-up decision.
 
-    ', status: todo}
-- {id: qg-governor, content: '- [x] ✅ [SCRIPT] P0. Cross-slot concurrency governor — a host-level `flock`/token-bucket wrapper so at most K QG runs execute concurrently across ALL slots (default K = `max(1, floor(physical_cores/4))`, env-overridable `QG_HOST_CONCURRENCY`). Wire it into `quality-gates-base/base-service.sh` so every repo''s `quality-gates.sh` acquires a host token before the heavy (pytest/basedpyright) phases. Converts 8× simultaneous thrash into orderly queueing → p95 wall-clock drops with NO added parallelism. This is the core fix. `nice -n10` + `ionice -c2 -n7` the QG process tree. **FOLLOW-UP FIX (slot-5 2026-06-03, PM@ec30709f9 (on LDR via tab-mirror; draining to staging)): the governor was INACTIVE on the macOS operator host** — it used bash ≥4.1''s `exec {fd}>` auto-FD form, so on bash 3.2 (macOS) it bailed to ungoverned and slots thrashed (observed 5 concurrent QGs on the dev Mac → OOM/exit-144 risk). Rewrote `qg_governor_acquire`/`release`/`--status` to open explicit
-    numeric FDs via `eval "exec $fd>..."` (base 200 + token index; bash-3.2 AND ≥4.1 compatible; ungoverned-safe on any FD failure). Verified on bash 3.2.57: `--status` reports active token accounting + two independent processes queue correctly at K=1. Now genuinely active on every host.
+        ", status: todo }
+  - { id: qg-governor, content: '- [x] ✅ [SCRIPT] P0. Cross-slot concurrency governor — a host-level
+        `flock`/token-bucket wrapper so at most K QG runs execute concurrently across ALL slots (default K = `max(1,
+        floor(physical_cores/4))`, env-overridable `QG_HOST_CONCURRENCY`). Wire it into
+        `quality-gates-base/base-service.sh` so every repo''s `quality-gates.sh` acquires a host token before the heavy
+        (pytest/basedpyright) phases. Converts 8× simultaneous thrash into orderly queueing → p95 wall-clock drops with
+        NO added parallelism. This is the core fix. `nice -n10` + `ionice -c2 -n7` the QG process tree. **FOLLOW-UP FIX
+        (slot-5 2026-06-03, PM@ec30709f9 (on LDR via tab-mirror; draining to staging)): the governor was INACTIVE on the
+        macOS operator host** — it used bash ≥4.1''s `exec {fd}>` auto-FD form, so on bash 3.2 (macOS) it bailed to
+        ungoverned and slots thrashed (observed 5 concurrent QGs on the dev Mac → OOM/exit-144 risk). Rewrote
+        `qg_governor_acquire`/`release`/`--status` to open explicit numeric FDs via `eval "exec $fd>..."` (base 200 +
+        token index; bash-3.2 AND ≥4.1 compatible; ungoverned-safe on any FD failure). Verified on bash 3.2.57:
+        `--status` reports active token accounting + two independent processes queue correctly at K=1. Now genuinely
+        active on every host.
 
-    ', status: todo}
-- {id: qg-slot-aware-workers, content: '- [x] ✅ [SCRIPT] P0. Replace `pytest -n auto` (grabs ALL cores per slot → N-slot oversubscription) with a slot-aware cap: `-n $(QG_PYTEST_WORKERS or min(4, floor(free_cores / active_slots)))`. `active_slots` read from the orchestrator/registry or a host token count. Default conservatively; never let one slot''s pytest claim the whole box. Document the formula in `codex/06-coding-standards/quality-gates.md`.
+        ', status: todo }
+  - { id: qg-slot-aware-workers, content: "- [x] ✅ [SCRIPT] P0. Replace `pytest -n auto` (grabs ALL cores per slot →
+        N-slot oversubscription) with a slot-aware cap: `-n $(QG_PYTEST_WORKERS or min(4, floor(free_cores /
+        active_slots)))`. `active_slots` read from the orchestrator/registry or a host token count. Default
+        conservatively; never let one slot's pytest claim the whole box. Document the formula in
+        `/codex/06-coding-standards/quality-gates.md`.
 
-    ', status: todo}
-- {id: qg-repo-green-sentinel, content: '- [x] ✅ [SCRIPT] P1. Per-repo green-sentinel cache — extend the existing `.qg_last_passed_sha` into a content-hash sentinel so an unchanged repo (tree hash unchanged since last green) skips the heavy phases entirely and exits 0 fast. MUST be sound: hash includes source + tests + pyproject + lockfile + tool-config + QG-script versions; any mismatch → full run. Keyed per-repo so the first slot to green a repo lets siblings short-circuit.
+        ", status: todo }
+  - { id: qg-repo-green-sentinel, content: "- [x] ✅ [SCRIPT] P1. Per-repo green-sentinel cache — extend the existing
+        `.qg_last_passed_sha` into a content-hash sentinel so an unchanged repo (tree hash unchanged since last green)
+        skips the heavy phases entirely and exits 0 fast. MUST be sound: hash includes source + tests + pyproject +
+        lockfile + tool-config + QG-script versions; any mismatch → full run. Keyed per-repo so the first slot to green
+        a repo lets siblings short-circuit.
 
-    ', status: todo}
-- {id: qg-selective-tests, content: '- [x] ✅ [SCRIPT] P1. Import-graph selective testing — replace the archived plan''s brittle `sed` path-mangling with a real changed-files→affected-tests map (evaluate `pytest-testmon` vs a lightweight import-graph walk). Iterative dev runs execute only tests transitively touching changed files; full suite still runs at the gate-to-main pass. Gate behind `QG_SELECTIVE=true` (default off until proven sound — a missed-test false-negative is worse than slowness).
+        ", status: todo }
+  - { id: qg-selective-tests, content: "- [x] ✅ [SCRIPT] P1. Import-graph selective testing — replace the archived
+        plan's brittle `sed` path-mangling with a real changed-files→affected-tests map (evaluate `pytest-testmon` vs a
+        lightweight import-graph walk). Iterative dev runs execute only tests transitively touching changed files; full
+        suite still runs at the gate-to-main pass. Gate behind `QG_SELECTIVE=true` (default off until proven sound — a
+        missed-test false-negative is worse than slowness).
 
-    ', status: todo}
-- {id: qg-basedpyright-scope, content: '- [x] ✅ [SCRIPT] P1. Scope + warm basedpyright — run it on the changed package(s), not the whole `src/`, for iterative runs (full-tree only at gate-to-main). Evaluate basedpyright watch/daemon mode to avoid the cold whole-tree analyze (the single biggest CPU spike per run). Persist + share the basedpyright cache dir across worktrees so the first slot warms it for all.
+        ", status: todo }
+  - { id: qg-basedpyright-scope, content: "- [x] ✅ [SCRIPT] P1. Scope + warm basedpyright — run it on the changed
+        package(s), not the whole `src/`, for iterative runs (full-tree only at gate-to-main). Evaluate basedpyright
+        watch/daemon mode to avoid the cold whole-tree analyze (the single biggest CPU spike per run). Persist + share
+        the basedpyright cache dir across worktrees so the first slot warms it for all.
 
-    ', status: todo}
-- {id: qg-xdist-start-method, content: '- [ ] [SCRIPT] P2. **Root-cause the xdist re-import cost = multiprocessing start method** (slot-3 2026-06-03). `PYTEST_WORKERS=0` (serial) is the default because each xdist worker "re-imports UTL+UAC from scratch" — but that is a macOS artefact: macOS defaults to `spawn` (full re-import per worker) while the Linux QG VMs default to `fork` (workers inherit the parent''s already-imported modules for FREE). So bounded xdist on the Linux VMs (`-n` capped + `--maxprocesses` + `fork`/`forkserver` start method) likely parallelises with near-zero re-import tax, while macOS stays serial. Evaluate + MEASURE (full features-service suite: serial-macOS vs fork-xdist-Linux) before enabling; keep behind a flag, never on macOS, honour the existing `QG_MEM_CAP`/OOM guard (the 2026-05-15 79GB incident). **Complementary to + LOWER priority than `qg-selective-tests`** — for small diffs, scoping to affected tests beats any parallelism (aligns with this plan''s "do-less-work,
-    not more parallelism" thesis). Evidence: local macOS full features-service QG measured ~14 min @ ~2% suite progress 2026-06-03 — the laptop is the slow path; the fleet runs heavy QG on the Linux VMs by design.
+        ", status: todo }
+  - { id: qg-xdist-start-method, content: '- [ ] [SCRIPT] P2. **Root-cause the xdist re-import cost = multiprocessing
+        start method** (slot-3 2026-06-03). `PYTEST_WORKERS=0` (serial) is the default because each xdist worker
+        "re-imports UTL+UAC from scratch" — but that is a macOS artefact: macOS defaults to `spawn` (full re-import per
+        worker) while the Linux QG VMs default to `fork` (workers inherit the parent''s already-imported modules for
+        FREE). So bounded xdist on the Linux VMs (`-n` capped + `--maxprocesses` + `fork`/`forkserver` start method)
+        likely parallelises with near-zero re-import tax, while macOS stays serial. Evaluate + MEASURE (full
+        features-service suite: serial-macOS vs fork-xdist-Linux) before enabling; keep behind a flag, never on macOS,
+        honour the existing `QG_MEM_CAP`/OOM guard (the 2026-05-15 79GB incident). **Complementary to + LOWER priority
+        than `qg-selective-tests`** — for small diffs, scoping to affected tests beats any parallelism (aligns with this
+        plan''s "do-less-work, not more parallelism" thesis). Evidence: local macOS full features-service QG measured
+        ~14 min @ ~2% suite progress 2026-06-03 — the laptop is the slow path; the fleet runs heavy QG on the Linux VMs
+        by design.
 
-    ', status: todo}
-- {id: qg-coverage-off-hotpath, content: '- [x] ✅ [SCRIPT] P1. Move `--cov` off the hot path — coverage instrumentation touches every executed line (large CPU/RAM cost). Make it opt-in: iterative/`--quick` runs skip coverage; coverage + the coverage floor are enforced ONLY on the gate-to-main (quickmerge Pass 1) full run. No change to the merge-gate coverage requirement — only to when it is paid.
+        ', status: todo }
+  - { id: qg-coverage-off-hotpath, content: "- [x] ✅ [SCRIPT] P1. Move `--cov` off the hot path — coverage
+        instrumentation touches every executed line (large CPU/RAM cost). Make it opt-in: iterative/`--quick` runs skip
+        coverage; coverage + the coverage floor are enforced ONLY on the gate-to-main (quickmerge Pass 1) full run. No
+        change to the merge-gate coverage requirement — only to when it is paid.
 
-    ', status: todo}
-- {id: qg-shared-caches, content: '- [x] ✅ [SCRIPT] P2. Persistent shared caches across worktrees/slots — ruff cache (`~/.cache/ruff`), pytest cache, basedpyright cache, and uv cache keyed + shared so the first slot warms them for all. Verify cache locations are NOT per-worktree (the default `.ruff_cache`/`.pytest_cache` inside each worktree defeats sharing) — repoint to a host-shared dir via env.
+        ", status: todo }
+  - { id: qg-shared-caches, content: "- [x] ✅ [SCRIPT] P2. Persistent shared caches across worktrees/slots — ruff cache
+        (`~/.cache/ruff`), pytest cache, basedpyright cache, and uv cache keyed + shared so the first slot warms them
+        for all. Verify cache locations are NOT per-worktree (the default `.ruff_cache`/`.pytest_cache` inside each
+        worktree defeats sharing) — repoint to a host-shared dir via env.
 
-    ', status: todo}
-- {id: qg-offload-full-run, content: '- [x] ✅ [DESIGN] P2. Offload the heavy full run off the contended dev host — design (not yet implement) routing the gate-to-main full suite + coverage to a dedicated CI/VM so the dev host only ever runs the light iterative gate. **This is the concrete shape of Option B** in the "Where QG + SIT actually run — three architecture options" section above: a self-hosted GitHub Actions runner pool (`runs-on: [self-hosted, qg]`) replacing the undersized `ubuntu-latest` (7 GB) runner, sized off `qg-perrepo-baseline`. The ADR must (a) pick A/B/C, (b) spec the runner pool + provisioning (`bootstrap_runner.sh`), (c) define the worker fast-pre-check, and (d) resolve the two-pass/sentinel change (authoritative gate moves local-sentinel → CI check). Decide the trigger boundary (quickmerge already two-passes via `.qg_last_passed_sha`). Implementation is a follow-up todo gated on this ADR.
+        ", status: todo }
+  - { id: qg-offload-full-run, content: '- [x] ✅ [DESIGN] P2. Offload the heavy full run off the contended dev host —
+        design (not yet implement) routing the gate-to-main full suite + coverage to a dedicated CI/VM so the dev host
+        only ever runs the light iterative gate. **This is the concrete shape of Option B** in the "Where QG + SIT
+        actually run — three architecture options" section above: a self-hosted GitHub Actions runner pool (`runs-on:
+        [self-hosted, qg]`) replacing the undersized `ubuntu-latest` (7 GB) runner, sized off `qg-perrepo-baseline`. The
+        ADR must (a) pick A/B/C, (b) spec the runner pool + provisioning (`bootstrap_runner.sh`), (c) define the worker
+        fast-pre-check, and (d) resolve the two-pass/sentinel change (authoritative gate moves local-sentinel → CI
+        check). Decide the trigger boundary (quickmerge already two-passes via `.qg_last_passed_sha`). Implementation is
+        a follow-up todo gated on this ADR.
 
-    ', status: todo}
-- {id: qg-codex-ssot-update, content: '- [x] ✅ [AGENT] P1. Update `codex/06-coding-standards/quality-gates.md` with a new "Resource governance under multi-slot load" section: the governor, slot-aware worker formula, sentinel cache semantics, coverage-on-gate-only rule, and the explicit anti-pattern ("`-n auto` per slot on a shared host is oversubscription, not speedup"). Per CLAUDE.md Post-Plan-Phase Codex Audit HARD RULE.
+        ', status: todo }
+  - { id: qg-codex-ssot-update, content: '- [x] ✅ [AGENT] P1. Update `/codex/06-coding-standards/quality-gates.md` with
+        a new "Resource governance under multi-slot load" section: the governor, slot-aware worker formula, sentinel
+        cache semantics, coverage-on-gate-only rule, and the explicit anti-pattern ("`-n auto` per slot on a shared host
+        is oversubscription, not speedup"). Per CLAUDE.md Post-Plan-Phase Codex Audit HARD RULE.
 
-    ', status: todo}
+        ', status: todo }
 isProject: false
 ---
 

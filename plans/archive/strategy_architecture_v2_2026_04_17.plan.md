@@ -10,7 +10,7 @@ repos: [e2e-testing, execution-service, strategy-service, unified-api-contracts,
 scope: [engineer, admin]
 tags: []
 related: []
-created: '2026-04-17'
+created: "2026-04-17"
 owner: iggy
 started: 2026-04-17
 locked_by: live-defi-rollout
@@ -43,16 +43,16 @@ Canonical architecture converged across two prior sessions (2026-04-16 → 2026-
 - **Kraken removed everywhere**
 
 Supersedes legacy category-based organization in `09-strategy/{cefi,defi,sports,tradfi,prediction}/`. See
-`codex/09-strategy/architecture-v2/MIGRATION.md` for complete old-doc → new-archetype mapping.
+`/codex/09-strategy/architecture-v2/MIGRATION.md` for complete old-doc → new-archetype mapping.
 
 ## Doc-writing progress (Phase 1)
 
 - [x] [DOC] P0. Inventory existing strategy docs (cefi/defi/tradfi/sports/prediction + cross-cutting) to build migration
       reference
-- [x] [DOC] P0. Create codex/09-strategy/architecture-v2/README.md (full taxonomy + Capital Flow Lifecycle section)
-- [x] [DOC] P0. Create codex/09-strategy/architecture-v2/MIGRATION.md (56 legacy docs → v2 placement audit)
-- [x] [DOC] P0. Update codex/04-architecture/capital-structure-and-regulatory.md with fund-client framing + per-category
-      custody
+- [x] [DOC] P0. Create /codex/09-strategy/architecture-v2/README.md (full taxonomy + Capital Flow Lifecycle section)
+- [x] [DOC] P0. Create /codex/09-strategy/architecture-v2/MIGRATION.md (56 legacy docs → v2 placement audit)
+- [x] [DOC] P0. Update /codex/04-architecture/capital-structure-and-regulatory.md with fund-client framing +
+      per-category custody
 - [x] [DOC] P0. Write 8 family docs in architecture-v2/families/ (ml-directional, rules-directional, carry-and-yield,
       arbitrage-structural, market-making, event-driven, vol-trading, stat-arb-pairs) — all include "Not in this family"
 - [x] [DOC] P0. Write 18 archetype docs in architecture-v2/archetypes/ — all include "Not in this archetype"
@@ -73,22 +73,22 @@ Supersedes legacy category-based organization in `09-strategy/{cefi,defi,sports,
 - [x] [DOC] P0. Write cross-cutting/capital-client-isolation.md
 - [x] [DOC] P0. Write cross-cutting/trade-expression.md
 - [x] [DOC] P0. Write cross-cutting/venue-account-coordination.md
-- [x] [DOC] P0. Write codex/04-architecture/strategy-execution-protocol.md
-- [x] [DOC] P0. Write codex/04-architecture/artifact-versioning.md
-- [x] [DOC] P0. Write codex/04-architecture/execution-policy.md
-- [x] [DOC] P0. Write codex/04-architecture/backtest-groups.md
-- [x] [DOC] P0. Write codex/04-architecture/capital-flow-model.md
-- [x] [DOC] P0. Write codex/04-architecture/schema-versioning.md
-- [x] [DOC] P0. Write codex/04-architecture/slow-fast-routing-split.md
-- [x] [DOC] P0. Write codex/04-architecture/capital-efficiency-patterns.md
-- [x] [DOC] P0. Write codex/04-architecture/account-instructions.md
-- [x] [DOC] P0. Write codex/02-venues/venue-registry-reference.md
-- [x] [DOC] P0. Write codex/02-venues/prime-brokers.md
-- [x] [DOC] P0. Write codex/02-venues/unity-integration.md
-- [x] [DOC] P0. Write codex/03-services/portfolio-allocator.md
-- [x] [DOC] P0. Write codex/03-services/venue-capability-registry.md
-- [x] [DOC] P0. Write codex/06-coding-standards/strategy-identity-versioning.md
-- [x] [DOC] P0. Write codex/06-coding-standards/artifact-naming.md
+- [x] [DOC] P0. Write /codex/04-architecture/strategy-execution-protocol.md
+- [x] [DOC] P0. Write /codex/04-architecture/artifact-versioning.md
+- [x] [DOC] P0. Write /codex/04-architecture/execution-policy.md
+- [x] [DOC] P0. Write /codex/04-architecture/backtest-groups.md
+- [x] [DOC] P0. Write /codex/04-architecture/capital-flow-model.md
+- [x] [DOC] P0. Write /codex/04-architecture/schema-versioning.md
+- [x] [DOC] P0. Write /codex/04-architecture/slow-fast-routing-split.md
+- [x] [DOC] P0. Write /codex/04-architecture/capital-efficiency-patterns.md
+- [x] [DOC] P0. Write /codex/04-architecture/account-instructions.md
+- [x] [DOC] P0. Write /codex/02-venues/venue-registry-reference.md
+- [x] [DOC] P0. Write /codex/02-venues/prime-brokers.md
+- [x] [DOC] P0. Write /codex/02-venues/unity-integration.md
+- [x] [DOC] P0. Write /codex/03-services/portfolio-allocator.md
+- [x] [DOC] P0. Write /codex/03-services/venue-capability-registry.md
+- [x] [DOC] P0. Write /codex/06-coding-standards/strategy-identity-versioning.md
+- [x] [DOC] P0. Write /codex/06-coding-standards/artifact-naming.md
 
 ## Apply consistently to all remaining docs
 
@@ -114,12 +114,13 @@ Supersedes legacy category-based organization in `09-strategy/{cefi,defi,sports,
       every archetype is covered + tier assignments match the risk story. Per-strategy configs override via
       `initial_config["kelly_fraction"]`.
 - [x] [TBD] Allocator cadence defaults per client size — `strategy-service@28167d7` `portfolio_allocator/cadence.py`
-      `build_default_allocator_cadence(total_client_equity_usd)`. Tiered by AUM: WEEKLY Monday 00:00 UTC below $500k,
-      DAILY 00:00 UTC for $500k-$5M, HOURLY every 4h for $5M-$50M, HOURLY every 2h at $50M+. 11 tests cover each
-      boundary + monotonic tightening. Per-client configs override by passing an explicit `AllocationCadence` to
+      `build_default_allocator_cadence(total_client_equity_usd)`. Tiered by AUM: WEEKLY Monday 00:00 UTC below
+      $500k,
+      DAILY 00:00 UTC for $500k-$5M, HOURLY every 4h for $5M-$50M, HOURLY every 2h at $50M+. 11 tests cover
+      each boundary + monotonic tightening. Per-client configs override by passing an explicit `AllocationCadence` to
       `ClientAllocatorInstance` at registration.
 - [x] [TBD] Shadow deployment pattern specifics for archetype upgrades — codified. New codex doc
-      `codex/04-architecture/shadow-deployment-pattern.md` + `strategy-service@0b94e8c`
+      `/codex/04-architecture/shadow-deployment-pattern.md` + `strategy-service@0b94e8c`
       `engine/strategies/v2/shadow_deployment.py` with `ShadowDeploymentPolicy` (content-hashed, versioned per
       archetype), `ShadowComparisonMetrics`, `ShadowDecision` (PROMOTE/EXTEND/REJECT/ROLLBACK),
       `evaluate_shadow_deployment()` priority-ordered evaluator, tight-defaults for MM/vol/liquidation/recursive
@@ -172,7 +173,7 @@ Commit: `unified-api-contracts@4bc83bc` on `live-defi-rollout`.
       `ExecutionPolicyArtifact` (content-hashed, versioned) + `ExecutionPolicyRegistry` (append-only, monotonic
       version) + `resolve_algo()` document-order / first-match-wins / default-deny evaluator. Supports scalar operators
       (`<`, `<=`, `>`, `>=`, `==`, `in`, `not_in`) + compound groups (`any_of` / `all_of`). Mirrors the codex contract
-      in `codex/04-architecture/execution-policy.md` exactly, including the canonical small/medium/large TWAP ramp
+      in `/codex/04-architecture/execution-policy.md` exactly, including the canonical small/medium/large TWAP ramp
       example. 23 unit tests.
 - [x] [CODE] P1. Venue-account pre-flight — `risk-and-exposure-service@7f9a1df` `v2/preflight.py`
       `run_layer3_venue_account_preflight`. Includes haircuts, LTV, liquidation distance, utilisation.
@@ -183,7 +184,7 @@ Commit: `unified-api-contracts@4bc83bc` on `live-defi-rollout`.
       / TWAP / BOOK_TOP_AT_ACK).
 - [x] [CODE] P1. META_BROKER child-venue SOR (Unity) — our side ships child-venue targeting (`UnityMultiplex` tags each
       outbound by `child_venue_id`; `UnityBridge.place_bet` resolves the child book); Unity's internal SOR picks the
-      executing book on their side per `codex/02-venues/unity-integration.md` line 156.
+      executing book on their side per `/codex/02-venues/unity-integration.md` line 156.
 - [x] [CODE] P1. Unity adapter: TCP feed connector sidecar, Python bridge, all 3 sports enabled, bet placement, wallet
       sync, rollover tracking, turnover for subscription waiver — `execution-service@5e58477` shipped the adapter
       skeleton; `execution-service@207f3266` shipped the mock Feed Connector + real stdin/stdout IPC (send/recv,

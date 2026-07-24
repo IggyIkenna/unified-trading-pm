@@ -21,8 +21,8 @@ related:
   [
     issues/instrument_id_format_canonicalization_2026_07_08.md,
     ../audit/results/canonical_instrument_id_audit_2026_07_08.md,
-    canonical_id_p0_kraken_futures_collision_2026_07_08.md,
-    canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md,
+    /plans/archive/2026_07/canonical_id_p0_kraken_futures_collision_2026_07_08.md,
+    /plans/active/canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md,
   ]
 created: 2026-07-08
 last_updated: 2026-07-08

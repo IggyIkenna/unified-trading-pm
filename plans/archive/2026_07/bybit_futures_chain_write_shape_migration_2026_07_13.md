@@ -14,7 +14,11 @@ stage: [data]
 repos: [market-tick-data-service, market-data-processing-service]
 scope: [engineer]
 tags: [migration, bucket-placement, data-correctness, canonicalisation, cefi, bybit, futures_chain]
-related: [issues/bybit_futures_chain_write_shape_2026_07_13.md, aster_cefi_data_defi_bucket_migration_2026_07_13.md]
+related:
+  [
+    issues/bybit_futures_chain_write_shape_2026_07_13.md,
+    /plans/archive/2026_07/aster_cefi_data_defi_bucket_migration_2026_07_13.md,
+  ]
 created: 2026-07-13
 last_updated: 2026-07-13
 parent_epic: mtds_mdps_master
@@ -74,8 +78,8 @@ venues, or change instrument_type classification? Phase 1 owns this).
 
 - `market-tick-data-service/docs/GCS_PATHS.md`, `docs/canonical-write-conventions.md` (canonical `underlying=` hive
   shape for `futures_chain`/`options_chain`)
-- `codex/02-data/availability-manifest-and-data-status.md` (manifest rewrite discipline, single-walk rule)
-- `codex/05-infrastructure/gcs-object-operations.md` (`gcs_copy_object`/`gcs_delete_object`, never subprocess
+- `/codex/02-data/availability-manifest-and-data-status.md` (manifest rewrite discipline, single-walk rule)
+- `/codex/05-infrastructure/gcs-object-operations.md` (`gcs_copy_object`/`gcs_delete_object`, never subprocess
   `gcloud`/`gsutil`)
 
 ## Phase 1 — Full scope audit (P0)
@@ -143,7 +147,7 @@ venues, or change instrument_type classification? Phase 1 owns this).
 ## Phase 2 — Build + dry-run the reshape (P0)
 
 - [x] ✅ [DATA] P0. Build a reshape/backfill script (new script under `market-tick-data-service/scripts/`,
-      `# Epic: mtds_mdps_master`, `# Lifecycle: oneoff` header per `codex/06-coding-standards/script-homes.md`) that
+      `# Epic: mtds_mdps_master`, `# Lifecycle: oneoff` header per `/codex/06-coding-standards/script-homes.md`) that
       parses glued `{BASE}{QUOTE}.parquet` filenames back into `{underlying}/{quote}` using the SAME
       base/quote-splitting logic the 2026-07-09 code fix now uses going forward (do not reinvent — import/reuse it),
       server-side copies to the canonical `underlying={U}/ticks.parquet` path via UTL `gcs_copy_object`, and is
@@ -175,7 +179,7 @@ venues, or change instrument_type classification? Phase 1 owns this).
 ## Phase 3 — Apply + verify (P0)
 
 - [x] ✅ [DATA] P0. `--apply` the reshape, sharded by date range if needed (VM launch per
-      `codex/05-infrastructure/vm-launcher-runbook.md`, SPOT provisioning, no fire-and-forget — verify STARTED +
+      `/codex/05-infrastructure/vm-launcher-runbook.md`, SPOT provisioning, no fire-and-forget — verify STARTED +
       progress + terminal state). — **DONE, slot 14**, run local/interactive (only 835 objects — a VM shard was
       unnecessary, completed in ~7s).
       `scripts/reshape_bybit_futures_chain_glued_to_hive_2026_07_13.py --apply     --workers 20` (script already shipped

@@ -21,9 +21,9 @@ tags: [instrument-id, reconciliation, pnl, bug-fix, p0, live-vs-batch]
 related:
   [
     ../audit/results/canonical_instrument_id_audit_2026_07_08.md,
-    canonical_id_p0_ccxt_live_batch_divergence_2026_07_08.md,
+    /plans/archive/2026_07/canonical_id_p0_ccxt_live_batch_divergence_2026_07_08.md,
     issues/adapter_findings_gcs_manifest_deployment_api_reconciliation_gap_2026_07_08.md,
-    ../../codex/09-strategy/operational/paper-batch-live-reconciliation.md,
+    /codex/09-strategy/operational/paper-batch-live-reconciliation.md,
   ]
 created: 2026-07-08
 last_updated: 2026-07-08

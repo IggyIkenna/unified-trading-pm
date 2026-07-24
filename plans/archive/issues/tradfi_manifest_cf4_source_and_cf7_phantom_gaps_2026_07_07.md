@@ -18,7 +18,11 @@ stage: [data]
 repos: [market-tick-data-service, instruments-service]
 scope: [engineer]
 tags: [tradfi, manifest, cf4, cf7, source, phantom-audit, canonical-form]
-related: [tradfi_v9_stage1_finish_2026_07_06.md, tradfi_manifest_canonicalisation_2026_06_01.md]
+related:
+  [
+    /plans/active/tradfi_v9_stage1_finish_2026_07_06.md,
+    /plans/archive/2026_07/tradfi_manifest_canonicalisation_2026_06_01.md,
+  ]
 created: 2026-07-07
 source:
   - tradfi_v9_stage1_finish_2026_07_06.md Progress Log 2026-07-07 (pm@6eb7a8ca)

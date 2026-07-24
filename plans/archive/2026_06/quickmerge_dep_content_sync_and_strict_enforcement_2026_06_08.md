@@ -9,7 +9,12 @@ stage: [meta]
 repos: [instruments-service, unified-trading-pm]
 scope: [engineer, admin]
 tags: []
-related: [plans/active/qg_commit_quality_boundary_and_slot_ff_push_2026_06_03.md, plans/active/worktree_ldr_unification_2026_06_08.md, plans/active/ci_local_qg_parity_2026_06_08.md]
+related:
+  [
+    plans/active/qg_commit_quality_boundary_and_slot_ff_push_2026_06_03.md,
+    plans/active/worktree_ldr_unification_2026_06_08.md,
+    plans/active/ci_local_qg_parity_2026_06_08.md,
+  ]
 created: 2026-06-08
 parent_epic: infrastructure_master
 assigned_vm: vm-cross-cutting
@@ -90,7 +95,7 @@ Two gaps, both confirmed against the live machinery:
       pass through quickmerge is rejected. Carve-out allowlist (the ONLY direct-push class): PM `scripts/**` +
       `.github/**` and any repo's `.github/workflows/**` **when the change must reach `main` to unblock CI** (the
       chicken-and-egg). Everything else: HARD block.
-- [x] ✅ [DOCS] P1. Codify in CLAUDE.md + `SUB_AGENT_MANDATORY_RULES.md` + `codex/08-workflows/ci-cd-flow.md`: "Strict
+- [x] ✅ [DOCS] P1. Codify in CLAUDE.md + `SUB_AGENT_MANDATORY_RULES.md` + `/codex/08-workflows/ci-cd-flow.md`: "Strict
       quickmerge is a HARD RULE. Direct integration-branch code pushes are banned except PM-scripts / CI-workflow
       changes that must sync to `main` to unblock the pipeline." Replace the looser FF-push exception language;
       **reconcile with** `qg_commit_quality_boundary_and_slot_ff_push_2026_06_03.md` (do not fork — merge the two
@@ -128,7 +133,7 @@ Two gaps, both confirmed against the live machinery:
 
 ## Codex SSOT updates
 
-`codex/06-coding-standards/quality-gates.md` (dep-content gate), `codex/08-workflows/ci-cd-flow.md` (strict-quickmerge
+`/codex/06-coding-standards/quality-gates.md` (dep-content gate), `/codex/08-workflows/ci-cd-flow.md` (strict-quickmerge
 HARD rule + carve-out), CLAUDE.md § Git discipline + § Quality Gates, `SUB_AGENT_MANDATORY_RULES.md` § ship discipline.
 
 ## Progress — 2026-06-08 (slot-1 autonomous)

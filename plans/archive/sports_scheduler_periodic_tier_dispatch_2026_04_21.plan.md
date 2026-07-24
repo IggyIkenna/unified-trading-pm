@@ -17,9 +17,9 @@ locked_by: live-defi-rollout
 locked_since: 2026-04-21
 type: code
 epic: none
-completion_gates: {code: C5, deployment: none, business: none}
+completion_gates: { code: C5, deployment: none, business: none }
 repo_gates:
-- {repo: deployment-service, code: C0, deployment: none, business: none}
+  - { repo: deployment-service, code: C0, deployment: none, business: none }
 depends_on: []
 isProject: false
 ---
@@ -52,7 +52,7 @@ few minutes will actually fire Tier-1 + Tier-2 at their declared cadences.
   - `configs/sports-trigger-tiers.yaml` — already enriched (2026-04-21 commit `8b98449`) with `rolling_window` block
     under `discovery`. No changes needed here but Phase 3 reads the new keys.
   - `deployment_service/cloud_run/` — verify the Tier-1/2 dispatch can target a Cloud Run job (see
-    `codex/02-data/sports-scheduling-and-sharding.md` §8 — default for short periodic jobs is Cloud Run, not VM).
+    `/codex/02-data/sports-scheduling-and-sharding.md` §8 — default for short periodic jobs is Cloud Run, not VM).
 - **instruments-service**: consumer of dispatched CLI invocations. No changes — the existing CLI accepts
   `--start-date` + `--end-date`. (CLI ergonomics flags like `--lookahead-days` are a SEPARATE plan:
   `instruments_service_rolling_window_cli_flags_2026_04_21`. Do not couple.)

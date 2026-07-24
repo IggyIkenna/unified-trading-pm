@@ -1,11 +1,11 @@
 ---
 name: institutional-smoke-matrix
-overview:
+overview: >
   Build a smoke matrix for every (service × category × data_type × venue) cell using TEST buckets, in service-dependency
-  order. **PIVOTED 2026-04-20**: initial design used a daily cron + `--max-results 1` (bogus flag) + workspace orchestrator;
-  that architecture was wrong. Canonical gate is `system-integration-tests/tests/smoke/` wired into `staging-to-main.yml`
-  via `sit-gate.yml`. Per-service `scripts/smoke_matrix.py` remain as dev-local debugging helpers only. Phase 4/5/6
-  scheduler artifacts deleted (2026-04-20 afternoon).
+  order. **PIVOTED 2026-04-20**: initial design used a daily cron + `--max-results 1` (bogus flag) + workspace
+  orchestrator; that architecture was wrong. Canonical gate is `system-integration-tests/tests/smoke/` wired into
+  `staging-to-main.yml` via `sit-gate.yml`. Per-service `scripts/smoke_matrix.py` remain as dev-local debugging helpers
+  only. Phase 4/5/6 scheduler artifacts deleted (2026-04-20 afternoon).
 type: mixed
 epic: epic-data-platform-honest-coverage
 status: active
@@ -36,14 +36,14 @@ locked_since: 2026-04-20
 #   - Fixed: `--max-results 1` dropped from features-calendar, features-delta-one,
 #     and MDPS smoke_matrix.py (3 files). Docstrings updated to reflect that
 #     scope is narrowed via single-date/single-venue/single-category args.
-#   - Rewritten: `codex/14-playbooks/smoke-testing-playbook.md` now reflects
+#   - Rewritten: `/codex/14-playbooks/smoke-testing-playbook.md` now reflects
 #     SIT=gate / per-service=dev-local, 3-step assertion still canonical.
 #   - SSOT index row (00-SSOT-INDEX.md L15) rewritten.
 #
 # Kept (still correct under the new architecture):
 #   - `scripts/smoke_matrix.py` in 11 services — useful dev-local helpers.
-#   - Per-category bucket layouts SSOT (`codex/02-data/per-category-bucket-layouts.md`).
-#   - Sports T0/T1 adapter dependency order (`codex/02-data/sports-adapter-dependency-order.md`).
+#   - Per-category bucket layouts SSOT (`/codex/02-data/per-category-bucket-layouts.md`).
+#   - Sports T0/T1 adapter dependency order (`/codex/02-data/sports-adapter-dependency-order.md`).
 #   - TEST bucket provisioning + 7-day lifecycle (`deployment-service/scripts/provision-test-buckets.sh`).
 #   - MDPS 3-bug chain fix (safe_iterate_blobs + empty-bucket defence + pre-flight tolerance).
 #   - Manifest v5 record_empty/record_failed split.
@@ -72,9 +72,9 @@ todos:
   - id: phase-1-audit-is-test-run
     content: |
       - [x] [AGENT] P0. Audit every service config for IS_TEST_RUN handling. Per-service
-        report landed at `codex/02-data/is-test-run-audit-2026-04-20.md`.
+        report landed at `/codex/02-data/is-test-run-audit-2026-04-20.md`.
     status: done
-    note: "codex/02-data/is-test-run-audit-2026-04-20.md shipped via Phase 1 agent"
+    note: "/codex/02-data/is-test-run-audit-2026-04-20.md shipped via Phase 1 agent"
 
   - id: phase-1-propagate-is-test-run
     content: |
@@ -221,7 +221,7 @@ todos:
         actionable message: "api-football reference data missing for date X.
         Run: python -m instruments_service --operation instruments --mode batch
         --asset-group SPORTS --sports-provider API_FOOTBALL --start-date X --end-date X".
-        Document in `codex/02-data/sports-adapter-dependency-order.md` (NEW).
+        Document in `/codex/02-data/sports-adapter-dependency-order.md` (NEW).
     status: done
     note: |
       Shipped 2026-04-20 on live-defi-rollout. New helper
@@ -247,7 +247,7 @@ todos:
         api-football (canonical fixtures + leagues) MUST run FIRST, then
         footystats/SFI/Understat/odds-api can run in any order (they depend on
         api-football's canonical fixture IDs). Codify in
-        `codex/02-data/sports-adapter-dependency-order.md`. Add unit test that
+        `/codex/02-data/sports-adapter-dependency-order.md`. Add unit test that
         verifies the ordering invariant.
     status: done
     note: |
@@ -328,7 +328,7 @@ todos:
   # ─── Phase 5 — codex playbook + CI integration ──────────────────────────
   - id: phase-5-codex-playbook
     content: |
-      - [x] [DOC] P0. codex/14-playbooks/smoke-testing-playbook.md (NEW): operational
+      - [x] [DOC] P0. /codex/14-playbooks/smoke-testing-playbook.md (NEW): operational
         runbook for the smoke matrix. Covers: when to run (daily, pre-release,
         post-incident), how to read the per-cell summary, common failure modes
         (TEST bucket not provisioned, IS_TEST_RUN not propagated, dep order broken,
@@ -558,12 +558,12 @@ Total: **~5-7 focused agent sessions** + ~$1.5k/year ongoing matrix cost.
 
 ## SSOT references
 
-- Per-category bucket layouts: `codex/02-data/per-category-bucket-layouts.md` (defines what a smoke needs to write)
-- Honest-coverage manifest schema: `codex/02-data/availability-manifest-and-data-status.md`
-- VM tarball deployment: `codex/05-infrastructure/vm-tarball-deployment.md`
+- Per-category bucket layouts: `/codex/02-data/per-category-bucket-layouts.md` (defines what a smoke needs to write)
+- Honest-coverage manifest schema: `/codex/02-data/availability-manifest-and-data-status.md`
+- VM tarball deployment: `/codex/05-infrastructure/vm-tarball-deployment.md`
 - Coverage roadmap (the broader operational sequence): `plans/active/proper_coverage_roadmap_2026_04_20.md`
 - Service dependency DAG: `deployment-service/configs/dependencies.yaml`
-- CLI convention: `codex/06-coding-standards/cli-convention.md`
+- CLI convention: `/codex/06-coding-standards/cli-convention.md`
 
 ## Handover prompt for the next agent (copy verbatim)
 

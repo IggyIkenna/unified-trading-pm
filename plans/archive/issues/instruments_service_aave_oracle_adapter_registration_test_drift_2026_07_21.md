@@ -18,7 +18,11 @@ stage: [data]
 repos: [instruments-service, unified-api-contracts]
 scope: [engineer]
 tags: [defi, aave-oracle, test-drift, cross-repo, lst-rate]
-related: [lst_rate_honest_coverage_2026_07_21.md, instruments_service_deribit_combo_purge_test_drift_2026_07_21.md]
+related:
+  [
+    /plans/active/lst_rate_honest_coverage_2026_07_21.md,
+    /plans/active/issues/instruments_service_deribit_combo_purge_test_drift_2026_07_21.md,
+  ]
 created: 2026-07-21
 assigned_vm: planning
 source: [discovered while shipping defi_consolidated_closeout_2026_07_18.md Track 1 sub-items 2+4, slot-4]
@@ -121,7 +125,7 @@ class + data source).
 
 ## Codex SSOTs
 
-- `codex/08-workflows/ci-cd-flow.md` § "Local ↔ CI QG parity matrix" (the same tracked local-ahead-of-CI divergence
+- `/codex/08-workflows/ci-cd-flow.md` § "Local ↔ CI QG parity matrix" (the same tracked local-ahead-of-CI divergence
   class this issue class always falls into).
-- `codex/02-data/lst-exchange-rate-surfaces.md` (the four LST exchange-rate surfaces, canonical homes, honest-coverage
+- `/codex/02-data/lst-exchange-rate-surfaces.md` (the four LST exchange-rate surfaces, canonical homes, honest-coverage
   contract that `lst_rate_honest_coverage_2026_07_21.md` implements).

@@ -6,70 +6,88 @@ status: complete
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [e2e-testing, execution-service, instruments-service, market-data-processing-service, market-tick-data-service, strategy-service]
+repos:
+  [
+    e2e-testing,
+    execution-service,
+    instruments-service,
+    market-data-processing-service,
+    market-tick-data-service,
+    strategy-service,
+  ]
 scope: [engineer, admin]
 tags: []
 related: []
-created: '2026-04-03'
+created: "2026-04-03"
 remaining_todos_consolidated_into: consolidated_defi_data_pipeline_2026_04_15
 superseded_by: [consolidated_defi_data_pipeline_2026_04_15.md]
 reconciliation_status: superseded_by_consolidator
 reconciliation_date: 2026-04-25
-overview: End-to-end instrument pipeline validation + EIGEN/ETHFI reward lifecycle (claim, M2M, sell) + Lido configurability
+overview:
+  End-to-end instrument pipeline validation + EIGEN/ETHFI reward lifecycle (claim, M2M, sell) + Lido configurability
 type: code
 epic: epic-code-completion
 locked_by: live-defi-rollout
 locked_since: 2026-04-01
-completion_gates: {code: C5, deployment: none, business: none}
+completion_gates: { code: C5, deployment: none, business: none }
 repo_gates:
-- {repo: unified-api-contracts, code: C0, deployment: none, business: none}
-- {repo: instruments-service, code: C0, deployment: none, business: none}
-- {repo: market-tick-data-service, code: C0, deployment: none, business: none}
-- {repo: market-data-processing-service, code: C0, deployment: none, business: none}
-- {repo: features-onchain-service, code: C0, deployment: none, business: none}
-- {repo: strategy-service, code: C0, deployment: none, business: none}
-- {repo: execution-service, code: C0, deployment: none, business: none}
-- {repo: pnl-attribution-service, code: C0, deployment: none, business: none}
-- {repo: position-balance-monitor-service, code: C0, deployment: none, business: none}
-- {repo: e2e-testing, code: C0, deployment: none, business: none}
+  - { repo: unified-api-contracts, code: C0, deployment: none, business: none }
+  - { repo: instruments-service, code: C0, deployment: none, business: none }
+  - { repo: market-tick-data-service, code: C0, deployment: none, business: none }
+  - { repo: market-data-processing-service, code: C0, deployment: none, business: none }
+  - { repo: features-onchain-service, code: C0, deployment: none, business: none }
+  - { repo: strategy-service, code: C0, deployment: none, business: none }
+  - { repo: execution-service, code: C0, deployment: none, business: none }
+  - { repo: pnl-attribution-service, code: C0, deployment: none, business: none }
+  - { repo: position-balance-monitor-service, code: C0, deployment: none, business: none }
+  - { repo: e2e-testing, code: C0, deployment: none, business: none }
 depends_on: [share-class-architecture]
 todos:
-- {id: ip-1a-audit, content: '- [ ] [AGENT] P0. Audit all instruments needed across all DeFi strategies vs what exists upstream
+  - { id: ip-1a-audit, content: "- [ ] [AGENT] P0. Audit all instruments needed across all DeFi strategies vs what
+        exists upstream
 
-    ', status: todo, note: Must be done FIRST — blocks everything}
-- {id: ip-1b-missing-instruments, content: '- [x] [AGENT] P0. Add missing instrument definitions (EIGEN, ETHFI, Lido staking, Binance spot pairs)
+        ", status: todo, note: Must be done FIRST — blocks everything }
+  - { id: ip-1b-missing-instruments, content: "- [x] [AGENT] P0. Add missing instrument definitions (EIGEN, ETHFI, Lido
+        staking, Binance spot pairs)
 
-    ', status: done, note: ''}
-- {id: ip-1c-mtds-coverage, content: '- [ ] [AGENT] P0. Ensure MTDS adapters cover all required instruments + venues
+        ", status: done, note: "" }
+  - { id: ip-1c-mtds-coverage, content: "- [ ] [AGENT] P0. Ensure MTDS adapters cover all required instruments + venues
 
-    ', status: todo, note: ''}
-- {id: ip-2a-reward-types, content: '- [x] [AGENT] P0. Define reward lifecycle types in UAC (CLAIM_REWARD, SELL_REWARD instructions)
+        ", status: todo, note: "" }
+  - { id: ip-2a-reward-types, content: "- [x] [AGENT] P0. Define reward lifecycle types in UAC (CLAIM_REWARD,
+        SELL_REWARD instructions)
 
-    ', status: done, note: ''}
-- {id: ip-2b-reward-schedule, content: '- [x] [AGENT] P0. Codify EIGEN/ETHFI reward schedules in UAC registry
+        ", status: done, note: "" }
+  - { id: ip-2b-reward-schedule, content: "- [x] [AGENT] P0. Codify EIGEN/ETHFI reward schedules in UAC registry
 
-    ', status: done, note: 'EIGEN: weekly. Seasonal: ~quarterly'}
-- {id: ip-3a-strategy-rewards, content: '- [x] [AGENT] P0. Implement reward claiming + selling in strategy-service staking strategies
+        ", status: done, note: "EIGEN: weekly. Seasonal: ~quarterly" }
+  - { id: ip-3a-strategy-rewards, content: "- [x] [AGENT] P0. Implement reward claiming + selling in strategy-service
+        staking strategies
 
-    ', status: done, note: RewardClaimMixin._check_reward_claims() DONE; NOT YET WIRED into StakedBasisStrategy/RecursiveStakedBasisStrategy.generate_defi_signal(). Also SEASONAL_QUARTERLY settlement type missing.}
-- {id: ip-3b-execution-rewards, content: '- [x] [AGENT] P0. Implement CLAIM_REWARD + SELL_REWARD handlers in execution-service
+        ", status: done, note: RewardClaimMixin._check_reward_claims() DONE; NOT YET WIRED into
+        StakedBasisStrategy/RecursiveStakedBasisStrategy.generate_defi_signal(). Also SEASONAL_QUARTERLY settlement type
+        missing. }
+  - { id: ip-3b-execution-rewards, content: "- [x] [AGENT] P0. Implement CLAIM_REWARD + SELL_REWARD handlers in
+        execution-service
 
-    ', status: done, note: ''}
-- {id: ip-4a-pnl-rewards, content: '- [x] [AGENT] P0. Add reward P&L attribution (staking vs restaking vs seasonal)
+        ", status: done, note: "" }
+  - { id: ip-4a-pnl-rewards, content: "- [x] [AGENT] P0. Add reward P&L attribution (staking vs restaking vs seasonal)
 
-    ', status: done, note: ''}
-- {id: ip-4b-position-rewards, content: '- [x] [AGENT] P1. Track pending/claimed rewards in position-balance-monitor
+        ", status: done, note: "" }
+  - { id: ip-4b-position-rewards, content: "- [x] [AGENT] P1. Track pending/claimed rewards in position-balance-monitor
 
-    ', status: done, note: 'aggregate_with_rewards() DONE; WALLET:SPOT_ASSET:EIGEN/ETHFI post-claim tracking MISSING.'}
-- {id: ip-5a-lido-config, content: '- [x] [AGENT] P1. Make staking protocol configurable (Lido vs EtherFi) in strategy config
+        ", status: done, note: "aggregate_with_rewards() DONE; WALLET:SPOT_ASSET:EIGEN/ETHFI post-claim tracking
+        MISSING." }
+  - { id: ip-5a-lido-config, content: "- [x] [AGENT] P1. Make staking protocol configurable (Lido vs EtherFi) in
+        strategy config
 
-    ', status: done, note: ''}
-- {id: ip-6a-e2e, content: '- [x] [AGENT] P1. Add reward lifecycle scenarios to e2e-testing
+        ", status: done, note: "" }
+  - { id: ip-6a-e2e, content: "- [x] [AGENT] P1. Add reward lifecycle scenarios to e2e-testing
 
-    ', status: done, note: ''}
-- {id: ip-7a-docs, content: '- [x] [AGENT] P1. Update codex docs for instrument pipeline + reward lifecycle
+        ", status: done, note: "" }
+  - { id: ip-7a-docs, content: "- [x] [AGENT] P1. Update codex docs for instrument pipeline + reward lifecycle
 
-    ', status: done, note: ''}
+        ", status: done, note: "" }
 isProject: false
 ---
 
@@ -426,7 +444,7 @@ Phase 5 (E2E + Docs)
 
 ### 5B: Documentation
 
-- [ ] [AGENT] P1. Create `codex/09-strategy/defi/reward-lifecycle.md`:
+- [ ] [AGENT] P1. Create `/codex/09-strategy/defi/reward-lifecycle.md`:
   - MISSING: file does not exist in `unified-trading-pm/codex/09-strategy/defi/`
   - Reward types (staking yield, restaking, seasonal)
   - Reward schedules (weekly EIGEN, quarterly ETHFI)
@@ -435,9 +453,9 @@ Phase 5 (E2E + Docs)
   - P&L attribution timing
   - M2M valuation methodology
 
-- [ ] [AGENT] P1. Update `codex/09-strategy/defi/staked-basis.md` with reward lifecycle integration
+- [ ] [AGENT] P1. Update `/codex/09-strategy/defi/staked-basis.md` with reward lifecycle integration
 
-- [ ] [AGENT] P1. Create `codex/02-data/instrument-pipeline-defi.md`:
+- [ ] [AGENT] P1. Create `/codex/02-data/instrument-pipeline-defi.md`:
   - MISSING: file does not exist in `unified-trading-pm/codex/02-data/`
   - Full instrument → MTDS → MDPS → features → strategy pipeline diagram
   - Per-strategy instrument requirements table

@@ -45,7 +45,7 @@ suggested_owner: ikennaigboaka (operator) — RESOLVED by slot 4 agent per opera
 > ```
 >
 > **Phase 4.A unblocked** — wallet template at UAC@`b9050d7` now has live CMKs to reference. Operator cold-laptop
-> key-gen flow per `codex/05-infrastructure/custody-onboarding-checklist.md` § B.3 is now the only operator-action
+> key-gen flow per `/codex/05-infrastructure/custody-onboarding-checklist.md` § B.3 is now the only operator-action
 > remaining for mainnet wallet provisioning (and per 2026-05-12 POD scope clarification, even that's pre-cutover testing
 > with MetaMask / Trust Wallet — POD-side custody is delivered June-1).
 
@@ -58,7 +58,7 @@ Copper/Fireblocks credentials until June 1st.
 The cutover therefore depends on **operator-side Cloud HSM CMK provisioning** that can't be automated by an agent (needs
 IAM admin perms + new project resources, plus a cold-laptop key-generation protocol). The provisioning steps are
 documented in
-[`codex/14-customer-journeys/credentials/custody-onboarding-checklist.md`](../../codex/14-customer-journeys/credentials/custody-onboarding-checklist.md)
+[`/codex/14-customer-journeys/credentials/custody-onboarding-checklist.md`](/codex/14-customer-journeys/credentials/custody-onboarding-checklist.md)
 § B, but the actual provisioning has not been executed yet (`last_executed: NEVER`).
 
 ## Why it matters

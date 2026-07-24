@@ -15,7 +15,7 @@ scope: [engineer, admin]
 tags: [audit, manifest, honest-coverage, data-status, single-walk, data-correctness, canonicalisation]
 related:
   [
-    canonical_form_cross_service_audit_checklist.md,
+    /plans/audit/instructions/canonical_form_cross_service_audit_checklist.md,
     ../../active/master_data_canonicalisation_migration_catalogue_2026_06_07.md,
   ]
 created: 2026-05-22
@@ -49,8 +49,8 @@ closed set in UAC — **32 members** as of 2026-06-01: 28 `EXPECTED_*` + `SOURCE
 `record_captured()`, `available_at` semantics, single-walk discipline, and the manifest consolidator (Cloud Run + Cloud
 Scheduler).
 
-Codex SSOTs: `codex/02-data/availability-manifest-and-data-status.md`,
-`codex/02-data/honest-absence-downstream-handling.md`, `codex/05-infrastructure/manifest-consolidator-ssot.md`
+Codex SSOTs: `/codex/02-data/availability-manifest-and-data-status.md`,
+`/codex/02-data/honest-absence-downstream-handling.md`, `/codex/05-infrastructure/manifest-consolidator-ssot.md`
 
 ## Triggers
 
@@ -118,7 +118,7 @@ Codex SSOTs: `codex/02-data/availability-manifest-and-data-status.md`,
       `attempted_failed` only when all source rows failed. - **Closed-set source strings** mirror `SOURCE_PRIORITY`; any
       blank/unknown source on any cell is RED. SSOT:
       `plans/active/data_source_provenance_all_asset_groups_2026_06_01.md`; consumer policy:
-      `codex/02-data/honest-absence-downstream-handling.md` § multi-source; write-time gate: `mtds_mdps_master` item
+      `/codex/02-data/honest-absence-downstream-handling.md` § multi-source; write-time gate: `mtds_mdps_master` item
       (j).
 
 ## CF-13 + CF-14 + Era-B — recurring regression checks (added 2026-06-08)
@@ -142,7 +142,7 @@ Codex SSOTs: `codex/02-data/availability-manifest-and-data-status.md`,
 > The FORM checks (CF-1…CF-14) guard the schema; THESE guard the BEHAVIOUR — that each of the four manifest conditions
 > is WRITTEN to the right state and HANDLED correctly by every consumer. These regress silently (a consumer counts
 > `expected_unattempted` as failed; a writer mislabels a timeout as `empty_confirmed`). Run weekly + on any
-> writer/consumer change. Consumer policy SSOT: `codex/02-data/honest-absence-downstream-handling.md`.
+> writer/consumer change. Consumer policy SSOT: `/codex/02-data/honest-absence-downstream-handling.md`.
 
 WRITE-SIDE — the producer routes each absence shape to the right 4th-state + typed reason:
 
@@ -347,7 +347,7 @@ READ-SIDE — every downstream consumer handles each of the four states per poli
       Massive does not cover the VIX cash index) and assert the stamped `source`/`pipeline_mode` matches the REAL
       fetcher. **Trap: `source` present + in-closed-set passes CF-4 while being the WRONG vendor.** Green: sampled
       cross-vendor cells stamp the true fetcher; 0 writers index `SOURCE_PRIORITY` to stamp (code check in
-      `mtds_mdps_master` item (j) + `tradfi_master`). SSOT: `codex/02-data/tradfi-databento-sourcing-ssot.md`.
+      `mtds_mdps_master` item (j) + `tradfi_master`). SSOT: `/codex/02-data/tradfi-databento-sourcing-ssot.md`.
 
 - [ ] **(CF-27) backfill coverage vs TARGET UNIVERSE across the WHOLE timeframe** — per
       `(asset_group, data_type, venue)` compute

@@ -32,7 +32,7 @@ operator: ikenna
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
 spawned_plan: plans/active/risk_simulations_limits_alerting_2026_05_10.md
-related_codex: [codex/04-architecture/kill-switch-circuit-breaker.md, codex/04-architecture/separation-of-concerns.md]
+related_codex: [/codex/04-architecture/kill-switch-circuit-breaker.md, /codex/04-architecture/separation-of-concerns.md]
 ---
 
 ## Deferred work — migrated to:
@@ -60,7 +60,7 @@ incidental DEFERRED / post-cutover / out-of-scope tokens in the body are histori
 >   not preserved in conversation context. Body synthesized from (a) the original 2026-05-08 README backlog one-liner;
 >   (b) orphan-reference citations from 8 sibling docs (which name this doc as owner of the circuit-breaker rule
 >   taxonomy + the mock-data-as-stress-test surface); (c) workspace SSOTs in
->   `codex/04-architecture/kill-switch-circuit-breaker.md`
+>   `/codex/04-architecture/kill-switch-circuit-breaker.md`
 > - master plan Group F items 17-22. **Operator should review for framing drift vs original intent before audit pass
 >   consumes this as canonical.**
 
@@ -208,10 +208,10 @@ share-class-allowability matrix from sibling
 [`wallet_treasury_client_flow_post_trade_readiness_2026_05_08.md`](wallet_treasury_client_flow_post_trade_readiness_2026_05_08.md)
 Block C2, or is there a parallel per-share-class rule registry?
 
-D5. **Kill-switch integration** — `codex/04-architecture/kill-switch-circuit-breaker.md` is the workspace SSOT. When the
-kill-switch is armed (manual operator trigger, automated trigger from breach cascade, dead-man's-switch from heartbeat
-loss), pre-flight goes default-BLOCK across all rules. Is the kill-switch read-state available at execution-service
-pre-flight time, with sub-second freshness?
+D5. **Kill-switch integration** — `/codex/04-architecture/kill-switch-circuit-breaker.md` is the workspace SSOT. When
+the kill-switch is armed (manual operator trigger, automated trigger from breach cascade, dead-man's-switch from
+heartbeat loss), pre-flight goes default-BLOCK across all rules. Is the kill-switch read-state available at
+execution-service pre-flight time, with sub-second freshness?
 
 D6. **Pre-flight failure mode handling** — when the pre-flight rule engine itself errors (rule registry unreachable,
 risk-and-exposure-service down, share-class data stale), what's the default? Fail-open (allow instructions through —
@@ -255,11 +255,11 @@ Risk monitor (Block A here) consumes it; pre-flight (Block D here) enforces it. 
     counterparty exposure enforcement.
 
 - Codex SSOT(s) describe:
-  - **Risk-stack architecture** (`codex/04-architecture/risk-stack-monitor-simulation-alert-preflight.md`) — the 4
+  - **Risk-stack architecture** (`/codex/04-architecture/risk-stack-monitor-simulation-alert-preflight.md`) — the 4
     surfaces + their interactions + the canonical action taxonomy.
-  - **Circuit-breaker rule taxonomy** (extends `codex/04-architecture/kill-switch-circuit-breaker.md`) — per-rule {BLOCK
-    / MONITOR / TEST} declared as data + per-archetype × per-share-class activation matrix.
-  - **Stress scenario library** (`codex/04-architecture/stress-scenario-library.md`) — every catalogued scenario +
+  - **Circuit-breaker rule taxonomy** (extends `/codex/04-architecture/kill-switch-circuit-breaker.md`) — per-rule
+    {BLOCK / MONITOR / TEST} declared as data + per-archetype × per-share-class activation matrix.
+  - **Stress scenario library** (`/codex/04-architecture/stress-scenario-library.md`) — every catalogued scenario +
     per-archetype tail-risk decomposition + cadence + output schema.
   - **UPDATE master plan Group F** items 17-22 — risk-stack readiness rows per archetype.
 

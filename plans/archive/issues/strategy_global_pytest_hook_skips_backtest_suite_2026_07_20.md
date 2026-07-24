@@ -24,7 +24,11 @@ stage: [meta]
 repos: [strategy-service]
 scope: [engineer, admin]
 tags: [testing, ci-integrity, pytest, silent-skip, backtest, benchmark-fills, false-green]
-related: [prediction_consolidated_closeout_2026_07_18.md, prediction_arb_live_execution_bridge_2026_07_20.md]
+related:
+  [
+    /plans/active/prediction_consolidated_closeout_2026_07_18.md,
+    /plans/active/issues/prediction_arb_live_execution_bridge_2026_07_20.md,
+  ]
 created: 2026-07-20
 parent_epic: infrastructure_master
 assigned_vm: NA

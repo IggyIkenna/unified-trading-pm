@@ -11,7 +11,11 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: 2026-06-09
-source: [plans/active/cicd_contract_hardening_2026_06_01.md (§ SESSION OUTCOME + ADDENDUM), plans/active/worktree_ldr_unification_2026_06_08.md]
+source:
+  [
+    plans/active/cicd_contract_hardening_2026_06_01.md (§ SESSION OUTCOME + ADDENDUM),
+    plans/active/worktree_ldr_unification_2026_06_08.md,
+  ]
 locked_by: live-defi-rollout
 priority: P1
 resolved: 2026-06-12
@@ -20,7 +24,7 @@ resolved: 2026-06-12
 > **🟢 RESOLVED 2026-06-12 (ACKED-INTO-CODE)** — Harsh's host (`hk`) is migrated to Path-B and aligned with the
 > 2026-06-08/09 CI/CD reform. All slot worktrees are reference-clones on `live-defi-rollout` with per-slot identity
 > reading `harshkantariya [slot-N·laptop]` (verified on slot-3). Setup task complete; archived per
-> `codex/11-project-management/issue-doc-lifecycle.md`.
+> `/codex/11-project-management/issue-doc-lifecycle.md`.
 
 # Prompt for Harsh — finish setting up your host (Path-B worktrees + CI/CD reform)
 

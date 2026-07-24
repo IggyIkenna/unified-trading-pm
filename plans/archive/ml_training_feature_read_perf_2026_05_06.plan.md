@@ -11,17 +11,21 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: 2026-05-06
-overview: Reduce ML training feature-read time by 2-4x via three surgical changes to ml-training-service feature reader (date-partition row-group pruning, column pushdown, DuckDB lazy joins replacing pandas outer-merge) plus concurrency tuning of features-volatility-service (max_workers=4 default is conservative). Foundation for the P2 feature-store consolidation plan (sibling), which is high-effort and shipped after this lands.
+overview:
+  Reduce ML training feature-read time by 2-4x via three surgical changes to ml-training-service feature reader
+  (date-partition row-group pruning, column pushdown, DuckDB lazy joins replacing pandas outer-merge) plus concurrency
+  tuning of features-volatility-service (max_workers=4 default is conservative). Foundation for the P2 feature-store
+  consolidation plan (sibling), which is high-effort and shipped after this lands.
 type: code
 epic: data-pipeline-completion
 owner: Harsh
 locked_by: live-defi-rollout
 locked_since: 2026-05-06
-completion_gates: {code: C5, deployment: D2, business: B3}
+completion_gates: { code: C5, deployment: D2, business: B3 }
 repo_gates:
-- {repo: ml-training-service, code: C0, deployment: D0, business: B0}
-- {repo: features-volatility-service, code: C0, deployment: D0, business: B0}
-- {repo: features-delta-one-service, code: C0, deployment: D0, business: B0}
+  - { repo: ml-training-service, code: C0, deployment: D0, business: B0 }
+  - { repo: features-volatility-service, code: C0, deployment: D0, business: B0 }
+  - { repo: features-delta-one-service, code: C0, deployment: D0, business: B0 }
 depends_on: []
 isProject: false
 ---
@@ -37,14 +41,14 @@ isProject: false
 This plan implements / extends the following codex documents (read these BEFORE making code changes; drift between code
 and these docs is a review-blocking failure per `doc → plan → code`):
 
-- [`codex/02-data/data-lineage-MTDS-features-ml.md`](../../codex/02-data/data-lineage-MTDS-features-ml.md) — MTDS →
-  features → ml-training reader lineage; this plan reduces wall-clock at the ml-training read boundary
-- [`codex/06-coding-standards/quality-gates.md`](../../codex/06-coding-standards/quality-gates.md) — QG discipline for
-  the perf changes (basedpyright, ruff, coverage floor on the rewritten reader path)
-- [`codex/06-coding-standards/performance-targets.md`](../../codex/06-coding-standards/performance-targets.md) —
+- [`/codex/02-data/data-lineage-MTDS-features-ml.md`](/codex/02-data/data-lineage-MTDS-features-ml.md) — MTDS → features
+  → ml-training reader lineage; this plan reduces wall-clock at the ml-training read boundary
+- [`/codex/06-coding-standards/quality-gates.md`](/codex/06-coding-standards/quality-gates.md) — QG discipline for the
+  perf changes (basedpyright, ruff, coverage floor on the rewritten reader path)
+- [`/codex/06-coding-standards/performance-targets.md`](/codex/06-coding-standards/performance-targets.md) —
   service-level perf targets (the 2-4× target lives here)
-- [`codex/02-data/honest-absence-downstream-handling.md`](../../codex/02-data/honest-absence-downstream-handling.md) —
-  the DuckDB lazy-join must preserve honest-absence semantics; outer-merge-equivalent behaviour required
+- [`/codex/02-data/honest-absence-downstream-handling.md`](/codex/02-data/honest-absence-downstream-handling.md) — the
+  DuckDB lazy-join must preserve honest-absence semantics; outer-merge-equivalent behaviour required
 
 If any of the docs above is missing, this plan creates a stub for it (see [`codex/`](../../codex/) tree).
 

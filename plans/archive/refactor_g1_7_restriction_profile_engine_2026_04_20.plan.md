@@ -10,12 +10,20 @@ repos: [execution-service, strategy-service, unified-api-contracts, unified-trad
 scope: [engineer, admin]
 tags: []
 related: []
-created: '2026-04-20'
+created: "2026-04-20"
 priority: P0
 owner: agent
 locked_by: live-defi-rollout
 locked_since: 2026-04-20
-depends_on: [codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md §1.7, codex/14-playbooks/demo-ops/demo-restriction-profiles.md, codex/14-playbooks/demo-ops/pre-demo-curation-rules.md, codex/14-playbooks/demo-ops/dart-demo-modes.md, codex/14-playbooks/demo-ops/demo-decision-matrix.md, refactor_g1_6_derivation_engine_ship_to_strategy_service_availability_2026_04_20.md]
+depends_on:
+  [
+    /codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md §1.7,
+    /codex/14-playbooks/demo-ops/demo-restriction-profiles.md,
+    /codex/14-playbooks/demo-ops/pre-demo-curation-rules.md,
+    /codex/14-playbooks/demo-ops/dart-demo-modes.md,
+    /codex/14-playbooks/demo-ops/demo-decision-matrix.md,
+    refactor_g1_6_derivation_engine_ship_to_strategy_service_availability_2026_04_20.md,
+  ]
 ---
 
 ## Deferred work — migrated to:
@@ -56,13 +64,21 @@ Environment-agnostic: identical engine behaviour in dev / staging / prod. Only t
 
 ## Decisions locked with user (2026-04-20)
 
-| Decision                                                                                                | Chosen                                                                                                                              | Source                                                 |
-| ------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ | ----------------------------------------------- | ------------------- |
-| Engine lives in `strategy-service/strategy_service/availability/restriction_profiles.py`                | Colocated with derivation engine (G1.6) — single source of truth for all availability logic                                         | Kickoff §1.7                                           |
-| Demo profile registry is declarative YAML at `unified-trading-pm/codex/14-playbooks/demo-ops/profiles/` | One file per profile (`prospect-im.yaml`, `prospect-dart.yaml`, `prospect-regulatory.yaml`, `admin.yaml`, `client-full.yaml`, etc.) | Kickoff §1.7 + `demo-ops/demo-restriction-profiles.md` |
-| Persona overlays are computed, not stored                                                               | `RestrictionProfile = base_profile + persona_overlay + questionnaire_override + env_override`                                       | Kickoff §1.7                                           |
-| Environment-agnostic                                                                                    | Identical logic dev/staging/prod; input source differs only                                                                         | Dev-staging parity rule                                |
-| Profile shape uses closed enum                                                                          | `RestrictionProfile = { [tile_id]: "unlocked"                                                                                       | "padlocked"                                            | "hidden" }` — maps directly to G1.3's lockState | Kickoff §1.3 + §1.7 |
+| Decision | Chosen | Source | |
+------------------------------------------------------------------------------------------------------- |
+-----------------------------------------------------------------------------------------------------------------------------------
+
+| ------------------------------------------------------ | ----------------------------------------------- |
+------------------- | | Engine lives in `strategy-service/strategy_service/availability/restriction_profiles.py` |
+Colocated with derivation engine (G1.6) — single source of truth for all availability logic | Kickoff §1.7 | | Demo
+profile registry is declarative YAML at `unified-trading-pm/codex/14-playbooks/demo-ops/profiles/` | One file per
+profile (`prospect-im.yaml`, `prospect-dart.yaml`, `prospect-regulatory.yaml`, `admin.yaml`, `client-full.yaml`, etc.) |
+Kickoff §1.7 + `demo-ops/demo-restriction-profiles.md` | | Persona overlays are computed, not stored |
+`RestrictionProfile = base_profile + persona_overlay + questionnaire_override + env_override` | Kickoff §1.7 | |
+Environment-agnostic | Identical logic dev/staging/prod; input source differs only | Dev-staging parity rule | | Profile
+shape uses closed enum |
+`RestrictionProfile = { [tile_id]: "unlocked"                                                                                       | "padlocked"                                            | "hidden" }`
+— maps directly to G1.3's lockState | Kickoff §1.3 + §1.7 |
 
 ## Cross-references
 
@@ -75,19 +91,19 @@ Environment-agnostic: identical engine behaviour in dev / staging / prod. Only t
   `refactor_g1_13_demo_upsell_overlay_tempt_logic_2026_04_20.md` (tempt logic extends this)
 - **G1.3 consumer:** restriction profile's per-tile state feeds `use-tile-lock-state.ts`
 - **Rules cited:** `_ssot-rules/06-show-dont-show-discipline.md`, `_ssot-rules/04-dart-commercial-axes.md`
-- **Cross-cutting:** `codex/14-customer-journeys/playbook-concepts/visibility-slicing.md`
+- **Cross-cutting:** `/codex/14-customer-journeys/playbook-concepts/visibility-slicing.md`
 
 ## Mandatory read-set
 
-1. `codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md` §1.7
-2. `codex/14-playbooks/demo-ops/demo-restriction-profiles.md` — full
-3. `codex/14-playbooks/demo-ops/pre-demo-curation-rules.md`
-4. `codex/14-playbooks/demo-ops/dart-demo-modes.md`
-5. `codex/14-playbooks/demo-ops/demo-decision-matrix.md`
-6. `codex/14-playbooks/demo-ops/pre-demo-discovery-framework.md`
-7. `codex/14-playbooks/demo-ops/account-intelligence-record.md`
-8. `codex/14-customer-journeys/playbook-concepts/visibility-slicing.md`
-9. `codex/14-playbooks/infra-spec/stage-3c-derivation-engine.md`
+1. `/codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md` §1.7
+2. `/codex/14-playbooks/demo-ops/demo-restriction-profiles.md` — full
+3. `/codex/14-playbooks/demo-ops/pre-demo-curation-rules.md`
+4. `/codex/14-playbooks/demo-ops/dart-demo-modes.md`
+5. `/codex/14-playbooks/demo-ops/demo-decision-matrix.md`
+6. `/codex/14-playbooks/demo-ops/pre-demo-discovery-framework.md`
+7. `/codex/14-playbooks/demo-ops/account-intelligence-record.md`
+8. `/codex/14-customer-journeys/playbook-concepts/visibility-slicing.md`
+9. `/codex/14-playbooks/infra-spec/stage-3c-derivation-engine.md`
 10. `strategy-service/strategy_service/availability/derivation.py` (landed by G1.6)
 11. `strategy-service/strategy_service/availability/store.py` (existing Phase-10.5)
 
@@ -416,14 +432,56 @@ Fallback per repo: manual `git add <files> && git commit -m "..." && git push or
 
 ### Plan-vs-reality drifts (verified 2026-04-20 against `live-defi-rollout` post-Wave-C)
 
-| #   | Plan claims                                                                                                                                                         | Reality post-Wave-C                                                                                                                                                                                                                                                                                                                                                                             | Resolution                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
-| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1   | Line 39 Decisions table: engine lives in `strategy-service/strategy_service/availability/restriction_profiles.py`. Lines 108, 138, 152 reinforce.                   | Wave-C Option X put `derivation.py` in **UAC** (`unified-api-contracts/unified_api_contracts/internal/architecture_v2/derivation.py`). G1.7's `resolve_profile()` must be callable by `demo_universe()` + `prod_restrictions()` inside derivation.py; those calls would become a **circular dep** if resolve_profile lives in strategy-service (UAC → strategy-service is the wrong direction). | **Recommend Option X carry-through.** Ship `restriction_profiles.py` in UAC at `unified-api-contracts/unified_api_contracts/internal/architecture_v2/restriction_profiles.py`. Tests in `unified-api-contracts/tests/internal/unit/test_restriction_profiles.py`. YAML loader uses `importlib.resources`-style path resolution (PM codex is sibling repo; dev/CI resolve via `UNIFIED_TRADING_WORKSPACE_ROOT` env var same as G1.8 `_find_codex_markdown()` helper). Operator sign-off requested. |
-| 2   | Line 121: "Integration with G1.6: `demo_universe()` + `prod_restrictions()` now call `resolve_profile` when caller provides a profile ID"                           | These functions live in UAC derivation.py now, not strategy-service. **Modifying derivation.py here risks merge conflict with G1.11's `access_control()` modification** (both Wave D items touch the same file).                                                                                                                                                                                | **Sequence conflicts, not parallelise.** G1.7 touches derivation.py `demo_universe()` + `prod_restrictions()` bodies; G1.11 touches `access_control()` + new pre-check call. Land G1.7 commit first, then G1.11 rebases. Document as sequential inside Wave D despite the plans being tagged parallel.                                                                                                                                                                                            |
-| 3   | Line 131: "Expose profile resolution as internal API: `execution-service` (or a strategy-service internal API) serves `/internal/restriction-profile/<persona_id>`" | G1.7 is a pure-function layer — no HTTP surface justification yet for Wave D. Stage-3c §5 says "restriction-profile-service" is a Stage-3E G3 concern.                                                                                                                                                                                                                                          | **Defer HTTP endpoint.** Ship only the pure function + YAML loader + UI integration. If UI needs server-rendered profile for SSR, add a minimal strategy-service `api/restriction_profile_router.py` in a FOLLOW-UP commit (stage-3c §5 G3 scope). For Wave D, UI-dev hydrates from bundled YAML (bundled at build via a TS mirror similar to how G1.8 coverage.ts mirrors UAC manifest).                                                                                                         |
-| 4   | Line 134: "dev (`VITE_MOCK_API=true`), lib/auth/demo-provider.ts reads the same YAML files (bundled at build)"                                                      | YAML-in-TS-bundle adds build-time complexity. Simpler: generate a `lib/architecture-v2/restriction-profiles.ts` TS mirror from YAML via a PM `scripts/propagation/sync-restriction-profiles-to-ui.sh` (mirrors G1.8's `sync-archetype-capability-to-ui.sh` pattern, canonical post-G1.8).                                                                                                       | **Use G1.8 sync-script pattern.** PM script reads YAML at `demo-ops/profiles/*.yaml`, renders TS mirror with AUTO-GEN banner, wired into UI `scripts/quality-gates.sh` pre-hook for drift detection. UI reads the TS mirror directly — no runtime YAML parsing.                                                                                                                                                                                                                                   |
-| 5   | Line 40 Decisions table: "Demo profile registry is declarative YAML at `codex/14-playbooks/demo-ops/profiles/`"                                                     | Directory does NOT exist today.                                                                                                                                                                                                                                                                                                                                                                 | Net-new, fine. Validator tool at `codex/14-playbooks/demo-ops/_tools/validate_profiles.py` (also net-new directory).                                                                                                                                                                                                                                                                                                                                                                              |
-| 6   | Line 116 signature: `resolve_profile(persona: Persona, flavour: DemoFlavour                                                                                         | None, env: Env, questionnaire: QuestionnaireResponse                                                                                                                                                                                                                                                                                                                                            | None = None)`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | `Persona` + `DemoFlavour` already exist in UAC derivation.py (G1.6 shipped these). `Env` + `QuestionnaireResponse` are net-new. | Reuse existing `Persona` + `DemoFlavour`. Define `Env = Literal["dev", "staging", "prod"]` + placeholder `QuestionnaireResponse` BaseModel (concrete fields are G1.10 scope — ship with `extra="allow"` for forward-compat OR empty dict default for Wave D). |
+| # | Plan claims | Reality post-Wave-C | Resolution | | --- |
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+|
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+|
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+|
+-------------------------------------------------------------------------------------------------------------------------------
+
+|
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+| | 1 | Line 39 Decisions table: engine lives in
+`strategy-service/strategy_service/availability/restriction_profiles.py`. Lines 108, 138, 152 reinforce. | Wave-C Option
+X put `derivation.py` in **UAC** (`unified-api-contracts/unified_api_contracts/internal/architecture_v2/derivation.py`).
+G1.7's `resolve_profile()` must be callable by `demo_universe()` + `prod_restrictions()` inside derivation.py; those
+calls would become a **circular dep** if resolve_profile lives in strategy-service (UAC → strategy-service is the wrong
+direction). | **Recommend Option X carry-through.** Ship `restriction_profiles.py` in UAC at
+`unified-api-contracts/unified_api_contracts/internal/architecture_v2/restriction_profiles.py`. Tests in
+`unified-api-contracts/tests/internal/unit/test_restriction_profiles.py`. YAML loader uses `importlib.resources`-style
+path resolution (PM codex is sibling repo; dev/CI resolve via `UNIFIED_TRADING_WORKSPACE_ROOT` env var same as G1.8
+`_find_codex_markdown()` helper). Operator sign-off requested. | | 2 | Line 121: "Integration with G1.6:
+`demo_universe()` + `prod_restrictions()` now call `resolve_profile` when caller provides a profile ID" | These
+functions live in UAC derivation.py now, not strategy-service. **Modifying derivation.py here risks merge conflict with
+G1.11's `access_control()` modification** (both Wave D items touch the same file). | **Sequence conflicts, not
+parallelise.** G1.7 touches derivation.py `demo_universe()` + `prod_restrictions()` bodies; G1.11 touches
+`access_control()` + new pre-check call. Land G1.7 commit first, then G1.11 rebases. Document as sequential inside Wave
+D despite the plans being tagged parallel. | | 3 | Line 131: "Expose profile resolution as internal API:
+`execution-service` (or a strategy-service internal API) serves `/internal/restriction-profile/<persona_id>`" | G1.7 is
+a pure-function layer — no HTTP surface justification yet for Wave D. Stage-3c §5 says "restriction-profile-service" is
+a Stage-3E G3 concern. | **Defer HTTP endpoint.** Ship only the pure function + YAML loader + UI integration. If UI
+needs server-rendered profile for SSR, add a minimal strategy-service `api/restriction_profile_router.py` in a FOLLOW-UP
+commit (stage-3c §5 G3 scope). For Wave D, UI-dev hydrates from bundled YAML (bundled at build via a TS mirror similar
+to how G1.8 coverage.ts mirrors UAC manifest). | | 4 | Line 134: "dev (`VITE_MOCK_API=true`), lib/auth/demo-provider.ts
+reads the same YAML files (bundled at build)" | YAML-in-TS-bundle adds build-time complexity. Simpler: generate a
+`lib/architecture-v2/restriction-profiles.ts` TS mirror from YAML via a PM
+`scripts/propagation/sync-restriction-profiles-to-ui.sh` (mirrors G1.8's `sync-archetype-capability-to-ui.sh` pattern,
+canonical post-G1.8). | **Use G1.8 sync-script pattern.** PM script reads YAML at `demo-ops/profiles/*.yaml`, renders TS
+mirror with AUTO-GEN banner, wired into UI `scripts/quality-gates.sh` pre-hook for drift detection. UI reads the TS
+mirror directly — no runtime YAML parsing. | | 5 | Line 40 Decisions table: "Demo profile registry is declarative YAML
+at `codex/14-playbooks/demo-ops/profiles/`" | Directory does NOT exist today. | Net-new, fine. Validator tool at
+`codex/14-playbooks/demo-ops/_tools/validate_profiles.py` (also net-new directory). | | 6 | Line 116 signature:
+`resolve_profile(persona: Persona, flavour: DemoFlavour                                                                                         | None, env: Env, questionnaire: QuestionnaireResponse                                                                                                                                                                                                                                                                                                                                            | None = None)`
+| `Persona` + `DemoFlavour` already exist in UAC derivation.py (G1.6 shipped these). `Env` + `QuestionnaireResponse` are
+net-new. | Reuse existing `Persona` + `DemoFlavour`. Define `Env = Literal["dev", "staging", "prod"]` + placeholder
+`QuestionnaireResponse` BaseModel (concrete fields are G1.10 scope — ship with `extra="allow"` for forward-compat OR
+empty dict default for Wave D). |
 
 ### Pre-audit manifest (Citadel rule-6)
 

@@ -380,7 +380,7 @@ L2 passes. Never run L3b before L3a passes.
   auth-sports-migration-batch1 (auth status fixes in endpoint_registry + UIC sports canonical schemas);
   auth-sports-migration-batch2 (sports UMI adapters completion)." status: in_progress
 - id: p3-cross-cutting-codex content: "CODEX + SSOT DOCS (update as each tier completes): codex-service-pair-flows-doc
-  (DONE ✅ — unified-trading-codex/08-workflows/service-pair-flows.md exists; verified 2026-03-06);
+  (DONE ✅ — unified-trading-/codex/08-workflows/service-pair-flows.md exists; verified 2026-03-06);
   codex-quality-gates-aws-parity (DONE 2026-03-09 ✅ — AWS CodeBuild parity section added to quality-gates.md:
   structural differences table, env vars table, library vs service buildspec patterns, parity rules, adding-to-new-repo
   guide); codex-s2s-auth-phase0-impl (DONE 2026-03-09 ✅ — Phase 0 implementation details section added to

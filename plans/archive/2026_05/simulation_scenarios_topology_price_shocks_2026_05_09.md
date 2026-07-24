@@ -9,18 +9,33 @@ stage: [meta]
 repos: [alerting-service, deployment-api, deployment-service, deployment-ui, execution-service, features-service]
 scope: [engineer, admin]
 tags: []
-related: [plans/active/master_to_live_defi_2026_05_23.md, plans/active/defi_master.md, plans/epics/cross_cutting_2026_05_23.epic.md, plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md, plans/active/alerting_service_live_rules_2026_05_07.md, plans/active/writegate_honest_coverage_endtoend_2026_05_06.md, plans/archive/risk_simulations_limits_alerting_2026_05_10.md, plans/questions/disaster_recovery_reconciliation_circuit_breakers_2026_05_08.md, plans/questions/mock_data_pipeline_benchmarking_2026_05_08.md, plans/questions/promote_workflow_backtest_to_paper_to_live_2026_05_08.md]
+related:
+  [
+    plans/active/master_to_live_defi_2026_05_23.md,
+    plans/active/defi_master.md,
+    plans/epics/cross_cutting_2026_05_23.epic.md,
+    plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md,
+    plans/active/alerting_service_live_rules_2026_05_07.md,
+    plans/active/writegate_honest_coverage_endtoend_2026_05_06.md,
+    plans/archive/risk_simulations_limits_alerting_2026_05_10.md,
+    plans/questions/disaster_recovery_reconciliation_circuit_breakers_2026_05_08.md,
+    plans/questions/mock_data_pipeline_benchmarking_2026_05_08.md,
+    plans/questions/promote_workflow_backtest_to_paper_to_live_2026_05_08.md,
+  ]
 created: 2026-05-09
 locked_by: live-defi-rollout
 locked_since: 2026-05-09
 estimate_class: design
 estimate_baseline_ai_days: 33.5
 estimate_calibrated_ai_days: 20.1
-estimate_calibration_note: 'Baseline auto-extracted from in-body AI-day mentions during 2026-05-11 sweep (~3-5, ~1, ~1, ~1, + 14 more). Class inferred from filename (design, multiplier 0.6×).
+estimate_calibration_note: "Baseline auto-extracted from in-body AI-day mentions during 2026-05-11 sweep (~3-5, ~1, ~1,
+  ~1, + 14 more). Class inferred from filename (design, multiplier 0.6×).
 
-  CAVEAT: auto-extract SUMS all in-body mentions; plans with both ''Total: X'' headlines AND per-phase line items will be double-counted. Owner agent: verify baseline, refine class per codex/08-workflows/estimation-calibration.md, recompute calibrated if either changes.
+  CAVEAT: auto-extract SUMS all in-body mentions; plans with both 'Total: X' headlines AND per-phase line items will be
+  double-counted. Owner agent: verify baseline, refine class per /codex/08-workflows/estimation-calibration.md,
+  recompute calibrated if either changes.
 
-  '
+  "
 parent_epic: defi_master
 priority: P2
 ---
@@ -92,7 +107,7 @@ priority: P2
 > | 3 — Wire-ins                                | 3.E + 3.F only (execution-engine adversarial + risk/alerting consumers)                                         | **`design-shipped` 2026-05-12 slot 7 Day-2** (integration spec at `scratch_scenarios_day1/12_phase3_integration_spec.md`; cross-side handshake to Harsh slot 5 for implementation)                                         |
 > | 4 — Scenario library                        | 10 scenarios shipped as design fragments + UAC registry instances 2026-05-12 slot 7                             | **`done`** (UAC@`33630a6` registry/scenarios/)                                                                                                                                                                             |
 > | 5 — Matrix                                  | 16-cell scope (10 scenarios × 2 archetypes filtered to applicable; over-delivered vs 12-cell compressed target) | **`done` 2026-05-12 slot 7 Day-3** (UAC@`556b96f` `registry/scenario_archetype_matrix.py` + 11 tests; UTL@`66904fe0` `scenario/matrix_runner.py` + 10 tests — 16-cell matrix builds at module load from SCENARIO_REGISTRY) |
-> | 8.A — Codex scenario-injection-architecture | NEW doc capturing the architecture                                                                              | **`done` 2026-05-12 slot 7 Day-4** (PM `codex/04-architecture/scenario-injection-architecture.md`)                                                                                                                         |
+> | 8.A — Codex scenario-injection-architecture | NEW doc capturing the architecture                                                                              | **`done` 2026-05-12 slot 7 Day-4** (PM `/codex/04-architecture/scenario-injection-architecture.md`)                                                                                                                        |
 > | 6 / 7 / 8.B-I / 9                           | DEFERRED post-cutover                                                                                           | `deferred-after-simulation_scenarios_post_cutover_2026_06_01`                                                                                                                                                              |
 >
 > Total compressed scope: ~4-5 AI-days. Fits T-13 with margin. Successor plan picks up immediately post-cutover for the
@@ -128,8 +143,8 @@ This is **not**:
 - A DR / chaos drill harness (that's `disaster_recovery_reconciliation_circuit_breakers_2026_05_08.md`; this plan
   **provides** the synthetic injection primitives that DR drills will reuse).
 - A separate "backtest engine" — every scenario runs through the unified pipeline (MTDS → MDPS → features-\* →
-  strategy-service ↔ position-balance + risk + execution-service-in-matching-engine-mode), with one well-bounded
-  overlay layer.
+  strategy-service ↔ position-balance + risk + execution-service-in-matching-engine-mode), with one well-bounded overlay
+  layer.
 
 It **is**: a 14-day sprint that ships UAC scenario contracts, UTL injection primitives, per-layer wire-ins, an
 asset-group-scoped scenario library, a per-archetype regression matrix run on real VMs, and the pre-cutover gate
@@ -202,22 +217,22 @@ re-scan. Workspace-grep ran 2026-05-09 against `live-defi-rollout`.
 
 NEW:
 
-- `codex/04-architecture/scenario-injection-architecture.md` — overlay layer model, injection points, prod-codepath
+- `/codex/04-architecture/scenario-injection-architecture.md` — overlay layer model, injection points, prod-codepath
   reuse pattern, `synthetic=true` provenance.
-- `codex/04-architecture/scenario-outcome-assertions.md` — closed-enum outcome taxonomy, per-archetype expected-outcome
+- `/codex/04-architecture/scenario-outcome-assertions.md` — closed-enum outcome taxonomy, per-archetype expected-outcome
   matrix shape, fail semantics.
-- `codex/02-data/scenario-overlay-semantics.md` — overlay parquet schema, per-row provenance, `available_at` discipline
+- `/codex/02-data/scenario-overlay-semantics.md` — overlay parquet schema, per-row provenance, `available_at` discipline
   under overlay, manifest-side scenario_id column.
 
 UPDATE:
 
-- `codex/04-architecture/kill-switch-circuit-breaker.md` — scenario-driven trips section.
-- `codex/04-architecture/autonomous-recovery-matrix.md` — scenario-driven recovery validation section.
-- `codex/04-architecture/backtest-groups.md` — scenario-overlay mode added to backtest taxonomy.
-- `codex/05-infrastructure/live-pipeline-architecture.md` — scenario tap points within the live + batch unified
+- `/codex/04-architecture/kill-switch-circuit-breaker.md` — scenario-driven trips section.
+- `/codex/04-architecture/autonomous-recovery-matrix.md` — scenario-driven recovery validation section.
+- `/codex/04-architecture/backtest-groups.md` — scenario-overlay mode added to backtest taxonomy.
+- `/codex/05-infrastructure/live-pipeline-architecture.md` — scenario tap points within the live + batch unified
   pipeline.
-- `codex/05-infrastructure/replay-subsystem.md` — scenario-overlay-on-replay extension.
-- `codex/02-data/honest-absence-downstream-handling.md` — scenario-driven gap injection per consumer-class table.
+- `/codex/05-infrastructure/replay-subsystem.md` — scenario-overlay-on-replay extension.
+- `/codex/02-data/honest-absence-downstream-handling.md` — scenario-driven gap injection per consumer-class table.
 
 ### Cross-plan dependencies
 
@@ -320,10 +335,12 @@ and only then unblocks dependents.
 - [x] [SCRIPT] P0. **0.C Workspace-grep callsite enumeration.** **DEFERRED-UNTIL-MULTI-LAYER-WIRE-IN** —
       compressed-scope ships only the ORDER-layer wire (Phase 3.E, Harsh slot 5). Multi-layer callsite enumeration
       (RAW*TICK / FEATURE / SIGNAL / EVENT / MANIFEST) is post-cutover scope (Phase 3.A/B/C/G of successor plan); CSV
-      emission useful only when those taps land. For every overlay tap point —
-      `\_fetch*_`per MTDS     adapter,`*compute*_`per features-\* calculator,`emit_signal`in strategy-service,`submit_order`+    `simulate_fill`in execution-service,`record_captured`+`record_empty`+`record_failed`+    `record_expected_unattempted`in UTL ManifestWriter — produce a CSV    `repo,file,line,callsite_kind,target_overlay_layer`so Phase 3 sub-agents have a complete edit list. Tool:    `rg
-      -n "<pattern>" --type py --glob '!.venv\*' --glob '!tests'` per kind. Output: append to § "Audit findings" as a
-      fenced table.
+      emission useful only when those taps land. For every overlay tap point — `\_fetch*_`per MTDS
+      adapter,`*compute*_`per features-\* calculator,`emit_signal`in strategy-service,`submit_order`+ `simulate_fill`in
+      execution-service,`record_captured`+`record_empty`+`record_failed`+ `record_expected_unattempted`in UTL
+      ManifestWriter — produce a CSV `repo,file,line,callsite_kind,target_overlay_layer`so Phase 3 sub-agents have a
+      complete edit list. Tool: `rg     -n "<pattern>" --type py --glob '!.venv\*' --glob '!tests'` per kind. Output:
+      append to § "Audit findings" as a fenced table.
 
 **Full-execution criterion** (per HARD RULE):
 
@@ -676,7 +693,7 @@ typed `ScenarioOverlay` instance with ≥1 expected outcome. Minimum counts per 
 
 ## Phase 8 — Codex SSOTs (Days 11-12, ~1.5 AI-days, parallel with Phase 9 first-archetype run)
 
-- [x] [AGENT] P0. **8.A NEW `codex/04-architecture/scenario-injection-architecture.md`.** ✅ shipped slot 7 Day-4
+- [x] [AGENT] P0. **8.A NEW `/codex/04-architecture/scenario-injection-architecture.md`.** ✅ shipped slot 7 Day-4
       2026-05-12 (PM commit pending). Codifies reuse-prod-codepath principle + 6 closed-set pipeline-tap layers + 11
       mutation discriminator union + 9 OutcomeCategory enum + 6-tuple-per-cell contract + `synthetic=true` event-stream
       provenance + LookaheadBias compatibility (Phase 2.E) + 2-archetype 16-cell regression matrix + cross-plan
@@ -686,13 +703,13 @@ typed `ScenarioOverlay` instance with ≥1 expected outcome. Minimum counts per 
       values + reuse-prod-codepath principle + injection-point map + per-layer applier semantics + `synthetic=true`
       event-stream provenance + LookaheadBias compatibility note + cross-references to `live-pipeline-architecture.md` +
       `replay-subsystem.md`. Stub at Phase 1 commit; full content lands here.
-- [x] ✅ [AGENT] P0. **8.B NEW `codex/04-architecture/scenario-outcome-assertions.md`.** Sections: outcome taxonomy
+- [x] ✅ [AGENT] P0. **8.B NEW `/codex/04-architecture/scenario-outcome-assertions.md`.** Sections: outcome taxonomy
       closed enum + per-archetype matrix shape + fail semantics (matrix-red = cutover-block) + scenario-fail vs
       real-fire event distinction (`synthetic=true`) + alerting wire pattern + cross-reference to
       `kill-switch-circuit-breaker.md` + `autonomous-recovery-matrix.md`. — PM@7a735152 (2026-05-18 slot 3). Nine
       OutcomeCategory table; 6-tuple per-assertion contract; PASS/FAIL/WARN semantics; synthetic=True safeguard;
       alerting wire (log-only path).
-- [x] ✅ [AGENT] P0. **8.C NEW `codex/02-data/scenario-overlay-semantics.md`.** Sections: overlay parquet schema +
+- [x] ✅ [AGENT] P0. **8.C NEW `/codex/02-data/scenario-overlay-semantics.md`.** Sections: overlay parquet schema +
       per-row provenance column + `available_at` discipline under overlay (downgrade to warning, never silently
       shifted) + manifest `scenario_id` column + cross-reference to `honest-absence-downstream-handling.md` +
       `availability-manifest-and-data-status.md`. — PM@7a735152 (2026-05-18 slot 3). Schema
@@ -964,9 +981,9 @@ Status flips per Half-2 cadence: 1.A `design-shipped`; 1.B `design-shipped`; 1.C
 >
 > **Cross-references used throughout this section** (do NOT redesign):
 >
-> - Risk-and-exposure-service thresholds: `codex/04-architecture/circuit-breaker-rule-taxonomy.md`
+> - Risk-and-exposure-service thresholds: `/codex/04-architecture/circuit-breaker-rule-taxonomy.md`
 > - Position-balance-monitor breach logic: `risk_simulations_limits_alerting_2026_05_10.md`
-> - Kill-switch ladder: `codex/04-architecture/kill-switch-circuit-breaker.md`
+> - Kill-switch ladder: `/codex/04-architecture/kill-switch-circuit-breaker.md`
 > - Execution-service circuit breakers: `execution-service/execution_service/circuit_breakers/`
 
 - [x] [DESIGN] P0. **2.P1 Flash crash** — sudden multi-venue price drop. Design-shipped 2026-05-13 (design fragment
@@ -1012,7 +1029,7 @@ Status flips per Half-2 cadence: 1.A `design-shipped`; 1.B `design-shipped`; 1.C
     `BASIS_INVERSION_BPS` trip.
 
   **Alerting rule fired**: `RISK_RULE_BLOCKED` + `CIRCUIT_BREAKER_TRIPPED` + `KILL_SWITCH_ARMED` (all `synthetic=true`).
-  **Kill-switch ladder**: `KILL_ALL` → `MANUAL_UNKILL` (per `codex/04-architecture/kill-switch-circuit-breaker.md`
+  **Kill-switch ladder**: `KILL_ALL` → `MANUAL_UNKILL` (per `/codex/04-architecture/kill-switch-circuit-breaker.md`
   BreakerAction table). Recovery guard: "realized-vol back within 2x of 30-day baseline for 1800s contiguous AND
   drawdown < 50% of pre-crash level." **Execution circuit-breaker**: `AdversarialMatchingEngine` (execution-service
   Phase 3.E, `execution-service@d0ec76f1`) fires `RejectFills` + `LatencyInject` during crash window.
@@ -1112,7 +1129,7 @@ Status flips per Half-2 cadence: 1.A `design-shipped`; 1.B `design-shipped`; 1.C
   alerting-service `_is_synthetic()` short-circuit, Phase 3.F). **Kill-switch ladder**: `SCALE_DOWN` → `AUTO_COOLDOWN`
   (operational character — not a safety event unless breaker re-fires >3 times within 24h, which triggers
   `MANUAL_UNKILL`). Recovery guard: "funding rate < baseline x 3 for one full funding period contiguous." (per
-  `codex/04-architecture/kill-switch-circuit-breaker.md` BreakerRecoveryMode table). **Execution circuit-breaker**:
+  `/codex/04-architecture/kill-switch-circuit-breaker.md` BreakerRecoveryMode table). **Execution circuit-breaker**:
   `AdversarialMatchingEngine` fires `LatencyInject` (venue latency spikes during funding settlement) but NOT
   `RejectFills` — funding spike is operational, not a safety halt.
 
@@ -1124,9 +1141,10 @@ Status flips per Half-2 cadence: 1.A `design-shipped`; 1.B `design-shipped`; 1.C
   value-at-peg features)
 
   **Real-world referent (two canonical events)**:
-  - **2023-03-11 USDC de-peg to $0.87** (−13%) during Silicon Valley Bank collapse. Recovery: 72h after Treasury
-    backstop. Impact: Chainlink aggregator `0x8fFfFfd4AfB6115b954Bd326cbe7B4BA576818f6` published $0.87 for 18h; Aave
-    paused USDC as collateral; Curve 3pool depegged simultaneously. Full recovery within 3 days.
+  - **2023-03-11 USDC de-peg to
+    $0.87** (−13%) during Silicon Valley Bank collapse. Recovery: 72h after Treasury
+    backstop. Impact: Chainlink aggregator `0x8fFfFfd4AfB6115b954Bd326cbe7B4BA576818f6` published $0.87
+    for 18h; Aave paused USDC as collateral; Curve 3pool depegged simultaneously. Full recovery within 3 days.
   - **2022-06-13 stETH de-peg to 0.9404 ETH** during 3AC + Celsius unwind. Recovery: 6+ months (full repeg post-Merge
     October 2022). Impact: carry_staked_basis hedge leg basis inverted; recursive-borrow health-factors deteriorated.
 
@@ -1174,7 +1192,7 @@ Status flips per Half-2 cadence: 1.A `design-shipped`; 1.B `design-shipped`; 1.C
   **Alerting rule fired**: `RISK_RULE_BLOCKED` + `KILL_SWITCH_ARMED` + multiple `CRITICAL` alerts (`synthetic=true`);
   manual_unkill expected for catastrophic tier. **Kill-switch ladder**: `KILL_ALL` → `MANUAL_UNKILL` for all
   catastrophic-tier outcomes. Recovery guard: "peg-deviation < 50bps for 86400s contiguous AND issuer not in `Paused`
-  state." (per `codex/04-architecture/kill-switch-circuit-breaker.md` BreakerRecoveryMode). **Execution
+  state." (per `/codex/04-architecture/kill-switch-circuit-breaker.md` BreakerRecoveryMode). **Execution
   circuit-breaker**: `AdversarialMatchingEngine` fires `RejectFills` on stable-denominated orders when peg < −500bps
   threshold; `LatencyInject` simulates DEX slippage surge as AMM reprices the depegged stable.
 
@@ -1187,8 +1205,8 @@ Status flips per Half-2 cadence: 1.A `design-shipped`; 1.B `design-shipped`; 1.C
       2022-06-13 stETH; funding-rate spike: 2021-04-18 BTC 100%/yr; depeg: 2023-03-11 USDC + 2022-06-13 stETH).
       (evidence: design fragments 07-10 in `scratch_scenarios_day1/`)
 - [x] Cross-references to risk + kill-switch + execution circuit-breaker SSOTs cited per scenario. (evidence:
-      `codex/04-architecture/circuit-breaker-rule-taxonomy.md`, `codex/04-architecture/kill-switch-circuit-breaker.md`,
-      execution-service Phase 3.E `AdversarialMatchingEngine`)
+      `/codex/04-architecture/circuit-breaker-rule-taxonomy.md`,
+      `/codex/04-architecture/kill-switch-circuit-breaker.md`, execution-service Phase 3.E `AdversarialMatchingEngine`)
 - [x] UAC `ScenarioOverlay` instances for all 4 scenarios shipped in UAC@`33630a6`. (evidence:
       `registry/scenarios/{cefi,defi,cross_asset}.py` — `cefi_funding_spike_10x`, `cross_asset_flash_crash`,
       `cross_asset_basis_blowout_perp_spot`, `defi_stablecoin_depeg`)
@@ -1262,7 +1280,7 @@ Status flips per Half-2 cadence: 1.A `design-shipped`; 1.B `design-shipped`; 1.C
   non-overlay path. 2 new tests in `tests/unit/test_point_in_time.py` (downgrade-to-warning + strict-mode invariant).
   11/11 `TestAssertNoLookaheadForFeatureGroup` tests pass + scoped ruff clean.
 - **PM codex stub** at
-  [`codex/04-architecture/scenario-injection-architecture.md`](../../codex/04-architecture/scenario-injection-architecture.md):
+  [`/codex/04-architecture/scenario-injection-architecture.md`](/codex/04-architecture/scenario-injection-architecture.md):
   Phase 8.A NEW doc codifying reuse-prod-codepath principle + 6 closed-set pipeline-tap layers + 11 mutation
   discriminator union + 9 OutcomeCategory enum + 6-tuple-per-cell contract + `synthetic=true` event-stream provenance +
   LookaheadBias compatibility (Phase 2.E) + 2-archetype 16-cell regression matrix + cross-plan composition +
@@ -1281,7 +1299,7 @@ Status flips per Half-2 cadence: 1.A `design-shipped`; 1.B `design-shipped`; 1.C
 | 3.E + 3.F              | `design-shipped` Day-2 (impl Harsh slot 5) | `scratch_scenarios_day1/12_phase3_integration_spec.md`                           |
 | 4 (scenario library)   | `done` Day-2                               | UAC@`33630a6` `registry/scenarios/`                                              |
 | 5.A + 5.B + 5.C        | `done` Day-3                               | UAC@`556b96f` + UTL@`66904fe0`                                                   |
-| 8.A (codex stub)       | `done` Day-4                               | PM `codex/04-architecture/scenario-injection-architecture.md`                    |
+| 8.A (codex stub)       | `done` Day-4                               | PM `/codex/04-architecture/scenario-injection-architecture.md`                   |
 | 0 (pre-audit)          | `todo`                                     | Operator-deferrable; existing Day-1 design fragments serve as the de-facto audit |
 | 6 / 7 / 8.B-I / 9 / 10 | `deferred-after-successor`                 | `simulation_scenarios_post_cutover_2026_06_01.md`                                |
 
@@ -1342,7 +1360,7 @@ successor plan's Phase 3 multi-layer wire-in.
 - Kill switches: `unified_api_contracts/canonical/crosscutting/kill_switch.py`
 - Manifest 4-state: `unified_trading_library/manifest/writer.py` (`record_captured` / `record_empty` / `record_failed` /
   `record_expected_unattempted`)
-- Kill-switch + circuit-breaker architecture SSOT: `codex/04-architecture/kill-switch-circuit-breaker.md`
+- Kill-switch + circuit-breaker architecture SSOT: `/codex/04-architecture/kill-switch-circuit-breaker.md`
 
 ---
 
@@ -1377,8 +1395,8 @@ successor plan's Phase 3 multi-layer wire-in.
   - `CARRY_STAKED_BASIS` (hedge leg secondary): `BLOCK_NEW` via `VENUE_OUTAGE_SECONDS` PER_VENUE; escalates to
     `KILL_PER_ARCHETYPE_CARRY_STAKED_BASIS` (`kill_switch.py:79`) only if hedge-failure cascades into
     `LIQUIDATION_CASCADE_RISK` (`carry_staked_basis.py:110-124`).
-  - SSOT: `codex/04-architecture/kill-switch-circuit-breaker.md` § "Per-venue kill-switch";
-    `codex/04-architecture/autonomous-recovery-matrix.md` § "VENUE_OUTAGE_SECONDS recovery rule".
+  - SSOT: `/codex/04-architecture/kill-switch-circuit-breaker.md` § "Per-venue kill-switch";
+    `/codex/04-architecture/autonomous-recovery-matrix.md` § "VENUE_OUTAGE_SECONDS recovery rule".
 
 - [x] [DESIGN] P0. **1.T2 per-chain-down** (`defi_chain_rpc_outage_solana` — Ethereum RPC or Solana RPC unreachable). ✅
       DESIGN-COMPLETE 2026-05-17 — UAC@33630a6 registry live; scratch doc `02_defi_chain_rpc_outage_solana.md` + plan
@@ -1400,7 +1418,7 @@ successor plan's Phase 3 multi-layer wire-in.
   Solana protocol shard; MDPS write-gate fires `TICK_STALENESS` on Pyth Solana feeds for `(SOL, MSOL, JITOSOL, BSOL)`;
   `DEFI_FEATURE_STALE` fires once features-onchain crosses freshness window; `CIRCUIT_BREAKER_OPEN` fires for
   `RPC_OUTAGE_SECONDS` breaker at `T+60s`. Honest-absence per-shard: `record_failed(OracleStaleError)` on Pyth-Solana
-  shards (unexpected upstream gap, Category 2 per `codex/02-data/honest-absence-downstream-handling.md`). UAC source:
+  shards (unexpected upstream gap, Category 2 per `/codex/02-data/honest-absence-downstream-handling.md`). UAC source:
   `codes.py:34, 42-45, 52, 196-211`.
 
   **Expected risk-engine response**:
@@ -1414,7 +1432,7 @@ successor plan's Phase 3 multi-layer wire-in.
     `applies_to="ARBITRAGE_PRICE_DISPERSION"` seed extension, tracked as follow-up in
     `scratch_scenarios_day1/02_defi_chain_rpc_outage_solana.md`); CeFi perp leg remains tradeable on Bybit/Binance/OKX;
     archetype kill-switch withheld until cross-leg divergence widens.
-  - SSOT: `codex/04-architecture/kill-switch-circuit-breaker.md` § "DeFi kill-switch hierarchy"; UAC
+  - SSOT: `/codex/04-architecture/kill-switch-circuit-breaker.md` § "DeFi kill-switch hierarchy"; UAC
     `CHAIN_RPC_TEMPLATES` in `_defi.py`.
 
 - [x] [DESIGN] P0. **1.T3 per-protocol-paused** (`defi_liquidity_drain_lending_pool` — Aave/Morpho market paused or
@@ -1459,8 +1477,8 @@ successor plan's Phase 3 multi-layer wire-in.
     (governance-pause-clear ≠ economic-safety-clear; operator must confirm root cause cleared). The (FOLLOW-UP)
     lending-pool breaker auto-disarm MUST NOT cascade-disarm `LIQUIDATION_CASCADE_RISK` (orthogonal recovery per
     `circuit_breaker.py` composition rules).
-  - SSOT: `codex/04-architecture/kill-switch-circuit-breaker.md` § "DeFi protocol-pause kill-switch";
-    `codex/04-architecture/autonomous-recovery-matrix.md` § "borrow_blocked state".
+  - SSOT: `/codex/04-architecture/kill-switch-circuit-breaker.md` § "DeFi protocol-pause kill-switch";
+    `/codex/04-architecture/autonomous-recovery-matrix.md` § "borrow_blocked state".
 
 - [x] [DESIGN] P0. **1.T4 oracle-stale** (`defi_oracle_deviation_30sigma` — Chainlink heartbeat exceeded or 30σ
       wild-print). ✅ DESIGN-COMPLETE 2026-05-17 — UAC@33630a6 registry live; scratch doc
@@ -1501,7 +1519,7 @@ successor plan's Phase 3 multi-layer wire-in.
   - Alerting: `DEFI_FEATURE_STALE` alert fires with `synthetic=true` — PagerDuty + Telegram suppressed; dashboard
     surfaces in `defi.oracle` tile per alerting-service `_route_synthetic_log_only()` path (Phase 3.F
     `alerting-service@3c0d675`).
-  - SSOT: `codex/04-architecture/kill-switch-circuit-breaker.md` § "Oracle-divergence kill-switch"; UAC
+  - SSOT: `/codex/04-architecture/kill-switch-circuit-breaker.md` § "Oracle-divergence kill-switch"; UAC
     `CHAIN_RPC_TEMPLATES` + `config/testnet_contracts.yaml` (oracle address registry).
 
 - [x] [DESIGN] P0. **1.T5 gas-spike** (`defi_gas_surge_50x` — Ethereum gas price 10-50× baseline). ✅ DESIGN-COMPLETE
@@ -1540,7 +1558,7 @@ successor plan's Phase 3 multi-layer wire-in.
   - `available_at` discipline: synthetic gas-oracle rows use real-time `available_at` — this is a value-axis injection,
     not an arrival-timing injection, so `lookahead_bias_check` downgrade NOT required (distinct from RPC-outage +
     oracle-stale variants).
-  - SSOT: `codex/04-architecture/kill-switch-circuit-breaker.md` § "Gas-budget circuit breaker"; UAC
+  - SSOT: `/codex/04-architecture/kill-switch-circuit-breaker.md` § "Gas-budget circuit breaker"; UAC
     `registry/risk_rules/archetype.py` `GAS_BUDGET_PER_ARCHETYPE` rule definition.
 
 - [x] [DESIGN] P0. **1.T6 mempool-congestion** (`defi_mempool_congestion_inclusion_delay` — nonce queuing delays + MEV
@@ -1565,11 +1583,11 @@ successor plan's Phase 3 multi-layer wire-in.
   `mean_inclusion_latency_seconds` for `C` crosses 5× baseline within 60s; `pending_tx` count > `inflight_tx_limit`
   threshold per archetype (default 5 simultaneous) → autonomous-recovery state machine transitions to
   `mempool_congested` state (**FOLLOW-UP**: no explicit `mempool_congested` named state in
-  `codex/04-architecture/autonomous-recovery-matrix.md` — captured at
+  `/codex/04-architecture/autonomous-recovery-matrix.md` — captured at
   `scratch_scenarios_day1/06_defi_mempool_congestion.md` follow-up callout; owner: DR plan Phase 4); `CANCEL_LOST_RACE`
   event aggregated into `cancel_lost_rate_bps` rolling 5min window → crosses 8000bps (80%) during synthetic congestion;
-  sandwich variant: `MEV_DETECTED` typed event per `codex/04-architecture/mev-protection.md:376-389` pattern detection +
-  `DEFI_TX_SIMULATION_FAILED` (`codes.py:55`) for simulations that fail `amountOutMinimum` post-front-run;
+  sandwich variant: `MEV_DETECTED` typed event per `/codex/04-architecture/mev-protection.md:376-389` pattern
+  detection + `DEFI_TX_SIMULATION_FAILED` (`codes.py:55`) for simulations that fail `amountOutMinimum` post-front-run;
   `realised_slippage_bps` p50 shifts from ~5bps to ~50bps. UAC source: `codes.py:55, 88, 134`.
 
   **Expected risk-engine response**:
@@ -1587,8 +1605,8 @@ successor plan's Phase 3 multi-layer wire-in.
   - No kill-switch at congestion alone; escalation path exists only if: (a) inclusion-latency >600s compounding with a
     loss-realising sandwich tripping `MAX_SLIPPAGE_BPS`, OR (b) `mempool_congested` state persists past
     `auto_disarm_after_seconds` causing an accumulated position imbalance that trips `INVENTORY_IMBALANCE_RATIO`.
-  - SSOT: `codex/04-architecture/kill-switch-circuit-breaker.md` § "MEV + mempool risk circuit breakers";
-    `codex/04-architecture/mev-protection.md` § "Sandwich pattern detection".
+  - SSOT: `/codex/04-architecture/kill-switch-circuit-breaker.md` § "MEV + mempool risk circuit breakers";
+    `/codex/04-architecture/mev-protection.md` § "Sandwich pattern detection".
 
 **Phase 1 (topology) full-execution criterion** (design-only phase — no code changes; all UAC instances already shipped
 at UAC@`33630a6`):
@@ -1975,7 +1993,7 @@ Phase 2 price-shock designs):
 - Phase 7 (probability + expected-loss matrix): 10-scenario × 3-metric table (probability_weight / expected_loss_bps /
   recovery_time_hours) with historical basis per row; top-5 annualised-loss ranking; `defi_stablecoin_depeg` highest
   annual expected loss at 75,000 loss-bps-events/yr.
-- Phase 8.B-I (codex sections): 8 new sections added to `codex/04-architecture/scenario-injection-architecture.md`
+- Phase 8.B-I (codex sections): 8 new sections added to `/codex/04-architecture/scenario-injection-architecture.md`
   covering scenario authoring guide, per-archetype scenario selection, matrix runner usage, post-run report shape,
   adversarial mode flag wiring, synthetic provenance auditing, scenario archive/version history, and operator runbook.
 - Phase 9 successor plan: `simulation_scenarios_post_cutover_2026_06_01.md` updated with carry-forward table +
@@ -1985,6 +2003,6 @@ Phase 2 price-shock designs):
 | ------------------------------------- | ------------------------------------------------------------------------ | ------------------------------------------------------------------- |
 | Phase 6 (coverage matrix expansion)   | `done` design-shipped                                                    | This plan body §§ above                                             |
 | Phase 7 (probability + expected-loss) | `done` design-shipped                                                    | This plan body §§ above; UAC schema extension → successor Phase 1.B |
-| Phase 8.B-I (codex sections)          | `done` shipped                                                           | `codex/04-architecture/scenario-injection-architecture.md`          |
+| Phase 8.B-I (codex sections)          | `done` shipped                                                           | `/codex/04-architecture/scenario-injection-architecture.md`         |
 | Phase 9 (successor plan update)       | `done` shipped                                                           | `simulation_scenarios_post_cutover_2026_06_01.md`                   |
 | Phase 9 real-VM runs                  | `deferred-after-successor` (pending Phase 3.E operator runtime complete) | `simulation_scenarios_post_cutover_2026_06_01.md` Phase 6           |

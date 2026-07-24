@@ -1,7 +1,10 @@
 ---
 doc_type: audit-result
 title: A3 — Manifest divergence summary
-summary: A3 divergence join of the expected_coverage() oracle against 5 MTDS prod manifest indexes (1,211,278 cells) — 214,344 MISSING_EXPECTED (17.70%, silent gaps) + 765 DIVERGENT_EMPTY (Drift-bug class); top offenders are DeFi lending/dex venues (MORPHO/FLUID/CURVE), all sports bookmakers, and OKX/COINBASE cefi.
+summary:
+  A3 divergence join of the expected_coverage() oracle against 5 MTDS prod manifest indexes (1,211,278 cells) — 214,344
+  MISSING_EXPECTED (17.70%, silent gaps) + 765 DIVERGENT_EMPTY (Drift-bug class); top offenders are DeFi lending/dex
+  venues (MORPHO/FLUID/CURVE), all sports bookmakers, and OKX/COINBASE cefi.
 status: fail
 nature: record
 asset_group: [cross-cutting]
@@ -9,9 +12,17 @@ stage: [meta]
 repos: []
 scope: [engineer, admin]
 tags: [audit, manifest, data-correctness, honest-coverage, single-walk, defi, data-status]
-related: [expected_coverage_dump_2026_05_20_summary.md, manifest_divergence_all_services_2026_05_20_summary.md, phase7c_divergent_empty_triage_2026_05_21_summary.md]
+related:
+  [
+    /plans/audit/results/archive/expected_coverage_dump_2026_05_20_summary.md,
+    /plans/audit/results/archive/manifest_divergence_all_services_2026_05_20_summary.md,
+    /plans/audit/results/archive/phase7c_divergent_empty_triage_2026_05_21_summary.md,
+  ]
 created: 2026-05-20
-audited_scope: Full join of expected_coverage() oracle vs the 5 MTDS prod _index/availability_index.parquet manifests (cefi/defi/tradfi/sports/pred), 2020-01-01→2026-05-20; per-cell classification + top divergent (venue, data_type) per asset_group (single-walk, one index each)
+audited_scope:
+  Full join of expected_coverage() oracle vs the 5 MTDS prod _index/availability_index.parquet manifests
+  (cefi/defi/tradfi/sports/pred), 2020-01-01→2026-05-20; per-cell classification + top divergent (venue, data_type) per
+  asset_group (single-walk, one index each)
 date: 2026-05-20
 auditor: semver
 parent_epic: manifest_master

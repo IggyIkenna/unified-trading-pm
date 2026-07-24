@@ -19,10 +19,10 @@ scope: [engineer, admin]
 tags: []
 related:
   [
-    agent_recovery_controller_layer0_deterministic_2026_05_23.md,
+    /plans/archive/2026_05/agent_recovery_controller_layer0_deterministic_2026_05_23.md,
     ai_recovery_audit_signoff_agent_2026_05_23.md,
-    audit_acknowledgement_sla_and_state_2026_05_23.md,
-    incident_runbooks_and_evidence_store_2026_05_23.md,
+    /plans/archive/2026_05/audit_acknowledgement_sla_and_state_2026_05_23.md,
+    /plans/archive/2026_05/incident_runbooks_and_evidence_store_2026_05_23.md,
   ]
 created: "2026-05-23"
 parent_epic: observability_master
@@ -88,7 +88,7 @@ Affected files / consumers when shipping:
 - `alerting-service/alerting_service/gateway/` — NEW module owning the state machine + dedup-key + ack-queue.
 - `alerting-service/alerting_service/notifiers/router.py` — extend to consume IncidentEnvelope instead of raw alert.
 - `unified-trading-system-ui/components/widgets/alerts/` — ack-queue countdown widget.
-- `codex/04-architecture/incident-gateway-state-machine.md` — NEW SSOT.
+- `/codex/04-architecture/incident-gateway-state-machine.md` — NEW SSOT.
 
 Workspace-wide grep before any rename: `rg "DefiAlert|AlertDeliveryRecord" --include="*.py"` (consumers must continue to
 work; IncidentEnvelope is a SUPERSET that wraps the existing alert payload).
@@ -240,9 +240,9 @@ work; IncidentEnvelope is a SUPERSET that wraps the existing alert payload).
 
 ## Codex SSOT updates (post-plan-phase HARD RULE)
 
-- NEW: `codex/04-architecture/incident-gateway-state-machine.md` — 13-state diagram + transitions + dedup-key +
+- NEW: `/codex/04-architecture/incident-gateway-state-machine.md` — 13-state diagram + transitions + dedup-key +
   invariants.
-- UPDATE: `codex/03-observability/alerting.md` — point to new SSOT in the routing section.
+- UPDATE: `/codex/03-observability/alerting.md` — point to new SSOT in the routing section.
 
 ## Tier-1-4 implementation log (2026-05-23)
 
@@ -322,7 +322,7 @@ work; IncidentEnvelope is a SUPERSET that wraps the existing alert payload).
 
 - Operator ping doc → `plans/active/_agent_pings.md` 2026-05-23 ikenna-slot-1 → operator entry
 - 22 incident runbooks → `codex/15-runbooks/incidents/` (RB-INC/RECON/RISK/CONN/DEPLOY/INFRA/ALERT)
-- Game-day protocol → `codex/15-runbooks/incidents/game_day_protocol.md`
+- Game-day protocol → `/codex/15-runbooks/incidents/game_day_protocol.md`
 - Alerting Tier-5 → `alerting-service@e5c8084` (5 new gateway/notifier modules)
 - Strategy Tier-5 → `strategy-service@3b0f7397` (2 configs + close-all + helper)
 - Execution Tier-5 → `execution-service@a6fa7c501` (recovery_event_helper)

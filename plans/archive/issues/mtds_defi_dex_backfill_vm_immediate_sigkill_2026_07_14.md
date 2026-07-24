@@ -20,7 +20,11 @@ stage: [data]
 repos: [market-tick-data-service, deployment-service, unified-trading-library]
 scope: [engineer, admin]
 tags: [vm-launcher, backfill, dex-pools, dex-swaps, infra, sigkill, oom, manifest-freshness-cache, superseded]
-related: [../mtds_defi_dex_zero_capture_protocols_2026_07_14.md, mtds_backfill_vm_startup_oom_rc137_2026_07_14.md]
+related:
+  [
+    ../mtds_defi_dex_zero_capture_protocols_2026_07_14.md,
+    /plans/active/issues/mtds_backfill_vm_startup_oom_rc137_2026_07_14.md,
+  ]
 created: 2026-07-14
 parent_epic: infrastructure_master
 assigned_vm:

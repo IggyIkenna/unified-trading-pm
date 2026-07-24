@@ -91,7 +91,7 @@ root filesystem, not `/tmp`).
   89M, the smallest of the "big" ones, yet it was still the one that hit the wall).
 - I could not clean this up myself: the largest consumers (`tabs-3`, `tabs-9`, `tabs-5`, and the unscoped directory)
   belong to other slots' live or recently-active sessions — deleting another slot's files is an explicit
-  multi-agent-safety violation (`codex/05-infrastructure/per-tab-worktrees.md`), and I have no way to tell from outside
+  multi-agent-safety violation (`/codex/05-infrastructure/per-tab-worktrees.md`), and I have no way to tell from outside
   whether those transcripts are for a completed task (safe to prune) or an in-flight one (must not touch).
 
 ## Recommended decision

@@ -26,7 +26,7 @@ scope: [engineer]
 tags: [quality-gates, ci, false-positive, noqa, tooling-bug]
 related:
   [
-    mtds_empty_string_fallback_codex_gate_blocking_pushes_2026_07_08.md,
+    /plans/active/issues/mtds_empty_string_fallback_codex_gate_blocking_pushes_2026_07_08.md,
     scripts/quality_gates/check_no_empty_string_fallback.py,
   ]
 created: 2026-07-13

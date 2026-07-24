@@ -6,10 +6,24 @@ status: complete
 nature: record
 asset_group: [infrastructure]
 stage: [meta]
-repos: [deployment-api, deployment-service, features-service, instruments-service, market-data-processing-service, market-tick-data-service]
+repos:
+  [
+    deployment-api,
+    deployment-service,
+    features-service,
+    instruments-service,
+    market-data-processing-service,
+    market-tick-data-service,
+  ]
 scope: [engineer, admin]
 tags: []
-related: [manifest_evolution_SUPERSEDED_2026_05_21, manifest_cross_asset_rescan_design_2026_05_08, writegate_honest_coverage_endtoend_2026_05_06, expected_universe_v2_design_2026_05_08]
+related:
+  [
+    manifest_evolution_SUPERSEDED_2026_05_21,
+    manifest_cross_asset_rescan_design_2026_05_08,
+    writegate_honest_coverage_endtoend_2026_05_06,
+    expected_universe_v2_design_2026_05_08,
+  ]
 created: 2026-05-12
 priority: P0
 last_updated: 2026-05-12
@@ -20,11 +34,12 @@ locked_since: 2026-05-12
 estimate_class: brand-new
 estimate_baseline_ai_days: 6.6
 estimate_calibrated_ai_days: 6.6
-estimate_calibration_note: '+1.1 added 2026-05-12 for Phase 1.5 (sports fixture SSOT fix ~0.8) + Phase 2 extension (MDPS forward-fill contract ~0.3).
+estimate_calibration_note: "+1.1 added 2026-05-12 for Phase 1.5 (sports fixture SSOT fix ~0.8) + Phase 2 extension (MDPS
+  forward-fill contract ~0.3).
 
   brand-new class, multiplier 1.0×.
 
-  '
+  "
 effective_concurrent_slots: 4
 model_tier: sonnet-doable
 thinking: high
@@ -370,8 +385,8 @@ This contract means MDPS must READ upstream MTDS capture_status per shard, not j
       per upstream status). (mdps@3f70cf6 — 4 unit tests in tests/unit/test_expected_unattempted_on_dep_skip.py; all
       pass)
 - [x] [CODEX] P1. Add `## MDPS downstream consumption contract` section to
-      `codex/02-data/honest-absence-downstream-handling.md` documenting the 4-row table above. Reference this plan +
-      writegate Phase 2.A. (pm@5ab28423 — codex/02-data/honest-absence-downstream-handling.md § "MDPS downstream
+      `/codex/02-data/honest-absence-downstream-handling.md` documenting the 4-row table above. Reference this plan +
+      writegate Phase 2.A. (pm@5ab28423 — /codex/02-data/honest-absence-downstream-handling.md § "MDPS downstream
       consumption contract")
 - [x] [QG] P0. `cd market-data-processing-service && bash scripts/quality-gates.sh`. Push. (mdps@3f70cf6 — lint clean;
       19 pre-existing test failures in foreign files from UTL/UAC schema drift; my 4 Phase 2 tests pass; committed +
@@ -710,10 +725,10 @@ python instruments-service/scripts/reconcile_phantom_manifest_rows_all.py \
       non-zero denominator across all asset_groups. **DEFERRED TO PHASE 3 WINDOW** — denominator still 0 for
       expected_unattempted as of 2026-05-19 (manifests queried; 0 rows). Re-verify after Phase 3 MTDS runs. Issue doc:
       `issues/expected_unattempted_validation_pending_phase3_2026_05_19.md`.
-- [x] [CODEX] P1. Update `codex/02-data/availability-manifest-and-data-status.md` § "Expected-universe pre-flight chain"
-      to document the instruments→MTDS→MDPS→features propagation pattern + the two new EmptyConfirmedReason values.
-      (PM@82111516 — § "Expected-universe pre-flight chain" added with per-layer pre-flight table + MDPS downstream
-      consumption contract + 3 new EmptyConfirmedReason values + implementation refs)
+- [x] [CODEX] P1. Update `/codex/02-data/availability-manifest-and-data-status.md` § "Expected-universe pre-flight
+      chain" to document the instruments→MTDS→MDPS→features propagation pattern + the two new EmptyConfirmedReason
+      values. (PM@82111516 — § "Expected-universe pre-flight chain" added with per-layer pre-flight table + MDPS
+      downstream consumption contract + 3 new EmptyConfirmedReason values + implementation refs)
 - [x] [FLIP] P0. Flip this plan's parent epic gate: manifest_evolution_master G3 can now proceed (enumerator runs on top
       of the runtime propagation chain, not instead of it). **G3b (runtime propagation) CODE COMPLETE** — Phases 1+2
       shipped. Production validation deferred to Phase 3 window (issue doc:
@@ -892,9 +907,9 @@ codex SSOT).
 
 ## Codex SSOT updates (Phase 6)
 
-- **UPDATE** `codex/02-data/availability-manifest-and-data-status.md` § "Expected-universe pre-flight chain" — add the
+- **UPDATE** `/codex/02-data/availability-manifest-and-data-status.md` § "Expected-universe pre-flight chain" — add the
   full propagation chain description.
-- **UPDATE** `codex/02-data/honest-absence-downstream-handling.md` § "Reason taxonomy" — add
+- **UPDATE** `/codex/02-data/honest-absence-downstream-handling.md` § "Reason taxonomy" — add
   `EXPECTED_OUTSIDE_PROCESSING_SCOPE` + `EXPECTED_UPSTREAM_EMPTY` to the closed-set table.
-- **UPDATE** `codex/02-data/availability-manifest-and-data-status.md` § "Phantom audit" — note that phantom counts
+- **UPDATE** `/codex/02-data/availability-manifest-and-data-status.md` § "Phantom audit" — note that phantom counts
   include false positives until this plan's Phases 1–4 ship.

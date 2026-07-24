@@ -42,7 +42,7 @@ tags:
     duplicate-finding,
   ]
 related:
-  - mdps_honest_coverage_timeframe_extension_design_2026_07_21.md
+  - /plans/archive/issues/mdps_honest_coverage_timeframe_extension_design_2026_07_21.md
   - plans/active/data_pipeline_check_mdps_features_2026_07_20.md
   - ../../archive/issues/mdps_datatype_axis_switch_breaks_generic_classifier_2026_07_21.md
 created: "2026-07-21"

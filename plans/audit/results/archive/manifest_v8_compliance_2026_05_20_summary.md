@@ -1,17 +1,34 @@
 ---
 doc_type: audit-result
 title: A4 — Manifest v8 deep compliance summary
-summary: A4 deep manifest v8 compliance scan — 0% v8 across all 10 MTDS+IS master indexes (defi has 1.29M NULL rows); code side scanned 235 consumer files, 3 with hardcoded v<8 (rebuild_sports_manifest.py, UAC manifest_schema.py, UTL manifest_writer.py from_dict default=1) + 25 legacy-fallback files needing sunset dates.
+summary:
+  A4 deep manifest v8 compliance scan — 0% v8 across all 10 MTDS+IS master indexes (defi has 1.29M NULL rows); code side
+  scanned 235 consumer files, 3 with hardcoded v<8 (rebuild_sports_manifest.py, UAC manifest_schema.py, UTL
+  manifest_writer.py from_dict default=1) + 25 legacy-fallback files needing sunset dates.
 status: fail
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [deployment-api, deployment-service, instruments-service, market-data-processing-service, market-tick-data-service, unified-api-contracts]
+repos:
+  [
+    deployment-api,
+    deployment-service,
+    instruments-service,
+    market-data-processing-service,
+    market-tick-data-service,
+    unified-api-contracts,
+  ]
 scope: [engineer, admin]
 tags: [audit, manifest, data-correctness, migration, data-status, quality-gates]
-related: [manifest_v8_compliance_2026_05_20.md, manifest_v8_per_vm_shards_2026_05_20_summary.md]
+related:
+  [
+    /plans/audit/results/archive/manifest_v8_compliance_2026_05_20.md,
+    /plans/audit/results/archive/manifest_v8_per_vm_shards_2026_05_20_summary.md,
+  ]
 created: 2026-05-20
-audited_scope: 10 MTDS+IS master _index/availability_index.parquet schema_version distributions + 235 manifest-consumer code files (hardcoded v<8 constants, v8 indicators, legacy-fallback patterns)
+audited_scope:
+  10 MTDS+IS master _index/availability_index.parquet schema_version distributions + 235 manifest-consumer code files
+  (hardcoded v<8 constants, v8 indicators, legacy-fallback patterns)
 date: 2026-05-20
 auditor: semver
 parent_epic: manifest_master

@@ -1,7 +1,10 @@
 ---
 doc_type: audit-result
 title: A2 — expected_coverage() dump summary
-summary: A2 materialized expected_coverage() oracle dump over 2020-01-01→2026-05-20 (419,760 rows) — 68.62% SHOULD_HAVE_DATA / 28.01% NOT_YET_LIVE / 3.37% EXPECTED_EMPTY; defi dominates (291,500 cells); no per-symbol axis in v1 and sports off-season / DeFi protocol pauses still default to SHOULD_HAVE_DATA.
+summary:
+  A2 materialized expected_coverage() oracle dump over 2020-01-01→2026-05-20 (419,760 rows) — 68.62% SHOULD_HAVE_DATA /
+  28.01% NOT_YET_LIVE / 3.37% EXPECTED_EMPTY; defi dominates (291,500 cells); no per-symbol axis in v1 and sports
+  off-season / DeFi protocol pauses still default to SHOULD_HAVE_DATA.
 status: partial
 nature: record
 asset_group: [cross-cutting]
@@ -9,9 +12,15 @@ stage: [meta]
 repos: []
 scope: [engineer, admin]
 tags: [audit, honest-coverage, uac, data-quality, golden-window, defi]
-related: [expected_coverage_calendar_decisions_2026_05_20.md, manifest_divergence_2026_05_20_summary.md]
+related:
+  [
+    /plans/audit/results/archive/expected_coverage_calendar_decisions_2026_05_20.md,
+    /plans/audit/results/archive/manifest_divergence_2026_05_20_summary.md,
+  ]
 created: 2026-05-20
-audited_scope: Full materialization of the UAC expected_coverage() oracle for every in-scope (asset_group, source, data_type, date) cell over 2020-01-01→2026-05-20 — state + reason + per-asset-group breakdown
+audited_scope:
+  Full materialization of the UAC expected_coverage() oracle for every in-scope (asset_group, source, data_type, date)
+  cell over 2020-01-01→2026-05-20 — state + reason + per-asset-group breakdown
 date: 2026-05-20
 auditor: semver
 parent_epic: infrastructure_master

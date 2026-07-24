@@ -37,7 +37,7 @@ locked_since:
 supersedes:
 superseded_by:
 source: operator decision 2026-07-15 (Path B chosen over patching the archived repo)
-Codex SSOTs: [codex/05-infrastructure/vm-launcher-runbook.md, codex/08-workflows/ci-cd-flow.md]
+Codex SSOTs: [/codex/05-infrastructure/vm-launcher-runbook.md, /codex/08-workflows/ci-cd-flow.md]
 ---
 
 # Finish features-sports-service → features-service consolidation (deploy side)
@@ -884,7 +884,7 @@ repo. This plan tracks that work.
   `0c3fb77`==HEAD; `quickmerge --agent --files 'terraform/gcp/tofu.sh'`; landed on `origin/live-defi-rollout`,
   ancestor-verified). The Fix-B tfvars `:latest` half was left held/dirty and NOT staged (still blocked on the
   features-service red tree). Codex runbook (both gotchas + owner/cadence/verifier/last_executed frontmatter):
-  `codex/05-infrastructure/deployment-service-gcp-tofu-state.md`. **DEFERRED (small tracked follow-up):** hardening the
+  `/codex/05-infrastructure/deployment-service-gcp-tofu-state.md`. **DEFERRED (small tracked follow-up):** hardening the
   `main.tf` backend-block default itself (fail-loud, or correct to prod) — deferred because main.tf was contested by
   foreign WIP at fix time and the wrapper removes the trap for the normal path; recorded in the codex runbook's
   Footgun-1 follow-up note. Docs-only via the PM `docs(...)` carve-out.

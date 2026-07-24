@@ -9,8 +9,8 @@ stage: [meta]
 repos: [deployment-service, unified-trading-pm]
 scope: [engineer, admin]
 tags: []
-related: [master_to_live_defi_2026_05_23.md]
-created: '2026-05-21'
+related: [/plans/active/master_to_live_defi_2026_05_23.md]
+created: "2026-05-21"
 parent_epic: plan_hygiene_master
 priority: P1
 estimate_class: infra
@@ -26,7 +26,7 @@ Ships the scripts + runbook for `plan_hygiene_master`. Phase 1 (scripts) and Pha
 deliverable — Ikenna and Harsh can run `bash scripts/plan-hygiene/run_hygiene_sweep.sh` as part of their morning boot
 sequence on the planning VM.
 
-Codex SSOTs: `codex/11-project-management/active-plan-inventory-tracker.md` · `plans/epics/README.md`
+Codex SSOTs: `/codex/11-project-management/active-plan-inventory-tracker.md` · `plans/epics/README.md`
 
 ---
 

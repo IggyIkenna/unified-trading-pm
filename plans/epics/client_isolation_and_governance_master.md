@@ -76,13 +76,13 @@ Full archaeology of pre-May-23 5 deliverables:
 
 ## Codex SSOTs
 
-- [`codex/04-architecture/client-funds-isolation.md`](../../codex/04-architecture/client-funds-isolation.md) — HARD
-  RULE + 3-layer enforcement
-- [`codex/09-strategy/architecture-v2/axes/share-class.md`](../../codex/09-strategy/architecture-v2/axes/share-class.md)
-  — share-class axis SSOT
-- [`codex/06-coding-standards/quality-gates.md`](../../codex/06-coding-standards/quality-gates.md) — hardcoded-value QG
+- [`/codex/04-architecture/client-funds-isolation.md`](/codex/04-architecture/client-funds-isolation.md) — HARD RULE +
+  3-layer enforcement
+- [`/codex/09-strategy/architecture-v2/axes/share-class.md`](/codex/09-strategy/architecture-v2/axes/share-class.md) —
+  share-class axis SSOT
+- [`/codex/06-coding-standards/quality-gates.md`](/codex/06-coding-standards/quality-gates.md) — hardcoded-value QG
   steps
-- [`codex/11-project-management/epic-execution-with-sub-agents.md`](../../codex/11-project-management/epic-execution-with-sub-agents.md)
+- [`/codex/11-project-management/epic-execution-with-sub-agents.md`](/codex/11-project-management/epic-execution-with-sub-agents.md)
   — epic-flow SSOT (pointer to [`README.md`](README.md))
 
 ## Composition with other epics

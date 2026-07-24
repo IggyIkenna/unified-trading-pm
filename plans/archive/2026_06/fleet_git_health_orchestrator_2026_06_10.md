@@ -3,15 +3,16 @@ title: "Fleet git-health surface — hosts×slots×repos dirty/drift matrix + cr
 parent_epic: orchestrator_master
 assigned_vm: harsh_pc # was planning/central VM; reassigned to harsh_pc 2026-06-24 (Harsh owns AO plans)
 priority: P1
-status: supersededestimate_class: infra
+status: superseded
+estimate_class: infra
 estimate_baseline_ai_days: 3.0
 estimate_calibrated_ai_days: 2.4
 created: 2026-06-10
 source:
-  - 'operator direction 2026-06-10 (parent: plans/active/monitoring_control_plane_master_2026_06_10.md) — "crumbs from
+  - 'operator direction 2026-06-10 (parent: /plans/active/monitoring_control_plane_master_2026_06_10.md) — "crumbs from
     each machine — my hashes, the AWS VMs — dirty local worktrees vs the LDR remote, on the agent-orchestrator website"'
 related_plans:
-  - plans/active/monitoring_control_plane_master_2026_06_10.md
+  - /plans/active/monitoring_control_plane_master_2026_06_10.md
 locked_by: live-defi-rollout
 locked_since: 2026-06-10
 ---
@@ -147,9 +148,9 @@ vitest/tsc (dashboard).
 
 ## Phase 4 — ship + docs
 
-- [x] ✅ [DOCS] P2. DONE 2026-06-10 — `codex/04-architecture/agent-orchestrator-overview.md` § "Fleet git-health page
+- [x] ✅ [DOCS] P2. DONE 2026-06-10 — `/codex/04-architecture/agent-orchestrator-overview.md` § "Fleet git-health page
       (shipped 2026-06-10)" (endpoint + scope fan-out + reporter_stale/ff_cron_stale/drift derivations + vm_errors +
-      `/fleet-git` page + deployment-ui single-pane mirror) + `codex/03-observability/monitoring-control-plane.md` §
+      `/fleet-git` page + deployment-ui single-pane mirror) + `/codex/03-observability/monitoring-control-plane.md` §
       "Fleet git-health (agent-orchestrator) — SHIPPED" + § "Click-through to the existing UIs" (operator click-through
       rule: GitHub + AO deep-links).
 - [x] ✅ [TEST] P3. **NICE-TO-HAVE — add a vitest harness to the orchestrator dashboard** (provenance: slot-3 2026-06-10

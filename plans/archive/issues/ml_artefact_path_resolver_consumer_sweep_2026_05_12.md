@@ -12,7 +12,12 @@ tags: []
 related: []
 created: 2026-05-12
 author: ikenna-self-answer-ml-pb-batch (slot 8 sub-agent, batch 2)
-source: [plans/archive/issues/codex_audit_ml_2026_05_12.md ML-1, codex/04-architecture/bucket-name-ssot.md (b+), CLAUDE.md § "Bucket-name SSOT (b+)" + QG STEP 5.69 ratchet]
+source:
+  [
+    plans/archive/issues/codex_audit_ml_2026_05_12.md ML-1,
+    /codex/04-architecture/bucket-name-ssot.md (b+),
+    CLAUDE.md § "Bucket-name SSOT (b+)" + QG STEP 5.69 ratchet,
+  ]
 locked_by: live-defi-rollout
 locked_since: 2026-05-12
 severity: P1

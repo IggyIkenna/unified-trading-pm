@@ -6,7 +6,15 @@ status: resolved
 nature: record
 asset_group: [infrastructure]
 stage: [meta]
-repos: [agent-orchestrator, alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-service]
+repos:
+  [
+    agent-orchestrator,
+    alerting-service,
+    batch-live-reconciliation-service,
+    client-reporting-api,
+    deployment-api,
+    deployment-service,
+  ]
 scope: [engineer, admin]
 tags: []
 related: []
@@ -18,7 +26,8 @@ estimate_class: refactor
 estimate_baseline_ai_days: 6
 estimate_calibrated_ai_days: 2.4
 locked_by: live-defi-rollout
-source: [unified-trading-pm/codex/06-coding-standards/documentation-standards.md, unified-trading-pm/codex/00-SSOT-INDEX.md]
+source:
+  [unified-trading-pm/codex/06-coding-standards/documentation-standards.md, unified-trading-pm/codex/00-SSOT-INDEX.md]
 ---
 
 # Repo docs → codex SSOT consolidation
@@ -38,7 +47,7 @@ source: [unified-trading-pm/codex/06-coding-standards/documentation-standards.md
 > drift AND un-tiered-bucket drift). Root cause: the **same canonical content is duplicated** in `pm/codex/` (SSOT) and
 > a repo's `docs/` — the two copies drift. **Fix**: codex is the single SSOT; repo docs carry only repo-specific
 > essentials + a link to the canonical codex doc. Contract codified in
-> `codex/06-coding-standards/documentation-standards.md` **§ S5.11** (2026-06-01).
+> `/codex/06-coding-standards/documentation-standards.md` **§ S5.11** (2026-06-01).
 
 ## Contract (S5.11 — the durable fix)
 
@@ -126,8 +135,8 @@ issue.
 ## Audit registry (read-only pass 1 — 8 repos, 2026-06-01)
 
 > **Caveat**: audit agents proposed codex SSOT targets by grep; **verify each target exists before redirecting** (some
-> proposed paths e.g. `codex/05-infrastructure/gcs-lifecycle-policies.md`, `codex/04-architecture/concurrency.md`,
-> `codex/02-data/bucket-naming-and-config.md` may need creating or remapping). Never redirect to a non-existent doc.
+> proposed paths e.g. `/codex/05-infrastructure/gcs-lifecycle-policies.md`, `/codex/04-architecture/concurrency.md`,
+> `/codex/02-data/bucket-naming-and-config.md` may need creating or remapping). Never redirect to a non-existent doc.
 
 ### deployment-service (~52 docs) — heaviest. DELETE-heavy (Feb-2026 planning dumps)
 

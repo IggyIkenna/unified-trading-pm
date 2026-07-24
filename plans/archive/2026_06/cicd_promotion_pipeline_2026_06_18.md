@@ -20,7 +20,15 @@ estimate_class: infra
 estimate_baseline_ai_days: 8
 estimate_calibrated_ai_days: 6.4
 parent_consolidation: cicd_docs_and_consolidation_2026_06_18
-source: [ldr_trunk_promotion_decoupling_2026_06_10 (consolidated), ci_status_firestore_side_store_2026_06_10 (consolidated), ldr_tarball_auto_refresh_2026_06_17 (consolidated), cloud_build_router_aws_parity_2026_06_10 (consolidated), promotion_queue_conflict_wall_pileup_2026_06_17 (consolidated), cicd_contract_hardening_2026_06_01 (promotion-flow subset)]
+source:
+  [
+    ldr_trunk_promotion_decoupling_2026_06_10 (consolidated),
+    ci_status_firestore_side_store_2026_06_10 (consolidated),
+    ldr_tarball_auto_refresh_2026_06_17 (consolidated),
+    cloud_build_router_aws_parity_2026_06_10 (consolidated),
+    promotion_queue_conflict_wall_pileup_2026_06_17 (consolidated),
+    cicd_contract_hardening_2026_06_01 (promotion-flow subset),
+  ]
 ---
 
 > **⚠️ SUPERSEDED 2026-06-24 → [cicd_consolidated_remaining_2026_06_24.md](cicd_consolidated_remaining_2026_06_24.md)**
@@ -32,7 +40,7 @@ source: [ldr_trunk_promotion_decoupling_2026_06_10 (consolidated), ci_status_fir
 > work them in the consolidated plan.
 
 > **Consolidated 2026-06-18** from the plans above into one lean tracker (see `cicd_docs_and_consolidation_2026_06_18`).
-> **Pipeline shape SSOT:** `codex/08-workflows/ci-cd-flow.md` (the as-built mermaid + branch model) + the drill-down
+> **Pipeline shape SSOT:** `/codex/08-workflows/ci-cd-flow.md` (the as-built mermaid + branch model) + the drill-down
 > `docs/repo-management/CICD-WORKFLOW-CATALOG.md`. Each item carries its provenance. Zero open items were dropped — REAL
 > → Open work; likely-shipped → Verify-and-flip; premise-superseded → Closed; AWS-parity → Deferred annex.
 

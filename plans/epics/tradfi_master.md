@@ -79,17 +79,17 @@ locked_since: 2026-05-07
 The TradFi work is dispatched through child active plans (the backlog regen scans `plans/active/`, not this epic). Every
 former inline todo block below maps to one of these homes — nothing dropped, nothing flipped ✅ without evidence:
 
-| Former inline block                                                                                                                                                                                                            | Disposition                                                                                     | Home (the live, dispatchable plan)                                                                                                                                                                                                                                                   |
-| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| CME event-contract Phase 0 catalog backfill (9 EC\* roots, VM launcher + `VM_PREFIX_TO_BUCKET` register + catalog verify; L536-545)                                                                                            | **EXTRACTED (net-new) → archived 2026-06-30, consolidation**                                    | [`tradfi_cme_event_contract_backfill_2026_06_20`](../archive/2026_06/tradfi_cme_event_contract_backfill_2026_06_20.md)                                                                                                                                                               |
-| TradFi 5,212 legacy-blank `--apply-flips` VM run (scan complete, 0 uncertain; L386, MIGRATED FROM gate_3_phantom_audit_runbook)                                                                                                | **EXTRACTED (net-new residual) → archived 2026-06-30, consolidation**                           | [`tradfi_cme_event_contract_backfill_2026_06_20`](../archive/2026_06/tradfi_cme_event_contract_backfill_2026_06_20.md) (least-duplicative home for the bounded apply run)                                                                                                            |
-| ES/CBOE-VIX feature-calculator runs (features-delta-one + features-volatility for tradfi/ES; L245-248), ml-training ES smoke (L303), full S&P backtest 2020→2026 (L305-307); S&P swing ML + price-arb backtest readiness       | **EXTRACTED (net-new)**                                                                         | [`tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20`](../active/tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md)                                                                                                                                                        |
-| TradFi data-source adapter work (Massive/Databento, source column) — **SUPERSEDED 2026-07-21**: Massive removed 2026-07-19 + purged 2026-07-21; no co-mingled source column, only the general consolidator dedup-key hardening | **OWNED ELSEWHERE — do not duplicate**                                                          | [`codex/02-data/tradfi-databento-sourcing-ssot.md`](../../codex/02-data/tradfi-databento-sourcing-ssot.md) (databento-only sourcing SSOT; residual dedup-key hardening tracked in [`tradfi_consolidated_closeout_2026_07_18`](../active/tradfi_consolidated_closeout_2026_07_18.md)) |
-| Instrument / MTDS / MDPS data-clean, per-venue completion %, manifest v9 + pipeline_mode canonicalisation, phantom-audit per-cluster residual triage (L344-367, L584-588)                                                      | **OWNED ELSEWHERE — do not duplicate**                                                          | [`tradfi_manifest_canonicalisation_2026_06_01`](../archive/2026_07/tradfi_manifest_canonicalisation_2026_06_01.md) (ARCHIVED/superseded — canonical migration COMPLETE; superseded_by `data_completion_to_100_all_ag_2026_06_21`, the live owner)                                    |
-| Per-adapter `available_at` stamping (L556, tagged 🟡 TRACKED-ELSEWHERE)                                                                                                                                                        | **OWNED ELSEWHERE — do not duplicate**                                                          | [`available_at_lookahead_bias_completion_2026_05_08`](../archive/2026_05/available_at_lookahead_bias_completion_2026_05_08.md) (single-owner stamping plan; archived — runtime stamping shipped)                                                                                     |
-| `InstrumentRecord.expiry` nullable→required type-flip (L452, DEFERRED P3, MIGRATED FROM hard_schema_enforcement)                                                                                                               | **OWNED ELSEWHERE — do not duplicate**                                                          | hard-schema-enforcement workstream; runtime enforcement already shipped (uac@80aef10) — only the residual Pydantic type-flip remains, blocked on the live GCS migration. Point only; do NOT re-dispatch.                                                                             |
-| "End-state at May 23" success criteria for deliverable A (S&P prediction, L581-595) + deliverable B (price arbitrage, L632-640) + price-arb open questions (L652-654); backtest-harness item 17/18 fidelity + cutover gating   | **ROUTED TO MASTER**                                                                            | [`master_to_live_defi_2026_05_23`](../active/master_to_live_defi_2026_05_23.md) Group F. The data-clean + ES-feature subset is referenced from `tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20`; the cutover gating + backtest-harness fidelity live in master.               |
-| Already-shipped market-hours / session-type / futures-expiry-schema / S&P ML readiness items (mostly `- [x]` with evidence)                                                                                                    | **DONE (in-place)** — flipped with repo@sha evidence in the inline blocks below; no re-dispatch | —                                                                                                                                                                                                                                                                                    |
+| Former inline block                                                                                                                                                                                                            | Disposition                                                                                     | Home (the live, dispatchable plan)                                                                                                                                                                                                                                               |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| CME event-contract Phase 0 catalog backfill (9 EC\* roots, VM launcher + `VM_PREFIX_TO_BUCKET` register + catalog verify; L536-545)                                                                                            | **EXTRACTED (net-new) → archived 2026-06-30, consolidation**                                    | [`tradfi_cme_event_contract_backfill_2026_06_20`](../archive/2026_06/tradfi_cme_event_contract_backfill_2026_06_20.md)                                                                                                                                                           |
+| TradFi 5,212 legacy-blank `--apply-flips` VM run (scan complete, 0 uncertain; L386, MIGRATED FROM gate_3_phantom_audit_runbook)                                                                                                | **EXTRACTED (net-new residual) → archived 2026-06-30, consolidation**                           | [`tradfi_cme_event_contract_backfill_2026_06_20`](../archive/2026_06/tradfi_cme_event_contract_backfill_2026_06_20.md) (least-duplicative home for the bounded apply run)                                                                                                        |
+| ES/CBOE-VIX feature-calculator runs (features-delta-one + features-volatility for tradfi/ES; L245-248), ml-training ES smoke (L303), full S&P backtest 2020→2026 (L305-307); S&P swing ML + price-arb backtest readiness       | **EXTRACTED (net-new)**                                                                         | [`tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20`](../active/tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md)                                                                                                                                                    |
+| TradFi data-source adapter work (Massive/Databento, source column) — **SUPERSEDED 2026-07-21**: Massive removed 2026-07-19 + purged 2026-07-21; no co-mingled source column, only the general consolidator dedup-key hardening | **OWNED ELSEWHERE — do not duplicate**                                                          | [`/codex/02-data/tradfi-databento-sourcing-ssot.md`](/codex/02-data/tradfi-databento-sourcing-ssot.md) (databento-only sourcing SSOT; residual dedup-key hardening tracked in [`tradfi_consolidated_closeout_2026_07_18`](../active/tradfi_consolidated_closeout_2026_07_18.md)) |
+| Instrument / MTDS / MDPS data-clean, per-venue completion %, manifest v9 + pipeline_mode canonicalisation, phantom-audit per-cluster residual triage (L344-367, L584-588)                                                      | **OWNED ELSEWHERE — do not duplicate**                                                          | [`tradfi_manifest_canonicalisation_2026_06_01`](../archive/2026_07/tradfi_manifest_canonicalisation_2026_06_01.md) (ARCHIVED/superseded — canonical migration COMPLETE; superseded_by `data_completion_to_100_all_ag_2026_06_21`, the live owner)                                |
+| Per-adapter `available_at` stamping (L556, tagged 🟡 TRACKED-ELSEWHERE)                                                                                                                                                        | **OWNED ELSEWHERE — do not duplicate**                                                          | [`available_at_lookahead_bias_completion_2026_05_08`](../archive/2026_05/available_at_lookahead_bias_completion_2026_05_08.md) (single-owner stamping plan; archived — runtime stamping shipped)                                                                                 |
+| `InstrumentRecord.expiry` nullable→required type-flip (L452, DEFERRED P3, MIGRATED FROM hard_schema_enforcement)                                                                                                               | **OWNED ELSEWHERE — do not duplicate**                                                          | hard-schema-enforcement workstream; runtime enforcement already shipped (uac@80aef10) — only the residual Pydantic type-flip remains, blocked on the live GCS migration. Point only; do NOT re-dispatch.                                                                         |
+| "End-state at May 23" success criteria for deliverable A (S&P prediction, L581-595) + deliverable B (price arbitrage, L632-640) + price-arb open questions (L652-654); backtest-harness item 17/18 fidelity + cutover gating   | **ROUTED TO MASTER**                                                                            | [`master_to_live_defi_2026_05_23`](../active/master_to_live_defi_2026_05_23.md) Group F. The data-clean + ES-feature subset is referenced from `tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20`; the cutover gating + backtest-harness fidelity live in master.           |
+| Already-shipped market-hours / session-type / futures-expiry-schema / S&P ML readiness items (mostly `- [x]` with evidence)                                                                                                    | **DONE (in-place)** — flipped with repo@sha evidence in the inline blocks below; no re-dispatch | —                                                                                                                                                                                                                                                                                |
 
 The blocks below are the **frozen May-07/08 source snapshot**, retained for archaeology only. They are SUPERSEDED by the
 routing table above — do NOT pick work from them directly.
@@ -99,15 +99,15 @@ routing table above — do NOT pick work from them directly.
 This plan implements / extends the following codex documents (read these BEFORE making code changes; drift between code
 and these docs is a review-blocking failure per `doc → plan → code`):
 
-- [`codex/02-data/availability-manifest-and-data-status.md`](../../codex/02-data/availability-manifest-and-data-status.md)
-  — manifest v5 semantics + `record_captured` / `record_empty` / `record_failed` discipline (TradFi calendar pre-skip +
+- [`/codex/02-data/availability-manifest-and-data-status.md`](/codex/02-data/availability-manifest-and-data-status.md) —
+  manifest v5 semantics + `record_captured` / `record_empty` / `record_failed` discipline (TradFi calendar pre-skip +
   ES.OPT cluster validation)
-- [`codex/02-data/honest-absence-downstream-handling.md`](../../codex/02-data/honest-absence-downstream-handling.md) —
+- [`/codex/02-data/honest-absence-downstream-handling.md`](/codex/02-data/honest-absence-downstream-handling.md) —
   TradFi non-trading-day reasons (`EXPECTED_HOLIDAY` / `EXPECTED_WEEKEND` / `EXPECTED_PARTIAL_HALF_DAY`) and downstream
   NaN tolerances
-- [`codex/02-data/per-asset-group-bucket-layouts.md`](../../codex/02-data/per-asset-group-bucket-layouts.md) — TradFi
-  GCS bucket layout + hive partition keys (per-instrument ETFs vs bundled futures/options chains)
-- [`codex/09-strategy/architecture-v2/category-instrument-coverage.md`](../../codex/09-strategy/architecture-v2/category-instrument-coverage.md)
+- [`/codex/02-data/per-asset-group-bucket-layouts.md`](/codex/02-data/per-asset-group-bucket-layouts.md) — TradFi GCS
+  bucket layout + hive partition keys (per-instrument ETFs vs bundled futures/options chains)
+- [`/codex/09-strategy/architecture-v2/category-instrument-coverage.md`](/codex/09-strategy/architecture-v2/category-instrument-coverage.md)
   — ES.OPT 11-cluster taxonomy (ES + E1A–E5A + EW1–EW4 + EOM) and TradFi instrument coverage matrix
 
 If any of the docs above is missing, this plan creates a stub for it (see [`codex/`](../../codex/) tree).
@@ -186,8 +186,8 @@ Covers:
   removed) — there is no more Barchart-vs-Yahoo VIX-15m layering rule to enforce; VIX exposure is **VX-futures-only via
   Databento `XCBF.PITCH`** (matches CLAUDE.md: "VIX=VX-futures via XCBF.PITCH, Barchart RETIRED"). Barchart has **zero
   remaining sanctioned use** in TradFi sourcing. SSOT:
-  [`codex/02-data/tradfi-databento-sourcing-ssot.md`](../../codex/02-data/tradfi-databento-sourcing-ssot.md) — **NOTE**:
-  as of 2026-07-14 that codex doc's own §"VIX — futures vs the cash index" (lines 271-275) still describes the retired
+  [`/codex/02-data/tradfi-databento-sourcing-ssot.md`](/codex/02-data/tradfi-databento-sourcing-ssot.md) — **NOTE**: as
+  of 2026-07-14 that codex doc's own §"VIX — futures vs the cash index" (lines 271-275) still describes the retired
   Barchart+Yahoo VIX-15m cash-index layering as current; it was not updated for the 2026-06-23 deletion and is flagged
   here as CODEX-GATED (not corrected in this pass — codex edits are out of scope for a plans-reconciliation fix;
   recommend an operator-approved follow-up to update that codex SSOT).
@@ -198,13 +198,13 @@ Covers:
 - **MTDS TradFi slice to ≥99%** (ETFs per-instrument; futures/options bundled by root).
 
 **MVP backtest scope** (per
-[`codex/09-strategy/mvp-universe-per-asset-group.md`](../../codex/09-strategy/mvp-universe-per-asset-group.md), **stale
-on 2 tokens as of 2026-07-21 — CODEX-GATED follow-up needed, same spirit as the line-183 codex-gated note above**): S&P
-500 (CME ES + ES.OPT; **no SPY** — operator clarification 2026-05-13, "ES futures has more trading hours") + BTC/ETH
-ETFs (NASDAQ IBIT, NASDAQ ETHA) + crypto futures (CME MBT, CME MET) + VIX FUTURE (VX via Databento `XCBF.PITCH`; cash
-index deleted 2026-06-23 — **no CBOE BTC options on IBIT**: `option_underliers={ES}` ONLY, operator ruling "no CME
-option for BTC and ETH", `codex/02-data/mvp-scope-canonical.md:88`) + GLD/USO/UNG cross-instrument carry. **2026-07-21
-+409 additions** (`uac@afa2dd64`→`22e6a534`): treasury INDEX curve (CBOE US3M/US2Y/US5Y/US10Y/US30Y) + KRW FX
+[`/codex/09-strategy/mvp-universe-per-asset-group.md`](/codex/09-strategy/mvp-universe-per-asset-group.md), **stale on 2
+tokens as of 2026-07-21 — CODEX-GATED follow-up needed, same spirit as the line-183 codex-gated note above**): S&P 500
+(CME ES + ES.OPT; **no SPY** — operator clarification 2026-05-13, "ES futures has more trading hours") + BTC/ETH ETFs
+(NASDAQ IBIT, NASDAQ ETHA) + crypto futures (CME MBT, CME MET) + VIX FUTURE (VX via Databento `XCBF.PITCH`; cash index
+deleted 2026-06-23 — **no CBOE BTC options on IBIT**: `option_underliers={ES}` ONLY, operator ruling "no CME option for
+BTC and ETH", `/codex/02-data/mvp-scope-canonical.md:88`) + GLD/USO/UNG cross-instrument carry. **2026-07-21 +409
+additions** (`uac@afa2dd64`→`22e6a534`): treasury INDEX curve (CBOE US3M/US2Y/US5Y/US10Y/US30Y) + KRW FX
 (`FX:SPOT_PAIR:KRW-USD`) + BTC/ETH FUTURES (already listed above as CME MBT/MET, now joined by BTC/ETH roots). Served
 catalogue rebuild for the +409 expansion is pending post-backfill (catalogue still reflects the old mvp count until
 rebuild+promote). Tier A archetypes touching TradFi: ml-continuous (ES) + arbitrage-event-markets (CME EVENT_CONTRACT vs
@@ -603,16 +603,16 @@ volume.
       two-path `record_expected_empty` emission (early-return path for all-non-trading-day batches + finalization-block
       path for mixed batches); used existing UAC `EXPECTED_WEEKEND`/`EXPECTED_HOLIDAY` reasons (more precise than
       generic `EXPECTED_NON_TRADING_SESSION`); 3 unit tests in `tests/unit/test_orchestrator_non_trading_session.py`.
-- [x] [AGENT] P0. **Codex update**: extend `codex/02-data/honest-absence-downstream-handling.md` with a "Session-typed
+- [x] [AGENT] P0. **Codex update**: extend `/codex/02-data/honest-absence-downstream-handling.md` with a "Session-typed
       empty reasons" section listing all 6 EXPECTED_NON_TRADING_SESSION sub-reasons (pre-market closed, post-market
       closed, weekend, holiday, half-day-early-close, partial-halt). NEW
-      `codex/06-coding-standards/session-aware-feature-calculator-pattern.md` (small doc) describes the standard pattern
-      for features-\* calculators that need overnight or pre-market data. **SHIPPED 2026-05-15**: `PM@db9b7af8` — added
-      § "Session-typed availability" to honest-absence-downstream-handling.md (EXPECTED_WEEKEND / EXPECTED_HOLIDAY /
-      EXPECTED_OUTSIDE_TRADING_HOURS reasons, orchestrator two-path emission pattern, downstream consumer action table,
-      n_valid sibling column rule); extended session-aware-feature-calculator-pattern.md with § "Session-typed manifest
-      reasons" (three-reason table, rolling-window session-adjusted-denominator code pattern, `is_session_closed` helper
-      using `_SESSION_CLOSED_REASONS` frozenset).
+      `/codex/06-coding-standards/session-aware-feature-calculator-pattern.md` (small doc) describes the standard
+      pattern for features-\* calculators that need overnight or pre-market data. **SHIPPED 2026-05-15**: `PM@db9b7af8`
+      — added § "Session-typed availability" to honest-absence-downstream-handling.md (EXPECTED_WEEKEND /
+      EXPECTED_HOLIDAY / EXPECTED_OUTSIDE_TRADING_HOURS reasons, orchestrator two-path emission pattern, downstream
+      consumer action table, n_valid sibling column rule); extended session-aware-feature-calculator-pattern.md with §
+      "Session-typed manifest reasons" (three-reason table, rolling-window session-adjusted-denominator code pattern,
+      `is_session_closed` helper using `_SESSION_CLOSED_REASONS` frozenset).
 
 ### CME event-contracts Phase 0 — catalog backfill (migrated from `cme_event_contracts_cross_venue_arb_shard_design_2026_05_08`) — EXTRACTED 2026-06-20
 
@@ -847,7 +847,7 @@ DeFi-first cutover + operator Databento PAYG spend sign-off). · **estimate**: 1
 - VIX 15m layering: CLAUDE.md "VIX 15m source layering" workspace-wide rule.
 - Venue trading calendar: `unified_api_contracts.canonical.crosscutting.venue_trading_calendar`.
 - Honest-coverage % surface: `GET /api/data-status/honest-coverage` + `HonestCoverageCard` (deployment-ui). SSOT:
-  [`codex/03-deployment/data-status-ui-surface.md`](../../codex/03-deployment/data-status-ui-surface.md). Phase 7F per
+  [`/codex/03-deployment/data-status-ui-surface.md`](/codex/03-deployment/data-status-ui-surface.md). Phase 7F per
   `cross_asset_group_catalogue_audit_2026_05_10.md`.
 - Canonical asset_group registry: `unified_api_contracts.canonical.crosscutting.asset_group_registry` (Phase 5C/5D).
 

@@ -161,7 +161,7 @@ grep -n "f\".*-{self._chain}\"\|f\".*SOLANA" \
 
 ## Phase 4 — Codex update
 
-- [x] [SCRIPT] P1. Update `codex/04-architecture/solana-defi-coverage.md` § "Venue naming convention": add note that
+- [x] [SCRIPT] P1. Update `/codex/04-architecture/solana-defi-coverage.md` § "Venue naming convention": add note that
       canonical naming is `{PROTOCOL}-SOLANA` per UAC `_defi.py:687` + adapter code; bare-name rows are legacy migration
       artifacts (this plan resolves them). (unified-trading-pm@02efcea5)
 
@@ -184,7 +184,7 @@ No downstream plan needed — this plan is self-contained.
 | Deferred item              | Successor / action                                                                                                                                                                                                                                                                                        |
 | -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Phase 3 VM migration apply | **BLOCKED-OPERATOR-DECISION**: Verify whether parquet files exist at `raw_tick_data/.../venue=MARINADE/...` in `market-data-tick-defi-prd-central-element-323112` before apply. Dry-run found `parquets_migrated=0` for all 169 Cat A rows — likely phantom captures, but confirm before executing write. |
-| Phase 4 Codex update       | Update `codex/04-architecture/solana-defi-coverage.md` once Phase 3 verified.                                                                                                                                                                                                                             |
+| Phase 4 Codex update       | Update `/codex/04-architecture/solana-defi-coverage.md` once Phase 3 verified.                                                                                                                                                                                                                            |
 
 ---
 

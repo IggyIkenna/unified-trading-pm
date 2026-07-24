@@ -1,6 +1,8 @@
 ---
 doc_type: issue
-title: Strict-quickmerge provenance gate PERPETUALLY re-flags a trailer-less LDR commit after a squash-promote — every LDR→staging drain re-blocks on the same commit (14b11e2) until manually admin-merged
+title:
+  Strict-quickmerge provenance gate PERPETUALLY re-flags a trailer-less LDR commit after a squash-promote — every
+  LDR→staging drain re-blocks on the same commit (14b11e2) until manually admin-merged
 summary:
 status: resolved
 nature: record
@@ -11,7 +13,12 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: 2026-06-17
-source: ['#ci-failures 2026-06-16/17: ''Provenance gate BLOCKED'' on unified-trading-library #367/#368/#371/#372 — all the SAME commit 14b11e2; and features-service #567 (06a83fb6)', scripts/cicd/check_strict_quickmerge.py]
+source:
+  [
+    "#ci-failures 2026-06-16/17: 'Provenance gate BLOCKED' on unified-trading-library #367/#368/#371/#372 — all the SAME
+    commit 14b11e2; and features-service #567 (06a83fb6)",
+    scripts/cicd/check_strict_quickmerge.py,
+  ]
 priority: P1
 resolved: 2026-06-18
 ---
@@ -79,7 +86,7 @@ gate just can't tell, because squash-merges destroy per-commit promotion trackin
     `mode=marker marker=b859a153 reachable=True` → `✅ provenance: promote-range is quickmerge-clean` → recreated PR
     #374 with auto-merge ARMED + 0 provenance-block comments (was the perpetually-blocked repo across #367–#373). Unit
     tests: `tests/unit/test_promote_provenance_range.py` + `tests/unit/test_check_strict_quickmerge.py`. Shipped:
-    unified-trading-pm@b54da7855 (LDR) + PR #389 → main. SSOT: `codex/08-workflows/ci-cd-flow.md` § D1 (already states
+    unified-trading-pm@b54da7855 (LDR) + PR #389 → main. SSOT: `/codex/08-workflows/ci-cd-flow.md` § D1 (already states
     the contract).
 - [x] ✅ [CICD] P3. ~~INTERIM (no code): the recurring drains are unblocked by `gh pr merge <n> --admin --squash`~~ —
       **MOOT, superseded by P1 (2026-06-17)**: the squash-blind perpetual block is fixed at the source, so no more
@@ -87,5 +94,5 @@ gate just can't tell, because squash-merges destroy per-commit promotion trackin
 
 ## Composes with
 
-`codex/08-workflows/ci-cd-flow.md` § strict-quickmerge + § "LDR is the SSOT". The strict-quickmerge HARD RULE itself is
+`/codex/08-workflows/ci-cd-flow.md` § strict-quickmerge + § "LDR is the SSOT". The strict-quickmerge HARD RULE itself is
 correct (catch real bypasses); this is purely the RANGE computation being squash-blind.

@@ -19,9 +19,9 @@ scope: [engineer]
 tags: [docker, dependencies, tradfi, mvp, production, big-finding]
 related:
   [
-    mtds_image_uac_dep_skew_breaks_all_cloud_run_jobs_2026_07_20.md,
-    tradfi_schema_version_string_regression_2026_07_20.md,
-    tradfi_consolidated_closeout_2026_07_18.md,
+    /plans/archive/issues/mtds_image_uac_dep_skew_breaks_all_cloud_run_jobs_2026_07_20.md,
+    /plans/archive/issues/tradfi_schema_version_string_regression_2026_07_20.md,
+    /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-07-20
 parent_epic: tradfi_master

@@ -10,7 +10,7 @@ repos: [instruments-service, market-tick-data-service, unified-api-contracts]
 scope: [engineer, admin]
 tags: []
 related: []
-created: '2026-03-02'
+created: "2026-03-02"
 ---
 
 # Sports-Betting-Services-Previous — Full Migration Plan
@@ -253,4 +253,4 @@ After all code is migrated, a data migration script will:
 - `unified-api-contracts/unified_api_contracts/sports/` — target for all schemas
 - `features-sports-service/` — target for feature logic, clients, CLI, tracking
 - `instruments-service/instruments_service/sports/` — target for league registry, team aliases
-- `unified-trading-codex/04-architecture/sports-integration-plan.md` — architectural decisions
+- `unified-trading-/codex/04-architecture/sports-integration-plan.md` — architectural decisions

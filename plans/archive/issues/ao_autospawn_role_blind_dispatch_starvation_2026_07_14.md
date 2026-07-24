@@ -23,7 +23,7 @@ repos: [agent-orchestrator]
 scope: [engineer]
 tags: [agent-orchestrator, autospawn, dispatch, role-gate, dispatch-correctness]
 related:
-  - codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md
+  - /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md
 priority: P1
 resolved_by: agent-orchestrator@8a423bb
 superseded_by: ../../active/ao_dispatch_hardening_2026_07_16.md # 2026-07-16: the two open follow-up gaps (skip-exhaustion churn -> R1, dead-slot affinity spill -> R5) were re-verified STILL-BROKEN and absorbed by that plan. This pointer was MISSING at archival, which orphaned the work and caused it to be re-discovered + re-filed a day later as ao_skip_blind_spawn_budget_phantom_churn_2026_07_15. The headline fix (ao@8a423bb) stands and is live.
@@ -128,7 +128,7 @@ all-`data_engineering` to a diversified fleet.
 
 ## Codex SSOTs
 
-- `codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` (role-based dispatch)
-- `codex/04-architecture/runtime-deployment-topology.md` </content>
+- `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` (role-based dispatch)
+- `/codex/04-architecture/runtime-deployment-topology.md` </content>
 
 </invoke>

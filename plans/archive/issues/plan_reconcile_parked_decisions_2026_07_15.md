@@ -112,7 +112,7 @@ file is therefore actively mis-routing every agent that reads it.
 judgment, however strong the evidence. This one needs your word.
 
 - **A: Edit CLAUDE.md:291 — drop Polygon.io from the removed list and note "Polygon.io → rebranded Massive, re-adopted
-  as the secondary TradFi source (see `codex/02-data/tradfi-databento-sourcing-ssot.md`)". [WORKER REC]** — smallest
+  as the secondary TradFi source (see `/codex/02-data/tradfi-databento-sourcing-ssot.md`)". [WORKER REC]** — smallest
   edit that stops the mis-routing; keeps the rule one-line per CLAUDE.md's format.
 - **B:** Keep CLAUDE.md as-is and instead correct the codex SSOT + let the conditional index point there.
 - **C:** Leave both; treat "Polygon.io" (the old brand) as genuinely removed and "Massive" as a distinct, allowed
@@ -201,12 +201,12 @@ zero inbound refs or a single ref in a LIVE doc (repointed in the same commit).
 
 **Group A — referenced from `codex/` SSOT docs → archiving requires a plans→codex edit (never autonomous):**
 
-| Plan                                                   | codex doc referencing it                                                           |
-| ------------------------------------------------------ | ---------------------------------------------------------------------------------- |
-| `foundation_gates_and_capture_to_100_2026_07_06`       | `codex/02-data/defi-completeness-oracle.md`                                        |
-| `honest_coverage_smoke_harness_2026_06_28`             | `codex/02-data/shard-coverage-classification.md` — calls it **"Plan (in-flight)"** |
-| `global_ledger_epic_reaudit_2026_07_12`                | `codex/04-architecture/global-ledger-architecture.md`                              |
-| `deployment_registry_firestore_p4_dynamodb_2026_07_14` | `codex/05-infrastructure/*`                                                        |
+| Plan                                                   | codex doc referencing it                                                            |
+| ------------------------------------------------------ | ----------------------------------------------------------------------------------- |
+| `foundation_gates_and_capture_to_100_2026_07_06`       | `/codex/02-data/defi-completeness-oracle.md`                                        |
+| `honest_coverage_smoke_harness_2026_06_28`             | `/codex/02-data/shard-coverage-classification.md` — calls it **"Plan (in-flight)"** |
+| `global_ledger_epic_reaudit_2026_07_12`                | `/codex/04-architecture/global-ledger-architecture.md`                              |
+| `deployment_registry_firestore_p4_dynamodb_2026_07_14` | `codex/05-infrastructure/*`                                                         |
 
 Note the second row: codex asserts a plan is _in-flight_ that is verified **done**. That is live plan↔codex drift
 (review-blocking per CLAUDE.md) independent of archival.

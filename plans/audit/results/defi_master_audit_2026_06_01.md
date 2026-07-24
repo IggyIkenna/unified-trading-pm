@@ -2,14 +2,11 @@
 doc_type: audit-result
 title: DeFi Master — Strategy Data-Coverage Audit Result (2026-06-01)
 summary:
-  DeFi strategy data-coverage audit (staked-basis / funding-arb / basis carry +
-  Solana MVP) — corrects a first-pass 0%-captured false alarm (it had read only
-  the market-data-tick-defi phantom grid) — raw data EXISTS at 79-96% in the
-  dedicated per-data_type buckets, so the problems are data-in-wrong-form
-  (hyphen/underscore + staking_yields/lst_rates aliases, v4-v8 spread 0% v9) not
-  absence, PLUS the big L3 finding that features-onchain/delta-one/volatility-defi
-  are near-empty so the strategies cannot run, and the coverage-summary
-  denominator is self-referential.
+  DeFi strategy data-coverage audit (staked-basis / funding-arb / basis carry + Solana MVP) — corrects a first-pass
+  0%-captured false alarm (it had read only the market-data-tick-defi phantom grid) — raw data EXISTS at 79-96% in the
+  dedicated per-data_type buckets, so the problems are data-in-wrong-form (hyphen/underscore + staking_yields/lst_rates
+  aliases, v4-v8 spread 0% v9) not absence, PLUS the big L3 finding that features-onchain/delta-one/volatility-defi are
+  near-empty so the strategies cannot run, and the coverage-summary denominator is self-referential.
 status: partial
 nature: record
 asset_group: [cross-cutting]
@@ -17,13 +14,10 @@ stage: [meta]
 repos: [deployment-api, features-service, market-tick-data-service]
 scope: [engineer, admin]
 tags: [audit, defi, honest-coverage, manifest, features, data-correctness, data-status, canonicalisation]
-related:
-  [
-    ../instructions/defi_master_audit_instructions.md,
-    defi_c0_datastate_audit_2026_06_01.md,
-  ]
+related: [../instructions/defi_master_audit_instructions.md, /plans/audit/results/defi_c0_datastate_audit_2026_06_01.md]
 created: 2026-06-01
-audited_scope: Strategy Data-Coverage Audit (items o-v) — staked basis carry / funding rate arb / basis carry + Solana MVP
+audited_scope:
+  Strategy Data-Coverage Audit (items o-v) — staked basis carry / funding rate arb / basis carry + Solana MVP
 date: 2026-06-01
 auditor: ikenna (interactive slot 1)
 parent_epic: defi_master
@@ -34,8 +28,13 @@ doc_versions_checked:
 type: audit-result
 epic: defi_master
 instructions_ref: plans/audit/instructions/defi_master_audit_instructions.md
-correction_note: First pass reported "0% captured / data missing" — that was a methodology error (read only the market-data-tick-defi phantom grid). Corrected after reading the dedicated per-data_type buckets. Data EXISTS (79-96% captured); the real problems are data-in-wrong-form (cleanup/migration), not absence.
-data_source: dedicated DeFi buckets (lst-rates/lending-indices/oracle-prices/perp-funding/dex-pools/dex-swaps) + market-data-tick-{defi,cefi,tradfi} prd indexes — read from actual manifest + GCS object counts
+correction_note:
+  First pass reported "0% captured / data missing" — that was a methodology error (read only the market-data-tick-defi
+  phantom grid). Corrected after reading the dedicated per-data_type buckets. Data EXISTS (79-96% captured); the real
+  problems are data-in-wrong-form (cleanup/migration), not absence.
+data_source:
+  dedicated DeFi buckets (lst-rates/lending-indices/oracle-prices/perp-funding/dex-pools/dex-swaps) +
+  market-data-tick-{defi,cefi,tradfi} prd indexes — read from actual manifest + GCS object counts
 ---
 
 # DeFi Master — Strategy Data-Coverage Audit Result (2026-06-01)
@@ -224,7 +223,7 @@ Coverage cells that actually gate go-live (audit these specifically):
 
 | Item                                   | Verdict         | Evidence                                                                                                                                    |
 | -------------------------------------- | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| (o) IS universe present                | 🟠 NOT VERIFIED | dedicated buckets enumerate real venues (LIDO/AAVE_V3/CHAINLINK/GMX…); IS↔manifest reconciliation still owed.                              |
+| (o) IS universe present                | 🟠 NOT VERIFIED | dedicated buckets enumerate real venues (LIDO/AAVE_V3/CHAINLINK/GMX…); IS↔manifest reconciliation still owed.                               |
 | (p) Expected-coverage dump             | 🟠 STALE        | a2 dump 12 days old, END_DATE hardcoded 2026-05-20 — re-run to today.                                                                       |
 | (q) Divergence = 0 (all buckets)       | 🟠 AMBER        | Across dedicated buckets, 79–96% captured. Phantom grid (C1) inflates `market-data-tick-defi` divergence falsely.                           |
 | (r) v9 per-data_type from data         | 🔴 RED          | v4–v8 spread, 0% v9 (C4) — migration of existing data.                                                                                      |

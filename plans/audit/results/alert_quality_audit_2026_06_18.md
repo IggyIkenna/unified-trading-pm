@@ -2,12 +2,10 @@
 doc_type: audit-result
 title: Alert Quality Audit — Slack
 summary:
-  Audit of Slack alert quality (#ci-failures + agent-orchestrator alerts) —
-  root-causes the operator's 60-80%-repeat complaint to per-process in-memory
-  dedup state that resets on VM restart plus zero read-back dedup in the shared
-  notify-slack.yml carrier; proposes an error-pointer message standard and a
-  prioritized remediation (P0 read-back dedup in the carrier, collapse
-  triple-detected stuck-PR alerts) → wrapper plan alert_quality_overhaul.
+  Audit of Slack alert quality (#ci-failures + agent-orchestrator alerts) — root-causes the operator's 60-80%-repeat
+  complaint to per-process in-memory dedup state that resets on VM restart plus zero read-back dedup in the shared
+  notify-slack.yml carrier; proposes an error-pointer message standard and a prioritized remediation (P0 read-back dedup
+  in the carrier, collapse triple-detected stuck-PR alerts) → wrapper plan alert_quality_overhaul.
 status: fail
 nature: record
 asset_group: [cross-cutting]
@@ -19,14 +17,13 @@ related:
   [
     ../../active/monitoring_control_plane_master_2026_06_10.md,
     ../instructions/infrastructure_master_audit_instructions.md,
-    ../../../codex/08-workflows/ci-cd-flow.md,
+    /codex/08-workflows/ci-cd-flow.md,
   ]
 created: 2026-06-18
 audited_scope:
-  24 agent-orchestrator server-side notify_* alerts + all callers, 50 PM
-  workflows + 10 AO workflows, ci_failure_watcher.py + promotion_lag_monitor.py,
-  and the notify-slack.yml shared carrier (dedup/ledger). NOT covered — runtime
-  alert-volume measurement.
+  24 agent-orchestrator server-side notify_* alerts + all callers, 50 PM workflows + 10 AO workflows,
+  ci_failure_watcher.py + promotion_lag_monitor.py, and the notify-slack.yml shared carrier (dedup/ledger). NOT covered
+  — runtime alert-volume measurement.
 date: 2026-06-18
 auditor: ikennaigboaka
 parent_epic: observability_master
@@ -40,7 +37,15 @@ instructions_ref: plans/audit/instructions/infrastructure_master_audit_instructi
 plan_of_record: plans/active/monitoring_control_plane_master_2026_06_10.md
 author: ikenna [autonomous audit — Opus background agents]
 assigned_vm: planning
-source: [agent-orchestrator/server/notifications/slack.py, 'agent-orchestrator/server/{health,autospawn,worker_liveness_watchdog,main_agent_keeper,plan_health,escalation,ci_reconcile,usage_poller,gh_rate_monitor,server}.py', 'unified-trading-pm/.github/workflows/{ci-failure-watcher,promotion-lag-monitor,escalate-to-orchestrator,semver-agent,main-backmerge-to-ldr}.yml', scripts/repo-management/ci_failure_watcher.py, scripts/cicd/promotion_lag_monitor.py, codex/08-workflows/ci-cd-flow.md]
+source:
+  [
+    agent-orchestrator/server/notifications/slack.py,
+    "agent-orchestrator/server/{health,autospawn,worker_liveness_watchdog,main_agent_keeper,plan_health,escalation,ci_reconcile,usage_poller,gh_rate_monitor,server}.py",
+    "unified-trading-pm/.github/workflows/{ci-failure-watcher,promotion-lag-monitor,escalate-to-orchestrator,semver-agent,main-backmerge-to-ldr}.yml",
+    scripts/repo-management/ci_failure_watcher.py,
+    scripts/cicd/promotion_lag_monitor.py,
+    /codex/08-workflows/ci-cd-flow.md,
+  ]
 ---
 
 # Alert Quality Audit (Class 1 of 2)

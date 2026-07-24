@@ -14,7 +14,7 @@ scope: [engineer, admin]
 tags: [audit, cefi, binance, bybit, deribit, manifest, instruments, canonicalisation]
 related:
   [
-    canonical_form_cross_service_audit_checklist.md,
+    /plans/audit/instructions/canonical_form_cross_service_audit_checklist.md,
     ../../active/master_data_canonicalisation_migration_catalogue_2026_06_07.md,
   ]
 created: 2026-05-22
@@ -73,7 +73,7 @@ MTDS, perp funding readers, spot price readers, CeFi archetype definitions.
       `--mode live` implemented. Check: `a6_batch_live_adapter_parity.py` output for cefi rows — batch count == live
       count per venue
 
-- [ ] (f) **CEFFU custody codex alignment**: `codex/04-architecture/custody-providers.md` describes CEFFU correctly.
+- [ ] (f) **CEFFU custody codex alignment**: `/codex/04-architecture/custody-providers.md` describes CEFFU correctly.
       Verify the June-1 timeline is documented and code reflects the May-23 `CLOUD_KMS_ENCRYPTED` path.
 
 - [ ] (g) **DeFi+CeFi hybrid hedge leg**: perp hedge leg for `carry_staked_basis` archetype wires correctly to the CeFi

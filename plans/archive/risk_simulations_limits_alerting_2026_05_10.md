@@ -9,7 +9,14 @@ stage: [meta]
 repos: [alerting-service, deployment-api, deployment-ui, execution-service, features-service, instruments-service]
 scope: [engineer, admin]
 tags: []
-related: [plans/active/master_to_live_defi_2026_05_23.md, plans/active/disaster_recovery_circuit_breakers_2026_05_10.md, plans/active/alerting_service_live_rules_2026_05_07.md, plans/active/simulation_scenarios_topology_price_shocks_2026_05_09.md, plans/active/promote_workflow_may23_cli_path_2026_05_10.md]
+related:
+  [
+    plans/active/master_to_live_defi_2026_05_23.md,
+    plans/active/disaster_recovery_circuit_breakers_2026_05_10.md,
+    plans/active/alerting_service_live_rules_2026_05_07.md,
+    plans/active/simulation_scenarios_topology_price_shocks_2026_05_09.md,
+    plans/active/promote_workflow_may23_cli_path_2026_05_10.md,
+  ]
 created: 2026-05-10
 type: plan
 deadline: 2026-05-23
@@ -18,15 +25,19 @@ companion_to: master_to_live_defi_2026_05_23.md (Group F item 20 circuit breaker
 locked_by: live-defi-rollout
 locked_since: 2026-05-10
 spawned_from: plans/questions/risk_simulations_limits_alerting_2026_05_08.md
-related_codex: [codex/04-architecture/kill-switch-circuit-breaker.md, codex/04-architecture/capital-efficiency-patterns.md]
+related_codex:
+  [/codex/04-architecture/kill-switch-circuit-breaker.md, /codex/04-architecture/capital-efficiency-patterns.md]
 estimate_class: design
 estimate_baseline_ai_days: 11.2
 estimate_calibrated_ai_days: 6.8
-estimate_calibration_note: 'Baseline auto-extracted from in-body AI-day mentions during 2026-05-11 sweep (~0.5, ~1.5, ~2, ~2, + 6 more). Class inferred from filename (design, multiplier 0.6×).
+estimate_calibration_note: "Baseline auto-extracted from in-body AI-day mentions during 2026-05-11 sweep (~0.5, ~1.5,
+  ~2, ~2, + 6 more). Class inferred from filename (design, multiplier 0.6×).
 
-  CAVEAT: auto-extract SUMS all in-body mentions; plans with both ''Total: X'' headlines AND per-phase line items will be double-counted. Owner agent: verify baseline, refine class per codex/08-workflows/estimation-calibration.md, recompute calibrated if either changes.
+  CAVEAT: auto-extract SUMS all in-body mentions; plans with both 'Total: X' headlines AND per-phase line items will be
+  double-counted. Owner agent: verify baseline, refine class per /codex/08-workflows/estimation-calibration.md,
+  recompute calibrated if either changes.
 
-  '
+  "
 ---
 
 > **ARCHIVED 2026-05-16 — 100% done per inventory (slot-8 SWEEP-16 mechanical archive sweep)**
@@ -64,18 +75,18 @@ This section is the canonical seam diagram every Phase 1+ UAC contract docstring
 
 ### Cross-product table — `RiskRuleConsequence` × 5 canonical SSOTs
 
-| Consequence  | Risk-gates Layer (per [`risk-gates.md`](../../codex/09-strategy/architecture-v2/cross-cutting/risk-gates.md)) | Event(s) emitted (per the 8-event lifecycle SSOT)                                                                                                              | Composes with kill-switch trigger (5-set per [`kill-switch-circuit-breaker.md`](../../codex/04-architecture/kill-switch-circuit-breaker.md))                                | Composes with circuit-breaker action (3-set per [`alerting_service_live_rules`](alerting_service_live_rules_2026_05_07.md))                                                                                                                                                                             | Composes with strategy kill-switch behaviour (4-set)                                                                                                                       | AlertCode mapping (UAC@d00326d)                                                                                                                               |
-| ------------ | ------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `BLOCK`      | Layer 2 (risk-and-exposure-service)                                                                           | `INSTRUCTION_REJECTED_RISK` + `RiskRuleFiredEvent` (sev: HIGH or CRITICAL)                                                                                     | If rule has `triggers_kill_switch: true` AND fires per-rule threshold count → engages `DAILY_LOSS_BREACH` / `MAX_DRAWDOWN_BREACH` / `DATA_STALE` per `RiskRuleTrigger` type | Aggregated BLOCK rate ≥ 60% across N instructions → execution-service circuit-breaker may transition CLOSED→DEGRADED→OPEN per per-venue failure-rate threshold; on transition emits `stop_new_signals` (DEGRADED) / `force_exit_only` (OPEN) / `halt_strategy` (cascade per autonomous-recovery-matrix) | If kill-switch engaged: `STOP_NEW_ONLY` (default) / `FAST_UNWIND` (if MAX_DRAWDOWN_BREACH) / `SLOW_UNWIND` (operator override) / `DELTA_HEDGE` (if cross-venue still open) | Reuse existing `PREFLIGHT_FAILED` for generic case; new `RISK_RULE_BLOCKED` (proposed addition to closed set in Phase 1.E) if granular per-rule alerts needed |
-| `SCALE_DOWN` | Layer 2 (rule decision) → Layer 3 (execution-service applies size adjustment)                                 | `INSTRUCTION_ACCEPTED_PREFLIGHT` (with `size_adjusted: true` annotation) → `RESIZED_EXECUTION` at Layer 3 + `RiskRuleFiredEvent` (sev: WARN)                   | Does NOT trigger kill-switch (size-adjusted instruction proceeds; no breach state)                                                                                          | Does NOT trigger circuit-breaker (instruction is approved, just smaller)                                                                                                                                                                                                                                | Strategy continues normally with reduced size                                                                                                                              | New `RISK_RULE_SCALED_DOWN` (Phase 1.E proposed addition to UAC@d00326d closed set)                                                                           |
-| `MONITOR`    | Layer 2 (passthrough; advisory)                                                                               | `INSTRUCTION_ACCEPTED_PREFLIGHT` (no modification) + `RiskRuleFiredEvent` (sev: INFO or WARN)                                                                  | Does NOT trigger kill-switch                                                                                                                                                | Does NOT trigger circuit-breaker                                                                                                                                                                                                                                                                        | Strategy continues normally                                                                                                                                                | New `RISK_RULE_MONITOR_FIRED` (Phase 1.E proposed addition)                                                                                                   |
-| `TEST_ONLY`  | Layer 2 (route-divert; tags instruction with `mode=TEST`) → Layer 3 routes to matching engine                 | `INSTRUCTION_ACCEPTED_PREFLIGHT` (with `mode=TEST` annotation) → `ORDER_SUBMITTED` to matching engine instead of live venue + `RiskRuleFiredEvent` (sev: INFO) | Does NOT trigger kill-switch                                                                                                                                                | Does NOT trigger circuit-breaker (no live venue contact)                                                                                                                                                                                                                                                | Strategy continues; fills are simulated, not real                                                                                                                          | New `RISK_RULE_TEST_ONLY_ROUTED` (Phase 1.E proposed addition)                                                                                                |
+| Consequence  | Risk-gates Layer (per [`risk-gates.md`](/codex/09-strategy/architecture-v2/cross-cutting/risk-gates.md)) | Event(s) emitted (per the 8-event lifecycle SSOT)                                                                                                              | Composes with kill-switch trigger (5-set per [`kill-switch-circuit-breaker.md`](/codex/04-architecture/kill-switch-circuit-breaker.md))                                     | Composes with circuit-breaker action (3-set per [`alerting_service_live_rules`](alerting_service_live_rules_2026_05_07.md))                                                                                                                                                                             | Composes with strategy kill-switch behaviour (4-set)                                                                                                                       | AlertCode mapping (UAC@d00326d)                                                                                                                               |
+| ------------ | -------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `BLOCK`      | Layer 2 (risk-and-exposure-service)                                                                      | `INSTRUCTION_REJECTED_RISK` + `RiskRuleFiredEvent` (sev: HIGH or CRITICAL)                                                                                     | If rule has `triggers_kill_switch: true` AND fires per-rule threshold count → engages `DAILY_LOSS_BREACH` / `MAX_DRAWDOWN_BREACH` / `DATA_STALE` per `RiskRuleTrigger` type | Aggregated BLOCK rate ≥ 60% across N instructions → execution-service circuit-breaker may transition CLOSED→DEGRADED→OPEN per per-venue failure-rate threshold; on transition emits `stop_new_signals` (DEGRADED) / `force_exit_only` (OPEN) / `halt_strategy` (cascade per autonomous-recovery-matrix) | If kill-switch engaged: `STOP_NEW_ONLY` (default) / `FAST_UNWIND` (if MAX_DRAWDOWN_BREACH) / `SLOW_UNWIND` (operator override) / `DELTA_HEDGE` (if cross-venue still open) | Reuse existing `PREFLIGHT_FAILED` for generic case; new `RISK_RULE_BLOCKED` (proposed addition to closed set in Phase 1.E) if granular per-rule alerts needed |
+| `SCALE_DOWN` | Layer 2 (rule decision) → Layer 3 (execution-service applies size adjustment)                            | `INSTRUCTION_ACCEPTED_PREFLIGHT` (with `size_adjusted: true` annotation) → `RESIZED_EXECUTION` at Layer 3 + `RiskRuleFiredEvent` (sev: WARN)                   | Does NOT trigger kill-switch (size-adjusted instruction proceeds; no breach state)                                                                                          | Does NOT trigger circuit-breaker (instruction is approved, just smaller)                                                                                                                                                                                                                                | Strategy continues normally with reduced size                                                                                                                              | New `RISK_RULE_SCALED_DOWN` (Phase 1.E proposed addition to UAC@d00326d closed set)                                                                           |
+| `MONITOR`    | Layer 2 (passthrough; advisory)                                                                          | `INSTRUCTION_ACCEPTED_PREFLIGHT` (no modification) + `RiskRuleFiredEvent` (sev: INFO or WARN)                                                                  | Does NOT trigger kill-switch                                                                                                                                                | Does NOT trigger circuit-breaker                                                                                                                                                                                                                                                                        | Strategy continues normally                                                                                                                                                | New `RISK_RULE_MONITOR_FIRED` (Phase 1.E proposed addition)                                                                                                   |
+| `TEST_ONLY`  | Layer 2 (route-divert; tags instruction with `mode=TEST`) → Layer 3 routes to matching engine            | `INSTRUCTION_ACCEPTED_PREFLIGHT` (with `mode=TEST` annotation) → `ORDER_SUBMITTED` to matching engine instead of live venue + `RiskRuleFiredEvent` (sev: INFO) | Does NOT trigger kill-switch                                                                                                                                                | Does NOT trigger circuit-breaker (no live venue contact)                                                                                                                                                                                                                                                | Strategy continues; fills are simulated, not real                                                                                                                          | New `RISK_RULE_TEST_ONLY_ROUTED` (Phase 1.E proposed addition)                                                                                                |
 
 ### Orthogonality declarations
 
 - **vs ErrorAction taxonomy** (`RETRY` / `RECONNECT` / `SKIP` / `FAIL` per
-  [`autonomous-recovery-matrix.md`](../../codex/04-architecture/autonomous-recovery-matrix.md)): `RiskRuleConsequence`
-  is a **pre-flight rule decision at Layer 2** (before instruction reaches venue); ErrorAction is a **post-venue-error
+  [`autonomous-recovery-matrix.md`](/codex/04-architecture/autonomous-recovery-matrix.md)): `RiskRuleConsequence` is a
+  **pre-flight rule decision at Layer 2** (before instruction reaches venue); ErrorAction is a **post-venue-error
   classification at Layer 4** (after venue rejects an attempt). They don't overlap; both can apply to the same
   instruction lifecycle:
   - Layer 2 may BLOCK → instruction never reaches venue → no ErrorAction ever fires.
@@ -297,9 +308,11 @@ canonical SSOTs.
       `unified_api_contracts/registry/risk_rules/strategy_family.py` with full 6-rule seed for LST*LEVERAGE_FAMILY +
       FUNDING_ARB_FAMILY (12 rules covering the 6 required categories) plus single-rule placeholders for the 5
       forward-compat families (BASIS_CARRY / OPTIONS_VOL / SPORTS_MM / PREDICTION_MM / STAT_ARB) = 17 rules total.
-      Extended UAC `RiskRuleScope` with new `PER_STRATEGY_FAMILY` member + `RiskRuleId` with 6
-      `FAMILY*\*`members;    `kill_switch_scope()`returns`None`for`PER_STRATEGY_FAMILY`(family-aggregate rules escalate via the     circuit-breaker BLOCK-rate path, not the kill-switch's per-blast-radius halt). 30 unit tests in    `tests/internal/unit/test_risk_rules_strategy_family.py`
-      cover coverage invariants + per-family rule shapes + orthogonality with kill-switch axis.)
+      Extended UAC `RiskRuleScope` with new `PER_STRATEGY_FAMILY` member + `RiskRuleId` with 6 `FAMILY*\*`members;
+      `kill_switch_scope()`returns`None`for`PER_STRATEGY_FAMILY`(family-aggregate rules escalate via the circuit-breaker
+      BLOCK-rate path, not the kill-switch's per-blast-radius halt). 30 unit tests in
+      `tests/internal/unit/test_risk_rules_strategy_family.py` cover coverage invariants + per-family rule shapes +
+      orthogonality with kill-switch axis.)
 - [x] [AGENT] P0. **2.I Family-aggregate evaluator.** UTL `risk/family_aggregator.py`: rolls up per-archetype state into
       per-family state (sum-of-positions per family + max-drawdown across family + cross-family correlation matrix from
       rolling returns). Feeds rule_evaluator at family scope. Recomputes per fill event + per-minute cron. (UTL@db8dcae5
@@ -437,11 +450,11 @@ returns full rule set; tests pass.
 
 ## Phase 7 — Codex SSOTs (Day 12, ~0.5 AI-day)
 
-- [x] [AGENT] P0. **7.A NEW `codex/04-architecture/risk-rule-taxonomy.md`.** Taxonomy, scope axis, consequence closed
+- [x] [AGENT] P0. **7.A NEW `/codex/04-architecture/risk-rule-taxonomy.md`.** Taxonomy, scope axis, consequence closed
       enum. (PM@730914a9 — 152-line doc: closed-set RiskRuleId 22 members + RiskRuleScope 6 + RiskRuleConsequence 4 +
       RiskRuleTrigger 13 typed subtypes + § 7 SSOT seam diagram verbatim from plan body + orthogonality declarations vs
       ErrorAction / AlertCode / KillSwitchScope; 7 outbound cross-references.)
-- [x] [AGENT] P0. **7.B NEW `codex/04-architecture/risk-preflight-flow.md`.** Order-submission flow, scale-down
+- [x] [AGENT] P0. **7.B NEW `/codex/04-architecture/risk-preflight-flow.md`.** Order-submission flow, scale-down
       semantics, block semantics. (PM@730914a9 — 153-line doc: ASCII flow diagram across Layers 1-4 +
       RiskPreflightResult shape + BLOCK / SCALE_DOWN (min-aggregation) / MONITOR / TEST_ONLY aggregation semantics +
       strategy + execution call sites + kill-switch bus integration + anti-patterns; 7 outbound cross-references.)
@@ -453,7 +466,7 @@ returns full rule set; tests pass.
       (PM@730914a9 — added Per-archetype Capital-at-Risk Ceiling Cross-Link section showing 3-layer composition (account
       guards / per-archetype CaR / family aggregate) with risk_preflight() integration + 3 new outbound cross-references
       to risk-rule-taxonomy / risk-preflight-flow / risk-breaker-seam.)
-- [x] [AGENT] P0. **7.E NEW `codex/04-architecture/risk-breaker-seam.md` — RATIFIED 2026-05-10 cross-plan audit Q9.**
+- [x] [AGENT] P0. **7.E NEW `/codex/04-architecture/risk-breaker-seam.md` — RATIFIED 2026-05-10 cross-plan audit Q9.**
       Document the distinct-enums-with-escalation-seam architecture: `RiskRuleConsequence` (per-rule-firing taxonomy)
       and `BreakerAction` (per-venue state-machine taxonomy) are SEPARATE enums by design — different triggers,
       different layers. The seam: when N consecutive `RiskRuleConsequence.SCALE_DOWN` consequences fire on same
@@ -913,5 +926,5 @@ Codex audit (Phase 7): all Phase-7 codex docs (`risk-rule-taxonomy.md` / `risk-p
 `risk-breaker-seam.md` / `kill-switch-circuit-breaker.md` UPDATE / `capital-efficiency-patterns.md` UPDATE) shipped +
 flipped prior cycle (`unified-trading-pm@d86c8b3c`/`@730914a9`/`@bf1ebc54`) — verified still current; the
 `RiskRuleFiredEvent` model addition is a small follow-on that fits `risk-preflight-flow.md`'s event-emission section
-(NICE-TO-HAVE — `codex/04-architecture/risk-preflight-flow.md` already documents the `RiskRuleFiredEvent` name; the
+(NICE-TO-HAVE — `/codex/04-architecture/risk-preflight-flow.md` already documents the `RiskRuleFiredEvent` name; the
 model shape can be appended on the next substantive touch).

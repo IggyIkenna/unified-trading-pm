@@ -27,7 +27,7 @@ operator: ikenna
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
 spawned_plan: plans/active/client_reporting_pnl_attribution_mvp_2026_05_10.md
-related_codex: [codex/04-architecture/separation-of-concerns.md]
+related_codex: [/codex/04-architecture/separation-of-concerns.md]
 ---
 
 ## Deferred work — migrated to:
@@ -230,9 +230,9 @@ For each sub-question in Blocks A-C, fill:
 - **Owner side**: TBD — likely ikenna for product/business decisions (productisation scope, fee model, attribution
   schema) + harsh for implementation (UI surface, API endpoints, attribution data plumbing)
 - **Codex SSOTs touched**: TBD — likely:
-  - NEW: `codex/04-architecture/client-reporting-service-architecture.md`
-  - NEW: `codex/04-architecture/pnl-attribution-decomposition-per-archetype.md`
-  - NEW: `codex/14-customer-journeys/external-strategy-attribution-as-a-service.md` (if productisation in scope)
+  - NEW: `/codex/04-architecture/client-reporting-service-architecture.md`
+  - NEW: `/codex/04-architecture/pnl-attribution-decomposition-per-archetype.md`
+  - NEW: `/codex/14-customer-journeys/external-strategy-attribution-as-a-service.md` (if productisation in scope)
   - UPDATE: master plan Group F + G
 - **Cross-plan dependencies**:
   - Composes with

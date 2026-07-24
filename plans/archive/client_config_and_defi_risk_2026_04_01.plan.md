@@ -10,58 +10,66 @@ repos: [e2e-testing, execution-service, strategy-service, unified-api-contracts,
 scope: [engineer, admin]
 tags: []
 related: []
-created: '2026-04-03'
+created: "2026-04-03"
 remaining_todos_consolidated_into: consolidated_strategy_and_ui_2026_04_15
 superseded_by: [consolidated_strategy_and_ui_2026_04_15.md]
 reconciliation_status: superseded_by_consolidator
 reconciliation_date: 2026-04-25
-overview: Per-client strategy config overrides (venue restrictions, feature gating) + DeFi risk enhancements (sub-1H HF, depeg, rebalance costs)
+overview:
+  Per-client strategy config overrides (venue restrictions, feature gating) + DeFi risk enhancements (sub-1H HF, depeg,
+  rebalance costs)
 type: code
 epic: epic-code-completion
 locked_by: live-defi-rollout
 locked_since: 2026-04-01
-completion_gates: {code: C5, deployment: none, business: none}
+completion_gates: { code: C5, deployment: none, business: none }
 repo_gates:
-- {repo: unified-api-contracts, code: C0, deployment: none, business: none}
-- {repo: strategy-service, code: C0, deployment: none, business: none}
-- {repo: risk-and-exposure-service, code: C0, deployment: none, business: none}
-- {repo: pnl-attribution-service, code: C0, deployment: none, business: none}
-- {repo: position-balance-monitor-service, code: C0, deployment: none, business: none}
-- {repo: execution-service, code: C0, deployment: none, business: none}
-- {repo: unified-trading-system-ui, code: C0, deployment: none, business: none}
-- {repo: e2e-testing, code: C0, deployment: none, business: none}
+  - { repo: unified-api-contracts, code: C0, deployment: none, business: none }
+  - { repo: strategy-service, code: C0, deployment: none, business: none }
+  - { repo: risk-and-exposure-service, code: C0, deployment: none, business: none }
+  - { repo: pnl-attribution-service, code: C0, deployment: none, business: none }
+  - { repo: position-balance-monitor-service, code: C0, deployment: none, business: none }
+  - { repo: execution-service, code: C0, deployment: none, business: none }
+  - { repo: unified-trading-system-ui, code: C0, deployment: none, business: none }
+  - { repo: e2e-testing, code: C0, deployment: none, business: none }
 depends_on: [share-class-architecture, token-wrapping-venue-collateral]
 todos:
-- {id: cc-1a-client-config, content: '- [x] [AGENT] P0. Define per-client strategy config override schema in UAC — ClientStrategyOverride in client_config.py
+  - { id: cc-1a-client-config, content: "- [x] [AGENT] P0. Define per-client strategy config override schema in UAC —
+        ClientStrategyOverride in client_config.py
 
-    ', status: done, note: ''}
-- {id: cc-1b-venue-restrict, content: '- [x] [AGENT] P0. Implement venue restriction enforcement in strategy-service — ClientConfigOverrideMixin in defi_basis.py
+        ", status: done, note: "" }
+  - { id: cc-1b-venue-restrict, content: "- [x] [AGENT] P0. Implement venue restriction enforcement in strategy-service
+        — ClientConfigOverrideMixin in defi_basis.py
 
-    ', status: done, note: Patrick gets OKX/Bybit/Binance only for basis}
-- {id: cc-1c-feature-gate, content: '- [x] [AGENT] P1. Implement feature gating (rotation/multi-coin for premium clients only) — same mixin/override pattern
+        ", status: done, note: Patrick gets OKX/Bybit/Binance only for basis }
+  - { id: cc-1c-feature-gate, content: "- [x] [AGENT] P1. Implement feature gating (rotation/multi-coin for premium
+        clients only) — same mixin/override pattern
 
-    ', status: done, note: ''}
-- {id: cc-2a-hf-monitoring, content: '- [x] [AGENT] P0. Implement sub-1H health factor monitoring for leveraged positions — risk_metrics.py HF checks
+        ", status: done, note: "" }
+  - { id: cc-2a-hf-monitoring, content: "- [x] [AGENT] P0. Implement sub-1H health factor monitoring for leveraged
+        positions — risk_metrics.py HF checks
 
-    ', status: done, note: 1H is too slow for recursive staking at 2.5x leverage}
-- {id: cc-2b-depeg-risk, content: '- [x] [AGENT] P0. Add oracle depeg, stablecoin depeg, and borrow rate spread monitoring — implemented in risk checks
+        ", status: done, note: 1H is too slow for recursive staking at 2.5x leverage }
+  - { id: cc-2b-depeg-risk, content: "- [x] [AGENT] P0. Add oracle depeg, stablecoin depeg, and borrow rate spread
+        monitoring — implemented in risk checks
 
-    ', status: done, note: ''}
-- {id: cc-2c-rebalance-costs, content: '- [x] [AGENT] P0. Add expected rebalancing + emergency close cost estimation — defi_enhancements.py
+        ", status: done, note: "" }
+  - { id: cc-2c-rebalance-costs, content: "- [x] [AGENT] P0. Add expected rebalancing + emergency close cost estimation
+        — defi_enhancements.py
 
-    ', status: done, note: Good for UI display and strategy decisions}
-- {id: cc-2d-withdrawal-delay, content: '- [x] [AGENT] P1. Model EtherFi/Lido withdrawal delays as liquidity risk
+        ", status: done, note: Good for UI display and strategy decisions }
+  - { id: cc-2d-withdrawal-delay, content: "- [x] [AGENT] P1. Model EtherFi/Lido withdrawal delays as liquidity risk
 
-    ', status: done, note: EtherFi 2-week delay in stress scenarios}
-- {id: cc-3a-ui-client, content: '- [x] [AGENT] P1. Update UI for per-client config display + risk enhancements
+        ", status: done, note: EtherFi 2-week delay in stress scenarios }
+  - { id: cc-3a-ui-client, content: "- [x] [AGENT] P1. Update UI for per-client config display + risk enhancements
 
-    ', status: done, note: ''}
-- {id: cc-4a-e2e, content: '- [ ] [AGENT] P1. Add client config + risk scenarios to e2e-testing
+        ", status: done, note: "" }
+  - { id: cc-4a-e2e, content: "- [ ] [AGENT] P1. Add client config + risk scenarios to e2e-testing
 
-    ', status: todo, note: ''}
-- {id: cc-5a-docs, content: '- [ ] [AGENT] P1. Update codex docs
+        ", status: todo, note: "" }
+  - { id: cc-5a-docs, content: "- [ ] [AGENT] P1. Update codex docs
 
-    ', status: todo, note: ''}
+        ", status: todo, note: "" }
 isProject: false
 ---
 
@@ -359,13 +367,13 @@ Phase 4 (Docs)
 
 ## Phase 4: Documentation
 
-- [x] [AGENT] P1. Create `codex/09-strategy/cross-cutting/client-strategy-config.md`:
+- [x] [AGENT] P1. Create `/codex/09-strategy/cross-cutting/client-strategy-config.md`:
   - Per-client override schema
   - Venue restriction mechanism
   - Feature gating (basic vs premium)
   - Patrick example
 
-- [x] [AGENT] P1. Create `codex/04-architecture/defi-risk-monitoring.md`:
+- [x] [AGENT] P1. Create `/codex/04-architecture/defi-risk-monitoring.md`:
   - All DeFi risk types with thresholds
   - Sub-1H health factor monitoring
   - Oracle depeg detection

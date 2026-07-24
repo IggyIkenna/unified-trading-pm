@@ -135,6 +135,6 @@ See [`cross_cutting_may_23_2026.epic.md`](./cross_cutting_may_23_2026.epic.md) f
 
 - [`master_to_live_defi_2026_05_23`](../active/master_to_live_defi_2026_05_23.md) — May-23 cutover master
   (umbrella-of-epics)
-- [`codex/04-architecture/copper-custody-integration.md`](../../codex/04-architecture/copper-custody-integration.md)
-- [`codex/04-architecture/alerting-batch-live.md`](../../codex/04-architecture/alerting-batch-live.md)
-- [`codex/04-architecture/autonomous-recovery-matrix.md`](../../codex/04-architecture/autonomous-recovery-matrix.md)
+- [`/codex/04-architecture/copper-custody-integration.md`](/codex/04-architecture/copper-custody-integration.md)
+- [`/codex/04-architecture/alerting-batch-live.md`](/codex/04-architecture/alerting-batch-live.md)
+- [`/codex/04-architecture/autonomous-recovery-matrix.md`](/codex/04-architecture/autonomous-recovery-matrix.md)

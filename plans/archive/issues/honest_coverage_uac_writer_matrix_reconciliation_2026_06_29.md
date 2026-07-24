@@ -18,7 +18,7 @@ related:
   [
     ../honest_coverage_v2_opus_checkpoints_2026_06_28.md,
     ../honest_coverage_v2_instrument_denominator_2026_06_28.md,
-    ../../../codex/02-data/honest-coverage-model.md,
+    /codex/02-data/honest-coverage-model.md,
   ]
 created: 2026-06-29
 parent_epic: infrastructure_master
@@ -51,7 +51,7 @@ locked_since: 2026-05-21
 > tradfi 52, sports 24, prediction 17. Strays mean the writer captures real `(venue, instrument_type, data_type)` combos
 > that UAC's per-itype validity matrix does not sanction → for those nodes EXPECTED is too small → Layer-1 completeness
 > is **over-reported** (an upper bound). This is a cross-repo SSOT gap, not a measurement bug. Codex SSOT:
-> `codex/02-data/honest-coverage-model.md` § "CK3 — final integrated certification" (caveat).
+> `/codex/02-data/honest-coverage-model.md` § "CK3 — final integrated certification" (caveat).
 
 ## OPERATOR DECISIONS — RESOLVED 2026-06-29 (HANDOVER-READY; no open operator gates)
 
@@ -128,7 +128,7 @@ roll-up.
       `expected_coverage`), CME `ohlcv_24h` (not a Databento schema — VIX/Barchart), KALSHI `book_snapshot_5`, defi
       `pool     swaps_ohlcv*\*`. Net: **zero UAC expected-matrix additions**; every stray resolves via billing/MVP
       cutoff, enumerator over-seed carve-out, or grain roll-up. Billing SSOT:
-      `codex/02-data/tradfi-databento-sourcing-ssot.md` § schema-allowlist.
+      `/codex/02-data/tradfi-databento-sourcing-ssot.md` § schema-allowlist.
 - [x] [CODE] P1. Resolve the class-2 ASTER carve-out contradiction. ✅ DONE 2026-07-03 — (a) enumerator fix
       `instruments-service@3bb7acd`: `_row_data_types` applies the `VENUE_DATA_TYPE_CAPABILITIES` carve-out at seeding
       (CEFI ONLY — tradfi deliberately ungated: its capability entries are the OHLCV-window MVP declaration, and the
@@ -167,7 +167,7 @@ roll-up.
       truth confirmed no writer-side change needed: the legacy dialect venues carry only blank-itype rows (already
       outside Layer-1). Effect: 6 of cefi's 15 holes were captured-under-suffix false holes → GONE.
 - [x] [SCRIPT] P2. Re-run `measure_honest_coverage.py --asset-group all` after the above; the certified Layer-1 numbers
-      in `codex/02-data/honest-coverage-model.md` CK3 table will tighten — update them. ✅ DONE 2026-07-03 08:52 UTC —
+      in `/codex/02-data/honest-coverage-model.md` CK3 table will tighten — update them. ✅ DONE 2026-07-03 08:52 UTC —
       **cefi Layer-1 65.91% → 79.55%** (35/44, missing 15→9 — all 9 remaining are REAL defects: BITFINEX/KRAKEN-FUTURES
       `future` grain, BYBIT spot writer mis-stamp, OKX options_chain never enumerated); defi strays 133→128 (grain
       folds); ASTER strays gone; tradfi/sports/prediction unchanged (their strays are adjudicated cutoffs/out-of-MVP).

@@ -124,17 +124,17 @@ system without reading this plan.
 
 #### `unified-trading-pm`
 
-| File                                                                  | Action                                                                                         |
-| --------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| `codex/08-workflows/client-onboarding.md`                             | NEW — 7-step onboarding sequence                                                               |
-| `codex/09-strategy/architecture-v2/strategy-catalogue-3tier.md`       | Update sections (questionnaire seeding, Explore role, tier badges, admin catalogue management) |
-| `codex/09-strategy/architecture-v2/strategy-questionnaire-mapping.md` | NEW — 11-axis → filter mapping SSOT                                                            |
-| `codex/06-coding-standards/strategy-display-conventions.md`           | NEW — pretty-printing rules + bespoke names                                                    |
-| `codex/14-playbooks/demo-ops/profiles/desmond-dart-full.yaml`         | NEW — Desmond DART Full profile                                                                |
-| `codex/14-playbooks/demo-ops/profiles/desmond-signals-in.yaml`        | NEW — Desmond Signals-In profile                                                               |
-| `codex/14-playbooks/demo-ops/staging-demo-setup.md`                   | Update: email-based demo login pattern                                                         |
-| `codex/04-architecture/service-family-scope.md`                       | Update: Full vs Signals-In feature matrix, locked section design                               |
-| `codex/02-data/questionnaire-axes.md`                                 | NEW or update: full 11-axis catalogue + Firestore schema                                       |
+| File                                                                   | Action                                                                                         |
+| ---------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `/codex/08-workflows/client-onboarding.md`                             | NEW — 7-step onboarding sequence                                                               |
+| `/codex/09-strategy/architecture-v2/strategy-catalogue-3tier.md`       | Update sections (questionnaire seeding, Explore role, tier badges, admin catalogue management) |
+| `/codex/09-strategy/architecture-v2/strategy-questionnaire-mapping.md` | NEW — 11-axis → filter mapping SSOT                                                            |
+| `/codex/06-coding-standards/strategy-display-conventions.md`           | NEW — pretty-printing rules + bespoke names                                                    |
+| `codex/14-playbooks/demo-ops/profiles/desmond-dart-full.yaml`          | NEW — Desmond DART Full profile                                                                |
+| `codex/14-playbooks/demo-ops/profiles/desmond-signals-in.yaml`         | NEW — Desmond Signals-In profile                                                               |
+| `/codex/14-playbooks/demo-ops/staging-demo-setup.md`                   | Update: email-based demo login pattern                                                         |
+| `/codex/04-architecture/service-family-scope.md`                       | Update: Full vs Signals-In feature matrix, locked section design                               |
+| `/codex/02-data/questionnaire-axes.md`                                 | NEW or update: full 11-axis catalogue + Firestore schema                                       |
 
 ---
 
@@ -595,27 +595,27 @@ returns" links → reporting.
 
 **Dependency**: All phases 1-7 complete
 
-### - [ ] [DOC] P8.1 — Update `codex/09-strategy/architecture-v2/strategy-catalogue-3tier.md`
+### - [ ] [DOC] P8.1 — Update `/codex/09-strategy/architecture-v2/strategy-catalogue-3tier.md`
 
 Add/update sections: Explore tab role (discovery + subscription only; returns → reporting), questionnaire seeding,
 expanding universe model (99 representative + expansion envelope), DART Full vs Signals-In universe distinction, admin
 catalogue management (existing, do not rebuild), tier badge logic.
 
-### - [ ] [DOC] P8.2 — Create `codex/09-strategy/architecture-v2/strategy-questionnaire-mapping.md`
+### - [ ] [DOC] P8.2 — Create `/codex/09-strategy/architecture-v2/strategy-questionnaire-mapping.md`
 
 SSOT for 11-axis → catalogue filter mapping. Full axis table + rules-based expansion layer + example (Desmond's answers
 → filter → what he sees).
 
-### - [ ] [DOC] P8.3 — Create `codex/06-coding-standards/strategy-display-conventions.md`
+### - [ ] [DOC] P8.3 — Create `/codex/06-coding-standards/strategy-display-conventions.md`
 
 Bespoke display name table for 18 archetypes + 8 families. Acronym list. 6-function API. File location. Rule: no raw
 UNDERSCORE_IDs to clients.
 
-### - [ ] [DOC] P8.4 — Update `codex/04-architecture/service-family-scope.md`
+### - [ ] [DOC] P8.4 — Update `/codex/04-architecture/service-family-scope.md`
 
 Add: DART Full vs Signals-In feature matrix, demo plan toggle design, locked section design.
 
-### - [ ] [DOC] P8.5 — Create `codex/08-workflows/client-onboarding.md`
+### - [ ] [DOC] P8.5 — Create `/codex/08-workflows/client-onboarding.md`
 
 7-step onboarding sequence with Ikenna/client/system actions per step.
 
@@ -627,11 +627,11 @@ YAML profile following existing `prospect-dart.yaml` structure.
 
 YAML profile — same tile base, Research/Promote tiles padlocked.
 
-### - [ ] [DOC] P8.8 — Update `codex/14-playbooks/demo-ops/staging-demo-setup.md`
+### - [ ] [DOC] P8.8 — Update `/codex/14-playbooks/demo-ops/staging-demo-setup.md`
 
 Add: email-based persona mapping mechanism, persona naming convention, how to onboard new demo client (checklist).
 
-### - [ ] [DOC] P8.9 — Create or update `codex/02-data/questionnaire-axes.md`
+### - [ ] [DOC] P8.9 — Create or update `/codex/02-data/questionnaire-axes.md`
 
 Full 11-axis catalogue with Python type, TS type, allowed values, default, Firestore field path.
 
@@ -739,11 +739,11 @@ UI catalogue today exposes only the 99. We need:
 
 #### `unified-trading-pm`
 
-| File                                                            | Action                                                                                                                                                                               |
-| --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `codex/09-strategy/architecture-v2/strategy-catalogue-3tier.md` | Document the three-layer model: curated representatives (99) → full envelope (1,609) → bespoke (∞). Document progressive-disclosure UX.                                              |
-| `codex/09-strategy/architecture-v2/admin-locking-routing.md`    | NEW — SSOT for the `AdminStrategyAssignment` model. Covers: scope hierarchy (instance > archetype > family), route semantics, org-attachment flow-through, locking precedence rules. |
-| `codex/09-strategy/architecture-v2/archetype-taxonomy.md`       | Update: 9 families, full archetype list including 9 VOL + 7 MM + 4 PORTFOLIO.                                                                                                        |
+| File                                                             | Action                                                                                                                                                                               |
+| ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `/codex/09-strategy/architecture-v2/strategy-catalogue-3tier.md` | Document the three-layer model: curated representatives (99) → full envelope (1,609) → bespoke (∞). Document progressive-disclosure UX.                                              |
+| `/codex/09-strategy/architecture-v2/admin-locking-routing.md`    | NEW — SSOT for the `AdminStrategyAssignment` model. Covers: scope hierarchy (instance > archetype > family), route semantics, org-attachment flow-through, locking precedence rules. |
+| `/codex/09-strategy/architecture-v2/archetype-taxonomy.md`       | Update: 9 families, full archetype list including 9 VOL + 7 MM + 4 PORTFOLIO.                                                                                                        |
 
 ### Execution DAG
 
@@ -799,11 +799,11 @@ P9.3 (UAC AdminStrategyAssignment model) ─────────────
 
 #### Codex (LAST)
 
-- [ ] [DOC] P9.8.1 — Update `codex/09-strategy/architecture-v2/strategy-catalogue-3tier.md` with curated / envelope /
+- [ ] [DOC] P9.8.1 — Update `/codex/09-strategy/architecture-v2/strategy-catalogue-3tier.md` with curated / envelope /
       bespoke three-layer model + progressive-disclosure UX.
-- [ ] [DOC] P9.8.2 — Create `codex/09-strategy/architecture-v2/admin-locking-routing.md` (SSOT for
+- [ ] [DOC] P9.8.2 — Create `/codex/09-strategy/architecture-v2/admin-locking-routing.md` (SSOT for
       AdminStrategyAssignment).
-- [ ] [DOC] P9.8.3 — Update `codex/09-strategy/architecture-v2/archetype-taxonomy.md` with full 9-family / 32-archetype
+- [ ] [DOC] P9.8.3 — Update `/codex/09-strategy/architecture-v2/archetype-taxonomy.md` with full 9-family / 32-archetype
       list.
 - [ ] [QG] P9.DOC — `cd unified-trading-pm && bash scripts/quality-gates.sh`.
 
@@ -962,8 +962,8 @@ The DeFi/DeFi label has been fixed; cascade-to-4-levels in the catalogue surface
 | `lib/config/auth.ts` (the actual home of `AuthPersona`)                     | `assigned_strategies?: readonly string[]` field on the interface (L107) with jsdoc explaining catalogue slot label semantics + locked-visible fallback. (Plan said `lib/auth/personas.ts` — type lives in `auth.ts`; values seeded in `personas.ts`.)                               | ✅ DONE                                                                                                                    |
 | `lib/auth/personas.ts` Desmond + Patrick seeds                              | `desmond-dart-full` (L385) carries 11 slot labels (L409–421). `elysium-defi` (L250–265) carries 2; `elysium-defi-full` (L268–285) extends to 5 with CARRY_RECURSIVE_STAKED + YIELD_ROTATION_LENDING.                                                                                | ✅ DONE                                                                                                                    |
 | `lib/auth/demo-provider.ts` runtime hydration                               | `personaToAuthUser()` (L9–25) copies entitlements ONLY. **`assigned_strategies` is read by neither `personaToAuthUser` nor `login()`. `instrumentsForSlot()` is never called at login**. Plan-named "P10.6.4" is the architectural debt — not done.                                 | 🟥 PENDING (architectural debt — see "Universal hydration" rewrite below)                                                  |
-| `codex/09-strategy/architecture-v2/instruments-resolver-architecture.md`    | New SSOT shipped describing the catalogue ↔ instruments-service join, GCS layout, refresh cadence.                                                                                                                                                                                  | ✅ DONE                                                                                                                    |
-| `codex/09-strategy/architecture-v2/strategy-catalogue-3tier.md`             | Updated for 4-level filter hierarchy.                                                                                                                                                                                                                                               | ✅ DONE                                                                                                                    |
+| `/codex/09-strategy/architecture-v2/instruments-resolver-architecture.md`   | New SSOT shipped describing the catalogue ↔ instruments-service join, GCS layout, refresh cadence.                                                                                                                                                                                  | ✅ DONE                                                                                                                    |
+| `/codex/09-strategy/architecture-v2/strategy-catalogue-3tier.md`            | Updated for 4-level filter hierarchy.                                                                                                                                                                                                                                               | ✅ DONE                                                                                                                    |
 
 ### Architectural rewrite — Universal persona instrument hydration (replaces narrow P10.6.4)
 
@@ -1065,10 +1065,10 @@ P10.7 (✅ codex SSOTs) ─── DONE ─────────────�
 
 #### Codex — ✅ DONE
 
-- [x] [DOC] P10.7.1 — `codex/09-strategy/architecture-v2/instruments-resolver-architecture.md` (NEW) — describes the
+- [x] [DOC] P10.7.1 — `/codex/09-strategy/architecture-v2/instruments-resolver-architecture.md` (NEW) — describes the
       catalogue ↔ instruments-service join, GCS layout, refresh cadence. **Done:** commit `20c4532` by teammate.
       2026-04-25.
-- [x] [DOC] P10.7.2 — `codex/09-strategy/architecture-v2/strategy-catalogue-3tier.md` updated with 4-level filter
+- [x] [DOC] P10.7.2 — `/codex/09-strategy/architecture-v2/strategy-catalogue-3tier.md` updated with 4-level filter
       hierarchy decision (`asset_group → family → archetype → instance`). 2026-04-25.
 
 ### Success Criteria (Phase 10, refreshed)

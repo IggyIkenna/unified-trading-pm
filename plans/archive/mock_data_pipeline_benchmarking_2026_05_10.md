@@ -15,16 +15,16 @@ locked_by: live-defi-rollout
 locked_since: 2026-05-10
 spawned_plan: plans/active/mock_data_pipeline_benchmarking_2026_05_10.md
 related_codex:
-  - codex/02-data/contracts-scope-and-layout.md
-  - codex/02-data/availability-manifest-and-data-status.md
-  - codex/02-data/honest-absence-downstream-handling.md
-  - codex/04-architecture/batch-live-architecture.md
-  - codex/04-architecture/shard-level-failure-isolation.md
-  - codex/05-infrastructure/runtime-tiers-and-deployment.md
-  - codex/05-infrastructure/vm-tarball-deployment.md
-  - codex/05-infrastructure/launcher-script-ssot.md
-  - codex/05-infrastructure/live-pipeline-architecture.md
-  - codex/06-coding-standards/quality-gates.md
+  - /codex/02-data/contracts-scope-and-layout.md
+  - /codex/02-data/availability-manifest-and-data-status.md
+  - /codex/02-data/honest-absence-downstream-handling.md
+  - /codex/04-architecture/batch-live-architecture.md
+  - /codex/04-architecture/shard-level-failure-isolation.md
+  - /codex/05-infrastructure/runtime-tiers-and-deployment.md
+  - /codex/05-infrastructure/vm-tarball-deployment.md
+  - /codex/05-infrastructure/launcher-script-ssot.md
+  - /codex/05-infrastructure/live-pipeline-architecture.md
+  - /codex/06-coding-standards/quality-gates.md
 related_plans:
   - plans/active/master_to_live_defi_2026_05_23.md
   - plans/epics/ml_and_features_master_2026_05_07.md
@@ -444,7 +444,7 @@ unified features benchmark surface is well-defined.
 - A canonical plan exists in `plans/active/mock_data_pipeline_benchmarking_<date>.md`. The plan has per-Block phases:
   Block B (reuse audit + generator gap-fill), Block C (bucket SSOT + non-prod path discipline), Block D (harness
   extension), Block E (bottleneck taxonomy SSOT), Block F (audit-recipe + entrypoint script).
-- A codex SSOT in `codex/05-infrastructure/synthetic-data-benchmarking.md` (NEW) describes the workspace approach:
+- A codex SSOT in `/codex/05-infrastructure/synthetic-data-benchmarking.md` (NEW) describes the workspace approach:
   reuse-not-fork principle + per-asset_group generator inventory + bucket-suffix SSOT + parametric axes + bottleneck
   taxonomy + benchmark-runner architecture + per-stage thresholds.
 - A workspace-wide benchmark-runner exists at the right SSOT location (TBD per D2 — likely
@@ -698,16 +698,16 @@ Operator clarifications likely needed during iteration:
   decisions, Harsh for generator implementation + harness extensions + benchmark-runner script + bucket SSOT wiring +
   result-aggregation pipeline
 - **Codex SSOTs touched**:
-  - `codex/05-infrastructure/synthetic-data-benchmarking.md` — NEW — workspace SSOT (reuse principle + generator
+  - `/codex/05-infrastructure/synthetic-data-benchmarking.md` — NEW — workspace SSOT (reuse principle + generator
     architecture + bucket-suffix SSOT + bottleneck taxonomy + benchmark-runner)
-  - `codex/02-data/contracts-scope-and-layout.md` — UPDATE — link to per-data_type generator inventory
-  - `codex/05-infrastructure/runtime-tiers-and-deployment.md` — UPDATE — benchmark-VM tier + per-stage shape
+  - `/codex/02-data/contracts-scope-and-layout.md` — UPDATE — link to per-data_type generator inventory
+  - `/codex/05-infrastructure/runtime-tiers-and-deployment.md` — UPDATE — benchmark-VM tier + per-stage shape
     recommendations
-  - `codex/05-infrastructure/vm-tarball-deployment.md` — UPDATE — benchmark-VM launcher pattern
-  - `codex/05-infrastructure/launcher-script-ssot.md` — UPDATE — `launch-benchmark-vm.sh` registration
-  - `codex/04-architecture/batch-live-architecture.md` — UPDATE — benchmark-mode-as-batch-mode-with-synthetic-input
+  - `/codex/05-infrastructure/vm-tarball-deployment.md` — UPDATE — benchmark-VM launcher pattern
+  - `/codex/05-infrastructure/launcher-script-ssot.md` — UPDATE — `launch-benchmark-vm.sh` registration
+  - `/codex/04-architecture/batch-live-architecture.md` — UPDATE — benchmark-mode-as-batch-mode-with-synthetic-input
     framing
-  - `codex/06-coding-standards/quality-gates.md` — UPDATE — per-service benchmark entrypoint as a soft-gate
+  - `/codex/06-coding-standards/quality-gates.md` — UPDATE — per-service benchmark entrypoint as a soft-gate
 - **Cross-plan dependencies**:
   - `plans/active/master_to_live_defi_2026_05_23.md` — Group F items 17 + 18 reference benchmark thresholds for sign-off
   - `plans/epics/ml_and_features_master_2026_05_07.md` — features + ML benchmarking sits under this epic
@@ -742,7 +742,7 @@ Operator clarifications likely needed during iteration:
   per-stage events), Phase 1 benchmark VM + buckets, Phase 2 benchmark runner, Phase 3 initial run + bottleneck report,
   Phase 4 codex SSOT alignment + master-plan continuous-verification wiring, Phase 5 bottleneck-remediation backlog
   dispatch into epics
-- **Codex updates committed**: TBD (Phase 4 of plan — `codex/05-infrastructure/synthetic-data-benchmarking.md` NEW + 6
+- **Codex updates committed**: TBD (Phase 4 of plan — `/codex/05-infrastructure/synthetic-data-benchmarking.md` NEW + 6
   codex updates per plan-shape decisions block)
 - **Question doc closes (status: `closed`) when**: Phase 4 of the active plan ships (codex SSOT lands + master-plan
   continuous-verification column wired) AND a real synthetic-data benchmark run has produced a per-stage bottleneck

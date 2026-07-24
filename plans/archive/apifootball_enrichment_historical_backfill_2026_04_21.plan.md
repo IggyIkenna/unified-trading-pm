@@ -32,7 +32,7 @@ sports_p2_history_apifootball_2015_to_present_2026_06_27 (all 3 open items — m
 chain, data-status coverage confirmation, per-entity spot-check — are absorbed by that plan's completed monitor+rescan+
 audit cycles, cross-confirmed by `plans/active/sports_data_sources_canonical_completion_2026_07_13.md` and
 `plans/active/data_completion_to_100_all_ag_2026_06_21.md`. The pre-2020-06-06 portion of this plan's original window is
-independently moot per `codex/02-data/sports-2020-06-data-floor.md`. NOTE: `locked_by: live-defi-rollout` was never
+independently moot per `/codex/02-data/sports-2020-06-data-floor.md`. NOTE: `locked_by: live-defi-rollout` was never
 cleared at archival — flagged for operator `[unlock-plan]` cleanup, tracked in the parent issue doc.)
 
 ## PLAN-SIZING (Phase 0 — 2026-04-21)
@@ -211,9 +211,9 @@ Strictly sequential per-entity due to shared API key rate-limit.
 
 ## Cross-refs
 
-- Scheduling cadence codex: `codex/02-data/sports-scheduling-and-sharding.md` §§2.1, 4, 5.
+- Scheduling cadence codex: `/codex/02-data/sports-scheduling-and-sharding.md` §§2.1, 4, 5.
 - Launcher: `deployment-service/scripts/vm/launch-api-football-backfill-vm.sh`.
-- Manifest v5 `empty_confirmed` contract: `codex/02-data/availability-manifest-and-data-status.md`.
+- Manifest v5 `empty_confirmed` contract: `/codex/02-data/availability-manifest-and-data-status.md`.
 
 ## Out of scope
 

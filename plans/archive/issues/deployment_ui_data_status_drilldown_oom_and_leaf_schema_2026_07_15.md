@@ -29,9 +29,9 @@ repos: [deployment-ui, deployment-api]
 scope: [engineer, admin]
 tags: [data-status, drilldown, oom, cloud-run, honest-coverage, leaf-schema, deployment-ui, deployment-api, playwright]
 related:
-  - codex/03-deployment/data-status-ui-surface.md
-  - codex/02-data/honest-coverage-model.md
-  - codex/02-data/availability-manifest-and-data-status.md
+  - /codex/03-deployment/data-status-ui-surface.md
+  - /codex/02-data/honest-coverage-model.md
+  - /codex/02-data/availability-manifest-and-data-status.md
 created: 2026-07-15
 parent_epic: infrastructure_master
 assigned_vm: NA
@@ -48,8 +48,8 @@ depends_on: []
 
 # Data Status drilldown OOM + honest-coverage + drilldown leaf schema/metric (2026-07-15)
 
-Codex SSOTs: `codex/03-deployment/data-status-ui-surface.md`, `codex/02-data/honest-coverage-model.md`,
-`codex/02-data/availability-manifest-and-data-status.md`.
+Codex SSOTs: `/codex/03-deployment/data-status-ui-surface.md`, `/codex/02-data/honest-coverage-model.md`,
+`/codex/02-data/availability-manifest-and-data-status.md`.
 
 ## Symptoms (operator report)
 

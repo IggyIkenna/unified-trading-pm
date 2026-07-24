@@ -17,7 +17,7 @@ repos: [agent-orchestrator, unified-trading-pm]
 scope: [engineer, admin]
 tags:
   [agent-orchestrator, task-lifecycle, dirty-wip, resume, watchdog, autospawn, commit-identity, worktrees, quarantine]
-related: [../epics/orchestrator_master.md, ao_dispatch_correctness_regen_reconcile_2026_07_07.md]
+related: [../epics/orchestrator_master.md, /plans/archive/2026_07/ao_dispatch_correctness_regen_reconcile_2026_07_07.md]
 created: 2026-07-09
 last_updated: 2026-07-15
 parent_epic: orchestrator_master
@@ -148,11 +148,11 @@ preserve-on-handoff (the ONLY auto-commit point):
 
 ## 3. Codex SSOTs this plan depends on (read before executing; update in the DOC todo)
 
-- `codex/05-infrastructure/per-tab-worktrees.md` — Path-B slot clones, commit attribution `[slot-N·host]`,
+- `/codex/05-infrastructure/per-tab-worktrees.md` — Path-B slot clones, commit attribution `[slot-N·host]`,
   inherited-dirty-WIP liveness gate.
-- `codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` +
-  `codex/04-architecture/agent-orchestrator-overview.md` — slot/worker lifecycle, dispatch, watchdog.
-- `codex/12-agent-workflow/async-wait-and-poll-discipline.md` — watchdog/monitor verdict discipline (dead vs working
+- `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` +
+  `/codex/04-architecture/agent-orchestrator-overview.md` — slot/worker lifecycle, dispatch, watchdog.
+- `/codex/12-agent-workflow/async-wait-and-poll-discipline.md` — watchdog/monitor verdict discipline (dead vs working
   must be a measured verdict).
 - `plans/PLAN_FORMAT.md` §8b — evidence-backed completion for the VERIFY todo.
 
@@ -395,8 +395,8 @@ preserve-on-handoff (the ONLY auto-commit point):
       resolved by operator.
 - [x] [DOC] P1. ✅ unified-trading-pm docs commit (per-tab-worktrees.md §Derivation SSOT; agent-orchestrator-overview.md
       §Worker task lifecycle; CLAUDE.md one-liner) — **Post-phase codex audit** — update
-      `codex/05-infrastructure/per-tab-worktrees.md` (commit attribution — PATH-based slot derivation; checker script;
-      orphan-WIP identity), `codex/04-architecture/agent-orchestrator-overview.md` (task lifecycle states — done-gate,
+      `/codex/05-infrastructure/per-tab-worktrees.md` (commit attribution — PATH-based slot derivation; checker script;
+      orphan-WIP identity), `/codex/04-architecture/agent-orchestrator-overview.md` (task lifecycle states — done-gate,
       resume-on-death, preserve-on-handoff), and the CLAUDE.md one-liners if the shipped contract changed;
       SUPERSEDED-banner anything invalidated.
 

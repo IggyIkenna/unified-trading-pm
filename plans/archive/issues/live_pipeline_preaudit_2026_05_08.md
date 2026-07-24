@@ -6,13 +6,28 @@ status: resolved
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-service, deployment-ui]
+repos:
+  [
+    alerting-service,
+    batch-live-reconciliation-service,
+    client-reporting-api,
+    deployment-api,
+    deployment-service,
+    deployment-ui,
+  ]
 scope: [engineer, admin]
 tags: []
 related: []
 created: 2026-05-08
 author: tab2-pre-audit
-source: [plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md (Phase 0), codex/05-infrastructure/live-pipeline-architecture.md, codex/05-infrastructure/replay-subsystem.md, codex/02-data/pipeline-mode-partition.md, codex/04-architecture/instrument-lifecycle-cache-delta-hot-reload.md]
+source:
+  [
+    plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md (Phase 0),
+    /codex/05-infrastructure/live-pipeline-architecture.md,
+    /codex/05-infrastructure/replay-subsystem.md,
+    /codex/02-data/pipeline-mode-partition.md,
+    /codex/04-architecture/instrument-lifecycle-cache-delta-hot-reload.md,
+  ]
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
 ---
@@ -73,14 +88,14 @@ locked_since: 2026-05-08
 - **Per-key throttling (Bybit / Binance / OKX / Coinbase)**: WS connection counts capped per API key; per-VM
   connection-pool sizing must match `WS_CONNECTIONS_PER_VENUE` config knob (orthogonal to the shard SSOT — does NOT
   appear in the manifest, per
-  [`codex/05-infrastructure/live-pipeline-architecture.md`](../../codex/05-infrastructure/live-pipeline-architecture.md)
-  § Sharding).
+  [`/codex/05-infrastructure/live-pipeline-architecture.md`](/codex/05-infrastructure/live-pipeline-architecture.md) §
+  Sharding).
 - **Singleton-lock pattern** (sports forward-poll + prediction backfill VMs): launchers refuse to start if a same-prefix
   VM is RUNNING in the zone; `--force` bypass — see launchers `deployment-service/scripts/vm/launch-sfi-forward-poll.sh`
   and `launch-mtds-prediction-backfill-vm.sh`.
 - **IP redundancy for high-rate endpoints**: Hyperliquid / Alchemy benefit from multi-VM splay; record in launcher
   VM-name-prefix table per
-  [`codex/05-infrastructure/launcher-script-ssot.md`](../../codex/05-infrastructure/launcher-script-ssot.md).
+  [`/codex/05-infrastructure/launcher-script-ssot.md`](/codex/05-infrastructure/launcher-script-ssot.md).
 
 ### **Phase-3 sub-todos surfaced by (a)**
 
@@ -325,7 +340,7 @@ Phase 10's `InstrumentCacheRefreshTriggerEvent` consumers (MTDS / MDPS / feature
      instead of timer-driven).
 3. The 16-service callsite list above maps 1:1 to consumer wire-in surfaces. Each service's `config_reloaders.py` gets a
    sibling `instrument_cache_reloader.py` (or extends the existing reloader) per the pattern doc at
-   [`codex/04-architecture/instrument-lifecycle-cache-delta-hot-reload.md`](../../codex/04-architecture/instrument-lifecycle-cache-delta-hot-reload.md).
+   [`/codex/04-architecture/instrument-lifecycle-cache-delta-hot-reload.md`](/codex/04-architecture/instrument-lifecycle-cache-delta-hot-reload.md).
 
 **Reference pattern doc**: `unified_trading_library/api_key_reloader.py` shape — periodic reloader with
 `RefreshCallback = Callable[[dict[str, str], set[str]], None]` for the new-keys + removed-keys diff. Phase 10 mirrors

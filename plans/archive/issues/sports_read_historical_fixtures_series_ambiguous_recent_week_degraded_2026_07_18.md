@@ -26,7 +26,7 @@ related:
   [
     plans/active/issues/sports_elo_calculator_tz_naive_season_boundary_silent_skip_2026_07_17.md,
     plans/active/issues/sports_travel_calculator_home_venue_coords_never_resolved_2026_07_17.md,
-    codex/02-data/honest-absence-downstream-handling.md,
+    /codex/02-data/honest-absence-downstream-handling.md,
   ]
 created: 2026-07-18
 parent_epic: sports_master

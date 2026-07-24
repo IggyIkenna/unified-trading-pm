@@ -76,32 +76,31 @@ locked_since: 2026-05-07
 This plan implements / extends the following codex documents (read these BEFORE making code changes; drift between code
 and these docs is a review-blocking failure per `doc → plan → code`):
 
-- [`codex/02-data/availability-manifest-and-data-status.md`](../../codex/02-data/availability-manifest-and-data-status.md)
-  — manifest schema v9 (live since 2026-05-30, `MANIFEST_SCHEMA_VERSION = 9`; "v5" corrected 2026-06-30,
-  consolidation) + canonical `pipeline_mode=` partition + 4-state capture taxonomy + cluster validation for bundled CeFi
-  data_types (`options_chain` / `futures_chain`)
-- [`codex/02-data/honest-absence-downstream-handling.md`](../../codex/02-data/honest-absence-downstream-handling.md) —
-  CeFi `empty_confirmed` rule (only venue-level reasons legit: `EXPECTED_HOLIDAY` / `EXPECTED_WEEKEND` /
+- [`/codex/02-data/availability-manifest-and-data-status.md`](/codex/02-data/availability-manifest-and-data-status.md) —
+  manifest schema v9 (live since 2026-05-30, `MANIFEST_SCHEMA_VERSION = 9`; "v5" corrected 2026-06-30, consolidation) +
+  canonical `pipeline_mode=` partition + 4-state capture taxonomy + cluster validation for bundled CeFi data_types
+  (`options_chain` / `futures_chain`)
+- [`/codex/02-data/honest-absence-downstream-handling.md`](/codex/02-data/honest-absence-downstream-handling.md) — CeFi
+  `empty_confirmed` rule (only venue-level reasons legit: `EXPECTED_HOLIDAY` / `EXPECTED_WEEKEND` /
   `EXPECTED_PRE_VENUE_LAUNCH` / `EXPECTED_PARTIAL_HALF_DAY`); zero-source-response on alive instrument-day must flip to
   `attempted_failed`
-- [`codex/02-data/per-asset-group-bucket-layouts.md`](../../codex/02-data/per-asset-group-bucket-layouts.md) — CeFi
-  shard matrix: spot/perp = per-instrument-per-day (35GB roots); options/futures = bundled by `options_chain` /
+- [`/codex/02-data/per-asset-group-bucket-layouts.md`](/codex/02-data/per-asset-group-bucket-layouts.md) — CeFi shard
+  matrix: spot/perp = per-instrument-per-day (35GB roots); options/futures = bundled by `options_chain` /
   `futures_chain` root; per-VM shard isolation policy
-- [`codex/02-data/mtds-data-source-coverage-matrix.md`](../../codex/02-data/mtds-data-source-coverage-matrix.md) — MTDS
+- [`/codex/02-data/mtds-data-source-coverage-matrix.md`](/codex/02-data/mtds-data-source-coverage-matrix.md) — MTDS
   per-(venue, data_type) source coverage with `SOURCE_COVERAGE_START` per venue (Tardis vs Databento vs venue-native
   REST)
-- [`codex/04-architecture/batch-live-architecture.md`](../../codex/04-architecture/batch-live-architecture.md) —
-  batch=live unified pipeline: same shard atom, same fields, same `available_at` semantics across modes; CeFi
-  forward-poll + backfill share one code path
-- [`codex/04-architecture/asset-class-ownership.md`](../../codex/04-architecture/asset-class-ownership.md) — CeFi venue
-  list (Bybit / Deribit / Binance / OKX / Bitfinex / Bitget / Kraken / Coinbase / Hyperliquid) + `VENUE_TO_ASSET_GROUP`
-  SSOT
-- [`codex/04-architecture/interface-credential-convention.md`](../../codex/04-architecture/interface-credential-convention.md)
+- [`/codex/04-architecture/batch-live-architecture.md`](/codex/04-architecture/batch-live-architecture.md) — batch=live
+  unified pipeline: same shard atom, same fields, same `available_at` semantics across modes; CeFi forward-poll +
+  backfill share one code path
+- [`/codex/04-architecture/asset-class-ownership.md`](/codex/04-architecture/asset-class-ownership.md) — CeFi venue list
+  (Bybit / Deribit / Binance / OKX / Bitfinex / Bitget / Kraken / Coinbase / Hyperliquid) + `VENUE_TO_ASSET_GROUP` SSOT
+- [`/codex/04-architecture/interface-credential-convention.md`](/codex/04-architecture/interface-credential-convention.md)
   — CeFi credentials: `get_order_adapter(venue, api_key, api_secret, ...)` keys-as-params shape; ApiKeyReloader
   hot-reload pattern
-- [`codex/05-infrastructure/launcher-script-ssot.md`](../../codex/05-infrastructure/launcher-script-ssot.md) — CeFi
-  backfill / forward-poll launchers MUST live under `deployment-service/scripts/vm/`; `VM_PREFIX_TO_BUCKET` registry
-  keeps zombie watchdog visibility
+- [`/codex/05-infrastructure/launcher-script-ssot.md`](/codex/05-infrastructure/launcher-script-ssot.md) — CeFi backfill
+  / forward-poll launchers MUST live under `deployment-service/scripts/vm/`; `VM_PREFIX_TO_BUCKET` registry keeps zombie
+  watchdog visibility
 
 If any of the docs above is missing, this plan creates a stub for it (see [`codex/`](../../codex/) tree).
 
@@ -156,7 +155,7 @@ Single source of truth for **CeFi asset_group** work toward live DeFi 2026-05-23
   options/futures).
 
 **MVP backtest scope** (per
-[`codex/09-strategy/mvp-universe-per-asset-group.md`](../../codex/09-strategy/mvp-universe-per-asset-group.md)): ~30 MVP
+[`/codex/09-strategy/mvp-universe-per-asset-group.md`](/codex/09-strategy/mvp-universe-per-asset-group.md)): ~30 MVP
 coins × 6 perp venues for arbitrage-funding-rate archetype. Dust-conversion spot coins (e.g. EIGEN) captured for prices,
 NOT in backtest config-grid. Data capture remains broad (all instruments per venue catalog). Tier A archetypes touching
 CeFi: ml-continuous + arbitrage-funding-rate + defi-carry-family (perp hedge legs).
@@ -168,7 +167,7 @@ CeFi: ml-continuous + arbitrage-funding-rate + defi-carry-family (perp hedge leg
   / Pacifica were originally scoped under `cefi_venue_universe_expansion` as "DEX perps" but they're DeFi by
   asset_group. **[2026-07-12 correction, finding 29, §A2 B-queue]** (was: listed as DeFi above with no reclassification
   note) — Lighter (LIGHTER-ZKSYNC) / Extended (EXTENDED-STARKNET) / Pacifica (PACIFICA-SOLANA) have since been
-  RECLASSIFIED CeFi per `codex/02-data/mvp-scope-canonical.md` § CeFi (they are canonical CeFi venues there) and
+  RECLASSIFIED CeFi per `/codex/02-data/mvp-scope-canonical.md` § CeFi (they are canonical CeFi venues there) and
   `mvp_backfill_cefi_tick_v10_2026_06_27.md:105-109` ("Any older cefi plan that … lists … LIGHTER/EXTENDED/PACIFICA as
   DeFi, is stale and SUBORDINATE").
 - Sports / Predictions → see `sports_master.md` / `predictions_master.md`.
@@ -621,7 +620,7 @@ real capital. Distinct from DeFi rollout (rules-based, carry-family). Ships the 
 - **Live = batch**: same code path; only fill source differs (cefi_master shares the unified pipeline; no live-only
   data_types). See CLAUDE.md "Live = batch" rule.
 - **Honest absence**: tail-end days of a venue's launch use `record_empty(empty_confirmed)`. No NaN-placeholder rows.
-  See `codex/02-data/honest-absence-downstream-handling.md`.
+  See `/codex/02-data/honest-absence-downstream-handling.md`.
 - **Manifest concurrency**: backfill VMs use per-VM shard isolation (`MANIFEST_PER_VM_SHARDS=true`, `VM_NAME=<unique>`).
 - **VM naming**: prefixes per CLAUDE.md "VM Naming Convention" (`cefi-{venue}-{flavor}-{ts}`); add new prefix to
   `vm_zombie_watchdog.py` `VM_PREFIX_TO_BUCKET` before launch.
@@ -670,7 +669,7 @@ _(no plans currently assigned at this priority)_
   [`shard_granularity_ssot_propagation_2026_05_06.md`](../archive/shard_granularity_ssot_propagation_2026_05_06.plan.md).
 - Sibling asset_group umbrellas: `defi_master`, `tradfi_master`, `sports_master`, `predictions_master`.
 - Honest-coverage % surface: `GET /api/data-status/honest-coverage` + `HonestCoverageCard` (deployment-ui). SSOT:
-  [`codex/03-deployment/data-status-ui-surface.md`](../../codex/03-deployment/data-status-ui-surface.md). Phase 7F per
+  [`/codex/03-deployment/data-status-ui-surface.md`](/codex/03-deployment/data-status-ui-surface.md). Phase 7F per
   `cross_asset_group_catalogue_audit_2026_05_10.md`.
 - Canonical asset_group registry: `unified_api_contracts.canonical.crosscutting.asset_group_registry` (Phase 5C/5D).
 

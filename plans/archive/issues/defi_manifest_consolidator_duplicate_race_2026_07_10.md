@@ -23,8 +23,8 @@ tags: [manifest, duplication, consolidator, honest-coverage, defi, data-correctn
 related:
   [
     plans/active/issues/defi_expected_unattempted_backlog_1m_2026_07_03.md,
-    codex/02-data/availability-manifest-and-data-status.md,
-    codex/05-infrastructure/manifest-consolidator-ssot.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/05-infrastructure/manifest-consolidator-ssot.md,
   ]
 created: 2026-07-10
 parent_epic: instruments_master

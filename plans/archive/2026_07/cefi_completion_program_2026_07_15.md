@@ -16,9 +16,9 @@ scope: [engineer, admin]
 tags: [cefi, honest-coverage, backfill, canonicalisation, manifest, liquidations, equity-perp, autonomous]
 related:
   [
-    mvp_backfill_cefi_tick_v10_2026_06_27.md,
-    master_data_canonicalisation_migration_catalogue_2026_06_07.md,
-    cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md,
+    /plans/archive/2026_07/mvp_backfill_cefi_tick_v10_2026_06_27.md,
+    /plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md,
+    /plans/active/cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md,
     issues/tardis_concurrent_ip_lockout_2026_07_12.md,
     issues/cefi_layer1_denominator_gaps_2026_07_03.md,
     issues/cefi_batch_manifest_blank_instrument_type_on_failure_2026_07_12.md,
@@ -78,12 +78,12 @@ venues, and the legacy-alias / instrument_type-casing strays are gone.**
 
 ## Codex SSOTs (read before touching a workstream — plan↔codex drift is review-blocking)
 
-- `codex/02-data/cefi-capture-universe.md` — two-layer model + perp-gate + `CeFiMvpRule` (the denominator predicate).
-- `codex/02-data/availability-manifest-and-data-status.md` — 4-state capture_status, `expected_unattempted` writer.
-- `codex/02-data/honest-coverage-model.md` — two-layer / two-view / instrument-gates-download.
-- `codex/02-data/pipeline-mode-partition.md` — `{mode}_{source}` partitioning (readers prefix-match).
-- `codex/05-infrastructure/vm-launcher-runbook.md` (§ Tardis cap 3) + `…/spot-vms-for-backfill.md`.
-- `codex/04-architecture/instruments-service-as-ssot-for-mtds.md` — IS owns the catalogue; MTDS derives capture.
+- `/codex/02-data/cefi-capture-universe.md` — two-layer model + perp-gate + `CeFiMvpRule` (the denominator predicate).
+- `/codex/02-data/availability-manifest-and-data-status.md` — 4-state capture_status, `expected_unattempted` writer.
+- `/codex/02-data/honest-coverage-model.md` — two-layer / two-view / instrument-gates-download.
+- `/codex/02-data/pipeline-mode-partition.md` — `{mode}_{source}` partitioning (readers prefix-match).
+- `/codex/05-infrastructure/vm-launcher-runbook.md` (§ Tardis cap 3) + `…/spot-vms-for-backfill.md`.
+- `/codex/04-architecture/instruments-service-as-ssot-for-mtds.md` — IS owns the catalogue; MTDS derives capture.
 
 ## Findings evidence (from the 2026-07-15 audit — see Progress Log for the raw queries)
 
@@ -567,7 +567,7 @@ exactly zero measured progress. Measured: eu 2,773,292 → 2,773,292 across mult
    silence). `launch-cefi-sharded-backfill.sh:498,702` uses
    `--provisioning-model=SPOT --instance-termination-action=DELETE --no-restart-on-failure` with **no relaunch
    mechanism** (only `launch-transfermarkt-backfill-vm.sh` has any preemption handling). The codex SPOT rule
-   (`codex/05-infrastructure/spot-vms-for-backfill.md`) justifies SPOT because "idempotent shards **re-run on
+   (`/codex/05-infrastructure/spot-vms-for-backfill.md`) justifies SPOT because "idempotent shards **re-run on
    preemption**" — **that premise is false for this launcher family.** **NOT FIXED IN CODE** — see the todo below.
 
 **Status of the writer fix: UNTESTED in production, NOT disproven.** Three eu tests, three INVALID results (fleet in the
@@ -619,7 +619,7 @@ the relabel pass over historical raw-id captures (peer dry-run `instruments-serv
       new/updated sweep-level tests in `test_data_pipeline_monitors.py`); full `quality-gates.sh` green. **Deliberately
       NOT done**: the actual codex correction to `spot-vms-for-backfill.md` (operator-gated per the plan-reconcile rule
       — exact edit text is in the 2026-07-16 Progress Log entry below for the operator to apply). SSOT to correct once
-      done: `codex/05-infrastructure/spot-vms-for-backfill.md` (its "idempotent shards re-run on preemption" premise is
+      done: `/codex/05-infrastructure/spot-vms-for-backfill.md` (its "idempotent shards re-run on preemption" premise is
       NOW TRUE for this family — see the exact wording needed in the Progress Log).
 
 ### 🔴 FOURTH blocker + it CORRUPTS the manifest: 3 lease-ON VMs in the real gap = 403 storm, ~94% false failures — 2026-07-16T06:10Z
@@ -744,7 +744,7 @@ notice.
       manifest corruption. Implement per the design above: `VM_TARDIS_CONSUMER=1` metadata stamp from every
       Tardis-consuming launcher + guard counts it; backfill yields to live/forward (never the reverse); backfill should
       pause-and-retry rather than record false `attempted_failed` when the slot is held. SSOTs to update once shipped:
-      `codex/05-infrastructure/vm-launcher-runbook.md` § Tardis cap + the CLAUDE.md one-liner. **SHIPPED (2026-07-16,
+      `/codex/05-infrastructure/vm-launcher-runbook.md` § Tardis cap + the CLAUDE.md one-liner. **SHIPPED (2026-07-16,
       deployment-service@02be72e)**: (i) `VM_TARDIS_CONSUMER=1` stamped in `launch-cefi-sharded-backfill.sh` (both
       per-shard + SINGLE_VM_QUEUE metadata blocks), `launch-cefi-sharded-backfill-aws.sh` (EXTRA_TAGS),
       `launch-mtds-backfill-vm.sh` (ONLY when `--asset-group CEFI` — verified DEFI stays unstamped),
@@ -957,7 +957,7 @@ still-pending corpus-mutation numbers:
    debris — the fix landed correctly (verified live: `is_bundle` branch at `enumerate_expected_universe.py:1117-1123`
    already sets `seed_instrument_id=""`/`seed_underlying=instr.underlying or instr.instrument_id` for
    `GRAIN_BUNDLE_BY_UNDERLYING` types) but the manifest is append/upsert-only so the pre-fix rows were never removed.
-3. **Why a bare re-run cannot self-heal either class**: read `codex/05-infrastructure/manifest-consolidator-ssot.md` —
+3. **Why a bare re-run cannot self-heal either class**: read `/codex/05-infrastructure/manifest-consolidator-ssot.md` —
    the DuckDB consolidator's dedup key is `(date, venue, data_type, service_name)` + optional dims PRESENT IN THE UNION
    SCHEMA (instrument_type/instrument_id included for per-instrument enumerator shards), last-write-wins by `written_at`
    DESC. Two rows with DIFFERENT `instrument_id` values are DIFFERENT keys — the consolidator legitimately keeps BOTH
@@ -1079,7 +1079,7 @@ genuinely-exit-0 VM never reaches this path.
 relauncher makes preemption truly benign, the alert should fire only when the relaunch itself FAILS"). A NEW event
 string `DP_VM_PREEMPTED_NO_RELAUNCH` (CRITICAL) self-emitted by `RelaunchPreemptedVm` on every failure path (no launcher
 / budget exhausted / guard-refused / launcher error) — reuses the EXISTING `log_event`→alerting-service carrier
-(`codex/05-infrastructure/data-pipeline-alerts.md`'s emit→route→escalate spine), no new plumbing invented. A plain
+(`/codex/05-infrastructure/data-pipeline-alerts.md`'s emit→route→escalate spine), no new plumbing invented. A plain
 string was used (not a new UTL constant) since this fix stayed scoped to deployment-service per the dispatch. On
 success: quiet INFO only.
 
@@ -1117,7 +1117,7 @@ to correctly REFUSE (exit 1, zero VM created) while the cap-1 backfill held the 
   aborted before any `gcloud compute instances create` call. Fleet state identical before/after this session.
 
 **Codex edit needed (operator-gated — NOT applied by me per the plan-reconcile rule)**:
-`codex/05-infrastructure/spot-vms-for-backfill.md` currently states (the premise this session makes TRUE): its
+`/codex/05-infrastructure/spot-vms-for-backfill.md` currently states (the premise this session makes TRUE): its
 "idempotent shards re-run on preemption" claim was FALSE for the cefi/tardis launcher family until today. The exact
 edit: replace that unqualified claim with something like — _"idempotent shards re-run on preemption for launchers that
 call `lc_write_launch_params()` at create time (currently: `launch-cefi-sharded-backfill.sh` + its AWS twin) — the
@@ -1125,7 +1125,7 @@ call `lc_write_launch_params()` at create time (currently: `launch-cefi-sharded-
 (`scripts/recovery/relaunch_backfill_vm.py`), which replays the captured launch env through the launcher's own
 `tardis_concurrency_guard`. A launcher that does NOT call `lc_write_launch_params()` still gets a relaunch attempt
 (best-effort, ambient env only) but not an exact-params replay — see `cefi_completion_program_2026_07_15.md` 2026-07-16
-for the design."_ Also worth a one-line mention in `codex/05-infrastructure/vm-launcher-runbook.md` § Tardis cap noting
+for the design."_ Also worth a one-line mention in `/codex/05-infrastructure/vm-launcher-runbook.md` § Tardis cap noting
 the `VM_TARDIS_CONSUMER=1` self-declaring metadata model now supersedes pure name-pattern matching (Fix 3), and
 (optionally) a new `DP-VM-007` row in `codex/05-infrastructure/data-pipeline-alerts.registry.yaml` /
 `data-pipeline-alerts.md`'s registry table for `DP_VM_PREEMPTED` / `DP_VM_PREEMPTED_NO_RELAUNCH` (mirroring the existing
@@ -1171,7 +1171,7 @@ counts RUNNING+PROVISIONING+STAGING (fixed 07-16 after the 40s race), so whichev
 creates a PROVISIONING VM and the other is refused — no double-launch. So there is zero downside to leaving the keeper
 armed through the deploy window.
 
-**Operator codex edit surfaced by the fix (gated, not applied)**: `codex/05-infrastructure/spot-vms-for-backfill.md`'s
+**Operator codex edit surfaced by the fix (gated, not applied)**: `/codex/05-infrastructure/spot-vms-for-backfill.md`'s
 "idempotent shards re-run on preemption" premise is now TRUE for the cefi/tardis family — Agent A wrote the exact
 replacement wording + a `vm-launcher-runbook.md` note + an optional `DP-VM-007` registry row into the
 unified-trading-pm@49a9ce243 Progress Log for the operator to apply.

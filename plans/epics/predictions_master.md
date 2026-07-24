@@ -76,15 +76,15 @@ locked_since: 2026-05-07
 This plan implements / extends the following codex documents (read these BEFORE making code changes; drift between code
 and these docs is a review-blocking failure per `doc → plan → code`):
 
-- [`codex/02-data/availability-manifest-and-data-status.md`](../../codex/02-data/availability-manifest-and-data-status.md)
-  — manifest v5 schema + canonical-question-group cluster validation at `record_captured`
-- [`codex/02-data/honest-absence-downstream-handling.md`](../../codex/02-data/honest-absence-downstream-handling.md) —
+- [`/codex/02-data/availability-manifest-and-data-status.md`](/codex/02-data/availability-manifest-and-data-status.md) —
+  manifest v5 schema + canonical-question-group cluster validation at `record_captured`
+- [`/codex/02-data/honest-absence-downstream-handling.md`](/codex/02-data/honest-absence-downstream-handling.md) —
   lifecycle-bounded absence reasons for prediction shards + downstream NaN handling
-- [`codex/02-data/prediction-schema-paths.md`](../../codex/02-data/prediction-schema-paths.md) — prediction GCS path
+- [`/codex/02-data/prediction-schema-paths.md`](/codex/02-data/prediction-schema-paths.md) — prediction GCS path
   layout + canonical-question-group bundling (raw market_ids → BTC_UP_DOWN_HOURLY etc.)
-- [`codex/04-architecture/batch-live-architecture.md`](../../codex/04-architecture/batch-live-architecture.md) —
-  batch=live pipeline guarantees (same shard atom, same fields, same `available_at` semantics across modes)
-- [`codex/09-strategy/architecture-v2/cross-cutting/prediction-markets.md`](../../codex/09-strategy/architecture-v2/cross-cutting/prediction-markets.md)
+- [`/codex/04-architecture/batch-live-architecture.md`](/codex/04-architecture/batch-live-architecture.md) — batch=live
+  pipeline guarantees (same shard atom, same fields, same `available_at` semantics across modes)
+- [`/codex/09-strategy/architecture-v2/cross-cutting/prediction-markets.md`](/codex/09-strategy/architecture-v2/cross-cutting/prediction-markets.md)
   — prediction-market lifecycle (`market_created_at` / `resolution_time` / `settlement_time`) + canonical-question-group
   SSOT
 
@@ -135,8 +135,8 @@ Covers:
   gates. Sports half (288M ODDS_API row migration + MDPS bucketing + FSS) lives in `sports_master`.
 
 **MVP backtest scope** (per
-[`codex/09-strategy/mvp-universe-per-asset-group.md`](../../codex/09-strategy/mvp-universe-per-asset-group.md)):
-Polymarket subset only by May-23 (BTC_UP_DOWN_HOURLY + other canonical question groups in scope). Kalshi + opinion.trade
+[`/codex/09-strategy/mvp-universe-per-asset-group.md`](/codex/09-strategy/mvp-universe-per-asset-group.md)): Polymarket
+subset only by May-23 (BTC_UP_DOWN_HOURLY + other canonical question groups in scope). Kalshi + opinion.trade
 backtest/live → 2026-06-15 (per wave2_polymarket plan split 2026-05-13). Tier A archetypes touching Prediction:
 arbitrage-event-markets (Polymarket vs CME) + arbitrage-sports-book (Polymarket vs Betfair).
 
@@ -976,7 +976,7 @@ _(no plans currently assigned at this priority)_
 - Sibling asset_group umbrellas: `cefi_master`, `defi_master`, `tradfi_master`, `sports_master`.
 - Sports half of e2e: `sports_master.md` (288M ODDS_API row migration + MDPS bucketing + FSS).
 - Honest-coverage % surface: `GET /api/data-status/honest-coverage` + `HonestCoverageCard` (deployment-ui). SSOT:
-  [`codex/03-deployment/data-status-ui-surface.md`](../../codex/03-deployment/data-status-ui-surface.md). Phase 7F per
+  [`/codex/03-deployment/data-status-ui-surface.md`](/codex/03-deployment/data-status-ui-surface.md). Phase 7F per
   `cross_asset_group_catalogue_audit_2026_05_10.md`.
 - Canonical asset_group registry: `unified_api_contracts.canonical.crosscutting.asset_group_registry` (Phase 5C/5D).
 

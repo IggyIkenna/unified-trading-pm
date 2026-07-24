@@ -10,27 +10,28 @@ repos: [deployment-api, deployment-service, deployment-ui, e2e-testing, instrume
 scope: [engineer, admin]
 tags: []
 related: []
-created: '2026-04-25'
-overview: 'Coordinated, multi-repo pass to align **service shard configuration** and **all consumers** on the dimension name
+created: "2026-04-25"
+overview: "Coordinated, multi-repo pass to align **service shard configuration** and **all consumers** on the dimension
+  name
 
   `asset_group` (trading venue axis) where the legacy name was `category`, without renaming GCS `category=` path
 
   segments until an explicit object-store migration exists. Complements the accepted API decision in
 
-  `codex/11-project-management/decisions/adr-2026-04-25-category-and-asset-group-field-naming.md` and
+  `/codex/11-project-management/decisions/adr-2026-04-25-category-and-asset-group-field-naming.md` and
 
   `venue_axis_asset_group_vocabulary_2026_04_25.plan.md`.
 
-  '
+  "
 type: mixed
 epic: epic-code-completion
-completion_gates: {code: C5, deployment: D2, business: none}
+completion_gates: { code: C5, deployment: D2, business: none }
 repo_gates:
-- {repo: deployment-service, code: C5, deployment: none, business: none}
-- {repo: deployment-api, code: C5, deployment: none, business: none}
-- {repo: deployment-ui, code: C5, deployment: none, business: none}
-- {repo: unified-api-contracts, code: C5, deployment: none, business: none}
-- {repo: system-integration-tests, code: C5, deployment: none, business: none}
+  - { repo: deployment-service, code: C5, deployment: none, business: none }
+  - { repo: deployment-api, code: C5, deployment: none, business: none }
+  - { repo: deployment-ui, code: C5, deployment: none, business: none }
+  - { repo: unified-api-contracts, code: C5, deployment: none, business: none }
+  - { repo: system-integration-tests, code: C5, deployment: none, business: none }
 depends_on: [venue-axis-asset-group-vocabulary-2026-04-25]
 isProject: false
 ---

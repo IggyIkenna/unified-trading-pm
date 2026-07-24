@@ -14,10 +14,10 @@ scope: [engineer, admin]
 tags: [monitoring, live-trading, observability, heartbeat, deployment, self-healing]
 related:
   [
-    codex/05-infrastructure/vm-tarball-deployment.md,
-    codex/05-infrastructure/launcher-script-ssot.md,
-    codex/06-coding-standards/config-reloader-pattern.md,
-    codex/02-data/honest-absence-downstream-handling.md,
+    /codex/05-infrastructure/vm-tarball-deployment.md,
+    /codex/05-infrastructure/launcher-script-ssot.md,
+    /codex/06-coding-standards/config-reloader-pattern.md,
+    /codex/02-data/honest-absence-downstream-handling.md,
   ]
 created: 2026-05-07
 authoritative_for:
@@ -83,7 +83,7 @@ Every adapter / service / strategy / VM workload emits the same closed set of li
 | `PREFLIGHT_SKIPPED`      | INFO     | Once per `correlation_id` when honest-absence skip   | Expected on holiday / weekend / pre-source-coverage   |
 
 Every adapter MUST classify errors via UAC `classify_venue_error()` + emit `ADAPTER_FETCH_FAILED` (shard-level failure
-isolation rule, SSOT `codex/04-architecture/shard-level-failure-isolation.md`).
+isolation rule, SSOT `/codex/04-architecture/shard-level-failure-isolation.md`).
 
 ## Per-archetype heartbeat matrix
 
@@ -143,14 +143,14 @@ The correlated-validation guarantee is supplied by the alerting-service + `unifi
 `STARTED`+`STOPPED` pair MUST be correlated against a manifest spot-check (sample parquet OHLC populated; cluster
 validation passing per writegate Phase 1A) **before** the run is treated as operationally complete. The audit-log
 emission for the validation passes through `_publish_emission_check` per the writegate slice (b)+(c) emission policy
-(SSOT: `codex/02-data/service-output-emission-semantics.md`).
+(SSOT: `/codex/02-data/service-output-emission-semantics.md`).
 
 This is the bright-line workspace rule "no fire-and-forget VM launches" — every VM launch MUST be paired with active
 event-stream verification (STARTED + progress + STOPPED) + correlated manifest spot-check. SSH-tailing logs is a dev
 crutch; production runs through deployment-UI events tab + alerting-service.
 
 SSOTs: `vm-tarball-deployment.md` § "Three guarantees are NOT sufficient" callout + CLAUDE.md "No fire-and-forget VM
-launches" + `codex/02-data/honest-absence-downstream-handling.md` (1440-NaN incident framing).
+launches" + `/codex/02-data/honest-absence-downstream-handling.md` (1440-NaN incident framing).
 
 ## Watchdog dict registration (required step at every launcher add)
 
@@ -188,7 +188,7 @@ launches and codified-discipline (alerting rules + correlated-validation) for li
   registration + QG check policy.
   [`../06-coding-standards/config-reloader-pattern`](/codex/06-coding-standards/config-reloader-pattern.md) — STEP 5.61
   `ServiceBootstrap` (STARTED/STOPPED/FAILED) + STEP 5.62 `make_health_router` requirements every service inherits.
-  [`../02-data/honest-absence-downstream-handling`](../02-data/honest-absence-downstream-handling.md) — 1440-NaN
+  [`../02-data/honest-absence-downstream-handling`](/codex/02-data/honest-absence-downstream-handling.md) — 1440-NaN
   reference framing + reason taxonomy for `record_empty`.
 - **Code**: `unified-trading-library/events/` (event emission helpers + `setup_events()` cloud-agnostic dispatcher);
   `deployment-service/deployment_service/vm/heartbeat_cli.py` + `heartbeat_daemon.py` (per-VM heartbeat); deployment-UI

@@ -1,7 +1,11 @@
 ---
 doc_type: plan
 title: CI/CD Phase-2 foundation — version-registry write-path (item B) + dynamic-versioning canary + spike guards
-summary: 'Phase-2 (version-out-of-source, D13) FOUNDATION lane. Stands up the registry write-path BEFORE any reader repoints: the event-driven tag→Firestore write-through (item B), the per-repo dynamic-versioning setup on ONE canary repo, and the three sandbox-spike hygiene guards (clean-checkout-at-tag build, publish-only-plain-3-part, stale-editable audit). Additive and reversible — breaks nothing live. This is registry-write-path step ① in the risk-ranked retarget order.'
+summary:
+  "Phase-2 (version-out-of-source, D13) FOUNDATION lane. Stands up the registry write-path BEFORE any reader repoints:
+  the event-driven tag→Firestore write-through (item B), the per-repo dynamic-versioning setup on ONE canary repo, and
+  the three sandbox-spike hygiene guards (clean-checkout-at-tag build, publish-only-plain-3-part, stale-editable audit).
+  Additive and reversible — breaks nothing live. This is registry-write-path step ① in the risk-ranked retarget order."
 status: superseded
 nature: process
 asset_group: cross-asset
@@ -9,7 +13,13 @@ stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]
 tags: [cicd, phase-2, version-out-of-source, firestore, setuptools-scm, registry, D13, WS-L]
-related: [cicd_consolidated_remaining_2026_06_24.md, cicd_phase2_semver_retarget_2026_06_27.md, ../epics/infrastructure_master.md, ../../codex/08-workflows/ci-cd-flow.md]
+related:
+  [
+    /plans/archive/2026_06/cicd_consolidated_remaining_2026_06_24.md,
+    /plans/archive/2026_06/cicd_phase2_semver_retarget_2026_06_27.md,
+    ../epics/infrastructure_master.md,
+    /codex/08-workflows/ci-cd-flow.md,
+  ]
 created: 2026-06-27
 parent_epic: infrastructure_master
 assigned_vm: NA
@@ -111,7 +121,7 @@ drift_direction: advance-code
 
 ## Codex SSOT updates
 
-- `codex/08-workflows/ci-cd-flow.md` § "Release tag reconciler" — document the new tag→Firestore write-through + the
+- `/codex/08-workflows/ci-cd-flow.md` § "Release tag reconciler" — document the new tag→Firestore write-through + the
   clean-checkout-at-tag + publish-only-clean guards.
 
 ## Progress Log
@@ -146,7 +156,7 @@ drift_direction: advance-code
     pip fix). Side fix: `main-backmerge-to-ldr.yml` schedule-trigger removal rolled out to all 24 service repos (was
     blocking PM QG template-parity check). Foundation is CODE-COMPLETE; sole remaining gate is live-verify (PR #618
     merged to main + a real `v*` tag push to greeks-service → Firestore doc). Folded into retarget-lane canary step per
-    plan. **Deferred (retarget plan):** Codex SSOT update `codex/08-workflows/ci-cd-flow.md` § Release-tag-reconciler —
+    plan. **Deferred (retarget plan):** Codex SSOT update `/codex/08-workflows/ci-cd-flow.md` § Release-tag-reconciler —
     document flag-gated `__VERSION_SOURCE__` + tag-mint write path; update when the retarget lane verifies the live
     gate.
 - 2026-06-27 (slot-3 PIPELINE UNBLOCKED): PR #618 (LDR→main) MERGED to main (run 28285801855 ✅). Foundation code

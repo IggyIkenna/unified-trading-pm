@@ -68,7 +68,7 @@ Both follow CLAUDE.md "commit + push per shippable unit" + "plan-checkbox flip i
 - [x] [DESIGN] P0. Author UAC `AlertCode` taxonomy (StrEnum + threshold dataclass + severity-vs-alert-code separation).
       Plan: [`alerting_service_live_rules_2026_05_07`](alerting_service_live_rules_2026_05_07.md) Phase 1. Repo: UAC.
       Why nuanced: closed-set philosophy decisions; sets workspace-wide alert vocabulary for years; codex SSOTs at
-      [`codex/14-playbooks/alerting/alert-code-taxonomy.md`](../../codex/14-playbooks/alerting/alert-code-taxonomy.md)
+      [`/codex/14-playbooks/alerting/alert-code-taxonomy.md`](/codex/14-playbooks/alerting/alert-code-taxonomy.md)
       expect this StrEnum to land here. **DONE 2026-05-07 (Agent 1)** — UAC@`d00326d` shipped + alerting plan Phase 1
       checkbox flips per PM@`7624ab21`. Phase 2-9 of alerting plan (KillSwitchBus rule wiring + consumer wiring)
       pending.
@@ -77,7 +77,7 @@ Both follow CLAUDE.md "commit + push per shippable unit" + "plan-checkbox flip i
       [`writegate_honest_coverage_endtoend_2026_05_06`](writegate_honest_coverage_endtoend_2026_05_06.md) Phase 4.A.
       Repos: UTL + deployment-api + deployment-ui. Why nuanced: cross-cutting across 3 repos; per-asset-group
       consumer-class judgments per
-      [`codex/02-data/honest-absence-downstream-handling.md`](../../codex/02-data/honest-absence-downstream-handling.md).
+      [`/codex/02-data/honest-absence-downstream-handling.md`](/codex/02-data/honest-absence-downstream-handling.md).
       **DONE 2026-05-07 (Agent 2)** — deployment-ui@`a7384a0` (TypedReasonBadges + FailurePillarStack components + 24
       unit tests + client.ts TurboSubDimension extension) + deployment-ui@`621f0b3` (wire components into DataStatusTab
       venue summary line). Closed-set drift guard test fails CI on \_FAILURE_PILLAR_KEYS / \_EMPTY_REASON_KEYS drift.
@@ -98,7 +98,7 @@ Both follow CLAUDE.md "commit + push per shippable unit" + "plan-checkbox flip i
       master-defi, defi_master, 2 issue files, canonicalisation plan). **Full handoff**:
       [`_HANDOFF_expected_universe_enumerator_2026_05_07.md`](_HANDOFF_expected_universe_enumerator_2026_05_07.md). Why
       nuanced: closes the rollup-vs-drilldown denominator divergence (codex SSOT
-      [`availability-manifest-and-data-status.md`](../../codex/02-data/availability-manifest-and-data-status.md) §
+      [`availability-manifest-and-data-status.md`](/codex/02-data/availability-manifest-and-data-status.md) §
       "Rollup-vs-drilldown denominator divergence (codified 2026-05-07)"); cross-cutting across instruments-service +
       deployment-service + 6+ PM plans + codex; affects what every other agent sees in the data-status panel. Cost:
       ~$2-5 GCE + ~2-3hr operator time. Repos: deployment-service + instruments-service + PM. **DONE 2026-05-07
@@ -132,7 +132,7 @@ Both follow CLAUDE.md "commit + push per shippable unit" + "plan-checkbox flip i
       alerting-service. Why nuanced: kill-switch invariants + threshold-tuning judgment.
 - [ ] [GOVERNANCE] P0. writegate Phase 5: workspace QG honest-coverage % gate + per-(asset_group, data_type) ratchet
       schedule. Plan: writegate Phase 5. Repos: UTL + base-service.sh. Codex SSOT to populate:
-      [`codex/02-data/honest_coverage_baseline_2026_05.md`](../../codex/02-data/honest_coverage_baseline_2026_05.md)
+      [`/codex/02-data/honest_coverage_baseline_2026_05.md`](/codex/02-data/honest_coverage_baseline_2026_05.md)
       (currently a stub).
 
 ### Day 4 — 2026-05-10
@@ -144,7 +144,7 @@ Both follow CLAUDE.md "commit + push per shippable unit" + "plan-checkbox flip i
 - [ ] [INFRA-DESIGN] P1. aws_migration Phase 2: dual-bucket setup + Storage Transfer Service config + bucket-naming SSOT
       discipline. Plan: [`aws_migration_defi_first_2026_05_07`](aws_migration_defi_first_2026_05_07.md) Phase 2. Repos:
       deployment-service + UCI. Codex SSOT to populate:
-      [`codex/05-infrastructure/cloud-agnostic-script-pattern.md`](../../codex/05-infrastructure/cloud-agnostic-script-pattern.md).
+      [`/codex/05-infrastructure/cloud-agnostic-script-pattern.md`](/codex/05-infrastructure/cloud-agnostic-script-pattern.md).
 - [ ] [COORDINATION] P1. Triage
       [`defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07`](defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md)
       (just promoted) — overlaps with defi_master Fork 1 launch decision; canonicalise venue-collateral matrix BEFORE
@@ -240,7 +240,7 @@ Both follow CLAUDE.md "commit + push per shippable unit" + "plan-checkbox flip i
       `setup-defi-buckets.sh` dry-run. Plan: aws_migration_defi_first Phase 0-1. Repos: deployment-service +
       instruments-service. **Phase 0 DONE 2026-05-07** — operator credit confirmed ≥$40k over 11 months / ~$3,636/mo
       sustainable / no service / region / account locks expected; cost analysis shipped at
-      `codex/05-infrastructure/aws_migration_cost_analysis_2026_05_07.md`; dual-cloud-active steady state decision
+      `/codex/05-infrastructure/aws_migration_cost_analysis_2026_05_07.md`; dual-cloud-active steady state decision
       logged in audit doc § "Decisions taken in-session". **Phase 1 smoke PENDING** —
       `CLOUD_PROVIDER=aws     instruments-service --health-check` + bucket-name parity audit + `setup-defi-buckets.sh`
       dry-run all need execution by operator.

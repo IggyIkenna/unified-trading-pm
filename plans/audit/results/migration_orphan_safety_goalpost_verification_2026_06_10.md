@@ -76,7 +76,7 @@ The migration machinery is far more complete than the operator's framing assumes
 | 8   | **Know the data size; pre-download to de-risk**                                                          | 🔴 **GAP**                         | nothing rolls bytes per AG×data_type×venue → **⑯** below                                                     |
 | 9   | **Registry of all possible shard dynamics per AG (consolidation of the _possible_ manifest)**            | 🟡 **PARTIAL/SCATTERED**           | axis NAMES exist (`SHARD_AXIS_MATRIX`); value-domains scattered; no consolidated generator → **⑰** below     |
 | 10  | **Run manifest where we have instruments but no MTDS data → seed denominator as `expected_unattempted`** | 🟡 **EXISTS, CeFi STUB**           | `enumerate_expected_universe.py` does this; **CeFi + Prediction are stubs** (now unblockable) → **⑱** below  |
-| 11  | **Audit candle left/right edge-timestamp from external sources**                                         | 🟡 **SSOT EXISTS, make recurring** | `codex/02-data/bar-boundary-candle-edge-convention.md` filed; add as standing check → **⑲** below            |
+| 11  | **Audit candle left/right edge-timestamp from external sources**                                         | 🟡 **SSOT EXISTS, make recurring** | `/codex/02-data/bar-boundary-candle-edge-convention.md` filed; add as standing check → **⑲** below           |
 | 12  | **Make all of this RE-RUNNABLE post-migration (not one-shot)**                                           | 🔴 **GAP**                         | new points must fold into `canonical_form_cross_service_audit_checklist.md` → **CF-15…CF-21** (Durability §) |
 | —   | **"No v10 because we missed an ATTRIBUTE"** (the deepest fear)                                           | 🔴 **GAP**                         | ⑧ checks _cell_ completeness, not _column/attribute_ completeness → **⑮** below                              |
 
@@ -252,7 +252,7 @@ space. Do ⑰ once and the CeFi/Prediction enumerators fall out of it.
 > _open_) or **right-edge** (timestamp = bar _close_) labelled. An issue/plan was already filed and may be fixed — but
 > it must stay a **standing, re-runnable audit point**.
 
-This already has a codex SSOT: **`codex/02-data/bar-boundary-candle-edge-convention.md`** (+
+This already has a codex SSOT: **`/codex/02-data/bar-boundary-candle-edge-convention.md`** (+
 `chart-candle-delivery-flow.md`). The audit point is: for **every external candle/OHLCV source** (per venue ×
 timeframe), verify the ingested timestamp matches the canonical convention the SSOT mandates — a left/right-edge
 mismatch silently shifts every bar by one interval (a `1h` bar mislabelled by edge is off by 60 min), which corrupts

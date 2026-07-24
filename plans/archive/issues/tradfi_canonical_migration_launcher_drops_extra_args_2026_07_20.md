@@ -24,7 +24,7 @@ related:
     massive_purge_blocked_databento_l1_entitlement_2026_07_20,
     tradfi_consolidated_closeout_2026_07_18,
     tradfi_canonical_path_migration_design_2026_07_19,
-    codex/05-infrastructure/vm-launcher-runbook.md,
+    /codex/05-infrastructure/vm-launcher-runbook.md,
   ]
 created: 2026-07-20
 priority: P0

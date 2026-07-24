@@ -17,7 +17,7 @@ summary: >-
   always reporting "missing" (never "blocked_on_raw") for any MDPS venue/category that routes through the generic path
   (any category outside MTDS_CATEGORY_META, or any deploy before the honest-coverage parity work lands). This
   under-reports data availability without raising or logging — an honest-absence violation in spirit
-  (codex/02-data/honest-absence-downstream-handling.md), even though no row is fabricated.
+  (/codex/02-data/honest-absence-downstream-handling.md), even though no row is fabricated.
 status: resolved
 nature: issue
 asset_group: [cefi, tradfi, defi]
@@ -25,7 +25,11 @@ stage: [data]
 repos: [deployment-api, market-data-processing-service, unified-api-contracts]
 scope: [engineer]
 tags: [data-correctness, mdps, manifest, data_type, regression, classifier]
-related: [candle_feature_canonical_path_divergence_2026_07_20.md, ../mtds_data_status_page_parity_2026_07_21.md]
+related:
+  [
+    /plans/active/issues/candle_feature_canonical_path_divergence_2026_07_20.md,
+    ../mtds_data_status_page_parity_2026_07_21.md,
+  ]
 created: "2026-07-21"
 last_updated: "2026-07-22"
 parent_epic: infrastructure_master

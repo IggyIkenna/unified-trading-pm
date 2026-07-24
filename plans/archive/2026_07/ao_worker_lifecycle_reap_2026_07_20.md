@@ -13,7 +13,11 @@ stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer]
 tags: [agent-orchestrator, worker-lifecycle, tmux, reaper, dispatch]
-related: [ao_open_issues_consolidated_close_out_2026_07_17.md, ao_dispatch_liveness_p0_2026_07_20.md]
+related:
+  [
+    /plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md,
+    /plans/archive/2026_07/ao_dispatch_liveness_p0_2026_07_20.md,
+  ]
 created: 2026-07-20
 last_updated: 2026-07-20
 parent_epic: orchestrator_master
@@ -161,9 +165,9 @@ WOULD kill, and get approval before any real reap.**
 
 ## Codex SSOTs
 
-- `codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` — slot/worker lifecycle.
-- `codex/04-architecture/autonomous-recovery-matrix.md` — what may self-recover autonomously vs needs a human.
-- `codex/04-architecture/recovery-defence-in-depth-layers.md` — where the pruner sits among the recovery layers.
+- `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` — slot/worker lifecycle.
+- `/codex/04-architecture/autonomous-recovery-matrix.md` — what may self-recover autonomously vs needs a human.
+- `/codex/04-architecture/recovery-defence-in-depth-layers.md` — where the pruner sits among the recovery layers.
 
 ## Progress Log
 

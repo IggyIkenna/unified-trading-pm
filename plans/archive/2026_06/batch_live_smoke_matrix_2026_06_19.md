@@ -9,7 +9,8 @@ stage: [meta]
 repos: [deployment-service, e2e-testing, market-tick-data-service]
 scope: [engineer, admin]
 tags: []
-related: [plans/epics/batch_live_symmetry_master.md, plans/active/cross_ag_shard_4pillar_validation_harness_2026_06_19.md]
+related:
+  [plans/epics/batch_live_symmetry_master.md, plans/active/cross_ag_shard_4pillar_validation_harness_2026_06_19.md]
 created: 2026-06-19
 parent_epic: batch_live_symmetry_master
 assigned_vm: vm-cross-cutting
@@ -19,7 +20,11 @@ estimate_baseline_ai_days: 4
 estimate_calibrated_ai_days: 3
 locked_by: live-defi-rollout
 locked_since: 2026-06-19
-Codex SSOTs: [codex/04-architecture/shard-level-failure-isolation.md, codex/02-data/pipeline-mode-and-batch-live-reconciliation.md]
+Codex SSOTs:
+  [
+    /codex/04-architecture/shard-level-failure-isolation.md,
+    /codex/02-data/pipeline-mode-and-batch-live-reconciliation.md,
+  ]
 ---
 
 # Batch+Live Shard Smoke Matrix

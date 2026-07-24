@@ -17,10 +17,10 @@ locked_by: live-defi-rollout
 locked_since: 2026-04-21
 type: code
 epic: none
-completion_gates: {code: C5, deployment: none, business: none}
+completion_gates: { code: C5, deployment: none, business: none }
 repo_gates:
-- {repo: unified-trading-library, code: C5}
-- {repo: instruments-service, code: C5}
+  - { repo: unified-trading-library, code: C5 }
+  - { repo: instruments-service, code: C5 }
 depends_on: []
 isProject: false
 ---
@@ -148,7 +148,7 @@ Once UTL ships the primitives:
 | `unified-trading-library/unified_trading_library/`                | Existing `manifest_writer.py`, `events.py` etc. | Add `manifest_migrations/` subpackage.                                                                                             |
 | `unified-trading-library/unified_trading_library/__init__.py`     | Existing public exports.                        | Export `ManifestMigrator`, `RescanScanner`, `LegacyRowPurger`, `chunked_date_ranges`.                                              |
 | `instruments-service/scripts/rescan_sports_fixtures_canonical.py` | 623 lines, full chunk-safe logic inline.        | Refactor to ~50 lines using UTL primitives. Keep CLI shape for backwards compatibility with `launch-sports-manifest-rescan-vm.sh`. |
-| `codex/02-data/chunk-safe-manifest-migrations.md`                 | Describes pattern as if it's per-repo.          | Update to reference UTL primitives as the canonical implementation; per-repo scripts are now thin entry points.                    |
+| `/codex/02-data/chunk-safe-manifest-migrations.md`                | Describes pattern as if it's per-repo.          | Update to reference UTL primitives as the canonical implementation; per-repo scripts are now thin entry points.                    |
 
 ## Success criteria
 
@@ -217,9 +217,9 @@ Once UTL ships the primitives:
 
 ### Phase 4: Codex update [SEQUENTIAL]
 
-- [x] [AGENT] P1. Update `codex/02-data/chunk-safe-manifest-migrations.md` to point at the UTL primitives. The existing
+- [x] [AGENT] P1. Update `/codex/02-data/chunk-safe-manifest-migrations.md` to point at the UTL primitives. The existing
       pattern description stays; add a "use the UTL implementation, don't re-write" note at the top.
-- [x] [AGENT] P1. Update `codex/02-data/sports-scheduling-and-sharding.md` §12 roadmap to mark this plan's dependency
+- [x] [AGENT] P1. Update `/codex/02-data/sports-scheduling-and-sharding.md` §12 roadmap to mark this plan's dependency
       chain explicit.
 
 ### Phase 5: QG [SEQUENTIAL]
@@ -261,7 +261,7 @@ approach is this UTL refactor first, then the per-entity rescan + purge uses UTL
 
 ## Cross-refs
 
-- Chunk-safe pattern codex: `codex/02-data/chunk-safe-manifest-migrations.md`.
-- Manifest v5 contract: `codex/02-data/availability-manifest-and-data-status.md`.
+- Chunk-safe pattern codex: `/codex/02-data/chunk-safe-manifest-migrations.md`.
+- Manifest v5 contract: `/codex/02-data/availability-manifest-and-data-status.md`.
 - Existing implementation being refactored: `instruments-service/scripts/rescan_sports_fixtures_canonical.py`.
 - Consumer plan: `sports_manifest_shard_migration_cleanup_2026_04_21.md`.

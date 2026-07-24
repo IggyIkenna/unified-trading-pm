@@ -6,10 +6,22 @@ status: complete
 nature: record
 asset_group: [infrastructure]
 stage: [meta]
-repos: [alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-ui, execution-service]
+repos:
+  [
+    alerting-service,
+    batch-live-reconciliation-service,
+    client-reporting-api,
+    deployment-api,
+    deployment-ui,
+    execution-service,
+  ]
 scope: [engineer, admin]
 tags: []
-related: [plans/active/issues/workspace_qg_ci_startup_failure_2026_05_26.md, plans/active/tradfi_massive_dual_source_2026_05_28.md]
+related:
+  [
+    plans/active/issues/workspace_qg_ci_startup_failure_2026_05_26.md,
+    plans/active/tradfi_massive_dual_source_2026_05_28.md,
+  ]
 created: 2026-05-29
 parent_epic: infrastructure_master
 assigned_vm: vm-cross-cutting
@@ -18,18 +30,18 @@ execution_scope: local-only
 estimate_class: infra
 estimate_baseline_ai_days: 5
 estimate_calibrated_ai_days: 4
-completion_gates: {code: C5, deployment: D3, business: B3}
+completion_gates: { code: C5, deployment: D3, business: B3 }
 repo_gates:
-- {repo: unified-trading-pm, code: C0}
-- {repo: unified-api-contracts, code: C0}
-- {repo: unified-trading-library, code: C0}
-- {repo: alerting-service, code: C0}
-- {repo: ml-service, code: C0}
-- {repo: features-service, code: C0}
-- {repo: batch-live-reconciliation-service, code: C0}
-- {repo: execution-service, code: C0}
-- {repo: instruments-service, code: C0}
-- {repo: deployment-ui, code: C0}
+  - { repo: unified-trading-pm, code: C0 }
+  - { repo: unified-api-contracts, code: C0 }
+  - { repo: unified-trading-library, code: C0 }
+  - { repo: alerting-service, code: C0 }
+  - { repo: ml-service, code: C0 }
+  - { repo: features-service, code: C0 }
+  - { repo: batch-live-reconciliation-service, code: C0 }
+  - { repo: execution-service, code: C0 }
+  - { repo: instruments-service, code: C0 }
+  - { repo: deployment-ui, code: C0 }
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
 ---
@@ -69,8 +81,8 @@ locked_since: 2026-05-21
 
 ## Overview
 
-Rolls every affected workspace repo onto the new canonical CI flow (`codex/08-workflows/ci-cd-flow.md`) AND applies a v2
-rename of the workspace-qg caller workflow with a new job key to escape GitHub's server-side BuildFailed ghost cache.
+Rolls every affected workspace repo onto the new canonical CI flow (`/codex/08-workflows/ci-cd-flow.md`) AND applies a
+v2 rename of the workspace-qg caller workflow with a new job key to escape GitHub's server-side BuildFailed ghost cache.
 
 **Operator directive 2026-05-29**: "All pushed. Here's the canonical updated flow: LDR → Cloud Build (canonical,
 post-fixes)". Operator wants PM → UAC → UTL first (in order), each migrated by:
@@ -119,7 +131,7 @@ alone doesn't escape it.
 
 | Layer                                      | Status                      | Note                                                                                                                                      |
 | ------------------------------------------ | --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| Canonical CI codex doc                     | ✅ shipped 2026-05-29       | `codex/08-workflows/ci-cd-flow.md` § three-tier + two-pass + sentinel model                                                               |
+| Canonical CI codex doc                     | ✅ shipped 2026-05-29       | `/codex/08-workflows/ci-cd-flow.md` § three-tier + two-pass + sentinel model                                                              |
 | PM `python-quality-gates.yml` real content | ✅ correct on disk          | Bad comment reverted in `7ca446080`                                                                                                       |
 | PM main branch protection                  | ✅ rotated 2026-05-29       | Required check now `quality-gates-v2` (was `quality-gates`)                                                                               |
 | GH Support ticket                          | 🟡 open                     | #4422570 filed 2026-05-27, awaiting cache clear                                                                                           |
@@ -132,7 +144,7 @@ alone doesn't escape it.
 
 ### Phase 0 — Pre-flight: confirm canonical doc + branch protection access (0.25 day)
 
-- [x] ✅ [AUDIT] P0. Read `codex/08-workflows/ci-cd-flow.md` end-to-end — 292 lines. Covers three-tier branch model,
+- [x] ✅ [AUDIT] P0. Read `/codex/08-workflows/ci-cd-flow.md` end-to-end — 292 lines. Covers three-tier branch model,
       two-pass sentinel model, workspace-qg triggers excluding LDR, staging-first PR target. Plan recipe matches doc.
 - [x] ✅ [AUDIT] P0. Admin perms confirmed on PM/UAC/UTL — `gh api` returns `admin=True` for all three.
 - [x] ✅ [AUDIT] P0. Confirm `.qg_last_passed_sha` sentinel format expected by quickmerge —
@@ -278,17 +290,17 @@ execution-service, instruments-service, deployment-ui. Order by risk (lowest fir
       callee). The v1 caller + callee deletion already happened; the BLOCKED-UPSTREAM hold on GH Support #4422570 was
       stale over-caution (the feared v2-registration re-poisoning never materialised — v2 is the required check
       fleet-wide and green). No `cleanup_v1_*` successor needed.
-- [x] ✅ [CODEX] P1. `codex/08-workflows/ci-cd-flow.md` updated this turn (2026-05-29 EOD) with new section "Canonical
+- [x] ✅ [CODEX] P1. `/codex/08-workflows/ci-cd-flow.md` updated this turn (2026-05-29 EOD) with new section "Canonical
       required check name (post-Option-D, 2026-05-29)" — names `quality-gates-v2` as the workspace canonical,
       cross-references the per-repo matrix in feature-branch-workflow.md, documents v1-cleanup-pending.
 - [x] ✅ [CODEX] P1. Update `workspace_qg_ci_startup_failure_2026_05_26.md` with final Option D close-out — DONE
       (verified 2026-06-07): the issue completed its archival flow and now lives at
       `plans/archive/issues/workspace_qg_ci_startup_failure_2026_05_26.md`. Option D (the `quality-gates-v2` canonical
-      required-check) is documented in `codex/08-workflows/ci-cd-flow.md` § "Canonical required check name". The only
+      required-check) is documented in `/codex/08-workflows/ci-cd-flow.md` § "Canonical required check name". The only
       residual (v1 PM callee deletion) is the BLOCKED-UPSTREAM item above (GH #4422570), tracked separately.
 - [x] ✅ [CLAUDE-MD] P1. Workspace-wide pointer to v2 canonical — DONE (verified 2026-06-07): `cursor-configs/CLAUDE.md`
       § "CI Verification After Every Push" already carries the line **"Required check name (all repos):
-      `quality-gates-v2` (v1 `quality-gates`/`workspace-qg` retired 2026-05-29 — see `codex/08-workflows/ci-cd-flow.md`
+      `quality-gates-v2` (v1 `quality-gates`/`workspace-qg` retired 2026-05-29 — see `/codex/08-workflows/ci-cd-flow.md`
       § quality-gates-v2)"**. The codex § "Canonical required check name" remains the authoritative source; the 1-line
       CLAUDE.md cross-reference is present.
 - [x] ✅ [SCRIPT] P2. deployment-ui post-cutover tidy — **(a) DONE 2026-06-02**: deleted the stale v1 ghost chain
@@ -300,7 +312,7 @@ execution-service, instruments-service, deployment-ui. Order by risk (lowest fir
       refs `backup/main-pre-ff-20260602` (was f7715ec) + `backup/staging-pre-ff-20260602` (was bf50cdd) from
       `origin/deployment-ui` after operator confirmed the promotion settled. Target repo: `deployment-ui`.
 - [x] ✅ [PLAN] P1. Pre-archival 5-step audit — DONE 2026-06-07 (codex-alignment step verified): Phases 1-4 + 4.5 done
-      (deployment-ui canonical, 17/17 rulesets consistent); the codex SSOT `codex/08-workflows/ci-cd-flow.md` §
+      (deployment-ui canonical, 17/17 rulesets consistent); the codex SSOT `/codex/08-workflows/ci-cd-flow.md` §
       "Canonical required check name" reflects what shipped (Option D / `quality-gates-v2`). The two doc P1s above are
       closed. **The plan stays ACTIVE (not yet archived) by design**: the single remaining item is the BLOCKED-UPSTREAM
       v1 PM-callee deletion (GH #4422570) — per the plan-archival HARD RULE we do not archive with an open in-scope
@@ -329,9 +341,9 @@ execution-service, instruments-service, deployment-ui. Order by risk (lowest fir
 
 ## Codex SSOTs
 
-- `codex/08-workflows/ci-cd-flow.md` (Phase 5 update — v2 job key as canonical required check)
-- `codex/05-infrastructure/quickmerge-architecture.md` (verify sentinel-write step doc; no edit expected)
-- `codex/06-coding-standards/feature-branch-workflow.md` (verify aligned with new canonical; no edit expected)
+- `/codex/08-workflows/ci-cd-flow.md` (Phase 5 update — v2 job key as canonical required check)
+- `/codex/05-infrastructure/quickmerge-architecture.md` (verify sentinel-write step doc; no edit expected)
+- `/codex/06-coding-standards/feature-branch-workflow.md` (verify aligned with new canonical; no edit expected)
 - `plans/active/issues/workspace_qg_ci_startup_failure_2026_05_26.md` (Phase 5 close-out)
 - `CLAUDE.md` § "CI Verification After Every Push" (Phase 5 — 1-line v2 pointer if needed)
 

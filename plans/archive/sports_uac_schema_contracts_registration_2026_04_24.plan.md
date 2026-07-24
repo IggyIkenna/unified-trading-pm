@@ -6,25 +6,37 @@ status: complete
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [deployment-api, deployment-ui, instruments-service, strategy-service, unified-api-contracts, unified-trading-system-ui]
+repos:
+  [
+    deployment-api,
+    deployment-ui,
+    instruments-service,
+    strategy-service,
+    unified-api-contracts,
+    unified-trading-system-ui,
+  ]
 scope: [engineer, admin]
 tags: []
 related: []
 created: 2026-04-24
-overview: Declare UAC SchemaContracts for every SPORTS data_type currently written to GCS without a contract (19 of 20 live types). Today only `(sports, odds, trades)` is registered; FIXTURES, INJURIES, XG, WEATHER, etc. all fall back to raw parquet projection in the drilldown schema modal, and downstream consumers (FSS, strategy-service, deployment-api) have no SSOT to validate against. Also drop the SFI_STANDINGS phantom (schema bug — endpoint doesn't exist).
+overview:
+  Declare UAC SchemaContracts for every SPORTS data_type currently written to GCS without a contract (19 of 20 live
+  types). Today only `(sports, odds, trades)` is registered; FIXTURES, INJURIES, XG, WEATHER, etc. all fall back to raw
+  parquet projection in the drilldown schema modal, and downstream consumers (FSS, strategy-service, deployment-api)
+  have no SSOT to validate against. Also drop the SFI_STANDINGS phantom (schema bug — endpoint doesn't exist).
 priority: P2
 owner: agent
 completed: 2026-04-25
 type: code
 epic: none
-completion_gates: {code: C5, deployment: none, business: none}
+completion_gates: { code: C5, deployment: none, business: none }
 repo_gates:
-- {repo: unified-api-contracts, code: C5, deployment: none, business: none}
-- {repo: deployment-api, code: C5, deployment: none, business: none}
-- {repo: instruments-service, code: na, deployment: none, business: none}
-- {repo: features-sports-service, code: na, deployment: none, business: none}
-- {repo: deployment-ui, code: na, deployment: none, business: none}
-- {repo: unified-trading-pm, code: C5, deployment: none, business: none}
+  - { repo: unified-api-contracts, code: C5, deployment: none, business: none }
+  - { repo: deployment-api, code: C5, deployment: none, business: none }
+  - { repo: instruments-service, code: na, deployment: none, business: none }
+  - { repo: features-sports-service, code: na, deployment: none, business: none }
+  - { repo: deployment-ui, code: na, deployment: none, business: none }
+  - { repo: unified-trading-pm, code: C5, deployment: none, business: none }
 depends_on: []
 isProject: false
 reconciliation_status: shipped_substantive
@@ -340,7 +352,7 @@ registry-init race in tests. Phase 3 is **independent** of Phases 0-2 — can be
   `project_ui_manifest_v5_plus_fixture_breakdown_fix_2026_04_24.md`). The drilldown fix unblocks the FIXTURES
   per-fixture breakdown click; this plan closes the upstream SSOT gap that surfaced during the same session when the
   user clicked "View schema".
-- Availability-manifest v5 honest-coverage plan: `codex/02-data/availability-manifest-and-data-status.md`. That work is
+- Availability-manifest v5 honest-coverage plan: `/codex/02-data/availability-manifest-and-data-status.md`. That work is
   about **shard coverage** (did we capture?). This plan is about **column schemas** (what did we capture?). The two are
   orthogonal.
 - Sports roadmap master execution: `plans/active/sports_roadmap_master_execution_2026_04_21.md` — this plan is a

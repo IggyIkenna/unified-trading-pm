@@ -53,7 +53,7 @@ drift-backlog) until the decision lands, so we don't ship a fix that contradicts
 >   todo in `execution_master`.
 > - **F-45** — **code wins**: keep `instance_id` in the events path; `correlation_id` is a column, not a path key. Route
 >   codex-update todo to `codex_vs_repo_docs`.
-> - **F-06** — declare `codex/04-architecture/custody-providers.md` the entity-governance SSOT; entities = **Odum
+> - **F-06** — declare `/codex/04-architecture/custody-providers.md` the entity-governance SSOT; entities = **Odum
 >   Research UK + Odum Group Cayman**; scrub stale **Elysium** refs (removed provider) — file as FIX-STALE todo in
 >   `codex_vs_repo_docs`.
 > - **F-25** — build the **FULL unified `ClientConfig`** type in `unified_api_contracts.internal` (not a minimal stub).

@@ -16,9 +16,9 @@ created: "2026-03-16"
 ## Deferred work — migrated to: `plans/active/issues/batch4_strategy_ui_archived_plan_residuals_2026_07_21.md` — successor:
 
 batch4_strategy_ui_archived_plan_residuals (this plan's core SSOT artifacts — `base-ui.sh`, `eslint.config.base.js` —
-already shipped in the repo, and `codex/06-coding-standards/ui-testing-layers.md` is now the living UI-testing SSOT, but
-the 25 granular residual items were never re-verified against the current UI repos after 4 months of drift; tracked as a
-fresh re-audit todo there).
+already shipped in the repo, and `/codex/06-coding-standards/ui-testing-layers.md` is now the living UI-testing SSOT,
+but the 25 granular residual items were never re-verified against the current UI repos after 4 months of drift; tracked
+as a fresh re-audit todo there).
 
 # AI-GENERATED — awaiting user review and promotion
 
@@ -598,7 +598,7 @@ coverage and hides untested code from agents.
   bash unified-trading-pm/scripts/repo-management/run-all-setup.sh --ui-only --rollout-first
   ```
 
-- [ ] **p6-codex-doc** — Add `unified-trading-codex/06-coding-standards/ui-quality-gates.md` documenting:
+- [ ] **p6-codex-doc** — Add `unified-trading-/codex/06-coding-standards/ui-quality-gates.md` documenting:
   - The 6-stage gate and what each stage checks
   - UI codex compliance rules (Stage 3.5) with rationale
   - ESLint rules and why `no-explicit-any` is error not warn

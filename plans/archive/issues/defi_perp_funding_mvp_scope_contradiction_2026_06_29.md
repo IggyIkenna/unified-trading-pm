@@ -272,8 +272,8 @@ and the v10 G2 perp_funding gate are valid.
 
 ## Codex SSOTs
 
-- `codex/02-data/honest-coverage-model.md` — two-layer / instrument-gates-download denominator model.
-- `codex/02-data/availability-manifest-and-data-status.md` — `expected_unattempted` / reachable semantics.
+- `/codex/02-data/honest-coverage-model.md` — two-layer / instrument-gates-download denominator model.
+- `/codex/02-data/availability-manifest-and-data-status.md` — `expected_unattempted` / reachable semantics.
 - UAC `mvp_scope.py` is the live SSOT for "what is MVP"; the capability/coverage registries are the live SSOT for the
   reachable denominator — this issue is precisely that those two disagree for `perp_funding`.
 

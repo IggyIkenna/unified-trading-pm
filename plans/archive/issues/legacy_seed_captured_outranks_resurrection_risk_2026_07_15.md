@@ -45,8 +45,8 @@ related:
   [
     plans/active/issues/phantom_captures_cefi_2026_06_28.md,
     plans/active/issues/manifest_consolidator_prune_race_overlapping_executions_2026_07_13.md,
-    codex/05-infrastructure/manifest-consolidator-ssot.md,
-    codex/02-data/availability-manifest-and-data-status.md,
+    /codex/05-infrastructure/manifest-consolidator-ssot.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
   ]
 created: 2026-07-15
 last_updated: 2026-07-15 (Part 2 fix + cefi live multi-cycle hold confirmed)
@@ -273,7 +273,7 @@ and `snapshots/` (15 objects, 2.3GB) subdirectories — real pre-migration safet
 etc., going back to 2026-05-22). Grepped the whole workspace for any code path that READS from `_index/backups/` or
 `_index/snapshots/` as a source (as opposed to the ~30 one-off migration scripts that WRITE a pre-`--apply` safety copy
 there): found none — restore-from-backup is a manual, operator-invoked disaster-recovery procedure only
-(`codex/05-infrastructure/disaster-recovery.md`, `codex/02-data/ manifest-migration-coordination.md` — explicit steps,
+(`/codex/05-infrastructure/disaster-recovery.md`, `codex/02-data/ manifest-migration-coordination.md` — explicit steps,
 notify-operator, post-mortem doc required), never automatic, and none of the existing backup/snapshot files are tied to
 this specific blank-`data_type` incident, so nothing here is a live risk right now — documented as a category worth
 knowing about, not a finding requiring action.

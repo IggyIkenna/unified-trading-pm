@@ -1,15 +1,23 @@
 ---
 doc_type: plan
-title: QG commit-quality-boundary + slot FF-push to LDR (aggregation of uv-determinism + governor-macOS-fix + commit-gate design)
+title:
+  QG commit-quality-boundary + slot FF-push to LDR (aggregation of uv-determinism + governor-macOS-fix + commit-gate
+  design)
 summary:
 status: complete
 nature: record
 asset_group: [infrastructure]
 stage: [meta]
-repos: [agent-orchestrator, alerting-service, client-reporting-api, deployment-api, deployment-service, execution-service]
+repos:
+  [agent-orchestrator, alerting-service, client-reporting-api, deployment-api, deployment-service, execution-service]
 scope: [engineer, admin]
 tags: []
-related: [plans/active/uv_lockfile_determinism_2026_06_02.md, plans/active/cicd_contract_hardening_2026_06_01.md, plans/active/agent_orchestrator_e2e_workflow_and_execution_scope_2026_06_02.md]
+related:
+  [
+    plans/active/uv_lockfile_determinism_2026_06_02.md,
+    plans/active/cicd_contract_hardening_2026_06_01.md,
+    plans/active/agent_orchestrator_e2e_workflow_and_execution_scope_2026_06_02.md,
+  ]
 created: 2026-06-03
 parent_epic: infrastructure_master
 assigned_vm: vm-cross-cutting
@@ -18,7 +26,11 @@ estimate_class: infra
 estimate_baseline_ai_days: 1.5
 estimate_calibrated_ai_days: 1.2
 locked_by: live-defi-rollout
-source: [operator design discussion 2026-06-02/03 (slot tab/ikennaigboaka/4), 'plans/active/uv_lockfile_determinism_2026_06_02.md (parent effort, shipped)']
+source:
+  [
+    operator design discussion 2026-06-02/03 (slot tab/ikennaigboaka/4),
+    "plans/active/uv_lockfile_determinism_2026_06_02.md (parent effort, shipped)",
+  ]
 ---
 
 > **🗄️ ARCHIVED 2026-06-18 — superseded by the cicd consolidation; any open items were migrated to the 4 themed plans
@@ -134,7 +146,7 @@ All on `origin/live-defi-rollout`; full detail in
       → reframed "Quality gates BEFORE **COMMIT** — the commit IS the per-repo quality boundary"; scoped to code commits
       (doc/plan-flip/markdown take prek only); realized via QG-sweep batching (per-batch not per-commit). Also
       reconciled the "Quality Gates Are A Merge Prerequisite" block → "Commit + Merge Prerequisite".
-- [x] ✅ [DOC] P1. **DONE — @5dbe60407.** `codex/08-workflows/ci-cd-flow.md` § "Two-Pass Workflow Model" blockquote
+- [x] ✅ [DOC] P1. **DONE — @5dbe60407.** `/codex/08-workflows/ci-cd-flow.md` § "Two-Pass Workflow Model" blockquote
       reframed (QG before commit, not just quickmerge; commit = per-repo quality boundary; QG-sweep batching; doc-commit
       scope carve-out).
 - [x] ✅ [DOC] P2. **DONE — unified-trading-pm@7c3643236.** Added the commit-as-quality-boundary framing to
@@ -143,7 +155,7 @@ All on `origin/live-defi-rollout`; full detail in
       prek only). Applied AFTER the concurrent plan-hygiene session finished + committed (`f98182875` — its
       `check_claude_subagent_parity.sh` CLAUDE↔SUB_AGENT drift check now landed), so no collision; this mirror also
       satisfies that parity check vs the CLAUDE.md reframe (@8fd3dced5). All 4 [DOC] commit-prereq items now done.
-- [x] ✅ [DOC] P2. **DONE — @5dbe60407.** `codex/06-coding-standards/quality-gates.md` § "Two-Pass Workflow Model" —
+- [x] ✅ [DOC] P2. **DONE — @5dbe60407.** `/codex/06-coding-standards/quality-gates.md` § "Two-Pass Workflow Model" —
       added the commit-as-quality-boundary callout (prek = LIGHT gate; full QG = commit-prereq; QG-sweep batching;
       doc-commit carve-out).
 
@@ -242,13 +254,18 @@ All on `origin/live-defi-rollout`; full detail in
       monitor (cicd item below). DEPENDS on the global-uniqueness precondition above (✅ shipped). Parity guarded by
       `detect_template_drift.py --workflows` (PM PR #133). **Original spec (push-triggered):** Extend the
       `tab-mirror-to-ldr` GHA (SSOT: `unified-trading-pm/scripts/workflow-templates/`, runs on push to LDR) so that, in
-      addition to `tab→LDR` (FF LDR from an ahead-only tab — existing), it also does \*\*`LDR→tab`: FF every
-      `tab/*` branch that is purely BEHIND LDR** (ancestor) up to LDR. **HARD invariants:**     FF-only, **never force-push**, never auto-merge. A tab that is BOTH ahead+behind (DIVERGED) → **do NOT touch it**     → emit the divergence alert (cicd item below); the one safe auto-resolution is the existing "rebase diverged tab     onto LDR" path (`e21ca439`— preserves the tab's own commits + pulls LDR in), reuse it, don't re-invent. **Why     server-side not the cron**: host-independent — refreshes a slot's remote tab branch whether the owning host     (laptop / AWS VM) is online or not (the headless-fleet gap the cron can't cover). **Operates over EVERY`tab/_`
-      branch fleet-wide\*\* (all operators, all slots, every host) — DEPENDS on the global-uniqueness precondition above
-      (without it the glob can FF one host's remote with another host's commits). Composes with — does NOT replace — the
-      cron FF-push of QG-green \_committed_ agent work above (that's the `ahead`/push-agent-work-up leg; this is the
-      `behind`/keep-tabs- current-down leg). Repo: `unified-trading-pm` (workflow-templates →
-      `rollout-workflow-templates.sh`). parent_epic: (cicd master — cross-link `cicd_contract_hardening_2026_06_01.md`).
+      addition to `tab→LDR` (FF LDR from an ahead-only tab — existing), it also does \*\*`LDR→tab`: FF every `tab/*`
+      branch that is purely BEHIND LDR** (ancestor) up to LDR. **HARD invariants:** FF-only, **never force-push**, never
+      auto-merge. A tab that is BOTH ahead+behind (DIVERGED) → **do NOT touch it** → emit the divergence alert (cicd
+      item below); the one safe auto-resolution is the existing "rebase diverged tab onto LDR" path (`e21ca439`—
+      preserves the tab's own commits + pulls LDR in), reuse it, don't re-invent. **Why server-side not the cron**:
+      host-independent — refreshes a slot's remote tab branch whether the owning host (laptop / AWS VM) is online or not
+      (the headless-fleet gap the cron can't cover). **Operates over EVERY`tab/_` branch fleet-wide\*\* (all operators,
+      all slots, every host) — DEPENDS on the global-uniqueness precondition above (without it the glob can FF one
+      host's remote with another host's commits). Composes with — does NOT replace — the cron FF-push of QG-green
+      \_committed_ agent work above (that's the `ahead`/push-agent-work-up leg; this is the `behind`/keep-tabs-
+      current-down leg). Repo: `unified-trading-pm` (workflow-templates → `rollout-workflow-templates.sh`). parent_epic:
+      (cicd master — cross-link `cicd_contract_hardening_2026_06_01.md`).
 - [x] ✅ [SUPERSEDED-BY-PATH-B 2026-06-10 — cancelled] [INFRA] P2. **Pin every tab worktree's upstream to
       `origin/live-defi-rollout` + assert it in `verify-slot-host-symmetry.sh`.** Root cause of the misleading `N↑`
       display: a `git push -u` (or `branch --set-upstream-to=origin/tab/...`) re-points a worktree's upstream to its
@@ -339,7 +356,7 @@ All on `origin/live-defi-rollout`; full detail in
 - [x] ✅ [DOC] P1. **SUB_AGENT_MANDATORY_RULES.md** — added the behind-remote recovery recipe keyed on the
       `QUICKMERGE_BLOCKED` block (operative today against the existing exit-1; structured codes land with the INFRA
       item). — PM@pending (this batch).
-- [x] ✅ [DOC] P1. **codex/08-workflows/ci-cd-flow.md** § "STAGE 0.4 Not-Behind Gate" — documented the gate (ff →
+- [x] ✅ [DOC] P1. **/codex/08-workflows/ci-cd-flow.md** § "STAGE 0.4 Not-Behind Gate" — documented the gate (ff →
       rebase-autostash → abort+exit-1, never overwrites) + recovery recipe + PM-as-a-repo coverage + forward
       structured-contract note. — PM@pending (this batch).
 - [x] ✅ [DOC] P2. **CLAUDE.md** git-discipline — one-line pointer to the gate + recovery recipe + the tracked
@@ -447,7 +464,7 @@ design).
         AWS VM (run there or orchestrator-dispatch; can't reach it from a laptop). `crontab -l` host-correct paths +
         `git -C <vm>/unified-trading-pm rev-list --count HEAD..origin/live-defi-rollout` == 0.
 - [x] ✅ [DOCS] P1. **DONE 2026-06-12 — added § "Cron self-pull + Path-B per-slot ref refresh" to per-tab-worktrees.md
-      (self-pull principle + helper + H6 + Path-B ref-refresh).** `codex/05-infrastructure/per-tab-worktrees.md` §
+      (self-pull principle + helper + H6 + Path-B ref-refresh).** `/codex/05-infrastructure/per-tab-worktrees.md` §
       "Cron-based FF puller" — document the self-pull-executor principle + the rule "every machine-run PM cron
       self-pulls its script from LDR before running; GHA exempt (current by design)". + one-liner in canonical
       `CLAUDE.md`.

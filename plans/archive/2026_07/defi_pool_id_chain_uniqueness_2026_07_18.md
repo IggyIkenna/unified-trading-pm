@@ -21,7 +21,7 @@ repos:
   ]
 scope: [engineer]
 tags: [defi, identity, pool, shard-atom, instrument-id, uniqueness]
-related: [data_status_page_ux_and_canonicalisation_2026_07_16.md]
+related: [/plans/active/data_status_page_ux_and_canonicalisation_2026_07_16.md]
 created: 2026-07-18
 last_updated: 2026-07-18
 parent_epic: defi_master
@@ -83,10 +83,10 @@ single lifecycle into ghosts (the exact failure `_incremental_merge_keys` docume
 
 ## Codex SSOTs (read before touching)
 
-- `codex/02-data/availability-manifest-and-data-status.md` — "shard atom identical across
+- `/codex/02-data/availability-manifest-and-data-status.md` — "shard atom identical across
   writer/manifest/status/gate/UI".
-- `codex/02-data/defi-canonical-naming-ssot.md` — DeFi canonical identity + naming.
-- `codex/04-architecture/tier-and-import-architecture.md` — no service↔service deps; integrate by UAC contract.
+- `/codex/02-data/defi-canonical-naming-ssot.md` — DeFi canonical identity + naming.
+- `/codex/04-architecture/tier-and-import-architecture.md` — no service↔service deps; integrate by UAC contract.
 - `build_instrument_catalogue._incremental_merge_keys` — the current DeFi POOL dual-form identity
   (`pool::<CHAIN>::<addr.lower()>`) already chain-aware in the merge; the catalogue `instrument_id` is not.
 

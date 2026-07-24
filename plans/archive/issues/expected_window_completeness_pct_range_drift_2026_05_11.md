@@ -15,7 +15,13 @@ resolved: 2026-05-11
 author: ikenna-slot-6
 resolution: option-a-rename-to-fraction
 resolution_commits: [unified-api-contracts@76f950a]
-source: ['unified_api_contracts/canonical/crosscutting/manifest_schema.py:EXPECTED_WINDOW_COMPLETENESS_PCT_COLUMN docstring (UAC@174f401)', 'codex/02-data/availability-manifest-and-data-status.md:253', 'codex/02-data/availability-manifest-and-data-status.md:344']
+source:
+  [
+    "unified_api_contracts/canonical/crosscutting/manifest_schema.py:EXPECTED_WINDOW_COMPLETENESS_PCT_COLUMN docstring
+    (UAC@174f401)",
+    "/codex/02-data/availability-manifest-and-data-status.md:253",
+    "/codex/02-data/availability-manifest-and-data-status.md:344",
+  ]
 locked_by: live-defi-rollout
 locked_since: 2026-05-11
 ---
@@ -156,7 +162,7 @@ is open today (no writers yet); it's closed forever after the first row writes t
   blocks if not resolved).
 - `manifest_schema_final_gate_2026_05_09.md` Phase 4 (workspace consumer sweep; **not started**; every callsite that
   threads the kwarg picks ONE convention).
-- `codex/02-data/availability-manifest-and-data-status.md` lines 253 + 344 (the codex side that needs updating).
+- `/codex/02-data/availability-manifest-and-data-status.md` lines 253 + 344 (the codex side that needs updating).
 - `unified_trading_library/emission_publisher.py:75-78` (UTL `completeness_fraction` arg; canonical 0-1).
 - CLAUDE.md "No double SSOT in data-saving methodology" — three-way drift is the explicit anti-pattern this rule
   targets.

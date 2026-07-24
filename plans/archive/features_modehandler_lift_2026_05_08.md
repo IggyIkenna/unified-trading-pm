@@ -21,9 +21,11 @@ migrated_from: feature_batch_handler_abc_zero_consumers_2026_05_08.md (issue doc
 estimate_class: design
 estimate_baseline_ai_days: 0.5
 estimate_calibrated_ai_days: 0.3
-estimate_calibration_note: 'Backfilled 2026-05-13: status:complete (shipped UTL@abeb5bc3 + features-service@7335bbef 2026-05-08). Tiny residual baseline 0.5 × 0.6 = 0.3 for any final flips. **FLAG**: plan is complete; should move to plans/archive/ at next archival pass (no live work remaining).
+estimate_calibration_note: "Backfilled 2026-05-13: status:complete (shipped UTL@abeb5bc3 + features-service@7335bbef
+  2026-05-08). Tiny residual baseline 0.5 × 0.6 = 0.3 for any final flips. **FLAG**: plan is complete; should move to
+  plans/archive/ at next archival pass (no live work remaining).
 
-  '
+  "
 ---
 
 ## Deferred work — migrated to:
@@ -114,7 +116,7 @@ Estimated effort: 2-3 days for one focused agent.
          `unified_trading_library.service_cli.BaseModeHandler` (different lineage with `args`+`runtime` injection from
          ServiceCLI). Not unified with `feature_service_base.ModeHandler` because the contract surfaces differ
          (config-driven vs CLI-args-driven). Documented in codex.
-6. - [x] **Codex SSOT update** — `codex/04-architecture/features-service-architecture.md` extended with new
+6. - [x] **Codex SSOT update** — `/codex/04-architecture/features-service-architecture.md` extended with new
          `### Canonical ModeHandler ABC (lifted 2026-05-08, UTL@abeb5bc3)` subsection under "UTL helpers shared across
          families" (PM@<this-commit>). Adoption status table covers all 8 families + their decisions.
 7. - [x] **Workspace QG sweep** — features-service + UTL clean (per-file diffs surgical; deleted files clean; smoke

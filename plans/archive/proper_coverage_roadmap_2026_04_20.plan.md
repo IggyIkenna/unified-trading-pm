@@ -6,33 +6,151 @@ status: complete
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [deployment-api, deployment-service, deployment-ui, instruments-service, market-tick-data-service, unified-trading-library]
+repos:
+  [
+    deployment-api,
+    deployment-service,
+    deployment-ui,
+    instruments-service,
+    market-tick-data-service,
+    unified-trading-library,
+  ]
 scope: [engineer, admin]
 tags: []
 related: []
-created: '2026-04-20'
-overview: How to reach ~100% honest coverage per category for instruments-service / MTDS / MDPS — the operational sequence that lights up every cell of the Data Status heatmap.
+created: "2026-04-20"
+overview:
+  How to reach ~100% honest coverage per category for instruments-service / MTDS / MDPS — the operational sequence that
+  lights up every cell of the Data Status heatmap.
 type: ops
 epic: epic-data-platform-honest-coverage
 locked_by: live-defi-rollout
 locked_since: 2026-04-20
-completion_gates: {code: C5, deployment: D3, business: B3}
+completion_gates: { code: C5, deployment: D3, business: B3 }
 depends_on: [honest_coverage_metrics_2026_04_19]
 todos:
-- {id: phase-1-instruments-deferred, content: "- [ ] [AGENT] P0. Finish instruments-service Phase B deferred items: Polymarket\n  per-market loop in engine/orchestrator.py:1660-1687, Kalshi inlined paths,\n  SFI per-fixture entities (fixture-stats / odds / lineups), patch_prediction_shards.py,\n  rescan_prediction_v4.py. Each must call writer.record_empty / record_failed\n  consistently; tests in tests/unit/test_orchestrator_*_capture_status.py.\n", status: todo}
-- {id: phase-1-cross-cat-audit, content: "- [ ] [AGENT] P0. Cross-category audit of every ManifestWriter call site in\n  instruments-service / MTDS / MDPS / features-* — confirm record_empty vs\n  record_failed routing matches the underlying success/failure state per the\n  Bug B fix pattern in MTDS bc33700. Document any remaining mis-classifications\n  in this plan. Update MEMORY.md if a new pattern is discovered.\n", status: todo}
-- {id: phase-2-prediction-backfill, content: "- [ ] [SCRIPT] P0. PREDICTION full-history backfill via launch-mtds-prediction-backfill-vm.sh.\n  Range: 2025-03-14 (Polymarket CLOB cutover) → today. Single VM at a time\n  (singleton lock). Expected outcome: 14000+ captured rows + ~10x empty_confirmed\n  rows for non-trading conditionIds. Triggers PREDICTION attempt_coverage 23%→~99%.\n", status: todo, note: 'Estimated wall time: 4-12 hours single VM, depending on conditionId universe size.'}
-- {id: phase-2-cefi-backfill, content: "- [ ] [SCRIPT] P1. CEFI sharded backfill via launch-cefi-sharded-backfill.sh.\n  Already partly executed (per MEMORY.md). Confirm all year × venue × heavy/light\n  shards have completed; manually re-fire any shard with VM_STATUS != COMPLETED.\n  Track via deployment-ui Data Status page (post Phase C).\n", status: todo}
-- {id: phase-2-tradfi-backfill, content: "- [ ] [SCRIPT] P1. TRADFI backfill — CME ES + CBOE VIX 2024-2026, futures + options.\n  Same launcher as CEFI (launch-cefi-sharded-backfill.sh handles tradfi).\n  Smaller universe than CEFI; should complete in 1-2 days wall time.\n", status: todo}
-- {id: phase-2-defi-backfill, content: "- [ ] [SCRIPT] P1. DEFI backfill per chain × protocol. Existing scripts:\n  scripts/full-defi-backfill.sh (MTDS) + features-onchain-service backfill via\n  launch-features-backfill-vm.sh DEFI. Validate against DEFI_REPOS in\n  create-code-tarballs.sh. Coverage target: every (chain × protocol × date) cell.\n", status: todo}
-- {id: phase-2-sports-cron-stabilization, content: "- [ ] [AGENT] P0. Sports cron orchestration: replace whatever is launching\n  10× SFI VMs concurrently (root cause of yesterday's thundering herd) with\n  a singleton-respecting scheduler. Singleton lock in launcher (968b961) is\n  a bandaid; the orchestration layer needs to stop firing 10 at once. Find\n  the cron / Cloud Scheduler / GHA workflow that did this and fix it.\n", status: todo}
-- {id: phase-2-sports-backfill, content: "- [ ] [SCRIPT] P1. SPORTS backfill: SFI + footystats + odds-api + Understat\n  + transfermarkt + open_meteo + api_football. Each provider has its own\n  launcher (launch-sfi-forward-poll.sh, launch-footystats-forward-poll.sh).\n  Backfill window: 2019-01-01 → today (per Phase 5b.3 scope in MDPS launcher).\n", status: todo}
-- {id: phase-3-reconcile-manifests, content: "- [ ] [SCRIPT] P0. Per-bucket manifest reconciliation pass via UTL helper:\n  unified_trading_library.manifest_writer.rebuild_manifest_from_canonical_paths.\n  For each bucket (instruments-store-{cat}, market-data-tick-{cat},\n  instruments-store-prediction, etc.) — scan canonical paths and write missing\n  manifest rows as capture_status=captured. Honest-coverage rule: this pass\n  only fills CAPTURED gaps. EMPTY_CONFIRMED / ATTEMPTED_FAILED rows must come\n  from real adapter runs (no retroactive sentinel fill — Decision #1 of\n  honest_coverage_metrics_2026_04_19).\n", status: todo}
-- {id: phase-3-coverage-audit-script, content: "- [ ] [AGENT] P1. Build deployment-service/scripts/audit-coverage.py — per-category\n  × per-service report. Inputs: bucket lists from create-code-tarballs.sh\n  category arrays. Outputs: a markdown table with attempt_coverage_pct,\n  capture_coverage_pct, empty_rate, failure_rate per (service × category) cell.\n  Integrate into a daily GHA workflow that posts to ops Slack.\n", status: todo}
-- {id: phase-4-deployment-ui-dashboard, content: "- [ ] [AGENT] P0. Phase C of honest-coverage-metrics — deployment-api ingest\n  of v5 columns + deployment-ui 4-state heatmap + filter toggle + retry\n  action + Playwright validation. Currently dispatched (this session). Plan\n  ref: honest_coverage_metrics_2026_04_19.md § phase-c-*.\n", status: todo}
-- {id: phase-4-per-service-coverage-page, content: "- [ ] [AGENT] P1. New deployment-ui page: /data-status/coverage-roadmap.\n  Renders the matrix from the audit-coverage.py script as a per-(service × category)\n  heatmap with click-through to the underlying shards. Single source of truth\n  for coverage progress that the operator can refresh on demand.\n", status: todo}
-- {id: phase-5-coverage-floor, content: "- [ ] [SCRIPT] P1. Add coverage_floor.yaml (per service × category) ratchet\n  gate. Blocks merges that would lower attempt_coverage below the historical\n  baseline. Pattern: same as the coverage_ratchet_policy_2026_04_19 plan but\n  scoped to data coverage instead of test coverage.\n", status: todo}
-- {id: phase-5-failure-triage-runbook, content: "- [ ] [DOC] P1. Write codex/02-data/failure-triage-runbook.md describing\n  how to read attempted_failed rows in the manifest, classify by error_reason,\n  and route to the right owner (adapter team, infra, vendor support). Pair\n  with the deployment-ui Retry button workflow.\n", status: todo}
+  - {
+      id: phase-1-instruments-deferred,
+      content:
+        "- [ ] [AGENT] P0. Finish instruments-service Phase B deferred items: Polymarket\n  per-market loop in
+        engine/orchestrator.py:1660-1687, Kalshi inlined paths,\n  SFI per-fixture entities (fixture-stats / odds /
+        lineups), patch_prediction_shards.py,\n  rescan_prediction_v4.py. Each must call writer.record_empty /
+        record_failed\n  consistently; tests in tests/unit/test_orchestrator_*_capture_status.py.\n",
+      status: todo,
+    }
+  - {
+      id: phase-1-cross-cat-audit,
+      content:
+        "- [ ] [AGENT] P0. Cross-category audit of every ManifestWriter call site in\n  instruments-service / MTDS /
+        MDPS / features-* — confirm record_empty vs\n  record_failed routing matches the underlying success/failure
+        state per the\n  Bug B fix pattern in MTDS bc33700. Document any remaining mis-classifications\n  in this plan.
+        Update MEMORY.md if a new pattern is discovered.\n",
+      status: todo,
+    }
+  - {
+      id: phase-2-prediction-backfill,
+      content:
+        "- [ ] [SCRIPT] P0. PREDICTION full-history backfill via launch-mtds-prediction-backfill-vm.sh.\n  Range:
+        2025-03-14 (Polymarket CLOB cutover) → today. Single VM at a time\n  (singleton lock). Expected outcome: 14000+
+        captured rows + ~10x empty_confirmed\n  rows for non-trading conditionIds. Triggers PREDICTION attempt_coverage
+        23%→~99%.\n",
+      status: todo,
+      note: "Estimated wall time: 4-12 hours single VM, depending on conditionId universe size.",
+    }
+  - {
+      id: phase-2-cefi-backfill,
+      content:
+        "- [ ] [SCRIPT] P1. CEFI sharded backfill via launch-cefi-sharded-backfill.sh.\n  Already partly executed (per
+        MEMORY.md). Confirm all year × venue × heavy/light\n  shards have completed; manually re-fire any shard with
+        VM_STATUS != COMPLETED.\n  Track via deployment-ui Data Status page (post Phase C).\n",
+      status: todo,
+    }
+  - {
+      id: phase-2-tradfi-backfill,
+      content:
+        "- [ ] [SCRIPT] P1. TRADFI backfill — CME ES + CBOE VIX 2024-2026, futures + options.\n  Same launcher as CEFI
+        (launch-cefi-sharded-backfill.sh handles tradfi).\n  Smaller universe than CEFI; should complete in 1-2 days
+        wall time.\n",
+      status: todo,
+    }
+  - {
+      id: phase-2-defi-backfill,
+      content:
+        "- [ ] [SCRIPT] P1. DEFI backfill per chain × protocol. Existing scripts:\n  scripts/full-defi-backfill.sh
+        (MTDS) + features-onchain-service backfill via\n  launch-features-backfill-vm.sh DEFI. Validate against
+        DEFI_REPOS in\n  create-code-tarballs.sh. Coverage target: every (chain × protocol × date) cell.\n",
+      status: todo,
+    }
+  - {
+      id: phase-2-sports-cron-stabilization,
+      content:
+        "- [ ] [AGENT] P0. Sports cron orchestration: replace whatever is launching\n  10× SFI VMs concurrently (root
+        cause of yesterday's thundering herd) with\n  a singleton-respecting scheduler. Singleton lock in launcher
+        (968b961) is\n  a bandaid; the orchestration layer needs to stop firing 10 at once. Find\n  the cron / Cloud
+        Scheduler / GHA workflow that did this and fix it.\n",
+      status: todo,
+    }
+  - {
+      id: phase-2-sports-backfill,
+      content:
+        "- [ ] [SCRIPT] P1. SPORTS backfill: SFI + footystats + odds-api + Understat\n  + transfermarkt + open_meteo +
+        api_football. Each provider has its own\n  launcher (launch-sfi-forward-poll.sh,
+        launch-footystats-forward-poll.sh).\n  Backfill window: 2019-01-01 → today (per Phase 5b.3 scope in MDPS
+        launcher).\n",
+      status: todo,
+    }
+  - {
+      id: phase-3-reconcile-manifests,
+      content:
+        "- [ ] [SCRIPT] P0. Per-bucket manifest reconciliation pass via UTL
+        helper:\n  unified_trading_library.manifest_writer.rebuild_manifest_from_canonical_paths.\n  For each bucket
+        (instruments-store-{cat}, market-data-tick-{cat},\n  instruments-store-prediction, etc.) — scan canonical paths
+        and write missing\n  manifest rows as capture_status=captured. Honest-coverage rule: this pass\n  only fills
+        CAPTURED gaps. EMPTY_CONFIRMED / ATTEMPTED_FAILED rows must come\n  from real adapter runs (no retroactive
+        sentinel fill — Decision #1 of\n  honest_coverage_metrics_2026_04_19).\n",
+      status: todo,
+    }
+  - {
+      id: phase-3-coverage-audit-script,
+      content:
+        "- [ ] [AGENT] P1. Build deployment-service/scripts/audit-coverage.py — per-category\n  × per-service report.
+        Inputs: bucket lists from create-code-tarballs.sh\n  category arrays. Outputs: a markdown table with
+        attempt_coverage_pct,\n  capture_coverage_pct, empty_rate, failure_rate per (service × category)
+        cell.\n  Integrate into a daily GHA workflow that posts to ops Slack.\n",
+      status: todo,
+    }
+  - {
+      id: phase-4-deployment-ui-dashboard,
+      content:
+        "- [ ] [AGENT] P0. Phase C of honest-coverage-metrics — deployment-api ingest\n  of v5 columns + deployment-ui
+        4-state heatmap + filter toggle + retry\n  action + Playwright validation. Currently dispatched (this session).
+        Plan\n  ref: honest_coverage_metrics_2026_04_19.md § phase-c-*.\n",
+      status: todo,
+    }
+  - {
+      id: phase-4-per-service-coverage-page,
+      content:
+        "- [ ] [AGENT] P1. New deployment-ui page: /data-status/coverage-roadmap.\n  Renders the matrix from the
+        audit-coverage.py script as a per-(service × category)\n  heatmap with click-through to the underlying shards.
+        Single source of truth\n  for coverage progress that the operator can refresh on demand.\n",
+      status: todo,
+    }
+  - {
+      id: phase-5-coverage-floor,
+      content:
+        "- [ ] [SCRIPT] P1. Add coverage_floor.yaml (per service × category) ratchet\n  gate. Blocks merges that would
+        lower attempt_coverage below the historical\n  baseline. Pattern: same as the coverage_ratchet_policy_2026_04_19
+        plan but\n  scoped to data coverage instead of test coverage.\n",
+      status: todo,
+    }
+  - {
+      id: phase-5-failure-triage-runbook,
+      content:
+        "- [ ] [DOC] P1. Write /codex/02-data/failure-triage-runbook.md describing\n  how to read attempted_failed rows
+        in the manifest, classify by error_reason,\n  and route to the right owner (adapter team, infra, vendor
+        support). Pair\n  with the deployment-ui Retry button workflow.\n",
+      status: todo,
+    }
 isProject: true
 ---
 

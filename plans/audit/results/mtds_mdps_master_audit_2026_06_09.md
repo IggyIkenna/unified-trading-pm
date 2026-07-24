@@ -2,18 +2,32 @@
 doc_type: audit-result
 title: MTDS Master — Correctness Audit (2026-06-09)
 summary:
-  MTDS adapter/manifest correctness audit (Mode-1) — mechanics GREEN (bucket-SSOT, no inline gs://, Era-B
-  chain remap, cluster+per-VM-shard isolation) but honest-absence RED — 8 genuine swallow clusters record fetch
-  failures as false empty_confirmed/SOURCE_RETURNED_ZERO + databento ohlcv_1m bar-edge laundering (METASTABLE);
-  5 FPs retracted, 9 latent/dead, +10 new findings on 2026-06-10 caller-chain re-verify.
+  MTDS adapter/manifest correctness audit (Mode-1) — mechanics GREEN (bucket-SSOT, no inline gs://, Era-B chain remap,
+  cluster+per-VM-shard isolation) but honest-absence RED — 8 genuine swallow clusters record fetch failures as false
+  empty_confirmed/SOURCE_RETURNED_ZERO + databento ohlcv_1m bar-edge laundering (METASTABLE); 5 FPs retracted, 9
+  latent/dead, +10 new findings on 2026-06-10 caller-chain re-verify.
 status: fail
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [deployment-service, ibkr-gateway-infra, instruments-service, market-data-processing-service, market-tick-data-service, unified-api-contracts]
+repos:
+  [
+    deployment-service,
+    ibkr-gateway-infra,
+    instruments-service,
+    market-data-processing-service,
+    market-tick-data-service,
+    unified-api-contracts,
+  ]
 scope: [engineer, admin]
 tags: [mtds, mdps, manifest, honest-coverage, data-correctness, defi, tradfi, audit]
-related: [plans/audit/instructions/mtds_mdps_master_audit_instructions.md, plans/active/bar_edge_left_vs_right_remediation_2026_06_08.md, codex/02-data/honest-absence-downstream-handling.md, codex/02-data/availability-manifest-and-data-status.md]
+related:
+  [
+    plans/audit/instructions/mtds_mdps_master_audit_instructions.md,
+    plans/active/bar_edge_left_vs_right_remediation_2026_06_08.md,
+    /codex/02-data/honest-absence-downstream-handling.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+  ]
 created: 2026-06-09
 audited_scope: market-tick-data-service (MTDS) adapters + manifest write path
 date: 2026-06-09

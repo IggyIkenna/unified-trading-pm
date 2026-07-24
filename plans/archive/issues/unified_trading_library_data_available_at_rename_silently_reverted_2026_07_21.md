@@ -141,13 +141,13 @@ that would break if it's removed (grep first), and add a regression test asserti
       needed for this todo — nothing to revert.
 
       **Adjacent finding, fixed in the same commit**: 2 codex docs still documented the STALE (bugged) column list —
-                      `codex/06-coding-standards/validation-and-errors.md`'s `DEFAULT_AS_OF_COLUMNS` example showed both
-                      `data_available_at` AND `available_at` together (a state the real tuple never had), and
-                      `codex/02-data/sports-scheduling-and-sharding.md` §5.1 prose still named `data_available_at` instead of the live
-                      `available_at`. Both corrected to match the current `unified-trading-library@9064dd2a` tuple
-                      (`as_of_date, valuation_date, available_at, kickoff_utc, event_time, computed_at`).
+                                                                              `/codex/06-coding-standards/validation-and-errors.md`'s `DEFAULT_AS_OF_COLUMNS` example showed both
+                                                                              `data_available_at` AND `available_at` together (a state the real tuple never had), and
+                                                                              `/codex/02-data/sports-scheduling-and-sharding.md` §5.1 prose still named `data_available_at` instead of the live
+                                                                              `available_at`. Both corrected to match the current `unified-trading-library@9064dd2a` tuple
+                                                                              (`as_of_date, valuation_date, available_at, kickoff_utc, event_time, computed_at`).
 
 ## Codex SSOTs
 
-`codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md`, `codex/02-data/pipeline-mode-partition.md` (for
+`/codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md`, `/codex/02-data/pipeline-mode-partition.md` (for
 `available_at` semantics generally).

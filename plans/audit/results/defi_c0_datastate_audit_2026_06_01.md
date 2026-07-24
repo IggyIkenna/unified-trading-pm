@@ -2,14 +2,11 @@
 doc_type: audit-result
 title: DeFi C0 data-state audit — per-bucket layout + schema + grain truth (pre-migration)
 summary:
-  Pre-migration DeFi C0 data-state audit — walked all 6 dedicated DeFi buckets'
-  object trees + consolidated _index parquets to establish ground truth for the
-  v9 single-walk — every source bucket holds THREE overlapping (not complementary)
-  layouts (L1 date=/L2 day=/category=defi/L3 raw_tick_data asset_group=defi
-  missing pipeline_mode=), 0% v9 confirmed, per-bucket L1 path/grain differs
-  (lst-rates + oracle-prices need row-split by protocol/source), and records the
-  binding operator decisions (superset-union lossless schema + derive perp funding
-  for L1 cells).
+  Pre-migration DeFi C0 data-state audit — walked all 6 dedicated DeFi buckets' object trees + consolidated _index
+  parquets to establish ground truth for the v9 single-walk — every source bucket holds THREE overlapping (not
+  complementary) layouts (L1 date=/L2 day=/category=defi/L3 raw_tick_data asset_group=defi missing pipeline_mode=), 0%
+  v9 confirmed, per-bucket L1 path/grain differs (lst-rates + oracle-prices need row-split by protocol/source), and
+  records the binding operator decisions (superset-union lossless schema + derive perp funding for L1 cells).
 status: fail
 nature: record
 asset_group: [cross-cutting]
@@ -17,19 +14,14 @@ stage: [meta]
 repos: [market-tick-data-service]
 scope: [engineer, admin]
 tags: [audit, defi, manifest, canonicalisation, data-correctness, pipeline-mode, single-walk, data-quality]
-related:
-  [
-    ../../active/defi_manifest_canonicalisation_2026_06_01.md,
-    ../../../codex/02-data/defi-canonical-naming-ssot.md,
-  ]
+related: [../../active/defi_manifest_canonicalisation_2026_06_01.md, /codex/02-data/defi-canonical-naming-ssot.md]
 created: 2026-06-01
 audited_scope:
-  the 6 dedicated DeFi buckets (dex-pools/dex-swaps/lst-rates/lending-indices/
-  oracle-prices/perp-funding) — top-level trees enumerated exhaustively, leaf path
-  + parquet column schema SAMPLED (1-2 objects per layout), manifest grain read
-  exhaustively from each _index. NOT covered — the heavy content walk +
-  oracle/lst row-mapping validation (deferred to an in-region VM).
-date: '2026-06-01'
+  the 6 dedicated DeFi buckets (dex-pools/dex-swaps/lst-rates/lending-indices/ oracle-prices/perp-funding) — top-level
+  trees enumerated exhaustively, leaf path + parquet column schema SAMPLED (1-2 objects per layout), manifest grain read
+  exhaustively from each _index. NOT covered — the heavy content walk + oracle/lst row-mapping validation (deferred to
+  an in-region VM).
+date: "2026-06-01"
 auditor: ikenna
 parent_epic: defi_master
 severity: P0
@@ -38,7 +30,11 @@ lib_version:
 doc_versions_checked:
 type: analysis
 epic: defi_master
-source: [plans/active/defi_manifest_canonicalisation_2026_06_01.md (§C0-RD1…RD5), market_tick_data_service/scripts/audit_canonical_form.py]
+source:
+  [
+    plans/active/defi_manifest_canonicalisation_2026_06_01.md (§C0-RD1…RD5),
+    market_tick_data_service/scripts/audit_canonical_form.py,
+  ]
 locked_by: live-defi-rollout
 ---
 

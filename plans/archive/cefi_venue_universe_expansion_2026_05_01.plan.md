@@ -146,7 +146,7 @@ Each DEX perp gets:
       dispatch routes correctly.
 - [ ] [AGENT] P0. Each adapter must: (a) implement `record_empty(row_key=...)` for empty source responses, (b) call
       `classify_venue_error()` on exceptions, (c) emit `ADAPTER_FETCH_FAILED` events per
-      `codex/04-architecture/shard-level-failure-isolation.md`.
+      `/codex/04-architecture/shard-level-failure-isolation.md`.
 - [ ] [AGENT] P0. Quality gates + quickmerge.
 
 ### Backfill

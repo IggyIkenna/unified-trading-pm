@@ -14,16 +14,16 @@ scope: [engineer, admin]
 tags: [audit, observability, deployment, infrastructure, scripts]
 related:
   [
-    vm_deployment_events_audit_2026_05_15.md,
-    ../../../codex/05-infrastructure/launcher-script-ssot.md,
+    /plans/audit/results/vm_deployment_events_audit_2026_05_15.md,
+    /codex/05-infrastructure/launcher-script-ssot.md,
     ../../../plans/audit/results/run_lifecycle_events_audit_2026_05_05.md,
   ]
 created: 2026-05-15
 authoritative_for: [VM launcher event-emission compliance audit]
 referenced_by:
   [
-    codex/05-infrastructure/event-sink-chain.md,
-    codex/05-infrastructure/pubsub-topic-inventory.md,
+    /codex/05-infrastructure/event-sink-chain.md,
+    /codex/05-infrastructure/pubsub-topic-inventory.md,
     plans/audit/results/run_lifecycle_events_audit_2026_05_05.md,
     plans/audit/results/vm_deployment_events_audit_2026_05_15.md,
   ]
@@ -162,5 +162,5 @@ Unit tests: `tests/unit/test_vm_event_emission.py`
 
 - `deployment-service/scripts/vm/setup-data-pipeline-vm.sh` (fixed)
 - `deployment-service/deployment_service/vm/heartbeat_cli.py` (event emission Python binding)
-- `codex/05-infrastructure/launcher-script-ssot.md` (trigger chain SSOT)
+- `/codex/05-infrastructure/launcher-script-ssot.md` (trigger chain SSOT)
 - `plans/active/issues/runbook_execution_governance_gaps_2026_05_08.md`

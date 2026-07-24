@@ -9,8 +9,9 @@ stage: [meta]
 repos: [deployment-service, market-tick-data-service, unified-api-contracts]
 scope: [engineer, admin]
 tags: []
-related: [tradfi_ohlcv_only_mvp_backfill_2026_05_15.md, master_to_live_defi_2026_05_23.md]
-created: '2026-05-17'
+related:
+  [/plans/archive/2026_05/tradfi_ohlcv_only_mvp_backfill_2026_05_15.md, /plans/active/master_to_live_defi_2026_05_23.md]
+created: "2026-05-17"
 parent_epic: tradfi_master
 priority: P2
 archived: 2026-05-23
@@ -75,14 +76,14 @@ the CME `mbp_10` book-depth declaration. Seed table (copied from the predecessor
 
 ### Phase 3 — Restore codex coverage matrix
 
-- [x] ✅ [SCRIPT] P0. `codex/02-data/mtds-data-source-coverage-matrix.md` § 3 TRADFI: re-list trades + tbbo rows; remove
-      **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires market-tick-data-service, deployment-service, or UAC
-      changes not in slot 6 worktree. Post-cutover DeFi-first priority. "DEFERRED-post-cutover" annotations from the
+- [x] ✅ [SCRIPT] P0. `/codex/02-data/mtds-data-source-coverage-matrix.md` § 3 TRADFI: re-list trades + tbbo rows;
+      remove **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires market-tick-data-service, deployment-service, or
+      UAC changes not in slot 6 worktree. Post-cutover DeFi-first priority. "DEFERRED-post-cutover" annotations from the
       coverage-axes table; remove header callout to this plan.
 
 ### Phase 4 — Update availability-manifest codex
 
-- [x] ✅ [SCRIPT] P0. `codex/02-data/availability-manifest-and-data-status.md` — flip the "TradFi L1-L3 tick data"
+- [x] ✅ [SCRIPT] P0. `/codex/02-data/availability-manifest-and-data-status.md` — flip the "TradFi L1-L3 tick data"
       bullet **[DEFERRED-SERVICE-REPOS 2026-05-23 slot 6]** Requires market-tick-data-service, deployment-service, or
       UAC changes not in slot 6 worktree. Post-cutover DeFi-first priority. from "deferred to post-cutover" to "restored
       — `is_in_tradfi_tick_window` returns True for May 2023 + Jul 2024 windows". Note the historical context inline; do
@@ -140,9 +141,9 @@ the CME `mbp_10` book-depth declaration. Seed table (copied from the predecessor
 
 ## Codex SSOT updates
 
-- [x] ✅ `codex/02-data/mtds-data-source-coverage-matrix.md` § 3 — Phase 3 above. **[DEFERRED-POST-CUTOVER 2026-05-23
+- [x] ✅ `/codex/02-data/mtds-data-source-coverage-matrix.md` § 3 — Phase 3 above. **[DEFERRED-POST-CUTOVER 2026-05-23
       slot 6]** Post-cutover milestone item. Gated on TradFi L1-L3 tick data backfill completing (post-DeFi-cutover).
-- [x] ✅ `codex/02-data/availability-manifest-and-data-status.md` — Phase 4 above. **[DEFERRED-POST-CUTOVER 2026-05-23
+- [x] ✅ `/codex/02-data/availability-manifest-and-data-status.md` — Phase 4 above. **[DEFERRED-POST-CUTOVER 2026-05-23
       slot 6]** Post-cutover milestone item. Gated on TradFi L1-L3 tick data backfill completing (post-DeFi-cutover).
 - [x] ✅ No new codex stub required — pattern is a reverse of the predecessor's narrowing. **[DEFERRED-POST-CUTOVER
       2026-05-23 slot 6]** Post-cutover milestone item. Gated on TradFi L1-L3 tick data backfill completing
@@ -180,10 +181,10 @@ decision on Databento PAYG spend):
   `_DEFERRED_VENUE_DATA_TYPE_COVERAGE_WINDOWS` into `VENUE_DATA_TYPE_CAPABILITIES` for CME/ICE/NASDAQ/NYSE trades +
   tbbo.
 - **Phase 3 — Restore codex coverage matrix (P0, DEFERRED-POST-CUTOVER)**:
-  `codex/02-data/mtds-data-source-coverage-matrix.md` § 3 TRADFI: re-list trades + tbbo rows; remove
+  `/codex/02-data/mtds-data-source-coverage-matrix.md` § 3 TRADFI: re-list trades + tbbo rows; remove
   "DEFERRED-post-cutover" annotations.
 - **Phase 4 — Update availability-manifest codex (P0, DEFERRED-POST-CUTOVER)**:
-  `codex/02-data/availability-manifest-and-data-status.md` — flip "TradFi L1-L3 tick data" bullet from "deferred to
+  `/codex/02-data/availability-manifest-and-data-status.md` — flip "TradFi L1-L3 tick data" bullet from "deferred to
   post-cutover" to "restored — `is_in_tradfi_tick_window` returns True for May 2023 + Jul 2024 windows".
 - **Phase 5 — Repair MTDS contract-pin test (P0, DEFERRED-POST-CUTOVER)**: Update
   `test_tradfi_tick_window_empty_means_always_suppressed` to pin the 2-window contract; rename UAC test to

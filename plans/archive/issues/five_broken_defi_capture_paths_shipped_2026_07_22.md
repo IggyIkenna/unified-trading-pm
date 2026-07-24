@@ -35,8 +35,8 @@ tags:
     cloud-scheduler,
   ]
 related:
-  - defi_venue_phase_live_definition_contradiction_2026_07_22.md
-  - vault_share_price_handler_capture_gap_since_2026_06_22.md
+  - /plans/active/issues/defi_venue_phase_live_definition_contradiction_2026_07_22.md
+  - /plans/archive/issues/vault_share_price_handler_capture_gap_since_2026_06_22.md
   - plans/active/distinct_values_noncanonical_audit_2026_07_20.md
 created: "2026-07-22"
 parent_epic: infrastructure_master

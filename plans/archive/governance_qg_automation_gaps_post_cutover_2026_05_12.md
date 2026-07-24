@@ -9,12 +9,18 @@ stage: [meta]
 repos: [alerting-service, strategy-service, unified-trading-api, unified-trading-pm, unified-trading-system-ui]
 scope: [engineer, admin]
 tags: []
-related: [plans/active/codex_vs_citadel_infrastructure_audit_2026_05_10.md, plans/active/codex_doc_currency_and_consolidation_post_cutover_2026_05_12.md, plans/active/alerting_runbook_and_operator_ux_post_cutover_2026_05_12.md]
+related:
+  [
+    plans/active/codex_vs_citadel_infrastructure_audit_2026_05_10.md,
+    plans/active/codex_doc_currency_and_consolidation_post_cutover_2026_05_12.md,
+    plans/active/alerting_runbook_and_operator_ux_post_cutover_2026_05_12.md,
+  ]
 created: 2026-05-12
 type: plan
 deadline: 2026-05-23
 prior_deadline: 2026-08-31
-deadline_change_reason: 'Operator direction 2026-05-13: pulled forward into May-23 scope. "QG is key to good trading hardened" —
+deadline_change_reason: 'Operator direction 2026-05-13: pulled forward into May-23 scope. "QG is key to good trading
+  hardened" —
 
   fixing governance automation + ratchet gaps pre-cutover means live trading runs with full HARD RULE
 
@@ -124,7 +130,7 @@ this plan owns the QG/automation half.)
       best-effort wording in AGENT_ONBOARDING.md; agents continue self-pacing per ScheduleWakeup/loop semantics.
       **MIGRATED FROM:** G-8.
 - [x] ✅ [DESIGN] P2. **Group F — STALE_OPEN_ALERT meta-alert (AL-21 QG half).** Contract codified at
-      `unified-trading-pm@<pending>` in `codex/15-runbooks/alerting/alert-code-taxonomy.md` § "Alert lifecycle audit
+      `unified-trading-pm@<pending>` in `/codex/15-runbooks/alerting/alert-code-taxonomy.md` § "Alert lifecycle audit
       (STALE_OPEN_ALERT meta-alert)". Defines: (1) `alert_type: transient|paired` per-code classification; (2) paired
       alerts must clear within `clear_sla_seconds` (default 3600s) or alerting-service raises `STALE_OPEN_ALERT` with
       the original alert_id/code/elapsed time in details; (3) implementation surface

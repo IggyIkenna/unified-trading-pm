@@ -10,7 +10,7 @@ repos: [unified-trading-system-ui]
 scope: [engineer, admin]
 tags: []
 related: []
-created: '2026-04-20'
+created: "2026-04-20"
 companion_to: marketing_site_restructure_2026_04_20.plan.md
 reconciliation_status: shipped_substantive
 reconciliation_date: 2026-04-25
@@ -44,7 +44,7 @@ implements a light-auth code check against `NEXT_PUBLIC_BRIEFING_ACCESS_CODE`, w
 under `odum-briefing-session`.
 [app/(public)/briefings/layout.tsx:1-5](<../../unified-trading-system-ui/app/(public)/briefings/layout.tsx#L1>) wraps
 every `/briefings/*` route. This matches
-[authentication/light-auth-briefings.md](../codex/14-playbooks/authentication/light-auth-briefings.md) spec exactly — it
+[authentication/light-auth-briefings.md](/codex/14-playbooks/authentication/light-auth-briefings.md) spec exactly — it
 is deliberately NOT Firebase auth (too heavy for post-first-call prospects).
 
 The "Sign-in required" badge on
@@ -120,8 +120,8 @@ Ordered by severity. Every item cites the codex rule it violates (`_ssot-rules/0
 
 ## 3. Term drift — cross-checked against codex glossary
 
-Codex SSOT: [codex/14-playbooks/glossary.md](../codex/14-playbooks/glossary.md),
-[codex/14-playbooks/\_ssot-rules/02-tone-and-posture.md](../codex/14-playbooks/_ssot-rules/02-tone-and-posture.md).
+Codex SSOT: [/codex/14-playbooks/glossary.md](/codex/14-playbooks/glossary.md),
+[codex/14-playbooks/\_ssot-rules/02-tone-and-posture.md](/codex/14-playbooks/_ssot-rules/02-tone-and-posture.md).
 
 ### Forbidden / deprecated (codex rule)
 
@@ -160,7 +160,7 @@ Fix: add first-mention-expand pass on each page during Phase 2 rewrite.
 **Codex spec** requires 4-5 sections per pillar. Full table follows. Cross-ref to parent plan Phase 3 (per-path briefing
 routes).
 
-### Investment Management briefing — gap vs [im-decision-journey.md](../codex/14-playbooks/experience/im-decision-journey.md)
+### Investment Management briefing — gap vs [im-decision-journey.md](/codex/14-playbooks/experience/im-decision-journey.md)
 
 | Codex required section                                                     | Shipped                                    | Gap type                                                                    |
 | -------------------------------------------------------------------------- | ------------------------------------------ | --------------------------------------------------------------------------- |
@@ -170,7 +170,7 @@ routes).
 | FCA / MLRO / compliance detail                                             | "under Odum's FCA permissions" (TLDR only) | Shallow                                                                     |
 | Platform-fee client-choice mechanic (+5% perf OR $500/mo)                  | —                                          | Missing — per rule 08, keep codex-private unless plan M5 resolves otherwise |
 
-### DART briefing — gap vs [dart-briefing.md](../codex/14-playbooks/experience/dart-briefing.md)
+### DART briefing — gap vs [dart-briefing.md](/codex/14-playbooks/experience/dart-briefing.md)
 
 | Codex required section                                                                   | Shipped               | Gap type                                                |
 | ---------------------------------------------------------------------------------------- | --------------------- | ------------------------------------------------------- |
@@ -181,7 +181,7 @@ routes).
 | Research/promote/execute loop                                                            | One phrase in summary | Shallow                                                 |
 | Venue / chain / instrument-type packs + 12-month commitment floor                        | —                     | Missing                                                 |
 
-### Regulatory briefing — gap vs [regulatory-umbrella-briefing.md](../codex/14-playbooks/experience/regulatory-umbrella-briefing.md)
+### Regulatory briefing — gap vs [regulatory-umbrella-briefing.md](/codex/14-playbooks/experience/regulatory-umbrella-briefing.md)
 
 | Codex required section                                                                                | Shipped                                  | Gap type       |
 | ----------------------------------------------------------------------------------------------------- | ---------------------------------------- | -------------- |
@@ -197,19 +197,19 @@ content — ship from scratch.
 
 Full canonical glossary extracted this session. Primary SSOT docs that Phase 2/3 writers must align to:
 
-- **Audience terms** — [audiences-and-journeys.md](../codex/14-playbooks/audiences-and-journeys.md)
-- **Product terms** — [glossary.md](../codex/14-playbooks/glossary.md) +
-  [\_ssot-rules/04-dart-commercial-axes.md](../codex/14-playbooks/_ssot-rules/04-dart-commercial-axes.md)
-- **Environments** — [environments/README.md](../codex/14-playbooks/environments/README.md)
-- **Catalogues** — [cross-cutting/catalogues.md](../codex/14-customer-journeys/playbook-concepts/catalogues.md)
+- **Audience terms** — [audiences-and-journeys.md](/codex/14-playbooks/audiences-and-journeys.md)
+- **Product terms** — [glossary.md](/codex/14-playbooks/glossary.md) +
+  [\_ssot-rules/04-dart-commercial-axes.md](/codex/14-playbooks/_ssot-rules/04-dart-commercial-axes.md)
+- **Environments** — [environments/README.md](/codex/14-playbooks/environments/README.md)
+- **Catalogues** — [cross-cutting/catalogues.md](/codex/14-customer-journeys/playbook-concepts/catalogues.md)
 - **Lock state + maturity** —
-  [09-strategy/architecture-v2/cross-cutting/strategy-availability-and-locking.md](../codex/09-strategy/architecture-v2/cross-cutting/strategy-availability-and-locking.md)
+  [09-strategy/architecture-v2/cross-cutting/strategy-availability-and-locking.md](/codex/09-strategy/architecture-v2/cross-cutting/strategy-availability-and-locking.md)
 - **Tone & posture (anti-patterns)** —
-  [\_ssot-rules/02-tone-and-posture.md](../codex/14-playbooks/_ssot-rules/02-tone-and-posture.md) lines 56-77
+  [\_ssot-rules/02-tone-and-posture.md](/codex/14-playbooks/_ssot-rules/02-tone-and-posture.md) lines 56-77
 - **Playbook grammar (9-section structure)** —
-  [\_ssot-rules/01-grammar.md](../codex/14-playbooks/_ssot-rules/01-grammar.md)
+  [\_ssot-rules/01-grammar.md](/codex/14-playbooks/_ssot-rules/01-grammar.md)
 - **Building-block dimensions (for pricing-adjacent copy)** —
-  [\_ssot-rules/05-building-block-dimensions.md](../codex/14-playbooks/_ssot-rules/05-building-block-dimensions.md)
+  [\_ssot-rules/05-building-block-dimensions.md](/codex/14-playbooks/_ssot-rules/05-building-block-dimensions.md)
 
 ## 6. Delta summary — what this manifest adds beyond the parent plan
 

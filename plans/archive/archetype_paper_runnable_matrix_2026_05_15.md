@@ -24,8 +24,8 @@ incidental DEFERRED / post-cutover / out-of-scope tokens in the body are histori
 
 title: "Archetype paper-runnable matrix (pvl-p18b snapshot)" slug: archetype_paper_runnable_matrix_2026_05_15 created:
 2026-05-15 author: slot-5 (harsh) locked_by: live-defi-rollout locked_since: 2026-05-15 codex_ssot:
-codex/09-strategy/architecture-v2/cross-cutting/archetype-paper-readiness.md spawned_by: "slot_5 extended queue item 6 —
-pvl-p18b-archetype-paper-runnable-matrix" estimate_class: design estimate_baseline_ai_days: 0.5
+/codex/09-strategy/architecture-v2/cross-cutting/archetype-paper-readiness.md spawned_by: "slot_5 extended queue item 6
+— pvl-p18b-archetype-paper-runnable-matrix" estimate_class: design estimate_baseline_ai_days: 0.5
 estimate_calibrated_ai_days: 0.3
 
 ---
@@ -34,7 +34,7 @@ estimate_calibrated_ai_days: 0.3
 
 > **Purpose**: populate per-archetype 4-state taxonomy for the May-23 lead pair (`carry_staked_basis` +
 > `ARBITRAGE_PRICE_DISPERSION`) per `pvl-p18b`. Full taxonomy defined in
-> `codex/09-strategy/architecture-v2/cross-cutting/archetype-paper-readiness.md`. This plan is the EVIDENCE RECORD for
+> `/codex/09-strategy/architecture-v2/cross-cutting/archetype-paper-readiness.md`. This plan is the EVIDENCE RECORD for
 > Group F item 18.B in `master_to_live_defi_2026_05_23.md`.
 
 ---

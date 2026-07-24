@@ -30,9 +30,9 @@ scope: [engineer]
 tags: [manifest, consolidator, data-correctness, regression, production-outage, big-finding, schema_version]
 related:
   [
-    tradfi_manifest_consolidator_row_count_varchar_crash_2026_07_12.md,
-    tradfi_manifest_row_loss_regression_2026_07_12.md,
-    tradfi_consolidated_closeout_2026_07_18.md,
+    /plans/archive/issues/tradfi_manifest_consolidator_row_count_varchar_crash_2026_07_12.md,
+    /plans/archive/issues/tradfi_manifest_row_loss_regression_2026_07_12.md,
+    /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
   ]
 parent_epic: tradfi_master
 locked_by:

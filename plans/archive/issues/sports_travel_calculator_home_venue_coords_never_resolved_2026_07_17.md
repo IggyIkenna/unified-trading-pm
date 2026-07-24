@@ -26,7 +26,7 @@ related:
     plans/active/issues/sports_travel_calculator_tz_aware_kickoff_crash_2026_07_14.md,
     plans/active/issues/sports_venue_id_numeric_coercion_data_loss_2026_07_13.md,
     plans/active/sports_p2_features_history_to_ml_ready_2026_06_27.md,
-    codex/02-data/honest-absence-downstream-handling.md,
+    /codex/02-data/honest-absence-downstream-handling.md,
   ]
 created: 2026-07-17
 parent_epic: sports_master
@@ -183,7 +183,7 @@ feature surface) rather than absorbing into `sports_travel_calculator_tz_aware_k
 - [x] ✅ [DATA] P1. **Fix the root cause** found above, restoring genuine (non-zero, non-hardcoded) travel-distance and
       cumulative-travel computation for fixtures where the data genuinely exists — and make the genuinely-missing case
       (no data available) surface as an honest NaN, not a silent `0.0`, per
-      `codex/02-data/honest-absence-downstream-handling.md`. Add/extend a unit test using a real fixture+venue fixture
+      `/codex/02-data/honest-absence-downstream-handling.md`. Add/extend a unit test using a real fixture+venue fixture
       pair with actual travel history spanning >0km, asserting a nonzero cumulative-travel result — the existing test
       suite evidently didn't catch this (all current tests must be using either trivial single-fixture cases or
       synthetic data that happens to avoid the broken path). (repo: features-service) — features-service@6efefde2. Root
@@ -205,15 +205,15 @@ feature surface) rather than absorbing into `sports_travel_calculator_tz_aware_k
       produces real, varying travel data before closing this out. (repo: features-service)
 
       **DONE (2026-07-18T08:25Z, slot-6) — closed by the SAME consolidated fleet as the sibling elo issue doc's
-                          -004 todo** (see that doc's completion note for the full 10-VM launch details, per-VM exit status, and the
-                          `read_historical_fixtures` unrelated-bug caveat on the fleet's final date). Content-sampled
-                          `day=2021-05-22/league=113/feature_group=derived_features/features.parquet` directly (not trusting a
-                          single audit script): `home_travel_distance_km`/`away_travel_distance_km` and `cumulative_travel_30d`
-                          columns now show a genuine MIX of NaN (honest-absence where venue history genuinely isn't resolvable) and
-                          populated values, replacing the pre-fix signature this doc documented (`home_cumulative_travel_30d`/
-                          `away_cumulative_travel_30d` == 0.0 in 100% of sampled rows, NEVER NaN, NEVER nonzero). This confirms the
-                          str/int venue-coords fix (`6efefde2` + the deeper `9923b0d8` fixture-path fix) is reflected in the
-                          re-computed corpus, not just present in the code. (repo: features-service)
+                                                                                  -004 todo** (see that doc's completion note for the full 10-VM launch details, per-VM exit status, and the
+                                                                                  `read_historical_fixtures` unrelated-bug caveat on the fleet's final date). Content-sampled
+                                                                                  `day=2021-05-22/league=113/feature_group=derived_features/features.parquet` directly (not trusting a
+                                                                                  single audit script): `home_travel_distance_km`/`away_travel_distance_km` and `cumulative_travel_30d`
+                                                                                  columns now show a genuine MIX of NaN (honest-absence where venue history genuinely isn't resolvable) and
+                                                                                  populated values, replacing the pre-fix signature this doc documented (`home_cumulative_travel_30d`/
+                                                                                  `away_cumulative_travel_30d` == 0.0 in 100% of sampled rows, NEVER NaN, NEVER nonzero). This confirms the
+                                                                                  str/int venue-coords fix (`6efefde2` + the deeper `9923b0d8` fixture-path fix) is reflected in the
+                                                                                  re-computed corpus, not just present in the code. (repo: features-service)
 
 ## Progress Log
 
@@ -376,7 +376,7 @@ shipped + this doc's Todo 2 already flipped by that slot).
 str-normalization + drop-the-`int()`-cast fix, PLUS a correctness improvement I missed: `_compute_cumulative_travel`
 returning `(0.0, len(recent))` when games happened but the team's home venue still can't be resolved is ITSELF a silent
 non-honest-absence case (a real games-happened-but-unresolvable-venue stretch should read as NaN, not 0.0, per
-`codex/02-data/honest-absence-downstream-handling.md` — the same north-star violation this whole issue doc is about).
+`/codex/02-data/honest-absence-downstream-handling.md` — the same north-star violation this whole issue doc is about).
 Discarded my redundant local commit (`git reset --keep origin/live-defi-rollout` — safe, working tree was clean, no
 foreign WIP at risk) and adopted slot-8's shipped fix instead of shipping a competing/lesser version. Confirmed
 `features-service@6efefde2` passes the full `tests/sports/unit/calculators/test_travel_calculator.py` suite (43 passed)

@@ -22,9 +22,9 @@ scope: [engineer, admin]
 tags: [quickmerge, quality-gates, strict-quickmerge, pre-push-hook, tooling-gap, agent-mode]
 related:
   [
-    features_service_raw_ldr_pushes_bypass_quickmerge_2026_07_13.md,
-    quickmerge_untracked_new_files_silent_noop_2026_06_23.md,
-    qg_pytest_testpaths_excludes_scripts_quality_gates_2026_07_14.md,
+    /plans/archive/issues/features_service_raw_ldr_pushes_bypass_quickmerge_2026_07_13.md,
+    /plans/active/issues/quickmerge_untracked_new_files_silent_noop_2026_06_23.md,
+    /plans/archive/issues/qg_pytest_testpaths_excludes_scripts_quality_gates_2026_07_14.md,
   ]
 created: "2026-07-14"
 parent_epic: infrastructure_master

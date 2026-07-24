@@ -9,7 +9,12 @@ stage: [meta]
 repos: [agent-orchestrator, deployment-service, unified-trading-pm]
 scope: [engineer, admin]
 tags: []
-related: [plans/active/api_host_chronic_impairment_2026_05_29.md, plans/active/plan_hygiene_silent_failure_capture_2026_05_29.md, plans/active/cross_operator_auth_failover_2026_05_29.md]
+related:
+  [
+    plans/active/api_host_chronic_impairment_2026_05_29.md,
+    plans/active/plan_hygiene_silent_failure_capture_2026_05_29.md,
+    plans/active/cross_operator_auth_failover_2026_05_29.md,
+  ]
 created: 2026-05-29
 parent_epic: plans/epics/orchestrator_master.md
 assigned_vm: vm-orchestrator
@@ -20,7 +25,11 @@ estimate_calibrated_ai_days: 0.8
 last_updated: 2026-05-29
 locked_by: live-defi-rollout
 locked_since: 2026-05-29
-codex_ssots: [codex/04-architecture/agent-orchestrator-overview.md, codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md]
+codex_ssots:
+  [
+    /codex/04-architecture/agent-orchestrator-overview.md,
+    /codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md,
+  ]
 ---
 
 > **✅ COMPLETE — ARCHIVED 2026-06-01.** All 15 todos done; zombie prune + `--prune-stale` + per-VM `assigned_vm` scope
@@ -201,17 +210,17 @@ doesn't melt the fleet).
       all small VMs (6783 → 349 ≈ 94.9%). ✅
 
       **POST-FULL-ROLLOUT operator SSM snapshot (2026-05-30T04:25Z, direct state.db query):**
-      Operator (slot-1-laptop) completed Phase 3 rollout: 6 VMs via the autonomous `run_fleet_enable_prune.sh` (it
-      bailed after `vm-sports` on the 7th VM due to SSM get-command-invocation timeout in the wait loop), then 5
-      remaining VMs fired in parallel via direct AWS SSM SendCommand. All 11 VMs verified: drop-in
-      `/etc/systemd/system/orchestrator.service.d/prune-stale.conf` present + `ORCHESTRATOR_REGEN_PRUNE_STALE=true`
-      in `/proc/<orchestrator-pid>/environ`. Post-rollout state.db `queued` counts (direct sqlite COUNT, not heartbeat):
-      vm-orchestrator=334, vm-defi=357, vm-cefi=353, vm-tradfi=353, vm-sports=336, vm-cross-cutting=353,
-      vm-operator-ops=338, vm-prediction=35, **vm-ml=135 (was 6591 — 97.95% reduction)**,
-      **vm-trading-core=0 (was 6154 — 100% reduction)**, api-host=0.
-      The L4 `assigned_vm` filter (agent-orchestrator@c13375c) is now operationally verified — vm-ml + vm-trading-core
-      no longer hold the bloated 6k+ task universe; each VM ingests only plans with matching `assigned_vm` (or no
-      filter). **Phase 3 + Phase 4 fully closed at the data layer.** ✅
+                                                                                                                  Operator (slot-1-laptop) completed Phase 3 rollout: 6 VMs via the autonomous `run_fleet_enable_prune.sh` (it
+                                                                                                                  bailed after `vm-sports` on the 7th VM due to SSM get-command-invocation timeout in the wait loop), then 5
+                                                                                                                  remaining VMs fired in parallel via direct AWS SSM SendCommand. All 11 VMs verified: drop-in
+                                                                                                                  `/etc/systemd/system/orchestrator.service.d/prune-stale.conf` present + `ORCHESTRATOR_REGEN_PRUNE_STALE=true`
+                                                                                                                  in `/proc/<orchestrator-pid>/environ`. Post-rollout state.db `queued` counts (direct sqlite COUNT, not heartbeat):
+                                                                                                                  vm-orchestrator=334, vm-defi=357, vm-cefi=353, vm-tradfi=353, vm-sports=336, vm-cross-cutting=353,
+                                                                                                                  vm-operator-ops=338, vm-prediction=35, **vm-ml=135 (was 6591 — 97.95% reduction)**,
+                                                                                                                  **vm-trading-core=0 (was 6154 — 100% reduction)**, api-host=0.
+                                                                                                                  The L4 `assigned_vm` filter (agent-orchestrator@c13375c) is now operationally verified — vm-ml + vm-trading-core
+                                                                                                                  no longer hold the bloated 6k+ task universe; each VM ingests only plans with matching `assigned_vm` (or no
+                                                                                                                  filter). **Phase 3 + Phase 4 fully closed at the data layer.** ✅
 
 ### Phase 4 — L4 investigate vm-ml + vm-trading-core 21× yaml bloat (research-then-fix)
 
@@ -257,7 +266,7 @@ imported 24×.
       default everywhere."** Cross-link this plan. Collision group: none. Estimate: 0.05 AI-day. **DONE 2026-05-30** —
       added to `cursor-configs/CLAUDE.md` after the "backlog is plan-driven" rule. Covers: invariant, env var default,
       audit recipe (verify_fleet_prune_state.sh), recovery (enable_prune_stale.sh), SSOT link.
-- [x] ✅ [DOCS] P1. Add codex doc `codex/04-architecture/agent-orchestrator-backlog-state-alignment.md` — the full
+- [x] ✅ [DOCS] P1. Add codex doc `/codex/04-architecture/agent-orchestrator-backlog-state-alignment.md` — the full
       architecture: regen lifecycle, yaml⇆state.db invariants, audit recipe, recovery if drift detected. Collision
       group: none. Estimate: 0.1 AI-day. **DONE 2026-05-30** — doc written: regen lifecycle flow diagram, invariants
       table (dedup-by-brief, dedup-by-id, no-task-steal, idempotent, per-VM scope), env vars table, drift audit recipe,

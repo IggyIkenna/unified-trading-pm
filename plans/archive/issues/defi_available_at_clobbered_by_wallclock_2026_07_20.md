@@ -11,8 +11,8 @@ summary: >-
   `_upload_parquet` (`:149`). Net effect on a HISTORICAL backfill: the shipped `available_at` is the wall-clock time the
   backfill happened to run, not when the data became available on-chain. That is non-deterministic across re-runs, so a
   batch re-run of window W cannot reproduce paper(W) — the ε=0 contract in
-  `codex/09-strategy/operational/paper-batch-live-reconciliation.md` — and any point-in-time / lookahead filter keyed on
-  `available_at` silently uses a fabricated time. Found while designing the DeFi backfill optimization (the streaming
+  `/codex/09-strategy/operational/paper-batch-live-reconciliation.md` — and any point-in-time / lookahead filter keyed
+  on `available_at` silently uses a fabricated time. Found while designing the DeFi backfill optimization (the streaming
   write-path port would have propagated the pattern); NOT introduced by that work.
 status: resolved
 nature: issue
@@ -34,8 +34,8 @@ tags:
   ]
 related:
   - plans/active/defi_consolidated_closeout_2026_07_18.md
-  - codex/09-strategy/operational/paper-batch-live-reconciliation.md
-  - codex/02-data/live-data-persistence-and-event-log.md
+  - /codex/09-strategy/operational/paper-batch-live-reconciliation.md
+  - /codex/02-data/live-data-persistence-and-event-log.md
 created: 2026-07-20
 parent_epic: infrastructure_master
 assigned_vm: NA

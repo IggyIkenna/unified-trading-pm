@@ -10,7 +10,7 @@ repos: [unified-trading-api, unified-trading-pm, unified-trading-system-ui]
 scope: [engineer, admin]
 tags: []
 related: []
-created: '2026-04-21'
+created: "2026-04-21"
 ---
 
 ## Deferred work — migrated to:
@@ -176,7 +176,7 @@ todos:
         `tests/unit/routes/test_strategy_performance.py`. status: done
 
 - id: p4-codex-performance-overlay-doc content: |
-  - [x] [AGENT] P1. Create `codex/09-strategy/architecture-v2/performance-overlay.md`: 3 modes, allocator query
+  - [x] [AGENT] P1. Create `/codex/09-strategy/architecture-v2/performance-overlay.md`: 3 modes, allocator query
         patterns, odum-paper source, venue-slice semantics. Cross-ref odum-paper-client-zero.md + strategy-catalogue-
         3tier.md. status: done
 

@@ -38,7 +38,7 @@ Successor to the Solana perp DEX adapters (Plan B) that shipped at `instruments-
 Lifinity) plus Pyth oracle price feeds for the `arbitrage_price_dispersion` archetype.
 
 **Issue doc**: `plans/active/issues/solana_defi_coverage_gaps_2026_05_13.md` **Codex SSOT**:
-`codex/04-architecture/solana-defi-coverage.md` (Phase 7 updates)
+`/codex/04-architecture/solana-defi-coverage.md` (Phase 7 updates)
 
 ---
 
@@ -203,7 +203,7 @@ backfill script shell is ready; the APPLY mode raises a descriptive warning unti
 
 ## Phase 7 — Codex SSOT updates (SERIAL — after Phases 1-6)
 
-- [x] [SCRIPT] P1. Update or create `codex/04-architecture/solana-defi-coverage.md` to reflect:
+- [x] [SCRIPT] P1. Update or create `/codex/04-architecture/solana-defi-coverage.md` to reflect:
   - 4 new AMM/CLOB adapters (Meteora, Phoenix, Jupiter, Lifinity)
   - Pyth oracle integration
   - Updated `SOLANA_DEFI_PROTOCOLS` + `SOLANA_PROTOCOL_DEPLOY_DATES` entries

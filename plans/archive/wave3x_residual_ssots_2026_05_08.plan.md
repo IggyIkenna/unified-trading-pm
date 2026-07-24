@@ -6,7 +6,15 @@ status: complete
 nature: record
 asset_group: [sports]
 stage: [meta]
-repos: [deployment-api, features-service, instruments-service, unified-api-contracts, unified-trading-library, unified-trading-pm]
+repos:
+  [
+    deployment-api,
+    features-service,
+    instruments-service,
+    unified-api-contracts,
+    unified-trading-library,
+    unified-trading-pm,
+  ]
 scope: [engineer, admin]
 tags: []
 related: []
@@ -16,11 +24,13 @@ locked_since: 2026-05-08
 estimate_class: design
 estimate_baseline_ai_days: 6
 estimate_calibrated_ai_days: 3.6
-estimate_calibration_note: 'No explicit AI-day estimates found in plan body during 2026-05-11 sweep; class inferred from filename (design, multiplier 0.6×).
+estimate_calibration_note: "No explicit AI-day estimates found in plan body during 2026-05-11 sweep; class inferred from
+  filename (design, multiplier 0.6×).
 
-  Owner agent: fill baseline + multiply × 0.6 per codex/08-workflows/estimation-calibration.md. Refine class if dominant work-class differs.
+  Owner agent: fill baseline + multiply × 0.6 per /codex/08-workflows/estimation-calibration.md. Refine class if
+  dominant work-class differs.
 
-  '
+  "
 parent_epic: sports_master
 priority: P2
 ---
@@ -210,7 +220,7 @@ reconciler can re-classify them with the now-available typed reasons.
       columns are written / a new reason is added. (Operator decides if/when to run `--apply-flips` after CSV review —
       currently a no-op given 0 upgrades.)
 - [x] [DOCS] P0. **SHIPPED 2026-05-11 PM** (slot 3): codex update to
-      `codex/02-data/honest-absence-downstream-handling.md` — added a
+      `/codex/02-data/honest-absence-downstream-handling.md` — added a
       `### Reconciler chain for legacy error_reason (the three passes)` subsection (under "Reader-side fallback for
       legacy rows") naming all 3 reconcilers in order + noting `reconcile_legacy_blank_to_typed_reason.py` is the
       **canonical mechanism for legacy-reason upgrades whenever a new `EXPECTED_*` reason is added to UAC
@@ -271,7 +281,7 @@ instead of writing nothing.
       volatility-smile use case (operator-flagged: every strike must be visible even on zero-volume days for
       cross-instrument analysis). **SHIPPED 2026-05-13 (slot 6 wave 2, PM@84e29700)**: added
       `## Zero-activity-bar shape (case-D design —     implementation deferred post-cutover)` section to
-      `codex/02-data/honest-absence-downstream-handling.md` — per-data_type carry-forward table
+      `/codex/02-data/honest-absence-downstream-handling.md` — per-data_type carry-forward table
       (ohlcv/trades/book_snapshot/derivative_ticker/options_chain/DeFi-continuous/prediction CLOB), vol-smile
       constraint, Wave 3.M implementation requirements, and successor-plan pointer.
 - [x] ✅ [PLAN] P2. **DEFERRED-AFTER-CUTOVER** File `plans/active/wave3x_track_d_implementation_<date>.md` — the Wave
@@ -310,7 +320,7 @@ stamping logic.
       no-cols-raises / empty-df / all-NaT-raises / no-mutation; + UTL-facade re-export). 37 tests pass; ruff clean;
       basedpyright clean on `availability_stamping.py`.
 - [x] [DOCS] P0. **SHIPPED 2026-05-11 PM** (slot 3): codex update to
-      `codex/02-data/honest-absence-downstream-handling.md` — added a
+      `/codex/02-data/honest-absence-downstream-handling.md` — added a
       `## Per-source available_at stamping helpers (UTL)` section with the per-helper rule table (lineups / injuries /
       odds_snapshot / post_match(+cascade) / event_time-for-weather / cefi_tick / offset+explicit) + the
       `record_captured` → `assert_available_at_present` → `LookaheadBiasError` enforcement note + the

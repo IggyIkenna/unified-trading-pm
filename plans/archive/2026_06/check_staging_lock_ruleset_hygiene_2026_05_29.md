@@ -55,7 +55,7 @@ enforcing v2. So future PRs to these 3 repos will:
 3. ONLY check-staging-lock counts as required for merge
 
 That's not a correctness issue but it means quality-gates-v2 is advisory not gating for these repos. Workspace canonical
-(per `codex/08-workflows/ci-cd-flow.md`) is that `quality-gates-v2` SHOULD be the gating check.
+(per `/codex/08-workflows/ci-cd-flow.md`) is that `quality-gates-v2` SHOULD be the gating check.
 
 ## Recommended decision
 

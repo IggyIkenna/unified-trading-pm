@@ -9,12 +9,20 @@ stage: [meta]
 repos: [deployment-api, deployment-service, deployment-ui, unified-trading-pm]
 scope: [engineer, admin]
 tags: []
-related: [issues/running_vm_fleet_status_2026_05_27.md, deployment_ui_vm_and_venue_coverage_visibility_2026_05_27.md]
+related:
+  [
+    issues/running_vm_fleet_status_2026_05_27.md,
+    /plans/archive/deployment_ui_vm_and_venue_coverage_visibility_2026_05_27.md,
+  ]
 created: 2026-05-27
 parent_epic: infrastructure_master
 assigned_vm: vm-cross-cutting
 completed: 2026-06-01
-completed_note: 'Operator-marked done 2026-06-01 (harsh). Throwaway bucket deleted. Live vm-logs/ stream healthy. Deferred (operator: ''let it be''): rolling-archive + serial-capture crons committed but never tofu-applied → durable 14-day-TTL survival NOT live in prod; doubled-path nesting in the 05-30 migration copy. Captured in issues/fleet_audit_triad_deferred_followups_2026_06_01.md.'
+completed_note:
+  "Operator-marked done 2026-06-01 (harsh). Throwaway bucket deleted. Live vm-logs/ stream healthy. Deferred (operator:
+  'let it be'): rolling-archive + serial-capture crons committed but never tofu-applied → durable 14-day-TTL survival
+  NOT live in prod; doubled-path nesting in the 05-30 migration copy. Captured in
+  issues/fleet_audit_triad_deferred_followups_2026_06_01.md."
 priority: P1
 author: harsh (claude opus 4.7)
 estimate_class: infra
@@ -102,9 +110,9 @@ test (`gs://deployment-scripts-{pid}/vm-logs/{vm}/run.log`).
       `classify_vm_name` to enumerate lifecycle-classified prefixes dynamically. Idempotent (skips existing GCS
       objects). Unit tests in `test_vm_serial_capture_cron.py`.
 - [x] [AGENT] P2. **Codex SSOT**: document the two canonical paths + the backup/retention contract in
-      `codex/05-infrastructure/vm-tarball-deployment.md` (or a new `codex/05-infrastructure/vm-log-archival.md`), and
+      `/codex/05-infrastructure/vm-tarball-deployment.md` (or a new `/codex/05-infrastructure/vm-log-archival.md`), and
       reference it from the kill/teardown runbook. — unified-trading-pm@2844421c ✅ New
-      `codex/05-infrastructure/vm-log-archival.md`: live stream + durable snapshot + daily rolling + serial-rolling
+      `/codex/05-infrastructure/vm-log-archival.md`: live stream + durable snapshot + daily rolling + serial-rolling
       paths; backup-vm-logs.sh usage; pre-kill hook table; throwaway-bucket retirement recipe; verify runbook. Added
       reference from `vm-launcher-runbook.md` kill/teardown section.
 - [x] [AGENT] P2. **Per-repo log-destination convention**: extend the canonical-path idea beyond VMs — every

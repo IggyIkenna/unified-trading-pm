@@ -9,8 +9,8 @@ stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]
 tags: []
-related: [plan_hygiene_automation_2026_05_21.md]
-created: '2026-05-23'
+related: [/plans/archive/2026_05/plan_hygiene_automation_2026_05_21.md]
+created: "2026-05-23"
 parent_epic: plan_hygiene_master
 assigned_vm: vm-cross-cutting
 priority: P1
@@ -101,6 +101,6 @@ each:
 
 This plan was a next-session kickoff prompt — no active todos. The work it described has been executed in this session.
 
-- Hygiene sweep guidance → `codex/11-project-management/plan-hygiene.md` (SSOT)
+- Hygiene sweep guidance → `/codex/11-project-management/plan-hygiene.md` (SSOT)
 - Script inventory → same codex doc + `scripts/plan-hygiene/`
 - LEDGER wiring → superseded by Phase 6 daily cron approach (Cloud Run + Cloud Scheduler) Archiving 2026-05-23.

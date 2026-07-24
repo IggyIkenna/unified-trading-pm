@@ -55,8 +55,8 @@ See [§ Greeks-service](#greeks-service-data-pipeline-derivation--batch--live) f
 - **After any edit to `features_service/delta_one/app/features/registry.py`** (registry SSOT drift — items i, j, o)
 - **After any edit to `features_service/delta_one/app/core/feature_writer.py`** (stamp / metadata drift — items k, l,
   live-versioning)
-- **After any edit to `codex/02-data/feature-formula-versioning.md` or `codex/04-architecture/artifact-versioning.md`**
-  (doc-code drift — items p, t)
+- **After any edit to `/codex/02-data/feature-formula-versioning.md` or
+  `/codex/04-architecture/artifact-versioning.md`** (doc-code drift — items p, t)
 - **After a `live-defi-rollout` push to features-service** (composes with CI-Verification HARD RULE)
 - **After the FIRST successful features-service write to any `gs://features-delta-one-{ag}-{pid}/`** — that write is the
   only signal that unblocks items (l) / (live-versioning) / (batch-live). Until it happens, those items stay BLOCKED —
@@ -101,7 +101,7 @@ See [§ Greeks-service](#greeks-service-data-pipeline-derivation--batch--live) f
 ### Registry SSOT + Formula Versioning
 
 > Shipped 2026-05-28 across 5 phases in `plans/active/features_registry_status_versioning_2026_05_28.md`. Codex SSOT:
-> `codex/02-data/feature-formula-versioning.md`.
+> `/codex/02-data/feature-formula-versioning.md`.
 
 - [ ] (i) **Registry covers every CALCULATOR_REGISTRY group**: every key in
       `features_service.delta_one.app.calculators.CALCULATOR_REGISTRY` must have ≥1 `FeatureSpec` entry in
@@ -112,7 +112,7 @@ See [§ Greeks-service](#greeks-service-data-pipeline-derivation--batch--live) f
 
 - [ ] (j) **Status + Implementation closed-set Literals haven't drifted**: the `Status = Literal[...]` and
       `Implementation = Literal[...]` declarations in `registry.py` must match exactly what
-      `codex/02-data/feature-formula-versioning.md` § "Status field" + § "FeatureSpec extensions" document. A silent
+      `/codex/02-data/feature-formula-versioning.md` § "Status field" + § "FeatureSpec extensions" document. A silent
       widening of either set breaks the test-gate filter (item m) + the consumer pin pattern. Find:
       `grep -A 10 "^Status = Literal\|^Implementation = Literal" features_service/delta_one/app/features/registry.py`
       Verify: Status set = `{verified, tested, in_dev, listed, blocked, deprecated, need_data}`; Implementation set =
@@ -161,7 +161,7 @@ See [§ Greeks-service](#greeks-service-data-pipeline-derivation--batch--live) f
       `listed=1329, verified=28, tested=19`. Audit window: if `listed` count hasn't decreased in 4 weeks, flag the audit
       owner to promote at least the high-priority specs.
 
-- [ ] (p) **Codex-named implementation files exist at documented paths**: `codex/02-data/feature-formula-versioning.md`
+- [ ] (p) **Codex-named implementation files exist at documented paths**: `/codex/02-data/feature-formula-versioning.md`
       § "The four files" claims 4 concrete paths exist. Drift = file rename / move without codex update. Run:
       `for f in features_service/delta_one/app/features/registry.py features_service/delta_one/app/features/formula_hash.py features_service/delta_one/app/features/status_report.py features_service/delta_one/app/core/feature_writer.py; do test -f features-service/$f && echo "OK $f" || echo "MISSING $f"; done`
       Verify: all 4 OK. Any MISSING ⇒ update the codex doc or restore the file.
@@ -197,7 +197,7 @@ See [§ Greeks-service](#greeks-service-data-pipeline-derivation--batch--live) f
       MUST still resolve to a real artifact. Find:
       `sed -n '/Feature formula versioning/,/SSOT:/p' cursor-configs/CLAUDE.md` Verify: registry path still exists;
       `features-status` console-script entry still in features-service `pyproject.toml`; codex SSOT
-      `codex/02-data/feature-formula-versioning.md` still exists.
+      `/codex/02-data/feature-formula-versioning.md` still exists.
 
 - [ ] (u) **Fetch-failure → `attempted_failed`, never `empty_confirmed` — PER-ADAPTER swallow audit (codified
       2026-06-01)**: every features-service adapter doing external I/O (DefiLlama / on-chain RPC / vendor REST in

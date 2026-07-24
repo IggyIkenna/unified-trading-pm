@@ -9,8 +9,8 @@ stage: [meta]
 repos: [agent-orchestrator, alerting-service, deployment-api, deployment-service, execution-service, features-service]
 scope: [engineer, admin]
 tags: []
-related: [master_to_live_defi_2026_05_23.md]
-created: '2026-05-21'
+related: [/plans/active/master_to_live_defi_2026_05_23.md]
+created: "2026-05-21"
 parent_epic: infrastructure_master
 priority: P1
 estimate_class: refactor
@@ -25,7 +25,7 @@ locked_since: 2026-05-12
 Workspace-wide `ruff check --fix` + `ruff format` sweep across all service repos; Telegram bot hygiene cleanup; per-repo
 QG green verified post-fix. All 14 repos swept + Telegram hygiene done — archive candidate.
 
-Codex SSOTs: `codex/06-coding-standards/quality-gates.md`
+Codex SSOTs: `/codex/06-coding-standards/quality-gates.md`
 
 ---
 

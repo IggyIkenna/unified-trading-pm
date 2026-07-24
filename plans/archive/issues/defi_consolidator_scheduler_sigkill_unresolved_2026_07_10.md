@@ -27,7 +27,7 @@ tags: [consolidator, cloud-run, oom, sigkill, scheduler, defi, unresolved]
 related:
   [
     plans/active/issues/defi_manifest_consolidator_duplicate_race_2026_07_10.md,
-    codex/05-infrastructure/manifest-consolidator-ssot.md,
+    /codex/05-infrastructure/manifest-consolidator-ssot.md,
   ]
 created: 2026-07-10
 parent_epic: instruments_master
@@ -202,7 +202,7 @@ session; flagging with real evidence for whoever picks up the residual-kill inve
 Confirms the residual kill pattern is STILL ACTIVE 3 days after the TTL fix and the canonical is STILL stuck at the same
 `2026-07-10T21:42:30Z` timestamp cited above (i.e. zero successful merges since, ~2.7 days now). New diagnostic detail
 not previously captured: the consolidator's own self-reported `_index/latest.json` run summary
-(`codex/05-infrastructure/manifest-consolidator-ssot.md` § "Cockpit data-correctness signals", shipped
+(`/codex/05-infrastructure/manifest-consolidator-ssot.md` § "Cockpit data-correctness signals", shipped
 `unified-trading-library@111592eb`) surfaces this failure mode directly —
 
 ```

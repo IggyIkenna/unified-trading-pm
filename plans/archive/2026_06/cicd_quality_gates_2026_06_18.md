@@ -6,7 +6,15 @@ status: superseded
 nature: record
 asset_group: [infrastructure]
 stage: [meta]
-repos: [agent-orchestrator, alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-service]
+repos:
+  [
+    agent-orchestrator,
+    alerting-service,
+    batch-live-reconciliation-service,
+    client-reporting-api,
+    deployment-api,
+    deployment-service,
+  ]
 scope: [engineer, admin]
 tags: []
 related: []
@@ -20,7 +28,13 @@ estimate_class: infra
 estimate_baseline_ai_days: 5
 estimate_calibrated_ai_days: 4
 parent_consolidation: cicd_docs_and_consolidation_2026_06_18
-source: [qg_commit_quality_boundary_and_slot_ff_push_2026_06_03 (consolidated), ci_local_qg_parity_2026_06_08 (consolidated), worktree_ldr_unification_2026_06_08 (consolidated), cicd_contract_hardening_2026_06_01 (quality-gates subset)]
+source:
+  [
+    qg_commit_quality_boundary_and_slot_ff_push_2026_06_03 (consolidated),
+    ci_local_qg_parity_2026_06_08 (consolidated),
+    worktree_ldr_unification_2026_06_08 (consolidated),
+    cicd_contract_hardening_2026_06_01 (quality-gates subset),
+  ]
 ---
 
 > **⚠️ SUPERSEDED 2026-06-24 → [cicd_consolidated_remaining_2026_06_24.md](cicd_consolidated_remaining_2026_06_24.md)**
@@ -32,7 +46,7 @@ source: [qg_commit_quality_boundary_and_slot_ff_push_2026_06_03 (consolidated), 
 > work them in the consolidated plan.
 
 > **Consolidated 2026-06-18** (see `cicd_docs_and_consolidation_2026_06_18`). **SSOT:**
-> `codex/08-workflows/ci-cd-flow.md` (the two-pass model, the QG sentinel, Path-B) + `CICD-WORKFLOW-CATALOG.md`. Zero
+> `/codex/08-workflows/ci-cd-flow.md` (the two-pass model, the QG sentinel, Path-B) + `CICD-WORKFLOW-CATALOG.md`. Zero
 > open items dropped.
 
 # CI/CD Quality Gates
@@ -44,12 +58,12 @@ source: [qg_commit_quality_boundary_and_slot_ff_push_2026_06_03 (consolidated), 
 
 ### Local ↔ CI parity + QG mechanics
 
-- [SCRIPT] P1. Fix any non-SIT-delta divergence in the local↔CI matrix to byte-identical (the drive-to-parity
-      catch-all; most root-causes closed, the catch-all stays). (ci_local_qg_parity)
+- [SCRIPT] P1. Fix any non-SIT-delta divergence in the local↔CI matrix to byte-identical (the drive-to-parity catch-all;
+  most root-causes closed, the catch-all stays). (ci_local_qg_parity)
 - [SCRIPT] P2. QG dep-clone ref-determinism — resolve all deps at the same ref (no mixed-ref clone).
-      (cicd_contract_hardening #23; composes with the LDR→staging drain verify in cicd_promotion_pipeline)
-- [INFRA] P2. Churn-protection: idempotent plan-inventory regen + manifest-canonical-form + a `prettier --check`
-      gate (three named writers still churn the worktree). (cicd_contract_hardening #2)
+  (cicd_contract_hardening #23; composes with the LDR→staging drain verify in cicd_promotion_pipeline)
+- [INFRA] P2. Churn-protection: idempotent plan-inventory regen + manifest-canonical-form + a `prettier --check` gate
+  (three named writers still churn the worktree). (cicd_contract_hardening #2)
 - [x] ✅ [SCRIPT] P1. e2e-testing editable self-install — add package-discovery to `pyproject.toml` (QG hygiene).
       (cicd_contract_hardening #1) — e2e-testing@23424ff | changed `[tool.setuptools.packages.find] include = []` →
       `[tool.setuptools] packages = []`; bypasses flat-layout autodiscovery that caused "Multiple top-level packages"
@@ -59,32 +73,31 @@ source: [qg_commit_quality_boundary_and_slot_ff_push_2026_06_03 (consolidated), 
       e2e-testing@33549fe (MAX_DURATION env-override + remove centralized CVEs) | features-service@8e11b2e4
       (MAX_DURATION env-override + remove centralized CVE comment block)
 - [SCRIPT] P3. Remove now-redundant local PYSEC-2024-277/2025-183/2026-161 entries from remaining repos:
-      alerting-service, client-reporting-api, ml-service, system-integration-tests, trading-agent-service,
-      unified-trading-api, unified-trading-library, greeks-service, strategy-service. (cicd_contract_hardening #8
-      follow-up)
+  alerting-service, client-reporting-api, ml-service, system-integration-tests, trading-agent-service,
+  unified-trading-api, unified-trading-library, greeks-service, strategy-service. (cicd_contract_hardening #8 follow-up)
 
 ### Path-B worktree ship discipline (worktree_ldr finish)
 
 - [DOCS] P2. Rewrite AO `worker.md` + the boot-prompt `branch` fallback off the retired `tab/<op>/N` model.
-      (worktree_ldr)
+  (worktree_ldr)
 - [SCRIPT] P3. Prune vestigial tab-branch code in the slot scripts (keep the identity-prefix; careful surgery,
-      documented-harmless no-ops). (worktree_ldr)
-- [INFRA] P2. AO drift-tick is staged on LDR, inert until the agent-orchestrator LDR→main promotion lands — activate
-      it then. (worktree_ldr)
+  documented-harmless no-ops). (worktree_ldr)
+- [INFRA] P2. AO drift-tick is staged on LDR, inert until the agent-orchestrator LDR→main promotion lands — activate it
+  then. (worktree_ldr)
 - [INFRA] P2. E2e smoke: force a merge-conflict PR → auto-recover + escalate → VM Path-B worker (the closing
-      verification; archives the section when green). (worktree_ldr)
+  verification; archives the section when green). (worktree_ldr)
 
 ### Cron / infra residuals
 
 - [x] ✅ [SCRIPT] P1. `orphan-ping-audit` 4h local crontab — add a self-pull (Cloud Run copy exempt). (qg_commit L399) —
       PM@aa65d40a3 | added `K_SERVICE`-guarded `git pull --ff-only` at top of `audit_ping_orphans.sh`; Cloud Run exempt
       (clones fresh); lifecycle header added.
-- [OPS] P0. AWS-VM half — verify `ROOT_PM`/`SLOT_DIR` + crons + not-stranded (Harsh-laptop half done; must run on
-      the VM). (qg_commit L435/L441)
-- [DESIGN] P3. LATER — crons self-pull from a QG-v2-gated ref (successor hardening; the self-pull already removed
-      the foot-gun). (qg_commit L452)
-- [CICD] P2. deployment-service CodeBuild BUILD exit 127 (uv/image not found) — live infra red, non-blocking
-      (CodeBuild not required). (qg_commit L604)
+- [OPS] P0. AWS-VM half — verify `ROOT_PM`/`SLOT_DIR` + crons + not-stranded (Harsh-laptop half done; must run on the
+  VM). (qg_commit L435/L441)
+- [DESIGN] P3. LATER — crons self-pull from a QG-v2-gated ref (successor hardening; the self-pull already removed the
+  foot-gun). (qg_commit L452)
+- [CICD] P2. deployment-service CodeBuild BUILD exit 127 (uv/image not found) — live infra red, non-blocking (CodeBuild
+  not required). (qg_commit L604)
 - [x] ✅ [SCRIPT] P2. Finish the codex-not-a-separate-repo cleanup — `major-bump-approval.yml` write-back +
       `setup-workspace` clone remain. (qg_commit L808) — PM@8676d86 | fixed broken `unified-trading-codex/` runtime
       paths in `compute-epic-readiness.py` (WORKSPACE_ROOT→PM_ROOT, REPOS_DIR/EPICS_DIR now resolve to
@@ -93,16 +106,16 @@ source: [qg_commit_quality_boundary_and_slot_ff_push_2026_06_03 (consolidated), 
 ### Docs / SSOT hygiene (from the 2026-06-18 `docs/repo-management/` reconciliation)
 
 - [DOCS] P2. Migrate `docs/repo-management/CI-CD-FLOW.md`'s unique bootstrap/venv/dependency-alignment/mock-infra
-      content → `codex/05-infrastructure/workspace-setup.md` (currently an 8-line stub), correcting the stale
-      sync-to-main / force-push / three-tier bits to as-built (LDR-trunk); then delete `CI-CD-FLOW.md` (it's bannered
-      NOT-the-SSOT in the meantime).
-- [DOCS] P3. Repoint the ~18 residual references off the 4 retired CI/CD docs (`CI-CD-FLOW.md` /
-      `docs/ci-cd-ssot.md` / `version-cascade-flow.md` / `sync-to-main-flow.md`) → `codex/08-workflows/ci-cd-flow.md`
-      across `.cursor/rules/*.mdc` (cicd-setup, ci-rollout-ownership, dependency-install-protocol,
-      dependency-alignment-and-setup-flow, single-repo-vs-workspace-setup, prettier-docs-formatting,
-      quality-gates-propagation-risk) + `codex/05-infrastructure/{cicd-setup,README,new-repo-setup}.md` +
-      `scripts/{workspace/workspace-bootstrap.sh, repo-management/sync-all-to-main.sh, repo-management/README-ALIGNMENT-AND-SETUP.md}`;
-      drop dead `§7`/`§2` anchors. The retired-doc stubs self-redirect, so this is cleanliness, not correctness.
+  content → `/codex/05-infrastructure/workspace-setup.md` (currently an 8-line stub), correcting the stale sync-to-main
+  / force-push / three-tier bits to as-built (LDR-trunk); then delete `CI-CD-FLOW.md` (it's bannered NOT-the-SSOT in the
+  meantime).
+- [DOCS] P3. Repoint the ~18 residual references off the 4 retired CI/CD docs (`CI-CD-FLOW.md` / `docs/ci-cd-ssot.md` /
+  `version-cascade-flow.md` / `sync-to-main-flow.md`) → `/codex/08-workflows/ci-cd-flow.md` across `.cursor/rules/*.mdc`
+  (cicd-setup, ci-rollout-ownership, dependency-install-protocol, dependency-alignment-and-setup-flow,
+  single-repo-vs-workspace-setup, prettier-docs-formatting, quality-gates-propagation-risk) +
+  `codex/05-infrastructure/{cicd-setup,README,new-repo-setup}.md` +
+  `scripts/{workspace/workspace-bootstrap.sh, repo-management/sync-all-to-main.sh, repo-management/README-ALIGNMENT-AND-SETUP.md}`;
+  drop dead `§7`/`§2` anchors. The retired-doc stubs self-redirect, so this is cleanliness, not correctness.
 
 ## Verify-and-flip (likely shipped — confirm, then close)
 

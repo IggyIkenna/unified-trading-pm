@@ -110,5 +110,5 @@ See [`cross_cutting_may_23_2026.epic.md`](./cross_cutting_may_23_2026.epic.md). 
 ## See also
 
 - [`master_to_live_defi_2026_05_23`](../active/master_to_live_defi_2026_05_23.md) — May-23 cutover master
-- [`codex/04-architecture/backtest-groups.md`](../../codex/04-architecture/backtest-groups.md)
-- [`codex/04-architecture/batch-live-symmetry.md`](../../codex/04-architecture/batch-live-symmetry.md)
+- [`/codex/04-architecture/backtest-groups.md`](/codex/04-architecture/backtest-groups.md)
+- [`/codex/04-architecture/batch-live-symmetry.md`](/codex/04-architecture/batch-live-symmetry.md)

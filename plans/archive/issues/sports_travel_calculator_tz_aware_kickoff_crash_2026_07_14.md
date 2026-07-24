@@ -28,7 +28,7 @@ related:
   [
     plans/active/sports_p2_features_history_to_ml_ready_2026_06_27.md,
     plans/active/issues/sports_venue_id_numeric_coercion_data_loss_2026_07_13.md,
-    codex/02-data/honest-absence-downstream-handling.md,
+    /codex/02-data/honest-absence-downstream-handling.md,
   ]
 created: 2026-07-14
 parent_epic: sports_master

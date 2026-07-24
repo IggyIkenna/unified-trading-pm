@@ -16,7 +16,11 @@ stage: [meta]
 repos: [deployment-ui]
 scope: [engineer]
 tags: [deployment-observability, cockpit, vm-health, ui, deployment-ui, playwright]
-related: [deployment_observability_expansion_2026_07_08.md, deployment_obs_backend_kinds_health_2026_07_09.md]
+related:
+  [
+    /plans/archive/2026_07/deployment_observability_expansion_2026_07_08.md,
+    /plans/archive/2026_07/deployment_obs_backend_kinds_health_2026_07_09.md,
+  ]
 created: "2026-07-09"
 last_updated: "2026-07-09"
 parent_epic: observability_master
@@ -39,7 +43,7 @@ source: deployment_observability_expansion_2026_07_08.md
 # Deployment observability — kind badges, composite health, resource columns + detail popover (UI)
 
 > **✅ ARCHIVED 2026-07-13 — COMPLETE.** Every todo shipped (UI `[UI]` + `pw:L2` gated). No deferred items; no new codex
-> contract (reuses `codex/06-coding-standards/ui-testing-layers.md`). Frozen record.
+> contract (reuses `/codex/06-coding-standards/ui-testing-layers.md`). Frozen record.
 
 > **LOCAL / human plan** (`assigned_vm: NA`, `execution_scope: local-only` — NOT AO-dispatched, never ingested).
 > Executed **interactively in this slot** once the backend AO plan
@@ -47,38 +51,38 @@ source: deployment_observability_expansion_2026_07_08.md
 > visual-iteration-heavy (popover layout, chip colours, sparklines), so it's built here against the mock and wired to
 > the real `DeploymentItem` fields the backend ships. Full design context + the mock visual contract live in the LOCAL
 > parent **`deployment_observability_expansion_2026_07_08.md`** (read "Where we are" + WS-C + WS-D first). **UI gate:**
-> no tick without `[UI]` + `pw:L2 ✓` + a cited regression spec (`codex/06-coding-standards/ui-testing-layers.md`);
+> no tick without `[UI]` + `pw:L2 ✓` + a cited regression spec (`/codex/06-coding-standards/ui-testing-layers.md`);
 > Python tools are banned in this repo (tsc/ESLint/Vitest/Playwright only).
 
 ## Todos
 
 - [x] 1. ✅ [UI] P1. **Kind badges + rich fields** — 6 kinds render (VM · CLOUD_RUN_JOB · CLOUD_RUN_SERVICE ·
-     ECS_SERVICE · LAMBDA · CLOUD_FUNCTION); services show Mode="—" (umbrella NONE). — deployment-ui@608d221
-     (`ModeBadge` NONE→"—", 8 service fixtures NONE) + @4895925. `pw:L2 ✓` cockpit.spec.ts "all 6 compute kinds render
-     kind badges; services show Mode='—'".
+      ECS_SERVICE · LAMBDA · CLOUD_FUNCTION); services show Mode="—" (umbrella NONE). — deployment-ui@608d221
+      (`ModeBadge` NONE→"—", 8 service fixtures NONE) + @4895925. `pw:L2 ✓` cockpit.spec.ts "all 6 compute kinds render
+      kind badges; services show Mode='—'".
 - [x] 2. ✅ [UI] P1. **Composite Health column** — chip text = exact state (VM 7-state; service serving/scaled-to-zero/
-     dead/degraded), colour = 3-tier severity. — deployment-ui@608d221 (`HEALTH_META`, `serviceHealthLabel`
-     desired-vs-running sub-taxonomy). `pw:L2 ✓` cockpit.spec.ts "composite Health column names each VM state + the
-     service sub-taxonomy".
+      dead/degraded), colour = 3-tier severity. — deployment-ui@608d221 (`HEALTH_META`, `serviceHealthLabel`
+      desired-vs-running sub-taxonomy). `pw:L2 ✓` cockpit.spec.ts "composite Health column names each VM state + the
+      service sub-taxonomy".
 - [x] 3. ✅ [UI] P1. **Resources columns** — cpu/mem/disk % colour-coded (amber ≥70, red ≥90, `↑` climbing mem);
-     services cpu/mem only, no-sample rows "—". — deployment-ui@608d221 (`ResourceCell`). `pw:L2 ✓` cockpit.spec.ts
-     "Resources column shows cpu/mem/disk for VMs; honest '—' for a no-sample row". NOTE: inline scalars need the
-     backend to surface `cpu_pct`/`mem_pct`/`disk_pct` on the LIST (currently `/detail`-only) — small backend follow-up,
-     flagged in Progress Log.
+      services cpu/mem only, no-sample rows "—". — deployment-ui@608d221 (`ResourceCell`). `pw:L2 ✓` cockpit.spec.ts
+      "Resources column shows cpu/mem/disk for VMs; honest '—' for a no-sample row". NOTE: inline scalars need the
+      backend to surface `cpu_pct`/`mem_pct`/`disk_pct` on the LIST (currently `/detail`-only) — small backend
+      follow-up, flagged in Progress Log.
 - [x] 4. ✅ [UI] P1. **Name-click detail panel** — enhances the existing cockpit slide-over: a `WorkHealthCard` served
-     by `GET /deployments/{name}/detail` (cpu/mem/disk/io-write/net-recv/workload_alive + composite verdict, honest
-     point-in-time note; "VM-only" for kinds without /proc), plus structural service fields (tasks running/desired,
-     revision, runtime, memory) in the Target card. — deployment-ui@4895925 (`getDeploymentDetail`, mock `/detail`
-     handler). `pw:L2 ✓` cockpit.spec.ts "name-click detail panel shows the /detail work-health vector" + "a service
-     shows structural task counts + no /proc vector".
+      by `GET /deployments/{name}/detail` (cpu/mem/disk/io-write/net-recv/workload_alive + composite verdict, honest
+      point-in-time note; "VM-only" for kinds without /proc), plus structural service fields (tasks running/desired,
+      revision, runtime, memory) in the Target card. — deployment-ui@4895925 (`getDeploymentDetail`, mock `/detail`
+      handler). `pw:L2 ✓` cockpit.spec.ts "name-click detail panel shows the /detail work-health vector" + "a service
+      shows structural task counts + no /proc vector".
 - [x] 5. ✅ [UI] P1. **Console deep-link** — `consoleUrl()` builds the GCP/AWS console URL per kind (GCE
-     instancesDetail, EC2 instances search, Cloud Run job+service, ECS cluster/service, Lambda function, Cloud
-     Function); rendered in the detail header. — deployment-ui@4895925. `pw:L2 ✓` cockpit.spec.ts "console deep-link is
-     built per kind (GCE VM vs ECS service)". (EC2 uses a name-search URL — instance-id not on the contract; a backend
-     `instance_id` field would make it exact.)
+      instancesDetail, EC2 instances search, Cloud Run job+service, ECS cluster/service, Lambda function, Cloud
+      Function); rendered in the detail header. — deployment-ui@4895925. `pw:L2 ✓` cockpit.spec.ts "console deep-link is
+      built per kind (GCE VM vs ECS service)". (EC2 uses a name-search URL — instance-id not on the contract; a backend
+      `instance_id` field would make it exact.)
 - [x] 6. ✅ [UI] P2. **Kind filter** dropdown next to Mode/Cloud/Status/asset-group (client-side) — finds services
-     despite Mode="—". — deployment-ui@4895925 (`kindFilter` + `filter-kind` select). `pw:L2 ✓` cockpit.spec.ts "Kind
-     filter isolates a single kind".
+      despite Mode="—". — deployment-ui@4895925 (`kindFilter` + `filter-kind` select). `pw:L2 ✓` cockpit.spec.ts "Kind
+      filter isolates a single kind".
 
 ## Progress Log
 

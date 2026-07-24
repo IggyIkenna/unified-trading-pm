@@ -13,7 +13,8 @@ push. basedpyright <dir>/ not basedpyright. Delete deprecated code; no parallel 
 before implementing anything new.
 
 WORKSPACE_ROOT=${UNIFIED_TRADING_WORKSPACE_ROOT}/unified-trading-system-repos All Python/pytest/ruff/basedpyright/QG
-commands: cd $WORKSPACE_ROOT && source .venv-workspace/bin/activate first.
+commands: cd $WORKSPACE_ROOT
+&& source .venv-workspace/bin/activate first.
 
 ---
 
@@ -91,7 +92,7 @@ Any old name anywhere is **immediate technical debt**. Fix at every level the mo
 
 New CI/CD pattern needed → update `unified-trading-pm/scripts/quickmerge.sh` (SSOT), then propagate. New setup pattern
 needed → update `unified-trading-pm/scripts/setup.sh` (SSOT), then propagate. New QG check needed → update
-`unified-trading-codex/06-coding-standards/quality-gates.md` first, then template, then propagate. New cursor rule
+`unified-trading-/codex/06-coding-standards/quality-gates.md` first, then template, then propagate. New cursor rule
 needed → create in `.cursor/rules/`, then add to `.cursorrules` if always-apply. New manifest field needed → update
 codex schema doc first, then `workspace-manifest.json`.
 
@@ -226,8 +227,8 @@ All items independent — run in parallel:
   tier-order setup)
 - `unified-trading-pm/templates/AGENTS.md` — per-repo caveats template for agents/developers
 - `unified-trading-pm/.github/workflows/version-bump.yml` — version-bump SSOT
-- `unified-trading-codex/06-coding-standards/setup-standards.md` — setup.sh documentation (includes isolated mode, fresh
-  env, AGENTS.md)
+- `unified-trading-/codex/06-coding-standards/setup-standards.md` — setup.sh documentation (includes isolated mode,
+  fresh env, AGENTS.md)
 - `unified-trading-codex/00-SSOT-INDEX.md` — canonical SSOT map
-- `unified-trading-codex/06-coding-standards/quality-gates.md` — QG template
+- `unified-trading-/codex/06-coding-standards/quality-gates.md` — QG template
 - `unified-trading-pm/docs/new-repo-setup.md` — new repo setup guide

@@ -14,10 +14,10 @@ scope: [engineer, admin]
 tags: [frontmatter, mechanical-seed, plans-active, grep-native, ao-fleet-test]
 related:
   [
-    doc_frontmatter_mechanical_seed_and_sample_2026_06_24.md,
-    doc_frontmatter_schema_and_validator_2026_06_24.md,
+    /plans/archive/doc_frontmatter_mechanical_seed_and_sample_2026_06_24.md,
+    /plans/archive/2026_06/doc_frontmatter_schema_and_validator_2026_06_24.md,
     ../epics/agent_operating_framework_master.md,
-    ../../codex/11-project-management/doc-frontmatter-schema.md,
+    /codex/11-project-management/doc-frontmatter-schema.md,
   ]
 created: 2026-06-27
 parent_epic: agent_operating_framework_master
@@ -83,8 +83,8 @@ non-destructive (existing values preserved); validator-green on HARD violations.
 
 ## Codex SSOTs
 
-- [`codex/11-project-management/doc-frontmatter-schema.md`](../../codex/11-project-management/doc-frontmatter-schema.md)
-  — the universal-core + per-type **plan** required/optional fields + null/`NA` conventions this seed targets.
+- [`/codex/11-project-management/doc-frontmatter-schema.md`](/codex/11-project-management/doc-frontmatter-schema.md) —
+  the universal-core + per-type **plan** required/optional fields + null/`NA` conventions this seed targets.
 - Tooling: `scripts/docs/seed_frontmatter.py` (`--apply`) + `scripts/docs/docspec.py` (`--check`).
 
 ## Todos

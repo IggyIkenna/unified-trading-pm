@@ -21,9 +21,9 @@ scope: [engineer]
 tags: [features, book-microstructure, premise-correction, architecture-decision]
 related:
   [
-    l2_book_microstructure_capture_2026_07_13.md,
-    features_read_book_columns_not_snapshots_2026_06_28.md,
-    mdps_book_microstructure_precompute_columns_2026_06_28.md,
+    /plans/active/l2_book_microstructure_capture_2026_07_13.md,
+    /plans/archive/2026_07/features_read_book_columns_not_snapshots_2026_06_28.md,
+    /plans/archive/2026_07/mdps_book_microstructure_precompute_columns_2026_06_28.md,
   ]
 created: 2026-07-14
 parent_epic: strategy_master
@@ -107,7 +107,7 @@ not an implementation detail:
 
 **Option C now, Option A as the real follow-up.** Reintroducing a parallel snapshot-read path (Option B) to hit this
 plan's narrow scope would be a deliberate architecture regression for one feature group, decided unilaterally by
-whichever agent picks up todo 5 next — exactly the kind of call `codex/12-agent-workflow/work-philosophy.md`'s
+whichever agent picks up todo 5 next — exactly the kind of call `/codex/12-agent-workflow/work-philosophy.md`'s
 craft-scoping keeps out of a single dispatched task. Recommend: mark todo 5 blocked-on-this-issue-doc in the plan (done
 below), and file a new MDPS-scoped plan (Option A) as a separate piece of work when someone picks up the
 `MarketMakingQueueMicrostructureEngine` backtest gate for real — it is not on this plan's critical path today (no

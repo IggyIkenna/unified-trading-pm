@@ -9,8 +9,14 @@ stage: [meta]
 repos: [features-service, strategy-service, trading-agent-service]
 scope: [engineer, admin]
 tags: []
-related: [master_to_live_defi_2026_05_23.md, promote_workflow_may23_cli_path_2026_05_10.md, phase5_features_streaming_carry_staked_basis_mvp_2026_05_19.md, strategy_repo_consolidation_2026_05_19.md]
-created: '2026-05-20'
+related:
+  [
+    /plans/active/master_to_live_defi_2026_05_23.md,
+    /plans/archive/2026_05/promote_workflow_may23_cli_path_2026_05_10.md,
+    /plans/archive/2026_05/phase5_features_streaming_carry_staked_basis_mvp_2026_05_19.md,
+    /plans/archive/2026_05/strategy_repo_consolidation_2026_05_19.md,
+  ]
+created: "2026-05-20"
 parent_epic: trading_agent_master
 priority: P0
 estimate_class: refactor
@@ -26,8 +32,8 @@ regime + ETA + ML + LLM context) + strategy PnL streams -> `trading-agent-servic
 allocator logic, full ML/LLM intelligence, and automatic re-weighting are post-cutover. May-23 scope = data flow wired +
 no-op defaults + CI green + backtest-replay no-leak gate.
 
-Codex SSOTs: `codex/04-architecture/trading-agent-service-directive-pipeline.md` -
-`codex/06-coding-standards/config-reloader-pattern.md`
+Codex SSOTs: `/codex/04-architecture/trading-agent-service-directive-pipeline.md` -
+`/codex/06-coding-standards/config-reloader-pattern.md`
 
 ---
 
@@ -77,8 +83,8 @@ Codex SSOTs: `codex/04-architecture/trading-agent-service-directive-pipeline.md`
 ## Phase 8 -- Codex SSOT + plan manifest
 
 - [x] ✅ [AGENT] P0. All manifest entries M1-M6/PW1-PW2/F1/Q1-Q2/E1-E2/SR1/SA1/FC1 applied; NEW
-      `codex/04-architecture/trading-agent-service-directive-pipeline.md`; UPDATE
-      `codex/06-coding-standards/config-reloader-pattern.md` (DirectiveReloader subsection); inventory regenerated.
+      `/codex/04-architecture/trading-agent-service-directive-pipeline.md`; UPDATE
+      `/codex/06-coding-standards/config-reloader-pattern.md` (DirectiveReloader subsection); inventory regenerated.
       (PM@`d7964d0d`)
 
 ## Temporary states + canonical follow-up plans

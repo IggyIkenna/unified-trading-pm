@@ -43,8 +43,8 @@ tags:
 related:
   [
     ../data_pipeline_e2e_check_2026_07_10.md,
-    cefi_aster_hyperliquid_bitget_bitfinex_adapter_bugs_2026_07_12.md,
-    ../../../codex/02-data/honest-absence-downstream-handling.md,
+    /plans/archive/issues/cefi_aster_hyperliquid_bitget_bitfinex_adapter_bugs_2026_07_12.md,
+    /codex/02-data/honest-absence-downstream-handling.md,
   ]
 created: 2026-07-13
 parent_epic: mtds_mdps_master

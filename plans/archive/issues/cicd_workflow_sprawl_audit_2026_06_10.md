@@ -1,6 +1,7 @@
 ---
 doc_type: issue
-title: CI/CD GitHub-Actions workflow sprawl audit — dead/duplicate/band-aid workflows fleet-wide (verified across 25 repos)
+title:
+  CI/CD GitHub-Actions workflow sprawl audit — dead/duplicate/band-aid workflows fleet-wide (verified across 25 repos)
 summary:
 status: resolved
 nature: record
@@ -11,7 +12,12 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: 2026-06-10
-source: [codex/08-workflows/ci-cd-flow.md, scripts/workflow-templates/, 'fleet-wide dispatch-graph verification, slot-4 @ LDR 2026-06-10 (PM a71add30a)']
+source:
+  [
+    /codex/08-workflows/ci-cd-flow.md,
+    scripts/workflow-templates/,
+    "fleet-wide dispatch-graph verification, slot-4 @ LDR 2026-06-10 (PM a71add30a)",
+  ]
 locked_by: live-defi-rollout
 priority: P1
 ---
@@ -234,12 +240,13 @@ Sequence lowest-risk → highest-value. **All deletes are PM-only / in-place exc
       `--label "major-bump-approval"` → `--label "major-bump-pending"` in `.github/workflows/semver-agent.yml` +
       `scripts/workflow-templates/     semver-agent.yml.tmpl` + rollout, so semver-created MAJOR-bump issues actually
       reach the `/approve` handler. Repo: unified-trading-pm (templated ×25).
-- [x] ✅ **[DONE 2026-06-12 — `main-backmerge-to-ldr.yml` + `staging-backmerge-to-ldr.yml` templates both now `group:
-      backmerge-to-ldr` (aligned to the documented shared key)]** [SCRIPT] P2. Align `main-backmerge-to-ldr.yml`'s
-      concurrency group to the documented `backmerge-to-ldr` (the value staging-backmerge already uses and both headers
-      claim is "shared") so the two serialize as designed. **Not a correctness fix** — both already push FF-only + 5×
-      retry + never-force, so this only removes avoidable retry churn and makes the code match its own stated invariant.
-      **Templated** — edit `scripts/workflow-templates/` SSOT + `rollout-workflow-templates.sh` + commit fleet-wide.
+- [x] ✅ **[DONE 2026-06-12 — `main-backmerge-to-ldr.yml` + `staging-backmerge-to-ldr.yml` templates both now
+      `group:     backmerge-to-ldr` (aligned to the documented shared key)]** [SCRIPT] P2. Align
+      `main-backmerge-to-ldr.yml`'s concurrency group to the documented `backmerge-to-ldr` (the value staging-backmerge
+      already uses and both headers claim is "shared") so the two serialize as designed. **Not a correctness fix** —
+      both already push FF-only + 5× retry + never-force, so this only removes avoidable retry churn and makes the code
+      match its own stated invariant. **Templated** — edit `scripts/workflow-templates/` SSOT +
+      `rollout-workflow-templates.sh` + commit fleet-wide.
 
 ### Tier 3 — no-op + vestigial cleanup
 
@@ -276,7 +283,7 @@ Sequence lowest-risk → highest-value. **All deletes are PM-only / in-place exc
 
 ## Codex SSOT updates (on execution)
 
-- `codex/08-workflows/ci-cd-flow.md` — correct the tab-mirror "DISABLED fleet-wide" statement; document the canonical
+- `/codex/08-workflows/ci-cd-flow.md` — correct the tab-mirror "DISABLED fleet-wide" statement; document the canonical
   major-bump handler once B1 is resolved; reflect any merged backmerge/CI-health workflows.
 
 ## Verification appendix (commands, for re-audit)

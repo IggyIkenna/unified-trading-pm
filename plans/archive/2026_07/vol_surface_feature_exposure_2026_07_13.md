@@ -12,7 +12,7 @@ stage: [features]
 repos: [features-service, strategy-service]
 scope: [engineer]
 tags: [strategy, v2-engine, vol-trading, features, greeks]
-related: [v2_engine_venue_buildout_2026_06_15.md]
+related: [/plans/active/v2_engine_venue_buildout_2026_06_15.md]
 created: 2026-07-13
 parent_epic: strategy_master
 assigned_vm: planning
@@ -52,7 +52,7 @@ sequential: false
 - **Honest absence is mandatory** (existing convention, do not weaken it): a bucket/leg/underlying with no usable data
   omits the key — never synthesise a value. Mirror the existing tests (`OTM-only→no iv_atm`, etc.).
 - **`formula_version=1` on every NEW feature key** (no bump to existing keys — this is additive, not a math change), per
-  `codex/02-data/feature-formula-versioning.md`.
+  `/codex/02-data/feature-formula-versioning.md`.
 - Consumers waiting on this (do not re-scope their engines here, just unblock the feature): `VOL_VARIANCE_SWAP`,
   `VOL_RATIO_SPREAD`, `VOL_SPREAD_STRUCTURES` (per-strike grid); `VOL_DISPERSION` full mode, `VOL_CROSS_ASSET_SPREAD`
   (multi-underlying vector) — all tracked in the parent plan, still `BACKTEST-PENDING` on Tardis regardless of this plan
@@ -93,7 +93,7 @@ sequential: false
       `iv_skew_25d*{tenor}     = iv*25d_put*{tenor} - iv*25d_call*{tenor}`,
       `iv*skew_10d*{tenor} = iv*10d_put*{tenor} -     iv*10d_call*{tenor}`(8 more derived keys).`formula_version`:
       mirror this module's own simple `FORMULA_VERSION:     int =     1`constant, NOT the`delta_one` `FeatureSpec`
-      registry/GCS-partition mechanism in`codex/02-data/feature-formula-versioning.md` — confirmed that mechanism isn't
+      registry/GCS-partition mechanism in`/codex/02-data/feature-formula-versioning.md` — confirmed that mechanism isn't
       used anywhere in the volatility family; matching the direct sibling code being extended is the
       internally-consistent choice (a known pre-existing two-convention split in the repo, not something to reconcile
       here).

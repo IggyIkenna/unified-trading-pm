@@ -41,26 +41,26 @@ cadence + completeness matters more than any single subsystem.
 
 ## Codex SSOTs
 
-- [`codex/04-architecture/agent-orchestrator-overview.md`](../../../codex/04-architecture/agent-orchestrator-overview.md)
-  — overall architecture
-- [`codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`](/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md)
+- [`/codex/04-architecture/agent-orchestrator-overview.md`](/codex/04-architecture/agent-orchestrator-overview.md) —
+  overall architecture
+- [`/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`](/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md)
   — topology + dispatch SSOT (single central VM, N role-dispatched slot workers; supersedes the deleted
   worker-topology/dns-cutover/multi-vm-topology docs, 2026-07-18)
-- [`codex/05-infrastructure/agent-orchestrator-deploy.md`](../../../codex/05-infrastructure/agent-orchestrator-deploy.md)
-  — central API VM nginx/systemd
-- [`codex/05-infrastructure/agent-orchestrator-slack-notifications.md`](../../../codex/05-infrastructure/agent-orchestrator-slack-notifications.md)
+- [`/codex/05-infrastructure/agent-orchestrator-deploy.md`](/codex/05-infrastructure/agent-orchestrator-deploy.md) —
+  central API VM nginx/systemd
+- [`/codex/05-infrastructure/agent-orchestrator-slack-notifications.md`](/codex/05-infrastructure/agent-orchestrator-slack-notifications.md)
   — notification inventory
-- [`codex/12-agent-workflow/orchestrator-safety-mechanisms.md`](../../../codex/12-agent-workflow/orchestrator-safety-mechanisms.md)
+- [`/codex/12-agent-workflow/orchestrator-safety-mechanisms.md`](/codex/12-agent-workflow/orchestrator-safety-mechanisms.md)
   — stuck-detect + failover + git staleness
-- [`codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md`](../../../codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md)
+- [`/codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md`](/codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md)
   — setup-token auth
-- [`codex/12-agent-workflow/harsh-laptop-migration-2026-05-20.md`](../../../codex/12-agent-workflow/harsh-laptop-migration-2026-05-20.md)
+- [`/codex/12-agent-workflow/harsh-laptop-migration-2026-05-20.md`](/codex/12-agent-workflow/harsh-laptop-migration-2026-05-20.md)
   — operator-laptop slot host
-- [`codex/04-architecture/agent-orchestrator-autospawn.md`](../../../codex/04-architecture/agent-orchestrator-autospawn.md)
-  — AutoSpawnLoop trigger contract (added 2026-06-01; the "idle VM self-heals" loop)
-- [`codex/04-architecture/agent-orchestrator-worker-liveness.md`](../../../codex/04-architecture/agent-orchestrator-worker-liveness.md)
+- [`/codex/04-architecture/agent-orchestrator-autospawn.md`](/codex/04-architecture/agent-orchestrator-autospawn.md) —
+  AutoSpawnLoop trigger contract (added 2026-06-01; the "idle VM self-heals" loop)
+- [`/codex/04-architecture/agent-orchestrator-worker-liveness.md`](/codex/04-architecture/agent-orchestrator-worker-liveness.md)
   — WorkerLivenessWatchdog three-mode kill contract (added 2026-06-01)
-- [`codex/04-architecture/agent-orchestrator-backlog-state-alignment.md`](../../../codex/04-architecture/agent-orchestrator-backlog-state-alignment.md)
+- [`/codex/04-architecture/agent-orchestrator-backlog-state-alignment.md`](/codex/04-architecture/agent-orchestrator-backlog-state-alignment.md)
   — regen prune-stale + yaml⇆state.db honesty invariant + per-VM scope filter (added 2026-06-01)
 
 ## Triggers
@@ -220,8 +220,8 @@ cadence + completeness matters more than any single subsystem.
 - [ ] **(f3) GCS / S3 backup is honest about its target.** Read
       [`server/gcs_sync.py`](../../../../agent-orchestrator/server/gcs_sync.py) — currently GCS-only; AWS-fleet VMs
       without `ORCHESTRATOR_GCS_BUCKET` set keep state on local disk only. Verify this is the documented state in
-      [`codex/04-architecture/agent-orchestrator-overview.md`](../../../codex/04-architecture/agent-orchestrator-overview.md)
-      § "Secrets + buckets" (the "Known gap" callout should still be present). If S3-side snapshot has shipped, the doc
+      [`/codex/04-architecture/agent-orchestrator-overview.md`](/codex/04-architecture/agent-orchestrator-overview.md) §
+      "Secrets + buckets" (the "Known gap" callout should still be present). If S3-side snapshot has shipped, the doc
       must reflect it.
 
 ### G. Dashboard
@@ -256,7 +256,7 @@ cadence + completeness matters more than any single subsystem.
       [`deployment-service/packer/agent-orchestrator/README.md`](../../../../deployment-service/packer/agent-orchestrator/README.md)
   - no dead pointers (every file path resolves). (The codex DNS-cutover SSOT this item used to cross-check was deleted
     2026-07-18 — folded into
-    [`codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`](/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md).)
+    [`/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`](/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md).)
 
 ### I. EIP + DNS rollout state (Phase 11)
 
@@ -277,8 +277,8 @@ cadence + completeness matters more than any single subsystem.
 ### J. Codex doc alignment
 
 - [ ] **(j1) Connectivity model in overview doc matches code.** Read
-      [`codex/04-architecture/agent-orchestrator-overview.md`](../../../codex/04-architecture/agent-orchestrator-overview.md)
-      § "Connectivity model" — auth re-termination + private-VPC proxy described. Cross-check against
+      [`/codex/04-architecture/agent-orchestrator-overview.md`](/codex/04-architecture/agent-orchestrator-overview.md) §
+      "Connectivity model" — auth re-termination + private-VPC proxy described. Cross-check against
       `server/server.py::proxy_to_vm`.
 
 - [ ] **(j2) No stale `OAuthBadge` / `oauth_refresh` / `GCSCredsPoller` references in any orchestrator codex doc.**
@@ -287,12 +287,12 @@ cadence + completeness matters more than any single subsystem.
       — expect either 0 hits OR every hit must be inside a "removed in Phase 4b-cleanup" historical note.
 
 - [ ] **(j3) Notification inventory matches.** Compare the S/T matrix table in
-      [`codex/05-infrastructure/agent-orchestrator-slack-notifications.md`](../../../codex/05-infrastructure/agent-orchestrator-slack-notifications.md)
+      [`/codex/05-infrastructure/agent-orchestrator-slack-notifications.md`](/codex/05-infrastructure/agent-orchestrator-slack-notifications.md)
       to the actual `def notify_*` inventory in `server/notifications/`. Counts must match (13 slack / 9 telegram as of
       2026-06-01) AND each function's S/T column must match which module actually exports it.
 
 - [ ] **(j4) Central VM identity in the single-VM SSOT matches `backends.json`.** Read
-      [`codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`](/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md)
+      [`/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`](/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md)
       (successor to the deleted worker-topology doc, 2026-07-18) — the central VM's IP/instance ID matches
       `backends.json` (or backends.json says EIP — see check i2).
 

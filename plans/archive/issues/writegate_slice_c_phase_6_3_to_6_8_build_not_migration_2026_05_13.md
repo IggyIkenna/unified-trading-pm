@@ -12,7 +12,13 @@ tags: []
 related: []
 created: 2026-05-13
 author: ikenna-main-slot1
-source: [plans/active/writegate_honest_coverage_endtoend_2026_05_06.md slice (c) Phase 6.3-6.8, features-volatility-service / features-cross-instrument-service / ml-training-service / ml-inference-service / strategy-service / execution-service / position-balance-monitor-service / risk-and-exposure-service / instruments-service]
+source:
+  [
+    plans/active/writegate_honest_coverage_endtoend_2026_05_06.md slice (c) Phase 6.3-6.8,
+    features-volatility-service / features-cross-instrument-service / ml-training-service / ml-inference-service /
+    strategy-service / execution-service / position-balance-monitor-service / risk-and-exposure-service /
+    instruments-service,
+  ]
 locked_by: live-defi-rollout
 locked_since: 2026-05-13
 ---
@@ -141,4 +147,4 @@ fans out 2 sub-agents per service).
   covers producer-side
 - `plans/active/issues/strategy_archetype_taxonomy_refinement_2026_05_12.md` — strategy-service emission overlaps with
   carry-engine refactor (slot 5)
-- `codex/02-data/service-output-emission-semantics.md` — canonical pattern doc (writegate slice (b) MDPS POC reference)
+- `/codex/02-data/service-output-emission-semantics.md` — canonical pattern doc (writegate slice (b) MDPS POC reference)

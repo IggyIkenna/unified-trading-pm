@@ -165,7 +165,7 @@ references:
     back-fill. Both required: read-side handles present + legacy data we never re-write; write-side handles canonical
     data plane long-term.
   - Plan stays active until Stage 4 closeout. Recommend converting to a codex SSOT
-    (`codex/02-data/manifest-migration-coordination.md`) when fully drained, rather than archive — the sequencing DAG +
+    (`/codex/02-data/manifest-migration-coordination.md`) when fully drained, rather than archive — the sequencing DAG +
     risk register + VM impact matrix is durable institutional memory.
   - **Concurrency note**: this plan file is being concurrently edited by another agent's prettier/auto-format pass;
     per-todo `[AUDIT 2026-05-07: ...]` line markers were attempted and reverted twice. The plan-level header (this
@@ -351,8 +351,8 @@ This is the operator-visible view — what the human needs to do, when, in what 
 - Workspace rule: CLAUDE.md `§ Per-VM shard isolation for concurrent backfills`.
 - Workspace rule: CLAUDE.md `§ VIX 15m source layering` — Barchart preload + Yahoo rolling + honest gap; example of how
   layered sources interact with manifest writes.
-- Codex SSOT (write side): `codex/02-data/availability-manifest-and-data-status.md`.
-- Codex SSOT (read side): `codex/02-data/honest-absence-downstream-handling.md` (shipped 2026-05-06).
+- Codex SSOT (write side): `/codex/02-data/availability-manifest-and-data-status.md`.
+- Codex SSOT (read side): `/codex/02-data/honest-absence-downstream-handling.md` (shipped 2026-05-06).
 
 ## Conflicts + sequencing constraints (added 2026-05-07)
 

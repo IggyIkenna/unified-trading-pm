@@ -26,9 +26,9 @@ scope: [engineer, admin]
 tags: [agent-orchestrator, config, env-vars, pydantic-settings, refactor, consolidation, tuning-defaults]
 related:
   [
-    ao_open_issues_consolidated_close_out_2026_07_17.md,
-    ../codex/06-coding-standards/config-reloader-pattern.md,
-    ../codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
+    /plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md,
+    /codex/06-coding-standards/config-reloader-pattern.md,
+    /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
     ../epics/orchestrator_master.md,
   ]
 created: 2026-07-18
@@ -117,7 +117,7 @@ class OrchestratorConfig(UnifiedCloudConfig):   # BaseSettings — THE .env surf
 
 ## Codex SSOTs (read + reconcile after Phase 4)
 
-- `codex/06-coding-standards/config-reloader-pattern.md` — typed-config / reloader contract.
+- `/codex/06-coding-standards/config-reloader-pattern.md` — typed-config / reloader contract.
 - `agent-orchestrator/docs/ENV_VARS.md` — operator reference; rewritten in Phase 4 to the two-class shape (also clears
   AF-6: retired `tab/<vm_id>/<slot>` + "Fleet VM (epic worker)" framing).
 
@@ -182,7 +182,7 @@ class OrchestratorConfig(UnifiedCloudConfig):   # BaseSettings — THE .env surf
       grep config.py" note. Cleared AF-6: dropped `tab/<vm_id>/<slot>`, "Fleet VM (epic worker)", and the
       `ORCHESTRATOR_OPERATOR = tab branch operator` framing for the single-VM `planning` reality.
 - [x] [DOC] P2. ✅ **Codex reconcile — nothing to change** — checked
-      `codex/06-coding-standards/config-reloader-pattern.md`: 0 grep hits for `OrchestratorConfig` / "every knob" /
+      `/codex/06-coding-standards/config-reloader-pattern.md`: 0 grep hits for `OrchestratorConfig` / "every knob" /
       `tuning`; its single "orchestrator" mention is about crash telemetry, not config structure. The nested split
       invalidates no claim there.
 

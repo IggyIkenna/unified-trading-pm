@@ -2,13 +2,11 @@
 doc_type: audit-result
 title: Data-source provenance audit — all asset groups (2026-06-01)
 summary:
-  Code write-path audit of the row-level `source`-column provenance capability
-  across all five asset groups — provenance is UNIVERSAL (every captured cell
-  stamps source now, even single-source, for swap-resilience). tradfi AMBER
-  (gate live, backfill unblocked), defi RED (the only live silent-collapse —
-  ManifestWriter.add() doesn't persist source so Pyth-vs-Chainlink oracle_prices
-  collapse last-write-wins), cefi/sports/prediction RED (source blank / lives in
-  path not column); gate should raise MissingSourceError for all asset groups.
+  Code write-path audit of the row-level `source`-column provenance capability across all five asset groups — provenance
+  is UNIVERSAL (every captured cell stamps source now, even single-source, for swap-resilience). tradfi AMBER (gate
+  live, backfill unblocked), defi RED (the only live silent-collapse — ManifestWriter.add() doesn't persist source so
+  Pyth-vs-Chainlink oracle_prices collapse last-write-wins), cefi/sports/prediction RED (source blank / lives in path
+  not column); gate should raise MissingSourceError for all asset groups.
 status: fail
 nature: record
 asset_group: [cross-cutting]
@@ -19,15 +17,14 @@ tags: [audit, data-provenance, source-provenance, manifest, data-correctness, de
 related:
   [
     ../../active/data_source_provenance_all_asset_groups_2026_06_01.md,
-    cefi_master_audit_2026_06_03.md,
+    /plans/audit/results/cefi_master_audit_2026_06_03.md,
   ]
 created: 2026-06-01
 audited_scope:
-  data-source provenance capability (row-level `source` column + per-source
-  manifest row + downstream SOURCE_PRIORITY resolution) across all 5 asset groups
-  — a code write-path audit against live-defi-rollout (source_priority.py,
-  manifest_writer.py, _defi_manifest.py). NOT covered — prod data-state source
-  distribution reads (deferred to plan Phase 7).
+  data-source provenance capability (row-level `source` column + per-source manifest row + downstream SOURCE_PRIORITY
+  resolution) across all 5 asset groups — a code write-path audit against live-defi-rollout (source_priority.py,
+  manifest_writer.py, _defi_manifest.py). NOT covered — prod data-state source distribution reads (deferred to plan
+  Phase 7).
 date: 2026-06-01
 auditor: slot-1 (ikenna, interactive)
 parent_epic: infrastructure_master
@@ -37,7 +34,9 @@ lib_version:
 doc_versions_checked:
 type: audit-result
 epic: [tradfi_master, cefi_master, defi_master, sports_master, predictions_master, mtds_mdps_master, manifest_master]
-instructions_ref: plans/audit/instructions/{tradfi,cefi,sports,predictions,defi}_master_audit_instructions.md § "Dual-source provenance"; mtds_mdps_master item (j); manifest_master item (i)
+instructions_ref:
+  plans/audit/instructions/{tradfi,cefi,sports,predictions,defi}_master_audit_instructions.md § "Dual-source
+  provenance"; mtds_mdps_master item (j); manifest_master item (i)
 parent_plan: plans/active/data_source_provenance_all_asset_groups_2026_06_01.md
 ---
 

@@ -2,12 +2,10 @@
 doc_type: audit-result
 title: Legacy-shape GCS duplicate delete-list + 48h e2e research-data accounting
 summary:
-  Read-only full-walk audit deriving the legacy-shape GCS duplicate delete-list
-  across all 5 market-data-tick raw_tick_data namespaces — only cefi has a
-  substantial byte-verified safe-delete list (1,077,672 legacy objects / ~9.98 TB,
-  each with a byte-identical canonical pipeline_mode=batch_* twin);
-  defi/tradfi/sports/pred are essentially NOT migrated so their legacy objects
-  have no canonical twin and are MIGRATE-FIRST (deleting now would lose data); the
+  Read-only full-walk audit deriving the legacy-shape GCS duplicate delete-list across all 5 market-data-tick
+  raw_tick_data namespaces — only cefi has a substantial byte-verified safe-delete list (1,077,672 legacy objects /
+  ~9.98 TB, each with a byte-identical canonical pipeline_mode=batch_* twin); defi/tradfi/sports/pred are essentially
+  NOT migrated so their legacy objects have no canonical twin and are MIGRATE-FIRST (deleting now would lose data); the
   48h e2e research data is fully accounted-for and none is irreplaceable.
 status: partial
 nature: record
@@ -19,15 +17,14 @@ tags: [audit, manifest, canonicalisation, pipeline-mode, cost, single-walk, data
 related:
   [
     ../instructions/infrastructure_master_audit_instructions.md,
-    defi_c0_datastate_audit_2026_06_01.md,
+    /plans/audit/results/defi_c0_datastate_audit_2026_06_01.md,
   ]
 created: 2026-06-18
 audited_scope:
-  read-only full walk (no sampling) of all 5 market-data-tick
-  raw_tick_data/by_date/ namespaces (cefi/defi/tradfi/sports/pred) — legacy→
-  canonical twin derivation + safe-delete vs migrate-first classification, plus a
-  48h e2e research-data accounting cross-check. NOT covered — any actual delete
-  (read-only; only per-AG audit parquets written).
+  read-only full walk (no sampling) of all 5 market-data-tick raw_tick_data/by_date/ namespaces
+  (cefi/defi/tradfi/sports/pred) — legacy→ canonical twin derivation + safe-delete vs migrate-first classification, plus
+  a 48h e2e research-data accounting cross-check. NOT covered — any actual delete (read-only; only per-AG audit parquets
+  written).
 date: 2026-06-18
 auditor: ikennaigboaka [autonomous gcs-delete-list audit]
 parent_epic: infrastructure_master
@@ -40,9 +37,17 @@ epic: infrastructure_master
 instructions_ref: plans/audit/instructions/infrastructure_master_audit_instructions.md
 author: ikennaigboaka [autonomous gcs-delete-list audit]
 assigned_vm: vm-cross-cutting
-method: Read-only GCS enumeration of all 5 market-data-tick raw_tick_data/by_date/ namespaces (full walk, no sampling) via the google-cloud-storage client, parallel-by-day (ThreadPoolExecutor workers=32-48). Canonical twin derived by inserting pipeline_mode={mode}_{source} (= UTL derive_pipeline_mode_for_row, the migrator SSOT) left of asset_group= and normalising category=->asset_group=; twin existence by membership in the same day's listed canonical name-set (authoritative) + independent gcs_describe_object STAT confirmation on a sample (byte-size match).
+method:
+  Read-only GCS enumeration of all 5 market-data-tick raw_tick_data/by_date/ namespaces (full walk, no sampling) via the
+  google-cloud-storage client, parallel-by-day (ThreadPoolExecutor workers=32-48). Canonical twin derived by inserting
+  pipeline_mode={mode}_{source} (= UTL derive_pipeline_mode_for_row, the migrator SSOT) left of asset_group= and
+  normalising category=->asset_group=; twin existence by membership in the same day's listed canonical name-set
+  (authoritative) + independent gcs_describe_object STAT confirmation on a sample (byte-size match).
 audit_tool: e2e-testing/scripts/defi/audit_legacy_gcs_dup_delete_list.py
-audit_artifacts: ['gs://market-data-tick-{cefi,defi,tradfi,sports,pred}-prd-central-element-323112/_index/audit/legacy_dup_delete_list_{ag}.parquet']
+audit_artifacts:
+  [
+    "gs://market-data-tick-{cefi,defi,tradfi,sports,pred}-prd-central-element-323112/_index/audit/legacy_dup_delete_list_{ag}.parquet",
+  ]
 ---
 
 # Legacy-shape GCS duplicate delete-list + 48h e2e research-data accounting (2026-06-18)
@@ -124,16 +129,16 @@ re-key, not a copy).
 The last ~48h of `e2e-testing/scripts/defi/` work (staked-basis / funding-arb research) FETCHES from Hyperliquid
 (metaAndAssetCtxs, perp_funding ~230 coins), Binance/OKX/Bybit/Deribit, Aster, Drift. Where it reads/writes:
 
-| dataset / artifact                                                            | location                                                                     | canonical status                                 | classification                                                                 |
-| ----------------------------------------------------------------------------- | ---------------------------------------------------------------------------- | ------------------------------------------------ | ------------------------------------------------------------------------------ |
-| CeFi perp `derivative_ticker` (funding)                                       | reads canonical `market-data-tick-cefi .../pipeline_mode=batch_tardis/...`   | CANONICAL (already)                              | accounted-for; reads canonical, the safe-delete list is its LEGACY twin        |
-| HL `perp_funding` (~230 coins, 1/day)                                         | `perp-funding-central-element-323112` (raw_tick_data/by_date + bare day=)    | NON-canonical research bucket (OUT OF SCOPE)     | accounted-for; NOT in the 5 market-data-tick buckets; not touched              |
+| dataset / artifact                                                            | location                                                                     | canonical status                                | classification                                                                 |
+| ----------------------------------------------------------------------------- | ---------------------------------------------------------------------------- | ----------------------------------------------- | ------------------------------------------------------------------------------ |
+| CeFi perp `derivative_ticker` (funding)                                       | reads canonical `market-data-tick-cefi .../pipeline_mode=batch_tardis/...`   | CANONICAL (already)                             | accounted-for; reads canonical, the safe-delete list is its LEGACY twin        |
+| HL `perp_funding` (~230 coins, 1/day)                                         | `perp-funding-central-element-323112` (raw_tick_data/by_date + bare day=)    | NON-canonical research bucket (OUT OF SCOPE)    | accounted-for; NOT in the 5 market-data-tick buckets; not touched              |
 | HL `perp_daily_ctx` (mark_px+vol, xsec)                                       | `perp-funding-central-element-323112` (sparse / newer)                       | NON-canonical research bucket; script flags "⚠" | re-downloadable (HL metaAndAssetCtxs); a perp_daily_ctx backfill is its source |
-| LST `exchange_rate` (staking APY)                                             | `lst-rates-central-element-323112` (legacy bare day=)                        | legacy research bucket (OUT OF SCOPE)            | accounted-for; not in the 5 buckets; not touched                               |
-| Aster funding                                                                 | LIVE `fapi.asterdex.com` (no GCS)                                            | n/a (no backfill)                                | re-downloadable (`_fetch_aster_funding`)                                       |
-| Drift funding                                                                 | LIVE Solana RPC via isolated driftpy venv                                    | n/a (no backfill)                                | re-downloadable (`drift_funding_reader.py`)                                    |
-| script OUTPUTS (HTML/CSV/JSON reports, lightgbm model, funding cache parquet) | LOCAL only (`/tmp/staked_basis_scan/`, `/tmp/funding_regime/`)               | derived analysis artifacts                       | re-downloadable (re-run the scan)                                              |
-| colocated_engine features/events                                              | feature bucket + `{project}-events` + reads `deployment-scripts-*` overrides | production-path (not raw market-data dup)        | out of scope (not a legacy raw_tick_data dup)                                  |
+| LST `exchange_rate` (staking APY)                                             | `lst-rates-central-element-323112` (legacy bare day=)                        | legacy research bucket (OUT OF SCOPE)           | accounted-for; not in the 5 buckets; not touched                               |
+| Aster funding                                                                 | LIVE `fapi.asterdex.com` (no GCS)                                            | n/a (no backfill)                               | re-downloadable (`_fetch_aster_funding`)                                       |
+| Drift funding                                                                 | LIVE Solana RPC via isolated driftpy venv                                    | n/a (no backfill)                               | re-downloadable (`drift_funding_reader.py`)                                    |
+| script OUTPUTS (HTML/CSV/JSON reports, lightgbm model, funding cache parquet) | LOCAL only (`/tmp/staked_basis_scan/`, `/tmp/funding_regime/`)               | derived analysis artifacts                      | re-downloadable (re-run the scan)                                              |
+| colocated_engine features/events                                              | feature bucket + `{project}-events` + reads `deployment-scripts-*` overrides | production-path (not raw market-data dup)       | out of scope (not a legacy raw_tick_data dup)                                  |
 
 **Runaway / unaccounted data**: none found. The fetched research data is either (a) in the dedicated `perp-funding-*` /
 `lst-rates-*` research buckets (NOT in the 5 in-scope market-data-tick buckets, so untouched by this delete-list), (b)

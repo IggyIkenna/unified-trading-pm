@@ -6,21 +6,32 @@ status: complete
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [alerting-service, batch-live-reconciliation-service, deployment-api, deployment-ui, e2e-testing, execution-service]
+repos:
+  [alerting-service, batch-live-reconciliation-service, deployment-api, deployment-ui, e2e-testing, execution-service]
 scope: [engineer, admin]
 tags: []
-related: [plans/active/master_to_live_defi_2026_05_23.md, plans/active/promote_workflow_may23_cli_path_2026_05_10.md, plans/questions/paper_vs_live_workflow_maturity_2026_05_08.md, plans/archive/client_reporting_pnl_attribution_mvp_2026_05_10.md, plans/archive/risk_simulations_limits_alerting_2026_05_10.md, plans/epics/strategy_and_dart_master_SUPERSEDED_2026_05_21.md]
+related:
+  [
+    plans/active/master_to_live_defi_2026_05_23.md,
+    plans/active/promote_workflow_may23_cli_path_2026_05_10.md,
+    plans/questions/paper_vs_live_workflow_maturity_2026_05_08.md,
+    plans/archive/client_reporting_pnl_attribution_mvp_2026_05_10.md,
+    plans/archive/risk_simulations_limits_alerting_2026_05_10.md,
+    plans/epics/strategy_and_dart_master_SUPERSEDED_2026_05_21.md,
+  ]
 created: 2026-05-10
 archived: 2026-05-23
 last_updated: 2026-05-23
 estimate_class: infra
 estimate_baseline_ai_days: 25
 estimate_calibrated_ai_days: 20.0
-estimate_calibration_note: 'No explicit AI-day estimates found in plan body during 2026-05-11 sweep; class inferred from filename (infra, multiplier 0.8×).
+estimate_calibration_note: "No explicit AI-day estimates found in plan body during 2026-05-11 sweep; class inferred from
+  filename (infra, multiplier 0.8×).
 
-  Owner agent: fill baseline + multiply × 0.8 per codex/08-workflows/estimation-calibration.md. Refine class if dominant work-class differs.
+  Owner agent: fill baseline + multiply × 0.8 per /codex/08-workflows/estimation-calibration.md. Refine class if
+  dominant work-class differs.
 
-  '
+  "
 parent_epic: dart_and_promote_master
 assigned_vm: vm-operator-ops
 priority: P2
@@ -150,9 +161,9 @@ ways. Consumers (strategy-service uses TWO simultaneously) drift; reasoning acro
 
 **Phase 1 codex deliverables** (ride with this phase per Post-Plan-Phase Codex Audit):
 
-- NEW `codex/04-architecture/strategy-lifecycle-state-machine.md` — reconciled canonical state machine.
-- UPDATE `codex/09-strategy/architecture-v2/strategy-lifecycle-maturity.md` — fix 4 codex/code drift lines (245, 46, 46,
-  256).
+- NEW `/codex/04-architecture/strategy-lifecycle-state-machine.md` — reconciled canonical state machine.
+- UPDATE `/codex/09-strategy/architecture-v2/strategy-lifecycle-maturity.md` — fix 4 codex/code drift lines (245, 46,
+  46, 256).
 - UPDATE CLAUDE.md — add **"Strategy Lifecycle State Machine SSOT"** key rule pointing at the new codex doc + the
   canonical enum.
 
@@ -214,8 +225,9 @@ features manifest version / chain RPC pins. **This phase populates those fields*
 
 **Phase 2 codex deliverables**:
 
-- NEW `codex/04-architecture/live-deployment-manifest.md` — `CandidateManifest` shape + capture point + rollback recipe.
-- NEW `codex/09-strategy/architecture-v2/cross-cutting/backtest-run-manifest.md` — `BacktestRunManifest` shape +
+- NEW `/codex/04-architecture/live-deployment-manifest.md` — `CandidateManifest` shape + capture point + rollback
+  recipe.
+- NEW `/codex/09-strategy/architecture-v2/cross-cutting/backtest-run-manifest.md` — `BacktestRunManifest` shape +
   reproducibility recipe.
 
 **Phase 2 done definition**:
@@ -267,7 +279,7 @@ Promote/candidate/lifecycle-pause events the question doc names DON'T exist anyw
 
 **Phase 3 codex deliverables**:
 
-- UPDATE `codex/03-observability/lifecycle-events.md` — extend canonical event taxonomy with strategy-lifecycle event
+- UPDATE `/codex/03-observability/lifecycle-events.md` — extend canonical event taxonomy with strategy-lifecycle event
   types + cross-service event-consumer matrix.
 
 **Phase 3 done definition**:
@@ -298,7 +310,7 @@ consumption.
 
 **Phase 4 codex deliverables**:
 
-- NEW `codex/09-strategy/architecture-v2/cross-cutting/archetype-strategy-params.md` — per-archetype parameter schema
+- NEW `/codex/09-strategy/architecture-v2/cross-cutting/archetype-strategy-params.md` — per-archetype parameter schema
   SSOT.
 
 **Phase 4 done definition**: 53 archetypes have validated Pydantic schemas; loose dicts gone.
@@ -321,7 +333,7 @@ consumption.
 
 **Phase 5 codex deliverables**:
 
-- NEW `codex/09-strategy/architecture-v2/cross-cutting/strategy-config-drift-detection.md` — drift checker semantics +
+- NEW `/codex/09-strategy/architecture-v2/cross-cutting/strategy-config-drift-detection.md` — drift checker semantics +
   cron wiring + alerting.
 
 **Phase 5 done definition**: cron VM running daily; drift event fires on injected drift; alert reaches operator within
@@ -360,9 +372,9 @@ separate API calls. Manual + error-prone.
 
 **Phase 6 codex deliverables**:
 
-- NEW `codex/04-architecture/cross-service-promote-handlers.md` — every service that subscribes to lifecycle events +
+- NEW `/codex/04-architecture/cross-service-promote-handlers.md` — every service that subscribes to lifecycle events +
   what registration handler fires.
-- UPDATE `codex/04-architecture/interface-credential-convention.md` — extend with auto-register patterns.
+- UPDATE `/codex/04-architecture/interface-credential-convention.md` — extend with auto-register patterns.
 
 **Phase 6 done definition**: end-to-end promote-to-live test fires events, all 4 services auto-register, no operator
 manual API calls needed.
@@ -415,9 +427,9 @@ matrix has F17/F18 with `Last verified: NEVER`.
 
 **Phase 8 codex deliverables**:
 
-- NEW `codex/09-strategy/architecture-v2/cross-cutting/backtest-persistence-and-ranking.md` — single SSOT for path /
+- NEW `/codex/09-strategy/architecture-v2/cross-cutting/backtest-persistence-and-ranking.md` — single SSOT for path /
   manifest schema / score schema / ranking semantics / promotion gates.
-- UPDATE `codex/05-infrastructure/path-registry.md` — pin canonical `backtest_results/` template, kill legacy reader
+- UPDATE `/codex/05-infrastructure/path-registry.md` — pin canonical `backtest_results/` template, kill legacy reader
   path.
 
 **Phase 8 done definition**:
@@ -466,8 +478,8 @@ wiring all triggered from the promote endpoint.
 
 **Phase 9 codex deliverables**:
 
-- NEW `codex/14-customer-journeys/promote-pipeline-backend.md` — `/promote-to-live` API + pre-flight checks codified.
-- NEW `codex/04-architecture/promote-workflow-architecture.md` (UI section — May-23 plan ships the operator-CLI
+- NEW `/codex/14-customer-journeys/promote-pipeline-backend.md` — `/promote-to-live` API + pre-flight checks codified.
+- NEW `/codex/04-architecture/promote-workflow-architecture.md` (UI section — May-23 plan ships the operator-CLI
   section).
 
 **Phase 9 done definition**: Promote UI button click hits real backend; pre-flight enforced; events fire; UI converges;
@@ -494,8 +506,8 @@ the cutover-blocker subset. **This phase extends to all archetypes + advanced op
 
 **Phase 10 codex deliverables**:
 
-- NEW `codex/14-customer-journeys/dart/mode-toggle.md` — DART 3-way + manual-trade gate flow.
-- NEW `codex/05-infrastructure/live-deployment-monitoring.md` (master plan line 146 work-stream B doc).
+- NEW `/codex/14-customer-journeys/dart/mode-toggle.md` — DART 3-way + manual-trade gate flow.
+- NEW `/codex/05-infrastructure/live-deployment-monitoring.md` (master plan line 146 work-stream B doc).
 
 **Phase 10 done definition**: DART supports 3-way visualization; per-trade gate works for first 3d of any new
 deployment; pause/retire buttons live.
@@ -518,9 +530,9 @@ string-set in sports_execution + 3 competing surfaces violate "no double SSOT".
 
 **Phase 11 codex deliverables**:
 
-- NEW `codex/04-architecture/operational-modes.md` — 4-cell UAC SSOT.
-- NEW `codex/04-architecture/paper-vs-live-execution-seam.md` — execution-service mode dispatch.
-- NEW `codex/05-infrastructure/per-venue-paper-policy.md` (`paper_target_registry` SSOT).
+- NEW `/codex/04-architecture/operational-modes.md` — 4-cell UAC SSOT.
+- NEW `/codex/04-architecture/paper-vs-live-execution-seam.md` — execution-service mode dispatch.
+- NEW `/codex/05-infrastructure/per-venue-paper-policy.md` (`paper_target_registry` SSOT).
 
 **Phase 11 done definition**: 3 anti-pattern surfaces gone; UAC `OperationalMode` is single SSOT.
 

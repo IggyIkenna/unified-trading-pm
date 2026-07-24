@@ -9,7 +9,12 @@ stage: [meta]
 repos: [instruments-service, unified-trading-pm]
 scope: [engineer, admin]
 tags: []
-related: [live_pipeline_mtds_mdps_features_2026_05_08, writegate_honest_coverage_endtoend_2026_05_06, gcs_migration_bundle_pipeline_mode_2026_05_08]
+related:
+  [
+    live_pipeline_mtds_mdps_features_2026_05_08,
+    writegate_honest_coverage_endtoend_2026_05_06,
+    gcs_migration_bundle_pipeline_mode_2026_05_08,
+  ]
 created: 2026-05-08
 type: plan
 plan_type: design
@@ -120,12 +125,12 @@ Until slice b ships, this design stays DRAFT and Stage 1 schema-bump commit is g
 
 Per CLAUDE.md "Post-Plan-Phase Codex Audit HARD RULE":
 
-- **UPDATE** `codex/02-data/availability-manifest-and-data-status.md` — add v8 section after v8 `pipeline_mode` block;
+- **UPDATE** `/codex/02-data/availability-manifest-and-data-status.md` — add v8 section after v8 `pipeline_mode` block;
   describe the 3 new columns + reader migration window.
-- **NEW** `codex/04-architecture/service-emission-policy.md` — describe the 4-state lifecycle, hook insertion points,
+- **NEW** `/codex/04-architecture/service-emission-policy.md` — describe the 4-state lifecycle, hook insertion points,
   consumer behaviour. Stub created at slice-a ship; expanded here.
 - **UPDATE** `codex/00-SSOT-INDEX.md` — register the new emission-policy doc.
-- **CROSS-LINK** `codex/02-data/pipeline-mode-partition.md` Shipped Progress table to point at this v8 design once it
+- **CROSS-LINK** `/codex/02-data/pipeline-mode-partition.md` Shipped Progress table to point at this v8 design once it
   exits DRAFT.
 
 ## Temporary states + their canonical follow-up plans

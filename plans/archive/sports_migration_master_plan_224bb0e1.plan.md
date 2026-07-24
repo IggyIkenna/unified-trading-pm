@@ -6,44 +6,159 @@ status: complete
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [deployment-service, execution-service, instruments-service, market-data-processing-service, market-tick-data-service, strategy-service]
+repos:
+  [
+    deployment-service,
+    execution-service,
+    instruments-service,
+    market-data-processing-service,
+    market-tick-data-service,
+    strategy-service,
+  ]
 scope: [engineer, admin]
 tags: []
 related: []
-created: '2026-03-04'
-overview: Single comprehensive plan for sports betting migration. Architecture alignment (UIC/AC, interfaces-only auth), data layer separation (reference vs features vs market), sports-as-adapter pattern, batch-live symmetry, unified CLI, 70% test coverage, full provider registry, arbitrage+ML pipeline. Merged from sports_migration_master_plan_9b2acc2e.
+created: "2026-03-04"
+overview:
+  Single comprehensive plan for sports betting migration. Architecture alignment (UIC/AC, interfaces-only auth), data
+  layer separation (reference vs features vs market), sports-as-adapter pattern, batch-live symmetry, unified CLI, 70%
+  test coverage, full provider registry, arbitrage+ML pipeline. Merged from sports_migration_master_plan_9b2acc2e.
 todos:
-- {id: phase-0-arch-alignment, content: 'Align schema ownership (UIC internal, AC external) and API key placement (interfaces only)', status: completed}
-- {id: phase-0-clone, content: Clone sports-betting-service from GitHub into archive/sports-betting-service, status: completed}
-- {id: phase-0-inventory, content: Feature inventory both archives (sports-betting-services-previous + sports-betting-service), status: completed}
-- {id: phase-0-doc-scan, content: Scan and extract docs from footballbets/features/docs/core and utils, status: completed}
-- {id: phase-1-league-classification, content: Expand league classification to 94 leagues in instruments-service, status: completed}
-- {id: phase-1-team-stadium, content: 'Team and stadium mapping (74+ teams, 68+ stadiums, geocode-venues CLI)', status: completed}
-- {id: phase-1-canonical-schemas, content: Align canonical schemas in unified-api-contracts with UMI adapters, status: completed}
-- {id: phase-2-package-structure, content: 'Create features-sports-service package structure (calculators, adapters, engine, tracking)', status: completed}
-- {id: phase-2-data-exporters, content: Implement 14 data exporters (fixture-level + standalone), status: completed}
-- {id: phase-2-feature-tracking, content: Feature tracking 1000+ features across 14-24 modules, status: completed}
-- {id: phase-2-batch-fetch, content: Batch fetch CLI for 4+ providers with rate limiting, status: completed}
-- {id: phase-2-ht-features, content: 'Half-time features (HT state, performance, delta, momentum, OddsHTSnapshot)', status: completed}
-- {id: phase-2-ml-predictions, content: ML prediction features for schedules (ml-training/inference integration), status: completed}
-- {id: phase-3-half-time-arb, content: Extend ArbitrageStrategy for half-time arbitrage in strategy-service, status: completed}
-- {id: phase-3-operational-modes, content: Verify SCE/HUF modes for sports vs DeFi in execution-service, status: completed}
-- {id: phase-4-usei, content: 'BaseSportsAdapter, Betfair, Pinnacle in unified-sports-execution-interface', status: completed}
-- {id: phase-4-odds-processing, content: Sports odds processing in market-data-processing-service, status: completed}
-- {id: phase-4-execution-sports, content: Sports execution module in execution-service (SCE mode), status: completed}
-- {id: phase-5-gcs-schema, content: 'GCS Hive schema migration (by_date/day={date}/) for sports paths', status: completed}
-- {id: phase-5-validate-timestamp, content: Add validate_timestamp_date_alignment before all sports GCS writes, status: completed}
-- {id: phase-6-data-sources, content: 'Integrate all data sources (Understat, FootyStats, Transfermarkt, API-Football, etc.)', status: completed}
-- {id: phase-6-odds-aggregators, content: 'Add SharpAPI, Odds Engine, MetaBet schemas to unified-api-contracts', status: completed}
-- {id: phase-6-scraping-note, content: Document scraping for non-exchange bookmakers for orders and market data, status: completed}
-- {id: phase-7-parallel-agents, content: Execute parallel agents (A-J) for P0/P1/P2 streams, status: completed}
-- {id: phase-8-self-audit, content: Run self-audit checklist before declaring done, status: completed}
-- {id: phase-data-layer, content: Enforce reference vs features vs market data separation; odds via market-tick-data, status: completed}
-- {id: phase-batch-live, content: Add --mode batch|live and shared engine to features-sports-service, status: completed}
-- {id: phase-unified-cli, content: Align features-sports-service CLI with get_handler_for_mode pattern, status: completed}
-- {id: phase-test-coverage, content: Achieve 70%+ unit test coverage on all sports code; tests must pass, status: completed}
-- {id: live-mode-impl, content: 'Implement full live mode in features-sports-service (PubSub sink, event-driven)', status: completed}
-- {id: live-mode-tests, content: 'Add live mode integration tests (test_live_handler, test_pubsub_subscriber)', status: completed}
+  - {
+      id: phase-0-arch-alignment,
+      content: "Align schema ownership (UIC internal, AC external) and API key placement (interfaces only)",
+      status: completed,
+    }
+  - {
+      id: phase-0-clone,
+      content: Clone sports-betting-service from GitHub into archive/sports-betting-service,
+      status: completed,
+    }
+  - {
+      id: phase-0-inventory,
+      content: Feature inventory both archives (sports-betting-services-previous + sports-betting-service),
+      status: completed,
+    }
+  - {
+      id: phase-0-doc-scan,
+      content: Scan and extract docs from footballbets/features/docs/core and utils,
+      status: completed,
+    }
+  - {
+      id: phase-1-league-classification,
+      content: Expand league classification to 94 leagues in instruments-service,
+      status: completed,
+    }
+  - {
+      id: phase-1-team-stadium,
+      content: "Team and stadium mapping (74+ teams, 68+ stadiums, geocode-venues CLI)",
+      status: completed,
+    }
+  - {
+      id: phase-1-canonical-schemas,
+      content: Align canonical schemas in unified-api-contracts with UMI adapters,
+      status: completed,
+    }
+  - {
+      id: phase-2-package-structure,
+      content: "Create features-sports-service package structure (calculators, adapters, engine, tracking)",
+      status: completed,
+    }
+  - { id: phase-2-data-exporters, content: Implement 14 data exporters (fixture-level + standalone), status: completed }
+  - { id: phase-2-feature-tracking, content: Feature tracking 1000+ features across 14-24 modules, status: completed }
+  - { id: phase-2-batch-fetch, content: Batch fetch CLI for 4+ providers with rate limiting, status: completed }
+  - {
+      id: phase-2-ht-features,
+      content: "Half-time features (HT state, performance, delta, momentum, OddsHTSnapshot)",
+      status: completed,
+    }
+  - {
+      id: phase-2-ml-predictions,
+      content: ML prediction features for schedules (ml-training/inference integration),
+      status: completed,
+    }
+  - {
+      id: phase-3-half-time-arb,
+      content: Extend ArbitrageStrategy for half-time arbitrage in strategy-service,
+      status: completed,
+    }
+  - {
+      id: phase-3-operational-modes,
+      content: Verify SCE/HUF modes for sports vs DeFi in execution-service,
+      status: completed,
+    }
+  - {
+      id: phase-4-usei,
+      content: "BaseSportsAdapter, Betfair, Pinnacle in unified-sports-execution-interface",
+      status: completed,
+    }
+  - {
+      id: phase-4-odds-processing,
+      content: Sports odds processing in market-data-processing-service,
+      status: completed,
+    }
+  - {
+      id: phase-4-execution-sports,
+      content: Sports execution module in execution-service (SCE mode),
+      status: completed,
+    }
+  - {
+      id: phase-5-gcs-schema,
+      content: "GCS Hive schema migration (by_date/day={date}/) for sports paths",
+      status: completed,
+    }
+  - {
+      id: phase-5-validate-timestamp,
+      content: Add validate_timestamp_date_alignment before all sports GCS writes,
+      status: completed,
+    }
+  - {
+      id: phase-6-data-sources,
+      content: "Integrate all data sources (Understat, FootyStats, Transfermarkt, API-Football, etc.)",
+      status: completed,
+    }
+  - {
+      id: phase-6-odds-aggregators,
+      content: "Add SharpAPI, Odds Engine, MetaBet schemas to unified-api-contracts",
+      status: completed,
+    }
+  - {
+      id: phase-6-scraping-note,
+      content: Document scraping for non-exchange bookmakers for orders and market data,
+      status: completed,
+    }
+  - { id: phase-7-parallel-agents, content: Execute parallel agents (A-J) for P0/P1/P2 streams, status: completed }
+  - { id: phase-8-self-audit, content: Run self-audit checklist before declaring done, status: completed }
+  - {
+      id: phase-data-layer,
+      content: Enforce reference vs features vs market data separation; odds via market-tick-data,
+      status: completed,
+    }
+  - {
+      id: phase-batch-live,
+      content: Add --mode batch|live and shared engine to features-sports-service,
+      status: completed,
+    }
+  - {
+      id: phase-unified-cli,
+      content: Align features-sports-service CLI with get_handler_for_mode pattern,
+      status: completed,
+    }
+  - {
+      id: phase-test-coverage,
+      content: Achieve 70%+ unit test coverage on all sports code; tests must pass,
+      status: completed,
+    }
+  - {
+      id: live-mode-impl,
+      content: "Implement full live mode in features-sports-service (PubSub sink, event-driven)",
+      status: completed,
+    }
+  - {
+      id: live-mode-tests,
+      content: "Add live mode integration tests (test_live_handler, test_pubsub_subscriber)",
+      status: completed,
+    }
 isProject: false
 ---
 
@@ -554,13 +669,13 @@ flowchart TB
 ## References
 
 - [workspace-manifest.json](unified-trading-pm/workspace-manifest.json) — completion_paths.sports, futureRepos
-- [contracts-scope-and-layout.md](unified-trading-codex/02-data/contracts-scope-and-layout.md) — UIC vs AC, schema
+- [contracts-scope-and-layout.md](unified-trading-/codex/02-data/contracts-scope-and-layout.md) — UIC vs AC, schema
   ownership
 - [instruments-domain-and-api-keys.mdc](.cursor/rules/core/instruments-domain-and-api-keys.mdc) — API keys from Secret
   Manager only
 - [sports_migration_gap_fix.md](unified-trading-pm/plans/cursor-plans/sports_migration_gap_fix.md)
 - [SPORTS_PROVIDERS_REGISTRY.md](unified-trading-pm/docs/SPORTS_PROVIDERS_REGISTRY.md)
-- [sports-schema-paths.md](unified-trading-codex/02-data/sports-schema-paths.md) — gap fix (COMPLETE per plan)
+- [sports-schema-paths.md](unified-trading-/codex/02-data/sports-schema-paths.md) — gap fix (COMPLETE per plan)
 - [T1_T2_MIGRATION_PATTERNS.md](unified-trading-pm/plans/active/T1_T2_MIGRATION_PATTERNS.md) — migration patterns
 - archive/sports-betting-services-previous/footballbets/features/docs/core/ — FEATURES_CATALOG, FEATURE_ENGINEERING
 - execution-service: ExecutionMode SCE/HUF in signal_driven_shared.py, strategies.py

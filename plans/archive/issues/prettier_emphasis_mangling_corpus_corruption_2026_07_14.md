@@ -26,7 +26,11 @@ stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer]
 tags: [docs-integrity, prettier, tooling, plans-corpus, codex, quality-gates]
-related: [plan_reconciliation_operator_decisions_2026_07_11.md, instruments_foundation_completeness_2026_06_24.md]
+related:
+  [
+    /plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md,
+    /plans/active/instruments_foundation_completeness_2026_06_24.md,
+  ]
 created: 2026-07-14
 source:
   - verify-rerun-2 chunk-7 fixer agent flagged pre-existing multi-space corruption in

@@ -6,7 +6,15 @@ status: complete
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [deployment-api, deployment-service, deployment-ui, features-service, market-data-processing-service, market-tick-data-service]
+repos:
+  [
+    deployment-api,
+    deployment-service,
+    deployment-ui,
+    features-service,
+    market-data-processing-service,
+    market-tick-data-service,
+  ]
 scope: [engineer, admin]
 tags: []
 related: []
@@ -57,7 +65,7 @@ with explicit handshake).
 ## Today's slot assignments
 
 > **Per-tab worktree model**
-> ([`codex/05-infrastructure/per-tab-worktrees.md`](../../codex/05-infrastructure/per-tab-worktrees.md)). Each slot is a
+> ([`/codex/05-infrastructure/per-tab-worktrees.md`](/codex/05-infrastructure/per-tab-worktrees.md)). Each slot is a
 > permanent worktree at `${WORKSPACE_ROOT}/.tabs/<N>/` on branch `tab/ikennaigboaka/<N>`. Slot count: 8 already
 > provisioned (per `setup-tab-worktrees.sh --list` 2026-05-11). Before any slot reassignment from yesterday's theme, run
 > `bash unified-trading-pm/scripts/dev/setup-tab-worktrees.sh --reset-slot <N>`.
@@ -179,7 +187,7 @@ under-utilisation is fine, mid-cycle collision is not.
   - **P0 Phase 5.1** — Add `manifest_completeness` UTL helper computing
     `captured / (captured + empty_confirmed + attempted_failed + expected_unattempted)` per drilldown level. SSOT for
     the 3 derived %s
-    ([`measure-honest-coverage.py` is the per-data_type measurement script](../../codex/02-data/availability-manifest-and-data-status.md);
+    ([`measure-honest-coverage.py` is the per-data_type measurement script](/codex/02-data/availability-manifest-and-data-status.md);
     the helper is the in-process compute).
   - **P0 Phase 5.3** — Wire `manifest_completeness` into deployment-api `/api/data-status/leaf-stats` endpoint (already
     shipped @3b0477a per [LEDGER 2026-05-08 evening](../../ikenna_orchestrator/LEDGER.md) — extend with the new helper
@@ -187,7 +195,7 @@ under-utilisation is fine, mid-cycle collision is not.
   - **P0 Phase 5.4** — Add `service_emission_state` column to deployment-ui DataStatusTab venue summary line (extends
     @8f630a6 / @621f0b3 per LEDGER); badge stack rendering for the 4 ServiceEmissionPolicy enum values.
   - **P1 Phase 5.5** — Codex SSOT update: extend
-    [`codex/02-data/availability-manifest-and-data-status.md`](../../codex/02-data/availability-manifest-and-data-status.md)
+    [`/codex/02-data/availability-manifest-and-data-status.md`](/codex/02-data/availability-manifest-and-data-status.md)
     "v8 schema" section; document the 3 new columns + their write-time semantics.
   - **P1 Phase 5.6** — Add CLAUDE.md key-rule entry under "Availability manifest v5 (honest-coverage)" extending it to
     v8 (`service_emission_state` + `pipeline_mode` + `feature_family`).
@@ -316,7 +324,7 @@ under-utilisation is fine, mid-cycle collision is not.
 >
 > 1. **`MDPSStreamingAggregator`** (UTL@`58bfbbeb` stub) → real implementation: UTC-aligned candle boundaries +
 >    watermark + grace + replay handoff per the design contract in
->    `codex/05-infrastructure/live-pipeline-architecture.md`. Add unit tests covering the 4-category empty-output
+>    `/codex/05-infrastructure/live-pipeline-architecture.md`. Add unit tests covering the 4-category empty-output
 >    decision matrix per CLAUDE.md.
 > 2. **`AssetScopedFeaturesRunner`** (UTL@`58bfbbeb` stub) → real implementation. Per-asset_group flavor
 >    (cefi/defi/tradfi/predictions/sports) wired against the now-consolidated `features-service`.
@@ -346,7 +354,7 @@ under-utilisation is fine, mid-cycle collision is not.
   - **P0 Phase 11 design** — Draft deployment-UI live tab schema: `/api/live-status` endpoint contract + frontend
     component scaffold + integration with existing Health-API extension (Phase 8 already shipped).
   - **P1 Phase 14** — Codex SSOT updates: extend
-    [`codex/05-infrastructure/live-pipeline-architecture.md`](../../codex/05-infrastructure/live-pipeline-architecture.md)
+    [`/codex/05-infrastructure/live-pipeline-architecture.md`](/codex/05-infrastructure/live-pipeline-architecture.md)
     with Phase 4-5 streaming aggregation design + Phase 11 UI surface.
 - **Plan-of-record**: [`live_pipeline_mtds_mdps_features_2026_05_08.md`](live_pipeline_mtds_mdps_features_2026_05_08.md)
   Phases 4-5 + 11 + 14.
@@ -466,9 +474,8 @@ under-utilisation is fine, mid-cycle collision is not.
   slot 3 cross-side ping when Phase 0 lands.
 - **Hard-gate: Ikenna slot 2 (writegate v8 schema) → Harsh slot 6 (workspace QG sweep)**. Ikenna ships v8 columns; Harsh
   slot 6 runs the workspace-wide QG green check. **Signal**: Ikenna slot 2 cross-side ping when Phase 5.7 lands.
-- **Coordinate: Ikenna slot 3 (AVAILABILITY_AT_SEMANTICS audit) ↔ Harsh slot 3 (Wave3x Track E sports stamping)**.
-  Track E folded into available_at Phase 1 — Harsh ships per-source helpers, Ikenna integrates into
-  AVAILABILITY_AT_SEMANTICS.
+- **Coordinate: Ikenna slot 3 (AVAILABILITY_AT_SEMANTICS audit) ↔ Harsh slot 3 (Wave3x Track E sports stamping)**. Track
+  E folded into available_at Phase 1 — Harsh ships per-source helpers, Ikenna integrates into AVAILABILITY_AT_SEMANTICS.
 - **Banner-add: Ikenna slot 1 (banner sweep) → both sides**. Slot 1 ensures every plan that touches Phase 1 / Phase 2 /
   Phase 3 work has the cross-plan banner pointing back at code_freeze umbrella.
 
@@ -486,9 +493,9 @@ under-utilisation is fine, mid-cycle collision is not.
 | `deployment-ui/src/components/DataStatusTab/*`                        | slot 2 (badge rendering) + slot 4 (live tab scaffold for separate Live tab)                | Distinct component files; slot 4's Live tab is a NEW component, not edits to DataStatusTab.           |
 
 **Per-slot worktree isolation** (per
-[`codex/05-infrastructure/per-tab-worktrees.md`](../../codex/05-infrastructure/per-tab-worktrees.md)) makes cross-slot
-races on `.git/index` unrepresentable; the table above is for SHARED-FILE-CONTENT collisions when slots push and pull
-each other's commits.
+[`/codex/05-infrastructure/per-tab-worktrees.md`](/codex/05-infrastructure/per-tab-worktrees.md)) makes cross-slot races
+on `.git/index` unrepresentable; the table above is for SHARED-FILE-CONTENT collisions when slots push and pull each
+other's commits.
 
 ## Spawn prompts (paste-ready into fresh Claude Code / Cursor tabs)
 

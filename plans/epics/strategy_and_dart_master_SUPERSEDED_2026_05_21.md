@@ -13,7 +13,7 @@ stage: [meta]
 repos: [deployment-ui, e2e-testing, execution-service, features-service, market-tick-data-service, strategy-service]
 scope: [engineer, admin]
 tags: [strategy, refactor, consolidation, promote, ui, ssot-audit]
-related: [strategy_master.md, dart_and_promote_master.md, README.md]
+related: [/plans/epics/strategy_master.md, /plans/epics/dart_and_promote_master.md, README.md]
 created: 2026-05-07
 name:
 tier:
@@ -118,8 +118,8 @@ ui-1a-walkthrough-audit + ui-2a-batch-live in consolidated). One umbrella resolv
   MIGRATION + 18 archetypes + 7 axes + 11 cross-cutting + 2 architecture docs)
 - [`codex/14-customer-journeys/dart/`](../../codex/14-customer-journeys/dart/) — DART terminal vs research playbook
   (paired SSOT for the cockpit refactor)
-- [`codex/04-architecture/shadow-deployment-pattern.md`](../../codex/04-architecture/shadow-deployment-pattern.md) —
-  shadow window contract for archetype builds
+- [`/codex/04-architecture/shadow-deployment-pattern.md`](/codex/04-architecture/shadow-deployment-pattern.md) — shadow
+  window contract for archetype builds
 
 ## Phase 1 — Archetype engine v2 finalization (was: strategy_architecture_v2_finalization)
 
@@ -247,7 +247,7 @@ ui-1a-walkthrough-audit + ui-2a-batch-live in consolidated). One umbrella resolv
 ### 1.8 Phase 11 — Dated-future roll mechanism (representative-future-service + combo creation)
 
 > Implements block-list entry BL-10 from `category-instrument-coverage.md`. Unblocks every `-dated-` slot. Codex spec at
-> `codex/09-strategy/architecture-v2/cross-cutting/futures-roll-and-combos.md`.
+> `/codex/09-strategy/architecture-v2/cross-cutting/futures-roll-and-combos.md`.
 >
 > **May-23 gating clarification** (deep audit 2026-05-07): the May-23 lead archetype `carry_staked_basis` (and
 > hedging-leg `ARBITRAGE_PRICE_DISPERSION` (`funding-rate-dispersion`; renamed from legacy `leveraged_funding_arb` per
@@ -493,17 +493,17 @@ ui-1a-walkthrough-audit + ui-2a-batch-live in consolidated). One umbrella resolv
   is post-May-23.
 
   **Topology GAP closure todos (from topology_qgroup_gap_closure_2026_05_09 Phase 1+8):**
-  - [x] [AGENT] P0. **GAP-1 + GAP-4**: `codex/04-architecture/strategy-ensemble-topology.md` pinning ONE VM per
+  - [x] [AGENT] P0. **GAP-1 + GAP-4**: `/codex/04-architecture/strategy-ensemble-topology.md` pinning ONE VM per
         asset_group + DeFi/CeFi split + multi-tenancy rules + colocation-bootstrap protocol. Shipped PM@369d8424
         2026-05-14.
   - [x] [AGENT] P0. **GAP-2 + GAP-3**: Process-vs-in-proc shape codified in
-        `codex/04-architecture/strategy-ensemble-topology.md` § "Per-VM process layout" — 4 separate OS processes, local
-        Redis IPC, `POSITION_BALANCE_URL`/`RISK_EXPOSURE_URL`/`EXECUTION_URL` env-var service discovery. Shipped
+        `/codex/04-architecture/strategy-ensemble-topology.md` § "Per-VM process layout" — 4 separate OS processes,
+        local Redis IPC, `POSITION_BALANCE_URL`/`RISK_EXPOSURE_URL`/`EXECUTION_URL` env-var service discovery. Shipped
         PM@369d8424 2026-05-14. Colocation bootstrap script (`colocate-strategy-vm.sh`) DEFERRED Phase 1.9.
   - [x] [AGENT] P0. **GAP-5**: `ExecutionRejectionCode` + `ExecutionRejectionEvent` shipped UAC@25d9a70.
         Strategy-service rejection consumer shipped strategy-service@c87f9c1 (`rejection_handler.py` + 11 unit tests).
         Shipped 2026-05-14.
-  - [x] [AGENT] P0. **GAP-12**: `codex/04-architecture/matching-engine-assumptions.md` pinning per-matcher slippage
+  - [x] [AGENT] P0. **GAP-12**: `/codex/04-architecture/matching-engine-assumptions.md` pinning per-matcher slippage
         model + commission schedule + latency model + venue-liquidity proxy + `BenchmarkFillMode` per
         `InstructionActionV2`. `MatchingEngineConfig` UAC class TODO: ship in UAC internal/architecture_v2 Phase 1.9
         bundle. Shipped PM@369d8424 2026-05-14.
@@ -529,7 +529,7 @@ ui-1a-walkthrough-audit + ui-2a-batch-live in consolidated). One umbrella resolv
   `m3-ultramem-160`), `strategy-service/scripts/run_2yr_config_grid_backtest.py` extension to cover all 6 Tier A
   archetype families, codex SSOTs for performance-targets + cutover-window dependency-order. Mock-data approach lets
   this run in parallel with real-backfill workstream (no I/O dependency). MVP universe scope per
-  `codex/09-strategy/mvp-universe-per-asset-group.md`.
+  `/codex/09-strategy/mvp-universe-per-asset-group.md`.
 - **`plans/active/strategy_archetype_taxonomy_2026_05_12.md`** — archetype taxonomy refinement (separately
   cross-referenced earlier; parent_epic already set).
 - **`plans/active/strategy_repo_consolidation_2026_05_19.md`** (~12 cal-AI-days, P0, deadline 2026-05-23, `infra` class)
@@ -542,8 +542,8 @@ ui-1a-walkthrough-audit + ui-2a-batch-live in consolidated). One umbrella resolv
   duration. Sibling: `plans/active/ml_repo_consolidation_2026_05_19.md` (independent execution).
 
 **MVP scope SSOT for backtest config-grid + ML training sizing**:
-[`codex/09-strategy/mvp-universe-per-asset-group.md`](../../codex/09-strategy/mvp-universe-per-asset-group.md) defines
-Tier A (backtest-complete by May-23) vs Tier B (code-ready architecture only). Tier A = ml-continuous (CeFi + ES) +
+[`/codex/09-strategy/mvp-universe-per-asset-group.md`](/codex/09-strategy/mvp-universe-per-asset-group.md) defines Tier
+A (backtest-complete by May-23) vs Tier B (code-ready architecture only). Tier A = ml-continuous (CeFi + ES) +
 ml-settled (Sports) + arbitrage-funding-rate + arbitrage-sports-book + arbitrage-event-markets + defi-carry-family.
 
 ## Coordination with sibling plans

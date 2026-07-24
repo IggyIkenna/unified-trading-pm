@@ -13,10 +13,10 @@ stage: [meta]
 repos: [deployment-service, instruments-service, unified-trading-pm]
 scope: [engineer, admin]
 tags: [catalogue, data-status, manifest, instruments, data-pipeline]
-related: [availability-manifest-and-data-status.md, canonical-schema-groups.md]
+related: [/codex/02-data/availability-manifest-and-data-status.md, /codex/02-data/canonical-schema-groups.md]
 created: 2026-03-27
 authoritative_for: [data-catalogue YAML manifest schema (data-catalogue.*.yaml)]
-referenced_by: [codex/02-data/canonical-schema-groups.md]
+referenced_by: [/codex/02-data/canonical-schema-groups.md]
 owner:
 last_reviewed: 2026-05-13
 code_refs:
@@ -53,7 +53,7 @@ last_verified: 2026-05-12
 > `gs://data-catalogue-{project_id}/**/manifest.parquet` to refresh them, but **no writer of that artifact exists in the
 > workspace**, so the sync has nothing to read.
 >
-> The sibling copy at `codex/06-coding-standards/data-catalogue-schema.md` carried the same defects and was **deleted
+> The sibling copy at `/codex/06-coding-standards/data-catalogue-schema.md` carried the same defects and was **deleted
 > 2026-07-23** (doc-reconciliation, operator-approved) rather than bannered — no second copy of a confirmed-fictional
 > schema needed to survive.
 

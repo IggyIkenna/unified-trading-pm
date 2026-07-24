@@ -33,8 +33,8 @@ related:
     plans/active/sports_p2_history_apifootball_2015_to_present_2026_06_27.md,
     plans/archive/2026_07/sports_p2_daily_forward_catalogue_and_final_gate_2026_06_27.md,
     plans/active/issues/sports_manifest_unknown_league_id_2026_07_08.md,
-    codex/02-data/availability-manifest-and-data-status.md,
-    codex/02-data/honest-coverage-model.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/02-data/honest-coverage-model.md,
   ]
 created: 2026-07-13
 last_updated: 2026-07-20

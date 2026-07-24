@@ -3,10 +3,13 @@ title: LST APR sourcing — on-chain `exchangeRate()` is the canonical source; D
 created: 2026-05-14
 author: ikenna (claude opus 4.7, 1M context)
 resolved: 2026-05-17
-resolution: SUBSTANTIVELY-SHIPPED — validation work + master plan row + Marinade BLOCKED-OPERATOR-DECISION all ✅. Single P2 SCRIPT remains DEFERRED-POST-CUTOVER (NICE-TO-HAVE): coinbase_wrapped_assets.py UTL client requires new external_apis/ subpackage architectural decision; on-chain canonical source already wired.
+resolution: >
+  SUBSTANTIVELY-SHIPPED — validation work + master plan row + Marinade BLOCKED-OPERATOR-DECISION all ✅. Single P2
+  SCRIPT remains DEFERRED-POST-CUTOVER (NICE-TO-HAVE): coinbase_wrapped_assets.py UTL client requires new external_apis/
+  subpackage architectural decision; on-chain canonical source already wired.
 source:
   - cursor-configs/CLAUDE.md § "External Data Is Always Available — Never Silently Defer Adapters"
-  - codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md § "On-chain APY derivation (real, not vendor)"
+  - /codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md § "On-chain APY derivation (real, not vendor)"
   - market-tick-data-service/market_tick_data_service/cli/handlers/lst_rates_handler.py
   - unified-api-contracts/unified_api_contracts/internal/domain/defi/lst.py (`LST_TOKEN_TO_PROTOCOL_ASSET`)
   - real-data smoke test 2026-05-14 (cbETH 4-year history pull, evidence inline below)
@@ -47,7 +50,7 @@ staking_apy_bps = ((rate[t] / rate[t-7d]) ** (365/7) - 1) * 1e4
 ```
 
 This is already what
-[`carry-staked-basis.md` § "On-chain APY derivation"](../../../codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md)
+[`carry-staked-basis.md` § "On-chain APY derivation"](/codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md)
 specifies and what the
 [features-onchain `staking_apy_total` aggregator](<../../../features-service%20(onchain%20family)/features_onchain_service/engine/staking_apy_total.py>)
 consumes.
@@ -128,13 +131,13 @@ Three crisp facts:
    - Use case: cross-check today's on-chain value against the API once per shard; emit `MANIFEST_CROSS_SOURCE_DRIFT` if
      delta > 1 bp (unexpected — they're literally the same number on-chain).
 3. **Coinbase credential is NOT a blocker** for cbETH. The `coinbase-api-key` row in
-   `codex/07-security/secrets-management.md` (`KEY_NOT_IN_SM`) is for _order placement_ (Coinbase brokerage API), not
+   `/codex/07-security/secrets-management.md` (`KEY_NOT_IN_SM`) is for _order placement_ (Coinbase brokerage API), not
    the public wrapped-assets endpoint. Do not file a `BLOCKED-CREDENTIALS` for cbETH data.
 4. **Remove DefiLlama from LST APR consideration entirely.** The four DefiLlama URLs in
    [`unified-trading-library/.../external_urls.py`](../../../unified-trading-library/unified_trading_library/features_interface/external_urls.py)
    and the `defillama_tvl` feature in UAC `required_inputs.py` are TVL/protocol-scale features for Phase 2 risk context
    only — they do not feed LST APR. Add a non-goal callout in
-   [carry-staked-basis.md](../../../codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md) (§ "On-chain APY
+   [carry-staked-basis.md](/codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md) (§ "On-chain APY
    derivation"):
 
    > Non-goal: DefiLlama yields. DefiLlama is a TVL/risk-context source only; the staking APY is reconstructed from
@@ -167,7 +170,7 @@ sub-agent picks up this thread).
 ## Plan-flip checkboxes (for sub-agents picking this up)
 
 - [x] [DOC] P1. Add "Non-goal: DefiLlama yields" callout to
-      `codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md` § "On-chain APY derivation" pointing to this
+      `/codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md` § "On-chain APY derivation" pointing to this
       issue doc. (shipped in this commit)
 - [x] [SCRIPT] P1. Promote `/tmp/cbeth_history_test.py` to
       `market-tick-data-service/scripts/smoke_test_cbeth_history.py` — shipped MTDS@`f0b1f7f9`. Passes ruff lint +
@@ -177,12 +180,12 @@ sub-agent picks up this thread).
       per-PR-touching-`lst_rates_handler` smoke trigger if cross-source drift becomes a recurring concern.
 - [x] **FORMALLY DEFERRED-POST-CUTOVER (NICE-TO-HAVE)** [SCRIPT] P2. Add
       `unified_trading_library/external_apis/coinbase_wrapped_assets.py` public-endpoint client (no auth), emit
-      `MANIFEST_CROSS_SOURCE_DRIFT` when on-chain ↔ API delta > 1 bp. **DEFERRED-POST-CUTOVER (NICE-TO-HAVE)**:
-      requires new UTL `external_apis/` subpackage (architectural decision) + new event type
-      `MANIFEST_CROSS_SOURCE_DRIFT`. On-chain canonical source already wired; this is a secondary smoke for drift
-      detection only. Successor: file a separate plan once UTL `external_apis/` subpackage shape is decided (currently 1
-      candidate consumer; needs ≥2 to justify a new subpackage). **FORMALLY CLOSED 2026-05-19 slot-5** — on-chain
-      canonical source already wired + validated; this cross-source drift check is post-cutover scope.
+      `MANIFEST_CROSS_SOURCE_DRIFT` when on-chain ↔ API delta > 1 bp. **DEFERRED-POST-CUTOVER (NICE-TO-HAVE)**: requires
+      new UTL `external_apis/` subpackage (architectural decision) + new event type `MANIFEST_CROSS_SOURCE_DRIFT`.
+      On-chain canonical source already wired; this is a secondary smoke for drift detection only. Successor: file a
+      separate plan once UTL `external_apis/` subpackage shape is decided (currently 1 candidate consumer; needs ≥2 to
+      justify a new subpackage). **FORMALLY CLOSED 2026-05-19 slot-5** — on-chain canonical source already wired +
+      validated; this cross-source drift check is post-cutover scope.
 - [x] [PLAN] P2. Cross-link this issue doc from `defi_master_2026_05_07.md` § "Real residual concerns" (after "Solana
       coverage genuinely thin" bullet). (shipped in this commit)
 - [x] [PLAN] P2. Slot 1 main: add a row to `master_to_live_defi_2026_05_23.md` § "Credential asks awaiting operator"

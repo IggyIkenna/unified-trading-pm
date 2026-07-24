@@ -1,7 +1,10 @@
 ---
 doc_type: audit-result
 title: A6 — Batch-live adapter parity summary
-summary: A6 automated batch-live adapter parity scan (573 adapter files, 160 in-scope tuples) — 13 BATCH_ONLY review-blocking cells (4 defi resolved 2026-05-21 via curve/jito/morpho _defi_ws.py) + 146 MISSING_BOTH silent gaps + 0 LIVE_ONLY; regex/path heuristic with known compound-venue false-negatives.
+summary:
+  A6 automated batch-live adapter parity scan (573 adapter files, 160 in-scope tuples) — 13 BATCH_ONLY review-blocking
+  cells (4 defi resolved 2026-05-21 via curve/jito/morpho _defi_ws.py) + 146 MISSING_BOTH silent gaps + 0 LIVE_ONLY;
+  regex/path heuristic with known compound-venue false-negatives.
 status: fail
 nature: record
 asset_group: [cross-cutting]
@@ -9,9 +12,11 @@ stage: [meta]
 repos: [market-data-processing-service, market-tick-data-service]
 scope: [engineer, admin]
 tags: [audit, mtds, mdps, reconciliation, defi, cefi, live-trading]
-related: [batch_live_adapter_parity_2026_05_20.md]
+related: [/plans/audit/results/archive/batch_live_adapter_parity_2026_05_20.md]
 created: 2026-05-20
-audited_scope: 573 adapter files across MTDS + MDPS + IS; 160 (asset_group, venue_token, data_type) tuples classified GREEN/BATCH_ONLY/LIVE_ONLY/MISSING_BOTH via path + first-4000-char regex
+audited_scope:
+  573 adapter files across MTDS + MDPS + IS; 160 (asset_group, venue_token, data_type) tuples classified
+  GREEN/BATCH_ONLY/LIVE_ONLY/MISSING_BOTH via path + first-4000-char regex
 date: 2026-05-20
 auditor: semver
 parent_epic: batch_live_symmetry_master

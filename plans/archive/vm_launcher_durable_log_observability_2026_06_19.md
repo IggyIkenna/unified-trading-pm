@@ -52,8 +52,8 @@ long_lived_vm_logs_not_backed_up_2026_07_02 (the one remaining P3 item — sweep
 > below); the one genuinely-open item — **durable logs for long-lived orchestrator VMs (Tier 3, GCP + AWS)** — is
 > consciously **DEFERRED, not lost**, and migrated to
 > [`plans/active/issues/long_lived_vm_logs_not_backed_up_2026_07_02.md`](../active/issues/long_lived_vm_logs_not_backed_up_2026_07_02.md).
-> Codex SSOT for the shipped contract: `codex/05-infrastructure/vm-tarball-deployment.md` § "Observability + lifecycle —
-> two tiers" + runbook `codex/15-runbooks/vm-log-observability-verify.md`.
+> Codex SSOT for the shipped contract: `/codex/05-infrastructure/vm-tarball-deployment.md` § "Observability + lifecycle
+> — two tiers" + runbook `/codex/15-runbooks/vm-log-observability-verify.md`.
 
 **Goal**: every VM launch ships its run log + lifecycle/heartbeat continuously to durable object storage (GCS/S3), so
 progress is visible WITHOUT SSH and a dead VM's full log + terminal status survive termination. Closes the operator
@@ -83,8 +83,8 @@ bypass that stack. SSOT fix landed in the shared trap-block helpers + the active
 - [x] [TF] P0. Add AWS S3 lifecycle for the AWS deployment-scripts bucket (`terraform/aws/vm_logs_lifecycle.tf`: vm-logs
       14 d / vm-heartbeat 15 d / log-archive 30 d) mirroring the GCP `deployment_scripts` bucket. (GCP lifecycle already
       existed in `terraform/gcp/main.tf` + `vm_log_archival_scheduler.tf`.)
-- [x] [DOC] P0. Codex § "Observability + lifecycle — two tiers" (`codex/05-infrastructure/vm-tarball-deployment.md`) +
-      runbook `codex/15-runbooks/vm-log-observability-verify.md` (owner/cadence/verifier/last_executed).
+- [x] [DOC] P0. Codex § "Observability + lifecycle — two tiers" (`/codex/05-infrastructure/vm-tarball-deployment.md`) +
+      runbook `/codex/15-runbooks/vm-log-observability-verify.md` (owner/cadence/verifier/last_executed).
 
 ## Remaining — migrate the rest of the bespoke GCP launchers to the SSOT helper
 
@@ -132,5 +132,5 @@ long-lived sweep is genuinely open, and is migrated to the Tier-3 issue doc (def
 
 ## Codex SSOT updates
 
-- `codex/05-infrastructure/vm-tarball-deployment.md` § "Observability + lifecycle — two tiers" (updated 2026-06-19).
-- `codex/15-runbooks/vm-log-observability-verify.md` (new runbook).
+- `/codex/05-infrastructure/vm-tarball-deployment.md` § "Observability + lifecycle — two tiers" (updated 2026-06-19).
+- `/codex/15-runbooks/vm-log-observability-verify.md` (new runbook).

@@ -10,45 +10,54 @@ repos: [e2e-testing, execution-service, strategy-service, unified-api-contracts]
 scope: [engineer, admin]
 tags: []
 related: []
-created: '2026-04-03'
+created: "2026-04-03"
 remaining_todos_consolidated_into: consolidated_defi_data_pipeline_2026_04_15
 superseded_by: [consolidated_defi_data_pipeline_2026_04_15.md]
 reconciliation_status: superseded_by_consolidator
 reconciliation_date: 2026-04-25
-overview: MEV protection framework (Flashbots pipes, private mempool), execution algo comparison, basis trade dynamic coin selection
+overview:
+  MEV protection framework (Flashbots pipes, private mempool), execution algo comparison, basis trade dynamic coin
+  selection
 type: code
 epic: epic-code-completion
 locked_by: live-defi-rollout
 locked_since: 2026-04-01
-completion_gates: {code: C5, deployment: none, business: none}
+completion_gates: { code: C5, deployment: none, business: none }
 repo_gates:
-- {repo: unified-api-contracts, code: C0, deployment: none, business: none}
-- {repo: execution-service, code: C0, deployment: none, business: none}
-- {repo: strategy-service, code: C0, deployment: none, business: none}
-- {repo: e2e-testing, code: C0, deployment: none, business: none}
+  - { repo: unified-api-contracts, code: C0, deployment: none, business: none }
+  - { repo: execution-service, code: C0, deployment: none, business: none }
+  - { repo: strategy-service, code: C0, deployment: none, business: none }
+  - { repo: e2e-testing, code: C0, deployment: none, business: none }
 depends_on: [token-wrapping-venue-collateral]
 todos:
-- {id: mev-1a-framework, content: '- [x] [AGENT] P0. Create MEV protection framework in execution-service (Flashbots pipes)
+  - { id: mev-1a-framework, content: "- [x] [AGENT] P0. Create MEV protection framework in execution-service (Flashbots
+        pipes)
 
-    ', status: done, note: Pipes only — paid subscriptions not required yet}
-- {id: mev-1b-protected-rpc, content: '- [x] [AGENT] P1. Add protected RPC configuration (MEV Blocker, Flashbots Protect)
+        ", status: done, note: Pipes only — paid subscriptions not required yet }
+  - { id: mev-1b-protected-rpc, content: "- [x] [AGENT] P1. Add protected RPC configuration (MEV Blocker, Flashbots
+        Protect)
 
-    ', status: done, note: 'PROTECTED_RPC_URLS dict added to UAC _defi.py, exported from capability_declarations and registry __init__.py'}
-- {id: mev-2a-basis-coins, content: '- [x] [AGENT] P0. Implement dynamic coin selection for basis trade from instrument registry
+        ", status: done, note: "PROTECTED_RPC_URLS dict added to UAC _defi.py, exported from capability_declarations and
+        registry __init__.py" }
+  - { id: mev-2a-basis-coins, content: "- [x] [AGENT] P0. Implement dynamic coin selection for basis trade from
+        instrument registry
 
-    ', status: done, note: _get_eligible_basis_coins() added to BasisTradeStrategy; wired into _scan_percoin_keys()}
-- {id: mev-2b-rebalance-costbenefit, content: '- [x] [AGENT] P0. Add rebalance cost-benefit analysis to basis trade
+        ", status: done, note: _get_eligible_basis_coins() added to BasisTradeStrategy; wired into _scan_percoin_keys() }
+  - { id: mev-2b-rebalance-costbenefit, content: "- [x] [AGENT] P0. Add rebalance cost-benefit analysis to basis trade
 
-    ', status: done, note: _should_rebalance() added; wired into _build_rebalance_instructions() as cost-benefit gate}
-- {id: mev-2c-algo-comparison, content: '- [x] [AGENT] P1. Create execution algo comparison framework (TWAP vs VWAP vs direct)
+        ", status: done, note: _should_rebalance() added; wired into _build_rebalance_instructions() as cost-benefit
+        gate }
+  - { id: mev-2c-algo-comparison, content: "- [x] [AGENT] P1. Create execution algo comparison framework (TWAP vs VWAP
+        vs direct)
 
-    ', status: done, note: AlgoComparisonRunner skeleton in execution_service/algo_library/algo_comparison.py with AlgoRunResult and ComparisonReport}
-- {id: mev-3a-e2e, content: '- [ ] [AGENT] P1. Add MEV + execution scenarios to e2e-testing
+        ", status: done, note: AlgoComparisonRunner skeleton in execution_service/algo_library/algo_comparison.py with
+        AlgoRunResult and ComparisonReport }
+  - { id: mev-3a-e2e, content: "- [ ] [AGENT] P1. Add MEV + execution scenarios to e2e-testing
 
-    ', status: todo, note: ''}
-- {id: mev-4a-docs, content: '- [x] [AGENT] P1. Document MEV protection + execution enhancements in codex
+        ", status: todo, note: "" }
+  - { id: mev-4a-docs, content: "- [x] [AGENT] P1. Document MEV protection + execution enhancements in codex
 
-    ', status: done, note: codex/07-security/mev-protection.md created in unified-trading-pm}
+        ", status: done, note: /codex/07-security/mev-protection.md created in unified-trading-pm }
 isProject: false
 ---
 
@@ -450,14 +459,14 @@ Phase 3 (E2E + Docs)
 
 ### 3B: Documentation
 
-- [x] [AGENT] P1. Create `codex/07-security/mev-protection.md`:
+- [x] [AGENT] P1. Create `/codex/07-security/mev-protection.md`:
   - MEV threat model for DeFi trades
   - Protection strategies (Flashbots, private mempool, L2 sequencer)
   - Configuration per chain
   - Cost of protection (tips, relay fees)
   - Which operations need protection (swaps yes, lending no)
 
-- [ ] [AGENT] P1. Create `codex/09-strategy/cross-cutting/execution-algo-selection.md`:
+- [ ] [AGENT] P1. Create `/codex/09-strategy/cross-cutting/execution-algo-selection.md`:
   - Algo recommendations per DeFi operation type
   - Cost-benefit rebalancing framework
   - Dynamic coin selection from instrument registry

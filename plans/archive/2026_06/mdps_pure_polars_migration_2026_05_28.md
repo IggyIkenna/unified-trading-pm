@@ -9,7 +9,11 @@ stage: [meta]
 repos: [instruments-service, market-data-processing-service, unified-api-contracts, unified-trading-pm]
 scope: [engineer, admin]
 tags: []
-related: [mdps_filter_pushdown_memory_audit_and_fix_2026_05_28.md, mdps_long_running_multi_shard_architecture_audit_2026_05_28.md]
+related:
+  [
+    /plans/archive/2026_06/mdps_filter_pushdown_memory_audit_and_fix_2026_05_28.md,
+    /plans/archive/2026_06/mdps_long_running_multi_shard_architecture_audit_2026_05_28.md,
+  ]
 created: 2026-05-28
 parent_epic: mtds_mdps_master
 assigned_vm: vm-ml
@@ -19,15 +23,23 @@ priority: P1
 estimate_class: refactor
 estimate_baseline_ai_days: 6
 estimate_calibrated_ai_days: 2.4
-codex_ssots: [codex/06-coding-standards/data-engine-selection.md, codex/06-coding-standards/service-orchestration-patterns.md]
-audit_findings_grounding: [plans/audit/results/mdps_engine_benchmark_findings_2026_05_28.md, plans/audit/results/mdps_long_running_engine_mixing_2026_05_28.md, plans/audit/results/mdps_long_running_state_inventory_2026_05_28.md]
+codex_ssots:
+  [/codex/06-coding-standards/data-engine-selection.md, /codex/06-coding-standards/service-orchestration-patterns.md]
+audit_findings_grounding:
+  [
+    plans/audit/results/mdps_engine_benchmark_findings_2026_05_28.md,
+    plans/audit/results/mdps_long_running_engine_mixing_2026_05_28.md,
+    plans/audit/results/mdps_long_running_state_inventory_2026_05_28.md,
+  ]
 locked_by: live-defi-rollout
 locked_since: 2026-05-28
 ---
 
 # MDPS pure-Polars migration — staged engine cutover
 
-> **✅ ARCHIVED 2026-06-21 — pure-Polars engine shipped + codex-LOCKED (data-engine-selection.md). Deferred adapter-protocol pandas→polars + Phase-6 emission-check → mdps_adapter_protocol_pandas_to_polars_2026_06_21. [unlock-plan]**
+> **✅ ARCHIVED 2026-06-21 — pure-Polars engine shipped + codex-LOCKED (data-engine-selection.md). Deferred
+> adapter-protocol pandas→polars + Phase-6 emission-check → mdps_adapter_protocol_pandas_to_polars_2026_06_21.
+> [unlock-plan]**
 
 ## Goal
 
@@ -760,8 +772,8 @@ different `Manifest + Honest Absence` SSOT consequences. **None can be chosen wi
 - Smoke evidence: 2026-05-29 session, `/tmp/smoke_test_2day.log` (heavy path killed at VmRSS 57 GB) +
   `/tmp/smoke_lite.log` (streamlined path succeeded in 21s at peak 764 MB).
 - This phase **does not block** Phases 2 / 3.6 / 5.6 / 5.7 — those touch unrelated surfaces.
-- Composes with `codex/02-data/availability-manifest-and-data-status.md` (manifest SSOT) and
-  `codex/02-data/honest-absence-downstream-handling.md` (per-shard policy semantics) — any chosen option must preserve
+- Composes with `/codex/02-data/availability-manifest-and-data-status.md` (manifest SSOT) and
+  `/codex/02-data/honest-absence-downstream-handling.md` (per-shard policy semantics) — any chosen option must preserve
   their contracts.
 
 ## Test plan

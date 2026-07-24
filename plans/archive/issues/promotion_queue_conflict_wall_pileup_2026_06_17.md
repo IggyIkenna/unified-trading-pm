@@ -1,17 +1,32 @@
 ---
 doc_type: issue
-title: Promotion-queue "conflict wall" pile-up — 18 stuck promote/dep-update PRs (PM hub FIXED; dep-update fan-out + stale-mergeability + per-repo test failures remain), and they lack a stale-conflict alert
+title:
+  Promotion-queue "conflict wall" pile-up — 18 stuck promote/dep-update PRs (PM hub FIXED; dep-update fan-out +
+  stale-mergeability + per-repo test failures remain), and they lack a stale-conflict alert
 summary:
 status: resolved
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [agent-orchestrator, alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-ui]
+repos:
+  [
+    agent-orchestrator,
+    alerting-service,
+    batch-live-reconciliation-service,
+    client-reporting-api,
+    deployment-api,
+    deployment-ui,
+  ]
 scope: [engineer, admin]
 tags: []
 related: []
 created: 2026-06-17
-source: ['operator triage-queue screenshot 2026-06-17: 18 PRs ''Conflict wall'', 3h–17h stuck, → staging / → main', scripts/cicd/reconcile_manifest_backmerge.py, '.github/workflows/{ldr-to-staging-promote,ldr-to-main-promote,main-backmerge-to-ldr}.yml']
+source:
+  [
+    "operator triage-queue screenshot 2026-06-17: 18 PRs 'Conflict wall', 3h–17h stuck, → staging / → main",
+    scripts/cicd/reconcile_manifest_backmerge.py,
+    ".github/workflows/{ldr-to-staging-promote,ldr-to-main-promote,main-backmerge-to-ldr}.yml",
+  ]
 locked_by: live-defi-rollout
 priority: P1
 ---
@@ -92,7 +107,7 @@ its own QG/v2 verification):**
       `market-tick-data-service#224`, `system-integration-tests#232/#234/#235/#236`, `trading-agent-service#211/#212`,
       `batch-live-reconciliation-service#83`) via `merge-conflict-detected` → `conflict-resolution-agent` →
       `escalate-to-orchestrator`; a worker rebases the branch onto staging keeping the floor bump, per the new playbook
-      `codex/08-workflows/dep-update-conflict-resolution.md` (and Slacks + asks the operator in the orchestrator UI if
+      `/codex/08-workflows/dep-update-conflict-resolution.md` (and Slacks + asks the operator in the orchestrator UI if
       it genuinely can't). Goes live once the bot reaches main (PM drain).
 - [x] ✅ [CICD] P1. **market-tick-data-service** — the unit-test failure
       `test_polymarket_adapter_lifecycle_gating.py::test_canonical_question_group_column_emitted` is **RESOLVED on LDR**
@@ -116,7 +131,7 @@ its own QG/v2 verification):**
       surviving CONFLICTING dep-update PR → `conflict-resolution-agent` (now emits a **dep-update-specific** context —
       "rebase the topic branch onto staging, keep the floor bump" — instead of the wrong generic "resolve ON LDR" that
       made escalated workers unable to find the context) → `escalate-to-orchestrator` worker, which resolves per
-      `codex/08-workflows/dep-update-conflict-resolution.md`. Worker resolves the mechanical 90%; the can't-resolve
+      `/codex/08-workflows/dep-update-conflict-resolution.md`. Worker resolves the mechanical 90%; the can't-resolve
       fallback Slacks #ci-failures + surfaces the question in the orchestrator UI for the operator. Digest-only (Fix
       below) prevents the recurrence; this chain drains the existing ones. unified-trading-pm@(LDR f7f6203e9).
 - [x] ✅ [CICD] P2. **Auto-close superseded dep-update PRs** when a newer-version dep-update PR for the same (repo, dep)
@@ -176,9 +191,9 @@ commits over a — flaky but real — failing required check).
 **Root cause of the circular deadlock (confirmed):** jammed promotion → no fresh UTL/UAC release tags → CI dep-clone
 falls back to STALE tags (UTL v0.10.0 while LDR=0.13.0; UAC v0.14.0 while LDR=0.18.0) → basedpyright resolves dep types
 as `Unknown` → broad `reportUnknown*` typecheck failures fleet-wide → v2 red → promotion jammed. UTL/UAC
-main↔staging↔LDR are 3-way diverged (UTL staging+22/main+29) BUT **LDR is the verified lossless SUPERSET**
-(`main ⊆ LDR` AND `staging ⊆ LDR`, zero missing commits — incl. main's starlette-CVE fix `f1dbf572` + risk/margin
-features). So tagging the superset content is lossless.
+main↔staging↔LDR are 3-way diverged (UTL staging+22/main+29) BUT **LDR is the verified lossless SUPERSET** (`main ⊆ LDR`
+AND `staging ⊆ LDR`, zero missing commits — incl. main's starlette-CVE fix `f1dbf572` + risk/margin features). So
+tagging the superset content is lossless.
 
 **Action taken (operator-chosen option a — cut fresh tags; additive + reversible):**
 

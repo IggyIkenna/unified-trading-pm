@@ -10,7 +10,7 @@ repos: [instruments-service, market-tick-data-service]
 scope: [engineer, admin]
 tags: []
 related: []
-created: '2026-04-21'
+created: "2026-04-21"
 ---
 
 ## Deferred work — migrated to:
@@ -109,7 +109,7 @@ todos:
         as filter: fetch full universe, filter to capability-declared subset. Honour IS_TEST_RUN (write to -test-
         bucket). Emit `instruments.parquet` at the canonical path:
         `instrument_availability/by_date/day={date}/venue={venue}/instruments.parquet` (matches CEFI layout per
-        codex/02-data/per-category-bucket-layouts.md). status: pending
+        /codex/02-data/per-category-bucket-layouts.md). status: pending
 
 - id: phase-b1-tradfi-mtds-read content: |
   - [ ] [AGENT] P0. Update MTDS Databento adapter
@@ -199,7 +199,7 @@ todos:
 - id: phase-b8-filter-audit content: |
   - [ ] [AGENT] P2. Audit all filter application sites to confirm they run AFTER universe load, not IN the adapter.
         Expected sites: UAC `capability_declarations` checks, service_config mvp_symbols / mvp_markets. Document the
-        canonical filter application pattern in `codex/02-data/universe-and-filter-model.md` (new doc): 1.
+        canonical filter application pattern in `/codex/02-data/universe-and-filter-model.md` (new doc): 1.
         instruments-service writes full universe (instruments.parquet) 2. MTDS loads instruments.parquet 3. MTDS applies
         capability_declarations + service_config filter 4. MTDS fetches ticks for filtered subset 5. Coverage = fetched
         / filtered_universe (honest 100% possible) status: pending
@@ -232,7 +232,7 @@ todos:
 
 # runs on VMs
 
-# - codex/02-data/universe-and-filter-model.md documents the pattern
+# - /codex/02-data/universe-and-filter-model.md documents the pattern
 
 # ── Out of scope (NOT this plan) ─────────────────────────────────────────────
 

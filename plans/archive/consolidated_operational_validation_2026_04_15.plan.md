@@ -10,26 +10,32 @@ repos: [deployment-service, execution-service, instruments-service]
 scope: [engineer, admin]
 tags: []
 related: []
-created: '2026-04-16'
-overview: 'Consolidated remaining operational, E2E, and infrastructure validation work from 4 source plans.
+created: "2026-04-16"
+overview: "Consolidated remaining operational, E2E, and infrastructure validation work from 4 source plans.
 
   Covers: cluster E2E tests, pipeline scheduling gaps, QG sweeps, data type cleanup, trade booking QG.
 
-  '
+  "
 type: mixed
 epic: epic-deployment
 reconciliation_status: yaml_to_markdown_converted
 reconciliation_date: 2026-04-25
 reconciliation_evidence: _reconciliation_evidence_map_2026_04_25.md
-completion_gates: {code: C5, deployment: D3, business: B4}
+completion_gates: { code: C5, deployment: D3, business: B4 }
 repo_gates:
-- {repo: deployment-service, code: C0}
-- {repo: market-tick-data-service, code: C0}
-- {repo: features-calendar-service, code: C0}
-- {repo: instruments-service, code: C0}
-- {repo: execution-service, code: C0}
+  - { repo: deployment-service, code: C0 }
+  - { repo: market-tick-data-service, code: C0 }
+  - { repo: features-calendar-service, code: C0 }
+  - { repo: instruments-service, code: C0 }
+  - { repo: execution-service, code: C0 }
 depends_on: [consolidated-sports-prediction-pipeline, consolidated-defi-data-pipeline]
-source_plans: [unified_pipeline_scheduling_and_triggers_2026_04_15, remove_data_types_field_2026_04_10, manual_trade_booking_reconciliation_2026_03_22, instruments_service_template_refactor_8e653acc]
+source_plans:
+  [
+    unified_pipeline_scheduling_and_triggers_2026_04_15,
+    remove_data_types_field_2026_04_10,
+    manual_trade_booking_reconciliation_2026_03_22,
+    instruments_service_template_refactor_8e653acc,
+  ]
 isProject: false
 ---
 
@@ -49,13 +55,13 @@ isProject: false
 This plan implements / extends the following codex documents (read these BEFORE making code changes; drift between code
 and these docs is a review-blocking failure per `doc → plan → code`):
 
-- [`codex/03-observability/alerting.md`](../../codex/03-observability/alerting.md) — alerting baseline (severity matrix,
+- [`/codex/03-observability/alerting.md`](/codex/03-observability/alerting.md) — alerting baseline (severity matrix,
   routing, escalation) — the operational-validation gates assert against this contract
-- [`codex/04-architecture/alerting-batch-live.md`](../../codex/04-architecture/alerting-batch-live.md) — batch vs live
+- [`/codex/04-architecture/alerting-batch-live.md`](/codex/04-architecture/alerting-batch-live.md) — batch vs live
   alerting symmetry; cluster E2E + scheduling-gap tests must exercise both modes
-- [`codex/05-infrastructure/runtime-tiers-and-deployment.md`](../../codex/05-infrastructure/runtime-tiers-and-deployment.md)
+- [`/codex/05-infrastructure/runtime-tiers-and-deployment.md`](/codex/05-infrastructure/runtime-tiers-and-deployment.md)
   — runtime-tier matrix (Tier 0/1/2 local + staging + prod) — pipeline scheduling + QG sweeps run per tier
-- [`codex/04-architecture/manual-trade-booking.md`](../../codex/04-architecture/manual-trade-booking.md) — manual-trade
+- [`/codex/04-architecture/manual-trade-booking.md`](/codex/04-architecture/manual-trade-booking.md) — manual-trade
   booking + reconciliation contract that the trade-booking QG validates
 
 If any of the docs above is missing, this plan creates a stub for it (see [`codex/`](../../codex/) tree).

@@ -12,7 +12,7 @@ stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer, admin]
 tags: [orchestrator, spawn, regression, main-agent, boot-stub]
-related: [orchestrator_master.md]
+related: [/plans/epics/orchestrator_master.md]
 created: "2026-07-13"
 last_updated: "2026-07-15"
 parent_epic: orchestrator_master
@@ -202,4 +202,4 @@ to `execution_scope: local-only` per the sibling-plan norm unless there is a spe
 
 ## Codex SSOTs
 
-- `codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` (main-agent-keeper always-on contract)
+- `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` (main-agent-keeper always-on contract)

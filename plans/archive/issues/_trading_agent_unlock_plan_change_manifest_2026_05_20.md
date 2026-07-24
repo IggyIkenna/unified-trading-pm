@@ -94,9 +94,9 @@ new actionable plan at 2.8 cal-AI-days (refactor × 0.4).
 
 - **Location**: line 306 § "SSOT touchpoint map" — "Hot-reload semantics" row
 - **Current**:
-  `codex/06-coding-standards/config-reloader-pattern.md · codex/04-architecture/live-strategy-config-hot-reload.md (new — work-stream F)`
+  `/codex/06-coding-standards/config-reloader-pattern.md · /codex/04-architecture/live-strategy-config-hot-reload.md (new — work-stream F)`
 - **Change**: append
-  `· codex/04-architecture/trading-agent-service-directive-pipeline.md (new — see architecture-unlock plan Phase 8)`
+  `· /codex/04-architecture/trading-agent-service-directive-pipeline.md (new — see architecture-unlock plan Phase 8)`
 - **Rationale**: new codex SSOT for the directive-flow architecture (allocator → directive → strategy reloader → capital
   weights).
 
@@ -104,7 +104,7 @@ new actionable plan at 2.8 cal-AI-days (refactor × 0.4).
 
 - **Location**: line 1505 § F · Codex SSOT gaps to fill alongside the work
 - **Add**:
-  - `- [ ] [DOC] codex/04-architecture/trading-agent-service-directive-pipeline.md (work-stream G new — see trading_agent_service_architecture_unlock plan)`
+  - `- [ ] [DOC] /codex/04-architecture/trading-agent-service-directive-pipeline.md (work-stream G new — see trading_agent_service_architecture_unlock plan)`
 - **Rationale**: parent-master-plan tracks new codex SSOT creation.
 
 #### Change M6 — add `last_executed` row to continuous-verification table

@@ -20,8 +20,8 @@ scope: [engineer, admin]
 tags: [monitoring, alerting, data-pipeline, observability, dedup, slack-spam]
 related:
   [
-    codex/05-infrastructure/data-pipeline-alerts.md,
-    codex/15-runbooks/incidents/rb_data_001.md,
+    /codex/05-infrastructure/data-pipeline-alerts.md,
+    /codex/15-runbooks/incidents/rb_data_001.md,
     plans/active/data_pipeline_hardening_self_monitoring_2026_06_22.md,
     plans/active/issues/dp_alert_flood_triage_and_monitor_fixes_2026_06_23.md,
   ]
@@ -96,8 +96,8 @@ Verified from code (no changes made — diagnosis only):
 _shipped_ the `_RECURRING_WARN_EVENTS` cooldown pattern + the cross-sweep RESOLVED bookend) covered `DP_VM_STALL`,
 `DP_CRON_DID_NOT_FIRE`, `DP_VM_GONE_NO_CAPTURE`, `DP_CATALOG_NOT_RUNNING`, `DP_ZOMBIE_WATCHDOG_DOWN` — but never
 `DP_RUN_MOSTLY_EMPTY` (it did not exist as an alert until DP-FETCH-009 reused the event, per the meta_watchers.py module
-docstring). `codex/05-infrastructure/data-pipeline-alerts.md` documents the intended incident-gateway model but doesn't
-flag this gap; `codex/15-runbooks/incidents/rb_data_001.md` documents `DP_RUN_MOSTLY_EMPTY` as page_operator and states
+docstring). `/codex/05-infrastructure/data-pipeline-alerts.md` documents the intended incident-gateway model but doesn't
+flag this gap; `/codex/15-runbooks/incidents/rb_data_001.md` documents `DP_RUN_MOSTLY_EMPTY` as page_operator and states
 "the RESOLVED bookend posts" on recovery, without addressing the un-suppressed repeat while still-firing. This is a new
 finding.
 
@@ -114,9 +114,10 @@ finding.
    consecutive-miss counter) so the detector itself only re-emits after a cooldown elapses since its last emission for
    that cell — matching the CLAUDE.md CI-alerting rule ("fire on change / RESOLVED / re-remind, never every tick") at
    the source rather than relying solely on the downstream generic dedup.
-3. **[docs]** Update `codex/05-infrastructure/data-pipeline-alerts.md`'s emit→route→escalate diagram to reflect that the
-   "incident gateway" box is NOT currently wired for the DP_* family (only `route_legacy_alert`/`route_incident` reaches
-   it) — either wire DP_* CRITICAL events through it, or correct the diagram so it doesn't overstate current coverage.
+3. **[docs]** Update `/codex/05-infrastructure/data-pipeline-alerts.md`'s emit→route→escalate diagram to reflect that
+   the "incident gateway" box is NOT currently wired for the DP_* family (only `route_legacy_alert`/`route_incident`
+   reaches it) — either wire DP_* CRITICAL events through it, or correct the diagram so it doesn't overstate current
+   coverage.
 
 ## Open work (tracked todos)
 
@@ -128,7 +129,7 @@ finding.
 - [x] [CODE] P2. `deployment-service`: add a persisted re-nag interval to `check_high_attempted_failed` per fix #2
       (defense-in-depth, source-side fix independent of the alerting-service cooldown table). —
       `deployment-service@0aaab1a2254ba7ba7f680a94a399f1e7b2285768`
-- [x] [DOCS] P2. Correct/update the incident-gateway wiring claim in `codex/05-infrastructure/data-pipeline-alerts.md`
+- [x] [DOCS] P2. Correct/update the incident-gateway wiring claim in `/codex/05-infrastructure/data-pipeline-alerts.md`
       per fix #3. — unified-trading-pm (this commit): added a wiring caveat to the emit→route→escalate diagram
       documenting that DP_\* CRITICAL events bypass the incident gateway entirely (only reachable via
       `route_legacy_alert()`/`route_incident()` for execution/strategy incidents) and rely on the `AlertDeduplicator` +

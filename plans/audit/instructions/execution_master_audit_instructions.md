@@ -33,8 +33,8 @@ execution-service: venue handlers (all CeFi + DeFi venues), transfer coordinator
 (`CLOUD_KMS_ENCRYPTED` for May-23; Copper + CEFFU post-June-1), flash loan receiver, matching engine. Hard rule:
 cross-client funds movement FORBIDDEN at all 3 enforcement layers.
 
-Codex SSOTs: `codex/04-architecture/client-funds-isolation.md`, `codex/04-architecture/flash-loan-receiver.md`,
-`codex/04-architecture/custody-providers.md`, `codex/04-architecture/defi-execution-overview.md`
+Codex SSOTs: `/codex/04-architecture/client-funds-isolation.md`, `/codex/04-architecture/flash-loan-receiver.md`,
+`/codex/04-architecture/custody-providers.md`, `/codex/04-architecture/defi-execution-overview.md`
 
 ## Triggers
 
@@ -59,7 +59,7 @@ Codex SSOTs: `codex/04-architecture/client-funds-isolation.md`, `codex/04-archit
       May-23 ships on KMS only
 
 - [ ] (d) **FlashLoanReceiver.sol matches codex**: contract in `deployment-service/contracts/FlashLoanReceiver.sol`
-      matches description in `codex/04-architecture/flash-loan-receiver.md`. Grep:
+      matches description in `/codex/04-architecture/flash-loan-receiver.md`. Grep:
       `rg "FlashLoanReceiver" deployment-service/ --include="*.sol"` Read: codex doc — verify ABI, callback signature,
       and re-entrancy protection match
 

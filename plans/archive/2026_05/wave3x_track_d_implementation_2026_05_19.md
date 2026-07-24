@@ -15,13 +15,13 @@ archived: 2026-05-23
 estimate_class: brand-new
 estimate_baseline_ai_days: 8
 estimate_calibrated_ai_days: 8
-estimate_calibration_note: 'New implementation (brand-new class, 1.0× multiplier). Scope: UTL primitive +
+estimate_calibration_note: "New implementation (brand-new class, 1.0× multiplier). Scope: UTL primitive +
 
   catalog threading + per-adapter wire-in across MTDS/MDPS/features-service.
 
   Audit docs from wave3x Track D are the spec.
 
-  '
+  "
 parent_epic: mtds_mdps_master
 assigned_vm: vm-ml
 priority: P2
@@ -38,7 +38,7 @@ Implementation blocked pre-2026-05-23; this plan owns the post-cutover execution
 
 Track D audit completed 2026-05-11. Findings: `plans/archive/issues/wave3x_track_d_findings_2026_05_11.md`
 
-Carry-forward semantics per data_type documented in: `codex/02-data/honest-absence-downstream-handling.md` §
+Carry-forward semantics per data_type documented in: `/codex/02-data/honest-absence-downstream-handling.md` §
 "Zero-activity-bar shape"
 
 Operator decision: case-D implementation (zero-activity-bars) requires a new UTL primitive + `instrument_catalog`
@@ -101,7 +101,7 @@ threaded at adapter construction. Post-cutover scope.
 ## Audit findings SSOT
 
 - `plans/archive/issues/wave3x_track_d_findings_2026_05_11.md` — full per-audit findings (D1-D6).
-- `codex/02-data/honest-absence-downstream-handling.md` § "Zero-activity-bar shape" — carry-forward table.
+- `/codex/02-data/honest-absence-downstream-handling.md` § "Zero-activity-bar shape" — carry-forward table.
 
 ## Temporary states + their canonical follow-up plans
 

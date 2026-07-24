@@ -19,7 +19,7 @@ related:
   [
     issues/instrument_id_format_canonicalization_2026_07_08.md,
     audit/results/canonical_instrument_id_audit_2026_07_08.md,
-    prediction_canonical_identity_migration_2026_07_08.md,
+    /plans/archive/2026_07/prediction_canonical_identity_migration_2026_07_08.md,
   ]
 created: 2026-07-14
 last_updated: 2026-07-14
@@ -149,8 +149,8 @@ complete backfill — running `build_instrument_catalogue.py --mode full` for ce
 - [x] ✅ [VERIFY] P2. Confirmed deployment-api's `instrument_coverage.py` (the identified live consumer of
       `prod/catalog.parquet`) matches purely on `instrument_id` — never reads `canonical_instrument_id` or
       `glued_pair_id` — confirmed schema-compatible/additive-only via direct code read, no code change needed.
-- [x] [BACKEND] P3. Post-phase codex audit — check whether `codex/02-data/defi-canonical-naming-ssot.md` or
-      `codex/04-architecture/instrument-universe-registry-consolidation.md` document the (now-corrected) glued_pair_id
+- [x] [BACKEND] P3. Post-phase codex audit — check whether `/codex/02-data/defi-canonical-naming-ssot.md` or
+      `/codex/04-architecture/instrument-universe-registry-consolidation.md` document the (now-corrected) glued_pair_id
       polarity or canonical_instrument_id's CeFi/DeFi scope; update/SUPERSEDED-banner if they assert the old (wrong)
       state. — **FOLDED OUT** to plans/epics/instruments_master.md (2026-07-15, plan-reconcile §6 operator ruling);
       tracked there, not here.

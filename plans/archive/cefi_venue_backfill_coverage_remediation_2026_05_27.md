@@ -6,7 +6,15 @@ status: complete
 nature: record
 asset_group: [infrastructure]
 stage: [meta]
-repos: [alerting-service, deployment-service, instruments-service, market-data-processing-service, market-tick-data-service, unified-trading-library]
+repos:
+  [
+    alerting-service,
+    deployment-service,
+    instruments-service,
+    market-data-processing-service,
+    market-tick-data-service,
+    unified-trading-library,
+  ]
 scope: [engineer, admin]
 tags: []
 related: [issues/running_vm_fleet_status_2026_05_27.md]
@@ -14,7 +22,10 @@ created: 2026-05-27
 parent_epic: mtds_mdps_master
 assigned_vm: vm-ml
 completed: 2026-06-01
-completed_note: Operator-marked done 2026-06-01 (harsh). All code/data-correctness fixes shipped. Tardis paid key is INTENTIONALLY not activated (operator choice, NOT a blocker). GCS manifest migration / 22-day-gap reconcile is DEFERRED — to be run when operator sees fit.
+completed_note:
+  Operator-marked done 2026-06-01 (harsh). All code/data-correctness fixes shipped. Tardis paid key is INTENTIONALLY not
+  activated (operator choice, NOT a blocker). GCS manifest migration / 22-day-gap reconcile is DEFERRED — to be run when
+  operator sees fit.
 priority: P0
 author: harsh (claude opus 4.7)
 estimate_class: infra
@@ -406,12 +417,12 @@ noted inline.) Evidence: [`issues/running_vm_fleet_status_2026_05_27.md`](issues
 ## Codex SSOT updates
 
 - [x] ✅ DONE [AGENT] P2. Document the expiry-window request-filtering contract + the 401≠honest-absence rule in
-      `codex/02-data/honest-absence-downstream-handling.md` (reason taxonomy) and the MTDS adapter docs. — Added
+      `/codex/02-data/honest-absence-downstream-handling.md` (reason taxonomy) and the MTDS adapter docs. — Added
       `## §7 — CeFi expiry-window contract + 401≠honest-absence` to `honest-absence-downstream-handling.md` (manifest
       matrix, pre-request filter pseudocode, 401 rule + rationale, cross-refs). Added `## §9` to `cefi-batch-live.md`
       (adapter-level pseudocode for expiry filter + 401 handling). — PM@4aad8e88
 - [x] ✅ [AGENT] P2. Document the §6A honest-absence-violation classes (in-flight drop, silent-zero, captured-0-row) as
       anti-patterns + the required `record_empty`/`attempted_failed` call sites, in the same codex doc. — Added
-      `## §6A honest-absence violation classes` section to `codex/02-data/honest-absence-downstream-handling.md` with
+      `## §6A honest-absence violation classes` section to `/codex/02-data/honest-absence-downstream-handling.md` with
       3-class taxonomy, per-class examples (OKX@774db33, dex-swaps@ed5fdcf, Understat@c654ccf, MDPS-2026-05-05),
       required call-site patterns, and summary anti-pattern table. PM@e40df622

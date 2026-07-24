@@ -15,7 +15,7 @@ scope: [engineer, admin]
 tags: [audit, batch-live, reconciliation, pipeline-mode, manifest, data-correctness, canonicalisation]
 related:
   [
-    canonical_form_cross_service_audit_checklist.md,
+    /plans/audit/instructions/canonical_form_cross_service_audit_checklist.md,
     ../../active/master_data_canonicalisation_migration_catalogue_2026_06_07.md,
   ]
 created: "2026-05-22"
@@ -47,9 +47,9 @@ Per-service batch=live audit across all 19 epic code surfaces. Reconciliation sc
 operational modes of the SAME pipeline — identical schemas, data_types, fields. Banned: separate live-only data_types;
 distinct field sets; `available_at` derived at read-time.
 
-Codex SSOTs: `codex/02-data/service-output-emission-semantics.md`,
+Codex SSOTs: `/codex/02-data/service-output-emission-semantics.md`,
 `plans/active/writegate_honest_coverage_endtoend_2026_05_06.md`,
-`codex/02-data/pipeline-mode-and-batch-live-reconciliation.md`
+`/codex/02-data/pipeline-mode-and-batch-live-reconciliation.md`
 
 `pipeline_mode` is the column that makes batch↔live reconciliation a `GROUP BY pipeline_mode` over the SAME manifest.
 Implementation shipped via `plans/active/pipeline_mode_implementation_2026_05_28.md` (Phases 0–6 complete) +
@@ -122,7 +122,7 @@ work and any future asset_group that needs pipeline_mode column-fill / manifest 
       that where batch and live acquire the SAME cell from a **different upstream source**, the two are _semantically_
       equivalent — count parity (a6) is blind to a live WS path that produces a different shape/cadence than the batch
       source. **Step 1 — enumerate the different-source pairs**: for every (service, `asset_group`, venue, data_type),
-      record the batch upstream vs the live upstream from `codex/02-data/mtds-data-source-coverage-matrix.md` + the
+      record the batch upstream vs the live upstream from `/codex/02-data/mtds-data-source-coverage-matrix.md` + the
       adapter code. Known classes: CeFi `trades` / `book_snapshot_5` = Tardis bulk CSV (batch) vs venue WebSocket
       (live); DeFi DEX = The Graph subgraph-historical (batch) vs subgraph-current / WS (live); Solana DEX
       (Orca/Raydium/Drift/Phoenix) = S3 archive / RPC snapshot (batch) vs WebSocket (live). **Step 2 — verify

@@ -95,6 +95,25 @@ Anyone setting `allowed_venues` in a strategy config today, believing it constra
 inert. Per the workspace's "delete deprecated code, no shims" rule this should be wired up for real or removed, not left
 as a plausible-looking trap.
 
+**RESOLVED 2026-07-24 (`strategy-service@813ec66b`) — DELETED, not wired up.** Re-verified before deleting: the class
+has exactly two fields (`enabled`, `allowed_venues`) and BOTH have zero consumers repo-wide (grepped
+`smart_order_routing` across all `.py`/`.yaml`/`.md` — only definition sites, YAML config population, and one
+construction test, never an attribute read) — so the whole `SmartOrderRoutingConfig` class was dead, not just
+`allowed_venues` within an otherwise-live class. Removed: the `SmartOrderRoutingConfig` Pydantic model
+(`config_loader.py`) + its `smart_order_routing` field on `StrategyConfig`; `DeFiSORConfigDict` TypedDict + its
+`smart_order_routing` field on `DeFiStrategyConfigDict` (`types.py`); the `smart_order_routing:` block (both `enabled:`
+and `allowed_venues:` keys) from all 7 YAML configs that set it (`configs/liquidation_capture_eth.yaml`,
+`strategy_service/configs/{active_lp_eth_usdc,active_lp_sol_usdc,basis_trade_multi_coin,basis_trade_multi_venue, lending_arb_arbitrum,lending_arb_eth}.yaml`);
+the "Smart Order Routing (DeFi)" section + JSON example block from `docs/CONFIG_SCHEMA.md`; the
+`SmartOrderRoutingConfig` import + construction call from `tests/unit/test_config_loader.py`. **Correction to this doc's
+own file list**: `tests/unit/test_schema_robustness.py` was NOT touched — re-grepping found its `allowed_venues` tests
+exercise a completely different, UAC-defined `StrategyInstruction.allowed_venues` field
+(`unified_api_contracts.internal.domain.strategy_service.instruction`, re-exported via
+`strategy_service/models/instruction.py`), unrelated to `SmartOrderRoutingConfig`/`DeFiSORConfigDict` — same field name,
+different class/repo, real (not verified dead) execution-routing field on the instruction schema. Final grep for
+`SmartOrderRoutingConfig|DeFiSORConfigDict|smart_order_routing` across the repo: zero hits. Quality gates green (fresh
+foreground run, exit 0); pushed via quickmerge, landed on `live-defi-rollout`.
+
 ## Finding 3 — two independently-maintained "eligible venues per archetype" registries, no cross-check
 
 - `strategy-service`'s `target_universe` catalog files (hardcoded per-archetype tuples — what actually runs in
@@ -107,6 +126,102 @@ as a plausible-looking trap.
 `strategy-service` never imports the UAC leg-spec module. The seed file's own comment (line 106) says its
 `_SPOT_VENUES_STAKED` union should match `catalog_staked_basis.py`'s output — but nothing enforces that at build time;
 it's an unchecked cross-repo assumption. If the two ever diverge, nothing would catch it.
+
+### Addendum 2026-07-24 — Finding 3 reconciliation-direction analysis (investigation only, not actioned)
+
+Sub-agent investigation into HOW to reconcile the two registries (per this doc's own Finding-3 open question). Read in
+full: `/codex/04-architecture/tier-and-import-architecture.md`, `strategy-service`'s `target_universe/catalog*.py` (all
+5 family files + `catalog.py`'s dispatcher), and UAC's `archetype_leg_spec_seeds.py` (1644 lines, full file).
+
+**1. Tier constraint — CONFIRMED, no ambiguity.** `unified_api_contracts` (UAC) is `T0-base` — "true leaves, no
+workspace imports … stdlib + pydantic ONLY — zero unified-\* imports, not even in tests" (tier doc line 93-96, 216-217).
+`strategy-service` is `T4` (Services). Import rule #2: "Higher tiers may import from SAME or LOWER tiers only" + "No
+service ↔ service imports" — T4 may import T0-3, never the reverse, and UAC may NEVER import a service regardless of
+tier direction (T0-base's own rule is even stricter: zero workspace imports at all, full stop). So any design where
+UAC's `archetype_leg_spec_seeds.py` reads `strategy-service`'s catalog live is a hard architecture violation, not just a
+style preference — confirms the premise driving this whole analysis.
+
+**2. The two structures are NOT the same granularity of fact — confirmed by reading both, and this is the load-bearing
+finding.** `strategy-service`'s catalog builders (`build_carry_basis_perp()`, `build_carry_staked_basis()`, etc.) emit
+**one `TargetInstanceSpec` per fully-resolved DEPLOYABLE INSTANCE** — a concrete
+`(venue × coin × share_class × capital_budget × engine-specific config-key literals)` combo with a unique `slot_label`
+(`CARRY_BASIS_PERP@binance-btc-1h-usdt-v3-prod` etc.) that gets registered with the live engine factory. E.g.
+`build_carry_basis_perp()` alone emits 130 rows just for its "single-venue netted" bundle (10 venue bundles × 13 coins),
+each carrying literal `spot_venue`/`perp_venue`/`instrument`/`coin`/`hold_policy`/`target_funding_bps` string values.
+UAC's `ArchetypeLegStructure` (`archetype_leg_spec_seeds.py`) is **one structure per ARCHETYPE, not per instance** — a
+coarse leg-role MODEL (`leg_id`, `role` enum, `instrument_types` enum tuple, `asset_groups` enum tuple,
+`eligible_venue_ids` — a hand-curated UNION across all rows for that leg, not tied to any specific coin/capital/
+instance, `constraints` describing atomic-bundling/collateral semantics, `execution_coupling` mode). It has **no concept
+of coin, capital budget, share class, or engine config values at all** — those simply have no field to live in.
+Conversely, the catalog's flat `initial_config: dict[str,str]` has **no concept of leg role, atomicity constraint, or
+execution-coupling mode** — those are baked into engine `_build_legs()`/`on_tick()` logic, never surfaced as catalog
+data. Each side structurally cannot express what the other captures — this is not a "same fact, different format"
+mismatch, it's two genuinely different facts (instance provisioning data vs. archetype capability metadata) that happen
+to overlap on ONE shared sub-fact: which venues are eligible per leg role.
+
+**3. That shared sub-fact has ALREADY silently diverged — found by direct comparison, not theoretical.** Comparing UAC's
+`_basis_perp_structure()` (CARRY_BASIS_PERP) `eligible_venue_ids` against `catalog_carry.py`'s
+`_CARRY_BASIS_PERP_VENUE_BUNDLES` (the catalog's actual live venue set):
+
+- UAC's **perp leg** lists `(binance, bitget, bybit, deribit, gmx_v2, hyperliquid, kraken, okx)` — **missing `aster`,
+  `kalshi-perp`, and `polymarket-perp`**, all three of which are live rows in the catalog's
+  `_CARRY_BASIS_PERP_VENUE_BUNDLES` today (kalshi-perp "live from 2026-05-29" per the catalog's own comment). Also a
+  naming drift: catalog emits bare `"gmx"`, UAC's seed has `"gmx_v2"`.
+- UAC's **spot leg** lists `(binance, bitfinex, bitget, bybit, coinbase, hyperliquid, kraken, okx, uniswap_v3)` —
+  **missing `deribit` and `aster`** (both are live catalog spot-leg venues in the netted-bundle form), while including
+  `coinbase` (only appears in the catalog's separate "cross-venue" rows, not the netted-bundle rows the perp leg draws
+  from).
+
+This is exactly the risk Finding 3 flagged in the abstract — confirmed concretely for the very first archetype checked,
+same-day as this addendum. Zero effort was spent hunting for this; it fell out of the first side-by-side read. This
+raises confidence that a systematic diff would find more.
+
+**4. Recommendation: (A), the diff/gate-fail variant — NOT full regeneration, and NOT (B).**
+
+- **(A) wins because of point 2**: only the `eligible_venue_ids` field is even mechanically derivable from the catalog
+  (via a per-archetype mapping of config-keys → leg role, e.g. `spot_venue`→SPOT leg, `perp_venue`→PERP leg,
+  `staking_venue`→STAKE leg, `lending_venue`→LEND leg). Everything else in `ArchetypeLegStructure` (leg roles,
+  `instrument_types`, `constraints`, `execution_coupling`) is sourced from reading the ENGINE's actual `_build_legs`/
+  `on_tick` code + codex docs (per the seed file's own docstring) — work that is not catalog-derivable at all, so full
+  auto-regeneration (A-a) can only ever repopulate one field of the structure regardless of effort spent. That collapses
+  A-a and A-b into practically the same shape of fix: **a script that computes the per-archetype per-leg-role venue
+  union from `TARGET_UNIVERSE` and asserts catalog-venues ⊆ UAC eligible_venue_ids** (one-directional containment, not
+  equality — UAC's list may legitimately be broader, e.g. citing a codex-documented venue not yet live in the catalog),
+  failing the gate on any catalog venue absent from UAC's set. This would have caught the aster/kalshi/polymarket/gmx_v2
+  drift above today.
+- **(B) — SSOT inversion — is NOT actually a full inversion once you account for point 2.** Even under (B), UAC's schema
+  would need **new fields it doesn't have today** (coin/capital-budget/share-class/hold-policy/engine-config- literal
+  equivalents) to become the catalog's real source, because `ArchetypeLegStructure` currently models
+  capability/eligibility, not provisioning. Without those new fields, "invert the SSOT" only ever means "catalog reads
+  UAC's venue-eligibility union and layers everything else on top itself" — which is functionally closer to (A) than a
+  true single-source model. A true (B) would require designing and shipping a materially bigger UAC schema first
+  (schema-design risk, version bump, migration), THEN rewriting **all ~18-19 DeFi/carry catalog builder functions**
+  across 3 files (`catalog_carry.py` — 7 builders, `catalog_staked_basis.py` — 2 builders, `catalog_yield_defi.py` — 9
+  builders; `catalog_trading.py`'s `build_arbitrage_price_dispersion` is the 19th if counted per this doc's own
+  DeFi-touching scope) to consume it instead of hardcoding tuples, while preserving every archetype's idiosyncratic
+  per-engine config-key contract (e.g. `CARRY_STAKED_BASIS_DATED`'s `dated_expiry`+`roll_on_dte` vs the plain
+  archetype's static `perp_instrument`; `CARRY_RECURSIVE_BORROW_LENDING_ONLY`'s 7-field per-cell
+  lender/chain/collateral/debt/mode tuples) — exactly the class of catalog↔engine key-mismatch bug this same doc's Phase
+  1 and Phase 3 addenda ALREADY found twice, independently, in unrelated work this week. Rewriting 18-19 builder
+  functions at once meaningfully raises the odds of reintroducing that bug class at scale, for an architectural
+  cleanliness gain that (per point 2) is smaller than it first appears — the instance-level facts would still need a
+  home, and that home is legitimately `strategy-service` (a T4/provisioning concern), not UAC (a T0/schema concern).
+
+**Sizing**: **(A) is roughly a half-day-to-1-day script** — the per-archetype config-key→leg-role mapping is the fiddly
+part (~19 archetypes, key names vary per engine, as evidenced by the Phase-1/Phase-3 key-naming bugs already found), the
+containment-check + CI wiring itself is small. **(B) is a multi-day refactor, realistically 3-5+ AI-days minimum** — new
+UAC schema fields + a version bump + migration + rewriting 18-19 builder functions + full regression against
+`test_target_universe_disjoint_from_legacy` and every engine's `REQUIRED_PARAMS`, with real risk of reintroducing the
+same silent config-key-mismatch bug class this doc already tracks twice. **Recommend (A).**
+
+**What was surprising**: that the two registries had ALREADY diverged (not just "could diverge in theory") — three live
+venues (aster, kalshi-perp, polymarket-perp) missing from UAC's CARRY_BASIS_PERP perp-leg union, found on the very first
+archetype spot-checked, with zero targeted search. Also surprising: how thin the actual schema overlap between the two
+structures is once read side-by-side — they share almost nothing except venue-id strings; the "two unreconciled
+registries" framing undersells how differently-shaped they are, which argues strongly against a naive full-diff or
+full-regeneration approach and toward the narrower per-leg-role venue-containment check.
+
+---
 
 ## Recommendation (operator decision needed — not actioned)
 
@@ -198,18 +313,18 @@ run SEQUENTIALLY, not in parallel:
       `lst_yields` index-ratio — `strategy-service@e93902d8`. New `CanonicalLstYieldsIndexProvider` is the reusable
       building block Phase 1 below reuses directly.
 - [x] [BACKEND] P1. **Phase 1 — CARRY_STAKED_BASIS_DATED — FULLY SHIPPED 2026-07-23.** Config-shape blocker resolved
-      (`strategy-service@606f2fb5`): `catalog_staked_basis.py` now emits the engine's real key names, DROPPING a
-      static `perp_instrument` entirely in favor of `dated_expiry`+`roll_on_dte`, which `CarryStakedBasisEngine` now
+      (`strategy-service@606f2fb5`): `catalog_staked_basis.py` now emits the engine's real key names, DROPPING a static
+      `perp_instrument` entirely in favor of `dated_expiry`+`roll_on_dte`, which `CarryStakedBasisEngine` now
       DYNAMICALLY resolves every tick via a new pure `resolve_current_dated_contract()`
       (`carry_and_yield/dated_contract_resolver.py`) implementing Deribit's real quarterly-roll rule (verified against
       real captured dated-future symbols, not assumed from convention). Paper-replay tick-loader wiring shipped
-      separately, same day (`strategy-service@795fa10c`): `_load_staked_basis_dated_ticks()` in `paper_run_handler.py`
-      + a new `CanonicalDatedFutureMarkProvider` (`engine/core/canonical_dated_future_mark_provider.py`) reading real
-      Deribit dated-`FUTURE` `book_snapshot_5` mid-prices per day for whichever contract the resolver says is
-      currently held (handles both the legacy `{ASSET}-{DD}{MON}{YY}` and wire-canonical
-      `DERIBIT:FUTURE:{ASSET}-{QUOTE}@{INV|LIN}-{YYYYMMDD}` naming conventions, tried in a fixed deterministic
-      priority order) + passive/attribution wiring for the STAKING leg (reusing `CanonicalLstYieldsIndexProvider`,
-      identical to the plain archetype) and the dated-futures mark-to-market leg + `CARRY_STAKED_BASIS_DATED` added to
+      separately, same day (`strategy-service@795fa10c`): `_load_staked_basis_dated_ticks()` in `paper_run_handler.py` +
+      a new `CanonicalDatedFutureMarkProvider` (`engine/core/canonical_dated_future_mark_provider.py`) reading real
+      Deribit dated-`FUTURE` `book_snapshot_5` mid-prices per day for whichever contract the resolver says is currently
+      held (handles both the legacy `{ASSET}-{DD}{MON}{YY}` and wire-canonical
+      `DERIBIT:FUTURE:{ASSET}-{QUOTE}@{INV|LIN}-{YYYYMMDD}` naming conventions, tried in a fixed deterministic priority
+      order) + passive/attribution wiring for the STAKING leg (reusing `CanonicalLstYieldsIndexProvider`, identical to
+      the plain archetype) and the dated-futures mark-to-market leg + `CARRY_STAKED_BASIS_DATED` added to
       `paper_universe.py`'s `_ENGINE_DRIVABLE_ARCHETYPES`. Full evidence trail:
       `defi_catalog_engine_config_key_contract_drift_2026_07_23.md`'s `CARRY_STAKED_BASIS_DATED` row + this session's
       chat record.
@@ -299,8 +414,35 @@ run SEQUENTIALLY, not in parallel:
       mechanical pre-flight sweep across ALL remaining archetypes (grep each engine's actual `params.get(...)`/
       `str_param(...)` calls vs its catalog's emitted config dict keys) to find every landmine BEFORE building any more
       tick loaders, rather than discovering them one expensive agent-dispatch at a time.
-- [ ] [BACKEND] P2. **Phase 4 — YIELD_ROTATION_LENDING + YIELD_STAKING_SIMPLE**. Pure yield archetypes (no hedge leg) —
-      reuse `lending_rates`/`lst_yields` readers already established.
+- [x] [BACKEND] P2. **Phase 4a — YIELD_STAKING_SIMPLE — SHIPPED 2026-07-24, `strategy-service@5cc6e98b`.** Config keys
+      (`staking_protocol`/`asset`) were pre-verified CLEAN this session (no catalog/engine contract-drift bug, unlike
+      Phases 1/3's landmines) — a genuine tick-loader-wiring task. Real data-coverage finding: the catalog's 6th row
+      (`ethena`) is DELIBERATELY EXCLUDED from this build, not a "couldn't find it" punt — sUSDe (UAC
+      `LST_TOKEN_TO_PROTOCOL_ASSET`'s `ETHENA`/`USDE` token) was REMOVED from MTDS's `lst_rates` collector 2026-07-23
+      (`lst_venue_registry_gap_and_cron_crash_loop_2026_07_22.md`, same day as this doc) because it is an ERC-4626
+      yield-bearing vault share, not a genuine staking-derivative redemption rate; its real, current data home is
+      `vault_share_price_handler.py`'s `vault_share_price` feature group (a DIFFERENT corpus from `lst_yields`), already
+      consumed by DEFI_LP_VAULT's own `ethena`/`sUSDe` catalog row (`catalog_yield_defi.py::     build_defi_lp_vault()`)
+      — no proxying attempted, held out with a static, typed `paper_universe.py` skip reason
+      (`missing_lst_yields_coverage:staking_protocol=ethena`, visible in `skipped_specs.json`). Shipped the other 5 rows
+      (lido/rocketpool/etherfi/jito/marinade): `_load_yield_staking_simple_ticks()` +
+      `_build_yield_staking_simple_tick()` (`paper_run_handler.py`, single-leg — no `leg_state` needed, a
+      `StakeInstruction`/`UnstakeInstruction` fill reads the snapshot's top-level fields directly), a new
+      `YIELD_STAKING_SIMPLE_LST_ASSET` static protocol→token map + `_yield_staking_simple_config_satisfiable()` gate
+      (`paper_universe.py`, since this archetype's catalog carries no `lst_asset` key at all — only
+      `staking_protocol`/`asset` — unlike the other LST archetypes), `YIELD_STAKING_SIMPLE` added to
+      `_ENGINE_DRIVABLE_ARCHETYPES`, and dedicated minimal single-leg passive/attribution producers
+      (`build_yield_staking_simple_passive`/`build_yield_staking_simple_attribution` — ONE `STAKING_REWARD`/`CARRY` leg
+      only, no lending/funding leg exists for this archetype, reusing `CanonicalLstYieldsIndexProvider` +
+      `index_ratio_accrual` unchanged). Quality gates: lint/basedpyright clean on every touched file; 121 new/updated
+      unit tests green (satisfiability gate, tick-loader honest-absence + determinism, passive/attribution single-leg
+      shape). In passing, fixed a PRE-EXISTING, unrelated empty-string-fallback ratchet regression (2 lines,
+      `pnl_input_builder.py:293`/`signal_broadcast/transport.py:369`, both genuinely-safe optional-field cases —
+      `# noqa: qg-empty-fallback` added) that had pushed `strategy-service` from 166 to 168 sites (baseline 166),
+      blocking `quality-gates.sh` STEP 5.101 for the whole repo regardless of archetype.
+- [ ] [BACKEND] P2. **Phase 4b — YIELD_ROTATION_LENDING (not started)**. Pure yield archetype (no hedge leg) — reuse
+      `lending_rates` reader already established. NOT config-verified yet — check for the Phase-1/Phase-3 class of
+      catalog/engine key-mismatch bug BEFORE dispatching a build agent.
 - [ ] [BACKEND] P2. **Phase 5 — LIQUIDATION_CAPTURE**. New data source: on-chain liquidation-cascade feed +
       `health_factor_trigger`.
 - [ ] [BACKEND] P1. **After Phases 1-5**: build the Layer-3 curtailment mechanism (`PaperUniverseConfig` venue/currency
@@ -313,10 +455,46 @@ run SEQUENTIALLY, not in parallel:
       catalog-declared currency universe to build a day-partition tick loader against. Flagged, not silently dropped — a
       currency constraint for these three would need new logic inside the engines themselves, a materially different
       (and separately-scoped) piece of work.
-- [ ] [BACKEND] P2. Side-decision 1 (not started): wire `SmartOrderRoutingConfig.allowed_venues` for real, or delete it
-      (dead code, Finding 2 above).
-- [ ] [BACKEND] P2. Side-decision 2 (not started): reconcile strategy-service's catalog vs UAC's
-      `archetype_leg_spec_seeds.py` (Finding 3 above, two unreconciled registries).
+- [x] [BACKEND] P2. Side-decision 1 — **DELETED 2026-07-24, `strategy-service@813ec66b`** (dead code, Finding 2 above;
+      whole class was dead, not just `allowed_venues` — see Finding 2's resolution note).
+- [x] [BACKEND] P2. Side-decision 2 — **SHIPPED 2026-07-24, `unified-api-contracts@211e0d05` + `e2e-testing@0000f5d8`**.
+      Built the addendum's recommended (A) — a one-directional containment gate (catalog TargetInstanceSpec venues ⊆ UAC
+      eligible_venue_ids per leg role, NOT equality) — and ran it against the REAL current corpus for all 19 in-scope
+      archetypes (`e2e-testing/scripts/defi/archetype_venue_containment.py`, 531 real `TargetInstanceSpec` rows
+      scanned). Found 17 distinct (archetype, leg, venue) violations beyond the addendum's 2 already-known ones
+      (CARRY_BASIS_PERP's aster/kalshi-perp/polymarket-perp on the perp leg + deribit/aster on the spot leg) — ALL
+      genuine catalog-has-it-UAC-doesn't gaps, none triaged away: missing `etherfi` (CARRY_STAKED_BASIS/_DATED stake
+      leg + CARRY_RECURSIVE_STAKED loop_stake), missing `compound_v3` (CARRY_RECURSIVE_STAKED
+      loop_collateral/loop_borrow), missing `ice`/`cme`/`nymex`/`cboe` (CARRY_BASIS_DATED(_INV) spot leg — the
+      commodity/equity-index TradFi rows), missing `aster`/`kalshi_perp`/`polymarket_perp` (CARRY_FUNDING_DISPERSION),
+      missing `ethena` (YIELD_STAKING_SIMPLE), missing `spark` (YIELD_ROTATION_LENDING), missing `aerodrome`/`raydium`
+      (LIQUIDATION_CAPTURE swap leg), missing `ethena`/`maker` (DEFI_LP_VAULT), missing `raydium` (CARRY_BASIS_PERP's
+      cross-venue-DEX spot row), and — the largest cluster — ARBITRAGE_PRICE_DISPERSION's buy/sell legs missing
+      `aave_v3`/`compound_v3`/`morpho` (lending-protocol-arb sub-family), `betfair`/`matchbook`/ `kalshi` (bare
+      event-market ids, distinct from the routing-specific `betfair_direct`/`kalshi_perp` already cited), `cme`
+      (cross-venue dated-futures-arb sub-family), and `camelot_v3`/`pancakeswap_v3`/`orca`/`raydium`/`phoenix`/
+      `aerodrome_v3`/`sushiswap_v3` (the DEX cross-venue spot-dispersion sub-family — 10 DEX pairs read off
+      `unified-api-contracts/.../archetype_leg_spec_seeds.py`'s `_price_dispersion_structure()`). Fixed every one
+      directly in `archetype_leg_spec_seeds.py` (never touched strategy-service's catalog — containment direction is
+      catalog→UAC only). **gmx/gmx_v2 naming question resolved as legitimately-different, NOT a bug**: grepped both
+      systems' consumers — UAC's OWN `registry/` layer (`venue_collateral.py`, `venue_adapter_keys.py`,
+      `defi_venues.py`) canonically keys this perp DEX as bare `GMX` (matching what the catalog emits), while UAC's
+      `architecture_v2/` layer (`archetype_leg_spec_seeds.py` + 4 sibling modules — `collateral_registry.py`,
+      `jurisdiction_overlay.py`, `order_semantics.py`, `simulation_assumptions.py`, `liquidation_bonus_schedule.py`)
+      independently, consistently uses `gmx_v2` for the SAME real venue (GMX's V2 contracts per
+      `venue_launch_dates.py`'s own comment). Kept `gmx_v2` as-is (consistent with its own module family); the
+      containment check aliases `gmx`↔`gmx_v2` (+ `aave`↔`aave_v3`, `compound`↔`compound_v3`, `uniswap`↔`uniswap_v3`,
+      `balancer`↔`balancer_v2` — same catalog-short-token-vs-UAC-versioned-token pattern, each verified via
+      `venue_adapter_keys.VENUE_PREFIX_TO_PROTOCOL` before aliasing, never guessed). **Homed in `e2e-testing`
+      (`scripts/defi/archetype_venue_containment.py`), not either repo it checks**: `unified_api_contracts` is T0-base —
+      zero workspace imports, not even in tests (`/codex/04-architecture/tier-and-import-architecture.md`, re-verified,
+      not just cited) — so a check importing both strategy-service (T4) and UAC (T0) can never live in UAC, and putting
+      it in strategy-service would make one T4 service arbiter of a T0 schema; e2e-testing already declares editable
+      deps on both. 36 unit tests (`e2e-testing/tests/unit/test_archetype_venue_containment.py`) cover the containment
+      LOGIC itself on synthetic catalog/UAC fixtures (pass/fail/alias/CSV-split/excluded-token/UAC-broader-is-fine
+      cases) PLUS a real-corpus regression test (`test_real_corpus_is_currently_contained`) that is now the ongoing CI
+      gate catching this class of drift automatically going forward. Both repos' `quality-gates.sh --no-fix` green;
+      pushed + verified reachable on `origin/live-defi-rollout` (`git merge-base --is-ancestor` both shas).
 
 **Lesson recorded**: an audit that maps only the PRODUCTION side of a question ("what does the catalog declare") can
 miss a real gap that only shows up by diffing against the EXPLORATORY/backtest side ("what did we already prove out that

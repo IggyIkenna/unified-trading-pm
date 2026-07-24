@@ -17,9 +17,21 @@ estimate_class: refactor
 estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 1.2
 resolved: 2026-06-09
-resolution: ACKED-INTO-PLAN+CODE — code+tests shipped @5a5e989/4fd962d/23d7add/56202b0 (test_finalize_session_grid_seed.py + test_prior_day_seed.py + test_state_adapter_density.py); remaining operational densify-reprocess migrated to plans/epics/mtds_mdps_master.md Phase 11 as a dispatchable - [ ] [DATA] P1 checkbox
+resolution:
+  ACKED-INTO-PLAN+CODE — code+tests shipped @5a5e989/4fd962d/23d7add/56202b0 (test_finalize_session_grid_seed.py +
+  test_prior_day_seed.py + test_state_adapter_density.py); remaining operational densify-reprocess migrated to
+  plans/epics/mtds_mdps_master.md Phase 11 as a dispatchable - [ ] [DATA] P1 checkbox
 decisions_landed: 2026-06-01
-source: [market-data-processing-service/market_data_processing_service/app/adapters/cefi/derivative_adapter.py, market-data-processing-service/market_data_processing_service/app/adapters/cefi/futures_chain_adapter.py, market-data-processing-service/market_data_processing_service/app/adapters/cefi/options_chain_adapter.py, market-data-processing-service/market_data_processing_service/app/adapters/defi/liquidity_adapter.py, market-data-processing-service/market_data_processing_service/app/adapters/defi/market_state_adapter.py, market-data-processing-service/market_data_processing_service/app/adapters/cefi/book_snapshot_adapter.py, market-data-processing-service/market_data_processing_service/app/adapters/tradfi/tbbo_adapter.py]
+source:
+  [
+    market-data-processing-service/market_data_processing_service/app/adapters/cefi/derivative_adapter.py,
+    market-data-processing-service/market_data_processing_service/app/adapters/cefi/futures_chain_adapter.py,
+    market-data-processing-service/market_data_processing_service/app/adapters/cefi/options_chain_adapter.py,
+    market-data-processing-service/market_data_processing_service/app/adapters/defi/liquidity_adapter.py,
+    market-data-processing-service/market_data_processing_service/app/adapters/defi/market_state_adapter.py,
+    market-data-processing-service/market_data_processing_service/app/adapters/cefi/book_snapshot_adapter.py,
+    market-data-processing-service/market_data_processing_service/app/adapters/tradfi/tbbo_adapter.py,
+  ]
 priority: P2
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
@@ -143,10 +155,10 @@ Tests in scope:
 
 ## Codex SSOT updates
 
-- `codex/02-data/honest-absence-downstream-handling.md` — add § "Per-adapter density contract: dense + LOCF + no leading
-  NaN".
-- `codex/06-coding-standards/adapter-finalization-contract.md` — new doc tying every adapter to `_finalize_session_grid`
-  (or its state-col variant). Code-review checklist item.
+- `/codex/02-data/honest-absence-downstream-handling.md` — add § "Per-adapter density contract: dense + LOCF + no
+  leading NaN".
+- `/codex/06-coding-standards/adapter-finalization-contract.md` — new doc tying every adapter to
+  `_finalize_session_grid` (or its state-col variant). Code-review checklist item.
 
 ## Composes with
 
@@ -192,7 +204,7 @@ Tests in scope:
       `process_to_candles` + forward it from all 9 finalizer-routed adapters. Edge cases: prior-day missing → drop;
       multi-day halt → staleness grows (fine, recorded); DST/holiday gaps. Tests: mock the prior-day parquet read
       (live + batch parity). Then flip the issue-doc-level Decision-1 carry todo. SSOT for the contract:
-      `codex/06-coding-standards/adapter-finalization-contract.md`.
+      `/codex/06-coding-standards/adapter-finalization-contract.md`.
 - [x] ✅ [SCRIPT] P0. **Decision 2 — Option A.** Add `state_col: str | None = None` (+ `flow_cols`, `seed_state`) to
       `_finalize_session_grid`; first-obs mask uses `~isnan(<state_col>)` when provided. — MDPS@4fd962d.
 - [x] ✅ [SCRIPT] P0. Update 7 state adapters to call `_finalize_session_grid(output, state_col=<canonical>)`
@@ -210,15 +222,15 @@ Tests in scope:
       `issue_docs_remediation_sweep_2026_06_02.md`). Full `quality-gates.sh` exit-0 is blocked solely by that foreign
       file.
 - [x] ✅ [DOCS] P1. Codex SSOT updates per above (+ document the carry-from-prior-day leading-bin contract). —
-      `codex/06-coding-standards/adapter-finalization-contract.md` (new) +
-      `codex/02-data/honest-absence-downstream-handling.md` § "Per-adapter density contract: dense + LOCF + no leading
+      `/codex/06-coding-standards/adapter-finalization-contract.md` (new) +
+      `/codex/02-data/honest-absence-downstream-handling.md` § "Per-adapter density contract: dense + LOCF + no leading
       NaN + carry-from-prior-day".
 - [ ] [DATA] P1. **Densify already-CAPTURED historical candle cells** — re-run the MDPS adapters (now dense per the
       finalization contract) over historical raw ticks so pre-fix parquets lose their leading-NaN / NaN-OHLC shape.
       Go-forward writes are ALREADY dense (shipped @56202b0); this is purely historical remediation, and only matters
       for date windows that backtests / features-onchain actually read. **Home + scope (verified 2026-06-02):** - NOT a
       manifest-consolidator task — the consolidator only merges per-VM manifest shards into the `_index`; it never reads
-      or rewrites candle-parquet CONTENT (`codex/05-infrastructure/manifest-consolidator-ssot.md`). - NOT a
+      or rewrites candle-parquet CONTENT (`/codex/05-infrastructure/manifest-consolidator-ssot.md`). - NOT a
       GCS-object-migration walk — `gcs_migration_bundle_pipeline_mode_2026_05_08.md` rewrites/relocates objects and can
       add columns from existing data, but CANNOT re-derive dense candles (that needs the raw ticks + the new finalizer).
       So it cannot ride the single-walk GCS migration. - It is an OPERATIONAL candle reprocess → home =
@@ -242,10 +254,17 @@ Tests in scope:
       `bash launch-mdps-backfill-vm.sh --force <cefi|tradfi|defi|...> <start> <end> full`. **SCOPE = REAL data, NOT mock
       (operator Q 2026-06-02):** densify rewrites REAL production candle parquets under `processed_candles/`,
       re-aggregated from REAL raw ticks — NOT mock/synthetic. `pipeline_mode` in the buckets is a **batch-vs-live source
-      discriminator** (`PipelineMode` StrEnum =
-      `batch*\*`/`live_websocket`); there is **no     `mock`PipelineMode value**. The separate`MOCK` mode (`unified_api_contracts.internal.modes`,     `CLOUD_MOCK_MODE=true`) is credential-free TEST-ISOLATION runtime (all-fake, simulates live schema) — never a     production candle partition; synthetic/benchmark data lives in `gs://{pid}-synthetic-input`via the distinct    `synthetic-benchmark`VM path. So the densify does NOT come under any mock bucket/partition.     **LAUNCH HANDED TO slot-1-main (operator decision 2026-06-02):** prerequisite-only this session — no reprocess VMs     launched. slot-1-main (Phase-11 owner) pulls the`--force`reprocess into the next coordinated MDPS window. **DeFi     MUST gate** on the active`market-data-tick-defi-prd-…` `\_index` single-walk contention (`defi_manifest`C0-GREEN     per the 2026-06-01`\_agent_pings.md`
-      banner); **non-DeFi (cefi/tradfi)** can proceed first. Date window = backtest/features-onchain read-range (pin
-      with strategy owner; paper reads TODAY → recent read window unless an older backtest range is confirmed).
+      discriminator** (`PipelineMode` StrEnum = `batch*\*`/`live_websocket`); there is **no `mock`PipelineMode value**.
+      The separate`MOCK` mode (`unified_api_contracts.internal.modes`, `CLOUD_MOCK_MODE=true`) is credential-free
+      TEST-ISOLATION runtime (all-fake, simulates live schema) — never a production candle partition;
+      synthetic/benchmark data lives in `gs://{pid}-synthetic-input`via the distinct `synthetic-benchmark`VM path. So
+      the densify does NOT come under any mock bucket/partition. **LAUNCH HANDED TO slot-1-main (operator decision
+      2026-06-02):** prerequisite-only this session — no reprocess VMs launched. slot-1-main (Phase-11 owner) pulls
+      the`--force`reprocess into the next coordinated MDPS window. **DeFi MUST gate** on the
+      active`market-data-tick-defi-prd-…` `\_index` single-walk contention (`defi_manifest`C0-GREEN per the
+      2026-06-01`\_agent_pings.md` banner); **non-DeFi (cefi/tradfi)** can proceed first. Date window =
+      backtest/features-onchain read-range (pin with strategy owner; paper reads TODAY → recent read window unless an
+      older backtest range is confirmed).
 - [ ] [SCRIPT] P3. **deployment-service** — **DEFERRED / NICE-TO-HAVE (discovered 2026-06-02):** the deployment-api
       `backfill_launch.py` `_build_argv` "universal launcher contract" passes `["bash", launcher, "--force"]` with **no
       positional args**, but `launch-mdps-backfill-vm.sh` reads `asset_group`/`start`/`end`/`mode` from POSITIONAL (not

@@ -27,7 +27,7 @@ repos: [market-tick-data-service, unified-trading-pm]
 scope: [engineer, admin]
 tags:
   [quality-gates, ci-cd, ldr-to-main-promote, sigpipe, provenance-gate, pip-audit, cve, sentinel, quickmerge-blocked]
-related: [mtds_canonical_stem_leaf_qg_regression_blocks_quickmerge_2026_07_21.md]
+related: [/plans/archive/issues/mtds_canonical_stem_leaf_qg_regression_blocks_quickmerge_2026_07_21.md]
 created: "2026-07-21"
 parent_epic: infrastructure_master
 priority: P1
@@ -162,4 +162,4 @@ depends_on: []
 
 ## Codex SSOTs
 
-`codex/08-workflows/ci-cd-flow.md` (LDR→main promotion, quickmerge, direct-push carve-outs).
+`/codex/08-workflows/ci-cd-flow.md` (LDR→main promotion, quickmerge, direct-push carve-outs).

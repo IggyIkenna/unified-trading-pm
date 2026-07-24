@@ -9,8 +9,9 @@ stage: [meta]
 repos: [agent-orchestrator, deployment-service]
 scope: [engineer, admin]
 tags: []
-related: [agent_orchestrator_workers_on_vms_2026_05_19.md, agent_reliability_mitigations_2026_05_20.md]
-created: '2026-05-21'
+related:
+  [agent_orchestrator_workers_on_vms_2026_05_19.md, /plans/archive/2026_05/agent_reliability_mitigations_2026_05_20.md]
+created: "2026-05-21"
 parent_epic: orchestrator_master
 priority: P0
 archived_date: 2026-05-22
@@ -23,8 +24,8 @@ locked_since: 2026-05-21
 
 > **ARCHIVED 2026-05-22** — All phases complete. Fleet of 10 GCE epic VMs healthy (T+10min verification passed).
 > Deferred items migrated to `plans/epics/orchestrator_master.md` + `plans/active/aws_epic_vm_fleet_2026_05_22.md`.
-> Codex alignment: `codex/04-architecture/agent-orchestrator-overview.md` +
-> `codex/05-infrastructure/agent-orchestrator-worker-topology.md` updated 2026-05-22.
+> Codex alignment: `/codex/04-architecture/agent-orchestrator-overview.md` +
+> `/codex/05-infrastructure/agent-orchestrator-worker-topology.md` updated 2026-05-22.
 
 ## Deferred work — migrated to:
 
@@ -52,9 +53,9 @@ Harsh PC. New model: 1 planning VM + 9 epic VMs, all running orchestrator + 8 wo
 
 Codex SSOTs:
 
-- `codex/04-architecture/agent-orchestrator-overview.md` — updated 2026-05-22 (fleet topology, AWS toggle noted)
-- `codex/05-infrastructure/vm-tarball-deployment.md`
-- `codex/05-infrastructure/agent-orchestrator-worker-topology.md` — written 2026-05-22 (was stub)
+- `/codex/04-architecture/agent-orchestrator-overview.md` — updated 2026-05-22 (fleet topology, AWS toggle noted)
+- `/codex/05-infrastructure/vm-tarball-deployment.md`
+- `/codex/05-infrastructure/agent-orchestrator-worker-topology.md` — written 2026-05-22 (was stub)
 
 ---
 

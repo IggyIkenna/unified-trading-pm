@@ -1395,7 +1395,7 @@ The work splits into three SEQUENTIAL sub-steps. Each AG runs through all three 
       matches `build_*_partition_path` output for a fixed input.
 - [ ] [AGENT] P0. Once (a)+(b)+(c) green, delete the migration scripts from MTDS `scripts/` (they were one-shot tools;
       keeping them around invites accidental re-runs that write to the legacy shapes again). Document in
-      `codex/02-data/availability-manifest-and-data-status.md` § "Path layout history" as the closure record.
+      `/codex/02-data/availability-manifest-and-data-status.md` § "Path layout history" as the closure record.
 
 **Why this sequencing**: writer lock-down without disk migration leaves the legacy parquets stranded (correct, they just
 stop accumulating new drift). Disk migration without writer lock-down is the treadmill. The audit-loop
@@ -1990,8 +1990,8 @@ curl -sS "http://localhost:8004/api/data-status/manifest?service=market-tick-dat
       script and confirming the prefix template targets `market-data-tick-{ag}-{pid}` for MTDS, or whether a separate
       bucket flag is needed. If the script does NOT cover MTDS buckets, add a `--bucket` override and run it on the MTDS
       bucket before claiming Phase 0 is done. (Path SSOT cross-ref:
-      [`02-data/availability-manifest-and-data-status.md`](../../codex/02-data/availability-manifest-and-data-status.md)
-      § "Phantom audit — re-runnable recipe".)
+      [`02-data/availability-manifest-and-data-status.md`](/codex/02-data/availability-manifest-and-data-status.md) §
+      "Phantom audit — re-runnable recipe".)
 - [ ] [HUMAN] P0. Review the five `/tmp/mtds-recon-*.log` snapshots. Capture the per-AG counts in the **Notes** section
       below. **Do NOT decide on Phase 2 yet** — Phase 0.1 below must run first. The decision is forward-phantom vs
       inverse-phantom vs genuinely-missing, and Phase 0 only sees one of those three.
@@ -2060,8 +2060,8 @@ proper fix to land afterwards.
 - [ ] [HUMAN] P0. **MUST run on a same-region GCE VM** — cross-region GCS listing is 18× slower (~12 prefixes/sec from
       laptop vs 222/sec on `asia-northeast1-c`). Spin up `e2-standard-4` in `asia-northeast1-c` for the audit. Same
       pattern as the phantom audit recipe in
-      [`02-data/availability-manifest-and-data-status.md`](../../codex/02-data/availability-manifest-and-data-status.md)
-      § "Phantom audit — re-runnable recipe".
+      [`02-data/availability-manifest-and-data-status.md`](/codex/02-data/availability-manifest-and-data-status.md) §
+      "Phantom audit — re-runnable recipe".
 - [ ] [SCRIPT] P0. Run the inverse audit per AG, with sample size from the cost-ladder table above. Output:
       `/tmp/mtds-inverse-cefi.csv /tmp/mtds-inverse-tradfi.csv /tmp/mtds-inverse-sports.csv /tmp/mtds-inverse-prediction.csv /tmp/mtds-inverse-defi.csv`
       Each CSV row: `ag, venue, data_type, day, classification, found_at_path`. Classifications:
@@ -2149,8 +2149,8 @@ If any of these don't exist, the alternative is a generic UTL rebuild via the ma
 - [ ] [HUMAN] P0. **Pass `per_vm_shards=True`** when running rebuild — without it, the rebuild's writes fight the
       consolidator daemon's CAS retries and most rebuild output gets dropped. Reference incident: 2026-05-02 DeFi
       rebuild lost 80k rows compacted to 12k canonical because of CAS contention. SSOT:
-      [`02-data/availability-manifest-and-data-status.md`](../../codex/02-data/availability-manifest-and-data-status.md)
-      § "Per-VM shard layout".
+      [`02-data/availability-manifest-and-data-status.md`](/codex/02-data/availability-manifest-and-data-status.md) §
+      "Per-VM shard layout".
 - [ ] [SCRIPT] P0. Run the rebuild for each affected AG:
       `bash cd ~/unified-trading-system-repos/market-tick-data-service VM_NAME=rebuild-mtds-{ag}-$(date +%Y%m%d-%H%M%S) MANIFEST_PER_VM_SHARDS=true \ .venv/bin/python scripts/rebuild_{ag}_manifest.py 2>&1 | tee /tmp/mtds-rebuild-{ag}.log `
       Each unique `VM_NAME` writes its own per-VM shard so concurrent runs don't collide.
@@ -2214,8 +2214,8 @@ the 2026-05-05 Databento silent-drop incident — Tardis rate-limits per-account
 - [ ] [HUMAN] P1. **OOM watch** — CeFi VMs occasionally `rc=137` (SIGKILL by systemd OOM-killer) on heavy
       instrument_types (DERIBIT options chain especially). No `EXIT_STATUS` written for rc=137. Diagnose via Cloud
       Logging kernel OOM query (see
-      [`05-infrastructure/vm-tarball-deployment.md`](../../codex/05-infrastructure/vm-tarball-deployment.md) § "Exit
-      codes"). Bump machine type or shard year-by-year.
+      [`05-infrastructure/vm-tarball-deployment.md`](/codex/05-infrastructure/vm-tarball-deployment.md) § "Exit codes").
+      Bump machine type or shard year-by-year.
 
 ### TRADFI
 
@@ -2375,33 +2375,33 @@ Verification has to cover **both directions** now, not just forward phantoms:
       mismatches, missing SM secrets, launcher flag drift).
 - [ ] [HUMAN] P1. If any per-AG gap remained at <99% for legitimate reasons (provider outage, bookmaker shutdown, etc.),
       document it in
-      [`02-data/availability-manifest-and-data-status.md`](../../codex/02-data/availability-manifest-and-data-status.md)
+      [`02-data/availability-manifest-and-data-status.md`](/codex/02-data/availability-manifest-and-data-status.md)
       under "Known coverage gaps" so future runs don't chase it.
 - [ ] [AGENT] P2. Mark this plan complete and move to `plans/archive/`.
 
 ## Files / commands referenced
 
-| Repo                     | File / command                                                                                 | Phase         |
-| ------------------------ | ---------------------------------------------------------------------------------------------- | ------------- |
-| instruments-service      | `scripts/reconcile_phantom_manifest_rows_all.py` (with `--bucket` / `--service`)               | 0,1,3         |
-| instruments-service      | `scripts/reconcile_phantom_manifest_rows_all.py --mode inverse` (Path A — to be added)         | 0.1,3         |
-| market-tick-data-service | `scripts/audit_inverse_phantoms.py` (Path B — one-off audit script)                            | 0.1,3         |
-| market-tick-data-service | `scripts/rebuild_{cefi,tradfi,sports,prediction,defi}_manifest.py` (verify exists per AG)      | 1.5           |
-| unified-trading-library  | `python -m unified_trading_library.manifest_consolidator --bucket <X>` (force-merge)           | 1.5           |
-| deployment-service       | `scripts/vm/launch-cefi-sharded-backfill.sh`                                                   | 2-CEFI        |
-| deployment-service       | `scripts/vm/launch-tradfi-backfill-vm.sh` (singleton-locked)                                   | 2-TRADFI      |
-| deployment-service       | `scripts/vm/launch-mtds-prediction-backfill-vm.sh` (singleton-locked)                          | 2-PRED        |
-| deployment-service       | `scripts/vm/launch-mtds-gas-fees-backfill-vm.sh`                                               | 2-DEFI        |
-| deployment-service       | `scripts/vm/launch-mtds-lst-rates-backfill-vm.sh`                                              | 2-DEFI        |
-| deployment-service       | `scripts/vm/launch-mtds-vault-share-price-backfill-vm.sh`                                      | 2-DEFI        |
-| deployment-service       | `scripts/vm/launch-manifest-consolidator-vm.sh`                                                | 0.5           |
-| deployment-service       | `scripts/vm/create-code-tarballs.sh --all`                                                     | 0.5           |
-| deployment-service       | `scripts/vm/vm_zombie_watchdog.py` (`VM_PREFIX_TO_BUCKET` dict)                                | 0.5           |
-| deployment-api           | `POST /api/data-status/turbo/clear` (drops all 4 cache layers)                                 | 3             |
-| unified-api-contracts    | `unified_api_contracts/canonical/coverage_starts.py`                                           | ref           |
-| unified-trading-pm       | `codex/14-playbooks/backfill-completion-playbook.md`                                           | ref           |
-| unified-trading-pm       | `codex/02-data/availability-manifest-and-data-status.md` § Phantom audit + Per-VM shard layout | 0,0.1,1,1.5,3 |
-| unified-trading-pm       | `codex/05-infrastructure/vm-tarball-deployment.md`                                             | 0.5,1.5,2     |
+| Repo                     | File / command                                                                                  | Phase         |
+| ------------------------ | ----------------------------------------------------------------------------------------------- | ------------- |
+| instruments-service      | `scripts/reconcile_phantom_manifest_rows_all.py` (with `--bucket` / `--service`)                | 0,1,3         |
+| instruments-service      | `scripts/reconcile_phantom_manifest_rows_all.py --mode inverse` (Path A — to be added)          | 0.1,3         |
+| market-tick-data-service | `scripts/audit_inverse_phantoms.py` (Path B — one-off audit script)                             | 0.1,3         |
+| market-tick-data-service | `scripts/rebuild_{cefi,tradfi,sports,prediction,defi}_manifest.py` (verify exists per AG)       | 1.5           |
+| unified-trading-library  | `python -m unified_trading_library.manifest_consolidator --bucket <X>` (force-merge)            | 1.5           |
+| deployment-service       | `scripts/vm/launch-cefi-sharded-backfill.sh`                                                    | 2-CEFI        |
+| deployment-service       | `scripts/vm/launch-tradfi-backfill-vm.sh` (singleton-locked)                                    | 2-TRADFI      |
+| deployment-service       | `scripts/vm/launch-mtds-prediction-backfill-vm.sh` (singleton-locked)                           | 2-PRED        |
+| deployment-service       | `scripts/vm/launch-mtds-gas-fees-backfill-vm.sh`                                                | 2-DEFI        |
+| deployment-service       | `scripts/vm/launch-mtds-lst-rates-backfill-vm.sh`                                               | 2-DEFI        |
+| deployment-service       | `scripts/vm/launch-mtds-vault-share-price-backfill-vm.sh`                                       | 2-DEFI        |
+| deployment-service       | `scripts/vm/launch-manifest-consolidator-vm.sh`                                                 | 0.5           |
+| deployment-service       | `scripts/vm/create-code-tarballs.sh --all`                                                      | 0.5           |
+| deployment-service       | `scripts/vm/vm_zombie_watchdog.py` (`VM_PREFIX_TO_BUCKET` dict)                                 | 0.5           |
+| deployment-api           | `POST /api/data-status/turbo/clear` (drops all 4 cache layers)                                  | 3             |
+| unified-api-contracts    | `unified_api_contracts/canonical/coverage_starts.py`                                            | ref           |
+| unified-trading-pm       | `/codex/14-playbooks/backfill-completion-playbook.md`                                           | ref           |
+| unified-trading-pm       | `/codex/02-data/availability-manifest-and-data-status.md` § Phantom audit + Per-VM shard layout | 0,0.1,1,1.5,3 |
+| unified-trading-pm       | `/codex/05-infrastructure/vm-tarball-deployment.md`                                             | 0.5,1.5,2     |
 
 **Explicitly NOT used** (these run instruments-service or MDPS, not MTDS):
 `launch-{api-football,transfermarkt,sfi, footystats,understat,openmeteo}-backfill-vm.sh` (instruments-side, sibling plan

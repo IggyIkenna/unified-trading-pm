@@ -126,7 +126,7 @@ blank-reason `expected_unattempted` for big-5 native leagues dropped from **185/
       to resolve them); flagged in the plan's Progress Log for whoever next picks up item #6. — unified-trading-pm (this
       doc, no code change needed; 920b303 already shipped by the prior session). Slot-4, 2026-07-09.
 - [x] ✅ [SCRIPT] P2. Add a QG lint check (or extend an existing one, e.g. STEP 5.7x in
-      `codex/06-coding-standards/quality-gates.md`) that flags a `ManifestWriter`/`record_*()` call followed by a
+      `/codex/06-coding-standards/quality-gates.md`) that flags a `ManifestWriter`/`record_*()` call followed by a
       `return` with no `.write()`/`.flush()` on that variable before the function exits, when OTHER exit paths in the
       same function DO call it — generalizes this fix into a standing guard instead of relying on manual review. (repo:
       unified-trading-pm) — Wired as **STEP 5.102** (new checker, not an extension of 5.7x — those steps are unrelated
@@ -139,7 +139,7 @@ blank-reason `expected_unattempted` for big-5 native leagues dropped from **185/
       positives/negatives vs. the hand-diagnosis), correctly silent on sfi.py (confirmed clean). Wired
       `scripts/quality-gates-base/base-service.sh` STEP 5.102 (same per-repo-scope shape as STEP 5.70) +
       `manifest_writer_missing_write_baseline.yaml` (0-entry bootstrap — a full workspace sweep found 0 remaining
-      occurrences) + doc section in `codex/06-coding-standards/quality-gates.md` +
+      occurrences) + doc section in `/codex/06-coding-standards/quality-gates.md` +
       `test_check_manifest_writer_missing_write_before_return.py` (10 unit tests). — unified-trading-pm (this session,
       slot-4, 2026-07-09).
 - [x] ✅ [INVESTIGATE] P2. Audit whether the same early-return-no-write anti-pattern exists in non-sports orchestrators
@@ -168,7 +168,7 @@ blank-reason `expected_unattempted` for big-5 native leagues dropped from **185/
       `instruments_service/engine/orchestrator/*.py` (the live per-date orchestrator — the direct structural analogue of
       the fixed sports files) but did NOT re-audit the `scripts/` one-off backfill scripts that also call
       `ManifestWriter(` (e.g. `aggregate_legacy_es_opt_trades.py`, `full_polymarket_dump.py`,
-      `patch_prediction_shards.py`) — those are TEMPORARY one-offs per `codex/06-coding-standards/script-homes.md`, not
+      `patch_prediction_shards.py`) — those are TEMPORARY one-offs per `/codex/06-coding-standards/script-homes.md`, not
       the standing calendar-guard orchestrator path this bug class targets, so out of this todo's scope. Slot-12,
       2026-07-09.
 

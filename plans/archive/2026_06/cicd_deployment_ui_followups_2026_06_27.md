@@ -1,7 +1,11 @@
 ---
 doc_type: plan
 title: CI/CD deployment-ui follow-ups — Repos-CI working/pending render + unit-test flake
-summary: 'The two deployment-ui (TS UI) items from the cicd tracker, split out because plans are role-homogeneous and these need the ui-developer role: render the Repos-CI working/pending state per repo (orchestrator half already shipped — UI render remaining), and investigate the unstable unit test flake discovered 2026-06-27 (slot-1). UI repo — TS/Playwright only, no Python tools; every tick needs [UI] + pw:L2 ✓ + a cited regression spec.'
+summary:
+  "The two deployment-ui (TS UI) items from the cicd tracker, split out because plans are role-homogeneous and these
+  need the ui-developer role: render the Repos-CI working/pending state per repo (orchestrator half already shipped — UI
+  render remaining), and investigate the unstable unit test flake discovered 2026-06-27 (slot-1). UI repo —
+  TS/Playwright only, no Python tools; every tick needs [UI] + pw:L2 ✓ + a cited regression spec."
 status: superseded
 nature: design
 asset_group: cross-asset
@@ -9,7 +13,12 @@ stage: [meta]
 repos: [deployment-ui]
 scope: [engineer, admin]
 tags: [cicd, deployment-ui, ui, repos-ci, flaky-test, ui-developer]
-related: [cicd_consolidated_remaining_2026_06_24.md, ../epics/infrastructure_master.md, ../../codex/06-coding-standards/ui-testing-layers.md]
+related:
+  [
+    /plans/archive/2026_06/cicd_consolidated_remaining_2026_06_24.md,
+    ../epics/infrastructure_master.md,
+    /codex/06-coding-standards/ui-testing-layers.md,
+  ]
 created: 2026-06-27
 parent_epic: infrastructure_master
 assigned_vm: NA
@@ -33,7 +42,7 @@ drift_direction: advance-code
 
 > **Independent track — no upstream dep, parallel-startable.** **Model tier: Sonnet/ui-developer.** UI repo —
 > **TS/ESLint/Vitest/Playwright only, NO Python tools.** Every tick MUST carry `[UI]` + `pw:L2 ✓` + a cited regression
-> spec (`codex/06-coding-standards/ui-testing-layers.md`) or the reviewer rejects the ✅.
+> spec (`/codex/06-coding-standards/ui-testing-layers.md`) or the reviewer rejects the ✅.
 
 ## Tasks
 

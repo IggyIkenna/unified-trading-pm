@@ -16,7 +16,11 @@ stage: [meta]
 repos: [deployment-api, deployment-service, unified-api-contracts]
 scope: [engineer]
 tags: [deployment-observability, cockpit, vm-health, cloud-run, ecs, lambda, heartbeat, deployment-api]
-related: [deployment_observability_expansion_2026_07_08.md, deployment_obs_ui_popover_health_2026_07_09.md]
+related:
+  [
+    /plans/archive/2026_07/deployment_observability_expansion_2026_07_08.md,
+    /plans/archive/2026_07/deployment_obs_ui_popover_health_2026_07_09.md,
+  ]
 created: "2026-07-09"
 last_updated: "2026-07-09"
 parent_epic: observability_master
@@ -57,11 +61,12 @@ source: deployment_observability_expansion_2026_07_08.md
 ## Codex SSOTs (READ before touching each area — plan↔codex drift is review-blocking)
 
 - Inventory contract + classification: `deployment-api/.../routes/deployments_inventory.py`.
-- Deployment observability / no-fire-and-forget: `codex/05-infrastructure/deployment-observability.md`.
+- Deployment observability / no-fire-and-forget: `/codex/05-infrastructure/deployment-observability.md`.
 - Heartbeat daemon + wrapper: `deployment-service/scripts/vm/vm-exec-with-gcs-tee.sh`,
   `deployment-service/deployment_service/vm/heartbeat_cli.py`, `unified_trading_library.lifecycle`.
-- Availability manifest (object-delta cross-check): `codex/02-data/availability-manifest-and-data-status.md`.
-- Shard-level failure isolation (honest per-kind degradation): `codex/04-architecture/shard-level-failure-isolation.md`.
+- Availability manifest (object-delta cross-check): `/codex/02-data/availability-manifest-and-data-status.md`.
+- Shard-level failure isolation (honest per-kind degradation):
+  `/codex/04-architecture/shard-level-failure-isolation.md`.
 
 ## Todos
 

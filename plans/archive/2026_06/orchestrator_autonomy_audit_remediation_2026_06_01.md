@@ -9,7 +9,13 @@ stage: [meta]
 repos: [agent-orchestrator, deployment-ui, trading-agent-service, unified-trading-pm]
 scope: [engineer, admin]
 tags: []
-related: [plans/active/autospawn_idle_vms_2026_05_30.md, plans/active/agent_orchestrator_worker_liveness_watchdog_2026_06_01.md, plans/active/agent_orchestrator_backlog_state_alignment_2026_05_29.md, plans/active/harsh_pc_dispatch_failover_2026_05_30.md]
+related:
+  [
+    plans/active/autospawn_idle_vms_2026_05_30.md,
+    plans/active/agent_orchestrator_worker_liveness_watchdog_2026_06_01.md,
+    plans/active/agent_orchestrator_backlog_state_alignment_2026_05_29.md,
+    plans/active/harsh_pc_dispatch_failover_2026_05_30.md,
+  ]
 created: 2026-06-01
 parent_epic: plans/epics/orchestrator_master.md
 assigned_vm: vm-orchestrator
@@ -19,7 +25,11 @@ estimate_baseline_ai_days: 1.5
 estimate_calibrated_ai_days: 1.2
 last_updated: 2026-06-01
 archived: 2026-06-01
-codex_ssots: [codex/04-architecture/agent-orchestrator-overview.md, codex/05-infrastructure/agent-orchestrator-slack-notifications.md]
+codex_ssots:
+  [
+    /codex/04-architecture/agent-orchestrator-overview.md,
+    /codex/05-infrastructure/agent-orchestrator-slack-notifications.md,
+  ]
 source_audit: plans/audit/results/orchestrator_master_audit_2026_06_01.md
 ---
 
@@ -85,10 +95,11 @@ reboot still wipes dispatch/backlog state).
       11); confirmed end-to-end: fresh snapshot objects landing every ~10–20 min in
       `s3://uts-orchestrator-state-427895769566/snapshots/` (verified 2026-06-01 ~20:55Z, both VMs writing). Bucket
       ap-northeast-1, versioning on; `enable_s3_snapshot.sh` is the drop-in. AWS disaster-recovery loop CLOSED.
-- [x] ✅ [DOCS] P2. Update the `codex/04-architecture/agent-orchestrator-overview.md` "Known gap" callout — flip it from
-      "deferred future work" to "shipped — AWS↔S3 snapshot live" with the bucket name + env var. Collision group: none.
-      Estimate: 0.05 AI-day. ✅ DONE 2026-06-01 — overview "Secrets + buckets" state-snapshot row + the callout now read
-      "code shipped @57dc8c2; remaining operator step = provision bucket + set `ORCHESTRATOR_S3_BUCKET` on 11 VMs".
+- [x] ✅ [DOCS] P2. Update the `/codex/04-architecture/agent-orchestrator-overview.md` "Known gap" callout — flip it
+      from "deferred future work" to "shipped — AWS↔S3 snapshot live" with the bucket name + env var. Collision group:
+      none. Estimate: 0.05 AI-day. ✅ DONE 2026-06-01 — overview "Secrets + buckets" state-snapshot row + the callout
+      now read "code shipped @57dc8c2; remaining operator step = provision bucket + set `ORCHESTRATOR_S3_BUCKET` on 11
+      VMs".
 
 ### Phase 2 — P1-1: standing deploy-currency + flag-liveness fleet check
 
@@ -194,9 +205,13 @@ even inline. Verdict: only FM9 (autostash-rebase) is fully handled; two auto-res
       resolves the "dead agent ⇒ slot is infinitely dirty, nobody ever cleans it" failure — **quarantine must NEVER be
       terminal**. - **maker provably LIVE** (fresh claim + live tmux/heartbeat — realistically the operator's own
       interactive session on the same slot, per the "operator session counts as a slot" rule) → do NOT stomp it; resolve
-      **role-aware**: a background autonomous worker
-      `notify*\*`-pings     the operator and waits out the TTL (then inherits on expiry); an interactive/operator session ASKS the operator     ("are other agents finished? OK to commit this WIP?") and commits on confirmation. **Forbidden anti-patterns**:     (i) per-file foreign attribution — `in_flight_files_json`is a refinement, never a gate; an unreported dirty file     in an isolated slot worktree is still slot-owned; (ii) terminal quarantine — a dead maker's WIP must eventually be     inherited, never left dirty forever. Removes the FM8 HARD-RULE violation without wedging respawn-inherit.     Collision group:`ao_respawn_hygiene`.
-      Estimate: 0.5 AI-day.
+      **role-aware**: a background autonomous worker `notify*\*`-pings the operator and waits out the TTL (then inherits
+      on expiry); an interactive/operator session ASKS the operator ("are other agents finished? OK to commit this
+      WIP?") and commits on confirmation. **Forbidden anti-patterns**: (i) per-file foreign attribution —
+      `in_flight_files_json`is a refinement, never a gate; an unreported dirty file in an isolated slot worktree is
+      still slot-owned; (ii) terminal quarantine — a dead maker's WIP must eventually be inherited, never left dirty
+      forever. Removes the FM8 HARD-RULE violation without wedging respawn-inherit. Collision
+      group:`ao_respawn_hygiene`. Estimate: 0.5 AI-day.
 - [x] ✅ [CODE] P0. **FM8 addendum — interactive-editor liveness (3rd signal beyond claim-TTL + tmux).** ✅ DONE
       2026-06-01 — agent-orchestrator@0b6b12e. `has_recent_dirty_mtime()` (default 120s) is the 3rd LIVE input, threaded
       into `classify_maker_liveness(recent_edit=...)` + `resolve_dirty_state(recent_edit_within_seconds=...)`: LIVE if
@@ -295,18 +310,21 @@ even inline. Verdict: only FM9 (autostash-rebase) is fully handled; two auto-res
       Estimate: 0.1 AI-day.
 - [x] ✅ [DOCS] P1. ✅ DONE 2026-06-01 — PM@74a557f1f (codex) + @3f2d5e3f6 (CLAUDE.md). Added the "Pre-spawn
       branch-state + liveness-gated dirty resolution (Phase 4)" section to
-      `codex/05-infrastructure/per-tab-worktrees.md` (FM2/FM3/FM8/ FM8b coordinator + FM1/5/6/7 gate + FM6 LDR-not-main
+      `/codex/05-infrastructure/per-tab-worktrees.md` (FM2/FM3/FM8/ FM8b coordinator + FM1/5/6/7 gate + FM6 LDR-not-main
       correction + FM4/5 prompt inlining) and the canonical liveness-gated/role-aware inherited-dirty-WIP rule to
       `cursor-configs/CLAUDE.md` § Other key rules (edited while clean — the earlier foreign-dirty window had passed).
-      Cross-linked this plan + worktree\*clean*check.py. Codex `codex/05-infrastructure/per-tab-worktrees.md` — document
-      the pre-spawn branch-state gate + **liveness-gated** dirty resolution (slot-isolation invariant: dirty == a
-      prior-you that's gone → inherit; only a provably-LIVE peer is protected; quarantine is never terminal) +
+      Cross-linked this plan + worktree\*clean*check.py. Codex `/codex/05-infrastructure/per-tab-worktrees.md` —
+      document the pre-spawn branch-state gate + **liveness-gated** dirty resolution (slot-isolation invariant: dirty ==
+      a prior-you that's gone → inherit; only a provably-LIVE peer is protected; quarantine is never terminal) +
       slot-tagged-stash discipline + the 9-FM coverage table above. Add a `cursor-configs/CLAUDE.md` rule (canonical —
       do NOT edit per-repo copies) under `### Other key     rules`: \**an agent resolving inherited dirty WIP must first
-      detect whether it is a background autonomous worker (tmux
-      `orch-slot-*`session /`ORCHESTRATOR\**`env / claim`role`) or an interactive operator     session — background: `notify\_\_`-ping the operator + inherit once the prior maker's claim TTL expires;     interactive: ASK the operator whether other agents are finished, then commit. Never stomp a provably-live peer;     never leave a dead maker's slot infinitely dirty.** Cross-link this plan. ⚠️ `cursor-configs/CLAUDE.md`
-      was actively foreign-dirty at 2026-06-01 19:40 (another agent mid-edit) — make this CLAUDE.md edit only when that
-      worktree is clean, to avoid the very FM8 collision this plan fixes. Collision group: none. Estimate: 0.2 AI-day.
+      detect whether it is a background autonomous worker (tmux `orch-slot-*`session /`ORCHESTRATOR\**`env /
+      claim`role`) or an interactive operator session — background: `notify\_\_`-ping the operator + inherit once the
+      prior maker's claim TTL expires; interactive: ASK the operator whether other agents are finished, then commit.
+      Never stomp a provably-live peer; never leave a dead maker's slot infinitely dirty.** Cross-link this plan. ⚠️
+      `cursor-configs/CLAUDE.md` was actively foreign-dirty at 2026-06-01 19:40 (another agent mid-edit) — make this
+      CLAUDE.md edit only when that worktree is clean, to avoid the very FM8 collision this plan fixes. Collision group:
+      none. Estimate: 0.2 AI-day.
 
 ## Closing condition
 

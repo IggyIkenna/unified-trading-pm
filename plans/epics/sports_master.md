@@ -128,26 +128,26 @@ locked_since: 2026-05-07
 This plan implements / extends the following codex documents (read these BEFORE making code changes; drift between code
 and these docs is a review-blocking failure per `doc → plan → code`):
 
-- [`codex/02-data/availability-manifest-and-data-status.md`](../../codex/02-data/availability-manifest-and-data-status.md)
-  — manifest v5 schema + sports per-fixture-bundle cluster validation (`ODDS_SNAPSHOT` / `ODDS_MOVEMENT` / `ARBITRAGE`
+- [`/codex/02-data/availability-manifest-and-data-status.md`](/codex/02-data/availability-manifest-and-data-status.md) —
+  manifest v5 schema + sports per-fixture-bundle cluster validation (`ODDS_SNAPSHOT` / `ODDS_MOVEMENT` / `ARBITRAGE`
   per-league-tier expected bookmaker sets); per-(source, data_type, league_id, day) shard atom
-- [`codex/02-data/honest-absence-downstream-handling.md`](../../codex/02-data/honest-absence-downstream-handling.md) —
+- [`/codex/02-data/honest-absence-downstream-handling.md`](/codex/02-data/honest-absence-downstream-handling.md) —
   sports-specific empty_confirmed legitimacy: instrument-day-grain empty IS legit (no fixtures today / no markets active
   is normal); paused-league windows (`KNOWN_COVERAGE_GAPS`) + pre-`SOURCE_COVERAGE_START` clip rules
-- [`codex/02-data/per-asset-group-bucket-layouts.md`](../../codex/02-data/per-asset-group-bucket-layouts.md) — sports
+- [`/codex/02-data/per-asset-group-bucket-layouts.md`](/codex/02-data/per-asset-group-bucket-layouts.md) — sports
   per-source folder layout per CLAUDE.md "Sports GCS path SSOT":
   `sports_reference/by_date/day=*/entity={F}/league={L}/{F}.parquet`;
   `candidate_parquet_paths(data_type, day, league_id)` is the canonical probe API
-- [`codex/04-architecture/batch-live-architecture.md`](../../codex/04-architecture/batch-live-architecture.md) —
-  batch=live unified pipeline: same shard atom, same fields, same `available_at` semantics; sports lineups stamped at
+- [`/codex/04-architecture/batch-live-architecture.md`](/codex/04-architecture/batch-live-architecture.md) — batch=live
+  unified pipeline: same shard atom, same fields, same `available_at` semantics; sports lineups stamped at
   `kickoff − 60min`, fixture_stats / understat at `match_end_time`, weather at forecast-issue-time
-- [`codex/09-strategy/architecture-v2/archetypes/ml-directional-event-settled.md`](../../codex/09-strategy/architecture-v2/archetypes/ml-directional-event-settled.md)
+- [`/codex/09-strategy/architecture-v2/archetypes/ml-directional-event-settled.md`](/codex/09-strategy/architecture-v2/archetypes/ml-directional-event-settled.md)
   — ML-directional event-settled archetype (sports prediction)
-- [`codex/09-strategy/architecture-v2/archetypes/market-making-event-settled.md`](../../codex/09-strategy/architecture-v2/archetypes/market-making-event-settled.md)
+- [`/codex/09-strategy/architecture-v2/archetypes/market-making-event-settled.md`](/codex/09-strategy/architecture-v2/archetypes/market-making-event-settled.md)
   — Market-making event-settled archetype
-- [`codex/09-strategy/architecture-v2/archetypes/rules-directional-event-settled.md`](../../codex/09-strategy/architecture-v2/archetypes/rules-directional-event-settled.md)
+- [`/codex/09-strategy/architecture-v2/archetypes/rules-directional-event-settled.md`](/codex/09-strategy/architecture-v2/archetypes/rules-directional-event-settled.md)
   — Rules-directional event-settled archetype
-- [`codex/09-strategy/architecture-v2/archetypes/event-driven.md`](../../codex/09-strategy/architecture-v2/archetypes/event-driven.md)
+- [`/codex/09-strategy/architecture-v2/archetypes/event-driven.md`](/codex/09-strategy/architecture-v2/archetypes/event-driven.md)
   — Event-driven archetype foundation (cross-cutting; sports + predictions)
 
 If any of the docs above is missing, this plan creates a stub for it (see [`codex/`](../../codex/) tree).
@@ -233,8 +233,8 @@ Covers:
   bundled-shard SSOT migration; Kalshi + opinion.trade Phase 3 stays 2026-06-15.
 
 **MVP scope SSOT** for sports backtest universe:
-[`codex/09-strategy/mvp-universe-per-asset-group.md`](../../codex/09-strategy/mvp-universe-per-asset-group.md) — Top-5
-EU football (EPL + LaLiga + Serie A + Bundesliga + Ligue 1) × 4 markets (1X2 / Over-Under 2.5 / BTTS / Asian Handicap).
+[`/codex/09-strategy/mvp-universe-per-asset-group.md`](/codex/09-strategy/mvp-universe-per-asset-group.md) — Top-5 EU
+football (EPL + LaLiga + Serie A + Bundesliga + Ligue 1) × 4 markets (1X2 / Over-Under 2.5 / BTTS / Asian Handicap).
 MLS + other leagues post-cutover. Tier A archetype = `ml-settled` (post-fixture-settlement ML).
 
 ## Scrapers DEFERRED-INDEFINITELY 2026-05-12 per operator
@@ -498,7 +498,7 @@ hard-fails every sports `record_captured` call as long as parquets stamp the pre
       in all 11 Phase-4 calculators — features-service@a9d0c32c.
 - [x] ✅ [AGENT] P2. NaN handling — distinguish NaN-by-design (OUT_OF_COVERAGE → `out_of_coverage` status, parquet
       written with NaN) from NaN-from-missing-upstream (UPSTREAM_MISSING → `upstream_missing` status, calculator
-      skipped) per `codex/02-data/honest-absence-downstream-handling.md`. quality_tracker records the distinction;
+      skipped) per `/codex/02-data/honest-absence-downstream-handling.md`. quality_tracker records the distinction;
       batch_handler uses `record_empty(SOURCE_RETURNED_ZERO)` for empty derived features groups. Tests in
       `tests/sports/unit/test_run_new_calculators_coverage_gate.py` confirm both paths — features-service@a9d0c32c.
 - [x] ✅ [AGENT] P2. Backwards-compat — features computed before this change have manifest rows without coverage info;
@@ -745,7 +745,7 @@ should live in MTDS, not instruments-service), `footystats_odds` (separate UAC n
       needed beyond the already-existing FootyStats schema declarations). The `cadence` field per C.11 still applies as
       a separate workspace-wide refdata-cadence migration; instruments-service ODDS is per-(league, date) which already
       matches the per-day shard atom — no cadence drift to fix.
-- [x] [DOC] P0. Documented the outcome in `codex/02-data/sports-data-source-coverage-matrix.md` § 4 (resolved the "ODDS
+- [x] [DOC] P0. Documented the outcome in `/codex/02-data/sports-data-source-coverage-matrix.md` § 4 (resolved the "ODDS
       duplication" open question), § 2.2 (clarified `ODDS` here = footystats snapshot only), and § 5 changelog.
       Schema-modal disambiguation under C.3 below.
 
@@ -763,11 +763,11 @@ The two data_types collide visually in the data-status panel without a clear dis
       "NOT to be confused with…". - `normalize_footystats_odds_snapshot`: short docstring pointing at
       `normalize_footystats_odds` for the full bookmaker-odds vs FootyStats-predictions distinction.
 
-      Codex doc updated: `codex/02-data/sports-data-source-coverage-matrix.md` §2.2 — added `PREDICTIONS vs ODDS —
-                                                  disambiguation` block under the §2.2 footystats data_types matrix. Calls out the FOUR concrete differences:
-                                                  (a) PREDICTIONS = MODEL OUTPUT (FootyStats's algorithm), (b) ODDS = MARKET DATA (real bookmaker quotes),
-                                                  (c) downstream consumers must NOT merge them (different statistical properties), (d) strategy-service must NOT
-                                                  use PREDICTIONS as input feature for a model targeting ODDS for the same fixture (same-source label leakage).
+      Codex doc updated: `/codex/02-data/sports-data-source-coverage-matrix.md` §2.2 — added `PREDICTIONS vs ODDS —
+                                                                                                          disambiguation` block under the §2.2 footystats data_types matrix. Calls out the FOUR concrete differences:
+                                                                                                          (a) PREDICTIONS = MODEL OUTPUT (FootyStats's algorithm), (b) ODDS = MARKET DATA (real bookmaker quotes),
+                                                                                                          (c) downstream consumers must NOT merge them (different statistical properties), (d) strategy-service must NOT
+                                                                                                          use PREDICTIONS as input feature for a model targeting ODDS for the same fixture (same-source label leakage).
 
 #### C.4 — Transfermarkt PLAYER_VALUES per-player flatten
 
@@ -892,13 +892,13 @@ follow-up flatten target; STANDINGS and MATCHES are probably already correct.
       via raw-payload sample).
 
       Migration: if downstream consumers tolerate NaN, no flip needed (just landing the new normalizer + re-fetching
-                                              going forward writes populated columns from now on; historical rows stay None-populated and are NaN-tolerant);
-                                              if any consumer explicitly checks column existence via `.dropna(subset=...)`, then full B.1-shape migration
-                                              (flip + delete + re-fetch) is required. Cassette parity test catches the wire-up regression.
+                                                                                                      going forward writes populated columns from now on; historical rows stay None-populated and are NaN-tolerant);
+                                                                                                      if any consumer explicitly checks column existence via `.dropna(subset=...)`, then full B.1-shape migration
+                                                                                                      (flip + delete + re-fetch) is required. Cassette parity test catches the wire-up regression.
 
-                                              (UAC@4e23bd9 — added `home_goals_halftime`/halftime, `home_shots_on_target`, `home_yellow_cards`,
-                                              `home_red_cards`, home_fouls, home_offsides + `away_*` variants to FootyStatsMatch; normalized to
-                                              CanonicalFixture fields)
+                                                                                                      (UAC@4e23bd9 — added `home_goals_halftime`/halftime, `home_shots_on_target`, `home_yellow_cards`,
+                                                                                                      `home_red_cards`, home_fouls, home_offsides + `away_*` variants to FootyStatsMatch; normalized to
+                                                                                                      CanonicalFixture fields)
 
 ### FIXTURES schema split — SCHEDULE + OUTCOMES (migrated from issue `fixtures_lookahead_bias_post_match_scores_2026_05_08`) — SUPERSEDED 2026-06-20 (history only; see § "Workstream routing")
 
@@ -982,7 +982,7 @@ cancellations.
 - [x] ✅ [AGENT] P1. Empirical investigation — postponed-fixture identity. Pull 30 confirmed-postponed fixtures from
       api_football across 2024-2026; confirm for each whether: (a) same `fixture_id` retained at the new kickoff, OR (b)
       new `fixture_id` issued at reschedule, OR (c) original `fixture_id` deleted + replaced. Document the
-      empirically-correct model in `codex/02-data/sports-fixtures-lifecycle.md` (NEW codex doc; see codex todo below).
+      empirically-correct model in `/codex/02-data/sports-fixtures-lifecycle.md` (NEW codex doc; see codex todo below).
       **COMPLETED 2026-05-23**: Case (a) confirmed — 0 PST fixtures found across
       EPL/SerieA/Bundesliga/Ligue1/Championship/ LaLiga/Eredivisie for seasons 2023-2025; PST is transient, reverts to
       NS on reschedule, same fixture_id retained. Codex doc updated with full evidence table + operational implications
@@ -1101,7 +1101,7 @@ features silently miss bookmaker × market gaps.
       `expected_root_clusters = {fixture_id: len(EXPECTED_BOOKMAKER_MARKET_SETS[tier])}` per Phase 1A of writegate.
 - [x] ✅ [AGENT] P1. Downstream consumer guidance — features-sports arbitrage / odds-movement calculators handle NaN
       rows: arbitrage drops NaN bookmakers from the pricing comparison (already correct behavior); odds-movement treats
-      NaN snapshot as no-update (already correct). Document in `codex/02-data/honest-absence-downstream-handling.md` §
+      NaN snapshot as no-update (already correct). Document in `/codex/02-data/honest-absence-downstream-handling.md` §
       "ODDS NaN-fill semantics" (extend existing doc, not new). **COMPLETED 2026-05-23**: Section added to
       honest-absence-downstream-handling.md with: NaN-fill vs record_empty distinction table, per-consumer policy table
       (arbitrage/CLV/ML/execution), implementation note on cluster validation denominator — PM@(see commit).
@@ -1278,7 +1278,7 @@ Phases 1-3+5, C.6 report_time, MatchStatus SSOT item.
 | C.7 Follow-up #1: STANDINGS flatten                 | `[~]` partial-shipped   | UAC@ac12d80 — normalizer + schema flatten (14→32 cols); migration deferred (VM op)      |
 | C.7 Follow-up #3: MATCHES `team_a_*` → `home_*`     | `[x]` shipped           | UAC@4e23bd9 — FootyStats field mappings (12 home/away variants); migration deferred     |
 | MatchStatus adapter migration                       | `[ ]` open (DEFERRED)   | Replace `{"FT","AET","PEN"}` ad-hoc sets with `AF_COMPLETED_CODES` across IS adapters   |
-| Cross-source fixture status verifier                | `[x]` design-shipped    | PM@1a86b6ab — design in codex/02-data/sports-fixtures-lifecycle.md § verifier           |
+| Cross-source fixture status verifier                | `[x]` design-shipped    | PM@1a86b6ab — design in /codex/02-data/sports-fixtures-lifecycle.md § verifier          |
 | Codex doc `sports-fixtures-lifecycle.md`            | `[x]` shipped           | PM@1a86b6ab — 8-state lifecycle + per-state available_at + verifier design              |
 | FIXTURES schema split (SCHEDULE + OUTCOMES)         | `[ ]` P0 open           | Large — coordinate with writegate strict-mode flip                                      |
 
@@ -1327,14 +1327,14 @@ Phases 1-3+5, C.6 report_time, MatchStatus SSOT item.
       denominate against).
 
       **DONE 2026-06-03 (deployment-api@96e7ac7)**: `TEAMS` was `global_periodic cadence_days=1` (~365/yr) and
-                                              `PLAYER_VALUES` was `per_league_periodic cadence_days=90` (quarterly approx) — both WRONG (written at trigger
-                                              dates only). Added `global_trigger_date` + `per_league_trigger_date` axes +
-                                              `_sports_trigger_dates_for_{window,league}` helpers (union of `get_reference_refresh_dates` across leagues,
-                                              clipped) reading from the UAC `LEAGUE_REGISTRY` (no GCS I/O, so it works before the IS write-path lands —
-                                              coverage shows 0% until then, correctly).
+                                                                                                      `PLAYER_VALUES` was `per_league_periodic cadence_days=90` (quarterly approx) — both WRONG (written at trigger
+                                                                                                      dates only). Added `global_trigger_date` + `per_league_trigger_date` axes +
+                                                                                                      `_sports_trigger_dates_for_{window,league}` helpers (union of `get_reference_refresh_dates` across leagues,
+                                                                                                      clipped) reading from the UAC `LEAGUE_REGISTRY` (no GCS I/O, so it works before the IS write-path lands —
+                                                                                                      coverage shows 0% until then, correctly).
 
-                                              `TEAMS` → `global_trigger_date`, `PLAYER_VALUES` → `per_league_trigger_date`. 8 tests incl. the
-                                              trigger-date≪daily-calendar invariant. QG exit 0.
+                                                                                                      `TEAMS` → `global_trigger_date`, `PLAYER_VALUES` → `per_league_trigger_date`. 8 tests incl. the
+                                                                                                      trigger-date≪daily-calendar invariant. QG exit 0.
 
 - [ ] [QG] P2. `bash scripts/quality-gates.sh` on deployment-api after A4.1.
 
@@ -1485,7 +1485,7 @@ readiness — scoped chain + gates (no activation)
   [`sports_data_available_at_rename_2026_05_07.md`](../archive/sports_data_available_at_rename_2026_05_07.plan.md).
 - Sports phantom-fixtures-recovery handover: `plans/ai/_sports_phantom_fixtures_recovery_handover_2026_05_06.md`.
 - Honest-coverage % surface: `GET /api/data-status/honest-coverage` + `HonestCoverageCard` (deployment-ui). SSOT:
-  [`codex/03-deployment/data-status-ui-surface.md`](../../codex/03-deployment/data-status-ui-surface.md). Phase 7F per
+  [`/codex/03-deployment/data-status-ui-surface.md`](/codex/03-deployment/data-status-ui-surface.md). Phase 7F per
   `cross_asset_group_catalogue_audit_2026_05_10.md`.
 - Canonical asset_group registry: `unified_api_contracts.canonical.crosscutting.asset_group_registry` (Phase 5C/5D).
 

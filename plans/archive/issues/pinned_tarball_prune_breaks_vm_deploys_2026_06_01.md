@@ -12,7 +12,12 @@ tags: []
 related: []
 created: 2026-06-01
 author: ikenna (slot 1)
-source: ['bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md (migration attempt-1 failure, 2026-06-01)', deployment-service/scripts/vm/create-code-tarballs.sh + setup-data-pipeline-vm.sh, codex/05-infrastructure/vm-tarball-deployment.md]
+source:
+  [
+    "bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md (migration attempt-1 failure, 2026-06-01)",
+    deployment-service/scripts/vm/create-code-tarballs.sh + setup-data-pipeline-vm.sh,
+    /codex/05-infrastructure/vm-tarball-deployment.md,
+  ]
 locked_by: live-defi-rollout
 ---
 

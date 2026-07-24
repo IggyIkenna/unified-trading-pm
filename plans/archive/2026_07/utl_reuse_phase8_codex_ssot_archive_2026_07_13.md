@@ -52,24 +52,25 @@ drift_direction: correct-codex
 
 ## Todos
 
-- [x] ✅ [AUDIT] P1. Update codex for every contract this plan changes: `codex/06-coding-standards/README.md`
-      (reuse-before-reimplement rule + the new UTL retry helper), `codex/04-architecture/agent-orchestrator-overview.md`
-      (cloud I/O via UTL; auth-fetch only), `codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md`
-      (strategy equity-drawdown-HWM is local + distinct from UTL fee-crystallization HWM — record the NON-finding so a
-      future audit doesn't re-flag it), and the ml model-registry doc (UTL is SSOT; writegate/manifest/allowlist now in
-      UTL). — DONE (2026-07-13, slot-3), `unified-trading-pm@<this commit>`:
-  - **`codex/06-coding-standards/README.md`**: added Core Principle 6 ("Reuse before reimplement") citing the whole
+- [x] ✅ [AUDIT] P1. Update codex for every contract this plan changes: `/codex/06-coding-standards/README.md`
+      (reuse-before-reimplement rule + the new UTL retry helper),
+      `/codex/04-architecture/agent-orchestrator-overview.md` (cloud I/O via UTL; auth-fetch only),
+      `/codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md` (strategy equity-drawdown-HWM is local +
+      distinct from UTL fee-crystallization HWM — record the NON-finding so a future audit doesn't re-flag it), and the
+      ml model-registry doc (UTL is SSOT; writegate/manifest/allowlist now in UTL). — DONE (2026-07-13, slot-3),
+      `unified-trading-pm@<this commit>`:
+  - **`/codex/06-coding-standards/README.md`**: added Core Principle 6 ("Reuse before reimplement") citing the whole
     9-phase remediation as the verification precedent; documented UTL's new `retry`/`with_retry` helper
     (`unified-trading-library@20c8ae8d`) as the pattern for hand-rolled adapter retry loops, distinct from the existing
     `@handle_api_errors`/`@handle_storage_errors` decorators.
-  - **`codex/04-architecture/agent-orchestrator-overview.md`**: added a callout noting `server/gcs_sync.py` and
+  - **`/codex/04-architecture/agent-orchestrator-overview.md`**: added a callout noting `server/gcs_sync.py` and
     `server/auth.py::_load_gcs_secret` go through UTL `get_storage_client()` (not raw `boto3`/`google.cloud.storage`) as
     of `agent-orchestrator@62894565` — auth-fetch only, JWT signing itself untouched.
-  - **`codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md`**: added the equity-curve-drawdown vs
+  - **`/codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md`**: added the equity-curve-drawdown vs
     fee-crystallization-HWM NON-finding (matching the existing `hwm_seeds.py` NON-finding's format) — strategy-service's
     `RiskCalculator.calculate_drawdown`/`compute_drawdown` + the `pnl_monitor.py`/`output_builders.py` peak loop are a
     different domain (real-time risk gating) from §8's fee HWM (performance-fee billing); do not collapse them.
-  - **`codex/04-architecture/ml-service-architecture.md`**: updated the sub-package layout diagram (the local
+  - **`/codex/04-architecture/ml-service-architecture.md`**: updated the sub-package layout diagram (the local
     `model_registry` entry was deleted in Phase 3) and added a "ModelRegistry class SSOT" note pointing at
     `unified_trading_library.ModelRegistry` as the canonical home, listing all 4 repointed ml-service consumers.
 - [x] ✅ [AUDIT] P1. Record the **verified NON-findings** list (greeks BSM kernel — UAC has only delta-strike schemas;
@@ -77,10 +78,10 @@ drift_direction: correct-codex
       schemas; trading-agent ephemeral ledger; ibkr TCP health probe; client-reporting-api `core/hwm_seeds.py` — static
       seeds for UTL's three-method HWM, not a `max(equity)` reimpl) in the relevant codex docs so the next reuse audit
       doesn't re-open them. — unified-trading-pm@6bd87af85. Recorded in
-      `codex/04-architecture/greeks-service-overview.md`, `codex/04-architecture/kill-switch-circuit-breaker.md`,
-      `codex/09-strategy/operational/paper-batch-live-reconciliation.md`,
-      `codex/04-architecture/trading-agent-service-directive-pipeline.md`, `codex/02-venues/prime-brokers.md`, and
-      `codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md`.
+      `/codex/04-architecture/greeks-service-overview.md`, `/codex/04-architecture/kill-switch-circuit-breaker.md`,
+      `/codex/09-strategy/operational/paper-batch-live-reconciliation.md`,
+      `/codex/04-architecture/trading-agent-service-directive-pipeline.md`, `/codex/02-venues/prime-brokers.md`, and
+      `/codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md`.
 - [x] [VERIFY] P1. Remove the Phase-0 in-flight banners (added to the 5 epic plans); run plan-hygiene + active-inventory
       regen; archive the tracker (`plans/active/utl_uac_reuse_consolidation_remediation_2026_06_10.md`) and this whole
       split family per the 5-step HARD RULE once all repos hit C5. — **FOLDED OUT** to

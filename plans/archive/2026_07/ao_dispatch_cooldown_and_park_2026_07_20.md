@@ -15,9 +15,9 @@ scope: [engineer]
 tags: [agent-orchestrator, dispatch, cooldown, auto-park, policy]
 related:
   [
-    ao_open_issues_consolidated_close_out_2026_07_17.md,
-    ao_backlog_regen_integrity_2026_07_20.md,
-    ao_fleet_observability_kpis_2026_07_20.md,
+    /plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md,
+    /plans/archive/2026_07/ao_backlog_regen_integrity_2026_07_20.md,
+    /plans/active/ao_fleet_observability_kpis_2026_07_20.md,
   ]
 created: 2026-07-20
 last_updated: 2026-07-20
@@ -142,7 +142,7 @@ identical conclusion.
       done — a mechanism-level enforcement would need every future manual park to register through this same store,
       which the manual RULES.md recipe does not currently do).
 - [x] ✅ [BACKEND] P2. **Publish the store's contract for its other consumer.** — this commit. SSOT:
-      `codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` § "2. Task lifecycle" ("Skip / cooldown /
+      `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` § "2. Task lifecycle" ("Skip / cooldown /
       park") — key namespacing, window semantics, change-triggered re-eligibility, and the full auto-park/unpark
       contract, `code_refs` updated. Notified `ao_fleet_observability_kpis_2026_07_20.md` directly (Progress Log entry +
       AF-1b todo text updated to "Unblocked 2026-07-20"). **Gate PARTIALLY MET**: the interface is documented and
@@ -159,9 +159,9 @@ identical conclusion.
 
 ## Codex SSOTs
 
-- `codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` — dispatch/skip/park model.
-- `codex/06-coding-standards/config-reloader-pattern.md` + the 2026-07-18 config split — why new tunables are env-free.
-- `codex/04-architecture/agent-orchestrator-alerting.md` — the park's operator-visible surface must be actionable-only.
+- `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` — dispatch/skip/park model.
+- `/codex/06-coding-standards/config-reloader-pattern.md` + the 2026-07-18 config split — why new tunables are env-free.
+- `/codex/04-architecture/agent-orchestrator-alerting.md` — the park's operator-visible surface must be actionable-only.
 
 ## Progress Log
 

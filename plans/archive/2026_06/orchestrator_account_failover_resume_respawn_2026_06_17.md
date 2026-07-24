@@ -1,7 +1,8 @@
 ---
 title: "Orchestrator account failover — context-preserving resume-respawn on usage cap"
 created: 2026-06-17
-status: supersededparent_epic: orchestrator_master
+status: superseded
+parent_epic: orchestrator_master
 assigned_vm: harsh_pc
 execution_scope: local-only
 locked_by: live-defi-rollout
@@ -222,11 +223,11 @@ The Phase-3 watchdog/keeper paths were already correct (`pick_headroom_account`)
 
 ## Codex SSOT updates
 
-- ✅ `codex/04-architecture/agent-orchestrator-overview.md` § Worker liveness watchdog — added "Trigger 1.4 — usage-cap
+- ✅ `/codex/04-architecture/agent-orchestrator-overview.md` § Worker liveness watchdog — added "Trigger 1.4 — usage-cap
   account failover (resume-respawn)" documenting cap → resume on fresh headroom account, 95%-is-spawn-gate-only,
   wait-don't-force-spawn when capped, deterministic session-id + persistence, main-agent parity, cooldown + no-daily-cap
   for the resume path.
-- ✅ `codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md` § "Context-preserving resume across a token
+- ✅ `/codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md` § "Context-preserving resume across a token
   change" — added the verified resume-across-token-change facts (session-id at launch, `--resume` reloads context in the
   same config-dir + cwd, token-change clean under setup-token auth, gotchas).
 
@@ -270,8 +271,8 @@ The Phase-3 watchdog/keeper paths were already correct (`pick_headroom_account`)
       `last_msg="↻ resumed on sub-a-ikenna after usage cap (context intact)"`, `claude_session_id` unchanged, and
       `watchdog_usage_cap_resumed` logged `{"account_id": "sub-a-ikenna", "claude_session_id": …}`.
     - **FROZEN (decision B, no headroom):** all 4 accounts forced to 99% → watchdog did **NOT** kill (pane still alive),
-      set `last_msg="⏸ usage-capped — awaiting account headroom"`, logged `watchdog_usage_cap_frozen` **once** (a
-      second tick left the count at 1 — per-episode dedup), slot in `_cap_frozen_paged`.
+      set `last_msg="⏸ usage-capped — awaiting account headroom"`, logged `watchdog_usage_cap_frozen` **once** (a second
+      tick left the count at 1 — per-episode dedup), slot in `_cap_frozen_paged`.
   - Net: Phase 1 P2 + Phase 4 P1 verified locally (same claude build + real multi-account resume). The only remaining
     item is the Phase 4 P2 live `systemctl restart` + runtime-log observation on the central VM (operator).
 - **2026-06-23 (slot-2, laptop) — operator-requested RECOVERY AUDIT of the account-exhaustion incident + Phase 6 fix.**

@@ -6,26 +6,41 @@ status: drafted
 nature: record
 asset_group: [sports]
 stage: [meta]
-repos: [alerting-service, batch-live-reconciliation-service, deployment-api, deployment-service, deployment-ui, execution-service]
+repos:
+  [
+    alerting-service,
+    batch-live-reconciliation-service,
+    deployment-api,
+    deployment-service,
+    deployment-ui,
+    execution-service,
+  ]
 scope: [engineer, admin]
 tags: []
-related: [predictions_master.md, infrastructure_master.md]
+related: [/plans/epics/predictions_master.md, /plans/epics/infrastructure_master.md]
 created: 2026-05-06
 role: umbrella
 archived: 2026-05-23
 last_updated: 2026-05-23
 parent: manifest_evolution_SUPERSEDED_2026_05_21
 companion_handover: plans/archive/shard_granularity_ssot_propagation_2026_05_06.HANDOVER.md
-supersedes_phases: [plans/archive/shard_granularity_ssot_propagation_2026_05_06.md § Phase 1 Tier 1, 'plans/archive/shard_granularity_ssot_propagation_2026_05_06.md § Phase 1 Tier 2 raw-tables (sports available_at, paused — now scoped here)']
+supersedes_phases:
+  [
+    plans/archive/shard_granularity_ssot_propagation_2026_05_06.md § Phase 1 Tier 1,
+    "plans/archive/shard_granularity_ssot_propagation_2026_05_06.md § Phase 1 Tier 2 raw-tables (sports available_at,
+    paused — now scoped here)",
+  ]
 manifest_migration_coordinator: manifest_migration_SUPERSEDED_2026_05_21.md
 estimate_class: design
 estimate_baseline_ai_days: 40
 estimate_calibrated_ai_days: 24.0
-estimate_calibration_note: 'No explicit AI-day estimates found in plan body during 2026-05-11 sweep; class inferred from filename (design, multiplier 0.6×).
+estimate_calibration_note: "No explicit AI-day estimates found in plan body during 2026-05-11 sweep; class inferred from
+  filename (design, multiplier 0.6×).
 
-  Owner agent: fill baseline + multiply × 0.6 per codex/08-workflows/estimation-calibration.md. Refine class if dominant work-class differs.
+  Owner agent: fill baseline + multiply × 0.6 per /codex/08-workflows/estimation-calibration.md. Refine class if
+  dominant work-class differs.
 
-  '
+  "
 parent_epic: sports_master
 assigned_vm: vm-sports
 priority: P0
@@ -1273,10 +1288,14 @@ new UTL pinned in workspace-manifest.json.
       `"prediction_canonical_question_group"` — registry: `PREDICTION_GROUPS = {}` **EMPTY temporary state**. Slot
       reserved + cluster guard wired. NO caller currently uses this data*type (Polymarket shards per-`base_asset` per
       current audit). When canonical_question_group SSOT lands in
-      `prediction_canonical_question_group_uac_ssot_2026*<TBD>.md`, registry gets populated AND Polymarket migrates AND cluster guard fires meaningfully. Documented in §"Temporary states + their canonical follow-up plans".     - `DATA_TYPE_TO_CLUSTER_REGISTRY:
-      dict[str,
-      str]`(data_type → registry symbol name).     -`OPTIONS_CLUSTERS`lifted from instruments-service (ES.OPT 11-cluster taxonomy as seed; per-root entries).     -`FUTURES_CLUSTERS`(greenfield; ES + MES seeds; spreads + butterflies per root).     -`SPORTS_FIXTURE_CLUSTERS` (greenfield; per-`league_tier`→ expected bookmaker set; tier-1 EU football seed; tier-2 / tier-3 expansion in this plan or follow-up).     -`PREDICTION_GROUPS
-      = {}` (empty placeholder; gets populated by canonical_question_group SSOT plan).
+      `prediction_canonical_question_group_uac_ssot_2026*<TBD>.md`, registry gets populated AND Polymarket migrates AND
+      cluster guard fires meaningfully. Documented in §"Temporary states + their canonical follow-up plans". -
+      `DATA_TYPE_TO_CLUSTER_REGISTRY:     dict[str,     str]`(data_type → registry symbol
+      name). -`OPTIONS_CLUSTERS`lifted from instruments-service (ES.OPT 11-cluster taxonomy as seed; per-root
+      entries). -`FUTURES_CLUSTERS`(greenfield; ES + MES seeds; spreads + butterflies per
+      root). -`SPORTS_FIXTURE_CLUSTERS` (greenfield; per-`league_tier`→ expected bookmaker set; tier-1 EU football seed;
+      tier-2 / tier-3 expansion in this plan or follow-up). -`PREDICTION_GROUPS     = {}` (empty placeholder; gets
+      populated by canonical_question_group SSOT plan).
 - [x] [SCRIPT] P0. New module `unified_api_contracts/canonical/crosscutting/source_priority.py`: - `SourcePriority` enum
       or dataclass per `(asset_group, data_type)`. - `SOURCE_PRIORITY: dict[tuple[str, str], list[str]]` — ordered list
       of source keys, top entry is primary. - Tie-breaker rules documented in module docstring (timestamp-availability >
@@ -1335,13 +1354,13 @@ QG between Phase 1B and Phase 2: UAC tests green; UAC pushed; consumer-pin propa
   `available_at` column. Each row's value = when the live pipeline would have actually had that row's information (per
   `UAC.AVAILABILITY_AT_SEMANTICS`). For multi-source data*types, the `UAC.SOURCE_PRIORITY` top entry determines the
   source whose timing is used. NEVER derived at read-time. Stamping helpers:
-  `unified_trading_library.availability_stamping.stamp_available_at*\*`. UTL's `record_captured`calls `assert_available_at_present`
-  internally.
+  `unified_trading_library.availability_stamping.stamp_available_at*\*`. UTL's `record_captured`calls
+  `assert_available_at_present` internally.
 
 - [x] [DOCS] P0. Update existing CLAUDE.md "Honest absence vs fake placeholders" section with explicit cross-link to the
       three-category decision; rewrite the "Reader/schema-drift bug" sub-bullet to call out path B (timestamp bias) as a
       distinct sub-class. [AUDIT 2026-05-07: DONE — CLAUDE.md line 309 carries explicit cross-link to
-      `codex/02-data/honest-absence-downstream-handling.md`; line 286 "Three-category empty-output decision" rule
+      `/codex/02-data/honest-absence-downstream-handling.md`; line 286 "Three-category empty-output decision" rule
       references reason taxonomy + per-service consumer-class audit.]
 - [x] [DOCS] P0. Update `unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md` to inherit the new sections
       (it's a per-repo synced file). [AUDIT 2026-05-07: FRESH — actionable; SUB_AGENT_MANDATORY_RULES.md missing the
@@ -1454,8 +1473,8 @@ grep.
       `DefiMarketStateAdapter`.]
 - [x] ✅ [SCRIPT] P0. Wire `expected_root_clusters` + `cluster_extractor` into MDPS chain-bundle write paths
       (futures_chain, options_chain). Use UAC `DATA_TYPE_TO_CLUSTER_REGISTRY` to look up the registry per data_type.
-      [AUDIT 2026-05-07: FRESH — actionable; zero `expected_root_clusters` callsites in MDPS (`grep -r
-      "expected_root_clusters" market_data_processing_service/` returns empty). MTDS has the wiring at
+      [AUDIT 2026-05-07: FRESH — actionable; zero `expected_root_clusters` callsites in MDPS
+      (`grep -r     "expected_root_clusters" market_data_processing_service/` returns empty). MTDS has the wiring at
       orchestrator.py:2155 for ES.OPT only; MDPS chain-bundle adapters need parallel wiring. Couples to MTDS Phase 2.B
       item below.] — market-data-processing-service@5b95fb5 (\_build_cluster_params: futures_chain →
       FUTURES_CHAIN_BUCKETS + futures_expiry_bucket; options_chain → get_active_es_options_clusters_for_date +
@@ -1629,9 +1648,9 @@ grep.
       `stamp_available_at_post_match(df, "kickoff_utc", duration_min=120)` — **fallback only** since api*football
       `/injuries` exposes no timestamp (amendment C). Document as best-effort proxy until forward-poll-vs-backfill
       timestamp differentiation lands in instruments-service (separate plan
-      `sports_forward_poll_timestamps_2026*<TBD>.md`).     - 8 reference tables → `stamp_available_at_explicit(df,
-      fetch_completed_at)`where `fetch_completed_at`    comes from`\_FETCH_COMPLETED_AT[table_name]` cache populated at
-      fetch time.
+      `sports_forward_poll_timestamps_2026*<TBD>.md`). - 8 reference tables →
+      `stamp_available_at_explicit(df,     fetch_completed_at)`where `fetch_completed_at` comes
+      from`\_FETCH_COMPLETED_AT[table_name]` cache populated at fetch time.
 - [x] [SCRIPT] P0. Add `_FETCH_COMPLETED_AT: dict[str, datetime]` module-level cache in `_fetch_runner.py` (verified
       location via audit 2026-05-06; currently does not exist). Populate inside each `run_fetch_*` for the 8 reference
       tables at the moment the GCS read returns. Accessor: `get_fetch_completed_at(table_name) -> datetime`. Today's
@@ -1660,19 +1679,23 @@ grep.
       No source dependency.
 - [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0. **Deferred schema bumps with low-confidence fallback shipping today
       (named successor plan listed below)**: `announced_at` (FIXTURES), `report_time` (INJURIES), `match_end_time`
-      (FIXTURE*STATS / FIXTURE_PLAYER_STATS) ship as nullable columns with paired
-      `*_confidence`audit columns: -    `announced_at: timestamp_utc nullable`+    `announced_at_confidence:
-      Literal["source_native", "low_default_kickoff_minus_14d"]`. Today: every row gets     `kickoff_utc -
-      14d`+`low_default_kickoff_minus_14d`. When successor plan lands a forward-poll source that     captures real announcement time, rows re-stamp from the new source. - `report_time:
-      timestamp_utc nullable`+    `report_time_confidence: Literal["source_native",
-      "low_default_kickoff_minus_lead_time"]`. Today: every row gets     `kickoff_utc -
-      injury_lead_time_estimate`(per-league average lead time, default 7 days) +    `low_default\*_`. Successor plan: forward-poll injury sources with timestamps.     - `match*end_time:
-      timestamp_utc nullable`+`match_end_time_source: Literal["api_football_native", "sfi_progressive_freeze",
-      "footystats_native", "understat_native",
-      "low_default_kickoff_plus_120min"]`. Today: detection cascade lands per Phase 2.D below; rows that fall to last-resort get `low_default*\_`. SFI freeze-detection IS achievable today (re-uses halftime detector), so most fixtures resolve via cascade not fallback.     - `occurrence*time:
-      timestamp_utc
-      nullable`(in `INJURIES_COLUMNS`) — populated when injury fixture's `fixture_events`table contains the injury event; else null. No fallback.     **Successor plan**:`sports_forward_poll_timestamps_2026*<TBD>.md`— captures real-time scraping of announcement, injury report, and match end times from sources that DO expose these (verify per source in that plan's Phase 0). After successor plan lands + retrospective backfill completes, the `\*\_confidence`
-      audit columns surface low-default fixtures in data-status panel for re-attempt.
+      (FIXTURE*STATS / FIXTURE_PLAYER_STATS) ship as nullable columns with paired `*_confidence`audit columns: -
+      `announced_at: timestamp_utc nullable`+
+      `announced_at_confidence:     Literal["source_native", "low_default_kickoff_minus_14d"]`. Today: every row gets
+      `kickoff_utc -     14d`+`low_default_kickoff_minus_14d`. When successor plan lands a forward-poll source that
+      captures real announcement time, rows re-stamp from the new source. - `report_time:     timestamp_utc nullable`+
+      `report_time_confidence: Literal["source_native",     "low_default_kickoff_minus_lead_time"]`. Today: every row
+      gets `kickoff_utc -     injury_lead_time_estimate`(per-league average lead time, default 7 days) +
+      `low_default\*_`. Successor plan: forward-poll injury sources with timestamps. -
+      `match*end_time:     timestamp_utc nullable`+`match_end_time_source: Literal["api_football_native", "sfi_progressive_freeze",     "footystats_native", "understat_native",     "low_default_kickoff_plus_120min"]`.
+      Today: detection cascade lands per Phase 2.D below; rows that fall to last-resort get `low_default*\_`. SFI
+      freeze-detection IS achievable today (re-uses halftime detector), so most fixtures resolve via cascade not
+      fallback. - `occurrence*time:     timestamp_utc     nullable`(in `INJURIES_COLUMNS`) — populated when injury
+      fixture's `fixture_events`table contains the injury event; else null. No fallback. **Successor
+      plan**:`sports_forward_poll_timestamps_2026*<TBD>.md`— captures real-time scraping of announcement, injury report,
+      and match end times from sources that DO expose these (verify per source in that plan's Phase 0). After successor
+      plan lands + retrospective backfill completes, the `\*\_confidence` audit columns surface low-default fixtures in
+      data-status panel for re-attempt.
 - [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P0. **`match_end_time` detection cascade (in scope — SFI freeze-detection
       IS achievable today)**. Cascade per-fixture (UAC `MATCH_END_TIME_DETECTORS` registry, source-priority ordered): 1.
       `api_football` — `fixture.fixture.timestamp` +
@@ -1705,7 +1728,7 @@ manifest verbs across all 4 services for a 1-day × 1-venue test run.
 
 Operator direction 2026-05-07: the manifest is the single source of truth for "what's there + why what's there is or
 isn't there." Two refinements over the original 3-category model in Phase 2.A — codified in
-[`codex/02-data/honest-absence-downstream-handling.md` § &#34;Reason taxonomy (codified 2026-05-07)&#34;](../../codex/02-data/honest-absence-downstream-handling.md):
+[`/codex/02-data/honest-absence-downstream-handling.md` § &#34;Reason taxonomy (codified 2026-05-07)&#34;](/codex/02-data/honest-absence-downstream-handling.md):
 
 1. **Expanded reason taxonomy.** `empty_confirmed` rows now carry one of: `EXPECTED_HOLIDAY`, `EXPECTED_WEEKEND`,
    `EXPECTED_PAUSED_LEAGUE`, `EXPECTED_PRE_SOURCE_COVERAGE_START`, `EXPECTED_PRE_GENESIS_CHAIN`,
@@ -1860,12 +1883,16 @@ split.
       parquet under `day=YYYY-MM-DD`, check if any tick's `timestamp.date()` differs from the partition key. Stats-only
       first (count mismatches per venue / data_type / day); flag for human review before flipping any manifest rows
       (this is upstream-bug detection, not data-quality fix). Shipped MTDS@a32433b —
-      `scripts/mtds_reconcile_partition_mismatch.py` (454 lines). Walks
-      `raw_tick_data/by_date/day=*/...`via     ThreadPoolExecutor + pyarrow column-only reads; samples up to`--sample-size`rows (default 1000) per parquet and     counts ticks whose`tick_timestamp.date()`differs from the path partition`day=`. Probes 7 candidate timestamp     column names (`timestamp`/`ts`/`tick_timestamp`/`event_timestamp`/`block_timestamp`/`trade_timestamp`/    `kline_timestamp`); skips parquets without one. Output: CSV report at     `$TMPDIR/mtds-partition-mismatch-{asset_group}-{ts}.csv`+ top-20`(venue,
-      data_type,
-      day)`aggregate logged for     operator quick-look. **Stats-only by design** — does NOT flip manifest rows. Operator decides remediation     (typically: launch MTDS gapfill VM for the high-mismatch_pct tuples). RECONCILER*\* events emitted via UTL     log_event. Filters:`--asset-group
-      {cefi,defi,tradfi,prediction}`+ optional`--venue`/`--data-type`/`--day` for incremental review. Smoke-verified
-      module loads + asset_group set + timestamp probe order.
+      `scripts/mtds_reconcile_partition_mismatch.py` (454 lines). Walks `raw_tick_data/by_date/day=*/...`via
+      ThreadPoolExecutor + pyarrow column-only reads; samples up to`--sample-size`rows (default 1000) per parquet and
+      counts ticks whose`tick_timestamp.date()`differs from the path partition`day=`. Probes 7 candidate timestamp
+      column names (`timestamp`/`ts`/`tick_timestamp`/`event_timestamp`/`block_timestamp`/`trade_timestamp`/
+      `kline_timestamp`); skips parquets without one. Output: CSV report at
+      `$TMPDIR/mtds-partition-mismatch-{asset_group}-{ts}.csv`+ top-20`(venue,     data_type,     day)`aggregate logged
+      for operator quick-look. **Stats-only by design** — does NOT flip manifest rows. Operator decides remediation
+      (typically: launch MTDS gapfill VM for the high-mismatch_pct tuples). RECONCILER*\* events emitted via UTL
+      log_event. Filters:`--asset-group     {cefi,defi,tradfi,prediction}`+ optional`--venue`/`--data-type`/`--day` for
+      incremental review. Smoke-verified module loads + asset_group set + timestamp probe order.
 - [x] [SCRIPT] P0. `features_sports_reconcile_available_at.py` — for every features-sports parquet on disk, check if
       `available_at` column present + populated correctly per the new UAC semantic. If missing or wrong → flip manifest
       from `captured` to `attempted_failed[reason=MissingAvailableAt]`. Re-attempt happens via Phase 2.C re-run. Shipped
@@ -2038,9 +2065,9 @@ per-consumer integration tests demonstrate same downstream behaviour for legacy 
 **Why this exists.** Phase 3.D.1 reconciler stamps reasons on `empty_confirmed AND error_reason IS NULL` rows (legacy
 backfill), but does **NOT enumerate the expected universe** — tuples that have NO manifest row at all stay absent. This
 leaves the rollup-vs-drilldown denominator gap open (per
-[`codex/02-data/availability-manifest-and-data-status.md`](../../codex/02-data/availability-manifest-and-data-status.md)
-§ "Rollup-vs-drilldown denominator divergence (codified 2026-05-07)"). To close the gap, every expected
-`(shard_key, day)` MUST have a manifest row.
+[`/codex/02-data/availability-manifest-and-data-status.md`](/codex/02-data/availability-manifest-and-data-status.md) §
+"Rollup-vs-drilldown denominator divergence (codified 2026-05-07)"). To close the gap, every expected `(shard_key, day)`
+MUST have a manifest row.
 
 **Operator directive 2026-05-07**: _"if needs be, we can just write the manifest with every single entry as
 not-attempted or something that's not the same as empty, so that all the possible combinatorics are already reflected in
@@ -2064,8 +2091,10 @@ sub-phase ships the enumerator that physically writes those rows.
       `instruments-service/scripts/enumerate_expected_universe.py` — accepts
       `--asset-group {defi | sports | tradfi | cefi | prediction}` flag, walks the asset*group's expected universe per
       the matrix above, reads the canonical manifest ONCE (manifest concurrency principle), filters to tuples with NO
-      manifest row, writes
-      `record_expected_empty(reason=EXPECTED*\*)`rows via UTL`record_expected_empty`helper.     Default scan-only (CSV report);`--apply-write`requires`MANIFEST_PER_VM_SHARDS=true`+`VM_NAME=...`per the     per-VM shard isolation rule.`--max-writes-per-run`default 100k halt safety. Mirrors the safety scaffolding of    `reconcile_expected_absence_reasons.py`.
+      manifest row, writes `record_expected_empty(reason=EXPECTED*\*)`rows via UTL`record_expected_empty`helper. Default
+      scan-only (CSV report);`--apply-write`requires`MANIFEST_PER_VM_SHARDS=true`+`VM_NAME=...`per the per-VM shard
+      isolation rule.`--max-writes-per-run`default 100k halt safety. Mirrors the safety scaffolding of
+      `reconcile_expected_absence_reasons.py`.
 - [x] [SCRIPT] P0 (shipped instruments-service@8e404c8 / @d1c9928). Per-asset-group reason classifier dispatch —
       `_enumerate_tradfi` yields `EXPECTED_HOLIDAY` / `EXPECTED_WEEKEND` (via UAC `non_trading_day_reason`);
       `_enumerate_defi` yields `EXPECTED_PRE_GENESIS_CHAIN` (day < `chain_genesis`) and `EXPECTED_INSTRUMENT_NOT_LISTED`
@@ -2122,13 +2151,13 @@ sub-phase ships the enumerator that physically writes those rows.
       pass on the data-status panel. Fine-grained per-instrument lifecycle (cefi instrument-listed-since / prediction
       `PREDICTION_GROUPS` per-day) is the v2 universe in Phase 3.D.5 below, not Phase 3.D.4.
 - [x] [DOCS] P0 (shipped 2026-05-07, PM@5e8f8ca6). Updated
-      [`codex/02-data/expected-absence-backfill-runbook.md`](../../codex/02-data/expected-absence-backfill-runbook.md)
-      from PLANNED stub to SHIPPED runbook: documents both passes (reconciler + enumerator), per-asset-group volumes
-      table (1,455,901 total rows), scan-only / apply-write recipe, verification protocol (events + per-VM shard +
-      canonical merge spot-check), operational hazards (cap-bump for DeFi, per-VM shard isolation requirement,
-      dtype-correct fill-default fix), re-run cadence, open follow-ups.
+      [`/codex/02-data/expected-absence-backfill-runbook.md`](/codex/02-data/expected-absence-backfill-runbook.md) from
+      PLANNED stub to SHIPPED runbook: documents both passes (reconciler + enumerator), per-asset-group volumes table
+      (1,455,901 total rows), scan-only / apply-write recipe, verification protocol (events + per-VM shard + canonical
+      merge spot-check), operational hazards (cap-bump for DeFi, per-VM shard isolation requirement, dtype-correct
+      fill-default fix), re-run cadence, open follow-ups.
 - [x] [DOCS] P0 (shipped 2026-05-07, PM@5e8f8ca6). Marked
-      [`codex/02-data/availability-manifest-and-data-status.md`](../../codex/02-data/availability-manifest-and-data-status.md)
+      [`/codex/02-data/availability-manifest-and-data-status.md`](/codex/02-data/availability-manifest-and-data-status.md)
       § "Rollup-vs-drilldown denominator divergence" "Half 2 — Backward-fill" sub-section as **SHIPPED** with VM commit
       shas (PM@79e47874 + PM@341bb285) + spot-check evidence (DeFi 688,220 EXPECTED_PRE_GENESIS_CHAIN sample
       `chain=ARBITRUM venue=AAVE_V3-ARBITRUM day=2018-01-01`; TradFi 35,050 EXPECTED_WEEKEND sample
@@ -2420,7 +2449,7 @@ interface on the manifest.
       instrument-types with thousands of expiring contracts (options chains), the per-cluster bundle drilldown already
       collapses; per-day for the bundle root is the relevant grain.
 - [x] [DOCS] P0. Update
-      [`codex/02-data/availability-manifest-and-data-status.md`](../../codex/02-data/availability-manifest-and-data-status.md)
+      [`/codex/02-data/availability-manifest-and-data-status.md`](/codex/02-data/availability-manifest-and-data-status.md)
       to document the 4-state capture_status taxonomy + the v1+v2 hierarchical SSOT model + the `expected_unattempted` →
       `captured` supersede semantics. ✅ PM@77f0ef404 — added `expected_unattempted` cascade contract subsection with
       4-state routing table, scheduling artifact semantics, supersede contract, and coverage formula impact.
@@ -2579,7 +2608,7 @@ clear instruction for "what's actually there", per-service flexibility for "how 
       OK to signal on; pre-launch / unattempted is not.)
 - [x] ✅ DEFERRED-OPERATOR-DECISION [execution] P2. Position / fill simulation respects upstream cascade. (Mostly
       already correct via the manifest pre-flight gate — this is an audit pass.)
-- [x] [DOCS] P0. Codify the cascade in `codex/02-data/honest-absence-downstream-handling.md` — per-service
+- [x] [DOCS] P0. Codify the cascade in `/codex/02-data/honest-absence-downstream-handling.md` — per-service
       consumer-class audit table extension to include `expected_unattempted` and the cascade-propagation contract. ✅
       PM@77f0ef404 — added `## Per-service consumer-class — 4-state capture_status handling` table +
       `expected_unattempted` cascade contract subsection in availability-manifest-and-data-status.md.
@@ -2684,7 +2713,7 @@ been empty_confirmed" finding adds:
       per-canonical-question-group lifecycle (depends on UAC `PREDICTION_GROUPS` per `predictions_master.md`). Yields
       `expected_unattempted` for active markets, `EXPECTED_INSTRUMENT_NOT_LISTED` / `EXPECTED_INSTRUMENT_DELISTED` for
       outside-lifecycle dates.
-- [x] ✅ [DOCS] P0. Update `codex/02-data/honest-absence-downstream-handling.md` with the per-source-rules table + the
+- [x] ✅ [DOCS] P0. Update `/codex/02-data/honest-absence-downstream-handling.md` with the per-source-rules table + the
       typed-reason-taxonomy expansion process. — PM@662c5ebc4 (Wave 3.S per-source section: understat/footystats/
       api_football table + is_expected_for_source() usage + bundled cluster validation note + expansion recipe;
       EXPECTED_OUTSIDE_TRANSFER_WINDOW description corrected to cover sports player-transfer windows)
@@ -2708,9 +2737,9 @@ where completeness matters (CeFi thin pairs, TradFi after-hours, sports zero-boo
 - The instrument is alive per instruments-service catalog AND
 - The day falls within the venue's expected market hours (per `venue_trading_calendar` / `KNOWN_COVERAGE_GAPS` / source
   rules) AND
-- The data*type is one where "no activity but still tradeable" is a meaningful state —
-  `ohlcv*\*`, `trades`, `book_snapshot_5`, `derivative_ticker`, `options_chain`, `futures_chain`, `odds_snapshot`
-  (sports — no bookmaker offered odds for an active fixture), etc.
+- The data*type is one where "no activity but still tradeable" is a meaningful state — `ohlcv*\*`, `trades`,
+  `book_snapshot_5`, `derivative_ticker`, `options_chain`, `futures_chain`, `odds_snapshot` (sports — no bookmaker
+  offered odds for an active fixture), etc.
 
 **Manifest representation:** `capture_status=captured` (real bars on disk, just zero-volume). Distinct from
 `empty_confirmed` (we tried, source said empty / structurally empty), `attempted_failed` (error), `expected_unattempted`
@@ -2963,18 +2992,18 @@ consumer-side wiring (cascade); 8 dimensions are fully shipped today.
       tradfi+defi+sports+prediction DONE 2026-05-22 (slot-2); cefi follow-up item below. UAC@6498446 + PM@this commit.
 
       **APPLIED 2026-05-22 (slot-2) for tradfi+defi+sports+prediction (cefi blocked — see follow-up item below):**
-      - Pre-req UAC fix: `non_trading_day_reason` not exported from UAC top-level facade. Fixed + UAC@6498446. QG exit 0.
-      - Reconciler scope: `empty_confirmed` rows with `error_reason ∈ {SOURCE_RETURNED_ZERO,
-        EXPECTED_INSTRUMENT_NOT_LISTED}` — rows that got a WRONG default from the 2026-05-07 sweep.
-      - Applied results:
-        | asset_group | candidates | applied | breakdown | shard |
-        |-------------|-----------|---------|-----------|-------|
-        | tradfi | 5,190 | 5,190 ✅ | **111 → EXPECTED_PARTIAL_HALF_DAY** (US Black Friday/July3 at CME/NASDAQ/NYSE); 5,079 → attempted_failed/LBEER | `_index/per_vm/recon-legacy-typed-tradfi-1779441974.parquet` |
-        | defi | 14 | 14 ✅ | 14 EIGENLAYER eigenlayer_rewards → attempted_failed/LBEER | `_index/per_vm/recon-legacy-typed-defi-1779441990.parquet` |
-        | sports | 1,829,839 | 0 | No upgrades (sports SSOT SRZ rows don't fire Wave 3.S rules via this path) | — |
-        | prediction | 51 | 0 | No upgrades | — |
-        | cefi | 85,202 | **BLOCKED** | IS CeFi instruments catalog not found at `gs://instruments-store-cefi-central-element-323112/reference_data/instruments/cefi/all.parquet`; without lifecycle cross-ref, all 85,202 SRZ rows would flip to LBEER (too aggressive). Re-scan after IS CeFi backfill lands catalog. | — |
-      - Consolidator merges tradfi+defi shards within ~5 min of apply.
+                                                                                                                  - Pre-req UAC fix: `non_trading_day_reason` not exported from UAC top-level facade. Fixed + UAC@6498446. QG exit 0.
+                                                                                                                  - Reconciler scope: `empty_confirmed` rows with `error_reason ∈ {SOURCE_RETURNED_ZERO,
+                                                                                                                    EXPECTED_INSTRUMENT_NOT_LISTED}` — rows that got a WRONG default from the 2026-05-07 sweep.
+                                                                                                                  - Applied results:
+                                                                                                                    | asset_group | candidates | applied | breakdown | shard |
+                                                                                                                    |-------------|-----------|---------|-----------|-------|
+                                                                                                                    | tradfi | 5,190 | 5,190 ✅ | **111 → EXPECTED_PARTIAL_HALF_DAY** (US Black Friday/July3 at CME/NASDAQ/NYSE); 5,079 → attempted_failed/LBEER | `_index/per_vm/recon-legacy-typed-tradfi-1779441974.parquet` |
+                                                                                                                    | defi | 14 | 14 ✅ | 14 EIGENLAYER eigenlayer_rewards → attempted_failed/LBEER | `_index/per_vm/recon-legacy-typed-defi-1779441990.parquet` |
+                                                                                                                    | sports | 1,829,839 | 0 | No upgrades (sports SSOT SRZ rows don't fire Wave 3.S rules via this path) | — |
+                                                                                                                    | prediction | 51 | 0 | No upgrades | — |
+                                                                                                                    | cefi | 85,202 | **BLOCKED** | IS CeFi instruments catalog not found at `gs://instruments-store-cefi-central-element-323112/reference_data/instruments/cefi/all.parquet`; without lifecycle cross-ref, all 85,202 SRZ rows would flip to LBEER (too aggressive). Re-scan after IS CeFi backfill lands catalog. | — |
+                                                                                                                  - Consolidator merges tradfi+defi shards within ~5 min of apply.
 
 **Sequencing note:** the new typed reasons + classifier extensions ship before the migration script (the reconciler
 depends on the extended classifier). Tasks can be parallelised within Wave 3.S (sports) and Wave 3.T (tradfi) and Wave
@@ -3370,7 +3399,7 @@ codex doc § 8 Per-service rollout playbook is the canonical recipe; a service-t
       policy-gated paths per Phase 6.2. **No `(market-tick-data-service, *)` seed-dict entry needed.** Drift-watch: if a
       future MTDS handler reads from a _prior MTDS write_ to compute a derived row (cross-handler aggregation), that's
       the trigger to wire `publish_with_policy`; documented in the Phase 6.1 codex stub
-      (`codex/02-data/service-output-emission-semantics.md` § "MTDS is n/a" pending a Phase 6.9 codex update).
+      (`/codex/02-data/service-output-emission-semantics.md` § "MTDS is n/a" pending a Phase 6.9 codex update).
 
 **Phase 6.2 — MDPS remaining data_types (P0, ~2 days)**
 
@@ -3505,10 +3534,10 @@ codex doc § 8 Per-service rollout playbook is the canonical recipe; a service-t
       order_flow_inference, polynomial_trendlines, risk_reward, wedge_quality, return_kurtosis, swing_outcome_targets,
       sr_memory). Adding 24 near-duplicate rows pads the seed dict. **Recommend** helper pattern:
       `OHLCV_DERIVED_FEATURE_GROUPS: frozenset[str]` + auto-population loop at module load time, OR wildcard convention
-      `("features-service (delta-one family)",
-      "ohlcv*\*")`.     Defer to Phase-2 expansion alongside the per-service `publish_with_policy()`wiring.     (uac@07b4992 2026-05-14: replaced orphaned`("features-service",
-      ...)`keys with correct    `("features-delta-one-service", ...)` entries for all 21 FEATURE_GROUPS including
-      NAN_FILL bucket; catch-all fallback = STRICT_FAIL; explicit seeds now route correctly.)
+      `("features-service (delta-one family)",     "ohlcv*\*")`. Defer to Phase-2 expansion alongside the per-service
+      `publish_with_policy()`wiring. (uac@07b4992 2026-05-14: replaced orphaned`("features-service",     ...)`keys with
+      correct `("features-delta-one-service", ...)` entries for all 21 FEATURE_GROUPS including NAN_FILL bucket;
+      catch-all fallback = STRICT_FAIL; explicit seeds now route correctly.)
 - [x] [features-service (cross-instrument family)] P2. **Seed-vs-registry drift flag**: original seed `paired_spec` +
       `pairwise_correlation` entries do NOT appear as `feature_group` names in the live `CALCULATOR_REGISTRY`
       (`features-service/features_service/cross_instrument/engine/orchestrator.py`). Closest live names:
@@ -4171,10 +4200,10 @@ Phase 2.A residual, Phase 5 honest-coverage baseline.
 
 - `unified-trading-pm/scripts/qg/measure-honest-coverage.py` — operator-driven baseline measurement script that reads
   each asset_group's `_index/availability_index.parquet` from a same-region GCE VM, applies the formulas documented in
-  `codex/02-data/honest_coverage_baseline_2026_05.md` § "Methodology", and writes per-data_type rows back into the doc's
-  table. Cross-region listing is 18× slower per the manifest phantom-audit recipe so this MUST run on a same-region VM.
-  Reference impl shape: mirror `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py` (HTTP pool tuned to
-  `2*workers`, same-region zone, per-asset-group bucket loop).
+  `/codex/02-data/honest_coverage_baseline_2026_05.md` § "Methodology", and writes per-data_type rows back into the
+  doc's table. Cross-region listing is 18× slower per the manifest phantom-audit recipe so this MUST run on a
+  same-region VM. Reference impl shape: mirror `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py`
+  (HTTP pool tuned to `2*workers`, same-region zone, per-asset-group bucket loop).
 - `unified-trading-pm/scripts/qg/honest-coverage-ratchet.sh` — CI gate that reads the doc's table at PR-time and
   hard-fails when any cell regresses beyond the ±0.5pp tolerance band. Spec'd in the doc § "QG ratchet implementation";
   needs a JSON delta report per PR for operator visibility.
@@ -4235,7 +4264,7 @@ the 37-VM in-flight output once this section's Option A/B/C decision lands. Coor
       fire-and-forget VM launches" rule. Workspace-wide adapter audit for same violations across cefi/tradfi/defi MTDS
       handlers (the issue flagged that this likely isn't isolated to Tardis — there are at least 8 MTDS handlers with
       similar shape that need the same field added).
-- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P0. **Codex update**: `codex/02-data/honest-absence-downstream-handling.md`
+- [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P0. **Codex update**: `/codex/02-data/honest-absence-downstream-handling.md`
       § "Re-shape decision codification" capturing the per-instrument-vs-bundle decision per asset_group + per data_type
       (this is the SSOT that reflects whichever Option A/B/C the operator picks).
 
@@ -4266,7 +4295,7 @@ signal can't distinguish "venue quiet" from "MTDS dropped frames". Coordinate Ph
       Phase 3.D.5 Wave 3.M defines zero-volume-bar mechanism for "venue quiet, baseline says zero is OK"; add 3rd state
       for "baseline says non-zero expected, but observed is near-zero" → `record_failed(SUSPECTED_GAP)`.
 - [x] ✅ DEFERRED-OPERATOR-DECISION [AGENT] P0. **Codex update**: extend
-      `codex/02-data/availability-manifest-and-data-status.md` with the `DATA_QUALITY_SUSPECTED_GAP` reason semantics +
+      `/codex/02-data/availability-manifest-and-data-status.md` with the `DATA_QUALITY_SUSPECTED_GAP` reason semantics +
       the 3-state-vs-2-state explanation.
 
 ## Open questions
@@ -4640,7 +4669,7 @@ Per-asset-group counts (from A4):
 2. - [x] ✅ DEFERRED-OPERATOR-DECISION **P0**. Re-run A3 manifest divergence. Assert no new `DIVERGENT_EMPTY` cells
          introduced by the migration.
 3. - [x] ✅ DEFERRED-OPERATOR-DECISION **P0**. Codex SSOT update — extend
-         `codex/02-data/availability-manifest-and-data-status.md` with the v8 migration completion banner + reference
+         `/codex/02-data/availability-manifest-and-data-status.md` with the v8 migration completion banner + reference
          incident.
 
 ### Phase 7 success criteria

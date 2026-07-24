@@ -12,7 +12,7 @@ stage: [meta]
 repos: [client-reporting-api, execution-service, unified-trading-pm]
 scope: [engineer, admin]
 tags: [tranche, credentials, routing, reporting, execution, secret-manager]
-related: [../05-infrastructure/secret-manager-naming.md, client-reporting-architecture.md]
+related: [/codex/05-infrastructure/secret-manager-naming.md, /codex/04-architecture/client-reporting-architecture.md]
 created: 2026-03-27
 authoritative_for: [three-tranche client credential and data routing]
 referenced_by:
@@ -59,8 +59,8 @@ Client uploads CSV → GCS bucket → client-reporting-api reads → reporting o
 
 - Credentials: `exec-{client}-{venue}-{field}` in GCP Secret Manager (`field` = `api-key` / `api-secret` /
   `passphrase`-for-OKX-only — corrected 2026-07-23; see
-  [`../05-infrastructure/secret-manager-naming.md`](../05-infrastructure/secret-manager-naming.md) § 1.1 for the full
-  model, including the pooled/house sibling pattern for venues without per-client credentials)
+  [`/codex/05-infrastructure/secret-manager-naming.md`](/codex/05-infrastructure/secret-manager-naming.md) § 1.1 for the
+  full model, including the pooled/house sibling pattern for venues without per-client credentials)
 - Data path: Live exchange API via execution-service adapters
 - Router output: `data_source = "api_live"`
 - Services: execution-service fetches credentials at startup via `get_secret_client()`

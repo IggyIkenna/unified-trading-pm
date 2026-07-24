@@ -22,7 +22,7 @@ assigned_vm: NA
 resolved_by:
   "operator-audited close 2026-07-17 (hk session) — final flips + evidence in
   plans/archive/2026_07/ao_host_disk_pressure_2026_07_16.md; convention codified in
-  codex/05-infrastructure/per-tab-worktrees.md § Shared uv cache"
+  /codex/05-infrastructure/per-tab-worktrees.md § Shared uv cache"
 locked_by: # cleared 2026-07-17 — operator granted [unlock-plan] explicitly (AskUserQuestion ruling, same session as the 30G deletion)
 execution_scope: orchestrator-agent
 drift_direction: advance-code
@@ -39,7 +39,7 @@ locked_since: # cleared 2026-07-17 with the [unlock-plan] grant (was 2026-05-21)
 > `0 */2` + prune cron, executed by `../2026_07/ao_host_disk_pressure_2026_07_16.md`); the B2 interactive-shell gap
 > closed cross-host via `scripts/dev/install-uv-cache-shell-env.sh` (`pm@86dea79d5`, planning VM + hk dev host); and the
 > stale 30G pre-convention `/active/uv-cache` deleted (18G measured freed — hardlinked venvs unharmed, as predicted).
-> Durable convention: `codex/05-infrastructure/per-tab-worktrees.md` § "Shared uv cache".
+> Durable convention: `/codex/05-infrastructure/per-tab-worktrees.md` § "Shared uv cache".
 
 > **✅ SHIPPED + ROLLED OUT 2026-06-29** (claude-opus-4-8, interactive): the corrected C1–C4 are LIVE —
 > `agent-orchestrator@e168f1a` (tmux_spawn spawn env + vm-disk-guard fix) + `unified-trading-pm@257c1413b`
@@ -478,11 +478,11 @@ self-sustaining (vm-disk-guard no longer nukes the cache).
 
 ## Codex SSOTs
 
-- `codex/05-infrastructure/per-tab-worktrees.md` — per-slot `git clone --reference` worktree model.
-- `codex/04-architecture/tier-and-import-architecture.md` — tier/import rules; services integrate by contract + mocks,
+- `/codex/05-infrastructure/per-tab-worktrees.md` — per-slot `git clone --reference` worktree model.
+- `/codex/04-architecture/tier-and-import-architecture.md` — tier/import rules; services integrate by contract + mocks,
   not direct service↔service deps.
-- `codex/06-coding-standards/integration-testing-layers.md` — SIT at the staging boundary.
-- `codex/08-workflows/ci-cd-flow.md` — dep-branch cascade, quickmerge, LDR/main promotion.
+- `/codex/06-coding-standards/integration-testing-layers.md` — SIT at the staging boundary.
+- `/codex/08-workflows/ci-cd-flow.md` — dep-branch cascade, quickmerge, LDR/main promotion.
 
 ### 2026-07-13 — slot 7: disk pressure recurred/escalated past the 2026-06-29 post-fix baseline
 

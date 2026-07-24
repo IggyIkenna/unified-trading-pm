@@ -21,9 +21,9 @@ estimate_class: infra
 estimate_baseline_ai_days: 6
 estimate_calibrated_ai_days: 4.8
 effective_concurrent_slots: 8
-estimate_calibration_note: 'Full-sweep day. All May-23-deadline + no-deadline backlog allocated across 8 implementer
+estimate_calibration_note: "Full-sweep day. All May-23-deadline + no-deadline backlog allocated across 8 implementer
 
-  slots. Ikenna owns ~231 cal AI-days (2× Harsh''s 116). Carries every deferred item from
+  slots. Ikenna owns ~231 cal AI-days (2× Harsh's 116). Carries every deferred item from
 
   May-15 / May-16 / May-18 splits. Critical blocker: operator must trigger write-pause
 
@@ -31,7 +31,7 @@ estimate_calibration_note: 'Full-sweep day. All May-23-deadline + no-deadline ba
 
   462 total / 236 May-23 critical-path / 97 no-deadline = 333 spreadable.
 
-  '
+  "
 ---
 
 # Ikenna's daily work-split — 2026-05-19 (full backlog sweep)
@@ -125,7 +125,7 @@ work.
 
 > **🔴 SLOT FREEZE 2026-05-20 (operator directive)**: Per new data-pipeline correctness HARD RULE
 > ([CLAUDE.md](../../cursor-configs/CLAUDE.md) § "Data Pipeline Correctness Is The Heartbeat" +
-> [codex SSOT](../../codex/02-data/data-pipeline-correctness-hard-rule.md)), slots **6, 7, 9** FROZEN from prior themes
+> [codex SSOT](/codex/02-data/data-pipeline-correctness-hard-rule.md)), slots **6, 7, 9** FROZEN from prior themes
 > (deployment UI / simulation scenarios / promote workflow) until mega-audit Phase A1-A6 GREEN for their asset_groups.
 > All 3 were doubling down on layer-N+1 work on top of a workspace with only 3.66% in-scope cells confirmed `captured` +
 > 0% manifest rows at v8. Reassigned to A3 remediation per epics + A6 BATCH_ONLY remediation. See per-slot sections
@@ -274,7 +274,7 @@ rg "get_bucket_name" --type py --glob '!.venv*' --glob '!tests'
          {instrument_id}.parquet rename) implemented + 50 tests green + dry-run verified (ohlcv_legacy_filename=1
          detected on real CeFi data). PM@`916742464`. Phase 3 fleet first launched 11:23 UTC, crashed on
          `gcloud    storage ls` (no prefix-match support for hive paths); relaunched 11:58 UTC with fix:
-         `gsutil ls -r    **wildcard + graceful zero-match. Also fixed startup script: Python crash no longer prevents shutdown.    31 VMs RUNNING asia-northeast1-c as of 12:06 UTC. PM@`726a3bf` (gsutil fix), deployment-service@`5b917c1`   (startup-shutdown fix). Phase 3 IN-PROGRESS — monitoring VM logs. Phases 6/9 unblock after phantom gate.    **+Phase 7.6 (operator-directed follow-on)** ✅ UTL`gcs_blob_ops.py`helpers shipped —   `unified-trading-library@63f6ebc7`+`unified-trading-pm@253ad8cbb`(2026-05-19). Migration script    refactored to use UTL gcs_copy_object/gcs_delete_object/gcs_describe_object instead of inline GCS client.    New codex doc`codex/05-infrastructure/gcs-object-operations.md` +
+         `gsutil ls -r    **wildcard + graceful zero-match. Also fixed startup script: Python crash no longer prevents shutdown.    31 VMs RUNNING asia-northeast1-c as of 12:06 UTC. PM@`726a3bf` (gsutil fix), deployment-service@`5b917c1`   (startup-shutdown fix). Phase 3 IN-PROGRESS — monitoring VM logs. Phases 6/9 unblock after phantom gate.    **+Phase 7.6 (operator-directed follow-on)** ✅ UTL`gcs_blob_ops.py`helpers shipped —   `unified-trading-library@63f6ebc7`+`unified-trading-pm@253ad8cbb`(2026-05-19). Migration script    refactored to use UTL gcs_copy_object/gcs_delete_object/gcs_describe_object instead of inline GCS client.    New codex doc`/codex/05-infrastructure/gcs-object-operations.md` +
          CLAUDE.md rule added. 250× perf gain.
 
 **RE-DISPATCH 2026-05-19 (Part A items 1-3+5 ✅; item 4 BLOCKED-OPERATOR; new pickup per
@@ -373,7 +373,7 @@ helper + L7 sweep, Tab 3 = QG STEPs L2/L3/L7.
           `FUNCTION_SIZE_EXTRA_EXCLUDES`, run QG green, commit + flip checkbox in same agent turn. Once
           execution-service allowlist is 0, scan unified-trading-api/ml-inference/ml-training/strategy-service
           allowlists; pick smallest for next stream. Cumulative target 100 → 109+ by EOD. If recurring pattern across
-          services, add one-line codex note to `codex/06-coding-standards/method-size.md`. (refactor 0.4×, ~12 baseline
+          services, add one-line codex note to `/codex/06-coding-standards/method-size.md`. (refactor 0.4×, ~12 baseline
           = ~5 cal AI-days) — execution-service@23d8401c6 (8 commits; allowlist now empty `()`; codex stub created PM
           this commit; next stream: scan strategy-service allowlist)
 

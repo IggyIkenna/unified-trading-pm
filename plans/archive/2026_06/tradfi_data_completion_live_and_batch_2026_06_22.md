@@ -6,7 +6,15 @@ status: complete
 nature: record
 asset_group: [tradfi]
 stage: [meta]
-repos: [deployment-service, instruments-service, market-data-processing-service, market-tick-data-service, unified-api-contracts, unified-trading-library]
+repos:
+  [
+    deployment-service,
+    instruments-service,
+    market-data-processing-service,
+    market-tick-data-service,
+    unified-api-contracts,
+    unified-trading-library,
+  ]
 scope: [engineer, admin]
 tags: []
 related: []
@@ -152,7 +160,7 @@ Re-measure:
       bars) daily cron (`launch-tradfi-fwd-daily-cron-vm.sh`). **This is the largest remaining piece** (a live-rollout
       build, not a backfill). **Success:** live_databento producers for every tradfi (venue,data_type) shard; a recent
       day's live rows == batch rerun (live==batch parity, per
-      `codex/09-strategy/operational/paper-batch-live-reconciliation.md`). Repos: market-tick-data-service
+      `/codex/09-strategy/operational/paper-batch-live-reconciliation.md`). Repos: market-tick-data-service
       (connectors/registry) + deployment-service (launchers). Provenance: this plan.
 
 ## Gap-fill items (discovered post-fleet-audit 2026-06-22)
@@ -194,8 +202,8 @@ Re-measure:
 
 ## SSOTs to read
 
-- `codex/02-data/tradfi-databento-sourcing-ssot.md` (3-dataset allowlist, gotchas, live producer)
-- `codex/02-data/availability-manifest-and-data-status.md` (4-state + honest absence)
-- `codex/02-data/pipeline-mode-partition.md` (grain + canonical paths)
+- `/codex/02-data/tradfi-databento-sourcing-ssot.md` (3-dataset allowlist, gotchas, live producer)
+- `/codex/02-data/availability-manifest-and-data-status.md` (4-state + honest absence)
+- `/codex/02-data/pipeline-mode-partition.md` (grain + canonical paths)
 - `registry/databento_subscription_allowlist.py` (billing-fail-closed)
 - market-tick-data-service `engine/orchestrator/symbol_rules.py` (the WRITER grain SSOT the enumerator must match)

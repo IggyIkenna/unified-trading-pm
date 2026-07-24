@@ -569,7 +569,7 @@ Plan fan-out: B-015 smoke re-launch coordination (apply-flips audit complete; ma
    by adding the 4-field `execution:` block to the 9 baselined runbooks. Group A.1 todo flipped in the governance plan
    body. (design 0.6×, ~3 = 1.8 cal)
 7. 🔄 **`deploy_missing_auto_launch_2026_05_07` close** (V2 carry from slot 9). **Slot-8 partial 2026-05-15**: Phase 4
-   item 1 (codex docs) ✅ SHIPPED at `unified-trading-pm@52cf9627` — `codex/02-data/data-status-drilldown.md` §5
+   item 1 (codex docs) ✅ SHIPPED at `unified-trading-pm@52cf9627` — `/codex/02-data/data-status-drilldown.md` §5
    documents preview + auto-launch modes with full IAM / rate-limit / audit-log / idempotency / correlation-id /
    tarball-refresh contract. **7 items still open**: Phase 2 (4 P0 deployment-api endpoint + idempotency + event
    correlation + rate-limiter) `BLOCKED-UPSTREAM` on Firestore rate-limit state infra + BigQuery audit-log infra (Phase

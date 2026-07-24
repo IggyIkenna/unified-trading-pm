@@ -6,21 +6,44 @@ status: complete
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-service, deployment-ui]
+repos:
+  [
+    alerting-service,
+    batch-live-reconciliation-service,
+    client-reporting-api,
+    deployment-api,
+    deployment-service,
+    deployment-ui,
+  ]
 scope: [engineer, admin]
 tags: []
-related: [plans/active/promote_workflow_may23_cli_path_2026_05_10.md, plans/active/promote_workflow_post_cutover_ui_pipeline_2026_05_10.md, plans/active/governance_qg_automation_gaps_post_cutover_2026_05_12.md, plans/active/deployment_ui_lifecycle_tabs_2026_05_08.md]
+related:
+  [
+    plans/active/promote_workflow_may23_cli_path_2026_05_10.md,
+    plans/active/promote_workflow_post_cutover_ui_pipeline_2026_05_10.md,
+    plans/active/governance_qg_automation_gaps_post_cutover_2026_05_12.md,
+    plans/active/deployment_ui_lifecycle_tabs_2026_05_08.md,
+  ]
 created: 2026-05-13
 type: plan
 deadline: 2026-05-23
 priority: P0
 parent_epic: cross_cutting_may_23_2026.epic.md
-spawned_from: codex/05-infrastructure/deployment-and-qg-strategy.md (codified 2026-05-13 from Ikenna + Harsh design discussion 17:05-17:18 UTC)
-related_codex: [codex/05-infrastructure/deployment-and-qg-strategy.md, codex/05-infrastructure/vm-tarball-deployment.md, codex/05-infrastructure/launcher-script-ssot.md, codex/08-workflows/cutover-window-dependency-order.md]
+spawned_from:
+  /codex/05-infrastructure/deployment-and-qg-strategy.md (codified 2026-05-13 from Ikenna + Harsh design discussion
+  17:05-17:18 UTC)
+related_codex:
+  [
+    /codex/05-infrastructure/deployment-and-qg-strategy.md,
+    /codex/05-infrastructure/vm-tarball-deployment.md,
+    /codex/05-infrastructure/launcher-script-ssot.md,
+    /codex/08-workflows/cutover-window-dependency-order.md,
+  ]
 estimate_class: infra
 estimate_baseline_ai_days: 25
 estimate_calibrated_ai_days: 20.0
-estimate_calibration_note: 'Infra class — original 7 work units (env-locking + act pre-flight + tarball pinning + 99%-repo + base-pin +
+estimate_calibration_note: "Infra class — original 7 work units (env-locking + act pre-flight + tarball pinning +
+  99%-repo + base-pin +
 
   ratchet + coverage), PLUS Phase 0 clean-start QG sweep (+3.5 cal-days post-2026-05-13 QG sweep findings),
 
@@ -30,7 +53,7 @@ estimate_calibration_note: 'Infra class — original 7 work units (env-locking +
 
   Phase 7 (lighter coverage raise) absorbed into Phase 8 (targeted surface coverage).
 
-  '
+  "
 ---
 
 > **ARCHIVED 2026-05-20** — 100% complete (all 90 items shipped); DEFERRED items tracked in successor plans listed
@@ -55,7 +78,7 @@ operator picks Option A or B from the issue doc. Plan status: `done` (all non-op
 # Deployment + QG strategy implementation
 
 > **Spawned from**
-> [`codex/05-infrastructure/deployment-and-qg-strategy.md`](../../codex/05-infrastructure/deployment-and-qg-strategy.md)
+> [`/codex/05-infrastructure/deployment-and-qg-strategy.md`](/codex/05-infrastructure/deployment-and-qg-strategy.md)
 > codified 2026-05-13. That doc is the architectural SSOT; this plan is the work to ship it.
 
 ## Why this plan exists
@@ -120,10 +143,10 @@ This plan ships the 7 work-units that operationalize that strategy by 2026-05-23
       (deployment-api@3040a1b — all 8 C901/SIM102/E402 violations resolved via per-callsite noqa with rationale;
       \_EMPTY_REASON_KEYS synced with UAC EmptyConfirmedReason +7 values; 4 pre-existing test failures fixed by adding
       row_keys for cross-asset-rescan + strategy-paper + strategy-live launchers)
-- [x] [AGENT] P0. `alerting-service`: 4 N802 SHOUTY*CASE test names in
-      `tests/unit/notifiers/test_router*_.py`. Rename or `# noqa:
-      N802`if intentionally documenting event-codes. (alerting-service@74761a5 — all 4 SHOUTY_CASE test names renamed to lowercase snake_case; alerting-service@75f0404 — respx dep added,`\_is_runtime_alert()`
-      '_' wildcard fix, basedpyright unknown-type fixes in governance_forum_watcher.py; 451 tests pass; 4 pre-existing
+- [x] [AGENT] P0. `alerting-service`: 4 N802 SHOUTY*CASE test names in `tests/unit/notifiers/test_router*_.py`. Rename
+      or `# noqa:     N802`if intentionally documenting event-codes. (alerting-service@74761a5 — all 4 SHOUTY_CASE test
+      names renamed to lowercase snake_case; alerting-service@75f0404 — respx dep added,`\_is_runtime_alert()` '_'
+      wildcard fix, basedpyright unknown-type fixes in governance_forum_watcher.py; 451 tests pass; 4 pre-existing
       D.5+D.7 codex violations filed → `plans/active/issues/alerting_service_codex_violations_d5_d7_2026_05_14.md`)
 - [x] [AGENT] P0. `client-reporting-api`: B008 Query-as-arg-default in `attribution.py:237+`. Refactor to
       default-factory. (client-reporting-api@e936eb4 — Annotated[date|None, Query(...)] pattern; RUF002 × also fixed;
@@ -219,7 +242,7 @@ UAC schemas already shipped.
       to `/tmp/act-preflight-{repo}-{sha}.log`; reports PASS/FAIL + duration; overall exit code = 0 if all pass, 1 if
       any fail, 2 if pre-flight error. Shellcheck clean.
 - [x] ✅ [AGENT] P0. **Per-workflow coverage test** — coverage matrix doc shipped 2026-05-17 (slot-8) at
-      `unified-trading-pm@74edbc74` → `codex/05-infrastructure/act-preflight-coverage.md`. 45 workspace workflows
+      `unified-trading-pm@74edbc74` → `/codex/05-infrastructure/act-preflight-coverage.md`. 45 workspace workflows
       classified across 4 statuses (FULL / PARTIAL / REMOTE-ONLY / N/A): 6 FULL · 6 PARTIAL · 28 REMOTE-ONLY · 5 N/A.
       Per-service-repo baseline: `quality-gates.yml` + `python-quality-gates.yml` are FULL when `.venv` resolvable. Doc
       carries `last_reviewed: 2026-05-17` + Runbook Execution-Owner 4 fields.
@@ -300,10 +323,9 @@ shipped (uses same UI patterns); UAC `DeploymentReadiness` schema.
       src/components/DeploymentReadinessTab.tsx + src/api/repoReadiness.ts)
 - [x] [AGENT] P1. **Fix 4 pre-existing test-isolation failures** — root cause: `deployment_api/routes/__init__.py`
       eagerly imports all routes; early test files (test*kill_switch_routes.py) ran before
-      `GCP_PROJECT_ID`/`CLOUD_MOCK_MODE` were set. Fix: conftest.py `setdefault` block before
-      `\_ensure*\*`calls. Also fixed boto3 IMDSv2 network calls     blocked by`--allow-hosts` in CI (mock AWS
-      credentials in patch.dict). (deployment-api@e373860 — tests/unit/conftest.py + test_storage_facade_aws_path.py;
-      CODEX_MAX_VIOLATIONS 20→22)
+      `GCP_PROJECT_ID`/`CLOUD_MOCK_MODE` were set. Fix: conftest.py `setdefault` block before `\_ensure*\*`calls. Also
+      fixed boto3 IMDSv2 network calls blocked by`--allow-hosts` in CI (mock AWS credentials in patch.dict).
+      (deployment-api@e373860 — tests/unit/conftest.py + test_storage_facade_aws_path.py; CODEX_MAX_VIOLATIONS 20→22)
 
 **Owner**: slot 7 (2026-05-15). **Dependencies**: Phase 4 tracking surface shipped.
 
@@ -702,7 +724,7 @@ surface, not per repo:
       $CURRENT_BASELINE/$SURFACES_IN_SCOPE/$PLAN_FLIP_TARGET) + bounded
       work contract (4hr/30-file cap) + success criteria (per-surface ≥ target + plan-flip in same agent turn).
 - [x] ✅ [AGENT] P1. **Per-tab worktrees discipline** — codified in the same `coverage-raise-spawn.md` doc as a HARD
-      RULE section pointing to `setup-tab-worktrees.sh` + `codex/05-infrastructure/per-tab-worktrees.md`. Sub-agents
+      RULE section pointing to `setup-tab-worktrees.sh` + `/codex/05-infrastructure/per-tab-worktrees.md`. Sub-agents
       MUST operate in `.tabs/<N>/<repo>/`; the spawn template threads `$WORKTREE_PATH` to enforce this.
 
 **Owner**: slot 1 main spawns + monitors; leaf-service slots execute. **Dependencies**: None — independent of deployment

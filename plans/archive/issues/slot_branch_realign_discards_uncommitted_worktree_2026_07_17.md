@@ -23,8 +23,8 @@ tags: [slot-safety, data-loss, branch-heal, self-healing, uncommitted-work, mult
 related:
   [
     "[[slot11_silent_branch_reset_data_loss_2026_07_13]]",
-    "codex/05-infrastructure/per-tab-worktrees.md",
-    "codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md",
+    "/codex/05-infrastructure/per-tab-worktrees.md",
+    "/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md",
   ]
 created: 2026-07-17
 parent_epic: infrastructure_master
@@ -112,9 +112,9 @@ first fix below is safe and correct regardless of which command turns out to be 
    preceding `commit:` reflog line, so **it structurally cannot see this class** — uncommitted loss leaves no reflog
    trace at all. Any "0 findings" from it is not evidence that uncommitted work is safe. Consider a periodic
    worktree-hash snapshot per slot, or accept that detection here is inherently best-effort and prioritise fix 1.
-4. **[DOCS] P3** — `codex/05-infrastructure/per-tab-worktrees.md` currently frames inherited-dirty-WIP as LIVENESS-gated
-   ("dead claim → inherit + commit; live claim / mtime <120s → PROTECT"). That rule is written for _agents_; note that
-   the orchestrator's own heal path does not honour the same protection for uncommitted work.
+4. **[DOCS] P3** — `/codex/05-infrastructure/per-tab-worktrees.md` currently frames inherited-dirty-WIP as
+   LIVENESS-gated ("dead claim → inherit + commit; live claim / mtime <120s → PROTECT"). That rule is written for
+   _agents_; note that the orchestrator's own heal path does not honour the same protection for uncommitted work.
 
 ## Workaround until fixed
 

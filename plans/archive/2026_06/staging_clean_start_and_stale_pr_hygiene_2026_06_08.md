@@ -9,7 +9,12 @@ stage: [meta]
 repos: [alerting-service, deployment-api, deployment-service, e2e-testing, execution-service, instruments-service]
 scope: [engineer, admin]
 tags: []
-related: [plans/active/cicd_contract_hardening_2026_06_01.md, plans/active/issues/sit_94_failures_masked_by_dangling_lock_2026_06_07.md, plans/active/ci_local_qg_parity_2026_06_08.md]
+related:
+  [
+    plans/active/cicd_contract_hardening_2026_06_01.md,
+    plans/active/issues/sit_94_failures_masked_by_dangling_lock_2026_06_07.md,
+    plans/active/ci_local_qg_parity_2026_06_08.md,
+  ]
 created: 2026-06-08
 parent_epic: infrastructure_master
 assigned_vm: vm-cross-cutting
@@ -260,7 +265,7 @@ merged. The **only** exception: `main` may carry CI-workflow versions not yet on
 
 ## Codex SSOT updates
 
-`codex/08-workflows/ci-cd-flow.md` § LDR-as-SSOT + clean-start runbook; add the stale-PR sweeper to the runbook owner
+`/codex/08-workflows/ci-cd-flow.md` § LDR-as-SSOT + clean-start runbook; add the stale-PR sweeper to the runbook owner
 table.
 
 ## Progress — 2026-06-08 (slot-1 autonomous)

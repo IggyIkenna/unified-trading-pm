@@ -19,8 +19,10 @@ related:
   - plans/active/issues/defi_coverage_capability_alignment_2026_05_22.md
   - plans/audit/results/global_ledger_audit_mtds_2026_05_23.md
 created: 2026-05-23
-audited_scope: instruments-service InstrumentRecord + carry-rate metadata vs PassiveLedger synthesiser requirements (static code read, no GCS sampling)
-date: '2026-05-23'
+audited_scope:
+  instruments-service InstrumentRecord + carry-rate metadata vs PassiveLedger synthesiser requirements (static code
+  read, no GCS sampling)
+date: "2026-05-23"
 auditor: slot-7 (ikenna-side)
 parent_epic: strategy_master
 severity: P1
@@ -29,7 +31,16 @@ lib_version:
 doc_versions_checked:
 type: analysis
 epic: global_ledger_pnl_attribution_master
-source: [instruments-service/instruments_service/engine/orchestrator.py, instruments-service/instruments_service/reference_data/, unified-api-contracts/unified_api_contracts/internal/reference/instrument.py, unified-api-contracts/unified_api_contracts/registry/market_data_categories.py, unified-api-contracts/unified_api_contracts/registry/expected_coverage.py, unified-api-contracts/unified_api_contracts/canonical/domain/derivatives/futures.py, unified-api-contracts/unified_api_contracts/_instrument_enums.py]
+source:
+  [
+    instruments-service/instruments_service/engine/orchestrator.py,
+    instruments-service/instruments_service/reference_data/,
+    unified-api-contracts/unified_api_contracts/internal/reference/instrument.py,
+    unified-api-contracts/unified_api_contracts/registry/market_data_categories.py,
+    unified-api-contracts/unified_api_contracts/registry/expected_coverage.py,
+    unified-api-contracts/unified_api_contracts/canonical/domain/derivatives/futures.py,
+    unified-api-contracts/unified_api_contracts/_instrument_enums.py,
+  ]
 ---
 
 # Global Ledger Audit — instruments-service
@@ -71,7 +82,7 @@ per venue per date under `instrument_availability/by_date/`). The carry rates ar
 provides the InstrumentRecord metadata (pool_address, atoken_address, source_archive_url_template) that MTDS handlers
 consume to derive where to fetch rates.
 
-This is the IS→MTDS contract codified in `codex/04-architecture/instruments-service-as-ssot-for-mtds.md`.
+This is the IS→MTDS contract codified in `/codex/04-architecture/instruments-service-as-ssot-for-mtds.md`.
 
 ### What IS adapters DO provide
 

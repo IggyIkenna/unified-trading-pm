@@ -57,7 +57,7 @@ Dispatched to `sports_p2_features_history_to_ml_ready-001` (Todo 1: compute feat
 slot repos clean. Followed the prior session's handoff: found all 3 tracked gap-fill VMs gone. Diagnosed via each VM's
 GCS `run.log`: all 3 failed identically with
 `"Manifest consolidator appears DOWN for bucket='instruments-store-sports-prd-central-element-323112': consolidated _index/availability_index.parquet heartbeat is 136-137s old (> 120s budget)"`
-— a correct fail-fast per `codex/05-infrastructure/manifest-consolidator-ssot.md`.
+— a correct fail-fast per `/codex/05-infrastructure/manifest-consolidator-ssot.md`.
 
 Confirmed the manifest had since recovered (`gsutil stat` showed a fresh update ~11s old) and relaunched all 3 ranges.
 **All 3 relaunched VMs failed AGAIN within ~5 minutes, with the identical error** — ruling out a one-off transient blip;

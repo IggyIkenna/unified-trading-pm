@@ -27,8 +27,8 @@ tags: [manifest, consolidator, race-condition, data-loss, per-vm-shards, cloud-r
 related:
   [
     plans/active/issues/sports_fixtures_pending_eu_phantom_denominator_2026_07_13.md,
-    codex/05-infrastructure/manifest-consolidator-ssot.md,
-    codex/02-data/availability-manifest-and-data-status.md,
+    /codex/05-infrastructure/manifest-consolidator-ssot.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
   ]
 created: 2026-07-13
 last_updated: 2026-07-13

@@ -13,10 +13,13 @@ stage: [meta]
 repos: [agent-orchestrator, deployment-api, deployment-ui, execution-service, features-service, instruments-service]
 scope: [engineer, admin]
 tags: [quality-gates, performance, benchmark, monitoring, infrastructure, audit]
-related: [codex/06-coding-standards/quality-gates.md, plans/audit/results/qg_config_ssot_matrix_2026_06_09.md]
+related: [/codex/06-coding-standards/quality-gates.md, plans/audit/results/qg_config_ssot_matrix_2026_06_09.md]
 created: 2026-06-09
-audited_scope: per-phase QG wall-time + RAM profile (tests/codex/typecheck/pip-audit/size-checks/bandit/removed-symbols/ruff) across the fleet, single-core pinned; + phase scopability classification for the fast-tier design; re-profiled 2026-06-17 post-optimization
-date: '2026-06-11'
+audited_scope:
+  per-phase QG wall-time + RAM profile (tests/codex/typecheck/pip-audit/size-checks/bandit/removed-symbols/ruff) across
+  the fleet, single-core pinned; + phase scopability classification for the fast-tier design; re-profiled 2026-06-17
+  post-optimization
+date: "2026-06-11"
 auditor: slot (interactive)
 parent_epic: infrastructure_master
 severity: P3
@@ -26,7 +29,11 @@ doc_versions_checked:
 type: benchmark
 epic: infrastructure_master
 parent_plan: plans/archive/2026_06/quality_gates_speed_and_config_ssot_2026_06_09.md
-source: ['profile_qg_resources.py --all --parallel (host-adaptive pinned sweep, 2026-06-11)', raw per-repo JSON/txt/markers in the gitignored .qg_profile/ (not committed — large intermediates)]
+source:
+  [
+    "profile_qg_resources.py --all --parallel (host-adaptive pinned sweep, 2026-06-11)",
+    raw per-repo JSON/txt/markers in the gitignored .qg_profile/ (not committed — large intermediates),
+  ]
 ---
 
 # QG per-phase profile — fleet sweep (2026-06-11)

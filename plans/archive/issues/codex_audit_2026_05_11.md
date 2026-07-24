@@ -6,14 +6,32 @@ status: resolved
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [deployment-api, deployment-service, deployment-ui, features-service, instruments-service, unified-trading-library]
+repos:
+  [deployment-api, deployment-service, deployment-ui, features-service, instruments-service, unified-trading-library]
 scope: [engineer, admin]
 tags: []
 related: []
 created: 2026-05-11
 author: harsh-workspace-qg-tab (slot 6)
-source: [plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md — Phase 1 freeze gate item 9 ("Codex SSOTs updated per CLAUDE.md 'Post-Plan-Phase Codex Audit' HARD RULE — every doc that the Phase 1 plans should have touched is current"), plans/active/work_split_2026_05_11_harsh.md § "Slot 6" — freeze-gate items 8 + 9, the 25 Phase 1 plans enumerated in code_freeze § "Phase 1 — Code-complete inventory" (Phase 1.A-1.F)]
-execution: {owner: slot 6 (harsh-workspace-qg-tab) — runs all 4 days of the 2026-05-11→05-15 cycle; days 2-4 deepen the per-doc currency spot-checks; per-plan codex docs are owned by each Phase 1 plan's own codex phase, cadence: daily refresh until the 2026-05-15 Phase 1 freeze gate fires, verifier: code_freeze freeze-gate item 9 flippable ⟺ every row in the "pending codex work" table below resolved OR explicitly deferred post-cutover, last_executed: '2026-05-11'}
+source:
+  [
+    plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md — Phase 1 freeze gate item 9 ("Codex SSOTs
+    updated per CLAUDE.md 'Post-Plan-Phase Codex Audit' HARD RULE — every doc that the Phase 1 plans should have touched
+    is current"),
+    plans/active/work_split_2026_05_11_harsh.md § "Slot 6" — freeze-gate items 8 + 9,
+    the 25 Phase 1 plans enumerated in code_freeze § "Phase 1 — Code-complete inventory" (Phase 1.A-1.F),
+  ]
+execution:
+  {
+    owner:
+      slot 6 (harsh-workspace-qg-tab) — runs all 4 days of the 2026-05-11→05-15 cycle; days 2-4 deepen the per-doc
+      currency spot-checks; per-plan codex docs are owned by each Phase 1 plan's own codex phase,
+    cadence: daily refresh until the 2026-05-15 Phase 1 freeze gate fires,
+    verifier:
+      code_freeze freeze-gate item 9 flippable ⟺ every row in the "pending codex work" table below resolved OR
+      explicitly deferred post-cutover,
+    last_executed: "2026-05-11",
+  }
 locked_by: live-defi-rollout
 locked_since: 2026-05-11
 ---
@@ -50,21 +68,21 @@ the actual UTL code + the referenced plans, not by grep alone.
 
 ## Pending codex work for freeze-gate item 9 (the 33 not-yet-created docs, grouped by owning plan)
 
-| Owning Phase 1 plan                                  | Codex docs still to create (all `- [ ]` in the plan today)                                                                                                                                                                                                                                                                                                                    | Notes                                                                                                        |
-| ---------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| `writegate_honest_coverage_endtoend_2026_05_06.md`   | `codex/02-data/service-output-emission-semantics.md` (NEW)                                                                                                                                                                                                                                                                                                                    | ServiceEmissionPolicy SSOT; slice (b) Phase 5.x.                                                             |
-| `hard_schema_enforcement_2026_05_08.md`              | `codex/06-coding-standards/error-handling.md`, `codex/06-coding-standards/schema-validation.md`                                                                                                                                                                                                                                                                               | NEW; SCHEMA_VALIDATION_FAILED enum + write-boundary hard enforcement.                                        |
-| `features_repo_consolidation_2026_05_08.md`          | `codex/02-data/data-status-drilldown-hierarchy.md`                                                                                                                                                                                                                                                                                                                            | Note: `codex/02-data/data-status-drilldown.md` exists — possible rename/intent mismatch; verify with slot 2. |
-| `risk_simulations_limits_alerting_2026_05_10.md`     | `codex/04-architecture/risk-rule-taxonomy.md`, `codex/04-architecture/risk-preflight-flow.md`, `codex/04-architecture/risk-breaker-seam.md`                                                                                                                                                                                                                                   | NEW (7.A / 7.B / 7.E todos; 7.E "RATIFIED 2026-05-10 cross-plan audit Q9").                                  |
-| `disaster_recovery_circuit_breakers_2026_05_10.md`   | `codex/04-architecture/circuit-breaker-rule-taxonomy.md`, `codex/04-architecture/kill-switch-event-bus.md`                                                                                                                                                                                                                                                                    | NEW; cutover-MVP circuit-breaker + kill-switch.                                                              |
-| `promote_workflow_may23_cli_path_2026_05_10.md`      | `codex/04-architecture/promote-workflow-architecture.md`, `codex/05-infrastructure/strategy-vm-launcher-shape.md`, `codex/04-architecture/live-deployment-manifest.md`, `codex/09-strategy/operational/cli-promote-paths.md`, `codex/14-customer-journeys/promote-pipeline-backend.md`                                                                                        | All NEW (`[ ]` todos); plus `custody-providers.md` UPDATE (exists).                                          |
-| `topology_qgroup_gap_closure_2026_05_09.md`          | `codex/04-architecture/matching-engine-assumptions.md`, `codex/04-architecture/matching-engine-mode-dispatch.md`, `codex/04-architecture/ml-lifecycle.md`, `codex/04-architecture/multi-mode-wallet-isolation.md`, `codex/04-architecture/strategy-ensemble-topology.md`                                                                                                      | 18 GAPs + 2 WATCH + 1 ISSUE before May-23; several NEW codex docs.                                           |
-| `defi_recursive_borrow_archetypes_2026_05_10.md`     | `codex/09-strategy/architecture-v2/archetypes/carry-recursive-staked-config-variants.md`, `codex/16-strategy-playbooks/defi/recursive-borrow-backtest-2026-05.md`                                                                                                                                                                                                             | NEW; carry_staked_basis Phase 9. (`carry-recursive-staked.md` + `carry-staked-basis.md` already exist.)      |
-| `defi_simulation_realism_2026_05_10.md`              | `codex/04-architecture/concentrated-liquidity.md`                                                                                                                                                                                                                                                                                                                             | NEW; DeFi matching-engine extension. (`amm-slippage-simulation.md` already exists.)                          |
-| `deployment_ui_lifecycle_tabs_2026_05_08.md`         | `codex/05-infrastructure/deployment-ui-environment-tiers.md`                                                                                                                                                                                                                                                                                                                  | NEW; EnvironmentTier enum doc. (`deployment-ui-architecture.md` shipped @PM`ebe5cc09`.)                      |
-| `api_keys_wallets_accounts_readiness_2026_05_10.md`  | `codex/04-architecture/custody-architecture.md`, `codex/05-infrastructure/aws-iam-matrix.md`, `codex/05-infrastructure/credentials-matrix.md`, `codex/05-infrastructure/hsm-wallet-signing.md`, `codex/05-infrastructure/per-archetype-wallet-isolation.md`, `codex/05-infrastructure/secret-manager-naming.md`, `codex/14-customer-journeys/credentials/rotation-runbook.md` | 7 NEW codex docs; credential provisioning for May-23 cutover.                                                |
-| `wallet_treasury_client_flow_2026_05_10.md`          | `codex/04-architecture/client-lifecycle-state-machine.md`, `codex/04-architecture/treasury-custody-flow.md`                                                                                                                                                                                                                                                                   | NEW; wallet/treasury/client lifecycle MVP.                                                                   |
-| `client_reporting_pnl_attribution_mvp_2026_05_10.md` | `codex/04-architecture/client-reporting-architecture.md`                                                                                                                                                                                                                                                                                                                      | NEW. (`backtest-groups.md`, `pnl-attribution.md`, `capital-efficiency-patterns.md` already exist.)           |
+| Owning Phase 1 plan                                  | Codex docs still to create (all `- [ ]` in the plan today)                                                                                                                                                                                                                                                                                                                           | Notes                                                                                                         |
+| ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------- |
+| `writegate_honest_coverage_endtoend_2026_05_06.md`   | `/codex/02-data/service-output-emission-semantics.md` (NEW)                                                                                                                                                                                                                                                                                                                          | ServiceEmissionPolicy SSOT; slice (b) Phase 5.x.                                                              |
+| `hard_schema_enforcement_2026_05_08.md`              | `/codex/06-coding-standards/error-handling.md`, `/codex/06-coding-standards/schema-validation.md`                                                                                                                                                                                                                                                                                    | NEW; SCHEMA_VALIDATION_FAILED enum + write-boundary hard enforcement.                                         |
+| `features_repo_consolidation_2026_05_08.md`          | `/codex/02-data/data-status-drilldown-hierarchy.md`                                                                                                                                                                                                                                                                                                                                  | Note: `/codex/02-data/data-status-drilldown.md` exists — possible rename/intent mismatch; verify with slot 2. |
+| `risk_simulations_limits_alerting_2026_05_10.md`     | `/codex/04-architecture/risk-rule-taxonomy.md`, `/codex/04-architecture/risk-preflight-flow.md`, `/codex/04-architecture/risk-breaker-seam.md`                                                                                                                                                                                                                                       | NEW (7.A / 7.B / 7.E todos; 7.E "RATIFIED 2026-05-10 cross-plan audit Q9").                                   |
+| `disaster_recovery_circuit_breakers_2026_05_10.md`   | `/codex/04-architecture/circuit-breaker-rule-taxonomy.md`, `/codex/04-architecture/kill-switch-event-bus.md`                                                                                                                                                                                                                                                                         | NEW; cutover-MVP circuit-breaker + kill-switch.                                                               |
+| `promote_workflow_may23_cli_path_2026_05_10.md`      | `/codex/04-architecture/promote-workflow-architecture.md`, `/codex/05-infrastructure/strategy-vm-launcher-shape.md`, `/codex/04-architecture/live-deployment-manifest.md`, `/codex/09-strategy/operational/cli-promote-paths.md`, `/codex/14-customer-journeys/promote-pipeline-backend.md`                                                                                          | All NEW (`[ ]` todos); plus `custody-providers.md` UPDATE (exists).                                           |
+| `topology_qgroup_gap_closure_2026_05_09.md`          | `/codex/04-architecture/matching-engine-assumptions.md`, `/codex/04-architecture/matching-engine-mode-dispatch.md`, `/codex/04-architecture/ml-lifecycle.md`, `/codex/04-architecture/multi-mode-wallet-isolation.md`, `/codex/04-architecture/strategy-ensemble-topology.md`                                                                                                        | 18 GAPs + 2 WATCH + 1 ISSUE before May-23; several NEW codex docs.                                            |
+| `defi_recursive_borrow_archetypes_2026_05_10.md`     | `/codex/09-strategy/architecture-v2/archetypes/carry-recursive-staked-config-variants.md`, `/codex/16-strategy-playbooks/defi/recursive-borrow-backtest-2026-05.md`                                                                                                                                                                                                                  | NEW; carry_staked_basis Phase 9. (`carry-recursive-staked.md` + `carry-staked-basis.md` already exist.)       |
+| `defi_simulation_realism_2026_05_10.md`              | `/codex/04-architecture/concentrated-liquidity.md`                                                                                                                                                                                                                                                                                                                                   | NEW; DeFi matching-engine extension. (`amm-slippage-simulation.md` already exists.)                           |
+| `deployment_ui_lifecycle_tabs_2026_05_08.md`         | `/codex/05-infrastructure/deployment-ui-environment-tiers.md`                                                                                                                                                                                                                                                                                                                        | NEW; EnvironmentTier enum doc. (`deployment-ui-architecture.md` shipped @PM`ebe5cc09`.)                       |
+| `api_keys_wallets_accounts_readiness_2026_05_10.md`  | `/codex/04-architecture/custody-architecture.md`, `/codex/05-infrastructure/aws-iam-matrix.md`, `/codex/05-infrastructure/credentials-matrix.md`, `/codex/05-infrastructure/hsm-wallet-signing.md`, `/codex/05-infrastructure/per-archetype-wallet-isolation.md`, `/codex/05-infrastructure/secret-manager-naming.md`, `/codex/14-customer-journeys/credentials/rotation-runbook.md` | 7 NEW codex docs; credential provisioning for May-23 cutover.                                                 |
+| `wallet_treasury_client_flow_2026_05_10.md`          | `/codex/04-architecture/client-lifecycle-state-machine.md`, `/codex/04-architecture/treasury-custody-flow.md`                                                                                                                                                                                                                                                                        | NEW; wallet/treasury/client lifecycle MVP.                                                                    |
+| `client_reporting_pnl_attribution_mvp_2026_05_10.md` | `/codex/04-architecture/client-reporting-architecture.md`                                                                                                                                                                                                                                                                                                                            | NEW. (`backtest-groups.md`, `pnl-attribution.md`, `capital-efficiency-patterns.md` already exist.)            |
 
 **Total: 33 codex docs across 13 plans must land (or be explicitly deferred post-cutover) before freeze-gate item 9
 flips on 2026-05-15.** The bulk are recent (2026-05-09/10) Phase 1.D-1.F plans
@@ -74,10 +92,10 @@ in-flight plans. The Phase 1.A-1.C schema/manifest/pipeline core is in better sh
 
 ## Findings (verified)
 
-### F2 — `codex/02-data/availability-manifest-and-data-status.md` v8 dataclass is behind the code on `feature_family`
+### F2 — `/codex/02-data/availability-manifest-and-data-status.md` v8 dataclass is behind the code on `feature_family`
 
 **Severity**: P2 — doc-vs-code drift; not a correctness bug. **Owner**: `features_repo_consolidation_2026_05_08.md`
-codex phase (slot 2 — that plan already lists `codex/02-data/availability-manifest-and-data-status.md` in its
+codex phase (slot 2 — that plan already lists `/codex/02-data/availability-manifest-and-data-status.md` in its
 codex-update phase).
 
 **Evidence**: The `AvailabilityRecord` dataclass snippet in `availability-manifest-and-data-status.md` (the "Schema v8"
@@ -90,9 +108,9 @@ comment block.
 
 ### F3 — v8 manifest-schema declaration ownership is ambiguous: `code_freeze` says "writegate slice (b) Phase 5.1"; `availability-manifest-and-data-status.md` + `manifest_schema_final_gate_2026_05_09.md` say the final-gate plan
 
-**Severity**: P2 — plan↔doc divergence on which plan is the v8-schema SSOT. Risk: two plans (or their agents) both
-think they own the v8 column declaration → double-SSOT, the very thing CLAUDE.md "No double SSOT" + the code_freeze
-plan's `(NOT a separate manifest_v8_schema_migration_design file)` clause are guarding against. **Owner**: needs an
+**Severity**: P2 — plan↔doc divergence on which plan is the v8-schema SSOT. Risk: two plans (or their agents) both think
+they own the v8 column declaration → double-SSOT, the very thing CLAUDE.md "No double SSOT" + the code_freeze plan's
+`(NOT a separate manifest_v8_schema_migration_design file)` clause are guarding against. **Owner**: needs an
 operator/slot-1 call on which plan is canonical; the loser gets a `> SUPERSEDED — see <X>` banner. The code_freeze plan
 body line 139 + 174-179 may need a small update to point at `manifest_schema_final_gate_2026_05_09.md` (slot 1 PM-body
 territory).
@@ -104,7 +122,7 @@ territory).
   direction ...)"_. Same plan `:174-179` — _"the v8 design lives in: Schema column declaration —
   `writegate_honest_coverage_endtoend_2026_05_06.md` slice (b) Phase 5.1 ... There is therefore no 'v8 schema design'
   gap"_.
-- `codex/02-data/availability-manifest-and-data-status.md` "Schema v8" section — _"v8 (maximalist final gate per
+- `/codex/02-data/availability-manifest-and-data-status.md` "Schema v8" section — _"v8 (maximalist final gate per
   [`manifest_schema_final_gate_2026_05_09.md`](.../manifest_schema_final_gate_2026_05_09.md):8-15)"_.
 - `plans/active/manifest_schema_final_gate_2026_05_09.md` overview — _"One-shot maximalist plan that lands the BEST
   manifest (v8 with all designed columns) ... slice b spec landed as part of this plan"_,
@@ -132,16 +150,16 @@ in both; or (b) one supersedes the other → banner + reconcile. Not slot 6's ca
 
 ## Spot-check results (core docs that the schema freeze hinges on)
 
-| Codex doc                                                              | State                                                    | Verdict                                                                                                                            |
-| ---------------------------------------------------------------------- | -------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| `codex/02-data/availability-manifest-and-data-status.md`               | full (1139L)                                             | Healthy; has v8 "Schema v8 (current; ratified 2026-05-09)" section. **F2 + observation above.**                                    |
-| `codex/02-data/honest-absence-downstream-handling.md`                  | full (307L)                                              | Healthy; reason taxonomy (9-value `EMPTY_CONFIRMED_REASONS` closed set) codified 2026-05-07 — matches CLAUDE.md.                   |
-| `codex/02-data/pipeline-mode-partition.md`                             | stub-with-progress (137L)                                | Healthy; STATUS header + migration-owner ref + shipped-progress table. Appropriate in-flight state.                                |
-| `codex/04-architecture/instrument-lifecycle-cache-delta-hot-reload.md` | stub (NEW)                                               | Healthy; STATUS header + plan back-ref (live_pipeline Phase 10). Appropriate.                                                      |
-| `codex/05-infrastructure/live-pipeline-architecture.md`                | stub (192L, NEW)                                         | Healthy; STATUS header + plan back-ref + prerequisite plan refs. Appropriate.                                                      |
-| `codex/05-infrastructure/replay-subsystem.md`                          | stub (NEW)                                               | Healthy; STATUS header + plan back-ref (live_pipeline Phase 7). Appropriate.                                                       |
-| `codex/04-architecture/features-service-architecture.md`               | full-ish (`status: stable`, `last_reviewed: 2026-05-08`) | Healthy; matches the consolidated-features-service design. **(Re-verify `feature_family` mention once F2 lands.)**                 |
-| `codex/04-architecture/batch-live-architecture.md`                     | full (438L)                                              | Healthy; "POST-2026-05-08 SSOT" annotation, Redis Stream inner-loop, pipeline_mode mentions, live-pipeline topology refs. Current. |
+| Codex doc                                                               | State                                                    | Verdict                                                                                                                            |
+| ----------------------------------------------------------------------- | -------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `/codex/02-data/availability-manifest-and-data-status.md`               | full (1139L)                                             | Healthy; has v8 "Schema v8 (current; ratified 2026-05-09)" section. **F2 + observation above.**                                    |
+| `/codex/02-data/honest-absence-downstream-handling.md`                  | full (307L)                                              | Healthy; reason taxonomy (9-value `EMPTY_CONFIRMED_REASONS` closed set) codified 2026-05-07 — matches CLAUDE.md.                   |
+| `/codex/02-data/pipeline-mode-partition.md`                             | stub-with-progress (137L)                                | Healthy; STATUS header + migration-owner ref + shipped-progress table. Appropriate in-flight state.                                |
+| `/codex/04-architecture/instrument-lifecycle-cache-delta-hot-reload.md` | stub (NEW)                                               | Healthy; STATUS header + plan back-ref (live_pipeline Phase 10). Appropriate.                                                      |
+| `/codex/05-infrastructure/live-pipeline-architecture.md`                | stub (192L, NEW)                                         | Healthy; STATUS header + plan back-ref + prerequisite plan refs. Appropriate.                                                      |
+| `/codex/05-infrastructure/replay-subsystem.md`                          | stub (NEW)                                               | Healthy; STATUS header + plan back-ref (live_pipeline Phase 7). Appropriate.                                                       |
+| `/codex/04-architecture/features-service-architecture.md`               | full-ish (`status: stable`, `last_reviewed: 2026-05-08`) | Healthy; matches the consolidated-features-service design. **(Re-verify `feature_family` mention once F2 lands.)**                 |
+| `/codex/04-architecture/batch-live-architecture.md`                     | full (438L)                                              | Healthy; "POST-2026-05-08 SSOT" annotation, Redis Stream inner-loop, pipeline_mode mentions, live-pipeline topology refs. Current. |
 
 ## Open questions
 
@@ -173,7 +191,7 @@ F2 (`availability-manifest-and-data-status.md` v8 dataclass missing `feature_fam
 
 `code_freeze_migrate_backfill_sequencing_2026_05_10.md` (`:139`, `:174-179`) says the v8 manifest-schema column
 declaration is owned by `writegate_honest_coverage_endtoend_2026_05_06.md` slice (b) Phase 5.1 and explicitly "(NOT a
-separate `manifest_v8_schema_migration_design` file ...)". But `codex/02-data/availability-manifest-and-data-status.md`
+separate `manifest_v8_schema_migration_design` file ...)". But `/codex/02-data/availability-manifest-and-data-status.md`
 and the plan `manifest_schema_final_gate_2026_05_09.md` (created 2026-05-09; "slice b spec landed as part of this plan")
 both point at `manifest_schema_final_gate_2026_05_09.md` as the v8 owner — which functionally IS a "v8 schema migration
 design" plan. These are distinct artifacts → double-SSOT risk per CLAUDE.md "No double SSOT". **Decision needed**: (a)
@@ -192,20 +210,20 @@ Re-ran after the morning's incoming: v8 manifest schema slice (b) Phase 1.A/B/C 
 `manifest_schema_final_gate` plan body expanded its "Codex SSOTs touched" section today. Net deltas to the day-1
 inventory:
 
-- **v8 schema codex currency — confirmed.** `codex/02-data/availability-manifest-and-data-status.md:244` has the "Schema
-  v8 (current; ratified 2026-05-09)" section + the 4-state `capture_status` enum + reader-fallback notes. F2
+- **v8 schema codex currency — confirmed.** `/codex/02-data/availability-manifest-and-data-status.md:244` has the
+  "Schema v8 (current; ratified 2026-05-09)" section + the 4-state `capture_status` enum + reader-fallback notes. F2
   (`feature_family` missing from the v8 dataclass _snippet_ in that doc — UTL code already has it @`c16cef3`) remains
   the one gap, still routed to slot 2's `features_repo_consolidation_2026_05_08.md` codex phase. F3 (v8-schema owner) ✅
   resolved by operator — see § Open questions Q1 / A1: `manifest_schema_final_gate_2026_05_09.md` is canonical;
   writegate slice (b) Phase 5.2 SUPERSEDED; `code_freeze` body re-pointed.
 - **2 NEW codex docs surfaced into the pending inventory** (not in the day-1 91-doc count —
   `manifest_schema_final_gate`'s codex section was expanded after the morning scan):
-  - `codex/04-architecture/service-emission-policy.md` — NEW; full expansion of the slice-a `service_emission_policy.py`
-    stub (the 4-state `ServiceEmissionPolicy` enum + read protocol). Tracked-pending in
+  - `/codex/04-architecture/service-emission-policy.md` — NEW; full expansion of the slice-a
+    `service_emission_policy.py` stub (the 4-state `ServiceEmissionPolicy` enum + read protocol). Tracked-pending in
     `manifest_schema_final_gate_2026_05_09.md` "Codex SSOTs touched" `:128` + "Codex SSOT updates" `:507` ("Phase 1
     boundary → ... `service-emission-policy.md`"). Not yet created. (Adjacent:
-    `codex/04-architecture/execution-policy.md` exists; the emission-policy doc is a distinct sibling.)
-  - `codex/02-data/cross-asset-rescan-protocol.md` — NEW stub; tracked-pending in
+    `/codex/04-architecture/execution-policy.md` exists; the emission-policy doc is a distinct sibling.)
+  - `/codex/02-data/cross-asset-rescan-protocol.md` — NEW stub; tracked-pending in
     `code_freeze_migrate_backfill_sequencing_2026_05_10.md:337` (the "after Phase 2 freeze gate fires" DOC todo) + the
     cross-asset-rescan plan's Codex SSOT updates. Not yet created.
   - **Revised count: 58 present / 35 referenced-but-not-yet-created** (the day-1 "33" + these two). All 35 remain
@@ -218,7 +236,7 @@ inventory:
     `EXPECTED_REFDATA_CADENCE_CHANGE`
   - `EXPECTED_KNOWN_SOURCE_GAP` (latest — operator-approved 2026-05-11; landed via `manifest_schema_final_gate` Phase 1;
     covers VIX-15m mid-history gap + sports `KNOWN_COVERAGE_GAPS`).
-    `codex/02-data/honest-absence-downstream-handling.md` § "Reason taxonomy (codified 2026-05-07)" lists the original
+    `/codex/02-data/honest-absence-downstream-handling.md` § "Reason taxonomy (codified 2026-05-07)" lists the original
     9 + `EXPECTED_KNOWN_SOURCE_GAP` (slot 3 added that row 2026-05-11 PM citing UAC@`174f401`) = **10**; still missing
     the 8 Wave-3.X members (`EXPECTED_PRE_VENUE_LAUNCH` / `EXPECTED_OUTSIDE_TRADING_HOURS` /
     `EXPECTED_OUTSIDE_TRANSFER_WINDOW` / `EXPECTED_PRE_SEASON` / `EXPECTED_POST_SEASON` /
@@ -230,7 +248,7 @@ inventory:
 - **`RecordFailedReason` taxonomy is NEW** (UAC `honest_coverage.py:227`; 8 closed-set members:
   `SCHEMA_VALIDATION_FAILED`/`UPSTREAM_TIMESTAMP_BIAS`/`MALFORMED_TICK_FIELD`/`UPSTREAM_SUBGRAPH_ZERO`/`CLUSTER_COVERAGE_VIOLATION`/`MALFORMED_ROW_KEY`/`CLASSIFIED_VENUE_ERROR`/`UNCLASSIFIED_ADAPTER_ERROR`).
   Landed @`cb70b3a` (slot 5's RE-TASK — foundational for `hard_schema_enforcement_2026_05_08.md` Phase 2 per-row
-  `record_failed` routing). `codex/02-data/availability-manifest-and-data-status.md` +
+  `record_failed` routing). `/codex/02-data/availability-manifest-and-data-status.md` +
   `honest-absence-downstream-handling.md` don't reference it yet. **NOT a new finding** — codex sync tracked-pending in
   `hard_schema_enforcement_2026_05_08.md` `:119-126` (`codex-update` todo: "add the `SCHEMA_VALIDATION_FAILED` reason
   ... to the closed-set `RecordFailedReason` enum" in `honest-absence-downstream-handling.md`) + `code_freeze:337`
@@ -244,11 +262,11 @@ Spot-checked the Phase-1 plan codex todos that flipped `- [x]` since the day-1 s
 (no "checkbox flipped, doc not there" violations):
 
 - `alerting_service_live_rules_2026_05_07.md:357` (`[x]` create `codex/15-runbooks/alerting/` with `scope: alerting`) +
-  `:512` (`[x]` `codex/15-runbooks/alerting/alert-code-taxonomy.md` add kill-switch-publisher content) — **verified**:
+  `:512` (`[x]` `/codex/15-runbooks/alerting/alert-code-taxonomy.md` add kill-switch-publisher content) — **verified**:
   the dir exists with 8+ runbook files; `alert-code-taxonomy.md` is present (≈20 KB, `status: active`, 37 `kill_switch`
   references). ✓
 - `wave3x_residual_ssots_2026_05_08.md:181` + `:277` (`[x]` SHIPPED 2026-05-11 PM (slot 3): codex updates to
-  `codex/02-data/honest-absence-downstream-handling.md`) — **verified**: the doc has the
+  `/codex/02-data/honest-absence-downstream-handling.md`) — **verified**: the doc has the
   `### Reconciler chain for legacy error_reason (the three passes)` subsection + the
   `## Per-source available_at stamping helpers (UTL)` section + the `EXPECTED_KNOWN_SOURCE_GAP` row in the
   reason-taxonomy table. ✓ (The reason-taxonomy table is at 10/18 reasons — that's the tracked-pending closed-set sweep
@@ -263,7 +281,7 @@ The RESUME-block ask ("verify the v8-schema + emission-policy SSOT consistency i
 `expected_window_completeness_pct`→`_fraction` rename") resolves to: **already maintained by ikenna-slot-6 — nothing new
 from this walk.**
 
-- `codex/02-data/service-output-emission-semantics.md` — brought to v8-currency at **PM@`f99895d1`** (semver-rollout
+- `/codex/02-data/service-output-emission-semantics.md` — brought to v8-currency at **PM@`f99895d1`** (semver-rollout
   bot, ikenna-slot-6, 2026-05-11 12:09 UTC): STATUS block now cites UAC@`174f401` (the `manifest_schema` /
   `service_emission_state` / `service_emission_policy.next_state` modules); added a `### next_state(...)` resolver
   section + a `## Manifest-read protocol per service_emission_state` section with the 4-state consumer-action table
@@ -276,15 +294,17 @@ from this walk.**
   codex `availability-manifest-and-data-status.md:253/344` says 0-100 percentage; the `_pct` column name implies
   percentage). Owned + tracked Ikenna-side (the `→_fraction` rename `76f950a` the RESUME block mentions is the proposed
   resolution shape). **Not a slot-6 finding** — recorded here only so the freeze-gate-9 inventory shows it's captured.
-- New codex stub `codex/04-architecture/service-emission-policy.md` (one of the 4 day-1-flagged NEW docs) — created by
+- New codex stub `/codex/04-architecture/service-emission-policy.md` (one of the 4 day-1-flagged NEW docs) — created by
   ikenna-slot-6 per the RESUME block; verify content currency on the days-2-4 deepening pass (not a flip violation — its
   owning plan's todo is now legitimately `- [x]` with the stub landed).
 
 ### Slot-2 features-svc session-3 fan-out — QG-validated 2026-05-11 ~12:15 UTC
 
-Not a codex item, cross-ref only: the 28-commit slot-2 fan-out
-@`features-service`e4b10570`` (`c458166e..e4b10570`) was static-validated — see [`qg_sweep_2026_05_11.md`](qg_sweep_2026_05_11.md) regression-log row. Verdict ✓ static (gcs_reader 4-module split path-templates byte-identical + fallback/per-league logic preserved; onchain+volatility orchestrator splits = clean extract-method/module; web3-hoist no circular risk; `ruff
-check features_service/`exit-0; no`.py`>900L). Minor non-blocking: 5 bare`# noqa` ruff-warnings (slot-2's, exempt).
+Not a codex item, cross-ref only: the 28-commit slot-2 fan-out @`features-service`e4b10570`` (`c458166e..e4b10570`) was
+static-validated — see [`qg_sweep_2026_05_11.md`](qg_sweep_2026_05_11.md) regression-log row. Verdict ✓ static
+(gcs_reader 4-module split path-templates byte-identical + fallback/per-league logic preserved; onchain+volatility
+orchestrator splits = clean extract-method/module; web3-hoist no circular risk; `ruff check features_service/`exit-0;
+no`.py`>900L). Minor non-blocking: 5 bare`# noqa` ruff-warnings (slot-2's, exempt).
 
 ### Days-2-4 codex deepening pass — 2026-05-11 ~13:45 UTC (slot 6)
 
@@ -295,12 +315,12 @@ ManifestWriter is _shipped_ (Phase 2) not just UAC-declared; rescan launcher ref
 **Status delta on the 4 day-1-flagged NEW codex docs** (supersedes the 12:23-UTC "all 4 still absent" note above — 3 of
 4 have now landed):
 
-| Doc                                                      | Day-1 state | Now (2026-05-11 ~13:45 UTC)                                                                                       |
-| -------------------------------------------------------- | ----------- | ----------------------------------------------------------------------------------------------------------------- |
-| `codex/04-architecture/risk-rule-taxonomy.md`            | absent      | **LANDED** (168 L, `scope: [engineer, admin]`)                                                                    |
-| `codex/04-architecture/circuit-breaker-rule-taxonomy.md` | absent      | **LANDED** (350 L, `scope: [engineer, admin]`, `status: active`)                                                  |
-| `codex/04-architecture/service-emission-policy.md`       | absent      | **LANDED** (134 L, `scope: [engineer, admin]`) — created by ikenna-slot-6 per the RESUME block; stub-appropriate. |
-| `codex/02-data/cross-asset-rescan-protocol.md`           | absent      | **STILL ABSENT** — see below; tracked-pending in `manifest_schema_final_gate_2026_05_09.md`.                      |
+| Doc                                                       | Day-1 state | Now (2026-05-11 ~13:45 UTC)                                                                                       |
+| --------------------------------------------------------- | ----------- | ----------------------------------------------------------------------------------------------------------------- |
+| `/codex/04-architecture/risk-rule-taxonomy.md`            | absent      | **LANDED** (168 L, `scope: [engineer, admin]`)                                                                    |
+| `/codex/04-architecture/circuit-breaker-rule-taxonomy.md` | absent      | **LANDED** (350 L, `scope: [engineer, admin]`, `status: active`)                                                  |
+| `/codex/04-architecture/service-emission-policy.md`       | absent      | **LANDED** (134 L, `scope: [engineer, admin]`) — created by ikenna-slot-6 per the RESUME block; stub-appropriate. |
+| `/codex/02-data/cross-asset-rescan-protocol.md`           | absent      | **STILL ABSENT** — see below; tracked-pending in `manifest_schema_final_gate_2026_05_09.md`.                      |
 
 **`cross-asset-rescan-protocol.md` — codex gap post-Phase-3-ship (route to ikenna-slot-6 / `manifest_schema_final_gate`
 Phase 3 codex follow-up).** `manifest_schema_final_gate` Phase 3 (cross-asset rescan launcher) SHIPPED end-to-end
@@ -308,7 +328,7 @@ Phase 3 codex follow-up).** `manifest_schema_final_gate` Phase 3 (cross-asset re
 `vm_zombie_watchdog.py`'s `VM_PREFIX_TO_BUCKET`; `deployment-api@c8a1cd4` = registered in `_SERVICE_LAUNCHER_SCRIPTS`;
 `instruments-service@a264f21` = `scripts/cross_asset_rescan.py` 333-line orchestrator) — per the CLAUDE.md
 "Post-Plan-Phase Codex Audit" HARD RULE, the codex stub the plan declares it touches
-(`codex/02-data/cross-asset-rescan-protocol.md`) should now exist as at least a stub. It doesn't. Not a flip violation
+(`/codex/02-data/cross-asset-rescan-protocol.md`) should now exist as at least a stub. It doesn't. Not a flip violation
 if the owning plan's codex-doc checkbox is still `- [ ]` (it is — `manifest_schema_final_gate` Phase 3's done-def lists
 the codex update as pending) — but it's a deferred codex item that the Phase-3-ship should carry. **No code/data
 impact** — the rescan workflow runs fine without the codex doc; the doc is the intent-record. Routed to ikenna-slot-6.
@@ -325,8 +345,8 @@ breakage. Routed to `manifest_schema_final_gate_2026_05_09.md` Phase 2 follow-up
 bump-code-to-8 vs soften-the-prose). PM@`f8d4d9bf` added that finding-todo.
 
 **`launcher-script-ssot.md` rescan-launcher reference** — checked: the doc does NOT mention `cross-asset-rescan` — but
-`codex/05-infrastructure/launcher-script-ssot.md` isn't an enumeration doc (it's the SSOT _rule_ + migration-tracker for
-ad-hoc launchers being moved into `deployment-service/scripts/vm/`); the rescan launcher was BORN in the canonical
+`/codex/05-infrastructure/launcher-script-ssot.md` isn't an enumeration doc (it's the SSOT _rule_ + migration-tracker
+for ad-hoc launchers being moved into `deployment-service/scripts/vm/`); the rescan launcher was BORN in the canonical
 location (`deployment-service@19fad8c`), so it doesn't need a migration entry, and it IS properly registered in
 `_SERVICE_LAUNCHER_SCRIPTS` (`deployment-api@c8a1cd4`). **No update needed for `launcher-script-ssot.md`.** ✓
 

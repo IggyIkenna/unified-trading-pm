@@ -11,7 +11,11 @@ scope: [engineer, admin]
 tags: []
 related: []
 created: 2026-05-24
-source: [UAC test_credentials_per_mode_archetype failure (bybit) → GCP Secret Manager audit 2026-05-24, composes with the active credential-alignment work (UAC@2ec9fcf3 'align credential IDs to actual SM names')]
+source:
+  [
+    UAC test_credentials_per_mode_archetype failure (bybit) → GCP Secret Manager audit 2026-05-24,
+    composes with the active credential-alignment work (UAC@2ec9fcf3 'align credential IDs to actual SM names'),
+  ]
 locked_by: live-defi-rollout
 priority: P2
 ---
@@ -48,7 +52,7 @@ credential IDs broadly do not match real GCP Secret Manager** (`central-element-
   in SM → the hedge leg can't authenticate. This is latent (not caught by CI: the archetype config + its tests are
   mutually consistent on the wrong names) but blocks live csb.
 - **okx is per-client** (`exec-<client>-okx-*`) — this is the per-client isolation architecture
-  (`codex/04-architecture/per-client-isolation-architecture.md`), not a single shared okx key. The archetype config's
+  (`/codex/04-architecture/per-client-isolation-architecture.md`), not a single shared okx key. The archetype config's
   single `okx-trade-api-key` is architecturally wrong, not just a rename.
 
 ## Recommended decision

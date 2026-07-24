@@ -122,20 +122,20 @@ The `execution-store-*` output buckets store raw fill parquets, not manifest ind
 
 ### Dim 5 — Error classification coverage
 
-| Component                                                    | Status                                                                        | Evidence                     |
-| ------------------------------------------------------------ | ----------------------------------------------------------------------------- | ---------------------------- |
-| `engine/orchestrator.py`                                     | ✅ `classify_venue_error()` + `ADAPTER_FETCH_FAILED`                          | lines 252, 348               |
-| `engine/multi_leg_orchestrator.py`                           | ✅ `classify_venue_error()`                                                   | lines 334, 470               |
-| `engine/routing/instruction_router.py`                       | ✅ `classify_venue_error()`                                                   | line 281                     |
-| `trade_execution/adapters/_native_base.py`                   | ✅ `classify_venue_error()` in base class                                     | lines 157-167                |
-| `trade_execution/adapters/kraken_rest_adapter.py`            | ✅ `classify_venue_error()`                                                   | lines 662-720                |
-| `trade_execution/adapters/bybit_native.py`                   | ✅ `classify_venue_error()`                                                   | line 184                     |
-| `trade_execution/adapters/okx_native.py`                     | ✅ `classify_venue_error()`                                                   | line 206                     |
-| `trade_execution/adapters/bitget_native.py`                  | ✅ `classify_venue_error()`                                                   | line 180                     |
-| `sports_execution/adapters/exchanges/kalshi.py`              | ✅ `classify_venue_error()` + `ADAPTER_FETCH_FAILED` at 6 callsites           | lines 254-546                |
-| `sports_execution/adapters/exchanges/betfair.py`             | ✅ `classify_venue_error()` + `ADAPTER_FETCH_FAILED`                          | lines 490, 938               |
-| `sports_execution/adapters/exchanges/matchbook.py`           | ✅ `classify_venue_error()` + `ADAPTER_FETCH_FAILED`                          | lines 201-207                |
-| `defi_execution/protocols/aster.py`                          | ✅ `classify_venue_error()`                                                   | lines 74-81                  |
+| Component                                                    | Status                                                                       | Evidence                     |
+| ------------------------------------------------------------ | ---------------------------------------------------------------------------- | ---------------------------- |
+| `engine/orchestrator.py`                                     | ✅ `classify_venue_error()` + `ADAPTER_FETCH_FAILED`                         | lines 252, 348               |
+| `engine/multi_leg_orchestrator.py`                           | ✅ `classify_venue_error()`                                                  | lines 334, 470               |
+| `engine/routing/instruction_router.py`                       | ✅ `classify_venue_error()`                                                  | line 281                     |
+| `trade_execution/adapters/_native_base.py`                   | ✅ `classify_venue_error()` in base class                                    | lines 157-167                |
+| `trade_execution/adapters/kraken_rest_adapter.py`            | ✅ `classify_venue_error()`                                                  | lines 662-720                |
+| `trade_execution/adapters/bybit_native.py`                   | ✅ `classify_venue_error()`                                                  | line 184                     |
+| `trade_execution/adapters/okx_native.py`                     | ✅ `classify_venue_error()`                                                  | line 206                     |
+| `trade_execution/adapters/bitget_native.py`                  | ✅ `classify_venue_error()`                                                  | line 180                     |
+| `sports_execution/adapters/exchanges/kalshi.py`              | ✅ `classify_venue_error()` + `ADAPTER_FETCH_FAILED` at 6 callsites          | lines 254-546                |
+| `sports_execution/adapters/exchanges/betfair.py`             | ✅ `classify_venue_error()` + `ADAPTER_FETCH_FAILED`                         | lines 490, 938               |
+| `sports_execution/adapters/exchanges/matchbook.py`           | ✅ `classify_venue_error()` + `ADAPTER_FETCH_FAILED`                         | lines 201-207                |
+| `defi_execution/protocols/aster.py`                          | ✅ `classify_venue_error()`                                                  | lines 74-81                  |
 | **`trade_execution/adapters/binance_ccxt.py`**               | **⚠ `UNKNOWN_VENUE_ERROR_RECEIVED` emitted but NO `classify_venue_error()`** | **lines 281, 317, 465, 577** |
 | **`trade_execution/adapters/hyperliquid_ccxt.py`**           | **⚠ NO `classify_venue_error()` — `ccxt.BaseError` caught bare**             | **lines 186, 332, 443**      |
 | **`trade_execution/adapters/bybit_ccxt.py`**                 | **⚠ NO `classify_venue_error()`**                                            | all except blocks            |
@@ -401,11 +401,11 @@ leave order errors unclassified in live trading — high-severity for post-cutov
 
 ## Codex SSOT updates required
 
-- `codex/04-architecture/instruments-service-as-ssot-for-mtds.md`: add section clarifying execution-service IS contract
+- `/codex/04-architecture/instruments-service-as-ssot-for-mtds.md`: add section clarifying execution-service IS contract
   (IS owns _instrument specs_, not _connectivity URLs_). Distinguish data-ingestion handlers (MTDS pattern) from
   execution adapters (execution pattern).
-- `codex/04-architecture/defi-execution-overview.md`: note that IS provides tick_size/contract_size for Deribit and DeFi
-  instruments; live API fetch is fallback only.
+- `/codex/04-architecture/defi-execution-overview.md`: note that IS provides tick_size/contract_size for Deribit and
+  DeFi instruments; live API fetch is fallback only.
 
 ---
 

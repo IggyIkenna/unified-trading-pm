@@ -28,7 +28,7 @@ scope: [engineer]
 tags: [quality-gates, file-size, ci-blocking, technical-debt, ratchet]
 related:
   [
-    mtds_empty_string_fallback_codex_gate_blocking_pushes_2026_07_08.md,
+    /plans/active/issues/mtds_empty_string_fallback_codex_gate_blocking_pushes_2026_07_08.md,
     ../issues/instrument_id_format_canonicalization_2026_07_08.md,
   ]
 created: 2026-07-09

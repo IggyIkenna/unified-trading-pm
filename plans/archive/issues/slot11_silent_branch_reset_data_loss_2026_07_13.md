@@ -13,7 +13,7 @@ stage: [meta]
 repos: [unified-trading-library, unified-api-contracts]
 scope: [engineer, admin]
 tags: [git-safety, incident, slot-infrastructure, data-loss-risk]
-related: [codex/05-infrastructure/per-tab-worktrees.md]
+related: [/codex/05-infrastructure/per-tab-worktrees.md]
 created: "2026-07-13"
 parent_epic: infrastructure_master
 assigned_vm: planning
@@ -83,7 +83,7 @@ any slot, any repo, any time between commit and push.
 
 ## Why it matters
 
-This is the exact failure mode `codex/05-infrastructure/per-tab-worktrees.md` + `CLAUDE.md` § "Multi-agent safety" warn
+This is the exact failure mode `/codex/05-infrastructure/per-tab-worktrees.md` + `CLAUDE.md` § "Multi-agent safety" warn
 AGENTS not to inflict on each other ("never force-push", "never git reset --hard ... uncommitted work") — but here the
 actor was NOT an agent following documented git discipline; it was something else with write access to a slot clone that
 used `git reset` instead of `git merge --ff-only`/`git pull --rebase --autostash` (which the worker/RULES.md docs

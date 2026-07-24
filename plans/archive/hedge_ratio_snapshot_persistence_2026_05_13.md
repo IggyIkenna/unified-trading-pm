@@ -10,7 +10,7 @@ repos: [deployment-service, deployment-ui, strategy-service, unified-trading-pm]
 scope: [engineer, admin]
 tags: []
 related: []
-created: '2026-05-13'
+created: "2026-05-13"
 ---
 
 > **ARCHIVED 2026-05-19** — 100% complete (all items); preserved for archaeology.
@@ -157,7 +157,7 @@ attached to `AtomicInstruction.attestations` as **audit metadata** — co-emitte
 
 ### Phase 4 — Codex SSOT + plan close (~0.2 cal AI-days)
 
-- [x] ✅ [SCRIPT] P0. Update `codex/04-architecture/amm-slippage-simulation.md` § "Hedge-ratio dynamic adjustment" with
+- [x] ✅ [SCRIPT] P0. Update `/codex/04-architecture/amm-slippage-simulation.md` § "Hedge-ratio dynamic adjustment" with
       writeback pattern + consumer chain. ✅ Added FULLY SHIPPED banner with UAC@2fcb1bb + strategy-service@21209bd +
       pnl-attribution-service@ee96d3c commit refs.
 - [x] ✅ [SCRIPT] P0. Flip parent plan `defi_simulation_realism_2026_05_10.md` Phase 6B-WIRE-IN DEFERRED entry with this
@@ -206,7 +206,7 @@ sides coherently.
 - [x] ✅ [AGENT] P0. Unit tests — 11 tests: `REBALANCED` round-trip, 5x `HOLD_WITHIN_DRIFT_BAND` variants,
       `HOLD_FEATURE_STALE`, exception swallow, schema match, row value verification. strategy-service@`285f154`. Autouse
       perf guard (720-tick batch overhead eliminated): strategy-service@`df2ff9f`.
-- [x] ✅ [SCRIPT] P0. Updated `codex/04-architecture/amm-slippage-simulation.md` § "Hedge-ratio dynamic adjustment" —
+- [x] ✅ [SCRIPT] P0. Updated `/codex/04-architecture/amm-slippage-simulation.md` § "Hedge-ratio dynamic adjustment" —
       added "Phase 5 pre-decision audit trail" subsection with full commit refs. unified-trading-pm@see-flip-commit.
 - [x] ✅ [SCRIPT] P0. Cross-side notify filed (harsh-main → ikenna-main `_agent_pings.md` 2026-05-18 11:20 UTC) + acked
       (ikenna-main → harsh-main `_agent_pings.md`:3469 2026-05-18 11:23 UTC).

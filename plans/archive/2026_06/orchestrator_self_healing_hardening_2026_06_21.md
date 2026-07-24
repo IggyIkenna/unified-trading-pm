@@ -1,7 +1,8 @@
 ---
 title: "Orchestrator self-healing hardening — account rotation + watchdog recovery + audit-reflog noise"
 created: 2026-06-21
-status: supersededparent_epic: orchestrator_master
+status: superseded
+parent_epic: orchestrator_master
 assigned_vm: harsh_pc
 execution_scope: local-only
 locked_by: live-defi-rollout
@@ -350,8 +351,8 @@ clears the flag on recovery.
       `notify_all_accounts_unusable`) with an `/accounts` deep-link. — agent-orchestrator@d35c0f09 | tests:
       test_usage_poller_auth_failover.py (+6 cases)
 - [x] ✅ [DOC] P2. **Codex SSOT.** Documented the auth-failure eviction flow + the "missing-heartbeat-is-not-auth"
-      invariant + global-outage guard + auto-recovery in `codex/04-architecture/agent-orchestrator-worker-liveness.md` §
-      "Account auth-failure eviction" + a pointer paragraph in `agent-orchestrator-overview.md` § Watchdog. —
+      invariant + global-outage guard + auto-recovery in `/codex/04-architecture/agent-orchestrator-worker-liveness.md`
+      § "Account auth-failure eviction" + a pointer paragraph in `agent-orchestrator-overview.md` § Watchdog. —
       unified-trading-pm (this commit)
 
 #### Deploy-currency + SQLite hardening (operator 2026-06-23 follow-ups)
@@ -373,17 +374,17 @@ clears the flag on recovery.
 ### Incidental finding (2026-06-23) — S3 state-snapshot backup failing (region mismatch)
 
 - [x] ✅ [ORCHESTRATOR] P2. **Off-VM state-snapshot backups to S3 — region bug FIXED in code (2026-06-25).** Root cause
-      was `get_region()` in UTL `cloud_interface/constants.py` branching on the **ambient** `get_cloud_provider()`, so an
-      explicit AWS S3 client on a GCP-primary deployment inherited the GCP region `asia-northeast1` → invalid endpoint
-      `s3.asia-northeast1.amazonaws.com` → `NameResolutionError`. Fix (the "per-cloud region mapping in the S3 client
-      construction" option, preferred over an `AWS_REGION` env band-aid): `get_region(provider=None)` is now
+      was `get_region()` in UTL `cloud_interface/constants.py` branching on the **ambient** `get_cloud_provider()`, so
+      an explicit AWS S3 client on a GCP-primary deployment inherited the GCP region `asia-northeast1` → invalid
+      endpoint `s3.asia-northeast1.amazonaws.com` → `NameResolutionError`. Fix (the "per-cloud region mapping in the S3
+      client construction" option, preferred over an `AWS_REGION` env band-aid): `get_region(provider=None)` is now
       provider-aware, and all **8** AWS-client construction sites in `cloud_interface/factory.py` pass
       `CloudProvider.AWS` → an AWS client always resolves an AWS region (`AWS_REGION` env or `ap-northeast-1` default).
       2 regression tests lock the cross-cloud behaviour; UTL `quality-gates.sh` green (145s); 89 cloud_interface tests
       pass. — unified-trading-library@496e2b78 (LDR; Tier-C drain → staging). **Takes operational effect on the next
       central-VM redeploy** (vm-planning is currently powered off, so no snapshots are due now anyway). Original
-      diagnosis kept for history:
-      The auto-snapshot loop writes local `data/state/state.json` fine, but the S3 upload fails:
+      diagnosis kept for history: The auto-snapshot loop writes local `data/state/state.json` fine, but the S3 upload
+      fails:
       `NameResolutionError: Failed to resolve 'uts-orchestrator-state-427895769566.s3.asia-northeast1.amazonaws.com'` →
       `s3_uri: None`, and `aws s3 ls …/snapshots/planning/2026-06-23/` is EMPTY (no snapshots land). Root cause: the
       cloud-agnostic config feeds the **GCP** region name `asia-northeast1` to the **AWS** S3 client, which needs
@@ -405,10 +406,10 @@ clears the flag on recovery.
 
 ## Codex SSOT updates
 
-- [x] ✅ [DOC] P2. `codex/04-architecture/agent-orchestrator-worker-liveness.md` — documented all 5 closures (fix a/b/c,
-      G3a checkout-not-reset, G3b LoopSupervisor) + the account-selection closures in a "Self-healing hardening
+- [x] ✅ [DOC] P2. `/codex/04-architecture/agent-orchestrator-worker-liveness.md` — documented all 5 closures (fix
+      a/b/c, G3a checkout-not-reset, G3b LoopSupervisor) + the account-selection closures in a "Self-healing hardening
       (2026-06-21)" section. — unified-trading-pm@4dbc4eb1d
-- [x] ✅ [DOC] P3. `codex/04-architecture/agent-orchestrator-overview.md` § Watchdog — added a "Self-healing hardening
+- [x] ✅ [DOC] P3. `/codex/04-architecture/agent-orchestrator-overview.md` § Watchdog — added a "Self-healing hardening
       (2026-06-21)" paragraph summarising the 5 closures + cross-linking the worker-liveness doc. — unified-trading-pm
       (this commit)
 
@@ -460,26 +461,25 @@ safe-gate (running service untouched until a verified restart) worked as designe
       authorized_user ADC → default path), QG-green. — unified-trading-library@5e413c7f
 - [x] ✅ [OPS] P1. **Blocker 2 — account roster file — DONE (2026-06-25, operator-confirmed + verified).** Cloud roster
       is complete + consistent: S3 `s3://uts-orchestrator-creds-427895769566/config/accounts.json` + GCS
-      `gs://central-element-323112-orchestrator-creds/config/accounts.json` both carry all **4** accounts
-      (sub-a-ikenna / sub-b-iggy2london / sub-c-ikenna-odum / sub-d-odum1default), each with `oauth_token_env_file`,
+      `gs://central-element-323112-orchestrator-creds/config/accounts.json` both carry all **4** accounts (sub-a-ikenna
+      / sub-b-iggy2london / sub-c-ikenna-odum / sub-d-odum1default), each with `oauth_token_env_file`,
       **byte-identical** across clouds, and **schema-valid** (loads through the strict `AccountDef` pydantic model — all
       `max20`, all with `label` + `oauth_token_env_file`, valid 2027 setup-token expiries). All 4 `<id>.env` token files
       are present in both clouds' `accounts/` prefix (`sub-d-odum1default.env` added 2026-06-15). The per-host local
       `data/config/accounts.json` is VM-bootstrap-pulled from cloud; operator confirms the pull across backend hosts
       (vm-planning itself is currently powered off, so its stale S3 snapshots since 2026-06-22 are expected, not a live
-      fault). **Original root-cause kept for history:** The new code REQUIRES an
-      explicit `oauth_token_env_file` per account; the **old code derived** the token path by convention
-      (`~/.claude-accounts/<id>.env`), so it spawns fine without the field. The running 4-account state (sub-a/b/c/d,
-      from the DB/snapshot) lacks `oauth_token_env_file` → new code = `ACCOUNT POOL EXHAUSTED`. The correctly-schema'd
-      roster (WITH `oauth_token_env_file`) lives at **S3 `s3://uts-orchestrator-creds-427895769566/config/accounts.json`
-      but is STALE** (2026-05-22; only 3 accounts — sub-a/b/c, missing sub-d) AND is **not present locally** at
-      `data/config/accounts.json` (the new code's read path — only `accounts.mock.json` is there; the live one is
-      operator-edited/committed and went missing). All 4 token `.env` files exist in `~/.claude-accounts/`. **Fix: place
-      a current `data/config/accounts.json` with all 4 accounts each carrying
-      `oauth_token_env_file:     ~/.claude-accounts/<id>.env`** (+ refresh the stale S3 copy to match). The schema is
-      known (matches the S3 copy); the roster (which accounts / limits / sub-d) is the operator's live account config —
-      confirm the roster, then the redeploy runs both validated fixes (unset `GOOGLE_APPLICATION_CREDENTIALS` + this
-      file) safe-gated. Owner: operator (account roster).
+      fault). **Original root-cause kept for history:** The new code REQUIRES an explicit `oauth_token_env_file` per
+      account; the **old code derived** the token path by convention (`~/.claude-accounts/<id>.env`), so it spawns fine
+      without the field. The running 4-account state (sub-a/b/c/d, from the DB/snapshot) lacks `oauth_token_env_file` →
+      new code = `ACCOUNT POOL EXHAUSTED`. The correctly-schema'd roster (WITH `oauth_token_env_file`) lives at **S3
+      `s3://uts-orchestrator-creds-427895769566/config/accounts.json` but is STALE** (2026-05-22; only 3 accounts —
+      sub-a/b/c, missing sub-d) AND is **not present locally** at `data/config/accounts.json` (the new code's read path
+      — only `accounts.mock.json` is there; the live one is operator-edited/committed and went missing). All 4 token
+      `.env` files exist in `~/.claude-accounts/`. **Fix: place a current `data/config/accounts.json` with all 4
+      accounts each carrying `oauth_token_env_file:     ~/.claude-accounts/<id>.env`** (+ refresh the stale S3 copy to
+      match). The schema is known (matches the S3 copy); the roster (which accounts / limits / sub-d) is the operator's
+      live account config — confirm the roster, then the redeploy runs both validated fixes (unset
+      `GOOGLE_APPLICATION_CREDENTIALS` + this file) safe-gated. Owner: operator (account roster).
 - [x] ✅ [OPS] P2. **Redeploy DONE (2026-06-23).** Both fixes applied (restored S3 `config/accounts.json` → local
       `data/config/accounts.json` per operator; unset `GOOGLE_APPLICATION_CREDENTIALS`) + ff-pull to current LDR +
       restart. New code LIVE (`a169552`) with the FM7 fix + cap-default + 128 commits: 3 accounts loaded WITH

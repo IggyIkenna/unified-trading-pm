@@ -21,14 +21,20 @@ estimate_baseline_ai_days: 5
 estimate_calibrated_ai_days: 5
 locked_by: live-defi-rollout
 locked_since: 2026-05-28
-codex_ssots: [codex/04-architecture/artifact-versioning.md, codex/02-data/availability-manifest-and-data-status.md, codex/06-coding-standards/strategy-identity-versioning.md]
+codex_ssots:
+  [
+    /codex/04-architecture/artifact-versioning.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/06-coding-standards/strategy-identity-versioning.md,
+  ]
 ---
 
 # Features registry expansion + status tags + formula versioning
 
-> **✅ ARCHIVED 2026-06-21 — ships clean (own temp-states: none); 4 codex docs written/aligned. Consumer-pin + other-family rollout are epic-owned (features_and_ml_master). [unlock-plan]**
+> **✅ ARCHIVED 2026-06-21 — ships clean (own temp-states: none); 4 codex docs written/aligned. Consumer-pin +
+> other-family rollout are epic-owned (features_and_ml_master). [unlock-plan]**
 
-> **Why now**: `codex/04-architecture/artifact-versioning.md` declares the contract (every feature_group has
+> **Why now**: `/codex/04-architecture/artifact-versioning.md` declares the contract (every feature_group has
 > `content_hash + monotonic v`, consumers pin by `@vN`, registry retained for replay). features-service has **not
 > implemented it**: `formula_version` / `feature_group_version` / `calculator_version` return 0 grep hits across the
 > repo, no version column in `DeltaOneFeatureRecord`, no status field on `FeatureSpec`, and **29 of 34 calculator groups
@@ -142,9 +148,9 @@ guard.
 
 ### Layer 5 — Codex alignment
 
-- Update `codex/04-architecture/artifact-versioning.md` § Feature groups to cite the actual implementation paths
+- Update `/codex/04-architecture/artifact-versioning.md` § Feature groups to cite the actual implementation paths
   (registry.py, feature_writer.py, status_report.py).
-- New codex doc `codex/02-data/feature-formula-versioning.md` — the drift-detection mechanism + the per-column
+- New codex doc `/codex/02-data/feature-formula-versioning.md` — the drift-detection mechanism + the per-column
   `formula_version` parquet column
   - the consumer pin pattern.
 - `MEMORY.md` reference to the new docs.
@@ -223,9 +229,9 @@ guard.
 
 ### Phase 5 — Codex alignment + consumer pin pattern [P2]
 
-- [x] ✅ [DOC] P2. Updated `codex/04-architecture/artifact-versioning.md` § Feature groups row to cite the registry.py
+- [x] ✅ [DOC] P2. Updated `/codex/04-architecture/artifact-versioning.md` § Feature groups row to cite the registry.py
       SSOT path + per-group `max(spec.formula_version)` resolution + link to the new implementation doc.
-- [x] ✅ [DOC] P2. New codex doc `codex/02-data/feature-formula-versioning.md` (~190 lines) covering: 4-file
+- [x] ✅ [DOC] P2. New codex doc `/codex/02-data/feature-formula-versioning.md` (~190 lines) covering: 4-file
       architecture, per-row sidecar + file-level parquet metadata, group version resolution, bump procedure, 0 sentinel,
       drift detection, status field semantics, consumer pin pattern, composition with other codex docs.
 - [x] ✅ [DOC] P2. Consumer pin example

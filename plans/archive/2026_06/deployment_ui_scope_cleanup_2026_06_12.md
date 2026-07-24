@@ -1,6 +1,7 @@
 ---
 doc_type: plan
-title: deployment-ui scope cleanup — move trading/research surfaces to unified-trading-system-ui; keep the devops pane lean
+title:
+  deployment-ui scope cleanup — move trading/research surfaces to unified-trading-system-ui; keep the devops pane lean
 summary:
 status: complete
 nature: record
@@ -9,7 +10,8 @@ stage: [meta]
 repos: [deployment-api, deployment-ui, unified-trading-api, unified-trading-pm, unified-trading-system-ui]
 scope: [engineer, admin]
 tags: []
-related: [plans/active/monitoring_control_plane_master_2026_06_10.md, plans/active/ci_dashboard_deployment_ui_2026_06_10.md]
+related:
+  [plans/active/monitoring_control_plane_master_2026_06_10.md, plans/active/ci_dashboard_deployment_ui_2026_06_10.md]
 created: 2026-06-12
 parent_epic: deployment_and_user_management_master
 assigned_vm: vm-cross-cutting
@@ -18,7 +20,13 @@ estimate_class: refactor
 estimate_baseline_ai_days: 4.0
 estimate_calibrated_ai_days: 1.6
 archived: 2026-06-12
-source: ['operator direction 2026-06-12: "deployment ui needs a cleanup — at some point confused the Unified Trading System UI with the Deployment UI and started building Dart stuff and ML stuff in there, which is totally pointless there. Figure out what it was trying to build; build it into the Unified Trading System UI; clean up the Deployment UI; keep CI/CD clickable through the CI/CD tab and epics via the epics tab."']
+source:
+  [
+    'operator direction 2026-06-12: "deployment ui needs a cleanup — at some point confused the Unified Trading System
+    UI with the Deployment UI and started building Dart stuff and ML stuff in there, which is totally pointless there.
+    Figure out what it was trying to build; build it into the Unified Trading System UI; clean up the Deployment UI;
+    keep CI/CD clickable through the CI/CD tab and epics via the epics tab."',
+  ]
 ---
 
 # deployment-ui scope cleanup — trading/research surfaces → unified-trading-system-ui
@@ -32,8 +40,8 @@ source: ['operator direction 2026-06-12: "deployment ui needs a cleanup — at s
 >   CLAUDE.md dual-cut rule `unified-trading-pm` (`runtime-deployment-topology.md` + `cursor-configs/CLAUDE.md`).
 >   Follow-ups (operator request): config-only-pyproject `setup.sh` fix `unified-trading-pm` SSOT +
 >   `unified-trading-system-ui@6c9680d9`; networkidle flake fix `deployment-ui@ebaee4f` (nav_and_header 20/20). pw:L2
->   green both repos. **Codex alignment verified**: `codex/04-architecture/runtime-deployment-topology.md` § "UI surface
->   split" reflects what shipped. No `locked_by` (unlocked at archival; `[unlock-plan]`).
+>   green both repos. **Codex alignment verified**: `/codex/04-architecture/runtime-deployment-topology.md` § "UI
+>   surface split" reflects what shipped. No `locked_by` (unlocked at archival; `[unlock-plan]`).
 
 ## Scope
 
@@ -145,7 +153,7 @@ ALREADY-SATISFIED (no work): "CI/CD clickable through the CI/CD tab + epics via 
       tests/smoke/nav_and_header.spec.ts + tests/smoke/deploy-and-subscriptions.smoke.spec.ts.
 - [x] ✅ [DOCS] P2. Phase 5 — DONE 2026-06-12. Added a "UI surface split — deployment-ui (devops + deploy pane) vs
       unified-trading-system-ui (trading/research/client)" subsection to
-      `codex/04-architecture/runtime-deployment-topology.md` (dual-cut deploy model, `/api/deploy/*` rewrite rationale,
+      `/codex/04-architecture/runtime-deployment-topology.md` (dual-cut deploy model, `/api/deploy/*` rewrite rationale,
       DART-only-in-UTS-UI, deployment-api = single shared deploy/subscriptions backend). Extended the CLAUDE.md repo-map
       line (`cursor-configs/CLAUDE.md` § System-First Architecture) with the dual-cut deploy rule + SSOT pointer. Repo:
       unified-trading-pm.

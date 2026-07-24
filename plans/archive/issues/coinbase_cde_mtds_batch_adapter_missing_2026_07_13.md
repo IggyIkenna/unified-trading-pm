@@ -27,9 +27,9 @@ tags: [coinbase-cde, cefi, mtds, batch-adapter-gap, honest-coverage, data-correc
 related:
   [
     ../data_pipeline_e2e_check_2026_07_10.md,
-    coinbase_futures_spot_pair_zero_attempts_2026_07_12.md,
-    wsfeedconnector_phase35_gap_2026_07_06.md,
-    ../../../codex/02-data/data-pipeline-correctness-hard-rule.md,
+    /plans/archive/issues/coinbase_futures_spot_pair_zero_attempts_2026_07_12.md,
+    /plans/active/issues/wsfeedconnector_phase35_gap_2026_07_06.md,
+    /codex/02-data/data-pipeline-correctness-hard-rule.md,
   ]
 created: 2026-07-13
 parent_epic: mtds_mdps_master

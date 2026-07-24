@@ -2,10 +2,10 @@
 doc_type: audit-instruction
 title: dart_and_promote_master_audit_instructions
 summary:
-  Weekly audit of DART + the promote workflow — verifies the pre-May-23 promote endpoint only accepts paper_1d→live_early
-  (live_full rejected 422), MinimalCandidateManifest stays minimal, ManualTradeGateDialog fires for the first 3 trading
-  days, Firebase execution-full enforced at UI-only, the promote state machine covers all transitions, and codex↔code
-  alignment.
+  Weekly audit of DART + the promote workflow — verifies the pre-May-23 promote endpoint only accepts
+  paper_1d→live_early (live_full rejected 422), MinimalCandidateManifest stays minimal, ManualTradeGateDialog fires for
+  the first 3 trading days, Firebase execution-full enforced at UI-only, the promote state machine covers all
+  transitions, and codex↔code alignment.
 status: active
 nature: process
 asset_group: [cross-cutting]
@@ -14,7 +14,7 @@ repos: [deployment-api, deployment-ui]
 scope: [engineer, admin]
 tags: [audit, ui, execution, strategy, verification]
 related: []
-created: '2026-05-22'
+created: "2026-05-22"
 tier: L3
 parent_epic: strategy_master
 cadence: weekly (minimum)
@@ -34,8 +34,8 @@ DART (Deal Allocation and Review Tool), ManualTradeGateDialog (first 3 trading d
 (`POST /api/promote/{strategy_id}/{manifest_id}`), `MinimalCandidateManifest` in Firestore, promote state machine.
 May-23 valid promote path: `paper_1d` → `live_early` only. `live_full` is post-cutover.
 
-Codex SSOTs: `codex/04-architecture/promote-workflow-architecture.md`,
-`codex/09-strategy/operational/cli-promote-paths.md`
+Codex SSOTs: `/codex/04-architecture/promote-workflow-architecture.md`,
+`/codex/09-strategy/operational/cli-promote-paths.md`
 
 ## Triggers
 
@@ -65,9 +65,9 @@ Codex SSOTs: `codex/04-architecture/promote-workflow-architecture.md`,
       `rg "StateMachine\|transition\|promote_state" --include="*.py" -l` — read transitions list Verify: invalid
       transitions raise appropriate error
 
-- [ ] (f) **Promote workflow codex alignment**: `codex/04-architecture/promote-workflow-architecture.md` matches current
-      code. No code patterns present that contradict the codex doc. Read: both codex doc and implementation — spot-check
-      3 key code paths
+- [ ] (f) **Promote workflow codex alignment**: `/codex/04-architecture/promote-workflow-architecture.md` matches
+      current code. No code patterns present that contradict the codex doc. Read: both codex doc and implementation —
+      spot-check 3 key code paths
 
 ### E2E Flow Verification
 

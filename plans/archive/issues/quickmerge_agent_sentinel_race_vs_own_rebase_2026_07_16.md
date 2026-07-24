@@ -27,9 +27,9 @@ tags: [ci-cd, quickmerge, quality-gates, sentinel, race-condition, agent-workflo
 related:
   [
     plans/active/github_actions_ci_cost_reduction_2026_07_15.md,
-    codex/08-workflows/ci-cd-flow.md,
-    codex/06-coding-standards/quality-gates.md,
-    codex/12-agent-workflow/commit-push-flip-rule.md,
+    /codex/08-workflows/ci-cd-flow.md,
+    /codex/06-coding-standards/quality-gates.md,
+    /codex/12-agent-workflow/commit-push-flip-rule.md,
   ]
 created: 2026-07-16
 parent_epic: deployment_and_user_management_master

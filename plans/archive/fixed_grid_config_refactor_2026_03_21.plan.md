@@ -10,27 +10,29 @@ repos: [execution-service, strategy-service, unified-trading-pm]
 scope: [engineer, admin]
 tags: [ml, strategy, execution, config, backtest, grid, architecture]
 related: []
-created: '2026-03-21'
-overview: 'Split ML training, strategy, and execution backtest configs into Fixed (lookup keys) vs Grid (combinatoric search) tiers. Target-type-specific params move from top-level fields into per-type dicts. Enables unified mass backtesting across TradFi/CeFi/DeFi/Sports without nonsensical cross-products.
+created: "2026-03-21"
+overview: "Split ML training, strategy, and execution backtest configs into Fixed (lookup keys) vs Grid (combinatoric
+  search) tiers. Target-type-specific params move from top-level fields into per-type dicts. Enables unified mass
+  backtesting across TradFi/CeFi/DeFi/Sports without nonsensical cross-products.
 
-  '
+  "
 type: code
 epic: epic-code-completion
 priority: P0
 owner: human
 locked_by:
 locked_since:
-completion_gates: {code: C4, deployment: none, business: none}
+completion_gates: { code: C4, deployment: none, business: none }
 repo_gates:
-- {repo: unified-internal-contracts, code: C0, deployment: none, business: none}
-- {repo: unified-ml-interface, code: C0, deployment: none, business: none}
-- {repo: unified-config-interface, code: C0, deployment: none, business: none}
-- {repo: ml-training-service, code: C0, deployment: none, business: none}
-- {repo: strategy-service, code: C0, deployment: none, business: none}
-- {repo: execution-service, code: C0, deployment: none, business: none}
-- {repo: unified-domain-client, code: C0, deployment: none, business: none}
-- {repo: ml-inference-service, code: C0, deployment: none, business: none}
-- {repo: unified-trading-pm, code: none, deployment: none, business: none, readiness_note: Plan + codex docs only.}
+  - { repo: unified-internal-contracts, code: C0, deployment: none, business: none }
+  - { repo: unified-ml-interface, code: C0, deployment: none, business: none }
+  - { repo: unified-config-interface, code: C0, deployment: none, business: none }
+  - { repo: ml-training-service, code: C0, deployment: none, business: none }
+  - { repo: strategy-service, code: C0, deployment: none, business: none }
+  - { repo: execution-service, code: C0, deployment: none, business: none }
+  - { repo: unified-domain-client, code: C0, deployment: none, business: none }
+  - { repo: ml-inference-service, code: C0, deployment: none, business: none }
+  - { repo: unified-trading-pm, code: none, deployment: none, business: none, readiness_note: Plan + codex docs only. }
 depends_on: [uniform-ml-pipeline-sports-migration-2026-03-20]
 ---
 
@@ -251,14 +253,14 @@ Phase 1 (T0: UIC schemas) ──► Phase 2 (T1: UMI + UCI) ──► Phase 3a (
 - [ ] [AGENT] P1. Workspace-wide grep verification: no bare `swing_lookback_window` as top-level ModelVariantConfig
       field access (should all be via target_params or backwards-compat property).
 
-- [ ] [AGENT] P1. Write codex doc: `unified-trading-codex/04-architecture/fixed-grid-config.md` documenting the two-tier
-      pattern, per-type param bags, and how to add new target types / strategy modes.
+- [ ] [AGENT] P1. Write codex doc: `unified-trading-/codex/04-architecture/fixed-grid-config.md` documenting the
+      two-tier pattern, per-type param bags, and how to add new target types / strategy modes.
 
 ---
 
 ## Phase 5: Codex SSOT + UI Plan Docs
 
-- [ ] [AGENT] P0. Write codex doc: `unified-trading-codex/04-architecture/fixed-grid-config.md`
+- [ ] [AGENT] P0. Write codex doc: `unified-trading-/codex/04-architecture/fixed-grid-config.md`
   - Two-tier architecture: Fixed (lookup keys) vs Grid (combinatoric search)
   - Per-target-type param bags: what params each target_type accepts
   - Per-strategy-mode param bags: what params each strategy_mode accepts

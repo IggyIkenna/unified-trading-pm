@@ -1,7 +1,9 @@
 ---
 doc_type: issue
-title: 'STALE-IMAGE / not-latest-code: no alert when Cloud Run jobs run an outdated image'
-summary: 'There is **no alert** when a Cloud Run job (or long-lived service) is running an image that is older than the latest build on `live-defi-rollout` / `main`. The failure class is:'
+title: "STALE-IMAGE / not-latest-code: no alert when Cloud Run jobs run an outdated image"
+summary:
+  "There is **no alert** when a Cloud Run job (or long-lived service) is running an image that is older than the latest
+  build on `live-defi-rollout` / `main`. The failure class is:"
 status: resolved
 nature: process
 asset_group: cross-asset
@@ -13,7 +15,12 @@ related: []
 created: 2026-06-26
 severity: P1
 priority: P1
-resolved_by: {utl: unified-trading-library@d9d344a9, uac: unified-api-contracts@c6a2fede, deployment_service: deployment-service@fc3c4a7}
+resolved_by:
+  {
+    utl: unified-trading-library@d9d344a9,
+    uac: unified-api-contracts@c6a2fede,
+    deployment_service: deployment-service@fc3c4a7,
+  }
 resolved_date: 2026-06-26
 class: STALE-IMAGE
 assigned_vm: NA
@@ -25,7 +32,9 @@ drift_direction: advance-code
 depends_on: []
 ---
 
-> **RESOLVED 2026-06-30 (verified, archived)** — DP_CLOUD_RUN_STALE_IMAGE alert shipped + verified present in UTL events/event_types.py, UAC alerting/rules.py, and deployment-service/data_pipeline_monitors/stale_image_watcher.py (+cli +unit test). The alert GAP is closed; the operator image-rebuild is a separate follow-up.
+> **RESOLVED 2026-06-30 (verified, archived)** — DP_CLOUD_RUN_STALE_IMAGE alert shipped + verified present in UTL
+> events/event_types.py, UAC alerting/rules.py, and deployment-service/data_pipeline_monitors/stale_image_watcher.py
+> (+cli +unit test). The alert GAP is closed; the operator image-rebuild is a separate follow-up.
 
 > **RESOLVED 2026-06-26** — DP-VM-007 alert implemented and shipped to `live-defi-rollout` across all 3 repos. See
 > shipped SHAs in `resolved_by` above. Operator action still required for the image rebuild (IAM-blocked).
@@ -46,7 +55,7 @@ existing alert.
 
 ## Why it matters
 
-The data-pipeline alerts codex SSOT (`codex/05-infrastructure/data-pipeline-alerts.md`) requires:
+The data-pipeline alerts codex SSOT (`/codex/05-infrastructure/data-pipeline-alerts.md`) requires:
 
 > "every deployment must be (a) ALERT-FREE and (b) running LATEST CODE to count as done"
 
@@ -115,8 +124,8 @@ Run for: `deployment-service` and any other repos whose Cloud Run jobs are stale
 
 ## References
 
-- `codex/05-infrastructure/data-pipeline-alerts.md` § DP-VM class (the stale-image class is a gap)
-- `codex/05-infrastructure/deployment-observability.md` § Cloud Run jobs registry
+- `/codex/05-infrastructure/data-pipeline-alerts.md` § DP-VM class (the stale-image class is a gap)
+- `/codex/05-infrastructure/deployment-observability.md` § Cloud Run jobs registry
 - `deployment-service/deployment_service/cloud_run_job_registry.py` — 61 classified jobs
 - `deployment-service/deployment_service/backends/_gcp_sdk.py` — the approved GCP SDK seam
 - `deployment-service/deployment_service/data_pipeline_monitors/meta_watchers.py` — extension point

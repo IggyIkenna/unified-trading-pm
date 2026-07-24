@@ -9,7 +9,15 @@ stage: [meta]
 repos: [agent-orchestrator, alerting-service, deployment-service, deployment-ui, execution-service, ml-service]
 scope: [engineer, admin]
 tags: []
-related: [plans/active/harsh_day_master_2026_06_02.md, plans/active/agent_context_and_memory_hygiene_2026_06_02.md, plans/active/quality_gates_resource_contention_speedup_2026_06_02.md, plans/active/cicd_contract_hardening_2026_06_01.md, plans/epics/orchestrator_master.md, plans/archive/issues/orchestrator_autonomy_residual_findings_2026_06_02.md]
+related:
+  [
+    plans/active/harsh_day_master_2026_06_02.md,
+    plans/active/agent_context_and_memory_hygiene_2026_06_02.md,
+    plans/active/quality_gates_resource_contention_speedup_2026_06_02.md,
+    plans/active/cicd_contract_hardening_2026_06_01.md,
+    plans/epics/orchestrator_master.md,
+    plans/archive/issues/orchestrator_autonomy_residual_findings_2026_06_02.md,
+  ]
 created: 2026-06-02
 parent_epic: orchestrator_master
 priority: P1
@@ -82,7 +90,7 @@ staging is the **promotion step when a unit is done**; merge-to-`main` is the CI
       tests (parse default/local-only/no-frontmatter + `test_regen_skips_local_only_plans`); pytest 60 passed, check.sh
       green. — agent-orchestrator@e21bd41
 - [x] ✅ [DOC] P1. The 3 local-only plans are stamped (verified); field documented in
-      `codex/04-architecture/agent-orchestrator-overview.md` § "Backlog auto-generation". — unified-trading-pm
+      `/codex/04-architecture/agent-orchestrator-overview.md` § "Backlog auto-generation". — unified-trading-pm
 
 ### G2 — discovery latency [P0] _(Harsh-owned)_
 

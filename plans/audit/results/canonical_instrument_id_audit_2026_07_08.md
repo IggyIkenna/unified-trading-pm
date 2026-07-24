@@ -36,7 +36,7 @@ related:
     ../../epics/instruments_master.md,
     ../../epics/batch_live_symmetry_master.md,
     ../../epics/client_isolation_and_governance_master.md,
-    ../../../codex/04-architecture/instruments-service-as-ssot-for-mtds.md,
+    /codex/04-architecture/instruments-service-as-ssot-for-mtds.md,
   ]
 created: 2026-07-08
 authoritative_for: [canonical instrument_id compliance state across the workspace, as of 2026-07-08]
@@ -229,5 +229,5 @@ out it's where the `@LIN`/`@INV` convention already lives).
   unresolved piece of the canonical_question_group question above).
 - Full migration-mechanics scoping (backfill vs. go-forward-only) for each P0/P1 finding — tracked as a todo on
   [[instrument_id_format_canonicalization_2026_07_08]].
-- The MVP-universe-per-asset-group cross-check against `codex/09-strategy/mvp-universe-per-asset-group.md` (part of the
+- The MVP-universe-per-asset-group cross-check against `/codex/09-strategy/mvp-universe-per-asset-group.md` (part of the
   docs-consolidation plan's Phase 1, not yet done).

@@ -6,7 +6,15 @@ status: complete
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [batch-live-reconciliation-service, deployment-api, deployment-service, deployment-ui, execution-service, features-service]
+repos:
+  [
+    batch-live-reconciliation-service,
+    deployment-api,
+    deployment-service,
+    deployment-ui,
+    execution-service,
+    features-service,
+  ]
 scope: [engineer, admin]
 tags: []
 related: []
@@ -21,13 +29,14 @@ estimate_class: infra
 estimate_baseline_ai_days: 5
 estimate_calibrated_ai_days: 4.0
 effective_concurrent_slots: 8
-estimate_calibration_note: 'Cycle 2 Day-3 (write-pause + delegate-flip day). Per operator direction 2026-05-18 06:15 UTC,
+estimate_calibration_note: "Cycle 2 Day-3 (write-pause + delegate-flip day). Per operator direction 2026-05-18 06:15
+  UTC,
 
   Ikenna side owns all heavy decision-bearing cutover work today. Harsh stays in mechanical-only
 
   mode. ~8 implementer slots × ~12-16 cal AI-days each = ~100-128 cal AI-days total.
 
-  '
+  "
 ---
 
 # Ikenna's daily work-split — 2026-05-18 (Cycle 2 Day-3)
@@ -281,9 +290,9 @@ per-output-type UAC schema declaration; (5) unit + integration tests.
 `cefi-batch-live.md` + `mode-axis-discipline.md`. Harsh slot 5 was on Tab 1 (batch_live reconciler). Slot 8 (Ikenna)
 owns Tab 2 (codex docs half).
 
-1. - [x] ✅ **Tab 2 — `cefi-batch-live.md` codex doc**: NEW `codex/04-architecture/cefi-batch-live.md` shipped by
+1. - [x] ✅ **Tab 2 — `cefi-batch-live.md` codex doc**: NEW `/codex/04-architecture/cefi-batch-live.md` shipped by
          batch_live_symmetry Tab 1. File exists at canonical path. — PM@6153d9ea (backfilled 2026-05-18)
-2. - [x] ✅ **Tab 2 — `mode-axis-discipline.md` codex doc**: NEW `codex/06-coding-standards/mode-axis-discipline.md`
+2. - [x] ✅ **Tab 2 — `mode-axis-discipline.md` codex doc**: NEW `/codex/06-coding-standards/mode-axis-discipline.md`
          shipped by batch_live_symmetry Tab 1. File exists at canonical path. — PM@6153d9ea (backfilled 2026-05-18)
 3. - [ ] **`alerting_service_live_rules_2026_05_07` 15 remaining items**: push remaining alerting rule items. Plan at
          51/66 = 77%, 3.0 cal left. Read plan for open `- [ ]` items. (design 0.6×, ~5 = 3.0 cal)

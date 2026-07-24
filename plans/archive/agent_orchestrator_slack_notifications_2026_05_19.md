@@ -9,7 +9,11 @@ stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer, admin]
 tags: []
-related: [agent_orchestrator_cloud_run_deployment_2026_05_19.md, master_to_live_defi_2026_05_23.md]
+related:
+  [
+    /plans/archive/2026_05/agent_orchestrator_cloud_run_deployment_2026_05_19.md,
+    /plans/active/master_to_live_defi_2026_05_23.md,
+  ]
 created: "2026-05-19"
 parent_epic: orchestrator_master
 priority: P1
@@ -36,7 +40,7 @@ Block Kit upgrade for agent-orchestrator Slack notifications: slot_blocked / slo
 header+section+fields+context blocks with retry (3 attempts, backoff) and dashboard link. Phases 1-2 shipped; Phase 3
 (Cloud Run secret wiring) + Phase 4 (e2e staging smoke) pending.
 
-Codex SSOTs: `codex/04-architecture/agent-orchestrator-overview.md`
+Codex SSOTs: `/codex/04-architecture/agent-orchestrator-overview.md`
 
 ---
 

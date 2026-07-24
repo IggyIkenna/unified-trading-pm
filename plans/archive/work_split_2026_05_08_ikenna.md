@@ -115,7 +115,7 @@ calendar end-of-day — agents finish faster than humans.
 | `expected_universe` v2 enumerator                     | Cross-bucket join with instruments-service catalog (Phase 3.D.4 v2 deferred from 2026-05-07)                                        | 3   |
 | `manifest_migration_master_2026_05_07` + infra_master | v6 → v7 manifest schema migration design (post-writegate Phase 5 ratchet)                                                           | 3   |
 | `aws_migration_defi_first_2026_05_07`                 | Phase 2 dual-bucket setup + Storage Transfer Service config + UCI bucket-naming SSOT discipline                                     | 4   |
-| `aws_migration_defi_first_2026_05_07`                 | `codex/05-infrastructure/cloud-agnostic-script-pattern.md` SSOT population                                                          | 4   |
+| `aws_migration_defi_first_2026_05_07`                 | `/codex/05-infrastructure/cloud-agnostic-script-pattern.md` SSOT population                                                         | 4   |
 | `aws_migration_defi_first_2026_05_07`                 | Phase 3 cross-cloud parity smoke (CLOUD_PROVIDER=aws read-path on DeFi shards)                                                      | 4   |
 | `alerting_service_live_rules_2026_05_07`              | Phase 2 KillSwitchBus rule wiring + `CROSS_CLOUD_EGRESS_DETECTED` rule + AAVE utilization-spike threshold                           | 5   |
 | `alerting_service_live_rules_2026_05_07`              | Phase 3-9 paging targets + DART terminal wiring + rehearsal procedure                                                               | 5   |
@@ -198,7 +198,7 @@ Item 1, not parallelization blockers between items.
       `unified-trading-pm/codex/16-strategy-playbooks/defi/venue-collateral-2026-05-07.md` (new doc). Update
       `unified-api-contracts/unified_api_contracts/registry/venue_collateral.py` matrix entries (5+ flipped rows; see
       plan body for full list). Add unit tests covering the flips. Update
-      [`carry-staked-basis.md`](../../codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md) "Today's
+      [`carry-staked-basis.md`](/codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md) "Today's
       venue-collateral" section. ~2 AI-days.
 - [ ] [TRADING+INFRA] P1. **Pyth Hermes archive backfill — jitoSOL 2022-11 → 2023-10 11-month gap** — Tab 14 audit found
       Pyth Hermes archive doesn't cover the early jitoSOL period needed for `carry_staked_basis` Solana leg historical
@@ -356,7 +356,7 @@ prevents honest-coverage % regressions post-cutover. Both are governance-grade w
       14 codex SSOT updates per the post-plan-phase codex audit HARD RULE. ~2 AI-days.
 - [ ] [GOVERNANCE+DESIGN] P0. **Writegate Phase 5 — workspace QG honest-coverage % gate + per-(asset_group, data_type)
       ratchet schedule**. Per
-      [`codex/02-data/honest_coverage_baseline_2026_05.md`](../../codex/02-data/honest_coverage_baseline_2026_05.md)
+      [`/codex/02-data/honest_coverage_baseline_2026_05.md`](/codex/02-data/honest_coverage_baseline_2026_05.md)
       (currently a stub, needs population). Writes: UTL helper that computes honest-coverage % per shard-key from the
       manifest; base-service.sh QG STEP that fails CI if a service's coverage drops > 0.5pp from baseline; ratchet
       schedule (monthly cadence, 99% floor) per CLAUDE.md "honest absence" methodology. ~1 AI-day.
@@ -398,10 +398,10 @@ not coordinated — see cross-side).
 - [`plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md`](live_pipeline_mtds_mdps_features_2026_05_08.md)
 - [`plans/active/gcs_migration_bundle_pipeline_mode_2026_05_08.md`](gcs_migration_bundle_pipeline_mode_2026_05_08.md)
   (cross-cutting; pipeline_mode hive partition migration is the parallel half)
-- [`codex/05-infrastructure/live-pipeline-architecture.md`](../../codex/05-infrastructure/live-pipeline-architecture.md)
-- [`codex/05-infrastructure/replay-subsystem.md`](../../codex/05-infrastructure/replay-subsystem.md)
-- [`codex/02-data/pipeline-mode-partition.md`](../../codex/02-data/pipeline-mode-partition.md)
-- [`codex/04-architecture/instrument-lifecycle-cache-delta-hot-reload.md`](../../codex/04-architecture/instrument-lifecycle-cache-delta-hot-reload.md)
+- [`/codex/05-infrastructure/live-pipeline-architecture.md`](/codex/05-infrastructure/live-pipeline-architecture.md)
+- [`/codex/05-infrastructure/replay-subsystem.md`](/codex/05-infrastructure/replay-subsystem.md)
+- [`/codex/02-data/pipeline-mode-partition.md`](/codex/02-data/pipeline-mode-partition.md)
+- [`/codex/04-architecture/instrument-lifecycle-cache-delta-hot-reload.md`](/codex/04-architecture/instrument-lifecycle-cache-delta-hot-reload.md)
 
 **Sub-agent fan-out**:
 
@@ -462,7 +462,7 @@ sequence after Phase 8-11 ship. ML alerting design (item 8) is design-only Tab 2
 | sa2.P12-alerting      | Live-pipeline alerting tier-up wiring — connect circuit-breaker rules into alerting-service                                                                                                         | alerting-service rule structure (Ikenna T5 owns); KillSwitchBus (Ikenna T5 owns)                                                                                                                                                                     |
 | sa2.P13-gaptree       | 4-category gap tree applied to live + stale-not-missing rule via ServiceEmissionPolicy.PUBLISHED_DEGRADED                                                                                           | Replay; ServiceEmissionPolicy schema; alerting rules                                                                                                                                                                                                 |
 | sa2.P14-codex         | Update 8 codex docs per Post-Plan-Phase Audit (`live-pipeline-architecture.md`, `replay-subsystem.md`, `pipeline-mode-partition.md`, `instrument-lifecycle-cache-delta-hot-reload.md` + 4 existing) | Plan body; code surfaces                                                                                                                                                                                                                             |
-| sa2.WG5-ratchet       | NEW `unified_trading_library/honest_coverage_ratchet.py` + base-service.sh QG STEP + populate `codex/02-data/honest_coverage_baseline_2026_05.md`                                                   | live-pipeline source; UAC; per-service emission consumers                                                                                                                                                                                            |
+| sa2.WG5-ratchet       | NEW `unified_trading_library/honest_coverage_ratchet.py` + base-service.sh QG STEP + populate `/codex/02-data/honest_coverage_baseline_2026_05.md`                                                  | live-pipeline source; UAC; per-service emission consumers                                                                                                                                                                                            |
 | sa2.AvailAt-MDPS      | `available_at` chain link 0 (MDPS bar timestamp) + link 3 (reader propagation)                                                                                                                      | UAC `FEATURE_REQUIRED_INPUTS` (sa2.AvailAt-UAC owns); UTL `assert_available_at_present` (sa2.AvailAt-UTL owns)                                                                                                                                       |
 | sa2.AvailAt-UAC       | UAC `FEATURE_REQUIRED_INPUTS` expansion (link 4) + `AVAILABILITY_AT_SEMANTICS` coverage audit (link 5)                                                                                              | MDPS bar timestamps; UTL guard; QG static check                                                                                                                                                                                                      |
 | sa2.AvailAt-UTL       | UTL `ManifestWriter.assert_available_at_present` guard (link 7)                                                                                                                                     | UAC; MDPS; QG                                                                                                                                                                                                                                        |
@@ -548,9 +548,9 @@ rescan VM operation to Harsh Tab 4.
   isolation for concurrent backfills", "Manifest concurrency principle", "Manifest phantom audit"
 - [`plans/active/gcs_migration_bundle_pipeline_mode_2026_05_08.md`](gcs_migration_bundle_pipeline_mode_2026_05_08.md)
 - [`plans/epics/manifest_migration_master_2026_05_07.md`](../epics/manifest_migration_master_2026_05_07.md)
-- [`codex/02-data/availability-manifest-and-data-status.md`](../../codex/02-data/availability-manifest-and-data-status.md)
-- [`codex/02-data/pipeline-mode-partition.md`](../../codex/02-data/pipeline-mode-partition.md)
-- [`codex/02-data/chunk-safe-manifest-migrations.md`](../../codex/02-data/chunk-safe-manifest-migrations.md)
+- [`/codex/02-data/availability-manifest-and-data-status.md`](/codex/02-data/availability-manifest-and-data-status.md)
+- [`/codex/02-data/pipeline-mode-partition.md`](/codex/02-data/pipeline-mode-partition.md)
+- [`/codex/02-data/chunk-safe-manifest-migrations.md`](/codex/02-data/chunk-safe-manifest-migrations.md)
 
 **Sub-agent fan-out**:
 
@@ -587,7 +587,7 @@ per-(shard_key, day) ServiceEmissionPolicy state column.
 | sa3.GCS-P4-pred     | prediction consumer cutover                                                                                                                                                | Other 4 asset_group consumer cutovers                                                                                                                      |
 | sa3.GCS-P5-fb-rm    | Reader-fallback removal (final commit after ALL Phase 4 cutovers verify)                                                                                                   | Anything else — this is a single mechanical removal commit                                                                                                 |
 | sa3.GCS-P6-recon    | Reconciler walks manifest + cross-checks bucket layout per asset_group                                                                                                     | Source code edits                                                                                                                                          |
-| sa3.GCS-P7-codex    | Update 6 codex docs per Post-Plan-Phase Audit (1 NEW `codex/02-data/pipeline-mode-partition.md` + 5 UPDATE existing)                                                       | Plan body; code surfaces                                                                                                                                   |
+| sa3.GCS-P7-codex    | Update 6 codex docs per Post-Plan-Phase Audit (1 NEW `/codex/02-data/pipeline-mode-partition.md` + 5 UPDATE existing)                                                      | Plan body; code surfaces                                                                                                                                   |
 | sa3.V7-design       | NEW `unified_trading_library/manifest_v7.py` (formalise per-(shard_key, day) ServiceEmissionPolicy state column) + 1-time migration script + reader-removal of v6 fallback | UAC manifest schema (Wave 4 slice a — already shipped); Tab 2 sa2.P11 ServiceEmissionPolicy consumer wiring (sa3.V7-design ships SCHEMA, sa2.P11 reads it) |
 | sa3.ExpUniv-v2      | `instruments-service/scripts/enumerate_expected_universe.py` v2 (cross-bucket join with catalog) + per-VM launcher                                                         | v1 enumerator (already shipped); manifest v7 schema (sa3.V7-design owns)                                                                                   |
 | sa3.Rescan-launcher | NEW `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py` rescan launcher script + design doc; triage file generator for Harsh T4 to consume                | Harsh T4 operational invocation surface (Harsh runs the launcher); v6→v7 migration script (sa3.V7-design)                                                  |
@@ -626,7 +626,7 @@ cross-references to [`master_to_live_defi_2026_05_23.md`](master_to_live_defi_20
       5 buckets created Phase 2 at deployment-service@7da2f3d). Health-check passes against AWS-resident DeFi manifest +
       sample parquet read returns expected rows. Per CLAUDE.md "Force-Sync Warning" + "AWS Migration" framework. ~2
       AI-days.
-- [ ] [INFRA+CODEX] P0. **`codex/05-infrastructure/cloud-agnostic-script-pattern.md` SSOT population** — currently a
+- [ ] [INFRA+CODEX] P0. **`/codex/05-infrastructure/cloud-agnostic-script-pattern.md` SSOT population** — currently a
       stub. Populate with the 4-cloud-tier discipline + bucket-naming SSOT + dual-bucket dual-write rule + Storage
       Transfer Service config pattern + UCI bucket-naming module reference + per-asset_group migration sequencing. ~1
       AI-day.
@@ -648,9 +648,9 @@ Tab 5 (single owner of alerting); hands off live-pipeline cross-cloud verificati
 
 - CLAUDE.md sections: "Force-Sync Warning (CRITICAL)", "Workspace Configs (Canonical in PM)", "Workflow Templates"
 - [`plans/active/aws_migration_defi_first_2026_05_07.md`](aws_migration_defi_first_2026_05_07.md) full body
-- [`codex/05-infrastructure/cloud-agnostic-migration.md`](../../codex/04-architecture/cloud-agnostic-migration.md)
-  (existing — read for the migration framework)
-- [`codex/05-infrastructure/aws-migration-cost-snapshot-2026-05-07.md`](../../codex/05-infrastructure/aws-migration-cost-snapshot-2026-05-07.md)
+- [`/codex/05-infrastructure/cloud-agnostic-migration.md`](/codex/04-architecture/cloud-agnostic-migration.md) (existing
+  — read for the migration framework)
+- [`/codex/05-infrastructure/aws-migration-cost-snapshot-2026-05-07.md`](/codex/05-infrastructure/aws-migration-cost-snapshot-2026-05-07.md)
   (per-resource cost snapshot extracted from the archived analysis; operator credit + steady-state cost decision)
 
 **Sub-agent fan-out**:
@@ -740,8 +740,8 @@ readiness narrative + alert wiring + IAM/audit-log/rate-limit operator decisions
 - [`plans/active/master_to_live_defi_2026_05_23.md`](master_to_live_defi_2026_05_23.md) Group F + G full
 - [`plans/active/deploy_missing_auto_launch_2026_05_07.md`](deploy_missing_auto_launch_2026_05_07.md) Phase 0 + the 3
   STATUS DRAFT proposals
-- [`codex/15-runbooks/alerting/alert-code-taxonomy.md`](../../codex/15-runbooks/alerting/alert-code-taxonomy.md)
-- [`codex/15-runbooks/alerting/threshold-tuning.md`](../../codex/15-runbooks/alerting/threshold-tuning.md)
+- [`/codex/15-runbooks/alerting/alert-code-taxonomy.md`](/codex/15-runbooks/alerting/alert-code-taxonomy.md)
+- [`/codex/15-runbooks/alerting/threshold-tuning.md`](/codex/15-runbooks/alerting/threshold-tuning.md)
 
 **Sub-agent fan-out**:
 
@@ -782,7 +782,7 @@ mid-cycle add to close the gap before May-23. Pure design / UAC SSOT work — Ha
 **Plan-of-record**: [`cross_cutting_may_23_deliverables_2026_05_08.md`](cross_cutting_may_23_deliverables_2026_05_08.md)
 (shared with Harsh Tab 6) +
 [`plans/epics/cross_cutting_may_23_2026.epic.md`](../epics/cross_cutting_may_23_2026.epic.md) (parent epic) +
-[`codex/09-strategy/strategy-summary.md`](../../codex/09-strategy/strategy-summary.md) (existing 8-family / 18-archetype
+[`/codex/09-strategy/strategy-summary.md`](/codex/09-strategy/strategy-summary.md) (existing 8-family / 18-archetype
 catalogue baseline).
 
 **Scope (5 items, P0-P1)**:
@@ -807,7 +807,7 @@ catalogue baseline).
       execution rejects if computed position would breach allocation. **Done**: schema ships, unit tests covering
       allocation respect + tagging propagation shape. ~2 AI-days.
 - [ ] [DESIGN] P0. **DART manual-trade lane scope spec** — write
-      `codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md` (or extend existing
+      `/codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md` (or extend existing
       `operational-modes-matrix.md`) with per-archetype list of operator-replicable manual surfaces. Required surfaces:
       (a) DeFi swap / lend / borrow / stake actions per chain × protocol for `carry_staked_basis`; (b) CeFi order
       placement (limit / market / stop) across Bybit / Deribit / Binance / OKX; (c) ML training trigger (pause / resume
@@ -823,10 +823,10 @@ catalogue baseline).
 - [`plans/epics/cross_cutting_may_23_2026.epic.md`](../epics/cross_cutting_may_23_2026.epic.md) — 5-deliverable scope
 - [`cross_cutting_may_23_deliverables_2026_05_08.md`](cross_cutting_may_23_deliverables_2026_05_08.md) — shared
   plan-of-record (you write to its `## Open questions` for blockers; Harsh T6 reads it)
-- [`codex/09-strategy/strategy-summary.md`](../../codex/09-strategy/strategy-summary.md) — existing catalogue baseline
-- [`codex/09-strategy/operational/onboarding-checklist.md`](../../codex/09-strategy/operational/onboarding-checklist.md)
-  — strategy onboarding flow (your schemas wire into this)
-- [`codex/09-strategy/architecture-v2/cross-cutting/operational-modes-matrix.md`](../../codex/09-strategy/architecture-v2/cross-cutting/operational-modes-matrix.md)
+- [`/codex/09-strategy/strategy-summary.md`](/codex/09-strategy/strategy-summary.md) — existing catalogue baseline
+- [`/codex/09-strategy/operational/onboarding-checklist.md`](/codex/09-strategy/operational/onboarding-checklist.md) —
+  strategy onboarding flow (your schemas wire into this)
+- [`/codex/09-strategy/architecture-v2/cross-cutting/operational-modes-matrix.md`](/codex/09-strategy/architecture-v2/cross-cutting/operational-modes-matrix.md)
   — DART manual-trade lane SSOT (extend or peer doc)
 
 **Sub-agent fan-out**:
@@ -838,14 +838,14 @@ catalogue baseline).
 
 **Sub-agent isolation table** (paste rows verbatim into each Task prompt's "files OFF-LIMITS" section):
 
-| Sub-agent ID         | Files owned (only edit these)                                                                                                                                                       | Files OFF-LIMITS                                                                                                                                                                             |
-| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| sa6.UAC-catalogue    | NEW `unified_api_contracts/canonical/strategy/catalogue.py` schema (StrategyArchetype enum + CatalogueRow dataclass + ArchetypeConfig per-family) + tests                           | `canonical/strategy/ids.py` (sa6.UAC-ids owns); `canonical/strategy/cme_polymarket_arb_archetype.py` (Harsh T5 sa5.CMEPolyArb owns — same DIR but DIFFERENT file; sa6 ships catalogue first) |
-| sa6.UAC-ids          | NEW `unified_api_contracts/canonical/strategy/ids.py` (canonical naming + versioning rule + `derive_strategy_id`) + tests                                                           | `canonical/strategy/catalogue.py` (sa6.UAC-catalogue owns); `canonical/client/`                                                                                                              |
-| sa6.UAC-client       | NEW `unified_api_contracts/canonical/client/model.py` (Client + accounts list + CapitalAllocation per (client, archetype, venue)) + tests                                           | `canonical/strategy/`; UAC `chain_env.py` (Ikenna T1 owns)                                                                                                                                   |
-| sa6.DART-spec        | NEW `codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md` (5 surfaces: DeFi swap/lend/stake, CeFi orders, ML training trigger, sports bet, prediction-market) | UAC; existing codex `operational-modes-matrix.md` (read-only reference)                                                                                                                      |
-| sa6.CatalogueRowEnum | Read-only enumeration of `(archetype, venue, instrument_type)` combos from existing codex `strategy-summary.md` 8-family / 18-archetype baseline → output spec doc                  | All UAC; codex (read-only)                                                                                                                                                                   |
-| sa6.DART-research    | Read-only research across deployment-ui / unified-trading-system-ui to identify existing manual-action surfaces (extend vs add for each of 5 DART surfaces)                         | All UI source; UAC                                                                                                                                                                           |
+| Sub-agent ID         | Files owned (only edit these)                                                                                                                                                        | Files OFF-LIMITS                                                                                                                                                                             |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| sa6.UAC-catalogue    | NEW `unified_api_contracts/canonical/strategy/catalogue.py` schema (StrategyArchetype enum + CatalogueRow dataclass + ArchetypeConfig per-family) + tests                            | `canonical/strategy/ids.py` (sa6.UAC-ids owns); `canonical/strategy/cme_polymarket_arb_archetype.py` (Harsh T5 sa5.CMEPolyArb owns — same DIR but DIFFERENT file; sa6 ships catalogue first) |
+| sa6.UAC-ids          | NEW `unified_api_contracts/canonical/strategy/ids.py` (canonical naming + versioning rule + `derive_strategy_id`) + tests                                                            | `canonical/strategy/catalogue.py` (sa6.UAC-catalogue owns); `canonical/client/`                                                                                                              |
+| sa6.UAC-client       | NEW `unified_api_contracts/canonical/client/model.py` (Client + accounts list + CapitalAllocation per (client, archetype, venue)) + tests                                            | `canonical/strategy/`; UAC `chain_env.py` (Ikenna T1 owns)                                                                                                                                   |
+| sa6.DART-spec        | NEW `/codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md` (5 surfaces: DeFi swap/lend/stake, CeFi orders, ML training trigger, sports bet, prediction-market) | UAC; existing codex `operational-modes-matrix.md` (read-only reference)                                                                                                                      |
+| sa6.CatalogueRowEnum | Read-only enumeration of `(archetype, venue, instrument_type)` combos from existing codex `strategy-summary.md` 8-family / 18-archetype baseline → output spec doc                   | All UAC; codex (read-only)                                                                                                                                                                   |
+| sa6.DART-research    | Read-only research across deployment-ui / unified-trading-system-ui to identify existing manual-action surfaces (extend vs add for each of 5 DART surfaces)                          | All UI source; UAC                                                                                                                                                                           |
 
 Master sa6 (Tab 6 orchestrator) owns: orchestration + integration + design judgment + per-deliverable RESOLVED block in
 `cross_cutting_may_23_deliverables_2026_05_08.md` `## Open questions` so Harsh T6 can consume. UAC editor priority queue
@@ -1088,9 +1088,9 @@ BEFORE doing anything else, read in order:
      plan-of-record).
   4. plans/active/writegate_honest_coverage_endtoend_2026_05_06.md Phase 5 (your
      secondary plan-of-record).
-  5. codex/05-infrastructure/live-pipeline-architecture.md + replay-subsystem.md +
-     codex/02-data/pipeline-mode-partition.md +
-     codex/04-architecture/instrument-lifecycle-cache-delta-hot-reload.md.
+  5. /codex/05-infrastructure/live-pipeline-architecture.md + replay-subsystem.md +
+     /codex/02-data/pipeline-mode-partition.md +
+     /codex/04-architecture/instrument-lifecycle-cache-delta-hot-reload.md.
 
 Your agent-tag: live-pipeline-tab. Your tab number: 2.
 
@@ -1135,7 +1135,7 @@ BEFORE doing anything else, read in order:
      § "Workspace Configs (Canonical in PM)".
   2. plans/active/work_split_2026_05_08_ikenna.md § "TAB 4 — AWS migration + cloud-agnostic governance".
   3. plans/active/aws_migration_defi_first_2026_05_07.md (primary).
-  4. codex/05-infrastructure/cloud-agnostic-script-pattern.md (currently a stub — you populate it).
+  4. /codex/05-infrastructure/cloud-agnostic-script-pattern.md (currently a stub — you populate it).
 
 Your agent-tag: aws-cloud-agnostic-tab. Your tab number: 4.
 
@@ -1157,7 +1157,7 @@ BEFORE doing anything else, read in order:
   3. plans/active/alerting_service_live_rules_2026_05_07.md (primary).
   4. plans/active/master_to_live_defi_2026_05_23.md Group F+G full bodies.
   5. plans/active/deploy_missing_auto_launch_2026_05_07.md Phase 0.
-  6. codex/15-runbooks/alerting/alert-code-taxonomy.md + threshold-tuning.md.
+  6. /codex/15-runbooks/alerting/alert-code-taxonomy.md + threshold-tuning.md.
 
 Your agent-tag: alerting-master-governance-tab. Your tab number: 5.
 
@@ -1188,9 +1188,9 @@ BEFORE doing anything else, read in order:
   4. plans/active/cross_cutting_may_23_deliverables_2026_05_08.md (shared plan-of-record
      with Harsh Tab 6 — you write per-deliverable RESOLVED blocks; Harsh T6 reads them).
   5. plans/epics/cross_cutting_may_23_2026.epic.md — 5-deliverable scope (parent epic).
-  6. codex/09-strategy/strategy-summary.md — existing 8-family / 18-archetype catalogue
+  6. /codex/09-strategy/strategy-summary.md — existing 8-family / 18-archetype catalogue
      baseline (your enumeration source).
-  7. codex/09-strategy/architecture-v2/cross-cutting/operational-modes-matrix.md — DART manual-trade lane
+  7. /codex/09-strategy/architecture-v2/cross-cutting/operational-modes-matrix.md — DART manual-trade lane
      existing SSOT (extend or peer with new dart-manual-trade-spec.md).
 
 Your agent-tag: cross-cutting-design-tab. Your tab number: 6.
@@ -1267,7 +1267,7 @@ BEFORE doing anything else, read in order:
   3. plans/active/work_split_2026_05_08_ikenna.md § "Spawn prompts — fresh fan-out" — collision map + master gate.
   4. plans/epics/instruments_live_master_2026_05_08.md § "A.7 — CLI `--trigger` axis" lines 182-189
      (your primary plan-of-record).
-  5. codex/06-coding-standards/cli-convention.md — service CLI axes (`--operation`, `--mode`, `--asset-group`).
+  5. /codex/06-coding-standards/cli-convention.md — service CLI axes (`--operation`, `--mode`, `--asset-group`).
 
 Your agent-tag for ping-ledger entries: instruments-cli-trigger-tab. Your tab number: F1.
 

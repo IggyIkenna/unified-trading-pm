@@ -69,7 +69,7 @@ auto-generates these symlinks by scanning all `cursor-rules/**/*.mdc` files.
 
 ### Category D — Codex stale deployment-v3 symlinks (2 files)
 
-- `unified-trading-codex/04-architecture/RUNTIME_TOPOLOGY_DECISIONS.md` → FIXED (now → deployment-service) ✅
+- `unified-trading-/codex/04-architecture/RUNTIME_TOPOLOGY_DECISIONS.md` → FIXED (now → deployment-service) ✅
 - `unified-trading-codex/04-architecture/RUNTIME_DEPLOYMENT_TOPOLOGY_DAG.svg` →
   `../../unified-trading-deployment-v3/configs/RUNTIME_DEPLOYMENT_TOPOLOGY_DAG.svg` Action: check if file exists in
   `deployment-service/configs/`; if yes re-target, if no remove symlink.

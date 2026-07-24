@@ -113,7 +113,7 @@ wrong. This is the hypothesis the FX 100% slice most supports.
 
 **(B) Genuinely empty parquets recorded as `captured`.** The shard wrote a 0-row parquet and the writer called
 `record_captured` on it. This is the explicitly BANNED "empty placeholder rows that look populated" pattern (CLAUDE.md §
-banned patterns; `codex/02-data/honest-absence-downstream-handling.md`) — an empty shard must go through `record_empty`
+banned patterns; `/codex/02-data/honest-absence-downstream-handling.md`) — an empty shard must go through `record_empty`
 / `record_failed` with a typed reason and fetch-evidence, never `record_captured`.
 
 The two are distinguishable by a direct object check: sample N cells that report `row_count` 0-or-null, resolve each to
@@ -155,7 +155,7 @@ tradfi MVP-backfill-ready call in `tradfi_consolidated_closeout_2026_07_18`.
 
 ## Codex SSOTs
 
-- `codex/02-data/availability-manifest-and-data-status.md` — 4-state `capture_status`, shard-atom identity.
-- `codex/02-data/honest-absence-downstream-handling.md` — the honest-absence contract; empty must never look captured.
-- `codex/02-data/data-pipeline-correctness-hard-rule.md` — audits fixed in FULL; RED freezes layer N+1.
-- `codex/02-data/honest-coverage-model.md` — the coverage denominator this measurement feeds.
+- `/codex/02-data/availability-manifest-and-data-status.md` — 4-state `capture_status`, shard-atom identity.
+- `/codex/02-data/honest-absence-downstream-handling.md` — the honest-absence contract; empty must never look captured.
+- `/codex/02-data/data-pipeline-correctness-hard-rule.md` — audits fixed in FULL; RED freezes layer N+1.
+- `/codex/02-data/honest-coverage-model.md` — the coverage denominator this measurement feeds.

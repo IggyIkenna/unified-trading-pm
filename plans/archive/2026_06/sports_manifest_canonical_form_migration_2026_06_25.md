@@ -18,12 +18,18 @@ estimate_baseline_ai_days: 10
 estimate_calibrated_ai_days: 4
 locked_by: live-defi-rollout
 priority: P0
-source: ['operator directive 2026-06-25 ("should use canonical forms, so migrate"; "if there''s any GCS data that''s in the wrong canonical form ... for instrument service or market(-tick)-data service, when it comes to schemas or paths or whatever, it should be migrated so we don''t have two sources of truth — manifest lines up with coverage + index + data-status + deployment-UI; everything related to asset_group should be updated; document is such in plan")']
+source:
+  [
+    'operator directive 2026-06-25 ("should use canonical forms, so migrate"; "if there''s any GCS data that''s in the
+    wrong canonical form ... for instrument service or market(-tick)-data service, when it comes to schemas or paths or
+    whatever, it should be migrated so we don''t have two sources of truth — manifest lines up with coverage + index +
+    data-status + deployment-UI; everything related to asset_group should be updated; document is such in plan")',
+  ]
 ---
 
 # Sports manifest + GCS canonical-form migration — one SSOT
 
-**Codex SSOT:** `codex/02-data/instruments-foundation-and-catalogue-completeness.md` (§2 layered coverage, §3 sports,
+**Codex SSOT:** `/codex/02-data/instruments-foundation-and-catalogue-completeness.md` (§2 layered coverage, §3 sports,
 §6.1 key-overlap). Parent foundation plan: `plans/active/instruments_foundation_completeness_2026_06_24.md`. Sibling:
 `plans/active/issues/sports_golden_window_attempted_failed_remediation_2026_06_24.md` (the #5 candidate-path framing for
 TEAMS/STANDINGS is SUPERSEDED by this plan — see root cause below).
@@ -118,9 +124,13 @@ Measured 2026-06-25 on `instruments-store-sports-prd-central-element-323112/_ind
       probes `_index/per_vm/{vm}.parquet` across AG buckets; both `exit_code_fleet_monitor` + `heartbeat_stall_watcher`
       callsites updated; 4 unit tests added. The shared instruments-backfill VM (`instr-backfill-cefi-*`) captures ALL
       asset*groups in one run (run.log: `ManifestWriter cleanup: flushed buffers for [sports, cefi, defi, tradfi]`), but
-      `DP*_`alerts derive    `Asset
-      group:`from the VM-name prefix (cefi) via`VM*PREFIX_TO_BUCKET`/`classify_deployment_target`→ a sports     api_football 429 on that VM is mis-labelled`cefi`. Fix: the `DP_SOURCE_RATE_LIMITED`/`DP*_`alert (deployment-     service no-capture-reason path) must read the asset_group from the failing shard/venue (run.log per-shard AG +     the manifest row's`asset_group`), not the launch-AG name prefix; the shared cross-AG instruments VM should be     classified multi-AG (or per-bucket). Provenance: operator Slack 2026-06-25 (`instr-backfill-cefi-2`
-      DP_SOURCE_RATE_LIMITED tagged cefi while flushing sports).
+      `DP*_`alerts derive `Asset     group:`from the VM-name prefix (cefi)
+      via`VM*PREFIX_TO_BUCKET`/`classify_deployment_target`→ a sports api_football 429 on that VM is mis-labelled`cefi`.
+      Fix: the `DP_SOURCE_RATE_LIMITED`/`DP*_`alert (deployment- service no-capture-reason path) must read the
+      asset_group from the failing shard/venue (run.log per-shard AG + the manifest row's`asset_group`), not the
+      launch-AG name prefix; the shared cross-AG instruments VM should be classified multi-AG (or per-bucket).
+      Provenance: operator Slack 2026-06-25 (`instr-backfill-cefi-2` DP_SOURCE_RATE_LIMITED tagged cefi while flushing
+      sports).
 - [x] ✅ [SCRIPT] P1. **Verify single-SoT end to end** — after migration: `compute_honest_coverage` number == raw-GCS
       recompute (§2.3 reconciliation guard) AND the deployment-UI `/data-status` sports number matches, per (source,
       data_type). Key-overlap climbs / phantom drops (§6.1), never a raw count. market-tick-data-service@b70a97ea | §2.3

@@ -69,7 +69,7 @@ Constraints:
   - If you touch UAC/UTL/UCI/UEI, pre-audit downstream consumers per
     Citadel-Grade Planning Standards §6
   - Test-bucket convention: `-test-` in MIDDLE (between category and
-    project_id) — SSOT: codex/02-data/per-category-bucket-layouts.md
+    project_id) — SSOT: /codex/02-data/per-category-bucket-layouts.md
 
 Deliverables on completion:
   - Every Phase A todo flipped to [x]
@@ -131,7 +131,7 @@ Your scope — two commits per class:
       get_write_bucket_name
     - Output parquet at canonical path
       `instrument_availability/by_date/day={date}/venue={venue}/instruments.parquet`
-      (SPORTS is different — see codex/02-data/per-category-bucket-layouts.md
+      (SPORTS is different — see /codex/02-data/per-category-bucket-layouts.md
       for the sports_reference/.../entity= tree)
     - Unit tests covering: happy path write, IS_TEST_RUN=true bucket
       routing, 0-row venue returns empty-confirmed not attempted-failed
@@ -201,7 +201,7 @@ this adds the pool/swap universe needed for Uniswap/Balancer tick ingest.
 
 ### B8 (filter-model audit + new doc)
 
-Can run any time — creates a new codex doc at `codex/02-data/universe-and-filter-model.md` documenting the canonical
+Can run any time — creates a new codex doc at `/codex/02-data/universe-and-filter-model.md` documenting the canonical
 pattern (universe discovery → filter → fetch → coverage). Also audits all filter call sites to confirm they run AFTER
 universe load, not IN the adapter.
 

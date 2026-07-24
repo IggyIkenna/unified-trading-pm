@@ -10,12 +10,19 @@ repos: [deployment-service, strategy-service, unified-api-contracts, unified-tra
 scope: [engineer, admin]
 tags: []
 related: []
-created: '2026-04-20'
+created: "2026-04-20"
 priority: P0
 owner: agent
 locked_by: live-defi-rollout
 locked_since: 2026-04-20
-depends_on: [codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md §1.10, refactor_g1_7_restriction_profile_engine_2026_04_20.md, refactor_g1_11_service_family_scope_rules_2026_04_20.md, plans/active/user_management_merge_2026_03_23.md, plans/active/five_space_ia_execution_child_plan_2026_04_17.md (ticket]
+depends_on:
+  [
+    /codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md §1.10,
+    refactor_g1_7_restriction_profile_engine_2026_04_20.md,
+    refactor_g1_11_service_family_scope_rules_2026_04_20.md,
+    plans/active/user_management_merge_2026_03_23.md,
+    plans/active/five_space_ia_execution_child_plan_2026_04_17.md (ticket,
+  ]
 ---
 
 ## Deferred work — migrated to:
@@ -57,22 +64,22 @@ sink differs (localStorage seed in dev vs user-management-api staging endpoint +
   handling for vague answers)
 - **Sibling plans:** `plans/active/user_management_merge_2026_03_23.md` (light-auth lead flow),
   `plans/active/five_space_ia_execution_child_plan_2026_04_17.md` (ticket #12 staging Firebase)
-- **Playbook SSOT:** `codex/14-playbooks/experience/im-decision-journey.md`,
-  `codex/14-playbooks/demo-ops/pre-demo-discovery-framework.md`,
-  `codex/14-playbooks/demo-ops/account-intelligence-record.md`
-- **Strategy-side source:** `codex/09-strategy/architecture-v2/category-instrument-coverage.md` (axis values)
+- **Playbook SSOT:** `/codex/14-playbooks/experience/im-decision-journey.md`,
+  `/codex/14-playbooks/demo-ops/pre-demo-discovery-framework.md`,
+  `/codex/14-playbooks/demo-ops/account-intelligence-record.md`
+- **Strategy-side source:** `/codex/09-strategy/architecture-v2/category-instrument-coverage.md` (axis values)
 - **Shared-core:** `shared-core/org-fund-client-entity-model.md`, `cross-cutting/sma-vs-pooled.md`
 
 ## Mandatory read-set
 
-1. `codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md` §1.10
-2. `codex/09-strategy/architecture-v2/category-instrument-coverage.md` — categories + instrument types + venue scope
+1. `/codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md` §1.10
+2. `/codex/09-strategy/architecture-v2/category-instrument-coverage.md` — categories + instrument types + venue scope
    enumeration
-3. `codex/14-customer-journeys/playbook-concepts/sma-vs-pooled.md`
-4. `codex/14-playbooks/shared-core/org-fund-client-entity-model.md`
-5. `codex/14-playbooks/experience/im-decision-journey.md`
-6. `codex/14-playbooks/demo-ops/pre-demo-discovery-framework.md`
-7. `codex/14-playbooks/demo-ops/account-intelligence-record.md`
+3. `/codex/14-customer-journeys/playbook-concepts/sma-vs-pooled.md`
+4. `/codex/14-playbooks/shared-core/org-fund-client-entity-model.md`
+5. `/codex/14-playbooks/experience/im-decision-journey.md`
+6. `/codex/14-playbooks/demo-ops/pre-demo-discovery-framework.md`
+7. `/codex/14-playbooks/demo-ops/account-intelligence-record.md`
 8. `plans/active/user_management_merge_2026_03_23.md`
 9. `plans/active/five_space_ia_execution_child_plan_2026_04_17.md` (ticket #12)
 10. `unified-trading-system-ui/lib/auth/demo-provider.ts`

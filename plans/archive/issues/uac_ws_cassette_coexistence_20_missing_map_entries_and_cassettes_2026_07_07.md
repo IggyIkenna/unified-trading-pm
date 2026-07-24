@@ -24,9 +24,9 @@ scope: [engineer, admin]
 tags: [qg-blocker, cross-repo, batch-live-ssot, ws-cassette-coexistence, phase-3-5, wsfeedconnector-rollout]
 related:
   [
-    wsfeedconnector_phase35_gap_2026_07_06.md,
-    bybit_spot_manifest_stray_captures_2026_07_07.md,
-    ../../codex/02-data/live-data-persistence-and-event-log.md,
+    /plans/active/issues/wsfeedconnector_phase35_gap_2026_07_06.md,
+    /plans/archive/issues/bybit_spot_manifest_stray_captures_2026_07_07.md,
+    /codex/02-data/live-data-persistence-and-event-log.md,
   ]
 created: 2026-07-07
 parent_epic: instruments_master

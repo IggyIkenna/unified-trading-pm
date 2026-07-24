@@ -17,7 +17,7 @@ tags: [data-correctness, canonical, gcs-paths, candles, migration, verification,
 related:
   [
     ../../active/issues/candle_feature_canonical_path_divergence_2026_07_20.md,
-    ../../../codex/02-data/availability-manifest-and-data-status.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
   ]
 created: 2026-07-23
 last_updated: 2026-07-23

@@ -38,8 +38,8 @@ drift_direction: advance-code
 
 > **✅ ARCHIVED 2026-07-14 [unlock-plan] (operator ruling 2026-07-14, sports plan-set bulk archival).** All todos `[x]`
 > complete (0 open; audited complete 2026-07-13). Honest-coverage / manifest learnings were codified during the work in
-> the cited Codex SSOTs (`codex/02-data/availability-manifest-and-data-status.md`,
-> `codex/02-data/honest-absence-downstream-handling.md`, `codex/02-data/sports-gcs-path-ssot.md`) — no unmigrated
+> the cited Codex SSOTs (`/codex/02-data/availability-manifest-and-data-status.md`,
+> `/codex/02-data/honest-absence-downstream-handling.md`, `/codex/02-data/sports-gcs-path-ssot.md`) — no unmigrated
 > durable contract found. Lock cleared per the ruling; historical/frozen.
 
 > **Coordinator**: `sports_pipeline_to_100pct_golden_window_first_2026_06_27.md` (Phase 0). This plan ships the
@@ -62,13 +62,13 @@ dispatches nowhere.
 
 ## Codex SSOTs (read before coding)
 
-- `codex/02-data/honest-absence-downstream-handling.md` — typed `EXPECTED_*` vs `record_failed`; a 404 on one league ≠
+- `/codex/02-data/honest-absence-downstream-handling.md` — typed `EXPECTED_*` vs `record_failed`; a 404 on one league ≠
   failure for the rest
-- `codex/02-data/sports-gcs-path-ssot.md` — `candidate_parquet_paths()` is the canonical probe; every real on-disk shape
-  must be emitted
-- `codex/02-data/availability-manifest-and-data-status.md` — 4-state `capture_status`; phantom = `captured` cell with no
-  parquet; reverse-heal vs forward-flip
-- `codex/02-data/data-pipeline-correctness-hard-rule.md` — fix the root cause, never mask
+- `/codex/02-data/sports-gcs-path-ssot.md` — `candidate_parquet_paths()` is the canonical probe; every real on-disk
+  shape must be emitted
+- `/codex/02-data/availability-manifest-and-data-status.md` — 4-state `capture_status`; phantom = `captured` cell with
+  no parquet; reverse-heal vs forward-flip
+- `/codex/02-data/data-pipeline-correctness-hard-rule.md` — fix the root cause, never mask
 
 ## Todos
 

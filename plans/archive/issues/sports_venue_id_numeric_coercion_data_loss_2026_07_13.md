@@ -28,7 +28,7 @@ related:
   [
     plans/active/issues/features_sports_unbounded_memory_early_history_dates_2026_07_13.md,
     plans/active/sports_p2_features_history_to_ml_ready_2026_06_27.md,
-    codex/02-data/honest-absence-downstream-handling.md,
+    /codex/02-data/honest-absence-downstream-handling.md,
   ]
 created: 2026-07-13
 parent_epic: sports_master
@@ -289,7 +289,7 @@ Grep `venue_id` + `to_numeric` fleet-wide (per the existing P1 CODE todo's own i
     already-computed `fair_prob_*` model probabilities, not raw features (and would only be transitively affected if the
     upstream model existed, which it doesn't, per above). Neither engine is registered in the live
     `ARCHETYPE_ENGINE_REGISTRY` (`engine/strategies/v2/factory.py:58-90` has zero `sports`-named entries) — confirmed
-    `codex/09-strategy/architecture-v2/cross-cutting/archetype-paper-readiness.md:133,173` marks both sports archetypes
+    `/codex/09-strategy/architecture-v2/cross-cutting/archetype-paper-readiness.md:133,173` marks both sports archetypes
     `"◯ backtest-only … No paper plumbing. Post-cutover."`
   - **Verdict: no retrain needed.** The sports pipeline is still pre-consumption (historical backfill / ML-readiness
     phase per `sports_p2_features_history_to_ml_ready_2026_06_27.md`), matching operator expectations — nothing has ever

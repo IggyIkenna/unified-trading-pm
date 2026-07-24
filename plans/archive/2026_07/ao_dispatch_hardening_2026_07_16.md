@@ -40,7 +40,7 @@ related:
     ../archive/issues/dispatcher_role_eligibility_gap_review_slots_2026_07_13.md,
     ../archive/issues/ao_operator_message_silent_drop_no_reply_ack_2026_07_08.md,
     issues/mtds_empty_string_fallback_codex_gate_blocking_pushes_2026_07_08.md,
-    ao_host_disk_pressure_2026_07_16.md,
+    /plans/archive/2026_07/ao_host_disk_pressure_2026_07_16.md,
     ../archive/issues/ao_autospawn_role_blind_dispatch_starvation_2026_07_14.md,
     ../epics/orchestrator_master.md,
   ]
@@ -429,12 +429,12 @@ Three of this plan's own source docs prescribe fixes that current code contradic
 ### Phase 4 — close the paper trail (P2)
 
 - [x] [BACKEND] P2. ✅ **DONE 2026-07-16 — `unified-trading-pm@5a79c4c23`.** Rewrote
-      `codex/04-architecture/agent-orchestrator-autospawn.md`: added the **§ Spawn budget** section X3 flagged as
+      `/codex/04-architecture/agent-orchestrator-autospawn.md`: added the **§ Spawn budget** section X3 flagged as
       missing (the `FilterScope` table, the measured 1014/101 churn, and an explicit warning that 'simplifying'
       `CAPABILITY` into the budget starves the fleet), corrected Gate 1 to CLAIMABLE-not-queued, and fixed live
       codex↔code drift — the doc still documented `_top_queued_task_params`, which R2 **deleted**. `last_reviewed`
       bumped. ~~Document the (now-fixed) spawn-budget contract in~~
-      `codex/04-architecture/agent-orchestrator-autospawn.md` — the doc-gap flagged as X3's third corroboration in
+      `/codex/04-architecture/agent-orchestrator-autospawn.md` — the doc-gap flagged as X3's third corroboration in
       `ao_docs_reconciliation_2026_07_15`.
 - [x] [BACKEND] P2. ✅ **DONE 2026-07-16 — `agent-orchestrator@f163892`.** The comment cited `recovery-audit` as the
       live NEVER_LAUNCH example; that set is now `frozenset()` and its only member's template is deleted, so it pointed
@@ -523,10 +523,10 @@ Three of this plan's own source docs prescribe fixes that current code contradic
 
 ## Codex SSOTs
 
-- `codex/04-architecture/agent-orchestrator-autospawn.md` — autospawn/spawn-budget contract (Phase 4 updates it).
-- `codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` — single-VM + role-based dispatch.
-- `codex/04-architecture/agent-orchestrator-overview.md` — runtime overview.
-- `codex/06-coding-standards/quality-gates.md` — the ship gate.
+- `/codex/04-architecture/agent-orchestrator-autospawn.md` — autospawn/spawn-budget contract (Phase 4 updates it).
+- `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` — single-VM + role-based dispatch.
+- `/codex/04-architecture/agent-orchestrator-overview.md` — runtime overview.
+- `/codex/06-coding-standards/quality-gates.md` — the ship gate.
 
 ## Progress Log
 

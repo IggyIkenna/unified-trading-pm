@@ -112,7 +112,7 @@ FastAPI App (any API repo)                                  log_event() → GCS/
 
 - [x] Write cursor plan to `plans/active/ui_api_event_telemetry_2026_03_10.md`
 - [x] Add entry #35 to `plans/active/INDEX.md`
-- [x] Update `unified-trading-codex/03-observability/lifecycle-events.md`
+- [x] Update `unified-trading-/codex/03-observability/lifecycle-events.md`
 
 ## Verification
 

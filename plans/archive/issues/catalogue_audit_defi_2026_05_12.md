@@ -12,8 +12,27 @@ tags: []
 related: []
 created: 2026-05-12
 author: harsh-catalogue-audit-tab (slot 8 sub-agent)
-source: [plans/active/cross_asset_group_catalogue_audit_2026_05_10.md, unified-api-contracts/unified_api_contracts/registry/defi_venue_capabilities.py, unified-api-contracts/unified_api_contracts/registry/defi_protocol_registry.py, unified-api-contracts/unified_api_contracts/registry/defi_venues.py, unified-api-contracts/unified_api_contracts/registry/defi_major_assets.py, unified-api-contracts/unified_api_contracts/registry/chain_env.py, unified-api-contracts/unified_api_contracts/registry/market_data_categories.py, unified-api-contracts/unified_api_contracts/registry/capability_declarations/_defi.py, unified-api-contracts/unified_api_contracts/registry/capability_declarations/_defi_lst.py, unified-api-contracts/unified_api_contracts/registry/capability_declarations/_defi_oracle_coverage.py, unified-api-contracts/unified_api_contracts/registry/capability_declarations/_defi_chain_data.py, unified-api-contracts/unified_api_contracts/internal/domain/defi/lst.py, unified-api-contracts/unified_api_contracts/internal/risk.py,
-  instruments-service/instruments_service/reference_data/factory.py, instruments-service/instruments_service/reference_data/adapters/defi/ (26 adapters), market-tick-data-service/market_tick_data_service/market_interface/adapters/defi/, market-tick-data-service/market_tick_data_service/cli/handlers/ (defi data_type handlers), execution-service/execution_service/defi_execution/protocols/ (connectors)]
+source:
+  [
+    plans/active/cross_asset_group_catalogue_audit_2026_05_10.md,
+    unified-api-contracts/unified_api_contracts/registry/defi_venue_capabilities.py,
+    unified-api-contracts/unified_api_contracts/registry/defi_protocol_registry.py,
+    unified-api-contracts/unified_api_contracts/registry/defi_venues.py,
+    unified-api-contracts/unified_api_contracts/registry/defi_major_assets.py,
+    unified-api-contracts/unified_api_contracts/registry/chain_env.py,
+    unified-api-contracts/unified_api_contracts/registry/market_data_categories.py,
+    unified-api-contracts/unified_api_contracts/registry/capability_declarations/_defi.py,
+    unified-api-contracts/unified_api_contracts/registry/capability_declarations/_defi_lst.py,
+    unified-api-contracts/unified_api_contracts/registry/capability_declarations/_defi_oracle_coverage.py,
+    unified-api-contracts/unified_api_contracts/registry/capability_declarations/_defi_chain_data.py,
+    unified-api-contracts/unified_api_contracts/internal/domain/defi/lst.py,
+    unified-api-contracts/unified_api_contracts/internal/risk.py,
+    instruments-service/instruments_service/reference_data/factory.py,
+    instruments-service/instruments_service/reference_data/adapters/defi/ (26 adapters),
+    market-tick-data-service/market_tick_data_service/market_interface/adapters/defi/,
+    market-tick-data-service/market_tick_data_service/cli/handlers/ (defi data_type handlers),
+    execution-service/execution_service/defi_execution/protocols/ (connectors),
+  ]
 locked_by: live-defi-rollout
 locked_since: 2026-05-12
 ---
@@ -89,7 +108,7 @@ Cross-referenced five layers per the parent plan: (1) UAC capability/venue/regis
 - **Chainlink oracle coverage start** (DF-18) → `defi_master_2026_05_07.md` (already owns the Pyth/Chainlink split
   decision) — add `ORACLE_COVERAGE_START["chainlink"]`.
 - **execution-only / no-instrument-universe venue-class taxonomy** (DF-19) →
-  `codex/02-data/contracts-scope-and-layout.md` doc update (THIS plan Phase 1H / 7A) — document the Jupiter/bridge
+  `/codex/02-data/contracts-scope-and-layout.md` doc update (THIS plan Phase 1H / 7A) — document the Jupiter/bridge
   "venue with capability rows but no instrument universe" class.
 - **mock fixtures** — no DeFi-specific mock-fixture finding surfaced in this pass;
   `mock_data_pipeline_benchmarking_2026_05_10.md` not implicated. (If euler/radiant/venus/benqi/vault adapters get MTDS

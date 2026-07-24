@@ -4,18 +4,34 @@ title: Repo scripts/ characterization — fleet-wide audit (Phase 1)
 summary:
   Read-only lifecycle characterization of every service repo's scripts/ (~820 .py+.sh, 21 repos) — ~620 KEEP-PERMANENT,
   ~65 KEEP-ONEOFF, ~127 DELETE, ~75 DEPRECATE, ~8 PROMOTE-TO-CLI; Finding-1 (🔴 gating rule — DO NOT mass-delete
-  mid-campaign, only ~40 immediately-safe), Finding-2 (🟠 ~75 scripts carry google.cloud-direct / hardcoded project-id
-  / inline-gs:// rot invisible to QG), Finding-3 (8 recurring-prod scripts to promote to CLI); no deletions this pass.
+  mid-campaign, only ~40 immediately-safe), Finding-2 (🟠 ~75 scripts carry google.cloud-direct / hardcoded project-id /
+  inline-gs:// rot invisible to QG), Finding-3 (8 recurring-prod scripts to promote to CLI); no deletions this pass.
 status: partial
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [agent-orchestrator, alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-service]
+repos:
+  [
+    agent-orchestrator,
+    alerting-service,
+    batch-live-reconciliation-service,
+    client-reporting-api,
+    deployment-api,
+    deployment-service,
+  ]
 scope: [engineer, admin]
 tags: [scripts, plan-hygiene, infrastructure, quality-gates, migration, audit]
-related: [plans/active/repo_scripts_governance_audit_2026_06_18.md, plans/audit/instructions/infrastructure_master_audit_instructions.md, codex/06-coding-standards/script-homes.md]
+related:
+  [
+    plans/active/repo_scripts_governance_audit_2026_06_18.md,
+    plans/audit/instructions/infrastructure_master_audit_instructions.md,
+    /codex/06-coding-standards/script-homes.md,
+  ]
 created: 2026-06-18
-audited_scope: every SERVICE repo's scripts/ (~820 .py+.sh across 21 repos, excludes unified-trading-pm) — per-script lifecycle classification (KEEP-PERMANENT/KEEP-ONEOFF/DELETE/DEPRECATE/PROMOTE-TO-CLI) + cloud-discipline red-flag grep + dead-checker sweep
+audited_scope:
+  every SERVICE repo's scripts/ (~820 .py+.sh across 21 repos, excludes unified-trading-pm) — per-script lifecycle
+  classification (KEEP-PERMANENT/KEEP-ONEOFF/DELETE/DEPRECATE/PROMOTE-TO-CLI) + cloud-discipline red-flag grep +
+  dead-checker sweep
 date: 2026-06-18
 auditor: harshkantariya [autonomous scripts audit]
 parent_epic: infrastructure_master
@@ -29,7 +45,9 @@ parent_plan: plans/active/repo_scripts_governance_audit_2026_06_18.md
 instructions_ref: plans/audit/instructions/infrastructure_master_audit_instructions.md
 author: harshkantariya [autonomous scripts audit]
 assigned_vm: vm-cross-cutting
-method: 6 read-only Opus sub-agents, one per repo-cluster; per-script skim (docstring + key imports + filename) + git last-modified date + red-flag grep
+method:
+  6 read-only Opus sub-agents, one per repo-cluster; per-script skim (docstring + key imports + filename) + git
+  last-modified date + red-flag grep
 ---
 
 # Repo scripts/ characterization — fleet audit (Phase 1)

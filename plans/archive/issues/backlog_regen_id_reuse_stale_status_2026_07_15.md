@@ -20,7 +20,7 @@ stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer, admin]
 tags: [backlog, regen, id-collision, tooling-defect, dispatch]
-related: [cefi_mtds_writer_raw_symbol_vs_canonical_eu_namespace_mismatch_2026_07_15.md]
+related: [/plans/active/issues/cefi_mtds_writer_raw_symbol_vs_canonical_eu_namespace_mismatch_2026_07_15.md]
 created: 2026-07-15
 parent_epic: agent_operating_framework_master
 assigned_vm: planning

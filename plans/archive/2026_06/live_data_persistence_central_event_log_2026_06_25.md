@@ -1,12 +1,22 @@
 ---
 doc_type: plan
-title: Live data persistence — central event-log spine (Pub/Sub) + pluggable consumers (service / table / GCS) + 2-tier archive, batch==paper==live
+title:
+  Live data persistence — central event-log spine (Pub/Sub) + pluggable consumers (service / table / GCS) + 2-tier
+  archive, batch==paper==live
 summary:
 status: complete
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [deployment-service, e2e-testing, execution-service, features-service, market-data-processing-service, market-tick-data-service]
+repos:
+  [
+    deployment-service,
+    e2e-testing,
+    execution-service,
+    features-service,
+    market-data-processing-service,
+    market-tick-data-service,
+  ]
 scope: [engineer, admin]
 tags: []
 related: []
@@ -22,7 +32,7 @@ locked_since: 2026-05-21
 ---
 
 > **✅ ARCHIVED — shipped 2026-06-26 — all 11 child plans DONE (Plans 00–10). Codex SSOT:
-> `codex/02-data/live-data-persistence-and-event-log.md`.**
+> `/codex/02-data/live-data-persistence-and-event-log.md`.**
 
 # Live data persistence — central event-log spine
 
@@ -73,7 +83,7 @@ view + a daily cold compaction** — all configuration, not consumer code; no Re
 
 **Determinism guard (the whole point):** the cold flush is a **faithful copy** of what was streamed (never a recompute)
 → batch-replay reads the **identical bars** the live consumer saw → `paper(W) == batch-rerun(W)` holds
-(`codex/09-strategy/operational/paper-batch-live-reconciliation.md`). For STREAM_ONLY data this long-term capture is a
+(`/codex/09-strategy/operational/paper-batch-live-reconciliation.md`). For STREAM_ONLY data this long-term capture is a
 **determinism requirement**, not a cost choice — you cannot re-run the week if the only copy was cleaned up.
 
 ## Operator decisions (RESOLVED 2026-06-26 — D1/D2/D4 locked; D3 = Phase-0 deliverable)
@@ -198,9 +208,9 @@ Flip an item here when its child-plan todo ships. This is a single-glance tracke
 
 ## Codex SSOT updates
 
-- `codex/02-data/live-data-persistence-and-event-log.md` (NEW — Phase 8)
-- `codex/02-data/pipeline-mode-and-batch-live-reconciliation.md` (update — Phase 8)
-- `codex/09-strategy/operational/paper-batch-live-reconciliation.md` (cross-link the determinism proof — Phase 7/8)
+- `/codex/02-data/live-data-persistence-and-event-log.md` (NEW — Phase 8)
+- `/codex/02-data/pipeline-mode-and-batch-live-reconciliation.md` (update — Phase 8)
+- `/codex/09-strategy/operational/paper-batch-live-reconciliation.md` (cross-link the determinism proof — Phase 7/8)
 
 ## Cross-links
 

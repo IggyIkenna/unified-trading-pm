@@ -13,8 +13,15 @@ related: []
 created: 2026-05-15
 author: harsh-main (audit pass)
 resolved: 2026-05-15
-resolution: STRUCTURAL-FIX-SHIPPED — 10 GB per-process RSS cap via PYTEST_WORKERS=1 + ulimit/memray instrumentation (post-OOM hardening). No more 79 GB runaway processes possible. Audit shows current peak ~3 GB (well within cap). Per-repo memray audit + UTL <1 GB RSS optimization is a NICE-TO-HAVE follow-up, NOT blocking May-23.
-source: [2026-05-15 OOM incident (PM@c3cb11f6 + ca3fad47 mitigation landed), 'Live ps audit during 6-slot concurrent QG runs (2026-05-15 23:50 UTC)']
+resolution:
+  STRUCTURAL-FIX-SHIPPED — 10 GB per-process RSS cap via PYTEST_WORKERS=1 + ulimit/memray instrumentation (post-OOM
+  hardening). No more 79 GB runaway processes possible. Audit shows current peak ~3 GB (well within cap). Per-repo
+  memray audit + UTL <1 GB RSS optimization is a NICE-TO-HAVE follow-up, NOT blocking May-23.
+source:
+  [
+    2026-05-15 OOM incident (PM@c3cb11f6 + ca3fad47 mitigation landed),
+    "Live ps audit during 6-slot concurrent QG runs (2026-05-15 23:50 UTC)",
+  ]
 locked_by: live-defi-rollout
 locked_since: 2026-05-15
 severity: P2 — not blocking May-23; impacts dev-box concurrent-QG capacity + GHA cost-per-run
@@ -23,7 +30,7 @@ suggested_owner: ikenna-side OR opus-max-tier slot (memory-profiling + import-gr
 
 > **🟢 RESOLUTION VERIFIED 2026-05-20** — structural fix shipped at `unified-trading-pm@c3cb11f6` (`QG_MEM_CAP=10G`
 > per-subprocess cap via systemd-run) + `unified-trading-pm@ca3fad47` (`PYTEST_WORKERS=1` default + macOS warning path).
-> SSOT `codex/06-coding-standards/quality-gates-memory-governance.md`. No more runaway >10 GB processes possible;
+> SSOT `/codex/06-coding-standards/quality-gates-memory-governance.md`. No more runaway >10 GB processes possible;
 > current peak ~3 GB well within cap. Per-repo memray audit + UTL <1 GB optimisation is explicit NICE-TO-HAVE not
 > blocking May-23 (operator-acked at issue-doc filing). Archiving.
 
@@ -118,7 +125,7 @@ But left unaddressed:
 - PM@c3cb11f6 — `QG_MEM_CAP` env (default 10G) caps each pytest/basedpyright subprocess via
   `systemd-run --user --scope -p MemoryMax`. Linux-only.
 - PM@ca3fad47 — `PYTEST_WORKERS=1` default + OLD/NEW comment pattern in base-service.sh + macOS warning path. SSOT
-  `codex/06-coding-standards/quality-gates-memory-governance.md`.
+  `/codex/06-coding-standards/quality-gates-memory-governance.md`.
 - The cap **works** — today's audit shows no process near 10 GB; the 3 GB peaks are well within the cap. No more 79 GB
   runaway processes possible.
 

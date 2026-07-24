@@ -17,11 +17,12 @@ locked_by: live-defi-rollout
 locked_since: 2026-04-21
 type: code
 epic: none
-completion_gates: {code: C5, deployment: none, business: none}
+completion_gates: { code: C5, deployment: none, business: none }
 repo_gates:
-- {repo: deployment-api, code: C3}
-- {repo: deployment-ui, code: C3}
-depends_on: [sports_manifest_shard_migration_cleanup_2026_04_21, instruments_service_orchestrator_reliability_fixes_2026_04_21]
+  - { repo: deployment-api, code: C3 }
+  - { repo: deployment-ui, code: C3 }
+depends_on:
+  [sports_manifest_shard_migration_cleanup_2026_04_21, instruments_service_orchestrator_reliability_fixes_2026_04_21]
 isProject: false
 ---
 
@@ -310,7 +311,7 @@ Phase 0 (audit) ─► Phase 1 (api endpoints) ┐
 
 ## Cross-refs
 
-- Per-fixture shard key codex: `codex/02-data/sports-scheduling-and-sharding.md` §1 + §9.
+- Per-fixture shard key codex: `/codex/02-data/sports-scheduling-and-sharding.md` §1 + §9.
 - Existing per-(league, day) CSV: `deployment-api/routes/data_status.py` `download_fixtures_csv` +
   `build_fixtures_csv_export`.
 - Existing drilldown UI: `deployment-ui/src/components/DataStatusTab.tsx` per-league date badges.

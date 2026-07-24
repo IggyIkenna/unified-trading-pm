@@ -72,13 +72,13 @@ silently blanked, on a perfectly healthy, fresh consolidator.
 ## Why it matters
 
 - `source` is explicitly called out as crosscutting in workspace rules
-  (`codex/02-data/availability-manifest-and-data-status.md` — "`source=` is crosscutting; `record_captured(source=…)`
+  (`/codex/02-data/availability-manifest-and-data-status.md` — "`source=` is crosscutting; `record_captured(source=…)`
   required"). Any downstream consumer that groups/filters `read_availability_index()`'s output by `source` (rather than
   re-deriving source from `venue`/`data_type` combinations, which is fragile and exactly what caused this session's
   false alarm) silently gets wrong results with no error, no warning, no missing column exception — just an all-blank
   column.
 - This is a **silent-placeholder-class bug** (the exact anti-pattern
-  `codex/02-data/honest-absence-downstream-handling.md` bans) on a field that exists in the write path and the raw
+  `/codex/02-data/honest-absence-downstream-handling.md` bans) on a field that exists in the write path and the raw
   storage, just not the read path's declared schema.
 - Concretely dangerous for any manual/one-off verification script (like this session's gate re-check) that assumes
   `read_availability_index()` is schema-complete and filters by `source` — it will silently mis-scope, as happened here

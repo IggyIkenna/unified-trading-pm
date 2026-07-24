@@ -24,9 +24,9 @@ related:
   [
     instruments-service/scripts/build_instrument_catalogue.py,
     instruments-service/scripts/canonicalize_tradfi_catalogue_usd_lin_2026_07_18.py,
-    codex/02-data/data-pipeline-correctness-hard-rule.md,
-    codex/02-data/availability-manifest-and-data-status.md,
-    codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+    /codex/02-data/data-pipeline-correctness-hard-rule.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
   ]
 created: 2026-07-20
 parent_epic: infrastructure_master

@@ -1,7 +1,10 @@
 ---
 doc_type: audit-result
 title: AWS↔GCP Bucket-Name Symmetry Audit — Phase 1 Summary
-summary: AWS↔GCP bucket-name symmetry audit of cloud-providers.yaml — 64 kind×asset_group rows, 24 kinds with prefix_drift + 10 with infix_missing need drop_prefix/add_store_infix/add_tick_infix YAML fixes; 0 of 63-char cap violations; 2 spawning-script drift fixes applied.
+summary:
+  AWS↔GCP bucket-name symmetry audit of cloud-providers.yaml — 64 kind×asset_group rows, 24 kinds with prefix_drift + 10
+  with infix_missing need drop_prefix/add_store_infix/add_tick_infix YAML fixes; 0 of 63-char cap violations; 2
+  spawning-script drift fixes applied.
 status: partial
 nature: record
 asset_group: [cross-cutting]
@@ -9,9 +12,15 @@ stage: [meta]
 repos: [deployment-service]
 scope: [engineer, admin]
 tags: [audit, canonicalisation, migration, infrastructure, defi, ssot-audit]
-related: [batch_live_adapter_parity_2026_05_20_summary.md, mega_audit_phase_a_issues_human_readable_2026_05_20.md]
+related:
+  [
+    /plans/audit/results/archive/batch_live_adapter_parity_2026_05_20_summary.md,
+    /plans/audit/results/archive/mega_audit_phase_a_issues_human_readable_2026_05_20.md,
+  ]
 created: 2026-05-20
-audited_scope: All aws.storage bucket kinds in deployment-service/configs/cloud-providers.yaml vs GCP counterparts (per-asset-group dicts one row each) + every deployment-service/scripts/ script that provisions/references buckets on either cloud
+audited_scope:
+  All aws.storage bucket kinds in deployment-service/configs/cloud-providers.yaml vs GCP counterparts (per-asset-group
+  dicts one row each) + every deployment-service/scripts/ script that provisions/references buckets on either cloud
 date: 2026-05-20
 auditor: ikenna-slot-10
 parent_epic: batch_live_symmetry_master
@@ -23,18 +32,16 @@ doc_versions_checked:
 
 # AWS↔GCP Bucket-Name Symmetry Audit — Phase 1 Summary
 
-**Date**: 2026-05-20  
-**Audited file**: `deployment-service/configs/cloud-providers.yaml`  
-**Output**: `plans/audit/results/aws_gcp_bucket_symmetry_2026_05_20.csv`  
-**Worker**: ikenna-slot-10 (overnight autonomous operation)
+**Date**: 2026-05-20 **Audited file**: `deployment-service/configs/cloud-providers.yaml` **Output**:
+`plans/audit/results/aws_gcp_bucket_symmetry_2026_05_20.csv` **Worker**: ikenna-slot-10 (overnight autonomous operation)
 
 ---
 
 ## Scope
 
-All `aws.storage` bucket kinds in `cloud-providers.yaml` were compared against their GCP counterparts.  
-Per-asset-group dict kinds produce one CSV row per asset_group.  
-GCP-only kinds (e.g. `defi-validation`, `events` env-less variant) are noted but not AWS-audited.
+All `aws.storage` bucket kinds in `cloud-providers.yaml` were compared against their GCP counterparts. Per-asset-group
+dict kinds produce one CSV row per asset_group. GCP-only kinds (e.g. `defi-validation`, `events` env-less variant) are
+noted but not AWS-audited.
 
 ---
 
@@ -50,8 +57,8 @@ GCP-only kinds (e.g. `defi-validation`, `events` env-less variant) are noted but
 | 63-char cap violations (current) | **0**  |
 | 63-char cap violations (target)  | **0**  |
 
-Worst current name: `unified-trading-features-xinstrument-tradfi-427895769566` (56 chars, well under 63).  
-Worst target name after fix: `features-xinstrument-tradfi-427895769566` (40 chars).
+Worst current name: `unified-trading-features-xinstrument-tradfi-427895769566` (56 chars, well under 63). Worst target
+name after fix: `features-xinstrument-tradfi-427895769566` (40 chars).
 
 ---
 
@@ -59,8 +66,8 @@ Worst target name after fix: `features-xinstrument-tradfi-427895769566` (40 char
 
 ### prefix_drift — 24 kinds, 41 rows
 
-All AWS templates that carry the `unified-trading-` prefix where GCP uses no such prefix.  
-Action required: **drop_prefix** on AWS side in the YAML.
+All AWS templates that carry the `unified-trading-` prefix where GCP uses no such prefix. Action required:
+**drop_prefix** on AWS side in the YAML.
 
 Kinds:
 
@@ -92,8 +99,8 @@ Kinds:
 
 ### infix_missing — 10 kinds, 20 rows
 
-AWS templates that have both the `unified-trading-` prefix AND a missing structural infix (`-store-` or `tick-`).  
-Action required: **drop_prefix + add_store_infix** or **drop_prefix + add_tick_infix**.
+AWS templates that have both the `unified-trading-` prefix AND a missing structural infix (`-store-` or `tick-`). Action
+required: **drop_prefix + add_store_infix** or **drop_prefix + add_tick_infix**.
 
 | Kind                          | asset_groups               | Missing infix                                             | Action                       |
 | ----------------------------- | -------------------------- | --------------------------------------------------------- | ---------------------------- |
@@ -110,8 +117,7 @@ Action required: **drop_prefix + add_store_infix** or **drop_prefix + add_tick_i
 
 ### already_symmetric — 3 kinds
 
-Per Q7(b) operator decision 2026-05-13: `unified-trading-` prefix already dropped.  
-No YAML change required.
+Per Q7(b) operator decision 2026-05-13: `unified-trading-` prefix already dropped. No YAML change required.
 
 - `pnl-store-defi`
 - `positions-store-defi`
@@ -143,8 +149,8 @@ rows should be reclassified as `gcp_only_change` with GCP YAML edits.
 
 All 9 Group B kinds (`features-delta-one`, `features-volatility`, `features-onchain`, `features-xinstrument`,
 `features-mtf`, `strategy-store`, `execution-store`, `ml-artifacts`, `ml-training-artifacts`) correctly have **no
-`${DEPLOYMENT_ENV_SHORT}`** in both GCP and AWS templates.  
-The rollback is symmetric. No `env_split_rollback` rows in the CSV.
+`${DEPLOYMENT_ENV_SHORT}`** in both GCP and AWS templates. The rollback is symmetric. No `env_split_rollback` rows in
+the CSV.
 
 ---
 

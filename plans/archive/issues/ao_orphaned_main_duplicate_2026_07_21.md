@@ -20,7 +20,7 @@ related:
   [
     plans/active/issues/orphaned_workers_on_tmux_loss_stale_dispatch_2026_07_17.md,
     plans/active/ao_worker_lifecycle_dispatch_context_2026_07_21.md,
-    codex/04-architecture/agent-orchestrator-worker-liveness.md,
+    /codex/04-architecture/agent-orchestrator-worker-liveness.md,
   ]
 created: 2026-07-21
 parent_epic: infrastructure_master

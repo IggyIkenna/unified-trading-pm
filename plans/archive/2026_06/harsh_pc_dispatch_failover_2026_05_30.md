@@ -9,7 +9,8 @@ stage: [meta]
 repos: [agent-orchestrator, unified-trading-pm]
 scope: [engineer, admin]
 tags: []
-related: [plans/active/autospawn_idle_vms_2026_05_30.md, plans/active/agent_orchestrator_backlog_state_alignment_2026_05_29.md]
+related:
+  [plans/active/autospawn_idle_vms_2026_05_30.md, plans/active/agent_orchestrator_backlog_state_alignment_2026_05_29.md]
 created: 2026-05-30
 parent_epic: plans/epics/orchestrator_master.md
 assigned_vm: vm-orchestrator
@@ -19,7 +20,7 @@ estimate_baseline_ai_days: 1.5
 estimate_calibrated_ai_days: 0.6
 last_updated: 2026-05-30
 archived: 2026-06-01
-codex_ssots: [codex/04-architecture/agent-orchestrator-overview.md]
+codex_ssots: [/codex/04-architecture/agent-orchestrator-overview.md]
 ---
 
 ## ✅ ARCHIVED 2026-06-01
@@ -93,12 +94,12 @@ Same as `autospawn_idle_vms_2026_05_30.md` § CI-safety contract — cross-link 
 
 ### Phase 1 — Design the FailoverLoop
 
-- [x] ✅ [DESIGN] P0. Document the `FailoverLoop` design in `codex/04-architecture/agent-orchestrator-overview.md` §
+- [x] ✅ [DESIGN] P0. Document the `FailoverLoop` design in `/codex/04-architecture/agent-orchestrator-overview.md` §
       "Host-offline failover lifecycle": heartbeat-silence threshold (10 min), soft-vs-hard pin distinction,
       affinity-matching logic (`repos` ⊃ `vm.master_plans`, then `asset_group`, then `collision_group`, then
       `least-loaded`), rollback on heartbeat-return, audit trail (`failover_origin` field). Collision group:
       `ao_failover_design`. Estimate: 0.15 AI-day. **DONE 2026-05-30** — new `## Host-offline failover lifecycle`
-      section added to `codex/04-architecture/agent-orchestrator-overview.md`. Covers trigger contract table, affinity
+      section added to `/codex/04-architecture/agent-orchestrator-overview.md`. Covers trigger contract table, affinity
       algorithm (4 tiers), soft/hard pin distinction, rollback semantics, audit trail, env vars table, anti-patterns.
 - [x] ✅ [DESIGN] P0. Audit `target_slot` semantics in current `regen_backlog_from_plan.py` — confirm whether
       `target_slot` is always present, whether `failover_allowed: false` exists today (likely not), and what default to
@@ -208,10 +209,10 @@ Same as `autospawn_idle_vms_2026_05_30.md` § CI-safety contract — cross-link 
       failover decisions)."** Cross-link this plan. Collision group: none. Estimate: 0.05 AI-day. **DONE 2026-05-30** —
       Added HARD RULE block under `### Other key rules` in `cursor-configs/CLAUDE.md`: 10-min threshold, hard-pin
       opt-in, vm-orchestrator only, activity events, rollback semantics, SSOT link.
-- [x] ✅ [DOCS] P1. Add codex doc `codex/04-architecture/agent-orchestrator-host-offline-failover.md` — full
+- [x] ✅ [DOCS] P1. Add codex doc `/codex/04-architecture/agent-orchestrator-host-offline-failover.md` — full
       architecture: heartbeat lifecycle, affinity-matching algorithm, rollback semantics, audit trail
       (`failover_origin`), interaction with collision_group. Collision group: none. Estimate: 0.1 AI-day. **DONE
-      2026-05-30** — `codex/04-architecture/agent-orchestrator-host-offline-failover.md` written: problem statement,
+      2026-05-30** — `/codex/04-architecture/agent-orchestrator-host-offline-failover.md` written: problem statement,
       scope table (soft/hard/unrooted), trigger contract (5 gates), heartbeat lifecycle diagram, affinity-matching (4
       tiers: repo overlap → asset group → collision group → least loaded), rollback semantics (unclaimed tasks cleared
       on heartbeat return), audit trail (failover_origin + cached heartbeat snapshot + activity events), deployment
@@ -223,7 +224,7 @@ Same as `autospawn_idle_vms_2026_05_30.md` § CI-safety contract — cross-link 
       activity events, rollback semantics). Docs-fast-path to `main`: combined with the regen + autospawn HARD RULEs in
       PR #102 (https://github.com/IggyIkenna/unified-trading-pm/pull/102, OPEN, base `main`). Operator will merge that
       PR to land all three self-healing HARD RULEs on main together — single-PR rollout is cleaner than 3 separate
-      fast-path PRs. The codex doc (`codex/04-architecture/agent-orchestrator-host-offline-failover.md`) is already on
+      fast-path PRs. The codex doc (`/codex/04-architecture/agent-orchestrator-host-offline-failover.md`) is already on
       `live-defi-rollout` and propagates via the normal pm-pull flow without needing a main-target PR.
 
 ## Closing condition

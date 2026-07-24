@@ -10,7 +10,7 @@ repos: [market-data-processing-service]
 scope: [engineer, admin]
 tags: []
 related: [../epics/mtds_mdps_master.md, ../archive/2026_06/mdps_pure_polars_migration_2026_05_28.md]
-created: '2026-06-21'
+created: "2026-06-21"
 parent_epic: mtds_mdps_master
 priority: P3
 execution_scope: orchestrator-agent
@@ -28,7 +28,7 @@ locked_since: 2026-06-21
 # MDPS adapter protocol pandas→polars + Phase-6 emission-check scalability
 
 > **MIGRATED FROM:** `mdps_pure_polars_migration_2026_05_28.md` (archived 2026-06-21). The MDPS engine is pure-Polars
-> end-to-end (that plan shipped + is codex-LOCKED in `codex/06-coding-standards/data-engine-selection.md`). These two
+> end-to-end (that plan shipped + is codex-LOCKED in `/codex/06-coding-standards/data-engine-selection.md`). These two
 > items were deferred there under an explicit operator directive ("adapter output stays pandas for now, migrate later"
 >
 > - Phase-6 "DO NOT TOUCH YET — scope after an operator option-pick") and are tracked here so they are not lost.

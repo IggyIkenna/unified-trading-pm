@@ -1,7 +1,8 @@
 ---
 title: "Orchestrator agent-type oversight coverage — every agent type registered, health-tracked, UI-visible"
 created: 2026-06-17
-status: supersededparent_epic: orchestrator_master
+status: superseded
+parent_epic: orchestrator_master
 assigned_vm: harsh_pc
 execution_scope: local-only
 locked_by: live-defi-rollout
@@ -321,9 +322,9 @@ PM-repo conflict notes).
 
 ## Codex SSOT updates
 
-- `codex/04-architecture/agent-orchestrator-overview.md` — document the full agent-type roster + that EVERY live type
+- `/codex/04-architecture/agent-orchestrator-overview.md` — document the full agent-type roster + that EVERY live type
   registers an AgentRow and is health/reaper/UI-covered (single oversight model, no bespoke-only types).
-- `codex/05-infrastructure/agent-orchestrator-worker-topology.md` — agent-type coverage matrix.
+- `/codex/05-infrastructure/agent-orchestrator-worker-topology.md` — agent-type coverage matrix.
 
 ## Cross-links
 

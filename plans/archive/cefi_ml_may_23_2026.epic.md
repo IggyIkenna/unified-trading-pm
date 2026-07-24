@@ -59,7 +59,7 @@ strategy → execution) must work in live mode for the three target venues.
 - [ ] **Kill switches + circuit breakers** wired per archetype: position-limit breach, P&L drawdown threshold,
       signal-staleness, model-drift detection. **`KILL_SWITCH_ML_MODEL_FAILURE` taxonomy shipped 2026-05-08 at
       UAC@6c4784f**, `kill_switch_scope=ARCHETYPE` semantics documented in
-      `codex/14-playbooks/alerting/alert-code-taxonomy.md`. Service wiring still pending (alerting plan Phase 2
+      `/codex/14-playbooks/alerting/alert-code-taxonomy.md`. Service wiring still pending (alerting plan Phase 2
       kill-switch publisher hook + execution-service halt-pump consumer).
 - [ ] **DART manual override**: operator can pause / override / replicate any ML-driven trade as a manual trade.
       DEFERRED — lives in `strategy_and_dart_master_2026_05_07.md` Phase 2.2; out of scope for the alerting taxonomy
@@ -127,6 +127,6 @@ See [`cross_cutting_may_23_2026.epic.md`](./cross_cutting_may_23_2026.epic.md). 
 ## See also
 
 - [`master_to_live_defi_2026_05_23`](../active/master_to_live_defi_2026_05_23.md) — May-23 cutover master
-- [`codex/04-architecture/ml-experiment-lifecycle.md`](../../codex/04-architecture/ml-experiment-lifecycle.md) (codex
-  gap; lands as part of `ml_and_features_master`)
-- [`codex/04-architecture/batch-live-pipeline.md`](../../codex/04-architecture/batch-live-pipeline.md)
+- [`/codex/04-architecture/ml-experiment-lifecycle.md`](/codex/04-architecture/ml-experiment-lifecycle.md) (codex gap;
+  lands as part of `ml_and_features_master`)
+- [`/codex/04-architecture/batch-live-pipeline.md`](/codex/04-architecture/batch-live-pipeline.md)

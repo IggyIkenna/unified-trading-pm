@@ -14,8 +14,8 @@ repos: [unified-trading-library, deployment-service]
 scope: [engineer]
 tags: [dynamodb, deployment-registry, aws, cloud-interface, migration]
 related:
-  - deployment_registry_firestore_migration_2026_07_14.md
-  - deployment_registry_firestore_p1_dualwrite_2026_07_14.md
+  - /plans/active/deployment_registry_firestore_migration_2026_07_14.md
+  - /plans/archive/2026_07/deployment_registry_firestore_p1_dualwrite_2026_07_14.md
 created: "2026-07-14"
 last_updated: "2026-07-14"
 parent_epic: observability_master
@@ -97,8 +97,8 @@ provision only. No `os.getenv`; UTC datetimes; QG-green.
       the one-line activation step (flip the cloud selector) in the AWS-migration runbook. — deployment-service@4d39f44:
       `terraform/aws/deployment_registry_dynamodb.tf` (table `unified-trading-{env}-deployments`, PK `deployment_id`,
       GSI `status-index`, `deployment_registry_dynamodb_billing_mode` var PAY_PER_REQUEST/PROVISIONED); activation step
-      documented in `codex/05-infrastructure/deployment-observability.md` § "AWS backend activation (deployment-registry
-      DynamoDB)".
+      documented in `/codex/05-infrastructure/deployment-observability.md` § "AWS backend activation
+      (deployment-registry DynamoDB)".
 - [x] ✅ [INFRA] P2. Ship (commit + push, cite shas) and flip this plan's items (`docs(plans):`). THEN hand off —
       activate the final phase ONLY IF Phase 3 is already `complete`: set
       `deployment_registry_firestore_p5_verify_2026_07_14.md` frontmatter `status: draft`→`active` and commit. If Phase
@@ -157,4 +157,4 @@ provision only. No `os.getenv`; UTC datetimes; QG-green.
 
 ## Codex SSOTs
 
-- `codex/05-infrastructure/deployment-observability.md` — registry SSOT (the backend-swap note added Phase 5).
+- `/codex/05-infrastructure/deployment-observability.md` — registry SSOT (the backend-swap note added Phase 5).

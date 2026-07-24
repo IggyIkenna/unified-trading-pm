@@ -22,9 +22,9 @@ scope: [engineer, admin]
 tags: [pipeline-mode, canonical-path, manifest, data-correctness, provenance, duplicate-objects, catalogue-gap, tardis]
 related:
   [
-    codex/02-data/pipeline-mode-partition.md,
-    codex/02-data/availability-manifest-and-data-status.md,
-    codex/05-infrastructure/gcs-and-manifest-delete-safety-protocol.md,
+    /codex/02-data/pipeline-mode-partition.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
   ]
 created: 2026-07-20
 priority: P1
@@ -171,8 +171,8 @@ Three things fall out:
 
 ### 2.1 What the `{mode}_{source}` convention requires
 
-Per [`codex/02-data/pipeline-mode-partition.md`](../../../codex/02-data/pipeline-mode-partition.md) §"Source-aware
-modes + transport", `pipeline_mode = {mode}_{source}[_{transport}]` where **`source` is the VENDOR only**. The doc's own
+Per [`/codex/02-data/pipeline-mode-partition.md`](/codex/02-data/pipeline-mode-partition.md) §"Source-aware modes +
+transport", `pipeline_mode = {mode}_{source}[_{transport}]` where **`source` is the VENDOR only**. The doc's own
 anti-pattern list forbids gluing transport into the source and requires every batch `PipelineMode` to round-trip with a
 `SOURCE_PRIORITY` entry.
 
@@ -328,7 +328,7 @@ remediation.
 Manifest rows are keyed **including** `pipeline_mode`. A physical object move without a coordinated manifest rewrite
 turns every moved row into a phantom. Two standing hazards apply:
 
-- **Phantom-audit `--apply` hazard** (`codex/02-data/pipeline-mode-partition.md` §"Why `--apply` is dangerous"): the
+- **Phantom-audit `--apply` hazard** (`/codex/02-data/pipeline-mode-partition.md` §"Why `--apply` is dangerous"): the
   Axis-10 class of bug. `ASSET_GROUP_CONFIG[ag]["prefix_tpls"]` must cover the new shape _before_ any `--apply`, or real
   `captured` rows flip to `attempted_failed`.
 - **GCS delete-safety invariant** (same doc, 🔴 HARD RULE): never delete a legacy object without
@@ -427,7 +427,7 @@ Stated explicitly so no downstream reader over-reads the evidence:
 
 ## 6. Codex SSOTs consulted
 
-- [`codex/02-data/pipeline-mode-partition.md`](../../../codex/02-data/pipeline-mode-partition.md) — `{mode}_{source}`
+- [`/codex/02-data/pipeline-mode-partition.md`](/codex/02-data/pipeline-mode-partition.md) — `{mode}_{source}`
   convention, reader prefix-match rule, GCS delete-safety invariant, phantom-audit `--apply` hazard.
-- [`codex/02-data/availability-manifest-and-data-status.md`](../../../codex/02-data/availability-manifest-and-data-status.md)
-  — 4-state `capture_status`, shard-atom definition.
+- [`/codex/02-data/availability-manifest-and-data-status.md`](/codex/02-data/availability-manifest-and-data-status.md) —
+  4-state `capture_status`, shard-atom definition.

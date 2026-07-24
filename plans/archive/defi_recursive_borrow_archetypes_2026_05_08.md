@@ -26,12 +26,12 @@ locked_by: live-defi-rollout
 locked_since: 2026-05-08
 related_codex:
   [
-    codex/09-strategy/architecture-v2/archetypes/carry-recursive-staked.md,
-    codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md,
-    codex/09-strategy/architecture-v2/archetypes/arbitrage-price-dispersion.md,
-    codex/09-strategy/architecture-v2/archetypes/carry-basis-perp.md,
-    codex/16-strategy-playbooks/defi/venue-collateral-2026-05-07.md,
-    codex/09-strategy/strategy-summary.md,
+    /codex/09-strategy/architecture-v2/archetypes/carry-recursive-staked.md,
+    /codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md,
+    /codex/09-strategy/architecture-v2/archetypes/arbitrage-price-dispersion.md,
+    /codex/09-strategy/architecture-v2/archetypes/carry-basis-perp.md,
+    /codex/16-strategy-playbooks/defi/venue-collateral-2026-05-07.md,
+    /codex/09-strategy/strategy-summary.md,
   ]
 spawned_plan: plans/active/defi_recursive_borrow_archetypes_2026_05_10.md
 ---
@@ -282,8 +282,8 @@ covering DeFi:
 
 **Key finding**: `CARRY_RECURSIVE_STAKED` ALREADY exists at
 [enums.py:65](../../../unified-api-contracts/unified_api_contracts/internal/architecture_v2/enums.py#L65) with codex doc
-[`carry-recursive-staked.md`](../../codex/09-strategy/architecture-v2/archetypes/carry-recursive-staked.md) and tracer
-math `_net_apr_recursive(stake_apy, borrow_apy, ltv, n_loops)` at
+[`carry-recursive-staked.md`](/codex/09-strategy/architecture-v2/archetypes/carry-recursive-staked.md) and tracer math
+`_net_apr_recursive(stake_apy, borrow_apy, ltv, n_loops)` at
 [`defi_carry_recursive_staked_decision_trace.py:210`](../../../execution-service/execution_service/cli/defi_carry_recursive_staked_decision_trace.py#L210).
 The recursion semantics, share-class semantics, and kill-switch surface are identical to Family 1 + Family 2 needs.
 

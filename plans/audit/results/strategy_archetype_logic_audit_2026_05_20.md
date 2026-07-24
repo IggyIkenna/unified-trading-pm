@@ -2,11 +2,12 @@
 doc_type: audit-result
 title: Strategy archetype logic audit — separate from data-sanity mega audit + strategy MAP
 summary:
-  Strategy-logic audit (distinct from the data-sanity mega audit) + full strategy MAP (§0, 7-subagent synthesis) —
-  53 closed-set archetypes, axes/hard-rule tables, data flow, decision logic, treasury/execution, batch=paper=live.
-  Verdict fail — 5 P0 silent-failure risks — CARRY_STAKED_BASIS always returns [] (empty VENUE_COLLATERAL_MATRIX),
-  funding-rate-dispersion uncaught raise ValueError breaks shard isolation, two silent-stub archetypes, ARCHETYPE
-  enum collision, PnL stream emits zeros; plus missing VENUE_JURISDICTION_RESTRICTIONS (P0 pre-live) + thin risk-rule coverage (2/53).
+  Strategy-logic audit (distinct from the data-sanity mega audit) + full strategy MAP (§0, 7-subagent synthesis) — 53
+  closed-set archetypes, axes/hard-rule tables, data flow, decision logic, treasury/execution, batch=paper=live. Verdict
+  fail — 5 P0 silent-failure risks — CARRY_STAKED_BASIS always returns [] (empty VENUE_COLLATERAL_MATRIX),
+  funding-rate-dispersion uncaught raise ValueError breaks shard isolation, two silent-stub archetypes, ARCHETYPE enum
+  collision, PnL stream emits zeros; plus missing VENUE_JURISDICTION_RESTRICTIONS (P0 pre-live) + thin risk-rule
+  coverage (2/53).
 status: fail
 nature: record
 asset_group: [cross-cutting]
@@ -14,10 +15,29 @@ stage: [meta]
 repos: [alerting-service, deployment-service, e2e-testing, execution-service, features-service, instruments-service]
 scope: [engineer, admin]
 tags: [strategy, defi, execution, escalation, ssot-audit, data-correctness, audit]
-related: [mega_audit_and_plan_beefup_progression_2026_05_20.md, trading_agent_service_architecture_unlock_2026_05_22.md, strategy_and_dart_master_SUPERSEDED_2026_05_21.md, mtds_mdps_master.md, per_client_isolation_and_venue_fanout_topology_2026_05_20.md, strategy_execution_contract_remediation_2026_05_20.md, phase5_features_streaming_carry_staked_basis_mvp_2026_05_19.md, api_keys_wallets_accounts_readiness_2026_05_10.md, cross_client_funds_isolation_retroactive_audit_2026_05_20.md, promote_workflow_may23_cli_path_2026_05_10.md, promote_workflow_post_cutover_ui_pipeline_2026_05_10.md, defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md, defi_recursive_borrow_archetypes_2026_05_10.md, strategy_repo_consolidation_2026_05_19.md]
+related:
+  [
+    /plans/archive/issues/mega_audit_and_plan_beefup_progression_2026_05_20.md,
+    /plans/archive/2026_05/trading_agent_service_architecture_unlock_2026_05_22.md,
+    /plans/epics/strategy_and_dart_master_SUPERSEDED_2026_05_21.md,
+    /plans/epics/mtds_mdps_master.md,
+    /plans/archive/2026_05/per_client_isolation_and_venue_fanout_topology_2026_05_20.md,
+    /plans/archive/2026_05/strategy_execution_contract_remediation_2026_05_20.md,
+    /plans/archive/2026_05/phase5_features_streaming_carry_staked_basis_mvp_2026_05_19.md,
+    /plans/archive/2026_05/api_keys_wallets_accounts_readiness_2026_05_10.md,
+    /plans/archive/issues/cross_client_funds_isolation_retroactive_audit_2026_05_20.md,
+    /plans/archive/2026_05/promote_workflow_may23_cli_path_2026_05_10.md,
+    /plans/archive/2026_05/promote_workflow_post_cutover_ui_pipeline_2026_05_10.md,
+    /plans/archive/2026_05/defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md,
+    /plans/archive/2026_05/defi_recursive_borrow_archetypes_2026_05_10.md,
+    /plans/archive/2026_05/strategy_repo_consolidation_2026_05_19.md,
+  ]
 created: 2026-05-20
-audited_scope: strategy-service archetype logic across all 53 closed-set archetypes + 10 axes (venue/share-class/leverage/instrument-type/collateral/jurisdiction/credential/treasury/risk) + data flow (MTDS→MDPS→features→ML→strategy) + treasury/execution handoff + batch=paper=live mode parity + mock-data surface
-date: '2026-05-20'
+audited_scope:
+  strategy-service archetype logic across all 53 closed-set archetypes + 10 axes
+  (venue/share-class/leverage/instrument-type/collateral/jurisdiction/credential/treasury/risk) + data flow
+  (MTDS→MDPS→features→ML→strategy) + treasury/execution handoff + batch=paper=live mode parity + mock-data surface
+date: "2026-05-20"
 auditor: claude + operator
 parent_epic: strategy_master
 severity: P0
@@ -107,7 +127,7 @@ SSOT: `unified_api_contracts.internal.architecture_v2.enums.StrategyArchetype` (
 | 5. Instrument type taxonomy                             | `registry.taxonomy.InstrumentTypeFamily` (SPOT/PERP/FUTURE/OPTION/LENDING_POSITION/BORROW_POSITION/LP_POSITION/STAKED_POSITION/SPORTS_MARKET/PREDICTION_MARKET)                                                   | **GOOD**                                                                                                                                                                                                                                         | Add `RESTAKING_POSITION` (EigenLayer/Karak/Symbiotic); add `CREDIT_POSITION` (Morpho isolated); disambiguate on-chain vs off-chain perps |
 | 6. Collateral type + LTV + haircut per (venue, asset)   | `registry/venue_collateral.VENUE_COLLATERAL_MATRIX` (CeFi) + `defi_reserve_params.py` (DeFi)                                                                                                                      | **STALE FLAGS** — `STALENESS_FLAG_2026_05_07` on DERIBIT/BYBIT/OKX LST rows pending live-API probe; no Compound V3 haircuts; no GMX V2 per-market; Kraken spot missing                                                                           | Resolve staleness probes; unify lookup; add missing rows                                                                                 |
 | 7. **Jurisdiction restrictions per (venue, client_id)** | **MISSING** — only inline comment in `_cefi.py` L680 ("Odum Research UK is on Extended's restricted territory list")                                                                                              | **MISSING — P0 PRE-LIVE GAP**                                                                                                                                                                                                                    | Create `registry/venue_jurisdiction_restrictions.py`                                                                                     |
-| 8. Credential requirements per (venue, archetype)       | `capability_declarations/_cefi.py` per-venue `auth_scope` + `OperationDetail` + `signing_scheme` + `codex/04-architecture/interface-credential-convention.md`                                                     | **PARTIAL** — `config_secret_field` empty for most venues; no closed-set `archetype → required_credential_types`; Hyperliquid wallet-based (EIP-712 agent key) not "api_key"                                                                     | Populate `config_secret_field`; add per-archetype credential type table                                                                  |
+| 8. Credential requirements per (venue, archetype)       | `capability_declarations/_cefi.py` per-venue `auth_scope` + `OperationDetail` + `signing_scheme` + `/codex/04-architecture/interface-credential-convention.md`                                                    | **PARTIAL** — `config_secret_field` empty for most venues; no closed-set `archetype → required_credential_types`; Hyperliquid wallet-based (EIP-712 agent key) not "api_key"                                                                     | Populate `config_secret_field`; add per-archetype credential type table                                                                  |
 | 9. Treasury vs trading wallet split per asset_group     | `internal.domain.account.WalletRole` (TREASURY/TRADING/RESERVE) + `internal.domain.execution_service.transfer_types.WalletType` (FUNDING/TRADING/SPOT/UNIFIED/ON_CHAIN) + `VENUE_WALLET_CAPABILITIES` (CeFi-only) | **GOOD CeFi; PARTIAL DeFi (codex prose only); MISSING TradFi**                                                                                                                                                                                   | Extend `VENUE_WALLET_CAPABILITIES` to DeFi+TradFi; add `TREASURY_MODEL_BY_ASSET_GROUP` constant                                          |
 | 10. Risk parameters per archetype                       | `risk_rules/archetype.ARCHETYPE_RULES` (12 rules × 2 archetypes only) + venue/account/client/asset_group/global/strategy_family modules                                                                           | **THIN COVERAGE** — only `CARRY_STAKED_BASIS` + `ARBITRAGE_PRICE_DISPERSION` have full rule tuples; 51 archetypes uncovered; `ARCHETYPE_CONCENTRATION_MULTIPLIER` 10/53 seeded                                                                   | Extend `ARCHETYPE_RULES` to all 53 archetypes                                                                                            |
 
@@ -170,8 +190,8 @@ Consolidation (`strategy_repo_consolidation_2026_05_19.md`, 94% done, Phase 11 s
    instruction: patch `strategy_service.engine.strategies.v2.carry_and_yield.staked_basis.accepted_perp_collateral` to
    return `frozenset(["stETH"])`.
 2. **Funding-rate-dispersion `raise ValueError`** in per-pair emission loop — single stale venue → aborts all remaining
-   pairs. Violates `codex/04-architecture/shard-level-failure-isolation.md`. Should be `continue` with `logger.warning`.
-   Price-dispersion path does NOT have this bug.
+   pairs. Violates `/codex/04-architecture/shard-level-failure-isolation.md`. Should be `continue` with
+   `logger.warning`. Price-dispersion path does NOT have this bug.
 3. **`CARRY_RECURSIVE_BORROW_LENDING_ONLY` + `CARRY_BASIS_PERP_INV` silent stubs** — registered, `staking_yield_enabled`
    gate silently returns `[]`. Misconfigured client → "silent healthy" paper trade with no activity.
 4. **`SportsArbDutchingEngine` ARCHETYPE collision** — uses `ARBITRAGE_PRICE_DISPERSION` enum value; if ever added to
@@ -408,7 +428,7 @@ check at transaction time** — open gap.
 
 ### 0.9 Credentials + custody inventory
 
-Per `codex/04-architecture/interface-credential-convention.md`:
+Per `/codex/04-architecture/interface-credential-convention.md`:
 
 | Adapter type     | Factory signature                                                                                                                                  |
 | ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -599,31 +619,28 @@ means."** Strategy is market-neutral to its share class.
 
 **Per-archetype share class declarations** (from each codex `share_class:` config schema):
 
-| Archetype family                           | Primary share class | Permitted others                                        | Notes                                                                                                               |
-| ------------------------------------------ | ------------------- | ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- | ---- |
-| `CARRY_STAKED_BASIS`                       | USDC                | USDT (Bybit slot)                                       | Operator axiom: always USD\* (USD-neutral). ETH share class would be a different archetype (`YIELD_STAKING_SIMPLE`) |
-| `CARRY_RECURSIVE_STAKED`                   | not declared        | ETH / SOL / USDC                                        | ETH share class → no perp hedge (ETH-neutral by construction); USDC → perp hedge required                           |
-| `CARRY_RECURSIVE_BORROW_LENDING_ONLY`      | not declared        | USDC / USD                                              | Market-neutral by construction (rate spread)                                                                        |
-| `CARRY_BASIS_PERP` / `_INV`                | USDT                | USDC, USD                                               | CeFi perp-native                                                                                                    |
-| `CARRY_BASIS_DATED` / `_INV`               | USD                 | USDT, USDC                                              | Doc declares `share_class: USD`                                                                                     |
-| `YIELD_STAKING_SIMPLE`                     | not declared        | ETH / SOL / USDC                                        | Passive hold — natural native-token share class                                                                     |
-| `YIELD_ROTATION_LENDING`                   | USDC                | USDT, USD                                               | —                                                                                                                   |
-| `ARBITRAGE_PRICE_DISPERSION`               | USD                 | USDT, USDC, GBP                                         | Sports cross-book slots show `gbp` (e.g. `...epl-gbp-v2`); always USD\*                                             |
-| `ARBITRAGE_CROSS_DOMAIN_EVENT`             | USD\*               | USD, GBP, USDC                                          | "Always fiat-denominated to match binary payoff"                                                                    |
-| `LIQUIDATION_CAPTURE`                      | USD                 | USDC, USDT                                              | —                                                                                                                   |
-| All `MEV_*`                                | USDC                | depends on chain (ETH for Ethereum MEV, SOL for Solana) | —                                                                                                                   |
-| `MARKET_MAKING_EVENT_SETTLED`              | GBP                 | USD, EUR                                                | Sports books settle GBP                                                                                             |
-| `MARKET_MAKING_PREDICTION`                 | USDC                | —                                                       | Polymarket/Kalshi native                                                                                            |
-| `MARKET_MAKING_*` (4 CeFi variants)        | USDT or USD         | USDC                                                    | —                                                                                                                   |
-| `DEFI_LP_*`                                | USDC                | USDT, ETH                                               | DeFi protocols primary in USDC                                                                                      |
-| `EVENT_DRIVEN`                             | USDT                | USDC                                                    | —                                                                                                                   |
-| All `VOL_*` (CeFi options)                 | USDT                | USDC, USD                                               | LEAPS/TERM_STRUCTURE/DISPERSION: `USDT                                                                              | USD` |
-| `STAT_ARB_PAIRS_FIXED` / `CROSS_SECTIONAL` | USD                 | USDT                                                    | —                                                                                                                   |
-| `PORTFOLIO_*`                              | USD                 | any                                                     | Portfolio layer converts each sub-strategy NAV to reporting currency                                                |
-| `ML_DIRECTIONAL_CONTINUOUS`                | USDT or ETH or USD  | any                                                     | Doc states "BANKROLL in share_class currency (e.g., USDT, ETH, USD)" — currency-agnostic                            |
-| `ML_DIRECTIONAL_EVENT_SETTLED`             | USD or GBP or EUR   | USDC                                                    | —                                                                                                                   |
-| `RULES_DIRECTIONAL_CONTINUOUS`             | USD                 | USDT, ETH                                               | —                                                                                                                   |
-| `RULES_DIRECTIONAL_EVENT_SETTLED`          | USD                 | GBP                                                     | —                                                                                                                   |
+| Archetype family | Primary share class | Permitted others | Notes | | ------------------------------------------ |
+------------------- | ------------------------------------------------------- |
+------------------------------------------------------------------------------------------------------------------- |
+---- | | `CARRY_STAKED_BASIS` | USDC | USDT (Bybit slot) | Operator axiom: always USD\* (USD-neutral). ETH share class
+would be a different archetype (`YIELD_STAKING_SIMPLE`) | | `CARRY_RECURSIVE_STAKED` | not declared | ETH / SOL / USDC |
+ETH share class → no perp hedge (ETH-neutral by construction); USDC → perp hedge required | |
+`CARRY_RECURSIVE_BORROW_LENDING_ONLY` | not declared | USDC / USD | Market-neutral by construction (rate spread) | |
+`CARRY_BASIS_PERP` / `_INV` | USDT | USDC, USD | CeFi perp-native | | `CARRY_BASIS_DATED` / `_INV` | USD | USDT, USDC |
+Doc declares `share_class: USD` | | `YIELD_STAKING_SIMPLE` | not declared | ETH / SOL / USDC | Passive hold — natural
+native-token share class | | `YIELD_ROTATION_LENDING` | USDC | USDT, USD | — | | `ARBITRAGE_PRICE_DISPERSION` | USD |
+USDT, USDC, GBP | Sports cross-book slots show `gbp` (e.g. `...epl-gbp-v2`); always USD\* | |
+`ARBITRAGE_CROSS_DOMAIN_EVENT` | USD\* | USD, GBP, USDC | "Always fiat-denominated to match binary payoff" | |
+`LIQUIDATION_CAPTURE` | USD | USDC, USDT | — | | All `MEV_*` | USDC | depends on chain (ETH for Ethereum MEV, SOL for
+Solana) | — | | `MARKET_MAKING_EVENT_SETTLED` | GBP | USD, EUR | Sports books settle GBP | | `MARKET_MAKING_PREDICTION`
+| USDC | — | Polymarket/Kalshi native | | `MARKET_MAKING_*` (4 CeFi variants) | USDT or USD | USDC | — | | `DEFI_LP_*` |
+USDC | USDT, ETH | DeFi protocols primary in USDC | | `EVENT_DRIVEN` | USDT | USDC | — | | All `VOL_*` (CeFi options) |
+USDT | USDC, USD | LEAPS/TERM_STRUCTURE/DISPERSION:
+`USDT                                                                              | USD` | | `STAT_ARB_PAIRS_FIXED` /
+`CROSS_SECTIONAL` | USD | USDT | — | | `PORTFOLIO_*` | USD | any | Portfolio layer converts each sub-strategy NAV to
+reporting currency | | `ML_DIRECTIONAL_CONTINUOUS` | USDT or ETH or USD | any | Doc states "BANKROLL in share_class
+currency (e.g., USDT, ETH, USD)" — currency-agnostic | | `ML_DIRECTIONAL_EVENT_SETTLED` | USD or GBP or EUR | USDC | — |
+| `RULES_DIRECTIONAL_CONTINUOUS` | USD | USDT, ETH | — | | `RULES_DIRECTIONAL_EVENT_SETTLED` | USD | GBP | — |
 
 **Share class enum collision** (P1 — affects sports + TradFi tracks):
 
@@ -890,7 +907,7 @@ value + descriptor + engine class + codex doc).
 | `ARCHETYPE_CONCENTRATION_MULTIPLIER`                           | Unknown archetype → silently gets 1.0 | **NOT ENFORCED**                                          |
 | `ARCHETYPE_RULES` coverage                                     | New archetype with no risk rules      | **NOT ENFORCED** — no test requires ≥1 rule per archetype |
 | `_BUILDERS_BY_ARCHETYPE` `KeyError`                            | Archetype with no catalog builder     | Runtime — universe load                                   |
-| `AllocatorArchetype` ↔ archetype binding                      | New archetype with no rank allocator  | **NOT ENFORCED** — falls back to generic                  |
+| `AllocatorArchetype` ↔ archetype binding                       | New archetype with no rank allocator  | **NOT ENFORCED** — falls back to generic                  |
 | Codex doc existence                                            | Missing codex doc                     | **NOT ENFORCED**                                          |
 
 ### 0.17 Config architecture — hot-reload vs restart + hardcoded value inventory (operator: "any hardcoded values outside config")
@@ -1435,21 +1452,22 @@ Beyond per-archetype audits, surface workspace-wide patterns:
 
 Codex doc paths this audit will touch:
 
-- `codex/09-strategy/architecture-v2/README.md` — add §0 Map link
-- `codex/09-strategy/architecture-v2/category-instrument-coverage.md` — verify completeness vs 53-archetype taxonomy
-- `codex/09-strategy/architecture-v2/cross-cutting/strategy-execution-runtime.md` (NEW) — decision loop SSOT per
+- `/codex/09-strategy/architecture-v2/README.md` — add §0 Map link
+- `/codex/09-strategy/architecture-v2/category-instrument-coverage.md` — verify completeness vs 53-archetype taxonomy
+- `/codex/09-strategy/architecture-v2/cross-cutting/strategy-execution-runtime.md` (NEW) — decision loop SSOT per
   archetype
-- `codex/09-strategy/architecture-v2/cross-cutting/universe-enumeration-contract.md` (NEW) — features-service ×
+- `/codex/09-strategy/architecture-v2/cross-cutting/universe-enumeration-contract.md` (NEW) — features-service ×
   instruments-service × strategy-catalog
-- `codex/09-strategy/architecture-v2/cross-cutting/allocator-pipeline-contract.md` (NEW) — trading-agent-service →
+- `/codex/09-strategy/architecture-v2/cross-cutting/allocator-pipeline-contract.md` (NEW) — trading-agent-service →
   strategy-service post-cutover production logic
-- `codex/09-strategy/architecture-v2/cross-cutting/treasury-trading-wallet-invariant.md` (NEW) — audit-verifiable
+- `/codex/09-strategy/architecture-v2/cross-cutting/treasury-trading-wallet-invariant.md` (NEW) — audit-verifiable
   wallet/signing/exposure invariant
-- `codex/09-strategy/architecture-v2/cross-cutting/instrument-type-leverage-matrix.md` (NEW) —
+- `/codex/09-strategy/architecture-v2/cross-cutting/instrument-type-leverage-matrix.md` (NEW) —
   `archetype × asset_group × instrument_type → (venue, max_leverage, ...)` table
-- `codex/04-architecture/share-class-architecture.md` — un-stale (currently lists 3 share classes; v2 axes doc lists 8)
-- `codex/09-strategy/architecture-v2/uac-registry-gaps.md` — resolve 12 unactioned proposals or downgrade to non-binding
-- `codex/09-strategy/strategy-summary.md` — remove `vscode-webview://` URL artifact
+- `/codex/04-architecture/share-class-architecture.md` — un-stale (currently lists 3 share classes; v2 axes doc lists 8)
+- `/codex/09-strategy/architecture-v2/uac-registry-gaps.md` — resolve 12 unactioned proposals or downgrade to
+  non-binding
+- `/codex/09-strategy/strategy-summary.md` — remove `vscode-webview://` URL artifact
 
 ## Sequencing — when this audit can run (revised 2026-05-21)
 
@@ -1477,7 +1495,7 @@ Codex doc paths this audit will touch:
 ## Foundation-gate alignment
 
 This audit is **layer 6** (strategy + execution) per
-`codex/11-project-management/foundation-completion-gate-discipline.md`. Prereqs:
+`/codex/11-project-management/foundation-completion-gate-discipline.md`. Prereqs:
 
 - Layer 1 GREEN (IS hardening — C0/C1/C2/C3 audits)
 - Layer 5 GREEN (features → strategy contract — C6 audit)
@@ -1502,7 +1520,7 @@ bugs.
 
 ## Ack triggers (when this issue archives)
 
-Per `codex/11-project-management/issue-doc-lifecycle.md`, this issue archives when:
+Per `/codex/11-project-management/issue-doc-lifecycle.md`, this issue archives when:
 
 1. Per-archetype audit docs land in `plans/audit/archetypes/` (~13-28 docs depending on scope cut; 23-dim per archetype)
 2. Cross-cutting findings doc lands
@@ -1560,25 +1578,24 @@ Key paths cited throughout this audit (for fast navigation):
 
 **Codex SSOTs**:
 
-- [codex/09-strategy/architecture-v2/](../../../unified-trading-pm/codex/09-strategy/architecture-v2/) — strategy
-  architecture v2
-- [codex/09-strategy/architecture-v2/archetypes/](../../../unified-trading-pm/codex/09-strategy/architecture-v2/archetypes/)
-  — per-archetype design SSOTs (28+ docs)
-- [codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md](../../../unified-trading-pm/codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md)
+- [codex/09-strategy/architecture-v2/](/codex/09-strategy/architecture-v2/) — strategy architecture v2
+- [codex/09-strategy/architecture-v2/archetypes/](/codex/09-strategy/architecture-v2/archetypes/) — per-archetype design
+  SSOTs (28+ docs)
+- [/codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md](/codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md)
   — `PnLAttributionRow` + factor enum
-- [codex/09-strategy/architecture-v2/cross-cutting/portfolio-allocator.md](../../../unified-trading-pm/codex/09-strategy/architecture-v2/cross-cutting/portfolio-allocator.md)
+- [/codex/09-strategy/architecture-v2/cross-cutting/portfolio-allocator.md](/codex/09-strategy/architecture-v2/cross-cutting/portfolio-allocator.md)
   — 8 allocator archetypes
-- [codex/09-strategy/architecture-v2/axes/share-class.md](../../../unified-trading-pm/codex/09-strategy/architecture-v2/axes/share-class.md)
-- [codex/04-architecture/promote-workflow-architecture.md](../../../unified-trading-pm/codex/04-architecture/promote-workflow-architecture.md)
-- [codex/04-architecture/custody-providers.md](../../../unified-trading-pm/codex/04-architecture/custody-providers.md)
-- [codex/04-architecture/interface-credential-convention.md](../../../unified-trading-pm/codex/04-architecture/interface-credential-convention.md)
-- [codex/04-architecture/client-funds-isolation.md](../../../unified-trading-pm/codex/04-architecture/client-funds-isolation.md)
-- [codex/04-architecture/treasury-custody-flow.md](../../../unified-trading-pm/codex/04-architecture/treasury-custody-flow.md)
-- [codex/04-architecture/wallet-hierarchy-and-capital-flow.md](../../../unified-trading-pm/codex/04-architecture/wallet-hierarchy-and-capital-flow.md)
-- [codex/04-architecture/defi-execution-overview.md](../../../unified-trading-pm/codex/04-architecture/defi-execution-overview.md)
-- [codex/04-architecture/flash-loan-receiver.md](../../../unified-trading-pm/codex/04-architecture/flash-loan-receiver.md)
-- [codex/04-architecture/trading-agent-service-directive-pipeline.md](../../../unified-trading-pm/codex/04-architecture/trading-agent-service-directive-pipeline.md)
-- [codex/09-strategy/operational/cli-promote-paths.md](../../../unified-trading-pm/codex/09-strategy/operational/cli-promote-paths.md)
-- [codex/04-architecture/shard-level-failure-isolation.md](../../../unified-trading-pm/codex/04-architecture/shard-level-failure-isolation.md)
+- [/codex/09-strategy/architecture-v2/axes/share-class.md](/codex/09-strategy/architecture-v2/axes/share-class.md)
+- [/codex/04-architecture/promote-workflow-architecture.md](/codex/04-architecture/promote-workflow-architecture.md)
+- [/codex/04-architecture/custody-providers.md](/codex/04-architecture/custody-providers.md)
+- [/codex/04-architecture/interface-credential-convention.md](/codex/04-architecture/interface-credential-convention.md)
+- [/codex/04-architecture/client-funds-isolation.md](/codex/04-architecture/client-funds-isolation.md)
+- [/codex/04-architecture/treasury-custody-flow.md](/codex/04-architecture/treasury-custody-flow.md)
+- [/codex/04-architecture/wallet-hierarchy-and-capital-flow.md](/codex/04-architecture/wallet-hierarchy-and-capital-flow.md)
+- [/codex/04-architecture/defi-execution-overview.md](/codex/04-architecture/defi-execution-overview.md)
+- [/codex/04-architecture/flash-loan-receiver.md](/codex/04-architecture/flash-loan-receiver.md)
+- [/codex/04-architecture/trading-agent-service-directive-pipeline.md](/codex/04-architecture/trading-agent-service-directive-pipeline.md)
+- [/codex/09-strategy/operational/cli-promote-paths.md](/codex/09-strategy/operational/cli-promote-paths.md)
+- [/codex/04-architecture/shard-level-failure-isolation.md](/codex/04-architecture/shard-level-failure-isolation.md)
 
 **Plans (spine — 10 most important)**: see §"Active plans inventory" above.

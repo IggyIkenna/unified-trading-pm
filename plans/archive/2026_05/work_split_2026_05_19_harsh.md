@@ -17,7 +17,7 @@ estimate_class: infra
 estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 2.4
 effective_concurrent_slots: 8
-estimate_calibration_note: 'Harsh side owns ~116 cal AI-days today (1/2 of Ikenna''s 231 = 2:1 ratio). Mix of
+estimate_calibration_note: "Harsh side owns ~116 cal AI-days today (1/2 of Ikenna's 231 = 2:1 ratio). Mix of
 
   mechanical sweeps, infra runs, and plan close-outs. All heavy decision-bearing cutover
 
@@ -27,7 +27,7 @@ estimate_calibration_note: 'Harsh side owns ~116 cal AI-days today (1/2 of Ikenn
 
   Harsh slot — confirm still running before all else.
 
-  '
+  "
 parent_epic: orchestrator_master
 priority: P1
 ---
@@ -152,13 +152,14 @@ Read the plan for Phases 3–6 open items. Focus on DeFi-first provisioning + rs
          § B.2 with full AWS envelope-encrypt runbook (B.2.1–B.2.6 including `aws kms encrypt` + Secrets Manager store +
          WalletProvisioningConfig ARN format). (infra 0.8×, ~2 = 1.6 cal)
 6. - [x] ✅ **GAP-2.4.A** — Verified and fixed aws_migration bucket naming drift. deployment-service@8ea4be7: (1)
-         setup-defi-buckets.sh used ${DEPLOYMENT_ENV} (long: 'prod') but cloud-providers.yaml uses
-         ${DEPLOYMENT_ENV_SHORT} ('prd') — resolver returns 'prd', bucket created with 'prod' → 404 on every write.
-         Fixed by adding ENV_SHORT mapping (prod→prd / staging→stg / development→dev) and using ${ENV_SHORT} in all 10
-         bucket templates. (2) pnl/positions/risk-store-defi: script had unified-trading- prefix, yaml+GCP do not —
-         fixed by removing prefix to match SSOT. Resolver reads yaml correctly; provisioning script was the source of
-         drift. Buckets not yet created (GAP-2.4.B pending) — fix lands before --apply run. (research 1.2×, ~1 = 1.2
-         cal)
+         setup-defi-buckets.sh used
+         ${DEPLOYMENT_ENV} (long: 'prod') but cloud-providers.yaml uses
+         ${DEPLOYMENT_ENV_SHORT} ('prd') —
+         resolver returns 'prd', bucket created with 'prod' → 404 on every write. Fixed by adding ENV_SHORT mapping
+         (prod→prd / staging→stg / development→dev) and using ${ENV_SHORT} in all 10 bucket templates. (2)
+         pnl/positions/risk-store-defi: script had unified-trading- prefix, yaml+GCP do not — fixed by removing prefix
+         to match SSOT. Resolver reads yaml correctly; provisioning script was the source of drift. Buckets not yet
+         created (GAP-2.4.B pending) — fix lands before --apply run. (research 1.2×, ~1 = 1.2 cal)
 7. - [x] ✅ **GAP-2.4.B** — provision-aws-buckets.sh executed (slot-1 main, ikenna side, 2026-05-19): 30 buckets created
          across 3 envs (prd/stg/dev × 10 DeFi buckets). `Grand total: existing=0, created=30, failed=0`. (infra 0.8×, ~4
          = 3.2 cal)
@@ -399,7 +400,7 @@ clone.
          quality-gates.yml added, deploy-staging/prod scoped out. agent-orchestrator@5294de1. (backfilled 2026-05-20)
 
 6. - [x] ✅ **P6 — Codex SSOT + CLAUDE.md updates** — plan status: done. New codex doc at
-         codex/04-architecture/agent-orchestrator-overview.md, local-dev.md updated, CLAUDE.md key repo map updated,
+         /codex/04-architecture/agent-orchestrator-overview.md, local-dev.md updated, CLAUDE.md key repo map updated,
          README+OPERATIONS.md updated. PM@1277a0cb. (backfilled 2026-05-20)
 
 7. - [x] ✅ **Plan flips** — this commit. (slot 4 2026-05-20)
@@ -436,7 +437,7 @@ must exist). P1 code work can start immediately.
          confirmed HTTP 200. Issue filed for revision 00012 exit 3 (unrelated transient; 00011-mtg unaffected).
          (agent-orchestrator@`07e42e2` 2026-05-21; backfilled by ikenna slot-1 main 2026-05-21)
 
-5. - [x] ✅ **P4 — Codex update** — new `codex/05-infrastructure/agent-orchestrator-slack-notifications.md` created;
+5. - [x] ✅ **P4 — Codex update** — new `/codex/05-infrastructure/agent-orchestrator-slack-notifications.md` created;
          overview Slack section replaced with 2-line pointer. (slot 4 2026-05-20)
 
 6. - [x] ✅ **Plan flips** — this commit. (slot 4 2026-05-20)

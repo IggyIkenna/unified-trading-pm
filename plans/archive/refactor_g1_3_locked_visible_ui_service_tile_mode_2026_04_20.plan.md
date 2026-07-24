@@ -10,12 +10,18 @@ repos: [unified-trading-pm, unified-trading-system-ui]
 scope: [engineer, admin]
 tags: []
 related: []
-created: '2026-04-20'
+created: "2026-04-20"
 priority: P0
 owner: agent
 locked_by: live-defi-rollout
 locked_since: 2026-04-20
-depends_on: [codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md §1.3, codex/14-playbooks/_ssot-rules/06-show-dont-show-discipline.md, codex/14-customer-journeys/playbook-concepts/visibility-slicing.md, codex/14-playbooks/demo-ops/demo-restriction-profiles.md]
+depends_on:
+  [
+    /codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md §1.3,
+    /codex/14-playbooks/_ssot-rules/06-show-dont-show-discipline.md,
+    /codex/14-customer-journeys/playbook-concepts/visibility-slicing.md,
+    /codex/14-playbooks/demo-ops/demo-restriction-profiles.md,
+  ]
 ---
 
 ## Deferred work — migrated to:
@@ -49,16 +55,16 @@ session).
 - **Sibling Wave A plans:** refactor*g1*{1,5,9,12,14}\_2026_04_20.md
 - **Wave D consumer:** refactor_g1_7_restriction_profile_engine — the engine's output maps to `lockState` per tile.
 - **Rules cited:** `_ssot-rules/06-show-dont-show-discipline.md` (LOCKED-VISIBLE vs HIDDEN-ENTIRELY section)
-- **Cross-cutting:** `codex/14-customer-journeys/playbook-concepts/visibility-slicing.md`
-- **Demo-ops:** `codex/14-playbooks/demo-ops/demo-restriction-profiles.md`
+- **Cross-cutting:** `/codex/14-customer-journeys/playbook-concepts/visibility-slicing.md`
+- **Demo-ops:** `/codex/14-playbooks/demo-ops/demo-restriction-profiles.md`
 
 ## Mandatory read-set
 
-1. `codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md` §1.3
-2. `codex/14-playbooks/_ssot-rules/06-show-dont-show-discipline.md` (full — especially LOCKED-VISIBLE vs HIDDEN-ENTIRELY
-   section)
-3. `codex/14-customer-journeys/playbook-concepts/visibility-slicing.md`
-4. `codex/14-playbooks/demo-ops/demo-restriction-profiles.md`
+1. `/codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md` §1.3
+2. `/codex/14-playbooks/_ssot-rules/06-show-dont-show-discipline.md` (full — especially LOCKED-VISIBLE vs
+   HIDDEN-ENTIRELY section)
+3. `/codex/14-customer-journeys/playbook-concepts/visibility-slicing.md`
+4. `/codex/14-playbooks/demo-ops/demo-restriction-profiles.md`
 5. `unified-trading-system-ui/components/shell/service-tabs.tsx`
 6. Existing ServiceTile / service-card component (enumerate path in Phase 3A; today likely under `components/services/`
    or `components/shell/`)
@@ -209,9 +215,9 @@ Research. Wave A; parallelisable with 1.1, 1.5, 1.9, 1.12, 1.14-markdown.
 ```
 cd /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm
 git checkout live-defi-rollout && git pull
-ls codex/14-playbooks/_ssot-rules/06-show-dont-show-discipline.md
-ls codex/14-customer-journeys/playbook-concepts/visibility-slicing.md
-ls codex/14-playbooks/demo-ops/demo-restriction-profiles.md
+ls /codex/14-playbooks/_ssot-rules/06-show-dont-show-discipline.md
+ls /codex/14-customer-journeys/playbook-concepts/visibility-slicing.md
+ls /codex/14-playbooks/demo-ops/demo-restriction-profiles.md
 ls ../unified-trading-system-ui/components/architecture-v2/LockState.tsx
 ```
 

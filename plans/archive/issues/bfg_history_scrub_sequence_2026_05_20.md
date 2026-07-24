@@ -9,8 +9,12 @@ stage: [meta]
 repos: [execution-service, instruments-service, market-tick-data-service, strategy-service, unified-trading-library]
 scope: [engineer, admin]
 tags: []
-related: [gcp_sa_private_key_in_git_history_execution_service_2026_05_15.md (parent issue), github_pat_in_instruments_service_env_2026_05_15.md (parent issue)]
-created: '2026-05-20'
+related:
+  [
+    /plans/archive/issues/gcp_sa_private_key_in_git_history_execution_service_2026_05_15.md (parent issue),
+    /plans/archive/issues/github_pat_in_instruments_service_env_2026_05_15.md (parent issue),
+  ]
+created: "2026-05-20"
 locked_by: live-defi-rollout
 locked_since: 2026-05-20
 priority: P3
@@ -315,8 +319,8 @@ into this plan body before phase 5 close.
 
 - [ ] No new codex doc required — this is a one-time hygiene operation. Reference to BFG mechanics already lives
       implicitly in CLAUDE.md hard-stop list. If post-scrub we identify a recurring gitleaks-then-rotate-then-scrub
-      pattern worth codifying, file successor plan: `codex/05-infrastructure/credential-leak-response-runbook.md` (named
-      successor — not in scope here).
+      pattern worth codifying, file successor plan: `/codex/05-infrastructure/credential-leak-response-runbook.md`
+      (named successor — not in scope here).
 
 ---
 

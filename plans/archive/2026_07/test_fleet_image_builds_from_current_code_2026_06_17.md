@@ -557,5 +557,5 @@ _(append each build failure + fix here as we go — this IS the plan's progress 
 - Build pipeline: service `cloudbuild.yaml` canonical template (STEP 5.22 canary services); UTL `cloudbuild.yaml`;
   FROM-digest ratchet (CLAUDE.md § Dependencies+builds); `quickmerge.sh` `--build` (Gap 5).
 - Tarball path: `deployment-service/scripts/vm/create-code-tarballs.sh`;
-  `codex/05-infrastructure/vm-tarball-deployment.md`.
-- VM/image deploy topology: `codex/04-architecture/runtime-deployment-topology.md`.
+  `/codex/05-infrastructure/vm-tarball-deployment.md`.
+- VM/image deploy topology: `/codex/04-architecture/runtime-deployment-topology.md`.

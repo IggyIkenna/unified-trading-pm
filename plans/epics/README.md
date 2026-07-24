@@ -26,7 +26,7 @@ name: epics-readme
 > [`agent_operating_framework_master.md:129`](agent_operating_framework_master.md) (2026-06-24) — _"`assigned_vm` is a
 > mandatory **per-plan** field; epic-to-VM delegation is DROPPED for matching"_; and (ii) the single-VM,
 > role-based-dispatch architecture (2026-06-27; central `planning` VM + role dispatch, no per-epic VMs) per
-> `cursor-configs/CLAUDE.md` and `codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`. The epic-level
+> `cursor-configs/CLAUDE.md` and `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`. The epic-level
 > `assigned_vm`/VM-topology content below is retained for archaeology only — do not dispatch or match against it.
 
 **This file is the SSOT** for what epics are, how they relate to audits + active plans, how they map to VMs, and the
@@ -40,7 +40,7 @@ assigned to exactly one epic via `parent_epic:` frontmatter. **No orphan active 
 the plan doesn't belong in `plans/active/`. Epics are everlasting: they have no deadline; there's always more work as
 audits surface gaps.
 
-**The model (SSOT: [`codex/12-agent-workflow/work-philosophy.md`](../../codex/12-agent-workflow/work-philosophy.md)).**
+**The model (SSOT: [`/codex/12-agent-workflow/work-philosophy.md`](/codex/12-agent-workflow/work-philosophy.md)).**
 Codex docs are the **target state**, the codebase is the **current state**, and an epic is the **gap** between them. The
 gap is **bidirectional**: most plans _advance the code toward codex_, but some _correct a stale codex toward the code_
 (codex was written day-one; correct it incrementally, never as an up-front rewrite). A **plan** is one small step that
@@ -142,7 +142,7 @@ priority: P0|P1|P2|P3
 status: draft|active|blocked|paused|complete|cancelled # draft ⇒ orchestrator does NOT ingest (WIP); flip to active when finalised
 estimate_class: refactor|design|infra|brand-new|research
 estimate_baseline_ai_days: <N>
-estimate_calibrated_ai_days: <N> # baseline × class multiplier per codex/08-workflows/estimation-calibration.md
+estimate_calibrated_ai_days: <N> # baseline × class multiplier per /codex/08-workflows/estimation-calibration.md
 locked_by: live-defi-rollout
 locked_since: YYYY-MM-DD
 related_plans:
@@ -339,15 +339,15 @@ This file is the SSOT. Other docs point here:
 
 - [`../../cursor-configs/CLAUDE.md`](../../cursor-configs/CLAUDE.md) — workspace project instructions; pointers from
   "Plan Format + Filename Convention" + "Daily Work-Split Process" sections
-- [`../../codex/11-project-management/epic-execution-with-sub-agents.md`](../../codex/11-project-management/epic-execution-with-sub-agents.md)
+- [`/codex/11-project-management/epic-execution-with-sub-agents.md`](/codex/11-project-management/epic-execution-with-sub-agents.md)
   — codex pointer
-- [`../../codex/11-project-management/README.md`](../../codex/11-project-management/README.md) — codex section index
-  with epic registry
+- [`/codex/11-project-management/README.md`](/codex/11-project-management/README.md) — codex section index with epic
+  registry
 - [`../PLAN_FORMAT.md`](../PLAN_FORMAT.md) — plan format schema (references epic frontmatter rules here)
-- [`../../codex/11-project-management/active-plan-inventory-tracker.md`](../../codex/11-project-management/active-plan-inventory-tracker.md)
+- [`/codex/11-project-management/active-plan-inventory-tracker.md`](/codex/11-project-management/active-plan-inventory-tracker.md)
   — orphan detection logic
-- [`../../codex/08-workflows/estimation-calibration.md`](../../codex/08-workflows/estimation-calibration.md) —
-  epic-exempt estimation rule
+- [`/codex/08-workflows/estimation-calibration.md`](/codex/08-workflows/estimation-calibration.md) — epic-exempt
+  estimation rule
 
 If you change this file, audit the above for staleness. If you change any of the above, update this file too.
 

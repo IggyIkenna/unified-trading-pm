@@ -29,7 +29,7 @@ priority: P2
 > for the disaster-recovery gap audit at
 > [`../../audit/results/observability_disaster_recovery_audit_2026_05_23.md`](../../audit/results/observability_disaster_recovery_audit_2026_05_23.md).
 > The audit spawned **11 active plans** under `parent_epic: observability_master` totalling ~86 cal AI-days. Per the
-> Issue-Doc Lifecycle Discipline HARD RULE (`codex/11-project-management/issue-doc-lifecycle.md`), this issue doc
+> Issue-Doc Lifecycle Discipline HARD RULE (`/codex/11-project-management/issue-doc-lifecycle.md`), this issue doc
 > archives once all 11 plans flip to `status: complete`.
 >
 > **Spawned plans** (all carry `parent_epic: observability_master`):
@@ -59,10 +59,10 @@ priority: P2
 >
 > **New codex SSOTs** (2026-05-23):
 >
-> - [`codex/04-architecture/incident-gateway-state-machine.md`](../../../codex/04-architecture/incident-gateway-state-machine.md)
-> - [`codex/04-architecture/recovery-defence-in-depth-layers.md`](../../../codex/04-architecture/recovery-defence-in-depth-layers.md)
-> - [`codex/05-infrastructure/physical-pager-layer.md`](../../../codex/05-infrastructure/physical-pager-layer.md)
-> - [`codex/15-runbooks/alerting/audit-acknowledgement-flow.md`](../../../codex/15-runbooks/alerting/audit-acknowledgement-flow.md)
+> - [`/codex/04-architecture/incident-gateway-state-machine.md`](/codex/04-architecture/incident-gateway-state-machine.md)
+> - [`/codex/04-architecture/recovery-defence-in-depth-layers.md`](/codex/04-architecture/recovery-defence-in-depth-layers.md)
+> - [`/codex/05-infrastructure/physical-pager-layer.md`](/codex/05-infrastructure/physical-pager-layer.md)
+> - [`/codex/15-runbooks/alerting/audit-acknowledgement-flow.md`](/codex/15-runbooks/alerting/audit-acknowledgement-flow.md)
 >
 > **Audit instructions extended** (2026-05-23):
 > [`plans/audit/instructions/observability_master_audit_instructions.md`](../../audit/instructions/observability_master_audit_instructions.md)

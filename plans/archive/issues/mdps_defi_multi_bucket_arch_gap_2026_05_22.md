@@ -18,8 +18,8 @@ locked_since: 2026-05-21
 ---
 
 > **✅ ARCHIVED 2026-05-27 `[unlock-plan]`** — RESOLVED — Option A (features-onchain raw bypass) confirmed;
-> `codex/02-data/defi-data-pipeline.md §7.1` documents the model; 3 unnecessary MDPS VMs deleted. Doc itself says 'close
-> this issue'.
+> `/codex/02-data/defi-data-pipeline.md §7.1` documents the model; 3 unnecessary MDPS VMs deleted. Doc itself says
+> 'close this issue'.
 >
 > Operator-authorized archival 2026-05-27 (issue-doc lifecycle: work shipped or fully captured in a named plan). Lock
 > `live-defi-rollout` removed via `[unlock-plan]` in the archival commit.
@@ -81,7 +81,7 @@ directly from MTDS raw_tick_data."_
   `dex_swaps` data (which IS an MDPS-processed type)
 - vault_share_price in main DeFi bucket is also a bypass type; MDPS will skip/write empty for it
 
-**Codex update needed**: document DeFi data flow in `codex/04-architecture/defi-execution-overview.md` or
+**Codex update needed**: document DeFi data flow in `/codex/04-architecture/defi-execution-overview.md` or
 `codex/02-data/` — "DeFi bypass types" section. Assign to features-service codex update pass.
 
 **Status: RESOLVED — no operator decision needed.** Arch gap is expected design; 3 VMs deleted; main DeFi MDPS VM

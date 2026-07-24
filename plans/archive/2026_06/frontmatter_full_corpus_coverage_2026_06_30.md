@@ -1,7 +1,11 @@
 ---
 doc_type: plan
 title: Full-corpus frontmatter coverage — seed + enum-normalize every live doc_type to the schema
-summary: Extend the mechanical frontmatter rollout from plans/active to the WHOLE live corpus (codex, issues, epics, audit-results, audit-instructions, cursor-rules, agent-roles) AND add the enum-normalization pass the bare seeder cannot do (cross-asset->cross-cutting, data-ingestion->data, ...), so docspec.py is HARD-green on every non-exempt live doc. summary/tags/authoritative_for content stays present-but-empty (deferred content pass).
+summary:
+  Extend the mechanical frontmatter rollout from plans/active to the WHOLE live corpus (codex, issues, epics,
+  audit-results, audit-instructions, cursor-rules, agent-roles) AND add the enum-normalization pass the bare seeder
+  cannot do (cross-asset->cross-cutting, data-ingestion->data, ...), so docspec.py is HARD-green on every non-exempt
+  live doc. summary/tags/authoritative_for content stays present-but-empty (deferred content pass).
 status: complete
 nature: process
 asset_group: [meta]
@@ -9,7 +13,13 @@ stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]
 tags: [frontmatter, docspec, grep-native, enum-normalization, doc-governance, full-corpus]
-related: [plans_active_frontmatter_mechanical_rollout_2026_06_27.md, doc_frontmatter_schema_and_validator_2026_06_24.md, ../epics/agent_operating_framework_master.md, ../../codex/11-project-management/doc-frontmatter-schema.md]
+related:
+  [
+    /plans/archive/plans_active_frontmatter_mechanical_rollout_2026_06_27.md,
+    /plans/archive/2026_06/doc_frontmatter_schema_and_validator_2026_06_24.md,
+    ../epics/agent_operating_framework_master.md,
+    /codex/11-project-management/doc-frontmatter-schema.md,
+  ]
 created: 2026-06-30
 parent_epic: agent_operating_framework_master
 assigned_vm: NA
@@ -24,7 +34,11 @@ locked_since: NA
 supersedes:
 superseded_by:
 depends_on: [plans_active_frontmatter_mechanical_rollout_2026_06_27]
-source: [operator request 2026-06-30 — roll the frontmatter coverage out across ALL live doc_types while there is no collision risk; reuses scripts/docs/seed_frontmatter.py + docspec.py shipped by the W2/W3 plans]
+source:
+  [
+    operator request 2026-06-30 — roll the frontmatter coverage out across ALL live doc_types while there is no
+    collision risk; reuses scripts/docs/seed_frontmatter.py + docspec.py shipped by the W2/W3 plans,
+  ]
 assigned_role: infra-engineer
 drift_direction: advance-code
 ---
@@ -58,8 +72,8 @@ Verification target per tree: `python3 scripts/docs/docspec.py --check <glob>` e
 
 ## Codex SSOTs
 
-- [`codex/11-project-management/doc-frontmatter-schema.md`](../../codex/11-project-management/doc-frontmatter-schema.md)
-  — universal-core + per-type fields + the §5 closed-vocab enums this pass targets.
+- [`/codex/11-project-management/doc-frontmatter-schema.md`](/codex/11-project-management/doc-frontmatter-schema.md) —
+  universal-core + per-type fields + the §5 closed-vocab enums this pass targets.
 - Tooling: `scripts/docs/seed_frontmatter.py` (`--apply`) + `scripts/docs/docspec.py` (`--check`).
 
 ## Baseline (docspec, 2026-06-30, non-exempt live docs)
@@ -79,7 +93,7 @@ Out of scope: `plans/archive/` + `plans/ai/` (validator returns `doc_type: None`
 
 ## Todos
 
-- [x] ✅ [SCRIPT] P2. **Fix the one malformed-YAML doc.** `codex/15-runbooks/vm-log-observability-verify.md` had a
+- [x] ✅ [SCRIPT] P2. **Fix the one malformed-YAML doc.** `/codex/15-runbooks/vm-log-observability-verify.md` had a
       backtick-started `verifier:` value (invalid YAML) — now double-quoted + seeded. **Gate**: docspec parses + HARD=0.
 - [x] ✅ [SCRIPT] P2. **plans/active (top-level) — enum-normalize.** Ran the fix over `plans/active/*.md` (mostly
       already seeded; was failing on `cross-asset`/`data-ingestion`). **Gate**: `docspec --check plans/active/*.md`
@@ -121,12 +135,12 @@ Out of scope: `plans/archive/` + `plans/ai/` (validator returns `doc_type: None`
 
 ## Two-checks lifecycle + consolidation path (operator decision 2026-06-30)
 
-Two frontmatter checks coexist for now, converging to one. The forward-looking work (content pass →
-comprehensive blocking gate backed by `docspec` → retire `check_docspec_coverage` → agent-role repo gate) was
-**split into its own P3 plan**:
+Two frontmatter checks coexist for now, converging to one. The forward-looking work (content pass → comprehensive
+blocking gate backed by `docspec` → retire `check_docspec_coverage` → agent-role repo gate) was **split into its own P3
+plan**:
 [`frontmatter_content_pass_and_gate_consolidation_2026_06_30`](frontmatter_content_pass_and_gate_consolidation_2026_06_30.md).
 The lifecycle decision is also recorded in the schema SSOT banner
-([`doc-frontmatter-schema.md`](../../codex/11-project-management/doc-frontmatter-schema.md)).
+([`doc-frontmatter-schema.md`](/codex/11-project-management/doc-frontmatter-schema.md)).
 
 ## Progress Log
 

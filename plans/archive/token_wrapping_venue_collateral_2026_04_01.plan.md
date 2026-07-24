@@ -10,42 +10,46 @@ repos: [e2e-testing, execution-service, strategy-service, unified-api-contracts]
 scope: [engineer, admin]
 tags: []
 related: []
-created: '2026-04-03'
+created: "2026-04-03"
 overview: Wrapped/unwrapped token protocol mapping, venue collateral acceptance matrix, collateral haircuts in UAC
 type: code
 epic: epic-code-completion
 locked_by: live-defi-rollout
 locked_since: 2026-04-01
-completion_gates: {code: C5, deployment: none, business: none}
+completion_gates: { code: C5, deployment: none, business: none }
 repo_gates:
-- {repo: unified-api-contracts, code: C0, deployment: none, business: none}
-- {repo: execution-service, code: C0, deployment: none, business: none}
-- {repo: strategy-service, code: C0, deployment: none, business: none}
-- {repo: instruments-service, code: C0, deployment: none, business: none}
-- {repo: e2e-testing, code: C0, deployment: none, business: none}
+  - { repo: unified-api-contracts, code: C0, deployment: none, business: none }
+  - { repo: execution-service, code: C0, deployment: none, business: none }
+  - { repo: strategy-service, code: C0, deployment: none, business: none }
+  - { repo: instruments-service, code: C0, deployment: none, business: none }
+  - { repo: e2e-testing, code: C0, deployment: none, business: none }
 depends_on: []
 todos:
-- {id: tw-1a-token-map, content: '- [x] [AGENT] P0. Create wrapped/unwrapped token mapping registry in UAC
+  - { id: tw-1a-token-map, content: "- [x] [AGENT] P0. Create wrapped/unwrapped token mapping registry in UAC
 
-    ', status: done, note: ''}
-- {id: tw-1b-collateral-matrix, content: '- [x] [AGENT] P0. Create venue collateral acceptance matrix in UAC
+        ", status: done, note: "" }
+  - { id: tw-1b-collateral-matrix, content: "- [x] [AGENT] P0. Create venue collateral acceptance matrix in UAC
 
-    ', status: done, note: ''}
-- {id: tw-1c-haircuts, content: '- [x] [AGENT] P0. Formalise collateral haircuts from defi_reserve_params into venue-level registry
+        ", status: done, note: "" }
+  - { id: tw-1c-haircuts, content: "- [x] [AGENT] P0. Formalise collateral haircuts from defi_reserve_params into
+        venue-level registry
 
-    ', status: done, note: defi_reserve_params.py already has Aave LTV/liquidation data}
-- {id: tw-2a-strategy-validation, content: '- [x] [AGENT] P0. Add collateral acceptance validation to strategy instruction generation
+        ", status: done, note: defi_reserve_params.py already has Aave LTV/liquidation data }
+  - { id: tw-2a-strategy-validation, content: "- [x] [AGENT] P0. Add collateral acceptance validation to strategy
+        instruction generation
 
-    ', status: done, note: ''}
-- {id: tw-2b-execution-wrapping, content: '- [x] [AGENT] P0. Add auto-wrap/unwrap logic to execution-service handlers
+        ", status: done, note: "" }
+  - { id: tw-2b-execution-wrapping, content: "- [x] [AGENT] P0. Add auto-wrap/unwrap logic to execution-service handlers
 
-    ', status: done, note: ''}
-- {id: tw-3a-e2e, content: '- [x] [AGENT] P1. Add collateral validation scenarios to e2e-testing
+        ", status: done, note: "" }
+  - { id: tw-3a-e2e, content: "- [x] [AGENT] P1. Add collateral validation scenarios to e2e-testing
 
-    ', status: done, note: 'e2e-testing/scripts/defi/test_collateral_validation.py — 9 scenarios covering wrapping lookups, collateral matrix, haircuts, WrapPreprocessor auto-wrap, strategy blocking, and staked basis dual-collateral flow'}
-- {id: tw-4a-docs, content: '- [x] [AGENT] P1. Document token wrapping + collateral in codex
+        ", status: done, note: "e2e-testing/scripts/defi/test_collateral_validation.py — 9 scenarios covering wrapping
+        lookups, collateral matrix, haircuts, WrapPreprocessor auto-wrap, strategy blocking, and staked basis
+        dual-collateral flow" }
+  - { id: tw-4a-docs, content: "- [x] [AGENT] P1. Document token wrapping + collateral in codex
 
-    ', status: done, note: unified-trading-pm/codex/04-architecture/token-wrapping-and-collateral.md}
+        ", status: done, note: unified-trading-pm/codex/04-architecture/token-wrapping-and-collateral.md }
 isProject: false
 ---
 
@@ -87,7 +91,7 @@ venues.
 | Lido wrap           | stETH         | wstETH           | Yes — explicit wrap            | `wstETH.wrap(stETH_amount)`       |
 | WETH contract       | ETH           | WETH             | Yes — explicit deposit         | `WETH.deposit{value: amount}()`   |
 | WETH contract       | WETH          | ETH              | Yes — explicit withdraw        | `WETH.withdraw(amount)`           |
-| Uniswap V3          | WETH ↔ token | token ↔ WETH    | Must be wrapped                | Router uses WETH internally       |
+| Uniswap V3          | WETH ↔ token  | token ↔ WETH     | Must be wrapped                | Router uses WETH internally       |
 | Morpho supply       | WETH, weETH   | share tokens     | Same as Aave                   | Market-specific                   |
 | Flash loan (Aave)   | WETH          | WETH             | Must repay in WETH             | Flash borrowed as WETH            |
 | Flash loan (Morpho) | WETH          | WETH             | Must repay in WETH             | Flash borrowed as WETH            |
@@ -408,7 +412,7 @@ Phase 3 (E2E + Docs)
 
 ### 3B: Documentation
 
-- [ ] [AGENT] P1. Create `codex/04-architecture/token-wrapping-and-collateral.md`:
+- [ ] [AGENT] P1. Create `/codex/04-architecture/token-wrapping-and-collateral.md`:
   - Token wrapping reality table (which protocol accepts what)
   - Venue collateral acceptance matrix
   - Auto-wrapping behavior in execution-service

@@ -9,7 +9,8 @@ stage: [meta]
 repos: [agent-orchestrator, alerting-service, deployment-service, unified-api-contracts, unified-trading-pm]
 scope: [engineer, admin]
 tags: []
-related: [plans/active/agent_orchestrator_e2e_workflow_and_execution_scope_2026_06_02.md, plans/epics/orchestrator_master.md]
+related:
+  [plans/active/agent_orchestrator_e2e_workflow_and_execution_scope_2026_06_02.md, plans/epics/orchestrator_master.md]
 created: 2026-06-02
 parent_epic: orchestrator_master
 assigned_vm: vm-orchestrator
@@ -178,7 +179,7 @@ worktree on `tab/hk/N` spawns under account `harsh-primary` (operator `harsh`). 
       `ORCHESTRATOR_REVIEW_SLOTS=2` in `bootstrap_vm.sh` (folds into F12's per-VM env work).
 
   _Original task (kept for context):_ **Operator-requested 2026-06-03 — half-built design, finish the wiring.** Per
-  `codex/12-agent-workflow/orchestrator-multi-vm-topology.md:107` each epic VM = slot-1 **main** + slot-2 **review**
+  `/codex/12-agent-workflow/orchestrator-multi-vm-topology.md:107` each epic VM = slot-1 **main** + slot-2 **review**
   (Sonnet 4.6) + N workers. The review agent reviews each worker commit against the plan + FF-merges slot branches →
   LDR. **Already shipped**: `agents/review.md` boot prompt + the `role` model (`orm.py:231` `main|review|backup|custom`;
   `worktree_claim.py`). **Gap**: `AutoSpawnLoop` (`server/autospawn.py`) ONLY spawns task-`worker`s — it early-exits on

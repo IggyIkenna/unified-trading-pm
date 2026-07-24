@@ -1,17 +1,31 @@
 ---
 doc_type: issue
-title: semver-agent version-bump `[skip ci]` blocks staging→main promotion (+ re-bump loop) — root cause + recommended fix
+title:
+  semver-agent version-bump `[skip ci]` blocks staging→main promotion (+ re-bump loop) — root cause + recommended fix
 summary:
 status: resolved
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [agent-orchestrator, alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-service]
+repos:
+  [
+    agent-orchestrator,
+    alerting-service,
+    batch-live-reconciliation-service,
+    client-reporting-api,
+    deployment-api,
+    deployment-service,
+  ]
 scope: [engineer, admin]
 tags: []
 related: []
 created: 2026-06-09
-source: [plans/active/issues/ci_incident_findings_2026_06_09.md, plans/active/dependency_promotion_range_pins_and_major_bump_sit_2026_06_09.md, 'codex/08-workflows/ci-cd-flow.md (§ "[skip ci] and required checks")']
+source:
+  [
+    plans/active/issues/ci_incident_findings_2026_06_09.md,
+    plans/active/dependency_promotion_range_pins_and_major_bump_sit_2026_06_09.md,
+    '/codex/08-workflows/ci-cd-flow.md (§ "[skip ci] and required checks")',
+  ]
 locked_by: live-defi-rollout
 priority: P1
 ---
@@ -87,7 +101,7 @@ radius of all options considered.
 2. **Bump-then-block creates a re-bump loop.** A blocked promotion means the change stays "unreleased," so any further
    `staging` churn re-triggers `semver-agent` and the version escalates (`0.2→0.3→0.4`).
 
-This is exactly the foot-gun already codified as a _rule_ in `codex/08-workflows/ci-cd-flow.md` ("never `[skip ci]` a
+This is exactly the foot-gun already codified as a _rule_ in `/codex/08-workflows/ci-cd-flow.md` ("never `[skip ci]` a
 commit that becomes the HEAD of a v2-gated promotion PR") — but the **semver-agent itself violates it on every
 release**, so the rule needs a _mechanism_ fix, not just documentation.
 

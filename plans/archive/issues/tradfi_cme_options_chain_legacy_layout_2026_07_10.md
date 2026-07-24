@@ -17,9 +17,9 @@ scope: [engineer]
 tags: [instrument-id, canonicalization, tradfi, cme, options-chain, legacy-layout]
 related:
   [
-    instrument_id_format_canonicalization_2026_07_08.md,
+    /plans/active/issues/instrument_id_format_canonicalization_2026_07_08.md,
     ../canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md,
-    manifest_consolidator_service_name_dedup_split_2026_07_14.md,
+    /plans/archive/issues/manifest_consolidator_service_name_dedup_split_2026_07_14.md,
   ]
 created: 2026-07-10
 parent_epic: instruments_master

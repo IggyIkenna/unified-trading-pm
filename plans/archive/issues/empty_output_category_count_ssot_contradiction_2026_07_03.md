@@ -2,8 +2,8 @@
 doc_type: issue
 title: SSOT contradiction — empty-output decision tree is 3-category in one codex doc, 4-category in another
 summary:
-  codex/04-architecture/shard-level-failure-isolation.md claims a "three-category empty-output decision tree" while
-  codex/06-coding-standards/validation-and-errors.md (newer, operator directive 2026-05-07) documents FOUR categories
+  /codex/04-architecture/shard-level-failure-isolation.md claims a "three-category empty-output decision tree" while
+  /codex/06-coding-standards/validation-and-errors.md (newer, operator directive 2026-05-07) documents FOUR categories
   (adds path D zero-activity-bar). Same decision, conflicting category counts — one doc must be corrected or scoped.
 status: resolved
 nature: record
@@ -14,8 +14,8 @@ scope: [engineer]
 tags: [ssot-contradiction, frontmatter, data-correctness, empty-output, codex-drift]
 related:
   [
-    ../../../codex/04-architecture/shard-level-failure-isolation.md,
-    ../../../codex/06-coding-standards/validation-and-errors.md,
+    /codex/04-architecture/shard-level-failure-isolation.md,
+    /codex/06-coding-standards/validation-and-errors.md,
     ../../archive/2026_07/frontmatter_content_pass_and_gate_consolidation_2026_06_30.md,
   ]
 created: 2026-07-03
@@ -41,10 +41,10 @@ depends_on: []
 
 Two live codex SSOTs describe the per-shard empty-output classification decision with different category counts:
 
-- [`codex/04-architecture/shard-level-failure-isolation.md`](../../../codex/04-architecture/shard-level-failure-isolation.md)
-  — claims `authoritative_for: [... three-category empty-output decision tree]`; body documents 3 categories.
-- [`codex/06-coding-standards/validation-and-errors.md`](../../../codex/06-coding-standards/validation-and-errors.md) —
-  the newer merged write-side SSOT; documents a **four-category** decision (adds path D: zero-activity-bar), citing an
+- [`/codex/04-architecture/shard-level-failure-isolation.md`](/codex/04-architecture/shard-level-failure-isolation.md) —
+  claims `authoritative_for: [... three-category empty-output decision tree]`; body documents 3 categories.
+- [`/codex/06-coding-standards/validation-and-errors.md`](/codex/06-coding-standards/validation-and-errors.md) — the
+  newer merged write-side SSOT; documents a **four-category** decision (adds path D: zero-activity-bar), citing an
   operator directive of 2026-05-07.
 
 If the 2026-05-07 directive added path D, the shard-level doc's 3-category tree (and its `authoritative_for` claim) is
@@ -65,10 +65,10 @@ Re-verified directly against both docs' frontmatter: `validation-and-errors.md` 
 newer merged SSOT) yet still carries `authoritative_for: [... three-category empty-output decision tree]` — confirms
 option A **[REC]** above is the correct read (shard-level-failure-isolation.md is the stale side, never updated after
 the 2026-05-08 merge). **NOT auto-applied**: the actual fix requires editing
-`codex/04-architecture/shard-level-failure-isolation.md`, which is out of scope for this doc-reconciliation pass (codex/
-files are never edited here). Status stays `open` pending a codex-authorized edit; the `- [ ]` todo below is unchanged.
-Finding #346, plan-reconciliation `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 "50
-reclassified" blanket ruling.
+`/codex/04-architecture/shard-level-failure-isolation.md`, which is out of scope for this doc-reconciliation pass
+(codex/ files are never edited here). Status stays `open` pending a codex-authorized edit; the `- [ ]` todo below is
+unchanged. Finding #346, plan-reconciliation `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md`
+§A2 "50 reclassified" blanket ruling.
 
 ## Todos
 
@@ -84,10 +84,10 @@ Verified against codex during the AO issue-doc reconciliation sweep. The remedy 
 **already applied on 2026-07-12** by `unified-trading-pm@4d42f50c2` (_"docs(plans): leftover queue closed — codex
 taxonomy/URDI/consolidator/ao-self-pull synced"_):
 
-- `codex/04-architecture/shard-level-failure-isolation.md` now carries an
+- `/codex/04-architecture/shard-level-failure-isolation.md` now carries an
   `<!-- EMPTY_OUTPUT_CATEGORY_CORRECTION_2026_07_12 -->` banner, documents **4** categories (not 3), and its
   `authoritative_for:` **no longer claims the empty-output decision-tree count at all**.
-- `codex/06-coding-standards/validation-and-errors.md:23-24` holds the sole
+- `/codex/06-coding-standards/validation-and-errors.md:23-24` holds the sole
   `authoritative_for: [..., four-category empty-output decision, ...]` claim.
 - **Gate satisfied**: the two docs agree on the category count (A honest-absence / B upstream-timestamp-bias / C
   malformed-fields / D zero-activity-bar) and there is no duplicate `authoritative_for` phrase.

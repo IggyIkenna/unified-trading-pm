@@ -76,7 +76,7 @@ incidental DEFERRED / post-cutover / out-of-scope tokens in the body are histori
 
 The workspace SSOT is **"batch = live, same code path, same component interactions, only fill source differs"** —
 declared in [`CLAUDE.md` § "Batch = Live: Unified Pipeline Architecture (CRITICAL)"](../../cursor-configs/CLAUDE.md) and
-[`codex/04-architecture/batch-live-architecture.md`](../../codex/04-architecture/batch-live-architecture.md). It applies
+[`/codex/04-architecture/batch-live-architecture.md`](/codex/04-architecture/batch-live-architecture.md). It applies
 across every asset_group (cefi / defi / tradfi / sports / prediction), every layer (data → features → ML → strategy →
 execution → position → risk → alerting → reporting → UI → events), and every operational mode (backtest / paper / live).
 
@@ -112,7 +112,7 @@ catching a silent mode-divergence the day after live cutover.
 ### Block A — SSOT principle + scope alignment
 
 A1. The principle is stated in two places (CLAUDE.md "Batch = Live" section +
-`codex/04-architecture/batch-live-architecture.md`). Are they bit-coherent, or is one of them ahead of the other? Audit
+`/codex/04-architecture/batch-live-architecture.md`). Are they bit-coherent, or is one of them ahead of the other? Audit
 shows: **coherent** (both shipped 2026-05-08, both consolidate prior deletes). Verify there's no third place stating a
 contradicting principle (e.g. an old codex doc, a service README, a plan body).
 
@@ -195,7 +195,7 @@ regardless of where fills came from.
 C4. `risk-and-exposure-service` — audit verdict: **mode-blind**. Verify. Should fire identical risk gates in both modes.
 
 C5. `alerting-service` — audit verdict: **assumed mode-blind**, not deeply verified. Per
-`codex/04-architecture/alerting-batch-live.md` — alerting parity is documented. But ServiceEmissionPolicy has 4 states
+`/codex/04-architecture/alerting-batch-live.md` — alerting parity is documented. But ServiceEmissionPolicy has 4 states
 (PUBLISHED_OK / PUBLISHED_DEGRADED / STALE / BLOCKED_CRITICAL) per recently-shipped UTL `emission_publisher.py`. Do
 alert rules fire identically in batch + live, or does batch suppress some alerts (e.g. data-freshness alerts that are
 nonsensical against a frozen historical replay)?
@@ -221,7 +221,7 @@ verdict: **assumed mode-blind** (compute identical features regardless of input 
 subsets. What's the gap-fill plan? Is sports feature family blocking May-23?
 
 C9. `instruments-service` — audit verdict: **mode-blind for definitions** but has an `instruments-live` exception per
-`codex/04-architecture/instruments-live-architecture.md` (live discovery via venue API + per-venue trading-calendar
+`/codex/04-architecture/instruments-live-architecture.md` (live discovery via venue API + per-venue trading-calendar
 enrichment). Is the exception properly bounded — definitions are mode-blind, but discovery has a live mode? Or is the
 exception leaking into definition shape?
 
@@ -314,7 +314,7 @@ parquets)?
 
 ### Block F — UI symmetry (DART, dashboard, ops, research)
 
-F1. **DART** — per `codex/04-architecture/research-service-and-dart-integration.md` +
+F1. **DART** — per `/codex/04-architecture/research-service-and-dart-integration.md` +
 `09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md`, DART is the manual-trade gate (6 lanes: DeFi
 swap, lend/stake, CeFi order, ML training, sports bet, prediction market). It's _not_ a separate UI repo — it's a
 tab/surface in `unified-trading-system-ui` (verify exact location). Does DART distinguish backtest / paper / live in its
@@ -609,16 +609,16 @@ drown in scope.
   asset_group masters + features-consolidation + alerting + UI repos. Plan body lists every gap from Audit findings
   below + assigns each to a phase + cites exact file:line + names the codex SSOT it touches.
 - **Codex SSOTs** — at minimum:
-  - NEW: `codex/04-architecture/cefi-batch-live.md` (per-asset-group narrative — currently missing)
-  - NEW: `codex/04-architecture/tradfi-batch-live.md` (per-asset-group narrative — currently missing)
-  - NEW: `codex/04-architecture/prediction-batch-live.md` (per-asset-group narrative — currently missing)
-  - UPDATE: `codex/04-architecture/batch-live-architecture.md` — add cross-asset-group meta + mode-axis composition
+  - NEW: `/codex/04-architecture/cefi-batch-live.md` (per-asset-group narrative — currently missing)
+  - NEW: `/codex/04-architecture/tradfi-batch-live.md` (per-asset-group narrative — currently missing)
+  - NEW: `/codex/04-architecture/prediction-batch-live.md` (per-asset-group narrative — currently missing)
+  - UPDATE: `/codex/04-architecture/batch-live-architecture.md` — add cross-asset-group meta + mode-axis composition
     table + LIVE_event-prefix anti-pattern + UI mode-context guidance
-  - UPDATE: `codex/06-coding-standards/quality-gates.md` — document new STEP 5.XX entries for static enforcement
+  - UPDATE: `/codex/06-coding-standards/quality-gates.md` — document new STEP 5.XX entries for static enforcement
     (L2/L3/L4/L5/L6/L7)
-  - UPDATE: `codex/05-infrastructure/live-pipeline-architecture.md` — explicit replay-watermark integration with
+  - UPDATE: `/codex/05-infrastructure/live-pipeline-architecture.md` — explicit replay-watermark integration with
     manifest CAS
-  - NEW: `codex/06-coding-standards/mode-axis-discipline.md` — codifies RuntimeMode + PipelineMode +
+  - NEW: `/codex/06-coding-standards/mode-axis-discipline.md` — codifies RuntimeMode + PipelineMode +
     BatchExecutionMode + OperationalMode + MaturityPhase composition + which axis is the SSOT for what
 - **Static enforcement landed** — at minimum L2 (mode-conditional branching AST sweep) + L7
   (`assert_available_at_present`) + L3 (RuntimeMode redeclaration ban) for May-23. L1/L4/L5/L6 post-cutover.
@@ -699,19 +699,19 @@ The audit was run by three parallel sub-agents covering services / UI+events / c
 
 ### Codex SSOT (Block A, I, J, K)
 
-- **Principle docs coherent** — `CLAUDE.md` "Batch = Live" + `codex/04-architecture/batch-live-architecture.md`
+- **Principle docs coherent** — `CLAUDE.md` "Batch = Live" + `/codex/04-architecture/batch-live-architecture.md`
   (consolidated 2026-05-08, replaces deleted `batch-live-pipeline.md` + `batch-live-symmetry.md`) +
-  `codex/04-architecture/execution-modes-and-chain-resolution.md` all align.
-- **Replay subsystem doc** — `codex/05-infrastructure/replay-subsystem.md` shipped 2026-05-08. Watermark contract +
+  `/codex/04-architecture/execution-modes-and-chain-resolution.md` all align.
+- **Replay subsystem doc** — `/codex/05-infrastructure/replay-subsystem.md` shipped 2026-05-08. Watermark contract +
   smooth-handoff + anti-pattern (`pipeline_mode=replay` banned) all documented.
-- **Matching engine doc** — `codex/04-architecture/batch-live-architecture.md:§5` covers BENCHMARK + SIMULATED +
+- **Matching engine doc** — `/codex/04-architecture/batch-live-architecture.md:§5` covers BENCHMARK + SIMULATED +
   L0/L1/L2/AMM matchers. ✅ Complete.
-- **Strategy lifecycle 9-phase enum** — `codex/09-strategy/architecture-v2/strategy-lifecycle-maturity.md` ships full
+- **Strategy lifecycle 9-phase enum** — `/codex/09-strategy/architecture-v2/strategy-lifecycle-maturity.md` ships full
   state machine + UAC enum + transition rules. ✅ Complete.
-- **DART manual-trade gate** — `codex/04-architecture/research-service-and-dart-integration.md` +
-  `codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md` cover DART end-to-end (6 lanes). ✅
+- **DART manual-trade gate** — `/codex/04-architecture/research-service-and-dart-integration.md` +
+  `/codex/09-strategy/architecture-v2/cross-cutting/dart-manual-trade-spec.md` cover DART end-to-end (6 lanes). ✅
   Complete.
-- **Pipeline-mode partition doc** — `codex/02-data/pipeline-mode-partition.md` shipped 2026-05-08. Closed-set enum +
+- **Pipeline-mode partition doc** — `/codex/02-data/pipeline-mode-partition.md` shipped 2026-05-08. Closed-set enum +
   reader fallback + phase shipping table. ✅ Complete.
 - **Per-asset-group batch=live narratives — GAPS:**
   - CeFi: NO dedicated doc (matcher pattern only implied by L2Matcher spec)
@@ -772,7 +772,7 @@ Status legend: ✅ ANSWERED-FROM-CODE · ⚠️ PARTIAL (code+gaps) · ❌ CONFI
 ### Block A — SSOT principle + scope alignment
 
 - **A1** ✅ — Two canonical SSOTs (CLAUDE.md "Batch = Live" section +
-  `codex/04-architecture/batch-live-architecture.md`)
+  `/codex/04-architecture/batch-live-architecture.md`)
   - 4 read-only mirrors (archive/unified-internal-contracts, UI context, UTL cloud_interface). No third place
     contradicts. Legacy `ServiceMode` FULLY RETIRED (only test refs at `test_domain_new_modules.py:206,214`).
 - **A2** 🤔 — Four seams documented (`batch-live-architecture.md` § 2): data ingest, replay watermark, feature compute,
@@ -879,7 +879,7 @@ Status legend: ✅ ANSWERED-FROM-CODE · ⚠️ PARTIAL (code+gaps) · ❌ CONFI
 
 ### Block F — UI symmetry
 
-- **F1** ✅ — DART per `codex/04-architecture/research-service-and-dart-integration.md:13` is operator-facing
+- **F1** ✅ — DART per `/codex/04-architecture/research-service-and-dart-integration.md:13` is operator-facing
   manual-trade gate; 6 lanes spec'd. DART panel + ack-flow shipped 2026-05-08 (per master plan F23 status).
 - **F2** ✅ confirmed — `dashboard/page.tsx:72-76,100-104,120,158` hardcodes mock values per `isLive` boolean. Mock-mode
   artefact, post-cutover cleanup.
@@ -953,7 +953,7 @@ Status legend: ✅ ANSWERED-FROM-CODE · ⚠️ PARTIAL (code+gaps) · ❌ CONFI
 
 - **K1** ✅ — Replay subsystem SHIPPED (design + helpers). `ReplayWatermarkKV` + `ReplayPublisher` at UTL
   `streaming/replay.py:61-200+`. Tests at `tests/unit/test_replay.py:37-190`. Codex stub at
-  `codex/05-infrastructure/replay-subsystem.md`. Operational deployment Phase 7 PENDING.
+  `/codex/05-infrastructure/replay-subsystem.md`. Operational deployment Phase 7 PENDING.
 - **K2** ✅ — Original-time `available_at` stamping documented in module docstring + codex `:36`. Caller responsibility.
 - **K3** ⚠️ — `REPLAY_BACKSTOP_REACHED` event documented in codex `:70-71` but code emit + alerting wiring PENDING
   (Phase 7).
@@ -977,7 +977,7 @@ Status legend: ✅ ANSWERED-FROM-CODE · ⚠️ PARTIAL (code+gaps) · ❌ CONFI
 
 ### Block M — Cross-cutting integration
 
-- **M1** ✅ — Alerting parity per `codex/04-architecture/alerting-batch-live.md`: same routing rules, same dedup, same
+- **M1** ✅ — Alerting parity per `/codex/04-architecture/alerting-batch-live.md`: same routing rules, same dedup, same
   cooldown logic; only event source differs.
 - **M2** ✅ — Position-balance mode-blind (Block C3).
 - **M3** ⚠️ — `risk-and-exposure-service/risk_and_exposure_service/kill_switch_rules.py` shipped + bus-subscriber wired.
@@ -1040,16 +1040,16 @@ J3 · post-cutover for G1+F4+F5 · post-cutover for I2/I5.
 - **Plan type**: mixed (codex docs + UAC enum extension + UTL helper + QG steps + UI refactor + reconciler shipping).
 - **Owner side**: parallel-agent fan-out — see "AI parallel work-split" below.
 - **Codex SSOTs touched**:
-  - NEW: `codex/04-architecture/cefi-batch-live.md` (~30min sub-agent, contract per Block I1)
-  - NEW: `codex/04-architecture/tradfi-batch-live.md` (~30min sub-agent, post-cutover scope)
-  - NEW: `codex/04-architecture/prediction-batch-live.md` (~30min sub-agent, post-cutover scope)
-  - NEW: `codex/06-coding-standards/mode-axis-discipline.md` — mode-axis cartesian product table (~1h)
-  - UPDATE: `codex/04-architecture/batch-live-architecture.md` — cross-asset-group meta + UI mode-context guidance +
+  - NEW: `/codex/04-architecture/cefi-batch-live.md` (~30min sub-agent, contract per Block I1)
+  - NEW: `/codex/04-architecture/tradfi-batch-live.md` (~30min sub-agent, post-cutover scope)
+  - NEW: `/codex/04-architecture/prediction-batch-live.md` (~30min sub-agent, post-cutover scope)
+  - NEW: `/codex/06-coding-standards/mode-axis-discipline.md` — mode-axis cartesian product table (~1h)
+  - UPDATE: `/codex/04-architecture/batch-live-architecture.md` — cross-asset-group meta + UI mode-context guidance +
     LIVE\_ event-prefix anti-pattern (~30min)
-  - UPDATE: `codex/06-coding-standards/quality-gates.md` — STEP entries L1-L6 (~1h)
-  - UPDATE: `codex/05-infrastructure/replay-subsystem.md` — implementation-status update + REPLAY_BACKSTOP wiring
+  - UPDATE: `/codex/06-coding-standards/quality-gates.md` — STEP entries L1-L6 (~1h)
+  - UPDATE: `/codex/05-infrastructure/replay-subsystem.md` — implementation-status update + REPLAY_BACKSTOP wiring
     (~15min)
-  - UPDATE: `codex/04-architecture/features-service-architecture.md` — sports + calendar live-handler timeline (~15min)
+  - UPDATE: `/codex/04-architecture/features-service-architecture.md` — sports + calendar live-handler timeline (~15min)
 - **Cross-plan dependencies**:
   - `master_to_live_defi_2026_05_23.md` Group F items 17/18/20/21/23 — symmetry IS the verification gate.
   - `live_pipeline_mtds_mdps_features_2026_05_08.md` — replay-subsystem Phase 7 deployment + REPLAY_BACKSTOP wiring.

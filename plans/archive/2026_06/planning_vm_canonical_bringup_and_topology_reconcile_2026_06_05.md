@@ -9,7 +9,11 @@ stage: [meta]
 repos: [agent-orchestrator, deployment-service, unified-trading-pm]
 scope: [engineer, admin]
 tags: []
-related: [plans/active/agent_orchestrator_e2e_workflow_and_execution_scope_2026_06_02.md, plans/active/cicd_contract_hardening_2026_06_01.md]
+related:
+  [
+    plans/active/agent_orchestrator_e2e_workflow_and_execution_scope_2026_06_02.md,
+    plans/active/cicd_contract_hardening_2026_06_01.md,
+  ]
 created: 2026-06-05
 parent_epic: orchestrator_master
 assigned_vm: planning
@@ -17,7 +21,8 @@ priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 1.5
 estimate_calibrated_ai_days: 1.2
-source: [operator session 2026-06-05 (slot tab/ikennaigboaka/1) — planning-VM spin-up + static-IP/topology clarification]
+source:
+  [operator session 2026-06-05 (slot tab/ikennaigboaka/1) — planning-VM spin-up + static-IP/topology clarification]
 ---
 
 > **✅ ARCHIVED 2026-06-10 — complete.** Central/planning VM canonically branded + provisioned: 5 `tab/planning/N` slots
@@ -38,7 +43,7 @@ source: [operator session 2026-06-05 (slot tab/ikennaigboaka/1) — planning-VM 
 > properly-branded interactive slots, and the registry/docs are stale + conflate it with the _epic_ VM `vm-orchestrator`
 > (a SEPARATE, currently-stopped box that owns the agent-orchestrator codebase epic). Static-IP question resolved: only
 > the ONE central API needs a stable public IP and it HAS the EIP; epic VMs are private (central proxies over the VPC),
-> dynamic IPs are fine. SSOT topology: `codex/12-agent-workflow/orchestrator-multi-vm-topology.md`.
+> dynamic IPs are fine. SSOT topology: `/codex/12-agent-workflow/orchestrator-multi-vm-topology.md`.
 
 ## Canonical topology (confirmed 2026-06-05)
 
@@ -86,9 +91,9 @@ source: [operator session 2026-06-05 (slot tab/ikennaigboaka/1) — planning-VM 
       `$0`-API Max-plan-slot cross-plan-contradiction + governance-doc-drift detector). Its header said it was "BUILT
       but only runs once the planning-VM orchestrator is live" — which THIS plan's re-provision just made true (5 live
       planning slots). The only GAP was the on-merge trigger: wired `main-backmerge-to-ldr.yml` (PM-only step, gated on
-      `decision != noop`) to `POST /api/plan-health/dispatch` after each main↔LDR back-merge, so the agent runs on
-      every LDR→main reconciliation (not just the daily cron) and the plans stay clean as the branches sync. The FF
-      main→LDR itself is the deterministic back-merge job (already there). I dropped my initial escalation.py
+      `decision != noop`) to `POST /api/plan-health/dispatch` after each main↔LDR back-merge, so the agent runs on every
+      LDR→main reconciliation (not just the daily cron) and the plans stay clean as the branches sync. The FF main→LDR
+      itself is the deterministic back-merge job (already there). I dropped my initial escalation.py
       `wall_type=plan_health` duplicate in favour of the existing `/api/plan-health/dispatch`. Repos:
       `unified-trading-pm` (workflow template + copy). parent_epic: orchestrator_master.
 - [x] ✅ [INFRA] P1. **Make `ORCHESTRATOR_VM_ID=planning` durable in the central VM's provisioning.** SHIPPED 2026-06-05
@@ -132,7 +137,7 @@ source: [operator session 2026-06-05 (slot tab/ikennaigboaka/1) — planning-VM 
       `ORCHESTRATOR_VM_ID=planning` + the `tab/planning/N` branches. SHIPPED 2026-06-05: renamed the
       `orchestrator_vm_registry.yaml` `id:` + every live `assigned_vm: planning-vm` ref (this plan +
       `master_to_live_defi_2026_05_23.md` (frontmatter-only edit; lock blocks archival not edits) + the
-      `plan_hygiene_master.md` epic) + the id-refs in `codex/12-agent-workflow/orchestrator-multi-vm-topology.md` +
+      `plan_hygiene_master.md` epic) + the id-refs in `/codex/12-agent-workflow/orchestrator-multi-vm-topology.md` +
       `epic-keyword-surface.yaml`, and updated the historical note in `agent-orchestrator-worker-topology.md`.
       **Preserved** the `launch-planning-vm.sh` script-name refs in `vm-tarball-deployment.md` (those are filenames, not
       the id). `regen_vm_registry.py --check` = OK (11 vm-ids valid). The last name-mismatch is closed: registry id ==
@@ -148,6 +153,6 @@ source: [operator session 2026-06-05 (slot tab/ikennaigboaka/1) — planning-VM 
       the topology SSOT (`orchestrator-multi-vm-topology.md`) was ALREADY correct ("Central API VM = Planning VM @
       13.113.200.22"); the overview + canonical-plan-flow do NOT conflate (no central/escalation claim on
       vm-orchestrator); the only live stale ref was the dead-IP row in
-      `codex/05-infrastructure/agent-orchestrator-worker-topology.md` → fixed (vm-orchestrator marked parked + a
+      `/codex/05-infrastructure/agent-orchestrator-worker-topology.md` → fixed (vm-orchestrator marked parked + a
       "central = planning VM, EIP 13.113.200.22" clarifier added). Remaining 52.193.229.193 refs are in an ARCHIVED plan
       (left as-is). Repo: `unified-trading-pm`. parent_epic: orchestrator_master.

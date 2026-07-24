@@ -13,7 +13,11 @@ stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer]
 tags: [agent-orchestrator, dispatch, liveness, watchdog, regression]
-related: [ao_open_issues_consolidated_close_out_2026_07_17.md, ao_scheduled_agent_hygiene_2026_07_20.md]
+related:
+  [
+    /plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md,
+    /plans/archive/2026_07/ao_scheduled_agent_hygiene_2026_07_20.md,
+  ]
 created: 2026-07-20
 last_updated: 2026-07-20
 parent_epic: orchestrator_master
@@ -221,9 +225,9 @@ last for that reason, not for convenience.
 
 ## Codex SSOTs
 
-- `codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` — dispatch/spawn/slot model.
-- `codex/04-architecture/autonomous-recovery-matrix.md` — what may self-recover vs what needs a human.
-- `codex/12-agent-workflow/async-wait-and-poll-discipline.md` — measured-verdict discipline for the deploy + re-measure
+- `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` — dispatch/spawn/slot model.
+- `/codex/04-architecture/autonomous-recovery-matrix.md` — what may self-recover vs what needs a human.
+- `/codex/12-agent-workflow/async-wait-and-poll-discipline.md` — measured-verdict discipline for the deploy + re-measure
   gates above.
 
 ## Progress Log

@@ -6,7 +6,15 @@ status: complete
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [deployment-api, deployment-service, deployment-ui, features-service, instruments-service, market-data-processing-service]
+repos:
+  [
+    deployment-api,
+    deployment-service,
+    deployment-ui,
+    features-service,
+    instruments-service,
+    market-data-processing-service,
+  ]
 scope: [engineer, admin]
 tags: []
 related: []
@@ -56,7 +64,7 @@ run to their done-definitions, not to 2026-05-15.
 ## Today's slot assignments
 
 > **Per-tab worktree model**
-> ([`codex/05-infrastructure/per-tab-worktrees.md`](../../codex/05-infrastructure/per-tab-worktrees.md)). Each slot is a
+> ([`/codex/05-infrastructure/per-tab-worktrees.md`](/codex/05-infrastructure/per-tab-worktrees.md)). Each slot is a
 > permanent worktree at `${WORKSPACE_ROOT}/.tabs/<N>/` on branch `tab/hk/<N>`. **Slot count: 6 — provisioned 2026-05-11
 > via `setup-tab-worktrees.sh --init --slots 6`** (`$USER=hk` → branches `tab/hk/1`..`tab/hk/6`, all at the
 > `live-defi-rollout` tip; 6 covers the 5 active themes + 1 reserve; grow with `--add-slot` if peak parallel work
@@ -266,7 +274,7 @@ under-utilisation is fine, mid-cycle collision is not.
   - **P0** Phase 0f — VM launcher scripts (~30 under `deployment-service/scripts/vm/`) read `DEPLOYMENT_ENV`; pass to VM
     via metadata. `--env <prod|staging|dev>` CLI flag per launcher OR centralised helper.
   - **P0** Phase 0g — verify deployment UI env-tier shipped ✅ done (per
-    `codex/05-infrastructure/deployment-ui-architecture.md`); cross-check per-env deployment-api resolves env-tiered
+    `/codex/05-infrastructure/deployment-ui-architecture.md`); cross-check per-env deployment-api resolves env-tiered
     names via resolver.
   - **P0** Phase 0h — sync script `deployment-service/scripts/sync-buckets-prod-to-{staging,dev}.sh` + Cloud Scheduler
     cron. Truncated date window (1-2 yr), same-region enforced, manifest sync post-data-sync. Ships in Phase 1; first
@@ -477,7 +485,7 @@ SHARED-FILE-CONTENT collisions when slots push and pull each other's commits.
 > **Boot pre-req** (already done 2026-05-11): 6 slot worktrees provisioned via `setup-tab-worktrees.sh --init --slots 6`
 > (`$USER=hk` → branches `tab/hk/1`..`tab/hk/6`). Before reassigning a slot to a new theme, run
 > `setup-tab-worktrees.sh --reset-slot <N>` first. Full 7-step recipe:
-> [`codex/05-infrastructure/per-tab-worktrees.md`](../../codex/05-infrastructure/per-tab-worktrees.md).
+> [`/codex/05-infrastructure/per-tab-worktrees.md`](/codex/05-infrastructure/per-tab-worktrees.md).
 >
 > **The prompts below are intentionally minimal.** All the common content — role, git discipline (conditional push to
 > `live-defi-rollout`, rebase-on-push, plan-aware-merge on conflict), reading order, communication bus (ping ledger +

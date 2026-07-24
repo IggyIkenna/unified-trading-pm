@@ -24,7 +24,7 @@ stage: [data]
 repos: [market-tick-data-service]
 scope: [engineer]
 tags: [test-baseline-drift, quality-gates-blocker, defi, shard-count, quickmerge-sentinel]
-related: [mtds_rule11_shard_count_stale_baseline_2026_07_21.md]
+related: [/plans/active/issues/mtds_rule11_shard_count_stale_baseline_2026_07_21.md]
 created: "2026-07-22"
 parent_epic: infrastructure_master
 assigned_vm: NA

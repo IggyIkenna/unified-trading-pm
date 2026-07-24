@@ -39,7 +39,7 @@ tags:
     honest-coverage,
   ]
 related:
-  - uac_is_defi_oracle_dex_adapter_drift_2026_07_20.md
+  - /plans/archive/issues/uac_is_defi_oracle_dex_adapter_drift_2026_07_20.md
 created: 2026-07-23
 parent_epic: infrastructure_master
 assigned_vm: NA

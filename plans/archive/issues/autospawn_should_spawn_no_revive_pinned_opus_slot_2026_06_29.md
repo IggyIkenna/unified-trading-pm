@@ -12,14 +12,14 @@ stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer, admin]
 tags: [agent-orchestrator, autospawn, model-tier, opus, dispatch, starvation, follow-up]
-related: [../../codex/04-architecture/agent-orchestrator-autospawn.md]
+related: [/codex/04-architecture/agent-orchestrator-autospawn.md]
 created: 2026-06-29
 parent_epic: orchestrator_master
 priority: P2
 source:
   [
     operator request 2026-06-29,
-    ../../codex/04-architecture/agent-orchestrator-autospawn.md,
+    /codex/04-architecture/agent-orchestrator-autospawn.md,
     session 2026-06-28/29 opus-routing fix,
   ]
 assigned_vm: planning

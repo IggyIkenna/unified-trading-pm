@@ -14,7 +14,7 @@ stage: [data]
 repos: [market-tick-data-service]
 scope: [engineer]
 tags: [instrument-id, canonicalization, prediction, connection-pool, tech-debt]
-related: [instrument_id_format_canonicalization_2026_07_08.md]
+related: [/plans/active/issues/instrument_id_format_canonicalization_2026_07_08.md]
 created: 2026-07-10
 parent_epic: instruments_master
 assigned_vm:

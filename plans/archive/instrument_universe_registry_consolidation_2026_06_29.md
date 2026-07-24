@@ -20,11 +20,11 @@ scope: [engineer, admin]
 tags: [instrument-universe, venue-registry, adapter-routing, honest-coverage, ssot-consolidation, data-correctness]
 related:
   [
-    ../../codex/04-architecture/instrument-universe-registry-consolidation.md,
-    ../../codex/04-architecture/instruments-service-as-ssot-for-mtds.md,
-    ../../codex/04-architecture/tier-and-import-architecture.md,
-    ../../codex/02-data/honest-coverage-model.md,
-    honest_coverage_v2_instrument_denominator_2026_06_28.md,
+    /codex/04-architecture/instrument-universe-registry-consolidation.md,
+    /codex/04-architecture/instruments-service-as-ssot-for-mtds.md,
+    /codex/04-architecture/tier-and-import-architecture.md,
+    /codex/02-data/honest-coverage-model.md,
+    /plans/archive/2026_07/honest_coverage_v2_instrument_denominator_2026_06_28.md,
   ]
 created: 2026-06-29
 parent_epic: instruments_master
@@ -56,11 +56,11 @@ in this plan" — not DEFERRED-tagged items)
 > (`instruments-service@4da6fe8` + `unified-api-contracts@6bcff215`); Phase 2 (adapter routing → UAC keys) + codex flip
 > shipped 2026-07-03 (`unified-api-contracts@9eb5518`+`@6516ed4`, `unified-trading-library@5a83484`,
 > `instruments-service@8b7ce01`). Standing SSOT:
-> [`codex/04-architecture/instrument-universe-registry-consolidation.md`](../../codex/04-architecture/instrument-universe-registry-consolidation.md).
+> [`/codex/04-architecture/instrument-universe-registry-consolidation.md`](/codex/04-architecture/instrument-universe-registry-consolidation.md).
 > One follow-up re-homed to `instruments_mtds_subset_consistency_remediation_2026_06_17.md` (MTDS prefix-map mirror).
 
 > **Operator-approved 2026-06-29.** Codex target:
-> [`instrument-universe-registry-consolidation.md`](../../codex/04-architecture/instrument-universe-registry-consolidation.md).
+> [`instrument-universe-registry-consolidation.md`](/codex/04-architecture/instrument-universe-registry-consolidation.md).
 > **Resolved 2026-06-29:** expected-universe single-entry-point work folded into
 > [`honest_coverage_v2_instrument_denominator`](honest_coverage_v2_instrument_denominator_2026_06_28.md) (this plan =
 > venues
@@ -150,7 +150,7 @@ in this plan" — not DEFERRED-tagged items)
 ## Codex flip
 
 - [x] [AGENT] P2. After Phases 1–2 land, remove the PROPOSAL banner from
-      `codex/04-architecture/instrument-universe-registry-consolidation.md` and update
+      `/codex/04-architecture/instrument-universe-registry-consolidation.md` and update
       `instruments-service-as-ssot-for-mtds.md` to point at the consolidated registry. **Gate:** `docs(plans):` flip +
       codex audit clean. ✅ **DONE 2026-07-03** (this commit) — consolidation doc: PROPOSAL banner → IMPLEMENTED status
       note with ship evidence, moves 1+2 marked SHIPPED (move 3 stays tracked in
@@ -178,7 +178,7 @@ in this plan" — not DEFERRED-tagged items)
 ## Notes / context
 
 Implements
-[`codex/04-architecture/instrument-universe-registry-consolidation.md`](../../codex/04-architecture/instrument-universe-registry-consolidation.md).
+[`/codex/04-architecture/instrument-universe-registry-consolidation.md`](/codex/04-architecture/instrument-universe-registry-consolidation.md).
 Originally scoped pure-refactor SSOT consolidation (`estimate_class: refactor`, 0.4× multiplier). **AMENDED 2026-06-29
 (see Progress Log):** the pre-audit overturned the "identical sets before/after" premise; the FINAL operator-locked
 scope has two deliberate, operator-approved behaviour deltas — (1) cefi now enumerates `KALSHI-PERP`/`POLYMARKET-PERP`

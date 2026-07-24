@@ -60,8 +60,8 @@ tests remain green); all three are raw-layer coverage or cross-ref issues.
 - Prod has `entity=sfi_leagues` partitions for 2019-01 only (same period as Transfermarkt). Zero 2020-2026 coverage.
 - `launch-sfi-forward-poll.sh` exists but is forward-poll only (T-1 default; singleton-locked). **There is no backfill
   variant**.
-- **Codex correction needed**: `codex/02-data/sports-scheduling-and-sharding.md` §2.4 currently declares `SFI_STANDINGS`
-  as a fetched data_type. But
+- **Codex correction needed**: `/codex/02-data/sports-scheduling-and-sharding.md` §2.4 currently declares
+  `SFI_STANDINGS` as a fetched data_type. But
   [`instruments-service/instruments_service/engine/orchestrator.py`](../../../instruments-service/instruments_service/engine/orchestrator.py)
   L4365-4367 explicitly says "SFI has NO standings endpoint (confirmed from archived service). Standings come from API
   Football" and sets `_want_sfi_standings = False`. Codex §2.4 `SFI_STANDINGS` declaration is aspirational and

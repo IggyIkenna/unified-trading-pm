@@ -42,7 +42,7 @@ locked_since:
 > everything. no instruments no mvp nothing." The DRIFT venue this doc's finding concerns has been **removed entirely**
 > (Drift was hacked ~$280M on 2026-04-01, rebranded to Velocity DEX 2026-07-01, now a ~2-week-old private beta with ~$0
 > listed TVL) — all Solana perp DEXes are dropped except Jupiter (not integrated). This doc's finding/fix is now moot;
-> kept for historical record only. SSOT for the removal: `codex/04-architecture/solana-defi-coverage.md` (tombstone
+> kept for historical record only. SSOT for the removal: `/codex/04-architecture/solana-defi-coverage.md` (tombstone
 > banner).
 
 # Drift V2 sig-index parts-cache full-download inefficiency (2026-07-15)

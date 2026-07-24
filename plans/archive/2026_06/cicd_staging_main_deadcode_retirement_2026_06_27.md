@@ -1,7 +1,12 @@
 ---
 doc_type: plan
-title: CI/CD staging→main dead-code retirement — remove the squash/conflict-fallback/auto-collapse now all 21 are ldr_main
-summary: WS-L Phase-1 cleanup. With all 21 standard repos on promotion_model=ldr_main, the staging→main squash machinery is dead code. Retire the staging→main squash step + the conflict-fallback + the WS-B auto-collapse SPEC per repo, and stop the redundant empty staging→main PRs across consecutive */15 runs. GATED on Phase-2 finalize because Phase-2 rewrites the same staging-to-main.yml / version-cure files — retiring before that would collide.
+title:
+  CI/CD staging→main dead-code retirement — remove the squash/conflict-fallback/auto-collapse now all 21 are ldr_main
+summary:
+  WS-L Phase-1 cleanup. With all 21 standard repos on promotion_model=ldr_main, the staging→main squash machinery is
+  dead code. Retire the staging→main squash step + the conflict-fallback + the WS-B auto-collapse SPEC per repo, and
+  stop the redundant empty staging→main PRs across consecutive */15 runs. GATED on Phase-2 finalize because Phase-2
+  rewrites the same staging-to-main.yml / version-cure files — retiring before that would collide.
 status: superseded
 nature: process
 asset_group: cross-asset
@@ -9,7 +14,13 @@ stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]
 tags: [cicd, WS-L, ldr_main, dead-code, staging-to-main, cleanup]
-related: [cicd_consolidated_remaining_2026_06_24.md, cicd_phase2_finalize_2026_06_27.md, ../epics/infrastructure_master.md, ../../codex/08-workflows/ci-cd-flow.md]
+related:
+  [
+    /plans/archive/2026_06/cicd_consolidated_remaining_2026_06_24.md,
+    /plans/archive/2026_06/cicd_phase2_finalize_2026_06_27.md,
+    ../epics/infrastructure_master.md,
+    /codex/08-workflows/ci-cd-flow.md,
+  ]
 created: 2026-06-27
 parent_epic: infrastructure_master
 assigned_vm: NA
@@ -54,7 +65,7 @@ drift_direction: advance-code
 
 ## Codex SSOT updates
 
-- `codex/08-workflows/ci-cd-flow.md` — note the staging→main merge path is retired fleet-wide (LDR→main is the only
+- `/codex/08-workflows/ci-cd-flow.md` — note the staging→main merge path is retired fleet-wide (LDR→main is the only
   promote path under `ldr_main`).
 
 ## Progress Log

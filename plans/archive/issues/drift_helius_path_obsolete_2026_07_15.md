@@ -24,7 +24,7 @@ related:
     issues/drift_v2_sig_index_parts_cache_full_download_2026_07_15.md,
     issues/manifest_index_read_oom_canonical_cache_2026_06_24.md,
     plans/active/mvp_backfill_defi_onchain_v10_2026_06_27.md,
-    codex/04-architecture/drift-v2-data-sources.md,
+    /codex/04-architecture/drift-v2-data-sources.md,
   ]
 created: 2026-07-15
 parent_epic: defi_master
@@ -45,7 +45,7 @@ locked_since:
 > everything. no instruments no mvp nothing." The DRIFT venue this doc's finding concerns has been **removed entirely**
 > (Drift was hacked ~$280M on 2026-04-01, rebranded to Velocity DEX 2026-07-01, now a ~2-week-old private beta with ~$0
 > listed TVL) — all Solana perp DEXes are dropped except Jupiter (not integrated). This doc's finding/fix is now moot;
-> kept for historical record only. SSOT for the removal: `codex/04-architecture/solana-defi-coverage.md` (tombstone
+> kept for historical record only. SSOT for the removal: `/codex/04-architecture/solana-defi-coverage.md` (tombstone
 > banner).
 
 # DRIFT V2 Helius path obsolete — migration ruling + verify-first (2026-07-15)
@@ -55,7 +55,7 @@ locked_since:
 **Option A confirmed** via `/blocked` `BLK-ba6c367c` (slot-2), consistent with the SAME ruling given independently on
 `BLK-5d122841` + `BLK-6067d459` this session. Abandon the Helius sig-index path entirely; switch DRIFT `perp_funding`
 backfill to the shipped Velocity API ingester (`backfill_drift_v2_historical.py`, `mtds@0f70f376`). Grounded in
-`codex/04-architecture/drift-v2-data-sources.md` (`status: current`, created 2026-06-01) — it explicitly declares the
+`/codex/04-architecture/drift-v2-data-sources.md` (`status: current`, created 2026-06-01) — it explicitly declares the
 Helius sig-walker path OBSOLETE (intractable ~6.4M sig/day wall) and names Velocity as canonical. Option B's premise (a
 known reason Velocity was rejected) is **false** per the SSOT.
 

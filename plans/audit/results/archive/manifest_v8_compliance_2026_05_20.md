@@ -1,17 +1,27 @@
 ---
 doc_type: audit-result
 title: Manifest v8 Compliance Audit — 2026-05-20
-summary: Manifest v8 compliance audit (data + code) — 0% of 7,412,946 prod MTDS+IS manifest rows are at v8 (max v7; 1,336,749 NULL schema_version rows, mostly defi); code side flags deployment-service/scripts/rebuild_sports_manifest.py writing schema_version=3 and migrate_solana_defi_v4_to_v8.py never executed; 25 legacy-fallback files need sunset dates.
+summary:
+  Manifest v8 compliance audit (data + code) — 0% of 7,412,946 prod MTDS+IS manifest rows are at v8 (max v7; 1,336,749
+  NULL schema_version rows, mostly defi); code side flags deployment-service/scripts/rebuild_sports_manifest.py writing
+  schema_version=3 and migrate_solana_defi_v4_to_v8.py never executed; 25 legacy-fallback files need sunset dates.
 status: fail
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [agent-orchestrator, deployment-api, deployment-service, execution-service, features-service, instruments-service]
+repos:
+  [agent-orchestrator, deployment-api, deployment-service, execution-service, features-service, instruments-service]
 scope: [engineer, admin]
 tags: [audit, manifest, data-correctness, migration, data-status, quality-gates]
-related: [manifest_v8_compliance_2026_05_20_summary.md, manifest_v8_per_vm_shards_2026_05_20_summary.md]
+related:
+  [
+    /plans/audit/results/archive/manifest_v8_compliance_2026_05_20_summary.md,
+    /plans/audit/results/archive/manifest_v8_per_vm_shards_2026_05_20_summary.md,
+  ]
 created: 2026-05-20
-audited_scope: All 10 MTDS+IS prod _index/availability_index.parquet files (full row count by schema_version) + workspace-wide code scan of manifest-consumer files for schema_version/capture_status/available_at usage and hardcoded v<8 constants
+audited_scope:
+  All 10 MTDS+IS prod _index/availability_index.parquet files (full row count by schema_version) + workspace-wide code
+  scan of manifest-consumer files for schema_version/capture_status/available_at usage and hardcoded v<8 constants
 date: 2026-05-20
 auditor: slot-3 sub-agent
 parent_epic: manifest_master

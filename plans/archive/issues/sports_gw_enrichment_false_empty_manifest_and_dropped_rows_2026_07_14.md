@@ -127,7 +127,7 @@ attempted_failed > expected_unattempted, `source=api_football`.
 Todo-9's gate query on the current index returns: per-fixture entities 0 pending-fetch, 0 blank-reason, 0 missing-cells;
 every non-captured cell carries a typed reason. All three zeros are REAL — but the typed reasons are FALSE on 3,720
 cells. Honest-absence integrity is the entire point of the manifest
-(`codex/02-data/honest-absence-downstream-handling.md`); a green readout built on false `empty_confirmed` is a RED.
+(`/codex/02-data/honest-absence-downstream-handling.md`); a green readout built on false `empty_confirmed` is a RED.
 
 ## Consequences / holds (operator-ruled chain interrupted)
 

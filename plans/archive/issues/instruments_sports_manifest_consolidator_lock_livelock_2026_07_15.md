@@ -146,7 +146,7 @@ Direct inspection of the consolidator job that owns this bucket's index:
 ## Why not fixed here
 
 The consolidator code (`uts-prod-manifest-consolidator-instruments-sports`, part of the shared `manifest-consolidator`
-pattern per `codex/05-infrastructure/manifest-consolidator-ssot.md`) is a different system from
+pattern per `/codex/05-infrastructure/manifest-consolidator-ssot.md`) is a different system from
 `features-service-sports` — this dispatch's scope was the sports Cloud Run Job deploy, not the consolidator. The
 lock/TTL logic likely lives in a shared library or a Batch/Cloud-Run-Job image used by **~29**
 `uts-prod-manifest-consolidator-*` jobs (`gcloud run jobs list | grep consolidator` — cefi/defi/tradfi/prediction
@@ -451,7 +451,7 @@ boundary — this reinforces it's a genuine boundary-condition bug, not a fluke.
 was itself picked to match an assumed "24-30min" ceiling with almost no margin — don't repeat that mistake; either use a
 generously wide fixed value, e.g. 2700-3600s, or make the horizon asset_group-aware / read from the same per-bucket
 cadence config the consolidator's own `MANIFEST_CONSOLIDATED_STALENESS_SEC` overrides already use, since defi is already
-known to run long merges — see `codex/05-infrastructure/manifest-consolidator-ssot.md`'s per-AG cadence table). Verify
+known to run long merges — see `/codex/05-infrastructure/manifest-consolidator-ssot.md`'s per-AG cadence table). Verify
 the fix by observing live logs across several real defi merge cycles (each ~30min) — not a single point-in-time "0 DOWN"
 snapshot, which is exactly what produced the overstated claim being corrected here.
 

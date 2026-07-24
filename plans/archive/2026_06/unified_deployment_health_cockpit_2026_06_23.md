@@ -1,15 +1,26 @@
 ---
 doc_type: plan
 title: Unified Deployment & Health Observability Cockpit (live/paper/batch + fleet health)
-summary: Build a unified observability cockpit showing live/paper/batch deployment status and fleet health across all services.
+summary:
+  Build a unified observability cockpit showing live/paper/batch deployment status and fleet health across all services.
 status: complete
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [agent-orchestrator, deployment-api, deployment-service, deployment-ui, instruments-service, market-tick-data-service]
+repos:
+  [agent-orchestrator, deployment-api, deployment-service, deployment-ui, instruments-service, market-tick-data-service]
 scope: [engineer, admin]
 tags: [observability, deployment, health, cockpit, fleet, monitoring, dashboard]
-related: [deployment_observability_parity_live_batch_paper_2026_06_22.md, deployment_ui_monitoring_pane_2026_06_19.md, data_pipeline_hardening_self_monitoring_2026_06_22.md, vm_launcher_durable_log_observability_2026_06_19.md, data_feed_sla_registry_and_active_self_healing_2026_06_19.md, issues/dp_event_pubsub_delivery_gap_2026_06_22.md, issues/github_actions_billing_wall_2026_06_11.md]
+related:
+  [
+    /plans/archive/2026_07/deployment_observability_parity_live_batch_paper_2026_06_22.md,
+    /plans/archive/2026_06/deployment_ui_monitoring_pane_2026_06_19.md,
+    /plans/active/data_pipeline_hardening_self_monitoring_2026_06_22.md,
+    /plans/archive/vm_launcher_durable_log_observability_2026_06_19.md,
+    /plans/active/data_feed_sla_registry_and_active_self_healing_2026_06_19.md,
+    issues/dp_event_pubsub_delivery_gap_2026_06_22.md,
+    issues/github_actions_billing_wall_2026_06_11.md,
+  ]
 created: 2026-06-23
 parent_epic: observability_master
 assigned_vm: NA
@@ -809,7 +820,7 @@ DP\_\* → Slack delivery is live end-to-end (issue `dp_event_pubsub_delivery_ga
   (never unlock autonomously); it is archive-ELIGIBLE pending the 5-step archival ritual once the operator confirms.
 
 - 2026-07-01: **Plan COMPLETE — archiving.** Validated: ZERO open todos (incl. operator additions O1–O5); Phase 5 Codex
-  SSOT applied — `codex/05-infrastructure/deployment-observability.md` carries the cockpit + `/api/health/overview` +
+  SSOT applied — `/codex/05-infrastructure/deployment-observability.md` carries the cockpit + `/api/health/overview` +
   `/api/fleet/reconciliation` + `MONITORED_SERVICES` guard content (11 matches); cited commits resolve (PM@95907367c,
   deployment-ui@f9052c3, deployment-api@43b7932); pw:L2 gate met by the real `deployment-ui/tests/smoke/cockpit.spec.ts`
   suite. Lock cleared on operator instruction.

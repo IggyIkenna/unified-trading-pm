@@ -26,7 +26,7 @@ related:
   [
     plans/active/sports_catalog_league_grain_only_scope_2026_07_08.md,
     instruments-service/docs/SPORTS_INSTRUMENTS.md,
-    codex/02-data/availability-manifest-and-data-status.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
     plans/active/issues/instruments_docs_audit_outstanding_items_2026_07_08.md,
   ]
 created: 2026-07-08
@@ -97,9 +97,9 @@ data_types needs a call-graph trace; I could not confirm it in the time availabl
 
 ## Why it matters
 
-Per `codex/02-data/availability-manifest-and-data-status.md`, the manifest is the SSOT for honest-coverage calculations,
-and `league_id` is one of the manifest's primary partition keys. 2,373 rows silently bucketed under a shared,
-non-canonical `"UNKNOWN"` pseudo-league:
+Per `/codex/02-data/availability-manifest-and-data-status.md`, the manifest is the SSOT for honest-coverage
+calculations, and `league_id` is one of the manifest's primary partition keys. 2,373 rows silently bucketed under a
+shared, non-canonical `"UNKNOWN"` pseudo-league:
 
 - Pollutes the league-grain catalog with a phantom "league" that isn't real (the catalog row this produces has no
   meaningful `available_to`, so it will stay "active" forever until someone notices).

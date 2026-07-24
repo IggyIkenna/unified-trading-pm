@@ -41,9 +41,9 @@ tags:
   ]
 related:
   [
-    ao_operator_message_silent_drop_no_reply_ack_2026_07_08.md,
-    ao_fleet_stall_opus_spawn_and_skip_thrash_2026_07_07.md,
-    plan_reconciliation_operator_decisions_2026_07_11.md,
+    /plans/archive/issues/ao_operator_message_silent_drop_no_reply_ack_2026_07_08.md,
+    /plans/archive/issues/ao_fleet_stall_opus_spawn_and_skip_thrash_2026_07_07.md,
+    /plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md,
     ../sports_manifest_canonicalisation_2026_06_01.md,
   ]
 created: 2026-07-13

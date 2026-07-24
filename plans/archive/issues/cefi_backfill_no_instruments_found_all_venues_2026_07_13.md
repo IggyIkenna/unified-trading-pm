@@ -29,7 +29,7 @@ scope: [engineer, admin]
 tags: [cefi, backfill, instrument-resolution, availability-index, migration-collision, data-correctness, big-finding]
 related:
   [
-    tardis_concurrent_ip_lockout_2026_07_12.md,
+    /plans/active/issues/tardis_concurrent_ip_lockout_2026_07_12.md,
     ../aster_cefi_data_defi_bucket_migration_2026_07_13.md,
     ../data_pipeline_e2e_check_2026_07_10.md,
   ]
@@ -107,7 +107,7 @@ resolves this P0.
 `instrument_availability/by_date/` objects from the legacy flat layout (`day={d}/venue={V}/instruments.parquet`) to the
 SOURCE-AWARE hive layout
 (`day={d}/pipeline_mode=batch_instruments_service/asset_group={ag}/venue={V}/instruments.parquet` — the
-`codex/02-data/pipeline-mode-partition.md` convention), leaving `instruments.20260709-113120.binancefix.bak.parquet`
+`/codex/02-data/pipeline-mode-partition.md` convention), leaving `instruments.20260709-113120.binancefix.bak.parquet`
 files at the old paths. SIX MTDS readers still opened the legacy path EXACTLY (no prefix-match): the batch preflight
 gate (`preflight._check_instruments_available` — the pilot blocker), the DeFi base adapter's instrument load, the LIVE
 websocket runner's universe read (`websocket_runner._read_is_parquet_sync` — live connectors' subscription universes!),

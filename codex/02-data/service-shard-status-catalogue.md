@@ -17,7 +17,7 @@ scope: [engineer, admin]
 tags: [catalogue, data-status, shard-status, genesis, reference-data, ssot, staleness]
 related:
   [
-    data-catalogue-schema.md,
+    /codex/02-data/data-catalogue-schema.md,
     /codex/02-data/availability-manifest-and-data-status.md,
     /codex/02-data/cross-asset-canonical-target-ssot.md,
     /codex/02-data/honest-coverage-model.md,

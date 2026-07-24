@@ -616,12 +616,12 @@ parallel).
 - `cursor-configs/workspace-trading.code-workspace`, `cursor-configs/workspace-complete.code-workspace`,
   `cursor-configs/unified-trading-system-repos.code-workspace` — workspace folder entries (4 tabs × 3 repos = 12 entries
   each).
-- `codex/04-architecture/strategy-service-architecture.md` (already exists — UPDATE per Phase 9 (a)).
-- `codex/04-architecture/runtime-deployment-topology.md` (25 hits across 3 names).
-- `codex/04-architecture/risk-preflight-flow.md`, `codex/04-architecture/amm-slippage-simulation.md`,
+- `/codex/04-architecture/strategy-service-architecture.md` (already exists — UPDATE per Phase 9 (a)).
+- `/codex/04-architecture/runtime-deployment-topology.md` (25 hits across 3 names).
+- `/codex/04-architecture/risk-preflight-flow.md`, `/codex/04-architecture/amm-slippage-simulation.md`,
   `codex/04-architecture/deprecation-ledger.yaml`.
-- `codex/00-getting-started/DEPRECATED_SERVICES.md` (PROMOTE the 3 to deprecated).
-- `codex/03-services/venue-capability-registry.md`, `codex/03-observability/slos.md`.
+- `/codex/00-getting-started/DEPRECATED_SERVICES.md` (PROMOTE the 3 to deprecated).
+- `/codex/03-services/venue-capability-registry.md`, `/codex/03-observability/slos.md`.
 - `codex/11-project-management/{service-registry.yaml, mvp-universe.yaml, venue-support-matrix.yaml, epics/*.yaml}` —
   service-registry SSOT updates.
 - `codex/15-runbooks/*.md` — runbook owner / path references (alerting/position_drift, balance_drift,
@@ -629,13 +629,13 @@ parallel).
   position-reconciliation-deploy-gate).
 - `codex/10-audit/_service-pipeline-post-trade.yaml`, `codex/10-audit/repos/risk-and-exposure-service.yaml`,
   `codex/10-audit/repos/pnl-attribution-service.yaml`, `codex/10-audit/_archive/live/pnl-attribution-service.yaml`,
-  `codex/10-audit/MASTER_READINESS_LIVE_DEFI_2026_05_23.md`, `codex/10-audit/consolidation-gap-analysis.md`,
-  `codex/10-audit/CONTRACTS_SEPARATION_AUDIT.md`, `codex/10-audit/epic-checklist-mapping.yaml`,
-  `codex/10-audit/validator-epic-mapping.yaml`, `codex/10-audit/FOUNDATIONAL-REPOS-AUDIT-2026-03-07.md`.
+  `/codex/10-audit/MASTER_READINESS_LIVE_DEFI_2026_05_23.md`, `/codex/10-audit/consolidation-gap-analysis.md`,
+  `/codex/10-audit/CONTRACTS_SEPARATION_AUDIT.md`, `codex/10-audit/epic-checklist-mapping.yaml`,
+  `codex/10-audit/validator-epic-mapping.yaml`, `/codex/10-audit/FOUNDATIONAL-REPOS-AUDIT-2026-03-07.md`.
 - `codex/05-infrastructure/unified-libraries/{LIBRARY-DEPENDENCY-MATRIX.md, INTERNAL_DEPENDENCY_GRAPH.md}`.
 - `codex/06-coding-standards/{integration-testing-layers.md, dependency-management.md, quality-gates.md}`.
-- `codex/09-strategy/architecture-v2/cross-cutting/restaking-reward-economics.md`.
-- `codex/13-codex-governance/SSOT-BOUNDARY.md`, `codex/10-audit/README.md`.
+- `/codex/09-strategy/architecture-v2/cross-cutting/restaking-reward-economics.md`.
+- `/codex/13-codex-governance/SSOT-BOUNDARY.md`, `/codex/10-audit/README.md`.
 
 ### Env-var prefixes (`RISK_AND_EXPOSURE_SERVICE_*` etc.)
 

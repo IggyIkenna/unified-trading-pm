@@ -6,7 +6,15 @@ status: resolved
 nature: record
 asset_group: [infrastructure]
 stage: [meta]
-repos: [alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-service, deployment-ui]
+repos:
+  [
+    alerting-service,
+    batch-live-reconciliation-service,
+    client-reporting-api,
+    deployment-api,
+    deployment-service,
+    deployment-ui,
+  ]
 scope: [engineer, admin]
 tags: []
 related: []
@@ -38,7 +46,7 @@ locked_since: 2026-05-21
 > those... following the new canonical form with quality gates initially bypassed AFTER WE ARE SURE THEY PASSED LOCALLY
 > IN FULL as per new canonical".
 >
-> **New canonical CI flow SSOT**: `codex/08-workflows/ci-cd-flow.md` (sentinel-based two-pass: full local QG writes
+> **New canonical CI flow SSOT**: `/codex/08-workflows/ci-cd-flow.md` (sentinel-based two-pass: full local QG writes
 > `.qg_last_passed_sha` → quickmerge --agent verifies SHA match → push to staging → PR auto-merges on workspace-qg green
 > → semver-agent bump → staging-to-main → Cloud Build on main).
 
@@ -164,7 +172,7 @@ callee inherits the BuildFailed validation cache on first trigger.
 4. **Optional Plan-B**: if v2 ALSO ghosts (cache keys deeper than path), inline QG steps directly in the v2 caller. One
    job, no reusable. GitHub can't ghost what doesn't reference anything
 
-**Operational sequencing** (per `codex/08-workflows/ci-cd-flow.md` canonical flow):
+**Operational sequencing** (per `/codex/08-workflows/ci-cd-flow.md` canonical flow):
 
 1. Local `bash scripts/quality-gates.sh` IN FULL (no skip flags) → writes `.qg_last_passed_sha` sentinel
 2. `quickmerge.sh "msg" --agent` verifies sentinel SHA matches HEAD → PR to staging → auto-merge

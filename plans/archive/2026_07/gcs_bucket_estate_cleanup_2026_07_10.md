@@ -297,7 +297,7 @@ interactive-portion deletions listed in "Already shipped" above. Breakdown by ca
   `unified-trading-pm/plans/active/issues/gas_fees_lst_rates_manifest_bucket_mismatch_2026_07_10.md` (PR #920) — this is
   the "big finding, data-correctness" flag per workspace rules. **Needs your read + a direction call**: point the
   readers at the market-data bucket, or make the writer dual-write — the doc lays out both options and what to check
-  first (`codex/05-infrastructure/manifest-consolidator-ssot.md`).
+  first (`/codex/05-infrastructure/manifest-consolidator-ssot.md`).
 
 ## 3. Config SSOT cleanup (so nothing gets silently resurrected)
 

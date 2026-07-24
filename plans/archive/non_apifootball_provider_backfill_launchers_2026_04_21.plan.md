@@ -17,9 +17,9 @@ locked_by: live-defi-rollout
 locked_since: 2026-04-21
 type: code
 epic: none
-completion_gates: {code: C5, deployment: none, business: none}
+completion_gates: { code: C5, deployment: none, business: none }
 repo_gates:
-- {repo: deployment-service, code: C0}
+  - { repo: deployment-service, code: C0 }
 depends_on: []
 isProject: false
 ---
@@ -56,13 +56,13 @@ dispatched to a VM without laptop runs.
 
 ## Pre-audit manifest
 
-| File                                              | Reference                                                                           |
-| ------------------------------------------------- | ----------------------------------------------------------------------------------- |
-| `launch-api-football-backfill-vm.sh`              | Template — copy the argparse + singleton-lock + metadata wiring shape.              |
-| `launch-sfi-forward-poll.sh`                      | Sibling example — simpler shape, same metadata.                                     |
-| `launch-footystats-forward-poll.sh`               | Existing FootyStats launcher — check what it takes + what's missing for historical. |
-| `setup-data-pipeline-vm.sh` §line 451+            | Generic VM_TASK fallback consumes VM_SPORTS_PROVIDER — works for every provider.    |
-| `codex/02-data/sports-scheduling-and-sharding.md` | §2 provider-by-provider cadence + data-publication rules.                           |
+| File                                               | Reference                                                                           |
+| -------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| `launch-api-football-backfill-vm.sh`               | Template — copy the argparse + singleton-lock + metadata wiring shape.              |
+| `launch-sfi-forward-poll.sh`                       | Sibling example — simpler shape, same metadata.                                     |
+| `launch-footystats-forward-poll.sh`                | Existing FootyStats launcher — check what it takes + what's missing for historical. |
+| `setup-data-pipeline-vm.sh` §line 451+             | Generic VM_TASK fallback consumes VM_SPORTS_PROVIDER — works for every provider.    |
+| `/codex/02-data/sports-scheduling-and-sharding.md` | §2 provider-by-provider cadence + data-publication rules.                           |
 
 ## Singleton-lock semantics per provider
 

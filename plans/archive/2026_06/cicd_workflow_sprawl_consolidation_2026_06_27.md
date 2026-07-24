@@ -1,7 +1,12 @@
 ---
 doc_type: plan
 title: CI/CD workflow-sprawl consolidation — fold redundant CI workflows + token-pool split + SIT-harness decouple
-summary: release_machinery sprawl reduction. Fold sit-starvation→sit-debounce, merge ci-status-reconciler+ci-failure-watcher into ci-health, consolidate the main-backmerge drift-tick + promotion-lag-monitor into one branch-health monitor, extract a shared agent-runner.yml. Plus the token-pool split (same-repo read-only→GITHUB_TOKEN, cross-repo→PAT), the SIT-harness-hygiene-from-cascade-validity decouple, the game-day+synthetic smokes into the SIT schedule, and a per-cone parallel-staging-locks design. Independent of Phase-2 (different workflow files).
+summary:
+  release_machinery sprawl reduction. Fold sit-starvation→sit-debounce, merge ci-status-reconciler+ci-failure-watcher
+  into ci-health, consolidate the main-backmerge drift-tick + promotion-lag-monitor into one branch-health monitor,
+  extract a shared agent-runner.yml. Plus the token-pool split (same-repo read-only→GITHUB_TOKEN, cross-repo→PAT), the
+  SIT-harness-hygiene-from-cascade-validity decouple, the game-day+synthetic smokes into the SIT schedule, and a
+  per-cone parallel-staging-locks design. Independent of Phase-2 (different workflow files).
 status: superseded
 nature: process
 asset_group: cross-asset
@@ -9,7 +14,12 @@ stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]
 tags: [cicd, sprawl, consolidation, sit, ci-health, branch-health, token-pool, release_machinery]
-related: [cicd_consolidated_remaining_2026_06_24.md, ../epics/infrastructure_master.md, ../../codex/08-workflows/ci-cd-flow.md]
+related:
+  [
+    /plans/archive/2026_06/cicd_consolidated_remaining_2026_06_24.md,
+    ../epics/infrastructure_master.md,
+    /codex/08-workflows/ci-cd-flow.md,
+  ]
 created: 2026-06-27
 parent_epic: infrastructure_master
 assigned_vm: NA
@@ -65,7 +75,7 @@ drift_direction: advance-code
 
 ## Codex SSOT updates
 
-- `codex/08-workflows/ci-cd-flow.md` — update the workflow inventory (folded names) + the token-pool convention.
+- `/codex/08-workflows/ci-cd-flow.md` — update the workflow inventory (folded names) + the token-pool convention.
 
 ## Progress Log
 
@@ -84,16 +94,16 @@ drift_direction: advance-code
     dispatch + label). `conflict-resolution-agent.yml` collapsed to thin input-resolver → calls `agent-runner.yml`.
   - Task 6 ✅: Token-pool split — `ldr-to-main-promote.yml` + `ldr-to-staging-promote.yml` checkout moved to
     `GITHUB_TOKEN`; App token created after checkout for cross-repo ops. Convention documented in
-    `codex/08-workflows/ci-cd-flow.md`.
+    `/codex/08-workflows/ci-cd-flow.md`.
   - Task 7 ✅: `sit-gate.yml` `harness-lint` job added (parallel to `lock-staging`, `continue-on-error: true`). Checks
     SIT harness existence + consecutive-failure pattern; on issues dispatches `wall_type=harness_lint` fix-task to
     orchestrator. Cascade NEVER gated on this job.
   - Task 8 ✅: `sit-gate.yml` dispatch step extended: `game-day-sit` + `synthetic-smokes` dispatched to
     `system-integration-tests` best-effort after `full-workspace-sit` (hard-fail). Notify message updated.
-  - Task 9 ✅: `codex/08-workflows/per-cone-parallel-staging-locks.md` written — cone assignments (T0-T1-base exclusive;
-    T3+ concurrent), lock schema sketch, prerequisites.
-  - Codex SSOT updated: `codex/08-workflows/ci-cd-flow.md` — workflow inventory table (folded/retired names), token-pool
-    convention section, SIT-harness lint decoupling section. All stale `ci-failure-watcher`/`promotion-lag-monitor`
-    references updated.
+  - Task 9 ✅: `/codex/08-workflows/per-cone-parallel-staging-locks.md` written — cone assignments (T0-T1-base
+    exclusive; T3+ concurrent), lock schema sketch, prerequisites.
+  - Codex SSOT updated: `/codex/08-workflows/ci-cd-flow.md` — workflow inventory table (folded/retired names),
+    token-pool convention section, SIT-harness lint decoupling section. All stale
+    `ci-failure-watcher`/`promotion-lag-monitor` references updated.
   - QG: green (exit 0) after fixing `per-cone-parallel-staging-locks.md` missing scope frontmatter + PM own copy of
     `main-backmerge-to-ldr.yml` schedule removal.

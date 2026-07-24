@@ -1,7 +1,11 @@
 ---
 doc_type: plan
 title: CI/CD AWS dual-cloud image builds — router + buildspec + cross-cloud parity (mirror the GCP cloud-build-router)
-summary: 'Stand up the AWS side of dual-cloud image builds to mirror the GCP cloud-build-router: an AWS build router, buildspec.aws.yaml generator + fleet rollout, cross-cloud parity test, ECR live-target reconcile, the staging→main (now LDR→main) image build/validate gate, Tier-D per-service Cloud Run deploy-config audit, and the dual-cloud codex SSOT. Independent of Phase-2 — fully parallel-startable. Owns NEW files (no collision with the version-registry work).'
+summary:
+  "Stand up the AWS side of dual-cloud image builds to mirror the GCP cloud-build-router: an AWS build router,
+  buildspec.aws.yaml generator + fleet rollout, cross-cloud parity test, ECR live-target reconcile, the staging→main
+  (now LDR→main) image build/validate gate, Tier-D per-service Cloud Run deploy-config audit, and the dual-cloud codex
+  SSOT. Independent of Phase-2 — fully parallel-startable. Owns NEW files (no collision with the version-registry work)."
 status: superseded
 nature: process
 asset_group: cross-asset
@@ -9,7 +13,13 @@ stage: [meta]
 repos: [unified-trading-pm, deployment-service]
 scope: [engineer, admin]
 tags: [cicd, dual-cloud, aws, ecr, codebuild, buildspec, cloud-build-router, promotion_pipeline]
-related: [cicd_consolidated_remaining_2026_06_24.md, ../epics/infrastructure_master.md, ../../codex/05-infrastructure/vm-tarball-deployment.md, ../../codex/08-workflows/ci-cd-flow.md]
+related:
+  [
+    /plans/archive/2026_06/cicd_consolidated_remaining_2026_06_24.md,
+    ../epics/infrastructure_master.md,
+    /codex/05-infrastructure/vm-tarball-deployment.md,
+    /codex/08-workflows/ci-cd-flow.md,
+  ]
 created: 2026-06-27
 parent_epic: infrastructure_master
 assigned_vm: NA
@@ -68,13 +78,13 @@ drift_direction: advance-code
 - [x] [SCRIPT] P3. Replace the CodeBuild PUSH webhook with router-driven starts OR document the webhook model. **Gate:**
       build starts are router-driven, or the webhook model is documented. (promotion_pipeline) ✅ Router-driven is
       canonical; PUSH webhooks are redundant/harmless. Decision documented in
-      codex/05-infrastructure/dual-cloud-image-builds.md.
+      /codex/05-infrastructure/dual-cloud-image-builds.md.
 - [x] [INFRA] P3. (optional, operator decision) Make the GCP `…-live-defi-rollout` build also opt-in (cost vs coverage).
       **Gate:** operator decision recorded; opt-in implemented if chosen. (promotion_pipeline) ✅ Decision: no change —
       operator must explicitly request LDR branch triggers. Documented in codex.
 - [x] [DOC] P2. Codex SSOT § "Dual-cloud image builds" — router→buildspec→QG→push→provenance, both clouds. **Gate:** the
       codex doc describes the full dual-cloud build flow. (promotion_pipeline) ✅
-      codex/05-infrastructure/dual-cloud-image-builds.md — unified-trading-pm PR #618
+      /codex/05-infrastructure/dual-cloud-image-builds.md — unified-trading-pm PR #618
 
 ## Success criteria
 
@@ -89,7 +99,7 @@ drift_direction: advance-code
 
 - 2026-06-27: Split from the cicd consolidated tracker (promotion_pipeline / dual-cloud lane). Independent — parallel.
 - 2026-06-27 (session): PM items shipped in PR #618 — cloud-build-router-aws.yml, image-build-validate.yml,
-  image-build-gate.yml (template + 24-repo rollout), codex/05-infrastructure/dual-cloud-image-builds.md. Decisions
+  image-build-gate.yml (template + 24-repo rollout), /codex/05-infrastructure/dual-cloud-image-builds.md. Decisions
   recorded in codex: ECR target confirmed as 427895769566 (no TF divergence), webhook model documented (router is
   canonical), GCP LDR branch triggers left as operator decision. Tasks 2+4, 5, 8, 9, 10, 11 ✅. Remaining:
   deployment-service commit (tasks 1, 3, 6, 7 — buildspec template fix, 12 Cloud Run configs, parity QG script,

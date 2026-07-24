@@ -6,17 +6,24 @@ status: complete
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [alerting-service, deployment-service, e2e-testing, execution-service, features-service, market-tick-data-service]
+repos:
+  [alerting-service, deployment-service, e2e-testing, execution-service, features-service, market-tick-data-service]
 scope: [engineer, admin]
 tags: []
-related: [plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md, plans/active/promote_workflow_may23_cli_path_2026_05_10.md, plans/active/master_to_live_defi_2026_05_23.md, plans/active/features_repo_consolidation_2026_05_08.md]
+related:
+  [
+    plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md,
+    plans/active/promote_workflow_may23_cli_path_2026_05_10.md,
+    plans/active/master_to_live_defi_2026_05_23.md,
+    plans/active/features_repo_consolidation_2026_05_08.md,
+  ]
 created: 2026-05-19
 archived: 2026-05-23
 last_updated: 2026-05-23
 estimate_class: brand-new
 estimate_baseline_ai_days: 15.0
 estimate_calibrated_ai_days: 15.0
-estimate_calibration_note: 'Class=brand-new. Original 12 cal-AI-days (per-venue funding adapter + 30-day backfill + live
+estimate_calibration_note: "Class=brand-new. Original 12 cal-AI-days (per-venue funding adapter + 30-day backfill + live
 
   wiring + strategy consumer + cloud-providers rollback + features-service deploy + paper verify).
 
@@ -26,7 +33,7 @@ estimate_calibration_note: 'Class=brand-new. Original 12 cal-AI-days (per-venue 
 
   averaged ~180 cal-AI-days/day, so 15 cal-AI-days fits a ≤4-day calendar window with 3+ slots.
 
-  '
+  "
 parent_epic: features_and_ml_master
 assigned_vm: vm-ml
 priority: P2
@@ -366,9 +373,9 @@ surface for performance-derived features to exist even if it only computes passt
 
 ## Codex SSOT updates
 
-- codex/04-architecture/live-pipeline-architecture.md — add Phase 5 perp_funding_rates feature_group spec
-- codex/02-data/honest-absence-downstream-handling.md — add EXPECTED_NO_FUNDING_RATE_TICKS reason
-- codex/06-coding-standards/quality-gates.md — confirm features-service QG covers cefi/ subdir
+- /codex/04-architecture/live-pipeline-architecture.md — add Phase 5 perp_funding_rates feature_group spec
+- /codex/02-data/honest-absence-downstream-handling.md — add EXPECTED_NO_FUNDING_RATE_TICKS reason
+- /codex/06-coding-standards/quality-gates.md — confirm features-service QG covers cefi/ subdir
 
 ## Temporary states + their canonical follow-up plans
 

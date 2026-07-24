@@ -81,9 +81,9 @@ tags:
   ]
 related:
   [
-    sports_p2_features_history_to_ml_ready_2026_06_27.md,
-    sports_fixtures_schema_split_completion_2026_06_20.md,
-    ../../../codex/02-data/honest-absence-downstream-handling.md,
+    /plans/active/sports_p2_features_history_to_ml_ready_2026_06_27.md,
+    /plans/archive/2026_07/sports_fixtures_schema_split_completion_2026_06_20.md,
+    /codex/02-data/honest-absence-downstream-handling.md,
   ]
 created: 2026-07-15
 parent_epic: sports_master

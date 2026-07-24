@@ -50,9 +50,9 @@ tags:
   ]
 related:
   [
-    codex/02-data/pipeline-mode-partition.md,
-    codex/02-data/availability-manifest-and-data-status.md,
-    codex/02-data/defi-canonical-naming-ssot.md,
+    /codex/02-data/pipeline-mode-partition.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/02-data/defi-canonical-naming-ssot.md,
     plans/active/issues/cefi_onchain_venues_mislabeled_batch_tardis_2026_07_20.md,
     plans/active/issues/defi_fold_manifest_registration_pending_2026_07_21.md,
   ]
@@ -213,7 +213,7 @@ GMX shards per-instrument on days its native Graph schema returns multiple marke
 **Migration performed** (idempotent, proof-gated — copy -> `gcs_describe_object` verify size match on both old+new ->
 delete original; never deletes before a verified twin exists). Executed via a one-off script
 (`unified_trading_library.cloud_interface.gcs_copy_object` / `gcs_delete_object` / `gcs_describe_object` — never
-subprocess `gcloud`/`gsutil`), NOT committed to any repo (temporary, per `codex/06-coding-standards/script-homes.md`).
+subprocess `gcloud`/`gsutil`), NOT committed to any repo (temporary, per `/codex/06-coding-standards/script-homes.md`).
 
 **A first single-phase design was RETIRED after it hit real production contention.** The first attempt did the GCS
 copy + a per-unit `DefiManifestRecorder` open/write/close INSIDE the same worker thread, at 24-way concurrency.
@@ -269,10 +269,10 @@ regardless of consolidator completion timing.
 
 ## 6. Codex SSOTs consulted
 
-- [`codex/02-data/pipeline-mode-partition.md`](../../../codex/02-data/pipeline-mode-partition.md) — `{mode}_{source}`
+- [`/codex/02-data/pipeline-mode-partition.md`](/codex/02-data/pipeline-mode-partition.md) — `{mode}_{source}`
   convention, reader prefix-match rule (`batch_*` is read-safe to move within), GCS delete-safety invariant.
-- [`codex/02-data/availability-manifest-and-data-status.md`](../../../codex/02-data/availability-manifest-and-data-status.md)
-  — 4-state `capture_status`, shard-atom definition (`pipeline_mode` is NOT part of the shard atom, confirmed via the
+- [`/codex/02-data/availability-manifest-and-data-status.md`](/codex/02-data/availability-manifest-and-data-status.md) —
+  4-state `capture_status`, shard-atom definition (`pipeline_mode` is NOT part of the shard atom, confirmed via the
   `cefi_onchain_venues_mislabeled_batch_tardis_2026_07_20.md` precedent — a `pipeline_mode` move does not double-count
   coverage).
 - [`plans/active/issues/cefi_onchain_venues_mislabeled_batch_tardis_2026_07_20.md`](cefi_onchain_venues_mislabeled_batch_tardis_2026_07_20.md)

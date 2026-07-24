@@ -19,8 +19,12 @@ estimate_calibrated_ai_days: 2.8
 priority: P1
 last_updated: 2026-05-23
 archived: 2026-05-23
-source: design discussion with operator (Harsh) + Ikenna 2026-05-22 — agent-orchestrator dashboard 401 triage → centralized-API decision (Ikenna, Slack 2026-05-22 17:1x)
-gate: Phase 1 (private-VPC repoint) before workers drop public IPs; Phase 3 (UI single-baseUrl) deletes per-backend-token code — align with the dashboard author first
+source:
+  design discussion with operator (Harsh) + Ikenna 2026-05-22 — agent-orchestrator dashboard 401 triage →
+  centralized-API decision (Ikenna, Slack 2026-05-22 17:1x)
+gate:
+  Phase 1 (private-VPC repoint) before workers drop public IPs; Phase 3 (UI single-baseUrl) deletes per-backend-token
+  code — align with the dashboard author first
 ---
 
 # Multi-backend fleet connectivity — centralized API router
@@ -220,7 +224,7 @@ breaking the rest.
 
 ## Phase 6 — Codex SSOT + docs (P2)
 
-- [x] ✅ [AGENT] P2. `codex/04-architecture/agent-orchestrator-overview.md` — centralized API-router model (one HTTPS
+- [x] ✅ [AGENT] P2. `/codex/04-architecture/agent-orchestrator-overview.md` — centralized API-router model (one HTTPS
       front, private-VPC proxy, single token). Supersede any per-VM-FQDN / per-backend-token text. Resolve the
       `orchestrator_vm_registry.yaml` (per-VM FQDN) ↔ `worker.md` (outbound POST) drift Ikenna flagged. Fixed JWT SSOT
       description (GCS hot-reload deferred P3; actual SSOT = `ORCHESTRATOR_JWT_SECRET` env var). — PM@ac0579abc

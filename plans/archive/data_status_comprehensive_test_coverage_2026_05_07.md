@@ -9,27 +9,40 @@ stage: [meta]
 repos: [deployment-api, deployment-ui, market-tick-data-service, unified-api-contracts, unified-trading-library]
 scope: [engineer, admin]
 tags: []
-related: [data_status_drilldown_shard_atom_alignment_2026_05_07.md, aws_migration_defi_first_2026_05_07.md, launcher_scripts_consolidation_into_deployment_service_2026_05_07.md, deploy_missing_auto_launch_2026_05_07.md]
-created: '2026-05-07'
-overview: Build a comprehensive regression-test net for the data-status surface — Python unit tests for SSOT alignment + cutoffs + deploy-missing + cloud-agnostic behavior, Vitest component tests for the UI, and a Playwright e2e suite that walks every (service, asset_group) pair. Premise — the data-status surface keeps breaking because (a) writers + readers + UI live in different repos with no contract test gluing them, (b) the pieces are mocked individually but never end-to-end, (c) cloud-agnostic claims aren't tested.
+related:
+  [
+    /plans/archive/data_status_drilldown_shard_atom_alignment_2026_05_07.md,
+    /plans/archive/2026_05/aws_migration_defi_first_2026_05_07.md,
+    /plans/archive/launcher_scripts_consolidation_into_deployment_service_2026_05_07.md,
+    /plans/archive/deploy_missing_auto_launch_2026_05_07.md,
+  ]
+created: "2026-05-07"
+overview:
+  Build a comprehensive regression-test net for the data-status surface — Python unit tests for SSOT alignment + cutoffs
+  + deploy-missing + cloud-agnostic behavior, Vitest component tests for the UI, and a Playwright e2e suite that walks
+  every (service, asset_group) pair. Premise — the data-status surface keeps breaking because (a) writers + readers + UI
+  live in different repos with no contract test gluing them, (b) the pieces are mocked individually but never
+  end-to-end, (c) cloud-agnostic claims aren't tested.
 type: code
 epic: epic-deployment
-completion_gates: {code: C5, deployment: none, business: none}
+completion_gates: { code: C5, deployment: none, business: none }
 repo_gates:
-- {repo: deployment-api, code: C2, deployment: none, business: none}
-- {repo: deployment-ui, code: C2, deployment: none, business: none}
-- {repo: unified-api-contracts, code: C2, deployment: none, business: none}
-- {repo: unified-trading-library, code: C2, deployment: none, business: none}
-- {repo: unified-trading-pm, code: C2, deployment: none, business: none}
+  - { repo: deployment-api, code: C2, deployment: none, business: none }
+  - { repo: deployment-ui, code: C2, deployment: none, business: none }
+  - { repo: unified-api-contracts, code: C2, deployment: none, business: none }
+  - { repo: unified-trading-library, code: C2, deployment: none, business: none }
+  - { repo: unified-trading-pm, code: C2, deployment: none, business: none }
 depends_on: [data_status_drilldown_shard_atom_alignment_2026_05_07.md]
 todos: []
 isProject: false
 estimate_class: design
 estimate_baseline_ai_days: 15
 estimate_calibrated_ai_days: 9
-estimate_calibration_note: 'Backfilled 2026-05-13: 30 todos, 0 done; cross-repo regression-test net (Python unit + Vitest + Playwright e2e) across deployment-api/ui + UAC + UTL + PM. Design class (test contract surface design; building matrices). Baseline 15 (~0.5 AI-day per substantive todo, mech-leaning); × 0.6 = 9.0.
+estimate_calibration_note: "Backfilled 2026-05-13: 30 todos, 0 done; cross-repo regression-test net (Python unit +
+  Vitest + Playwright e2e) across deployment-api/ui + UAC + UTL + PM. Design class (test contract surface design;
+  building matrices). Baseline 15 (~0.5 AI-day per substantive todo, mech-leaning); × 0.6 = 9.0.
 
-  '
+  "
 ---
 
 # Comprehensive data-status test coverage
@@ -276,7 +289,7 @@ related deployment-api PR.
   Vitest render-gate test + one Python contract test.
 - **Regression gate:** the four 2026-05-07 + earlier incidents listed in "Why" each have a named test that fails when
   the bug is reverted (verified-via-stash-and-rerun protocol).
-- **Documentation gate:** new codex doc `codex/06-coding-standards/test-coverage-data-status.md` lists the test
+- **Documentation gate:** new codex doc `/codex/06-coding-standards/test-coverage-data-status.md` lists the test
   patterns + how to add a new (service, asset_group) to the suite when one lands.
 
 ## Out of scope

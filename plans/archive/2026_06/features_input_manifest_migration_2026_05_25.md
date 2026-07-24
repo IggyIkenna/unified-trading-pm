@@ -17,7 +17,7 @@ assigned_vm: vm-ml
 estimate_class: refactor
 estimate_baseline_ai_days: 9
 estimate_calibrated_ai_days: 3.6
-estimate_calibration_note: 'Refactor class (0.4×): propagates the EXISTING onchain manifest-read pattern
+estimate_calibration_note: "Refactor class (0.4×): propagates the EXISTING onchain manifest-read pattern
 
   (`_read_manifest_rows` → `read_availability_index` → capture_status) to 3 more
 
@@ -25,7 +25,7 @@ estimate_calibration_note: 'Refactor class (0.4×): propagates the EXISTING onch
 
   (one shared UTL helper); the bulk is delete-and-rewire across known callsites.
 
-  '
+  "
 priority: P2
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
@@ -237,11 +237,11 @@ Verified against the plans corpus + UAC + recent repo commits before scoping, to
 
 ### Phase 6 — Codex SSOT + governance `[P1]`
 
-- [x] ✅ [DOC] P1. Update `codex/02-data/availability-manifest-and-data-status.md` §"Expected-universe pre-flight
+- [x] ✅ [DOC] P1. Update `/codex/02-data/availability-manifest-and-data-status.md` §"Expected-universe pre-flight
       chain": add the **features→MDPS** manifest-read contract row (currently only MTDS+MDPS are operationalized;
       features pre-flight is only a scope gate). Document features reading MDPS `capture_status`. — PM@310d4420c:
       updated features row in pre-flight chain table + implementation refs.
-- [x] ✅ [DOC] P1. Update `codex/02-data/data-lineage-MTDS-features-ml.md` to state features input discovery is
+- [x] ✅ [DOC] P1. Update `/codex/02-data/data-lineage-MTDS-features-ml.md` to state features input discovery is
       manifest-driven (v8), not path-probe. — PM@310d4420c: added "Features input discovery — manifest-driven (v8)"
       section with pattern, motivation, refs.
 

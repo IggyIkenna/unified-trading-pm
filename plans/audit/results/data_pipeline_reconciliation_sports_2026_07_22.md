@@ -143,7 +143,7 @@ master plan's Progress Log for the full analysis; not re-litigated here.)
 
 ## Phase 2 — non-canonical sweep
 
-Register (`codex/02-data/non-canonical-path-inventory.md`) re-check for sports-scoped entries: no new non-canonical
+Register (`/codex/02-data/non-canonical-path-inventory.md`) re-check for sports-scoped entries: no new non-canonical
 location found beyond what's already tracked (the K1 casing axis + the 6,110-row phantom population above, both
 already-registered/tracked, not new register entries).
 

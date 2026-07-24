@@ -1,6 +1,6 @@
 ---
 doc_type: plan
-title: 'Handoff Guide: Unified Trading System - Epics 1-3'
+title: "Handoff Guide: Unified Trading System - Epics 1-3"
 summary:
 status: complete
 nature: record
@@ -10,7 +10,7 @@ repos: [execution-service, instruments-service, market-tick-data-service]
 scope: [engineer, admin]
 tags: []
 related: []
-created: '2026-03-03'
+created: "2026-03-03"
 ---
 
 # Handoff Guide: Unified Trading System - Epics 1-3
@@ -46,7 +46,7 @@ You're taking over **3 critical epics** that build the foundation for live tradi
   - [Project #8 - Market Data](https://github.com/users/IggyIkenna/projects/8/views/1)
 - [ ] Run quality gates on existing libraries (verify they pass)
 - [ ] Read Epic 1 breakdown:
-      [`unified-trading-codex/11-project-management/epic-breakdowns/epic-unified-libraries-refactor.md`](../epic-breakdowns/epic-unified-libraries-refactor.md)
+      [`unified-trading-/codex/11-project-management/epic-breakdowns/epic-unified-libraries-refactor.md`](../epic-breakdowns/epic-unified-libraries-refactor.md)
 
 ### Day 2
 

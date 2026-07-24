@@ -10,7 +10,7 @@ repos: [deployment-service, features-service]
 scope: [engineer, admin]
 tags: []
 related: []
-created: '2026-06-17'
+created: "2026-06-17"
 parent_epic: infrastructure_master
 assigned_vm: vm-cross-cutting
 estimate_class: infra
@@ -98,5 +98,5 @@ no logs). Use `if/fi`, never `||`, in the bootstrap.
 
 ## Codex SSOT updates
 
-- `codex/05-infrastructure/vm-tarball-deployment.md` — add the "auto-refresh from LDR" section (cron + SHA-skip + the
+- `/codex/05-infrastructure/vm-tarball-deployment.md` — add the "auto-refresh from LDR" section (cron + SHA-skip + the
   no-`||`-in-bootstrap pitfall + the `_refresh_status.json` audit object).

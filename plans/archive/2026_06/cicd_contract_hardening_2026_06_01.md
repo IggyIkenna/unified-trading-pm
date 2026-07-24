@@ -6,10 +6,23 @@ status: complete
 nature: record
 asset_group: [infrastructure]
 stage: [meta]
-repos: [agent-orchestrator, alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-service]
+repos:
+  [
+    agent-orchestrator,
+    alerting-service,
+    batch-live-reconciliation-service,
+    client-reporting-api,
+    deployment-api,
+    deployment-service,
+  ]
 scope: [engineer, admin]
 tags: []
-related: [plans/active/issues/full_cicd_sit_target_state_2026_05_24.md, plans/active/workspace_repo_branch_protection_gaps_2026_05_29.md, plans/archive/2026_05/ci_canonical_v2_migration_2026_05_29.md]
+related:
+  [
+    plans/active/issues/full_cicd_sit_target_state_2026_05_24.md,
+    plans/active/workspace_repo_branch_protection_gaps_2026_05_29.md,
+    plans/archive/2026_05/ci_canonical_v2_migration_2026_05_29.md,
+  ]
 created: 2026-06-01
 parent_epic: infrastructure_master
 assigned_vm: vm-cross-cutting
@@ -284,7 +297,7 @@ source: [plans/audit/results/infrastructure_master_audit_2026_06_01.md]
 | 6    | `issues/semver_version_bump_skip_ci_promotion_block_2026_06_09`   | promotion            | semver `[skip ci]` bump → v2-never-reported promotion block (auto-recover shipped; residuals)                    |
 | 4    | `issues/ci_incident_findings_2026_06_09`                          | ci/cd                | 2026-06-09 incident findings (unacked residuals → fold into waves or archive)                                    |
 | 2    | `staging_clean_start_and_stale_pr_hygiene_2026_06_08`             | promotion            | staging force-sync clean-start + stale promote-PR hygiene                                                        |
-| 1    | `ci_local_qg_parity_2026_06_08`                                   | quality-gates        | local QG ↔ CI v2 parity (drift-tick + backmerge cron)                                                           |
+| 1    | `ci_local_qg_parity_2026_06_08`                                   | quality-gates        | local QG ↔ CI v2 parity (drift-tick + backmerge cron)                                                            |
 | 1    | `issues/sit_uac_orphan_cap_stale_consumer_list_2026_06_07`        | SIT                  | SIT UAC orphan-cap + stale consumer list                                                                         |
 | 1    | `issues/harsh_pathb_and_cicd_reform_setup_2026_06_09`             | ci/cd                | Harsh-laptop Path-B + CI/CD reform setup parity                                                                  |
 | 0    | `issues/orphan_rootm_branch_unmerged_work_2026_06_05`             | hygiene              | 0 open checkboxes — **archive-candidate** per issue-doc lifecycle (verify content acked, then archive)           |
@@ -610,11 +623,12 @@ what the operator is seeing:
       NOT skip later steps in the same job**; gate every subsequent step on a
       `steps.<id>.outputs.version_only != 'true'` guard (or make the short-circuit its own early-exit job that still
       reports the required context). Rollout: `rollout-workflow-templates.sh` (align PM's own `.github/` copies —
-      hand-maintained) → land via the sanctioned PM
-      `scripts/**`+`.github/**`carve-out (chicken-and-egg: a corrected     gate can't pass through the gate it fixes). Verify on the next real release: (i) bump commit reports v2 green in     seconds, (ii) staging→main merges with no manual recovery, (iii) no version escalation, (iv)`main`
-      image carries the bumped version. repo: unified-trading-pm. **DEFERRED FUTURE (Option B, not now):\*\* fold the
-      bump into the LDR→staging promotion content (zero separate commit) — cleaner but moves the bump pre-SIT + re-wires
-      the breaking-cascade/lock timing (large blast radius); keep as a follow-up cleanup, not the asap fix.
+      hand-maintained) → land via the sanctioned PM `scripts/**`+`.github/**`carve-out (chicken-and-egg: a corrected
+      gate can't pass through the gate it fixes). Verify on the next real release: (i) bump commit reports v2 green in
+      seconds, (ii) staging→main merges with no manual recovery, (iii) no version escalation, (iv)`main` image carries
+      the bumped version. repo: unified-trading-pm. **DEFERRED FUTURE (Option B, not now):\*\* fold the bump into the
+      LDR→staging promotion content (zero separate commit) — cleaner but moves the bump pre-SIT + re-wires the
+      breaking-cascade/lock timing (large blast radius); keep as a follow-up cleanup, not the asap fix.
 - [x] ✅ [RESOLVED-STALE: LDR-trunk drain shipped 2026-06-09/10] [SCRIPT] P2. **`ci-failure-watcher` disposition once
       Option C lands — do NOT retire the watcher (corrects the proposal's §8/open-Q3 overreach).** The watcher has TWO
       independent flags: `--escalate` (`conflict_prs_to_escalate` / `blocked_failing_prs_to_escalate`,
@@ -1061,14 +1075,13 @@ coverage-gaming). `ibkr` also has a `MIN_COVERAGE=0` config bug to fix first.
       deps); pyproject re-adds it editable for the 14 test files importing deployment_api.routes/utils/main. staging
       clears via promotion. I diagnosed identically but did not push a competing fix.] deployment-service LDR + staging
       v2 RED — orphaned cross-repo test import after the circular-dep cut.** `tests/mocks.py:10` hard-imports
-      `from deployment_api.utils.path_combinatorics import CombinatoricEntry`, but the
-      deployment-api↔deployment-service circular-dep removal dropped `deployment-api` from deployment-service's
-      pyproject **on LDR** (main still declares it at pyproject:9 + `[tool.uv.sources]` → main GREEN @36d24833, the
-      STALE side; LDR @2ab4cce5 = RED, run 26803497154). The `_CombinatoricEntry` usage at `tests/mocks.py:95` is
-      already guarded (`if _CombinatoricEntry is not None`) → the type is optional-by-design; the bug is the hard
-      top-level import. Fix on LDR (the correct post-cut side): make the import resilient OR relocate
-      `CombinatoricEntry` to a shared contract — do NOT re-add deployment-api as a dep (re-creates the just-removed
-      cycle). repo: deployment-service.
+      `from deployment_api.utils.path_combinatorics import CombinatoricEntry`, but the deployment-api↔deployment-service
+      circular-dep removal dropped `deployment-api` from deployment-service's pyproject **on LDR** (main still declares
+      it at pyproject:9 + `[tool.uv.sources]` → main GREEN @36d24833, the STALE side; LDR @2ab4cce5 = RED, run
+      26803497154). The `_CombinatoricEntry` usage at `tests/mocks.py:95` is already guarded
+      (`if _CombinatoricEntry is not None`) → the type is optional-by-design; the bug is the hard top-level import. Fix
+      on LDR (the correct post-cut side): make the import resilient OR relocate `CombinatoricEntry` to a shared contract
+      — do NOT re-add deployment-api as a dep (re-creates the just-removed cycle). repo: deployment-service.
 - [x] ✅ [LINT] P2. **[PROMOTION-LAG, not fresh debt — re-audit 2026-06-02: the 14 QG-scope ruff errors are ALREADY
       FIXED on LDR @eabdf05 "fix(lint): green all 14 ruff errors in QG scope (tests/ lint pass)"; e2e LDR is 10 commits
       ahead of main. main red (run 26796774457 @b526b5eb) clears via the LDR→main promotion campaign (P1 below), NOT a
@@ -1299,7 +1312,7 @@ machinery):
 > SIT v2 QG is GREEN; these are in the SIT _integration_ `code_test` suite (the staging→main gate content), NOT the v2
 > QG. All 3 are UPSTREAM (not SIT's to fix). They must be green for a trustworthy staging→main SIT promotion.
 
-- [x] ✅ [TEST] P1. **[RESOLVED 2026-06-02: all 7 added to __all__ + missing imports added for GitHubWorkflowEvent
+- [x] ✅ [TEST] P1. **[RESOLVED 2026-06-02: all 7 added to **all** + missing imports added for GitHubWorkflowEvent
       (domain/cicd) and InternalEndpointSpec (internal/registry). QG green, basedpyright 0 new errors,
       test_uic_completeness 0 missing.] UAC `unified_api_contracts.internal.__all__` missing 342 public classes** (12
       `test_uic_completeness.py` failures). `unified_api_contracts/internal/__init__.py` `__all__` is incomplete vs the
@@ -1741,8 +1754,8 @@ machinery):
 > **Self-contained for a fresh agent.** ONE ordered backlog covering BOTH workstreams: **(A)** revive the dead
 > staging→main promotion automation, and **(B)** green the per-repo QG debt the broken gates were hiding. Do them in the
 > order below (loudest + cheapest first; greening can run in parallel per repo). Token + safety rules are in the HANDOFF
-> block above. Codex SSOT for the durable rules: `codex/08-workflows/ci-cd-flow.md`. **Update each todo live-true as you
-> ship; resolve conflicts ON `live-defi-rollout`, never a throwaway branch.**
+> block above. Codex SSOT for the durable rules: `/codex/08-workflows/ci-cd-flow.md`. **Update each todo live-true as
+> you ship; resolve conflicts ON `live-defi-rollout`, never a throwaway branch.**
 
 ### 🔴 BIG FINDING 2026-06-02 — fleet-wide PyJWT advisory will RED most mains' pip-audit (time-triggered)
 
@@ -1844,8 +1857,8 @@ machinery):
   CI required check. So `main` legitimately lags LDR on server code — that is the two-axis design, **not** promotion
   drift. Do not "sync slot work into main" for server code.
 
-Full rule: CLAUDE.md § "Git discipline". SSOT: `codex/05-infrastructure/per-tab-worktrees.md` § "Branch-state gate
-(`check_slot_branch_state`) — FM6" + `codex/04-architecture/agent-orchestrator-overview.md`.
+Full rule: CLAUDE.md § "Git discipline". SSOT: `/codex/05-infrastructure/per-tab-worktrees.md` § "Branch-state gate
+(`check_slot_branch_state`) — FM6" + `/codex/04-architecture/agent-orchestrator-overview.md`.
 
 **Captured discoveries (codex-vs-plans target-state audit,
 `plans/audit/results/codex_vs_plans_target_state_deviations_2026_06_01.md` §0):**
@@ -2371,7 +2384,7 @@ by a PR:
     (`gh api -X DELETE …/branches/main/protection/enforce_admins`). Classic
     `required_status_checks`+`required_pull_request_reviews` + the ruleset still fully gate **non-admins**; only repo
     admins (incl the automation's admin PAT) bypass — the deliberate design exception for orchestration repos that
-    direct-push `[skip ci]` bookkeeping commits. Documented in `codex/08-workflows/ci-cd-flow.md` § Branch-protection
+    direct-push `[skip ci]` bookkeeping commits. Documented in `/codex/08-workflows/ci-cd-flow.md` § Branch-protection
     (corrected the false "[skip ci] reaches main via PR flow" claim) + § Operational-status (SIT chain REVIVED).
   - **2 more chain bugs surfaced + fixed by the e2e (all on PM LDR/main/staging):** (a) `staging-to-main` STEP 11
     cascade `KeyError: 'OWNER'` — `OWNER`/`TOKEN` were plain shell vars not exported to the python heredoc → declared in
@@ -2492,7 +2505,7 @@ by a PR:
 - [x] ✅ [DOC] P1. **Codex + CLAUDE.md alignment** — `unified-trading-pm` codex `ci-cd-flow.md` operational-status
       section brought current 2026-06-01 (watcher + notify-guard + staging_versions SHIPPED; SIT-repo side + semver
       rollout remaining; + the "local ≠ CI" prettier/typecheck gotcha codified). Keep updating as the rest revives — the
-      original tracking note: keep `codex/08-workflows/ci-cd-flow.md` (the SSOT) current with the v2-gate reality, the
+      original tracking note: keep `/codex/08-workflows/ci-cd-flow.md` (the SSOT) current with the v2-gate reality, the
       force-push rule, and the operational status of the promotion automation as each piece revives; CLAUDE.md points to
       it (done 2026-06-01 — see Codex SSOTs).
 
@@ -2764,8 +2777,8 @@ embedded MTDS `configs/venue_data_types.yaml` legacy-alias data finding stays ow
 **F. Drift / reconciliation gaps:**
 
 - [x] ✅ [SCRIPT] P2. **behind/ahead reporter — DONE via PR #145** (flow-health reporter computes all 3 pairs as message
-      context). ORIG:**behind/ahead reporter for main↔staging + staging↔LDR (both directions)** — today only main→LDR
-      is watched (`main-backmerge-to-ldr.yml`); staging↔LDR drift is invisible. repo: unified-trading-pm.
+      context). ORIG:**behind/ahead reporter for main↔staging + staging↔LDR (both directions)** — today only main→LDR is
+      watched (`main-backmerge-to-ldr.yml`); staging↔LDR drift is invisible. repo: unified-trading-pm.
 - [x] ✅ [SCRIPT] P2. **staging→LDR backmerge — DONE 2026-06-05** (`unified-trading-pm@8cd62f42e` retains
       `.github/workflows/staging-backmerge-to-ldr.yml`: staging→LDR no-ff merge, 5× FF-retry, conflict PR + escalation;
       shares backmerge-to-ldr concurrency w/ main-backmerge). ORIG: staging→LDR backmerge — only main-backmerge existed.
@@ -2929,18 +2942,17 @@ embedded MTDS `configs/venue_data_types.yaml` legacy-alias data finding stays ow
       `main`; LDR is free-push again (verified: `features-service@587e494e` bucket-override fix landed on LDR). The
       coverage-floor / `PYTEST_UNIT_DIR` QG-red now correctly gates main-promotion. Original finding (provenance):
   > **features-service was branch-structurally incomplete — quality-gates-v2 was wrongly gating `live-defi-rollout`**
-  > (slot 7 finding 2026-06-01).
-      features-service has **only a `live-defi-rollout` branch — NO `main`, NO `staging`** (every other repo has all three;
-      MTDS verified). Its GitHub **default branch is therefore `live-defi-rollout`**, and the `require-quality-gates`
-      ruleset (id `17136160`, target `~DEFAULT_BRANCH`, rule `required_status_checks`) consequently enforces
-      `quality-gates-v2` **on LDR** — which contradicts the workspace model (LDR is the free-push integration branch; v2
-      gates `main`+`staging` only). Effect: direct LDR pushes to features-service are rejected ("repository rule
-      violations"), so e.g. `features-service@587e494e` (the `_failed_group_manifest` bucket-override fix) cannot land.
-      **Fix (match the canonical repo shape):** create `main` + `staging` from current LDR HEAD → set GitHub default
-      branch to `main` → the `~DEFAULT_BRANCH` ruleset then gates `main` (correct) and LDR becomes free-push (the
-      coverage-floor / per-family `PYTEST_UNIT_DIR` QG-red then correctly gates main-promotion, not LDR). Coordinate with
-      the active features-service QG work (regime_clustering / coverage-floor) before flipping the default. Repo:
-      features-service (gh repo settings + branch creation). Owner: Ikenna (CI/branch governance).
+  > (slot 7 finding 2026-06-01). features-service has **only a `live-defi-rollout` branch — NO `main`, NO `staging`**
+  > (every other repo has all three; MTDS verified). Its GitHub **default branch is therefore `live-defi-rollout`**, and
+  > the `require-quality-gates` ruleset (id `17136160`, target `~DEFAULT_BRANCH`, rule `required_status_checks`)
+  > consequently enforces `quality-gates-v2` **on LDR** — which contradicts the workspace model (LDR is the free-push
+  > integration branch; v2 gates `main`+`staging` only). Effect: direct LDR pushes to features-service are rejected
+  > ("repository rule violations"), so e.g. `features-service@587e494e` (the `_failed_group_manifest` bucket-override
+  > fix) cannot land. **Fix (match the canonical repo shape):** create `main` + `staging` from current LDR HEAD → set
+  > GitHub default branch to `main` → the `~DEFAULT_BRANCH` ruleset then gates `main` (correct) and LDR becomes
+  > free-push (the coverage-floor / per-family `PYTEST_UNIT_DIR` QG-red then correctly gates main-promotion, not LDR).
+  > Coordinate with the active features-service QG work (regime_clustering / coverage-floor) before flipping the
+  > default. Repo: features-service (gh repo settings + branch creation). Owner: Ikenna (CI/branch governance).
 
 ## Why it matters
 
@@ -2970,8 +2982,8 @@ past a red gate. That is the same class of hole that let `staging` drift ~1 mont
 > - **Safety**: every ruleset verified `active`; `enforce_admins` toggles during admin-merges were all re-enabled.
 >
 > **Remaining (tracked below):** instruments-service main coverage (0.18% short); enforce_admins on `staging` (optional
-> Phase-2 tail); mdps↔UAC lending_indices divergence + mdps pyright debt; PM main↔LDR back-merge (Phase 5); v1
-> workflow FILE deletion (separate held plan).
+> Phase-2 tail); mdps↔UAC lending_indices divergence + mdps pyright debt; PM main↔LDR back-merge (Phase 5); v1 workflow
+> FILE deletion (separate held plan).
 
 > **🔑 PREREQUISITE (discovered 2026-06-01 — RESOLVED via provisioning, not a missing credential).** The migrations edit
 > `.github/workflows/*.yml`, which the gh **keyring login token (`gho_…`) cannot do** (no `workflow` scope). But the
@@ -3285,7 +3297,7 @@ Baseline (2026-06-01): `enforce_admins` true on only 6/23 (alerting, execution, 
       `verify_branch_protection_check_names.py` → ALL CONSISTENT. **Codified (no regression on re-provision):**
       `ops/branch-protection-template.json` (1→0), `scripts/repo-management/admin-force-sync-all-to-main.sh`
       (`// 1`→`// 0`), `scripts/propagation/apply-branch-protection.sh` comment; policy doc in
-      `codex/06-coding-standards/feature-branch-workflow.md` § "Zero human-approvals". — repo: unified-trading-pm
+      `/codex/06-coding-standards/feature-branch-workflow.md` § "Zero human-approvals". — repo: unified-trading-pm
       (gh-API + SSOT scripts).
 - [ ] [SCRIPT] P3. **Add a `required_approving_review_count > 0` flag to `verify_branch_protection_check_names.py`** (or
       a companion) so a repo that drifts back to requiring human review surfaces in the consistency audit — completes
@@ -3353,7 +3365,7 @@ Baseline (2026-06-01): `enforce_admins` true on only 6/23 (alerting, execution, 
       matching AWS's `:$VERSION`+`:latest`. No change needed.
 - [x] ✅ [DOC] P2. **Branch-triggered build recipe — DOCUMENTED 2026-06-01.** Added
       `### Branch-triggered build — hotfix     image off an arbitrary branch (no main promotion)` to
-      `codex/08-workflows/ci-cd-flow.md` (under "Full CI/CD Flow"): Cloud Build trigger path
+      `/codex/08-workflows/ci-cd-flow.md` (under "Full CI/CD Flow"): Cloud Build trigger path
       (`setup-cloud-build-triggers.sh` + manual `gcloud builds submit … _SERVICE_NAME/COMMIT_SHA`, immutable
       `:${COMMIT_SHA}` tag) and the SHA-pinned `create-code-tarballs.sh` local-code alternative, with the "never leave a
       branch-built image as steady state" caveat. — unified-trading-pm@bd4b3a7d7.
@@ -3379,7 +3391,7 @@ label-vs-API-diff validation, and cross-repo SIT. Short-term acceptable; must be
       status — promotion automation" section with what's shipped vs remaining + the local≠CI gotcha.
 - [x] ✅ [DESIGN] P1. **Version feedback to staging/LDR — DOCUMENTED 2026-06-01.** Added
       `### Version feedback to     staging/LDR + the main→LDR back-merge requirement` to
-      `codex/08-workflows/ci-cd-flow.md` (under "Version Bump Flow"): bump computed on staging → `version-bump`
+      `/codex/08-workflows/ci-cd-flow.md` (under "Version Bump Flow"): bump computed on staging → `version-bump`
       `repository_dispatch` to PM (`staging_versions` SSOT) → cascade via `update-dependency-version.yml` → flows back
       through quickmerge→staging→main; the closure rule that BOTH the main-side semver bump AND the PM doc-fast-path
       produce main-only commits the `main-backmerge-to-ldr.yml` GHA must mirror, else the LDR→staging PR conflicts on
@@ -3408,7 +3420,7 @@ label-vs-API-diff validation, and cross-repo SIT. Short-term acceptable; must be
 #### Phase 6 — proposed architecture (operator 2026-06-01): orchestrator-driven agent escalation + loud alerting
 
 - [x] ✅ [DESIGN] P1. **Layer the pipeline by whether it needs Claude — DOCUMENTED 2026-06-01.** Added
-      `### Pipeline     layering — deterministic vs judgment (what needs Claude)` to `codex/08-workflows/ci-cd-flow.md`
+      `### Pipeline     layering — deterministic vs judgment (what needs Claude)` to `/codex/08-workflows/ci-cd-flow.md`
       (under "Operational status — promotion automation"): DETERMINISTIC (no agent — semver bump-compute,
       `staging-to-main.yml`, `sit-gate.yml` = repair, not escalate) vs JUDGMENT (agent — staging-merge-conflict
       resolution, commit-label↔API-diff mismatch, SIT-failure triage → `repository_dispatch` to agent-orchestrator →
@@ -3445,7 +3457,7 @@ label-vs-API-diff validation, and cross-repo SIT. Short-term acceptable; must be
 - [x] ✅ [OPERATOR-DECISION→RESOLVED 2026-06-01] P2. **Decision: the advisory `staging_status.locked` flag + GitHub's
       native auto-merge queue is SUFFICIENT** — no hard flock/queue serialization. Observed collisions are handled by
       the conditional-push + rebase discipline (and, under shared-worktree ref-races, the isolated-worktree promotion).
-      To record in `codex/08-workflows/ci-cd-flow.md` (concurrent-push section). Revisit only if real contention
+      To record in `/codex/08-workflows/ci-cd-flow.md` (concurrent-push section). Revisit only if real contention
       surfaces.
 
 ### Phase 5 — PM main↔LDR back-merge drift (discovered 2026-06-01 attempting the LDR→main catch-up) **P0**
@@ -3467,7 +3479,7 @@ behind the exact drift this whole audit is about.
       re-diverging. No manual 95-file merge needed.
 - [x] ✅ [DOC] P1. **PM doc-fast-path back-merge — DOCUMENTED 2026-06-01.** Captured in the new
       `### Version feedback to     staging/LDR + the main→LDR back-merge requirement` subsection of
-      `codex/08-workflows/ci-cd-flow.md`: "PM doc-fast-path to `main` REQUIRES a back-merge to LDR (automated by
+      `/codex/08-workflows/ci-cd-flow.md`: "PM doc-fast-path to `main` REQUIRES a back-merge to LDR (automated by
       `.github/workflows/main-backmerge-to-ldr.yml`); never leave a main-only commit unmirrored" — listed as one of the
       two main-only-commit sources reconciled by the back-merge GHA. Co-documented with 644. —
       unified-trading-pm@bd4b3a7d7.
@@ -3498,10 +3510,12 @@ behind the exact drift this whole audit is about.
       fallthrough. `TestFindManifest` (2 tests incl `test_returns_none_when_not_found`) pass; sibling test unaffected.
 - [x] ✅ [CHORE] P3. **3 archived plans' conflict-marker residue RESOLVED 2026-06-01.** Confirmed REAL unresolved-merge
       residue (not doc examples) — each was a `git merge` conflict from the wave-2 archival commit `5353e40f7`, mangled
-      by markdown blockquote prefixing (`=======`→`> ========`, `>>>>>>>`→`> > > > > > > >`) so a naive `^=======` scan
-      missed the closers. Both sides were COMPLEMENTARY (HEAD = `ARCHIVED` banner; incoming = `## Deferred work` table)
-      → kept both, stripped all `<<<<<<<<`/`========`/`>>>>>>>>` lines. `grep -E '<<<<<<<|>>>>>>>|======='` now CLEAN on
-      all three (`d5_features_missing_data_downgrade_2026_05_20.md`, `strategy_archetype_taxonomy_2026_05_12.md`,
+      by markdown blockquote prefixing: the divider line gained a leading `>`, and the closing marker's angle brackets
+      each gained a trailing space and `>` prefix, spreading it across the line — so a naive scan anchored on the bare,
+      unprefixed divider missed the closers. Both sides were COMPLEMENTARY (HEAD = `ARCHIVED` banner; incoming =
+      `## Deferred work` table) → kept both, stripped every mangled opener/divider/closer line.
+      `check_conflict_markers.sh` (which also catches this exact blockquote-spread form) now reads CLEAN on all three
+      (`d5_features_missing_data_downgrade_2026_05_20.md`, `strategy_archetype_taxonomy_2026_05_12.md`,
       `defi_protocol_outage_detector_2026_05_20.md`). — unified-trading-pm@9ea02c953.
 
 ## Success criteria
@@ -3516,9 +3530,9 @@ behind the exact drift this whole audit is about.
 
 ## Codex SSOTs
 
-- `codex/06-coding-standards/feature-branch-workflow.md` (per-repo required-check + enforce_admins matrix)
-- `codex/08-workflows/ci-cd-flow.md` (branch model + concurrent-push protocol)
-- `codex/05-infrastructure/deployment-and-qg-strategy.md` (tarball-vs-image + build provenance)
+- `/codex/06-coding-standards/feature-branch-workflow.md` (per-repo required-check + enforce_admins matrix)
+- `/codex/08-workflows/ci-cd-flow.md` (branch model + concurrent-push protocol)
+- `/codex/05-infrastructure/deployment-and-qg-strategy.md` (tarball-vs-image + build provenance)
 
 ## Out of scope (named successors)
 
@@ -4086,12 +4100,11 @@ to `i-0c9b283b31d6b5ca7` verified Online (AWS admin `admin_od`).
 - **infra_slot_sync remaining**: cleanup sub-agent in-flight (backlog.mock P1, AutoSpawn-SQLAlchemy P3, ui-semver
   checkout P2); operator-gated #1/#2 stay BLOCKED-OPERATOR.
 - **plan-health-gate PIN — HELD (do NOT pin yet).** Functionally green (#152) but RED on PM PRs due to the pre-existing
-  **PM `main`↔LDR todo drift** (`check_todo_regression`); pinning now jams all PM main merges incl. automated
-  promotion. **Pin after** PM `main`==LDR on plan todos (Phase-5 reconcile). Context to register: `plan-health-gate`
-  (verify via `gh api .../commits/<main-sha>/check-runs` before the ruleset PATCH).
-- **PM `main`↔LDR drift (Phase 5)**: 38 main-only (37 `[skip ci]` churn +1 doc) + ~42 LDR-ahead;
-  `main-backmerge-to-ldr` alive but lagging. Benign churn, not feature-blocking; full reconcile = backmerge then
-  LDR→main promote.
+  **PM `main`↔LDR todo drift** (`check_todo_regression`); pinning now jams all PM main merges incl. automated promotion.
+  **Pin after** PM `main`==LDR on plan todos (Phase-5 reconcile). Context to register: `plan-health-gate` (verify via
+  `gh api .../commits/<main-sha>/check-runs` before the ruleset PATCH).
+- **PM `main`↔LDR drift (Phase 5)**: 38 main-only (37 `[skip ci]` churn +1 doc) + ~42 LDR-ahead; `main-backmerge-to-ldr`
+  alive but lagging. Benign churn, not feature-blocking; full reconcile = backmerge then LDR→main promote.
 
 ### Resolved blockers (were operator-gated; now cleared)
 
@@ -4293,7 +4306,7 @@ been the sole required check fleet-wide for weeks.
 | `CI RECOVERED: instruments/mdps/mtds/execution …`                                         | **HEALTHY** — cascade converging                                                                   | none                                                                                                                                                                                                                                                                                                                                                                                   |
 | `sit-unlock: SIT Failed — staging unlocked`                                               | **HEALTHY** — the intended fail-safe (SIT runs, fails on real incoherence, unlocks for fixes)      | none (machinery now correct after the sit-gate fixes #165/#166)                                                                                                                                                                                                                                                                                                                        |
 | `ldr-ci-monitor: unified-trading-pm RED→GREEN`                                            | **HEALTHY** — my PM credential-ratchet fix recovered                                               | none                                                                                                                                                                                                                                                                                                                                                                                   |
-| `CI REGRESSION: deployment-service/execution-service FAILING (was FEATURE_GREEN)` on main | **TRANSIENT** — cascade in flux; both recovered minutes later (execution→FEATURE_GREEN 17:43)      | self-resolving; consider debouncing FEATURE_GREEN↔FAILING flaps                                                                                                                                                                                                                                                                                                                       |
+| `CI REGRESSION: deployment-service/execution-service FAILING (was FEATURE_GREEN)` on main | **TRANSIENT** — cascade in flux; both recovered minutes later (execution→FEATURE_GREEN 17:43)      | self-resolving; consider debouncing FEATURE_GREEN↔FAILING flaps                                                                                                                                                                                                                                                                                                                        |
 | `mdps/mtds FAILING — AttributeError BATCH_HYPERLIQUID_REST`                               | **REAL — the #1 blocker**                                                                          | the UAC+UTL `BATCH_HYPERLIQUID` enum migration is coherent on LDR+staging but **main lags for BOTH** (data-value change `batch_hyperliquid_rest`→`batch_hyperliquid`); consumer/SIT QGs that clone UTL@main hit the old name. Needs the **coordinated UAC+UTL staging→main promotion** (data-track; see finding below). Do NOT fix piecemeal (my UTL #250 was closed for exactly this) |
 | `execution #216 QG: STEP 5.21 reportUnknown* warning/none + 5.12b gs:// URI`              | **REAL** — pre-existing execution-service QG-debt surfaced by the dep-update PR                    | execution-service's own plan (basedpyright strict config + replace `gs://` f-string in `evidence_router.py:66` with `resolve_bucket_name`)                                                                                                                                                                                                                                             |
 | `mtds #133 QG: pydantic ValidationError CandleBoundaryCrossedEvent`                       | **REAL** — likely the same enum-value migration touching a UAC event model                         | resolves with the coordinated enum migration; verify the event's `pipeline_mode` field accepts the new value                                                                                                                                                                                                                                                                           |
@@ -4542,9 +4555,9 @@ rollout, never per-repo).
 to `main`**. Verified 2026-06-15: `origin/main` content == `origin/live-defi-rollout` for every affected workflow (both
 `@v1`) → the running version IS the deprecated one. After bumping, **verify content-parity on `main`** per repo
 (`git grep -hoE '<action>@v[0-9]+' origin/main -- <file>`), not the commit count (squash-merge keeps LDR perpetually
-`ahead_by=N`). Use the sanctioned
-**`.github/**`direct-to-main carve-out** if the promotion pipeline lags. (AO quirk:`main-backmerge-to-ldr.yml`is not yet on`agent-orchestrator`'s `main`
-— its LDR→main migration is incomplete; tracked in the AO e2e plan.)
+`ahead_by=N`). Use the sanctioned **`.github/**`direct-to-main carve-out** if the promotion pipeline lags. (AO
+quirk:`main-backmerge-to-ldr.yml`is not yet on`agent-orchestrator`'s `main` — its LDR→main migration is incomplete;
+tracked in the AO e2e plan.)
 
 #### 3a — drop-in node24 (target already runs in our fleet; no behaviour change) — `BLOCKED-NONE`
 
@@ -4672,8 +4685,8 @@ of scope (flagged, not deprecation-impacting): `.extra/` archived repos + inert 
 
 ### What shipped (all to LDR; PM Option-B → main)
 
-1. **Step 0 heal** — reconciled PM main↔LDR (brought promote-bot `--auto --rebase` + exclude-AO-from-SIT + CI fixes
-   DOWN to LDR), cleared the dangling `execution-service=0.2.0` breaking-cascade lock + drained AO phantom.
+1. **Step 0 heal** — reconciled PM main↔LDR (brought promote-bot `--auto --rebase` + exclude-AO-from-SIT + CI fixes DOWN
+   to LDR), cleared the dangling `execution-service=0.2.0` breaking-cascade lock + drained AO phantom.
 2. **Step 1 content-based breaking-detection** — `scripts/cicd/detect_breaking_change.py` (AST public-surface differ; 8
    unit tests; rule-11 proven on UTL+UAC) replaces the crude `grep '^-' __init__.py` heuristic; wired into
    semver-agent.yml + .tmpl + **rolled out to all 23 repos' LDR**; SIT now breaking-gated via `breaking_pending`
@@ -4686,7 +4699,7 @@ of scope (flagged, not deprecation-impacting): `.extra/` archived repos + inert 
    `DEP_CONTENT_GATE_BLOCK=1` to enforce); `local_qg_sweep.py` dep-order pre-promotion oracle; drift-checker true CI
    no-op (fixed the tag-lag false-positive that the drift-tick rollout exposed).
 5. **Docs/rules** — codified content-based breaking-detection + LDR-SSOT clean-start + drift-tick in
-   `cursor-configs/CLAUDE.md` + `SUB_AGENT_MANDATORY_RULES.md` + `codex/08-workflows/ci-cd-flow.md`.
+   `cursor-configs/CLAUDE.md` + `SUB_AGENT_MANDATORY_RULES.md` + `/codex/08-workflows/ci-cd-flow.md`.
 
 ### Forced tradeoffs / decisions (under AUTONOMOUS_AGENT_RULES rule 1)
 
@@ -4717,11 +4730,11 @@ of scope (flagged, not deprecation-impacting): `.extra/` archived repos + inert 
 Three operator follow-ups after the SESSION OUTCOME above — all DONE + shipped:
 
 1. **strict-quickmerge codified in the rule surface** (was missing): HARD RULE added to `cursor-configs/CLAUDE.md`
-   - `SUB_AGENT_MANDATORY_RULES.md` + `codex/08-workflows/ci-cd-flow.md` § strict-quickmerge. Closed carve-out set
+   - `SUB_AGENT_MANDATORY_RULES.md` + `/codex/08-workflows/ci-cd-flow.md` § strict-quickmerge. Closed carve-out set
      (dirty-deps · FF-pull-in + PM `docs(plans)` flip · PM `scripts/**`+`.github/**` that must reach main) reconciled
      with `qg_commit_quality_boundary_and_slot_ff_push_2026_06_03.md` (one set, not forked). Shipped PM@5fbfb6849.
 2. **Parity matrix + divergence watchdog "plugged in"**: the local↔CI QG parity-matrix table is in
-   `codex/08-workflows/ci-cd-flow.md` (the 2 intentional gaps: workflow-drift CI no-op + assembled-SIT layer);
+   `/codex/08-workflows/ci-cd-flow.md` (the 2 intentional gaps: workflow-drift CI no-op + assembled-SIT layer);
    `scripts/cicd/parity_watchdog.py` auto-files `ci_local_qg_divergence_<repo>_<date>.md` + emits an ORCH_ALERT on a
    local-green/staging-red event. ci_local_qg watchdog+matrix items flipped. Shipped PM@5fbfb6849.
 3. **Worktree Path-B migration EXECUTED** (operator: "multi-slot session ended, finish now") — **without compromising
@@ -4734,7 +4747,7 @@ Three operator follow-ups after the SESSION OUTCOME above — all DONE + shipped
    - **MACHINERY**: `setup-tab-worktrees.sh` provisions Path-B; `tab-mirror-to-ldr.yml` DISABLED fleet-wide (24 repos);
      `scripts/cicd/slot_drift_check.py` is the new drift invariant; `slot-cron-ff-pull.sh` + `quickmerge.sh` work
      UNCHANGED for Path-B (keyed on the integration branch, not tab names). Shipped PM@d22a64b74 + 90abb6a49.
-   - **DOCS**: CLAUDE.md § "Per-slot worktrees — Path-B" + SUB_AGENT + `codex/05-infrastructure/per-tab-worktrees.md`
+   - **DOCS**: CLAUDE.md § "Per-slot worktrees — Path-B" + SUB_AGENT + `/codex/05-infrastructure/per-tab-worktrees.md`
      SUPERSEDED-bannered. `worktree_ldr_unification_2026_06_08.md` flipped + Progress note.
    - **Slot-1** (the live operating slot for this session) stays on `tab/ikennaigboaka/1`; reclines to Path-B on its
      next `setup-tab-worktrees.sh --reset-slot 1` (it pushes via explicit refspec, unaffected by tab-mirror retirement).
@@ -4804,7 +4817,7 @@ recurring friction the operator has hit repeatedly.
 [backmerge] escalated conflict to orchestrator (opus worker)
 ```
 
-1. **Genuine (non-ci_status) conflict** on 5 files: `codex/08-workflows/ci-cd-flow.md`, `cursor-configs/CLAUDE.md`,
+1. **Genuine (non-ci_status) conflict** on 5 files: `/codex/08-workflows/ci-cd-flow.md`, `cursor-configs/CLAUDE.md`,
    `plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md`,
    `plans/active/staging_clean_start_and_stale_pr_hygiene_2026_06_08.md`, `workspace-manifest.json` (the latter beyond
    the ci_status-only fields Guard 2 auto-resolves). The backmerge's `--no-ff merge origin/main` cannot auto-resolve →
@@ -5258,7 +5271,7 @@ Open follow-ups:
       paid-`ANTHROPIC_API_KEY` agents to the VM orchestrator** per the documented pivot. After the GHA-Claude
       retirement, also prune the now consumer-less `schema-changed` emit from the semver-agent template (25 emitters
       dispatch into the void since schema-changed-handler was deleted 2026-06-11). Repo: unified-trading-pm.
-- [ ] [DOC] P3. **Codex SSOT updates on execution** — `codex/08-workflows/ci-cd-flow.md`: correct the tab-mirror
+- [ ] [DOC] P3. **Codex SSOT updates on execution** — `/codex/08-workflows/ci-cd-flow.md`: correct the tab-mirror
       "DISABLED fleet-wide" statement; document `major-bump-issue-handler.yml` as the canonical `/approve` handler;
       reflect any merged backmerge/CI-health workflows. Repo: unified-trading-pm.
 

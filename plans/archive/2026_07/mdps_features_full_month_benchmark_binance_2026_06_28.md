@@ -67,7 +67,7 @@ harness — pick the RUNNABLE Binance shard, confirm a genuine full-month window
 - **Peak RSS and retained RSS** after each day (the arena-leak signal from the 2026-05-28 audit).
 - Output bytes + object count (candles + features).
 - Estimated egress $ = output GB × the GCP-egress/AWS-ingress rate from
-  `codex/05-infrastructure/aws_migration_cost_analysis_2026_05_07.md`.
+  `/codex/05-infrastructure/aws_migration_cost_analysis_2026_05_07.md`.
 
 ## Todos
 
@@ -97,11 +97,13 @@ harness — pick the RUNNABLE Binance shard, confirm a genuine full-month window
       and USE_POLARS=true); operator decision 2026-06-29: accept Plan 8 evidence as sufficient. OOM finding documented
       at `plans/audit/results/benchmarks/mdps_fullpipeline_oom_finding_2026_06_29.md`. Script extension (--end-date)
       shipped at market-data-processing-service@02b480c.
-- [x] [IMPLEMENT] P1. Build the **per-shard cost model**: $/shard-month and RSS/shard for the artifact, with the formula
+- [x] [IMPLEMENT] P1. Build the **per-shard cost model**:
+      $/shard-month and RSS/shard for the artifact, with the formula
       to extrapolate across the MVP universe (shard count × per-shard cost). — Gate: a cost-model table + total-universe
-      estimate; egress $ cites the cost-analysis rate. ✅ Cost model built 2026-06-29; see **Per-shard cost model**
-      section below. Egress rate $0.09/GB per `aws_migration_cost_analysis_2026_05_07.md`; universe size ~14K cefi
-      shards from `mvp_backfill_cefi_tick_v10_2026_06_27.md`. No new code shipped (arithmetic model).
+      estimate; egress $
+      cites the cost-analysis rate. ✅ Cost model built 2026-06-29; see **Per-shard cost model** section below. Egress
+      rate $0.09/GB per `aws_migration_cost_analysis_2026_05_07.md`; universe size ~14K cefi shards from
+      `mvp_backfill_cefi_tick_v10_2026_06_27.md`. No new code shipped (arithmetic model).
 - [x] [AGENT] P1. Commit the benchmark report + cost model (no `*_SUMMARY.md` doc — results live in this plan's Progress
       Log + a committed results artifact); quickmerge any benchmark-runner code `--agent --files`. — Gate: QG green on
       touched repos; report committed. ✅ Results artifact:
@@ -124,10 +126,12 @@ and RSS measurements.
 | `derivative_ticker` | `cefi_carry_funding_24h_200p` (200×24h) | 200 calendar days                  |
 
 The benchmark's _outer_ required window is the **max** of the three = **200 calendar days**. We measure **wall-time /
-peak+retained RSS / output bytes / object count / egress $** over that full 200-day span, but report-aggregate the
+peak+retained RSS / output bytes / object count / egress
+$** over that full 200-day span, but report-aggregate the
 per-day numbers as a **30-day "report month"** (the 30 most recent fully-captured calendar days inside the 200-day
-window). This gives the operator a $/shard-month + RSS/shard number that extrapolates linearly to the universe (per Plan
-6's `shard_count × per-shard cost` formula) without losing the heavy-lookback runtime characterization.
+window). This gives the operator a $/shard-month +
+RSS/shard number that extrapolates linearly to the universe (per Plan 6's `shard_count × per-shard cost` formula)
+without losing the heavy-lookback runtime characterization.
 
 **Month / reporting window.** The 200-day pull anchors at **today − 200 days** through **today**, evaluated by the
 benchmark runner at execution time. The 30-day report-month is the trailing 30 calendar days at the same anchor;
@@ -163,7 +167,7 @@ pass once Plan 8 is integrated.
 
 **Per-cell metric set (audit canary shape, per the 2026-05-28 findings):** wall-time (total + per-day), peak + retained
 RSS sampled at day boundaries, output bytes, object count, estimated egress $ (output GB × the canonical GCP-egress /
-AWS-ingress rate from `codex/05-infrastructure/aws_migration_cost_analysis_2026_05_07.md`).
+AWS-ingress rate from `/codex/05-infrastructure/aws_migration_cost_analysis_2026_05_07.md`).
 
 ## Min-window correction (audited 2026-06-28)
 

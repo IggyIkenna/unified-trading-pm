@@ -13,8 +13,8 @@ repos: [market-data-processing-service]
 scope: [engineer, admin]
 tags: [mdps, performance, polars, benchmark, data-pipeline, cefi, binance]
 related:
-  - results_full_month_binance_2026_04.md
-  - results_synthetic_stage1_2026_05_28.md
+  - /plans/audit/results/benchmarks/mdps_engine_comparison_2026_05_28/results_full_month_binance_2026_04.md
+  - /plans/audit/results/benchmarks/mdps_engine_comparison_2026_05_28/results_synthetic_stage1_2026_05_28.md
 created: 2026-05-28
 audited_scope:
   9 BINANCE-FUTURES perpetual trades parquets for 2026-04-15, 4 read paths

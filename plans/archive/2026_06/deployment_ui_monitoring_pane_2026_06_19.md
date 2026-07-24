@@ -19,7 +19,13 @@ locked_by: live-defi-rollout
 estimate_class: infra
 estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 2.4
-source: [2026-06-18 operator design session — deployment-ui = CICD/codebase/fleet/images lens, 2026-06-19 operator decision — split monitoring_surfaces_overhaul into two single-surface plans (deployment-ui here; agent-orchestrator dashboard → agent_orchestrator_dashboard_monitoring_2026_06_19.md), 'plans/audit/results/monitoring_surfaces_audit_2026_06_18.md (Opus audit, 4 background agents)']
+source:
+  [
+    2026-06-18 operator design session — deployment-ui = CICD/codebase/fleet/images lens,
+    2026-06-19 operator decision — split monitoring_surfaces_overhaul into two single-surface plans (deployment-ui here;
+    agent-orchestrator dashboard → agent_orchestrator_dashboard_monitoring_2026_06_19.md),
+    "plans/audit/results/monitoring_surfaces_audit_2026_06_18.md (Opus audit, 4 background agents)",
+  ]
 priority: P2
 ---
 
@@ -298,4 +304,4 @@ status than what gates promotions.
 
 ## Codex SSOT updates
 
-- `codex/04-architecture/runtime-deployment-topology.md` — deployment-ui fleet-runtime + unified-alert-ledger surfaces.
+- `/codex/04-architecture/runtime-deployment-topology.md` — deployment-ui fleet-runtime + unified-alert-ledger surfaces.

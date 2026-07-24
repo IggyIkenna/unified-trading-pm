@@ -120,6 +120,7 @@ Phase-0 findings already accumulated during the parent plans. Execution agent sh
 | File / thing to find | Purpose | Expected outcome | |
 ---------------------------------------------------------------------------------------------------------------- |
 --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 | -------------------------------------------------------------------------------------------------------- |
 ------------------------------ | | `instruments-service/instruments_service/engine/orchestrator.py::_write_team_mapping`
 | Confirm the pattern (flat parquet, no partitioning, one write per orchestrator run). | Use same shape but partition TM
@@ -184,7 +185,7 @@ Phase 0 (pre-audit verification — embed findings in plan PRE-AUDIT-FINDINGS)
       │       └─ 3.4 Unit tests
       │
       └─► Track 4: Codex + QG + quickmerge [SEQUENTIAL, final gate]
-              ├─ 4.1 codex/02-data/sports-scheduling-and-sharding.md §2.2 + §2.4 updates
+              ├─ 4.1 /codex/02-data/sports-scheduling-and-sharding.md §2.2 + §2.4 updates
               ├─ 4.2 QG on all 4 repos
               ├─ 4.3 Commit + push (UAC → instruments-service → features-sports-service → PM)
               └─ 4.4 Post-merge: re-run TM + SFI backfill on a narrow test window to measure cache speedup
@@ -276,7 +277,7 @@ Phase 0 (pre-audit verification — embed findings in plan PRE-AUDIT-FINDINGS)
 ### Track 4: Codex + QG + quickmerge [SEQUENTIAL]
 
 - [x] [AGENT] P1. Update codex
-      [`02-data/sports-scheduling-and-sharding.md`](../../codex/02-data/sports-scheduling-and-sharding.md): - §2.2
+      [`02-data/sports-scheduling-and-sharding.md`](/codex/02-data/sports-scheduling-and-sharding.md): - §2.2
       (Transfermarkt): document cache path
       `sports_reference/mappings/transfermarkt_league_teams/season={YYYY}/teams.parquet` + 7-day staleness +
       trigger-date invalidation. Cross-ref `get_leagues_needing_refresh` as authoritative trigger schedule. - §2.4

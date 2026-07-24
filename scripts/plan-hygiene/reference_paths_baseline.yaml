@@ -10,14 +10,12 @@
 # SSOT: codex/11-project-management/cross-reference-path-convention.md,
 # plans/active/issues/reference_path_convention_2026_07_23.md.
 note: >-
-  Seeded 2026-07-23 against the corpus's TRUE pre-migration state (12,021 format violations — the vast majority of the
-  corpus still on the bare/relative codex-ref form and bare `related:` filenames; 630 existence violations — lower than
-  post-migration precisely because most refs aren't yet in the checkable leading-slash form at all, not because fewer
-  are broken). This commit ships the convention + tooling + the doc-specific fixes it required, but deliberately does
-  NOT include the corpus-wide reformatting pass (scripts/plan-hygiene/fix_reference_paths.py already produced it
-  locally, ~2,150 files, verified hygiene-clean) — an extremely active concurrent session sharing this checkout made a
-  single combined commit of that size repeatedly fail (branch drift + .git/index.lock races on every retry). Splitting
-  lets the core deliverable land now; the corpus reformat is its own immediate follow-up commit, at which point re-run
-  --update-baseline to ratchet both counts down to ~176 / ~1,285 (the verified post-migration numbers).
-format_count: 12021
-existence_count: 630
+  Seeded 2026-07-23 pre-migration (12,021 / 630), then corrected same day once the corpus-wide reformat
+  (scripts/plan-hygiene/fix_reference_paths.py, ~2,150 files) landed as its own follow-up commit: format_count drops to
+  176 (the ratchet's whole point). existence_count RISES to 1,285 — not a regression: most refs weren't in the checkable
+  leading-slash form at all pre-migration, so the pre-migration 630 undercounted how many are actually dangling;
+  completing the migration measures the corpus honestly for the first time, it doesn't create new breakage. See
+  plans/active/issues/reference_path_convention_2026_07_23.md for the full cleanup backlog (both counts' remaining
+  entries).
+format_count: 176
+existence_count: 1285

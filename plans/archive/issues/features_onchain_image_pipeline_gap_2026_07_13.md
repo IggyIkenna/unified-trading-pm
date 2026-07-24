@@ -41,8 +41,8 @@ tags:
 related:
   [
     ../../archive/issues/features_repo_consolidation_preaudit_2026_05_08.md,
-    ../../../codex/15-runbooks/lst-seasonal-rewards-smoke.md,
-    ../../../codex/09-strategy/architecture-v2/cross-cutting/restaking-reward-economics.md,
+    /codex/15-runbooks/lst-seasonal-rewards-smoke.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/restaking-reward-economics.md,
   ]
 created: 2026-07-13
 parent_epic: infrastructure_master
@@ -108,7 +108,7 @@ depends_on: []
   - **Verification execution**: `uts-prod-features-onchain-collect-lst-seasonal-rewards-t9zl9` →
     `Execution completed successfully in 40.68s`, container exit(0), `succeededCount: 1` (2026-07-13T22:42Z).
   - Run outcome detail: see Progress Log below (event counts / chains wired from execution logs).
-- Remaining operational caveat: the smoke runbook (`codex/15-runbooks/lst-seasonal-rewards-smoke.md`,
+- Remaining operational caveat: the smoke runbook (`/codex/15-runbooks/lst-seasonal-rewards-smoke.md`,
   `last_executed: never`) requires 9 Secret Manager keys (ALCHEMY/HELIUS/…SCAN); presence could not be verified from
   this session (secretmanager PERMISSION_DENIED for `unified-trading-sa`). If per-chain scanners fail on missing keys
   the job exits 0 with 0 events (D10 shard isolation) — silent under-collection. Operator should run the runbook's
@@ -139,7 +139,7 @@ depends_on: []
 2. **Stale docstring**: `features-service/scripts/onchain/collect_lst_seasonal_rewards_daily.py` usage block still says
    `python -m scripts.collect_lst_seasonal_rewards_daily` (pre-consolidation path; also the `-m` form is broken per the
    shadowing note above).
-3. **Stale runbook module paths**: `codex/15-runbooks/lst-seasonal-rewards-smoke.md` references
+3. **Stale runbook module paths**: `/codex/15-runbooks/lst-seasonal-rewards-smoke.md` references
    `features_onchain_service.collectors.…` — the consolidated home is `features_service.onchain.collectors.…`.
 4. **Stale per-service terraform**: `deployment-service/terraform/services/features-onchain-service/` +
    `scripts/setup-cloud-build-triggers.sh` still enumerate the retired standalone repos

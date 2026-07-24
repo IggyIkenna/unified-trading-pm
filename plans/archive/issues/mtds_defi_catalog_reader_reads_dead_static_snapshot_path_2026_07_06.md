@@ -20,9 +20,9 @@ scope: [engineer]
 tags: [defi, mtds, catalog-reader, silent-fallback, honest-coverage, data-correctness]
 related:
   [
-    is_catalogue_completion_2d_2026_07_06.md,
+    /plans/archive/2026_07/is_catalogue_completion_2d_2026_07_06.md,
     ../cefi_hl_aster_batch_data_gaps_2026_06_22.md,
-    ../../../codex/02-data/availability-manifest-and-data-status.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
   ]
 created: 2026-07-06
 last_updated: 2026-07-06

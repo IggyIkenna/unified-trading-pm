@@ -13,7 +13,7 @@ stage: [meta]
 repos: [deployment-api]
 scope: [engineer]
 tags: [data-status, downloads, csv, deployment-api, sports, tradfi, 500]
-related: [data_status_tab_and_downloads_remediation_2026_06_16.md]
+related: [/plans/active/data_status_tab_and_downloads_remediation_2026_06_16.md]
 created: 2026-07-18
 last_updated: 2026-07-18
 parent_epic: deployment_and_user_management_master

@@ -6,7 +6,15 @@ status: complete
 nature: record
 asset_group: ALL
 stage: [meta]
-repos: [execution-service, instruments-service, market-tick-data-service, strategy-service, system-integration-tests, unified-api-contracts]
+repos:
+  [
+    execution-service,
+    instruments-service,
+    market-tick-data-service,
+    strategy-service,
+    system-integration-tests,
+    unified-api-contracts,
+  ]
 scope: [engineer, admin]
 tags: []
 related: []
@@ -15,22 +23,25 @@ locked_by: live-defi-rollout
 locked_since: 2026-05-01
 plan_type: mixed
 owner: ikenna
-overview: Volatility-derived max-leverage primitive + leveraged funding-arb + 5 derivable archetype engines (LP concentrated/pool/vault, MEV liquidation-bundle/JIT/backrun) + sandwich theoretical, with venue/chain coverage backfill and codex enhancement
+overview:
+  Volatility-derived max-leverage primitive + leveraged funding-arb + 5 derivable archetype engines (LP
+  concentrated/pool/vault, MEV liquidation-bundle/JIT/backrun) + sandwich theoretical, with venue/chain coverage
+  backfill and codex enhancement
 type: mixed
 epic: epic-code-completion
-completion_gates: {code: C5, deployment: D2, business: B3}
+completion_gates: { code: C5, deployment: D2, business: B3 }
 repo_gates:
-- {repo: unified-api-contracts, code: C0, deployment: none, business: none}
-- {repo: unified-trading-library, code: C0, deployment: none, business: none}
-- {repo: execution-service, code: C0, deployment: none, business: none}
-- {repo: strategy-service, code: C0, deployment: none, business: none}
-- {repo: features-onchain-service, code: C0, deployment: none, business: none}
-- {repo: market-tick-data-service, code: C0, deployment: none, business: none}
-- {repo: instruments-service, code: C0, deployment: none, business: none}
-- {repo: position-balance-monitor-service, code: C0, deployment: none, business: none}
-- {repo: risk-and-exposure-service, code: C0, deployment: none, business: none}
-- {repo: system-integration-tests, code: C0, deployment: none, business: none}
-- {repo: unified-trading-pm, code: C0, deployment: none, business: none}
+  - { repo: unified-api-contracts, code: C0, deployment: none, business: none }
+  - { repo: unified-trading-library, code: C0, deployment: none, business: none }
+  - { repo: execution-service, code: C0, deployment: none, business: none }
+  - { repo: strategy-service, code: C0, deployment: none, business: none }
+  - { repo: features-onchain-service, code: C0, deployment: none, business: none }
+  - { repo: market-tick-data-service, code: C0, deployment: none, business: none }
+  - { repo: instruments-service, code: C0, deployment: none, business: none }
+  - { repo: position-balance-monitor-service, code: C0, deployment: none, business: none }
+  - { repo: risk-and-exposure-service, code: C0, deployment: none, business: none }
+  - { repo: system-integration-tests, code: C0, deployment: none, business: none }
+  - { repo: unified-trading-pm, code: C0, deployment: none, business: none }
 depends_on: [leveraged_leg_controller_2026_05_01]
 isProject: false
 ---
@@ -221,16 +232,16 @@ Phase 6 — Venue / chain coverage backfill (PARALLEL within phase)
    └─ 6.7 GATE — pipeline E2E across the union runs without `unsupported_venue` warnings
 
 Phase 7 — Codex docs (PARALLEL with Phase 6)
-   ├─ 7.1 codex/09-strategy/architecture-v2/archetypes/lp_concentrated.md
-   ├─ 7.2 codex/09-strategy/architecture-v2/archetypes/lp_pool.md
-   ├─ 7.3 codex/09-strategy/architecture-v2/archetypes/lp_vault.md
-   ├─ 7.4 codex/09-strategy/architecture-v2/archetypes/arbitrage_mev_liquidation_bundle.md
-   ├─ 7.5 codex/09-strategy/architecture-v2/archetypes/arbitrage_mev_jit_liquidity.md
-   ├─ 7.6 codex/09-strategy/architecture-v2/archetypes/arbitrage_mev_backrun.md
-   ├─ 7.7 codex/09-strategy/architecture-v2/archetypes/arbitrage_mev_sandwich.md (theoretical caveat)
-   ├─ 7.8 codex/09-strategy/cross-cutting/leverage-and-volatility.md (new SSOT)
-   ├─ 7.9 codex/14-playbooks/defi/lp-strategies.md (family playbook)
-   ├─ 7.10 codex/14-playbooks/defi/mev-strategies.md (family playbook + mempool deferral)
+   ├─ 7.1 /codex/09-strategy/architecture-v2/archetypes/lp_concentrated.md
+   ├─ 7.2 /codex/09-strategy/architecture-v2/archetypes/lp_pool.md
+   ├─ 7.3 /codex/09-strategy/architecture-v2/archetypes/lp_vault.md
+   ├─ 7.4 /codex/09-strategy/architecture-v2/archetypes/arbitrage_mev_liquidation_bundle.md
+   ├─ 7.5 /codex/09-strategy/architecture-v2/archetypes/arbitrage_mev_jit_liquidity.md
+   ├─ 7.6 /codex/09-strategy/architecture-v2/archetypes/arbitrage_mev_backrun.md
+   ├─ 7.7 /codex/09-strategy/architecture-v2/archetypes/arbitrage_mev_sandwich.md (theoretical caveat)
+   ├─ 7.8 /codex/09-strategy/cross-cutting/leverage-and-volatility.md (new SSOT)
+   ├─ 7.9 /codex/14-playbooks/defi/lp-strategies.md (family playbook)
+   ├─ 7.10 /codex/14-playbooks/defi/mev-strategies.md (family playbook + mempool deferral)
    └─ 7.11 GATE — codex-sync agent green; rules-alignment agent green
 
 Phase 8 — End-to-end validation + results memory (SEQUENTIAL after Phases 4/5/6/7)
@@ -513,45 +524,45 @@ def clamp_to_venue_capabilities(venue, instrument, target_leverage):
 ### Phase 7 — Codex docs
 
 - id: p7-1-lp-concentrated-doc content: |
-  - [ ] [AGENT] P2. codex/09-strategy/architecture-v2/archetypes/lp_concentrated.md — family/archetype placement, leg
+  - [ ] [AGENT] P2. /codex/09-strategy/architecture-v2/archetypes/lp_concentrated.md — family/archetype placement, leg
         structure, IL closed form, fee-tier selection, rebalance triggers, gas/Tendermint considerations, parity test
         references. status: todo
 
 - id: p7-2-lp-pool-doc content: |
-  - [ ] [AGENT] P2. codex/09-strategy/architecture-v2/archetypes/lp_pool.md — Curve / Balancer invariants, depeg
+  - [ ] [AGENT] P2. /codex/09-strategy/architecture-v2/archetypes/lp_pool.md — Curve / Balancer invariants, depeg
         modelling, deposit-share APY, parity test references. status: todo
 
 - id: p7-3-lp-vault-doc content: |
-  - [ ] [AGENT] P2. codex/09-strategy/architecture-v2/archetypes/lp_vault.md — ERC-4626 share-price math, fee-curve
+  - [ ] [AGENT] P2. /codex/09-strategy/architecture-v2/archetypes/lp_vault.md — ERC-4626 share-price math, fee-curve
         handling, withdraw queues, parity test references. status: todo
 
 - id: p7-4-mev-bundle-doc content: |
-  - [ ] [AGENT] P2. codex/09-strategy/architecture-v2/archetypes/arbitrage_mev_liquidation_bundle.md — flash loan source
-        matrix, atomic bundle structure, gas budget, protocol coverage. status: todo
+  - [ ] [AGENT] P2. /codex/09-strategy/architecture-v2/archetypes/arbitrage_mev_liquidation_bundle.md — flash loan
+        source matrix, atomic bundle structure, gas budget, protocol coverage. status: todo
 
 - id: p7-5-mev-jit-doc content: |
-  - [ ] [AGENT] P2. codex/09-strategy/architecture-v2/archetypes/arbitrage_mev_jit_liquidity.md — detection signal,
+  - [ ] [AGENT] P2. /codex/09-strategy/architecture-v2/archetypes/arbitrage_mev_jit_liquidity.md — detection signal,
         2-block window, fee math, timing risk. status: todo
 
 - id: p7-6-mev-backrun-doc content: |
-  - [ ] [AGENT] P2. codex/09-strategy/architecture-v2/archetypes/arbitrage_mev_backrun.md — ordering, priority gas win
+  - [ ] [AGENT] P2. /codex/09-strategy/architecture-v2/archetypes/arbitrage_mev_backrun.md — ordering, priority gas win
         prob, arbitrage path resolution. status: todo
 
 - id: p7-7-mev-sandwich-doc content: |
-  - [ ] [AGENT] P2. codex/09-strategy/architecture-v2/archetypes/arbitrage_mev_sandwich.md — theoretical-only status;
+  - [ ] [AGENT] P2. /codex/09-strategy/architecture-v2/archetypes/arbitrage_mev_sandwich.md — theoretical-only status;
         explicit deferral pointer to mempool_feed_integration plan; theoretical profit upper-bound formula. status: todo
 
 - id: p7-8-leverage-vol-ssot content: |
-  - [ ] [AGENT] P2. codex/09-strategy/cross-cutting/leverage-and-volatility.md — new SSOT covering MaxUnderlyingMove
+  - [ ] [AGENT] P2. /codex/09-strategy/cross-cutting/leverage-and-volatility.md — new SSOT covering MaxUnderlyingMove
         primitive, derive_max_safe_leverage formula, registry seed/override workflow, controller clamp integration,
         LEVERAGE_CAP_TRIPPED + LEVERAGE_BREACH events. status: todo
 
 - id: p7-9-lp-playbook content: |
-  - [ ] [AGENT] P2. codex/14-playbooks/defi/lp-strategies.md — LP family playbook covering archetype selection, fee-tier
-        selection, IL/fees crossover, gas-budget guidance. status: todo
+  - [ ] [AGENT] P2. /codex/14-playbooks/defi/lp-strategies.md — LP family playbook covering archetype selection,
+        fee-tier selection, IL/fees crossover, gas-budget guidance. status: todo
 
 - id: p7-10-mev-playbook content: |
-  - [ ] [AGENT] P2. codex/14-playbooks/defi/mev-strategies.md — MEV family playbook covering bundle building, RPC
+  - [ ] [AGENT] P2. /codex/14-playbooks/defi/mev-strategies.md — MEV family playbook covering bundle building, RPC
         selection, mempool feed deferral, sandwich theoretical-only status. status: todo
 
 - id: p7-11-codex-gate content: |

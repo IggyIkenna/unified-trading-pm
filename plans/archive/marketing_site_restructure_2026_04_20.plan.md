@@ -10,7 +10,7 @@ repos: [unified-trading-system-ui]
 scope: [engineer, admin]
 tags: []
 related: []
-created: '2026-04-20'
+created: "2026-04-20"
 priority: P0
 owner: agent
 depends_on: [path_to_100m_finalization_2026_04_20, signal_leasing_broadcast_architecture_2026_04_20]
@@ -72,18 +72,18 @@ This plan produces a coherent marketing-site structure that:
 
 User confirmed all 10 M-recommendations in session 2026-04-20. Phase 1 pre-audit unblocked.
 
-| #   | Locked decision                                                                                                                                    |
-| --- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| M1  | 5 top-level nav items (DART / Signals / IM / Reg / Firm)                                                                                           |
-| M2  | `/platform` remains DART umbrella + split sub-pages `/platform/signals-in` and `/platform/full` for click-through detail                           |
-| M3  | "DART Signals-In" / "Signals Service (Signals-Out)" naming (direction-arrow explicit)                                                              |
-| M4  | Tiered light-auth gate matching existing `authentication/` 3-tier model                                                                            |
-| M5  | Full schema content behind light-auth gate; page-level copy gives overview only                                                                    |
-| M6  | Static SVG/HTML fund/SMA hierarchy visuals on `/strategies` + `/regulatory` in Phase 4; interactive drill-down deferred to Stage 3                 |
-| M7  | Full strategy family + archetype catalogue behind light-auth gate (reads from `codex/09-strategy/architecture-v2/category-instrument-coverage.md`) |
-| M8  | Surface read-only-key mechanic on IM + Reg pages (scope of copy to be drafted in Phase 2)                                                          |
-| M9  | Fund-slicing visibility mechanic surfaced on IM page (pb3b narrative)                                                                              |
-| M10 | Anonymise existing clients (sector / geography / strategy-family descriptors) until explicit written permission to name                            |
+| #   | Locked decision                                                                                                                                     |
+| --- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| M1  | 5 top-level nav items (DART / Signals / IM / Reg / Firm)                                                                                            |
+| M2  | `/platform` remains DART umbrella + split sub-pages `/platform/signals-in` and `/platform/full` for click-through detail                            |
+| M3  | "DART Signals-In" / "Signals Service (Signals-Out)" naming (direction-arrow explicit)                                                               |
+| M4  | Tiered light-auth gate matching existing `authentication/` 3-tier model                                                                             |
+| M5  | Full schema content behind light-auth gate; page-level copy gives overview only                                                                     |
+| M6  | Static SVG/HTML fund/SMA hierarchy visuals on `/strategies` + `/regulatory` in Phase 4; interactive drill-down deferred to Stage 3                  |
+| M7  | Full strategy family + archetype catalogue behind light-auth gate (reads from `/codex/09-strategy/architecture-v2/category-instrument-coverage.md`) |
+| M8  | Surface read-only-key mechanic on IM + Reg pages (scope of copy to be drafted in Phase 2)                                                           |
+| M9  | Fund-slicing visibility mechanic surfaced on IM page (pb3b narrative)                                                                               |
+| M10 | Anonymise existing clients (sector / geography / strategy-family descriptors) until explicit written permission to name                             |
 
 ## Commercial-path mapping (what lives where)
 
@@ -103,13 +103,13 @@ Per the locked rule-04 matrix + Signal Leasing 4th-path:
 
 - Parent: [path_to_100m_finalization_2026_04_20.md](path_to_100m_finalization_2026_04_20.md)
 - Sibling: [signal_leasing_broadcast_architecture_2026_04_20.md](signal_leasing_broadcast_architecture_2026_04_20.md)
-- Locked commercial model: `codex/14-playbooks/_ssot-rules/04-dart-commercial-axes.md`, `dart-pricing-axes.md`,
+- Locked commercial model: `/codex/14-playbooks/_ssot-rules/04-dart-commercial-axes.md`, `dart-pricing-axes.md`,
   `im-profit-share-structures.md`
-- Strategy codex: `codex/09-strategy/architecture-v2/category-instrument-coverage.md` +
+- Strategy codex: `/codex/09-strategy/architecture-v2/category-instrument-coverage.md` +
   `strategy-allocation-lock-matrix.md`
-- Auth tier model: `codex/14-playbooks/authentication/light-auth-briefings.md`, `firebase-staging.md`,
+- Auth tier model: `/codex/14-playbooks/authentication/light-auth-briefings.md`, `firebase-staging.md`,
   `firebase-production.md`
-- Instruction schema: `codex/14-playbooks/shared-core/instruction-schema-fit-and-package-boundaries.md`
+- Instruction schema: `/codex/14-playbooks/shared-core/instruction-schema-fit-and-package-boundaries.md`
 
 ## Out of scope
 
@@ -226,13 +226,13 @@ Phases 2A + 4 are parallelisable. Phase 5 consumes both. Phase 6 validates the w
 
 ### Phase 5 — Docs alignment [SHIPPED]
 
-- [x] [AGENT] P0. Update `codex/14-playbooks/experience/marketing-journey.md` — reflect 5-path structure + light auth
+- [x] [AGENT] P0. Update `/codex/14-playbooks/experience/marketing-journey.md` — reflect 5-path structure + light auth
       gate + direction-arrow naming ("DART Signals-In" / "Signals Service (Signals-Out)"). Done 2026-04-20 (PM
       `30cdf420`).
-- [x] [AGENT] P0. Update `codex/14-playbooks/authentication/light-auth-briefings.md` — document per-path code pattern
+- [x] [AGENT] P0. Update `/codex/14-playbooks/authentication/light-auth-briefings.md` — document per-path code pattern
       (M4 tiered model). Per-path codes in `NEXT_PUBLIC_BRIEFING_ACCESS_CODE_*` env vars; dev-default fallback. Done
       2026-04-20 (PM `30cdf420`).
-- [x] [AGENT] P0. Update `codex/14-playbooks/implementation-mapping/route-mapping.md` — register: `/platform`,
+- [x] [AGENT] P0. Update `/codex/14-playbooks/implementation-mapping/route-mapping.md` — register: `/platform`,
       `/platform/signals-in`, `/platform/full`, `/signals`, `/investment-management`, `/regulatory`, `/who-we-are` (Firm
       — slug preserved; nav label "Who We Are"), `/briefings/` hub + 6 `[slug]` routes,
       `/services/{backtesting,data,engagement,execution,investment,platform,regulatory}`, with inbound-link path per
@@ -249,11 +249,11 @@ Briefings hub + 6 pillars shipped. Content-depth audit vs codex SSOT still pendi
 phase should READ the cited SSOT and expand `lib/briefings/content.ts` where the current copy is thin.
 
 - [x] [AGENT] P0. Audit `lib/briefings/content.ts` `dart-signals-in` pillar against
-      `codex/14-playbooks/shared-core/instruction-schema-fit-and-package-boundaries.md`. Must include: rule-10 8-field
+      `/codex/14-playbooks/shared-core/instruction-schema-fit-and-package-boundaries.md`. Must include: rule-10 8-field
       spec (per-field rows), venue × instrument × execution-mode compatibility matrix (CeFi / DeFi / Polymarket /
       Sports), lifecycle supersede/add/cancel semantics, what-signals-only-does-NOT-enable. Done 2026-04-20 (UI
       `12238b6`).
-- [x] [AGENT] P0. Audit `signals-out` pillar against `codex/14-playbooks/commercial-model/signal-leasing.md`. Must
+- [x] [AGENT] P0. Audit `signals-out` pillar against `/codex/14-playbooks/commercial-model/signal-leasing.md`. Must
       include: signal payload schema full spec (direction / size / confidence / valid_until / supersedes / idempotency
       key), webhook + REST-pull delivery mechanics (D2), HMAC-signing + idempotency rules, the four light-observability
       components (history / backtest compare / delivery health / optional P&L attribution), hybrid commercial model
@@ -263,11 +263,11 @@ phase should READ the cited SSOT and expand `lib/briefings/content.ts` where the
       / complex / full-matrix sweep), IP-power exclusivity tier anchors (commodity through uniquely-differentiated).
       Done 2026-04-20 (UI `f4775d0` four-tier exclusivity + `5379c4f` metered research three-band).
 - [x] [AGENT] P0. Audit `investment-management` pillar against
-      `codex/14-playbooks/commercial-model/im-profit-share-structures.md` +
+      `/codex/14-playbooks/commercial-model/im-profit-share-structures.md` +
       `shared-core/org-fund-client-entity-model.md`. Must include: fund/SMA mechanics + read-only-key mechanic +
       perf-fee band (30-35% no-management-fee) + platform-fee client-choice (Option A +5% perf / Option B $500/mo — no
       specific numbers per rule 08). Done 2026-04-20 (UI `5379c4f`).
-- [x] [AGENT] P0. Audit `regulatory` pillar against `codex/14-playbooks/experience/regulatory-umbrella-briefing.md`.
+- [x] [AGENT] P0. Audit `regulatory` pillar against `/codex/14-playbooks/experience/regulatory-umbrella-briefing.md`.
       Must include: FCA scope enumeration, 5-workstream onboarding (legal / compliance / MLRO / venue / reporting),
       supervisory-artifact index, 12-month minimum, read-only-key mechanic. Done 2026-04-20 (UI `2eea185`).
 - [x] [AGENT] P0. Audit `platform` pillar (umbrella). Should cross-link to signals-in + full + signals-out without

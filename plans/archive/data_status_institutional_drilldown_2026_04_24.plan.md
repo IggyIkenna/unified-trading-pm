@@ -224,7 +224,7 @@ Shard-detail must branch on `(service, instrument_type_class)` to produce the ri
       ETHEREUM → AAVE_V3 → liquidation_events → 2026-04-18 → shows pool list + schema + download. - Sports: SFI → EPL →
       2026-04-12 → shows fixtures for that day + schema + download. - Instruments: DERIBIT → options → 2026-04-18 →
       shows full option definitions list + schema + download.
-- [x] [AGENT] P1. Codex doc update: `codex/02-data/data-status-drilldown.md` (new) documenting the unified shard-detail
+- [x] [AGENT] P1. Codex doc update: `/codex/02-data/data-status-drilldown.md` (new) documenting the unified shard-detail
       contract, shard-by-service matrix, and the Schema / Sample / Instruments / Download tab structure.
 - [x] [SCRIPT] P1. Quickmerge PM.
 

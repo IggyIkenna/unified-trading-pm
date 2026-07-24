@@ -52,7 +52,7 @@ locked_since:
 > everything. no instruments no mvp nothing." The DRIFT venue this doc's finding concerns has been **removed entirely**
 > (Drift was hacked ~$280M on 2026-04-01, rebranded to Velocity DEX 2026-07-01, now a ~2-week-old private beta with ~$0
 > listed TVL) — all Solana perp DEXes are dropped except Jupiter (not integrated). This doc's finding/fix is now moot;
-> kept for historical record only. SSOT for the removal: `codex/04-architecture/solana-defi-coverage.md` (tombstone
+> kept for historical record only. SSOT for the removal: `/codex/04-architecture/solana-defi-coverage.md` (tombstone
 > banner).
 
 # Drift V2 Helius day-backfill OOM on a program-wide sig-index day (2026-07-15)
@@ -60,7 +60,7 @@ locked_since:
 > **🔴 2026-07-15 (data_engineering slot-10): the P2 investigation below found something bigger than the todo asked.**
 > The whole Helius sig-index/day-backfill path this doc is about (`mtds-solana-drift-backfill` +
 > `mtds-drift-sig-walker-*` fleet) was declared **OBSOLETE** and **NOT on any critical path** by
-> `codex/04-architecture/drift-v2-data-sources.md` on **2026-06-01** — a full month before the
+> `/codex/04-architecture/drift-v2-data-sources.md` on **2026-06-01** — a full month before the
 > `mvp_backfill_defi_onchain_v10` DRIFT-perp-funding saga (2026-06-29 → present) even started. A fully-built, tested,
 > per-market replacement (`DriftV2HistoricalIngester` / `backfill_drift_v2_historical.py`, shipped
 > `market-tick-data-service@0f70f376` 2026-06-01) already exists in the repo but was **never wired into any VM
@@ -202,7 +202,7 @@ fix below lands.
       need full instruction decoding (a Drift V2 IDL decoder, which `_parse_helius_batch`'s own
       `data_quality="helius_v2_signatures_only"` flag already documents as NOT being available on this path). 2. **That
       decoder/per-market gap is moot — a per-market replacement already exists and is already shipped.**
-      `codex/04-architecture/drift-v2-data-sources.md` (`status: current`, created 2026-06-01) is the codex SSOT for
+      `/codex/04-architecture/drift-v2-data-sources.md` (`status: current`, created 2026-06-01) is the codex SSOT for
       Drift V2 ingestion and states plainly: the Helius sig-walking path is **"OBSOLETE for Drift V2 historical needs"**
       and **"REMAINS in the MTDS repo as cold infrastructure ... but is NOT on any critical path"**. The replacement —
       Drift's own Velocity Data API (`data.api.drift.trade`) — exposes genuinely **per-market** endpoints
@@ -254,7 +254,7 @@ fix below lands.
       duplicated here. **NEW 2026-07-15 (data_engineering slot-10), operator/main ruling needed**: decide whether to (a)
       abandon the Helius sig-index/day-backfill path for DRIFT `perp_funding` entirely and switch to
       `backfill_drift_v2_historical.py` (Velocity Data API, per-market, already shipped `mtds@0f70f376`, zero Helius
-      spend, documented "zero gap" coverage back to 2024-06-01 per `codex/04-architecture/drift-v2-data-sources.md`),
+      spend, documented "zero gap" coverage back to 2024-06-01 per `/codex/04-architecture/drift-v2-data-sources.md`),
       stopping/not-relaunching the `mtds-drift-sig-walker-*` fleet and re-routing `mtds-solana-drift-backfill` (or a new
       launcher) to the Velocity path; or (b) there's a reason (rate limits, data-shape mismatch, a gap the codex doc
       doesn't know about) the team already implicitly rejected the Velocity path for this specific backfill and kept
@@ -302,7 +302,7 @@ fix below lands.
       roster + run.log-tail monitoring convention used across this plan's many "-003" check-ins should add a
       log-staleness check (e.g. flag a VM whose `run.log` hasn't advanced in >30 min while still `RUNNING`) rather than
       relying on an agent noticing a `TERMINATED` status change on the next dispatch. (repo: deployment-service or
-      wherever the VM-launcher/observability runbook lives — codex/05-infrastructure/deployment-observability.md) —
+      wherever the VM-launcher/observability runbook lives — /codex/05-infrastructure/deployment-observability.md) —
       deployment-service@c56463b. Added
       `python -m deployment_service.data_pipeline_monitors.check_vm_cli --vm-name     <VM>` (DP-VM-006): an ad-hoc,
       self-contained, on-demand CLI that reuses the SAME tested `heartbeat_stall_watcher.classify_vm_liveness` the
@@ -332,7 +332,7 @@ fix below lands.
       pre-fix) that the VM booted clean on the fixed code — did **not** get far enough to observe the fix actually
       resolving a busy day (still mid-scan) before the next event below. **Received a steering message from main
       mid-session** relaying the P0 ruling this todo's gate was waiting on: the Helius sig-index/day-backfill path is
-      OBSOLETE (`codex/04-architecture/drift-v2-data-sources.md`, current since 2026-06-01) — ruling is (a), switch to
+      OBSOLETE (`/codex/04-architecture/drift-v2-data-sources.md`, current since 2026-06-01) — ruling is (a), switch to
       the Velocity Data API path; "if your sub-task depends on the sig-index/sig-walker, STOP investing further ...
       verify the Velocity path on a sample market-day first, then decommission." This task depends on it entirely.
       Independently re-verified before acting: `curl https://data.api.drift.trade/market/SOL-PERP/fundingRates/2025/1/9`
@@ -358,7 +358,7 @@ walks `getSignaturesForAddress` on the Drift V2 PROGRAM address only, no per-mar
 RPC level) and `solana_defi_drift_helius.py`/`solana_defi_drift.py` (confirmed: `_parse_helius_batch` unconditionally
 labels every resolved row with the CLI-supplied `market`, and the OOM streaming fix from todo P1 above has already
 landed independently of this task). While tracing "whoever owns the `data_quality=helius_v2_signatures_only` decision"
-per the todo's second half, found `codex/04-architecture/drift-v2-data-sources.md` — a `status: current` codex SSOT
+per the todo's second half, found `/codex/04-architecture/drift-v2-data-sources.md` — a `status: current` codex SSOT
 dated 2026-06-01 declaring the entire Helius sig-index path OBSOLETE and NOT on any critical path, superseded by Drift's
 Velocity Data API (per-market, free, "zero gap" back to 2024-06-01). Confirmed the replacement
 (`DriftV2HistoricalIngester`/`backfill_drift_v2_historical.py`) is fully implemented + tested

@@ -194,7 +194,7 @@ credential format.
 
 ## Foundation-gate violations observed
 
-Per `codex/11-project-management/foundation-completion-gate-discipline.md` ("don't build layer-N+1 on a layer-N that
+Per `/codex/11-project-management/foundation-completion-gate-discipline.md` ("don't build layer-N+1 on a layer-N that
 isn't GREEN"):
 
 - **Harsh slot 5** (is_mtds_contract_audit Phase 3+4 → MTDS handler edits): layer-1+4 foundation (DeFi data freshness

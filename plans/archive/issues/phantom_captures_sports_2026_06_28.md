@@ -80,12 +80,12 @@ The ODDS phantom count (26,220) suggests a wholesale fetcher or writer failure o
 3. **Verify**: re-run dry-run post-apply to confirm 0 phantoms.
 
 Cold-start context: `unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md` +
-`codex/05-infrastructure/manifest-consolidator-ssot.md` + `codex/02-data/availability-manifest-and-data-status.md`.
+`/codex/05-infrastructure/manifest-consolidator-ssot.md` + `/codex/02-data/availability-manifest-and-data-status.md`.
 
 ## Todos
 
 - [x] ✅ [CODE] P2. Diagnose sports phantom root cause (26,220 ODDS phantoms — fetcher outage or writer failure?). Read
-      `codex/02-data/availability-manifest-and-data-status.md` first. Repo: `instruments-service`. **DIAGNOSIS
+      `/codex/02-data/availability-manifest-and-data-status.md` first. Repo: `instruments-service`. **DIAGNOSIS
       2026-06-28T05:02Z (slot-10)**: Analyzed triage JSONL `triage_sports_20260628_042535.jsonl`. - All 27,595 phantoms
       have blank venue + blank instrument_id (sports aggregated-level rows) - ODDS=26,220 | TEAMS=448 | STANDINGS=448 |
       PLAYER_VALUES=314 | FIXTURES=163 - Date range: 2018-01-01 → 2026-07-04 (3,060 dates). All `manifest_capture_time`

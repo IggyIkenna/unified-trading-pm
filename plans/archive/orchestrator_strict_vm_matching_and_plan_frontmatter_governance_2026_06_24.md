@@ -645,7 +645,7 @@ before trusting it in the fleet — never a copy of anyone's v1 code.
 ## Codex SSOT updates
 
 - `codex/12-agent-workflow/` — regen strict-matching + reassignment/prune model.
-- `codex/11-project-management/plan-hygiene.md` (or new) — frontmatter completeness matrix + `NA` rule.
+- `/codex/11-project-management/plan-hygiene.md` (or new) — frontmatter completeness matrix + `NA` rule.
 
 ## Progress Log
 

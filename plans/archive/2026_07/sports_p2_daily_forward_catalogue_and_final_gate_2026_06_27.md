@@ -74,11 +74,11 @@ Three steady-state surfaces + the final verdict:
 
 ## Codex SSOTs
 
-- `codex/02-data/sports-scheduling-and-sharding.md` — sports-scheduler tiers + cadence state
-- `codex/05-infrastructure/manifest-consolidator-ssot.md` — consolidator freshness
-- `codex/05-infrastructure/data-pipeline-alerts.md` (+ `.registry.yaml`) — `DP_CATALOG_NOT_RUNNING` /
+- `/codex/02-data/sports-scheduling-and-sharding.md` — sports-scheduler tiers + cadence state
+- `/codex/05-infrastructure/manifest-consolidator-ssot.md` — consolidator freshness
+- `/codex/05-infrastructure/data-pipeline-alerts.md` (+ `.registry.yaml`) — `DP_CATALOG_NOT_RUNNING` /
   `DP_CRON_DID_NOT_FIRE` budgets; drive-to-zero
-- `codex/05-infrastructure/deployment-observability.md` — active-dp-alerts blobs + RESOLVED bookend
+- `/codex/05-infrastructure/deployment-observability.md` — active-dp-alerts blobs + RESOLVED bookend
 
 ## Todos
 
@@ -190,7 +190,7 @@ Three steady-state surfaces + the final verdict:
       ODDS eu=89,073 is IMPOSSIBLE, not fetchable — do NOT fetch it).** The `api_football … ODDS eu=89,073` slice above
       is counted as a real gap "awaiting P2a enrichment coordinator". It is not: **api_football has no odds path in
       instruments-service** — the adapter's `get_odds()` is a deprecated stub that logs "use
-      `get_fixture_odds_snapshot()` instead" (`codex/02-data/sports-data-source-coverage-matrix.md` §4). No fetch, no
+      `get_fixture_odds_snapshot()` instead" (`/codex/02-data/sports-data-source-coverage-matrix.md` §4). No fetch, no
       fleet, and no credit spend can ever move these cells; ODDS is **footystats**-owned in IS (operator ruling
       2026-06-27, #6 REVERSED). The league counts are the tell: footystats ODDS spans 46 leagues (the codex footystats
       denominator); these rows span **94** — the api_football league universe cross-producted against a data_type

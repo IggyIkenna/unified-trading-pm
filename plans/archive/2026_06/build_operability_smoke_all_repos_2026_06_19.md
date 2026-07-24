@@ -6,7 +6,15 @@ status: complete
 nature: record
 asset_group: [infrastructure]
 stage: [meta]
-repos: [agent-orchestrator, alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-service]
+repos:
+  [
+    agent-orchestrator,
+    alerting-service,
+    batch-live-reconciliation-service,
+    client-reporting-api,
+    deployment-api,
+    deployment-service,
+  ]
 scope: [engineer, admin]
 tags: []
 related: []
@@ -18,7 +26,13 @@ locked_by: live-defi-rollout
 estimate_class: infra
 estimate_baseline_ai_days: 4
 estimate_calibrated_ai_days: 3.2
-source: ['2026-06-19 operator request — test that we can create images for ALL repos, and that the images are OPERABLE (open up + run), not just `docker build` exit 0 → needs a smoke test', 2026-06-19 mdps build fix (build_operability proven end-to-end on market-data-processing-service), 2026-06-19 fleet Dockerfile/cloudbuild sweep (3 build-blocker classes catalogued below)]
+source:
+  [
+    "2026-06-19 operator request — test that we can create images for ALL repos, and that the images are OPERABLE (open
+    up + run), not just `docker build` exit 0 → needs a smoke test",
+    2026-06-19 mdps build fix (build_operability proven end-to-end on market-data-processing-service),
+    2026-06-19 fleet Dockerfile/cloudbuild sweep (3 build-blocker classes catalogued below),
+  ]
 priority: P1
 ---
 
@@ -261,9 +275,10 @@ classes:
 
 ## Codex SSOT updates
 
-- `codex/06-coding-standards/quality-gates.md` — in-image operability smoke step (the real "test the artifact you
+- `/codex/06-coding-standards/quality-gates.md` — in-image operability smoke step (the real "test the artifact you
   deploy") + the credential-free probe env.
-- `codex/08-workflows/ci-cd-flow.md` — build-operability gate in the cloudbuild pipeline; base-digest fan-out mechanism.
+- `/codex/08-workflows/ci-cd-flow.md` — build-operability gate in the cloudbuild pipeline; base-digest fan-out
+  mechanism.
 
 ## Phase 2.5 — wire the 6 new repos' build triggers (the GAP — operator-confirmed 2026-06-19)
 

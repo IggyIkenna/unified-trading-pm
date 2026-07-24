@@ -126,7 +126,7 @@ not have.
 
 1. **Cross-cutting data-correctness bug, not sports-specific.** The manifest consolidator
    (`unified_trading_library/manifest_consolidator.py`) is the single canonical-index writer for EVERY asset_group
-   bucket (`codex/05-infrastructure/manifest-consolidator-ssot.md`). Any bucket where two consolidation cycles overlap
+   bucket (`/codex/05-infrastructure/manifest-consolidator-ssot.md`). Any bucket where two consolidation cycles overlap
    in time — plausible whenever multiple VMs/backfills/scripts write per-VM shards to the same bucket close together,
    which is routine on a busy multi-slot day like today — is exposed to this lost-update race, not just
    `instruments-store-sports-prd`.

@@ -44,7 +44,7 @@ tags: [sports, scheduler, cloud-run, cli-wiring, deployment, season-boundary, ph
 related:
   [
     instruments-service/docs/SPORTS_INSTRUMENTS.md,
-    codex/02-data/sports-scheduling-and-sharding.md,
+    /codex/02-data/sports-scheduling-and-sharding.md,
     deployment-service/configs/sports-trigger-tiers.yaml,
     deployment-service/deployment_service/sports_trigger_scheduler.py,
     deployment-service/deployment_service/sports_trigger_periodic.py,

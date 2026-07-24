@@ -6,18 +6,26 @@ status: complete
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [e2e-testing, execution-service, market-tick-data-service, strategy-service, unified-trading-pm, unified-trading-system-ui]
+repos:
+  [
+    e2e-testing,
+    execution-service,
+    market-tick-data-service,
+    strategy-service,
+    unified-trading-pm,
+    unified-trading-system-ui,
+  ]
 scope: [engineer, admin]
 tags: []
 related: []
-created: '2026-04-16'
-overview: 'Consolidated remaining strategy intelligence and UI work from 5 source plans.
+created: "2026-04-16"
+overview: "Consolidated remaining strategy intelligence and UI work from 5 source plans.
 
   Covers: cross-domain alpha features, strategy lifecycle, composable strategies,
 
   client config E2E, UI walkthrough alignment, UI sync hardening.
 
-  '
+  "
 type: mixed
 epic: epic-code-completion
 archived: 2026-05-07
@@ -25,21 +33,28 @@ superseded_by: plans/active/strategy_and_dart_master_2026_05_07.md
 reconciliation_status: yaml_to_markdown_converted
 reconciliation_date: 2026-04-25
 reconciliation_evidence: _reconciliation_evidence_map_2026_04_25.md
-completion_gates: {code: C5, deployment: D3, business: B4}
+completion_gates: { code: C5, deployment: D3, business: B4 }
 repo_gates:
-- {repo: unified-api-contracts, code: C0}
-- {repo: unified-trading-library, code: C0}
-- {repo: strategy-service, code: C0}
-- {repo: ml-inference-service, code: C0}
-- {repo: execution-service, code: C0}
-- {repo: features-delta-one-service, code: C0}
-- {repo: features-onchain-service, code: C0}
-- {repo: features-cross-instrument-service, code: C0}
-- {repo: market-tick-data-service, code: C0}
-- {repo: unified-trading-system-ui, code: C0}
-- {repo: unified-trading-api, code: C0}
+  - { repo: unified-api-contracts, code: C0 }
+  - { repo: unified-trading-library, code: C0 }
+  - { repo: strategy-service, code: C0 }
+  - { repo: ml-inference-service, code: C0 }
+  - { repo: execution-service, code: C0 }
+  - { repo: features-delta-one-service, code: C0 }
+  - { repo: features-onchain-service, code: C0 }
+  - { repo: features-cross-instrument-service, code: C0 }
+  - { repo: market-tick-data-service, code: C0 }
+  - { repo: unified-trading-system-ui, code: C0 }
+  - { repo: unified-trading-api, code: C0 }
 depends_on: []
-source_plans: [cross_domain_alpha_execution_intelligence_2026_04_11, strategy_lifecycle_visibility_ui_2026_04_11, client_config_and_defi_risk_2026_04_01, ui_walkthrough_and_e2e_alignment_2026_04_01, ui_sync_hardening_2026_03_23]
+source_plans:
+  [
+    cross_domain_alpha_execution_intelligence_2026_04_11,
+    strategy_lifecycle_visibility_ui_2026_04_11,
+    client_config_and_defi_risk_2026_04_01,
+    ui_walkthrough_and_e2e_alignment_2026_04_01,
+    ui_sync_hardening_2026_03_23,
+  ]
 isProject: false
 ---
 
@@ -158,8 +173,9 @@ A. Client config and UI alignment are nearly done (2 items each).
       2026-05-07: FRESH — strategy-service grep `ComposableStrategy|composable_strategy` → 0 hits. Likely lower priority
       post-Plan A 5-dim catalogue; archetype variants already provide composition surface.]
 - [ ] [AGENT] P0. slv-p2-auto-retune: Add auto-retuning trigger in ml-inference-service. [AUDIT 2026-05-07:
-      PARTIALLY-FRESH — `ml-inference-service/ml_inference_service/engine/drift_monitor.py` ships `auto_retune_enabled:
-      bool` + monitor pipeline (lines 8 + 110); needs the actual retune-trigger publish wiring to ml-training-service.]
+      PARTIALLY-FRESH — `ml-inference-service/ml_inference_service/engine/drift_monitor.py` ships
+      `auto_retune_enabled:     bool` + monitor pipeline (lines 8 + 110); needs the actual retune-trigger publish wiring
+      to ml-training-service.]
 - [ ] [AGENT] P0. slv-p2-lineage: Add prediction lineage tracking. [AUDIT 2026-05-07: PARTIALLY-FRESH — ml-inference
       `69d6313` threads service-run job_id + model_family into manifest writes; ml-training `f7369f2` companion. That's
       the manifest-side lineage; the strategy-side consumer (strategy reads back which model produced which signal) is
@@ -213,7 +229,7 @@ A. Client config and UI alignment are nearly done (2 items each).
 
 - [x] [AGENT] P1. ui-p9a-health-all-services: Health check all services from UI. Evidence: per CLAUDE.md (Local
       Development), `http://localhost:3000/health` auto-detects tier and checks all connectors; runtime tiers in
-      `codex/05-infrastructure/runtime-tiers-and-deployment.md`.
+      `/codex/05-infrastructure/runtime-tiers-and-deployment.md`.
 - [ ] [AGENT] P1. ui-p9b-qg-validation: Run quality gates: vitest + vite build + playwright. [AUDIT 2026-05-07: FRESH —
-      final QG gate. Note: `unified-trading-system-ui` is Next.js (not Vite for dev/test); command names should be `npm
-      test` (vitest) + `npm build` + `npx playwright test` per `package.json` standard across the workspace.]
+      final QG gate. Note: `unified-trading-system-ui` is Next.js (not Vite for dev/test); command names should be
+      `npm     test` (vitest) + `npm build` + `npx playwright test` per `package.json` standard across the workspace.]

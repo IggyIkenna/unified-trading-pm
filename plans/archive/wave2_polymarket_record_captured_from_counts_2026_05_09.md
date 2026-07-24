@@ -6,7 +6,15 @@ status: complete
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [e2e-testing, features-service, instruments-service, market-tick-data-service, strategy-service, unified-trading-library]
+repos:
+  [
+    e2e-testing,
+    features-service,
+    instruments-service,
+    market-tick-data-service,
+    strategy-service,
+    unified-trading-library,
+  ]
 scope: [engineer, admin]
 tags: []
 related: []
@@ -14,7 +22,8 @@ created: 2026-05-09
 type: sub-plan
 deadline: 2026-05-23 (Polymarket subset) / 2026-06-15 (Kalshi + opinion.trade)
 prior_deadline: post-cutover (target 2026-06-15)
-deadline_change_reason: 'Operator direction 2026-05-13: split scope. Polymarket subset PULLED FORWARD into May-23 (live prediction
+deadline_change_reason: "Operator direction 2026-05-13: split scope. Polymarket subset PULLED FORWARD into May-23 (live
+  prediction
 
   market trading runs at May-23 cutover — bundled-shard SSOT correctness matters when live trades land).
 
@@ -22,11 +31,11 @@ deadline_change_reason: 'Operator direction 2026-05-13: split scope. Polymarket 
 
   can follow when bundle adapters land).
 
-  Venue-agnostic phases (1 helper, 2 deprecation banner, 4 legacy delete, 5 codex update) ALL ship May-23 — they''re
+  Venue-agnostic phases (1 helper, 2 deprecation banner, 4 legacy delete, 5 codex update) ALL ship May-23 — they're
 
   the foundation. Phase 3 splits: Polymarket migration ships May-23; Kalshi + opinion.trade migration → 2026-06-15.
 
-  '
+  "
 priority: P1
 horizon: pre-May-23 (Polymarket) / scope-bounded post-cutover (Kalshi + opinion.trade)
 companion_to: plans/epics/predictions_master_2026_05_07.md
@@ -36,11 +45,14 @@ locked_since: 2026-05-09
 estimate_class: design
 estimate_baseline_ai_days: 4.5
 estimate_calibrated_ai_days: 2.7
-estimate_calibration_note: 'Baseline auto-extracted from in-body AI-day mentions during 2026-05-11 sweep (~1, ~0.5, ~1-2, ~1, + 1 more). Class inferred from filename (design, multiplier 0.6×).
+estimate_calibration_note: "Baseline auto-extracted from in-body AI-day mentions during 2026-05-11 sweep (~1, ~0.5,
+  ~1-2, ~1, + 1 more). Class inferred from filename (design, multiplier 0.6×).
 
-  CAVEAT: auto-extract SUMS all in-body mentions; plans with both ''Total: X'' headlines AND per-phase line items will be double-counted. Owner agent: verify baseline, refine class per codex/08-workflows/estimation-calibration.md, recompute calibrated if either changes.
+  CAVEAT: auto-extract SUMS all in-body mentions; plans with both 'Total: X' headlines AND per-phase line items will be
+  double-counted. Owner agent: verify baseline, refine class per /codex/08-workflows/estimation-calibration.md,
+  recompute calibrated if either changes.
 
-  '
+  "
 ---
 
 > **ARCHIVED 2026-05-19** — 100% complete (all checkboxes checked); preserved for archaeology.
@@ -185,8 +197,8 @@ static ratchet that bans `ManifestWriter.add()` calls where the `data_type=` kwa
 
 - [x] [SCRIPT] P0. Update CLAUDE.md "Cluster validation MANDATORY at `record_captured`" section to remove the Polymarket
       / Kalshi option-α carve-out (added 2026-05-09; carve-out cites this Wave-2 as named successor). Update
-      `codex/02-data/availability-manifest-and-data-status.md` to document `record_captured_from_counts` as the
-      streaming-writer companion to `record_captured`. Update `codex/04-architecture/shard-level-failure-isolation.md`
+      `/codex/02-data/availability-manifest-and-data-status.md` to document `record_captured_from_counts` as the
+      streaming-writer companion to `record_captured`. Update `/codex/04-architecture/shard-level-failure-isolation.md`
       if it references the legacy `add()` path. status: done (PM@d93a9952 — CLAUDE.md: no option-alpha carve-out found
       (was never added to CLAUDE.md; plan referenced a future addition that did not land); codex
       `availability-manifest-and-data-status.md` updated with Phase 4 ValueError ban + QG STEP 5.73 note + pipeline_mode

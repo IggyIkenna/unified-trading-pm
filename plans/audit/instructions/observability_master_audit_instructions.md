@@ -40,19 +40,19 @@ dependency buffers**, **alert-provider health + independent fallback (Twilio voi
 
 Codex SSOTs governing this epic:
 
-| Doc                                                         | Owns                                                                                                                                                |
-| ----------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `codex/03-observability/alerting.md`                        | AlertSeverity (T1/T2/T3/T4 ↔ CRITICAL/HIGH/WARN/INFO) → channel routing                                                                            |
-| `codex/04-architecture/autonomous-recovery-matrix.md`       | Decision tree — every failure scenario × every recovery action                                                                                      |
-| `codex/04-architecture/kill-switch-circuit-breaker.md`      | Kill-switch state machine; circuit-breaker per-venue; auto-deactivation                                                                             |
-| `codex/04-architecture/recovery-defence-in-depth-layers.md` | **NEW 2026-05-23** — 5-layer model: L0 deterministic Python → L1 LLM audit/signoff → L2 PagerDuty → L3 Twilio voice → L4 pager → L5 human audit ack |
-| `codex/04-architecture/incident-gateway-state-machine.md`   | **NEW 2026-05-23** — 13-state incident lifecycle (DETECTED → … → CLOSED); audit-ack queue                                                           |
-| `codex/05-infrastructure/disaster-recovery.md`              | RTO/RPO targets, Tier 0-3 recovery, restore from manifest                                                                                           |
-| `codex/15-runbooks/physical-pager-layer.md`                 | **NEW 2026-05-23** — Pager device comparison, webhook prototype, Twilio voice bridge                                                                |
-| `codex/05-infrastructure/live-deployment-monitoring.md`     | Per-archetype heartbeat thresholds; STARTED/progress/STOPPED/FAILED event cadence                                                                   |
-| `codex/15-runbooks/alerting/pagerduty-escalation-policy.md` | Ikenna 14:30–02:30 UK / Harsh 02:30–14:30 UK; escalation ladder                                                                                     |
-| `codex/15-runbooks/alerting/audit-acknowledgement-flow.md`  | **NEW 2026-05-23** — 6h ack SLA + secondary-human-escalation + founder fallback                                                                     |
-| `codex/02-data/data-pipeline-correctness-hard-rule.md`      | Layer freeze on RED data audit; slot-reassignment trigger                                                                                           |
+| Doc                                                          | Owns                                                                                                                                                |
+| ------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/codex/03-observability/alerting.md`                        | AlertSeverity (T1/T2/T3/T4 ↔ CRITICAL/HIGH/WARN/INFO) → channel routing                                                                             |
+| `/codex/04-architecture/autonomous-recovery-matrix.md`       | Decision tree — every failure scenario × every recovery action                                                                                      |
+| `/codex/04-architecture/kill-switch-circuit-breaker.md`      | Kill-switch state machine; circuit-breaker per-venue; auto-deactivation                                                                             |
+| `/codex/04-architecture/recovery-defence-in-depth-layers.md` | **NEW 2026-05-23** — 5-layer model: L0 deterministic Python → L1 LLM audit/signoff → L2 PagerDuty → L3 Twilio voice → L4 pager → L5 human audit ack |
+| `/codex/04-architecture/incident-gateway-state-machine.md`   | **NEW 2026-05-23** — 13-state incident lifecycle (DETECTED → … → CLOSED); audit-ack queue                                                           |
+| `/codex/05-infrastructure/disaster-recovery.md`              | RTO/RPO targets, Tier 0-3 recovery, restore from manifest                                                                                           |
+| `/codex/15-runbooks/physical-pager-layer.md`                 | **NEW 2026-05-23** — Pager device comparison, webhook prototype, Twilio voice bridge                                                                |
+| `/codex/05-infrastructure/live-deployment-monitoring.md`     | Per-archetype heartbeat thresholds; STARTED/progress/STOPPED/FAILED event cadence                                                                   |
+| `/codex/15-runbooks/alerting/pagerduty-escalation-policy.md` | Ikenna 14:30–02:30 UK / Harsh 02:30–14:30 UK; escalation ladder                                                                                     |
+| `/codex/15-runbooks/alerting/audit-acknowledgement-flow.md`  | **NEW 2026-05-23** — 6h ack SLA + secondary-human-escalation + founder fallback                                                                     |
+| `/codex/02-data/data-pipeline-correctness-hard-rule.md`      | Layer freeze on RED data audit; slot-reassignment trigger                                                                                           |
 
 ## Triggers
 
@@ -186,7 +186,7 @@ Codex SSOTs governing this epic:
 ### Section I — Alert provider + notification tooling
 
 - [ ] (I.1) **One primary incident provider** (PagerDuty per `alerting_service_live_rules_2026_05_07.md` Phase 4).
-- [ ] (I.2) **Slack deprecated** per `codex/03-observability/alerting.md`; verify no code path adds new Slack-only
+- [ ] (I.2) **Slack deprecated** per `/codex/03-observability/alerting.md`; verify no code path adds new Slack-only
       routes.
 - [ ] (I.3) **Independent fallback = Twilio direct voice/SMS**: separate account + separate billing + direct API path
       from Incident Gateway. Verify: works when PagerDuty API is down (synthetic provider-outage test).
@@ -196,8 +196,8 @@ Codex SSOTs governing this epic:
 
 ### Section J — Physical pager + final-mile fallback
 
-- [ ] (J.1) **Comparison matrix docs**: `codex/15-runbooks/physical-pager-layer.md` documents 4-6 candidates with price,
-      webhook API path, pros/cons, recommended pick.
+- [ ] (J.1) **Comparison matrix docs**: `/codex/15-runbooks/physical-pager-layer.md` documents 4-6 candidates with
+      price, webhook API path, pros/cons, recommended pick.
 - [ ] (J.2) **Webhook prototype**: `PhysicalPagerNotifier` abstract interface + 4 vendor subclasses ship in
       alerting-service.
 - [ ] (J.3) **Twilio voice bridge as permanent fallback**: Twilio voice triggers when SEV0 not acked within configured
@@ -348,8 +348,8 @@ compose with its neighbours.
 - [ ] (P.8) **independent_fallback_twilio ↔ incident_gateway**: TwilioVoice in AlertChannel; CRITICAL rules include it.
 - [ ] (P.9) **physical_pager ↔ audit_acknowledgement_sla**: PhysicalPager triggered ONLY by 5 closed-set conditions
       reachable from the ack-escalation cron.
-- [ ] (P.10) **incident_runbooks_evidence ↔ everything**: every IncidentEnvelope stamped with runbook_id +
-      config_hash + code_version + runbook_version.
+- [ ] (P.10) **incident_runbooks_evidence ↔ everything**: every IncidentEnvelope stamped with runbook_id + config_hash +
+      code_version + runbook_version.
 - [ ] (P.11) **deployment_ui_safety_ops ↔ incident_gateway**: manual actions flow through gateway (not direct service
       API calls).
 

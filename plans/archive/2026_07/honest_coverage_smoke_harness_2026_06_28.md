@@ -85,7 +85,7 @@ vs candles-only.
       (`empty_confirmed`/`expected_unattempted`) from INSUFFICIENT-HISTORY (window only partially captured) — this is
       the crux and must not collapse. — Gate: a reviewed spec + a `classify_shard_coverage(...)` signature; honest-empty
       vs insufficient-history decision table. — unified-api-contracts@746d546a. Spec doc:
-      `codex/02-data/shard-coverage-classification.md`. UAC module:
+      `/codex/02-data/shard-coverage-classification.md`. UAC module:
       `unified_api_contracts/canonical/crosscutting/shard_coverage_classification.py` (typed enum `ShardCoverageClass`,
       `RequiredWindow`, `WindowCaptureCounts`, `ShardCoverageReport`, pure-logic core `classify_from_capture_counts` +
       `bucket_capture_status_cell`, signature-frozen `classify_shard_coverage` wrapper with body `NotImplementedError`

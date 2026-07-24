@@ -22,8 +22,8 @@ scope: [engineer, admin]
 tags: [cross-repo, breaking-change, canonical-id, build_instrument_id, quarantine-model, editable-install-ripple]
 related:
   [
-    cefi_chain_tail_v6_canonicalisation_2026_07_21.md,
-    ../../../codex/06-coding-standards/tier-and-import-architecture.md,
+    /plans/active/issues/cefi_chain_tail_v6_canonicalisation_2026_07_21.md,
+    /codex/04-architecture/tier-and-import-architecture.md,
   ]
 created: 2026-07-21
 last_updated: 2026-07-21
@@ -82,7 +82,7 @@ shows all three files + `git diff` clean against MTDS's own HEAD `7335631d`):
   commit touched that file + its test.
 - **This is a real cross-repo breaking-change gap**: UAC tightened a shared contract (`build_instrument_id`) without
   MTDS's own call sites / tests being updated in the same wave — the two repos are momentarily out of lockstep. Per
-  `codex/04-architecture/tier-and-import-architecture.md` MTDS depends on UAC as a shared lib; a UAC-side behavior
+  `/codex/04-architecture/tier-and-import-architecture.md` MTDS depends on UAC as a shared lib; a UAC-side behavior
   change that MTDS's test suite doesn't yet accommodate is exactly the kind of drift that gate is meant to catch.
 - **Blast radius on the shipping pipeline**: as long as this persists, `market-tick-data-service`'s full
   `quality-gates.sh` cannot reach green for ANY agent's diff (not just this one) — it blocks all MTDS quickmerges

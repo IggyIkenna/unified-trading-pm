@@ -3,8 +3,7 @@ doc_type: audit-result
 title: MDPS Long-Running Axes E, G, H — Three Adjacent Findings
 summary: >-
   Three adjacent MDPS long-running findings. Axis E: pre-count loop (venues-only) diverges from the processing scanner
-  (venues+instrument_ids) → misleading "Listed 18 vs 4" operator logs; 2-line fix passes instrument_ids= to
-  pre-count.
+  (venues+instrument_ids) → misleading "Listed 18 vs 4" operator logs; 2-line fix passes instrument_ids= to pre-count.
   Axis G: _iter_chain_symbol_dfs (Polars predicate-pushdown per-symbol streaming) is the architecturally-correct
   reference for high-volume bundles (peak = one symbol, not the 165 MB bundle). Axis H: all 21 registered adapters are
   stateless — adapter caches are NOT the 25 GB floor owner (closes that hypothesis).
@@ -20,8 +19,10 @@ related:
   - plans/audit/results/mdps_long_running_state_inventory_2026_05_28.md
   - plans/active/mdps_long_running_multi_shard_architecture_audit_2026_05_28.md
 created: 2026-05-28
-audited_scope: MDPS long-running axes E (pre-count vs processing-scanner divergence), G (chain-bundle streaming reference pattern), H (adapter-registry dispatch state-retention)
-date: '2026-05-28'
+audited_scope:
+  MDPS long-running axes E (pre-count vs processing-scanner divergence), G (chain-bundle streaming reference pattern), H
+  (adapter-registry dispatch state-retention)
+date: "2026-05-28"
 auditor: claude opus 4.7 (slot main subagent)
 parent_epic: mtds_mdps_master
 severity: P2
@@ -325,7 +326,7 @@ The 25 GB empirical floor in the 2026-05-28 canary is **NOT** from adapter state
 `CandleAdapterRegistry.get_adapter(category, dt, config=service_config) → adapter.process_to_candles(tick_data, tf, info, metadata)`
 → return result → adapter goes out of scope and is GC'd.
 
-**Architectural**: Codify in `codex/06-coding-standards/service-orchestration-patterns.md` § "Adapter Contract" (new
+**Architectural**: Codify in `/codex/06-coding-standards/service-orchestration-patterns.md` § "Adapter Contract" (new
 subsection):
 
 - Adapters MUST be stateless (no per-instance caches, no cross-call state).

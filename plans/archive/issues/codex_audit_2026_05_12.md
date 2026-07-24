@@ -12,7 +12,11 @@ tags: []
 related: []
 created: 2026-05-12
 author: ikenna-codefreeze-audit-tab (slot 3)
-source: [plans/active/issues/codex_audit_2026_05_11.md (slot 6 day-1 baseline), 3-cluster Explore sub-agent fan-out 2026-05-12 Day 3 (Phase 1.D + 1.E + 1.F clusters)]
+source:
+  [
+    plans/active/issues/codex_audit_2026_05_11.md (slot 6 day-1 baseline),
+    3-cluster Explore sub-agent fan-out 2026-05-12 Day 3 (Phase 1.D + 1.E + 1.F clusters),
+  ]
 locked_by: live-defi-rollout
 locked_since: 2026-05-12
 ---
@@ -47,44 +51,44 @@ specifically attributed to Phase 1.D/1.E/1.F (1.D = 9 of the 12; 1.F = 3 of the 
 **All 18 existing docs PASS currency check** — no SUPERSEDED markers, no stale dates pre-2026-05-08; content matches
 plan body state (including Phase 1 UAC extensions + Q8/Q9 ratifications 2026-05-10). Key examples:
 
-- `codex/04-architecture/risk-rule-taxonomy.md` (2026-05-11 12:40) — ships 22-member closed-set `RiskRuleId` per Phase
+- `/codex/04-architecture/risk-rule-taxonomy.md` (2026-05-11 12:40) — ships 22-member closed-set `RiskRuleId` per Phase
   1.A
-- `codex/04-architecture/circuit-breaker-rule-taxonomy.md` (2026-05-11 14:14) — 4-set `BreakerAction` + registry seed
-- `codex/04-architecture/autonomous-recovery-matrix.md` (2026-05-12 09:21) — LayerN decision tree +
+- `/codex/04-architecture/circuit-breaker-rule-taxonomy.md` (2026-05-11 14:14) — 4-set `BreakerAction` + registry seed
+- `/codex/04-architecture/autonomous-recovery-matrix.md` (2026-05-12 09:21) — LayerN decision tree +
   `BreakerRecoveryMode` extension
-- `codex/03-observability/alerting.md` + `codex/15-runbooks/alerting/alert-code-taxonomy.md` (45-member closed set)
-- `codex/04-architecture/risk-breaker-seam.md` — Q9 ratification 2026-05-10 seam codified
-- `codex/04-architecture/kill-switch-event-bus.md` + `codex/04-architecture/mev-protection.md`
+- `/codex/03-observability/alerting.md` + `/codex/15-runbooks/alerting/alert-code-taxonomy.md` (45-member closed set)
+- `/codex/04-architecture/risk-breaker-seam.md` — Q9 ratification 2026-05-10 seam codified
+- `/codex/04-architecture/kill-switch-event-bus.md` + `/codex/04-architecture/mev-protection.md`
 
 **9 missing docs are NEW creations (NOT supersedence)**, all owned by plans where they're enumerated as Phase 7
 deliverables that ride with the owning plan's later phases — on-schedule per CLAUDE.md "Post-Plan-Phase Codex Audit"
 rule, not yet-late-to-deliver:
 
-1. `codex/09-strategy/operational/cli-promote-paths.md` — promote plan Phase 2 + Phase 7
-2. `codex/04-architecture/promote-workflow-architecture.md` — promote plan Phase 7 (May-23 dual-track narrative)
-3. `codex/05-infrastructure/strategy-vm-launcher-shape.md` — promote plan Phase 1 + Phase 7
-4. `codex/04-architecture/live-deployment-manifest.md` — promote plan Phase U1 (MinimalCandidateManifest)
-5. `codex/14-customer-journeys/promote-pipeline-backend.md` — promote plan Phase U3
-6. `codex/04-architecture/strategy-ensemble-topology.md` — topology plan Phase 1
-7. `codex/04-architecture/matching-engine-assumptions.md` — topology plan Phase 1
-8. `codex/04-architecture/ml-lifecycle.md` — topology plan Phase 2
-9. `codex/04-architecture/multi-mode-wallet-isolation.md` — topology plan Phase 4
+1. `/codex/09-strategy/operational/cli-promote-paths.md` — promote plan Phase 2 + Phase 7
+2. `/codex/04-architecture/promote-workflow-architecture.md` — promote plan Phase 7 (May-23 dual-track narrative)
+3. `/codex/05-infrastructure/strategy-vm-launcher-shape.md` — promote plan Phase 1 + Phase 7
+4. `/codex/04-architecture/live-deployment-manifest.md` — promote plan Phase U1 (MinimalCandidateManifest)
+5. `/codex/14-customer-journeys/promote-pipeline-backend.md` — promote plan Phase U3
+6. `/codex/04-architecture/strategy-ensemble-topology.md` — topology plan Phase 1
+7. `/codex/04-architecture/matching-engine-assumptions.md` — topology plan Phase 1
+8. `/codex/04-architecture/ml-lifecycle.md` — topology plan Phase 2
+9. `/codex/04-architecture/multi-mode-wallet-isolation.md` — topology plan Phase 4
 
 ### Phase 1.E — DeFi catalogue / archetypes / sim (7 ✅ / 1 🟡 / 0 ❌)
 
 All 7 referenced codex docs present + content current vs. plan body state (including 2026-05-12 UAC commits):
 
-- `codex/02-data/defi-venue-protocol-catalogue.md` — reflects 99-venue ALL_DEFI_VENUES (UAC@`495d262`)
-- `codex/02-data/defi-data-type-taxonomy.md` — lending_indices schema fields current; governance_proposals +
+- `/codex/02-data/defi-venue-protocol-catalogue.md` — reflects 99-venue ALL_DEFI_VENUES (UAC@`495d262`)
+- `/codex/02-data/defi-data-type-taxonomy.md` — lending_indices schema fields current; governance_proposals +
   slashing_events rows landed
-- `codex/05-infrastructure/chain-rpc-mev-tenderly.md` — Jito MEV (Phase 5A) + Tenderly bundle-sim
-- `codex/04-architecture/flash-loan-receiver.md` — current; pre-deployment addresses
-- `codex/09-strategy/architecture-v2/archetypes/carry-recursive-staked.md` + new
+- `/codex/05-infrastructure/chain-rpc-mev-tenderly.md` — Jito MEV (Phase 5A) + Tenderly bundle-sim
+- `/codex/04-architecture/flash-loan-receiver.md` — current; pre-deployment addresses
+- `/codex/09-strategy/architecture-v2/archetypes/carry-recursive-staked.md` + new
   `carry-recursive-borrow-lending-only.md` (2026-05-12)
 
 **1 🟡 DRIFTING — stamp lag only, content current**:
 
-- `codex/02-data/defi-data-type-taxonomy.md` — `Last updated: 2026-05-10` stamp predates 2026-05-12 UAC@`d02cce2`
+- `/codex/02-data/defi-data-type-taxonomy.md` — `Last updated: 2026-05-10` stamp predates 2026-05-12 UAC@`d02cce2`
   lending-rate enum extension. Schema table CONTENT correctly lists `supply_apy / borrow_apy` in `lending_indices`
   fields, so content is current; only the header stamp lags by 2 days. Documentation-hygiene issue, not SSOT drift.
 
@@ -92,23 +96,24 @@ All 7 referenced codex docs present + content current vs. plan body state (inclu
 
 All 11 existing docs current; 8 of them created 2026-05-12 per slot 4 DART work:
 
-- `codex/05-infrastructure/deployment-ui-architecture.md` § "Environment tier" — env-tier via `window.location.hostname`
-- `codex/05-infrastructure/credentials-matrix.md` (2026-05-12) — workspace SSOT
-- `codex/05-infrastructure/fireblocks-integration-spec.md` (2026-05-12) — June-1 integration design
-- `codex/05-infrastructure/hsm-wallet-signing.md` (2026-05-12) — SigningSurface tier ladder
-- `codex/05-infrastructure/per-archetype-wallet-isolation.md` (2026-05-12) — N×M wallet topology
-- `codex/05-infrastructure/secret-manager-naming.md` (2026-05-12) — SSOT naming convention
-- `codex/05-infrastructure/custody-onboarding-checklist.md` (2026-05-12) — operator-runnable checklist
-- `codex/04-architecture/interface-credential-convention.md` — 4-part pattern documented
-- `codex/04-architecture/capital-efficiency-patterns.md` — pre-Phase 1.F + Phase 8.D cross-link pending
-- `codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md` (2026-05-10) — Hard Rule #4 + schema
-- `codex/14-customer-journeys/shared-core/treasury-and-subaccount-model.md` — treasury model
+- `/codex/05-infrastructure/deployment-ui-architecture.md` § "Environment tier" — env-tier via
+  `window.location.hostname`
+- `/codex/05-infrastructure/credentials-matrix.md` (2026-05-12) — workspace SSOT
+- `/codex/05-infrastructure/fireblocks-integration-spec.md` (2026-05-12) — June-1 integration design
+- `/codex/05-infrastructure/hsm-wallet-signing.md` (2026-05-12) — SigningSurface tier ladder
+- `/codex/05-infrastructure/per-archetype-wallet-isolation.md` (2026-05-12) — N×M wallet topology
+- `/codex/05-infrastructure/secret-manager-naming.md` (2026-05-12) — SSOT naming convention
+- `/codex/05-infrastructure/custody-onboarding-checklist.md` (2026-05-12) — operator-runnable checklist
+- `/codex/04-architecture/interface-credential-convention.md` — 4-part pattern documented
+- `/codex/04-architecture/capital-efficiency-patterns.md` — pre-Phase 1.F + Phase 8.D cross-link pending
+- `/codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md` (2026-05-10) — Hard Rule #4 + schema
+- `/codex/14-customer-journeys/shared-core/treasury-and-subaccount-model.md` — treasury model
 
 **3 missing docs are NEW creations awaiting Phase 7/8 execution** (NOT blocking earlier phases):
 
-1. `codex/04-architecture/client-lifecycle-state-machine.md` — `wallet_treasury_client_flow` Phase 8.A
-2. `codex/04-architecture/treasury-custody-flow.md` — `wallet_treasury_client_flow` Phase 8.B
-3. `codex/04-architecture/client-reporting-architecture.md` — `client_reporting_pnl_attribution_mvp` Phase 7.A
+1. `/codex/04-architecture/client-lifecycle-state-machine.md` — `wallet_treasury_client_flow` Phase 8.A
+2. `/codex/04-architecture/treasury-custody-flow.md` — `wallet_treasury_client_flow` Phase 8.B
+3. `/codex/04-architecture/client-reporting-architecture.md` — `client_reporting_pnl_attribution_mvp` Phase 7.A
 
 ## Why it matters
 
@@ -131,7 +136,7 @@ All 11 existing docs current; 8 of them created 2026-05-12 per slot 4 DART work:
 
 1. **Flip code_freeze freeze-gate item 9 from 🟡 PARTIAL to 🟢 NON-BLOCKING** with note: "36 audited docs current (3
    clusters Phase 1.D/1.E/1.F). 12 NEW docs scheduled for owning plan Phase 7-8 — not pre-freeze deliverables."
-2. **Fix the 1 stamp-lag finding** (`codex/02-data/defi-data-type-taxonomy.md` Last-updated bump 2026-05-10 →
+2. **Fix the 1 stamp-lag finding** (`/codex/02-data/defi-data-type-taxonomy.md` Last-updated bump 2026-05-10 →
    2026-05-12 + acknowledge UAC@`d02cce2` in changelog) — slot 8 or any agent touching that doc on next pass.
 3. **Track the 12 NEW codex docs** as deferred items in their respective owning plans' Phase 7-8 sub-sections (already
    are; no action needed).

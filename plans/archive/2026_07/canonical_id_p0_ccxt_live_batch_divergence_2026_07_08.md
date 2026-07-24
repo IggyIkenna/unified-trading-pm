@@ -18,7 +18,7 @@ related:
   [
     ../audit/results/canonical_instrument_id_audit_2026_07_08.md,
     issues/instrument_id_format_canonicalization_2026_07_08.md,
-    ../../codex/09-strategy/operational/paper-batch-live-reconciliation.md,
+    /codex/09-strategy/operational/paper-batch-live-reconciliation.md,
   ]
 created: 2026-07-08
 last_updated: 2026-07-10 # (was: 2026-07-08 -- corrected 2026-07-12, finding 24, §A2 B-queue ruling: Progress Log records a 2026-07-10 status-flip active->complete that postdated the recorded last_updated)

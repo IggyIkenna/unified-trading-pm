@@ -39,7 +39,7 @@ locked_since: 2026-05-21
 # Deployment And User Management Master
 
 **Owns**: deployment-api + deployment-ui (was: also user-management-service + user-management-ui — dropped 2026-07-12:
-both ARCHIVED per `codex/DEPRECATED_UIS_NOTICE.md` + `codex/05-infrastructure/ui-functionality-requirements.md` ("User
+both ARCHIVED per `codex/DEPRECATED_UIS_NOTICE.md` + `/codex/05-infrastructure/ui-functionality-requirements.md` ("User
 Management | user-management-ui | archived") + CLAUDE.md's system map ("`user-management-ui` ARCHIVED"); no
 `user-management-service` repo exists in the workspace. Findings #314/#385, plan-reconciliation
 `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 "50 reclassified" blanket ruling.)
@@ -53,8 +53,8 @@ See [`README.md`](README.md) for the canonical epic frontmatter schema + body st
 
 All active plans under this epic that touch any UI repo (`deployment-ui`, `unified-trading-system-ui` — was: also
 `user-management-ui`, ARCHIVED, see "Owns" note above, corrected 2026-07-12) MUST pass the playwright verification gate
-before any todo is ticked ✅ done. Per `plans/PLAN_FORMAT.md` § 9 and `codex/06-coding-standards/ui-testing-layers.md` §
-"Plan-Level Enforcement":
+before any todo is ticked ✅ done. Per `plans/PLAN_FORMAT.md` § 9 and `/codex/06-coding-standards/ui-testing-layers.md`
+§ "Plan-Level Enforcement":
 
 - **`[UI]` tag**: every UI-touching todo MUST carry a `[UI]` marker — either combined (`[AGENT][UI]`/`[HUMAN][UI]`) or
   bare `[UI]` (the established convention in this epic's own child plans); a role tag with no `UI` marker at all (bare
@@ -79,12 +79,12 @@ Key deployment/user-management UI surfaces and their required layers:
 
 ## Codex SSOTs
 
-| Doc                                                      | Owns                                                                                                        |
-| -------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| `codex/08-workflows/deployment-flow.md`                  | Operator promotion path (dev → staging → main + paper → live); full promotion lifecycle                     |
-| `codex/04-architecture/promote-workflow-architecture.md` | Strategy promote path; `MinimalCandidateManifest`; `POST /api/promote/{strategy_id}/{manifest_id}` contract |
-| `codex/04-architecture/batch-live-architecture.md`       | Mode-toggle invariant (batch vs live); same-codepath requirement                                            |
-| `codex/03-deployment/data-status-ui-surface.md`          | Data-status UI honest-coverage surface; deployment-ui freshness display                                     |
+| Doc                                                       | Owns                                                                                                        |
+| --------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `/codex/08-workflows/deployment-flow.md`                  | Operator promotion path (dev → staging → main + paper → live); full promotion lifecycle                     |
+| `/codex/04-architecture/promote-workflow-architecture.md` | Strategy promote path; `MinimalCandidateManifest`; `POST /api/promote/{strategy_id}/{manifest_id}` contract |
+| `/codex/04-architecture/batch-live-architecture.md`       | Mode-toggle invariant (batch vs live); same-codepath requirement                                            |
+| `/codex/03-deployment/data-status-ui-surface.md`          | Data-status UI honest-coverage surface; deployment-ui freshness display                                     |
 
 ## Assigned active plans
 

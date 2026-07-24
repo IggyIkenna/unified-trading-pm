@@ -4,7 +4,7 @@ created: 2026-05-20
 author: background agent (delegated by slot-1)
 locked_by: live-defi-rollout
 codifies_rule_from:
-  - codex/11-project-management/issue-doc-lifecycle.md
+  - /codex/11-project-management/issue-doc-lifecycle.md
   - CLAUDE.md § Citadel-Grade Planning Standards item (9)
 ---
 

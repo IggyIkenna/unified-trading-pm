@@ -6,32 +6,37 @@ status: complete
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [deployment-service, e2e-testing, execution-service, instruments-service, market-tick-data-service, strategy-service]
+repos:
+  [deployment-service, e2e-testing, execution-service, instruments-service, market-tick-data-service, strategy-service]
 scope: [engineer, admin]
 tags: []
 related: []
-created: '2026-04-25'
-overview: 'Align code and docs on the trading **venue axis** vocabulary: **asset group** (CeFi / DeFi / TradFi / Sports / Prediction)
+created: "2026-04-25"
+overview: "Align code and docs on the trading **venue axis** vocabulary: **asset group** (CeFi / DeFi / TradFi / Sports
+  / Prediction)
 
-  with UAC SSOT dict keys unchanged (`cefi`, `defi`, …). Waves A–B shipped in UAC, UTL, MDPS, MTDS; remaining waves cover
+  with UAC SSOT dict keys unchanged (`cefi`, `defi`, …). Waves A–B shipped in UAC, UTL, MDPS, MTDS; remaining waves
+  cover
 
   features services, execution consumer JSON keys, and deployment/SIT parity. Agent context lives in
 
   `unified-trading-pm/cursor-configs/CLAUDE.md` + this plan.
 
-  '
+  "
 type: mixed
 epic: epic-code-completion
 archived_on: 2026-05-07
-archive_reason: 5 main vocabulary waves (A/B/C/D/E) shipped; 3 absorbed items folded into infrastructure_master + defi_master umbrellas
-completion_gates: {code: C3, deployment: none, business: none}
+archive_reason:
+  5 main vocabulary waves (A/B/C/D/E) shipped; 3 absorbed items folded into infrastructure_master + defi_master
+  umbrellas
+completion_gates: { code: C3, deployment: none, business: none }
 repo_gates:
-- {repo: unified-api-contracts, code: C5, deployment: none, business: none}
-- {repo: unified-trading-library, code: C5, deployment: none, business: none}
-- {repo: market-data-processing-service, code: C5, deployment: none, business: none}
-- {repo: market-tick-data-service, code: C5, deployment: none, business: none}
-- {repo: unified-trading-api, code: C1, deployment: none, business: none}
-- {repo: instruments-service, code: C1, deployment: none, business: none}
+  - { repo: unified-api-contracts, code: C5, deployment: none, business: none }
+  - { repo: unified-trading-library, code: C5, deployment: none, business: none }
+  - { repo: market-data-processing-service, code: C5, deployment: none, business: none }
+  - { repo: market-tick-data-service, code: C5, deployment: none, business: none }
+  - { repo: unified-trading-api, code: C1, deployment: none, business: none }
+  - { repo: instruments-service, code: C1, deployment: none, business: none }
 depends_on: []
 isProject: false
 ---
@@ -62,9 +67,9 @@ and these docs is a review-blocking failure per `doc → plan → code`):
   vocabulary rules (CLI flag `--asset-group`, env vars `VM_ASSET_GROUP` / `MDPS_ASSET_GROUP`, Python symbols
   `VENUES_BY_ASSET_GROUP` / `DATA_TYPES_BY_ASSET_GROUP` / `MarketAssetGroup`, hive-key `asset_group=` canonical vs
   legacy `category=`, the lowercase dict-key exception)
-- [`codex/02-data/availability-manifest-and-data-status.md`](../../codex/02-data/availability-manifest-and-data-status.md)
-  — manifest hive partition keys (`asset_group=` canonical, `category=` legacy) + reader fallback discipline
-- [`codex/02-data/per-category-bucket-layouts.md`](../../codex/02-data/per-category-bucket-layouts.md) — per-asset-group
+- [`/codex/02-data/availability-manifest-and-data-status.md`](/codex/02-data/availability-manifest-and-data-status.md) —
+  manifest hive partition keys (`asset_group=` canonical, `category=` legacy) + reader fallback discipline
+- [`/codex/02-data/per-category-bucket-layouts.md`](/codex/02-data/per-category-bucket-layouts.md) — per-asset-group
   bucket layout + path templates the vocabulary touches
 
 If any of the docs above is missing, this plan creates a stub for it (see [`codex/`](../../codex/) tree).

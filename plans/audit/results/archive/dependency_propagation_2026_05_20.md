@@ -1,17 +1,31 @@
 ---
 doc_type: audit-result
 title: Dependency Fail-Propagation Audit — 2026-05-20
-summary: Read-only dependency fail-propagation audit (MTDS/features/strategy/execution/ml) — overall pipeline RED; two P0 wiring gaps (execution-service assert_market_data_fresh + strategy-service assert_feature_fresh defined but zero engine call-sites) let live orders route on stale/failed upstream data; StaleUpstreamError not defined anywhere.
+summary:
+  Read-only dependency fail-propagation audit (MTDS/features/strategy/execution/ml) — overall pipeline RED; two P0
+  wiring gaps (execution-service assert_market_data_fresh + strategy-service assert_feature_fresh defined but zero
+  engine call-sites) let live orders route on stale/failed upstream data; StaleUpstreamError not defined anywhere.
 status: fail
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [execution-service, features-service, instruments-service, market-data-processing-service, market-tick-data-service, ml-service]
+repos:
+  [
+    execution-service,
+    features-service,
+    instruments-service,
+    market-data-processing-service,
+    market-tick-data-service,
+    ml-service,
+  ]
 scope: [engineer, admin]
 tags: [audit, data-correctness, execution, strategy, mtds, features, live-trading, data-pipeline]
-related: [dependency_propagation_2026_05_20_summary.md]
+related: [/plans/audit/results/archive/dependency_propagation_2026_05_20_summary.md]
 created: 2026-05-20
-audited_scope: Read-only source inspection (excl .venv/tests) of MTDS, features-service, strategy-service, execution-service, ml-service dependency-check paths (batch pre-flight + live staleness gate), plus UAC/UTL DependencyError/DataStalenessError definitions
+audited_scope:
+  Read-only source inspection (excl .venv/tests) of MTDS, features-service, strategy-service, execution-service,
+  ml-service dependency-check paths (batch pre-flight + live staleness gate), plus UAC/UTL
+  DependencyError/DataStalenessError definitions
 date: 2026-05-20
 auditor: Slot 3 sub-agent
 parent_epic: infrastructure_master
@@ -62,13 +76,13 @@ service source dirs only (excluded `.venv*`, `tests/`, `__pycache__`)
 
 ## Per-service × mode matrix
 
-| Service               | Upstream                 | Batch: pre-flight check?                                                                                           | Batch: uses DependencyError?                                                                             | Live: StaleUpstreamError?                                                                                           | Verdict |
-| --------------------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- | ------- |
-| **MTDS**              | instruments-service (IS) | ⚠ GCS blob check only (not manifest capture_status)                                                               | ❌ Not raised on IS fail; falls back to UAC MVP seed                                                     | ❌ No `StaleUpstreamError`; reconnect stamped as `STALE` in manifest only                                           | YELLOW  |
-| **features-service**  | MTDS                     | ✅ `BaseDependencyChecker.check_dependencies()` + `manifest_window_guard` (capture_status aware)                   | ✅ `DependencyError` raised when `fail_on_missing=True` (default)                                        | ❌ No `StaleUpstreamError`; live handler passes to PubSub subscriber without staleness gate                         | YELLOW  |
-| **strategy-service**  | features-service         | ✅ `manifest_allocation_guard.check_allocation_manifest()` reads capture_status; skips on `attempted_failed`       | ⚠ Skips + alerts but does NOT raise `DependencyError`; returns `should_skip_live=True` (caller decides) | ⚠ `DataStalenessError` defined + imported but **no call sites found in engine code** for live mode                 | YELLOW  |
-| **execution-service** | strategy-service         | ❌ No upstream manifest check before trade execution; preflight only checks secrets, API keys, risk-service health | ❌ `DependencyError` not used; no strategy manifest dependency check                                     | ⚠ `assert_market_data_fresh()` defined and exported but **no engine call sites found**; only exists in tests       | RED     |
-| **ml-service**        | features-service         | ✅ `BaseDependencyChecker.check_dependencies()` + `DependencyError` raised on missing required deps                | ✅ `DependencyError` raised when `fail_on_missing=True`                                                  | ❌ No `StaleUpstreamError`; live inference stale window handled via `STRICT_FAIL` suppression (not raised as error) | YELLOW  |
+| Service               | Upstream                 | Batch: pre-flight check?                                                                                           | Batch: uses DependencyError?                                                                            | Live: StaleUpstreamError?                                                                                           | Verdict |
+| --------------------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- | ------- |
+| **MTDS**              | instruments-service (IS) | ⚠ GCS blob check only (not manifest capture_status)                                                                | ❌ Not raised on IS fail; falls back to UAC MVP seed                                                    | ❌ No `StaleUpstreamError`; reconnect stamped as `STALE` in manifest only                                           | YELLOW  |
+| **features-service**  | MTDS                     | ✅ `BaseDependencyChecker.check_dependencies()` + `manifest_window_guard` (capture_status aware)                   | ✅ `DependencyError` raised when `fail_on_missing=True` (default)                                       | ❌ No `StaleUpstreamError`; live handler passes to PubSub subscriber without staleness gate                         | YELLOW  |
+| **strategy-service**  | features-service         | ✅ `manifest_allocation_guard.check_allocation_manifest()` reads capture_status; skips on `attempted_failed`       | ⚠ Skips + alerts but does NOT raise `DependencyError`; returns `should_skip_live=True` (caller decides) | ⚠ `DataStalenessError` defined + imported but **no call sites found in engine code** for live mode                  | YELLOW  |
+| **execution-service** | strategy-service         | ❌ No upstream manifest check before trade execution; preflight only checks secrets, API keys, risk-service health | ❌ `DependencyError` not used; no strategy manifest dependency check                                    | ⚠ `assert_market_data_fresh()` defined and exported but **no engine call sites found**; only exists in tests        | RED     |
+| **ml-service**        | features-service         | ✅ `BaseDependencyChecker.check_dependencies()` + `DependencyError` raised on missing required deps                | ✅ `DependencyError` raised when `fail_on_missing=True`                                                 | ❌ No `StaleUpstreamError`; live inference stale window handled via `STRICT_FAIL` suppression (not raised as error) | YELLOW  |
 
 ---
 

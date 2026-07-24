@@ -28,7 +28,7 @@ repos: [agent-orchestrator]
 scope: [engineer, admin]
 tags:
   [agent-orchestrator, operator-chat, message-delivery, reply-ack, at-least-once, silent-drop, main-agent, reliability]
-related: [ao_blocked_queue_operator_ruling_sync_gap_2026_07_13.md]
+related: [/plans/archive/issues/ao_blocked_queue_operator_ruling_sync_gap_2026_07_13.md]
 created: 2026-07-08
 parent_epic: orchestrator_master
 priority: P1

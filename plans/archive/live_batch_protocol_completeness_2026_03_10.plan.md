@@ -6,44 +6,259 @@ status: complete
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [execution-service, instruments-service, market-data-processing-service, market-tick-data-service, strategy-service, system-integration-tests]
+repos:
+  [
+    execution-service,
+    instruments-service,
+    market-data-processing-service,
+    market-tick-data-service,
+    strategy-service,
+    system-integration-tests,
+  ]
 scope: [engineer, admin]
 tags: []
 related: []
-created: '2026-03-10'
-overview: Audit and remediate all 14 T4 services to ensure both batch and live mode handlers, CLI flags, transport switching, and tests are present and functional.
+created: "2026-03-10"
+overview:
+  Audit and remediate all 14 T4 services to ensure both batch and live mode handlers, CLI flags, transport switching,
+  and tests are present and functional.
 type: code
 epic: epic-code-completion
-completion_gates: {code: C5, deployment: none, business: none}
+completion_gates: { code: C5, deployment: none, business: none }
 repo_gates:
-- {repo: instruments-service, code: C1, deployment: none, business: none, readiness_note: 'DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off required for a code plan.'}
-- {repo: market-tick-data-service, code: C1, deployment: none, business: none, readiness_note: 'DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off required for a code plan.'}
-- {repo: market-data-processing-service, code: C1, deployment: none, business: none, readiness_note: 'DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off required for a code plan.'}
-- {repo: features-delta-one-service, code: C1, deployment: none, business: none, readiness_note: 'DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off required for a code plan.'}
-- {repo: features-volatility-service, code: C1, deployment: none, business: none, readiness_note: 'DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off required for a code plan.'}
-- {repo: features-calendar-service, code: C1, deployment: none, business: none, readiness_note: 'DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off required for a code plan.'}
-- {repo: features-onchain-service, code: C1, deployment: none, business: none, readiness_note: 'DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off required for a code plan.'}
-- {repo: features-commodity-service, code: C0, deployment: none, business: none, readiness_note: 'DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off required for a code plan.'}
-- {repo: features-cross-instrument-service, code: C1, deployment: none, business: none, readiness_note: 'DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off required for a code plan.'}
-- {repo: features-multi-timeframe-service, code: C1, deployment: none, business: none, readiness_note: 'DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off required for a code plan.'}
-- {repo: features-sports-service, code: C1, deployment: none, business: none, readiness_note: 'DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off required for a code plan.'}
-- {repo: ml-training-service, code: C1, deployment: none, business: none, readiness_note: 'DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off required for a code plan.'}
-- {repo: strategy-service, code: C1, deployment: none, business: none, readiness_note: 'DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off required for a code plan.'}
-- {repo: execution-service, code: C1, deployment: none, business: none, readiness_note: 'DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off required for a code plan.'}
-- {repo: system-integration-tests, code: C0, deployment: none, business: none, readiness_note: 'DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off required for a code plan.'}
+  - {
+      repo: instruments-service,
+      code: C1,
+      deployment: none,
+      business: none,
+      readiness_note:
+        "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
+        required for a code plan.",
+    }
+  - {
+      repo: market-tick-data-service,
+      code: C1,
+      deployment: none,
+      business: none,
+      readiness_note:
+        "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
+        required for a code plan.",
+    }
+  - {
+      repo: market-data-processing-service,
+      code: C1,
+      deployment: none,
+      business: none,
+      readiness_note:
+        "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
+        required for a code plan.",
+    }
+  - {
+      repo: features-delta-one-service,
+      code: C1,
+      deployment: none,
+      business: none,
+      readiness_note:
+        "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
+        required for a code plan.",
+    }
+  - {
+      repo: features-volatility-service,
+      code: C1,
+      deployment: none,
+      business: none,
+      readiness_note:
+        "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
+        required for a code plan.",
+    }
+  - {
+      repo: features-calendar-service,
+      code: C1,
+      deployment: none,
+      business: none,
+      readiness_note:
+        "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
+        required for a code plan.",
+    }
+  - {
+      repo: features-onchain-service,
+      code: C1,
+      deployment: none,
+      business: none,
+      readiness_note:
+        "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
+        required for a code plan.",
+    }
+  - {
+      repo: features-commodity-service,
+      code: C0,
+      deployment: none,
+      business: none,
+      readiness_note:
+        "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
+        required for a code plan.",
+    }
+  - {
+      repo: features-cross-instrument-service,
+      code: C1,
+      deployment: none,
+      business: none,
+      readiness_note:
+        "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
+        required for a code plan.",
+    }
+  - {
+      repo: features-multi-timeframe-service,
+      code: C1,
+      deployment: none,
+      business: none,
+      readiness_note:
+        "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
+        required for a code plan.",
+    }
+  - {
+      repo: features-sports-service,
+      code: C1,
+      deployment: none,
+      business: none,
+      readiness_note:
+        "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
+        required for a code plan.",
+    }
+  - {
+      repo: ml-training-service,
+      code: C1,
+      deployment: none,
+      business: none,
+      readiness_note:
+        "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
+        required for a code plan.",
+    }
+  - {
+      repo: strategy-service,
+      code: C1,
+      deployment: none,
+      business: none,
+      readiness_note:
+        "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
+        required for a code plan.",
+    }
+  - {
+      repo: execution-service,
+      code: C1,
+      deployment: none,
+      business: none,
+      readiness_note:
+        "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
+        required for a code plan.",
+    }
+  - {
+      repo: system-integration-tests,
+      code: C0,
+      deployment: none,
+      business: none,
+      readiness_note:
+        "DR N/A: code-completion epic scope; deployment managed by dedicated infra plans. BR N/A: no commercial sign-off
+        required for a code plan.",
+    }
 depends_on: [mock_data_dev_project_seeding_2026_03_10, phase3_service_hardening_integration]
 todos:
-- {id: p1-todo-05, content: 'features-commodity-service: Create cli/handlers/ with live_handler.py and batch_handler.py; add --mode batch|live to cli/main.py', status: done, note: DONE — cli/handlers/live_handler.py and batch_handler.py created; --mode batch|live added to cli/main.py with BatchHandler/LiveHandler dispatch. Commit b187ad0.}
-- {id: p1-todo-08, content: 'market-data-processing-service: Add --mode batch|live to cli/parser.py; wire mode selection', status: done, note: DONE — --mode batch|live added to process subparser; _mode_dispatch_handler routes to LiveModeHandler (lazy import) or process_candles_handler. Commit 6a3b920.}
-- {id: p1-todo-09, content: 'instruments-service: Rename --run-mode to --mode in cli/parser.py; create cli/handlers/batch_handler.py', status: done, note: DONE — --run-mode renamed to --mode with deprecated --run-mode alias (both dest='mode'); validate_arguments() enforces required. Commit 9c313ef.}
-- {id: p1-todo-10, content: 'features-sports-service: Add unit tests for batch_handler.py', status: done, note: DONE — tests/unit/test_batch_handler.py created; 6 unit tests covering BatchHandler.run() lifecycle. Commit d389213.}
-- {id: p1-todo-11, content: 'market-tick-data-service: Add unit tests for cli/batch_handler.py', status: done, note: DONE — tests/unit/test_batch_handler.py created; 6 unit tests covering DownloadBatchHandler init/set_date/run/validate_config. Commit c85e0f8.}
-- {id: p1-todo-12, content: 'ml-training-service: Document as batch-only service in codex; rename handlers', status: done, note: DONE — unified-trading-codex/04-architecture/batch-live-symmetry.md updated with Batch-Only Service Exemptions section documenting MLTR as batch-only by design. Commit e1d8545.}
-- {id: p1-todo-13, content: 'strategy-service: Consolidate live routing from service_entry.py to cli/handlers/live_handler.py', status: done, note: DONE — cli/handlers/live_handler.py created as synchronous facade over StrategyLiveHandler; exported from handlers __init__. Commit 70d8605.}
-- {id: p1-todo-15, content: 'Add test_live_mode_handler.py unit tests for FDS, FVS, FCS, FOS, STR', status: done, note: 'DONE — FVS and FOS had pre-existing tests; FCS: tests/unit/test_live_mode_handler.py (commit 0a4d03f); STR: tests/unit/test_live_mode_handler.py (commit a03a607). FDS repo does not exist.'}
-- {id: phase2-transport-tests, content: Add tests/unit/test_mode_switching.py and tests/integration/test_mode_switching.py per service, status: done, note: 'DONE — tests/unit/test_mode_switching.py added and committed for all 13 services: instruments-service (5 tests, source-inspection for live mode), market-data-processing-service (6 tests), market-tick-data-service (7 tests, INSTRUMENTS_READY coordination event), features-volatility-service (7 tests), features-delta-one-service (5 tests), features-calendar-service (7 tests), features-onchain-service (6 tests), features-commodity-service (6 tests), features-cross-instrument-service (7 tests), features-multi-timeframe-service (6 tests), features-sports-service (8 tests), strategy-service (7 tests, sys.modules pre-seeding for circular import), execution-service (7 tests). All 88 tests pass.'}
-- {id: phase3-sit-symmetry, content: Create system-integration-tests/tests/integration/test_batch_live_symmetry.py for 13 services, status: done, note: 'DONE 2026-03-11 — test_batch_live_symmetry.py written; 5 parametrized test functions covering all 13 services from audit matrix (repo_exists, batch_handler_exists, live_handler_exists, both_modes_present, matrix_coverage).'}
-- {id: phase4-codex-update, content: Update unified-trading-codex/04-architecture/batch-live-symmetry.md with final audit matrix, status: done, note: 'DONE — Service Audit Matrix (2026-03-11) added covering 13 services with batch/live handler status, --mode flag, test coverage, and Handler Pattern Reference. Commit 8655262.'}
+  - {
+      id: p1-todo-05,
+      content:
+        "features-commodity-service: Create cli/handlers/ with live_handler.py and batch_handler.py; add --mode
+        batch|live to cli/main.py",
+      status: done,
+      note:
+        DONE — cli/handlers/live_handler.py and batch_handler.py created; --mode batch|live added to cli/main.py with
+        BatchHandler/LiveHandler dispatch. Commit b187ad0.,
+    }
+  - {
+      id: p1-todo-08,
+      content: "market-data-processing-service: Add --mode batch|live to cli/parser.py; wire mode selection",
+      status: done,
+      note:
+        DONE — --mode batch|live added to process subparser; _mode_dispatch_handler routes to LiveModeHandler (lazy
+        import) or process_candles_handler. Commit 6a3b920.,
+    }
+  - {
+      id: p1-todo-09,
+      content:
+        "instruments-service: Rename --run-mode to --mode in cli/parser.py; create cli/handlers/batch_handler.py",
+      status: done,
+      note:
+        DONE — --run-mode renamed to --mode with deprecated --run-mode alias (both dest='mode'); validate_arguments()
+        enforces required. Commit 9c313ef.,
+    }
+  - {
+      id: p1-todo-10,
+      content: "features-sports-service: Add unit tests for batch_handler.py",
+      status: done,
+      note:
+        DONE — tests/unit/test_batch_handler.py created; 6 unit tests covering BatchHandler.run() lifecycle. Commit
+        d389213.,
+    }
+  - {
+      id: p1-todo-11,
+      content: "market-tick-data-service: Add unit tests for cli/batch_handler.py",
+      status: done,
+      note:
+        DONE — tests/unit/test_batch_handler.py created; 6 unit tests covering DownloadBatchHandler
+        init/set_date/run/validate_config. Commit c85e0f8.,
+    }
+  - {
+      id: p1-todo-12,
+      content: "ml-training-service: Document as batch-only service in codex; rename handlers",
+      status: done,
+      note:
+        DONE — unified-trading-/codex/04-architecture/batch-live-symmetry.md updated with Batch-Only Service Exemptions
+        section documenting MLTR as batch-only by design. Commit e1d8545.,
+    }
+  - {
+      id: p1-todo-13,
+      content: "strategy-service: Consolidate live routing from service_entry.py to cli/handlers/live_handler.py",
+      status: done,
+      note:
+        DONE — cli/handlers/live_handler.py created as synchronous facade over StrategyLiveHandler; exported from
+        handlers __init__. Commit 70d8605.,
+    }
+  - {
+      id: p1-todo-15,
+      content: "Add test_live_mode_handler.py unit tests for FDS, FVS, FCS, FOS, STR",
+      status: done,
+      note:
+        "DONE — FVS and FOS had pre-existing tests; FCS: tests/unit/test_live_mode_handler.py (commit 0a4d03f); STR:
+        tests/unit/test_live_mode_handler.py (commit a03a607). FDS repo does not exist.",
+    }
+  - {
+      id: phase2-transport-tests,
+      content: Add tests/unit/test_mode_switching.py and tests/integration/test_mode_switching.py per service,
+      status: done,
+      note:
+        "DONE — tests/unit/test_mode_switching.py added and committed for all 13 services: instruments-service (5 tests,
+        source-inspection for live mode), market-data-processing-service (6 tests), market-tick-data-service (7 tests,
+        INSTRUMENTS_READY coordination event), features-volatility-service (7 tests), features-delta-one-service (5
+        tests), features-calendar-service (7 tests), features-onchain-service (6 tests), features-commodity-service (6
+        tests), features-cross-instrument-service (7 tests), features-multi-timeframe-service (6 tests),
+        features-sports-service (8 tests), strategy-service (7 tests, sys.modules pre-seeding for circular import),
+        execution-service (7 tests). All 88 tests pass.",
+    }
+  - {
+      id: phase3-sit-symmetry,
+      content: Create system-integration-tests/tests/integration/test_batch_live_symmetry.py for 13 services,
+      status: done,
+      note:
+        "DONE 2026-03-11 — test_batch_live_symmetry.py written; 5 parametrized test functions covering all 13 services
+        from audit matrix (repo_exists, batch_handler_exists, live_handler_exists, both_modes_present, matrix_coverage).",
+    }
+  - {
+      id: phase4-codex-update,
+      content: Update unified-trading-/codex/04-architecture/batch-live-symmetry.md with final audit matrix,
+      status: done,
+      note:
+        "DONE — Service Audit Matrix (2026-03-11) added covering 13 services with batch/live handler status, --mode
+        flag, test coverage, and Handler Pattern Reference. Commit 8655262.",
+    }
 isProject: false
 ---
 
@@ -470,7 +685,7 @@ async def test_batch_live_output_identical(service_name: str, fixture_data) -> N
 
 ### P4.1 — Update batch-live-symmetry.md
 
-File: `unified-trading-codex/04-architecture/batch-live-symmetry.md`
+File: `unified-trading-/codex/04-architecture/batch-live-symmetry.md`
 
 Add:
 
@@ -500,7 +715,7 @@ Add:
 - `*/tests/unit/test_mode_switching.py` — add where absent
 - `*/tests/integration/test_mode_switching.py` — add where absent
 - `system-integration-tests/tests/integration/test_batch_live_symmetry.py` (new)
-- `unified-trading-codex/04-architecture/batch-live-symmetry.md` (update)
+- `unified-trading-/codex/04-architecture/batch-live-symmetry.md` (update)
 - `unified-trading-pm/audits/batch_live_mode_audit_2026_03_10.md` (new)
 
 ## Dependencies

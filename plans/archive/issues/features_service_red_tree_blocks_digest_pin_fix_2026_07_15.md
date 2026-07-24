@@ -20,7 +20,7 @@ stage: [meta]
 repos: [features-service, deployment-service, unified-trading-pm]
 scope: [engineer, admin]
 tags: [red-tree, sports, coverage-gate, ci-blocking, digest-pin, incident]
-related: [features_sports_service_consolidation_deploy_2026_07_15.md]
+related: [/plans/archive/2026_07/features_sports_service_consolidation_deploy_2026_07_15.md]
 created: 2026-07-15
 last_updated: 2026-07-21
 parent_epic: sports_master
@@ -133,9 +133,9 @@ regardless of where the floor happens to sit.
 - **CI**: `features-service` `quality-gates-v2` on `live-defi-rollout` has been GREEN on every run since `35e6bb49` /
   `2026-07-16T06:50:47Z` (the run right after `1d65390a` landed) through the current HEAD `0445eaec`
   (`2026-07-21T13:33:32Z`) — **40+ consecutive successes**, spanning today's separate 2020-06-06 sports-floor revert
-  (`uac@8cdf7808`, `codex/02-data/sports-2020-06-data-floor.md`) with no break. That revert changed the LIVE floor value
-  the test derives from (transfermarkt 2018-01-01 → 2020-06-06) and the test kept passing — direct proof the derivation
-  fix is robust to floor churn, which was its explicit design intent.
+  (`uac@8cdf7808`, `/codex/02-data/sports-2020-06-data-floor.md`) with no break. That revert changed the LIVE floor
+  value the test derives from (transfermarkt 2018-01-01 → 2020-06-06) and the test kept passing — direct proof the
+  derivation fix is robust to floor churn, which was its explicit design intent.
 - **Local**: `features-service` HEAD == `origin/live-defi-rollout` == `0445eaec`, clean tree.
   `check_calculator_coverage(calc_name="squad_value", ref_data={"player_values": …}, target_date=date(2020, 6, 5))` →
   `CoverageDecision(verdict=OUT_OF_COVERAGE, reason='all_upstreams_out_of_coverage')` (matches the test's expectation).

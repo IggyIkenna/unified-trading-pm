@@ -14,7 +14,7 @@ stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer]
 tags: [dispatch, role-routing, craft-scoping, worker-lifecycle]
-related: [cost_obs_ui_unified_breakdown_2026_07_08.md]
+related: [/plans/archive/2026_07/cost_obs_ui_unified_breakdown_2026_07_08.md]
 created: "2026-07-08"
 parent_epic: agent_operating_framework_master
 priority: P2
@@ -54,30 +54,30 @@ routing, or no `ui-developer`-capable slot was free and it fell through to any-s
       agent-orchestrator) — agent-orchestrator@`69870f4`.
 
       **Confirmed root cause**: slot-role registration was NOT wired anywhere — `SlotRow` (orm.py) had no
-              role/craft column, `BootRequest` (models/worker_api.py) accepted no such field, and `pick_next_task()`
-              (dispatch.py) never read one; the ONLY affinity mechanism (`target_slot`/`affinity`) binds a task to a specific
-              slot ID, not to a craft category. The `role_registry.py` + `GET /api/roles` surface is a read-only dashboard
-              view of `agents/*.md`, never consulted at dispatch time. So a craft-scoped persona's "you are CRAFT-SCOPED"
-              text was the ONLY thing enforcing its boundary — purely a prompt-level convention, invisible server-side,
-              exactly matching how slot 3 (this same session, on the sibling `cost_obs_ui_unified_breakdown` plan) had
-              earlier ADOPTED a mismatched ui-developer task rather than skipping it like slot 7 did — two data_engineering
-              slots, two different outcomes, because nothing server-side disambiguated the "correct" behavior.
+                                                                          role/craft column, `BootRequest` (models/worker_api.py) accepted no such field, and `pick_next_task()`
+                                                                          (dispatch.py) never read one; the ONLY affinity mechanism (`target_slot`/`affinity`) binds a task to a specific
+                                                                          slot ID, not to a craft category. The `role_registry.py` + `GET /api/roles` surface is a read-only dashboard
+                                                                          view of `agents/*.md`, never consulted at dispatch time. So a craft-scoped persona's "you are CRAFT-SCOPED"
+                                                                          text was the ONLY thing enforcing its boundary — purely a prompt-level convention, invisible server-side,
+                                                                          exactly matching how slot 3 (this same session, on the sibling `cost_obs_ui_unified_breakdown` plan) had
+                                                                          earlier ADOPTED a mismatched ui-developer task rather than skipping it like slot 7 did — two data_engineering
+                                                                          slots, two different outcomes, because nothing server-side disambiguated the "correct" behavior.
 
-              **Fix shipped**: an optional, backward-compatible `slots.slot_role` column (migrated via the existing
-              `_add_missing_columns` idempotent-ALTER pattern) + `BootRequest.slot_role`. `None` (the default for the vast
-              majority of slots) leaves `pick_next_task()` fully unfiltered — unchanged behavior. `prompts.render_worker()`
-              now auto-injects `slot_role=assigned_role` into the rendered `<SLOT_ROLE>` boot-curl placeholder (worker.md)
-              whenever a craft-role template actually renders (an unknown/typo'd role gets `slot_role=""`, never the bogus
-              string — else a retired role name would permanently lock a slot out of every role-tagged task). `pick_next_task`
-              skips any queued task whose `assigned_role` doesn't match a set `slot_role`. Also fixed `spawn_preview`
-              (dashboard "Worker" tab, which has no craft-role selector) so `<SLOT_ROLE>` renders `""` instead of leaking as
-              literal placeholder text. basedpyright/ruff/pytest (1115 passed, incl. 7 new — 5 dispatch-gate tests + 2
-              `render_worker` regression tests for the bogus-role fix) all green.
+                                                                          **Fix shipped**: an optional, backward-compatible `slots.slot_role` column (migrated via the existing
+                                                                          `_add_missing_columns` idempotent-ALTER pattern) + `BootRequest.slot_role`. `None` (the default for the vast
+                                                                          majority of slots) leaves `pick_next_task()` fully unfiltered — unchanged behavior. `prompts.render_worker()`
+                                                                          now auto-injects `slot_role=assigned_role` into the rendered `<SLOT_ROLE>` boot-curl placeholder (worker.md)
+                                                                          whenever a craft-role template actually renders (an unknown/typo'd role gets `slot_role=""`, never the bogus
+                                                                          string — else a retired role name would permanently lock a slot out of every role-tagged task). `pick_next_task`
+                                                                          skips any queued task whose `assigned_role` doesn't match a set `slot_role`. Also fixed `spawn_preview`
+                                                                          (dashboard "Worker" tab, which has no craft-role selector) so `<SLOT_ROLE>` renders `""` instead of leaking as
+                                                                          literal placeholder text. basedpyright/ruff/pytest (1115 passed, incl. 7 new — 5 dispatch-gate tests + 2
+                                                                          `render_worker` regression tests for the bogus-role fix) all green.
 
-              **Not in scope for this fix (adjacent, separate gap — not fixed here)**: `spawn_agent_preview`
-              (`GET /api/spawn/agent-preview`) renders a bare `agents/<role>.md` template via `prompts.render(role, ...)` for
-              ANY role name including the 5 craft-scoped personas — unlike `render_worker`, it never prepends the generic
-              `worker.md` lifecycle (the actual `/boot` curl), so previewing a craft role directly through that endpoint
-              would produce an incomplete prompt with no lifecycle section. This looks pre-existing and independent of the
-              dispatch-routing gap this task closes (it predates my change and my change doesn't worsen it) — flagging for a
-              follow-up, not fixing here to stay in scope.
+                                                                          **Not in scope for this fix (adjacent, separate gap — not fixed here)**: `spawn_agent_preview`
+                                                                          (`GET /api/spawn/agent-preview`) renders a bare `agents/<role>.md` template via `prompts.render(role, ...)` for
+                                                                          ANY role name including the 5 craft-scoped personas — unlike `render_worker`, it never prepends the generic
+                                                                          `worker.md` lifecycle (the actual `/boot` curl), so previewing a craft role directly through that endpoint
+                                                                          would produce an incomplete prompt with no lifecycle section. This looks pre-existing and independent of the
+                                                                          dispatch-routing gap this task closes (it predates my change and my change doesn't worsen it) — flagging for a
+                                                                          follow-up, not fixing here to stay in scope.

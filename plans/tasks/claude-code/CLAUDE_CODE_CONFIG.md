@@ -91,7 +91,7 @@ Before starting, read these files to understand the standards:
 1. /Users/ikennaigboaka/Documents/repos/unified-trading-system-repos/.cursorrules
 2. /Users/ikennaigboaka/Documents/repos/unified-trading-system-repos/.cursor/rules/no-empty-fallbacks.mdc
 3. /Users/ikennaigboaka/Documents/repos/unified-trading-system-repos/.cursor/rules/no-type-any-use-specific.mdc
-4. /Users/ikennaigboaka/Documents/repos/unified-trading-system-repos/unified-trading-codex/06-coding-standards/README.md
+4. /Users/ikennaigboaka/Documents/repos/unified-trading-system-repos/unified-trading-/codex/06-coding-standards/README.md
 ```
 
 **This forces Claude Code to read your standards before orchestrating!**

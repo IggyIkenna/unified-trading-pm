@@ -262,7 +262,7 @@ strategy is also leased externally; emission happens BEFORE execution, not inste
 
 - `deployment-service/scripts/provision/provision-counterparty-secrets.sh` — helper that creates per-counterparty HMAC
   secret in GCP Secret Manager under `counterparty-hmac-secret-{counterparty_id}` (matches
-  `codex/07-security/secret-naming-convention.md`). Idempotent.
+  `/codex/07-security/secret-naming-convention.md`). Idempotent.
 - `deployment-service/scripts/provision/provision-counterparty-secrets.py` — Python variant for CI/CD. Reads from
   `counterparty-bootstrap.yaml` config.
 - `deployment-service/configs/counterparty-bootstrap.yaml` — seed data for the 2 Sept-2026 launch counterparties.
@@ -402,12 +402,12 @@ strategy is also leased externally; emission happens BEFORE execution, not inste
 
 **REFERENCES (no change):**
 
-- `codex/04-architecture/shard-level-failure-isolation.md` — D10 anchor.
-- `codex/04-architecture/interface-credential-convention.md` — D3 anchor.
-- `codex/06-coding-standards/config-reloader-pattern.md` — typed config reloader anchor.
-- `codex/07-security/secret-naming-convention.md` — counterparty secret naming authority.
-- `codex/07-security/secret-rotation.md` — 90-day rotation policy inherited.
-- `codex/07-security/service-to-service-auth.md` — auth design anchor for counterparty HMAC.
+- `/codex/04-architecture/shard-level-failure-isolation.md` — D10 anchor.
+- `/codex/04-architecture/interface-credential-convention.md` — D3 anchor.
+- `/codex/06-coding-standards/config-reloader-pattern.md` — typed config reloader anchor.
+- `/codex/07-security/secret-naming-convention.md` — counterparty secret naming authority.
+- `/codex/07-security/secret-rotation.md` — 90-day rotation policy inherited.
+- `/codex/07-security/service-to-service-auth.md` — auth design anchor for counterparty HMAC.
 
 ### 8. Memory
 

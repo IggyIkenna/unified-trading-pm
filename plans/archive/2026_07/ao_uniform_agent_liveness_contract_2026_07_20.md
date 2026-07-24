@@ -15,9 +15,9 @@ scope: [engineer]
 tags: [agent-orchestrator, liveness, boot-protocol, reaper, architecture]
 related:
   [
-    ao_dispatch_liveness_p0_2026_07_20.md,
-    ao_scheduled_agent_hygiene_2026_07_20.md,
-    ao_worker_lifecycle_reap_2026_07_20.md,
+    /plans/archive/2026_07/ao_dispatch_liveness_p0_2026_07_20.md,
+    /plans/archive/2026_07/ao_scheduled_agent_hygiene_2026_07_20.md,
+    /plans/archive/2026_07/ao_worker_lifecycle_reap_2026_07_20.md,
   ]
 created: 2026-07-20
 last_updated: 2026-07-21
@@ -217,7 +217,7 @@ and tests are local (`bash scripts/quality-gates.sh`). Live confirmation needs r
 > **Status: APPROVED (operator, 2026-07-21); reconciled to the `/done`-then-stop decision.** Written before any code,
 > per the plan's "write down the contract first" rule. Subsystem inputs verified against live code
 > (`agent-orchestrator@HEAD`); this is the design Workstreams A-C implement, and its codex SSOT
-> (`codex/04-architecture/agent-orchestrator-worker-liveness.md`) is already reconciled (todo C2). The Gate for this
+> (`/codex/04-architecture/agent-orchestrator-worker-liveness.md`) is already reconciled (todo C2). The Gate for this
 > todo — "a reader can answer 'why won't a one-off be reaped?' without reading any reaper's source" — is met by §5 + §6
 > below.
 
@@ -328,10 +328,10 @@ one-off looks identical to a live fleet worker on both.
 
 ## Codex SSOTs
 
-- `codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` — slot/worker/dispatch model this refines.
-- `codex/04-architecture/recovery-defence-in-depth-layers.md` + `…/autonomous-recovery-matrix.md` — the liveness
+- `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` — slot/worker/dispatch model this refines.
+- `/codex/04-architecture/recovery-defence-in-depth-layers.md` + `…/autonomous-recovery-matrix.md` — the liveness
   subsystems whose inputs this changes.
-- `codex/12-agent-workflow/async-wait-and-poll-discipline.md` — measured terminal verdicts for the live gates.
+- `/codex/12-agent-workflow/async-wait-and-poll-discipline.md` — measured terminal verdicts for the live gates.
 
 ## Progress Log
 
@@ -396,8 +396,8 @@ one-off looks identical to a live fleet worker on both.
   **role-aware `/done`** (backend archives `lifecycle-complete` + frees the slot + flags it so `WorkerLivenessKicker`
   stops nudging) → stop; the next reap cleans the session. This REVERSES the plan's original §2/§6 "Class B never
   `/done`" premise and the SAME premise in two codex docs. Per operator ordering (**docs before code**), reconciled now:
-  (a) `codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` — Class-B banner + §Reap correction; (b)
-  `codex/04-architecture/agent-orchestrator-worker-liveness.md` — new "one-off/scheduled completion contract" section
+  (a) `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` — Class-B banner + §Reap correction; (b)
+  `/codex/04-architecture/agent-orchestrator-worker-liveness.md` — new "one-off/scheduled completion contract" section
   (the 4th, finished-immortal failure mode); (c) this plan §2 row + §6 (above). **Code phase — NOT started, awaiting the
   operator's next audit:** extend `/done` to accept a task-less role-aware completion (today it hard-requires
   `task_id` + a plan-flip → 404/409 for a task-less one-off, verified in `server/routes/slots_worker.py:616-767`);

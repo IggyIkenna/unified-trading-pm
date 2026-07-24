@@ -17,8 +17,7 @@ stage: [data, meta]
 repos: [instruments-service, deployment-api]
 scope: [engineer, admin]
 tags: [dead-code, data-status, honest-coverage, hygiene, instruments-service]
-related:
-  [../instruments_completion_tracker_2026_07_06.md, ../../../codex/06-coding-standards/data-status-endpoint-contract.md]
+related: [../instruments_completion_tracker_2026_07_06.md, /codex/06-coding-standards/data-status-endpoint-contract.md]
 created: 2026-07-07
 parent_epic: instruments_master
 priority: P2
@@ -51,7 +50,7 @@ locked_since:
 - `instruments-service/instruments_service/api/data_status.py` (`GET /api/data-status`) was created in commit `001cf7c3`
   (2026-05-20): _"Phase 2 P1 of honest_coverage_formula_consolidation_2026_05_19: exposes honest-coverage summary over
   HTTP so deployment-api/UI can consume it without shelling out. Mirrors the `--operation=status` CLI path."_
-- Its governing codex doc, `codex/06-coding-standards/data-status-endpoint-contract.md`, requires every service's
+- Its governing codex doc, `/codex/06-coding-standards/data-status-endpoint-contract.md`, requires every service's
   `/api/data-status` route to call the canonical `compute_coverage_for_bucket()` / `compute_honest_coverage()` helper
   and return `{"counts": ..., "coverage": float}` — a **formula-consistency** contract (CLI, per-service API, and
   downstream consumers can never drift on the honest-coverage math), not a richness contract. It is satisfied today.

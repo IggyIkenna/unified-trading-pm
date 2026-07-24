@@ -25,8 +25,8 @@ related:
     plans/active/bucket_fold_features_2026_07_17.md,
     plans/active/bucket_fold_execution_strategy_2026_07_17.md,
     plans/active/bucket_fold_portfolio_state_2026_07_17.md,
-    codex/05-infrastructure/bucket-isolation-model.md,
-    codex/05-infrastructure/manifest-consolidator-ssot.md,
+    /codex/05-infrastructure/bucket-isolation-model.md,
+    /codex/05-infrastructure/manifest-consolidator-ssot.md,
   ]
 created: "2026-07-17"
 last_updated: "2026-07-17"
@@ -67,9 +67,9 @@ can only land once they're all done. Kept as a separate gated plan so no single 
 
 ## Codex SSOTs (this plan UPDATES these — they are the deliverable, read current state first)
 
-- `codex/05-infrastructure/bucket-isolation-model.md` — Group-B naming table.
-- `codex/05-infrastructure/manifest-consolidator-ssot.md` — consolidator target set.
-- `codex/05-infrastructure/gcs-lifecycle-policies.md` — lifecycle claims.
+- `/codex/05-infrastructure/bucket-isolation-model.md` — Group-B naming table.
+- `/codex/05-infrastructure/manifest-consolidator-ssot.md` — consolidator target set.
+- `/codex/05-infrastructure/gcs-lifecycle-policies.md` — lifecycle claims.
 
 ## Todos
 
@@ -122,7 +122,7 @@ can only land once they're all done. Kept as a separate gated plan so no single 
       blrs@2f0380b/ds@ccfaca26; upstream producer chain is its own lifecycle). ✅ **Parent codex-audit todo (line ~355)
       DONE: PM@c6f97b239** — CLAUDE.md storage rule + `bucket-naming-and-config.md` stub (frontmatter `superseded_by` +
       summary + banner + read-instead list) repointed from the dead CLAUDE "(b+)" section + the archived
-      `bucket_name_ssot` plan → the live `codex/05-infrastructure/bucket-isolation-model.md`;
+      `bucket_name_ssot` plan → the live `/codex/05-infrastructure/bucket-isolation-model.md`;
       `per-asset-group-bucket-layouts.md` assessed NOT stale (covers Group A raw + path divergences; Group B folded
       shapes live in bucket-isolation-model.md, already updated PM@8ea8abd89).
 
@@ -192,7 +192,7 @@ can only land once they're all done. Kept as a separate gated plan so no single 
     done, reader-code legs = 4c/4d; recon: out-of-fold-scope). Shipped the **parent codex-audit todo (line ~355)**:
     PM@c6f97b239 (promote-PR #1179) repointed CLAUDE.md's storage-rule SSOT + the `bucket-naming-and-config.md`
     superseded stub (frontmatter/summary/ banner/read-instead) from the dead CLAUDE "(b+)" section + the archived
-    `bucket_name_ssot` plan → the live `codex/05-infrastructure/bucket-isolation-model.md`;
+    `bucket_name_ssot` plan → the live `/codex/05-infrastructure/bucket-isolation-model.md`;
     `per-asset-group-bucket-layouts.md` assessed NOT stale. **Discovered (out-of-scope finding, not fixed)**: a mangled
     bucket-SSOT rule-shorthand ("(b+)" / "ln") appears in several other codex docs (artifact-versioning,
     ml-experiment-lifecycle, defi/tradfi/prediction-data-types-catalog, data-catalogue-schema,

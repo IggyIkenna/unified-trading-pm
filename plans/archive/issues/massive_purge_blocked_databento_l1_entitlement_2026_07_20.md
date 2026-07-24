@@ -23,7 +23,7 @@ related:
   [
     tradfi_canonical_path_migration_design_2026_07_19,
     tradfi_consolidated_closeout_2026_07_18,
-    codex/02-data/tradfi-databento-sourcing-ssot.md,
+    /codex/02-data/tradfi-databento-sourcing-ssot.md,
   ]
 created: 2026-07-20
 priority: P0
@@ -221,7 +221,7 @@ Worked example — `CME/trades/2023-09-12`: manifest says `batch_databento captu
 
 **Why this is dangerous beyond the purge:** a naive "is it duplicated in Databento?" check driven off the manifest would
 have classified ~826,159 Massive objects as safe-to-delete. That is the exact shape of a silent million-object data-loss
-event. This is a `record_captured` honesty violation (`codex/02-data/data-pipeline-correctness-hard-rule.md`) and these
+event. This is a `record_captured` honesty violation (`/codex/02-data/data-pipeline-correctness-hard-rule.md`) and these
 rows should be re-stamped `expected_unattempted` / `empty_confirmed`.
 
 > ⚠️ Note the write-side interaction: per the 2026-07-20 operator ruling, `source='massive'` now hard-rejects at the UTL
@@ -229,7 +229,7 @@ rows should be re-stamped `expected_unattempted` / `empty_confirmed`.
 
 ## BLOCKED-CREDENTIALS — the precise entitlement ask
 
-Per `codex/02-data/external-data-always-available-rule.md`, exhausting the free path is a **credential ask, not a
+Per `/codex/02-data/external-data-always-available-rule.md`, exhausting the free path is a **credential ask, not a
 descope**. To unblock the purge, exactly one of:
 
 - **A (recommended)** — a Databento **historical `trades` + `tbbo` entitlement** (or a budgeted metered PAYG
@@ -262,5 +262,5 @@ descope**. To unblock the purge, exactly one of:
       manifest-vs-disk consistency check so a `captured` row with no object on disk fails loudly. (repo:
       market-tick-data-service)
 - [ ] [OPERATOR] P0. Decide the entitlement ask A / B / C above. Purge stays HELD until then.
-- [ ] [DOCS] P1. If B is chosen, update `codex/02-data/tradfi-databento-sourcing-ssot.md` — `batch_massive` read
+- [ ] [DOCS] P1. If B is chosen, update `/codex/02-data/tradfi-databento-sourcing-ssot.md` — `batch_massive` read
       recognition becomes PERMANENT, not "kept until the purge".

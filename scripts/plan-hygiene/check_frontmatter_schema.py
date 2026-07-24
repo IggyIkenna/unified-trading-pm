@@ -54,6 +54,11 @@ DOC_TREES: tuple[str, ...] = (
     "**/*.mdc",
 )
 _ARCHIVE_PREFIX = "plans/archive/"
+# Per-agent worktree scratch space (see the Agent tool's `isolation: "worktree"` mode) — never
+# real corpus content. The unscoped "**/*.mdc" DOC_TREES pattern below would otherwise sweep up
+# a live agent's `.claude/worktrees/<id>/.cursor/rules/**/*.mdc` copy and false-flag it against
+# the real `.cursor/rules/...` original's already-seeded baseline entry.
+_CLAUDE_WORKTREE_PREFIX = ".claude/"
 
 
 def _load_docspec():
@@ -72,7 +77,12 @@ def _iter_docs() -> list[Path]:
     for pat in DOC_TREES:
         for p in PM.glob(pat):
             rel = p.relative_to(PM).as_posix()
-            if p.is_file() and p not in seen and not rel.startswith(_ARCHIVE_PREFIX):
+            if (
+                p.is_file()
+                and p not in seen
+                and not rel.startswith(_ARCHIVE_PREFIX)
+                and not rel.startswith(_CLAUDE_WORKTREE_PREFIX)
+            ):
                 seen.add(p)
                 out.append(p)
     return sorted(out)

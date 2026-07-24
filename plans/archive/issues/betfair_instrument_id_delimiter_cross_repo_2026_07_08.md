@@ -127,7 +127,7 @@ Changing `instrument_key = f"{market_id}/{selection_id}"` to use `:` in instrume
 - **Create a NEW, real inconsistency**: three sibling implementations (strategy-service ×2, execution-service) would
   continue emitting/parsing `/`, while instruments-service alone would emit `:` for what is conceptually the SAME
   Betfair market+selection identity. The workspace's Batch=Live determinism architecture
-  (`codex/09-strategy/operational/paper-batch-live-reconciliation.md`) explicitly requires a canonical `InstrumentKey`
+  (`/codex/09-strategy/operational/paper-batch-live-reconciliation.md`) explicitly requires a canonical `InstrumentKey`
   that different services can join on by string equality — a delimiter mismatch between the reference-data plane and the
   execution/position plane for the same instrument breaks that join the moment anything (features-service,
   strategy-service reference lookups) tries to correlate a Betfair fill/position with instruments-service's Betfair

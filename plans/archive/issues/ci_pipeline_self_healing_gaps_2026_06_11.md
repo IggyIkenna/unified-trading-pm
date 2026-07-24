@@ -1,6 +1,8 @@
 ---
 doc_type: issue
-title: CI/CD pipeline self-healing gaps — semver-agent trigger starvation, LDR-rewind data loss, orchestrator stale-PR escalation
+title:
+  CI/CD pipeline self-healing gaps — semver-agent trigger starvation, LDR-rewind data loss, orchestrator stale-PR
+  escalation
 summary:
 status: resolved
 nature: record
@@ -99,7 +101,7 @@ silently gone (recoverable only from `origin/wip-preserve/*` or reflog) — not 
       snapshot can no longer silently drop LDR commits that may already be on staging. **Squash-proof** (compares HEAD
       directly to LDR; no staging ancestry, which squash-merges break). `--allow-rewind` overrides for the rare
       intentional rewind. Verified: fresh HEAD passes, stale HEAD~N blocks. Composes with
-      `codex/08-workflows/ci-cd-flow.md` § "LDR is the SSOT — back-merge DOWN first".
+      `/codex/08-workflows/ci-cd-flow.md` § "LDR is the SSOT — back-merge DOWN first".
 - [ ] [SCRIPT] P2. One-off: diff `origin/wip-preserve/*` + reflog vs current LDR per repo to detect any silently-dropped
       commit NOT on staging; recover or confirm none.
 
@@ -654,7 +656,7 @@ it would mis-fire the moment a repo IS ready. Fix alongside.
 
 ## Composes with
 
-- `codex/08-workflows/ci-cd-flow.md` § "LDR is the SSOT" + § "Two-Pass Workflow Model" + the content-first
+- `/codex/08-workflows/ci-cd-flow.md` § "LDR is the SSOT" + § "Two-Pass Workflow Model" + the content-first
   dep-resolution update (2026-06-11).
 - `plans/active/ldr_trunk_promotion_decoupling_2026_06_10.md` (Gap 1 is its incomplete-rollout tail).
 - `plans/active/issues/instruments_service_version_phantom_2026_06_11.md` (RESOLVED — the version phantom Gap 1

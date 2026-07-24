@@ -10,7 +10,8 @@ push. basedpyright <dir>/ not basedpyright. Delete deprecated code; no parallel 
 before implementing anything new.
 
 WORKSPACE_ROOT=${UNIFIED_TRADING_WORKSPACE_ROOT}/unified-trading-system-repos All Python/pytest/ruff/basedpyright/QG
-commands: cd $WORKSPACE_ROOT && source .venv-workspace/bin/activate first.
+commands: cd $WORKSPACE_ROOT
+&& source .venv-workspace/bin/activate first.
 
 ---
 
@@ -63,8 +64,8 @@ If any check fails: STOP. Complete Phase 1 first.
 | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
 | Workspace manifest DAG | `unified-trading-pm/WORKSPACE_MANIFEST_DAG.svg` — 63 repos, 13 levels (L0-L12, AUTHORITATIVE). L0=PM, L1=codex, L2+=code repos |
 | Manifest JSON          | `unified-trading-pm/workspace-manifest.json`                                                                                   |
-| Tier architecture      | `unified-trading-codex/04-architecture/TIER-ARCHITECTURE.md`                                                                   |
-| Library matrix         | `unified-trading-codex/05-infrastructure/unified-libraries/LIBRARY-DEPENDENCY-MATRIX.md`                                       |
+| Tier architecture      | `unified-trading-/codex/04-architecture/TIER-ARCHITECTURE.md`                                                                  |
+| Library matrix         | `unified-trading-/codex/05-infrastructure/unified-libraries/LIBRARY-DEPENDENCY-MATRIX.md`                                      |
 
 **Library tier map:**
 
@@ -291,11 +292,11 @@ rename GitHub repo + AR packages + Cloud Build triggers.
 
 - `unified-trading-pm/plans/active/phase2_library_tier_hardening.plan.md` — full task list
 - `unified-trading-pm/workspace-manifest.json` — repo registry
-- `unified-trading-codex/05-infrastructure/unified-libraries/LIBRARY-DEPENDENCY-MATRIX.md` — tier rules
-- `unified-trading-codex/04-architecture/TIER-ARCHITECTURE.md` — full tier architecture
-- `unified-trading-codex/06-coding-standards/quality-gates.md` — QG template
-- `unified-trading-codex/06-coding-standards/setup-standards.md` — setup.sh documentation (includes isolated mode, fresh
-  env, AGENTS.md)
+- `unified-trading-/codex/05-infrastructure/unified-libraries/LIBRARY-DEPENDENCY-MATRIX.md` — tier rules
+- `unified-trading-/codex/04-architecture/TIER-ARCHITECTURE.md` — full tier architecture
+- `unified-trading-/codex/06-coding-standards/quality-gates.md` — QG template
+- `unified-trading-/codex/06-coding-standards/setup-standards.md` — setup.sh documentation (includes isolated mode,
+  fresh env, AGENTS.md)
 - `unified-trading-pm/scripts/setup.sh` — setup.sh SSOT template (supports `--isolated` for standalone repos)
 - `unified-trading-pm/scripts/workspace-bootstrap.sh` — full workspace bootstrap for fresh VMs
 - `unified-trading-pm/templates/AGENTS.md` — per-repo caveats template for agents/developers

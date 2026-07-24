@@ -230,7 +230,7 @@ no reader sees new writes against pre-migration parquets.
   decision.
 - **Writegate Phase 2.C** (the consumer of this rename):
   [`writegate_honest_coverage_endtoend_2026_05_06.md`](./writegate_honest_coverage_endtoend_2026_05_06.md).
-- **Honest absence downstream SSOT** (companion principle): `codex/02-data/honest-absence-downstream-handling.md`.
+- **Honest absence downstream SSOT** (companion principle): `/codex/02-data/honest-absence-downstream-handling.md`.
 - **Migration precedent** (idempotent column-level migration):
   `instruments-service/scripts/migrate_local_sfi_to_canonical.py`.
 - **Workspace rule** ("manifest migration not fallback"): `cursor-configs/CLAUDE.md` § Shard-granularity SSOT.

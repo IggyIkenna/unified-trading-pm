@@ -46,7 +46,7 @@ immutability + 7-year retention) PULLED FORWARD to pre-May-15 freeze window**.
 The Copper / CEFFU integration is the **client's** responsibility (their account provisioning + key management), not
 ours. We don't build the integration; if/when the client provisions Copper or CEFFU, we wire the existing UTL custody
 adapter to their credentials — which is a config-only flip on `WalletProvisioningConfig.signing_surface` per
-`codex/04-architecture/custody-providers.md`. No standalone Phase 2 build required.
+`/codex/04-architecture/custody-providers.md`. No standalone Phase 2 build required.
 
 **Slot assignments (corrected)**:
 
@@ -216,7 +216,7 @@ pre-cutover gate.
 - **Predecessor plan**: `wallet_treasury_client_flow_2026_05_10.md` § "Design Decisions — Q3, Q5 Deferred"
 - **Related audit findings**: `plans/active/issues/codex_audit_pb_*.md` (PB-1, PB-3)
 - **Custody provisioning**: `api_keys_wallets_accounts_readiness_2026_05_10.md` Phase 8.D
-- **Copper interface**: `codex/04-architecture/interface-credential-convention.md` (DeFi execution path)
+- **Copper interface**: `/codex/04-architecture/interface-credential-convention.md` (DeFi execution path)
 - **Master plan**: `master_to_live_defi_2026_05_23.md` Group G item 23 (operator UX for withdrawals)
 
 ---

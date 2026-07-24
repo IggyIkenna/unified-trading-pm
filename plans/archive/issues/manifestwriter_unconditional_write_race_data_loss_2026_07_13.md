@@ -25,8 +25,8 @@ scope: [engineer, admin]
 tags: [manifest-writer, data-loss, race-condition, concurrency, data-correctness, honest-coverage, cross-cutting]
 related:
   [
-    cefi_live_only_data_types_vs_layer1_denominator_contradiction_2026_07_12.md,
-    ../../../codex/02-data/availability-manifest-and-data-status.md,
+    /plans/archive/issues/cefi_live_only_data_types_vs_layer1_denominator_contradiction_2026_07_12.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
   ]
 created: 2026-07-13
 parent_epic: infrastructure_master
@@ -87,9 +87,9 @@ that becomes false the moment it's overwritten.
 This is not a theoretical race — it happened, was directly observed, and directly explains 2 of 6 rows a real backfill
 run believed it wrote successfully being **absent** from the manifest. Every service in this workspace's manifest
 pipeline shares this same `ManifestWriter` (`unified-trading-library`, imported by MTDS/instruments-service/features
-etc. per `codex/02-data/availability-manifest-and-data-status.md`), so this bug is NOT scoped to cefi onchain-perp — any
-manifest write, from any writer, on any asset_group, that happens to lose the generation-match race 15 times in a row
-under contention is silently discarded. Given "Data pipeline correctness is the heartbeat" (CLAUDE.md HARD RULE) and
+etc. per `/codex/02-data/availability-manifest-and-data-status.md`), so this bug is NOT scoped to cefi onchain-perp —
+any manifest write, from any writer, on any asset_group, that happens to lose the generation-match race 15 times in a
+row under contention is silently discarded. Given "Data pipeline correctness is the heartbeat" (CLAUDE.md HARD RULE) and
 "never silent placeholders" — this is the inverse failure mode: not a silent PLACEHOLDER, but a silent DROP of a row the
 writer itself believed succeeded. Layer-1/Layer-2 coverage numbers, `denominator_complete` gates, and any downstream
 consumer trusting a `capture_status` row's presence are all exposed to this whenever the shared manifest is under heavy
@@ -111,8 +111,9 @@ Two candidate fixes, not mutually exclusive:
   risks a writer blocking much longer under sustained fleet-wide contention (which, per this session, can mean many
   minutes).
 - A third option worth architecture input: shard the manifest write path per-VM/per-slot (`MANIFEST_PER_VM_SHARDS`
-  already exists per `codex/05-infrastructure/vm-launcher-runbook.md` for launcher-level sharding) so concurrent writers
-  don't all contend on ONE blob's generation at all — the true fix for the contention, not just the race it induces.
+  already exists per `/codex/05-infrastructure/vm-launcher-runbook.md` for launcher-level sharding) so concurrent
+  writers don't all contend on ONE blob's generation at all — the true fix for the contention, not just the race it
+  induces.
 
 I have NOT attempted a fix — this is `unified-trading-library`, imported by every service's manifest writer; a change
 here is cross-cutting and needs an architecture call on which mitigation (or combination) is correct, per this

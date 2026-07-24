@@ -74,10 +74,10 @@ P1c, MTDS). XG/XG_SHOTS are understat (→ P1b).
 
 ## Codex SSOTs
 
-- `codex/02-data/availability-manifest-and-data-status.md` — 4-state `capture_status`, the
+- `/codex/02-data/availability-manifest-and-data-status.md` — 4-state `capture_status`, the
   `expected_unattempted_pending_fetch == 0` target
-- `codex/02-data/honest-absence-downstream-handling.md` — typed `EXPECTED_*`; the golden-window effect
-- `codex/02-data/sports-gcs-path-ssot.md` — sports layouts + `candidate_parquet_paths()`
+- `/codex/02-data/honest-absence-downstream-handling.md` — typed `EXPECTED_*`; the golden-window effect
+- `/codex/02-data/sports-gcs-path-ssot.md` — sports layouts + `candidate_parquet_paths()`
 
 ## Mechanics (real CLIs / scripts / launchers)
 

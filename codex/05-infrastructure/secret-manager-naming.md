@@ -3,13 +3,13 @@ doc_type: codex-ssot
 title: Secret Manager naming convention — SSOT
 summary: >-
   Secret Manager naming-convention SSOT — merged 2026-07-23 with the former
-  codex/07-security/secret-naming-convention.md (superseded, redirects here). States the two-axis model verified against
-  real GCP inventory — private/client-owned execution credentials use exec-{client}-{venue}-{field} (client, venue, api
-  all present — confirmed live for OKX's 8 clients + Binance's 2 clients); public market-data and pooled/house
-  credentials share one key per venue, no client segment (read/trade-split for Binance/Deribit, single unscoped key for
-  Bybit/Aster, wallet-style for Hyperliquid). Also covers the <class>-<surface>-<env>-<role>-<version> provisioning
-  pattern for custody/CMK/wrapped-wallet/data/aux secrets, the AWS mirror, and the bybit_api_key/bybit_api_secret
-  underscore-violation fix (cloned to bybit-api-key/ bybit-api-secret 2026-07-23).
+  /codex/07-security/secret-naming-convention.md (superseded, redirects here). States the two-axis model verified
+  against real GCP inventory — private/client-owned execution credentials use exec-{client}-{venue}-{field} (client,
+  venue, api all present — confirmed live for OKX's 8 clients + Binance's 2 clients); public market-data and
+  pooled/house credentials share one key per venue, no client segment (read/trade-split for Binance/Deribit, single
+  unscoped key for Bybit/Aster, wallet-style for Hyperliquid). Also covers the <class>-<surface>-<env>-<role>-<version>
+  provisioning pattern for custody/CMK/wrapped-wallet/data/aux secrets, the AWS mirror, and the
+  bybit_api_key/bybit_api_secret underscore-violation fix (cloned to bybit-api-key/ bybit-api-secret 2026-07-23).
 status: current
 nature: ssot
 asset_group: [meta]
@@ -19,24 +19,24 @@ scope: [engineer, admin]
 tags: [secret-manager, security, canonicalisation, credentials, defi, cefi, execution]
 related:
   [
-    ../15-runbooks/credential-rotation-runbook.md,
-    credentials-matrix.md,
-    ../04-architecture/custody-providers.md,
-    ../07-security/secret-naming-convention.md,
-    ../07-security/client-credentials.md,
-    ../07-security/service-to-service-auth.md,
+    /codex/15-runbooks/credential-rotation-runbook.md,
+    /codex/05-infrastructure/credentials-matrix.md,
+    /codex/04-architecture/custody-providers.md,
+    /codex/07-security/secret-naming-convention.md,
+    /codex/07-security/client-credentials.md,
+    /codex/07-security/service-to-service-auth.md,
   ]
 created: 2026-05-11
 authoritative_for: [Secret Manager secret naming convention]
 referenced_by:
   [
-    codex/05-infrastructure/aws-iam-matrix.md,
-    codex/05-infrastructure/credentials-matrix.md,
-    codex/05-infrastructure/hsm-wallet-signing.md,
-    codex/05-infrastructure/per-archetype-wallet-isolation.md,
-    codex/15-runbooks/credential-rotation-runbook.md,
-    codex/14-customer-journeys/authentication/firebase-local.md,
-    codex/15-runbooks/per-source-credential-rotation-runbook.md,
+    /codex/05-infrastructure/aws-iam-matrix.md,
+    /codex/05-infrastructure/credentials-matrix.md,
+    /codex/05-infrastructure/hsm-wallet-signing.md,
+    /codex/05-infrastructure/per-archetype-wallet-isolation.md,
+    /codex/15-runbooks/credential-rotation-runbook.md,
+    /codex/14-customer-journeys/authentication/firebase-local.md,
+    /codex/15-runbooks/per-source-credential-rotation-runbook.md,
   ]
 owner:
 last_reviewed: 2026-07-23
@@ -44,6 +44,11 @@ code_refs:
   [
     unified-trading-library/unified_trading_library/cloud_interface/credentials_registry.py,
     execution-service/execution_service/data/tranche_router.py,
+    execution-service/execution_service/cli/handlers/live_execution_handler.py,
+    execution-service/execution_service/service_config.py,
+    execution-service/execution_service/sports_execution/prediction_markets/kalshi.py,
+    execution-service/execution_service/sports_execution/prediction_markets/polymarket.py,
+    market-tick-data-service/market_tick_data_service/market_interface/clients/thegraph_base_client.py,
   ]
 ---
 
@@ -54,7 +59,7 @@ code_refs:
 > Phase 9.C. Codifies the workspace naming pattern for every secret in GCP Secret Manager + AWS Secrets Manager.
 >
 > **Merged 2026-07-23** (doc-reconciliation, operator-approved) with the former
-> [`codex/07-security/secret-naming-convention.md`](../07-security/secret-naming-convention.md) — both docs carried
+> [`/codex/07-security/secret-naming-convention.md`](/codex/07-security/secret-naming-convention.md) — both docs carried
 > `authoritative_for: [Secret Manager secret naming convention]` verbatim, a retrieval-layer collision. That doc is now
 > `status: superseded` and redirects here.
 >
@@ -93,12 +98,30 @@ Two independent axes decide a credential's shape. Get these right and the name f
   `-secret` siblings). Real, live, intentional — not leftover experimentation.
 - **Doesn't split**: Bybit, Aster — one unscoped key does both (`bybit-api-key` / `bybit-api-secret` as of 2026-07-23;
   see § 1.2's rename below). Aster: `aster-api-key` / `aster-secret-key`.
-- **Wallet-style**: Hyperliquid — `hyperliquid-trade-key` (EIP-712 signing, no separate secret).
+- **Wallet-style**: Hyperliquid — `hyperliquid-trade-key`, but note this is the ONE exception to "one key per venue =
+  flat string": the secret VALUE is a JSON blob (`private_key`, `wallet_address`, `main_wallet` — agent wallet
+  authorized by a main wallet for EIP-712 signing; see `/codex/07-security/secrets-management.md` § On-Chain/DeFi for
+  the field meanings), verified live 2026-07-23. A first pass at wiring this into
+  `execution-service/execution_service/cli/handlers/live_execution_handler.py` assumed a flat private-key string
+  (matching every other venue's shape) and had to be corrected after fetching the real secret and finding it parses as
+  JSON — don't repeat that assumption.
 - **Single system-wide blob**: Kalshi (`kalshi-api-credentials`), IBKR (`ibkr-account-credentials` — a physical
   single-Gateway-process constraint, not a "read-only" designation).
 - **Ad hoc multi-field, not yet normalised**: Betfair (`betfair-api-key` + `betfair-app-key` + `betfair-username` — 3
-  separate secrets), Polymarket (`polymarket-api-key` / `-passphrase` / `-private-key` / `-secret`). Out of scope for
-  this pass; flagged for a future cleanup, not touched.
+  separate secrets, all already correctly hyphenated — the ad hoc-ness is the 3-way SPLIT, not a naming violation, so
+  there's nothing to rename here), Polymarket (`polymarket-api-key` / `-passphrase` / `-private-key` / `-secret`, same
+  situation). Consolidating either into one blob (like Kalshi/IBKR) is a real code change across 3+ consumer
+  files/repos, not a naming fix; out of scope for this pass, flagged for a future cleanup, not touched. GCP also has a
+  4th, UPPERCASE `BETFAIR_APP_KEY` secret alongside the 3 real ones — checked 2026-07-23, this is NOT the same
+  underscore violation `bybit_api_key` was: zero code calls `get_secret_client().get_secret("BETFAIR_APP_KEY")`; all 4
+  references are `os.environ.get("BETFAIR_APP_KEY")` in e2e-testing scripts + test conftest, and
+  `unified-api-contracts/tests/vcr/test_betfair_auth_vcr.py` documents it as intentionally provisioned for direct
+  secret-to-env injection at deploy time (a different, legitimate mechanism from the CredentialsRegistry-resolved path)
+  — left untouched.
+- **Data-vendor key pool (not client-scoped, orthogonal to Axis 1/2)**: The Graph is a rate-limited 9-key rotation pool
+  — `thegraph-api-key` + `thegraph-api-key-2`..`-9` — **intentional, live, correctly named** (matches
+  `market-tick-data-service/market_tick_data_service/market_interface/clients/thegraph_base_client.py`'s
+  `_THEGRAPH_NUM_API_KEYS = 9` + 429-aware round-robin, not naming drift). Fixed 2026-07-23 (see § 1.2).
 
 **Never add a client segment to a pooled/house/read-only secret** — there is no client to isolate from, and doing so
 would misrepresent what the secret is.
@@ -126,13 +149,13 @@ declares each client's `venue` + a `secret_names:` mapping (fixed 2026-07-23 —
 
 ## § 1.2 — Known naming violations
 
-| Name in use        | Canonical target                           | Status                                                                                                                                                                                                                                                                                |
-| ------------------ | ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `bybit_api_key`    | `bybit-api-key`                            | **FIXED 2026-07-23** — cloned in GCP (value verified byte-identical via hash), all code/config references updated across 5 repos, old underscored secret deleted from GCP after verifying zero remaining references workspace-wide.                                                   |
-| `bybit_api_secret` | `bybit-api-secret`                         | **FIXED 2026-07-23** — same as above.                                                                                                                                                                                                                                                 |
-| `ibkr-tws-key`     | `ibkr-account-credentials`                 | **Fixed** (pre-existing) — real code uses `ibkr-account-credentials` (`ibkr_credentials.py:4,113`).                                                                                                                                                                                   |
-| `betfair_app_key`  | `betfair-app-key` (NOT `-api-credentials`) | **Partially fixed, target corrected 2026-07-23** — real code already uses hyphenated `betfair-app-key`; the OLD target `betfair-api-credentials` was itself wrong (doesn't exist in GCP; Betfair is 3 separate ad hoc secrets, see § 1 above) — no further action needed on this one. |
-| `graph-api-key`    | `thegraph-api-key`                         | **Unresolved, out of scope** — multiple live variants coexist (`thegraph-api-key`(-2..9), `the-graph-api-key`, `graph-api-key`); flagged for a future pass, not touched here.                                                                                                         |
+| Name in use        | Canonical target                           | Status                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| ------------------ | ------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `bybit_api_key`    | `bybit-api-key`                            | **FIXED 2026-07-23** — cloned in GCP (value verified byte-identical via hash), all code/config references updated across 5 repos, old underscored secret deleted from GCP after verifying zero remaining references workspace-wide.                                                                                                                                                                                                                                                                                                       |
+| `bybit_api_secret` | `bybit-api-secret`                         | **FIXED 2026-07-23** — same as above.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| `ibkr-tws-key`     | `ibkr-account-credentials`                 | **Fixed** (pre-existing) — real code uses `ibkr-account-credentials` (`ibkr_credentials.py:4,113`).                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| `betfair_app_key`  | `betfair-app-key` (NOT `-api-credentials`) | **Partially fixed, target corrected 2026-07-23** — real code already uses hyphenated `betfair-app-key`; the OLD target `betfair-api-credentials` was itself wrong (doesn't exist in GCP; Betfair is 3 separate ad hoc secrets, see § 1 above) — no further action needed on this one.                                                                                                                                                                                                                                                     |
+| `graph-api-key`    | `thegraph-api-key`                         | **FIXED 2026-07-23** — was mischaracterized as "unresolved fragmentation"; ground truth is simpler: `thegraph-api-key`(-2..9) is a correct, intentional 9-key rotation pool (see § 1), `graph-api-key` was a genuinely orphaned GCP secret (zero live code references, deleted after verification), and `the-graph-api-key` was a real BUG — 4 MTDS handlers fetched that nonexistent name every run (api_key=missing, 0 rows silently); migrated to `load_thegraph_key_pool()`, matching the fix `position_data_handler.py` already had. |
 
 ---
 
@@ -183,7 +206,7 @@ GCP. Do not confuse this dead per-client design with the real, live, non-client 
 
 ### 2.3 Prediction venues
 
-Corrected 2026-07-23 against live GCP inventory — neither venue matches a single-blob shape:
+Corrected 2026-07-23 against live GCP inventory:
 
 ```
 kalshi-api-credentials      # single system-wide blob (matches § 1's CredentialsRegistry.VENUE_SECRET_MAP)
@@ -193,6 +216,18 @@ polymarket-passphrase
 polymarket-private-key
 polymarket-secret
 ```
+
+Both `KalshiAdapterConfig`/`PolymarketAdapterConfig` in
+`execution-service/execution_service/sports_execution/prediction_markets/{kalshi,polymarket}.py` are documented-but-
+not-yet-wired NautilusTrader adapter config STUBS (no code anywhere calls `get_secret_client().get_secret(...)` on their
+`secret_name*` fields yet) — both had wrong defaults, fixed 2026-07-23 after actually querying GCP rather than trusting
+the stub's own comments: `KalshiAdapterConfig` split into two fields (`kalshi-api-key` + `kalshi-api-secret`, neither
+exists) when the real secret is the ONE blob above — collapsed to a single `secret_name = "kalshi-api-credentials"`
+field. `PolymarketAdapterConfig.secret_name_api_secret` / `secret_name_api_passphrase` defaulted to
+`polymarket-api-secret` / `polymarket-api-passphrase` (neither exists, the "-api-" infix doesn't apply to these two
+fields even though it does for `secret_name_api_key`) — fixed to `polymarket-secret` / `polymarket-passphrase`.
+`secret_name_funder` (`polymarket-funder-address`) is NOT a naming bug — it is a real field for a secret that is simply
+not yet provisioned in GCP.
 
 ### 2.4 Cloud KMS CMKs
 
@@ -325,13 +360,13 @@ before merging.
 
 - [`credentials-matrix.md`](credentials-matrix.md) — workspace credential SSOT (which secrets each mode + archetype
   consumes).
-- [`../15-runbooks/custody-onboarding-checklist.md`](../15-runbooks/custody-onboarding-checklist.md) — operator-action
-  provisioning runbook.
+- [`/codex/15-runbooks/custody-onboarding-checklist.md`](/codex/15-runbooks/custody-onboarding-checklist.md) —
+  operator-action provisioning runbook.
 - [`fireblocks-integration-spec.md`](fireblocks-integration-spec.md) — Fireblocks-specific naming (RSA PEM + vault
   account).
 - [`per-archetype-wallet-isolation.md`](per-archetype-wallet-isolation.md) — per-wallet wrapped PK naming pattern
   derivation.
-- [`../07-security/secret-naming-convention.md`](../07-security/secret-naming-convention.md) — superseded by this doc
-  (2026-07-23); retained for history.
+- [`/codex/07-security/secret-naming-convention.md`](/codex/07-security/secret-naming-convention.md) — superseded by
+  this doc (2026-07-23); retained for history.
 - `unified-trading-library/unified_trading_library/cloud_interface/credentials_registry.py` — the real
   `CredentialsRegistry` implementation backing § 1.1.

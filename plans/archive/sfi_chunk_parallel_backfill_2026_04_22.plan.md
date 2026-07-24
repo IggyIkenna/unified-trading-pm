@@ -44,8 +44,8 @@ Each date has ~900 matches × ~150 progressive_stats rows = ~137k rows landed pe
 
 Single-VM throughput is **accurate but unacceptable** for a 6.3-year backfill. Existing precedent in memory
 `project_chunk_safe_manifest_migrations_pattern_shipped_2026_04_21` + codex
-[`02-data/chunk-safe-manifest-migrations.md`](../../codex/02-data/chunk-safe-manifest-migrations.md): the SPORTS
-FIXTURES rescan already uses a 3-mode chunk-safe pattern (single-VM / worker / coordinator) via
+[`02-data/chunk-safe-manifest-migrations.md`](/codex/02-data/chunk-safe-manifest-migrations.md): the SPORTS FIXTURES
+rescan already uses a 3-mode chunk-safe pattern (single-VM / worker / coordinator) via
 `rescan_sports_fixtures_canonical.py`. This plan applies the same shape to the SFI backfill, gated by the
 `soccer-football-info-api-key` rate-limit constraint.
 
@@ -140,8 +140,8 @@ ceiling.
       per 429 hit - total wall-clock per date Document the quota in this plan.
 
       *Deferred to operator fire*. Existing measurement from killed `sfi-backfill-20260421-231826`:
-                      ~1.4 dates/hour single-VM → ~68 days for 2020-01-01..2026-04-21 range. Used as the
-                      conservative baseline in the launcher help text + codex.
+                                                                              ~1.4 dates/hour single-VM → ~68 days for 2020-01-01..2026-04-21 range. Used as the
+                                                                              conservative baseline in the launcher help text + codex.
 
 - [x] [AGENT] P0. `launch-sports-manifest-rescan-vm.sh` 3-mode protocol: - **single-VM** (default): process full range
       on one VM, canonical writes direct. - **worker** (`--chunk-id X --run-id Y --date-start A --date-end B`): scan
@@ -152,9 +152,9 @@ ceiling.
       same run-id.
 
       SFI variant (shipped): Option 2 skips worker/coordinator modes because SFI writes land in
-                      per-date canonical shards (not `_index/partial/`). Chunks are naturally disjoint on date key;
-                      no merge required. Availability-index manifest rows may race at chunk edges — recommend
-                      running `launch-sports-manifest-rescan-vm.sh` after all chunks complete.
+                                                                              per-date canonical shards (not `_index/partial/`). Chunks are naturally disjoint on date key;
+                                                                              no merge required. Availability-index manifest rows may race at chunk edges — recommend
+                                                                              running `launch-sports-manifest-rescan-vm.sh` after all chunks complete.
 
 ### Phase 1: Chunk-safe CLI in instruments-service [DEFERRED — Option 2 skipped it]
 
@@ -207,7 +207,7 @@ follow-up if Option 2 wall-clock proves insufficient.
 
 - [ ] [AGENT] P1. Update codex `02-data/sports-scheduling-and-sharding.md` §2.4: - Document measured rate-limit ceiling
       (~14 calls/min). - Cmd examples: single-VM (unchanged) vs `--chunks 4` 4-worker split. - Cross-ref
-      `codex/02-data/chunk-safe-manifest-migrations.md` as the SSOT pattern.
+      `/codex/02-data/chunk-safe-manifest-migrations.md` as the SSOT pattern.
 
 - [x] [AGENT] P1. Bash syntax check `bash -n launch-sfi-backfill-vm.sh` clean. `--dry-run` blocked by policy in this
       session (policy: prior VM-fire request was denied); launcher dry-run deferred to next-session operator. Python
@@ -245,7 +245,7 @@ Sequential by dependency chain — each phase's output feeds the next.
 
 ## SSOT cross-refs
 
-- Chunk-safe pattern: `codex/02-data/chunk-safe-manifest-migrations.md` + memory
+- Chunk-safe pattern: `/codex/02-data/chunk-safe-manifest-migrations.md` + memory
   `project_chunk_safe_manifest_migrations_pattern_shipped_2026_04_21.md`.
 - SFI rate-limit incident: memory `project_rolling_window_cli_shipped_2026_04_21.md` + codex §2.4 reference to
   2026-04-19 thundering-herd.

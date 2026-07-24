@@ -1,7 +1,10 @@
 ---
 doc_type: audit-result
 title: Codex 04-architecture phantom + retired provider ref audit — 2026-05-20
-summary: "PASS — 0 violations: rg for URDI|Elysium|Arkham|Bloxroute|Infura across codex/04-architecture/ found 6 hits, all correctly classified (Bloxroute/Infura documented as REMOVED; Elysium = active POD client sub-entity, unrelated to the banned MEV route). No fixes required."
+summary:
+  "PASS — 0 violations: rg for URDI|Elysium|Arkham|Bloxroute|Infura across codex/04-architecture/ found 6 hits, all
+  correctly classified (Bloxroute/Infura documented as REMOVED; Elysium = active POD client sub-entity, unrelated to the
+  banned MEV route). No fixes required."
 status: pass
 nature: record
 asset_group: [cross-cutting]
@@ -11,7 +14,9 @@ scope: [engineer, admin]
 tags: [audit, ssot-audit, defi, verification]
 related: []
 created: 2026-05-20
-audited_scope: All .md files in codex/04-architecture/ for phantom/retired-provider references (URDI, Elysium, Arkham, Bloxroute, Infura)
+audited_scope:
+  All .md files in codex/04-architecture/ for phantom/retired-provider references (URDI, Elysium, Arkham, Bloxroute,
+  Infura)
 date: 2026-05-20
 auditor: slot-10 (ikenna-vm)
 parent_epic: infrastructure_master
@@ -49,7 +54,7 @@ rg "URDI|Elysium|Arkham|Bloxroute|Infura" codex/04-architecture/ -n
   URDI→UCI consolidation history — those are outside this audit's scope but are correctly annotated as historical.)
 - **Arkham**: 0 references in `codex/04-architecture/`. (Appears in `codex/02-venues/` as `Arkham | Removed` — correctly
   documented.)
-- **Elysium disambiguation**: `codex/14-customer-journeys/pod-elysium-client-onboarding.md` explicitly states the
+- **Elysium disambiguation**: `/codex/14-customer-journeys/pod-elysium-client-onboarding.md` explicitly states the
   POD/Elysium client entity is unrelated to the banned `Elysium` MEV route. The references in `codex/04-architecture/`
   are the active-client meaning, not the retired-provider meaning.
 

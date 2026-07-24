@@ -496,10 +496,10 @@ Phase 6 (after Phase 4)
 ```
 
 Codex SSOT:
-[`codex/09-strategy/cross-cutting/restaking-reward-economics.md`](../../codex/09-strategy/cross-cutting/restaking-reward-economics.md)
+[`/codex/09-strategy/cross-cutting/restaking-reward-economics.md`](/codex/09-strategy/cross-cutting/restaking-reward-economics.md)
 
 - updates to
-  [`codex/09-strategy/cross-cutting/pnl-attribution.md`](../../codex/09-strategy/cross-cutting/pnl-attribution.md).
+  [`/codex/09-strategy/cross-cutting/pnl-attribution.md`](/codex/09-strategy/cross-cutting/pnl-attribution.md).
 
 UAC schema (shipped 2026-05-01 commit `473af9d`): `unified_api_contracts.internal.architecture_v2.restaking_rewards` —
 `LSTRewardStream`, `LST_REWARD_STREAMS`, `RewardTokenEconomics`, `REWARD_TOKEN_ECONOMICS`, `RewardPnLLayer`,

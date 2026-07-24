@@ -35,8 +35,8 @@ tags: [tradfi, databento, ohlcv, adapter-bugs, silent-empty, smoke-test, data-co
 related:
   [
     ../data_pipeline_e2e_check_2026_07_10.md,
-    tradfi_manifest_row_loss_regression_2026_07_12.md,
-    tradfi_manifest_cf4_source_and_cf7_phantom_gaps_2026_07_07.md,
+    /plans/archive/issues/tradfi_manifest_row_loss_regression_2026_07_12.md,
+    /plans/archive/issues/tradfi_manifest_cf4_source_and_cf7_phantom_gaps_2026_07_07.md,
   ]
 created: 2026-07-12
 parent_epic: mtds_mdps_master
@@ -118,7 +118,7 @@ engages) but **all 12 still write zero parquet rows**. Splitting the 12:
 
 - **ICE** (ohlcv_1m): registered in `umi_tick_provider._DATABENTO_VENUES` but has zero rows in
   `TRADFI_DATABENTO_INSTRUMENTS` — Yahoo-DXY-only, IFUS.IMPACT explicitly removed per
-  `codex/02-data/tradfi-databento-sourcing-ssot.md`. `--source databento` is a silent no-op for it (early-return before
+  `/codex/02-data/tradfi-databento-sourcing-ssot.md`. `--source databento` is a silent no-op for it (early-return before
   any network call). **Explained, not a bug** — the checker's own `--source` forcing logic has already been narrowed to
   exclude ICE (see market-tick-data-service commit `0dd8eaba`, same day).
 - **YAHOO_FINANCE** (ohlcv_15m/24h): not in `_DATABENTO_VENUES` at all — `--source databento` is a complete no-op; its

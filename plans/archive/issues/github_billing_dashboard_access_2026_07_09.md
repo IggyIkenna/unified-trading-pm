@@ -16,7 +16,11 @@ stage: [meta]
 repos: [deployment-api, deployment-ui]
 scope: [engineer, admin]
 tags: [billing, cost, observability, github, credentials, deployment-ui, operator-ask]
-related: [cost_observability_ui_2026_07_08.md, github_actions_billing_wall_2026_06_11.md]
+related:
+  [
+    /plans/archive/2026_07/cost_observability_ui_2026_07_08.md,
+    /plans/archive/issues/github_actions_billing_wall_2026_06_11.md,
+  ]
 created: 2026-07-09
 priority: P2
 parent_epic: deployment_and_user_management_master

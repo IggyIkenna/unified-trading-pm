@@ -28,8 +28,8 @@ tags: [tradfi, krx, yahoo-finance, expected-coverage, honest-coverage, data-corr
 related:
   [
     ../data_pipeline_e2e_check_2026_07_10.md,
-    ../../../codex/02-data/honest-coverage-model.md,
-    ../../../codex/02-data/tradfi-databento-sourcing-ssot.md,
+    /codex/02-data/honest-coverage-model.md,
+    /codex/02-data/tradfi-databento-sourcing-ssot.md,
   ]
 created: 2026-07-12
 parent_epic: infrastructure_master

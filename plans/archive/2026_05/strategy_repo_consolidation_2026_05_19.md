@@ -10,7 +10,7 @@ repos: [alerting-service, deployment-api, deployment-service, e2e-testing, execu
 scope: [engineer, admin]
 tags: []
 related: []
-created: '2026-05-19'
+created: "2026-05-19"
 epic: strategy_and_dart_master_SUPERSEDED_2026_05_21
 priority: P0
 parent: master_to_live_defi_2026_05_23
@@ -20,47 +20,216 @@ last_updated: 2026-05-19
 estimate_class: infra
 estimate_baseline_ai_days: 15
 estimate_calibrated_ai_days: 12
-completion_gates: {code: C5, deployment: D2, business: none}
+completion_gates: { code: C5, deployment: D2, business: none }
 repo_gates:
-- {repo: strategy-service, code: C0, deployment: none, business: none}
-- {repo: strategy-service (risk sub-package), code: C0, deployment: none, business: none}
-- {repo: strategy-service (position sub-package), code: C0, deployment: none, business: none}
-- {repo: strategy-service (pnl sub-package), code: C0, deployment: none, business: none}
-- {repo: risk-and-exposure-service, code: C0, deployment: none, business: none}
-- {repo: position-balance-monitor-service, code: C0, deployment: none, business: none}
-- {repo: pnl-attribution-service, code: C0, deployment: none, business: none}
-- {repo: unified-api-contracts, code: C0, deployment: none, business: none}
-- {repo: unified-trading-library, code: C0, deployment: none, business: none}
-- {repo: deployment-api, code: C0, deployment: none, business: none}
-- {repo: deployment-ui, code: C0, deployment: none, business: none}
-- {repo: deployment-service, code: C0, deployment: none, business: none}
-- {repo: unified-trading-pm, code: C0, deployment: none, business: none}
+  - { repo: strategy-service, code: C0, deployment: none, business: none }
+  - { repo: strategy-service (risk sub-package), code: C0, deployment: none, business: none }
+  - { repo: strategy-service (position sub-package), code: C0, deployment: none, business: none }
+  - { repo: strategy-service (pnl sub-package), code: C0, deployment: none, business: none }
+  - { repo: risk-and-exposure-service, code: C0, deployment: none, business: none }
+  - { repo: position-balance-monitor-service, code: C0, deployment: none, business: none }
+  - { repo: pnl-attribution-service, code: C0, deployment: none, business: none }
+  - { repo: unified-api-contracts, code: C0, deployment: none, business: none }
+  - { repo: unified-trading-library, code: C0, deployment: none, business: none }
+  - { repo: deployment-api, code: C0, deployment: none, business: none }
+  - { repo: deployment-ui, code: C0, deployment: none, business: none }
+  - { repo: deployment-service, code: C0, deployment: none, business: none }
+  - { repo: unified-trading-pm, code: C0, deployment: none, business: none }
 depends_on: []
 todos:
-- {id: phase-0-pre-audit-manifest, content: "- [x] ✅ [AGENT] P0. Phase 0 — Pre-audit manifest (read-only). Produce\n  `plans/active/issues/strategy_repo_consolidation_preaudit_2026_05_19.md` enumerating, per source repo\n  (`risk-and-exposure-service`, `position-balance-monitor-service`, `pnl-attribution-service`):\n  (a) every Python module + class + public function + post-merge sub-package landing\n      (`strategy_service/risk/`, `strategy_service/position/`, `strategy_service/pnl/`);\n  (b) every callsite OUTSIDE the source repo that imports from `risk_and_exposure_service.*` /\n      `position_balance_monitor_service.*` / `pnl_attribution_service.*` — grep across all sibling repos under\n      `${WORKSPACE_ROOT}` (UAC / UTL / UCI / UEI / MTDS / MDPS / instruments-service / ml-training-service /\n      ml-inference-service / strategy-service / execution-service / unified-trading-pm / deployment-api /\n      deployment-ui / deployment-service / e2e-testing). Fact-report 2026-05-19 showed\
-    \ ZERO cross-repo Python\n      imports, but verify and capture exact line-level evidence; any hits get rows: repo, file, line, import\n      statement, post-merge replacement;\n  (c) every script under `scripts/` per source repo + its post-merge home;\n  (d) every test under `tests/` per source repo + its post-merge home (`strategy-service/tests/risk/` etc.);\n  (e) every UAC / UTL symbol the source repo redefines locally that should be imported from upstream instead\n      (Citadel-Grade § 7 SSOT rule — catch self-declared duplicates, especially around kill-switch event\n      schemas, breaker-trip events, PnL attribution row contracts);\n  (f) every cross-package helper duplicated across ≥2 source repos (lift-to-UTL candidates) — specifically\n      `ServiceBootstrap` callsite patterns, kill-switch bus subscriber boilerplate, ManifestFreshnessCache\n      adoption status, `config_reloaders.py` typed-class wiring;\n  (g) per-repo `pyproject.toml` dependency union — find conflicts (different\
-    \ pinned versions of same dep) and\n      resolve to single flat dependency list ahead of Phase 3;\n  (h) hardcoded service-name strings in source — `\"risk-and-exposure-service\"` / etc. as pub/sub topic\n      prefixes, env-var prefixes (`RISK_AND_EXPOSURE_SERVICE_*`), GCS bucket subpaths, deployment-service\n      terraform refs (see Phase 8 for the wider deployment-service sweep). Topic-name compatibility decisions\n      land here (rename vs keep-legacy-prefix-for-subscribers).\n  Output drives every later phase; the entire migration's correctness depends on catching every external\n  import + every hardcoded service-name string. **Foot-gun**: `unified-trading-pm/cursor-configs/` and\n  `unified-trading-pm/codex/` reference module paths in docs (search for module substring, not just `import`).\n  — PM@slot-1-sub-agent (2026-05-19); pre-audit artifact created; 25 external imports found across 7 files\n", status: done}
-- {id: phase-1-uac-utl-schema-prep, content: "- [x] ✅ [AGENT] P0. Phase 1 — UAC / UTL schema prep. N/A — pre-audit §(e) confirmed no new UAC schema\n  columns or UAC PRs needed. All 3 source repos already import UAC types correctly (risk: 36× UAC/23× UTL;\n  PBM: 63× UAC/46× UTL; PnL: 7× UAC/13× UTL). Kill-switch bus subscriber pattern is healthy (uses\n  UAC `KillSwitchBusEvent`). UTL lift candidates (config_reloaders 4×, kill_switch_bus_subscriber 4×)\n  are Phase 5 scope, not Phase 1 UAC PRs. — PM@slot-5 2026-05-19 (backfill; N/A determination)\n", status: done}
-- {id: phase-2-skeleton, content: "- [x] ✅ [AGENT] P0. Phase 2 — Skeleton scaffolding in strategy-service (in-place, no new repo). Create empty\n  sub-package dirs `strategy_service/risk/`, `strategy_service/position/`, `strategy_service/pnl/` with\n  `__init__.py` shims that will receive the subtree-merge in Phase 3. Update `strategy-service/pyproject.toml`\n  with the union of dependencies from the 3 source repos (resolved per Phase 0 (g)). Update\n  `strategy-service/api/main.py` Health-API to expose aggregated freshness across all 4 surfaces (strategy\n  signal freshness + risk-monitor heartbeat + position-recon last-run + pnl-attribution last-run). Add CLI\n  operation discriminators in `strategy_service/cli/service_entry.py`: `--operation risk-monitor | position-recon |\n  pnl-attribution` as stub handlers. Commit on `live-defi-rollout` branch.\n  **Foot-gun**: do NOT yet move any code from source repos — Phase 2 is empty scaffolding so Phase 3\n  subtree-merge has landing zones with\
-    \ no name collisions.\n  — strategy-service@eee8bbb (2026-05-19); 1990 tests pass; ruff + basedpyright clean\n", status: done}
-- {id: phase-3-subtree-merge, content: "- [x] ✅ [AGENT] P0. Phase 3 — Subtree-merge 3 source repos into strategy-service with full git history\n  preserved. For each of {risk-and-exposure-service, position-balance-monitor-service, pnl-attribution-service}:\n  ```bash\n  cd strategy-service\n  git remote add -f <source>-remote ../<source>-service\n  git merge -s ours --no-commit --allow-unrelated-histories <source>-remote/main\n  git read-tree --prefix=strategy_service/<sub>/ -u <source>-remote/main:<source_service>/\n  git read-tree --prefix=tests/<sub>/ -u <source>-remote/main:tests/\n  git read-tree --prefix=scripts/<sub>/ -u <source>-remote/main:scripts/\n  git commit -m \"feat(consolidation): subtree-merge <source>-service into strategy_service/<sub>/\"\n  ```\n  Each subtree-merge is ONE commit per source repo (3 total). Verify with `git log --follow\n  strategy_service/risk/<file>` that history pre-merge is reachable. **Foot-gun**: subtree-merge does NOT\n  rewrite import statements\
-    \ inside the merged code — `strategy_service/risk/__init__.py` still imports\n  `from risk_and_exposure_service.core import ...` until Phase 4. QG WILL fail between Phase 3 and Phase 4;\n  this is expected. Keep Phase 4 in the same agent turn.\n  — strategy-service@92515fde (risk) @cb200745 (position) @c67fb13d (pnl) @544edf80 (merge) 2026-05-19;\n    history reachable via 92515fde^2 (risk-remote tab/5 HEAD ba2eb788)\n", status: done, blocked_by: phase-2-skeleton}
-- {id: phase-4-fix-imports-and-cli, content: "- [x] ✅ [AGENT] P0. Phase 4 — Fix internal imports + unify CLI + collapse `api/main.py` per sub-package into\n  single Health-API router. Per Phase 0 (b) manifest:\n  (a) sed-rewrite every `from risk_and_exposure_service.*` → `from strategy_service.risk.*` (and similar for\n      position + pnl) inside the merged tree;\n  (b) collapse the 3 source `cli/main.py` entrypoints into `strategy_service/cli/main.py` dispatcher keyed by\n      `--operation`; preserve every existing CLI flag verbatim (`--asset-group`, `--mode`, `--operation`,\n      domain-specific flags) — operators have wired flags into existing launchers, breaking the contract\n      blocks the cutover;\n  (c) consolidate the 3 source `api/main.py` Health-API routers into strategy-service's existing router with\n      sub-paths (`/health/risk`, `/health/position`, `/health/pnl`, `/health/strategy`); per-surface\n      `data_freshness` callbacks merge into a single `make_health_router`\
-    \ call;\n  (d) merge `config_reloaders.py` per source repo into strategy-service's typed-config class (one config\n      namespace per surface, all under a single `StrategyServiceConfig` root);\n  (e) consolidate per-repo `ServiceBootstrap` invocations into ONE `ServiceBootstrap` at strategy-service\n      top level (STARTED / STOPPED / FAILED events at the consolidated-service level; per-surface\n      sub-bootstraps if needed for granular kill-switch routing);\n  (f) merge per-repo `tests/conftest.py` fixtures — resolve fixture-name collisions by prefixing\n      (`risk_<fixture>`, `position_<fixture>`, etc.);\n  (g) run `bash scripts/quality-gates.sh` in strategy-service repo — every QG step must pass. Specifically:\n      STEP 5.61 ServiceBootstrap, STEP 5.62 api/main.py + make_health_router, STEP 5.34 typed config_reloaders,\n      STEP 5.66 per-VM shard isolation, STEP 5.69 bucket-name SSOT.\n  **PYTEST_UNIT_DIR**: strategy-service may need `PYTEST_UNIT_DIR=\"tests/\"` after merge\
-    \ — `find tests/unit/ -name\n  'test_*.py' | wc -l` < 5% of `find tests/ -name 'test_*.py' | wc -l` triggers the override. Verify post-merge.\n  Push to `live-defi-rollout` only when QG green.\n", status: done, blocked_by: phase-3-subtree-merge}
-- {id: phase-5-lifts-to-utl, content: "- [x] ✅ [AGENT] P1. Phase 5 — Lift cross-cutting helpers to UTL. — utl@e2445522 + strategy-service@054fae03\n  `ConfigReloaderBase[T]` → `unified_trading_library/config_interface/config_reloader_base.py` (9 tests).\n  `KillSwitchBusSubscriberBase` → `unified_trading_library/lifecycle/kill_switch_subscriber_base.py` (13 tests).\n  4× config_reloaders.py + 4× kill_switch_bus_subscriber.py refactored to use base classes.\n  strategy-service: 1456 passed, 0 errors; utl: 22 new tests all pass; basedpyright clean both repos.\n", status: done, blocked_by: phase-4-fix-imports-and-cli}
-- {id: phase-6-parity-test, content: "- [x] ✅ [AGENT] P0. Phase 6 — Symmetry / parity validation BEFORE archive. — strategy-service@91f701b0\n  (1) **Boot parity** ✅: all 12 {operation × asset_group} pairs EXIT=0, ~6-15s each (baseline ~14s; no >2×\n      regression). Operations: risk-monitor, position-recon, pnl-attribution × cefi/defi/tradfi/prediction.\n  (2) **QG parity** ✅: 4059 passed, 316 skipped, 0 errors (strategy-service@04f88fc7, Phase 4 gate).\n  (3) **Functional parity** ⏳ PENDING-OPERATOR: `scripts/dev/strategy_parity_diff.py` shipped @91f701b0.\n      Requires operator to run:\n        `python scripts/dev/strategy_parity_diff.py --gate functional --surface all \\`\n        `    --baseline-dir gs://BUCKET/baselines/ --consolidated-dir gs://BUCKET/strategy-service/`\n      against GCS pre-archive snapshots from source repos BEFORE Phase 7 archive executes.\n      Boot + QG gates green → safe to proceed to Phase 7 operator actions; functional run is the\n      final pre-cutover\
-    \ confirmation (operator-owned, not a blocker for Phase 7 operator kick-off).\n", status: done, blocked_by: phase-4-fix-imports-and-cli}
-- {id: phase-7-archive-source-repos, content: "- [x] ✅ [HUMAN+AGENT] P0. Phase 7 — Archive the 3 source repos. COMPLETE 2026-05-20.\n  Agent-half (2026-05-19):\n  1. ✅ DEPRECATION_NOTICE.md committed: risk@6e52257 + position@f602e58 + pnl@c1ac3f0\n  2. ✅ strategy-service CHANGELOG + QGBA merged: strategy-service@607a411b\n  3. ✅ workspace-manifest.json updated (status=pending-archive): PM@b6907afe0\n  4. ✅ code-workspace folders list cleaned (29→26 entries): PM@b6907afe0\n  5. ✅ setup-tab-worktrees.sh auto-skips repos with `archived_into` set — no edit needed\n  6. ✅ operator ping filed in `_agent_pings.md`: PM@b6907afe0\n  Operator actions (2026-05-20):\n  7. ✅ `gh repo archive IggyIkenna/risk-and-exposure-service --yes` — archived=true verified\n  8. ✅ `gh repo archive IggyIkenna/position-balance-monitor-service --yes` — archived=true verified\n  9. ✅ `gh repo archive IggyIkenna/pnl-attribution-service --yes` — archived=true verified\n  Agent follow-up (2026-05-20):\n  10. ✅ workspace-manifest.json\
-    \ status→archived + archived_into + archived_date: PM@ad31a6710\n  11. ✅ cursor-configs/unified-trading-system-repos.code-workspace: 24 git.ignoredRepositories entries removed (3 repos × 8 tabs): PM@ad31a6710\n  12. ✅ cursor-configs/workspace-complete.code-workspace: 3 folders entries removed: PM@ad31a6710\n  13. ✅ cursor-configs/workspace-trading.code-workspace: 3 folders entries removed: PM@ad31a6710\n", status: done, blocked_by: phase-6-parity-test}
-- {id: phase-8a-launcher-migration, content: "- [x] ✅ [AGENT] P0. Phase 8A — Launcher migration in `deployment-service`. deployment-service@7679dfe + @2ed3fdd (2026-05-19):\n  - `cloud-build/refresh-tarballs.cloudbuild.yaml`: dropped 3 source services from clone list\n  - `scripts/vm/create-code-tarballs.sh`: removed 3 source repos from all 5 category arrays\n  - `scripts/vm/setup-data-pipeline-vm.sh`: SERVICE_TARBALLS remapped to strategy-service-code\n  - `scripts/vm/backfill-cluster.sh`: L7 case arms now invoke `python -m strategy_service --operation {pnl-attribution,risk-monitor,position-recon}`\n  - `configs/_topology_nodes_upper.py`: consolidated 3 nodes into single STRAT_L7 node with operation-axis\n  - `configs/_topology_panels.py`: updated Cloud Run Job panel text\n  - `terraform/cloud-build/gcp/main.tf`: removed 3 source service trigger entries\n  - `terraform/services/{risk,position,pnl}/`: ARCHIVED.md destroy-runbook added\n  - Workflow audit: 0 migrations needed (27 workflows\
-    \ examined — all PM-template-derived or obsolete)\n  - Branch protection clean: no orphan refs from archived repos\n", status: done, blocked_by: phase-7-archive-source-repos}
-- {id: phase-8b-deployment-api-ui, content: "- [x] ✅ [AGENT] P0. Phase 8B — `deployment-api` + `deployment-ui` updates. Service registry endpoints\n  (`/services/list`, `/services/<id>/health`) update to remove the 3 source service IDs and expose\n  per-operation health on strategy-service. DART drilldown UI updates for risk-monitor + position-recon +\n  pnl-attribution surfaces to point at strategy-service health endpoints. Update `MinimalCandidateManifest`\n  Firestore consumers if any reference `risk_and_exposure_service` / etc. by name (Phase 0 (h) finding).\n  — deployment-api@bd87d70 + deployment-ui@d22f2ba (2026-05-20). Removed 3 old IDs from VALID_SERVICES,\n  SERVICES_WITH_TRIGGERS, _KNOWN_TARBALL_SERVICES, _ASSET_GROUP_TARBALLS (5 asset groups), RICH_SERVICES,\n  TURBO_SUB_DIMENSION_SERVICES, OVERRIDABLE_SERVICES; added risk-monitor/position-recon/pnl-attribution\n  operations to strategy-service entry in ServiceList.tsx.\n", status: done, blocked_by: phase-7-archive-source-repos}
-- {id: phase-9-codex-ssot-updates, content: "- [x] ✅ [AGENT] P0. Phase 9 — Codex SSOT updates. — PM@4d934d7ac (2026-05-20)\n  (a) `codex/04-architecture/strategy-service-architecture.md`: status stub→stable; caveat updated to\n      reflect consolidation complete (Phase 6 parity 4059 passed 0 errors).\n  (b) `codex/00-SSOT-INDEX.md`: strategy-service row STUB→STABLE with parity evidence + launcher sha.\n  (c) `promote-workflow-architecture.md`: no old-service references found — already clean.\n  (d) `launcher-script-ssot.md`: no old-service references found — already clean.\n  (e) `vm-tarball-deployment.md`: no old-service references found — already clean.\n  (f) `cli-convention.md`: no old-service references found — already clean.\n  (g) `cli-promote-paths.md`: no old-service references found — already clean.\n  (h) Migration banners added to 5 high-traffic architectural docs: runtime-deployment-topology.md,\n      data-flow-map.md, risk-preflight-flow.md, LIBRARY-DEPENDENCY-MATRIX.md,\
-    \ INTERNAL_DEPENDENCY_GRAPH.md.\n      10-audit/ + _archived_pre_v2/ historical docs intentionally left as-is (historical record).\n", status: done, blocked_by: phase-8a-launcher-migration}
-- {id: phase-10-workspace-qg-sweep, content: "- [x] ✅ [AGENT] P0. Phase 10 — Workspace QG sweep + cross-plan coordination banner cleanup. — PM@(this commit) strategy-service@467cf674 (2026-05-20)\n  Banners stripped from 21 active plans. Inventory regenerator run: 68 plans, 64% done.\n  QG: all unit tests passing including asyncio.run() fix for pnl orchestrator tests (Python 3.13 compat).\n  VM smoke test BLOCKED-OPERATOR (human-only VM launch; agent cannot boot strategy-service VM).\n", status: done, blocked_by: phase-9-codex-ssot-updates}
-- {id: phase-0-side-effect-soft-freeze-announcement, content: "- [x] ✅ [AGENT] P0. Phase 0 SIDE EFFECT — Cross-plan soft-freeze announcement. Add coordination banner to\n  every active plan identified in fact-report (2026-05-19) as having scope over the 4 affected repos\n  (~12 plans with `repo_gates`, ~34 with passing mentions). Banner text:\n  ```\n\n  > strategy-service is absorbing risk-and-exposure-service + position-balance-monitor-service +\n  > pnl-attribution-service as sub-packages 2026-05-19 → 2026-05-23. **Soft freeze**: NO new public-API\n  > surfaces, NO new top-level packages, NO module renames in any of the 4 repos until Phase 7 archive\n  > lands. Internal bugfixes + test work + plan-flip backfills continue. See plan body for the 12 affected\n  > plans + Phase 4 import-rewrite path.\n  ```\n  Banner-remove owned by this plan's Phase 10. Affected plan list per fact-report — enumerate in the Phase 0\n  pre-audit artifact and link from each banner.\n  RESULT (2026-05-19 slot-8):\
-    \ 20 plans patched — AUDIT_2026_05_15_harsh_side_completion, alerting_service_live_rules, batch_live_symmetry, bucket_name_ssot_canonicalisation, codex_vs_citadel_infrastructure_audit, compute_optimization_mock_data, cross_cutting_may_23_deliverables, defi_archetypes_canonicalisation_and_venue_matrix, defi_master, defi_recursive_borrow_archetypes, deployment_and_qg_strategy_implementation, features_repo_consolidation, features_service_qg_cleanup, live_pipeline_mtds_mdps_features, master_to_live_defi, ml_repo_consolidation, mock_data_pipeline_benchmarking, promote_workflow_may23_cli_path, ruff_workspace_cleanup, writegate_honest_coverage_endtoend.\n", status: done}
+  - { id: phase-0-pre-audit-manifest, content: "- [x] ✅ [AGENT] P0. Phase 0 — Pre-audit manifest (read-only).
+        Produce\n  `plans/active/issues/strategy_repo_consolidation_preaudit_2026_05_19.md` enumerating, per source
+        repo\n  (`risk-and-exposure-service`, `position-balance-monitor-service`, `pnl-attribution-service`):\n  (a)
+        every Python module + class + public function + post-merge sub-package landing\n      (`strategy_service/risk/`,
+        `strategy_service/position/`, `strategy_service/pnl/`);\n  (b) every callsite OUTSIDE the source repo that
+        imports from `risk_and_exposure_service.*` /\n      `position_balance_monitor_service.*` /
+        `pnl_attribution_service.*` — grep across all sibling repos under\n      `${WORKSPACE_ROOT}` (UAC / UTL / UCI /
+        UEI / MTDS / MDPS / instruments-service / ml-training-service /\n      ml-inference-service / strategy-service /
+        execution-service / unified-trading-pm / deployment-api /\n      deployment-ui / deployment-service /
+        e2e-testing). Fact-report 2026-05-19 showed\
+        \ ZERO cross-repo Python\n      imports, but verify and capture exact line-level evidence; any hits get rows:
+        repo, file, line, import\n      statement, post-merge replacement;\n  (c) every script under `scripts/` per
+        source repo + its post-merge home;\n  (d) every test under `tests/` per source repo + its post-merge home
+        (`strategy-service/tests/risk/` etc.);\n  (e) every UAC / UTL symbol the source repo redefines locally that
+        should be imported from upstream instead\n      (Citadel-Grade § 7 SSOT rule — catch self-declared duplicates,
+        especially around kill-switch event\n      schemas, breaker-trip events, PnL attribution row contracts);\n  (f)
+        every cross-package helper duplicated across ≥2 source repos (lift-to-UTL candidates) —
+        specifically\n      `ServiceBootstrap` callsite patterns, kill-switch bus subscriber boilerplate,
+        ManifestFreshnessCache\n      adoption status, `config_reloaders.py` typed-class wiring;\n  (g) per-repo
+        `pyproject.toml` dependency union — find conflicts (different\
+        \ pinned versions of same dep) and\n      resolve to single flat dependency list ahead of Phase 3;\n  (h)
+        hardcoded service-name strings in source — `\"risk-and-exposure-service\"` / etc. as pub/sub
+        topic\n      prefixes, env-var prefixes (`RISK_AND_EXPOSURE_SERVICE_*`), GCS bucket subpaths,
+        deployment-service\n      terraform refs (see Phase 8 for the wider deployment-service sweep). Topic-name
+        compatibility decisions\n      land here (rename vs keep-legacy-prefix-for-subscribers).\n  Output drives every
+        later phase; the entire migration's correctness depends on catching every external\n  import + every hardcoded
+        service-name string. **Foot-gun**: `unified-trading-pm/cursor-configs/` and\n  `unified-trading-pm/codex/`
+        reference module paths in docs (search for module substring, not just `import`).\n  — PM@slot-1-sub-agent
+        (2026-05-19); pre-audit artifact created; 25 external imports found across 7 files\n", status: done }
+  - {
+      id: phase-1-uac-utl-schema-prep,
+      content:
+        "- [x] ✅ [AGENT] P0. Phase 1 — UAC / UTL schema prep. N/A — pre-audit §(e) confirmed no new UAC
+        schema\n  columns or UAC PRs needed. All 3 source repos already import UAC types correctly (risk: 36× UAC/23×
+        UTL;\n  PBM: 63× UAC/46× UTL; PnL: 7× UAC/13× UTL). Kill-switch bus subscriber pattern is healthy (uses\n  UAC
+        `KillSwitchBusEvent`). UTL lift candidates (config_reloaders 4×, kill_switch_bus_subscriber 4×)\n  are Phase 5
+        scope, not Phase 1 UAC PRs. — PM@slot-5 2026-05-19 (backfill; N/A determination)\n",
+      status: done,
+    }
+  - { id: phase-2-skeleton, content: "- [x] ✅ [AGENT] P0. Phase 2 — Skeleton scaffolding in strategy-service (in-place,
+        no new repo). Create empty\n  sub-package dirs `strategy_service/risk/`, `strategy_service/position/`,
+        `strategy_service/pnl/` with\n  `__init__.py` shims that will receive the subtree-merge in Phase 3. Update
+        `strategy-service/pyproject.toml`\n  with the union of dependencies from the 3 source repos (resolved per Phase
+        0 (g)). Update\n  `strategy-service/api/main.py` Health-API to expose aggregated freshness across all 4 surfaces
+        (strategy\n  signal freshness + risk-monitor heartbeat + position-recon last-run + pnl-attribution last-run).
+        Add CLI\n  operation discriminators in `strategy_service/cli/service_entry.py`: `--operation risk-monitor |
+        position-recon |\n  pnl-attribution` as stub handlers. Commit on `live-defi-rollout` branch.\n  **Foot-gun**: do
+        NOT yet move any code from source repos — Phase 2 is empty scaffolding so Phase 3\n  subtree-merge has landing
+        zones with\
+        \ no name collisions.\n  — strategy-service@eee8bbb (2026-05-19); 1990 tests pass; ruff + basedpyright clean\n", status: done }
+  - { id: phase-3-subtree-merge, content: "- [x] ✅ [AGENT] P0. Phase 3 — Subtree-merge 3 source repos into
+        strategy-service with full git history\n  preserved. For each of {risk-and-exposure-service,
+        position-balance-monitor-service, pnl-attribution-service}:\n  ```bash\n  cd strategy-service\n  git remote add
+        -f <source>-remote ../<source>-service\n  git merge -s ours --no-commit --allow-unrelated-histories
+        <source>-remote/main\n  git read-tree --prefix=strategy_service/<sub>/ -u
+        <source>-remote/main:<source_service>/\n  git read-tree --prefix=tests/<sub>/ -u
+        <source>-remote/main:tests/\n  git read-tree --prefix=scripts/<sub>/ -u <source>-remote/main:scripts/\n  git
+        commit -m \"feat(consolidation): subtree-merge <source>-service into strategy_service/<sub>/\"\n  ```\n  Each
+        subtree-merge is ONE commit per source repo (3 total). Verify with `git log
+        --follow\n  strategy_service/risk/<file>` that history pre-merge is reachable. **Foot-gun**: subtree-merge does
+        NOT\n  rewrite import statements\
+        \ inside the merged code — `strategy_service/risk/__init__.py` still imports\n  `from
+        risk_and_exposure_service.core import ...` until Phase 4. QG WILL fail between Phase 3 and Phase 4;\n  this is
+        expected. Keep Phase 4 in the same agent turn.\n  — strategy-service@92515fde (risk) @cb200745 (position)
+        @c67fb13d (pnl) @544edf80 (merge) 2026-05-19;\n    history reachable via 92515fde^2 (risk-remote tab/5 HEAD
+        ba2eb788)\n", status: done, blocked_by: phase-2-skeleton }
+  - { id: phase-4-fix-imports-and-cli, content: "- [x] ✅ [AGENT] P0. Phase 4 — Fix internal imports + unify CLI +
+        collapse `api/main.py` per sub-package into\n  single Health-API router. Per Phase 0 (b) manifest:\n  (a)
+        sed-rewrite every `from risk_and_exposure_service.*` → `from strategy_service.risk.*` (and similar
+        for\n      position + pnl) inside the merged tree;\n  (b) collapse the 3 source `cli/main.py` entrypoints into
+        `strategy_service/cli/main.py` dispatcher keyed by\n      `--operation`; preserve every existing CLI flag
+        verbatim (`--asset-group`, `--mode`, `--operation`,\n      domain-specific flags) — operators have wired flags
+        into existing launchers, breaking the contract\n      blocks the cutover;\n  (c) consolidate the 3 source
+        `api/main.py` Health-API routers into strategy-service's existing router with\n      sub-paths (`/health/risk`,
+        `/health/position`, `/health/pnl`, `/health/strategy`); per-surface\n      `data_freshness` callbacks merge into
+        a single `make_health_router`\
+        \ call;\n  (d) merge `config_reloaders.py` per source repo into strategy-service's typed-config class (one
+        config\n      namespace per surface, all under a single `StrategyServiceConfig` root);\n  (e) consolidate
+        per-repo `ServiceBootstrap` invocations into ONE `ServiceBootstrap` at strategy-service\n      top level
+        (STARTED / STOPPED / FAILED events at the consolidated-service level; per-surface\n      sub-bootstraps if
+        needed for granular kill-switch routing);\n  (f) merge per-repo `tests/conftest.py` fixtures — resolve
+        fixture-name collisions by prefixing\n      (`risk_<fixture>`, `position_<fixture>`, etc.);\n  (g) run `bash
+        scripts/quality-gates.sh` in strategy-service repo — every QG step must pass. Specifically:\n      STEP 5.61
+        ServiceBootstrap, STEP 5.62 api/main.py + make_health_router, STEP 5.34 typed config_reloaders,\n      STEP 5.66
+        per-VM shard isolation, STEP 5.69 bucket-name SSOT.\n  **PYTEST_UNIT_DIR**: strategy-service may need
+        `PYTEST_UNIT_DIR=\"tests/\"` after merge\
+        \ — `find tests/unit/ -name\n  'test_*.py' | wc -l` < 5% of `find tests/ -name 'test_*.py' | wc -l` triggers the
+        override. Verify post-merge.\n  Push to `live-defi-rollout` only when QG green.\n", status: done, blocked_by: phase-3-subtree-merge }
+  - {
+      id: phase-5-lifts-to-utl,
+      content:
+        "- [x] ✅ [AGENT] P1. Phase 5 — Lift cross-cutting helpers to UTL. — utl@e2445522 +
+        strategy-service@054fae03\n  `ConfigReloaderBase[T]` →
+        `unified_trading_library/config_interface/config_reloader_base.py` (9 tests).\n  `KillSwitchBusSubscriberBase` →
+        `unified_trading_library/lifecycle/kill_switch_subscriber_base.py` (13 tests).\n  4× config_reloaders.py + 4×
+        kill_switch_bus_subscriber.py refactored to use base classes.\n  strategy-service: 1456 passed, 0 errors; utl:
+        22 new tests all pass; basedpyright clean both repos.\n",
+      status: done,
+      blocked_by: phase-4-fix-imports-and-cli,
+    }
+  - { id: phase-6-parity-test, content: "- [x] ✅ [AGENT] P0. Phase 6 — Symmetry / parity validation BEFORE archive. —
+        strategy-service@91f701b0\n  (1) **Boot parity** ✅: all 12 {operation × asset_group} pairs EXIT=0, ~6-15s each
+        (baseline ~14s; no >2×\n      regression). Operations: risk-monitor, position-recon, pnl-attribution ×
+        cefi/defi/tradfi/prediction.\n  (2) **QG parity** ✅: 4059 passed, 316 skipped, 0 errors
+        (strategy-service@04f88fc7, Phase 4 gate).\n  (3) **Functional parity** ⏳ PENDING-OPERATOR:
+        `scripts/dev/strategy_parity_diff.py` shipped @91f701b0.\n      Requires operator to run:\n        `python
+        scripts/dev/strategy_parity_diff.py --gate functional --surface all \\`\n        `    --baseline-dir
+        gs://BUCKET/baselines/ --consolidated-dir gs://BUCKET/strategy-service/`\n      against GCS pre-archive
+        snapshots from source repos BEFORE Phase 7 archive executes.\n      Boot + QG gates green → safe to proceed to
+        Phase 7 operator actions; functional run is the\n      final pre-cutover\
+        \ confirmation (operator-owned, not a blocker for Phase 7 operator kick-off).\n", status: done, blocked_by: phase-4-fix-imports-and-cli }
+  - { id: phase-7-archive-source-repos, content: "- [x] ✅ [HUMAN+AGENT] P0. Phase 7 — Archive the 3 source repos.
+        COMPLETE 2026-05-20.\n  Agent-half (2026-05-19):\n  1. ✅ DEPRECATION_NOTICE.md committed: risk@6e52257 +
+        position@f602e58 + pnl@c1ac3f0\n  2. ✅ strategy-service CHANGELOG + QGBA merged:
+        strategy-service@607a411b\n  3. ✅ workspace-manifest.json updated (status=pending-archive): PM@b6907afe0\n  4.
+        ✅ code-workspace folders list cleaned (29→26 entries): PM@b6907afe0\n  5. ✅ setup-tab-worktrees.sh auto-skips
+        repos with `archived_into` set — no edit needed\n  6. ✅ operator ping filed in `_agent_pings.md`:
+        PM@b6907afe0\n  Operator actions (2026-05-20):\n  7. ✅ `gh repo archive IggyIkenna/risk-and-exposure-service
+        --yes` — archived=true verified\n  8. ✅ `gh repo archive IggyIkenna/position-balance-monitor-service --yes` —
+        archived=true verified\n  9. ✅ `gh repo archive IggyIkenna/pnl-attribution-service --yes` — archived=true
+        verified\n  Agent follow-up (2026-05-20):\n  10. ✅ workspace-manifest.json\
+        \ status→archived + archived_into + archived_date: PM@ad31a6710\n  11. ✅
+        cursor-configs/unified-trading-system-repos.code-workspace: 24 git.ignoredRepositories entries removed (3 repos
+        × 8 tabs): PM@ad31a6710\n  12. ✅ cursor-configs/workspace-complete.code-workspace: 3 folders entries removed:
+        PM@ad31a6710\n  13. ✅ cursor-configs/workspace-trading.code-workspace: 3 folders entries removed:
+        PM@ad31a6710\n", status: done, blocked_by: phase-6-parity-test }
+  - { id: phase-8a-launcher-migration, content: "- [x] ✅ [AGENT] P0. Phase 8A — Launcher migration in
+        `deployment-service`. deployment-service@7679dfe + @2ed3fdd (2026-05-19):\n  -
+        `cloud-build/refresh-tarballs.cloudbuild.yaml`: dropped 3 source services from clone list\n  -
+        `scripts/vm/create-code-tarballs.sh`: removed 3 source repos from all 5 category arrays\n  -
+        `scripts/vm/setup-data-pipeline-vm.sh`: SERVICE_TARBALLS remapped to strategy-service-code\n  -
+        `scripts/vm/backfill-cluster.sh`: L7 case arms now invoke `python -m strategy_service --operation
+        {pnl-attribution,risk-monitor,position-recon}`\n  - `configs/_topology_nodes_upper.py`: consolidated 3 nodes
+        into single STRAT_L7 node with operation-axis\n  - `configs/_topology_panels.py`: updated Cloud Run Job panel
+        text\n  - `terraform/cloud-build/gcp/main.tf`: removed 3 source service trigger entries\n  -
+        `terraform/services/{risk,position,pnl}/`: ARCHIVED.md destroy-runbook added\n  - Workflow audit: 0 migrations
+        needed (27 workflows\
+        \ examined — all PM-template-derived or obsolete)\n  - Branch protection clean: no orphan refs from archived
+        repos\n", status: done, blocked_by: phase-7-archive-source-repos }
+  - {
+      id: phase-8b-deployment-api-ui,
+      content:
+        "- [x] ✅ [AGENT] P0. Phase 8B — `deployment-api` + `deployment-ui` updates. Service registry
+        endpoints\n  (`/services/list`, `/services/<id>/health`) update to remove the 3 source service IDs and
+        expose\n  per-operation health on strategy-service. DART drilldown UI updates for risk-monitor + position-recon
+        +\n  pnl-attribution surfaces to point at strategy-service health endpoints. Update
+        `MinimalCandidateManifest`\n  Firestore consumers if any reference `risk_and_exposure_service` / etc. by name
+        (Phase 0 (h) finding).\n  — deployment-api@bd87d70 + deployment-ui@d22f2ba (2026-05-20). Removed 3 old IDs from
+        VALID_SERVICES,\n  SERVICES_WITH_TRIGGERS, _KNOWN_TARBALL_SERVICES, _ASSET_GROUP_TARBALLS (5 asset groups),
+        RICH_SERVICES,\n  TURBO_SUB_DIMENSION_SERVICES, OVERRIDABLE_SERVICES; added
+        risk-monitor/position-recon/pnl-attribution\n  operations to strategy-service entry in ServiceList.tsx.\n",
+      status: done,
+      blocked_by: phase-7-archive-source-repos,
+    }
+  - { id: phase-9-codex-ssot-updates, content: "- [x] ✅ [AGENT] P0. Phase 9 — Codex SSOT updates. — PM@4d934d7ac
+        (2026-05-20)\n  (a) `/codex/04-architecture/strategy-service-architecture.md`: status stub→stable; caveat
+        updated to\n      reflect consolidation complete (Phase 6 parity 4059 passed 0 errors).\n  (b)
+        `codex/00-SSOT-INDEX.md`: strategy-service row STUB→STABLE with parity evidence + launcher sha.\n  (c)
+        `promote-workflow-architecture.md`: no old-service references found — already clean.\n  (d)
+        `launcher-script-ssot.md`: no old-service references found — already clean.\n  (e) `vm-tarball-deployment.md`:
+        no old-service references found — already clean.\n  (f) `cli-convention.md`: no old-service references found —
+        already clean.\n  (g) `cli-promote-paths.md`: no old-service references found — already clean.\n  (h) Migration
+        banners added to 5 high-traffic architectural docs: runtime-deployment-topology.md,\n      data-flow-map.md,
+        risk-preflight-flow.md, LIBRARY-DEPENDENCY-MATRIX.md,\
+        \ INTERNAL_DEPENDENCY_GRAPH.md.\n      10-audit/ + _archived_pre_v2/ historical docs intentionally left as-is
+        (historical record).\n", status: done, blocked_by: phase-8a-launcher-migration }
+  - {
+      id: phase-10-workspace-qg-sweep,
+      content:
+        "- [x] ✅ [AGENT] P0. Phase 10 — Workspace QG sweep + cross-plan coordination banner cleanup. — PM@(this commit)
+        strategy-service@467cf674 (2026-05-20)\n  Banners stripped from 21 active plans. Inventory regenerator run: 68
+        plans, 64% done.\n  QG: all unit tests passing including asyncio.run() fix for pnl orchestrator tests (Python
+        3.13 compat).\n  VM smoke test BLOCKED-OPERATOR (human-only VM launch; agent cannot boot strategy-service VM).\n",
+      status: done,
+      blocked_by: phase-9-codex-ssot-updates,
+    }
+  - { id: phase-0-side-effect-soft-freeze-announcement, content: "- [x] ✅ [AGENT] P0. Phase 0 SIDE EFFECT — Cross-plan
+        soft-freeze announcement. Add coordination banner to\n  every active plan identified in fact-report (2026-05-19)
+        as having scope over the 4 affected repos\n  (~12 plans with `repo_gates`, ~34 with passing mentions). Banner
+        text:\n  ```\n\n  > strategy-service is absorbing risk-and-exposure-service + position-balance-monitor-service
+        +\n  > pnl-attribution-service as sub-packages 2026-05-19 → 2026-05-23. **Soft freeze**: NO new public-API\n  >
+        surfaces, NO new top-level packages, NO module renames in any of the 4 repos until Phase 7 archive\n  > lands.
+        Internal bugfixes + test work + plan-flip backfills continue. See plan body for the 12 affected\n  > plans +
+        Phase 4 import-rewrite path.\n  ```\n  Banner-remove owned by this plan's Phase 10. Affected plan list per
+        fact-report — enumerate in the Phase 0\n  pre-audit artifact and link from each banner.\n  RESULT (2026-05-19
+        slot-8):\
+        \ 20 plans patched — AUDIT_2026_05_15_harsh_side_completion, alerting_service_live_rules, batch_live_symmetry,
+        bucket_name_ssot_canonicalisation, codex_vs_citadel_infrastructure_audit, compute_optimization_mock_data,
+        cross_cutting_may_23_deliverables, defi_archetypes_canonicalisation_and_venue_matrix, defi_master,
+        defi_recursive_borrow_archetypes, deployment_and_qg_strategy_implementation, features_repo_consolidation,
+        features_service_qg_cleanup, live_pipeline_mtds_mdps_features, master_to_live_defi, ml_repo_consolidation,
+        mock_data_pipeline_benchmarking, promote_workflow_may23_cli_path, ruff_workspace_cleanup,
+        writegate_honest_coverage_endtoend.\n", status: done }
 parent_epic: strategy_master
 ---
 
@@ -261,7 +430,7 @@ slot-3/4/7/9 boot) is cheaper than discovering them mid-Phase-4 or post-archive.
       `git read-tree --prefix=strategy_service/<sub>/ -u <source>-remote/main:<source_package>/` pulls package + tests +
       scripts only; `docs/` intentionally NOT merged (codex is workspace SSOT). Record in each archived source repo's
       `DEPRECATION_NOTICE.md` (Phase 7): "docs/ content not migrated — see
-      `codex/04-architecture/strategy-service-architecture.md` and related codex pages." 1-line addendum to Phase 3
+      `/codex/04-architecture/strategy-service-architecture.md` and related codex pages." 1-line addendum to Phase 3
       recipe; <5 min work. — VERIFIED 2026-05-19: `git show {92515fde,cb200745,c67fb13d} --stat | grep docs/` returns
       empty — docs/ correctly excluded from all 3 subtree-merge commits. Handoff to Phase 7 (slot 6): include "docs/ not
       migrated" note in DEPRECATION_NOTICE.md per above.

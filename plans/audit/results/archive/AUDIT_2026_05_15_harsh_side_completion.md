@@ -450,7 +450,7 @@ These are not gaps — they reflect the natural dispatch-cycle cadence. Auto-pol
 
 ### F. Master-plan readiness column refresh
 
-[`codex/10-audit/MASTER_READINESS_LIVE_DEFI_2026_05_23.md`](/codex/10-audit/MASTER_READINESS_LIVE_DEFI_2026_05_23.md)
+[`/codex/10-audit/MASTER_READINESS_LIVE_DEFI_2026_05_23.md`](/codex/10-audit/MASTER_READINESS_LIVE_DEFI_2026_05_23.md)
 was refreshed by slot 6 today ([@1051d3b6](../../unified-trading-pm)) with `last_refreshed: 2026-05-15` and the
 custody-providers correction (May-23 = CLOUD_KMS_ENCRYPTED, not Copper/CEFFU). All 23 A-G items verified accurate.
 

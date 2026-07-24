@@ -6,7 +6,8 @@ status: complete
 nature: record
 asset_group: [infrastructure]
 stage: [meta]
-repos: [deployment-service, instruments-service, market-tick-data-service, unified-api-contracts, unified-trading-library]
+repos:
+  [deployment-service, instruments-service, market-tick-data-service, unified-api-contracts, unified-trading-library]
 scope: [engineer, admin]
 tags: []
 related: []
@@ -381,7 +382,7 @@ captured/(cap+empty+failed+eu) = 1,005,848/6,519,518 = **15.43%**.
 
 - CeFi implementation is the template: per-day instrument availability → daily catalogue aggregation →
   catalogue-as-filter → MTDS capture. Read the CeFi catalogue + capture path and mirror it for DeFi.
-- Canonical naming SSOT: `codex/02-data/defi-canonical-naming-ssot.md`.
+- Canonical naming SSOT: `/codex/02-data/defi-canonical-naming-ssot.md`.
 - Shard-granularity SSOT (writer atom == enumerator atom == per-pool): `plans/epics/infrastructure_master.md`.
 
 ## Progress Log

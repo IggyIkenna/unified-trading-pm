@@ -25,10 +25,10 @@ tags:
   [honest-coverage, denominator-audit, layer-1, data-correctness, cefi, coinbase-futures, spot-pair, mvp-backfill-v10]
 related:
   [
-    mvp_backfill_cefi_tick_v10_2026_06_27.md,
-    cefi_deribit_combo_and_okx_bare_venue_gaps_2026_07_12.md,
-    ../../../codex/02-data/honest-coverage-model.md,
-    ../../../codex/02-data/availability-manifest-and-data-status.md,
+    /plans/archive/2026_07/mvp_backfill_cefi_tick_v10_2026_06_27.md,
+    /plans/active/issues/cefi_deribit_combo_and_okx_bare_venue_gaps_2026_07_12.md,
+    /codex/02-data/honest-coverage-model.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
   ]
 created: 2026-07-12
 parent_epic: cefi_master

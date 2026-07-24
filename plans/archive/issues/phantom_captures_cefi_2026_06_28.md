@@ -101,7 +101,7 @@ gaps and the backfill will attempt to fill them — which is correct behavior bu
 3. Reference triage JSONL at `gs://central-element-323112-phantom-triage/triage_cefi_20260628_021110.jsonl`.
 
 Cold-start context: `unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md` +
-`codex/05-infrastructure/manifest-consolidator-ssot.md` + `codex/02-data/availability-manifest-and-data-status.md`.
+`/codex/05-infrastructure/manifest-consolidator-ssot.md` + `/codex/02-data/availability-manifest-and-data-status.md`.
 
 ## Todos
 

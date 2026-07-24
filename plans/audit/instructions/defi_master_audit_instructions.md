@@ -15,7 +15,7 @@ scope: [engineer, admin]
 tags: [audit, defi, honest-coverage, manifest, execution, canonicalisation, data-correctness]
 related:
   [
-    canonical_form_cross_service_audit_checklist.md,
+    /plans/audit/instructions/canonical_form_cross_service_audit_checklist.md,
     ../../active/master_data_canonicalisation_migration_catalogue_2026_06_07.md,
   ]
 created: 2026-05-22
@@ -28,7 +28,19 @@ type: audit-instructions
 epic: defi_master
 assigned_vm: vm-defi
 last_updated: 2026-06-01
-codex_ssots_to_check_drift_against: [codex/02-data/defi-data-types-catalog.md, codex/02-data/defi-data-pipeline.md, codex/02-data/data-lineage-MTDS-features-ml.md, codex/02-data/availability-manifest-and-data-status.md, codex/02-data/data-status-drilldown.md, codex/02-data/venue-availability.md, codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md, codex/09-strategy/architecture-v2/archetypes/carry-basis-perp.md, codex/09-strategy/architecture-v2/archetypes/carry-basis-dated.md, codex/09-strategy/architecture-v2/archetypes/arbitrage-price-dispersion.md]
+codex_ssots_to_check_drift_against:
+  [
+    /codex/02-data/defi-data-types-catalog.md,
+    /codex/02-data/defi-data-pipeline.md,
+    /codex/02-data/data-lineage-MTDS-features-ml.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/02-data/data-status-drilldown.md,
+    /codex/02-data/venue-availability.md,
+    /codex/09-strategy/architecture-v2/archetypes/carry-staked-basis.md,
+    /codex/09-strategy/architecture-v2/archetypes/carry-basis-perp.md,
+    /codex/09-strategy/architecture-v2/archetypes/carry-basis-dated.md,
+    /codex/09-strategy/architecture-v2/archetypes/arbitrage-price-dispersion.md,
+  ]
 ---
 
 # DeFi Master — Audit Instructions
@@ -129,7 +141,7 @@ Key code surfaces:
       Check: `a6_batch_live_adapter_parity.py` output for asset_group=defi rows
 
 - [ ] (e) **FlashLoanReceiver.sol matches codex**: architecture description in
-      `codex/04-architecture/flash-loan-receiver.md` matches the actual contract. Grep:
+      `/codex/04-architecture/flash-loan-receiver.md` matches the actual contract. Grep:
       `rg "FlashLoanReceiver" deployment-service/contracts/`
 
 - [ ] (f) **No hardcoded RPC URLs**: QG `no_hardcoded_venue_urls.sh` passes for all DeFi service dirs. Run:
@@ -147,16 +159,16 @@ Key code surfaces:
       provider — distinguish before flagging.)
 
 - [ ] (i) **Pyth oracle scope**: Pyth used for Solana on-chain only; other chains use Chainlink. Read:
-      `codex/04-architecture/defi-execution-overview.md` and verify code matches
+      `/codex/04-architecture/defi-execution-overview.md` and verify code matches
 
 ### Code ↔ Codex drift (added 2026-05-27)
 
 Verify the data-pipeline codex SSOTs (`codex/02-data/defi-*.md`, `data-lineage-MTDS-features-ml.md`) match code. Method:
 grep code truth, compare to the doc, classify each as `aligned` / `codex-stale` / `code-bug`. Reference run + format:
-[`defi-data-pipeline.md`](../../../codex/02-data/defi-data-pipeline.md) §1 drift register.
+[`defi-data-pipeline.md`](/codex/02-data/defi-data-pipeline.md) §1 drift register.
 
 - [ ] (j) **data_type names**: handler constants `_*_DATA_TYPE` in MTDS `cli/handlers/*.py` match the `data_type=` names
-      documented in `codex/02-data/defi-data-types-catalog.md`. Canonical = `dex_swaps` / `dex_pool_state` /
+      documented in `/codex/02-data/defi-data-types-catalog.md`. Canonical = `dex_swaps` / `dex_pool_state` /
       `lending_indices` / `perp_funding` / `lst_rates` / `vault_share_price` (NOT `swap_events` / `pool_state` /
       `lending_metrics` / `funding_rates`). Grep: `rg "_DATA_TYPE\s*=" market-tick-data-service/*/cli/handlers/`
 - [ ] (k) **data_type completeness**: every `collect-*` DeFi operation in MTDS `cli/main.py` is documented in the
@@ -272,9 +284,9 @@ reference, not a substitute for reading the source):
 > Sources for the expected set (read these, don't copy the snapshot): archetype files in
 > `codex/09-strategy/architecture-v2/archetypes/`; `Features expected` lists in the
 > `strategy-service/.../v2/carry_and_yield/*.py` engines; canonical data_type names + buckets in
-> `codex/02-data/defi-data-types-catalog.md`; venue/capability backing in
+> `/codex/02-data/defi-data-types-catalog.md`; venue/capability backing in
 > `unified-api-contracts/unified_api_contracts/registry/defi_venues.py`; lineage in
-> `codex/02-data/data-lineage-MTDS-features-ml.md`.
+> `/codex/02-data/data-lineage-MTDS-features-ml.md`.
 >
 > **The expected set is driven by the canonical coverage SSOT, NOT the snapshot above.** The denominator for "in
 > totality" is `EXPECTED_COVERAGE_BY_ASSET_GROUP` in

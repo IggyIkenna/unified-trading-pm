@@ -10,7 +10,7 @@ repos: [agent-orchestrator, deployment-service]
 scope: [engineer, admin]
 tags: []
 related: []
-created: '2026-05-22'
+created: "2026-05-22"
 parent_epic: orchestrator_master
 priority: P1
 estimate_class: infra
@@ -33,8 +33,8 @@ Move agent-orchestrator workers from laptop tmux-spawn to dedicated GCE VMs (asy
 Harsh-backup PC). Backend ssh-spawns into assigned worker box. Required before Cloud Run prod cutover (Harsh laptop
 nginx shutdown). Also includes worker-liveness kicker daemon + preflight script shipped.
 
-Codex SSOTs: `codex/05-infrastructure/agent-orchestrator-worker-topology.md` (to be created at Phase 6) ·
-`codex/04-architecture/agent-orchestrator-overview.md`
+Codex SSOTs: `/codex/05-infrastructure/agent-orchestrator-worker-topology.md` (to be created at Phase 6) ·
+`/codex/04-architecture/agent-orchestrator-overview.md`
 
 ---
 
@@ -75,7 +75,7 @@ Codex SSOTs: `codex/05-infrastructure/agent-orchestrator-worker-topology.md` (to
 
 ## Phase 6 — Codex SSOT
 
-- [ ] [AGENT] P6. NEW `codex/05-infrastructure/agent-orchestrator-worker-topology.md`. **DEFERRED-POST-CUTOVER** →
+- [ ] [AGENT] P6. NEW `/codex/05-infrastructure/agent-orchestrator-worker-topology.md`. **DEFERRED-POST-CUTOVER** →
       migrated to `epic_vm_fleet_commissioning_2026_05_21.md` Deferred.
 
 ## Pending preflight items

@@ -27,8 +27,8 @@ related:
   [
     plans/archive/2026_07/understat_local_backfill_completion_2026_07_06.md,
     plans/active/issues/understat_bulk_download_backfill_2026_06_29.md,
-    codex/02-data/availability-manifest-and-data-status.md,
-    codex/02-data/honest-absence-downstream-handling.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/02-data/honest-absence-downstream-handling.md,
   ]
 created: 2026-07-08
 parent_epic: infrastructure_master
@@ -87,7 +87,7 @@ branches could **never self-heal**, regardless of how many backfill/retry passes
 
 ## Why it matters
 
-Per `codex/02-data/availability-manifest-and-data-status.md`, `capture_status` is a 4-state ledger and the
+Per `/codex/02-data/availability-manifest-and-data-status.md`, `capture_status` is a 4-state ledger and the
 honest-coverage denominator (`captured / (captured + empty_confirmed + attempted_failed + expected_unattempted)`) is
 read directly by downstream consumers (data-status UI, strategy/features pre-flight) — they never re-derive it. A cell
 stuck at `attempted_failed` forever (when the correct state is a typed `empty_confirmed`/`expected_unattempted`
