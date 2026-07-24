@@ -10,7 +10,7 @@ summary: >-
   entirely (AO owns orchestrator health), remove the census embed + reconciliation cards, MERGE the orphan idle-spend
   capability and the standalone /vm-deployments history into the Deployments tab (retiring /vm-deployments), and leave
   Fleet as ONLY fleet git health + slot-wise dirty repos.
-status: active
+status: complete # (was: active) 2026-07-24 archival: all 15 todos [x], evidence cited inline on each checkbox
 nature: process
 asset_group: [meta]
 stage: [meta]
@@ -22,7 +22,7 @@ related:
   - /plans/archive/2026_07/deployment_ui_date_range_filter_and_search_2026_07_20.md
   - /plans/archive/2026_07/deployment_ui_vm_log_viewer_2026_07_20.md
 created: "2026-07-21"
-last_updated: "2026-07-21"
+last_updated: "2026-07-24"
 parent_epic: observability_master
 assigned_vm: NA
 execution_scope: orchestrator-agent

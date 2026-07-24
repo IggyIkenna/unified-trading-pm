@@ -189,11 +189,11 @@ without inventing a second spec. Finding C (stale checkboxes) was already Phase 
       would have caught what the two manual/adversarial passes caught this session, as the acceptance test for this
       whole initiative. **RE-CHECKED 2026-07-24 (slot 2), verdict = 3/4 LIVE, line 2 NOT live — precondition still
       unmet.** Lines 1, 3, 4 confirmed live this session (see their todos above +
-      `ao_remediation_b_code_chain_2026_07_23.md` item 14's parallel check). Line 2 (hygiene-sweep hard-fail wired into
-      `quality-gates.sh`) is confirmed NOT wired — `grep -n run_hygiene_sweep scripts/quality-gates.sh` returns nothing
-      — and its own prerequisite (fix the over-cap plans) is still open: a fresh
-      `bash scripts/plan-hygiene/check_line_caps.sh` run today shows **13 plans still HARD-violating** the
-      1000L/2000L-umbrella cap (down from 30 at this todo's authoring, but not zero — see
+      `/plans/archive/2026_07/ao_remediation_b_code_chain_2026_07_23.md` item 14's parallel check). Line 2
+      (hygiene-sweep hard-fail wired into `quality-gates.sh`) is confirmed NOT wired —
+      `grep -n run_hygiene_sweep scripts/quality-gates.sh` returns nothing — and its own prerequisite (fix the over-cap
+      plans) is still open: a fresh `bash scripts/plan-hygiene/check_line_caps.sh` run today shows **13 plans still
+      HARD-violating** the 1000L/2000L-umbrella cap (down from 30 at this todo's authoring, but not zero — see
       `plan_line_cap_remediation_2026_07_23.md`, still `status: open`). A full `run_hygiene_sweep.sh --ci --no-regen`
       run today confirms the current state: 0 hard failures / 1 soft warning (line caps), matching the prerequisite's
       own "0 corpus violations on the other 6 currently-soft checks, line-caps is the sole blocker" framing. Since the

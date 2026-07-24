@@ -26,8 +26,8 @@ scope: [engineer, admin]
 tags: [ci-cd, github-actions, event-ledger, gcs, race-condition, data-loss, read-modify-write, alerts]
 related:
   [
-    plans/active/deployment_alerts_ingestion_completeness_2026_07_20.md,
-    plans/active/issues/persist_cicd_event_ledger_read_modify_write_race_2026_07_17.md,
+    /plans/archive/2026_07/deployment_alerts_ingestion_completeness_2026_07_20.md,
+    /plans/archive/issues/persist_cicd_event_ledger_read_modify_write_race_2026_07_17.md,
   ]
 created: 2026-07-21
 parent_epic: observability_master

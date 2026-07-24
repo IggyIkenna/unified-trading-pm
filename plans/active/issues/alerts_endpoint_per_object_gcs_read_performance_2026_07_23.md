@@ -27,8 +27,8 @@ repos: [deployment-api, deployment-ui, alerting-service]
 scope: [engineer]
 tags: [alerts, observability, performance, gcs, n-plus-one]
 related:
-  - /plans/active/deployment_alerts_ingestion_completeness_2026_07_20.md
-  - /plans/active/deployment_ui_alerts_page_rebuild_2026_07_20.md
+  - /plans/archive/2026_07/deployment_alerts_ingestion_completeness_2026_07_20.md
+  - /plans/archive/2026_07/deployment_ui_alerts_page_rebuild_2026_07_20.md
 created: 2026-07-23
 parent_epic: observability_master
 assigned_vm: NA

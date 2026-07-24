@@ -7,7 +7,7 @@ summary:
   test. The interdependent code chain and shared-doc recorders live in Plan B, which is gated behind this one. Two
   safety-sensitive backend todos (cross-role reply routing, wedge liveness gate) are HELD out of both plans per operator
   ruling Q2 and stay in their issue docs.
-status: active
+status: complete # (was: active) 2026-07-24 archival: all 8 todos [x], evidence cited inline on each checkbox
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -17,7 +17,7 @@ tags: [agent-orchestrator, doc-integrity, plan-hygiene, plan-reconcile]
 related:
   [
     /plans/active/ao_issue_docs_consolidated_remediation_2026_07_23.md,
-    /plans/active/ao_remediation_b_code_chain_2026_07_23.md,
+    /plans/archive/2026_07/ao_remediation_b_code_chain_2026_07_23.md,
     /plans/active/issues/ao_repo_docs_deleted_against_instructions_dead_code_refs_2026_07_23.md,
     /plans/active/issues/plan_quality_four_line_defense_architecture_2026_07_23.md,
   ]

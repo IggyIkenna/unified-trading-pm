@@ -133,10 +133,10 @@ normally.
       `plans/active/issues/sports_predictions_live_mode_and_backtest_execution_orphaned_2026_07_21.md` (P3) — bundles
       the recurring `spread_calculator`/strategy+execution backtest/live-mode-activation gap found independently in 3 of
       the 14 plans; (3)
-      `plans/active/issues/features_sports_deployment_ui_coverage_tab_and_registry_playbook_2026_07_21.md` (P3) — the
-      deployment-ui honest-coverage tab + codex feature-registration playbook that Phase 8 of
-      `features_sports_honest_coverage` never shipped. Also surfaced (not separately filed, just noted in each banner):
-      10 of the 14 archived plans still carry `locked_by: live-defi-rollout` never cleared at archival — a
+      `plans/archive/issues/features_sports_deployment_ui_coverage_tab_and_registry_playbook_2026_07_21.md` (P3,
+      resolved + archived 2026-07-24) — the deployment-ui honest-coverage tab + codex feature-registration playbook that
+      Phase 8 of `features_sports_honest_coverage` never shipped. Also surfaced (not separately filed, just noted in
+      each banner): 10 of the 14 archived plans still carry `locked_by: live-defi-rollout` never cleared at archival — a
       process-hygiene gap for the operator, not blocking. Re-ran `check_plan_discipline.py` before/after: 96 → 82
       violations (exactly the 14 `C-archive-no-successor` fixes, 0 side effects), re-baselined 96 → 82 via
       `--baseline-write`. (repo: unified-trading-pm)

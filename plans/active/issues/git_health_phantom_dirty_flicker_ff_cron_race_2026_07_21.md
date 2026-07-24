@@ -502,12 +502,12 @@ doc).
 
 ### 6. BLOCKED-OPERATOR (slot 2, 2026-07-24): item 6's `dirty_files=2172` measurement needs operator/interactive access
 
-`ao_remediation_b_code_chain_2026_07_23.md` item 6 asks to verify the unexplained `dirty_files=2172` row for
-`unified-trading-pm` on host `ip-172-31-0-185` slot 0 by running `git status --porcelain | wc -l` directly in that
-clone. Resolved `ip-172-31-0-185` via `aws ec2 describe-instances --filters Name=private-ip-address,Values=172.31.0.185`
-→ `i-0dd9812a96cdda5dc` (tag `agent-orch-human-planning-vm`, region `ap-northeast-1`) — this is the **human-planning
-VM** (`interactive only` per workspace `CLAUDE.md`), not the orchestrator VM (`i-0c9b283b31d6b5ca7`) that
-`check-ao-backlog-status.sh` targets.
+`/plans/archive/2026_07/ao_remediation_b_code_chain_2026_07_23.md` item 6 asks to verify the unexplained
+`dirty_files=2172` row for `unified-trading-pm` on host `ip-172-31-0-185` slot 0 by running
+`git status --porcelain | wc -l` directly in that clone. Resolved `ip-172-31-0-185` via
+`aws ec2 describe-instances --filters Name=private-ip-address,Values=172.31.0.185` → `i-0dd9812a96cdda5dc` (tag
+`agent-orch-human-planning-vm`, region `ap-northeast-1`) — this is the **human-planning VM** (`interactive only` per
+workspace `CLAUDE.md`), not the orchestrator VM (`i-0c9b283b31d6b5ca7`) that `check-ao-backlog-status.sh` targets.
 
 Tried the same SSM-send-command pattern that script uses (read-only `curl`/shell on the box, no inbound firewall
 change): both `aws ssm describe-instance-information --filters Key=InstanceIds,Values=i-0dd9812a96cdda5dc` and
@@ -524,8 +524,8 @@ with the blocked-question so the sequential queue can proceed to item 7 while th
       — literal interactive box access is no longer required to answer item 6's real-or-phantom question. Original item:
       operator (or an agent with SSM access to `i-0dd9812a96cdda5dc`) runs
       `git -C <the unified-trading-pm slot-0 clone on ip-172-31-0-185> status --porcelain | wc -l` and records the
-      count + an explicit real-or-phantom verdict here, closing out `ao_remediation_b_code_chain_2026_07_23.md` item 6
-      (repo: unified-trading-pm).
+      count + an explicit real-or-phantom verdict here, closing out
+      `/plans/archive/2026_07/ao_remediation_b_code_chain_2026_07_23.md` item 6 (repo: unified-trading-pm).
 
 ### 7. RESOLVED 2026-07-24 (slot 3) — live server-side re-measurement gives an explicit REAL verdict without box access
 

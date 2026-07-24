@@ -363,12 +363,12 @@ NOT AO and are deliberately out of scope here.
 - [x] [INFRA] P3. **07-12 degradation onset: name it or close it.** `worker_polling_dead` 0→587 + spawn:dispatch
       0.6:1→44:1 on 2026-07-12 was never explained (mechanism since fixed). One `activity_log` excavation pass → either
       a named cause or a recorded not-worth-it decision. Source: doc #8 todo 3. **Gate**: doc #8's gate — not silence. —
-      ✅ **DONE via `/plans/active/ao_remediation_b_code_chain_2026_07_23.md` item 12 (this commit; slot 3)**, collapsed
-      to one owner per that item's own duplicate-NOTE (this exact item). Named cause: the true onset was 2026-07-12
-      15:00 UTC, a second, unalerted `ao-self-pull.sh` dirty-gate wedge (root: a `tempfile.gettempdir()` CWD-fallback
-      bug in `regen_backlog_from_plan.py`), not the earlier, well-known 08:1x UTC `/tmp`-ENOSPC blip (which was real but
-      contained). Root-fixed same day, `agent-orchestrator@fc9ac53`. Full hourly-breakdown methodology + activity-log
-      evidence lives in that plan's Progress Log — not duplicated here.
+      ✅ **DONE via `/plans/archive/2026_07/ao_remediation_b_code_chain_2026_07_23.md` item 12 (this commit; slot 3)**,
+      collapsed to one owner per that item's own duplicate-NOTE (this exact item). Named cause: the true onset was
+      2026-07-12 15:00 UTC, a second, unalerted `ao-self-pull.sh` dirty-gate wedge (root: a `tempfile.gettempdir()`
+      CWD-fallback bug in `regen_backlog_from_plan.py`), not the earlier, well-known 08:1x UTC `/tmp`-ENOSPC blip (which
+      was real but contained). Root-fixed same day, `agent-orchestrator@fc9ac53`. Full hourly-breakdown methodology +
+      activity-log evidence lives in that plan's Progress Log — not duplicated here.
 - [ ] [REVIEW] P2. **`ao_docs_reconciliation` close-out pass.** Verify tier-by-tier (1–6) what has since landed (several
       tiers were executed piecemeal: Tier-4 → `ao_residuals`; X2 → recovery doc; some Tier-1 flips landed in later
       commits), apply/route what remains, then flip the tracker `resolved` + archive. Its own X5 lesson applies: every

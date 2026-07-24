@@ -25,7 +25,7 @@ tags: [agent-orchestrator, test-isolation, slack, plan-health, alerting]
 related:
   [
     /plans/active/issues/dispatch_sequential_gate_fix_2026_07_24.md,
-    /plans/active/ao_remediation_a_independent_fixes_2026_07_23.md,
+    /plans/archive/2026_07/ao_remediation_a_independent_fixes_2026_07_23.md,
   ]
 created: 2026-07-24
 last_updated: 2026-07-24

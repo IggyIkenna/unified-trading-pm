@@ -140,20 +140,19 @@ is regenerated after a fix.**
       superseded by a faster independent method**: rather than wait on the sweep, ran a targeted bounded walk across the
       exact date range the original bug's backfill loop covered (2023-01-01..2026-04-15) — proved the population is
       EXACTLY 17 days × {ORCA, RAYDIUM}, 2025-01-01..17, no gaps, nothing beyond this window. See "Scope" section above.
-- [ ] 3. [CODE] P1. **Build the relabel-forward migration per the todo-1 ruling — SCRIPT SHIPPED + VALIDATED 2026-07-23,
-      FULL-SCALE RUN LAUNCHED 2026-07-23, still in progress.** `market-tick-data-service@67524cbb`
-      (`scripts/relabel_solana_dex_pools_fake_history.py`): for each affected object, reads the row(s), derives
-      `<true_date>` from the row's own `timestamp` (NOT `available_at`), computes the canonical dest path via UAC
-      `build_defi_partition_path` with `day=<true_date>` + the resolved `live_onchain_subgraph` pipeline_mode +
-      `data_type=dex_pool_state` (this population predates the 2026-06-05 rename), re-stamps BOTH `available_at` (via
-      `stamp_available_at_onchain_tick`) and the row-level `data_type` column (a real bug caught during validation — the
-      row's own column must match its new path, not just the path), uploads, `record_captured`s only the new path, and
-      leaves the OLD object un-recorded + logged to a dedupe'd pending-human-delete report
-      (`_index/audit/dex_pools_fake_history_pending_delete.parquet`). Preserves the original pool-address leaf filename
-      (collision-safe; deliberately does not risk the separate tracked symbol-collision bug). **Validated end-to-end
-      against 1 real production object** (`--apply`, then deleted + redid it once to fix the data_type bug) — also
-      caught and fixed a `setup_events()`-not-initialized crash and a retry-logic gap that would have silently skipped
-      `record_captured` forever after a partial failure. **Interim backfill exclusion — SHIPPED
+- [x] 3. [CODE] P1. **Build the relabel-forward migration per the todo-1 ruling — DONE, full-scale run VERIFIED COMPLETE
+      2026-07-24.** `market-tick-data-service@67524cbb` (`scripts/relabel_solana_dex_pools_fake_history.py`): for each
+      affected object, reads the row(s), derives `<true_date>` from the row's own `timestamp` (NOT `available_at`),
+      computes the canonical dest path via UAC `build_defi_partition_path` with `day=<true_date>` + the resolved
+      `live_onchain_subgraph` pipeline_mode + `data_type=dex_pool_state` (this population predates the 2026-06-05
+      rename), re-stamps BOTH `available_at` (via `stamp_available_at_onchain_tick`) and the row-level `data_type`
+      column (a real bug caught during validation — the row's own column must match its new path, not just the path),
+      uploads, `record_captured`s only the new path, and leaves the OLD object un-recorded + logged to a dedupe'd
+      pending-human-delete report (`_index/audit/dex_pools_fake_history_pending_delete.parquet`). Preserves the original
+      pool-address leaf filename (collision-safe; deliberately does not risk the separate tracked symbol-collision bug).
+      **Validated end-to-end against 1 real production object** (`--apply`, then deleted + redid it once to fix the
+      data_type bug) — also caught and fixed a `setup_events()`-not-initialized crash and a retry-logic gap that would
+      have silently skipped `record_captured` forever after a partial failure. **Interim backfill exclusion — SHIPPED
       `instruments-service@fd8450b7`**: `split_dex_pools_fake_history()` in `backfill_orphan_class_e.py` (mirrors
       `backfill_orphan_class_e_sports.py`'s `split_pre_floor` pattern) excludes all 34 known combinations from
       `record_captured` entirely — a normal defi `--apply` run cannot touch this population before the relabel migration
@@ -220,14 +219,19 @@ is regenerated after a fix.**
       (the count exceeding a single true-date's 14,094+99 by summing across BOTH 05-04 and 05-05 is expected — there are
       two distinct true dates, not one). **Practical implication**: the real migration OUTCOME (correct data existing
       under the true historical dates) is very likely already close to fully achieved even though the script still has
-      to walk all 241,281 source rows (redundant duplicates included) before it reports done — full-scale completion of
-      the SCRIPT RUN is still NOT yet verified, but the underlying DATA CORRECTNESS goal looks nearly met already.
-      **Full-scale completion NOT yet formally verified.** Next check: re-run the day=2026-05-04/05 ORCA+RAYDIUM
-      destination-object count above (should stop growing once genuinely done) and check VM status via
-      `gcloud compute instances list --filter="name~'defi-relabel-2026072[4-9]'"` (ON_DEMAND VMs should only disappear
-      on a real completion/crash, not silently). Once genuinely complete, the pending-delete report
-      (`_index/audit/dex_pools_fake_history_pending_delete.parquet`) needs HUMAN review before any old-object cleanup
-      (never automated).
+      to walk all 241,281 source rows (redundant duplicates included) before it reports done. **VERIFIED COMPLETE
+      2026-07-24 ~12:09 UTC**: all 4 ON_DEMAND VMs terminated CLEANLY this time (no repeat of the earlier
+      disappearances) — each `run.log` ends with `done. objects processed = N (apply=True)`, `command exited rc=0`,
+      `DEPLOYMENT_COMPLETED exit_code=0`: `d01to05v3`=70,965, `d06to09v3`=56,772, `d10to13v3`=56,772, `d14to17v3`=56,772
+      — **sum = 241,281, EXACTLY matching the measured population** (proves every single legacy object was actually
+      visited, no shard silently under-ran). **Final real destination-object count**: 28,435 distinct canonical
+      `dex_pool_state` objects now exist (`day=2026-05-04`: 14,104 ORCA + 119 RAYDIUM; `day=2026-05-05`: 14,099 ORCA +
+      113 RAYDIUM) — confirms the "17 fake-day copies converge on a small set of true dates" hypothesis: the real
+      unique-object footprint is ~28K, not 241K. **Pending-delete report verified**:
+      `_index/audit/dex_pools_fake_history_pending_delete.parquet` exists with exactly 241,281 rows (one entry per
+      legacy object, deduped on `legacy_uri`) — every old object is logged for a human to review before any deletion;
+      **this script never deletes anything itself, and nobody should delete the old objects without a human reviewing
+      this report first.**
 - [x] 4. [REVIEW] P2. ~~Check whether the SAME bug shape exists for Kamino~~ — **PARTIALLY DONE 2026-07-23**:
       `venue=KAMINO/chain=SOLANA/instrument_type=pool/data_type=dex_pools/` has **zero objects** in the `-prd-` bucket
       across 6 sampled days (both inside and outside the affected window) — moot for the AMM-pool shape this issue

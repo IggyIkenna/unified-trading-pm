@@ -8,7 +8,7 @@ summary: >-
   A): the page can only filter/sort on fields that actually arrive, so this stays draft until Plan A lands the
   normalised schema and mirrors the alerting-service sources. Two cheap wins independent of Plan A: the timeline drops
   workflow_name and truncates the timestamp to HH:MM (hiding the date) — both are already in the payload.
-status: active
+status: complete # (was: active) 2026-07-24 archival: all 9 todos [x], evidence cited inline on each checkbox
 nature: process
 asset_group: [meta]
 stage: [meta]
@@ -17,10 +17,10 @@ scope: [engineer]
 tags: [deployment-ui, alerts, filters, sort, observability]
 related:
   - /plans/active/deployment_ui_observability_ux_tracker_2026_07_17.md
-  - /plans/active/deployment_alerts_ingestion_completeness_2026_07_20.md
+  - /plans/archive/2026_07/deployment_alerts_ingestion_completeness_2026_07_20.md
   - /plans/archive/2026_07/deployment_ui_date_range_filter_and_search_2026_07_20.md
 created: "2026-07-20"
-last_updated: "2026-07-20"
+last_updated: "2026-07-24"
 parent_epic: observability_master
 assigned_vm: NA
 execution_scope: orchestrator-agent

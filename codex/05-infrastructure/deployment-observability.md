@@ -21,7 +21,7 @@ related:
     /codex/05-infrastructure/deployment-clusters-live-vs-batch.md,
     /codex/05-infrastructure/live-deployment-monitoring.md,
     plans/active/deployment_ui_cost_per_day_accuracy_2026_07_20.md,
-    plans/active/deployment_ui_fleet_tab_consolidation_2026_07_21.md,
+    /plans/archive/2026_07/deployment_ui_fleet_tab_consolidation_2026_07_21.md,
   ]
 created: 2026-06-22
 authoritative_for:

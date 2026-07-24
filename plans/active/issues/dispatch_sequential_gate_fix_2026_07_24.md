@@ -21,8 +21,8 @@ scope: [engineer]
 tags: [agent-orchestrator, dispatch, intra-plan-concurrency, sequential, doc-code-drift]
 related:
   [
-    /plans/active/ao_remediation_a_independent_fixes_2026_07_23.md,
-    /plans/active/ao_remediation_b_code_chain_2026_07_23.md,
+    /plans/archive/2026_07/ao_remediation_a_independent_fixes_2026_07_23.md,
+    /plans/archive/2026_07/ao_remediation_b_code_chain_2026_07_23.md,
     /plans/active/task_template.md,
   ]
 created: 2026-07-24

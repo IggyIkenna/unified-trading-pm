@@ -41,8 +41,9 @@ V/Track F; the halftime-detection follow-ups are superseded by a much deeper 202
 data; the T-1h trigger test + UI/coverage-audit items are absorbed into the consolidation-deploy plan + the closeout's
 Track K. **GENUINELY ORPHANED**: the deployment-ui per-feature-group coverage tab (Phase 8.A) and the "how to register a
 new feature" codex playbook (Phase 8.C) — filed as
-`plans/active/issues/features_sports_deployment_ui_coverage_tab_and_registry_playbook_2026_07_21.md`. NOTE:
-`locked_by: live-defi-rollout` was never cleared at archival — flagged for operator `[unlock-plan]` cleanup.)
+`plans/archive/issues/features_sports_deployment_ui_coverage_tab_and_registry_playbook_2026_07_21.md` (resolved +
+archived 2026-07-24). NOTE: `locked_by: live-defi-rollout` was never cleared at archival — flagged for operator
+`[unlock-plan]` cleanup.)
 
 # features-sports-service — honest-coverage backfill
 

@@ -141,7 +141,7 @@ calculator, stop — you're duplicating what Step 1 already gives you for free.*
 per-calculator axis is reachable only via `sports_honest_coverage()`'s internal computation, not yet wired to any HTTP
 route for per-calculator drill-down (only the 3 rollup categories — `FIXTURE_FEATURES`/`ODDS_FEATURES`/
 `DERIVED_FEATURES` — are exposed over `GET /api/data-status/turbo` today); see
-`plans/active/issues/features_sports_deployment_ui_coverage_tab_and_registry_playbook_2026_07_21.md` for that gap.
+`/plans/archive/issues/features_sports_deployment_ui_coverage_tab_and_registry_playbook_2026_07_21.md` for that gap.
 
 ## Worked example — adding a hypothetical `set_piece_calculator`
 

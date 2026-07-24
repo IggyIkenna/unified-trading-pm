@@ -19,7 +19,7 @@ scope: [engineer]
 tags: [observability, bigquery, event-spine, resource-metrics, run-history, idle-spend]
 related:
   - /plans/active/deployment_ui_observability_ux_tracker_2026_07_17.md
-  - /plans/active/deployment_ui_fleet_tab_consolidation_2026_07_21.md
+  - /plans/archive/2026_07/deployment_ui_fleet_tab_consolidation_2026_07_21.md
 created: "2026-07-21"
 last_updated: "2026-07-21"
 parent_epic: observability_master
@@ -69,7 +69,7 @@ below block dispatch; each references symbols, not line numbers (grep to locate)
       columns); or (C) accept a raw-JSON `data` column + query-time extraction (contradicts the typed-schema todos). The
       `[DATA] P0` + `[INFRA] P0/P1` todos are mutually inconsistent until this is chosen.
 - [ ] [BACKEND] P0. **PR-2 (BLOCKING) — resource-sample event constant needs the FULL re-export chain.** The daemon
-      caller (`heartbeat_cli.py`) imports the DEPLOYMENT_* constants from the top-level `unified_trading_library`
+      caller (`heartbeat_cli.py`) imports the DEPLOYMENT\_\* constants from the top-level `unified_trading_library`
       package, not from `events_interface`. Adding the new constant only to `events_interface/schemas.py` will
       `ImportError` at the caller. Add it to `events_interface/schemas.py` AND `events_interface/__init__.py` AND the
       top-level `unified_trading_library/__init__.py` (both the import and `__all__`).
@@ -104,8 +104,8 @@ below block dispatch; each references symbols, not line numbers (grep to locate)
 Reached after a design discussion that compared three write paths (GCS-batched, event-spine→BigQuery, Ops-Agent):
 
 1. **Store = BigQuery, via the existing UTL event spine.** Cost is
-   ~$0 at fleet scale (~4 GB logical / 6 months for
-   100 VMs at 1/min; storage ~$0.08/mo; query within the 1 TB/month
+   ~$0 at fleet scale (~4 GB logical / 6 months for 100
+   VMs at 1/min; storage ~$0.08/mo; query within the 1 TB/month
    free tier). BigQuery removes ALL the GCS-specific complexity (flush cadence, per-day-vs-per-VM files,
    immutability/rewrite, compaction, object-count) — the VM just publishes an event. Chosen over GCS+DuckDB (B) because
    the write path is simpler, not despite it.

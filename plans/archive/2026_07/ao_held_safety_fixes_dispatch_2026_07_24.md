@@ -7,7 +7,7 @@ summary:
   todo touches, so they run in parallel now rather than waiting for Plan B to finish. Each already carries a stated
   regression-test gate in its own todo text, which the operator confirmed IS the review mechanism (a gate + green QG) —
   no extra PR-review ceremony required.
-status: active
+status: complete # (was: active) 2026-07-24 archival: all 2 todos [x], evidence cited inline on each checkbox
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -17,8 +17,8 @@ tags: [agent-orchestrator, worker-liveness, cross-role-messaging, plan-reconcile
 related:
   [
     /plans/active/ao_issue_docs_consolidated_remediation_2026_07_23.md,
-    /plans/active/ao_remediation_a_independent_fixes_2026_07_23.md,
-    /plans/active/ao_remediation_b_code_chain_2026_07_23.md,
+    /plans/archive/2026_07/ao_remediation_a_independent_fixes_2026_07_23.md,
+    /plans/archive/2026_07/ao_remediation_b_code_chain_2026_07_23.md,
     /plans/active/issues/wedge_detector_lacks_liveness_by_progress_false_positive_2026_07_21.md,
     /plans/active/issues/agent_reply_cannot_address_a_different_role_silent_cross_role_blind_spot_2026_07_22.md,
   ]
@@ -50,10 +50,10 @@ source:
 > "Held for operator review" section.** Operator ruling 2026-07-23 (Q2) held these out of the original dispatch because
 > each touches machinery where a careless change is dangerous (at-least-once message delivery; genuine wedge detection).
 > Operator ruling 2026-07-24: dispatch both now, without waiting for
-> [`ao_remediation_b_code_chain_2026_07_23`](/plans/active/ao_remediation_b_code_chain_2026_07_23.md) to finish, **on
-> the condition that neither collides with Plan B's file set** — checked at authoring (below) and confirmed clear. The
-> stated regression-test gate on each todo, plus a green `quality-gates.sh`, IS the review mechanism; no separate
-> PR-review step is required.
+> [`ao_remediation_b_code_chain_2026_07_23`](/plans/archive/2026_07/ao_remediation_b_code_chain_2026_07_23.md) to
+> finish, **on the condition that neither collides with Plan B's file set** — checked at authoring (below) and confirmed
+> clear. The stated regression-test gate on each todo, plus a green `quality-gates.sh`, IS the review mechanism; no
+> separate PR-review step is required.
 
 > **Parallel-safety proof (checked at authoring 2026-07-24):** todo 1 touches only
 > `server/worker_liveness/_git_alerts.py`; todo 2 touches only `server/routes/agents.py` + `server/models/agents.py`.
