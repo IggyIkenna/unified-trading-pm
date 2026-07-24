@@ -225,10 +225,11 @@ everything else. SSOT: `/codex/11-project-management/doc-frontmatter-schema.md` 
   though the target didn't); enforced hard via a shrinking-ratchet baseline (`check_reference_paths.py`, corpus-wide
   migration done 2026-07-23) — `depends_on`/`parent_epic`/`supersedes`/ `superseded_by`/`entry_point_for` stay bare
   slugs (machine-parsed, out of scope). **Plan hygiene** `run_hygiene_sweep.sh`; inventory
-  `regenerate_active_plan_inventory.py` (orphan count >0 is review-blocking). **Line caps** (500 soft/1000 hard/2000
-  umbrella) are a REAL hard gate (ratchet-baselined, `check_line_caps.sh` — 2026-07-24, was advisory-only) in the sweep
-  AND prek `--precommit`: a plan you stage must not be over cap. SSOTs: `codex/11-project-management/`,
-  `/codex/08-workflows/estimation-calibration.md`, `/codex/11-project-management/cross-reference-path-convention.md`.
+  `regenerate_active_plan_inventory.py` (orphan count >0 is review-blocking). **Line caps** (plans 500 soft/1000 hard;
+  epics `plans/epics/*.md` 2000 hard flat — NO `umbrella:`/`locked_by`+todos exemption, 2026-07-24 ruling) are a REAL
+  hard gate (ratchet-baselined, `check_line_caps.sh`) in the sweep AND prek `--precommit`: a plan/epic you stage must
+  not be over its cap. SSOTs: `codex/11-project-management/`, `/codex/08-workflows/estimation-calibration.md`,
+  `/codex/11-project-management/cross-reference-path-convention.md`.
 
 ## Governance + safety HARD RULES
 

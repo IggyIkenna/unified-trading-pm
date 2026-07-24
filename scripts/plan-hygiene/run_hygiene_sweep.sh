@@ -149,13 +149,13 @@ run_check "depends_on DAG (cycles + self-deps)" hard python3 "$SCRIPT_DIR/check_
 # pre-existing count, never on the corpus's existing debt. Supersedes check_codex_refs.sh's
 # narrower existence-only scope (kept below for its standalone fast path).
 run_check "Reference path convention (/plans, /codex — ratchet)" hard python3 "$SCRIPT_DIR/check_reference_paths.py" --quiet
-# Line caps (500 soft/1000 hard/2000 umbrella, operator ruling 2026-07-23) — flipped from
-# advisory to a real hard gate 2026-07-24 via the SAME shrinking-ratchet shape as the
-# reference-path check above (line_caps_baseline.yaml): hard-fails only on a NEW over-cap
-# plan (or an existing one getting worse) above the pre-existing count, never on the debt
-# plan_line_cap_remediation_2026_07_23.md didn't finish cleaning up. Lower the baseline as
-# each remaining flagged plan is split/trimmed; it should reach 0.
-run_check "Line caps (500 soft/1000 hard/2000 umbrella — ratchet)" hard "$SCRIPT_DIR/check_line_caps.sh" --quiet
+# Line caps (plans 500 soft/1000 hard; epics 2000 hard flat, NO umbrella-exemption escape hatch —
+# operator ruling 2026-07-24) — flipped from advisory to a real hard gate 2026-07-24 via the SAME
+# shrinking-ratchet shape as the reference-path check above (line_caps_baseline.yaml): hard-fails
+# only on a NEW over-cap plan/epic (or an existing one getting worse) above the pre-existing count,
+# never on the debt plan_line_cap_remediation_2026_07_23.md didn't finish cleaning up. Lower the
+# baseline as each remaining flagged plan/epic is split/trimmed; it should reach 0.
+run_check "Line caps (plans 500/1000, epics 2000 — no exemption, ratchet)" hard "$SCRIPT_DIR/check_line_caps.sh" --quiet
 run_check "Estimate sanity (±20% drift)"     soft "$SCRIPT_DIR/check_estimate_sanity.sh"
 run_check "Superseded plans in active/"      soft "$SCRIPT_DIR/check_superseded_in_active.sh"
 run_check "Codex path refs resolve (legacy, subset of the ratchet check above)" soft "$SCRIPT_DIR/check_codex_refs.sh"

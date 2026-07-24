@@ -156,27 +156,30 @@ ingested). Use for operator-only work, trackers, design docs, and dispatcher-sur
   same information, same visual weight, structurally un-ingestable. This is a discoverability index, not a second copy
   of the dispatch surface; the referenced plan's OWN file is still the one place that todo actually ships from)._
 - **A plan gated on a FORKED-OUT child's work states it as `depends_on` + `gate_on_depends: true`, not just prose**
-  _(finding I, 2026-07-24: splitting an over-cap plan into an umbrella parent + child plans is now a routine pattern —
-  see `check_line_caps.sh`'s `umbrella: true` exemption — and it is easy to leave the real ordering constraint as header
-  prose only, e.g. "Track 5 (C-GREEN gated on T1→T3)" after Track 1 moved to a separate child plan. Prose alone is
-  invisible to the dispatcher: if the parent is ever flipped to `assigned_vm: planning`, the gated track's todos would
-  be dispatchable immediately, concurrently with the child's still-open prerequisite work)._ The SAME edit that forks a
-  section out to a child plan must ALSO add that child's slug to the parent's `depends_on:` frontmatter (+
-  `gate_on_depends: true` if the parent has any remaining todo that genuinely can't start before the child finishes) —
-  do not defer this to a follow-up.
+  _(finding I, 2026-07-24: splitting an over-cap plan into a coordination-index parent + child plans is now a routine
+  pattern — see `check_line_caps.sh`'s hard 1000L cap (no exemption; a genuinely large hub belongs in `plans/epics/`,
+  which gets its own flat 2000L cap, not a free pass while still in `plans/active/`) — and it is easy to leave the real
+  ordering constraint as header prose only, e.g. "Track 5 (C-GREEN gated on T1→T3)" after Track 1 moved to a separate
+  child plan. Prose alone is invisible to the dispatcher: if the parent is ever flipped to `assigned_vm: planning`, the
+  gated track's todos would be dispatchable immediately, concurrently with the child's still-open prerequisite work)._
+  The SAME edit that forks a section out to a child plan must ALSO add that child's slug to the parent's `depends_on:`
+  frontmatter (+ `gate_on_depends: true` if the parent has any remaining todo that genuinely can't start before the
+  child finishes) — do not defer this to a follow-up.
 - **Don't let a plan's own history balloon past cap — extract completed Progress Log sections AS YOU GO, don't wait for
   a remediation pass** _(finding J, 2026-07-24: `plan_line_cap_remediation_2026_07_23.md` had to clean up 30 plans that
   had silently grown to 1000-4780 lines, almost entirely from accumulated, fully-closed, dated Progress Log entries
   nobody extracted along the way — the same failure repeating one plan at a time is exactly what let the backlog
-  reach 30. `check_line_caps.sh` (soft warn >500L, hard fail >1000L non-umbrella / 2000L umbrella) is now a REAL hard
-  gate in `run_hygiene_sweep.sh` — both the corpus-wide sweep (a shrinking-ratchet baseline, `line_caps_baseline.yaml` —
-  no NEW over-cap plan tolerated) and the prek `--precommit` fast path (an absolute per-staged-file bar: if you're
-  already editing a plan that's over cap, split/trim it before that commit lands, same as the frontmatter/todo-format
-  gates next to it)._ When a Progress Log entry is fully closed (every todo it covers is `[x]`, nothing references it as
-  still-open), don't leave it inline forever — once your plan crosses ~500L, extract the oldest fully-closed dated
-  section(s) verbatim into an archive-bound `<slug>_history_<date>.md` (`status: complete`, `nature: record`, 0 open
-  todos, lives in `plans/archive/2026_07/` or the current month) and leave a one-line pointer behind. This is cheap
-  (minutes) done incrementally; it is expensive (a dedicated remediation plan) done as a 30-file backlog.
+  reach 30. `check_line_caps.sh` (soft warn >500L / hard fail >1000L for a normal plan, hard fail >2000L for a REAL epic
+  in `plans/epics/` — NO other exemption, `umbrella: true` no longer means anything, 2026-07-24 ruling) is now a REAL
+  hard gate in `run_hygiene_sweep.sh` — both the corpus-wide sweep (a shrinking-ratchet baseline,
+  `line_caps_baseline.yaml` — no NEW over-cap plan/epic tolerated) and the prek `--precommit` fast path (an absolute
+  per-staged-file bar: if you're already editing a plan or epic that's over its cap, split/trim it before that commit
+  lands, same as the frontmatter/todo-format gates next to it)._ When a Progress Log entry is fully closed (every todo
+  it covers is `[x]`, nothing references it as still-open), don't leave it inline forever — once your plan crosses
+  ~500L, extract the oldest fully-closed dated section(s) verbatim into an archive-bound `<slug>_history_<date>.md`
+  (`status: complete`, `nature: record`, 0 open todos, lives in `plans/archive/2026_07/` or the current month) and leave
+  a one-line pointer behind. This is cheap (minutes) done incrementally; it is expensive (a dedicated remediation plan)
+  done as a 30-file backlog.
 
 ---
 

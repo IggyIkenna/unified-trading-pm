@@ -1,22 +1,29 @@
-# Baseline for check_line_caps.sh — plan line-count caps (500 soft / 1000 hard /
-# 2000 umbrella; operator ruling 2026-07-23).
+# Baseline for check_line_caps.sh — plan/epic line-count caps (operator ruling 2026-07-24:
+# plans/epics/*.md flat 2000L hard cap; everything else in plans/active/*.md flat 500L soft /
+# 1000L hard cap — NO exceptions, no `umbrella: true`/`locked_by`+todos escape hatch).
 #
 # This is a SHRINKING ratchet, same pattern as reference_paths_baseline.yaml. hard_count
-# is the number of pre-existing HARD (over-cap) plans the gate tolerates. A live count
-# EXCEEDING this baseline fails the check — a NEW plan crossed the cap (or an existing
+# is the number of pre-existing HARD (over-cap) plans/epics the gate tolerates. A live count
+# EXCEEDING this baseline fails the check — a NEW plan/epic crossed the cap (or an existing
 # one got worse), fix it, don't grow the number. LOWER hard_count (re-run
-# `check_line_caps.sh --update-baseline`) the moment a flagged plan is split/trimmed
-# back under cap. NEVER hand-raise it.
+# `check_line_caps.sh --update-baseline`) the moment a flagged plan/epic is split/trimmed
+# back under cap. NEVER hand-raise it except for a deliberate, documented POLICY change (like
+# this one) that mechanically exposes pre-existing debt the old policy didn't count — never
+# to paper over a new violation.
 #
 # SSOT: codex/12-agent-workflow/plan-hygiene.md, codex/11-project-management/plan-hygiene.md,
 # plans/active/issues/plan_line_cap_remediation_2026_07_23.md.
 note: >-
-  Seeded 2026-07-24 at the tail of the plan_line_cap_remediation_2026_07_23.md cleanup: 21+3+5+3 of the original 30
-  flagged plans were fixed across that effort's several passes (some by concurrent sessions working the same backlog); 8
-  remain HARD-flagged as of this seed (7 from the original 30 still open, +1 new drift —
-  artifact_pipeline_observability_2026_07_17.md — found by re-running the checker, unrelated to the original batch).
-  This baseline exists so the check can be promoted from soft/advisory to a real hard gate (closing the enforcement gap
-  the remediation left open — see that issue doc's "Deferred work" table) WITHOUT immediately blocking the shared
-  CI/promotion pipeline over debt nobody has fixed yet. Lower this count as each of the 8 is resolved; it should reach
-  0.
-hard_count: 8
+  Seeded 2026-07-24 (v1) at 8, right after check_line_caps.sh was flipped from advisory to a real hard gate at the tail
+  of the plan_line_cap_remediation_2026_07_23.md cleanup (21+3+5+3 of the original 30 flagged plans fixed across several
+  passes). Re-seeded the SAME day (v2, 8 -> 17) when the operator ruled the umbrella-exemption model itself was wrong:
+  the old policy let a plan in plans/active/ marked `umbrella: true` (or locked_by + >100 todos) grow to 2000L
+  unflagged, and plans/epics/*.md was never scanned at all. Removing BOTH escape hatches mechanically exposed 9 more
+  violations that were always real debt, just never counted: 8 plans/active/ docs that were umbrella-exempt at
+  1072-1820L (defi_consolidated_closeout, cefi_consolidated_closeout, data_pipeline_alerts_batch_remediation_closeout,
+  master_data_canonicalisation_migration_catalogue, sports_consolidated_closeout, cefi_4surface_migration_execution_log,
+  tradfi_manifest_content_recovery_completion, data_completion_to_100_all_ag) + 1 epic (plans/epics/defi_master.md,
+  2052L, the only one over the new 2000L epic cap). This is a policy tightening making the count go UP once, not a
+  regression -- the same 17 files were already either over-cap-and-tracked or quietly-exempt; none of them got worse
+  today. Lower this count as each of the 17 is resolved; it should reach 0.
+hard_count: 17

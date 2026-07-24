@@ -408,3 +408,31 @@ session:
   actually see it.
 - `cursor-configs/CLAUDE.md` § "Plans — format + authoring discipline" now states line-caps is a real hard gate (was
   silent on this before).
+
+**Umbrella-exemption model removed entirely — TWO-TIER policy, no exceptions (2026-07-24, operator ruling, same
+session):** the "just-closed" gate above still had an escape hatch baked in — a plan in `plans/active/` marked
+`umbrella: true` (or `locked_by` + >100 todos) was exempt from the 1000L cap up to a 2000L ceiling, and
+`plans/epics/*.md` was never scanned by `check_line_caps.sh` at all. Operator ruled this should go: epics get a flat
+2000L hard cap (same number, but now a REAL epic in `plans/epics/`, not a frontmatter marker on a doc still sitting in
+`plans/active/`); everything else is a flat 500L soft / 1000L hard cap, full stop. `check_line_caps.sh` rewritten
+accordingly (path-substring epic detection, tested against both absolute and relative invocation — an earlier
+`*/plans/epics/*` case-pattern version silently miscategorized a bare relative path as a non-epic plan, caught by
+testing both invocation shapes before shipping). This is a genuine POLICY TIGHTENING, not a regression: it mechanically
+exposed 9 files that were always real debt but never counted — baseline re-seeded 8 → 17 (see
+`line_caps_baseline.yaml`'s `note:` for the full provenance). The 9 newly-exposed:
+
+| File                                                                          | Lines | Kind | Likely resolution                                                                                                                                                                       |
+| ----------------------------------------------------------------------------- | ----: | ---- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `plans/epics/defi_master.md`                                                  |  2052 | epic | Split — first epic ever to hit this cap; no precedent yet for how to split one                                                                                                          |
+| `plans/active/data_completion_to_100_all_ag_2026_06_21.md`                    |  1820 | plan | Already mid-split by another session as of this writing — check its state first                                                                                                         |
+| `plans/active/sports_consolidated_closeout_2026_07_19.md`                     |  1786 | plan | Was `umbrella: true` + locked + 116 todos — genuinely large, needs a real split or promotion to an epic                                                                                 |
+| `plans/active/defi_consolidated_closeout_2026_07_18.md`                       |  1489 | plan | Was `umbrella: true` — already has a sibling strategy/PnL index split out; may need one more slice                                                                                      |
+| `plans/active/cefi_consolidated_closeout_2026_07_18.md`                       |  1421 | plan | Was `umbrella: true` — same shape as the defi sibling above                                                                                                                             |
+| `plans/active/tradfi_manifest_content_recovery_completion_2026_07_24.md`      |  1633 | plan | Was `umbrella: true` — check for extractable completed history first                                                                                                                    |
+| `plans/active/cefi_4surface_migration_execution_log_2026_07_24.md`            |  1635 | plan | Was `umbrella: true`, only 7 todos, likely a pure operational log — candidate for the same 3-way chunk-split treatment as `mvp_backfill_defi_onchain_v10_operational_log_2026_07_24.md` |
+| `plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md` |  1289 | plan | Was `umbrella: true` (explicitly set, not the todos-proxy) — a catalogue/coordinator doc, likely a real epic candidate                                                                  |
+| `plans/active/data_pipeline_alerts_batch_remediation_closeout_2026_07_24.md`  |  1072 | plan | Was `umbrella: true` — only ~72L over, likely trivial                                                                                                                                   |
+
+None of these were triaged in the same depth as the original 30 (no per-file bucket classification, no proposed
+child-plan slugs) — that is real remaining work for a future pass, not done here. `umbrella: true` frontmatter left in
+place on these files (inert now, harmless) rather than stripped from 10 files as an out-of-scope cleanup.
