@@ -81,6 +81,42 @@ SCRIPT_DIR="${SCRIPT_DIR:-$QG_SCRIPT_DIR}"
 PROJECT_ROOT="${PROJECT_ROOT:-$QG_PROJECT_ROOT}"
 REPO_ROOT="${REPO_ROOT:-$(cd "$PROJECT_ROOT/.." 2>/dev/null && pwd)}"
 
+# ── WORKTREE-IDENTITY GUARD (fail loud, never silently gate the wrong clone) ──
+# Confirmed root cause (qg_backfill_disk_and_lint_checks_resolve_via_main_clone_not_worktree_2026_07_24.md):
+# PROJECT_ROOT/REPO_ROOT/WORKSPACE_ROOT all use `${VAR:-fresh-derivation}` patterns that TRUST an
+# inherited env value verbatim once one is set — a stale/persistent export (old shell profile,
+# leftover tmux env) silently redirects every downstream `${WORKSPACE_ROOT}/<repo>/...` gate path
+# at the WRONG clone (often the shared bare per-repo MAIN clone) instead of the worktree actually
+# under test, even though SAME-repo-name checks (the SERVICE_NAME banner below) can't catch this —
+# MAIN and the worktree share the same basename, only the toplevel path differs. This guard
+# compares PROJECT_ROOT against the ACTUAL git toplevel for the invoking cwd and hard-fails on a
+# mismatch, rather than silently proceeding to gate a different tree than the one requested.
+if [[ -z "${QG_SKIP_WORKTREE_IDENTITY_GUARD:-}" ]]; then
+    _qg_actual_toplevel="$(git rev-parse --show-toplevel 2>/dev/null || true)"
+    _qg_mismatch=""
+    if [[ -n "$_qg_actual_toplevel" && "$PROJECT_ROOT" != "$_qg_actual_toplevel" ]]; then
+        _qg_mismatch="PROJECT_ROOT='$PROJECT_ROOT' but the actual git worktree at cwd resolves to '$_qg_actual_toplevel'"
+    elif [[ -n "$_qg_actual_toplevel" && -n "${WORKSPACE_ROOT:-}" ]]; then
+        # WORKSPACE_ROOT is set by each repo's OWN quality-gates.sh (not derived here) and feeds
+        # every `${WORKSPACE_ROOT}/<repo>/...` gate path in base-service.sh — check it separately
+        # since PROJECT_ROOT can be correct while WORKSPACE_ROOT alone is stale/polluted.
+        _qg_expected_ws_root="$(cd "$_qg_actual_toplevel/.." 2>/dev/null && pwd)"
+        if [[ -n "$_qg_expected_ws_root" && "$WORKSPACE_ROOT" != "$_qg_expected_ws_root" ]]; then
+            _qg_mismatch="WORKSPACE_ROOT='$WORKSPACE_ROOT' but the actual worktree's parent is '$_qg_expected_ws_root'"
+        fi
+        unset _qg_expected_ws_root
+    fi
+    if [[ -n "$_qg_mismatch" ]]; then
+        echo "❌ [quality-gates] WORKTREE-IDENTITY MISMATCH: $_qg_mismatch." >&2
+        echo "   An inherited env var (PROJECT_ROOT/REPO_ROOT/WORKSPACE_ROOT) is pointing this QG run" >&2
+        echo "   at a DIFFERENT clone than the one being gated — unset it (check your shell" >&2
+        echo "   profile/tmux env) and re-run." >&2
+        echo "   SSOT: unified-trading-pm/plans/active/issues/qg_backfill_disk_and_lint_checks_resolve_via_main_clone_not_worktree_2026_07_24.md" >&2
+        exit 1
+    fi
+    unset _qg_actual_toplevel _qg_mismatch
+fi
+
 # Banner — names the resolved repo so the operator can spot wrong-resolution at a glance.
 # Critical under per-tab worktrees (.tabs/<N>/<repo>/) where sibling-worktree confusion
 # was the root cause of slot_worktree_qg_repo_root_resolution_2026_05_11.
