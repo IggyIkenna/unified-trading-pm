@@ -337,22 +337,28 @@ tracked below as follow-up, not blocking this plan's core migration/manifest-rec
   `False` — CBOE is a MIXED venue (`_VENUE_INSTRUMENT_TYPE["CBOE"] == "index"`, correct for the Treasury-yield
   `ohlcv_24h` majority, but silently wrong for the VX-futures `ohlcv_1s`/`ohlcv_1m` minority — there was no
   data_type-level override, unlike `options_chain`/`futures_chain`'s literal-name override). So this shard never even
-  reached the atom-coverage code the first fix touched. **FIXED**: `_is_bundled_chain_shard` now special-cases
-  `CBOE`+`ohlcv_1s`/`ohlcv_1m` → `True`, plus a `CBOE` → `"VIX"` entry in `_CHAIN_UNDERLYING_FALLBACK`. Production fix
-  shipping is being blocked intermittently by a pre-existing, unrelated pytest race — see
-  `plans/active/issues/mtds_deployment_env_race_survives_single_worker_2026_07_23.md` (this session's counter-evidence
-  that the race survives `PYTEST_WORKERS=1`, contradicting another slot's same-day "structural fix" claim). 3 new
-  regression tests (`tests/unit/test_pipeline_e2e_check.py::TestIsBundledChainShardCboeCorrection`) proven correct via
-  isolated `pytest` runs (3/3 pass) but deliberately NOT shipped alongside the production fix — adding them to the full
-  suite deterministically (if intermittently) triggers that same pre-existing pollution bug.
+  reached the atom-coverage code the first fix touched. **FIXED + SHIPPED**: `mtds@0205eaab` — `_is_bundled_chain_shard`
+  now special-cases `CBOE`+`ohlcv_1s`/`ohlcv_1m` → `True`, plus a `CBOE` → `"VIX"` entry in
+  `_CHAIN_UNDERLYING_FALLBACK`. Shipping took **6 quickmerge attempts** (5 hit the identical pre-existing, unrelated
+  `DEPLOYMENT_ENV` pytest race — see `plans/active/issues/mtds_deployment_env_race_survives_single_worker_2026_07_23.md`
+  for the full bisection, including new evidence this session that isolates the trigger to quickmerge's cascade/pull
+  step specifically, not generic pytest flakiness); the 6th landed clean. 3 new regression tests
+  (`tests/unit/test_pipeline_e2e_check.py::TestIsBundledChainShardCboeCorrection`) proven correct via isolated `pytest`
+  runs (3/3 pass) but deliberately NOT shipped alongside the production fix — adding them to the full suite
+  deterministically (if intermittently) triggers that same pre-existing pollution bug; tracked as the P3 todo below.
+  **Live re-verification**
+  (`TRADFI:CBOE:ohlcv_1s,ohlcv_1m --legs force,skip --require-captured --auto-day --day 2026-07-13`, against the
+  now-current code tarball `mtds-code@0205eaab...`) was launched but had not reached a terminal state when this session
+  ended — check `run.log` for the VM this produced before trusting either verdict; do not re-launch blind without
+  checking first.
 
 - `- [ ] [SCRIPT] P3. Add TestIsBundledChainShardCboeCorrection (3 tests, verified passing in isolation) to tests/unit/test_pipeline_e2e_check.py once mtds_deployment_env_race_survives_single_worker_2026_07_23.md is resolved.`
 - `~~- [ ] [SCRIPT] P3. Fix IS's FX force/skip status label~~` — **SUPERSEDED 2026-07-23**: rather than relabel the
   honest-absence status, built the actual missing adapter. `instruments-service` had zero reference-data adapter for FX
   (`NO_ADAPTER_YET`) even though MTDS already has a fully-working Yahoo-sourced FX tick/OHLCV path — a research agent
   confirmed the fix was SIMPLE (a ~110-line static adapter, no vendor call, reading the same UAC `FX_SPOT_PAIRS` list
-  MTDS already iterates). `[x]` **SHIPPED**: `uac@<pending>` (`venue_adapter_keys.py` `"FX": NO_ADAPTER_YET` →
-  `"FX": "fx"`) + `instruments-service@<pending>` (new `FxReferenceDataAdapter`,
+  MTDS already iterates). `[x]` **SHIPPED**: `uac@ee28af67` (`venue_adapter_keys.py` `"FX": NO_ADAPTER_YET` →
+  `"FX": "fx"`) + `instruments-service@f9be7ec7` (new `FxReferenceDataAdapter`,
   `instruments_service/reference_data/adapters/tradfi/fx.py`, byte-identical canonical-id construction to MTDS's own
   `FX:SPOT_PAIR:{BASE}-{QUOTE}`, 5 new unit tests, all passing).
 - `- [ ] [DATA] P2. VM fleet preemption auto-recovery has a real, already-tracked coverage gap for short-lived VMs`
@@ -366,6 +372,46 @@ tracked below as follow-up, not blocking this plan's core migration/manifest-rec
   > issue's remaining scoping (items 8-9) doesn't yet name the two pipeline-check launchers as candidates for the
   > native-shutdown-script fix (3 other launchers already use it) — add them there rather than re-solving here.
 - `- [ ] [DATA] P1-OPERATOR-REVIEW. (carried forward) Review the retire-phase candidate list (50,520 rows) before ever running --apply — unchanged from the earlier entry; still awaiting operator review, not touched this continuation.`
+
+### 2026-07-24 — session wrap-up (operator asked to stop after shipping local + pre-compact)
+
+**Shipped this continuation**: `mtds@0205eaab` (CBOE `_is_bundled_chain_shard` fix, see above); PM plan/issue-doc
+updates via auto-merged PR [#1430](https://github.com/IggyIkenna/unified-trading-pm/pull/1430). A genuine merge conflict
+was hit and resolved mid-session: another slot's `plan-hygiene line-cap remediation` (commit `693927181`) split this
+parent doc into 3 children (including this one) concurrently with my own quickmerge autostash-pop of a 29-line addition
+targeting the pre-split doc — resolved by restoring the file to clean `HEAD` and manually re-applying the addition to
+the correct destination (this child, not the trimmed umbrella), rather than hand-resolving the resulting ~3600-line
+naive conflict block. Lesson: a stash-pop conflict against a doc that was concurrently restructured (not just edited)
+can produce a conflict block far larger than the real diff — when that happens, pull the stash's own `--stat`/diff and
+hand-place the change rather than trying to reconcile the raw conflict markers.
+
+**Cross-repo audit at session end** (`git status --porcelain` + `git rev-list --count origin/<branch>..HEAD`, all 5
+touched repos): `market-tick-data-service`, `unified-trading-pm`, `unified-api-contracts`, `unified-trading-library` all
+clean, `ahead=0`. `instruments-service` carries one harmless untracked `pipeline_e2e_check_reports/` dir (regenerable
+smoke-test output, not referenced by any committed doc — left as-is). Pre-existing stashes in PM (4 autostash entries,
+one of which is my own already-incorporated 29-line addition — `git stash drop` is blocked by the orchestrator's
+autonomous-worker guardrail, left in place, harmless) and MTDS (1 named foreign WIP + 2 autostash, untouched all session
+per "never drop foreign WIP") were deliberately left alone.
+
+**Still in-flight, not observed before this session ended**: the CBOE live force+skip re-verification
+(`--asset-group TRADFI --venue CBOE --data-types ohlcv_1s,ohlcv_1m --day 2026-07-13 --legs force,skip --require-captured --auto-day`,
+launched against the current code tarball `mtds-code@0205eaab...` which the per-commit auto-builder had already produced
+by the time of launch — no manual rebuild needed). Whoever resumes this should check that run's `run.log` / manifest
+fingerprint before either trusting a stale "known-flaky-network" verdict or re-launching a duplicate VM.
+
+**Deferred work after 2026-07-24**:
+
+| Item                                                                       | State / why deferred                                                                                                                                                             | Blocked on                                                                                                             |
+| -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| CBOE live force+skip re-verification terminal result                       | In-flight at session end (see above)                                                                                                                                             | Nothing — just needs the VM to finish + `run.log` read                                                                 |
+| 3 `TestIsBundledChainShardCboeCorrection` regression tests                 | Written, verified in isolation, withheld from the shipped commit                                                                                                                 | `mtds_deployment_env_race_survives_single_worker_2026_07_23.md` resolution                                             |
+| `DEPLOYMENT_ENV` pytest race root cause                                    | Narrowed to quickmerge's cascade/pull step this session (5 dirty / 1 clean via quickmerge vs. 1 clean via direct `quality-gates.sh` back-to-back); exact mechanism still unknown | Needs someone to instrument the cascade step itself (env diff before/after `STAGE 0`), not another blind-retry session |
+| Chain-bundle canonical-root→raw-Databento-symbol reverse translation (CME) | Genuinely open, blocked on an `EXCHANGE_CODE_TO_NAME` SSOT contradiction across two UAC files                                                                                    | Operator input, per `tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md` §4                                       |
+| VM fleet preemption early-boot blind window for smoke-test VMs             | Tracked, not yet actioned                                                                                                                                                        | `vm_fleet_preemption_autorecovery_gap_2026_07_23.md` items 8-9                                                         |
+| Retire-phase 50,520-row `--apply`                                          | Untouched all session, correctly                                                                                                                                                 | Operator review — hard stop, never autonomous                                                                          |
+
+**Recommended next item**: read the CBOE VM's `run.log` first (cheapest, already in flight) before picking up anything
+else — it's the only item above that doesn't need new investigation, just a status check.
 
 ---
 

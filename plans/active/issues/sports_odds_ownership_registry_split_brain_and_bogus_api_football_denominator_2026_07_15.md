@@ -316,22 +316,29 @@ also depresses every ODDS honest-coverage ratio by ~4.6× on the denominator.
       NOT yet observed):** the 01:30 UTC cron runs a DEPLOYED UAC, so it keeps minting api_football-stamped ODDS rows
       until 57bcc7c5 promotes to `main` and reaches the enumerator's runtime. Verify with a post-cron read once
       promoted: 0 NEW `source=api_football` `ODDS` rows with `written_at` after the deploy.
-- [ ] [VERIFY] P1. **Confirm the re-seed actually stopped** once unified-api-contracts@57bcc7c5 is deployed to the
-      expected-universe-v2 runtime. Gate: a post-01:30-cron read of the IS sports `_index` shows **no**
-      `source=api_football` × `data_type=ODDS` row whose `written_at` postdates the deploy (existing rows persist until
-      the purge below — count them separately by `written_at`, not in aggregate).
-- [ ] [DATA] P1. **DEFERRED PURGE — do NOT run while the P0 index repair is in flight.** Purge/retype the **127,018
-      already-written** `api_football` × `ODDS` rows (82,509 blank-reason `expected_unattempted` + 22,740
-      `EXPECTED_POST_SEASON` + 21,769 `EXPECTED_PRE_SEASON`, 94 leagues). Fixing the seed (above) stops NEW ones; it
-      does **not** retract these. They remain denominator pollution (~4.6× on every ODDS coverage ratio) and a live
-      mis-fetch risk for the `af-backfill-*` fleet until purged. **Sequencing (the reason this is deferred):** a
-      separate P0 agent owns index repair as of 2026-07-15 — a concurrent purge would race it. Run only AFTER that
-      settles, and re-measure first (the counts move). **Decide remove-vs-retype:** these rows are impossible-by-
-      construction, so REMOVE is the honest option (they are not absence-with-a-reason; they are cells that should never
-      have existed); a `EXPECTED_SOURCE_DOES_NOT_PROVIDE`-style retype would keep an impossible (source, data_type) pair
-      in the corpus and still needs `source=api_football` to be a legitimate ODDS axis, which it is not. Gate: 0
-      `source=api_football` × `ODDS` rows in the IS sports `_index`; ODDS coverage ratios re-measured post-purge;
-      snapshot-first per the standard wipe ritual.
+- [x] [VERIFY] P1. ✅ **DONE — confirmed 2026-07-16 (T3.2 in `sports_legacy_bucket_cutover_2026_07_16.md`).** Three
+      independent re-measurements at execution time confirmed the re-seed stopped: (1) provenance arithmetic closes
+      exactly (82,509 pre-existing `expected_unattempted` rows all trace to the pre-fix bulk run + nightly crons, none
+      newer); (2) the newest enumerator run (`enum-universe-sports-20260716-013041`) wrote 0 `api_football × ODDS` rows
+      (resolves footystats instead, per UAC@57bcc7c5); (3) the writer guard is runtime-verified ON
+      (`is_valid_manifest_source("sports","ODDS","api_football")` → False, raises `MissingSourceError` on any future
+      mis-stamped write). Do not cite the unrelated `mtds@e9d9dec0` wipe as this evidence — it targeted a different
+      bucket entirely.
+- [x] [DATA] P1. ✅ **DEFERRED PURGE — DONE 2026-07-16T13:09Z (T3.1 in `sports_legacy_bucket_cutover_2026_07_16.md`).**
+      Purged the bogus `api_football × ODDS` rows. **Re-measured count at execution time was 123,149** (not the 127,018
+      estimated when this todo was filed — the doc's own runbook correction), 0 remained after, footystats × ODDS
+      untouched at 140,574. Verified BY CONTENT via a fresh re-download (never the writer's own return): 0 rows match
+      the predicate post-purge, total dropped by exactly 123,149, no `captured` row lost, collateral-damage census
+      confirmed exactly one `(data_type, source)` cell class changed. Snapshot taken first
+      (`_index/purge_backups/20260716-130924/...bak.parquet`, crc32c-verified). Independently re-verified 2026-07-23/24
+      (per the sports plan-reconcile audit): 0 rows remain in prod. Do NOT cite the unrelated `mtds@e9d9dec0` wipe as
+      the completing evidence — it targeted a different bucket entirely. Historical context preserved below for the
+      original decision rationale (remove-vs-retype, sequencing). **Decide remove-vs-retype:** these rows are
+      impossible-by- construction, so REMOVE is the honest option (they are not absence-with-a-reason; they are cells
+      that should never have existed); a `EXPECTED_SOURCE_DOES_NOT_PROVIDE`-style retype would keep an impossible
+      (source, data_type) pair in the corpus and still needs `source=api_football` to be a legitimate ODDS axis, which
+      it is not. Gate: 0 `source=api_football` × `ODDS` rows in the IS sports `_index`; ODDS coverage ratios re-measured
+      post-purge; snapshot-first per the standard wipe ritual.
 - [x] ✅ [DOCS] P2. Un-park / re-scope `sports_p2_daily_forward_catalogue_and_final_gate_2026_06_27.md` so ODDS
       eu=89,073 is not carried as an api_football fetch target. — **DONE 2026-07-15**, unified-trading-pm@b836cab53.
       Annotated in place (the plan is `[PARKED]`/priority-999, so it was corrected, not un-parked — un-parking is the

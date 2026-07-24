@@ -94,6 +94,13 @@ regexes = [
 ]
 
 [[allowlists]]
+description = "Cloud Build image tags of the shape <service>:golive-<7-hex-commit> quoted verbatim in plan/issue-doc deploy history — a Docker image tag derived from a git commit SHA, not a credential; confirmed already present in previously-committed plan history (client-reporting-api go-live Progress Log, commit 06818cd42) without incident"
+regexes = [
+  '''[a-z][a-z0-9-]*:golive-[0-9a-f]{7}\b''',
+  '''golive-[0-9a-f]{7}\b''',
+]
+
+[[allowlists]]
 description = "GCP project-specific patterns already revoked and in history-rewrite scope"
 # These are documented in plans/active/issues/gcp_sa_private_key_in_git_history_*
 # Remove this allowlist after history rewrite (git filter-repo) completes.

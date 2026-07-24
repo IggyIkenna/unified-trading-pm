@@ -199,9 +199,8 @@ required_repos:
     asset_group: core
 
 optional_repos:
-  - repo: unified-defi-execution-interface
-    asset_group: defi
-    note: "Required for DeFi epic. Optional for CeFi."
+  # unified-defi-execution-interface entry removed 2026-07-24 (operator ruling, workspace-wide epic-yaml scrub):
+  # UDEI was merged into execution-service 2026-03-26 and no longer exists as a standalone repo.
 
   - repo: features-service (onchain family)
     asset_group: defi

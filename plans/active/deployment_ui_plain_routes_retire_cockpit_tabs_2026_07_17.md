@@ -129,14 +129,15 @@ Vitest / Playwright — no Python). Playwright **L2** evidence + a cited regress
       strict-mode) — untouched files, verified failing identically at HEAD via stash. deployment-ui@079b29e.
 - [x] ✅ [INFRA] P1. Shipped via quickmerge `--agent --files` — deployment-ui@079b29e landed on live-defi-rollout;
       flipping these checkboxes in the same turn (`docs(plans):`).
-- [ ] [REVIEW] P2. Post-phase doc audit: (a) ✅ DONE 2026-07-21 (plan-reconcile consolidation pass) —
+- [x] ✅ [REVIEW] P2. Post-phase doc audit: (a) ✅ DONE 2026-07-21 (plan-reconcile consolidation pass) —
       `deployment_observability_expansion_2026_07_08.md`'s `[UI] P3 ✅ KEEP (operator-confirmed 2026-07-11)` decision
       now carries a `⚠️ SUPERSEDED 2026-07-21` note recording that the "alongside the cockpit tab" framing is stale (no
-      cockpit tab remains to be "alongside"), while the underlying KEEP-the-route decision still holds. (b) STILL OPEN —
-      stub/refresh the routing convention in codex so "plain routes, one scheme, layout route for shared chrome" is the
-      written rule and the `?tab=` pattern cannot regrow (checked `codex/06-coding-standards/` — no existing doc covers
-      this; `ui-testing-layers.md` covers the route-smoke _test_ layer, not the URL-scheme _convention_ — needs a new
-      stub or a new section in an existing doc).
+      cockpit tab remains to be "alongside"), while the underlying KEEP-the-route decision still holds. (b) ✅ DONE
+      2026-07-24 — new stub `unified-trading-pm@<pending>`:
+      [`/codex/06-coding-standards/ui-routing-convention.md`](/codex/06-coding-standards/ui-routing-convention.md)
+      codifies "one URL scheme, plain routes only" + the layout-route-is-optional-not-automatic rule + the
+      orphan-audit/testid enforcement mechanics, citing this plan's shipped commit (`deployment-ui@079b29e`) as the
+      reference implementation. Cross-linked from `ui-testing-layers.md`'s `related:`.
 
 ## Success criteria
 
@@ -174,6 +175,18 @@ Vitest / Playwright — no Python). Playwright **L2** evidence + a cited regress
 - **STASH CLEANUP:** the obsolete `stash@{0}` from the first (backwards) attempt can be dropped — every salvageable
   piece landed in 079b29e. Left in place for the operator to drop (`git stash drop` is agent-banned on foreign WIP, but
   this one is mine — dropping it is safe once the operator confirms).
+
+- **2026-07-24** — Closed the one remaining P2 doc-audit sub-item (b): authored
+  [`/codex/06-coding-standards/ui-routing-convention.md`](/codex/06-coding-standards/ui-routing-convention.md), a new
+  stub SSOT (no existing doc fit — `ui-testing-layers.md` covers the test layer, not the URL-scheme convention itself,
+  confirmed by re-checking `codex/06-coding-standards/` before writing). Covers: the plain-routes-only rule + why
+  (`?tab=`-owned shells collide with an embedded pane's own query params, the exact `Deployments.tsx` bug this plan
+  fixed); the layout-route-is-optional-not-automatic distinction (chrome-only → mount above `<Routes>`, no layout route;
+  cross-pane state → layout route IS needed); the `orphan-audit.ts` no-compat-redirect-whitelist enforcement mechanic;
+  and the `cockpit-tab-*`/`cockpit-navlink-*` testid-split convention. Cites `deployment-ui@079b29e` as the reference
+  implementation and scopes it forward to `unified-trading-system-ui` should the same dual-scheme problem grow there.
+  Cross-linked from `ui-testing-layers.md`'s `related:`. **All todos in this plan are now done (0 open)** —
+  archive-eligible per plan-hygiene discipline.
 
 ## Codex SSOTs
 

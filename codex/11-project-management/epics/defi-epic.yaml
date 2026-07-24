@@ -119,13 +119,10 @@ required_repos:
     rationale: "Risk monitoring required for live DeFi execution. BR3 sufficient (events verified)."
 
   # ── DeFi-specific ────────────────────────────────────────────────────────
-
-  - repo: unified-defi-execution-interface
-    arch_tier: library-t2
-    min_stage: cr5
-    min_br_stage: na
-    asset_group: defi
-    rationale: "UDEI provides SWAP/LEND/BORROW/STAKE execution contracts for DeFi protocols."
+  # unified-defi-execution-interface entry removed 2026-07-24 (operator ruling, workspace-wide epic-yaml scrub):
+  # UDEI was merged into execution-service 2026-03-26 and no longer exists as a standalone repo; its function is
+  # already covered by the execution-service entry above (see its rationale). The old entry was a
+  # permanently-unsatisfiable required gate.
 
   - repo: features-service (onchain family)
     arch_tier: service
