@@ -178,3 +178,32 @@ source:
   (split for parallelism) + Q2 (hold the 2 safety-sensitive backend todos). Born `status: active`,
   `assigned_vm: planning` — dispatchable to the AO fleet. The parent plan is retained as the holding/index doc for the 6
   non-dispatched items.
+- **2026-07-24 (slot 2)**: Items 1-4 shipped sequentially (all `unified-trading-pm`/`agent-orchestrator@<sha>` citations
+  inline on their checkboxes above): item 1 (`dirty_files` single-source-of-truth fix), item 2 (df>0-with-empty-sample
+  tripwire instrumentation), item 3 (mirrored fix onto the FF-cron dirty gate, `LOCK_FILE` made test-overridable, + a
+  drive-by fix for an unrelated `setup-tab-worktrees.sh --help` truncation), item 4 (`dirty_consecutive_ticks`
+  confirm-gate on `not_clean_since` clear + the sync-nudge in `agent-orchestrator/server/routes/git_health.py`). Every
+  item's bats/pytest gate was verified to FAIL against the pre-fix code and PASS against the fix (not just "passes now"
+  — a real regression-test confirmation). Both repos pushed clean (`ahead=0`/`behind=0`) as of this entry.
+
+  ## Deferred work after 2026-07-24
+
+  | Item | State                               | Blocked-on                                                                                               |
+  | ---- | ----------------------------------- | -------------------------------------------------------------------------------------------------------- |
+  | 5    | Not done — natural next in sequence | Nobody; next dispatch should pick this up (FF-pull skip gate)                                            |
+  | 6-7  | Not done                            | Nobody; sequential continuation                                                                          |
+  | 8-14 | Not done                            | Nobody; sequential continuation (2 `[BACKEND]` items HELD per Q2 — operator-decision, do not auto-start) |
+
+  Recommended next item: **#5** (extend the `dirty_consecutive_ticks >= 2` gate to the FF-pull skip decision in
+  `slot-cron-ff-pull.sh`) — it is the direct continuation of items 1/3/4's theme and the plan is `sequential: true`, so
+  it is the only unblocked item until it lands.
+
+  Lessons worth carrying forward: (a) this environment hit repeated transient SSH-connect stalls to github.com mid-hook
+  (`git fetch` stuck in `SYN-SENT`) during this session — not a code bug, resolved on retry/backgrounding each time, no
+  fix needed; (b) `quality-gates.sh`'s sentinel is keyed to the exact commit HEAD at run time — running it BEFORE
+  committing only works if nothing changes before `quickmerge --agent` checks it; safer to commit first, then QG, then
+  quickmerge (the documented order in `agents/RULES.md` § 2), which is what ended up happening for items 3-4 after an
+  initial mis-ordering on item 1; (c) `dirty_consecutive_ticks` (item 4) is a SWEEP-WIDE aggregate from the FF-cron, not
+  a per-repo counter — the gate design deliberately uses it as a cross-check between two independent observers (the
+  reporter's own git status vs. the FF-cron's), not as a same-repo streak; this is worth re-reading before touching item
+  5, which extends the identical signal to a different consumer.
