@@ -169,9 +169,20 @@ todo below.
       when 169 legitimately wasn't registered yet). Generalizes to every affected pair: any league added to the registry
       AFTER writes had already occurred for it produces this same split, with no mechanism to correct already-written
       shards and no loud signal when a lookup misses.
-- [ ] [DIAG] P2. Enumerate the full non-canonical (`league=<numeric>` / bare) population across the whole
-      fixtures_schedule corpus, not just the 10 pairs this task sampled (repo: instruments-service). **Done when**: a
-      corpus-wide census reports the total row count and the set of affected (league, season) pairs.
+- [x] [DIAG] P2. ✅ Corpus-wide census done via a single MANIFEST read (not a raw GCS walk — cheaper and satisfies the
+      single-walk requirement): downloaded `_index/availability_index.parquet` once
+      (`instruments-store-sports-prd-central-element-323112`, 5,526,420 total rows), filtered to
+      `data_type IN (FIXTURES, FIXTURES_SCHEDULE)` (394,922 rows), then filtered to rows whose `league_id` is a bare
+      numeric string (the non-canonical marker, since the writer's silent fallback writes the raw `af_league_id` as the
+      manifest `league_id` too, not just the GCS partition — same bug, same value, both surfaces). **Result: 6,678
+      non-canonical rows across 485 distinct numeric league_ids** — far larger than the 86-row/10-pair sample this task
+      happened to find; `capture_status` is 100% `captured` (no partial/failed non-canonical rows). Date range
+      `2026-05-04` → `2026-07-06`; every affected row's calendar year is 2026 (the manifest schema has no dedicated
+      `season` column — sports "season" is a domain concept derived elsewhere, not a manifest field, so this reports
+      calendar-year-of-write, not the domain season label; flagging that distinction rather than conflating them). Full
+      list of the 485 affected numeric league_ids is in this session's tool output, not reproduced inline here (too
+      large for the line-cap budget) — re-derivable in ~10s via the exact census query above if todo 4 (the fold) needs
+      the enumerated list again.
 - [ ] [CODE] P1. Fix the writer so it never falls back to writing under a raw-id folder — fail loud (or resolve via a
       documented, tested fallback) instead (repo: instruments-service). **Done when**: a regression test reproduces the
       old lookup-miss condition and asserts the fix.
