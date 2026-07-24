@@ -164,6 +164,19 @@ ingested). Use for operator-only work, trackers, design docs, and dispatcher-sur
   section out to a child plan must ALSO add that child's slug to the parent's `depends_on:` frontmatter (+
   `gate_on_depends: true` if the parent has any remaining todo that genuinely can't start before the child finishes) —
   do not defer this to a follow-up.
+- **Don't let a plan's own history balloon past cap — extract completed Progress Log sections AS YOU GO, don't wait for
+  a remediation pass** _(finding J, 2026-07-24: `plan_line_cap_remediation_2026_07_23.md` had to clean up 30 plans that
+  had silently grown to 1000-4780 lines, almost entirely from accumulated, fully-closed, dated Progress Log entries
+  nobody extracted along the way — the same failure repeating one plan at a time is exactly what let the backlog
+  reach 30. `check_line_caps.sh` (soft warn >500L, hard fail >1000L non-umbrella / 2000L umbrella) is now a REAL hard
+  gate in `run_hygiene_sweep.sh` — both the corpus-wide sweep (a shrinking-ratchet baseline, `line_caps_baseline.yaml` —
+  no NEW over-cap plan tolerated) and the prek `--precommit` fast path (an absolute per-staged-file bar: if you're
+  already editing a plan that's over cap, split/trim it before that commit lands, same as the frontmatter/todo-format
+  gates next to it)._ When a Progress Log entry is fully closed (every todo it covers is `[x]`, nothing references it as
+  still-open), don't leave it inline forever — once your plan crosses ~500L, extract the oldest fully-closed dated
+  section(s) verbatim into an archive-bound `<slug>_history_<date>.md` (`status: complete`, `nature: record`, 0 open
+  todos, lives in `plans/archive/2026_07/` or the current month) and leave a one-line pointer behind. This is cheap
+  (minutes) done incrementally; it is expensive (a dedicated remediation plan) done as a 30-file backlog.
 
 ---
 

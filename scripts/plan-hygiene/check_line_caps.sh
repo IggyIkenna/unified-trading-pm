@@ -15,23 +15,56 @@
 # canonicalisation catalogues) that are legitimately large in CONTEXT but carry <100 todos, so the
 # todo-count proxy misses them. `umbrella: true` is auditable (grep it) — the hygiene reviewer
 # rejects a bogus marker; it is NOT a free pass to skip splitting genuinely-splittable plans.
-# Usage: bash scripts/plan-hygiene/check_line_caps.sh [--quiet]
-# Exit 0 = no hard violations. Exit 1 = one or more plans over cap (1000L non-umbrella, 2000L umbrella).
+# Usage: bash scripts/plan-hygiene/check_line_caps.sh [--quiet] [--update-baseline] [file ...]
+# No files given -> full-corpus glob, gated by the shrinking-ratchet baseline (see below).
+# Files given -> check ONLY those (the prek hook's STAGED plans), no baseline involved: a file
+# THIS commit touches must not be over cap, full stop (RULE-11 blast-radius safety, same
+# convention as check_frontmatter.sh's optional file-list arg) — pre-existing debt in files
+# you're not editing is a corpus-wide concern, not this commit's.
+# Exit 0 (full-corpus mode) = HARD-failure count <= baseline (see line_caps_baseline.yaml).
+# Exit 1 = count exceeds baseline — a NEW plan crossed the cap, or an existing one got worse.
+# This is a SHRINKING ratchet (same pattern as check_reference_paths.py/reference_paths_baseline.yaml):
+# pre-existing debt from before the baseline was seeded is tolerated so this check can be a real
+# hard gate without immediately blocking the shared pipeline over violations nobody introduced today.
+# --update-baseline: after fixing a flagged plan, persist the new (lower) count (full-corpus mode
+# only). Refuses to raise the baseline — if the live count is higher than what's on disk, the run
+# still fails.
 
 set -euo pipefail
-QUIET="${1:-}"
+QUIET=""
+UPDATE_BASELINE=""
+FILES=()
+for _arg in "$@"; do
+  case "$_arg" in
+    --quiet) QUIET="--quiet" ;;
+    --update-baseline) UPDATE_BASELINE="1" ;;
+    *) FILES+=("$_arg") ;;
+  esac
+done
 PM_DIR="$(cd "$(dirname "$0")/../.." && pwd)"
 HARD_FAILURES=0
 UMBRELLA_CAP=2000
+BASELINE_PATH="$(dirname "$0")/line_caps_baseline.yaml"
+BASELINE_COUNT="$(grep -E '^hard_count:' "$BASELINE_PATH" | sed -E 's/^hard_count:[[:space:]]*//')"
+BASELINE_COUNT="${BASELINE_COUNT:-0}"
+SCOPED=""
+[ "${#FILES[@]}" -gt 0 ] && SCOPED="1"
 
 echo "Line-count check (soft=500, hard=1000, umbrella cap=${UMBRELLA_CAP}):"
 echo ""
 
-for f in "$PM_DIR/plans/active"/*.md; do
+if [ -n "$SCOPED" ]; then
+  TARGETS=("${FILES[@]}")
+else
+  TARGETS=("$PM_DIR/plans/active"/*.md)
+fi
+
+for f in "${TARGETS[@]}"; do
   name="$(basename "$f")"
   [ "$name" = "INDEX.md" ] && continue
   [[ "$name" == _* ]] && continue           # _agent_pings.md etc
   [[ "$name" == *.HANDOVER.md ]] && continue
+  [ -f "$f" ] || continue                   # a staged file can be a deletion (no longer on disk)
 
   lines=$(wc -l < "$f")
   todos=$(grep -c "^- \[.\]" "$f" 2>/dev/null || true)
@@ -59,9 +92,32 @@ for f in "$PM_DIR/plans/active"/*.md; do
 done
 
 echo ""
-if [ "$HARD_FAILURES" -gt 0 ]; then
-  echo "❌ check_line_caps: ${HARD_FAILURES} plan(s) over cap (1000L hard / ${UMBRELLA_CAP}L umbrella)"
+
+if [ -n "$SCOPED" ]; then
+  if [ "$HARD_FAILURES" -gt 0 ]; then
+    echo "❌ check_line_caps: ${HARD_FAILURES} staged plan(s) over cap — split before committing"
+    exit 1
+  fi
+  [ "$QUIET" != "--quiet" ] && echo "✅ check_line_caps: staged plan(s) within cap"
+  exit 0
+fi
+
+if [ "$UPDATE_BASELINE" = "1" ]; then
+  if [ "$HARD_FAILURES" -gt "$BASELINE_COUNT" ]; then
+    echo "❌ check_line_caps: refusing to raise baseline from ${BASELINE_COUNT} to ${HARD_FAILURES} — fix the new/worse violation(s) instead"
+    exit 1
+  fi
+  sed -i.bak -E "s/^hard_count:.*/hard_count: ${HARD_FAILURES}/" "$BASELINE_PATH" && rm -f "${BASELINE_PATH}.bak"
+  echo "Baseline updated: hard_count=${HARD_FAILURES} (was ${BASELINE_COUNT})"
+  exit 0
+fi
+
+if [ "$HARD_FAILURES" -gt "$BASELINE_COUNT" ]; then
+  echo "❌ check_line_caps: ${HARD_FAILURES} plan(s) over cap (baseline ${BASELINE_COUNT}) — a NEW violation landed, see plans/active/issues/plan_line_cap_remediation_2026_07_23.md"
   exit 1
+elif [ "$HARD_FAILURES" -gt 0 ]; then
+  [ "$QUIET" != "--quiet" ] && echo "✅ check_line_caps: ${HARD_FAILURES} pre-existing violation(s), within baseline (${BASELINE_COUNT}) — not a regression"
+  exit 0
 else
   [ "$QUIET" != "--quiet" ] && echo "✅ check_line_caps: no hard violations"
   exit 0

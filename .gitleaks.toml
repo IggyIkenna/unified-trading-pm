@@ -9,6 +9,16 @@ useDefault = true
 # ============================================================
 # ALLOWLISTS — workspace-wide false positives
 # ============================================================
+#
+# GOTCHA (found 2026-07-24, cost a full failed-first-attempt cycle): a `regexes` entry must match
+# the SUBSTRING gitleaks actually captured as the "Secret" for that rule -- NOT the full source
+# line, and not whatever context you'd naturally include for readability. E.g. a Docker image tag
+# `client-reporting-api:golive-9968cb1` triggers the default `generic-api-key` rule, but that rule
+# only captures `golive-9968cb1` as the Secret -- an allowlist regex requiring the
+# `client-reporting-api:` prefix (`[a-z][a-z0-9-]*:golive-[0-9a-f]{7}\b`) does NOT match and the
+# false positive keeps failing. Verify a NEW allowlist entry with the EXACT command the hook runs,
+# AFTER actually staging the offending file: `gitleaks protect --staged --config .gitleaks.toml`
+# (an empty stage trivially reports "no leaks found" and proves nothing).
 
 [[allowlists]]
 description = "Ethereum contract addresses and event topic hashes in DeFi source code"
