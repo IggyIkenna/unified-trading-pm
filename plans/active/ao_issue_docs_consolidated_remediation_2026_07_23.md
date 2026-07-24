@@ -49,39 +49,32 @@ source: "/plan-reconcile AO-scope run 2026-07-23"
 > regen never ingests it. Each item below moves to a child plan (or a new one) once the operator rules or its blocker
 > clears.
 
-## Held for operator review (operator ruling Q2, 2026-07-23)
+## Held for operator review (operator ruling Q2, 2026-07-23) — MOVED 2026-07-24
 
-> Both are real, code-verified backend fixes, deliberately NOT dispatched: each touches machinery where a careless
-> change is dangerous — at-least-once message delivery, and genuine wedge detection — so the operator holds the gate at
-> PR-review time. Dispatch these (move to Plan B or a new plan) only after that review mechanism is decided.
-
-- [ ] [BACKEND] P2. Add a liveness-by-progress gate to `maybe_alert_git_staleness` and `maybe_nudge_on_red_repos` in
-      `server/worker_liveness/_git_alerts.py` so a burst-committing worker is not classified as wedged. Suppress or
-      soften when the worktree's last commit (`git log -1 --format=%ct`) is newer than the sustain window, or a live
-      child process runs under it (`pgrep -f <worktree>`). Today these key purely on `dirty_files`/`ahead`/`behind` plus
-      age, and `_git_surfaces_pass` runs unconditionally for every slot — its own docstring records that the 2026-07-14
-      coverage-gap fix REMOVED the live-worker gate, so an actively-working slot has no exemption. **Gate**: a
-      regression test where a recent-commit-but-still-dirty worker does NOT fire the staleness alert, with the
-      genuinely-stale-slot tests still green.
-- [ ] [BACKEND] P1. Route `agent_reply()` in `server/routes/agents.py` to the ORIGINATING role when the answered message
-      came from a peer, instead of always the replier's own thread. It currently calls `post_agent_message_by_role` with
-      `target_role=agent.role, direction="from_agent"` unconditionally, and `AgentReplyRequest` in
-      `server/models/agents.py` has no cross-role target field — so a reply to a peer lands on the replier's own thread
-      and the peer never sees it in its poll. When `in_reply_to` resolves to a message whose `from_role` differs, post
-      `direction="to_agent"` to that `from_role` plus the tmux nudge. **Gate**: a regression test proving a cross-role
-      reply lands in the target role's next `/poll` (not merely its `/history`), with the existing same-role reply-ack
-      tests still green.
+> **Both dispatched 2026-07-24** to
+> [`ao_held_safety_fixes_dispatch_2026_07_24`](/plans/active/ao_held_safety_fixes_dispatch_2026_07_24.md) — operator
+> ruling: confirmed neither touches a file `ao_remediation_b_code_chain_2026_07_23` touches, so both run now rather than
+> waiting for Plan B to finish. The regression-test gate stated in each todo, plus green `quality-gates.sh`, IS the
+> review mechanism the Q2 hold was waiting on.
 
 ## Non-dispatchable — operator decision / upstream-blocked
 
 > `[OPERATOR]` and `BLOCKED-` items. Kept here as the record; none is AO-eligible until resolved.
 
-- [ ] [OPERATOR] P2. Rule on the epic-VM code artifacts — `deployment-service/scripts/vm/launch-epic-vm.sh`,
+- [x] ✅ [OPERATOR] P2. Rule on the epic-VM code artifacts — `deployment-service/scripts/vm/launch-epic-vm.sh`,
       `launch-epic-vm-aws.sh`, and the ten `agent-orch-vm-*` prefixes registered `LONG_LIVED_LIVE` in
       `vm_prefix_registry.py`. Per-epic VMs were deprecated 2026-06-27 and CLAUDE.md says delete deprecated code with no
       shims, but the failover module received an explicit KEEP ruling on the multi-VM-may-return argument, so this is a
       judgment call rather than a cleanup. Operator direction 2026-07-23 was to file it and decide later. **Gate**: a
-      recorded keep-or-delete ruling; if KEEP, the named single-VM scenario that still needs it.
+      recorded keep-or-delete ruling; if KEEP, the named single-VM scenario that still needs it. — **RULED 2026-07-24:
+      KEEP.** Named scenario — **workload/blast-radius isolation for a single high-stakes epic**: if a future epic (e.g.
+      live-capital-at-risk automation) needs guaranteed isolated compute that must never contend for slots with the
+      shared general-purpose fleet, a dedicated epic-VM provides isolation the single-VM model cannot express. Distinct
+      from the already-KEPT host-failover resilience case
+      ([`ao_failover_multi_vm_readiness_2026_07_20`](/plans/archive/2026_07/ao_failover_multi_vm_readiness_2026_07_20.md),
+      archived complete) — that ruling keeps `FailoverLoop` for a SECOND HOST taking over if the central orchestrator VM
+      goes offline, which is a different axis from one-VM-per-epic workload allocation; the two rulings are not the same
+      argument and should not be conflated.
 - [x] ✅ [OPERATOR] P3. Spot-check the live fleet for a slot dirty over 24h with no live session, to rank the periodic
       dirty-resolution sweep. If none exists this is a structural gap with no active incident — a reason to sequence it
       behind P1 work, NOT a reason to close it. **Gate**: the one-line finding recorded in the issue doc. — **CHECKED
@@ -99,7 +92,11 @@ source: "/plan-reconcile AO-scope run 2026-07-23"
       and a 100-task synthetic fixture were handed to the design agent on 2026-07-17; re-checked 2026-07-23 with no
       movement, no `GET /api/backlog/graph` endpoint and no relations UI commit. The model is a cross-cutting GRAPH, not
       a hierarchy, which is why three table/tree attempts were rejected. **Gate**: design received, implemented, and the
-      relation a table cannot express — one prereq gating tasks in multiple plans — is visible in one view.
+      relation a table cannot express — one prereq gating tasks in multiple plans — is visible in one view. —
+      **CORRECTED 2026-07-24 (operator)**: the design is NOT stalled/lost — operator confirms it already exists (held
+      outside this tracker, not yet committed anywhere this audit could see, which is why the artifact-level check read
+      as "no movement"). Deliberately sequenced LAST in this remediation pass per operator direction; not AO-eligible
+      until the operator brings the design in and this todo is re-scoped as a concrete build task.
 
 ## Parked decisions — not in any plan (judgment calls, per task_template section 4)
 
