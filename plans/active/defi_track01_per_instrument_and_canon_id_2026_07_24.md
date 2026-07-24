@@ -544,15 +544,51 @@ instruments in one `instruments.parquet` with `available_from/to`).
       there is nothing to re-split. **The pre-resume gate on "Resume the paused DeFi crons" (Track 8) for
       `collect-solana-defi` specifically is now CLEARED** — the symbol fix has landed, so resuming that one cron no
       longer risks day-one conflation; resuming is still an operator decision (a live-production cron restart), not
-      something to flip unilaterally — (b) **manifest impact — STILL OPEN, not addressed by the code fix above** — once
-      the symbol/`instrument_id` convention changes, existing `capture_status` cells keyed by the OLD bare-symbol form
-      no longer match the new discriminated form; this is a de-facto key rename and needs the SAME
-      backfill/re-registration treatment as any other instrument-id migration in this plan (see the POOL/LENDING
-      fallback-elimination item above, step 5, for the pattern), not a silent drop — moot until the cron actually
-      resumes and starts writing under the new convention, since (a) proved zero existing cells use the old form yet;
-      (c) **naming-doc update — STILL OPEN** — `/codex/02-data/defi-canonical-naming-ssot.md` documents the current
-      bare-symbol filename grammar and must be updated to describe the new `{token_a}-{token_b}-{discriminator}` form,
-      or the SSOT drifts from the code the moment this lands. (repos: market-tick-data-service)
+      something to flip unilaterally — (b) **manifest impact — RE-VERIFIED 2026-07-24, still moot, now empirically
+      re-confirmed (not just reasoned).** Once the symbol/`instrument_id` convention changes, any pre-existing
+      `capture_status` cell keyed under the OLD bare-symbol form would no longer match the NEW discriminated form for
+      the same underlying pool — a de-facto key rename needing the SAME backfill/re-registration treatment as any other
+      instrument-id migration in this plan (see the POOL/LENDING fallback-elimination item above, step 5, for the
+      pattern). **Empirical check this session**: a full manifest download (`_index/availability_index.parquet`, the
+      standard chunked-parallel-download pattern `verify_defi_glued_ids_2026_07_24.py` uses) hit sustained transient GCS
+      throughput problems this session (~298 KiB/s measured, `gcloud storage cp` itself crashed/failed after 11 min — an
+      environment-wide network condition, not specific to this file) and did not complete; a faster, bounded
+      `gcloud storage ls` spot-check against the raw GCS objects for `day=2026-07-2*` (today's window) for ORCA/RAYDIUM
+      `dex_pool_state`/`solana_amm_pool` found **zero objects**, consistent with (and extending forward) the
+      already-documented 2026-06-05→2026-07-23 systematic sample in the todo above. **Net: still moot as of 2026-07-24**
+      — no writer has produced a canonical-shape shard under either the bare or discriminated form, so there is nothing
+      to reconcile yet. **Standing pre-resume checklist item (once `collect-solana-defi` actually resumes)**: before/at
+      resume, re-verify the manifest has zero pre-existing bare-symbol `solana_amm_pool` rows (expected, per this
+      check); if any exist from an out-of-band write, run the same backfill/re-registration migration pattern referenced
+      above before trusting cross-form aggregation. — (c) **naming-doc update — DONE 2026-07-24.**
+      `/codex/02-data/defi-canonical-naming-ssot.md` gained a new "Solana AMM pool SYMBOL grammar" section documenting
+      the real `{token_a}-{token_b}[-{discriminator}]` form (discriminator precedence: `TS{tick_spacing}` →
+      `{fee_rate_bps}BPS` → `{POOL_TYPE}` → none, per `_pool_fee_discriminator()`, `mtds@0d83a8a9`), replacing the stale
+      bare-symbol description; the same stale bare example (`ORCA-SOLANA:SOLANA_AMM_POOL:SOL-USDC`) in
+      `cross-asset-canonical-target-ssot.md` §3 was also corrected. (repos: market-tick-data-service)
+- [x] ✅ [BACKEND] P2. **Second Solana writer (`dex_pools_handler.py`/`_dex_pools_subgraph.py::_collect_solana_dex`, CLI
+      op `collect-dex-pools`) — RESOLVED 2026-07-24, code read + live cron check, no fix needed.** Full code trace:
+      `_solana_defi_fetch.py`'s `fetch_orca`/`fetch_raydium` DO populate `token_a`/`token_b`/`tick_spacing`/
+      `fee_rate_bps` on the row (same fields `solana_defi_handler.py`'s fix consumes), but `_collect_solana_dex`
+      (`_dex_pools_subgraph.py:350-354`) never reads them into a `symbol` key — it always
+      `row.setdefault("symbol", pool_id_str)` (the raw pool/vault **ADDRESS**) before calling `write_defi_rows`. Traced
+      both consumers of that `symbol` value: (a) the manifest `record_captured(instrument_id=pool_id_lower, ...)` key
+      (`dex_pools_handler.py:734`) is the lower-cased pool ADDRESS, not a symbol; (b) `write_defi_rows`
+      (`canonical_write.py:333-350`) shards by `instrument_id` and the parquet file LEAF is
+      `_sanitize_defi_symbol(group_symbol)` — `group_symbol` is the SAME address. **Conclusion: this writer is
+      structurally immune to the token-pair collision bug** (a pool address is inherently unique per pool — two distinct
+      pools sharing a token pair can never collide on it), correcting the plan's "same gap in a MORE severe form"
+      framing — the real gap here is READABILITY (opaque address-named files instead of human-readable symbols), not
+      correctness. **Cron status, re-verified live**:
+      `gcloud scheduler jobs describe     uts-prod-mtds-collect-dex-pools-cron --location=asia-northeast1` →
+      `state: PAUSED` (still registered in `market_tick_data_service/cli/main.py:554` +
+      `deployment-service/terraform/gcp/defi_collection_scheduler.tf`, not retired). **Explicit resolution (this is the
+      "explicit retire decision" the plan's own phrasing allows for): no code fix required before this cron is safe to
+      resume, on collision grounds** — nothing to migrate, nothing to discriminate. An optional, separate, low-priority
+      readability improvement (resolve real token-pair symbols for Solana in this writer, matching the EVM path's
+      existing `resolve_pool_symbol` catalogue lookup) could be filed if wanted, but is NOT a data-correctness blocker.
+      Full detail also added to `/codex/02-data/defi-canonical-naming-ssot.md` § Solana AMM pool SYMBOL grammar ("Scope"
+      paragraph). (repos: market-tick-data-service, deployment-service)
 - **UTL `_derive_instrument_id.py` dispatch key `('defi','lending')`** — once the EVM retire lands, `lending` stops
   being produced for EVM; retarget/split the dispatch so Solana's `SOLANA_LENDING` grain (untouched by the retire, per
   above) keeps a live dispatch entry. Concrete implementation task, not a standing fork — resolves
