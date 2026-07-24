@@ -181,9 +181,10 @@ entry). UTC datetimes only. `quality-gates.sh`-green before each commit; commit 
       because of the silent-degradation catch below. — CODE SHIPPED, APPLY BLOCKED-CREDENTIALS:
       deployment-service@2018d39 adds the Terraform resource (default compute SA, `roles/datastore.user`); actually
       applying it needs operator-run credentials not available in this session. See Progress Log.
-- [ ] [INFRA] P1. **Link 4 — confirm `google-cloud-firestore` actually lands in the VM venv.**
+- [x] ✅ [INFRA] P1. **Link 4 — confirm `google-cloud-firestore` actually lands in the VM venv.**
       `build_deployment_registry_store` lazily imports `google.cloud.firestore`; the VM installs deployment-service with
-      `--no-deps` and UTL normally, so whether the SDK is present on a VM is **UNVERIFIED**. Same reason as link 3.
+      `--no-deps` and UTL normally, so whether the SDK is present on a VM is **UNVERIFIED**. Same reason as link 3. —
+      CONFIRMED ABSENT, then FIXED: unified-trading-library@907d3ab. Full detail in Progress Log.
 - [ ] [VERIFY] P1. **Verification must be POSITIVE — absence of errors proves NOTHING.** The
       `_maybe_build_registry_store()` hardening shipped above (deliberately, to protect fleet liveness) makes links 3+4
       fail **silently**: a missing SDK or missing IAM logs
@@ -257,6 +258,28 @@ entry). UTC datetimes only. `quality-gates.sh`-green before each commit; commit 
 - No `os.getenv`; UTC datetimes; reaper never raises into the sync loop; QG green on both repos.
 
 ## Progress Log
+
+- **2026-07-24 (slot 2, infra) — [INFRA] P1 "Link 4 — confirm google-cloud-firestore lands in the VM venv" — GAP
+  CONFIRMED + FIXED.** Continued on this todo (read-only investigation, no new credentials needed) while Link 3 waits on
+  `BLK-ab723fe3`. Traced the VM install path in `setup-data-pipeline-vm.sh`: `deployment-service` ALWAYS installs
+  `--no-deps` (unconditionally, not just for `synthetic-benchmark` VMs — the `_route_to_nodeps` reset only fires for
+  `_base != "deployment"`), while `unified-trading-library` installs with full deps (`INSTALL_ARGS_STD`) — and
+  `_maybe_build_registry_store()` / the lazy `firestore` import live in UTL's `deployment_registry.py`, not
+  deployment-service, so the STD-install path is what matters. Grepped UTL's `pyproject.toml` `dependencies = [...]`
+  list directly: **zero** hits for `firestore` (it declares `google-cloud-storage`/`-secret-manager`/`-pubsub`/
+  `-logging`/`-bigquery`/`-compute`/`-run`/`-build`/`-scheduler` but never `-firestore`) — confirming the gap the todo
+  suspected is real, not hypothetical: every VM today gets `ModuleNotFoundError` on the lazy import, silently degrading
+  to GCS-only (the same hardening from the 2026-07-17 session). Cross-checked deployment-api's own `pyproject.toml`
+  (`google-cloud-firestore>=2.0.0,<3.0.0`, used by its separate CI-status Firestore store) — confirms deployment-api's
+  Cloud Run container is unaffected (different dependency tree, not `--no-deps`), so this gap is VM-specific only.
+  **Fixed**: added the same `google-cloud-firestore>=2.0.0,<3.0.0` floor to UTL's `pyproject.toml` (matches
+  deployment-api's already-resolved `google-cloud-firestore==2.27.0` per its `uv.lock`) and regenerated `uv.lock`
+  (`uv lock --check` confirmed staleness first; `uv lock` resolved cleanly to 2.28.0, within the `<3.0.0` ceiling — 200
+  packages total, no conflicts). QG green 3× on this diff (130-155s each); one quickmerge re-gate run hit 5 unrelated
+  `test_constants.py` bucket-name-test failures that did NOT reproduce running the same file in isolation (36/36 passed)
+  nor on a full-suite re-run immediately after (sentinel matched HEAD exactly) — test-isolation flake, not caused by
+  this diff (a dependency-list addition can't plausibly break bucket-name resolution tests). Shipped:
+  unified-trading-library@907d3ab.
 
 - **2026-07-24 (slot 2, infra) — [INFRA] P1 "Link 3 — grant the VM SA Firestore write IAM" — CODE SHIPPED, APPLY
   BLOCKED-CREDENTIALS. Checkbox left UNCHECKED — the IAM grant has NOT actually taken effect on live GCP.** Identified
