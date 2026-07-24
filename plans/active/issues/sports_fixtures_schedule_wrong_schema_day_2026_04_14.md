@@ -167,7 +167,55 @@ sports_reference/by_date/day=2026-04-14/pipeline_mode=batch_api_football/entity=
       entities remain unaffected. `quality-gates.sh` green.
 - [ ] [DATA] P2. Snapshot + re-fetch the real `day=2026-04-14` fixtures content for the 85 affected leagues (repo:
       instruments-service). **Done when**: all 85 `league=<L>/fixtures_schedule.parquet` shards for `day=2026-04-14`
-      read with the correct fixtures schema.
+      read with the correct fixtures schema. **BLOCKED — new finding (2026-07-24, slot 4), see below; NOT attempted
+      against PROD.**
+
+## New finding — the 85 "affected league" folder names are not registered UAC canonical league_ids at all (2026-07-24, slot 4)
+
+Built `scripts/recover_fixtures_schedule_wrong_schema_day_2026_04_14.py` (dry-run only, no PROD write) to re-fetch
+`api_football`'s real fixtures for `day=2026-04-14` (single day-level call, mirroring
+`_ensure_canonical_fixtures_for_override`'s pattern) and filter to the 85 affected leagues. The live dry-run fetch
+succeeded broadly (substantial real fixture data returned across many leagues, confirmed via the fixed
+`CANONICAL_LEAGUE_ID_LOOKUP_MISS` warning firing repeatedly for OTHER numeric ids resolving to real data) — but
+**matched 0 of the 85 target leagues, 0 fixture rows total.**
+
+Investigated whether this is genuine honest-absence (plausible on its face — many of the 85 are reserve/U18-U20/
+regional lower-division leagues) vs a bug, by checking the UAC registry directly for 3 of the 85 (all major,
+should-obviously-be-tracked leagues): `get_league("ENGLAND_CHAMPIONSHIP")`, `get_league("ITALY_SERIE_B")`,
+`get_league("SAUDI_ARABIA_PRO_LEAGUE")` — **all three return `None`.** A workspace-wide grep of `unified-api-contracts/`
+for the literal string `"ENGLAND_CHAMPIONSHIP"` returns **zero hits anywhere** — the actual registered prediction-tier
+canonical id for this league is the abbreviated `ENG_CHAMPIONSHIP` (`league_data_prediction.py:33`), a materially
+different string shape (`ENGLAND_CHAMPIONSHIP` vs `ENG_CHAMPIONSHIP` — not a case/whitespace variant, a different
+abbreviation convention entirely).
+
+**Conclusion: the 85 "affected league" strings extracted directly from the bad shards' `league=<X>` folder names are not
+UAC `api_football` canonical league_ids under ANY tier/registry function checked — they use an entirely different,
+longer "COUNTRY_LEAGUENAME" naming convention.** This means:
+
+1. My dry-run's "0 of 85 covered" result is NOT evidence of honest-absence — it's a naming-convention mismatch in the
+   filter itself (`_canonical_league_id()` on a real af_league_id would never produce e.g. `ENGLAND_CHAMPIONSHIP`, only
+   `ENG_CHAMPIONSHIP`), so the filter could never match regardless of whether real fixtures exist.
+2. The wrong-schema shards' partition names are therefore NOT derived from a normal `_canonical_league_id()` call at all
+   — reopens the still-unresolved DIAG P1 todo above (which writer produced this content) with a NEW clue: the
+   partition-name generator for these 85 bad writes used a naming scheme that exists nowhere in the current registry,
+   which may narrow down which historical code path is responsible (or point to a different provider's own internal
+   league-naming convention — SoccerFootballInfo/Understat/Transfermarkt/FootyStats all have their own adapters and
+   could plausibly use a fuller "COUNTRY_LEAGUE" convention, consistent with the issue's own "wrote its OTHER product to
+   the fixtures_schedule path" hypothesis).
+3. **Not safe to proceed with the re-fetch-and-write recovery as scoped** until this is resolved: writing real fixtures
+   data keyed to a canonical league_id would land in a DIFFERENT partition (the correctly-canonicalized one, e.g.
+   `league=ENG_CHAMPIONSHIP`) than the currently-broken one (`league=ENGLAND_CHAMPIONSHIP`) — so even a successful
+   fetch+write would NOT fix the shard this todo names; it would create a new, correctly-schemaed shard elsewhere while
+   leaving the bad one exactly as broken as before.
+
+**Recommended next step**: before any PROD write, determine what the 85 folder-name strings actually correspond to —
+check if they match a NON-api_football provider's own league taxonomy (SoccerFootballInfo/Understat/Transfermarkt/
+FootyStats league-name constants), or a historical/renamed form of the UAC registry (git-blame `league_data*.py` for
+whether `ENG_CHAMPIONSHIP` was ever spelled `ENGLAND_CHAMPIONSHIP`). The recovery script
+(`scripts/recover_fixtures_schedule_wrong_schema_day_2026_04_14.py`, dry-run-verified-safe / apply-mode untested) is
+ready to reuse once the correct target-identification approach is confirmed — it was NOT run in `--apply` mode, no PROD
+object was touched or snapshotted.
+
 - [x] ✅ [CODE] P2. Add a schema assertion (column-set check) at the fixtures_schedule writer so a future mismatch fails
       loud instead of silently producing an unreadable-by-projection shard (repo: instruments-service). **Done when**: a
       unit test feeds a wrong-schema DataFrame into the writer and asserts a loud failure. — Same commit as the P1 todo
