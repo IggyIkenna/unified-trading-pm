@@ -169,12 +169,13 @@ entry). UTC datetimes only. `quality-gates.sh`-green before each commit; commit 
       predate the fork fix so any rebuild after 2026-07-09 should already carry them, but confirm rather than assume;
       this is the other half of the Resources-column gap folded in below. — VERIFIED 2026-07-24 (slot 2). Full detail in
       Progress Log.
-- [ ] [INFRA] P1. **Link 2 — wire `DEPLOYMENT_REGISTRY_FIRESTORE_DUALWRITE` into the VM launch env.** Measured
+- [x] ✅ [INFRA] P1. **Link 2 — wire `DEPLOYMENT_REGISTRY_FIRESTORE_DUALWRITE` into the VM launch env.** Measured
       2026-07-17: **zero** launchers reference the flag. `_maybe_build_registry_store()` reads it off
       `UnifiedCloudConfig` (pydantic `AliasChoices` → process env), while launchers pass config via GCE metadata
       (`METADATA="${METADATA},DEPLOYMENT_ENV=..."`) — so FIRST verify metadata actually reaches the heartbeat process's
       env, THEN thread the flag through the launcher path (+ deployment-api's env for the reaper). This is per-launcher
-      wiring, **not** a one-line Cloud Run env var. (PULLED OUT of the `[DATA]` todo below, where it was only prose.)
+      wiring, **not** a one-line Cloud Run env var. (PULLED OUT of the `[DATA]` todo below, where it was only prose.) —
+      deployment-service@e726aab. Full detail in Progress Log.
 - [ ] [INFRA] P1. **Link 3 — grant the VM service account Firestore write IAM.** VMs write GCS only today; Firestore
       writes need `roles/datastore.user` (or equivalent) on the VM SA. **UNVERIFIED** — must be checked before the soak,
       because of the silent-degradation catch below.
@@ -254,6 +255,22 @@ entry). UTC datetimes only. `quality-gates.sh`-green before each commit; commit 
 - No `os.getenv`; UTC datetimes; reaper never raises into the sync loop; QG green on both repos.
 
 ## Progress Log
+
+- **2026-07-24 (slot 2, infra) — [INFRA] P1 "Link 2 — wire the dual-write flag into the VM launch env" — SHIPPED.**
+  Traced the metadata→env mechanism `setup-data-pipeline-vm.sh` already uses for `DEPLOYMENT_ENV` (`_meta KEY default`
+  reads the GCE metadata attribute via the instance-metadata server, then `export KEY` makes it a process env var for
+  the setup script's own shell) and confirmed the child process DOES inherit it: `_launch_with_tee()` invokes the
+  workload via a plain `nohup bash "$TEE_WRAPPER" ... bash -c "$cmd"` (no `env -i` / systemd unit / `sudo -u` that would
+  reset the environment) — the same inheritance path already proven in production for `VM_NAME`/`VM_ASSET_GROUP`/
+  `DEPLOYMENT_ENV`. Added the same `_meta` + `export` pair for `DEPLOYMENT_REGISTRY_FIRESTORE_DUALWRITE` right after the
+  `DEPLOYMENT_ENV_SHORT` export (before any registry-constructing code path fires), defaulting to `"false"` — matching
+  UTL's own field default, so every launcher that hasn't opted in keeps writing GCS-only. Scoped to the metadata→env
+  **plumbing** only, per the todo's own framing: turning the flag ON for VMs is the separate, already- tracked `[DATA]`
+  todo below ("Enable dual-write on a SUBSET of the live fleet"), not this one. Cloud Run's side
+  (`+ deployment-api's env for the reaper`) needs no code change — `UnifiedCloudConfig`'s `AliasChoices` already picks
+  up ANY process env var by name, so setting it on the Cloud Run service is a plain `--update-env-vars` flip, which is
+  that same `[DATA]` todo's job (an ops action, not a code gap). — deployment-service@e726aab (QG green 79s, shipped via
+  quickmerge --agent).
 
 - **2026-07-24 (slot 2, infra) — [INFRA] P1 "Link 1 — rebuild the VM code tarballs" — VERIFIED, no code change needed.**
   The rebuild trigger question: there is **no automated CI trigger** for `create-code-tarballs.sh` — grepped every
