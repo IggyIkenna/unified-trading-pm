@@ -2,9 +2,10 @@
 doc_type: codex-ssot
 title: Sports Batch/Live Architecture
 summary:
-  Per-asset-group batch/live architecture for asset_group=sports — no in-play live source (all sources are
-  replay-capable batch), the (source,data_type,league_id,day) shard atom with fixture_id as a row column,
-  L0Matcher/SportsMatchingEngine fills, and the fixture-dependent empty-reason taxonomy.
+  Per-asset-group batch/live architecture for asset_group=sports — odds_api is a live source today (REST-poll → GCS +
+  Pub/Sub; see sports-live-odds-connectivity.md), every other sports source stays replay-capable batch-only, the
+  (source,data_type,league_id,day) shard atom with fixture_id as a row column, L0Matcher/SportsMatchingEngine fills, and
+  the fixture-dependent empty-reason taxonomy.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -30,7 +31,7 @@ referenced_by:
     /codex/04-architecture/tradfi-batch-live.md,
   ]
 owner:
-last_reviewed: 2026-07-23
+last_reviewed: 2026-07-24
 code_refs:
 plan:
   plans/archive/2026_07/sports_manifest_canonicalisation_2026_06_01.md +
@@ -58,28 +59,41 @@ plan:
 > [`/codex/02-data/sports-data-types-catalog.md`](/codex/02-data/sports-data-types-catalog.md). SSOT for both:
 > `plans/active/sports_consolidated_closeout_2026_07_19.md` (ENTITY-SPLIT / K-DECISIONS).
 
+> **⚠️ CORRECTION (2026-07-24) — §1/§2/§6 wrongly claimed sports has no live source; `odds_api` IS live.** UAC
+> `SOURCE_MODE_CAPABILITY["odds_api"]` flipped to `{BATCH, LIVE, REPLAY}` in `unified-api-contracts@249ca53f2`
+> (2026-06-21) — the code comment there calls it "the FIRST live sports source" — but this doc's prior
+> `last_reviewed: 2026-07-23` pass never touched the §1 capability row or the "no in-play live source" framing repeated
+> in §1/§2/§6. Fixed in place below, scoped to `odds_api` only — every OTHER sports source (fixtures, reference,
+> weather, xG, transfers, SFI) remains batch/replay-only with no live archetype. Live-path mechanics (poll cadence,
+> Pub/Sub topic, MDPS producer) are the SSOT of [`sports-live-odds-connectivity.md`](sports-live-odds-connectivity.md),
+> not duplicated here. Provenance: `plans/active/issues/sports_plan_and_docs_reconcile_findings_2026_07_24.md`.
+
 ---
 
 ## §1 Sports sources in scope
 
-Sports is fixture-centric, multi-source, and (today) has **no in-play live source** — every source is a batch/REST
-archive or scheduled snapshot, and every source is **replay-capable** (historical endpoints + Secret-Manager keys
-already held), per UAC `SOURCE_MODE_CAPABILITY`:
+Sports is fixture-centric and multi-source. **`odds_api` is a live source today** — UAC `SOURCE_MODE_CAPABILITY`
+declares `odds_api = {BATCH, LIVE, REPLAY}` (`_source_priority_data.py`, commit `249ca53f2`, 2026-06-21 — "the FIRST
+live sports source"); live-path mechanics (REST-poll cadence, Pub/Sub topic, MDPS producer) are the SSOT of
+[`sports-live-odds-connectivity.md`](sports-live-odds-connectivity.md), not duplicated here. Every OTHER sports source
+is still a batch/REST archive or scheduled snapshot with no live archetype — but every source, `odds_api` included, is
+**replay-capable** (historical endpoints + Secret-Manager keys already held), per UAC `SOURCE_MODE_CAPABILITY`:
 
 | Source                     | Role (data_types)                                                                                                                                                                                                                                                                        | `SOURCE_MODE_CAPABILITY` (UAC)           |
 | -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- |
 | `api_football`             | Primary fixture lifecycle: `fixtures_schedule`/`fixtures_outcomes` (split entity, 2026-05-23 — legacy bare `entity=fixtures/` FROZEN, never an active write target), fixture_lineups/events/stats/player_stats, injuries, results, standings, + reference (teams/players/venues/leagues) | `{BATCH, REPLAY}`                        |
 | `footystats`               | matches, odds, predictions (+ deferred `fixtures_schedule`/`fixtures_outcomes` multi-source merge candidate)                                                                                                                                                                             | `{BATCH, REPLAY}`                        |
-| `odds_api`                 | odds_snapshot, odds_movement, arbitrage (multi-bookmaker odds)                                                                                                                                                                                                                           | `{BATCH, REPLAY}`                        |
+| `odds_api`                 | odds_snapshot, odds_movement, arbitrage (multi-bookmaker odds)                                                                                                                                                                                                                           | `{BATCH, LIVE, REPLAY}`                  |
 | `understat`                | understat_xg / xg / xg_shots                                                                                                                                                                                                                                                             | `{BATCH, REPLAY}`                        |
 | `soccer_football_info`     | sfi_progressive_stats                                                                                                                                                                                                                                                                    | `{BATCH, REPLAY}`                        |
 | `transfermarkt`            | transfer_records, player_values                                                                                                                                                                                                                                                          | `{BATCH, REPLAY}`                        |
 | `open_meteo`               | weather / weather_forecast (fixture-pinned)                                                                                                                                                                                                                                              | `{BATCH, REPLAY}`                        |
 | `mdps_odds_horizon_bucket` | Computed odds_horizon_bucket (internal service source)                                                                                                                                                                                                                                   | `{BATCH, LIVE, REPLAY}` (service source) |
 
-A `live_<source>` capability lands only when a sports in-play live archetype exists — the capability matrix is the gate,
-not an aspiration (closed-set rule: a `live_<source>`/`replay_<source>` PipelineMode member exists iff
-`SOURCE_MODE_CAPABILITY` declares it).
+A `live_<source>` capability lands only when a sports in-play live archetype exists for THAT source — the capability
+matrix is the gate, not an aspiration (closed-set rule: a `live_<source>`/`replay_<source>` PipelineMode member exists
+iff `SOURCE_MODE_CAPABILITY` declares it). `odds_api` has already cleared this gate (`LIVE_ODDS_API` PipelineMode member
+exists, `pipeline_mode.py`); the other 6 sports sources have not.
 
 **Source of truth**: UAC `SOURCE_PRIORITY[("sports", <data_type>)]` (per-data_type source order) +
 `SOURCE_MODE_CAPABILITY` (mode capability) + `registry/capability_declarations/` (per-source operations). Collection
@@ -93,23 +107,30 @@ reference-shaped) + the MTDS odds connectors; the computed odds-horizon buckets 
 The core invariant from [`batch-live-architecture.md §1`](batch-live-architecture.md) applies: ONE sports pipeline,
 mode-conditional logic only at the 4 seams. Sports-specific shape:
 
-- **Sports is the canonical "batch sole SSOT" asset group (M6 case 3).** With no live source, the `[batch-cutoff → now]`
+- **Fixtures/reference sources stay the "batch sole SSOT" shape (no live source); `odds_api`-sourced data does not.**
+  Fixtures (api_football) and every other non-odds sports source have no live archetype — the `[batch-cutoff → now]`
   continuity tail resolves per shard to: autostart `replay_<source>` where the gap is re-fetchable (all sports sources
-  are replay-capable), else wait-for-batch / a configured-OK-gap (per-shard DR config). Sports fixtures are the worked
-  example of M6's "no replay AND no live" arm in the ratified contract — the startup gate never demands a live feed that
-  cannot exist (`could_exist(shard, mode)` guardrail, M2×M3).
+  are replay-capable), else wait-for-batch / a configured-OK-gap (per-shard DR config); the startup gate never demands a
+  live feed that cannot exist (`could_exist(shard, mode)` guardrail, M2×M3). **`odds_api`-sourced data_types
+  (`odds_snapshot`/`odds_movement`/`arbitrage`/`trades`) are the exception: `odds_api` is `{BATCH, LIVE, REPLAY}` today
+  (§1)** — live-path mechanics are the SSOT of [`sports-live-odds-connectivity.md`](sports-live-odds-connectivity.md),
+  not duplicated here. _(Flagged, not resolved by this pass:
+  [`pipeline-mode-partition.md` § M6](/codex/02-data/pipeline-mode-partition.md) names "sports fixtures" as the M6
+  case-3 "no replay AND no live" worked example, but this doc's own §1 table shows api_football as REPLAY-capable — a
+  pre-existing case-1-vs-case-3 labeling question, orthogonal to this pass's `odds_api` fix, that needs its own review
+  by whoever owns M6 case semantics — not resolved here.)_
 - **Forward-looking fixtures are a CADENCE property, not a new pipeline_mode (M8).** The api-football 7-days-ahead
   fixtures snapshot is `batch_api_football` + cadence `scheduled_recurring` — sparse/forward-looking data never gets its
   own mode (that would fragment the reader's union).
 - **Seasonality replaces the trading calendar.** Where TradFi gates staleness on `is_non_trading_day`, sports gates
   expected-coverage on the fixture calendar: no fixture scheduled ⇒ absence is the EXPECTED state (see §4 reasons).
 
-| Seam            | Batch                                        | Live (when an in-play archetype lands)         |
-| --------------- | -------------------------------------------- | ---------------------------------------------- |
-| Data source     | REST archive snapshots → Parquet on GCS      | In-play odds feed (capability-gated, none yet) |
-| Feature compute | Load feature Parquet from GCS                | Embedded UTL `feature_calculator` in-process   |
-| ML inference    | Load prediction Parquet from GCS             | Subscribe to prediction topic                  |
-| Execution fills | `SportsMatchingEngine` (L0 top-of-book odds) | Real bookmaker bet placement                   |
+| Seam            | Batch                                        | Live (`odds_api`-sourced data_types only — §1)                                    |
+| --------------- | -------------------------------------------- | --------------------------------------------------------------------------------- |
+| Data source     | REST archive snapshots → Parquet on GCS      | Odds API REST-poll + exchange poll → Pub/Sub (`sports-live-odds-connectivity.md`) |
+| Feature compute | Load feature Parquet from GCS                | Embedded UTL `feature_calculator` in-process                                      |
+| ML inference    | Load prediction Parquet from GCS             | Subscribe to prediction topic                                                     |
+| Execution fills | `SportsMatchingEngine` (L0 top-of-book odds) | Real bookmaker bet placement                                                      |
 
 ---
 
@@ -152,6 +173,12 @@ would 10× the manifest for zero failure-isolation gain (multi-axis correction, 
 - `EXPECTED_NO_MAPPING` — canonical league/entity exists but the per-source provider mapping is absent (fetch not
   addressable; coverage-extendable, not permanently empty).
 - `EXPECTED_PRE_SOURCE_COVERAGE_START` / `EXPECTED_PAST_SOURCE_COVERAGE_END` — per-source archive bounds.
+- **Gap, not yet closed-set (flagged 2026-07-24)**: no `EmptyConfirmedReason` member exists today for
+  "`odds_horizon_bucket` window missed because the fixture kicked off early" —
+  [`sports-data-types-catalog.md`](/codex/02-data/sports-data-types-catalog.md) previously cited a non-existent
+  `EXPECTED_FIXTURE_STARTED_EARLY`; corrected there to flag the gap explicitly rather than claim the member exists.
+  Needs an actual UAC enum addition (mint a new member, name TBD) before this case can honestly be `empty_confirmed` —
+  open follow-up, not a shippable reason yet.
 - Any other absence MUST be `record_failed(error=classify_venue_error(...))` — a 401/quota failure is `attempted_failed`
   (retryable), never honest absence.
 
@@ -165,8 +192,9 @@ drilldown carry the identical atom. SSOT:
 
 - `pipeline_mode` is source-aware: `batch_api_football` / `batch_footystats` / `batch_odds_api` / `batch_understat` /
   `batch_soccer_football_info` / `batch_transfermarkt` / `batch_open_meteo` (+ computed
-  `batch_mdps_odds_horizon_bucket`); `replay_<source>` members exist for every sports source per the capability matrix.
-  NEVER coarse `batch`, never an asset_group-glued value.
+  `batch_mdps_odds_horizon_bucket`); `replay_<source>` members exist for every sports source per the capability matrix,
+  and `live_odds_api` additionally exists for `odds_api` (§1 — the one sports source with a live archetype today). NEVER
+  coarse `batch`, never an asset_group-glued value.
 - `transport` is a COLUMN (`rest` for every sports source today), never glued into the source name (R4).
 - Row-level `source` column + per-source manifest row are REQUIRED (`record_captured(source=...)`; `MissingSourceError`
   on blank). Sports is one of the crosscutting-provenance RED gaps — the historical `_index` source-stamp + the
@@ -178,16 +206,21 @@ drilldown carry the identical atom. SSOT:
 
 ## §6 Live pipeline timing — sports
 
-There is no sports live stream today (capability matrix, §1). The timing rules that already apply:
+**`odds_api` live odds streaming is operating today** (§1) — REST-poll → GCS + Pub/Sub; SSOT for the live-path mechanics
+(poll cadence, adapters, MDPS producer, Pub/Sub topic) is
+[`sports-live-odds-connectivity.md`](sports-live-odds-connectivity.md), not duplicated here. Every OTHER sports source
+still has no live stream. Timing rules that apply:
 
 - Scheduled snapshot cadences (fixtures 7-days-ahead, daily results/stats sweeps) are deployment topology — cadence
   column + deployment-registry `run_class`, per M8.
 - The MDPS odds-horizon-bucket computation consumes batch odds snapshots and emits at its own cadence with write-time
   `available_at` (never derived at read time — `LookaheadBiasError` discipline applies to odds movement exactly as to
   ticks).
-- When an in-play archetype lands, live odds ride the standard MTDS → Redis → MDPS cascade with UTC-aligned boundaries
-  ([`batch-live-architecture.md §10`](batch-live-architecture.md)) and the source gains `Mode.LIVE` in the capability
-  matrix FIRST (closed-set rule) — the M6 startup gate then resolves sports shards to case 1/2 automatically.
+- Live odds ride the standard MTDS → Redis → MDPS cascade with UTC-aligned boundaries
+  ([`batch-live-architecture.md §10`](batch-live-architecture.md)); `odds_api` already carries `Mode.LIVE` in the
+  capability matrix (closed-set rule cleared) — the M6 startup gate resolves `odds_api`-sourced shards to case 1/2
+  automatically. A future non-odds sports source landing a live archetype would need to clear the same `Mode.LIVE` gate
+  before this applies to it.
 
 ---
 

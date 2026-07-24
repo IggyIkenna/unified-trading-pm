@@ -1461,10 +1461,14 @@ recalibration todo above). The 313 missing are pre-existing coverage holes owned
 The instruction ("just fix the leakage in the odds and any associated features") is closed: the (c) guard no longer
 over-blocks a phantom, the pivot no longer empties a real date, and every date is in its correct, honest state.
 
-## RE-TRIAGE (2026-07-23)
+## RE-TRIAGE (2026-07-23, count corrected 2026-07-24)
 
-**Verdict: RESOLVED BY LATER WORK** (core investigation + all but one spun-off P0/P1 item), **one residual P1 still
-open**, confirmed against current code.
+**Verdict: RESOLVED BY LATER WORK** (core investigation + all spun-off P0/CODE items), **but the 2026-07-23 pass
+undercounted this doc's own remaining Todos** — it named "one residual P1" (the PIT-gate item only). A direct
+`grep -n '- \[ \]'` of this file shows **5 open checkboxes** (lines 547, 1006, 1015, 1023, 1028 — the finding
+`sports_plan_and_docs_reconcile_findings_2026_07_24.md` flagged this). All 5 are re-verified below against current
+code/plans on 2026-07-24, not inherited from the 2026-07-23 pass or from each other; **none turned out to be
+already-fixed-but-unflipped** — every one is genuinely still open.
 
 - The doc's own central question ("does SFI substitute for half-time odds?") is answered and the OR-5b(c) → B-REFINED
   recommendation stands unchallenged in the umbrella closeout (`sports_master_closeout_2026_07_21.md` §D, `ad#4`, 2 days
@@ -1473,13 +1477,34 @@ open**, confirmed against current code.
   (features-service@c57cc753), the closing-line/CLV leak fix + 3 quarantined models (features-service@bf6fc2f4 +
   ml-service@c0603cb), the SFI `1h_*` capture-gap fix (uac@96cdfc4f + instruments-service@1f7c51cf +
   features-service@5a8684ed), and the fixture-identity-collapse fix (market-data-processing-service@9f2560b7).
-- **One item from this doc's own Todos is still genuinely open** — re-checked directly against current code, not
-  inherited: `_apply_ht_odds_pit_gate`'s `if not ht_break_minutes:` default-cutoff branch is still unreachable in
-  production. `features_service/sports/exporters/odds_features_exporter.py` (current `live-defi-rollout` checkout) still
-  guards the only call site with `if ht_break_minutes: bucketed = _apply_ht_odds_pit_gate(...)` (line ~287) — the gate
-  is never invoked at all when HT break times are unknown, matching this doc's original P1 exactly. Also matches the
-  master closeout's own framing:
-  `"_apply_ht_odds_pit_gate default-cutoff unreachable in prod (1 open P1; leaks already fixed)"`.
+- **All 5 of this doc's own remaining Todos are still genuinely open** — each re-checked directly against current
+  code/plans on 2026-07-24:
+  1. **(line 547, [CODE] P1)** `_apply_ht_odds_pit_gate`'s `if not ht_break_minutes:` default-cutoff branch is still
+     unreachable in production. `features_service/sports/exporters/odds_features_exporter.py` (current
+     `live-defi-rollout` checkout, line 287) still guards the only call site with
+     `if ht_break_minutes: bucketed = _apply_ht_odds_pit_gate(...)` — the gate is never invoked at all when HT break
+     times are unknown, matching this doc's original P1 exactly. Also matches the master closeout's own framing:
+     `"_apply_ht_odds_pit_gate default-cutoff unreachable in prod (1 open P1; leaks already fixed)"`. This is the item
+     the 2026-07-23 pass already named — still correct, just no longer the ONLY one.
+  2. **(line 1006, [DATA] P1)** The blank-`fixture_id` raw generation — still open, no upstream-writer fix found.
+     Checked MTDS's ODDS_API adapter (`market_tick_data_service/market_interface/adapters/sports/odds_api_adapter.py`,
+     which writes `event_id` but never a populated `fixture_id`) and its git log since 2026-07-17: no commit populates
+     `fixture_id` at write time or drops the blank column. MDPS@9f2560b7 (already shipped) makes the DOWNSTREAM derive
+     immune to this, but the raw writer itself is unchanged. Owner MTDS, per the todo.
+  3. **(line 1015, [DATA] P1)** `verify_ml_readiness.py`'s 95% non-NULL threshold — still open, still a flat un-rebased
+     constant. `features_service/sports/compute/ml_readiness_check.py:29` reads `NON_NULL_THRESHOLD: float = 0.95`
+     verbatim, with no per-horizon logic added. The recalibration against the post-purge honest matrix has not been
+     done.
+  4. **(line 1023, [DATA] P1)** Reconcile the market-data-sports manifest for the 2,436 deleted T-0 shards — still open,
+     still blocked on its stated dependency. Per
+     `plans/archive/2026_07/sports_legacy_bucket_cutover_history_2026_07_24.md` (dated the same day as this re-triage),
+     the cutover's T6.1 merge of `_index/per_vm/cutover-move-20260716.parquet` is still confirmed **NOT merged** — the
+     blocker this todo names is unchanged.
+  5. **(line 1028, [ML] P2)** Retrain the CLV models after the `ODDS_FEATURES` recompute — still open. The stated
+     prerequisite (the recompute) IS now done (see "ODDS_FEATURES recompute EXECUTED" below: 1,524/1,861 dates purged,
+     2026-07-17), but no retrain followed it: `ml-service` git log since 2026-07-17 has no CLV/retrain commit, and the 3
+     quarantined artifacts (`ml-service@c0603cb`) remain the only reference models. The prerequisite clearing does not
+     by itself close this todo — retraining is a separate, not-yet-run action.
 - The other open P0 item this doc's history references (the 423-date odds-features recompute from the
   fixture-identity-collapse fix) belongs to `sports_canonical_raw_truncated_rederive_destroys_corpus_2026_07_16.md`'s
   scope, not this doc's own remaining Todos — not duplicated here.

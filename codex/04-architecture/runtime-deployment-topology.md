@@ -693,8 +693,10 @@ subsets:
 - **Minimal:** instruments → MTDH → MDPS → execution (no ML, no features)
 - **With ML:** adds features → ML training → ML inference → strategy
 - **With risk:** adds PBM → risk → PnL → client-reporting
-- **DeFi:** adds features-service (onchain family) + unified-defi-execution-interface
-- **Sports:** adds features-service (sports family) + unified-sports-execution-interface (future)
+- **DeFi:** adds features-service (onchain family) + execution-service (unified-defi-execution-interface merged in,
+  2026-03-26)
+- **Sports:** adds features-service (sports family) + execution-service (unified-sports-execution-interface merged in,
+  2026-03-26)
 
 Each service checks config for which upstream data is available. Missing optional upstream data = service runs without
 that input (gracefully). Required upstream data = service fails fast with clear error.

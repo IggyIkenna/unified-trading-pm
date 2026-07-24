@@ -25,7 +25,7 @@ authoritative_for: [MTDS/MDPS sports data_type catalog (odds and derived types),
 referenced_by:
   [/codex/01-domain/sports-instruments.md, /codex/02-data/README.md, /codex/02-data/sports-fixtures-lifecycle.md]
 owner:
-last_reviewed: 2026-07-22
+last_reviewed: 2026-07-24
 code_refs:
 ---
 
@@ -266,7 +266,14 @@ and convergence of bookmaker lines in the final hours is a key market-efficiency
 
 `T-0` = last captured odds before kickoff; this is the "closing line" used for CLV computation in strategy-service.
 `T-24h` is typically the opening line for fixtures announced more than 24h ahead. Horizons where the match had already
-started (e.g. a fixture kicked off early) have `empty_confirmed` status with reason `EXPECTED_FIXTURE_STARTED_EARLY`.
+started (e.g. a fixture kicked off early) are honest absence — but **`EXPECTED_FIXTURE_STARTED_EARLY` does NOT exist in
+UAC `EmptyConfirmedReason` today** (verified against
+`unified_api_contracts/canonical/crosscutting/_honest_coverage_empty_reasons.py`, 2026-07-24; corrected here — this doc
+previously cited it as if it shipped). No existing member cleanly covers this semantic (`EXPECTED_NO_FIXTURE` /
+`EXPECTED_FIXTURE_POSTPONED` / `EXPECTED_FIXTURE_CANCELLED` all describe a DIFFERENT fixture state, not "the fixture
+happened but started before this horizon could be captured"). **Open follow-up**: mint a real `EmptyConfirmedReason`
+member for this case (or confirm an existing one covers it) before code can emit it — don't cite
+`EXPECTED_FIXTURE_STARTED_EARLY` as a shipped reason until then.
 
 Used by features-service for betting-market-implied probability signals, CLV (closing line value), and line-movement
 trajectory features. The 8-horizon structure provides a standardised time series for ML feature engineering without
@@ -374,16 +381,16 @@ coverage (~23 books); niche sports may have 5–8 books.
 
 ## Coverage Axes
 
-| data_type               | Coverage axis                                   | Expected shards (per day)                                             | record_empty expected                                                                                 |
-| ----------------------- | ----------------------------------------------- | --------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| `odds`                  | per-league × per-bookmaker × per-fixture-date   | league × bookmaker × fixture_calendar                                 | Yes — bookmaker dark for a match day = `attempted_failed` (not `empty_confirmed`)                     |
-| `odds_snapshot`         | per-league × per-bookmaker × per-fixture-date   | same as odds                                                          | Yes — same rule as `odds`                                                                             |
-| `odds_movement`         | per-league × per-bookmaker × per-fixture-date   | same as odds                                                          | Yes — fewer than 2 intervals available = `empty_confirmed`                                            |
-| `arbitrage_opportunity` | per-league × per-fixture-date (cross-bookmaker) | league × fixture_calendar (1 shard per league-day, not per-bookmaker) | Yes — no arb found in interval = `empty_confirmed`; missing bookmaker = `attempted_failed`            |
-| `odds_horizon_bucket`   | per-league × per-bookmaker × per-fixture-date   | same as odds                                                          | Yes — horizon window missed (match started early) = `empty_confirmed[EXPECTED_FIXTURE_STARTED_EARLY]` |
-| `markets`               | per-league × per-fixture-date                   | league × fixture_calendar                                             | Yes — fixture cancelled before any book offered prices = `empty_confirmed`                            |
-| `outcomes`              | per-league × per-fixture-date                   | same as markets                                                       | Yes — market type has no outcomes (e.g. totals not offered) = `empty_confirmed`                       |
-| `settlements`           | per-league × per-fixture-date                   | same as markets                                                       | Yes — unsettled (match not yet finished) = `expected_unattempted`; postponed = `empty_confirmed`      |
+| data_type               | Coverage axis                                   | Expected shards (per day)                                             | record_empty expected                                                                                                                                                                                           |
+| ----------------------- | ----------------------------------------------- | --------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `odds`                  | per-league × per-bookmaker × per-fixture-date   | league × bookmaker × fixture_calendar                                 | Yes — bookmaker dark for a match day = `attempted_failed` (not `empty_confirmed`)                                                                                                                               |
+| `odds_snapshot`         | per-league × per-bookmaker × per-fixture-date   | same as odds                                                          | Yes — same rule as `odds`                                                                                                                                                                                       |
+| `odds_movement`         | per-league × per-bookmaker × per-fixture-date   | same as odds                                                          | Yes — fewer than 2 intervals available = `empty_confirmed`                                                                                                                                                      |
+| `arbitrage_opportunity` | per-league × per-fixture-date (cross-bookmaker) | league × fixture_calendar (1 shard per league-day, not per-bookmaker) | Yes — no arb found in interval = `empty_confirmed`; missing bookmaker = `attempted_failed`                                                                                                                      |
+| `odds_horizon_bucket`   | per-league × per-bookmaker × per-fixture-date   | same as odds                                                          | Yes — horizon window missed (match started early); no `EmptyConfirmedReason` member exists for this yet (2026-07-24 follow-up, see detail above) — NOT `EXPECTED_FIXTURE_STARTED_EARLY` (does not exist in UAC) |
+| `markets`               | per-league × per-fixture-date                   | league × fixture_calendar                                             | Yes — fixture cancelled before any book offered prices = `empty_confirmed`                                                                                                                                      |
+| `outcomes`              | per-league × per-fixture-date                   | same as markets                                                       | Yes — market type has no outcomes (e.g. totals not offered) = `empty_confirmed`                                                                                                                                 |
+| `settlements`           | per-league × per-fixture-date                   | same as markets                                                       | Yes — unsettled (match not yet finished) = `expected_unattempted`; postponed = `empty_confirmed`                                                                                                                |
 
 **Key distinction on `attempted_failed` vs `empty_confirmed` for odds types**: if a bookmaker's API returned an error or
 timeout for a fixture, the correct status is `attempted_failed` — the data MAY exist but we could not retrieve it. If
@@ -464,7 +471,8 @@ All sports MTDS handlers emit honest-coverage entries per the manifest v5 contra
 - **Historical odds before bookmaker start dates** — `get_expected_bookmakers()` `per_bookmaker_start_dates` defines the
   per-bookmaker coverage floor. Historical requests before the start date are gated by `clip_dates_to_source_coverage()`
   which returns an empty range — no backfill is possible. Status: legitimate gap, `empty_confirmed` with
-  `EXPECTED_SOURCE_COVERAGE_START`.
+  `EXPECTED_PRE_SOURCE_COVERAGE_START` (corrected 2026-07-24 — was mis-cited as `EXPECTED_SOURCE_COVERAGE_START`, which
+  does not exist in UAC; `EXPECTED_PRE_SOURCE_COVERAGE_START` is the real member).
 
 ---
 

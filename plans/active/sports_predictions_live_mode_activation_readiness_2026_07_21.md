@@ -25,6 +25,7 @@ tags: [sports, prediction, live-mode, activation-chain, readiness-ladder, mtds, 
 related:
   [
     plans/active/issues/sports_predictions_live_mode_and_backtest_execution_orphaned_2026_07_21.md,
+    /plans/active/sports_group_c_execution_backtest_harness_2026_07_21.md,
     plans/active/sports_arb_decay_window_and_alpha_gate_design_2026_07_21.md,
     plans/active/sports_odds_feature_naming_canonicalization_2026_07_21.md,
     plans/archive/2026_07/master_to_live_defi_2026_05_23.md,
@@ -37,7 +38,7 @@ related:
     plans/active/sports_consolidated_closeout_2026_07_19.md,
   ]
 created: "2026-07-21"
-last_updated: "2026-07-21"
+last_updated: "2026-07-24"
 parent_epic: sports_master
 assigned_vm: NA
 execution_scope: local-only
@@ -141,9 +142,14 @@ Per the SSOT-direction rule, these stay owned by their existing docs — this pl
   `ML_DIRECTIONAL_EVENT_SETTLED`/`SPORTS_VALUE_BETTING`). A real, currently-open bug blocks the ORIGINAL "sports arb"
   archetype specifically: `plans/active/issues/sports_arb_dutching_engine_not_wired_to_factory_2026_07_21.md`
   (`SportsArbDutchingEngine` not in the factory dispatch table).
-- **Group-C execution-alpha harness** — still an open DESIGN DECISION in the same parent issue doc (does sports even
-  need a matching-engine harness, or was the original ask imprecise phrasing for "prove the strategy backtest works"?) —
-  not decided yet, tracked there, not duplicated here.
+- **Group-C execution-alpha harness** — **decided YES, genuinely needed** (resolved, not open — corrected 2026-07-24 per
+  the plan-reconciliation audit; the parent issue doc's Group-C decision-todo is checked `[x]`: "~~Decide whether
+  sports/predictions actually needs a Group-C execution-alpha harness~~ — **decision: YES, genuinely needed (not a
+  category error like the sibling Group-B/C conflation todo above) — scoped as its own plan, not built now.**"
+  `L0Matcher` already generically routes sports/prediction `BookmakerCategory`/`"BET"` sources to `BookType.L0_TOB`, so
+  the missing piece is purely a `run_sports_backtest` CLI entrypoint, not a from-scratch harness). Scoped — not yet
+  built — in `sports_group_c_execution_backtest_harness_2026_07_21.md`, sitting for operator review/dispatch, same as
+  the arb-decay-window design doc below.
 - **Arb-decay-window + paper-trade alpha gate** — spec'd (design-only, no implementation) in
   `sports_arb_decay_window_and_alpha_gate_design_2026_07_21.md` (BLK-b567ce7d), pending operator review/dispatch.
 - **FSS/ML/strategy schema naming** — the 4-way `spread_calculator`-adjacent naming mismatch is ruled (BLK-a1ce4719, UAC
@@ -173,9 +179,11 @@ Per the SSOT-direction rule, these stay owned by their existing docs — this pl
       `batch-live-architecture.md` §4) — depends on the MDPS live feed above actually arriving. (repo: features-service)
 - [ ] [REVIEW] P3. Run a sports archetype through the existing CLI-primary promote workflow (`run-paper.sh` →
       `preflight-cutover.sh` → `launch-strategy-paper-vm.sh`, ≥7 days, then `run-live.sh` →
-      `launch-strategy-live-vm.sh`) once it reaches `CANDIDATE` phase via a passing Group-B (+ Group-C if Todo below
-      rules one is needed) backtest — no new promote-workflow engineering, just executing the existing chain. (repo:
-      strategy-service, execution-service)
+      `launch-strategy-live-vm.sh`) once it reaches `CANDIDATE` phase via a passing Group-B backtest AND the Group-C
+      execution-alpha harness (decided YES-needed per
+      `sports_predictions_live_mode_and_backtest_execution_orphaned_2026_07_21.md` — scoped but not yet built in
+      `sports_group_c_execution_backtest_harness_2026_07_21.md`, which must land first) — no new promote-workflow
+      engineering, just executing the existing chain. (repo: strategy-service, execution-service)
 - [ ] [OPERATOR] P3. Final explicit go-ahead to flip sports (and separately, prediction, once it reaches this rung) from
       paper to live trading — requires the full readiness-ladder checklist (Groups A-H,
       `master_to_live_defi_2026_05_23.md`) passing for the asset group, same bar cefi/defi cleared. **This is the actual
@@ -196,3 +204,10 @@ Per the SSOT-direction rule, these stay owned by their existing docs — this pl
   the existing promote-workflow CLI) via a dedicated research pass, not invented from scratch — see the "structural
   blocker" section for why this genuinely differs from the cefi/defi case (no live odds source exists for sports today,
   vs. cefi/defi which had one to wire up).
+- 2026-07-24: **Corrected per the 2026-07-23/24 plan-reconciliation audit
+  (`plans/active/issues/sports_plan_and_docs_reconcile_findings_2026_07_24.md`)** — the "Prerequisites already tracked
+  elsewhere" section's Group-C bullet wrongly said the harness need was "not decided yet"; the parent issue doc
+  (`sports_predictions_live_mode_and_backtest_execution_orphaned_2026_07_21.md`) actually has that exact decision-todo
+  checked `[x]` with "decision: YES, genuinely needed", which spawned
+  `sports_group_c_execution_backtest_harness_2026_07_21.md` (now added to `related:`). Also corrected Todo 5's "Group-C
+  if Todo below rules one is needed" phrasing, which assumed the same stale undecided state.

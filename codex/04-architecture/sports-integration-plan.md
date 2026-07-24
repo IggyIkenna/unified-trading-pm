@@ -28,7 +28,13 @@ related:
   ]
 created: 2026-03-27
 authoritative_for: []
-referenced_by: [/codex/04-architecture/sports-batch-live.md, /codex/04-architecture/sports-live-odds-connectivity.md]
+referenced_by:
+  [
+    /codex/04-architecture/sports-batch-live.md,
+    /codex/04-architecture/sports-live-odds-connectivity.md,
+    /codex/04-architecture/README.md,
+    /codex/00-SSOT-INDEX.md,
+  ]
 owner:
 last_reviewed: 2026-07-23
 superseded_by:
