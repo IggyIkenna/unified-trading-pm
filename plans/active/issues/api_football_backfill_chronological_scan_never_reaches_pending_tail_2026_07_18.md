@@ -12,7 +12,7 @@ summary:
   primary previously-undiagnosed reason this todo's many relaunches never closed the gate regardless of VM health. Filed
   an immediate-mitigation todo (narrow pending-cluster relaunch) and a systemic fix todo (manifest-aware date-jump in
   the backfill loop).
-status: open
+status: resolved
 nature: issue
 asset_group: [sports]
 stage: [data]
@@ -29,7 +29,7 @@ parent_epic: sports_master
 priority: P1
 assigned_vm: NA
 source: [sports_p2_history_apifootball_2015_to_present-001]
-resolved_by:
+resolved_by: instruments-service@15df7d14, features-service@12bf6efe, deployment-api@317a58a, deployment-service@51c07c3
 locked_by:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
@@ -219,7 +219,8 @@ Two independent, non-conflicting fixes:
       `vm_prefix_registry.py` entry, so name-based fleet inspection (this audit, the zombie-watchdog's per-prefix
       staleness threshold) cannot disambiguate which launcher produced a given `fs-backfill-*` VM without reading its
       metadata/command line. Give one of the two launchers a distinct prefix + registry entry. (repo:
-      deployment-service) — **DONE 2026-07-18 slot-4, `deployment-service@613ec25` + `deployment-api@317a58a`**:
+      deployment-service) — **DONE 2026-07-18 slot-4, `deployment-service@51c07c3`** (mis-cited as `613ec25` prior to
+      2026-07-24 correction; `613ec25` is an unrelated cefi-backfill-boot-disk commit) **+ `deployment-api@317a58a`**:
       footystats keeps `fs-backfill-` (unchanged); `launch-features-sports-backfill-vm.sh` moved to its own
       `fts-backfill-` prefix (distinct from the `fss-backfill-vm-N` parallel-fanout variant of the same backfill),
       updating its VM_NAME + singleton-lock filter + `--force` help text. Added the new prefix to every tracking surface

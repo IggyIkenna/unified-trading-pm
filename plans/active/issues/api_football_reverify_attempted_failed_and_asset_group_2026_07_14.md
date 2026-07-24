@@ -95,13 +95,16 @@ that should never happen. None are blocked on credentials.
 
 ## Recommended decision + todos
 
-- [ ] [DATA] P1. **Re-fetch backfill the ~3,116 UNDOCUMENTED api_football attempted_failed** (INJURIES 1,946, FIXTURES
+- [x] [DATA] P1. **Re-fetch backfill the ~3,116 UNDOCUMENTED api_football attempted_failed** (INJURIES 1,946, FIXTURES
       612, blank-data_type 461, PLAYER_STATS 73, TEAMS 24) via the existing per-fixture/per-entity recovery path
       (`instruments-service` `_fetch_sports_reference_data`, same pattern as
       `api_football_attempted_failed_residual_closer_2026_07_13.py`). Whatever genuinely re-fetches to 0 rows with a
       clean 2xx `FetchEvidence` → relabel `empty_confirmed(SOURCE_RETURNED_ZERO)`; the rest must capture. Investigate
       the 461 blank-data_type failures first (a blank data_type is itself suspect — likely a writer/enumerator bug).
-      (repo: instruments-service)
+      (repo: instruments-service) — **STALE CHECKBOX, corrected 2026-07-24**: the "Update 2026-07-15" section below
+      already states "Finding A (undocumented attempted_failed): CLOSED... no action needed on this todo beyond what's
+      already landed" (`instruments-service@493393c8` + `21591e54` + `9b4f7655`). This checkbox was never flipped to
+      match; flipping now, no new work performed.
 - [x] [DATA] P1. **Extend the consolidator asset_group heal to the instruments-store-sports bucket** so blank/pre-v9
       sports rows are stamped `asset_group=sports` at consolidation (mirror `_asset_group_for_market_data_bucket` for
       the `instruments-store-{ag}` bucket family, OR a one-off repair pass over the 22,668 blank rows). Fixes the sports

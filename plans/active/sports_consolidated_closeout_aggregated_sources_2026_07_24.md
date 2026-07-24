@@ -125,10 +125,17 @@ drift_direction: advance-code
     - **[DATA] P1.** Post-backfill relabel (after the 6 running backfill VMs finish)
     - **[SCRIPT] P2.** Relaunch features-sfi-progressive (code fix shipped, SPORTS re-run pending)
     - **[DATA] P2.** Enrichment completed clean at ~30-34% honest, ~70k unattempted/entity = API-Football daily-cap
+  - [`plans/active/sports_live_availability_and_source_latency_2026_07_24.md`](/plans/active/sports_live_availability_and_source_latency_2026_07_24.md)
+    (2 open, added to this index 2026-07-24 — was missing): Live-ODDS quota/book-set decision
+    (BLOCKED-OPERATOR-DECISION)
+    - re-pin the 5 `source_data_latency.py` p95-lag constants from empirical `latency_observations` data (the ~2-week
+      accrual gate has now passed, actionable).
 
 - **Odds / feature-naming / coverage**:
   - [`plans/active/sports_odds_bookmaker_coverage_enumeration_2026_06_20.md`](/plans/active/sports_odds_bookmaker_coverage_enumeration_2026_06_20.md)
-    — 0 open todos.
+    — **corrected 2026-07-24, was wrongly "0 open"** (4 open): UAC `LEAGUE_ID_TO_TIER` mapping, extend
+    `EXPECTED_BOOKMAKER_MARKET_SETS` to 28 unmapped league_ids, fix `fixture_id=NULL` propagation in the odds_api
+    backfill, plus a 4th P1 item — see the doc's own P1 section (lines 205-223) for full detail.
   - [`plans/active/sports_odds_feature_naming_canonicalization_2026_07_21.md`](/plans/active/sports_odds_feature_naming_canonicalization_2026_07_21.md)
     (8 open):
     - **[DATA] P1.** New compute (not a rename) — per-bookmaker raw decimal-odds retention
@@ -306,10 +313,10 @@ drift_direction: advance-code
 
 - **API-Football / source-adapter correctness**:
   - [`plans/active/issues/api_football_backfill_chronological_scan_never_reaches_pending_tail_2026_07_18.md`](/plans/active/issues/api_football_backfill_chronological_scan_never_reaches_pending_tail_2026_07_18.md)
-    — 0 open todos.
+    — **resolved 2026-07-24** (all 5 todos were already `[x]`; frontmatter `status` was stale, now corrected).
   - [`plans/active/issues/api_football_reverify_attempted_failed_and_asset_group_2026_07_14.md`](/plans/active/issues/api_football_reverify_attempted_failed_and_asset_group_2026_07_14.md)
-    (2 open):
-    - **[DATA] P1.** Re-fetch backfill the ~3,116 undocumented api_football `attempted_failed` rows
+    (1 open, corrected 2026-07-24 — the P1 re-fetch-backfill item was a stale checkbox, already done per the doc's own
+    "Update 2026-07-15" section, now flipped):
     - **[DATA] P2.** Remove/relabel 1 defi/UNISWAP_V3-BASE row mis-filed in the sports manifest
   - [`plans/active/issues/footystats_matches_predictions_fetch_gaps_2026_07_08.md`](/plans/active/issues/footystats_matches_predictions_fetch_gaps_2026_07_08.md)
     (1 open):

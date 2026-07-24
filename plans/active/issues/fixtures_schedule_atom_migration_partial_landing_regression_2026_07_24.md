@@ -24,7 +24,7 @@ summary: >-
   the exact ~93.7%-understated-coverage bug the 2026-06-23 fix (`cc69eef`) was written to solve. This is NOT just a
   stale-test problem; it is a live data-status/coverage-percent regression for the sports asset_group for as long as the
   writer-side half of the migration remains unshipped.
-status: open
+status: resolved
 nature: issue
 asset_group: [sports]
 stage: [meta]
@@ -46,7 +46,7 @@ depends_on: []
 locked_by:
 locked_since:
 assigned_vm: planning
-resolved_by:
+resolved_by: unified-api-contracts@c2b303f7, instruments-service@e19c5a7a
 ---
 
 # FIXTURES→FIXTURES_SCHEDULE atom migration: UAC changed, writer didn't — live regression window (2026-07-24)
@@ -103,3 +103,14 @@ Escalating to the operator/main given severity. Two options, either resolves it:
 
 Either way, deployment-api's `test_oow_denominator.py` 4 failing tests should NOT be "fixed" by simply updating their
 fixtures to `"FIXTURES_SCHEDULE"` — that would hide the fact that production data still says `"FIXTURES"` today.
+
+## RESOLVED (2026-07-24)
+
+Both options landed: (A) `instruments-service@e19c5a7a` migrated the 8 writer call sites this doc names
+(`sports_reference_fixtures.py`, `process_write.py`, `writers.py`, `catalogue.py`, `process_completeness.py`,
+`process_preflight.py`, `process_zero_records.py`, `sports_fixtures_daily_repoll.py`) to emit `FIXTURES_SCHEDULE`; (B)
+`unified-api-contracts@c2b303f7` kept `SCHEDULE_DEFINING_DATA_TYPES` additive (`{"FIXTURES", FIXTURES_SCHEDULE}`) as the
+stop-gap during the transition. Re-ran `deployment-api/tests/unit/data_status/test_oow_denominator.py` at current HEAD:
+40 passed (all 4 previously-red tests green). The residual exact-set narrowing (dropping the legacy `"FIXTURES"` literal
+once the corpus census confirms zero remaining rows) is tracked separately in
+`sports_closeout_batch1_ao_ready_2026_07_24.md`'s `[DATA]` backfill todo, not here.

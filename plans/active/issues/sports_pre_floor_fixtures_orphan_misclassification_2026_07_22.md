@@ -26,6 +26,7 @@ related:
     /plans/active/issues/estate_orphan_assessment_2026_07_21.md,
     /codex/02-data/sports-2020-06-data-floor.md,
     /codex/02-data/orphan-object-detection.md,
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
   ]
 created: 2026-07-22
 last_updated: 2026-07-22
@@ -141,3 +142,9 @@ one the writer/reader path exercises directly. `gcs_paths.SPORTS_DATA_TYPE_TO_FO
 floor/source guards) — a split that updates one silently leaves the other's dependent logic (`is_pre_launch_date`,
 `SOURCE_PRIORITY`, `AVAILABILITY_AT_SEMANTICS`) defensively permissive rather than loudly broken, which is precisely why
 this went undetected for over a week (cutover 2026-07-14, found 2026-07-22).
+
+## Duplicate-tracking note (2026-07-24)
+
+This doc's 83,541-row population and disposition (todos 2-4: operator ruling, wipe, re-verify) are the SAME work as
+`sports_consolidated_closeout_2026_07_19.md`'s Track V "decision 14" bullet (the pre-floor wipe todo). That bullet is
+canonical — execute there, then flip todos 2-4 here as done citing the same evidence, rather than executing twice.

@@ -20,7 +20,7 @@ summary:
   moved, 305,000+ rows recovered" is **0 rows recovered**. Related: the same case-blindness is why the OR-5b
   investigation''s cell census double-counted (99,414 vs the measured 49,707). NOT fixed here — this leg authorises no
   deletions.'
-status: open
+status: resolved
 nature: issue
 asset_group: [sports]
 stage: [data]
@@ -50,6 +50,10 @@ locked_since:
 supersedes:
 superseded_by:
 resolved_by:
+  "Option A executed — plans/archive/2026_07/sports_master_closeout_2026_07_21.md:694-697 (6,110 lowercase-twin
+  duplicate GCS objects deleted, crc-verified) +
+  plans/archive/2026_07/sports_master_closeout_progress_log_2026_07_24.md:399-429 (phantom soccer_* manifest-row prune,
+  6,110/6,110 verified stale_remaining=0)"
 source: ["OR-5b(a) recovery leg 2026-07-16 — re-validation of the G1 derivation map"]
 ---
 
