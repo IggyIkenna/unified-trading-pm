@@ -131,6 +131,50 @@ choice is codex-dictated, not open; (3) mechanism = **re-derive both rows from t
 which is flipped ✅ for the shipped code scope). This issue doc stays the full analysis; the two todos below are
 SUPERSEDED by that plan todo.
 
+## Pre-flight findings (worker, 2026-07-24) — CORRECTS resolution point (3)
+
+Ran the pre-flight scope-confirm grep-then-read main's resolution assigned to the backfill todo. Found the scope-confirm
+was NOT clean (main's resolution assumed "expect zero post-`e19c5a7a`") — two real bugs, both fixed + shipped
+(`instruments-service@47c1ffb3`, QG green):
+
+1. **Live leak (now closed)**: `instruments-service/instruments_service/triggers/sports_fixture_status_refresh.py` (the
+   stale-NS status-refresh cron trigger) still called `manifest.record_failed()`/`record_captured()` with the raw
+   `"FIXTURES"` string literal — a 9th call site the original migration missed (it isn't in the todo's named-file list).
+   This trigger runs regularly, so it was CONTINUOUSLY re-creating new legacy rows even after `e19c5a7a` shipped — any
+   backfill run before this fix would have been chasing a moving target. Fixed to `FIXTURES_SCHEDULE` (imported from
+   `unified_api_contracts.sports`), mirroring the sibling `sports_fixtures_daily_repoll.py` trigger's already-correct
+   convention exactly (same import, same single-atom `record_captured`/`record_failed` shape — see its own module
+   docstring). Two test assertions updated to match
+   (`tests/unit/triggers/test_sports_fixture_status_refresh.py:218,536`).
+2. **Silent mis-attribution (now closed)**: `_SPORTS_DATA_TYPE_TO_PIPELINE_MODE`
+   (`instruments_service/engine/orchestrator/__init__.py`) had no `FIXTURES_SCHEDULE`/`FIXTURES_OUTCOMES` keys — only
+   the legacy `"FIXTURES"` key survived the migration. Any caller resolving pipeline_mode for the new atoms
+   (`writers.py:270`, `_pipeline_mode_for_sports_data_type`) hit a `KeyError` caught by a bare
+   `except KeyError: _venue_pm = PipelineMode.BATCH_INSTRUMENTS_SERVICE` fallback — not a crash, but a SILENT
+   wrong-pipeline_mode stamp on every row that hit this path. Added both keys mapped to
+   `PipelineMode.BATCH_API_FOOTBALL` (matching the retired `"FIXTURES"` entry, same source).
+
+**Correction to resolution point (3) — the mechanism is simpler than assumed, not harder.** Exhaustive grep across every
+repo for `FIXTURES_OUTCOMES` as a manifest `data_type=` write (not just the GCS `entity=` path label) found **zero live
+call sites** — not in `instruments-service`, not in `migrate_fixtures_split.py`, nowhere. Both already-migrated sibling
+call sites (`process_write.py`, `sports_fixtures_daily_repoll.py`) emit `record_captured()`/
+`record_failed()`/`record_empty()` using `FIXTURES_SCHEDULE` ONLY — `FIXTURES_OUTCOMES` is a GCS-object-only label
+(`entity=fixtures_outcomes/` partition), never a tracked manifest `data_type`. The established, PROVEN codebase
+convention is: **one manifest atom per fixture-capture event (`FIXTURES_SCHEDULE`), not two.** So the backfill does
+**not** need a 1-to-2 fan-out — it's a **1:1 in-place restamp** (`data_type: "FIXTURES"` → `"FIXTURES_SCHEDULE"`) on the
+existing 337,464 rows, exactly mirroring the sibling `sports_closeout_batch1_ao_ready_2026_07_24.md` todo's
+already-completed precedent: `market-tick-data-service/scripts/restamp_sports_odds_horizon_bucket_2026_07_22.py` (same
+repo, same "re-stamp not delete" pattern — row-delete is verified-unsafe for this manifest, `_legacy_seed.parquet`
+resurrection re-supplies deleted rows on the next consolidator merge). This removes point (3)'s "extend
+`migrate_fixtures_split.py`" branch entirely — no GCS reads/re-derivation needed, no per-(date,league) enumeration, no
+row-filtering convention question (point (2) is now moot: there is no outcomes row to conditionally emit at the manifest
+level). Point (1) is resolved: the only found live-emitter was the trigger above, now fixed.
+
+**Promoted verification tool** (was a scratchpad one-off; the backfill's own Done-when requires re-running this exact
+census twice more — once right after the restamp, once after ≥2 consolidator cycles):
+`deployment-api/scripts/census_manifest_data_type_2026_07_24.py` — read-only, sanctioned axis-value-census logic,
+`--service`/`--asset-group`/--filter-prefix` args.
+
 ## Todos
 
 - [x] [DATA] P1. ✅ SUPERSEDED (main 2026-07-24) — scope-confirm + convention are resolved above; folded into the
@@ -138,3 +182,14 @@ SUPERSEDED by that plan todo.
 - [x] [DATA] P1. ✅ SUPERSEDED (main 2026-07-24) — the manifest backfill is scoped + dispatchable as the `[DATA] P0`
       todo in `/plans/active/sports_closeout_batch1_ao_ready_2026_07_24.md` (main-resolved design; SPOT-VM; census-zero
       Done-when). Run + verify there.
+- [ ] [DATA] P0. Write + run the SIMPLIFIED 1:1 manifest restamp (per the correction above — NOT the 1-to-2 fan-out in
+      resolution point 3): a script mirroring
+      `market-tick-data-service/scripts/restamp_sports_odds_horizon_bucket_2026_07_22.py`'s exact pattern (snapshot the
+      consolidated index to `_index/backups/` first, download full parquet, mask `data_type == "FIXTURES"` rows, rewrite
+      `data_type` to `FIXTURES_SCHEDULE` in place, CAS re-upload with `if_generation_match`), targeting bucket
+      `instruments-store-sports-prd-central-element-323112`. **Done when**: a census via
+      `deployment-api/scripts/census_manifest_data_type_2026_07_24.py --filter-prefix FIXTURES` returns zero `FIXTURES`
+      rows immediately after the restamp AND again after ≥2 manifest-consolidator cycles (consolidator SSOT:
+      `/codex/05-infrastructure/manifest-consolidator-ssot.md`). (repo: market-tick-data-service or instruments-service
+      — whichever owns write access to the sports availability index; confirm via `_maintenance.py`'s existing
+      `purge_venue_before_date()`/`rebuild_manifest()` precedent for which repo's script conventionally does this.)
