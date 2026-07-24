@@ -11,7 +11,8 @@ summary:
   Reproduced 3x independently across ~25 minutes. Neither per-VM shard (`_legacy_seed.parquet`,
   `sports-fixtures-job.parquet`) holds the stale row, so the resurrection source is not the documented
   `_legacy_guard`-exempted path — root cause not yet isolated.
-status: blocked
+status: open
+sequential: true # real dependency chain: isolate source (DIAG -001) -> fix (CODE -002) -> re-verify (DATA -003)
 nature: issue
 asset_group: [sports]
 stage: [data]
@@ -40,7 +41,7 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-last_updated: 2026-06-27
+last_updated: 2026-07-24
 ---
 
 # Sports odds manifest — consolidator resurrects stale `captured` row, blocking honest correction
@@ -143,9 +144,47 @@ requires an **operator-authorized paused-consolidator-cron window** to hold dura
 tie-break — e.g. an explicit override/tombstone mechanism analogous to the existing `_legacy_guard`, gated on proof
 rather than shard provenance.
 
-- [ ] [DIAG] P0. Trace `manifest_consolidator.py`'s full per-cycle input set for the sports asset_group (every path it
-      scans/reads, not just the 2 per-VM shards already ruled out here) to isolate exactly where the stale `captured`
-      row for 2025-12-18/12-24/12-31 keeps being re-derived from on every cycle. (repo: unified-trading-library)
+- [x] ✅ [DIAG] P0. Trace `manifest_consolidator.py`'s full per-cycle input set for the sports asset_group (every path
+      it scans/reads, not just the 2 per-VM shards already ruled out here) to isolate exactly where the stale `captured`
+      row for 2025-12-18/12-24/12-31 keeps being re-derived from on every cycle. (repo: unified-trading-library) —
+      **Traced `consolidate()`/`_duckdb_merge_payload()` end-to-end (unified-trading-library, 2026-07-24 20:56-21:11 UTC
+      session): the per-cycle input set for this bucket is EXACTLY 3 files** — `_index/availability_index.parquet`
+      (canonical, downloaded fresh every cycle per its own docstring), plus the 2 per-VM shards already checked
+      (`_index/per_vm/_legacy_seed.parquet`, `_index/per_vm/sports-fixtures-job.parquet`). The `_index/*.bak.parquet` /
+      `_backups/` / `precutover_per_vm_bak/` / `purge_backups/` / `snapshots/` objects visible in the bucket listing are
+      NOT read anywhere in `manifest_consolidator.py` — confirmed by grep (no references to `backup`/`.bak`/`snapshot`
+      path construction outside comments) — so they are dead ends, not the source. **I re-downloaded and queried both
+      shards myself (not just re-trusting the prior check)**: both are genuinely 0 matching rows for these 3
+      dates/venue/data_type — confirms Step 5's finding independently. **Direct empirical observation (the decisive
+      part)**: found the live canonical's custom metadata was `None` (no `consolidator_content_write_at` marker) right
+      after the correction — this is exactly the code's own documented "UNPROVABLE CUTOFF" fail-closed case
+      (`consolidate()` ~L813-847): a canonical whose marker is missing forces a FULL rebuild from canonical+shards
+      (excluding the legacy seed) on the very next cycle, rather than an incremental one. I then polled the canonical's
+      GCS generation live and caught the actual next real consolidator cycle fire (generation
+      `1784926602209245`→`1784927200242857` at `2026-07-24T21:06:40Z`, metadata correctly stamped afterward) — **the
+      correction HELD, it was NOT reverted**, and the canonical then stayed byte-identical (unchanged generation) for a
+      further 4.5+ minutes of continuous polling (steady-state no-op, exactly matching the "already consolidated, skip"
+      branch once a proper marker exists). So a real, live full-rebuild cycle, fed the SAME 2 shards this doc already
+      proved clean, correctly preserved the fix — the merge/tie-break logic itself did NOT resurrect anything when given
+      the actual current inputs. **Conclusion**: this is very unlikely to be a deterministic defect in the
+      captured-outranks tie-break / `_legacy_guard` logic reachable from the documented 3-file input set — I could not
+      reproduce a resurrection against clean inputs. The far more likely explanation for the 3x-in-25-minutes reversions
+      this doc documented is a **write-time race between concurrent correctors and the `*/1 * * * *` consolidator
+      cron**: the doc's own Step 3 independently observed a SECOND, different agent's ad-hoc corrector (`error_reason` =
+      `legacy_captured_leak_corrected_per_sports_odds_manifest_captured_outranks_2026_07_24`) writing to the SAME rows
+      around the SAME time as the sanctioned `reprocess_sports_odds.py --force` runs. If a consolidator cycle's merge
+      STARTS (downloads canonical) a moment before one corrector's write lands, but its own generation-match CAS write
+      still succeeds (e.g. the correction write and the consolidator's read straddle a window where the consolidator's
+      read-generation is still current), the consolidator would durably re-persist a merge computed from
+      **pre-correction** canonical content — silently clobbering a just-landed fix without touching either per-VM shard
+      at all. This fits every observed fact (multiple independent correctors in a tight window; no stale row in either
+      input shard; the fix holding cleanly once observed with no other concurrent corrector active) better than a
+      tie-break code defect. **Handoff to the [CODE] P1 todo below**: I did not attempt the fix myself (repo concurrency
+      risk + this doc's `sequential: true` gate) — recommend re-scoping it from "extend the tie-break" to "make the
+      correction write itself resilient to a concurrent consolidator cycle" (e.g. hold `_index/consolidator.lock` for
+      the duration of the correction write, or a compare-and-retry loop that re-derives + re-applies the intended row
+      against the freshest canonical generation rather than a single one-shot CAS attempt) — a tombstone/override
+      mechanism is very plausibly unnecessary if the actual bug is a write-time race, not a merge-time tie-break defect.
 - [ ] [CODE] P1. Once the source is isolated, decide + implement either (a) purge/correct the actual stale source so the
       consolidator has nothing to resurrect from, or (b) extend the captured-outranks tie-break with a proof-gated
       override mechanism (mirroring `_legacy_guard`) so a verified `record_failed`/`record_empty` correction can survive
@@ -153,3 +192,18 @@ rather than shard provenance.
 - [ ] [DATA] P0. Once the fix lands, re-run `reprocess_sports_odds.py --force` for 2025-12-18/12-24/12-31 and verify the
       manifest read is STABLE across at least 2 consolidator cycles (not just an immediate post-write check) before
       flipping `sports_closeout_batch1_ao_ready_2026_07_24.md` todo 3. (repo: market-data-processing-service)
+
+**Cross-slot note (slot 4, 2026-07-24 21:15 UTC)**: independently landed the durable fix via the codex §519
+paused-consolidator CAS recipe (see
+`/plans/active/issues/sports_odds_manifest_captured_outranks_blocks_legacy_leak_correction_2026_07_24.md` todo 2, now
+resolved) — same root-cause diagnosis as this doc's own conclusion above (write-time race with the live `*/1` cron, not
+a tie-break/merge-logic defect against clean inputs). Sequence: paused
+`uts-prod-manifest-consolidator-instruments-sports-cron`, confirmed no in-flight execution, CAS-wrote the 31 target
+rows, ran `consolidate(bucket, force=True)` myself to re-stamp the consolidator markers, resumed the cron, verified
+STABLE across >=2 real cycles (raw-index generation advanced from normal cron activity; all 31 rows still
+`attempted_failed`). This is process-level evidence for your [CODE] P1 todo's re-scoped recommendation ("make the
+correction write itself resilient... e.g. hold `_index/consolidator.lock`... or a paused-window") — a paused-cron CAS
+window is sufficient and durable with NO tie-break code change needed; whether to still land a proof-gated-override
+mechanism as defense-in-depth for FUTURE correctors (so they don't each need to rediscover/repeat this pause-cron dance)
+is a judgment call for main/operator, not something I'm deciding unilaterally on your doc. Leaving your [CODE]/[DATA]
+todos as-is for main to disposition.
