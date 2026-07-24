@@ -4,9 +4,10 @@ description:
   Audit the PM plans corpus (plans/active + plans/active/issues + plans/epics + the normative refs PLAN_FORMAT.md /
   task_template.md / INDEX.md / ACTIVE_INDEX.md) for cross-doc contradictions, done-but-unchecked todos, AND
   AO-dispatch-readiness defects (first-line truncation, unenforced ordering, bare section-shorthand, ambiguous verbs,
-  inconsistent delete-tagging, missing definition-of-done — per task_template.md §3), AND data-pipeline-milestones
-  drift for the 5 asset-group consolidated closeouts (per data_pipeline_e2e_milestones_gate_2026_07_24.md's 14
-  cross-AG correctness criteria), adversarially verify every finding, then reconcile — auto-fix the mechanical classes (checkbox flips with hard
+  inconsistent delete-tagging, missing definition-of-done, markdown structural well-formedness, internal
+  self-consistency — per task_template.md §3), AND data-pipeline-milestones drift for the 5 asset-group consolidated
+  closeouts (per data_pipeline_e2e_milestones_gate_2026_07_24.md's 14 cross-AG correctness criteria), adversarially
+  verify every finding, then reconcile — auto-fix the mechanical classes (checkbox flips with hard
   evidence, supersession banners, status/frontmatter drift, dangling refs) AND anything a source of truth can settle
   (if a claim is countable, count it — do not escalate a provable fact), then route only genuine authority/preference
   calls to the operator as a batched interactive Q&A with options + a marked recommendation. ASK > PARK: park as
@@ -207,6 +208,18 @@ history; properly-bannered supersession (an UNbannered superseded doc that still
    gate doc's `last_updated` is drift, same class as a stale checkbox. This is CONTENT correctness for data-pipeline
    plans specifically, distinct from hunter 5's general AO-dispatch-readiness format check — run both, they catch
    different things.
+7. **Prose/structural-integrity hunters** — added 2026-07-24 (findings L/M, `task_template.md` §3) after an adversarial
+   verification pass on `data_pipeline_e2e_milestones_gate_2026_07_24.md`'s 64-todo distribution found two defect
+   classes NO existing hunter's checklist named: a heading whose parenthetical annotation split across a blank line
+   (orphaning a floating `)`), and an invariant paragraph that contradicted itself in the same sentence and against the
+   formula the same doc showed two paragraphs above. Neither is a todo-line rule (hunter 5) or a cross-doc contradiction
+   (hunters 1-4) — both are WITHIN one doc's own newly-touched prose, so they slip through unless explicitly checked.
+   Piggyback on whichever hunter already reads that doc in full (epic-cluster/topic hunters, items 1-2 — no new
+   dedicated pass needed) and add these two checks for every heading/bold-span/invariant-paragraph the run's diff
+   touched: (a) **structural well-formedness** — every `(`/`` ` ``/`**`/`[` opened on a heading or bold-span line closes
+   on the SAME physical line, never across a blank line; (b) **internal self-consistency** — any stated
+   rule/invariant/formula, re-derived against an example or formula the same doc shows elsewhere, must not contradict it
+   or itself mid-sentence.
 
 ## Phase 2 — done-but-unchecked sweep
 

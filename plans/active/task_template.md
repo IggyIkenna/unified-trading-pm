@@ -16,7 +16,7 @@ scope: [engineer, admin]
 tags: [template, format, canonical, agent-task, plan-authoring]
 related: [/plans/archive/2026_07/ao_dispatch_correctness_regen_reconcile_2026_07_07.md, /plans/PLAN_FORMAT.md]
 created: "2026-02-25"
-last_updated: 2026-07-23 # was: 2026-07-14 — corrected 2026-07-23, plan_quality_four_line_defense_architecture_2026_07_23.md line-1 todo: added §3 rules for findings D/E/F/G/C (section-shorthand, ambiguous verbs, delete-risk tagging, definition-of-done, stale-checkbox pre-check) surfaced by an adversarial AO-dispatch-readiness review of sports_consolidated_closeout_2026_07_19.md
+last_updated: 2026-07-24 # was: 2026-07-23 — corrected 2026-07-24, added §3 findings L/M (markdown structural well-formedness, internal self-consistency) surfaced by an adversarial verification pass on data_pipeline_e2e_milestones_gate_2026_07_24.md's 64-todo distribution; prior entry: corrected 2026-07-23, plan_quality_four_line_defense_architecture_2026_07_23.md line-1 todo: added §3 rules for findings D/E/F/G/C (section-shorthand, ambiguous verbs, delete-risk tagging, definition-of-done, stale-checkbox pre-check) surfaced by an adversarial AO-dispatch-readiness review of sports_consolidated_closeout_2026_07_19.md
 parent_epic: agent_operating_framework_master
 assigned_vm: NA
 execution_scope: local-only
@@ -193,6 +193,21 @@ ingested). Use for operator-only work, trackers, design docs, and dispatcher-sur
   spot-check, and a post-backfill final gate. A todo that only ever ran the skill once, or references the skill by name
   without a dated run, does not satisfy this — cite the actual run (report path / dispatch_id / date) as the
   definition-of-done, same as any other evidence-backed completion claim.
+- **A heading or bold/parenthetical span must close every bracket on the SAME physical line it opens on — never split
+  across a blank line** _(finding L, 2026-07-24: an adversarial verification pass on
+  `data_pipeline_e2e_milestones_gate_2026_07_24.md`'s distribution found a new `## MVP universe` heading whose
+  parenthetical annotation opened `(gate-audit §14, 2026-07-24: ...` then, after a blank line, closed on its own
+  orphaned line as a floating `)` — no existing check (mechanical or LLM) caught it because it's neither a todo-line
+  rule nor a cross-doc contradiction, just a single doc's own markdown breaking mid-render)._ Before finalizing any
+  heading/`**bold**`/parenthetical, check the raw line breaks (`grep -n`, not the rendered preview) — every `(`,
+  `` ` ``, `**`, and `[` it opens must close before the next blank line or the next heading, whichever comes first.
+- **A newly-written claim must not contradict itself in the same sentence, or contradict a fact/formula the SAME doc
+  already shows elsewhere** _(finding M, 2026-07-24: the same verification pass found a "symmetric-inclusion invariant"
+  paragraph that asserted `all_shards_coverage` "correctly includes it in both" and then, three words later, qualified
+  that with "(denominator only...)" — directly contradicting itself and the formula shown two paragraphs above it)._
+  Before shipping a paragraph that states a rule/invariant/formula, re-derive it against any example or formula the SAME
+  doc already shows and confirm they agree; re-read the sentence once as a skeptic looking for the word that contradicts
+  the clause right before it, not just for typos.
 
 ---
 
