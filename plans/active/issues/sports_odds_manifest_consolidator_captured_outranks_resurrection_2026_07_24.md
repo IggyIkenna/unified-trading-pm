@@ -144,9 +144,47 @@ requires an **operator-authorized paused-consolidator-cron window** to hold dura
 tie-break — e.g. an explicit override/tombstone mechanism analogous to the existing `_legacy_guard`, gated on proof
 rather than shard provenance.
 
-- [ ] [DIAG] P0. Trace `manifest_consolidator.py`'s full per-cycle input set for the sports asset_group (every path it
-      scans/reads, not just the 2 per-VM shards already ruled out here) to isolate exactly where the stale `captured`
-      row for 2025-12-18/12-24/12-31 keeps being re-derived from on every cycle. (repo: unified-trading-library)
+- [x] ✅ [DIAG] P0. Trace `manifest_consolidator.py`'s full per-cycle input set for the sports asset_group (every path
+      it scans/reads, not just the 2 per-VM shards already ruled out here) to isolate exactly where the stale `captured`
+      row for 2025-12-18/12-24/12-31 keeps being re-derived from on every cycle. (repo: unified-trading-library) —
+      **Traced `consolidate()`/`_duckdb_merge_payload()` end-to-end (unified-trading-library, 2026-07-24 20:56-21:11 UTC
+      session): the per-cycle input set for this bucket is EXACTLY 3 files** — `_index/availability_index.parquet`
+      (canonical, downloaded fresh every cycle per its own docstring), plus the 2 per-VM shards already checked
+      (`_index/per_vm/_legacy_seed.parquet`, `_index/per_vm/sports-fixtures-job.parquet`). The `_index/*.bak.parquet` /
+      `_backups/` / `precutover_per_vm_bak/` / `purge_backups/` / `snapshots/` objects visible in the bucket listing are
+      NOT read anywhere in `manifest_consolidator.py` — confirmed by grep (no references to `backup`/`.bak`/`snapshot`
+      path construction outside comments) — so they are dead ends, not the source. **I re-downloaded and queried both
+      shards myself (not just re-trusting the prior check)**: both are genuinely 0 matching rows for these 3
+      dates/venue/data_type — confirms Step 5's finding independently. **Direct empirical observation (the decisive
+      part)**: found the live canonical's custom metadata was `None` (no `consolidator_content_write_at` marker) right
+      after the correction — this is exactly the code's own documented "UNPROVABLE CUTOFF" fail-closed case
+      (`consolidate()` ~L813-847): a canonical whose marker is missing forces a FULL rebuild from canonical+shards
+      (excluding the legacy seed) on the very next cycle, rather than an incremental one. I then polled the canonical's
+      GCS generation live and caught the actual next real consolidator cycle fire (generation
+      `1784926602209245`→`1784927200242857` at `2026-07-24T21:06:40Z`, metadata correctly stamped afterward) — **the
+      correction HELD, it was NOT reverted**, and the canonical then stayed byte-identical (unchanged generation) for a
+      further 4.5+ minutes of continuous polling (steady-state no-op, exactly matching the "already consolidated, skip"
+      branch once a proper marker exists). So a real, live full-rebuild cycle, fed the SAME 2 shards this doc already
+      proved clean, correctly preserved the fix — the merge/tie-break logic itself did NOT resurrect anything when given
+      the actual current inputs. **Conclusion**: this is very unlikely to be a deterministic defect in the
+      captured-outranks tie-break / `_legacy_guard` logic reachable from the documented 3-file input set — I could not
+      reproduce a resurrection against clean inputs. The far more likely explanation for the 3x-in-25-minutes reversions
+      this doc documented is a **write-time race between concurrent correctors and the `*/1 * * * *` consolidator
+      cron**: the doc's own Step 3 independently observed a SECOND, different agent's ad-hoc corrector (`error_reason` =
+      `legacy_captured_leak_corrected_per_sports_odds_manifest_captured_outranks_2026_07_24`) writing to the SAME rows
+      around the SAME time as the sanctioned `reprocess_sports_odds.py --force` runs. If a consolidator cycle's merge
+      STARTS (downloads canonical) a moment before one corrector's write lands, but its own generation-match CAS write
+      still succeeds (e.g. the correction write and the consolidator's read straddle a window where the consolidator's
+      read-generation is still current), the consolidator would durably re-persist a merge computed from
+      **pre-correction** canonical content — silently clobbering a just-landed fix without touching either per-VM shard
+      at all. This fits every observed fact (multiple independent correctors in a tight window; no stale row in either
+      input shard; the fix holding cleanly once observed with no other concurrent corrector active) better than a
+      tie-break code defect. **Handoff to the [CODE] P1 todo below**: I did not attempt the fix myself (repo concurrency
+      risk + this doc's `sequential: true` gate) — recommend re-scoping it from "extend the tie-break" to "make the
+      correction write itself resilient to a concurrent consolidator cycle" (e.g. hold `_index/consolidator.lock` for
+      the duration of the correction write, or a compare-and-retry loop that re-derives + re-applies the intended row
+      against the freshest canonical generation rather than a single one-shot CAS attempt) — a tombstone/override
+      mechanism is very plausibly unnecessary if the actual bug is a write-time race, not a merge-time tie-break defect.
 - [ ] [CODE] P1. Once the source is isolated, decide + implement either (a) purge/correct the actual stale source so the
       consolidator has nothing to resurrect from, or (b) extend the captured-outranks tie-break with a proof-gated
       override mechanism (mirroring `_legacy_guard`) so a verified `record_failed`/`record_empty` correction can survive
