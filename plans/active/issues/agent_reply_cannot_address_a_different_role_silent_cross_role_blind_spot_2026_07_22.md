@@ -167,3 +167,8 @@ too large.
 - [ ] [REVIEW] P3. **Sign-off before the routing change ships** — it touches the reply-ack / redelivery-cap machinery
       from `ao_operator_message_silent_drop_no_reply_ack_2026_07_08`; a careless change re-breaks at-least-once
       delivery. **Gate**: approval recorded before the P1 todo ships.
+- [ ] [DOCS] P2. **Apply the identical peer-vs-operator branch to `agents/review.md` STEP 2** (its "2. For each message
+      … POST your reply" block, `agents/review.md:198-205`) — confirmed still present 2026-07-24, unconditional `/reply`
+      regardless of `from_role`, same bug class as the main.md item above and never even adopted the interim ad hoc
+      mitigation. Found while shipping the main.md fix; filed rather than fixed inline because it is a different file
+      outside that todo's declared scope. **Gate**: same as the main.md item above, applied to review.md.
