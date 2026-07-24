@@ -21,7 +21,7 @@ scope: [engineer, admin]
 tags: [manifest-consolidator, captured-outranks, resurrection, sports, data-correctness, blocked]
 related:
   [
-    /plans/active/sports_closeout_batch1_ao_ready_2026_07_24.md,
+    /plans/archive/2026_07/sports_closeout_batch1_ao_ready_2026_07_24.md,
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
   ]
 created: 2026-07-24

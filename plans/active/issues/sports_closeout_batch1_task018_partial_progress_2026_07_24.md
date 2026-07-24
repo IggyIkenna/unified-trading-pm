@@ -19,7 +19,7 @@ stage: [data]
 repos: [unified-api-contracts, instruments-service, unified-trading-pm]
 scope: [engineer]
 tags: [sports, cleanup, partial-progress, qg-red, handoff]
-related: [/plans/active/sports_closeout_batch1_ao_ready_2026_07_24.md]
+related: [/plans/archive/2026_07/sports_closeout_batch1_ao_ready_2026_07_24.md]
 created: 2026-07-24
 parent_epic: sports_master
 assigned_vm: planning

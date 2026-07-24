@@ -15,7 +15,7 @@ stage: [data]
 repos: [unified-trading-library]
 scope: [engineer]
 tags: [manifest, silent-empty, honest-absence, read-path]
-related: [/plans/active/sports_closeout_batch1_ao_ready_2026_07_24.md]
+related: [/plans/archive/2026_07/sports_closeout_batch1_ao_ready_2026_07_24.md]
 parent_epic: manifest_master
 priority: P3
 created: "2026-07-24"

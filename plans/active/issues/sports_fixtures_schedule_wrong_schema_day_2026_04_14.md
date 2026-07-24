@@ -14,7 +14,7 @@ stage: [data]
 repos: [instruments-service]
 scope: [engineer]
 tags: [sports, data-correctness, schema-mismatch, fixtures-schedule]
-related: [/plans/active/sports_closeout_batch1_ao_ready_2026_07_24.md]
+related: [/plans/archive/2026_07/sports_closeout_batch1_ao_ready_2026_07_24.md]
 created: 2026-07-24
 assigned_vm: planning
 parent_epic: sports_master
@@ -189,28 +189,28 @@ sports_reference/by_date/day=2026-04-14/pipeline_mode=batch_api_football/entity=
       data_type.
 
       **FULL CAUSAL CHAIN TRACED (2026-07-24, slot 11)**: `unified-api-contracts/registry/venue_adapter_keys.py:191`
-                  registers `"API_FOOTBALL": "api_football"` in the SAME generic venue→adapter-key registry crypto/defi/tradfi
-                  venues use — `api_football` is not a sports-only special case, it's a first-class generic venue. Top-down:
-                  `process.py:150` computes `active_venues = [v for v in venues if is_venue_available(v, date)]` from the
-                  top-level `venues` param → `process_fetch.py`'s fetch stage splits `active_venues` into `defi_active`
-                  (`v in defi_venue_names`) vs. `non_defi_active` (**everything else, unconditionally** — line 125, no
-                  sports/prediction exclusion) → `non_defi_active` (line 172) calls `fetch_instruments_for_all_venues(...)` →
-                  `urdi_reference_provider.py` resolves the adapter via `get_adapter_for_canonical_venue()` and calls
-                  `.get_instruments()` → for `api_football` this is `ApiFootballReferenceDataAdapter.get_instruments()`, returning
-                  `InstrumentRecord`s built by `_canonical_fixture_to_instrument()` (item 3 above) → these records flow back into
-                  `process_fetch.py`'s generic instrument pipeline and eventually reach `_write_venue`/`_gated_sink_write`, which
-                  (item 4 above) maps `venue=="API_FOOTBALL"` to `data_type=FIXTURES_SCHEDULE` — landing exactly at the corrupted
-                  path. **The bug is structural, not a one-off typo**: if the top-level `venues` list for ANY run ever includes
-                  `"api_football"` (or `"API_FOOTBALL"`) OUTSIDE the dedicated sports fixture flow
-                  (`_orch._fetch_sports_reference_data`, the CORRECT writer confirmed in `process_fetch.py:253` — takes its own
-                  separate `api_football_key` path and writes via `record_captured_from_counts`, never touching `_write_venue`),
-                  this exact corruption reproduces. **Still not pinned down**: which specific CLI invocation / cron / script
-                  populated the top-level `venues` param with `api_football` on 2026-07-16 (and 07-12 for the 118th file) — that
-                  requires either historical run logs (already confirmed unavailable — no GCS Data Access audit logging on this
-                  bucket, per slot 12's finding) or finding a config/registry state where `api_football` was reachable from a
-                  non-sports-scoped `--asset-group` selection at that time. The regression guard shipped for the CODE todo below
-                  (`_assert_not_cross_domain_contamination`) makes this class of mix-up impossible going forward regardless of
-                  which exact caller triggered it historically — closing the loop even without the historical "who".
+                              registers `"API_FOOTBALL": "api_football"` in the SAME generic venue→adapter-key registry crypto/defi/tradfi
+                              venues use — `api_football` is not a sports-only special case, it's a first-class generic venue. Top-down:
+                              `process.py:150` computes `active_venues = [v for v in venues if is_venue_available(v, date)]` from the
+                              top-level `venues` param → `process_fetch.py`'s fetch stage splits `active_venues` into `defi_active`
+                              (`v in defi_venue_names`) vs. `non_defi_active` (**everything else, unconditionally** — line 125, no
+                              sports/prediction exclusion) → `non_defi_active` (line 172) calls `fetch_instruments_for_all_venues(...)` →
+                              `urdi_reference_provider.py` resolves the adapter via `get_adapter_for_canonical_venue()` and calls
+                              `.get_instruments()` → for `api_football` this is `ApiFootballReferenceDataAdapter.get_instruments()`, returning
+                              `InstrumentRecord`s built by `_canonical_fixture_to_instrument()` (item 3 above) → these records flow back into
+                              `process_fetch.py`'s generic instrument pipeline and eventually reach `_write_venue`/`_gated_sink_write`, which
+                              (item 4 above) maps `venue=="API_FOOTBALL"` to `data_type=FIXTURES_SCHEDULE` — landing exactly at the corrupted
+                              path. **The bug is structural, not a one-off typo**: if the top-level `venues` list for ANY run ever includes
+                              `"api_football"` (or `"API_FOOTBALL"`) OUTSIDE the dedicated sports fixture flow
+                              (`_orch._fetch_sports_reference_data`, the CORRECT writer confirmed in `process_fetch.py:253` — takes its own
+                              separate `api_football_key` path and writes via `record_captured_from_counts`, never touching `_write_venue`),
+                              this exact corruption reproduces. **Still not pinned down**: which specific CLI invocation / cron / script
+                              populated the top-level `venues` param with `api_football` on 2026-07-16 (and 07-12 for the 118th file) — that
+                              requires either historical run logs (already confirmed unavailable — no GCS Data Access audit logging on this
+                              bucket, per slot 12's finding) or finding a config/registry state where `api_football` was reachable from a
+                              non-sports-scoped `--asset-group` selection at that time. The regression guard shipped for the CODE todo below
+                              (`_assert_not_cross_domain_contamination`) makes this class of mix-up impossible going forward regardless of
+                              which exact caller triggered it historically — closing the loop even without the historical "who".
 
 - [x] ✅ [CODE] P1. Fix the write-path bug so no future run can write a non-fixtures schema under
       `entity=fixtures_schedule/` (repo: instruments-service). **Done when**: a regression test reproduces the old

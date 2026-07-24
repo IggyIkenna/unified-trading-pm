@@ -22,7 +22,7 @@ scope: [engineer, admin]
 tags: [sports, fixtures, manifest, data_type-atom, duplicate, backfill, honest-coverage]
 related:
   [
-    /plans/active/sports_closeout_batch1_ao_ready_2026_07_24.md,
+    /plans/archive/2026_07/sports_closeout_batch1_ao_ready_2026_07_24.md,
     /plans/active/issues/fixtures_manifest_legacy_backfill_2026_07_24.md,
     /plans/archive/issues/legacy_seed_captured_outranks_resurrection_risk_2026_07_15.md,
   ]

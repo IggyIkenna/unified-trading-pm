@@ -26,7 +26,7 @@ tags: [quality-gates, worktree-isolation, path-resolution, main-clone, multi-age
 related:
   [
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
-    /plans/active/sports_closeout_batch1_ao_ready_2026_07_24.md,
+    /plans/archive/2026_07/sports_closeout_batch1_ao_ready_2026_07_24.md,
     /plans/active/issues/qg_workspace_root_template_drift_12_repos_2026_07_24.md,
   ]
 created: "2026-07-24"

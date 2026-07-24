@@ -15,7 +15,7 @@ scope: [engineer]
 tags: [sports, ao-dispatch, close-out, batch-1, archival]
 related:
   [
-    /plans/active/sports_closeout_batch1_ao_ready_2026_07_24.md,
+    /plans/archive/2026_07/sports_closeout_batch1_ao_ready_2026_07_24.md,
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
   ]
 created: "2026-07-24"
@@ -84,13 +84,28 @@ drift_direction: advance-code
       follow-up remains: `qg_workspace_root_template_drift_12_repos_2026_07_24.md` (open, 2 open todos). No issue doc
       needed flipping — every one was already accurately maintained by prior workers. **Done-when met**: all 20 parent
       checkboxes flipped with independently-verified evidence; every touched issue doc's `status` re-verified accurate.
-- [ ] [DOC] P2. **Archive `sports_closeout_batch1_ao_ready_2026_07_24.md`** via the standard 6-step ritual (per
-      CLAUDE.md's plan-archival rule): migrate any DEFERRED items to a tracked todo elsewhere (there should be none —
-      batch 1 was scoped to have zero dependencies left dangling, but verify) → add the archive banner → run the
-      codex-alignment check (do any codex docs need a status update now that these 20 items shipped — e.g. the Distinct
-      Values canonical-vocabulary target todo 2 closes) → update CLAUDE.md/codex if any new durable contract resulted →
-      grep the corpus for every referrer of `sports_closeout_batch1_ao_ready_2026_07_24` (including the cross-reference
-      banner this plan's own creation added to `sports_consolidated_closeout_2026_07_19.md`) and fix each path to point
-      at the archived location → clear `locked_by` (already empty here, confirm). **Done when**: the plan is moved to
-      `plans/archive/2026_07/`, every corpus referrer resolves to the new path, and the parent plan's cross-reference
-      banner is updated to reflect batch 1 as archived-and-complete.
+- [x] [DOC] P2. ✅ **Archived `sports_closeout_batch1_ao_ready_2026_07_24.md`** via the standard 6-step ritual —
+      `unified-trading-pm@(this commit)`. (1) DEFERRED check: zero `DEFERRED` markers found, all 21 top-level todos
+      confirmed `[x]` before archiving. (2) Archive banner added (`> **✅ ARCHIVED 2026-07-24 — COMPLETE.**`) +
+      `status: active` → `status: complete` in frontmatter. (3) Codex-alignment check: zero `codex/` references anywhere
+      in the plan body — no codex doc needed a status update. (4) No new durable contract resulted requiring a
+      CLAUDE.md/codex change. (5) Corpus-wide grep found 12 real leading-slash (`/plans/active/...`) referrers across 11
+      files (`sports_closeout_batch1_finalize_2026_07_24.md`,
+      `sports_closeout_batch1_task018_partial_progress_2026_07_24.md`, `fixtures_manifest_legacy_backfill_2026_07_24.md`
+      (4×), `sports_fixtures_schedule_wrong_schema_day_2026_04_14.md`,
+      `sports_odds_manifest_consolidator_captured_outranks_resurrection_2026_07_24.md`,
+      `manifest_reader_silent_empty_on_missing_project_id_2026_07_24.md`,
+      `sports_fixtures_schedule_noncanonical_raw_league_id_folders_2026_07_24.md`,
+      `fixtures_manifest_duplicate_collision_residual_2026_07_24.md`,
+      `sports_odds_markets_outcomes_settlements_arbitrage_expected_since_2024_zero_captured_2026_07_24.md`,
+      `sports_odds_manifest_captured_outranks_blocks_legacy_leak_correction_2026_07_24.md`,
+      `qg_backfill_disk_and_lint_checks_resolve_via_main_clone_not_worktree_2026_07_24.md`) — all repointed to
+      `/plans/archive/2026_07/sports_closeout_batch1_ao_ready_2026_07_24.md`; the one actual markdown LINK (not a bare
+      prose mention) was in the auto-generated `active_plan_inventory_dashboard_2026_07_24.md`, fixed by regenerating it
+      (`regenerate_active_plan_inventory.py`, 0 orphans). The parent plan's own cross-reference banner
+      (`sports_consolidated_closeout_2026_07_19.md` line 97) rewritten to state archived-and-complete, pointing at the
+      new path. Bare backtick prose citations (e.g. "shipped via `sports_closeout_batch1_ao_ready_2026_07_24.md` todo
+      8") were NOT touched — not navigable links, just historical evidence citations naming a file that still exists
+      (just moved); `check_doc_body_links.py` only flags actual `[text](path)` markdown links, confirmed these don't
+      trip it. (6) `locked_by` confirmed already empty. **Done when met**: plan moved to `plans/archive/2026_07/`, every
+      corpus referrer resolves to the new path, parent plan's banner updated to archived-and-complete.
