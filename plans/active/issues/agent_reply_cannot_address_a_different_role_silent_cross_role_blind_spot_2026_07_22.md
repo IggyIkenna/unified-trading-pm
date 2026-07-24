@@ -160,10 +160,17 @@ too large.
       instead of `from_agent` on the replier's own thread. **Gate**: a regression test proves a cross-role reply lands
       in the target role's next `/poll` (not merely its `/history`), and the existing same-role reply-ack tests stay
       green.
-- [ ] [DOCS] P2. **Codify the peer-vs-operator branch in `agents/main.md` STEP 2B** — `from_role == "operator"` →
+- [x] ✅ [DOCS] P2. **Codify the peer-vs-operator branch in `agents/main.md` STEP 2B** — `from_role == "operator"` →
       `/reply`; any other `from_role` → `POST /api/agents/by-role/<from_role>/message` with `from_agent_id`. Without
       this the procedural half stays folklore. **Gate**: the diff lands and the next live cross-role exchange shows a
-      `to_agent` message in the recipient's poll.
+      `to_agent` message in the recipient's poll. — **SHIPPED `unified-trading-pm@026b79fff`**: branch stated explicitly
+      with both curl examples; STEP 2A's redelivery sentence updated to match. Sibling gap in `agents/review.md` STEP 2
+      filed as the new todo directly below.
 - [ ] [REVIEW] P3. **Sign-off before the routing change ships** — it touches the reply-ack / redelivery-cap machinery
       from `ao_operator_message_silent_drop_no_reply_ack_2026_07_08`; a careless change re-breaks at-least-once
       delivery. **Gate**: approval recorded before the P1 todo ships.
+- [ ] [DOCS] P2. **Apply the identical peer-vs-operator branch to `agents/review.md` STEP 2** (its "2. For each message
+      … POST your reply" block, `agents/review.md:198-205`) — confirmed still present 2026-07-24, unconditional `/reply`
+      regardless of `from_role`, same bug class as the main.md item above and never even adopted the interim ad hoc
+      mitigation. Found while shipping the main.md fix; filed rather than fixed inline because it is a different file
+      outside that todo's declared scope. **Gate**: same as the main.md item above, applied to review.md.

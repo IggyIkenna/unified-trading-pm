@@ -293,9 +293,10 @@ curl -sS -X POST $SERVER_URL/api/agents/$AGENT_ID/poll \
 
 Response shape: `{ ok: true, messages: [{id, direction, from_role, content, created_at}, ...] }`
 
-DELIVERY IS AT-LEAST-ONCE: each to_agent message is RE-RETURNED on every poll until you /reply-ack it — so a tick that
-polls but fails to answer no longer silently loses the operator's message; it comes back next tick. Two things you MUST
-honour:
+DELIVERY IS AT-LEAST-ONCE: each to_agent message is RE-RETURNED on every poll until it is acked — only `/reply` acks
+(STEP 2B's operator branch); the peer branch (`by-role/.../message`) does not, so a peer-originated message keeps
+redelivering until the cap below fires — so a tick that polls but fails to answer no longer silently loses the
+operator's message; it comes back next tick. Two things you MUST honour:
 
 - You will SEE the same message id again until you reply. That is expected, not a duplicate — do not treat a repeat as a
   new question.
@@ -304,9 +305,12 @@ honour:
   replied to it.
 
 STEP 2B — for each message in `messages` (most ticks this will be empty): read it, think about it in the context of
-current orchestration work, compose a response (conversational, can ask clarifying questions), and POST your reply,
-echoing the id in `in_reply_to` so the server acks exactly that message (omit `in_reply_to` to ack the whole drained
-batch at once):
+current orchestration work, compose a response, then branch on THAT message's `from_role` — the two reply channels are
+NOT interchangeable, they write to different places, and prior to this being written down the branch was handled ad hoc
+in one live session only (issue: `agent_reply_cannot_address_a_different_role_silent_cross_role_blind_spot_2026_07_22`):
+
+- **`from_role == "operator"`** → answer via `/reply`, echoing the id in `in_reply_to` so the server acks exactly that
+  message (omit `in_reply_to` to ack the whole drained batch at once):
 
 ```bash
 curl -sS -X POST $SERVER_URL/api/agents/$AGENT_ID/reply \
@@ -318,6 +322,26 @@ curl -sS -X POST $SERVER_URL/api/agents/$AGENT_ID/reply \
     \"last_msg\": \"<short STATUS STRING, e.g. \\\"answered ops q\\\" — NOT a message id>\"
   }"
 ```
+
+- **any other `from_role`** (a peer agent — `review`, `plan_reconciler`, `custom`, …) → `/reply` would post to YOUR OWN
+  role's thread (`direction=from_agent`), which that peer's `/poll` never sees: silently invisible, not merely slow.
+  Answer it via `POST /api/agents/by-role/<from_role>/message` instead, substituting the MESSAGE's `from_role` (who sent
+  it) into the URL, and pass your own id as `from_agent_id` so the server attributes `from_role` correctly (it resolves
+  `from_role` FROM `from_agent_id`, overriding whatever the body says). Note the body field is `text`, not `content`:
+
+```bash
+curl -sS -X POST $SERVER_URL/api/agents/by-role/<the message's from_role>/message \
+  -H 'Content-Type: application/json' \
+  -d "{
+    \"text\": \"<your reply>\",
+    \"from_agent_id\": \"$AGENT_ID\"
+  }"
+```
+
+This is the only channel that lands a `to_agent` row in the peer's own `/poll` (plus a best-effort tmux-nudge of its
+live session) — `/reply` does neither. Caveat: this endpoint has no `in_reply_to`, so it does NOT ack the message you're
+answering; the original stays `answered_at: null` and keeps redelivering on your own poll until the ~30-redelivery cap
+trips (STEP 2A). That is expected for the peer branch — do not re-answer a repeat, just let it lapse.
 
 If you drained a message but genuinely CANNOT answer it this tick (you need to investigate first), that is fine — do NOT
 fake an ack. Leave it un-replied; it redelivers next tick and your scratch file keeps it visible. After ~30 unanswered
