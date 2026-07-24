@@ -353,11 +353,15 @@ tracked below as follow-up, not blocking this plan's core migration/manifest-rec
   (`tests/unit/test_pipeline_e2e_check.py::TestIsBundledChainShardCboeCorrection`) proven correct via isolated `pytest`
   runs (3/3 pass) but deliberately NOT shipped alongside the production fix — adding them to the full suite
   deterministically (if intermittently) triggers that same pre-existing pollution bug; tracked as the P3 todo below.
-  **Live re-verification**
-  (`TRADFI:CBOE:ohlcv_1s,ohlcv_1m --legs force,skip --require-captured --auto-day --day 2026-07-13`, against the
-  now-current code tarball `mtds-code@0205eaab...`) was launched but had not reached a terminal state when this session
-  ended — check `run.log` for the VM this produced before trusting either verdict; do not re-launch blind without
-  checking first.
+  **Live re-verification: CONFIRMED GREEN.**
+  (`TRADFI:CBOE:ohlcv_1s,ohlcv_1m --legs force,skip --require-captured --auto-day --day 2026-07-13`, against the current
+  code tarball `mtds-code@0205eaab...`) completed **4/4 passed** — force + skip for both `ohlcv_1s` and `ohlcv_1m`,
+  `skip_proof: genuine` on both skip legs (not ambiguous — a real PROD-captured shard/day was proven fresh, not just a
+  checker artifact). Report: `plans/audit/results/data_pipeline_e2e_check_mtds_2026_07_13_cboe_reverify.md` (saved under
+  a distinct filename — the default report path collides with the comprehensive 60-cell full-surface run's own report of
+  the same name; do NOT let a future narrow-scope re-run silently clobber that file again, always pass a distinct output
+  path or copy-aside first). The CBOE mixed-venue fix is now verified correct at both the unit-test and
+  live-infrastructure level.
 
 - `- [ ] [SCRIPT] P3. Add TestIsBundledChainShardCboeCorrection (3 tests, verified passing in isolation) to tests/unit/test_pipeline_e2e_check.py once mtds_deployment_env_race_survives_single_worker_2026_07_23.md is resolved.`
 - `~~- [ ] [SCRIPT] P3. Fix IS's FX force/skip status label~~` — **SUPERSEDED 2026-07-23**: rather than relabel the
