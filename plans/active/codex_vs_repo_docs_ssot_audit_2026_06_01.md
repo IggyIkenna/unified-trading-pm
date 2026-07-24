@@ -195,8 +195,8 @@ from scope).
       single-VM architecture pivot 2026-06-27 — a `[x]` from before a pivot reads as current coverage when it isn't).
       Concrete drift found on re-check: the "multi-vm-topology" doc + "multi-vm auth diagram" the 2026-06-22 pass
       reconciled no longer exist under those names —
-      `codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` and
-      `codex/04-architecture/runtime-deployment-topology.md` are the current SSOTs (multi-VM dispatch deprecated
+      `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` and
+      `/codex/04-architecture/runtime-deployment-topology.md` are the current SSOTs (multi-VM dispatch deprecated
       2026-06-27; single central orchestrator VM + role-based dispatch replaced it). The "backlog-model / base-branch
       docs already-accurate" claim also needs re-checking against Path-B (per-slot `git clone --reference` on
       `live-defi-rollout`, no `tab/<op>/N` branch — the tab-branch model this audit pass may have verified against is

@@ -81,9 +81,9 @@ backfill).
 ## Open TODOs
 
 - [ ] [DOCS] P1. **Update the two codex docs that still describe the OLD always-pin model** (now stale after
-      `agent-orchestrator@867b1731e`). `codex/12-agent-workflow/work-philosophy.md` says "tasks pin to the first slot
+      `agent-orchestrator@867b1731e`). `/codex/12-agent-workflow/work-philosophy.md` says "tasks pin to the first slot
       that claims one — slots.py:\_claim_plan_for_slot; cross-agent speed comes from more plans"; and
-      `codex/04-architecture/agent-orchestrator-backlog-state-alignment.md` describes `_claim_plan_for_slot` pinning a
+      `/codex/04-architecture/agent-orchestrator-backlog-state-alignment.md` describes `_claim_plan_for_slot` pinning a
       plan's siblings. Both must be corrected to: pinning is now GATED on `sequential: true`; non-sequential plans fan
       out to N slots (intra-plan concurrency is the default, matching `task_template.md` §4). **Operator sign-off
       required before editing a codex SSOT** (workspace HARD RULE — codex edits are never autonomous). **Gate**: neither
