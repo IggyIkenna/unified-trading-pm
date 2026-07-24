@@ -274,8 +274,11 @@ the daily digest, they never page; a standing condition pages once on the false�
 orchestrator only when HEAD moved, or when the running process predates the checkout HEAD. A deduped Slack
 `_alert_wedge` fires when the pull is wedged (dirty/diverged) AND the clone is `≥AO_DRIFT_ALERT_COMMITS` (10) behind.
 **Open hardening gap**: the wedge alert fires on checkout-behind, NOT on a current-checkout-but-stale-running-process —
-tracked in the AO close-out plan. The `launch-epic-vm*.sh` + historical Cloud Run deploy scripts are retained for
-cloud-agnostic re-spin optionality only; no epic VMs run.
+tracked in the AO close-out plan. **`launch-epic-vm*.sh` REMOVED 2026-07-24** (operator ruling: per-epic VMs are
+deprecated and unused since the 2026-06-27 single-VM pivot — no re-spin optionality is worth the code debt; recreate
+from git history, `deployment-service@7438ec5^`, if the per-epic model ever returns). Disaster recovery for the single
+central/planning VM is the separate, already-covered `launch-central-brain-aws.sh` (from-scratch relaunch + EIP
+reassociation) — see its header comment for the current recovery procedure.
 
 ### What a self-pull ACTUALLY deploys — the generator-inert boundary (HARD RULE)
 

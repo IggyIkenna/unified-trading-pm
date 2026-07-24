@@ -462,7 +462,7 @@ post-pivot re-sweep.
       autonomous): frontmatter block now reads `assigned_vm: planning | NA`, with a dated CORRECTED banner; two further
       stale lines in the same doc were fixed with it (the `tab/<operator>/<N>` branch model in §[4] and §[8]-[10], and
       "plan-level `assigned_vm` matches the slot's VM context" → role-based dispatch).
-- [ ] [OPERATOR] P2. **Rule on the epic-VM code artifacts — they have never been ruled on, by anyone.**
+- [x] ✅ [OPERATOR] P2. **Rule on the epic-VM code artifacts — they have never been ruled on, by anyone.**
       `deployment-service/scripts/vm/launch-epic-vm.sh` + `launch-epic-vm-aws.sh` still ship, and
       `deployment_service/vm_prefix_registry.py` still registers **10**
       `agent-orch-vm-{defi,cefi,tradfi,sports,     prediction,ml,trading-core,operator-ops,cross-cutting,orchestrator}-`
@@ -471,7 +471,15 @@ post-pivot re-sweep.
       module got an explicit **KEEP** ruling on the "multi-VM may return for resilience" argument, so this is genuinely
       a judgment call, not a cleanup. **Operator direction 2026-07-23: file it, decide later** — the point of this todo
       is that the decision stops being invisible. **Gate**: a recorded keep-or-delete ruling; if KEEP, the named
-      scenario under single-VM that still needs it (mirroring the failover precedent).
+      scenario under single-VM that still needs it (mirroring the failover precedent). — **RULED 2026-07-24: DELETE**
+      (not the KEEP-with-scenario first recorded same day — operator overruled it: don't want the code debt, recreate
+      from git history if the per-epic model ever returns). **Shipped `deployment-service@7438ec5`**: both scripts + all
+      10 registry entries + the mirrored `launcher_registry.py` relaunch table removed, dependent tests + packer README
+      fixed, full QG green. The failover-precedent argument this todo cited doesn't actually transfer: that ruling keeps
+      `FailoverLoop` for CENTRAL-VM host resilience (a second host takes over), a different axis from per-epic workload
+      VMs — confirmed `launch-central-brain-aws.sh` (the central-VM DR relaunch tool) never depended on the epic-VM
+      scripts. One new gap surfaced in the process: that relaunch tool doesn't re-provision the self-hosted GitHub
+      Actions "glue" runner pool also hosted on this VM — separately tracked, not resolved here.
 - [ ] [REVIEW] P3. **Reopen or annotate `plans/active/codex_vs_repo_docs_ssot_audit_2026_06_01.md:192`** — its
       agent-orchestrator line is still `[x] SHIPPED` with no note about the post-pivot re-drift this doc's own G-M1
       finding asked for. A `[x]` that predates a pivot reads as current coverage. **Gate**: the line carries either a
