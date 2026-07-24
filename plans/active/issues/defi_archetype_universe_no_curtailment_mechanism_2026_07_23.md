@@ -392,28 +392,82 @@ run SEQUENTIALLY, not in parallel:
       archetypes regardless of execution-service's own readiness — the blocker is strategy-side, not
       execution-service-side. Worth a scoping pass to confirm whether execution-service's orchestrator is real/complete
       enough that ONLY the strategy-side `on_tick` stub needs finishing (a smaller task than assumed) — flagging, not
-      re-scoping unilaterally.
-- [ ] [BACKEND] P1. **Phase 3 — BLOCKED before dispatch, 2026-07-23 — SAME class of bug as Phase 1, silent this time.**
-      Pre-checked `CARRY_BASIS_DATED` + `CARRY_BASIS_DATED_INV` (mirroring the Phase-1 lesson) before spawning a build
-      agent, and caught a real, previously-undiscovered production bug: `CarryBasisDatedEngine.on_tick()`
-      (`carry_and_yield/basis_dated.py`) requires `spot_venue` + `future_venue` + `spot_instrument` +
-      `future_instrument` (`if not (spot_venue and future_venue and spot_instr and future_instr): return []`), but
-      **every single row in both archetypes' catalogs** (`catalog_carry.py`'s `build_carry_basis_dated()` +
-      `build_carry_basis_dated_inv()`, 11 rows total: 3 commodity + 2 equity-index + 2 crypto + 2 ETF-vs-CME-micro for
-      DATED; 2 crypto + 1 commodity for DATED_INV) emits DIFFERENT keys instead — `cash_venue` (not `spot_venue`),
-      `dated_venue` (not `future_venue`), a single `instrument`/`cash_instrument` (not the split
-      `spot_instrument`/`future_instrument`). Unlike Phase 1 (a `ValueError` at `register_instance()`), this does NOT
-      crash — the engine just silently `return []`s forever, for every row, in every environment (paper/batch/live).
-      This is a SILENT no-op, arguably worse than Phase 1's loud crash: nothing signals anything is wrong; it just looks
-      like "the strategy never finds an opportunity." **NOT dispatched to a build agent — do not wire a tick-loader for
-      an engine guaranteed to no-op** (same reasoning as the 2 stub archetypes above). Needs the SAME kind of
-      operator/design decision as Phase 1: is the fix a catalog key-rename (cheap, if the engine's key names are the
-      intended contract) or does the engine need to read the catalog's actual key names (a live-code change, needs
-      care)? **Strategic note**: this is the 3rd of 4 archetypes checked so far with a real catalog/engine contract
-      break (only `CARRY_RECURSIVE_STAKED` was clean) — before continuing Phase 4/5 one-by-one, consider a cheap,
-      mechanical pre-flight sweep across ALL remaining archetypes (grep each engine's actual `params.get(...)`/
-      `str_param(...)` calls vs its catalog's emitted config dict keys) to find every landmine BEFORE building any more
-      tick loaders, rather than discovering them one expensive agent-dispatch at a time.
+      re-scoping unilaterally. **Scoping pass completed 2026-07-24 (read-only investigation, no code changed — the
+      actual build stays correctly un-dispatched, see verdict below).** `RecursiveLoopOrchestrator` (711 lines,
+      `execution-service/execution_service/defi_execution/orchestrators/recursive_loop_orchestrator.py`) is genuinely
+      real and substantially complete: `open()`/`unwind()` entry points, health-factor-triggered abort handling, both
+      persistent (iterative on-chain loop) and flash-loan (single-tx) open/close variants, 353 lines of unit tests. So
+      execution-service's side is NOT the gap. **But the strategy-side gap is bigger than "finish a stub" — it needs NEW
+      decision logic, not plumbing.** Read `CarryRecursiveStakedEngine.on_tick()` in full (`recursive_staked.py`): when
+      `staking_yield_enabled=true` (the already-built `CARRY_RECURSIVE_STAKED` case, Phase 2), a real pipeline runs —
+      `_preflight()` (APY/LTV/leverage checks), `_build_loop_legs()`, `_build_instruction()` — none of which exists for
+      the `staking_yield_enabled=false` path (Families 1/2 =
+      `CARRY_RECURSIVE_BORROW_LENDING_ONLY`/`CARRY_BASIS_PERP_INV`). Those two archetypes are a economically DIFFERENT
+      recursive structure (pure lending-rate-differential leverage / inverse basis-perp leverage, no staking leg) — they
+      need their OWN preflight/leg-building/instruction logic analogous to but distinct from the staked case, including
+      real risk-parameter decisions this session should not invent unilaterally: what
+      leverage-target/health-factor-abort thresholds trigger an open vs. unwind, what economic signal (funding
+      differential? lending-rate spread?) drives entry for each family. **Verdict: still correctly NOT AO-dispatchable**
+      — per the workspace's dispatch-scope-eligibility rule, an open-ended "invent the trading logic and its risk
+      thresholds" task is a human design decision wearing a todo's clothes, not a checkable, worker-determinable
+      outcome. Remains parked pending an operator design/scoping session (which SHOULD now be materially faster given
+      execution-service's readiness is confirmed and the exact missing piece is precisely named, not vague).
+- [x] [BACKEND] P1. **Phase 3 — CARRY_BASIS_DATED / CARRY_BASIS_DATED_INV — SHIPPED 2026-07-24,
+      `strategy-service@b280d27a`.** The config-key mismatch this entry originally flagged (catalog emitting
+      `cash_venue`/`dated_venue`/`instrument` vs the engine's `spot_venue`/`future_venue`/`spot_instrument`/
+      `future_instrument`) was ALREADY FIXED by an earlier same-day commit (`strategy-service@b5d293d0`, "fix(strategy):
+      align CARRY_BASIS_DATED(_INV) catalog config keys with CarryBasisDatedEngine" — verified via
+      `git log`/`git blame` + 139 lines of its own contract tests before this build started); this shipment is
+      specifically the remaining tick-loader-wiring half. Real catalog row count (re-verified by reading
+      `catalog_carry.py` directly, not the audit's "11 rows" figure, which undercounted): `build_carry_basis_dated()`
+      has 16 rows (3 commodity + 2 equity-index + 2 crypto + 2 ETF-vs-CME-micro + 2 intra-Deribit + 5
+      `status=databento_pending` placeholders), `build_carry_basis_dated_inv()` has 3 (2 crypto + 1 commodity) — 19 rows
+      total across both archetypes. **Data-coverage finding (the catalog's own comment pointed at
+      `paired_price_dispersion` — verified, not assumed):** that feature group has **NEVER been computed/persisted in
+      prod for ANY row** — direct GCS listing (2026-07-24) found ZERO `xinstrument/` objects in the CEFI/TRADFI/DEFI
+      `features-*` buckets (the features-cross-instrument-service batch dispatch that would write it has never run). So
+      the tick loader instead computes `basis_bps` DIRECTLY from real raw-tick mid-prices, independently re-implementing
+      the exact same formula the (unrun) kernel documents (`spread_bps = (future_mid - spot_mid) / spot_mid * 10_000`,
+      annualised `× 365 / days_to_expiry`; spot=left/future=right, so positive = contango, matching the engine's
+      documented sign convention with no flip needed) — a new `CanonicalSpotMarkProvider` (Binance spot
+      `book_snapshot_5`, real `BTCUSDT.parquet`/`ETHUSDT.parquet` verified) for the spot leg, reusing Phase 1's
+      already-shipped `CanonicalDatedFutureMarkProvider` (Deribit dated-future `book_snapshot_5`, real objects verified
+      2026-07-01..2026-07-20) for the future leg, referencing the front-quarter ("q1") contract via the same
+      `resolve_current_dated_contract_expiry` resolver Phase 1 built. **Only 4 of the 19 rows are honestly wired** (the
+      2 binance/deribit crypto rows in each archetype — real data verified on BOTH legs); the other 15 are excluded via
+      a new `_basis_dated_config_satisfiable()` gate (`paper_universe.py`, mirroring the
+      `_yield_rotation_lending_config_satisfiable`/`_yield_staking_simple_config_satisfiable` pattern) with typed skip
+      reason `missing_basis_dated_market_data:spot_venue=…,future_venue=…`: TradFi rows (3 commodity + 2 equity-index +
+      2 ETF-vs-CME-micro in DATED, 1 commodity in DATED_INV) — the `features-tradfi-{env}-{pid}` bucket carries ZERO
+      feature output of any kind (only manifest `_index/` files, verified by direct listing); the RAW tick bucket DOES
+      carry real CME/ICE/CBOE data but under `instrument_type={futures_chain,combo,options_chain,index}`, none of which
+      any existing reader parses as a flat per-contract shard (NASDAQ/NYSE ETF ticks also appear only intermittently) —
+      a from-scratch TradFi bundled-chain/index/ETF resolver across 5 venues is a materially bigger, separately-scoped
+      build, flagged not attempted; intra-Deribit rows (2) — the catalog's own comment already documents this ingestion
+      as "currently partial…deferred," independently reconfirmed (no `instrument_type=index`/`spot` shard exists for
+      DERIBIT); the 5 `databento_pending` placeholder rows — self-documented pending in the catalog already. **New
+      finding, not fixed (documented, not silently papered over):** `CARRY_BASIS_DATED_INV`'s catalog sets a
+      `direction:     "SHORT_BASIS"` key that `CarryBasisDatedEngine.on_tick()` never reads at all (grepped the engine —
+      zero references) — both archetypes share the identical engine class and currently behave IDENTICALLY; whether
+      `SHORT_BASIS` should invert entry logic, restrict entries to backwardation only, or something else is a real
+      product/design decision this build did not make unilaterally (same reasoning as Phase 1's dated-expiry- resolution
+      hold) — the tick loader wires both archetypes against the engine's REAL current (shared) behavior, not a guessed
+      one. `CARRY_BASIS_DATED_INV` added to `E2E_UNIVERSE_ARCHETYPES`; both archetypes added to
+      `_ENGINE_DRIVABLE_ARCHETYPES` + the Layer-3 curtailment identity maps (`_VENUE_IDENTITY_KEYS`/
+      `_CURRENCY_IDENTITY_KEYS`). New attribution/passive/transfers wiring in `run_paper` mirrors the
+      ARBITRAGE_PRICE_DISPERSION dex-dispersion branch's shape (a venue-spread capture, not an accrual position) —
+      `r.carry_rates_by_day` carries `(day, basis_bps, 0.0)` per day (genuine zero funding leg, no funding exists for
+      this archetype). 12 new/updated unit tests (`test_canonical_spot_mark_provider.py`,
+      `test_basis_dated_tick_wiring.py`, `test_paper_universe.py`): golden mid-price math, honest-absence (missing spot
+      mark / missing future mark / unregistered venue), sign-convention proof (contango positive, backwardation
+      negative), determinism (byte-identical ticks across independent runs against the same fixture corpus), and the
+      satisfiability-gate regression guard (exactly 2 selected + 14 skipped for DATED, 2 selected + 1 skipped for
+      DATED_INV). Quality gates: `strategy-service` `quality-gates.sh --no-fix` GREEN (fresh run, 5583 passed/206
+      skipped/5 xfailed, all pre-existing; basedpyright clean on every touched file; STEP 5.101 empty-string-fallback
+      ratchet held at the 166 baseline — this build's own new `.get(key, "")` sites were rewritten to direct indexing
+      instead, since the satisfiability gate had already guaranteed key presence). Pushed via quickmerge, landed on
+      `live-defi-rollout`; verified `git merge-base --is-ancestor b280d27a origin/live-defi-rollout` +
+      `git rev-list --count origin/live-defi-rollout..HEAD` == 0.
 - [x] [BACKEND] P2. **Phase 4a — YIELD_STAKING_SIMPLE — SHIPPED 2026-07-24, `strategy-service@5cc6e98b`.** Config keys
       (`staking_protocol`/`asset`) were pre-verified CLEAN this session (no catalog/engine contract-drift bug, unlike
       Phases 1/3's landmines) — a genuine tick-loader-wiring task. Real data-coverage finding: the catalog's 6th row
