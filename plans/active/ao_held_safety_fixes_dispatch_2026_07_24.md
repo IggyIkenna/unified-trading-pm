@@ -64,14 +64,22 @@ source:
 
 ## Todos
 
-- [ ] [BACKEND] P2. Add a liveness-by-progress gate to `maybe_alert_git_staleness` and `maybe_nudge_on_red_repos` in
+- [x] ✅ [BACKEND] P2. Add a liveness-by-progress gate to `maybe_alert_git_staleness` and `maybe_nudge_on_red_repos` in
       `server/worker_liveness/_git_alerts.py` so a burst-committing worker is not classified as wedged. Suppress or
       soften when the worktree's last commit (`git log -1 --format=%ct`) is newer than the sustain window, or a live
       child process runs under it (`pgrep -f <worktree>`). Today these key purely on `dirty_files`/`ahead`/`behind` plus
       age, and `_git_surfaces_pass` runs unconditionally for every slot — its own docstring records that the 2026-07-14
       coverage-gap fix REMOVED the live-worker gate, so an actively-working slot has no exemption. **Gate**: a
       regression test where a recent-commit-but-still-dirty worker does NOT fire the staleness alert, with the
-      genuinely-stale-slot tests still green.
+      genuinely-stale-slot tests still green. — **SHIPPED `agent-orchestrator@0757a75`**: new
+      `_worktree_has_live_progress(worktree, now)` in `_git_alerts.py` checks `git -C <worktree> log -1 --format=%ct`
+      against a `LIVENESS_PROGRESS_WINDOW_S` (10 min) window, falling back to `pgrep -f <worktree>` for a live child
+      process; best-effort (missing worktree/binary/failure reads as False = original alerting behavior). Wired into
+      both `maybe_alert_git_staleness` (after the red-summary build, before the throttle/page) and
+      `maybe_nudge_on_red_repos` (before composing the nudge message). Regression coverage in
+      `tests/test_git_staleness_alerting.py`: burst-committing-worker suppression for both the staleness page and the
+      red-repo nudge, a control proving the genuinely-stale path still pages, plus direct unit coverage of the predicate
+      (recent commit / old commit+no proc / live proc / no worktree at all) — full suite green (1606 passed, 1 skipped).
 - [x] ✅ [BACKEND] P1. Route `agent_reply()` in `server/routes/agents.py` to the ORIGINATING role when the answered
       message came from a peer, instead of always the replier's own thread. It currently calls
       `post_agent_message_by_role` with `target_role=agent.role, direction="from_agent"` unconditionally, and
@@ -95,3 +103,9 @@ source:
 - **2026-07-24**: Slot 4 shipped the P1 cross-role `/reply` routing fix — `agent-orchestrator@738b2d3`, full QG green
   (1595 passed, 1 skipped). Todo 2 flipped. The remaining P2 liveness-by-progress-gate todo and the P3 review sign-off
   are still open.
+- **2026-07-24**: Slot 6 shipped the P2 liveness-by-progress gate — `agent-orchestrator@0757a75`, full QG green (1606
+  passed, 1 skipped). Todo 1 flipped. Both of this plan's todos are now shipped, satisfying its stated
+  regression-test-gate-is-the-review-mechanism contract. The source issue doc
+  (`plans/active/issues/wedge_detector_lacks_liveness_by_progress_false_positive_2026_07_21.md`) still carries its own
+  separate P2 `[DOCS]` todo (apply the same commit-recency/live-process check to the `agents/review.md` wedge heuristic)
+  and P3 `[REVIEW]` operator-sign-off todo — those are out of this plan's scope and remain open there.
