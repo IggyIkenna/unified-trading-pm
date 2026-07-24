@@ -135,7 +135,18 @@ source:
       alongside `agent-orchestrator/scripts/install-plan-reconciler-timer.sh`, and state the cadence in both skills' own
       docs. No docs-reconciler timer or cron exists anywhere in the repo today — the skill is operator-triggered only.
       **Gate**: `systemctl list-timers` on the orchestrator VM shows the docs-reconcile timer with a computed
-      next-elapse, and one run posts a result.
+      next-elapse, and one run posts a result. — PARKED (BLK-f09e9ca9, main interim ruling C, 2026-07-24): code is
+      shipped and QG-green (`agent-orchestrator@329571e` — `mode="docs_reconcile"` wired into `plan_health.dispatch()`,
+      `agents/docs_reconciler.md`, `scripts/install-docs-reconcile-timer.sh`, both skills' SKILL.md cadence-documented,
+      `_SINGLETON_AGENT_KINDS` extended), but the checkbox stays `[ ]` per the runtime-verification HARD RULE — the Gate
+      needs the timer LIVE on the orchestrator VM, which needs two operator/root actions this worker's sandbox cannot
+      perform: (1) `sudo bash scripts/install-docs-reconcile-timer.sh` (writes `/etc/systemd/system/*` as root), and (2)
+      the live root clone at `/home/ubuntu/unified-trading-system-repos/agent-orchestrator` is on `f52b223`, BEHIND
+      `329571e`, so `/api/plan-health/dispatch` won't accept `mode=docs_reconcile` until it pulls +
+      `orchestrator.service` restarts (a fleet-wide bounce main will not do unilaterally). Resolves naturally on the
+      next routine orchestrator deploy/restart, or the operator can run it now:
+      `git pull --ff-only origin live-defi-rollout && sudo systemctl     restart orchestrator.service && sudo bash scripts/install-docs-reconcile-timer.sh`,
+      then verify via `systemctl     list-timers` + `sudo systemctl start docs-reconciler.service`.
 
 ## Progress Log
 

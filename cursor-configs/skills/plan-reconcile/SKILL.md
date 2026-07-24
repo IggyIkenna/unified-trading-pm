@@ -344,13 +344,16 @@ silently-dropped finding is the failure this skill exists to prevent, so a run t
 one that reports them. Recommend a re-run cadence (post-major-phase or weekly) until the confirmed-findings count trends
 to zero.
 
-## AO-VM handoff (target end-state)
+## AO-VM handoff — LIVE (this skill's own doc was stale on the cadence; fixed ao_remediation_a_independent_fixes_2026_07_23 #8)
 
-This skill is written to be dispatchable: author a wrapper plan (ASK the operator first — plan-destination HARD RULE;
-`assigned_vm: planning`, `assigned_role` per the role registry, `execution_scope` PM-repo-only) whose todos invoke
-`/plan-reconcile --autonomous` on a cadence. The autonomous contract above (no pauses, auto-fix only, park rulings,
-notify on big findings) is exactly the non-interactive behaviour the AO worker needs. Until that plan exists, the skill
-stays operator-triggered.
+The handoff described below is DONE, not a target end-state: `plan_reconciler` (the `agents/plan_reconciler.md` daily
+worker that folds this skill's autonomous contract in) runs automatically once a day, autonomous mode, via
+`plan-reconciler.timer` on the central orchestrator VM — `agent-orchestrator/scripts/install-plan-reconciler-timer.sh`
+installs it (01:00 UTC, a quiet window before the fleet's morning activity). The timer POSTs `{"mode": "reconcile"}` to
+`/api/plan-health/dispatch`, which spawns the worker (opus / effort max / thinking on) on a free Max-plan slot. The
+autonomous contract above (no pauses, auto-fix only, park rulings, notify on big findings) is exactly the
+non-interactive behaviour that daily worker runs under. This skill (`/plan-reconcile`) stays directly invocable
+interactively any time — the timer is additive, not a replacement for an on-demand run.
 
 ## Codex SSOTs
 
