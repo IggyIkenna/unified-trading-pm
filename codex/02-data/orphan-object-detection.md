@@ -24,6 +24,7 @@ related:
     /codex/02-data/canonical-cutover-register.md,
     /codex/02-data/availability-manifest-and-data-status.md,
     /codex/05-infrastructure/gcs-object-operations.md,
+    /plans/active/issues/defi_orphan_sweep_test_artifact_prod_leak_2026_07_24.md,
   ]
 created: 2026-07-20
 authoritative_for:
@@ -34,7 +35,7 @@ authoritative_for:
   ]
 referenced_by: [/codex/02-data/canonical-cutover-register.md, /codex/02-data/four-surface-reconciliation-procedure.md]
 owner:
-last_reviewed: 2026-07-20
+last_reviewed: 2026-07-24
 code_refs:
   [
     instruments-service/scripts/migration_orphan_sweep.py,
@@ -136,6 +137,31 @@ manifested. They are not.
 
 This is the single most important fact in this doc: **a prefix being labelled means the sweep stops asking whether its
 contents are orphaned.** Any new non-canonical top-level tree added to that table inherits the same blindness.
+
+### 2b-bis. The OPPOSITE-direction gap — an UNLABELLED top-level prefix is silently trusted, not silently excluded
+
+§2b's blind spot is a prefix that IS labelled, excluding its contents from A/B/D/E entirely. There is a second,
+opposite-direction gap in the same function: a top-level prefix that is in **neither** `_NON_DATA_TOP_LEVEL_LABELS` nor
+`_DATA_PREFIXES` (`raw_tick_data/`, `day=`) is **not excluded at all** — `classify_object` never checks it, and an
+object under it with a hive-shaped tail flows straight through to A/B/D/E as if it were ordinary service data. The
+sweep's own SEPARATE bucket-taxonomy pass (`_taxonomy_label`, `:956-964`) DOES flag it — that is the "0 unknown is the
+acceptance bar" line in `_print_report` — but nothing downstream ever consulted that signal before this fix.
+
+**Found 2026-07-23/24** (`plans/active/issues/defi_orphan_sweep_test_artifact_prod_leak_2026_07_24.md`): defi's terminal
+sweep classified 8 objects under `agent-sample-test-jupiter/` (an agent's own smoke-test write leaked into the PROD
+bucket) as genuine `E_orphan_real` — `backfill_orphan_class_e.py --apply` would have `record_captured`'d them as real
+production data. The SAME defect class, on a DIFFERENT prefix
+(`_remediation_backups/ kraken_futures_collision_2026_07_08/` — a legitimate server-side pre-fix backup, not test data,
+but equally not a source of NEW coverage), had ALREADY landed on cefi's manifest before the fix existed: 4 cells'
+`row_count` inflated ~180-199% by double-counting the backup copies alongside their canonical twins.
+
+**Fixed** (`instruments-service@9a491b23`): `backfill_orphan_class_e.py` gained `split_unknown_prefix_rows()`, which
+excludes any class-E row whose top-level prefix the sweep's own `_taxonomy_label()` could not attribute to real service
+data, BEFORE backfill plans are built — mirrors `split_dex_pools_fake_history`'s exclude-before-plan shape (§ n/a, that
+fix predates this doc's last review). This closes the gap for the BACKFILL path; it does not change
+`migration_orphan_sweep.py`'s own classification (an unlabelled-prefix object still reads A/B/D/E in the sweep's report
+and in its taxonomy's `unknown:` count simultaneously — both signals now exist, only the backfill consumer was blind to
+the second one).
 
 ### 2c. Blind spot 2 — the classified corpus is only raw tick data
 

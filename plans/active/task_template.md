@@ -39,7 +39,11 @@ drift_direction: advance-code
 > **READ THIS before writing any plan.** Pick your TRACK (§1), copy the matching frontmatter (§2), follow the todo
 > format (§3). AO-dispatched plans have STRICT rules (§4). Editing a plan whose tasks are already live? §5. Canonical
 > frontmatter schema: `plans/PLAN_FORMAT.md`. **Never hand-edit `backlog.yaml`** — the backend owns it; you author
-> plans.
+> plans. **Authoring or maintaining a data-pipeline / asset-group consolidated-closeout plan?** Also check
+> `/plans/active/data_pipeline_e2e_milestones_gate_2026_07_24.md`'s 14 cross-AG correctness criteria (canonical
+> adapters/registries/GCS paths, VM/billing monitoring, MDPS canonicalization, honest-coverage math, checkpoint cadence,
+> AO-dispatch-readiness, MVP/batch=live=paper wiring) — this template governs plan FORMAT; that doc governs
+> data-pipeline CONTENT correctness for the same class of plan.
 
 ---
 

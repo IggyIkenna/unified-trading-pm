@@ -4,8 +4,9 @@ description:
   Audit the PM plans corpus (plans/active + plans/active/issues + plans/epics + the normative refs PLAN_FORMAT.md /
   task_template.md / INDEX.md / ACTIVE_INDEX.md) for cross-doc contradictions, done-but-unchecked todos, AND
   AO-dispatch-readiness defects (first-line truncation, unenforced ordering, bare section-shorthand, ambiguous verbs,
-  inconsistent delete-tagging, missing definition-of-done — per task_template.md §3), adversarially verify every
-  finding, then reconcile — auto-fix the mechanical classes (checkbox flips with hard
+  inconsistent delete-tagging, missing definition-of-done — per task_template.md §3), AND data-pipeline-milestones
+  drift for the 5 asset-group consolidated closeouts (per data_pipeline_e2e_milestones_gate_2026_07_24.md's 14
+  cross-AG correctness criteria), adversarially verify every finding, then reconcile — auto-fix the mechanical classes (checkbox flips with hard
   evidence, supersession banners, status/frontmatter drift, dangling refs) AND anything a source of truth can settle
   (if a claim is countable, count it — do not escalate a provable fact), then route only genuine authority/preference
   calls to the operator as a batched interactive Q&A with options + a marked recommendation. ASK > PARK: park as
@@ -198,6 +199,14 @@ history; properly-bannered supersession (an UNbannered superseded doc that still
      LOCAL/human one. Findings route through the same Phase 3 adversarial-verification + Phase 4 routing as
      contradictions (auto-fix the mechanical rewrites directly with evidence; ask/park only genuinely ambiguous judgment
      calls, e.g. whether a delete needs `[OPERATOR]`).
+6. **Data-pipeline-milestones drift** — added 2026-07-24 alongside `data_pipeline_e2e_milestones_gate_2026_07_24.md` (14
+   cross-AG data-pipeline-correctness criteria: canonical adapters/registries/GCS paths, VM/billing monitoring, MDPS
+   canonicalization, honest-coverage math, checkpoint cadence, AO-dispatch-readiness, MVP/batch=live=paper wiring). That
+   doc's 64 todos are tagged `target: <file>` — most target the 5 asset-group consolidated closeouts. For each AG
+   closeout, confirm every todo tagged for it has actually landed there (not just proposed) — an unlanded todo after its
+   gate doc's `last_updated` is drift, same class as a stale checkbox. This is CONTENT correctness for data-pipeline
+   plans specifically, distinct from hunter 5's general AO-dispatch-readiness format check — run both, they catch
+   different things.
 
 ## Phase 2 — done-but-unchecked sweep
 

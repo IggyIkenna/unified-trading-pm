@@ -18,6 +18,7 @@ related:
     /codex/05-infrastructure/vm-tarball-deployment.md,
     /codex/05-infrastructure/deployment-observability.md,
     /codex/05-infrastructure/aws-migration-cost-snapshot-2026-05-07.md,
+    /codex/05-infrastructure/vm-preemption-and-billing-waste-monitoring.md,
   ]
 created: 2026-06-27
 authoritative_for: [Spot-VM provisioning standard for backfill launchers]

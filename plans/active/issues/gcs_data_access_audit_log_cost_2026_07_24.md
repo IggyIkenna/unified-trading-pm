@@ -121,6 +121,40 @@ cost/volume goes away. Two open questions block scoping this, in order:
    the actual cost driver. (Admin Activity logs — bucket create/delete, IAM changes — are separate, always free, and
    unaffected either way.)
 
+## App-logging architecture check (operator question, 2026-07-24 — answered)
+
+Operator asked: do our services use Cloud Logging for their own app logs, or do we dump our own logs — and if
+self-managed, do those already have a retention cycle? Checked via full-workspace grep, not assumed:
+
+- **App/service logs are self-managed and GCS-based, not Cloud Logging.** Three surfaces, none of them Cloud Logging:
+  structured lifecycle events (`log_event()` → `GCSEventSink` →
+  `gs://{project}-events/events/{service}/{date}/events.jsonl`); raw VM stdout/stderr (`vm-exec-with-gcs-tee.sh` tees to
+  `gs://deployment-scripts-{project}/vm-logs/{vm}/run.log`); and plain Python `logging` via
+  `ServiceBootstrap._setup_logging()` (`unified_trading_library/service_framework/bootstrap.py`), which is stdlib
+  `basicConfig`→stderr with **no Cloud Logging handler**. GCE VMs (the whole backfill/canonical-migration fleet) run no
+  ops-agent, so that stderr never reaches Cloud Logging at all — it only survives via the GCS tee. **Cloud Run services
+  are the one exception**: the platform auto-captures container stdout/stderr into Cloud Logging by default — a real,
+  separate cost surface (`run.googleapis.com%2Fstdout`/`stderr`), but a different log stream from the Data Access audit
+  logs this issue is scoped to, and nothing in-repo manages or reads it.
+- **Retention on the self-managed path is mixed, not "everywhere" as hypothesized** — confirmed via
+  `deployment-service/terraform/gcp/main.tf` + `canonical_buckets.tf`: VM run logs (`age=14`→delete), VM heartbeats
+  (`age=15`→delete), and the `logs/`/`recon-logs/`/`audit-results/`/archive prefixes (`age=30`→delete) all have real
+  TTLs. **But the lifecycle-event bucket (`{project}-events`) and `alerting-service-{project}` have no delete rule at
+  all** — the canonical `for_each` lifecycle rule only transitions them to COLDLINE at `age=60`, so app-level structured
+  events accumulate indefinitely (cheaply, but forever). Flagging as a separate gap, not folded into this issue's scope.
+- **Blast radius of touching Cloud Logging is small and well-contained**: no log-based metrics, no Cloud Monitoring
+  alert policies, no dashboards, and no `google_logging_project_sink`/`google_logging_metric` terraform resources exist
+  anywhere in the workspace (the `_Default`/`_Required` sink isn't managed in this repo's IaC at all — a filter has to
+  be added via console/`gcloud` or a new terraform resource, not an edit to an existing one). `ci-alerting`/
+  `notify-slack.yml` dedup lives in GCS, entirely orthogonal to Cloud Logging.
+- **One real collision to account for when scoping the filter**:
+  `deployment-api/deployment_api/routes/client_treasury.py` (`_emit_cloud_audit_log`, lines ~329-361) writes
+  client-withdrawal **compliance** events to the exact same log name, `cloudaudit.googleapis.com/data_access`, via a
+  direct (lazy-imported) `google.cloud.logging` call. A **blanket `logName`-only exclusion** (no `resource.type`
+  scoping) would silently drop this compliance write too. The `resource.type="gcs_bucket"`-scoped option already in this
+  doc should be safe (the treasury write has no GCS-bucket resource), but this is exactly the kind of thing to verify
+  explicitly in the dry-run/preview before flipping the filter live — added to todo 2 below.
+
 ## What could not be established in-session
 
 - **The actual dollar figure.** `gcloud billing accounts list`/`gcloud billing projects describe` both fail with
@@ -140,8 +174,12 @@ cost/volume goes away. Two open questions block scoping this, in order:
       project's IAM Audit Config (`gcloud projects get-iam-policy central-element-323112` → `auditConfigs`) and/or any
       org-level audit policy, and ask whether it was a deliberate compliance decision.
 - [ ] [DEVOPS] P2. Once the "why" is answered, add the appropriately-scoped Cloud Logging exclusion filter (blanket vs
-      bucket-specific — see options above) via terraform, alongside the existing `_Default`/`_Required` sink definitions
-      (not yet located precisely in-session — likely `deployment-service/terraform/gcp/`).
+      bucket-specific — see options above); the `_Default`/`_Required` sink is NOT managed in this repo's terraform (
+      confirmed 2026-07-24, zero `google_logging_project_sink`/`google_logging_metric` resources found workspace-wide) —
+      this will need a new terraform resource or a console/`gcloud` change, not an edit to an existing one. Before
+      flipping live, verify the filter does NOT also match `deployment-api/deployment_api/routes/client_treasury.py`'s
+      `_emit_cloud_audit_log` compliance write, which logs to the same `cloudaudit.googleapis.com/data_access` log name
+      (a `resource.type="gcs_bucket"`-scoped filter should be safe; a blanket `logName`-only filter would not be).
 - [ ] [DEVOPS] P3. Get the authoritative current $ figure from Billing Console → Reports (Cloud Logging service, Log
       Volume SKU) and consider enabling the Cloud Billing API + a BigQuery billing export for this project so future
       cost questions don't require manual metric reconstruction.

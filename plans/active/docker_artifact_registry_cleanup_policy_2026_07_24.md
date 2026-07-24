@@ -168,10 +168,18 @@ Three rules per Artifact Registry Docker repo, `Keep` taking precedence over `De
     olderThan: "3d"
 ```
 
-**Open verification (Phase B):** `mostRecentVersions.keepCount` is believed to apply **per package**, not per repo — if
-so, one repo-wide `keep-5-recent` rule already yields 5-per-service and the issue doc's "20 per-package rules to avoid a
-shared pool" rationale is unnecessary (2 rules + 1 deployed-keep, not 21). `versionNamePrefixes`/`packageNamePrefixes`
-are **prefix** matches — a footgun if any two package names share a prefix; use exact names and confirm in the dry-run.
+**Verified (Phase B, todo 4 — RESOLVED 2026-07-24):** `mostRecentVersions.keepCount` applies **per package, not per
+repo**. Per the GCP docs
+([Configure cleanup policies](https://docs.cloud.google.com/artifact-registry/docs/repositories/cleanup-policy)): "To
+apply the keep policy to all packages in your repository, omit the `packageNamePrefixes` condition. The specified number
+of recent versions of each package in your repository are kept." — i.e. `keepCount: 5` with no `packageNamePrefixes`
+keeps 5 versions **of each package**, not 5 total across the repo. **Decision: repo-wide `keep-5-recent` (todo 5's
+policy shape, `packageNamePrefixes` omitted) is correct as drafted — no per-package expansion needed.** 3 rules total
+for `unified-trading-system` (`keep-deployed-digests` + `keep-5-recent` + `delete-older-than-3d`), not 21. Operator
+confirmed intent 2026-07-24: never drop the latest/deployed image for any package, but trimming version history past 5
+per package is fine to keep total volume reasonable — this is exactly what the verified per-package semantics deliver.
+`versionNamePrefixes`/`packageNamePrefixes` are still **prefix** matches — a footgun if any two package names share a
+prefix; use exact names and confirm in the dry-run (todo 6).
 
 ## Operator decisions (2026-07-24 — FINAL)
 
@@ -205,9 +213,12 @@ human-only.
 
 ### Phase B — Verify AR semantics + draft the policy
 
-- [ ] 4. [INFRA] P2. Verify against current GCP docs whether `mostRecentVersions.keepCount` applies per-package or
+- [x] 4. [INFRA] P2. Verify against current GCP docs whether `mostRecentVersions.keepCount` applies per-package or
       per-repo — this decides 2 rules vs 20 keep rules for `unified-trading-system`. Done-when: the cited GCP doc
-      statement + the recorded decision (repo-wide keep-5 vs per-package rules).
+      statement + the recorded decision (repo-wide keep-5 vs per-package rules). ✅ 2026-07-24 — per-package, confirmed
+      via [GCP docs](https://docs.cloud.google.com/artifact-registry/docs/repositories/cleanup-policy); decision:
+      repo-wide `keep-5-recent` with `packageNamePrefixes` omitted (see § Policy shape). Operator confirmed intent
+      matches: never drop latest/deployed per package, trim history past 5 per package.
 - [ ] 5. [INFRA] P2. Draft the `unified-trading-system` cleanup policy JSON/YAML: `keep-deployed-digests` (from Phase
       A) + `keep-5-recent` floor + `delete-older-than-3d` (tagState any). Done-when: the policy file is committed beside
       this plan.
