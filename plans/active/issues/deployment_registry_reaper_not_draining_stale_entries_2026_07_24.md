@@ -44,6 +44,7 @@ source:
   uts-shared-deployment-api-00268-d2l / deployment-api:e476c73 on 2026-07-24."
 execution_scope: orchestrator-agent
 drift_direction: advance-code
+sequential: true
 depends_on: []
 locked_by:
 locked_since:
