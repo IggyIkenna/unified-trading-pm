@@ -20,8 +20,8 @@ related:
 created: "2026-07-14"
 last_updated: "2026-07-24"
 parent_epic: observability_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 2
@@ -40,10 +40,13 @@ source: deployment_registry_firestore_migration_2026_07_14.md (master, Phase 0)
 # Phase 0 — Unblock prod (schedule the reaper + graceful complete)
 
 > **Dispatch:** `assigned_role: infra` · **model: Sonnet** (default) · **effort: high**. First phase of the chain —
-> `status: active`, no `depends_on`. **Pulled to LOCAL execution 2026-07-14** (`assigned_vm: NA` /
-> `execution_scope: local-only`) — AO's per-task turnaround on this chain was too slow (3 P0 tasks still `queued` after
-> 6h); driving the remaining P0 todos + the full downstream chain interactively instead. Do not flip back to
-> `assigned_vm: planning` without operator instruction.
+> `status: active`, no `depends_on`. **Flipped back to AO 2026-07-24** (`assigned_vm: planning` /
+> `execution_scope: orchestrator-agent`, explicit operator instruction) — the 2026-07-14 pull to local execution was a
+> throughput complaint (3 P0 tasks still `queued` after 6h), not a correctness one; live backlog check same day shows 81
+> recently-tracked tasks all `status=done`, zero `queued`, so the original bottleneck doesn't currently apply.
+> **Operator-confirmed scope for the two live-infra todos** (Link 3 IAM grant, `[DATA]` flag-enable): neither touches
+> the currently-running fleet — only NEWLY LAUNCHED VMs (post Link 1/2 tarball+launcher fixes) pick up the flag, so AO
+> may execute both without a separate human checkpoint.
 
 ## Context (read first — self-contained)
 
@@ -244,6 +247,15 @@ entry). UTC datetimes only. `quality-gates.sh`-green before each commit; commit 
 - No `os.getenv`; UTC datetimes; reaper never raises into the sync loop; QG green on both repos.
 
 ## Progress Log
+
+- **2026-07-24 (slot 3, .tabs/3 worktree) — flipped back to AO.** Operator explicitly instructed reallocation after
+  reviewing the remaining 9 todos: `assigned_vm: NA`→`planning`, `execution_scope: local-only`→`orchestrator-agent`
+  (`sequential: true` was already set from the plan's original authoring — unchanged, confirmed still present). Live AO
+  backlog check (`agent-orchestrator/scripts/orchestrator/check-ao-backlog-status.sh`, read-only via SSM) showed 81
+  recently-tracked tasks, all `status=done`, zero `queued` — the 2026-07-14 throughput complaint that caused the pull
+  doesn't currently apply. Operator explicitly confirmed Link 3 (IAM grant) and `[DATA]` (flag-enable) are safe for AO
+  to execute unsupervised: neither touches the currently-running fleet, only newly-launched VMs pick up the flag post
+  Link 1/2. No further human checkpoint required inside this plan.
 
 - **2026-07-24 (slot 3, .tabs/3 worktree — local execution)** — Operator asked, on live Firestore state (confirmed 0
   docs, matching the 2026-07-17 measurement unchanged one week later): "once this plan is done, will the UI show it —
