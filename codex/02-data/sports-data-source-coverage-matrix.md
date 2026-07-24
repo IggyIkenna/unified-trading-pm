@@ -38,10 +38,17 @@ code_refs:
 
 # Sports Data Source — Coverage Matrix SSOT
 
-> **Note (2026-07-19).** FIXTURES now writes across two entities — `entity=fixtures_schedule` +
-> `entity=fixtures_outcomes` (2026-05-23) — and the fixtures **manifest atom** is still the legacy
-> `data_type="FIXTURES"` umbrella (migration pending, closeout Track C1). data_type is UPPER for sports (K0-(b)). See
-> `sports_consolidated_closeout_2026_07_19.md`.
+> **Note (2026-07-19, casing banner corrected 2026-07-24).** FIXTURES now writes across two entities —
+> `entity=fixtures_schedule` + `entity=fixtures_outcomes` (2026-05-23) — and the fixtures **manifest atom** is still the
+> legacy `data_type="FIXTURES"` umbrella (migration pending, closeout Track C1). **Casing doctrine has reversed twice
+> since this note's original K0-(b) UPPER claim**: 2026-07-22 (K1/K2) migrated `data_type`/`instrument_type` UP to
+> UPPER-case; 2026-07-23 the closeout doc's Track C **reversed that decision fully to LOWER-case, for ALL sports
+> data_types** — this is the current, canonical target, including instruments-service-side reference data_types
+> (FIXTURES/INJURIES/TEAMS/STANDINGS), not just the 9 MTDS/MDPS ones (operator ruling 2026-07-24, resolving the
+> ambiguity `sports-batch-live.md`/`sports-data-types-catalog.md` left open). The 2026-07-22 K1/K2 UPPER migration is
+> itself now `SUPERSEDED, MUST BE REVERTED` per the closeout — do not treat any UPPER-cased sports `data_type`/
+> `instrument_type` value as canonical. See `sports_consolidated_closeout_2026_07_19.md` Track C for the live revert
+> todo, and `sports_master_closeout_2026_07_21.md` for the K1/K2 execution history (superseded, not current truth).
 
 **Status:** canonical — consumed by deployment-api data-status aggregator, instruments-service adapter audits, and
 downstream coverage dashboards.
@@ -190,8 +197,15 @@ Expected leagues: 55 (PREDICTION 33 + FEATURES 22). Reference leagues NOT covere
 `sports_honest_coverage()` against it: 2,564 / 3,400 expected (league, trigger-date) shards = 75.41% all-time
 (2014-2026), 439 / 441 = 99.55% for the current era (2025-01-01 to 2026-07-08) — see
 `instruments-service/docs/SPORTS_INSTRUMENTS.md` § "Reference-data providers" for the full before/after writeup.
-`TRANSFERMARKT_LEAGUES` is retired (2026-05-05, per `deployment-api`'s `sports_helpers.py` comment) — its row below is a
-historical record, not a currently-active data_type.
+**HISTORICAL-ONLY as of 2026-07-24**: this 2026-07-08 all-time figure predates the operator-ruled 2020-06-06 sports data
+floor (`sports_master_closeout_2026_07_21.md`, ruled 2026-07-21; `/codex/02-data/sports-2020-06-data-floor.md`) —
+pre-2020-06 rows are fabrication-by-construction and have since been wiped from the tick/features buckets (the
+reference-data bucket's pre-floor wipe status is tracked separately in the closeout). The 75.41% all-time / 2014-2026
+denominator above has NOT been re-measured against the post-floor manifest and should not be relied on for current
+honest-coverage numbers — treat it as a historical record of the pre-floor state, not current truth. The 99.55%
+current-era (2025-01-01 to 2026-07-08) figure is unaffected (entirely post-floor). `TRANSFERMARKT_LEAGUES` is retired
+(2026-05-05, per `deployment-api`'s `sports_helpers.py` comment) — its row below is a historical record, not a
+currently-active data_type.
 
 | data_type               | Coverage axis                                                                                                              | Expected shards per day                                                 | `record_empty` expected |
 | ----------------------- | -------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- | ----------------------- |

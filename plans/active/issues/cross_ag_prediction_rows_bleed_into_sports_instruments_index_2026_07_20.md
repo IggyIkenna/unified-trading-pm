@@ -14,7 +14,7 @@ summary: >-
   closed reconciliation type fits a cross-bucket asset_group bleed) escalated per the findings-triage HARD RULE, not a
   finding either read-only skill could fix. Measurement caveat — the sports index was in stale per-VM-shard fallback so
   6,597 is a recent-weighted lower bound.
-status: resolved
+status: open
 nature: issue
 asset_group: [sports, prediction]
 stage: [data]
@@ -46,7 +46,7 @@ superseded_by:
 source:
   "/data-pipeline-reconciliation sports (F4) + prediction (F1) runs, 2026-07-20; both independently measured the same
   bleed at 6,597 rows via scoped manifest reads"
-resolved_by: market-tick-data-service@a7ff45f9 (round-2 remediation)
+resolved_by:
 ---
 
 # Cross-AG bleed — `asset_group=prediction` rows in the `instruments-store-sports` index
@@ -179,3 +179,61 @@ manifest = 0.
 **Status: RESOLVED.** Todos 1-4 above are now genuinely done (1: pinned via this investigation; 2: root-caused precisely
 — it was an unfixed second bug, not stale-shard reassertion; 3: the fix landed 07-22, confirmed holding; 4: this section
 IS the retraction/correction of the 07-20 "complete" claim).
+
+## RE-TRIAGE ROUND 3 (2026-07-24) — REOPENED, "RESOLVED" claim contradicted by a fresh live read
+
+**Verdict: STILL OPEN, and round-2's "RESOLVED"/"VERIFY PASSED: 0 remaining" claim does not hold today.** Reverting
+`status` to `open` and clearing `resolved_by` per the findings-triage HARD RULE — do NOT re-close from this doc alone;
+this needs a dedicated root-cause session before any further remediation attempt (per the RE-TRIAGE round-2 section's
+own instruction not to guess-fix).
+
+**Live evidence (2026-07-24, streaming pyarrow/gcsfs read of
+`gs://instruments-store-sports-prd-central-element-323112/_index/availability_index.parquet`, columns
+`asset_group`/`venue`/`data_type`/`written_at` only — no full-file download, no whole-bucket walk):**
+
+- `asset_group=prediction` rows present: **11,727** — KALSHI 11,667 / POLYMARKET 60; `trades` 11,540 /
+  `prediction_canonical_question_group` 187. This is the **exact same total, exact same venue/data_type split** as the
+  round-2 RE-TRIAGE's pre-remediation measurement (2026-07-23), not a fresh reaccumulation with different numbers.
+- By `written_at` date: **07-17: 1,756 · 07-19: 2,341 · 07-20: 2,500 · 07-21: 2,468 · 07-22: 2,662** — again an **exact
+  match**, date-for-date and count-for-count, to the round-2 RE-TRIAGE's own pre-remediation breakdown. Notably **zero
+  rows dated 07-23 or later** — if this were a live, ongoing writer bug reaccumulating fresh rows (as round-1 was), we
+  would expect NEW dates appearing in the 24+ hours since; instead the row set looks like the EXACT pre-remediation
+  population was restored wholesale, not regrown.
+- Checked whether this is a raw-data (object-level) regression, not just a manifest ghost: `gcloud storage ls` for the
+  sample rows' `(date, venue)` combinations under the sports bucket's tree returned **zero matching objects** —
+  consistent with round-2's own claim that the underlying tick data was already correctly placed in the prediction
+  bucket and needed no relocation. **This is a metadata-only reassertion, not a recurrence of the original raw-data
+  bucket-routing bug.**
+- Checked the obvious "stale per-VM shard" hypothesis the round-2 section itself named as a risk:
+  `gs://instruments-store-sports-prd-central-element-323112/_index/per_vm/` contains only one object,
+  `_legacy_seed.parquet` (18.3 KiB, last modified 2026-06-28) — far too small and far too old to carry 11,727 rows dated
+  07-17 through 07-22. **This specific hypothesis is RULED OUT** — whatever is reasserting these rows is not this per-VM
+  shard directory.
+
+**Working hypothesis (NOT confirmed — needs code-level investigation, not just data reads):** the exact-match-down-to-
+the-row totals strongly suggest the consolidated `_index/availability_index.parquet` is periodically **rebuilt from a
+source that round-2's remediation never touched** — e.g. a snapshot/checkpoint/BigQuery write-ahead surface the
+consolidator merges from on each cycle, distinct from both the live consolidated parquet (which the remediation script
+successfully edited, per its own VERIFY PASSED) and the `per_vm/` shard directory (ruled out above). If the
+consolidator's rebuild logic re-merges an older full-index snapshot (rather than incrementally applying the REMOVE),
+every consolidation cycle would silently undo the fix — which is consistent with what's observed: the exact
+pre-remediation row set, verbatim, reappearing with no new growth.
+
+**Next steps (do NOT guess-fix; this needs its own investigation before any further remediation is attempted):**
+
+1. Read `unified-trading-library`'s manifest consolidator (`manifest_consolidator.py`, referenced elsewhere in this
+   epic) to find every input surface it merges from when rebuilding `instruments-store-sports`'s
+   `availability_index.parquet` — confirm whether one of them still carries the pre-remediation rows.
+2. Check whether the round-2 remediation script (`scripts/sports/remediate_cross_ag_prediction_bleed_2026_07_23.py`)
+   wrote its REMOVE anywhere the consolidator does NOT read from (e.g. it may have edited a snapshot copy or a different
+   index path than the one the live consolidator treats as authoritative).
+3. Confirm whether a consolidation cycle has actually run since the 2026-07-23 remediation (check the consolidated
+   index's own `written`/generation metadata) — if the index literally hasn't been rebuilt since remediation, the
+   presence of 11,727 rows would instead mean the REMOVE never actually took effect on the LIVE index in the first place
+   (a different root cause than a rebuild-time reversion).
+4. Once (1)-(3) pin the actual mechanism, re-run the remediation (or fix the consolidator input the remediation missed)
+   and verify **across at least one full consolidation cycle** (not just an immediate post-write read) before re-closing
+   this doc.
+
+Do not re-flip this doc's `status` to `resolved` or re-attribute `resolved_by` until a round-4 pass confirms the fix
+holds across a real consolidation cycle, not just an immediate verify.

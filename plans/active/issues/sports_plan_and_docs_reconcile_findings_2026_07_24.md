@@ -1,12 +1,15 @@
 ---
 doc_type: issue
-title: Sports-scoped /plan-reconcile + /docs-reconcile findings (2026-07-23 run) — 33 confirmed, unapplied
-summary: Two sports-scoped audit workflows (plan-reconcile over 16 root plans/39 issue docs/1 epic; docs-reconcile over
-  12 current + 1 superseded + 9 archived-pre-v2 sports codex docs + 6 epic/audit yaml) ran to completion and
-  adversarially verified 33 findings (20 plan-corpus, 13 codex-corpus). NONE of the fixes below have been applied yet —
-  this doc is the durable record so the findings survive past this session. Confirms the operator's working hypothesis
-  that sports_consolidated_closeout_2026_07_19.md is canonical (sports_master_closeout_2026_07_21.md is an entry-point
-  index only) — but finding #P5 shows master_closeout's own title/H1/`/autonomous` prompt still contradicts that framing.
+title: Sports-scoped /plan-reconcile + /docs-reconcile findings (2026-07-23 run) — 18/31 applied 2026-07-24
+summary: >-
+  Two sports-scoped audit workflows (plan-reconcile over 16 root plans/39 issue docs/1 epic; docs-reconcile over 12
+  current + 1 superseded + 9 archived-pre-v2 sports codex docs + 6 epic/audit yaml) ran to completion and adversarially
+  verified 33 findings (20 plan-corpus, 13 codex-corpus). As of 2026-07-24, 18 fixes are applied (all P0s incl. a live
+  GCP-verified league_id-migration ruling and a reopened cross_ag_prediction-bleed round-3 finding; all 4 operator
+  rulings applied; most P1 mechanical fixes) — see "Deferred work after 2026-07-24" below for the 13 remaining.
+  Confirmed the operator's working hypothesis that sports_consolidated_closeout_2026_07_19.md is canonical
+  (sports_master_closeout_2026_07_21.md is now a fixed entry-point index, title/H1/prompt included, not just
+  frontmatter).
 status: open
 nature: issue
 asset_group: [sports]
@@ -96,50 +99,50 @@ prose in the same file. This is the highest-priority item in this doc.
 
 ### P0 — needs operator ruling
 
-- [ ] [DOC] P0. **P1 — league_id migration status contradiction**: closeout's Track V
-      (`sports_consolidated_closeout_2026_07_19.md:1308`) says the 214,842-row historical manifest migration still needs
-      scheduling; master_closeout (`sports_master_closeout_2026_07_21.md:197`) — citing the SAME source issue doc — logs
-      its own league_id relocation COPY (275,136 objects, mtds@b2a49317) + manifest-swap
-      `--apply-prod --confirm-prod-write` as EXECUTED 2026-07-22 (only human-only DELETE remains). Confirm: is this the
-      SAME work (Track V should read COPY+SWAP done, DELETE pending) or genuinely separate NAME-FORM remapping (in which
-      case both docs need explicit cross-references so nobody duplicates it)?
-- [ ] [DOC] P0. **P5 — master_closeout self-contradicts on canonical status**: frontmatter/summary disclaim superseding
-      the closeout (`entry_point_for:`), but the SAME file's title ("single source of truth", line 4), H1 heading (line
-      74), and its `/autonomous` copy-paste prompt (line 597, labeled "copy this") all declare ITSELF sole SSOT and
-      never name the closeout doc — a fresh `/autonomous` session following this file's own instructions would work from
-      a ~7-item stale checklist and never touch the closeout's 96 open todos incl. its own self-described "THE single
-      highest-priority item" (ODDS_API-dormancy investigation). Edit title/H1/prompt to match the entry-point framing;
-      correct the closeout's decision-9 log line, which currently overstates this fix as complete.
-- [ ] [DOC] P0. **Track F re-run instruction contradicts the 2020-06 floor wipe**: closeout Track F still has an open P0
-      todo to re-run/regenerate `derived_features` for 2017+2018, but that exact population was already WIPED (not
-      regenerated) 2026-07-21 under the data-floor ruling — which the SAME doc's Track V decision 14 already
-      acknowledges. Strike/rewrite Track F to scope remaining work to post-floor residue only (2020-06-06-onward 2020
-      cells + 2,821 fabricated cells in 2021-2026).
-- [ ] [DOC] P0. **cross_ag_prediction_rows_bleed_into_sports_instruments_index is falsely marked resolved a 3rd time**
-      (data-correctness, findings-triage HARD RULE — notify operator): doc claims "VERIFY PASSED / 0 remaining", but a
-      fresh live prod read (this investigation, 2026-07-23) shows the exact same 11,727-row bleed is BACK. Do NOT flip
-      checkboxes. Needs RE-TRIAGE round 3: confirm whether the consolidator is re-merging a stale per-VM shard carrying
-      pre-remediation rows; purge/refresh that shard or re-run REMOVE and verify across a full consolidation cycle
-      before re-closing.
+- [x] [DOC] P0. ✅ **DONE 2026-07-24 — RULED: SAME WORK, applied.** Live GCS re-verification this session: independently
+      re-aggregated all 24 relocation shard-report JSONs (reproduced the exact 275,136 objects / 54,835,957 rows),
+      confirmed the manifest ADD/REMOVE swap executed 2026-07-22 (VERIFY PASSED stale_remaining=0), and
+      live-spot-checked GCS directly — canonical `league_id=EPL` object exists, old raw-keyed `league_id=PREMIER_LEAGUE`
+      object for the same cell is STILL PRESENT (delete genuinely pending, human-gated). Track V rewritten in
+      `sports_consolidated_closeout_2026_07_19.md` to read COPY+SWAP done, DELETE pending, pointing at master_closeout's
+      own 5-part-proof delete todo instead of duplicating it. `sports_consolidated_closeout_2026_07_19@local`.
+- [x] [DOC] P0. ✅ **DONE 2026-07-24.** Edited `sports_master_closeout_2026_07_21.md`'s title (line 4), H1 heading,
+      intro blockquote, and `/autonomous` prompt to drop the "single source of truth" self-claim and explicitly point to
+      `sports_consolidated_closeout_2026_07_19.md`'s 96+ open todos; also fixed the prompt's stale step-3/4 status
+      (COPY+SWAP now shown done, not pending) and repointed its broken
+      `rebuild_sports_manifest.py::_clean_stale_league_entries` reference to the verified `manifest_swap_2026_07_22.py`
+      tool. Corrected the closeout's decision-9 log line, which overstated the 2026-07-23 fix as complete (it only
+      touched frontmatter).
+- [x] [DOC] P0. ✅ **DONE 2026-07-24.** Rewrote Track F in `sports_consolidated_closeout_2026_07_19.md`: the 2017+2018
+      "re-run" todo is now marked resolved-via-pre-floor-wipe (not a re-run target — `deployment-service@78a0aa4`
+      already deleted this population 2026-07-21); the corpus-wide re-run/PURGE/CENSUS todos are rescoped to post-floor
+      residue only (Jun-Dec 2020 + the 2,821 fabricated 2021-2026 cells).
+- [x] [DOC] P0. ✅ **RE-TRIAGE ROUND 3 DONE 2026-07-24 — REOPENED, do NOT treat as resolved.** Live streaming
+      pyarrow/gcsfs read of the sports instruments-store index found the exact same 11,727 bleed rows, exact same
+      venue/date breakdown, back in place despite round-2's "VERIFY PASSED: 0 remaining" claim. Confirmed metadata-only
+      (no physical objects in the sports bucket) and ruled OUT the stale-per-VM-shard hypothesis (`_index/per_vm/` holds
+      only an unrelated 18KB seed file). Root cause of the reversion is NOT yet confirmed — working hypothesis is a
+      consolidator rebuild path round-2's remediation never touched. Reverted `status` to `open` + cleared `resolved_by`
+      in `cross_ag_prediction_rows_bleed_into_sports_instruments_index_2026_07_20.md`, appended a "RE-TRIAGE ROUND 3"
+      section with next-step investigation plan, and corrected `sports_consolidated_closeout_2026_07_19.md`'s two stale
+      "RESOLVED" references (Track X decision log + the go-live pre-req REVIEW item, now a hard BLOCKER on
+      `sports_predictions_live_mode_activation_readiness_2026_07_21.md`). **The underlying data bug is still open** —
+      this todo covered the re-triage/documentation, not a fix; round 4 (root-cause + durable fix) remains future work.
 
 ### P1 — auto-fixable (mechanical, evidence-backed; not yet applied)
 
-- [ ] [DOC] P1. Add a dated correction note to master_closeout's K1/K2 sections pointing at the closeout's Track C
-      revert decision (2026-07-23) — master_closeout still says K1/K2 "ALL now complete", closeout says "SUPERSEDED,
-      MUST BE REVERTED".
-- [ ] [DOC] P1. Re-run `scripts/plans/populate_epic_bodies_2026_05_21.py` against `plans/epics/sports_master.md` — it
-      still lists 3 archived fold-in plans as `status: active` and understates the closeout's estimate by ~4x (9.6 vs
-      36.8 cal AI-days).
-- [ ] [DOC] P2. Fix closeout's decision-4 count ("6 orphan plans") to "5" (line 1298) to match the correct count
-      elsewhere in the same doc (line 565) — cosmetic, self-contained.
-- [ ] [DOC] P2. Correct `sports_golden_window_attempted_failed_remediation_2026_06_24.md`'s 2026-07-23 RE-TRIAGE, which
-      calls `sports_pipeline_to_100pct_golden_window_first_2026_06_27.md` "still active" — it was archived the same day
-      under the closeout's Track X fold-in.
-- [ ] [DOC] P2. Flip `sports_odds_ownership_registry_split_brain_and_bogus_api_football_denominator_2026_07_15.md` line
-      323's DEFERRED PURGE checkbox to done — the purge already ran via `sports_legacy_bucket_cutover_2026_07_16.md`
-      T3.1 (2026-07-16T13:09Z, 123,149 rows), independently re-verified 0 rows remain in prod. Also flip the adjacent
-      line-319 VERIFY todo (T3.2 confirms it). Also correct closeout line 802-803, which still calls this open. Note: do
-      NOT cite the MTDS@e9d9dec0 wipe as the completing evidence — it targeted a different bucket entirely.
+- [x] [DOC] P1. ✅ **DONE 2026-07-24.** Added a correction blockquote to `sports_master_closeout_2026_07_21.md` right
+      before the K1/K2 items pointing at the closeout's Track C revert decision.
+- [x] [DOC] P1. ✅ **DONE 2026-07-24.** Ran `populate_epic_bodies_2026_05_21.py --apply` (workspace-wide, no per-epic
+      scoping flag exists — regenerated all 23 epic bodies, all mechanical/deterministic). `sports_master.md`'s
+      "Assigned active plans" section no longer lists the 3 archived fold-in plans and shows the correct 36.8 cal AI-day
+      estimate.
+- [x] [DOC] P2. ✅ **DONE 2026-07-24.** Fixed the "6 orphan plans" → "5" miscounted instance.
+- [x] [DOC] P2. ✅ **DONE 2026-07-24.** Corrected the golden_window doc's RE-TRIAGE — the coordinator plan's frontmatter
+      is verified `status: superseded` (folded into closeout Track X 2026-07-23), not `active`.
+- [x] [DOC] P2. ✅ **DONE 2026-07-24.** Flipped both checkboxes with full T3.1/T3.2 evidence (123,149 rows purged
+      2026-07-16T13:09Z, re-verified 0 remain) and corrected the closeout's stale "open" reference to point at the
+      completed purge.
 
 ### P1-P2 — needs a substantive (non-mechanical) fix, no operator authority question
 
@@ -157,25 +160,18 @@ prose in the same file. This is the highest-priority item in this doc.
 - [ ] [DOC] P2. `sports_odds_bookmaker_coverage_enumeration_2026_06_20.md`'s "Gap analysis from P1c Todo 4" section (28
       unmapped league_ids, LEAGUE_ID_TO_TIER requirement) exists only as prose, not todos — convert or fold into the
       closeout's Track X reconciliation first.
-- [ ] [DOC] P2. Fix closeout Track H's misattribution of the rejected 180-240s staleness-budget value to
-      `sports_manifest_read_staleness_budget_missing_2026_07_15.md` (that doc actually recommends 1800s, matching the
-      closeout's own earlier correct attribution at line ~748). Citation-accuracy fix only.
-- [ ] [DOC] P1. `sports_master_closeout_2026_07_21.md`'s `/autonomous` prompt (step 4, line 638) still tells a fresh
-      agent to reuse `rebuild_sports_manifest.py::_clean_stale_league_entries` for the pending manifest-swap+delete —
-      the SAME doc's fifth-wave Progress Log proves this script is broken (wrong partition-key pattern) and would delete
-      the entire 1.78M+-row sports MTDS manifest if run in write mode. Repoint to the verified
-      `manifest_swap_2026_07_22.py` tool (already documented elsewhere in the same file). Mechanical, no judgment needed
-      — correct tool name already exists in-doc.
-- [ ] [DOC] P1. `sports_live_writer_instrument_type_casing_never_fixed_2026_07_22.md` is `status: resolved` with a
-      same-day RE-TRIAGE declaring K1/K2 UPPER-casing correct — but the closeout's later same-day reconciliation
-      reverses that (LOWER-case canonical, K1/K2 "MUST BE REVERTED", not yet executed). Add a correction banner; the
-      closeout's revert decision is later same-day and evidenced.
-- [ ] [DOC] P1. **Venue-vocabulary scope** (needs operator ruling) — `/codex/01-domain/sports-instruments.md`
-      (last_reviewed 2026-05-22) declares only 3 active sports venues, but current measurements show ~15+
-      individually-registered bookmaker venues live in prod. Ambiguous whether these are legitimate sub-identities
-      within the ODDS_API feed or genuine doc staleness — this doc was NOT included in the closeout's 2026-07-23 6-doc
-      codex-alignment pass that fixed the identical bug class in sibling docs, and isn't cited in either plan's
-      Codex-SSOTs list.
+- [x] [DOC] P2. ✅ **DONE 2026-07-24.** Corrected the citation — the rejected 180-240s value is from sweep §J, not from
+      the issue doc (which already correctly recommends 1800s, matching this line's own target).
+- [x] [DOC] P1. ✅ **DONE 2026-07-24** (part of the P5 fix above) — repointed to `manifest_swap_2026_07_22.py`.
+- [x] [DOC] P1. ✅ **DONE 2026-07-24.** Added a correction blockquote right after the RE-TRIAGE header noting the
+      UPPER-casing direction it confirms is itself now superseded/must-be-reverted per the closeout's later Track C.
+- [x] [DOC] P1. ✅ **DONE 2026-07-24 — RULED: doc is stale, updated.** Live census of the sports tick manifest's `venue`
+      column found 28 distinct individually-registered bookmaker venues captured today (PADDYPOWER, UNIBET, DRAFTKINGS,
+      SKYBET, SPORT888, MATCHBOOK, FANDUEL, BETONLINEAG, BETRIVERS, CORAL, WILLIAMHILL, BETVICTOR, VIRGINBET,
+      LIVESCOREBET, CASUMO, BETSSON, UNIBET_UK/EU, BETFAIR_EX_UK/EU, BETFAIR_SB_UK, LADBROKES_UK, SMARKETS, BOVADA,
+      BETWAY, BETMGM, plus PINNACLE/BETFAIR direct) — these are ODDS_API-aggregator sub-identities, not a
+      scraper-deferral violation. Rewrote the DELTA note in `sports-instruments.md` to explain the aggregator mechanism
+      and the corrected count.
 
 ## docs-reconcile findings (scope: 12 current + 1 superseded + 9 archived-pre-v2 sports codex + 6 epic/audit yaml; 13 confirmed / 1 refuted; Phase 0 deterministic checks all green corpus-wide)
 
@@ -193,16 +189,15 @@ prose in the same file. This is the highest-priority item in this doc.
 
 ### P1 — needs operator ruling (authority/scope, not correctness)
 
-- [ ] [DOC] P1. Casing doctrine has NO single current-truth doc: `sports-data-source-coverage-matrix.md` (stale,
-      predates reversal) says UPPER via K0-DECISION(b); `sports-batch-live.md` says the 2026-07-23 reversal covers ALL
-      sports data_types but points to `sports-data-types-catalog.md` for "most current" — which is scoped only to its 9
-      MTDS/MDPS data_types, never mentioning FIXTURES/INJURIES/TEAMS/STANDINGS. Rule whether the "ALL types" reversal
-      includes instruments-service-side reference data_types, then fix whichever doc is wrong.
-- [ ] [DOC] P1. `sports-epic.yaml` still lists eliminated `unified-sports-execution-interface` (merged into
-      execution-service 2026-03-26) as a `required_repos` gate — permanently unsatisfiable. **Not sports-specific**:
-      `defi-epic.yaml`/`cefi-epic.yaml`/`tradfi-epic.yaml` share the identical pattern for
-      `unified-defi-execution-interface` (same elimination date). Recommend a workspace-wide PM ruling (scrub vs.
-      annotate-satisfied), not a sports-only point fix.
+- [x] [DOC] P1. ✅ **DONE 2026-07-24 — RULED: ALL sports data_types, including instruments-service reference
+      data_types.** Rewrote `sports-data-source-coverage-matrix.md`'s casing banner to state the current LOWER-case
+      doctrine explicitly, cite both reversal dates (2026-07-22 partial UPPER, 2026-07-23 full LOWER reversal), and flag
+      the 2026-07-22 K1/K2 UPPER migration as itself superseded/must-be-reverted.
+- [x] [DOC] P1. ✅ **DONE 2026-07-24 — RULED: scrub the eliminated entries, workspace-wide.** Removed the
+      `unified-sports-execution-interface` required entry from `sports-epic.yaml` and the
+      `unified-defi-execution-interface` entry from `defi-epic.yaml` (required), `cefi-epic.yaml` + `tradfi-epic.yaml`
+      (optional) — all 4 files, both required and optional occurrences, since the repo no longer exists standalone. YAML
+      syntax validated post-edit.
 
 ### P1-P2 — auto-fixable (mechanical; not yet applied)
 
@@ -228,14 +223,10 @@ prose in the same file. This is the highest-priority item in this doc.
       linked plans say the MANIFEST-side prune (131,426 + 944,776 phantom rows, plus 83,541 pre-floor FIXTURES rows) is
       explicitly NOT done yet. Qualify the section to separate done (GCS-object wipe) from deferred (manifest-row
       prune).
-- [ ] [DOC] P1. `sports-data-source-coverage-matrix.md`'s casing banner (lines 41-44) still points to the closeout doc
-      for "current truth" without noting the plan's headline decision has since reversed twice more (2026-07-22 partial,
-      2026-07-23 full reversal to lower-case). This exact gap is already an open Track D P2 todo inside the closeout
-      itself — this finding confirms that todo is real and unaddressed.
-- [ ] [DOC] P2. `sports-instruments.md` has 3 dead reference links (lines 27, 472-474): a nonexistent sibling repo
-      (`sports-betting-services/docs/INSTRUMENT_KEY.md`) and 2 nonexistent codex paths — one of which
-      (`sports-data-sources.md`) has a real target (`sports-data-source-coverage-matrix.md`) the SAME doc already links
-      correctly elsewhere.
+- [x] [DOC] P1. ✅ **DONE 2026-07-24** (same edit as the casing-doctrine-scope fix above — the rewritten banner
+      explicitly cites both reversal dates).
+- [x] [DOC] P2. ✅ **DONE 2026-07-24.** Removed the dead sibling-repo link (2 occurrences) and repointed the dead
+      `sports-data-sources.md` codex path to the real `sports-data-source-coverage-matrix.md` target.
 
 ### P2 — needs a substantive fix, no operator authority question
 
@@ -243,9 +234,31 @@ prose in the same file. This is the highest-priority item in this doc.
       `EXPECTED_SOURCE_COVERAGE_START` (typo of `EXPECTED_PRE_SOURCE_COVERAGE_START` — mechanical fix) and
       `EXPECTED_FIXTURE_STARTED_EARLY` (needs a decision: mint a real member, or map onto an existing one — then update
       `sports-batch-live.md`'s closed-set §4 list to match).
-- [ ] [DOC] P2. `sports-data-source-coverage-matrix.md`'s worked Transfermarkt coverage example (2014-2026, verified
-      2026-07-08) predates the 2020-06-06 floor ruling (2026-07-21) and isn't reconciled to it. Re-run the verification
-      against the post-floor manifest, or banner the example as historical-only.
+- [x] [DOC] P2. ✅ **DONE 2026-07-24 (bannered, not re-verified).** Added a note qualifying the 75.41% all-time
+      (2014-2026) figure as historical-only/pre-floor, not re-measured against the post-floor manifest; the 99.55%
+      current-era figure is unaffected (entirely post-floor).
+
+## Deferred work after 2026-07-24
+
+Session stopped by operator instruction (interactive `/autonomous` continuation, not a background dispatch) after
+applying all P0s + all 4 operator rulings + most P1 mechanicals. Remaining `- [ ]` items above, for the next session:
+
+| Item                                                                                                                                                                                 | Priority | Type                                               |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------- | -------------------------------------------------- |
+| Archive-candidate verdict — `sports_odds_bookmaker_coverage_enumeration_2026_06_20.md` (do NOT auto-archive; needs `[unlock-plan]` + operator ruling on the empirical-seed question) | P1       | judgment call                                      |
+| `sports_halftime_odds_sfi_vs_inplay_2026_07_16.md` — enumerate/re-triage 5 undercounted open checkboxes                                                                              | P1       | substantive                                        |
+| `sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md` — link or archive for real                                                                             | P1       | substantive                                        |
+| `sports_predictions_live_mode_activation_readiness_2026_07_21.md` — fix Group-C harness claim + `related:` list                                                                      | P2       | mechanical                                         |
+| `sports_odds_bookmaker_coverage_enumeration_2026_06_20.md` — convert gap-analysis prose to tracked todos                                                                             | P2       | substantive                                        |
+| docs-reconcile P0 — `sports-batch-live.md` vs `sports-live-odds-connectivity.md` odds_api `authoritative_for` collision                                                              | P0       | substantive, needs scope decision                  |
+| docs-reconcile — `sports-gcs-path-ssot.md` bucket-deletion past-tense + close T6.7 + check 2 sibling docs                                                                            | P1       | mechanical                                         |
+| docs-reconcile — `sports-integration-plan.md` `referenced_by:` + superseded caveat                                                                                                   | P2       | mechanical                                         |
+| docs-reconcile — `kelly.md` + `staking-methods.md` missing in-body SUPERSEDED banners                                                                                                | P1       | mechanical                                         |
+| docs-reconcile — `unified-sports-reference-interface.yaml` status flip to `"eliminated"`                                                                                             | P1       | mechanical (needs 2-hop-merge destination confirm) |
+| docs-reconcile — `runtime-deployment-topology.md` line 697 USEI + line 696 UDEI reword                                                                                               | P2       | mechanical                                         |
+| docs-reconcile — `sports-2020-06-data-floor.md` "no phantom rows survive" qualifier                                                                                                  | P2       | mechanical                                         |
+| docs-reconcile P2 — `sports-data-types-catalog.md` `EmptyConfirmedReason` enum typo (mechanical) + `EXPECTED_FIXTURE_STARTED_EARLY` decision (mint vs map)                           | P2       | mixed                                              |
+| cross_ag_prediction_rows_bleed round 4 — root-cause the consolidator reversion mechanism + durable fix (see the issue doc's RE-TRIAGE ROUND 3 next-steps)                            | P0       | data-correctness, real investigation               |
 
 ## Ledger (Phase 5.9 discipline — counted, not eyeballed)
 

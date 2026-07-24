@@ -182,44 +182,58 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
 - [x] [CODE] P0. ✅ §Z season_context fabrication FIXED — **features-service@c6eb1f38** (QG green). Gate derives
       matchday from `round`; `_competition_phase`/games_remaining honest `None` on NaN; 2 regression tests. The 8-VM
       re-run fleet writing the fabricated pattern was STOPPED.
-- [~] [DATA] P0. **Clean corpus-wide `derived_features` re-run**, 2019→present, bounded per-year SPOT chunks; re-run ANY
-  chunk **ON-DEMAND** instead if it hits the `--force`×SPOT within-year preemption-replay hazard (confirmed on
-  2019+2020, see below) — does **NOT** depend on Track C's C1 fixtures-manifest-atom migration (unrelated
-  instruments-service bookkeeping; this re-run reads fixture parquets, already correct via the 2026-07-18
-  round-derivation/catalogue-repoint/backfill sweep the audit confirmed terminal, plus its split-entity read fix) —
-  gated only on the season_context-fabrication code fix (line above) + a fresh tarball (both done). **This is the ONE
-  place this dependency is stated — do not restate it differently elsewhere in this doc.** Watchdog on a validated
-  creation-time metric (whole-date filter, not an hour pattern — cf. codex async rule 1a). Prerequisite already
-  satisfied: the features-service GCS tarball had to be rebuilt (was stale `aa7ea0ff`, pre-fix; a naive relaunch would
-  have repeated the corrupt run) via `create-code-tarballs.sh --include features-service` → `c6eb1f38`. 2024 pilot chunk
-  launched and verified (real early/mid/late `competition_phase` spread; matchday non-null ≈ round non-null). **⚠️
-  CORRECTION 2026-07-20 — the earlier "VERIFIED corpus-wide: 2021-2026 CLEAN" claim on this line was OVERSTATED and is
-  RETRACTED** (it sampled only days the re-run had already rewritten). A creation-time census of all 124,554 objects + a
-  250-object stratified content sample found **100% fabrication among all pre-fix objects (249/250)** — 35,045
-  fabricated parquet objects total, 2,821 inside the supposedly-clean 2021-2026. Two structural gaps this surfaced, now
-  their own follow-up todos below: (a) 2017+2018 (26,089 files, 2018 the corpus's largest year) were never in the
-  original "2019→present" scope; (b) `--force` only overwrites days the run produces output for, so a fabricated object
-  on a zero-output day survives any number of re-runs (observed `day=2019-04-20`). Full evidence:
-  `issues/sports_derived_features_fabricated_corpus_scope_2026_07_20.md`. **This todo is NOT done — the PURGE and
-  re-verify todos below are NOT yet safe to dispatch until this one AND the 2017+2018 todo are both done; no machine
-  gate enforces that today (this plan is `assigned_vm: NA`, not currently AO-dispatched) — if this chain is ever
-  extracted into its own AO-dispatched plan, give it `sequential: true` (task_template.md §4) rather than relying on
-  this prose note.**
-- [ ] [DATA] P0. **Re-run 2017 + 2018 `derived_features` ON-DEMAND** (never SPOT — same per-year chunking + `--force` as
-      the 2019/2020 recovery above) — never in this plan's original "2019→present" scope; measured 100% fabricated
-      (26,089 parquet objects; 2018 alone is 22,077, the corpus's largest year).
-- [ ] [DATA] P0. **PURGE the fabricated remainder, only after BOTH re-run todos above are done** — overwriting alone is
-      provably insufficient (a re-run never rewrites a day it produces no output for, so a fabricated object on a
-      zero-output day survives). Snapshot the delete list FIRST (GCS soft-delete gives a 7-day recovery window), then
-      delete every `derived_features` parquet still carrying a PRE-`2026-07-19` GCS creation timestamp. Honest absence
-      beats an invented `competition_phase` (`/codex/02-data/honest-absence-downstream-handling.md`). **Not
-      `[OPERATOR]`-gated** (unlike the K1/K2 GCS-delete below, which is): the soft-delete's 7-day recovery makes this
-      reversible-for-a-week, not the irreversible class `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`
-      reserves for human-only sign-off — the snapshot-first step is this todo's safety net.
+- [x] [DATA] P0. ✅ **RE-SCOPED 2026-07-24 (was mis-scoped "2019→present" — 2017-2019 + pre-2020-06-06 2020 are now
+      MOOT, already resolved by the 2020-06 floor wipe, not a re-run target).** Per the operator-ruled 2020-06-06 sports
+      data floor (`/codex/02-data/sports-2020-06-data-floor.md`, `sports_master_closeout_2026_07_21.md` §1): pre-floor
+      `derived_features` is fabrication-by-construction and gets DELETED, not regenerated. The pre-floor GCS wipe
+      (`deployment-service@78a0aa4`, EXECUTED + VERIFIED 2026-07-21) already deleted 212,519 pre-floor
+      `features-sports-prd` objects (2017-01-01…2020-06-05, spot-verified 0 pre-floor days remain) — this supersedes and
+      moots the re-run work this todo originally scoped for 2017-2019 and Jan-Jun 2020. **Remaining live scope, per
+      master_closeout §2-F: post-floor only** — the Jun-Dec 2020 residual + **2,821 fabricated cells measured inside
+      2021-2026** (from the retracted-CLEAN-claim census below), which the pre-floor wipe does NOT touch (they postdate
+      the floor and are real trading data, not fabrication-by-construction — they need re-run + targeted purge, not
+      deletion-by-floor). Clean corpus-wide re-run, bounded per-year SPOT chunks; re-run ANY chunk **ON-DEMAND** instead
+      if it hits the `--force`×SPOT within-year preemption-replay hazard (confirmed on 2019+2020 pre-floor-wipe testing)
+      — does **NOT** depend on Track C's C1 fixtures-manifest-atom migration (unrelated instruments-service bookkeeping;
+      this re-run reads fixture parquets, already correct via the 2026-07-18 round-derivation/catalogue-repoint/backfill
+      sweep the audit confirmed terminal, plus its split-entity read fix) — gated only on the season_context-fabrication
+      code fix (line above) + a fresh tarball (both done). Watchdog on a validated creation-time metric (whole-date
+      filter, not an hour pattern — cf. codex async rule 1a). **⚠️ CORRECTION 2026-07-20 — the earlier "VERIFIED
+      corpus-wide: 2021-2026 CLEAN" claim on this line was OVERSTATED and is RETRACTED** (it sampled only days the
+      re-run had already rewritten). A creation-time census of all 124,554 objects + a 250-object stratified content
+      sample found **100% fabrication among all pre-fix objects (249/250)** — 35,045 fabricated parquet objects total
+      measured at the time, of which 2,821 are inside 2021-2026 (post-floor, still live scope) and the remainder is now
+      moot (pre-floor, wiped). Structural gap this surfaced, still live: `--force` only overwrites days the run produces
+      output for, so a fabricated object on a zero-output day survives any number of re-runs (observed `day=2019-04-20`,
+      now moot — but the same defect could affect a post-floor zero-output day, so the PURGE todo below stays mandatory
+      regardless of re-run coverage). Full evidence:
+      `issues/sports_derived_features_fabricated_corpus_scope_2026_07_20.md`. **This todo is NOT done for the post-floor
+      residue — the PURGE and re-verify todos below are NOT yet safe to dispatch until this one is done for Jun-Dec
+      2020 + 2021-2026; no machine gate enforces that today (this plan is `assigned_vm: NA`, not currently
+      AO-dispatched) — if this chain is ever extracted into its own AO-dispatched plan, give it `sequential: true`
+      (task_template.md §4) rather than relying on this prose note.**
+- [x] [DATA] P0. ✅ **RESOLVED VIA PRE-FLOOR WIPE, not a re-run (was: "Re-run 2017+2018 `derived_features`
+      ON-DEMAND").** 2017 and 2018 are 100% pre-floor (before 2020-06-06) — the measured 26,089 fabricated parquet
+      objects for these years (2018 alone 22,077, the corpus's largest year) were deleted by the pre-floor GCS wipe
+      (`deployment-service@78a0aa4`, 2026-07-21, part of the same 212,519-object `features-sports-prd` deletion cited
+      above), not regenerated. Regenerating fabricated pre-floor data would have re-created fabrication-by-construction
+      — the floor ruling's whole point is that this population should not exist at all. No further action needed here.
+- [ ] [DATA] P0. **PURGE the fabricated POST-FLOOR remainder (Jun-Dec 2020 + 2021-2026 only — 2017-2019 + pre-06-06 2020
+      are moot, already deleted by the pre-floor wipe), only after the re-run todo above is done for that same
+      post-floor scope** — overwriting alone is provably insufficient (a re-run never rewrites a day it produces no
+      output for, so a fabricated object on a zero-output day survives). Snapshot the delete list FIRST (GCS soft-delete
+      gives a 7-day recovery window), then delete every POST-FLOOR `derived_features` parquet still carrying a
+      PRE-`2026-07-19` GCS creation timestamp — do NOT re-touch pre-floor dates, they're already handled by the wipe's
+      own snapshot+delete. Honest absence beats an invented `competition_phase`
+      (`/codex/02-data/honest-absence-downstream-handling.md`). **Not `[OPERATOR]`-gated** (unlike the K1/K2 GCS-delete
+      below, which is): the soft-delete's 7-day recovery makes this reversible-for-a-week, not the irreversible class
+      `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` reserves for human-only sign-off — the snapshot-first
+      step is this todo's safety net.
 - [ ] [DATA] P0. **Re-verify by CENSUS, not sampling, only after the PURGE todo above is done** — the terminal check is
-      "zero pre-fix-dated `derived_features` objects remain", decidable from object metadata alone (a GCS creation-time
-      listing, not a content sample). Sampling is what produced the retracted CLEAN claim above. **Done when**: the
-      census returns 0 objects with a pre-`2026-07-19` creation timestamp.
+      "zero pre-fix-dated POST-FLOOR `derived_features` objects remain" (pre-floor is separately verified 0 by the
+      wipe's own census), decidable from object metadata alone (a GCS creation-time listing, not a content sample).
+      Sampling is what produced the retracted CLEAN claim above. **Done when**: the census returns 0 post-floor objects
+      with a pre-`2026-07-19` creation timestamp.
 - [ ] [DIAG] P1. `sfi_progressive_features` is corpus-empty (1 manifest row) despite a documented 2020→today window —
       find why the backfill never ran, then run it. Without it every HT/progressive-SFI ML feature is unavailable.
 - [ ] [DIAG] P2. `is_promotion_relegation` is hardcoded `False` (dead) — wire it from the standings relegation-zone
@@ -261,16 +275,16 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
       (`npx playwright test     --project=chromium tests/smoke/`) + a cited regression spec per CLAUDE.md UI
       playwright-gate HARD RULE; on a fleet VM with no dev server, keep `[BLOCKED-PLAYWRIGHT]`.
       <!-- BLOCKED-UPSTREAM evidence (2026-06-24 slot-23):
-                                                                                                                                                                                                                                                                                                       GCS check: entity=fixtures_schedule + entity=fixtures_outcomes DO NOT EXIST in
-                                                                                                                                                                                                                                                                                                       gs://instruments-store-sports-prd-central-element-323112/sports_reference/by_date/ — only entity=fixtures.
-                                                                                                                                                                                                                                                                                                       Q5/Q6 columns absent from ALL sampled parquets: EPL 2026-05-17, Ligue1 2026-05-17, SerieA 2026-05-09,
-                                                                                                                                                                                                                                                                                                       LaLiga 2026-05-09, Bundesliga 2026-05-10, Norway 2026-06-21 (written 2026-05-23 before Q5/Q6 deploy).
-                                                                                                                                                                                                                                                                                                       Root cause: entity-split writer commit 254fb843 ("entity-split fixtures→fixtures_schedule+fixtures_outcomes;
-                                                                                                                                                                                                                                                                                                       writegate strict mode") is on origin/live-defi-rollout as of 2026-06-24 but NOT yet on main.
-                                                                                                                                                                                                                                                                                                       Q5/Q6 additive write path (48c54805, 2026-06-05) IS on main — but existing entity=fixtures parquets
-                                                                                                                                                                                                                                                                                                       were all written before 2026-06-05 and the "old-path-copy" branch does not re-process them.
-                                                                                                                                                                                                                                                                                                       Unblock: 254fb843 promotes main → IS Docker rebuild + VM relaunch → migrate_fixtures_split.py runs
-                                                                                                                                                                                                                                                                                                       on real sports buckets → new entity=fixtures_schedule+fixtures_outcomes paths appear → re-run VERIFY. --> (FOLDED
+                                                                                                                                                                                                                                                                                                                           GCS check: entity=fixtures_schedule + entity=fixtures_outcomes DO NOT EXIST in
+                                                                                                                                                                                                                                                                                                                           gs://instruments-store-sports-prd-central-element-323112/sports_reference/by_date/ — only entity=fixtures.
+                                                                                                                                                                                                                                                                                                                           Q5/Q6 columns absent from ALL sampled parquets: EPL 2026-05-17, Ligue1 2026-05-17, SerieA 2026-05-09,
+                                                                                                                                                                                                                                                                                                                           LaLiga 2026-05-09, Bundesliga 2026-05-10, Norway 2026-06-21 (written 2026-05-23 before Q5/Q6 deploy).
+                                                                                                                                                                                                                                                                                                                           Root cause: entity-split writer commit 254fb843 ("entity-split fixtures→fixtures_schedule+fixtures_outcomes;
+                                                                                                                                                                                                                                                                                                                           writegate strict mode") is on origin/live-defi-rollout as of 2026-06-24 but NOT yet on main.
+                                                                                                                                                                                                                                                                                                                           Q5/Q6 additive write path (48c54805, 2026-06-05) IS on main — but existing entity=fixtures parquets
+                                                                                                                                                                                                                                                                                                                           were all written before 2026-06-05 and the "old-path-copy" branch does not re-process them.
+                                                                                                                                                                                                                                                                                                                           Unblock: 254fb843 promotes main → IS Docker rebuild + VM relaunch → migrate_fixtures_split.py runs
+                                                                                                                                                                                                                                                                                                                           on real sports buckets → new entity=fixtures_schedule+fixtures_outcomes paths appear → re-run VERIFY. --> (FOLDED
       IN from sports_fixtures_schema_split_completion_2026_06_20, 2026-07-15, plan-reconcile §6 operator ruling)
       **MERGED here 2026-07-24** (plan-hygiene line-cap remediation, `plan_line_cap_remediation_2026_07_23.md` decision
       #6) from `sports_p2_features_history_to_ml_ready_2026_06_27.md`'s "Folded-in scope 2026-07-15" section — this
@@ -467,9 +481,13 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
       112,277 `attempted_failed` triplet root-cause and the 139,620 `empty_confirmed` emitter identification).
 - [ ] [DIAG] P2. Confirm sports genuinely never emits `expected_unattempted` in the odds manifest (0 of 1.97M) by
       design, or fix the miscoercion into `empty_confirmed`.
-- [ ] [DATA] P1. Fix `AG_STALENESS_BUDGET_SEC["sports"]` at **≥1800s** (the observed refresh cadence), not 180-240s (a
-      conflicting merge-duration-derived value from `sports_manifest_read_staleness_budget_missing_2026_07_15` that
-      would still false-trip against the read-gate's blob-AGE check) — merge both docs' fix into this one change.
+- [ ] [DATA] P1. Fix `AG_STALENESS_BUDGET_SEC["sports"]` at **≥1800s** (the observed refresh cadence, per
+      `sports_manifest_read_staleness_budget_missing_2026_07_15`'s own ~11-min blob-age swing measurement), not 180-240s
+      (**citation corrected 2026-07-24**: the conflicting merge-duration-derived value is from sweep §J, NOT from the
+      issue doc — `sports_manifest_read_staleness_budget_missing_2026_07_15` actually already recommends 1800s, matching
+      this line's own target value; this line previously misattributed §J's rejected 180-240s value to the issue doc.
+      See the correct attribution already present in this same file's "Staleness budget — same defect as sweep §J,
+      conflicting fix values" entry below) — merge §J's and the issue doc's fix into this one change.
 - [ ] [REVIEW] P2. Honest-coverage atom regrade to per-calculator grain (already operator-decided, implementation
       pending) + league_id namespace reconciliation (check the Track V/H league_id migration todo first — may be the
       same namespace-mismatch problem already partly fixed there) + `fixture_stats` 708-failure root-cause.
@@ -623,17 +641,27 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
         rows" todo); the raw-form `league_id` concern is already independently tracked under Track V's
         league_id-namespace migration. Nothing new to action — the source plan is archived at
         `/plans/archive/2026_07/sports_p2_features_history_to_ml_ready_2026_06_27.md`.
-  - [ ] [REVIEW] P1. Confirm the cross-AG `asset_group=prediction` bleed-bug fix (`mtds@a7ff45f9`, root cause
-        `@299ef540`) is durable, not just verified-once, as an explicit pre-req gate before
-        `sports_predictions_live_mode_activation_readiness_2026_07_21.md` proceeds past its go-live todo — that plan is
-        scoping new live MTDS/prediction infra with zero visibility into this bug (decision 17).
+  - [x] [REVIEW] P0. ✅ **ANSWERED 2026-07-24 — it is NOT durable.** A fresh live read found the bleed's exact
+        pre-remediation row set (11,727 rows, same venue/date breakdown) back in the sports index, despite round-2's
+        "VERIFY PASSED: 0 remaining" claim — see the reopened
+        `cross_ag_prediction_rows_bleed_into_sports_instruments_index_2026_07_20.md` "RE-TRIAGE ROUND 3" section. This
+        is now a hard BLOCKER, not just an unconfirmed pre-req, for
+        `sports_predictions_live_mode_activation_readiness_2026_07_21.md`'s go-live todo — do not proceed past it until
+        round 4 confirms a fix holds across a real consolidation cycle.
 - [x] [DOC] P2. ✅ **FLIPPED 2026-07-23 (adversarial-review finding C — stale checkbox next to its own completion
       evidence).** **NEW 2026-07-23 (decision 9) — formalize `sports_master_closeout_2026_07_21.md`'s entry-point
-      relationship.** ✅ **DONE 2026-07-23.** Added a new `entry_point_for: [target-plan-slug]` field to
-      `plans/PLAN_FORMAT.md`'s frontmatter schema (distinct from `supersedes`/`superseded_by` — signals "these two plans
-      are intentionally co-live," not "safe to archive the target"). Applied to `sports_master_closeout_2026_07_21.md`:
+      relationship.** ✅ **DONE 2026-07-23 (frontmatter only) + 2026-07-24 (in-body prose).** Added a new
+      `entry_point_for: [target-plan-slug]` field to `plans/PLAN_FORMAT.md`'s frontmatter schema (distinct from
+      `supersedes`/`superseded_by` — signals "these two plans are intentionally co-live," not "safe to archive the
+      target"). Applied to `sports_master_closeout_2026_07_21.md`:
       `entry_point_for: [sports_consolidated_closeout_2026_07_19]`, and its summary reworded from "Supersedes..." to "Is
-      the entry-point index for..." — the prose-vs-field self-contradiction is resolved, not just re-described.
+      the entry-point index for...". **Correction 2026-07-24**: the 2026-07-23 pass only touched the frontmatter — the
+      SAME file's title, H1 heading, and its `/autonomous` copy-paste prompt still asserted itself as sole "single
+      source of truth" and never named this closeout doc (finding P5,
+      `issues/sports_plan_and_docs_reconcile_findings_2026_07_24.md`), so the prose-vs-field self-contradiction was only
+      half-resolved by the earlier pass, not fully as this line previously claimed. The title/H1/prompt prose (+ a stale
+      `/autonomous`-prompt script reference to the confirmed-broken
+      `rebuild_sports_manifest.py::_clean_stale_league_entries`) were fixed 2026-07-24.
 - [ ] [CLEANUP] P3. Drop the frozen 2018-2020 `markets`/`outcomes`/`settlements`/`arbitrage_opportunity` scaffolding;
       correct `SPORTS_INSTRUMENTS.md` stale "Known gaps" (lineups player-id strip claim is false); add a junk-symbol
       guard for non-ASCII characters in fixture names (the "§D" pointer this line originally cited could not be
@@ -833,8 +861,10 @@ are self-contradictions in THIS closeout / the audit — both now fixed** (marke
   `sports_read_historical_fixtures_series_ambiguous` (@538c233e,@4be73e2a — a ~521-date recompute fleet ran). **Confirm
   this 521-date gap-fill and the §Z re-run are ONE combined recompute, not dropped against each other.** → FEATURES.
 - **B** — the ⏰ 112,277 retention cliff (finding #1) → Track O P0 above.
-- **C** — `sports_odds_ownership_registry_split_brain`: DEFERRED PURGE of 127,018 bogus `api_football×ODDS` rows + "did
-  the re-seed stop" verify. → CANON/ODDS-LEAK.
+- **C** — `sports_odds_ownership_registry_split_brain`: ✅ **DONE 2026-07-16** (corrected 2026-07-24 — was stale here).
+  The DEFERRED PURGE (123,149 bogus `api_football×ODDS` rows, re-measured at execution time vs. the originally-estimated
+  127,018) + "did the re-seed stop" verify both completed via `sports_legacy_bucket_cutover_2026_07_16.md` T3.1/T3.2; 0
+  rows remain, independently re-verified 2026-07-23/24. → CANON/ODDS-LEAK.
 - **D** — `sports_manifest_null_vs_empty_dedup_double_count`: unexplained consolidator incremental-dedup gap + 612,682
   blank-`error_reason` `empty_confirmed` residue. → HONEST-COVERAGE.
 - **E** — `sports_index_recency_masked_captured_atoms`: redeploy `expected-universe-v2-sports` Cloud Run image + P3
@@ -980,27 +1010,27 @@ All four resolved in interactive chat. These are now actionable, not gated:
       manifest's `league_id` namespace does NOT match the canonical registry's:
 
       | manifest `league_id` (raw) | canonical registry key |
-                                                                                                                                                                                                                                                                                                  | -------------------------- | ---------------------- |
-                                                                                                                                                                                                                                                                                                  | `PREMIER_LEAGUE`           | `EPL`                  |
-                                                                                                                                                                                                                                                                                                  | `CHAMPIONSHIP`             | `ENG_CHAMPIONSHIP`     |
-                                                                                                                                                                                                                                                                                                  | `PRIMERA_DIVISION`         | `LA_LIGA`              |
-                                                                                                                                                                                                                                                                                                  | `2._BUNDESLIGA`            | `BUNDESLIGA_2`         |
-                                                                                                                                                                                                                                                                                                  | `FIRST_DIVISION_A`         | (no registry entry)    |
+                                                                                                                                                                                                                                                                                                                      | -------------------------- | ---------------------- |
+                                                                                                                                                                                                                                                                                                                      | `PREMIER_LEAGUE`           | `EPL`                  |
+                                                                                                                                                                                                                                                                                                                      | `CHAMPIONSHIP`             | `ENG_CHAMPIONSHIP`     |
+                                                                                                                                                                                                                                                                                                                      | `PRIMERA_DIVISION`         | `LA_LIGA`              |
+                                                                                                                                                                                                                                                                                                                      | `2._BUNDESLIGA`            | `BUNDESLIGA_2`         |
+                                                                                                                                                                                                                                                                                                                      | `FIRST_DIVISION_A`         | (no registry entry)    |
 
-                                                                                                                                                                                                                                                                                                  Measured: **328,999 manifest rows carry a `league_id` absent from `LEAGUE_REGISTRY`, and 265,134 of them were
-                                                                                                                                                                                                                                                                                                  written ON/AFTER the 2026-07-13 gate ruling** (statuses: captured 213,861 / empty_confirmed 50,975 /
-                                                                                                                                                                                                                                                                                                  attempted_failed 298). Verified there is NO alias — `PREMIER_LEAGUE`/`PRIMERA_DIVISION`/`2._BUNDESLIGA`/
-                                                                                                                                                                                                                                                                                                  `FIRST_DIVISION_A` appear nowhere in any registry entry's definition (only `CHAMPIONSHIP` partially matches
-                                                                                                                                                                                                                                                                                                  `ENG_CHAMPIONSHIP`/`SCOTTISH_CHAMPIONSHIP`/`USL_CHAMPIONSHIP` as a substring, which is itself ambiguous).
+                                                                                                                                                                                                                                                                                                                      Measured: **328,999 manifest rows carry a `league_id` absent from `LEAGUE_REGISTRY`, and 265,134 of them were
+                                                                                                                                                                                                                                                                                                                      written ON/AFTER the 2026-07-13 gate ruling** (statuses: captured 213,861 / empty_confirmed 50,975 /
+                                                                                                                                                                                                                                                                                                                      attempted_failed 298). Verified there is NO alias — `PREMIER_LEAGUE`/`PRIMERA_DIVISION`/`2._BUNDESLIGA`/
+                                                                                                                                                                                                                                                                                                                      `FIRST_DIVISION_A` appear nowhere in any registry entry's definition (only `CHAMPIONSHIP` partially matches
+                                                                                                                                                                                                                                                                                                                      `ENG_CHAMPIONSHIP`/`SCOTTISH_CHAMPIONSHIP`/`USL_CHAMPIONSHIP` as a substring, which is itself ambiguous).
 
-                                                                                                                                                                                                                                                                                                  **⛔ CONSEQUENCE: executing decision 2's "purge the non-registry rows" against the SYMBOLIC `league_id` would
-                                                                                                                                                                                                                                                                                                  DELETE core trading data — Premier League, La Liga, the Championship.** Those are not out-of-universe leagues;
-                                                                                                                                                                                                                                                                                                  they are in-universe leagues recorded under a different naming convention. The purge MUST NOT run until the
-                                                                                                                                                                                                                                                                                                  namespace is reconciled.
+                                                                                                                                                                                                                                                                                                                      **⛔ CONSEQUENCE: executing decision 2's "purge the non-registry rows" against the SYMBOLIC `league_id` would
+                                                                                                                                                                                                                                                                                                                      DELETE core trading data — Premier League, La Liga, the Championship.** Those are not out-of-universe leagues;
+                                                                                                                                                                                                                                                                                                                      they are in-universe leagues recorded under a different naming convention. The purge MUST NOT run until the
+                                                                                                                                                                                                                                                                                                                      namespace is reconciled.
 
-                                                                                                                                                                                                                                                                                                  NOTE this is a DIFFERENT axis from §U's 489-pair finding, which compared NUMERIC `af_league_id` against the
-                                                                                                                                                                                                                                                                                                  registry's `api_football_id` set (sound, numeric-vs-numeric). Both are real; do not conflate them. This is the
-                                                                                                                                                                                                                                                                                                  §C2 "league_id namespace reconciliation" item, now measured and escalated to P0.
+                                                                                                                                                                                                                                                                                                                      NOTE this is a DIFFERENT axis from §U's 489-pair finding, which compared NUMERIC `af_league_id` against the
+                                                                                                                                                                                                                                                                                                                      registry's `api_football_id` set (sound, numeric-vs-numeric). Both are real; do not conflate them. This is the
+                                                                                                                                                                                                                                                                                                                      §C2 "league_id namespace reconciliation" item, now measured and escalated to P0.
 
 - [x] [CODE] P0. ✅ **WRITE PATH CANONICALISED — operator chose canonicalise-at-write (2026-07-20); shipped
       market-tick-data-service@ad4f1872.** `_canonical_league_id()` resolves via the NUMERIC `api_football_id`; all 30
@@ -1012,25 +1042,27 @@ All four resolved in interactive chat. These are now actionable, not gated:
       `PRIMERA_DIVISION` Argentina+Chile, `SUPER_LEAGUE` Greek+Swiss) — a name-keyed map MERGES them. 3 regression
       tests, incl. one asserting the collisions resolve to DISTINCT slugs. Design + history plan:
       `issues/sports_league_id_namespace_migration_2026_07_20.md`.
-- [ ] [DATA] P0. **Migrate the 214,842 historical non-canonical manifest rows.** The manifest carries NO numeric id and
-      its only other provenance column is `venue` (a bookmaker), so the **75,432 rows on an ambiguous name cannot be
-      resolved from the manifest alone**. The underlying parquet CAN resolve them: `home_team`/`away_team` are populated
-      and colliding leagues have disjoint squads (verified — `CHAMPIONSHIP`→Barnsley/Fulham = ENG,
-      `PRIMERA_DIVISION`→San Lorenzo/Vélez = ARG, `SUPER_LEAGUE`→Young Boys/Zürich = SWISS). Map the 139,410 unambiguous
-      rows by name; resolve the ambiguous ones per-shard by team set, leaving undecidable shards UNTOUCHED. **Note
-      `league_id=` is a live GCS partition segment** — this is a RELOCATION, not a manifest rewrite. Snapshot first.
-      **Three design constraints measured 2026-07-20 (all CONFIRMED)**: (1) the consolidator dedups on a key INCLUDING
-      `league_id` (`manifest_consolidator.py:525`), so the relocation must DELETE the old raw-keyed rows, not just add
-      canonical ones, or the shard double-counts — reuse `rebuild_sports_manifest.py`'s `_clean_stale_league_entries`;
-      (2) MDPS derives its output partition from the parquet CONTENT column `df["league_id"][0]`
-      (`canonical_writer_shaping.py:467`), so a path-only move is insufficient — the content column must move too and
-      MDPS historical days need reprocessing; (3) `league_id`/`instrument_type`/`data_type` are all segments of the SAME
-      ~2M objects, so COMBINE with the K1 casing migration — one relocation, not two. Detail:
-      `issues/sports_league_id_namespace_migration_2026_07_20.md` — which now carries the VERIFIED 9-step execution plan
-      (9-agent adversarial workflow): GO-WITH-CAVEATS, measured scope **256,954 objects / 4.56 GiB** across 3 path
-      shapes, `sport_key` as the PRIMARY disambiguation route (team-roster is fallback), and a HUMAN-ONLY delete at
-      STEP 9. Two peripheral buckets carry a different vocabulary from an untraced writer — filed separately
-      (`issues/sports_peripheral_bucket_league_vocabulary_contamination_2026_07_20.md`), NOT folded in.
+- [x] [DATA] P0. ✅ **RE-TRIAGE 2026-07-24 (live GCS + manifest verification): this IS the same work as
+      `sports_master_closeout_2026_07_21.md`'s executed COPY+SWAP — this item was STALE, describing the pre-migration
+      state.** Migrate the 214,842 historical non-canonical manifest rows (75,432 of them ambiguous, resolved via
+      per-row `sport_key` classification — see `issues/sports_league_id_namespace_migration_2026_07_20.md` for the full
+      design). **Status, independently re-verified this session (not re-derived from the doc's prose alone):** (1) GCS
+      COPY relocation EXECUTED — 275,136/275,136 target objects verify=PASS, 54,835,957 rows written (mtds@b2a49317,
+      24-VM fleet, 2026-07-21/22); I re-aggregated all 24 raw shard-report JSONs directly from
+      `gs://deployment-scripts-central-element-323112/canonical-migration-sports-reloc/reports/` this session and
+      independently reproduced the exact same totals (275,136 objects / 54,835,957 rows) — not just trusting the doc's
+      claim. (2) The manifest ADD/REMOVE swap for this relocation EXECUTED 2026-07-22 (folded into the combined K1/K2
+      casing swap per master_closeout's "fourth/sixth wave" log: ADD 373,296 keys, of which 275,135 were this
+      relocation's canonical rows; REMOVE dropped the stale raw-keyed rows; VERIFY PASSED stale_remaining=0). (3) Live
+      spot-check this session (`day=2020-06-30/venue=BETVICTOR`): canonical
+      `league_id=EPL/instrument_type=ODDS/     data_type=TRADES/ticks.parquet` exists; the OLD raw-keyed
+      `league_id=PREMIER_LEAGUE/` GCS prefix is STILL PRESENT for the same cell — confirms COPY+SWAP is done, the
+      GCS-object DELETE genuinely has not run. **Only the human-gated delete of the old raw-keyed GCS objects remains**
+      — already tracked in `sports_master_closeout_2026_07_21.md`'s own P0 "RUN THE MANIFEST-SWAP TOOL FOR REAL, then
+      DELETE" todo (its 5-part-proof checklist), gated on confirming the K1 live-writer casing fix (shipped same
+      session) has actually stopped new non-canonical writes before the delete candidate set stops growing. This
+      closeout doc does not need its own duplicate delete todo — point here, don't re-track. Detail:
+      `issues/sports_league_id_namespace_migration_2026_07_20.md`.
 - [ ] [CODE] P1. **LIVE BUG — canonicalise the bookmaker-league coverage registry.** Measured 2026-07-20: the sports v2
       sentinel calls `is_bookmaker_league_covered(bm, _canon_lid)` with a CANONICAL id (`sentinels.py:319`) but
       `BOOKMAKER_LEAGUE_COVERAGE` (`unified-api-contracts/.../sports_bookmaker_league_coverage.py`) is keyed on RAW
@@ -1048,9 +1080,10 @@ All four resolved in interactive chat. These are now actionable, not gated:
       worktree (160 tests incl. the previously-foreign golden/dedup failures now fixed upstream), then shipped once the
       clone reconciled — foreign WIP never touched. Companion to the write-path fix mtds@ad4f1872.
 - [ ] [DATA] P2. Dispose of the genuinely-out-of-universe rows (decision 2): exclude from the denominator; purge only
-      once confirmed. **STILL BLOCKED on the historical migration above** — until the 214,842 raw-named rows are
-      canonicalised, a registry-membership test on the symbolic `league_id` still classifies Premier League / La Liga /
-      the Championship as non-registry, and the purge would DELETE core trading data. Snapshot before any delete.
+      once confirmed. **UNBLOCKED 2026-07-24** — the historical migration above has its manifest-side COPY+SWAP executed
+      and verified (stale_remaining=0), so the manifest's `league_id` values for Premier League / La Liga / the
+      Championship are now canonical and a registry-membership test correctly classifies them as in-registry; the purge
+      is no longer at risk of deleting core trading data on that account. Snapshot before any delete regardless.
 - [ ] [DOC] P3. Document pre-2019 (2013–2018) as an intentional, explained exclusion (decision 3) in the audit's gap
       table so the remaining-blanks arithmetic reads clean.
 - [x] [DATA] P1. ~~K2 scope is now ALL lower-case rows incl. ~1.8M `trades` (decision 4) — gated on K1 shipping first.~~
@@ -1284,15 +1317,21 @@ recorded state**. Full per-doc verdicts are in each file's own `## RE-TRIAGE (20
 **Two findings from the re-triage needed escalation — both dug into further the same day, one fully resolved, one
 corrected to a properly-scoped code fix:**
 
-- [x] [DATA] P0. ✅ **`cross_ag_prediction_rows_bleed_into_sports_instruments_index_2026_07_20.md` — RESOLVED.**
-      Root-caused precisely: the 07-20 "complete" claim fixed the raw-data-bucket bug (`mtds@5581dcf9`) but missed the
-      MANIFEST-bucket's own copy of the same bug (`orchestrator/__init__.py::_resolve_manifest_bucket`, resolving once
-      per RUN not per-venue), not fixed until `mtds@299ef540` (2026-07-22T02:01:44Z) — during that ~39.5h gap the
-      manifest bug kept writing fresh bleed rows even though the raw data was already routing correctly. Confirmed zero
-      bleed rows written after `299ef540` (writer bug fixed + holding) before remediating. Executed
-      `market-tick-data-service@a7ff45f9`: CAS-safe ADD 5,056 + REMOVE 11,727 across both manifests, snapshot-first,
-      **VERIFY PASSED** (0 remaining, 0 still missing). Full detail in the issue doc's own "ROUND-2 ROOT CAUSE +
-      REMEDIATION" section.
+- [ ] [DATA] P0. **`cross_ag_prediction_rows_bleed_into_sports_instruments_index_2026_07_20.md` — REOPENED 2026-07-24,
+      round-2's "RESOLVED" claim below does not hold.** Root-caused precisely (round 2): the 07-20 "complete" claim
+      fixed the raw-data-bucket bug (`mtds@5581dcf9`) but missed the MANIFEST-bucket's own copy of the same bug
+      (`orchestrator/__init__.py::_resolve_manifest_bucket`, resolving once per RUN not per-venue), not fixed until
+      `mtds@299ef540` (2026-07-22T02:01:44Z) — during that ~39.5h gap the manifest bug kept writing fresh bleed rows
+      even though the raw data was already routing correctly. Confirmed zero bleed rows written after `299ef540` (writer
+      bug fixed + holding) before remediating. Executed `market-tick-data-service@a7ff45f9`: CAS-safe ADD 5,056 + REMOVE
+      11,727 across both manifests, snapshot-first, **VERIFY PASSED at the time** (0 remaining, 0 still missing).
+      **RE-TRIAGE ROUND 3 (2026-07-24)**: a fresh live read of the SAME index found the **exact same 11,727 rows, exact
+      same venue/date breakdown**, back in place — round-2's remediation has NOT held. Confirmed metadata-only (no
+      physical objects found in the sports bucket) and ruled out the obvious stale-per-VM-shard hypothesis
+      (`_index/per_vm/` holds only an unrelated 18KB seed file dated 2026-06-28). Root cause of the REVERSION is
+      unconfirmed — working hypothesis is a consolidator rebuild path that re-merges a surface round-2's remediation
+      never touched. **Do NOT re-flip this to resolved** — full detail + next-step investigation plan in the issue doc's
+      own "RE-TRIAGE ROUND 3 (2026-07-24)" section.
 - [x] [DATA] P1. ✅ **`sports_index_recency_masked_captured_atoms_2026_07_13.md` — root cause CORRECTED, redeploy todo
       was targeting the WRONG job.** Traced the actual 04:06:54Z masking write via Cloud Run execution history instead
       of assuming: it's `uts-prod-instruments-service-sports-fixtures` (generic instruments-service batch capture,
@@ -1330,7 +1369,8 @@ SSOT claims is current.
    (`sports_manifest_canonicalisation_2026_06_01`, `sports_pipeline_to_100pct_golden_window_first_2026_06_27`,
    `sports_odds_exchange_fixed_fork_2026_07_18`, `sports_p2_history_apifootball_2015_to_present_2026_06_27`) — see the
    new todos this pulled in below.
-4. **6 orphan plans with real overlap, never linked to this closeout** → link all + file a reconciliation todo each
+4. **5 orphan plans with real overlap, never linked to this closeout** (corrected 2026-07-24 — was miscounted "6" here,
+   already correctly "5" elsewhere in this doc, e.g. line ~606) → link all + file a reconciliation todo each
    (`sports_catalog_league_grain_only_scope_2026_07_08`, `sports_odds_bookmaker_coverage_enumeration_2026_06_20`,
    `sports_odds_feature_naming_canonicalization_2026_07_21`, `sports_p2_features_history_to_ml_ready_2026_06_27`,
    `sports_predictions_live_mode_activation_readiness_2026_07_21`) — see the new todos below.

@@ -92,13 +92,9 @@ required_repos:
     asset_group: core
 
   # ── Sports-specific ───────────────────────────────────────────────────────
-
-  - repo: unified-sports-execution-interface
-    arch_tier: library-t2
-    min_stage: cr5
-    min_br_stage: na
-    asset_group: sports
-    rationale: "USEI provides Betfair CLOB (via UTEI) and Pinnacle adapters."
+  # unified-sports-execution-interface entry removed 2026-07-24 (operator ruling, workspace-wide epic-yaml scrub):
+  # USEI was merged into execution-service 2026-03-26 and no longer exists as a standalone repo; its function is
+  # already covered by the execution-service entry above. The old entry was a permanently-unsatisfiable required gate.
 
   - repo: features-service (sports family)
     arch_tier: service
@@ -120,8 +116,8 @@ optional_repos:
     asset_group: cefi
     note: "Same as above."
 
-  - repo: unified-defi-execution-interface
-    asset_group: defi
+  # unified-defi-execution-interface entry removed 2026-07-24 (operator ruling, workspace-wide epic-yaml scrub):
+  # UDEI was merged into execution-service 2026-03-26 and no longer exists as a standalone repo.
 
   - repo: features-service (onchain family)
     asset_group: defi

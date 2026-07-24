@@ -206,6 +206,17 @@ partially done.
 and confirmed the fix landed, in the correct order, with the Step-0 prerequisite this doc itself flagged as
 mandatory-first.
 
+> **⚠️ CORRECTION 2026-07-24 — the UPPER-casing direction confirmed below is itself now SUPERSEDED, MUST BE REVERTED.**
+> This RE-TRIAGE (same day, 2026-07-23) correctly confirmed the K1/K2 UPPER-casing writer flip had shipped and landed in
+> the right order. But the closeout doc's LATER-same-day reconciliation (`sports_consolidated_closeout_2026_07_19.md`
+> Track C, K1/K2 items) reversed the casing-doctrine decision entirely: the canonical target for sports
+> `instrument_type`/`data_type` is LOWER-case for ALL sports data_types, not UPPER — so the exact writer flip this
+> RE-TRIAGE confirms as "resolved" is now the thing that needs to be reverted, not trusted as final state. Do not read
+> "RESOLVED BY LATER WORK" below as current casing-direction truth — it is accurate only as confirmation that the
+> (now-superseded) UPPER-casing work genuinely shipped as described. See
+> `/codex/02-data/sports-data-source-coverage-matrix.md`'s casing banner (corrected 2026-07-24) for the current
+> doctrine.
+
 Evidence (current code on `live-defi-rollout`, re-read 2026-07-23):
 
 - `market-tick-data-service/market_tick_data_service/engine/orchestrator/venue_fetch.py:887,896` — both path literals

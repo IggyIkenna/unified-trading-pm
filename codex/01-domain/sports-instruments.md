@@ -1,10 +1,12 @@
 ---
 doc_type: codex-ssot
 title: "Sports Instruments: Format, Matching, Normalization"
-summary:
+summary: >-
   Canonical sports instrument-key format SPORT:VENUE:MARKET_TYPE:LEAGUE:SEASON:HOME-AWAY::SELECTION plus cross-provider
-  fixture matching (api-football canonical ID), team/league normalization, YYYY-YYYY seasons, and handicap encoding;
-  active venues ODDS_API/PINNACLE/BETFAIR only (scrapers deferred-indefinitely).
+  fixture matching (api-football canonical ID), team/league normalization, YYYY-YYYY seasons, and handicap encoding.
+  Corrected 2026-07-24 — the "3 active venues (ODDS_API/PINNACLE/BETFAIR only)" framing below was stale — live prod
+  measurement shows 28 distinct individually-registered bookmaker venues writing data today (via the ODDS_API aggregator
+  feed, not a scraper-deferral violation).
 status: current
 nature: ssot
 asset_group: [meta]
@@ -29,19 +31,27 @@ code_refs:
 
 # Sports Instruments: Format, Matching, Normalization
 
-**Asset Class:** SPORTS (FOOTBALL) **Purpose:** Define canonical instrument format for sports betting **Reference:**
-[sportsbetting-services/docs/INSTRUMENT_KEY.md](../../sports-betting-services/docs/INSTRUMENT_KEY.md)
+**Asset Class:** SPORTS (FOOTBALL) **Purpose:** Define canonical instrument format for sports betting. (2026-07-24: the
+sibling-repo `sports-betting-services/docs/INSTRUMENT_KEY.md` reference this line used to carry pointed at a repo that
+does not exist anywhere in the workspace — removed rather than re-pointed to an unverified target.)
 
-> **[DELTA 2026-05-22]** **Current state:** Active sports venues are **ODDS_API** (multi-bookmaker aggregator),
-> **PINNACLE** (sharp benchmark), and **BETFAIR** (exchange / lay liquidity). All UK/EU scraper bookmakers (Bet365,
-> 888sport, Betfred, etc.) and US sportsbooks (DraftKings, FanDuel) were **DEFERRED-INDEFINITELY 2026-05-12** per
-> operator decision (verbatim: "remove bet365 from the universe and docs and update plans we wont have bet365 anytime
-> soon. same for other scrapers if implemented"). The `sports_master` epic reflects this; this doc's venue examples
-> pre-date that decision. **Planned delta:** `sports_master` active plan drives backfill for ODDS_API + PINNACLE +
-> BETFAIR only. **Target architecture:** Three-venue sports universe; instrument IDs still use the canonical
-> `SPORT:VENUE:MARKET_TYPE:LEAGUE:SEASON:HOME-AWAY::SELECTION` format defined below (unchanged), but only ODDS_API /
-> PINNACLE / BETFAIR are in-scope venues for pre-cutover work. Scrapers remain out-of-scope indefinitely until a new
-> operator decision.
+> **[DELTA 2026-05-22, VENUE COUNT CORRECTED 2026-07-24]** **What "3 active venues" actually meant, and why it's
+> stale:** the 2026-05-12 operator decision deferred DIRECT-SCRAPER integrations (Bet365, 888sport, Betfred as
+> standalone scraped sources) indefinitely — it did NOT limit the venue vocabulary to exactly 3 string values.
+> **ODDS_API is a multi-bookmaker AGGREGATOR feed**: it delivers odds tagged with the underlying bookmaker's own venue
+> identity, so a single ODDS_API integration legitimately produces many distinct `venue` values in the manifest. Live
+> prod measurement 2026-07-24 (`market-data-tick-sports-prd` manifest, distinct `venue` census): **28 distinct
+> individually-registered bookmaker venues** captured today, e.g. PADDYPOWER, UNIBET, DRAFTKINGS, SKYBET, SPORT888,
+> MATCHBOOK, FANDUEL, BETONLINEAG, BETRIVERS, CORAL, WILLIAMHILL, BETVICTOR, VIRGINBET, LIVESCOREBET, CASUMO, BETSSON,
+> UNIBET_UK/EU, BETFAIR_EX_UK/EU, BETFAIR_SB_UK, LADBROKES_UK, SMARKETS, BOVADA, BETWAY, BETMGM — plus PINNACLE and
+> BETFAIR as their own direct integrations. This is NOT a violation of the 2026-05-12 scraper-deferral decision — these
+> are sub-identities delivered through the aggregator feed the decision explicitly kept in scope, not new standalone
+> scraper integrations. **Current state**: PINNACLE (sharp benchmark, direct) and BETFAIR (exchange/lay liquidity,
+> direct) remain the only non-aggregator direct integrations; everything else routes through ODDS_API. **Target
+> architecture unchanged**: instrument IDs still use the canonical
+> `SPORT:VENUE:MARKET_TYPE:LEAGUE:SEASON:HOME-AWAY::SELECTION` format defined below — the `VENUE` slot legitimately
+> takes any of these 28+ bookmaker identities, not just 3. Direct-scraper integrations (as opposed to ODDS_API-fed
+> venues) remain out-of-scope indefinitely until a new operator decision.
 >
 > **Storage note (2026-05-22):** The BigQuery tables (`instruments.sports_instruments`, `instruments.fixture_mapping`,
 > etc.) shown in the "Storage & Schema" section below are **design-intent artefacts** from the pre-GCS architecture. The
@@ -475,7 +485,9 @@ CREATE TABLE instruments.league_mapping (
 
 ## References
 
-- Primary Spec: [sportsbetting-services/docs/INSTRUMENT_KEY.md](../../sports-betting-services/docs/INSTRUMENT_KEY.md)
+- Primary Spec: this document (2026-07-24 — the `sports-betting-services` sibling repo the old primary-spec link pointed
+  at does not exist anywhere in the workspace; broken link removed rather than re-pointed to an unverified target).
 - Codex: `01-domain/asset-classes.md#sports`
-- Codex: `02-data/sports-data-sources.md`
+- Codex: `/codex/02-data/sports-data-source-coverage-matrix.md` (2026-07-24 — corrected from the nonexistent
+  `02-data/sports-data-sources.md`; this doc is already linked correctly in this file's own `related:` frontmatter)
 - Service: `instruments-service` (handles sports instruments)
