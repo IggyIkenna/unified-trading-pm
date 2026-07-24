@@ -761,9 +761,9 @@
       "ldr_ci_status": "GREEN",
       "codebase_health": {
         "qg_red_reason": null,
-        "large_file_count": 8,
+        "coverage_pct": null,
         "warn_file_count": 9,
-        "coverage_pct": 90.72
+        "large_file_count": 8
       }
     },
     "market-data-processing-service": {
@@ -1300,10 +1300,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "large_file_count": 0,
-        "coverage_pct": 73.08,
         "qg_red_reason": null,
-        "warn_file_count": 0
+        "coverage_pct": null,
+        "warn_file_count": 0,
+        "large_file_count": 0
       }
     },
     "unified-trading-api": {
