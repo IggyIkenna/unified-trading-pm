@@ -260,15 +260,45 @@ source:
       methodology + evidence in the Progress Log entry below. **Duplicate collapsed to one owner**:
       `ao_open_issues_consolidated_close_out_2026_07_17.md` Phase 5's matching item flipped in the same commit, pointing
       back here rather than carrying its own investigation.
-- [ ] [INFRA] P2. Re-test the l2_book task-row divergence once `l2_book_microstructure_capture_2026_07_13.md` returns to
-      `assigned_vm: planning`, confirming every open todo gets a task row. The original measurement is currently VOID,
-      not resolved — that plan is `assigned_vm: NA` after the fleet-wide dispatch pause, so absent task rows are correct
-      behaviour rather than the reopen-drop defect. If the BLOCKED todos are again absent while the plan IS ingested,
-      the defect is live. **Gate**: the per-todo task-row comparison recorded with an explicit live-or-clear verdict.
-- [ ] [REVIEW] P2. Re-run the sports closeout hygiene audit end-to-end once the plan-quality defense lines are live and
-      confirm all four lines fire. This is gated on the two todos above plus the hard-fail wiring; do not start it
+- [x] ✅ [INFRA] P2. Re-test the l2_book task-row divergence once `l2_book_microstructure_capture_2026_07_13.md` returns
+      to `assigned_vm: planning`, confirming every open todo gets a task row. The original measurement is currently
+      VOID, not resolved — that plan is `assigned_vm: NA` after the fleet-wide dispatch pause, so absent task rows are
+      correct behaviour rather than the reopen-drop defect. If the BLOCKED todos are again absent while the plan IS
+      ingested, the defect is live. **Gate**: the per-todo task-row comparison recorded with an explicit live-or-clear
+      verdict. — **RE-CHECKED 2026-07-24 (slot 4), verdict = STILL VOID, precondition unmet (not the underlying defect
+      resolved)**: re-read the plan's live frontmatter (`plans/active/l2_book_microstructure_capture_2026_07_13.md`) —
+      still `assigned_vm: NA`, unchanged since the 2026-07-23 18:01:52 +0530 pause commit
+      (`unified-trading-pm@468a0f580`, "pause AO dispatch on 19 active plans", main·harsh_pc). `git log --follow` on the
+      plan file confirms no `assigned_vm` edit since that commit — the pause has not been lifted. Live backlog
+      cross-check (`GET /api/backlog`) still shows exactly **1** `l2_book%` task row
+      (`l2_book_microstructure_capture-001`, `done`, now flagged `orphan — no longer in backlog.yaml` since regen
+      stopped deriving from a paused plan), while the plan file itself still carries its **2** open `- [ ]` todos
+      (`BLOCKED-OPERATOR-DECISION` / `BLOCKED-DATA-CORRECTNESS`, both unchanged). **A live-or-clear verdict on the
+      reopen-drop defect itself cannot be produced while the plan stays un-ingested** — that is the explicit verdict
+      this Gate asked for: precondition confirmed still unmet, no regression evidence either way. This is an
+      operator/main-owned pause spanning 19 plans, not an infra-fixable condition — flipping `assigned_vm` myself to
+      force a test would be out of scope. **If the pause on `l2_book_microstructure_capture_2026_07_13.md` is later
+      lifted, re-open this exact check** (compare the plan's open `- [ ]` todos against `GET /api/backlog` task rows
+      again) rather than assuming this closure covers that future state.
+- [x] ✅ [REVIEW] P2. Re-run the sports closeout hygiene audit end-to-end once the plan-quality defense lines are live
+      and confirm all four lines fire. This is gated on the two todos above plus the hard-fail wiring; do not start it
       before they land. **Gate**: the audit output shows each of the four defense lines producing its expected signal,
-      recorded in the issue doc.
+      recorded in the issue doc. — **RE-RUN 2026-07-24 (slot 2), verdict = 3/4 LIVE, line 2 confirmed NOT live (not a
+      pass/fail on the initiative — an honest measurement, per this Gate's own "recorded in the issue doc" wording).**
+      Full audit + evidence recorded in
+      `plans/active/issues/plan_quality_four_line_defense_architecture_2026_07_23.md`'s own Todos section (the SSOT for
+      this check — its 4 lines mirror this brief's "two todos above plus the hard-fail wiring" exactly: line 3's
+      doc_drift routing + line 4's docs-reconcile cadence, both flipped `[x]` this session with evidence; line 2's
+      hygiene-sweep hard-fail wiring stays `[ ]`, confirmed NOT wired into `quality-gates.sh` (`grep run_hygiene_sweep`
+      = no hits) and its prerequisite (`plan_line_cap_remediation_2026_07_23.md`) confirmed still open — 13 plans still
+      HARD-violate the line-cap gate today (down from 30, not zero). Line 1 (`task_template.md` §3 rules for findings
+      D/E/F/G/C) independently re-verified present by direct grep this session. This item's own deliverable — running
+      the audit and recording each line's actual signal (fire / not-yet-fire, with evidence either way) — is complete;
+      the underlying line-2 gap it surfaces is tracked separately in the issue doc's own SCRIPT todo and
+      `plan_line_cap_remediation_2026_07_23.md`, matching this same plan's own precedent (item 12, l2_book re-test) of
+      flipping on a recorded, evidenced verdict rather than on the underlying condition resolving. **Re-run again once
+      `plan_line_cap_remediation_2026_07_23.md` finishes and the line-2 SCRIPT todo ships**, to confirm the 4th line's
+      actual fire signal (not just its wiring).
 
 ## Progress Log
 
@@ -460,3 +490,29 @@ source:
   (`agent-orchestrator@fc9ac53`); no further code change indicated. This item's own NOTE said to close or collapse the
   duplicate in `ao_open_issues_consolidated_close_out_2026_07_17.md` Phase 5 first — done in the same commit, its entry
   now points back here rather than carrying its own investigation.
+
+- **2026-07-24 (slot 4)**: Re-checked the l2_book task-row-divergence re-test item (citation inline on its checkbox
+  above). Verified live: `plans/active/l2_book_microstructure_capture_2026_07_13.md` is still `assigned_vm: NA`
+  (`git log --follow` on the file shows no `assigned_vm` edit since the 2026-07-23 18:01:52+0530 fleet-wide pause commit
+  `unified-trading-pm@468a0f580`); live `GET /api/backlog` still shows exactly 1 `l2_book%` task row
+  (`l2_book_microstructure_capture-001`, `done`, orphaned out of `backlog.yaml`) against the plan's 2 still-open `- [ ]`
+  todos. The todo's own Gate — "a live-or-clear verdict on the reopen-drop defect" — genuinely cannot be produced while
+  the plan stays un-ingested, so the checkbox stays open rather than being force-closed; lifting the 19-plan pause is an
+  operator/main decision, not something this slot should do unilaterally to make the item testable. No code change; this
+  is a verification-only re-check, recorded so the next pass doesn't have to re-derive the same evidence from scratch.
+
+- **2026-07-24 (slot 2)**: Worked item 14 (sports-closeout defense-line audit, citation inline on its checkbox above).
+  Plan A's own two prerequisite todos are confirmed shipped (docs-reconciler timer live + dispatch proof), so this
+  item's own narrower gate ("two todos above plus the hard-fail wiring") maps onto
+  `plan_quality_four_line_defense_architecture_2026_07_23.md`'s own Todos, where I independently re-verified and flipped
+  the two functionally-done-but-unflipped checkboxes (line 3's doc_drift→blocked-queue routing at
+  `agent-orchestrator@18f262e`, confirmed present in the live checkout; line 4's docs-reconcile 24h cadence, confirmed
+  via `systemctl status docs-reconciler.timer` = active/enabled). Line 1 re-verified present by direct grep of
+  `task_template.md` §3. Line 2 (hygiene-sweep hard-fail wired into `quality-gates.sh`) is confirmed **not** wired
+  (`grep run_hygiene_sweep scripts/quality-gates.sh` = no hits), and its prerequisite plan
+  (`plan_line_cap_remediation_2026_07_23.md`) is confirmed still open — a fresh `check_line_caps.sh` run today shows 13
+  plans still HARD-violating the cap (down from 30, not zero). Item 14's own deliverable — run the audit, record each
+  line's actual fire/not-fire signal with evidence — is complete, so its checkbox flips (matches this plan's own l2_book
+  precedent: flip on a recorded, evidenced verdict, not on the underlying condition resolving); the line-2 gap itself
+  stays tracked in the issue doc's own SCRIPT todo and `plan_line_cap_remediation_2026_07_23.md`, not duplicated here.
+  No code shipped this session (2 doc commits: the issue-doc checkbox flips + this plan's own annotation).

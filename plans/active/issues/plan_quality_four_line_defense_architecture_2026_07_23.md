@@ -145,7 +145,9 @@ without inventing a second spec. Finding C (stale checkboxes) was already Phase 
       todos and needs a real split, not a trim) and should be tracked as its own plan before this todo can ship. All 6
       other currently-soft checks are already at 0 corpus-wide violations (verified 2026-07-23,
       `run_hygiene_sweep.sh --ci --no-regen`) and can flip to hard-fail immediately, independent of the line-caps
-      prerequisite.
+      prerequisite. **Progress check 2026-07-24 (slot 2)**: re-ran `bash scripts/plan-hygiene/check_line_caps.sh` — down
+      to **13 plans still HARD** (from 30), so `plan_line_cap_remediation_2026_07_23.md` (still `status: open`) has made
+      real progress but the prerequisite is not yet clear. This todo still cannot ship.
 - [x] [INFRA] P0. ✅ **Research DONE 2026-07-23 — line 3 is MOSTLY ALREADY BUILT; extend, do not rebuild.** Found:
       `scripts/self-hosted-runners/hosted-baseline/plan-health-agent.yml` (+ its rollout-committed twin
       `.github/workflows/plan-health-agent.yml`) is a GHA workflow (daily cron `0 2 * * *` + PR gate) whose own header
@@ -164,19 +166,40 @@ without inventing a second spec. Finding C (stale checkboxes) was already Phase 
       convention. AO has no separate generic cron/`CronCreate` registry — recurring work is done via per-purpose systemd
       timers hitting dedicated dispatch endpoints, supervised by the daemon-thread `LoopSupervisor`
       (`server/loop_supervisor.py`); that's the pattern to extend, not a new scheduler.
-- [ ] [INFRA] P1. **Narrowed scope post-research**: route `plan_health.py::record_result()`'s `doc_drift` findings
-      through the AO dashboard's `notify_slot_blocked` BLOCKED-question surface (question/options/recommendation shape +
-      the `notify_slot_blocked_answered` ✅-close bookend) instead of/alongside the current Slack-only
-      `notify_plan_health_findings` path — this is the only piece of line 3 not already live. Confirm whether
-      `agents/plan_reconciler.md`'s prompt already covers everything the `/plan-reconcile` skill file checks, or needs
-      extending to match it 1:1 (the skill and the agent prompt currently exist as two separate texts — reconcile them
-      or point one at the other).
-- [ ] [INFRA] P2. Wire `/docs-reconcile` onto the same 24h cadence as line 3, and clarify in both skills' own
-      descriptions where the plan↔codex-content-alignment boundary sits between them (avoid either silently dropping it,
-      or both duplicating it).
+- [x] [INFRA] P1. ✅ **DONE (agent-orchestrator@18f262e, confirmed live 2026-07-24 slot 2)** — routed
+      `plan_health.py::record_result()`'s `doc_drift` findings through the AO dashboard's `notify_slot_blocked`
+      BLOCKED-question surface. Each NEW `doc_drift` key now also gets a synthetic `BlockedRow` (`slot_id=0`, the same
+      "plan-level, no worker slot" sentinel `bootstrap.py` uses for operator-gated todos) via `state_store.add_blocked`,
+      visible through `blocked_queue` (`GET /api/state` / `/api/blocked/*`), plus a `notify_slot_blocked` Slack ping —
+      additive, the existing `notify_plan_health_findings` Slack path is unchanged. Verified present in the current
+      `live-defi-rollout` checkout (`.tabs/2/agent-orchestrator/server/plan_health.py` lines ~552-628). No NEW doc_drift
+      finding has fired since this shipped (all recent `doc_drift_open` activity predates 18f262e), so the live
+      blocked-queue path itself hasn't been end-to-end exercised by a fresh finding yet — the code path is confirmed
+      present and reachable, not yet observed firing on real drift.
+- [x] [INFRA] P2. ✅ **DONE (agent-orchestrator@329571e + interactive SSM install, confirmed live 2026-07-24 slot 2)** —
+      `/docs-reconcile` is wired onto the same 24h cadence as line 3. `docs-reconciler.timer` confirmed
+      `active (waiting)`, `enabled`, `Trigger: Sat 2026-07-25 02:04:22 UTC` via `systemctl status docs-reconciler.timer`
+      on the orchestrator VM this session; a manual proof-dispatch already fired successfully today
+      (`plan_health_dispatched` slot 2, `dispatch_id=agt-763781`, 07:25:09 UTC, `agent_kind=docs_reconciler`). The
+      timer's own first natural (cron-triggered, not manually dispatched) elapse hasn't happened yet — that's expected,
+      it isn't due until 2026-07-25 02:04 UTC. Plan↔codex-content-alignment boundary is documented in this doc's § "The
+      four lines of defense" item 4 (`/docs-reconcile` = codex-internal structural health; `/plan-reconcile` = whether a
+      plan's claims about codex are still true) — no further clarification needed.
 - [ ] [REVIEW] P2. Once lines 2-4 are live, re-run the sports closeout hygiene audit end-to-end and confirm all 4 lines
       would have caught what the two manual/adversarial passes caught this session, as the acceptance test for this
-      whole initiative.
+      whole initiative. **RE-CHECKED 2026-07-24 (slot 2), verdict = 3/4 LIVE, line 2 NOT live — precondition still
+      unmet.** Lines 1, 3, 4 confirmed live this session (see their todos above +
+      `ao_remediation_b_code_chain_2026_07_23.md` item 14's parallel check). Line 2 (hygiene-sweep hard-fail wired into
+      `quality-gates.sh`) is confirmed NOT wired — `grep -n run_hygiene_sweep scripts/quality-gates.sh` returns nothing
+      — and its own prerequisite (fix the over-cap plans) is still open: a fresh
+      `bash scripts/plan-hygiene/check_line_caps.sh` run today shows **13 plans still HARD-violating** the
+      1000L/2000L-umbrella cap (down from 30 at this todo's authoring, but not zero — see
+      `plan_line_cap_remediation_2026_07_23.md`, still `status: open`). A full `run_hygiene_sweep.sh --ci --no-regen`
+      run today confirms the current state: 0 hard failures / 1 soft warning (line caps), matching the prerequisite's
+      own "0 corpus violations on the other 6 currently-soft checks, line-caps is the sole blocker" framing. Since the
+      Gate requires **all four** lines producing their expected signal and line 2 structurally cannot fire while
+      unwired, this item stays open rather than being force-closed on 3/4 — **re-open this exact check once
+      `plan_line_cap_remediation_2026_07_23.md` finishes and this SCRIPT todo ships.**
 
 ## Codex SSOTs
 
