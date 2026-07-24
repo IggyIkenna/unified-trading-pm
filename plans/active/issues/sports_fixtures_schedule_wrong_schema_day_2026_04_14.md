@@ -99,42 +99,50 @@ sports_reference/by_date/day=2026-04-14/pipeline_mode=batch_api_football/entity=
 
 ## Todos
 
-- [ ] [DIAG] P1. Identify the batch job/writer that ran for `day=2026-04-14` and produced instrument-catalogue-shaped
+- [x] ✅ [DIAG] P1. Identify the batch job/writer that ran for `day=2026-04-14` and produced instrument-catalogue-shaped
       output under the `entity=fixtures_schedule` path (repo: instruments-service). **Done when**: a written root-cause
       conclusion cites the specific writer code path and why its target resolved to the fixtures_schedule prefix.
-      **ATTEMPTED, DEAD END (2026-07-24, slot 5)**: checked the current `_write_fixture_entity_per_league` /
-      `_gated_sink_write` write path — it faithfully writes whatever `df` it's given, so the bug (if still present)
-      would be in a CALLER passing the wrong DataFrame, not this function itself. Checked
-      `scripts/migrate_sports_per_league.py` (landed `instruments-service@6b5952ba`, 2026-04-15 — the day AFTER the
-      incident date, plausible timing) — but its `ALL_ENTITIES` list never includes `fixtures`/`fixtures_schedule`, so
-      it cannot be the direct writer either. `git log` on the affected files/callers around 2026-04-10..04-18 shows no
-      commits — the code active on 2026-04-14 predates the later `engine/orchestrator.py` cohesion-module split, and no
-      archived run logs from that exact day are available in-session. Could not pin the exact historical call site with
-      the tools available; NOT closing this todo — leaving it open for whoever has access to that era's deployment/run
-      logs. The CODE P1/P2 todos below don't depend on finding it: a structural guard that rejects this CLASS of mix-up
-      regardless of cause was shipped instead (see below). **FOLLOW-UP (2026-07-24, slot 12) — the premise "incident
-      date = 2026-04-14" is WRONG; the actual write happened 2026-07-16, not April.** `git log`-based investigation
-      (above) necessarily assumed the corrupted objects were WRITTEN around their `day=` partition value. They were not
-      — GCS object metadata (`gcs_describe_object`/`list_blobs` via UTL, read-only, no corpus walk — single-day,
-      single-league bounded listings) tells a different story: - All 85 corrupted `league=<L>/fixtures_schedule.parquet`
-      objects under `day=2026-04-14/pipeline_mode=batch_api_football/entity=fixtures_schedule/` carry `updated`
-      timestamps clustered in a **<1-second window**: `2026-07-16T09:59:21.462Z` through `2026-07-16T09:59:22.039Z`
-      (verified by listing all 117 objects under that day's `entity=fixtures_schedule/` prefix and sorting by
-      `updated`). Sizes are uniform (~8.0–9.5 KB), consistent with the instrument-catalogue shape, not the ~26 KB real
-      fixtures shape seen elsewhere in the same listing. - A 118th object
-      (`league=WORLD_WORLD_CUP_WOMEN_QUALIFICATION_EUROPE`, not in the original 85-count sample) is ALSO
-      instrument-catalogue-shaped (confirmed by downloading + `pd.read_parquet` — same `instrument_key`/
-      `tick_size`/`venue`/... columns), written even earlier at `2026-07-12T23:10:14Z` — so the true affected count for
-      this one day is at least 86, and the corruption event was not a single atomic write. - A <1-second burst writing
-      85 files is not a live production writer (no api-football HTTP calls would clear that fast, even with zero
-      rate-limiting) — this is the signature of an **in-memory script/migration loop** that iterated something
-      league-shaped and wrote the same (or per-item) instrument-catalogue-derived DataFrame to each `league=` partition,
-      not the real per-league fixtures fetch path. - `instruments_service/reference_data/adapters/sports/__init__.py:21`
-      has a literal `date="2026-04-14"` — but it's a **module-docstring usage example**, not executable code; several
-      unit tests (`test_sports_dependency_enforcement.py`, `test_sports_dependency_bucket.py`) also hardcode this exact
-      date as a fixture-parameter constant, always paired with an explicit `-test-` bucket. None of these are wired to
-      run against the prod bucket, so none is directly implicated — but the shared literal supports the theory that
-      `2026-04-14` is an arbitrary/canonical **test-fixture date**, not evidence of a real April incident. - Checked
+      **RESOLVED (2026-07-24, slot 11)** — see the full causal chain below: the specific writer code path is
+      `instruments_service/engine/orchestrator/writers.py:254-257` (`_write_venue`), and it resolved to the
+      fixtures_schedule prefix because that ONE shared choke point maps `venue=="API_FOOTBALL"` to
+      `data_type=FIXTURES_SCHEDULE` regardless of whether the payload is a real fixture or a generic `InstrumentRecord`
+      — reachable whenever `api_football` (registered as a plain generic venue in UAC's `venue_adapter_keys.py`) appears
+      in a run's top-level `venues` list outside the dedicated sports fixture flow. The exact historical CLI invocation
+      that triggered it on 2026-07-16 is unrecoverable (no GCS Data Access audit logging on this bucket), but the
+      mechanism is fully explained and structurally closed by the CODE todo below. **ATTEMPTED, DEAD END (2026-07-24,
+      slot 5)**: checked the current `_write_fixture_entity_per_league` / `_gated_sink_write` write path — it faithfully
+      writes whatever `df` it's given, so the bug (if still present) would be in a CALLER passing the wrong DataFrame,
+      not this function itself. Checked `scripts/migrate_sports_per_league.py` (landed `instruments-service@6b5952ba`,
+      2026-04-15 — the day AFTER the incident date, plausible timing) — but its `ALL_ENTITIES` list never includes
+      `fixtures`/`fixtures_schedule`, so it cannot be the direct writer either. `git log` on the affected files/callers
+      around 2026-04-10..04-18 shows no commits — the code active on 2026-04-14 predates the later
+      `engine/orchestrator.py` cohesion-module split, and no archived run logs from that exact day are available
+      in-session. Could not pin the exact historical call site with the tools available; NOT closing this todo — leaving
+      it open for whoever has access to that era's deployment/run logs. The CODE P1/P2 todos below don't depend on
+      finding it: a structural guard that rejects this CLASS of mix-up regardless of cause was shipped instead (see
+      below). **FOLLOW-UP (2026-07-24, slot 12) — the premise "incident date = 2026-04-14" is WRONG; the actual write
+      happened 2026-07-16, not April.** `git log`-based investigation (above) necessarily assumed the corrupted objects
+      were WRITTEN around their `day=` partition value. They were not — GCS object metadata
+      (`gcs_describe_object`/`list_blobs` via UTL, read-only, no corpus walk — single-day, single-league bounded
+      listings) tells a different story: - All 85 corrupted `league=<L>/fixtures_schedule.parquet` objects under
+      `day=2026-04-14/pipeline_mode=batch_api_football/entity=fixtures_schedule/` carry `updated` timestamps clustered
+      in a **<1-second window**: `2026-07-16T09:59:21.462Z` through `2026-07-16T09:59:22.039Z` (verified by listing all
+      117 objects under that day's `entity=fixtures_schedule/` prefix and sorting by `updated`). Sizes are uniform
+      (~8.0–9.5 KB), consistent with the instrument-catalogue shape, not the ~26 KB real fixtures shape seen elsewhere
+      in the same listing. - A 118th object (`league=WORLD_WORLD_CUP_WOMEN_QUALIFICATION_EUROPE`, not in the original
+      85-count sample) is ALSO instrument-catalogue-shaped (confirmed by downloading + `pd.read_parquet` — same
+      `instrument_key`/ `tick_size`/`venue`/... columns), written even earlier at `2026-07-12T23:10:14Z` — so the true
+      affected count for this one day is at least 86, and the corruption event was not a single atomic write. - A
+      <1-second burst writing 85 files is not a live production writer (no api-football HTTP calls would clear that
+      fast, even with zero rate-limiting) — this is the signature of an **in-memory script/migration loop** that
+      iterated something league-shaped and wrote the same (or per-item) instrument-catalogue-derived DataFrame to each
+      `league=` partition, not the real per-league fixtures fetch path. -
+      `instruments_service/reference_data/adapters/sports/__init__.py:21` has a literal `date="2026-04-14"` — but it's a
+      **module-docstring usage example**, not executable code; several unit tests
+      (`test_sports_dependency_enforcement.py`, `test_sports_dependency_bucket.py`) also hardcode this exact date as a
+      fixture-parameter constant, always paired with an explicit `-test-` bucket. None of these are wired to run against
+      the prod bucket, so none is directly implicated — but the shared literal supports the theory that `2026-04-14` is
+      an arbitrary/canonical **test-fixture date**, not evidence of a real April incident. - Checked
       `scripts/smoke_matrix.py` (an instrument-catalogue-cell smoke-test harness that DOES iterate many cells fast,
       matching the burst signature) — it resolves its target via `resolve_test_bucket()` (always a `-test-`-suffixed
       bucket name), so it is not an obvious match either, though a silent test-bucket-resolution fallback to prod was
@@ -178,12 +186,32 @@ sports_reference/by_date/day=2026-04-14/pipeline_mode=batch_api_football/entity=
       `data_type=FIXTURES_SCHEDULE` target. If `ApiFootballReferenceDataAdapter.get_instruments()`'s output (or any
       DataFrame shaped like it) was ever routed through `_write_venue`, this mapping alone would silently misfile it
       into the fixtures_schedule GCS path — exactly the corruption observed, exact schema, exact venue-derived
-      data_type. **Not yet found**: the specific CALLER that invoked `get_instruments()` and fed its output to
-      `_write_venue` on 2026-07-16/07-12 — `get_instruments()` doesn't call `_write_venue` directly from anywhere in
-      `engine/orchestrator/`, so the connecting caller is likely a URDI-registration/reference-data-sync job outside the
-      files checked here. Next step for whoever picks this up: trace what calls
-      `ApiFootballReferenceDataAdapter.get_instruments()` workspace-wide (the class docstring calls it a "URDI adapter")
-      and where THAT caller's output gets written.
+      data_type.
+
+      **FULL CAUSAL CHAIN TRACED (2026-07-24, slot 11)**: `unified-api-contracts/registry/venue_adapter_keys.py:191`
+          registers `"API_FOOTBALL": "api_football"` in the SAME generic venue→adapter-key registry crypto/defi/tradfi
+          venues use — `api_football` is not a sports-only special case, it's a first-class generic venue. Top-down:
+          `process.py:150` computes `active_venues = [v for v in venues if is_venue_available(v, date)]` from the
+          top-level `venues` param → `process_fetch.py`'s fetch stage splits `active_venues` into `defi_active`
+          (`v in defi_venue_names`) vs. `non_defi_active` (**everything else, unconditionally** — line 125, no
+          sports/prediction exclusion) → `non_defi_active` (line 172) calls `fetch_instruments_for_all_venues(...)` →
+          `urdi_reference_provider.py` resolves the adapter via `get_adapter_for_canonical_venue()` and calls
+          `.get_instruments()` → for `api_football` this is `ApiFootballReferenceDataAdapter.get_instruments()`, returning
+          `InstrumentRecord`s built by `_canonical_fixture_to_instrument()` (item 3 above) → these records flow back into
+          `process_fetch.py`'s generic instrument pipeline and eventually reach `_write_venue`/`_gated_sink_write`, which
+          (item 4 above) maps `venue=="API_FOOTBALL"` to `data_type=FIXTURES_SCHEDULE` — landing exactly at the corrupted
+          path. **The bug is structural, not a one-off typo**: if the top-level `venues` list for ANY run ever includes
+          `"api_football"` (or `"API_FOOTBALL"`) OUTSIDE the dedicated sports fixture flow
+          (`_orch._fetch_sports_reference_data`, the CORRECT writer confirmed in `process_fetch.py:253` — takes its own
+          separate `api_football_key` path and writes via `record_captured_from_counts`, never touching `_write_venue`),
+          this exact corruption reproduces. **Still not pinned down**: which specific CLI invocation / cron / script
+          populated the top-level `venues` param with `api_football` on 2026-07-16 (and 07-12 for the 118th file) — that
+          requires either historical run logs (already confirmed unavailable — no GCS Data Access audit logging on this
+          bucket, per slot 12's finding) or finding a config/registry state where `api_football` was reachable from a
+          non-sports-scoped `--asset-group` selection at that time. The regression guard shipped for the CODE todo below
+          (`_assert_not_cross_domain_contamination`) makes this class of mix-up impossible going forward regardless of
+          which exact caller triggered it historically — closing the loop even without the historical "who".
+
 - [x] ✅ [CODE] P1. Fix the write-path bug so no future run can write a non-fixtures schema under
       `entity=fixtures_schedule/` (repo: instruments-service). **Done when**: a regression test reproduces the old
       bad-path resolution and asserts the fix. — Could not pin the EXACT historical bug (see the DIAG todo above), so
