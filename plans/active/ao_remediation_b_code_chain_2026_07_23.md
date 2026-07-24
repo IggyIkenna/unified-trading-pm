@@ -241,12 +241,25 @@ source:
       OPERATIONS.md/env-var batch the sweep actually covered) and links
       `plans/active/issues/ao_repo_docs_deleted_against_instructions_dead_code_refs_2026_07_23.md` for the missed
       batch + its fix todos. Duplicate todo in that issue doc flipped alongside (same finding, one fix).
-- [ ] [BACKEND] P3. Root-cause the 2026-07-12 degradation onset — `worker_polling_dead` going 0 to 587 and the
+- [x] ✅ [BACKEND] P3. Root-cause the 2026-07-12 degradation onset — `worker_polling_dead` going 0 to 587 and the
       spawn-to-dispatch ratio moving from 0.6:1 to 44:1 on that date — or record an explicit not-worth-excavating
       decision. The mechanism itself is fixed; what was never explained is why it STARTED that day, which means a
       recurrence would be invisible until it costs again. One `activity_log` excavation pass is enough. **Gate**: a
       named cause with activity-log evidence, or a recorded decision — not silence. NOTE: this item is ALSO open in
-      `ao_open_issues_consolidated_close_out_2026_07_17.md` Phase 5; close both or collapse them into one owner first.
+      `ao_open_issues_consolidated_close_out_2026_07_17.md` Phase 5; close both or collapse them into one owner first. —
+      **RESOLVED, named cause (unified-trading-pm, this commit; slot 3)**: live `activity_log` excavation
+      (`GET /api/activity`, direct `localhost:8765` access this session) pinpoints the true onset at **2026-07-12 15:00
+      UTC** — a SECOND, unalerted recurrence of an `ao-self-pull.sh` dirty-gate wedge (root cause: a
+      `tempfile.gettempdir()` CWD-fallback bug in `regen_backlog_from_plan.py` planting garbage snapshot dirs directly
+      in the orchestrator's own repo checkout, first tripped ~2026-07-10 21:3x UTC per
+      `/plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` L3876-3901) — NOT the more
+      commonly-cited 08:1x UTC `/tmp`-ENOSPC window, which the hourly data shows was a real but CONTAINED incident
+      (dispatch recovered fine through 09:00-14:00 UTC). Root-fixed same day at 22:36 UTC via
+      `agent-orchestrator@fc9ac53` (`_safe_tempdir_base()` CWD-fallback refusal + a brand-new stale-process wedge-alert
+      — this exact failure shape had no alert before, which is why it ran silent for hours). Full hourly-breakdown
+      methodology + evidence in the Progress Log entry below. **Duplicate collapsed to one owner**:
+      `ao_open_issues_consolidated_close_out_2026_07_17.md` Phase 5's matching item flipped in the same commit, pointing
+      back here rather than carrying its own investigation.
 - [ ] [INFRA] P2. Re-test the l2_book task-row divergence once `l2_book_microstructure_capture_2026_07_13.md` returns to
       `assigned_vm: planning`, confirming every open todo gets a task row. The original measurement is currently VOID,
       not resolved — that plan is `assigned_vm: NA` after the fleet-wide dispatch pause, so absent task rows are correct
@@ -381,3 +394,69 @@ source:
   | Item  | State    | Blocked-on                                                                                                                                                                        |
   | ----- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
   | 11-14 | Not done | Nobody; sequential continuation (the earlier "HELD per Q2" label on items 10/12 was a documentation error — corrected above; item 12 is not operator-held, just next in sequence) |
+
+- **2026-07-24 (slot 3, continued)**: Item 12 resolved — named cause, no code change needed (both contributing
+  mechanisms were already fixed on 2026-07-12 itself; the todo's own gate accepts a recorded cause equally to a code
+  fix). This session has direct network access to the live orchestrator at `localhost:8765`, so the excavation queried
+  `GET /api/activity` directly rather than working from secondhand summaries.
+
+  **Step 1 — reproduce the headline number.**
+  `GET /api/activity?type=worker_polling_dead&since=2026-07-12T00:00:00&until=2026-07-13T00:00:00&limit=1000` returned
+  exactly **587** rows (`ts` range 02:46:56Z-23:58:31Z) — confirms the plan's/fleet_kpis.py's cited figure is a real,
+  live-DB count, not a stale or rounded estimate.
+
+  **Step 2 — hourly breakdown to find the actual onset.** Queried `slot_boot` (`_BOOT_EVENT`) and `task_dispatched`
+  (`_DISPATCH_EVENT`, per `agent-orchestrator/server/fleet_kpis.py:41-42`) plus `worker_polling_dead` for
+  2026-07-11T00:00 through 2026-07-13T12:00 and bucketed by hour. Result (`boots / dispatch / ratio / wpd` per UTC
+  hour):
+  - 07-11 all day: boots 2-6/hr, dispatch **0 all day** (quiet baseline — not the incident).
+  - 07-12 02:00-14:00: boots ramp 3->60/hr but dispatch KEEPS PACE (6-28/hr) — ratio mostly 0.6-4.7:1, elevated but not
+    catastrophic. This window contains the well-documented `/tmp`-tmpfs-ENOSPC incident
+    (`/plans/archive/issues/host_tmp_tmpfs_enospc_blocks_bash_tool_2026_07_12.md`, ~08:1x-09:5x UTC, fleet-wide `/tmp`
+    clear by slot-12 + `agent-orchestrator@fd9c002`'s `CLAUDE_CODE_TMPDIR` repoint) — but the data shows THAT incident
+    was contained: dispatch recovered to 15-27/hr through 10:00-14:00 UTC, right through and after it.
+  - **07-12 15:00 UTC — sharp regime change**: boots jump to a suspiciously constant **~55-69/hr** (robotic, not organic
+    — consistent with a stuck retry loop, not variable task-driven activity) while `task_dispatched` collapses to 0-6/hr
+    (often literally 0) — ratios of 51:1/57:1/69:1 in individual hours. This regime persists continuously through 07-13
+    05:00 UTC (still 20-60/hr boots vs 0-5 dispatch), only recovering to healthy ratios (0.8-4.1:1, 12-21 dispatch/hr)
+    by 07-13 06:00-11:00 UTC.
+  - A 760-row all-event-type dump of the 13:30-16:00 UTC transition window corroborates a genuine spawn/kick storm
+    exactly at this transition: 137 `slot_boot` + 106 `autospawn_succeeded` + 89 `worker_kicked` + 87
+    `worker_polling_dead` + 87 `slot_idle_stale` vs only 27 `task_dispatched` — consistent with many slots being flagged
+    dead, kicked, and respawned repeatedly without ever landing real work.
+
+  **Step 3 — connect the timeline to code history.** `git log --since=2026-07-10 --until=2026-07-13 -- server/` in the
+  agent-orchestrator slot clone surfaced the relevant commits. Cross-referencing
+  `/plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` L3876-3901 (an already-live record of "TWO
+  LIVE INCIDENTS found + operator-ruled" on 2026-07-12) pins the mechanism precisely:
+  - **Trigger**: `regen_backlog_from_plan.py::_resolve_plans_dir` called `tempfile.mkdtemp(prefix=...)` with no `dir=`
+    argument, silently inheriting Python's own `tempfile.gettempdir()` fallback chain — when every real temp location
+    (TMPDIR/TEMP/TMP, `/tmp`, `/var/tmp`, `/usr/tmp`) is full/unwritable (the _2026-07-10_ `/tmp`-full incident, a day
+    before the one the tmpfs issue doc documents), `gettempdir()` falls back to the **process CWD**, which for the
+    orchestrator's systemd service **is the repo checkout itself**. This planted `regen-ldr-plans-*` snapshot
+    directories directly in the tree.
+  - **Consequence**: `ao-self-pull.sh`'s dirty-gate (a safety check meant to refuse restarting onto a dirty/uncommitted
+    tree) misread these injected files as real local changes and refused to restart the live orchestrator process —
+    wedging it stale for **~37h**, starting ~2026-07-10 21:3x UTC per the cited plan doc's own timestamp math (restart
+    eventually landed 2026-07-12 10:30:27Z, loading HEAD `fd9c002`). Critically, the checkout on disk kept
+    fast-forwarding fine (`git log` looked current) — only the RUNNING, in-memory process was stale, which is why the
+    pre-existing `_alert_wedge` (drift-based, checkout-behind-only) never fired.
+  - **The 15:00 UTC second wedge**: the 10:30:27Z restart was an interim fix (an `ao-self-pull.sh` allowlist entry,
+    `agent-orchestrator@5bf8ce5`) — NOT the root generator fix — so the same CWD-fallback bug re-triggered a SECOND time
+    later that day, re-wedging the process with (at the time) zero alerting for this specific failure shape. This
+    second, silent wedge — not the earlier, well-alerted `/tmp`-ENOSPC blip — is what actually produced the sustained
+    15:00-UTC-onward boots-without-dispatch collapse.
+  - **The actual fix**: `agent-orchestrator@fc9ac53` (2026-07-12 22:36:28 UTC) shipped `_safe_tempdir_base()` (refuses
+    the CWD-fallback, degrades to the PM working tree instead), `_sweep_orphan_snapshots()` (reclaims dirs orphaned by a
+    hard-killed process), a `try/finally` around snapshot creation, AND a brand-new wedge-alert that fires when the
+    checkout is current but the running process has stayed stale for >=3 consecutive ticks
+    (`AO_STALE_PROCESS_ALERT_TICKS`) — closing exactly the detection gap that let the 15:00 UTC recurrence run silent
+    for hours. 5 new regression tests; `quality-gates.sh` green (1204 passed) at ship time.
+
+  **Verdict**: named cause, not a mystery — a recurring `tempfile.gettempdir()` CWD-fallback bug (triggered by `/tmp`
+  exhaustion events on both 2026-07-10 and 2026-07-12) that wedged the orchestrator's own self-restart mechanism, with
+  the SECOND (unalerted) wedge — not the well-known morning `/tmp`-ENOSPC blip — responsible for the bulk of the
+  587-event/44:1 numbers. Both the generator bug and the missing-alert gap were fixed same-day
+  (`agent-orchestrator@fc9ac53`); no further code change indicated. This item's own NOTE said to close or collapse the
+  duplicate in `ao_open_issues_consolidated_close_out_2026_07_17.md` Phase 5 first — done in the same commit, its entry
+  now points back here rather than carrying its own investigation.
