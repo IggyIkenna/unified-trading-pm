@@ -32,7 +32,14 @@ summary: >-
   `run_in_background: true` command until it happened to complete inside the 10-min window (succeeded once host load
   dropped from ~19-27 to ~7-12), which cost roughly 90 minutes of wall-clock retries/polling for what should have been
   one ~8-15 minute background wait.
-status: open
+status: superseded
+resolved_by: >-
+  plans/active/issues/reaper_kills_inflight_detached_quickmerge_false_done_2026_07_24.md — filed independently by
+  review(slot-1)/main with the SAME on-host evidence (slot 9, PID 2949777, this exact incident) plus a second victim
+  (slot 8) and a sharper root cause framing (reaper kills an in-flight quickmerge whose QG child is actively
+  CPU-progressing, not a true orphan) + a false-done /done-acceptance gap this doc didn't identify. That doc is now the
+  canonical tracker; this doc's mechanism narrative (CLAUDE_CONFIG_DIR env-var matching, ppid-ancestry loss on reparent,
+  boot_grace_seconds=300) remains useful supporting detail, cross-referenced there.
 nature: issue
 asset_group: [meta]
 stage: [meta]
