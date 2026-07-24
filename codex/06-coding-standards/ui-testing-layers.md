@@ -15,6 +15,7 @@ tags: [ui, quality-gates, validation, frontend]
 related:
   [
     /codex/06-coding-standards/integration-testing-layers.md,
+    /codex/06-coding-standards/ui-routing-convention.md,
     /codex/02-data/vcr-cassette-ownership.md,
     /codex/14-customer-journeys/testing/README.md,
   ]
