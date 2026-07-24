@@ -137,6 +137,22 @@ match, not yet mechanism-confirmed like the doc_drift case above).
       `quality-gates.sh` pytest run at all (is it exported at the shell/profile level for all subprocesses on the
       central VM, not just the systemd-managed `orchestrator.service`?) — informs whether the fix belongs ONLY in the
       tests, or also in how broadly that env var is scoped on the host.
+- [ ] [SCRIPT] P3. Add a `SLACK_ALERTS_READER_BOT_TOKEN` env-var fallback to `scripts/dev/slack-read-channel.py` (gcloud
+      ADC stays primary; env var is the degraded path) — every gcloud identity available in this session hit either
+      `PERMISSION_DENIED` on `secretmanager.versions.access` or a stale-token reauth prompt that can't run
+      non-interactively, and the operator supplied the token directly from `.act-secrets` instead. Attempted 2026-07-24
+      (diff written, syntax-validated) but blocked shipping by an UNRELATED pre-existing `quality-gates.sh` failure:
+      STEP 5.101 (`no_empty_string_fallback_baseline`) reports 320 sites > baseline 319, citing
+      `scripts/sports/migrate_player_mappings_to_canonical.py:63` — a file this todo never touched. Reverted the
+      uncommitted diff cleanly rather than force it through; retry once that unrelated ratchet is resolved. **Gate**:
+      same as the existing script's own conventions — the fallback is documented as secondary, never touches disk/argv.
+- [ ] [BACKEND] P2. **Separately flagged**: `scripts/sports/migrate_player_mappings_to_canonical.py:63` breached the
+      `no_empty_string_fallback_baseline` ratchet (320 > 319) — this blocks EVERY future `unified-trading-pm` CODE
+      quickmerge (STEP 5.101 scans the whole workspace root, not just the touching diff) until fixed or explicitly
+      exempted. Found as a side effect of an unrelated attempted commit 2026-07-24; not investigated further (out of
+      scope, unfamiliar file, not touched by this session). SSOT for the ratchet:
+      `plans/active/issues/mtds_empty_string_fallback_codex_gate_blocking_pushes_2026_07_08.md`. **Gate**: rewrite the
+      site to fail fast, or add `# noqa: qg-empty-fallback` with a one-line reason per that SSOT's own recipe.
 
 ## Progress Log
 
