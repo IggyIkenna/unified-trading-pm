@@ -83,10 +83,11 @@ source:
       exist — the directory was removed in `agent-orchestrator@5eaea29` and role prompts now live in
       `unified-trading-pm/agents/`. Use a pointer rather than re-listing files that will drift again. **Gate**: every
       path in the README tree resolves and no link targets a nonexistent `agents/` file.
-- [ ] [DOCS] P3. Correct the branch-flow sentence in `agent-orchestrator/docs/REPO_PROVENANCE.md` to the current model —
-      per-slot clones on `live-defi-rollout`, then LDR to `main` DIRECT with staging bypassed by the per-repo `ldr_main`
-      toggle. It still describes the retired `tab -> live-defi-rollout -> staging -> main` flow. SSOT:
-      `/codex/08-workflows/ci-cd-flow.md`. **Gate**: no `tab ->` flow description remains in the file.
+- [x] ✅ [DOCS] P3. Correct the branch-flow sentence in `agent-orchestrator/docs/REPO_PROVENANCE.md` to the current
+      model — agent-orchestrator@5d8cdc8 per-slot clones on `live-defi-rollout`, then LDR to `main` DIRECT with staging
+      bypassed by the per-repo `ldr_main` toggle. It still describes the retired
+      `tab -> live-defi-rollout -> staging -> main` flow. SSOT: `/codex/08-workflows/ci-cd-flow.md`. **Gate**: no
+      `tab ->` flow description remains in the file.
 - [ ] [DOCS] P3. Add a SUPERSEDED banner (or fix the text) in
       `/codex/12-agent-workflow/local-slot-host-symmetric-worker-model.md`, which still carries live
       `tab/<operator>/<N>` references to the RETIRED tab-branch model with no banner. Same class as the
