@@ -162,6 +162,29 @@ except Exception:
     print(0)' "${FF_RESULT_FILE}" 2>/dev/null || echo 0)
 fi
 
+# Defensive instrumentation (ao_remediation_b_code_chain_2026_07_23.md item 2 — the
+# diagnostic half of item 1). Item 1 made dirty_files := len(sample_list), so
+# `dirty_files>0 with an empty sample` is now structurally unreachable through
+# classify_repo()'s own control flow — but it must survive as a tripwire in case a
+# future edit reintroduces an independent count, or some other path recomputes
+# dirty_files without going through sample_list. Standalone + parameterised (not
+# inlined) specifically so a test can FORCE the condition directly — call it with a
+# contrived (dirty_files, sample_list length) pair that classify_repo() itself can no
+# longer produce — and still prove the raw-bytes log line fires
+# (git_health_phantom_dirty_flicker_ff_cron_race_2026_07_21.md: pins the next
+# occurrence of whatever upstream mechanism injects a stray count, cause-agnostic).
+# Args: $1=dirty_files count, $2=raw `git status --porcelain` capture, $3=sample
+# array length actually kept. Logs (never log_quiet — an anomaly, not routine noise)
+# and returns 0 if it fired, 1 otherwise.
+log_df_sample_mismatch_if_any() {
+    local df="$1" porcelain_raw="$2" sample_len="$3"
+    if [[ "${df}" -gt 0 && "${sample_len}" -eq 0 ]]; then
+        log "[anomaly] dirty_files=${df} with an empty dirty_files_sample — raw porcelain (cat -A): $(printf '%s' "${porcelain_raw}" | cat -A | tr '\n' ';')"
+        return 0
+    fi
+    return 1
+}
+
 # Classify one repo worktree → emits TAB-separated row to stdout:
 #   name<TAB>branch<TAB>state<TAB>dirty_files<TAB>ahead<TAB>behind<TAB>local_sha<TAB>int_branch<TAB>dirty_oldest_iso<TAB>unpushed_plans<TAB>dirty_sample
 #
@@ -246,6 +269,9 @@ classify_repo() {
             dirty_sample="$(printf '%s|' "${sample_list[@]}")"
             dirty_sample="${dirty_sample%|}"   # strip trailing pipe
         fi
+        # Tripwire: dirty_files is derived from sample_list above, so this can't fire
+        # through this code path today — kept for whatever regresses that invariant.
+        log_df_sample_mismatch_if_any "${dirty_files}" "${porcelain}" "${#sample_list[@]}"
     fi
 
     ahead=0

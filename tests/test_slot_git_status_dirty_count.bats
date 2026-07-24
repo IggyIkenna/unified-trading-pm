@@ -110,3 +110,35 @@ _make_repo() {
     [ "${#parts[@]}" -eq "$df" ]
     [ "$df" -le 7 ]
 }
+
+# ── item 2: df>0-with-empty-sample tripwire instrumentation ─────────────────────
+# classify_repo() can no longer produce this combination itself (item 1 made
+# dirty_files := len(sample_list)), so we call the standalone
+# log_df_sample_mismatch_if_any() directly with a FORCED, contrived pair —
+# exactly what the todo's Gate asks for.
+_call_mismatch_check() { # $1=df $2=raw-porcelain $3=sample_len
+    bash -c '
+        source "'"${REPORTER_ABS}"'" --workspace "'"${EMPTY_WS}"'" --quiet
+        log_df_sample_mismatch_if_any "$1" "$2" "$3"
+    ' _ "$1" "$2" "$3"
+}
+
+@test "forced df>0 + empty sample -> emits the raw-bytes anomaly log line" {
+    run _call_mismatch_check "1" "$(printf ' \nM  x')" "0"
+    [ "$status" -eq 0 ]
+    [[ "$output" == *"[anomaly]"* ]]
+    [[ "$output" == *"dirty_files=1"* ]]
+    [[ "$output" == *"empty dirty_files_sample"* ]]
+    [[ "$output" == *"cat -A"* ]]
+}
+
+@test "consistent df/sample (both 0 or both non-zero) -> no anomaly log line" {
+    run _call_mismatch_check "0" "" "0"
+    [ "$status" -eq 1 ]
+    [ -z "$output" ]
+
+    run _call_mismatch_check "2" "M  a
+M  b" "2"
+    [ "$status" -eq 1 ]
+    [ -z "$output" ]
+}
