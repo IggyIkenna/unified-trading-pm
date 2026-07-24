@@ -77,6 +77,27 @@ reuse/extend it, don't hand-roll; (2) if a genuinely new prefix is needed,
 `plans/active/issues/instrument_id_format_canonicalization_2026_07_08.md` Progress Log, 2026-07-09 "real gap found in
 the VM launch itself" entry.
 
+**HARD RULE — heavy I/O NEVER runs from the operator's local machine; it runs on a VM in-region, always, not just when
+the operator happens to mention bandwidth.** "Heavy" = any full/near-full corpus GCS discovery walk, a manifest-index
+read-transform-write over the whole `_index`, or a rename/backfill touching more than a few hundred objects. "Local
+machine" = an interactive per-tab worktree session on the operator's own laptop
+(`/codex/05-infrastructure/per-tab-worktrees.md`) — it has no in-region GCS network path, its bandwidth is
+metered/costly (roaming, tethering, etc.), and its uptime isn't guaranteed mid-task. **Does NOT apply to the
+human-planning VM or the AO central-orchestrator `planning` VM**
+(`/codex/04-architecture/runtime-deployment-topology.md`) — both are already cloud-hosted with fast/cheap internet, so
+heavy I/O from either is fine; the rule targets the operator's own hardware specifically, not "any non-designated-VM
+session." Real incident, 2026-07-24: a corpus-wide Script-2 discovery walk (2,674 days, no `--start-date` scoping) was
+launched directly in a local per-tab session and measured at ~65–90s/day — an ETA of 48–67 **hours** — before the
+operator separately flagged they were on paid roaming data, at which point it became clear the same run had already been
+pulling that volume through the operator's own connection the whole time, unnoticed until the ETA math was done.
+**Applies unconditionally on a local machine, independent of any stated connectivity/cost constraint** — reuse an
+existing `launch-*.sh` per the rule above (`launch-canonical-migration-vm.sh` for one-off migrations; the generic
+`canonical-migration` `VM_TASK` dispatch in `setup-data-pipeline-vm.sh` runs any `VM_MIGRATION_CMD` verbatim, so it fits
+scripts with no dedicated launcher yet). A local session may only: launch/poll a VM (control-plane calls + small log
+tails), read/write git and plan docs, and do single-object `gsutil stat`/small-file reads for a quick health check. SSOT
+for VM selection/naming: this doc's rule above; for Spot provisioning:
+`/codex/05-infrastructure/spot-vms-for-backfill.md`.
+
 ---
 
 ## 1. Infrastructure / Cron VMs
