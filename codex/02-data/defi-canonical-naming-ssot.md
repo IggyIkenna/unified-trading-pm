@@ -48,8 +48,13 @@ referenced_by:
     plans/audit/results/defi_c0_datastate_audit_2026_06_01.md,
   ]
 owner:
-last_reviewed: 2026-07-22
+last_reviewed: 2026-07-24
 code_refs:
+  [
+    market-tick-data-service/market_tick_data_service/cli/handlers/solana_defi_handler.py,
+    market-tick-data-service/market_tick_data_service/cli/handlers/dex_pools_handler.py,
+    market-tick-data-service/market_tick_data_service/cli/handlers/_dex_pools_subgraph.py,
+  ]
 ---
 
 # DeFi canonical naming SSOT (data_type · chain · instrument_type · path · bucket)
@@ -117,6 +122,52 @@ for `lending_indices` (EVM `lending` + Solana `solana_lending` instrument_types 
 lending keying is INTERIM `LENDING`/`SOLANA_LENDING`, NOT the holdings A_TOKEN/DEBT_TOKEN split; the
 flat-`LENDING`-retire was reversed — see the instrument_type row above +
 `issues/canonical_closeout_open_questions_2026_07_18.md` § D).
+
+## Solana AMM pool SYMBOL grammar — fee/tick-spacing discriminator (CORRECTED 2026-07-24, was bare-symbol)
+
+> **Supersedes the bare `{token_a}-{token_b}` grammar this doc previously implied for Solana AMM pools** (and the stale
+> `ORCA-SOLANA:SOLANA_AMM_POOL:SOL-USDC` example still in `cross-asset-canonical-target-ssot.md` §3 — fix tracked
+> alongside this one). The bare form MERGED economically-distinct pools (different fee tiers / tick-spacings sharing one
+> token pair — routine for Orca Whirlpools / Raydium CLMM) into a single `instrument_id`/parquet shard via
+> `write_defi_rows`'s `groupby("instrument_id")` — confirmed live via Raydium's own API (7/100 sampled top-100 pools
+> were duplicate-pair/distinct-`pool_id`, e.g. `WSOL/USDC` had 2 live pools, `AKE/USDC` had 3).
+
+**Writer**: `solana_defi_handler.py::_solana_row_symbol` (kamino/orca/raydium/meteora/lifinity dispatch), fixed
+`market-tick-data-service@0d83a8a9`. The SYMBOL segment of `instrument_id`/filename is now
+**`{token_a}-{token_b}[-{discriminator}]`**, discriminator resolved by `_pool_fee_discriminator()` with this precedence
+(first match wins, against the row's OWN already-captured columns — no new upstream fetch):
+
+1. `TS{tick_spacing}` — Orca `tick_spacing` (most specific).
+2. `{fee_rate_bps}BPS` — Orca or Raydium `fee_rate_bps`.
+3. `{POOL_TYPE}` (uppercased) — Raydium `pool_type` (Standard/Concentrated label).
+4. No discriminator — unchanged bare `{token_a}-{token_b}` when the row carries NONE of the above (currently
+   Kamino/Meteora/Lifinity, which don't populate any of these fields yet — matches pre-fix output exactly, no regression
+   for those protocols).
+
+Representative canonical ids: `ORCA-SOLANA:SOLANA_AMM_POOL:SOL-USDC-TS64` (tick-spacing discriminated),
+`RAYDIUM-SOLANA:SOLANA_AMM_POOL:SOL-USDC-25BPS` (fee discriminated).
+
+**Scope — this fix does NOT cover the second Solana DEX writer.** `dex_pools_handler.py`'s companion
+`_dex_pools_subgraph.py::_collect_solana_dex` (routed via the `collect-dex-pools` CLI op, cron
+`uts-prod-mtds-collect-dex-pools-cron`) never resolves a token-pair symbol for Solana at all — `_solana_defi_fetch.py`'s
+`fetch_orca`/`fetch_raydium` DO populate `token_a`/`token_b`/`tick_spacing`/`fee_rate_bps` on the row, but
+`_collect_solana_dex` never reads them into `symbol`; it always falls back to the bare pool **ADDRESS**
+(`row.setdefault("symbol", pool_id_str)`) for both the manifest `record_captured(instrument_id=...)` key and the
+`write_defi_rows` parquet file leaf. **Verified 2026-07-24: this is NOT exposed to the same collision bug** — a pool
+address is inherently unique per pool, so address-keyed instrument_ids/filenames can never merge two distinct pools. The
+gap here is readability (opaque address-named files instead of human-readable symbols), not correctness — no fix
+required before that cron resumes on collision grounds. Full writer inventory + cron status:
+`plans/active/defi_consolidated_closeout_2026_07_18.md` (`dex_pools_handler.py` todo).
+
+**Manifest impact of the discriminator change**: because the discriminator changes the SYMBOL segment, any pre-existing
+`capture_status` cell keyed under the old bare form would need reconciliation against a newly-discriminated cell for the
+same underlying pool once captures resume. Measured 2026-07-24 (empirical manifest sample, not reasoned abstractly): the
+`uts-prod-mtds-collect-solana-defi-cron` collector — the ONLY writer that ever exercised this symbol path — has been
+PAUSED since before this fix shipped, and zero `data_type=dex_pool_state` / `instrument_type=solana_amm_pool` manifest
+rows exist for ORCA/RAYDIUM under either form. **Moot today; becomes a real pre-resume reconciliation step only once the
+cron resumes and both forms could coexist in the same window.** Full detail:
+`plans/active/defi_track01_per_instrument_and_canon_id_2026_07_24.md` (Solana pool-symbol todo, manifest-impact
+sub-item).
 
 ## Per-surface alignment status (the fan-out — each is a tracked todo)
 
