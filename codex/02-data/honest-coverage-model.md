@@ -694,6 +694,3 @@ the per-node % will tighten as that reconciliation lands.
 | Coverage baseline ratchet (v1 numbers, May 2026)          | `/codex/02-data/honest_coverage_baseline_2026_05.md`             |
 | Pipeline mode / source partitioning                       | `/codex/02-data/pipeline-mode-partition.md`                      |
 | Data-status UI surface (coverage.json consumer)           | `/codex/03-deployment/data-status-ui-surface.md`                 |
-
-</content>
-</invoke>
