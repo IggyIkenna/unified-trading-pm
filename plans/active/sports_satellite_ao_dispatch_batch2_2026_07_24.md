@@ -196,7 +196,14 @@ source: >-
       launch) so the VM booted on valid code, but this auth gap will block the NEXT slot's tarball rebuild attempt until
       fixed. Full evidence + the reconciliation note in the canonical closeout plan: see this todo's own re-measurement
       above; re-run `_index/availability_index.parquet` INJURIES query after the VM's `EXIT_STATUS` appears to confirm
-      the gap actually closed before flipping this checkbox.
+      the gap actually closed before flipping this checkbox. — **Health-checked 2026-07-25T01:45Z (slot 7,
+      data_engineering), re-dispatched, NOT a duplicate launch.** `af-backfill-20260725-002739` confirmed RUNNING
+      (`gcloud compute instances list`), `PROGRESS.json` monotonic and advancing (`last_completed_date=2022-04-04` as of
+      this check, started at 2018-01-01), `run.log` tail shows live INJURIES fetches with no error/stall signature.
+      Genuinely not completable this turn (started ~8h17m ago, ~4.25 of ~8.5 covered years so far at current rate —
+      several more hours remain). No duplicate action taken; released back to the queue via `/skip-current-task` so
+      other dispatchable work isn't blocked on this slot idling — a future dispatch should re-check
+      `PROGRESS.json`/`EXIT_STATUS` before assuming still-running.
 - [x] ✅ [CODE] P1. **UAC canonical registry build/refine** — unified-api-contracts@ce18ff15. Audited every clause of
       the Architecture section against current code before touching anything (most of this program had already shipped):
       name/ids/country/season-start-end-per-year (`season_dates.get_season_start`/`get_season_end`, per-league-per-year)
