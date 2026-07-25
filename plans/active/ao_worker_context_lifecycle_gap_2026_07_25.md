@@ -232,14 +232,20 @@ sequential: true
       `test_frozen_below_context_threshold_still_kicked`) — the first asserts the log event fires and no kick is
       attempted at the threshold; the second confirms ordinary frozen-but-normal-context kicks are unaffected one pct
       point below it. 1676/1676 tests pass, full `quality-gates.sh` PASSED.
-- [ ] [BACKEND] P2. **Give the reactive crash-time context-loss path its own visible event type.** In `tmux_pruner.py` /
-      `resume_lifecycle.py`, the existing `resume_fresh_context_pct` skip-resume check (observed live 2026-07-25 for
-      slots 5, 8, and 9 — `slot_resume_skipped`: "context 100% >= resume_fresh_context_pct 90%") currently folds into
-      the generic `tmux_session_lost` event. Log a distinct, clearly-labeled activity type (e.g.
-      `context_saturated_session_lost_task_requeued`) when `resume_decision != "resume"` AND the dying slot's last-known
-      `context_used_pct >= 90`, so this failure mode stays separately visible/countable on the dashboard even after
-      todos 3-4-7 reduce how often sessions ever reach that point. **Done when**: the new event type fires exactly under
-      that condition; existing `tmux_session_lost` logging is otherwise untouched; `quality-gates.sh` green.
+- [x] ✅ [BACKEND] P2. **Give the reactive crash-time context-loss path its own visible event type.** —
+      `agent-orchestrator@37f3c8d` (reprovenanced via `agent-orchestrator@8d0381a`, mid-history strict-quickmerge bypass
+      — see that commit's own message for why). In `server/tmux_pruner.py`'s dead-slot prune path: captured the slot's
+      `context_used_pct` into `pre_reset_context_pct` BEFORE the existing `resume_decision != "resume"` branch zeroes it
+      (the value was gone by the time any post-hoc log call could read it), then — immediately after the existing
+      `tmux_session_lost` log call, which is untouched — logs a new `context_saturated_session_lost_task_requeued` event
+      (slot_id, tmux_session, context_used_pct, resume_fresh_context_pct, resume_decision, released_task) when
+      `resume_decision != "resume"` AND `pre_reset_context_pct >= cfg.tuning.resume_fresh_context_pct`. 3 new tests in
+      `tests/test_task_lifecycle_done_gate_resume.py`: fires exactly once with correct details for a high-context
+      dead+clean-tree requeue; does NOT fire for a normal-context requeue; does NOT fire when the classifier instead
+      chooses to resume (dirty tree, context below the fresh-cutoff). 1668/1668 tests pass (was 1654 before this
+      session's other slots' work + this addition), ruff + basedpyright clean, full `quality-gates.sh` PASSED. Also
+      fixed pre-existing `uv.lock` drift (already-declared `google-cloud-firestore` dep never re-locked) discovered
+      while bootstrapping the venv — `agent-orchestrator@3e3e213`, unrelated to this todo, shipped alongside it.
 - [ ] [BACKEND] P2. **Regression test reproducing this session's full live scenario end-to-end.** A worker slot
       completes a task at `context_used_pct=93` with `compactions_total` far predating `assigned_at` (mirrors slot 3's
       live snapshot 2026-07-25T04:23-04:36 UTC). Assert: `done_slot` (post todo 3) withholds `next_task` and sets the
