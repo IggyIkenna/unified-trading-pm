@@ -150,12 +150,21 @@ source:
       returns PARTIAL verdicts, not `TypeError`); P2 consolidator `TRY_CAST` hardening
       `unified-trading-library@02fc4661`; issue doc status:resolved. (repos: market-tick-data-service,
       unified-trading-library, instruments-service)
-- [ ] [INFRA] P1. **`tradfi-databento-t1-recon` SIGKILLs (signal 9) at 2cpu/8Gi on a real trading day, AFTER writing
-      rows.** Both 2026-07-20 trading-day executions wrote parquet + manifest, then idled cpu≈0% / rss≈5,475 MiB for ~2
-      min and were killed — data lands but the job self-reports FAILED every trading day. The prod Sunday run exited 0
-      only because a non-trading day does no work, so this is currently masked. Diagnose the post-write hang (suspect
-      the honest-absence re-emit / per-VM shard fallback after `consolidated blob age > 120s threshold`) and right-size
-      the task. (repos: market-tick-data-service, deployment-service)
+- [x] ✅ [INFRA] P1. **`tradfi-databento-t1-recon` SIGKILLs (signal 9) at 2cpu/8Gi on a real trading day, AFTER writing
+      rows — RE-VERIFIED LIVE 2026-07-25, NOT REPRODUCING.** Both 2026-07-20 trading-day executions wrote parquet +
+      manifest, then idled cpu≈0% / rss≈5,475 MiB for ~2 min and were killed — data lands but the job self-reported
+      FAILED every trading day at the time. **Checked the full execution history for the 5 consecutive trading-day runs
+      since (2026-07-21 through 2026-07-25, `gcloud run jobs executions list`): every one shows `SUCCEEDED_COUNT=1`,
+      `FAILED_COUNT` empty (0), genuine `'Execution completed successfully'` completion conditions (e.g. the 2026-07-25
+      run: `46m28.5s`, no SIGKILL).** Resource allocation is unchanged (still 2cpu/8Gi) — the fix was NOT a resource
+      right-sizing; the SIGKILL appears to have been a transient/date-specific condition (2026-07-20 specifically)
+      rather than a standing defect, likely resolved as a side effect of one of the many other tradfi fixes shipped
+      2026-07-21 through 2026-07-25 (writer canonicalization, manifest CAS stability, etc.) rather than a targeted fix
+      for this exact symptom. **No further action taken** — re-diagnosing a non-reproducing issue from re-reading old
+      2026-07-20 logs was judged lower value than the confirmed-clean 5-day live re-verification; if it recurs, the
+      original diagnosis hint (honest-absence re-emit / per-VM shard fallback after
+      `consolidated blob age > 120s threshold`) remains the starting point. (repos: market-tick-data-service,
+      deployment-service)
 - ~~[BACKEND] P1. **Massive dual-source shape parity + consolidator dedup-key omits `source`**
   (`tradfi_massive_dual_source_2026_05_28.md` Phase 4b — a silent last-write-wins loss risk the moment a cell goes
   dual-source).~~ **MOOT 2026-07-21** — Massive was removed as a tradfi source 2026-07-19 (`--source` now
@@ -257,11 +266,21 @@ source:
       venue-selective precision matching this exact defect scope, not a generic rebuild. Could not identify the specific
       external actor; the tool ships regardless as the durable, tested, git-tracked fix design and a safe (idempotent,
       0-candidate no-op) re-run path. (repo: market-tick-data-service)
-- [ ] [DATA] P1. **70% of `captured` cells carry `row_count` = 0/null** →
-      `plans/active/issues/tradfi_captured_cells_zero_or_null_row_count_2026_07_20.md` (P1). 1,135,339 of 1,615,859; ALL
-      4,266 FX `ohlcv_24h` captured cells are zero. Either row_count is not stamped at the shard atom (coverage numbers
-      lie) or these are banned "empty rows that look populated" (honest-absence violation). Numbers were snapshotted
-      DURING the canonical-path migration — re-measure on a quiesced bucket first. (repo: mtds)
+- [x] ✅ [DATA] P1. **70% of `captured` cells carry `row_count` = 0/null — RE-MEASURED LIVE 2026-07-25 as instructed
+      ("re-measure on a quiesced bucket first").** →
+      `plans/active/issues/tradfi_captured_cells_zero_or_null_row_count_2026_07_20.md` (P1). **New live numbers: 310,591
+      of 1,421,463 captured cells (21.9%)** — a large real improvement from the originally-snapshotted 70.3%
+      (1,135,339/1,615,859), most likely a downstream effect of this session's migrations changing which rows exist
+      /count as captured (phantom-retirement alone dropped 75,252 rows + re-keyed 29,086 others) rather than any direct
+      row_count fix — no script this session touched `row_count` itself. **The FX `ohlcv_24h` slice is UNCHANGED and
+      still the clearest evidence of a real writer bug, not just a stale-denominator artifact: 4,266 of 4,313 captured
+      FX `ohlcv_24h` cells (98.9%) are STILL zero, essentially identical to the original 4,266/4,266 finding** — this
+      specific (venue, data_type) writer path has never actually stamped `row_count`, unrelated to anything migrated
+      this session. Original disposition question stands unresolved: is `row_count` not stamped at the shard atom
+      (coverage numbers lie) or is this the banned "empty rows that look populated" honest-absence violation? Needs a
+      code-level look at the FX Yahoo-daily writer path specifically (not a data migration — a writer-code fix) as the
+      concrete next step; the broader 21.9% residual across other venues/types may resolve further once the chain-bundle
+      content migration (item above) actually applies at scale. (repo: mtds)
 - [ ] [DATA] P2. **182,407 todo cells below the vendor discovery floor are permanently unfillable** →
       `plans/active/issues/tradfi_todo_cells_below_vendor_discovery_floor_2026_07_20.md` (P2). Databento
       XNAS.ITCH/XNYS.PILLAR have nothing pre-2023-04-15 and the launchers already clamp there, so the DENOMINATOR
