@@ -37,6 +37,9 @@ resolved_by: slot-3
 
 # consolidated-closeout plans — stale archive-referrer links, fleet-wide QG block
 
+> **🟢 ARCHIVED 2026-07-25** — status=resolved, archived per /codex/11-project-management/issue-doc-lifecycle.md's
+> archive-on-resolve rule.
+
 ## What I found
 
 `python3 unified-trading-pm/scripts/run_validators.py --scope all` failed with 14 `BROKEN:` link reports, all of the

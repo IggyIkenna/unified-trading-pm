@@ -261,6 +261,89 @@ Phase 1:
 - [ ] [DOCS] P0. Full rewrite of `ci-cd-flow.md` body + the CLAUDE.md "Git discipline + shipping pipeline" section to
       the MVP (remove the complex-gate prose) — bigger contract edit, for operator review when Ikenna is back.
 
+## Phase 4 — semver-agent trigger retarget (completes the shelved D13/Phase-2 retarget; un-shelved 2026-07-25)
+
+> **Source**: operator directive 2026-07-25 (`/autonomous`, "we are NOT gonna use staging right now unless we flip the
+> toggle, so under the ldr to main we need a full mechanism for that, all repos do it properly"). Found while resolving
+> today's CI alerts: no `unified-trading-library` wheel has published since 2026-06-27 (F2, tracked in
+> `issues/post_cutover_silent_assumption_sweep_2026_07_23.md`).
+>
+> **Root cause (confirmed by direct repro, not inference)**: `ldr-to-staging-promote.yml`'s `*/15` drain cron was
+> correctly stopped 2026-06-28 per `staging_dormant_mode` (archived
+> `/plans/archive/2026_06/cicd_retire_staging_branch_2026_06_27.md` — the OPERATOR END-STATE). But
+> `scripts/workflow-templates/semver-agent.yml.tmpl` still triggers ONLY on `branches: [staging]`
+> (`workflow_run: quality-gates-v2` + a direct `push: [staging]` fallback). With the drain off, `staging` never advances
+> — verified directly: `unified-trading-library`'s `origin/staging` HEAD is `3df05de2a55df1093fa737a6fe01aebb943599e3`
+> (2026-06-28T21:04:20, "Tier C auto-drain"), **526 commits behind** `origin/live-defi-rollout` as of 2026-07-25T15:27Z.
+> So semver-agent has not fired since ~06-28 for ANY `ldr_main` repo → zero new tags minted → `publish-package.yml`
+> (triggers on `push:[main]`) never sees new content → Artifact Registry frozen at whatever was last published
+> pre-outage (`unified-trading-library` last version `0.55.0`, 2026-06-27T10:02:52). This is NOT the
+> "instruments-service Cloud Build failure" incident from today's alerts (that repo builds UTL from a local path dep in
+> CI, unaffected) — it's a separate, longer-running, previously-undiscovered outage this investigation surfaced.
+>
+> **Why this is safe to fix now (lower-risk than it looks)**: the archived
+> `/plans/archive/2026_06/cicd_phase2_semver_retarget_2026_06_27.md` (Phase-2/D13, `status: superseded` by THIS plan,
+> `depends_on: cicd_phase2_foundation` — already green) already shipped the HARD part — the writer mints a `vX.Y.Z` git
+> tag instead of a `chore(release)` pyproject commit, for any repo flagged `version_source=git-tag` (confirmed:
+> `unified-trading-library`'s live `.github/workflows/semver-agent.yml` already has `VERSION_SOURCE="git-tag"` hardcoded
+> at 3 sites) — canaried on greeks-service, never fleet-rolled. The compute-next (tag-based) + bump-rate breaker
+> (tag-based) legs are also done. **The ONLY missing piece is the TRIGGER**: retarget `branches: [staging]` →
+> `branches: [main]` in the `.tmpl`, roll out via the existing `rollout-semver-agent.sh` /
+> `rollout-workflow-templates.sh` mechanism. This does NOT touch the SIT/breaking-change gate (already solved
+> differently + verified working today via the `sit-gate/fleet-green` mechanism, finding 78 above) — semver-agent's own
+> label-check is already ADVISORY, not blocking (Phase 1 above), so retargeting its trigger cannot regress promotion
+> safety, only versioning liveness.
+>
+> **Scope discipline (rule 11, blast-radius-before-fleet-rollout)**: retarget + prove on T0 first
+> (`unified-trading-library`, `unified-api-contracts` — the two repos actually blocking real Cloud Build/publish issues
+> today), verify a REAL tag mints + a REAL wheel appears in Artifact Registry end-to-end, THEN roll to the rest of the
+> `version_source=git-tag` fleet. Repos still on the legacy pyproject-commit path are lower priority (not blocking
+> anything today) — enumerate + decide per-repo in a later tick, don't block T0 on auditing all 23.
+
+- [x] [WORKFLOW] P0. ✅ Retargeted `scripts/workflow-templates/semver-agent.yml.tmpl` trigger `branches: [staging]` →
+      **`push: branches: [main]` only** — dropped the `workflow_run: quality-gates-v2` leg (redundant: the LDR→main
+      promote PR already required-checks v2 before merge, and v2 also runs on `push:[main]`, so the tree is v2-validated
+      by the time it lands). Full staging→main audit done (17 hooks classified): checkout / bump-rate scan / dispatch
+      payload `"branch"` / label-check status SHA all → main HEAD; **git-tag repos derive the compute-next baseline from
+      `git describe --tags` (NOT the stale `staging_versions` map — UTL read 0.43.0 there vs a live 0.56.0 tag → would
+      have scanned 13 versions of ancient history → spurious breaking over-bump); legacy repos read the stable
+      `versions` map (branch=main dispatch)**; the major-bump/1.0.0 graduation path deliberately still routes through
+      staging. Validated: YAML parse OK, `bash -n` OK on all 8 run-blocks, actionlint finding-set IDENTICAL to the old
+      copy (0 new issues). Evidence: `unified-trading-pm@0b128a7251a98e1c5f984383055f3dd386289c06` (carve-out
+      `scripts/**` direct push).
+- [x] [WORKFLOW] P0. ✅ **Rolled to T0 ONLY** (`unified-trading-library` + `unified-api-contracts`) via
+      `rollout-workflow-templates.sh --repo <r> --template semver-agent.yml` (the correct tool — it substitutes
+      `__VERSION_SOURCE__=git-tag` from the manifest; `rollout-semver-agent.sh` does NOT and would render a broken
+      literal). Both installed copies now fire on `push:[main]`, byte-reproducible from the SSOT. Evidence:
+      `unified-api-contracts@02a20f3b6e94647b1e2f2cf5b5668590d5f03e33` (quickmerge, landed LDR),
+      `unified-trading-library@c143cd96a12588177aa0e37f1c8ed4ada98d54bf` (carve-out `.github/**` direct push —
+      quickmerge timed out on transient connectivity + sentinel went stale on a concurrent promote/backmerge).
+      **End-to-end live verification (tag mint → wheel in AR) is IN PROGRESS** — requires the changes to first promote
+      LDR→main (the promote push itself self-activates the new `push:[main]` trigger), tracked in the VERIFY todo below.
+- [ ] [VERIFY] P0. **T0 end-to-end live proof**: after the T0 changes promote LDR→main, confirm the promote push
+      self-activates the new `push:[main]` trigger, semver-agent fires on `unified-trading-library` /
+      `unified-api-contracts` main (`gh run list --workflow semver-agent.yml`), mints a new `vX.Y.Z` tag
+      (`git tag --sort=-creatordate | head`), and `publish-package.yml` publishes a new wheel to Artifact Registry
+      (`gcloud artifacts versions list     --package=unified-trading-library --repository=unified-libraries --location=asia-northeast1     --project=central-element-323112`).
+      If the promotion cadence is too slow to observe in-session, document reasoned-through vs verified-live.
+- [ ] [WORKFLOW] P1. Once T0 is proven, enumerate the remaining `ldr_main` + `version_source=git-tag` repos (23 total)
+      and roll the same retarget fleet-wide via `rollout-workflow-templates.sh` (verify 0 drift after). **Known
+      already-dead-on-staging: `unified-trading-api`** — its deployed `.github/workflows/semver-agent.yml` still
+      triggers on `workflow_run/push:[staging]` (found 2026-07-25; a 3rd git-tag repo whose versioning is still frozen).
+      PM's own copy references staging only vestigially (PM is no-staging by design) — do NOT retarget PM's copy without
+      care.
+- [ ] [DOCS] P1. **Reconcile the stale SSOT contradiction the retarget exposes** (found 2026-07-25):
+      `/codex/08-workflows/ci-cd-flow.md` § "Release tag reconciler" still says "minting is moving to the PM reconciler"
+      (Option B) — but Option B was DECIDED (`/plans/active/issues/post_cutover_silent_assumption_sweep_2026_07_23.md` §
+      "Option B") yet NEVER built, and is architecturally incoherent for git-tag repos
+      (`scripts/cicd/reconcile_release_tags.py` hard-refuses to mint for dynamic-versioned repos — "read the version,
+      mint the matching tag is circular when the tag defines the version"; the script is a STALL DETECTOR whose own
+      message points to semver-agent as the minter). Today's Phase-4 retarget makes **per-repo semver-agent-on-main**
+      the live minter — update ci-cd-flow.md § Release tag reconciler + mark the Option-B doc's F2 minting sub-steps
+      superseded. (Owner-review edit; codex contract change.)
+- [ ] [VERIFY] P2. Confirm `instruments-service` (and any other real consumer, not just the local-path CI build) picks
+      up the newly-published wheel where it matters (a real deployed image / Docker build, not just local-path CI).
+
 ## Operator decisions / notes
 
 - **dep-order removal** (Phase 1) is the one behavior change with a trade-off (a dependent could reach main before its
@@ -292,6 +375,34 @@ Phase 1:
 
 ## Progress Log
 
+- 2026-07-25 (Phase 4 — semver-agent trigger retargeted staging→main, T0 shipped): Retargeted the fleet SSOT
+  `semver-agent.yml.tmpl` from the dormant `staging` trigger to **`push: branches: [main]` only** (dropped the redundant
+  `workflow_run: quality-gates-v2` leg — the LDR→main promote PR already required-checks v2), and rolled it to T0 only
+  (`unified-trading-library` + `unified-api-contracts`) per rule-11 scoping. Shipped: `unified-trading-pm@0b128a725`
+  (template), `unified-api-contracts@02a20f3b` (quickmerge), `unified-trading-library@c143cd96` (carve-out, quickmerge
+  kept timing out on transient connectivity). Full 17-hook staging→main audit: checkout / bump-rate scan (`origin/main`)
+  / dispatch payload `"branch":"main"` / label-check status SHA all retargeted; **git-tag repos now derive the
+  compute-next baseline from `git describe --tags`** instead of the PM `staging_versions` map (which was stale by 13
+  versions for UTL — 0.43.0 vs a live v0.56.0 tag — and would have scanned ancient history → a spurious breaking
+  over-bump, the 2026-06-09 cascade class); legacy repos read the stable `versions` map (matching the PM consumer's
+  `branch=main`→`versions[]` write). Validated: YAML parse OK, `bash -n` OK on all 8 run-blocks, actionlint finding-set
+  IDENTICAL to the old copy (0 new issues). **DESIGN-CONFLICT RESOLVED (big finding)**: the 2026-07-23 revert
+  (`df89ac54`, "minting moves to the PM reconciler (option B)") pointed at a centralized minter that a sub-agent
+  investigation proved was **DECIDED but NEVER BUILT and is architecturally incoherent for git-tag repos** —
+  `scripts/cicd/reconcile_release_tags.py` hard-refuses to mint for dynamic-versioned repos ("read the version, mint the
+  matching tag is circular when the tag defines the version") and is only a STALL DETECTOR whose own message points to
+  semver-agent as the minter. That revert was a localized 18-min edit to UTL's copy alone — the SSOT template was NEVER
+  reverted (stayed staging-triggered since 2026-07-21). Fleet-wide tag-death empirically confirmed:
+  `unified-trading-library`, `unified-api-contracts`, greeks/instruments/mtds/execution-service all have ZERO new v*
+  tags since ~2026-06-27, so no live minter exists → no double-mint risk (the stall-detector reconciler simply stops
+  alarming once tags flow). Today's operator dispatch (2026-07-25) + the coordinator's active direction chose
+  semver-agent-on-main → this retarget is the coherent live fix. **Verified LIVE**: code shipped + all static validation
+  green; the fleet-wide versioning-dead root cause confirmed by direct tag-date inspection. **Reasoned-through / PENDING
+  live observation**: the tag-mint→wheel end-to-end (self-activates on the first LDR→main promote of these copies —
+  GitHub evaluates the pushed commit's `push:[main]` trigger) — tracked in the new [VERIFY] P0 todo; driving/observing
+  it next. **Discovered + logged as new todos**: `unified-trading-api` is a 3rd git-tag repo still on the dead staging
+  trigger (next-wave rollout); the codex `ci-cd-flow.md` § "Release tag reconciler" + the Option-B doc are now
+  stale/contradictory and need reconciliation.
 - 2026-07-12 (finding 78 — SIT-fleet-green wired as a REQUIRED check, MVP gate-set item #1 now enforced): Read the
   current shape (`ldr-to-main-promote-fleet.yml`'s existing in-script SIT gate only consults SIT for a BREAKING/unknown
   delta — the 2026-07-07/08 incident's root cause, since a non-breaking delta never checked SIT at all). Built the fleet
