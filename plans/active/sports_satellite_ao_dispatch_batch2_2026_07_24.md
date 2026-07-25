@@ -8,15 +8,15 @@ summary: >-
   never AO-dispatchable (that index deliberately uses non-checkbox markers so AO's regen_backlog parser can't ingest
   it). This plan extracts every genuinely AO-eligible todo from those 22 docs (concrete, determinable by a worker alone,
   no open operator/design judgment call) into one real AO-dispatchable plan, mirroring the
-  `sports_closeout_batch1_ao_ready_2026_07_24.md` pattern. 36 todos from 15 source docs. Internally-sequential
-  multi-step chains (e.g. a 5-step GCS migration recovery procedure, a 4-step census→copy→reprocess→swap execution
-  sequence) are combined into single todos rather than fanned out — AO's per-todo model has no mechanism to mechanically
-  gate step N on step N-1 within one plan short of `sequential: true` for the WHOLE plan, and this plan's other todos
-  genuinely benefit from concurrent dispatch, so combining same-job chains into one todo each is the safe choice, not a
-  fragile cross-todo ordering promise. 4 real AO-eligible items were deliberately EXCLUDED (not lost — flagged in their
-  source docs) because they depend on either another todo below landing first (a 5-repo-spanning parity test; a UI
-  relabel gated on its own backend todo) or a human/operator decision that has not yet been made (the
-  SportsMatchingEngine-vs-L0Matcher design call blocks all 3 of
+  `sports_closeout_batch1_ao_ready_2026_07_24.md` pattern. 37 todos (corrected 2026-07-25 plan-reconcile, was 36) from
+  15 source docs. Internally-sequential multi-step chains (e.g. a 5-step GCS migration recovery procedure, a 4-step
+  census→copy→reprocess→swap execution sequence) are combined into single todos rather than fanned out — AO's per-todo
+  model has no mechanism to mechanically gate step N on step N-1 within one plan short of `sequential: true` for the
+  WHOLE plan, and this plan's other todos genuinely benefit from concurrent dispatch, so combining same-job chains into
+  one todo each is the safe choice, not a fragile cross-todo ordering promise. 4 real AO-eligible items were
+  deliberately EXCLUDED (not lost — flagged in their source docs) because they depend on either another todo below
+  landing first (a 5-repo-spanning parity test; a UI relabel gated on its own backend todo) or a human/operator decision
+  that has not yet been made (the SportsMatchingEngine-vs-L0Matcher design call blocks all 3 of
   `sports_group_c_execution_backtest_harness_2026_07_21.md`'s todos; a manifest-perf verify-speedup todo depends on 2
   sibling implementation todos both landing). 7 of the 22 source docs contributed ZERO AO-eligible todos (either 100%
   human-only design/operator-decision work, or already fully done) and are untouched by this plan.
