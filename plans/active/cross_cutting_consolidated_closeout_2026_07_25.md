@@ -218,19 +218,23 @@ docs need re-confirm).
 **Close-out criterion**: the closeout doc's 6 todos all closed or re-deferred with a named owner; the ml-fold's 32-item
 TF/IAM drift finding handed to Track 6; the portfolio-state retention question ruled by the operator.
 
-## Track 6 — Bucket IAM / credential-gated hygiene · P1
+## Track 6 — Bucket IAM / credential-gated hygiene · P1 — **✅ both credential blockers cleared 2026-07-25**
 
-**Sources**: `bucket_iam_write_protection_per_tier_2026_06_09.md` (Phase 0 done, Group A gate MET 2026-07-22; Phase 1 —
-per-tier SA terraform — explicitly NOT started: the author stopped because `gcloud storage buckets list` under the
-session's credential returns ~0 results, and shipping an unverified IAM Condition to the project's primary write
-identity is exactly the "confident inference is not a proof" trap) +
-`issues/gcs_data_access_audit_log_cost_2026_07_ 24.md` (~90% resolved — exclusion filter live, billing export confirmed
-live, $52.92 actual cost measured; 1 open P2: remove an unneeded `DATA_WRITE` `auditConfigs` entry, needs
-`setIamPolicy`) + `issues/datapoint_validation_results_ bucket_missing_2026_07_21.md` (~85% resolved; 3 small residual
-verify/hardening items, not credential-blocked).
+**Sources**: `bucket_iam_write_protection_per_tier_2026_06_09.md` (Phase 0 done, Group A gate MET 2026-07-22; Phase 1's
+bucket-enumeration blocker cleared — operator ran `gcloud storage buckets list` via personal ADC and found the Group-A
+naming assumption itself was WRONG: real buckets are two-tier `-test-`/`-prd-`, not the assumed three-tier
+`-dev-`/`-stg-`/`-prd-` — the per-tier SA design needs re-deriving against this before P1.1-P1.3 terraform lands, not
+yet done) +
+[`plans/archive/2026_07/gcs_data_access_audit_log_cost_2026_07_24.md`](/plans/archive/2026_07/gcs_data_access_audit_log_cost_2026_07_24.md)
+(**DONE, archived** — operator removed the `DATA_WRITE` `auditConfigs` entry via ADC `setIamPolicy` with an explicit
+`updateMask` — the API's default mask is `bindings,etag` only and would have silently no-opped on `auditConfigs`
+otherwise; verified via an independent re-read) +
+[`issues/datapoint_validation_results_bucket_missing_2026_07_21.md`](/plans/active/issues/datapoint_validation_results_bucket_missing_2026_07_21.md)
+(~85% resolved; 3 small residual verify/hardening items, not credential-blocked, unaffected by the above).
 
-**Commands already handed to the operator 2026-07-25** (see Progress Log for the exact recipe) for the first two docs'
-`storage.buckets.list`/`setIamPolicy` blockers — awaiting the operator running them and reporting back.
+**Close-out criterion (updated)**: `bucket_iam_write_protection_per_tier`'s Phase 1 SA design re-derived against the
+real `-test-`/`-prd-` naming, then P1.1-P1.3 terraform authored + applied;
+`datapoint_validation_results_bucket_missing`'s 3 residual items closed.
 
 **Close-out criterion**: operator runs the handed-off commands; Phase 1 terraform ships once bucket names are verified;
 the `DATA_WRITE` auditConfigs entry removed; `datapoint_validation_results_bucket_missing`'s 3 residual items closed
