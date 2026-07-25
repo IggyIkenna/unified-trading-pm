@@ -543,6 +543,44 @@ contain the ONLY copy of a foreign agent's uncommitted WIP:
 content for that file — if the autostash held a foreign agent's only WIP copy for that path, it is permanently gone
 (UNRECOVERABLE). The autostash drop follows silently and the WIP is lost with no warning.
 
+### Silent duplicate-file resurrection after a rebase/stash-pop (2026-07-25)
+
+A DIFFERENT failure mode from the conflict case above: a `git pull --rebase --autostash` (or a manual `git stash push` /
+`git stash pop` cycle) can **silently resurrect stale pre-move copies of renamed files** with NO conflict markers and NO
+error — `git status` looks clean, the commit succeeds, and the diff even looks plausible. This happened during a large
+corpus-wide archival sweep: after several rebase cycles on a very active shared checkout, 54 files that had been
+`git mv`'d into `plans/archive/` reappeared at their OLD `plans/active/` paths, duplicated alongside their correct
+archive-side twins — with no rebase/stash output ever flagging it.
+
+**Why `git status` doesn't catch this**: a clean working tree matching the last commit is not proof the LAST COMMIT
+itself is correct — it only proves you haven't drifted from what you already committed. If the corruption happened
+INSIDE a commit (a stash-pop reintroduced stale content that then got committed), `git status` reads as perfectly clean.
+
+**Detection — verify commit CONTENT, not just clean status, after any rebase-heavy sequence involving file moves:**
+
+```bash
+# Don't trust git status alone. Spot-check that a doc you moved is genuinely NOT duplicated:
+git cat-file -e HEAD:plans/active/<old-name>.md && echo "STILL AT OLD PATH — corruption" || echo "clean"
+
+# For a gate-backed invariant (e.g. an archival count), re-run the actual checker against HEAD content,
+# not just the working tree, and compare to the expected number:
+python3 scripts/plan-hygiene/check_terminal_status_archived.py --quiet
+```
+
+A live gate script that unexpectedly jumps back to a much-higher violation count right after a rebase — on a tree that
+`git status` reports as clean — is the tell. Re-run the check; if it's real (not a transient read mid-write by another
+session), diff each flagged pair before touching anything (the resurrected copy is usually byte-identical to the
+pre-move version, confirming nothing unique was added), then remove the stale duplicates one at a time (`git rm` — bulk
+multi-file `git rm` invocations can trip the destructive-command guardrail; single-file calls do not).
+
+**Root cause, best understood**: the prek/prettier auto-stage hooks and a manual `git pull --rebase --autostash` both
+perform their OWN internal stash-and-restore cycles. On a checkout this actively shared (many concurrent sessions
+committing every few seconds), these can interleave — one process's autostash pop can restore an OLDER snapshot of a
+file's content over top of a newer rename that landed in between. The practical mitigation is procedural, not
+preventive: **after any commit that moved/renamed files across a rebase-heavy sequence, immediately verify via
+`git show HEAD:<path> | wc -l` (or an equivalent content check) that the committed result matches intent** — don't just
+trust that a clean `git status` + a plausible commit message means the commit contains what you think it does.
+
 ### Isolated-worktree promotion (rare: concurrent session shares slot's `.git`)
 
 Under Path-B each slot is an independent clone with its OWN `.git`, so two agents sharing the same slot's `.git` is

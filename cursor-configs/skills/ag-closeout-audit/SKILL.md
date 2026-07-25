@@ -10,18 +10,21 @@ description: >-
   auto-shipped) the next `<ag>_satellite_ao_dispatch_batchN_<date>.md` + gated `batchN_finalize` plan pair, mirroring
   the pattern built for sports (`sports_satellite_ao_dispatch_batch2_2026_07_24.md` +
   `sports_satellite_ao_dispatch_batch2_finalize_2026_07_24.md`). Parameterized by asset group — invoke as
-  `/ag-closeout-audit <ag>` (e.g. `tradfi`, `defi`, `cefi`, `prediction`, `sports`). Trigger on `/ag-closeout-audit
-  <ag>`, "run the sports treatment for <ag>", "audit <ag> orphans", "how many <ag> docs would be orphaned if we finished
-  the consolidated plan", "<ag> closeout completeness check".
+  `/ag-closeout-audit <ag>` (e.g. `tradfi`, `defi`, `cefi`, `prediction`, `sports`, `cross-cutting`). Trigger on
+  `/ag-closeout-audit <ag>`, "run the sports treatment for <ag>", "audit <ag> orphans", "how many <ag> docs would be
+  orphaned if we finished the consolidated plan", "<ag> closeout completeness check".
 ---
 
 # /ag-closeout-audit — per-AG closeout completeness projection + next-batch drafting
 
 Generalizes the sports-corpus closeout arc built 2026-07-24/25 (triage → `sports_satellite_ao_dispatch_batch2` →
 `sports_satellite_ao_dispatch_batch2_finalize` → the orphan-projection audit) into a repeatable, AG-parameterized
-procedure. cefi, defi, tradfi, and prediction each already have their own `<ag>_consolidated_closeout_2026_07_18.md`
-sitting in the same pre-treatment state sports was in before this session — this skill is what closes that gap without
-re-deriving the approach by hand each time.
+procedure. As of 2026-07-25 all 5 AGs (cefi/defi/tradfi/prediction/sports) have been through this treatment at least
+once AND through a follow-on consolidated-plan line-cap split (parent trimmed to ~450-750L, forked into
+Track/phase-named AO-dispatch children per `task_template.md` findings I/R) — this skill's Phase 0.2 (below) discovers
+BOTH doc classes. A 6th, cross-cutting layer (data-pipeline concerns spanning IS→features-service→data-status-UI→
+manifest/GCS-path→UAC→UTL that aren't specific to any one AG) is being built the same way — invoke as
+`/ag-closeout-audit cross-cutting` once its own `cross_cutting_consolidated_closeout_*.md` exists.
 
 **This skill answers a forward-looking completeness question — it is NOT `/plan-reconcile`.** `/plan-reconcile` fixes
 what's already provably done (false-unchecked flips, contradiction resolution, archival) across the WHOLE corpus. This
@@ -113,11 +116,21 @@ For the target `<ag>`:
    NON-covering: being listed there is not dispatch) and `<ag>_consolidated_audit_*.md` (an earlier audit that may have
    spawned the closeout). Confirm these exist — if there is no `<ag>_consolidated_closeout_*.md` yet, stop and tell the
    operator this AG hasn't been consolidated at all (a different, prior gap than this skill addresses).
-2. **Existing AO-dispatch-batch + finalize pairs for this AG**: grep `plans/active/*.md` for `^assigned_vm: planning`
-   docs whose `asset_group` includes `<ag>` and whose filename matches `<ag>_*(ao_dispatch|satellite)*batch*` or similar
-   — read each to confirm it's a batch-extraction plan (cites `Source: <doc>` per todo) and check whether it has a
-   paired `depends_on: [<slug>] + gate_on_depends: true` finalize plan (per `task_template.md` §4's
-   finalize-plan-coverage rule — cross-check with
+2. **Existing AO-dispatch-batch + finalize pairs for this AG** — TWO discovery paths, UNION the results (added
+   2026-07-25 after the 5-AG consolidated-plan split found the filename-only path alone misses a real class of covering
+   plan): a. **Filename-pattern path**: grep `plans/active/*.md` for `^assigned_vm: planning` docs whose `asset_group`
+   includes `<ag>` and whose filename matches `<ag>_*(ao_dispatch|satellite)*batch*` or similar — read each to confirm
+   it's a batch-extraction plan (cites `Source: <doc>` per todo) and check whether it has a paired
+   `depends_on: [<slug>] + gate_on_depends: true` finalize plan. b. **Dependency-graph path**: read
+   `<ag>_consolidated_closeout_*.md`'s frontmatter `depends_on:` + `related:` (and its
+   `_history_*`/`_native_ao_extract_*` siblings' own `depends_on:`/`related:`) and follow every listed slug that is
+   itself `assigned_vm: planning` — this catches AO-dispatched plans FORKED OUT of the consolidated closeout itself
+   during a line-cap split (e.g. `cefi_migration_cutover_and_track8_completion_2026_07_25.md`,
+   `tradfi_registry_coverage_and_ao_readiness_2026_07_25.md`), whose filenames describe their CONTENT (a Track/phase
+   name), not the `ao_dispatch`/`satellite`/`batch` pattern — path (a) alone silently misses these, which would
+   misclassify an already-covering, already-AO-readiness-scrubbed plan as an orphan needing a fresh draft. For BOTH
+   paths: check whether each has a paired `depends_on: [<slug>] + gate_on_depends: true` finalize plan (per
+   `task_template.md` §4's finalize-plan-coverage rule — cross-check with
    `.venv/bin/python scripts/quality_gates/check_finalize_plan_coverage.py --workspace-root <root>` if convenient). Also
    check `plans/archive/2026_*/` for already-archived batches of this AG (their coverage is DONE, not a gap).
 3. **AG-primary doc inventory**: enumerate every `plans/active/*.md` and `plans/active/issues/*.md` whose frontmatter
@@ -127,7 +140,23 @@ For the target `<ag>`:
    the same betting-market work tagged two ways, not two different scopes) — these are the deterministic cross-cutting
    candidates to exclude from the deep audit. This is a CANDIDATE filter only; the per-doc agent in Phase 1 re-checks
    scope from real content (step 5 below), since asset_group tagging is not perfectly reliable. Further exclude docs
-   already `status: resolved`/`archived`/`superseded` — they're already closed, not orphans.
+   already `status: resolved`/`archived`/`superseded` — they're already closed, not orphans. **Orthogonality HARD CHECK
+   (added 2026-07-25 — a real corpus-quality bug, not a hypothetical)**: `cefi`/`defi`/ `tradfi`/`prediction`/`sports`
+   and `cross-cutting` are meant to be a MUTUALLY EXCLUSIVE partition — a doc belongs to exactly one specific AG, or is
+   genuinely cross-AG, never both. A doc tagged with exactly ONE specific AG PLUS `cross-cutting` (e.g.
+   `[cefi, cross-cutting]`) is a MISTAG, not a valid third category — and it is actively dangerous: per the exclusion
+   rule above, such a doc gets excluded from `<ag>`'s own audit (cross-cutting reads as "a different peer marker") AND
+   excluded from `cross-cutting`'s own audit (the specific AG reads as "a different peer marker" there too) — it falls
+   through BOTH audits and becomes an invisible orphan the discovery step itself creates, exactly the failure class this
+   whole skill exists to catch. **Before running Phase 1 for `<ag>` OR for `cross-cutting`**, grep the corpus for
+   `asset_group:.*cross-cutting` and check each hit's array for exactly one other specific-AG marker (not the legitimate
+   "spans multiple/all 5 AGs + cross-cutting" pattern used by genuine cross-AG coordination docs, e.g.
+   `ag_closeout_audit_rollout_2026_07_25.md`, which is fine as-is, if slightly redundant — cross-cutting alone would
+   already imply multi-AG scope). Any single-AG+cross-cutting hit found must be RETAGGED correctly (read the doc's real
+   content/repos to decide which side is right — confirmed examples fixed 2026-07-25:
+   `coinbase_bare_name_migration_execution_service_2026_07_10.md` was genuinely cefi-only, `cross-cutting` dropped;
+   `issues/manifest_v6_batch3_residual_orphaned_work_2026_07_21.md` was genuinely cross-AG, `cefi` dropped), never
+   silently left dual-tagged or silently excluded from both audits.
 
 ## Phase 1 — per-doc classification (Workflow tool, one agent per doc)
 

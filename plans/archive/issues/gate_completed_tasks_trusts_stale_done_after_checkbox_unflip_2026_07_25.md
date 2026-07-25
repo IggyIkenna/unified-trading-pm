@@ -85,7 +85,10 @@ resolved_by: >-
   `git stash`/ `git pull --rebase --autostash` round-trip in this heavily shared, multi-agent-concurrent PM clone —
   plain `git stash` does not reliably re-stage a brand-new file across a pop, and neither survived several internal
   quickmerge stash cycles) and recreated verbatim from this session's own retained content; the shipped
-  agent-orchestrator code was unaffected (that repo's clone had no such concurrent stash contention).
+  agent-orchestrator code was unaffected (that repo's clone had no such concurrent stash contention). FOLLOW-UP (same
+  session): both this tool and `audit_false_done.py` now run on a systemd timer on the live orchestrator VM (hourly /
+  every-4h respectively, `agent-orchestrator@d266e7e`) per explicit operator instruction after measuring real runtime
+  (~5.4-5.6 s each) — see the Progress Log's final entry.
 depends_on: []
 ---
 
@@ -205,3 +208,24 @@ round-trips the same way a tracked file's diff does). Recreated both files verba
 (no information lost — the full text was already composed and reviewed earlier in this same session) and shipped cleanly
 on the next attempt. No impact on the actual shipped fix (agent-orchestrator code), which lives in a separate,
 non-contended clone.
+
+### 2026-07-25 — same session, follow-up: both audit scripts now run on a cron
+
+- [x] ✅ [INFRA] P2. **Wired both audit scripts to run periodically on the live orchestrator VM**, per explicit operator
+      instruction after measuring real runtime. Measured live (SSM, as the `ubuntu` user — the same user
+      `orchestrator.service` runs as, avoiding a git "dubious ownership" false failure hit when first measured as
+      `root`): `audit_stale_gate_references.py` ~5.6 s, `audit_false_done.py` ~5.4 s — both comfortably "a matter of
+      minutes" as the operator's threshold put it. Added
+      `scripts/{audit-stale-gate-references,audit-false-done}.     {service,timer}` + `scripts/install-audit-crons.sh`
+      (mirrors the existing `orch-watchdog` systemd-timer pattern in this repo exactly — same
+      path-substitution/dry-run/idempotent-install conventions). Installed + started on the live VM
+      (`i-0c9b283b31d6b5ca7`) via `install-audit-crons.sh --operator ubuntu --start`; both timers verified
+      `active (waiting)` via `systemctl list-timers`, and each timer's `--start`-triggered first real run completed
+      `code=exited, status=0/SUCCESS` (checked via `systemctl status` + `journalctl`). Cadence: hourly for
+      `audit-stale-gate-references`, every 4 h for `audit-false-done` (operator-specified). This **deliberately
+      supersedes** the prior "run once per close-out session, not on a cron" guidance in the codex SSOT for
+      `audit_false_done.py` — that guidance's own rationale (the UNAUDITABLE→auditable transition being a live edge)
+      argued against treating a cron's silence as permanent proof of cleanliness, not against running it periodically;
+      codex updated in the same edit to state this explicitly rather than leaving the superseded framing to confuse a
+      future reader. Neither timer pages/alerts on a finding today — that's a real, separate scope decision, not assumed
+      or silently added. (repo: agent-orchestrator) — agent-orchestrator@d266e7e, interactive session, 2026-07-25.
