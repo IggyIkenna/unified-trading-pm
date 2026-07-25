@@ -122,15 +122,18 @@ flip:
       `867b68f6179747a51b25410d3771f1e02e571fc6`).
 - [x] 3. [DATA] P1. Add the `migration_pending`-window note to `honest-coverage-model.md:154-157` (today lowercase /
       target UPPERCASE / harness normalises), with a dated annotation and a pointer to this issue. —
-      unified-trading-pm@<pm-sha> + evidence. Added the `> **migration_pending window (2026-07-25...)**` block to
+      unified-trading-pm@c1c317069 + evidence. Added the `migration_pending window (2026-07-25...)` blockquote to
       `/codex/02-data/honest-coverage-model.md` § Layer-2 read grain, documenting today's-lowercase / D1-target-
       UPPERCASE / the Layer-1 normaliser (pre-existing) / the Layer-2 drill-down fix (this issue) / the sequencing gate,
       with a pointer back to this issue doc; bumped `last_reviewed: 2026-07-25` and added this issue to `referenced_by`.
 - [x] 4. [REVIEW] P1. Gate: this normalisation lands + is proven green BEFORE the D1 `instrument_type`-column migration
       flips any writer or rewrites history. Cross-link this issue from the D1 migration todo so the ordering is
-      enforced. — unified-trading-pm@<pm-sha> + evidence. Confirmed the D1 `instrument_type`-column UPPERCASE rewrite is
-      performed by `instruments-service/scripts/complete_cefi_manifest_canonical_dedup_2026_07_17.py`'s `--apply` (its
-      own docstring delta (iv): "`instrument_type` COLUMN drift — 3.19M BLANK + lowercase/aliased
-      ->`canonical;    `out["instrument_type"] =
-      new_itype`reassigns the UPPERCASE-space canonicalised value") — this is EXACTLY     todo 3 ("Execute the minutes-gap hybrid cutover (Track 1)") of    `plans/active/cefi_migration_cutover_and_track8_completion_2026_07_25.md`. Added a cross-link gate blockquote to     that todo citing this issue + the shipped fix's commit sha (`instruments-service@867b68f6`), confirming the     normalisation landed BEFORE that `--apply`runs (the plan is`status:
-      draft`, not yet dispatched) and that the todo is now unblocked on this specific dependency. Ordering is enforced.
+      enforced. — unified-trading-pm@c1c317069 + evidence. Confirmed the D1 `instrument_type`-column UPPERCASE rewrite
+      is performed by `instruments-service/scripts/complete_cefi_manifest_canonical_dedup_2026_07_17.py`'s `--apply`
+      (its own docstring delta (iv): "instrument_type COLUMN drift — 3.19M BLANK + lowercase/aliased -> canonical"; it
+      reassigns `out["instrument_type"] = new_itype` with the UPPERCASE-space canonicalised value) — this is EXACTLY
+      todo 3 ("Execute the minutes-gap hybrid cutover (Track 1)") of
+      `plans/active/cefi_migration_cutover_and_track8_completion_2026_07_25.md`. Added a cross-link gate blockquote to
+      that todo citing this issue + the shipped fix's commit sha (`instruments-service@867b68f6`), confirming the
+      normalisation landed BEFORE that `--apply` runs (the plan is `status: draft`, not yet dispatched) and that the
+      todo is now unblocked on this specific dependency. Ordering is enforced.
