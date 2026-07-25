@@ -115,6 +115,22 @@ depends_on: []
   write batching/serialisation is now the highest-leverage fix, not just the readiness probe. Self-cleared again by
   05:13 (last pool error 05:12:40). **Four occurrences in ~1 hour with shrinking intervals (02:0x → 04:29 → 05:07 →
   05:12); a restart at 05:11 did not prevent 05:12.**
+- **#5 05:20:04–05:21:38Z — fifth occurrence; fresh process ran only ~4.5 min before re-exhausting, and this window
+  briefly INVERTED the health-green blind spot.** Fresh process 3057955 started 05:15:33; it exhausted the same
+  `QueuePool 5+10` at 05:20:04 (~4.5 min of uptime — a bit longer than #4's ~70s but still far short of durable). Main
+  (agt-52bb99) confirmed on-host at ~05:21: `/api/agents/*/poll` + `/api/state` AND **`/health` + `/api/roles` all
+  returned HTTP 000** at 6–12s timeouts — i.e. `/health` (DB-independent) did NOT stay green this time. Root cause of
+  the inversion: a `WatchFiles` reload fired 05:20:54 (edit to `server/routes/slots_worker.py`) while the pool was
+  exhausted; the old process's clean-shutdown path takes a **final session snapshot that itself needs a DB connection it
+  can't get**, so shutdown hung ~30s (05:20:54 "Shutting down" → 05:21:24 "taking final snapshot" → 05:21:38
+  "Finished"), and during that shutdown window even `/health` was unresponsive. A fresh process (3214408) came up
+  05:21:43 and poll/state recovered immediately (state 0.08s). **Refinement for BACKEND-P2 (DB-aware readiness probe):**
+  the `/health`-stays-green assumption holds only for steady-state pool starvation; a reload-during-starvation makes
+  `/health` go 000 too for the ~30s shutdown-snapshot window — so a monitor keying purely on `/health` sees a transient
+  blip it can't distinguish from a normal reload. **Five occurrences now (02:0x → 04:29 → 05:07 → 05:12 → 05:20); the
+  reload-triggered restart cleared #5 within ~1.5 min, so this was NOT the >10-min sustained-outage page trigger** — but
+  the frequency and the fact that a fresh pool re-exhausts in single-digit minutes keeps BACKEND-P3 (right-size pool +
+  batch/serialise per-slot git-status writes) the highest-leverage fix.
 - **Adjacent NEW bug surfaced in the #4 window (needs its own tracking, not the same root cause):** at 05:12:52
   `POST /api/plan-health/dispatch` returned `500` with
   `TypeError: can't subtract offset-naive and offset-aware datetimes` (a naive-vs-aware datetime subtraction on the
