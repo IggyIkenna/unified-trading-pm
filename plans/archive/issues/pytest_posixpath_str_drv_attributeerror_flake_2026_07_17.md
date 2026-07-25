@@ -60,6 +60,13 @@ depends_on: []
 
 # pytest PosixPath `_str`/`_drv` AttributeError flake — cross-repo, cross-agent
 
+> **✅ ARCHIVED 2026-07-25 — RESOLVED.** Reproduced deterministically, root-caused, and fixed
+> (instruments-service@bc7936a9c75b353bd587b4e2e0d254d207cb7b80) per the Progress Log below; 8/8 clean re-runs at the
+> exact `--timeout` value that reliably reproduced the bug beforehand, full `quality-gates.sh --no-fix` green. The
+> residual general upstream hazard (CPython 3.13 `pathlib._local` + `pytest-timeout` SIGALRM interaction) is a
+> documented, low-probability, unfixed-in-repo risk, not an open action item — monitor for recurrence per the Progress
+> Log's closing note.
+
 ## Evidence
 
 **Occurrence 1** (this plan's P9 Q2 CeFi migration work, instruments-service, 2026-07-16 ~14:00 UTC-ish local run,
