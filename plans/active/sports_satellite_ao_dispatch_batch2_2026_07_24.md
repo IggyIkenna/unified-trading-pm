@@ -263,7 +263,26 @@ source: >-
       populated for `SportsArbDutchingEngine`. (repo: features-service). **Done when**: a decimal odds field keyed per
       outcome+venue (final name per the decided scheme, e.g. `odds_decimal_home_pinnacle`) is computed and populated in
       FSS output for real bookmaker/venue combinations. Source:
-      `sports_odds_feature_naming_canonicalization_2026_07_21.md`.
+      `sports_odds_feature_naming_canonicalization_2026_07_21.md`. — **IN PROGRESS, checkpointed 2026-07-25 (slot 7,
+      pre-compact)**: investigation done (via Explore agent), implementation NOT YET STARTED. Findings to resume from,
+      so the next session doesn't re-derive them: the tap point is `_pivot_bucketed_to_fixture()`
+      (`features_service/sports/exporters/odds_features_exporter.py:372-517`) — inside its per-fixture
+      `horizon_group.groupby(id_col)` loop (line 386), `group` is already the long-format per-bookmaker DataFrame
+      (`bookmaker_key`, `home_odds`/`draw_odds`/`away_odds`) needed to emit one `odds_decimal_<outcome>_<venue>` column
+      per bookmaker actually quoting that fixture at that horizon, before the group collapses to a single row. Venue
+      tokens are lowercase snake_case The-Odds-API bookmaker keys verbatim (e.g. `pinnacle`, `bet365`, `draftkings` —
+      see `unified-api-contracts/unified_api_contracts/canonical/domain/sports/bookmaker_registry.py`), NOT a UAC enum.
+      **Correctness risk to design around**: `feature_expectations.py`'s `ODDS_COLUMNS` registry drives PIT
+      horizon-gating (`apply_horizon_gate()`) — any new DYNAMIC per-venue column bypasses PIT gating entirely unless
+      also registered there (or via a pattern match), since the registry is a fixed list, not a prefix match. There is
+      no hard schema allowlist at the parquet-write boundary (`write_sports_table` writes whatever columns the DataFrame
+      has), so the column WILL flow through — the PIT-gating gap is the thing to actually solve, not schema
+      registration. Test pattern to follow: `tests/sports/unit/test_odds_features_exporter.py`'s
+      `TestPivotBucketedToFixture` class (e.g. `test_best_odds_computed` at line 152, `test_best_venue_columns` at
+      line 379) — same construct-a-small-long-format-df-then-assert-on-result style. **Separate finding filed, NOT part
+      of this todo's scope**: `compute_odds_batch()`'s dead-code path silently overwrites `best_odds_*` with a mean
+      instead of the correct max — see `issues/fss_bookmaker_dispersion_dead_code_overwrites_best_odds_2026_07_25.md`;
+      be aware of it when touching this file but do not conflate the two todos.
 - [ ] [DATA] P1. **Rename UAC's `OddsFeaturesMixin`/`SportsFeatureVector` fields** to the 2026-07-23 DECIDED naming
       scheme (rename in place). Add/update UAC unit tests covering the schema's field set. (repo: unified-api-contracts
       `unified_api_contracts/internal/domain/features_sports/_features_venue_referee_player_odds.py`). **Done when**:
