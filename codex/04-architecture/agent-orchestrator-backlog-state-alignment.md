@@ -64,19 +64,27 @@ record of every todo that ever existed. Two entirely normal, non-alarming ways a
 **A missing row is therefore never by itself evidence of a lost or dropped task.** Check the plan file's own checkbox
 state first — that is the actual source of truth — before treating an absent backlog/DB row as an incident.
 
-## Auditing `status=done` honesty — `audit_false_done.py` cadence
+## Auditing `status=done` honesty — `audit_false_done.py` / `audit_stale_gate_references.py` cadence
 
-`scripts/orchestrator/audit_false_done.py` (run on the live VM, `--db data/state/state.db --pm ../unified-trading-pm`)
-checks every `done` row with a plan_ref against its plan's actual checkbox state. Per
+`scripts/orchestrator/audit_false_done.py` (`--db data/state/state.db --pm ../unified-trading-pm`) checks every `done`
+row with a plan_ref against its plan's actual checkbox state. Per
 `backlog_task_done_status_diverges_from_plan_checkbox_2026_07_16.md`'s closing ruling: the gated mechanism itself
-(`check_plan_flip`'s hard-409 at `/done`-time) needs **no periodic sweep** — it structurally prevents a NEW false-`done`
-row from being written at all. But the tool still runs **once per close-out session, not on a cron**, because the
-UNAUDITABLE→auditable transition is a live edge: a legacy row's `brief_hash` backfills silently the moment regen next
-touches it (`sync_backlog_to_db`'s NULL-hash first-touch backfill), and that transition can surface old poison — a
-pre-migration row that was ALWAYS wrong but only becomes checkable once it acquires a hash — at any time, not on a
-predictable schedule. A cron would either fire on stale state or need its own staleness logic; a close-out-session run
-is cheap and catches it exactly when someone is already looking. See `ao_backlog_regen_integrity_2026_07_20.md` todo 7
-for the audit that reached this ruling.
+(`check_plan_flip`'s hard-409 at `/done`-time) needs no periodic sweep to PREVENT a new false-`done` row — that part is
+structural. The "run once per close-out session, not on a cron" framing from that ruling is now **SUPERSEDED
+2026-07-25** by explicit operator instruction, once real runtime was measured live on the orchestrator VM (~5.4 s) and
+judged well within a periodic budget: both this tool and its sibling `audit_stale_gate_references.py` (~5.6 s) now run
+as systemd timers on the central orchestrator VM — `audit-false-done.timer` every 4 h,
+`audit-stale-gate-references.timer` every 1 h (`scripts/audit-false-done.{service,timer}`,
+`scripts/audit-stale-gate-references.{service,timer}`, installed via
+`scripts/install-audit-crons.sh --operator ubuntu --start`). The original UNAUDITABLE→auditable-transition concern (a
+legacy row's `brief_hash` backfills silently the moment regen next touches it, surfacing old poison at an unpredictable
+time) is a reason a NAIVE cron could be misleading if read as "clean = provably nothing wrong, forever" — it is not a
+reason not to run the check regularly; an hourly/4-hourly cadence just means that surfacing happens within one tick
+instead of waiting for someone to remember to run it by hand. **A nonzero exit from either service is a real finding,
+not a bug** — check `journalctl -u audit-false-done.service` / `-u audit-stale-gate-references.service`; neither timer
+pages or alerts today (no Slack/on-call wiring exists for these findings yet — that's a real, separate scope decision,
+not assumed). See `ao_backlog_regen_integrity_2026_07_20.md` todo 7 for the original ruling and
+`gate_completed_tasks_trusts_stale_done_after_checkbox_unflip_2026_07_25.md`'s Progress Log for the cadence change.
 
 ---
 
@@ -301,9 +309,10 @@ syntax", but the data model does not technically enforce the ban) never self-hea
 **Detection**: `scripts/orchestrator/audit_stale_gate_references.py` (shipped 2026-07-25, mirrors
 `audit_false_done.py`'s pattern) finds the exact, mechanically-verifiable case — an orphaned `done` id still named in
 some live task's `completed_tasks`, whose own plan currently has an open todo hashing IDENTICALLY to its stored
-`brief_hash` (the same line, un-reworded, just un-checked). Run it the same session as any manual audit-and-reopen; it
-is read-only (report-only, no `--fix`) — correct a confirmed finding via `POST /api/backlog/{id}/reopen`-style mutation
-or by re-wiring the affected plan's `depends_on`, not by hand-editing `backlog.yaml`. A clean run means "no exact-reopen
+`brief_hash` (the same line, un-reworded, just un-checked). Runs hourly on the live VM via
+`audit-stale-gate- references.timer` (see "Auditing `status=done` honesty" above) as well as on-demand; it is read-only
+(report-only, no `--fix`) — correct a confirmed finding via `POST /api/backlog/{id}/reopen`-style mutation or by
+re-wiring the affected plan's `depends_on`, not by hand-editing `backlog.yaml`. A clean run means "no exact-reopen
 collision found", not "no drift is possible" — a reopened todo that was ALSO reworded on the same edit is undetectable
 by this tool (no plaintext brief survives an orphaned row to fuzzy-match against). SSOT for the full investigation:
 `plans/archive/issues/gate_completed_tasks_trusts_stale_done_after_checkbox_unflip_2026_07_25.md`.
