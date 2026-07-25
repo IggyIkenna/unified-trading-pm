@@ -231,6 +231,16 @@ base-image pipeline without confirming the correct source config/IAM/connection 
       branch across 3 consecutive attempts; each retry was a clean `git pull --rebase --autostash` with zero conflicts,
       never a blind overwrite). Confirmed live on `origin/live-defi-rollout` via `git merge-base --is-ancestor` + direct
       content read (`git show origin/live-defi-rollout:.github/workflows/cloud-build-router.yml`).
+- [ ] [BACKEND] P3. Harden `notify-utl-base-image-not-configured` against an empty-`repo_type` recurrence (review flag,
+      msg 2012, 2026-07-25). The job's `repo_type != 'library'` guard fired correctly for the observed incident (run
+      30145190398 resolved `repo_type=service` for `unified-trading-library`, so the guard matched), but this same
+      workflow already documents `repo_type` as UNRELIABLE when the dispatch payload omits it — the fallback then
+      resolves to the workspace-manifest declared `type=library`, making `repo_type != 'library'` FALSE and silently
+      suppressing this exact alert on a future recurrence. Gate the alert on `repo == 'unified-trading-library'`
+      (identity, always known) rather than on the derived `repo_type`, or additionally fire when `repo_type` is
+      empty/unknown, so a payload-omitted recurrence still pages. **Done when**: a simulated dispatch with empty
+      `repo_type` for `unified-trading-library` still fires the alert. Not blocking — the shipped P2 fix fully covers
+      the OBSERVED failure mode and is QG-green; this closes a latent second suppression path only.
 
 ## Progress Log
 
