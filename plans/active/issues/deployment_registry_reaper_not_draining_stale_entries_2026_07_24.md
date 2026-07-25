@@ -343,7 +343,23 @@ flipping the checkbox.
       [issues/utl_prod_cloud_build_trigger_missing_fleet_stale_base_image_2026_07_25.md](utl_prod_cloud_build_trigger_missing_fleet_stale_base_image_2026_07_25.md).
       Part (1) of this todo (live re-verification of `active/` convergence) stays open and is now ALSO gated on that
       doc's Todo 1 (recreate the trigger) — re-verification cannot succeed until a fresh UTL base image actually
-      publishes with `4773a3fd` in it, deployment-api rebuilds against it, and a new revision deploys.
+      publishes with `4773a3fd` in it, deployment-api rebuilds against it, and a new revision deploys. — **RE-DISPATCHED
+      2026-07-25 (slot 2, backend_engineer)**: re-checked the gate chain. Trigger recreation (Todo 1 of the sibling doc)
+      is DONE (`unified-trading-library-prod` exists + correctly configured). But manually verifying it hit a NEW real
+      bug — unescaped `$VERSION`/`$IMAGE_TAG` comment references in `cloudbuild.yaml` trip Cloud Build's substitution
+      validator — fixed + shipped (`unified-trading-library@44922ad1`+`71dcf0f4`), full details + the fleet-wide 15-repo
+      instance of the same bug class in
+      [issues/cloudbuild_yaml_unescaped_substitution_comments_fleet_wide_2026_07_25.md](cloudbuild_yaml_unescaped_substitution_comments_fleet_wide_2026_07_25.md).
+      Both fixes are on `live-defi-rollout` only — `git show origin/main:cloudbuild.yaml` still shows the old unescaped
+      content; 2 promote PRs open (`unified-trading-library` #644 for `44922ad1`, #645 for `71dcf0f4`), both
+      `mergeable_state: blocked` pending required checks. Part (1)'s full chain (promote lands → fresh UTL base image
+      publishes → deployment-api rebuilds → new Cloud Run revision → ≥2 reap-tick intervals, 900s each, of log
+      observation) is genuinely not completable in one dispatch turn. Not attempted further. Next dispatch: re-check
+      `gh pr list --repo IggyIkenna/unified-trading-library --state open` for #644/#645 merged to `main`; once merged,
+      confirm a fresh UTL base image publishes
+      (`gcloud artifacts docker images list     .../unified-trading-library --sort-by="~UPDATE_TIME"` shows an
+      `UPDATE_TIME` after the merge), THEN proceed with the original re-verification steps (direct image extraction +
+      log watch) exactly as scoped above.
 
 - **2026-07-24 (slot-4, review)**: Re-ran the end-to-end verification per the todo above, against the freshly deployed
   `uts-shared-deployment-api-00270-2l9` (`deployment-api:366154d`) — confirmed via `gcloud builds log` (Cloud Build
