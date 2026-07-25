@@ -69,6 +69,9 @@ duplicate — this ruling does not touch them.
 
 # OKX-FUTURES/OKX-SWAP margin_type wire-key collision: real ambiguity, or stale mislabel artifact?
 
+> **🟢 RESOLVED 2026-07-25 — ACKED-INTO-CODE** — `instruments-service@1c920fab` (dedup rule + docstring retraction, per
+> the OPERATOR RULING above); archived per the terminal-status backlog sweep.
+
 ## The contradiction
 
 `instruments-service/scripts/build_instrument_catalogue.py`, function `_dedup_cefi_expiry_off_by_one()` (docstring,

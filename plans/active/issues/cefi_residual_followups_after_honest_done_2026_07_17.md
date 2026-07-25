@@ -504,7 +504,8 @@ pairs stay honest-unresolved (reported, never guessed).
 
 - **2026-07-25 — older Progress Log entries (2026-07-17/07-18 build narrative: blueprint workflow, Phase -1 catalogue
   rebuild + gate, Phase 0b write/reader-bridge ships, Phase C migration-script dry-runs, Phase A/B provenance + deploy
-  characterization) EXTRACTED verbatim to `cefi_residual_followups_after_honest_done_history_2026_07_25.md`** for
+  characterization) EXTRACTED verbatim to
+  `plans/archive/issues/cefi_residual_followups_after_honest_done_history_2026_07_25.md`** for
   `plans/active/issues/*.md` 1000-line hard-cap compliance (was 1151 lines; pattern per
   `plan_line_cap_remediation_2026_07_23.md` § FINAL RESOLUTION). The entry above (CUTOVER STAGED) is the most recent /
   current status and stays live here. **plan-reconcile contradiction check (2026-07-25)**: read the full

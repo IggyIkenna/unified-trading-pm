@@ -114,7 +114,7 @@ removes the manual cost and catches regressions before they compound.
       it cites (a) exist, (b) still describe the same pattern the plan's todos assume. Flag deviations for operator
       review. Output: `plans/active/issues/codex_alignment_deviations_<date>.md`. — Result: CLEAN. 1 broken ref (planned
       future doc, not a regression); 0 semantic deviations across 8 plans with open todos × codex refs.
-      `plans/active/issues/codex_alignment_deviations_2026_06_25.md` — PM@e8e1f189f (slot-1)
+      `plans/archive/issues/codex_alignment_deviations_2026_06_25.md` — PM@e8e1f189f (slot-1)
 - [x] ✅ [AGENT] P2. For each flagged deviation: determine whether the plan is stale (codex evolved, plan didn't) or the
       codex is incomplete (plan captured a rule change that wasn't propagated to codex). Propose targeted codex augments
       or plan updates. — N/A: P1 returned 0 semantic deviations; no follow-up augments needed. (PM@slot-1)

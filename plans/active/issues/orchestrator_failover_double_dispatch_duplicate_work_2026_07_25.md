@@ -126,3 +126,23 @@ a double-/done, but self-mitigating so far (both incidents resolved to doc-only 
 workers independently detected the already-landed work — that is luck, not a guarantee). Filed per the big-finding
 triage rule (cross-cutting throughput/correctness, recurred 2× in one window) and cross-linked to the same-window
 autospawn-gap and DB-pool-wedge issues. Recommend a BACKEND worker confirm the failover/lease path.
+
+## Incident 3 — deployment_registry_reaper_not_draining_stale_entries-001 (slots 3 & 5 → 3 & 6), ~11:40–12:25Z
+
+The worst variant, and the first on a **CODE** task (deployment-api gunicorn/registry-reaper) rather than doc-only:
+
+- The failover moved the task **AWAY from the worker holding the diagnosis**: slot 3 had root-caused it ("prod loads
+  root-level gunicorn.conf.py") and was editing the fix, but went silent during repeated 14–19-min thinking runs (no
+  heartbeat) → the dispatcher failed it over to slot 5 (`dispatched_to=5`), a fresh worker. Both then held it in
+  `current_task=working`.
+- An `ao-self-pull` `systemctl restart orchestrator` mid-incident **re-shuffled dispatch** and moved the second holder
+  from slot 5 → slot 6 (`dispatched_to=6`) — the collision survived the restart, re-triggered by slot 3's ongoing silent
+  runs. This shows the condition is not a one-shot race; a long-silent-but-alive owner is repeatedly re-failed-over.
+- **Same-file code-conflict risk was REAL here** (not doc-only). Main coordinated read-only: messaged the fresh owner
+  (slot 5, then slot 6) to HOLD and let slot 3 land its fix, then verify + `/done` as owner-of-record; told slot 3 to
+  heartbeat during long runs and coordinate the `/done`.
+- **Outcome: resolved WITHOUT conflict** — slot 3 shipped the fix (`deployment-api@3fe…`, "fix shipped + plan flipped"),
+  slot 6 to verify + `/done`. No duplicate/conflicting commit landed. **But that clean outcome depended on main manually
+  babysitting the collision across ~45min and a restart** — exactly the manual toil the BACKEND fix (todos above) should
+  remove. Incident 3 upgrades the "self-mitigating / luck" caveat: on a code task the luck margin is thinner, and the
+  restart-survival shows ping-staleness failover is too eager against a healthy long-silent worker.

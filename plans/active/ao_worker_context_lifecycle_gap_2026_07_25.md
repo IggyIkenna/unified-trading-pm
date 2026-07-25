@@ -152,24 +152,41 @@ sequential: true
       Progress Log). Experienced the mechanism live while shipping this exact todo: my own `/progress` call at
       `context_used_pct: 70` returned `directive: "compact_now"` — real-time confirmation the shipped gate matches what
       I just wrote. `quality-gates.sh` green (unified-trading-pm).
-- [ ] [BACKEND] P1. **Expose worker session-start time via the API.** Add `last_spawned_at: datetime | None` to
+- [x] ✅ [BACKEND] P1. **Expose worker session-start time via the API.** Add `last_spawned_at: datetime | None` to
       `SlotView` (`server/models/slots.py`) and populate it in the `/api/state` route mapping (`server/routes/state.py`)
       from the ORM `SlotRow.last_spawned_at` field, which already exists and is already read internally
       (`server/worker_liveness/__init__.py` reads `slot.last_spawned_at`) but was never serialized out — this is the
       exact field whose absence forced this session's live diagnosis to infer session-vs-task-age carryover indirectly
       from `compactions_total`/`last_compacted_at` instead of reading it directly. **Done when**: `GET /api/state`
       returns a non-null `last_spawned_at` for every slot with a live tmux session; a test asserts the field
-      round-trips; `quality-gates.sh` green.
-- [ ] [BACKEND] P1. **Fix the context-burn anomaly clock** in `server/worker_liveness_watchdog.py::_is_context_burning`
-      (Trigger 4). Currently keyed on `hours_on_task` (derived from `assigned_at`, which resets on every reassignment —
-      confirmed live 2026-07-25: 5 slots >=80% context produced zero `context_burn_suspected` fires over a 7h window
-      because none had spent >=4h on their CURRENT task even though their sessions carried compaction histories hours
-      older than the task). Replace/supplement that input with a session-scoped clock derived from `last_spawned_at`
-      (todo 6) — "hours since this SESSION last compacted or was spawned," not "hours on this task." Keep the existing
-      `context_pct >= min_pct OR compactions_total >= min_compactions` disjunct. **Done when**: a new unit test
-      reproduces the exact live scenario from this session (task reassigned 0.08h ago, context 100%, last compaction >4h
-      before assignment) and asserts `_is_context_burning` now returns `True` where the old task-clock version returned
-      `False`; `quality-gates.sh` green.
+      round-trips; `quality-gates.sh` green. — **`agent-orchestrator@c920d34`.** Added the field to `SlotView` and wired
+      it into `_slot_to_view` by reusing the already-computed `last_spawned` local (no duplicate `to_utc` call, the same
+      value `phase` inference already derives from). 2 new tests in `tests/test_slot_view_last_spawned_at.py`
+      (`test_last_spawned_at_none_when_never_spawned`, `test_last_spawned_at_round_trips_from_orm_row`), mirroring the
+      existing `test_slot_view_kind.py` pattern. 1687/1687 tests pass, ruff + basedpyright clean, full
+      `quality-gates.sh` PASSED.
+- [x] ✅ [BACKEND] P1. **Fix the context-burn anomaly clock** in
+      `server/worker_liveness_watchdog.py::_is_context_burning` (Trigger 4) — **`agent-orchestrator@f11dec2`.** Added
+      `_hours_since_session_reset(now, last_spawned_at, last_compacted_at)` — anchored on whichever of the two reset
+      events is MORE RECENT (no anchor at all counts as maximally old, `float("inf")`, so a dataless slot doesn't
+      silently suppress the trigger) — and rewired `_handle_context_burn_trigger` to feed its result into
+      `_is_context_burning` instead of the old `hours_on_task` (`(now - assigned_at).total_seconds() / 3600.0`).
+      `_is_context_burning`'s first parameter is renamed `hours_since_session_reset` (pure threshold function,
+      signature-only change; the 4 existing kwarg-based tests in `test_e2e_findings_remediation.py` updated to match).
+      Kept the existing `context_pct >= min_pct OR compactions_total >= min_compactions` disjunct verbatim, per this
+      todo's own spec. Also renamed `notify_context_burn`'s `hours_on_task` param to `hours_since_session_reset`
+      (message text updated from "h in flight" to "h since session reset") since no test asserted on its call args.
+      **Done-when unit test**: `test_context_burn_session_clock_survives_task_reassignment` (added to
+      `test_e2e_findings_remediation.py`) reproduces the exact live scenario — task reassigned 0.08h ago, context 100%,
+      last compaction 4.5h before assignment — and asserts the OLD `hours_on_task`-equivalent input
+      (`hours_since_session_reset=0.08`) returns `False` while the NEW `_hours_since_session_reset(...)` output (~4.58h)
+      returns `True`. Also added an end-to-end `_tick_once` integration test,
+      `test_tick_context_burn_suspects_on_stale_session_despite_fresh_reassignment` (in
+      `test_worker_liveness_watchdog.py`), proving the wiring through the real trigger path (not just the pure function)
+      — added `last_compacted_at` to that file's `_make_slot()` test helper (previously absent; every caller now gets an
+      explicit `None` default rather than an auto-`MagicMock` attribute, which would have broken `to_utc()` on every
+      existing context-burn test once the caller started reading `slot.last_compacted_at`). `quality-gates.sh` green:
+      1689 passed, 1 skipped, ruff + basedpyright clean.
 - [x] ✅ [BACKEND] P1. **Add WIP preservation to `_kill_slot`** — `agent-orchestrator@7c1ed65`. Implemented as
       `_preserve_wip_before_kill(slot_id, tmux_session)`, called from `_kill_slot` before `kill_session` fires, for
       every kill reason (not just `context_burn`). **Deviation from this todo's original text**: reuses the higher-level

@@ -114,7 +114,7 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
       2/6 both inspected — its image tag just never changed again because no NEWER promote has landed since) was built
       from that commit at `2026-07-25T02:51:26Z`. **So the fix has been live ~2.5h, and the precondition IS met** —
       filed a standalone methodology issue for the false-negative pattern itself:
-      [deployment_promote_squash_ancestry_false_negative_2026_07_25.md](deployment_promote_squash_ancestry_false_negative_2026_07_25.md).
+      [deployment_promote_squash_ancestry_false_negative_2026_07_25.md](/plans/archive/issues/deployment_promote_squash_ancestry_false_negative_2026_07_25.md).
       **Read the actual next occurrence**: `gcloud logging read` on `run.googleapis.com%2Fvarlog%2Fsystem` shows one
       post-deploy `Uncaught signal: 6` at `2026-07-25T04:27:19Z` (pid=29, tid=29). Pulled the
       `run.googleapis.com%2Fstderr` stream for ±5min around it (`04:25:00Z`–`04:30:00Z`) — **zero entries**, and a 24h
@@ -156,15 +156,29 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
       the sibling `deployment_registry_reaper_not_draining_stale_entries_2026_07_24.md` Gap-2 finding. (repo:
       deployment-api) — **Checked 2026-07-25T06:23Z (slot 2)**: `agent-orchestrator@7ba17e2`'s fix IS live — confirmed
       via content-diff (not ancestry — this session's own methodology lesson from the sibling
-      `deployment_promote_squash_ancestry_false_negative_2026_07_25.md`): `origin/main`'s `gunicorn.conf.py` is
-      byte-identical to the fix commit, promoted via `2efbbcb` at `06:05:45Z`. Cloud Run revision
+      `plans/archive/issues/deployment_promote_squash_ancestry_false_negative_2026_07_25.md`): `origin/main`'s
+      `gunicorn.conf.py` is byte-identical to the fix commit, promoted via `2efbbcb` at `06:05:45Z`. Cloud Run revision
       `uts-shared-deployment-api-00275-7zl` (built `06:14:00Z`, confirmed serving 100% traffic) carries it.
       `gcloud     logging read` for `"Uncaught signal"` scoped to that exact revision: **zero occurrences** — not
       surprising, only 9 minutes elapsed since deploy vs. the measured ~20-40min crash cadence, not yet a stall. Not
       completable this turn (the trigger event — the next SIGABRT — hasn't happened yet, not a blocker to resolve).
       Released via `/skip-current-task`. Next dispatch: re-run the same `gcloud logging read` scoped to revision
       `00275-7zl`; once a SIGABRT appears, pull the `stderr` stream ±5min around it and read the
-      `Fatal Python error`/`Current thread` dump for the stuck call site.
+      `Fatal Python error`/`Current thread` dump for the stuck call site. — **CORRECTION 2026-07-25 (slot 3)**: the
+      `06:23Z` "content-diff confirms it's live" check above diffed `origin/main:deployment_api/gunicorn.conf.py` — but
+      that file is a **dead duplicate never loaded in production**. `Dockerfile`/`Dockerfile.dashboard` both `COPY` +
+      load a repo-root `gunicorn.conf.py` instead (`-c /app/gunicorn.conf.py`), which `7ba17e2` never touched — verified
+      by `docker pull`ing revision `00275-7zl`'s actual image
+      (`sha256:1282490246ad38c7b9398ae09f1982351d3aea0837935c8e8b1b00c3421f42a6`) and extracting `/app/gunicorn.conf.py`
+      directly: no `post_worker_init`, no `faulthandler` import at all — just the old bare-`pass` stub. This is why
+      SIGABRTs kept recurring on `00275-7zl` with zero dumps (11 occurrences observed `06:10Z`–`11:46Z`, confirmed via
+      `gcloud logging read` scoped to that exact revision) — the "fix" was never actually armed. **Fixed for real** in
+      `deployment_registry_reaper_not_draining_stale_entries_2026_07_24.md`'s corresponding todo:
+      `deployment-api@3fea307` ports the faulthandler hook into the ACTUAL loaded file, deletes the dead duplicate, and
+      is runtime-verified locally (a real `SIGABRT` now produces a full dump). Shipped, landed on `live-defi-rollout`.
+      This todo's precondition ("the fix ships") is now genuinely met as of `3fea307` — next dispatch should re-check
+      once THAT reaches a fresh Cloud Run deploy (verified via direct image extraction, not source-diff) and a SIGABRT
+      recurs; read the resulting dump for the stuck call site.
 
 ## Progress Log
 
@@ -253,7 +267,7 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
   `git merge-base --is-ancestor 1adf54b origin/main` check is structurally incapable of returning true after a
   squash-merge promote (verified via content-diff instead: `faulthandler.enable()` is present in `origin/main`'s
   `gunicorn.conf.py`, byte-identical to LDR). Filed the systemic verification-methodology bug as its own issue:
-  [deployment_promote_squash_ancestry_false_negative_2026_07_25.md](deployment_promote_squash_ancestry_false_negative_2026_07_25.md).
+  [deployment_promote_squash_ancestry_false_negative_2026_07_25.md](/plans/archive/issues/deployment_promote_squash_ancestry_false_negative_2026_07_25.md).
   With the precondition now confirmed met, read the actual next SIGABRT occurrence (`04:27:19Z`, post-deploy) — no
   faulthandler dump appeared on stderr for it (24h stderr sweep shows nothing between `01:03:36Z` and now). Per the
   todo's own instruction, did NOT re-guess a root cause — filed a fresh evidence-backed `[BACKEND]` todo above for why

@@ -58,6 +58,9 @@ depends_on: []
 
 # agent-orchestrator boot-template STEP 2 contradicts one-shot escalation roles' `does_not` rule
 
+> **🟢 RESOLVED 2026-07-25 — ACKED-INTO-CODE** — `agent-orchestrator@6495d52` (one-shot escalation roles no longer told
+> to call `/boot`); archived per the terminal-status backlog sweep.
+
 ## What I found
 
 `server/prompts.py::_compose()` decides which boot-message shape to emit using a single condition: `slot_id is not None`

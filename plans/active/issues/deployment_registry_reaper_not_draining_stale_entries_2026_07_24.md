@@ -207,24 +207,24 @@ flipping the checkbox.
       `[REVIEW]` checkbox. Full detail + a NEW P0 finding (the P1 cold-cache fix removed the old global serialization on
       cold census computations — 2 concurrent cache-key computations OOM-killed the whole container, 17,002MiB used vs
       16,384MiB limit, `Container terminated on signal 9`, a MORE SEVERE failure mode than the bug it fixed) in
-      [issues/deployment_api_inventory_cold_path_concurrent_oom_2026_07_24.md](deployment_api_inventory_cold_path_concurrent_oom_2026_07_24.md).
+      [issues/deployment_api_inventory_cold_path_concurrent_oom_2026_07_24.md](/plans/archive/issues/deployment_api_inventory_cold_path_concurrent_oom_2026_07_24.md).
 - [x] ✅ [BACKEND] P1. **Root-cause why `active/` is still not converging toward the live-VM count after the P0
       `CancelledError`/grace-period fix (Todo 1) and P1 cold-cache fix (Todo 2) both shipped and were re-verified live
       (Todo 3, slot-4: still 403–404, unchanged).** This is Gap 1 itself, distinct from the sibling OOM regression
-      (`deployment_api_inventory_cold_path_concurrent_oom_2026_07_24.md`, which tracks a DIFFERENT, newly-discovered
-      crash bug from the P1 fix) — that sibling doc's own fix does not address why reap ticks that DO complete aren't
-      archiving the sampled stale entries. Next steps: confirm a reap tick is actually completing end-to-end post-fix
-      (look for the `"[SYNC_SERVICE] Reaper: archived"` / `"[AUTO_SYNC] Reaper: archived"` log lines that were NEVER
-      observed in 7 days pre-fix — their continued absence post-fix would point at a second, still-undiagnosed blocker
-      beyond the `CancelledError` symptom); if ticks ARE completing, re-sample the 30 previously-`status="stale"`
-      entries to see whether they were archived or the reap logic itself is silently no-op'ing on them. Done-when: the
-      root cause of non-convergence is identified and either fixed + re-verified (`active/` ≈ live-VM count) or a
-      concrete blocker is documented. — **ROOT-CAUSED + FIXED 2026-07-25 (slot 2)**: `unified-trading-library@4773a3fd`.
-      `"[AUTO_SYNC] Reaper: archived"` confirmed STILL absent 3+ hours after the P0/P1 fixes deployed
-      (`gcloud logging read` against `uts-shared-deployment-api`, no matches over 3 days) — AND the exact same
-      `asyncio.wait_for(_background_task, timeout=20)` → `_run_deployment_reaper`'s `run_in_executor` failure from Todo
-      1 is STILL firing live (traceback captured `2026-07-25T01:03:36Z`, well after the 5s→20s fix shipped). Root cause:
-      `DeploymentsRegistry.list_active()` (`unified_trading_library/deployment_registry.py`) downloads every
+      (`plans/archive/issues/deployment_api_inventory_cold_path_concurrent_oom_2026_07_24.md`, which tracks a DIFFERENT,
+      newly-discovered crash bug from the P1 fix) — that sibling doc's own fix does not address why reap ticks that DO
+      complete aren't archiving the sampled stale entries. Next steps: confirm a reap tick is actually completing
+      end-to-end post-fix (look for the `"[SYNC_SERVICE] Reaper: archived"` / `"[AUTO_SYNC] Reaper: archived"` log lines
+      that were NEVER observed in 7 days pre-fix — their continued absence post-fix would point at a second,
+      still-undiagnosed blocker beyond the `CancelledError` symptom); if ticks ARE completing, re-sample the 30
+      previously-`status="stale"` entries to see whether they were archived or the reap logic itself is silently
+      no-op'ing on them. Done-when: the root cause of non-convergence is identified and either fixed + re-verified
+      (`active/` ≈ live-VM count) or a concrete blocker is documented. — **ROOT-CAUSED + FIXED 2026-07-25 (slot 2)**:
+      `unified-trading-library@4773a3fd`. `"[AUTO_SYNC] Reaper: archived"` confirmed STILL absent 3+ hours after the
+      P0/P1 fixes deployed (`gcloud logging read` against `uts-shared-deployment-api`, no matches over 3 days) — AND the
+      exact same `asyncio.wait_for(_background_task, timeout=20)` → `_run_deployment_reaper`'s `run_in_executor` failure
+      from Todo 1 is STILL firing live (traceback captured `2026-07-25T01:03:36Z`, well after the 5s→20s fix shipped).
+      Root cause: `DeploymentsRegistry.list_active()` (`unified_trading_library/deployment_registry.py`) downloads every
       `active/*.json` blob **sequentially**, one `download_string` call at a time — the doc's own cited ~138s/~3k-entry
       rate implies ~46ms/blob, so at the current ~400-entry backlog the tick itself takes ~18-20s, landing right at (or
       over) the 20s grace period. The P0 fix bought headroom but the tick's own duration eats it right back — every
@@ -243,7 +243,7 @@ flipping the checkbox.
       review) — RE-VERIFIED, fix IS deployed but `active/` STILL has NOT converged.** Correcting this todo's own
       verification instruction: do NOT rely on `git merge-base --is-ancestor` alone — it fails FOREVER post-squash-merge
       regardless of whether the content shipped (full writeup:
-      [issues/deployment_promote_squash_ancestry_false_negative_2026_07_25.md](deployment_promote_squash_ancestry_false_negative_2026_07_25.md)).
+      [issues/deployment_promote_squash_ancestry_false_negative_2026_07_25.md](/plans/archive/issues/deployment_promote_squash_ancestry_false_negative_2026_07_25.md)).
       Content-diffed instead: `git show origin/main:unified_trading_library/deployment_registry.py` shows
       `ThreadPoolExecutor(max_workers=32)` present, byte-identical to LDR's copy — the fix's content genuinely reached
       `main`. Caveat found while checking: deployment-api consumes UTL via a **local editable path**
@@ -258,7 +258,7 @@ flipping the checkbox.
       pre-fix 403-404 baseline. **Not resolved** — either the built container doesn't actually carry the UTL fix (the
       editable-path gap above), or the reap tick still isn't executing/completing for a different reason than diagnosed.
       New todo added below rather than re-asserting the fix worked without evidence.
-- [ ] [BACKEND] P0. **Determine why `active/` still hasn't moved (404, unchanged) despite
+- [x] ✅ [BACKEND] P0. **Determine why `active/` still hasn't moved (404, unchanged) despite
       `unified-trading-library@4773a3fd`'s parallelization fix being live on `main` for ~2.5h with zero
       `"Reaper: archived"` lines AND zero `_run_deployment_reaper` tracebacks (neither the old failure nor the expected
       new success signal appears in Cloud Logging).** Check, in order: (1) confirm the DEPLOYED CONTAINER's build
@@ -268,7 +268,82 @@ flipping the checkbox.
       content if possible. (2) If the container IS correct, confirm the reaper tick is being invoked AT ALL post-deploy
       (add a cheap one-time INFO log at tick start if none exists — the total silence of BOTH the old error and the new
       success line is itself suspicious). (3) Re-check `active/` vs live-VM count once resolved. (repo: deployment-api,
-      unified-trading-library)
+      unified-trading-library) — **ROOT-CAUSED 2026-07-25 (slot 3) via DIRECT IMAGE INSPECTION, not source-repo
+      content-diff** (the same false-confidence gap slot 10 flagged but nobody had yet directly checked):
+      `docker     pull`ed the LIVE revision's actual image (`uts-shared-deployment-api-00275-7zl`,
+      `sha256:1282490246ad38c7b9398ae09f1982351d3aea0837935c8e8b1b00c3421f42a6`), extracted
+      `unified_trading_library/deployment_registry.py` and both `gunicorn.conf.py` copies from inside it. Confirmed the
+      deployed `deployment_registry.py` has **NO `ThreadPoolExecutor`** — the UTL parallelization fix genuinely never
+      reached this image, even though `git show origin/main:...` (what every prior verification pass checked) has it.
+      Traced further: the triggering Cloud Build (`7b80517d...`, commit `2efbbcb` — which DOES contain the fix per
+      content-diff) produced this EXACT image digest, so the gap isn't a stale/skipped build — chasing that is now a
+      separate open question (see the new todo below), not needed to close THIS one. **The real, confirmed, and now
+      FIXED root cause for the other symptom (zero faulthandler dumps, zero "Reaper: archived" lines, zero "Started
+      background sync task" lines) is a wrong-file bug, unrelated to any build/cache mystery**: two `gunicorn.conf.py`
+      files existed in `deployment-api` — a repo-root one (`COPY`'d + loaded by BOTH `Dockerfile` and
+      `Dockerfile.dashboard` via `-c /app/gunicorn.conf.py`) and `deployment_api/gunicorn.conf.py` (a duplicate). The
+      two SIGABRT/leader-election fix commits (`1adf54b`, `7ba17e2`, both cited as "confirmed live" by prior sessions
+      via `git show origin/main:deployment_api/gunicorn.conf.py`) both edited the **`deployment_api/` copy — which
+      `deployment_api/gunicorn.conf.py`'s own unit test exercised (hence green `quality-gates.sh`), but which production
+      NEVER LOADS**. Extracted the root file from the SAME live image: it's the old stub — bare `pass` in `post_fork`,
+      no `post_worker_init` hook at all, so `faulthandler.enable()` never runs AND `worker_identity.set_worker_age()`
+      never runs, meaning `is_leader_worker()` (which defaults `True` when `_worker_age` is unset) returns `True` for
+      **every** worker, not one — every gunicorn worker has been redundantly running its own auto-sync/reaper loop this
+      whole time, contending on the same GCS locks. **Fixed**: `deployment-api@3fea307` — ported both hooks
+      (leader-election `post_fork` + faulthandler `post_worker_init`) into the ACTUAL root `gunicorn.conf.py` using
+      deferred (function-local, not module-level) imports of `deployment_api.settings`/`worker_identity` — a
+      module-level import in this file crashes gunicorn at config-load time (reproduced locally:
+      `BucketNamingError: GCP_PROJECT_ID is not set`, since config-load happens BEFORE `preload_app`'s own app import) —
+      this is exactly why the root file was originally written to read `PORT`/`WORKERS` straight from env instead of
+      importing settings. Deleted the dead `deployment_api/gunicorn.conf.py` duplicate + repointed its test at the real
+      file. **Runtime-verified end-to-end against a real local gunicorn boot** (not just unit tests): with `WORKERS=2`,
+      exactly one worker now logs `"Background auto-sync task started (leader     worker)"` and the other logs
+      `"...skipped (non-leader worker)"` (previously ALL workers would claim leadership); sent a real `SIGABRT` to a
+      running worker and it produced a full `Fatal Python error`/`Current thread` faulthandler dump before gunicorn
+      cleanly respawned a replacement worker (which itself correctly re-elected a new leader).
+      `bash scripts/quality-gates.sh` green (pytest + all steps, twice — once pre-commit dirty-tree, once post-commit
+      against the exact shipped SHA). Shipped via `quickmerge --agent --files`, landed on `live-defi-rollout` at
+      `deployment-api@3fea307c679d8c974dc68594555d4760524a4935`. **NOT yet re-verified against PROD `active/`
+      convergence** (needs a fresh Cloud Run deploy of this fix + several reap-tick intervals to observe — see new todo
+      below) and the SEPARATE "why did a build from a commit with the UTL fix produce an image without it" question is
+      also still open — both spun into a new todo rather than closing this one on an unverified assumption.
+- [ ] [BACKEND] P0. **Two follow-ups from the wrong-gunicorn-file root-cause fix (`deployment-api@3fea307`):** (1) Once
+      `3fea307` reaches a fresh Cloud Run deploy, re-verify via the SAME direct-image-extraction method used to find
+      this bug (NOT source-repo content-diff — grep the actual pulled/extracted image for `post_worker_init` in
+      `/app/gunicorn.conf.py`) that it's really live, then watch `gcloud logging read` for
+      `"Background auto-sync task     started (leader worker)"` appearing exactly ONCE per instance (not per-worker) and
+      `"[AUTO_SYNC] Reaper: archived"` appearing at all for the first time ever; re-measure `active/` object count vs
+      live-VM count after ≥2 reap-tick intervals (900s each). (2) SEPARATELY, root-cause why Cloud Build
+      `7b80517d-0457-44b7-9e59-b53076b9bbc9` (triggered from commit `2efbbcb`, which DOES contain
+      `unified-trading-library@4773a3fd`'s `ThreadPoolExecutor` fix per content-diff) produced image
+      `sha256:1282490246...` whose `unified_trading_library/deployment_registry.py` does NOT contain that fix — check
+      the Dockerfile's `FROM ...unified-trading-library@${BASE_IMAGE_DIGEST}` base-image pin (line ~45): if
+      `BASE_IMAGE_DIGEST` wasn't refreshed to a UTL base image built from `4773a3fd`, deployment-api's OWN fresh commit
+      wouldn't matter — the vendored UTL code comes from a SEPARATE, independently-tagged base image, not from
+      re-cloning UTL at deployment-api build time. This is a distinct, real gap from the gunicorn-file bug and needs its
+      own verification once found. (repo: deployment-api) — **(2) ROOT-CAUSED 2026-07-25 (slot 6, backend_engineer),
+      part (1) still open.** Confirmed via the live service's own
+      `/api/cloud-builds/library-status/unified-trading-library` endpoint: deployed `package_version` = `0.55.0`,
+      nowhere near `main`'s current `0.56.1.dev357+g6afe62c71`. Traced the full publish chain live (gh CLI + gcloud, not
+      source-repo content-diff): UTL's `quality-gates-v2.yml` correctly dispatched `qg-passed` for the exact push
+      carrying `4773a3fd` (`gh run` `30145177081`, job "Dispatch cloud-build trigger (main release)" succeeded,
+      2026-07-25T05:06:23Z); PM's `cloud-build-router.yml` correctly received it (`gh run` `30145190398`, job
+      `route-build` reports `success`) — but that job's own log shows the REAL failure:
+      `gcloud builds triggers run unified-trading-library-prod --region=asia-northeast1` →
+      **`ERROR:     NOT_FOUND: Requested entity was not found`**, silently swallowed as a WARNING (job still reports
+      green, no alert fires). `gcloud builds triggers list --project central-element-323112` confirms **no
+      `unified-trading-library-prod` trigger exists at all** (sibling `instruments-service-prod` does, confirming the
+      naming convention). `gcloud artifacts docker images list ...unified-trading-library --sort-by="~UPDATE_TIME"`
+      confirms **zero images have published since 2026-07-23T09:12:10Z** — 51+ hours and 15+ main-branch commits stale
+      as of this writing, despite `update-dependency-version.yml`'s digest-refresh mechanism itself working correctly
+      (it just has nothing new to propagate). This is why `BASE_IMAGE_DIGEST` was already at its "freshest" refreshed
+      value and STILL didn't carry `4773a3fd` — the freshest value available IS the stale one. Full evidence +
+      recommended remediation (GCP infra action — recreate the trigger, out of backend_engineer craft scope) filed as
+      its own cross-cutting doc since this blocks EVERY service's Docker build, not just deployment-api:
+      [issues/utl_prod_cloud_build_trigger_missing_fleet_stale_base_image_2026_07_25.md](utl_prod_cloud_build_trigger_missing_fleet_stale_base_image_2026_07_25.md).
+      Part (1) of this todo (live re-verification of `active/` convergence) stays open and is now ALSO gated on that
+      doc's Todo 1 (recreate the trigger) — re-verification cannot succeed until a fresh UTL base image actually
+      publishes with `4773a3fd` in it, deployment-api rebuilds against it, and a new revision deploys.
 
 - **2026-07-24 (slot-4, review)**: Re-ran the end-to-end verification per the todo above, against the freshly deployed
   `uts-shared-deployment-api-00270-2l9` (`deployment-api:366154d`) — confirmed via `gcloud builds log` (Cloud Build
@@ -282,7 +357,7 @@ flipping the checkbox.
   concurrently), and 2 concurrent census computations (default-region stale-refresh + an `all_regions=true` cold poll)
   OOM-killed the container (17,002MiB vs 16,384MiB limit, `signal 9`) — plausibly the SAME mechanism behind the
   still-unconfirmed SIGABRT crash-loop in the sibling issue doc. Filed
-  [issues/deployment_api_inventory_cold_path_concurrent_oom_2026_07_24.md](deployment_api_inventory_cold_path_concurrent_oom_2026_07_24.md)
+  [issues/deployment_api_inventory_cold_path_concurrent_oom_2026_07_24.md](/plans/archive/issues/deployment_api_inventory_cold_path_concurrent_oom_2026_07_24.md)
   (P0, BACKEND) with a concrete reproduction + 4 candidate fix approaches. Did NOT flip this plan's original `[REVIEW]`
   checkbox — leaving it as-is with its existing partial-pass note, now additionally pointing at the new issue doc. No
   code changes made this session (review-only pass).

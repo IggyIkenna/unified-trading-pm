@@ -71,6 +71,10 @@ resolved_by:
 
 # CeFi canonical-completeness program history (2026-07-17 → 2026-07-18)
 
+> **🟢 RESOLVED 2026-07-25 — ACKED-INTO-CODE** — extraction is the resolution (closed, historical Progress Log
+> narrative; the parent issue doc remains the live source of truth for open todos/gate state); archived per the
+> terminal-status backlog sweep.
+
 > **Companion history doc, not the live plan.** This holds the verbatim historical Progress Log entries (everything
 > older than the single most-recent "CUTOVER STAGED" status entry) extracted from
 > `/plans/active/issues/cefi_residual_followups_after_honest_done_2026_07_17.md` to bring that doc back under the

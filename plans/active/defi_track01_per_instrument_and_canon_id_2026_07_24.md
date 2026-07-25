@@ -217,26 +217,27 @@ the duplicate/phantom rows. Fix = **fetch bulk, write per-instrument** (the id i
 
 - [x] ✅ [DATA] P1. **Divergence RCA — DONE 2026-07-24 (autonomous session, sub-agent investigation).** Verdict: a real,
       systemic BUG (not a deliberate threshold), now point-patched but NOT generally fixed. Root cause: the DeFi
-      catalogue build's `filter_defi_instruments_by_relevance()` (`instruments-service/instruments_service/engine/orchestrator/defi.py:431-489`)
-      requires BOTH legs of a DEX pool to be in the hardcoded `DEFI_MAJOR_ASSET_SYMBOLS` whitelist
+      catalogue build's `filter_defi_instruments_by_relevance()`
+      (`instruments-service/instruments_service/engine/orchestrator/defi.py:431-489`) requires BOTH legs of a DEX pool
+      to be in the hardcoded `DEFI_MAJOR_ASSET_SYMBOLS` whitelist
       (`unified-api-contracts/unified_api_contracts/registry/defi_major_assets.py:17-44`) — an asset-relevance filter,
       not a TVL filter. It silently dropped 32 real, liquid Raydium pools pairing a major asset against a non-major one
       (XMR/BNB/LTC/ZEC/XRP/TRX/meme tokens/exotic stables). The legacy 2026-04-14 capture predates this filter
       (introduced ~2026-07-09) so it has all 98 pools; the 2026-07-13 canon rebuild goes through the filtered catalogue
       and gets only 66. **Blast radius is systemic** — this filter runs on every catalogue build, dropping the same
-      class of pool on every day, every DEX venue under `DEX_VENUE_KEYWORDS`, not just Raydium on that one day.
-      **Fix status**: `unified-api-contracts@3f79489f` (2026-07-20) added a `DEFI_FORCE_INCLUDE_POOLS` allowlist (the
-      32 addresses, top-32-by-TVL from the legacy snapshot) but it was DEAD CODE — nothing called it — until
+      class of pool on every day, every DEX venue under `DEX_VENUE_KEYWORDS`, not just Raydium on that one day. **Fix
+      status**: `unified-api-contracts@3f79489f` (2026-07-20) added a `DEFI_FORCE_INCLUDE_POOLS` allowlist (the 32
+      addresses, top-32-by-TVL from the legacy snapshot) but it was DEAD CODE — nothing called it — until
       `instruments-service@4e97a82e` (2026-07-24, today) actually wired it into the filter, a 4-day window where the
       "fix" existed but had zero effect. **Net**: canon `dex_pool_state` is trustworthy for these 32 specific addresses
       (protection is address-based, retroactive to any re-run). It is **NOT** generally trustworthy for other
       raydium/DEX days — any OTHER high-TVL pool pairing a major asset with a non-major one will still be silently
       dropped unless manually added to the allowlist; this is a point-fix, not a general TVL override. (repo:
       instruments-service, unified-api-contracts)
-- [ ] [DATA] P2. **NEW 2026-07-24 — the DEX asset-relevance filter (`filter_defi_instruments_by_relevance`) needs a
-      real TVL-based fallback, not a hand-maintained allowlist**, per the Divergence RCA above: the current fix only
-      covers the 32 addresses known at ONE 2026-07-20 snapshot; any new high-TVL pool pairing a major/non-major asset
-      going forward silently drops again until someone notices and manually extends `DEFI_FORCE_INCLUDE_POOLS`. (repo:
+- [ ] [DATA] P2. **NEW 2026-07-24 — the DEX asset-relevance filter (`filter_defi_instruments_by_relevance`) needs a real
+      TVL-based fallback, not a hand-maintained allowlist**, per the Divergence RCA above: the current fix only covers
+      the 32 addresses known at ONE 2026-07-20 snapshot; any new high-TVL pool pairing a major/non-major asset going
+      forward silently drops again until someone notices and manually extends `DEFI_FORCE_INCLUDE_POOLS`. (repo:
       instruments-service, unified-api-contracts)
 - [~] [BACKEND] P0. **Catalogue-venue gap — ROOT CAUSE FIXED + SHIPPED (`unified-api-contracts@f7314dc2`, 9/9
   acceptance: 7 new venues + cbETH/wBETH ACCEPT, COINBASE-SPOT/BINANCE-FUTURES stay CEFI; whole defi universe validates,
@@ -275,7 +276,7 @@ instruments in one `instruments.parquet` with `available_from/to`).
 ## Track 1 — CANON: instrument-id + residual walk (⛔ gates Half-B historical canonicalisation) · P0
 
 - **Sources**: `data_completion_defi_2026_07_15.md` (C2–C12),
-  `issues/defi_pool_canonical_instrument_id_policy_contradiction_2026_07_17.md`,
+  `plans/archive/issues/defi_pool_canonical_instrument_id_policy_contradiction_2026_07_17.md`,
   `issues/defi_lending_atoken_debttoken_instrument_split_2026_07_07.md` (RESOLVED code; durability + legacy-row
   migration open), `issues/defi_perp_funding_canonicalisation_derivative_ticker_all_perps_2026_07_15.md`,
   `issues/defi_perp_funding_mvp_scope_contradiction_2026_06_29.md`.
@@ -391,28 +392,29 @@ instruments in one `instruments.parquet` with `available_from/to`).
       correctly-resolved factory address cannot be written back without this. (repos: instruments-service,
       unified-api-contracts, market-tick-data-service)
 - [x] ✅ [DATA] P2. **RESOLVED 2026-07-24 (autonomous session, sub-agent investigation) — the "2,936 rows = cefi
-      leakage" premise was WRONG for 99.998% of the population; genuine leakage is 4 rows, not 2,936, and needs a
-      writer fix, not a manifest cleanup.** Fresh live count (24,209,852-row manifest): `HYPERLIQUID`=204,286,
-      `KALSHI_PERP`=2, `POLYMARKET_PERP`=2. **HYPERLIQUID is NOT a bug — do not touch.** All 204,286 rows are
+      leakage" premise was WRONG for 99.998% of the population; genuine leakage is 4 rows, not 2,936, and needs a writer
+      fix, not a manifest cleanup.** Fresh live count (24,209,852-row manifest): `HYPERLIQUID`=204,286, `KALSHI_PERP`=2,
+      `POLYMARKET_PERP`=2. **HYPERLIQUID is NOT a bug — do not touch.** All 204,286 rows are
       `data_type∈{perp_daily_ctx,perp_mark_price,perp_funding}`, `instrument_type=perpetual`, `capture_status=captured`
       (2023-05-12→2026-06-09) — this is the deliberate, operator-locked (2026-06-01) canonical wire value for the
       Hyperliquid L1 chain (`unified-api-contracts/unified_api_contracts/canonical/crosscutting/defi.py`:
-      `CHAIN_WIRE_VALUE_OVERRIDES = {ChainKind.HYPERLIQUID_L1: "HYPERLIQUID"}`), matching `onchain_perp_batch_handler.py`'s
-      documented DUAL classification (CLOB/trades → cefi; chain-level funding/mark-price context → defi with
-      `chain=HYPERLIQUID`). Removing/renaming it would be actively harmful — the same mistake class as the
-      AAVE/MORPHOVAULTS venue-collapse finding earlier in this plan. **KALSHI_PERP/POLYMARKET_PERP (4 rows total) IS a
-      genuine, live, ongoing bug**: `market-tick-data-service/market_tick_data_service/cli/handlers/_perp_funding_kalshi_polymarket.py:317-320`
-      calls the DeFi-only `write_defi_rows(venue="KALSHI_PERP", chain="KALSHI_PERP", ...)` for two venues UAC's own
-      registry classifies as CeFi (`unified-api-contracts/unified_api_contracts/registry/venue_constants.py:372-373`,
-      "CFTC-regulated crypto perps") — unlike Hyperliquid, these have no underlying blockchain, so there's no
-      legitimate defi bucket for them; this is copy-paste leakage from the Hyperliquid pattern, not a naming quirk.
-      Population is tiny (4/24.2M) but growing ~1-2 rows/day (an active 2026-07-22-started daily cron). **Deliberately
-      NOT manifest-cleaned this session**: removing rows needs the in-place CAS-REPLACE path (additive-shard can't
-      delete), and the writer bug is still live — a manifest-only removal today resurrects tomorrow (the exact
-      durability trap `canonicalize_prediction_manifest_2026_07_18.py`'s FINDING 2 documents). Correct fix is a writer
-      change (route these 2 venues through a cefi-classified write path, mirroring `onchain_perp_batch_handler.py`'s
-      own explicit-`asset_group='cefi'` `ManifestWriter` precedent) — see the new todo below. Also noted, NOT yet
-      filed: `source` is also wrongly stamped `"hyperliquid"` for both KALSHI_PERP/POLYMARKET_PERP rows (should be
+      `CHAIN_WIRE_VALUE_OVERRIDES = {ChainKind.HYPERLIQUID_L1: "HYPERLIQUID"}`), matching
+      `onchain_perp_batch_handler.py`'s documented DUAL classification (CLOB/trades → cefi; chain-level
+      funding/mark-price context → defi with `chain=HYPERLIQUID`). Removing/renaming it would be actively harmful — the
+      same mistake class as the AAVE/MORPHOVAULTS venue-collapse finding earlier in this plan.
+      **KALSHI_PERP/POLYMARKET_PERP (4 rows total) IS a genuine, live, ongoing bug**:
+      `market-tick-data-service/market_tick_data_service/cli/handlers/_perp_funding_kalshi_polymarket.py:317-320` calls
+      the DeFi-only `write_defi_rows(venue="KALSHI_PERP", chain="KALSHI_PERP", ...)` for two venues UAC's own registry
+      classifies as CeFi (`unified-api-contracts/unified_api_contracts/registry/venue_constants.py:372-373`,
+      "CFTC-regulated crypto perps") — unlike Hyperliquid, these have no underlying blockchain, so there's no legitimate
+      defi bucket for them; this is copy-paste leakage from the Hyperliquid pattern, not a naming quirk. Population is
+      tiny (4/24.2M) but growing ~1-2 rows/day (an active 2026-07-22-started daily cron). **Deliberately NOT
+      manifest-cleaned this session**: removing rows needs the in-place CAS-REPLACE path (additive-shard can't delete),
+      and the writer bug is still live — a manifest-only removal today resurrects tomorrow (the exact durability trap
+      `canonicalize_prediction_manifest_2026_07_18.py`'s FINDING 2 documents). Correct fix is a writer change (route
+      these 2 venues through a cefi-classified write path, mirroring `onchain_perp_batch_handler.py`'s own
+      explicit-`asset_group='cefi'` `ManifestWriter` precedent) — see the new todo below. Also noted, NOT yet filed:
+      `source` is also wrongly stamped `"hyperliquid"` for both KALSHI_PERP/POLYMARKET_PERP rows (should be
       venue-derived), same writer, same follow-up. (repo: market-tick-data-service)
 - [ ] [BACKEND] P2. **NEW 2026-07-24 — fix `_perp_funding_kalshi_polymarket.py`'s asset_group/chain/source routing for
       KALSHI_PERP/POLYMARKET_PERP** (see the resolved item above for full root cause): route these 2 venues through a
@@ -719,17 +721,17 @@ instruments in one `instruments.parquet` with `available_from/to`).
       market-tick-data-service)
 
       **RE-VERIFIED 2026-07-24 (this pass) — the `--apply` handoff is still NOT unblocked; NOT 0 glued ids.** The 9
-                                                                          ORCA `dex_pool_state` cells (2025-12-23..12-31) finished migrating clean this session (all 9 confirmed
-                                                                          `errors=0` across a retry chain: `leafparallel`+`lpar5`+`lpar7` VMs, cumulative `cells=1+3+5=9`) and a scoped
-                                                                          manifest rebuild ran after — but a fresh `verify_defi_glued_ids_2026_07_24.py` run still shows **21 glued-id
-                                                                          rows** (unchanged: the same 9 ORCA + the same 12 liquidations). Root cause (code-read, not inferred): neither
-                                                                          the migration, the scoped rebuild, nor this delete-marker script (GCS-objects-only, confirmed via its own
-                                                                          docstring) ever **retracts** a pre-existing manifest row once its source object is renamed to `_migrated_*` —
-                                                                          the old glued-id row and the new per-instrument rows have different `instrument_id`s, so upsert never
-                                                                          supersedes the old one. Full findings + recommended next step (a manifest-row-level purge, not yet built):
-                                                                          `plans/archive/issues/mtds_defi_migration_cell_stall_untimed_gcs_read_2026_07_22.md` addendum "tick 3"
-                                                                          (2026-07-24). **The `--apply` operator handoff at the parent plan (line 708) stays gated — do not consider it
-                                                                          unblocked by the 9 ORCA cells finishing; a separate manifest-side fix is still required first.**
+                                                                              ORCA `dex_pool_state` cells (2025-12-23..12-31) finished migrating clean this session (all 9 confirmed
+                                                                              `errors=0` across a retry chain: `leafparallel`+`lpar5`+`lpar7` VMs, cumulative `cells=1+3+5=9`) and a scoped
+                                                                              manifest rebuild ran after — but a fresh `verify_defi_glued_ids_2026_07_24.py` run still shows **21 glued-id
+                                                                              rows** (unchanged: the same 9 ORCA + the same 12 liquidations). Root cause (code-read, not inferred): neither
+                                                                              the migration, the scoped rebuild, nor this delete-marker script (GCS-objects-only, confirmed via its own
+                                                                              docstring) ever **retracts** a pre-existing manifest row once its source object is renamed to `_migrated_*` —
+                                                                              the old glued-id row and the new per-instrument rows have different `instrument_id`s, so upsert never
+                                                                              supersedes the old one. Full findings + recommended next step (a manifest-row-level purge, not yet built):
+                                                                              `plans/archive/issues/mtds_defi_migration_cell_stall_untimed_gcs_read_2026_07_22.md` addendum "tick 3"
+                                                                              (2026-07-24). **The `--apply` operator handoff at the parent plan (line 708) stays gated — do not consider it
+                                                                              unblocked by the 9 ORCA cells finishing; a separate manifest-side fix is still required first.**
 
 - [x] ✅ [DATA] P1. **Verify the fake-history relabel-forward migration to actual completion** (todo 3,
       `/plans/active/issues/defi_solana_dex_pools_fake_history_recurrence_prd_bucket_2026_07_23.md`) — **VERIFIED
@@ -754,14 +756,14 @@ instruments in one `instruments.parquet` with `available_from/to`).
       `filter_defi_instruments_by_relevance` + `_add_force_include`, covering the high-TVL Raydium pool force-include
       behavior R5 flagged (32 legacy-only pools incl. XMR/USDC $47M, BNB/USDC $18M). (repo: instruments-service)
 
-- [x] ✅ [DOC] P1. **RESOLVED by concurrent work, verified 2026-07-24 (autonomous session) — `defi_consolidated_closeout_2026_07_18.md`
-      is back UNDER the 1000L hard cap.** Live re-check via the actual gate (`bash scripts/plan-hygiene/check_line_caps.sh`):
-      the file is now **996L**, badged `SOFT` (over the 500L soft threshold, but no longer over the 1000L hard one) —
-      not in `check_line_caps.sh`'s hard-violator output at all. Other concurrent sessions' own split/trim passes on this
-      same shared branch (this todo cites its own extraction precedent) already did the ~550-line trim this todo called
-      for between when it was filed (1546L) and now — no further extraction needed to clear the hard gate. The scoped
-      prek hook that originally blocked edits to this file no longer blocks a staged touch to it (verified via the same
-      live gate script run above, not by testing an actual commit against it in this pass). Note the file is still over
-      the 500L SOFT threshold (996L) — the "Aggregated source docs" /
-      "Contradiction resolution" extraction candidates named below remain a reasonable FUTURE hygiene improvement, just
-      no longer a hard blocker on anyone editing the file. (repo: unified-trading-pm)
+- [x] ✅ [DOC] P1. **RESOLVED by concurrent work, verified 2026-07-24 (autonomous session) —
+      `defi_consolidated_closeout_2026_07_18.md` is back UNDER the 1000L hard cap.** Live re-check via the actual gate
+      (`bash scripts/plan-hygiene/check_line_caps.sh`): the file is now **996L**, badged `SOFT` (over the 500L soft
+      threshold, but no longer over the 1000L hard one) — not in `check_line_caps.sh`'s hard-violator output at all.
+      Other concurrent sessions' own split/trim passes on this same shared branch (this todo cites its own extraction
+      precedent) already did the ~550-line trim this todo called for between when it was filed (1546L) and now — no
+      further extraction needed to clear the hard gate. The scoped prek hook that originally blocked edits to this file
+      no longer blocks a staged touch to it (verified via the same live gate script run above, not by testing an actual
+      commit against it in this pass). Note the file is still over the 500L SOFT threshold (996L) — the "Aggregated
+      source docs" / "Contradiction resolution" extraction candidates named below remain a reasonable FUTURE hygiene
+      improvement, just no longer a hard blocker on anyone editing the file. (repo: unified-trading-pm)

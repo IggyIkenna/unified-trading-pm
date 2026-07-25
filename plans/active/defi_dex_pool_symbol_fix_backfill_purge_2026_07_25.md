@@ -75,9 +75,20 @@ is quick and doesn't block anything.
 ## Todos
 
 - [ ] [OPERATOR] P2. **Purge orphaned lst_rates `_migrated_*` markers** for COINBASE/SWELL/MAKER/ETHENA (all
-      `raw_tick_data/**/venue={coinbase,swell,maker,ethena}/**/data_type=lst_rates/_migrated_*.parquet` objects) + their
-      manifest rows, in `market-data-tick-defi-prd-central-element-323112`. Prod-bucket delete, human-gated per
-      `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` -- no agent runs this. Done-when: zero `_migrated_*`
+      `raw_tick_data/**/venue={COINBASE,SWELL,MAKER,ETHENA}/**/data_type=lst_rates/_migrated_*.parquet` objects) + their
+      manifest rows, in `market-data-tick-defi-prd-central-element-323112`. **Corrected 2026-07-25**: venue segments are
+      UPPERCASE in real GCS paths (canonical convention, confirmed by direct listing) -- the original lowercase glob
+      here would have matched zero real objects. Prod-bucket delete, human-gated per
+      `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` -- no agent runs this. **BLOCKED-DATA-CORRECTNESS
+      (2026-07-25 five-part-proof, disposition `no-migrate-first`)**: NOT safe to execute yet, independent of the casing
+      fix above. Two real blockers found: (1) a LIVE, unfiltered reader --
+      `features-service/features_service/onchain/app/core/data_loader.py:121-138` (`_probe_mtds_blobs`) -- currently
+      matches `_migrated_*.parquet` objects (no underscore-prefix exclusion), wired into production via
+      `onchain/engine/orchestrator.py:462,877`; (2) sampled canonical-twin coverage is only 91% (COINBASE 76% / MAKER
+      92% / ETHENA 96% / SWELL 100%), short of the required 100% before any asset_group's delete list executes. Full
+      evidence + the reader-bug issue doc: `unified-trading-pm@72d40de44`
+      (`issues/defi_lst_rates_migrated_marker_unfiltered_live_reader_2026_07_25.md`). **Sequencing**: fix the reader
+      filter first, re-verify coverage, THEN this purge can move to `yes-after-verify`. Done-when: zero `_migrated_*`
       lst_rates markers remain for these 4 venues in GCS or the manifest. (repo: market-tick-data-service)
 - [ ] [BACKEND] P1. **Fix the `messari_basic` subgraph query** in
       `market_tick_data_service/cli/handlers/dex_pools_handler.py` -- add `inputTokens { symbol }` (and

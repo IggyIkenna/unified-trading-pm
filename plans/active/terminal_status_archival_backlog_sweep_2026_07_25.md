@@ -104,36 +104,46 @@ For the named doc:
       (status=resolved, doc_type=issue) per the Procedure below. Done when: `check_terminal_status_archived.py` no
       longer lists it. — unified-trading-pm@db253f0c9 (moved to plans/archive/issues/, banner added, all 3 referrers
       repointed; check_terminal_status_archived.py confirmed clean).
-- [ ] [INFRA] P2. Archive `plans/active/issues/candle_feature_canonical_path_divergence_history_part2_2026_07_25.md`
+- [x] [INFRA] P2. ✅ Archive `plans/active/issues/candle_feature_canonical_path_divergence_history_part2_2026_07_25.md`
       (status=resolved, doc_type=issue) per the Procedure below. Done when: `check_terminal_status_archived.py` no
-      longer lists it.
-- [ ] [INFRA] P2. Archive `plans/active/issues/cefi_okx_margin_type_wire_key_ambiguity_reclassification_2026_07_22.md`
+      longer lists it. — unified-trading-pm@40f3c5b65 (moved to plans/archive/issues/, banner added, parent doc's 3
+      referrers repointed; check_terminal_status_archived.py confirmed clean).
+- [x] [INFRA] P2. ✅ Archive
+      `plans/active/issues/cefi_okx_margin_type_wire_key_ambiguity_reclassification_2026_07_22.md` (status=resolved,
+      doc_type=issue) per the Procedure below. Done when: `check_terminal_status_archived.py` no longer lists it. —
+      unified-trading-pm@24878e802 (moved to plans/archive/issues/, banner added, all 3 referrers repointed;
+      check_terminal_status_archived.py confirmed clean).
+- [x] [INFRA] P2. ✅ Archive `plans/active/issues/cefi_residual_followups_after_honest_done_history_2026_07_25.md`
       (status=resolved, doc_type=issue) per the Procedure below. Done when: `check_terminal_status_archived.py` no
-      longer lists it.
-- [ ] [INFRA] P2. Archive `plans/active/issues/cefi_residual_followups_after_honest_done_history_2026_07_25.md`
+      longer lists it. — unified-trading-pm@77abcc1e6 (moved to plans/archive/issues/, banner added, parent doc's
+      referrer repointed; check_terminal_status_archived.py confirmed clean).
+- [x] [INFRA] P2. ✅ Archive `plans/active/issues/codex_alignment_deviations_2026_06_25.md` (status=resolved,
+      doc_type=issue) per the Procedure below. Done when: `check_terminal_status_archived.py` no longer lists it. —
+      unified-trading-pm@9fe6cd627 (moved to plans/archive/issues/, banner added, plan_hygiene_master epic referrer
+      repointed; check_terminal_status_archived.py confirmed clean).
+- [x] [INFRA] P2. ✅ Archive `plans/active/issues/defi_pool_canonical_instrument_id_policy_contradiction_2026_07_17.md`
       (status=resolved, doc_type=issue) per the Procedure below. Done when: `check_terminal_status_archived.py` no
-      longer lists it.
-- [ ] [INFRA] P2. Archive `plans/active/issues/codex_alignment_deviations_2026_06_25.md` (status=resolved,
-      doc_type=issue) per the Procedure below. Done when: `check_terminal_status_archived.py` no longer lists it.
-- [ ] [INFRA] P2. Archive `plans/active/issues/defi_pool_canonical_instrument_id_policy_contradiction_2026_07_17.md`
-      (status=resolved, doc_type=issue) per the Procedure below. Done when: `check_terminal_status_archived.py` no
-      longer lists it.
+      longer lists it. — unified-trading-pm@79d56a054 (moved to plans/archive/issues/, banner added, all 3 referrers
+      repointed; check_terminal_status_archived.py confirmed clean).
 - [ ] [INFRA] P2. Archive
       `plans/active/issues/deployment_api_cefi_venue_canonical_compare_test_regression_2026_07_21.md` (status=resolved,
       doc_type=issue) per the Procedure below. Done when: `check_terminal_status_archived.py` no longer lists it.
-- [ ] [INFRA] P2. Archive `plans/active/issues/deployment_api_inventory_cold_path_concurrent_oom_2026_07_24.md`
+- [x] [INFRA] P2. ✅ Archive `plans/active/issues/deployment_api_inventory_cold_path_concurrent_oom_2026_07_24.md`
       (status=resolved, doc_type=issue) per the Procedure below. Done when: `check_terminal_status_archived.py` no
-      longer lists it.
-- [ ] [INFRA] P2. Archive `plans/active/issues/deployment_promote_squash_ancestry_false_negative_2026_07_25.md`
+      longer lists it. — unified-trading-pm@54cbb2dae (moved to plans/archive/issues/, banner added, both referrers in
+      the sibling reaper-drain doc repointed; check_terminal_status_archived.py confirmed clean).
+- [x] [INFRA] P2. ✅ Archive `plans/active/issues/deployment_promote_squash_ancestry_false_negative_2026_07_25.md`
       (status=resolved, doc_type=issue) per the Procedure below. Done when: `check_terminal_status_archived.py` no
-      longer lists it.
+      longer lists it. — unified-trading-pm@bc48ccf2d (moved to plans/archive/issues/, banner added, all 5 referrers
+      across 3 plans + 1 codex doc repointed; check_terminal_status_archived.py confirmed clean).
 - [ ] [INFRA] P2. Archive
       `plans/active/issues/detached_nohup_worker_processes_reaped_as_orphans_by_config_dir_match_2026_07_24.md`
       (status=superseded, doc_type=issue) per the Procedure below. Done when: `check_terminal_status_archived.py` no
       longer lists it.
-- [ ] [INFRA] P2. Archive `plans/active/issues/escalation_boot_template_ignores_one_shot_lifecycle_2026_07_25.md`
+- [x] [INFRA] P2. ✅ Archive `plans/active/issues/escalation_boot_template_ignores_one_shot_lifecycle_2026_07_25.md`
       (status=resolved, doc_type=issue) per the Procedure below. Done when: `check_terminal_status_archived.py` no
-      longer lists it.
+      longer lists it. — unified-trading-pm@0c21c56c2 (moved to plans/archive/issues/, banner added, no other corpus
+      referrers; check_terminal_status_archived.py confirmed clean).
 - [ ] [INFRA] P2. Archive `plans/active/issues/finalize_plan_coverage_regression_2_plans_2026_07_25.md`
       (status=resolved, doc_type=issue) per the Procedure below. Done when: `check_terminal_status_archived.py` no
       longer lists it.

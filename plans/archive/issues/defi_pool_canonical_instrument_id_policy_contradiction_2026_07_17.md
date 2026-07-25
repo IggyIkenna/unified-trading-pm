@@ -50,6 +50,9 @@ resolved_by: instruments-service@c31d37c3, unified-api-contracts@e319864f
 
 # DeFi POOL rows: `canonical_instrument_id` policy contradiction
 
+> **🟢 RESOLVED 2026-07-25 — ACKED-INTO-CODE** — Option A shipped: `instruments-service@c31d37c3` +
+> `unified-api-contracts@e319864f`; archived per the terminal-status backlog sweep.
+
 ## The contradiction (both cannot be true)
 
 | Source                                                                                                                                                       | Asserts                                                                                                                                                       |

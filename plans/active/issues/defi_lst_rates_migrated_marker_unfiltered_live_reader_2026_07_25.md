@@ -117,12 +117,20 @@ See the companion delete-safety five-part-proof report (this session's response 
 per-venue twin-coverage sampling, content-match results, and the writer-side (Part 3) confirmation that
 `migrate_defi_batch_to_per_instrument.py` is a completed one-off, not a live writer.
 
-## Recommendation (operator decision needed — not made here)
+## Todos
 
-1. Fix `_probe_mtds_blobs` (and audit for the same unfiltered-glob pattern elsewhere in MTDS-output consumers) to skip
-   any leaf whose basename starts with `_`, before any lst_rates `_migrated_*` purge is executed.
-2. Re-run this delete-safety proof (or the sanctioned `delete_migrated_defi_markers_2026_07_23.py --dry-run`, which
-   already implements the correct per-marker SAFE/FLAGGED disposition logic) after the reader fix, and only then
-   consider `--apply` for the SAFE population — never a blind glob-delete of "every `_migrated_*` lst_rates object for
-   these 4 venues," since the FLAGGED (no-twin) minority (up to ~24% for COINBASE in-sample) would lose its only
-   surviving copy.
+- [ ] [BACKEND] P1. **Fix `_probe_mtds_blobs`**
+      (`features-service/features_service/onchain/app/core/data_loader.py:121-138`) to skip any leaf whose basename
+      starts with `_` — matching `rebuild_defi_manifest.py`'s existing convention for the same markers. Audit for the
+      same unfiltered-glob pattern elsewhere in MTDS-output consumers (any other
+      `n.endswith(".parquet") and data_type_segment in n`-shaped match with no underscore exclusion). This is a
+      non-destructive code fix (no GCS/prod-data touched) — does NOT require the human-only delete approval. **Done
+      when**: a unit test asserts `_probe_mtds_blobs` excludes a `_migrated_*`-prefixed object from its match set while
+      still matching the real per-instrument twin; `quality-gates.sh` green.
+- [ ] [OPERATOR] P2. **Re-verify + purge, only after the reader fix lands.** Re-run this delete-safety proof (or the
+      sanctioned `delete_migrated_defi_markers_2026_07_23.py --dry-run`, which already implements the correct per-marker
+      SAFE/FLAGGED disposition logic) with the reader fixed, then execute `defi_dex_pool_symbol_fix_backfill_purge-001`
+      only for the SAFE population — never a blind glob-delete of "every `_migrated_*` lst_rates object for these 4
+      venues," since the FLAGGED (no-twin) minority (up to ~24% for COINBASE in-sample) would lose its only surviving
+      copy. Human-gated per `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` — no agent runs the actual
+      delete.

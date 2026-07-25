@@ -215,7 +215,7 @@ source: >-
   independently-verified-done docs sitting un-archived — `cefi_consolidated_closeout_aggregated_sources_2026_07_24.md`,
   `plans/archive/issues/aster_capture_broken_coverage_and_completeness_2026_07_20.md`,
   `issues/cefi_deribit_combo_and_okx_bare_venue_gaps_2026_07_12.md`,
-  `issues/cefi_okx_margin_type_wire_key_ambiguity_reclassification_2026_07_22.md`,
+  `plans/archive/issues/cefi_okx_margin_type_wire_key_ambiguity_reclassification_2026_07_22.md`,
   `issues/deployment_api_cefi_venue_canonical_compare_test_regression_2026_07_21.md`,
   `issues/instruments_service_deribit_combo_purge_test_drift_2026_07_21.md`,
   `issues/mtds_rule11_shard_count_stale_baseline_2026_07_21.md`), 9 `exclude_cross_cutting` (correctly caught — several
@@ -255,7 +255,7 @@ source: >-
   orphaned (24 `orphaned_never_touched` + 16 `orphaned_partial_coverage`, one of the 16 is the master closeout itself —
   self-referential — real satellite orphan count is **39**), **8 `archivable_now`** (all 8 resolved: 6
   `mvp_backfill_defi_onchain_v10_operational_log_part<N>` history-fork docs flipped `status: complete` in place,
-  `defi_pool_canonical_instrument_id_policy_contradiction_2026_07_17.md` shipped,
+  `plans/archive/issues/defi_pool_canonical_instrument_id_policy_contradiction_2026_07_17.md` shipped,
   `gas_fees_lst_rates_manifest_bucket_mismatch_2026_07_10.md` deliberately NOT flipped — carries
   `locked_by: live-defi-rollout`, queued for the operator, entry 2 in
   `autonomous_session_operator_decisions_2026_07_25.md`), **6 `archivable_after_planned_work`**, **2
