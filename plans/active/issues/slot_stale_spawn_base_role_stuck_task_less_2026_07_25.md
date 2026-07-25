@@ -120,7 +120,20 @@ is actually dead. A worker landing on the very first `/boot` after respawn can s
 before a retry self-heals. Not re-opening P1/P2 (the fix works, and the addendum's fix would only speed up the reap, not
 add correctness) — a mitigation is now a P3 backlog todo, not urgent:
 
-- [ ] [BACKEND] P3. In `boot_slot`'s task-less-one-off branch, when the resolved `owning_agent` is itself stale
+- [x] ✅ [BACKEND] P3. In `boot_slot`'s task-less-one-off branch, when the resolved `owning_agent` is itself stale
       (`AgentRow.status == "stale"` and its `last_ping` is older than the same staleness threshold the health monitor
       uses to reap it), treat it the same as `owning_agent is None` — self-heal immediately instead of waiting for the
-      next health-monitor tick to age it out of the `("active", "stale")` filter. (repo: agent-orchestrator)
+      next health-monitor tick to age it out of the `("active", "stale")` filter. (repo: agent-orchestrator) —
+      agent-orchestrator@41840c1. **Implementation deviates from the literal premise**: for a `one_shot`/`scheduled`
+      agent (cicd/plan_health/plan_reconciler), `AgentRow.status` can never actually reach `"stale"` — `health.py`'s
+      silence dimmer explicitly `continue`s past these lifecycles (their session dying IS the expected end of the task,
+      not silence-worth-flagging), so they go `active` → `archived` directly via `reap_orphan_agents`, never through
+      `"stale"`. The real race (confirmed by the addendum) is **session-reuse outrunning the periodic reaper tick**: a
+      watchdog respawn kills + recreates the SAME-NAMED tmux session, and `find_active_agent_for_session` can still
+      resolve the dead occupant's `AgentRow` until `reap_orphan_agents` next runs. Implemented the equivalent self-heal
+      by mirroring `reap_orphan_agents`' own session-reused check (`server/state_store/agents.py`) instead: if the
+      resolved agent's last recorded activity (`last_ping or registered_at`) predates the CURRENT session instance's
+      creation time (`tmux_spawn.session_created_at`), treat it as stale immediately. Same self-heal-now outcome the
+      todo asked for, correct mechanism. Regression tests:
+      `test_stale_spawn_base_role_session_reused_self_heals_to_idle`,
+      `test_spawn_base_role_session_not_reused_still_held_working`.
