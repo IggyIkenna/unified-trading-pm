@@ -178,7 +178,23 @@ repeat sample showing genuinely 0 non-13-col objects (or documented unrecoverabl
       `DEPLOYMENT_COMPLETED`/`exit_code` terminal marker. Not completable this turn (still ~2140 of ~2500 dates remain).
       Released via `/skip-current-task`, not duplicate-launched. Next dispatch: repeat this health-check (2-read
       progress-metric check — either a new `date=` boundary OR continued in-date fixture-fetch advance counts as live);
-      once terminal, re-run the census script per "Next action" above before flipping this checkbox.
+      once terminal, re-run the census script per "Next action" above before flipping this checkbox. — **Health-checked
+      2026-07-25T06:00Z (slot 4, data_engineering), still RUNNING, confirms recovery from the fallback-date stall**:
+      `gcloud compute instances list` confirms `RUNNING` in `asia-northeast1-c`; heartbeat blob update time
+      `2026-07-25T06:00:57Z` (~3s old at check time). Run log grew 59,547→65,126 lines since slot 3's 05:53Z read, and
+      **the date boundary finally advanced past the `2019-12-25` fallback** to `date=2020-02-21` (65 completed fixture
+      IDs via the normal GCS-based enrichment path, not the 16,765-ID fallback) — confirms the rate-limit-heavy fallback
+      date resolved on its own via the client's retry/backoff, exactly as the 05:53Z finding predicted, no intervention
+      needed. No error/stall signature. Not completable this turn (still early 2020 of the 2019→2026-07-25 range).
+      Released via `/skip-current-task`, not duplicate-launched. **Process note (not fixed, just flagged)**: this task
+      has now been redispatched to 6 different slots within ~1h42m (04:18/05:10/05:29/05:37/05:53/05:54/06:00Z — 7
+      checks) purely to re-confirm a VM known to run for hours — each dispatch is a full agent turn spent on a
+      health-check that adds little beyond "still alive". Worth the operator/main agent considering a longer minimum
+      re-dispatch gap (e.g. park via priority + a time-gated prerequisite per `RULES.md` § "Park a task") for this
+      specific todo until the VM is closer to terminal, rather than a fix I should make unilaterally as a dispatched
+      worker. Next dispatch: repeat this health-check (2-read progress-metric check — a new `date=` boundary OR
+      continued in-date fixture-fetch advance both count as live); once terminal, re-run the census script per "Next
+      action" above before flipping this checkbox.
 
 ## Codex SSOTs
 
