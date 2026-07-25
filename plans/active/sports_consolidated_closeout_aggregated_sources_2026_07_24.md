@@ -312,6 +312,18 @@ drift_direction: advance-code
     - **[SCRIPT] P3.** Re-run a full (non-sliced) `quality-gates.sh` and confirm phase 5
 
 - **API-Football / source-adapter correctness**:
+  - [`plans/active/issues/understat_bulk_download_backfill_2026_06_29.md`](/plans/active/issues/understat_bulk_download_backfill_2026_06_29.md)
+    (6 open — linked here 2026-07-25 ag-closeout-linkage fix; the understat XG/XG_SHOTS bulk-downloader design,
+    replacing the slow date-by-date crawl):
+    - **[DATA] P1.** One-off manifest normalization (dedup pollution) — sequenced AFTER the §9.2 consolidator fix
+      deploys to the Cloud Run jobs.
+    - **[SCRIPT] P1.** Build the bulk writer reusing `get_fixtures`/`get_match_shots`/`record_captured` (unblocked).
+    - **[DATA] P0.** Full backfill run (operator-gated locus, `dont save before confirming` — operator gate before any
+      GCS write).
+    - **[CODE] P1.** DEFERRED — register `XG_SHOTS` in `SPORTS_DATA_TYPE_META` (deployment-api) — patch ready, blocked
+      on deployment-api LDR going QG-green.
+    - **[VERIFY] P1.** Confirm the §9.2 consolidator NULL-vs-`''` dedup fix reaches the deployed Cloud Run jobs.
+    - **[VERIFY] P1.** After backfill: re-evaluate the `understat-vm-xg-complete` gate against real captured shots.
   - [`plans/archive/issues/api_football_backfill_chronological_scan_never_reaches_pending_tail_2026_07_18.md`](/plans/archive/issues/api_football_backfill_chronological_scan_never_reaches_pending_tail_2026_07_18.md)
     — **resolved 2026-07-24** (all 5 todos were already `[x]`; frontmatter `status` was stale, now corrected).
   - [`plans/active/issues/api_football_reverify_attempted_failed_and_asset_group_2026_07_14.md`](/plans/active/issues/api_football_reverify_attempted_failed_and_asset_group_2026_07_14.md)

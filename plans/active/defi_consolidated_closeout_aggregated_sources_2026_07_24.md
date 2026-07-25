@@ -319,6 +319,19 @@ drift_direction: none
       the phantom pattern.
 
 - **DeFi-specific canonicalisation residuals**:
+  - [`plans/active/defi_venue_lst_rates_residual_2026_07_24.md`](/plans/active/defi_venue_lst_rates_residual_2026_07_24.md)
+    (2 open — linked here 2026-07-25 ag-closeout-linkage fix, forked verbatim off the archived
+    migration-verification/orphan-safety harness):
+    - **[DATA] P3.** Fold the `lst-rates` corpus into the DeFi could-exist / data-status view (5 LST venues read as zero
+      today despite captured rows).
+    - **[DATA] P3.** Orphan/junk defi venues — `VAULT` + `SUSHISWAP` classic-vs-V3 ambiguity reconciliation in
+      `ALL_DEFI_VENUES`/`LEGACY_DEFI_VENUE_ALIASES`.
+  - [`plans/active/issues/features_service_defi_data_loading_blockers_2026_05_29.md`](/plans/active/issues/features_service_defi_data_loading_blockers_2026_05_29.md)
+    (linked here 2026-07-25 ag-closeout-linkage fix) — `status: open`, `BLOCKED-OPERATOR-DECISION` (4 original DeFi
+    data-type-mapping/legacy-manifest/OHLC-contract/duplicate-column decisions RESOLVED 2026-06-01 per its own OPERATOR
+    DECISION LEDGER banner); the doc's live residual is the parallel CeFi-pivot smoke-test thread it records (3
+    MDPS/features-service cross-repo bugs — tz-aware-vs-naive datetime join, canonical_writer column-order drift,
+    filter-pushdown memory overhead) — no `- [ ]` checkboxes of its own, tracked as prose in its EOD handoff section.
   - [`plans/active/defi_onchain_derivable_values_and_date_drift_2026_06_20.md`](/plans/active/defi_onchain_derivable_values_and_date_drift_2026_06_20.md)
     (2 open)
     - **[HUMAN-AGENT] P1.** Pyth Hermes coverage SSOT + jitoSOL pre-2023-10 backtest scope — operator go/no-go on

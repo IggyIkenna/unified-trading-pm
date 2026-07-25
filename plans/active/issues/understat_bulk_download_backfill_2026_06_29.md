@@ -26,6 +26,7 @@ related:
   [
     sports_p2_history_reference_and_odds_2015_to_present_2026_06_27,
     sports_p1_golden_window_reference_sources_2026_06_27,
+    /plans/active/sports_consolidated_closeout_aggregated_sources_2026_07_24.md,
   ]
 created: 2026-06-29
 parent_epic: infrastructure_master
