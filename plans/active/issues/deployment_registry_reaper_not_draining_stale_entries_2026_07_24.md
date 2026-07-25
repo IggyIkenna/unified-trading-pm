@@ -676,3 +676,13 @@ flipping the checkbox.
   deploy build id + at least one successful scheduler-triggered invocation (Cloud Scheduler's own
   `lastAttemptTime`/status, or a direct authenticated test call) + `active/` object count actually dropping from 406
   toward the live-VM count (currently ~9). Only then flip this todo + the plan's original `[REVIEW]` checkbox.
+
+  **SHIPPED 2026-07-25T17:40Z (slot 5, same session): `deployment-api@2b70c03`** — `POST /api/internal/reap-tick`
+  (`deployment_api/routes/_reap_scheduler.py`) + `REAP_SCHEDULER_INVOKER_SA` config field
+  (`deployment_api_config.py`/`settings.py`) + wired directly on `app` in `main.py` (NOT under `_authenticated_router`).
+  `quality-gates.sh` green; landed on LDR, promote triggered. **Remaining before done-when is satisfiable**: (1) promote
+  to `main` + deploy (infra provisioning, not code); (2) `REAP_SCHEDULER_INVOKER_SA` must actually be SET on the
+  deployed Cloud Run service (currently empty — the endpoint fails closed with 503 until it's configured, by design) to
+  the invoking service account's email; (3) create the actual Cloud Scheduler job
+  (`gcloud scheduler jobs create http ... --oidc-service-account-email=<that same SA> --uri=<deployed URL>/api/internal/reap-tick`)
+  — none of this happened yet this session; (4) THEN the convergence re-verification.
