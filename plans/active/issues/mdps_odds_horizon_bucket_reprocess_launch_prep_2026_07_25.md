@@ -107,6 +107,31 @@ across >=2 manifest-consolidator cycles (~1min cadence) before flipping the pare
 `batch_footystats` copy+swap (16,970 objects) is a separate step (extend `migrate_sports_league_id_casing_2026_07_21.py`
 to that shape) — not started, not part of this VM launch.
 
+## Addendum (2026-07-25, slot 7) — batch_footystats shape is NOT a simple re-run of the odds executor
+
+While the reprocess VMs (below) ran, spot-checked the real `batch_footystats` raw shape on 3 sample days
+(`gcloud storage ls -r`, single-object descents, not a corpus walk) to scope the extension ahead of time. It is **not**
+a drop-in re-target of `migrate_sports_league_id_casing_2026_07_21.py`'s existing logic — 3 real differences found:
+
+1. **`instrument_type=` is BARE (empty value)** on every object seen, e.g.
+   `.../pipeline_mode=batch_footystats/asset_group=sports/venue=ODDS_API/instrument_type=/data_type=odds/league=<L>/...`
+   — the odds executor's target casing (`instrument_type=ODDS`) assumes a populated segment; this shape needs that
+   decided (backfilled to `ODDS` on write, or is `data_type=odds` itself the intended type-carrier and
+   `instrument_type=` is dead weight to drop?) — an architect call, not an execution detail.
+2. **Filenames are `ticks_migrated_<timestamp>.parquet`**, not the odds executor's `ticks.parquet` — these read as a
+   one-time migration dump (2026-05-05 timestamps seen), not this pipeline's live write path; worth confirming whether
+   `batch_footystats` is even still actively written before spending migration effort on it. A 2019-08-10 sample day had
+   ZERO `batch_footystats` objects at all (day-sparse, unlike `batch_odds_api`'s near-daily coverage).
+3. **Raw league values ARE non-canonical and distinct from the odds classification map** — confirmed both
+   `league=2._BUNDESLIGA` and `league=BUNDESLIGA` coexist as separate raw partitions on the same day (`day=2024-03-02`),
+   i.e. real collision/merge-on-write cases exist here too, but `classification.json` / `sportkey_canon_final.json`
+   (built for the odds shape) have not been checked for footystats coverage — may need its own classification pass, not
+   a reuse.
+
+Recommend scoping the footystats extension as its own short design pass (read `classification.json` coverage, decide the
+`instrument_type=` disposition, confirm write-path liveness) before an executor spawns code against it — flagging here
+rather than guessing under this VM-launch task's scope.
+
 ## Todos
 
 - [ ] [SCRIPT] P0. Launch the MDPS `odds_horizon_bucket` reprocess (single VM or sharded, per above) once tarball
