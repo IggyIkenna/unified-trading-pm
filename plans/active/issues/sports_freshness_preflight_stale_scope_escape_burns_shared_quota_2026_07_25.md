@@ -88,12 +88,18 @@ depends_on: []
       over a real stale date confirming zero out-of-scope API-Football calls — no VM launch/relaunch was performed in
       this turn; that's the P1 todo immediately below, still gated on operator/next-dispatch confirmation of quota state
       per the domestic-selection issue doc's tracker.
-- [ ] [DATA] P1. **RELAUNCHED 2026-07-25T15:18Z (slot 7), NOT yet terminal-confirmed** — `af-backfill-20260725-151845`
-      (tarballs rebuilt + SHA-verified to carry the fix), launched from the domestic-selection issue doc's own tracker
-      (`sports_curated_universe_domestic_selection_remaining_2026_07_25.md`, don't duplicate-launch). Still needs:
-      health check to terminal + a fresh `get_live_quota()` read confirming the burn rate matches FIXTURES-only (~1
-      call/date), not the ~6900-calls-in-under-an-hour scope-escape signature the pre-fix run showed. Record final
-      quota_remaining.
+- [ ] [DATA] P1. **RELAUNCHED 2026-07-25T15:18Z (slot 7), FIX CONFIRMED HOLDING, NOT yet terminal** —
+      `af-backfill-20260725-151845` (tarballs rebuilt + SHA-verified to carry the fix), launched from the
+      domestic-selection issue doc's tracker (don't duplicate-launch). **Positive confirmation 2026-07-25T15:45Z**: the
+      VM's run.log processed date **2026-04-18 — the EXACT date that triggered the original scope-escape** (1747
+      fixtures) — and logged `Per-fixture enrichment: 1747 fixtures x 0 entities = 0 calls queued` +
+      `Entity-scoped mode: restricting to FIXTURES only`, i.e. zero out-of-scope enrichment calls, unlike the pre-fix
+      run which burned ~6900 calls on this exact date. Live quota corroborates: `daily_remaining` 64965→64928 in ~27min
+      (~37 calls total, consistent with ~1 call/date), nowhere near the prior ~6900-calls-in-under-an-hour signature.
+      **Fix is proven correct in production on the reproduction case, not just unit tests.** Still running (large
+      2020-06-06..2026-07-25 range) — not yet terminal, not a hang. **Next dispatch**: health-check to terminal
+      (`gcloud compute instances list` + `run.log` tail), record final `quota_remaining`, THEN this todo + the parent
+      relaunch todo in the domestic-selection doc both flip together.
 - [ ] [DATA] P2. Audit whether the earlier 08:12Z quota exhaustion and any other in-flight sports backfills hit the same
       stale-scope-escape (grep run logs for enrichment fetches on `--sports-entity`-scoped runs); if any already-running
       VM is escaping scope, stop it too. Cross-ref
