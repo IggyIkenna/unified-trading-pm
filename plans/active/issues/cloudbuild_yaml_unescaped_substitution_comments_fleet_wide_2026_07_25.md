@@ -144,9 +144,9 @@ fix. No behavior change to the actual build (bash never executed these comments)
       batch-live-reconciliation-service) — batch-live-reconciliation-service@d7c76fb, exhaustive re-scan (the same
       builtins/declared-substitution-aware regex from this doc's Recommended fix) confirmed zero remaining bad
       substitutions; `quality-gates.sh` green (155s).
-- [ ] [INFRA] P1. Fix `deployment-api/cloudbuild.yaml` line 201 (bare `$BASE_IMAGE_DIGEST` in comment →
+- [x] ✅ [INFRA] P1. Fix `deployment-api/cloudbuild.yaml` line 201 (bare `$BASE_IMAGE_DIGEST` in comment →
       `$$BASE_IMAGE_DIGEST`) + run the exhaustive re-scan above to confirm zero remaining. Ship via quickmerge. (repo:
-      deployment-api)
+      deployment-api) — deployment-api@0badf57, exhaustive re-scan confirmed zero remaining bare substitutions.
 - [ ] [INFRA] P1. Fix `deployment-service/cloudbuild.yaml` line 80 (bare `$BASE_IMAGE_DIGEST` in comment →
       `$$BASE_IMAGE_DIGEST`) + run the exhaustive re-scan above to confirm zero remaining. Ship via quickmerge. (repo:
       deployment-service)
