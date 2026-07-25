@@ -386,8 +386,8 @@ source: >-
       odds-features exporter to emit the UAC-chosen field names instead of the current `home_implied_prob`-style
       convention; update exporter tests + downstream fixture files. (repo: features-service). **Done when**: all 180
       `ODDS_COLUMNS` entries + exporter output renamed per the decided scheme; exporter tests and downstream fixtures
-      updated; quality-gates green. Source: `sports_odds_feature_naming_canonicalization_2026_07_21.md`. — SHIPPED (slot
-      11): all 139 entries renamed per the DECIDED scheme, QG green. features-service@0ded2449.
+      updated; quality-gates green. Source: `sports_odds_feature_naming_canonicalization_2026_07_21.md`. — SHIPPED
+      features-service@0ded2449 (slot 11) + gap-fix features-service@e240eca2 (slot 4); full detail in source plan.
 - [x] ✅ [BACKEND] P2. **Close the silent-agnostic gap in `SportsFeatureLoaderMixin`** — ml-service@07976ae. Added
       `_validate_odds_schema` (checked only for the `odds_features` group): raises `ValueError` when a non-empty frame
       has ZERO columns overlapping UAC `OddsFeaturesMixin`'s known field set — a producer/consumer naming mismatch,
@@ -541,14 +541,13 @@ source: >-
       `scripts/migration_orphan_sweep_sports.py --bucket reference` afterward). **Done when**: all 58 rows across the 16
       days have canonical objects written, and a re-run of the orphan sweep reclassifies them as `A_canonical` instead
       of `B_legacy_duplicate`. Source: `issues/sports_legacy_duplicate_triage_2026_07_22.md`.
-- [ ] [CODE] P1. **Repoint or retire the two flat-legacy readers** before the 28,100 post-floor flat rows can be
-      reconsidered for delete: (a) `sports_reference_fixtures.py:139`'s old-path branch — verify never reached for
-      canonicalised dates (add counter/log), or remove now that canonical coverage is ~98%; (b)
-      `data_status_sports.py`'s level-4 fallback — same treatment. Re-run Part 4 grep+READ after either change lands.
-      (repo: instruments-service `engine/orchestrator/sports_reference_fixtures.py:139`; deployment-service
-      `cli/utils/data_status_sports.py:32-42,72-75`). **Done when**: both readers are either instrumented (proving never
-      hit for canonicalised dates) or removed outright (worker's engineering call, given ~478 of the 28,100 rows
-      currently rely on the fallback as sole source); Part 4 grep+READ re-run recorded. Source:
+- [x] ✅ [CODE] P1. **Repoint or retire the two flat-legacy readers — INSTRUMENTED, not removed** (correctly: ~478 of
+      28,100 rows have no canonical twin, sole source is the fallback). (a) instruments-service@693280e7:
+      `sports_reference_fixtures.py:139`'s old-path branch now logs a greppable `LEGACY_FLAT_PATH_HIT` warning on every
+      hit. (b) deployment-service@734fdd5: `data_status_sports.py`'s level-4 fallback (both duplicate call sites) log
+      the same marker. 4 new regression tests (3 DS + 1 IS) prove the marker fires on real hits, stays silent on
+      canonical/split-entity hits. `quality-gates.sh` green both repos. Part 4 re-run: 2 live readers unchanged
+      (instrumentation ≠ removal) — now measurable via log-based metrics before any delete reconsideration. Source:
       `issues/sports_legacy_duplicate_triage_2026_07_22.md`.
 - [x] ✅ [REVIEW] P3. **Rescan `migration_orphan_sweep_sports.py --bucket reference`** to retire the 4,735 stale
       (already-deleted) flat pre-floor rows from the durable audit parquet, and fix the classifier's

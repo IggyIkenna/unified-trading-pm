@@ -364,3 +364,10 @@ item, it becomes a `BLOCKED-OPERATOR-DECISION` Progress Log entry (see Procedure
   action (would violate the plan-locking HARD RULE). I don't have write access to the orchestrator's runtime
   `backlog.yaml` from this slot (it's server-side state, not a repo file I can edit), so I can't apply the durable-park
   fix myself — skipping via `/skip-current-task` per the same precedent as slot-3.
+- **2026-07-25 (slot-9): RE-DISPATCHED again, re-confirmed still parked, NOT archived.** Both gates unchanged since
+  slot-6's pass: `locked_by: live-defi-rollout` still on the doc; C1 in
+  `canonical_closeout_open_questions_2026_07_18.md` still unanswered. No `backlog.yaml` in this slot's
+  `agent-orchestrator` checkout either (confirmed via `find`) — same no-durable-park-access constraint slots 2/3/6 hit.
+  Skipping via `/skip-current-task`; this is now the 4th consecutive re-dispatch of the identical parked task,
+  underscoring `external_promote_gated_task_redispatch_churn_no_durable_park_2026_07_25.md`'s P3 backend todo (durable
+  `auto_unpark__` prereq for worker-applied parks) — no new issue doc needed, that one already tracks it.

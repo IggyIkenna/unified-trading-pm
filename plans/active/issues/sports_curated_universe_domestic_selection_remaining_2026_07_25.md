@@ -415,14 +415,22 @@ inherited from the first shipped batch:
       relaunch `launch-api-football-backfill-vm.sh --entity FIXTURES 2020-06-06 2026-07-25` (SPOT, resumes from measured
       progress — the fixed code now correctly stays FIXTURES-scoped on stale-not-missing dates), health-check to
       terminal, THEN resume this todo's original spot-verify + enrichment-campaign-scoping sequence.
-- [ ] [SCRIPT] P3. Add the same `START_DATE` clamp/warning to `launch-api-football-backfill-vm.sh` that
+- [x] ✅ [SCRIPT] P3. Add the same `START_DATE` clamp/warning to `launch-api-football-backfill-vm.sh` that
       `launch-sports-entity-sweep-vm.sh` already has per `/codex/02-data/sports-2020-06-data-floor.md`'s
       enforcement-surface list (item 6) — this launcher silently accepts a pre-2020-06-06 explicit start date with no
       warning (the venue-epoch skip gate is defense-in-depth, not a substitute for the launcher itself
       refusing/clamping). Found 2026-07-25 (slot 11) while launching `af-backfill-20260725-125405` after correcting the
       parent plan's own stale "2019→" range by hand; a future agent without that context could launch a genuinely
       pre-floor range unnoticed. (repo: deployment-service). **Done when**: the launcher clamps or loudly warns on a
-      pre-2020-06-06 explicit `START_DATE`, matching its sibling.
+      pre-2020-06-06 explicit `START_DATE`, matching its sibling. — `deployment-service@192d1f8`: the three sibling
+      launchers named in the codex enforcement-surface list only clamp STRUCTURALLY (hardcoded per-entity/per-window
+      start dates baked into their tables — no user-supplied date can go pre-floor), whereas this launcher's
+      explicit-mode `<START_DATE> <END_DATE>` positional args are genuinely free-form; added a real runtime check right
+      after the existing date-format sanity-check that REFUSES (`exit 1`, loud stderr citing the codex doc) any
+      `START_DATE < 2020-06-06`, string-compared (ISO-8601 dates sort lexicographically, same pattern already used in
+      `launch-tradfi-backfill-vm.sh`/`launch-cefi-sharded-backfill.sh`). Verified live via `--dry-run`: `2019-01-01`
+      refused with the new error + exit 1; the exact boundary `2020-06-06` and a post-floor `2020-07-01` both pass
+      through unchanged to VM-launch planning. `quality-gates.sh` green (98s, deployment-service).
 
 ## Codex SSOTs
 

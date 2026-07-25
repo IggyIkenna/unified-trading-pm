@@ -323,10 +323,24 @@ Recommended next steps, in priority order:
 - [ ] 2. [DATA] P2. **Migrate-forward the 58 v2 post-floor rows** (16 days) into canonical per-league `entity=fixtures`
       / `entity=fixture_stats` — a small, tractable per-league fan-out (reuse `migrate_sports_per_league.py`'s
       per-fixture-league-join logic), not a delete. Re-run the sweep after to confirm these flip to `A_canonical`.
-- [ ] 3. [CODE] P2. **Repoint or retire the two flat-legacy readers** before the 28,100 post-floor flat rows can be
-      reconsidered for delete: (a) `sports_reference_fixtures.py:139`'s old-path branch — verify it is never actually
-      reached for canonicalised dates (add a counter/log), or remove it now that canonical coverage is ~98%; (b)
-      `data_status_sports.py`'s level-4 fallback — same treatment. Re-run Part 4 grep+READ after either change lands.
+- [x] ✅ 3. [CODE] P2. **Repoint or retire the two flat-legacy readers — DONE (instrumented, not removed)** 2026-07-25
+      (slot 7, data_engineering). Removal was NOT the safe choice: ~478 of the 28,100 post-floor rows have zero
+      canonical twin at any path variant and rely on these readers as their sole surviving data source — removing either
+      would be a real, silent data-loss regression for those dates, not a cleanup. Instead both readers now emit a
+      greppable `LEGACY_FLAT_PATH_HIT` warning-level log on every real hit, so actual hit frequency becomes measurable
+      (via log-based metrics / Cloud Logging queries) ahead of any future delete reconsideration — this satisfies the
+      "instrumented" half of the original done-when; "proving never hit" was never achievable given the 478-row finding
+      above, so that branch of the done-when is moot, not unmet. (a) `instruments-service@693280e7` —
+      `sports_reference_fixtures.py:139`'s old-path-copy branch. (b) `deployment-service@734fdd5` —
+      `data_status_sports.py`'s level-4 fallback, BOTH duplicate call sites (`_load_fixture_counts_for_date` and the
+      separate inline copy in `_check_league_status`, which the original todo's line range didn't call out as two sites
+      — found while implementing). 4 new regression tests total (1 instruments-service proving the marker fires on a
+      real old-path hit; 3 deployment-service — legacy hit fires in each function, canonical hit does NOT
+      false-positive). `quality-gates.sh` green both repos (both files were already AT their 900-line ratchet cap, so
+      the log calls were written single-line/minimal-comment to stay under it — no ratchet regression). Part 4 grep+READ
+      re-run: **unchanged, 2 live readers still present** — instrumentation is not removal; the readers stay exactly as
+      reachable as before, just now measurable. Mirrored in
+      `/plans/active/sports_satellite_ao_dispatch_batch2_2026_07_24.md`'s copy of this todo.
 - [x] ✅ 4. [REVIEW] P3. **Rescan `migration_orphan_sweep_sports.py --bucket reference`** to retire the 4,735 stale
       (already-deleted) flat pre-floor rows from the durable audit parquet, and to fix the classifier's
       `is_covered_sports`-before-`_is_pre_launch` ordering so pre-floor cells with a stale-captured manifest row

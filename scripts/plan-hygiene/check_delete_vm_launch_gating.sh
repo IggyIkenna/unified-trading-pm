@@ -37,7 +37,7 @@ fi
 RISK_PAT='(--apply|gcs_delete_object|gsutil rm|gcloud storage rm| delete \+ | delete/purge|launch-[a-z-]+\.sh|gcloud compute instances create)'
 # Signal it's already covered: an explicit operator gate, a stated safe-idempotent-pattern phrase, or
 # the risky verb explicitly negated (dry-run-only / no --apply / read-only / diagnose-only work).
-SAFE_PAT='(\[OPERATOR\]|delete-safety-protocol|idempotent|copy.{0,10}verify.{0,10}delete|human-only|already-established|no operator gate needed|Operator-owned|dry-run|no \`?--apply\`?|without \`?--apply\`?|read-only|no new VM launch|BLOCKED-OPERATOR)'
+SAFE_PAT='(\[OPERATOR\]|delete-safety-protocol|idempotent|copy.{0,10}verify.{0,10}delete|human-only|already-established|no operator gate needed|Operator-owned|dry-run|no .{0,2}--apply|without .{0,2}--apply|read-only|no new VM launch|BLOCKED-OPERATOR)'
 
 RC=0
 for f in "${FILES[@]}"; do
