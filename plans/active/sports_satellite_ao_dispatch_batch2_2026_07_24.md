@@ -315,14 +315,22 @@ source: >-
 
 ### From `data_completion_sports_2026_07_24.md`
 
-- [ ] [DATA] P1. **Post-backfill entity-coverage relabel** (after confirming the 6 previously-running backfill VMs are
-      terminal and the consolidator is drained — relabel races a live manifest): extend the entity-coverage relabel
-      (`refresh_sports_league_entity_coverage` / migration C logic) over the 120 recent dates (2026-02-20→06-19) × 789
-      leagues — no-coverage (league,data_type) pairs → `expected_empty` (`EXPECTED_NO_PROVIDER_COVERAGE`), and reconcile
-      cells whose data already exists in GCS → `captured`. Then re-measure honest-cov (expect a large jump). (repo:
-      instruments-service + market-tick-data-service manifest migration touch point). **Done when**: VMs confirmed
-      terminal → relabel applied over the 120-date × 789-league window → cells reclassified correctly → honest-cov
-      re-measured and the delta recorded in the source plan. Source: `data_completion_sports_2026_07_24.md`.
+- [x] ✅ [DATA] P1. **Post-backfill entity-coverage relabel — PREMISE RESOLVED, not executed as a relabel; residual
+      filed separately.** The 6 named backfill VMs ARE confirmed terminal (0 sports-tagged GCE instances, running or
+      otherwise, in `central-element-323112` as of 2026-07-25). But BEFORE running the prescribed relabel, I measured
+      the current manifest directly: the diagnosed 789-league/1,027,396-row phantom `expected_unattempted` set in the
+      2026-02-20→06-19 window is now **33,905 rows across 96 league_ids — ALL 96 in the current in-universe set, ZERO
+      out-of-universe leagues remain in-window** (a ~30x reduction, resolved as a side effect of the intervening
+      write-gate + dereg + canonicalize program, instruments-service@0345ffc through 2026-07-21). The prescribed
+      "no-coverage pairs → expected_empty" script no longer matches the manifest's actual shape and running it blind
+      risks mislabeling genuine post-cutover pending-fetch gaps as false-empty (the residual is dominated by the
+      2026-07-14+ `FIXTURES_OUTCOMES`/`FIXTURES_SCHEDULE` split-entity backfill, not raw-league over-enumeration). Also
+      found a DIFFERENT, currently-RUNNING sports backfill VM (`af-backfill-20260725-002739`, unrelated to the
+      original 6) writing `_index/availability_index.parquet` directly and unsharded — confirms the manifest is not
+      safely drained for an unprotected RMW regardless of the premise question. Filed
+      `issues/sports_post_backfill_relabel_premise_resolved_residual_gap_2026_07_25.md` with the full measurement + 3
+      correctly-scoped follow-up todos rather than force a stale-premise migration against a live-changing production
+      manifest. Source: `data_completion_sports_2026_07_24.md`.
 - [ ] [SCRIPT] P2. **Relaunch features-sfi-progressive** — code fix already shipped (`features-service@06c44c02`); first
       verify (via git log) whether the launcher's repoint to `VM_SERVICE=features_service` /
       `python -m features_service.sports.scripts.compute_sfi_progressive_only` already shipped (the source doc cites
