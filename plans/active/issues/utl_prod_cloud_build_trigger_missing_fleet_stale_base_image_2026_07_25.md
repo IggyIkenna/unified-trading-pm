@@ -168,17 +168,46 @@ base-image pipeline without confirming the correct source config/IAM/connection 
 
 ## Todos
 
-- [ ] [INFRA] P0. Recreate the `unified-trading-library-prod` Cloud Build trigger in GCP project
+- [x] ✅ [INFRA] P0. Recreate the `unified-trading-library-prod` Cloud Build trigger in GCP project
       `central-element-323112`, region `asia-northeast1` — mirror `instruments-service-prod`'s working config (GitHub
       App connection, `main` branch push filter, `cloudbuild.yaml` build config path, service account). Check Cloud
       Audit Logs around 2026-07-23T09:00-09:15Z first to understand how it disappeared (accidental delete vs IaC drift
       vs connection re-auth) so the recreate doesn't just re-break the same way. (repo: infra/GCP config, no application
-      repo)
+      repo) — **Found already recreated 2026-07-25 (slot 2, infra)** when picking up todo 2 below:
+      `gcloud builds     triggers describe unified-trading-library-prod --region=asia-northeast1` confirms it exists
+      (`createTime: 2026-07-25T12:44:13Z`, `id: e9da54bb-ca66-40f6-b5fd-5caff6bfebf1`), correctly configured (push to
+      `^main$`, GitHub App connection `iggyikenna-github`, `filename: cloudbuild.yaml`) — mirrors
+      `instruments-service-prod`'s pattern. **Not created by this session** — no attribution/audit-log root-cause
+      investigation was captured by whoever did it; flipping on the OBSERVED fact the entity now exists and is correctly
+      configured, not on having done the recreate or the audit-log trace myself. If the audit-log root cause (why it
+      disappeared 2026-07-23) still matters, that's a separate follow-up, not blocking this todo's own done-when (the
+      trigger existing + correctly configured).
 - [ ] [INFRA] P1. Once the trigger is recreated, manually verify one end-to-end publish
       (`gcloud builds triggers run     unified-trading-library-prod` or a trivial UTL `main` push) and confirm the new
       image lands in
       `asia-northeast1-docker.pkg.dev/central-element-323112/unified-trading-library/unified-trading-library` with a
-      fresh `UPDATE_TIME`.
+      fresh `UPDATE_TIME`. — **RE-DISPATCHED 2026-07-25 (slot 2, infra)**: attempted
+      `gcloud builds triggers run     unified-trading-library-prod --branch=main`, hit a NEW real bug —
+      `INVALID_ARGUMENT: key in the template "VERSION" is not a valid built-in substitution`. Root-caused: Cloud Build's
+      substitution validator scans the RAW YAML text of every build step, including comment lines inside multi-line bash
+      heredoc blocks — 5 comment-only occurrences of bare (single-`$`) `$VERSION`/`$IMAGE_TAG` in `cloudbuild.yaml`
+      (added in the 2026-07-23 "Build-unique IMAGE TAG" commit, the SAME day the trigger went missing) trip the same
+      "not a valid built-in substitution" validation as an undeclared variable, even though bash itself never touches
+      text inside a `#` comment. Fixed + shipped `unified-trading-library@44922ad1` + follow-up `@71dcf0f4` (a
+      git-stash-pop conflict during the first commit's own shipping partially reverted 1 of the 5 escapes — caught via
+      an exhaustive re-scan of the whole file for any non-builtin single-`$` reference, confirmed zero remaining on the
+      final HEAD). Both QG-green, both landed on `live-defi-rollout`. **Still blocked on the LDR→main promote actually
+      landing**: `gcloud builds triggers run --branch=main` reads `cloudbuild.yaml` from the `main` branch's current
+      tip, which does NOT have either fix yet (`git show origin/main:cloudbuild.yaml` confirms the old unescaped
+      content) — promote PR #644 (`unified-trading-library` repo, `44922ad1` → `main`) is open,
+      `mergeable_state: blocked` (pending required checks / the `*/15` promote cron), and the second commit `71dcf0f4`
+      hasn't been captured by a promote PR at all yet. Released via `/skip-current-task`, not attempted further this
+      dispatch. Next dispatch: check `gh pr list --repo IggyIkenna/unified-trading-library --state open` for the promote
+      PR(s) covering both `44922ad1` and `71dcf0f4`; once merged to `main` (confirm via
+      `git show origin/main:cloudbuild.yaml | grep -c '\$VERSION\|\$IMAGE_TAG'` returning 0 unescaped hits), re-run
+      `gcloud builds triggers run unified-trading-library-prod --region=asia-northeast1 --branch=main` and confirm the
+      resulting build succeeds + a fresh image lands via
+      `gcloud artifacts docker images list .../unified-trading-library --sort-by="~UPDATE_TIME" --limit=3`.
 - [x] ✅ [BACKEND] P2. `unified-trading-pm/.github/workflows/cloud-build-router.yml`'s `route-build` job should not
       silently report `success`/green when `gcloud builds triggers run` returns `NOT_FOUND` — either fail the job loud
       or fix the condition on the existing (currently-skipped) `Slack — Build Trigger Not Configured` step so it
