@@ -231,10 +231,13 @@ drift_direction: advance-code
       (same-pattern-vs-different for the two days; dead-vs-live for the scheduler job, with delete or kept-reason
       recorded; shared-import verdict named or ruled out) are recorded in the issue doc's Progress Log. Source:
       `issues/cefi_batch_download_oom_crashloop_capture_halt_2026_07_24.md`.
-- [ ] [DATA] P1. **Prove + execute the cefi chain-tail v6 canonicalisation cutover (3 sub-items merged into one todo —
-      the cutover-register update needs the proof + migration's actual results, and both write findings to the same
-      issue doc):** (a) Prove the shipped W1 v6 fix end-to-end against real GCS data (`-test-` bucket) — feed one real
-      day of already-captured cefi `options_chain`/`futures_chain` tick data through
+- [ ] [DATA] P1. **Conflict-check (2026-07-25 plan-reconcile): shares `partitioned_writer.py`'s `write_chunk`→
+      `_update_cluster_and_chain_counts` call chain with the P2 cluster-counts-widen todo below. Do NOT dispatch
+      concurrently — run the P2 widen FIRST so this proof validates the final, post-widen code, not a
+      soon-to-be-superseded intermediate state.** **Prove + execute the cefi chain-tail v6 canonicalisation cutover (3
+      sub-items merged into one todo — the cutover-register update needs the proof + migration's actual results, and
+      both write findings to the same issue doc):** (a) Prove the shipped W1 v6 fix end-to-end against real GCS data
+      (`-test-` bucket) — feed one real day of already-captured cefi `options_chain`/`futures_chain` tick data through
       `PartitionedTickWriter.write_chunk`, confirm the written path is v6-canonical
       (`underlying={U}/quote={Q}/margin={M}/ticks.parquet`), confirm `reader.py`'s v6-first probe reads it back, and
       confirm `_assert_canonical_chain_path` raises on a hand-constructed synthetic v5-shaped path. (b) Enumerate real
@@ -249,8 +252,10 @@ drift_direction: advance-code
       recorded (old v5 objects left in place); (c)'s register entry cites both shas with an accurate, (b)-consistent
       two-part status — all in the issue doc's Progress Log / the register, committed via quickmerge. Source:
       `issues/cefi_chain_tail_v6_canonicalisation_2026_07_21.md`.
-- [ ] [DATA] P2. **Widen the cefi chain-tail cluster-counts bookkeeping key to include quote/margin.**
-      `_update_cluster_and_chain_counts` (`market-tick-data-service/.../engine/orchestrator/partitioned_writer.py`) keys
+- [ ] [DATA] P2. **Conflict-check (2026-07-25 plan-reconcile): shares the same `partitioned_writer.py` call chain as the
+      P1 v6-canonicalisation-proof todo above — run this one FIRST, then the P1 proof, never concurrently.** **Widen the
+      cefi chain-tail cluster-counts bookkeeping key to include quote/margin.** `_update_cluster_and_chain_counts`
+      (`market-tick-data-service/.../engine/orchestrator/partitioned_writer.py`) keys
       `_cluster_counts`/`_chain_available_at_max` on the 3-tuple `(itype, dt, underlying)` — widen to the 5-tuple
       `(itype, dt, underlying, quote, margin)`, mirroring the fix already applied to `_row_counts`/the writer-object
       cache key, so two cefi chains sharing an underlying but different quote/margin settlement no longer merge their
@@ -354,10 +359,17 @@ drift_direction: advance-code
       correctly Tardis-archived, out of scope. Repo: market-tick-data-service. **Conflict-check note**: the one flagged
       conflict (a sibling doc scoping this wider, to "<2026-04-17") is explicitly non-blocking per the triage's own text
       — "not a data-safety risk, the existing restamp tool is idempotent and would no-op on already-corrected days."
-      **Done when**: the `--apply` run completes with `moved`/`already-done`/`resumed-delete` for every enumerated
-      object and zero `CONFLICT`/`MISSING`/`COPY-VERIFY-FAILED` statuses; consolidator run completes; a fresh
-      availability_index query shows zero `captured` LIGHTER-ZKSYNC `ohlcv_1m` rows under `batch_tardis` for the window
-      and the corresponding `batch_lighter_api` rows exist. Source:
+      **Cross-plan coordination note (2026-07-25 plan-reconcile)**: `cefi_consolidated_closeout_2026_07_18.md`'s
+      Deferred-work table item 6 (Track 1, still not-started as of this note) separately plans a LIGHTER-ZKSYNC
+      numeric-stem→canonical-symbol filename rename over the same venue's raw objects — a different mutation axis
+      (filename stem, not `pipeline_mode=` partition path) but potentially overlapping GCS objects. Before running this
+      todo's `--apply` step, confirm Track 1's rename has NOT started against the same window; if it has, re-derive
+      which order is safe by reading `restamp_lighter_ohlcv_batch_tardis_to_lighter_api_2026_07_18.py`'s
+      path-enumeration logic against Track 1's Script 2 resolver rather than assuming either order is safe. **Done
+      when**: the `--apply` run completes with `moved`/`already-done`/`resumed-delete` for every enumerated object and
+      zero `CONFLICT`/`MISSING`/`COPY-VERIFY-FAILED` statuses; consolidator run completes; a fresh availability_index
+      query shows zero `captured` LIGHTER-ZKSYNC `ohlcv_1m` rows under `batch_tardis` for the window and the
+      corresponding `batch_lighter_api` rows exist. Source:
       `issues/cefi_onchain_venues_mislabeled_batch_tardis_2026_07_20.md`.
 - [ ] [DATA] P1. **Characterize the EXTENDED-STARKNET `batch_tardis` vs `batch_extended` content divergence,
       read-only.** For the 2026-01-01→~2026-06-04 overlap window, read a stratified sample (≥3 days × ≥10 overlapping
