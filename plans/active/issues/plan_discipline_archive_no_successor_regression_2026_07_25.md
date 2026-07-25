@@ -130,13 +130,20 @@ Per file, read the flagged DEFERRED/post-cutover/out-of-scope mention(s) in cont
       confirm 0 violations, then decide with the operator/main agent whether any surviving false-positive class warrants
       a regex refinement in `check_plan_discipline.py` (vs. per-doc markers) so this doesn't recur every time an
       operational log gets archived with ordinary "out of scope" scoping prose. **Re-ran: 0 violations, at baseline
-      (0).** No surviving false-positive class — all 5 had a genuine, locatable successor already in the corpus (4 were
-      already named in the flagged prose itself, just not in the checker's machine-matched shape; the 5th was findable
-      by grepping the "filed as its own... todo" claim), so **no regex refinement is warranted** — this was an archival
-      ritual completeness gap (missing `## Deferred work — migrated to:`-style markers), not a checker bug. Sample of
-      201 other `plans/archive/*.md` docs matching the same `out of scope`/`post-cutover` tokens: 196 already pass via
-      an existing successor reference somewhere in the doc, consistent with "add the marker" being the right fix, not
-      "loosen the regex." — unified-trading-pm (this commit)
+      (0).** My own read of the 5: no surviving false-positive class — all 5 had a genuine, locatable successor already
+      in the corpus (4 were already named in the flagged prose itself, just not in the checker's machine-matched shape;
+      the 5th was findable by grepping the "filed as its own... todo" claim), so I concluded per-doc markers were
+      sufficient and a regex refinement wasn't strictly required. **Addendum (same landing window):** slot-2
+      independently reached the opposite call on the SAME repo-blocker (RB-c56af4e2) and shipped
+      `unified-trading-pm@a2857ef67` — tightened `_ARCHIVE_OK_TOKENS_RE` to require an explicit bold/heading marker
+      (`**out of scope**` / `## Out of scope`) rather than the bare phrase, on the reasoning that a bare-substring match
+      over the whole doc is systematically noisy (matches ordinary Progress-Log prose, not just whole-doc deferral
+      claims). Quickmerge's rebase-on-push landed that commit BEFORE this one, so both fixes are now combined in the
+      same tree: the 5 per-doc `**MIGRATED TO:**` markers added here are harmless, accurate documentation either way,
+      and remain useful given `_DEFERRED_RE`-shaped hits still route through the same successor check. Re-verified
+      post-rebase: `check_plan_discipline.py` still reports 0 violations at HEAD. No further action — decision is
+      effectively resolved as "both," which is fine since neither is a case-by-case hack (slot-2's is a principled,
+      corpus-wide tightening, not a per-doc exclusion). — unified-trading-pm (this commit)
 
 ## Codex SSOTs
 
