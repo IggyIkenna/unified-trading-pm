@@ -150,3 +150,14 @@ Traced the gap:
 - [ ] [INFRA] P2. Investigate whether the `cloud-build-router.yml` "Persist CI/CD event" gsutil credential failure (run
       `30159646779`, 13:24:19Z, "Your credentials are invalid") shares a root cause with this incident — same or sibling
       self-hosted runner box (repo: unified-trading-pm).
+
+## Progress Log
+
+- **2026-07-25T14:1xZ (slot 7, infra) — todo 2 dispatched, still BLOCKED on todo 1.** Re-confirmed live, fresh: (a)
+  `gh run list --repo IggyIkenna/unified-trading-pm --workflow=ci-status-update.yml --limit 10` — all 10 most recent
+  runs `failure` (latest `2026-07-25T14:11:52Z`); (b) direct Firestore REST `GET .../ci_status/deployment-api` via
+  `gcloud auth application-default print-access-token` (same ADC identity the issue doc used) → `403 PERMISSION_DENIED`,
+  unchanged. Todo 1's `[OPERATOR]` precondition has NOT been met yet — todo 2's own text is "once permissions restored",
+  which isn't true right now, so there is nothing for an INFRA worker to verify. Skipping todo 2 (GATED) rather than
+  forcing it; todo 3 (harden `full-workspace-sit.yml`'s stamp step) is independently actionable NOW (does not depend on
+  todo 1) and is a legitimate separate INFRA P1 pickup.
