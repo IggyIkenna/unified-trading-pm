@@ -30,8 +30,8 @@ assigned_vm: planning
 execution_scope: orchestrator-agent
 priority: P0
 estimate_class: infra
-estimate_baseline_ai_days: 3.5
-estimate_calibrated_ai_days: 2.8
+estimate_baseline_ai_days: 4.2
+estimate_calibrated_ai_days: 3.4
 locked_by:
 locked_since:
 supersedes:
@@ -128,12 +128,38 @@ sequential: true
       reproduces the exact live scenario from this session (task reassigned 0.08h ago, context 100%, last compaction >4h
       before assignment) and asserts `_is_context_burning` now returns `True` where the old task-clock version returned
       `False`; `quality-gates.sh` green.
-- [ ] [OPERATOR] P1. BLOCKED-OPERATOR-DECISION — decide whether to flip `context_burn_kill` (`server/config.py`) from
-      its current default `False` to `True` now that todo 7 fixes the detector's blind spot and todos 3-4 give workers a
-      graceful compact-first path before any kill would ever trigger. Do NOT flip this default as part of this plan's
-      automated execution — it's a live-fleet auto-kill behavior change that a prior operator deliberately gated behind
-      manual opt-in "until the heuristic has fleet mileage"; re-evaluate only after todos 1-7 have run in production for
-      a burn-in period the operator sets.
+- [ ] [BACKEND] P1. **Add WIP preservation to `_kill_slot`** (`server/worker_liveness_watchdog.py`) — a hard
+      prerequisite for enabling `context_burn_kill` at all. Confirmed by direct code read this session: `_kill_slot`
+      currently just calls `kill_session(tmux_session)` and flips `status="killed"` — zero preservation of uncommitted
+      worktree changes, so any real WIP in flight at kill time is lost outright. Reuse the existing `stash_dirty_repos`
+      (`server/worktree_clean_check/_stash.py`), already used on the controlled `/done` exit path
+      (`server/routes/slots_worker.py:640`, logged as `slot_stash_on_done`, stash refs GCS-ledger-persisted per
+      `server/notifications/slack.py`'s comment) — call it from `_kill_slot` before `kill_session` fires, for every kill
+      reason, not just `context_burn`. **Done when**: a unit test asserts a dirty worktree's changes are stashed (and
+      the stash ref logged) before the tmux session is killed, for a simulated `context_burn` kill; existing kill-path
+      tests for the other reasons (`context_full`, `stuck_at_prompt`, etc.) still pass unmodified; `quality-gates.sh`
+      green.
+- [ ] [BACKEND] P1. **Sharpen the kill trigger to only fire after the graceful path has already failed** — operator
+      design ruling 2026-07-25: kill should require context "so high it can't take instruction anymore," not just the
+      existing 80%-suspicion threshold. Add `context_burn_kill_min_pct: int = Field(default=98, ge=1, le=100)` to
+      `Tuning` (`server/config.py`), distinct from `context_burn_min_pct` (stays 80, still gates the unconditional
+      `context_burn_suspected` flag/Slack alert — informational, unchanged). In `_is_context_burning`'s caller
+      (`server/worker_liveness_watchdog.py`), gate the actual kill (not the suspicion flag) on BOTH:
+      `context_pct >=     context_burn_kill_min_pct` AND a compact directive was already sent (todo 3/4's `directive`
+      field) and NOT complied with within a grace window (no `context_used_pct` drop observed across the next 2
+      consecutive `/progress`or `/done` reports after the directive) — i.e. kill is the last resort after the graceful
+      compact-before-next/compact-now path has demonstrably failed, not a parallel independent trigger. **Confirmed
+      already true, no change needed**: the Slack alert (`notify_context_burn`, called with `killed=_CONTEXT_BURN_KILL`)
+      already fires unconditionally today regardless of whether kill is enabled — nothing to add there. **Done when**: a
+      unit test asserts kill does NOT fire at 85% context with no prior directive (below the new kill threshold), does
+      NOT fire at 99% if a directive was sent but the grace window hasn't elapsed yet, and DOES fire at 99% once a
+      directive was sent and 2 consecutive reports show no pct drop; `quality-gates.sh` green.
+- [ ] [OPERATOR] P2. BLOCKED-OPERATOR-DECISION — decide whether to flip `context_burn_kill` (`server/config.py`) from
+      its current default `False` to `True`, now gated on the sharpened near-100%-and-directive-already-failed trigger
+      above (not the old 80%-only condition) and with WIP preserved before any kill. Do NOT flip this default as part of
+      this plan's automated execution — it's a live-fleet auto-kill behavior change a prior operator deliberately gated
+      behind manual opt-in "until the heuristic has fleet mileage"; re-evaluate only after the two todos above plus
+      todos 1-7 have run in production for a burn-in period the operator sets.
 - [ ] [BACKEND] P2. **Stop the WorkerLivenessKicker from blindly re-nudging a frozen+context-saturated slot.** In
       `WorkerLivenessKicker._tick_once` (`server/worker_liveness/__init__.py`): when `classify_pane(pane) == "frozen"`
       AND the slot's current `context_used_pct >= context_worker_compact_gate_pct` (todo 1's threshold), skip the
@@ -162,7 +188,7 @@ sequential: true
       `/api/activity` (read-only SSM, same pattern as this plan's `source` field) for slot IDs 2, 3, 5, 8, 9 (the ones
       tracked live during this session's diagnosis) and confirm: (a) no slot receives a next task while self-reporting
       `context_used_pct` at/above the gate threshold (todo 3), (b) a reproduced long-session/ short-task-age scenario
-      now trips `context_burn_suspected` (todo 7), (c) the new `frozen_at_high_context` (todo 9) and
-      `context_saturated_session_lost_task_requeued` (todo 10) event types appear when their trigger conditions are
+      now trips `context_burn_suspected` (todo 7), (c) the new `frozen_at_high_context` (todo 11) and
+      `context_saturated_session_lost_task_requeued` (todo 12) event types appear when their trigger conditions are
       manually reproduced in a test env. **Done when**: a written verification note citing actual post-deploy event/log
       evidence for (a)-(c), attached to this plan's Progress Log.

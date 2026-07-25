@@ -28,8 +28,8 @@ assigned_vm: planning
 execution_scope: orchestrator-agent
 priority: P0
 estimate_class: infra
-estimate_baseline_ai_days: 1.5
-estimate_calibrated_ai_days: 1.2
+estimate_baseline_ai_days: 2.2
+estimate_calibrated_ai_days: 1.8
 locked_by:
 locked_since:
 supersedes:
@@ -88,13 +88,39 @@ sequential: true
       behavior. **Done when**: a written finding citing the exact function/branch responsible for slots 13/14/15/0's
       dormancy, plus (only if a bug) a fix with a regression test that a long-dormant free slot gets an AutoSpawn
       attempt within one normal tick interval.
+- [ ] [INFRA] P0. **Audit whether `check_doc_body_links` promote-blocking failures actually trigger
+      `escalate-to-orchestrator.yml`, wire it in if not.** Confirmed live 2026-07-25: the LDR→main promotion has been
+      repeatedly blocked since at least 04:06 UTC by
+      `scripts/quality_gates/test_check_doc_body_links.py::test_live_corpus_has_zero_new_broken_body_links` failing ("1
+      new broken body link" — a cross-repo doc link CI's single-repo checkout can't resolve, same failure class already
+      fixed once today per the 04:21:52 `check_doc_body_links.py` escalation) across multiple successive auto-generated
+      promote PRs (closed #1474, #1475, an intermediate PR at 04:06, #1478, and the still-open #1483 as of this plan's
+      authoring) — yet `GET /api/escalations/active` at the time showed only two `plan_health`-wall_type escalations in
+      flight, none for this `tests`-slice/`check_doc_body_links` wall. Read
+      `.github/workflows/escalate-to-orchestrator.yml`'s callers
+      (`grep -rn "escalate-to-orchestrator" .github/workflows/` across ALL repos, not just unified-trading-pm) and
+      `server/escalation.py`'s `_prompt_template_for` / `_wall_cooldown_key` to determine: (a) does a `quality-gates-v2`
+      / `QG slice (tests)` failure on this specific selector actually fire the
+      `repository_dispatch: escalate-to-orchestrator` event at all, or only `plan_health` and a fixed set of other wall
+      types do, and (b) if it does fire, is a dedup/cooldown key silently suppressing repeat escalations for the same
+      recurring failure across successive auto-generated promote PRs (each new promote PR gets a NEW PR number, which
+      may not match the cooldown key's PR-number-scoping, causing every fresh promote attempt to look like a "new" wall
+      that should escalate again — or the opposite, an overly broad key that treats them as the same wall and never
+      re-fires). If gap (a), wire the `tests`-slice/`check_doc_body_links` failure into the same
+      escalate-to-orchestrator call the other CRITICAL QG slice failures already use. If gap (b), fix the cooldown key
+      to scope on `(repo, wall_type, failure_signature)` rather than raw PR number, so a recurring failure across
+      auto-regenerated promote PRs still re-escalates. **Done when**: either a cited example of this exact failure class
+      successfully escalating end-to-end (a `cicd`-role dispatch + a resolving commit), or a fix + a regression test
+      proving a `check_doc_body_links` promote-blocker now produces an active escalation.
 - [ ] [REVIEW] P1. **Post-fix live re-verification against the same baseline.** Re-run the same read-only telemetry pull
-      this plan's `source` field describes (`GET /api/state`, `GET /api/backlog`, `GET /api/activity` via the read-only
-      SSM pattern in `agent-orchestrator/scripts/orchestrator/check-ao-backlog-status.sh` — READ-ONLY, do not restart or
-      mutate anything on the VM) against the live orchestrator VM (`i-0c9b283b31d6b5ca7`, `ap-northeast-1`) after todos
-      1-2 ship and reach production. Confirm: (a) the active-slot fraction has recovered toward the ~12/15 baseline the
-      operator observed earlier on 2026-07-25 (or state plainly if it hasn't, with the new blocking cause), (b) slots
-      13/14/15/0 either now show fresh AutoSpawn attempts or the audit's "intended cap" finding is confirmed still
+      this plan's `source` field describes (`GET /api/state`, `GET /api/backlog`, `GET /api/activity`,
+      `GET /api/escalations/active` via the read-only SSM pattern in
+      `agent-orchestrator/scripts/orchestrator/check-ao-backlog-status.sh` — READ-ONLY, do not restart or mutate
+      anything on the VM) against the live orchestrator VM (`i-0c9b283b31d6b5ca7`, `ap-northeast-1`) after the prior
+      todos ship and reach production. Confirm: (a) the active-slot fraction has recovered toward the ~12/15 baseline
+      the operator observed earlier on 2026-07-25 (or state plainly if it hasn't, with the new blocking cause), (b)
+      slots 13/14/15/0 either now show fresh AutoSpawn attempts or the audit's "intended cap" finding is confirmed still
       correct, (c) a fresh branch-quarantine episode (if one occurs naturally, or induced in a test env) produces a
-      verified alert. **Done when**: a written verification note citing the actual re-pulled slot/activity data,
-      attached to this plan's Progress Log.
+      verified alert, (d) the LDR→main promotion pipeline has actually cleared the recurring `check_doc_body_links`
+      blocker (a merged promote PR, not just another closed-and-superseded one). **Done when**: a written verification
+      note citing the actual re-pulled slot/activity/escalation data, attached to this plan's Progress Log.
