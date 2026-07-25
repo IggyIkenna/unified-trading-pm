@@ -1,0 +1,140 @@
+---
+doc_type: issue
+title:
+  "ci_status Firestore writer (`unified-trading-sa`) is 403 PermissionDenied fleet-wide — SIT-gated LDR→main promotion
+  silently stalled for every ldr_main repo"
+summary: >-
+  `ci-status-update.yml` (`unified-trading-pm`) has been failing 100% of the time since at least 2026-07-25T10:36Z (last
+  observed success) with `google.api_core.exceptions.PermissionDenied: 403 Missing or insufficient permissions` on the
+  Firestore transaction write to `ci_status/{repo}`. Reproduced live from the same self-hosted-runner ambient ADC
+  identity (`unified-trading-sa@central-element-323112.iam.gserviceaccount.com`) via a direct REST PATCH — same 403.
+  Because `sit_validated_tree` (the fleet's `ldr-to-main-promote-fleet.yml` SIT gate input) is written ONLY by this
+  workflow, EVERY SIT-covered repo (21 repos, incl. `deployment-api`, `agent-orchestrator`, `unified-trading-library`,
+  `instruments-service`, …) whose promote gate needs a fresh SIT stamp is now fail-CLOSED and re-dispatching
+  `full-workspace-sit` on every ~5 min tick with zero forward progress — the SIT jobs themselves pass and log `"stamped
+  SIT_VALIDATED <repo> @ <sha> (tree ...)"`, but that log line only reflects a successful `repository_dispatch` POST
+  (fire-and-forget), not a successful downstream Firestore write, so the fleet has been silently believing SIT
+  validation is landing when it is not.
+status: open
+nature: issue
+asset_group: [meta]
+stage: [meta]
+repos: [unified-trading-pm]
+scope: [engineer, admin]
+tags: [ci-cd, firestore, ci_status, promote-gate, sit-gate, permissions, fleet-wide, incident]
+related: [deployment_registry_reaper_not_draining_stale_entries_2026_07_24]
+created: 2026-07-25
+priority: P0
+parent_epic: infrastructure_master
+source:
+  "discovered 2026-07-25 (slot 5, infra) while chasing why deployment-api's LDR→main promote of a fix-carrying digest
+  bump stayed SIT-gate-blocked despite a SIT run completing and logging success."
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+sequential: false
+depends_on: []
+locked_by:
+locked_since:
+assigned_vm: planning
+resolved_by:
+---
+
+# ci_status Firestore writer is 403'ing fleet-wide (2026-07-25)
+
+## What I found
+
+Working `deployment_registry_reaper_not_draining_stale_entries-002` (re-verify a deployment-api fix now that its
+base-image digest was refreshed and pushed to LDR@`108e2fd`), the LDR→main promote kept SIT-gate-BLOCKing with the SAME
+stale `sit_validated_tree` across three consecutive manual `ldr-to-main-promote-fleet.yml` triggers (13:46, 13:54,
+13:57), even though a `full-workspace-sit` run (`system-integration-tests` run `30160408041`) completed successfully at
+13:52 and logged `"stamped SIT_VALIDATED deployment-api @ 0badf575... (tree c2bd5b9c...)"` — the exact tree the promote
+gate was waiting for.
+
+Traced the gap:
+
+1. `full-workspace-sit.yml`'s stamp step (`system-integration-tests/.github/workflows/full-workspace-sit.yml:158-175`)
+   is fire-and-forget: it POSTs a `ci-status-update` `repository_dispatch` to `unified-trading-pm` and echoes
+   `"stamped SIT_VALIDATED ..."` purely because the `curl` HTTP call succeeded — it never checks whether the downstream
+   workflow run actually completes, let alone whether its Firestore write succeeds.
+2. Read the LIVE Firestore doc directly (`GET .../documents/ci_status/deployment-api` via REST):
+   `updateTime: 2026-07-25T07:00:30Z` — over 7 hours stale, `sit_validated_tree` still the OLD value (`2584a2d8...`),
+   confirming the 13:52 stamp never actually landed.
+3. `gh run list --repo IggyIkenna/unified-trading-pm --workflow=ci-status-update.yml` shows the dispatched runs queuing
+   up (self-hosted glue-writer-pool capacity) and then **ALL failing** — sampled 100 recent runs: 95 `failure`, 0
+   `success`, earliest failure in that window `2026-07-25T13:48:04Z`. Paginated further back: the **last successful run
+   was `2026-07-25T10:36:47Z`** — i.e. this has been broken for **at least ~3.5 hours** before discovery, likely longer
+   (100-run window doesn't reach further back at this dispatch volume).
+4. Every sampled failure has the SAME traceback:
+   `google.api_core.exceptions.PermissionDenied: 403 Missing or insufficient permissions` inside
+   `ci_status_store.py::set_status`'s Firestore transaction (`client.transaction()` → `begin_transaction`). The job runs
+   on the self-hosted glue-writer pool and relies on **ambient ADC**
+   (`~/.config/gcloud/application_default_credentials.json`, SA
+   `unified-trading-sa@central-element-323112.iam.gserviceaccount.com`) — the per-run `google-github-actions/auth@v3`
+   step was deliberately DROPPED for this job on 2026-07-17 (comment in `ci-status-update.yml`: "PROBED on the box
+   before dropping ... Firestore write+read+delete OK").
+5. **Reproduced independently, live, from this session** (same box, same ADC identity) via a direct Firestore REST
+   `PATCH` to `ci_status/_probe_slot5` using `gcloud auth application-default print-access-token` (confirmed via
+   `tokeninfo` to be minted for `unified-trading-sa`'s `client_id`, not a different active gcloud account): **same
+   `403 PERMISSION_DENIED`**. So this is not runner-flakiness or a stale/expired individual CI run — the SA itself
+   currently lacks the Firestore write permission it had when probed on 2026-07-17. Root cause NOT further diagnosed —
+   reading the SA's current IAM bindings requires `resourcemanager.projects.getIamPolicy`, which neither of this
+   session's two active gcloud identities (`github-actions-deploy@...`, and `ikenna@odum-research.com` — reauth failed
+   non-interactively) could exercise here. Candidate causes, not verified: (a) a `roles/datastore.user` (or equivalent)
+   binding was removed/replaced for this SA in an unrelated IAM cleanup; (b) an org-policy or VPC-SC change scoped
+   Firestore access; (c) the ADC key file on the runner box is stale/rotated out from under a live SA key rotation.
+6. Side-effect also observed (separate symptom, same box, NOT yet confirmed same root cause): the
+   `cloud-build-router.yml` "Persist CI/CD event" step's `gsutil cp` GCS write also failed ("Your credentials are
+   invalid. Please run `$ gcloud auth login`") in an UNRELATED run (`unified-trading-pm` run `30159646779`, 13:24:19Z) —
+   a DIFFERENT symptom (gcloud CLI creds, not ADC) on what may be the same or a sibling self-hosted runner. Flagging as
+   a possible second data point for the same underlying credential/IAM incident, not confirmed to share a root cause.
+
+## Why it matters
+
+- **Every SIT-covered `ldr_main` repo's promotion from LDR to `main` is silently stalled.** The promote gate design
+  explicitly fails CLOSED on a missing/stale `sit_validated_tree` (correct, conservative behavior) — but the SIT stamp
+  step's fire-and-forget logging makes the fleet BELIEVE stamps are landing, so nobody would notice this without
+  directly reading the Firestore doc's `updateTime`, exactly as done here. This is the same failure CLASS as the earlier
+  `unified-trading-library-prod` Cloud Build trigger incident
+  (`utl_prod_cloud_build_trigger_missing_fleet_stale_base_image_2026_07_25.md`) — a downstream step silently swallowing
+  a real failure behind an apparently-green log line.
+- Directly blocking my current task (`deployment_registry_reaper_not_draining_stale_entries-002`): the `deployment-api`
+  gunicorn/reaper P0 fix chain (`deployment-api@3fea307` → digest refresh `108e2fd`) is fix-complete on LDR but cannot
+  reach `main`/Cloud Run until this clears.
+- Per CLAUDE.md's "Data pipeline correctness is the heartbeat" / SSOT-contradiction escalation rule, a fleet-wide CI/CD
+  promotion stall silently masquerading as healthy is a NOTIFY-OPERATOR-grade finding, not a routine backlog item.
+
+## Recommended decision
+
+1. **[OPERATOR]** Diagnose + restore `unified-trading-sa@central-element-323112.iam.gserviceaccount.com`'s Firestore
+   write permission (likely `roles/datastore.user` on project `central-element-323112`, or whatever role covers
+   `ci_status` — grep `ci_status_firestore_side_store_2026_06_10.md` for the originally-granted role) — this needs
+   `resourcemanager.projects.getIamPolicy`/`setIamPolicy`, which this session's identities don't have. Cross-check the
+   ADC key file on the affected self-hosted runner box(es) hasn't silently rotated out from under a live SA key
+   rotation.
+2. **[INFRA]** Once permissions are restored, verify `ci-status-update.yml` runs go green again
+   (`gh run list --workflow=ci-status-update.yml` — expect `success`, not `failure`), then confirm `deployment-api`'s
+   `sit_validated_tree` Firestore field actually advances to `c2bd5b9c...` (or the LDR tree current at fix time).
+3. **[INFRA]** Harden `full-workspace-sit.yml`'s stamp step (`:158-175`) so it stops declaring success purely from the
+   `curl` HTTP-accept — either poll the dispatched `ci-status-update` run to a terminal state before echoing "stamped",
+   or have `ci-status-update.yml` itself post a `sit-stamp-failed` signal back (mirrors the existing "Report SIT result
+   to PM" step already in the same file) so a downstream Firestore-write failure surfaces as a page instead of a silent
+   no-op. This is the same "verify the write, don't trust the HTTP-accept" lesson as the Cloud Build trigger incident.
+4. **[INFRA]** Once (1)-(3) land, re-run `deployment_registry_reaper_not_draining_stale_entries-002`'s remaining chain:
+   confirm `deployment-api`'s promote PR (past #377) merges to `main`, a fresh Cloud Build + Cloud Run revision deploys,
+   then re-verify `active/` convergence per that issue doc's Todo 5.
+
+## Todos
+
+- [ ] [OPERATOR] P0. Diagnose + restore Firestore write permission for
+      `unified-trading-sa@central-element-323112.iam.gserviceaccount.com` on project `central-element-323112` (reproduce
+      via `gcloud auth application-default print-access-token` + a direct Firestore REST `PATCH` from the affected
+      self-hosted runner box; confirmed 403 as of 2026-07-25T14:02Z). Check IAM bindings + any recent SA key rotation.
+- [ ] [INFRA] P0. Once permissions restored, verify `ci-status-update.yml` (unified-trading-pm) runs green again and
+      `ci_status/deployment-api`'s `sit_validated_tree` advances to the current LDR tree (repo: unified-trading-pm).
+- [ ] [INFRA] P1. Harden `full-workspace-sit.yml`'s stamp step
+      (`system-integration-tests/.github/workflows/full-workspace-sit.yml:158-175`) to not declare "stamped
+      SIT_VALIDATED" success from a bare `curl` HTTP-accept — verify the downstream `ci-status-update` run actually
+      completes + writes, or surface failure loudly (repo: system-integration-tests).
+- [ ] [INFRA] P2. Investigate whether the `cloud-build-router.yml` "Persist CI/CD event" gsutil credential failure (run
+      `30159646779`, 13:24:19Z, "Your credentials are invalid") shares a root cause with this incident — same or sibling
+      self-hosted runner box (repo: unified-trading-pm).
