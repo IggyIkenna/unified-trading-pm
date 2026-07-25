@@ -215,7 +215,15 @@ repeat sample showing genuinely 0 non-13-col objects (or documented unrecoverabl
       slots noted it in-doc only, unaddressed after ~2h18m / 9 redispatches) rather than re-noting it a 3rd time here —
       see the blocked question posted against this task. Next dispatch: repeat this health-check (2-read progress-metric
       check — a new `date=` boundary OR continued in-date fixture-fetch advance both count as live); once terminal,
-      re-run the census script per "Next action" above before flipping this checkbox.
+      re-run the census script per "Next action" above before flipping this checkbox. — **Health-checked
+      2026-07-25T06:48Z (slot 9, data_engineering), still RUNNING, confirms slot 5's 06:40Z check**:
+      `gcloud compute instances list` confirms `RUNNING`; heartbeat blob updateTime `06:47:21Z` (~42s old); run.log grew
+      78,791→81,332 lines (+2,541) since the 06:40Z read, latest timestamp `06:46:55Z` (live); `date=` boundary
+      unchanged at `2020-03-18` (443 distinct dates, same as 06:40Z) — genuine in-date advance, no stall, no error/
+      terminal marker. Not completable this turn. **Not re-escalating the redispatch-frequency concern** — already
+      raised via `/blocked` by slot 5 at 06:40Z and still pending an operator/main answer; releasing quietly. Next
+      dispatch: repeat this health-check; once terminal, re-run the census script per "Next action" above before
+      flipping this checkbox.
 
 ## Codex SSOTs
 
