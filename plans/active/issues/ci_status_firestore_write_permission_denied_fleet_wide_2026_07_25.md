@@ -179,12 +179,22 @@ Traced the gap:
       WIF-credential parse failure vs Firestore 403 PermissionDenied), different onset (reproduces back to
       2026-07-24T12:48Z, 22h before this incident began, and still reproducing after — pre-existing unrelated tooling
       issue). Full evidence in "What I found" item 6 above. Follow-up filed as new todo below.
-- [ ] [INFRA] P3. `cloud-build-router.yml`'s "Persist CI/CD event" step's `gsutil cp` GCS write fails under WIF auth for
-      `execution-service-sa@central-element-323112.iam.gserviceaccount.com` ("Your credentials are invalid. Please run
-      `$ gcloud auth login`") — pre-existing since at least 2026-07-24T12:48Z (run `30094405633`), still failing as of
-      2026-07-25T14:03Z (run `30160874407`); `continue-on-error` hides it from the job conclusion. Switch to
+- [x] ✅ [INFRA] P3. `cloud-build-router.yml`'s "Persist CI/CD event" step's `gsutil cp` GCS write fails under WIF auth
+      for `execution-service-sa@central-element-323112.iam.gserviceaccount.com` ("Your credentials are invalid. Please
+      run `$ gcloud auth login`") — pre-existing since at least 2026-07-24T12:48Z (run `30094405633`), still failing as
+      of 2026-07-25T14:03Z (run `30160874407`); `continue-on-error` hides it from the job conclusion. Switch to
       `gcloud storage cp` (native ADC/WIF support) or otherwise make the `persist-event` composite action's gsutil call
-      WIF-compatible (repo: unified-trading-pm, `.github/actions/persist-event`).
+      WIF-compatible (repo: unified-trading-pm, `.github/actions/persist-event`). — unified-trading-pm@309fc5348:
+      swapped `timeout 60 gsutil cp - "$GCS_URI"` for `timeout 60 gcloud storage cp - "$GCS_URI"` in
+      `.github/actions/persist-event/action.yml` (same stdin-source syntax — `gcloud storage cp --help` confirms `-`
+      reads file content from stdin, a drop-in swap). Reproduced the bug live on this box first
+      (`gsutil ls -b gs://unified-trading-cicd-events` → "Your credentials are invalid. Please run
+      `$ gcloud auth login`", same signature) then confirmed the fix direction (`gcloud storage buckets     describe`
+      succeeded using the SAME ambient credentials) before shipping. End-to-end verified the exact stdin-cp pattern
+      against the real bucket: wrote a probe object via `gcloud storage cp -` and read it back with matching content
+      (`gs://unified-trading-cicd-events/cicd/events/_verification_probe/1784989225-probe.jsonl`) — left in place
+      (harmless, isolated, non-canonical prefix) since single-object GCS deletes are guardrail-blocked for this role.
+      `quality-gates.sh` green (sentinel-verified); shipped via quickmerge → PR #1508 (auto-merge to main).
 
 ## Progress Log
 

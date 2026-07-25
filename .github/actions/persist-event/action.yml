@@ -207,6 +207,13 @@ runs:
     # Skipped entirely when gcp_sa_key is empty: on self-hosted runners the runner user's ambient
     # ADC already authenticates gsutil, so an auth step there is both pointless and a guaranteed
     # failure (the action rejects an empty credentials_json).
+    # NOTE (2026-07-25, ci_status_firestore_write_permission_denied_fleet_wide): the write below uses
+    # `gcloud storage cp`, not `gsutil cp` — the legacy Python `gsutil` binary cannot consume a WIF
+    # (`google-github-actions/auth@v3`) short-lived `external_account` credential file the way the
+    # native `gcloud storage`/Cloud SDK path can, producing "Your credentials are invalid. Please run
+    # `$ gcloud auth login`" on every WIF-authenticated caller (confirmed reproducing on this exact box:
+    # `gsutil ls` 403s with that message while `gcloud storage buckets describe` succeeds using the SAME
+    # ambient credentials) — `gsutil` is unaffected by ambient-ADC self-hosted auth, only by WIF.
     - name: Authenticate to GCP
       if: steps.build-event.outputs.cloud_provider == 'gcp' && inputs.gcp_sa_key != ''
       continue-on-error: true
@@ -241,7 +248,11 @@ runs:
 
         # `timeout` replaces the reusable's job-level `timeout-minutes: 5`, which composite steps
         # do not support. Without it a hung transfer hangs the CALLER's job, not just this write.
-        printf '%s\n' "$EVENT_JSON" | timeout 60 gsutil cp - "$GCS_URI" \
+        # `gcloud storage cp -` (native Cloud SDK, WIF-compatible) replaces `gsutil cp -` (2026-07-25
+        # fix: the legacy gsutil binary cannot consume a WIF-issued external_account credential file
+        # the same way native gcloud/Cloud SDK calls can — same stdin-source syntax, drop-in swap,
+        # verified live against this bucket before shipping).
+        printf '%s\n' "$EVENT_JSON" | timeout 60 gcloud storage cp - "$GCS_URI" \
           || echo "::warning::GCS write failed — event not persisted"
 
         echo "Persisted event to $GCS_URI"

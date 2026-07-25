@@ -405,6 +405,14 @@ inherited from the first shipped batch:
       class). **Next dispatch**: pick up the P0 fix in the linked doc first; once it ships, relaunch FIXTURES-only
       (SPOT, resumes from measured progress, no data lost by the stop), health-check to terminal, THEN resume this
       todo's original spot-verify + enrichment-campaign-scoping sequence.
+- [ ] [SCRIPT] P3. Add the same `START_DATE` clamp/warning to `launch-api-football-backfill-vm.sh` that
+      `launch-sports-entity-sweep-vm.sh` already has per `codex/02-data/sports-2020-06-data-floor.md`'s
+      enforcement-surface list (item 6) — this launcher silently accepts a pre-2020-06-06 explicit start date with no
+      warning (the venue-epoch skip gate is defense-in-depth, not a substitute for the launcher itself
+      refusing/clamping). Found 2026-07-25 (slot 11) while launching `af-backfill-20260725-125405` after correcting the
+      parent plan's own stale "2019→" range by hand; a future agent without that context could launch a genuinely
+      pre-floor range unnoticed. (repo: deployment-service). **Done when**: the launcher clamps or loudly warns on a
+      pre-2020-06-06 explicit `START_DATE`, matching its sibling.
 
 ## Codex SSOTs
 
