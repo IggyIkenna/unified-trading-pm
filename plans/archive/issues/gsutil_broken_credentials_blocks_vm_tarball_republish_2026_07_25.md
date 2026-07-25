@@ -22,7 +22,7 @@ stage: [meta]
 repos: [deployment-service]
 scope: [engineer, admin]
 tags: [gcloud, gsutil, credentials, vm-launcher, infra, blocked-credentials]
-related: [/plans/active/issues/vm_tarball_upload_expired_wif_token_interactive_slot_2026_07_25.md]
+related: [/plans/archive/issues/vm_tarball_upload_expired_wif_token_interactive_slot_2026_07_25.md]
 created: 2026-07-25
 assigned_vm: NA
 parent_epic: infrastructure_master

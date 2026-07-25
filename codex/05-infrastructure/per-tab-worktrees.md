@@ -787,7 +787,7 @@ shell. An agent's sandboxed Bash-tool invocation (and any other non-interactive 
 sources `.bashrc`, so it still resolves the broken snap `gcloud`/`gsutil` first; every
 `deployment-service/scripts/vm/*.sh` launcher and `create-code-tarballs.sh` depends on a working `gcloud` CLI, so this
 silently blocks any interactive-AO-slot VM launch or tarball rebuild. Root-caused + fixed 2026-07-25:
-`plans/active/issues/vm_tarball_upload_expired_wif_token_interactive_slot_2026_07_25.md`.
+`plans/archive/issues/vm_tarball_upload_expired_wif_token_interactive_slot_2026_07_25.md`.
 
 **Fix**: `scripts/dev/install-gcloud-sdk-path-symlinks.sh` symlinks the real SDK's `gcloud`/`gsutil`/`bq`/
 `docker-credential-gcloud` into `~/.local/bin` — already FIRST on `PATH` in every shell type observed on this host
