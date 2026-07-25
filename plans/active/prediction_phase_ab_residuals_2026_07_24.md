@@ -52,7 +52,7 @@ related:
     /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
   ]
 created: "2026-07-24"
-last_updated: "2026-07-24"
+last_updated: "2026-07-25" # was 2026-07-24 — consolidated-closeout split pass added 2 todos relocated from the parent (adapter dead-code audit as new A5; merged reconciliation-cadence + duplicate-note in Phase B) + folded the POLYMARKET schema-extension ruling into the existing A2 todo (no new checkbox); open-todo count 11 -> 13
 parent_epic: predictions_master
 assigned_vm: NA
 execution_scope: local-only
@@ -158,10 +158,20 @@ source: >-
       suggested). Separately, manifest `data_type=prediction_trades` (2,477 rows, still being written 2 days before the
       audit) is a genuine non-canonical axis value, not a `migration_pending` case.** No writer identified yet for the
       legacy shapes (deferred to the issue doc's own todo, a code-read task). Full evidence + 3 open questions (Q1
-      catalogue metadata recoverability, Q2 still-being-written?, Q3 retro-register vs migrate/purge — **Q3 is genuinely
-      operator-authority, queued in the gate doc's decision table**):
+      catalogue metadata recoverability, Q2 still-being-written?, **Q3 retro-register vs migrate/purge — RULED
+      2026-07-25 (operator): extend the canonical `trades` schema to preserve the trader-identity + market-question +
+      outcome-label content, then migrate — not drop the metadata, not leave it permanently forked**):
       `/plans/active/issues/prediction_polymarket_legacy_dual_write_trees_metadata_loss_2026_07_24.md`. (repos:
-      market-tick-data-service, unified-api-contracts, instruments-service)
+      market-tick-data-service, unified-api-contracts, instruments-service) **Schema-extension migration (relocated
+      2026-07-25 from the parent's "Queued audits + reviews" section, folded into this todo rather than opened as a new
+      checkbox — same issue doc, same underlying finding):** per the Q3 ruling above, a 3-step sequence tracked in full
+      detail in the linked issue doc — (1) design the extended canonical `trades` schema (2,477 manifest rows + the
+      related ~158+-object non-canonical deep-tree shape both need a home), (2) implement the writer update + migrate
+      the existing rows, (3) register the new shape in the cutover/non-canonical-path inventories. **Done when**: all 3
+      steps are checked with evidence in
+      `/plans/active/issues/prediction_polymarket_legacy_dual_write_trees_metadata_loss_2026_07_24.md` itself (that
+      doc's own todos remain the source of truth for step-by-step evidence); this bullet is satisfied once that doc
+      shows all 3 checked.
 
 ### A3 — Venue-perps + live CLOB depth residuals (fold)
 
@@ -196,6 +206,24 @@ source: >-
       (reads `fixture_match_for_instrument_key`, ~6-line extension of the `clob_token_ids` block) + the MTDS
       prediction-tick schema — see HELD list. (repos: instruments-service ✅; unified-api-contracts +
       market-tick-data-service DEFERRED)
+
+### A5 — Adapter code-quality audit (relocated 2026-07-25 from the parent's "Queued audits + reviews" section)
+
+- [ ] [BACKEND] P2. **Adapter dead-code/fallback audit.** Audit instruments-service's and market-tick-data-service's
+      prediction adapters (kalshi.py, polymarket/) for dead code, silent fallback branches, and duplicated logic, per
+      `/codex/06-coding-standards/adapter-dead-code-and-fallback-ban.md`. Exact paths:
+      `instruments_service/reference_data/adapters/prediction/kalshi.py` + `.../adapters/prediction/polymarket/`
+      (instruments-service), `.../adapters/prediction/` (market-tick-data-service). **Awareness note (not a done-when
+      gate)**: `prediction_satellite_ao_dispatch_batch1_2026_07_25.md` todo 1 already targets one known defect on this
+      surface — the dead `trading-api.kalshi.com` host — but in a DIFFERENT file
+      (`e2e-testing/scripts/validation/validate_batch_live_smoke_matrix.py`, not the adapter files themselves); if
+      batch1 has landed by the time this runs, don't re-file that as a new finding, just note it's already tracked. Also
+      tracked as an AO-dispatchable execution copy in `prediction_consolidated_native_ao_extract_2026_07_25.md`
+      (`status: draft`) todo 1 — that plan's own Done-when now reconciles evidence back into THIS checkbox (updated
+      2026-07-25, corpus-wide referrer fixup), not the parent's now-relocated section. Done when: every adapter file in
+      scope has either a filed finding (a new `plans/active/issues/<slug>.md`, one per distinct defect class found) or
+      an explicit "0 findings" line recorded in this plan's Progress Log — not silence. (repos: instruments-service,
+      market-tick-data-service)
 
 ## Phase B — run the migrations (gated on Phase A green)
 
@@ -284,6 +312,23 @@ source: >-
       confirms 0 non-canonical entries for prediction. This is the cross-AG standard — tradfi/cefi/sports all target the
       same 100% bar; DeFi is the sole exception (genuinely mixed per-instrument_type, tracked separately in
       `defi_consolidated_closeout_2026_07_18.md`).
+- [ ] [DATA] P2. **`/data-pipeline-reconciliation` post-migration 3x-cadence + duplicate-note merge (relocated
+      2026-07-25 from the parent's "Queued audits + reviews" + "Distinct Values / axis-value census" P3 sections — both
+      tracked the same underlying action, merged into this one todo).** Reach the 3x dated-pass cadence
+      `task_template.md` finding K requires for prediction: baseline (confirmed) `2026-07-20` —
+      `/plans/audit/results/data_pipeline_reconciliation_prediction_2026_07_20.md`; a 2nd pass already exists, uncited
+      until now — `/plans/audit/results/data_pipeline_reconciliation_prediction_2026_07_24.md` (diffs against the
+      2026-07-20 baseline: reachable_coverage 95.82% vs 94.63%; F2 malformed `instrument_type` 76 `prediction` rows
+      unchanged, +70 blank, was 30); the 3rd and final pass is the genuinely-blocked post-Phase-B-migration final gate
+      (this same doc's migration todo above must land first) — re-run `/data-pipeline-reconciliation prediction` once it
+      does and diff against the 2026-07-20 baseline. Also verify whether any `/data-pipeline-reconciliation prediction`
+      run PREDATES the 2026-07-20 baseline (search `plans/audit/results/`, `plans/active/`, `plans/archive/`) — record
+      found-with-path or confirmed-absent. Also also tracked as an AO-dispatchable partial-slice execution copy in
+      `prediction_consolidated_native_ao_extract_2026_07_25.md` (`status: draft`) todo 4 — that plan's own Done-when now
+      cites this checkbox + the parent doc's "Distinct Values / axis-value census" section (updated 2026-07-25,
+      corpus-wide referrer fixup) as its reconciliation targets. **Done when**: all 3 dated runs' report paths are cited
+      together in this plan's Progress Log, and the parent's "Distinct Values / axis-value census" section lists the
+      2026-07-24 pass alongside the 2026-07-20 baseline.
 
 ## Progress Log
 
@@ -291,3 +336,10 @@ source: >-
   forward the Phase A + Phase B sections verbatim (14 todos total: 5 done / 9 open at split time). See the parent's
   Progress Log (ticks 1-31, especially the A0/A2/A4/§5/§6 and Phase-B `--apply` entries — ticks 1, 4-9, 16-18, 21) for
   the full session-by-session history of what is already shipped here. Future work on this plan logs new entries below.
+- **2026-07-25 (consolidated-closeout split pass) — relocated 2 items in from the parent's now-forked "Queued audits +
+  reviews" / "Distinct Values" P3 sections.** Added new "A5 — Adapter code-quality audit" subsection (1 todo). Added 1
+  merged Phase-B todo combining the `/data-pipeline-reconciliation` 3x-cadence top-up with the former "Distinct Values"
+  P3 duplicate-note (both tracked the same underlying post-Phase-B-migration reconciliation action). Folded the
+  operator-ruled (2026-07-25) POLYMARKET `prediction_trades` schema-extension migration into the existing A2
+  dual-write-trees todo (same source issue doc, same finding — no new checkbox needed). Net: open-todo count 11 → 13. No
+  engineering work executed in this pass — pure relocation + reconciliation of pre-existing tracked items.
