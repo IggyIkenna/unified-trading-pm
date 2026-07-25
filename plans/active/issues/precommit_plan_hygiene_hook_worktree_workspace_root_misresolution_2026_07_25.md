@@ -15,7 +15,7 @@ summary: >-
   quality-gates.sh) and was never touched by that fix. Three independent agents running in `.claude/worktrees/<id>/`
   isolation today (2026-07-25, the `/plan-reconcile` apply-Workflow's follow-up passes) all independently hit this hook
   resolving/validating against the MAIN checkout instead of their own worktree.
-status: open
+status: superseded
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -27,6 +27,7 @@ related:
     /plans/active/issues/qg_backfill_disk_and_lint_checks_resolve_via_main_clone_not_worktree_2026_07_24.md,
     /plans/active/issues/qg_workspace_root_template_drift_12_repos_2026_07_24.md,
     /codex/05-infrastructure/per-tab-worktrees.md,
+    /plans/active/issues/precommit_hooks_workspace_root_resolves_to_main_not_worktree_2026_07_25.md,
   ]
 created: "2026-07-25"
 parent_epic: infrastructure_master
@@ -41,7 +42,7 @@ drift_direction: advance-code
 locked_by:
 locked_since:
 supersedes:
-superseded_by:
+superseded_by: precommit_hooks_workspace_root_resolves_to_main_not_worktree_2026_07_25
 resolved_by:
 source: >-
   Found independently by 3 Agent-tool sub-agents (isolation: worktree) during this session's plan-reconcile follow-up
@@ -50,6 +51,12 @@ depends_on: []
 ---
 
 # `.pre-commit-config.yaml`'s plan-hygiene hook mis-resolves worktree paths — same bug class, different location than the already-fixed qg-common.sh instance
+
+> **⚠️ SUPERSEDED 2026-07-25** — a 4th independent agent hit the same bug with directly-confirmed root-cause evidence
+> (traced the actual exported `WORKSPACE_ROOT` value) and filed
+> [`precommit_hooks_workspace_root_resolves_to_main_not_worktree_2026_07_25.md`](/plans/active/issues/precommit_hooks_workspace_root_resolves_to_main_not_worktree_2026_07_25.md)
+> in parallel. That doc is more complete (confirmed root cause this doc had flagged as unreproduced, plus a wider
+> affected-hooks list) and now carries this doc's 3 confirmations merged in. **Track the bug there, not here.**
 
 ## What was found (3 independent confirmations)
 

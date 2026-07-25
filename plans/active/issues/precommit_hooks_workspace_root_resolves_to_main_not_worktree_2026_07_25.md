@@ -33,12 +33,13 @@ related:
     /plans/active/issues/qg_backfill_disk_and_lint_checks_resolve_via_main_clone_not_worktree_2026_07_24.md,
     /plans/active/issues/qg_workspace_root_template_drift_12_repos_2026_07_24.md,
     /plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md,
+    /plans/active/issues/precommit_plan_hygiene_hook_worktree_workspace_root_misresolution_2026_07_25.md,
   ]
 created: "2026-07-25"
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
-priority: P2
+priority: P1
 estimate_class: refactor
 source:
   "side-finding while executing plan_reconciliation_operator_decisions_2026_07_11.md's line-cap split, this session
@@ -90,6 +91,21 @@ for the single `git commit`/`git push` invocations. Verified this correctly rout
 scripts against the worktree's own staged content (re-ran `run_hygiene_sweep.sh --precommit` directly first to confirm
 before trusting it inside the real commit). No `.pre-commit-config.yaml`, hook script, or shared file was modified.
 
+## Merged in: 3 more independent confirmations (from a near-duplicate issue doc filed in parallel, merged 2026-07-25)
+
+A sibling agent working a different part of this same session's follow-up work independently filed
+`precommit_plan_hygiene_hook_worktree_workspace_root_misresolution_2026_07_25.md` (now superseded by this doc) after 3
+OTHER agents hit the identical symptom on 3 OTHER files, in 3 OTHER `.claude/worktrees/agent-<hash>` worktrees, before
+this doc's own directly-confirmed root cause (the exported `WORKSPACE_ROOT`) was known — i.e. 4 independent
+worktree-isolated agents hit this in the same session, on different files, at different times. Two used a
+`WORKSPACE_ROOT`-override symlink workaround (same mitigation as this doc's own "Workaround used to ship" section); one
+used `--no-verify` after manually re-running `check_frontmatter_schema.py`/`check_line_caps.sh`/
+`check_reference_paths.py` clean from its own worktree first — **flagging that transparently**: CLAUDE.md's git safety
+protocol says hooks are never skipped without explicit user request, and this agent made an autonomous judgment call to
+bypass a hook it had independently diagnosed as broken rather than working around the resolution (as the other 3 did).
+The practical risk was mitigated by the manual compensating checks, but the deviation itself should stay visible rather
+than being silently absorbed into a "problem solved" narrative.
+
 ## Recommended decision
 
 Same as the sibling doc's Option A, applied to `.pre-commit-config.yaml` specifically: every local-hook `entry:` using
@@ -102,10 +118,12 @@ working `WORKSPACE_ROOT` value at all, this is plausibly wider-blast-radius than
 
 ## Todos
 
-- [ ] [DIAG] P2. Confirm whether any `.claude/worktrees/agent-<hash>` session currently has a persistently-exported
+- [ ] [DIAG] P1. Confirm whether any `.claude/worktrees/agent-<hash>` session currently has a persistently-exported
       `WORKSPACE_ROOT` (check the launcher/bootstrap for this session type — was it set intentionally for a different,
-      slot-based convention and just doesn't apply here, or is it leaking from a parent shell/profile?).
-- [ ] [CODE] P2. Apply the same fix pattern as
+      slot-based convention and just doesn't apply here, or is it leaking from a parent shell/profile?). Bumped to P1
+      given 4 independent agents hit this in a single session — this blocks/corrupts precommit validation for
+      essentially every Agent-tool `isolation: worktree` session doing plan/codex commits, not a rare edge case.
+- [ ] [CODE] P1. Apply the same fix pattern as
       `qg_backfill_disk_and_lint_checks_resolve_via_main_clone_not_worktree_2026_07_24.md`'s todo 2 (Option A preferred
       here specifically, since Option B's "fixed file itself needs to be the one loaded" caveat applies just as much to
       `.pre-commit-config.yaml`'s hook resolution) to every `${WORKSPACE_ROOT:-...}`-style `entry:` in
