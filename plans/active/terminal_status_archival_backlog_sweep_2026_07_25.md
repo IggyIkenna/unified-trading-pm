@@ -384,3 +384,10 @@ item, it becomes a `BLOCKED-OPERATOR-DECISION` Progress Log entry (see Procedure
   action taken (would violate the plan-locking HARD RULE). This is now the 6th consecutive re-dispatch of the identical
   parked task — same remediation tracked in `external_promote_gated_task_redispatch_churn_no_durable_park_2026_07_25.md`
   (P3), no fresh escalation needed. Skipping via `/skip-current-task`.
+- **2026-07-25 (slot-4): RE-DISPATCHED again, re-confirmed still parked, NOT archived.** Both gates unchanged since
+  slot-11's pass: `locked_by: live-defi-rollout` still on the doc's frontmatter (line 34); C1 in
+  `canonical_closeout_open_questions_2026_07_18.md` (line 114-116) still an unanswered `[unlock-plan]` recommendation.
+  No new archival action taken (would violate the plan-locking HARD RULE). This is now the 7th consecutive re-dispatch
+  of the identical parked task — same remediation tracked in
+  `external_promote_gated_task_redispatch_churn_no_durable_park_2026_07_25.md` (P3), no fresh escalation needed.
+  Skipping via `/skip-current-task`.
