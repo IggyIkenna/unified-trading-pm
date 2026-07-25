@@ -382,7 +382,7 @@ source: >-
       `issues/sports_legacy_duplicate_triage_2026_07_22.md` noting the shared root cause. Source:
       `issues/sports_legacy_duplicate_triage_2026_07_22.md`. Added cross-reference to both
       `plans/archive/2026_07/sports_master_closeout_2026_07_21.md` (PENDING EXECUTION item) and its companion
-      `sports_master_closeout_progress_log_2026_07_24.md` (tracking table row) — unified-trading-pm@PENDING_SHA.
+      `sports_master_closeout_progress_log_2026_07_24.md` (tracking table row) — unified-trading-pm@243998b6c.
 
 ### From `issues/sports_index_recency_masked_captured_atoms_2026_07_13.md`
 
