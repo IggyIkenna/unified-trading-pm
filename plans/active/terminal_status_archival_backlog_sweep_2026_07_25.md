@@ -371,3 +371,23 @@ item, it becomes a `BLOCKED-OPERATOR-DECISION` Progress Log entry (see Procedure
   Skipping via `/skip-current-task`; this is now the 4th consecutive re-dispatch of the identical parked task,
   underscoring `external_promote_gated_task_redispatch_churn_no_durable_park_2026_07_25.md`'s P3 backend todo (durable
   `auto_unpark__` prereq for worker-applied parks) — no new issue doc needed, that one already tracks it.
+- **2026-07-25 (slot-10): RE-DISPATCHED again, re-confirmed still parked, NOT archived.** Both gates unchanged since
+  slot-9's pass: `locked_by: live-defi-rollout` still on the doc's frontmatter; C1 in
+  `canonical_closeout_open_questions_2026_07_18.md` still an unanswered `[unlock-plan]` recommendation. No new archival
+  action taken (would violate the plan-locking HARD RULE). This is now the 5th consecutive re-dispatch of the identical
+  parked task — the durable-park backend fix tracked in
+  `external_promote_gated_task_redispatch_churn_no_durable_park_2026_07_25.md` (P3) is the actual remediation for this
+  churn, not a fresh escalation. Skipping via `/skip-current-task`.
+- **2026-07-25 (slot-11): RE-DISPATCHED again, re-confirmed still parked, NOT archived.** Both gates unchanged since
+  slot-10's pass: `locked_by: live-defi-rollout` still on the doc's frontmatter; C1 in
+  `canonical_closeout_open_questions_2026_07_18.md` still an unanswered `[unlock-plan]` recommendation. No new archival
+  action taken (would violate the plan-locking HARD RULE). This is now the 6th consecutive re-dispatch of the identical
+  parked task — same remediation tracked in `external_promote_gated_task_redispatch_churn_no_durable_park_2026_07_25.md`
+  (P3), no fresh escalation needed. Skipping via `/skip-current-task`.
+- **2026-07-25 (slot-4): RE-DISPATCHED again, re-confirmed still parked, NOT archived.** Both gates unchanged since
+  slot-11's pass: `locked_by: live-defi-rollout` still on the doc's frontmatter (line 34); C1 in
+  `canonical_closeout_open_questions_2026_07_18.md` (line 114-116) still an unanswered `[unlock-plan]` recommendation.
+  No new archival action taken (would violate the plan-locking HARD RULE). This is now the 7th consecutive re-dispatch
+  of the identical parked task — same remediation tracked in
+  `external_promote_gated_task_redispatch_churn_no_durable_park_2026_07_25.md` (P3), no fresh escalation needed.
+  Skipping via `/skip-current-task`.

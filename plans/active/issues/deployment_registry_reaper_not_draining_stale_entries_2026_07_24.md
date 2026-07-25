@@ -431,13 +431,98 @@ flipping the checkbox.
       `deployment-api`'s Cloud Run service has a custom logging driver/sidecar or structured-logging library that
       intercepts stdout before Cloud Logging's default capture. (3) Do NOT re-attempt the gunicorn-file or
       `CancelledError` fixes again — both are confirmed genuinely deployed and are not the (or not the only) remaining
-      cause. **UPDATE 2026-07-25T14:02Z (slot 5): found the ACTUAL blocker — it is not SIT itself.** SIT ran, passed,
-      and logged a matching-tree stamp for `deployment-api`, but the stamp is fire-and-forget (`repository_dispatch`
-      only) and the downstream Firestore write is 403'ing FLEET-WIDE (`ci_status_store.py` `PermissionDenied`,
-      `unified-trading-sa` ADC identity, reproduced live via direct REST `PATCH` — same 403; 0/95 sampled
-      `ci-status-update.yml` runs succeeded since 2026-07-25T10:36Z). This blocks EVERY SIT-covered repo's promote, not
-      just this one. Filed as its own cross-cutting P0 since it blocks the whole fleet's LDR→main pipeline, not just
-      this todo:
+      cause. **DIAGNOSTIC SHIPPED 2026-07-25T15:34Z (slot 5): deployment-api@d750dab** (LDR) —
+      `deployment_api/lifespan.py`'s `lifespan()` now writes `"[STARTUP-DIAGNOSTIC] lifespan entered"` directly via
+      `sys.stderr.write()`/`flush()` as the VERY FIRST statement in the function, before `fastapi_uei_lifespan(...)`'s
+      context manager is even entered — this bypasses the stdlib `logging` module entirely (a bare `print()` is
+      codex-banned, hence `sys.stderr.write`). `quality-gates.sh` green (102s); `quickmerge --agent` landed on LDR,
+      `ldr-to-main-promote-fleet.yml` triggered manually to accelerate. **This is TEMPORARY INSTRUMENTATION, not a fix —
+      remove once the root cause is found.** Prior to shipping this, traced `deployment_api/main.py:125` which ALREADY
+      carries a 2026-07-24 comment documenting the EXACT same "zero application log lines, only HTTP access logs"
+      symptom, "fixed" by adding `logging.basicConfig(level=logging.INFO)` at MODULE level (i.e. runs once in the
+      gunicorn MASTER process under `preload_app = True`, before fork) — that fix is evidently not holding across the
+      fork/worker-init boundary (a well-known Python gotcha: a subsequent `logging.config.dictConfig(...)` call anywhere
+      in the startup path — e.g. inside uvicorn's own worker init — silently DISABLES pre-existing loggers via its
+      default `disable_existing_loggers=True`, even though the root logger's handler object itself survives). **Next
+      dispatch, once this diagnostic reaches a fresh Cloud Run revision + ≥1 request**: `gcloud logging read` for
+      `"[STARTUP-DIAGNOSTIC] lifespan entered"` on `run.googleapis.com%2Fstderr`. ABSENT → the problem is
+      lifespan/stdout-capture, not logging config (chase Cloud Run's log-capture path or whether `lifespan()` is reached
+      at all). PRESENT but `"Background auto-sync task started"` STILL absent → confirms the `logging` module IS the
+      broken link (chase `disable_existing_loggers` / where uvicorn's worker sets up its own logging relative to
+      `main.py`'s module-level `basicConfig()` call) — the concrete fix in that case is almost certainly moving the
+      logging setup into `post_worker_init` in the ROOT `gunicorn.conf.py` (same pattern already used there for
+      `faulthandler.enable()` and `worker_identity.set_worker_age()` — guaranteed to run AFTER any worker-level logging
+      reconfiguration, unlike the current module-import-time `basicConfig()` call). Once root-caused and fixed for real,
+      REMOVE this diagnostic line (repo: deployment-api). **DIAGNOSTIC RESULT 2026-07-25T15:59Z (slot 5): the
+      `logging`-module hypothesis is DISPROVEN — the real problem is one level lower.** `deployment-api@d750dab` reached
+      prod as revision `uts-shared-deployment-api-00277-6kd` (Cloud Build `b7628768`, deployed `2026-07-25T15:56:33Z`).
+      Confirmed the app IS genuinely running: `curl .../health` returned a real, correct response
+      (`{"status":"ok","service":"deployment-api",...}`). Yet **zero** `run.googleapis.com%2Fstderr` / `%2Fstdout`
+      output exists for this revision — not the `sys.stderr.write()` diagnostic (which bypasses Python `logging`
+      entirely), AND not even gunicorn's OWN access log (`gunicorn.conf.py`: `accesslog = "-"` → stdout — a
+      process-level write, independent of ANY app Python code) for the `/health` request that definitely hit it. This
+      rules out "a `dictConfig` disabled the app's loggers" as the cause — the silence is NOT Python-`logging`-specific,
+      it is silence at the RAW stdout/stderr stream level, for BOTH the app and gunicorn itself. Cross-checked this is
+      not a general Cloud Logging capture outage for this service: queried the SAME log streams with no revision filter
+      over the last 7 days and found FULL Python tracebacks captured fine for older revisions (e.g.
+      `uts-shared-deployment-api-00274-s9g` at `2026-07-25T06:14:03Z`, showing the OLD `CancelledError` symptom in
+      complete detail) — so Cloud Logging's stdout/stderr ingestion pipeline works in general; something about the
+      CURRENT build/deploy specifically breaks it. Leading hypothesis, NOT yet confirmed: a container/process-level
+      issue introduced somewhere between the last revision that DID log (`00274-s9g`, pre-gunicorn-file-fix) and the
+      current one — candidates: (a) something in the `deployment-api@3fea307` gunicorn-file fix's
+      `post_worker_init`/`post_fork` hooks altering stdio in a way that only manifests under Cloud Run's specific
+      process supervision (unlikely given `faulthandler.enable()` alone shouldn't touch fds, but not ruled out); (b) a
+      Dockerfile/base-image change since `00274-s9g` altering how the container's ENTRYPOINT/CMD connects stdout/stderr
+      (e.g. an added wrapper process, a changed exec form); (c) a Cloud Run log-agent-side issue specific to newer
+      revisions/instances. **This needs infra-level investigation beyond app-code changes** — next dispatch should NOT
+      try another app-code print/log instrumentation (already proven futile: raw `sys.stderr.write()` doesn't appear
+      either); instead (1) diff the Dockerfile/`ENTRYPOINT`/`CMD` between whatever commit `00274-s9g` was built from and
+      current `main` for any exec-form/wrapper changes, (2) check whether `gcloud run services describe` shows any
+      startCommand/args override that could be swallowing stdio, (3) consider whether this is a genuine GCP-side Cloud
+      Run logging regression worth a support ticket if (1)/(2) turn up nothing. Leave the diagnostic line in place
+      (harmless, already proven not to interfere with the app running) until root-caused — removing it now would only
+      lose the disambiguation this session already paid for. **RULED OUT 2026-07-25T16:01Z (slot 5, same session):**
+      re-checked after ~5 more minutes (not a Cloud Logging propagation delay — still zero output, while
+      `run.googleapis.com%2Fvarlog%2Fsystem` DOES show entries in the same window, so ingestion itself is working).
+      `gcloud run revisions describe uts-shared-deployment-api-00277-6kd` shows NO `command`/`args` override (uses the
+      image's own `ENTRYPOINT`/`CMD` as-is) and NO `run.googleapis.com/execution-environment` annotation on EITHER the
+      silent revision (`00277-6kd`) or the historical revision that logged fine (`00274-s9g`) — so a gen1/gen2
+      execution-environment difference is also ruled out. Dockerfile's `ENTRYPOINT`/`CMD` (`["/usr/bin/tini", "--"]` /
+      `["gunicorn", "deployment_api.main:app", "-c", "/app/gunicorn.conf.py"]`) is unremarkable — `tini` only forwards
+      signals/reaps zombies, doesn't touch stdio. `PYTHONUNBUFFERED=1` IS set (`Dockerfile:146`, itself a fix for an
+      EARLIER instance of "zero app-level log lines" diagnosed 2026-07-24 as Python's default block-buffering under a
+      non-TTY) — but this session's diagnostic used an explicit `.flush()` after `sys.stderr.write()`, so buffering
+      cannot explain ITS absence regardless. **Exhausted the diagnostic paths available without deeper platform
+      tooling** (container exec/shell access into a running Cloud Run instance is not standard tooling here) — next
+      dispatch's most promising unexplored angle: pull + diff the FULL image layer history (not just Dockerfile source)
+      between `00274-s9g`'s build and current, in case a base-image or builder-stage change (not visible in the
+      Dockerfile text itself) altered something at the OS/container level; failing that, this may genuinely warrant a
+      GCP support ticket. **IMPORTANT CORRECTION 2026-07-25T16:04Z (slot 5, same session) — this is NOT a new
+      regression, recalibrating the framing above.** Pulled the FULL (unfiltered, `format=json`) log set for `00274-s9g`
+      (the "historical revision that logged fine" cited above) — of **500** sampled entries, only **ONE** is
+      `run.googleapis.com%2Fstderr` (the single `CancelledError` traceback already quoted in this doc's "What I found"
+      section); the other 499 are `%2Frequests` (HTTP access) + `%2Fvarlog%2Fsystem` (container lifecycle). **Normal
+      `logger.info()` calls were ALREADY silent in that "working" revision too** — the ONE stderr line that exists is an
+      UNCAUGHT EXCEPTION traceback, not evidence that routine app logging worked. This matches the ORIGINAL 2026-07-24
+      diagnosis verbatim ("Never saw a single ... log line in 7 days ... nor even the one-time startup lines ... despite
+      minScale=1") — i.e. total log silence for ROUTINE output has been the standing state across MANY revisions/days,
+      not something newly broken by a recent change. The genuinely interesting residual question is narrower than framed
+      above: **why does an uncaught exception's traceback reach stderr when literally nothing else does** (not
+      `logger.info()`, not a bare `print()`, not this session's explicit `sys.stderr.write()+flush()`)? A plausible
+      lead: Python's default unhandled-exception path (`sys.excepthook` / asyncio's default task-exception handler
+      calling `traceback.print_exception`) writes DIRECTLY to the `sys.stderr` FILE OBJECT via the C-level `PyErr_Print`
+      machinery, which may bypass whatever is intercepting/redirecting `sys.stderr` for every other write path in this
+      process (something is clearly wrapping or replacing `sys.stderr` after Python startup, or gunicorn/uvicorn's
+      worker init is redirecting fds for normal writes but not for the crash path) — worth checking whether anything in
+      this app's startup (`main.py`, `lifespan.py`, UTL's `fastapi_uei_lifespan`/`setup_service_observability`)
+      reassigns `sys.stdout`/ `sys.stderr` to a custom stream object (e.g. a StringIO-backed log capturer, or an
+      OTel/observability SDK's stdio interception) that only proxies through SOME writes. **UPDATE 2026-07-25T14:02Z
+      (slot 5): found the ACTUAL blocker — it is not SIT itself.** SIT ran, passed, and logged a matching-tree stamp for
+      `deployment-api`, but the stamp is fire-and-forget (`repository_dispatch` only) and the downstream Firestore write
+      is 403'ing FLEET-WIDE (`ci_status_store.py` `PermissionDenied`, `unified-trading-sa` ADC identity, reproduced live
+      via direct REST `PATCH` — same 403; 0/95 sampled `ci-status-update.yml` runs succeeded since 2026-07-25T10:36Z).
+      This blocks EVERY SIT-covered repo's promote, not just this one. Filed as its own cross-cutting P0 since it blocks
+      the whole fleet's LDR→main pipeline, not just this todo:
       [issues/ci_status_firestore_write_permission_denied_fleet_wide_2026_07_25.md](ci_status_firestore_write_permission_denied_fleet_wide_2026_07_25.md).
       Part (1) of this todo is now ALSO gated on that doc's Todo 1/2 (operator restores the Firestore permission, then
       `ci-status-update.yml` goes green again) before the promote can ever pass the SIT gate. Next dispatch: check that

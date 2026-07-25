@@ -226,3 +226,19 @@ work doesn't reintroduce a 5th convention.
   fast pre-flight `git log --oneline -3 -- <target file>` / branch-drift check before starting a large mechanical rename
   that's plausible for another slot to also be doing, to catch the collision before doing the full work rather than
   after.
+
+- 2026-07-25 (slot 4) **review-fix on the gap-fix, features-service@0ab873b3**: a review of `e240eca2` caught that the
+  `scripts/sports/seed_mock_data.py` gap-fix over-renamed `df["odds_draw"]` → `df["odds_moneyline_draw"]` inside
+  `_compute_vig_column`/`_compute_edge_column`. That `df` comes straight from UAC
+  `SyntheticDataGenerator. generate_match_odds()` (`unified_api_contracts/internal/testing/synthetic.py`), which
+  hardcodes the RAW columns `odds_home`/`odds_draw`/`odds_away` — a completely different, unrelated schema from the
+  `ODDS_COLUMNS` feature-naming scheme this whole migration targets. `odds_home`/`odds_away` were correctly left alone
+  in the same two functions; only `odds_draw` got swept up by mistake (a same-name-different-schema false positive my
+  earlier repo-wide grep couldn't distinguish, since it only matches on the STRING, not on which schema a given `df`
+  actually came from). This would have `KeyError`'d the next time the script actually ran — quality-gates.sh stayed
+  green only because the script has zero test coverage (`grep tests/` for it returns nothing), so nothing exercised the
+  bug. Reverted both lines back to `df["odds_draw"]`, smoke-tested `_compute_vig_column`/`_compute_edge_column` directly
+  against a synthetic `odds_home`/`odds_draw`/`odds_away` frame (correct non-NaN vig/edge values), quality-gates.sh
+  fresh full run green (17823 passed). **Lesson**: a column-rename grep must verify which SCHEMA a `df` actually carries
+  before renaming a read of it, not just match the string — a scheme-compliant name colliding with an unrelated raw-data
+  column of the same old name is a real trap, not a hypothetical one.

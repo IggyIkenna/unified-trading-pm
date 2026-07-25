@@ -387,7 +387,7 @@ source: >-
       convention; update exporter tests + downstream fixture files. (repo: features-service). **Done when**: all 180
       `ODDS_COLUMNS` entries + exporter output renamed per the decided scheme; exporter tests and downstream fixtures
       updated; quality-gates green. Source: `sports_odds_feature_naming_canonicalization_2026_07_21.md`. — SHIPPED
-      features-service@0ded2449 (slot 11) + gap-fix features-service@e240eca2 (slot 4); full detail in source plan.
+      features-service@{0ded2449,e240eca2,0ab873b3}; full detail in source plan.
 - [x] ✅ [BACKEND] P2. **Close the silent-agnostic gap in `SportsFeatureLoaderMixin`** — ml-service@07976ae. Added
       `_validate_odds_schema` (checked only for the `odds_features` group): raises `ValueError` when a non-empty frame
       has ZERO columns overlapping UAC `OddsFeaturesMixin`'s known field set — a producer/consumer naming mismatch,
