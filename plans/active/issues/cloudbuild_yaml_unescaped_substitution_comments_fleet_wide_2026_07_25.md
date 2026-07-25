@@ -176,9 +176,11 @@ fix. No behavior change to the actual build (bash never executed these comments)
       ml-service@1257161, exhaustive re-scan confirmed zero remaining bare substitutions.
 - [ ] [INFRA] P1. Fix `strategy-service/cloudbuild.yaml` line 308 (bare `$VERSION` in comment → `$$VERSION`) + run the
       exhaustive re-scan above to confirm zero remaining. Ship via quickmerge. (repo: strategy-service)
-- [ ] [INFRA] P1. Fix `trading-agent-service/cloudbuild.yaml` lines 94, 262 (bare `$VERSION` in comments →
+- [x] ✅ [INFRA] P1. Fix `trading-agent-service/cloudbuild.yaml` lines 94, 262 (bare `$VERSION` in comments →
       `$$VERSION`) + run the exhaustive re-scan above to confirm zero remaining. Ship via quickmerge. (repo:
-      trading-agent-service)
+      trading-agent-service) — trading-agent-service@b0436ce, exhaustive re-scan (builtins/declared-substitution-aware
+      regex from this doc's Recommended fix) confirmed zero remaining bad substitutions; `quality-gates.sh` green
+      (112s).
 - [ ] [INFRA] P2. Determine whether this bug class also blocks real webhook/push-triggered builds (not just manual
       `gcloud builds triggers run`) for any of the 15 repos above — check each repo's recent Cloud Build history /
       `cloud-build-router.yml` run logs for a `NOT_FOUND`/`INVALID_ARGUMENT`/"not a valid built-in substitution"
