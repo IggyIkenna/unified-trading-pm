@@ -292,11 +292,31 @@ source: >-
       `apply_horizon_gate()`/`get_column_horizons()` so these get the same leak protection as every other odds field.
       Add a regression test proving a T-24h row's `odds_decimal_*` doesn't leak a later horizon's value. (repo:
       features-service)
-- [ ] [DATA] P1. **Rename UAC's `OddsFeaturesMixin`/`SportsFeatureVector` fields** to the 2026-07-23 DECIDED naming
-      scheme (rename in place). Add/update UAC unit tests covering the schema's field set. (repo: unified-api-contracts
-      `unified_api_contracts/internal/domain/features_sports/_features_venue_referee_player_odds.py`). **Done when**:
-      field names match the decided scheme table in the source doc's 2026-07-23 Progress Log (`prob_implied_*`,
-      `prob_fair_*`, `odds_market_*`, `odds_decimal_*`, etc.); UAC unit tests updated and passing. Source:
+- [x] ✅ [DATA] P1. **Rename UAC's `OddsFeaturesMixin`/`SportsFeatureVector` fields** — unified-api-contracts@689efa54 +
+      ml-service@91f031a. All 49 fields renamed to the decided scheme, grounded in `features-service`'s actual
+      calculator output (`odds_calculator.py`/`odds_velocity.py`) and live consumers, not a blind find-replace — several
+      old fields shared a literal string with UNRELATED same-named columns in other layers (MDPS's raw handicap-line
+      bucket column, FootyStats' vendor API field, a synthetic mock-odds generator); confirmed via workspace-wide grep +
+      context-read before touching anything, so those were correctly left untouched. **Collision resolution**:
+      `market_home_odds_best`/`market_away_odds_best` win the `odds_decimal_` slot (this scheme's own worked example,
+      `best_odds_home` → `odds_decimal_home`, and what `SportsValueBettingEngine` needs);
+      `odds_home_win`/`odds_draw`/`odds_away_win` (a DIFFERENT, currently-live FSS column under the exact same old name)
+      got the distinct `odds_moneyline_` metric instead of colliding with it. Same pattern for
+      `market_home_away_odds_ratio` vs `odds_home_away_ratio` (a `consensus` qualifier disambiguates the schema-only
+      one). **Production-safety carve-out**: `odds_sharp_money_on_home`/`_away` and the 6 fixed-line over/under fields
+      were deliberately left UNCHANGED — they exact-match a currently-live FSS producer column today, and renaming them
+      would have zeroed out `SportsFeatureLoaderMixin._validate_odds_schema`'s producer/consumer overlap check (an
+      already-shipped loud-fail gate) ahead of FSS's own migration (the P2 todo immediately below, not yet landed) with
+      no compensating benefit — documented in the class docstring so this isn't rediscovered. New UAC test file (none
+      existed for this class before) asserts the exact field set, retired names are gone, and the deliberately-unchanged
+      set survives; fixed the 2 hardcoded old-field-name test fixtures + 1 stale docstring reference this rename broke
+      in `ml-service`'s `test_sports_feature_loader.py`/`sports_feature_loader.py` (an adjacent, same-turn fix — that
+      test suite directly imports `OddsFeaturesMixin`). **Known transitional gap**: several renamed fields (e.g.
+      `odds_asian_handicap_line`, `prob_implied_btts_*`) DO exact-match a currently-live FSS column under their OLD
+      name, per this scheme's own worked examples — those were renamed anyway (the operator's explicit table example),
+      so `SportsFeatureLoaderMixin`'s loud-fail gate will correctly start firing for real `odds_features` loads touching
+      those specific fields until the P2 FSS-side migration lands; this is the gate doing its designed job (loud, not
+      silent), not a regression, but P2 should be prioritized to close the window. Source:
       `sports_odds_feature_naming_canonicalization_2026_07_21.md`.
 - [ ] [DATA] P2. **Migrate `features_service/sports/calculators/odds_columns.py`'s `ODDS_COLUMNS`** + the odds-features
       exporter to emit the UAC-chosen field names instead of the current `home_implied_prob`-style convention; update
