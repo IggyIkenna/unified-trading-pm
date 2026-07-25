@@ -642,12 +642,13 @@ session:**
 - Build as a one-off `market-tick-data-service/scripts/` migration with lifecycle markers. Tooling from `~/tmp-or5b/` is
   NOT on this host → rebuilt from this spec.
 
-> **🟥 BLOCKED-OPERATOR-DECISION, 2026-07-25 (slot 7, data_engineering) — this plan is now MOOT, do not dispatch STEP
-> 1-6 against it.** Live-verified before attempting STEP 1: the legacy bucket
-> (`market-data-tick-sports-central-element-323112`) was manually deleted by the operator on 2026-07-17T17:05:17Z
-> (`gcloud storage rm`, confirmed via Cloud Audit Logs) — BEFORE this recovery plan's own STEP 1 ever executed — and is
-> confirmed past GCS's 7-day soft-delete window (absent from the project's 39 currently soft-deleted buckets). The
-> ~550,062 legacy-only keys this plan was designed to recover are permanently lost; there is nothing left to read. Full
-> writeup + recommended next steps (confirm operator intent, re-assess whether STEP 4's T2.10 seed purge is
-> independently actionable since it operates on the still-live index, not the deleted bucket):
+> **🟥 BLOCKED, 2026-07-25 (slot 7, data_engineering) — STEP 1-5 are unexecutable, do not dispatch against them.** The
+> data source is permanently gone (intent NOT asserted here — that's a separate, still-open operator question). Live-
+> verified before attempting STEP 1: the legacy bucket (`market-data-tick-sports-central-element-323112`) returns 404;
+> Cloud Audit Logs confirm a `storage.buckets.delete` on 2026-07-17T17:05:17Z, BEFORE this recovery plan's own STEP 1
+> ever executed, and past GCS's 7-day soft-delete window (absent from the project's 39 currently soft-deleted buckets).
+> The ~550,062 legacy-only keys this plan was designed to recover are permanently lost; there is nothing left to read.
+> STEP 4's T2.10 seed purge may still be independently actionable (operates on the still-live index, not the deleted
+> bucket) — re-assess separately. Full writeup + the open deliberate-vs-accidental question (operator-authority P0,
+> BLK-op-mdt_legacy_bucket_deleted_before_recovery-001):
 > `issues/mdt_legacy_bucket_deleted_before_recovery_2026_07_25.md`.
