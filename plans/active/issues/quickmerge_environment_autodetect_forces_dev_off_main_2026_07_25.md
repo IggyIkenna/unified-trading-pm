@@ -7,7 +7,7 @@ title:
 summary: >
   `scripts/quickmerge.sh`'s "ENVIRONMENT AUTO-DETECT" block (~L1214) sets `ENVIRONMENT=production` only when `git branch
   --show-current` is literally `main`; every other branch — including `live-defi-rollout`, which quickmerge lands on by
-  design (LDR-is-SSOT, codex/08-workflows/ci-cd-flow.md) — falls through to `ENVIRONMENT=development` +
+  design (LDR-is-SSOT, /codex/08-workflows/ci-cd-flow.md) — falls through to `ENVIRONMENT=development` +
   `GCP_PROJECT_ID_DEV`. This predates the LDR-is-SSOT model (or never accounted for it). CONFIRMED root cause (not
   test-order pollution, see "What was verified"): `unified-trading-library`'s
   `tests/cloud_interface/unit/test_constants.py` (5 tests) assert the DOCUMENTED prod default of
