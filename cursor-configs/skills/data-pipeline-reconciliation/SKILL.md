@@ -301,7 +301,8 @@ rule still holds per shard; a whole-AG missing surface is a single declared gap,
   `/codex/02-data/reconciliation-finding-taxonomy.md` § 5.1.
   > **Gate:** the honest-coverage harness must be made case-robust **BEFORE** the migration flips the writers to
   > UPPERCASE — flipping first breaks the harness on un-migrated data. See
-  > `plans/active/issues/honest_coverage_harness_instrument_type_case_break_on_d1_migration_2026_07_20.md`.
+  > `plans/archive/issues/honest_coverage_harness_instrument_type_case_break_on_d1_migration_2026_07_20.md` (resolved,
+  > archived).
 - **defi market/event `LENDING` keying (decision D)** — **RULED 2026-07-20 (operator D2 — FULL retire).** Market/event
   flat `LENDING` is `migration_pending` (the retire is gated on
   `plans/active/defi_lending_writer_retire_prerequisite_2026_07_20.md`). The skill does **NOT REFUSE** it and does **NOT

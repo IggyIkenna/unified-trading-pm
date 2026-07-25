@@ -475,9 +475,10 @@ ruling-annotated but the rulings had NOT propagated to 6 sibling docs (cutover-r
 delete-safety-protocol, mvp-scope-canonical, defi-canonical-naming, and two plans), each still framing D1/D2 as
 UNRULED/PARKED — the exact pre-ruling staleness a future agent would act on. All fixed with dated banners. **One
 substantive contradiction refused-and-reported → filed as an issue** (`c3e7eb55f`,
-`issues/honest_coverage_harness_instrument_type_case_break_on_d1_migration_2026_07_20.md`): the v2 coverage harness
-reads `instrument_type` **lowercase**; the D1 UPPERCASE migration will silently zero-match every migrated shard unless
-the harness is made case-robust FIRST. Same fail-closed class as the sports MDPS substring matcher.
+`plans/archive/issues/honest_coverage_harness_instrument_type_case_break_on_d1_migration_2026_07_20.md`, resolved,
+archived): the v2 coverage harness reads `instrument_type` **lowercase**; the D1 UPPERCASE migration will silently
+zero-match every migrated shard unless the harness is made case-robust FIRST. Same fail-closed class as the sports MDPS
+substring matcher.
 
 **Still open for todo 21** (the audit confirmed): the taxonomy must drop BOTH refusals — §5.1 (D1/C2a) AND §5.2 + AE-5
 (D2/decision-D). Todo 22's checkbox slightly overstated completion (it claimed the taxonomy reclassification, which was

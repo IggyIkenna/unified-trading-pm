@@ -111,12 +111,12 @@ drift_direction: advance-code
       migration, 2026-07-20 ruling)**: this `--apply` > (`complete_cefi_manifest_canonical_dedup_2026_07_17.py`) is the
       script that rewrites the manifest > `instrument_type` COLUMN to UPPERCASE (its own docstring's delta (iv),
       "`instrument_type` COLUMN drift... > lowercase/aliased -> canonical"). Per >
-      `plans/active/issues/honest_coverage_harness_instrument_type_case_break_on_d1_migration_2026_07_20.md` > (todo 4),
-      this `--apply` MUST NOT run until that issue's case-insensitivity fix to the Honest-Coverage v2 > harness
-      (`instruments-service/scripts/measure_honest_coverage.py` — shipped > `instruments-service@867b68f6`, 2026-07-25,
-      QG green) has landed and is proven green — otherwise the > cutover silently craters coverage.json for every
-      migrated cefi shard the moment this todo runs. That > normalisation has shipped; this todo is now UNBLOCKED on
-      that specific dependency.
+      `plans/archive/issues/honest_coverage_harness_instrument_type_case_break_on_d1_migration_2026_07_20.md` (resolved,
+      archived) > (todo 4), this `--apply` MUST NOT run until that issue's case-insensitivity fix to the Honest-Coverage
+      v2 > harness (`instruments-service/scripts/measure_honest_coverage.py` — shipped > `instruments-service@867b68f6`,
+      2026-07-25, QG green) has landed and is proven green — otherwise the > cutover silently craters coverage.json for
+      every migrated cefi shard the moment this todo runs. That > normalisation has shipped; this todo is now UNBLOCKED
+      on that specific dependency.
 - [ ] [BACKEND] P0. **POST-CUTOVER: flip the smoke-check + downloader to canonical instrument ids.** MUST land with (or
       immediately after) todo 3's cutover `--apply`, else targeted re-fetch silently breaks fleet-wide. Today the
       downloader's `--instrument-ids` matches RAW venue-native symbols EXACTLY (no substring/underlying expansion, no

@@ -52,7 +52,7 @@ referenced_by:
     /codex/06-coding-standards/data-status-endpoint-contract.md,
     plans/archive/issues/cefi_layer1_denominator_gaps_2026_07_03.md,
     plans/active/issues/honest_coverage_uac_writer_matrix_reconciliation_2026_06_29.md,
-    plans/active/issues/honest_coverage_harness_instrument_type_case_break_on_d1_migration_2026_07_20.md,
+    plans/archive/issues/honest_coverage_harness_instrument_type_case_break_on_d1_migration_2026_07_20.md,
   ]
 owner:
 last_reviewed: 2026-07-25
@@ -184,7 +184,8 @@ the full frame OOM-kills the VM).
 >   case-sensitively tracks the cefi/tradfi in-flight uppercase migration on purpose).
 > - Sequencing: this normalisation landed BEFORE the D1 `instrument_type`-column migration is allowed to flip any writer
 >   or rewrite history — see
->   `plans/active/issues/honest_coverage_harness_instrument_type_case_break_on_d1_migration_2026_07_20.md` (gate).
+>   `plans/archive/issues/honest_coverage_harness_instrument_type_case_break_on_d1_migration_2026_07_20.md` (gate;
+>   resolved, archived).
 
 ---
 
