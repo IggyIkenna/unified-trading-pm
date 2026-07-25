@@ -174,8 +174,10 @@ fix. No behavior change to the actual build (bash never executed these comments)
 - [x] ✅ [INFRA] P1. Fix `ml-service/cloudbuild.yaml` lines 94, 261 (bare `$VERSION` in comments → `$$VERSION`) + run
       the exhaustive re-scan above to confirm zero remaining. Ship via quickmerge. (repo: ml-service) —
       ml-service@1257161, exhaustive re-scan confirmed zero remaining bare substitutions.
-- [ ] [INFRA] P1. Fix `strategy-service/cloudbuild.yaml` line 308 (bare `$VERSION` in comment → `$$VERSION`) + run the
-      exhaustive re-scan above to confirm zero remaining. Ship via quickmerge. (repo: strategy-service)
+- [x] ✅ [INFRA] P1. Fix `strategy-service/cloudbuild.yaml` line 308 (bare `$VERSION` in comment → `$$VERSION`) + run
+      the exhaustive re-scan above to confirm zero remaining. Ship via quickmerge. (repo: strategy-service) —
+      strategy-service@0616a141, exhaustive re-scan confirmed zero remaining bad substitutions; `quality-gates.sh`'s own
+      STEP 5.19 ("cloudbuild.yaml substitutions OK") independently confirmed the fix; green (190s).
 - [x] ✅ [INFRA] P1. Fix `trading-agent-service/cloudbuild.yaml` lines 94, 262 (bare `$VERSION` in comments →
       `$$VERSION`) + run the exhaustive re-scan above to confirm zero remaining. Ship via quickmerge. (repo:
       trading-agent-service) — trading-agent-service@b0436ce, exhaustive re-scan (builtins/declared-substitution-aware
