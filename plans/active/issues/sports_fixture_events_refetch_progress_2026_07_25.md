@@ -160,7 +160,16 @@ repeat sample showing genuinely 0 non-13-col objects (or documented unrecoverabl
       once terminal, re-run the census script per "Next action" above before flipping this checkbox. — **Health-checked
       2026-07-25T05:37Z (slot 3, data_engineering), still RUNNING, confirms slot 4's 05:29Z check**: run.log grew
       47,010→55,413 lines since the 05:10Z read, latest timestamp 05:37:48 (live); still the same `date=2019-12-25`
-      fallback (37min in of its ~66min budget), no stall. Released via `/skip-current-task` again, no new finding.
+      fallback (37min in of its ~66min budget), no stall. Released via `/skip-current-task` again, no new finding. —
+      **Health-checked 2026-07-25T05:53Z (slot 3, data_engineering), still RUNNING, new finding**: log growing (59,547
+      lines), heartbeat at 05:51:24Z (~2min old, live); still `date=2019-12-25` (359 distinct dates unchanged). **New**:
+      log now shows `429 Rate limited ... sleeping 60s to next minute` retries against
+      `v3.football.api-sports.io/fixtures/events` — API-Football rate-limiting has kicked in on this date's 16,765-
+      fixture fallback burst, which explains why `2019-12-25` is running noticeably longer than `2019-12-24`'s ~66min
+      (each 429 costs a 60s sleep on top of the normal per-fixture call). Not correctness-affecting (the client's own
+      retry/backoff handles it, per the `attempt 1/10` counter), but pushes the total ETA further out — worth knowing if
+      a future health-check sees this date still running well past 66min, that's the rate-limit cost accumulating, not a
+      new stall. Released via `/skip-current-task` again.
 
 ## Codex SSOTs
 
