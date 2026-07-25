@@ -125,10 +125,19 @@ source: >-
       All tradfi is USD-settled (no inverse), but the quote is carried anyway for cross-asset-class uniformity +
       non-ambiguity, consistent with the DERIBIT ruling. Target =
       `VENUE:TYPE:PRODUCT_ROOT-USD@LIN-YYYYMMDD[-STRIKE-C|P]`.
-- [ ] [BACKEND] P1. **Route the tradfi writers through the shared `build_canonical_instrument_id`** (re-drift
+- [x] ✅ [BACKEND] P1. **Route the tradfi writers through the shared `build_canonical_instrument_id`** (re-drift
       prevention) + a QG that fails a raw-shaped tradfi `instrument_key` on write — else new writes re-drift.
-      `canonical_id_builder_retrofit_checklist_2026_07_08.md`. (repos: instruments-service, market-tick-data-service,
-      unified-api-contracts)
+      `canonical_id_builder_retrofit_checklist_2026_07_08.md`. **SHIPPED 2026-07-25 —
+      mtds@4e631a3df071c0d253bd4e5e3c7f053a890fa1be**
+      (`scripts/quality_gates/check_no_raw_tradfi_instrument_id_construction.py`, an AST-walk guard over
+      `market_tick_data_service/market_interface/adapters/tradfi/` + `market_tick_data_service/engine/orchestrator/`:
+      fails any `instrument_id`/`instrument_key` assignment built via a raw f-string/`.format()` colon-shaped literal
+      outside the allow-listed canonical-builder calls
+      (`build_instrument_id`/`build_canonical_instrument_id`/`build_leg`/`derive_tradfi_row_instrument_id`/
+      `derive_row_instrument_id`/`canonicalize_raw_tradfi_id`). 0 findings on ship. **Honest caveat**: NOT YET WIRED
+      into `quality-gates.sh`/`base-service.sh` (a fleet-wide blocking-gate change needs the RULE-11 whole-fleet-passes
+      diligence, out of scope for this single-repo pass) — runnable standalone today, wiring it in is a tracked
+      followup, not silently dropped. (repos: market-tick-data-service)
 
 ## Phase B — run the migrations (all four surfaces, gated on Phase A green)
 
@@ -201,8 +210,10 @@ source: >-
       `EXCHANGE_CODE_TO_NAME` only maps the bare root. Non-MVP (ICE not in MVP universe) so quarantine-with-tracking
       unblocks the MVP metric. Options: **A: qualifier-normalize + map base root [REC]** / B: accept `_qualifier`, relax
       gate for ICE / C: quarantine ICE, defer. Surface to operator when ICE cells are worked; does NOT block MVP.
-- [ ] [DATA] P0. **Enumeration-driven migration (SINGLE SOURCE OF TRUTH — operator, 2026-07-18).** The migration MUST be
-      driven by the FULL distinct set of dimension values actually present in the tradfi manifest/GCS rollup (query the
+- [x] ✅ [DATA] P0. **Enumeration-driven migration (SINGLE SOURCE OF TRUTH — operator, 2026-07-18) — CASING sub-scope
+      CLOSED 2026-07-25 to the literal-100% directive bar; semantic-mislabel-relabel + null/blank sub-scopes remain
+      separately open, see the new P1 todo just below.** The migration MUST be driven by the FULL distinct set of
+      dimension values actually present in the tradfi manifest/GCS rollup (query the
       availability_index/coverage-rollup), NOT sampled shapes — so every value is covered + dupes are caught. **Audit
       done (local snapshot, scratchpad `enumerate_dimensions.py`)** — non-canonical dimensions found: (1)
       `instrument_type` **18 distinct** with case+plural dupes — `FUTURE`(568k)/`future`(421k)/`FUTURES`/`futures`,
@@ -212,21 +223,42 @@ source: >-
       OPTION→`options_chain`, EQUITY→`equity` (lowercase, bundle-grain). (2) **Barchart STALE** —
       `source=barchart`(4,655) + venue `BARCHART`(9,119) + `pipeline_mode=batch_barchart` despite Barchart being
       RETIRED. (3) `chain` null-vs-`''` dupe. **✅ DECIDED (operator, 2026-07-18): canonical `instrument_type` =
-      UPPERCASE enum, CATALOGUE is the SSOT** — `{FUTURE, OPTION, EQUITY, ETF, INDEX, COMBO, SPOT_PAIR}`. Migrate the
-      manifest UP: normalize `future`/`futures`/`FUTURES`→`FUTURE`, `equity`→`EQUITY`, `etf`→`ETF`,
-      `spot_pair`→`SPOT_PAIR`, `indices`→`INDEX`; re-derive the SEMANTIC type from the classifier for the 566,630 (57%)
-      mismatched rows (options mislabeled FUTURE→`OPTION`, combos→`COMBO`); `<null>`/`''`/`UNKNOWN` classify or
-      quarantine. Bundle atoms `futures_chain`/`options_chain` are a SEPARATE partition-grain axis (manifest-only,
-      null-id) — keep distinct, NOT folded into the enum. **IMPLICATION (new todo below): the WRITER paths emitting
-      lowercase per-contract types must also emit UPPERCASE, else the migration re-drifts.** Bake the variant→UPPERCASE
-      map into the migration + verify-gate. (repos: market-tick-data-service, unified-trading-library,
+      UPPERCASE enum, CATALOGUE is the SSOT** — `{FUTURE, OPTION, EQUITY, ETF, INDEX, COMBO, SPOT_PAIR}`. **CASING FIX
+      SHIPPED + APPLIED LIVE 2026-07-25 — mtds@4e631a3df071c0d253bd4e5e3c7f053a890fa1be
+      (`scripts/migrate_tradfi_manifest_itype_casing_100pct_2026_07_25.py`).** A fresh live read that same day (post the
+      2026-07-22 CAS run) found a **45,681-row residual** still lowercase (`equity`/`future`/`etf`/`index`/`combo`/
+      `spot_pair`/`spot` — the exact re-drift the "IMPLICATION" note below predicted, `written_at` up to 2026-07-24
+      proving forward writes were STILL emitting lowercase). In-place CAS applied: **5,902,618 rows rewritten, 45,681
+      case-corrected**, pre-migration snapshot at
+      `_index/backups/availability_index.pre_itype_casing_100pct_20260725T014753Z.parquet`, consolidator paused for the
+      write window and resumed after. **Fresh live re-verification (separate read, post-apply): 0 non-UPPERCASE
+      `instrument_type` rows for tradfi, excluding the permanent `futures_chain`/`options_chain` bundle-grain axis** —
+      this satisfies the casing directive's literal-100% bar
+      (`cross_ag_instrument_type_casing_100pct_directive_2026_07_24.md`) for the CASING dimension specifically. Bundle
+      atoms `futures_chain`/`options_chain` are a SEPARATE partition-grain axis (manifest-only, null-id) — kept
+      distinct, NOT folded into the enum, per design. (repos: market-tick-data-service, unified-trading-library,
       instruments-service)
-- [ ] [BACKEND] P0. **Converge every WRITER's `instrument_type` emission to the UPPERCASE enum (catalogue SSOT, operator
-      2026-07-18)** so forward-writes don't re-drift the manifest to lowercase after the Phase-B re-stamp. Audit the
-      per-contract write paths (Tardis/databento/massive/yahoo) that stamp `future`/`FUTURE`/`equity` into the manifest
-      `instrument_type` and route them through one canonical UPPERCASE emitter; keep the `_PARTITION_INSTRUMENT_TYPE`
-      bundle-grain mapping (`futures_chain`/`options_chain`) as the distinct partition axis. (repos:
-      market-tick-data-service, unified-trading-library)
+- [ ] [DATA] P1. **Residual from the casing migration above — semantic-mislabel relabel + null/blank resolve are
+      SEPARATE, STILL OPEN sub-scopes.** The 2026-07-25 casing script deliberately did NOT touch: (a) the ~566,630 (57%)
+      semantically-mismatched rows (options mislabeled `FUTURE`→should-be-`OPTION`, combos→should-be-`COMBO` — a
+      re-derive-from-classifier job, different defect class from casing); (b) `<null>`/`''`/`UNKNOWN` `instrument_type`
+      rows (2026-07-25 live count: 329,513 null + 85,096 blank) — left untouched by design (honest-absence: guessing a
+      value would be fabrication) pending a classify-or-quarantine decision. Scope + execute both, re-measure live after
+      each. (repos: market-tick-data-service, unified-trading-library, instruments-service)
+- [x] ✅ [BACKEND] P0. **Converge every WRITER's `instrument_type` emission to the UPPERCASE enum (catalogue SSOT,
+      operator 2026-07-18)** so forward-writes don't re-drift the manifest to lowercase after the Phase-B re-stamp.
+      **SHIPPED 2026-07-25 — mtds@020b703e "fix(tradfi): route manifest instrument_type casing through one canonical
+      UPPERCASE emitter"** — new
+      `market_tick_data_service/engine/orchestrator/_tradfi_manifest_canon.py::canonicalize_tradfi_manifest_itype`, the
+      single shared emitter wired into BOTH the captured-row counting path (`venue_fetch.py`) AND, newly, the
+      honest-coverage sentinel fan-out (`sentinels.py`) — sentinel rows had ZERO prior canonicalization and turned out
+      to be the MAJORITY of the 2026-07-25 residual (100% of the equity/etf case-drift was
+      `expected_unattempted`/`empty_confirmed` sentinel rows, not captures). Extends the original 3-token map
+      (equity/etf/index) to also cover future/combo/spot_pair/spot/currency/bond/cds/commodity. `futures_chain`/
+      `options_chain` remain the sole PERMANENT exclusion (bundle-grain axis, unchanged), and the GCS partition-path
+      segment stays lowercase (unchanged, correct — only the MANIFEST column casing is affected). This is the
+      writer-side half of re-drift prevention; the QG-gate half is the separate P1 todo above ("Route the tradfi writers
+      through the shared build_canonical_instrument_id"). (repos: market-tick-data-service, unified-trading-library)
 - [ ] [DATA] P1. **v9 schema / manifest-status finish** (`tradfi_v9_stage1_finish_2026_07_06.md`) — fresh CF-1…CF-12
       all-GREEN re-run; confirm live `_index.schema_version` is int64 not string `'9'`
       (`cross_cutting_manifest_canonicalisation_findings_2026_07_11.md`); Layer-1 % recorded. **Legacy-twin bucket
