@@ -621,3 +621,58 @@ flipping the checkbox.
   (P0, BACKEND) with a concrete reproduction + 4 candidate fix approaches. Did NOT flip this plan's original `[REVIEW]`
   checkbox — leaving it as-is with its existing partial-pass note, now additionally pointing at the new issue doc. No
   code changes made this session (review-only pass).
+
+- **2026-07-25T17:20Z (slot 5) — operator ruling on `BLK-d5db60a5` + implementation plan for the next dispatch.**
+  Operator chose **Option B**: a Cloud Scheduler-triggered authenticated HTTP reap endpoint (synchronous
+  reap-on-request, guaranteed request-context CPU, zero extra ongoing cost) over `--no-cpu-throttling` (rejected:
+  commits the `cpu=4`/`memory=16Gi`/`minScale=1` service to material always-on 4-vCPU billing). Explicit guardrails from
+  the ruling: (1) Cloud Scheduler with **OIDC service-account auth**, NOT a public endpoint; (2) keep
+  leader-election-style idempotency so overlapping/manual invocations are safe; (3) sane cadence (5-15 min); (4) do
+  **NOT** add `--no-cpu-throttling`; (5) verify convergence with evidence (`active/` count drop + deploy build id + a
+  post-deploy reap-tick observation); (6) ship via the normal `quickmerge --agent` + LDR→main promote flow — if
+  verification can't complete in one dispatch tick, **park durably rather than churn** (cites
+  `/plans/active/issues/external_promote_gated_task_redispatch_churn_no_durable_park_2026_07_25.md`).
+
+  **Researched the exact implementation this session (no code shipped yet — intentional; see rationale below):**
+  - **Reap logic to call**: `SyncService().reap_stale_deployments(max_reap=500)`
+    (`deployment_api/services/sync_service.py:538`) — the SAME function the background loop already calls, already
+    idempotent (bounded per-call, archives whatever's currently stale, safe to call repeatedly/concurrently). Wrap in
+    `asyncio.to_thread(...)` (mirrors the `rollup-run` endpoint's pattern below) so the synchronous GCS I/O doesn't
+    block the event loop.
+  - **Precedent for this exact pattern in THIS service**: `deployment_api/routes/data_status/_rollup.py`'s
+    `POST /rollup-run` — already a "Cloud Scheduler hits this synchronous internal endpoint" route, with a docstring
+    literally describing the same design goal (gen2 Cloud Run Jobs crash / this compute must run in the gen1 service).
+    Mirror its `async def` + `asyncio.to_thread`/`asyncio.to_thread` shape, NOT its auth (`rollup-run` uses
+    `verify_any_auth` = X-API-Key OR Firebase, which does NOT satisfy the operator's OIDC requirement).
+  - **OIDC verification primitive**: `google.oauth2.id_token.verify_oauth2_token(token, request, audience)` — already a
+    workspace-approved call, used in `execution-service/execution_service/auth.py`'s `GoogleOIDCAuth.verify_token`
+    (human/domain-restricted auth) and `deployment_api/firebase_auth.py`'s `_verify_firebase_id_token` (same
+    `google.oauth2.id_token` module, different verify function). Neither is a direct drop-in — execution-service's
+    checks an `hd` (hosted domain) claim for HUMAN Google Workspace auth, not a specific service-account identity.
+    **Write a small, NEW, purpose-built dependency** (do not force-fit the existing ones): verify the token signature
+    via `verify_oauth2_token`, then check the token's `email` claim exactly matches the Cloud Scheduler job's configured
+    invoker service account (a new setting, e.g. `REAP_SCHEDULER_INVOKER_SA` — plain config, not a secret) — mirrors
+    `firebase_auth.py`'s dependency-function shape (return the verified identity string; raise `HTTPException(401, ...)`
+    on any failure) and MUST respect the existing `DISABLE_AUTH` bypass convention (every other auth dependency in this
+    codebase does, for local/mock-mode consistency).
+  - **Router wiring**: do NOT attach under `_authenticated_router` in `main.py` (that applies `verify_any_auth`
+    fleet-wide to everything mounted on it — wrong scheme for this route). Mount a small standalone router directly on
+    `app` with the new OIDC dependency as its own `Depends(...)`, at e.g. `POST /api/internal/reap-tick`.
+  - **Cloud Scheduler job itself**: checked live — **no existing scheduler job for `rollup-run` was found either**
+    (`gcloud scheduler jobs list` / Cloud Scheduler REST API both returned 0 jobs in `asia-northeast1` for this project
+    — either it's provisioned in a different region, or that docstring's "hit by the Cloud Scheduler" claim predates an
+    actual provisioned job; not resolved this session). **The new reap-tick scheduler job needs to be created via
+    `gcloud scheduler jobs create http` with `--oidc-service-account-email` +
+    `--oidc-token-audience=<the endpoint URL>`** — this is real infra provisioning (a `[OPERATOR]`/infra action, not a
+    code change) and should happen AFTER the endpoint code is deployed and its exact prod URL is known.
+
+  **Why no code was shipped this session despite having the design**: this is genuinely NEW, security-sensitive
+  auth-path code (a wrong audience/email check either locks out the real Cloud Scheduler job OR — worse — accepts an
+  unintended caller) at the end of an already very long diagnostic session; per the operator's own parking guidance,
+  better to hand off a precise, evidence-backed plan than rush an unverified auth implementation. **Next dispatch,
+  done-when**: (1) add the new auth dependency + `/api/internal/reap-tick` route (repo: deployment-api); (2)
+  `quality-gates.sh` green, ship via `quickmerge --agent`, promote LDR→main, deploy; (3)
+  `gcloud scheduler jobs create http` with OIDC auth pointed at the deployed URL, cadence 5-15 min; (4) verify: cite the
+  deploy build id + at least one successful scheduler-triggered invocation (Cloud Scheduler's own
+  `lastAttemptTime`/status, or a direct authenticated test call) + `active/` object count actually dropping from 406
+  toward the live-VM count (currently ~9). Only then flip this todo + the plan's original `[REVIEW]` checkbox.
