@@ -90,5 +90,4 @@ drift_direction: advance-code
       (slot 2)**: not archivable — 4 of 5 parent items remain genuinely blocked (per the sibling finalize doc's own
       re-check above), so the parent correctly stays `status: active`, not archived. The sibling finalize doc is the
       standing pointer for this; this doc needs no independent archival attempt. Evidence:
-      `unified-trading-pm@<pending-sha>` (this commit) + `agent-orchestrator@f58d934` (root-cause dispatcher fix, see
-      banner above).
+      `unified-trading-pm@93ba15a52` + `agent-orchestrator@f58d934` (root-cause dispatcher fix, see banner above).
