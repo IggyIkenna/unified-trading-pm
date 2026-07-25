@@ -200,11 +200,23 @@ inherited from the first shipped batch:
       assumed); 2 pre-existing hardcoded-count tests updated (126→145 Understat gaps, 35→54 non-MVP football) matching
       the established batch pattern. All 19 confirmed `in_mvp_scope=False` via a live odds-manifest check (zero matches
       for any of the 7 countries). Full per-country citations in the commit message.
-- [ ] [DATA] P1. **North/Central America + Caribbean (CONCACAF)** — Antigua and Barbuda, Aruba, Barbados, Belize,
-      Bermuda, Canada, Costa Rica, Cuba, Curacao, Dominican Republic, El Salvador, Grenada, Guadeloupe, Guatemala,
-      Haiti, Honduras, Jamaica, Nicaragua, Panama, Suriname, Trinidad and Tobago (21 countries — largest batch, consider
-      splitting further if a worker finds the citation-research load too heavy for one dispatch). (repo:
-      unified-api-contracts). **Done when**: per the shared contract above, for this country list.
+- [x] [DATA] P1. ✅ **North/Central America + Caribbean (CONCACAF)** — all 21 countries covered across two concurrent
+      slots. A different slot independently landed `unified-api-contracts@dfeef957` for 7 countries (Costa Rica,
+      Jamaica, Honduras, Panama, Trinidad and Tobago, Canada, Guatemala) — verified their Canada/Guatemala entries
+      exactly matched this slot's own independent WebSearch analysis before treating them as done. This slot then landed
+      the remaining 14 countries via `unified-api-contracts@80717936` (Antigua and Barbuda, Aruba, Barbados, Belize,
+      Bermuda, Cuba, Curacao, Dominican Republic, El Salvador, Grenada, Guadeloupe, Haiti, Nicaragua, Suriname — 17
+      entries, since Dominican Republic/El Salvador/Nicaragua each got a top-league + cup pair). 11 of the 14 carry only
+      ONE catalog entry (top league) — division-below and cup genuinely absent from the catalog, no id to cite, skipped
+      per the never-fabricate rule. Three had real decisions, WebSearch-verified: Dominican Republic's "Copa LDF"
+      confirmed as the sole/primary cup candidate; El Salvador's "Copa Presidente" is typed `League` in the raw catalog
+      (a catalog mislabel) but confirmed as the genuine primary knockout cup, used despite the catalog's own coarse type
+      tag; Nicaragua's "Liga Primera U20" excluded (wrong axis, youth), "Copa Nicaragua" confirmed primary cup. Required
+      re-merging 4x on top of concurrent East/Southeast Asia, South Asia, and Fiji+New Zealand/OFC batches landing on
+      the same file mid-session — each resolved via reset-to-clean-HEAD + fresh re-append + live recompute (0 collisions
+      each time; `_mvp_football_league_ids()` stayed 96 throughout). Final registry: 347 entries, 335 Understat gaps,
+      244 non-MVP football (both hardcoded-count tests updated to match, live-derived not hand-arithmetic).
+      `quality-gates.sh` green on the final ship. (repo: unified-api-contracts).
 - [x] ✅ [DATA] P1. **West Africa (CAF)** — Benin, Burkina Faso, Cameroon, Congo, DR Congo, Gabon, Gambia, Ghana,
       Guinea, Ivory Coast, Liberia, Mali, Mauritania, Nigeria, Senegal, Togo (16 countries).
       `unified-api-contracts@28bda62a` (16 entries, 13 verifiable countries). Burkina Faso/DR Congo/Ivory Coast SKIPPED
