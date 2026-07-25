@@ -729,6 +729,19 @@ source: >-
     already-captured + the per-source caps above) is now almost entirely mechanical — join `leagues.parquet` against the
     375-candidate list + Directive A/B's rules (top + below-division + continental cups + majors) — the remaining hard
     part is narrowed specifically to season/ transfer-window dates, not the whole metadata problem.
+  - **Confirmed the catalog's shape matches Directive A/B's two-category selection cleanly, no further discovery needed
+    on this axis**: grouping `leagues.parquet` by `country` shows `country="World"` holds **176 entries, 175 of them
+    `Cup`** (World Cup, Euro Championship, UEFA Champions/Europa League, Copa America, CONCACAF Gold Cup, AFC/CAF
+    equivalents, etc.) — this IS the "continental cups + majors" bucket Directive A/B names explicitly, already cleanly
+    separated from the 171 real countries' domestic leagues/cups (England 46, Spain 38, Germany 34, Brazil 109, …). So
+    the selection mechanically splits into two independent, well-scoped joins: (a) per-country top-league +
+    division-below + domestic-cup from the 171-country group, (b) the specific named majors/continental cups from the
+    176-entry World group (Directive A names them: World Cup, Euros, Copa America, Champions League, UEFA/UECL, Copa
+    Libertadores/Sudamericana, AFC/CAF equivalents — a literal name-match against these 176, not a fresh enumeration).
+    **This closes out this session's contribution to step 1** — everything needed to WRITE the curated list is now
+    identified and located; actually writing the join code + the ~300 `LeagueDefinition` UAC entries + widening the
+    write-gate remains real implementation work for a fresh session (still correctly not done here — a discrepancy in a
+    production write-gate is expensive to unwind, worth doing with full attention).
 
 - **2026-07-25 (slot 2, data_engineering) — "Eliminate the bare/legacy dual-layout" todo — VERIFIED CLEAN, no
   canonicalize/delete action needed.** Operator explicitly confirmed sign-off for the irreversible GCS apply this todo
