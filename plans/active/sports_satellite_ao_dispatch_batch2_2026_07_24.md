@@ -803,6 +803,35 @@ source: >-
     season-month defaults (operator-approved hemisphere heuristic), and the domestic-vs-continental split (171-country
     group vs 176-entry World group). What's left is writing, testing, and shipping the actual code — genuine
     implementation work, not more discovery.
+  - **CRITICAL — actually attempted the 11-entry continental-majors slice and found a real, confirmed regression risk;
+    reverted cleanly, no code shipped, checkbox stays unchecked.** Wrote 11 `LeagueDefinition` entries into
+    `unified_api_contracts/canonical/domain/sports/league_data_other.py`'s `REFERENCE_LEAGUES` dict (World Cup, Euros,
+    FIFA Club World Cup, Copa America, OFC/CONCACAF/AFC×2/CAF Champions League, UEFA + CONCACAF Nations League — the 11
+    of the 18 keyword-matched majors not already in the registry), `classification="Reference"`, hemisphere-default
+    `season_months` per the operator's approved policy. **QG caught a real defect**: two tests failed —
+    `test_full_94_football_universe_is_mvp` / `test_all_89_other_football_leagues_are_understat_gaps` — both hardcode
+    registry-size assertions. Root cause traced past the test counts to the actual mechanism:
+    `_mvp_scope_rules.py::_mvp_football_league_ids()` (feeds the sports `is_mvp()` predicate) takes EVERY
+    `sport=="FOOTBALL"` registry entry with **NO classification filter at all** — so my 11 new `Reference`-tagged
+    entries were silently swept into MVP/prediction scope, directly contradicting the operator's explicit "not
+    suggesting we increase the scope of what we are predicting now." **Attempted the obvious fix** (filter
+    `_mvp_football_league_ids()` to `classification == "Prediction"`) and measured its actual effect before shipping it:
+    **the current 96-league MVP baseline is Prediction (33) + Features (24) + Reference (39) COMBINED — all three
+    classifications, not just Prediction.** That "fix" would have silently SHRUNK live MVP/prediction scope from 96 to
+    33, a severe regression in the opposite direction. **Neither the naive addition NOR the obvious fix is safe** —
+    there is no existing field in `LeagueDefinition`/`classification` that distinguishes "new operator-directed
+    wider-reference addition, NOT MVP" from "pre-existing Reference-tier entry that IS legitimately part of the
+    96-league MVP baseline" (e.g. `FA_CUP` is `classification="Reference"` AND correctly in MVP scope today). **Reverted
+    both files cleanly** (`git checkout --`, confirmed `git status` clean) — zero code shipped, zero regression risk
+    taken. This is now a real, confirmed architecture question for whoever implements this, not a hypothetical: either
+    (a) add a new boolean/enum field (e.g. `in_mvp_scope: bool`) to `LeagueDefinition` so classification and
+    MVP-membership are independently settable, or (b) give the curated-universe expansion its own registry dict entirely
+    separate from `LEAGUE_REGISTRY`/`_mvp_football_league_ids()`'s sweep, or (c) get an explicit operator ruling on
+    whether the 11 majors SHOULD actually be in MVP scope (Directive A's own prose is ambiguous on this specific point —
+    it says "wider universe" but also "we pretty much narrow down our prediction leagues to the ones the odds API has
+    data for", and several of these 11 majors DO have real odds-API coverage per this session's earlier per-source-cap
+    measurement). Do not repeat this session's naive-add attempt without resolving (a)/(b)/(c) first — QG will catch it
+    again, but better to design it correctly than rely on the test suite as the only guardrail.
 
 - **2026-07-25 (slot 2, data_engineering) — "Eliminate the bare/legacy dual-layout" todo — VERIFIED CLEAN, no
   canonicalize/delete action needed.** Operator explicitly confirmed sign-off for the irreversible GCS apply this todo
