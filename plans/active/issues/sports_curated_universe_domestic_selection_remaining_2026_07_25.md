@@ -317,7 +317,26 @@ inherited from the first shipped batch:
       `gcloud compute instances list --filter='name~"^af-backfill-"'`; once clear, enumerate the exact new-league
       `league_id` list (all `in_mvp_scope=False` entries added across the 11 batches, i.e. everything with
       `created`/added 2026-07-25 in `league_data_other.py`'s `REFERENCE_LEAGUES`) before launching, so the backfill
-      command has a concrete scoped target rather than "all leagues."
+      command has a concrete scoped target rather than "all leagues." — **RE-CHECKED 2026-07-25 (slot 2,
+      data_engineering)**: `af-backfill-20260725-032253` is now `TERMINATED` (confirmed live via
+      `gcloud compute     instances list`) — the singleton lock IS clear (it only counts `status=RUNNING`, per the
+      launcher's own filter). **Enumeration done**: extracted every `api_football_id=` added across the 14
+      curated-universe commits
+      (`unified-api-contracts@{7b13196e,162e51a3,a04996fd,dbd64914,49049b7,4e437004,dfeef957,80717936,28bda62a,     cf06ea48,a0fd391c,a7aa4226,cf4c8491,0104c2f2}`,
+      i.e. continental majors + all 11 domestic batches) via
+      `git show <sha> -- .../league_data_other.py | grep '^\+.*api_football_id='` — **287 unique league_ids**, all
+      independently re-verified present in the current file with `in_mvp_scope=False` (0 missing, 0 wrong-scope; the 1
+      apparent mismatch on a naive substring check was a false positive — `api_football_id=504`'s comment-line mention 2
+      lines above the real field, not a second entry). Reproducible in seconds from the SHA list above — not re-pasting
+      the 287-id list inline here to keep this doc lean. **Still NOT launched**: could not verify the API-Football daily
+      quota has reset since the 2026-07-25T08:12Z exhaustion incident
+      (`issues/sports_fixture_events_refetch_progress_2026_07_25.md`'s CRITICAL entry) — this session's environment has
+      no API key loaded (`get_live_quota()` returned `live=False`, registry fallback only, not a real read), and
+      guessing the reset time risks repeating the exact silent-corruption failure mode that incident already found once
+      today. Released via `/skip-current-task`, not attempted. Next dispatch: obtain a real `/status` read (needs the
+      production API key, not available in a bare dev worktree) or operator confirmation the daily quota has reset, THEN
+      launch `launch-api-football-backfill-vm.sh` scoped to the 287 enumerated league_ids (regenerate via the SHA list
+      above, don't hand-copy) — 2019→ fixtures+enrichment, gated + honest-empty per Directive A/B.
 
 ## Codex SSOTs
 
