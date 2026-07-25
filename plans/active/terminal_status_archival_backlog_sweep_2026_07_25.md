@@ -140,9 +140,10 @@ For the named doc:
       `plans/active/issues/detached_nohup_worker_processes_reaped_as_orphans_by_config_dir_match_2026_07_24.md`
       (status=superseded, doc_type=issue) per the Procedure below. Done when: `check_terminal_status_archived.py` no
       longer lists it.
-- [ ] [INFRA] P2. Archive `plans/active/issues/escalation_boot_template_ignores_one_shot_lifecycle_2026_07_25.md`
+- [x] [INFRA] P2. ✅ Archive `plans/active/issues/escalation_boot_template_ignores_one_shot_lifecycle_2026_07_25.md`
       (status=resolved, doc_type=issue) per the Procedure below. Done when: `check_terminal_status_archived.py` no
-      longer lists it.
+      longer lists it. — unified-trading-pm@0c21c56c2 (moved to plans/archive/issues/, banner added, no other corpus
+      referrers; check_terminal_status_archived.py confirmed clean).
 - [ ] [INFRA] P2. Archive `plans/active/issues/finalize_plan_coverage_regression_2_plans_2026_07_25.md`
       (status=resolved, doc_type=issue) per the Procedure below. Done when: `check_terminal_status_archived.py` no
       longer lists it.
