@@ -337,7 +337,7 @@ drift_direction: none
       coverage.
     - **[AGENT] P2.** `SolidlyCLForkPool` historical golden-swap validation — ≥20 Velodrome + ≥20 Aerodrome real
       on-chain fixtures within 5 bps.
-  - [`plans/active/issues/defi_pool_canonical_instrument_id_policy_contradiction_2026_07_17.md`](/plans/active/issues/defi_pool_canonical_instrument_id_policy_contradiction_2026_07_17.md)
+  - [`plans/archive/issues/defi_pool_canonical_instrument_id_policy_contradiction_2026_07_17.md`](/plans/archive/issues/defi_pool_canonical_instrument_id_policy_contradiction_2026_07_17.md)
     (2 open)
     - **[BACKEND] P2.** Trace `backfill_defi_canonical_id_and_glued_prefix_2026_07_14.py`'s POOL code path — does it
       enforce the "pool or not" invariant, or is this a docstring-only defect?

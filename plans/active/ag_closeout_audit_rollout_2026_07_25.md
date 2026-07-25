@@ -255,7 +255,7 @@ source: >-
   orphaned (24 `orphaned_never_touched` + 16 `orphaned_partial_coverage`, one of the 16 is the master closeout itself —
   self-referential — real satellite orphan count is **39**), **8 `archivable_now`** (all 8 resolved: 6
   `mvp_backfill_defi_onchain_v10_operational_log_part<N>` history-fork docs flipped `status: complete` in place,
-  `defi_pool_canonical_instrument_id_policy_contradiction_2026_07_17.md` shipped,
+  `plans/archive/issues/defi_pool_canonical_instrument_id_policy_contradiction_2026_07_17.md` shipped,
   `gas_fees_lst_rates_manifest_bucket_mismatch_2026_07_10.md` deliberately NOT flipped — carries
   `locked_by: live-defi-rollout`, queued for the operator, entry 2 in
   `autonomous_session_operator_decisions_2026_07_25.md`), **6 `archivable_after_planned_work`**, **2
