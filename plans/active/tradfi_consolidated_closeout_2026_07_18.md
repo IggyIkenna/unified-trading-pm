@@ -6,12 +6,16 @@ summary:
   IS/MTDS plan/issue into ONE ordered pass, mirroring cefi_consolidated_closeout_2026_07_18.md. **2026-07-24 line-cap
   remediation** trimmed the doc from 2549 lines to an umbrella-eligible coordination index — the manifest/content
   id-canonicalisation completion work (Phase A1 residual + Phase B/B.5), the download/backfill throughput follow-ups
-  (Phase A3/A3.1), and the Phase-D terminal gate were forked verbatim to 3 sibling plans (see `related:` below); this
-  parent retains the ground-truth context, MVP universe, Phase A2 (adapter/registry correctness), Phase C
-  (data-status/honest-coverage), the aggregated reference index, and a condensed milestone summary of the full
-  historical Progress Log (full detail lives on the 3 children now). GROUND-TRUTH CORRECTION (measured live 2026-07-18,
+  (Phase A3/A3.1), and the Phase-D terminal gate were forked verbatim to 3 sibling plans (see `related:` below).
+  **2026-07-25 second-tier trim** (the doc had grown back to 927 lines) forked Phase A2 (adapter/registry correctness)
+  and the STILL-OPEN residue of Phase C (data-status/honest-coverage) to a 4th child,
+  `tradfi_registry_coverage_and_ao_readiness_2026_07_25.md`; the 2 fully-closed Phase C mega-verdicts (honest-coverage
+  re-verification, KRX name-column shipment) that used to sit inline plus the full condensed Progress Log moved to
+  `tradfi_consolidated_closeout_history_2026_07_25.md` (pure record). This parent now retains the ground-truth context,
+  MVP universe, the Codex SSOT index, and the aggregated reference index (untouched, 421 lines) — see the 4 children for
+  all open work and the history companion for closed narrative. GROUND-TRUTH CORRECTION (measured live 2026-07-18,
   superseding this plan's own first-draft "largely done" verdict) — the persisted tradfi manifest and catalogue are ~100
-  percent NON-canonical for derivatives at the plan's outset; see the 3 children for how much of that has since been
+  percent NON-canonical for derivatives at the plan's outset; see the children for how much of that has since been
   closed.
 status: active
 nature: process
@@ -48,6 +52,13 @@ related:
     /plans/active/tradfi_manifest_content_recovery_completion_2026_07_24.md,
     /plans/active/tradfi_backfill_throughput_followups_2026_07_24.md,
     /plans/active/tradfi_phase_d_terminal_gate_2026_07_24.md,
+    /plans/active/tradfi_registry_coverage_and_ao_readiness_2026_07_25.md,
+    /plans/active/tradfi_registry_coverage_and_ao_readiness_2026_07_25_finalize.md,
+    /plans/archive/2026_07/tradfi_consolidated_closeout_history_2026_07_25.md,
+    /plans/active/tradfi_satellite_ao_dispatch_batch1_2026_07_25.md,
+    /plans/active/tradfi_satellite_ao_dispatch_batch2_2026_07_25.md,
+    /plans/active/tradfi_consolidated_native_ao_extract_2026_07_25.md,
+    /plans/active/tradfi_consolidated_native_ao_extract_2026_07_25_finalize.md,
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,
     /plans/active/canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md,
     /plans/archive/2026_07/tradfi_v9_stage1_finish_2026_07_06.md,
@@ -65,7 +76,7 @@ related:
     /plans/active/data_pipeline_e2e_milestones_gate_2026_07_24.md,
   ]
 created: 2026-07-18
-last_updated: "2026-07-24"
+last_updated: "2026-07-25"
 parent_epic: tradfi_master
 assigned_vm: NA
 execution_scope: local-only
@@ -80,15 +91,12 @@ locked_since:
 supersedes:
 superseded_by:
 depends_on: [tradfi_manifest_content_recovery_completion_2026_07_24, tradfi_backfill_throughput_followups_2026_07_24]
-gate_on_depends:
-  true # mechanism note: regen_backlog_from_plan.py's gate_on_depends holds the WHOLE plan (every todo, incl. the
-  # otherwise-unrelated Phase A2 adapter/registry todos), not just the 2 todos this was written for — Phase C
-  # (data-status/honest-coverage) is gated on Phase B, which forked to
-  # tradfi_manifest_content_recovery_completion_2026_07_24; the BLOCKED-INFRA "Certify tradfi Layer-1" todo is gated on
-  # the catalogue rebuild+promote, which forked to tradfi_backfill_throughput_followups_2026_07_24 — both were real,
-  # un-machine-enforced cross-plan gates found by the 2026-07-24 AO-flip-safety audit; encoded here so a future
-  # `assigned_vm: planning` flip can't dispatch Phase C or BLOCKED-INFRA before their real prerequisites land (the
-  # whole-plan gate is broader than intended but is the accepted cost of the mechanism, not restructured here).
+# gate_on_depends removed 2026-07-25 (second-tier trim, fix #6): the 2 items it protected -- Phase C's
+# honest-coverage-gated-on-Phase-B residue, and the BLOCKED-INFRA Layer-1-cert item -- both forked to
+# tradfi_registry_coverage_and_ao_readiness_2026_07_25.md, which now carries the real depends_on+gate_on_depends:true.
+# This parent's one remaining native todo (MVP wiring backfill=paper=live verify) isn't gated on either upstream plan,
+# so depends_on here is retained as documentation/history only (also still gates this plan's own archival per
+# PLAN_FORMAT.md, independent of gate_on_depends).
 source:
   Operator, 2026-07-18 — after spotting DERIBIT:FUTURE:AVAX@LIN-20260718 missing its quote and then seeing raw symbols
   in tradfi parquet names, manifest entries, and the instruments data-status page/catalogue, directed a single one-pass
@@ -101,7 +109,11 @@ source:
   line-cap remediation (`plans/active/issues/plan_line_cap_remediation_2026_07_23.md` row 29) — this doc had grown to
   2549 lines (over the 2000L umbrella ceiling) via an ~1700-line tick-by-tick Progress Log; content moved verbatim to
   the 3 children in the related list above, and this parent is now a trimmed coordination index (the `umbrella=true`
-  frontmatter key that carried this was later stripped 2026-07-24, ruled inert workspace-wide).
+  frontmatter key that carried this was later stripped 2026-07-24, ruled inert workspace-wide). **On 2026-07-25** a
+  second-tier trim (the doc had grown back to 927 lines) forked Phase A2 + the still-open Phase C residue to a 4th child
+  (`tradfi_registry_coverage_and_ao_readiness_2026_07_25.md`) and extracted the 2 fully-closed Phase C mega-verdicts +
+  the full condensed Progress Log to a history companion (`tradfi_consolidated_closeout_history_2026_07_25.md`) — see
+  this doc's own "Phase A2 + Phase C — forked 2026-07-25" section for the pointer.
 ---
 
 # TradFi consolidated close-out — one pass to MVP-backfill-ready
@@ -145,10 +157,14 @@ source:
 >   the tradfi MVP backfills only after A-D are green; **still blocked** on the chain-bundle sampler follow-up. The P1:
 >   post-full-backfill `/data-pipeline-reconciliation` RUN checkpoint, gated on the P0.
 >
-> **Retained here**: the ground-truth verdict + MVP universe (foundational context for all 3 children), Phase A2
-> (adapter/registry correctness), Phase C (data-status + honest-coverage), the aggregated Codex SSOT + source-doc index,
-> and a condensed milestone summary replacing the full tick-by-tick Progress Log (see the 3 children for full historical
-> detail on their respective workstreams).
+> **Retained here (as of 2026-07-24)**: the ground-truth verdict + MVP universe (foundational context for all children),
+> Phase A2 (adapter/registry correctness), Phase C (data-status + honest-coverage), the aggregated Codex SSOT +
+> source-doc index, and a condensed milestone summary replacing the full tick-by-tick Progress Log. **Updated
+> 2026-07-25**: Phase A2 and the still-open residue of Phase C were forked to a 4th child
+> (`tradfi_registry_coverage_and_ao_readiness_2026_07_25.md`) and the condensed milestone summary moved to a history
+> companion (`tradfi_consolidated_closeout_history_2026_07_25.md`) — see the "Phase A2 + Phase C — forked 2026-07-25"
+> section and the Progress Log section below for the current pointers. What's still genuinely retained here now: the
+> ground-truth verdict + MVP universe, and the aggregated Codex SSOT + source-doc index.
 
 ## Ground-truth verdict (measured live 2026-07-18 — supersedes the first-draft "largely done" claim)
 
@@ -209,7 +225,7 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
 
 > **Honest finding (this pass, 2026-07-24)**: every "Backfill proven" cell above is sourced from this plan's own
 > Progress Log / child-plan digests — none is a fresh re-verification. The "Paper/live wiring proven" column is entirely
-> unpopulated: nothing in this plan, its 3 children, or the Aggregated-source-docs index references a paper-trading
+> unpopulated: nothing in this plan, its children, or the Aggregated-source-docs index references a paper-trading
 > ledger, live-trading ledger, or the epsilon=0 batch=live=paper determinism proof
 > (`/codex/09-strategy/operational/paper-batch-live-reconciliation.md`) for ANY tradfi MVP cell — this plan's scope is
 > data-backfill readiness only, and the paper/live wiring question has not been investigated by any tradfi doc found in
@@ -225,198 +241,41 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
 
 ---
 
-## Remaining in this coordinator — Phase A2 (adapter/registry correctness) + Phase C (data-status/honest-coverage)
+## Phase A2 (adapter/registry correctness) + Phase C (data-status/honest-coverage) — forked 2026-07-25
 
-> Phase A1 (writer convergence) and Phase B/B.5 (the migration itself) forked to
-> `tradfi_manifest_content_recovery_completion_2026_07_24.md`; Phase A3/A3.1 (download/backfill throughput) forked to
-> `tradfi_backfill_throughput_followups_2026_07_24.md`; Phase D (the terminal gate) forked to
-> `tradfi_phase_d_terminal_gate_2026_07_24.md`. The two sections below (A2 + C) are the only phases that stayed on this
-> parent, unchanged.
-
-### A2 — Adapter / registry correctness (so the MVP cells actually fetch + classify)
-
-- [ ] [BACKEND] P1. **CME `mbp_10`/`trades`/`tbbo` `VENUE_DATA_TYPE_CAPABILITIES` restoration** + no `ohlcv_15m/24h`
-      aggregation writer exists (leaves `vix_features` unfed) —
-      `tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md`. Gate:
-      `VENUE_DATA_TYPE_CAPABILITIES` verified to declare mbp_10/trades/tbbo as billing-gated (per the "Data-type ×
-      source priority" note above — declared possible, not chased to full L3 history), and a recorded decision on
-      whether an `ohlcv_15m/24h` aggregation writer ships to feed `vix_features`. (repos: market-tick-data-service,
-      unified-api-contracts)
-- [ ] [BACKEND] P2. **KRX equities intraday registry-vs-adapter mismatch**
-      (`krx_intraday_ohlcv_registry_vs_adapter_mismatch_2026_07_12.md`, RESOLVED — this is about KRX (Korean)
-      **equities** `ohlcv_1m`/`ohlcv_15m` registry coverage, a separate cell from the declared MVP **FX KRW** cell
-      (`FX:SPOT_PAIR:KRW-USD`, daily); verify the equities fix still holds, and separately verify the FX KRW cell has no
-      analogous registry-vs-adapter gap). **IBKR `_SEC_TYPE_MAP` / Databento `_resolve_product_root` / combo-leg** —
-      DONE in code (`canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md`, single-leg todo already `[x]`).
-      **`mvp_mode` dead gate** decision (`tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md`). Gate: KRX-equities
-      mismatch re-verified still resolved, the FX KRW cell separately confirmed to have no registry-vs-adapter gap, and
-      the `mvp_mode` dead-gate decision (wire a real caller or remove) is made and recorded. (repos:
-      instruments-service, market-tick-data-service)
-- [ ] [BACKEND] P2. **Full MTDS+IS adapter smoke findings** — `mtds_is_full_adapter_smoketest_findings_2026_07_07.md`,
-      `instruments_remaining_work_audit_2026_07_10.md` (tradfi slice),
-      `uac_data_type_validity_combinator_fragmentation_2026_07_07.md`. Gate: every open finding in the 3 cited docs
-      re-verified current against live tradfi state or re-filed as its own tracked todo.
-- [ ] [BACKEND] P2. Audit every adapter/handler module under
-      `instruments-service/instruments_service/reference_data/adapters/tradfi/`,
-      `market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/`, and the tradfi venue files
-      under `execution-service/execution_service/trade_execution/adapters/` for duplicate implementations, a runtime
-      fallback masking a real failure, and dead (referenced-but-never-scheduled) code, per the rule in
-      `/codex/06-coding-standards/adapter-dead-code-and-fallback-ban.md`. Definition-of-done: a filed finding (or a
-      stated "clean" verdict) per adapter directory, cited with file paths, recorded in this plan's Progress Log or a
-      new `plans/active/issues/` doc. (repos: instruments-service, market-tick-data-service, execution-service)
-- [ ] [BACKEND] P1. **NEW 2026-07-24 — two live defects found by the raw-tick reconciliation's 3rd run: (1) ICE/KRX/FX
-      (all Yahoo-exclusive per SSOT) captured under `source=databento` since ~2026-07-18 (real values, wrong provenance
-      stamp, root cause not yet found — hypothesis: the 2026-06-24 DATABENTO-FIRST change missing a per-venue
-      `_VENUE_SOURCE_EXCLUSIONS` guard); (2) FX `SPOT_PAIR` manifest `instrument_id` is 0% well-formed across its entire
-      2020-2026 captured history (the GCS object + content are fine — this is a pure manifest-copy defect).** Positive
-      counter-finding same run: captured-row id-form canonicality measured ~99.3% corpus-wide (up from the 07-21
-      report's 30.8%), independently corroborated by a 99.95%-clean reconstructed-path check — strong evidence the
-      Phase-B migration in `tradfi_manifest_content_recovery_completion_2026_07_24.md` has substantially landed; that
-      plan's relevant todo should be confirmed/flipped against this evidence rather than treated as still-open. Full
-      evidence for both defects + the `_quarantine/` register going stale (146K→400K+ objects in 3-4 days, register
-      still says "deleted"): `/plans/active/issues/tradfi_fx_provenance_and_manifest_id_defects_2026_07_24.md`. (repos:
-      market-tick-data-service, unified-api-contracts, unified-trading-pm)
-
-## Phase C — data-status + honest-coverage (gated on Phase B)
-
-- [x] ✅ [BACKEND] P1. **Honest-coverage for tradfi**: out-of-window `expected_unattempted` clipping
-      (`/plans/archive/issues/honest_coverage_out_of_window_expected_unattempted_not_clipped_2026_07_16.md`, RESOLVED —
-      verify for tradfi); reference-data shard-dimension model
-      (`honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md`); coverage-floor registry
-      cross-propagation (`coverage_floor_registries_no_cross_propagation_2026_07_17.md`). Gate: all 3 cited findings
-      re-verified against live tradfi data (clipping holds, shard-dimension model applied, coverage-floor registries
-      cross-propagate) with the results recorded. **VERIFIED 2026-07-25, all 3 against LIVE tradfi manifests
-      (`market-data-tick-tradfi-prd-central-element-323112` 5,826,709 rows +
-      `instruments-store-tradfi-prd-central-element-323112` 27,251 rows, both freshly downloaded):** (1) **out-of-window
-      clipping — STILL HOLDS.** All 400,643 `expected_unattempted` rows carry blank `error_reason` (never an
-      `EXPECTED_*` reason, so `expected_unattempted_known_empty` stays empty for tradfi exactly as the archived doc
-      predicted); 2,647,410 of 3,802,192 `empty_confirmed` rows carry an `OUT_OF_COVERAGE_WINDOW_REASONS` member
-      (`EXPECTED_INSTRUMENT_NOT_LISTED`/`_DELISTED`/`_NO_PROVIDER_COVERAGE`/`_OUT_OF_COVERAGE_WINDOW`/
-      `_DEPRECATED_DATA_TYPE`) and are clipped from both numerator+denominator by deployment-api's
-      `coverage.py::oow_reason_mask` against UAC's live `OUT_OF_COVERAGE_WINDOW_REASONS` frozenset — code path unchanged
-      since the 2026-07-16 verification. (2) **reference-data shard-dimension model — CORRECTLY APPLIED.** All 7 tradfi
-      IS venues show real per-`(venue, instrument_type)` splits with no blank-collapse (CME:
-      FUTURE=2024/COMBO=1995/OPTION=1995; CBOE 5 types; ICE/NYSE/NASDAQ/KRX/FX all multi-type) — the 2026-07-07
-      `_split_by_instrument_type` writer fix is live for tradfi; residual blank-`instrument_type` rows (4,504/27,251)
-      are exclusively `EXPECTED_WEEKEND`/`_HOLIDAY`/`_PRE_VENUE_LAUNCH` non-trading pre-stamps (already documented as
-      "no fix needed" in the source doc) + 93 genuine unclassified adapter errors, not a writer regression; no
-      DERIBIT-COMBO-style fake-venue analog exists in tradfi's venue list. (3) **coverage-floor cross-propagation — WAS
-      STILL LIVE, NOW FIXED.** Confirmed the cited CME mismatch was still unresolved as of session start
-      (`coverage_starts.py:175` `"CME": date(2010, 1, 1), # TODO verify` vs `venue_mapping.py:334` `"CME": "2020-01-01"`
-      no TODO). Probed the live MTDS manifest per `coverage_starts.py`'s own docstring instruction — earliest CME
-      `capture_status=captured` row is 2020-01-01, every pre-2020 date is `empty_confirmed`/`expected_unattempted` —
-      confirming `venue_mapping.py` was right. **Shipped: unified-api-contracts@32b2879c** updates
-      `TRADFI_SOURCE_COVERAGE_START["CME"]` to `date(2020, 1, 1)` and drops the TODO; gate `dbd6491`→`32b2879c` all
-      green (583s, sentinel `dbd649140e946cbcf91275a6bd10bd73c12516a5`). Matching P2 todo flipped in
-      `coverage_floor_registries_no_cross_propagation_2026_07_17.md`. The other 2 registries (TARDIS `# TODO verify`,
-      the 8 CeFi mismatches, POLYMARKET, DeFi drifts) are that doc's own separately-tracked P1/P2/P3 items, out of this
-      tradfi-scoped todo's gate.
-- [ ] [CODE] P2. **Billing-gated Databento L2/L3 cells must not count as `attempted_failed`.** Databento tradfi's
-      billing entitlement is 1-month L3 + 1-year L1 (see the "Data-type × source priority" note above), so
-      `mbp_10`/`trades`/`tbbo` lookback/entitlement-guard rejections are EXPECTED, not real failures — but no
-      classification mechanism currently excludes them, so a hit outside the entitlement window records
-      `attempted_failed` today. Wire a durable classification (a new UAC `classify_venue_error()` outcome or
-      `expected_reason` value) that recognizes the billing-entitlement-guard rejection and routes it to
-      `empty_confirmed`/`expected_unattempted` instead of `attempted_failed`. Definition-of-done: a unit test asserting
-      a simulated entitlement-guard rejection for `mbp_10`/`trades`/`tbbo` on a Databento tradfi shard yields 0
-      `attempted_failed` rows, plus a live manifest spot-check showing the count trending down after the fix ships.
-      (repos: unified-api-contracts, market-tick-data-service)
-- [ ] [BACKEND] P1. **Data-status page renders canonical tradfi** (the "Upcoming expiries" + instruments/catalogue
-      views) — `data_status_page_ux_and_canonicalisation_2026_07_16.md`; deployment-api legacy venue-lookup gap
-      (`deployment_api_legacy_instrument_availability_venue_lookup_gap_2026_07_13.md`, RESOLVED — verify tradfi). Gate:
-      the "Upcoming expiries" widget + catalogue view render canonical ids for a live sample row (no raw
-      `E3AN6     C7960`-style output per the Ground-truth verdict table above), and the venue-lookup gap fix is
-      confirmed to hold for tradfi.
-- [ ] [REVIEW] P1. **Run the already-shipped distinct-values/axis-value census for tradfi and verify 0 non-canonical**
-      (supersedes the prior "RE-ADD the dimensions enumeration view" todo — that view already shipped live:
-      deployment-api `GET /distinct-values/{asset_group}` + `GET /axis-value-census`, code at
-      `deployment-api/deployment_api/routes/data_status/_distinct_values.py` + `_axis_census.py`; tracked corpus-wide in
-      `/plans/active/distinct_values_noncanonical_audit_2026_07_20.md`). Call both endpoints for `asset_group=tradfi`
-      against the current nightly rollup + manifest and confirm every distinct
-      `instrument_type`/`data_type`/`chain`/`source`/`pipeline_mode`/`venue` value is canonical (0 non-canonical, or
-      only explicitly-accepted exceptions per the cutover register) — the exact dupes the 2026-07-18 audit found
-      (`FUTURE`/`future`/`FUTURES`, `EQUITY`/`equity`, stale `barchart`) must be 0 or explained. Definition-of-done: a
-      recorded run (date + endpoint response, or a link to the refreshed
-      `distinct_values_noncanonical_audit_2026_07_20.md` ground-truth table) showing the tradfi row. (repos:
-      deployment-api)
-- [ ] [BACKEND] P2. **Denominator / catalogue-completeness + new untracked findings** — 875 tradfi atoms with narrowed
-      historical objects + 153 duplicate KRX row_keys
-      (`tradfi_instrument_type_migration_read_stale_legacy_object_2026_07_17.md`); phantom captures
-      (`phantom_captures_tradfi_2026_06_28.md`); expected_reason misclassification P3s. Gate: each of the 3 cited
-      findings re-verified against live tradfi state (counts re-measured or explained as stale) and recorded.
-- [x] [BACKEND] P1. **KRX (Korean) equities carry a human-readable NAME across catalogue + manifest + data-status
-      (operator, 2026-07-20)** — **instruments-service@6780f10e** (the 4th and last code surface; gate green **4712
-      passed / 0 failed / 3 skipped**, `.qg_last_passed_sha == 9267e0ea` at ship time). _**CODE 4/4 LANDED 2026-07-20**
-      — read-surface chain is complete and shipped: **UAC@f7e0301d** (first-class optional `InstrumentRecord.name` +
-      `KRX_EQUITY_NAMES` bare-code→issuer-name SSOT, derived from the EXISTING `KrxEquityDef.name` — no new mapping
-      invented, no provider re-fetch needed), **deployment-api@65f5593** (`name` on the Catalogue Explorer JSON route +
-      the download-CSV, schema-aware read so a pre-`name` catalogue degrades to blank rather than raising),
-      **deployment-ui@2ff1e61** (Name column, em-dash for honest-absent; `pw:L2 ✓`
-      `tests/e2e/data-status-catalogue-name-column.spec.ts`). **instruments-service@6780f10e SHIPPED 2026-07-20**
-      (`name` in `CATALOG_COLUMNS` + `_add_instrument_name` on-the-fly stamp mirroring
-      `_add_mvp_column`/`_add_equity_tags`, + `name=eq.name` on the KRX records). *It was gate-blocked for ~4h on
-      failures that were NOT from this work* — first the 5 UAC↔IS DeFi drift guards from UAC@3f79489f
-      (METEORA/LIFINITY/PHOENIX + CHAINLINK/PYTH declared without matching IS adapter classes), then, once those
-      cleared, a 6th unrelated cross-repo lockstep (`test_expected_matches_golden[sports]`, golden=27 vs actual=47, from
-      uac@b6a1d83a adding 20 ODDS_API fan-out bookmakers). **Both were other agents' in-flight work and both
-      self-resolved** — DeFi via is@793125ad + is@6506b505 (adapters wired + goldens regenerated), sports via
-      is@9267e0ea (goldens regenerated). This deliverable deliberately did NOT touch either: no guard was weakened,
-      excluded, or baselined, and no foreign golden was regenerated to force green. Ship gate at is@9267e0ea: **4712
-      passed / 0 failed / 3 skipped, exit 0**. Residual DeFi coverage-honesty finding (3 live venues with measured-dead
-      upstreams + `expected_coverage` not phase-gated), tracked in
-      `/plans/archive/issues/uac_is_defi_oracle_dex_adapter_drift_2026_07_20.md`, was NOT this plan's to fix and is now
-      RESOLVED — 2026-07-22, `uac@9a047a31` + `instruments-service@52a1cb53` (defi_consolidated_closeout_2026_07_18.md
-      session), narrowed the 3 dead-upstream venues to `phase="pipeline"` + dropped their `expected_coverage.py` rows.
-      **Verified on a SAMPLE (no full regen):** `_add_instrument_name` stamps `KRX:EQUITY:005930`→"Samsung Electronics",
-      `KRX:EQUITY:000660`→"SK Hynix", `KRX:EQUITY:005380`→"Hyundai Motor", and also catches the legacy
-      `KRX:EQUITY:005930.KS-USD` variant (same `base_asset`); non-KRX rows stay honestly blank. Live tradfi
-      `prod/catalog.parquet` today has 10 KRX rows and NO `name` column — it appears on the next roll-up. **STILL
-      OPEN:** (a) the availability-manifest `name` column (item 2 below) — deliberately NOT done here, the manifest is
-      availability data and its shard-atom/writer is owned by another agent; catalogue-as-SSOT + display-time join is
-      preferred; (b) the catalogue regeneration that makes the name land LIVE (main agent). **Audit of other
-      opaque-coded venues:** KRX is the only venue needing this — DeFi pool addresses already carry human-readable
-      `glued_pair_id` + `base_asset`, prediction conditionIds already carry `question`, sports fixtures already carry
-      team names, and CME/CBOE/NASDAQ/NYSE roots are already readable._ KRX equities are identified by the 6-digit
-      exchange code (`KRX:EQUITY:000660` = SK Hynix, `005930` = Samsung Electronics, `005380` = Hyundai Motor) — the
-      code is the stable/unique official ticker (kept as the canonical `instrument_id`, analogous to
-      `NASDAQ:EQUITY:AAPL`), but it is NOT human-readable. Add a first-class reference-data `name` field (romanized
-      company name) resolved from a KRX code→name mapping (source: provider security description — Yahoo `.KS` /
-      Databento — else a maintained KRX listing reference in instruments-service), and SURFACE it on every read surface:
-      (1) deployment-api Catalogue Explorer + download-CSV (`instrument_id` + `name`), (2) the availability manifest
-      (`name` column carried by the WRITER, never re-derived downstream), (3) the data-status dimensions view. GCS
-      object PATHS keep the stable code id (paths must be stable/unique; names change on rebrand/merger) — the readable
-      name rides as metadata/column, not in the path. Audit whether any other venue shares the numeric-code pattern.
-      Regenerate catalogue + manifest so the name lands live; verify the Catalogue Explorer shows `SK Hynix` /
-      `Samsung Electronics` next to the code. (repos: instruments-service, market-tick-data-service, deployment-api,
-      deployment-ui)
-- [ ] [BACKEND] P2. **NEW 2026-07-25 (plan-reconcile) — track the KRX name-column "STILL OPEN" work above as a real
-      todo, not just prose behind a checked box.** The P1 item above is `[x]` (code shipped 4/4, catalogue-side name
-      confirmed live), but its own STILL OPEN note names 2 pieces of work never separately tracked: (a) the
-      availability-manifest `name` column (owned by another agent — the manifest's shard-atom/writer, not the catalogue)
-      — deliberately deferred there in favor of catalogue-as-SSOT + display-time join; (b) the catalogue regeneration
-      that actually lands the name LIVE (distinct from the code shipping — confirm this has happened since the
-      2026-07-20 "10 KRX rows and NO name column" sample check, or run it). **Done when**: either both are confirmed
-      already done with fresh evidence (a live catalogue read showing the `name` column populated for KRX rows), or both
-      are executed and verified. Repos: instruments-service, market-tick-data-service, deployment-api.
-- [ ] [VERIFY] P0. 🚧 BLOCKED-INFRA — **Certify tradfi Layer-1** — post the v9 migration + rebuild + IS catalogue (Plan
-      2), record the fresh tradfi denominator + %. Gate: tradfi number recorded; all 5 AGs now canonical-and-measured.
-      **STILL BLOCKED 2026-07-21 (only PARTIALLY unblocked)**: the v9 manifest migration/rebuild are done (task 10,
-      2026-07-16), but the served catalogue has not yet been rebuilt/promoted for the +409 MVP expansion
-      (`uac@afa2dd64`→`22e6a534`) — so the fresh tradfi denominator this todo must record is not yet final. Gated on the
-      pending catalogue rebuild + promote (see `tradfi_backfill_throughput_followups_2026_07_24.md` "FINAL STEP"), not
-      cleanly runnable yet. (FOLDED IN from layer1_remeasure_and_certify_2026_07_06, 2026-07-15, plan-reconcile §6
-      operator ruling)
-
-  **Note (2026-07-24)**: relocated verbatim from `tradfi_v9_stage1_finish_2026_07_06.md`'s "Folded-in scope 2026-07-15"
-  section during the plan-hygiene line-cap remediation (that plan is now archived, 0 remaining open todos). The "FINAL
-  STEP" this todo's gate cites now lives on the sibling `tradfi_backfill_throughput_followups_2026_07_24.md` (gated on
-  backfill completion — rebuild+promote the served catalogue so `mvp=True` reflects the +409 expansion), not on this
-  parent directly — see that child for the current status.
+> **Second-tier line-cap trim** (this parent had grown back to 927 lines since the 2026-07-24 3-way split — a smaller,
+> second-tier trim of the same kind, this time forking the STILL-OPEN residue of Phase A2 + Phase C rather than
+> already-closed narrative). The 2 fully-closed Phase C mega-verdicts (the honest-coverage 3-finding verification, and
+> the KRX human-readable-name 4/4-code-surfaces shipment) are pure historical record now — moved verbatim to
+> [`plans/archive/2026_07/tradfi_consolidated_closeout_history_2026_07_25.md`](/plans/archive/2026_07/tradfi_consolidated_closeout_history_2026_07_25.md)
+> alongside the Progress Log (see below). Every STILL-OPEN item from A2 + Phase C moved to
+> [`tradfi_registry_coverage_and_ao_readiness_2026_07_25.md`](/plans/active/tradfi_registry_coverage_and_ao_readiness_2026_07_25.md)
+> (8 AO-dispatch-readiness fixes applied during the move — 2 broken cross-doc references restated inline, 1 finding-H
+> digest reformat, 1 missing self-justification added, 1 stale whole-plan gate relocated to the child, 2 bundled
+> VERIFY+DECIDE todos split — see that child's own fork-note for the full list). A gated finalize plan
+> (`tradfi_registry_coverage_and_ao_readiness_2026_07_25_finalize.md`) reconciles + archives that child once its content
+> is fully closed.
+>
+> **Open-todo digest (2026-07-25, so this fork is AO-legible without opening the child)**:
+>
+> - **A2 (adapter/registry correctness)** — 5 open: CME mbp_10/trades/tbbo capability-declaration verify (P1, the
+>   `ohlcv_15m/24h` writer DESIGN decision split out as a non-dispatchable pointer), KRX equities registry-vs-adapter
+>   verify (P2, the `mvp_mode` DECISION split out as a non-dispatchable pointer), Full MTDS+IS adapter smoke findings
+>   re-verify (P2), adapter dead-code/fallback audit (P2), the "two live defects" digest pointer (source-mislabel + FX
+>   manifest id, reformatted non-checkbox per finding H).
+> - **Phase C (data-status/honest-coverage) — still-open residue only** — 6 open: billing-gated Databento L2/L3
+>   classification (P2), data-status page canonical render (P1), distinct-values/axis-value census (P1),
+>   denominator/catalogue-completeness re-verify (P2), KRX name-column follow-up tracking (P2, rewritten inline per the
+>   fork), and the BLOCKED-INFRA "Certify tradfi Layer-1" gate (P0, still blocked as of 2026-07-25 — the catalogue
+>   rebuild+promote "FINAL STEP" in `tradfi_backfill_throughput_followups_2026_07_24.md` remains pending).
+>
+> **Retained here**: the ground-truth verdict + MVP universe (unchanged), the Codex SSOTs index, and the Aggregated
+> source docs digest (untouched, 421 lines).
 
 ## Plan-quality — AO-dispatch-readiness pass (owed)
 
-- [ ] [REVIEW] P2. Run the same adversarial AO-dispatch-readiness pass that produced sports's Track Y findings A-G (the
-      6 defect classes: bare section shorthand, ambiguous verbs, delete-tagging inconsistency, missing
+- [x] ✅ [REVIEW] P2. Run the same adversarial AO-dispatch-readiness pass that produced sports's Track Y findings A-G
+      (the 6 defect classes: bare section shorthand, ambiguous verbs, delete-tagging inconsistency, missing
       definition-of-done, stale checkboxes, digest-checkbox misuse — see
       `/plans/archive/2026_07/sports_consolidated_closeout_history_2026_07_24.md`'s "Track Y — PLAN-QUALITY REMEDIATION"
       section for the original method, extracted there by sports's own line-cap-remediation split) against this entire
@@ -427,7 +286,20 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
       follow-up todos. **Same-session spot-check (2026-07-24, this pass)**: no bare `§X`-as-sole-meaning or banned-verb
       instances found among this file's real (non-digest) `- [ ]` todos; delete-risk tagging on the real todos is
       consistent (no untagged prod-delete todo exists in this file); a full stale-checkbox + definition-of-done sweep
-      across every real todo is still owed.
+      across every real todo is still owed. **CLOSED 2026-07-25 (this pass)**: the 2026-07-25 second-tier line-cap
+      trim's own design pass ran exactly this sweep against the A2 + Phase C content (since forked to
+      `tradfi_registry_coverage_and_ao_readiness_2026_07_25.md`) and found + fixed 8 concrete defects: 2 broken
+      cross-doc "above" references restated inline (the CME mbp_10/trades/tbbo todo, the Billing-gated Databento L2/L3
+      todo), 1 broken "above" reference in the KRX name-column STILL-OPEN todo rewritten to state the fact directly, 1
+      finding-H violation (the "two live defects" todo reformatted as a non-checkbox digest pointer), 1 missing
+      self-justification added (the KRX catalogue-rebuild+promote sub-item), 1 stale whole-plan `gate_on_depends`
+      relocated to the child that actually carries the gated content, the `related:` frontmatter gap closed (4 sibling
+      AO-dispatch/triage docs added), and 2 bundled VERIFY+DECIDE todos split into a bounded AO-eligible verify + a
+      non-dispatchable decision pointer each. This closes the sweep for A2+Phase C content; the remainder of this file
+      (Ground-truth verdict, MVP universe, Aggregated source docs) was already spot-checked clean 2026-07-24 (see
+      above). A fresh copy of this same audit-obligation todo now lives on
+      `tradfi_registry_coverage_and_ao_readiness_2026_07_25.md` (an audit todo is re-run per-file as content evolves,
+      not treated as permanently satisfied).
 
 ## Codex SSOTs (read before touching a phase)
 
@@ -857,70 +729,23 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
     - **[DOC] P3.** `build_canonical_candle_path()` docstring example still shows superseded semantics
     - **[SCRIPT] P3.** Investigate why `CEFI:DERIBIT:trades:24h`'s force-leg classification shows `off_template=29`
 
-## Progress Log — condensed milestone summary (2026-07-24, replaces the pre-split ~1700-line tick-by-tick log)
+## Progress Log — pointer (full condensed milestone summary moved 2026-07-25)
 
-> **The full tick-by-tick history was NOT deleted** — it was split verbatim across the 3 children by workstream (see the
-> Split notice above). This section is a short, condensed orientation only; for exact commands, shas, measured numbers,
-> and the full narrative, read the relevant child's own Progress Log.
+> The full "condensed milestone summary" Progress Log (2026-07-18 through 2026-07-23 ticks, replacing the original
+> ~1700-line tick-by-tick log per the 2026-07-24 split) moved verbatim to
+> [`plans/archive/2026_07/tradfi_consolidated_closeout_history_2026_07_25.md`](/plans/archive/2026_07/tradfi_consolidated_closeout_history_2026_07_25.md)
+> during this 2026-07-25 second-tier trim — nothing summarized, rewritten, or dropped. For exact commands, shas,
+> measured numbers, and the full narrative, read that history doc or the 3 sibling children's own Progress Logs.
 
-- **2026-07-18 — Plan authored + ground-truth-corrected.** First-draft "largely done" claim disproved by direct live GCS
-  reads: catalogue + manifest derivative ids measured at 0% canonical. Rewritten into the Phase A→B→C→D structure above.
-  → full detail: `tradfi_manifest_content_recovery_completion_2026_07_24.md`.
-- **2026-07-18 — Phase A1 writer convergence shipped** (UAC shared builder + MTDS/IS writers all emit `-USD@LIN`).
-  **Phase B — manifest (Surface B) migration executed + RE-VERIFIED LIVE 2026-07-25**: migrated via
-  pause-consolidator→CAS-rewrite→resume; fresh live read confirms FUTURE/OPTION `instrument_id` canonical
-  363,954/403,467 (90.2%), EQUITY/ETF carrying `-USD` 3,189,939/3,225,484 (98.9%), durability independently re-verified.
-  **Catalogue (Surface A) migration is NOT YET executed** — still an open P0 (DURABILITY TRAP: a `prod/n`-only rewrite
-  silently reverts on the next catalogue rebuild); the 99.86% figure in the child doc is the PRE-migration
-  canonicalizability measurement on the raw catalogue, not a completed-migration result. →
-  `tradfi_manifest_content_recovery_completion_2026_07_24.md`.
-- **2026-07-18 — A3.1 Databento e2e throughput optimization shipped + measured 1.56x** (gated concurrent-date driver,
-  disk-policy fix, concurrency plumbing); a P0 fleet incident (88 launchers with a truncated `gcloud` command from an
-  unrelated disk-policy sweep) found and fixed mid-measurement. → `tradfi_backfill_throughput_followups_2026_07_24.md`.
-- **2026-07-19 — First Phase-D pass: 36/60 red, dominated by checker bugs, not real MVP-path failures** (billing-gated
-  Databento datasets misclassified as failed; `--mvp-only` not suppressing non-MVP augmentation) — both fixed. CME
-  `ohlcv_1m` root-caused to a genuine shard-atom design ambiguity (chain-bundle vs per-contract), flagged
-  BLOCKED-OPERATOR-DECISION. Re-run: clean MVP verdict, 2/15 hard-fail (both CME, pending the ruling). →
-  `tradfi_phase_d_terminal_gate_2026_07_24.md`.
-- **2026-07-20 — Operator 6h-away mandate: complete everything autonomously.** Canonical GCS-PATH migration executed on
-  20 SPOT VM shards (2.65M objects classified, 0 orphans, 2 defects found+fixed mid-run); CME shard-atom ruled Option A
-  (chain bundle — fix the checker, not the writer); Massive purge initially HELD (the `trades`/`tbbo` corpus was the
-  only copy, billing-gated), then operator-AUTHORIZED under accepted-permanent-loss (Option C — "our subscription is
-  terminated, ohlcv_1m is more than enough"), then EXECUTED (1,701,422 objects purged, 0 collateral, soft-delete safety
-  net held throughout). Post-migration audit confirmed complete (a 14-object residue found+fixed); manifest surgical
-  cleanup dropped 686,005 stale massive rows + 3,615 disk-verified phantom rows. →
-  `tradfi_manifest_content_recovery_completion_2026_07_24.md`.
-- **2026-07-21 — MVP scope expanded +409 cells** (VIX futures, CBOE treasury-yield INDEX, FX KRW, CME crypto
-  futures-only); backfill fleet launched at scale. Reconciliation run found the earlier "~99.65% canonical" claim was
-  OVERSTATED — historical manifest/parquet-content id-form was actually only 30.8% canonical (0% pre-2023) — and an
-  ACTIVE LIVE REGRESSION was caught: the currently-running backfill fleet wrote canonical GCS filenames but
-  non-canonical manifest rows for the same capture (~850K bad rows/day). Writer bug root-caused + fixed same day. →
-  `tradfi_manifest_content_recovery_completion_2026_07_24.md` (writer/manifest fix) +
-  `tradfi_backfill_throughput_followups_2026_07_24.md` (backfill-drive fleet launch).
-- **2026-07-21/22 — Cash-bucket crash bug fixed properly** (a per-row exception-isolation gap that had silently
-  truncated the 2026-07-18 migration run); content-rewrite script shipped; manifest CAS re-stamp executed on VMs
-  (6,262,988 rows rewritten in place: 1,751,779 cash rows migrated to `-USD`, combos re-stamped, derivative mislabels
-  corrected). All remaining migration work deliberately moved onto VM compute (operator directive, session
-  time/credit-constrained). → `tradfi_manifest_content_recovery_completion_2026_07_24.md`.
-- **2026-07-22 — Honest-coverage audit run for real**; KRX equities gap found + closed (new Yahoo-daily launcher, no
-  prior launcher had ever targeted this venue); chain-manifest recovery script built + shipped (register phase applied
-  live: 1,545 rows registered for real captured-but-unregistered data; retire phase — 50,520 candidate rows —
-  deliberately left `--apply`-gated pending operator review, NOT auto-applied); CME MBO monolith investigation found
-  only 30 objects (not the previously-cited 107 — discrepancy investigated but not fully explained; migration tool
-  design deferred as its own follow-up). → `tradfi_manifest_content_recovery_completion_2026_07_24.md`.
-- **2026-07-23 — Phase D re-run found + fixed 3 real, independently-verified checker bugs**: (1) MTDS freshness
-  pre-flight read the wrong (permanently-stale `-test-` tier) bucket under `--test-run`; (2) the skip-leg vacuously
-  failed on an honest-empty force leg instead of recognizing there was nothing to prove a skip against; (3) IS's
-  expected-write-prefix builder went stale after an unrelated 2026-07-21 hive-path canonicalisation change. IS check
-  improved 0/14 → 11/14 passed (remaining 3 explained: 1 SPOT-preemption noise, 2 genuine honest-absence). Full MTDS
-  all-shards run: 21 passed / 21 failed / 18 skipped — failures mostly SPOT preemption noise (measured via
-  `gcloud compute operations list`, not assumed) plus 2 known pre-existing gaps and one newly-surfaced chain-bundle
-  sampler root-mismatch, filed as its own follow-up issue rather than chased further in-session. →
-  `tradfi_phase_d_terminal_gate_2026_07_24.md`.
-
-**State as of the 2026-07-24 fork**: manifest/content migration is substantially complete on the primary surfaces with
-one 50,520-row retire-phase batch awaiting explicit operator sign-off before `--apply` (Child 1); backfill throughput is
-measured + optimized (1.56x shipped) with further ETA/concurrency-cap tuning identified but not yet applied (Child 2);
-the Phase-D terminal gate has found and fixed 3 real cross-cutting checker bugs, but is **not yet fully green** — the
-MVP backfill readiness gate stays blocked pending the chain-bundle sampler follow-up or an explicit operator acceptance
-of the current evidence as sufficient (Child 3).
+**State as of the 2026-07-25 fork**: manifest/content migration is substantially complete — catalogue (Surface A) and
+manifest (Surface B) both migrated + re-verified live 2026-07-25, chain-bundle content (Surfaces C/D) tool shipped +
+dry-run measured but `--apply` at scale still pending on a dedicated VM — with a 50,520-row retire-phase batch still
+awaiting operator sign-off (Child 1); backfill throughput is measured + optimized (1.56x shipped), the catalogue
+rebuild+promote "FINAL STEP" still pending as of 2026-07-25 (Child 2); the Phase-D terminal gate found and fixed 3 real
+cross-cutting checker bugs but is not yet fully green, blocked on the chain-bundle sampler follow-up (Child 3). Phase A2
+(adapter/registry correctness) + the still-open Phase C (data-status/honest-coverage) residue moved to a 4th child,
+`tradfi_registry_coverage_and_ao_readiness_2026_07_25.md` (Child 4), this same day. Two AO-dispatch satellite batches
+(`tradfi_satellite_ao_dispatch_batch1_2026_07_25.md`, `tradfi_satellite_ao_dispatch_batch2_2026_07_25.md`) and a
+native-todo AO-eligibility extract (`tradfi_consolidated_native_ao_extract_2026_07_25.md`) have since drafted
+AO-dispatchable candidates off this plan's satellite docs and native todos — all `status: draft`, pending operator
+activation.
