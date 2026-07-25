@@ -126,7 +126,7 @@ is a **terminal-looking honest state** — it reads as "checked, genuinely nothi
 
 ## Why it matters
 
-This is the honest-absence hard rule (`codex/02-data/honest-absence-downstream-handling.md`): a genuine 200+empty and a
+This is the honest-absence hard rule (`/codex/02-data/honest-absence-downstream-handling.md`): a genuine 200+empty and a
 fetch failure are different states, and conflating them here means real data silently becomes permanently-unretriable
 "confirmed empty" gaps. It is currently active and live — not a historical residue — on the exact VM this plan's own
 todo (`sports_satellite_ao_dispatch_batch2-011`) is tracking to completion.
