@@ -128,9 +128,10 @@ For the named doc:
 - [ ] [INFRA] P2. Archive
       `plans/active/issues/deployment_api_cefi_venue_canonical_compare_test_regression_2026_07_21.md` (status=resolved,
       doc_type=issue) per the Procedure below. Done when: `check_terminal_status_archived.py` no longer lists it.
-- [ ] [INFRA] P2. Archive `plans/active/issues/deployment_api_inventory_cold_path_concurrent_oom_2026_07_24.md`
+- [x] [INFRA] P2. ✅ Archive `plans/active/issues/deployment_api_inventory_cold_path_concurrent_oom_2026_07_24.md`
       (status=resolved, doc_type=issue) per the Procedure below. Done when: `check_terminal_status_archived.py` no
-      longer lists it.
+      longer lists it. — unified-trading-pm@54cbb2dae (moved to plans/archive/issues/, banner added, both referrers in
+      the sibling reaper-drain doc repointed; check_terminal_status_archived.py confirmed clean).
 - [ ] [INFRA] P2. Archive `plans/active/issues/deployment_promote_squash_ancestry_false_negative_2026_07_25.md`
       (status=resolved, doc_type=issue) per the Procedure below. Done when: `check_terminal_status_archived.py` no
       longer lists it.
