@@ -481,13 +481,29 @@ flipping the checkbox.
       startCommand/args override that could be swallowing stdio, (3) consider whether this is a genuine GCP-side Cloud
       Run logging regression worth a support ticket if (1)/(2) turn up nothing. Leave the diagnostic line in place
       (harmless, already proven not to interfere with the app running) until root-caused — removing it now would only
-      lose the disambiguation this session already paid for. **UPDATE 2026-07-25T14:02Z (slot 5): found the ACTUAL
-      blocker — it is not SIT itself.** SIT ran, passed, and logged a matching-tree stamp for `deployment-api`, but the
-      stamp is fire-and-forget (`repository_dispatch` only) and the downstream Firestore write is 403'ing FLEET-WIDE
-      (`ci_status_store.py` `PermissionDenied`, `unified-trading-sa` ADC identity, reproduced live via direct REST
-      `PATCH` — same 403; 0/95 sampled `ci-status-update.yml` runs succeeded since 2026-07-25T10:36Z). This blocks EVERY
-      SIT-covered repo's promote, not just this one. Filed as its own cross-cutting P0 since it blocks the whole fleet's
-      LDR→main pipeline, not just this todo:
+      lose the disambiguation this session already paid for. **RULED OUT 2026-07-25T16:01Z (slot 5, same session):**
+      re-checked after ~5 more minutes (not a Cloud Logging propagation delay — still zero output, while
+      `run.googleapis.com%2Fvarlog%2Fsystem` DOES show entries in the same window, so ingestion itself is working).
+      `gcloud run revisions describe uts-shared-deployment-api-00277-6kd` shows NO `command`/`args` override (uses the
+      image's own `ENTRYPOINT`/`CMD` as-is) and NO `run.googleapis.com/execution-environment` annotation on EITHER the
+      silent revision (`00277-6kd`) or the historical revision that logged fine (`00274-s9g`) — so a gen1/gen2
+      execution-environment difference is also ruled out. Dockerfile's `ENTRYPOINT`/`CMD` (`["/usr/bin/tini", "--"]` /
+      `["gunicorn", "deployment_api.main:app", "-c", "/app/gunicorn.conf.py"]`) is unremarkable — `tini` only forwards
+      signals/reaps zombies, doesn't touch stdio. `PYTHONUNBUFFERED=1` IS set (`Dockerfile:146`, itself a fix for an
+      EARLIER instance of "zero app-level log lines" diagnosed 2026-07-24 as Python's default block-buffering under a
+      non-TTY) — but this session's diagnostic used an explicit `.flush()` after `sys.stderr.write()`, so buffering
+      cannot explain ITS absence regardless. **Exhausted the diagnostic paths available without deeper platform
+      tooling** (container exec/shell access into a running Cloud Run instance is not standard tooling here) — next
+      dispatch's most promising unexplored angle: pull + diff the FULL image layer history (not just Dockerfile source)
+      between `00274-s9g`'s build and current, in case a base-image or builder-stage change (not visible in the
+      Dockerfile text itself) altered something at the OS/container level; failing that, this may genuinely warrant a
+      GCP support ticket. **UPDATE 2026-07-25T14:02Z (slot 5): found the ACTUAL blocker — it is not SIT itself.** SIT
+      ran, passed, and logged a matching-tree stamp for `deployment-api`, but the stamp is fire-and-forget
+      (`repository_dispatch` only) and the downstream Firestore write is 403'ing FLEET-WIDE (`ci_status_store.py`
+      `PermissionDenied`, `unified-trading-sa` ADC identity, reproduced live via direct REST `PATCH` — same 403; 0/95
+      sampled `ci-status-update.yml` runs succeeded since 2026-07-25T10:36Z). This blocks EVERY SIT-covered repo's
+      promote, not just this one. Filed as its own cross-cutting P0 since it blocks the whole fleet's LDR→main pipeline,
+      not just this todo:
       [issues/ci_status_firestore_write_permission_denied_fleet_wide_2026_07_25.md](ci_status_firestore_write_permission_denied_fleet_wide_2026_07_25.md).
       Part (1) of this todo is now ALSO gated on that doc's Todo 1/2 (operator restores the Firestore permission, then
       `ci-status-update.yml` goes green again) before the promote can ever pass the SIT gate. Next dispatch: check that
