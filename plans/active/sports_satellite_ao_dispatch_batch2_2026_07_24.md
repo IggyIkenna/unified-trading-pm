@@ -739,10 +739,13 @@ source: >-
       unresolved/non-canonical value before write, so the `.../entity=injuries/league=235/` leakage cited as evidence is
       historical debris pre-dating that gate, not a live path — confirmed no more bare-numeric-id partitions can be
       produced going forward. Source: `issues/sports_league_id_namespace_migration_2026_07_20.md`.
-- [ ] [DATA] P0. **CREDENTIAL BLOCKER RESOLVED 2026-07-25** (`deployment-service@3ba14ff` routes tarball uploads through
-      ADC, not gsutil — re-verified end-to-end: full 5-repo republish succeeded). The MDPS `odds_horizon_bucket`
-      reprocess + `batch_footystats` copy+swap remain genuinely un-executed (not a credential issue anymore, just not
-      yet done) — pick up fresh via `launch-mdps-sports-bucket-vm.sh`. Full detail:
+- [x] ✅ **2026-07-25 (slot 7) — step-4 resolved: genuine-gain merged 2026-07-17, duplicate residual staged for human
+      purge — market-tick-data-service@75f226e8 (prior merge) + unified-trading-pm@2705cb4fd,@b5bf80d53 (this session's
+      execution + verification + correction).** [DATA] P0. **CREDENTIAL BLOCKER RESOLVED 2026-07-25**
+      (`deployment-service@3ba14ff` routes tarball uploads through ADC, not gsutil — re-verified end-to-end: full 5-repo
+      republish succeeded). The MDPS `odds_horizon_bucket` reprocess + `batch_footystats` copy+swap remain genuinely
+      un-executed (not a credential issue anymore, just not yet done) — pick up fresh via
+      `launch-mdps-sports-bucket-vm.sh`. Full detail:
       `/plans/active/issues/gsutil_broken_credentials_blocks_vm_tarball_republish_2026_07_25.md`. **League_id casing
       migration — census→copy→reprocess→swap (4-step ordered sequence, one worker, execute in order — this is one
       already-verified, ready-to-execute migration, not 4 independent jobs).** **Progress**: (a) found step (2)'s
