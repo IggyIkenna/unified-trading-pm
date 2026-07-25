@@ -8,10 +8,11 @@ summary: >-
   re-check of each item's already-logged conflict against the CURRENT content of
   `prediction_consolidated_closeout_2026_07_18.md` and batch1 itself, per the skill's step-1 "before fresh Phase-1
   triage, re-check the prior batch's Deferred section first" rule. Of the 12 deferred docs + item 9 (13 total
-  candidates), 6 cleared conflict-free (2 were pure duplicates of work batch1 already extracted, so contribute no new
-  todo; 6 produced genuinely new, conflict-free AO-eligible todos below); the remainder stay genuinely blocked
-  (duplicate-of-batch1, 0-AO-eligible-content, or operator-gated) and are re-recorded in Deferred with an explicit
-  current-state note per item, per the skill's non-batchable taxonomy.
+  candidates), 8 cleared conflict-free (corrected 2026-07-25 plan-reconcile — was miscounted as "6 cleared" while the
+  same sentence's own breakdown summed to 8: 2 were pure duplicates of work batch1 already extracted, so contribute no
+  new todo; 6 produced genuinely new, conflict-free AO-eligible todos below, matching this doc's actual 6 dispatchable
+  todos); the remainder stay genuinely blocked (duplicate-of-batch1, 0-AO-eligible-content, or operator-gated) and are
+  re-recorded in Deferred with an explicit current-state note per item, per the skill's non-batchable taxonomy.
 status: draft
 nature: process
 asset_group: [prediction]
@@ -82,9 +83,12 @@ drift_direction: advance-code
       the grep result + decommission-plan citation as evidence, or left open with a dated note naming the exact
       non-compliant file:line(s) found — never silently dropped. Source:
       `issues/kalshi_live_capture_regression_and_drift_2026_07_13.md`.
-- [ ] [DIAG] P2. **Re-verify the `instrument_type` casing/canonicalisation residual with the CORRECT (case-insensitive)
-      comparison rule, and reconcile `prediction_phase_ab_residuals_2026_07_24.md`'s item-9 checkbox.** Run a fresh
-      READ-ONLY live read of the prediction manifest (`availability_index.parquet` / the live
+- [ ] [DIAG] P2. **Conflict-check (2026-07-25 plan-reconcile)**: `prediction_satellite_ao_dispatch_batch1_2026_07_25.md`
+      todo 7 ALSO writes to `prediction_phase_ab_residuals_2026_07_24.md`'s Progress Log. Do not dispatch/commit
+      concurrently with that todo — batch1 was drafted first, run batch1 todo 7 before this todo if both are active.
+      **Re-verify the `instrument_type` casing/canonicalisation residual with the CORRECT (case-insensitive) comparison
+      rule, and reconcile `prediction_phase_ab_residuals_2026_07_24.md`'s item-9 checkbox.** Run a fresh READ-ONLY live
+      read of the prediction manifest (`availability_index.parquet` / the live
       `GET /data-status/catalogue-filter-options` endpoint), comparing the `instrument_type` column
       **case-insensitively** — per the RULED codex standard (`/codex/02-data/reconciliation-finding-taxonomy.md` §5.1:
       C2a is RULED UPPERCASE-target, `migration_pending`, operator D1 2026-07-20 — "the reconciliation does NOT REFUSE
@@ -202,6 +206,11 @@ of these clear by re-check; a future batch3 should re-check them again only if t
 
 - **`prediction_phase_ab_residuals_2026_07_24.md` items 1-3, 5, 7 (5 of batch1's own 7 todos)** — DUPLICATE-OF-BATCH1
   (already dispatched there, not re-extracted). No new state.
+- **`issues/prediction_lifecycle_prefetch_gate_and_resolution_day_catalogue_2026_07_14.md`** — ADDED 2026-07-25
+  plan-reconcile (was silently missing from this Deferred section despite being one of batch1's original 12 deferred
+  docs). DUPLICATE-OF-BATCH1: its sole AO-eligible open item (line 115, a `[VERIFY] P2` re-measure of prediction
+  attempted/captured trajectory) is substantively identical to batch1 todo 4, which writes its before/after counts into
+  this exact same doc's Progress Log. No new todo needed here.
 - **`data_completion_prediction_2026_07_15.md`** — 0 AO-eligible (21 human-only items unchanged), 3 conflicts logged
   against the doc generally (FLAG-3/FLAG-2 cross-AG duplication risk, a Phase-B-naming ambiguity between two different
   "Phase B"s). Re-check: none of the 3 conflicts are individually resolvable by evidence today (they're genuine
@@ -214,9 +223,9 @@ of these clear by re-check; a future batch3 should re-check them again only if t
   actioned here.
 - **`prediction_phase_c_data_status_ui_2026_07_24.md`, `prediction_phase_d_formal_smoke_and_backfill_2026_07_24.md`,
   `prediction_phase_e_football_arb_live_2026_07_24.md`** — 0 AO-eligible each (all remaining work is either
-  machine-gated on `prediction_phase_ab_residuals_2026_07_24.md`'s 10 open items, or is itself the human-scale
-  post-migration smoke/backfill/football-arb work the consolidated plan scopes as a dedicated phase, not a bounded
-  solo-worker todo). Unchanged from batch1.
+  machine-gated on `prediction_phase_ab_residuals_2026_07_24.md`'s 11 open items (corrected 2026-07-25 plan-reconcile,
+  was 10), or is itself the human-scale post-migration smoke/backfill/football-arb work the consolidated plan scopes as
+  a dedicated phase, not a bounded solo-worker todo). Unchanged from batch1.
 - **`issues/prediction_polymarket_legacy_dual_write_trees_metadata_loss_2026_07_24.md`** — both of its 2 AO-eligible
   candidates are DUPLICATE-OF-BATCH1 (batch1 todo 5 already combines the exact same grep-then-READ +
   title/slug-recoverability investigation). No new todo. The doc's OWN Q3/Todos (the operator-ruled POLYMARKET
