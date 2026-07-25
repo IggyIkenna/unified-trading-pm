@@ -99,12 +99,26 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
       INVESTIGATED 2026-07-24 (slot 2). Full detail in Progress Log — deployment-api@1adf54b (faulthandler
       instrumentation shipped; root cause narrowed but NOT yet 100% confirmed, see log).
 - [ ] [REVIEW] P1. Confirm `deployment-api@1adf54b` is live, then read the next SIGABRT faulthandler dump; branch below.
-      Verify it's live via `gh pr list` / the promote workflow (this repo is `staging`-first, not direct-to-main); once
-      it's been live a few hours, `gcloud logging read` the `run.googleapis.com%2Fstderr` stream around the next
-      `Uncaught signal: 6` and check for a `Fatal Python error`/`Current thread` faulthandler dump naming
-      `deployment-api@6f6a389`'s `_compute_inventory` cold path — if so, the SIGABRT loop is resolved by that fix and
-      the crash rate should visibly drop; if not, do not re-guess — file a fresh evidence-backed BACKEND todo with the
-      exact stuck call site. (repo: deployment-api)
+      Verify it's live via `gh pr list` / the promote workflow; once it's been live a few hours, `gcloud logging read`
+      the `run.googleapis.com%2Fstderr` stream around the next `Uncaught signal: 6` and check for a
+      `Fatal Python     error`/`Current thread` faulthandler dump naming `deployment-api@6f6a389`'s `_compute_inventory`
+      cold path — if so, the SIGABRT loop is resolved by that fix and the crash rate should visibly drop; if not, do not
+      re-guess — file a fresh evidence-backed BACKEND todo with the exact stuck call site. (repo: deployment-api) — **🟡
+      NOT YET LIVE, checked 2026-07-25T04:12Z (slot 2)**: correction to this todo's own text — `deployment-api` is
+      actually `ldr_main` **direct** promote (no `staging` branch exists on this repo; confirmed `git branch -a` + no
+      staging-specific promote workflow), not staging-first as originally written here. Verified via the ACTUAL ground
+      truth (`gcloud run services describe uts-shared-deployment-api`), not just git state: live revision
+      `uts-shared-deployment-api-00274-s9g` runs image tag `273c951` —
+      `git merge-base --is-ancestor 1adf54b     origin/main` confirms `1adf54b` is NOT an ancestor of that commit, so
+      the faulthandler fix has genuinely not reached prod yet. Not stuck: `origin/live-defi-rollout` is 221 commits
+      ahead of `origin/main` right now, but the most recent promote PR (`#376`, merged 2026-07-25T02:43Z, ~1.5h before
+      this check) carried 100 commits in one batch — the gap is explained by today's exceptionally heavy concurrent-slot
+      commit volume on this repo's shared LDR outrunning the promote cadence, not a broken pipeline. `1adf54b` will be
+      swept into a future automatic promote PR; this doesn't need manual intervention. Genuinely not completable this AO
+      turn (needs an automatic promote cycle + a fresh deploy + several hours of live runtime before the next SIGABRT
+      could even recur) — released, not stalled; a future dispatch should re-check
+      `git merge-base --is-ancestor 1adf54b origin/main` and the live revision's image tag before re-attempting the log
+      check.
 
 ## Progress Log
 
