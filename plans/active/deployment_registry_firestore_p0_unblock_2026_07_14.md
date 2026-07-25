@@ -242,7 +242,7 @@ entry). UTC datetimes only. `quality-gates.sh`-green before each commit; commit 
 > GCS) — it does NOT by itself populate this column. Both gaps have to close for the column to show real data
 > end-to-end, which is why this plan isn't "done" for the operator's actual question until both are.
 
-- [ ] [BACKEND] P2. Add `cpu_pct: float | None = None` / `mem_pct` / `mem_slope` / `disk_pct` fields to the
+- [x] ✅ [BACKEND] P2. Add `cpu_pct: float | None = None` / `mem_pct` / `mem_slope` / `disk_pct` fields to the
       `DeploymentItem` model (`deployments_inventory.py:362`) — currently absent from the class entirely, not just unset
       — then forward them from `entry.cpu_pct`/`entry.mem_pct`/`entry.mem_slope`/`entry.disk_pct` inside `_vm_item()`'s
       `DeploymentItem(...)` construction (`deployments_inventory.py:762-801`), mirroring the four lines already correct
@@ -250,7 +250,16 @@ entry). UTC datetimes only. `quality-gates.sh`-green before each commit; commit 
       stays detail-only by existing design (keeps the ~200-target list payload small; see the docstring above
       `DeploymentDetailResponse`). No frontend change needed — `Deployments.tsx`'s `ResourceCell` and the TS type
       already expect these fields. Unit-test: a VM entry with `cpu_pct` set produces a `DeploymentItem` carrying the
-      same value (today it would silently drop it). Ship+flip.
+      same value (today it would silently drop it). Ship+flip. — SHIPPED 2026-07-25 (slot 7, backend_engineer): added
+      the 4 fields to `DeploymentItem` + forwarded `entry.cpu_pct`/`mem_pct`/`mem_slope`/`disk_pct` in `_vm_item()`,
+      exactly mirroring the detail endpoint. 2 new tests (a VM entry's cpu/mem/mem_slope/disk_pct survive into
+      `DeploymentItem`; a legacy row's honest 0.0 default vs. a Cloud Run job's honest `None` are distinct) — 112/112
+      pass across both inventory test files. **Real regression found + fixed en route**: the FIRST quickmerge attempt
+      caught `test_inventory_route_gcp_unchanged_with_empty_aws` (`tests/unit/test_route_deployments_inventory_aws.py`)
+      genuinely failing — a LOCAL inline `_FakeEntry` class there (distinct from the dataclass one in the sibling test
+      file) had no `cpu_pct`/etc. attributes, so `_vm_item()`'s new unconditional `entry.cpu_pct` read raised
+      `AttributeError`. Fixed by adding the same 4 D.1-field 0.0 defaults to that fake class.
+      `quality-gates.sh --no-fix` fresh green (not cached) on the corrected tree. deployment-api@96f5eb5.
 - [ ] [REVIEW] P2. Verify against the DEPLOYED API with REAL (non-mock) data — confirm the inline Resources column on
       `/deployments` shows a real cpu/mem/disk% for at least one live VM whose registry entry carries D.1 metrics, not
       just the mock fixture and not just the detail popover. If it still shows `—` for every live VM once the backend
