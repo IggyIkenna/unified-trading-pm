@@ -358,3 +358,9 @@ item, it becomes a `BLOCKED-OPERATOR-DECISION` Progress Log entry (see Procedure
   either: C1 is already a live, unanswered, correctly-worded operator recommendation in the tracker doc; a second
   identical escalation adds noise, not new information. Skipping this task via `/skip-current-task` so it releases
   cleanly; the durable-park BACKEND fix above is the tracked remediation for the repeat-dispatch cost itself.
+- **2026-07-25 (slot-6): RE-DISPATCHED again, re-confirmed still parked, NOT archived.** Both gates unchanged since
+  slot-3's pass: `locked_by: live-defi-rollout` still set on the doc's frontmatter; C1 in
+  `canonical_closeout_open_questions_2026_07_18.md` still an unanswered `[unlock-plan]` recommendation. No new archival
+  action (would violate the plan-locking HARD RULE). I don't have write access to the orchestrator's runtime
+  `backlog.yaml` from this slot (it's server-side state, not a repo file I can edit), so I can't apply the durable-park
+  fix myself — skipping via `/skip-current-task` per the same precedent as slot-3.
