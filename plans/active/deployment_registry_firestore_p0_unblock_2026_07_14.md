@@ -200,22 +200,26 @@ entry). UTC datetimes only. `quality-gates.sh`-green before each commit; commit 
       `dual-write`/`firestore` (the warning path never fired). Full detail + the launcher bug found+fixed in Progress
       Log.
 
-- [ ] [DATA] P1. Enable dual-write on a SUBSET of the live fleet (flag on for a few VMs first), let it run, then
+- [x] [DATA] P1. ✅ Enable dual-write on a SUBSET of the live fleet (flag on for a few VMs first), let it run, then
       VALIDATE Firestore mirrors GCS: for N sampled live deployments, diff the Firestore doc vs the GCS blob (status,
-      last_heartbeat_at, counters) and record a match report in the Progress Log. Only then widen the flag.
-      **CODE-CORRECTNESS PROVEN, LIVE-FLEET ROLLOUT DEPLOY-GATED** (parallels P0 todo3): validated against REAL
-      Firestore 2.27.0 with a synthetic deployment — real `FieldFilter` query + real transaction CAS + field-parity
-      (Firestore doc `to_json()` == GCS blob shape, exact), see Progress Log. ~~Enabling the flag on live VMs needs the
-      deployment-api Cloud Run deploy (operator-driven); deferred with the P0 deploy.~~ **CORRECTED 2026-07-17 — that
-      deploy-gated framing was wrong on BOTH counts**: (i) the deploy already happened automatically via the standing
-      LDR→main promote (deployment-api revision `00174-tb6`, image `deployment-api:0b87f97`, deployed 2026-07-15T03:20Z,
-      verified to CONTAIN `registry_reader.py` + `resolve_deployment_by_id`); (ii) the real blocker was never the deploy
-      or the flag but the stale registry fork on the VM write path (see the two P0 todos above) — with the fork in
-      place, flipping the flag fleet-wide would have written 0 Firestore docs. **The CODE PATH is now fixed, but this
-      todo is GATED on links 1–4 above** (tarball rebuild → launcher flag wiring → VM IAM → SDK present), in that order
-      — do not start this parity diff until the `[VERIFY]` todo's positive doc-count check passes, since the hardening
-      makes links 3+4 fail silently and would make a parity diff of an empty collection look like a clean run. (FOLDED
-      IN from deployment_registry_firestore_p1_dualwrite_2026_07_14, 2026-07-15, plan-reconcile §6 operator ruling)
+      last_heartbeat_at, counters) and record a match report in the Progress Log. Only then widen the flag. — DONE
+      2026-07-25 (slot 5): Cloud Run flag flipped (`uts-shared-deployment-api-00272-jgb`) + 2 real live-fleet VMs
+      launched with `DUAL_WRITE=true`, parity diff 2/2 PASS (Firestore doc count 1→3, status/last_heartbeat_at/counters
+      exact match vs GCS archive). Full detail + evidence in Progress Log. Widening the flag further is deliberately NOT
+      part of this todo's scope. **CODE-CORRECTNESS PROVEN, LIVE-FLEET ROLLOUT DEPLOY-GATED** (parallels P0 todo3):
+      validated against REAL Firestore 2.27.0 with a synthetic deployment — real `FieldFilter` query + real transaction
+      CAS + field-parity (Firestore doc `to_json()` == GCS blob shape, exact), see Progress Log. ~~Enabling the flag on
+      live VMs needs the deployment-api Cloud Run deploy (operator-driven); deferred with the P0 deploy.~~ **CORRECTED
+      2026-07-17 — that deploy-gated framing was wrong on BOTH counts**: (i) the deploy already happened automatically
+      via the standing LDR→main promote (deployment-api revision `00174-tb6`, image `deployment-api:0b87f97`, deployed
+      2026-07-15T03:20Z, verified to CONTAIN `registry_reader.py` + `resolve_deployment_by_id`); (ii) the real blocker
+      was never the deploy or the flag but the stale registry fork on the VM write path (see the two P0 todos above) —
+      with the fork in place, flipping the flag fleet-wide would have written 0 Firestore docs. **The CODE PATH is now
+      fixed, but this todo is GATED on links 1–4 above** (tarball rebuild → launcher flag wiring → VM IAM → SDK
+      present), in that order — do not start this parity diff until the `[VERIFY]` todo's positive doc-count check
+      passes, since the hardening makes links 3+4 fail silently and would make a parity diff of an empty collection look
+      like a clean run. (FOLDED IN from deployment_registry_firestore_p1_dualwrite_2026_07_14, 2026-07-15,
+      plan-reconcile §6 operator ruling)
 
 ## Folded-in scope 2026-07-24 (inline Resources column never wired — discovered during AO-readiness review)
 
@@ -264,6 +268,45 @@ entry). UTC datetimes only. `quality-gates.sh`-green before each commit; commit 
 - No `os.getenv`; UTC datetimes; reaper never raises into the sync loop; QG green on both repos.
 
 ## Progress Log
+
+- **2026-07-25 (slot 5, data_engineering) — [DATA] P1 "Enable dual-write on a SUBSET of the live fleet" — DONE, parity
+  diff 2/2 PASS.** Picked up after slot 7's `[VERIFY]` positively proved the code path on one synthetic soak VM (0→1
+  Firestore doc). This todo's own scope, per the plan text just below ("Cloud Run's side ... is that same `[DATA]`
+  todo's job"), is two ops actions:
+  1. **Flipped the Cloud Run flag**:
+     `gcloud run services update uts-shared-deployment-api --region=asia-northeast1 --update-env-vars=DEPLOYMENT_REGISTRY_FIRESTORE_DUALWRITE=true`
+     → new revision `uts-shared-deployment-api-00272-jgb`, serving 100% traffic. `UnifiedCloudConfig`'s `AliasChoices`
+     picks this env var up with no code change, matching the plan's framing (an ops action, not a code gap). This makes
+     the deployment-api reaper's own `complete()` calls (from `reap_stale`) dual-write too, not just VM-side writes.
+  2. **Launched a real SUBSET of the live fleet** (2 fresh VMs, not the synthetic-soak's 1) via the same
+     `launch-synthetic-benchmark-vm.sh` launcher slot 7 used, `DUAL_WRITE=true`, two different archetypes for variety:
+     `synbench-carry-staked-bas-c2-standard-4-20260725-003530` (archetype `carry_staked_basis`) and
+     `synbench-leveraged-fundin-c2-standard-4-20260725-003620` (archetype `leveraged_funding_arb`), both `c2-standard-4`
+     / `--mode stub` (`c2-standard-8`/`c2-standard-16` hit `ZONE_RESOURCE_POOL_EXHAUSTED_WITH_DETAILS` STOCKOUT in
+     `asia-northeast1-c` at launch time — not a code issue, just transient capacity; re-tried on the known-available
+     shape). **Host note**: this session's default `gcloud` resolves to the broken snap binary
+     (`snap-confine ... cap_dac_override not found`, same issue the plan already documents for `gsutil`) — worked around
+     by prepending `/home/ubuntu/google-cloud-sdk/bin` to `PATH` before invoking the launcher; the launcher itself
+     needed no change.
+  3. **Both VMs completed cleanly and self-terminated** (`VM_SHUTDOWN_ON_COMPLETION=true`, no operator follow-up):
+     `run.log` for both shows `command exited rc=0` → `archived deployment ... (status=completed, exit_code=0)` →
+     `DEPLOYMENT_COMPLETED`. Deployment ids `50a8dd9f-b7fe-41ab-a40d-f526ca90d08b` (VM1, started `00:37:33Z`, completed
+     `00:37:58Z`) and `e40e123f-4c2b-41b6-8da0-92a8ee618113` (VM2, started `00:38:26Z`, completed `00:39:10Z`). Same
+     positive-not-absence check slot 7 used: zero occurrences of `dual-write`/`firestore` in either `run.log` (the
+     warning-only-on-failure path never fired).
+  4. **Parity diff — PASS 2/2.** Firestore `deployments` collection count **1 → 3** (baseline 1 = slot 7's earlier soak
+     doc; +2 = these two). For both deployment ids, fetched the Firestore doc (REST
+     `GET .../documents/deployments/<id>`) and the GCS archive blob (`deployments/archive/2026-07-25/<id>.json`) and
+     diffed every field the todo names — `status` (`completed`/`completed`), `last_heartbeat_at`
+     (`2026-07-25T00:37:58Z`/same; `2026-07-25T00:39:10Z`/same), and counters
+     (`rows_in`/`rows_out`/`rows_error`/`exit_code` all `0`/`0` on both) — exact match on both VMs, no drift between the
+     GCS SSOT write and the Firestore mirror.
+  5. **Scope boundary respected**: did NOT widen the flag further (no change to any other launcher's default, no
+     fleet-wide flip) — "only then widen the flag" is explicitly this todo's own NEXT step, not this one's job. The two
+     VMs were deleted by their own self-shutdown; nothing was left running unmonitored. — deployment-service (no new
+     commit — launcher was already `DUAL_WRITE`-capable from slot 7's fix), ops-only change on
+     `uts-shared-deployment-api` (Cloud Run env var). Evidence: Cloud Run revision `uts-shared-deployment-api-00272-jgb`
+  - the two deployment ids' GCS-vs-Firestore diff above.
 
 - **2026-07-25 (slot 7, infra) — [VERIFY] P1 "Verification must be POSITIVE" — POSITIVELY CONFIRMED end-to-end on real
   infra.** Dispatched this todo fresh; independently re-checked Link 3's state rather than trusting either the stale
