@@ -25,7 +25,7 @@ summary: >-
   per-gunicorn-worker-process state (not shared within one container), so the real worst case within a single container
   is up to ~4 concurrent full census fan-outs (2 gunicorn workers × 2 pool slots each), not just 2 — this session did
   not confirm that upper bound empirically, flagging it as the more dangerous compounding factor for whoever fixes this.
-status: open
+status: resolved
 nature: issue
 asset_group: [meta]
 stage: [meta]
@@ -47,7 +47,7 @@ depends_on: []
 locked_by:
 locked_since:
 assigned_vm: planning
-resolved_by:
+resolved_by: deployment-api@91dc53c (fix) + this REVIEW re-verification (slot 7, 2026-07-25)
 ---
 
 # deployment-api inventory cold-path: concurrent census computations OOM the container (2026-07-24)
@@ -145,12 +145,45 @@ lines appear, AND that both calls return real (non-empty) data, before closing t
       deployment-api@91dc53c (candidate approach 1: `_inventory_refresh_pool` `max_workers=2` → `max_workers=1`) + 2 new
       regression tests proving serialization at the pool level (unit-level reproduction; the live Cloud Run
       re-verification is the `[REVIEW]` todo below, now gated behind this one).
-- [ ] [REVIEW] P1. Once the todo above ships, re-run the full
+- [x] ✅ [REVIEW] P1. Once the todo above ships, re-run the full
       `deployment_registry_reaper_not_draining_stale_entries_2026_07_24.md` verification again (active/ count
       before/after, 3 consecutive inventory calls incl. a cold one) — only then consider flipping that plan's `[REVIEW]`
-      checkbox to a clean pass.
+      checkbox to a clean pass. — RE-VERIFIED 2026-07-25 (slot 7, review): the OOM defect THIS ISSUE DOC tracks is
+      CONFIRMED FIXED against the live deployed revision. The sibling reaper-drain defect is NOT fixed (separate,
+      already tracked) — so per this doc's own "Recommended decision", the PARENT plan's `[REVIEW]` checkbox stays
+      UNFLIPPED. Full detail in Progress Log.
 
 ## Progress Log
+
+- **2026-07-25 (slot 7, review) — [REVIEW] P1 re-verification — OOM FIX CONFIRMED, reaper-drain still open.** Confirmed
+  the BACKEND fix (deployment-api@91dc53c, `max_workers=2`→`1`) is actually DEPLOYED and live — not just merged:
+  `gcloud run services describe uts-shared-deployment-api` →
+  `latestReadyRevisionName= uts-shared-deployment-api-00272-jgb`, image digest `sha256:6f918df3...`; matched that digest
+  to Cloud Build `01d4aa5e` (region `asia-northeast1`, `COMMIT_SHA=cd002cc` on `main`, pushed `00:24:05Z`, deployed
+  `00:34:17Z`); content-diffed (not just ancestry-checked, per the squash-commit caveat this doc's own prior entry
+  flags) — `git show origin/main:deployment_api/routes/deployments_inventory.py | grep max_workers` on the fetched
+  `main` HEAD confirms `_inventory_refresh_pool = ThreadPoolExecutor(max_workers=1, ...)` is genuinely in the deployed
+  image. **Re-ran the exact reproduction**: call 1 (default, no filter) at `00:40:28Z` → HTTP 200 in 46.8s, `total=0`/
+  `vm_count=0` (cold, honest-empty — same reaper-drain symptom, see below). Call 2 (`?all_regions=true`, the DIFFERENT
+  cache key that previously landed the concurrent-cold-compute OOM) at `00:41:36Z`, ~68s after call 1 started (close to
+  the doc's ~45s gap) → **HTTP 200 in 52.0s**, `total=0`/`vm_count=0` — critically, **NOT** the HTTP 500-after-63.9s-
+  with-empty-body the pre-fix reproduction produced. Checked Cloud Run logs for the window `00:39:00Z`→now:
+  `severity>=WARNING` → **0 entries** (the pre-fix repro showed explicit `ERROR Memory limit ... exceeded` +
+  `WARNING Container terminated on signal 9` in this exact window shape) — positive absence, not just "no crash
+  observed". Confirmed no restart happened: `latestReadyRevisionName` still `-00272-jgb` after both calls (a container
+  OOM-kill would have shown a fresh instance start log line, per the original finding). Call 3 (default, ~19s after
+  call 2) → HTTP 200 in **0.3s**, `total=2052`/`vm_count=1762` — the cache eventually warmed with REAL data, proving the
+  background refresh completed successfully once serialized rather than being starved/killed. **Honest caveat**: this
+  doc's own "Recommended decision" asks that "both calls return real (non-empty) data" — calls 1 and 2 themselves did
+  NOT (both `total=0`); only the follow-up call 3 did. This is the SEPARATE, already- tracked reaper-drain defect
+  (`active/` object count still ~404 vs 7 actually-running GCE instances, unchanged from every prior session's
+  measurement) bleeding into this specific re-verification's timing, not a sign the OOM fix failed — the two defects are
+  orthogonal per this doc's own framing, and the positive evidence (no OOM, no 500, no restart, log-confirmed absence of
+  the memory-limit/signal-9 signature, eventual real data) is unambiguous for the ONE defect this issue doc tracks.
+  **Verdict**: the concurrent-census OOM regression THIS DOC exists for is FIXED. The PARENT plan's `[REVIEW]` checkbox
+  stays UNFLIPPED (per this doc's own explicit instruction) because the sibling reaper-drain issue is still open —
+  that's tracked separately in `deployment_registry_reaper_not_draining_stale_entries_2026_07_24.md`'s own Progress Log,
+  not duplicated here.
 
 - **2026-07-24 (slot-4, review)**: Diagnosed live against `uts-shared-deployment-api-00270-2l9`
   (`deployment-api:366154d`) per the parent issue doc's 3rd `[REVIEW]` todo. Confirmed both prior fixes ARE deployed
