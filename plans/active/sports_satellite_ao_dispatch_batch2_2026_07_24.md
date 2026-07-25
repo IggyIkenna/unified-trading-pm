@@ -666,7 +666,12 @@ source: >-
       objects remaining (or documented unrecoverable). **🟡 IN PROGRESS (2026-07-25, slot 2)**: full census done
       (12,603/43,233 genuinely non-canonical, recovery-ids parquet built), re-fetch launch blocked on the af-backfill
       singleton lock (INJURIES VM still running) — full state + resume command:
-      `issues/sports_fixture_events_refetch_progress_2026_07_25.md`.
+      `issues/sports_fixture_events_refetch_progress_2026_07_25.md`. — **Stale sub-status corrected 2026-07-25T05:38Z
+      (slot 11): the INJURIES-VM lock cleared hours ago; the re-fetch VM (`af-backfill-20260725-032253`) has been
+      RUNNING since 03:22Z** (launched by slot 4, health-checked healthy by slot 11 at 04:18Z and again now — heartbeat
+      fresh, no stall, now in the slower per-fixture event-loop phase covering 16,765 fixtures across 2019→2026-07-25).
+      Genuinely hours from terminal; not completable in an AO turn. Full detail in the issue doc above — do not
+      re-dispatch a duplicate health-check within the next ~30min.
 - [ ] [CODE] P2. **Writer-side de-dup + schema-conformance gate** so neither defect re-accrues — the `player_stats`
       writer rejects/dedupes rows on write; the `fixture_events` writer validates/enforces the canonical 13-col schema
       before accepting new objects. (repo: instruments-service `_writer_captured.py` row_count/effective_count logic +
