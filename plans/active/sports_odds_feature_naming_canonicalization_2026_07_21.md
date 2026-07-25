@@ -115,9 +115,32 @@ evidence. Summary of what each site currently uses:
 - [ ] [DATA] P1. Update `unified_api_contracts`'s `OddsFeaturesMixin`/`SportsFeatureVector` fields to the names chosen
       in todo 1 (rename in place — UAC being SSOT doesn't make its current names sacrosanct). Add/update the UAC unit
       tests covering the schema's field set. (repo: unified-api-contracts)
-- [ ] [DATA] P2. Migrate `features_service/sports/calculators/odds_columns.py`'s `ODDS_COLUMNS` + the odds-features
+- [x] ✅ [DATA] P2. Migrate `features_service/sports/calculators/odds_columns.py`'s `ODDS_COLUMNS` + the odds-features
       exporter to emit the UAC-chosen field names instead of the current `home_implied_prob`-style convention; update
       the exporter's own tests + any downstream fixture files that assert the old column names. (repo: features-service)
+      — **SHIPPED features-service@0ded2449 (slot 11, data_engineering, 2026-07-25T14:20Z)**: all 139 `ODDS_COLUMNS`
+      entries + the exporter + PIT horizon-gating overrides + `feature_definitions.yaml` renamed per the decided scheme,
+      matching UAC's already-renamed `OddsFeaturesMixin` exactly where they overlap and extending the scheme by symmetry
+      for the BookmakerTier/probability-space fields UAC's shipped subset didn't cover. Also fixed an unrelated
+      pre-existing path bug in `regenerate_feature_definitions.py`. `quality-gates.sh` full run (sentinel bypassed):
+      17823 passed, 0 failed. **Concurrent-duplicate note (slot 4)**: slot 4 independently built the same 139-entry
+      migration in parallel, unaware of slot 11's in-flight ship — caught the collision on push (branch drift showed
+      slot 11's commit already on origin), verified it was complete and correct before discarding its own duplicate diff
+      (never shipped). A repo-wide old-name grep against the newly-landed tree found 2 files slot 11's commit missed —
+      `features_service/sports/engine/sports_validity_engine.py` (`bookmaker_count_total`) and
+      `scripts/sports/seed_mock_data.py` (`market_vig`/`home_edge`/`odds_draw`) — fixed to the same scheme by slot 4,
+      quality-gates.sh fresh full run green (17823 passed, sentinel forced not cached): features-service@e240eca2. Full
+      `tests/sports/` suite (incl. integration, which the standard `RUN_INTEGRATION=false` gate skips) also verified
+      green except one confirmed byte-identical PRE-EXISTING failure (`test_table_schemas_dict_has_all_sport_tables`,
+      unrelated "players" table gap — verified on a clean tree, filed separately:
+      `issues/sports_table_schemas_missing_players_table_2026_07_25.md`). **Follow-up finding (P2, filed as a new todo
+      below, NOT fixed here — different repo, out of scope for this `(repo: features-service)`-scoped todo)**: a
+      repo-wide grep of ml-service turned up FOUR more files still using the pre-migration names —
+      `ml_service/training/engine/mock_data_provider.py`, `ml_service/training/app/core/sports_target_generator.py`,
+      `tests/training/unit/test_sports_feature_loader.py`, `tests/training/unit/test_horizon_gate_shield.py` — none of
+      these were touched by the earlier ml-service migration commits
+      (`unified-api-contracts@689efa54`/`ml-service@91f031a` covered the schema/loader only, not mock-data generation or
+      target generation).
 - [ ] [BACKEND] P2. Close the silent-agnostic gap in `SportsFeatureLoaderMixin`
       (`ml_service/training/app/core/sports_feature_loader.py`): add real schema validation against
       `OddsFeaturesMixin`'s field set at the point the odds `feature_group` parquet is read, so a producer/consumer
@@ -130,6 +153,16 @@ evidence. Summary of what each site currently uses:
 - [ ] [BACKEND] P2. Migrate the legacy `strategy_service/adapters/sports_feature_subscriber.py` (currently
       `ht_odds_home_implied` etc.) to the same UAC-chosen names — this is a third, separate convention from the v2
       engines and must not be left behind as a 5th orphaned dialect. (repo: strategy-service)
+- [ ] [DATA] P2. **Found 2026-07-25 (slot 4, while shipping the ODDS_COLUMNS migration todo above)**: migrate 4
+      ml-service files still using the pre-migration odds-feature names, missed by the earlier ml-service migration
+      commits (`unified-api-contracts@689efa54`/`ml-service@91f031a` covered only the schema/loader, not these) —
+      `ml_service/training/engine/mock_data_provider.py`, `ml_service/training/app/core/sports_target_generator.py`,
+      `tests/training/unit/test_sports_feature_loader.py`, `tests/training/unit/test_horizon_gate_shield.py`. Apply the
+      same generative scheme + UAC-ground-truth mapping this todo's own commit used (re-derive from the scheme table
+      above + UAC's `OddsFeaturesMixin` docstring, don't hand-guess); watch for the same f-string dynamically-built-name
+      gap that bit the FSS pass (quoted-literal search alone is insufficient). (repo: ml-service). **Done when**: a
+      repo-wide grep of ml-service for any of the old `ODDS_COLUMNS` names (quoted literal AND f-string prefix forms)
+      returns zero hits; `quality-gates.sh` green.
 - [ ] [REVIEW] P3. Once todos 2–6 land, write the FSS-output ↔ ml-service-input ↔ strategy-service-input parity test
       originally requested by `sports_predictions_live_mode_and_backtest_execution_orphaned_2026_07_21.md` — against the
       now-real UAC contract. This is the deliverable the parent issue's own todo 2 asked for; it was blocked until this
