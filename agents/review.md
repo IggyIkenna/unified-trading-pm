@@ -134,6 +134,24 @@ role=main for anything needing operator/orchestrator judgment.
      - The PM gate `scripts/quality_gates/check_evidence_backed_completion.py` enforces this structurally; run it
        `--require-verification` (you have GCP auth) to also flag unverifiable cited builds. A red here is a
        worker-actionable defect, not advisory.
+  5. **"Is commit `<sha>` live" — do NOT use `git merge-base --is-ancestor <sha> origin/main` alone (HARD RULE, codified
+     2026-07-25 after 3 wasted redispatch cycles across 2 plans —
+     `deployment_promote_squash_ancestry_false_negative_2026_07_25.md`).** Any repo whose LDR→main promote SQUASH-merges
+     (e.g. `deployment-api`'s `ldr-to-main-promote-fleet.yml`, "Option-B direct") produces a NEW synthetic commit on
+     `main` that is content-identical to the LDR commit at that point but is NEVER a git-graph descendant of the
+     original LDR SHA — so the ancestor check reports "not an ancestor" FOREVER, even minutes after the fix deployed. An
+     unchanged image tag/revision name across two checks does NOT mean "still not deployed" either — it can mean
+     "deployed once, no NEWER promote landed since." Recipe for "is `<repo>@<sha>`'s fix actually live on
+     `main`/deployed":
+     - (a) Identify the specific file(s)/lines the fix touches.
+     - (b) Content-diff, not ancestry: `git show origin/main:<path>` and grep for the fix's distinctive marker line;
+       compare byte-for-byte against `origin/live-defi-rollout`'s copy of the same path.
+     - (c) Cross-reference the deployed artifact's build/deploy timestamp
+       (`gcloud run revisions describe ... --format='value(metadata.creationTimestamp)'` for Cloud Run repos) against
+       the promote PR's merge time (`gh pr list --state merged --json mergedAt,number`) to confirm the deploy happened
+       AFTER the relevant squash-merge.
+     - `git merge-base --is-ancestor` stays valid ONLY for repos whose promote preserves a real merge commit (no squash)
+       — check the repo's promote workflow mode before trusting it.
 - Chat with the operator when they ping you — questions about code quality, done-or-not decisions, etc.
 - Watch worktree git-health (Path-B). The 5-min FF-pull cron keeps every worktree on latest LDR but SKIPS any repo with
   a dirty tree (`[skip:dirty]`), so a long-dirty worktree means its worker is either STUCK on a blocked question (WIP
