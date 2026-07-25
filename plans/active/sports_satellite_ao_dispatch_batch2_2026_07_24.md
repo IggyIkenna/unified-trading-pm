@@ -546,6 +546,55 @@ source: >-
   hermetic alpha-bps test) — ALL gated on a human/architect decision (SportsMatchingEngine vs L0Matcher) that has not
   yet been made. Not dispatchable until that decision lands; do not dispatch speculatively.
 
+## Progress Log
+
+- **2026-07-25 (slot 2, data_engineering) — "Eliminate the bare/legacy dual-layout" todo — SCOPED, execution DEFERRED
+  (not started, checkbox correctly left unchecked).** Operator explicitly confirmed sign-off for the irreversible GCS
+  apply this todo implies (asked directly given the discovery below) before any investigation proceeded further.
+  Findings:
+  - **Clarified a scope boundary that wasn't obvious from this plan's todo text alone**: this exact "bare/legacy
+    dual-layout" work is the same underlying action as the archived `sports_manifest_canonicalisation_2026_06_01.md`'s
+    E3→E8 apply steps (superseded into `sports_consolidated_closeout_2026_07_19.md`), which that doc explicitly flags as
+    never having fired (gated on operator sign-off + fleet drain + foundation gates). Separately, the closeout doc ALSO
+    carries an explicit **"DO NOT EXECUTE, cross-reference only"** warning for the _legacy no-env bucket decommission_
+    (`instruments-store-sports` vs `-prd-`, owned by `sports_legacy_bucket_cutover_2026_07_16.md`,
+    `assigned_vm: NA`/`execution_scope: local-only` — never AO-dispatchable). Confirmed these are DIFFERENT scopes: this
+    todo is an intra-bucket path-LAYOUT cleanup (bare-path objects vs. `league=`-partitioned objects, both already
+    living inside the single canonical `instruments-store-sports-prd-*` bucket, per
+    `unified_api_contracts/canonical/domain/sports/gcs_paths.py`'s `SportsPathLayout` enum) — NOT the whole-bucket
+    decommission. The DO-NOT-EXECUTE boundary does not cover this todo; the operator-sign-off gate does, and was
+    obtained.
+  - **Identified existing tooling to reuse rather than rewrite**:
+    `instruments-service/scripts/migrate_sports_per_league.py` (436 lines, `--dry-run`/`--no-dry-run`,
+    `--entity {name|all}`) already implements exactly the bare→per-league canonicalize half of this todo, covering
+    `fixture_stats`/`fixture_events`/`fixture_lineups`/`player_stats` (fixture-id join),
+    `footystats_predictions`/`footystats_matches` (canonical-fixture-id prefix), `injuries` (direct `league_id` column),
+    `understat_xg` (league column). It does NOT cover every entity in `SPORTS_DATA_TYPE_LAYOUT` with
+    `PER_DAY_PER_LEAGUE` (e.g. `FIXTURES` itself, `TEAMS`, `STANDINGS`, `ODDS`, `PREDICTIONS`, `XG_SHOTS`,
+    `SFI_PROGRESSIVE_STATS`) — either those never had a bare-layout era, or their migration needs separate handling; NOT
+    yet determined which.
+  - **DID NOT get to a real census**: attempted `bash scripts/setup.sh` to get a working `.venv` for a `--dry-run` scan
+    (needed before any real numbers on scope: which entities actually have residual bare files, how many dates/objects,
+    in-retention vs pre-retention split against the `SOURCE_COVERAGE_START` genesis registry) — the setup timed out at 2
+    minutes (dependency install for a large repo) before completing.
+  - **Deliberately stopped here rather than rush the irreversible half.** This todo's own "Done when" bar requires FULL
+    completion (every dual-layout entity canonicalised-or-deleted, snapshot-first) — not a partial pass. Given (a) the
+    real census hasn't run yet, so the true scope (object count, date range, retention split) is unknown, (b) this is a
+    genuinely multi-entity, multi-year GCS operation with an IRREVERSIBLE delete half, and (c) this session was already
+    at a compaction-flagged context level when the task was dispatched — starting the snapshot/canonicalize/delete
+    sequence without first completing the census, and without headroom to see it through to full verification, risks
+    leaving prod sports data in a partially-migrated, unverified state. That is a worse outcome than a clean, documented
+    handoff. Per this codebase's own heavy-I/O rule (`/codex/05-infrastructure/vm-launcher-runbook.md` § heavy-I/O), a
+    full multi-year census + migration at this scale is also a candidate for a dedicated VM run rather than an
+    interactive session, which the next pickup should evaluate.
+  - **Recommended next step for whoever picks this up**: (1) get a working venv (or run on a fresh VM per the heavy-I/O
+    precedent), (2) run `migrate_sports_per_league.py --entity all --dry-run` against
+    `instruments-store-sports-prd-central-element-323112` to get the real per-entity bare-file census, (3) for entities
+    the script doesn't cover, determine (via manifest query, not a new whole-corpus walk) whether they ever had a bare
+    layout at all, (4) THEN snapshot + canonicalize/delete with the retention floor from UAC `SOURCE_COVERAGE_START`.
+    Operator sign-off for the irreversible apply is already on record in this session (chat, not yet written elsewhere —
+    worth a durable note if/when execution actually starts).
+
 ## Reconciliation
 
 Once a todo here ships, flip the corresponding checkbox in its named source doc, citing this plan's commit as evidence.
