@@ -165,10 +165,21 @@ inherited from the first shipped batch:
 > independent confirmation, never a decision. Verify `_mvp_football_league_ids()` count stays 96 (or moves intentionally
 > with evidence). `quality-gates.sh` green before shipping each batch.
 
-- [ ] [DATA] P1. **Western Europe / small nations (UEFA)** — Andorra, Cyprus, Estonia, Faroe Islands, Finland,
+- [x] ✅ [DATA] P1. **Western Europe / small nations (UEFA)** — Andorra, Cyprus, Estonia, Faroe Islands, Finland,
       Gibraltar, Iceland, Ireland, Latvia, Liechtenstein, Lithuania, Luxembourg, Malta, Northern Ireland, San Marino,
-      Wales (16 countries). (repo: unified-api-contracts). **Done when**: per the shared contract above, for this
-      country list.
+      Wales (16 countries). — `unified-api-contracts@a04996fd` (42 entries). Notable finds: Liechtenstein has NO
+      domestic league (clubs play in the Swiss system, WebSearch-confirmed) — only its national Cup added, matching the
+      catalog's single entry exactly, no league fabricated. Finland's Ykkönen was demoted to tier 3 in 2024 when
+      Ykkösliiga launched as the real tier 2 — used Ykkösliiga, not the more obviously-named Ykkönen. Wales's catalog
+      "FAW Championship" does not clearly map to the real North/South regional tier-2 split (post-2019 Cymru Leagues
+      merger) — excluded rather than guessed. Iceland's catalog "Úrvalsdeild" confirmed as the current top flight under
+      its historical name (rebranded "Besta deild karla" for sponsorship, same competition). Zero `api_football_id`
+      collisions; `_mvp_football_league_ids()` stayed 96; zero real captured ODDS data for all 42 entries. Landed
+      through 3 concurrent-edit collisions (East/Southeast Asia, South Asia, and CONCACAF-remaining batches each landing
+      on the same file mid-session) — resolved each via a clean re-split of both batches' blocks (verified zero
+      duplicate keys every time) + recomputed the 2 hardcoded-count tests fresh from the live merged registry each time,
+      not hand-arithmetic. (repo: unified-api-contracts). **Done when**: per the shared contract above, for this country
+      list.
 - [x] ✅ [DATA] P1. **Eastern Europe (UEFA)** — Albania, Armenia, Azerbaijan, Belarus, Bosnia, Bulgaria, Crimea, Czech
       Republic, Georgia, Hungary, Kosovo, Macedonia, Moldova, Montenegro, Romania, Slovakia, Slovenia (17 countries). —
       **ALREADY SHIPPED (slot unknown), checkbox flip caught up 2026-07-25T04:30Z (slot 11)**,
