@@ -18,7 +18,7 @@ related:
   [
     /plans/active/infra_capture_and_devops_leftovers_2026_07_06.md,
     /plans/active/instruments_completion_tracker_2026_07_06.md,
-    /plans/active/issues/operator_iam_permission_parity_2026_06_18.md,
+    /plans/archive/issues/operator_iam_permission_parity_2026_06_18.md,
   ]
 created: "2026-07-25"
 last_updated: "2026-07-25"

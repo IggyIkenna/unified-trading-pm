@@ -87,8 +87,9 @@ drift_direction: advance-code
 - [ ] [DOC] P3. **Archive `sports_satellite_ao_dispatch_batch3_2026_07_25.md`** via the standard 6-step ritual (per
       CLAUDE.md's plan-archival rule): migrate any remaining Deferred items to a tracked todo elsewhere (todo 2 above
       should have already resolved all 6 — verify none remain) → add the archive banner → run the codex-alignment check
-      (does `codex/02-data/sports-features-bucket-path-ssot.md`, created by this batch's own todo 5, need any further
-      cross-referencing) → grep the corpus for every referrer of `sports_satellite_ao_dispatch_batch3_2026_07_25` and
-      fix each path to point at the archived location → clear `locked_by` (already empty here, confirm). **Done when**:
-      the plan is moved to `plans/archive/2026_07/`, every corpus referrer resolves to the new path, and this finalize
-      doc itself gets archived alongside it in the same commit.
+      (does `sports-features-bucket-path-ssot.md` under `codex/02-data/`, created by this batch's own todo 5, need any
+      further cross-referencing) → grep the corpus for every referrer of
+      `sports_satellite_ao_dispatch_batch3_2026_07_25` and fix each path to point at the archived location → clear
+      `locked_by` (already empty here, confirm). **Done when**: the plan is moved to `plans/archive/2026_07/`, every
+      corpus referrer resolves to the new path, and this finalize doc itself gets archived alongside it in the same
+      commit.

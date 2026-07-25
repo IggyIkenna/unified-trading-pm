@@ -278,5 +278,5 @@ evidence. This plan's own reconciliation-then-archive step should be machine-gat
 ## Codex SSOTs
 
 No new durable contract is created by this plan — every todo executes an already-decided spec from its source doc,
-except the new `codex/02-data/sports-features-bucket-path-ssot.md` doc todo 5 itself creates (that todo's own Done-when
-covers registering it in the master closeout's Codex SSOTs list).
+except the new `sports-features-bucket-path-ssot.md` doc (to land under `codex/02-data/`) todo 5 itself creates (that
+todo's own Done-when covers registering it in the master closeout's Codex SSOTs list).
