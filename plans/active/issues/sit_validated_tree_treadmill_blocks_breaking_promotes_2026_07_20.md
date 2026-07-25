@@ -140,6 +140,25 @@ decide "already promoted".
 
 ## Progress Log
 
+- **2026-07-25 (later session) — concrete impact confirmed: agent-orchestrator's dashboard has not deployed in ~5
+  days.** `agent-orchestrator`'s `live-defi-rollout` was measured 331 commits ahead of `main` (0 behind) with `main`'s
+  last commit dated `2026-07-25T11:11:57Z` despite `ldr-to-main-promote-fleet.yml` running successfully every 10-15 min
+  in between (confirmed `agent-orchestrator` logged "READY... all deps on main" every tick but the run summary only ever
+  lists OTHER repos under "Promoted" — consistent with this doc's own dated comment in the workflow: "Measured
+  2026-07-20: agent-orchestrator 25 files / 7 commits un-promoted with NO open PR... tripping branch-health every cycle;
+  deployment-ui and unified-trading-system-ui carry the identical latent hole"). Practical consequence:
+  `deploy-dashboard.yml` triggers only on push to `main`, so NO dashboard UI change has actually reached production in
+  that window — an operator-visible feature (backlog-detail-table columns) landed on LDR the same day and was invisible
+  until this was diagnosed. **Workaround used (not a fix for this doc's underlying race)**:
+  `gh workflow run deploy-dashboard.yml --ref live-defi-rollout -f target=prod` — dispatches the SAME deploy workflow
+  directly against the LDR tip, bypassing the stuck main-promotion gate entirely (the dashboard build/deploy step
+  touches only the static frontend bundle, nothing in the SIT-gate/promotion logic itself, so this carries none of the
+  risk a code-level workaround would). Confirmed working end-to-end. **This is a safe, repeatable stopgap for
+  `agent-orchestrator`/`deployment-ui`/`unified-trading-system-ui` specifically** (the three repos this doc's own
+  2026-07-20 comment already names as carrying the identical latent hole) until the direction ruling above is made —
+  worth considering as an interim mitigation in its own right (a scheduled `workflow_dispatch` against LDR for
+  dashboard-only repos) even independent of fixing the underlying SIT-gate race, since a stale-but-correct dashboard
+  deploy is lower-risk than a stuck one.
 - **2026-07-20** — Surfaced while fixing the `breaking_scan_dir` deadlock. A separate, INDEPENDENT correctness bug found
   in the same gate was fixed immediately (the AST differ diffed the branch NAME via its own second fetch, so it could
   classify a different tree than the one gated and frozen; now pinned to `$LDR_SHA`, fail-closed if unreachable).

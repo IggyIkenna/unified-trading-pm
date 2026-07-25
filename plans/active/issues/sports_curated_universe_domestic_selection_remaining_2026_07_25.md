@@ -384,7 +384,27 @@ inherited from the first shipped batch:
       `gcloud storage cat gs://deployment-scripts-central-element-323112/vm-logs/af-backfill-20260725-125405/run.log`);
       once terminal, spot-verify a sample of the 287 new leagues now show captured `entity=fixtures` rows post-floor,
       THEN scope + launch the separate per-fixture enrichment campaign (budget-capped per Directive A/B) before
-      considering step 2 done or touching step 3's destructive residual-drop.
+      considering step 2 done or touching step 3's destructive residual-drop. — **Health-checked 2026-07-25T13:33Z (slot
+      4, data_engineering), STOPPED PROTECTIVELY, NOT terminal-completed**: found this VM was NOT running the cheap
+      FIXTURES-only path it was launched for — it hit a live code bug where a stale-not-missing date (schema- version
+      re-fetch trigger, not first-time capture) silently escapes the `--sports-entity FIXTURES` scope and falls back to
+      unscoped fetch-everything (teams/standings/injuries + per-fixture stats/events/lineups/ player_stats). Measured
+      directly via a live `ApiFootballAdapter.get_live_quota()` call: shared daily quota dropped 73705→66788 (~6900
+      calls) in under an hour from ONE date (2026-04-18, 1761 fixtures) — more than the entire campaign's intended
+      budget. Filed `BLK-aa5efbbb`; main ruled Option A (stop + fix + relaunch-after-fix) and, since the owning worker
+      (this slot) stayed on other findings-closure work rather than executing the stop within a tick, main executed
+      `gcloud compute instances stop af-backfill-20260725-125405` itself (protective, reversible, zero written-data loss
+      — idempotent/skip-aware). Verified STATUS=TERMINATED. Root-caused + tracked in
+      `issues/sports_freshness_preflight_stale_scope_escape_burns_shared_quota_2026_07_25.md` (main's canonical filing —
+      supersedes an independent duplicate this slot drafted before seeing main's). **Step 2 is now BLOCKED** on that
+      doc's `[DATA] P0` fix (`_freshness_preflight()` must fold `stale` into `missing_entities`, or equivalently
+      `_fetch_sports_reference_block` must never fall back to unscoped fetch when a CLI `--sports-entity` scope was
+      supplied) — do NOT relaunch `launch-api-football-backfill-vm.sh --entity FIXTURES` until that fix ships + is
+      quality-gates green (relaunching now would re-hit the same scope-escape on any other stale-not-missing date in the
+      2020-06-06..2026-07-25 range and risk exhausting the shared quota again, exactly today's earlier 08:12Z failure
+      class). **Next dispatch**: pick up the P0 fix in the linked doc first; once it ships, relaunch FIXTURES-only
+      (SPOT, resumes from measured progress, no data lost by the stop), health-check to terminal, THEN resume this
+      todo's original spot-verify + enrichment-campaign-scoping sequence.
 
 ## Codex SSOTs
 

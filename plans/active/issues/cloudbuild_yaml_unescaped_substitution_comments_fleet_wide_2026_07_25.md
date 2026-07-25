@@ -153,8 +153,9 @@ fix. No behavior change to the actual build (bash never executed these comments)
 - [x] ✅ [INFRA] P1. Fix `execution-service/cloudbuild.yaml` line 278 (bare `$VERSION` in comment → `$$VERSION`) + run
       the exhaustive re-scan above to confirm zero remaining. Ship via quickmerge. (repo: execution-service) —
       execution-service@6ae9c71b, exhaustive re-scan confirmed zero remaining bare substitutions.
-- [ ] [INFRA] P1. Fix `features-service/cloudbuild.yaml` lines 94, 270 (bare `$VERSION` in comments → `$$VERSION`) + run
-      the exhaustive re-scan above to confirm zero remaining. Ship via quickmerge. (repo: features-service)
+- [x] ✅ [INFRA] P1. Fix `features-service/cloudbuild.yaml` lines 94, 270 (bare `$VERSION` in comments → `$$VERSION`) +
+      run the exhaustive re-scan above to confirm zero remaining. Ship via quickmerge. (repo: features-service) —
+      features-service@a2251e63, exhaustive re-scan confirmed zero remaining bare substitutions.
 - [x] ✅ [INFRA] P1. Fix `fund-administration-service/cloudbuild.yaml` line 238 (bare `$VERSION` in comment →
       `$$VERSION`) + run the exhaustive re-scan above to confirm zero remaining. Ship via quickmerge. (repo:
       fund-administration-service) — fund-administration-service@b62d896, exhaustive re-scan confirmed zero remaining
@@ -162,8 +163,11 @@ fix. No behavior change to the actual build (bash never executed these comments)
 - [x] ✅ [INFRA] P1. Fix `greeks-service/cloudbuild.yaml` line 259 (bare `$VERSION` in comment → `$$VERSION`) + run the
       exhaustive re-scan above to confirm zero remaining. Ship via quickmerge. (repo: greeks-service) —
       greeks-service@081ad53, exhaustive re-scan confirmed zero remaining bare substitutions.
-- [ ] [INFRA] P1. Fix `instruments-service/cloudbuild.yaml` lines 74, 243 (bare `$VERSION` in comments → `$$VERSION`) +
-      run the exhaustive re-scan above to confirm zero remaining. Ship via quickmerge. (repo: instruments-service)
+- [x] ✅ [INFRA] P1. Fix `instruments-service/cloudbuild.yaml` lines 74, 243 (bare `$VERSION` in comments →
+      `$$VERSION`) + run the exhaustive re-scan above to confirm zero remaining. Ship via quickmerge. (repo:
+      instruments-service) — instruments-service@ea239573, exhaustive re-scan (builtins/declared-substitution-aware
+      regex from this doc's Recommended fix) confirmed zero remaining bad substitutions; `quality-gates.sh` green
+      (196s).
 - [x] ✅ [INFRA] P1. Fix `market-data-processing-service/cloudbuild.yaml` line 237 (bare `$VERSION` in comment →
       `$$VERSION`) + run the exhaustive re-scan above to confirm zero remaining. Ship via quickmerge. (repo:
       market-data-processing-service) — market-data-processing-service@be66050, exhaustive re-scan confirmed zero
@@ -171,20 +175,44 @@ fix. No behavior change to the actual build (bash never executed these comments)
 - [ ] [INFRA] P1. Fix `market-tick-data-service/cloudbuild.yaml` lines 108 (`$BASE_IMAGE_DIGEST`), 309 (`$VERSION`) in
       comments → double-escaped + run the exhaustive re-scan above to confirm zero remaining. Ship via quickmerge.
       (repo: market-tick-data-service)
-- [ ] [INFRA] P1. Fix `ml-service/cloudbuild.yaml` lines 94, 261 (bare `$VERSION` in comments → `$$VERSION`) + run the
-      exhaustive re-scan above to confirm zero remaining. Ship via quickmerge. (repo: ml-service)
-- [ ] [INFRA] P1. Fix `strategy-service/cloudbuild.yaml` line 308 (bare `$VERSION` in comment → `$$VERSION`) + run the
-      exhaustive re-scan above to confirm zero remaining. Ship via quickmerge. (repo: strategy-service)
-- [ ] [INFRA] P1. Fix `trading-agent-service/cloudbuild.yaml` lines 94, 262 (bare `$VERSION` in comments →
+- [x] ✅ [INFRA] P1. Fix `ml-service/cloudbuild.yaml` lines 94, 261 (bare `$VERSION` in comments → `$$VERSION`) + run
+      the exhaustive re-scan above to confirm zero remaining. Ship via quickmerge. (repo: ml-service) —
+      ml-service@1257161, exhaustive re-scan confirmed zero remaining bare substitutions.
+- [x] ✅ [INFRA] P1. Fix `strategy-service/cloudbuild.yaml` line 308 (bare `$VERSION` in comment → `$$VERSION`) + run
+      the exhaustive re-scan above to confirm zero remaining. Ship via quickmerge. (repo: strategy-service) —
+      strategy-service@0616a141, exhaustive re-scan confirmed zero remaining bad substitutions; `quality-gates.sh`'s own
+      STEP 5.19 ("cloudbuild.yaml substitutions OK") independently confirmed the fix; green (190s).
+- [x] ✅ [INFRA] P1. Fix `trading-agent-service/cloudbuild.yaml` lines 94, 262 (bare `$VERSION` in comments →
       `$$VERSION`) + run the exhaustive re-scan above to confirm zero remaining. Ship via quickmerge. (repo:
-      trading-agent-service)
-- [ ] [INFRA] P2. Determine whether this bug class also blocks real webhook/push-triggered builds (not just manual
+      trading-agent-service) — trading-agent-service@b0436ce, exhaustive re-scan (builtins/declared-substitution-aware
+      regex from this doc's Recommended fix) confirmed zero remaining bad substitutions; `quality-gates.sh` green
+      (112s).
+- [x] ✅ [INFRA] P2. Determine whether this bug class also blocks real webhook/push-triggered builds (not just manual
       `gcloud builds triggers run`) for any of the 15 repos above — check each repo's recent Cloud Build history /
       `cloud-build-router.yml` run logs for a `NOT_FOUND`/`INVALID_ARGUMENT`/"not a valid built-in substitution"
       failure. If any repo's real push-triggered builds ARE affected, that repo's base/service image may be silently
       stale exactly like unified-trading-library was — escalate to the operator immediately per the data-pipeline/
       infra-correctness HARD RULE (this would be a live, currently-silent outage, not a latent one). (repo:
-      cross-cutting investigation, no single owning repo)
+      cross-cutting investigation, no single owning repo) — **RESOLVED: no live outage. Real push/automated-triggered
+      builds are NOT affected.** Root cause of the distinction: every real Cloud Build invocation in this fleet (whether
+      fired by GCP's native GitHub-push webhook — confirmed via
+      `gcloud builds triggers describe     execution-service-build`, which carries a real
+      `repositoryEventConfig.push.branch: ^main$` — or by `cloud-build-router.yml`'s own
+      `gcloud builds triggers run "${REPO}-${ENV}" --substitutions="_VERSION=...,..."`) always resolves with an explicit
+      substitutions context. The ORIGINAL UTL repro
+      (`gcloud builds triggers run unified-trading-library-prod --branch=main`, no `--substitutions` flag at all) is the
+      outlier — an ad-hoc manual verification call, not a shape any real trigger path uses. Confirmed empirically
+      against repos that were STILL UNPATCHED at check time (bug not yet fixed in their `cloudbuild.yaml`): every recent
+      automated build reached real `build`-step execution (i.e. the trigger-creation-time `INVALID_ARGUMENT` never
+      fired) — `instruments-service-prod` build `956ca03f-626f-4b21-b972-e21f80934866` (2026-07-25T12:11Z, steps ran
+      through `build` before failing there on an unrelated docker-build issue), `features-service-build` builds
+      `3b0d33c7`/`aed3e590` (same pattern), `trading-agent-service-build` build `b3161b52` (same pattern),
+      `strategy-service-build` build `a2d6f93a` (in-flight, already past `build`-step start), and
+      `market-tick-data-service-build`'s last 5 runs all `SUCCESS`. A trigger-time substitution-validator rejection
+      never creates a build ID or runs any step — reaching `build` status (success OR failure) is proof the validator
+      passed. No escalation needed; the P1 mechanical fixes above remain worth finishing for hygiene (a future manual
+      `triggers run` verification without `--substitutions` would still hit the same class), but there is no silent
+      stale-image outage to page on.
 
 ## Codex SSOTs
 

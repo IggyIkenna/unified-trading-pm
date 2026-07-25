@@ -320,6 +320,17 @@ item, it becomes a `BLOCKED-OPERATOR-DECISION` Progress Log entry (see Procedure
   the 1000-line hard cap — the one-line path repoint pushes it to 1001 and `check_line_caps` hard-fails the commit.
   Reverted the repoint edit; left the stale `issues/...` relative reference un-fixed as a known, tracked gap rather than
   blocking this archival.
+- **2026-07-25 (slot-7) — BLOCKED-OPERATOR-DECISION**: `gcs_hive_partition_malformed_paths_remediation_2026_06_01.md`
+  (status=superseded). Re-verified the resolution itself holds (recurrence-guard SHA `unified-trading-pm@5d6d398e4`
+  reachable; both cited successors — `plans/archive/2026_07/tradfi_manifest_canonicalisation_2026_06_01.md` E7 and
+  `plans/archive/2026_07/cefi_manifest_canonicalisation_2026_06_01.md` E2 — exist, are themselves `status: superseded`
+  (already archived), and each explicitly confirms completing the exact remediation this doc's Pattern 1/Pattern 2
+  cite). **But the doc itself still carries `locked_by: live-defi-rollout`** in its frontmatter — per CLAUDE.md's plan-
+  locking HARD RULE, a locked doc is never autonomously archived, only via an explicit `[unlock-plan]` from the
+  operator. This exact blocker was already surfaced (not yet acted on) by
+  `plans/active/issues/canonical_closeout_open_questions_2026_07_18.md`'s own C1 entry: "locked plans are never
+  autonomous-archived; needs `[unlock-plan]`. REC: unlock + archive." Not archiving; leaving the checkbox unflipped and
+  skipping this task (reason_code GATED) until the operator authorizes `[unlock-plan]`.
 - **2026-07-25 (slot-2): BLOCKED-OPERATOR-DECISION — todo
   (`gcs_hive_partition_malformed_paths_remediation_2026_06_01.md`) NOT archived.** Resolution itself checks out
   (`resolved_by` cites `tradfi_manifest_canonicalisation_2026_06_01.md` E7
@@ -347,3 +358,9 @@ item, it becomes a `BLOCKED-OPERATOR-DECISION` Progress Log entry (see Procedure
   either: C1 is already a live, unanswered, correctly-worded operator recommendation in the tracker doc; a second
   identical escalation adds noise, not new information. Skipping this task via `/skip-current-task` so it releases
   cleanly; the durable-park BACKEND fix above is the tracked remediation for the repeat-dispatch cost itself.
+- **2026-07-25 (slot-6): RE-DISPATCHED again, re-confirmed still parked, NOT archived.** Both gates unchanged since
+  slot-3's pass: `locked_by: live-defi-rollout` still set on the doc's frontmatter; C1 in
+  `canonical_closeout_open_questions_2026_07_18.md` still an unanswered `[unlock-plan]` recommendation. No new archival
+  action (would violate the plan-locking HARD RULE). I don't have write access to the orchestrator's runtime
+  `backlog.yaml` from this slot (it's server-side state, not a repo file I can edit), so I can't apply the durable-park
+  fix myself — skipping via `/skip-current-task` per the same precedent as slot-3.

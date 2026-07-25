@@ -388,6 +388,18 @@ flipping the checkbox.
       check `gh pr list --repo IggyIkenna/deployment-api --state all --limit 5` for a new promote PR past `#377` having
       merged sha `108e2fd`'s tree, confirm via `git show origin/main:Dockerfile | grep BASE_IMAGE_DIGEST` reads
       `sha256:a302c0cd...` (or newer), THEN proceed with the original re-verification steps exactly as scoped above.
+      **UPDATE 2026-07-25T14:02Z (slot 5): found the ACTUAL blocker — it is not SIT itself.** SIT ran, passed, and
+      logged a matching-tree stamp for `deployment-api`, but the stamp is fire-and-forget (`repository_dispatch` only)
+      and the downstream Firestore write is 403'ing FLEET-WIDE (`ci_status_store.py` `PermissionDenied`,
+      `unified-trading-sa` ADC identity, reproduced live via direct REST `PATCH` — same 403; 0/95 sampled
+      `ci-status-update.yml` runs succeeded since 2026-07-25T10:36Z). This blocks EVERY SIT-covered repo's promote, not
+      just this one. Filed as its own cross-cutting P0 since it blocks the whole fleet's LDR→main pipeline, not just
+      this todo:
+      [issues/ci_status_firestore_write_permission_denied_fleet_wide_2026_07_25.md](ci_status_firestore_write_permission_denied_fleet_wide_2026_07_25.md).
+      Part (1) of this todo is now ALSO gated on that doc's Todo 1/2 (operator restores the Firestore permission, then
+      `ci-status-update.yml` goes green again) before the promote can ever pass the SIT gate. Next dispatch: check that
+      issue doc's Todo 1/2 status; once resolved, confirm `deployment-api`'s promote PR merges to `main`, then proceed
+      with the original re-verification steps exactly as scoped above.
 
 - **2026-07-24 (slot-4, review)**: Re-ran the end-to-end verification per the todo above, against the freshly deployed
   `uts-shared-deployment-api-00270-2l9` (`deployment-api:366154d`) — confirmed via `gcloud builds log` (Cloud Build

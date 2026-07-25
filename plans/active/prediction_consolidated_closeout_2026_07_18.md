@@ -659,6 +659,12 @@ this section)**:
 These are new bounded todos for a future dispatched worker — none require the multi-file cross-repo audit itself to be
 done in THIS session; each names a determinable done-when so a worker can pick it up cold.
 
+> **AO-eligibility triage (2026-07-25)**: 5 of this section's 6 todos + the P3 "Duplicate note" below in "Distinct
+> Values / axis-value census" have been triaged and drafted into
+> [`prediction_consolidated_native_ao_extract_2026_07_25.md`](/plans/active/prediction_consolidated_native_ao_extract_2026_07_25.md)
+> (`status: draft` — not yet dispatched). The P1 POLYMARKET `prediction_trades` schema-extension todo stays human
+> (unresolved PII/architecture call); see that doc's Deferred section for why.
+
 - [ ] [BACKEND] P2. Audit instruments-service's and market-tick-data-service's prediction adapters (kalshi.py,
       polymarket/) for dead code, silent fallback branches, and duplicated logic, per
       `/codex/06-coding-standards/adapter-dead-code-and-fallback-ban.md`. Exact paths:
