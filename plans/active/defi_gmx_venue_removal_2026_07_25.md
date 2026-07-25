@@ -95,10 +95,12 @@ changelog/docstring comment describing the historical removal itself (never insi
       `engine/orchestrator/defi.py`, `scripts/enumerate_expected_universe.py`,
       `scripts/dex_pool_glued_pair_id_canonicalize_2026_07_09.py`. Done-when: the definition-of-done convention above,
       zero hits. (repo: instruments-service)
-- [ ] [BACKEND] P2. **Remove GMX from `execution-service`** -- `service_config.py`, the 4 `cli/defi_*_decision_trace.py`
-      scripts (carry_staked_basis / carry_basis_perp / arbitrage_dispersion / liquidation_capture) that reference GMX,
-      `custody/pre_trade_pinger.py`. Done-when: the definition-of-done convention above, zero hits. (repo:
-      execution-service)
+- [x] ✅ [BACKEND] P2. **Remove GMX from `execution-service`** -- `service_config.py`, the 4
+      `cli/defi_*_decision_trace.py` scripts (carry_staked_basis / carry_basis_perp / arbitrage_dispersion /
+      liquidation_capture) that reference GMX, `custody/pre_trade_pinger.py`. Done-when: the definition-of-done
+      convention above, zero hits. (repo: execution-service) -- execution-service@09a828ed. Also updated
+      tests/e2e/test_defi_execution_e2e.py (stale GMX venue-coverage assertions).
+      `grep -rli "\bgmx\b" . --include="*.py"` returns zero hits repo-wide (incl. tests).
 - [ ] [BACKEND] P2. **Remove GMX from `strategy-service`** -- the `("gmx", "GMX", ShareClass.USDC)` entry in
       `engine/strategies/v2/target_universe/catalog_carry.py`, GMX chain/config entries in
       `engine/strategies/v2/carry_and_yield/staked_basis.py` (including the "GMX-V2 rows pending verification" comment,
