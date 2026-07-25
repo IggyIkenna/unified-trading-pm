@@ -100,6 +100,18 @@ depends_on: []
       (or auto-adds) on drift — i.e. make "model column without migration" a caught error, not a runtime 500 on the hot
       read path. Cross-ref the existing `_migrate_*` convention in `server/bootstrap.py`.
 
+## Status update (2026-07-25 ~05:37Z, main agt-52bb99)
+
+**Acute outage MITIGATED, code root cause STILL OPEN.** By 05:37Z `/api/state` returned to 200 (0.052s) and read-only
+`PRAGMA table_info(slots)` on the live `state.db` now shows `context_directive_issued` **present**. But `bootstrap.py`
+still has **no** `_migrate_slots_context_directive_issued()` (HEAD is `9c73579 fix(autospawn)…`, not a migration
+commit), and the DB was not recreated (backlog is non-empty: queued 22 / dispatched 4 / done 100). So the column was
+almost certainly added by a **manual `ALTER TABLE slots ADD COLUMN …`** on the live DB — a stopgap that cleared the 500
+without the durable code fix. **BACKEND-P1 stays OPEN**: the migration must still be added to `bootstrap.py` so the
+schema self-heals on any fresh/recreated `state.db` (and on `state.mock.db`, which read-only PRAGMA still showed lacking
+the column) — otherwise this recurs the next time a DB is provisioned from scratch. Not main's action (manual live-DB
+ALTER is outside charter; main did not apply it). `status` kept `open` until the code migration lands.
+
 ## Triage / charter note
 
 Main (agt-52bb99) diagnosed this read-only and is **charter-barred from shipping the code fix** (migrations reach the
