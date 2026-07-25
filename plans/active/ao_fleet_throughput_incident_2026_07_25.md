@@ -63,7 +63,7 @@ sequential: true
 
 ## Todos
 
-- [ ] [INFRA] P0. **Verify the branch-quarantine starvation alert actually fired for this episode, fix if not.**
+- [x] [INFRA] P0. ✅ **Verify the branch-quarantine starvation alert actually fired for this episode, fix if not.**
       `_alert_branch_quarantine` (`server/autospawn.py:1112-1160`) is designed to page via `notify_slot_quarantined`
       specifically when a slot sits quarantined WHILE queued work exists ("walls queued → this quarantine is starving
       dispatch → error-pointer page", `autospawn.py:1140`) — exactly the condition observed at 2026-07-25T04:35-04:43
@@ -124,3 +124,44 @@ sequential: true
       verified alert, (d) the LDR→main promotion pipeline has actually cleared the recurring `check_doc_body_links`
       blocker (a merged promote PR, not just another closed-and-superseded one). **Done when**: a written verification
       note citing the actual re-pulled slot/activity/escalation data, attached to this plan's Progress Log.
+
+## Progress Log
+
+- **2026-07-25 (slot-12)** — Todo 1 VERIFIED, no fix needed. Pulled `journalctl -u orchestrator.service` for the central
+  orchestrator VM (running locally on this VM — `ORCHESTRATOR_VM_ROLE=planning`) over 04:25-05:05 UTC and
+  cross-referenced `GET /api/activity`. `_alert_branch_quarantine` (`server/autospawn.py:1112`) fired the STARVATION
+  path (`notify_slot_quarantined`, not the lighter `notify_spawn_failure`) for all three quarantined slots, each with a
+  confirmed `HTTP/1.1 200 OK` Slack POST immediately after the log line:
+  - slot 4 —
+    `04:33:26,682 WARNING slot-quarantine STARVATION alert fired: slot 4 — unified-api-contracts on live-defi-rollout (diverged) (1 wall(s) queued)`,
+    POST 200 OK at `04:33:26,682`.
+  - slot 5 —
+    `04:36:40,954 WARNING slot-quarantine STARVATION alert fired: slot 5 — unified-trading-pm on live-defi-rollout (diverged) (1 wall(s) queued)`,
+    POST 200 OK at `04:36:40,953`.
+  - slot 9 —
+    `04:42:45,782 WARNING slot-quarantine STARVATION alert fired: slot 9 — unified-api-contracts on live-defi-rollout (diverged) (1 wall(s) queued)`,
+    POST 200 OK at `04:42:45,782`.
+
+  Each fire corresponds to an `escalation_dispatch_initiated`/`escalation_dispatch_failed` pair for the SAME escalation
+  id (`agt-8ab986` for slots 4/5, `agt-23b3a6` for slot 9) in `GET /api/activity` — the escalation row was still
+  `status="queued"` at spawn-attempt time (its status only flips to `dispatched` on success), so `count_queued_walls()`
+  correctly read `1` and took the paging branch. The dedup state file
+  (`data/state/autospawn_branch_quarantine_alerted.dedup.json`) shows only slot 9 today because slots 4 and 5 were later
+  auto-healed (`autospawn slot 4: branch quarantine auto-healed` at 04:45:24; `autospawn slot 5: ... auto-healed` at
+  04:51:47) — a successful spawn calls `_clear_branch_quarantine_alert` (`autospawn.py:1476`), which by design erases
+  the dedup breadcrumb on recovery. That is NOT evidence the alert didn't fire — the journal + Slack-200 entries above
+  are.
+
+  **Adjacent finding (not fixed here — out of this todo's scope, filed for tracking)**: `notify_slot_quarantined`'s
+  starvation condition is `escalation.count_queued_walls() > 0` — this counts queued rows in the CI-escalation
+  `EscalationQueueRow` table only, NOT the 142-row backlog-task queue this plan's `source` field cites (25 tasks
+  `queued`). In this exact episode an escalation wall (`agt-8ab986`/`agt-23b3a6`) happened to be queued at all three
+  alert moments, so the STARVATION page correctly fired — but if a future quarantine episode has queued BACKLOG tasks
+  and zero queued escalation walls, the alert would silently take the lighter `notify_spawn_failure` path despite real
+  dispatch starvation. Filed as `plans/active/issues/branch_quarantine_alert_blind_to_backlog_queue_2026_07_25.md` (P2)
+  — extend the starvation condition to `count_queued_walls() > 0 OR count_queued_backlog_tasks() > 0`.
+
+  Existing regression coverage already exercises this exact scenario end-to-end:
+  `tests/test_alert_quality_overhaul.py::test_branch_quarantine_pages_starvation_when_walls_queued` (quarantined slot
+  - nonzero `count_queued_walls()` → `notify_slot_quarantined`; zero → the lighter alert) — no new test needed for this
+    todo's verified-not-broken outcome.
