@@ -166,11 +166,10 @@ satisfies every requirement:
     confirm which the readers use) + dedup — do NOT blind-delete (would break team/venue resolution).
   - Per-source pre-genesis ANOMALIES only (e.g. any footystats parquet before 2019, odds before 2020-06) — targeted
     check + delete/relabel; honest-absence clip already hides them from the denominator.
-- [ ] [DATA] P0. **NICE-TO-HAVE / watch-item: odds-granularity (operator: "only add if needed")** — the odds-API
-      granularity change (10-min → 5-min snapshots ~2024) + odds-types added over time are NOT captured at a
-      per-`(source,data_type,effective-date)` grain today. Add a dated capability entry ONLY IF we find it mislabels
-      coverage (e.g. pre-2024 10-min data read as missing 5-min). Same "add per-league/per-date granularity only on
-      discovery" pattern as the existing registry.
+- [x] ✅ [DATA] P0. **NICE-TO-HAVE / watch-item: odds-granularity** — unified-api-contracts@a32ceb87. Checked; not
+      confirmed, documented as checked-no-issue (no dated capability entry needed — no code path anywhere computes an
+      expected-snapshot-count from a cadence constant, so the mislabeling this watches for cannot occur today). Full
+      resolution in `sports_satellite_ao_dispatch_batch2_2026_07_24.md`'s matching todo.
 - [x] ✅ [DOCS] P0b-codex. **Fixed `per-asset-group-bucket-layouts.md` 2026-06-24** (PM@6fc561a45) — SPORTS row now
       documents the per-league canonical hive partition + all 4 `SportsLayout` variants + `candidate_parquet_paths`.
       (`sports-adapter-dependency-order.md` still shows `entity=fixtures` shorthand without `league=` — minor, fold into

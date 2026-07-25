@@ -124,14 +124,19 @@ source: >-
       when**: `day=all` rows folded into `SportsLayout.FLAT` + deduped without breaking team/venue resolution;
       per-source pre-genesis anomalies identified and deleted/relabeled; no blanket delete performed. Source:
       `sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md`.
-- [ ] [DATA] P0. **Odds-granularity watch-item check** (operator: "only add if needed") — the odds-API granularity
-      change (10-min → 5-min snapshots ~2024) + odds-types added over time are NOT captured at a
-      per-(source,data_type,effective-date) grain today. Check whether pre-2024 10-min data is mislabeled as missing
-      5-min data; if confirmed, add a dated capability entry following the existing registry pattern; if not confirmed,
-      document as checked-no-issue. (repo: unified-api-contracts capability registry; instruments-service/MDPS odds
-      honest-coverage consumers). **Done when**: the mislabeling question is checked and resolved either way (entry
-      added, or documented no-issue) — a bounded check-then-maybe-act task, not an open design call. Source:
-      `sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md`.
+- [x] ✅ [DATA] P0. **Odds-granularity watch-item check** — unified-api-contracts@a32ceb87. Checked whether pre-cutover
+      10-min odds snapshots would be evaluated against a 5-min expectation anywhere and misread as missing coverage.
+      **Result: not confirmed, documented as checked-no-issue** — no code path in UAC/instruments-service/MTDS/MDPS
+      computes an expected-snapshot-count from a fixed cadence constant; MDPS bucket assignment
+      (`bucket_assignment_adapter.py` `TIER1_HORIZONS`) matches snapshots to fixed pre-match offsets with a 30-90min
+      staleness tolerance, and the honest-coverage expected-universe key for odds is
+      `(date, league_id,     timeframe/horizon)` with no per-minute axis — the mislabeling scenario cannot occur today.
+      Recorded the investigation + a re-check pointer directly in `_endpoint_registry_data.py` (the one place the
+      cadence fact lived, previously as inert prose) so a future raw-tick-count completeness check for `odds_api`
+      re-reads it first; also fixed a stale comment referencing a never-built `v3_era_cutoff` field. Noted discrepancy:
+      the codebase's own documented cutover is **~2023** (v3→v4 endpoint version), not ~2024 as this todo's text states
+      — flagged for whoever eventually builds a cadence-derived check to confirm the correct date before relying on it.
+      Source: `sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md`.
 - [ ] [DATA] P0. **Drop 2 out-of-universe numeric `league=` dirs** (`14231`/`315`), snapshot-first, twin/scope-verified.
       (repo: instruments-service). **Done when**: both dirs are dropped (snapshot-first) or explicitly folded into the
       curated-set residual-drop todo below's tracked scope. Source:
