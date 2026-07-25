@@ -133,7 +133,7 @@ Vitest / Playwright — no Python). Playwright **L2** evidence + a cited regress
       `deployment_observability_expansion_2026_07_08.md`'s `[UI] P3 ✅ KEEP (operator-confirmed 2026-07-11)` decision
       now carries a `⚠️ SUPERSEDED 2026-07-21` note recording that the "alongside the cockpit tab" framing is stale (no
       cockpit tab remains to be "alongside"), while the underlying KEEP-the-route decision still holds. (b) ✅ DONE
-      2026-07-24 — new stub `unified-trading-pm@<pending>`:
+      2026-07-24 — new stub `unified-trading-pm@0409bbb7d`:
       [`/codex/06-coding-standards/ui-routing-convention.md`](/codex/06-coding-standards/ui-routing-convention.md)
       codifies "one URL scheme, plain routes only" + the layout-route-is-optional-not-automatic rule + the
       orphan-audit/testid enforcement mechanics, citing this plan's shipped commit (`deployment-ui@079b29e`) as the
