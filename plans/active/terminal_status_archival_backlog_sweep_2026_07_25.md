@@ -95,9 +95,11 @@ For the named doc:
 - [ ] [INFRA] P2. Archive
       `plans/active/issues/blocked_prerequisites_marker_excluded_from_dispatch_and_gate_2026_07_25.md` (status=resolved,
       doc_type=issue) per the Procedure below. Done when: `check_terminal_status_archived.py` no longer lists it.
-- [ ] [INFRA] P2. Archive `plans/active/issues/branch_quarantine_alert_blind_to_backlog_queue_2026_07_25.md`
+- [x] [INFRA] P2. ✅ Archive `plans/active/issues/branch_quarantine_alert_blind_to_backlog_queue_2026_07_25.md`
       (status=resolved, doc_type=issue) per the Procedure below. Done when: `check_terminal_status_archived.py` no
-      longer lists it.
+      longer lists it. — unified-trading-pm@e50c84c88 (moved to plans/archive/issues/, banner added, codex referrer in
+      agent-orchestrator-alerting.md repointed + content updated to reflect the shipped fix;
+      check_terminal_status_archived.py confirmed clean).
 - [ ] [INFRA] P2. Archive `plans/active/issues/candle_feature_canonical_path_divergence_history_part1_2026_07_25.md`
       (status=resolved, doc_type=issue) per the Procedure below. Done when: `check_terminal_status_archived.py` no
       longer lists it.
