@@ -244,19 +244,19 @@ source:
       (`_rebuild_tradfi_cf11.py` `_handle_srz_tradfi_row` reclassifies any SRZ on a trading day to `attempted_failed`,
       converting a correct cross-venue absence — a NYSE-listed ticker on a NASDAQ run — into a phantom failure). They
       also use the BARE `instrument_id` (`AAPL`) vs the canonical `NASDAQ:EQUITY:AAPL-USD` the current enumerator
-      writes, so they double-count the denominator. Shipped `scripts/retire_tradfi_cf11_phantom_srz_2026_07_25.py` +
-      16 regression tests: routes cross-venue absence to `EXPECTED_INSTRUMENT_NOT_LISTED`, same-venue delivery-lag
-      gaps to `EXPECTED_SOURCE_DELIVERY_LAG` (matching the live-emitter fix, never a false "not listed" claim for a
-      ticker that trades there), and drops a bare row whose canonical-id counterpart already exists; instrument type
-      (EQUITY/ETF) resolved via a 9-day instruments-service catalogue sample (SPOT_PAIR excluded as known
-      contamination), 100% resolution/0 conflicts measured. **Live evidence**: a 2026-07-25 02:44 UTC read found
-      104,338 matching rows (matches this bullet's ~104,623 within normal live-manifest drift); before this tool's own
-      `--apply` could run, two independent fresh re-reads (~03:00/~03:03 UTC, distinct GCS object generations
-      confirming genuine intervening writes — not a caching artifact) found the NASDAQ/NYSE population already at 0,
-      while the CME/CBOE/FX population (a different, out-of-scope defect — futures/options per-contract codes) stayed
-      unchanged at 202,172, i.e. venue-selective precision matching this exact defect scope, not a generic rebuild.
-      Could not identify the specific external actor; the tool ships regardless as the durable, tested, git-tracked
-      fix design and a safe (idempotent, 0-candidate no-op) re-run path. (repo: market-tick-data-service)
+      writes, so they double-count the denominator. Shipped `scripts/retire_tradfi_cf11_phantom_srz_2026_07_25.py` + 16
+      regression tests: routes cross-venue absence to `EXPECTED_INSTRUMENT_NOT_LISTED`, same-venue delivery-lag gaps to
+      `EXPECTED_SOURCE_DELIVERY_LAG` (matching the live-emitter fix, never a false "not listed" claim for a ticker that
+      trades there), and drops a bare row whose canonical-id counterpart already exists; instrument type (EQUITY/ETF)
+      resolved via a 9-day instruments-service catalogue sample (SPOT_PAIR excluded as known contamination), 100%
+      resolution/0 conflicts measured. **Live evidence**: a 2026-07-25 02:44 UTC read found 104,338 matching rows
+      (matches this bullet's ~104,623 within normal live-manifest drift); before this tool's own `--apply` could run,
+      two independent fresh re-reads (~03:00/~03:03 UTC, distinct GCS object generations confirming genuine intervening
+      writes — not a caching artifact) found the NASDAQ/NYSE population already at 0, while the CME/CBOE/FX population
+      (a different, out-of-scope defect — futures/options per-contract codes) stayed unchanged at 202,172, i.e.
+      venue-selective precision matching this exact defect scope, not a generic rebuild. Could not identify the specific
+      external actor; the tool ships regardless as the durable, tested, git-tracked fix design and a safe (idempotent,
+      0-candidate no-op) re-run path. (repo: market-tick-data-service)
 - [ ] [DATA] P1. **70% of `captured` cells carry `row_count` = 0/null** →
       `plans/active/issues/tradfi_captured_cells_zero_or_null_row_count_2026_07_20.md` (P1). 1,135,339 of 1,615,859; ALL
       4,266 FX `ohlcv_24h` captured cells are zero. Either row_count is not stamped at the shard atom (coverage numbers
