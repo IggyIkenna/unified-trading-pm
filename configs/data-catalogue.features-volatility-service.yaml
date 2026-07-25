@@ -1,3 +1,8 @@
+# NOTE (2026-07-25, bucket_estate_consolidation_closeout_2026_07_24.md, asset-group parity drift cleanup):
+# the `bucket:` fields below were corrected from the retired per-kind `features-volatility-{ag}-test-project`
+# shape to the current folded `features-{ag}-test-project` shape (Fold A, bucket_fold_features_2026_07_17 —
+# all per-kind feature buckets collapsed into one per-asset_group `features` bucket; kind is now an
+# object-key prefix, not part of the bucket name). This is catalogue metadata only, not a live resolver call.
 service_name: features-volatility-service
 last_updated: "2026-02-06"
 auto_refreshed: "2026-02-06T22:00:00"
@@ -23,7 +28,7 @@ shard_status:
     completion_pct: 0.0
     dates_found: 0
     dates_expected: 763
-    bucket: features-volatility-cefi-test-project
+    bucket: features-cefi-test-project
     options_iv:
       start_date: "2019-03-30"
       stage_1_has_run: false
@@ -61,7 +66,7 @@ shard_status:
     completion_pct: 0.0
     dates_found: 0
     dates_expected: 763
-    bucket: features-volatility-tradfi-test-project
+    bucket: features-tradfi-test-project
     options_iv:
       start_date: "2020-01-01"
       stage_1_has_run: false
@@ -99,7 +104,7 @@ shard_status:
     completion_pct: 0.0
     dates_found: 0
     dates_expected: 763
-    bucket: features-volatility-defi-test-project
+    bucket: features-defi-test-project
     notes: DEFI not supported -- no options data. Bucket exists but expected to remain empty.
 epic_dependencies:
   - epic_task: market-data:4.1

@@ -207,7 +207,16 @@ For the target `<ag>`:
    content/repos to decide which side is right — confirmed examples fixed 2026-07-25:
    `coinbase_bare_name_migration_execution_service_2026_07_10.md` was genuinely cefi-only, `cross-cutting` dropped;
    `issues/manifest_v6_batch3_residual_orphaned_work_2026_07_21.md` was genuinely cross-AG, `cefi` dropped), never
-   silently left dual-tagged or silently excluded from both audits.
+   silently left dual-tagged or silently excluded from both audits. **After every retag, re-run
+   `scripts/plan-hygiene/check_ag_closeout_linkage.py` before moving on** — fixing the TAG is necessary but not
+   sufficient: a doc just retagged onto its real AG can be newly orphaned WITHIN that AG if nothing in that AG's
+   closeout family (its `related:` graph or its aggregated-sources digest body text) mentions it yet — the check went
+   0→4→0 orphans, then 0→1→0, then 0→3→0 across 3 separate retag rounds this session, each time because the fix landed
+   correctly but the linkage step was skipped first. The remedy is a one-line addition to the AG's
+   `<ag>_consolidated_closeout_aggregated_sources_*.md` (or the main closeout doc if no aggregated-sources sibling
+   exists) naming the retagged doc — use a proper `[text](path)` markdown link, not a bare backtick-quoted filename,
+   since prettier can wrap a long bare filename across a line break and silently break the substring match the linkage
+   check relies on.
 
    **A second, distinct sub-bug (found the same day, scoping the cross-cutting AG's own candidate corpus):** the
    dual-tag grep above only catches a doc carrying BOTH a specific AG and `cross-cutting`. It does NOT catch a doc

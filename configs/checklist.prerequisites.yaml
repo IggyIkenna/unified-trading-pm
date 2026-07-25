@@ -165,13 +165,19 @@ gcp_prerequisites:
           - features-volatility-tradfi-test-project
 
       gcs_buckets_features_onchain:
-        description: "GCS buckets for features-onchain-service (CEFI/DEFI only)"
+        description:
+          "GCS buckets for features-onchain-service (DEFI only — CEFI is producer-less by design, see
+          cloud-providers.yaml history; corrected 2026-07-25 bucket-estate-consolidation closeout, asset-group parity
+          drift cleanup: Fold A folded the per-kind onchain bucket into the generic per-asset_group features bucket, so
+          this verification no longer greps a distinct 'onchain' name)"
         status: done
-        notes: ""
-        verification: "gsutil ls | grep features-onchain"
+        notes:
+          "Bucket names below use the current folded features-{ag}-test-project shape, not the retired
+          features-onchain-{ag} shape. verification is stale post-fold (no bucket literally contains 'onchain' anymore);
+          kept for historical record."
+        verification: "gsutil ls | grep 'features-\\(cefi\\|defi\\)-test'"
         buckets:
-          - features-onchain-cefi-test-project
-          - features-onchain-defi-test-project
+          - features-defi-test-project
 
       gcs_buckets_ml:
         description: "GCS buckets for ML services"
@@ -392,13 +398,18 @@ aws_prerequisites:
           - unified-trading-features-volatility-tradfi-${AWS_ACCOUNT_ID}
 
       s3_buckets_features_onchain:
-        description: "S3 buckets for features-onchain-service (CEFI/DEFI only)"
+        description:
+          "S3 buckets for features-onchain-service (DEFI only — CEFI is producer-less by design; corrected 2026-07-25
+          bucket-estate-consolidation closeout, asset-group parity drift cleanup: Fold A folded the per-kind onchain
+          bucket into the generic per-asset_group features bucket, and the `unified-trading-*` naming scheme itself
+          predates the canonical env-tiered fold)"
         status: pending
-        notes: ""
-        verification: "aws s3 ls | grep features-onchain"
+        notes:
+          "Bucket name below uses the current folded features-{ag}-{env}-{account} shape, not the retired
+          unified-trading-features-onchain-{ag} shape."
+        verification: "aws s3 ls | grep features-defi"
         buckets:
-          - unified-trading-features-onchain-cefi-${AWS_ACCOUNT_ID}
-          - unified-trading-features-onchain-defi-${AWS_ACCOUNT_ID}
+          - features-defi-prd-${AWS_ACCOUNT_ID}
 
       s3_buckets_ml:
         description: "S3 buckets for ML services"

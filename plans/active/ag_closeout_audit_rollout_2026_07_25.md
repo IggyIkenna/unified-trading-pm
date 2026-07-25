@@ -630,3 +630,81 @@ re-checking it doc-by-doc just because the directive is pre-authorized.
 agents themselves surfaced (operator is away for ~4h as of this checkpoint — park per ASK>PARK, don't block) → final
 verification (line caps, hygiene sweep, dependency graph, zero orphans) → the mass status/assigned_vm flip across the
 whole family → ship → verify on origin → final closing report.
+
+## 🛑 GATE UPDATE (2026-07-25, supersedes the "pre-authorized, execute without asking" text above)
+
+**The operator returned and the mass-flip authorization CHANGED.** Verbatim: _"how we gonna [manage] the data
+pipeline... cross cutting AG concerns... imagine this is our desired path with cross cutting another 6th AG...
+IMPORTANT: before you ship the status change i'll run steps 2 and 3 on planning vm and ensure they[']re part of daily ao
+pipeline flows running on planning vm... this would be a manual trigger to assess the quality of running them from there
+then the steps you mentioned MASS FLIP:... Ship the mass flip, verify on origin, Confirm AO picks up the queue, Deliver
+final closing report."_
+
+**This is a NEW, standing gate that overrides the earlier "pre-authorized, execute without asking" line above for the
+5-AG family** (and now applies to everything built since, see Round 5 below): the mass status/assigned_vm flip, the
+ship, the `check-agent-orchestrator` confirmation, and the final closing report **all wait until the operator personally
+runs `/ag-closeout-audit` + `/plan-reconcile` on the planning VM themselves** (their own manual quality-assessment
+trigger for the daily AO pipeline flows) and confirms. **Do not self-authorize past this gate on the strength of the
+earlier standing directive — it no longer applies unmodified.** As of this Progress Log entry, that operator
+confirmation has NOT yet been given; the mass flip has NOT been executed.
+
+## Round 5 (2026-07-25, same day) — the 6th tranche (cross-cutting) + 3 more (ao/ci/infra), full-corpus orthogonality sweep
+
+Massively expanded scope per operator request: build a genuine 6th "asset-group-style" tranche for cross-AG
+data-pipeline concerns (mirroring the 5 real AGs), then — after the operator noted `/plan-reconcile` should be
+topic-scoped the same way and asked "arent we able to use epic assignment... to filter out pure ci/cd and ao related
+tasks that arent per ag or cross cutting" — expanded to a full 9-tranche partition (5 AGs + cross-cutting + `ao` +
+`ci` + `infra`) covering the WHOLE plans/issues corpus.
+
+- **Orthogonality sweep**: scoping the new tranches surfaced **19 total single-AG mistags** (docs tagged
+  `asset_group: cross-cutting` whose real content was single-AG-specific, or a fork that inherited its parent
+  coordinator's tag verbatim) across 4 rounds of discovery — all fixed, each verified via `check_ag_closeout_linkage.py`
+  (0 orphans after each round). Full pattern documented in `cursor-configs/skills/ag-closeout-audit/SKILL.md`'s
+  Orthogonality HARD CHECK section.
+- **`plans/active/cross_cutting_consolidated_closeout_2026_07_25.md`** authored (originally 15 Tracks from a 68-doc
+  epic-filtered scoping pass, then extended to **24 Tracks** after a full corpus-wide sweep found ~40 more genuine
+  cross-cutting docs the epic-filter missed, mostly under `observability_master`/
+  `deployment_and_user_management_master`/`orchestrator_master`/`agent_operating_framework_master`/`strategy_master`).
+  611 lines.
+- **3 new tranche docs authored** — `ao_consolidated_closeout_2026_07_25.md` (176L, ~36 docs: dispatch/backlog bugs,
+  worker/slot lifecycle + git-safety, orchestrator VM/auth infra, AO alerting), `ci_consolidated_closeout_2026_07_25.md`
+  (160L, ~33 docs: quickmerge, Cloud Build/GHA, SIT/promotion, release-tag machinery), and
+  `infra_consolidated_closeout_2026_07_25.md` (163L, ~32 docs: repo/script governance, CVE/dependency mgmt, org admin,
+  PM plan-hygiene tooling). All 3 stay `asset_group: [cross-cutting]` (no new asset_group enum values introduced) —
+  membership is `parent_epic` + explicit listing in that tranche's own doc, not a frontmatter field.
+- **Both skills upgraded**: `/ag-closeout-audit` now supports all 9 tranches + `all` as the default with no argument (so
+  a scheduled AO trigger never fails asking "which tranche"), and a real discovery-bug fix — Phase 0.2's
+  batch/finalize-pair discovery required `assigned_vm: planning`, which silently missed covering plans still
+  `status: draft`/`assigned_vm: NA` (exactly the state every doc built today sits in, pre-mass-flip). `/plan-reconcile`
+  gained the same 9-tranche optional scoping with `all` as the default (preserves today's exact whole-corpus behavior
+  for every existing unscoped invocation).
+- **IAM-credential-gated items resolved**: operator ran the handed-off commands personally via ADC —
+  `gcs_data_access_audit_log_cost_2026_07_24.md`'s `DATA_WRITE` `auditConfigs` removal DONE (archived); the bucket-IAM
+  Phase-1 enumeration blocker cleared, revealing Group A buckets are actually two-tier `-test-`/`-prd-`, not the assumed
+  three-tier `-dev-`/`-stg-`/`-prd-` (flagged in `bucket_iam_write_protection_per_tier_2026_06_09.md` so Terraform isn't
+  authored against the wrong assumption).
+- **A `cross-cutting-light-residual-closeout` Workflow launched** (`wf_1290040b-63e`) to close ~12 bounded residual
+  todos named across the cross-cutting doc's Tracks + an archival sweep of confirmed-done docs. **Still running as of
+  this entry** — do NOT assume its fixes landed without checking; several of its targets
+  (`distinct_values_noncanonical_audit_2026_07_20.md`,
+  `issues/mtds_uac_adapter_contract_baseline_regression_2026_07_09.md`,
+  `issues/honest_coverage_harness_instrument_type_case_break_on_d1_migration_2026_07_20.md` — already archived,
+  `plans/active/issues/gcs_data_access_audit_log_cost_2026_07_24.md`'s duplicate archival attempt) show
+  uncommitted/in-progress dirty state in the shared working tree at compaction time. A new issue doc,
+  `issues/honest_coverage_rollup_scoped_rerun_masks_distinct_values_2026_07_25.md`, appeared untracked — likely a
+  genuine finding from the census-refresh agent, not yet reviewed.
+
+### Deferred work after 2026-07-25 (Round 5)
+
+| Item                                                                                                                                                           | State / why deferred                                                                           | Blocked on                                                                                                                                                 |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `wf_1290040b-63e` (light-residual-closeout workflow) completion                                                                                                | Cannot be done yet — still running, no ETA better than "check for the completion notification" | Nothing — will complete on its own; review its results (incl. the new `honest_coverage_rollup_scoped_rerun_masks_distinct_values` issue doc) once it lands |
+| Mass flip (draft→active, NA→planning) for all consolidated parents + native_ao_extract pairs + split children + satellite batches + the 3 new ao/ci/infra docs | Operator-owned — do not start                                                                  | The GATE UPDATE above: operator must personally run `/ag-closeout-audit` + `/plan-reconcile` on the planning VM and confirm                                |
+| Ship the mass flip, verify on origin, `check-agent-orchestrator` confirmation, final closing report                                                            | Operator-owned — do not start                                                                  | Same gate as above                                                                                                                                         |
+| Cross-cutting Track 24 (strategy/execution-determinism family) — flagged as the first line-cap-split extraction candidate                                      | Not done — no action needed yet, doc is at 611L, well under cap                                | Nothing urgent; revisit if the doc grows past ~750-800L                                                                                                    |
+
+**Recommended next item for a fresh session**: check whether `wf_1290040b-63e` has completed (task-notification, do not
+poll); if so, review + commit its results (including the new issue doc), re-run `check_ag_closeout_linkage.py` +
+`check_terminal_status_archived.py` corpus-wide to confirm no fresh orphans, then continue waiting on the operator's
+gate above. Do NOT execute the mass flip without the operator's explicit confirmation that they've run the audits
+themselves.

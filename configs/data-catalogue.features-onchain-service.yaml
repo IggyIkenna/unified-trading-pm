@@ -4,6 +4,17 @@
 # Note: TRADFI not supported (no on-chain data)
 # Source: sharding.features-onchain-service.yaml
 # Generated: 2026-02-06
+#
+# NOTE (2026-07-25, bucket_estate_consolidation_closeout_2026_07_24.md, asset-group parity drift cleanup):
+# `bucket:` fields below corrected from the retired per-kind `features-onchain-{ag}-test-project` shape to
+# the current folded `features-{ag}-test-project` shape (Fold A — onchain is one of the five per-kind
+# feature buckets collapsed into one per-asset_group `features` bucket; kind is now an object-key prefix).
+# CEFI's row is additionally producer-less by design, not merely unmigrated-data: on-chain metrics are
+# DeFi-only in every consumer (features_service/onchain/config.py hardcodes `_ONCHAIN_ASSET_GROUP = "defi"`;
+# deployment-api scopes the service to frozenset({"DEFI"})) — CEFI's shared `features-cefi-test-project`
+# bucket exists (for other CEFI feature kinds) but will never receive onchain writes. This is catalogue
+# metadata only, not a live resolver call; the shard-tracking numbers are left as-is (out of this cleanup's
+# scope — a design question, not a bucket-naming drift).
 
 service_name: "features-onchain-service"
 last_updated: "2026-02-06"
@@ -32,7 +43,7 @@ shard_status:
     completion_pct: 0.0
     dates_found: 0
     dates_expected: 763
-    bucket: "features-onchain-cefi-test-project"
+    bucket: "features-cefi-test-project" # producer-less (see note above); never actually written
     macro_sentiment:
       {
         start_date: "2019-03-30",
@@ -72,7 +83,7 @@ shard_status:
     completion_pct: 0.0
     dates_found: 0
     dates_expected: 763
-    bucket: "features-onchain-defi-test-project"
+    bucket: "features-defi-test-project"
     macro_sentiment:
       {
         start_date: "2020-05-18",

@@ -418,16 +418,35 @@ def build_report(transitions: list[dict]) -> tuple[bool, str, str]:
     return alert, severity, report
 
 
-def write_github_output(alert: bool, severity: str, report: str) -> None:
+def write_github_output(alert: bool, severity: str, report: str, transitions: list[dict]) -> None:
     out_path = os.environ.get("GITHUB_OUTPUT")
     if not out_path:
         return
+    # Escalation matrix input (2026-07-26): escalate-to-orchestrator.yml already exists and
+    # explicitly supports wall_type=ldr_qg_failure, but this monitor never called it — a RED
+    # transition posted to Slack and stopped there, with no attempt to hand the wall to an
+    # orchestrator worker and no failure-to-escalate signal either (found via a real "why didn't
+    # this escalate" operator question). Emit just the RED transitions as JSON so the wrapping
+    # workflow can fan out a matrix job; a genuinely empty list must still be valid JSON (`[]`)
+    # so `fromJson()` in the workflow doesn't choke on an empty string.
+    red = [t for t in transitions if t["kind"] == "red"]
+    red_entries = [
+        {
+            "repo": t["repo"],
+            "sha": t["sha"] or "",
+            "url": t["url"] or "",
+            "attribution": t.get("attribution") or "",
+        }
+        for t in red
+    ]
+    red_json = json.dumps(red_entries)
     with open(out_path, "a", encoding="utf-8") as fh:
         fh.write(f"alert={'true' if alert else 'false'}\n")
         fh.write(f"severity={severity}\n")
         fh.write("report<<__RPT__\n")
         fh.write(report + "\n")
         fh.write("__RPT__\n")
+        fh.write(f"red_transitions_json={red_json}\n")
 
 
 def main() -> int:
@@ -454,7 +473,7 @@ def main() -> int:
         manifest = load_manifest(manifest_path)
     except (OSError, json.JSONDecodeError) as exc:
         print(f"  ! cannot read manifest {manifest_path}: {exc} — fail-open, no alert", file=sys.stderr)
-        write_github_output(False, "INFO", "LDR monitor: manifest unreadable (fail-open, no alert).")
+        write_github_output(False, "INFO", "LDR monitor: manifest unreadable (fail-open, no alert).", [])
         return 0
 
     transitions, new_levels = evaluate_fleet(manifest, repos, args.limit)
@@ -470,7 +489,7 @@ def main() -> int:
 
     alert, severity, report = build_report(transitions)
     print(report)
-    write_github_output(alert, severity, report)
+    write_github_output(alert, severity, report, transitions)
 
     # Fire fresh LDR runs so the NEXT tick has a current conclusion to read. Done LAST so a
     # dispatch error can never block the read/detect/persist that already happened.
