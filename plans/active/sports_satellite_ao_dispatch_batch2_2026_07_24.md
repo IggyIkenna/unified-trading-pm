@@ -677,6 +677,21 @@ source: >-
     not a large undertaking. A crude prefix-match heuristic is NOT sufficient on its own (produces false positives) —
     the next pass should verify each flagged pair against real capture data before merging, same discipline this session
     applied.
+  - **Per-source-cap cross-reference, real numbers (still no code touched)** — queried the same backup's `data_type`
+    breakdown to check the candidate pool against Directive A/B's stated per-source caps: **XG (Understat)**: 18
+    distinct leagues with real captured data — HIGHER than the operator's own "~6" estimate, so Understat's true reach
+    is bigger than assumed (good — more free reference data). **MATCHES (footystats)**: 30 leagues — under the "~50"
+    cap, room to grow. **ODDS**: 30 leagues — OVER the operator's stated "~20" odds-API cap; since odds availability is
+    what ultimately gates the PREDICTION-tier subset (per Directive A: "we pretty much narrow down our prediction
+    leagues to the ones that the odds API has data for"), this is the one real discrepancy worth operator confirmation
+    before finalizing — either the "~20" figure was a rough estimate (use the real 30), or 10 of these 30 need to be
+    excluded from the prediction tier specifically (they'd still be fine as features-tier reference).
+    **SFI_PROGRESSIVE_STATS**: 33 leagues, all cross-checked as already within the API-Football-covered set (no orphan
+    SFI-only leagues found in this sample) — consistent with Directive A's "can't be trying to get soccer football info
+    for a league that doesn't exist in API Football" rule. This closes step 3's cross-reference with real measured
+    numbers instead of the directive's own rough estimates — the next session can go straight to finalizing the list
+    against these figures (flag the ODDS 30-vs-~20 discrepancy to the operator specifically) rather than re-deriving
+    them.
 
 - **2026-07-25 (slot 2, data_engineering) — "Eliminate the bare/legacy dual-layout" todo — VERIFIED CLEAN, no
   canonicalize/delete action needed.** Operator explicitly confirmed sign-off for the irreversible GCS apply this todo
