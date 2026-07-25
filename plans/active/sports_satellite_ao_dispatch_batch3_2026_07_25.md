@@ -126,7 +126,9 @@ drift_direction: advance-code
       cited) are recorded; `source_data_latency.py`'s 5 constants are updated to the empirical p95 wherever samples are
       sufficient; and `sports_live_availability_and_source_latency_2026_07_24.md`'s Source-latency Step-2 verdict table
       is flipped from UNVALIDATABLE-FROM-BACKFILL to VALIDATED, citing sample sizes. Source:
-      `sports_consolidated_closeout_aggregated_sources_2026_07_24.md`.
+      `sports_live_availability_and_source_latency_2026_07_24.md` (corrected 2026-07-25 plan-reconcile — the digest
+      cited here as Source has 0 checkboxes and is not the real dispatch/reconciliation target; the actual open checkbox
+      for this work lives in the doc now cited).
 - [ ] [DATA] P2. Determine the disposition of `market-data-tick-sports-prd`'s 20,785 `venue=KALSHI`/
       `empty_confirmed`/`row_count=0` rows (paired with `source=polymarket_clob`, dates 2020-06-06..2026-05-21) —
       classify as (a) an independent instance of the same writer/consolidator asset_group-mislabeling class the
@@ -139,7 +141,9 @@ drift_direction: advance-code
       when**: Todo 15 in `cross_ag_prediction_rows_bleed_into_sports_instruments_index_2026_07_20.md` is answered with a
       cited classification (a/b/c) and an explicit remediation recommendation, recorded as a new dated section in that
       same doc; the doc's own `status: open` and ROUND 6/7 gating on the unrelated population are left untouched.
-      Source: `sports_consolidated_closeout_aggregated_sources_2026_07_24.md`.
+      Source: `cross_ag_prediction_rows_bleed_into_sports_instruments_index_2026_07_20.md` (corrected 2026-07-25
+      plan-reconcile — this todo's own Done-when already names the real target, todo 15 in that doc; the digest cited
+      here as Source has 0 checkboxes).
 - [ ] [DOC] P3. Write the sports features-bucket (`sports_features/`) path-layout SSOT in codex/02-data — document that
       `odds_features` is day-level (`sports_features/by_date/day=<D>/feature_group=odds_features/features.parquet`)
       while `derived_features`/`fixture_features` are per-league with RAW api-football numeric ids in the GCS path
@@ -170,7 +174,8 @@ drift_direction: advance-code
       before the delete; and either the mis-routing writer is fixed with a regression test, or a documented reason it
       isn't reproducible is recorded as a new dated section in
       `issues/api_football_reverify_attempted_failed_and_asset_group_2026_07_14.md`. Source:
-      `sports_consolidated_closeout_aggregated_sources_2026_07_24.md`.
+      `issues/api_football_reverify_attempted_failed_and_asset_group_2026_07_14.md` (corrected 2026-07-25 plan-reconcile
+      — matches this todo's own Done-when target; the digest previously cited as Source has 0 checkboxes).
 - [ ] [INFRA] P3. Grant `lifecycle-catalogue-regen@central-element-323112.iam.gserviceaccount.com`
       `storage.objects.create` on `central-element-323112-events` (or the correct events-sink bucket, confirm the exact
       name at execution time) so `CATALOGUE_SHRINK_BLOCKED`/similar structured events from the
@@ -189,7 +194,9 @@ drift_direction: advance-code
       never itself flipped. Repo: unified-trading-pm. **Done when**: the doc's frontmatter `status` reads `resolved`
       with `resolved_by` populated, citing either the same live-code re-measurement evidence already gathered in the
       sibling doc or a fresh independent re-measurement if this doc's own claims need independent reverification first.
-      Source: `sports_consolidated_closeout_aggregated_sources_2026_07_24.md`.
+      Source: `issues/instruments_service_codex_compliance_ceiling_drift_2026_07_20.md` (corrected 2026-07-25
+      plan-reconcile — this todo's subject IS that doc; the digest previously cited as Source has 0 checkboxes and isn't
+      the doc actually being flipped).
 - [ ] [DIAG] P2. **Verify whether the sports manifest's 2026-vs-prior-year enumeration-grain inconsistency (~10x more
       cells seeded per data_type for 2026 than prior years) still persists** — measure current per-data_type
       cell-seeding counts for a matched 2025 vs 2026 sample window directly against the live
