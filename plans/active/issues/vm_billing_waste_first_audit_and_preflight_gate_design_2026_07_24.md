@@ -219,7 +219,7 @@ depends_on: []
     — a real, working checkpoint, just under a **non-standard filename** (not literally `PROGRESS.json`). Functionally
     conformant (line-indexed, monotonic within its shard). **Open question, not independently verified this run**: does
     `exit_code_fleet_monitor.py`'s `read_progress_checkpoint()` (which reads by a specific expected filename per
-    `codex/05-infrastructure/spot-vms-for-backfill.md`) actually recognize `MIGRATION_PROGRESS-shard{N}.json`, or does
+    `/codex/05-infrastructure/spot-vms-for-backfill.md`) actually recognize `MIGRATION_PROGRESS-shard{N}.json`, or does
     this launcher's checkpoint silently go unread by the generic actuator despite existing? Filed as a minor follow-up
     below.
   - **`canonical-migration-defi-relabel` (3 events) — CLEAN, fully conformant.** Sample
@@ -266,7 +266,7 @@ depends_on: []
     this sample. Filed as a follow-up todo below** rather than asserted as either broken or fine.
   - **`datapoint-validation-{prediction,cefi,defi}` (5 events total: 2+2+1) — LOW SEVERITY, no finding filed.** Runs
     `scripts/validate_datapoint_schema_id.py` — the Tier-2 **read-only** per-datapoint id+schema validation job (per
-    `codex/02-data/reconciliation-census-and-compute-tiers.md`). No `PROGRESS.json`, but a replay re-reads/re-validates
+    `/codex/02-data/reconciliation-census-and-compute-tiers.md`). No `PROGRESS.json`, but a replay re-reads/re-validates
     GCS parquet already there — it does NOT re-issue paid external API calls (Databento/Tardis), so even an unconfirmed
     worst-case blind restart costs internal GCS-read compute time, not real third-party billing. **Verdict:
     architecturally same gap, immaterial billing severity — not escalated.**

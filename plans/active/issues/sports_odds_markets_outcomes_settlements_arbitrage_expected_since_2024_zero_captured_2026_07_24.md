@@ -146,7 +146,7 @@ data_types) explains both findings at once.
       operator sign-off requested via /blocked (slot 5, 2026-07-24).
 - [x] [DIAG] P1. **Discriminator investigation requested by main (2026-07-24, INTERIM guidance on BLK-c545ae54, operator
       sign-off STILL PENDING)** — the RETIRE recommendation collides with the external-data-always-available HARD RULE
-      (`codex/02-data/external-data-always-available-rule.md`): exhausting/absent a capture path is a credential/build
+      (`/codex/02-data/external-data-always-available-rule.md`): exhausting/absent a capture path is a credential/build
       ask, NOT a descope; zero adapter code is EQUALLY consistent with (a) a mechanical/erroneous phantom declaration
       never in product scope (retire legitimate) or (b) a genuinely-wanted-but-unbuilt feature (rule says scaffold +
       `BLOCKED-CREDENTIALS`, never retire). Pinnacle/Betfair/The Odds API do offer markets/odds/settlement endpoints, so

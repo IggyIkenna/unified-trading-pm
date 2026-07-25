@@ -92,7 +92,7 @@ Same for KRX `000660`/`005380`/`005930` on 2026-07-21/22/23 — plausible KRW-sc
 
 ### Why this contradicts the SSOT — grep-then-READ, cited precisely
 
-- `codex/02-data/tradfi-databento-sourcing-ssot.md` § "KRX + ICE are YAHOO FINANCE, not Databento" (2026-06-27 operator
+- `/codex/02-data/tradfi-databento-sourcing-ssot.md` § "KRX + ICE are YAHOO FINANCE, not Databento" (2026-06-27 operator
   correction): _"neither KRX nor ICE is 'operator-blocked', 'Databento-sourced', 'needs an adapter', or 'off-allowlist'…
   the data is freely available via Yahoo and the adapters exist."_ Also: _"Explicitly NOT subscribed (querying them
   raises `DatabentoDatasetNotAllowedError`): all ICE feeds (`IFEU.IMPACT` Brent/Gasoil, `IFUS.IMPACT` ICE Dollar-Index +
