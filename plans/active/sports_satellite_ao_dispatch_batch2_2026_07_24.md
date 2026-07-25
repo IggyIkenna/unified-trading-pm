@@ -424,8 +424,8 @@ source: >-
       `issues/sports_post_backfill_relabel_premise_resolved_residual_gap_2026_07_25.md` with the full measurement + 3
       correctly-scoped follow-up todos rather than force a stale-premise migration against a live-changing production
       manifest. Source: `data_completion_sports_2026_07_24.md`.
-- [ ] [SCRIPT] P2. **Relaunch features-sfi-progressive** — code fix already shipped (`features-service@06c44c02`); first
-      verify (via git log) whether the launcher's repoint to `VM_SERVICE=features_service` /
+- [ ] [OPERATOR] P2. **Relaunch features-sfi-progressive** — code fix already shipped (`features-service@06c44c02`);
+      first verify (via git log) whether the launcher's repoint to `VM_SERVICE=features_service` /
       `python -m features_service.sports.scripts.compute_sfi_progressive_only` already shipped (the source doc cites
       placeholder `<sha>`s, not real ones); if not, ship it. Then confirm market-tick-data-service is clean (no foreign
       uncommitted WIP blocking the tarball build) → rebuild SPORTS tarball via
@@ -434,7 +434,10 @@ source: >-
       run.log has no `MissingFeatureFamilyError`. (repo: deployment-service
       `scripts/vm/launch-sfi-progressive-features-backfill-vm.sh`, `scripts/vm/create-code-tarballs.sh`;
       features-service `features_service/sports/scripts/compute_sfi_progressive_only.py` — read-only dependency check on
-      market-tick-data-service, no edits there). **Done when**: launcher confirmed pointed at
+      market-tick-data-service, no edits there). **[OPERATOR]**: `RECOMPUTE_FORCE=true --force` overwrites captured prod
+      manifest rows for the full 2020-01-01→today window + launches a billed VM — cite
+      `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`, get operator go-ahead before the relaunch step (the
+      verify/tarball-rebuild prep above is safe without it). **Done when**: launcher confirmed pointed at
       `features_service.sports.scripts.compute_sfi_progressive_only` (fixed if not); SPORTS tarball rebuilt; relaunch's
       run.log shows no `MissingFeatureFamilyError` and `PROGRESSIVE_DAY_CAPTURED` events, exit code 0. Source:
       `data_completion_sports_2026_07_24.md`.
