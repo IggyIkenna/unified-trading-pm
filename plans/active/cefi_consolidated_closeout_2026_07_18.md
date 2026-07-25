@@ -314,6 +314,11 @@ Real but non-blocking, each in its own doc; listed for completeness so nothing i
 
 ## Track 8 — Non-canonical ENUMERATION audit → align EVERY form to one SSOT (operator ask, 2026-07-18) · P0
 
+> **Numbered 8, not 6 or 7 (pre-existing, unchanged by this pass)** — this section was renumbered off a duplicate "Track
+> 6" heading collision with the hygiene-items section above; Track 7 (candle-namespace, below) already existed at the
+> time, so this became Track 8 rather than re-colliding. Reading order (Track 8 before Track 7) does not match numeric
+> order — a pre-existing quirk, not introduced by the 2026-07-25 split.
+
 - **Source / ask**: the deployment-ui/api "data status" view used to enumerate every instrument_type / data_type / chain
   / venue in the GCS data/manifest for an asset_group — a duplication + non-canonical-naming detector. Removed from the
   UI/API; operator (2026-07-18): re-add it, and use the enumeration so the migration is COMPLETE (align EVERY
