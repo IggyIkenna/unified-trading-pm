@@ -2,24 +2,14 @@
 doc_type: plan
 title: GitHub Actions CI/CD cost reduction — self-host the glue, kill the minute-minimum tax, fix cron cadence
 summary: >-
-  PM is ~48% of a ~$1,000/mo GitHub Actions bill despite a code freeze because it is the fleet CI/CD control tower —
-  ~79% of its runs are automation (status routing, deploy dispatch, promotion/health crons), only ~8% are doc commits.
-  All repos are private (every minute billed) and there are ZERO self-hosted runners, so the biggest untapped lever is
-  moving lightweight glue off $0.006/min GitHub-hosted runners onto compute we already run 24/7. Tiered fix — self-host
-  the switchboard+crons (39 MOVE: 38 runs-on flips + 1 composite-action conversion), collapse the quality-gates job
-  fan-out that pays a 1-min minimum per sub-second job, and fix cron cadence; 17 workflows stay hosted (test gates,
-  fleet templates, a cross-repo reusable, the failure-independence monitors + their alert carrier). ALL decisions closed
-  2026-07-15/16. ACTIVE + operator-driven (assigned_vm NA — never auto-dispatched). 8 runners live on the orchestrator
-  VM (5 JIT-ephemeral glue + 3 long-lived glue-writer, disjoint labels). **STEP 2 COMPLETE 2026-07-17: 37/37 movers
-  self-hosted, zero-billed, verified on real runs.** **STEP 2c SHIPPED 2026-07-17 (@a6057ea36, promoted to main same
-  day): all 22 persist-cicd-event callers converted to the composite action (~$117/mo of 1-min-minimum persist jobs
-  removed); the old reusable's DELETION is staged behind observing green ci-status-update runs on main — until it lands,
-  `git revert a6057ea36` is a one-command rollback.** D1 (2b↔2c checkout collision) RESOLVED by operator delegation —
-  checkout kept, @main pin rejected. A2 SHIPPED + PROVEN 2026-07-17 (Firestore content-sentinel dedup, fleet-live;
-  two-dispatch proof on alerting-service: MISS+save then 22s HIT+skip with the required check green). A1 SHIPPED
-  2026-07-17 (docs-only fast-path; tests+typecheck short-circuit, lint-codex always full). Next = A5 + the amended STEP
-  2b trim; D2-D4 are open operator decisions. One P0 pending: quickmerge's --agent sentinel races its own rebase on a
-  busy branch.
+  SPLIT 2026-07-24 (plan line-cap remediation, plan_line_cap_remediation_2026_07_23.md row 13) — this doc is now a thin
+  redirect index, not a live record; nothing is tracked here anymore. The full content lives in 3 child docs:
+  `plans/archive/2026_07/github_actions_self_hosted_runner_migration_2026_07_15.md` (self-hosted-runner migration,
+  COMPLETE, archived, 0 open todos), `plans/active/github_actions_operator_gated_followups_2026_07_17.md`
+  (operator-gated followups, ACTIVE, 9 open todos), and
+  `plans/active/github_actions_staging_machinery_shutdown_2026_07_24.md` (staging-branch machinery shutdown, ACTIVE, 1
+  partially-done todo). Kept only so existing cross-references (`related:`, `parent_epic`, old commit messages) still
+  resolve to something — read the matching child instead of this file.
 status: active
 nature: process
 asset_group: [cross-cutting]
@@ -31,7 +21,7 @@ related:
   - /plans/archive/issues/github_billing_dashboard_access_2026_07_09.md
   - /plans/active/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md
 created: 2026-07-15
-last_updated: 2026-07-17
+last_updated: 2026-07-24
 parent_epic: deployment_and_user_management_master
 assigned_vm: NA
 execution_scope: local-only

@@ -159,28 +159,33 @@ current work.
 
 ### DeFi Strategy Rollout
 
-- defi_ui_component_audit_2026_03_31.md — UI component audit
+- [defi_ui_component_audit_2026_03_31.md](../ai/defi_ui_component_audit_2026_03_31.plan.md) — **(DRAFT — plans/ai/,
+  never promoted to active/ — corrected 2026-07-25, plan-reconcile finding)** UI component audit
 - defi_phase3_infrastructure_2026_03_30.md — **(ARCHIVED)** Infrastructure completion
 - defi_strategies_phase2_2026_03_29.md — **(ARCHIVED)** Phase 2 strategies
 
 ### Sports
 
-- sports_predictions_e2e_2026_05_05.md — Drives sports predictions running end-to-end: feature-service-sports →
+- [sports_predictions_e2e_2026_05_05.md](../archive/sports_predictions_e2e_2026_05_05.plan.md) — **(ARCHIVED — corrected
+  2026-07-25, plan-reconcile finding)** Drives sports predictions running end-to-end: feature-service-sports →
   ml-training (Model 2A walk-forward) → strategy-service paper trade (ArbitrageStrategy + MLSportsStrategy) →
   execution-service paper fills + matching-engine for execution alpha → upcoming-fixtures-ui shows predictions. Path:
   re-key existing 288M Odds-API rows (`migrate_sports_canonical.py`, idempotent, no API) + MDPS 8-bucket horizon adapter
   (`SportsBucketAssignmentAdapter`, no API) → FSS feature compute → ML → strategy → UI. Folds
   `sports_e2e_validation_2026_03_27` Phases 2/3/5; Phase 4 re-collection budget dropped (predictions don't need it).
   Depends on master roadmap Phase 6, UTL base-image rebuild, and features_sports_honest_coverage_2026_05_05.
-- run_lifecycle_events_ssot_2026_05_05.md — Cross-cutting observability fix per the 2026-05-05 CLAUDE.md "No
+- [run_lifecycle_events_ssot_2026_05_05.md](../archive/run_lifecycle_events_ssot_2026_05_05.plan.md) — **(ARCHIVED —
+  corrected 2026-07-25, plan-reconcile finding)** Cross-cutting observability fix per the 2026-05-05 CLAUDE.md "No
   fire-and-forget VM launches" rule. 4 phases: (1) UTL helper `run_lifecycle(service_name, details=...)` context
   manager + unit tests in `unified_trading_library.events`; (2) audit every long-running entry-point in the workspace;
   (3) rollout to MTDS migrates / MDPS / instruments-service / deployment-service / FSS / strategy / execution; (4)
   base-service.sh STEP 5.63 QG enforcement. Closes the gap where 11 audited scripts emit `setup_events` but no
   RUN_STARTED + terminal RUN_COMPLETED|FAILED. Reference incident: migrate_sports_canonical patched ad-hoc in MTDS
   ce9b069; this plan rolls the helper into UTL so every script gets the same shape.
-- instruments_service_write_gate_validation_2026_04_22.md — Close the architectural gap where raw-data sinks in
-  instruments-service bypass UTL's point-in-time validators entirely. Every `sink.write(...)` gates through
+- [instruments_service_write_gate_validation_2026_04_22.md](../ai/instruments_service_write_gate_validation_2026_04_22.plan.md)
+  — **(DRAFT — plans/ai/, never promoted to active/ — corrected 2026-07-25, plan-reconcile finding)** Close the
+  architectural gap where raw-data sinks in instruments-service bypass UTL's point-in-time validators entirely. Every
+  `sink.write(...)` gates through
   `InstrumentsWriteGate.validate_and_write(df, partition, batch_date, mode='strict'|'warn')` asserting
   `value.date() <= batch_date` for every as-of column candidate. Warn-mode rollout measures violation volume; flip to
   strict once adapters clean. Motivated by the 2026-04-22 TM-VM incident (bugs fixed in instruments-service `cdded95`)
@@ -199,10 +204,14 @@ current work.
 
 ### Data & Testing
 
-- [instruments_to_100pct_eod_2026_05_04.md](instruments_to_100pct_eod_2026_05_04.md) — instruments-service to ≥99%
-  honest coverage across all 5 asset groups (sibling to MTDS plan; epic: data-pipeline-completion).
-- [market_tick_data_to_100pct_2026_05_05.md](market_tick_data_to_100pct_2026_05_05.md) — market-tick-data-service raw
-  download to ≥99% honest coverage across all 5 asset groups. **GCS-truth-first**: Phase 0.1 inverse-phantom audit
+- [instruments_to_100pct_eod_2026_05_04.md](../archive/instruments_to_100pct_eod_2026_05_04.plan.md) — **(ARCHIVED —
+  link corrected 2026-07-25, plan-reconcile finding: was a 404, real file is
+  plans/archive/instruments_to_100pct_eod_2026_05_04.plan.md)** instruments-service to ≥99% honest coverage across all 5
+  asset groups (sibling to MTDS plan; epic: data-pipeline-completion).
+- [market_tick_data_to_100pct_2026_05_05.md](../archive/market_tick_data_to_100pct_2026_05_05.plan.md) — **(ARCHIVED —
+  link corrected 2026-07-25, plan-reconcile finding: was a 404, real file is
+  plans/archive/market_tick_data_to_100pct_2026_05_05.plan.md)** market-tick-data-service raw download to ≥99% honest
+  coverage across all 5 asset groups. **GCS-truth-first**: Phase 0.1 inverse-phantom audit
   (parquet-on-disk-no-manifest-row) is a mandatory gate before any backfill VM launches — prevents wasted
   Tardis/Databento/DeFi-RPC/odds-API spend on data we already have. Per-AG decision: manifest rebuild (cheap) vs
   backfill (paid). Phase 2 launchers: `launch-cefi-sharded-backfill.sh`, `launch-tradfi-backfill-vm.sh`,
@@ -216,7 +225,8 @@ current work.
 
 ### Service Remediation
 
-- citadel_per_service_remediation_2026_03_24.md — Per-service fixes
+- [citadel_per_service_remediation_2026_03_24.md](../ai/citadel_per_service_remediation_2026_03_24.plan.md) — **(DRAFT —
+  plans/ai/, never promoted to active/ — corrected 2026-07-25, plan-reconcile finding)** Per-service fixes
 - instruments_service_reorganisation_2026_03_27.md — **(ARCHIVED)** Instruments service
 - prediction_capture_incident_remediation_2026_07_06.md — Remediation for the 07-01→07-06 prediction-capture outage: (A)
   capture-path dtype hardening (UTL Int64/bool/float coercion shipped; residuals split out, see below) + (B)
@@ -235,7 +245,8 @@ current work.
 
 ### Library Consolidation
 
-- fold_uei_into_utl_2026_04_17.md — Fold unified-trading-library into `unified_trading_library.events` (aggregate of
+- [fold_uei_into_utl_2026_04_17.md](../archive/fold_uei_into_utl_2026_04_17.plan.md) — **(ARCHIVED — corrected
+  2026-07-25, plan-reconcile finding)** Fold unified-trading-library into `unified_trading_library.events` (aggregate of
   both), migrate 30+ consumers, archive UEI repo
 
 ### Strategy Lifecycle & Catalogue (NEW 2026-04-21)
@@ -243,7 +254,8 @@ current work.
 - performance_overlay_pbms_pnl_series_2026_04_22.md — Ship PBMS `GET /api/v1/accounts/{account_id}/pnl-series` + UTA
   `HttpPbmPerformanceClient` so `<PerformanceOverlay>` uses real odum-paper / odum-live P&L streams (synth fallback
   unchanged). Depends on archived performance overlay primitive plan.
-- dart_exclusive_subscription_research_fork_2026_04_21.md — Plan D: DART exclusive-subscription model
+- [dart_exclusive_subscription_research_fork_2026_04_21.md](../archive/dart_exclusive_subscription_research_fork_2026_04_21.plan.md)
+  — **(ARCHIVED — corrected 2026-07-25, plan-reconcile finding)** Plan D: DART exclusive-subscription model
   (`StrategyInstanceSubscription` with `dart_exclusive`/`im_allocation`/`signals_in` types + exclusive-lock invariant),
   client-authored research fork lifecycle (`StrategyVersion` draft → pending_approval → approved → rolled_out), joint
   Odum-client version governance gated on `backtest_1yr` + admin approval, UTA subscribe/fork/approve/rollout endpoints,
@@ -252,9 +264,10 @@ current work.
 
 ### UI & Admin Unification
 
-- dashboard_services_grid_collapse_2026_04_21.md — Collapse `/dashboard` tile grid 11 → 5 (DART · Odum Signals · Reports
-  · Investor Relations · Admin & Ops), per-persona sub-route chips under each tile, and family/archetype filter strip
-  above grid. Sibling to Phase-11 nav 8→4 collapse. Depends on archived
+- [dashboard_services_grid_collapse_2026_04_21.md](../archive/dashboard_services_grid_collapse_2026_04_21.plan.md) —
+  **(ARCHIVED — corrected 2026-07-25, plan-reconcile finding)** Collapse `/dashboard` tile grid 11 → 5 (DART · Odum
+  Signals · Reports · Investor Relations · Admin & Ops), per-persona sub-route chips under each tile, and
+  family/archetype filter strip above grid. Sibling to Phase-11 nav 8→4 collapse. Depends on archived
   [`ui_unification_v2_sanitisation_2026_04_20.md`](../archive/ui_unification_v2_sanitisation_2026_04_20.md).
 
 ### Deployment Topology & Client Isolation

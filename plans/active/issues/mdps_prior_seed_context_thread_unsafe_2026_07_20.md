@@ -133,7 +133,6 @@ lives_, not _what it resolves to_.
       heterogeneous file list may carry wrong leading-bin seed values. Determine whether prod backfills ran with
       concurrency and whether affected shards need re-derivation.
 - [x] 4. ✅ [SCRIPT] P1. R1 SHIPPED mdps@b3376b8 — opt-in MDPS_DATE_CONCURRENCY/--date-concurrency (default 1);
-    date-level multiprocessing (measured 4.12->1.04s @N=1..4). In-date max_workers raise still a follow-up. Only AFTER
-    1+2: raise the concurrency lever (the pool was measured under-fed — 2 futures into 8 slots) and re-measure
-    per-instrument-day throughput.
-</content>
+      date-level multiprocessing (measured 4.12->1.04s @N=1..4). In-date max_workers raise still a follow-up. Only AFTER
+      1+2: raise the concurrency lever (the pool was measured under-fed — 2 futures into 8 slots) and re-measure
+      per-instrument-day throughput.

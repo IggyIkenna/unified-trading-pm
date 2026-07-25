@@ -90,4 +90,4 @@ Build the **staking-accrual leg on #4 now** (it's the correct rate and the healt
 redemption-rate backfill for full-history correctness, with visible honest-absence on uncovered days. Treat the
 **recursive-staking collateral leg as blocked** on the Aave-oracle capture (action 4) — do NOT model LST collateral on a
 proxy. The mark-to-market basis leg needs the operator's E1 short-funding answer (see
-[[pnl_interest_accrual_wrong_engine_and_banned_formula_2026_07_21]]) plus the #1/#2 backfills. </content>
+[[pnl_interest_accrual_wrong_engine_and_banned_formula_2026_07_21]]) plus the #1/#2 backfills.

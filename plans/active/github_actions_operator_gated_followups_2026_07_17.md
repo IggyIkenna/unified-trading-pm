@@ -32,7 +32,7 @@ related:
     /plans/active/issues/post_cutover_silent_assumption_sweep_2026_07_23.md,
   ]
 created: "2026-07-24"
-last_updated: 2026-07-23
+last_updated: 2026-07-24
 parent_epic: deployment_and_user_management_master
 assigned_vm: NA
 execution_scope: local-only

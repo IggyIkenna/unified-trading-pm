@@ -32,7 +32,9 @@ source:
   [
     "Discovered running sync-archetype-capability-to-ui.sh --write while resolving
     archetype_venue_universe_cefi_vs_registry_no_cefi_cells_2026_06_30.md (2026-07-10, slot-3). Change was reverted (not
-    committed) once the break was found — see that issue doc's Resolution section for the revert evidence.",
+    committed) once the break was found — no committed diff exists; the referenced issue doc's Resolution section only
+    flags the sync drift as out-of-scope for that fix, it does not itself carry the revert evidence (verified
+    2026-07-25).",
   ]
 assigned_vm: NA
 locked_by:
