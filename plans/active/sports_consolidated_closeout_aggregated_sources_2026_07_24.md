@@ -388,7 +388,9 @@ drift_direction: advance-code
   `/plans/active/candle_canonical_path_migration_execution_2026_07_24.md`,
   `/plans/active/canonical_id_builder_retrofit_checklist_2026_07_08.md`,
   `/plans/active/data_pipeline_check_mdps_features_2026_07_20.md`,
-  `/plans/active/mdps_features_reduced_artifact_tracker_2026_06_28.md`.
+  `/plans/active/mdps_features_reduced_artifact_tracker_2026_06_28.md`,
+  `/plans/active/issues/understat_bulk_download_backfill_2026_06_29.md` (retagged `[sports]` 2026-07-25, was a
+  cross-cutting mistag — see `cursor-configs/skills/ag-closeout-audit/SKILL.md`'s Orthogonality HARD CHECK).
 
 - **Sibling closeouts / cross-AG (own primary tracking elsewhere, linked here for awareness only)**:
   `/plans/active/defi_consolidated_closeout_2026_07_18.md` (in this doc's own `related:` — cross-AG link, not sports

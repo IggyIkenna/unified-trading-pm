@@ -299,6 +299,12 @@ fixture-linked before MVP backfill.
 > evidence/prose dropped). Docs with 0 open todos say so explicitly. >8-open docs list every P0/P1 in full and cap P2/P3
 > with a `+N more` marker — nothing is silently dropped. Re-verified 2026-07-24 against the live corpus.
 
+- **Retagged into prediction scope 2026-07-25** (orthogonality mistag found scoping the new cross-cutting AG layer — see
+  `cursor-configs/skills/ag-closeout-audit/SKILL.md`'s Orthogonality HARD CHECK):
+  [`prediction_cqg_residual_2026_07_24.md`](/plans/active/prediction_cqg_residual_2026_07_24.md) — 2 open
+  (cqg-classifier coverage decision + downstream cqg-grain catalogue wiring, forked from
+  `migration_verification_orphan_safety_2026_06_10`).
+
 - **This plan's own Phase A-E children (2026-07-24 fork — were listed in the Split-notice table above but not repeated
   here; added so this index is the single place every source doc lives, including this plan's own forks)**:
   - **[BACKEND] P0.**

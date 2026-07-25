@@ -711,3 +711,11 @@ drift_direction: none
       `build_instrument_catalogue.py --asset-group defi` (and `cefi`) as a confirmation pass — pre-conditions now
       satisfied, `instruments-service@ee19f6f3` already hardens the catalogue script to structurally exclude the killed
       venues.
+
+- **Retagged into defi scope 2026-07-25** (both were orthogonality mistags found scoping the new cross-cutting AG layer
+  — see `cursor-configs/skills/ag-closeout-audit/SKILL.md`'s Orthogonality HARD CHECK):
+  - [`defi_venue_lst_rates_residual_2026_07_24.md`](/plans/active/defi_venue_lst_rates_residual_2026_07_24.md) —
+    lst-rates aggregation + venue-spelling residual, forked from `migration_verification_orphan_safety_2026_06_10`.
+  - [`features_service_defi_data_loading_blockers_2026_05_29.md`](/plans/active/issues/features_service_defi_data_loading_blockers_2026_05_29.md)
+    — DeFi features-service e2e test blocker; `master:` field names `defi_manifest_canonicalisation_2026_06_01.md` as
+    owner.
