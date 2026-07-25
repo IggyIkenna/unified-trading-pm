@@ -196,20 +196,11 @@ source: >-
       launch) so the VM booted on valid code, but this auth gap will block the NEXT slot's tarball rebuild attempt until
       fixed. Full evidence + the reconciliation note in the canonical closeout plan: see this todo's own re-measurement
       above; re-run `_index/availability_index.parquet` INJURIES query after the VM's `EXIT_STATUS` appears to confirm
-      the gap actually closed before flipping this checkbox. — **Health-checked 2026-07-25T01:45Z (slot 7,
-      data_engineering), re-dispatched, NOT a duplicate launch.** `af-backfill-20260725-002739` confirmed RUNNING
-      (`gcloud compute instances list`), `PROGRESS.json` monotonic and advancing (`last_completed_date=2022-04-04` as of
-      this check, started at 2018-01-01), `run.log` tail shows live INJURIES fetches with no error/stall signature.
-      Genuinely not completable this turn (started ~8h17m ago, ~4.25 of ~8.5 covered years so far at current rate —
-      several more hours remain). No duplicate action taken; released back to the queue via `/skip-current-task` so
-      other dispatchable work isn't blocked on this slot idling — a future dispatch should re-check
-      `PROGRESS.json`/`EXIT_STATUS` before assuming still-running. — **Re-health-checked 2026-07-25T02:24Z (slot 2)**:
-      still RUNNING, `PROGRESS.json` monotonic-advanced to `last_completed_date=2024-03-31`, no stall signature.
-      Genuinely still hours from completion; released again, no duplicate action. — **Re-health-checked
-      2026-07-25T02:30Z (slot 9, data_engineering)**: still RUNNING, `PROGRESS.json` monotonic-advanced to
-      `last_completed_date=2024-08-06`, run.log tail shows live per-date ticking with fresh timestamps, no error/stall
-      signature (only a benign pandas FutureWarning). ~6.6 of ~8.5 years covered. Genuinely still hours from completion
-      (2018-01-01→present at this rate); released again via `/skip-current-task`, no duplicate action taken.
+      the gap actually closed before flipping this checkbox. — **Re-health-checked 3x (01:45Z slot 7 / 02:24Z slot 2 /
+      02:30Z slot 9), latest 2026-07-25T02:30Z**: `af-backfill-20260725-002739` still RUNNING, `PROGRESS.json`
+      monotonic-advancing (`last_completed_date=2024-08-06`, ~6.6/8.5 years covered), `run.log` shows live fetches, no
+      error/stall signature. Genuinely still hours from completion; each check released via `/skip-current-task`, NEVER
+      duplicate-launched — re-check `PROGRESS.json`/`EXIT_STATUS` before assuming still running.
 - [x] ✅ [CODE] P1. **UAC canonical registry build/refine** — unified-api-contracts@ce18ff15. Audited every clause of
       the Architecture section against current code before touching anything (most of this program had already shipped):
       name/ids/country/season-start-end-per-year (`season_dates.get_season_start`/`get_season_end`, per-league-per-year)
@@ -624,16 +615,11 @@ source: >-
       per-object-unique(fixture_id,player_id) converges to 0 duplicates project-wide). Source:
       `issues/canonical_player_stats_fixture_events_quality_2026_07_16.md`.
 - [ ] [DATA] P1. **`fixture_events` re-fetch into the canonical 13-col schema** — fold into the OR-1 `fixture_events`
-      re-fetch campaign; re-fetch the degenerate/heterogeneous cells from api-football into the canonical schema.
-      Re-fetch lists archived at
-      `gs://deployment-scripts-central-element-323112/sports_cutover_2026_07_16/phase2_evidence/`. (repo:
-      instruments-service re-fetch/ingest tooling; GCS bucket `instruments-store-sports-prd`,
-      `entity=fixture_events/*/fixture_events.parquet` — DIFFERENT entity/objects from the player_stats todo above, safe
-      to dispatch concurrently). **Done when**: the degenerate 5-col stub (~30% of sampled objects), the 9-col named
-      variant, and the 10-col `af_`-prefixed variant are re-fetched and rewritten into the canonical 13-col schema,
-      matching the target already established for the 57% already-canonical objects; a repeat 120-object sample shows 0
-      non-13-col objects (or documents genuinely unrecoverable ones). Source:
-      `issues/canonical_player_stats_fixture_events_quality_2026_07_16.md`.
+      re-fetch campaign. (repo: instruments-service). **Done when**: a full re-census shows 0 genuinely non-canonical
+      objects remaining (or documented unrecoverable). **🟡 IN PROGRESS (2026-07-25, slot 2)**: full census done
+      (12,603/43,233 genuinely non-canonical, recovery-ids parquet built), re-fetch launch blocked on the af-backfill
+      singleton lock (INJURIES VM still running) — full state + resume command:
+      `issues/sports_fixture_events_refetch_progress_2026_07_25.md`.
 - [ ] [CODE] P2. **Writer-side de-dup + schema-conformance gate** so neither defect re-accrues — the `player_stats`
       writer rejects/dedupes rows on write; the `fixture_events` writer validates/enforces the canonical 13-col schema
       before accepting new objects. (repo: instruments-service `_writer_captured.py` row_count/effective_count logic +
