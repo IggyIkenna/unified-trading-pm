@@ -310,6 +310,29 @@ jobs:
             else
               echo "  PR #$PR_NUM blocked but v2 present on head (genuine gate fail or in-progress) — leaving it"
               ACTION="blocked"
+              # ao_worker_context_lifecycle_gap_2026_07_25.md / ao_fleet_throughput_incident_2026_07_25.md finding
+              # (2026-07-25): a genuine quality-gates-v2 FAILURE on this promote PR previously had NO escalation
+              # path at all — every other wall type here (dirty/conflict) escalates via main-backmerge-to-ldr, but
+              # a real test/typecheck/lint failure just sat until the next */15 tick superseded the PR with a
+              # fresh attempt from a (hopefully by-then-different) LDR tip, silently re-trying the SAME failure
+              # indefinitely with no one ever notified to fix the root cause. Purely additive — does not alter any
+              # existing branch above; only fires when the v2 run for this exact head SHA CONCLUDED as a failure
+              # (not in-progress, not action_required/cancelled, already excluded by HAS_V2 above). Dedup/cooldown
+              # is handled server-side by the orchestrator's escalation wall-cooldown key
+              # (server/escalation.py::_wall_cooldown_key), so it's safe to fire this on every tick the failure
+              # persists — repeat dispatches for the same (repo, wall_type) within the cooldown window are dropped.
+              V2_FAILED=$(gh run list --repo "$OWNER/$REPO" --workflow quality-gates-v2.yml --limit 50 \
+                --json headSha,conclusion --jq "[.[]|select(.headSha==\"$HEAD_SHA\" and .conclusion==\"failure\")]|length" 2>/dev/null || echo "0")
+              if [ "${V2_FAILED:-0}" != "0" ] && [ "$DRY_RUN" != "true" ]; then
+                V2_RUN_URL=$(gh run list --repo "$OWNER/$REPO" --workflow quality-gates-v2.yml --limit 50 \
+                  --json headSha,conclusion,url --jq "[.[]|select(.headSha==\"$HEAD_SHA\" and .conclusion==\"failure\")][0].url" 2>/dev/null || echo "unknown")
+                CTX="LDR->main promote PR #$PR_NUM (head ${HEAD_SHA:0:8}) blocked on a genuine quality-gates-v2 FAILURE, not a conflict. Run: ${V2_RUN_URL}. This promote PR will be superseded by a fresh attempt on the next */15 tick unless the underlying failure is fixed on live-defi-rollout."
+                PAYLOAD=$(jq -n --arg ctx "$CTX" --arg pr "$PR_NUM" \
+                  '{event_type:"escalate-to-orchestrator",client_payload:{repo:"unified-trading-pm",pr_number:$pr,wall_type:"ldr_main_qg_failure",context:$ctx,authoring_slot:"ldr-to-main-promote"}}')
+                printf '%s' "$PAYLOAD" | GH_TOKEN="$GH_PAT_FOR_ARM" gh api -X POST "repos/$OWNER/unified-trading-pm/dispatches" --input - \
+                  && echo "  dispatched ldr_main_qg_failure escalation for PR #$PR_NUM" \
+                  || echo "::warning::ldr_main_qg_failure escalation dispatch failed for PR #$PR_NUM (non-fatal)"
+              fi
             fi
           elif [ "$MSTATE" = "dirty" ]; then
             # ── L146 inline forward-drain reconcile (promotion_queue_conflict_wall_pileup_2026_06_17): ──
