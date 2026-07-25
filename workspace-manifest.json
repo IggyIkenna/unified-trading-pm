@@ -529,10 +529,10 @@
       ],
       "notes": "Consolidated features service — 8 features-* repos merged as sub-packages (calendar/commodity/cross_instrument/delta_one/multi_timeframe/onchain/sports/volatility) under features_service.<family>. ONE Docker image parameterised by --feature-family CLI flag, ONE flat pyproject.toml, ONE Health-API endpoint exposing per-family freshness. New UAC schema column feature_family added 2026-05-08 (Phase 1A). Consolidation plan: plans/active/features_repo_consolidation_2026_05_08.md. Phase 7 archival complete 2026-05-08: the 8 source repos are archived read-only on GitHub with DEPRECATION_NOTICE.md banners and carry status=consolidated-into-features-service + archived_into=features-service + archive_date=2026-05-08 in this manifest. New work / bug fixes go to features-service/features_service/<family>/.",
       "codebase_health": {
+        "large_file_count": 0,
+        "coverage_pct": 85.57,
         "warn_file_count": 14,
-        "qg_red_reason": null,
-        "coverage_pct": 85.56,
-        "large_file_count": 0
+        "qg_red_reason": null
       },
       "ldr_ci_status": "GREEN"
     },
@@ -760,10 +760,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "large_file_count": 8,
         "warn_file_count": 9,
-        "qg_red_reason": null,
-        "coverage_pct": null
+        "coverage_pct": 90.85,
+        "large_file_count": 8,
+        "qg_red_reason": null
       }
     },
     "market-data-processing-service": {
@@ -1301,9 +1301,9 @@
       "ldr_ci_status": "GREEN",
       "codebase_health": {
         "large_file_count": 0,
+        "coverage_pct": null,
         "warn_file_count": 0,
-        "qg_red_reason": null,
-        "coverage_pct": 73.08
+        "qg_red_reason": null
       }
     },
     "unified-trading-api": {
