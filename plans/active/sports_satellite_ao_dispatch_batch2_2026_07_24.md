@@ -638,15 +638,17 @@ source: >-
 
 ### From `issues/mdt_legacy_canonical_row_gap_2026_07_16.md`
 
-- [ ] [DATA] P1. **32-day legacy→canonical MDT row recovery (5-step ordered sequence, one worker, execute in order —
-      this is one recovery procedure, not 5 independent jobs).** (1) READ-ONLY: re-derive the ~32 gap days by whole-day
-      KEY-LEVEL containment (legacy tick keys − canonical tick keys) over the candidate window (2022-09-07..2022-10-01
-      dominant + a handful of 2023/2025 days) — do NOT inherit the banner's day-list, confirm it; expect ~32 days /
-      550,062 legacy-only keys (524,486 pre-match + 25,576 in-play) / ~2,081 objects. (2) BUILD: per confirmed gap day,
-      read legacy old-shape objects → extract canonical-absent keys → derive canonical segments via
-      `build_instrument_id` (the already-validated 100.0000% derivation map — do NOT re-derive) → split pre-match vs
-      in-play by kickoff time → MERGE (never overwrite — canonical holds `bookmaker_key`/`fixture_id`/`available_at`
-      legacy lacks) → de-dup on the poll key `(event,market,outcome,bm_time,price)` → stamp `available_at` via
+- [x] ✅ **ABANDONED 2026-07-25 (operator ruling, deliberate) — source bucket deleted before STEP 1 ran, data
+      unrecoverable; see `issues/mdt_legacy_bucket_deleted_before_recovery_2026_07_25.md`.** [DATA] P1. **32-day
+      legacy→canonical MDT row recovery (5-step ordered sequence, one worker, execute in order — this is one recovery
+      procedure, not 5 independent jobs).** (1) READ-ONLY: re-derive the ~32 gap days by whole-day KEY-LEVEL containment
+      (legacy tick keys − canonical tick keys) over the candidate window (2022-09-07..2022-10-01 dominant + a handful of
+      2023/2025 days) — do NOT inherit the banner's day-list, confirm it; expect ~32 days / 550,062 legacy-only keys
+      (524,486 pre-match + 25,576 in-play) / ~2,081 objects. (2) BUILD: per confirmed gap day, read legacy old-shape
+      objects → extract canonical-absent keys → derive canonical segments via `build_instrument_id` (the
+      already-validated 100.0000% derivation map — do NOT re-derive) → split pre-match vs in-play by kickoff time →
+      MERGE (never overwrite — canonical holds `bookmaker_key`/`fixture_id`/`available_at` legacy lacks) → de-dup on the
+      poll key `(event,market,outcome,bm_time,price)` → stamp `available_at` via
       `unified_trading_library.availability_stamping.stamp_available_at_odds_snapshot(df, source="odds_api")`. (2b)
       IN-PLAY QUARANTINE (per the already-ruled OR-5b(c) mechanism — execution, not a design choice): in-play rows land
       under a non-`ticks.parquet` filename with a distinct `data_type=` segment, `pipeline_mode` unchanged
