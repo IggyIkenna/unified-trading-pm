@@ -134,3 +134,16 @@ another idle slot (only removes the offending slot from consideration for that o
 landing commit for the `messari_basic` query fix in `market-tick-data-service`). Skipped again with the same reasoning;
 main (`agt-52bb99`) confirmed the ruling live and directed this note rather than a re-investigation. Root cause (item 1
 above) is still unfixed as of this note.
+
+## 2026-07-25 recurrence note (slot 6, third bounce)
+
+Bounced again — slot 6 was dispatched `defi_dex_pool_symbol_fix_backfill_purge_finalize-001` fresh (no prior task
+history in this session). Independently re-verified before finding this doc: read the parent plan
+(`defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md`), confirmed all 5 todos still `- [ ]`; read
+`market-tick-data-service/market_tick_data_service/cli/handlers/dex_pools_handler.py` directly and confirmed
+`_CURVE_QUERY`/`_CURVE_QUERY_FILTERED` (the query used by `curve`/`sushiswap`/`velodrome_v2`/`trader_joe_v2` via the
+`messari_basic` protocol-table entry) still have no `inputTokens` field, and the protocol table still maps all four to
+`_parse_curve`, not `_parse_messari_dex` — the BACKEND query-fix todo has not shipped, confirming the checkbox state is
+accurate, not stale. Declining to flip any of the 3 referencing docs per this issue's existing recommendation A.
+Skipping this task rather than re-filing a duplicate `/blocked` (BLK-0d30dec1 already covers the question and already
+has main's answer). Root cause (item 1 above) is still unfixed as of this note.
