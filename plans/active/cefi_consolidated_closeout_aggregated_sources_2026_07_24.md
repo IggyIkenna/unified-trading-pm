@@ -168,7 +168,7 @@ drift_direction: advance-code
     - 16. **[DATA] P1.** Root-cause + close the candle object↔manifest disconnect so skip-if-fresh can be trusted
           post-migration.
 - **Coverage / backfill / VM ops**:
-  - [`plans/active/issues/aster_capture_broken_coverage_and_completeness_2026_07_20.md`](/plans/active/issues/aster_capture_broken_coverage_and_completeness_2026_07_20.md)
+  - [`plans/archive/issues/aster_capture_broken_coverage_and_completeness_2026_07_20.md`](/plans/archive/issues/aster_capture_broken_coverage_and_completeness_2026_07_20.md)
     — 0 open todos (status: open, narrative finding doc — no checkbox-tracked items, see file for recommended fix).
   - [`plans/active/aster_and_cefi_rolling_adv_feature_2026_07_21.md`](/plans/active/aster_and_cefi_rolling_adv_feature_2026_07_21.md)
     (status: active)

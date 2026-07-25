@@ -213,7 +213,7 @@ source: >-
   self-referential, its own Track 3/Track 4 have zero checkboxes at all, so it's genuinely NOT self-covering unlike
   sports'/tradfi's/prediction's master docs; real satellite orphan count is **29**), **7 `archivable_now`** (real,
   independently-verified-done docs sitting un-archived — `cefi_consolidated_closeout_aggregated_sources_2026_07_24.md`,
-  `issues/aster_capture_broken_coverage_and_completeness_2026_07_20.md`,
+  `plans/archive/issues/aster_capture_broken_coverage_and_completeness_2026_07_20.md`,
   `issues/cefi_deribit_combo_and_okx_bare_venue_gaps_2026_07_12.md`,
   `issues/cefi_okx_margin_type_wire_key_ambiguity_reclassification_2026_07_22.md`,
   `issues/deployment_api_cefi_venue_canonical_compare_test_regression_2026_07_21.md`,

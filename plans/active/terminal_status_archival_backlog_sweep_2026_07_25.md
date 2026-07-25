@@ -280,3 +280,17 @@ For the named doc:
 
 None at authoring time — every violation the gate found is enumerated above. If step 1's re-verification fails for any
 item, it becomes a `BLOCKED-OPERATOR-DECISION` Progress Log entry (see Procedure step 1), not a silent skip.
+
+## Progress Log
+
+- 2026-07-25 (slot-7): Todo 2 (`aster_capture_broken_coverage_and_completeness_2026_07_20.md`) archived — resolution
+  re-verified (all 4 cited SHAs reachable: `execution-service@e11e6a136`, `unified-trading-pm@12b0d9db8`,
+  `market-tick-data-service@d8efc6d6`, `market-tick-data-service@a7f7769a`), banner added, moved to
+  `plans/archive/issues/`, `check_terminal_status_archived.py` confirmed clean. Step 4 (corpus-wide referrer fixup)
+  completed for 5 of 6 referrers. **One referrer left un-fixed**:
+  `plans/active/issues/sports_shard_enumeration_cartesian_blowup_2026_07_20.md` (its `related:` frontmatter still points
+  at the old `plans/active/issues/...` path) — that file is 1216 lines, already over the 1000L hard line-cap
+  (pre-existing, unrelated to this edit), and `check_line_caps.sh`'s scoped pre-commit check refuses ANY staged commit
+  touching an over-cap file (by design, no exceptions — see the script's own comments). Fixing the referrer requires
+  first splitting that doc under the cap, which is out of scope for a single-line path fix. Leaving as a known, tracked
+  gap rather than blocking this archival or bypassing the gate.
