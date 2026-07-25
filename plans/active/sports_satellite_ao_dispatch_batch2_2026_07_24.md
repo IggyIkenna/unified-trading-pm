@@ -506,13 +506,29 @@ source: >-
       a manifest slice instead of per-date probes; consolidation-lag fallback implemented + documented; a regression
       test proves equivalent results to the old probe-based check; no independently-hardcoded duplicate path templates
       remain; quality-gates green. Source: `issues/sports_dependency_check_manifest_vs_gcs_path_2026_07_08.md`.
-- [ ] [DATA] P2. **Cached/batched fix for `sports_fixtures.py:356`** — this one needs fixture_id-level set membership
-      the manifest doesn't carry; replace the current one-GCS-call-per-(entity×league)-pair pattern with a cached
-      per-date or per-backfill-window parquet read of the real fixture-capture file. (repo: instruments-service
-      `instruments_service/reference_data/sports_fixtures.py` around line 356 — DIFFERENT file from the todo above, safe
-      to dispatch concurrently with it). **Done when**: the membership check no longer issues one GCS call per
-      (entity×league) pair; replaced with a cached per-date/per-window parquet read; a regression test proves
-      correctness matches the current per-pair GCS behavior; quality-gates green. Source:
+- [x] [DATA] P2. ✅ **Cached/batched fix for `sports_fixtures.py:356`** — `instruments-service@2be5698d`. The doc's
+      stated path (`instruments_service/reference_data/sports_fixtures.py`) was stale — the real file is
+      `instruments_service/engine/orchestrator/sports_fixtures.py`, and the actual per-(entity×league) primitive
+      (`_read_existing_per_league_fixture_ids`, called from
+      `sports_reference_fixtures.py::_read_captured_per_entity_league`) had ALREADY been fanned out concurrently by a
+      prior fix (`api_football_backfill_chronological_scan_never_reaches_pending_tail_2026_07_18.md`) — wall-clock was
+      already fixed, but call COUNT was unchanged (still up to ~4 entities × ~33 leagues individual `.exists()` probes).
+      No per-date consolidated parquet exists in the real storage layout (verified: each league is a genuinely separate
+      GCS object under `entity={entity}/league={L}/`), so a true single-read-per-date isn't achievable — the real
+      ceiling is per-ENTITY batching via the ALREADY-EXISTING shared helper `_read_per_league_entity_df` (same one used
+      to fix the other ~9 sites in this issue doc), which lists+downloads every league's data for one entity+date in a
+      single pass. Implemented as a new small cohesion module (`sports_fixture_prefetch_skip.py` — kept
+      `sports_reference_fixtures.py` under the 900-line ratchet) with `_read_captured_league_fixture_ids_for_entity()`
+      (batched per-entity read) + `_captured_fixture_ids_by_league()` (grouping helper); collapses call count from
+      O(entities × leagues) to O(entities) — up to ~132 individual `.exists()` probes down to `len(entities)` (typically
+      ≤4) `list_blobs` passes. Removed the now-dead `_read_existing_per_league_fixture_ids` (zero remaining callers,
+      confirmed via full-repo grep) + its 2 stale `__all__` exports. Rewrote the 2026-07-18 concurrency regression tests
+      (`TestGatherPerFixtureRowsBatchedPreFetchSkip`, was `...ConcurrentPreFetchSkip`) to prove the NEW invariant — 1
+      batched call per entity regardless of league count (not just wall-clock) — while preserving entity-level
+      concurrency coverage; added 3 new direct unit tests for the grouping/batched-read helpers (fid-column fallback,
+      no-blobs-found, transport-failure fail-safe-empty). Fixed 4 existing integration-test mock targets (facade path
+      changed with the module split). Full `quality-gates.sh` green (4880+ tests, 0 basedpyright errors beyond the
+      pre-existing warn-only ceiling, file-size ratchet clean). Source:
       `issues/sports_dependency_check_manifest_vs_gcs_path_2026_07_08.md`.
 
 ### From `issues/sports_legacy_duplicate_triage_2026_07_22.md`

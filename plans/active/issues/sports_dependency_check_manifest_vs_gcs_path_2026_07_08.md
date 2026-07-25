@@ -200,10 +200,12 @@ supposed to be the canonical, path-agnostic answer to "did this availability eve
       Prediction+Features+Reference set (matching `_fetch_fixture_ids_via_api`'s fallback-path scope) or whether
       `fixture_ids_override`'s real callers only ever pass fixture_ids that already have a working non-GCS league
       source, making this dead weight — real verification of which, before choosing a fix, is required.
-- [ ] [DATA] P2. **Design a separate, cached/batched fix for `sports_fixtures.py:356`** — this one needs
-      fixture_id-level set membership the manifest doesn't carry; likely a single per-date (or per-backfill-window)
-      parquet read of the real fixture-capture file, cached across the (entity × league) loop instead of one GCS call
-      per pair. (Out of scope for this pass — explicitly excluded per operator instruction.)
+- [x] [DATA] P2. ✅ **Cached/batched fix for `sports_fixtures.py:356`** — `instruments-service@2be5698d`. See
+      `sports_satellite_ao_dispatch_batch2_2026_07_24.md`'s corresponding todo for full evidence. Summary: no per-date
+      consolidated parquet exists in the real storage layout, so per-ENTITY batching (via the already-shared
+      `_read_per_league_entity_df` helper) is the real ceiling — collapses call count from O(entities × leagues) to
+      O(entities), split into a new `sports_fixture_prefetch_skip.py` cohesion module to stay under the 900-line
+      ratchet. Retired `_read_existing_per_league_fixture_ids` (dead after the swap). `quality-gates.sh` green.
 - [x] [SCRIPT] P3. **Remove the 2 confirmed-dead-code sites** (`weather.py:46` `_load_venue_coordinates`,
       `weather.py:87` `_extract_fixture_venue_ids`) — zero real callers, verified (full-repo grep, zero hits besides
       declaration/export). Removed + their dedicated unit-test classes
