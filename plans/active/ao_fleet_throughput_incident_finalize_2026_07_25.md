@@ -50,12 +50,13 @@ sequential: true
       activity-log/Slack evidence still exists. **Done when**: all 3 todos' evidence independently re-verified,
       discrepancies (if any) logged in this doc's Progress Log. — VERIFIED 2026-07-25T05:45Z (slot 10, review), all 3
       hold. See Progress Log for full evidence.
-- [ ] [INFRA] P1. **Cross-check todo 2's dormant-slot finding against `ao_worker_context_lifecycle_gap_2026_07_25.md`.**
-      If the parent plan's audit found slots 13/14/15/0 dormant due to an intentional AutoSpawn concurrency cap (not a
-      bug), confirm that cap doesn't undermine the context-lifecycle plan's assumption that all working slots are
-      reachable by its new gate/directive logic — if the cap means some slots never actually run long enough to
-      accumulate the cross-task context carryover this plan complex was built for, note that explicitly (informational,
-      not a required code change). **Done when**: a one-paragraph cross-check note is added to this doc's Progress Log.
+- [x] ✅ [INFRA] P1. **Cross-check todo 2's dormant-slot finding against
+      `ao_worker_context_lifecycle_gap_2026_07_25.md`.** If the parent plan's audit found slots 13/14/15/0 dormant due
+      to an intentional AutoSpawn concurrency cap (not a bug), confirm that cap doesn't undermine the context-lifecycle
+      plan's assumption that all working slots are reachable by its new gate/directive logic — if the cap means some
+      slots never actually run long enough to accumulate the cross-task context carryover this plan complex was built
+      for, note that explicitly (informational, not a required code change). **Done when**: a one-paragraph cross-check
+      note is added to this doc's Progress Log.
 - [ ] [INFRA] P2. **Run the standard 6-step archival ritual** on `ao_fleet_throughput_incident_2026_07_25.md`: migrate
       any DEFERRED items into new tracked todos, add a `> **🟢 ARCHIVED**` banner, run the codex-alignment check (does
       any `/codex/05-infrastructure/vm-launcher-runbook.md` or orchestrator-alerting doc need updating given todo 1's
@@ -101,3 +102,15 @@ sequential: true
     scope. Left for whoever picks up the parent plan's remaining todo 4 (or a future finalize-plan revision) — not
     fabricated here since re-verifying "3" when the doc's real intent may have shifted to "4" is not this task's call to
     make unilaterally.
+
+- **2026-07-25 (slot-12)** — Todo 2 (cross-check): todo 2's finding was NOT that slots 13/14/15/0 are excluded by an
+  intentional cap (that was the plan's hypothesis going in) — the actual audit result was slot 0 alone is intentionally
+  excluded (`status: paused`), while 13/14/15 were a genuine BUG (unfair ascending-slot_id tie-break under the
+  `ORCHESTRATOR_FLEET_WORKER_CAP=8` fleet cap), now fixed (`agent-orchestrator@18d8538`) with a round-robin
+  least-recently-attempted tie-break. This does NOT undermine `ao_worker_context_lifecycle_gap_2026_07_25.md`'s
+  assumption — if anything it STRENGTHENS the case for that plan: previously-starved high-numbered slots (13/14/15) now
+  also rotate INTO active service and accumulate the same persistent-session, multi-task-without-reset pattern the
+  context-lifecycle plan's gate/directive logic protects against, rather than sitting permanently idle and exempt from
+  it. The fleet cap itself (8 concurrent workers) is unchanged and still bounds how many slots run AT ONCE, but which
+  slots take turns is now fair — so the context-gate logic's reach (every currently-dispatched slot, regardless of
+  slot_id) is unaffected by the fix; it was never scoped to "only the historically-busy slots" in the first place.

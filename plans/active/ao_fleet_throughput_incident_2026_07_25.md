@@ -104,8 +104,8 @@ sequential: true
       `quality-gates-v2 → escalate-to-orchestrator` YAML/shell validated via `actionlint` (clean) locally; live
       confirmation is the remaining half of this todo's "Done when", left open for the next genuine occurrence rather
       than fabricating a synthetic failure to force one.
-- [ ] [REVIEW] P1. **Post-fix live re-verification against the same baseline.** Re-run the same read-only telemetry pull
-      this plan's `source` field describes (`GET /api/state`, `GET /api/backlog`, `GET /api/activity`,
+- [x] [REVIEW] P1. ✅ **Post-fix live re-verification against the same baseline.** Re-run the same read-only telemetry
+      pull this plan's `source` field describes (`GET /api/state`, `GET /api/backlog`, `GET /api/activity`,
       `GET /api/escalations/active` via the read-only SSM pattern in
       `agent-orchestrator/scripts/orchestrator/check-ao-backlog-status.sh` — READ-ONLY, do not restart or mutate
       anything on the VM) against the live orchestrator VM (`i-0c9b283b31d6b5ca7`, `ap-northeast-1`) after the prior
@@ -196,3 +196,45 @@ sequential: true
   `tests/test_autospawn.py::test_tick_rotates_through_idle_slots_when_chronically_at_cap` (3 equal slots, budget=1/tick
   × 2 ticks → the second tick must pick a DIFFERENT slot than the first) + full `tests/test_autospawn.py` suite (105/105
   pass).
+
+- **2026-07-25T06:04Z (slot-12)** — Todo 4: live re-verification against the plan's baseline, via the running
+  orchestrator's local API (this VM IS the orchestrator host — `ORCHESTRATOR_VM_ROLE=planning`) + `gh` + `journalctl`.
+  Confirmed the fix (`agent-orchestrator@18d8538`) is live in the running process (server HEAD `4dfa759` is a descendant
+  of `18d8538`, ~24min of live runtime at check time).
+
+  (a) **Active-slot fraction**: `GET /api/state` shows 7/17 slots `tmux_alive=true` right now (vs. the plan's baseline
+  working=5) — a modest improvement, NOT yet back to the operator's earlier-observed ~12/15. Backlog: 14 queued / 5
+  dispatched / 106 done — genuinely more throughput than the original incident snapshot (0 dispatched at the time).
+  Plausible explanation: several concurrent slots this session (2,3,11,12 + others) were actively shipping this same
+  plan + `ao_worker_context_lifecycle_gap_2026_07_25.md` throughout, which is real dispatched work, not idle capacity —
+  the fleet was never fully starved during this observation window the way it was at 04:35-04:52Z.
+
+  (b) **Slots 13/14/15/0**: still show `tmux_alive=false` / zero fresh `autospawn_succeeded`/`autospawn_failed`
+  activity-log rows since the fix went live (checked the full window 05:40Z→06:04Z). This is NOT a fix regression — a
+  DIFFERENT, legitimate mechanism (`idle_blocker_inferred` events, unrelated to `_run_one_tick`'s candidate ordering)
+  shows these 3 slots currently have 8-10 backlog tasks all blocked/ineligible for THEM specifically (role/target_slot
+  mismatches against the current `sports_satellite_ao_dispatch_batch2-*` queue shape), i.e. `_slots_with_claimable_task`
+  correctly excludes them right now — there is genuinely no claimable work for these slots in the CURRENT queue,
+  independent of fairness ordering. The round-robin fix only guarantees fairness AMONG slots that both have claimable
+  work AND are otherwise eligible; it can't manufacture claimable work that doesn't exist. Slot 0 remains intentionally
+  `paused` (unchanged, confirmed still excluded via `_slot_is_configured`). This is a genuinely different, weaker signal
+  than "the fix didn't work" — the fix has simply not yet been exercised because no fresh
+  chronic-cap-with-eligible-tail-slot episode has recurred to trigger it; the regression test proves the mechanism works
+  in isolation (todo 2's evidence).
+
+  (c) **Fresh branch-quarantine episode**: none occurred naturally in the observation window (checked
+  `journalctl`/activity for `quarantine`/`autospawn_failed` events after 05:40Z — none found). Nothing to verify by
+  natural recurrence; deliberately did NOT induce a synthetic quarantine on the live prod orchestrator to force one (per
+  this todo's own "if one occurs naturally, or induced in a **test env**" framing — prod is not a test env). Todo 1's
+  finding (the alert mechanism itself works, confirmed via 3 independent real fires earlier) stands as the best
+  available evidence.
+
+  (d) **`check_doc_body_links` promote-escalation fix**: no open `chore(promote): LDR → main` PR exists right now to
+  observe (none currently blocked); `main` is 61 commits behind `live-defi-rollout` (1 ahead) as of this check — a
+  promote PR should auto-open on the next `*/15` tick. Same "not yet exercised, nothing to disprove" state as (c) — the
+  additive `V2_FAILED` check (`unified-trading-pm@3e4c73436`, re-verified line-for-line by the finalize plan's todo 1)
+  is live and byte-confirmed correct; awaiting a genuine future v2 failure on a promote PR head to observe the dispatch
+  fire end-to-end.
+
+  **Overall verdict**: partial recovery confirmed (throughput up, backlog draining), (b)/(c)/(d) genuinely
+  not-yet-observable rather than failed, no regression found in any of the 3 shipped fixes.
