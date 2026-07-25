@@ -153,8 +153,9 @@ fix. No behavior change to the actual build (bash never executed these comments)
 - [x] ✅ [INFRA] P1. Fix `execution-service/cloudbuild.yaml` line 278 (bare `$VERSION` in comment → `$$VERSION`) + run
       the exhaustive re-scan above to confirm zero remaining. Ship via quickmerge. (repo: execution-service) —
       execution-service@6ae9c71b, exhaustive re-scan confirmed zero remaining bare substitutions.
-- [ ] [INFRA] P1. Fix `features-service/cloudbuild.yaml` lines 94, 270 (bare `$VERSION` in comments → `$$VERSION`) + run
-      the exhaustive re-scan above to confirm zero remaining. Ship via quickmerge. (repo: features-service)
+- [x] ✅ [INFRA] P1. Fix `features-service/cloudbuild.yaml` lines 94, 270 (bare `$VERSION` in comments → `$$VERSION`) +
+      run the exhaustive re-scan above to confirm zero remaining. Ship via quickmerge. (repo: features-service) —
+      features-service@a2251e63, exhaustive re-scan confirmed zero remaining bare substitutions.
 - [x] ✅ [INFRA] P1. Fix `fund-administration-service/cloudbuild.yaml` line 238 (bare `$VERSION` in comment →
       `$$VERSION`) + run the exhaustive re-scan above to confirm zero remaining. Ship via quickmerge. (repo:
       fund-administration-service) — fund-administration-service@b62d896, exhaustive re-scan confirmed zero remaining
