@@ -154,7 +154,17 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
 - [ ] [REVIEW] P2. Once the above BACKEND todo ships (or a subsequent SIGABRT does show a dump), read it and report the
       stuck call site per this issue's original ask — confirm/refute the `_compute_inventory` cold-path hypothesis from
       the sibling `deployment_registry_reaper_not_draining_stale_entries_2026_07_24.md` Gap-2 finding. (repo:
-      deployment-api)
+      deployment-api) — **Checked 2026-07-25T06:23Z (slot 2)**: `agent-orchestrator@7ba17e2`'s fix IS live — confirmed
+      via content-diff (not ancestry — this session's own methodology lesson from the sibling
+      `deployment_promote_squash_ancestry_false_negative_2026_07_25.md`): `origin/main`'s `gunicorn.conf.py` is
+      byte-identical to the fix commit, promoted via `2efbbcb` at `06:05:45Z`. Cloud Run revision
+      `uts-shared-deployment-api-00275-7zl` (built `06:14:00Z`, confirmed serving 100% traffic) carries it.
+      `gcloud     logging read` for `"Uncaught signal"` scoped to that exact revision: **zero occurrences** — not
+      surprising, only 9 minutes elapsed since deploy vs. the measured ~20-40min crash cadence, not yet a stall. Not
+      completable this turn (the trigger event — the next SIGABRT — hasn't happened yet, not a blocker to resolve).
+      Released via `/skip-current-task`. Next dispatch: re-run the same `gcloud logging read` scoped to revision
+      `00275-7zl`; once a SIGABRT appears, pull the `stderr` stream ±5min around it and read the
+      `Fatal Python error`/`Current thread` dump for the stuck call site.
 
 ## Progress Log
 

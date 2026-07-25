@@ -17,7 +17,7 @@ summary: >-
   overall repo drift counts, not to "is this specific commit's content live" checks — which is the far more common thing
   a reviewer actually needs to verify, and where this session's agents (including this one, initially) kept reaching for
   the wrong recipe.
-status: open
+status: resolved
 nature: issue
 asset_group: [meta]
 stage: [meta]
@@ -42,7 +42,7 @@ depends_on: []
 locked_by:
 locked_since:
 assigned_vm: planning
-resolved_by:
+resolved_by: unified-trading-pm@93ca33d
 ---
 
 # Squash-merge breaks naive SHA-ancestry "is it live" checks (2026-07-25)
@@ -102,7 +102,7 @@ content-diff alternative as the default recipe for THIS question shape.
 Fix in `unified-trading-pm/agents/review.md` and/or `RULES.md` — add the correct recipe as the DEFAULT for "is commit X
 live" checks, not just the aggregate-drift-count case already covered:
 
-- [ ] [DOCS] P2. In `unified-trading-pm/agents/review.md`'s "Evidence-backed completion" section (or a new subsection
+- [x] ✅ [DOCS] P2. In `unified-trading-pm/agents/review.md`'s "Evidence-backed completion" section (or a new subsection
       near it), add an explicit recipe for "is commit `<sha>` from repo `<r>`'s LDR history actually live on
       `main`/deployed" that does NOT rely on `git merge-base --is-ancestor <sha> origin/main` alone. Recommended recipe:
       (a) identify the specific file(s)/lines the fix touches; (b) `git show origin/main:<path>` and grep for the fix's
@@ -112,11 +112,11 @@ live" checks, not just the aggregate-drift-count case already covered:
       against the promote PR's `mergedAt` (`gh pr list --state merged --json mergedAt,number`) to confirm the deploy
       happened AFTER (not before) the relevant squash-merge. Explicitly call out that an unchanged image tag/revision
       name across two checks does NOT imply "still not deployed" — it can mean "deployed once, no NEWER promote since,"
-      which is functionally different. (repo: unified-trading-pm)
+      which is functionally different. (repo: unified-trading-pm) — unified-trading-pm@93ca33d (see Progress Log).
 - [x] ✅ [DOCS] P3. Cross-check which OTHER repos use the same "Option-B direct" squash-merge promote mode (grep
       `.github/workflows/` or the fleet promote workflow's repo list in `unified-trading-pm` for `ldr_main` /
       "Option-B") vs a merge-commit-preserving mode — if the split is meaningful, note in
-      `codex/08-workflows/ci-cd-flow.md` which mode applies where, so a reviewer knows up front whether the ancestor
+      `/codex/08-workflows/ci-cd-flow.md` which mode applies where, so a reviewer knows up front whether the ancestor
       check is even valid for a given repo. (repo: unified-trading-pm) — unified-trading-pm@1b6fdc147 (see Progress
       Log).
 - [x] ✅ [REVIEW] P3. Sweep currently-open plans/issue docs for other "confirm `<repo>@<sha>` is live" todos phrased
@@ -125,6 +125,18 @@ live" checks, not just the aggregate-drift-count case already covered:
       unified-trading-pm) — SWEPT 2026-07-25T06:00Z (slot 10, review). See Progress Log for the full sweep + findings.
 
 ## Progress Log
+
+- **2026-07-25T06:15Z (slot 6, infra)** — Shipped todo 1 (`unified-trading-pm@93ca33d`): added item 5 under
+  `review.md`'s "Evidence-backed completion" QG-flow-defects list — the "is commit `<sha>` live" content-diff recipe
+  (file/marker diff via `git show origin/main:<path>` + grep, cross-referenced against `gcloud run revisions describe`
+  vs the promote PR's `mergedAt`), explicitly naming that `git merge-base --is-ancestor` alone is invalid for any
+  squash-merge-promoted repo and that an unchanged image tag does not imply "still not deployed." All 3 todos in this
+  doc are now shipped; marking resolved. Note: shipping this hit sustained heavy `unified-trading-pm` doc-push
+  contention (10+ lost sentinel races on `check-branch-drift`, matching the known
+  `quickmerge_sentinel_race_retry_storm_under_pm_doc_push_contention_2026_07_21.md` throughput issue) — the push
+  actually landed on an earlier attempt than my bounded-retry script detected (its "Landed on live-defi-rollout" grep
+  missed the actual success line), so double-check `git log -- <path>` on origin directly rather than trusting a
+  retry-wrapper's pass/fail verdict under this kind of contention.
 
 - **2026-07-25T05:52Z (slot 4, review)** — Shipped todo 2 (`unified-trading-pm@1b6fdc147`). Cross-checked every promote
   path's merge-arm step: `workspace-manifest.json` shows all 24 non-PM repos are `promotion_model: ldr_main` today (none
@@ -136,7 +148,7 @@ live" checks, not just the aggregate-drift-count case already covered:
   check is "sometimes" valid there, never guaranteed. Net: the split IS meaningful (direct-fleet promote = always squash
   = ancestor check always invalid; staging-routed = rebase-first = sometimes valid) but has zero practical effect right
   now since 100% of repos are `ldr_main` direct — documented the table + the caveat in
-  `codex/08-workflows/ci-cd-flow.md` § "Which repos squash vs. rebase on promote". Did not touch `agents/review.md`
+  `/codex/08-workflows/ci-cd-flow.md` § "Which repos squash vs. rebase on promote". Did not touch `agents/review.md`
   (todo 1, separate task, not yet dispatched to this slot). (Correction: the codex commit's SHA was rewritten by a
   `git pull --rebase --autostash` needed to reconcile branch drift before this flip could push — first cited
   `1ed215b31`, corrected here to the actually-reachable `1b6fdc147`.)

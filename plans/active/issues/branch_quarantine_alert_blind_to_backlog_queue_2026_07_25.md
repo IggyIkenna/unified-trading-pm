@@ -9,7 +9,7 @@ repos: [agent-orchestrator]
 scope: [engineer]
 tags: [orchestrator, autospawn, alerting, branch-quarantine]
 created: "2026-07-25"
-source: [/plans/active/ao_fleet_throughput_incident_2026_07_25.md]
+source: [/plans/archive/2026_07/ao_fleet_throughput_incident_2026_07_25.md]
 assigned_vm: planning
 summary: >-
   The branch-quarantine STARVATION Slack alert (`notify_slot_quarantined`) only checks queued CI-escalation walls

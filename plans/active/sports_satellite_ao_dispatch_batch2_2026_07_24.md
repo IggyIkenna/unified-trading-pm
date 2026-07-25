@@ -335,14 +335,23 @@ source: >-
       the new `[DATA] P2` todo below. **Separate finding filed, NOT part of this todo's scope**:
       `compute_odds_batch()`'s dead-code `bookmaker_home_cols` path silently overwrites `best_odds_*` with a mean
       instead of the correct max — see `issues/fss_bookmaker_dispersion_dead_code_overwrites_best_odds_2026_07_25.md`.
-- [ ] [DATA] P2. **PIT horizon-gating gap for the new `odds_decimal_<outcome>_<venue>` columns** (found while shipping
-      the todo above): `feature_expectations.py`'s `ODDS_COLUMNS` registry drives PIT horizon-gating
+- [x] ✅ [DATA] P2. **PIT horizon-gating gap for the new `odds_decimal_<outcome>_<venue>` columns** (found while
+      shipping the todo above): `feature_expectations.py`'s `ODDS_COLUMNS` registry drives PIT horizon-gating
       (`apply_horizon_gate()`), which only walks a fixed column list — the new dynamic per-venue columns aren't in it
       and so bypass PIT gating entirely (there's no schema allowlist blocking them at the parquet-write boundary either,
       so they DO reach output — just ungated). Add a pattern-match (e.g. `startswith("odds_decimal_")`) to
       `apply_horizon_gate()`/`get_column_horizons()` so these get the same leak protection as every other odds field.
       Add a regression test proving a T-24h row's `odds_decimal_*` doesn't leak a later horizon's value. (repo:
-      features-service)
+      features-service) — features-service@daa373bd. Extended `apply_horizon_gate()` to pattern-match the
+      `odds_decimal_` prefix, gating those dynamic columns at the same horizon as the static "odds" group (read from the
+      registry via `_ALWAYS_FULL_GROUPS["odds"][1]`, not duplicated, so a future change to the odds group's horizon
+      stays in sync automatically) — `get_column_horizons()` itself stays a static SSOT dict (unchanged contract for
+      downstream consumers); the dynamic extension happens only inside the sports `apply_horizon_gate()` wrapper, which
+      has the live `df.columns` needed to pattern-match. 2 regression tests: one confirming the columns survive gating
+      at T-24h (their real home horizon); one monkeypatching a later horizon and confirming the column then gets NaN'd,
+      proving the wiring is genuinely real rather than coincidentally matching the untouched-metadata path. Session
+      survived a mid-task session death (this exact fix was lost and had to be reapplied byte-for-byte before shipping —
+      verified via git status showing a clean tree post-resume). `quality-gates.sh` green.
 - [x] ✅ [DATA] P1. **Rename UAC's `OddsFeaturesMixin`/`SportsFeatureVector` fields** — unified-api-contracts@689efa54 +
       ml-service@91f031a. All 49 fields renamed to the decided scheme, grounded in `features-service`'s actual
       calculator output (`odds_calculator.py`/`odds_velocity.py`) and live consumers, not a blind find-replace — several
@@ -497,13 +506,29 @@ source: >-
       a manifest slice instead of per-date probes; consolidation-lag fallback implemented + documented; a regression
       test proves equivalent results to the old probe-based check; no independently-hardcoded duplicate path templates
       remain; quality-gates green. Source: `issues/sports_dependency_check_manifest_vs_gcs_path_2026_07_08.md`.
-- [ ] [DATA] P2. **Cached/batched fix for `sports_fixtures.py:356`** — this one needs fixture_id-level set membership
-      the manifest doesn't carry; replace the current one-GCS-call-per-(entity×league)-pair pattern with a cached
-      per-date or per-backfill-window parquet read of the real fixture-capture file. (repo: instruments-service
-      `instruments_service/reference_data/sports_fixtures.py` around line 356 — DIFFERENT file from the todo above, safe
-      to dispatch concurrently with it). **Done when**: the membership check no longer issues one GCS call per
-      (entity×league) pair; replaced with a cached per-date/per-window parquet read; a regression test proves
-      correctness matches the current per-pair GCS behavior; quality-gates green. Source:
+- [x] [DATA] P2. ✅ **Cached/batched fix for `sports_fixtures.py:356`** — `instruments-service@2be5698d`. The doc's
+      stated path (`instruments_service/reference_data/sports_fixtures.py`) was stale — the real file is
+      `instruments_service/engine/orchestrator/sports_fixtures.py`, and the actual per-(entity×league) primitive
+      (`_read_existing_per_league_fixture_ids`, called from
+      `sports_reference_fixtures.py::_read_captured_per_entity_league`) had ALREADY been fanned out concurrently by a
+      prior fix (`api_football_backfill_chronological_scan_never_reaches_pending_tail_2026_07_18.md`) — wall-clock was
+      already fixed, but call COUNT was unchanged (still up to ~4 entities × ~33 leagues individual `.exists()` probes).
+      No per-date consolidated parquet exists in the real storage layout (verified: each league is a genuinely separate
+      GCS object under `entity={entity}/league={L}/`), so a true single-read-per-date isn't achievable — the real
+      ceiling is per-ENTITY batching via the ALREADY-EXISTING shared helper `_read_per_league_entity_df` (same one used
+      to fix the other ~9 sites in this issue doc), which lists+downloads every league's data for one entity+date in a
+      single pass. Implemented as a new small cohesion module (`sports_fixture_prefetch_skip.py` — kept
+      `sports_reference_fixtures.py` under the 900-line ratchet) with `_read_captured_league_fixture_ids_for_entity()`
+      (batched per-entity read) + `_captured_fixture_ids_by_league()` (grouping helper); collapses call count from
+      O(entities × leagues) to O(entities) — up to ~132 individual `.exists()` probes down to `len(entities)` (typically
+      ≤4) `list_blobs` passes. Removed the now-dead `_read_existing_per_league_fixture_ids` (zero remaining callers,
+      confirmed via full-repo grep) + its 2 stale `__all__` exports. Rewrote the 2026-07-18 concurrency regression tests
+      (`TestGatherPerFixtureRowsBatchedPreFetchSkip`, was `...ConcurrentPreFetchSkip`) to prove the NEW invariant — 1
+      batched call per entity regardless of league count (not just wall-clock) — while preserving entity-level
+      concurrency coverage; added 3 new direct unit tests for the grouping/batched-read helpers (fid-column fallback,
+      no-blobs-found, transport-failure fail-safe-empty). Fixed 4 existing integration-test mock targets (facade path
+      changed with the module split). Full `quality-gates.sh` green (4880+ tests, 0 basedpyright errors beyond the
+      pre-existing warn-only ceiling, file-size ratchet clean). Source:
       `issues/sports_dependency_check_manifest_vs_gcs_path_2026_07_08.md`.
 
 ### From `issues/sports_legacy_duplicate_triage_2026_07_22.md`
@@ -671,7 +696,10 @@ source: >-
       RUNNING since 03:22Z** (launched by slot 4, health-checked healthy by slot 11 at 04:18Z and again now — heartbeat
       fresh, no stall, now in the slower per-fixture event-loop phase covering 16,765 fixtures across 2019→2026-07-25).
       Genuinely hours from terminal; not completable in an AO turn. Full detail in the issue doc above — do not
-      re-dispatch a duplicate health-check within the next ~30min.
+      re-dispatch a duplicate health-check within the next ~30min. — **Health-checked 2026-07-25T06:43Z (slot 2)**:
+      still `RUNNING`, heartbeat 34s old, run.log grew 69,781→79,917 lines (+10,136) since the issue doc's 06:08Z check
+      (same doc, more detail there — this parent plan's todo and the issue doc both point at the same VM; resist the
+      urge to duplicate full detail in both). Released via `/skip-current-task`, not duplicate-launched.
 - [ ] [CODE] P2. **Writer-side de-dup + schema-conformance gate** so neither defect re-accrues — the `player_stats`
       writer rejects/dedupes rows on write; the `fixture_events` writer validates/enforces the canonical 13-col schema
       before accepting new objects. (repo: instruments-service `_writer_captured.py` row_count/effective_count logic +
@@ -713,12 +741,14 @@ source: >-
       abandon recovery (ruling 2026-07-25), data unrecoverable. Source:
       `issues/mdt_legacy_canonical_row_gap_2026_07_16.md`,
       `issues/mdt_legacy_bucket_deleted_before_recovery_2026_07_25.md`.
-- [ ] [DOC] P3. **File a new issue doc** for the standalone finding: "30/200 sampled canonical MDT objects carry
+- [x] ✅ [DOC] P3. **File a new issue doc** for the standalone finding: "30/200 sampled canonical MDT objects carry
       duplicate rows on the poll key (event, market, outcome, bm_time, price, fetch_utc), independent of the OR-5b
-      cutover." (The de-dup-on-write remediation itself is already folded into the recovery-sequence todo above's step 2
-      spec — this todo is only the standalone documentation action.) (repo: unified-trading-pm `plans/active/issues/` —
-      new doc, standard issue frontmatter). **Done when**: a new issue doc exists under `plans/active/issues/`
-      documenting the finding per standard lifecycle. Source: `issues/mdt_legacy_canonical_row_gap_2026_07_16.md`.
+      cutover." — `issues/mdt_canonical_odds_poll_key_duplicate_rows_2026_07_25.md`. Note: the recovery-sequence todo
+      above's step 2 dedup was scoped only to the abandoned 32-day recovery's own merged rows, never the wider
+      already-existing canonical population this finding covers, and that recovery is now itself ABANDONED (source
+      legacy bucket deleted before STEP 1 ran) — so the new doc adds 2 fresh `[DATA]` fix todos (root-cause + measure,
+      then de-dup if warranted) rather than treating remediation as already covered elsewhere. Source:
+      `issues/mdt_legacy_canonical_row_gap_2026_07_16.md`.
 
 ### From `issues/sports_league_id_namespace_migration_2026_07_20.md`
 

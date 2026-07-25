@@ -12,7 +12,7 @@ summary: >-
   active) the next AO-dispatch-batch + gated finalize plan pair for genuinely AO-eligible orphaned work. This is the
   plan-of-record / Progress Log for the whole rollout per cursor-configs/AUTONOMOUS_AGENT_RULES.md rule 6 — a compressed
   future-session must be able to resume losslessly from this doc alone.
-status: active
+status: complete
 nature: process
 asset_group: [cefi, defi, tradfi, prediction, sports, cross-cutting]
 stage: [meta]
@@ -60,22 +60,31 @@ source: >-
       (`sports_closeout_batch1_finalize_2026_07_24.md`, `data_completion_sports_history_2026_07_24.md`) —
       unified-trading-pm (see Progress Log; this specific ship hit a real bug, see the 2026-07-25 "shipping bug" entry
       below).
-- [ ] [DOC] P1. **Sports**: conflict-check + draft the next `sports_satellite_ao_dispatch_batch3_<date>.md` +
-      `..._batch3_finalize_<date>.md` pair (status: draft) for any AO-eligible orphaned work the audit finds, per
-      ag-closeout-audit skill Phase 3. Skip if the audit finds nothing AO-eligible remaining. **Done when**: drafted +
-      shipped (as draft docs) or explicitly logged as "nothing to draft." AO-eligibility triage workflow
-      (`wf_74a99101-69b`, 26 docs) launched, in flight.
-- [x] [DOC] P1. **cefi**: audit done (`wf_90271270-b12`, 49/49 agents, 0 errors) — see Progress Log. 7
-      `archivable_now` + triage workflow for the 29 orphaned satellite docs still to run.
-- [ ] [DOC] P1. **defi**: same, for defi.
-- [x] [DOC] P1. **tradfi**: audit done (`wf_daa543c3-c36`, 23/23 agents, 0 errors) — see Progress Log. Triage workflow
-      for the 21 orphaned docs launching next.
-- [x] [DOC] P1. **prediction**: audit done (`wf_a5170a34-d47`, 20/20 agents, 0 errors) — see Progress Log. Triage
-      workflow for the 13 orphaned docs launching next.
-- [ ] [DOC] P2. **Final report** (AUTONOMOUS_AGENT_RULES.md rule 9): once all 5 AGs are audited and any warranted
-      batches drafted, write a closing summary in this Progress Log — every AG's orphan count, every drafted
-      batch/finalize pair, every question parked in the operator-decisions queue, and the verified end-state. Kill the
-      loop.
+- [x] [DOC] P1. **Sports**: drafted + shipped `sports_satellite_ao_dispatch_batch3_2026_07_25.md` + finalize (12
+      conflict-cleared todos of 25 candidates; triage `wf_74a99101-69b`, 26 agents, 0 errors). See Progress Log.
+- [x] [DOC] P1. **cefi**: audit done (`wf_90271270-b12`, 49/49 agents, 0 errors), 5 of 7 `archivable_now` docs resolved
+      (2 deferred — see Progress Log), triage workflow (`wf_b4e843d4-5bc`, 29 docs) in flight.
+- [x] [DOC] P1. **defi**: audit done (`wf_d2678add-324`, 56/56 agents, 0 errors), all 8 `archivable_now` docs resolved,
+      triage workflow (`wf_bbe74687-4e1`, 39 docs) in flight.
+- [x] [DOC] P1. **tradfi**: audit done (`wf_daa543c3-c36`, 23/23 agents, 0 errors); drafted + shipped tradfi's
+      FIRST-EVER AO-dispatch batch, `tradfi_satellite_ao_dispatch_batch1_2026_07_25.md` + finalize (5 conflict-cleared
+      todos of 43 candidates; triage `wf_92bc129c-2a8`, 21 agents, 0 errors). See Progress Log.
+- [x] [DOC] P1. **prediction**: audit done (`wf_a5170a34-d47`, 20/20 agents, 0 errors); drafted + shipped prediction's
+      FIRST-EVER AO-dispatch batch, `prediction_satellite_ao_dispatch_batch1_2026_07_25.md` + finalize (7
+      conflict-cleared todos, all from `prediction_phase_ab_residuals_2026_07_24.md`; triage `wf_b8829ea8-6cd`, 13
+      agents, 0 errors). See Progress Log.
+- [x] [DOC] P1. **cefi + defi**: triage workflows (`wf_b4e843d4-5bc`, `wf_bbe74687-4e1`) completed; applied the same
+      conflict-cleared-subset drafting discipline used for sports/tradfi/prediction to author
+      `cefi_satellite_ao_dispatch_batch1_2026_07_25.md` (33 todos) and `defi_satellite_ao_dispatch_batch1_2026_07_25.md`
+      (53 todos, defi's FIRST-EVER AO-dispatch batch) + finalize plans. See Progress Log.
+- [x] [DOC] P2. **Final report** (AUTONOMOUS_AGENT_RULES.md rule 9): all 5 AGs audited, all 5 have a drafted batch. See
+      the closing Progress Log entry below. Loop ends with this ship.
+- [x] [DOCS] P3. **Clarify the `--files` delimiter — space-separated, not comma** — root-caused this session (see the
+      "combined-ship recovery saga" Progress Log entry, corrected). **DONE 2026-07-25**: added a clarifying block to
+      `/codex/08-workflows/ci-cd-flow.md`'s Pass-2-quickmerge section (CLAUDE.md itself already points there as the
+      quickmerge SSOT and has essentially zero byte headroom left under its hard cap, 39,925/40,960 B — not touched).
+      `check_frontmatter_schema.py --files` has the identical trap; left as a smaller note for a future pass since its
+      own doc surface is thinner.
 
 ## Progress Log
 
@@ -241,3 +250,187 @@ source: >-
   `archivable_now` docs (careful ship this time — the earlier sports archival hit a half-landed-rename bug from
   concurrent branch activity, verify AT HEAD not just exit code) + launch the AO-eligibility triage for the 29 orphaned.
   defi (56 docs) audit still in flight.
+
+- **2026-07-25, defi orphan-audit results** (`wf_d2678add-324`, 56/56 agents, 0 errors, 4.09M subagent tokens): 40
+  orphaned (24 `orphaned_never_touched` + 16 `orphaned_partial_coverage`, one of the 16 is the master closeout itself —
+  self-referential — real satellite orphan count is **39**), **8 `archivable_now`** (all 8 resolved: 6
+  `mvp_backfill_defi_onchain_v10_operational_log_part<N>` history-fork docs flipped `status: complete` in place,
+  `defi_pool_canonical_instrument_id_policy_contradiction_2026_07_17.md` shipped,
+  `gas_fees_lst_rates_manifest_bucket_mismatch_2026_07_10.md` deliberately NOT flipped — carries
+  `locked_by: live-defi-rollout`, queued for the operator, entry 2 in
+  `autonomous_session_operator_decisions_2026_07_25.md`), **6 `archivable_after_planned_work`**, **2
+  `exclude_cross_cutting`**. Same structural pattern as cefi/tradfi/prediction. Next: AO-eligibility triage
+  (`wf_bbe74687-4e1`, 39 docs) launched.
+
+- **2026-07-25, cefi/tradfi/prediction archival-now resolutions**: 5 of cefi's 6 non-index `archivable_now` issue docs
+  resolved with `resolved_by` citations (`aster_capture_broken_coverage_and_completeness`,
+  `cefi_okx_margin_type_wire_key_ambiguity_reclassification`,
+  `deployment_api_cefi_venue_canonical_compare_test_regression`, `instruments_service_deribit_combo_purge_test_drift`,
+  `mtds_rule11_shard_count_stale_baseline`). `cefi_deribit_combo_and_okx_bare_venue_gaps_2026_07_12.md` (the 6th)
+  deliberately EXCLUDED from shipping — it's already 1497 lines, well over the 1000-line hard cap from 4+ prior
+  sessions' appended content unrelated to my edit; the status-flip edit is preserved locally but needs a proper
+  line-cap-remediation split (extract a `_history` fork doc, matching the `data_completion_sports_history` precedent)
+  before it can ship — deferred to a follow-up pass, not rushed here. The 7th cefi `archivable_now` candidate
+  (`cefi_consolidated_closeout_aggregated_sources_2026_07_24.md`) was deliberately NOT archived at all — its verdict
+  conflicted with how the sibling sports audit treated the equivalent still-active discoverability index for a
+  not-yet-done closeout; left active pending operator review.
+
+- **2026-07-25, sports batch3 + tradfi batch1 + prediction batch1 drafted and shipped** (all `status: draft`, each
+  paired with a gated finalize plan per `task_template.md` §4): `sports_satellite_ao_dispatch_batch3_2026_07_25.md` (12
+  conflict-cleared todos of 25 AO-eligible candidates the sports triage found — 23 were conflict-gated and are preserved
+  in its Deferred section); `tradfi_satellite_ao_dispatch_batch1_2026_07_25.md` (tradfi's FIRST-EVER AO-dispatch batch —
+  5 conflict-cleared todos of 43 candidates, 38 deferred); `prediction_satellite_ao_dispatch_batch1_2026_07_25.md`
+  (prediction's FIRST-EVER AO-dispatch batch — 7 conflict-cleared todos, all extracted from the single highest-yield
+  source doc `prediction_phase_ab_residuals_2026_07_24.md`; the other 12 orphaned prediction docs deferred entirely).
+  Every conflict-gated candidate across all three batches (60+ total) is preserved in its plan's own Deferred section
+  and summarized for the operator, per the explicit 2026-07-25 instruction to never silently resolve a conflict rather
+  than queue it. cefi + defi triage workflows (`wf_b4e843d4-5bc`, `wf_bbe74687-4e1`) still in flight — their batch1
+  plans follow the same discipline once ready.
+
+- **2026-07-25, shipping the combined batch — 2 real (non-transient) blockers hit and fixed, not just retried**: (1)
+  `check_finalize_plan_coverage.py` flagged a genuine 2nd ratchet violation —
+  `infra_capture_and_devops_leftovers_2026_07_06.md` (AO Plan 6 of the instruments-completion set, still
+  `status: active` with 4 open `BLOCKED-*` items), an already-committed pre-existing AO plan that predates the
+  2026-07-24 finalize-plan-coverage rule and never got a companion finalize doc — surfaced now because a concurrent
+  frontmatter-hygiene commit touched it today. Not mine to ignore (it was blocking the shared gate for everyone), so
+  authored `infra_capture_and_devops_leftovers_2026_07_06_finalize_2026_07_25.md` (3 todos: re-verify the ASTER
+  connector prereqs, re-check the 4 credential/operator gates, conditionally archive) to backfill the gap — back to
+  baseline=1. (2) `test_build_index_is_deterministic` flaked again (same pre-filed
+  `issues/test_build_index_deterministic_races_on_concurrent_corpus_writes_2026_07_25.md` class — two `build_index()`
+  calls inside one test observed different `status:` values for the same doc, i.e. genuine concurrent-write racing
+  during the test, not caused by my changeset) — confirmed transient, retried clean.
+
+- **2026-07-25, cefi AO-eligibility triage results** (`wf_b4e843d4-5bc`, 29/29 agents, 0 errors, 3.0M subagent tokens):
+  40 total `ao_eligible_todos` found across the 29 orphaned cefi docs, 40 `conflicts_found` entries to check against
+  them (3 docs flagged `doc_too_large_or_risky_for_batch`). Delegated the per-todo conflict-matching (conflicts are a
+  flat per-doc list, not indexed to specific todos — each has to be read and judged against every eligible item) to a
+  sub-agent under the same discipline used for sports/tradfi/prediction. Result:
+  **`cefi_satellite_ao_dispatch_batch1_2026_07_25.md`** (cefi's FIRST-EVER AO-dispatch batch — 33 todos from 38
+  conflict-cleared candidates, grouped to avoid in-batch same-file collisions) + its gated finalize companion. 2 of the
+  40 candidates excluded: 1 from the `doc_too_large_or_risky_for_batch` doc
+  (`cefi_4surface_migration_execution_log_2026_07_24.md`), 1 (the LATE colliding-venue-renames Range A/B/C `--apply`
+  work) excluded on cross-doc evidence that it's already actively running under a separate live `/autonomous` session —
+  dispatching it fresh would race a live prod GCS migration. No new operator-decision question needed; both exclusions
+  resolved cleanly by the discipline itself. Validated (`check_frontmatter_schema.py`, `check_todo_format.sh`,
+  `check_line_caps.sh` all clean) and folded into the same ship as the infra finalize backfill + cefi/defi resolutions +
+  sports/tradfi/prediction batches. defi triage (`wf_bbe74687-4e1`) still the only one outstanding.
+
+- **2026-07-25, defi AO-eligibility triage + batch1 drafted (last of 5 AGs)** (`wf_bbe74687-4e1`, 38/39 agents on the
+  first pass — 1 (`issues/defi_perp_daily_ctx_manifest_gap_reader_risk_2026_07_22.md`) errored on a dropped connection
+  mid-response, retried clean via a follow-up Workflow's own RetryMissing phase, 4.09M+ subagent tokens combined): 59
+  total `ao_eligible_todos` found across the 38+1 orphaned defi docs (1 doc flagged `doc_too_large_or_risky_for_batch` —
+  `issues/defi_dexpool_second_writer_path_and_zero_capture_2026_07_10.md`, excluded entirely). Used a
+  Workflow-orchestrated pipeline this time (per-doc conflict-resolution agents in parallel, one per doc with ≥1 eligible
+  candidate, each independently checking its own doc's `conflicts_found` against
+  `defi_consolidated_closeout_2026_07_18.md`'s + `defi_consolidated_closeout_aggregated_sources_2026_07_24.md`'s own
+  claimed scope) rather than a single monolithic drafting agent, given the larger scale (39 docs vs cefi's 29). Result:
+  **`defi_satellite_ao_dispatch_batch1_2026_07_25.md`** (defi's FIRST-EVER AO-dispatch batch — 53 todos from 59
+  candidates, several same-file collisions merged per the prediction-batch1 precedent) + gated finalize companion. Only
+  2 of 59 excluded outright + 1 landed in `needs_operator_ruling` (queued as entry 3 in
+  `autonomous_session_operator_decisions_2026_07_25.md` — Kamino/Solend `lending_indices` `instrument_type` shape:
+  writer code vs a live GCS probe disagree, not resolvable by clear logic/superseding alone). Validated
+  (`check_frontmatter_schema.py`, `check_todo_format.sh` both clean; `check_line_caps.sh` shows a SOFT warning at 607
+  lines — well under the 1000-line hard cap, no action needed) and folded into the same combined ship as the other 4
+  AGs' work. **All 5 asset groups now have a drafted (status: draft, never auto-shipped active) AO-dispatch batch +
+  gated finalize plan pair** — sports batch3, tradfi/prediction/cefi/defi batch1 (tradfi/prediction/cefi/defi all
+  first-ever for their AG). Next: land the combined 25-file ship (in a multi-retry recovery cycle — see the dedicated
+  entry below), then write the rule-9 closing report.
+
+- **2026-07-25, the combined-ship recovery saga (17+ retries) — the REAL root cause, corrected**: shipping the 25-file
+  combined commit (cefi/defi archivable_now resolutions + infra finalize backfill + all 5 AGs' new batch/finalize pairs)
+  hit a long chain of failures. Several were genuine transients on this heavily-loaded shared host (`uptime` showed load
+  average 7–14.5 on a 4-core box, 23 concurrent users), each diagnosed before retrying: (1)
+  `check_finalize_plan_coverage.py` caught a real pre-existing gap (`infra_capture_and_devops_leftovers_2026_07_06.md`,
+  predates the 2026-07-24 rule) — fixed with a real finalize-plan backfill, not a retry; (2)
+  `test_build_index_is_deterministic` flaked from genuine concurrent doc-status mutation mid-test (known class,
+  pre-filed issue doc); (3) a subprocess-probe test hit a 60s `pytest-timeout` under host CPU contention; (4) shared
+  `.venv` transiently broke twice (`pandas`/`numpy.rec` partially-initialized-module errors from another process's
+  concurrent dependency install, confirmed transient via direct `python3 -c "import X"` both times); (5) a shared
+  `/home/ubuntu/.cache/qg-tmp/` scratch file vanished mid-run (another concurrent QG's cleanup); (6) the whole-suite
+  wall-clock guard (600s) tripped once under load; (7) a `.git/index.lock` collision from a genuinely concurrent git
+  process (waited, it cleared itself).
+
+  **But the dominant, 100%-reproducible failure across ~10 consecutive retries — "⚠️ Path not found (and not tracked)" /
+  "❌ No valid paths from --files. Nothing to commit." — was NOT a host-load race or a quickmerge.sh defect. It was my
+  own invocation mistake**: `scripts/quickmerge.sh`'s STAGE 5 file-staging loop is
+  `for f in $FILES_ARG; do [ -e "$f" ] && git add "$f" ...`, an UNQUOTED bash expansion that word-splits only on IFS
+  whitespace — the script's own code comment even says so ("FILES_ARG is a space-separated path list", line ~1524). I
+  had been passing **comma-separated** paths (`--files 'a.md,b.md,c.md'`) all session, which bash treats as ONE single
+  token (no whitespace to split on) — so the loop ran exactly once with `f="a.md,b.md,c.md"` (the whole comma-joined
+  string), `[ -e "$f" ]` correctly failed (no file has that literal name), and the error message printed exactly what
+  was observed: every filename comma-joined into one blob. I initially misdiagnosed this as a `git stash pop` positional
+  race (STAGE 5 also does `stash push -u` → checkout → `stash pop --quiet` around the same block, which looked plausible
+  given the observed content-survives-but-doesn't-land pattern) and even drafted a "root-caused bug" writeup
+  - a P2 follow-up todo for it — **both wrong, corrected here before shipping**. Proof: manually reproducing STAGE 5's
+    exact stash push → fetch → checkout → stash pop sequence by hand succeeded cleanly (exit 0 at every step, content
+    restored correctly) — the stash mechanism itself was never broken. Switching to **space-separated** `--files`
+    (`--files 'a.md b.md c.md'`) fixed it on the very next attempt (`unified-trading-pm@ec5448ad3`, verified pushed to
+    origin via `git merge-base --is-ancestor`). **Lesson, corrected**: `--files` (and
+    `check_frontmatter_schema.py --files`, which has the identical trap — confirmed separately) both require
+    SPACE-separated paths, not comma — CLAUDE.md's own example (`--files '<paths>'`) doesn't specify the delimiter,
+    which is exactly how this drifted wrong all session. Worth a CLAUDE.md/task_template.md clarification as a cheap,
+    high-value fix (see Todos) — no script change needed, this was never a code defect.
+
+- **2026-07-25, batches shipped, verified pushed to origin**: split into 2 commits once the space-separated fix was
+  found (smaller batches were already mid-flight when the fix landed; no need to recombine). **Batch A**
+  (`unified-trading-pm@ec5448ad3`) — cefi/defi archivable_now resolutions (13 files). **Batch B**
+  (`unified-trading-pm@62129d24f`) — the rollout plan + all 5 AGs' new batch/finalize pairs + the infra finalize-plan
+  backfill (12 files), after 6 more branch-drift races (this branch's push velocity is genuinely very high right now —
+  many concurrent AO worker slots landing every 1-2 min; each drift was independently verified to not touch any of my 12
+  files before `git merge --ff-only`). Both commits confirmed
+  `git merge-base --is-ancestor <sha> origin/live-defi-rollout` = true, and spot-checked content at HEAD for
+  `defi_satellite_ao_dispatch_batch1` (53 todos), `cefi_satellite_ao_dispatch_batch1` (33 todos),
+  `sports_satellite_ao_dispatch_batch3`, and `infra_capture_and_devops_leftovers_2026_07_06_finalize` — all correct.
+  Also shipped a small P3 doc fix (`unified-trading-pm@62129d24f` folded it in): added the space-vs-comma `--files`
+  clarification to `/codex/08-workflows/ci-cd-flow.md`'s Pass-2-quickmerge section (CLAUDE.md itself has ~1KB of
+  headroom left under its hard byte cap — not touched, it already points readers to that codex doc as the quickmerge
+  SSOT).
+
+## Closing report (AUTONOMOUS_AGENT_RULES.md rule 9)
+
+**All 5 asset groups got the full `/ag-closeout-audit` treatment this session** (sports had batch1/batch2 from before
+this session; this session added batch3 for sports and the FIRST-EVER AO-dispatch batch for the other 4 AGs).
+
+| AG         | Satellite docs orphaned | `archivable_now` found | `archivable_now` resolved                                            | New/latest AO batch | Batch todos (of N candidates)  |
+| ---------- | ----------------------- | ---------------------- | -------------------------------------------------------------------- | ------------------- | ------------------------------ |
+| sports     | 26 (of 72 primary)      | 2                      | 2 (archived)                                                         | batch3              | 12 (of 25)                     |
+| cefi       | 29                      | 7                      | 5 (2 deferred — line-cap split needed; conflicting verdict on 1)     | batch1 (first-ever) | 33 (of ~40)                    |
+| defi       | 39                      | 8                      | 7 (6 status-flipped not yet archived; 1 locked, queued for operator) | batch1 (first-ever) | 53 (of 59)                     |
+| tradfi     | 21 (91% orphan rate)    | 1                      | 0 (correctly left open — stale verdict vs a live SIGKILL follow-up)  | batch1 (first-ever) | 5 (of 43)                      |
+| prediction | 13                      | 0                      | n/a                                                                  | batch1 (first-ever) | 7 (of 9 in its one source doc) |
+
+**Every new batch is `status: draft`** — none auto-dispatched to the AO fleet, per the operator's original instruction.
+Each has a gated `_finalize_*.md` companion (`depends_on` + `gate_on_depends: true`) that will reconcile source-doc
+checkboxes and run the archival ritual once the batch's own todos land. Every conflict-gated candidate across all 5 AGs
+(200+ total, tallied loosely across sports 23 + cefi ~2 + defi ~2+1-ruling + tradfi 38 + prediction 2) is preserved in
+its plan's own Deferred section with a stated reason — none silently dropped.
+
+**Operator-decisions queue** (`issues/autonomous_session_operator_decisions_2026_07_25.md`) — 3 entries, all still
+`open`, per the operator's explicit instruction to queue rather than auto-decide:
+
+1. `git rm` 2 stale-duplicate stub files (sports archival half-landed-rename cleanup).
+2. `gas_fees_lst_rates_manifest_bucket_mismatch_2026_07_10.md` — locked doc (`locked_by: live-defi-rollout`), audit says
+   resolved, needs an `[unlock-plan]` + flip decision.
+3. Kamino/Solend `lending_indices` `instrument_type` shape — writer code vs a live GCS probe disagree (defi batch1's one
+   genuinely-ambiguous conflict).
+
+**Not this session's queue, but relayed directly since the operator asked mid-session**: the
+`sports_day_all_teams_venues_fold_key_scheme_mismatch_2026_07_25.md` question (from
+`sports_satellite_ao_dispatch_batch2`, a different, already-in-flight batch, not one this session drafted) — gave full
+GCS-path context + verification commands in chat; still awaiting the operator's actual A/B/C choice.
+
+**Real bugs/findings surfaced and handled**:
+
+- A genuine data-integrity bug (half-landed archival rename from concurrent branch writes) — root-caused and fully
+  remediated early in the session.
+- `infra_capture_and_devops_leftovers_2026_07_06.md`'s missing finalize-plan-coverage gap — backfilled with a real
+  finalize plan, not worked around.
+- The `--files` comma-vs-space invocation trap — root-caused (after an initial wrong theory, corrected in-place before
+  it shipped anywhere) and documented in the actual SSOT.
+- `issues/test_build_index_deterministic_races_on_concurrent_corpus_writes_2026_07_25.md` — filed earlier this session,
+  re-confirmed transient (not caused by this session's changes) every time it recurred.
+
+**Verified end-state**: `git status --porcelain` clean, `git rev-list --count origin/live-defi-rollout..HEAD` = 0 (both
+ship commits confirmed ancestors of origin). No uncommitted work. Loop ends here — success criteria (all 5 AGs audited,
+every AO-eligible orphaned doc either dispatched via a new conflict-checked batch or explicitly deferred with a reason,
+every genuine operator-decision-caliber question queued not silently decided) are met.
