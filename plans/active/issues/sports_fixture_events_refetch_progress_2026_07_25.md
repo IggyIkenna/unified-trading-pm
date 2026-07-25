@@ -194,7 +194,17 @@ repeat sample showing genuinely 0 non-13-col objects (or documented unrecoverabl
       specific todo until the VM is closer to terminal, rather than a fix I should make unilaterally as a dispatched
       worker. Next dispatch: repeat this health-check (2-read progress-metric check — a new `date=` boundary OR
       continued in-date fixture-fetch advance both count as live); once terminal, re-run the census script per "Next
-      action" above before flipping this checkbox.
+      action" above before flipping this checkbox. — **Health-checked 2026-07-25T06:08Z (slot 2, backend_engineer,
+      craft-adopted per worker.md ADOPT-not-refuse on a role-mismatched dispatch), still RUNNING, confirms slot 4's
+      06:00Z check**: `gcloud compute instances list` confirms `RUNNING` in `asia-northeast1-c`; heartbeat blob update
+      time `2026-07-25T06:08:08Z` (23s old at check time, via `gcloud storage cat` — `gsutil` failed with a stale
+      credential error in this session, unrelated to the VM); run.log grew 65,126→69,781 lines (+4,655) since the 06:00Z
+      read, and the `date=` boundary advanced 2020-02-21→2020-03-18 (genuine forward progress, no fallback-date stall
+      this time). Not completable this turn (still early 2020 of the 2019→2026-07-25 range, ~2100 of ~2500 dates
+      remain). Released via `/skip-current-task`, not duplicate-launched. **Seconding the prior process note**: this is
+      the 8th redispatch of a pure health-check across ~1h50m — the operator/main-agent time-gate suggestion above
+      remains unaddressed and still applies. Next dispatch: repeat this health-check (2-read progress-metric check);
+      once terminal, re-run the census script per "Next action" above before flipping this checkbox.
 
 ## Codex SSOTs
 
