@@ -9,10 +9,13 @@ description: >-
   checkmarks). Then, for orphaned docs carrying genuine AO-eligible bounded-outcome work, drafts (status: draft, never
   auto-shipped) the next `<ag>_satellite_ao_dispatch_batchN_<date>.md` + gated `batchN_finalize` plan pair, mirroring
   the pattern built for sports (`sports_satellite_ao_dispatch_batch2_2026_07_24.md` +
-  `sports_satellite_ao_dispatch_batch2_finalize_2026_07_24.md`). Parameterized by asset group — invoke as
-  `/ag-closeout-audit <ag>` (e.g. `tradfi`, `defi`, `cefi`, `prediction`, `sports`, `cross-cutting`). Trigger on
-  `/ag-closeout-audit <ag>`, "run the sports treatment for <ag>", "audit <ag> orphans", "how many <ag> docs would be
-  orphaned if we finished the consolidated plan", "<ag> closeout completeness check".
+  `sports_satellite_ao_dispatch_batch2_finalize_2026_07_24.md`). Parameterized by topic tranche — invoke as
+  `/ag-closeout-audit <tranche>` across all 9: `cefi`, `defi`, `tradfi`, `prediction`, `sports`, `cross-cutting`, `ao`,
+  `ci`, `infra`. **`all` is a valid tranche and the DEFAULT when invoked with no argument** (e.g. a scheduled AO
+  trigger) — runs every tranche's audit and aggregates one combined report, so a no-arg scheduled invocation never fails
+  for lack of a tranche name. Trigger on `/ag-closeout-audit [<tranche>]`, "run the sports treatment for <tranche>",
+  "audit <tranche> orphans", "how many <tranche> docs would be orphaned if we finished the consolidated plan",
+  "<tranche> closeout completeness check", "audit everything"/"run the full closeout audit" (→ `all`).
 ---
 
 # /ag-closeout-audit — per-AG closeout completeness projection + next-batch drafting
@@ -22,15 +25,49 @@ Generalizes the sports-corpus closeout arc built 2026-07-24/25 (triage → `spor
 procedure. As of 2026-07-25 all 5 AGs (cefi/defi/tradfi/prediction/sports) have been through this treatment at least
 once AND through a follow-on consolidated-plan line-cap split (parent trimmed to ~450-750L, forked into
 Track/phase-named AO-dispatch children per `task_template.md` findings I/R) — this skill's Phase 0.2 (below) discovers
-BOTH doc classes. A 6th, cross-cutting layer (data-pipeline concerns spanning IS→features-service→data-status-UI→
-manifest/GCS-path→UAC→UTL that aren't specific to any one AG) is being built the same way — invoke as
-`/ag-closeout-audit cross-cutting` once its own `cross_cutting_consolidated_closeout_*.md` exists.
+BOTH doc classes. As of 2026-07-25 a full 9-way topic partition exists: the 5 AGs, `cross-cutting` (data-pipeline
+concerns spanning IS→features-service→data-status-UI→manifest/GCS-path→UAC→UTL that aren't specific to any one AG,
+`cross_cutting_consolidated_closeout_2026_07_25.md`), `ao` (agent-orchestrator dispatch/worker-lifecycle,
+`ao_consolidated_closeout_2026_07_25.md`), `ci` (CI/CD pipeline mechanics, `ci_consolidated_closeout_2026_07_25.md`),
+and `infra` (generic repo/dependency/terraform/org hygiene, `infra_consolidated_closeout_2026_07_25.md`) — built the
+same day from a corpus-wide classification pass so this AG↔topic partition covers the WHOLE plans/issues corpus with
+zero unaccounted docs.
+
+## The 9 tranches + `all` default — classification mechanism differs by tranche
+
+**5 AGs (`cefi`/`defi`/`tradfi`/`prediction`/`sports`)**: membership is `asset_group` frontmatter — a doc's
+`asset_group` list containing exactly that AG name is ground truth (subject to the Orthogonality HARD CHECK below).
+
+**`cross-cutting`**: membership is `asset_group` containing `cross-cutting` AND `parent_epic` in one of the 5
+data-relevant epics this doc was scoped from (`infrastructure_master`'s data-relevant subset, `instruments_master`,
+`mtds_mdps_master`, `manifest_master`, `features_and_ml_master`) OR explicit membership in one of Tracks 16-24 (docs
+epic-scoped elsewhere but reclassified in by content — see that doc's own Progress Log).
+
+**`ao`/`ci`/`infra`**: **no dedicated `asset_group` value exists for these** — all 3 stay tagged
+`asset_group: cross-cutting` at the frontmatter level (introducing 3 new enum values was deliberately avoided to avoid a
+schema migration). Membership is instead ground-truthed by: (1) `parent_epic` as a strong prior (`ao` ≈
+`orchestrator_master` + `agent_operating_framework_master`; `ci`/`infra` split the CI/CD-vs-generic content inside
+`infrastructure_master` + `deployment_and_user_management_master` + `strategy_master` + `plan_hygiene_master`), (2) but
+the FINAL call is explicit membership in that tranche's own consolidated-closeout doc's Track/Sources lists, since the
+ci-vs-infra-vs-ao split needed actual per-doc content judgment, not a mechanical epic rule (see each doc's own Progress
+Log for the classification pass that produced it). **When auditing `ao`/`ci`/`infra`, do not attempt to re-derive
+membership from `asset_group` alone (it will just say `cross-cutting` for the whole corpus) — read the target tranche's
+own consolidated-closeout doc's Sources lists as the membership set, and treat a doc found in the
+`infrastructure_master`/`orchestrator_master`/etc. corpus that ISN'T listed in ANY of the 4 non-AG tranches's docs
+(cross-cutting/ao/ci/infra) as a genuine new orphan to triage into whichever tranche its content actually matches.**
+
+**`all` (the default with no argument)**: run the audit for all 9 tranches (parallel Agent dispatch, one per tranche, is
+the efficient path given the scale — see Phase 1) and aggregate one combined report: total orphan count per tranche, any
+genuine new mistags found (feed back into the Orthogonality HARD CHECK below), and per-tranche next-batch
+recommendations. **This is the mode a scheduled/cron AO invocation with no explicit tranche argument should resolve to —
+never fail or block asking "which tranche?"**.
 
 **This skill answers a forward-looking completeness question — it is NOT `/plan-reconcile`.** `/plan-reconcile` fixes
-what's already provably done (false-unchecked flips, contradiction resolution, archival) across the WHOLE corpus. This
-skill projects forward ("if everything currently active/dispatched for this ONE AG finishes, what's still stuck?") and,
-where warranted, drafts the next AO-dispatch batch to close the gap. Run `/plan-reconcile` first if the corpus might
-have stale/false-unchecked state — this skill's classification is only as good as the frontmatter `status` it reads.
+what's already provably done (false-unchecked flips, contradiction resolution, archival) across the WHOLE corpus (or, as
+of 2026-07-25, a single topic-scoped shard of it — see `/plan-reconcile`'s own SKILL.md). This skill projects forward
+("if everything currently active/dispatched for this ONE tranche finishes, what's still stuck?") and, where warranted,
+drafts the next AO-dispatch batch to close the gap. Run `/plan-reconcile` first if the corpus might have
+stale/false-unchecked state — this skill's classification is only as good as the frontmatter `status` it reads.
 
 ## Why `batchN` exists as a SIBLING doc, not content folded into the consolidated closeout plan
 
@@ -122,14 +159,20 @@ For the target `<ag>`:
    exception never comes up for them.
 2. **Existing AO-dispatch-batch + finalize pairs for this AG** — TWO discovery paths, UNION the results (added
    2026-07-25 after the 5-AG consolidated-plan split found the filename-only path alone misses a real class of covering
-   plan): a. **Filename-pattern path**: grep `plans/active/*.md` for `^assigned_vm: planning` docs whose `asset_group`
-   includes `<ag>` and whose filename matches `<ag>_*(ao_dispatch|satellite)*batch*` or similar — read each to confirm
-   it's a batch-extraction plan (cites `Source: <doc>` per todo) and check whether it has a paired
-   `depends_on: [<slug>] + gate_on_depends: true` finalize plan. b. **Dependency-graph path**: read
-   `<ag>_consolidated_closeout_*.md`'s frontmatter `depends_on:` + `related:` (and its
-   `_history_*`/`_native_ao_extract_*` siblings' own `depends_on:`/`related:`) and follow every listed slug that is
-   itself `assigned_vm: planning` — this catches AO-dispatched plans FORKED OUT of the consolidated closeout itself
-   during a line-cap split (e.g. `cefi_migration_cutover_and_track8_completion_2026_07_25.md`,
+   plan). **NEITHER path filters on `assigned_vm`/`status` (widened 2026-07-25)** — a covering plan sitting
+   `status: draft` / `assigned_vm: NA` still counts as covering, it just hasn't been AO-dispatched YET; the whole point
+   of `/ag-closeout-audit` running BEFORE the mass-flip-to-planning is to confirm the not-yet-flipped plans already
+   cover everything, so filtering discovery to `assigned_vm: planning` would make the audit blind to its own pre-flip
+   candidates and wrongly report them as orphans needing a fresh draft. Record each covering plan's
+   `status`/`assigned_vm` in the report (covered-and-dispatched vs covered-but-still-draft are both "not orphaned", but
+   the operator needs to know which): a. **Filename-pattern path**: grep `plans/active/*.md` for docs (any
+   `status`/`assigned_vm`) whose `asset_group` includes `<ag>` and whose filename matches
+   `<ag>_*(ao_dispatch|satellite)*batch*` or similar — read each to confirm it's a batch-extraction plan (cites
+   `Source: <doc>` per todo) and check whether it has a paired `depends_on: [<slug>] + gate_on_depends: true` finalize
+   plan. b. **Dependency-graph path**: read `<ag>_consolidated_closeout_*.md`'s frontmatter `depends_on:` + `related:`
+   (and its `_history_*`/`_native_ao_extract_*` siblings' own `depends_on:`/`related:`) and follow every listed slug
+   regardless of its `assigned_vm`/`status` — this catches plans FORKED OUT of the consolidated closeout itself during a
+   line-cap split (e.g. `cefi_migration_cutover_and_track8_completion_2026_07_25.md`,
    `tradfi_registry_coverage_and_ao_readiness_2026_07_25.md`), whose filenames describe their CONTENT (a Track/phase
    name), not the `ao_dispatch`/`satellite`/`batch` pattern — path (a) alone silently misses these, which would
    misclassify an already-covering, already-AO-readiness-scrubbed plan as an orphan needing a fresh draft. For BOTH
@@ -137,9 +180,13 @@ For the target `<ag>`:
    `task_template.md` §4's finalize-plan-coverage rule — cross-check with
    `.venv/bin/python scripts/quality_gates/check_finalize_plan_coverage.py --workspace-root <root>` if convenient). Also
    check `plans/archive/2026_*/` for already-archived batches of this AG (their coverage is DONE, not a gap).
-3. **AG-primary doc inventory**: enumerate every `plans/active/*.md` and `plans/active/issues/*.md` whose frontmatter
-   `asset_group` list contains `<ag>`. Filter out docs whose `asset_group` also contains a genuinely DIFFERENT peer
-   asset-group marker (any of `cefi`/`defi`/`tradfi`/`quant`/`options`/`cross-cutting`, EXCLUDING `<ag>` itself and the
+3. **AG-primary doc inventory**: for the 5 real AGs + `cross-cutting`, enumerate every `plans/active/*.md` and
+   `plans/active/issues/*.md` whose frontmatter `asset_group` list contains `<ag>`. **For `ao`/`ci`/`infra`,
+   `asset_group` alone is USELESS** (all 3 stay tagged `asset_group: cross-cutting` — see the classification-mechanism
+   section above) — instead read that tranche's own `<ag>_consolidated_closeout_2026_07_25.md`'s Track/Sources lists as
+   the membership set directly (each Source link IS a member of the inventory; there is no separate filter step). For
+   the 5 AGs + cross-cutting, filter out docs whose `asset_group` also contains a genuinely DIFFERENT peer asset-group
+   marker (any of `cefi`/`defi`/`tradfi`/`quant`/`options`/`cross-cutting`, EXCLUDING `<ag>` itself and the
    historically-confirmed same-work dual-tag `prediction` when auditing `sports` or vice versa — that pairing describes
    the same betting-market work tagged two ways, not two different scopes) — these are the deterministic cross-cutting
    candidates to exclude from the deep audit. This is a CANDIDATE filter only; the per-doc agent in Phase 1 re-checks
@@ -192,6 +239,12 @@ For the target `<ag>`:
    pass before the full corpus sweep.
 
 ## Phase 1 — per-doc classification (Workflow tool, one agent per doc)
+
+**`all` mode**: run Phase 0-3 once PER TRANCHE, as 9 separate top-level `Workflow` invocations (never nest a
+`workflow()` call inside another — the tool throws on >1 level of nesting) — either sequentially or fired in parallel
+from the calling context, then aggregate the 9 reports into one combined summary at the end. Do not try to flatten all 9
+tranches' docs into one giant Workflow pipeline; each tranche's Phase 0 discovery (its own consolidated closeout +
+batch/finalize pairs) is genuinely distinct context per doc.
 
 Given the AG-primary candidate list from Phase 0.3, launch a `Workflow` (`pipeline()` over the doc list — this corpus
 runs 50-90+ AG-primary docs per AG, well past what's worth doing serially or by hand). Each agent:
