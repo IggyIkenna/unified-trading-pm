@@ -151,22 +151,22 @@ Two independent, additive fixes, neither mutually exclusive:
       manifests + 156 launcher scripts correctly (`gcloud storage ls -l` confirmed fresh timestamps), then exited 127
       when the trailing `gsutil ls` hit the expired token. Fixed by swapping to `gcloud storage ls` (same fix pattern as
       todo 2). ✅ — deployment-service@a12c84a.
-- [ ] 4. [INFRA] P3. A 3RD occurrence remains, NOT yet fixed: `scripts/vm/lib/launcher_common.sh`'s
-      `lc_verify_tarball_freshness()` (pre-launch guard, called by every `launch-*.sh`) and its sibling
-      `lc_resolve_tarball_sha()` both call `gsutil -q cp <manifest> ...` / `gsutil -q stat ...` to read a tarball's
-      manifest — under this same WIF-token gap the read fails, and `lc_verify_tarball_freshness` treats that as
-      `WARNING: tarball manifest MISSING for <repo>` (a FALSE staleness signal — the manifest is actually present and
-      fresh, `gsutil` just can't read it) for every repo, every launch, in any interactive slot with the broken active
-      account. Reproduced live 2026-07-25 immediately after fixing todo 3: launching
-      `features-sfi-progressive-20260725-131351` printed "tarball manifest MISSING" for all 5 repos
-      (features-service/MTDS/UAC/UTL/deployment-service) despite `gcloud storage ls -l` confirming all 5 manifests
-      present with fresh (8-minutes-old) timestamps. Did NOT block this launch — `LC_TARBALL_FRESHNESS` defaults to
-      `warn`, not `enforce` — but it means the pre-launch staleness guard is CURRENTLY BLIND (always reports
-      false-MISSING) in exactly the interactive-slot environment this guard exists to protect, and worse, under
-      `LC_TARBALL_FRESHNESS=enforce` it would wrongly REFUSE every launch. Not fixed in-session: `launcher_common.sh` is
-      a shared library sourced by ~150 launcher scripts (39 total `gsutil` call sites) — too wide a surface to patch +
-      verify inside one task's adjacency budget. Fix: replace the `gsutil -q cp`/`gsutil -q stat` calls in
-      `lc_verify_tarball_freshness()` + `lc_resolve_tarball_sha()` with `gcloud storage cp` /
-      `gcloud storage objects     describe` (mirrors todos 2-3's fix), then smoke-test a handful of launchers across
-      both `warn` and `enforce` modes before considering the wider 39-site sweep. (repo: deployment-service
-      `scripts/vm/lib/launcher_common.sh`.)
+- [x] 4. [INFRA] P3. A 3RD occurrence — FIXED. `scripts/vm/lib/launcher_common.sh`'s `lc_verify_tarball_freshness()`
+      (pre-launch guard, called by every `launch-*.sh`) and its sibling `lc_resolve_tarball_sha()` both called
+      `gsutil -q cp <manifest> ...` / `gsutil -q stat ...` to read a tarball's manifest — under this same WIF-token gap
+      the read failed, and `lc_verify_tarball_freshness` treated that as `WARNING: tarball manifest MISSING for <repo>`
+      (a FALSE staleness signal) for every repo, every launch, in any interactive slot with the broken active account.
+      ✅ — deployment-service@8f996db. Swapped both functions' `gsutil -q cp`/`gsutil -q stat` calls to
+      `gcloud storage cp --quiet`/`gcloud storage objects describe` (mirrors todos 2-3's fix; also swapped their
+      `command -v gsutil` tooling-precondition checks to `command -v gcloud`). Reproduced first, then verified live on
+      this host with the same broken `github-actions-deploy@...` WIF account still active: `gsutil ls` against the code
+      bucket failed with "Your credentials are invalid" while `gcloud storage ls` succeeded (ADC); called both fixed
+      functions directly — `lc_resolve_tarball_sha` returned a real commit_sha (no false-empty), and
+      `lc_verify_tarball_freshness` correctly reported genuine staleness (not a false MISSING) in both `warn` (exit 0,
+      non-blocking) and `enforce` (exit 1, blocking) modes for 2 different repos. Updated the 2 unit tests
+      (`TestTarballFreshnessGuard::test_fresh_tarball_passes`, `::test_stale_tarball_warn_does_not_block`) plus
+      `::test_missing_manifest_enforce_blocks`'s mock from a `gsutil` shell-function stub to a `gcloud` one (they were
+      asserting against the old codepath and failed post-fix until updated); `quality-gates.sh` green (12/12
+      `TestTarballFreshnessGuard` tests pass). The wider ~150-launcher/39-total-gsutil-call-site sweep this todo flagged
+      as out-of-scope remains open — only `lc_verify_tarball_freshness`/`lc_resolve_tarball_sha` were in this todo's
+      stated scope. (repo: deployment-service `scripts/vm/lib/launcher_common.sh`.)
