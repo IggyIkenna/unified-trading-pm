@@ -20,7 +20,7 @@ summary: >-
   agent trusting SS4.2/SS6 literally for a market-data-tick-sports-prd reconciliation will skip running the oracle when
   it should run, and will dispatch to candidate_parquet_paths() (the sports_reference resolver), which returns paths
   that do not exist in this bucket at all.
-status: open
+status: resolved
 nature: issue
 asset_group: [sports]
 stage: [data]
@@ -34,6 +34,7 @@ related:
     /codex/02-data/cross-asset-canonical-target-ssot.md,
     plans/active/issues/sports_phantom_audits_reference_not_marketdata_2026_07_14.md,
     plans/audit/results/data_pipeline_reconciliation_sports_2026_07_24.md,
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
   ]
 created: 2026-07-24
 parent_epic: sports_master
@@ -54,7 +55,7 @@ source:
   "/data-pipeline-reconciliation sports raw-tick dispatch, 2026-07-24 — direct GCS listing of
   market-data-tick-sports-prd-central-element-323112 plus a code read of gcs_paths.py's SPORTS_BUCKET_TEMPLATE and
   canonical_path_violations() run on a live sample"
-resolved_by:
+resolved_by: unified-trading-pm@34de8774e (all 3 fixes)
 ---
 
 # The reconciliation skill's own codex is wrong about which bucket its sports raw-tick description applies to

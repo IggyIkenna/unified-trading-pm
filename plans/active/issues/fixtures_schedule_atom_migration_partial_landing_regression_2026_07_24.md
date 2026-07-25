@@ -37,6 +37,7 @@ related:
     deployment_registry_reaper_not_draining_stale_entries_2026_07_24,
     /plans/active/issues/fixtures_manifest_duplicate_collision_residual_2026_07_24.md,
     /plans/active/issues/fixtures_manifest_legacy_backfill_2026_07_24.md,
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
   ]
 created: 2026-07-24
 priority: P0

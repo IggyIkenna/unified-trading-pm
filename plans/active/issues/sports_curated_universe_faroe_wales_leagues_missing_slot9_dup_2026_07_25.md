@@ -24,7 +24,7 @@ stage: [meta]
 repos: [unified-api-contracts]
 scope: [engineer, admin]
 tags: [sports, curated-universe, league-data, unified-api-contracts, duplicate-work, worktree, dead-worker]
-related: [/codex/05-infrastructure/per-tab-worktrees.md]
+related: [/codex/05-infrastructure/per-tab-worktrees.md, /plans/active/sports_consolidated_closeout_2026_07_19.md]
 created: 2026-07-25
 last_updated: 2026-07-25
 priority: P2
