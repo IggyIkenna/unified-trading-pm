@@ -249,7 +249,45 @@ still the open ask (this is now the 11th health-check redispatch across ~3h08m);
 `/skip-current-task {"reason_code": "GATED"}` per the DEDUP NOTE above so the auto-park cooldown machinery can engage.
 Next dispatch: repeat this health-check (2-read progress-metric check — a new `date=` boundary OR continued in-date
 fixture-fetch advance both count as live); once terminal, re-run the census script per "Next action" above before
-flipping this checkbox.
+flipping this checkbox. — **🔴 Health-checked 2026-07-25T08:34Z (slot 7, data_engineering), CRITICAL — not a routine
+health-check, a live data-correctness incident**: `date=` boundary stuck at `2020-03-22` (447 distinct dates, unchanged
+in-window); `run.log` showed the VM's API-Football key hit its **DAILY** request quota at exactly `08:12:00Z`
+(`{'errors': {'requests': 'You have reached the request limit for the day...'}}`, 8,534 repeats 08:12-08:34Z, **zero**
+successful `Fetched N ... for fixture=X` lines in that window — a genuine zero-forward-progress stall, not the
+per-minute `429`/`rateLimit` sleep-retry pattern every prior check saw). Traced root cause in
+`instruments-service/reference_data/adapters/sports/adapters/api_football.py`: all 4 per-fixture methods
+(`get_fixture_statistics`/`get_fixture_events`/`get_fixture_lineups`/`get_fixture_player_stats`) swallow ANY exception
+(including this hard, non-`rateLimit` failure — `is_rate_limit=False`, already re-raised immediately by
+`_fetch_and_extract` per its own docstring) and `return []`. Because `sports_reference_fixtures.py`'s
+`_gather_per_fixture_rows._fetch_one` is the ONLY place that increments `entity_failures`, and the exception never
+reaches it, `_handle_empty_fixture_entity` takes the "legitimate empty" branch and stamps affected leagues
+`EXPECTED_NO_FIXTURE`/`empty_confirmed` — silently corrupting every date this VM processes past 08:12Z, and (unverified
+scope) potentially historical runs that hit any prior hard-failure class on these 4 entities.
+
+Full writeup + fix scope: `issues/api_football_per_fixture_hard_failure_silently_recorded_empty_2026_07_25.md`
+(`unified-trading-pm@9022488a2`, PR #1492). Filed `/blocked` `BLK-78a76a51` (this todo's own genuine judgment call —
+stop the VM now vs leave running); **main ruled A — stop now** (SPOT+idempotent; empty_confirmed is worse than
+attempted_failed since downstream won't retry it). **Fix shipped**: `instruments-service@f31fb2e9` — the 4 adapters now
+re-raise after `_emit_fetch_failed`; 4 unit tests updated to expect the raise
+(`test_get_fixture_{statistics,events,lineups,player_stats}_error_propagates`, mirroring the existing
+`get_injuries_error_propagates` precedent); full `quality-gates.sh` green; verified the ALREADY-correct
+`TestCF11PerFixtureEntityFailurePath` orchestrator suite now actually gets exercised end-to-end (previously it only
+tested the orchestrator's handling of a mock that raised — the real adapter never did). **I could not execute the VM
+stop myself**: `gcloud` auth expired mid-session on both available accounts
+(`Unable to retrieve Identity Pool subject token: job is already completed`; non-interactive reauth impossible) —
+flagged via `/progress` for another slot/main to run
+`gcloud compute instances stop af-backfill-20260725-032253 --zone asia-northeast1-c`.
+
+**Next dispatch (updated — supersedes the "repeat health-check" instruction above)**: (1) confirm the VM was actually
+stopped (`gcloud compute instances list --filter='name~"^af-backfill-20260725-032253"'` should show `TERMINATED` or
+absent); if still `RUNNING`, execute the stop. (2) Do NOT relaunch until the API-Football daily quota has reset
+(unverified reset time — check account status or a lightweight `/status` call before relaunching). (3) On relaunch, the
+fixed adapter code (`f31fb2e9`+) makes hard failures correctly `attempted_failed`, so a normal re-run will now retry
+them instead of silently skipping — no separate relabeling step should be needed for genuinely NEW runs, but the window
+this VM already wrote between `08:12Z` and its stop time was written under the OLD buggy code and must be treated as
+suspect (re-fetch, don't trust its `empty_confirmed` cells at face value in the eventual re-census). (4) Only once the
+VM reaches a genuine terminal state under the fixed code should the "Next action" census script re-run and this checkbox
+flip.
 
 ## Codex SSOTs
 

@@ -699,7 +699,32 @@ source: >-
       re-dispatch a duplicate health-check within the next ~30min. — **Health-checked 2026-07-25T06:43Z (slot 2)**:
       still `RUNNING`, heartbeat 34s old, run.log grew 69,781→79,917 lines (+10,136) since the issue doc's 06:08Z check
       (same doc, more detail there — this parent plan's todo and the issue doc both point at the same VM; resist the
-      urge to duplicate full detail in both). Released via `/skip-current-task`, not duplicate-launched.
+      urge to duplicate full detail in both). Released via `/skip-current-task`, not duplicate-launched. — **🔴
+      2026-07-25T08:34Z (slot 7, data_engineering) — CRITICAL: live data-correctness bug found + fixed, VM stop
+      escalated.** Health-check found the VM zero-progress since 08:12Z (API-Football DAILY quota exhausted, 8,534
+      failed fetches logged, date boundary stuck at `2020-03-22`) and root-caused a real code bug: the 4 per-fixture
+      `api_football.py` adapters (`get_fixture_statistics`/`get_fixture_events`/`get_fixture_lineups`/
+      `get_fixture_player_stats`) swallowed hard fetch failures internally and returned `[]`, so
+      `_gather_per_fixture_rows`'s `entity_failures` tracking never fired and affected leagues/dates were silently
+      stamped `empty_confirmed`/`EXPECTED_NO_FIXTURE` instead of `attempted_failed` — the exact honest-absence violation
+      this campaign exists to fix. Full evidence:
+      `issues/api_football_per_fixture_hard_failure_silently_recorded_empty_2026_07_25.md`
+      (`unified-trading-pm@9022488a2`, PR #1492). Filed `/blocked` (`BLK-78a76a51`); main ruled **A — stop the VM now**
+      (SPOT+idempotent, safe to relaunch; leaving it running keeps writing false `empty_confirmed`, which is WORSE than
+      `attempted_failed` since downstream won't retry it). **Fix shipped**: `instruments-service@f31fb2e9` — the 4
+      adapters now re-raise after `_emit_fetch_failed` instead of swallowing; 4 unit tests updated
+      (`*_error_returns_empty` → `*_error_propagates`, mirrors the existing `get_injuries_error_propagates` precedent);
+      full `quality-gates.sh` green (109s); orchestrator-level `TestCF11PerFixtureEntityFailurePath` suite (already
+      correct) confirms `_fetch_one`/`_handle_empty_fixture_entity` now actually receive the failure signal.
+      **BLOCKED-OPERATOR on my end**: could not execute the VM stop myself — `gcloud` auth expired mid-session
+      (`Unable to retrieve Identity Pool subject token: job is already completed`, both available accounts,
+      non-interactive reauth impossible) — flagged via `/progress` for another slot/main with working credentials to run
+      `gcloud compute instances stop af-backfill-20260725-032253     --zone asia-northeast1-c`. **Do NOT flip this
+      checkbox done yet**: (1) VM stop still pending execution, (2) once stopped, relaunch only after the API-Football
+      daily quota resets, (3) the window `08:12Z`→stop-time was written under the OLD buggy code — those dates'
+      `empty_confirmed` rows must be relabeled/re-fetched (issue doc todo 4), not trusted at face value by the eventual
+      re-census. Released via `/skip-current-task {"reason_code":     "GATED"}` — genuinely gated on the VM-stop +
+      quota-reset, not undoable from this slot.
 - [x] ✅ [CODE] P2. **Writer-side de-dup + schema-conformance gate** so neither defect re-accrues — the `player_stats`
       writer rejects/dedupes rows on write; the `fixture_events` writer validates/enforces the canonical 13-col schema
       before accepting new objects. — `instruments-service@f5fa9f8a`. Added a `player_stats` de-dup gate (drop
