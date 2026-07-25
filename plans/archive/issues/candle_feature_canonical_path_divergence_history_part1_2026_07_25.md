@@ -39,7 +39,7 @@ tags:
 related:
   [
     /plans/active/issues/candle_feature_canonical_path_divergence_2026_07_20.md,
-    /plans/active/issues/candle_feature_canonical_path_divergence_history_part2_2026_07_25.md,
+    /plans/archive/issues/candle_feature_canonical_path_divergence_history_part2_2026_07_25.md,
   ]
 created: "2026-07-25"
 last_updated: "2026-07-25"
@@ -84,7 +84,7 @@ source: >-
 > it remains the verbatim historical record, in original document order, except the todo-11/12/13/14/15 and todo-16/19
 > checkbox lines, which were relocated to the parent's `## Todos` section (each removal is marked in place below with a
 > pointer). Continues in part 2
-> (`/plans/active/issues/candle_feature_canonical_path_divergence_history_part2_2026_07_25.md`) starting at the P6
+> (`/plans/archive/issues/candle_feature_canonical_path_divergence_history_part2_2026_07_25.md`) starting at the P6
 > drain. The parent issue doc remains the single live source of truth for the
 > Findings/Corrected-Ruling/Decision/LOCKED-shape sections and for every still-open todo (2, 3, 7, 9, 13, 15, 16, 19).
 

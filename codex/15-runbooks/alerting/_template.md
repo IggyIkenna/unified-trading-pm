@@ -7,7 +7,7 @@ authoritative_for:
   Canonical shape for per-AlertCode operator runbooks. Every runbook in this directory MUST conform to this template.
   Copy this file, replace `<AlertCode>` with the actual code, and fill in every section. Empty sections MUST be replaced
   with "N/A — <one-line reason>" rather than deleted.
-referenced_by: [/codex/15-runbooks/alerting/README.md, /plans/active/alerting_service_live_rules_2026_05_07.md]
+referenced_by: [/codex/15-runbooks/alerting/README.md, /plans/archive/2026_05/alerting_service_live_rules_2026_05_07.md]
 related:
   - codex/15-runbooks/alerting/README.md
   - codex/15-runbooks/alerting/operator-playbook.md
@@ -138,6 +138,6 @@ For any CRITICAL or HIGH true-positive: file write-up within 24h in
 - **Operator playbook (high-level):** [`operator-playbook.md`](./operator-playbook.md).
 - **Rehearsal procedure:** [`rehearsal-procedure.md`](./rehearsal-procedure.md).
 - **Implementing plan:**
-  [`alerting_service_live_rules_2026_05_07`](../../../plans/active/alerting_service_live_rules_2026_05_07.md).
+  [`alerting_service_live_rules_2026_05_07`](../../../plans/archive/2026_05/alerting_service_live_rules_2026_05_07.md).
 - **DART:** [DART playbook](../dart/).
 - **UAC SSOT:** `unified-api-contracts/unified_api_contracts/canonical/crosscutting/alerting/`.
