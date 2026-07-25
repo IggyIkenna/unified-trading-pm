@@ -121,9 +121,10 @@ For the named doc:
       doc_type=issue) per the Procedure below. Done when: `check_terminal_status_archived.py` no longer lists it. —
       unified-trading-pm@9fe6cd627 (moved to plans/archive/issues/, banner added, plan_hygiene_master epic referrer
       repointed; check_terminal_status_archived.py confirmed clean).
-- [ ] [INFRA] P2. Archive `plans/active/issues/defi_pool_canonical_instrument_id_policy_contradiction_2026_07_17.md`
+- [x] [INFRA] P2. ✅ Archive `plans/active/issues/defi_pool_canonical_instrument_id_policy_contradiction_2026_07_17.md`
       (status=resolved, doc_type=issue) per the Procedure below. Done when: `check_terminal_status_archived.py` no
-      longer lists it.
+      longer lists it. — unified-trading-pm@79d56a054 (moved to plans/archive/issues/, banner added, all 3 referrers
+      repointed; check_terminal_status_archived.py confirmed clean).
 - [ ] [INFRA] P2. Archive
       `plans/active/issues/deployment_api_cefi_venue_canonical_compare_test_regression_2026_07_21.md` (status=resolved,
       doc_type=issue) per the Procedure below. Done when: `check_terminal_status_archived.py` no longer lists it.
