@@ -263,32 +263,35 @@ source: >-
 > these landing first and this plan has no mechanical way to gate one todo on 5 siblings without serializing the whole
 > plan — add it as a new todo (in this plan or a successor) once these 5 are confirmed shipped.
 
-- [ ] [DATA] P1. **New compute, not a rename**: add per-bookmaker raw decimal-odds retention to
+- [x] ✅ [DATA] P1. **New compute, not a rename**: add per-bookmaker raw decimal-odds retention to
       `features_service/sports/calculators/` (whatever calculator currently collapses per-venue quotes into
       `best_odds_*`/`odds_variance_*` — trace it first) so a `decimal_odds_<outcome>_<venue>` shape can actually be
       populated for `SportsArbDutchingEngine`. (repo: features-service). **Done when**: a decimal odds field keyed per
       outcome+venue (final name per the decided scheme, e.g. `odds_decimal_home_pinnacle`) is computed and populated in
       FSS output for real bookmaker/venue combinations. Source:
-      `sports_odds_feature_naming_canonicalization_2026_07_21.md`. — **IN PROGRESS, checkpointed 2026-07-25 (slot 7,
-      pre-compact)**: investigation done (via Explore agent), implementation NOT YET STARTED. Findings to resume from,
-      so the next session doesn't re-derive them: the tap point is `_pivot_bucketed_to_fixture()`
-      (`features_service/sports/exporters/odds_features_exporter.py:372-517`) — inside its per-fixture
-      `horizon_group.groupby(id_col)` loop (line 386), `group` is already the long-format per-bookmaker DataFrame
-      (`bookmaker_key`, `home_odds`/`draw_odds`/`away_odds`) needed to emit one `odds_decimal_<outcome>_<venue>` column
-      per bookmaker actually quoting that fixture at that horizon, before the group collapses to a single row. Venue
-      tokens are lowercase snake_case The-Odds-API bookmaker keys verbatim (e.g. `pinnacle`, `bet365`, `draftkings` —
-      see `unified-api-contracts/unified_api_contracts/canonical/domain/sports/bookmaker_registry.py`), NOT a UAC enum.
-      **Correctness risk to design around**: `feature_expectations.py`'s `ODDS_COLUMNS` registry drives PIT
-      horizon-gating (`apply_horizon_gate()`) — any new DYNAMIC per-venue column bypasses PIT gating entirely unless
-      also registered there (or via a pattern match), since the registry is a fixed list, not a prefix match. There is
-      no hard schema allowlist at the parquet-write boundary (`write_sports_table` writes whatever columns the DataFrame
-      has), so the column WILL flow through — the PIT-gating gap is the thing to actually solve, not schema
-      registration. Test pattern to follow: `tests/sports/unit/test_odds_features_exporter.py`'s
-      `TestPivotBucketedToFixture` class (e.g. `test_best_odds_computed` at line 152, `test_best_venue_columns` at
-      line 379) — same construct-a-small-long-format-df-then-assert-on-result style. **Separate finding filed, NOT part
-      of this todo's scope**: `compute_odds_batch()`'s dead-code path silently overwrites `best_odds_*` with a mean
-      instead of the correct max — see `issues/fss_bookmaker_dispersion_dead_code_overwrites_best_odds_2026_07_25.md`;
-      be aware of it when touching this file but do not conflate the two todos.
+      `sports_odds_feature_naming_canonicalization_2026_07_21.md`. — SHIPPED 2026-07-25 (slot 7, data_engineering):
+      `_pivot_bucketed_to_fixture()` (`odds_features_exporter.py`) now emits one `odds_decimal_<outcome>_<venue>` column
+      per bookmaker actually quoting a fixture (venue = the raw lowercase bookmaker_key, e.g.
+      `odds_decimal_home_pinnacle`). Critical fix required beyond the tap point alone: `compute_odds_batch()` rebuilds
+      its output frame from scratch (`event_id` + its own fixed `ODDS_COLUMNS`), so the new dynamic columns from
+      `_pivot_bucketed_to_fixture`'s output would be silently dropped — added an explicit merge-back in
+      `export_odds_features()` right after `compute_odds_batch()` runs, the same pattern `available_at` already uses for
+      the identical reason. 3 new/extended tests (2 unit-level on `_pivot_bucketed_to_fixture`, 1 end-to-end through the
+      REAL `compute_odds_batch` proving the merge-back survives) — 47/47 pass in `test_odds_features_exporter.py`.
+      `quality-gates.sh --no-fix` fresh green. — features-service@b03a6de4. **Known limitation, filed as a follow-up
+      (not blocking this todo's done-when)**: the new dynamic columns bypass `feature_expectations.py`'s
+      `ODDS_COLUMNS`-registry PIT horizon-gating (`apply_horizon_gate()` only walks a fixed list, no prefix match) — see
+      the new `[DATA] P2` todo below. **Separate finding filed, NOT part of this todo's scope**:
+      `compute_odds_batch()`'s dead-code `bookmaker_home_cols` path silently overwrites `best_odds_*` with a mean
+      instead of the correct max — see `issues/fss_bookmaker_dispersion_dead_code_overwrites_best_odds_2026_07_25.md`.
+- [ ] [DATA] P2. **PIT horizon-gating gap for the new `odds_decimal_<outcome>_<venue>` columns** (found while shipping
+      the todo above): `feature_expectations.py`'s `ODDS_COLUMNS` registry drives PIT horizon-gating
+      (`apply_horizon_gate()`), which only walks a fixed column list — the new dynamic per-venue columns aren't in it
+      and so bypass PIT gating entirely (there's no schema allowlist blocking them at the parquet-write boundary either,
+      so they DO reach output — just ungated). Add a pattern-match (e.g. `startswith("odds_decimal_")`) to
+      `apply_horizon_gate()`/`get_column_horizons()` so these get the same leak protection as every other odds field.
+      Add a regression test proving a T-24h row's `odds_decimal_*` doesn't leak a later horizon's value. (repo:
+      features-service)
 - [ ] [DATA] P1. **Rename UAC's `OddsFeaturesMixin`/`SportsFeatureVector` fields** to the 2026-07-23 DECIDED naming
       scheme (rename in place). Add/update UAC unit tests covering the schema's field set. (repo: unified-api-contracts
       `unified_api_contracts/internal/domain/features_sports/_features_venue_referee_player_odds.py`). **Done when**:
