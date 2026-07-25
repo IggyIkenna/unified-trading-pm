@@ -207,6 +207,12 @@ ingested). Use for operator-only work, trackers, design docs, and dispatcher-sur
   Before shipping a paragraph that states a rule/invariant/formula, re-derive it against any example or formula the SAME
   doc already shows and confirm they agree; re-read the sentence once as a skeptic looking for the word that contradicts
   the clause right before it, not just for typos.
+- **Before writing a recovery/backfill script, live-probe that the data source still exists** _(finding N, 2026-07-25:
+  the worker on `sports_satellite_ao_dispatch_batch2-033` organically checked that the source GCS bucket was still
+  reachable before writing STEP 1's script rather than trusting the plan's stale-as-of-authoring premise — the plan it
+  was executing had tracked ~550,062 rows as recoverable for 8 days after the bucket had actually been deleted;
+  `recovery_plan_source_liveness_probe_gap_2026_07_25.md`)._ A recovery/backfill todo's first step should confirm the
+  named source (bucket/table/API) is still live, not assume the plan's authoring-time premise still holds.
 
 ---
 
