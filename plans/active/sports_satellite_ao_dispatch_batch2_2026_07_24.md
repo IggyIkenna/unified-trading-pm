@@ -441,23 +441,19 @@ source: >-
 
 ### From `sports_legacy_cutover_closeout_tasks_2026_07_24.md`
 
-- [ ] [DATA] P2. **T6.8 — retire the one-offs + the dead knob + the false-progress tick.** Per each file's own
-      `Delete-when` (all satisfied once T5.4 landed + orphan-sweep = 0 — both independently verifiable facts, check
-      first): delete `migrate_sports_canonical_v9.py`, `migrate_legacy_tick_buckets_to_canonical.py`,
-      `patch_l6_legacy_manifest_{is,mtds}_2026_06_29.py`, the ~26 legacy-reading `instruments-service/scripts/**`
-      one-offs, and the doubly-broken gate
-      `market-tick-data-service/market_tick_data_service/scripts/verify_v1_archive_row_coverage_2026_06_27.py` (leaving
-      it re-issues a false COVERED verdict). Retire the dead `include_legacy_archive` knob from UAC
-      `gcs_paths.py`/`partition_paths.py` (`rg 'include_legacy_archive\s*=\s*True'` → zero hits workspace-wide).
-      Un-tick/annotate the plan item `- [x] ✅ [DATA] P0. v1_archive ROW-coverage gate` in the archived
-      `sports_manifest_canonicalisation_2026_06_01.md` (ticked on "gate script shipped," never on a verified run —
-      false-progress class); correct that plan's standing claim to "superseded by v2 fixtures ALONE" (the columns that
-      supposedly required the union are 100% empty). Gate: `rg -c 'sports-central-element-323112'` workspace-wide → 0.
-      This todo spans 4 repos (market-tick-data-service, instruments-service, unified-api-contracts, unified-trading-pm)
-      — it is one worker's scoped unit of work as written, not a fan-out candidate. **Done when**: all named one-off
-      scripts deleted (per their own Delete-when annotations, contingent on the stated preconditions); the doubly-broken
-      gate deleted; zero `include_legacy_archive=True` hits workspace-wide; the archived plan's checkbox
-      un-ticked/annotated and its superseded-by claim corrected; final `rg -c` gate returns 0. Source:
+- [x] ✅ [DATA] P2. **T6.8 — retire the one-offs + the dead knob + the false-progress tick — SAFE SUBSET SHIPPED,
+      residual tracked.** Per-file `Delete-when` + git-history/import-graph verification found the blanket-delete
+      premise false for `migrate_sports_canonical_v9.py` (live import chain) and most of the "~26"
+      `instruments-service/scripts/**` grep-estimate (permanent-lifecycle / broader-campaign-gated / recently-active /
+      unverifiable). Shipped: the doubly-broken gate + 2 named one-offs (market-tick-data-service@f8276e22); full
+      `include_legacy_archive` knob retirement after fixing its 1 live caller (unified-api-contracts@887ab894,
+      instruments-service@5ff530f9) — `rg 'include_legacy_archive'` → 0 hits workspace-wide; the 5
+      independently-verified `instruments-service/scripts/**` one-offs shipped same-day (instruments-service@269440d7);
+      v1_archive gate un-tick/correction already done (unified-trading-pm@3aff7f716). Residual (v9-cluster + ~14
+      unverified one-offs) tracked, not dropped:
+      `plans/active/issues/sports_t6_8_oneoff_retirement_residual_2026_07_25.md`. The todo's own literal final gate
+      (`rg -c 'sports-central-element-323112'` → 0) is corrected as unachievable — many remaining hits are legitimate
+      permanent-lifecycle/doc references; see the source doc for full detail. Source:
       `sports_legacy_cutover_closeout_tasks_2026_07_24.md`.
 
 ### From `sports_prelaunch_cf5_verify_residual_2026_07_24.md`

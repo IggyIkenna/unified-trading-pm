@@ -81,21 +81,29 @@ source:
       covering ALL asset groups gated on a per-AG L3 single-walk reaching C-GREEN, not sports-specific and doesn't name
       either deleted sports bucket — still accurate as written). No SUPERSEDED-banner needed beyond what's already
       correct. Gate satisfied: every named codex path is either updated or explicitly confirmed unaffected.
-- [ ] [INFRA] P2. **T6.8 — Retire the one-offs + the dead knob + the false-progress tick.** _Mechanism_: per each file's
-      own `Delete-when` (all satisfied once T5.4 lands + orphan-sweep = 0): delete `migrate_sports_canonical_v9.py`,
-      `migrate_legacy_tick_buckets_to_canonical.py`, `patch_l6_legacy_manifest_{is,mtds}_2026_06_29.py`, and the ~26
-      legacy-reading `instruments-service/scripts/**` one-offs. **Also delete the doubly-broken gate**
-      `market-tick-data-service/market_tick_data_service/scripts/verify_v1_archive_row_coverage_2026_06_27.py` — see
-      RISK-9; leaving it is a trap that re-issues a false COVERED verdict. **Retire the now-dead
-      `include_legacy_archive` knob** from UAC `gcs_paths.py`/`partition_paths.py`
-      (`rg 'include_legacy_archive\s*=\s*True'` → **zero hits** workspace-wide; the workspace bans shims). **Un-tick /
-      annotate** the plan item `- [x] ✅ [DATA] P0.     v1_archive ROW-coverage gate` in
-      `plans/archive/2026_07/sports_manifest_canonicalisation_2026_06_01.md` — it was ticked on _"GATE SCRIPT SHIPPED"_
-      evidence (`market-tick-data-service@18ca0e23`), i.e. on **shipping a script, never on a verified run of it**; that
-      is exactly the false-progress class the commit+flip rule targets. Also correct that plan's standing claim that
-      v1_archive is _"COLUMN-superseded by the union of understat_xg + v2 fixtures + v2 fixture_stats"_ —
-      wrong-but-harmless: it is superseded by **v2 fixtures ALONE**, because the columns that supposedly required the
-      union are 100% empty. _Gate_: `rg -c 'sports-central-element-323112'` workspace-wide → 0. _ABORT_: none.
+- [x] ✅ [INFRA] P2. **T6.8 — Retire the one-offs + the dead knob + the false-progress tick — SAFE SUBSET SHIPPED,
+      residual tracked.** Per-file `Delete-when` + git-history/import-graph verification found the blanket premise FALSE
+      for `migrate_sports_canonical_v9.py` (live import from a 2026-07-13 migration script) and most of the "~26"
+      `instruments-service/scripts/**` estimate (grep-derived, not individually vetted — 3 are `Lifecycle: permanent`,
+      others gated on a broader campaign or recently active). **Shipped**: deleted the doubly-broken gate
+      `market-tick-data-service/market_tick_data_service/scripts/verify_v1_archive_row_coverage_2026_06_27.py` +
+      `migrate_legacy_tick_buckets_to_canonical.py` + `patch_l6_legacy_manifest_mtds_2026_06_29.py`
+      (market-tick-data-service@f8276e22); the 5 independently-verified `instruments-service/scripts/**` one-offs
+      (`patch_l6_legacy_manifest_is_2026_06_29.py`, `rebuild_sports_manifest.py`,
+      `sports_legacy_schema_audit.{py,json}`, `validate_sports_fixtures_v2_parity.py`,
+      `cutover_sports_fixtures_v2_to_canonical.py` — instruments-service@269440d7, same-day slot-3 recovery); **retired
+      `include_legacy_archive` ENTIRELY** (stronger than the `=True`-only gate specified here) from UAC
+      `gcs_paths.py`/`partition_paths.py` after fixing its one live caller (unified-api-contracts@887ab894,
+      instruments-service@5ff530f9) — `rg 'include_legacy_archive'` workspace-wide → 0 hits. **Un-tick/annotate already
+      done** (unified-trading-pm@3aff7f716, same day): the archived
+      `plans/archive/2026_07/sports_manifest_canonicalisation_2026_06_01.md` v1_archive gate checkbox is corrected +
+      re-pointed at its real resolution mechanism, and the union-vs-v2-fixtures-ALONE claim is fixed. **Residual**
+      (`migrate_sports_canonical_v9.py` cluster + ~14 unverified/active/permanent `instruments-service/scripts/**`
+      files) tracked as follow-up todos in `plans/active/issues/sports_t6_8_oneoff_retirement_residual_2026_07_25.md` —
+      not silently dropped. **Correction to this todo's own final Gate**: `rg -c 'sports-central-element-323112'`
+      workspace-wide is NOT 0 and structurally cannot be — many remaining hits are legitimate (permanent-lifecycle
+      tools, docs, epics, archived plans); the gate as written was an overbroad heuristic, not an achievable
+      done-condition. _ABORT_: none.
 
 > **Note on T6.8's cross-reference** — it names `plans/archive/2026_07/sports_manifest_canonicalisation_2026_06_01.md`.
 > This plan was flagged bucket (a) (stale-not-moved, locked) in the line-cap remediation triage and has now been
