@@ -3,12 +3,15 @@ doc_type: plan
 title: Prediction consolidated closeout — native-todo AO extract finalize
 summary: >-
   Gated closeout for prediction_consolidated_native_ao_extract_2026_07_25.md — machine-held via depends_on +
-  gate_on_depends: true until all 5 of that plan's todos are done. Unlike the batch1/batch2 finalize pattern (which
-  reconciles checkboxes in a DIFFERENT sibling source doc), this extract's own source IS
-  prediction_consolidated_closeout_2026_07_18.md — so this finalize plan reconciles checkboxes directly in the PARENT
-  doc's "Queued audits + reviews" / "Distinct Values" sections, re-checks whether the 2 deferred native todos (P3
-  duplicate-note, P1 POLYMARKET schema-extension) have newly cleared, and archives the EXTRACT batch doc itself (never
-  the parent — the parent stays active with Phase B/C/D/E still open).
+  gate_on_depends: true until all 5 of that plan's todos are done. This extract's own source WAS
+  prediction_consolidated_closeout_2026_07_18.md at drafting time, but the same-day consolidated-closeout split pass
+  relocated all 5 targeted checkboxes out to prediction_phase_ab_residuals_2026_07_24.md and
+  prediction_phase_d_formal_smoke_and_backfill_2026_07_24.md (corrected 2026-07-25, corpus-wide referrer fixup) — so
+  this finalize plan now reconciles checkboxes at those 2 phase children (the parent's own "Distinct Values / axis-value
+  census" section prose, not its former checkbox, is the one piece that's unchanged), re-checks whether the 2 deferred
+  native todos (the former P3 duplicate-note — now merged into phase_ab's reconciliation todo — and the P1 POLYMARKET
+  schema-extension) have newly cleared, and archives the EXTRACT batch doc itself (never the parent — the parent stays
+  active with Phase B/C/D/E still open).
 status: draft
 nature: process
 asset_group: [prediction]
@@ -20,9 +23,11 @@ related:
   [
     /plans/active/prediction_consolidated_native_ao_extract_2026_07_25.md,
     /plans/active/prediction_consolidated_closeout_2026_07_18.md,
+    /plans/active/prediction_phase_ab_residuals_2026_07_24.md,
+    /plans/active/prediction_phase_d_formal_smoke_and_backfill_2026_07_24.md,
   ]
 created: "2026-07-25"
-last_updated: "2026-07-25"
+last_updated: "2026-07-25" # same-day correction (consolidated-closeout split pass): todos 1-2 rewritten to reconcile checkboxes at phase_ab_residuals/phase_d instead of the parent's now-relocated "Queued audits + reviews" section; related: extended to both phase children
 parent_epic: predictions_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -51,30 +56,44 @@ drift_direction: advance-code
 
 ## Todos
 
-- [ ] [REVIEW] P2. **Reconcile the parent doc's checkboxes.** Of the extract batch's 5 todos, 2 are FULL completions
-      (adapter dead-code audit, adversarial AO-dispatch-readiness pass) and 3 are PARTIAL (the `-is`/`-mtds` pre-Phase-B
-      baseline runs, and the reconciliation verify+cite). In `prediction_consolidated_closeout_2026_07_18.md`'s "Queued
-      audits + reviews" section: flip the 2 fully-completed todos' checkboxes to `[x]` with the evidence (filed-findings
-      list or "0 findings" citation; Track-Y findings or "0 findings" citation). For the 3 partial todos, do NOT flip
-      their checkboxes — instead append a dated Progress Log note recording exactly what landed (which leg of "twice
-      more" / which dated pass) and what remains (the Phase-B mid-migration / post-migration leg), so a future reader
-      doesn't re-investigate work already done. Also update the "Distinct Values / axis-value census" section per the
+- [ ] [REVIEW] P2. **Reconcile the checkboxes at their NEW homes (corrected 2026-07-25 — the parent's "Queued audits +
+      reviews" section this todo originally targeted was forked out to the 4 Phase children the SAME day this extract
+      was drafted; it no longer carries any real checkbox for any of the 5 items below).** Of the extract batch's 5
+      todos, 2 are FULL completions (adapter dead-code audit → `prediction_phase_ab_residuals_2026_07_24.md`'s "A5 —
+      Adapter code-quality audit" subsection; adversarial AO-dispatch-readiness pass →
+      `prediction_phase_d_formal_smoke_and_backfill_2026_07_24.md`'s Phase D section) and 3 are PARTIAL (`-is`
+      pre-Phase-B baseline + `-mtds` pre-Phase-B baseline → both in
+      `prediction_phase_d_formal_smoke_and_backfill_2026_07_24.md`'s Phase D section, as their OWN dedicated
+      3x-cadence-top-up checkboxes distinct from that doc's post-migration P0 gate; the reconciliation verify+cite →
+      `prediction_phase_ab_residuals_2026_07_24.md`'s Phase B section, merged into ONE combined checkbox with the former
+      "Distinct Values" P3 duplicate-note). Flip the 2 fully-completed todos' checkboxes to `[x]` at their new homes
+      with the evidence (filed-findings list or "0 findings" citation; Track-Y findings or "0 findings" citation). For
+      the 3 partial todos, do NOT flip their checkboxes — instead append a dated Progress Log note (in the HOSTING
+      phase-child doc, not the parent) recording exactly what landed (which leg of "twice more" / which dated pass) and
+      what remains (the Phase-B mid-migration / post-migration leg), so a future reader doesn't re-investigate work
+      already done. Also update the parent's "Distinct Values / axis-value census" section (unchanged location) per the
       extract batch's todo 4 (cite the 2026-07-24 reconciliation pass alongside the 2026-07-20 baseline, if not already
       landed by that todo's own execution). **Done when**: all 5 extract-batch todos have a corresponding, verified
-      update in `prediction_consolidated_closeout_2026_07_18.md` (checkbox flip for the 2 full ones, Progress Log note
-      for the 3 partial ones), citing the extract-batch's commit SHA(s) as evidence.
-- [ ] [REVIEW] P2. **Re-check the 2 deferred native todos.** (a) P3 "Duplicate note": re-check whether Phase B (the
-      canonicalisation migration) has landed since this extract was drafted — if yes, dispatch a new bounded todo
-      (post-Phase-B `/data-pipeline-reconciliation prediction` run, diffed against the 2026-07-20 baseline) into a
-      follow-up plan or directly if a live AO plan already exists for it; if Phase B still hasn't landed, leave it
-      deferred with a dated re-check note. (b) P1 POLYMARKET `prediction_trades` schema-extension: re-check whether the
-      operator has ruled on the trader-identity/PII field question (search
+      update at their respective new homes (checkbox flip for the 2 full ones, Progress Log note for the 3 partial ones)
+      plus the parent's Distinct-Values-section update, citing the extract-batch's commit SHA(s) as evidence.
+- [ ] [REVIEW] P2. **Re-check the 2 deferred native todos.** (a) The former P3 "Duplicate note" — **corrected
+      2026-07-25**: this is no longer a separate parent-doc item; it merged into
+      `prediction_phase_ab_residuals_2026_07_24.md`'s reconciliation-cadence todo (Phase B section). Re-check whether
+      Phase B (the canonicalisation migration) has landed since this extract was drafted — if yes, dispatch a new
+      bounded todo (post-Phase-B `/data-pipeline-reconciliation prediction` run, diffed against the 2026-07-20 baseline)
+      into a follow-up plan or directly if a live AO plan already exists for it; if Phase B still hasn't landed, leave
+      that merged todo deferred with a dated re-check note. (b) P1 POLYMARKET `prediction_trades` schema-extension —
+      **corrected 2026-07-25**: relocated (folded into the existing A2 dual-write-trees todo) in
+      `prediction_phase_ab_residuals_2026_07_24.md`'s Phase B section, no longer in the parent's "Queued audits +
+      reviews". Re-check whether the operator has ruled on the trader-identity/PII field question specifically (search
       `plans/active/issues/prediction_polymarket_legacy_dual_write_trees_metadata_loss_2026_07_24.md`'s Progress log and
-      any `autonomous_session_operator_decisions_*.md` doc for a dated ruling); if ruled, the schema-design step becomes
-      bounded — draft a new AO-eligible todo against the ruling's specific field list (plus `[OPERATOR]` +
-      delete-safety-protocol citation for the migration step, per `task_template.md` finding O); if not yet ruled, leave
-      it deferred. **Done when**: both (a) and (b) have an explicit current-state note (still gated / newly
-      dispatchable, with a new todo/plan created if so).
+      any `autonomous_session_operator_decisions_*.md` doc for a dated ruling) — note the MACRO question (extend vs.
+      drop vs. fork) was already ruled 2026-07-25 (per that phase_ab todo's own text), but the specific PII field list
+      is a narrower, still-open sub-question per this extract's own Deferred analysis below; if the field-list question
+      is now ruled too, the schema-design step becomes bounded — draft a new AO-eligible todo against the ruling's
+      specific field list (plus `[OPERATOR]` + delete-safety-protocol citation for the migration step, per
+      `task_template.md` finding O); if not yet ruled, leave it deferred. **Done when**: both (a) and (b) have an
+      explicit current-state note (still gated / newly dispatchable, with a new todo/plan created if so).
 - [ ] [DOC] P2. **Archive `prediction_consolidated_native_ao_extract_2026_07_25.md`** via the standard 6-step ritual
       (per CLAUDE.md's plan-archival rule): confirm the Deferred section above has nothing left unaddressed (todo 2
       should have already resolved what it could) → add the archive banner → run the codex-alignment check → grep the
