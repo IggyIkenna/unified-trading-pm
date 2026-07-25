@@ -23,7 +23,7 @@ summary: >-
   escalation role docs (`agents/cicd.md`, `agents/conflict_resolver.md`, `agents/data_pipeline_failure.md`) all declare
   `lifecycle: one_shot` + an explicit `does_not: Enter the worker /boot heartbeat loop` — so the generated boot message
   and the role's own canonical doc directly contradict each other for all three roles, every time.
-status: open
+status: resolved
 nature: issue
 asset_group: [meta]
 stage: [meta]
@@ -47,7 +47,7 @@ parent_epic: orchestrator_master
 assigned_vm: planning
 priority: P1
 locked_by:
-resolved_by:
+resolved_by: agent-orchestrator@6495d52
 source:
   "found live during cicd escalation agt-e0a637 (unified-trading-pm#1465, plan_health wall); filed during the session's
   /pre-compact durability sweep, 2026-07-25"
@@ -115,11 +115,13 @@ heartbeat + STEP 1 reads unchanged, but STEP 2 should point at the escalation's 
 source, not `/boot`. STEP 3 (completion) can stay the same one-shot-complete `/done` call, since that part is already
 correct and consistent with the role docs.
 
-- [ ] [CODE] P1. In `server/prompts.py::_compose()`, branch the STEP 2/STEP 3 text on whether `role` is a one-shot
-      escalation role (not merely `slot_id is not None`) — e.g. check
-      `role in {"cicd", "conflict_resolver",     "data_pipeline_failure"}` or thread the `lifecycle="one_shot"` value
-      already computed in `escalation.py` through to `render()`/`_compose()`. For that branch, STEP 2 should read as
-      "your task is already fully specified by the session vars above ($ESCALATION_ID/$WALL_TYPE/...) — do NOT call
-      /boot" instead of the generic queue-drain instruction. Add/update a unit test in agent-orchestrator's prompts test
-      module asserting the composed boot text for role=cicd (and conflict_resolver, data_pipeline_failure) never
-      contains the string `/boot`. (repo: agent-orchestrator)
+- [x] [CODE] P1. ✅ `agent-orchestrator@6495d52`. Added a module-level `_ONE_SHOT_ESCALATION_ROLES` frozenset
+      (`{"cicd", "conflict_resolver", "data_pipeline_failure"}`) and branched `_compose()` on
+      `role in     _ONE_SHOT_ESCALATION_ROLES` (checked before the generic `slot_id is not None` branch, not instead of
+      it — STEP 0/1 stay identical). The one-shot branch's STEP 2 text deliberately never mentions the `/boot` endpoint
+      at all (not even in a "do NOT call X" warning — the recommended decision's exact wording would itself have
+      contained the literal substring the test forbids), just points at the session-vars block already present. STEP 3
+      is unchanged (the existing one-shot `/done` line was already correct). Added 5 tests to `tests/test_prompts.py`: a
+      parametrized test asserting no `/boot` substring for all 3 roles + STEP 2/3 shape, a STEP 0/1-unchanged check, and
+      a regression guard that regular slot workers still get told to `/boot`. Full `quality-gates.sh` green (1647 tests,
+      ruff + basedpyright clean). (repo: agent-orchestrator)
