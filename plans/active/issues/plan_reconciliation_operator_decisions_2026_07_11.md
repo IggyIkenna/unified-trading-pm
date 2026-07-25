@@ -13,7 +13,7 @@ summary:
   finding text for Sections A+B (3606 lines) extracted verbatim 2026-07-25 into 4 history-part companion docs for
   line-cap compliance; this parent keeps the frontmatter, provenance, §A2 rulings table, Sections C/D, and the Progress
   Log (which carries the one still-open todo)."
-status: open
+status: resolved
 nature: notes
 asset_group: [cross-cutting]
 stage: [meta]
@@ -37,7 +37,7 @@ estimate_class: refactor
 source:
   "plan-reconcile contradiction audit, interactive session 2026-07-10/11 (operator-dispatched /autonomous); method:
   cursor-configs/skills/plan-reconcile/SKILL.md; findings archive in session scratchpad findings.json"
-resolved_by:
+resolved_by: 320/320 findings dispositioned; last remaining item (codex stub) confirmed already-documented 2026-07-25
 locked_by:
 drift_direction: advance-code
 depends_on: []
@@ -342,8 +342,12 @@ tracked in the Progress Log.
       a scratch-repo dry run (fake `systemctl`/`curl`): no alert on ticks 1-2, alert fires at tick 3, dedup suppresses
       tick 4, tick-counter clears once the self-heal actually resolves the staleness, and the pre-existing drift-based
       `_alert_wedge` still fires independently on a separate dirty+12-behind scenario (no cross-suppression).
-- [ ] [DOCS] P2. Codex stub: ao-self-pull.sh is the production AO deploy mechanism but is absent from
+- [x] [DOCS] P2. Codex stub: ao-self-pull.sh is the production AO deploy mechanism but is absent from
       agent-orchestrator-overview.md / runtime-deployment-topology.md (codex edit — operator-gated, queue for next Q&A).
+      ✅ Re-checked 2026-07-25: already fully documented in both — `agent-orchestrator-overview.md` lines 271-285 (its
+      own dedicated "Deploy currency" writeup) and `runtime-deployment-topology.md` line 590, plus
+      `agent-orchestrator-single-vm-architecture.md` lines 69/331-334. No longer a gap; superseded by later codex work,
+      not a new edit. No operator ruling needed — this was a factual doc-freshness check, not an authority question.
 - 2026-07-12 (rulings batch 2): applied per §A2 — LOGIC FREEZE lifted in strategy_master (286/292; NB the freeze's
   UNFREEZE-ping channel \_agent_pings.md was retired 2026-07-04, so the epic banner + this ledger ARE the lift record);
   G12 -> P0 in execution_master (367); Fireblocks OUT in defi_master (376); Tardis pair closed/unblocked (228+27); cefi
