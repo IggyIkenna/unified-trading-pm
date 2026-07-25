@@ -14,7 +14,7 @@ stage: [data]
 repos: [features-service, unified-api-contracts]
 scope: [engineer]
 tags: [sports, test-failure, table-schemas, pre-existing]
-related: []
+related: [/plans/active/sports_consolidated_closeout_2026_07_19.md]
 created: 2026-07-25
 priority: P2
 parent_epic: sports_master
