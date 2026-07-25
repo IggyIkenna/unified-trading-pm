@@ -807,13 +807,23 @@ source: >-
       consolidator-cycle-separated polls (~100s apart): `odds_horizon_bucket` = 408,815 rows / 130 distinct canonical
       league_id values, identical both polls — no TOCTOU-style revert. Full detail + shard4 residual tracking (P2 retry
       todo, does not block this checkbox): `issues/mdps_odds_horizon_bucket_shard4_residual_failures_2026_07_25.md`.
-      **Remaining: step (4) `batch_footystats` copy+swap (16,970 objects) — NOT started, and NOT a simple script
-      re-target.** Spot-checked the real raw shape (3 sample days): bare `instrument_type=` segment (empty value) on
-      every object, filenames are `ticks_migrated_<timestamp>.parquet` (reads as a one-time migration dump, not this
-      pipeline's live write path — worth confirming liveness), and the existing
-      `classification.json`/`sportkey_canon_final.json` DO cover the raw league values sampled (so classification-map
-      reuse looks likely, smaller gap than first feared). The `instrument_type=` disposition is a genuine architect
-      call, not an execution detail — raising as a blocked question rather than guessing on prod data. Full addendum:
+      **Step (4) `batch_footystats` copy+swap — CORRECTED 2026-07-25 (slot 7): this is NOT a casing-extension task, the
+      wording was stale.** Deterministic probe (writer-emission grep + manifest census, per BLK-b89f6ec3) found the
+      16,969-object population is not a footystats shape at all: 100% carries `source=ODDS_API`, mis-stamped
+      `pipeline_mode=batch_footystats` for what is really `batch_odds_api` data. This was ALREADY diagnosed AND largely
+      fixed by an archived investigation:
+      `plans/archive/issues/sports_canonical_migrated_odds_mistamped_footystats_2026_07_16.md` — the genuine-gain
+      199/1,815 days were merged into canonical `batch_odds_api` on 2026-07-17 (`market-tick-data-service@75f226e8`,
+      acceptance-tested against the real MDPS derive, 0 rows lost). Re-verified 2026-07-25 (BLK-8e3fdaff): the manifest
+      now carries ZERO rows for this population (already purged/pruned) but the raw GCS objects still exist as ORPHANS
+      for most sampled days; a fresh content-compare on `day=2022-06-15` reconfirms the archived doc's finding that the
+      remainder is a pure duplicate of already-canonical content (0 unique keys either side). **There is no remaining
+      copy+swap work — the copy already happened correctly.** What remains is the archived doc's own still-open,
+      human-gated PURGE of the now-redundant orphaned objects, staged (not executed) per the 5-part delete-safety proof:
+      `issues/sports_batch_footystats_mistamped_odds_orphan_delete_staging_2026_07_25.md`. **This checkbox reflects
+      steps 1-4 as CORRECTLY resolved for all AO-executable work** — the remaining PURGE is human-only per
+      `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` § 3.1 (prod-bucket delete hard stop), tracked in the
+      linked issue doc, not blocking. Full addendum on the original (now-superseded) footystats-shape spot-check:
       `issues/mdps_odds_horizon_bucket_reprocess_launch_prep_2026_07_25.md`.
 
 - **`sports_odds_feature_naming_canonicalization_2026_07_21.md`'s FSS↔ml-service↔strategy-service parity test** — gated
