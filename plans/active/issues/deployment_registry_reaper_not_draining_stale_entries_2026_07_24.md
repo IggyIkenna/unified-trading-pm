@@ -497,13 +497,32 @@ flipping the checkbox.
       dispatch's most promising unexplored angle: pull + diff the FULL image layer history (not just Dockerfile source)
       between `00274-s9g`'s build and current, in case a base-image or builder-stage change (not visible in the
       Dockerfile text itself) altered something at the OS/container level; failing that, this may genuinely warrant a
-      GCP support ticket. **UPDATE 2026-07-25T14:02Z (slot 5): found the ACTUAL blocker — it is not SIT itself.** SIT
-      ran, passed, and logged a matching-tree stamp for `deployment-api`, but the stamp is fire-and-forget
-      (`repository_dispatch` only) and the downstream Firestore write is 403'ing FLEET-WIDE (`ci_status_store.py`
-      `PermissionDenied`, `unified-trading-sa` ADC identity, reproduced live via direct REST `PATCH` — same 403; 0/95
-      sampled `ci-status-update.yml` runs succeeded since 2026-07-25T10:36Z). This blocks EVERY SIT-covered repo's
-      promote, not just this one. Filed as its own cross-cutting P0 since it blocks the whole fleet's LDR→main pipeline,
-      not just this todo:
+      GCP support ticket. **IMPORTANT CORRECTION 2026-07-25T16:04Z (slot 5, same session) — this is NOT a new
+      regression, recalibrating the framing above.** Pulled the FULL (unfiltered, `format=json`) log set for `00274-s9g`
+      (the "historical revision that logged fine" cited above) — of **500** sampled entries, only **ONE** is
+      `run.googleapis.com%2Fstderr` (the single `CancelledError` traceback already quoted in this doc's "What I found"
+      section); the other 499 are `%2Frequests` (HTTP access) + `%2Fvarlog%2Fsystem` (container lifecycle). **Normal
+      `logger.info()` calls were ALREADY silent in that "working" revision too** — the ONE stderr line that exists is an
+      UNCAUGHT EXCEPTION traceback, not evidence that routine app logging worked. This matches the ORIGINAL 2026-07-24
+      diagnosis verbatim ("Never saw a single ... log line in 7 days ... nor even the one-time startup lines ... despite
+      minScale=1") — i.e. total log silence for ROUTINE output has been the standing state across MANY revisions/days,
+      not something newly broken by a recent change. The genuinely interesting residual question is narrower than framed
+      above: **why does an uncaught exception's traceback reach stderr when literally nothing else does** (not
+      `logger.info()`, not a bare `print()`, not this session's explicit `sys.stderr.write()+flush()`)? A plausible
+      lead: Python's default unhandled-exception path (`sys.excepthook` / asyncio's default task-exception handler
+      calling `traceback.print_exception`) writes DIRECTLY to the `sys.stderr` FILE OBJECT via the C-level `PyErr_Print`
+      machinery, which may bypass whatever is intercepting/redirecting `sys.stderr` for every other write path in this
+      process (something is clearly wrapping or replacing `sys.stderr` after Python startup, or gunicorn/uvicorn's
+      worker init is redirecting fds for normal writes but not for the crash path) — worth checking whether anything in
+      this app's startup (`main.py`, `lifespan.py`, UTL's `fastapi_uei_lifespan`/`setup_service_observability`)
+      reassigns `sys.stdout`/ `sys.stderr` to a custom stream object (e.g. a StringIO-backed log capturer, or an
+      OTel/observability SDK's stdio interception) that only proxies through SOME writes. **UPDATE 2026-07-25T14:02Z
+      (slot 5): found the ACTUAL blocker — it is not SIT itself.** SIT ran, passed, and logged a matching-tree stamp for
+      `deployment-api`, but the stamp is fire-and-forget (`repository_dispatch` only) and the downstream Firestore write
+      is 403'ing FLEET-WIDE (`ci_status_store.py` `PermissionDenied`, `unified-trading-sa` ADC identity, reproduced live
+      via direct REST `PATCH` — same 403; 0/95 sampled `ci-status-update.yml` runs succeeded since 2026-07-25T10:36Z).
+      This blocks EVERY SIT-covered repo's promote, not just this one. Filed as its own cross-cutting P0 since it blocks
+      the whole fleet's LDR→main pipeline, not just this todo:
       [issues/ci_status_firestore_write_permission_denied_fleet_wide_2026_07_25.md](ci_status_firestore_write_permission_denied_fleet_wide_2026_07_25.md).
       Part (1) of this todo is now ALSO gated on that doc's Todo 1/2 (operator restores the Firestore permission, then
       `ci-status-update.yml` goes green again) before the promote can ever pass the SIT gate. Next dispatch: check that
