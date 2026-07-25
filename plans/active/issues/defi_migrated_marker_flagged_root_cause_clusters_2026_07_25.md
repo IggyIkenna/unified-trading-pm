@@ -73,6 +73,8 @@ SAFE marker is wrongly classified. The finding is about what "fix the FLAGGED on
    sense. If the content is only in the marker (no needs_attribution twin), the real question isn't "re-run the
    migration" — it's whether these 1-row aggregates are even meant to go through the per-instrument split at all, or
    whether they should have a different retirement/keep policy from the start. **Design question, not a migration bug.**
+   (NOTE 2026-07-25, later same day: this design question is now MOOT — the operator decided to remove GMX platform-wide
+   rather than fix/retire its data in place; see `plans/active/defi_gmx_venue_removal_2026_07_25.md`.)
 2. **TRADER_JOE_V2 (and likely the other dex_pool_state SHORTFALL clusters)** — this is a genuine upstream gap: pools
    have a real identity (`pool_id`) but no symbol resolution. The FIX (if pursued) is a symbol/pool metadata backfill
    for these specific pools — likely an instruments-service / URDI concern, NOT something
@@ -86,8 +88,10 @@ SAFE marker is wrongly classified. The finding is about what "fix the FLAGGED on
   them — verified it wouldn't fix at least the TRADER_JOE_V2 case, and the GMX case isn't really a "migration" problem
   at all.
 - The FLAGGED markers should stay exactly as-is (never deleted) until each cluster gets its own scoped decision:
-  accept-as-permanently-orphaned (GMX 1-row aggregates, if that's ruled the right call), a symbol/pool-metadata backfill
-  (TRADER_JOE_V2 + likely other dex_pool_state venues), or further investigation (lst_rates).
+  accept-as-permanently-orphaned (GMX 1-row aggregates — RULED 2026-07-25: GMX removed platform-wide, see
+  `defi_gmx_venue_removal_2026_07_25.md`, so this cluster is accept-as-orphaned by construction, not a live decision), a
+  symbol/pool-metadata backfill (TRADER_JOE_V2 + likely other dex_pool_state venues), or further investigation
+  (lst_rates).
 - This is exactly what the delete_migrated_defi_markers_2026_07_23.py dry-run is FOR — it correctly refuses to touch any
   of this. No corrective action needed on that script; this issue is about what comes after, once its report is final.
 

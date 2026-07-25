@@ -94,7 +94,6 @@ Both are wrong post-2026-01-13. The flips above unlock the capital-efficient cro
 - BINANCE rows stay `accepted=False` — Binance Multi-Assets Mode currently lists only
   BTC/ETH/BNB/XRP/ADA/DOT/SOL/USDC/USDT (no LST entries).
 - ASTER rows stay `accepted=False` — Aster supports USDC/USDT/USDF/asBNB only.
-- GMX rows stay `accepted=False` — GMX-V2 per-market collateral sets exclude LSTs.
 - The Tardis-captured `*-FUTURES` venue rows track the same gap (linear-USDT or coin-margined only).
 
 ## Follow-up items
@@ -157,7 +156,7 @@ Category B scenarios that directly test collateral-acceptance correctness:
   acceptance threshold at each venue
 
 Venue-collateral rows with `accepted=True` in the tables above are the cells exercised by these scenarios. Venues with
-`accepted=False` (HL, Binance, Aster, GMX) are skipped in Category B.
+`accepted=False` (HL, Binance, Aster) are skipped in Category B.
 
 ## Composes with
 

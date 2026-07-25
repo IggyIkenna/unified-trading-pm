@@ -104,7 +104,8 @@ Future enhancement: auto-select L2 chain based on gas cost and DEX liquidity.
 **Future L2-native perp venues (when supported):**
 
 - Drift (Solana) -- fully on-chain perps
-- GMX (Arbitrum) -- on-chain perps with GLP liquidity
+- GMX (Arbitrum) -- on-chain perps with GLP liquidity (GMX removed platform-wide 2026-07-25 — see
+  `plans/active/defi_gmx_venue_removal_2026_07_25.md`; this future-support item is now moot)
 
 **SSOT for instrument types per venue:** See
 [`INSTRUMENT_TYPES_BY_VENUE`](../../../unified-api-contracts/unified_api_contracts/registry/venue_constants.py)

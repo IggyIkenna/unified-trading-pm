@@ -294,13 +294,14 @@ drift_direction: advance-code
       `issues/defi_pipeline_mode_source_desync_yearn_v3_2026_07_21.md`.
 - [ ] [SCRIPT] P1. Write + run a read-only cross-source funding-parity check for every surviving DeFi perp venue
       declared for BOTH `perp_funding` and `derivative_ticker` in UAC's capability registry (excluding
-      DRIFT-SOLANA/PACIFICA-SOLANA per the 2026-07-16 partial-supersede ruling). Per (venue, market, funding interval)
-      compare `perp_funding.funding_rate` against the matching `derivative_ticker` settlement row within a documented
-      tolerance; emit an honest report (match %, divergence distribution, worst offenders, noting thin history e.g.
-      GMX). File any genuine divergence via standard findings-triage — do not resolve inline. No prod writes. Repo:
-      market-tick-data-service (new lifecycle-marked script under `scripts/one_offs/`). **Done when**: the script exists
-      with a lifecycle marker, runs clean read-only against prod GCS/manifest for every named venue, and a
-      match%/divergence report is appended to the source issue doc's Progress log. Source:
+      DRIFT-SOLANA/PACIFICA-SOLANA per the 2026-07-16 partial-supersede ruling; also exclude GMX — REMOVED 2026-07-25,
+      see `defi_gmx_venue_removal_2026_07_25.md` — it is no longer a registered venue). Per (venue, market, funding
+      interval) compare `perp_funding.funding_rate` against the matching `derivative_ticker` settlement row within a
+      documented tolerance; emit an honest report (match %, divergence distribution, worst offenders). File any genuine
+      divergence via standard findings-triage — do not resolve inline. No prod writes. Repo: market-tick-data-service
+      (new lifecycle-marked script under `scripts/one_offs/`). **Done when**: the script exists with a lifecycle marker,
+      runs clean read-only against prod GCS/manifest for every named venue, and a match%/divergence report is appended
+      to the source issue doc's Progress log. Source:
       `issues/defi_perp_funding_canonicalisation_derivative_ticker_all_perps_2026_07_15.md`.
 - [ ] [REVIEW] P2. Audit + verify each of the 6 known DeFi cross-chain pool-address collisions (1 CURVE
       AVALANCHE+OPTIMISM, 5 BALANCER addresses patched by instruments-service's collision-backfill script) end-to-end
@@ -539,8 +540,9 @@ drift_direction: advance-code
       venue-axis check already run in `distinct_values_noncanonical_audit_2026_07_20.md` RESULT 4. Repo:
       unified-api-contracts (read-only). **Done when**: a finding is written (appended to the issue doc's Progress Log)
       stating definitively — via a read-only code trace and/or a scoped enumerator test — whether registering
-      `perp_daily_ctx` for the already-registered HYPERLIQUID/GMX/CeFi combinations would mint new expected_unattempted
-      rows or move completeness_pct. No code/schema/manifest changes made. Source:
+      `perp_daily_ctx` for the already-registered HYPERLIQUID/CeFi combinations would mint new expected_unattempted rows
+      or move completeness_pct (NOTE: GMX dropped from this combination list — REMOVED 2026-07-25, see
+      `defi_gmx_venue_removal_2026_07_25.md`). No code/schema/manifest changes made. Source:
       `issues/defi_perp_daily_ctx_manifest_gap_reader_risk_2026_07_22.md`.
 - [ ] [DATA] P2. **Resolve the Kamino/Solend `lending_indices` `instrument_type` shape conflict — probe BOTH candidate
       paths.** `issues/defi_solana_dex_pools_fake_history_recurrence_prd_bucket_2026_07_23.md` item 4 left this

@@ -282,7 +282,6 @@ class LiquidationProtocol(StrEnum):
     EULER = "euler"
     MORPHO = "morpho"
     KAMINO = "kamino"
-    GMX_V2 = "gmx_v2"
 
 
 class LiquidationBonusEntry(BaseModel):

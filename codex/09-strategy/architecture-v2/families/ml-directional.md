@@ -128,7 +128,7 @@ The ML Directional family engine provides:
 
 ## Venue patterns
 
-- **Continuous**: CEFI (Binance, OKX, Bybit, Hyperliquid, Deribit), TRADFI (IBKR, CME, CBOE), DEFI perps (GMX, Drift).
+- **Continuous**: CEFI (Binance, OKX, Bybit, Hyperliquid, Deribit), TRADFI (IBKR, CME, CBOE), DEFI perps (Drift).
   Single-venue typical, but multi-venue SOR supported.
 - **Event-settled**: Unity (primary for sports), direct sports books, Polymarket (prediction). Unity enables cross-book
   best-odds per leg with no wallet friction.

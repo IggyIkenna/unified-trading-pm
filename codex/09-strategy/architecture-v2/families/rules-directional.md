@@ -137,8 +137,7 @@ The Rules Directional family engine provides:
 
 ## Venue patterns
 
-- **Continuous**: CEFI (Binance, OKX, Bybit, Hyperliquid), TRADFI (IBKR equities/futures/FX, CME), DEFI perps (GMX,
-  Drift)
+- **Continuous**: CEFI (Binance, OKX, Bybit, Hyperliquid), TRADFI (IBKR equities/futures/FX, CME), DEFI perps (Drift)
 - **Event-settled**: Unity (primary for sports), direct sports books, Polymarket (prediction)
 
 ## Expression options

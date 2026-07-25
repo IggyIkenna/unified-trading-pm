@@ -148,7 +148,8 @@ Real code fixes / features needed (not backfills, not pure doc drift).
    `plans/active/issues/mtds_is_full_adapter_smoketest_findings_2026_07_07.md` Master record, 12 open todos: P0 crash
    risks (Deribit live-WS misclassification, Polymarket `book_snapshot_5` schema crash), P1 fixes (OKX/Bybit margin-type
    mislabeling, VENUS/BENQI/ RADIANT/EULER_V2 orchestrator wiring, Curve factory-pool undercount), several pending
-   operator decisions (GMX V2 coverage, IDLE/JITORESTAKING/SYMBIOTIC/KARAK empty-feed acceptance).
+   operator decisions (GMX V2 coverage — **moot, GMX removed platform-wide 2026-07-25, see
+   `defi_gmx_venue_removal_2026_07_25.md`** —, IDLE/JITORESTAKING/SYMBIOTIC/KARAK empty-feed acceptance).
 
 ### P1
 

@@ -163,7 +163,7 @@ explicit set. The canonical list (keep in sync with the `ACRONYMS` set in source
 ```
 ML  BTC  ETH  SOL  USD  USDT  USDC  GBP  EUR
 DeFi  CeFi  TradFi
-LP  IV  DEX  CEX  OKX  ERC20  AAVE  GMX  IBKR
+LP  IV  DEX  CEX  OKX  ERC20  AAVE  IBKR
 CME  CBOE  ICE  SPY  ES  NQ
 ```
 
