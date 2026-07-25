@@ -122,9 +122,12 @@ changelog/docstring comment describing the historical removal itself (never insi
       catalog/alias behavior (GMX never had LST collateral acceptance, so CARRY_STAKED_BASIS slot count is unaffected;
       CARRY_BASIS_PERP -13 slots, ML_DIRECTIONAL_CONTINUOUS DeFi perps -2 slots, both within the existing
       `_TARGET_MIN`/`_TARGET_MAX` band). `quality-gates.sh` green (108s, exit 0).
-- [ ] [BACKEND] P3. **Remove GMX from `unified-trading-library`** -- any shared constants/registries referencing GMX (3
-      files matched pre-scoping). Done-when: the definition-of-done convention above, zero hits. (repo:
-      unified-trading-library)
+- [x] ✅ [BACKEND] P3. **Remove GMX from `unified-trading-library`** -- any shared constants/registries referencing GMX
+      (3 files matched pre-scoping). Done-when: the definition-of-done convention above, zero hits. (repo:
+      unified-trading-library) -- unified-trading-library@f22e516f. Removed the `GMX` venue override
+      (`pipeline_mode_resolver.py`), the `gmx` APY seed (`core/mock_defi_dynamics.py`), and `GMX` from the DeFi venue
+      frozenset (`ml/models.py`). `grep -rli "\bgmx\b" . --include="*.py"` returns zero hits repo-wide (incl. tests).
+      `quality-gates.sh` green (146s, exit 0).
 - [ ] [OPERATOR] P1. **Purge GMX GCS objects + manifest rows** -- delete every `raw_tick_data/**/venue=GMX/**` object
       (all chains, all data_types: `perp_funding`, `derivative_ticker`, any `dex_pool_state` entries from the `gmx`
       protocol table) in `market-data-tick-defi-prd-central-element-323112`, and the corresponding manifest rows.
