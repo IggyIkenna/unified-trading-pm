@@ -80,17 +80,35 @@ changelog/docstring comment describing the historical removal itself (never insi
 
 ## Todos
 
-- [ ] [DATA] P2. **Remove GMX from `unified-api-contracts`** -- venue/adapter-key registries (`VENUE_TO_ADAPTER_KEY`),
-      `VENUE_COLLATERAL_MATRIX`, any `SOURCE_PRIORITY`/pipeline-mode entries, venue enums, and test fixtures. ~30 files
-      matched a `gmx` grep pre-scoping (some are just enum/fixture mentions, not GMX-specific logic) -- confirm each hit
-      before deleting, some may be shared collateral-matrix rows covering multiple venues. Done-when: the
-      definition-of-done convention above, zero hits in this repo. (repo: unified-api-contracts)
-- [ ] [BACKEND] P2. **Remove GMX capture from `market-tick-data-service`** -- delete
-      `cli/handlers/_perp_funding_gmx.py`, remove its dispatch wiring from `perp_funding_handler.py`, remove the `gmx`
-      protocol entry from `dex_pools_handler.py`'s protocol table and `_dex_pools_subgraph.py`'s query-selection map,
-      remove `gmx` from `_instruments_metadata.py`'s chain/address maps. ~42 files matched pre-scoping. Done-when: the
-      definition-of-done convention above, zero hits outside a dated removal-changelog comment. (repo:
-      market-tick-data-service)
+- [x] ✅ [DATA] P2. **Remove GMX from `unified-api-contracts`** -- unified-api-contracts@18d53d63. Actual footprint was
+      wider than the ~30-file pre-scoping (word-boundary grep missed `gmx_v2`/`gmxv2` forms): 44 files across
+      `registry/` (venue/adapter-key registries, `VENUE_COLLATERAL_MATRIX`, capability declarations, launch
+      dates/cadence), `internal/architecture_v2/` (collateral/jurisdiction/order-semantics/simulation-assumptions/
+      liquidation-bonus registries + the `_STAKED_HEDGE_VENUES`/`gmx_v2` eligible-venue-id entries in
+      `archetype_leg_spec_seeds.py`), `internal/reference/`, `internal/schemas/`, `scripts/`, and test fixtures (incl.
+      hardcoded registry-count assertions that dropped by 1 after the removal). Confirmed each hit per the todo's
+      caveat: left GMX-the-CeFi-token-symbol in `cefi_instrument_universe.py` and GMX-the-Morpho-collateral- asset in
+      `defi_reserve_params.py` untouched (different namespace, not the DeFi venue); left the
+      `test_ws_cassette_coexistence.py` `gmx_arbitrum_ws` mapping in place pending the sibling market-tick-data-service
+      todo's connector deletion (that test reads the READ-ONLY root MTDS clone, which still has the connector file --
+      removing the mapping now would fail for an unrelated reason). Definition-of-done grep
+      (`grep -rli '\bgmx\b' . --include="*.py"`) returns zero hits outside dated `2026-07-25` removal comments + the 2
+      out-of-scope token entries + the 1 documented pending-sibling-todo mapping. `bash scripts/quality-gates.sh` green
+      (11925 passed, 0 failed, exit 0).
+- [x] ✅ [BACKEND] P2. **Remove GMX capture from `market-tick-data-service`** -- market-tick-data-service@68407ae5.
+      Deleted `_perp_funding_gmx.py` + `gmx_arbitrum_ws.py`; stripped gmx dispatch from `perp_funding_handler.py`
+      (DEFAULT_PROTOCOLS, GMX subgraph queries, `_run_process` branch, class stage-bindings, `preflight()`'s graph-key
+      loading), `dex_pools_handler.py`'s protocol table, `_dex_pools_subgraph.py`'s query-selection map,
+      `liquidations_handler.py` + `_liquidations_queries.py` (GMX liquidation capture -- found beyond the todo's
+      explicit scope via the repo-wide grep, in-scope under "remove GMX capture"), `_instruments_metadata.py`'s
+      chain/address map, the connectors registry, `subgraph_health_probe.py`, `data_manifest_handler.py` + `cli/main.py`
+      doc/help strings. Removed/updated GMX-specific test coverage (`test_perp_funding_handler_coverage.py` +
+      `test_perp_funding_normalization.py` deleted -- fully GMX-scoped; `test_perp_funding_handler.py`,
+      `test_liquidations_handler_coverage.py`, `test_cf11_swallow_remediation.py`,
+      `test_defi_lst_perp_specialty_ws_scaffolds.py` trimmed). Verified via the definition-of-done grep convention (zero
+      hits outside dated `2026-07-25` changelog comments in non-test `.py`; dated one-off migration scripts under
+      `scripts/one_offs/` and `market_tick_data_service/scripts/` left untouched as historical artifacts, out of
+      "capture" scope). Evidence: `bash scripts/quality-gates.sh` exit 0 (6905 passed, 0 failed).
 - [ ] [DATA] P2. **Remove GMX from `instruments-service` reference data / MVP instrument universe** --
       `engine/orchestrator/defi.py`, `scripts/enumerate_expected_universe.py`,
       `scripts/dex_pool_glued_pair_id_canonicalize_2026_07_09.py`. Done-when: the definition-of-done convention above,
@@ -114,9 +132,12 @@ changelog/docstring comment describing the historical removal itself (never insi
       catalog/alias behavior (GMX never had LST collateral acceptance, so CARRY_STAKED_BASIS slot count is unaffected;
       CARRY_BASIS_PERP -13 slots, ML_DIRECTIONAL_CONTINUOUS DeFi perps -2 slots, both within the existing
       `_TARGET_MIN`/`_TARGET_MAX` band). `quality-gates.sh` green (108s, exit 0).
-- [ ] [BACKEND] P3. **Remove GMX from `unified-trading-library`** -- any shared constants/registries referencing GMX (3
-      files matched pre-scoping). Done-when: the definition-of-done convention above, zero hits. (repo:
-      unified-trading-library)
+- [x] ✅ [BACKEND] P3. **Remove GMX from `unified-trading-library`** -- any shared constants/registries referencing GMX
+      (3 files matched pre-scoping). Done-when: the definition-of-done convention above, zero hits. (repo:
+      unified-trading-library) -- unified-trading-library@f22e516f. Removed the `GMX` venue override
+      (`pipeline_mode_resolver.py`), the `gmx` APY seed (`core/mock_defi_dynamics.py`), and `GMX` from the DeFi venue
+      frozenset (`ml/models.py`). `grep -rli "\bgmx\b" . --include="*.py"` returns zero hits repo-wide (incl. tests).
+      `quality-gates.sh` green (146s, exit 0).
 - [ ] [OPERATOR] P1. **Purge GMX GCS objects + manifest rows** -- delete every `raw_tick_data/**/venue=GMX/**` object
       (all chains, all data_types: `perp_funding`, `derivative_ticker`, any `dex_pool_state` entries from the `gmx`
       protocol table) in `market-data-tick-defi-prd-central-element-323112`, and the corresponding manifest rows.
@@ -124,11 +145,16 @@ changelog/docstring comment describing the historical removal itself (never insi
       this. Do this AFTER the code-removal todos above have landed (so nothing still tries to read GMX data mid-purge)
       -- operator judgment on exact timing, not machine-gated. Done-when: zero `venue=GMX` objects remain in the bucket,
       manifest shows zero rows for venue=gmx. (repo: market-tick-data-service)
-- [ ] [DOC] P2. **Update documentation referencing GMX** -- any codex docs, this plan's parent
+- [x] ✅ [DOC] P2. **Update documentation referencing GMX** -- any codex docs, this plan's parent
       (`defi_consolidated_closeout_2026_07_18.md`), and related issue docs that describe GMX as active/supported.
       Done-when: a grep across `codex/` + `plans/active/` for "GMX" shows only historical/changelog-style references
       (e.g. this plan itself, the root-cause issue doc), none describing it as a currently-supported venue. (repo:
-      unified-trading-pm)
+      unified-trading-pm) -- unified-trading-pm@bfda5df5b. Fanned out to 6 sub-agents covering 26 codex docs + 15
+      plans/active docs (40 files changed, 1 excluded: `instrument_id_format_canonicalization_2026_07_08.md` was already
+      1309L, over the 1000L hard cap pre-existing this change -- deferred, not shipped). Each mention was judged
+      CURRENTLY-ACTIVE (edited to a removal note) vs. HISTORICAL/dated (left unchanged to preserve the audit trail);
+      `defi_consolidated_closeout_2026_07_18.md` and the root-cause issue doc
+      (`issues/defi_migrated_marker_flagged_root_cause_clusters_2026_07_25.md`) both received targeted annotations.
 
 ## Codex SSOTs
 

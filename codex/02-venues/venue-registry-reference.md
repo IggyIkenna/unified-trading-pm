@@ -133,11 +133,10 @@ LSE/TSX-specific adapters.
 
 ## DeFi — Perp protocols (2)
 
-| Protocol    | Chain                | Notes                                     |
-| ----------- | -------------------- | ----------------------------------------- |
-| Hyperliquid | Own chain            | Listed in CeFi execution (hybrid CEX/DEX) |
-| dYdX V4     | Cosmos-based         | Perp DEX                                  |
-| GMX         | Arbitrum + Avalanche | GLP-pool perps                            |
+| Protocol    | Chain        | Notes                                     |
+| ----------- | ------------ | ----------------------------------------- |
+| Hyperliquid | Own chain    | Listed in CeFi execution (hybrid CEX/DEX) |
+| dYdX V4     | Cosmos-based | Perp DEX                                  |
 
 (Hyperliquid double-listed because it's classified CEFI for execution flows but is on-chain.)
 

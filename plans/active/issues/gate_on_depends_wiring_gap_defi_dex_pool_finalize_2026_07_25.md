@@ -125,3 +125,12 @@ unrelated one-off bugs.
    BLK-0d30dec1, recommendation A: skip and let it re-dispatch once the parent plan is genuinely done). Todo 2 (`-002`,
    the archival todo) is separately unsafe to run early since archival explicitly requires todo 1 to be correct first
    (`sequential: true`).
+
+## 2026-07-25 recurrence note
+
+Bounced from slot 5 to slot 4 within ~2 heartbeat ticks — `/skip-current-task` does NOT prevent immediate re-dispatch to
+another idle slot (only removes the offending slot from consideration for that one task instance). Parent plan
+`defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md` was still 0/5 todos done at re-dispatch time (verified again: no
+landing commit for the `messari_basic` query fix in `market-tick-data-service`). Skipped again with the same reasoning;
+main (`agt-52bb99`) confirmed the ruling live and directed this note rather than a re-investigation. Root cause (item 1
+above) is still unfixed as of this note.

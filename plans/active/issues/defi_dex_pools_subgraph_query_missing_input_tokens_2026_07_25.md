@@ -43,6 +43,11 @@ locked_since:
 
 # dex_pools_handler messari_basic subgraph query never requests inputTokens symbols
 
+> **NOTE (2026-07-25): GMX venue removed platform-wide** — see `defi_gmx_venue_removal_2026_07_25.md`. This doc's `gmx`
+> mentions describe the shared `messari_basic` query bug as found (the query entry/table below is filed byte-for-byte
+> against the code at the time). The gmx-specific slice of this bug is now moot going forward (its capture path is being
+> deleted, not fixed); the finding for curve/sushiswap/velodrome_v2/trader_joe_v2 remains open and unaffected.
+
 ## The bug, verified
 
 `market_tick_data_service/cli/handlers/dex_pools_handler.py`:

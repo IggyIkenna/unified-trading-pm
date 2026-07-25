@@ -206,8 +206,8 @@ API (Betfair Exchange, Smarkets, Matchbook, BetDAQ).
 
 - `(MARKET_MAKING_CONTINUOUS, DEFI, perp)`
 
-**Rationale:** Hyperliquid / GMX have protocol-level market-making incentives; there is no third-party-MM role
-comparable to CLOB MM on a CEX. Protocol-level MM is inaccessible to us by design.
+**Rationale:** Hyperliquid has protocol-level market-making incentives; there is no third-party-MM role comparable to
+CLOB MM on a CEX. Protocol-level MM is inaccessible to us by design.
 
 **Remediation:** Not a product gap — pursue CeFi perp MM (`MARKET_MAKING_CONTINUOUS, CEFI, perp`) instead, which is
 already `SUPPORTED`.

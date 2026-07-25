@@ -395,11 +395,11 @@ for ag in ASSET_GROUPS:
 > `valid_data_types_for_instrument_type(ag, itype)` (line ~925), **NOT** by indexing the raw
 > `VALID_DATA_TYPES_BY_AG_AND_INSTRUMENT_TYPE` dict. That dict only carries cefi/tradfi/sports/prediction static entries
 > and **ZERO defi keys** — defi validity is built dynamically from `capability_declarations._defi.PROTOCOL_CAPABILITIES`
-> (per-protocol, narrowed by the `PROTOCOL` segment of the `PROTOCOL-CHAIN` venue id, so e.g. GMX's `perp_funding` does
-> not leak to Uniswap pools). Indexing the dict directly returns ∅ for every defi tuple → `EXPECTED=0` → a **false "100%
-> complete"** (the empty-denominator failure mode below). `VENUE_DATA_TYPE_CAPABILITIES` is a cefi/tradfi venue table
-> (`VENUE_CAPABILITY_AGS = {cefi, tradfi}`); it must NOT be applied as a skip-filter to defi/sports/prediction (whose
-> capability is already encoded in the protocol/league validity functions).
+> (per-protocol, narrowed by the `PROTOCOL` segment of the `PROTOCOL-CHAIN` venue id, so e.g. Aave's `lending_indices`
+> does not leak to Uniswap pools). Indexing the dict directly returns ∅ for every defi tuple → `EXPECTED=0` → a **false
+> "100% complete"** (the empty-denominator failure mode below). `VENUE_DATA_TYPE_CAPABILITIES` is a cefi/tradfi venue
+> table (`VENUE_CAPABILITY_AGS = {cefi, tradfi}`); it must NOT be applied as a skip-filter to defi/sports/prediction
+> (whose capability is already encoded in the protocol/league validity functions).
 
 **Enumerated matrix** = the distinct `(venue, instrument_type, data_type)` tuples actually present in the skeleton
 (`enumerate_expected_universe.py` output / the manifest rows in any of the 4 states).

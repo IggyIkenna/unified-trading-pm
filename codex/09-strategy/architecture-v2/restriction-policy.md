@@ -80,50 +80,50 @@ Venue IDs mirror `representativeVenueIds` on the coverage cells verbatim.
 
 **Archetypes:** `ML_DIRECTIONAL_CONTINUOUS`, `ML_DIRECTIONAL_EVENT_SETTLED`.
 
-| Axis                  | Allowed values                                                                                                                                                                                                 |
-| --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Venue categories      | `CEFI`, `DEFI`, `TRADFI`, `SPORTS`, `PREDICTION`                                                                                                                                                               |
-| Instrument types      | `spot`, `perp`, `dated_future`, `option`, `event_settled`                                                                                                                                                      |
-| Representative venues | `binance`, `okx`, `bybit`, `hyperliquid`, `deribit`, `uniswap_v3`, `balancer`, `gmx_v2`, `drift`, `ibkr`, `cme`, `ice`, `cboe`, `unity`, `betfair_direct`, `smarkets_direct`, `matchbook_direct`, `polymarket` |
-| Data types            | tick / candle / L2 order-book / event feed — driven by the signal variant (`price`, `delta_as_expression`, `odds`)                                                                                             |
-| Blocked combos        | DEFI × option (BL-1), DEFI × dated_future (BL-2), PREDICTION × event_settled via Kalshi (BL-5)                                                                                                                 |
+| Axis                  | Allowed values                                                                                                                                                                                       |
+| --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Venue categories      | `CEFI`, `DEFI`, `TRADFI`, `SPORTS`, `PREDICTION`                                                                                                                                                     |
+| Instrument types      | `spot`, `perp`, `dated_future`, `option`, `event_settled`                                                                                                                                            |
+| Representative venues | `binance`, `okx`, `bybit`, `hyperliquid`, `deribit`, `uniswap_v3`, `balancer`, `drift`, `ibkr`, `cme`, `ice`, `cboe`, `unity`, `betfair_direct`, `smarkets_direct`, `matchbook_direct`, `polymarket` |
+| Data types            | tick / candle / L2 order-book / event feed — driven by the signal variant (`price`, `delta_as_expression`, `odds`)                                                                                   |
+| Blocked combos        | DEFI × option (BL-1), DEFI × dated_future (BL-2), PREDICTION × event_settled via Kalshi (BL-5)                                                                                                       |
 
 ### 2.2 `RULES_DIRECTIONAL` family
 
 **Archetypes:** `RULES_DIRECTIONAL_CONTINUOUS`, `RULES_DIRECTIONAL_EVENT_SETTLED`.
 
-| Axis                  | Allowed values                                                                                                                                                         |
-| --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Venue categories      | `CEFI`, `DEFI`, `TRADFI`, `SPORTS`, `PREDICTION`                                                                                                                       |
-| Instrument types      | `spot`, `perp`, `dated_future`, `event_settled`                                                                                                                        |
-| Representative venues | `binance`, `okx`, `bybit`, `hyperliquid`, `deribit`, `uniswap_v3`, `gmx_v2`, `drift`, `ibkr`, `cme`, `ice`, `unity`, `betfair_direct`, `smarkets_direct`, `polymarket` |
-| Data types            | tick / candle + computed technicals (MACD, Donchian, VWAP, funding snapshot) — signal variant `price` or `funding_rate` or `odds`                                      |
-| Blocked combos        | CEFI × option and TRADFI × option (BL-4), TRADFI × dated_future requires roll service (BL-10)                                                                          |
+| Axis                  | Allowed values                                                                                                                                               |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Venue categories      | `CEFI`, `DEFI`, `TRADFI`, `SPORTS`, `PREDICTION`                                                                                                             |
+| Instrument types      | `spot`, `perp`, `dated_future`, `event_settled`                                                                                                              |
+| Representative venues | `binance`, `okx`, `bybit`, `hyperliquid`, `deribit`, `uniswap_v3`, `drift`, `ibkr`, `cme`, `ice`, `unity`, `betfair_direct`, `smarkets_direct`, `polymarket` |
+| Data types            | tick / candle + computed technicals (MACD, Donchian, VWAP, funding snapshot) — signal variant `price` or `funding_rate` or `odds`                            |
+| Blocked combos        | CEFI × option and TRADFI × option (BL-4), TRADFI × dated_future requires roll service (BL-10)                                                                |
 
 ### 2.3 `CARRY_AND_YIELD` family
 
 **Archetypes:** `CARRY_BASIS_DATED`, `CARRY_BASIS_PERP`, `CARRY_STAKED_BASIS`, `CARRY_RECURSIVE_STAKED`,
 `YIELD_ROTATION_LENDING`, `YIELD_STAKING_SIMPLE`.
 
-| Axis                  | Allowed values                                                                                                                                                                                                                     |
-| --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Venue categories      | `CEFI`, `DEFI`, `TRADFI`                                                                                                                                                                                                           |
-| Instrument types      | `perp`, `dated_future`, `option`, `staking`, `lending`                                                                                                                                                                             |
-| Representative venues | `binance`, `okx`, `bybit`, `hyperliquid`, `deribit`, `coinbase`, `uniswap_v3`, `lido`, `rocketpool`, `etherfi`, `jito`, `marinade`, `aave_v3`, `compound_v3`, `euler`, `morpho`, `kamino`, `gmx_v2`, `drift`, `ibkr`, `cme`, `ice` |
-| Data types            | funding / basis / rate / staking-yield snapshots (signal variants `funding_rate`, `basis`, `rate_spread`, `staking_yield`)                                                                                                         |
-| Blocked combos        | CEFI × lending (BL-3, policy exclusion), DEFI × dated_future (BL-2), TRADFI × dated_future requires roll service (BL-10)                                                                                                           |
+| Axis                  | Allowed values                                                                                                                                                                                                           |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Venue categories      | `CEFI`, `DEFI`, `TRADFI`                                                                                                                                                                                                 |
+| Instrument types      | `perp`, `dated_future`, `option`, `staking`, `lending`                                                                                                                                                                   |
+| Representative venues | `binance`, `okx`, `bybit`, `hyperliquid`, `deribit`, `coinbase`, `uniswap_v3`, `lido`, `rocketpool`, `etherfi`, `jito`, `marinade`, `aave_v3`, `compound_v3`, `euler`, `morpho`, `kamino`, `drift`, `ibkr`, `cme`, `ice` |
+| Data types            | funding / basis / rate / staking-yield snapshots (signal variants `funding_rate`, `basis`, `rate_spread`, `staking_yield`)                                                                                               |
+| Blocked combos        | CEFI × lending (BL-3, policy exclusion), DEFI × dated_future (BL-2), TRADFI × dated_future requires roll service (BL-10)                                                                                                 |
 
 ### 2.4 `ARBITRAGE_STRUCTURAL` family
 
 **Archetypes:** `ARBITRAGE_PRICE_DISPERSION`, `LIQUIDATION_CAPTURE`.
 
-| Axis                  | Allowed values                                                                                                                                                                                                                        |
-| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Venue categories      | `CEFI`, `DEFI`, `TRADFI`, `SPORTS`, `PREDICTION`                                                                                                                                                                                      |
-| Instrument types      | `spot`, `perp`, `dated_future`, `option`, `lending`, `lp`, `event_settled`                                                                                                                                                            |
-| Representative venues | `binance`, `okx`, `bybit`, `hyperliquid`, `deribit`, `uniswap_v3`, `balancer`, `curve`, `sushiswap`, `gmx_v2`, `drift`, `aave_v3`, `kamino`, `ibkr`, `cme`, `ice`, `cboe`, `unity`, `betfair_direct`, `smarkets_direct`, `polymarket` |
-| Data types            | cross-venue price ticks, liquidation feed, IV surface (signal variants `price`, `iv_dispersion`, `liquidation_bonus`, `funding_rate`)                                                                                                 |
-| Blocked combos        | DEFI × option (BL-1)                                                                                                                                                                                                                  |
+| Axis                  | Allowed values                                                                                                                                                                                                              |
+| --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Venue categories      | `CEFI`, `DEFI`, `TRADFI`, `SPORTS`, `PREDICTION`                                                                                                                                                                            |
+| Instrument types      | `spot`, `perp`, `dated_future`, `option`, `lending`, `lp`, `event_settled`                                                                                                                                                  |
+| Representative venues | `binance`, `okx`, `bybit`, `hyperliquid`, `deribit`, `uniswap_v3`, `balancer`, `curve`, `sushiswap`, `drift`, `aave_v3`, `kamino`, `ibkr`, `cme`, `ice`, `cboe`, `unity`, `betfair_direct`, `smarkets_direct`, `polymarket` |
+| Data types            | cross-venue price ticks, liquidation feed, IV surface (signal variants `price`, `iv_dispersion`, `liquidation_bonus`, `funding_rate`)                                                                                       |
+| Blocked combos        | DEFI × option (BL-1)                                                                                                                                                                                                        |
 
 ### 2.5 `MARKET_MAKING` family
 
@@ -141,13 +141,13 @@ Venue IDs mirror `representativeVenueIds` on the coverage cells verbatim.
 
 **Archetypes:** `EVENT_DRIVEN`.
 
-| Axis                  | Allowed values                                                                                                                               |
-| --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| Venue categories      | `CEFI`, `DEFI`, `TRADFI`, `SPORTS`, `PREDICTION`                                                                                             |
-| Instrument types      | `spot`, `perp`, `dated_future`, `option`, `lending`, `staking`, `event_settled`                                                              |
-| Representative venues | `binance`, `okx`, `bybit`, `hyperliquid`, `deribit`, `uniswap_v3`, `gmx_v2`, `aave_v3`, `lido`, `ibkr`, `cme`, `cboe`, `unity`, `polymarket` |
-| Data types            | economic calendar, governance calendar, news / slashing feed (signal variant `event_surprise`)                                               |
-| Blocked combos        | TRADFI × dated_future requires roll service (BL-10)                                                                                          |
+| Axis                  | Allowed values                                                                                                                     |
+| --------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| Venue categories      | `CEFI`, `DEFI`, `TRADFI`, `SPORTS`, `PREDICTION`                                                                                   |
+| Instrument types      | `spot`, `perp`, `dated_future`, `option`, `lending`, `staking`, `event_settled`                                                    |
+| Representative venues | `binance`, `okx`, `bybit`, `hyperliquid`, `deribit`, `uniswap_v3`, `aave_v3`, `lido`, `ibkr`, `cme`, `cboe`, `unity`, `polymarket` |
+| Data types            | economic calendar, governance calendar, news / slashing feed (signal variant `event_surprise`)                                     |
+| Blocked combos        | TRADFI × dated_future requires roll service (BL-10)                                                                                |
 
 ### 2.7 `VOL_TRADING` family
 
@@ -169,7 +169,7 @@ Venue IDs mirror `representativeVenueIds` on the coverage cells verbatim.
 | --------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
 | Venue categories      | `CEFI`, `DEFI`, `TRADFI`                                                                                                           |
 | Instrument types      | `spot`, `perp`, `dated_future`                                                                                                     |
-| Representative venues | `binance`, `okx`, `bybit`, `hyperliquid`, `gmx_v2`, `drift`, `uniswap_v3`, `ibkr`, `cme`, `ice`                                    |
+| Representative venues | `binance`, `okx`, `bybit`, `hyperliquid`, `drift`, `uniswap_v3`, `ibkr`, `cme`, `ice`                                              |
 | Data types            | paired underlying ticks + co-integration diagnostics (signal variants `zscore_reversion`, `momentum_ranking`)                      |
 | Blocked combos        | DEFI × spot cross-sectional (BL-8), TRADFI × dated_future cross-sectional (BL-9), TRADFI × dated_future pairs roll service (BL-10) |
 

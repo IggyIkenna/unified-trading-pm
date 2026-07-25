@@ -149,6 +149,12 @@ run_check "depends_on DAG (cycles + self-deps)" hard python3 "$SCRIPT_DIR/check_
 # pre-existing count, never on the corpus's existing debt. Supersedes check_codex_refs.sh's
 # narrower existence-only scope (kept below for its standalone fast path).
 run_check "Reference path convention (/plans, /codex — ratchet)" hard python3 "$SCRIPT_DIR/check_reference_paths.py" --quiet
+# AG-closeout linkage (operator request 2026-07-25) — every single-asset-group plan/issue
+# doc must have a findable path (related: graph, either direction, or a body-text mention)
+# to its AG's consolidated closeout plan, so a finding can never silently become an
+# orphan nothing will ever pick up. Same shrinking-ratchet shape as the two checks above
+# (ag_closeout_linkage_baseline.yaml): hard-fails only on a NEW orphan, never on debt.
+run_check "AG-closeout linkage (single-AG docs -> consolidated closeout, ratchet)" hard python3 "$SCRIPT_DIR/check_ag_closeout_linkage.py" --quiet
 # Line caps (plans 500 soft/1000 hard; epics 2000 hard flat, NO umbrella-exemption escape hatch —
 # operator ruling 2026-07-24) — flipped from advisory to a real hard gate 2026-07-24 via the SAME
 # shrinking-ratchet shape as the reference-path check above (line_caps_baseline.yaml): hard-fails

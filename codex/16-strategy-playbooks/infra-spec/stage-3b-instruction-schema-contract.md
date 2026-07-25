@@ -462,7 +462,6 @@ where applicable.
 | lido × eth            | staking         |   ✅   |      ❌       |     ❌      |    ❌     |        ❌        |                                                            |
 | jito × solana         | staking         |   ✅   |      ❌       |     ❌      |    ❌     |        ❌        |                                                            |
 | hyperliquid_dex × hl  | perp            |   ✅   |      ✅       |     ✅      |    ❌     |        ❌        |                                                            |
-| gmx_v2 × arbitrum     | perp            |   ✅   |      ✅       |     ⚠️      |    ❌     |        ❌        |                                                            |
 | drift × solana        | perp            |   ✅   |      ✅       |     ⚠️      |    ❌     |        ❌        |                                                            |
 | uniswap × any         | option          |   ❌   |      ❌       |     ❌      |    ❌     |        ❌        | BL-1 — no DeFi options venue                               |
 | any × any             | dated_future    |   ❌   |      ❌       |     ❌      |    ❌     |        ❌        | BL-2 — no DeFi dated-future venue                          |

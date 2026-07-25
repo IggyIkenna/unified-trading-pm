@@ -518,19 +518,20 @@ live API keys + the HTTP client injection). Not a wizard/manifest defect — the
 (`unified-api-contracts/openapi/capability-verdict-matrix.json`) declares AVAILABLE leg cells for **9 venue ids whose
 alnum-stripped form is NOT in `KNOWN_VENUE_TOKENS`** (`unified_api_contracts.internal.architecture_v2.venue_tokens`):
 `balancer_v2`, `balancer_v3`, `betfair_direct`, `gmx_v2`, `jupiter`, `pancakeswap_v3`, `smarkets_direct`, `sommelier`,
-`sushiswap_v3` (11 of 43 AVAILABLE venues fail the alnum-strip token test; the 9 above were the ones sampled). When the
-fuzzer compiles such a cell to a v2 slot label (`{archetype}@{venue}-{instr}-usdt-prod`) the strategy-service parser
-`split_scope_tokens` raises `ValueError: scope tokens (…) start with a non-venue token` — so **no v2 strategy slot can
-be constructed for those venues at all**, even though the wizard would offer them as reachable. **Why it matters**: the
-capability wizard can present a config (venue × archetype) the strategy engine literally cannot instantiate — a
-mechanical dead-end between the manifest/verdict surface and the slot-identity grammar. Reproduced as a typed
-`unbuildable_slot` dead-end across 20 sampled configs (3/archetype run; deterministic). **Recommended decision**: align
-the two SSOTs — either add the missing venue tokens (with their `_vN`/`_direct` suffix normalisation) to
-`KNOWN_VENUE_TOKENS` + `split_scope_tokens`, OR have the verdict-matrix generator + the wizard venue-eligibility list
-exclude venues that have no slot-label token (compose with F39 "wizard offers ~13 venues; manifest has 183" — eligible
-lists are already hand-named subsets). Not fixed in this dispatch (LOGIC-FREEZE on strategy-service + collision boundary
-on UAC); recorded for a successor alignment plan. Companion smoke test:
-`e2e-testing/scripts/strategy/test_config_space_fuzzer_smoke.py`.
+`sushiswap_v3` (11 of 43 AVAILABLE venues fail the alnum-strip token test; the 9 above were the ones sampled; `gmx_v2`'s
+entry is now MOOT — GMX REMOVED 2026-07-25, see `defi_gmx_venue_removal_2026_07_25.md`, so it should drop out of the
+verdict matrix rather than need a token-registry fix). When the fuzzer compiles such a cell to a v2 slot label
+(`{archetype}@{venue}-{instr}-usdt-prod`) the strategy-service parser `split_scope_tokens` raises
+`ValueError: scope tokens (…) start with a non-venue token` — so **no v2 strategy slot can be constructed for those
+venues at all**, even though the wizard would offer them as reachable. **Why it matters**: the capability wizard can
+present a config (venue × archetype) the strategy engine literally cannot instantiate — a mechanical dead-end between
+the manifest/verdict surface and the slot-identity grammar. Reproduced as a typed `unbuildable_slot` dead-end across 20
+sampled configs (3/archetype run; deterministic). **Recommended decision**: align the two SSOTs — either add the missing
+venue tokens (with their `_vN`/`_direct` suffix normalisation) to `KNOWN_VENUE_TOKENS` + `split_scope_tokens`, OR have
+the verdict-matrix generator + the wizard venue-eligibility list exclude venues that have no slot-label token (compose
+with F39 "wizard offers ~13 venues; manifest has 183" — eligible lists are already hand-named subsets). Not fixed in
+this dispatch (LOGIC-FREEZE on strategy-service + collision boundary on UAC); recorded for a successor alignment plan.
+Companion smoke test: `e2e-testing/scripts/strategy/test_config_space_fuzzer_smoke.py`.
 
 ### F48 — Verdict-matrix declares 22 archetypes reachable that have NO v2 engine registered (all VOL\_\* + MARKET_MAKING\_\*)
 

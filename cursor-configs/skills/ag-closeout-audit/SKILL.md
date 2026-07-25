@@ -29,6 +29,70 @@ skill projects forward ("if everything currently active/dispatched for this ONE 
 where warranted, drafts the next AO-dispatch batch to close the gap. Run `/plan-reconcile` first if the corpus might
 have stale/false-unchecked state — this skill's classification is only as good as the frontmatter `status` it reads.
 
+## Why `batchN` exists as a SIBLING doc, not content folded into the consolidated closeout plan
+
+Two independent reasons, both real, neither alone sufficient:
+
+1. **The coverage gap (the actual root cause).** Every `<ag>_consolidated_closeout_*.md` carries a section (something
+   like "Aggregated source docs — referenced, not duplicated") that just LISTS/links every satellite doc in the AG for
+   discoverability. That section is explicitly a **digest, not real dispatch** — a satellite doc being linked there
+   means nothing is actually working its specific open items. `batchN` extracts AO-eligible items DIRECTLY OUT OF the
+   satellite docs themselves (never out of the consolidated doc's own content) to close that gap. This is why the
+   conflict-check (Phase 3) matters: it's reconciling two independent claims on the same ground, not splitting one doc's
+   content into two files.
+2. **The line-cap constraint (a real, independent, reinforcing reason).** Even where a satellite doc's items COULD in
+   principle be pasted into the consolidated doc's own todo list, the corpus scale makes that structurally impossible: a
+   single AG's triage routinely finds 40-60 AO-eligible candidates (defi batch1 alone shipped 54), and consolidated
+   closeout docs are already substantial. Inlining that volume would breach the workspace's 1000-line hard cap
+   (`check_line_caps.sh`, no exceptions) on the FIRST batch, let alone across batch2/3/N. So even in a hypothetical
+   world with no coverage-gap problem at all, extraction into sibling docs would still be the only viable shape.
+
+## The `batchN` methodology — an iterative drain, not a one-shot
+
+`batch1` is never expected to close an AG's orphan backlog in one pass — it extracts only what's conflict-clear TODAY.
+Everything else lands in that batch's own `## Deferred` section, tagged by WHY it was held back (see taxonomy below).
+Re-invoking this skill for the same AG (producing `batch2`, `batch3`, ...) is how the backlog drains over time:
+
+1. **Before fresh Phase-1 triage, re-check the PRIOR batch's own Deferred section first.** Every conflict-gated item
+   there names the specific competing claim it collided with (a consolidated-plan todo, another satellite doc's own
+   item). Check whether that competing claim has since shipped, superseded, or otherwise resolved — if so, the conflict
+   clears WITHOUT needing a fresh triage agent, and the item can move straight into the new batch's Todos. This is cheap
+   (a few greps + reads) and should always run first; it's frequently how a doc that was 100%-blocked in batch1 becomes
+   dispatchable in batch2 with zero new investigation.
+2. **Only then run a fresh Phase-1/Phase-3 pass** over whatever's left — either the same still-unresolved conflicts (if
+   nothing changed) or entirely new orphans that appeared since the last audit (new docs, new findings).
+3. **Stop iterating on an AG once every remaining orphaned doc's open work is PURELY from the non-batchable taxonomy
+   below** (no more conflict-gated items convertible by re-triage) — at that point, report the residual count to the
+   operator as "needs direct human action, not another batch" rather than continuing to spin batches that can't possibly
+   extract anything new.
+
+## The non-batchable taxonomy — why some Deferred items will NEVER become a `batchN` todo
+
+Not everything in a Deferred section is the same KIND of blocked. Distinguishing these matters because only one category
+resolves through re-triage — the others need direct operator/human action, and re-running this skill against them wastes
+a cycle:
+
+- **Conflict-gated (re-triageable — the ONLY category batch2+ can convert).** A genuine but resolvable collision with
+  another doc's own claim on the same ground. Clears when the competing side ships, is superseded, or a dated section
+  proves one claim stale. This is what step 1 above re-checks every iteration.
+- **Operator-gated.** An undecided design/judgment call, a two-option fork with no evidence-based tiebreaker, or an
+  explicit sign-off requirement (prod-bucket deletes, a credential ask, a schema/canonical-set change with blast-radius
+  the dispatch-scope rule excludes). No amount of re-triage resolves this — it needs the operator to actually rule, same
+  as any entry in `autonomous_session_operator_decisions_<date>.md`. Once ruled, it becomes a normal batch candidate
+  (see the Kamino/Solend precedent, 2026-07-25: queued, operator ruled, folded into `defi_satellite_ao_dispatch_batch1`
+  directly rather than waiting for a batch2).
+- **Time-gated.** Work that depends on elapsed real time (an accrual/backfill window not yet reached, a pending external
+  event, a cron cadence that hasn't fired enough cycles to have data yet). Re-triage will keep finding the same "not
+  yet" until the clock actually passes — track it, don't keep re-surfacing it every batch cycle.
+- **Too-large-or-risky-for-a-batch-todo.** A doc that's itself a live, fast-moving, multi-phase migration (dated DELTA
+  sections superseding each other within the same file, an actively-draining VM-backed process) — folding even its
+  cleanest-looking candidate into a batch risks colliding with its own in-flight state. Needs its own dedicated
+  triage/design pass as a standalone plan, not another `batchN` slot.
+- **Genuinely human-only, permanently.** Design-conversation-needed work the source doc itself says needs "a dedicated
+  engineering session with judgment," unbuilt safety tooling, or anything the dispatch-scope eligibility rule excludes
+  outright. These docs will keep reporting `orphaned_*` from Phase 1 forever unless a human directly does the work —
+  that's an accurate signal, not a stuck audit.
+
 ## Modes
 
 - **Interactive (default, operator present)**: report the audit results directly in chat; if Phase 3 drafts new

@@ -143,7 +143,8 @@ not read a bare `completeness_pct` divorced from `probe_block` and `probe_source
 The oracle dispatches on `PROTOCOL_CAPABILITIES[protocol].protocol_class`. Every protocol currently in UAC (`aave_v3` /
 `compound_v3` / `morpho` / `spark` / `fluid` / `venus` / `benqi` / `radiant` / `euler_v2` / `uniswap_v2` / `_v3` / `_v4`
 / `balancer` / `curve` / `sushiswap` / `pancakeswap_v3` / `aerodrome_v3` / `velodrome_v2` / `camelot_v3` /
-`trader_joe_v2` / `gmx` / …) maps to exactly one Tier-A + one Tier-B probe.
+`trader_joe_v2` / …) maps to exactly one Tier-A + one Tier-B probe. (`gmx` dropped from this list — GMX REMOVED
+2026-07-25, see `defi_gmx_venue_removal_2026_07_25.md`.)
 
 ### 3.1 DEX (`protocol_class == DEX`)
 
@@ -198,12 +199,13 @@ Perp DEXes typically expose their universe as an authoritative REST endpoint tha
 | Protocol      | Tier-A source                                                | Tier-B RPC call                              |
 | ------------- | ------------------------------------------------------------ | -------------------------------------------- |
 | `hyperliquid` | REST `POST /info { type: "meta" }` — `universe` array length | Same (this IS the on-chain projection)       |
-| `gmx`         | Subgraph `{ tokens(first: 1000) { id whitelisted } }` count  | `Vault.allWhitelistedTokens()`               |
 | `drift`       | Solana program account scan (`Market` accounts)              | Same (RPC is Tier-A; Solana has no subgraph) |
 | `jupiter`     | REST `GET /perps-markets` — length                           | Program-account scan (aggregator)            |
 
 > `flash_trade`/`mango`/`zeta` rows removed 2026-07-15 (operator ruling — venues deleted; dead API endpoints, ~$0 TVL,
-> zero MTDS capture ever wired). See `/codex/04-architecture/solana-defi-coverage.md`.
+> zero MTDS capture ever wired). See `/codex/04-architecture/solana-defi-coverage.md`. `gmx` row removed 2026-07-25 —
+> GMX venue support removed platform-wide (its captured `perp_funding` history was a synthetic OI-imbalance proxy, not
+> real funding-rate data). See `defi_gmx_venue_removal_2026_07_25.md`.
 
 ### 3.4 YIELD / STAKING / RESTAKING (`protocol_class ∈ {YIELD, STAKING, RESTAKING}`)
 
@@ -354,8 +356,9 @@ The design lands as a codex SSOT (this doc). Implementation is broken into these
   velodrome_v2, camelot_v3).
 - P1 [CODE]: `instruments-service/instruments_service/oracle/probe_registry.py` — dispatch table (empty probes at
   first). Wire the module import into `measure_honest_coverage.py` behind an `--use-defi-oracle` flag (default OFF).
-- P1 [CODE]: Tier-A DEX probe (uniswap_v3, aave_v3, gmx) as reference implementations — ~150 LOC each, reusing existing
-  adapter's subgraph client.
+- P1 [CODE]: Tier-A DEX probe (uniswap_v3, aave_v3, curve) as reference implementations — ~150 LOC each, reusing
+  existing adapter's subgraph client. (`gmx` dropped from this list — GMX REMOVED 2026-07-25, see
+  `defi_gmx_venue_removal_2026_07_25.md`.)
 - P2 [CODE]: Tier-A probes for the remaining ~20 protocols (10 DEX / 6 lending / 4 perps / 3 yield).
 - P2 [CODE]: Tier-B RPC probe for uniswap_v3 + aave_v3 on ETHEREUM (proves the RPC path end-to-end).
 - P2 [CODE]: `--use-defi-oracle` becomes DEFAULT ON in `measure_honest_coverage.py`; the DeFi Layer-1 number is now

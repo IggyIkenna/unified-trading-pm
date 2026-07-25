@@ -148,8 +148,9 @@ moved to KEPT.
 **C3 — EPIC + May-23-critical-path narrative banners (parked — authority-gated; provable but epics/critical-path are not
 autonomously edited)**: `defi_master.md:258/292/307` + `master_to_live_defi_2026_05_23.md:524/308` +
 `master_data_canonicalisation_migration_catalogue:1972` still frame HYPERLIQUID/ASTER as DeFi perp DEXs; the SSOT §6 +
-shipped code classify them **cefi CLOB** (GMX is the sole defi perp). REC: add a 2026-07-18 correction banner (matching
-the existing `defi_master:260` pattern), NOT a blind find-replace.
+shipped code classify them **cefi CLOB** (GMX is the sole defi perp — as of 2026-07-18; **GMX removed platform-wide
+2026-07-25**, see `defi_gmx_venue_removal_2026_07_25.md`, so this comparison point is now moot). REC: add a 2026-07-18
+correction banner (matching the existing `defi_master:260` pattern), NOT a blind find-replace.
 
 **C4 — small auto-fixes VERIFIED-provable, ready to apply next pass** (deferred from this pass to avoid mass-editing
 concurrently-edited plans in deep context): cefi Track-4 deribit_options_chain (:150) → repoint to Track-2 (the plan's

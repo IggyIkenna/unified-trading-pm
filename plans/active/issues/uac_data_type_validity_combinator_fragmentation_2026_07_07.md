@@ -199,7 +199,9 @@ just belongs on a different layer than instrument_type does, and conflating the 
       with **zero real captured rows** in the live manifest (100% `empty_confirmed`). This is the ACTUAL layer
       over-claiming, not the theoretical layer under-declaring (finding 2's original shape) — needs an
       operator/data-owner decision per (protocol, data_type) whether to wire the real capture path or roll back the
-      aspirational genesis date. Full live-verified table in the Progress Log below.
+      aspirational genesis date. Full live-verified table in the Progress Log below. **(NOTE 2026-07-25: GMX's slice of
+      this decision is moot — GMX venue removed platform-wide, see `defi_gmx_venue_removal_2026_07_25.md`; the remaining
+      decision covers COMPOUND_V3/MORPHO/FLUID/SPARK/RADIANT/DRIFT/KAMINO + AAVE_V3/ALCHEMY-\*.)**
 
 ## Progress Log
 

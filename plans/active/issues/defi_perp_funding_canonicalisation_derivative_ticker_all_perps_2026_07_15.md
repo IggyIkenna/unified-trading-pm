@@ -44,6 +44,13 @@ locked_since:
 > REST of this doc (Hyperliquid/Aster/GMX/Lighter derivative_ticker canonicalisation) is UNAFFECTED and remains active.
 > SSOT for the removal: `/codex/04-architecture/solana-defi-coverage.md` (tombstone banner).
 
+> 🟡 **FURTHER SUPERSEDE — GMX leg (2026-07-25, operator decision):** GMX removed platform-wide (its captured
+> `perp_funding` history turned out to be a synthetic OI-imbalance proxy, not real funding-rate data — the native
+> subgraph query never worked). The GMX-ARBITRUM/GMX-AVALANCHE `derivative_ticker` dual-write shipped by todo 2 below is
+> being removed along with the rest of GMX support; GMX drops out of the "surviving venues" set referenced elsewhere in
+> this doc (todo 4's MOOT note, the open `[DESIGN] P1` demote-to-derived-view todo). SSOT:
+> `plans/active/defi_gmx_venue_removal_2026_07_25.md`.
+
 # Perp funding canonicalisation — derivative_ticker for all perps (2026-07-15)
 
 > **Operator ruling (verbatim intent, 2026-07-15):** "Annualising funding rates is fine, but the highest-resolution
@@ -160,22 +167,23 @@ KALSHI-PERP/POLYMARKET-PERP are out of scope (documented above, not silently dro
       2026-07-16** with no parity check ever run — it explicitly states parity for the surviving venues "is not gated
       and can be re-scoped as a fresh todo if still wanted." No parity data exists or is queued, so this gate can never
       resolve as literally written. Before executing this DESIGN decision, either (a) file the re-scoped cross-source
-      parity todo (HYPERLIQUID/ASTER/GMX/…) that todo 4's MOOT note anticipates and gate on ITS results, or (b) route
-      straight to an operator decision on whether parity evidence is still required before demoting `perp_funding`.
-      Rationale (operator discussion 2026-07-15): with derivative_ticker now the canonical raw funding home for ALL
-      perps, `perp_funding` is derivable everywhere — for interval-native sources (Hyperliquid REST, GMX events) the two
-      are literally the same rows written twice (the GMX dual-write in todo 2 proves it: same rows, zero extra API
-      calls); for event-native sources (Drift) perp_funding is an aggregate of the settlements. No perp venue class
-      structurally requires a separate funding capture (no defi perp venue is an AMM in the Uniswap sense —
-      Drift/Hyperliquid are CLOBs; GMX is pool-as-counterparty but still emits funding as EVENTS). If todo 4's parity
-      holds within ε, the dual-capture is pure redundancy + a permanent parity-policing burden. **Scope of the
-      decision** (do NOT execute before the parity evidence exists): (a) migrate features-onchain's `perp_funding`
-      BYPASS read (`data-lineage-MTDS-features-ml.md`) to the derived view or to derivative_ticker directly; (b) re-home
-      the `mvp_backfill_defi_onchain_v10` MVP gate accounting — perp_funding is one of its 6 gate data_types with months
-      of manifest history, so the shard atom + coverage denominator implications must be worked through, not hand-waved
-      (honest-coverage model: a retired data_type's historical rows stay, they don't vanish); (c) stop capturing
-      perp_funding raw once (a)+(b) land. If parity FAILS, this todo closes as "keep both — parity report explains why".
-      Repos: market-tick-data-service, features-service, unified-api-contracts.
+      parity todo (HYPERLIQUID/ASTER/…; GMX removed 2026-07-25, see `defi_gmx_venue_removal_2026_07_25.md` — drop it
+      from the venue set) that todo 4's MOOT note anticipates and gate on ITS results, or (b) route straight to an
+      operator decision on whether parity evidence is still required before demoting `perp_funding`. Rationale (operator
+      discussion 2026-07-15): with derivative_ticker now the canonical raw funding home for ALL perps, `perp_funding` is
+      derivable everywhere — for interval-native sources (Hyperliquid REST, GMX events) the two are literally the same
+      rows written twice (the GMX dual-write in todo 2 proves it: same rows, zero extra API calls); for event-native
+      sources (Drift) perp_funding is an aggregate of the settlements. No perp venue class structurally requires a
+      separate funding capture (no defi perp venue is an AMM in the Uniswap sense — Drift/Hyperliquid are CLOBs; GMX is
+      pool-as-counterparty but still emits funding as EVENTS). If todo 4's parity holds within ε, the dual-capture is
+      pure redundancy + a permanent parity-policing burden. **Scope of the decision** (do NOT execute before the parity
+      evidence exists): (a) migrate features-onchain's `perp_funding` BYPASS read (`data-lineage-MTDS-features-ml.md`)
+      to the derived view or to derivative_ticker directly; (b) re-home the `mvp_backfill_defi_onchain_v10` MVP gate
+      accounting — perp_funding is one of its 6 gate data_types with months of manifest history, so the shard atom +
+      coverage denominator implications must be worked through, not hand-waved (honest-coverage model: a retired
+      data_type's historical rows stay, they don't vanish); (c) stop capturing perp_funding raw once (a)+(b) land. If
+      parity FAILS, this todo closes as "keep both — parity report explains why". Repos: market-tick-data-service,
+      features-service, unified-api-contracts.
 - [x] ✅ [OPERATOR-DECISION] P2. MANGO-SOLANA / ZETA-SOLANA / FLASH-SOLANA are half-onboarded (IS reference-data
       adapters + factory registration + tests exist; zero MTDS capture; not in the venues list /
       `VENUES_BY_ASSET_GROUP`). Decide: (A) complete onboarding, or (B) delete the whole vertical slice. — **RULED (B)
