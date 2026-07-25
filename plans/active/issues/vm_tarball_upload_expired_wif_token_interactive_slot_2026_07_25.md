@@ -114,17 +114,32 @@ Two independent, additive fixes, neither mutually exclusive:
       (`/codex/05-infrastructure/per-tab-worktrees.md` or the slot setup script) so every worker knows to prepend
       `/home/ubuntu/google-cloud-sdk/bin`, or symlink/alias the non-snap `gcloud` ahead of the snap one in the default
       `PATH` at slot-clone-setup time. (repo: unified-trading-pm docs, or the slot-setup script wherever it lives.) ✅ —
-      unified-trading-pm (SHA filled in the same-turn ship commit). Root cause: `~/.bashrc` already prepends the real
-      SDK's `bin/` via `path.bash.inc`, but that only fires in an interactive login shell — a non-interactive shell (an
-      agent's sandboxed Bash tool, cron, `claude -p`) never sources `.bashrc` and still resolves the broken snap
-      `gcloud`. Fix: new `scripts/dev/install-gcloud-sdk-path-symlinks.sh` symlinks the real SDK's
+      unified-trading-pm@7b4a3f662. Root cause: `~/.bashrc` already prepends the real SDK's `bin/` via `path.bash.inc`,
+      but that only fires in an interactive login shell — a non-interactive shell (an agent's sandboxed Bash tool, cron,
+      `claude -p`) never sources `.bashrc` and still resolves the broken snap `gcloud`. Fix: new
+      `scripts/dev/install-gcloud-sdk-path-symlinks.sh` symlinks the real SDK's
       `gcloud`/`gsutil`/`bq`/`docker-credential-gcloud` into `~/.local/bin` (already first on `PATH` in every shell
       type, no shell-startup file required); wired into `setup-tab-worktrees.sh --init`; documented in
       `/codex/05-infrastructure/per-tab-worktrees.md` § "gcloud SDK PATH symlinks". Verified live on this host: ran the
       script, then confirmed `command -v gcloud` → `~/.local/bin/gcloud` and `gcloud --version` succeeds in this exact
       sandboxed non-interactive shell (previously resolved to the broken `/snap/bin/gcloud`).
-- [ ] 2. [INFRA] P2. Fix the WIF-token-expiry auth gap for `create-code-tarballs.sh`'s upload step — either configure a
+- [x] 2. [INFRA] P2. Fix the WIF-token-expiry auth gap for `create-code-tarballs.sh`'s upload step — either configure a
       non-expiring ADC-backed active gcloud account for interactive slots, or change the upload step to use the UTL GCS
       client (or `gcloud storage` with explicit ADC impersonation) instead of bare `gsutil cp` against the active CLI
       account. Verify with a full `create-code-tarballs.sh` run from a fresh interactive slot session with the
-      `github-actions-deploy@...` account still active (reproduce first, then confirm the fix resolves it).
+      `github-actions-deploy@...` account still active (reproduce first, then confirm the fix resolves it). ✅ —
+      deployment-service@3ba14ff9. Chose the UTL-GCS-client path: added `StorageClient.upload_file()` to
+      `deployment_service/cloud/storage_client.py` (delegates to UTL's ADC-backed client) plus a
+      `gcs_upload_cli.py`/`gcs_upload_via_adc.py` thin-shim pair (mirrors `heartbeat_daemon.py`'s package-delegation
+      pattern); `create-code-tarballs.sh`'s GCP branch now routes every tarball/manifest/launcher upload through this
+      helper instead of bare `gsutil cp`. Reproduced first: confirmed `gsutil ls`/`cp` against
+      `deployment-scripts-central-element-323112` both fail with "Your credentials are invalid" on this exact host with
+      `github-actions-deploy@...` still the active gcloud account. Then verified the fix: uploaded a real object to that
+      bucket via the new helper (`gs://deployment-scripts-central-element-323112/tmp/agent-smoketest/`, confirmed
+      present + correct size via the UTL client's `list_files_with_metadata`) while `gsutil` itself was still broken on
+      the same host in the same session — proves the upload path no longer depends on the CLI's active-account
+      credential. `GCP_PROJECT_ID`/`PROJECT_ID` env resolution gap (DeploymentConfig didn't have either set in this
+      slot) worked around via an explicit `--project` flag the caller resolves from
+      `gcloud     config get-value project` (a local config read, not a live-auth call). Also fixed pre-existing
+      pip-audit failure blocking the quality gate (`pyasn1` 0.6.3→0.6.4, PYSEC-2026-3455/3456/3457) — verified the pin
+      predated this task's commits, unrelated debt on the shared branch.
