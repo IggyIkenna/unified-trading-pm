@@ -703,7 +703,23 @@ source: >-
     for a league that doesn't exist in API Football" rule. This closes step 3's cross-reference with real measured
     numbers instead of the directive's own rough estimates — the next session can go straight to finalizing the list
     against these figures (flag the ODDS 30-vs-~20 discrepancy to the operator specifically) rather than re-deriving
-    them.
+    them. **Operator resolved the ODDS discrepancy same session: use the real measured 30, not the ~20 estimate.**
+  - **Major follow-up finding: the metadata blocker on actually building `LeagueDefinition` entries is smaller than
+    assumed.** Was about to defer "assign country + season/transfer-window metadata to ~300 leagues" as needing a fresh
+    session (fabricating that data would be worse than not doing this task). Checked first whether it already exists
+    rather than assuming not:
+    `gs://instruments-store-sports-prd-central-element-323112/sports_reference/by_date/day=2024-01-15/pipeline_mode=batch_instruments_service/entity=leagues/leagues.parquet`
+    (object timestamp 2026-06-24 — recent, not stale) is the **full raw API-Football leagues catalog**: 1,228 rows,
+    columns `league_id, name, country, league_type, logo_url`, zero null countries, 171 distinct countries, **776
+    `League` / 452 `Cup`** already classified. This directly answers the "which of the 375 (and the wider universe) are
+    leagues vs cups, and which country" question that would otherwise require per-league research — it's already
+    captured, current, and complete for country+type. What's still genuinely absent: season start/end + transfer-window
+    dates (Directive A asks for these too) — not found in this file or any other checked this session; that piece likely
+    does need fresh research or an additional API-Football endpoint call per league, and is real remaining scope for
+    whoever picks this up. Net: the curated-list SELECTION step (which ~300 of 1,228, cross-referenced against the 375
+    already-captured + the per-source caps above) is now almost entirely mechanical — join `leagues.parquet` against the
+    375-candidate list + Directive A/B's rules (top + below-division + continental cups + majors) — the remaining hard
+    part is narrowed specifically to season/ transfer-window dates, not the whole metadata problem.
 
 - **2026-07-25 (slot 2, data_engineering) — "Eliminate the bare/legacy dual-layout" todo — VERIFIED CLEAN, no
   canonicalize/delete action needed.** Operator explicitly confirmed sign-off for the irreversible GCS apply this todo
