@@ -898,6 +898,19 @@ source: >-
     the same backup parquet's `data_type=="ODDS"` captured rows — **zero overlap** between the 11 new entries and the
     set of leagues with real captured odds data. Confirms `in_mvp_scope=False` was the correct call for all 11,
     consistent with (not contradicting) how the 5 pre-existing continental cups are treated.
+  - **Attempted the domestic-cups slice for the 26 already-covered countries (FA Cup, DFB Pokal, Coppa Italia, etc.) —
+    found a bug in my own filter before shipping anything, zero code touched.** `catalog['league_id']` is STRING dtype;
+    my "not yet in registry" filter compared it against a set of INTEGER `api_football_id`s — silently never matched, so
+    all 105→41→25 "candidates" I narrowed down to were false positives. Direct check against `LEAGUE_REGISTRY` confirms
+    every one of the 25 (`FA_CUP`, `COPA_DEL_REY`, `DFB_POKAL`, `COPPA_ITALIA`, `KNVB_CUP`, `GREEK_CUP`, `AUSTRIAN_CUP`,
+    `SWISS_CUP`, `DANISH_CUP`, `NORWEGIAN_CUP`, `SVENSKA_CUPEN`, `POLISH_CUP`, `COPA_ARGENTINA`, `COPA_DO_BRASIL`,
+    `COPA_CHILE`, `COPA_MX`, `BELGIAN_CUP`, `US_OPEN_CUP`, `EMPEROR_CUP`, `KOREAN_FA_CUP`, `AUSTRALIA_CUP`, + 4 more) is
+    ALREADY in the registry under a different key name than I'd have generated — would have shipped 25 duplicate entries
+    pointing at the same underlying competitions if I hadn't verified with a direct lookup before writing code. **Net
+    finding: the 26 already-covered countries' main domestic cups are already fully in the registry — nothing to add
+    here.** The real remaining gap is genuinely new countries not yet in `LEAGUE_REGISTRY` at all (145 of the 171 in the
+    catalog), which needs real per-country tier research (which division is "top", which is "below") — not something to
+    guess at row-by-row.
 
 - **2026-07-25 (slot 2, data_engineering) — "Eliminate the bare/legacy dual-layout" todo — VERIFIED CLEAN, no
   canonicalize/delete action needed.** Operator explicitly confirmed sign-off for the irreversible GCS apply this todo
