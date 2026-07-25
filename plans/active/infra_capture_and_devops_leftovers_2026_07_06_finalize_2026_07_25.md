@@ -52,6 +52,17 @@ drift_direction: advance-code
 > describes). This doc was never ingested (`status: draft` the whole time), so there was no dispatch collision in
 > practice — flagging here only so a future doc-health sweep doesn't re-activate two finalize plans for one parent. No
 > further action needed on this doc.
+>
+> **🟢 CORRECTION 2026-07-25 (slot 2)**: the "never ingested" claim above was wrong by the time this doc flipped to
+> `status: superseded` — the ingestion filter (`_plan_contributes_briefs` in
+> `agent-orchestrator/server/regen_backlog_from_plan.py`) only excluded `status: draft`, not `status: superseded`, so
+> this doc's 3 still-open checkboxes below WERE re-derived and dispatched as duplicate backlog tasks
+> (`infra_capture_and_devops_leftovers_2026_07_06_finalize-001/-002/-003`, `-001` landed on slot 2 today) of work slot 9
+> already completed in the successor doc. Fixed at the root: `agent-orchestrator@f58d934` adds `status: superseded` to
+> the ingestion/prune exclusion (regression tests: `test_regen_skips_superseded_plans`,
+> `test_prune_stale_removes_tasks_of_superseded_plan`, both green). Closing out the 3 todos below as duplicates of the
+> already-completed work in `infra_capture_and_devops_leftovers_finalize_2026_07_25.md` so no further re-dispatch can
+> occur even before the fix's next regen tick prunes them.
 
 > **Machine-gated on `infra_capture_and_devops_leftovers_2026_07_06.md`** (`depends_on` + `gate_on_depends: true`) — the
 > dispatcher will not queue any todo below until every todo in that plan is `done`. `sequential: true` because todo 2
@@ -64,31 +75,19 @@ drift_direction: advance-code
 
 ## Todos
 
-- [ ] [REVIEW] P2. **Re-verify the ASTER live connector prereqs (`BLOCKED-PREREQUISITES` item).** The source plan's own
-      2026-07-07 annotation already found both named prereqs landed on LDR shortly after the block was recorded
-      (`unified-api-contracts@3652f99f` added `book_snapshot_5`/`liquidations` to
-      `VENUE_DATA_TYPE_CAPABILITIES["ASTER"]`; `instruments-service@4a8cff75` added the enumerator's
-      per-(venue,data_type) `start_date` gate) but explicitly flagged that the connector launch itself was never
-      re-verified or flipped on that basis alone. Confirm both prereqs are still present at current LDR tip, then either
-      launch the connector (register `aster_book_liq_ws.py` into `live/connector_registry.py` + a live VM per the
-      KALSHI-PERP book5 template, verify `live_aster` rows land via a T+10-15min per-VM shard spot-check, no
-      fire-and-forget) or, if a newer blocker has since appeared, update the checkbox annotation with the current
-      blocker. **Done when**: either `live_aster` book5/liquidations rows are confirmed landing daily (checkbox flips
-      `[x]`) or the doc records the current, re-verified blocking reason.
-- [ ] [REVIEW] P2. **Re-check the 4 credential/operator-gated items' gates** — `collect-oracle-prices` pyth key,
-      gas-fees MANTLE paid RPC key, live ODDS quota decision, and the rate-limit-probe disposable-IP sanction. For each:
-      check whether the named credential/decision has landed since 2026-07-14 (grep Secret Manager provisioning commits,
-      `[ack-pending]` resolution, or an operator note elsewhere). If a gate cleared, either do the now-unblocked work
-      directly (each is small — a launcher/adapter scaffold already exists per the source plan) or spin it into a new
-      tracked todo if it needs its own dispatch. If still gated, leave the BLOCKED-* annotation as-is — do not descope.
-      **Done when**: each of the 4 items has an explicit current-state note (still gated, with evidence checked / newly
-      unblocked, with the resulting work done or re-tracked).
-- [ ] [DOC] P3. **Archive `infra_capture_and_devops_leftovers_2026_07_06.md`** via the standard 6-step ritual (per
-      CLAUDE.md's plan-archival rule) — ONLY if todos 1-2 above result in the plan having zero open items (all 5 either
-      flip `[x]` or remain genuinely BLOCKED-* with no further action possible right now, in which case downgrade
-      `status: active` → `blocked` instead of archiving, and skip this todo). If archivable: add the archive banner →
-      run the codex-alignment check → grep the corpus for every referrer of
-      `infra_capture_and_devops_leftovers_2026_07_06` and fix each path to point at the archived location → clear
-      `locked_by` (already empty, confirm) → move to `plans/archive/2026_07/` alongside this finalize doc in the same
-      commit. **Done when**: either the plan is archived with every corpus referrer fixed, or (if still genuinely
-      blocked) its `status` is downgraded to `blocked` with a note explaining which item(s) remain gated.
+- [x] ✅ [REVIEW] P2. **Re-verify the ASTER live connector prereqs (`BLOCKED-PREREQUISITES` item).** — **DUPLICATE,
+      checked 2026-07-25 (slot 2)**: already fully handled by
+      `infra_capture_and_devops_leftovers_finalize_2026_07_25.md` (the correct, non-duplicate doc). Its own record: the
+      parent's ASTER todo re-resolved to `BLOCKED-OPERATOR-DECISION` (`BLK-4f52080e`, main: HOLD pending the CeFi
+      live-capture cost-control freeze `BLK-55d45a68`) — still genuinely blocked, re-verified as of today. No
+      independent re-check needed here.
+- [x] ✅ [REVIEW] P2. **Re-check the 4 credential/operator-gated items' gates.** — **DUPLICATE, checked 2026-07-25
+      (slot 2)**: already fully handled by the sibling finalize doc. Its record: `collect-oracle-prices` pyth key
+      flipped `[x]` (premise was stale — launcher scaffold already exists, Hermes endpoint needs no auth, already
+      backfilling under a separate active plan); MANTLE gas-fees RPC, Live ODDS quota, and the rate-limit-probe VM all
+      re-confirmed still genuinely blocked as of 2026-07-25. No independent re-check needed here.
+- [x] ✅ [DOC] P3. **Archive `infra_capture_and_devops_leftovers_2026_07_06.md`.** — **DUPLICATE, checked 2026-07-25
+      (slot 2)**: not archivable — 4 of 5 parent items remain genuinely blocked (per the sibling finalize doc's own
+      re-check above), so the parent correctly stays `status: active`, not archived. The sibling finalize doc is the
+      standing pointer for this; this doc needs no independent archival attempt. Evidence:
+      `unified-trading-pm@93ba15a52` + `agent-orchestrator@f58d934` (root-cause dispatcher fix, see banner above).
