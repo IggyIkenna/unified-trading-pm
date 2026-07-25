@@ -172,9 +172,18 @@ fix. No behavior change to the actual build (bash never executed these comments)
       `$$VERSION`) + run the exhaustive re-scan above to confirm zero remaining. Ship via quickmerge. (repo:
       market-data-processing-service) — market-data-processing-service@be66050, exhaustive re-scan confirmed zero
       remaining bad substitutions; `quality-gates.sh` green (90s).
-- [ ] [INFRA] P1. Fix `market-tick-data-service/cloudbuild.yaml` lines 108 (`$BASE_IMAGE_DIGEST`), 309 (`$VERSION`) in
-      comments → double-escaped + run the exhaustive re-scan above to confirm zero remaining. Ship via quickmerge.
-      (repo: market-tick-data-service)
+- [ ] [INFRA] P1. BLOCKED-pending-underlying-fix (main ruling, BLK-4e267d8f, 2026-07-25). Fix
+      `market-tick-data-service/cloudbuild.yaml` lines 108 (`$BASE_IMAGE_DIGEST`), 309 (`$VERSION`) in comments →
+      double-escaped + run the exhaustive re-scan above to confirm zero remaining. Ship via quickmerge. (repo:
+      market-tick-data-service) — code change is DONE locally (comment-only escape, verified inert via a stashed control
+      run; unshipped local commit, lineage from `cbfdcd4b`, in slot 2's worktree) but quickmerge's local re-gate keeps
+      hitting the flaky `test_prediction_stays_prod_without_is_test_run` /
+      `test_adapter_resolves_canonical_cefi_bucket_is_test_run_aware` pollution tracked in
+      `mtds_flaky_is_test_run_pollution_2026_07_25.md`. Main ruled: do not retry-until-lucky, do not escalate to
+      operator (not a hard-stop), do not bypass the gate — park until `mtds_flaky_is_test_run_pollution-001` (slot 8, in
+      progress) lands and quality-gates.sh goes genuinely green, then re-run quickmerge ONCE. Synthetic condition
+      `auto_unpark__cloudbuild_yaml_unescaped_substitution_comments_fleet_wide-006` created (false) as the durable-park
+      signal, mirroring `server/auto_park.py`'s naming convention.
 - [x] ✅ [INFRA] P1. Fix `ml-service/cloudbuild.yaml` lines 94, 261 (bare `$VERSION` in comments → `$$VERSION`) + run
       the exhaustive re-scan above to confirm zero remaining. Ship via quickmerge. (repo: ml-service) —
       ml-service@1257161, exhaustive re-scan confirmed zero remaining bare substitutions.
