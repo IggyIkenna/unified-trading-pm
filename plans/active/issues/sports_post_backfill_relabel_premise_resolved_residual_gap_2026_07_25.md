@@ -175,11 +175,67 @@ of the follow-up:
       `ManifestWriter` API, not a custom mechanism. Did NOT touch the writer itself (the "fix the root cause so this
       stops re-accruing" follow-up stays open, flagged in todo 2's own text above, out of this todo's
       read-only-then-provable-write scope).
-- [ ] [DATA] P3. Separately check the `odds_horizon_bucket` (11,146 rows, MDPS-owned) and `TEAMS` (1,758 rows) residuals
-      in the same window — different owning writer, likely a different root cause than the FIXTURES-split timing gap.
-      (repo: market-tick-data-service for odds_horizon_bucket; instruments-service for TEAMS)
+- [x] ✅ [DATA] P3. Separately check the `odds_horizon_bucket` (11,146 rows, MDPS-owned) and `TEAMS` (1,758 rows)
+      residuals in the same window — different owning writer, likely a different root cause than the FIXTURES-split
+      timing gap. (repo: market-tick-data-service for odds_horizon_bucket; instruments-service for TEAMS) — **DIAGNOSED
+      2026-07-25T06:35Z (slot 2, data_engineering) — TWO further distinct root causes, neither matching the
+      FIXTURES-split interleaved pattern.** Single manifest read (window-filtered, no new corpus walk).
+      **`odds_horizon_bucket`** (`source=mdps_odds_horizon_bucket`, 18,419 total rows, 11,146 stuck — confirms the issue
+      doc's count exactly): 96 distinct stuck league_ids, but the shape is LEAGUE-LEVEL, not date-level — **66 leagues
+      (cups + lower tiers: `COPA_DEL_REY`, `CARABAO_CUP`, `BRASILEIRAO_SERIE_B`, `AUSTRIAN_2_LIGA`, etc.) have ZERO
+      captured rows anywhere in the entire 120-day window** (every single date stuck, confirmed via a full per-date dump
+      of a sample league) — this is a provider-coverage gap (the odds book simply doesn't list markets for these
+      competitions), not a per-day timing artifact; textbook `EXPECTED_NO_PROVIDER_COVERAGE`, not a relabel of anything
+      real. The other **30 leagues DO have real captures** (e.g. `EPL`, `BUNDESLIGA`, `ALLSVENSKAN`) with a smaller
+      residual — cross-checked against the legacy `FIXTURES` entity for the identical `(date, league_id)`:
+      **8,924/11,146 (80%) match a `FIXTURES` `empty_confirmed` row** (provably no fixture that day → safe to close,
+      same discipline as `close_fixtures_split_expected_unattempted_cells_2026_07_25.py`); **1,982/11,146 (18%) match a
+      `FIXTURES` `captured` row** (a REAL fixture existed that day but odds were never captured for it — a genuine
+      capture gap, NOT safe to relabel, needs its own investigation into why); the remaining 240 are the already-known
+      `CHINA_SUPER_LEAGUE`/`RUSSIA_PREMIER_LEAGUE` historical-lag case from todo 1. **`TEAMS`** (`source=api_football`,
+      1,758 stuck, confirms the issue doc's count): only 2 leagues (`RUSSIA_PREMIER_LEAGUE`, `CHINA_SUPER_LEAGUE`, 120
+      each — the same already-known newly-added-league lag) are FULLY absent; the other 33 partial leagues show a sharp
+      CLIFF-EDGE pattern, not interleaved gaps — sampled `EREDIVISIE` in full: captured daily (`instrument_count=1`)
+      every single date from `2026-02-20` through `2026-05-04`, then **zero captures for any date after that** (all 46
+      remaining dates through `2026-06-19` stuck) — the TEAMS roster-capture job for these 33 leagues appears to have
+      simply STOPPED running around `2026-05-04`/`05`, not a per-day writer-skip pattern like FIXTURES_OUTCOMES.
+      **Recommendation (not fixed this pass — diagnosis-only per this todo's scope)**: three follow-ups, each
+      independent: (1) `odds_horizon_bucket` — a closer script for the 8,924 provably-empty cells mirroring
+      `close_fixtures_split_expected_unattempted_cells_2026_07_25.py` (repo: market-tick-data-service); (2) the 66
+      no-coverage leagues need an `EXPECTED_NO_PROVIDER_COVERAGE`-class registry entry, not a relabel, so the enumerator
+      stops re-seeding `expected_unattempted` for them (repo: market-tick-data-service); (3) the 1,982
+      real-fixture-but-no-odds cells and the TEAMS 33-league capture-stall both need someone to check the ACTUAL capture
+      job/cron for signs of failure around early May (repo: market-tick-data-service for odds; instruments-service for
+      TEAMS) — this is a "did the job stop running" question, not a manifest-classification one, and out of a read-only
+      diagnosis todo's scope to answer from manifest data alone.
+- [ ] [DATA] P3. Close the provably-empty subset of `odds_horizon_bucket` `expected_unattempted` cells (8,924 of 11,146,
+      cross-checked against legacy `FIXTURES` `empty_confirmed` for the identical `(date, league_id)` — diagnosed above
+      by todo 3) via a safety-pattern closer script mirroring
+      `close_fixtures_split_expected_unattempted_cells_2026_07_25.py`'s provable-closure discipline (never a blind
+      relabel; exclude `SOURCE_RETURNED_ZERO` FIXTURES reasons the same way). (repo: market-tick-data-service)
+- [ ] [DATA] P3. Register the 66 cup/lower-tier leagues that have ZERO `odds_horizon_bucket` captures anywhere in the
+      diagnosed window (`COPA_DEL_REY`, `CARABAO_CUP`, `BRASILEIRAO_SERIE_B`, `AUSTRIAN_2_LIGA`, etc. — full list in the
+      manifest, diagnosed above by todo 3) as `EXPECTED_NO_PROVIDER_COVERAGE` (or the market-tick-data-service
+      equivalent registry) so the enumerator stops re-seeding `expected_unattempted` for leagues the odds provider
+      structurally never lists markets for — a coverage-registry fix, not a per-cell relabel. (repo:
+      market-tick-data-service)
+- [ ] [DATA] P3. Investigate whether the `odds_horizon_bucket` and `TEAMS` capture jobs actually stopped running around
+      early May 2026 for a subset of leagues (diagnosed above by todo 3: `TEAMS`'s `EREDIVISIE` captured daily through
+      `2026-05-04` then zero captures for any date since; `odds_horizon_bucket` has 1,982 cells where a real fixture
+      existed per `FIXTURES` but no odds were ever captured for it) — check the actual cron/job logs for errors or a
+      silent stop around that date, not just the manifest's own record of the gap. (repo: market-tick-data-service for
+      odds_horizon_bucket; instruments-service for TEAMS)
 
 ## Progress Log
+
+- **2026-07-25T06:35Z (slot 2, data_engineering)**: Dispatched todo 3 (diagnose `odds_horizon_bucket` + `TEAMS`
+  residuals). Single manifest read (window-filtered, no new corpus walk), no writes. Found two DIFFERENT root causes
+  from both each other and from todo 1's FIXTURES-split finding: `odds_horizon_bucket` is a league-level
+  provider-coverage gap for 66 cup/lower-tier leagues (zero captures ever) plus a smaller date-level gap for 30 covered
+  leagues (80% provably closeable via `FIXTURES` cross-check, 18% are real fixtures with a genuine missing-odds gap);
+  `TEAMS` is a cliff-edge capture-job stall for 33 leagues (ran daily through `2026-05-04`, zero captures since). Filed
+  3 new follow-up todos (closer script, coverage-registry fix, cron/job investigation) rather than leaving the
+  recommendations as prose only. Did not attempt any fix — diagnosis was this todo's full scope.
 
 - **2026-07-25 (slot 9, data_engineering)**: Filed while executing `sports_satellite_ao_dispatch_batch2-014`. Measured
   the current manifest directly (single read, no new corpus walk) before running the prescribed script; found the
