@@ -318,6 +318,12 @@ IN_WORKTREE_SECTION=1   # bad() from here on (#9-11) is per-worktree, never in t
 # debounce remains the second layer for genuine single-tick flaps in the page-worthy set.
 SYMMETRY_ALERT_THRESHOLD="${SYMMETRY_ALERT_THRESHOLD:-2}"
 _streak_file="${XDG_RUNTIME_DIR:-/tmp}/.slot-host-symmetry-fail-streak.$(id -u)"
+# Marker for the DRIFT→RECOVERED Slack bookend (added 2026-07-24). This script has no
+# equivalent of agent-orchestrator/server/notifications/slack.py's disk-persisted dedup
+# (notify_git_staleness_resolved() / notify_snapshot_recency_resolved()) — the marker file
+# plays that role: touched when a DRIFT alert is successfully posted (below), checked +
+# cleared with a RECOVERED post the next time this host runs clean.
+_alerted_file="${XDG_RUNTIME_DIR:-/tmp}/.slot-host-symmetry-alerted.$(id -u)"
 if [[ ${host_fail} -gt 0 ]]; then
     _prev_streak=$(cat "${_streak_file}" 2>/dev/null || echo 0)
     [[ "${_prev_streak}" =~ ^[0-9]+$ ]] || _prev_streak=0
@@ -326,6 +332,21 @@ if [[ ${host_fail} -gt 0 ]]; then
 else
     host_fail_streak=0
     rm -f "${_streak_file}" 2>/dev/null || true
+    if [[ ${ALERT} -eq 1 && -f "${_alerted_file}" ]]; then
+        # A DRIFT alert was previously posted and this host is now clean — close the loop.
+        _wh="${AGENT_ORCHESTRATOR_SLACK_WEBHOOK:-$(gcloud secrets versions access latest --secret=AGENT_ORCHESTRATOR_SLACK_WEBHOOK --project=central-element-323112 2>/dev/null || true)}"
+        if [[ -n "${_wh}" ]]; then
+            _host="$(hostname)"
+            _payload=$(python3 -c '
+import json, sys
+host = sys.argv[1]
+print(json.dumps({"text": f":white_check_mark: slot-host-symmetry RECOVERED on `{host}` — host-level checks now passing."}))
+' "${_host}")
+            curl -sS -X POST "${_wh}" -H "Content-Type: application/json" -d "${_payload}" \
+                >/dev/null 2>&1 && echo "[alert] posted host-level symmetry-RECOVERED alert to Slack" || echo "[alert] WARN: Slack RECOVERED post failed"
+        fi
+        rm -f "${_alerted_file}" 2>/dev/null || true
+    fi
 fi
 
 # 9. Per-worktree commit identity (recurrence guard for commit_identity_misconfig_fleet_2026_06_03).
@@ -488,7 +509,9 @@ lines.append("Run verify-slot-host-symmetry.sh on that host. SSOT: CLAUDE.md § 
 print(json.dumps({"text": "\n".join(lines)}))
 ' "${_host}" "${host_fail}" "${host_fail_streak}" "${_wt_fail}" "${HOST_FAIL_DETAILS}")
             curl -sS -X POST "${_wh}" -H 'Content-Type: application/json' -d "${_payload}" \
-                >/dev/null 2>&1 && echo "[alert] posted host-level symmetry-drift alert to Slack (streak=${host_fail_streak})" || echo "[alert] WARN: Slack post failed"
+                >/dev/null 2>&1 \
+                && { echo "[alert] posted host-level symmetry-drift alert to Slack (streak=${host_fail_streak})"; touch "${_alerted_file}" 2>/dev/null || true; } \
+                || echo "[alert] WARN: Slack post failed"
         else
             echo "[alert] WARN: no Slack webhook — host-level drift NOT alerted"
         fi
