@@ -139,7 +139,7 @@ orchestrator-dispatched).
       the AO code first): - [`is_daily_enum_capture_heal_2026_07_07.md`](is_daily_enum_capture_heal_2026_07_07.md) —
       exc_info fix → redeploy → real diagnosis → fix → backfill (one sequential thread; the heal + backfill +
       observability items below all folded in here). -
-      [`manifest_consolidator_dtype_at_source_fix_2026_07_07.md`](manifest_consolidator_dtype_at_source_fix_2026_07_07.md)
+      [`manifest_consolidator_dtype_at_source_fix_2026_07_07.md`](/plans/archive/2026_07/manifest_consolidator_dtype_at_source_fix_2026_07_07.md)
       — the consolidator dtype fix, independent (different repo — `market-tick-data-service` — parallel with the above).
       These supersede the 3 residual todos previously listed here; do not re-add them to this plan.
 
