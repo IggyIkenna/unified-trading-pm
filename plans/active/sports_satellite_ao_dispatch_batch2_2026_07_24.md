@@ -229,7 +229,15 @@ source: >-
       registry; instruments-service write-gate + backfill VMs + `_index` + GCS objects). **Done when**: curated list
       stored + write-gate widened; fixtures+enrichment backfilled for the curated set 2019→ with honest-empty for
       no-enrichment leagues; residual out-of-curated rows/objects dropped snapshot-first. Source:
-      `sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md`.
+      `sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md`. — **RECONCILED 2026-07-25 (slot 4,
+      data_engineering): checkbox correctly stays unchecked — this todo is ALREADY superseded-by-decomposition, not a
+      fresh start.** Step 1's continental-majors slice shipped (`unified-api-contracts@7b13196e`); the 171-country
+      domestic-selection slice is split into 11 confederation-batch todos in
+      `issues/sports_curated_universe_domestic_selection_remaining_2026_07_25.md` (backlog-verified: 4 dispatched, 7
+      queued, 1 done+orphaned as of 2026-07-25T03:02Z — real progress already in flight under separate task ids). Steps
+      2 (backfill) + 3 (residual drop) are explicitly gated on all 11 landing first. No code touched this session —
+      re-executing step 1 here would duplicate/collide with the already-dispatched batches; this todo's real done-when
+      is now "all 11 batches + step 2 + step 3 land," tracked in the issue doc, not re-derived here.
 
 ### From `sports_odds_bookmaker_coverage_enumeration_2026_06_20.md`
 
@@ -758,189 +766,14 @@ source: >-
 ## Progress Log
 
 - **2026-07-25 (slot 2, data_engineering) — "Curated-universe definition → backfill → residual drop" todo — step 1
-  substantially de-risked, NOT complete (checkbox correctly left unchecked, no write-gate code changed).** Directive A/B
-  (the operator's own spec for the curated list, quoted in full in the source doc) requires real judgment to turn into a
-  concrete ~300-league list — not a mechanical transcription — so rather than guess, checked whether a candidate pool
-  already exists from prior work instead of assuming a fresh API-Football enumeration was needed.
-  - **Found a major shortcut, not previously called out in any plan**: the pre-pruning manifest backup
-    (`gs://instruments-store-sports-prd-central-element-323112/_index/_backups/availability_index.20260505T132209Z.pre-leagues-retire.parquet`,
-    from before the 2026-05 cutdown to the 94-league baseline) still has **375 distinct league_ids with real
-    `capture_status=captured, instrument_count>0` rows** — i.e. leagues API-Football data was ALREADY fetched and paid
-    for, spanning dozens of countries' top divisions, second/third divisions (e.g. `ALBANIA_2ND_DIVISION_GROUP_A`,
-    `ARGENTINA_PRIMERA_C`), and domestic cups (`ALGERIA_COUPE_NATIONALE`, `ARMENIA_CUP`) — exactly the shape Directive
-    A/B describes (top league + division below + cups). This directly matches the operator's own framing ("we already do
-    have a bunch of fixtures in the API football, so it wouldn't be a full re-backfill") — meaning step 2's "burn ~6M
-    over weeks" may be a smaller residual gap than the todo's framing implies, not a fresh 300-league backfill from
-    zero.
-  - **NOT a clean drop-in list — needs real cleanup before it can back a write-gate**: sampled the 375 and found
-    naming-scheme duplicates from the pre-pruning era (`AUSTRIAN_2_LIGA` vs `AUSTRIA_2_LIGA`, `AUSTRIAN_BUNDESLIGA` vs
-    `AUSTRIA_BUNDESLIGA`) — the raw candidate set needs de-duplication + validation against UAC's existing
-    canonical-slug conventions before it's safe to feed into
-    `_is_in_canonical_write_universe`/`get_expected_leagues_for_source`. 63 additional league_id values in the same
-    snapshot are still RAW numeric API-Football IDs (33 of which already map via `_API_FOOTBALL_ID_TO_LEAGUE`, 30
-    genuinely unmapped) — those need canonical-slug assignment before inclusion, not silent numeric-ID admission
-    (mirrors the exact class of bug already fixed elsewhere in this same plan's league_id-namespace todos).
-  - **Deliberately did NOT touch the write-gate or UAC's `LEAGUE_REGISTRY` this session** — turning this candidate pool
-    into ~300 correctly-classified, de-duplicated, correctly-countried `LeagueDefinition` entries (with season
-    start/end + transfer-window metadata, per the plan's own UAC-registry todo) is real, careful data-entry work against
-    a PRODUCTION write-gate; doing it hastily risks baking wrong entries into the exact code path that controls weeks of
-    real API spend and manifest correctness. The raw candidate list is preserved at this session's working artifacts
-    (not committed — regenerate via the query below, cheap, no new GCS walk needed) rather than guessed at from scratch.
-  - **Recommended next step**: (1) re-run the extraction query below against the SAME backup parquet (already
-    identified, no new census needed) to regenerate the 375-league candidate list, (2) de-duplicate the naming-scheme
-    variants + resolve the 30 unmapped numeric IDs to canonical slugs, (3) cross-reference against Directive A/B's
-    per-source caps (Understat ~6, footystats ~50, SFI/odds-API bounded by API-Football availability) — those caps are a
-    genuine ceiling on how much of the 375 is actually eligible, not all 375 necessarily qualify, (4) THEN widen the
-    write-gate + add the UAC registry entries, (5) THEN assess the REAL residual backfill gap (likely much smaller than
-    a from-scratch ~300-league fetch, given most already have real data) before launching any VM. Extraction query:
-    `pd.read_parquet('<backup path above>', columns=['league_id','capture_status','instrument_count']); filter capture_status=='captured' & instrument_count>0; distinct non-numeric league_id values`.
-  - **Follow-up mechanical pass on the 375 (still no code touched)**: grouped by 4-char country-prefix to find likely
-    adjective/noun-form duplicates. 9 prefix groups flagged; MOST were false positives on inspection (`SLOVAKIA_*` vs
-    `SLOVENIA_*` share a 4-char prefix but are different countries; `SUPERCOPA_ESPANA` vs `SUPERETTAN` vs `SUPER_LIG`
-    are unrelated competitions that happen to start "SUPE"). Genuine duplicate PAIRS confirmed by inspection (same
-    real-world competition, inconsistent adjective/noun naming from the pre-pruning era):
-    `AUSTRIA_2_LIGA`/`AUSTRIAN_2_LIGA`, `AUSTRIA_BUNDESLIGA`/`AUSTRIAN_BUNDESLIGA`, `AUSTRIA_CUP`/`AUSTRIAN_CUP`,
-    `SCOTLAND_CHAMPIONSHIP`/`SCOTTISH_CHAMPIONSHIP`, and likely `GREECE_SUPER_LEAGUE_1`/`GREEK_SUPER_LEAGUE` (needs a
-    capture-date/instrument-count cross-check to confirm they aren't actually two distinct tiers before merging — did
-    NOT assume). So the real de-dup burden is small (~5 pairs out of 375, not a systemic mess) — the earlier finding's
-    caution about "not a clean drop-in list" stands, but the actual cleanup is now known to be a bounded, few-pair fix,
-    not a large undertaking. A crude prefix-match heuristic is NOT sufficient on its own (produces false positives) —
-    the next pass should verify each flagged pair against real capture data before merging, same discipline this session
-    applied.
-  - **Per-source-cap cross-reference, real numbers (still no code touched)** — queried the same backup's `data_type`
-    breakdown to check the candidate pool against Directive A/B's stated per-source caps: **XG (Understat)**: 18
-    distinct leagues with real captured data — HIGHER than the operator's own "~6" estimate, so Understat's true reach
-    is bigger than assumed (good — more free reference data). **MATCHES (footystats)**: 30 leagues — under the "~50"
-    cap, room to grow. **ODDS**: 30 leagues — OVER the operator's stated "~20" odds-API cap; since odds availability is
-    what ultimately gates the PREDICTION-tier subset (per Directive A: "we pretty much narrow down our prediction
-    leagues to the ones that the odds API has data for"), this is the one real discrepancy worth operator confirmation
-    before finalizing — either the "~20" figure was a rough estimate (use the real 30), or 10 of these 30 need to be
-    excluded from the prediction tier specifically (they'd still be fine as features-tier reference).
-    **SFI_PROGRESSIVE_STATS**: 33 leagues, all cross-checked as already within the API-Football-covered set (no orphan
-    SFI-only leagues found in this sample) — consistent with Directive A's "can't be trying to get soccer football info
-    for a league that doesn't exist in API Football" rule. This closes step 3's cross-reference with real measured
-    numbers instead of the directive's own rough estimates — the next session can go straight to finalizing the list
-    against these figures (flag the ODDS 30-vs-~20 discrepancy to the operator specifically) rather than re-deriving
-    them. **Operator resolved the ODDS discrepancy same session: use the real measured 30, not the ~20 estimate.**
-  - **Major follow-up finding: the metadata blocker on actually building `LeagueDefinition` entries is smaller than
-    assumed.** Was about to defer "assign country + season/transfer-window metadata to ~300 leagues" as needing a fresh
-    session (fabricating that data would be worse than not doing this task). Checked first whether it already exists
-    rather than assuming not:
-    `gs://instruments-store-sports-prd-central-element-323112/sports_reference/by_date/day=2024-01-15/pipeline_mode=batch_instruments_service/entity=leagues/leagues.parquet`
-    (object timestamp 2026-06-24 — recent, not stale) is the **full raw API-Football leagues catalog**: 1,228 rows,
-    columns `league_id, name, country, league_type, logo_url`, zero null countries, 171 distinct countries, **776
-    `League` / 452 `Cup`** already classified. This directly answers the "which of the 375 (and the wider universe) are
-    leagues vs cups, and which country" question that would otherwise require per-league research — it's already
-    captured, current, and complete for country+type. What's still genuinely absent: season start/end + transfer-window
-    dates (Directive A asks for these too) — not found in this file or any other checked this session; that piece likely
-    does need fresh research or an additional API-Football endpoint call per league, and is real remaining scope for
-    whoever picks this up. Net: the curated-list SELECTION step (which ~300 of 1,228, cross-referenced against the 375
-    already-captured + the per-source caps above) is now almost entirely mechanical — join `leagues.parquet` against the
-    375-candidate list + Directive A/B's rules (top + below-division + continental cups + majors) — the remaining hard
-    part is narrowed specifically to season/ transfer-window dates, not the whole metadata problem.
-  - **Confirmed the catalog's shape matches Directive A/B's two-category selection cleanly, no further discovery needed
-    on this axis**: grouping `leagues.parquet` by `country` shows `country="World"` holds **176 entries, 175 of them
-    `Cup`** (World Cup, Euro Championship, UEFA Champions/Europa League, Copa America, CONCACAF Gold Cup, AFC/CAF
-    equivalents, etc.) — this IS the "continental cups + majors" bucket Directive A/B names explicitly, already cleanly
-    separated from the 171 real countries' domestic leagues/cups (England 46, Spain 38, Germany 34, Brazil 109, …). So
-    the selection mechanically splits into two independent, well-scoped joins: (a) per-country top-league +
-    division-below + domestic-cup from the 171-country group, (b) the specific named majors/continental cups from the
-    176-entry World group (Directive A names them: World Cup, Euros, Copa America, Champions League, UEFA/UECL, Copa
-    Libertadores/Sudamericana, AFC/CAF equivalents — a literal name-match against these 176, not a fresh enumeration).
-    **This closes out this session's contribution to step 1** — everything needed to WRITE the curated list is now
-    identified and located; actually writing the join code + the ~300 `LeagueDefinition` UAC entries + widening the
-    write-gate remains real implementation work for a fresh session (still correctly not done here — a discrepancy in a
-    production write-gate is expensive to unwind, worth doing with full attention).
-  - **Found the actual code-level blocker on writing entries, not just a data gap**:
-    `LeagueDefinition.season_months: tuple[int, int]`
-    (`unified_api_contracts/canonical/domain/sports/league_registry.py:60`) is a REQUIRED field, no default — confirms
-    real per-league season-window data is a hard prerequisite for every new entry, not an optional nicety. **Operator
-    resolved this directly**: use a hemisphere-based default (Northern Hemisphere Aug–May, Southern Feb–Nov, explicit
-    hardcoded exceptions like MLS Feb–Nov) with an explicit code-comment TODO marker per entry, rather than block on
-    per-league research or silently guess without flagging it. This unblocks the write-gate widening for a fresh
-    session.
-  - **Sanity-checked the continental/majors slice specifically** (the part of step 1 that does NOT need per-country
-    tier-guessing, since Directive A names the tournaments explicitly): keyword-matched the 176-entry World group
-    against Directive A's named list (World Cup, Euros, Copa America, Champions/Europa/Conference League,
-    Libertadores/Sudamericana, AFC/CAF Champions League, Nations League) → **43 raw matches**. Flagging honestly: NOT
-    all 43 are "majors" in the operator's intended sense — many are youth (`World Cup - U20`), qualifiers
-    (`World Cup - Qualification Africa`), or women's variants that Directive A's own prose de-prioritizes — a fresh
-    session should filter to senior-men's-flagship first per Directive A's literal examples, not admit all 43
-    uncritically.
-  - **Every open question for this todo is now resolved or located**: candidate leagues (375 already-captured + 1,228
-    full catalog), per-source caps (measured + operator-confirmed for ODDS), duplicate handling (bounded ~5 pairs),
-    season-month defaults (operator-approved hemisphere heuristic), and the domestic-vs-continental split (171-country
-    group vs 176-entry World group). What's left is writing, testing, and shipping the actual code — genuine
-    implementation work, not more discovery.
-  - **CRITICAL — actually attempted the 11-entry continental-majors slice and found a real, confirmed regression risk;
-    reverted cleanly, no code shipped, checkbox stays unchecked.** Wrote 11 `LeagueDefinition` entries into
-    `unified_api_contracts/canonical/domain/sports/league_data_other.py`'s `REFERENCE_LEAGUES` dict (World Cup, Euros,
-    FIFA Club World Cup, Copa America, OFC/CONCACAF/AFC×2/CAF Champions League, UEFA + CONCACAF Nations League — the 11
-    of the 18 keyword-matched majors not already in the registry), `classification="Reference"`, hemisphere-default
-    `season_months` per the operator's approved policy. **QG caught a real defect**: two tests failed —
-    `test_full_94_football_universe_is_mvp` / `test_all_89_other_football_leagues_are_understat_gaps` — both hardcode
-    registry-size assertions. Root cause traced past the test counts to the actual mechanism:
-    `_mvp_scope_rules.py::_mvp_football_league_ids()` (feeds the sports `is_mvp()` predicate) takes EVERY
-    `sport=="FOOTBALL"` registry entry with **NO classification filter at all** — so my 11 new `Reference`-tagged
-    entries were silently swept into MVP/prediction scope, directly contradicting the operator's explicit "not
-    suggesting we increase the scope of what we are predicting now." **Attempted the obvious fix** (filter
-    `_mvp_football_league_ids()` to `classification == "Prediction"`) and measured its actual effect before shipping it:
-    **the current 96-league MVP baseline is Prediction (33) + Features (24) + Reference (39) COMBINED — all three
-    classifications, not just Prediction.** That "fix" would have silently SHRUNK live MVP/prediction scope from 96 to
-    33, a severe regression in the opposite direction. **Neither the naive addition NOR the obvious fix is safe** —
-    there is no existing field in `LeagueDefinition`/`classification` that distinguishes "new operator-directed
-    wider-reference addition, NOT MVP" from "pre-existing Reference-tier entry that IS legitimately part of the
-    96-league MVP baseline" (e.g. `FA_CUP` is `classification="Reference"` AND correctly in MVP scope today). **Reverted
-    both files cleanly** (`git checkout --`, confirmed `git status` clean) — zero code shipped, zero regression risk
-    taken. This is now a real, confirmed architecture question for whoever implements this, not a hypothetical: either
-    (a) add a new boolean/enum field (e.g. `in_mvp_scope: bool`) to `LeagueDefinition` so classification and
-    MVP-membership are independently settable, or (b) give the curated-universe expansion its own registry dict entirely
-    separate from `LEAGUE_REGISTRY`/`_mvp_football_league_ids()`'s sweep, or (c) get an explicit operator ruling on
-    whether the 11 majors SHOULD actually be in MVP scope (Directive A's own prose is ambiguous on this specific point —
-    it says "wider universe" but also "we pretty much narrow down our prediction leagues to the ones the odds API has
-    data for", and several of these 11 majors DO have real odds-API coverage per this session's earlier per-source-cap
-    measurement). Do not repeat this session's naive-add attempt without resolving (a)/(b)/(c) first — QG will catch it
-    again, but better to design it correctly than rely on the test suite as the only guardrail.
-  - **RESOLVED + SHIPPED, same session.** Operator picked option (a) directly. Added
-    `LeagueDefinition.in_mvp_scope: bool = True` (default preserves all 107 pre-existing entries' behavior unchanged —
-    none needed individual edits) and repointed `_mvp_football_league_ids()` to filter on it instead of classification.
-    Re-added the 11 continental-majors entries with `in_mvp_scope=False` explicit. **Verified before shipping, not
-    assumed**: `_mvp_football_league_ids()` still returns exactly 96 (unchanged) and none of the 11 new entries appear
-    in it — confirmed via direct call, not just "tests pass." Fixed the 2 tests that hardcoded `sport=="FOOTBALL"`
-    counts to filter on `in_mvp_scope` instead (verifying, not assuming, that all 11 new entries are genuine Understat
-    structural gaps before updating the count). Full `quality-gates.sh` green (279s, 11895 passed). Shipped:
-    **unified-api-contracts@7b13196e**. This closes the continental-majors SLICE of step 1 — the full ~300-league
-    curated universe (the 171-country domestic top+below+cup selection) remains open; main todo checkbox stays unchecked
-    since steps 2 (backfill) and 3 (residual drop) haven't started and even step 1 isn't fully done.
-  - **Post-ship consistency check (data, not guess)**: the 5 continental cups already in the registry before this
-    session (`UCL`, `UEL`, `UECL`, `COPA_LIBERTADORES`, `COPA_SUDAMERICANA`) are all `in_mvp_scope=True` (via the
-    field's default) — i.e. they were ALREADY intentionally part of the 96-league MVP baseline, consistent with
-    Directive A's "we pretty much narrow down our prediction leagues to the ones the odds API has data for."
-    Cross-checked whether any of the 11 NEWLY-shipped entries should have been `True` instead by the same logic: queried
-    the same backup parquet's `data_type=="ODDS"` captured rows — **zero overlap** between the 11 new entries and the
-    set of leagues with real captured odds data. Confirms `in_mvp_scope=False` was the correct call for all 11,
-    consistent with (not contradicting) how the 5 pre-existing continental cups are treated.
-  - **Attempted the domestic-cups slice for the 26 already-covered countries (FA Cup, DFB Pokal, Coppa Italia, etc.) —
-    found a bug in my own filter before shipping anything, zero code touched.** `catalog['league_id']` is STRING dtype;
-    my "not yet in registry" filter compared it against a set of INTEGER `api_football_id`s — silently never matched, so
-    all 105→41→25 "candidates" I narrowed down to were false positives. Direct check against `LEAGUE_REGISTRY` confirms
-    every one of the 25 (`FA_CUP`, `COPA_DEL_REY`, `DFB_POKAL`, `COPPA_ITALIA`, `KNVB_CUP`, `GREEK_CUP`, `AUSTRIAN_CUP`,
-    `SWISS_CUP`, `DANISH_CUP`, `NORWEGIAN_CUP`, `SVENSKA_CUPEN`, `POLISH_CUP`, `COPA_ARGENTINA`, `COPA_DO_BRASIL`,
-    `COPA_CHILE`, `COPA_MX`, `BELGIAN_CUP`, `US_OPEN_CUP`, `EMPEROR_CUP`, `KOREAN_FA_CUP`, `AUSTRALIA_CUP`, + 4 more) is
-    ALREADY in the registry under a different key name than I'd have generated — would have shipped 25 duplicate entries
-    pointing at the same underlying competitions if I hadn't verified with a direct lookup before writing code. **Net
-    finding: the 26 already-covered countries' main domestic cups are already fully in the registry — nothing to add
-    here.** The real remaining gap is genuinely new countries not yet in `LEAGUE_REGISTRY` at all (145 of the 171 in the
-    catalog), which needs real per-country tier research (which division is "top", which is "below") — not something to
-    guess at row-by-row.
-  - **Spun off the remaining work into its own issue doc** (this plan file is near its 1000-line hard cap from
-    concurrent slot activity — avoiding further growth here):
-    `issues/sports_curated_universe_domestic_selection_remaining_2026_07_25.md` — full session writeup (data locations,
-    the `in_mvp_scope` architecture fix, what shipped, what's a dead end, what genuinely remains). This todo's checkbox
-    stays unchecked here; track further progress in that doc, not this Progress Log.
-  - **Released per main's BLK-7daa3e2a ruling** (correctly-parked research gap, not a stall): strengthened the issue doc
-    to state the specific unblocking input + the 2 near-miss error classes hit this session
-    (`unified-trading-pm@7608a8ef3`), then `/done` citing both SHAs.
+  substantially de-risked, NOT complete.** Full investigation (candidate-pool discovery from a pre-pruning backup
+  parquet, the `in_mvp_scope` architecture fix, the continental-majors slice shipped `unified-api-contracts@7b13196e`,
+  per-source-cap measurements, and the 2 near-miss error classes hit) moved to
+  `issues/sports_curated_universe_domestic_selection_remaining_2026_07_25.md` to avoid this plan's line-cap growth — see
+  there for full detail; do not duplicate it here. Checkbox stays unchecked: steps 2-3 haven't started and step 1's
+  domestic-selection slice (145 countries) remains open, now decomposed into 11 confederation-batch todos in that issue
+  doc (backlog: 4 dispatched, 7 queued as of 2026-07-25T03:02Z). Released per main's BLK-7daa3e2a ruling
+  (correctly-parked research gap, not a stall) — `unified-trading-pm@7608a8ef3`.
 
 - **2026-07-25 (slot 2, data_engineering) — "Eliminate the bare/legacy dual-layout" todo — VERIFIED CLEAN, no
   canonicalize/delete action needed.** Operator explicitly confirmed sign-off for the irreversible GCS apply this todo
