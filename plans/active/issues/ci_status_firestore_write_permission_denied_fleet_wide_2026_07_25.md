@@ -15,7 +15,7 @@ summary: >-
   SIT_VALIDATED <repo> @ <sha> (tree ...)"`, but that log line only reflects a successful `repository_dispatch` POST
   (fire-and-forget), not a successful downstream Firestore write, so the fleet has been silently believing SIT
   validation is landing when it is not.
-status: open
+status: resolved
 nature: issue
 asset_group: [meta]
 stage: [meta]
@@ -40,7 +40,7 @@ depends_on: []
 locked_by:
 locked_since:
 assigned_vm: planning
-resolved_by:
+resolved_by: slot-3 (infra), 2026-07-25
 ---
 
 # ci_status Firestore writer is 403'ing fleet-wide (2026-07-25)
@@ -156,12 +156,24 @@ Traced the gap:
 
 ## Todos
 
-- [ ] [OPERATOR] P0. Diagnose + restore Firestore write permission for
+- [x] ✅ [OPERATOR] P0. Diagnose + restore Firestore write permission for
       `unified-trading-sa@central-element-323112.iam.gserviceaccount.com` on project `central-element-323112` (reproduce
       via `gcloud auth application-default print-access-token` + a direct Firestore REST `PATCH` from the affected
-      self-hosted runner box; confirmed 403 as of 2026-07-25T14:02Z). Check IAM bindings + any recent SA key rotation.
-- [ ] [INFRA] P0. Once permissions restored, verify `ci-status-update.yml` (unified-trading-pm) runs green again and
-      `ci_status/deployment-api`'s `sit_validated_tree` advances to the current LDR tree (repo: unified-trading-pm).
+      self-hosted runner box; confirmed 403 as of 2026-07-25T14:02Z). Check IAM bindings + any recent SA key rotation. —
+      resolved by operator; last `ci-status-update.yml` failure observed 2026-07-25T14:11:52Z, first green run
+      2026-07-25T14:26:07Z (verified below).
+- [x] ✅ [INFRA] P0. Once permissions restored, verify `ci-status-update.yml` (unified-trading-pm) runs green again and
+      `ci_status/deployment-api`'s `sit_validated_tree` advances to the current LDR tree (repo: unified-trading-pm). —
+      verified live 2026-07-25T14:3xZ: `gh run list --workflow=ci-status-update.yml --limit 50` → 50/50 `success`
+      (oldest in window 14:26:07Z, zero failures). `full-workspace-sit.yml` run `30161571001` (using the now-hardened,
+      poll-verified stamp step from todo 3) logged
+      `stamped SIT_VALIDATED deployment-api @ 0badf575...     (tree c2bd5b9cec217433a63ec7d5dbcceefa5554ccdb)`; the
+      dispatched `ci-status-update.yml` run `30161733363` (`conclusion=success`) confirmed in its own log it wrote
+      `SIT_VALIDATED_TREE: c2bd5b9cec217433a63ec7d5dbcceefa5554ccdb` for `deployment-api` — the exact tree the promote
+      gate was waiting for. (Note: my own session's ADC/SA impersonation of `unified-trading-sa` still 403s on a direct
+      Firestore REST read — a narrower, separate permission gap from the runner's WIF-issued
+      `google-github-actions/auth@v3` credential; not blocking since the CI run logs themselves are authoritative proof
+      the write landed.)
 - [x] ✅ [INFRA] P1. Harden `full-workspace-sit.yml`'s stamp step
       (`system-integration-tests/.github/workflows/full-workspace-sit.yml:158-175`) to not declare "stamped
       SIT_VALIDATED" success from a bare `curl` HTTP-accept — verify the downstream `ci-status-update` run actually
@@ -216,3 +228,15 @@ Traced the gap:
     independent failure signatures, non-overlapping timelines — conclusively unrelated. Filed the gsutil/WIF
     incompatibility as its own P3 follow-up todo (this doc) rather than a new issue doc, since it's already scoped and
     tracked here. Full evidence added to "What I found" item 6.
+- **2026-07-25T14:3xZ (slot 3, infra) — todos 1+2 verified live; ALL TODOS NOW COMPLETE, closing as resolved.** Operator
+  restored the Firestore write permission for `unified-trading-sa` (last failure `2026-07-25T14:11:52Z`, first green run
+  `14:26:07Z`). Verified: (a) `gh run list --workflow=ci-status-update.yml --limit 50` → 50/50 `success`, zero failures
+  since restore; (b) `full-workspace-sit.yml` run `30161571001` used the hardened poll-verified stamp step (shipped as
+  todo 3) and logged a genuine (not fire-and-forget)
+  `stamped SIT_VALIDATED deployment-api @ 0badf575... (tree c2bd5b9cec217433a63ec7d5dbcceefa5554ccdb)`; (c) the
+  dispatched `ci-status-update.yml` run `30161733363` (`conclusion=success`) confirmed in its own log body it wrote
+  `SIT_VALIDATED_TREE: c2bd5b9cec217433a63ec7d5dbcceefa5554ccdb` for `deployment-api` — matching the tree the promote
+  gate needed. Todo 4 was already shipped by a prior slot (unified-trading-pm@309fc5348). All 4 todos now `[x]`;
+  flipping doc `status: resolved`. Remaining follow-up (todo 4 of the "Recommended decision" list — re-verify
+  `deployment_registry_reaper_not_draining_stale_entries-002`'s remaining chain now that the SIT gate is unblocked) is
+  tracked in that issue doc, not this one.
