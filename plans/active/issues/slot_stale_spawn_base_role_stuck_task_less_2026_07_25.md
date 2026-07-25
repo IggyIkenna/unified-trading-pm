@@ -79,13 +79,18 @@ code's own comments warn about (stale `spawn_base_role` surviving past its ownin
 
 ## Recommended decision
 
-- [ ] [BACKEND] P1. In `server/routes/slots_worker.py::boot_slot`'s task-less-one-off branch (~line 249-269), when
+- [x] ✅ [BACKEND] P1. In `server/routes/slots_worker.py::boot_slot`'s task-less-one-off branch (~line 249-269), when
       `spawn_base_role` is set but `ss.find_active_agent_for_session(...)` finds no matching live `AgentRow` for this
       slot's tmux session, treat it as STALE: clear `slot.spawn_base_role = None` and fall through to the normal
-      idle/dispatch path instead of reporting "held working" forever. (repo: agent-orchestrator)
-- [ ] [BACKEND] P2. Add a regression test in `agent-orchestrator/tests/` that boots a slot with a stale
+      idle/dispatch path instead of reporting "held working" forever. (repo: agent-orchestrator) —
+      agent-orchestrator@1e74784
+- [x] ✅ [BACKEND] P2. Add a regression test in `agent-orchestrator/tests/` that boots a slot with a stale
       `spawn_base_role` and no corresponding `AgentRow`, and asserts the slot recovers to `idle`/normal dispatch instead
-      of looping the task-less-one-off branch forever. (repo: agent-orchestrator)
+      of looping the task-less-one-off branch forever. (repo: agent-orchestrator) — agent-orchestrator@1e74784
+      (`test_stale_spawn_base_role_with_no_agentrow_self_heals_to_idle`; also added
+      `test_spawn_base_role_with_live_agentrow_still_held_working` + fixed the pre-existing
+      `test_one_off_task_less_boot_holds_slot_working` to seed a realistic live AgentRow fixture, since it had been
+      asserting SlotRow-only state that is actually the stale case this fixes)
 - [ ] [OPERATOR] P2. Until the above ships, an operator hitting this state should reset the slot manually (there is no
       clean self-service endpoint today) — flag this as a UX gap in the same PR: the fix in P1 covers the self-heal
       path, but consider also exposing a `POST /api/slots/{id}/clear-spawn-role` escape hatch for support cases where
