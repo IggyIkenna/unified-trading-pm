@@ -212,7 +212,7 @@ epic._
 | [`data_status_tab_and_downloads_remediation_2026_06_16`](./data_status_tab_and_downloads_remediation_2026_06_16.md)                                                     | master           | refactor  | 23/31      | 74%          | 0.3      | —        |
 | [`tradfi_multisource_backfill_2026_06_22`](./tradfi_multisource_backfill_2026_06_22.md)                                                                                 | master           | infra     | 10/12      | 83%          | 0.3      | —        |
 | [`agent_orchestrator_alert_channel_cleanup_2026_07_13`](./agent_orchestrator_alert_channel_cleanup_2026_07_13.md)                                                       | master           | infra     | 18/20      | 90%          | 0.2      | —        |
-| [`infra_capture_and_devops_leftovers_finalize_2026_07_25`](./infra_capture_and_devops_leftovers_finalize_2026_07_25.md)                                                 | **orphan**       | infra     | 0/1        | 0%           | 0.2      | —        |
+| [`infra_capture_and_devops_leftovers_finalize_2026_07_25`](./infra_capture_and_devops_leftovers_finalize_2026_07_25.md)                                                 | master           | infra     | 0/1        | 0%           | 0.2      | —        |
 | [`consolidator_throughput_backlog_monitor_2026_07_09`](./consolidator_throughput_backlog_monitor_2026_07_09.md)                                                         | master           | design    | 23/26      | 88%          | 0.2      | —        |
 | [`data_completion_sports_2026_07_24`](./data_completion_sports_2026_07_24.md)                                                                                           | master           | infra     | 35/39      | 90%          | 0.2      | —        |
 | [`instruments_mtds_subset_consistency_remediation_2026_06_17`](./instruments_mtds_subset_consistency_remediation_2026_06_17.md)                                         | master           | infra     | —          | —            | 0.2      | —        |
@@ -235,7 +235,7 @@ epic._
 | [`migration_verification_orphan_safety_2026_06_10`](./migration_verification_orphan_safety_2026_06_10.md)                                                               | master           | design    | 25/25      | 100%         | 0.0      | —        |
 | [`mvp_backfill_defi_onchain_v10_operational_log_2026_07_24`](./mvp_backfill_defi_onchain_v10_operational_log_2026_07_24.md)                                             | master           | infra     | 7/7        | 100%         | 0.0      | —        |
 | [`sports_closeout_batch1_finalize_2026_07_24`](./sports_closeout_batch1_finalize_2026_07_24.md)                                                                         | master           | infra     | 0/1        | 0%           | 0.0      | —        |
-| **TOTAL** (179 plans)                                                                                                                                                   | 1 orphans, 0 TBD | —         | —          | **45% done** | **402**  | —        |
+| **TOTAL** (179 plans)                                                                                                                                                   | 0 orphans, 0 TBD | —         | —          | **45% done** | **402**  | —        |
 
 <!-- AUTO-INVENTORY-END -->
 

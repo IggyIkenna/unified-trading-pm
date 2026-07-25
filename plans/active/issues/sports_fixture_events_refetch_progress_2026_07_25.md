@@ -122,7 +122,13 @@ repeat sample showing genuinely 0 non-13-col objects (or documented unrecoverabl
       run will take hours (2019→ present, 16,765 fixtures); not completable this turn. Next dispatch: health-check
       `gcloud compute instances list --filter='name~"^af-backfill-20260725-032253"'` +
       `gs://deployment-scripts-central-element-323112/vm-logs/af-backfill-20260725-032253/run.log` before assuming still
-      running; once terminal, re-run the census script per "Next action" above before flipping this checkbox.
+      running; once terminal, re-run the census script per "Next action" above before flipping this checkbox. —
+      **Health-checked 2026-07-25T04:18Z (slot 11, data_engineering), still RUNNING**: heartbeat blob
+      (`vm-heartbeat/af-backfill-20260725-032253.txt`) fresh (31s old at check time); run.log date-progressed
+      2019-01-03→2019-12-24 between two checks ~6min apart, monotonic, no error/stall signature. Not completable this
+      turn (genuinely hours from done, 2019→2026-07-25 range). Released via `/skip-current-task`, not
+      duplicate-launched. Next dispatch: repeat this health-check; once terminal (`exit_code=0`/`DEPLOYMENT_COMPLETED`,
+      self-deleted), re-run the census script per "Next action" above before flipping this checkbox.
 
 ## Codex SSOTs
 
