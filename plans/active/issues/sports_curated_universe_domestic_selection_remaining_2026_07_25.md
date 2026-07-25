@@ -169,11 +169,24 @@ inherited from the first shipped batch:
       Gibraltar, Iceland, Ireland, Latvia, Liechtenstein, Lithuania, Luxembourg, Malta, Northern Ireland, San Marino,
       Wales (16 countries). (repo: unified-api-contracts). **Done when**: per the shared contract above, for this
       country list.
-- [ ] [DATA] P1. **Eastern Europe (UEFA)** — Albania, Armenia, Azerbaijan, Belarus, Bosnia, Bulgaria, Crimea, Czech
+- [x] ✅ [DATA] P1. **Eastern Europe (UEFA)** — Albania, Armenia, Azerbaijan, Belarus, Bosnia, Bulgaria, Crimea, Czech
       Republic, Georgia, Hungary, Kosovo, Macedonia, Moldova, Montenegro, Romania, Slovakia, Slovenia (17 countries).
       Note: Crimea's political/federation status is genuinely contested — verify which football federation the catalog's
       data actually reflects before adding, or skip as unverifiable. (repo: unified-api-contracts). **Done when**: per
-      the shared contract above, for this country list.
+      the shared contract above, for this country list. — DONE 2026-07-25: 49 `LeagueDefinition` entries (top+below+cup,
+      Bosnia gets 2 division-below entries for its genuine dual-entity FBiH/RS structure) for 16 of 17 countries. Crimea
+      SKIPPED per the near-miss rule — no solid, current, citable evidence establishes the catalog's "Premier League"
+      entry as a stable, sanctioned competition under any body FIFA/UEFA/Ukraine treats as legitimate (UEFA
+      special-status non-member arrangement, Ukrainian federation non-recognition, fragmented reporting on which
+      competition currently operates). Every entry verified via WebSearch (5 parallel research passes) against a real
+      external source before adding — caught 2 near-miss traps: Czech "Tipsport Liga" is an unrelated friendly
+      tournament, not the top flight (Chance Liga is); Moldova's current top-flight name is "Moldovan Liga" not "Liga 1"
+      (Liga 1 is the historical rename of the second-tier Divizia A). All `in_mvp_scope=False` (verified zero real
+      captured ODDS rows for any of the 49 `api_football_id`s via the pre-pruning backup parquet). Zero id/key
+      collisions with the registry; `_mvp_football_league_ids()` count stayed 96. Merged concurrently with 2 other
+      landing region batches (Central Asia, South America/CONMEBOL) that hit the same insertion point in
+      `league_data_other.py` — resolved via structural dict-block splicing (zero overlapping keys/ids) + recomputed the
+      2 shared hardcoded-count test assertions from the actual merged registry. unified-api-contracts@dbd64914.
 - [x] ✅ [DATA] P1. **Central Asia (AFC)** — Kazakhstan, Kyrgyzstan, Tajikistan, Turkmenistan, Uzbekistan (5 countries).
       `unified-api-contracts@49049b7` (9 entries). Kazakhstan (Premier League/First Division/Cup) + Uzbekistan (Super
       League/Pro League/Cup) got full top+below+cup, each WebSearch-verified. Kyrgyzstan/ Tajikistan/Turkmenistan got
