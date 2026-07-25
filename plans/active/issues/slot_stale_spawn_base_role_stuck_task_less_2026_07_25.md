@@ -102,3 +102,25 @@ At time of filing, `GET /api/escalations/active` = `[]`, `GET /api/repo-blockers
 backlog tasks are blocked on prereqs/collisions per `pick_next_task`. There is genuinely no dispatchable work for this
 slot right now — this is NOT a symptom of the bug above, just the reason the bug is currently visible (a slot that never
 got a normal task dispatched never clears `spawn_base_role`).
+
+## Addendum (2026-07-25, slot-3 respawn — the P1 fix works but is retry-dependent)
+
+Reproduced live on slot 3 (also a respawn after a predecessor stuck >15 min): the FIRST `/boot` after the P1 fix
+(`agent-orchestrator@1e74784`) still returned the stale one-off branch
+(`"one-off cicd booted — no backlog task; slot held working (not idle)"`) rather than self-healing immediately —
+`find_active_agent_for_session` resolved to a non-`None` `AgentRow` at that moment, so the `owning_agent is not None`
+branch (held-working) fired instead of the self-heal branch. A subsequent `POST /done {one_shot_complete: true}` 400'd
+with `"no active agent owns its session"` (the _other_ code path's lookup — same helper, called moments later — found NO
+agent). Re-`/boot`ing right after that failed `/done` came back clean
+(`dispatch_reason: "no queued task available — prereqs/collisions block all candidates"`, `spawn_base_role` cleared).
+
+So the self-heal in P1 is real but window-dependent: it only fires once the stale `AgentRow` has actually left the
+`("active", "stale")` status set (e.g. once a health-monitor tick reaps/expires it), not the instant the owning session
+is actually dead. A worker landing on the very first `/boot` after respawn can still see one stale "held working" cycle
+before a retry self-heals. Not re-opening P1/P2 (the fix works, and the addendum's fix would only speed up the reap, not
+add correctness) — a mitigation is now a P3 backlog todo, not urgent:
+
+- [ ] [BACKEND] P3. In `boot_slot`'s task-less-one-off branch, when the resolved `owning_agent` is itself stale
+      (`AgentRow.status == "stale"` and its `last_ping` is older than the same staleness threshold the health monitor
+      uses to reap it), treat it the same as `owning_agent is None` — self-heal immediately instead of waiting for the
+      next health-monitor tick to age it out of the `("active", "stale")` filter. (repo: agent-orchestrator)
