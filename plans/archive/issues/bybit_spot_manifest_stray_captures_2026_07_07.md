@@ -23,7 +23,7 @@ scope: [engineer, admin]
 tags: [honest-coverage, denominator-audit, layer-1, data-correctness, cefi, bybit-spot, manifest-surgery]
 related:
   [
-    /plans/active/issues/cefi_layer1_denominator_gaps_2026_07_03.md,
+    /plans/archive/issues/cefi_layer1_denominator_gaps_2026_07_03.md,
     /codex/02-data/honest-coverage-model.md,
     /codex/02-data/availability-manifest-and-data-status.md,
     /codex/02-data/honest-absence-downstream-handling.md,

@@ -22,7 +22,7 @@ related:
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,
     /plans/active/cefi_consolidated_native_ao_extract_2026_07_25.md,
     /plans/active/issues/adapter_findings_gcs_manifest_deployment_api_reconciliation_gap_2026_07_08.md,
-    /plans/active/issues/cefi_layer1_denominator_gaps_2026_07_03.md,
+    /plans/archive/issues/cefi_layer1_denominator_gaps_2026_07_03.md,
     /plans/active/cefi_misc_audits_and_hygiene_finalize_2026_07_25.md,
   ]
 created: "2026-07-25"
@@ -78,7 +78,7 @@ drift_direction: advance-code
       established spot-check methodology. Repo: instruments-service. **Done when**: each of the 3 findings has a
       recorded PASS/FAIL consistency verdict (GCS vs manifest vs UI) cited in the issue doc's Progress Log, and the doc
       explicitly still flags the cadence-decision half as open/human.
-- [ ] [PM] P1. **Archive `issues/cefi_layer1_denominator_gaps_2026_07_03.md`** (confirmed during this split: 0
+- [x] ✅ [PM] P1. **Archive `issues/cefi_layer1_denominator_gaps_2026_07_03.md`** (confirmed during this split: 0
       checkbox-syntax open todos of its own — a 1000-line narrative/findings doc whose actionable items were already
       forked into other docs, still carrying `status: open`) via the standard 6-step archival ritual. **Scope note**:
       its sibling `issues/betfair_instrument_id_delimiter_cross_repo_2026_07_08.md` is ALREADY archived (verified during
@@ -87,7 +87,19 @@ drift_direction: advance-code
       open-ended with no defined target list — those stay a human/PM judgment call in
       `cefi_consolidated_closeout_2026_07_18.md`, not dispatched here. Repo: unified-trading-pm. **Done when**:
       `cefi_layer1_denominator_gaps_2026_07_03.md` is confirmed 0-open-todos, `status` flipped to `resolved`, moved to
-      `plans/archive/issues/`, every corpus referrer's path fixed, and this plan's Progress Log cites the commit.
+      `plans/archive/issues/`, every corpus referrer's path fixed, and this plan's Progress Log cites the commit. ✅ —
+      unified-trading-pm@(this commit). A deeper cross-doc investigation (dispatched agent, full 1000-line read + every
+      prose-described residual gap traced to a sibling doc) confirmed safe: OKX-SPOT Option-A/B decision lives in
+      `instruments_service_cefi_qg_red_on_ldr_head_2026_07_08.md`; DERIBIT-COMBO real-row capture is gated on
+      `tardis_concurrent_ip_lockout_2026_07_12.md`; v1-enumerator retirement + DERIBIT-COMBO catalogue backfill are
+      fully shipped. Moved to `plans/archive/issues/`, `status: resolved`, 20 corpus referrers fixed (3 archived
+      "plan_reconciliation_operator_decisions_history_part*" docs intentionally left citing the OLD active-path — they
+      are frozen historical records of findings at the time, not live pointers). **Separate finding surfaced, NOT this
+      todo's scope — flagged to the operator instead**: `bybit_spot_manifest_stray_captures_2026_07_07.md` was flipped
+      `resolved` 2026-07-14 on checkbox-only evidence, but a 2026-07-10 live-manifest read
+      (`instruments_remaining_work_audit_2026_07_10.md` item 7) found the actual `--apply` relabel/delete was never run
+      against production (135,444 anomalous BYBIT-SPOT rows unchanged) — likely needs its status corrected + the
+      remediation actually re-run, independent of this archival.
 
 ## Reconciliation
 
