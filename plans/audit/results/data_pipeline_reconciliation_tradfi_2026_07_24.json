@@ -1,0 +1,330 @@
+{
+  "doc_type": "audit-result-json",
+  "asset_group": "tradfi",
+  "layer": "raw-tick",
+  "run_date": "2026-07-24",
+  "campaign_run_number": 3,
+  "prior_runs": [
+    "data_pipeline_reconciliation_tradfi_2026_07_20.md",
+    "data_pipeline_reconciliation_tradfi_2026_07_21.md"
+  ],
+  "mode": "read-only",
+  "phase0": {
+    "buckets": {
+      "market_data": {
+        "cloud": "gcp",
+        "resolved_name": "market-data-tick-tradfi-prd-central-element-323112",
+        "resolver": "resolve_bucket_name(cloud='gcp', kind='market-data', asset_group='tradfi', deployment_env='prd')",
+        "reachable": true,
+        "reachability_method": "non-recursive top-level delimiter listing via native bucket.list_blobs handle"
+      },
+      "instruments_store": {
+        "cloud": "gcp",
+        "resolved_name": null,
+        "reachable": null,
+        "note": "NOT ASSESSED this run - declared coverage gap; dispatch scope named only market-data bucket"
+      },
+      "aws": {
+        "reachable": null,
+        "note": "NOT ASSESSED this run - declared coverage gap; prior 2026-07-21 run found both AWS tradfi buckets reachable and empty"
+      }
+    },
+    "top_level_prefixes": [
+      "_index/",
+      "_migration_backup/",
+      "_quarantine/",
+      "_vm_staging/",
+      "backfill-logs/",
+      "configs/",
+      "databento-batch-registry/",
+      "processed_candles/",
+      "raw_tick_data/"
+    ],
+    "diff_vs_2026_07_21": {
+      "removed": ["_migration_backup_2026_07_09/", "_needs_attribution/"],
+      "note": "consistent with non-canonical-path-inventory.md retirement rows recording operator deletes of these exact locations after the 07-21 report's purge plan"
+    },
+    "index_freshness": {
+      "availability_index_parquet": { "size_mb": 96.0, "rows": 5902157, "asset_group_scoped": true },
+      "consolidator_lock": "absent - NOT locked",
+      "latest_json": {
+        "last_run_at": "2026-07-24T23:52:47.282534+00:00",
+        "success": true,
+        "verdict": "empty",
+        "shards_scanned": 1,
+        "incremental": true,
+        "no_op": true
+      },
+      "consolidator_stall_state": { "streak": 0, "baseline_shards": 2 },
+      "phantom_audit_latest": {
+        "phantom_count": 1635,
+        "generated_at": "2026-07-14T07:41:33.148660+00:00",
+        "staleness_days": 10
+      },
+      "reprobe_audit_latest": {
+        "new_empties": 0,
+        "disagreements": 0,
+        "ambiguous": 0,
+        "proven": 0,
+        "generated_at": "2026-07-14T06:22:36.079091+00:00"
+      }
+    },
+    "suppression_inputs_loaded": [
+      "canonical-cutover-register.md §2 (require_pipeline_mode effective-from 2026-05-19 for tradfi)",
+      "canonical-cutover-register.md §4 (tradfi chain-tail effective-from 2026-07-19)",
+      "reconciliation-finding-taxonomy.md §5.1 / cutover-register §3c (C2a instrument_type COLUMN casing, migration_pending, compared case-insensitively)",
+      "reconciliation-finding-taxonomy.md AE-2 (tradfi combo bare-underlying carve-out)",
+      "reconciliation-finding-taxonomy.md AE-4 (batch_massive, CLOSED - purge executed, no longer an accepted exception)",
+      "non-canonical-path-inventory.md rows 10, 11, 19, 22 (tradfi-scoped)"
+    ]
+  },
+  "phase1": {
+    "manifest_total_rows": 5902157,
+    "capture_status_counts": {
+      "empty_confirmed": 3772418,
+      "captured": 1421963,
+      "expected_unattempted": 401027,
+      "attempted_failed": 306749
+    },
+    "reachable_coverage": {
+      "formula": "captured / (captured + attempted_failed + expected_unattempted), empty_confirmed EXCLUDED",
+      "value": 0.6677,
+      "value_pct": "66.77%",
+      "is_lower_bound": true,
+      "lower_bound_reason": "instrument_gates_download=true for tradfi (all AGs gate Layer-2)"
+    },
+    "s1_structural_samples": [
+      {
+        "method": "prefix-scoped full-day listing, random subsample",
+        "day": "2026-07-20",
+        "population": 307,
+        "sample_size": 80,
+        "oracle_violations": 0,
+        "stem_content_matches": "62/62"
+      },
+      {
+        "method": "reconstructed-path oracle check (build_tradfi_partition_path + canonical_path_violations, index-only, no GCS I/O)",
+        "sample_size": 3000,
+        "measurable": 1973,
+        "clean": 1972,
+        "pct_clean": 99.95,
+        "one_failure": "FX/spot_pair/ohlcv_24h reconstructs to literal ticks.parquet (same defect as S3 FX finding)"
+      }
+    ],
+    "s3_id_form_captured_singles": {
+      "methodology": "shape regex ^[A-Z0-9\\-]+:[A-Z_]+:\\S+$ applied to instrument_id of captured rows with instrument_type in TRADFI_SINGLE_INSTRUMENT_TYPES (equity/etf/index/future/option/spot_pair/currency/bond/cds/commodity)",
+      "methodology_caveat": "NOT byte-exact rebuild via build_canonical_instrument_id; corroborated by the stricter reconstructed-path oracle check (99.95% clean) and direct content fetches",
+      "n": 912486,
+      "canonical": 905796,
+      "pct": 99.27,
+      "by_year": {
+        "2019": { "n": 585, "canonical": 585, "pct": 100.0 },
+        "2020": { "n": 1283, "canonical": 576, "pct": 44.9 },
+        "2021": { "n": 873, "canonical": 249, "pct": 28.5 },
+        "2022": { "n": 1258, "canonical": 576, "pct": 45.8 },
+        "2023": { "n": 197075, "canonical": 196010, "pct": 99.5 },
+        "2024": { "n": 299755, "canonical": 298469, "pct": 99.6 },
+        "2025": { "n": 256375, "canonical": 254958, "pct": 99.4 },
+        "2026": { "n": 155282, "canonical": 154373, "pct": 99.4 }
+      },
+      "comparison_to_2026_07_21_report": {
+        "prior_reported_pct_all": 30.8,
+        "prior_reported_pct_2020_2022": 0.0,
+        "prior_reported_pct_2023_2026": "27.3-34.3",
+        "delta_interpretation": "strong evidence the operator-gated content-migration executed in the intervening ~3 days; not a certified byte-exact before/after due to methodology difference"
+      }
+    },
+    "census": {
+      "pipeline_mode": {
+        "blank_or_null": 0,
+        "distinct": ["batch_databento", "batch_yahoo", "batch_barchart", "live_databento"],
+        "batch_massive_rows": 0
+      },
+      "source": { "blank_or_null": 0, "distinct": ["databento", "yahoo", "barchart"], "massive_rows": 0 },
+      "venue": {
+        "distinct_counts": {
+          "CME": 2024673,
+          "NYSE": 1852408,
+          "NASDAQ": 1524088,
+          "ICE": 407482,
+          "KRX": 38912,
+          "CBOE": 29765,
+          "FX": 15710,
+          "BARCHART": 9119
+        },
+        "non_canonical": {
+          "BARCHART": {
+            "count": 9119,
+            "capture_status": "all empty_confirmed",
+            "removed_from_vocab_date": "2026-06-24",
+            "still_touched_as_late_as": "2026-07-07",
+            "matches_2026_07_21_finding_F5": true
+          }
+        }
+      },
+      "instrument_type": {
+        "c2a_casing_suppressed_lowercase_rows": 45426,
+        "c2a_breakdown": {
+          "equity": 28765,
+          "future": 8984,
+          "etf": 5270,
+          "index": 1550,
+          "combo": 525,
+          "spot_pair": 332
+        },
+        "bundle_grain_carveout_rows": {
+          "options_chain": 261666,
+          "futures_chain": 236657,
+          "note": "verified correct per TRADFI_CHAIN_INSTRUMENT_TYPES + oracle clause 8, NOT a finding"
+        },
+        "blank_rows": 85096,
+        "blank_captured_rows": 1910,
+        "genuine_non_canonical_values": {
+          "FUTURES": { "count": 16, "capture_status": "all attempted_failed", "dates": "2026-06-22 to 2026-06-25" },
+          "spot": { "count": 2, "capture_status": "all attempted_failed", "dates": "2026-07-16, 2026-07-17" }
+        },
+        "matches_2026_07_21_finding_F6": true
+      }
+    },
+    "new_finding_fx_manifest_id": {
+      "finding_id": "G1",
+      "type": "taxonomy-gap (S3-only manifest instrument_id defect)",
+      "severity": "HIGH (proposed)",
+      "surfaces": ["S3"],
+      "scope": "tradfi FX SPOT_PAIR, all captured rows",
+      "captured_fx_rows": 4310,
+      "well_formed_in_manifest": 0,
+      "well_formed_pct": 0.0,
+      "breakdown": { "blank": 2812, "literal_ticks": 983, "bare_pair_no_prefix": 501, "correctly_shaped": 13 },
+      "date_range": "2020-01-02 to 2026-07-23",
+      "content_verified_correct_on_disk": true,
+      "verified_object_example": "raw_tick_data/by_date/day=2026-07-23/pipeline_mode=batch_databento/asset_group=tradfi/venue=FX/instrument_type=spot_pair/data_type=ohlcv_24h/FX:SPOT_PAIR:AUD-USD.parquet",
+      "verified_manifest_row_id_for_same_atom": "AUD-USD",
+      "comparison_venues": {
+        "NASDAQ_EQUITY_blank_pct": 0.81,
+        "NYSE_EQUITY_blank_pct": 0.11,
+        "NASDAQ_NYSE_ETF_blank_pct": 0.0
+      },
+      "is_new_finding": true,
+      "escalated_to_operator": true,
+      "issue_doc": "plans/active/issues/tradfi_fx_provenance_and_manifest_id_defects_2026_07_24.md"
+    },
+    "new_finding_source_mislabeling": {
+      "finding_id": "G2",
+      "type": "non_canonical_axis_value (source/pipeline_mode)",
+      "severity": "HIGH (escalated)",
+      "surfaces": ["S3", "plausible upstream S1/S2 cause"],
+      "venues": {
+        "ICE": {
+          "correct_source": "yahoo",
+          "mislabeled_captured_rows": 4,
+          "date_range": "2026-07-20 to 2026-07-23",
+          "first_attempt_databento": "2026-07-18",
+          "first_real_capture_databento": "2026-07-20"
+        },
+        "KRX": {
+          "correct_source": "yahoo",
+          "mislabeled_captured_rows": 12,
+          "date_range": "2026-07-20 to 2026-07-23",
+          "instruments": ["000660", "005380", "005930"]
+        },
+        "FX_ohlcv_24h": {
+          "correct_source": "yahoo",
+          "mislabeled_captured_rows": 802,
+          "total_fx_ohlcv_24h_captured": 3991,
+          "date_range": "2020-01-02 to 2026-07-23",
+          "note": "longstanding companion pattern, not new to this run"
+        }
+      },
+      "content_verified": true,
+      "ssot_contradicted": [
+        "tradfi-databento-sourcing-ssot.md",
+        "unified_api_contracts/registry/data_source_continuity.py::get_dxy_daily_source",
+        "unified_api_contracts/registry/venue_mapping.py (venue_to_data_provider['ICE']='yahoo_finance')"
+      ],
+      "root_cause_hypothesis_unverified": "2026-06-24 databento-first SOURCE_PRIORITY change reaching a code path lacking the per-venue _VENUE_SOURCE_EXCLUSIONS guard analogous to the already-fixed CBOE case",
+      "is_new_finding": true,
+      "escalated_to_operator": true,
+      "issue_doc": "plans/active/issues/tradfi_fx_provenance_and_manifest_id_defects_2026_07_24.md"
+    },
+    "batch_massive_purge": {
+      "status": "holding",
+      "objects": 0,
+      "manifest_rows": 0,
+      "confirmations": 3,
+      "confirmation_runs": ["2026-07-20", "2026-07-21", "2026-07-24"]
+    },
+    "ae2_adjacent_defect": {
+      "status": "still live, re-confirmed via grep+read this run",
+      "writer": "market_tick_data_service/engine/orchestrator/symbol_rules.py:259 (_UNDERLYING_PARTITIONED_TYPES includes combo)",
+      "reader": "market_tick_data_service/reader.py:62 (_UNDERLYING_PARTITIONED_TYPES excludes combo)",
+      "severity": "HIGH per taxonomy AE-2's own text"
+    }
+  },
+  "phase2": {
+    "register_rows_reverified": [
+      {
+        "row": 10,
+        "claim": "batch_massive retired 2026-07-21",
+        "reality": "confirmed holding, 0 objects/rows",
+        "disposition_change": "none"
+      },
+      {
+        "row": 11,
+        "claim": "legacy path shapes migrated 2026-07-20/21, 99.65% post-migration",
+        "reality": "consistent with this run's S1/S3 improvement, not independently re-measured at full scale",
+        "disposition_change": "none"
+      },
+      {
+        "row": 19,
+        "claim": "databento-batch-registry/, 7146 objects (07-21 measurement)",
+        "reality": "7146 objects, exact match",
+        "disposition_change": "none"
+      },
+      {
+        "row": 22,
+        "claim": "RETIRED - DELETED 2026-07-21 (against 15813-object baseline)",
+        "reality": "STALE - _quarantine/ now >=400000 objects / >=8.71GB (capped enumeration); 07-21 same-day measurement already found 146288/7.18GB",
+        "disposition_change": "RE-OPEN - update disposition, do not describe as deleted/resolved"
+      }
+    ],
+    "new_locations_found": [
+      {
+        "path": "_migration_backup/manifest_dedup_2026_07_10/",
+        "objects": 1,
+        "size_mb": 118.0,
+        "note": "07-21 report already proposed this exact register-patch line; never applied to shared register - re-flagging",
+        "disposition": "unknown"
+      },
+      {
+        "path": "_vm_staging/ (migrate_tradfi_to_hive.py + logs/ + mtds_backfill/)",
+        "objects": 13,
+        "size_mb": 38.0,
+        "note": "executable script + staging content at top level of prod data bucket, same class as sports scripts/ register row 4",
+        "disposition": "unknown"
+      },
+      {
+        "path": "configs/patches/",
+        "note": "resolves register row 28's open probe for tradfi - confirmed present",
+        "disposition": "unknown, unchanged"
+      }
+    ],
+    "orphans_assessed": false,
+    "orphans_note": "no whole-corpus walk this run; per orphan-object-detection.md must not claim 0",
+    "delete_suggestions_above_unknown": 0
+  },
+  "coverage_gaps": [
+    "orphans NOT ASSESSED (no whole-corpus walk)",
+    "S4 catalogue (instruments-store bucket) NOT ASSESSED this run - full coverage gap, dispatch scope named only market-data bucket",
+    "AWS NOT ASSESSED this run",
+    "id-form/schema at 100% NOT ASSESSED - largest sample 3000/1421963 captured rows (~0.2%)",
+    "_quarantine/ true size not fully enumerated - capped at 400000 objects",
+    "processed_candles/ explicitly out of scope (raw-tick layer only)",
+    "register rows re-verified for tradfi only",
+    "2020-2022 id-form residual (28-46%) not root-caused"
+  ],
+  "verdict": {
+    "is_100_pct_canonical": false,
+    "headline": "tradfi is NOT 100% canonical. Path structure (S1) and filename/content agreement are close to clean on sampled evidence (>99% in every sample taken). Manifest id-form for captured singles corpus-wide improved dramatically since 07-21 (~99.3% vs 30.8%), consistent with a migration having executed. Two live, currently-unfixed content-correctness defects remain: (1) Yahoo-exclusive venues (ICE/KRX, plus a longstanding FX companion) captured under a databento provenance stamp since ~2026-07-18, contradicting the sourcing SSOT and shipped UAC routing code; (2) tradfi FX SPOT_PAIR manifest instrument_id is 0% well-formed across its entire 2020-2026 history (the real GCS data is fine - only the manifest's copy of the key is wrong). Plus small unchanged legacy findings (BARCHART venue, FUTURES/spot typos, combo writer/reader path disagreement) and a badly stale, rapidly-growing _quarantine/ register entry (146K to >=400K objects in ~3-4 days)."
+  }
+}
