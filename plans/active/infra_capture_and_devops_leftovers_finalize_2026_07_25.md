@@ -78,4 +78,15 @@ source: >-
       that is a substantive `[DATA]`-craft launch/verify task, not this `[DOC]` archival task. Not completable this AO
       turn as dispatched; released without touching the parent doc (didn't want to rush a real VM launch as a rushed
       tail-end action). A future dispatch of the PARENT's own ASTER todo should do the actual launch+verify; only then
-      does this finalize todo's gate genuinely clear.
+      does this finalize todo's gate genuinely clear. — **🟡 RE-CONFIRMED STILL NOT MET, checked 2026-07-25 (slot 3)**:
+      same finding as the 04:52Z slot-2 check above — parent's ASTER todo still reads `- [ ] 🚧 BLOCKED-PREREQUISITES`,
+      not `[x]`. Traced WHY this keeps getting dispatched despite the gate: `_NON_DISPATCHABLE_RE` in
+      `agent-orchestrator/server/regen_backlog_from_plan.py` matches the broad `BLOCKED-[A-Z]` pattern, which also
+      catches `BLOCKED-PREREQUISITES` (not just the intended CREDENTIALS/OPERATOR-DECISION/BILLING/UPSTREAM-OUTAGE/
+      PLAYWRIGHT/JURISDICTION closed set) — so the ASTER todo has NEVER been ingested as a backlog task (confirmed via
+      `GET /api/backlog`: only this finalize task appears for the whole plan family) and `gate_on_depends`'s upstream
+      "open todos" check reads the parent as fully clear. This is a dispatcher bug, not a data problem — filed as
+      `issues/blocked_prerequisites_marker_excluded_from_dispatch_and_gate_2026_07_25.md` with a concrete regex fix +
+      regression test todo, plus a spun-out todo for the actual ASTER connector launch+verify once the regex is fixed.
+      Released again without touching the parent doc; this finalize todo should stop re-dispatching once the linked
+      issue's fix lands and the ASTER todo becomes a genuinely trackable backlog task.
