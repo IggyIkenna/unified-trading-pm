@@ -12,7 +12,7 @@ summary: >-
   active) the next AO-dispatch-batch + gated finalize plan pair for genuinely AO-eligible orphaned work. This is the
   plan-of-record / Progress Log for the whole rollout per cursor-configs/AUTONOMOUS_AGENT_RULES.md rule 6 — a compressed
   future-session must be able to resume losslessly from this doc alone.
-status: complete
+status: active # was: complete (2026-07-25) -- reopened same day, Round 3/4: /plan-reconcile + the 5-AG consolidated-plan split (operator directive)
 nature: process
 asset_group: [cefi, defi, tradfi, prediction, sports, cross-cutting]
 stage: [meta]
@@ -85,6 +85,22 @@ source: >-
       quickmerge SSOT and has essentially zero byte headroom left under its hard cap, 39,925/40,960 B — not touched).
       `check_frontmatter_schema.py --files` has the identical trap; left as a smaller note for a future pass since its
       own doc surface is thinner.
+- [x] [DOC] P1. **Round 3**: ran `/plan-reconcile` scoped to the 5 consolidated closeout docs + their batch/finalize
+      siblings (26 docs) — 37 findings across 5 parallel per-AG agents, 36 auto-fixed and shipped, 1 (sports line-cap
+      breach) parked as operator-decision entry #9. See Progress Log.
+- [x] [DOC] P2. **Round 3**: hardened the delete/VM-launch todo-tagging gap into `task_template.md` finding O, a new
+      soft mechanical pre-check (`check_delete_vm_launch_gating.sh`), `/plan-reconcile`'s hunter-5, and a compact
+      `CLAUDE.md` pointer — all 4 shipped. See Progress Log.
+- [x] [DOC] P1. **Round 3**: asked the operator entry #9 live in chat; answered — split ALL 5 AG consolidated plans into
+      parent+child (~700L target each), clear `depends_on`/`related` routing, full AO-readiness pass, ambiguities asked
+      interactively, end goal = every consolidated + batch plan AO-dispatchable to completion with ~80% of the
+      plans/issues corpus archived and zero orphans. See Progress Log for the verbatim directive.
+- [ ] [DOC] P1. **Round 4 (IN PROGRESS)**: 2 background Workflows launched — `wf_b80aa337-209` (delete/VM-launch audit
+      across all AO batch docs + fresh AO-eligibility triage of each consolidated plan's own native todos, not just
+      satellite docs) and `wf_2e2b573f-0bd` (design-only: propose the parent+child split for all 5 AGs, AO-readiness
+      scan, surface genuine ambiguities). **Done when**: both complete, results reviewed, genuine ambiguities asked to
+      the operator live, splits executed, final verification (line caps green, hygiene sweep green, dependency graph
+      navigable end-to-end, zero orphaned plans/issues) passes.
 
 ## Progress Log
 
@@ -483,3 +499,86 @@ damage.
 finalize plans) to catch any contradiction between them before anything moves toward full AO-dispatch-readiness — per
 the operator's explicit sequencing: reconciliation and clear depends_on/blocked_by/parallelizable understanding BEFORE
 converting everything into AO-doable tasks.
+
+---
+
+## Round 3 — `/plan-reconcile` pass + governance hardening (2026-07-25, operator-directed continuation)
+
+Ran `/plan-reconcile` scoped exactly as planned: the 5 consolidated closeout docs + their batch/finalize siblings (26
+docs). 5 parallel per-AG agents, each read every doc in its family in full (not sampled).
+
+**37 confirmed findings, 36 auto-fixed and shipped, 1 parked**: cefi 5 (same-file collision in `partitioned_writer.py`'s
+two todos, LIGHTER-ZKSYNC cross-plan coordination note, a 44-line whitespace-corrupted paragraph, stale
+`Track-6`→`Track-8` label) — `35591f5c3`, `58ce4c9b8`. defi 6 (stale `53`→`54` todo count in 7 places, a missing 29th
+reconciliation doc, a defect double-tracked in both the consolidated plan and the batch with no cross-flip, 2 stale
+digest counts) — `7761b2f48`, `4fb0775c9`, `bd6349d22`. tradfi 6 (two todos racing on the same file despite the doc's
+own "zero collisions" claim, 2 stale doc-counts, a checked-done item hiding untracked "STILL OPEN" work, a stale digest
+entry for an already-shipped fix) — `250ccfe55` (rebased). prediction 8 (a doc silently dropped between batch1 and
+batch2 with no note, a count that drifted 9→10→11 across three docs, an internally-impossible "10 human-only items"
+claim, a second cross-batch collision, a wrong correction premise) — `aaf153c19`…`423763ecd` (5 commits). sports 12
+(stale `36`→`37` count, 4 `Source:` tags repointed from a checkbox-less digest to their real targets, **1 parked**: the
+consolidated doc is 1002L against the 1000L hard cap — a genuine hard commit-blocker, not advisory, discovered directly
+when 3 small factual fixes couldn't ship and had to be reverted) — `ea38bc9d9`…`f1f52ccf3` (4 commits) +
+operator-decision entry #9 (`1f2786af0`).
+
+**Also shipped, per an explicit operator ask mid-session**: hardened the delete/VM-launch todo-tagging gap into
+`task_template.md` finding O, a new soft mechanical pre-check `scripts/plan-hygiene/check_delete_vm_launch_gating.sh`,
+`/plan-reconcile`'s hunter-5 (widened to cover VM-launch/billing risk, not just deletes), and a compact `CLAUDE.md`
+pointer (40,152/40,960 bytes, still under the hard cap) — `6fc2c39e5`, `6fcf09411`, `51e3ba4c6`.
+
+**Lesson worth carrying forward — this repo checkout saw extremely heavy concurrent write activity all session** (other
+slots, my own launched Workflow agents). Multiple fixes were silently reverted mid-flight — not from a bug in my edits,
+but because batching several files' edits before the first commit left a window where a concurrent
+`git pull --rebase`/stash-pop cycle elsewhere in the SAME shared checkout dropped my uncommitted hunks. **The fix that
+worked**: edit one file completely, verify the edit landed (`grep`/`git diff`), commit that ONE file immediately
+(pathspec-scoped `git commit <exact-paths>`, never batch multiple files across a time gap), then move to the next file.
+On a push rejection: `git fetch`, confirm the incoming commit doesn't touch your file, `git merge --ff-only`, retry. **A
+`git status` showing many "modified" files in this checkout does NOT mean your own work is at risk** — with this many
+concurrent agents, that's ambient noise from everyone else's in-progress WIP; the only thing that actually matters is
+`git rev-list --count origin/<branch>..HEAD == 0` after your own push. Also real: a raw `git commit` with no pathspec
+picks up EVERYTHING currently staged by any other live process in the shared index — always commit by exact file path,
+never bare `git commit -m`.
+
+## Round 4 — the 5-AG consolidated-plan split (2026-07-25, operator directive, IN PROGRESS)
+
+Asked operator-decision entry #9 (the sports line-cap breach) live in chat rather than leaving it parked, since the
+operator was actively in-session — per the `/plan-reconcile` skill's own "ASK > PARK when the operator is reachable"
+rule. **Operator's verbatim answer** (this is the governing directive for all subsequent work in this area):
+
+> "split into parent and child plans also same for the other AGs as per rules but hard requirement that we structrue it
+> so that we knwo closing todos on the consoldiated links to the other plans which may also link to other plans so the
+> routing must be clear. dont go crazy but get all AG consolidated 5 plans into around 700 lines so that we have room to
+> grow. rememebr we're tryna get those plans in a format that eventually ao can handle them so follwo all the ruels so
+> that those plus the sibling batch plans can all be converted to actuve and ao assigned to vm planning san dexecuted to
+> completion withotu any ioprhaned plans and issues remaining at the end thats the end game 80% of our plans and issues
+> archived once ao is done. any investigation needed to make the consoldiated plans mroe clear so that onnet can handle
+> shoudl be done so that ever todos ins clear and any conflicst or ambuguity ove rthe ordering prio or the detaisl of
+> execution shoudl be asked inetrwactively in this chat so that i can answer"
+
+Parsed intent: (1) split ALL 5 AG consolidated closeout plans (not just sports) into a parent + child structure; (2)
+hard requirement — the `depends_on`/`related` routing graph must be navigable end-to-end with no dead ends, even through
+a child that itself links further; (3) don't over-split — reasonable groupings, not one child per paragraph; (4) target
+~700 lines per consolidated (parent) plan, leaving headroom under the 1000L hard cap; (5) every todo that ends up
+dispatchable must pass a full `task_template.md` §3/§4 AO-readiness check — this is explicitly IN SERVICE of eventually
+flipping every consolidated + batch plan to `assigned_vm: planning` and letting AO run them to completion; (6) end
+state: ~80% of the plans/issues corpus archived, zero orphans; (7) **genuine ambiguities/conflicts get asked live in
+this chat, never silently resolved or parked** — this is a hard process requirement for the remainder of this work, not
+just a preference.
+
+**2 Workflows launched, both IN PROGRESS at time of this checkpoint**:
+
+- `wf_b80aa337-209` — Phase 1: adjudicate every delete/VM-launch candidate `check_delete_vm_launch_gating.sh` flags (9
+  files) and apply `[OPERATOR]` tags where genuinely needed. Phase 2: fresh AO-eligibility triage of each AG
+  consolidated plan's own NATIVE todos (not satellite docs, which this session's earlier batches already covered) —
+  draft `<ag>_consolidated_native_ao_extract_2026_07_25.md` + finalize for whatever's genuinely bounded/AO-eligible.
+  Already confirmed landing real fixes live (e.g. an `[OPERATOR]` tag added to a tradfi_batch2 todo).
+- `wf_2e2b573f-0bd` — design-ONLY pass (no file writes): one agent per AG proposes which Tracks/sections move into which
+  child plan(s) to bring the parent to ~700L, does an AO-readiness scan of content that would move, and — this is the
+  critical output — a distinct list of genuine ambiguities that must be asked to the operator before any execution, per
+  requirement (7) above.
+
+**Next when both complete**: review the 5 split proposals + the native-todo-triage results, batch any genuine
+ambiguities into a live interactive Q&A with the operator (never auto-resolved), then execute the confirmed splits —
+author child plans, trim each parent, wire the dependency graph, apply AO-readiness fixes — followed by a final
+verification pass (line caps green, `run_hygiene_sweep.sh` green, dependency graph navigable end-to-end, zero orphaned
+plans/issues).
