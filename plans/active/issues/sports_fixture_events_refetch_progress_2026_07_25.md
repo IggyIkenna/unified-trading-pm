@@ -169,7 +169,16 @@ repeat sample showing genuinely 0 non-13-col objects (or documented unrecoverabl
       (each 429 costs a 60s sleep on top of the normal per-fixture call). Not correctness-affecting (the client's own
       retry/backoff handles it, per the `attempt 1/10` counter), but pushes the total ETA further out — worth knowing if
       a future health-check sees this date still running well past 66min, that's the rate-limit cost accumulating, not a
-      new stall. Released via `/skip-current-task` again.
+      new stall. Released via `/skip-current-task` again. — **Health-checked 2026-07-25T05:54Z (slot 12,
+      data_engineering), still RUNNING, confirms slot 3's concurrent 05:53Z check**: `gcloud compute instances list`
+      confirms `RUNNING` in `asia-northeast1-c`; heartbeat blob fresh (~14s old at check time); run.log grew
+      55,413→60,162 lines (+4,749) since the 05:37Z read, latest timestamp `05:53:49` (live per-fixture
+      `Fetched N events for fixture=X` lines); still `date=2019-12-25` (~74min into its own ~66min fallback-date budget
+      — consistent with slot 3's just-logged 429-rate-limit finding explaining the overrun, not a new stall), no
+      `DEPLOYMENT_COMPLETED`/`exit_code` terminal marker. Not completable this turn (still ~2140 of ~2500 dates remain).
+      Released via `/skip-current-task`, not duplicate-launched. Next dispatch: repeat this health-check (2-read
+      progress-metric check — either a new `date=` boundary OR continued in-date fixture-fetch advance counts as live);
+      once terminal, re-run the census script per "Next action" above before flipping this checkbox.
 
 ## Codex SSOTs
 
