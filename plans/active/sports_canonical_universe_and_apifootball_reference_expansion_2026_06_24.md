@@ -166,6 +166,14 @@ satisfies every requirement:
     confirm which the readers use) + dedup — do NOT blind-delete (would break team/venue resolution).
   - Per-source pre-genesis ANOMALIES only (e.g. any footystats parquet before 2019, odds before 2020-06) — targeted
     check + delete/relabel; honest-absence clip already hides them from the denominator.
+  - > **🟡 2026-07-25 status**: this bullet's premise is stale — see
+    > `/plans/active/issues/sports_day_all_teams_venues_fold_key_scheme_mismatch_2026_07_25.md`. The `day=all` fold is
+    > not mechanically executable as described (TEAMS has no FLAT layout; the legacy vs. live venue key spaces have zero
+    > overlap) and is now `BLOCKED-OPERATOR-DECISION` in the AO-dispatched copy of this todo
+    > (`sports_satellite_ao_dispatch_batch2_2026_07_24.md`). The per-source genesis dates quoted above are also
+    > superseded by the 2026-07-21 uniform 2020-06-06 floor ruling (`/codex/02-data/sports-2020-06-data-floor.md`), and
+    > the pre-genesis anomaly check is already covered by that doc's tracked phantom-row-prune item — no separate action
+    > needed for part (b).
 - [x] ✅ [DATA] P0. **NICE-TO-HAVE / watch-item: odds-granularity** — unified-api-contracts@a32ceb87. Checked; not
       confirmed, documented as checked-no-issue (no dated capability entry needed — no code path anywhere computes an
       expected-snapshot-count from a cadence constant, so the mislabeling this watches for cannot occur today). Full

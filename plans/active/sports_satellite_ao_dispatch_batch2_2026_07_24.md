@@ -113,16 +113,24 @@ source: >-
       **Done when**: every per-league entity with a dual bare+per-league layout is canonicalised (in-retention) or
       deleted (pre-retention), snapshot-first; by-design bare entities left untouched. Source:
       `sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md`.
-- [ ] [DATA] P0. **Retention floor = the EXISTING per-source genesis registry — NOT a blanket 2015 delete.** Genesis
-      SSOT already exists (UAC `canonical/domain/sports/league_data.py` `SOURCE_COVERAGE_START`: understat 2014-01-01,
-      api_football 2015-01-01, footystats/transfermarkt/SFI 2019-01-01, open_meteo 2019-03-02, odds_api/mdps_odds
-      2020-06-06 + per-(source,data_type)/(source,league) overrides). Retention cleanup is SMALL: (a) `day=all` holds
-      `entity=teams` + `entity=venues` date-invariant reference data that also appears per-day-per-league — RECONCILE by
-      folding `day=all` into the canonical `SportsLayout.FLAT` home (`sports_reference/{F}/{F}.parquet`) + dedup, do NOT
-      blind-delete (would break team/venue resolution); (b) per-source pre-genesis ANOMALIES only (e.g. any footystats
-      parquet before 2019, odds before 2020-06) — targeted check + delete/relabel. (repo: instruments-service). **Done
-      when**: `day=all` rows folded into `SportsLayout.FLAT` + deduped without breaking team/venue resolution;
-      per-source pre-genesis anomalies identified and deleted/relabeled; no blanket delete performed. Source:
+- [ ] [DATA] P0. BLOCKED-OPERATOR-DECISION **Retention floor = the EXISTING per-source genesis registry — NOT a blanket
+      2015 delete.** 2026-07-25 investigation (`sports_day_all_teams_venues_fold_key_scheme_mismatch_2026_07_25.md`):
+      this todo's premise does not survive contact with the real GCS objects — **(a) day=all fold is genuinely
+      blocked**: UAC's SSOT only maps VENUES to a FLAT layout (TEAMS is PER_DAY_PER_LEAGUE-only, so "fold into FLAT" is
+      inapplicable to TEAMS as stated); the legacy `day=all/entity=venues/venues.parquet` (3,445 rows, raw numeric
+      api_football `venue_id` keys, e.g. `1456`) and the live FLAT `sports_reference/venues/venues.parquet` (2,860 rows,
+      slugified string keys, e.g. `OLD_TRAFFORD`) have **zero key overlap** — verified directly, not assumed — so there
+      is no join key to "dedup" against; no live reader of `day=all` was found in any of the 6 core sports repos (looks
+      like dead legacy data from an earlier writer generation), but `instruments-store-sports-prd` has soft-delete=0
+      (irreversible) and the original plan author explicitly flagged "would break team/venue resolution" as a delete
+      risk — needs explicit operator sign-off (see issue doc's Options A/B/C), not a unilateral fold-that-can't-work or
+      an irreversible delete. **(b) pre-genesis anomaly check is NOT new work**: the 131,306 TEAMS + 1,457 VENUES
+      pre-floor rows found are a subset of the ALREADY-TRACKED, already-deferred 944,776-row
+      phantom-pre-floor-manifest-row issue in `/codex/02-data/sports-2020-06-data-floor.md` (blocked on a GCS-walk
+      manifest rebuild, explicitly NOT a hand-edit target) — satisfied by reference, no separate script needed. Also:
+      this todo's quoted per-source genesis dates (understat 2014/api_football 2015/footystats etc. 2019) are **stale**,
+      superseded 2026-07-21 by a uniform 2020-06-06 WIPE floor for all sports sources (see the floor doc). Full
+      evidence, GCS byte/row counts, and recommended option in the issue doc. Source:
       `sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md`.
 - [x] ✅ [DATA] P0. **Odds-granularity watch-item check** — unified-api-contracts@a32ceb87. Checked whether pre-cutover
       10-min odds snapshots would be evaluated against a 5-min expectation anywhere and misread as missing coverage.
