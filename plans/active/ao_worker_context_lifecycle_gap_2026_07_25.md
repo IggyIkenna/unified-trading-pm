@@ -264,14 +264,54 @@ sequential: true
       `/done`, now genuinely post-compact, dispatches normally with no lingering gate state (the check is a plain
       per-call threshold comparison, confirmed by assertion). 1669/1669 tests pass, ruff + basedpyright clean, full
       `quality-gates.sh` PASSED.
-- [ ] [REVIEW] P1. **Post-deploy live verification against this plan's own root-cause evidence.** Re-pull `/api/state` +
-      `/api/activity` (read-only SSM, same pattern as this plan's `source` field) for slot IDs 2, 3, 5, 8, 9 (the ones
-      tracked live during this session's diagnosis) and confirm: (a) no slot receives a next task while self-reporting
-      `context_used_pct` at/above the gate threshold (todo 3), (b) a reproduced long-session/ short-task-age scenario
-      now trips `context_burn_suspected` (todo 7), (c) the new `frozen_at_high_context` (todo 11) and
-      `context_saturated_session_lost_task_requeued` (todo 12) event types appear when their trigger conditions are
-      manually reproduced in a test env. **Done when**: a written verification note citing actual post-deploy event/log
-      evidence for (a)-(c), attached to this plan's Progress Log.
+- [x] ✅ [REVIEW] P1. **Post-deploy live verification against this plan's own root-cause evidence.** Re-pull
+      `/api/state` + `/api/activity` (read-only SSM, same pattern as this plan's `source` field) for slot IDs 2, 3, 5,
+      8, 9 (the ones tracked live during this session's diagnosis) and confirm: (a) no slot receives a next task while
+      self-reporting `context_used_pct` at/above the gate threshold (todo 3), (b) a reproduced long-session/
+      short-task-age scenario now trips `context_burn_suspected` (todo 7), (c) the new `frozen_at_high_context`
+      (todo 11) and `context_saturated_session_lost_task_requeued` (todo 12) event types appear when their trigger
+      conditions are manually reproduced in a test env. **Done when**: a written verification note citing actual
+      post-deploy event/log evidence for (a)-(c), attached to this plan's Progress Log. — **Verified 2026-07-25T06:40Z
+      (slot 2, review) — running ON the orchestrator VM, queried `/api/state`+`/api/activity` DIRECTLY, no SSM proxy
+      needed.** Full detail in Progress Log. Summary: **(c) CONFIRMED live** — `frozen_at_high_context` fired 4 times in
+      the last 500 activity events (slots 11/12, real `context_pct`/`consecutive_prior_kicks` detail);
+      `context_saturated_session_lost_task_requeued` has 0 live fires yet (trigger condition — a dead worker at
+      saturated context — hasn't naturally occurred in the observed window; code + unit tests both confirm it's wired
+      correctly). **(b) NOT verifiable yet** — depends on the still-open "Fix the context-burn anomaly clock" todo
+      (`_is_context_burning` still keys off hours-on-TASK, not hours-on-slot); `context_burn_suspected` has 0 live
+      fires, consistent with that gap being unfixed, not a failure of anything already shipped. **(a) PARTIALLY REFUTED
+      — a real, live-confirmed gap found, not a clean pass.** `worker_compact_gated` DID fire 4 times live (slot 3 @
+      90-92%, slot 11 @ 88%, slot 12 @ 85% — the `/done` gate genuinely works). But tracing slot 3's full activity
+      sequence around one firing (`06:15:16.910Z worker_compact_gated ctx=90` immediately after a `slot_done`) found a
+      **`task_dispatched` event at `06:16:44.326Z` — 88 SECONDS later, trigger=`heartbeat`, with slot 3's context
+      confirmed STILL ~91% via three subsequent `proactive_compact_guidance` reads at 06:17/06:21/06:30Z (no compaction
+      ever happened in between)**. Read `heartbeat_slot()` (`server/routes/slots_worker.py:285`) to confirm: it calls
+      the SAME `pick_next_task()` as `done_slot()` with **zero context-threshold check anywhere in the function**.
+      Grepped every `pick_next_task(` call site in the file: **3 total** — `boot_slot` (line 219), `heartbeat_slot`
+      (line 456, the one caught live), `done_slot` (line 1152, todo 3's gate). Todos 3/4 only gated `/done` and
+      `/progress`'s directive; `/heartbeat` (the idle-poll route — arguably the MOST common trigger, since idle workers
+      poll it every ~60s) and `/boot` (whose `BootRequest.context_used_pct` is a real, non-always-zero field — a
+      `--resume` boot after an incomplete compaction could submit a genuinely high value) were never in either todo's
+      scope and are both still ungated. This is not hypothetical: it is the live mechanism that just handed a saturated
+      worker a brand-new task in production, ~90 seconds after the `/done` gate correctly withheld one for the SAME
+      slot. Filed as a new P0 todo below covering all three dispatch sites rather than silently noting it — this
+      undermines the plan's own core promise.
+- [ ] [BACKEND] P0. **Gate `heartbeat_slot` AND `boot_slot`'s dispatch on self-reported context — the two remaining
+      ungated `pick_next_task()` call sites**, found live 2026-07-25T06:40Z by the REVIEW todo above (todo 3/4 only
+      covered `/done` and `/progress`'s directive; `/heartbeat` and `/boot`'s dispatch were never in scope). In
+      `server/routes/slots_worker.py`, both `heartbeat_slot` (currently line 456) and `boot_slot` (currently line 219):
+      immediately before their own `picked = pick_next_task(session, slot_id, backlog)` call, apply the SAME gate
+      `done_slot` uses (`req.context_used_pct >= get_config().tuning.context_worker_compact_gate_pct`) — on trigger, do
+      NOT call `pick_next_task` (leave the candidate task `queued`, exactly like `done_slot`'s gate), set
+      `status="idle"`, and return the response with `new_task=None` + `directive="compact_before_next"` (reusing todo
+      2's field on `HeartbeatResponse`/`BootResponse` — add it to `BootResponse` if not already present; check before
+      assuming). Live evidence this closes: slot 3 was gated by `/done` at 90% context (`06:15:16Z`), then handed a
+      fresh task by `/heartbeat` 88 seconds later still at ~91% context (`06:16:44Z`, confirmed no compaction happened
+      via 3 subsequent `proactive_compact_guidance` reads) — this todo's fix must make that exact sequence impossible.
+      **Done when**: a unit test per route asserts it withholds `new_task`/`task` and sets the directive when
+      `context_used_pct >= threshold` (mirroring todo 3's `test_done_context_gate_withholds_next_task_above_threshold`),
+      dispatches normally below it, and the candidate task remains `queued`; a regression test reproduces the EXACT live
+      `/done`→`/heartbeat` sequence above, asserting `new_task is None` (not the bug); `quality-gates.sh` green.
 - [ ] [BACKEND] P2. **Add a migration-completeness test** asserting every column in `server/orm.py`'s `SlotRow` (and
       ideally `AgentRow`) exists in `bootstrap.py`'s `_add_missing_columns` ALTER-TABLE lists — discovered this session
       after the SAME gap bit the `slots` table TWICE in one day: `context_directive_issued` (todo 4,
@@ -284,6 +324,40 @@ sequential: true
       `quality-gates.sh` green.
 
 ## Progress Log
+
+**2026-07-25T06:40Z (slot 2, review).** Dispatched the post-deploy live-verification REVIEW todo. Running directly ON
+the orchestrator VM (not a dev checkout), so queried `/api/state` + `/api/activity` locally — no SSM proxy needed.
+
+- **(c) frozen_at_high_context / context_saturated_session_lost_task_requeued**: pulled the last 500 activity events.
+  `frozen_at_high_context` fired 4 times (slot 11 @ 06:29:47Z ctx=70%, slot 12 @ 06:26:31/06:29:47/06:30:33Z ctx=85%
+  each) — confirmed live, correct `context_pct`/`consecutive_prior_kicks` detail in every event.
+  `context_saturated_session_lost_task_requeued` = 0 live fires — its trigger (a DEAD worker caught at saturated
+  context) hasn't naturally occurred in the observed window; unit tests + code read both confirm it's wired correctly,
+  just not yet exercised live. Not a failure.
+- **(b) context_burn_suspected**: 0 live fires. This is CONSISTENT with, not contradicting, the still-open "Fix the
+  context-burn anomaly clock" todo — `_is_context_burning` still keys off hours-on-TASK (resets every reassignment), so
+  a long-session/short-task-age scenario genuinely cannot trip it yet. Correctly reported as not-yet-verifiable rather
+  than forcing a pass.
+- **(a) worker_compact_gated — fired live (4x: slot 3 @ 90-92%, slot 11 @ 88%, slot 12 @ 85%, all threshold=70), BUT
+  tracing one firing's full context found a real gap, not a clean pass.** Slot 3:
+  `06:15:16.910Z worker_compact_gated ctx=90` (immediately after its `slot_done`) →
+  `06:16:44.326Z task_dispatched ..., trigger=heartbeat` — a FRESH task dispatched 88 SECONDS later, with slot 3's
+  context confirmed still ~91% via 3 subsequent `proactive_compact_guidance` reads (06:17:26/06:21:51/06:30:27Z, no
+  compaction observed in between). Read `heartbeat_slot()` (`server/routes/slots_worker.py:285`) to confirm the
+  mechanism: it calls the identical `pick_next_task()` as `done_slot()` (line 456) with **zero context-threshold check
+  anywhere in the function** — todos 3/4 only gated `/done` and `/progress`'s directive; the third dispatch path,
+  `/heartbeat` (the idle-poll route, arguably the MOST common trigger since idle workers poll it every ~60s), was never
+  in either todo's scope. **This is not a hypothetical edge case — it is the exact live mechanism that just handed a
+  saturated worker (91% context) a brand new task in production, 90 seconds after the `/done` gate had correctly
+  withheld one for the SAME slot.** Filed as a new `[BACKEND] P0` todo above (does not silently note-and-move-on — this
+  undermines the plan's own core promise that a saturated worker won't receive more work) rather than treating this
+  REVIEW todo as a rubber-stamp pass.
+
+**Lesson for whoever authors the next gate-a-dispatch-path plan**: a plan that names specific ENDPOINTS to gate
+(`/done`, `/progress`) rather than the underlying INVARIANT ("no dispatch call may hand out a task to an over-threshold
+slot") will miss any dispatch path not explicitly enumerated — `pick_next_task()` is called from at least 3 routes in
+this file alone. A `pick_next_task()` call SITE audit (grep every caller) would have caught this at plan-authoring time
+instead of live, 90 seconds into production.
 
 **2026-07-25 (slot 2, backend_engineer, ~05:55-06:15 UTC).** Continued draining this sequential plan after todos 3-4
 (gate `done_slot`/`progress_slot` on self-reported context — `agent-orchestrator@55148c8`/`3ace754`). Dispatch briefly
