@@ -67,18 +67,18 @@ source:
 
 ## Capture wiring (dispatchable)
 
-- [ ] 🚧 **BLOCKED-PREREQUISITES** [DATA] P1. **Register + launch the ASTER live connector** — `aster_book_liq_ws.py`
-      into `live/connector_registry.py` + a live VM (the KALSHI-PERP book5 VM is the in-cefi template). **PREREQ: Plan
-      1's enumerator `start_date` support + the UAC capability flip for ASTER book5/liquidations have landed** (else you
-      re-create the 17,282-row over-seed). Verify `live_aster` rows land (per-VM shard spot-check at T+10-15min). **This
-      gates Plan 1's ASTER re-measure (2c/2f).** Connector SSOT: `issues/cefi_hl_aster_batch_data_gaps_2026_06_22` BUG
-      #4. Gate: `live_aster` book5/liquidations rows landing daily. **STATUS 2026-07-07 06:31 UTC —
-      BLOCKED-PREREQUISITES** (main-agent answer to `BLK-26ed6571`, task 001 pickup, slot-9): both hard prereqs unmet on
-      LDR — (a) `instruments-service/scripts/expected_universe.py` has zero `get_venue_data_type_start_date` awareness
-      on LDR (cefi-007 impl is done on slot 5, 126/126 green, but has NOT been quickmerged yet); (b) UAC
-      `market_data_categories.py` `VENUE_DATA_TYPE_CAPABILITIES["ASTER"]` still only lists
-      trades/derivative_ticker/perp_funding — NO book_snapshot_5, NO liquidations (**stale as of 2026-07-07 08:10 UTC —
-      corrected 2026-07-12, finding id 114, §A2 B-queue ruling**: `unified-api-contracts@3652f99f`, verified via
+- [ ] 🚧 **BLOCKED-OPERATOR-DECISION** [DATA] P1. **Register + launch the ASTER live connector** —
+      `aster_book_liq_ws.py` into `live/connector_registry.py` + a live VM (the KALSHI-PERP book5 VM is the in-cefi
+      template). **PREREQ: Plan 1's enumerator `start_date` support + the UAC capability flip for ASTER
+      book5/liquidations have landed** (else you re-create the 17,282-row over-seed). Verify `live_aster` rows land
+      (per-VM shard spot-check at T+10-15min). **This gates Plan 1's ASTER re-measure (2c/2f).** Connector SSOT:
+      `issues/cefi_hl_aster_batch_data_gaps_2026_06_22` BUG #4. Gate: `live_aster` book5/liquidations rows landing
+      daily. **STATUS 2026-07-07 06:31 UTC — BLOCKED-PREREQUISITES** (main-agent answer to `BLK-26ed6571`, task 001
+      pickup, slot-9): both hard prereqs unmet on LDR — (a) `instruments-service/scripts/expected_universe.py` has zero
+      `get_venue_data_type_start_date` awareness on LDR (cefi-007 impl is done on slot 5, 126/126 green, but has NOT
+      been quickmerged yet); (b) UAC `market_data_categories.py` `VENUE_DATA_TYPE_CAPABILITIES["ASTER"]` still only
+      lists trades/derivative_ticker/perp_funding — NO book_snapshot_5, NO liquidations (**stale as of 2026-07-07 08:10
+      UTC — corrected 2026-07-12, finding id 114, §A2 B-queue ruling**: `unified-api-contracts@3652f99f`, verified via
       `git log`/`git show` on `live-defi-rollout`, added `book_snapshot_5` + `liquidations` to
       `VENUE_DATA_TYPE_CAPABILITIES["ASTER"]` (`start_date=2026-06-23`), landing ~2h after this 06:31 UTC status check.
       Current tree confirms both keys present. The (a) prereq — `enumerate_expected_universe.py` per-(venue,dt)
@@ -124,7 +124,18 @@ source:
       (and a second invocation with `--shard-spec cefi:ASTER:liquidations`) — this is the generic per-shard launcher
       (its own usage docstring gives an ASTER example), already registered in `launcher_registry.py`
       (`mtds-live-cefi- → launch-mtds-live.sh`) and in `vm_zombie_watchdog.py`'s heartbeat-threshold table — no new
-      launcher script needed.
+      launcher script needed. **RESOLUTION 2026-07-25 (`BLK-4f52080e`, main): HOLD — do NOT launch.** This is a new
+      always-on (on-demand, indefinite-lifetime) production CeFi live-capture VM, and the operator's 2026-07-14
+      cost-control freeze (`BLK-55d45a68`) pauses ALL CeFi live capture pending the consolidation migration — which has
+      still never launched. The orthogonal-to-MVP-shard-scope argument is real but does not clear the freeze: the ruling
+      reads as no NEW CeFi live-capture VMs (consolidated or standalone) until consolidation resolves, and a standalone
+      always-on ASTER VM arguably cuts AGAINST the cost-consolidation intent (a standalone VM is exactly what
+      consolidation is meant to eliminate). This is an operator cost/policy decision, not a data-correctness prereq a
+      worker can clear unilaterally. **Guardrails for the next picker-upper**: (1) the ready-to-fire launch command +
+      prereq-met evidence stay documented above so it fires immediately once cleared; (2) task marked
+      BLOCKED-OPERATOR-DECISION, not failed — it is complete except for this gated launch; (3) when the freeze lifts,
+      prefer folding ASTER into `launch-mtds-live-cefi-consolidated.sh` over a standalone always-on VM, to honor the
+      cost-consolidation intent; (4) main is surfacing the freeze-lift decision to the operator — it is theirs to make.
 - [x] ✅ [DATA] P1. **Deribit `options_chain` live runner** — wire a live cron/VM to run
       `--operation deribit-options-chain` (the handler `mtds@9ecd1e29e` is **live/replay only — no backfill**,
       `process()` collects `date.today()`), so it captures BTC/ETH `options_chain` daily → then feeds Plan 4's
@@ -231,6 +242,14 @@ source:
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
 
+- **2026-07-25** — **Task 001 `BLK-4f52080e` answered: HOLD, do NOT launch** (main). Confirms recommendation B: the
+  2026-07-14 cost-control freeze on CeFi live capture (`BLK-55d45a68`) covers ANY new CeFi live-capture VM, not just a
+  relaunch of the paused consolidated migration — a standalone always-on ASTER VM would itself cut against the
+  cost-consolidation intent. Task marked **BLOCKED-OPERATOR-DECISION** (not failed): prereqs are met and the connector
+  code is shipped, only the gated launch remains. Guardrails for whoever picks this up once the freeze lifts: prefer
+  folding ASTER into `launch-mtds-live-cefi-consolidated.sh` over a standalone VM; the ready-to-fire per-shard command
+  stays documented on the task 001 checkbox above in the meantime. Released via `/skip-current-task` (main is surfacing
+  the freeze-lift decision to the operator — nothing further for this slot to do here).
 - **2026-07-25** — **Task 001 (ASTER live connector) re-verified — both original prereqs now met, but a NEW
   cross-cutting blocker found; escalated via `/blocked` instead of launching unilaterally** (slot 6 data_engineering).
   Confirmed on current LDR: (a) `instruments-service` enumerator's per-(venue,dt) `start_date` gate is live
