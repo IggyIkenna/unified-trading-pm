@@ -76,8 +76,8 @@ sequential: true
       check) with a regression test. **Done when**: either a cited Slack message ID / activity-log entry proving the
       alert fired correctly for slots 4/5/9's 2026-07-25 quarantine, or a fix + a new test in `tests/` reproducing this
       exact scenario (quarantined slot + nonzero queued count → alert fires).
-- [ ] [INFRA] P0. **Audit why slots 13, 14, 15, and 0 show zero AutoSpawn activity across the entire observed window**
-      despite `tmux_alive: false`. Read `AutoSpawnLoop`'s spawn-candidate selection (`server/autospawn.py`, the
+- [x] [INFRA] P0. ✅ **Audit why slots 13, 14, 15, and 0 show zero AutoSpawn activity across the entire observed
+      window** despite `tmux_alive: false`. Read `AutoSpawnLoop`'s spawn-candidate selection (`server/autospawn.py`, the
       `_should_spawn` method and whatever iterates slot candidates each tick) to determine: (a) does AutoSpawn target
       only a concurrency CAP below the full slot count (e.g. spawns onto the first N free slots per tick and never
       reaches the rest), (b) is there a per-slot cooldown/backoff counter that can get stuck indefinitely after repeated
@@ -169,3 +169,30 @@ sequential: true
   is already running live in production — `ao-self-pull.sh` FF-pulled + restarted the orchestrator at
   `2026-07-25T05:15:22Z` — so "queue blocking completion" is not currently the operative failure mode for either plan;
   both are actively converging.
+- **2026-07-25 (slot-12)** — Todo 2: two DISTINCT causes, one intended (slot 0), one a genuine bug now fixed (13/14/15).
+
+  **Slot 0 — intended, not a bug.** `status: "paused"` (confirmed via `GET /api/state`). `AutoSpawnLoop._should_spawn`
+  gates every candidate through `_slot_is_configured` (`server/autospawn.py:635`), which delegates to
+  `dispatch.slot_is_spawnable` — paused slots are excluded by design (the operator explicitly parked it; `last_ping`
+  27168min stale matches a long-parked slot, not a starved one). Working as designed — no fix.
+
+  **Slots 13/14/15 — genuine bug, fixed.** `AutoSpawnLoop._run_one_tick` (`server/autospawn.py:1758` prior to fix)
+  builds the per-tick candidate list via `select(SlotRow).order_by(SlotRow.slot_id)` then stable-sorts ONLY by recent
+  failure count (`server/autospawn.py:1765` prior to fix) — equal-failure slots keep raw ascending `slot_id` order.
+  Combined with the fleet-worker cap (`_apply_fleet_cap`, `ORCHESTRATOR_FLEET_WORKER_CAP=8` on this VM) and the
+  budget-exhaustion early-skip (`if len(to_spawn) >= spawn_budget: continue`, BEFORE `_should_spawn` even runs — so no
+  activity-log row at all for the skipped slot, matching the observed "zero AutoSpawn activity anywhere in the 2000-row
+  window"), this is option (a)+(b) hybrid: the CAP itself is intentional (documented, bounds the planning VM's on-demand
+  pool), but the SELECTION ORDER within that cap has no fairness/rotation — whenever fleet-wide demand keeps refilling
+  headroom with low-numbered idle slots before the scan reaches the tail, high-numbered idle slots (13,14,15) starve
+  indefinitely purely by slot-id bad luck. Live-confirmed right now: `GET /api/state` shows exactly 8 slots with
+  `tmux_alive: true` (2,3,4,6,7,10,11,12) == the configured cap, while 5/8/9/13/14/15 sit idle with no session —
+  13/14/15 are consistently LAST in ascending order behind three other idle slots that always win the race first.
+
+  **Fix** (`agent-orchestrator@18d8538`): added a secondary sort key — least-recently-ATTEMPTED
+  (`self._last_attempt_at`, never-attempted sorts first via an epoch sentinel) — so among equally-healthy slots the
+  fleet rotates instead of permanently favoring the same low slot_ids. Primary key (failure count, doomed-slots-to-
+  the-back) is unchanged. New regression test
+  `tests/test_autospawn.py::test_tick_rotates_through_idle_slots_when_chronically_at_cap` (3 equal slots, budget=1/tick
+  × 2 ticks → the second tick must pick a DIFFERENT slot than the first) + full `tests/test_autospawn.py` suite (105/105
+  pass).
