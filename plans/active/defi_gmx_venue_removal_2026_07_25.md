@@ -101,14 +101,19 @@ changelog/docstring comment describing the historical removal itself (never insi
       convention above, zero hits. (repo: execution-service) -- execution-service@09a828ed. Also updated
       tests/e2e/test_defi_execution_e2e.py (stale GMX venue-coverage assertions).
       `grep -rli "\bgmx\b" . --include="*.py"` returns zero hits repo-wide (incl. tests).
-- [ ] [BACKEND] P2. **Remove GMX from `strategy-service`** -- the `("gmx", "GMX", ShareClass.USDC)` entry in
+- [x] ✅ [BACKEND] P2. **Remove GMX from `strategy-service`** -- the `("gmx", "GMX", ShareClass.USDC)` entry in
       `engine/strategies/v2/target_universe/catalog_carry.py`, GMX chain/config entries in
       `engine/strategies/v2/carry_and_yield/staked_basis.py` (including the "GMX-V2 rows pending verification" comment,
       which becomes moot once removed), any GMX rows in `catalog_directional.py`/`catalog_staked_basis.py`, the
       venue-name-casing comment mentioning GMX in `engine/core/canonical_perp_funding_provider.py` (cosmetic, update if
       it reads oddly without GMX), and the 3 trace/probe scripts
       (`trace_arbitrage_price_dispersion.py`/`probe_funding_rate_dispersion_coverage.py`/`trace_all_carry_archetypes.py`)
-      if they hardcode GMX. Done-when: the definition-of-done convention above, zero hits. (repo: strategy-service)
+      if they hardcode GMX. Done-when: the definition-of-done convention above, zero hits. (repo: strategy-service) --
+      strategy-service@ca818ff8. Also removed the now-dead `"gmx": "arbitrum"` staking_protocol alias and updated 4
+      tests in `test_target_universe.py`/`test_canonical_perp_funding_provider.py` that asserted GMX-specific
+      catalog/alias behavior (GMX never had LST collateral acceptance, so CARRY_STAKED_BASIS slot count is unaffected;
+      CARRY_BASIS_PERP -13 slots, ML_DIRECTIONAL_CONTINUOUS DeFi perps -2 slots, both within the existing
+      `_TARGET_MIN`/`_TARGET_MAX` band). `quality-gates.sh` green (108s, exit 0).
 - [ ] [BACKEND] P3. **Remove GMX from `unified-trading-library`** -- any shared constants/registries referencing GMX (3
       files matched pre-scoping). Done-when: the definition-of-done convention above, zero hits. (repo:
       unified-trading-library)
