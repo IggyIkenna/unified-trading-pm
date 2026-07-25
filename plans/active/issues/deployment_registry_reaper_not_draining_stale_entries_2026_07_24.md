@@ -563,8 +563,37 @@ flipping the checkbox.
       flip this todo + the plan's original `[REVIEW]` checkbox. If it STILL doesn't converge after an undisturbed
       window: the leader-election/task-creation path is now proven innocent, so the remaining suspect narrows to the
       reap tick's OWN logic/timing (`_run_deployment_reaper`, `background_sync.py`) rather than anything about startup —
-      the log_event pattern established here can extend to instrument that function directly. **UPDATE 2026-07-25T14:02Z
-      (slot 5): found the ACTUAL blocker — it is not SIT itself.** SIT ran, passed, and logged a matching-tree stamp for
+      the log_event pattern established here can extend to instrument that function directly. **RE-CHECKED
+      2026-07-25T17:18:34Z (slot 5, undisturbed window complete, zero redeploys since `00280-p85`): STILL 406,
+      unchanged.** So the confound theory (my own repeated forced restarts) is ALSO ruled out — 30 clean minutes with
+      the leader-elected reaper task confirmed running produced zero convergence. **Strong new lead, most likely
+      unifying root cause for BOTH this AND the stdout mystery: Cloud Run CPU throttling.** Read
+      `_run_deployment_reaper`'s own gate (`background_sync.py:67`):
+      `if (_time.time() % _REAPER_INTERVAL_SEC) >= current_interval: return` — a real 900s-cycle rate-limiter, NOT a bug
+      (with `_REAPER_MAX_PER_TICK = 500` > the entire 406 backlog, one successful tick should clear it all;
+      `sync_interval_active = 30` means the sync loop should land inside the ~30s "hit window" near-deterministically
+      once per 900s cycle under NORMAL wall-clock-driven scheduling). Checked the deployed Cloud Run config: NO
+      `run.googleapis.com/cpu-throttling` annotation is set anywhere (confirmed via both
+      `gcloud run services     describe` and `gcloud run revisions describe uts-shared-deployment-api-00280-p85`), and
+      `cloudbuild.yaml:426`'s `gcloud run deploy` command has no `--no-cpu-throttling` flag either — meaning this
+      service runs on Cloud Run's **default CPU-throttled** mode, where CPU is allocated ONLY while actively handling an
+      HTTP request and is throttled to near-zero the rest of the time. `minScale=1` keeps the CONTAINER warm (prevents
+      scale-to-zero) but is a COMPLETELY SEPARATE setting from CPU allocation — a background `asyncio` loop's
+      `sleep()`-driven wake cadence can stall for arbitrarily long stretches between requests under this mode, which
+      would explain BOTH mysteries at once: (1) the reap tick's wall-clock-aligned window check may simply never get CPU
+      time to actually re-evaluate `time.time()` at the right moment, and (2) buffered stdout/stderr writes issued
+      during a throttled period may never get flushed to the container's output stream until CPU is next allocated (and
+      Cloud Run's log agent may not capture a flush that happens on the next unrelated request boundary the same way).
+      **This is a real $ tradeoff, not a free fix** — `--no-cpu-throttling` ("CPU always allocated") bills CPU for the
+      full container lifetime, not just request-serving time, which is a materially different cost profile for a
+      `minScale=1`, `cpu=4`, `memory=16Gi` service that's already running one instance continuously. **Recommending, not
+      doing, this change** — needs an **[OPERATOR]** decision given the cost impact. Next dispatch: (1) get operator
+      sign-off on `--no-cpu-throttling` (or an alternative: a Cloud Scheduler-triggered HTTP endpoint that calls the
+      reap logic synchronously on each invocation, guaranteeing real request-context CPU without paying for always-on
+      allocation — worth proposing as a lower-cost alternative achieving the same goal); (2) if approved, add
+      `--no-cpu-throttling` to `cloudbuild.yaml:426`'s deploy command, ship, deploy, and re-run the exact same
+      log_event + `active/`-count verification this session already built out. **UPDATE 2026-07-25T14:02Z (slot 5):
+      found the ACTUAL blocker — it is not SIT itself.** SIT ran, passed, and logged a matching-tree stamp for
       `deployment-api`, but the stamp is fire-and-forget (`repository_dispatch` only) and the downstream Firestore write
       is 403'ing FLEET-WIDE (`ci_status_store.py` `PermissionDenied`, `unified-trading-sa` ADC identity, reproduced live
       via direct REST `PATCH` — same 403; 0/95 sampled `ci-status-update.yml` runs succeeded since 2026-07-25T10:36Z).
