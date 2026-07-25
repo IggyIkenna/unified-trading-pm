@@ -76,13 +76,18 @@ depends_on: []
 
 ## Todos
 
-- [ ] [DATA] P0. Fix `_freshness_preflight()` so a `stale` (not just `missing`) entity contributes to `missing_entities`
-      (or, equivalently, so `_fetch_sports_reference_block` NEVER falls back to the unscoped fetch-everything path when
-      a CLI `--sports-entity` scope was supplied — an empty `missing_entities` under an explicit scope must fetch
-      NOTHING outside that scope, not EVERYTHING). **Done when**: a stale-not-missing date under
-      `--sports-entity FIXTURES` fetches ONLY fixtures (no teams/stats/events/lineups/player_stats), proven by a unit
-      test with stale=[FIXTURES]/missing=[] asserting `entities_to_fetch == ['FIXTURES']` (never `None`), and a dry-run
-      over a known stale date shows zero out-of-scope API-Football calls.
+- [x] ✅ [DATA] P0. Fix `_freshness_preflight()` so a `stale` (not just `missing`) entity contributes to
+      `missing_entities` — instruments-service@08387531. `process_preflight.py`'s per-entity-skip block now gates on
+      `is_sports_run and (missing or stale)` and builds `missing_entities = list(dict.fromkeys([*missing, *stale]))`
+      (deduped union), so a stale-not-missing entity can no longer produce an empty `missing_entities` that
+      `_fetch_sports_reference_block`'s `entities_to_fetch=missing_entities if missing_entities else None` would then
+      resolve to the unscoped `None` fetch-everything fallback. 2 new regression tests in
+      `tests/unit/test_orchestrator_gaps.py::TestFreshnessPreflightStaleScopeEscape`: `stale=["FIXTURES"]/missing=[]`
+      asserts `outcome.missing_entities == ["FIXTURES"]` (never empty/None-triggering); a second proves stale+missing
+      dedupe into one union. `quality-gates.sh` green (full run, sentinel-verified). **Not yet done**: a live dry-run
+      over a real stale date confirming zero out-of-scope API-Football calls — no VM launch/relaunch was performed in
+      this turn; that's the P1 todo immediately below, still gated on operator/next-dispatch confirmation of quota state
+      per the domestic-selection issue doc's tracker.
 - [ ] [DATA] P1. After the fix lands + is quality-gates green, relaunch the FIXTURES-only backfill (SPOT, skip-aware,
       resumes from measured progress) and confirm the quota-burn rate matches FIXTURES-only expectations (no enrichment
       blocks fetched). Record final/again quota_remaining.
