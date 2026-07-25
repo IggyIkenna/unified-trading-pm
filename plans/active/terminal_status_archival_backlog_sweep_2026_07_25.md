@@ -156,9 +156,10 @@ For the named doc:
       longer lists it. — unified-trading-pm@d31c02a96 (moved to plans/archive/issues/, banner added,
       check_terminal_status_archived.py confirmed clean; 0/1 referrer repointed, blocked on a pre-existing line-cap
       violation — see Progress Log).
-- [ ] [INFRA] P2. Archive `plans/active/issues/gas_fees_lst_rates_manifest_bucket_mismatch_2026_07_10.md`
+- [x] [INFRA] P2. ✅ Archive `plans/active/issues/gas_fees_lst_rates_manifest_bucket_mismatch_2026_07_10.md`
       (status=resolved, doc_type=issue) per the Procedure below. Done when: `check_terminal_status_archived.py` no
-      longer lists it.
+      longer lists it. — unified-trading-pm@f6ec0a848 (moved to plans/archive/issues/, banner added, 5/5 real path
+      referrers repointed; check_terminal_status_archived.py confirmed clean).
 - [ ] [INFRA] P2. Archive `plans/active/issues/gcs_hive_partition_malformed_paths_remediation_2026_06_01.md`
       (status=superseded, doc_type=issue) per the Procedure below. Done when: `check_terminal_status_archived.py` no
       longer lists it.
