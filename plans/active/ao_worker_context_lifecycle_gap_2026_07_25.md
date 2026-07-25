@@ -348,20 +348,55 @@ mechanism has self-healed every previous check this session, but flagged rather 
 `bf81e6b` live, that is itself a finding worth its own issue doc (recurring `fetch ... failed` on the orchestrator VM,
 not just today's transient one-off).
 
+**2026-07-25 ~06:30 UTC — deploy-currency confirmed + todo 9 correction found and verified sound.** The background poll
+timed out on a literal-sha grep (the FF log only records jump endpoints, not every intermediate commit — a poller design
+flaw, not a deploy problem), so verified directly instead: `git merge-base --is-ancestor bf81e6b HEAD` on the
+orchestrator VM returned true (exit 0), and `bf81e6b` sits at HEAD~9 in the VM's live git log as of the 06:15:01Z
+`ao-self-pull` FF (`54850f6 -> 0db1726`, restart confirmed `ActiveEnterTimestamp` 06:16:14Z). **Deploy currency: YES.**
+
+While verifying, found slot 2 had already landed `agent-orchestrator@54850f6` on top of my todo 9 — correctly identified
+the "2 consecutive reports" grace-window deviation I'd made (see above) as a real gap against this todo's own **Done
+when** text (a directive issued the SAME tick as hitting 98% could kill with zero grace), and closed it properly: added
+`SlotRow.context_directive_grace_reports`, wired it into `_add_missing_columns` in the SAME commit as the ORM column
+(explicitly citing `ca5d10d` to avoid repeating it), and restructured Trigger-4 so the kill check re-evaluates every
+tick instead of once at flag-time (this also fixes a real bug in my original cut: because the kill decision only ran
+inside the `not in self._burn_flagged` guard, a slot whose directive hadn't been issued yet at the exact moment
+suspicion first fired could NEVER be killed later even at 99% with a stale unheeded directive — the guard prevented
+re-entry). Verified independently rather than taking the commit message on faith: pulled the diff, confirmed
+`context_directive_grace_reports` appears in both `orm.py` and `bootstrap.py`'s `_add_missing_columns` list, ran the
+full local test suite (1667 passed) on current HEAD, and checked the live orchestrator's journalctl for the exact
+`no such column` error class that caused `ca5d10d` — none found for the new column (only historical
+`context_directive_ issued` errors, all timestamped 05:33:33, pre-dating today's fix). Todo 9's own evidence line
+(already corrected by slot 2) is accurate; no further edit needed there.
+
+**Separate finding, not caused by this plan's work**: while checking journalctl, found the orchestrator VM under active,
+worsening SQLite connection-pool exhaustion (`QueuePool`/`database is locked`, ~153 occurrences in the prior 2h) —
+already thoroughly root-caused and tracked in
+`plans/active/issues/orchestrator_db_pool_exhaustion_state_poll_stall_2026_07_25.md` (11 occurrences logged, root cause
+identified as `autospawn.py::_do_spawn` holding SQLite's write lock across the ~75s spawn cold-start, fix scoped as 5
+BACKEND todos in that doc). First occurrence there is 02:0x UTC, well before any of today's context-lifecycle shas —
+unrelated to this plan. Not duplicating; flagging here only because it's actively degrading the same fleet and its own
+doc notes the condition is escalating ("if a single window sustains >10 min... crosses into page/operator-action
+territory").
+
 ## Deferred work after 2026-07-25
 
-| Item                                                                                                                          | State              | Blocked on                                                                                          |
-| ----------------------------------------------------------------------------------------------------------------------------- | ------------------ | --------------------------------------------------------------------------------------------------- |
-| Deploy-currency confirmation for `bf81e6b` on the orchestrator VM                                                             | Cannot be done yet | A bounded 20-min background poll is watching; last 2 `ao-self-pull.sh` ticks logged a fetch failure |
-| Todos 5, 6, 7, 11, 12, 13 (worker.md, `last_spawned_at`, anomaly-clock fix, kicker fix, observability, regression test)       | Not done           | Nobody — todos 8/9/10 done this session (shas above); fleet/next session picks up the rest          |
-| Both gated finalize plans (`ao_worker_context_lifecycle_gap_finalize`, `ao_fleet_throughput_incident_finalize`)               | Cannot be done yet | `depends_on` + `gate_on_depends: true` — machine-held until their parent plan's todos are all done  |
-| `ao_fleet_throughput_incident` todo 4 (post-fix live review)                                                                  | Cannot be done yet | Sequential ordering behind todos 1-3 (all done as of this checkpoint)                               |
-| `orchestrator_slots_context_directive_issued_missing_migration_2026_07_25.md` (fleet-filed issue doc, discovered mid-session) | Not done           | Nobody — not investigated this session, flagged here so it isn't missed; not yet read in full       |
-| `branch_quarantine_alert_blind_to_backlog_queue_2026_07_25.md` (fleet-filed, P2)                                              | Not done           | Nobody — filed by slot 12, not yet picked up                                                        |
+| Item                                                                                                                            | State              | Blocked on                                                                                                             |
+| ------------------------------------------------------------------------------------------------------------------------------- | ------------------ | ---------------------------------------------------------------------------------------------------------------------- |
+| Todo 14 — REVIEW: post-deploy live verification against this plan's own root-cause evidence                                     | Not done           | Nobody — todos 1-13 all done as of this checkpoint; this is the only remaining `[REVIEW]`-tagged todo                  |
+| Todo 15 — BACKEND: migration-completeness test (every `SlotRow`/`AgentRow` column present in `bootstrap.py`'s ALTER-TABLE list) | Not done           | Nobody — newly added this session after the same gap bit `slots` twice in one day                                      |
+| Both gated finalize plans (`ao_worker_context_lifecycle_gap_finalize`, `ao_fleet_throughput_incident_finalize`)                 | Cannot be done yet | `depends_on` + `gate_on_depends: true` — machine-held until todos 14 + 15 above also land                              |
+| `ao_fleet_throughput_incident` todo 4 (post-fix live review)                                                                    | Not done           | Sequential ordering behind todos 1-3 (all done) — next in that plan's own queue                                        |
+| `orchestrator_slots_context_directive_issued_missing_migration_2026_07_25.md` (fleet-filed issue doc)                           | Not done           | Nobody — not investigated this session, flagged here so it isn't missed; not yet read in full                          |
+| `branch_quarantine_alert_blind_to_backlog_queue_2026_07_25.md` (fleet-filed, P2)                                                | Not done           | Nobody — filed by slot 12, not yet picked up                                                                           |
+| `orchestrator_db_pool_exhaustion_state_poll_stall_2026_07_25.md` (main-agent-filed, P1, 11 occurrences, escalating)             | Not done           | Nobody — root-caused + 5 BACKEND todos already scoped in that doc; unrelated to this plan, flagged for visibility only |
 
-**Recommended next item**: nothing needs a human right now — the fleet is actively converging on the above in priority
-order via normal AO dispatch, and every merge auto-deploys within ~15 min (confirmed live this session). The only
-genuinely operator-shaped remaining decision was the `context_burn_kill` flip, now resolved above.
+**Recommended next item**: nothing needs a human right now for THIS plan — todos 1-13 are all shipped and confirmed live
+(`bf81e6b` deploy-currency verified 06:16:14Z), the only genuinely operator-shaped decision (`context_burn_kill` flip)
+is resolved, and the fleet is converging on todos 14-15 via normal dispatch. The one item that DOES warrant operator
+attention is outside this plan's scope: `orchestrator_db_pool_exhaustion_state_poll_stall_2026_07_25.md` describes a
+worsening, already-root-caused P1 (SQLite write-lock held across spawn cold-starts) with its own doc explicitly stating
+it may cross into page territory if a window exceeds 10 minutes sustained.
 
 **Lessons this session (would otherwise be re-learned):**
 
