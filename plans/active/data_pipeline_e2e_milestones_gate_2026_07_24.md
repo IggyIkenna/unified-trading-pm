@@ -454,5 +454,6 @@ workspace's own ASK>PARK calibration now that the operator is away. Each row's i
 `BLOCKED-OPERATOR-DECISION` entry (options + recommendation, SUB_AGENT_MANDATORY_RULES escalation format) — this table
 is the single place to scan them all in one pass.
 
-| #   | Question (one line) | Issue doc | Status |
-| --- | ------------------- | --------- | ------ |
+| #   | Question (one line)                                                                                                                                                                                                                                                                       | Issue doc                                                                                             | Status |
+| --- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- | ------ |
+| 1   | Prediction's manifest `data_type=prediction_trades` (2,477 rows, still being written) — retroactively register it as a legitimate 3rd shard-grain variant, or migrate/purge it as a bug? Neither the documented pre-Plan-A legacy shape nor any current codex doc names this exact shape. | `/plans/active/issues/prediction_polymarket_legacy_dual_write_trees_metadata_loss_2026_07_24.md` (Q3) | OPEN   |
