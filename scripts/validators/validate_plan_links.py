@@ -26,6 +26,7 @@ def main() -> int:
         "--plans-dir", type=Path, default=Path(__file__).resolve().parent.parent.parent / "plans" / "active"
     )
     parser.add_argument("--workspace-root", type=Path, default=Path(__file__).resolve().parent.parent.parent.parent)
+    parser.add_argument("--quiet", action="store_true", help="Suppress the OK line on success (failures always print)")
     args = parser.parse_args()
 
     plans_dir: Path = cast(Path, args.plans_dir).resolve()
@@ -119,7 +120,8 @@ def main() -> int:
         for f, link in broken:
             print(f"BROKEN: {f} -> {link}", file=sys.stderr)
         return 1
-    print("OK: No broken links in plans/active/*.md")
+    if not args.quiet:
+        print("OK: No broken links in plans/active/*.md")
     return 0
 
 
