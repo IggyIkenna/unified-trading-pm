@@ -109,7 +109,18 @@ depends_on: []
       via skip-if-fresh — confirmed re-verified before the P0-fix launch: a plain non-`--force` re-run only re-fetches
       genuinely missing dates, so this correctly picks up at ~2026-06-02, not day one); if it fails again with
       exit_code=137 at a similar point, escalate to a memory-tier bump (e.g. e2-standard-8 → e2-highmem-8) rather than
-      blind-retrying a 3rd time on the same shape.
+      blind-retrying a 3rd time on the same shape. — **RE-RELAUNCHED 2026-07-25T23:09Z**: pre-launch verified singleton
+      lock clear (0 af-backfill-_/af-audit-_ RUNNING), the fix commit (`08387531`) confirmed an ancestor of both local
+      HEAD (`a8c0e18e`) and the currently-published instruments-service tarball SHA (`29b61775`, created_at
+      2026-07-25T16:26:50Z) — VM runs fix-safe code even though the launcher separately warned that tarball is stale vs.
+      a newer repo HEAD (unrelated commits from other slots) — and live API-Football `/status` showed 110,630/150,000
+      used (39,362 remaining) today, ample headroom. Launched `af-backfill-20260726-000946` (SPOT, e2-standard-8 — same
+      tier as the prior 137, since only one prior OOM-suspected failure has been observed and root cause was never
+      proven; escalate to e2-highmem-8 only if THIS run also dies 137). Confirmed `RUNNING`; run.log appeared ~2min
+      post-launch showing the clean zero-leak pattern (`Entity-scoped mode: restricting to FIXTURES     only` on every
+      date, no unscoped enrichment fetch lines) while fast-skipping already-captured 2020-08 dates. Terminal outcome not
+      yet known — tracked to completion in the batch2 plan's curated-universe-backfill todo
+      (`/plans/active/sports_satellite_ao_dispatch_batch2_2026_07_24.md`), not re-derived here.
 - [ ] [DATA] P2. Audit whether the earlier 08:12Z quota exhaustion and any other in-flight sports backfills hit the same
       stale-scope-escape (grep run logs for enrichment fetches on `--sports-entity`-scoped runs); if any already-running
       VM is escaping scope, stop it too. Cross-ref
