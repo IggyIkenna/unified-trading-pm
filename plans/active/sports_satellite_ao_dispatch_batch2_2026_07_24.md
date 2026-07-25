@@ -740,9 +740,10 @@ source: >-
       `league_id=<RAW>` rows for migrated shards with no consolidator double-count or row-count inflation; MDPS
       processed surface regenerated under canonical partitions; `is_bookmaker_league_covered("BETFAIR_EX_EU","EPL")`
       flips False→True after the coverage-registry refresh. Source:
-      `issues/sports_league_id_namespace_migration_2026_07_20.md`.
-
-## Deferred (real AO-eligible work, gated on something else — not lost, tracked here)
+      `issues/sports_league_id_namespace_migration_2026_07_20.md`. — **Prep done 2026-07-25T02:42Z (slot 9), launch NOT
+      yet executed** — tarballs re-verified/re-fixed, TOCTOU fix confirmed included, mechanism dry-run-verified correct,
+      ready-to-execute command staged. Full detail + exact next step:
+      `issues/mdps_odds_horizon_bucket_reprocess_launch_prep_2026_07_25.md`.
 
 - **`sports_odds_feature_naming_canonicalization_2026_07_21.md`'s FSS↔ml-service↔strategy-service parity test** — gated
   on all 5 naming-migration todos above landing. Add as a new todo once confirmed shipped.
