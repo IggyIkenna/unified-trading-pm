@@ -14,9 +14,13 @@ description:
   BLOCKED-OPERATOR-DECISION only when nobody is reachable to answer. Also runs a lifecycle + hygiene pass:
   archive fully-done plans (verified, unlocked), flag near-complete plans (<=1 open todo) for consolidation, and leave
   the corpus canonical (prettier + run_hygiene_sweep.sh-green, within line-caps). Plan↔codex drift is in scope and
-  plans→codex SSOT updates are applied ONLY after an explicit operator ruling. Trigger on /plan-reconcile, "reconcile
-  the plans", "plan contradiction audit", "check the plans for contradictions", "flip done-but-unchecked plan items",
-  "archive done plans", "consolidate near-empty plans".
+  plans→codex SSOT updates are applied ONLY after an explicit operator ruling. **Optionally topic-scoped** — invoke as
+  `/plan-reconcile [<tranche>]` across the same 9 tranches `/ag-closeout-audit` uses (`cefi`, `defi`, `tradfi`,
+  `prediction`, `sports`, `cross-cutting`, `ao`, `ci`, `infra`), or `all` (the default with no argument — preserves
+  today's whole-corpus behavior exactly) for smaller, faster sharded runs a scheduled AO trigger can complete
+  reliably. Trigger on /plan-reconcile [<tranche>], "reconcile the plans", "reconcile <tranche>", "plan contradiction
+  audit", "check the plans for contradictions", "flip done-but-unchecked plan items", "archive done plans",
+  "consolidate near-empty plans".
 ---
 
 # /plan-reconcile — plans corpus contradiction audit + reconciliation
@@ -32,6 +36,36 @@ canonical format — prettier-clean, `run_hygiene_sweep.sh`-green, within the li
 Runs against `unified-trading-pm/plans/{active,active/issues,epics}` + normative refs. Codex and archive are out of
 audit scope but ARE valid evidence when adjudicating (a codex SSOT outranks any plan; `plans/archive/` explains dangling
 refs).
+
+## Topic-scoped (sharded) runs — added 2026-07-25
+
+**`all` (no argument) is the default and preserves today's exact whole-corpus behavior — nothing changes for an existing
+unscoped invocation.** Passing a specific tranche narrows the audited corpus for a smaller, faster run, using the SAME
+classification mechanism `/ag-closeout-audit` uses (see that skill's "9 tranches" section for the full mechanism —
+summarized here): the 5 AGs (`cefi`/`defi`/`tradfi`/`prediction`/`sports`) filter on `asset_group` directly;
+`cross-cutting` filters on `asset_group: cross-cutting` + the classification already baked into
+`cross_cutting_consolidated_closeout_2026_07_25.md`'s own Tracks; `ao`/`ci`/`infra` have no dedicated `asset_group`
+value (all 3 stay tagged `cross-cutting`) so their membership is exactly the Sources listed in
+`ao_consolidated_closeout_2026_07_25.md` / `ci_consolidated_closeout_2026_07_25.md` /
+`infra_consolidated_closeout_2026_07_25.md` respectively. The normative refs (`PLAN_FORMAT.md`, `task_template.md`,
+`INDEX.md`, `ACTIVE_INDEX.md`) and codex stay in scope for EVERY shard (they're corpus-wide policy, not tranche-owned).
+
+**Why shard**: this corpus routinely runs 500+ active plans/issues — a full sweep is expensive enough that a
+scheduled/cron AO trigger benefits from a smaller, bounded-runtime shard instead of always paying for the whole corpus.
+Sharding trades completeness-per-run for reliability-per-run; it does not change what counts as a contradiction or a
+false-unchecked todo.
+
+**The real trade-off — cross-tranche contradictions are invisible to a single shard.** A contradiction between a cefi
+doc and a tradfi doc (or between an `ao` doc and a `ci` doc) can only be caught by a run that sees BOTH sides — a
+topic-scoped run genuinely cannot find it. Sharded runs are a good default for routine/scheduled sweeps; an occasional
+`all` run (or a run explicitly covering the 2 tranches in question, if the collision is already suspected) is still
+needed to catch genuinely cross-tranche contradictions. Don't let sharding become the ONLY mode this skill ever runs in.
+
+**Archival caution in a topic-scoped run**: before archiving a doc that looks fully done within the current shard, grep
+the OTHER 8 tranches' consolidated-closeout docs (or their Sources lists) for a reference to it — a doc can be primary
+to one tranche but still cross-referenced from another's Track content (the way this session's cross-cutting Tracks 2/13
+explicitly flag overlap with the cefi/defi closeouts). Archiving it without checking would silently orphan the other
+tranche's reference. When in doubt, leave it and note the cross-reference for a future `all` pass.
 
 ## Modes
 

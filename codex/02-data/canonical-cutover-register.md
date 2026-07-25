@@ -181,8 +181,8 @@ in 3c and must not be conflated with it. Grammar SSOT:
 > uppercase scripts (`instruments-service@555ddf1c` + the tradfi Phase-B script) are **RATIFIED** and their DRAIN-GATED
 > `--apply` freeze is **LIFTED**; defi/other rows not yet folded UP are `migration_pending`, not a fresh non-canonical
 > finding. **Gate**: the honest-coverage harness must be made case-robust BEFORE the migration flips writers — see
-> [`../../plans/active/issues/honest_coverage_harness_instrument_type_case_break_on_d1_migration_2026_07_20.md`](../../plans/active/issues/honest_coverage_harness_instrument_type_case_break_on_d1_migration_2026_07_20.md).
-> The pre-ruling table + "binding consequence" text below is HISTORY — do not act on it.
+> [`../../plans/archive/issues/honest_coverage_harness_instrument_type_case_break_on_d1_migration_2026_07_20.md`](../../plans/archive/issues/honest_coverage_harness_instrument_type_case_break_on_d1_migration_2026_07_20.md)
+> (resolved, archived). The pre-ruling table + "binding consequence" text below is HISTORY — do not act on it.
 >
 > **⛔ DeFi carve-out, 2026-07-24 (operator, `adb28421d`,
 > `plans/active/issues/cross_ag_instrument_type_casing_100pct_directive_2026_07_24.md`) — DeFi is NOT part of the

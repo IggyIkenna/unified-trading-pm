@@ -8,7 +8,10 @@ summary: >-
   actual point of the operator's ask), then follows up with the UI span-cap relabel and the regen-freshness decision.
 status: active
 nature: process
-asset_group: [cross-cutting]
+asset_group:
+  [sports] # corrected 2026-07-25 (ag-closeout-audit orthogonality fix) -- was [cross-cutting], a genuine mistag:
+  # 100% sports-specific (FixturesBrowser.tsx, fixtures_browser.py, sports fixture catalogue), no cross-AG mechanism
+
 stage: [meta]
 repos: [deployment-ui, deployment-api, instruments-service, unified-api-contracts, deployment-service]
 scope: [engineer, admin]

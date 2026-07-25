@@ -6,7 +6,10 @@ summary:
   ~5,900 `attempted_failed` cells are **mostly misclassification, not missing data**:"
 status: open
 nature: process
-asset_group: [cross-cutting]
+asset_group:
+  [sports] # corrected 2026-07-25 (ag-closeout-audit orthogonality fix) -- was [cross-cutting], a genuine mistag:
+  # sports golden-window/FIXTURES/MATCHES/ODDS/XG content, parent_epic is sports_master -- content is sports-only
+
 stage: [meta]
 repos: [deployment-service, instruments-service, market-tick-data-service]
 scope: [engineer, admin]

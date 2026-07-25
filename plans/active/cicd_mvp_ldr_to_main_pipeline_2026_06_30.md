@@ -258,8 +258,15 @@ Phase 1:
       active.
 - [x] [DOCS] P2. ✅ `/codex/08-workflows/ci-cd-flow.md` MVP banner added (gate set + retired-gates note + pointer here);
       full rewrite of the 1208-line body deferred (Phase-3 follow-up below).
-- [ ] [DOCS] P0. Full rewrite of `ci-cd-flow.md` body + the CLAUDE.md "Git discipline + shipping pipeline" section to
-      the MVP (remove the complex-gate prose) — bigger contract edit, for operator review when Ikenna is back.
+- [x] [DOCS] P0. ✅ Full rewrite of `/codex/08-workflows/ci-cd-flow.md` body + the CLAUDE.md "Git discipline + shipping
+      pipeline" section to the MVP. Removed the complex-gate prose; folded the MVP banner into the body; corrected the
+      branch model to LDR→main-DIRECT / staging-DORMANT-reversible; landed the 3-gate promote set
+      (`sit-gate/fleet-green` + `quality-gates-v2` + quickmerge-provenance) as the authoritative contract; documented
+      semver-agent-on-`push:[main]` git-tag minting + the `publish-package` wheel flow; rewrote § "Release tag
+      reconciler" to the corrected model; condensed the dead staging-cascade + 2026-06-01 HISTORICAL snapshot.
+      ci-cd-flow.md 1372→1096 lines; CLAUDE.md 40147 B (< 40 KiB cap). Every fact ground-truth-verified against the live
+      `semver-agent.yml` / `publish-package.yml` / `workspace-manifest.json` / `reconcile_release_tags.py`. Evidence:
+      `unified-trading-pm@b9d0b9209` (docs(codex), PR #1534 → main, v2-gated auto-merge).
 
 ## Phase 4 — semver-agent trigger retarget (completes the shelved D13/Phase-2 retarget; un-shelved 2026-07-25)
 
@@ -320,27 +327,42 @@ Phase 1:
       quickmerge timed out on transient connectivity + sentinel went stale on a concurrent promote/backmerge).
       **End-to-end live verification (tag mint → wheel in AR) is IN PROGRESS** — requires the changes to first promote
       LDR→main (the promote push itself self-activates the new `push:[main]` trigger), tracked in the VERIFY todo below.
-- [ ] [VERIFY] P0. **T0 end-to-end live proof**: after the T0 changes promote LDR→main, confirm the promote push
-      self-activates the new `push:[main]` trigger, semver-agent fires on `unified-trading-library` /
-      `unified-api-contracts` main (`gh run list --workflow semver-agent.yml`), mints a new `vX.Y.Z` tag
-      (`git tag --sort=-creatordate | head`), and `publish-package.yml` publishes a new wheel to Artifact Registry
-      (`gcloud artifacts versions list     --package=unified-trading-library --repository=unified-libraries --location=asia-northeast1     --project=central-element-323112`).
-      If the promotion cadence is too slow to observe in-session, document reasoned-through vs verified-live.
-- [ ] [WORKFLOW] P1. Once T0 is proven, enumerate the remaining `ldr_main` + `version_source=git-tag` repos (23 total)
-      and roll the same retarget fleet-wide via `rollout-workflow-templates.sh` (verify 0 drift after). **Known
-      already-dead-on-staging: `unified-trading-api`** — its deployed `.github/workflows/semver-agent.yml` still
-      triggers on `workflow_run/push:[staging]` (found 2026-07-25; a 3rd git-tag repo whose versioning is still frozen).
-      PM's own copy references staging only vestigially (PM is no-staging by design) — do NOT retarget PM's copy without
-      care.
-- [ ] [DOCS] P1. **Reconcile the stale SSOT contradiction the retarget exposes** (found 2026-07-25):
-      `/codex/08-workflows/ci-cd-flow.md` § "Release tag reconciler" still says "minting is moving to the PM reconciler"
-      (Option B) — but Option B was DECIDED (`/plans/active/issues/post_cutover_silent_assumption_sweep_2026_07_23.md` §
-      "Option B") yet NEVER built, and is architecturally incoherent for git-tag repos
-      (`scripts/cicd/reconcile_release_tags.py` hard-refuses to mint for dynamic-versioned repos — "read the version,
-      mint the matching tag is circular when the tag defines the version"; the script is a STALL DETECTOR whose own
-      message points to semver-agent as the minter). Today's Phase-4 retarget makes **per-repo semver-agent-on-main**
-      the live minter — update ci-cd-flow.md § Release tag reconciler + mark the Option-B doc's F2 minting sub-steps
-      superseded. (Owner-review edit; codex contract change.)
+- [x] [VERIFY] P0. ✅ **T0 end-to-end live proof — FULLY VERIFIED**: found + fixed a SECOND, independent bug blocking
+      the wheel publish (separate from the trigger retarget): the receiving `publish-package.yml` authenticated via
+      `secrets.GCP_SA_KEY_PROD`, a secret that has NEVER existed in this repo (only `GCP_SA_KEY` +
+      `WORKLOAD_IDENTITY_PROVIDER` do, confirmed via `gh secret list`) — every dispatch through this workflow since its
+      creation 2026-03-13 failed auth before checkout. Found via a real `unified-trading-library` publish-package FAILED
+      Slack alert. Fixed (PM, promoted to main via PR #1527) + re-dispatched UTL's v0.57.0 manually
+      (`repository_dispatch`, since `gh run rerun` replays the OLD pre-fix workflow definition — GH Actions always
+      re-runs from the default branch's copy, not LDR). **Result: `unified-trading-library` v0.57.0 is genuinely
+      published** (`gcloud artifacts versions list` shows `createTime: 2026-07-25T21:06:19Z`) — the first real publish
+      since 2026-06-27. UAC's re-dispatch of v0.72.0 correctly 400'd (that version already existed pre-outage,
+      2026-06-27T14:45:13Z — Artifact Registry's immutability is working as intended, not a bug). Also found + fixed a
+      THIRD gap while verifying: `notify-slack.yml`'s carrier suppresses a routine INFO/success post unless
+      `recovery: true` is set, so a successful publish was silently invisible in Slack even though it worked — added
+      per-repo recovery tracking to `publish-package.yml` (mirrors the same-day `cloud-build-failure-watcher.yml` fix),
+      shipped + promoted to main (PR #1530).
+- [x] [WORKFLOW] P1. ✅ **Fleet rollout COMPLETE — all 22 `ldr_main` + `version_source=git-tag` repos retargeted** (T0's
+      2 + 20 more, incl. `unified-trading-api` and `ibkr-gateway-infra`, both flagged as never-touched during the
+      rollout and handled explicitly). Rolled via a Workflow-tool fan-out (partial API-529 disruption mid-run, recovered
+      by direct verification + manual shipping of the remainder). Every repo confirmed via `git log` sha +
+      `git rev-list --count origin/live-defi-rollout..HEAD == 0`: agent-orchestrator `e609d388`, alerting-service
+      `908fea1e`, deployment-api `98c45a16`, batch-live-reconciliation-service `330b5d9e`, execution-service `5dacebcb`,
+      ml-service `b193c0c4`, market-data-processing-service (confirmed), trading-agent-service `1f9f85d5`,
+      unified-trading-api `50fde389`, strategy-service `856dc904`, ibkr-gateway-infra `fe089c2c` (hand-generated via
+      repo-name resubstitution from an already-correct copy, since `rollout-semver-agent.sh` doesn't handle git-tag
+      repos and the rollout Workflow never reached it), e2e-testing `846fafaf` (was blocked on execution-service +
+      strategy-service's own dirty trees clearing first — a real cross-repo dependency-cleanliness pre-flight, not a
+      bug), instruments-service `96fa543d`, features-service `9ef34516`, market-tick-data-service `d1b4f9b3`. 0 drift, 0
+      fleet regressions.
+- [x] [DOCS] P1. ✅ **Reconciled the stale SSOT contradiction the retarget exposed** (found 2026-07-25):
+      `/codex/08-workflows/ci-cd-flow.md` § "Release tag reconciler" no longer says "minting is moving to the PM
+      reconciler" (Option B). Rewrote it to state **semver-agent-on-`push:[main]` is the live minter** and
+      `scripts/cicd/reconcile_release_tags.py` is a STALL DETECTOR / backstop — confirmed by reading the script: it
+      hard-refuses to mint for dynamic-versioned repos ("read the version, mint the matching tag" is circular once the
+      tag defines the version) and its own STALL message names semver-agent as the minter. Added an explicit in-doc
+      "Correction (2026-07-25)" superseding the Option-B claim + the Option-B doc's F2 minting sub-steps. Evidence:
+      `unified-trading-pm@b9d0b9209` (same docs(codex) ship as the Phase-3 rewrite above, PR #1534 → main).
 - [ ] [VERIFY] P2. Confirm `instruments-service` (and any other real consumer, not just the local-path CI build) picks
       up the newly-published wheel where it matters (a real deployed image / Docker build, not just local-path CI).
 
@@ -375,6 +397,41 @@ Phase 1:
 
 ## Progress Log
 
+- 2026-07-25 (Phase 3 + Phase 4 DOCS — ci-cd-flow.md + CLAUDE.md rewritten to the MVP, `/autonomous`): Full rewrite of
+  `/codex/08-workflows/ci-cd-flow.md` (1372→1096 lines) + the CLAUDE.md "Git discipline + shipping pipeline" section,
+  correcting the pervasive stale "LDR→staging→main default" framing to **LDR→main-DIRECT / staging-DORMANT-reversible**.
+  Landed the 3-gate promote contract (`sit-gate/fleet-green` + `quality-gates-v2` + quickmerge-provenance); added a new
+  § documenting semver-agent-on-`push:[main]` (git-tag mint, no `chore(release)` commit) + the per-repo
+  `publish-package` dispatcher → PM receiver → Artifact Registry (`unified-libraries`, `asia-northeast1`, `git describe`
+  = authoritative wheel version) flow; rewrote § "Release tag reconciler" to the CORRECTED model (semver-agent-on-main =
+  live minter; `reconcile_release_tags.py` = stall detector, NOT the decided-but-never-built Option-B PM minter, which
+  is architecturally incoherent for git-tag repos); marked label-check / SIT-combination-digest / dep-order as
+  retired/advisory; condensed the dead staging-cascade + 2026-06-01 HISTORICAL snapshot. **Every asserted fact
+  ground-truth-verified against the LIVE configs**: `semver-agent.yml` trigger = `push:[main]` (UTL + `.tmpl`);
+  `publish-package.yml` auth = `GCP_SA_KEY`, AR = `unified-libraries`/`asia-northeast1`; `workspace-manifest.json`
+  `staging_dormant_mode:true`, 24 `ldr_main` + PM = 0-through-staging, 23 `version_source=git-tag`;
+  `pin_branch_protection_rulesets.py` requires `sit-gate/fleet-green` on `ldr_main` repos only;
+  `reconcile_release_tags.py` hard-refuses to mint for dynamic repos — no contradiction with the prompt found. CLAUDE.md
+  kept under its 40 KiB byte cap (40147 B). Shipped `unified-trading-pm@b9d0b9209` (docs(codex), PR #1534 → main,
+  v2-gated auto-merge); flipped the Phase-3 [DOCS] P0 + Phase-4 [DOCS] P1 checkboxes above. (One benign side-effect:
+  quickmerge's autostash swept a concurrent session's issue-archival file-add [`audit_cron_slack_alerting…`] into the
+  codex commit; the foreign session's own follow-up commit `3fe8a8bf4` completed the archival, so it converged correctly
+  — no duplicate.)
+- 2026-07-25 (Phase 4 — FLEET COMPLETE + F2 fully closed, `/autonomous`): Finished what the two prior entries left open.
+  (1) Fleet rollout: all 22 `ldr_main`+git-tag repos now retarget staging→main (see the [WORKFLOW] P1 checkbox above for
+  the full sha list) — the version-tagging mechanism is live fleet-wide, not just T0. (2) Found + fixed a SECOND real
+  bug the T0 proof surfaced: `publish-package.yml`'s GCP auth referenced a secret (`GCP_SA_KEY_PROD`) that never existed
+  — every wheel-publish dispatch had been failing since 2026-03-13, independent of the trigger-retarget bug. Fixed +
+  confirmed **`unified-trading-library` v0.57.0 genuinely published to Artifact Registry** (first real publish since
+  2026-06-27) — full chain (mint → dispatch → auth → build → publish) proven live end-to-end, not just reasoned-through.
+  (3) Found + fixed a THIRD gap: successful publishes were silently suppressed in Slack (carrier requires
+  `recovery: true`); added per-repo recovery tracking. (4) Found a SEPARATE, independent outage while verifying
+  wheel-consumers: 5 real Cloud Build failures (client-reporting-api, market-data-processing-service,
+  trading-agent-service, alerting-service, fund-administration-service) — these don't consume the Python wheel at all;
+  they run from a pre-built Docker BASE IMAGE with an old UTL version baked in, and the
+  base-image-rebuild+digest-fan-out mechanism (`update-dependency-version.yml`) is a THIRD, separate process from both
+  the tag-mint and the wheel-publish — delegated to a sub-agent, tracked as its own thread (not a Phase-4 blocker; Phase
+  4's scope is the version-tagging mechanism, which is now fully fixed and fleet-wide).
 - 2026-07-25 (Phase 4 — LIVE end-to-end verification): The retargeted mechanism is **proven live**. UAC's change
   promoted LDR→main, and the promote push (`chore(promote): LDR → main (Option-B direct)`) **self-activated the new
   `push:[main]` trigger** — semver-agent fired on `unified-api-contracts` main at 2026-07-25T20:01:24Z (run

@@ -456,7 +456,8 @@ stalls forever or migrates something it had no mandate to touch.
   during the `migration_pending` window; **(3)** enforces UPPERCASE only POST-migration. Defi/other rows not yet folded
   UP are `migration_pending`, not a fresh finding. **Gate**: the honest-coverage harness must be made case-robust BEFORE
   the migration flips writers —
-  `plans/active/issues/honest_coverage_harness_instrument_type_case_break_on_d1_migration_2026_07_20.md`.
+  `plans/archive/issues/honest_coverage_harness_instrument_type_case_break_on_d1_migration_2026_07_20.md` (resolved,
+  archived).
 - **O3 — defi flat `LENDING` instrument_type. ✅ RULED 2026-07-20 (operator ruling D2 — full retire is the TARGET, NOT
   yet implemented).** `cross-asset-canonical-target-ssot.md` §5's "`LENDING` is RETIRED (A_TOKEN/DEBT_TOKEN split)" is
   the correct TARGET, but the first attempt was **reversed in code** because it broke 5+ (really 8) MTDS lending writers

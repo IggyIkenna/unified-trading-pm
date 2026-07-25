@@ -12,7 +12,7 @@ summary: >
   new, not-yet-done work — appending an open item to an archived doc would recreate the exact dual-tracking anti-pattern
   `/codex/11-project-management/issue-doc-lifecycle.md` exists to prevent. Not yet implemented — this doc was filed as
   part of a `/pre-compact` context checkpoint, before implementation started.
-status: open
+status: resolved
 nature: notes
 asset_group: [meta]
 stage: [meta]
@@ -37,11 +37,18 @@ assigned_role: infra
 drift_direction: advance-code
 last_updated: 2026-07-25
 locked_by:
-resolved_by:
+resolved_by: >-
+  agent-orchestrator@0643c1f (wrapper + slack.py + dedup_state), unified-trading-pm@804191951 + @27abe3155
+  (enable_slack_alerts.sh generalization + operator-credential fix). Both timers verified live at 15-min cadence; both
+  units' webhook env verified live via `systemctl show`; transition logic verified via 10 passing regression tests.
 depends_on: []
 ---
 
 # Tighten audit-cron cadence to 15 min + add open/close Slack alerting
+
+> **✅ ARCHIVED 2026-07-25 — RESOLVED.** Both todos shipped in the same session that filed this doc: cadence tightened
+> to 15 min (verified live via `systemctl list-timers`), and the open/close Slack notifier built + wired + verified (10
+> passing regression tests + live webhook-env confirmation on the VM). See each todo's evidence line below.
 
 ## What's needed
 
@@ -81,15 +88,25 @@ The operator's follow-up instruction, given the low runtime, is:
 
 ## Todos
 
-- [ ] [INFRA] P2. **Change both timer cadences to 15 min** (`OnUnitActiveSec=900`) in
-      `scripts/audit-stale-gate-references.timer` + `scripts/audit-false-done.timer`, re-run
-      `scripts/install-audit-crons.sh --operator ubuntu --start` on the live VM (`i-0c9b283b31d6b5ca7`) to pick up the
-      change, and verify via `systemctl list-timers` that the new cadence is live. Done-when: both timers show a ≤15-min
-      `LEFT` value in `systemctl list-timers` after the next tick.
-- [ ] [INFRA] P2. **Build the open/close Slack notifier wrapper** per the design notes above (reuse the existing
-      dedup-by-state-transition + webhook pattern from `agent-orchestrator-alerting.md`/`slack.py` — do not invent a
-      parallel mechanism). Wire it as the `ExecStart` for both `.service` units (or a shared wrapper script both call)
-      so a state-transition fires the appropriate Slack message; ship with a regression test exercising the 0→nonzero,
-      nonzero→nonzero (no page), and nonzero→0 transitions. Done-when: a synthetic forced-finding run pages once on
-      first detection, stays silent on a repeat detection, and posts a ✅ CLOSE the tick it's cleared — verified live or
-      via a constructed test, not just code-reviewed.
+- [x] [INFRA] P2. ✅ **Change both timer cadences to 15 min** (`OnUnitActiveSec=900`) in
+      `scripts/audit-stale-gate-references.timer` + `scripts/audit-false-done.timer` — `agent-orchestrator@0643c1f`.
+      Re-ran `scripts/install-audit-crons.sh --operator ubuntu --start` on the live VM (`i-0c9b283b31d6b5ca7`).
+      **Evidence**: live `systemctl list-timers` (2026-07-25 22:52 UTC) shows both timers with `LEFT 12min` off a
+      `LAST ... 2min 53s ago` tick — matches the 15-min cadence exactly.
+- [x] [INFRA] P2. ✅ **Built the open/close Slack notifier wrapper** — `agent-orchestrator@0643c1f`
+      (`scripts/orchestrator/audit_cron_notify.py` + 4 new `notify_audit_*_breach`/`_resolved` functions in
+      `server/notifications/slack.py` + 2 new bool-sentinel paths in `server/dedup_state.py`, reusing the existing
+      dedup-by-state-transition + webhook pattern — no parallel mechanism invented) + `unified-trading-pm@804191951` and
+      `@27abe3155` (generalized `enable_slack_alerts.sh` to wire the webhook into the two new systemd units, fixing a
+      real root-vs-operator-credential mismatch discovered live: the VM's root instance-role lacks
+      `secretsmanager:GetSecretValue` on this secret, so the script now runs as the operator user with internally
+      `sudo`-prefixed privileged writes, mirroring `install-audit-crons.sh`'s identical pattern). Both `.service` units'
+      `ExecStart` now routes through the wrapper (`--audit stale-gate-references` / `--audit false-done`). **Verified
+      via a constructed test** (10 passing cases in `tests/test_audit_cron_notify.py` +
+      `tests/test_slack_notifications.py`, exercising 0→nonzero fires-breach-once, nonzero→nonzero silent, nonzero→0
+      fires-resolved-once, a full 4-tick lifecycle sequence, and a malformed-child-output crash path that deliberately
+      does NOT page) **and confirmed live**: `systemctl show <unit> --property=Environment` on the VM confirms
+      `AGENT_ORCHESTRATOR_SLACK_WEBHOOK` is now genuinely present for both units (was previously absent — the units' own
+      `EnvironmentFile=.env.local` line never carried it, a gap this work also closed). Did not fire a synthetic test
+      page into the live `agent-orchestrator-alerts` channel — the constructed-test coverage plus the live env-var
+      confirmation already meet this todo's done-when, and the channel is shared/human-monitored.

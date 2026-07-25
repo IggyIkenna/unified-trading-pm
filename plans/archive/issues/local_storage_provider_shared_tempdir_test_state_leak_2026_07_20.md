@@ -10,7 +10,7 @@ summary:
   MTDS quality gate (3 rebuild_defi_manifest dry-run tests), blocking every MTDS agent from committing. Production code
   was correct; the failure was purely leaked machine-local test state. Fix is per-test isolation (tmp_path) so a suite
   cannot observe another suite's objects.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [data]
@@ -32,7 +32,7 @@ depends_on: []
 locked_by:
 locked_since:
 assigned_vm:
-resolved_by:
+resolved_by: sub-agent, 2026-07-25 — unified-trading-library@8f0d6e8f02349244681346207c80da378e8ce0d4
 ---
 
 # P3 — `LocalStorageProvider` shares ONE temp root across every test, so state leaks between unrelated suites
@@ -106,3 +106,36 @@ Regression: a test asserting that two providers built in different tests cannot 
 Do **not** address this by loosening `ManifestConsolidatorStaleError` or setting `MANIFEST_ALLOW_STALE_FALLBACK=true` in
 the test env. The fail-closed is correct and load-bearing (it prevents an OOM-prone per-VM shard merge and the CF-11
 corpus drop); the bug is that tests fabricate the condition that trips it.
+
+## Resolution (2026-07-25)
+
+Shipped the "Alternative" fix from the Suggested-fix list above — an autouse fixture that redirects the default root,
+keeping every existing call site unchanged — in `unified-trading-library@8f0d6e8f02349244681346207c80da378e8ce0d4`:
+
+- `unified_trading_library/cloud_interface/providers/local.py`: factored the fallback-root computation out of
+  `LocalStorageProvider.__init__` into a module-level `_default_local_storage_root()` function. Behaviour is
+  byte-for-byte identical outside tests (`f"{tempfile.gettempdir()}/local-storage"`) — this only creates a
+  monkeypatchable seam; the real runtime default used by `factory.py`'s `local` provider path is untouched.
+- `tests/conftest.py`: added an autouse fixture, `_isolate_local_storage_provider_default_root`, that monkeypatches that
+  seam to `str(tmp_path / "local-storage")` for the duration of each test. Any `LocalStorageProvider()` constructed with
+  **no** explicit `base_dir` anywhere in unified-trading-library's test suite (~6500+ tests) now lands in that test's
+  own isolated `tmp_path` instead of the shared, never-torn-down host-global root — no call-site changes required, and
+  the redirect only affects this one seam (not the global `tempfile.gettempdir()`), so it can't perturb unrelated tests
+  that use `tempfile.gettempdir()` for other purposes (verified: none of the existing `gettempdir()`-asserting tests
+  reference `LocalStorageProvider`'s default root).
+- `tests/cloud_interface/unit/test_local_storage_provider_test_isolation.py` (new): the requested regression — proves
+  two independent test contexts constructing a bare `LocalStorageProvider()` (no `base_dir`) never observe each other's
+  state (one test writes at the default root and asserts it landed under `tmp_path`, not the real shared root; a second,
+  independent test asserts the first test's write is invisible), plus a direct class-level check that two
+  explicitly-different-rooted providers never cross-see each other's objects.
+
+Verified: `bash scripts/quality-gates.sh --no-fix` green in unified-trading-library (lint, full test suite across all
+`PYTEST_UNIT_DIR` families, 0 basedpyright errors/warnings, codex compliance) before shipping via
+`quickmerge.sh --agent`.
+
+Scope note: this repo's fix only covers unified-trading-library's own test suite (and any other repo whose tests import
+UTL's `tests/conftest.py`, which none do — conftest.py is per-repo). MTDS's own concrete trigger
+(`test_rebuild_defi_manifest_dry_run.py`) was already independently isolated by mocking `read_availability_index` in
+that repo (see the related, already-archived `mtds_qg_red_rebuild_defi_manifest_missing_index_2026_07_20`), so no
+further MTDS-side change was required to close this ticket. A repo-agnostic (e.g. shared pytest-plugin) version of this
+guard for every other consumer repo is a separate, not-yet-scoped follow-up if the leak recurs elsewhere.

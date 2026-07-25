@@ -27,6 +27,7 @@ related:
   [
     /plans/archive/migration_verification_orphan_safety_2026_06_10.md,
     /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
+    /plans/active/prediction_consolidated_closeout_2026_07_18.md,
   ]
 created: "2026-07-24"
 parent_epic: manifest_master

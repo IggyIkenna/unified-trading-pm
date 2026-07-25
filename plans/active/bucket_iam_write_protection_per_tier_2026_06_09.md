@@ -177,6 +177,25 @@ Two independent gates because Group A and Group B are at different stages:
 > enumerate the actual Group A bucket names, verify the proposed `*-dev-*`/`*-stg-*`/`*-prd-*` CEL conditions match them
 > exactly, then author + apply P1.1-P1.3 with that verification in hand. Not done here to avoid shipping an unverified
 > IAM change to the project's primary write identity.
+>
+> **🟢 Bucket enumeration RESOLVED 2026-07-25** — operator ran
+> `gcloud storage buckets list --project=central-element- 323112` personally (ADC, `ikenna@odum-research.com`). **The
+> `*-dev-*`/`*-stg-*`/`*-prd-*` three-tier assumption above is WRONG for Group A** — real bucket names are TWO-TIER,
+> `-test-`/`-prd-` only, no `-dev-`/`-stg-` suffix anywhere in this family:
+>
+> - `market-data-tick-{cefi,defi,pred,sports,tradfi}-{prd,test}-central-element-323112` (10 buckets)
+> - `instruments-store-{cefi,defi,pred,sports,tradfi}-{prd,test}-central-element-323112` (10 buckets)
+> - `features-calendar-{prd,test}-central-element-323112` (2 buckets, not per-AG)
+>
+> The only buckets using spelled-out `dev`/`staging`/`prod` naming are a DIFFERENT family entirely —
+> `uts-{dev,staging,prod}-deployment-state` — not in scope for Group A's per-tier SA bindings. **P1.1-P1.3's CEL
+> conditions must target `-test-`/`-prd-` for the market-data-tick/instruments-store/features-calendar families, NOT
+> `-dev-`/`-stg-`, or the conditions will silently match zero buckets.** This corrects, not just unblocks, the Phase-1
+> premise — re-derive the per-tier SA design (§ Open design decisions above) against this real naming before authoring
+> terraform: a `uts-dev-sa`/`uts-stg-sa` split may not even apply to Group A if there is no `-dev-`/`-stg-` tier for it
+> to bind to; the real distinction here is `-test-` (ephemeral/CI) vs `-prd-` (live). Terraform authoring (P1.1-P1.3) is
+> now genuinely unblocked on the listing gap, but still needs this re-derivation pass before it's ready to apply — not
+> done in this update.
 
 - [ ] [TERRAFORM] P1.1. Define per-tier SAs (`uts-dev-sa`, `uts-stg-sa`, `uts-prd-sa`) + a dedicated **migration SA**
       (`uts-migration-sa`, cross-tier write — the sanctioned exception, used only by

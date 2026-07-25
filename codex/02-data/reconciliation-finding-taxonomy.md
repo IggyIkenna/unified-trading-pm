@@ -581,7 +581,8 @@ re-opening a settled ruling.
 >
 > **Gate (blocking).** The honest-coverage harness MUST be made case-robust BEFORE the migration flips writers, or the
 > flip breaks it:
-> `plans/active/issues/honest_coverage_harness_instrument_type_case_break_on_d1_migration_2026_07_20.md`.
+> `plans/archive/issues/honest_coverage_harness_instrument_type_case_break_on_d1_migration_2026_07_20.md` (resolved,
+> archived).
 >
 > **Scope correction (2026-07-24, `data_pipeline_e2e_milestones_gate_2026_07_24.md` §2): defi is OUT of the D1/C2a
 > UPPERCASE-migration population.** The "mixed on disk — defi both cases present" measurement above should NOT be read

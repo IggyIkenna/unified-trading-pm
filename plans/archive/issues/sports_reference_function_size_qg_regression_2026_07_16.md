@@ -144,7 +144,7 @@ current `scripts/quality-gates.sh` comment block (lines ~191-200) documents this
 active exclusion entry today.
 
 **New finding, flagged not fixed (outside this doc's 4 assigned files)**: this issue is a near-exact duplicate of
-`plans/active/issues/instruments_service_codex_compliance_ceiling_drift_2026_07_20.md`, which documents the identical 3
+`plans/archive/issues/instruments_service_codex_compliance_ceiling_drift_2026_07_20.md`, which documents the identical 3
 functions with the identical line counts (89L/205L/253L) as a "regrowth by 2026-07-20." Both were resolved by the same
 `ac22305c` commit, but that other doc's `status:` is still `open` and its `resolved_by:` is still blank as of this
 re-triage — it was not in this agent's assigned slice so it was left untouched, but it should be re-triaged/closed too.

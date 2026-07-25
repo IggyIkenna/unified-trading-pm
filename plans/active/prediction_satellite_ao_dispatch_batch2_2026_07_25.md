@@ -97,22 +97,24 @@ drift_direction: advance-code
       106-row (0.014%) residual (`prediction` singular + `None`) is still accurate today. **Do NOT run**
       `canonicalize_prediction_manifest_2026_07_18.py --remove-stragglers --apply` against the 4,001-row lowercase
       `prediction_market` tail — converting THAT casing is the actual D1 migration, and it stays blocked on the still-
-      open harness-compatibility gate
-      (`plans/active/issues/honest_coverage_harness_instrument_type_case_break_on_d1_migration_2026_07_20.md`, status:
-      open, all 4 todos unchecked as of this re-check) — applying it now would race that gate. Repo:
-      market-tick-data-service (`availability_index.parquet`, read-only). **Resolution note**: this is
-      `prediction_phase_ab_residuals_2026_07_24.md`'s item 9, excluded from batch1 for conflicting with
-      `prediction_consolidated_closeout_2026_07_18.md`'s "instrument_type casing gap to literal 100%" framing. Re-check
-      finds that framing (its "Distinct Values" section, lines 213-215: "`prediction_market` (lower) 4,001 (0.54%, **C2a
-      REFUSED** — unruled axis, no migration proposed)") is ITSELF stale — the codex SSOT it should have cited documents
-      C2a was RULED (not refused) the SAME day (2026-07-20) it measured this census. The conflict clears by evidence
-      (the "other side" is a provably-superseded claim), but the original item-9 done-when ("literal 0 non-canonical
-      rows") is narrowed here to the case-insensitive standard the ruling actually mandates, to avoid extracting a
-      migration-execution step that's still gated shut elsewhere. **Done when**: a fresh case-insensitive live read's
-      malformed-row count + timestamp is recorded in `prediction_phase_ab_residuals_2026_07_24.md`'s Progress Log, and
-      its item-9 checkbox (lines 276-286) is flipped `[x]` if the count is 0 or explained if non-zero — citing the read,
-      never re-citing either historical (2026-07-19 or 2026-07-20) snapshot as current. Source:
-      `prediction_phase_ab_residuals_2026_07_24.md` (item 9).
+      open D1 migration-sequencing gate for this specific `--apply`
+      (`plans/archive/issues/honest_coverage_harness_instrument_type_case_break_on_d1_migration_2026_07_20.md` —
+      **UPDATE 2026-07-25: that issue's harness-compatibility fix has since SHIPPED + is resolved/archived**
+      (`instruments-service@867b68f6`, all 4 todos done) — the harness-compatibility precondition is now MET; any
+      remaining hold on running this `--apply` is a separate D1-migration-execution decision, not this gate) — applying
+      it now would still need that separate sign-off. Repo: market-tick-data-service (`availability_index.parquet`,
+      read-only). **Resolution note**: this is `prediction_phase_ab_residuals_2026_07_24.md`'s item 9, excluded from
+      batch1 for conflicting with `prediction_consolidated_closeout_2026_07_18.md`'s "instrument_type casing gap to
+      literal 100%" framing. Re-check finds that framing (its "Distinct Values" section, lines 213-215:
+      "`prediction_market` (lower) 4,001 (0.54%, **C2a REFUSED** — unruled axis, no migration proposed)") is ITSELF
+      stale — the codex SSOT it should have cited documents C2a was RULED (not refused) the SAME day (2026-07-20) it
+      measured this census. The conflict clears by evidence (the "other side" is a provably-superseded claim), but the
+      original item-9 done-when ("literal 0 non-canonical rows") is narrowed here to the case-insensitive standard the
+      ruling actually mandates, to avoid extracting a migration-execution step that's still gated shut elsewhere. **Done
+      when**: a fresh case-insensitive live read's malformed-row count + timestamp is recorded in
+      `prediction_phase_ab_residuals_2026_07_24.md`'s Progress Log, and its item-9 checkbox (lines 276-286) is flipped
+      `[x]` if the count is 0 or explained if non-zero — citing the read, never re-citing either historical (2026-07-19
+      or 2026-07-20) snapshot as current. Source: `prediction_phase_ab_residuals_2026_07_24.md` (item 9).
 - [ ] [AGENT] P1. **Predictions MTDS `canonical_question_group` completion-% slice** — compute per-
       (canonical_question_group, day) completion % against the live manifest's `prediction_canonical_question_group`
       bundle rows

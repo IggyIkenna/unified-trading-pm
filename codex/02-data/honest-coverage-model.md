@@ -52,9 +52,10 @@ referenced_by:
     /codex/06-coding-standards/data-status-endpoint-contract.md,
     plans/archive/issues/cefi_layer1_denominator_gaps_2026_07_03.md,
     plans/active/issues/honest_coverage_uac_writer_matrix_reconciliation_2026_06_29.md,
+    plans/archive/issues/honest_coverage_harness_instrument_type_case_break_on_d1_migration_2026_07_20.md,
   ]
 owner:
-last_reviewed: 2026-06-29
+last_reviewed: 2026-07-25
 code_refs:
 ---
 
@@ -158,6 +159,33 @@ projection:
 `instrument_type` (the v1 harness only read `[capture_status, venue, data_type, date]` — adding `instrument_type` is the
 core Phase-2 read change). Bounded-column reads remain mandatory (the cefi index is ~tens-of-millions of rows; loading
 the full frame OOM-kills the VM).
+
+> **`migration_pending` window (2026-07-25 — case-robustness fix, D1 gate).** The statement above is TODAY's reality:
+> the column is **lowercase** at the writer grain right now. The D1 ruling (2026-07-20,
+> `/codex/02-data/cross-asset-canonical-target-ssot.md` §7/§11) makes the **target** canonical manifest
+> `instrument_type` COLUMN **UPPERCASE**. These are the same column at two different points on the migration timeline,
+> not a contradiction to resolve by flipping this doc — flipping to UPPERCASE now would break the harness against
+> today's lowercase data. The harness is made **case-robust across the migration** instead:
+>
+> - **Layer-1** (`instruments-service/scripts/check_enumeration_completeness.py` `_canon_instrument_type` /
+>   `_canon_key`) already normalises case (`.strip().lower()`) on BOTH the EXPECTED (UAC) and ENUMERATED (manifest)
+>   sides before intersecting — this predates this note (`honest_coverage_uac_writer_matrix_reconciliation`, 2026-06-29)
+>   and is regression-tested (`test_case_fold_instrument_type`,
+>   `TestAlignmentNotArtifact.test_uppercase_manifest_matches_lowercase_expected`). The cefi Layer-2 MVP read-time gate
+>   (`filter_manifest_to_expected`) delegates to the same `_canon_key`, so it is case-robust too.
+> - **Layer-2 drill-down projections** (`by_venue_instrument_type` / `by_venue_instrument_type_data_type` in
+>   `instruments-service/scripts/measure_honest_coverage.py`) read the manifest directly and did NOT go through that
+>   normaliser — a raw groupby on `instrument_type` would silently SPLIT a shard whose history spans both the lowercase
+>   and UPPERCASE spelling (a real risk during the migration cutover window) into two cells, making a fully-covered
+>   shard look partially/newly uncovered from a case artifact alone. Fixed 2026-07-25: these projections now GROUP on a
+>   case-folded `instrument_type` (`_casefold_instrument_type_series`) while still DISPLAYING the raw, as-written casing
+>   (`_representative_instrument_type`) — merging counts across case variants without hiding the raw spelling from
+>   downstream consumers that deliberately read it (e.g. deployment-api's distinct-values drift panel, which
+>   case-sensitively tracks the cefi/tradfi in-flight uppercase migration on purpose).
+> - Sequencing: this normalisation landed BEFORE the D1 `instrument_type`-column migration is allowed to flip any writer
+>   or rewrite history — see
+>   `plans/archive/issues/honest_coverage_harness_instrument_type_case_break_on_d1_migration_2026_07_20.md` (gate;
+>   resolved, archived).
 
 ---
 

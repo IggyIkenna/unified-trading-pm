@@ -1,0 +1,139 @@
+---
+doc_type: issue
+title: Slot stuck task-less on stale spawn_base_role — /done one_shot_complete rejected, self-heal impossible
+summary:
+  A slot whose SlotRow.spawn_base_role is a stale typed-agent craft (e.g. "cicd") with no matching live AgentRow loops
+  forever reporting status=working with task=null — boot_slot's task-less-one-off branch never clears it, and
+  _done_one_off's one_shot_complete rejects because no AgentRow exists to archive; only a normal task dispatch clears
+  spawn_base_role, which cannot happen while the slot is misrouted into the one-off branch.
+status: open
+nature: issue
+asset_group: [meta]
+stage: [meta]
+repos: [agent-orchestrator]
+scope: [engineer]
+tags: [orchestrator, slot-lifecycle, spawn_base_role, one-shot, self-heal]
+related: []
+created: 2026-07-25
+parent_epic: agent_operating_framework_master
+assigned_vm: planning
+execution_scope: NA
+priority: P2
+estimate_class: refactor
+source: slot-2 boot investigation, discovered live 2026-07-25
+resolved_by:
+locked_by:
+drift_direction: advance-code
+depends_on: []
+---
+
+## What I found
+
+Slot 2 (this session, spawned by the orchestrator as a respawn after a predecessor went stuck >15 min) booted and hit
+`428 boot requires read confirmation` demanding `unified-trading-pm/agents/cicd.md` — i.e. `SlotRow.spawn_base_role` for
+slot 2 was already `"cicd"` before this session ever POSTed `/boot`. After reading `cicd.md` and re-booting, the
+response was:
+
+```json
+{ "task": null, "dispatch_reason": "one-off cicd booted — no backlog task; slot held working (not idle)" }
+```
+
+But `GET /api/escalations/active` → `[]` and `GET /api/repo-blockers` → `{"open": []}` — there is no live CI/CD wall for
+this slot to resolve. Per `agents/cicd.md`'s one-shot contract ("Complete then stop"), I POSTed:
+
+```json
+POST /api/slots/2/done {"task_id": "", "sha": "", "evidence": "...", "one_shot_complete": true}
+```
+
+which was rejected:
+
+```json
+{"detail": "one_shot_complete on slot 2 but no active agent owns its session 'orch-slot-2' —
+a Class-A worker must /done with a task_id."}
+```
+
+Root cause (read `server/routes/slots_worker.py` + `server/state_store/slots.py`):
+
+- `boot_slot` treats a task-less slot as a "typed one-off" purely off `SlotRow.spawn_base_role`
+  (`server/routes/slots_worker.py:249-269`) and holds it `status="working"` (not idle) — by design, so idle-reaper
+  scanners skip it.
+- `_done_one_off` (`server/routes/slots_worker.py:718`) requires a live `AgentRow` with
+  `lifecycle in ("one_shot", "scheduled")` tied to the slot's tmux session before it will archive + free the slot. If
+  that AgentRow was already archived/never created (e.g. the predecessor session that originally claimed this slot as a
+  cicd escalation died/was killed and its AgentRow got cleaned up, OR the watchdog respawn never re-ran
+  `claim_slot_for_typed_agent`), there is nothing for `_done_one_off` to find.
+- `spawn_base_role` is ONLY cleared by `assign_task_to_slot` (`server/state_store/slots.py`, comment ~line 100: "clear
+  any spawn_base_role a PRIOR typed-agent occupant left behind"), which runs ONLY when `pick_next_task` actually
+  dispatches a normal backlog task to this slot. If no normal task is currently dispatchable to this slot (true right
+  now — all 17 queued backlog tasks are blocked by prereqs/collisions per `pick_next_task`'s `first_blocking_filter`),
+  the slot is stuck in this task-less "cicd" state indefinitely: every `/boot` re-confirms `cicd.md` and returns
+  `task: null`, and `/done` with `one_shot_complete` 400s because there's no AgentRow to archive.
+
+## Why it matters
+
+A slot in this state can never self-clear via the documented worker/cicd lifecycle contract (`worker.md` boot loop /
+`cicd.md` "complete then stop"). It will sit reporting `status=working` with no actual task — invisible to the
+idle-reaper, invisible to `/skip-current-task` (no current_task to skip), and only escapable by an operator manually
+hitting some other endpoint (or a raw DB edit) to reset `spawn_base_role`/status. This is the same defect class the
+code's own comments warn about (stale `spawn_base_role` surviving past its owning AgentRow).
+
+## Recommended decision
+
+- [x] ✅ [BACKEND] P1. In `server/routes/slots_worker.py::boot_slot`'s task-less-one-off branch (~line 249-269), when
+      `spawn_base_role` is set but `ss.find_active_agent_for_session(...)` finds no matching live `AgentRow` for this
+      slot's tmux session, treat it as STALE: clear `slot.spawn_base_role = None` and fall through to the normal
+      idle/dispatch path instead of reporting "held working" forever. (repo: agent-orchestrator) —
+      agent-orchestrator@1e74784
+- [x] ✅ [BACKEND] P2. Add a regression test in `agent-orchestrator/tests/` that boots a slot with a stale
+      `spawn_base_role` and no corresponding `AgentRow`, and asserts the slot recovers to `idle`/normal dispatch instead
+      of looping the task-less-one-off branch forever. (repo: agent-orchestrator) — agent-orchestrator@1e74784
+      (`test_stale_spawn_base_role_with_no_agentrow_self_heals_to_idle`; also added
+      `test_spawn_base_role_with_live_agentrow_still_held_working` + fixed the pre-existing
+      `test_one_off_task_less_boot_holds_slot_working` to seed a realistic live AgentRow fixture, since it had been
+      asserting SlotRow-only state that is actually the stale case this fixes)
+- [ ] [OPERATOR] P2. Until the above ships, an operator hitting this state should reset the slot manually (there is no
+      clean self-service endpoint today) — flag this as a UX gap in the same PR: the fix in P1 covers the self-heal
+      path, but consider also exposing a `POST /api/slots/{id}/clear-spawn-role` escape hatch for support cases where
+      the AgentRow legitimately still exists but the operator wants to force a reset.
+
+## Current slot-2 status (informational, not part of the fix)
+
+At time of filing, `GET /api/escalations/active` = `[]`, `GET /api/repo-blockers` = `{"open": []}`, and all 17 queued
+backlog tasks are blocked on prereqs/collisions per `pick_next_task`. There is genuinely no dispatchable work for this
+slot right now — this is NOT a symptom of the bug above, just the reason the bug is currently visible (a slot that never
+got a normal task dispatched never clears `spawn_base_role`).
+
+## Addendum (2026-07-25, slot-3 respawn — the P1 fix works but is retry-dependent)
+
+Reproduced live on slot 3 (also a respawn after a predecessor stuck >15 min): the FIRST `/boot` after the P1 fix
+(`agent-orchestrator@1e74784`) still returned the stale one-off branch
+(`"one-off cicd booted — no backlog task; slot held working (not idle)"`) rather than self-healing immediately —
+`find_active_agent_for_session` resolved to a non-`None` `AgentRow` at that moment, so the `owning_agent is not None`
+branch (held-working) fired instead of the self-heal branch. A subsequent `POST /done {one_shot_complete: true}` 400'd
+with `"no active agent owns its session"` (the _other_ code path's lookup — same helper, called moments later — found NO
+agent). Re-`/boot`ing right after that failed `/done` came back clean
+(`dispatch_reason: "no queued task available — prereqs/collisions block all candidates"`, `spawn_base_role` cleared).
+
+So the self-heal in P1 is real but window-dependent: it only fires once the stale `AgentRow` has actually left the
+`("active", "stale")` status set (e.g. once a health-monitor tick reaps/expires it), not the instant the owning session
+is actually dead. A worker landing on the very first `/boot` after respawn can still see one stale "held working" cycle
+before a retry self-heals. Not re-opening P1/P2 (the fix works, and the addendum's fix would only speed up the reap, not
+add correctness) — a mitigation is now a P3 backlog todo, not urgent:
+
+- [x] ✅ [BACKEND] P3. In `boot_slot`'s task-less-one-off branch, when the resolved `owning_agent` is itself stale
+      (`AgentRow.status == "stale"` and its `last_ping` is older than the same staleness threshold the health monitor
+      uses to reap it), treat it the same as `owning_agent is None` — self-heal immediately instead of waiting for the
+      next health-monitor tick to age it out of the `("active", "stale")` filter. (repo: agent-orchestrator) —
+      agent-orchestrator@41840c1. **Implementation deviates from the literal premise**: for a `one_shot`/`scheduled`
+      agent (cicd/plan_health/plan_reconciler), `AgentRow.status` can never actually reach `"stale"` — `health.py`'s
+      silence dimmer explicitly `continue`s past these lifecycles (their session dying IS the expected end of the task,
+      not silence-worth-flagging), so they go `active` → `archived` directly via `reap_orphan_agents`, never through
+      `"stale"`. The real race (confirmed by the addendum) is **session-reuse outrunning the periodic reaper tick**: a
+      watchdog respawn kills + recreates the SAME-NAMED tmux session, and `find_active_agent_for_session` can still
+      resolve the dead occupant's `AgentRow` until `reap_orphan_agents` next runs. Implemented the equivalent self-heal
+      by mirroring `reap_orphan_agents`' own session-reused check (`server/state_store/agents.py`) instead: if the
+      resolved agent's last recorded activity (`last_ping or registered_at`) predates the CURRENT session instance's
+      creation time (`tmux_spawn.session_created_at`), treat it as stale immediately. Same self-heal-now outcome the
+      todo asked for, correct mechanism. Regression tests:
+      `test_stale_spawn_base_role_session_reused_self_heals_to_idle`,
+      `test_spawn_base_role_session_not_reused_still_held_working`.

@@ -14,7 +14,7 @@ summary: >-
   this is a WORKAROUND, not a fix. The other 2 tolerated violations (`Empty dict/list fallback`, `Hardcoded prod project
   ID`, both in `tests/unit/test_smoke_matrix.py`) were left as-is (already within the historical ceiling, out of scope
   for this fix).
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -34,7 +34,7 @@ depends_on: []
 locked_by:
 locked_since:
 assigned_vm: NA
-resolved_by:
+resolved_by: instruments-service@a8c0e18e (2026-07-25)
 ---
 
 # instruments-service codex-compliance ceiling drift
@@ -96,15 +96,57 @@ function-size debt.
       200L/50L gates directly again; `QUALITY_GATE_BYPASS_AUDIT.md` row dropped in the same close-out pass. Evidence:
       `quality-gates.sh --no-fix` green (3 violations, back within tolerance — the other 2 pre-existing tolerated
       violations below are untouched), sentinel==HEAD.
-- [ ] [DATA] P3. **Audit the other 2 tolerated violations** (`tests/unit/test_smoke_matrix.py` — empty dict/list
+- [x] [DATA] P3. **Audit the other 2 tolerated violations** (`tests/unit/test_smoke_matrix.py` — empty dict/list
       fallback + hardcoded prod project ID) — determine if `"test-project"` (the check's own suggested literal) is a
       safe drop-in replacement without breaking the test's actual intent (verifying `resolve_test_bucket()`'s behavior
-      when given a real project-id-shaped string).
-- [ ] [DECISION] P3. **Audit the `broad except Exception:` sites** (`evm_creation_resolver.py` ×4, `block_resolver.py`,
+      when given a real project-id-shaped string). — `instruments-service@a8c0e18e` (2026-07-25). **Re-audit
+      correction**: a live `quality-gates.sh --no-fix` run showed the "Empty dict/list fallback" violation was NOT
+      actually test_smoke_matrix.py — that check scans only `SOURCE_DIR` (`instruments_service/`, tests/ excluded
+      structurally), so it could never fire there; the real (and only) hit was
+      `instruments_service/oracle/defi_removal_probe.py:259` (`payload.get("removals", [])`, introduced by the SAME
+      2026-07-21 follow-up commit that fixed the function-size violations — the composition drifted again in between).
+      Fixed via `# noqa: qg-empty-fallback` (the function's own docstring already documents "never raises — degrades to
+      Option A"), documented in `QUALITY_GATE_BYPASS_AUDIT.md`. The `tests/unit/test_smoke_matrix.py` violation that WAS
+      real (`central-element-323112` hardcoded prod project ID, 5 occurrences in the prediction-bucket tests) is fixed:
+      introduced a single `_TEST_PROJECT_ID = "test-project"` module-level constant and pointed all 5 sites at it —
+      traced the actual code path (`resolve_test_bucket()`'s prediction branch never reads its `project_id` argument at
+      all, delegating straight to `resolve_bucket_name(kind="instruments-store-prediction", ...)`) and confirmed the
+      literal's value is never actually exercised as a "real project-id-shaped string", so the swap changes nothing
+      about test intent/coverage. Evidence: `quality-gates.sh --no-fix` green, Codex compliance dropped 3→1 violations,
+      4903 passed/7 skipped, sentinel `ec9af42e…`==pre-quickmerge HEAD.
+- [x] [DECISION] P3. **Audit the `broad except Exception:` sites** (`evm_creation_resolver.py` ×4, `block_resolver.py`,
       `_solana_utils.py` ×3, plus the 4 orchestrator files) — narrow each to a specific exception type where the actual
       failure mode is known (mirrors the fix already applied to the NEW
       `instruments_service/oracle/defi_removal_probe.py` module in the same session: `blob_exists()` pre-check +
-      `except (json.JSONDecodeError, UnicodeDecodeError, OSError)` instead of bare `except Exception:`).
+      `except (json.JSONDecodeError, UnicodeDecodeError, OSError)` instead of bare `except Exception:`). —
+      `instruments-service@a8c0e18e` (2026-07-25). Reviewed all 14 bare `except Exception:` sites (confirmed via a live
+      `quality-gates.sh` run, which literal-matches `except Exception:` only — the many `except Exception as exc:` sites
+      in these same files don't count): 6 narrowed to a concrete type — `evm_creation_resolver.py::_resolve_rpc_url`
+      (`KeyError` on `template.format()`, moved the 2 static in-workspace imports out of the try so a real ImportError
+      propagates loud instead of silently degrading), `evm_creation_resolver.py::_get_gcs_bucket` +
+      `_solana_utils.py::_get_gcs_bucket` (`BucketNamingError` — narrowing this one MATTERS: a bare `except Exception`
+      here was silently swallowing the exact fail-loud signal `BucketNamingError` was added 2026-07-20 to provide, per
+      `cloud_constants.py`'s own "fail loudly instead of inventing a name" comment), `sfi.py` +
+      `transfermarkt.py::_fetch_transfermarkt_data` (`ValueError` on `date_type.fromisoformat()`), and
+      `transfermarkt.py::_cache_is_fresh` (`(ValueError, TypeError)`, date arithmetic). The remaining 8 sites stay
+      broad, each inline-documented: `block_resolver.py` + `evm_creation_resolver.py::_resolve_rpc_url`'s Secret Manager
+      fetch (ADC/credential exception surface isn't a small enumerable set); 4 GCS read-merge sites in
+      `evm_creation_resolver.py`/`_solana_utils.py` (download_bytes doesn't pre-wrap the GCS SDK's exception surface,
+      and read-merge is best-effort-by-design); `sports_fixtures.py::_resolve_sports_ref_blob` + 2 sites in `weather.py`
+      (GCS list/parquet-parse probes where any failure correctly falls back to the safe default). All 8 documented in
+      `QUALITY_GATE_BYPASS_AUDIT.md` § 1.2. **Side-quest correction**: initially hypothesized `BE_EXCLUDE_GLOBS` (the
+      array excluding `_solana_utils.py`/`evm_creation_resolver.py` from this check) was a dead variable-name mismatch
+      vs. `base-service.sh` (cross-referenced the sibling `base-library.sh`, which uses a different name for a different
+      repo class) — reverted that "fix" before shipping once a live QG re-run proved the original name was already
+      correctly wired. Evidence: `quality-gates.sh --no-fix` green, broad- except sites down from 14 (all bare) to 4
+      (documented), Codex compliance 3→1 violations, 4903 passed/7 skipped, ALL QUALITY GATES PASSED, sentinel
+      `ec9af42e…`==pre-quickmerge HEAD.
+
+## Resolution (2026-07-25)
+
+Both remaining P3 follow-on todos closed in the same commit (`instruments-service@a8c0e18e`). This issue doc is now
+fully resolved — all 3 follow-on items (size-regrowth decomposition 2026-07-21, test-literal audit, broad-except audit,
+both 2026-07-25) are done. `status:` flipped `open` → `resolved`.
 
 ## Note (2026-07-23, found via a sports issue-doc re-triage sweep)
 

@@ -21,6 +21,7 @@ related:
     plans/active/issues/defi_code_codex_drift_2026_05_27.md,
     /codex/02-data/feature-formula-versioning.md,
     /codex/02-data/defi-canonical-naming-ssot.md,
+    /plans/active/defi_consolidated_closeout_aggregated_sources_2026_07_24.md,
   ]
 created: 2026-05-29
 parent_epic: features_and_ml_master

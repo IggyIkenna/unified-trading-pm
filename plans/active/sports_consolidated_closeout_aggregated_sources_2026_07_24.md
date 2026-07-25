@@ -312,6 +312,18 @@ drift_direction: advance-code
     - **[SCRIPT] P3.** Re-run a full (non-sliced) `quality-gates.sh` and confirm phase 5
 
 - **API-Football / source-adapter correctness**:
+  - [`plans/active/issues/understat_bulk_download_backfill_2026_06_29.md`](/plans/active/issues/understat_bulk_download_backfill_2026_06_29.md)
+    (6 open — linked here 2026-07-25 ag-closeout-linkage fix; the understat XG/XG_SHOTS bulk-downloader design,
+    replacing the slow date-by-date crawl):
+    - **[DATA] P1.** One-off manifest normalization (dedup pollution) — sequenced AFTER the §9.2 consolidator fix
+      deploys to the Cloud Run jobs.
+    - **[SCRIPT] P1.** Build the bulk writer reusing `get_fixtures`/`get_match_shots`/`record_captured` (unblocked).
+    - **[DATA] P0.** Full backfill run (operator-gated locus, `dont save before confirming` — operator gate before any
+      GCS write).
+    - **[CODE] P1.** DEFERRED — register `XG_SHOTS` in `SPORTS_DATA_TYPE_META` (deployment-api) — patch ready, blocked
+      on deployment-api LDR going QG-green.
+    - **[VERIFY] P1.** Confirm the §9.2 consolidator NULL-vs-`''` dedup fix reaches the deployed Cloud Run jobs.
+    - **[VERIFY] P1.** After backfill: re-evaluate the `understat-vm-xg-complete` gate against real captured shots.
   - [`plans/archive/issues/api_football_backfill_chronological_scan_never_reaches_pending_tail_2026_07_18.md`](/plans/archive/issues/api_football_backfill_chronological_scan_never_reaches_pending_tail_2026_07_18.md)
     — **resolved 2026-07-24** (all 5 todos were already `[x]`; frontmatter `status` was stale, now corrected).
   - [`plans/active/issues/api_football_reverify_attempted_failed_and_asset_group_2026_07_14.md`](/plans/active/issues/api_football_reverify_attempted_failed_and_asset_group_2026_07_14.md)
@@ -388,7 +400,9 @@ drift_direction: advance-code
   `/plans/active/candle_canonical_path_migration_execution_2026_07_24.md`,
   `/plans/active/canonical_id_builder_retrofit_checklist_2026_07_08.md`,
   `/plans/active/data_pipeline_check_mdps_features_2026_07_20.md`,
-  `/plans/active/mdps_features_reduced_artifact_tracker_2026_06_28.md`.
+  `/plans/active/mdps_features_reduced_artifact_tracker_2026_06_28.md`,
+  `/plans/active/issues/understat_bulk_download_backfill_2026_06_29.md` (retagged `[sports]` 2026-07-25, was a
+  cross-cutting mistag — see `cursor-configs/skills/ag-closeout-audit/SKILL.md`'s Orthogonality HARD CHECK).
 
 - **Sibling closeouts / cross-AG (own primary tracking elsewhere, linked here for awareness only)**:
   `/plans/active/defi_consolidated_closeout_2026_07_18.md` (in this doc's own `related:` — cross-AG link, not sports
@@ -397,3 +411,11 @@ drift_direction: advance-code
 
 - **Folded-in, excluded from the digest above (all `superseded_by: sports_consolidated_closeout_2026_07_19.md`, live
   content absorbed into Track C/S2 — see the callout at the top of this section for the full list of 5)**.
+
+## Deferred work — migrated to:
+
+**The `DEFERRED — register XG_SHOTS in SPORTS_DATA_TYPE_META` line above** (§ API-Football / source-adapter correctness)
+is quoted verbatim from its own doc's todo list — it is NOT a deferral native to THIS aggregator. The actual todo, its
+blocking condition (deployment-api LDR going QG-green), and its resolution live entirely in
+[`/plans/active/issues/understat_bulk_download_backfill_2026_06_29.md`](/plans/active/issues/understat_bulk_download_backfill_2026_06_29.md),
+already linked inline above — this doc only indexes it for the sports-AG digest.
