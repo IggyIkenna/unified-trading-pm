@@ -14,7 +14,7 @@ summary: >-
   SAME UAC-layout-vs-writer drift class the code itself documents for PLAYER_VALUES (gcs_paths.py:70-78, resolved
   2026-05-05 by aligning the table to the writer) — WEATHER is an un-fixed instance of it. Cross-repo — UAC layout table
   + IS weather writer.
-status: open
+status: resolved
 nature: issue
 asset_group: [sports]
 stage: [data]
@@ -46,7 +46,7 @@ superseded_by:
 source:
   "/data-pipeline-reconciliation sports run 2026-07-20 (finding F2); UAC layout side code-verified at gcs_paths.py:139,
   writer side proven on disk by the report across three days"
-resolved_by:
+resolved_by: unified-api-contracts@b73c95d5 (2026-07-25, slot 4)
 ---
 
 # Sports WEATHER — UAC layout `PER_DAY_BARE` vs writer `PER_DAY_PER_LEAGUE` manufactures phantoms
@@ -87,16 +87,25 @@ band-aid rows were written for WEATHER the way `write_player_values_placeholders
 
 ## Todos
 
-- [ ] 1. [DATA] P1. Confirm the writer's intended WEATHER layout is `PER_DAY_PER_LEAGUE` (read the IS weather writer +
-      confirm no bare `entity=weather/weather.parquet` objects are ALSO written) so the table is aligned to the true
-      layout, not to a second drift (repo: instruments-service).
-- [ ] 2. [CODE] P1. Align `SPORTS_DATA_TYPE_LAYOUT["WEATHER"]` in
+- [x] ✅ 1. [DATA] P1. Confirm the writer's intended WEATHER layout is `PER_DAY_PER_LEAGUE` (read the IS weather
+      writer + confirm no bare `entity=weather/weather.parquet` objects are ALSO written) so the table is aligned to the
+      true layout, not to a second drift (repo: instruments-service). — CONFIRMED 2026-07-25 (slot 4): code
+      (`weather.py:451-457,500`) + live GCS listing of `instruments-store-sports-prd-central-element-323112` for both
+      sample days (2026-07-10, 2026-07-05) — per-league objects only, zero bare objects.
+- [x] ✅ 2. [CODE] P1. Align `SPORTS_DATA_TYPE_LAYOUT["WEATHER"]` in
       `unified-api-contracts/unified_api_contracts/canonical/domain/sports/gcs_paths.py` to the confirmed writer layout,
       with a regression test that `candidate_parquet_paths(WEATHER, league=…)` builds the `league=` path (mirror the
-      existing PLAYER_VALUES alignment) (repo: unified-api-contracts).
-- [ ] 3. [DATA] P1. After the fix, re-run the sports phantom audit and confirm the WEATHER false positives drop out of
-      the `instruments-store-sports` phantom count; check for and remove any zero-row WEATHER placeholder residue (repo:
-      instruments-service).
+      existing PLAYER_VALUES alignment) (repo: unified-api-contracts). — SHIPPED 2026-07-25 (slot 4):
+      unified-api-contracts@b73c95d5, `tests/unit/sports/test_gcs_paths_weather.py` (6 tests).
+- [x] ✅ 3. [DATA] P1. After the fix, re-run the sports phantom audit and confirm the WEATHER false positives drop out
+      of the `instruments-store-sports` phantom count; check for and remove any zero-row WEATHER placeholder residue
+      (repo: instruments-service). — VERIFIED 2026-07-25 (slot 4):
+      `reconcile_phantom_manifest_rows_all.py --asset-group     sports --data-types WEATHER --dry-run` against live prod
+      manifest → 12,851 real captures, 0 phantom captures. No WEATHER placeholder-writer script exists in the codebase —
+      absence confirmed, nothing to remove.
+
+**RESOLVED 2026-07-25** (slot 4, data_engineering) — see plan
+`plans/active/sports_satellite_ao_dispatch_batch2_2026_07_24.md` for the full disposition.
 
 ## RE-TRIAGE (2026-07-23)
 

@@ -577,7 +577,7 @@ source: >-
 
 ### From `issues/sports_weather_uac_layout_per_day_bare_vs_writer_per_day_per_league_2026_07_20.md`
 
-- [ ] [CODE] P1. **WEATHER layout mismatch — confirm, align, reverify (3-step ordered sequence, one worker).** (1)
+- [x] ✅ [CODE] P1. **WEATHER layout mismatch — confirm, align, reverify (3-step ordered sequence, one worker).** (1)
       Confirm the writer's intended WEATHER layout is `PER_DAY_PER_LEAGUE` (read the IS weather writer
       `instruments_service/engine/orchestrator/weather.py` + confirm no bare `entity=weather/weather.parquet` objects
       are ALSO written via an actual GCS listing, not just the code comment — the 2026-07-23 RE-TRIAGE already cites
@@ -591,7 +591,11 @@ source: >-
       `gcs_paths.py`). **Done when**: layout confirmed via code + GCS listing; `SPORTS_DATA_TYPE_LAYOUT["WEATHER"]` set
       to `PER_DAY_PER_LEAGUE` with a passing regression test; phantom audit re-run shows WEATHER no longer contributing
       false positives; any placeholder residue removed or its absence confirmed. Source:
-      `issues/sports_weather_uac_layout_per_day_bare_vs_writer_per_day_per_league_2026_07_20.md`.
+      `issues/sports_weather_uac_layout_per_day_bare_vs_writer_per_day_per_league_2026_07_20.md`. — SHIPPED 2026-07-25
+      (slot 4): unified-api-contracts@b73c95d5. Confirmed via code + live GCS listing (league= objects only, zero bare);
+      set `SPORTS_DATA_TYPE_LAYOUT["WEATHER"]` to `PER_DAY_PER_LEAGUE` + regression test; sports phantom audit re-run:
+      12,851 real captures, 0 phantom (exceeds ≥106 baseline). No placeholder residue found. QG green. Full evidence in
+      the issue doc.
 
 ### From `issues/canonical_player_stats_fixture_events_quality_2026_07_16.md`
 
