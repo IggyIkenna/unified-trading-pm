@@ -154,24 +154,29 @@ drift_direction: advance-code
       `empty_confirmed[SOURCE_RETURNED_ZERO]` `prediction_canonical_question_group` manifest row for that (venue, cqg,
       day) instead of omitting it; `quality-gates.sh` is green. Source:
       `predictions_other_bucket_and_ui_drilldown_2026_06_20.md`.
-- [ ] [DATA] P2. **Combined residual-row diagnosis for `prediction_phantom_reconciler_wipes_bundle_atom_2026_07_10.md`
-      (2 sub-items merged into one todo since both snapshot-then-write against the SAME prediction manifest `_index`,
-      avoiding a concurrent-write race):** (a) Diagnose and, only if confirmed safe, purge the 17 blank-`data_type`
-      phantom aggregate-marker rows in the live prediction `_index` manifest
-      (`market-data-tick-pred-prd-central-element-323112`) — re-verify each row's supersession/genuine-phantom status
-      following the `purge_prediction_index_final_residuals_2026_07_11.py` precedent pattern (snapshot-then-write,
-      stop-on-surprise re-verify immediately before any delete). (b) Verify the current live count of
-      `batch_polymarket_clob` blank-`source` rows — the source issue measured 27,292 such rows on 2026-07-10, but the
-      later 2026-07-19 `canonicalize_prediction_manifest_2026_07_18.py --dry-run` measured only 2, suggesting this was
-      already resolved by that migration's `--apply`; if the live count is still material (thousands, not ~0-2),
-      backfill `source=polymarket_clob` via a targeted rebuild scoped to just this row predicate. Repos:
-      instruments-service (new one-off diagnose+purge script), market-tick-data-service (targeted backfill script or
-      scoped invocation of the existing canonicalizer). **Resolution note**: the 3 flagged conflicts are about DIFFERENT
-      residual row-sets in this same issue doc (the 189 blank/UNKNOWN-venue rows and the ~2,414 schema-v4/v5 rows —
-      neither is one of these 2 candidates) or document that `prediction_phase_ab_residuals_2026_07_24.md`'s "steps 1-4
-      landed" / "residuals 5-6 — DONE" checkmarks OVER-CLAIM this doc's actual remediation state (the doc's own
-      2026-07-11 Update explicitly says the 17 blank-`data_type` rows + this 27,292-row count were NOT touched by that
-      pass) — which CONFIRMS, rather than blocks, that these 2 items are still genuinely open, not already-done
+- [ ] [OPERATOR] P2. **Combined residual-row diagnosis for
+      `prediction_phantom_reconciler_wipes_bundle_atom_2026_07_10.md` (2 sub-items merged into one todo since both
+      snapshot-then-write against the SAME prediction manifest `_index`, avoiding a concurrent-write race):** (a)
+      Diagnose and, only if confirmed safe, purge the 17 blank-`data_type` phantom aggregate-marker rows in the live
+      prediction `_index` manifest (`market-data-tick-pred-prd-central-element-323112`) — re-verify each row's
+      supersession/genuine-phantom status following the `purge_prediction_index_final_residuals_2026_07_11.py` precedent
+      pattern (snapshot-then-write, stop-on-surprise re-verify immediately before any delete). (b) Verify the current
+      live count of `batch_polymarket_clob` blank-`source` rows — the source issue measured 27,292 such rows on
+      2026-07-10, but the later 2026-07-19 `canonicalize_prediction_manifest_2026_07_18.py --dry-run` measured only 2,
+      suggesting this was already resolved by that migration's `--apply`; if the live count is still material
+      (thousands, not ~0-2), backfill `source=polymarket_clob` via a targeted rebuild scoped to just this row predicate.
+      Repos: instruments-service (new one-off diagnose+purge script), market-tick-data-service (targeted backfill script
+      or scoped invocation of the existing canonicalizer). **Tagged `[OPERATOR]` per `task_template.md` §3's delete-risk
+      rule and `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`** (2026-07-25 delete/VM-launch gating pass) —
+      part (a) purges live prediction-manifest rows and part (b) overwrites live blank-`source` values on that same
+      manifest; both are prod-manifest mutations, and the "snapshot-then-write" precedent this todo cites is explicitly
+      NOT an adequate substitute for that codex's Part-2 content-verify proof (its own §1 states so) — human
+      review/execution required, not autonomous AO dispatch. **Resolution note**: the 3 flagged conflicts are about
+      DIFFERENT residual row-sets in this same issue doc (the 189 blank/UNKNOWN-venue rows and the ~2,414 schema-v4/v5
+      rows — neither is one of these 2 candidates) or document that `prediction_phase_ab_residuals_2026_07_24.md`'s
+      "steps 1-4 landed" / "residuals 5-6 — DONE" checkmarks OVER-CLAIM this doc's actual remediation state (the doc's
+      own 2026-07-11 Update explicitly says the 17 blank-`data_type` rows + this 27,292-row count were NOT touched by
+      that pass) — which CONFIRMS, rather than blocks, that these 2 items are still genuinely open, not already-done
       duplicates. **Done when**: for (a), a fresh live read of the 17-row predicate is recorded (count + capture_status
       breakdown), and either each row is confirmed superseded and purged via a snapshotted write with the row-count
       delta logged, or confirmed as the sole surviving evidence and explicitly left in place with that finding recorded;
