@@ -165,16 +165,28 @@ sequential: true
       (`test_last_spawned_at_none_when_never_spawned`, `test_last_spawned_at_round_trips_from_orm_row`), mirroring the
       existing `test_slot_view_kind.py` pattern. 1687/1687 tests pass, ruff + basedpyright clean, full
       `quality-gates.sh` PASSED.
-- [ ] [BACKEND] P1. **Fix the context-burn anomaly clock** in `server/worker_liveness_watchdog.py::_is_context_burning`
-      (Trigger 4). Currently keyed on `hours_on_task` (derived from `assigned_at`, which resets on every reassignment —
-      confirmed live 2026-07-25: 5 slots >=80% context produced zero `context_burn_suspected` fires over a 7h window
-      because none had spent >=4h on their CURRENT task even though their sessions carried compaction histories hours
-      older than the task). Replace/supplement that input with a session-scoped clock derived from `last_spawned_at`
-      (todo 6) — "hours since this SESSION last compacted or was spawned," not "hours on this task." Keep the existing
-      `context_pct >= min_pct OR compactions_total >= min_compactions` disjunct. **Done when**: a new unit test
-      reproduces the exact live scenario from this session (task reassigned 0.08h ago, context 100%, last compaction >4h
-      before assignment) and asserts `_is_context_burning` now returns `True` where the old task-clock version returned
-      `False`; `quality-gates.sh` green.
+- [x] ✅ [BACKEND] P1. **Fix the context-burn anomaly clock** in
+      `server/worker_liveness_watchdog.py::_is_context_burning` (Trigger 4) — **`agent-orchestrator@f11dec2`.** Added
+      `_hours_since_session_reset(now, last_spawned_at, last_compacted_at)` — anchored on whichever of the two reset
+      events is MORE RECENT (no anchor at all counts as maximally old, `float("inf")`, so a dataless slot doesn't
+      silently suppress the trigger) — and rewired `_handle_context_burn_trigger` to feed its result into
+      `_is_context_burning` instead of the old `hours_on_task` (`(now - assigned_at).total_seconds() / 3600.0`).
+      `_is_context_burning`'s first parameter is renamed `hours_since_session_reset` (pure threshold function,
+      signature-only change; the 4 existing kwarg-based tests in `test_e2e_findings_remediation.py` updated to match).
+      Kept the existing `context_pct >= min_pct OR compactions_total >= min_compactions` disjunct verbatim, per this
+      todo's own spec. Also renamed `notify_context_burn`'s `hours_on_task` param to `hours_since_session_reset`
+      (message text updated from "h in flight" to "h since session reset") since no test asserted on its call args.
+      **Done-when unit test**: `test_context_burn_session_clock_survives_task_reassignment` (added to
+      `test_e2e_findings_remediation.py`) reproduces the exact live scenario — task reassigned 0.08h ago, context 100%,
+      last compaction 4.5h before assignment — and asserts the OLD `hours_on_task`-equivalent input
+      (`hours_since_session_reset=0.08`) returns `False` while the NEW `_hours_since_session_reset(...)` output (~4.58h)
+      returns `True`. Also added an end-to-end `_tick_once` integration test,
+      `test_tick_context_burn_suspects_on_stale_session_despite_fresh_reassignment` (in
+      `test_worker_liveness_watchdog.py`), proving the wiring through the real trigger path (not just the pure function)
+      — added `last_compacted_at` to that file's `_make_slot()` test helper (previously absent; every caller now gets an
+      explicit `None` default rather than an auto-`MagicMock` attribute, which would have broken `to_utc()` on every
+      existing context-burn test once the caller started reading `slot.last_compacted_at`). `quality-gates.sh` green:
+      1689 passed, 1 skipped, ruff + basedpyright clean.
 - [x] ✅ [BACKEND] P1. **Add WIP preservation to `_kill_slot`** — `agent-orchestrator@7c1ed65`. Implemented as
       `_preserve_wip_before_kill(slot_id, tmux_session)`, called from `_kill_slot` before `kill_session` fires, for
       every kill reason (not just `context_burn`). **Deviation from this todo's original text**: reuses the higher-level
