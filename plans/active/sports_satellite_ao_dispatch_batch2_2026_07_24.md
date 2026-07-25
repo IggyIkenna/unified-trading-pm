@@ -155,7 +155,33 @@ source: >-
       stated prerequisite — the tarball rebuild with the write-gate — is already DONE.) (repo: instruments-service).
       **Done when**: enrichment coverage for the 94-league universe re-measured and materially improved toward 100% for
       XG_SHOTS/XG/PLAYER_STATS/MATCHES/INJURIES, with any broken enrichment paths fixed. Source:
-      `sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md`.
+      `sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md`. — **🟡 IN PROGRESS (2026-07-25),
+      NOT complete — re-scoped after re-measurement, do not re-dispatch a duplicate.** This exact item is ALSO tracked
+      (with a much longer, multi-session history of stalls/relaunches) in the canonical
+      `/plans/active/sports_consolidated_closeout_2026_07_19.md` — its own archived predecessor
+      (`sports_p2_history_apifootball_2015_to_present_2026_06_27.md`) explicitly warns "check Todo 9 status before
+      dispatching"; that VM tracker (2 SPOT VMs, `af-backfill-20260721-033537`/`-20260722-033350`) was last recorded
+      there as "running, months-to-years from gate" — **STALE**: both actually completed cleanly (`exit_code=0`,
+      self-deleted) by 2026-07-23, confirmed via their `PROGRESS.json`/`run.log` in
+      `gs://deployment-scripts-central-element-323112/vm-logs/`. Fresh manifest re-measurement (94-league-filtered,
+      `_index/availability_index.parquet`, 2026-07-25) shows the raw "% captured" cited above reflects GENUINE upstream
+      absence (`empty_confirmed`), not a backfill opportunity: FIXTURE_EVENTS 19.2% captured / 0.66% still
+      `expected_unattempted`; FIXTURE_STATS 18.2%/0.66%; FIXTURE_LINEUPS 19.2%/0.74%; PLAYER_STATS 11.9%/0.74%; MATCHES
+      11.5%/0.18%; XG 2.5%/0%; XG_SHOTS 2.2%/0% — i.e. these 7 are already **exhaustively attempted** (>99% of the
+      residual is honest-absence, not a real gap); re-launching a backfill for them would burn API quota for ~0% real
+      gain. **INJURIES is the one genuine exception**: 10,502 captured / 10,219 `expected_unattempted` (3.4%) — a real,
+      un-attempted residual. Launched a targeted, singleton-lock-verified-clear
+      (`gcloud compute instances     list --filter='name~"^af-backfill-"'` → 0 running) INJURIES catch-up:
+      `af-backfill-20260725-002739` (2018-01-01→2026-07-25), verified `DEPLOYMENT_STARTED` + actively fetching within
+      ~3min of launch (no fire-and-forget). ETA a few hours at the historically-observed INJURIES rate (~1,404 EU/hr,
+      session 8d of the archived plan) — NOT completable within one AO task turn; tracked to completion across sessions
+      like the archived plan's own history. Also found + flagged (issue doc filed): the `create-code-tarballs.sh` upload
+      step fails via `gsutil` under the active `github-actions-deploy@…` gcloud account (expired Identity-Pool/WIF
+      token) — the tarballs happened to already be fresh (rebuilt by another process ~35min before this session's
+      launch) so the VM booted on valid code, but this auth gap will block the NEXT slot's tarball rebuild attempt until
+      fixed. Full evidence + the reconciliation note in the canonical closeout plan: see this todo's own re-measurement
+      above; re-run `_index/availability_index.parquet` INJURIES query after the VM's `EXIT_STATUS` appears to confirm
+      the gap actually closed before flipping this checkbox.
 - [ ] [CODE] P1. **UAC canonical registry build/refine** — league/cup canonical + ids + is-cup + country + season
       start/end + transfer window; per-source eligibility maps + annual-id-change handling; team/player/fixture
       canonical + mappings. Wire honest-coverage to consume them. (Spec fully established by the source doc's
