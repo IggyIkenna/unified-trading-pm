@@ -140,7 +140,23 @@ For the target `<ag>`:
    the same betting-market work tagged two ways, not two different scopes) — these are the deterministic cross-cutting
    candidates to exclude from the deep audit. This is a CANDIDATE filter only; the per-doc agent in Phase 1 re-checks
    scope from real content (step 5 below), since asset_group tagging is not perfectly reliable. Further exclude docs
-   already `status: resolved`/`archived`/`superseded` — they're already closed, not orphans.
+   already `status: resolved`/`archived`/`superseded` — they're already closed, not orphans. **Orthogonality HARD CHECK
+   (added 2026-07-25 — a real corpus-quality bug, not a hypothetical)**: `cefi`/`defi`/ `tradfi`/`prediction`/`sports`
+   and `cross-cutting` are meant to be a MUTUALLY EXCLUSIVE partition — a doc belongs to exactly one specific AG, or is
+   genuinely cross-AG, never both. A doc tagged with exactly ONE specific AG PLUS `cross-cutting` (e.g.
+   `[cefi, cross-cutting]`) is a MISTAG, not a valid third category — and it is actively dangerous: per the exclusion
+   rule above, such a doc gets excluded from `<ag>`'s own audit (cross-cutting reads as "a different peer marker") AND
+   excluded from `cross-cutting`'s own audit (the specific AG reads as "a different peer marker" there too) — it falls
+   through BOTH audits and becomes an invisible orphan the discovery step itself creates, exactly the failure class this
+   whole skill exists to catch. **Before running Phase 1 for `<ag>` OR for `cross-cutting`**, grep the corpus for
+   `asset_group:.*cross-cutting` and check each hit's array for exactly one other specific-AG marker (not the legitimate
+   "spans multiple/all 5 AGs + cross-cutting" pattern used by genuine cross-AG coordination docs, e.g.
+   `ag_closeout_audit_rollout_2026_07_25.md`, which is fine as-is, if slightly redundant — cross-cutting alone would
+   already imply multi-AG scope). Any single-AG+cross-cutting hit found must be RETAGGED correctly (read the doc's real
+   content/repos to decide which side is right — confirmed examples fixed 2026-07-25:
+   `coinbase_bare_name_migration_execution_service_2026_07_10.md` was genuinely cefi-only, `cross-cutting` dropped;
+   `issues/manifest_v6_batch3_residual_orphaned_work_2026_07_21.md` was genuinely cross-AG, `cefi` dropped), never
+   silently left dual-tagged or silently excluded from both audits.
 
 ## Phase 1 — per-doc classification (Workflow tool, one agent per doc)
 

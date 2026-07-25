@@ -14,7 +14,11 @@ summary: >-
   zero hits, never shipped, no active plan claims it.
 status: open
 nature: issue
-asset_group: [cefi, cross-cutting]
+asset_group:
+  [cross-cutting] # corrected 2026-07-25 (ag-closeout-audit orthogonality fix) -- was [cefi, cross-cutting],
+  # a genuine mistag: this is UTL manifest CAS-path + deployment-api/ui quote_asset/margin_type surfacing, a genuinely
+  # cross-AG manifest-schema concern with no cefi-specific content
+
 stage: [data]
 repos: [unified-trading-library, deployment-api, deployment-ui]
 scope: [engineer]

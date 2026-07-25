@@ -7,7 +7,10 @@ summary:
   (Nautilus-driven) or removed.
 status: draft
 nature: design
-asset_group: [cefi, cross-cutting]
+asset_group:
+  [cefi] # corrected 2026-07-25 (ag-closeout-audit orthogonality fix) -- was [cefi, cross-cutting], a
+  # genuine mistag: this is a COINBASE (cefi venue)-specific execution-service caller migration, not cross-AG
+
 stage: [execution]
 repos: [execution-service]
 scope: [engineer]
