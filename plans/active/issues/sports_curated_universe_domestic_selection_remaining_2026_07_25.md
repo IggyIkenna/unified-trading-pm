@@ -174,8 +174,14 @@ inherited from the first shipped batch:
       Note: Crimea's political/federation status is genuinely contested — verify which football federation the catalog's
       data actually reflects before adding, or skip as unverifiable. (repo: unified-api-contracts). **Done when**: per
       the shared contract above, for this country list.
-- [ ] [DATA] P1. **Central Asia (AFC)** — Kazakhstan, Kyrgyzstan, Tajikistan, Turkmenistan, Uzbekistan (5 countries).
-      (repo: unified-api-contracts). **Done when**: per the shared contract above, for this country list.
+- [x] ✅ [DATA] P1. **Central Asia (AFC)** — Kazakhstan, Kyrgyzstan, Tajikistan, Turkmenistan, Uzbekistan (5 countries).
+      `unified-api-contracts@49049b7` (9 entries). Kazakhstan (Premier League/First Division/Cup) + Uzbekistan (Super
+      League/Pro League/Cup) got full top+below+cup, each WebSearch-verified. Kyrgyzstan/ Tajikistan/Turkmenistan got
+      top-league only — WebSearch confirmed real division-below/cup competitions exist for all three, but the
+      api-football `leagues.parquet` catalog carries no `api_football_id` for them (checked directly, not assumed), so
+      per the near-miss "never fabricate an id" rule those tiers are omitted rather than guessed. Turkmenistan's catalog
+      "Youth League" (829) explicitly excluded as wrong-axis. 0 registry collisions, MVP-scope count unchanged at 96,
+      `in_mvp_scope=False` (no captured odds data for any of the 5 countries). quality-gates.sh green.
 - [ ] [DATA] P1. **South America (CONMEBOL)** — Bolivia, Colombia, Ecuador, Paraguay, Peru, Uruguay, Venezuela (7
       countries). (repo: unified-api-contracts). **Done when**: per the shared contract above, for this country list.
 - [ ] [DATA] P1. **North/Central America + Caribbean (CONCACAF)** — Antigua and Barbuda, Aruba, Barbados, Belize,
