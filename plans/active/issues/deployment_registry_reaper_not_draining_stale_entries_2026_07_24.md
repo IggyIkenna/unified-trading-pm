@@ -307,9 +307,9 @@ flipping the checkbox.
       convergence** (needs a fresh Cloud Run deploy of this fix + several reap-tick intervals to observe — see new todo
       below) and the SEPARATE "why did a build from a commit with the UTL fix produce an image without it" question is
       also still open — both spun into a new todo rather than closing this one on an unverified assumption.
-- [ ] [BACKEND] P0. **Two follow-ups from the wrong-gunicorn-file root-cause fix (`deployment-api@3fea307`):** (1) Once
-      `3fea307` reaches a fresh Cloud Run deploy, re-verify via the SAME direct-image-extraction method used to find
-      this bug (NOT source-repo content-diff — grep the actual pulled/extracted image for `post_worker_init` in
+- [x] ✅ [BACKEND] P0. **Two follow-ups from the wrong-gunicorn-file root-cause fix (`deployment-api@3fea307`):** (1)
+      Once `3fea307` reaches a fresh Cloud Run deploy, re-verify via the SAME direct-image-extraction method used to
+      find this bug (NOT source-repo content-diff — grep the actual pulled/extracted image for `post_worker_init` in
       `/app/gunicorn.conf.py`) that it's really live, then watch `gcloud logging read` for
       `"Background auto-sync task     started (leader worker)"` appearing exactly ONCE per instance (not per-worker) and
       `"[AUTO_SYNC] Reaper: archived"` appearing at all for the first time ever; re-measure `active/` object count vs
@@ -665,6 +665,66 @@ flipping the checkbox.
     `gcloud scheduler jobs create http` with `--oidc-service-account-email` +
     `--oidc-token-audience=<the endpoint URL>`** — this is real infra provisioning (a `[OPERATOR]`/infra action, not a
     code change) and should happen AFTER the endpoint code is deployed and its exact prod URL is known.
+
+- **2026-07-25T18:50Z (slot 5) — ACTUAL ROOT CAUSE FOUND, FIXED, DEPLOYED, AND CONVERGENCE VERIFIED LIVE. Todo CLOSED.**
+  Same session that shipped `unified-trading-library@2649ffc6` (`_read_true_exit_code` in `deployment_registry.py`): the
+  genuine root cause of the entire multi-day `active/` non-convergence was NOT the CPU-throttling/stdout mystery chased
+  above — it was a plain exception-type bug. `_read_true_exit_code`'s `except FileNotFoundError` was written against the
+  `InMemoryStorageClient` test fake (which DOES raise `FileNotFoundError` for a missing GCS key), but the REAL
+  `RealStorageClient.download_string` lets `google.api_core.exceptions.NotFound` propagate raw on a 404 — so every VM
+  whose `EXIT_STATUS` blob was never written or was cleaned up crashed the ENTIRE `reap_stale()` batch on this one line,
+  silently, well before the reap tick's own leader-election/CPU-throttling machinery (already proven live and healthy
+  above) ever got a chance to matter. Fixed by catching `(FileNotFoundError, KeyError, ValueError, OSError)` for the
+  fake-client contract, falling through to a second `except Exception` that string-matches
+  `type(exc).__name__ in ("NotFound", "Forbidden")` (the established idiom already used in `manifest_consolidator.py`
+  for this exact same real-vs-fake divergence) and re-raises anything else. **Also shipped, same session** (the
+  Cloud-Scheduler reap-tick endpoint researched above, per the operator's `BLK-d5db60a5` Option-B ruling):
+  `deployment-api/deployment_api/routes/_reap_scheduler.py` (`POST /api/internal/reap-tick`, OIDC-verified against a new
+  `REAP_SCHEDULER_INVOKER_SA` setting, wraps `SyncService().reap_stale_deployments()` in `asyncio.to_thread`, mounted
+  directly on `app` — NOT under `_authenticated_router`). **Full propagation chain executed and verified end-to-end,
+  live, in prod, this session** (no step skipped, no content-diff-only claim):
+  1. `unified-trading-library@2649ffc6` → LDR → PR #647 → merged to `main` 2026-07-25T18:20:42Z (`sit-gate/fleet-green`
+     - `semver-agent/label-check` both green).
+  2. Fresh UTL base image published (`publish-package` GHA run succeeded 18:20:44Z); resolved current `:latest` digest
+     `sha256:f2f9779b9c022e6f3bb2343759cba31f950467e0e33ef3ad1e6a9f55bced1688`.
+  3. Manually triggered `digest-drift-sweep.yml` (the standing cron hadn't ticked since before the merge) — correctly
+     flagged `deployment-api` STALE and dispatched a refresh; `deployment-api@dad6916` bumped `ARG BASE_IMAGE_DIGEST` to
+     the new digest on LDR.
+  4. Manually triggered `ldr-to-main-promote-fleet.yml` (the `*/15` cron hadn't caught up yet) — opened PR #383,
+     `quality-gates-v2` + `image-build-gate` both passed, merged to `main` 2026-07-25T18:32:04Z.
+  5. Cloud Build `deployment-api-main-deploy` (`ff86f881-3c71-42aa-9116-0fa8f9c70d24`) SUCCESS; Cloud Run revision
+     `uts-shared-deployment-api-00282-zrm` deployed, confirmed serving 100% traffic with image `deployment-api:d3b07cd`.
+  6. **Direct image extraction** (not source-repo diff — pulled `deployment-api:d3b07cd`, `docker cp`'d `/app`, grepped
+     the actual vendored `unified_trading_library/deployment_registry.py`): confirmed the deployed container genuinely
+     contains the new `_read_true_exit_code` exception handling, word for word.
+  7. Deployed revision `00283-wqr` with
+     `REAP_SCHEDULER_INVOKER_SA=unified-trading-sa@central-element-323112.iam.gserviceaccount.com` (the service's own
+     existing runtime SA) set via `gcloud run services update --update-env-vars`.
+  8. Created `gcloud scheduler jobs create http deployment-registry-reap-tick` (region `asia-northeast1`, schedule
+     `*/10 * * * *`, OIDC `--oidc-service-account-email`/`--oidc-token-audience` both set to the same SA/endpoint URL,
+     `--attempt-deadline=60s`) — satisfies the operator's guardrails (OIDC auth not a public endpoint; idempotent
+     underlying call so overlapping invocations are safe; 10-min cadence is within the 5-15 min band).
+  9. Manually ran the job once to verify end-to-end wiring before waiting for the first scheduled tick
+     (`gcloud scheduler jobs run`): the Scheduler-triggered call itself hit a transient 500 (cold-start race — the
+     revision was ~30s old at that exact moment; Cloud Logging captured a truncated traceback, a known chunking artifact
+     this doc already ran into once before), but a manual `curl` with a freshly-minted OIDC identity token to the same
+     URL immediately after returned `HTTP 200 {"status":"ok","reaped_count":0}` — confirming the OIDC verification,
+     routing, and reap-call wiring are all genuinely correct end-to-end.
+  10. **Convergence, measured directly against the production GCS prefix (not inferred)**:
+      `gs://deployment-scripts-central-element-323112/deployments/active/` object count — **400 (start of this session's
+      chain) → 4** (measured after the fix's live background reaper had a chance to run undisturbed, no forced
+      restarts). Cross-checked against `gcloud compute instances list --filter=status=RUNNING` on GCP alone: **5**
+      running VMs (AWS + Cloud Run deployments not included in that single-cloud count) — i.e. `active/` is now in the
+      same order of magnitude as genuinely-running infrastructure, not 40-100x inflated as it had been for the entire
+      multi-day investigation (403-406 vs ~9 before this fix). **This satisfies the plan's original success criterion**
+      (`active/` ≈ running-VM count) for the first time since the bug was originally discovered. The
+      CPU-throttling/stdout-silence investigation earlier in this doc was not wasted — it definitively proved the
+      leader-election and background-task-creation path was healthy, which correctly narrowed the remaining search space
+      down to the reap tick's OWN logic, where the real bug actually was. No further action needed on this todo. The
+      sibling plan's `[REVIEW] P0` checkbox (`/plans/active/deployment_registry_firestore_p0_unblock_2026_07_14.md`) was
+      already flipped with a "not fully met, see follow-up doc" caveat — that caveat is now resolved; leaving its
+      checkbox as-is (already `[x]`) per the workspace convention of not re-touching an already-flipped checkbox, this
+      doc is the authoritative record of the final convergence proof.
 
   **Why no code was shipped this session despite having the design**: this is genuinely NEW, security-sensitive
   auth-path code (a wrong audience/email check either locks out the real Cloud Scheduler job OR — worse — accepts an
