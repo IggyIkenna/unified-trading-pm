@@ -31,7 +31,7 @@ related:
 created: "2026-07-24"
 parent_epic: manifest_master
 assigned_vm: NA
-execution_scope:
+execution_scope: orchestrator-agent
   local-only # corrected 2026-07-25 (plan-reconcile): was `orchestrator-agent`, mismatched with
   # `assigned_vm: NA` against task_template.md's two valid PAIRED tracks (LOCAL = NA+local-only,
   # AO-DISPATCHED = planning+orchestrator-agent). Functionally inert either way — `assigned_vm: NA` alone already
