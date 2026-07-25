@@ -46,6 +46,10 @@ depends_on: []
 
 # Tighten audit-cron cadence to 15 min + add open/close Slack alerting
 
+> **✅ ARCHIVED 2026-07-25 — RESOLVED.** Both todos shipped in the same session that filed this doc: cadence tightened
+> to 15 min (verified live via `systemctl list-timers`), and the open/close Slack notifier built + wired + verified (10
+> passing regression tests + live webhook-env confirmation on the VM). See each todo's evidence line below.
+
 ## What's needed
 
 Currently shipped (`agent-orchestrator@d266e7e`): `audit-stale-gate-references.timer` (hourly) and
