@@ -241,9 +241,16 @@ inherited from the first shipped batch:
       from the live registry (224 Understat gaps, 133 non-MVP football) rather than hand-adding deltas.
 - [ ] [DATA] P1. **South Asia (AFC)** — Bangladesh, Bhutan, India, Maldives, Nepal, Pakistan (6 countries). (repo:
       unified-api-contracts). **Done when**: per the shared contract above, for this country list.
-- [ ] [DATA] P1. **East/Southeast Asia (AFC)** — Cambodia, Chinese Taipei, Hong Kong, Indonesia, Laos, Macao, Malaysia,
-      Mongolia, Myanmar, Philippines, Singapore, Thailand, Vietnam (13 countries). (repo: unified-api-contracts). **Done
-      when**: per the shared contract above, for this country list.
+- [x] ✅ [DATA] P1. **East/Southeast Asia (AFC)** — Cambodia, Chinese Taipei, Hong Kong, Indonesia, Laos, Macao,
+      Malaysia, Mongolia, Myanmar, Philippines, Singapore, Thailand, Vietnam (13 countries).
+      `unified-api-contracts@cf4c8491` (21 entries, 11 of 13 countries). Chinese Taipei + Hong Kong SKIPPED — zero
+      catalog entries. Indonesia/Thailand/Vietnam got full top+below+cup; the rest top-league only (+ cup where
+      genuinely unambiguous). Two real near-miss traps caught via WebSearch, not guessed: (1) Malaysia's catalog
+      "Premier League" is DEFUNCT since 2022 (replaced by the A1 Semi-Pro League, not in the catalog) — excluded rather
+      than added as a stale division-below; (2) Malaysia has two prestigious cups (Malaysia Cup, historic; FA Cup,
+      today's functionally-primary via continental qualification) — picked FA Cup on that evidence, not a coin flip.
+      Mongolia's/Thailand's catalog "Super Cup"/"Champions Cup" excluded (verified exhibition matches). 0 registry
+      collisions, MVP-scope unchanged at 96. quality-gates.sh green.
 - [ ] [DATA] P1. **Oceania (OFC)** — Fiji, New Zealand (2 countries). (repo: unified-api-contracts). **Done when**: per
       the shared contract above, for this country list.
 - [ ] [DATA] P2. Once ALL 11 domestic-selection batches above land (not just one), run step 2 (curated-universe
