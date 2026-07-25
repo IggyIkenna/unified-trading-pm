@@ -91,10 +91,12 @@ code's own comments warn about (stale `spawn_base_role` surviving past its ownin
       `test_spawn_base_role_with_live_agentrow_still_held_working` + fixed the pre-existing
       `test_one_off_task_less_boot_holds_slot_working` to seed a realistic live AgentRow fixture, since it had been
       asserting SlotRow-only state that is actually the stale case this fixes)
-- [ ] [OPERATOR] P2. Until the above ships, an operator hitting this state should reset the slot manually (there is no
-      clean self-service endpoint today) — flag this as a UX gap in the same PR: the fix in P1 covers the self-heal
-      path, but consider also exposing a `POST /api/slots/{id}/clear-spawn-role` escape hatch for support cases where
-      the AgentRow legitimately still exists but the operator wants to force a reset.
+- [ ] [OPERATOR] P3. **The "reset manually until it ships" guidance below is now moot — P1/P2/P3 above have shipped.**
+      Live-checked 2026-07-25T23:47Z: no slot is currently in this defect's state (task-less, `status=working`, stale
+      `spawn_base_role`); the one `stale` slot at that moment (slot 1) was an unrelated dead-worker/ alive-tmux case for
+      the watchdog to reap, not this bug. Remaining ask is purely optional hardening: consider exposing a
+      `POST /api/slots/{id}/clear-spawn-role` escape hatch for the rarer case where the AgentRow legitimately still
+      exists but an operator wants to force a reset anyway. Not urgent — downgraded from P2.
 
 ## Current slot-2 status (informational, not part of the fix)
 
