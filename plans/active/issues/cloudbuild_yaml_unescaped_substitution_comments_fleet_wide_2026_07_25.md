@@ -183,7 +183,14 @@ fix. No behavior change to the actual build (bash never executed these comments)
       operator (not a hard-stop), do not bypass the gate — park until `mtds_flaky_is_test_run_pollution-001` (slot 8, in
       progress) lands and quality-gates.sh goes genuinely green, then re-run quickmerge ONCE. Synthetic condition
       `auto_unpark__cloudbuild_yaml_unescaped_substitution_comments_fleet_wide-006` created (false) as the durable-park
-      signal, mirroring `server/auto_park.py`'s naming convention.
+      signal, mirroring `server/auto_park.py`'s naming convention. RESUME: this todo's `BLOCKED-` marker makes
+      `/skip-current-task` orphan the backlog row on sight (confirmed 2026-07-25 — no manual `backlog.yaml` edit
+      needed); once `mtds_flaky_is_test_run_pollution-001` lands and a clean `quality-gates.sh` run is confirmed on
+      `market-tick-data-service`, whoever resumes should: (1) remove the `BLOCKED-pending-underlying-fix` marker from
+      this line so `PlanRegenLoop` re-derives it as dispatchable, (2) flip
+      `auto_unpark__cloudbuild_yaml_unescaped_substitution_comments_fleet_wide-006` to `true` via
+      `POST /api/prerequisites/<name>` for symmetry/audit trail, (3) in slot 2's worktree (or a fresh pull of the same
+      diff), re-run `bash scripts/quickmerge.sh --agent --files cloudbuild.yaml` ONCE against a confirmed-green tree.
 - [x] ✅ [INFRA] P1. Fix `ml-service/cloudbuild.yaml` lines 94, 261 (bare `$VERSION` in comments → `$$VERSION`) + run
       the exhaustive re-scan above to confirm zero remaining. Ship via quickmerge. (repo: ml-service) —
       ml-service@1257161, exhaustive re-scan confirmed zero remaining bare substitutions.
