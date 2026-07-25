@@ -27,11 +27,12 @@ related:
     /plans/active/prediction_consolidated_closeout_2026_07_18.md,
     /plans/active/prediction_satellite_ao_dispatch_batch1_2026_07_25.md,
     /plans/active/prediction_satellite_ao_dispatch_batch2_2026_07_25.md,
+    /plans/active/prediction_phase_ab_residuals_2026_07_24.md,
     /plans/active/prediction_phase_d_formal_smoke_and_backfill_2026_07_24.md,
     /plans/active/issues/prediction_polymarket_legacy_dual_write_trees_metadata_loss_2026_07_24.md,
   ]
 created: "2026-07-25"
-last_updated: "2026-07-25"
+last_updated: "2026-07-25" # same-day correction (consolidated-closeout split pass): all 5 todos' Done-when/Source lines corrected to point at their new homes in phase_ab_residuals/phase_d (the parent's "Queued audits + reviews" section they originally cited no longer carries real checkboxes); related: extended to add phase_ab_residuals
 parent_epic: predictions_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -69,6 +70,13 @@ drift_direction: advance-code
 >
 > **No GCS delete / `--apply` mutation and no VM launch appears in any todo below** — `task_template.md` finding O's
 > delete/VM-launch tagging requirement does not apply to this batch.
+>
+> **Corrected 2026-07-25 (same-day, corpus-wide referrer fixup — consolidated-closeout split pass).** After this plan
+> was drafted, the 5 source todos below physically relocated OUT of `prediction_consolidated_closeout_2026_07_18.md`'s
+> "Queued audits + reviews" / "Distinct Values" sections into `prediction_phase_ab_residuals_2026_07_24.md` (todo 1's
+> audit, todo 4's reconciliation-cadence) and `prediction_phase_d_formal_smoke_and_backfill_2026_07_24.md` (todos 2/3/5)
+> — that parent no longer carries a real checkbox for any of them. Every "Done when" / "Source" line below has been
+> updated to point at the item's NEW home; the underlying task each todo executes is unchanged.
 
 ## Todos
 
@@ -83,10 +91,11 @@ drift_direction: advance-code
       batch1 has landed by the time this runs, don't re-file that as a new finding, just note it's already tracked.
       Repos: instruments-service, market-tick-data-service (read + new-finding-doc writes only). **Done when**: every
       adapter file in scope has either a filed finding (a new `plans/active/issues/<slug>.md`, one per distinct defect
-      class found) or an explicit "0 findings" line recorded in `prediction_consolidated_closeout_2026_07_18.md`'s
-      Progress Log — not silence. On success, flip this todo's corresponding checkbox in that doc's "Queued audits +
-      reviews" section (the [BACKEND] P2 adapter-audit item). Source: `prediction_consolidated_closeout_2026_07_18.md`,
-      "Queued audits + reviews".
+      class found) or an explicit "0 findings" line recorded in `prediction_phase_ab_residuals_2026_07_24.md`'s Progress
+      Log — not silence. On success, flip this todo's corresponding checkbox in that doc's "A5 — Adapter code-quality
+      audit" subsection. Source: **corrected 2026-07-25** — `prediction_phase_ab_residuals_2026_07_24.md`, "A5 — Adapter
+      code-quality audit" (was `prediction_consolidated_closeout_2026_07_18.md`'s "Queued audits + reviews" — relocated
+      there same-day).
 - [ ] [DATA] P2. **`data-pipeline-check-is` — pre-Phase-B baseline checkpoint (partial slice).** Run
       `/data-pipeline-check-is --asset-group prediction` ONE time now as the pre-Phase-B baseline checkpoint. Phase B
       (the canonicalisation migration) has NOT started — it stays gated on a shared cefi/tradfi-migration VM drain
@@ -94,20 +103,23 @@ drift_direction: advance-code
       todo's "twice more" requirement (pre-Phase-B baseline + Phase-B mid-migration spot-check) is currently
       dispatchable; the mid-migration leg is genuinely blocked (there is no migration in flight to spot-check yet). This
       is a partial-parallelism SPLIT per `task_template.md` §4 — the mid-migration leg stays tracked by the ORIGINAL
-      todo in the parent doc, unchanged. Repo: market-tick-data-service / instruments-service (via the skill, `-test-`
-      buckets only). **Done when**: the run's report path + date is recorded in
-      `prediction_consolidated_closeout_2026_07_18.md`'s Progress Log, explicitly labeled "pre-Phase-B baseline (1 of
-      2)" — do NOT flip the parent doc's original `data-pipeline-check-is` checkbox (it remains open pending the
-      mid-migration leg). Source: `prediction_consolidated_closeout_2026_07_18.md`, "Queued audits + reviews".
+      todo, unchanged. Repo: market-tick-data-service / instruments-service (via the skill, `-test-` buckets only).
+      **Done when**: the run's report path + date is recorded in
+      `prediction_phase_d_formal_smoke_and_backfill_2026_07_24.md`'s Progress Log, explicitly labeled "pre-Phase-B
+      baseline (1 of 2)" — do NOT flip that doc's `data-pipeline-check-is` 3x-cadence-top-up checkbox (it remains open
+      pending the mid-migration leg). Source: **corrected 2026-07-25** —
+      `prediction_phase_d_formal_smoke_and_backfill_2026_07_24.md`, Phase D section (was
+      `prediction_consolidated_closeout_2026_07_18.md`'s "Queued audits + reviews" — relocated there same-day).
 - [ ] [DATA] P2. **`data-pipeline-check-mtds` — pre-Phase-B baseline checkpoint (partial slice).** Same structure as the
       `-is` todo above: run `/data-pipeline-check-mtds --asset-group prediction` ONE time now as the pre-Phase-B
       baseline (the MTDS prediction `-test-` bucket isolation fix already shipped per the parent doc's Ground-truth
       verdict, so this is safe to run against `-test-` buckets only); the Phase-B mid-migration spot-check leg stays
       blocked, tracked by the original todo. Repo: market-tick-data-service (`-test-` buckets only). **Done when**: the
-      run's report path + date is recorded in `prediction_consolidated_closeout_2026_07_18.md`'s Progress Log,
-      explicitly labeled "pre-Phase-B baseline (1 of 2)" — do NOT flip the parent doc's original
-      `data-pipeline-check-mtds` checkbox. Source: `prediction_consolidated_closeout_2026_07_18.md`, "Queued audits +
-      reviews".
+      run's report path + date is recorded in `prediction_phase_d_formal_smoke_and_backfill_2026_07_24.md`'s Progress
+      Log, explicitly labeled "pre-Phase-B baseline (1 of 2)" — do NOT flip that doc's `data-pipeline-check-mtds`
+      3x-cadence-top-up checkbox. Source: **corrected 2026-07-25** —
+      `prediction_phase_d_formal_smoke_and_backfill_2026_07_24.md`, Phase D section (was
+      `prediction_consolidated_closeout_2026_07_18.md`'s "Queued audits + reviews" — relocated there same-day).
 - [ ] [DATA] P2. **`/data-pipeline-reconciliation` — verify predating run + cite the already-existing uncited pass (no
       new live run needed).** (a) Search the corpus (`plans/audit/results/`, `plans/active/`, `plans/archive/`) for a
       `/data-pipeline-reconciliation prediction` report dated BEFORE 2026-07-20 (the confirmed baseline,
@@ -121,13 +133,18 @@ drift_direction: advance-code
       this citation, either 2-of-3 or 3-of-3 dated runs already exist — **only the post-Phase-B-migration final-gate
       pass (genuinely blocked until Phase B lands) can remain**; do not run a NEW live reconciliation pass as part of
       this todo, the discovery IS the deliverable. Repo: unified-trading-pm (docs only, read + cite). **Done when**:
-      (a)'s search result and (b)'s citation are both recorded in `prediction_consolidated_closeout_2026_07_18.md`'s
-      Progress Log with the exact report path(s); the "Distinct Values / axis-value census" section is updated to list
-      the 2026-07-24 pass alongside the 2026-07-20 baseline. **Note for the finalize plan**: this does NOT fully satisfy
-      the parent doc's P3 "Duplicate note" todo (Distinct Values section) — that todo's own done-when explicitly
-      requires POST-Phase-B-migration numbers, which neither the 07-20 nor 07-24 pass is. Source:
-      `prediction_consolidated_closeout_2026_07_18.md`, "Queued audits + reviews" + "Distinct Values / axis-value
-      census".
+      (a)'s search result and (b)'s citation are both recorded in `prediction_phase_ab_residuals_2026_07_24.md`'s
+      Progress Log with the exact report path(s) (**corrected 2026-07-25** — was
+      `prediction_consolidated_closeout_2026_07_18.md`'s Progress Log; the reconciliation-cadence checkbox this todo
+      feeds relocated there same-day, merged with the former P3 duplicate-note); the parent doc's "Distinct Values /
+      axis-value census" section (unchanged location) is updated to list the 2026-07-24 pass alongside the 2026-07-20
+      baseline. **Note for the finalize plan**: this does NOT fully satisfy
+      `prediction_phase_ab_residuals_2026_07_24.md`'s merged reconciliation-cadence todo (**corrected 2026-07-25** — was
+      the parent doc's P3 "Duplicate note" todo, now merged into that phase_ab todo) — that todo's own done-when
+      explicitly requires POST-Phase-B-migration numbers, which neither the 07-20 nor 07-24 pass is. Source: **corrected
+      2026-07-25** — `prediction_phase_ab_residuals_2026_07_24.md`'s merged Phase-B reconciliation todo + the parent
+      doc's "Distinct Values / axis-value census" section (was `prediction_consolidated_closeout_2026_07_18.md`'s
+      "Queued audits + reviews" + "Distinct Values / axis-value census").
 - [ ] [REVIEW] P2. **Adversarial AO-dispatch-readiness pass (Track-Y-style).** Run the same adversarial
       AO-dispatch-readiness pass sports's Track Y ran (method: the archived
       `sports_consolidated_closeout_history_2026_07_24.md`'s "Track Y — PLAN-QUALITY REMEDIATION" section, mirroring
@@ -136,16 +153,19 @@ drift_direction: advance-code
       missing definition-of-done, stale checkboxes (a todo already resolved elsewhere in the same doc but left `[ ]`),
       and unsafe digest-checkbox syntax (a "referenced, not duplicated" digest bullet using real `- [ ]` brackets
       instead of `- **[TAG]**`). Repo: unified-trading-pm (docs only). **Done when**: findings (or an explicit "0
-      findings") are recorded in `prediction_consolidated_closeout_2026_07_18.md`'s Progress Log, mirroring Track Y's
-      format; on success, flip this todo's corresponding checkbox in the parent doc's "Queued audits + reviews" section.
-      Source: `prediction_consolidated_closeout_2026_07_18.md`, "Queued audits + reviews".
+      findings") are recorded in `prediction_phase_d_formal_smoke_and_backfill_2026_07_24.md`'s Progress Log, mirroring
+      Track Y's format; on success, flip this todo's corresponding checkbox in that doc's Phase D section. Source:
+      **corrected 2026-07-25** — `prediction_phase_d_formal_smoke_and_backfill_2026_07_24.md`, Phase D section (was
+      `prediction_consolidated_closeout_2026_07_18.md`'s "Queued audits + reviews" — relocated there same-day).
 
 ## Deferred — stays with the parent doc, not extracted (2 of the parent's 7 native todos)
 
 - **P3 "Duplicate note" (Distinct Values / axis-value census section)** — not independently actionable: its own text
   says it's "satisfied automatically" once the reconciliation todo above is met, and its literal done-when requires
-  POST-Phase-B-migration numbers, which this batch's todo 4 explicitly does not produce (Phase B hasn't started). Stays
-  open in the parent doc, tracked there, re-check once Phase B lands.
+  POST-Phase-B-migration numbers, which this batch's todo 4 explicitly does not produce (Phase B hasn't started).
+  **Corrected 2026-07-25**: this item no longer "stays open in the parent doc" as a separate checkbox — the
+  consolidated-closeout split pass merged it INTO `prediction_phase_ab_residuals_2026_07_24.md`'s reconciliation-cadence
+  todo (same underlying action, one checkbox). Re-check that merged todo once Phase B lands.
 - **P1 POLYMARKET `prediction_trades` schema-extension migration** — STAYS HUMAN. The parent doc frames this as a
   bounded "3-step sequence" (schema design → writer update + migration → register in the cutover inventories) against
   the linked issue doc
