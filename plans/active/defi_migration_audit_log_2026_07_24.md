@@ -10,7 +10,10 @@ summary:
   umbrella cap.
 status: active
 nature: process
-asset_group: [cross-cutting]
+asset_group:
+  [defi] # corrected 2026-07-25 (ag-closeout-audit orthogonality fix) -- was [cross-cutting], a genuine mistag:
+  # this doc's own summary says "Verbatim DeFi-specific migration audit trail" -- it inherited the parent
+  # master-coordinator's cross-cutting tag on extraction instead of being corrected to its real single-AG scope
 stage: [meta]
 repos:
   [

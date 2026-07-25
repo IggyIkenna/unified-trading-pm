@@ -7,7 +7,10 @@ summary: >-
   view, and reconciling orphan/junk DeFi venue spellings (`VAULT`, `SUSHISWAP` classic-vs-V3 ambiguity).
 status: active
 nature: process
-asset_group: [cross-cutting]
+asset_group:
+  [defi] # corrected 2026-07-25 (ag-closeout-audit orthogonality fix) -- was [cross-cutting], a genuine mistag:
+  # lst-rates + DeFi venue spellings (VAULT/SUSHISWAP) are DeFi-only content, inherited the parent harness's
+  # cross-cutting tag on fork instead of being corrected to its real single-AG scope
 stage: [meta]
 repos:
   [

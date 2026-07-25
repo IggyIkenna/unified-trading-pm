@@ -7,7 +7,10 @@ summary: >-
   sports CF-5 trades-relabel fix, last recorded (2026-06-16) as code-complete but not yet landed.
 status: active
 nature: process
-asset_group: [cross-cutting]
+asset_group:
+  [sports] # corrected 2026-07-25 (ag-closeout-audit orthogonality fix) -- was [cross-cutting], a genuine mistag:
+  # pre-launch-window + CF-5 trades-relabel are sports-specific, inherited the parent harness's cross-cutting tag
+  # on fork instead of being corrected to its real single-AG scope
 stage: [meta]
 repos:
   [

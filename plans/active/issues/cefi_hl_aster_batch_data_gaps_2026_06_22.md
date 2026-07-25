@@ -4,7 +4,9 @@ title: CeFi HL/ASTER batch data gaps — day-bleed rejection, HL trades under-ca
 summary: "Per-data_type manifest breakdown (consolidated index + live per-VM shards):"
 status: open
 nature: process
-asset_group: [cross-cutting]
+asset_group:
+  [cefi] # corrected 2026-07-25 (ag-closeout-audit orthogonality fix) -- was [cross-cutting], a genuine mistag:
+  # HL(Hyperliquid)/ASTER are cefi venues and the doc's own tags already say "cefi" -- content is cefi-only
 stage: [meta]
 repos:
   [

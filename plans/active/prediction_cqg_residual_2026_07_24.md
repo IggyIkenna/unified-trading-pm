@@ -7,7 +7,10 @@ summary: >-
   and the downstream cqg-grain catalogue wiring it gates.
 status: active
 nature: process
-asset_group: [cross-cutting]
+asset_group:
+  [prediction] # corrected 2026-07-25 (ag-closeout-audit orthogonality fix) -- was [cross-cutting], a genuine
+  # mistag: cqg-classifier coverage is prediction-market-specific, inherited the parent harness's cross-cutting
+  # tag on fork instead of being corrected to its real single-AG scope
 stage: [meta]
 repos:
   [
