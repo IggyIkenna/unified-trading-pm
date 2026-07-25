@@ -97,3 +97,60 @@ SAFE marker is wrongly classified. The finding is about what "fix the FLAGGED on
   context and the queued operator decisions this issue backs.
 - `market-tick-data-service/scripts/one_offs/delete_migrated_defi_markers_2026_07_23.py` — the verification tool itself
   (module docstring already documents the GMX 1-row precedent this issue confirms at scale).
+
+## Update (2026-07-25, later same session — deeper per-cluster verification)
+
+Direct parquet inspection + two dispatched research agents refined every cluster's characterization. Corrections to the
+analysis above:
+
+- **GMX perp_funding — confirmed venue-wide daily aggregate, not per-instrument data at all.** Downloaded and inspected
+  a real marker directly: `market="all"`, `symbol`/`instrument_id`/`coin` all NULL, but `funding_rate_long/short`,
+  `long_oi_usd`/`short_oi_usd`, `tvl_usd`, `daily_volume_usd` populated -- one row = the WHOLE GMX venue on one chain
+  for one day. There is no per-instrument content to lose; the per-instrument split migration was applied to a data_type
+  that structurally isn't per-instrument. Design question (should this data_type even go through per-instrument
+  splitting?), confirmed not a bug.
+- **lst_rates cluster root-caused, and it's actually TWO different, more benign situations than first assumed**:
+  - `COINBASE` (cbETH) / `SWELL` (swETH): every FLAGGED marker is `marker_rows=1`, and it's a genuinely legitimate
+    single-instrument row (cbETH is the only token for protocol=coinbase, so 1 row/day is correct, not a data-loss
+    symptom). The split-migration's "write my own leaf" step just never completed for these -- fixing this is a trivial,
+    low-risk leaf-copy, not a backfill, since there's zero ambiguity about the content.
+  - `MAKER` (sDAI) / `ETHENA` (sUSDe): these are PRE-2026-07-23 remnants of a data_type that has since been corrected --
+    `lst_rates_handler.py`'s own code history explicitly removed sDAI/sUSDe from `lst_rates` (2026-07-23,
+    `lst_venue_registry_gap_and_cron_crash_loop_2026_07_22.md`) because they're not real LSTs (no validator staking),
+    reassigning them to `vault_share_price_handler.py`. These old markers represent a classification the system has
+    already moved away from.
+  - **Canonical destination for the 4 rate types the operator asked about**: `lst_rates` (this handler) = ONLY the
+    on-chain protocol par/redemption rate (e.g. Lido's `getPooledEthByShares` via direct RPC `eth_call` -- confirmed
+    reading the handler code, not the subgraph). The Chainlink/lending-oracle rate already has its own separate
+    canonical home: `oracle_prices` (see `issues/defi_lst_oracle_timestamp_glued_instrument_id_2026_07_20.md`). DEX
+    market rate and CEX rate for an LST token need no new data_type -- they're just that token traded on whatever
+    DEX/CEX it trades on, captured by the existing `dex_pool_state`/`dex_swaps`/cefi market-data paths, same as any
+    other token.
+- **TRADER_JOE_V2/VELODROME_V2/CURVE dex_pool_state — root cause is an ACTIVE CODE BUG, not just historical.** Full
+  detail in the new sibling issue, `issues/defi_dex_pools_subgraph_query_missing_input_tokens_2026_07_25.md`: the
+  subgraph query used for these 3 venues (`_CURVE_QUERY`, verified byte-for-byte in `dex_pools_handler.py`) never
+  requests `inputTokens { symbol }` from the subgraph -- only a sibling query variant (`_MESSARI_DEX_QUERY`, used by
+  other venues) does. This means symbol resolution ONLY happens via the instruments-service catalogue fallback (tier 1),
+  never via the subgraph (tier 2), for these 5 venues (curve/sushiswap/gmx/velodrome_v2/trader_joe_v2). **This bug is
+  still live** -- DeFi capture is currently operator-paused (since 2026-07-18, pending the per-instrument
+  re-architecture), so it isn't actively producing bad rows RIGHT NOW, but will resume producing them the moment capture
+  restarts, unless fixed first.
+- **Canonical-coverage check, answering "do we already have canonical data for this shard dimension elsewhere?"**
+  (checked live GCS + codex, 2026-07-25):
+
+  | Shard                                  | Current/live coverage?                                                                                                      | Already well-attributed?                                              |
+  | -------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+  | TRADER_JOE_V2/AVALANCHE/dex_pool_state | None -- venue currently empty                                                                                               | N/A                                                                   |
+  | VELODROME_V2/OPTIMISM/dex_pool_state   | Yes, through 2026-07-24                                                                                                     | Yes -- masked by catalogue-tier-1 coverage despite the same query bug |
+  | CURVE/ETHEREUM/dex_pool_state          | Yes, through 2026-07-18                                                                                                     | No -- still address-keyed, bug visibly live                           |
+  | UNISWAP_V3/ETHEREUM/dex_pool_swaps     | Yes, through 2026-07-24                                                                                                     | Yes -- different query path, never had this bug                       |
+  | HYPERLIQUID/HYPERLIQUID/perp_funding   | None as this shard -- venue reclassified `asset_group=cefi` 2026-06-25, current cefi capture only writes `data_type=trades` | N/A -- whole data_type discontinued for this venue                    |
+  | SUSHISWAP dex_pool_state               | Stopped ~2026-06-20/25                                                                                                      | Was address-keyed when active (same bug)                              |
+  | AURORA/AURORA/gas_fees                 | Continues under `venue=ALCHEMY,chain=AURORA` (RPC provider replaced chain as the venue key)                                 | Not really comparable -- single feed, not per-pool                    |
+
+  Net: VELODROME_V2 and UNISWAP_V3's old batch markers are genuinely low-value to fix (current data already covers the
+  same shard well). CURVE's gap is live and ongoing. TRADER_JOE_V2 and HYPERLIQUID/perp_funding have literally no
+  current equivalent -- the old markers are the only record, for whatever that's worth given the underlying
+  attribution/classification issues.
+
+Full detail on the active bug: `issues/defi_dex_pools_subgraph_query_missing_input_tokens_2026_07_25.md`.
