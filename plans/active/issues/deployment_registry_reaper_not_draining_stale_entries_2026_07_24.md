@@ -208,7 +208,7 @@ flipping the checkbox.
       cold census computations — 2 concurrent cache-key computations OOM-killed the whole container, 17,002MiB used vs
       16,384MiB limit, `Container terminated on signal 9`, a MORE SEVERE failure mode than the bug it fixed) in
       [issues/deployment_api_inventory_cold_path_concurrent_oom_2026_07_24.md](deployment_api_inventory_cold_path_concurrent_oom_2026_07_24.md).
-- [ ] [BACKEND] P1. **Root-cause why `active/` is still not converging toward the live-VM count after the P0
+- [x] ✅ [BACKEND] P1. **Root-cause why `active/` is still not converging toward the live-VM count after the P0
       `CancelledError`/grace-period fix (Todo 1) and P1 cold-cache fix (Todo 2) both shipped and were re-verified live
       (Todo 3, slot-4: still 403–404, unchanged).** This is Gap 1 itself, distinct from the sibling OOM regression
       (`deployment_api_inventory_cold_path_concurrent_oom_2026_07_24.md`, which tracks a DIFFERENT, newly-discovered
