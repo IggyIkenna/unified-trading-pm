@@ -95,9 +95,9 @@ drift_direction: advance-code
       independent re-read count; idempotent + resumable. **Self-justified, not `[OPERATOR]`-gated**: mirrors the same
       snapshot-then-copy-then-delete pattern this doc family already ships without an operator tag (K1/K2, the sports
       league_id relocation) — reversible via the snapshot, and scoped only to the venues whose class is already decided.
-      **Excludes** the 3 still-ambiguous venues (see the follow-on todo below). (repo: market-data-processing- service /
-      instruments-service). **Done when**: an independent re-read count of the moved objects matches the pre-move
-      snapshot count for exactly these 5 venues, with 0 objects lost.
+      **Excludes** the 3 still-ambiguous venues (see the follow-on todo below). (repo: instruments-service /
+      market-data-processing-service). **Done when**: an independent re-read count of the moved objects matches the
+      pre-move snapshot count for exactly these 5 venues, with 0 objects lost.
 - [ ] [OPERATOR] P1. **Once the mapping todo above resolves bare `BETFAIR`/`ODDS_API`/`PINNACLE`, move those venues' GCS
       objects the same way** (same snapshot → move → independent re-read count pattern as the todo above).
       `[OPERATOR]`-gated because it cannot execute correctly until the mapping decision lands — tagging it (rather than
