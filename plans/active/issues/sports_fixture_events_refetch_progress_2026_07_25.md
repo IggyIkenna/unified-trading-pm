@@ -35,6 +35,7 @@ supersedes:
 superseded_by:
 resolved_by:
 source: ["sports_satellite_ao_dispatch_batch2-031, slot 2, 2026-07-25"]
+drift_direction: advance-code
 ---
 
 # fixture_events canonical re-fetch — census done, launch pending
