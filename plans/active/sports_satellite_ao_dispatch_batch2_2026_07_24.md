@@ -741,12 +741,14 @@ source: >-
       abandon recovery (ruling 2026-07-25), data unrecoverable. Source:
       `issues/mdt_legacy_canonical_row_gap_2026_07_16.md`,
       `issues/mdt_legacy_bucket_deleted_before_recovery_2026_07_25.md`.
-- [ ] [DOC] P3. **File a new issue doc** for the standalone finding: "30/200 sampled canonical MDT objects carry
+- [x] ✅ [DOC] P3. **File a new issue doc** for the standalone finding: "30/200 sampled canonical MDT objects carry
       duplicate rows on the poll key (event, market, outcome, bm_time, price, fetch_utc), independent of the OR-5b
-      cutover." (The de-dup-on-write remediation itself is already folded into the recovery-sequence todo above's step 2
-      spec — this todo is only the standalone documentation action.) (repo: unified-trading-pm `plans/active/issues/` —
-      new doc, standard issue frontmatter). **Done when**: a new issue doc exists under `plans/active/issues/`
-      documenting the finding per standard lifecycle. Source: `issues/mdt_legacy_canonical_row_gap_2026_07_16.md`.
+      cutover." — `issues/mdt_canonical_odds_poll_key_duplicate_rows_2026_07_25.md`. Note: the recovery-sequence todo
+      above's step 2 dedup was scoped only to the abandoned 32-day recovery's own merged rows, never the wider
+      already-existing canonical population this finding covers, and that recovery is now itself ABANDONED (source
+      legacy bucket deleted before STEP 1 ran) — so the new doc adds 2 fresh `[DATA]` fix todos (root-cause + measure,
+      then de-dup if warranted) rather than treating remediation as already covered elsewhere. Source:
+      `issues/mdt_legacy_canonical_row_gap_2026_07_16.md`.
 
 ### From `issues/sports_league_id_namespace_migration_2026_07_20.md`
 
