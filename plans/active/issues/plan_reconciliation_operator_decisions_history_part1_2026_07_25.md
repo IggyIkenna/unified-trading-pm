@@ -27,6 +27,8 @@ resolved_by:
   "extracted verbatim from the closed 2026-07-11 contradiction audit; every finding's ruling + disposition lives in the
   parent's §A2 rulings table and Progress Log, not in this file"
 locked_by:
+drift_direction: advance-code
+depends_on: []
 ---
 
 # Plans-corpus contradiction audit — history part 1/4 (Section A, findings 1-59)
