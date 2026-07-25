@@ -26,7 +26,7 @@ last_updated: "2026-07-25"
 parent_epic: defi_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
-priority: P2
+priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 1.0
 estimate_calibrated_ai_days: 0.8
@@ -52,7 +52,7 @@ drift_direction: advance-code
 
 ## Todos
 
-- [ ] [REVIEW] P2. **Reconcile all 29 distinct source docs' checkboxes** (corrected 2026-07-25 plan-reconcile: the
+- [ ] [REVIEW] P1. **Reconcile all 29 distinct source docs' checkboxes** (corrected 2026-07-25 plan-reconcile: the
       original list below was missing the 29th doc,
       `issues/defi_solana_dex_pools_fake_history_recurrence_prd_bucket_2026_07_23.md` — the source of todo 54, appended
       after operator-decision entry #3 resolved; batch1's own frontmatter summary already independently states the
@@ -96,14 +96,14 @@ drift_direction: advance-code
       a doc's `status` to `resolved` if it genuinely reaches 0 open todos. **Done when**: all 29 source docs'
       corresponding checkboxes/sections are flipped with verified evidence (including the consolidated-plan Track 2
       cross-flip above), and any doc that genuinely reaches 0 open todos is flipped to `status: resolved`.
-- [ ] [REVIEW] P2. **Re-check the 1 too-large-doc exclusion for a batch2 pass.** Re-read
+- [ ] [REVIEW] P1. **Re-check the 1 too-large-doc exclusion for a batch2 pass.** Re-read
       `issues/defi_dexpool_second_writer_path_and_zero_capture_2026_07_10.md`'s current state — has whatever made it
       too-large/risky at batch-1 triage time settled enough that a fresh, precisely-scoped triage pass could now safely
       extract its AO-eligible candidate? If yes, recommend and scope a `defi_satellite_ao_dispatch_batch2` candidate
       item with a concrete done-when; if no, record why it's still too volatile and re-check again at the next batch
       cycle. **Done when**: the doc has an explicit settled-vs-still-volatile verdict recorded, with a scoped batch2
       candidate item if found settled.
-- [ ] [DIAG] P2. **Re-verify the Solana lending_indices path-shape operator ruling has been answered.** Check entry 3
+- [ ] [DIAG] P1. **Re-verify the Solana lending_indices path-shape operator ruling has been answered.** Check entry 3
       (Kamino/Solend `instrument_type` shape: `solana_lending` vs `solana_amm_pool`) in
       `plans/active/issues/autonomous_session_operator_decisions_2026_07_25.md`. If the operator has ruled: extract
       `issues/defi_solana_dex_pools_fake_history_recurrence_prd_bucket_2026_07_23.md`'s deferred candidate into a new
@@ -112,7 +112,7 @@ drift_direction: advance-code
       NOT spin a fresh todo — re-check at the next batch cycle. **Done when**: a definitive answered-vs-still-queued
       verdict is recorded here with the entry-3 status cited, and either a scoped batch2 candidate is created (if
       answered) or the item is confirmed still queued (if not).
-- [ ] [DOC] P3. **Archive `defi_satellite_ao_dispatch_batch1_2026_07_25.md`** via the standard 6-step ritual (per
+- [ ] [DOC] P1. **Archive `defi_satellite_ao_dispatch_batch1_2026_07_25.md`** via the standard 6-step ritual (per
       CLAUDE.md's plan-archival rule): migrate any remaining Deferred items to a tracked todo elsewhere (todos 2 and 3
       above should have already resolved the too-large-doc and operator-ruling exclusions — verify none remain
       untracked) → add the archive banner → run the codex-alignment check → grep the corpus for every referrer of

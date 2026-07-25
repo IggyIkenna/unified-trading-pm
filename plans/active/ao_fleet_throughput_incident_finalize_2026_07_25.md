@@ -20,7 +20,7 @@ last_updated: "2026-07-25"
 parent_epic: orchestrator_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
-priority: P1
+priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 0.3
 estimate_calibrated_ai_days: 0.24

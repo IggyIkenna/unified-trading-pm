@@ -31,7 +31,7 @@ last_updated: "2026-07-25"
 parent_epic: sports_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
-priority: P2
+priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 0.3
 estimate_calibrated_ai_days: 0.24
@@ -58,7 +58,7 @@ drift_direction: advance-code
 
 ## Todos
 
-- [ ] [DATA] P2. **Verify footystats MATCHES/PREDICTIONS/ODDS `pending_fetch` is still 0 and close the stale todo #4
+- [ ] [DATA] P1. **Verify footystats MATCHES/PREDICTIONS/ODDS `pending_fetch` is still 0 and close the stale todo #4
       checkbox in this issue doc.** Read the live `_index/availability_index.parquet` (single-walk discipline,
       shard-merged via `_merge_shard_frames`, same dedup key the reader/consolidator use) and confirm
       `(footystats,     MATCHES)` + `(footystats, PREDICTIONS)` + `(footystats, ODDS)` `pending_fetch == 0` still holds.
@@ -85,7 +85,7 @@ drift_direction: advance-code
       three read 0 and this doc's todo #4 checkbox + frontmatter `status` are flipped citing both the fresh read and the
       2026-07-12 archived-plan evidence, or (b) a nonzero count is found and filed as its own new finding (not silently
       re-closed). Source: `issues/footystats_matches_predictions_fetch_gaps_2026_07_08.md`.
-- [ ] [REVIEW] P2. **Reconcile the stale last todo in
+- [ ] [REVIEW] P1. **Reconcile the stale last todo in
       `plans/active/issues/fixtures_manifest_legacy_backfill_2026_07_24.md`** — a doc-sync gap, not a real conflict: (1)
       re-run the sanctioned census —
       `deployment-api/scripts/census_manifest_data_type_2026_07_24.py --service instruments-service --asset-group     sports --filter-prefix FIXTURES`
@@ -109,7 +109,7 @@ drift_direction: advance-code
       `fixtures_manifest_duplicate_collision_residual_2026_07_24.md`; a dated `## Update (2026-07-25)` section is added;
       no restamp script is written or re-run (docs-only change, zero production mutation) and `status: open` is left
       unchanged. Source: `issues/fixtures_manifest_legacy_backfill_2026_07_24.md`.
-- [ ] [DIAG] P2. **market-tick-data-service: sweep the manifest-driven `odds_horizon_bucket` index to size the extent of
+- [ ] [DIAG] P1. **market-tick-data-service: sweep the manifest-driven `odds_horizon_bucket` index to size the extent of
       the stale/zombie-tick contamination that predates the now-confirmed-shipped 2026-07-25 staleness-cap fix
       (`market-data-processing-service@aa6e8ac`, verified via `git log` — added `STALENESS_CAP_SECONDS`/
       `KICKOFF_PAST_CAP_SECONDS` to `_prepare_tick_data()`, 67/67 tests pass).** Scan

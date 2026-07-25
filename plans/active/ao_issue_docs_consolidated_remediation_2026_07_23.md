@@ -26,7 +26,7 @@ last_updated: 2026-07-23
 parent_epic: orchestrator_master
 assigned_vm: NA
 execution_scope: local-only
-priority: P1
+priority: P0
 estimate_class: refactor
 estimate_baseline_ai_days: 2
 estimate_calibrated_ai_days: 0.8
@@ -87,13 +87,13 @@ source: "/plan-reconcile AO-scope run 2026-07-23"
       no slot matches dirty>24h+no-live-session. No active incident; Plan B todo #7 (the periodic dirty-resolution
       sweep) stays exactly as prioritized — this result doesn't argue for deprioritizing it, since the gap is structural
       (no watchdog owns this today) regardless of today's snapshot.
-- [ ] [BACKEND] P2. BLOCKED-OPERATOR-DECISION — resolve the `/api/escalate` versus proposed `/api/escalation/{id}` route
+- [ ] [BACKEND] P0. BLOCKED-OPERATOR-DECISION — resolve the `/api/escalate` versus proposed `/api/escalation/{id}` route
       collision before ANY escalation code is written. `/api/escalate` already exists as the GHA-to-orchestrator CI-wall
       judgment dispatch; the proposed route is operator escalation. Whoever implements the second without noticing the
       first will either collide or wire operator escalations into the CI judgment path. Blocked on the
       `escalation_and_disaster_recovery_master` epic being un-paused. **Gate**: one of the two is renamed, or a recorded
       decision explains why the near-collision is acceptable.
-- [ ] [UI] P3. BLOCKED-UPSTREAM-DESIGN — build the backlog-relations view once a design lands. The brief plus real data
+- [ ] [UI] P0. BLOCKED-UPSTREAM-DESIGN — build the backlog-relations view once a design lands. The brief plus real data
       and a 100-task synthetic fixture were handed to the design agent on 2026-07-17; re-checked 2026-07-23 with no
       movement, no `GET /api/backlog/graph` endpoint and no relations UI commit. The model is a cross-cutting GRAPH, not
       a hierarchy, which is why three table/tree attempts were rejected. **Gate**: design received, implemented, and the

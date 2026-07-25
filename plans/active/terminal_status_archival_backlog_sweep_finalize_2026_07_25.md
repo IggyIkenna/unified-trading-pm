@@ -24,7 +24,7 @@ last_updated: 2026-07-25
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
-priority: P2
+priority: P0
 estimate_class: refactor
 estimate_baseline_ai_days: 0.3
 estimate_calibrated_ai_days: 0.12

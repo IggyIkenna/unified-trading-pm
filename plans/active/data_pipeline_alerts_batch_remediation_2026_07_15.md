@@ -85,7 +85,7 @@ stopping to ask. `/autonomous` was explicitly invoked. This is a LOCAL plan (`as
 
 ## Todos
 
-- [ ] [REVIEW] P2 — PARTIALLY DONE, time-bound limit. A full observation cycle (up to 24h for cefi's cadence) cannot
+- [ ] [REVIEW] P0. PARTIALLY DONE, time-bound limit. A full observation cycle (up to 24h for cefi's cadence) cannot
       complete inside this session — genuinely requires real wall-clock time to pass, not more agent effort. What COULD
       be verified now: the alerting-service + deployment-service dedup fixes are unit-tested to the exact claimed
       behavior (900s-apart collapses, 1801s-apart re-delivers) and both were independently re-derived by the adversarial
@@ -93,7 +93,7 @@ stopping to ask. `/autonomous` was explicitly invoked. This is a LOCAL plan (`as
       fixed, even without waiting out a live 24h cefi cycle to watch it directly. Genuinely unverified until real time
       passes: whether a RESOLVED/green bookend actually posts when the sports/tradfi/cefi conditions clear (that
       requires the underlying condition to actually clear first, which is a data-fix problem, not an alerting one).
-- [ ] [DOCS] P2. Tradfi mbp_10: correct
+- [ ] [DOCS] P0. Tradfi mbp_10: correct
       `tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md` to reflect that the UAC
       registry restriction is a confirmed-still-intentional operator scope decision, not an open gap — and check whether
       the `DP_RUN_MOSTLY_EMPTY` detector/alert for this specific cell should be suppressed/reclassified as expected

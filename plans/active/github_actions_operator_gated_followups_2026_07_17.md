@@ -36,7 +36,7 @@ last_updated: 2026-07-24
 parent_epic: deployment_and_user_management_master
 assigned_vm: NA
 execution_scope: local-only
-priority: P2
+priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 5
 estimate_calibrated_ai_days: 4
@@ -70,7 +70,7 @@ drift_direction: advance-code
 > Each item's own text already carries its full context (evidence, SSOT issue-doc pointers, operator asks) — nothing was
 > reworded.
 
-- [ ] [INFRA] P1. **`quickmerge.sh --agent` sentinel races its OWN rebase — WRITTEN UP, operator will fix later.** Full
+- [ ] [INFRA] P0. **`quickmerge.sh --agent` sentinel races its OWN rebase — WRITTEN UP, operator will fix later.** Full
       analysis (mechanism, line refs, repro, 3 candidate fixes + the negative test that must keep passing) lives in
       **`plans/archive/issues/quickmerge_agent_sentinel_race_vs_own_rebase_2026_07_16.md`** — that doc is the SSOT; do
       not re-analyse it here. One-line essence: STAGE 0.4 rebases your local commits (new SHAs), then STAGE 3 demands
@@ -79,7 +79,7 @@ drift_direction: advance-code
       fixed:** chain `quality-gates.sh --no-fix && quickmerge.sh …` in ONE shell (narrows the window; does not close
       it). Operator 2026-07-16: "we will also fix the issues with quickmerge --agent" — UNACKED, no plan owns it yet.
 
-- [ ] [INFRA] P2. **STEP 2d — assert-not-decorative on the mover set (NEW, from this plan's own audit 2026-07-17).** **3
+- [ ] [INFRA] P0. **STEP 2d — assert-not-decorative on the mover set (NEW, from this plan's own audit 2026-07-17).** **3
       of the 37 movers were long-dead silent no-ops** — `digest-drift-sweep` (never worked), `reconcile-release-tags`
       (dead since D13), `cassette-drift-check` (dead ~4 months, 52 false issues). **~8% of the audited surface was
       decorative, and NONE of it was caused by the flip** — the flip is simply what made someone read the logs. All
@@ -89,14 +89,14 @@ drift_direction: advance-code
       cheap recurring check that a mover's "did work" counter is not 0 on EVERY run for N days (and that "I did nothing"
       and "I could not look" are DIFFERENT exit states — the one-line assertion that would have caught all three on day
       one). Generalises `/codex/02-data/honest-absence-downstream-handling.md` from data to automation.
-- [ ] [INFRA] P2. **DELETE `reconcile-release-tags` (verdict reached 2026-07-17; saves ~48 no-op runs/day).** NOT a fix
+- [ ] [INFRA] P0. **DELETE `reconcile-release-tags` (verdict reached 2026-07-17; saves ~48 no-op runs/day).** NOT a fix
       — a deletion. It is impossible as written (reads the static pyproject version D13 deleted), redundant with
       `assert_version_coherence.py` (which WAS migrated and already emits the `tag-ok`/`tag-MISS` check), and its remedy
       INVERTS D13 (minting a release tag because a JSON cache said so would invent a release that never happened).
       Measured: every repo is `tag-ok`; exactly 1 of 24 (PM) is manifest-ahead, and per D13 that is a cache split, not a
       missing tag. **Confirm nothing dispatches it first** (it has a `repository_dispatch: [reconcile-release-tags]`
       trigger). SSOT: `plans/active/issues/reconcile_release_tags_dead_since_d13_git_tag_migration_2026_07_17.md`.
-- [ ] [REVIEW] P2. **OPERATOR DECISIONS on cassette-drift-check (fixed + flipped 2026-07-17, but two calls are yours).**
+- [ ] [REVIEW] P0. **OPERATOR DECISIONS on cassette-drift-check (fixed + flipped 2026-07-17, but two calls are yours).**
       (a) **Close the 52 open false `[Cassette Drift]` issues** in `unified-api-contracts` (each self-refuting: "Total
       cassettes checked: 0 / Drifted: 0 / No report file found" under a "Drift Detected" title). (b) **The 02:00 cron
       now opens a REAL 28-item issue** — but per FINDING #4 the detector's cassette→model matching is a lottery
@@ -106,7 +106,7 @@ drift_direction: advance-code
       (operator 2026-07-17) — do not duplicate it.** SSOT:
       `plans/active/issues/cassette_drift_check_calls_deleted_script_and_swallows_it_2026_07_17.md`.
 
-- [ ] [REVIEW] P2. **OPERATOR CALL (D2) — the CI/CD event ledger loses rows; decide fix-vs-accept (NEW 2026-07-17).**
+- [ ] [REVIEW] P0. **OPERATOR CALL (D2) — the CI/CD event ledger loses rows; decide fix-vs-accept (NEW 2026-07-17).**
       `persist-cicd-event` appends by downloading the whole `events.jsonl`, appending a line, and re-uploading — an
       unlocked read-modify-write on ONE object per repo per day. Overlapping writers silently discard each other's rows,
       and **every writer still logs `Persisted event to gs://…` and exits 0**, so the loss is invisible (the same
@@ -119,7 +119,7 @@ drift_direction: advance-code
       inside a cost refactor would bundle a silent behaviour change into a diff 22 workflows depend on). SSOT:
       `plans/archive/issues/persist_cicd_event_ledger_read_modify_write_race_2026_07_17.md`.
 
-- [ ] [VERIFY] P1. **PROVE the bootstrap on a bare host** — ⏳ **PARTIAL** (unified-trading-pm@80f00684a). ✅
+- [ ] [VERIFY] P0. **PROVE the bootstrap on a bare host** — ⏳ **PARTIAL** (unified-trading-pm@80f00684a). ✅
       **Container leg DONE**: bare `ubuntu:24.04` → EXIT=0, all 10 tools resolve; found + fixed the `sudo` assumption.
       Reproduce:
       `docker run --rm -v "$PWD/bootstrap-ci-host.sh:/b.sh:ro" ubuntu:24.04 bash -c 'useradd -m -s /bin/bash ubuntu; bash /b.sh'`.
@@ -129,18 +129,18 @@ drift_direction: advance-code
       the container pass**; it closes only when a real bare VM runs it. The upcoming planning-VM deploy proves the
       systemd/registration legs; the bare-VM leg stays open until we genuinely rebuild a host.
 
-- [ ] [VERIFY] P1. **Use `scripts/cicd/measure-billed-notify-cost.sh`** (promoted out of a scratchpad 2026-07-16 — it is
+- [ ] [VERIFY] P0. **Use `scripts/cicd/measure-billed-notify-cost.sh`** (promoted out of a scratchpad 2026-07-16 — it is
       what produced this plan's notify-slack numbers, and the measurement took THREE attempts to get right: skipped jobs
       are not billed, and a throttled API call silently counts as 0). After 3–5 days, re-measure PM's billed minutes
       (ledger); confirm the moved workflows bill ~$0 and the VM absorbed the load without contention (slice
       `MemoryCurrent` < 8G, orchestrator load unaffected).
 
-- [ ] [VERIFY] P2. Re-measure a representative QG run's billed job-minutes + the docs-PR / identical-tree skip rates
+- [ ] [VERIFY] P0. Re-measure a representative QG run's billed job-minutes + the docs-PR / identical-tree skip rates
       before/after (ledger + run counts).
 
 ### Phase 5 — Prove the savings
 
-- [ ] [VERIFY] P3. Two weeks after rollout, re-pull the billing ledger and compare to the Phase-0 baseline; record
+- [ ] [VERIFY] P0. Two weeks after rollout, re-pull the billing ledger and compare to the Phase-0 baseline; record
       actual $/mo saved per repo. Target landing: **fleet ~$1,000/mo → ~$300–400/mo**, and structurally flat when
       activity grows (glue cost stays on our VM; only real test minutes scale). **1-week interim pull done 2026-07-23**
       (Progress Log below): PM itself is down 35–56% depending on baseline (real, on-target direction) but the fleet

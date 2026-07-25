@@ -143,3 +143,30 @@ Two independent, additive fixes, neither mutually exclusive:
       `gcloud     config get-value project` (a local config read, not a live-auth call). Also fixed pre-existing
       pip-audit failure blocking the quality gate (`pyasn1` 0.6.3→0.6.4, PYSEC-2026-3455/3456/3457) — verified the pin
       predated this task's commits, unrelated debt on the shared branch.
+- [x] 3. [INFRA] P2. Fixed a 2nd occurrence of the same bug class: `create-code-tarballs.sh`'s own trailing "Uploaded
+      files:" verification listing (GCS branch) still called raw `gsutil ls`, so under this exact WIF-token gap the
+      LISTING failed and (via `set -e`) took the whole script down non-zero even though every real upload above it had
+      already succeeded — a false-failure signal, not a real one. Reproduced live 2026-07-25 (slot 10,
+      `sports_satellite_ao_dispatch_batch2-004`): a fresh `--asset-group SPORTS` rebuild uploaded all tarballs +
+      manifests + 156 launcher scripts correctly (`gcloud storage ls -l` confirmed fresh timestamps), then exited 127
+      when the trailing `gsutil ls` hit the expired token. Fixed by swapping to `gcloud storage ls` (same fix pattern as
+      todo 2). ✅ — deployment-service@a12c84a.
+- [x] 4. [INFRA] P3. A 3RD occurrence — FIXED. `scripts/vm/lib/launcher_common.sh`'s `lc_verify_tarball_freshness()`
+      (pre-launch guard, called by every `launch-*.sh`) and its sibling `lc_resolve_tarball_sha()` both called
+      `gsutil -q cp <manifest> ...` / `gsutil -q stat ...` to read a tarball's manifest — under this same WIF-token gap
+      the read failed, and `lc_verify_tarball_freshness` treated that as `WARNING: tarball manifest MISSING for <repo>`
+      (a FALSE staleness signal) for every repo, every launch, in any interactive slot with the broken active account.
+      ✅ — deployment-service@8f996db. Swapped both functions' `gsutil -q cp`/`gsutil -q stat` calls to
+      `gcloud storage cp --quiet`/`gcloud storage objects describe` (mirrors todos 2-3's fix; also swapped their
+      `command -v gsutil` tooling-precondition checks to `command -v gcloud`). Reproduced first, then verified live on
+      this host with the same broken `github-actions-deploy@...` WIF account still active: `gsutil ls` against the code
+      bucket failed with "Your credentials are invalid" while `gcloud storage ls` succeeded (ADC); called both fixed
+      functions directly — `lc_resolve_tarball_sha` returned a real commit_sha (no false-empty), and
+      `lc_verify_tarball_freshness` correctly reported genuine staleness (not a false MISSING) in both `warn` (exit 0,
+      non-blocking) and `enforce` (exit 1, blocking) modes for 2 different repos. Updated the 2 unit tests
+      (`TestTarballFreshnessGuard::test_fresh_tarball_passes`, `::test_stale_tarball_warn_does_not_block`) plus
+      `::test_missing_manifest_enforce_blocks`'s mock from a `gsutil` shell-function stub to a `gcloud` one (they were
+      asserting against the old codepath and failed post-fix until updated); `quality-gates.sh` green (12/12
+      `TestTarballFreshnessGuard` tests pass). The wider ~150-launcher/39-total-gsutil-call-site sweep this todo flagged
+      as out-of-scope remains open — only `lc_verify_tarball_freshness`/`lc_resolve_tarball_sha` were in this todo's
+      stated scope. (repo: deployment-service `scripts/vm/lib/launcher_common.sh`.)

@@ -268,6 +268,51 @@ produces as an input to decision 16 rather than a competing conclusion. Other: o
 
 ---
 
+## 9. `sports_consolidated_closeout_2026_07_19.md` is over the 1000-line hard cap — split or promote to epic? (2026-07-25, sports)
+
+`plans/active/sports_consolidated_closeout_2026_07_19.md` is 1002 lines
+(`bash scripts/plan-hygiene/check_line_caps.sh plans/active/sports_consolidated_closeout_2026_07_19.md` →
+`HARD sports_consolidated_closeout_2026_07_19.md 1002L todos=104` →
+`❌ check_line_caps: 1 staged plan(s)/epic(s) over cap`) despite already having been through **two** prior line-cap trim
+passes (its own line 964-971 banner: "2026-07-24 line-cap trim (2nd pass, umbrella-exemption removal ruling)"). It still
+carries `umbrella: true` in frontmatter (line 12), but CLAUDE.md's 2026-07-24 ruling states flatly: "Line caps ... NO
+`umbrella:`/`locked_by`+todos exemption" — that field grants no exemption anymore and is now vestigial/misleading.
+**This is a genuine hard blocker, not just an advisory finding**: the prek pre-commit hook's `check_line_caps.sh` gate
+is an ABSOLUTE per-staged-file bar (not a ratchet against a baseline) — ANY edit to this specific file is currently
+uncommittable via the normal path, confirmed directly this session when 3 small, purely-factual doc-comment fixes (see
+below) could not be shipped and had to be reverted.
+
+Per `/plan-reconcile`'s own routing rule, a line-cap SPLIT decision is explicitly operator-gated (not something to
+auto-resolve): the doc is a genuine large hub/coordinator doc (`umbrella: true`, absorbs ~7 fold-in sports plans + ~17
+issue docs per its own summary), so the real choice is HOW to bring it back under a cap, not WHETHER.
+
+**3 ready-to-apply fixes are queued and blocked on this decision** (drafted, verified correct, then reverted this
+session because the line-cap gate blocks any commit to this file): (1) the `superseded_by` field's inline comment claims
+"51 open/11 done todos" — stale by 4 days and 2 reconciliation sessions; the real current count is 65 open/39 done
+top-level (78 open/41 done incl. nested sub-todos). (2) the `estimate_baseline_ai_days` comment's own 19+37+33+5=94
+P0/P1/P2/P3 breakdown doesn't match its stated "96" total — an arithmetic slip. (3) Track C's casing-revert gating (line
+142-143, "NOT YET EXECUTED... per operator instruction") has no cross-reference to
+`issues/sports_satellite_batch2_casing_direction_contradicts_k1k2_revert_2026_07_25.md` (resolved), which documents this
+exact gating already having caught one real contradiction — worth linking so the next reader sees the gate isn't
+theoretical.
+
+A: **Split into a coordination-index parent (kept under `plans/active/`, trimmed to a Tracks-summary + links) + N child
+plans per Track/phase**, each independently under the 1000L cap, wired via `depends_on`/`gate_on_depends` per
+`task_template.md` finding I's pattern (already the established workspace pattern for exactly this situation — see
+`check_line_caps.sh`'s own doc comment: "a genuinely large hub belongs in `plans/epics/`... or splits"). Apply the 3
+queued fixes to whichever child inherits the frontmatter/estimate fields and Track C respectively, in the same pass.
+[WORKER REC] B: **Promote to a real epic** (`plans/epics/sports_consolidated_closeout.md`, 2000L hard cap flat, no
+further split needed at current size) — simpler (one move, no multi-doc wiring), but epics are meant for genuinely
+epic-scale coordination docs, not a workaround to avoid splitting; worth operator judgment on whether this doc's nature
+fits that bar. C: **Leave as-is for now, do nothing** — the doc still functions as documentation (only the COMMIT path
+via this specific checkout is blocked; reads work fine), and this is queued as a known, tracked papercut rather than
+urgent. The 3 ready fixes stay queued/unapplied until a future session picks this up. Other: operator can type a custom
+answer
+
+**Status**: open
+
+---
+
 This doc will accumulate entries as genuine judgment calls surface during the cefi/defi/tradfi/prediction/sports
 closeout-audit rollout. Format for each entry:
 

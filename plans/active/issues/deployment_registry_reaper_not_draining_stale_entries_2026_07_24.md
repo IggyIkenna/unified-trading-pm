@@ -343,7 +343,51 @@ flipping the checkbox.
       [issues/utl_prod_cloud_build_trigger_missing_fleet_stale_base_image_2026_07_25.md](utl_prod_cloud_build_trigger_missing_fleet_stale_base_image_2026_07_25.md).
       Part (1) of this todo (live re-verification of `active/` convergence) stays open and is now ALSO gated on that
       doc's Todo 1 (recreate the trigger) — re-verification cannot succeed until a fresh UTL base image actually
-      publishes with `4773a3fd` in it, deployment-api rebuilds against it, and a new revision deploys.
+      publishes with `4773a3fd` in it, deployment-api rebuilds against it, and a new revision deploys. — **RE-DISPATCHED
+      2026-07-25 (slot 2, backend_engineer)**: re-checked the gate chain. Trigger recreation (Todo 1 of the sibling doc)
+      is DONE (`unified-trading-library-prod` exists + correctly configured). But manually verifying it hit a NEW real
+      bug — unescaped `$VERSION`/`$IMAGE_TAG` comment references in `cloudbuild.yaml` trip Cloud Build's substitution
+      validator — fixed + shipped (`unified-trading-library@44922ad1`+`71dcf0f4`), full details + the fleet-wide 15-repo
+      instance of the same bug class in
+      [issues/cloudbuild_yaml_unescaped_substitution_comments_fleet_wide_2026_07_25.md](cloudbuild_yaml_unescaped_substitution_comments_fleet_wide_2026_07_25.md).
+      Both fixes are on `live-defi-rollout` only — `git show origin/main:cloudbuild.yaml` still shows the old unescaped
+      content; 2 promote PRs open (`unified-trading-library` #644 for `44922ad1`, #645 for `71dcf0f4`), both
+      `mergeable_state: blocked` pending required checks. Part (1)'s full chain (promote lands → fresh UTL base image
+      publishes → deployment-api rebuilds → new Cloud Run revision → ≥2 reap-tick intervals, 900s each, of log
+      observation) is genuinely not completable in one dispatch turn. Not attempted further. Next dispatch: re-check
+      `gh pr list --repo IggyIkenna/unified-trading-library --state open` for #644/#645 merged to `main`; once merged,
+      confirm a fresh UTL base image publishes
+      (`gcloud artifacts docker images list     .../unified-trading-library --sort-by="~UPDATE_TIME"` shows an
+      `UPDATE_TIME` after the merge), THEN proceed with the original re-verification steps (direct image extraction +
+      log watch) exactly as scoped above. — **RE-DISPATCHED 2026-07-25 (slot 5, infra craft-switched to backend_engineer
+      per task's `assigned_role`)**: confirmed #644/#645 (`44922ad1`/`71dcf0f4`) both MERGED to
+      `unified-trading-library` `main` (content-diffed `cloudbuild.yaml` on `origin/main` — `$$VERSION`/`$$IMAGE_TAG`
+      properly double-escaped, no more Cloud Build substitution-validator trip). Fresh UTL base images ARE now
+      publishing (`gcloud artifacts docker images list`: 3 new digests at 2026-07-25T13:15-13:31Z, after the merge).
+      Pulled + extracted `unified_trading_library/deployment_registry.py` from the freshest (`sha256:8c6a549b27b7...`) —
+      **confirmed it contains `ThreadPoolExecutor(max_workers=32)`**, i.e. the fix is genuinely in the published base
+      image. BUT found a NEW blocker in the chain: `deployment-api`'s `Dockerfile ARG BASE_IMAGE_DIGEST` was still
+      pinned to `sha256:2d620b66...` — a digest published **2026-07-25T13:15:16Z, i.e. BEFORE the fix-containing
+      images**, confirmed via direct pull+extract to NOT contain `ThreadPoolExecutor`. Root cause: the automated
+      digest-refresh path is `digest-drift-sweep.yml` (`unified-trading-pm`, cron `0 */6 * * *`) — it hadn't ticked
+      since 2026-07-25T12:18:47Z, well before the fix landed, so `deployment-api` would otherwise have sat stale for up
+      to ~6h. **Action taken (idempotent, no-code-risk CI dispatch, within infra craft scope)**: manually
+      `gh workflow run digest-drift-sweep.yml` — it correctly detected
+      `deployment-api: STALE (sha256:2d620b66... → sha256:a302c0cd...)` and dispatched a refresh; `deployment-api`'s
+      `update-dependency-version.yml` picked it up, bumped `ARG BASE_IMAGE_DIGEST=sha256:a302c0cd...` (verified via
+      direct pull this digest ALSO contains the `ThreadPoolExecutor` fix), and pushed to LDR (`deployment-api@108e2fd`).
+      Then manually `gh workflow run ldr-to-main-promote-fleet.yml` to accelerate promotion — it correctly found
+      `deployment-api`'s LDR/main trees differ but is SIT-gating the exact tree (fail-closed, dispatched SIT-on-LDR; a
+      later automated tick promotes once SIT validates — this is normal gate behavior, not a new blocker). **Chain
+      remaining, none of it actionable synchronously in one dispatch turn**: SIT validates this tree →
+      `ldr-to-main-promote-fleet` promotes `deployment-api@108e2fd` to `main` → Cloud Build rebuilds the image against
+      the NEW (fix-containing) base digest → a new Cloud Run revision deploys → wait ≥2 reap-tick intervals (900s each)
+      → re-run the ORIGINAL re-verification (direct image extraction for `post_worker_init` in `/app/gunicorn.conf.py` +
+      `gcloud logging read` for `"Background auto-sync task started"` exactly once per instance +
+      `"[AUTO_SYNC] Reaper: archived"` appearing for the first time + `active/` count vs live-VM count). Next dispatch:
+      check `gh pr list --repo IggyIkenna/deployment-api --state all --limit 5` for a new promote PR past `#377` having
+      merged sha `108e2fd`'s tree, confirm via `git show origin/main:Dockerfile | grep BASE_IMAGE_DIGEST` reads
+      `sha256:a302c0cd...` (or newer), THEN proceed with the original re-verification steps exactly as scoped above.
 
 - **2026-07-24 (slot-4, review)**: Re-ran the end-to-end verification per the todo above, against the freshly deployed
   `uts-shared-deployment-api-00270-2l9` (`deployment-api:366154d`) — confirmed via `gcloud builds log` (Cloud Build

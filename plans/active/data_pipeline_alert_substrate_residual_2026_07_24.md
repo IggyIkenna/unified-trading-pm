@@ -26,7 +26,7 @@ last_updated: "2026-07-24"
 parent_epic: observability_master
 assigned_vm: NA
 execution_scope: orchestrator-agent
-priority: P2
+priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 2.4
@@ -59,29 +59,29 @@ locked_since:
 
 ## Residual from Phase 2 (data-pipeline-alerts channel + streaming events + exit_code-aware fleet monitor)
 
-- [ ] [CODE] P1. Per-source **rate-limit / health event** `SOURCE_RATE_LIMITED{source, venue, http_429_count}` and
+- [ ] [CODE] P0. Per-source **rate-limit / health event** `SOURCE_RATE_LIMITED{source, venue, http_429_count}` and
       `SOURCE_KEY_POOL_EXHAUSTED` (C5: TheGraph 9-key pool, Databento, etc.) → `data-pipeline-alerts`. —
       **market-tick-data-service**
 
-- [ ] [UI] P2. **Streaming events pane** in deployment-ui that tails the live VM event stream (not just the alert
+- [ ] [UI] P0. **Streaming events pane** in deployment-ui that tails the live VM event stream (not just the alert
       ledger) per AG/VM. `[UI]` + `pw:L2 ✓` + regression spec required. Extend `deployment_ui_monitoring_pane`. —
       **deployment-ui**
 
 ## Residual from Phase 3 (Daily per-AG completion summary + hygiene audit) + Wave 4b out-of-repo wiring
 
-- [ ] [SCRIPT] P2. Close the `audit_criteria_automation` honest-SKIPs: wire CF-10 (phantom) and CF-14 (catalogue ⊇
+- [ ] [SCRIPT] P0. Close the `audit_criteria_automation` honest-SKIPs: wire CF-10 (phantom) and CF-14 (catalogue ⊇
       present-set) from SKIP to real checks inside `cf_manifest_audit_all.py`. — **market-tick-data-service**
 
-- [ ] [SCRIPT] P2. **v9-readiness gate** in the daily digest: surface `schema_version` distribution per AG (target
+- [ ] [SCRIPT] P0. **v9-readiness gate** in the daily digest: surface `schema_version` distribution per AG (target
       100%==9, read actual rows not the constant) and alert on any AG <100%. Reuse `audit_canonical_form.py` CF-1. —
       **e2e-testing**
 
-- [ ] [INFRA] P2. **Apply the data-pipeline-audit terraform** (the crons run only once deployed): after the var-change
+- [ ] [INFRA] P0. **Apply the data-pipeline-audit terraform** (the crons run only once deployed): after the var-change
       lands, targeted `terraform apply -target=...` the 4 `dp-audit` Cloud Run Jobs + 4 schedulers (NOT a blanket apply
       of `terraform/gcp/` — drift risk). The `cf_manifest_audit` apply convention is the model. Until applied, the crons
       exist in code + the image is ready, but the schedulers are not yet provisioned. — **deployment-service**
 
-- [ ] [CODE] P3. **UTL `DP_DAILY_DIGEST`/`DP_HYGIENE_SUMMARY` string constants** (cleanliness only — routing already
+- [ ] [CODE] P0. **UTL `DP_DAILY_DIGEST`/`DP_HYGIENE_SUMMARY` string constants** (cleanliness only — routing already
       works via the UAC rule matching the event string): 2-line add to `events/event_types.py` + `events/__init__`
       export; edits are green-and-ready on-disk in the slot UTL clone, ship on the next clean UTL window (a peer was
       live on manifest_writer). — unified-trading-library **unified-trading-library, unified-api-contracts,
@@ -89,10 +89,10 @@ locked_since:
 
 ## Phase 4 — Writer-side path + state invariants (defence-in-depth, closes residual C3/C7)
 
-- [ ] [CODE] P2. `record_captured`/`record_empty` assert the resolved GCS path `is_canonical()` (Phase 3 validator)
+- [ ] [CODE] P0. `record_captured`/`record_empty` assert the resolved GCS path `is_canonical()` (Phase 3 validator)
       before write — a non-canonical write fails loudly at the writer, not days later in an audit. —
       **unified-trading-library**
-- [ ] [CODE] P2. Live==batch schema invariant assert at the live `record_captured` boundary (C7: `asset_group`
+- [ ] [CODE] P0. Live==batch schema invariant assert at the live `record_captured` boundary (C7: `asset_group`
       kwarg-not-column class). — **unified-trading-library**
 
 ## Residual from Phase 6 (Alert enrichment, Tier 1)
@@ -102,7 +102,7 @@ locked_since:
 - [x] ✅ [CODE] P1. alerting-service: add `deployment_ui_base_url` (+ `deployment_scripts_log_bucket`) config, SM/env
       hot-reloaded (none exists today). — alerting-service@868872c (config.py fields + config_reloaders.py SM keys
       DEPLOYMENT_UI_BASE_URL/DEPLOYMENT_SCRIPTS_LOG_BUCKET + get_paging_credentials; default "" → links omitted)
-- [ ] [CODE] P1. UTL writer-gate `_emit_unproven_honest_absence`: add `venue`/`data_type`/`day` (from `row_key`) + an
+- [ ] [CODE] P0. UTL writer-gate `_emit_unproven_honest_absence`: add `venue`/`data_type`/`day` (from `row_key`) + an
       `error_message` to the DP_UNPROVEN_HONEST_ABSENCE `details`. — unified-trading-library
 - [x] ✅ [CODE] P1. `data_pipeline_slack.py::_build_blocks`: append a fenced-code trace block
       (evidence/exit_code/run_log_tail, ≤3000 chars) + an actions block with deep-link buttons — data-status
@@ -130,7 +130,7 @@ locked_since:
 
 ## Later-surfaced alert-substrate bugs (triaged 2026-06-23, still open)
 
-- [ ] [CODE] P2. **`get_paging_credentials` batch-fetch is fragile — one missing secret zeroes ALL paging creds** —
+- [ ] [CODE] P0. **`get_paging_credentials` batch-fetch is fragile — one missing secret zeroes ALL paging creds** —
       `config_reloaders._fetch` does `SecretManagerClient.get_secrets(_ALL_PAGING_SM_KEYS)` as ONE batch; 6 Twilio
       secrets + `DEPLOYMENT_SCRIPTS_LOG_BUCKET` are absent in SM → the batch raises → `except` returns empty → EVERY
       paging cred (incl. the #uts-live-alerts webhook) reads blank, so the SM-hot-reload path is dead (worked around by
@@ -138,7 +138,7 @@ locked_since:
       (per-secret get, skip-missing) OR create the absent secrets as empty placeholders (the `if val:` mapping already
       skips empties). Then SM-hot-reload works without the env fallback. (alerting-service)
 
-- [ ] [CODE] P2. **DP telemetry events route through the generic incident path (Telegram→Slack-fallback) — should not**
+- [ ] [CODE] P0. **DP telemetry events route through the generic incident path (Telegram→Slack-fallback) — should not**
       — diagnosis refined 2026-06-23: there is NO `alerting-slack-webhook-url` secret, but
       `alerting-telegram-bot-token` + `alerting-telegram-chat-id` DO exist → the generic path's PRIMARY is Telegram; the
       Slack-fallback secret only fires when Telegram is unconfigured (my local test lacked Telegram → hit the miss; in
@@ -158,7 +158,7 @@ locked_since:
       work via the data-pipeline mirror (`DATA_PIPELINE_ALERTS_SLACK_WEBHOOK`). Non-fatal (per-message isolation skips
       it). (alerting-service)
 
-- [ ] [CODE] P2. **Verify the deployment-service heartbeat-stall watcher emit carries
+- [ ] [CODE] P0. **Verify the deployment-service heartbeat-stall watcher emit carries
       `vm_name`+`asset_group`+`message`** so the per-VM DP_VM_STALL alerts render distinguishably (the 13× batch came
       from the OLD alerting revision 00005 @01:38 pre-base-url; confirm the current path renders vm_name). Repo:
       deployment-service `data_pipeline_monitors/heartbeat_stall_watcher.py`.

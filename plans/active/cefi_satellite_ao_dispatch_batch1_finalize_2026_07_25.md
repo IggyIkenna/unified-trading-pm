@@ -26,7 +26,7 @@ last_updated: "2026-07-25"
 parent_epic: cefi_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
-priority: P2
+priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 0.8
 estimate_calibrated_ai_days: 0.6
@@ -52,7 +52,7 @@ drift_direction: advance-code
 
 ## Todos
 
-- [ ] [REVIEW] P2. **Reconcile all 21 distinct source docs' checkboxes.** For each of
+- [ ] [REVIEW] P1. **Reconcile all 21 distinct source docs' checkboxes.** For each of
       `cefi_satellite_ao_dispatch_batch1_2026_07_25.md`'s 33 now-done todos: flip the corresponding checkbox/section in
       its named source doc (each todo's text ends with "Source: `<doc>.md`"), citing the batch-1 commit(s) that shipped
       it — verify the actual shipped commit exists before citing it. The 21 source docs:
@@ -80,7 +80,7 @@ drift_direction: advance-code
       reaches 0 open todos (checkbox AND prose-form). **Done when**: all 21 source docs' corresponding
       checkboxes/sections are flipped with verified evidence, and any doc that genuinely reaches 0 open todos is flipped
       to `status: resolved`.
-- [ ] [REVIEW] P2. **Re-check the 3 too-large-doc exclusions for a batch2 pass.** For each of
+- [ ] [REVIEW] P1. **Re-check the 3 too-large-doc exclusions for a batch2 pass.** For each of
       `cefi_4surface_migration_execution_log_2026_07_24.md`,
       `issues/cefi_backfill_per_day_catalogue_reload_2026_07_20.md`, and
       `issues/onchain_venues_mislabeled_batch_tardis_lane_2026_07_20.md` (all flagged
@@ -92,7 +92,7 @@ drift_direction: advance-code
       record why it's still too volatile and re-check again at the next batch cycle. **Done when**: each of the 3 docs
       has an explicit settled-vs-still-volatile verdict recorded, with a scoped batch2 candidate item for any doc found
       settled.
-- [ ] [DIAG] P2. **Re-verify the LATE colliding-venue renames exclusion.** Re-read
+- [ ] [DIAG] P1. **Re-verify the LATE colliding-venue renames exclusion.** Re-read
       `issues/cefi_chain_drop_root_cause_and_heavy_io_vm_rule_2026_07_24.md` and
       `cefi_4surface_migration_execution_log_2026_07_24.md` for the current state of the Range A/B/C `--apply` LATE
       colliding-venue rename passes (excluded from batch-1 on evidence they were "actively in progress via a live
@@ -103,7 +103,7 @@ drift_direction: advance-code
       verification dry-run) into a new tracked `cefi_satellite_ao_dispatch_batch2` candidate. **Done when**: a
       definitive landed-vs-still-pending verdict for the Range A/B/C migration is recorded with evidence (VM
       run.log/manifest citation), and either the item is marked DONE or a scoped batch2 candidate is created.
-- [ ] [DOC] P3. **Archive `cefi_satellite_ao_dispatch_batch1_2026_07_25.md`** via the standard 6-step ritual (per
+- [ ] [DOC] P1. **Archive `cefi_satellite_ao_dispatch_batch1_2026_07_25.md`** via the standard 6-step ritual (per
       CLAUDE.md's plan-archival rule): migrate any remaining Deferred items to a tracked todo elsewhere (todos 2 and 3
       above should have already resolved the too-large-doc and LATE-renames exclusions — verify none remain untracked) →
       add the archive banner → run the codex-alignment check → grep the corpus for every referrer of

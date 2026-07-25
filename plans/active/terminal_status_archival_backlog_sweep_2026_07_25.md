@@ -26,7 +26,7 @@ last_updated: 2026-07-25
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
-priority: P2
+priority: P0
 estimate_class: refactor
 estimate_baseline_ai_days: 2.0
 estimate_calibrated_ai_days: 0.8
@@ -83,216 +83,216 @@ For the named doc:
 
 ## Todos
 
-- [ ] [INFRA] P2. Archive
+- [ ] [INFRA] P0. Archive
       `plans/active/issues/api_football_backfill_chronological_scan_never_reaches_pending_tail_2026_07_18.md`
       (status=resolved, doc_type=issue) per the Procedure below. Done when: `check_terminal_status_archived.py` no
       longer lists it.
-- [x] [INFRA] P2. ✅ Archive `plans/active/issues/aster_capture_broken_coverage_and_completeness_2026_07_20.md`
+- [x] [INFRA] P0. ✅ Archive `plans/active/issues/aster_capture_broken_coverage_and_completeness_2026_07_20.md`
       (status=resolved, doc_type=issue) per the Procedure below. Done when: `check_terminal_status_archived.py` no
       longer lists it. — unified-trading-pm@be0f537c7 (moved to plans/archive/issues/, banner added,
       check_terminal_status_archived.py confirmed clean; 4/5 referrers repointed, 1 blocked on a pre-existing line-cap
       violation — see Progress Log).
-- [ ] [INFRA] P2. Archive
+- [ ] [INFRA] P0. Archive
       `plans/active/issues/blocked_prerequisites_marker_excluded_from_dispatch_and_gate_2026_07_25.md` (status=resolved,
       doc_type=issue) per the Procedure below. Done when: `check_terminal_status_archived.py` no longer lists it.
-- [x] [INFRA] P2. ✅ Archive `plans/active/issues/branch_quarantine_alert_blind_to_backlog_queue_2026_07_25.md`
+- [x] [INFRA] P0. ✅ Archive `plans/active/issues/branch_quarantine_alert_blind_to_backlog_queue_2026_07_25.md`
       (status=resolved, doc_type=issue) per the Procedure below. Done when: `check_terminal_status_archived.py` no
       longer lists it. — unified-trading-pm@e50c84c88 (moved to plans/archive/issues/, banner added, codex referrer in
       agent-orchestrator-alerting.md repointed + content updated to reflect the shipped fix;
       check_terminal_status_archived.py confirmed clean).
-- [x] [INFRA] P2. ✅ Archive `plans/active/issues/candle_feature_canonical_path_divergence_history_part1_2026_07_25.md`
+- [x] [INFRA] P0. ✅ Archive `plans/active/issues/candle_feature_canonical_path_divergence_history_part1_2026_07_25.md`
       (status=resolved, doc_type=issue) per the Procedure below. Done when: `check_terminal_status_archived.py` no
       longer lists it. — unified-trading-pm@db253f0c9 (moved to plans/archive/issues/, banner added, all 3 referrers
       repointed; check_terminal_status_archived.py confirmed clean).
-- [x] [INFRA] P2. ✅ Archive `plans/active/issues/candle_feature_canonical_path_divergence_history_part2_2026_07_25.md`
+- [x] [INFRA] P0. ✅ Archive `plans/active/issues/candle_feature_canonical_path_divergence_history_part2_2026_07_25.md`
       (status=resolved, doc_type=issue) per the Procedure below. Done when: `check_terminal_status_archived.py` no
       longer lists it. — unified-trading-pm@40f3c5b65 (moved to plans/archive/issues/, banner added, parent doc's 3
       referrers repointed; check_terminal_status_archived.py confirmed clean).
-- [x] [INFRA] P2. ✅ Archive
+- [x] [INFRA] P0. ✅ Archive
       `plans/active/issues/cefi_okx_margin_type_wire_key_ambiguity_reclassification_2026_07_22.md` (status=resolved,
       doc_type=issue) per the Procedure below. Done when: `check_terminal_status_archived.py` no longer lists it. —
       unified-trading-pm@24878e802 (moved to plans/archive/issues/, banner added, all 3 referrers repointed;
       check_terminal_status_archived.py confirmed clean).
-- [x] [INFRA] P2. ✅ Archive `plans/active/issues/cefi_residual_followups_after_honest_done_history_2026_07_25.md`
+- [x] [INFRA] P0. ✅ Archive `plans/active/issues/cefi_residual_followups_after_honest_done_history_2026_07_25.md`
       (status=resolved, doc_type=issue) per the Procedure below. Done when: `check_terminal_status_archived.py` no
       longer lists it. — unified-trading-pm@77abcc1e6 (moved to plans/archive/issues/, banner added, parent doc's
       referrer repointed; check_terminal_status_archived.py confirmed clean).
-- [x] [INFRA] P2. ✅ Archive `plans/active/issues/codex_alignment_deviations_2026_06_25.md` (status=resolved,
+- [x] [INFRA] P0. ✅ Archive `plans/active/issues/codex_alignment_deviations_2026_06_25.md` (status=resolved,
       doc_type=issue) per the Procedure below. Done when: `check_terminal_status_archived.py` no longer lists it. —
       unified-trading-pm@9fe6cd627 (moved to plans/archive/issues/, banner added, plan_hygiene_master epic referrer
       repointed; check_terminal_status_archived.py confirmed clean).
-- [x] [INFRA] P2. ✅ Archive `plans/active/issues/defi_pool_canonical_instrument_id_policy_contradiction_2026_07_17.md`
+- [x] [INFRA] P0. ✅ Archive `plans/active/issues/defi_pool_canonical_instrument_id_policy_contradiction_2026_07_17.md`
       (status=resolved, doc_type=issue) per the Procedure below. Done when: `check_terminal_status_archived.py` no
       longer lists it. — unified-trading-pm@79d56a054 (moved to plans/archive/issues/, banner added, all 3 referrers
       repointed; check_terminal_status_archived.py confirmed clean).
-- [ ] [INFRA] P2. Archive
+- [ ] [INFRA] P0. Archive
       `plans/active/issues/deployment_api_cefi_venue_canonical_compare_test_regression_2026_07_21.md` (status=resolved,
       doc_type=issue) per the Procedure below. Done when: `check_terminal_status_archived.py` no longer lists it.
-- [x] [INFRA] P2. ✅ Archive `plans/active/issues/deployment_api_inventory_cold_path_concurrent_oom_2026_07_24.md`
+- [x] [INFRA] P0. ✅ Archive `plans/active/issues/deployment_api_inventory_cold_path_concurrent_oom_2026_07_24.md`
       (status=resolved, doc_type=issue) per the Procedure below. Done when: `check_terminal_status_archived.py` no
       longer lists it. — unified-trading-pm@54cbb2dae (moved to plans/archive/issues/, banner added, both referrers in
       the sibling reaper-drain doc repointed; check_terminal_status_archived.py confirmed clean).
-- [x] [INFRA] P2. ✅ Archive `plans/active/issues/deployment_promote_squash_ancestry_false_negative_2026_07_25.md`
+- [x] [INFRA] P0. ✅ Archive `plans/active/issues/deployment_promote_squash_ancestry_false_negative_2026_07_25.md`
       (status=resolved, doc_type=issue) per the Procedure below. Done when: `check_terminal_status_archived.py` no
       longer lists it. — unified-trading-pm@bc48ccf2d (moved to plans/archive/issues/, banner added, all 5 referrers
       across 3 plans + 1 codex doc repointed; check_terminal_status_archived.py confirmed clean).
-- [ ] [INFRA] P2. Archive
+- [ ] [INFRA] P0. Archive
       `plans/active/issues/detached_nohup_worker_processes_reaped_as_orphans_by_config_dir_match_2026_07_24.md`
       (status=superseded, doc_type=issue) per the Procedure below. Done when: `check_terminal_status_archived.py` no
       longer lists it.
-- [x] [INFRA] P2. ✅ Archive `plans/active/issues/escalation_boot_template_ignores_one_shot_lifecycle_2026_07_25.md`
+- [x] [INFRA] P0. ✅ Archive `plans/active/issues/escalation_boot_template_ignores_one_shot_lifecycle_2026_07_25.md`
       (status=resolved, doc_type=issue) per the Procedure below. Done when: `check_terminal_status_archived.py` no
       longer lists it. — unified-trading-pm@0c21c56c2 (moved to plans/archive/issues/, banner added, no other corpus
       referrers; check_terminal_status_archived.py confirmed clean).
-- [x] [INFRA] P2. ✅ Archive `plans/active/issues/finalize_plan_coverage_regression_2_plans_2026_07_25.md`
+- [x] [INFRA] P0. ✅ Archive `plans/active/issues/finalize_plan_coverage_regression_2_plans_2026_07_25.md`
       (status=resolved, doc_type=issue) per the Procedure below. Done when: `check_terminal_status_archived.py` no
       longer lists it. — unified-trading-pm@e31106704 (moved to plans/archive/issues/, banner added, no corpus referrers
       to repoint; check_terminal_status_archived.py confirmed clean).
-- [ ] [INFRA] P2. Archive
+- [ ] [INFRA] P0. Archive
       `plans/active/issues/fixtures_schedule_atom_migration_partial_landing_regression_2026_07_24.md` (status=resolved,
       doc_type=issue) per the Procedure below. Done when: `check_terminal_status_archived.py` no longer lists it.
-- [x] [INFRA] P2. ✅ Archive `plans/active/issues/fss_bookmaker_dispersion_dead_code_overwrites_best_odds_2026_07_25.md`
+- [x] [INFRA] P0. ✅ Archive `plans/active/issues/fss_bookmaker_dispersion_dead_code_overwrites_best_odds_2026_07_25.md`
       (status=resolved, doc_type=issue) per the Procedure below. Done when: `check_terminal_status_archived.py` no
       longer lists it. — unified-trading-pm@d31c02a96 (moved to plans/archive/issues/, banner added,
       check_terminal_status_archived.py confirmed clean; 0/1 referrer repointed, blocked on a pre-existing line-cap
       violation — see Progress Log).
-- [x] [INFRA] P2. ✅ Archive `plans/active/issues/gas_fees_lst_rates_manifest_bucket_mismatch_2026_07_10.md`
+- [x] [INFRA] P0. ✅ Archive `plans/active/issues/gas_fees_lst_rates_manifest_bucket_mismatch_2026_07_10.md`
       (status=resolved, doc_type=issue) per the Procedure below. Done when: `check_terminal_status_archived.py` no
       longer lists it. — unified-trading-pm@f6ec0a848 (moved to plans/archive/issues/, banner added, 5/5 real path
       referrers repointed; check_terminal_status_archived.py confirmed clean).
-- [ ] [INFRA] P2. Archive `plans/active/issues/gcs_hive_partition_malformed_paths_remediation_2026_06_01.md`
+- [ ] [INFRA] P0. Archive `plans/active/issues/gcs_hive_partition_malformed_paths_remediation_2026_06_01.md`
       (status=superseded, doc_type=issue) per the Procedure below. Done when: `check_terminal_status_archived.py` no
       longer lists it.
-- [ ] [INFRA] P2. Archive `plans/active/issues/gsutil_broken_credentials_blocks_vm_tarball_republish_2026_07_25.md`
+- [ ] [INFRA] P0. Archive `plans/active/issues/gsutil_broken_credentials_blocks_vm_tarball_republish_2026_07_25.md`
       (status=resolved, doc_type=issue) per the Procedure below. Done when: `check_terminal_status_archived.py` no
       longer lists it.
-- [ ] [INFRA] P2. Archive `plans/active/issues/instruments_service_deribit_combo_purge_test_drift_2026_07_21.md`
+- [ ] [INFRA] P0. Archive `plans/active/issues/instruments_service_deribit_combo_purge_test_drift_2026_07_21.md`
       (status=resolved, doc_type=issue) per the Procedure below. Done when: `check_terminal_status_archived.py` no
       longer lists it.
-- [ ] [INFRA] P2. Archive `plans/active/issues/instruments_service_fx_adapter_key_unresolved_2026_07_23.md`
+- [ ] [INFRA] P0. Archive `plans/active/issues/instruments_service_fx_adapter_key_unresolved_2026_07_23.md`
       (status=resolved, doc_type=issue) per the Procedure below. Done when: `check_terminal_status_archived.py` no
       longer lists it.
-- [ ] [INFRA] P2. Archive `plans/active/issues/mdps_canonical_writer_adapter_contract_baseline_regression_2026_07_24.md`
+- [ ] [INFRA] P0. Archive `plans/active/issues/mdps_canonical_writer_adapter_contract_baseline_regression_2026_07_24.md`
       (status=resolved, doc_type=issue) per the Procedure below. Done when: `check_terminal_status_archived.py` no
       longer lists it.
-- [ ] [INFRA] P2. Archive `plans/active/issues/mdt_t2_6_league_case_duplicate_population_2026_07_16.md`
+- [ ] [INFRA] P0. Archive `plans/active/issues/mdt_t2_6_league_case_duplicate_population_2026_07_16.md`
       (status=resolved, doc_type=issue) per the Procedure below. Done when: `check_terminal_status_archived.py` no
       longer lists it.
-- [ ] [INFRA] P2. Archive `plans/active/issues/mtds_lst_extended_rates_uncited_addresses_2026_07_19.md`
+- [ ] [INFRA] P0. Archive `plans/active/issues/mtds_lst_extended_rates_uncited_addresses_2026_07_19.md`
       (status=resolved, doc_type=issue) per the Procedure below. Done when: `check_terminal_status_archived.py` no
       longer lists it.
-- [ ] [INFRA] P2. Archive `plans/active/issues/mtds_rule11_shard_count_stale_baseline_2026_07_21.md` (status=resolved,
+- [ ] [INFRA] P0. Archive `plans/active/issues/mtds_rule11_shard_count_stale_baseline_2026_07_21.md` (status=resolved,
       doc_type=issue) per the Procedure below. Done when: `check_terminal_status_archived.py` no longer lists it.
-- [ ] [INFRA] P2. Archive
+- [ ] [INFRA] P0. Archive
       `plans/active/issues/mtds_sports_api_football_wrong_source_reaccumulated_post_wipe_2026_07_22.md`
       (status=resolved, doc_type=issue) per the Procedure below. Done when: `check_terminal_status_archived.py` no
       longer lists it.
-- [ ] [INFRA] P2. Archive `plans/active/issues/plan_hygiene_sweep_transient_failure_2026_07_25.md` (status=resolved,
+- [ ] [INFRA] P0. Archive `plans/active/issues/plan_hygiene_sweep_transient_failure_2026_07_25.md` (status=resolved,
       doc_type=issue) per the Procedure below. Done when: `check_terminal_status_archived.py` no longer lists it.
-- [ ] [INFRA] P2. Archive `plans/active/issues/plan_line_cap_remediation_2026_07_23.md` (status=resolved,
+- [ ] [INFRA] P0. Archive `plans/active/issues/plan_line_cap_remediation_2026_07_23.md` (status=resolved,
       doc_type=issue) per the Procedure below. Done when: `check_terminal_status_archived.py` no longer lists it.
-- [ ] [INFRA] P2. Archive `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` (status=resolved,
+- [ ] [INFRA] P0. Archive `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` (status=resolved,
       doc_type=issue) per the Procedure below. Done when: `check_terminal_status_archived.py` no longer lists it.
-- [ ] [INFRA] P2. Archive `plans/active/issues/plan_reconciliation_operator_decisions_history_part1_2026_07_25.md`
+- [ ] [INFRA] P0. Archive `plans/active/issues/plan_reconciliation_operator_decisions_history_part1_2026_07_25.md`
       (status=resolved, doc_type=issue) per the Procedure below. Done when: `check_terminal_status_archived.py` no
       longer lists it.
-- [ ] [INFRA] P2. Archive `plans/active/issues/plan_reconciliation_operator_decisions_history_part2_2026_07_25.md`
+- [ ] [INFRA] P0. Archive `plans/active/issues/plan_reconciliation_operator_decisions_history_part2_2026_07_25.md`
       (status=resolved, doc_type=issue) per the Procedure below. Done when: `check_terminal_status_archived.py` no
       longer lists it.
-- [ ] [INFRA] P2. Archive `plans/active/issues/plan_reconciliation_operator_decisions_history_part3_2026_07_25.md`
+- [ ] [INFRA] P0. Archive `plans/active/issues/plan_reconciliation_operator_decisions_history_part3_2026_07_25.md`
       (status=resolved, doc_type=issue) per the Procedure below. Done when: `check_terminal_status_archived.py` no
       longer lists it.
-- [ ] [INFRA] P2. Archive `plans/active/issues/plan_reconciliation_operator_decisions_history_part4_2026_07_25.md`
+- [ ] [INFRA] P0. Archive `plans/active/issues/plan_reconciliation_operator_decisions_history_part4_2026_07_25.md`
       (status=resolved, doc_type=issue) per the Procedure below. Done when: `check_terminal_status_archived.py` no
       longer lists it.
-- [ ] [INFRA] P2. Archive `plans/active/issues/pm_qg_plan_discipline_and_frontmatter_regression_2026_07_21.md`
+- [ ] [INFRA] P0. Archive `plans/active/issues/pm_qg_plan_discipline_and_frontmatter_regression_2026_07_21.md`
       (status=resolved, doc_type=issue) per the Procedure below. Done when: `check_terminal_status_archived.py` no
       longer lists it.
-- [ ] [INFRA] P2. Archive
+- [ ] [INFRA] P0. Archive
       `plans/active/issues/precommit_hooks_workspace_root_resolves_to_main_not_worktree_2026_07_25.md` (status=resolved,
       doc_type=issue) per the Procedure below. Done when: `check_terminal_status_archived.py` no longer lists it.
-- [ ] [INFRA] P2. Archive
+- [ ] [INFRA] P0. Archive
       `plans/active/issues/precommit_plan_hygiene_hook_worktree_workspace_root_misresolution_2026_07_25.md`
       (status=superseded, doc_type=issue) per the Procedure below. Done when: `check_terminal_status_archived.py` no
       longer lists it.
-- [ ] [INFRA] P2. Archive
+- [ ] [INFRA] P0. Archive
       `plans/active/issues/qg_backfill_disk_and_lint_checks_resolve_via_main_clone_not_worktree_2026_07_24.md`
       (status=resolved, doc_type=issue) per the Procedure below. Done when: `check_terminal_status_archived.py` no
       longer lists it.
-- [ ] [INFRA] P2. Archive `plans/active/issues/recovery_plan_source_liveness_probe_gap_2026_07_25.md` (status=resolved,
+- [ ] [INFRA] P0. Archive `plans/active/issues/recovery_plan_source_liveness_probe_gap_2026_07_25.md` (status=resolved,
       doc_type=issue) per the Procedure below. Done when: `check_terminal_status_archived.py` no longer lists it.
-- [ ] [INFRA] P2. Archive `plans/active/issues/sit_main_ldr_drift_no_auto_promote_2026_07_13.md` (status=resolved,
+- [ ] [INFRA] P0. Archive `plans/active/issues/sit_main_ldr_drift_no_auto_promote_2026_07_13.md` (status=resolved,
       doc_type=issue) per the Procedure below. Done when: `check_terminal_status_archived.py` no longer lists it.
-- [ ] [INFRA] P2. Archive `plans/active/issues/sports_closeout_batch1_task018_partial_progress_2026_07_24.md`
+- [ ] [INFRA] P0. Archive `plans/active/issues/sports_closeout_batch1_task018_partial_progress_2026_07_24.md`
       (status=resolved, doc_type=issue) per the Procedure below. Done when: `check_terminal_status_archived.py` no
       longer lists it.
-- [ ] [INFRA] P2. Archive `plans/active/issues/sports_halftime_odds_sfi_vs_inplay_history_part1_2026_07_25.md`
+- [ ] [INFRA] P0. Archive `plans/active/issues/sports_halftime_odds_sfi_vs_inplay_history_part1_2026_07_25.md`
       (status=resolved, doc_type=issue) per the Procedure below. Done when: `check_terminal_status_archived.py` no
       longer lists it.
-- [ ] [INFRA] P2. Archive `plans/active/issues/sports_halftime_odds_sfi_vs_inplay_history_part2_2026_07_25.md`
+- [ ] [INFRA] P0. Archive `plans/active/issues/sports_halftime_odds_sfi_vs_inplay_history_part2_2026_07_25.md`
       (status=resolved, doc_type=issue) per the Procedure below. Done when: `check_terminal_status_archived.py` no
       longer lists it.
-- [ ] [INFRA] P2. Archive `plans/active/issues/sports_is_manifest_eu_regression_overwrite_2026_06_29.md`
+- [ ] [INFRA] P0. Archive `plans/active/issues/sports_is_manifest_eu_regression_overwrite_2026_06_29.md`
       (status=resolved, doc_type=issue) per the Procedure below. Done when: `check_terminal_status_archived.py` no
       longer lists it.
-- [ ] [INFRA] P2. Archive `plans/active/issues/sports_is_odds_capture_code_incomplete_reversal_2026_06_27.md`
+- [ ] [INFRA] P0. Archive `plans/active/issues/sports_is_odds_capture_code_incomplete_reversal_2026_06_27.md`
       (status=resolved, doc_type=issue) per the Procedure below. Done when: `check_terminal_status_archived.py` no
       longer lists it.
-- [ ] [INFRA] P2. Archive `plans/active/issues/sports_league_id_swap_silently_reverted_toctou_2026_07_25.md`
+- [ ] [INFRA] P0. Archive `plans/active/issues/sports_league_id_swap_silently_reverted_toctou_2026_07_25.md`
       (status=resolved, doc_type=issue) per the Procedure below. Done when: `check_terminal_status_archived.py` no
       longer lists it.
-- [ ] [INFRA] P2. Archive `plans/active/issues/sports_live_writer_instrument_type_casing_never_fixed_2026_07_22.md`
+- [ ] [INFRA] P0. Archive `plans/active/issues/sports_live_writer_instrument_type_casing_never_fixed_2026_07_22.md`
       (status=superseded, doc_type=issue) per the Procedure below. Done when: `check_terminal_status_archived.py` no
       longer lists it.
-- [ ] [INFRA] P2. Archive
+- [ ] [INFRA] P0. Archive
       `plans/active/issues/sports_odds_manifest_consolidator_captured_outranks_resurrection_2026_07_24.md`
       (status=resolved, doc_type=issue) per the Procedure below. Done when: `check_terminal_status_archived.py` no
       longer lists it.
-- [ ] [INFRA] P2. Archive
+- [ ] [INFRA] P0. Archive
       `plans/active/issues/sports_satellite_batch2_casing_direction_contradicts_k1k2_revert_2026_07_25.md`
       (status=resolved, doc_type=issue) per the Procedure below. Done when: `check_terminal_status_archived.py` no
       longer lists it.
-- [ ] [INFRA] P2. Archive
+- [ ] [INFRA] P0. Archive
       `plans/active/issues/sports_weather_uac_layout_per_day_bare_vs_writer_per_day_per_league_2026_07_20.md`
       (status=resolved, doc_type=issue) per the Procedure below. Done when: `check_terminal_status_archived.py` no
       longer lists it.
-- [ ] [INFRA] P2. Archive `plans/active/issues/verify_p1_prereq_dag_2026_06_29.md` (status=resolved, doc_type=issue) per
+- [ ] [INFRA] P0. Archive `plans/active/issues/verify_p1_prereq_dag_2026_06_29.md` (status=resolved, doc_type=issue) per
       the Procedure below. Done when: `check_terminal_status_archived.py` no longer lists it.
-- [ ] [INFRA] P2. Archive `plans/active/issues/zombie_watchdog_relaunch_reaped_live_backfills_2026_06_23.md`
+- [ ] [INFRA] P0. Archive `plans/active/issues/zombie_watchdog_relaunch_reaped_live_backfills_2026_06_23.md`
       (status=resolved, doc_type=issue) per the Procedure below. Done when: `check_terminal_status_archived.py` no
       longer lists it.
-- [ ] [INFRA] P2. Archive `plans/active/ag_closeout_audit_rollout_2026_07_25.md` (status=complete, doc_type=plan) per
+- [ ] [INFRA] P0. Archive `plans/active/ag_closeout_audit_rollout_2026_07_25.md` (status=complete, doc_type=plan) per
       the Procedure below. Done when: `check_terminal_status_archived.py` no longer lists it.
-- [ ] [INFRA] P2. Archive `plans/active/artifact_pipeline_observability_history_2026_07_24.md` (status=complete,
+- [ ] [INFRA] P0. Archive `plans/active/artifact_pipeline_observability_history_2026_07_24.md` (status=complete,
       doc_type=plan) per the Procedure below. Done when: `check_terminal_status_archived.py` no longer lists it.
-- [ ] [INFRA] P2. Archive `plans/active/defi_consolidated_closeout_history_2026_07_25.md` (status=complete,
+- [ ] [INFRA] P0. Archive `plans/active/defi_consolidated_closeout_history_2026_07_25.md` (status=complete,
       doc_type=plan) per the Procedure below. Done when: `check_terminal_status_archived.py` no longer lists it.
-- [ ] [INFRA] P2. Archive `plans/active/deployment_api_cache_oom_and_ui_latency_remediation_2026_07_13.md`
+- [ ] [INFRA] P0. Archive `plans/active/deployment_api_cache_oom_and_ui_latency_remediation_2026_07_13.md`
       (status=complete, doc_type=plan) per the Procedure below. Done when: `check_terminal_status_archived.py` no longer
       lists it.
-- [ ] [INFRA] P2. Archive `plans/active/infra_capture_and_devops_leftovers_2026_07_06_finalize_2026_07_25.md`
+- [ ] [INFRA] P0. Archive `plans/active/infra_capture_and_devops_leftovers_2026_07_06_finalize_2026_07_25.md`
       (status=superseded, doc_type=plan) per the Procedure below. Done when: `check_terminal_status_archived.py` no
       longer lists it.
-- [ ] [INFRA] P2. Archive `plans/active/mvp_backfill_defi_onchain_v10_operational_log_2026_07_24.md` (status=complete,
+- [ ] [INFRA] P0. Archive `plans/active/mvp_backfill_defi_onchain_v10_operational_log_2026_07_24.md` (status=complete,
       doc_type=plan) per the Procedure below. Done when: `check_terminal_status_archived.py` no longer lists it.
-- [ ] [INFRA] P2. Archive `plans/active/mvp_backfill_defi_onchain_v10_operational_log_part2_2026_07_24.md`
+- [ ] [INFRA] P0. Archive `plans/active/mvp_backfill_defi_onchain_v10_operational_log_part2_2026_07_24.md`
       (status=complete, doc_type=plan) per the Procedure below. Done when: `check_terminal_status_archived.py` no longer
       lists it.
-- [ ] [INFRA] P2. Archive `plans/active/mvp_backfill_defi_onchain_v10_operational_log_part3_2026_07_24.md`
+- [ ] [INFRA] P0. Archive `plans/active/mvp_backfill_defi_onchain_v10_operational_log_part3_2026_07_24.md`
       (status=complete, doc_type=plan) per the Procedure below. Done when: `check_terminal_status_archived.py` no longer
       lists it.
-- [ ] [INFRA] P2. Archive `plans/active/mvp_backfill_defi_onchain_v10_operational_log_part4_2026_07_24.md`
+- [ ] [INFRA] P0. Archive `plans/active/mvp_backfill_defi_onchain_v10_operational_log_part4_2026_07_24.md`
       (status=complete, doc_type=plan) per the Procedure below. Done when: `check_terminal_status_archived.py` no longer
       lists it.
-- [ ] [INFRA] P2. Archive `plans/active/mvp_backfill_defi_onchain_v10_operational_log_part5_2026_07_24.md`
+- [ ] [INFRA] P0. Archive `plans/active/mvp_backfill_defi_onchain_v10_operational_log_part5_2026_07_24.md`
       (status=complete, doc_type=plan) per the Procedure below. Done when: `check_terminal_status_archived.py` no longer
       lists it.
-- [ ] [INFRA] P2. Archive `plans/active/mvp_backfill_defi_onchain_v10_operational_log_part6_2026_07_24.md`
+- [ ] [INFRA] P0. Archive `plans/active/mvp_backfill_defi_onchain_v10_operational_log_part6_2026_07_24.md`
       (status=complete, doc_type=plan) per the Procedure below. Done when: `check_terminal_status_archived.py` no longer
       lists it.
-- [ ] [INFRA] P2. Archive `plans/active/sports_pipeline_to_100pct_golden_window_first_2026_06_27.md` (status=superseded,
+- [ ] [INFRA] P0. Archive `plans/active/sports_pipeline_to_100pct_golden_window_first_2026_06_27.md` (status=superseded,
       doc_type=plan) per the Procedure below. Done when: `check_terminal_status_archived.py` no longer lists it.
-- [ ] [INFRA] P2. Archive `plans/active/tradfi_massive_dual_source_2026_05_28.md` (status=superseded, doc_type=plan) per
+- [ ] [INFRA] P0. Archive `plans/active/tradfi_massive_dual_source_2026_05_28.md` (status=superseded, doc_type=plan) per
       the Procedure below. Done when: `check_terminal_status_archived.py` no longer lists it.
 
 ## Deferred
@@ -320,3 +320,30 @@ item, it becomes a `BLOCKED-OPERATOR-DECISION` Progress Log entry (see Procedure
   the 1000-line hard cap — the one-line path repoint pushes it to 1001 and `check_line_caps` hard-fails the commit.
   Reverted the repoint edit; left the stale `issues/...` relative reference un-fixed as a known, tracked gap rather than
   blocking this archival.
+- **2026-07-25 (slot-2): BLOCKED-OPERATOR-DECISION — todo
+  (`gcs_hive_partition_malformed_paths_remediation_2026_06_01.md`) NOT archived.** Resolution itself checks out
+  (`resolved_by` cites `tradfi_manifest_canonicalisation_2026_06_01.md` E7
+  - `cefi_manifest_canonicalisation_2026_06_01.md` E2, both already archived at `plans/archive/2026_07/`, confirming
+    they ran to completion; recurrence-guard SHA `unified-trading-pm@5d6d398e4` reachable) — but the doc itself carries
+    `locked_by: live-defi-rollout` with no `[unlock-plan]` on record. Per CLAUDE.md's plan-locking HARD RULE, a locked
+    doc is never autonomous-archived. This is NOT a stray/boilerplate `locked_by` value on this particular doc — the
+    corpus already flags it as a PARKED, unanswered operator-decision item:
+    `canonical_closeout_open_questions_2026_07_18.md` § C. `/plan-reconcile` parked rulings, item **C1** — "archival of
+    `gcs_hive_partition_malformed_paths_remediation_ 2026_06_01.md` (terminal/superseded but
+    `locked_by: live-defi-rollout`) — locked plans are never autonomous-archived; needs `[unlock-plan]`. REC: unlock +
+    archive." No operator answer is recorded there yet. Leaving the checkbox unchecked and NOT archiving this session —
+    doing so would be the exact autonomous-unlock CLAUDE.md forbids. Next dispatch: check whether C1 has since been
+    answered in `canonical_closeout_open_questions_2026_07_18.md`; if yes and the answer is unlock+archive, proceed per
+    the normal Procedure; if still unanswered, this stays parked (not this sweep's call to make).
+- **2026-07-25 (slot-3): RE-DISPATCHED, re-confirmed still parked, NOT archived.** Re-checked both gates slot-2 found:
+  (1) `plans/active/issues/gcs_hive_partition_malformed_paths_remediation_2026_06_01.md` frontmatter still carries
+  `locked_by: live-defi-rollout` (unchanged). (2) `canonical_closeout_open_questions_2026_07_18.md` § C1 still reads as
+  a standing "REC: unlock + archive" recommendation with no recorded operator answer/decision timestamp — nothing has
+  changed since slot-2's pass. No new archival action taken (would violate the plan-locking HARD RULE). This is the SAME
+  dispatch-churn class main just filed for a different external gate:
+  `plans/active/issues/external_promote_gated_task_redispatch_churn_no_durable_park_2026_07_25.md` (an
+  `auto_unpark__<task-id>`-style durable park, not a worker-applied `priority_override`, is the fix that survives
+  backlog re-derivation) — cross-referencing rather than filing a duplicate issue doc. Not filing a fresh `/blocked`
+  either: C1 is already a live, unanswered, correctly-worded operator recommendation in the tracker doc; a second
+  identical escalation adds noise, not new information. Skipping this task via `/skip-current-task` so it releases
+  cleanly; the durable-park BACKEND fix above is the tracked remediation for the repeat-dispatch cost itself.

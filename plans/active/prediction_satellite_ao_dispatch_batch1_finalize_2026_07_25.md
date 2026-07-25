@@ -25,7 +25,7 @@ last_updated: "2026-07-25"
 parent_epic: predictions_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
-priority: P2
+priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 0.4
 estimate_calibrated_ai_days: 0.3
@@ -51,7 +51,7 @@ drift_direction: advance-code
 
 ## Todos
 
-- [ ] [REVIEW] P2. **Reconcile the source doc(s).** `prediction_satellite_ao_dispatch_batch1_2026_07_25.md`'s 7 todos
+- [ ] [REVIEW] P1. **Reconcile the source doc(s).** `prediction_satellite_ao_dispatch_batch1_2026_07_25.md`'s 7 todos
       all cite `prediction_phase_ab_residuals_2026_07_24.md` as Source, but each todo's own Done-when records results
       into a DIFFERENT sibling doc's Progress Log (`prediction_capture_incident_remediation_2026_07_06.md`,
       `issues/prediction_lifecycle_prefetch_gate_and_resolution_day_catalogue_2026_07_14.md`,
@@ -66,7 +66,7 @@ drift_direction: advance-code
       either historical figure). **Done when**: `prediction_phase_ab_residuals_2026_07_24.md`'s 7 corresponding
       checkboxes are flipped with verified evidence, and each of the 3 sibling target docs' Progress Log entries are
       confirmed present.
-- [ ] [REVIEW] P2. **Re-check the excluded item 9 and the 12 fully-deferred docs**, now that the operator has
+- [ ] [REVIEW] P1. **Re-check the excluded item 9 and the 12 fully-deferred docs**, now that the operator has
       (presumably) ruled on the queued decision in `autonomous_session_operator_decisions_2026_07_25.md`. For item 9
       (the instrument_type-canonicalization re-verify excluded from batch1 for conflicting with
       `prediction_consolidated_closeout_2026_07_18.md`'s own casing-gap-to-100% item): check if that master-plan item
@@ -76,7 +76,7 @@ drift_direction: advance-code
       deferred. **Done when**: item 9's status is re-verified (dispatched or confirmed still gated), and each of the 12
       deferred docs has an explicit current-state note (still gated / newly dispatchable, with a new todo/plan created
       if so).
-- [ ] [DOC] P3. **Archive `prediction_satellite_ao_dispatch_batch1_2026_07_25.md`** via the standard 6-step ritual (per
+- [ ] [DOC] P1. **Archive `prediction_satellite_ao_dispatch_batch1_2026_07_25.md`** via the standard 6-step ritual (per
       CLAUDE.md's plan-archival rule): migrate any remaining Deferred items to a tracked todo elsewhere (todo 2 above
       should have already resolved what it could — verify none remain unaddressed) → add the archive banner → run the
       codex-alignment check → grep the corpus for every referrer of `prediction_satellite_ao_dispatch_batch1_2026_07_25`

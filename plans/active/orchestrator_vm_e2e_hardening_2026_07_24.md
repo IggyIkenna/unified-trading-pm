@@ -21,7 +21,7 @@ created: "2026-07-24"
 parent_epic: observability_master
 assigned_vm: NA
 execution_scope: orchestrator-agent
-priority: P1
+priority: P0
 estimate_class: design
 estimate_baseline_ai_days: 2.0
 estimate_calibrated_ai_days: 1.2
@@ -268,7 +268,7 @@ env files, CredsEnvPoller-synced), Secrets Manager (GH_PAT, ORCHESTRATOR_ENV_LOC
       cgroup (`systemctl --user status` shows the transient scope) and a runaway QG is OOM-killed inside its scope, not
       host-wide (probe-gating makes the code safe regardless).
 
-- [ ] [CREDS] P1. **Finish vm-0 SM wiring: align the blob's stale `ORCHESTRATOR_JWT_SECRET` (SM ← vm-0), operator
+- [ ] [CREDS] P0. **Finish vm-0 SM wiring: align the blob's stale `ORCHESTRATOR_JWT_SECRET` (SM ← vm-0), operator
       one-liner.** The wiring tooling is DONE — agent-orchestrator@4c558a8 `scripts/refresh_env_from_sm.sh` (UPSERT from
       the `ORCHESTRATOR_ENV_LOCAL` blob for long-lived hosts: SM keys win on drift, the 15+ local-only keys are never
       clobbered, backup-before-write, dry-run default, values never printed; component-verified + deployed to vm-0).
@@ -354,7 +354,7 @@ Live bugs found during this verification (both fixed):
       untouched; legacy DBs without blocked_queue tolerated). 3 new tests pin ingest/sync/prune. Was:
       **[OPERATOR]-tagged todos become dispatchable tasks** — vm-planning slot-5 (11:44 UTC) burned a real worker boot
       to ask flip-or-leave. Repo: agent-orchestrator. Found 2026-06-12 Slack-alert triage.
-- [ ] [DESIGN] P1. **Dirty-worktree resolution policy (Ikenna, Slack 2026-06-12 — the next-phase "no dirty worktrees"
+- [ ] [DESIGN] P0. **Dirty-worktree resolution policy (Ikenna, Slack 2026-06-12 — the next-phase "no dirty worktrees"
       flow)**: orchestrator directs a worker on a dirty slot tree to (1) run `quality-gates.sh` — green → quickmerge the
       WIP per the active plans; (2) red but easily fixable → fix, re-QG, quickmerge; (3) not easily fixable → hand to
       the operator as a GENUINELY dirty tree (operator judges useful-or-not); (4) operator says not useful → worker
@@ -428,7 +428,7 @@ deployed to the VM + verified). Remaining live-run findings:
       never sets the snapshot bucket envs**; the deleted creds-bucket `config/backlog.yaml` seed was NOT part of the DR
       path (backlog resumes via git/PlanRegenLoop, regen-authoritative). Found 2026-06-12 while answering the
       backup-vs-seed design question.
-- [ ] [CREDS] P2. **BLOCKED-CREDENTIALS — `harsh-worker` IAM lacks SSM read/run** (`ssm:GetParameters` broke the
+- [ ] [CREDS] P0. **BLOCKED-CREDENTIALS — `harsh-worker` IAM lacks SSM read/run** (`ssm:GetParameters` broke the
       launcher's Ubuntu-AMI resolution — worked around via `AMI_ID=ami-0bf052f8a9dd8bf42`;
       `ssm:DescribeInstanceInformation`/ `ssm:SendCommand` broke the verify harness — worked around via SSH). Operator
       ask: attach `AmazonSSMReadOnlyAccess` + `ssm:SendCommand`/`ssm:GetCommandInvocation` (scoped to the orchestrator

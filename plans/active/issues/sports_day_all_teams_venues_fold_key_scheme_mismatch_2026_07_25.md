@@ -47,6 +47,10 @@ depends_on: []
 
 # Sports `day=all` teams/venues fold — blocked on a real design ambiguity + irreversible-delete risk
 
+> **🟢 AUTHORIZED 2026-07-25 (operator, in-session)** — Option A selected: treat `day=all` as confirmed-dead legacy data
+> and delete both objects, backup-copy-first per the standard protocol. See the `[OPERATOR]` todo at the end of this doc
+> for the tracked delete action.
+
 ## What the task assumed vs what's actually there
 
 The assigned todo's premise (authored 2026-06-24): "`day=all` holds `entity=teams` + `entity=venues` (~974KiB),
@@ -159,3 +163,14 @@ footystats/transfermarkt/SFI 2019-01-01, open_meteo 2019-03-02) are **stale** �
 the 2026-07-21 operator ruling that collapsed every sports source's `SOURCE_COVERAGE_START` to a uniform `2020-06-06`
 floor with a WIPE (not relabel) mandate. Any future work against this todo's text should read the floor doc first, not
 the todo's own quoted dates.
+
+## Todos
+
+- [ ] [OPERATOR] P2. **🟢 AUTHORIZED 2026-07-25 (operator, in-session) — Option A.** Delete
+      `sports_reference/by_date/day=all/entity=teams/teams.parquet` and
+      `sports_reference/by_date/day=all/entity=venues/venues.parquet` in
+      `instruments-store-sports-prd-central-element-323112` (soft-delete=0, irreversible), following
+      `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`: backup-copy both objects to a `_legacy_archive/`
+      prefix (or equivalent) first, verify the backup, then delete the originals, then verify gone. Prod-bucket delete,
+      human-gated — no agent runs this. Done-when: both objects removed from the live path, backup copies confirmed
+      present, corresponding manifest rows (if any) cleared.

@@ -350,8 +350,8 @@ inherited from the first shipped batch:
       either way, since fixtures-by-date returns all leagues in one call) — no redo_all/`--force` needed, no wasted
       quota re-fetching already-correct old-league data. **Floor-date correction (real finding, not previously caught in
       this doc)**: the "2019→" range in this todo's own text (and repeated in slot 2's note above) CONTRADICTS the
-      ratified 2026-07-21 sports data floor (`codex/02-data/sports-2020-06-data-floor.md` — "every sports artifact dated
-      before 2020-06-06 is fabrication-by-construction... DELETE, do not backfill"; that doc's own "What is MOOT"
+      ratified 2026-07-21 sports data floor (`/codex/02-data/sports-2020-06-data-floor.md` — "every sports artifact
+      dated before 2020-06-06 is fabrication-by-construction... DELETE, do not backfill"; that doc's own "What is MOOT"
       section names the pre-2020-06 slice of exactly this api-football reference-expansion effort). Used the CORRECTED
       range `2020-06-06..2026-07-25` for the actual launch, not the stale 2019 start. **Tarball-staleness check
       performed before trusting the launch** (per the near-miss precedent in

@@ -382,7 +382,7 @@ source: >-
       those specific fields until the P2 FSS-side migration lands; this is the gate doing its designed job (loud, not
       silent), not a regression, but P2 should be prioritized to close the window. Source:
       `sports_odds_feature_naming_canonicalization_2026_07_21.md`.
-- [ ] [DATA] P2. **Migrate `features_service/sports/calculators/odds_columns.py`'s `ODDS_COLUMNS`** + the odds-features
+- [ ] [DATA] P1. **Migrate `features_service/sports/calculators/odds_columns.py`'s `ODDS_COLUMNS`** + the odds-features
       exporter to emit the UAC-chosen field names instead of the current `home_implied_prob`-style convention; update
       exporter tests + downstream fixture files. (repo: features-service). **Done when**: all 180 `ODDS_COLUMNS`
       entries + exporter output renamed per the decided scheme; exporter tests and downstream fixtures updated;
@@ -424,8 +424,8 @@ source: >-
       `issues/sports_post_backfill_relabel_premise_resolved_residual_gap_2026_07_25.md` with the full measurement + 3
       correctly-scoped follow-up todos rather than force a stale-premise migration against a live-changing production
       manifest. Source: `data_completion_sports_2026_07_24.md`.
-- [ ] [SCRIPT] P2. **Relaunch features-sfi-progressive** — code fix already shipped (`features-service@06c44c02`); first
-      verify (via git log) whether the launcher's repoint to `VM_SERVICE=features_service` /
+- [ ] [OPERATOR] P1. **Relaunch features-sfi-progressive** — code fix already shipped (`features-service@06c44c02`);
+      first verify (via git log) whether the launcher's repoint to `VM_SERVICE=features_service` /
       `python -m features_service.sports.scripts.compute_sfi_progressive_only` already shipped (the source doc cites
       placeholder `<sha>`s, not real ones); if not, ship it. Then confirm market-tick-data-service is clean (no foreign
       uncommitted WIP blocking the tarball build) → rebuild SPORTS tarball via
@@ -434,30 +434,29 @@ source: >-
       run.log has no `MissingFeatureFamilyError`. (repo: deployment-service
       `scripts/vm/launch-sfi-progressive-features-backfill-vm.sh`, `scripts/vm/create-code-tarballs.sh`;
       features-service `features_service/sports/scripts/compute_sfi_progressive_only.py` — read-only dependency check on
-      market-tick-data-service, no edits there). **Done when**: launcher confirmed pointed at
+      market-tick-data-service, no edits there). **[OPERATOR]**: `RECOMPUTE_FORCE=true --force` overwrites captured prod
+      manifest rows for the full 2020-01-01→today window + launches a billed VM — cite
+      `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`, get operator go-ahead before the relaunch step (the
+      verify/tarball-rebuild prep above is safe without it). **Done when**: launcher confirmed pointed at
       `features_service.sports.scripts.compute_sfi_progressive_only` (fixed if not); SPORTS tarball rebuilt; relaunch's
       run.log shows no `MissingFeatureFamilyError` and `PROGRESSIVE_DAY_CAPTURED` events, exit code 0. Source:
       `data_completion_sports_2026_07_24.md`.
 
 ### From `sports_legacy_cutover_closeout_tasks_2026_07_24.md`
 
-- [ ] [DATA] P2. **T6.8 — retire the one-offs + the dead knob + the false-progress tick.** Per each file's own
-      `Delete-when` (all satisfied once T5.4 landed + orphan-sweep = 0 — both independently verifiable facts, check
-      first): delete `migrate_sports_canonical_v9.py`, `migrate_legacy_tick_buckets_to_canonical.py`,
-      `patch_l6_legacy_manifest_{is,mtds}_2026_06_29.py`, the ~26 legacy-reading `instruments-service/scripts/**`
-      one-offs, and the doubly-broken gate
-      `market-tick-data-service/market_tick_data_service/scripts/verify_v1_archive_row_coverage_2026_06_27.py` (leaving
-      it re-issues a false COVERED verdict). Retire the dead `include_legacy_archive` knob from UAC
-      `gcs_paths.py`/`partition_paths.py` (`rg 'include_legacy_archive\s*=\s*True'` → zero hits workspace-wide).
-      Un-tick/annotate the plan item `- [x] ✅ [DATA] P0. v1_archive ROW-coverage gate` in the archived
-      `sports_manifest_canonicalisation_2026_06_01.md` (ticked on "gate script shipped," never on a verified run —
-      false-progress class); correct that plan's standing claim to "superseded by v2 fixtures ALONE" (the columns that
-      supposedly required the union are 100% empty). Gate: `rg -c 'sports-central-element-323112'` workspace-wide → 0.
-      This todo spans 4 repos (market-tick-data-service, instruments-service, unified-api-contracts, unified-trading-pm)
-      — it is one worker's scoped unit of work as written, not a fan-out candidate. **Done when**: all named one-off
-      scripts deleted (per their own Delete-when annotations, contingent on the stated preconditions); the doubly-broken
-      gate deleted; zero `include_legacy_archive=True` hits workspace-wide; the archived plan's checkbox
-      un-ticked/annotated and its superseded-by claim corrected; final `rg -c` gate returns 0. Source:
+- [x] ✅ [DATA] P2. **T6.8 — retire the one-offs + the dead knob + the false-progress tick — SAFE SUBSET SHIPPED,
+      residual tracked.** Per-file `Delete-when` + git-history/import-graph verification found the blanket-delete
+      premise false for `migrate_sports_canonical_v9.py` (live import chain) and most of the "~26"
+      `instruments-service/scripts/**` grep-estimate (permanent-lifecycle / broader-campaign-gated / recently-active /
+      unverifiable). Shipped: the doubly-broken gate + 2 named one-offs (market-tick-data-service@f8276e22); full
+      `include_legacy_archive` knob retirement after fixing its 1 live caller (unified-api-contracts@887ab894,
+      instruments-service@5ff530f9) — `rg 'include_legacy_archive'` → 0 hits workspace-wide; the 5
+      independently-verified `instruments-service/scripts/**` one-offs shipped same-day (instruments-service@269440d7);
+      v1_archive gate un-tick/correction already done (unified-trading-pm@3aff7f716). Residual (v9-cluster + ~14
+      unverified one-offs) tracked, not dropped:
+      `plans/active/issues/sports_t6_8_oneoff_retirement_residual_2026_07_25.md`. The todo's own literal final gate
+      (`rg -c 'sports-central-element-323112'` → 0) is corrected as unachievable — many remaining hits are legitimate
+      permanent-lifecycle/doc references; see the source doc for full detail. Source:
       `sports_legacy_cutover_closeout_tasks_2026_07_24.md`.
 
 ### From `sports_prelaunch_cf5_verify_residual_2026_07_24.md`
@@ -534,14 +533,14 @@ source: >-
 
 ### From `issues/sports_legacy_duplicate_triage_2026_07_22.md`
 
-- [ ] [DATA] P2. **Migrate-forward the 58 v2 post-floor rows** (16 days) into canonical per-league `entity=fixtures` /
+- [ ] [DATA] P1. **Migrate-forward the 58 v2 post-floor rows** (16 days) into canonical per-league `entity=fixtures` /
       `entity=fixture_stats` — reuse `migrate_sports_per_league.py`'s per-fixture-league-join logic, not a delete.
       Re-run the sweep after to confirm these flip to `A_canonical`. (repo: instruments-service —
       `scripts/migrate_sports_per_league.py` logic against bucket `instruments-store-sports-prd`; re-run
       `scripts/migration_orphan_sweep_sports.py --bucket reference` afterward). **Done when**: all 58 rows across the 16
       days have canonical objects written, and a re-run of the orphan sweep reclassifies them as `A_canonical` instead
       of `B_legacy_duplicate`. Source: `issues/sports_legacy_duplicate_triage_2026_07_22.md`.
-- [ ] [CODE] P2. **Repoint or retire the two flat-legacy readers** before the 28,100 post-floor flat rows can be
+- [ ] [CODE] P1. **Repoint or retire the two flat-legacy readers** before the 28,100 post-floor flat rows can be
       reconsidered for delete: (a) `sports_reference_fixtures.py:139`'s old-path branch — verify never reached for
       canonicalised dates (add counter/log), or remove now that canonical coverage is ~98%; (b)
       `data_status_sports.py`'s level-4 fallback — same treatment. Re-run Part 4 grep+READ after either change lands.

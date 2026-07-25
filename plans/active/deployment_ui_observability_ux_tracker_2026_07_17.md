@@ -34,7 +34,7 @@ last_updated: "2026-07-17"
 parent_epic: observability_master
 assigned_vm: NA
 execution_scope: orchestrator-agent
-priority: P2
+priority: P0
 estimate_class: design
 estimate_baseline_ai_days: 12
 estimate_calibrated_ai_days: 7.2
@@ -174,16 +174,16 @@ Path:
 - [ ] [DATA] P0. **Fix BUG #3 — AWS attribution.** Build the instance-id/ARN → friendly-name mapping (AWS census the
       inventory already loads, or the CUR resource Name tag) and apply it in the join so AWS VMs get real cost. No
       mapping → stay `None`, never `$0`.
-- [ ] [BACKEND] P1. Partial-vs-complete-day honesty for `cost_actual_usd` — today it silently falls back to the latest
+- [ ] [BACKEND] P0. Partial-vs-complete-day honesty for `cost_actual_usd` — today it silently falls back to the latest
       PARTIAL day when no complete day exists (service.py:321-322). Either mark it partial (tooltip "so far today") or
       hold `None` until a complete day lands — operator's call; record in the field doc.
-- [ ] [REVIEW] P1. Unit tests — (a) 1-day-in-window → avg == actual (regression for the reported symptom); (b) N active
+- [ ] [REVIEW] P0. Unit tests — (a) 1-day-in-window → avg == actual (regression for the reported symptom); (b) N active
       days → avg == sum/N; (c) 24h basis is complete-day/normalised, not `max`; (d) AWS ARN→name mapping attributes a
       known CUR row; (e) unmapped stays `None`. `bash scripts/quality-gates.sh` green in deployment-api.
-- [ ] [UI] P1. IF a "partial day" / "normalised" basis lands, add the `cost_basis`-style marker on `CostCell` so billed
+- [ ] [UI] P0. IF a "partial day" / "normalised" basis lands, add the `cost_basis`-style marker on `CostCell` so billed
       vs derived figures are distinguishable; else no UI change. `pw:L2 ✓` + cited spec if touched.
-- [ ] [INFRA] P1. Ship (quickmerge `--agent --files`, cite `<repo>@<sha>`) + flip todos same turn (`docs(plans):`).
-- [ ] [REVIEW] P2. Post-phase codex audit — document the Cost/day attribution contract (three definitions, active-days
+- [ ] [INFRA] P0. Ship (quickmerge `--agent --files`, cite `<repo>@<sha>`) + flip todos same turn (`docs(plans):`).
+- [ ] [REVIEW] P0. Post-phase codex audit — document the Cost/day attribution contract (three definitions, active-days
       average, 24h basis, GCP-name/AWS-ARN join) in `/codex/05-infrastructure/deployment-observability.md`.
 
 ### WS-1 success criteria
@@ -228,17 +228,17 @@ write clear instructions in the plan.
 
 ### WS-2 todos
 
-- [ ] [REVIEW] P1. **Accuracy audit (operator-mandated, before build).** Quantify lifecycle coverage — % of inventory
+- [ ] [REVIEW] P0. **Accuracy audit (operator-mandated, before build).** Quantify lifecycle coverage — % of inventory
       rows with `started_at`/`completed_at`, split by kind (VM / Cloud Run job / service) and `launched_by`
       (deployment-api / control-plane / adhoc). Measure archive retention depth (how far back
       `deployments/archive/<day>/` actually goes — any bucket lifecycle rule?). Define per-kind date semantics (a Cloud
       Run SERVICE has no run interval; a JOB does). Output — a coverage table + the per-kind filter rule, written into
       the split plan as the "clear instructions" the operator asked for.
-- [ ] [BACKEND] P1. Inventory endpoint accepts `date_from`/`date_to`; evaluates interval overlap on
+- [ ] [BACKEND] P0. Inventory endpoint accepts `date_from`/`date_to`; evaluates interval overlap on
       `started_at`/`completed_at` where present (incl. reading the day-partitioned archive for the range — bounded
       listing only); falls back to `last_run_at ∈ [A,B]` where lifecycle is absent; response marks WHICH rule matched
       per row (a basis field) so the UI can label approximate rows.
-- [ ] [UI] P1. Date-range picker on `/deployments` — URL-backed (`?date_from=&date_to=` per the plain-routes contract),
+- [ ] [UI] P0. Date-range picker on `/deployments` — URL-backed (`?date_from=&date_to=` per the plain-routes contract),
       an "approx (last-run)" marker on fallback rows, and a clear empty-state. `pw:L2 ✓` + cited regression spec.
 
 ---
@@ -262,12 +262,12 @@ A **filter on top for Service** and a **search bar for the Target column**.
 
 ### WS-3 todos
 
-- [ ] [UI] P2. Service dropdown filter — options derived from the loaded inventory's distinct `service` values,
+- [ ] [UI] P0. Service dropdown filter — options derived from the loaded inventory's distinct `service` values,
       URL-backed (`?service=`), client-side filter, same filter-bar row as the existing dropdowns.
-- [ ] [UI] P2. Target search box — free-text, matches the Target column (`item.name`, substring, case-insensitive),
+- [ ] [UI] P0. Target search box — free-text, matches the Target column (`item.name`, substring, case-insensitive),
       URL-backed (`?q=`), debounced, clears with an ✕. `pw:L2 ✓` + a cited regression spec covering both (a deep-link
       with `?service=&q=` applies both — same URL-filter contract the plain-routes refactor established).
-- [ ] [BACKEND] P3. _(stretch, optional)_ server-side `q=`/`service=` params if row counts ever outgrow client-side.
+- [ ] [BACKEND] P0. _(stretch, optional)_ server-side `q=`/`service=` params if row counts ever outgrow client-side.
 
 ---
 
@@ -300,18 +300,18 @@ tail should show only the last **~200–500 lines** so the UI doesn't crash. The
 
 ### WS-4 todos
 
-- [ ] [REVIEW] P1. **Repro audit first** — click through N live + N archived VMs; record which show a tail vs blank;
+- [ ] [REVIEW] P0. **Repro audit first** — click through N live + N archived VMs; record which show a tail vs blank;
       identify the exact read path (endpoint) and the failure mode (wrong path for archived VMs? auth? size timeout?
       live-vs-rolled path divergence after the 14-day TTL?). Findings → the split plan.
-- [ ] [BACKEND] P1. Log metadata on the detail response — object **size** + last-modified via `gcs_describe_object`;
+- [ ] [BACKEND] P0. Log metadata on the detail response — object **size** + last-modified via `gcs_describe_object`;
       resolve live (`vm-logs/`) vs archived (`log-archive/`) location per the audit and label which one is shown.
-- [ ] [BACKEND] P1. Bounded tail endpoint — read ONLY the last ~64–256 KB via a byte-range read, split to the last
+- [ ] [BACKEND] P0. Bounded tail endpoint — read ONLY the last ~64–256 KB via a byte-range read, split to the last
       200–500 lines (cap configurable). NEVER stream a whole 20–30 MB object into the API or the browser for the tail.
-- [ ] [UI] P1. Popup shows — size (human units), the capped tail with a "last N lines of X MB" label, and a working
+- [ ] [UI] P0. Popup shows — size (human units), the capped tail with a "last N lines of X MB" label, and a working
       **Download** (signed URL or streaming proxy; must not freeze the tab on 30 MB). Honest states — "no log yet" /
       "live log expired (14-day TTL), showing archive" / errors surfaced, never swallowed. `pw:L2 ✓` + cited regression
       spec.
-- [ ] [INFRA] P1. Ship + flip (`docs(plans):`).
+- [ ] [INFRA] P0. Ship + flip (`docs(plans):`).
 
 ---
 
@@ -347,18 +347,18 @@ thorough alert coverage** — do that audit first, then write the plan.
 
 ### WS-5 todos
 
-- [ ] [REVIEW] P1. **Coverage audit (operator-mandated, before build).** Inventory every alert SOURCE that exists today
+- [ ] [REVIEW] P0. **Coverage audit (operator-mandated, before build).** Inventory every alert SOURCE that exists today
       (channels, watchdogs, CI carriers, kill-switch, consolidator/data-status verdicts) vs what the `/alerts` ledger
       actually ingests; produce a coverage table + gap list; propose which feeds belong on the page and their normalised
       shape (source, class/severity, target, service, time, message, link).
-- [ ] [REVIEW] P1. **UX audit.** Define the proper table from the audited fields — sortable columns, filters (source,
+- [ ] [REVIEW] P0. **UX audit.** Define the proper table from the audited fields — sortable columns, filters (source,
       class/severity, target/service, date-range), URL-backed params (plain-routes contract), per-row deep-links (target
       → `/deployments/:name`, log stream → `?logs=`, runbook when present). A short design note in the split plan.
-- [ ] [UI] P1. Rebuild the alerts table per the audits — sorting, filtering, date range, linked drill-downs, proper
+- [ ] [UI] P0. Rebuild the alerts table per the audits — sorting, filtering, date range, linked drill-downs, proper
       layout. `pw:L2 ✓` + cited regression spec.
-- [ ] [BACKEND] P1. Whatever the coverage audit requires — normalise the missing feeds into the ledger (respect the
+- [ ] [BACKEND] P0. Whatever the coverage audit requires — normalise the missing feeds into the ledger (respect the
       dedup/actionable-only policies in the alerting SSOTs; the PAGE may show more than what PAGES Slack).
-- [ ] [INFRA] P1. Ship + flip (`docs(plans):`).
+- [ ] [INFRA] P0. Ship + flip (`docs(plans):`).
 
 ---
 
@@ -420,23 +420,23 @@ and catch outliers / OOM / disk hiccups. Requirements dictated —
 
 - [ ] [OPERATOR] P0. Decide the write path — (a) GCS-batched / (b) event-spine→BigQuery / (c) Ops-Agent-backed (or a
       hybrid). BLOCKED-OPERATOR-DECISION — explicitly deferred by the operator 2026-07-17.
-- [ ] [REVIEW] P1. Pre-decision audit for (c) — is the Ops Agent (or any host-metric export) already running on the
+- [ ] [REVIEW] P0. Pre-decision audit for (c) — is the Ops Agent (or any host-metric export) already running on the
       fleet VMs? What retention/granularity does it give, and can deployment-api query it per VM name? A yes here may
       delete most of the build.
-- [ ] [BACKEND] P1. Decision doc for the operator — per option: writes/day, objects/day, storage/mo, query-cost model,
+- [ ] [BACKEND] P0. Decision doc for the operator — per option: writes/day, objects/day, storage/mo, query-cost model,
       lifecycle spec (mirror the vm-logs TTL semantics; plain replace, no soft-delete/versioning — operator
       requirement), sample schema (D.1 fields + `vm_name`/`service`/`asset_group`/`mode`/`deployment_id` keys), SPOT
       flush-on-SIGTERM behaviour, and the dual-cloud answer. Feeds the operator decision above.
-- [ ] [BACKEND] P2. (post-decision) Writer on the heartbeat-daemon path per the chosen design (batch/flush cadence;
+- [ ] [BACKEND] P0. (post-decision) Writer on the heartbeat-daemon path per the chosen design (batch/flush cadence;
       SIGTERM flush; NEVER blocks the authoritative heartbeat/registry write — same best-effort contract as the
       dual-write mirror).
-- [ ] [BACKEND] P2. Read/query API — a VM's full-run timeline + a cross-VM comparison slice (filter service /
+- [ ] [BACKEND] P0. Read/query API — a VM's full-run timeline + a cross-VM comparison slice (filter service /
       asset_group / mode / time window).
-- [ ] [UI] P2. Historic timeline chart in the VM drill-down (CPU/RAM/disk over the run, spike/OOM markers) + a
+- [ ] [UI] P0. Historic timeline chart in the VM drill-down (CPU/RAM/disk over the run, spike/OOM markers) + a
       **dedicated comparison page** — overlay N VMs filtered by service × asset_group × mode (the operator's
       right-sizing workflow — "ten different VMs running instruments-service — what were their resources?"). `pw:L2 ✓` +
       cited regression spec.
-- [ ] [REVIEW] P2. End-to-end verify on a real backfill VM incl. a SPOT preemption — flush-on-SIGTERM works; sample loss
+- [ ] [REVIEW] P0. End-to-end verify on a real backfill VM incl. a SPOT preemption — flush-on-SIGTERM works; sample loss
       bounded to the buffer window; TTL/replace lifecycle behaves.
 
 ---

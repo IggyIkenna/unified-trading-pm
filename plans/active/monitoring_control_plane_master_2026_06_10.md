@@ -24,7 +24,7 @@ created: 2026-06-10
 parent_epic: observability_master
 assigned_vm: NA
 execution_scope: orchestrator-agent
-priority: P1
+priority: P0
 estimate_class: design
 estimate_baseline_ai_days: 2.0
 estimate_calibrated_ai_days: 1.2
@@ -225,7 +225,7 @@ those). Harsh's three-surface charter (verbatim to Ikenna):
       v2-never-reported deadlock + skip-ci-jam PR classes surface as explicit badges. Pure UI (data already on the
       detail payload). Added `repo-detail-history` test-id + scoped the drill-down test's branch assertions to it (the
       pipeline `main` stage label otherwise made the exact-text match ambiguous). Repo: deployment-ui (`RepoCi.tsx`).
-- [ ] [CODE] P3. **Version-coherence panel** — `assert_version_coherence.py` verdicts (VERSION_SPLIT /
+- [ ] [CODE] P0. **Version-coherence panel** — `assert_version_coherence.py` verdicts (VERSION_SPLIT /
       VESTIGIAL_SCALAR_DRIFT / DEP_FLOOR_UNSATISFIABLE) per repo on the dashboard. Repo: deployment-api (run/ingest) +
       deployment-ui. **ASSESSED 2026-06-12 (Harsh) — WANTS A VERDICT-STORE, do NOT reimplement inline.** VERSION_SPLIT
       needs per-repo source `pyproject.version` fetches (25 GitHub calls/load), and the two cheap manifest-internal
@@ -235,9 +235,9 @@ those). Harsh's three-surface charter (verbatim to Ikenna):
       `assert_version_coherence.py`'s VERDICT (the workflow-status→store generalisation the operator described
       2026-06-11), not a second implementation. **BLOCKED-ON: verdict-store (Firestore generalisation, gated by the
       CI/CD billing wall) OR operator OK on a faithful port.**
-- [ ] [CODE] P3. **Rollout-ratchet panels** — workflow-template drift (`detect_template_drift.py`) + Dockerfile
+- [ ] [CODE] P0. **Rollout-ratchet panels** — workflow-template drift (`detect_template_drift.py`) + Dockerfile
       digest-pin conversion status per repo. Repo: deployment-api + deployment-ui.
-- [ ] [CODE] P3. **Runtime-level deploy signal (v2 of decision 4)** — resolve what is RUNNING (deployment registry /
+- [ ] [CODE] P0. **Runtime-level deploy signal (v2 of decision 4)** — resolve what is RUNNING (deployment registry /
       Cloud Run revisions / VM heartbeats) and diff its SHA vs `main` HEAD. Repo: deployment-api + deployment-ui.
   > **🚫 Per-repo freeze-streak signal (AO half) + fleet-tab surface (deployment-ui half) — DESCOPED 2026-07-21
   > (operator).** The `deployment-ui` fleet tab is being handled by the agent already working on the deployment-ui side;
@@ -413,7 +413,7 @@ those). Harsh's three-surface charter (verbatim to Ikenna):
       version-surface + runs API (the proven live-read pattern) — NOT the blocked Firestore generalisation.**
       Ledger-persist tail (inline-curl alert) still rides `ci_dashboard_deployment_ui` P3. Repos: deployment-api
       (`repo_ci`/`_repo_ci_manifest`/`_repo_ci_types`/`_repo_ci_mocks`) + deployment-ui (`RepoCi`/`client`/`mock-api`).
-- [ ] [CODE] P2. **(G3) Manifest consolidator health (`CONSOLIDATOR_DOWN`) is homeless** — the consolidator watchdog
+- [ ] [CODE] P0. **(G3) Manifest consolidator health (`CONSOLIDATOR_DOWN`) is homeless** — the consolidator watchdog
       pages CRITICAL on a stale/missing `_index` while per-VM shards exist, but there is NO standing element on EITHER
       monitoring surface. Decide the home (it is data-pipeline, not CI/CD or fleet-git — candidates: a small
       consolidator-liveness chip on `/repos` header, or the data-status surface) + surface `assert_consolidator_healthy`
@@ -431,11 +431,11 @@ those). Harsh's three-surface charter (verbatim to Ikenna):
       "Consolidators tab" on top of that endpoint as a pre-existing SSOT, with no cross-reference back to this G3 item.
       This G3 todo should be re-scoped/closed against what actually shipped rather than left open as slot-3-owned "IN
       PROGRESS", or reconciled with the operator on what remains distinct from the cockpit surface.)**
-- [ ] [CODE] P3. **(G4) Ruleset / branch-protection drift has no standing state** — `rules-alignment-agent` pages
+- [ ] [CODE] P0. **(G4) Ruleset / branch-protection drift has no standing state** — `rules-alignment-agent` pages
       WARNING on per-repo ruleset misalignment; no UI. Fold into the planned **Rollout-ratchet panels** smart-extra
       (workflow-template drift + Dockerfile digest-pin) as a third ratchet column. Repos: deployment-api +
       deployment-ui.
-- [ ] [CODE] P3. **(G5) Change-freeze window active has no standing banner** — `change-freeze-check` pages WARNING when
+- [ ] [CODE] P0. **(G5) Change-freeze window active has no standing banner** — `change-freeze-check` pages WARNING when
       a freeze blocks a scheduled/autonomous run; add a freeze-window banner on `/repos` (active? window? reason?).
       Repo: deployment-ui. **ASSESSED 2026-06-12 (Harsh) — WANTS A VERDICT-STORE, do NOT reimplement inline.** The "is a
       freeze active NOW" verdict spans 6 recurrence types (daily / every_8h / 1st_friday_monthly / 3rd_friday_monthly /
