@@ -388,6 +388,61 @@ A/B/C `cefi-late-renames` apply (Finding 8) if their dates fall in 2025-11-01..2
 full-range verification dry-run will confirm this empirically rather than requiring a separately-scoped run**; do not
 build one preemptively.
 
+## Finding 10 (2026-07-25) — Range A/B/C applied (504,280 renamed, 1,333 dup-sources deleted); collision count GREW to
+
+1292 as a natural side-effect of the safe-majority apply, root-caused (not new/alarming); safe residual (~2,962) queued
+for a follow-up venue-scoped pass
+
+**Range A/B/C all completed successfully** on the `cefi-late-renames` VM category, drain-gated by the paused cron
+(Finding 7's discipline reused): Range A (`2025-11-03..2025-12-31`) 4,386 renamed/0 errors; Range B
+(`2026-01-04..2026-07-10`, the bulk) 499,119 renamed + 1,333 duplicate wire-sources deleted (content-identical except
+`instrument_id` — safely deleted, not renamed) + 10 transient-503 `copyTo` errors; Range C (`2026-07-12..2026-07-24`)
+765 renamed/0 errors. **All 10 Range B stragglers retried and confirmed renamed** (pre-verified
+source-present/target-absent for each, then re-invoked the real script's own `do_rename()` via a tiny scratchpad script
+— the SAME recovery pattern the 2026-07-23 KRAKEN-SPOT apply used for its own 6 stragglers). LIGHTER-ZKSYNC's
+separately-tracked backfill (item 6) is confirmed fully subsumed — no gap.
+
+**Fresh full-range verification dry-run** (`2025-11-01..2026-07-24`, post-apply): `would_rename=3646` remains — MORE
+than the 1114 originally queued, because Range A/B/C excluded the 6 known-colliding dates WHOLESALE (simplicity over
+precision), so every OTHER venue's safe renames on those same 6 days got skipped too, not just the truly-colliding ones.
+Per-venue:
+`EXTENDED-STARKNET: 704, LIGHTER-ZKSYNC: 177, ASTER: 60, BYBIT-SPOT: 1561, COINBASE-FUTURES: 520, DERIBIT: 276, HYPERLIQUID: 348`.
+**ASTER (60) and BYBIT-SPOT (1561) / COINBASE-FUTURES (520) are UNCHANGED from the very first pre-apply measurement** —
+their entire remaining population sits exactly on the 6 excluded dates, never touched.
+EXTENDED-STARKNET/LIGHTER-ZKSYNC/DERIBIT/HYPERLIQUID dropped substantially (most of their volume WAS outside the 6 dates
+and got applied).
+
+**STOP-ON-SURPRISE now reports 1292 (not 1114)** — `breakdown by venue: {HYPERLIQUID: 660, ASTER: 444, DERIBIT: 188}`.
+HYPERLIQUID/ASTER are **byte-identical to Finding 8's original measurement** (genuinely pre-existing, unaffected by this
+session's applies). **DERIBIT grew 10→188 — root-caused, not a new/independent problem**: it is the SAME mislabel
+pattern already flagged elsewhere in this exact run's own output
+(`MISLABEL... 26 source(s)... DERIBIT spot X_USDC/X_USDT in instrument_type=perpetual/`, "Needs a separate
+spot-partition move") — a raw DERIBIT `BTC_USDC` / `ETH_USDC` / `BNB_USDC` / `SOL_USDC` / `XRP_USDC` SPOT wire object
+sits (mis-catalogued) inside the `perpetual` partition and resolves to `DERIBIT:PERPETUAL:{SYM}-USDC@LIN`. On a date
+where NO genuine PERPETUAL canonical object of that name exists yet, the tool correctly leaves it honest-raw (the 26
+`mislabel_left_raw` count). **But on a date where Range A/B's OWN successful renames of the REAL PERPETUAL wire data
+just created that exact canonical target, the SAME mislabeled SPOT object now GENUINELY COLLIDES with it** (content
+differs — real PERPETUAL data vs. real SPOT data under one contested name) — a same-run-order artifact of applying the
+safe renames, not new corruption or moving data. Recurs in ~5-per-day clusters (the same 5 mislabeled symbols) across
+MANY dates spanning Nov 2025–Apr 2026 (log shows 16+ distinct dates in just the top-20 sample) — this will very likely
+grow a bit further as the SAFE remainder below lands (more PERPETUAL canonical targets get created, more latent SPOT
+mislabel collisions get exposed), and should be treated as an evolving-but-understood count, not a fixed one.
+
+**No action taken on the 1292** — same reasoning as Finding 8's queued question, now simply covering a fuller,
+better-understood population: the DERIBIT growth is **pre-existing catalogue mislabel debt** ("Needs a separate
+spot-partition move" — already named as its own fix in the script's own summary text, itself a live-served-data change
+appropriately out of this autonomous session's unsupervised scope), not a new decision to make. **The queued operator
+question from Finding 8 is UPDATED, not superseded**: same 3 options (leave as-is / investigate / operator rules), same
+recommendation (leave as-is for now), scope widened from "1114 on 6 dates" to "1292, dominated by HYPERLIQUID/ASTER's
+original 6-date pattern plus a recurring, mislabel-driven DERIBIT trickle across many more dates."
+
+**Safe residual identified and NOT yet applied**: `EXTENDED-STARKNET (704) + LIGHTER-ZKSYNC (177) + BYBIT-SPOT (1561)
+
+- COINBASE-FUTURES (520) =
+  2,962`renames belong to venues with ZERO collisions anywhere in the full scan — safe to apply via 4 sequential`--venue`-scoped `cefi-late-renames`runs over the FULL`2025-11-01..2026-07-24`
+  range (venue scoping fully isolates a run from other venues' collisions, so this sidesteps the whole "which of the 6
+  dates is safe" question cleanly). Next step, still under the same cron-pause drain gate.
+
 ## What's left (unchanged from the parent plan's last-known Deferred-work table, ~13:35Z revision)
 
 | #           | Item                                                              | State                                             | Notes                                                                                                                                                                                                                                                                                                                                                                                                           |
