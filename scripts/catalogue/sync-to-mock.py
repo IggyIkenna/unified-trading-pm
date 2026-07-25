@@ -35,6 +35,7 @@ import sys
 from datetime import UTC, date, datetime, timedelta
 
 from google.cloud import storage
+from google.cloud.storage.retry import DEFAULT_RETRY
 
 logger = logging.getLogger(__name__)
 
@@ -120,7 +121,10 @@ def _copy_day(
         if dry_run:
             logger.info("[DRY-RUN] gs://%s/%s -> gs://%s/%s", src_bucket_name, blob.name, tgt_bucket_name, tgt_name)
         else:
-            src_bucket.copy_blob(blob, tgt_bucket, new_name=tgt_name)
+            # No generation precondition -> google-cloud-storage's default ConditionalRetryPolicy
+            # won't auto-retry a transient 429/503 on a bare copy; DEFAULT_RETRY (same policy
+            # backing reload()/exists()/delete()) is safe here since re-copying is idempotent.
+            src_bucket.copy_blob(blob, tgt_bucket, new_name=tgt_name, retry=DEFAULT_RETRY)
         copied += 1
 
     return copied

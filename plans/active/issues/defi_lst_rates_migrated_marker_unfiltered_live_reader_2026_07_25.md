@@ -51,7 +51,7 @@ source:
     defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md todo defi_dex_pool_symbol_fix_backfill_purge-001 (Part 4:
     grep+READ proof no live code reads the candidate)",
   ]
-resolved_by:
+resolved_by: features-service@69753a7c88ba2d33b2def282632ce853d3739dee
 locked_by:
 locked_since:
 ---
@@ -119,14 +119,29 @@ per-venue twin-coverage sampling, content-match results, and the writer-side (Pa
 
 ## Todos
 
-- [ ] [BACKEND] P1. **Fix `_probe_mtds_blobs`**
+- [x] [BACKEND] P1. **Fix `_probe_mtds_blobs`**
       (`features-service/features_service/onchain/app/core/data_loader.py:121-138`) to skip any leaf whose basename
       starts with `_` — matching `rebuild_defi_manifest.py`'s existing convention for the same markers. Audit for the
       same unfiltered-glob pattern elsewhere in MTDS-output consumers (any other
       `n.endswith(".parquet") and data_type_segment in n`-shaped match with no underscore exclusion). This is a
       non-destructive code fix (no GCS/prod-data touched) — does NOT require the human-only delete approval. **Done
       when**: a unit test asserts `_probe_mtds_blobs` excludes a `_migrated_*`-prefixed object from its match set while
-      still matching the real per-instrument twin; `quality-gates.sh` green.
+      still matching the real per-instrument twin; `quality-gates.sh` green. —
+      `features-service@69753a7c88ba2d33b2def282632ce853d3739dee`. Fixed `_probe_mtds_blobs` (`data_loader.py`) via a
+      new `_is_retirement_marker()` helper (basename after the last `/` startswith `_`) added to the match predicate.
+      Audit found the SAME unfiltered shape in two sibling MTDS-output DeFi raw_tick_data probers and fixed both:
+      `onchain/calculators/perp_funding_rates_defi.py::     _load_raw_frame` (perp_funding needle-match) and
+      `onchain/adapters/mtds_canonical_reader.py::     read_canonical_defi_parquets` (day_blobs listing feeding the
+      `shard_suffix` match) — both would otherwise match a `_migrated_*` marker sitting at the identical hive path as
+      its twin. `_resolve_parquet_files` (same file, MDPS-candle reader per its docstring) and
+      `delta_one/app/core/data_loader.py` (`processed_candles/` MDPS output, not raw_tick_data DeFi) were checked and
+      are out of scope — neither path can carry a `_migrated_*` marker. Evidence: 3 new unit tests
+      (`test_onchain_data_loader.py::     TestProbeMtdsBlobs::test_excludes_migrated_retirement_marker_but_matches_real_twin`,
+      `test_perp_funding_rates_defi.py::test_load_raw_frame_excludes_migrated_retirement_marker`,
+      `test_mtds_canonical_reader.py::test_reader_skips_migrated_retirement_marker`), each constructing a real
+      per-instrument leaf + a `_migrated_*` marker at the same shard path and asserting only the real leaf is
+      matched/read (the marker's mock raises `AssertionError` if ever downloaded — never fires). `quality-gates.sh`
+      green: 17826 passed, 209 skipped, 0 failed, sentinel `.qg_last_passed_sha` == HEAD before quickmerge.
 - [ ] [OPERATOR] P2. **Re-verify + purge, only after the reader fix lands.** Re-run this delete-safety proof (or the
       sanctioned `delete_migrated_defi_markers_2026_07_23.py --dry-run`, which already implements the correct per-marker
       SAFE/FLAGGED disposition logic) with the reader fixed, then execute `defi_dex_pool_symbol_fix_backfill_purge-001`
