@@ -94,7 +94,7 @@ someone else, or the manifest shape may have shifted.
 
 ## Todos
 
-- [ ] [DATA] P1. **Re-verify current production state before touching anything.** Read the LIVE consolidated cefi
+- [x] ✅ [DATA] P1. **Re-verify current production state before touching anything.** Read the LIVE consolidated cefi
       manifest (`gs://market-data-tick-cefi-prd-central-element-323112/_index/availability_index.parquet`, via
       `measure_honest_coverage._read_manifest("cefi")` or an equivalent bounded-column/predicate-pushdown read -- do NOT
       do a naive full-frame load, see the manifest-read efficiency note in
@@ -103,8 +103,9 @@ someone else, or the manifest shape may have shifted.
       compare against it. **Done when**: a Progress Log entry states plainly whether the row counts are (a) unchanged
       (both scripts still need to run, proceed to todos 2-3), (b) partially changed (one script ran, figure out which
       and proceed only with the other), or (c) already fully remediated (close this plan with evidence, nothing further
-      to do). (repo: market-tick-data-service)
-- [ ] [OPERATOR] P1. **Run the PERPETUAL→SPOT_PAIR relabel** (only if todo 1 found it still needed).
+      to do). (repo: market-tick-data-service) -- **DONE 2026-07-25 (slot-6 data_engineering) -- case (b), PARTIALLY
+      changed.** See Progress Log for full breakdown + evidence.
+- [x] ✅ [OPERATOR] P1. **Run the PERPETUAL→SPOT_PAIR relabel** (only if todo 1 found it still needed).
       `cd market-tick-data-service && .venv/bin/python     scripts/relabel_bybit_spot_perpetual_itype_2026_07_07.py`
       (dry-run first, read the printed plan), then `--smoke` (relabels one shard, verify the `by_venue_instrument_type`
       split shows both `PERPETUAL` (remaining) and `SPOT_PAIR` (new) before continuing), then `--apply` (snapshots the
@@ -114,6 +115,12 @@ someone else, or the manifest shape may have shifted.
       PERPETUAL count is outside `[50_000, 60_000]`, or if any shard exceeds 400 rows) are the safety mechanism, not a
       substitute for a human running `--apply`. **Done when**: `by_venue_instrument_type` for BYBIT-SPOT shows the full
       ~53,785-row split to `SPOT_PAIR`, zero remaining `PERPETUAL` rows for this venue. (repo: market-tick-data-service)
+      -- **VERIFIED-ALREADY-SATISFIED 2026-07-25 (slot-6 data_engineering), NO MUTATION RUN.** Live re-read + a dry-run
+      of this exact script confirm 0 `PERPETUAL` rows remain and 226,319/226,319 BYBIT-SPOT rows already carry
+      `SPOT_PAIR` (including 2021-12-04-dated rows). The Gate this todo names is met organically -- most likely a
+      side-effect of the a1 forward-path fix (`mtds@9d21b133`) + uppercase-casing fix (`mtds@60287d3e`) combined with
+      routine manifest-consolidation reprocessing since 2026-07-12, not this script's `--apply` (which nobody ran -- see
+      Progress Log). No operator action needed; closing on verified end-state per this todo's own Done-when wording.
 - [ ] [OPERATOR] P1. **Run the spot-nonsense manifest purge** (only if todo 1 found it still needed; independent of todo
       2 -- disjoint row sets, but keep sequential for a clean one-mutation-at-a-time production trail).
       `cd     market-tick-data-service && .venv/bin/python     scripts/delete_bybit_spot_spot_nonsense_manifest_2026_07_07.py`
@@ -123,7 +130,17 @@ someone else, or the manifest shape may have shifted.
       per `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`. **Done when**: `by_data_type` for BYBIT-SPOT
       shows only `{trades, book_snapshot_5}`, zero rows remain under
       `derivative_ticker`/`futures_chain`/`options_chain`/ `ohlcv_1m`/`perp_funding`/`liquidations`. (repo:
-      market-tick-data-service)
+      market-tick-data-service) -- **⚠️ STILL NEEDED, AND THE SCRIPT ITSELF IS NOW STALE (found 2026-07-25, slot-6
+      data_engineering).** The 53,934-row spot-nonsense problem is byte-identical to 2026-07-07/07-10 (same 6
+      data_types, same per-type counts, still 100% `capture_status=empty_confirmed`, still 0 captured rows -- LOSSLESS
+      to delete). BUT this script's `_target_mask` hard-requires `instrument_type == ""`, and that condition no longer
+      holds: a LIVE dry-run today returns "rows to delete: 0" and then STOP-ON-SURPRISE fires ("53,934 rows ... carry
+      instrument_type != ''") because these rows now carry `instrument_type=SPOT_PAIR` (same organic cause as todo 2's
+      note above). **Before running this todo**: the script's identity filter needs a small maintenance fix -- drop or
+      relax the `instrument_type==""` guard (the real identity is
+      `venue + data_type-in-{6 nonsense types} +     capture_status=empty_confirmed + row_count=0`, not the itype value)
+      -- then dry-run/`--smoke`/`--apply` per the updated script. Do not hand-wave past the script's own
+      stop-on-surprise refusal; it is correctly protecting against exactly this kind of drift.
 - [ ] [DATA] P2. **Re-measure cefi Layer-1** (`measure_honest_coverage.py` or the current canonical entry point --
       confirm which one is live per `/codex/02-data/honest-coverage-model.md`, tooling may have moved since 2026-07-07)
       after todos 2-3 land, and confirm the BYBIT-SPOT tuple closes cleanly (matches
@@ -142,3 +159,72 @@ someone else, or the manifest shape may have shifted.
 - `/codex/02-data/honest-coverage-model.md` -- Layer-1 measurement + the instrument_type casing ruling.
 - `/codex/02-data/four-surface-reconciliation-procedure.md` -- bounded/predicate-pushdown manifest read pattern for todo
   1 (the consolidated cefi manifest is tens of millions of rows; a naive full-frame load risks OOM).
+
+## Progress Log
+
+- **2026-07-25** -- **Todo 1 DONE, todo 2 VERIFIED-ALREADY-SATISFIED, todo 3 confirmed still needed + its script found
+  stale** (slot-6 data_engineering). Live bounded/predicate-pushdown read of the consolidated cefi manifest
+  (`read_availability_index(bucket, columns=[venue,instrument_type,data_type,capture_status], filters=[("venue","==","BYBIT-SPOT")])`
+  -- NOT a naive full-frame load) against
+  `gs://market-data-tick-cefi-prd-central-element-323112/_index/availability_index.parquet`:
+
+  ```
+  total BYBIT-SPOT rows: 226,319   (was 135,444 on 2026-07-07/07-10 -- +90,875)
+
+  by instrument_type: {'SPOT_PAIR': 226,319}   (was {'': 81,659, 'PERPETUAL': 53,785})
+    -- 0 empty-itype rows, 0 PERPETUAL rows. 100% SPOT_PAIR, including 2021-12-04-dated rows.
+
+  by data_type:
+    trades              86,201   (was 40,755 -- +45,446)
+    book_snapshot_5     86,184   (was 40,755 -- +45,429)
+    derivative_ticker   13,350   (unchanged)
+    futures_chain       13,350   (unchanged)
+    ohlcv_1m            13,350   (unchanged)
+    options_chain       13,350   (unchanged)
+    perp_funding           267   (unchanged)
+    liquidations            267   (unchanged)
+
+  spot-nonsense subset (the 6 invalid-for-SPOT data_types), 53,934 rows total -- IDENTICAL to 2026-07-07 diagnosis (b):
+    100% capture_status=empty_confirmed, same per-data_type split (13,350 x4 + 267 x2), 0 captured rows -- still
+    LOSSLESS to delete, still fully present, untouched.
+
+  valid-spot subset (trades + book_snapshot_5) capture_status split:
+    captured 64,868 / expected_unattempted 102,348 / empty_confirmed 56,984 / attempted_failed 2,119
+  ```
+
+  **Verdict: case (b), PARTIALLY changed** -- not (a) unchanged (itype state moved materially), not (c) fully remediated
+  (the 53,934-row spot-nonsense purge target is untouched).
+
+  **Which script "ran"**: neither corrective script's `--apply` has a commit/log trail, and independently the cefi-wide
+  canonicalization cutover (`complete_cefi_manifest_canonical_dedup_2026_07_17.py`, the thing that WOULD rewrite
+  `instrument_type` casing/values at scale) is confirmed NOT yet applied -- its own plan
+  (`cefi_migration_cutover_and_track8_completion_2026_07_25.md`) is `status: draft` with its `--apply` todo still
+  unchecked. Ran both BYBIT-SPOT scripts in dry-run (read-only, no writes) against the live manifest for direct
+  confirmation:
+  - `relabel_bybit_spot_perpetual_itype_2026_07_07.py` (no args): "rows to relabel: 0" then its own STOP-ON-SURPRISE
+    fires ("226319 BYBIT-SPOT rows already carry instrument_type=SPOT_PAIR") -- i.e. the target end-state this script
+    exists to produce is ALREADY true.
+  - `delete_bybit_spot_spot_nonsense_manifest_2026_07_07.py` (no args): "rows to delete: 0" then its own
+    STOP-ON-SURPRISE fires on the _low_ end ("target row count 0 outside expected range [45000, 60000]") -- because its
+    `_target_mask` hard-requires `instrument_type == ""`, and every one of the 53,934 target rows now carries
+    `instrument_type=SPOT_PAIR` instead of `""`. The script's own identity filter is stale against current production
+    state; it is not able to find or delete the (still fully present) rows it was built for.
+
+  **Most likely mechanism** (stated for context, not required to close this todo): the a1 honest-absence-writer
+  forward-path fix (`mtds@9d21b133`, wired through `_resolve_instrument_type(venue, data_type)`, keyed on VENUE only)
+  - the uppercase-casing fix (`mtds@60287d3e`, 2026-07-12) landed between the 2026-07-10 confirm-unchanged read and
+    today. `instrument_type` is not part of the manifest shard-atom key, so as shards get re-touched by routine
+    consolidation/reprocessing (and as the cefi backfill-throughput-bug fix drove a large volume of new trades/
+    book_snapshot_5 captures -- consistent with +90,875 total rows being ~100% concentrated in those two valid
+    data_types while the enumerator-broadcast nonsense-data_type rows stayed exactly frozen, confirming the todo-(d)
+    capability gate is holding and not re-seeding them), the field coalesces to the now-correct venue-keyed value even
+    for historical dates -- without anyone running either corrective script's `--apply`. Not independently confirmed
+    against a consolidator-run log; flagged as the leading hypothesis only.
+
+  **Action taken this session**: flipped todo 2 to done (Gate independently verified met, no operator mutation needed)
+  and added a note to todo 3 flagging that its script needs a small maintenance fix (drop/relax the
+  `instrument_type==""` guard in `_target_mask` -- the real identity is
+  `venue + data_type-in-{6 nonsense types} + capture_status=empty_confirmed + row_count=0`) before an operator can run
+  it; the underlying 53,934-row purge target itself is unchanged and still needed. Did NOT edit the script or run
+  `--smoke`/`--apply` -- out of this task's scope (todo 1, read-only re-verification) and the mutation remains
+  `[OPERATOR]`-gated per `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`.
