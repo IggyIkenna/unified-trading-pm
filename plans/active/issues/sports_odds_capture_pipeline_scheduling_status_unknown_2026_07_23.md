@@ -94,3 +94,57 @@ Cloud Scheduler jobs matching sports|odds: 0 (checked asia-northeast1, us-centra
 GCE instances currently RUNNING matching sports|odds|mtds: only af-backfill-20260722-033350
   (instruments-service api-football FIXTURE backfill -- different pipeline, not MTDS odds ticks)
 ```
+
+## Addendum 2026-07-24 (`/data-pipeline-reconciliation sports` raw-tick dispatch) — the pipeline is NOT dormant; the manifest signal used above was reading the architecturally non-authoritative bucket
+
+**This answers the open question with an unambiguous NO, but reframes the real defect.** A same-day
+`/data-pipeline-reconciliation --asset-group sports` run (report:
+`plans/audit/results/data_pipeline_reconciliation_sports_2026_07_24.md`, finding F1) independently confirmed the gap
+this doc measured is real and has GROWN (from ~12h22m on 2026-07-23 to a full 2026-07-20→2026-07-24 span, ~4-5 days, by
+the time of this addendum) — but also found:
+
+1. **Real GCS writes ARE landing daily**, including `day=2026-07-24` (the day this addendum was written): populated,
+   real-content parquet objects with genuine bookmaker prices exist at
+   `raw_tick_data/by_date/day=2026-07-24/pipeline_mode=batch_odds_api/asset_group=sports/venue=DRAFTKINGS/league_id=ALLSVENSKAN/instrument_type=ODDS/data_type=TRADES/ticks.parquet`
+   — 24 rows, non-null `instrument_id`, real `price`/`point`/`outcome_name` columns. **The fetch+GCS-write side of the
+   pipeline is alive**, contradicting this doc's working framing that the pipeline might be fully dormant.
+2. **The `market-data-tick-sports-prd` manifest this doc's evidence was read from is NOT receiving new rows for ANY
+   sports pipeline_mode since 2026-07-20** (not just `batch_odds_api` — confirmed across the whole manifest). A reused
+   2026-07-21 whole-corpus orphan sweep independently found **20,443** raw-tick objects in this exact bucket with no
+   covering manifest row at all, back to 2021-05-16.
+3. **Cross-checked the live `day=2026-07-24`/`DRAFTKINGS`/`ALLSVENSKAN` sample against the sibling
+   `instruments-store-sports-prd` manifest**: a matching captured row EXISTS there (41 `DRAFTKINGS` rows for that day;
+   935 total `batch_odds_api` rows for `2026-07-24`, plus 42/84/1,121 for 07-21/22/23 — the exact dates
+   `market-data-tick-sports-prd`'s own manifest shows zero for). This strongly suggests the data is tracked, just via a
+   different bucket's manifest than the one this doc's 2026-07-23 measurement (and `market-data-tick-sports-prd`'s own
+   consolidator/orphan-sweep tooling) checks.
+
+**Revised framing**: the "is sports odds capture scheduled/running at all" question this doc opened is answered — **it
+is running** — but the manifest-recording half of that pipeline appears to have (fully or partially) relocated to
+`instruments-store-sports-prd` around 2026-07-20/21, leaving `market-data-tick-sports-prd`'s own index stale for new
+writes while still correctly receiving the parquet bytes. This is consistent with the pre-existing
+`sports_phantom_audits_reference_not_marketdata_2026_07_14.md` architecture note (_"routed ALL of sports' availability
+manifest to the instruments-store bucket while the actual tick BYTES ... correctly stay in the per-asset_group
+market-data-tick bucket"_), now shown to also cover the raw odds/TRADES lane, not only the reference domain that issue
+was scoped to. **Only ONE shard was cross-checked** — this is a strong lead, not a closed investigation across the full
+20,443-object population, and the 2026-07-21→07-23 GCS-side gap (zero venue prefixes at all under
+`raw_tick_data/.../pipeline_mode=batch_odds_api/` for those three dates) is a separate, real, unexplained 3-day writer
+gap that predates the day=2026-07-24 resumption — worth its own investigation.
+
+### New todos
+
+- [ ] 6. [DATA] P1. Confirm whether `market-data-tick-sports-prd`'s manifest writes for `batch_odds_api` (and every
+      other sports `pipeline_mode`) were DELIBERATELY re-routed to `instruments-store-sports-prd` around 2026-07-20/21
+      (a code/config change), or whether this is an unintended regression — grep+READ the manifest-write target
+      resolution in the sports capture path (same class of `_resolve_manifest_bucket()` logic already documented in
+      `sports_phantom_audits_reference_not_marketdata_2026_07_14.md`), not just the two data points this addendum
+      measured (repo: market-tick-data-service).
+- [ ] 7. [DATA] P2. Investigate the separate 2026-07-21→2026-07-23 GCS-side gap for
+      `pipeline_mode=batch_odds_api/asset_group=sports/` (zero venue prefixes on disk for those 3 dates, confirmed by
+      direct listing) — distinct from the manifest-routing question above; this is a real fetch/write gap on the writer
+      side, not just a manifest-recording gap (repo: market-tick-data-service).
+- [ ] 8. [DATA] P2. If todo 6 confirms the manifest target moved, decide whether `market-data-tick-sports-prd`'s own
+      `_index/` should be (a) left as a stale historical artifact and documented as such, or (b) backfilled/repointed so
+      single-bucket tools (orphan sweep, this skill's default Phase-0 methodology, any future
+      `market-data-tick-sports-prd`-scoped reconciliation) stop producing a false orphan signal for sports specifically
+      (repo: unified-trading-library / market-tick-data-service, decision needed first).

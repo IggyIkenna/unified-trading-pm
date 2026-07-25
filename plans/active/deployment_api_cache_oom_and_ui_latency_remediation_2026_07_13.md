@@ -9,7 +9,7 @@ summary:
   findings of record (incident evidence, full cache inventory B1–B18, latency table), then drives an operator-joint
   page-by-page / API-by-API walkthrough to decide per-surface caching, worker count, UI-UX, scalability and GCS/BigQuery
   read-write cost budget — then implements bounded caching that fits 4GB (8GB bump only if proven impossible).
-status: active
+status: complete
 nature: design
 asset_group: [cross-cutting]
 stage: [meta]
@@ -24,7 +24,7 @@ related:
     /codex/05-infrastructure/deployment-observability.md,
   ]
 created: 2026-07-13
-last_updated: 2026-07-14
+last_updated: 2026-07-25 # status flipped complete -- 18/18 todos done, doc's own final line self-declares archive-eligible; full archival ritual deferred (locked_by set, needs operator [unlock-plan])
 parent_epic: deployment_and_user_management_master
 assigned_vm: NA
 execution_scope: local-only

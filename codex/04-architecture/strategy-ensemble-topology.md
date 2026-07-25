@@ -161,7 +161,7 @@ The colocation bootstrap script (`deployment-service/scripts/vm/colocate-strateg
 ## Open items (post-cutover)
 
 > **[DELTA 2026-05-22]** May-23 cutover landed 2026-05-23. Items below are deferred to the active post-cutover roadmap
-> tracked in [`strategy_master.md`](../../../../plans/epics/strategy_master.md).
+> tracked in [`strategy_master.md`](/plans/epics/strategy_master.md).
 
 - Allocator service + dual-projection (Phase 1.9 residuals — see `strategy_master.md`)
 - IM-DESK + IM-CLIENT routing through the action-handler engine

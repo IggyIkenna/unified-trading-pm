@@ -49,12 +49,16 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-depends_on:
+depends_on: [prediction_phase_ab_residuals_2026_07_24]
+gate_on_depends: true
 source: >-
   Split from `prediction_consolidated_closeout_2026_07_18.md` (Phase D section, lines 370-437 of that doc as of
   2026-07-18/2026-07-24) per the operator-approved line-cap remediation triage
   `plans/active/issues/plan_line_cap_remediation_2026_07_23.md` (row 22, "4-way split along the plan's own Phase A-E
-  boundaries"). Content moved verbatim, not summarized.
+  boundaries"). Content moved verbatim, not summarized. `depends_on` + `gate_on_depends: true` added 2026-07-24 (plan
+  audit finding) to encode this doc's own header text ("post-migration completion gate") as a real dispatch gate,
+  matching the Phase E sibling's already-correct pattern — the migration is carried by
+  `prediction_phase_ab_residuals_2026_07_24.md`.
 ---
 
 # Prediction Phase D — formal smoke-test green + MVP backfill

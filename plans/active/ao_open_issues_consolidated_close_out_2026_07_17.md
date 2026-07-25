@@ -779,7 +779,12 @@ guidance contradicted by the 350x-collapse root cause) is ALREADY an open P0 `[D
 `plans/active/issues/cefi_tardis_throughput_collapse_350x_2026_07_17.md`. Do NOT file a duplicate — it is evidence for
 the close-the-loop point: plan_health keeps correctly re-reporting a real, owned, unactioned item.
 
-### Phase 7 — operator-reported dashboard bug (2026-07-24)
+### Phase 9 — operator-reported dashboard bug (2026-07-24)
+
+> **Renumbered from a duplicate "Phase 7" heading (P2 finding, corrected 2026-07-25)** — this section collided with the
+> "INDEPENDENT AGENT-AUDIT FINDINGS (Claude, 2026-07-17)" Phase 7 above (line ~581), which
+> `ao_fleet_observability_kpis_2026_07_20.md`'s "Phase 7 (AF-1…AF-5)" provenance citation resolves to. This section
+> becomes Phase 9 (next free number after Phase 8) to disambiguate.
 
 - [ ] [UI] P0. **Blocked-question option buttons submit on click instead of select-then-submit.**
       `agent-orchestrator/dashboard/src/layout.tsx::BlockedCard` renders each of a blocked question's `options[]` as a

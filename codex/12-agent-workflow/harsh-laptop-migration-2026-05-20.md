@@ -18,8 +18,8 @@ related:
     /codex/04-architecture/agent-orchestrator-overview.md,
     /codex/05-infrastructure/per-tab-worktrees.md,
     /codex/12-agent-workflow/README.md,
-    unified-trading-pm/agents/main.md,
-    unified-trading-pm/agents/worker.md,
+    /agents/main.md,
+    /agents/worker.md,
   ]
 created: 2026-05-20
 authoritative_for: [harsh laptop worker-host migration setup]
@@ -136,9 +136,8 @@ Read these BEFORE any commands. They are the source of truth that the migration 
    isolation model + the `setup-tab-worktrees.sh` bootstrap.
 4. `unified-trading-pm/agents/RULES.md` — slim shared rules for every agent (worker / main / review). Read first per its
    STEP 0 directive.
-5. `unified-trading-pm/agents/worker.md` — what Harsh's per-slot Claude sessions should run as.
-6. `unified-trading-pm/agents/main.md` — if Harsh wants to also run a "main" agent (orchestration assistant chat), this
-   is the prompt.
+5. `/agents/worker.md` — what Harsh's per-slot Claude sessions should run as.
+6. `/agents/main.md` — if Harsh wants to also run a "main" agent (orchestration assistant chat), this is the prompt.
 
 ---
 
@@ -328,8 +327,8 @@ for N in 13 14 15 16 17 18 19 20; do
 done
 ```
 
-Once spawned, each session needs the worker boot prompt pasted in. The canonical template is
-`unified-trading-pm/agents/worker.md`. For Harsh, the per-slot prompt is:
+Once spawned, each session needs the worker boot prompt pasted in. The canonical template is `/agents/worker.md`. For
+Harsh, the per-slot prompt is:
 
 ```
 You are slot <N> (find your slot number from PWD: .tabs/<N>/).
@@ -444,8 +443,8 @@ orchestrator's perspective and from the cron's perspective (the FF-pull cron log
 `origin/live-defi-rollout`, peers cannot safely rebase onto it).
 
 **Verify every host** (Harsh's laptop included): `bash scripts/verify-slot-host-symmetry.sh` (exit 0 = both crons
-installed + ran <10 min + report posted). SSOTs: this doc · `unified-trading-pm/agents/worker.md` ·
-`scripts/dev/slot-cron-ff-pull.sh` · `scripts/dev/slot-git-status-report.sh` · `scripts/verify-slot-host-symmetry.sh`.
+installed + ran <10 min + report posted). SSOTs: this doc · `/agents/worker.md` · `scripts/dev/slot-cron-ff-pull.sh` ·
+`scripts/dev/slot-git-status-report.sh` · `scripts/verify-slot-host-symmetry.sh`.
 
 ---
 

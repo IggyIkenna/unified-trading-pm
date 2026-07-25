@@ -94,7 +94,10 @@ auto-recovery matrix. This epic only routes to a human for the **`manual_unkill`
 ## Composition with other epics
 
 - **`agent_operating_framework_master`** — owns the role registry (W6) + the message broker (W9) this pipeline rides on.
-  Roles declare escalation triggers there; this epic consumes them. **Hard dependency: E1 needs W9.**
+  Roles declare escalation triggers there; this epic consumes them. **E1's `Depends` is `none`, not W9** — W9
+  (`role_registry_schema_and_broker_mvp`) was archived NOT-REQUIRED 2026-07-16, superseded by `assigned_role` dispatch;
+  the existing `POST /api/blocked/{id}/answer` → worker-poll path already satisfies the reply-routing requirement (W6
+  role registry still composes). Corrected 2026-07-23 per the Progress Log entry below.
 - **`observability_master`** (vm-cross-cutting, co-tier) — the deployment-ui surfaces + alert-state rendering compose
   with the observability dashboard. The "always visible / filter open-vs-resolved" UI lands as a deployment-ui tab.
 - **`client_isolation_and_governance_master`** — the `manual_unkill` / kill-switch governance that this pipeline's

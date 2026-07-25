@@ -143,7 +143,7 @@ completeness.
 | Owner-side        | Ikenna (mega audit Phase A complete; B/C/D in-flight)                                    |
 | Mockability       | n/a — audit reads code + manifest data + GCS/S3 reality                                  |
 | Deps              | Phase -2 / -1 consolidation tail                                                         |
-| Wrapper plan      | [`mtds_mdps_master.md`](../mtds_mdps_master.md) (already exists)                         |
+| Wrapper plan      | [`mtds_mdps_master.md`](/plans/epics/mtds_mdps_master.md) (already exists)               |
 | Wraps existing    | `mega_audit_and_plan_beefup_progression_2026_05_20.md` + 8 sequenced ordering-step plans |
 | Operator approval | n/a — already acked 2026-05-20                                                           |
 | Status            | `IN-FLIGHT` (Phase A GREEN; B/C/D pending)                                               |

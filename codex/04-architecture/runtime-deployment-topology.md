@@ -1403,11 +1403,11 @@ graph LR
 
 **12 separate deployments**, each reading from and writing to GCS. No shared memory, no process coupling.
 
-### Live: Package Aggregation (7 Deployments via Embedding)
+### Live: Package Aggregation (8 Deployments via Embedding)
 
 ```mermaid
 graph TB
-    subgraph Live[Live Pipeline - 7 Deployments with Package Embedding]
+    subgraph Live[Live Pipeline - 8 Deployments with Package Embedding]
         direction TB
 
         subgraph D1[Deploy 1: TARDIS Persistence]

@@ -2,13 +2,14 @@
 doc_type: issue
 title: "182,407 TRADFI todo cells sit below the vendor discovery floor and are permanently unfillable"
 summary:
-  182,407 TRADFI equity cells are counted `todo` on dates BEFORE the Databento venue discovery floor (XNAS.ITCH /
-  XNYS.PILLAR carry nothing pre-2023-04-15). No launcher can ever fill them — the launchers already clamp START_FLOOR to
-  that same UAC floor, correctly, so these cells are structurally unreachable rather than merely un-run. Counting them
-  as `todo` overstates remaining work, permanently depresses the coverage %, and leaves dashboards showing a gap no run
-  can ever close. They should be reclassified `expected_unattempted` / expected-absent so coverage reads honestly. The
-  floor is already the SSOT in UAC (`VenueMapping.get_instrument_discovery_start`) — this is about making the
-  DENOMINATOR agree with the clamp the launchers already apply.
+  182,407 TRADFI equity cells are counted `todo` on dates BEFORE the Databento venue discovery floor (`DBEQ.BASIC` — the
+  legacy per-venue feed names XNAS.ITCH/XNYS.PILLAR are consolidated into it, not separately subscribed — carries
+  nothing pre-2023-04-15). No launcher can ever fill them — the launchers already clamp START_FLOOR to that same UAC
+  floor, correctly, so these cells are structurally unreachable rather than merely un-run. Counting them as `todo`
+  overstates remaining work, permanently depresses the coverage %, and leaves dashboards showing a gap no run can ever
+  close. They should be reclassified `expected_unattempted` / expected-absent so coverage reads honestly. The floor is
+  already the SSOT in UAC (`VenueMapping.get_instrument_discovery_start`) — this is about making the DENOMINATOR agree
+  with the clamp the launchers already apply.
 status: open
 nature: issue
 asset_group: [tradfi]
@@ -50,10 +51,16 @@ resolved_by:
 
 **182,407** TRADFI cells are counted `todo` on dates strictly before their venue's Databento discovery floor:
 
-| Venue  | Databento dataset | Discovery floor | Pre-floor data |
-| ------ | ----------------- | --------------- | -------------- |
-| NASDAQ | XNAS.ITCH         | 2023-04-15      | none exists    |
-| NYSE   | XNYS.PILLAR       | 2023-04-15      | none exists    |
+| Venue  | Databento dataset                                                                           | Discovery floor | Pre-floor data |
+| ------ | ------------------------------------------------------------------------------------------- | --------------- | -------------- |
+| NASDAQ | `DBEQ.BASIC` (legacy per-venue feed name `XNAS.ITCH`, consolidated into it)                 | 2023-04-15      | none exists    |
+| NYSE   | `DBEQ.BASIC` (legacy per-venue feed name `XNYS.PILLAR`/`XNYS.TRADES`, consolidated into it) | 2023-04-15      | none exists    |
+
+> **Dataset attribution corrected 2026-07-25** (codex-alignment): the cited codex SSOT
+> (`/codex/02-data/tradfi-databento-sourcing-ssot.md`) states the per-venue feed names (`XNAS.ITCH`/`XNYS.TRADES`/etc.)
+> are "Explicitly NOT subscribed" and were consolidated into `DBEQ.BASIC` as of the 2026-06-18 lockdown; its own floor
+> table attributes this exact 2023-04-15 NASDAQ/NYSE floor to "DBEQ.BASIC equity archive earliest date". The floor DATES
+> here were always correct — only the dataset-name column was stale.
 
 **RE-VERIFIED EXACTLY, 2026-07-20 (tick 26).** Independently re-derived on manifest snapshot T1 `2026-07-20T14:47:40Z`
 and again at T2 `2026-07-20T15:09:03Z` (after the peer force-rebuild) — **182,407 on both**, so the figure is stable

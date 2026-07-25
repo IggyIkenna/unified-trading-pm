@@ -271,9 +271,7 @@ earlier log entry at `:1516-1522` names as the group that went MTDS-QG-red on th
 - Whether any Solana protocol can reach `lending_indices_handler.py:863` (the hardcoded-`LENDING` write path) was not
   traced to a terminal answer — todo 3 requires reading the branch before collapsing, not assuming.
 
-### 2026-07-21 — todos 1-5, 9, 13 code-complete + verified; todo 3 branch traced; todos 6-7 ruled/designed; NOT YET
-
-### COMMITTED (blocked on 2 unrelated cross-repo test-baseline regressions in the shared tree); todos 8/10/11/14 deferred
+### 2026-07-21 — todos 1-5, 9, 13 code-complete + verified; todo 3 branch traced; todos 6-7 ruled/designed; NOT YET COMMITTED (blocked on 2 unrelated cross-repo test-baseline regressions in the shared tree); todos 8/10/11/14 deferred
 
 **Todo 3 branch trace** (verified before collapsing): `lending_indices_morpho.py::_maybe_dedicated_collector` routes
 `chain=="SOLANA" and protocol in _SOLANA_LENDING_PROTOCOLS` → `_collect_solana_lending`, `protocol=="morpho"` →

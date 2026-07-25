@@ -135,13 +135,18 @@ not wired into the batch `dex_swaps_handler.py` cascade for `dex_pool_swaps`.
 - [x] [BACKEND] P1. **Add the `EXPECTED_SUBGRAPH_DEINDEXED` reason** to `EmptyConfirmedReason` (unified-api-contracts)
       so a permanently-deindexed subgraph can be recorded as honest `empty_confirmed` instead of `attempted_failed`.
       **SHIPPED** `unified-api-contracts@e893e5c9` — repo: `unified-api-contracts`.
-- [x] [DATA] P1. **Retroactively reclassify the CURVE/OPTIMISM `dex_pool_swaps` `attempted_failed` rows** →
-      `empty_confirmed[EXPECTED_SUBGRAPH_DEINDEXED]` via a one-shot manifest script (mirrors
+- [x] [DATA] P1. **Write + dry-run-verify the CURVE/OPTIMISM `dex_pool_swaps` `attempted_failed` reclassification
+      script** → `empty_confirmed[EXPECTED_SUBGRAPH_DEINDEXED]` via a one-shot manifest script (mirrors
       `reclassify_defi_reference_only_eu_2026_07_21.py`'s pattern: consolidated index + per_vm shards,
       backup-then-write, idempotent). **Script SHIPPED + dry-run VERIFIED** — `instruments-service@73100d4e`,
-      `scripts/reclassify_defi_curve_optimism_subgraph_deindexed_2026_07_24.py`. **`--apply` still pending** (blocked by
-      the heavy-I/O hard rule — must run on a VM, not locally). Full result + evidence in "Verified live (2026-07-24)"
-      below.
+      `scripts/reclassify_defi_curve_optimism_subgraph_deindexed_2026_07_24.py`. Full result + evidence in "Verified
+      live (2026-07-24)" below.
+- [ ] [DATA] P1. **Run `--apply` on a VM + verify the manifest rows actually flipped.** Blocked by the heavy-I/O hard
+      rule (must run on a VM, not locally). Per `defi_consolidated_closeout_2026_07_18.md`'s tracking of this same
+      action: **NOT YET RUN** — 2 VM-launch attempts 2026-07-24 both FAILED differently (rc=2 file-not-found from a
+      `setup-data-pipeline-vm.sh` hardcoded-path bug; a workaround attempt's `run.log` never got created), stopped
+      rather than blind-retry a 3rd time. Split out 2026-07-25 (apply_batch_12) from the prior single checked-off todo,
+      which incorrectly read as fully done while the actual data mutation had not happened.
 - [ ] [SCRIPT] P2. In `dex_swaps_handler.py`, recognize a 200-status GraphQL response whose `errors[]` message matches
       `subgraph not found: no allocations` (or more generally, any non-schema-drift GraphQL-level error that repeats
       across all 5 cascade schemas) as a **distinct, terminal condition** at FETCH TIME — do not raise the generic

@@ -1,0 +1,233 @@
+{
+  "doc_type": "audit-result",
+  "asset_group": "defi",
+  "layer": "raw-tick",
+  "run_date": "2026-07-24",
+  "generated_at": "2026-07-25T00:14:00+00:00",
+  "auditor": "/data-pipeline-reconciliation",
+  "read_only": true,
+  "bucket": {
+    "kind": "market-data",
+    "resolved_name": "market-data-tick-defi-prd-central-element-323112",
+    "reachable": true,
+    "probe_method": "non-recursive top-level list_blobs(delimiter='/')"
+  },
+  "phase0_index_state": {
+    "consolidator_lock_held": true,
+    "lock_instance": "1-52d4b36b",
+    "lock_started_at": "2026-07-24T23:52:40.380244+00:00",
+    "latest_run": {
+      "last_run_at": "2026-07-24T23:54:47.121864+00:00",
+      "verdict": "empty",
+      "no_op": true,
+      "error_reason": "locked",
+      "shards_scanned": 0
+    },
+    "index_last_updated": "2026-07-24T23:52:16.213000+00:00",
+    "read_fell_back_to_per_vm_shards": true,
+    "fallback_reason": "consolidated blob age 562.1s > 120s threshold",
+    "phantom_audit": {
+      "phantom_count": 1558,
+      "generated_at": "2026-07-19T12:31:33.737819+00:00",
+      "source": "read_published_not_rerun"
+    },
+    "reprobe_audit": {
+      "generated_at": "2026-07-14T11:20:14.580078+00:00",
+      "new_empties": 0,
+      "disagreements": 0,
+      "ambiguous": 0,
+      "proven": 0,
+      "reclassified": 0
+    }
+  },
+  "sample_scope": {
+    "primary_day": "2026-07-22",
+    "manifest_rows_sampled": 2644,
+    "corroboration_days": ["2026-07-23", "2026-07-24"],
+    "historical_census_day": "2020-06-15",
+    "gcs_census_list_blobs_calls": 198,
+    "objects_content_read": 14,
+    "objects_oracle_tested": 13
+  },
+  "corpus_scale_reused": {
+    "source": "orphan-sweep-defi-20260723-043605 (completed 2026-07-23T21:04:37Z), read from plans/active/issues/defi_orphan_sweep_test_artifact_prod_leak_2026_07_24.md, not re-run",
+    "total_objects": 24890959,
+    "classes": {
+      "A_canonical_manifested": { "count": 7675460, "pct": 30.84 },
+      "B_legacy_duplicate": { "count": 1080, "pct": 0.004 },
+      "D_junk": { "count": 136635, "pct": 0.55 },
+      "E_orphan_real": { "count": 15865384, "pct": 63.74 },
+      "C_C2_infra_nondata_by_difference": { "count": 1212400, "pct": 4.87 }
+    },
+    "note": "orthogonal to the id-form measurement below; class A does not imply id-form-clean"
+  },
+  "oracle_id_form_sample": {
+    "objects_tested": 13,
+    "objects_failing_id_form": 13,
+    "fail_rate_pct": 100.0,
+    "root_cause": "market-tick-data-service/market_tick_data_service/market_interface/adapters/defi/canonical_write.py::write_defi_rows leaf = sanitized SYMBOL only, not full instrument_id",
+    "oracle_capability_shipped": "unified-api-contracts@d40c5d7d (2026-07-20), refined @1cd27478 (2026-07-23)",
+    "id_form_checked_asset_groups": ["cefi", "defi"]
+  },
+  "manifest_snapshot_day_2026_07_22": {
+    "rows": 2644,
+    "capture_status": { "captured": 1620, "empty_confirmed": 1019, "attempted_failed": 5 },
+    "capture_status_pct": { "captured": 61.3, "empty_confirmed": 38.5, "attempted_failed": 0.2 },
+    "note": "raw snapshot distribution, NOT the reachable_coverage formula (expected_unattempted not projected in this read)"
+  },
+  "findings": [
+    {
+      "id": "FIND-00",
+      "type": "taxonomy-gap",
+      "severity": "HIGH",
+      "big_finding": true,
+      "summary": "Register/SSOT premise 'DeFi capture STOPPED, no new writes' is measurably false for batch writers as of 2026-07-24.",
+      "surfaces": ["cross-doc-vs-live-GCS"],
+      "delete_eligible": false,
+      "suppressed_by": null,
+      "status": "new"
+    },
+    {
+      "id": "FIND-01",
+      "type": "non_canonical_path",
+      "severity": "HIGH",
+      "severity_elevated_from": "MEDIUM",
+      "big_finding": true,
+      "summary": "write_defi_rows() writes the bare SYMBOL as filename leaf instead of the ruled full canonical_instrument_id; 13/13 sampled real objects fail the oracle id-form check; affects 6/7 shipped defi handlers.",
+      "surfaces": ["S1"],
+      "delete_eligible": false,
+      "suppressed_by": null,
+      "status": "new"
+    },
+    {
+      "id": "FIND-02",
+      "type": "non_canonical_axis_value",
+      "severity": "HIGH",
+      "summary": "KALSHI_PERP/POLYMARKET_PERP written with asset_group=defi, chain=<venue name> (not a real chain), source=hyperliquid (mislabeled); UAC registry classifies these venues as cefi.",
+      "surfaces": ["S1", "S3"],
+      "delete_eligible": false,
+      "suppressed_by": null,
+      "status": "already_tracked_corroborated",
+      "related_docs": [
+        "plans/active/defi_track01_per_instrument_and_canon_id_2026_07_24.md",
+        "plans/active/issues/defi_kalshi_perp_perp_funding_source_not_registered_2026_07_23.md"
+      ]
+    },
+    {
+      "id": "FIND-03",
+      "type": "shard_atom_vocab_desync",
+      "severity": "HIGH",
+      "summary": "Manifest venue 'MORPHOVAULTS' vs GCS path venue 'MORPHO_VAULTS' for the same protocol; persists from the 2026-07-20 reconciliation report's F5, unresolved 4 days later.",
+      "surfaces": ["S1", "S3"],
+      "delete_eligible": false,
+      "suppressed_by": null,
+      "status": "persists"
+    },
+    {
+      "id": "FIND-04",
+      "type": "non_canonical_axis_value",
+      "severity": "MEDIUM",
+      "summary": "venue=ETHEREUM, venue=POLYGON (bare chain names used as venue) found on historical day=2020-06-15 sample only; not a corpus-wide claim.",
+      "surfaces": ["S1"],
+      "delete_eligible": false,
+      "suppressed_by": null,
+      "status": "new_bounded"
+    },
+    {
+      "id": "FIND-05",
+      "type": "registry-drift-observation",
+      "severity": "INFO",
+      "summary": "12-13 actively-captured defi protocols (ACROSS, ALCHEMY, ANKR, BLAZESTAKE, FLASHBOTS, FRAX, MAKER, MANTLE, MORPHO_VAULTS, STADER, STAKEWISE, SWELL; LST ambiguous) absent from UAC VENUES_BY_ASSET_GROUP['defi'] registry.",
+      "surfaces": ["S1-vs-registry"],
+      "delete_eligible": false,
+      "suppressed_by": null,
+      "status": "new"
+    },
+    {
+      "id": "FIND-06",
+      "type": "missing_column",
+      "severity": "MEDIUM",
+      "summary": "Sampled parquet content missing asset_group, pipeline_mode, source, schema_version, canonical_instrument_id columns (v9 metadata contract); only available_at present. Sampled 1 object, Tier-1.",
+      "surfaces": ["S2"],
+      "delete_eligible": false,
+      "suppressed_by": null,
+      "status": "new_sampled"
+    },
+    {
+      "id": "FIND-07",
+      "type": "register-accuracy-correction",
+      "severity": "MEDIUM",
+      "summary": "non-canonical-path-inventory.md row 24 claims '_needs_attribution/' DELETED 2026-07-21 (both shapes); defi's shape is still present with objects time_created 2026-07-19 (predates the claimed delete).",
+      "surfaces": ["S1-vs-register"],
+      "delete_eligible": false,
+      "suppressed_by": null,
+      "status": "new"
+    },
+    {
+      "id": "FIND-08",
+      "type": "register-new-location",
+      "severity": "INFO",
+      "summary": "_vm_staging/ and backfill-logs/ top-level prefixes present in the defi prod bucket, not yet in the non-canonical-path-inventory register.",
+      "surfaces": ["S1"],
+      "delete_eligible": "unknown",
+      "suppressed_by": null,
+      "status": "new"
+    },
+    {
+      "id": "FIND-09",
+      "type": "codex-currency-correction",
+      "severity": "INFO",
+      "summary": "four-surface-reconciliation-procedure.md, reconciliation-finding-taxonomy.md, and CLAUDE.md state the oracle skips filename id-form checking except for tradfi; measured stale — cefi+defi are now checked by default (unified-api-contracts@d40c5d7d 2026-07-20, refined @1cd27478 2026-07-23). Re-tested the docs' own ADAF0:USTF0.parquet example directly; it now fails.",
+      "surfaces": ["doc-vs-code"],
+      "delete_eligible": false,
+      "suppressed_by": null,
+      "status": "new"
+    },
+    {
+      "id": "FIND-10",
+      "type": "manifest_infra",
+      "severity": "INFO",
+      "summary": "_index/consolidator.lock held by a different instance throughout this run; all S3 reads fell back to per-VM shards, making every count in this report a lower bound.",
+      "surfaces": ["S3"],
+      "delete_eligible": false,
+      "suppressed_by": null,
+      "status": "observed"
+    }
+  ],
+  "register_reconcile": {
+    "confirmed_accurate": [
+      "row_7_dex_pools_0_objects",
+      "row_8_lending_indices_0_objects",
+      "row_23_dual_migration_backup_present",
+      "row_28_configs_patches_present"
+    ],
+    "contradicted": ["row_24_needs_attribution_claimed_deleted_but_present"],
+    "new_candidates": ["_vm_staging/", "backfill-logs/", "_quarantine/processed_candles/ (candle-layer, out of scope)"]
+  },
+  "suppressed_exceptions": {
+    "AE-3_two_id_pool_divergence": {
+      "applicable_this_run": false,
+      "reason": "sampled objects missing canonical_instrument_id column entirely, not merely divergent -- reported as FIND-06 instead"
+    },
+    "AE-5_defi_interim_flat_lending": { "suppressed_rows_day_2026_07_22": 377 },
+    "C2a_instrument_type_casing": { "casing_divergent_rows_observed_this_sample": 0 }
+  },
+  "deletes_authorized": [],
+  "deletes_reconfirmed_no_change": ["dex_pools/", "lending_indices/"],
+  "coverage_gaps": [
+    "orphan enumeration not re-walked (reused 2026-07-23 sweep)",
+    "only 1 primary + 2 corroboration + 1 historical day sampled of ~2397 days on disk",
+    "S4 catalogue not independently re-probed this run",
+    "S2 content read on only 14 objects, all EVM pool shards",
+    "no Tier-2 100% id/schema VM campaign dispatched",
+    "_vm_staging/ and backfill-logs/ still-written-by not grepped",
+    "no reachable_coverage % computed (expected_unattempted not projected in the sampled read)"
+  ],
+  "verdict": {
+    "is_100pct_canonical": false,
+    "full_corpus_canonical_manifested_pct": 30.84,
+    "full_corpus_orphan_real_pct": 63.74,
+    "id_form_sample_pass_rate_pct": 0.0,
+    "headline": "Not close to 100% canonical on every measured surface pair; capture is active (not stopped) and currently writing non-canonical filenames on every EVM single-instrument object."
+  }
+}

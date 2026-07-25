@@ -20,7 +20,11 @@ stage: [data]
 repos: [market-tick-data-service, unified-api-contracts]
 scope: [engineer]
 tags: [test-baseline-drift, quality-gates-blocker, cefi, canonical-id, cross-repo]
-related: [/plans/active/issues/mtds_rule11_shard_count_stale_baseline_2026_07_21.md]
+related:
+  [
+    /plans/active/issues/mtds_rule11_shard_count_stale_baseline_2026_07_21.md,
+    /plans/active/issues/uac_build_instrument_id_colon_strictness_mtds_ripple_2026_07_21.md,
+  ]
 created: "2026-07-21"
 parent_epic: infrastructure_master
 assigned_vm: NA
@@ -42,6 +46,13 @@ locked_by:
 ---
 
 # UAC's new embedded-`:` `build_instrument_id` validation broke 3 pre-existing MTDS/cefi tests
+
+> **Duplicate-discovery note (added 2026-07-25, /plan-reconcile apply pass):** this is the SAME regression (same UAC
+> commit, same 3 failing tests) independently discovered and written up the same day as
+> [`uac_build_instrument_id_colon_strictness_mtds_ripple_2026_07_21.md`](/plans/active/issues/uac_build_instrument_id_colon_strictness_mtds_ripple_2026_07_21.md),
+> which carries the actionable, tracked-todo version (5 open todos vs this doc's 0 — this one is narrative-only). Track
+> the fix there to avoid duplicated/uncoordinated work; this doc stays open as the reproduction record until that one
+> resolves.
 
 ## Reproduction
 

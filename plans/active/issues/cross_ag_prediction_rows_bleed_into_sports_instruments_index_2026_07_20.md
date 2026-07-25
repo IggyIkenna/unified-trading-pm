@@ -457,3 +457,50 @@ Do not re-flip this doc's `status` to `resolved` or re-attribute `resolved_by` u
 across a real consolidation cycle, not just an immediate verify. Do not re-run the remediation script again without todo
 12/13 (the consolidator TOCTOU fix + deploy) first — re-running the same index-only fix without closing the race has now
 failed twice (11,727 rows came back in ~30h43m the first time, ~5min the second).
+
+## ADDENDUM 2026-07-24 (`/data-pipeline-reconciliation sports` raw-tick dispatch) — answers the original todo 1's unchecked "also check the market-data(tick)/sports manifest" item: yes, a related population exists there too
+
+**Status intentionally left unchanged (`open`) — do not treat this as a new round or re-attempt any remediation from
+this addendum alone.** This is read-only evidence from a sibling reconciliation run
+(`plans/audit/results/data_pipeline_reconciliation_sports_2026_07_24.md`, finding F2), filed here per the
+findings-triage rule to annotate rather than fix (collision risk — this doc is under active, ongoing investigation).
+
+The **original 2026-07-20 filing's todo 1** explicitly flagged as unchecked: _"also check the `market-data`(tick)/sports
+manifest for the same bleed."_ That check has now been done, against
+`market-data-tick-sports-prd-central-element-323112`'s own `_index/availability_index.parquet` (465,223 rows, full
+column-projected read, 2026-07-25):
+
+- **20,785 rows** carry `venue=KALSHI` under `asset_group=sports` in THIS manifest — `KALSHI` is registered exclusively
+  under `unified_api_contracts.registry.market_data_categories.VENUES_BY_ASSET_GROUP['prediction']`, not `['sports']`
+  (canonical sports venues: `ODDS_API`, `PINNACLE`, `BETFAIR`, `BETFAIR_SB_UK`, `BETFAIR_EX_UK`, `BETFAIR_EX_EU`,
+  `DRAFTKINGS`, `FANDUEL` — 8 entries, no `KALSHI`).
+- Paired with `source=polymarket_clob` / `pipeline_mode=batch_polymarket_clob` on every one of those rows — an internal
+  source/venue label mismatch (Kalshi and Polymarket are different platforms; this population is NOT simply "Kalshi data
+  mislabeled as sports", it also mixes in Polymarket's own vendor label).
+- **All 20,785 rows are `capture_status=empty_confirmed`, `row_count=0`** — unlike the `instruments-store-sports-prd`
+  bleed rounds above (which involve real `captured` rows, per the ROUND 4/6 investigation), this
+  `market-data-tick- sports-prd` population appears to be a **sentinel/negative-result population** (something checking
+  "does sports league X have Kalshi-labeled coverage" and recording an honest empty, mislabeled), not real misplaced
+  betting/trade data. No content is at risk here specifically.
+- Dates span **2020-06-06 → 2026-05-21** — an 6-year span, not concentrated in the recent 07-17→07-22 window the
+  `instruments-store-sports-prd` bleed rounds measured. The **counts do not match** (20,785 here vs. 11,667 KALSHI / 60
+  POLYMARKET = 11,727 there) and this was **not verified to be the identical row set** re-surfacing in a different
+  bucket — treat this as a **related, additional, separately-measured population**, not a duplicate count of the same
+  rows.
+
+**Why this might matter for root-causing ROUND 6's TOCTOU bug**: `_write_consolidated`'s CAS race
+(`unified-trading-library/unified_trading_library/manifest_consolidator.py`) is fleet-wide per ROUND 6's own scope note
+("used by `consolidate(bucket)` for every asset_group's manifest consolidation, not just sports"). If
+`market-data-tick-sports-prd`'s consolidator is ALSO racing against an external writer for this KALSHI population (a
+different, independent instance of the same class of bug, since `market-data-tick-sports-prd` is a different bucket with
+its own consolidator job), that would be a second live data point for the TOCTOU bug's blast radius — worth checking if
+todo 12/13 work ever needs a second reproduction case. **Not investigated further here** — this addendum is evidence,
+not a new root-cause claim.
+
+### New todo (does not renumber or supersede todos 1-14 above)
+
+- [ ] 15. [DATA] P2. Determine whether `market-data-tick-sports-prd`'s 20,785 `venue=KALSHI`/`empty_confirmed` rows are
+      (a) an independent instance of the same writer/consolidator mislabeling class documented above, (b) a legacy
+      artifact from before the sports/prediction venue split existed, or (c) something else entirely — and whether they
+      warrant their own remediation (lower urgency than todos 1-14 since `row_count=0` throughout: no real data is at
+      risk, only manifest-vocabulary hygiene) (repo: market-tick-data-service / unified-trading-library).

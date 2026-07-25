@@ -22,7 +22,7 @@ summary:
   8746708c claims, or add `# QG-allow: defi-citation` only if these are genuinely factory-deployed pool addresses (they
   don't look like it — wBETH/KelpDAO/Renzo/etc. read as protocol-level rate-provider constants, not auto-deployed
   pools)."
-status: open
+status: resolved
 nature: notes
 asset_group: [defi]
 stage: [data]
@@ -37,6 +37,9 @@ priority: P2
 source: cicd escalation agt-e7639b, quality-gates-v2 workflow_dispatch re-run 29669216186
 assigned_vm:
 resolved_by:
+  "market-tick-data-service@7e3b15eb (2026-07-19, 'fix(defi): cite 19 LST/vault/SY contract addresses in mtds
+  _lst_extended_rates (QG 5.97)') — verified ancestor of origin/live-defi-rollout; all 19 addresses in
+  _lst_extended_rates.py now carry # DERIVED citations, 0 uncited remaining (re-verified 2026-07-25)"
 locked_by:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
@@ -97,3 +100,12 @@ A short, targeted task (not a big investigation): pull the 19 `(token, address, 
 (most are well-known LST/LRT protocols — wBETH, KelpDAO, Renzo, etc.), then add the
 `# DERIVED <date> from ethereum <source>` comment per line. Est. 30-60 min including verification. This is currently the
 ONLY thing blocking `quality-gates-v2` on `market-tick-data-service` LDR→main promotion.
+
+## Resolution (2026-07-25, /plan-reconcile apply_batch_13 re-verification)
+
+**RESOLVED** — `market-tick-data-service@7e3b15eb` ("fix(defi): cite 19 LST/vault/SY contract addresses in mtds
+`_lst_extended_rates` (QG 5.97)", 2026-07-19, same day as this doc), verified a real ancestor of
+`origin/live-defi-rollout`. Re-checked the file on `origin/live-defi-rollout` directly: all 19 `"address":` entries in
+`_EVM_EXTENDED_RATE_CONFIGS` now carry a `# DERIVED <date> ...` comment — 0 uncited. STEP 5.97 is no longer red on this
+file. (Separately noted while re-verifying: the "no checkbox `- [ ]` todo anywhere" structural gap this doc was flagged
+for is now moot — the recommended-next-step work was completed before any conversion to a dispatchable todo was needed.)

@@ -6,8 +6,8 @@ created: 2026-05-07
 authoritative_for:
   Index of the alerting-service playbook docs — alert taxonomy, operator response, threshold tuning, rehearsal
   procedure. Anchors every other alerting doc in this directory.
-referenced_by: [codex/15-runbooks/alerting/pagerduty-escalation-policy.md]
-  - plans/active/alerting_service_live_rules_2026_05_07.md
+referenced_by:
+  [/codex/15-runbooks/alerting/pagerduty-escalation-policy.md, /plans/active/alerting_service_live_rules_2026_05_07.md]
 related:
   - codex/05-infrastructure/live-deployment-monitoring.md
   - codex/14-customer-journeys/dart/
@@ -42,7 +42,7 @@ incident-priority labels and Python `AlertSeverity.<MEMBER>` references both res
 - "Time-to-ack" for P0 / P1 / P2 is enforced by the PagerDuty escalation chain
   ([`pagerduty-escalation-policy.md`](pagerduty-escalation-policy.md) § "Escalation chain"). P3 / `INFO` are not paged
   and have no SLA.
-- Quiet hours: there are none. P0 / P1 page 24/7. P2 pages within business-hours-aware windows per the on-call rotation.
+- Quiet hours: none for P0 / P1 — they page 24/7. P2 pages within business-hours-aware windows per the on-call rotation.
   P3 / informational deliveries respect Telegram quiet-hours per group settings.
 - Adding a new alert: pick the codex enum value from this table; the Python rule body uses
   `severity=AlertSeverity.<MEMBER>`; PagerDuty routing is automatic via the alerting-service rule engine. Do NOT

@@ -35,7 +35,7 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-depends_on: [ao_dispatch_cooldown_and_park_2026_07_20.md]
+depends_on: [ao_dispatch_cooldown_and_park_2026_07_20]
 source:
 ---
 

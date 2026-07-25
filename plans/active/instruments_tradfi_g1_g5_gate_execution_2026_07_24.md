@@ -207,11 +207,12 @@ status index across all 4 children (this one, Phase-0, cefi, and the defi/sports
           mid-transition; curated enumeration already drops ICE instruments). Regression:
           `test_g1e_krx_uses_korean_calendar` + `test_g1e_fx_is_24_7` + `test_g1e_undeclared_venue_fail_closed`; updated
           the prior fail-open test.
-    - [ ] [SCRIPT] P0. **G1.f macro/currency canonicalise** — PARTIAL (operator-reshaped 2026-06-25): VIX cash-index
+    - [x] ✅ [SCRIPT] P0. **G1.f macro/currency canonicalise** — PARTIAL (operator-reshaped 2026-06-25): VIX cash-index
           REMOVED from UAC `YAHOO_INDICES` ✅ (uac@43db03f8 + databento VIX-USD tests IS@fb13355e); DXY KEEPS venue=ICE
           ✅ (operator REVERSED the planned ICE→FX — DXY IS the ICE/NYBOT US Dollar Index, Yahoo-sourced, the ONLY
           retained ICE exception, documented in-registry; ICE→FX key-migration CANCELLED). REMAINING split into G1.f.2
-          (VIX-15m index removal) + G1.f.3 (treasuries actually reach the catalogue) below.
+          (VIX-15m index removal) + G1.f.3 (treasuries actually reach the catalogue) below — both DONE, nothing left
+          open under G1.f itself.
     - [x] ✅ [SCRIPT] P1. **G1.f.2 — retire the VIX-15m INDEX (superseded by VX futures 1s OHLCV; operator 2026-06-25)**
           — remove `CBOE:INDEX:VIX-USD` ohlcv_15m as a distinct index. 3-repo, consumers-first. VX.FUT futures
           (`CBOE:FUTURE:VX`, XCBF.PITCH ohlcv-1s/1m, aggregated downstream) is KEPT — it IS the VIX-vol source;
@@ -344,12 +345,12 @@ status index across all 4 children (this one, Phase-0, cefi, and the defi/sports
 
 ## Deferred work after 2026-06-26
 
-| #   | Item                                                                                                                                              | Repo       | Priority | Blocked on                  |
-| --- | ------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | -------- | --------------------------- |
-| 1   | Clean stale CBOE ohlcv_15m capability entries (expected_coverage.py + data_type_capability.py + MDPS adapter docstring) post VIX-INDEX retirement | UAC + MDPS | P2       | Nothing (no live consumers) |
-| 2   | Verify UAC uac@599acf93 SIT passes (~30min Tier-C drain → staging → quality-gates-v2)                                                             | UAC        | P1       | CI auto                     |
-| 3   | G1.f (partial — DXY key migration ICE→FX) — operator-gated (ICE kept per 2026-06-25 operator reversal)                                            | UAC + IS   | P1       | Operator decision           |
-| 4   | G1.g MVP tags; G1.a.2 massive.py §7.1; G1.a.3 router.py dead config                                                                               | IS + MTDS  | P1/P2    | None                        |
+| #   | Item                                                                                                                                                                                                                      | Repo       | Priority | Blocked on                   |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | -------- | ---------------------------- |
+| 1   | Clean stale CBOE ohlcv_15m capability entries (expected_coverage.py + data_type_capability.py + MDPS adapter docstring) post VIX-INDEX retirement                                                                         | UAC + MDPS | P2       | Nothing (no live consumers)  |
+| 2   | Verify UAC uac@599acf93 SIT passes (~30min Tier-C drain → staging → quality-gates-v2)                                                                                                                                     | UAC        | P1       | CI auto                      |
+| 3   | ~~G1.f (partial — DXY key migration ICE→FX)~~ — RESOLVED 2026-06-25: operator REVERSED the planned migration, DXY KEEPS venue=ICE, ICE→FX key-migration CANCELLED outright (see G1.f above). No decision remains pending. | UAC + IS   | —        | Resolved (no longer blocked) |
+| 4   | G1.g MVP tags; G1.a.2 massive.py §7.1; G1.a.3 router.py dead config                                                                                                                                                       | IS + MTDS  | P1/P2    | None                         |
 
 ---
 

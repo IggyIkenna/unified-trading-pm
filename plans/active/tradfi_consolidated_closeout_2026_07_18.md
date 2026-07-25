@@ -15,7 +15,6 @@ summary:
   closed.
 status: active
 nature: process
-umbrella: true
 asset_group: [tradfi]
 stage: [meta]
 repos:
@@ -63,6 +62,7 @@ related:
     /plans/active/consolidator_throughput_backlog_monitor_2026_07_09.md,
     /plans/active/issues/candle_feature_canonical_path_divergence_2026_07_20.md,
     /plans/active/issues/plan_line_cap_remediation_2026_07_23.md,
+    /plans/active/data_pipeline_e2e_milestones_gate_2026_07_24.md,
   ]
 created: 2026-07-18
 last_updated: "2026-07-24"
@@ -81,11 +81,14 @@ supersedes:
 superseded_by:
 depends_on: [tradfi_manifest_content_recovery_completion_2026_07_24, tradfi_backfill_throughput_followups_2026_07_24]
 gate_on_depends:
-  true # Phase C (data-status/honest-coverage) is gated on Phase B, which forked to
-  # tradfi_manifest_content_recovery_completion_2026_07_24; the BLOCKED-PLAN2 "Certify tradfi Layer-1" todo is gated on
+  true # mechanism note: regen_backlog_from_plan.py's gate_on_depends holds the WHOLE plan (every todo, incl. the
+  # otherwise-unrelated Phase A2 adapter/registry todos), not just the 2 todos this was written for — Phase C
+  # (data-status/honest-coverage) is gated on Phase B, which forked to
+  # tradfi_manifest_content_recovery_completion_2026_07_24; the BLOCKED-INFRA "Certify tradfi Layer-1" todo is gated on
   # the catalogue rebuild+promote, which forked to tradfi_backfill_throughput_followups_2026_07_24 — both were real,
   # un-machine-enforced cross-plan gates found by the 2026-07-24 AO-flip-safety audit; encoded here so a future
-  # `assigned_vm: planning` flip can't dispatch Phase C or BLOCKED-PLAN2 before their real prerequisites land.
+  # `assigned_vm: planning` flip can't dispatch Phase C or BLOCKED-INFRA before their real prerequisites land (the
+  # whole-plan gate is broader than intended but is the accepted cost of the mechanism, not restructured here).
 source:
   Operator, 2026-07-18 — after spotting DERIBIT:FUTURE:AVAX@LIN-20260718 missing its quote and then seeing raw symbols
   in tradfi parquet names, manifest entries, and the instruments data-status page/catalogue, directed a single one-pass
@@ -97,8 +100,8 @@ source:
   (slot-3, 2026-07-18). **On 2026-07-24** the doc was trimmed + split 3 ways per the operator-approved plan-hygiene
   line-cap remediation (`plans/active/issues/plan_line_cap_remediation_2026_07_23.md` row 29) — this doc had grown to
   2549 lines (over the 2000L umbrella ceiling) via an ~1700-line tick-by-tick Progress Log; content moved verbatim to
-  the 3 children in the related list above, and this parent now carries the umbrella flag as a trimmed coordination
-  index.
+  the 3 children in the related list above, and this parent is now a trimmed coordination index (the `umbrella=true`
+  frontmatter key that carried this was later stripped 2026-07-24, ruled inert workspace-wide).
 ---
 
 # TradFi consolidated close-out — one pass to MVP-backfill-ready
@@ -115,7 +118,8 @@ source:
 > `/plans/active/issues/plan_line_cap_remediation_2026_07_23.md` (row 29). The 3-way split was overwhelmingly driven by
 > an ~1700-line tick-by-tick Progress Log sitting next to a small tail of genuinely open todos — every todo and every
 > Progress Log line was moved **verbatim** to its destination, nothing was summarized, rewritten, or dropped. This
-> parent now carries `umbrella: true` and stays under the 2000-line umbrella ceiling as a trimmed coordination index.
+> parent stays under the 2000-line umbrella ceiling as a trimmed coordination index (the `umbrella=true` frontmatter key
+> was later stripped 2026-07-24, ruled inert workspace-wide and absent from PLAN_FORMAT.md's schema).
 >
 > | Child plan                                                                                                               | Carries                                                                                                                                       |
 > | ------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -125,9 +129,13 @@ source:
 >
 > **Per-child open-todo digest (2026-07-24, so this split is AO-legible without opening the children)**:
 >
-> - `tradfi_manifest_content_recovery_completion_2026_07_24.md` — **11 open** (5×P0, 5×P1, 1×P2). Top P0s: (1) Migrate
->   the catalogue (Surface A) via `canonicalize_tradfi_catalogue_usd_lin_*.py`; (2) Enumeration-driven migration (SINGLE
->   SOURCE OF TRUTH, operator 2026-07-18) — must be driven by the full distinct dimension-value set, not sampled shapes.
+> - `tradfi_manifest_content_recovery_completion_2026_07_24.md` — **8 open** (2×P0, 5×P1, 1×P2, re-verified 2026-07-25
+>   against the child's own checkboxes — down from the earlier 11-open/5×P0 count). Top P0s still open: (1) **Migrate
+>   the catalogue (Surface A)** via `canonicalize_tradfi_catalogue_usd_lin_*.py` — NOT yet executed (DURABILITY TRAP: a
+>   `prod/n`-only rewrite silently reverts on the next `build_instrument_catalogue.py` rebuild — must also migrate the
+>   per-day corpus); (2) **Migrate GCS filenames + tick CONTENT (Surfaces C+D)**. The manifest migration (Surface B) is
+>   now DONE + RE-VERIFIED LIVE 2026-07-25, and the enumeration-driven-migration casing sub-scope CLOSED 2026-07-25 (its
+>   semantic-mislabel + null/blank residual moved to a separate open P1) — both are no longer open P0s.
 > - `tradfi_backfill_throughput_followups_2026_07_24.md` — **11 open** (0×P0, 8×P1, 3×P2). Top P1s: (1) Backfill-VM
 >   startup OOM rc137 + OOM remediation baked default + consolidator throughput/backlog monitor (3 sub-issues bundled);
 >   (2) TradFi has NO working T+1 forward-fill job — add source-scoped `…-tradfi-databento-t1-recon` Cloud Run job.
@@ -227,17 +235,25 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
 
 - [ ] [BACKEND] P1. **CME `mbp_10`/`trades`/`tbbo` `VENUE_DATA_TYPE_CAPABILITIES` restoration** + no `ohlcv_15m/24h`
       aggregation writer exists (leaves `vix_features` unfed) —
-      `tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md`. (repos:
-      market-tick-data-service, unified-api-contracts)
-- [ ] [BACKEND] P2. **KRX/KRW intraday registry-vs-adapter mismatch**
-      (`krx_intraday_ohlcv_registry_vs_adapter_mismatch_2026_07_12.md`, RESOLVED — verify it holds for the KRW MVP
-      cell). **IBKR `_SEC_TYPE_MAP` / Databento `_resolve_product_root` / combo-leg** — DONE in code
-      (`canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md`); flip its stale single-leg todo. **`mvp_mode`
-      dead gate** decision (`tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md`). (repos: instruments-service,
-      market-tick-data-service)
+      `tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md`. Gate:
+      `VENUE_DATA_TYPE_CAPABILITIES` verified to declare mbp_10/trades/tbbo as billing-gated (per the "Data-type ×
+      source priority" note above — declared possible, not chased to full L3 history), and a recorded decision on
+      whether an `ohlcv_15m/24h` aggregation writer ships to feed `vix_features`. (repos: market-tick-data-service,
+      unified-api-contracts)
+- [ ] [BACKEND] P2. **KRX equities intraday registry-vs-adapter mismatch**
+      (`krx_intraday_ohlcv_registry_vs_adapter_mismatch_2026_07_12.md`, RESOLVED — this is about KRX (Korean)
+      **equities** `ohlcv_1m`/`ohlcv_15m` registry coverage, a separate cell from the declared MVP **FX KRW** cell
+      (`FX:SPOT_PAIR:KRW-USD`, daily); verify the equities fix still holds, and separately verify the FX KRW cell has no
+      analogous registry-vs-adapter gap). **IBKR `_SEC_TYPE_MAP` / Databento `_resolve_product_root` / combo-leg** —
+      DONE in code (`canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md`, single-leg todo already `[x]`).
+      **`mvp_mode` dead gate** decision (`tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md`). Gate: KRX-equities
+      mismatch re-verified still resolved, the FX KRW cell separately confirmed to have no registry-vs-adapter gap, and
+      the `mvp_mode` dead-gate decision (wire a real caller or remove) is made and recorded. (repos:
+      instruments-service, market-tick-data-service)
 - [ ] [BACKEND] P2. **Full MTDS+IS adapter smoke findings** — `mtds_is_full_adapter_smoketest_findings_2026_07_07.md`,
       `instruments_remaining_work_audit_2026_07_10.md` (tradfi slice),
-      `uac_data_type_validity_combinator_fragmentation_2026_07_07.md`.
+      `uac_data_type_validity_combinator_fragmentation_2026_07_07.md`. Gate: every open finding in the 3 cited docs
+      re-verified current against live tradfi state or re-filed as its own tracked todo.
 - [ ] [BACKEND] P2. Audit every adapter/handler module under
       `instruments-service/instruments_service/reference_data/adapters/tradfi/`,
       `market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/`, and the tradfi venue files
@@ -246,13 +262,53 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
       `/codex/06-coding-standards/adapter-dead-code-and-fallback-ban.md`. Definition-of-done: a filed finding (or a
       stated "clean" verdict) per adapter directory, cited with file paths, recorded in this plan's Progress Log or a
       new `plans/active/issues/` doc. (repos: instruments-service, market-tick-data-service, execution-service)
+- [ ] [BACKEND] P1. **NEW 2026-07-24 — two live defects found by the raw-tick reconciliation's 3rd run: (1) ICE/KRX/FX
+      (all Yahoo-exclusive per SSOT) captured under `source=databento` since ~2026-07-18 (real values, wrong provenance
+      stamp, root cause not yet found — hypothesis: the 2026-06-24 DATABENTO-FIRST change missing a per-venue
+      `_VENUE_SOURCE_EXCLUSIONS` guard); (2) FX `SPOT_PAIR` manifest `instrument_id` is 0% well-formed across its entire
+      2020-2026 captured history (the GCS object + content are fine — this is a pure manifest-copy defect).** Positive
+      counter-finding same run: captured-row id-form canonicality measured ~99.3% corpus-wide (up from the 07-21
+      report's 30.8%), independently corroborated by a 99.95%-clean reconstructed-path check — strong evidence the
+      Phase-B migration in `tradfi_manifest_content_recovery_completion_2026_07_24.md` has substantially landed; that
+      plan's relevant todo should be confirmed/flipped against this evidence rather than treated as still-open. Full
+      evidence for both defects + the `_quarantine/` register going stale (146K→400K+ objects in 3-4 days, register
+      still says "deleted"): `/plans/active/issues/tradfi_fx_provenance_and_manifest_id_defects_2026_07_24.md`. (repos:
+      market-tick-data-service, unified-api-contracts, unified-trading-pm)
 
 ## Phase C — data-status + honest-coverage (gated on Phase B)
 
-- [ ] [BACKEND] P1. **Honest-coverage for tradfi**: out-of-window `expected_unattempted` clipping
-      (`honest_coverage_out_of_window_expected_unattempted_not_clipped_2026_07_16.md`, RESOLVED — verify for tradfi);
-      reference-data shard-dimension model (`honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md`);
-      coverage-floor registry cross-propagation (`coverage_floor_registries_no_cross_propagation_2026_07_17.md`).
+- [x] ✅ [BACKEND] P1. **Honest-coverage for tradfi**: out-of-window `expected_unattempted` clipping
+      (`/plans/archive/issues/honest_coverage_out_of_window_expected_unattempted_not_clipped_2026_07_16.md`, RESOLVED —
+      verify for tradfi); reference-data shard-dimension model
+      (`honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md`); coverage-floor registry
+      cross-propagation (`coverage_floor_registries_no_cross_propagation_2026_07_17.md`). Gate: all 3 cited findings
+      re-verified against live tradfi data (clipping holds, shard-dimension model applied, coverage-floor registries
+      cross-propagate) with the results recorded. **VERIFIED 2026-07-25, all 3 against LIVE tradfi manifests
+      (`market-data-tick-tradfi-prd-central-element-323112` 5,826,709 rows +
+      `instruments-store-tradfi-prd-central-element-323112` 27,251 rows, both freshly downloaded):** (1) **out-of-window
+      clipping — STILL HOLDS.** All 400,643 `expected_unattempted` rows carry blank `error_reason` (never an
+      `EXPECTED_*` reason, so `expected_unattempted_known_empty` stays empty for tradfi exactly as the archived doc
+      predicted); 2,647,410 of 3,802,192 `empty_confirmed` rows carry an `OUT_OF_COVERAGE_WINDOW_REASONS` member
+      (`EXPECTED_INSTRUMENT_NOT_LISTED`/`_DELISTED`/`_NO_PROVIDER_COVERAGE`/`_OUT_OF_COVERAGE_WINDOW`/
+      `_DEPRECATED_DATA_TYPE`) and are clipped from both numerator+denominator by deployment-api's
+      `coverage.py::oow_reason_mask` against UAC's live `OUT_OF_COVERAGE_WINDOW_REASONS` frozenset — code path unchanged
+      since the 2026-07-16 verification. (2) **reference-data shard-dimension model — CORRECTLY APPLIED.** All 7 tradfi
+      IS venues show real per-`(venue, instrument_type)` splits with no blank-collapse (CME:
+      FUTURE=2024/COMBO=1995/OPTION=1995; CBOE 5 types; ICE/NYSE/NASDAQ/KRX/FX all multi-type) — the 2026-07-07
+      `_split_by_instrument_type` writer fix is live for tradfi; residual blank-`instrument_type` rows (4,504/27,251)
+      are exclusively `EXPECTED_WEEKEND`/`_HOLIDAY`/`_PRE_VENUE_LAUNCH` non-trading pre-stamps (already documented as
+      "no fix needed" in the source doc) + 93 genuine unclassified adapter errors, not a writer regression; no
+      DERIBIT-COMBO-style fake-venue analog exists in tradfi's venue list. (3) **coverage-floor cross-propagation — WAS
+      STILL LIVE, NOW FIXED.** Confirmed the cited CME mismatch was still unresolved as of session start
+      (`coverage_starts.py:175` `"CME": date(2010, 1, 1), # TODO verify` vs `venue_mapping.py:334` `"CME": "2020-01-01"`
+      no TODO). Probed the live MTDS manifest per `coverage_starts.py`'s own docstring instruction — earliest CME
+      `capture_status=captured` row is 2020-01-01, every pre-2020 date is `empty_confirmed`/`expected_unattempted` —
+      confirming `venue_mapping.py` was right. **Shipped: unified-api-contracts@32b2879c** updates
+      `TRADFI_SOURCE_COVERAGE_START["CME"]` to `date(2020, 1, 1)` and drops the TODO; gate `dbd6491`→`32b2879c` all
+      green (583s, sentinel `dbd649140e946cbcf91275a6bd10bd73c12516a5`). Matching P2 todo flipped in
+      `coverage_floor_registries_no_cross_propagation_2026_07_17.md`. The other 2 registries (TARDIS `# TODO verify`,
+      the 8 CeFi mismatches, POLYMARKET, DeFi drifts) are that doc's own separately-tracked P1/P2/P3 items, out of this
+      tradfi-scoped todo's gate.
 - [ ] [CODE] P2. **Billing-gated Databento L2/L3 cells must not count as `attempted_failed`.** Databento tradfi's
       billing entitlement is 1-month L3 + 1-year L1 (see the "Data-type × source priority" note above), so
       `mbp_10`/`trades`/`tbbo` lookback/entitlement-guard rejections are EXPECTED, not real failures — but no
@@ -265,7 +321,10 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
       (repos: unified-api-contracts, market-tick-data-service)
 - [ ] [BACKEND] P1. **Data-status page renders canonical tradfi** (the "Upcoming expiries" + instruments/catalogue
       views) — `data_status_page_ux_and_canonicalisation_2026_07_16.md`; deployment-api legacy venue-lookup gap
-      (`deployment_api_legacy_instrument_availability_venue_lookup_gap_2026_07_13.md`, RESOLVED — verify tradfi).
+      (`deployment_api_legacy_instrument_availability_venue_lookup_gap_2026_07_13.md`, RESOLVED — verify tradfi). Gate:
+      the "Upcoming expiries" widget + catalogue view render canonical ids for a live sample row (no raw
+      `E3AN6     C7960`-style output per the Ground-truth verdict table above), and the venue-lookup gap fix is
+      confirmed to hold for tradfi.
 - [ ] [REVIEW] P1. **Run the already-shipped distinct-values/axis-value census for tradfi and verify 0 non-canonical**
       (supersedes the prior "RE-ADD the dimensions enumeration view" todo — that view already shipped live:
       deployment-api `GET /distinct-values/{asset_group}` + `GET /axis-value-census`, code at
@@ -281,7 +340,8 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
 - [ ] [BACKEND] P2. **Denominator / catalogue-completeness + new untracked findings** — 875 tradfi atoms with narrowed
       historical objects + 153 duplicate KRX row_keys
       (`tradfi_instrument_type_migration_read_stale_legacy_object_2026_07_17.md`); phantom captures
-      (`phantom_captures_tradfi_2026_06_28.md`); expected_reason misclassification P3s.
+      (`phantom_captures_tradfi_2026_06_28.md`); expected_reason misclassification P3s. Gate: each of the 3 cited
+      findings re-verified against live tradfi state (counts re-measured or explained as stale) and recorded.
 - [x] [BACKEND] P1. **KRX (Korean) equities carry a human-readable NAME across catalogue + manifest + data-status
       (operator, 2026-07-20)** — **instruments-service@6780f10e** (the 4th and last code surface; gate green **4712
       passed / 0 failed / 3 skipped**, `.qg_last_passed_sha == 9267e0ea` at ship time). _**CODE 4/4 LANDED 2026-07-20**
@@ -301,8 +361,10 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
       is@9267e0ea (goldens regenerated). This deliverable deliberately did NOT touch either: no guard was weakened,
       excluded, or baselined, and no foreign golden was regenerated to force green. Ship gate at is@9267e0ea: **4712
       passed / 0 failed / 3 skipped, exit 0**. Residual DeFi coverage-honesty finding (3 live venues with measured-dead
-      upstreams + `expected_coverage` not phase-gated) is documented in
-      `plans/active/issues/uac_is_defi_oracle_dex_adapter_drift_2026_07_20.md` and is owned by DeFi T2, NOT this plan.
+      upstreams + `expected_coverage` not phase-gated), tracked in
+      `/plans/archive/issues/uac_is_defi_oracle_dex_adapter_drift_2026_07_20.md`, was NOT this plan's to fix and is now
+      RESOLVED — 2026-07-22, `uac@9a047a31` + `instruments-service@52a1cb53` (defi_consolidated_closeout_2026_07_18.md
+      session), narrowed the 3 dead-upstream venues to `phase="pipeline"` + dropped their `expected_coverage.py` rows.
       **Verified on a SAMPLE (no full regen):** `_add_instrument_name` stamps `KRX:EQUITY:005930`→"Samsung Electronics",
       `KRX:EQUITY:000660`→"SK Hynix", `KRX:EQUITY:005380`→"Hyundai Motor", and also catches the legacy
       `KRX:EQUITY:005930.KS-USD` variant (same `base_asset`); non-KRX rows stay honestly blank. Live tradfi
@@ -325,14 +387,14 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
       Regenerate catalogue + manifest so the name lands live; verify the Catalogue Explorer shows `SK Hynix` /
       `Samsung Electronics` next to the code. (repos: instruments-service, market-tick-data-service, deployment-api,
       deployment-ui)
-- [ ] [VERIFY] P0. 🚧 BLOCKED-PLAN2 — **Certify tradfi Layer-1** — post the v9 migration + rebuild + IS catalogue (Plan
+- [ ] [VERIFY] P0. 🚧 BLOCKED-INFRA — **Certify tradfi Layer-1** — post the v9 migration + rebuild + IS catalogue (Plan
       2), record the fresh tradfi denominator + %. Gate: tradfi number recorded; all 5 AGs now canonical-and-measured.
       **STILL BLOCKED 2026-07-21 (only PARTIALLY unblocked)**: the v9 manifest migration/rebuild are done (task 10,
       2026-07-16), but the served catalogue has not yet been rebuilt/promoted for the +409 MVP expansion
       (`uac@afa2dd64`→`22e6a534`) — so the fresh tradfi denominator this todo must record is not yet final. Gated on the
-      pending catalogue rebuild + promote (see `tradfi_consolidated_closeout_2026_07_18.md` "FINAL STEP"), not cleanly
-      runnable yet. (FOLDED IN from layer1_remeasure_and_certify_2026_07_06, 2026-07-15, plan-reconcile §6 operator
-      ruling)
+      pending catalogue rebuild + promote (see `tradfi_backfill_throughput_followups_2026_07_24.md` "FINAL STEP"), not
+      cleanly runnable yet. (FOLDED IN from layer1_remeasure_and_certify_2026_07_06, 2026-07-15, plan-reconcile §6
+      operator ruling)
 
   **Note (2026-07-24)**: relocated verbatim from `tradfi_v9_stage1_finish_2026_07_06.md`'s "Folded-in scope 2026-07-15"
   section during the plan-hygiene line-cap remediation (that plan is now archived, 0 remaining open todos). The "FINAL
@@ -789,10 +851,14 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
 - **2026-07-18 — Plan authored + ground-truth-corrected.** First-draft "largely done" claim disproved by direct live GCS
   reads: catalogue + manifest derivative ids measured at 0% canonical. Rewritten into the Phase A→B→C→D structure above.
   → full detail: `tradfi_manifest_content_recovery_completion_2026_07_24.md`.
-- **2026-07-18 — Phase A1 writer convergence shipped** (UAC shared builder + MTDS/IS writers all emit `-USD@LIN`) →
-  **Phase B migration executed**: catalogue migrated to 99.86%→99.98% canonical (prod/n + per-day sweep); manifest
-  migrated via pause-consolidator→CAS-rewrite→resume to 94.78%+ FUTURE/OPTION canonical + 99.9% cash, durability
-  independently re-verified live. → `tradfi_manifest_content_recovery_completion_2026_07_24.md`.
+- **2026-07-18 — Phase A1 writer convergence shipped** (UAC shared builder + MTDS/IS writers all emit `-USD@LIN`).
+  **Phase B — manifest (Surface B) migration executed + RE-VERIFIED LIVE 2026-07-25**: migrated via
+  pause-consolidator→CAS-rewrite→resume; fresh live read confirms FUTURE/OPTION `instrument_id` canonical
+  363,954/403,467 (90.2%), EQUITY/ETF carrying `-USD` 3,189,939/3,225,484 (98.9%), durability independently re-verified.
+  **Catalogue (Surface A) migration is NOT YET executed** — still an open P0 (DURABILITY TRAP: a `prod/n`-only rewrite
+  silently reverts on the next catalogue rebuild); the 99.86% figure in the child doc is the PRE-migration
+  canonicalizability measurement on the raw catalogue, not a completed-migration result. →
+  `tradfi_manifest_content_recovery_completion_2026_07_24.md`.
 - **2026-07-18 — A3.1 Databento e2e throughput optimization shipped + measured 1.56x** (gated concurrent-date driver,
   disk-policy fix, concurrency plumbing); a P0 fleet incident (88 launchers with a truncated `gcloud` command from an
   unrelated disk-policy sweep) found and fixed mid-measurement. → `tradfi_backfill_throughput_followups_2026_07_24.md`.

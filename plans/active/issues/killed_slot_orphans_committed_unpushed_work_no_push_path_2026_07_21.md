@@ -108,3 +108,19 @@ Non-blocking for the fleet (backlog is healthy 13/0/13; the loop has stopped —
 already notified via the server's unpushed_plans_alert. Main orchestrator is barred from push/respawn, so remediation
 routes through these todos + operator action to land slot16's `ao_uniform_agent_liveness_contract` commits. Filed on
 review(slot1)'s behalf per the async-wait/stuck-recovery watchdog guidance.
+
+## Recurrences
+
+- **2026-07-25 ~02:33Z — slot 10** (flagged again by review/slot1, confirmed by main read-only). Same class: slot 10
+  died **idle** (prereq-blocked on `sports_satellite_ao_dispatch_batch2-005/-007/-011`) with
+  `worker_alive=false, tmux_alive=false`, holding one committed-but-unpushed commit `ed24ea184`
+  (`chore(orphan-wip): inherited WIP …`, authored 02:34:08Z) on branch `plan_reconciler/agt-be8370-archive` (no
+  upstream): `unified-trading-pm` ahead=1 / behind=22 vs origin/live-defi-rollout, HEAD not an ancestor. Files are 2
+  plan docs (`plan_reconciler_findings_2026_07_25.md` +95, `docs_retrieval_layer_reconcile_2026_07_23.md` +7); worktree
+  CLEAN so no uncommitted loss. `unpushed_plans_alert_sent` fired 02:32:16Z (operator surfaced). Confirms the open
+  `[INFRA] P2` reclaim-and-push todo is still unbuilt and the gap recurs. Note: main tried the sanctioned
+  `POST /api/agents/by-role/conflict_resolver/message` route (03:09Z) — it logged `agent_message_sent` but did **not**
+  spawn a one-shot conflict_resolver (a by-role thread message is not a dispatch), so that is not a viable ad-hoc
+  remediation either; still routes through the todo + operator. Landing needs judgment (is
+  `plan_reconciler_findings_2026_07_25.md` superseded by a newer scheduled run? + a 22-behind rebase of another agent's
+  branch) → correctly an operator/human call, not an auto-dispatched todo.

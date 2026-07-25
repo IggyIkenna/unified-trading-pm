@@ -41,7 +41,7 @@ source:
   forked from /plans/active/distinct_values_noncanonical_audit_2026_07_20.md per explicit operator rescope decision
   2026-07-24 (fork ONLY the MTDS lending-instrument-type historical-restamp workstream out; RESTAKING stays in the
   parent as shipped historical record)
-last_updated: 2026-06-27
+last_updated: 2026-07-24
 ---
 
 # MTDS lending instrument_type — historical manifest re-stamp

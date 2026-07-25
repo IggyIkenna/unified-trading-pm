@@ -32,13 +32,13 @@ priority: P2
 source:
   [
     batch-live-reconciliation-service/,
-    unified-trading-pm/codex/04-architecture/reconciliation-resolution.md,
-    unified-trading-pm/codex/04-architecture/reconciliation-age-tracking.md,
-    unified-trading-pm/codex/09-strategy/operational/batch-live-reconciliation-threshold-calibration.md,
-    unified-trading-pm/codex/15-runbooks/position-reconciliation-deploy-gate.md,
-    unified-trading-pm/codex/04-architecture/paper-vs-live-execution-seam.md,
-    unified-trading-pm/codex/04-architecture/separation-of-concerns.md,
-    unified-trading-pm/codex/04-architecture/data-flow-map.md,
+    /codex/04-architecture/reconciliation-resolution.md,
+    /codex/04-architecture/reconciliation-age-tracking.md,
+    /codex/09-strategy/operational/batch-live-reconciliation-threshold-calibration.md,
+    /codex/15-runbooks/position-reconciliation-deploy-gate.md,
+    /codex/04-architecture/paper-vs-live-execution-seam.md,
+    /codex/04-architecture/separation-of-concerns.md,
+    /codex/04-architecture/data-flow-map.md,
   ]
 assigned_vm:
 resolved_by:

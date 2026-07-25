@@ -645,3 +645,16 @@ workable, mildly-net-positive shape with the lease OFF; >3 risks contention coll
 zero-waste option. The launcher-hardening candidate refines to: warn (not refuse) at 2-3 concurrent Tardis VMs,
 refuse >3 unless the lease is enabled. Did NOT add more VMs on top of the live 06:37Z wave (risk of tipping it into
 collapse). — doc-reconciliation session, 2026-07-14
+
+> **🟡 SUPERSEDED 2026-07-25 (`/plan-reconcile`)**: the "2-3 concurrent Tardis VMs is workable" guidance immediately
+> above is now stale. Per operator ruling 2026-07-16, documented in `CLAUDE.md` and
+> `/codex/05-infrastructure/vm-launcher-runbook.md` § "Tardis Concurrent-VM Cap (HARD RULE)": **the cap is 1 concurrent
+> Tardis-consuming VM, across BOTH clouds — the lease does NOT lift it, it AMPLIFIES the storm.** The operator's own
+> note on this reversal: "the earlier cap-3 was measured on skip-scans, not real fetching" — i.e. this doc's 2026-07-14
+> empirical test (which measured a bitget relaunch's request pattern) did not hold once real-fetching load was measured;
+> N>1 in that later, real-fetching gap measured ~94% 403s + 37,212 FALSE `attempted_failed` manifest-corrupting rows +
+> coverage going BACKWARD, while N=1 measured ZERO 403s. Do NOT action the "warn at 2-3 / refuse >3" launcher guidance
+> above — the launcher-side control is now a hard 1-VM cap (`tardis-concurrency-guard.sh`), not a warn threshold. Scale
+> via `TARDIS_MAX_CONCURRENT_DOWNLOADS`/`TARDIS_BOOK_SNAPSHOT_MAX_CONCURRENT` on the single VM, never via more VMs. A
+> sibling doc, `cefi_consolidated_closeout_2026_07_18.md`, independently states the correct "N=1 Tardis cap, both
+> clouds" six days after this doc's empirical test — this doc was simply never reconciled against that ruling until now.

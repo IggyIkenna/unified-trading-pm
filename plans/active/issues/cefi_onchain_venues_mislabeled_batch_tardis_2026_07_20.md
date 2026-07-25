@@ -11,8 +11,10 @@ summary:
   plus 28 instruments and an entire ohlcv_1m data_type present ONLY in the fabricated lane. LIGHTER-ZKSYNC IS a real
   Tardis exchange (slug "lighter", coverage from 2026-04-17) so its post-cutover batch_tardis objects are CORRECTLY
   labelled — only a ~1k-object pre-2026-02 ohlcv_1m tail is mis-stamped. PACIFICA-SOLANA is a dropped venue (source
-  removed 2026-07-16, zero manifest rows) and is a purge, not a re-partition. Recommendation is NOT a blanket
-  re-partition — it is per-venue, and EXTENDED needs CONTENT reconciliation before any object move.
+  removed 2026-07-16, zero manifest rows) and is a quarantine, not a re-partition (CORRECTED — see C3 below; the sibling
+  finding + the cefi consolidated-closeout plan's tracked disposition both land on quarantine, not purge).
+  Recommendation is NOT a blanket re-partition — it is per-venue, and EXTENDED needs CONTENT reconciliation before any
+  object move.
 status: open
 nature: issue
 asset_group: [cefi]
@@ -25,6 +27,8 @@ related:
     /codex/02-data/pipeline-mode-partition.md,
     /codex/02-data/availability-manifest-and-data-status.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+    /plans/active/issues/onchain_venues_mislabeled_batch_tardis_lane_2026_07_20.md,
+    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-07-20
 priority: P1
@@ -54,7 +58,7 @@ last_updated: 2026-07-20
 | --------------------- | ---------------------------------------------------------------------------- | ------------------------------------- | ----------------------------------------- |
 | **EXTENDED-STARKNET** | 🔴 **CONFIRMED mislabel + full content-divergent DUPLICATION**               | **35,882 objects** under batch_tardis | Reconcile CONTENT first, then dispose     |
 | **LIGHTER-ZKSYNC**    | 🟡 **Mostly CORRECT** — Tardis genuinely archives this venue from 2026-04-17 | ~1,050-object legacy ohlcv_1m tail    | Small re-partition to `batch_lighter_api` |
-| **PACIFICA-SOLANA**   | 🟢 **Not a lane problem** — venue DROPPED 2026-07-16, zero manifest rows     | ~5 objects/day, 2025-07 → 2025-12     | Purge, not re-partition                   |
+| **PACIFICA-SOLANA**   | 🟢 **Not a lane problem** — venue DROPPED 2026-07-16, zero manifest rows     | ~5 objects/day, 2025-07 → 2025-12     | Quarantine, not re-partition or purge     |
 
 The framing "three on-chain venues mislabeled as batch_tardis" merges three unrelated causes. Treating them as one
 migration would move correctly-labelled Tardis data (LIGHTER), resurrect a deliberately-dropped venue (PACIFICA), and
@@ -393,19 +397,28 @@ Treat the three venues as the three separate problems they are, sequenced behind
 writes post-2026-02. **Leave every `derivative_ticker` object under `batch_tardis` untouched** — it is correct.
 Unambiguous, no content divergence, no catalogue dependency.
 
-**C3 — PACIFICA-SOLANA (P3, purge not migration).** The venue was dropped by operator ruling 2026-07-16, its UAC source
-was removed, and it has zero manifest rows. Re-partitioning would mean inventing a `batch_pacifica` mode that was
-deliberately deleted. Route these objects to the existing purge path
-(`market_tick_data_service/scripts/purge_drift_pacifica_solana_perp_2026_07_16.py`) under the standard delete-safety
-gate. **Operator confirmation required** — deletion is human-gated.
+**C3 — PACIFICA-SOLANA (P3, quarantine not migration or purge — CORRECTED 2026-07-25).** The venue was dropped by
+operator ruling 2026-07-16, its UAC source was removed, and it has zero manifest rows. Re-partitioning would mean
+inventing a `batch_pacifica` mode that was deliberately deleted. **This doc originally recommended routing these objects
+to the purge path (`purge_drift_pacifica_solana_perp_2026_07_16.py`); that recommendation conflicted with the sibling
+finding `/plans/active/issues/onchain_venues_mislabeled_batch_tardis_lane_2026_07_20.md` (same venue, same 2026-07-20
+investigation window), which recommends QUARANTINE (register in the fail-hard quarantine set, keep the data, do not
+delete) — orphan data from a culled venue, not a re-partition target.** The corpus has since converged on quarantine as
+the tracked disposition: `plans/active/cefi_consolidated_closeout_2026_07_18.md` carries the open todo "Register
+PACIFICA-SOLANA (265) in the fail-hard quarantine set" (also re-extracted into
+`plans/active/cefi_4surface_migration_execution_log_2026_07_24.md` and indexed in
+`plans/active/cefi_consolidated_closeout_aggregated_sources_2026_07_24.md`), dated 4 days after this doc and never
+mentioning a purge. Follow that todo instead of the purge script — no `--apply`/deletion of these objects without a
+fresh, explicit operator decision reopening the purge-vs-quarantine question.
 
 **C4 — Close the residual live defect (P2, code-only, no data).** Make the `cefi → BATCH_TARDIS` asset_group fallback at
 `pipeline_mode_resolver.py:346` **fail loud** (or return `None`) for any venue that `VenueMapping` reports is not a
 Tardis exchange, generalising the LIGHTER honest-absence guard at `pipeline_mode_resolver.py:325-326`. This is the only
 change that prevents the _next_ venue from silently repeating the whole incident. Ship independently of the data work.
 
-**Recommended sequencing:** C4 (no dependencies, prevents recurrence) → C2 (small, independent) → C3 (operator-gated) →
-C1 (behind the catalogue gap, bundled with its canonicalisation pass).
+**Recommended sequencing:** C4 (no dependencies, prevents recurrence) → C2 (small, independent) → C3 (quarantine
+registration, no deletion — see corrected C3 above) → C1 (behind the catalogue gap, bundled with its canonicalisation
+pass).
 
 ---
 

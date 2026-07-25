@@ -90,8 +90,9 @@ invariant (`StrategyVersion.__post_init__` rejects a non-None approval whose `ba
 The floor is **not a soft preference** — the user directive (2026-04-21) is categorical: _"new versions only roll out
 after thorough backtesting."_ Lowering the floor below `BACKTEST_1YR` requires a codex amendment + plan D version bump.
 
-**Exception path:** none. The approval gate is hard. If a strategy must go live before a 1-year backtest is viable (e.g.
-pre-seeded archetype with < 1yr of historical data), the admin must:
+**Exception path:** none that bypasses or lowers the `BACKTEST_1YR` floor — the gate is hard. If a real 1-year backtest
+isn't viable (e.g. pre-seeded archetype with < 1yr of historical data), the admin must instead REACH `BACKTEST_1YR`
+without a full year of real history:
 
 1. Run an extended paper trade on the `odum-paper` account for ≥ 90 days AT the version's config, promoting through
    `PAPER_1D → PAPER_14D → PAPER_STABLE`.

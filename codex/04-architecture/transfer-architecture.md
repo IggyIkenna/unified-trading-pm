@@ -175,6 +175,6 @@ All transfers emit lifecycle events via unified-trading-library. Failures trigge
 
 - [Kill Switch & Circuit Breaker](kill-switch-circuit-breaker.md) -- halt conditions that freeze transfers
 - [Autonomous Recovery Matrix](autonomous-recovery-matrix.md) -- how transfers fit into recovery decisions
-- [Execution Policy](../execution-policy.md) -- bridge and withdrawal fee estimation
+- [Execution Policy](/codex/04-architecture/execution-policy.md) -- bridge and withdrawal fee estimation
 - [Custody Providers](custody-providers.md) -- Copper / CEFFU / LocalKey / Mock providers (single SSOT)
 - [Wallet Hierarchy & Capital Flow](wallet-hierarchy-and-capital-flow.md) -- two-tier wallet model and share classes

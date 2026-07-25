@@ -131,9 +131,11 @@ ruled BLK-a1ce4719, migration plan authored) — the actual four-way naming mism
 re-grepped `SportsFeatureVector` across `features-service`, `ml-service`, `strategy-service` (non-test) — still **zero
 hits**, confirming it remains completely disconnected from all three real consumers. Read
 `plans/active/sports_odds_feature_naming_canonicalization_2026_07_21.md` (the migration plan this doc handed execution
-to): `status: active`, but **all 8 of its todos are still unchecked (`[ ]`)**, starting with the P1 `[OPERATOR]`
-field-naming decision at the top — the migration has not started. So the finding as originally written ("FSS output ≠
-ml-service loader ≠ strategy-service v2 ≠ strategy-service legacy ≠ UAC's own unused schema, zero cross-service
-enforcement") is still 100% true in the live codebase; only the ownership/scoping half of this doc's own todos is done.
+to): `status: active`; **correction (2026-07-25, plan-reconcile)**: its P1 `[OPERATOR]` field-naming decision todo is
+now `[x]` **DECIDED 2026-07-23 — new deliberate naming**, but the remaining 8 of 9 todos (the actual 3-repo migration:
+UAC schema fields, features-service compute + column rename, ml-service loader, strategy-service v2 + legacy engines,
+parity test) are still unchecked `[ ]` — the migration itself has not started. So the finding as originally written
+("FSS output ≠ ml-service loader ≠ strategy-service v2 ≠ strategy-service legacy ≠ UAC's own unused schema, zero
+cross-service enforcement") is still 100% true in the live codebase; only the decision + ownership/scoping half is done.
 No status flip — leaving `status: open` since the underlying problem this doc reports is not fixed yet, and execution
 should be tracked via the (still all-open) canonicalization plan.

@@ -30,7 +30,7 @@ code_refs:
   - deployment-ui/src/components/NavMenu.tsx
   - deployment-ui/scripts/orphan-audit.ts
   - deployment-ui/tests/smoke/nav-menu-dedup.spec.ts
-sources: [/plans/archive/2026_07/deployment_ui_plain_routes_retire_cockpit_tabs_2026_07_17.md]
+sources: [/plans/active/deployment_ui_plain_routes_retire_cockpit_tabs_2026_07_17.md]
 ---
 
 # UI routing convention — one URL scheme, plain routes only

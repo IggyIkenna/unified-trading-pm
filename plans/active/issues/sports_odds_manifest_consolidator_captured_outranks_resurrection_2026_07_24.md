@@ -11,7 +11,7 @@ summary:
   Reproduced 3x independently across ~25 minutes. Neither per-VM shard (`_legacy_seed.parquet`,
   `sports-fixtures-job.parquet`) holds the stale row, so the resurrection source is not the documented
   `_legacy_guard`-exempted path — root cause not yet isolated.
-status: open
+status: resolved
 sequential: true # real dependency chain: isolate source (DIAG -001) -> fix (CODE -002) -> re-verify (DATA -003)
 nature: issue
 asset_group: [sports]
@@ -21,13 +21,13 @@ scope: [engineer, admin]
 tags: [manifest-consolidator, captured-outranks, resurrection, sports, data-correctness, blocked]
 related:
   [
-    /plans/active/sports_closeout_batch1_ao_ready_2026_07_24.md,
+    /plans/archive/2026_07/sports_closeout_batch1_ao_ready_2026_07_24.md,
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
   ]
 created: 2026-07-24
 parent_epic: sports_master
 assigned_vm: planning
-resolved_by:
+resolved_by: unified-trading-library@14301571
 source:
   [
     "sports_closeout_batch1_ao_ready_2026_07_24.md todo 3 (Run reprocess_sports_odds.py --force for
@@ -98,6 +98,15 @@ documented finding that `market-data-sports` shares the uniform `*/1 * * * *` Cl
 (`uts-prod-manifest-consolidator-market-data-sports-cron`). The canonical index's generation kept advancing (new
 `updated` timestamps every check) even when I made no write of my own in between, confirming an external process is
 continuously rewriting it.
+
+> **⚠️ 2026-07-25 correction**: the attribution above (to the `market-data-sports` cron) was by analogy to a different
+> script's finding about a different bucket, and is a misattribution — this doc's own bucket in question is
+> `instruments-store-sports-prd-central-element-323112` (an `instruments-store`, not `market-data-tick`, bucket). Per
+> `/codex/05-infrastructure/manifest-consolidator-ssot.md`, `uts-prod-manifest-consolidator-instruments-sports-cron` and
+> `uts-prod-manifest-consolidator-market-data-sports-cron` are two DISTINCT Cloud Scheduler jobs for two DISTINCT
+> buckets. The actually-correct attribution — confirmed by this doc's own Cross-slot note below and independently by
+> `sports_odds_manifest_captured_outranks_blocks_legacy_leak_correction_2026_07_24.md` — is
+> `uts-prod-manifest-consolidator-instruments-sports-cron` (the one that was paused to land the durable fix).
 
 `unified_trading_library/manifest_consolidator.py`'s merge `ORDER BY` (lines ~2582-2588) makes
 `capture_status = 'captured'` **always outrank any non-captured status, regardless of recency**, for the same dedup-key
@@ -185,13 +194,39 @@ rather than shard provenance.
       the duration of the correction write, or a compare-and-retry loop that re-derives + re-applies the intended row
       against the freshest canonical generation rather than a single one-shot CAS attempt) — a tombstone/override
       mechanism is very plausibly unnecessary if the actual bug is a write-time race, not a merge-time tie-break defect.
-- [ ] [CODE] P1. Once the source is isolated, decide + implement either (a) purge/correct the actual stale source so the
-      consolidator has nothing to resurrect from, or (b) extend the captured-outranks tie-break with a proof-gated
+- [x] ✅ [CODE] P1. Once the source is isolated, decide + implement either (a) purge/correct the actual stale source so
+      the consolidator has nothing to resurrect from, or (b) extend the captured-outranks tie-break with a proof-gated
       override mechanism (mirroring `_legacy_guard`) so a verified `record_failed`/`record_empty` correction can survive
-      a consolidation cycle without requiring a paused-cron window every time. (repo: unified-trading-library)
-- [ ] [DATA] P0. Once the fix lands, re-run `reprocess_sports_odds.py --force` for 2025-12-18/12-24/12-31 and verify the
-      manifest read is STABLE across at least 2 consolidator cycles (not just an immediate post-write check) before
-      flipping `sports_closeout_batch1_ao_ready_2026_07_24.md` todo 3. (repo: market-data-processing-service)
+      a consolidation cycle without requiring a paused-cron window every time. (repo: unified-trading-library) —
+      Re-scoped per the DIAG todo's own conclusion (a write-time race, not a tie-break defect): closed the actual TOCTOU
+      race directly, rather than adding a proof-gated override. Root cause: `_write_consolidated`'s CAS write used a
+      fresh `blob.reload()` taken right before the upload as its `if_generation_match` token — a late reload always
+      reflects whatever is CURRENT at that moment, so it trivially matches itself and lets the write through even when
+      an external writer (any direct `ManifestWriter` call or one-off correction script — not just another consolidator
+      cycle) landed a change in the merge's own (90-120s in production) read-to-write window. Fix:
+      `_duckdb_merge_payload`/`_download_canonical_with_generation` now capture the canonical's generation via
+      `download_bytes_with_generation` at the SAME read that produces the merge payload; `_write_consolidated` uses THAT
+      captured value (never a fresh reload) as the CAS token on every attempt including retries — any intervening
+      external write now correctly fails the CAS check and drives the existing re-merge retry loop instead of being
+      silently clobbered. This makes future direct-writer corrections resilient to the live cron by construction,
+      closing exactly the gap slot 4's cross-slot note flagged as a main/operator judgment call — no paused-cron window
+      needed for FUTURE corrections (this doc's own 3 dates were already durably fixed by slot 4's A2 pause-cron
+      approach and don't need re-touching). — **unified-trading-library@14301571** (full `quality-gates.sh` green; 98/98
+      `test_manifest_consolidator.py` + 60/60 `test_manifest_writer_per_vm.py` passing, incl. the existing
+      lost-update-race regression test; 3 consolidator test files updated for the new 4-tuple `_duckdb_merge_payload`
+      return shape). Full details in the sibling issue doc's own todo:
+      `/plans/active/issues/sports_odds_manifest_captured_outranks_blocks_legacy_leak_correction_2026_07_24.md`.
+- [x] ✅ [DATA] P0. Once the fix lands, re-run `reprocess_sports_odds.py --force` for 2025-12-18/12-24/12-31 and verify
+      the manifest read is STABLE across at least 2 consolidator cycles (not just an immediate post-write check) before
+      flipping `sports_closeout_batch1_ao_ready_2026_07_24.md` todo 3. (repo: market-data-processing-service) — Already
+      satisfied: slot 4's A2 correction (paused-cron CAS write) already verified all 3 dates STABLE across >=2 real
+      consolidator cycles (8-min wait, generation advanced from normal cron activity, all 31 rows still
+      `attempted_failed` via both `ManifestWriter.lookup()` and a direct raw-index read) — see
+      `sports_odds_manifest_captured_outranks_blocks_legacy_leak_correction_2026_07_24.md` todo 2. No re-run needed; the
+      manifest already reads correctly for these 3 dates. `sports_closeout_batch1_ao_ready_2026_07_24.md` todo 3 can now
+      be flipped citing that verification. **Not yet independently re-confirmed**: a NEW direct-writer correction
+      surviving >=2 cycles with NO cron pause (proof the CODE fix above works end-to-end in production, not just in unit
+      tests) — deferred to whoever next runs a similar correction, since these 3 dates don't need re-touching.
 
 **Cross-slot note (slot 4, 2026-07-24 21:15 UTC)**: independently landed the durable fix via the codex §519
 paused-consolidator CAS recipe (see

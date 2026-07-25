@@ -201,7 +201,7 @@ history for CeFi/TradFi/Sports):
 | DeFi        |                                                ~12 LST + 4 AMM venues |                 730 |       ~15-20 |                            ~10K |
 | CeFi        |                                              30 coins × 6 perp venues |            **1825** |       ~15-20 | **~125-160K** (2.5× prior 2-yr) |
 | TradFi      | ~10 instruments (ES + crypto-ETF + futures + commodities; **no SPY**) |            **1825** |       ~10-15 |   **~18-27K** (2.5× prior 2-yr) |
-| Sports      |                       ~1000 fixtures/yr × 5 leagues × 4 markets × 5yr | **5×fixture-bound** |          ~10 |    **~400K-1M** (5× prior 2-yr) |
+| Sports      |                       ~1000 fixtures/yr × 5 leagues × 4 markets × 5yr | **5×fixture-bound** |          ~10 |  **~400K-1M** (2.5× prior 2-yr) |
 | Prediction  |                           Polymarket subset (~50 questions/day × 2yr) |                 730 |          ~10 |                         ~30-40K |
 
 **Total backtest scope**: ~580K-1.3M worker-runs across the cutover-window config-grid (CeFi/TradFi at 5yr ×
@@ -271,8 +271,8 @@ These archetypes MUST have a runnable 2-year backtest config-grid by 2026-05-23.
 
 **Both archetypes**:
 
-- **Owner plan**: [`plans/active/defi_master.md`](../../plans/active/defi_master.md) Fork 1 (DeFi master owns the
-  archetype family even though it spans cross-asset — single owner avoids cross-plan ambiguity).
+- **Owner plan**: [`plans/active/defi_master.md`](/plans/epics/defi_master.md) Fork 1 (DeFi master owns the archetype
+  family even though it spans cross-asset — single owner avoids cross-plan ambiguity).
 - **Shared infrastructure**: `paired_price_dispersion` calculator in `features-cross-instrument-service` powers BOTH
   (per defi_master line ~342). Catalog pair specs at UAC
   `unified_api_contracts.internal.architecture_v2.paired_dispersion_catalog`.

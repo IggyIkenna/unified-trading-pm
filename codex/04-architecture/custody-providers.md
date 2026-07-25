@@ -851,4 +851,4 @@ SSOT" invariant + slot 8 audit PB-19 deferred QG ratchet).
 - [Flash Loan Receiver](flash-loan-receiver.md) -- DeFi atomic execution
 - [`../../plans/archive/2026_07/master_to_live_defi_2026_05_23.md`](../../plans/archive/2026_07/master_to_live_defi_2026_05_23.md)
   Group F item 19 — live-trading prereq tracking (CEFFU integration)
-- [`../../plans/active/defi_master.md`](../../plans/active/defi_master.md) Fork 1 — Binance perp hedging-leg ownership
+- [`/plans/epics/defi_master.md`](/plans/epics/defi_master.md) Fork 1 — Binance perp hedging-leg ownership

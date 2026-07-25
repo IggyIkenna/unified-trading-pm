@@ -1,11 +1,11 @@
 ---
 doc_type: issue
 title: >-
-  Silent-wrong-answer class audit — 26 candidate findings across 8 repos, 2 personally confirmed P0s, the rest
+  Silent-wrong-answer class audit — 24 candidate findings across 8 repos, 2 personally confirmed P0s, the rest
   finder-evidenced but pending adversarial verification
 summary: >-
   A 10-lens workshop-style audit for the silent-wrong-answer class (a lookup that cannot fail plus a caller that cannot
-  fail) surfaced 26 distinct candidate findings across strategy-service, features-service, e2e-testing, ml-service,
+  fail) surfaced 24 distinct candidate findings across strategy-service, features-service, e2e-testing, ml-service,
   deployment-service, market-data-processing-service, execution-service, system-integration-tests and UTL. Seven finder
   lenses completed with runtime-executed / object-probed evidence; every adversarial VERIFIER died on a session limit,
   so with two exceptions these are FINDER-EVIDENCED, NOT adversarially verified — treat accordingly. The two exceptions

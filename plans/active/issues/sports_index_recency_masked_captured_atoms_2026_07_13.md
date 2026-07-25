@@ -88,13 +88,10 @@ depends_on: []
       `CASE WHEN capture_status = 'captured' THEN 1 ELSE 0 END DESC` (manifest_consolidator.py:1884); recency unchanged
       among equal-rank rows; degrades to pure recency on legacy frames without `capture_status`; +5 unit tests in
       `tests/unit/test_manifest_writer_per_vm.py`.
-- [ ] [INFRA] P1. Redeploy the `expected-universe-v2-sports` Cloud Run job image with the shipped enumerator guard —
-      until then the 01:30Z nightly keeps emitting season-gate empty rows over captured atoms (the consolidator's
-      captured-outranks guard now protects same-identity groups, but the emission churn + cross-identity masking
-      persists). **Fresh evidence 2026-07-14**: a NEW masked atom appeared post-scan — TEAMS/TFF_FIRST_LEAGUE/2026-07-13
-      (captured row_count=20 by `backfill-teams-61-leagues`, masked by an `EXPECTED_NO_PROVIDER_COVERAGE` empty written
-      2026-07-14T00:04:24Z) — the unguarded image is still emitting over captured atoms nightly; adjudicate it with the
-      same script once the image is redeployed (deliberately NOT stamped 2026-07-14, outside the reviewed verdicts CSV).
+- [x] [INFRA] P1. ~~Redeploy the `expected-universe-v2-sports` Cloud Run job image with the shipped enumerator guard~~ —
+      **SUPERSEDED 2026-07-23** by the "ROOT CAUSE CORRECTED" section below (the actual masking writer is a different
+      job, `uts-prod-instruments-service-sports-fixtures`, not this one) and **RESOLVED 2026-07-24** by the downgrade
+      todo's verification (see below): no redeploy action taken or needed on this job.
 - [ ] [DATA] P3. Sweep other asset groups for the same seeder-over-captured pattern (the enumerate_v2 guard is active
       for every asset_group now via main(); verify the nightly jobs' images pick it up fleet-wide).
 
@@ -197,7 +194,18 @@ masking rows together to apply the tie-break. This is a genuinely live, unmitiga
       (`enumerate_expected_universe.py`'s `captured_set` check), applied to this SEPARATE code path. This is real code
       investigation + a fix + tests, not a redeploy — appropriately scoped as its own session's work, not rushed here.
       Repo: `instruments-service`.
-- [ ] [INFRA] P3. **Downgrade, don't drop, the original "redeploy `expected-universe-v2-sports`" todo** — that image IS
+- [x] [INFRA] P3. **Downgrade, don't drop, the original "redeploy `expected-universe-v2-sports`" todo** — that image IS
       now current (confirmed `:latest` contains `ba306543` as of 2026-07-23T08:07:36Z) and Cloud Run Jobs generally
       re-pull a mutable tag per execution, so no action is likely needed there specifically; keep as a low-priority
-      verification only, not the primary fix.
+      verification only, not the primary fix. — ✅ 2026-07-24 VERIFIED via
+      `gcloud run jobs describe expected-universe-v2-sports --project=central-element-323112 --region=asia-northeast1`:
+      the job's container image is literally
+      `asia-northeast1-docker.pkg.dev/central-element-323112/unified-trading-system/instruments-service:latest` — a
+      mutable `:latest` tag, not pinned to a digest or fixed version. Confirms Cloud Run Jobs re-pull the tag per
+      execution as expected; no redeploy is needed to pick up future image updates. Recent executions
+      (`expected-universe-v2-sports-pb5vj` 2026-07-24T01:30:06Z, `-n6gbs` 2026-07-23T01:30:06Z, `-fvrgf`
+      2026-07-22T01:30:05Z) all completed successfully on the standard 01:30Z nightly cadence. **Resolved, no further
+      action** — this todo and the superseded original redeploy todo above are both closed. The remaining live gap
+      (masking writer is `uts-prod-instruments-service-sports-fixtures`, a different job) is tracked separately as the
+      `[CODE] P1` "extend the guard" todo above, dispatched via
+      `plans/active/sports_satellite_ao_dispatch_batch2_2026_07_24.md`.

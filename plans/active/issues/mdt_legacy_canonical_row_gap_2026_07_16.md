@@ -67,6 +67,19 @@ source:
 
 # MDT legacy↔canonical row gap — why canonical holds 6.7M fewer rows (OR-5b)
 
+> # 🔴 STEP 1-6 (the "MDT RECOVERY EXECUTION PLAN" below) ARE PERMANENTLY BLOCKED — DO NOT DISPATCH 2026-07-25
+>
+> The legacy bucket (`market-data-tick-sports-central-element-323112`) was **manually deleted by the operator on
+> 2026-07-17T17:05:17Z**, BEFORE STEP 1 of this plan ever ran — confirmed **deliberate** (operator ruling, 2026-07-25:
+> "abandon recovery"). The bucket is past its 7-day GCS soft-delete window and is **not recoverable**. Full incident
+> writeup: `mdt_legacy_bucket_deleted_before_recovery_2026_07_25.md`. **There is nothing left to read — STEP 1-6 as
+> written cannot be executed by any future worker, ever.** Do not re-dispatch against this plan's execution steps; every
+> attempt will just re-discover the same 404. This doc's INVESTIGATION findings above (the row-gap analysis, the
+> G1/G2/G3 nesting proof, the derivation map) remain historically correct and are preserved as read-only record — only
+> the EXECUTION plan is dead. **T2.10 (STEP 4, seed purge) is a separate exception — it operates on the still-live
+> manifest INDEX, not the deleted bucket's objects, and may be independently actionable; see that issue doc's follow-up
+> todo.**
+
 > # 🟢 CONFIRMED + EXPLAINED 2026-07-16 by [`sports_canonical_migrated_odds_mistamped_footystats_2026_07_16.md`](./sports_canonical_migrated_odds_mistamped_footystats_2026_07_16.md) — the G1 leg re-ran the merge decision independently and **refused it a second time.**
 >
 > The banner below is **upheld on new, independent evidence**, and the mechanism behind it is now identified:
@@ -588,7 +601,13 @@ owner: `[slot-3·laptop]` (reassigned by operator 2026-07-17; `[main·laptop]` i
 inherited (the `~/tmp-or5b/` scripts live on another host) → recovery is being rebuilt from spec, re-measuring the 32
 gap days independently before any write (standing "never inherit a classification" rule).
 
-**2026-07-17 — MDT RECOVERY EXECUTION PLAN (slot-3, IN PROGRESS — nothing mutated yet). Ground truth re-established this
+**2026-07-25 — 🔴 BLOCKED (slot 2). Legacy bucket manually deleted 2026-07-17T17:05:17Z, confirmed by the operator as a
+DELIBERATE abandonment of this recovery (2026-07-25 ruling, via `AskUserQuestion`). STEP 1-6 below can never execute —
+their read target no longer exists and is past GCS's 7-day soft-delete window. Full incident:
+`mdt_legacy_bucket_deleted_before_recovery_2026_07_25.md`. Do not dispatch against STEP 1-6 again.**
+
+**2026-07-17 — MDT RECOVERY EXECUTION PLAN (slot-3, IN PROGRESS — nothing mutated yet; 🔴 SUPERSEDED 2026-07-25, see
+banner above — the legacy bucket this plan reads from was deleted before any step ran). Ground truth re-established this
 session:**
 
 - **Layout confirmed by direct sampling.** Both buckets: `raw_tick_data/by_date/day=YYYY-MM-DD/…`. LEGACY gap-day
@@ -622,3 +641,14 @@ session:**
   (backed up first). **⚠️ CHECKPOINT WITH OPERATOR BEFORE STEP 6 (irreversible).**
 - Build as a one-off `market-tick-data-service/scripts/` migration with lifecycle markers. Tooling from `~/tmp-or5b/` is
   NOT on this host → rebuilt from this spec.
+
+> **🟥 BLOCKED, 2026-07-25 (slot 7, data_engineering) — STEP 1-5 are unexecutable, do not dispatch against them.** The
+> data source is permanently gone (intent NOT asserted here — that's a separate, still-open operator question). Live-
+> verified before attempting STEP 1: the legacy bucket (`market-data-tick-sports-central-element-323112`) returns 404;
+> Cloud Audit Logs confirm a `storage.buckets.delete` on 2026-07-17T17:05:17Z, BEFORE this recovery plan's own STEP 1
+> ever executed, and past GCS's 7-day soft-delete window (absent from the project's 39 currently soft-deleted buckets).
+> The ~550,062 legacy-only keys this plan was designed to recover are permanently lost; there is nothing left to read.
+> STEP 4's T2.10 seed purge may still be independently actionable (operates on the still-live index, not the deleted
+> bucket) — re-assess separately. Full writeup + the open deliberate-vs-accidental question (operator-authority P0,
+> BLK-op-mdt_legacy_bucket_deleted_before_recovery-001):
+> `issues/mdt_legacy_bucket_deleted_before_recovery_2026_07_25.md`.

@@ -176,6 +176,12 @@ rows but a cross-repo/SSOT-contradiction class finding.
 
 ### 2.4 🟠 K-series data_type casing — P1 CANON
 
+> **⚠️ CORRECTION 2026-07-25 — the UPPER-casing direction below is SUPERSEDED, do not implement it.** The
+> `sports_consolidated_closeout_2026_07_19.md` Track C (K1/K2) reconciliation reversed this decision on 2026-07-23/24:
+> the operator-ruled, FINAL casing target for sports `instrument_type`/`data_type` is **LOWER-case for ALL sports
+> data_types**, not UPPER. Read the mixed-bucket count below as historical measurement only; the fix direction is the
+> opposite of what §2.4/§3 state.
+
 market-data-sports is the ONLY mixed bucket (4 UPPER + 9 lower) vs operator K0-(b) "sports → UPPER everywhere".
 Lower-case needing UPPER: `odds` 20,331 + `odds_movement` 4 + `odds_snapshot` 4 + dead
 `odds_horizon_bucket_{15m,1h,4h,1d}` 1,337 = **20,339 rows, all from ONE legacy artifact**
@@ -212,17 +218,17 @@ years, all leagues, `source=api_football`. Suspicious — PINNACLE/MATCHBOOK cap
 
 ## 3. Codex drift (9 docs)
 
-| doc                                     | verdict          | fix                                                                                    |
-| --------------------------------------- | ---------------- | -------------------------------------------------------------------------------------- |
-| `sports-adapter-dependency-order.md`    | DRIFTED (worst)  | §1/§3 point at frozen `entity=fixtures`; repoint to split; §5 gate unreachable in prod |
-| `sports-data-types-catalog.md`          | DRIFTED          | data_types shown lower-case; rewrite UPPER per K0-(b); state F3 timeframe resolution   |
-| `sports-gcs-path-ssot.md`               | DRIFTED          | add `pipeline_mode=` segment + split-entity rows                                       |
-| `sports-scheduling-and-sharding.md`     | DRIFTED          | §9 diagram cites legacy path; §12 roadmap (13 plans) all done → banner                 |
-| `sports-live-odds-connectivity.md`      | DRIFTED          | §3 describes 13 scrapers deleted 2026-07-08 → retirement banner                        |
-| `sports-integration-plan.md`            | SEVERELY DRIFTED | pre-impl artifact mislabeled current → SUPERSEDED banner                               |
-| `sports-fixtures-lifecycle.md`          | current-ish      | add split-first read note (§ V)                                                        |
-| `sports-data-source-coverage-matrix.md` | mostly current   | add split note to §2.1                                                                 |
-| `sports-batch-live.md`                  | mostly current   | add split note + sync venue list                                                       |
+| doc                                     | verdict          | fix                                                                                                                                                                                                                        |
+| --------------------------------------- | ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `sports-adapter-dependency-order.md`    | DRIFTED (worst)  | §1/§3 point at frozen `entity=fixtures`; repoint to split; §5 gate unreachable in prod                                                                                                                                     |
+| `sports-data-types-catalog.md`          | DRIFTED          | data_types shown lower-case; ~~rewrite UPPER per K0-(b)~~ **SUPERSEDED 2026-07-25 — target is LOWER-case for ALL sports data_types (`sports_consolidated_closeout_2026_07_19.md` Track C)**; state F3 timeframe resolution |
+| `sports-gcs-path-ssot.md`               | DRIFTED          | add `pipeline_mode=` segment + split-entity rows                                                                                                                                                                           |
+| `sports-scheduling-and-sharding.md`     | DRIFTED          | §9 diagram cites legacy path; §12 roadmap (13 plans) all done → banner                                                                                                                                                     |
+| `sports-live-odds-connectivity.md`      | DRIFTED          | §3 describes 13 scrapers deleted 2026-07-08 → retirement banner                                                                                                                                                            |
+| `sports-integration-plan.md`            | SEVERELY DRIFTED | pre-impl artifact mislabeled current → SUPERSEDED banner                                                                                                                                                                   |
+| `sports-fixtures-lifecycle.md`          | current-ish      | add split-first read note (§ V)                                                                                                                                                                                            |
+| `sports-data-source-coverage-matrix.md` | mostly current   | add split note to §2.1                                                                                                                                                                                                     |
+| `sports-batch-live.md`                  | mostly current   | add split note + sync venue list                                                                                                                                                                                           |
 
 Plus `sports_master.md` epic has 5 broken `related:` paths (now under `../archive/`).
 
@@ -263,7 +269,10 @@ ask.
 - **§ U** — 489 in-window (league,season) pairs / 10,869 blank-round rows in leagues **absent from the UAC registry**:
   extend the registry or stop capturing them. "Sports backfilled 100%" can't be asserted until settled.
 - **§ T** — pre-2019 blank-round rows (122,864) are outside the stated 2019→2026 window: confirm whether 2013–2018 is in
-  scope.
+  scope. **RESOLVED — ANSWERED 2026-07-20 (decision 3, `sports_consolidated_closeout_2026_07_19.md` Track V)**: pre-2019
+  (2013–2018) is intentionally OUT OF SCOPE — an operator-decided scope boundary, no further api-football spend. This is
+  a deliberate exclusion, not an unexplained gap: the remaining-blanks arithmetic elsewhere in this audit should be read
+  against the 2019→2026 in-scope window only, with the 122,864 pre-2019 rows excluded by design.
 - **§ 2.3 cross-AG bleed** and **§ 2.5 attempted_failed triplet** — both are notify-class; root-cause before any
   relabel.
 

@@ -68,10 +68,10 @@ canonical slugs via the numeric `api_football_id` / `sport_key`. That machinery 
    (2026-07-11), so start there.
 2. **Root-cause** why a country-prefixed vocabulary exists at all — is it a legacy scraper, a different provider
    adapter, or a mis-normalisation? UNVERIFIED today.
-3. **Fix at the write path** (canonicalise-at-write), then migrate the 9,763 historical objects under the delete-safety
+3. **Fix at the write path** (canonicalise-at-write), then migrate the 9,733 historical objects under the delete-safety
    protocol.
 
-P2 because it is small (9,763 objects) and outside the ML-critical odds-tick path — but it IS live contamination, so it
+P2 because it is small (9,733 objects) and outside the ML-critical odds-tick path — but it IS live contamination, so it
 does not simply age out.
 
 Evidence: relocation workflow `subagents/workflows/wf_664f7ed4-df6/journal.jsonl` (gcs-sizing surveyor + verifier),

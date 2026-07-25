@@ -528,7 +528,7 @@ drift_direction: advance-code
       the futures curve).
     - +8 more P2 — see file for the rest.
   - [`plans/active/data_completion_cefi_2026_07_15.md`](/plans/active/data_completion_cefi_2026_07_15.md) (status:
-    active, 24 open — 18 P0/P1 shown, 6 P2/P3 capped; mostly MIGRATED FROM
+    active, 26 open — 20 P0/P1 (18 shown, 2 folded into the row above), 6 P2/P3 capped; mostly MIGRATED FROM
     `cefi_manifest_canonicalisation_2026_06_01.md`)
     - **[DATA] P0.** ⑧ IS cefi reference-universe gap — root-cause code fix shipped; operational backfill re-run + CLOB
       sub-part remain.
@@ -593,7 +593,9 @@ drift_direction: advance-code
   - [`plans/active/issues/cefi_layer1_denominator_gaps_2026_07_03.md`](/plans/active/issues/cefi_layer1_denominator_gaps_2026_07_03.md)
     — 0 open todos (closed/archived/record-only).
   - [`plans/active/issues/cefi_mtds_writer_raw_symbol_vs_canonical_eu_namespace_mismatch_2026_07_15.md`](/plans/active/issues/cefi_mtds_writer_raw_symbol_vs_canonical_eu_namespace_mismatch_2026_07_15.md)
-    — 0 open todos (closed/archived/record-only).
+    — all todos checked, but `status: open` — 2 operator-gated `--apply` production data-mutation sign-offs still
+    pending (relabel ~2.59M/3.13M raw-symbol Tardis manifest rows to canonical ids; purge ~49,720 stale-shape
+    `expected_unattempted` rows), deliberately never captured as separate checkboxes. NOT closed/archived/record-only.
   - [`plans/active/issues/cefi_onchain_perp_batch_venue_allowlist_gap_2026_07_12.md`](/plans/active/issues/cefi_onchain_perp_batch_venue_allowlist_gap_2026_07_12.md)
     - **[BLOCKED-CREDENTIALS] P1.** Tardis prod API key only has free-tier/preview entitlement for `lighter` exchange
       historical CSVs — needs operator subscription upgrade or an accepted-limitation ruling.

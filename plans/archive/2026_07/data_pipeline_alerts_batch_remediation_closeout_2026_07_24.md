@@ -9,8 +9,8 @@ summary: >-
   misclassification bug, YAHOO_FINANCE de-enumeration, CBOE ohlcv_24h enablement, and the 2026-07-16 baseline follow-up.
   The parent plan retains only its 2 still-genuinely-open todos plus 2 items this doc shows were narratively closed
   later (now flipped [x] with evidence in the parent).
-status: active
-nature: process
+status: complete
+nature: record
 asset_group: [meta]
 stage: [data]
 repos:

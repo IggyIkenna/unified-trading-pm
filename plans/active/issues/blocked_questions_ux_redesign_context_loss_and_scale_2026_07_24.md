@@ -53,11 +53,11 @@ depends_on: []
    ask, and no easy path back to what it was actually looking at when it asked.
 
 This is not hypothetical — it is exactly what happened this session (see
-[`dispatch_sequential_gate_fix_2026_07_24.md`](dispatch_sequential_gate_fix_2026_07_24.md) and the `pre-compact`
-summary): BLK-f09e9ca9 (task `ao_remediation_a_independent_fixes-008`) was answered at 06:38 UTC, but the worker that
-asked it had already skipped the task and gone idle at 06:35 — by the time the answer was enqueued there was no live
-session to receive it, and the operator's only path to more context on what that worker actually saw would have been its
-transcript, not a live re-ask.
+[`/plans/archive/2026_07/ao_remediation_a_independent_fixes_2026_07_23.md`](/plans/archive/2026_07/ao_remediation_a_independent_fixes_2026_07_23.md),
+which shows BLK-f09e9ca9 against todo -008, and the `pre-compact` summary): BLK-f09e9ca9 (task
+`ao_remediation_a_independent_fixes-008`) was answered at 06:38 UTC, but the worker that asked it had already skipped
+the task and gone idle at 06:35 — by the time the answer was enqueued there was no live session to receive it, and the
+operator's only path to more context on what that worker actually saw would have been its transcript, not a live re-ask.
 
 ## Operator's proposed direction
 

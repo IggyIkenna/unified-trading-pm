@@ -100,7 +100,7 @@ deleverage tx via the flash-loan receiver. Operator MUST confirm the auto-deleve
    gcloud storage cat gs://${PROJECT_ID}-events/events/execution-service/$(date -u +%Y-%m-%d)/*/hour=*/*.jsonl \
      | jq -c 'select(.event=="DEFI_AUTO_DELEVERAGE_EXECUTED")' | tail -3
    ```
-   Look for `tx_hash` + `status=success`. If found and HF post-tx is ≥1.20, alert is resolving — proceed to Path 1.
+   Look for `tx_hash` + `status=success`. If found and HF post-tx is ≥1.30, alert is resolving — proceed to Path 1.
 5. **Check correlated codes** — `DEFI_HEALTH_FACTOR_CRITICAL` always co-fires; if `DEFI_WEETH_DEPEG` ALSO fires this is
    a likely LST-collateral event (peg break inflated debt-to-collateral ratio). Search:
    ```bash
@@ -112,7 +112,7 @@ deleverage tx via the flash-loan receiver. Operator MUST confirm the auto-deleve
 
 ### Path 1 — Auto-deleverage succeeded
 
-If diagnosis step 4 returned a successful `DEFI_AUTO_DELEVERAGE_EXECUTED` event AND step 3 shows HF ≥ 1.20, the
+If diagnosis step 4 returned a successful `DEFI_AUTO_DELEVERAGE_EXECUTED` event AND step 3 shows HF ≥ 1.30, the
 flash-loan receiver has unwound the at-risk leg. Action:
 
 ```bash
@@ -124,7 +124,7 @@ gcloud storage cat gs://${PROJECT_ID}-events/events/strategy-service/$(date -u +
   | jq -c 'select(.event=="STRATEGY_HALT_ACKNOWLEDGED")' | tail -3
 ```
 
-**Success:** HF ≥ 1.20 sustained for 5 min, all subscribers ack'd halt, no re-fire of `KILL_SWITCH_*`. Operator may then
+**Success:** HF ≥ 1.30 sustained for 5 min, all subscribers ack'd halt, no re-fire of `KILL_SWITCH_*`. Operator may then
 follow the **resume-from-halt** procedure (below).
 
 ### Path 2 — Manual deleverage (auto failed)
@@ -194,7 +194,7 @@ If FP rate exceeds 5% per 24h sustained, raise via [`threshold-tuning.md`](./thr
 
 Escalate to tier-3 (strategy lead) immediately when ANY of:
 
-- HF < 1.02 (15bps from liquidation; auto-deleverage may not complete in time).
+- HF < 1.02 (200bps from liquidation at HF < 1.0; auto-deleverage may not complete in time).
 - `DEFI_POSITION_LIQUIDATED` co-fires (already liquidated — post-mortem time).
 - Path 1 + 2 both fail.
 - Total at-risk USD > 50k (operator judgment).

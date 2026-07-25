@@ -37,7 +37,7 @@ code_readiness:
 
   cr3_integration_tests:
     status: "not_assessed"
-    criteria: "7 manifest deps require tests in tests/integration/."
+    criteria: "6 manifest deps require tests in tests/integration/."
     manifest_dep_count: 6
     manifest_deps_covered:
       # - unified-trading-library

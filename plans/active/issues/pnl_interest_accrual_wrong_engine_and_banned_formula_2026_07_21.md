@@ -732,5 +732,18 @@ to the whole row-set at the reporting layer, not per-leg.
    scoped with a doc note explaining the split (as-is, a live wrong-import risk for any future cross-cutting
    client-reporting/strategy-service work).
 
-**This investigation does not reopen E1 (parallel session, funding-leg data-source mapping) or E4 (row-set, CONFIRMED).
-E2 remains open pending the ruling above** — do not wire the STAKING leg's unit convention until it lands.</content>
+**This investigation does not reopen E1 (parallel session, funding-leg data-source mapping) or E4 (row-set,
+CONFIRMED).**
+
+**🟡 Timeline note (added on reconciliation-pass):** the STAKING leg's engine-side wiring actually **shipped BEFORE this
+investigation ran** (`strategy-service@e93902d8`, "PROGRESS 2026-07-23 — STAKING leg SHIPPED" above, same date, earlier
+in document order) — the "do not wire the STAKING leg with a single hardcoded unit convention" gate stated earlier in
+this doc (`## Updated gating`) was technically crossed before E2 formally closed. This investigation's own
+recommendation (§ "Smallest correct increment", item 1) **retroactively validates that choice**: keep the engine-side
+stored amount single-canonical-quote-denominated, consistent with E4's ruling — no accrual-formula branching by share
+class inside strategy-service's engine. So **E2 is NOT open against the already-shipped STAKING leg accrual formula** —
+that part is settled, matches what shipped. What remains genuinely open (pending the operator ruling in § "Needs an
+explicit operator ruling" above) is the **reporting-layer dual-unit VIEWING work** (items 2-4 of the "Smallest correct
+increment" list: wiring `ShareClassFxMatrix` to a real rate feed, un-orphaning `convert_settlement_to_share_class`, and
+the (A)-vs-(B) semantics ruling) — additive work that does not require touching the STAKING leg's already-shipped engine
+code.</content>

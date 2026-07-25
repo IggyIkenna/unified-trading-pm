@@ -79,14 +79,15 @@ legitimate, deliberate, better-considered replacement — not a silent drop of t
 
 ## Recommended fix (not yet actioned — operator/plan-owner decision)
 
-1. Verify each of the 6 known cross-chain pool-address collisions (1 CURVE + 5 BALANCER) resolves correctly under Option
-   A end-to-end (catalogue → MTDS → MDPS → features → manifest/data-status).
-2. Reconcile the 2026-07-08 Balancer `@CHAIN` `instrument_id` patch against the 2026-07-18 Option-A ruling — either
-   revert the patch (bare `instrument_id`, rely on `canonical_instrument_id` for disambiguation) or explicitly ratify
-   Balancer as an intentional carve-out and document why.
-3. Fix CURVE's still-bare, still-colliding `instrument_id` (currently the only one of the 6 with zero mitigation).
-4. Update `/codex/02-data/defi-canonical-naming-ssot.md` with the two-id/dual-key POOL model (post-phase codex audit
-   that `defi_pool_id_chain_uniqueness_2026_07_18.md` named but was superseded before completing).
+- [ ] [DATA] P1. Verify each of the 6 known cross-chain pool-address collisions (1 CURVE + 5 BALANCER) resolves
+      correctly under Option A end-to-end (catalogue → MTDS → MDPS → features → manifest/data-status).
+- [ ] [DATA] P1. Reconcile the 2026-07-08 Balancer `@CHAIN` `instrument_id` patch against the 2026-07-18 Option-A ruling
+      — either revert the patch (bare `instrument_id`, rely on `canonical_instrument_id` for disambiguation) or
+      explicitly ratify Balancer as an intentional carve-out and document why.
+- [ ] [DATA] P1. Fix CURVE's still-bare, still-colliding `instrument_id` (currently the only one of the 6 with zero
+      mitigation).
+- [ ] [DOC] P2. Update `/codex/02-data/defi-canonical-naming-ssot.md` with the two-id/dual-key POOL model (post-phase
+      codex audit that `defi_pool_id_chain_uniqueness_2026_07_18.md` named but was superseded before completing).
 
 ## Provenance
 

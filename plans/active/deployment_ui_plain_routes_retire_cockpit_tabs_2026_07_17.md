@@ -8,7 +8,7 @@ summary: >-
   also FIXES a real bug the tab scheme caused: because the cockpit shell owns the URL, embedded tabs cannot own their
   query params, so `DeploymentsContent` abandons the URL for local state when embedded — silently losing filter
   deep-linking.
-status: active
+status: complete
 nature: process
 asset_group: [meta]
 stage: [meta]
@@ -18,7 +18,7 @@ tags: [deployment-ui, routing, url-scheme, refactor, cockpit, deep-link]
 related:
   - /plans/archive/2026_07/deployment_observability_expansion_2026_07_08.md
 created: "2026-07-17"
-last_updated: "2026-07-17"
+last_updated: "2026-07-25"
 parent_epic: observability_master
 assigned_vm: NA
 execution_scope: local-only
@@ -133,7 +133,7 @@ Vitest / Playwright — no Python). Playwright **L2** evidence + a cited regress
       `deployment_observability_expansion_2026_07_08.md`'s `[UI] P3 ✅ KEEP (operator-confirmed 2026-07-11)` decision
       now carries a `⚠️ SUPERSEDED 2026-07-21` note recording that the "alongside the cockpit tab" framing is stale (no
       cockpit tab remains to be "alongside"), while the underlying KEEP-the-route decision still holds. (b) ✅ DONE
-      2026-07-24 — new stub `unified-trading-pm@<pending>`:
+      2026-07-24 — new stub `unified-trading-pm@0409bbb7d`:
       [`/codex/06-coding-standards/ui-routing-convention.md`](/codex/06-coding-standards/ui-routing-convention.md)
       codifies "one URL scheme, plain routes only" + the layout-route-is-optional-not-automatic rule + the
       orphan-audit/testid enforcement mechanics, citing this plan's shipped commit (`deployment-ui@079b29e`) as the

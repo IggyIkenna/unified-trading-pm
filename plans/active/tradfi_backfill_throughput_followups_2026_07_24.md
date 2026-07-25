@@ -74,8 +74,8 @@ source:
       remediation baked default** (`tradfi_backfill_oom_remediation_2026_06_24.md`, e2-highmem-4, verify) +
       **consolidator throughput/backlog monitor** (`consolidator_throughput_backlog_monitor_2026_07_09.md`). (repos:
       deployment-service, market-tick-data-service)
-- [ ] [INFRA] P1. **TradFi has NO working T+1 forward-fill job** (`tradfi_t1_no_working_mtds_job_2026_07_17.md`) — add
-      source-scoped `…-tradfi-databento-t1-recon` Cloud Run job; live coverage erodes daily without it. (repos:
+- [x] ✅ [INFRA] P1. **TradFi has NO working T+1 forward-fill job** (`tradfi_t1_no_working_mtds_job_2026_07_17.md`) —
+      add source-scoped `…-tradfi-databento-t1-recon` Cloud Run job; live coverage erodes daily without it. (repos:
       deployment-service, market-tick-data-service) **INFRA SHIPPED + APPLIED 2026-07-20 — deployment-service@11bed3c;
       execution BLOCKED on a fleet-wide image bug (NOT this job's defect).** Terraform landed + `tofu apply [prod]`
       clean (**2 add / 0 change / 0 destroy**): Cloud Run job
@@ -105,7 +105,19 @@ source:
       5,208,844 rows of the tradfi availability index carry a STRING `schema_version` (new P0 todo above). 3/7 venues
       (ICE/FX/KRX) also still fail on `No module named 'yfinance'`. So the job is PROVEN CAPABLE but not yet
       operationally green. Tick once the un-forced nightly path exits 0 with all 7 venues attempted — i.e. after the
-      `schema_version` P0 and the yfinance P1 land.**
+      `schema_version` P0 and the yfinance P1 land.** **RESOLVED — RE-VERIFIED LIVE 2026-07-25.** Queried the job's
+      execution history directly
+      (`gcloud run jobs executions list     --job=uts-prod-market-tick-data-service-tradfi-databento-t1-recon --region=asia-northeast1     --project=central-element-323112`):
+      the un-forced SCHEDULED nightly invocation (`35 0 * * *` cron) has completed `SUCCEEDED_COUNT=1` for 4 consecutive
+      nights (2026-07-21, 07-22, 07-23, 07-24) plus one in-flight at query time (07-25). Read the full Cloud Logging
+      output for the 2026-07-24T00:35Z execution (`uts-prod-market-tick-data-service-tradfi-databento-t1-recoqwggf`):
+      execution condition `'Execution completed successfully in 19m34.6s.'` (genuine exit 0); pre-flight correctly
+      attempted every venue needing processing (`Pre-flight: 4/7 venues have captured shards for date=2026-07-23`, the
+      other 3 correctly skipped as already-fully-covered — proving the un-forced SKIP path works too, not just force);
+      real parquet rows written + manifest updates for ICE (1 row), FX (11 rows across 11 spot pairs), and KRX (equity
+      `ohlcv_24h`, confirming the yfinance fix holds in production). The `schema_version` and yfinance blockers cited
+      above are independently confirmed fixed elsewhere in this doc and hold live across 4+ consecutive days — the job
+      is operationally green, not just proven-capable.
 - [x] [INFRA] P0. **MTDS image ships a stale unified-api-contracts — ALL MTDS Cloud Run jobs fail at import**
       (`issues/mtds_image_uac_dep_skew_breaks_all_cloud_run_jobs_2026_07_20.md`). **RESOLVED 2026-07-20 —
       market-tick-data-service@21733255 + `Evidence: cloudbuild=316b0733-42e8-4b8e-82ab-4ad8f1695a84` SUCCESS (all 14
@@ -225,14 +237,26 @@ source:
       it only stops the cap applying where it never bounded anything. Regression tests in BOTH repos assert an explicit
       scope survives whole and that tail-of-alphabet instruments are present. **A blind backfill re-run would have
       re-failed on exactly these instruments.** (repos: unified-api-contracts, market-tick-data-service)
-- [ ] [DATA] P1. **Retire the 104,623 residual phantom `attempted_failed` rows.** The live emitter was already fixed for
+- [x] ✅ [DATA] P1. **Retire the 104,623 residual phantom `attempted_failed` rows — market-tick-data-service@ccbac784
+      (PR #712, `worktree-wf_9dc68885-289-4` → `live-defi-rollout`).** The live emitter was already fixed for
       NASDAQ/NYSE (`sentinels.py` → `EXPECTED_SOURCE_DELIVERY_LAG`, operator BLK-d385496b answer B, 2026-06-28); the
       surviving rows are historical residue written by a single CF-11 rebuild run on 2026-07-07 06:39–07:29 UTC
       (`_rebuild_tradfi_cf11.py` `_handle_srz_tradfi_row` reclassifies any SRZ on a trading day to `attempted_failed`,
       converting a correct cross-venue absence — a NYSE-listed ticker on a NASDAQ run — into a phantom failure). They
       also use the BARE `instrument_id` (`AAPL`) vs the canonical `NASDAQ:EQUITY:AAPL-USD` the current enumerator
-      writes, so they double-count the denominator. Route to `EXPECTED_INSTRUMENT_NOT_LISTED` + reclass, and fold the
-      bare-id rows into the in-flight canonical-path migration. (repo: market-tick-data-service)
+      writes, so they double-count the denominator. Shipped `scripts/retire_tradfi_cf11_phantom_srz_2026_07_25.py` + 16
+      regression tests: routes cross-venue absence to `EXPECTED_INSTRUMENT_NOT_LISTED`, same-venue delivery-lag gaps to
+      `EXPECTED_SOURCE_DELIVERY_LAG` (matching the live-emitter fix, never a false "not listed" claim for a ticker that
+      trades there), and drops a bare row whose canonical-id counterpart already exists; instrument type (EQUITY/ETF)
+      resolved via a 9-day instruments-service catalogue sample (SPOT_PAIR excluded as known contamination), 100%
+      resolution/0 conflicts measured. **Live evidence**: a 2026-07-25 02:44 UTC read found 104,338 matching rows
+      (matches this bullet's ~104,623 within normal live-manifest drift); before this tool's own `--apply` could run,
+      two independent fresh re-reads (~03:00/~03:03 UTC, distinct GCS object generations confirming genuine intervening
+      writes — not a caching artifact) found the NASDAQ/NYSE population already at 0, while the CME/CBOE/FX population
+      (a different, out-of-scope defect — futures/options per-contract codes) stayed unchanged at 202,172, i.e.
+      venue-selective precision matching this exact defect scope, not a generic rebuild. Could not identify the specific
+      external actor; the tool ships regardless as the durable, tested, git-tracked fix design and a safe (idempotent,
+      0-candidate no-op) re-run path. (repo: market-tick-data-service)
 - [ ] [DATA] P1. **70% of `captured` cells carry `row_count` = 0/null** →
       `plans/active/issues/tradfi_captured_cells_zero_or_null_row_count_2026_07_20.md` (P1). 1,135,339 of 1,615,859; ALL
       4,266 FX `ohlcv_24h` captured cells are zero. Either row_count is not stamped at the shard atom (coverage numbers

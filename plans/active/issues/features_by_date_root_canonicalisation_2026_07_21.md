@@ -198,3 +198,17 @@ quality-gates run finishes") did **not** match a shipped state:
   `tests/sports/unit/test_feature_versioning.py` — explicitly EXCLUDING the foreign sports Gap-2 / onchain perp-funding
   files listed above — then flip todos 1/2/3/5 with the real sha, then proceed to todos 6/7/8 (real-day proof,
   migration-size check, manifest resync, register/inventory update), none of which have been attempted by anyone yet.
+
+- **2026-07-25 (/plan-reconcile apply_batch_13, re-verification of the above "UNSHIPPED" verdict).** The verdict above
+  was accurate AT THE TIME (2026-07-21) but is now stale: `git log`/`git merge-base --is-ancestor` in the
+  `features-service` clone confirms `57f8b45d` is a REAL commit ("fix(features): R1 features by_date/day= root
+  canonicalisation…", `Quickmerge: agent` trailer), dated 2026-07-22 (the day after the verdict above), and IS an
+  ancestor of `origin/live-defi-rollout`. `git show --stat 57f8b45d` confirms it touches exactly the file set the
+  verdict names, and diffing it shows `delta_one/app/core/feature_writer.py` and `volatility/core/feature_writer.py` now
+  carry the `by_date` prefix. **So todos 1/2/3/5's `[x]` checkmarks + cited sha are CONFIRMED CORRECT with hard evidence
+  — the ship this verdict was waiting for happened the next day.** Todos 6/7/8 (real-day proof, historical migration,
+  manifest resync, cutover-register/inventory update) remain genuinely open and untouched — not affected by this
+  correction. Note: `/codex/02-data/canonical-cutover-register.md` §6a still shows delta_one/volatility as
+  `migration_pending` with the writer fix "NOT YET in force" — that register entry now looks stale too (the writer fix
+  landed 2026-07-22) but updating it is out of scope for this pass (codex changes need dedicated review); flagging it
+  here for whoever picks up todo 8.

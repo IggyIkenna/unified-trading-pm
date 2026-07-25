@@ -354,6 +354,16 @@ BEFORE exit_code → `DP_VM_PREEMPTED` (AUTO_RECOVER, DP-VM-007) → `RelaunchPr
 `force_run_not_replayable` — never silent. `PROGRESS.json` emission was ALREADY fleet-wide (UTL `record_vm_progress` +
 `vm-exec-with-gcs-tee.sh`), which is why only the trigger was missing.
 
+**CORRECTION (2026-07-25):** "ALREADY fleet-wide" is not exceptionless —
+`plans/active/lst_rate_honest_coverage_2026_07_21.md` (2026-07-21/22) documents a concrete production counter-example:
+`launch-mtds-pyth-lst-backfill-vm.sh` does NOT write a `PROGRESS.json` checkpoint (that session's own correction:
+"unlike the newer PROGRESS-checkpoint contract referenced in CLAUDE.md — that's a DIFFERENT, newer launcher family"),
+and the VM preempted after ~10hrs requiring a manual manifest-derived resume rather than an auto-resume via checkpoint.
+Root cause of why this specific launcher lacks coverage despite booting via the shared `setup-data-pipeline-vm.sh` seam
+is not yet diagnosed anywhere in the corpus — flagged here rather than swept into
+`issues/vm_fleet_preemption_autorecovery_gap_2026_07_23.md` (that doc tracks the separate early-shutdown-script
+`PREEMPTED`-signal blind spot, not this checkpoint-emission gap).
+
 **Fix:** `setup-data-pipeline-vm.sh` now installs `uts-preemption-signal.service`, a systemd unit mirroring Google's own
 `google-shutdown-scripts.service`, writing the same blob with the same `preempted=true` gate. Chosen because gcloud
 accepts only ONE metadata `shutdown-script`, so a unit **composes** with the ~10 launchers already emitting it inline

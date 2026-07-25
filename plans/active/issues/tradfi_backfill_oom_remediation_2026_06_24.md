@@ -108,9 +108,13 @@ green to land.
       Cloud Run job (verified: 6 shards relaunched on highmem). Reaped the 6 pre-fix e2-standard-4 OOM-loopers. (Had to
       clear 4 foreign gate-reds from the concurrent tradfi close-out to land: MTDS databento-first test ripple + Yahoo
       method-size [foreign-fixed] + 2 vm_zombie_watchdog noqa placements.) DONE 2026-06-24.
-- [ ] [INFRA] P2. After the next `deployment-service` image rebuild (which bakes the committed e2-highmem-4 default),
-      DROP the runtime `TRADFI_OHLCV_MACHINE` env override on the `uts-prod-tradfi-wave-launcher` Cloud Run job (the
-      override is the stop-gap; the baked default is the durable state). Target repo: `deployment-service`.
+- [x] ✅ [INFRA] P2. After the next `deployment-service` image rebuild (which bakes the committed e2-highmem-4 default),
+      DROP the runtime `TRADFI_OHLCV_MACHINE` env override on the `uts-prod-tradfi-wave-launcher` Cloud Run job —
+      **DONE, confirmed 2026-07-14 (see the P1 RECONCILED-COMPLETE-BY-FLEET entry below) and re-independently-verified
+      live 2026-07-25** via `gcloud run jobs describe uts-prod-tradfi-wave-launcher     --region=asia-northeast1`: job
+      env carries no `TRADFI_OHLCV_MACHINE` var (only
+      PROJECT_ID/DEPLOYMENT_ENV/GCP_PROJECT_ID/CLOUD_PROVIDER/DEPLOYMENT_ENV_SHORT/WORKSPACE_ROOT/WAVE_MAX_CONCURRENT) —
+      fleet runs on the baked `e2-highmem-4` default. Target repo: `deployment-service`.
 - [x] ✅ [TRADFI] P1. **RECONCILED-COMPLETE-BY-FLEET (2026-07-14)** — the always-on wave-launcher fleet IS the
       manifest-verified completion run for this todo; no separate manual "run to completion" pass is needed or
       appropriate (it would just race the standing Cloud Run Job). Verified 2026-07-14 (~18:30Z): - **Machine type —

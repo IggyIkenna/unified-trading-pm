@@ -90,8 +90,8 @@ EPIC stays put (everlasting). ACTIVE PLAN archives on completion. AUDIT DOC arch
 ```
 
 VM orchestrator + worker + review agents work the items continuously per
-[`../active/orchestrator_master.md`](../active/orchestrator_master.md). Ikenna + Harsh continuously feed the loop by
-running audits + spinning new plans/epics from issues identified.
+[`/plans/epics/orchestrator_master.md`](/plans/epics/orchestrator_master.md). Ikenna + Harsh continuously feed the loop
+by running audits + spinning new plans/epics from issues identified.
 
 **Rule**: no orphan active plans. Every file in `plans/active/*.md` declares `parent_epic:` in frontmatter. The
 inventory regenerator flags orphans as review-blocking.
@@ -126,9 +126,11 @@ related_plans:
 **Forbidden on epics**: `deadline:`, `estimate_class:`, `estimate_baseline_ai_days:`, `estimate_calibrated_ai_days:`.
 Epics are everlasting — they have no deadline. AI-day estimation lives on the active plans they reference.
 
-**Deprecated on epics** (2026-05-21): `owner:`, `asset_group:`. These fields are deprecated workspace-wide as part of
-the plan hygiene automation sweep. Remove them from existing epics when touching the file; do not add to new ones.
-`check_frontmatter.sh` flags them as violations.
+**Deprecated on epics** (2026-05-21): `owner:`. This field is deprecated workspace-wide as part of the plan hygiene
+automation sweep. Remove it from existing epics when touching the file; do not add to new ones. `check_frontmatter.sh`
+flags it as a violation. (`asset_group:` was previously listed here too, but `check_frontmatter.sh`'s
+`DEPRECATED_FIELDS` array never actually included it, and every currently-active epic still carries
+`asset_group: [cross-cutting]` in frontmatter unflagged — corrected 2026-07-25, plan-reconcile.)
 
 ## Active plan frontmatter (must declare parent_epic)
 
@@ -215,6 +217,12 @@ Regenerated 2026-07-12 from `epics/*.md` frontmatter per operator ruling (plan-r
 `strategy_and_dart_master_SUPERSEDED_2026_05_21.md`. Tier count also corrected 5→6 in the heading: the table has always
 spanned `L0`–`L5` (six distinct tiers); the pre-existing "5 tiers" phrasing undercounted.
 
+**Caveat (added 2026-07-25, plan-reconcile)**: this "Assigned VM" column is NOT kept in sync with per-epic
+`assigned_vm` frontmatter corrections made after 2026-07-12 (e.g. `escalation_and_disaster_recovery_master` and
+`trading_agent_master` both had `assigned_vm` corrected to `planning` on 2026-07-21) — consistent with the
+epic-owns-VM model already being SUPERSEDED/archival-only per the top banner. Treat this table's VM column as a
+2026-07-12 snapshot, not a live registry.
+
 - [ ] [SCRIPT] P2. Script this regeneration (scripts/plan-hygiene or scripts/docs) so the registry can't drift again —
       wire into the hygiene sweep.
 
@@ -242,7 +250,7 @@ Multiple epics can share a VM if workload is bounded; one epic never spans multi
 | `vm-orchestrator`  | `orchestrator_master`                                                                                                   | Self-managing                                     |
 
 Registry SSOT: [`../../orchestrator_vm_registry.yaml`](../../orchestrator_vm_registry.yaml). Full VM topology spec:
-[`../active/orchestrator_master.md`](../active/orchestrator_master.md).
+[`/plans/epics/orchestrator_master.md`](/plans/epics/orchestrator_master.md).
 
 ## Filename rules
 

@@ -20,7 +20,7 @@ scope: [engineer, admin]
 tags: [sports, fixtures, manifest, data_type-atom, backfill, honest-coverage]
 related:
   [
-    /plans/active/sports_closeout_batch1_ao_ready_2026_07_24.md,
+    /plans/archive/2026_07/sports_closeout_batch1_ao_ready_2026_07_24.md,
     /plans/active/issues/sports_is_index_fixtures_job_direct_write_328k_row_cut_2026_07_15.md,
     /codex/02-data/availability-manifest-and-data-status.md,
   ]
@@ -127,9 +127,9 @@ operator wakes only for plan-unlock): (1) scope-confirm is a worker grep-then-re
 choice is codex-dictated, not open; (3) mechanism = **re-derive both rows from the on-disk
 `FIXTURES_SCHEDULE`/`FIXTURES_OUTCOMES` GCS objects**, extending `migrate_fixtures_split.py` with
 `ManifestWriter.record_captured()` only where the object-split hasn't run. The backfill is now a **dispatchable
-`[DATA] P0` todo** in `/plans/active/sports_closeout_batch1_ao_ready_2026_07_24.md` (SPLIT out of that plan's code todo,
-which is flipped ✅ for the shipped code scope). This issue doc stays the full analysis; the two todos below are
-SUPERSEDED by that plan todo.
+`[DATA] P0` todo** in `/plans/archive/2026_07/sports_closeout_batch1_ao_ready_2026_07_24.md` (SPLIT out of that plan's
+code todo, which is flipped ✅ for the shipped code scope). This issue doc stays the full analysis; the two todos below
+are SUPERSEDED by that plan todo.
 
 ## Pre-flight findings (worker, 2026-07-24) — CORRECTS resolution point (3)
 
@@ -178,10 +178,10 @@ census twice more — once right after the restamp, once after ≥2 consolidator
 ## Todos
 
 - [x] [DATA] P1. ✅ SUPERSEDED (main 2026-07-24) — scope-confirm + convention are resolved above; folded into the
-      dispatchable backfill todo's pre-flight in `/plans/active/sports_closeout_batch1_ao_ready_2026_07_24.md`.
+      dispatchable backfill todo's pre-flight in `/plans/archive/2026_07/sports_closeout_batch1_ao_ready_2026_07_24.md`.
 - [x] [DATA] P1. ✅ SUPERSEDED (main 2026-07-24) — the manifest backfill is scoped + dispatchable as the `[DATA] P0`
-      todo in `/plans/active/sports_closeout_batch1_ao_ready_2026_07_24.md` (main-resolved design; SPOT-VM; census-zero
-      Done-when). Run + verify there.
+      todo in `/plans/archive/2026_07/sports_closeout_batch1_ao_ready_2026_07_24.md` (main-resolved design; SPOT-VM;
+      census-zero Done-when). Run + verify there.
 - [ ] [DATA] P0. Write + run the SIMPLIFIED 1:1 manifest restamp (per the correction above — NOT the 1-to-2 fan-out in
       resolution point 3): a script mirroring
       `market-tick-data-service/scripts/restamp_sports_odds_horizon_bucket_2026_07_22.py`'s exact pattern (snapshot the

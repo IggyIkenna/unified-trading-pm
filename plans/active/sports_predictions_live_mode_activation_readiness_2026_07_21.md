@@ -38,7 +38,7 @@ related:
     plans/active/sports_consolidated_closeout_2026_07_19.md,
   ]
 created: "2026-07-21"
-last_updated: "2026-07-24"
+last_updated: "2026-07-25"
 parent_epic: sports_master
 assigned_vm: NA
 execution_scope: local-only
@@ -67,12 +67,18 @@ drift_direction: advance-code
 > This plan scopes new live MTDS/prediction connector infrastructure for sports/prediction with **zero visibility** into
 > the closeout's active cross-AG `asset_group=prediction` bleed bug (rows meant for `prediction` writing into sports'
 > instruments index) — a real correctness defect in the exact data path this plan's Todo 2/3 would build new live
-> ingestion on top of. The closeout's own 2026-07-23 root-cause sweep fixed and verified the bleed bug
-> (`market-tick-data-service@a7ff45f9`, manifest-bucket root cause `@299ef540`) and separately ruled **GO on live-mode
-> activation — but explicitly gated on confirming that fix is durable, not just verified-once**, before any go-live
-> proceeds. **Do not resolve this conflict unilaterally from this document alone** — check the closeout's current Track
-> sections (Track O / the 2026-07-23 re-triage + decision-record sections) for the latest state before treating either
-> doc's status as final.
+> ingestion on top of. **UPDATE 2026-07-25 (was: "fixed and verified ... ruled GO ... gated on confirming durable" — the
+> durability check has since FAILED, not just pending):** the closeout's 2026-07-23 root-cause sweep initially fixed and
+> verified the bleed bug (`market-tick-data-service@a7ff45f9`, manifest-bucket root cause `@299ef540`), but a 2026-07-24
+> RE-TRIAGE ROUND 3 (`plans/active/issues/sports_plan_and_docs_reconcile_findings_2026_07_24.md:133`) found the exact
+> same 11,727 bleed rows back in the sports instruments index despite the earlier "VERIFY PASSED: 0 remaining" claim —
+> the fix did NOT hold durably. `status` was reverted to `open` in
+> `cross_ag_prediction_rows_bleed_into_sports_instruments_index_2026_07_20.md`, and this plan's go-live pre-req is now a
+> **hard BLOCKER**, not an unconfirmed pre-req — do not proceed past it until ROUND 4 (root-cause the manifest
+> consolidator's reassertion mechanism + ship a durable fix, verified across a real consolidation cycle) lands. **Do not
+> resolve this conflict unilaterally from this document alone** — check the closeout's current Track sections (Track X /
+> the 2026-07-24 re-triage + decision-record sections) for the latest state before treating either doc's status as
+> final.
 
 ## Why this plan exists, and what it is NOT
 

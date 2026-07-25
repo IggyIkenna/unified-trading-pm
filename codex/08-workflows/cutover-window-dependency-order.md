@@ -226,7 +226,7 @@ their plan bodies.
   [`plans/active/manifest_schema_final_gate_2026_05_09.md`](../../plans/active/manifest_schema_final_gate_2026_05_09.md)
 - **Code-freeze cutover sequencing**:
   [`plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md`](../../plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md)
-- **DeFi archetype owner**: [`plans/active/defi_master.md`](../../plans/active/defi_master.md) Fork 1
+- **DeFi archetype owner**: [`plans/active/defi_master.md`](/plans/epics/defi_master.md) Fork 1
 - **ML training**: [`plans/epics/features_and_ml_master.md`](../../plans/epics/features_and_ml_master.md)
 - **Master umbrella**:
   [`plans/archive/2026_07/master_to_live_defi_2026_05_23.md`](../../plans/archive/2026_07/master_to_live_defi_2026_05_23.md)

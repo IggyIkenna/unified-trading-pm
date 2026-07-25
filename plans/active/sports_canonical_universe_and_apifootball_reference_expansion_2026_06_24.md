@@ -166,21 +166,26 @@ satisfies every requirement:
     confirm which the readers use) + dedup — do NOT blind-delete (would break team/venue resolution).
   - Per-source pre-genesis ANOMALIES only (e.g. any footystats parquet before 2019, odds before 2020-06) — targeted
     check + delete/relabel; honest-absence clip already hides them from the denominator.
-- [ ] [DATA] P0. **NICE-TO-HAVE / watch-item: odds-granularity (operator: "only add if needed")** — the odds-API
-      granularity change (10-min → 5-min snapshots ~2024) + odds-types added over time are NOT captured at a
-      per-`(source,data_type,effective-date)` grain today. Add a dated capability entry ONLY IF we find it mislabels
-      coverage (e.g. pre-2024 10-min data read as missing 5-min). Same "add per-league/per-date granularity only on
-      discovery" pattern as the existing registry.
+  - > **🟡 2026-07-25 status**: this bullet's premise is stale — see
+    > `/plans/active/issues/sports_day_all_teams_venues_fold_key_scheme_mismatch_2026_07_25.md`. The `day=all` fold is
+    > not mechanically executable as described (TEAMS has no FLAT layout; the legacy vs. live venue key spaces have zero
+    > overlap) and is now `BLOCKED-OPERATOR-DECISION` in the AO-dispatched copy of this todo
+    > (`sports_satellite_ao_dispatch_batch2_2026_07_24.md`). The per-source genesis dates quoted above are also
+    > superseded by the 2026-07-21 uniform 2020-06-06 floor ruling (`/codex/02-data/sports-2020-06-data-floor.md`), and
+    > the pre-genesis anomaly check is already covered by that doc's tracked phantom-row-prune item — no separate action
+    > needed for part (b).
+- [x] ✅ [DATA] P0. **NICE-TO-HAVE / watch-item: odds-granularity** — unified-api-contracts@a32ceb87. Checked; not
+      confirmed, documented as checked-no-issue (no dated capability entry needed — no code path anywhere computes an
+      expected-snapshot-count from a cadence constant, so the mislabeling this watches for cannot occur today). Full
+      resolution in `sports_satellite_ao_dispatch_batch2_2026_07_24.md`'s matching todo.
 - [x] ✅ [DOCS] P0b-codex. **Fixed `per-asset-group-bucket-layouts.md` 2026-06-24** (PM@6fc561a45) — SPORTS row now
       documents the per-league canonical hive partition + all 4 `SportsLayout` variants + `candidate_parquet_paths`.
       (`sports-adapter-dependency-order.md` still shows `entity=fixtures` shorthand without `league=` — minor, fold into
       the next sports-codex touch.)
-- [ ] [DATA] P0. **2 out-of-universe numeric `league=` dirs** (`14231`/`315`) — fold into the hybrid residual-drop (P2
-      below) or drop now (snapshot-first).
-- [ ] [DATA] P0. **94-league enrichment backfill** — the residual golden-window gap is now GENUINE missing enrichment
-      (XG_SHOTS 0% / XG 13% / PLAYER_STATS 21% / MATCHES 35% / INJURIES 37%), NOT a schema artifact. API-Football
-      fixtures (fast, already 100%) → enrichment for the 94, fix broken, be thorough → re-measure toward 100%. Needs the
-      tarball rebuild (write-gate in image) below first.
+- [x] ✅ [DATA] P0. **2 out-of-universe numeric `league=` dirs** (`14231`/`315`) — dropped now, snapshot-first. Full
+      resolution in `sports_satellite_ao_dispatch_batch2_2026_07_24.md`'s matching todo — instruments-service@2c4fa059.
+- [x] ✅ [DATA] P0. **94-league enrichment backfill** — re-measured + closed. Full resolution + evidence in
+      `sports_satellite_ao_dispatch_batch2_2026_07_24.md`'s matching todo — unified-trading-pm@(this commit).
 - [ ] [CODE] P1. **UAC canonical registry build/refine** — league/cup canonical + ids + is-cup + country + season
       start/end + transfer window; per-source eligibility maps + annual-id-change handling; team/player/fixture
       canonical + mappings. Wire honest-coverage to consume them.

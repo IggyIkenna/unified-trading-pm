@@ -11,7 +11,7 @@ summary: >-
   inline work (disqualifying it from a pure index/hub read) or is already over the 2000L ceiling where umbrella-flagging
   alone cannot help. 14 of 30 are bucket (d) because locked_by=live-defi-rollout is set -- CLAUDE.md/PLAN_FORMAT.md
   require an operator "[unlock-plan]" grant before any of those can be touched.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting, meta]
 stage: [meta]
@@ -40,7 +40,11 @@ depends_on: []
 locked_by:
 locked_since:
 assigned_vm: NA
-resolved_by:
+resolved_by: >-
+  body's own FINAL RESOLUTION 2026-07-24 -- all 30 original + 9 newly-exposed plans closed, check_line_caps.sh green.
+  Re-verified live 2026-07-25: 1 pre-existing violation within the shrinking-ratchet baseline (17), not a regression --
+  new organic growth since 2026-07-24 is normal ongoing hygiene tracked by the ratchet itself, not a reopening of this
+  issue's original 30-plan debt.
 ---
 
 # Plan line-cap remediation — 30-plan triage
@@ -103,7 +107,7 @@ an exemption) is doing real work here — it correctly forces splits on trackers
 
 | #   | Plan                                                             |     Lines |             Todos | Locked            | Bucket | Proposed action (condensed)                                                                                                                                                                                                            |
 | --- | ---------------------------------------------------------------- | --------: | ----------------: | ----------------- | :----: | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1   | `bucket_estate_consolidation_to_sub100_2026_07_13.md`            |      2129 |      21 (15 done) | —                 | **c**  | Fork 6 open mop-up todos → `bucket_estate_consolidation_closeout_2026_07_23.md`; archive parent (history intact)                                                                                                                       |
+| 1   | `bucket_estate_consolidation_to_sub100_2026_07_13.md`            |      2129 |      21 (15 done) | —                 | **c**  | Fork 6 open mop-up todos → `bucket_estate_consolidation_closeout_2026_07_24.md`; archive parent (history intact)                                                                                                                       |
 | 2   | `capability_wizard_and_manifest_2026_06_11.md`                   |      1092 |      67 (65 done) | live-defi-rollout | **d**  | Ask unlock; would-be (a) — 2 residuals, mostly ready to archive                                                                                                                                                                        |
 | 3   | `carry_staked_basis_funding_scan_experiment_2026_06_16.md`       |      1426 |                54 | live-defi-rollout | **d**  | Ask unlock; would-be (c) — 3-way clean split (carry harness / cross-venue reversion research / ensemble productionization)                                                                                                             |
 | 4   | `cefi_consolidated_closeout_2026_07_18.md`                       |      2059 |                27 | —                 | **c**  | Extract 1566-line Progress Log → `cefi_4surface_migration_execution_log_2026_07_18.md`; trim parent to coordination index                                                                                                              |
@@ -161,7 +165,7 @@ them (none carry `locked_by`). Every split proposed is a **clean partition** (in
 
 | Parent                                                   | Proposed children                                                                                                                                                                                                                    | Split type                                                                                                                                               |
 | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `bucket_estate_consolidation_to_sub100_2026_07_13.md`    | `bucket_estate_consolidation_closeout_2026_07_23.md` (6 todos: recon-bucket closeout, cross-plan deletion checkpoint, ml legacy variants, `_KIND_ALIASES` removal, asset-group-parity drift, 3 audit issue-doc closures)             | clean-partition                                                                                                                                          |
+| `bucket_estate_consolidation_to_sub100_2026_07_13.md`    | `bucket_estate_consolidation_closeout_2026_07_24.md` (6 todos: recon-bucket closeout, cross-plan deletion checkpoint, ml legacy variants, `_KIND_ALIASES` removal, asset-group-parity drift, 3 audit issue-doc closures)             | clean-partition                                                                                                                                          |
 | `cefi_consolidated_closeout_2026_07_18.md`               | `cefi_4surface_migration_execution_log_2026_07_18.md` (the entire 1566-line Progress Log, still actively updated — KRAKEN-SPOT apply attempt-3 in flight as of 2026-07-23)                                                           | clean-partition                                                                                                                                          |
 | `data_pipeline_alerts_batch_remediation_2026_07_15.md`   | `data_pipeline_alerts_batch_remediation_closeout_2026_07_16.md` (historical narrative, archive-bound); parent trimmed to 4 items (2 stale-checkbox flips + 2 real opens)                                                             | clean-partition                                                                                                                                          |
 | `data_pipeline_check_mdps_features_2026_07_20.md`        | `candle_canonical_path_migration_execution_2026_07_21.md` (16 todos: the 8-phase candle-canonical-path migration the parent's own text calls "an EPIC, not a cheap migration")                                                       | **depends_on-gated** — parent's backfill-execution todo gets `depends_on: [candle_canonical_path_migration_execution_2026_07_21], gate_on_depends: true` |
@@ -437,6 +441,15 @@ None of these were triaged in the same depth as the original 30 (no per-file buc
 child-plan slugs) — that is real remaining work for a future pass, not done here. `umbrella: true` frontmatter left in
 place on these files (inert now, harmless) rather than stripped from 10 files as an out-of-scope cleanup.
 
+**Row resolved 2026-07-24 — `data_pipeline_alerts_batch_remediation_closeout_2026_07_24.md` (was 1072L in the table
+above).** All 14 todos it carried were already `[x]`, 0 open — it was itself fully-closed history (a closeout/narrative
+child extracted from `data_pipeline_alerts_batch_remediation_2026_07_15.md` earlier the same day), not merely an
+over-cap trim candidate. Archived outright to
+`plans/archive/2026_07/data_pipeline_alerts_batch_remediation_closeout_2026_07_24.md` (frontmatter flipped
+`status: complete` / `nature: record`) rather than partially trimmed — this fully resolves the line-cap violation as a
+side effect since `plans/archive/` is not cap-scanned. Referrers updated: `plans/epics/observability_master.md` (moved
+from the P0 active-plans section to its Archived-plans section, path updated).
+
 **Escalation, 2026-07-24 ~18:30Z — `cefi_consolidated_closeout_2026_07_18.md` is now HARD-BLOCKED for edits, not just
 flagged.** Hit this live, not hypothetically: tried to append a routine Progress Log DELTA to that file (now 1522L, up
 from the 1421L in the table above — normal session growth) and the pre-commit `check_line_caps.sh` hook refused
@@ -449,3 +462,35 @@ honored either, since the child is equally blocked. Worked around it this sessio
 standalone `plans/active/issues/` doc instead (`cefi_chain_drop_root_cause_and_heavy_io_vm_rule_2026_07_24.md`) rather
 than fighting the gate — that is a workaround, not a fix. **Recommends prioritizing this specific pair (parent + child)
 in the next remediation pass**, since it is actively blocking in-flight work, not just carrying debt.
+
+## FINAL RESOLUTION — 2026-07-24 (all 5 remaining HARD violations closed, `check_line_caps.sh` now reports zero)
+
+The 4 remaining rows from the "9 newly-exposed" table (§ above) plus the `cefi_consolidated_closeout_2026_07_18.md`
+escalation are now all resolved. `bash scripts/plan-hygiene/check_line_caps.sh` run live 2026-07-24 (post-fix) returns
+**"✅ check_line_caps: no hard violations"** corpus-wide — every remaining item this doc ever tracked (the original 30 +
+the 9 newly-exposed by the umbrella-exemption removal) is now closed. Each fix followed the SAME verbatim
+extract-to-archive-bound-history-child pattern already proven on rows 1-21 above (`task_template.md` §3 finding J), was
+independently adversarially re-verified against live disk + `git show HEAD:` (not the executing agent's own self-report
+— conservation of every open+done todo checked explicitly), and is pending commit in this same session:
+
+| File                                                                          |   Was |      Now | Resolution                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| ----------------------------------------------------------------------------- | ----: | -------: | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `plans/active/data_pipeline_alerts_batch_remediation_closeout_2026_07_24.md`  | 1072L | archived | Fully-closed history (14/14 done, 0 open) — moved outright to `plans/archive/2026_07/`, not trimmed. Referrer `plans/epics/observability_master.md` updated (P0→Archived-plans section).                                                                                                                                                                                                                                                                                                                                                              |
+| `plans/active/cefi_4surface_migration_execution_log_2026_07_24.md`            | 1635L |     616L | 2-way chunk split (mirrors the `mvp_backfill_defi_onchain_v10_operational_log` precedent): `cefi_4surface_migration_execution_log_history_part1_2026_07_24.md` (2026-07-18→07-20) + `_part2_` (2026-07-21 PRE-COMPACT checkpoint), both 0 open todos. Parent keeps all 7 open todos + the current 2026-07-22/23 state.                                                                                                                                                                                                                                |
+| `plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md` | 1289L |     953L | Single history child (`master_data_canonicalisation_migration_catalogue_history_2026_07_24.md`) carrying the fully-closed 2026-06-11/06-17/06-29 dispatch-wave + audit-verdict sections. All 7 open todos + the Gate-State Board / Sub-plan registry / Master coordination todos sections stay in the parent. `umbrella: true` left in place (inert per the 2026-07-24 ruling below, harmless, matching the precedent set on rows 1-21).                                                                                                              |
+| `plans/active/tradfi_manifest_content_recovery_completion_2026_07_24.md`      | 1633L |     918L | Single history child (`tradfi_manifest_content_recovery_completion_history_2026_07_24.md`) carrying the superseded ticks 1-12/20-21/23-27 + the 2026-07-21 pre-compact checkpoint/lessons + the P0 writer-regression finding (726L). `umbrella: true` removed from frontmatter (file is now genuinely under the flat 1000L cap on its own merits). All 19 open + 6 done todos accounted for.                                                                                                                                                          |
+| `plans/epics/defi_master.md` (epic, 2000L cap)                                | 2052L |    1829L | First-ever epic split — lower-risk than expected: ~1100 lines (roughly lines 345-1483) were already self-marked `— SUPERSEDED 2026-06-20 (history only)` by their own section headers, superseded by the "Workstream routing (restructured 2026-06-20)" section which stays. Verified zero open todos lived in that range before extracting it verbatim to `defi_master_history_2026_07_24.md` (`nature: record`, not itself an epic). All 41 open + 79 done todos, the epic's `doc_type`/identity, and its P0-P3 assigned-plans index are untouched. |
+
+**Conservation, independently verified per file** (adversarial re-check against `git show HEAD:<path>`, not the
+extracting agent's self-report): every open+done todo count before the edit equals the sum across parent+children after
+the edit, for all 5 rows above — zero todos lost. Every claimed "extracted" section header was spot-checked verbatim
+present in its destination child.
+
+**Net effect**: `plans/active/issues/plan_quality_four_line_defense_architecture_2026_07_23.md`'s own line-2 acceptance-
+test todo ("re-run the sports closeout hygiene audit end-to-end... acceptance test for this whole initiative") was gated
+on this doc reaching zero HARD violations — that precondition is now met; the acceptance-test re-run itself is tracked
+there, not here.
+
+**This issue doc is now RESOLVED** — both the original 30-plan triage and the 9-file umbrella-exemption-removal
+follow-up are fully closed, corpus-wide `check_line_caps.sh` is green, and the `--precommit`/full-corpus hard-fail gate
+this doc exists to unblock has no more pre-existing debt standing in its way.

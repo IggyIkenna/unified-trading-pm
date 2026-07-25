@@ -1,0 +1,203 @@
+{
+  "schema_version": 1,
+  "skill": "data-pipeline-reconciliation",
+  "asset_group": "sports",
+  "layer": "raw-tick",
+  "mode": "interactive",
+  "run_at": "2026-07-25T01:15:00Z",
+  "run_date_label": "2026-07-24",
+  "phases_run": ["phase0", "phase1", "phase2"],
+  "tier": "tier1_in_session",
+  "buckets": {
+    "primary": {
+      "kind": "market-data",
+      "asset_group": "sports",
+      "deployment_env": "prd",
+      "resolved_name": "market-data-tick-sports-prd-central-element-323112",
+      "reachable": true,
+      "probe_method": "non-recursive top-level list_blobs(delimiter='/')",
+      "top_level_prefixes": [
+        "_index/",
+        "_legacy_migrated_processed/",
+        "_legacy_migrated_scripts/",
+        "_legacy_migrated_vm_staging/",
+        "_vm_staging/",
+        "processed/",
+        "raw_tick_data/",
+        "scripts/"
+      ]
+    },
+    "cross_reference_only": {
+      "kind": "instruments-store",
+      "asset_group": "sports",
+      "deployment_env": "prd",
+      "resolved_name": "instruments-store-sports-prd-central-element-323112",
+      "reachable": true,
+      "note": "NOT the primary raw-tick bucket for this dispatch; spot-checked only, to test a specific hypothesis about a dual-manifest architecture (see finding F1). Not independently four-surface-reconciled this pass."
+    }
+  },
+  "index_freshness": {
+    "primary_bucket": {
+      "latest_json": {
+        "last_run_at": "2026-07-25T00:57:42.967597+00:00",
+        "success": true,
+        "verdict": "empty",
+        "shards_scanned": 1,
+        "no_op": true
+      },
+      "consolidator_stall_state": { "streak": 0, "baseline_shards": 1 },
+      "lock_held": false,
+      "phantom_audit_latest_json_present": false,
+      "reprobe_audit_latest_json": {
+        "generated_at": "2026-07-14T06:22:53.374113+00:00",
+        "day": "2026-07-14",
+        "new_empties": 0,
+        "disagreements": 0
+      }
+    },
+    "cross_reference_bucket": {
+      "latest_json": {
+        "last_run_at": "2026-07-25T01:10:43.044487+00:00",
+        "success": true,
+        "verdict": "empty",
+        "no_op": true
+      }
+    }
+  },
+  "manifest_summary": {
+    "primary_bucket_total_rows": 465223,
+    "primary_bucket_asset_group_sports_rows": 465223,
+    "genesis_date": "2020-06-01",
+    "max_date": "2026-07-20",
+    "capture_status_distribution": {
+      "captured": 443303,
+      "empty_confirmed": 21920,
+      "attempted_failed": 0,
+      "expected_unattempted": 0
+    },
+    "pipeline_mode_distribution": {
+      "batch_odds_api": { "captured": 275144, "empty_confirmed": 20 },
+      "batch_mdps_odds_horizon_bucket": { "captured": 123642, "empty_confirmed": 652 },
+      "batch_footystats": { "captured": 42027, "empty_confirmed": 449 },
+      "batch_polymarket_clob": { "captured": 0, "empty_confirmed": 20785 },
+      "batch_instruments_service": { "captured": 2490, "empty_confirmed": 0 },
+      "live_odds_api": { "captured": 0, "empty_confirmed": 14 }
+    }
+  },
+  "findings": [
+    {
+      "id": "F1",
+      "type": "orphan_real",
+      "severity": "HIGH",
+      "surfaces_disagreeing": ["S1", "S3"],
+      "asset_group": "sports",
+      "shard_class": "pipeline_mode=batch_odds_api, asset_group=sports, raw_tick_data/",
+      "summary": "market-data-tick-sports-prd's OWN manifest has recorded zero new rows (any pipeline_mode) since date=2026-07-20 while GCS continues to receive real, populated raw-tick objects daily through at least day=2026-07-24 (live-verified). A reused 2026-07-21 whole-corpus orphan sweep (single-walk-exempt) found 20,443 raw_tick_data objects with no covering manifest row in THIS bucket, pipeline_mode=batch_odds_api, spanning 2021-05-16 to 2026-07-20, ~300.6MB.",
+      "detector": "reused _index/audit/orphan_sweep_sports.parquet (generated 2026-07-21T10:13:55Z) + live manifest predicate-pushdown read (this pass) + live GCS delimiter descent (this pass)",
+      "delete_eligible": false,
+      "critical_caveat": "Cross-checked ONE live sample (day=2026-07-24, venue=DRAFTKINGS, league_id=ALLSVENSKAN) against the SIBLING instruments-store-sports-prd manifest: a matching captured row EXISTS there (41 DRAFTKINGS rows that day; 935 total batch_odds_api rows for 2026-07-24 in that manifest). This strongly suggests the underlying data is NOT lost, but that sports' manifest-writer target is routed to instruments-store-sports-prd -- an architectural deviation from every other asset_group's one-manifest-per-market-data-bucket pattern, already partially documented in a pre-existing 2026-07-14 issue. Only ONE shard was cross-checked, not the full 20,443 population.",
+      "related_existing_issues": [
+        "plans/active/issues/sports_odds_capture_pipeline_scheduling_status_unknown_2026_07_23.md",
+        "plans/active/issues/sports_phantom_audits_reference_not_marketdata_2026_07_14.md"
+      ]
+    },
+    {
+      "id": "F2",
+      "type": "non_canonical_axis_value",
+      "severity": "MEDIUM",
+      "surfaces_disagreeing": ["S3"],
+      "asset_group": "sports",
+      "summary": "57,246 of 465,223 manifest rows (12.3%) carry a venue value outside BOTH VENUES_BY_ASSET_GROUP['sports'] (8 entries) AND SPORTS_ODDS_API_ACCEPTED_NONCANONICAL_BOOKMAKERS (20 entries).",
+      "breakdown": {
+        "KALSHI": {
+          "count": 20785,
+          "note": "registered exclusively under VENUES_BY_ASSET_GROUP['prediction'], not sports; paired with source=polymarket_clob (internal source/venue mismatch -- Kalshi and Polymarket are different platforms); ALL rows capture_status=empty_confirmed, row_count=0 (no real data at stake); dates 2020-06-06 to 2026-05-21; likely a sibling/related instance of the actively-tracked cross-AG prediction bleed, in a different bucket with a different row count -- not verified identical"
+        },
+        "SPORT888": {
+          "count": 13997,
+          "note": "looks like a legitimate ODDS_API-fanout bookmaker never added to either registry list"
+        },
+        "UNIBET_UK": { "count": 9423, "note": "distinct from registered UNIBET; same unregistered-fanout pattern" },
+        "LADBROKES_UK": { "count": 8859, "note": "same unregistered-fanout pattern" },
+        "SMARKETS": { "count": 4162, "note": "same unregistered-fanout pattern" },
+        "UNIBET_EU": { "count": 12, "note": "same unregistered-fanout pattern" },
+        "UNKNOWN": { "count": 8, "note": "literal venue='UNKNOWN' sentinel, immaterial volume" }
+      },
+      "detector": "in-session distinct-value census (G1) -- manifest column vs unified_api_contracts.registry.market_data_categories.VENUES_BY_ASSET_GROUP + SPORTS_ODDS_API_ACCEPTED_NONCANONICAL_BOOKMAKERS",
+      "delete_eligible": false,
+      "related_existing_issues": [
+        "plans/active/issues/cross_ag_prediction_rows_bleed_into_sports_instruments_index_2026_07_20.md"
+      ]
+    },
+    {
+      "id": "F3",
+      "type": "codex-doc-accuracy (taxonomy-gap: no closed type for skill-SSOT-vs-reality mismatch)",
+      "severity": "MEDIUM",
+      "surfaces_disagreeing": [],
+      "asset_group": "sports",
+      "summary": "four-surface-reconciliation-procedure.md SS4.2/SS6 and this skill's own SS3d hazard table describe sports raw-tick as having 'no asset_group= key at all' and 'the oracle does NOT cover sports; every sports object lives under sports_reference/'. This is FALSE for the bucket this skill's own Phase-0 resolution step actually targets (market-data-tick-sports-prd, kind='market-data'): that bucket has ZERO objects under sports_reference/ (verified) and its raw-tick estate uses the STANDARD raw_tick_data/by_date/.../asset_group=sports/venue=.../league_id=.../instrument_type=.../data_type=.../ticks.parquet grammar, which the standard oracle DOES cover (0 violations on a 20-object sample, both require_pipeline_mode settings). The sports_reference/ layout is real but lives in a DIFFERENT bucket (instruments-store-sports-{env}, per SPORTS_BUCKET_TEMPLATE in gcs_paths.py) that this skill's raw-tick dispatch never resolves.",
+      "detector": "direct GCS listing + code read of unified_api_contracts/canonical/domain/sports/gcs_paths.py + canonical_path_violations() sample",
+      "delete_eligible": false,
+      "related_existing_issues": ["plans/active/issues/sports_phantom_audits_reference_not_marketdata_2026_07_14.md"],
+      "new_issue_filed": "plans/active/issues/reconciliation_skill_sports_raw_tick_ssot_wrong_bucket_2026_07_24.md"
+    },
+    {
+      "id": "F4",
+      "type": "migration_pending (suppressed per SS6 of canonical-cutover-register.md -- reported for freshness only, not a finding)",
+      "severity": "INFO",
+      "summary": "Sports data_type casing mixed: TRADES (UPPER, 275,136) vs trades (lower, 22,084 -- earlier reading before dedup; canonical register shows K1 target UPPER ruled 2026-07-18, register states K1 'NOT SHIPPED'. UAC code comment (market_data_categories.py, DATA_TYPES_BY_ASSET_GROUP['sports']) says 'TRADES: Canonical uppercase form (K1, mtds@2536b91c, 2026-07-22)' -- suggesting K1 DID ship 2026-07-22, contradicting the register's 'NOT SHIPPED' claim. Small codex-freshness note only; not filed as a separate issue.",
+      "delete_eligible": false
+    }
+  ],
+  "suppressed_exceptions": {
+    "AE-1_sports_blank_pipeline_mode_source": {
+      "applicable": false,
+      "note": "0 blank pipeline_mode/source rows in THIS (market-data-tick-sports) manifest -- AE-1 concerns instruments-store-sports specifically"
+    },
+    "sports_data_type_casing_K0_K1": { "applicable": true, "count_upper": 275136, "count_lower_or_other": 190087 }
+  },
+  "phase2_register_recheck": {
+    "item_4_scripts_in_bucket": {
+      "status": "RE-CONFIRMED PRESENT, unchanged disposition",
+      "objects": [
+        "scripts/fetch_missing_odds.py",
+        "scripts/oddspapi_historical_backfill.py",
+        "scripts/oddspapi_runner.py",
+        "_legacy_migrated_scripts/scripts/..."
+      ]
+    },
+    "item_13_processed_vs_processed_candles": {
+      "status": "RE-CONFIRMED PRESENT, candle-layer concern, out of scope for this raw-tick dispatch"
+    },
+    "new_noncanonical_location_found": false,
+    "register_patch_stanza_needed": false
+  },
+  "delete_suggestions": [],
+  "coverage_gaps": [
+    "instruments-store-sports-prd only spot-checked (2 targeted queries for F1's cross-check hypothesis), not independently four-surface-reconciled this pass -- out of this dispatch's raw-tick/market-data scope",
+    "--layer candles not run (explicitly out of scope per dispatch instructions)",
+    "Tier-2 100%-corpus per-datapoint (G2 id-canonical / G3 schema) validation not dispatched -- Tier-1 only (interactive mode, no VM launched)",
+    "_index/phantom_audit_latest.json not present in market-data-tick-sports-prd -- S3 phantom verdict (captured-row-with-no-object) NOT independently checked this pass, distinct from the orphan_real (object-with-no-row) finding which IS covered",
+    "id-form (G2) canonical-id-builder check not run against build_canonical_instrument_id for sports rows -- only observed raw content format",
+    "Full 465,223-row S1<->S3 join not performed -- only a 20-object oracle sample plus the reused 2026-07-21 whole-corpus orphan sweep",
+    "F1's cross-bucket cross-check verified only ONE shard (day=2026-07-24, venue=DRAFTKINGS, league_id=ALLSVENSKAN) -- not the full 20,443-object orphan population"
+  ],
+  "coverage_formula": {
+    "name": "reachable_coverage = captured / (captured + attempted_failed + expected_unattempted), empty_confirmed EXCLUDED",
+    "source": "honest-coverage-model.md (CK3-certified)",
+    "computed_value_primary_bucket": 1.0,
+    "caveat": "DEGENERATE for this manifest: attempted_failed=0 and expected_unattempted=0 for the entire sports population in market-data-tick-sports-prd, so the formula collapses to captured/captured=100.0%. This number is a LOWER BOUND that is silently blind to the 20,443+ orphan_real objects (F1), which are entirely outside the manifest and therefore invisible to any formula keyed on manifest rows. Do not quote 100% as a health signal without this caveat."
+  },
+  "big_finding_notified_operator": true,
+  "issue_docs_touched": {
+    "new": ["plans/active/issues/reconciliation_skill_sports_raw_tick_ssot_wrong_bucket_2026_07_24.md"],
+    "addenda_appended": [
+      "plans/active/issues/sports_odds_capture_pipeline_scheduling_status_unknown_2026_07_23.md",
+      "plans/active/issues/cross_ag_prediction_rows_bleed_into_sports_instruments_index_2026_07_20.md"
+    ]
+  },
+  "verdict": {
+    "is_100pct_canonical": false,
+    "headline": "Sports raw-tick (market-data-tick-sports-prd) is structurally canonical at the PATH level (oracle: 0 violations on sample) but its OWN manifest has an active, unresolved S3 gap since 2026-07-20 (F1) plus a 12.3%-of-rows venue-vocabulary drift (F2); the skill's own governing codex is measurably wrong about this bucket's layout (F3)."
+  }
+}

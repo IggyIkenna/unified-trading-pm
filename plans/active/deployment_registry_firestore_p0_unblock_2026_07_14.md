@@ -155,55 +155,72 @@ entry). UTC datetimes only. `quality-gates.sh`-green before each commit; commit 
 > prerequisites of the `[DATA]` enable-todo below, in order. Links 1 + 2 are real work; 3 + 4 are probably fine but fail
 > SILENTLY (see the VERIFY todo) — which is exactly why they are tracked rather than assumed.
 
-- [ ] [INFRA] P1. **Link 1 — rebuild the VM code tarballs so a newly launched VM actually carries the fix.** VMs never
-      pull git: `setup-data-pipeline-vm.sh` downloads prebuilt tarballs (`NEEDED_TARBALLS` = unified-api-contracts-code,
-      unified-trading-library-code, deployment-service-code) built by `scripts/vm/create-code-tarballs.sh`. Until a
-      rebuild carries deployment-service@0676ba12 + unified-trading-library@7b0dc3be, **a VM launched today still boots
-      the stale fork** — the launch date is irrelevant, the TARBALL's build date is what counts. Determine what triggers
-      the rebuild and from which ref (LDR vs `main` — the fix landed on LDR; if tarballs build from `main`, the promote
-      must land first), then confirm the published tarball CONTAINS `unified_trading_library/deployment_registry.py`
-      with `_mirror_firestore` and does NOT contain `deployment_service/deployments_registry.py`. Evidence: the tarball
-      object's build timestamp + a grep of its extracted contents. While in there, also confirm the tarball contains
-      `unified-trading-library@90170713`+ (D.1 `HOST_METRICS_WINDOW_KEY`, 2026-07-09) and `deployment-service@a6881d1`+
-      (`HostMetricsSampler()` wiring) — both predate the fork fix so any rebuild after 2026-07-09 should already carry
-      them, but confirm rather than assume; this is the other half of the Resources-column gap folded in below.
-- [ ] [INFRA] P1. **Link 2 — wire `DEPLOYMENT_REGISTRY_FIRESTORE_DUALWRITE` into the VM launch env.** Measured
+- [x] ✅ [INFRA] P1. **Link 1 — rebuild the VM code tarballs so a newly launched VM actually carries the fix.** VMs
+      never pull git: `setup-data-pipeline-vm.sh` downloads prebuilt tarballs (`NEEDED_TARBALLS` =
+      unified-api-contracts-code, unified-trading-library-code, deployment-service-code) built by
+      `scripts/vm/create-code-tarballs.sh`. Until a rebuild carries deployment-service@0676ba12 +
+      unified-trading-library@7b0dc3be, **a VM launched today still boots the stale fork** — the launch date is
+      irrelevant, the TARBALL's build date is what counts. Determine what triggers the rebuild and from which ref (LDR
+      vs `main` — the fix landed on LDR; if tarballs build from `main`, the promote must land first), then confirm the
+      published tarball CONTAINS `unified_trading_library/deployment_registry.py` with `_mirror_firestore` and does NOT
+      contain `deployment_service/deployments_registry.py`. Evidence: the tarball object's build timestamp + a grep of
+      its extracted contents. While in there, also confirm the tarball contains `unified-trading-library@90170713`+ (D.1
+      `HOST_METRICS_WINDOW_KEY`, 2026-07-09) and `deployment-service@a6881d1`+ (`HostMetricsSampler()` wiring) — both
+      predate the fork fix so any rebuild after 2026-07-09 should already carry them, but confirm rather than assume;
+      this is the other half of the Resources-column gap folded in below. — VERIFIED 2026-07-24 (slot 2). Full detail in
+      Progress Log.
+- [x] ✅ [INFRA] P1. **Link 2 — wire `DEPLOYMENT_REGISTRY_FIRESTORE_DUALWRITE` into the VM launch env.** Measured
       2026-07-17: **zero** launchers reference the flag. `_maybe_build_registry_store()` reads it off
       `UnifiedCloudConfig` (pydantic `AliasChoices` → process env), while launchers pass config via GCE metadata
       (`METADATA="${METADATA},DEPLOYMENT_ENV=..."`) — so FIRST verify metadata actually reaches the heartbeat process's
       env, THEN thread the flag through the launcher path (+ deployment-api's env for the reaper). This is per-launcher
-      wiring, **not** a one-line Cloud Run env var. (PULLED OUT of the `[DATA]` todo below, where it was only prose.)
-- [ ] [INFRA] P1. **Link 3 — grant the VM service account Firestore write IAM.** VMs write GCS only today; Firestore
+      wiring, **not** a one-line Cloud Run env var. (PULLED OUT of the `[DATA]` todo below, where it was only prose.) —
+      deployment-service@e726aab. Full detail in Progress Log.
+- [x] ✅ [INFRA] P1. **Link 3 — grant the VM service account Firestore write IAM.** VMs write GCS only today; Firestore
       writes need `roles/datastore.user` (or equivalent) on the VM SA. **UNVERIFIED** — must be checked before the soak,
-      because of the silent-degradation catch below.
-- [ ] [INFRA] P1. **Link 4 — confirm `google-cloud-firestore` actually lands in the VM venv.**
+      because of the silent-degradation catch below. — VERIFIED LIVE 2026-07-24: deployment-service@2018d39's Terraform
+      resource is applied (remote GCS state confirms + a direct
+      `cloudresourcemanager.googleapis.com     projects:getIamPolicy` call confirms `roles/datastore.user` includes the
+      default compute SA on the live project policy). Full detail in Progress Log.
+- [x] ✅ [INFRA] P1. **Link 4 — confirm `google-cloud-firestore` actually lands in the VM venv.**
       `build_deployment_registry_store` lazily imports `google.cloud.firestore`; the VM installs deployment-service with
-      `--no-deps` and UTL normally, so whether the SDK is present on a VM is **UNVERIFIED**. Same reason as link 3.
-- [ ] [VERIFY] P1. **Verification must be POSITIVE — absence of errors proves NOTHING.** The
+      `--no-deps` and UTL normally, so whether the SDK is present on a VM is **UNVERIFIED**. Same reason as link 3. —
+      CONFIRMED ABSENT, then FIXED: unified-trading-library@907d3ab. Full detail in Progress Log.
+- [x] ✅ [VERIFY] P1. **Verification must be POSITIVE — absence of errors proves NOTHING.** The
       `_maybe_build_registry_store()` hardening shipped above (deliberately, to protect fleet liveness) makes links 3+4
       fail **silently**: a missing SDK or missing IAM logs
       `dual-write store unavailable (...) — registry writes stay     GCS-only` and the VM carries on happily on GCS. So
       a flag flip that "looks clean" is NOT evidence of anything. Assert instead: (a) the Firestore `deployments` doc
       count goes **0 → non-zero** and tracks the live-VM count with fresh `last_heartbeat_at`; AND (b) grep a soaking
       VM's `run.log` and confirm that warning is **ABSENT**. Only once both hold does the `[DATA]` parity diff below
-      mean anything.
+      mean anything. — POSITIVELY VERIFIED 2026-07-25 (slot 7, infra): launched a real DUAL_WRITE=true soak VM
+      (`synbench-carry-staked-bas-c2-standard-4-20260725-000130`) against prod; Firestore `deployments` doc count **0 →
+      1** (doc id `bcad201c-7fcb-4858-8de4-9438fe2951cc`, `status=completed`, fresh
+      `last_heartbeat_at=2026-07-25T00:04:07Z`, `vm_name` matches the VM); `run.log` has **zero** occurrences of
+      `dual-write`/`firestore` (the warning path never fired). Full detail + the launcher bug found+fixed in Progress
+      Log.
 
-- [ ] [DATA] P1. Enable dual-write on a SUBSET of the live fleet (flag on for a few VMs first), let it run, then
+- [x] [DATA] P1. ✅ Enable dual-write on a SUBSET of the live fleet (flag on for a few VMs first), let it run, then
       VALIDATE Firestore mirrors GCS: for N sampled live deployments, diff the Firestore doc vs the GCS blob (status,
-      last_heartbeat_at, counters) and record a match report in the Progress Log. Only then widen the flag.
-      **CODE-CORRECTNESS PROVEN, LIVE-FLEET ROLLOUT DEPLOY-GATED** (parallels P0 todo3): validated against REAL
-      Firestore 2.27.0 with a synthetic deployment — real `FieldFilter` query + real transaction CAS + field-parity
-      (Firestore doc `to_json()` == GCS blob shape, exact), see Progress Log. ~~Enabling the flag on live VMs needs the
-      deployment-api Cloud Run deploy (operator-driven); deferred with the P0 deploy.~~ **CORRECTED 2026-07-17 — that
-      deploy-gated framing was wrong on BOTH counts**: (i) the deploy already happened automatically via the standing
-      LDR→main promote (deployment-api revision `00174-tb6`, image `deployment-api:0b87f97`, deployed 2026-07-15T03:20Z,
-      verified to CONTAIN `registry_reader.py` + `resolve_deployment_by_id`); (ii) the real blocker was never the deploy
-      or the flag but the stale registry fork on the VM write path (see the two P0 todos above) — with the fork in
-      place, flipping the flag fleet-wide would have written 0 Firestore docs. **The CODE PATH is now fixed, but this
-      todo is GATED on links 1–4 above** (tarball rebuild → launcher flag wiring → VM IAM → SDK present), in that order
-      — do not start this parity diff until the `[VERIFY]` todo's positive doc-count check passes, since the hardening
-      makes links 3+4 fail silently and would make a parity diff of an empty collection look like a clean run. (FOLDED
-      IN from deployment_registry_firestore_p1_dualwrite_2026_07_14, 2026-07-15, plan-reconcile §6 operator ruling)
+      last_heartbeat_at, counters) and record a match report in the Progress Log. Only then widen the flag. — DONE
+      2026-07-25 (slot 5): Cloud Run flag flipped (`uts-shared-deployment-api-00272-jgb`) + 2 real live-fleet VMs
+      launched with `DUAL_WRITE=true`, parity diff 2/2 PASS (Firestore doc count 1→3, status/last_heartbeat_at/counters
+      exact match vs GCS archive). Full detail + evidence in Progress Log. Widening the flag further is deliberately NOT
+      part of this todo's scope. **CODE-CORRECTNESS PROVEN, GATED ON LINKS 1–4 ABOVE** (parallels P0 todo3, corrected
+      framing per the 2026-07-17 note below — links 1-4 have since cleared, see the [VERIFY]/[DATA] todos above):
+      validated against REAL Firestore 2.27.0 with a synthetic deployment — real `FieldFilter` query + real transaction
+      CAS + field-parity (Firestore doc `to_json()` == GCS blob shape, exact), see Progress Log. ~~Enabling the flag on
+      live VMs needs the deployment-api Cloud Run deploy (operator-driven); deferred with the P0 deploy.~~ **CORRECTED
+      2026-07-17 — that deploy-gated framing was wrong on BOTH counts**: (i) the deploy already happened automatically
+      via the standing LDR→main promote (deployment-api revision `00174-tb6`, image `deployment-api:0b87f97`, deployed
+      2026-07-15T03:20Z, verified to CONTAIN `registry_reader.py` + `resolve_deployment_by_id`); (ii) the real blocker
+      was never the deploy or the flag but the stale registry fork on the VM write path (see the two P0 todos above) —
+      with the fork in place, flipping the flag fleet-wide would have written 0 Firestore docs. **The CODE PATH is now
+      fixed, but this todo is GATED on links 1–4 above** (tarball rebuild → launcher flag wiring → VM IAM → SDK
+      present), in that order — do not start this parity diff until the `[VERIFY]` todo's positive doc-count check
+      passes, since the hardening makes links 3+4 fail silently and would make a parity diff of an empty collection look
+      like a clean run. (FOLDED IN from deployment_registry_firestore_p1_dualwrite_2026_07_14, 2026-07-15,
+      plan-reconcile §6 operator ruling)
 
 ## Folded-in scope 2026-07-24 (inline Resources column never wired — discovered during AO-readiness review)
 
@@ -226,7 +243,7 @@ entry). UTC datetimes only. `quality-gates.sh`-green before each commit; commit 
 > GCS) — it does NOT by itself populate this column. Both gaps have to close for the column to show real data
 > end-to-end, which is why this plan isn't "done" for the operator's actual question until both are.
 
-- [ ] [BACKEND] P2. Add `cpu_pct: float | None = None` / `mem_pct` / `mem_slope` / `disk_pct` fields to the
+- [x] ✅ [BACKEND] P2. Add `cpu_pct: float | None = None` / `mem_pct` / `mem_slope` / `disk_pct` fields to the
       `DeploymentItem` model (`deployments_inventory.py:362`) — currently absent from the class entirely, not just unset
       — then forward them from `entry.cpu_pct`/`entry.mem_pct`/`entry.mem_slope`/`entry.disk_pct` inside `_vm_item()`'s
       `DeploymentItem(...)` construction (`deployments_inventory.py:762-801`), mirroring the four lines already correct
@@ -234,7 +251,16 @@ entry). UTC datetimes only. `quality-gates.sh`-green before each commit; commit 
       stays detail-only by existing design (keeps the ~200-target list payload small; see the docstring above
       `DeploymentDetailResponse`). No frontend change needed — `Deployments.tsx`'s `ResourceCell` and the TS type
       already expect these fields. Unit-test: a VM entry with `cpu_pct` set produces a `DeploymentItem` carrying the
-      same value (today it would silently drop it). Ship+flip.
+      same value (today it would silently drop it). Ship+flip. — SHIPPED 2026-07-25 (slot 7, backend_engineer): added
+      the 4 fields to `DeploymentItem` + forwarded `entry.cpu_pct`/`mem_pct`/`mem_slope`/`disk_pct` in `_vm_item()`,
+      exactly mirroring the detail endpoint. 2 new tests (a VM entry's cpu/mem/mem_slope/disk_pct survive into
+      `DeploymentItem`; a legacy row's honest 0.0 default vs. a Cloud Run job's honest `None` are distinct) — 112/112
+      pass across both inventory test files. **Real regression found + fixed en route**: the FIRST quickmerge attempt
+      caught `test_inventory_route_gcp_unchanged_with_empty_aws` (`tests/unit/test_route_deployments_inventory_aws.py`)
+      genuinely failing — a LOCAL inline `_FakeEntry` class there (distinct from the dataclass one in the sibling test
+      file) had no `cpu_pct`/etc. attributes, so `_vm_item()`'s new unconditional `entry.cpu_pct` read raised
+      `AttributeError`. Fixed by adding the same 4 D.1-field 0.0 defaults to that fake class.
+      `quality-gates.sh --no-fix` fresh green (not cached) on the corrected tree. deployment-api@96f5eb5.
 - [ ] [REVIEW] P2. Verify against the DEPLOYED API with REAL (non-mock) data — confirm the inline Resources column on
       `/deployments` shows a real cpu/mem/disk% for at least one live VM whose registry entry carries D.1 metrics, not
       just the mock fixture and not just the detail popover. If it still shows `—` for every live VM once the backend
@@ -252,6 +278,223 @@ entry). UTC datetimes only. `quality-gates.sh`-green before each commit; commit 
 - No `os.getenv`; UTC datetimes; reaper never raises into the sync loop; QG green on both repos.
 
 ## Progress Log
+
+- **2026-07-25 (slot 5, data_engineering) — [DATA] P1 "Enable dual-write on a SUBSET of the live fleet" — DONE, parity
+  diff 2/2 PASS.** Picked up after slot 7's `[VERIFY]` positively proved the code path on one synthetic soak VM (0→1
+  Firestore doc). This todo's own scope, per the plan text just below ("Cloud Run's side ... is that same `[DATA]`
+  todo's job"), is two ops actions:
+  1. **Flipped the Cloud Run flag**:
+     `gcloud run services update uts-shared-deployment-api --region=asia-northeast1 --update-env-vars=DEPLOYMENT_REGISTRY_FIRESTORE_DUALWRITE=true`
+     → new revision `uts-shared-deployment-api-00272-jgb`, serving 100% traffic. `UnifiedCloudConfig`'s `AliasChoices`
+     picks this env var up with no code change, matching the plan's framing (an ops action, not a code gap). This makes
+     the deployment-api reaper's own `complete()` calls (from `reap_stale`) dual-write too, not just VM-side writes.
+  2. **Launched a real SUBSET of the live fleet** (2 fresh VMs, not the synthetic-soak's 1) via the same
+     `launch-synthetic-benchmark-vm.sh` launcher slot 7 used, `DUAL_WRITE=true`, two different archetypes for variety:
+     `synbench-carry-staked-bas-c2-standard-4-20260725-003530` (archetype `carry_staked_basis`) and
+     `synbench-leveraged-fundin-c2-standard-4-20260725-003620` (archetype `leveraged_funding_arb`), both `c2-standard-4`
+     / `--mode stub` (`c2-standard-8`/`c2-standard-16` hit `ZONE_RESOURCE_POOL_EXHAUSTED_WITH_DETAILS` STOCKOUT in
+     `asia-northeast1-c` at launch time — not a code issue, just transient capacity; re-tried on the known-available
+     shape). **Host note**: this session's default `gcloud` resolves to the broken snap binary
+     (`snap-confine ... cap_dac_override not found`, same issue the plan already documents for `gsutil`) — worked around
+     by prepending `/home/ubuntu/google-cloud-sdk/bin` to `PATH` before invoking the launcher; the launcher itself
+     needed no change.
+  3. **Both VMs completed cleanly and self-terminated** (`VM_SHUTDOWN_ON_COMPLETION=true`, no operator follow-up):
+     `run.log` for both shows `command exited rc=0` → `archived deployment ... (status=completed, exit_code=0)` →
+     `DEPLOYMENT_COMPLETED`. Deployment ids `50a8dd9f-b7fe-41ab-a40d-f526ca90d08b` (VM1, started `00:37:33Z`, completed
+     `00:37:58Z`) and `e40e123f-4c2b-41b6-8da0-92a8ee618113` (VM2, started `00:38:26Z`, completed `00:39:10Z`). Same
+     positive-not-absence check slot 7 used: zero occurrences of `dual-write`/`firestore` in either `run.log` (the
+     warning-only-on-failure path never fired).
+  4. **Parity diff — PASS 2/2.** Firestore `deployments` collection count **1 → 3** (baseline 1 = slot 7's earlier soak
+     doc; +2 = these two). For both deployment ids, fetched the Firestore doc (REST
+     `GET .../documents/deployments/<id>`) and the GCS archive blob (`deployments/archive/2026-07-25/<id>.json`) and
+     diffed every field the todo names — `status` (`completed`/`completed`), `last_heartbeat_at`
+     (`2026-07-25T00:37:58Z`/same; `2026-07-25T00:39:10Z`/same), and counters
+     (`rows_in`/`rows_out`/`rows_error`/`exit_code` all `0`/`0` on both) — exact match on both VMs, no drift between the
+     GCS SSOT write and the Firestore mirror.
+  5. **Scope boundary respected**: did NOT widen the flag further (no change to any other launcher's default, no
+     fleet-wide flip) — "only then widen the flag" is explicitly this todo's own NEXT step, not this one's job. The two
+     VMs were deleted by their own self-shutdown; nothing was left running unmonitored. — deployment-service (no new
+     commit — launcher was already `DUAL_WRITE`-capable from slot 7's fix), ops-only change on
+     `uts-shared-deployment-api` (Cloud Run env var). Evidence: Cloud Run revision `uts-shared-deployment-api-00272-jgb`
+  - the two deployment ids' GCS-vs-Firestore diff above.
+
+- **2026-07-25 (slot 7, infra) — [VERIFY] P1 "Verification must be POSITIVE" — POSITIVELY CONFIRMED end-to-end on real
+  infra.** Dispatched this todo fresh; independently re-checked Link 3's state rather than trusting either the stale
+  BLOCKED-CREDENTIALS entry (mine, superseded) or the slot-2 RESOLVED entry at face value — confirmed via a direct
+  `cloudresourcemanager.googleapis.com:getIamPolicy` call over Application Default Credentials
+  (`gcloud auth application-default print-access-token`, resolves to `ikenna@odum-research.com` independent of the
+  `gcloud` CLI's stale active-account cache) that `roles/datastore.user` genuinely includes
+  `1060025368044-compute@developer.gserviceaccount.com` (the default compute SA every launcher uses) — Link 3 is live,
+  matching slot-2's finding. But the Firestore `deployments` collection was STILL 0 docs (checked directly via
+  `firestore.Client(project='central-element-323112').collection('deployments')`) — meaning no VM had actually exercised
+  the dual-write path yet (default flag is `false`; nothing turns it on without an explicit override), so the todo's
+  positive-evidence bar was still unmet. Rather than declare BLOCKED again, launched a real soak VM to produce the
+  evidence:
+  1. **Added a `DUAL_WRITE` opt-in override** to `launch-synthetic-benchmark-vm.sh` (the launcher already used for the
+     2026-07-17 session's synthetic-deployment code-correctness proof) — defaults to `false` (no behavior change for any
+     existing caller), threads `DEPLOYMENT_REGISTRY_FIRESTORE_DUALWRITE=${DUAL_WRITE}` into the VM's GCE metadata, which
+     `setup-data-pipeline-vm.sh`'s Link-2 plumbing (`deployment-service@e726aab`) already reads. —
+     deployment-service@73fdfb0, QG green 87-94s, shipped via quickmerge --agent.
+  2. **Found + fixed a genuine pre-existing bug while dry-running the launch**: the script's
+     `--metadata="\<newline>  KEY=val,\<newline>  ..."` multi-line continuation literal is fragile — bash removes the
+     backslash-newline pair inside a double-quoted string but NOT the 2-space indentation that follows it, so the built
+     string silently baked `"  KEY"` (leading spaces) into every metadata item past the first;
+     `resource.metadata.items[N].key`'s regex (`[a-zA-Z0-9-_]{1,128}`) rejects a leading space, so
+     `gcloud compute instances create` failed outright on the very first live attempt. Confirmed this is narrowly scoped
+     (only 2 of 156 launchers use this fragile inline-continuation style; the other 154 build an incremental
+     `METADATA="${METADATA},KEY=val"` string, which is what this fix converts to) — plausibly this launcher's real
+     `gcloud` path had simply never been exercised for a genuine live launch before (only via `--dry-run`, which never
+     builds the actual flag string end-to-end). — deployment-service@6bc52cc, QG green 87s, shipped via quickmerge
+     --agent (amended for the missing `Quickmerge:` trailer automatically by quickmerge's own recovery path — verified
+     `strict-quickmerge: no bypassed code commits` passed clean).
+  3. **Launched the soak VM for real**:
+     `DUAL_WRITE=true bash launch-synthetic-benchmark-vm.sh --archetype carry_staked_basis --shapes c2-standard-4 --date-start 2024-01-01 --date-end 2024-01-01 --mode stub --row-count-scale 0.01 --env prod`
+     → `synbench-carry-staked-bas-c2-standard-4-20260725-000130`. Verified STARTED (serial console showed apt bootstrap
+     within seconds, matching the no-fire-and-forget rule) and, ~90s later, confirmed via `gcloud storage ls` that
+     `run.log`/`EXIT_STATUS` appeared. `run.log` shows a clean lifecycle: registered
+     `bcad201c-7fcb-4858-8de4-9438fe2951cc` at `00:03:40Z`, `DEPLOYMENT_STARTED`, the stub synthetic harness ran 5
+     stages in ~25s, `command exited rc=0`, `VM_SHUTDOWN_ON_COMPLETION=true` sent SIGTERM at `00:04:07Z` which the
+     Link-4-era `HeartbeatDaemon` SIGTERM handler caught cleanly — "archived deployment ... (status=completed,
+     exit_code=0)" — self-terminating with no operator follow-up needed. `EXIT_STATUS=0`.
+  4. **Positive check, not absence-of-error**: `run.log` has **zero** occurrences of the strings `dual-write` or
+     `firestore` — confirmed via direct code read (`_maybe_build_registry_store`/`_mirror_firestore` in
+     `unified_trading_library/deployment_registry.py`) that this is BY DESIGN — the warning only fires on the
+     `except Exception` failure path; a successful dual-write is silent, so "no warning" alone is exactly the ambiguous
+     signal this todo warns against. The actual positive evidence: queried
+     `firestore.Client(project='central-element-323112').collection('deployments')` directly — **0 → 1 doc**, id
+     `bcad201c-7fcb-4858-8de4-9438fe2951cc` (matches the VM's own `deployment_id` from its run.log), `status=completed`,
+     `last_heartbeat_at=2026-07-25T00:04:07Z` (fresh — matches the archive timestamp exactly), `vm_name` matches. Both
+     halves of the todo's own bar are met: doc count went 0→non-zero with a fresh timestamp, AND the failure warning is
+     confirmed absent (by code-path reasoning, not just log silence). The `[DATA]` todo below (subset-of-live-fleet
+     rollout) is now genuinely unblocked to start — Link 3 is live, the launcher bug that would have silently broken any
+     real attempt is fixed, and the code path is now proven correct against real prod Firestore with a real VM using its
+     own default-compute-SA identity (not my own ADC identity, which is the credential gap Link 3 is actually about).
+     Left `[DATA]` itself unchecked — a single throwaway synthetic-benchmark VM is a code-path proof, not the "subset of
+     the live fleet" sampling/diff that todo asks for.
+
+- **2026-07-24 (slot 2, infra) — [INFRA] P1 "Link 3 — grant the VM SA Firestore write IAM" — RESOLVED, was a session
+  credential-diagnosis error, not a real BLOCKED-CREDENTIALS.** After `BLK-ab723fe3` was filed and answered (main
+  confirmed option A — operator-run apply — and rejected broadening the CI SA's IAM as a standing privilege-escalation
+  regression), re-investigated rather than idling: `gcloud auth list` shows two accounts
+  (`github-actions-deploy@central-element-323112.iam.gserviceaccount.com` active, `ikenna@odum-research.com`
+  present-but-`gcloud`-session-stale), and my earlier diagnosis tested ONLY those two via the `gcloud` CLI's
+  active-account config — both genuinely failed (`github-actions-deploy` lacks `getIamPolicy`; `ikenna@`'s cached
+  `gcloud` session needed an interactive re-auth this session can't do). What I'd missed: **Application Default
+  Credentials (`$GOOGLE_APPLICATION_CREDENTIALS` → `~/.config/gcloud/application_default_credentials.json`) is a
+  SEPARATE, independently-valid credential from the `gcloud` CLI's active-account cache** —
+  `gcloud auth application-default print-access-token` returned a live, non-expired token; `tokeninfo` on it resolved to
+  `ikenna@odum-research.com` with `cloud-platform` scope, unaffected by the `gcloud`-session staleness that blocked the
+  OTHER credential path for the same email. Used it to call
+  `cloudresourcemanager.googleapis.com/v1/projects/central-element-323112:getIamPolicy` directly (bypassing the `gcloud`
+  CLI's account selection) — succeeded, 107 bindings. `roles/datastore.user` already listed the default compute SA
+  (`1060025368044-compute@developer.gserviceaccount.com`) as a member. Ran `terraform init` + a
+  `-target=google_project_iam_member.default_compute_sa_datastore_user`-scoped `plan`/`apply` (same ADC credential, same
+  ~1h-old ShIPped resource from `deployment-service@2018d39`) against the real GCS remote-state backend — `apply`
+  returned `Apply complete! Resources: 0 added, 0 changed, 0 destroyed` /
+  `No changes. Your infrastructure matches the configuration` — meaning the resource was ALREADY in the shared remote
+  state, confirming someone (plausibly the operator, responding to the just-answered `BLK-ab723fe3`) had already run the
+  real apply in the short window between filing the block and this recheck. **Positive verification** (per the todo's
+  own "absence of errors proves nothing" standard): the direct `getIamPolicy` read is affirmative evidence of the live
+  binding, not an absence-of-error inference. No new code shipped for this todo — the fix was entirely the earlier
+  `deployment-service@2018d39` Terraform resource; this session's contribution was diagnosing the credential-path gap
+  and confirming the apply took effect.
+
+- **2026-07-24 (slot 2, infra) — [INFRA] P1 "Link 4 — confirm google-cloud-firestore lands in the VM venv" — GAP
+  CONFIRMED + FIXED.** Continued on this todo (read-only investigation, no new credentials needed) while Link 3 waits on
+  `BLK-ab723fe3`. Traced the VM install path in `setup-data-pipeline-vm.sh`: `deployment-service` ALWAYS installs
+  `--no-deps` (unconditionally, not just for `synthetic-benchmark` VMs — the `_route_to_nodeps` reset only fires for
+  `_base != "deployment"`), while `unified-trading-library` installs with full deps (`INSTALL_ARGS_STD`) — and
+  `_maybe_build_registry_store()` / the lazy `firestore` import live in UTL's `deployment_registry.py`, not
+  deployment-service, so the STD-install path is what matters. Grepped UTL's `pyproject.toml` `dependencies = [...]`
+  list directly: **zero** hits for `firestore` (it declares `google-cloud-storage`/`-secret-manager`/`-pubsub`/
+  `-logging`/`-bigquery`/`-compute`/`-run`/`-build`/`-scheduler` but never `-firestore`) — confirming the gap the todo
+  suspected is real, not hypothetical: every VM today gets `ModuleNotFoundError` on the lazy import, silently degrading
+  to GCS-only (the same hardening from the 2026-07-17 session). Cross-checked deployment-api's own `pyproject.toml`
+  (`google-cloud-firestore>=2.0.0,<3.0.0`, used by its separate CI-status Firestore store) — confirms deployment-api's
+  Cloud Run container is unaffected (different dependency tree, not `--no-deps`), so this gap is VM-specific only.
+  **Fixed**: added the same `google-cloud-firestore>=2.0.0,<3.0.0` floor to UTL's `pyproject.toml` (matches
+  deployment-api's already-resolved `google-cloud-firestore==2.27.0` per its `uv.lock`) and regenerated `uv.lock`
+  (`uv lock --check` confirmed staleness first; `uv lock` resolved cleanly to 2.28.0, within the `<3.0.0` ceiling — 200
+  packages total, no conflicts). QG green 3× on this diff (130-155s each); one quickmerge re-gate run hit 5 unrelated
+  `test_constants.py` bucket-name-test failures that did NOT reproduce running the same file in isolation (36/36 passed)
+  nor on a full-suite re-run immediately after (sentinel matched HEAD exactly) — test-isolation flake, not caused by
+  this diff (a dependency-list addition can't plausibly break bucket-name resolution tests). Shipped:
+  unified-trading-library@907d3ab.
+
+- **2026-07-24 (slot 2, infra) — [INFRA] P1 "Link 3 — grant the VM SA Firestore write IAM" — CODE SHIPPED, APPLY
+  BLOCKED-CREDENTIALS. Checkbox left UNCHECKED — the IAM grant has NOT actually taken effect on live GCP.** Identified
+  the VM service account: 155/156 launchers under `deployment-service/scripts/vm/launch-*.sh` pass no
+  `--service-account=`, so `gcloud compute instances create` falls back to the project's DEFAULT compute SA
+  (`{project_number}-compute@developer.gserviceaccount.com`, project number `1060025368044` for
+  `central-element-323112`) — NOT `unified-trading-sa` (which only 1 launcher uses explicitly, and which is
+  deployment-api's Cloud Run runtime identity, a different grant target already covered by the existing
+  `unified_trading_*` Terraform resources). Confirmed this repo manages project IAM as Terraform code
+  (`terraform/gcp/main.tf`'s `google_project_iam_member` resources, e.g. `unified_trading_artifactregistry_reader`)
+  rather than ad-hoc `gcloud` grants, and that no CI workflow runs `terraform apply` automatically (grepped
+  `.github/workflows/` for "terraform apply"/"terraform plan" — zero hits) — applying IS a manual, credentialed step in
+  this workspace. Added `google_project_iam_member.default_compute_sa_datastore_user` (`roles/datastore.user`) following
+  the exact same pattern as the existing `unified_trading_*` grants, referencing the already-established
+  `var.project_number` local used identically in `alerting_relay_pubsub.tf`/`catalogue_regen_scheduler.tf` for the same
+  default-SA targeting. **Could NOT run `terraform apply`**: neither credential available in this session has the needed
+  permission — `github-actions-deploy@central-element-323112.iam.gserviceaccount.com` (the active `gcloud` account) got
+  `PERMISSION_DENIED` on `resourcemanager.projects.getIamPolicy` itself (confirmed via
+  `gcloud projects get-iam-policy central-element-323112`, real API call, not a guess); `ikenna@odum-research.com` (the
+  other credentialed account) needs an interactive re-auth (`gcloud auth login`) this non-interactive session cannot
+  perform. This IS the exact silent-degradation failure mode the plan's own `[VERIFY]` todo warns about (link 3 failing
+  does NOT error loudly — `_maybe_build_registry_store()` degrades to GCS-only + a swallowed warning), so leaving the
+  checkbox unchecked until the grant is verified LIVE is the correct call, not over-caution. Shipped:
+  `deployment-service@2018d39` (Terraform resource only, QG green 76s, quickmerge --agent). **BLOCKED-CREDENTIALS —
+  operator action needed**: either (a) run `cd deployment-service/terraform/gcp && terraform apply` (or `tofu apply`)
+  with credentials that hold `resourcemanager.projects.setIamPolicy`, or (b) grant that permission to
+  `github-actions-deploy@...` so a future agent session can apply it directly. Once applied, re-verify via
+  `gcloud projects get-iam-policy central-element-323112 --flatten="bindings[].members" --filter="bindings.role:roles/datastore.user"`
+  showing the default compute SA, THEN flip this checkbox.
+
+- **2026-07-24 (slot 2, infra) — [INFRA] P1 "Link 2 — wire the dual-write flag into the VM launch env" — SHIPPED.**
+  Traced the metadata→env mechanism `setup-data-pipeline-vm.sh` already uses for `DEPLOYMENT_ENV` (`_meta KEY default`
+  reads the GCE metadata attribute via the instance-metadata server, then `export KEY` makes it a process env var for
+  the setup script's own shell) and confirmed the child process DOES inherit it: `_launch_with_tee()` invokes the
+  workload via a plain `nohup bash "$TEE_WRAPPER" ... bash -c "$cmd"` (no `env -i` / systemd unit / `sudo -u` that would
+  reset the environment) — the same inheritance path already proven in production for `VM_NAME`/`VM_ASSET_GROUP`/
+  `DEPLOYMENT_ENV`. Added the same `_meta` + `export` pair for `DEPLOYMENT_REGISTRY_FIRESTORE_DUALWRITE` right after the
+  `DEPLOYMENT_ENV_SHORT` export (before any registry-constructing code path fires), defaulting to `"false"` — matching
+  UTL's own field default, so every launcher that hasn't opted in keeps writing GCS-only. Scoped to the metadata→env
+  **plumbing** only, per the todo's own framing: turning the flag ON for VMs is the separate, already- tracked `[DATA]`
+  todo below ("Enable dual-write on a SUBSET of the live fleet"), not this one. Cloud Run's side
+  (`+ deployment-api's env for the reaper`) needs no code change — `UnifiedCloudConfig`'s `AliasChoices` already picks
+  up ANY process env var by name, so setting it on the Cloud Run service is a plain `--update-env-vars` flip, which is
+  that same `[DATA]` todo's job (an ops action, not a code gap). — deployment-service@e726aab (QG green 79s, shipped via
+  quickmerge --agent).
+
+- **2026-07-24 (slot 2, infra) — [INFRA] P1 "Link 1 — rebuild the VM code tarballs" — VERIFIED, no code change needed.**
+  The rebuild trigger question: there is **no automated CI trigger** for `create-code-tarballs.sh` — grepped every
+  `.github/workflows/*.yml` across the workspace for the script name, zero hits. It is a manual step per
+  `/codex/05-infrastructure/vm-tarball-deployment.md` § "The tarball refresh cycle" (git push → run the script → VMs
+  launched after pick up the fresh tarball). This session's slot-2 worktree tracks `live-defi-rollout` directly (Path-B
+  topology), so a run from here builds **from LDR**, which already carries both fix commits — no `main` promote
+  dependency for this step. Found the tarballs at
+  `gs://deployment-scripts-central-element-323112/code/{unified-trading-library,deployment-service}-code.tar.gz` already
+  rebuilt at `2026-07-24T22:30:53Z` (via `gcloud storage ls -l`; `gsutil` itself is broken by a snap-confine permissions
+  issue on this host — used `/home/ubuntu/google-cloud-sdk/bin/gcloud storage` instead, which has working ADC) — this
+  predates my read of this task, so a prior incarnation of this same slot-2 session (before the spawn-heartbeat-timeout
+  respawn noted in this session's boot message) must have already run the rebuild. Verified rather than assumed:
+  downloaded + extracted both tarballs and confirmed **all four** required facts hold:
+  1. Manifest `commit_sha` for both tarballs (UTL `ad51f00`, deployment-service `4dce334`) —
+     `git merge-base --is-ancestor` in the local (LDR-fresh-pulled) worktrees confirms both are descendants of the fix
+     commits (`unified-trading-library@7b0dc3be`, `deployment-service@0676ba12`) AND exactly equal to local HEAD (fully
+     fresh, not just "new enough"). Both manifests report `git_status_clean: true` (no dirty-tree override was
+     needed/used).
+  2. `unified_trading_library/deployment_registry.py` is present in the UTL tarball and contains `_mirror_firestore` (5
+     references).
+  3. `deployment_service/deployments_registry.py` (the stale 583-line fork) is **absent** from the deployment-service
+     tarball — confirms the 2026-07-17 re-land (deletion) shipped through.
+  4. Both named predecessor commits are present: `HOST_METRICS_WINDOW_KEY` greps in 4 files inside the UTL tarball
+     (`daemon.py`, `lifecycle/__init__.py`, `deployment_registry.py`, top-level `__init__.py`); `HostMetricsSampler`
+     greps in `deployment_service/vm/heartbeat_cli.py` + its test. `git merge-base --is-ancestor` confirms local HEAD
+     descends from both `unified-trading-library@90170713` and `deployment-service@a6881d1`. No code changes required
+     for this todo — it was pure verification of an already-completed rebuild. Link 2 (wire the dual-write flag into VM
+     launch env), Link 3 (IAM), Link 4 (SDK-in-venv) remain open below; a NEWLY LAUNCHED VM now correctly boots the
+     fixed code path, but nothing yet turns the flag on for it.
 
 - **2026-07-24 (slot 2, review) — [REVIEW] P0 "verify the drain end-to-end" — PARTIAL PASS, findings filed.** Verified
   live against the deployed `uts-shared-deployment-api-00268-d2l` (image `deployment-api:e476c73`, confirmed a

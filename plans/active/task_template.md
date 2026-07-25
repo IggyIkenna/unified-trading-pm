@@ -139,9 +139,8 @@ ingested). Use for operator-only work, trackers, design docs, and dispatcher-sur
 - **Delete-risk tagging must be consistent within one plan** _(finding F: one plan had a prod-GCS-deleting todo tagged
   plainly while a sibling delete todo in the same doc was `[OPERATOR]` + cited the delete-safety protocol — reads as an
   oversight, not a decision)._ Any todo that deletes/overwrites prod data (GCS objects, manifest rows, DB rows): tag
-  `[OPERATOR]` and cite `/codex/05-infrastructure/gcs-and-manifest-delete-safety-protocol.md` UNLESS you state
-  explicitly why this specific delete is lower-risk (e.g. genuinely soft-delete/reversible) — silence reads as an
-  oversight, not a ruling.
+  `[OPERATOR]` and cite `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` UNLESS you state explicitly why this
+  specific delete is lower-risk (e.g. genuinely soft-delete/reversible) — silence reads as an oversight, not a ruling.
 - **State the definition-of-done** _(finding G: several todos stated the problem/goal but not what evidence proves it's
   done — e.g. "wire the dependency gate for real" with no acceptance check)._ End each todo (or its first continuation
   line) with the concrete evidence a done-claim must cite — a passing check, a specific query returning zero rows, a
@@ -208,6 +207,12 @@ ingested). Use for operator-only work, trackers, design docs, and dispatcher-sur
   Before shipping a paragraph that states a rule/invariant/formula, re-derive it against any example or formula the SAME
   doc already shows and confirm they agree; re-read the sentence once as a skeptic looking for the word that contradicts
   the clause right before it, not just for typos.
+- **Before writing a recovery/backfill script, live-probe that the data source still exists** _(finding N, 2026-07-25:
+  the worker on `sports_satellite_ao_dispatch_batch2-033` organically checked that the source GCS bucket was still
+  reachable before writing STEP 1's script rather than trusting the plan's stale-as-of-authoring premise — the plan it
+  was executing had tracked ~550,062 rows as recoverable for 8 days after the bucket had actually been deleted;
+  `recovery_plan_source_liveness_probe_gap_2026_07_25.md`)._ A recovery/backfill todo's first step should confirm the
+  named source (bucket/table/API) is still live, not assume the plan's authoring-time premise still holds.
 
 ---
 
@@ -295,6 +300,21 @@ ingested). Use for operator-only work, trackers, design docs, and dispatcher-sur
   operator DIRECTLY asks for Fable (it is for the hardest / longest-running interactive work — overkill for routine
   dispatch). Effort: Haiku has NO effort levels (thinking on/off only); sonnet/opus/fable support `--effort` low→max.
   _[ROLLING OUT: fable spawn + per-model effort.]_
+- **Every AO-dispatched plan needs a gated finalize plan (operator ruling 2026-07-24).** Alongside any
+  `assigned_vm: planning` plan, author a companion `<plan-slug>_finalize_*.md` (`depends_on: [<plan-slug>]` +
+  `gate_on_depends: true` + `sequential: true`) whose job is: (1) reconcile every completed todo's evidence back into
+  its TRUE source doc(s) — either the plan's own checkboxes if self-contained, or every named source doc's corresponding
+  checkbox if the plan was a batch-style extraction from other docs (do not trust a source doc's own copy of the
+  evidence line — re-verify the cited commit exists); (2) re-check any deferred/excluded-at-authoring-time follow-up
+  item to see whether its gate (a sibling todo landing, a human/operator decision) has since cleared, and spin it into a
+  new tracked todo/plan if so; (3) run the standard 6-step archival ritual on the now-fully-done plan, including the
+  corpus-wide referrer-path fixup. This is what closes the loop — without it, a batch extraction plan ships its own
+  todos but leaves every source doc's checkbox stale and the plan itself never archives. Precedent:
+  `sports_closeout_batch1_ao_ready_2026_07_24.md` / `sports_closeout_batch1_finalize_2026_07_24.md`,
+  `sports_satellite_ao_dispatch_batch2_2026_07_24.md` / `sports_satellite_ao_dispatch_batch2_finalize_2026_07_24.md`.
+  Skip only for a plan that IS ITSELF already a finalize plan (no infinite regress) or a genuinely single-todo plan
+  where archival is trivial enough to fold into that one todo's own done-when. Enforced (ratchet-mode, warn-only, wired
+  into `quality-gates.sh`) by `scripts/quality_gates/check_finalize_plan_coverage.py`.
 - **NEVER hand-edit `backlog.yaml`.** Author plans; the backend derives the backlog.
 
 ---

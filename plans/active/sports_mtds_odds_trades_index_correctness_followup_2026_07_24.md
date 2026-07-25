@@ -116,6 +116,18 @@ source:
 > investigation and gates the MDT-bucket delete. A merged-index purge alone is a **false-progress trap**. _(Not executed
 > — read-only measurement; zero objects mutated.)_
 
+> **⚠️ POSSIBLY MOOT (flagged 2026-07-25, NOT independently re-verified — re-query before dispatch):**
+> `issues/mtds_sports_api_football_wrong_source_reaccumulated_post_wipe_2026_07_22.md` documents a CAS-safe wipe
+> (`market-tick-data-service@e9d9dec0`, executed 2026-07-23,
+> `scripts/sports/wipe_api_football_sports_manifest_2026_07_23.py`) that removed **ALL 1,266,874** `source=api_football`
+> rows from this exact `market-data-tick-sports-prd` manifest (filtered on `source` alone, VERIFY PASSED 0 remaining) —
+> this necessarily includes T2.10's `api_football × trades` subset. Before executing T2.10, re-query the current
+> manifest for `source=api_football AND data_type=trades`; if 0 remain, close T2.10 citing that wipe instead of
+> re-running the purge. **Caveat carried forward from the SLOT-3 finding above**: the wipe doc's evidence describes the
+> merged/index-level state — confirm the `_legacy_seed.parquet` shard specifically was also covered (not just the merged
+> index) before declaring this fully resolved, since a seed-only respawn is exactly the failure mode SLOT-3 warned
+> about.
+
 ## Sibling plan
 
 Forked alongside

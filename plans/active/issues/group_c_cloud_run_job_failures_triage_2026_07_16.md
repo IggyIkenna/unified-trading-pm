@@ -71,7 +71,9 @@ source:
   "utl_uac_skew_fleet_audit_2026_07_15.md § 'SEPARATE operational findings' #2 (Group-C) — operator-directed production
   job-failure investigation under /autonomous, 2026-07-16"
 assigned_vm: NA
-resolved_by: "market-tick-data-service@205b7e3e (partial — fast/cefi-t1-recon ImportError only)"
+resolved_by:
+  "market-tick-data-service@205b7e3e (partial — fast/cefi-t1-recon ImportError only); unified-trading-library@3485c4d0 +
+  market-tick-data-service@b8365c9d (Cluster 5 — batch-mode date-default gap)"
 locked_by:
 execution_scope: local-only
 model_tier: opus-required
@@ -266,12 +268,12 @@ that this triage shouldn't assume is wrong everywhere; (2) if a default is corre
 into the BATCH branch; (3) regression-test against every batch-mode service in the fleet, not just
 MTDS/strategy-service, since `_adapter.py` is shared UTL code.
 
-- [ ] [INFRA] P1. Decide + implement a default-to-yesterday date bridge for MTDS's batch CLI (mirroring
-      `market-data-processing-service/cli/main.py:190-192`'s precedent almost exactly), OR fix it once in shared
-      `unified_trading_library/service_framework/_adapter.py::_build_io()`'s BATCH branch (benefits every consumer that
-      lacks its own bridge, but needs confirming no batch consumer relies on explicit-dates-only as deliberate behavior)
-      — needs an owner decision on which of the two directions before coding. Repo: market-tick-data-service (option a)
-      or unified-trading-library (option b).
+- [x] ✅ [INFRA] P1. Decide + implement a default-to-yesterday date bridge for MTDS's batch CLI — **FIXED 2026-07-16,
+      shared root cause** (option b: `unified_trading_library/service_framework/_adapter.py::_build_io()`'s BATCH branch
+      now defaults omitted dates to yesterday UTC). Evidence: `unified-trading-library@3485c4d0` (verified ancestor of
+      `origin/live-defi-rollout`), propagated via `market-tick-data-service@b8365c9d` (base-image bump, also verified
+      ancestor). See "Cluster 5 FIXED 2026-07-16" below — unblocks the 11 DeFi daily-batch collectors + MTDS
+      `*-t1-recon` jobs.
 - [x] [OPS] P2. Once Cluster 1's ImportError fix landed, checked whether `fast-t1-recon` also hits this date bug —
       **CONFIRMED YES** via a real re-run (`uts-prod-market-tick-data-service-fast-t1-recon-tmmw8`, 2026-07-16 06:10
       UTC): bootstraps fully past the (now-fixed) import point, then hits the identical `Invalid date format ''` crash.

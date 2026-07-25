@@ -387,5 +387,8 @@ backfill invocation (no VM needed — approximately 2,340 lightweight RPC calls,
 the production cron itself is confirmed healthy, so the backfill and the ongoing cron converge on the same code path
 rather than diverging again.
 
-**Status**: this section resolves the 6-venue subset; the doc's overall `status` stays `open` pending the 5-venue
-follow-up and the backfill.
+**Status**: this section resolves the 6-venue subset AND the 5-venue follow-up (the 5 venues' underlying capture defects
+are now fixed and manually-verified live, per above). The doc's overall `status` stays `open` for two precisely narrower
+reasons only: (1) the 90-day backfill for the 6 shipped venues has not yet run (see above), and (2) the doc's own core
+question — whether `phase=="pipeline"` venues count toward the `defi` `completeness_pct` denominator — remains an
+unresolved operator decision.

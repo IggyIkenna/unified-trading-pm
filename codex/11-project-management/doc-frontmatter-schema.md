@@ -39,8 +39,8 @@ code_refs: []
 > **complete**: the live corpus reached **zero violations (HARD=0 SOFT=0, 1,298 docs) on 2026-07-04** and the single
 > comprehensive blocking gate is live — `scripts/plan-hygiene/check_frontmatter_schema.py` calls
 > `docspec.validate_frontmatter()` over the live trees (plans/active + epics + audit, codex, `*.mdc`) and **fails PM QG
-> on any violation, HARD or SOFT**. The interim warn-only `check_docspec_coverage.py` is RETIRED. **`plans/archive/**`is
-> deliberately outside the gated corpus** (operator decision 2026-07-04: archives are closed records — structurally
+> on any violation, HARD or SOFT**. The interim warn-only `check_docspec_coverage.py` is RETIRED. `plans/archive/**`
+> **is deliberately outside the gated corpus** (operator decision 2026-07-04: archives are closed records — structurally
 > seeded, summaries backfilled opportunistically, never ship-blocking).`agent-orchestrator/agents` (agent-role) is a
 > separate repo, covered by that repo's gate (still a plan todo).
 

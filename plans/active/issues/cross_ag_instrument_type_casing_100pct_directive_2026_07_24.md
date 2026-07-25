@@ -111,9 +111,11 @@ DeFi-only; the other four asset_groups' per-value target is uniformly UPPERCASE.
 
 ## Where each asset_group's execution item lives
 
-- **tradfi**: `plans/active/tradfi_manifest_content_recovery_completion_2026_07_24.md`, the "Converge every WRITER's
-  `instrument_type` emission to the UPPERCASE enum" todo (P0). Target = 100%; done when a fresh live manifest read shows
-  0 non-UPPERCASE `instrument_type` rows for tradfi and the data-status panel confirms 0 non-canonical entries.
+- **tradfi**: ✅ **RESOLVED 2026-07-25** — `plans/active/tradfi_manifest_content_recovery_completion_2026_07_24.md`, the
+  "Converge every WRITER's `instrument_type` emission to the UPPERCASE enum" + "Enumeration-driven migration" P0 todos.
+  Writer fix (`market-tick-data-service@020b703e`) + migration (`@4e631a3d`, applied live: 45,681 case-corrected). Fresh
+  live re-read this session (post-apply): `Rows CHANGED: 0`, self-verify `4,988,822/4,988,822 UPPERCASE` — 0
+  non-canonical `instrument_type` rows remain for tradfi. Full evidence in the child plan.
 - **cefi**: `plans/active/cefi_consolidated_closeout_2026_07_18.md`, the "instrument_type column normalization" todo
   (P0, script built + dry-run validated at 99.41%/97.49%, `--apply` DRAIN-GATED under the Track-1 cutover). Running the
   cutover `--apply` is necessary but the item does not close on `--apply` alone — done when a fresh live read

@@ -123,8 +123,12 @@ what's missing.
       free/credential-free, but per the parent plan's 2026-06-15 constraint ("backfills wait for explicit go... where
       applicable, the paid vendor") a bulk historical pull is still a backfill decision, not something to run unattended
       even on a free source. **Not dispatchable — stays visible, never auto-ingested.**
-- [ ] [SCRIPT] P1. Once the historical DVOL series is available (post-operator-go), wire it + the underlying's
-      realised-vol close series as `GroupBRunner` backtest input for **VOL_CARRY** and run the backtest.
+- [ ] [SCRIPT] P1. **BLOCKED-OPERATOR-DECISION (same gate as the todo immediately above — no historical DVOL series
+      exists yet)**: DO NOT WORK THIS TODO until the `[OPERATOR]` todo above is checked off and a real DVOL history pull
+      has landed — check the manifest for `data_type=volatility_index` rows spanning the approved window BEFORE picking
+      this up; if none exist, `/skip-current-task` immediately rather than re-verifying from scratch (3 slots already
+      burned a dispatch on this exact check — see Progress Log). Once available: wire it + the underlying's realised-vol
+      close series as `GroupBRunner` backtest input for **VOL_CARRY** and run the backtest.
 - [ ] [SCRIPT] P1. If VOL_CARRY's backtest passes the HARD CONTRACT bar above, register it in
       `ARCHETYPE_ENGINE_REGISTRY`. If it does not pass, leave `not_available` and file a new `BLOCKED-*` todo naming the
       specific failure (e.g. degenerate PnL, insufficient sample). Repo: strategy-service.
@@ -166,3 +170,16 @@ what's missing.
   `backlog_regen_drops_handtuned_prereqs` bug class); (4) when the operator answers `BLK-011c84cb`, flip the condition
   true. Then `/skip-current-task` (blocked-operator + ungated — not doable from a worker slot; worker cannot hand-edit
   `backlog.yaml` per the HARD RULE, so the gate is main's to add).
+- 2026-07-25 (/plan-reconcile apply pass): confirmed via a direct code read
+  (`agent-orchestrator/server/regen_backlog_from_plan.py::_wire_sequential_prereqs` + `_wire_gate_on_depends_prereqs`)
+  that **no plan-authoring-level fix exists for this specific shape** — not `sequential: true` (already set; confirmed
+  the doc's own prior finding that a non-ingested `[OPERATOR]`/`BLOCKED-*` predecessor is skipped when computing
+  "immediate predecessor," so the SCRIPT todo's real wired predecessor is the already-DONE todo two positions up), and
+  NOT a `depends_on`+`gate_on_depends: true` plan-split either — that mechanism's `_parse_open_todos` fallback (which
+  WOULD correctly gate on the still-open OPERATOR todo) only engages when the upstream plan has ZERO current backlog
+  task ids; this plan already has 2 DONE ingested task ids, so a split's downstream gate would wire to those (already
+  satisfied) and dispatch immediately — reproducing the exact same bug in a new form. **The only real fix is main's
+  backlog.yaml `prereqs.conditions` recipe above (still not applied) or a `dispatch.py`/regen code fix to also gate on
+  non-ingested predecessors** — flagging this as a cross-cutting AO limitation (not vol-specific) rather than
+  re-attempting a doc-only workaround. Added an inline `BLOCKED-OPERATOR-DECISION` self-skip warning to the SCRIPT todo
+  above so a dispatched worker can bail in one read without re-deriving this.

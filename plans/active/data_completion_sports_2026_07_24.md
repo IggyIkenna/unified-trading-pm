@@ -24,7 +24,7 @@ related:
     /plans/active/data_completion_tradfi_2026_07_15.md,
     /plans/active/data_completion_prediction_2026_07_15.md,
     /plans/active/issues/plan_line_cap_remediation_2026_07_23.md,
-    /plans/active/data_completion_sports_history_2026_07_24.md,
+    /plans/archive/2026_07/data_completion_sports_history_2026_07_24.md,
   ]
 created: "2026-07-24"
 parent_epic: manifest_master
@@ -599,7 +599,9 @@ So: **all data captured by ~06-23/24 (FootyStats-bound), then the relabel makes 
 source at 100% of what it CAN provide (Understat 5 leagues, FootyStats in-season, TM transfer-windows, weather where
 venue coords exist, etc.); genuine-no-coverage cells typed-empty + excluded. Monitors bqb62pbvd (TM/FS hang+
 exit-aware) + bmsfjnewh (sfi-progressive) wake on completion/problem. Open P1 fix before relabel: footystats-odds source
-mislabel (FS predictions+matches land; only odds blocked).
+mislabel (FS predictions+matches land; only odds blocked). **Already fixed** by the time this entry was logged — see the
+13:10 entry below (instruments-service@04f38a2), a documentation-ordering artifact from concurrent sessions, not a
+regression (SYNCED 2026-07-25, apply_batch_12).
 
 ### 2026-06-22 13:10 — TM/FS unbounded-HTTP HANG fixed; ETA + hang-detection codified
 

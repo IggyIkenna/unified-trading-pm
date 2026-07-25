@@ -67,12 +67,15 @@ locked_since:
 supersedes:
 superseded_by:
 depends_on:
+sequential: true
 source: >-
   Split from `prediction_consolidated_closeout_2026_07_18.md` (Phase A section, lines 177-266, and Phase B section,
   lines 267-343, of that doc as of 2026-07-18/2026-07-24) per the operator-approved line-cap remediation triage
   `plans/active/issues/plan_line_cap_remediation_2026_07_23.md` (row 22, "4-way split along the plan's own Phase A-E
   boundaries"). Content moved verbatim, not summarized. Phase A and Phase B are combined into one child per the triage's
-  specific guidance for this plan ("Phase A-B residuals").
+  specific guidance for this plan ("Phase A-B residuals"). `sequential: true` added 2026-07-24 (plan audit finding) to
+  encode this doc's own "Phase B — run the migrations (gated on Phase A green)" header text as a real ordering — this is
+  a WITHIN-plan A-before-B ordering, not a cross-plan gate, so `sequential` (not `depends_on`) is the correct mechanism.
 ---
 
 # Prediction Phase A-B residuals — code-ready writers + manifest migration follow-through
@@ -147,6 +150,18 @@ source: >-
       fails a non-canonical prediction `instrument_id`/`canonical_question_group` on write** — re-drift prevention, so
       new writes can't reintroduce the dupes A0 enumerates. (repos: instruments-service, market-tick-data-service,
       unified-api-contracts)
+- [ ] [BACKEND] P1. **NEW 2026-07-24 — POLYMARKET raw-tick data found living under ≥4 structurally-distinct GCS path
+      trees for the SAME shard (content-verified, byte-matching); the UAC oracle passes ALL of them as canonical
+      (structure-only blindness). One tree (10-segment, `data_source=`/`market_category=`/`market_type=`/
+      `resolution_period=`) has NO manifest column at all — genuinely unrepresentable, not just unmigrated — and carries
+      `title`/`slug`/`eventSlug` market-question text the canonical schema drops (metadata-loss risk, no delete
+      suggested). Separately, manifest `data_type=prediction_trades` (2,477 rows, still being written 2 days before the
+      audit) is a genuine non-canonical axis value, not a `migration_pending` case.** No writer identified yet for the
+      legacy shapes (deferred to the issue doc's own todo, a code-read task). Full evidence + 3 open questions (Q1
+      catalogue metadata recoverability, Q2 still-being-written?, Q3 retro-register vs migrate/purge — **Q3 is genuinely
+      operator-authority, queued in the gate doc's decision table**):
+      `/plans/active/issues/prediction_polymarket_legacy_dual_write_trees_metadata_loss_2026_07_24.md`. (repos:
+      market-tick-data-service, unified-api-contracts, instruments-service)
 
 ### A3 — Venue-perps + live CLOB depth residuals (fold)
 

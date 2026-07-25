@@ -105,7 +105,7 @@ Every audit deliverable MUST include a "Coverage matrix" section that declares p
 Audits without this section are review-blocked.
 
 Reference template:
-[plans/audit/results/mega_audit_phase_a_issues_human_readable_2026_05_20.md](../../plans/audit/results/mega_audit_phase_a_issues_human_readable_2026_05_20.md)
+[plans/audit/results/mega_audit_phase_a_issues_human_readable_2026_05_20.md](/plans/audit/results/archive/mega_audit_phase_a_issues_human_readable_2026_05_20.md)
 § "Coverage matrix (sampling vs comprehensive)".
 
 ### Invariant 4 — Layer-N+1 freeze on RED audit

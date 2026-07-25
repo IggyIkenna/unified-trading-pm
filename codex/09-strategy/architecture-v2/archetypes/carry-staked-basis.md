@@ -426,7 +426,7 @@ No engine, catalog, or strategy code change needed.
 
 ## See also
 
-- **Active umbrella plan**: [`plans/active/defi_master.md`](../../../../plans/active/defi_master.md) — Fork 1 owns live
+- **Active umbrella plan**: [`plans/active/defi_master.md`](/plans/epics/defi_master.md) — Fork 1 owns live
   carry_staked_basis deployment
 - **Venue-matrix / canonicalisation plan**:
   [`plans/active/defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md`](../../../../plans/active/defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md)

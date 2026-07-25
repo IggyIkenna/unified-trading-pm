@@ -70,17 +70,12 @@ Parent plan's P10-B (operator round-3, 2026-07-17) already shipped: `CATALOG_COL
 
 ## Open todos (moved verbatim from the parent, 2026-07-24)
 
-- [ ] [BACKEND] P2. **Switch `deployment-api/services/fixtures_browser.py` to the single catalogue** (the actual point
-      of the operator's ask — currently still the day-walk, @5815582). Design, verified against real data: read
-      `prod/catalog.parquet` ONCE (schema-aware projection: `instrument_id`/`instrument_type`/`league_id`/
-      `available_from`/`kickoff_utc`/`status`/`home_team_name`/`away_team_name`/`venue_name`/`round`), filter
-      `instrument_type=="fixture"`, TTL-cache the PARSED frame (not per-query) since filtering becomes in-memory. Map →
-      `FixtureRow`: `fixture_id`=`instrument_id`; `home_team_id`/`away_team_id` parsed from the id's `HOME_v_AWAY` (or
-      UAC `build_team_id`);
-      `venue_id`=""`(not carried — honest). **Filter AND group on`available_from`** — it is     the true fixture date, verified **17,064/17,064 (100%)** identical to the id's `:YYYYMMDD`suffix, zero drift.     Then`_MAX_WINDOW_SPAN_DAYS`
-      (120d cap) can be **deleted** — it only ever existed to bound the day-walk read cost — which is what finally makes
-      "all the fixtures" true. A half-written attempt was **reverted** (it broke the module; a broken file in a shared
-      checkout fails every agent's QG) — start clean from @5815582.
+- [x] ✅ [BACKEND] P2. **Switch `deployment-api/services/fixtures_browser.py` to the single catalogue** —
+      deployment-api@dbbf64c (shipped via `sports_satellite_ao_dispatch_batch2_2026_07_24.md`'s AO-dispatched copy of
+      this todo). Reads `prod/catalog.parquet` ONCE (schema-aware projection), TTL-cached parsed frame filtered to
+      `instrument_type=="fixture"`. `fixture_id`=`instrument_id`; `home_team_id`/`away_team_id` parsed from the id's
+      `HOME_v_AWAY` segment; `venue_id=""` (honest). Filters AND groups on `available_from`. `_MAX_WINDOW_SPAN_DAYS`
+      deleted. `quality-gates.sh` green (4964 passed). See that plan's Progress Log for full evidence.
 - [ ] [UI] P3. Once P10-B backend lands: `FixturesBrowser.tsx`'s window note + span-cap warning (`MAX_SPAN_DAYS=120`)
       become wrong — the catalogue has no 120d bound. Relabel to the real coverage (full history after the rollup) and
       drop the cap warning.
@@ -91,5 +86,8 @@ Parent plan's P10-B (operator round-3, 2026-07-17) already shipped: `CATALOG_COL
 
 ## Progress Log
 
-_(none yet — this plan was created 2026-07-24 by the plan line-cap remediation split; the todos above carry their full
-prior design history verbatim from the parent plan's Progress Log.)_
+- **2026-07-25 (slot-6, backend_engineer)**: Shipped the backend todo (deployment-api@dbbf64c) via the AO-dispatched
+  copy in `sports_satellite_ao_dispatch_batch2_2026_07_24.md`. This UNBLOCKS the `[UI] P3` todo below (the
+  `FixturesBrowser.tsx` window note + `MAX_SPAN_DAYS=120` warning are now stale and should be relabeled/dropped) — it is
+  not yet its own AO-dispatched todo anywhere; whoever picks up sports UI work next should add it. The `[DATA] P2`
+  freshness-caveat todo also remains open (regen-cadence decision, unrelated to this backend change).

@@ -288,3 +288,16 @@ cascade step pulled `unified-api-contracts` (a real, unrelated, just-landed venu
 both of this session's failures coincided with a cascade pull of a genuinely-changed ancestor repo, not merely
 concurrent host load (not independently measured this session, so not ruled out either). Not investigated further here —
 out of scope for a data-correctness remediation session; retrying with spacing per this doc's own guidance.
+
+**Cross-reference (2026-07-25, 10th/11th occurrence) — tradfi instrument_type casing-directive session, one NEW data
+point.** Shipping `scripts/migrate_tradfi_manifest_itype_casing_100pct_2026_07_25.py` (a new, isolated migration
+script + its test, zero overlap with either failing test's code path) via `quickmerge.sh --agent`, the identical 2 tests
+failed with the identical `AssertionError: market-data-tick-pred-dev-test-project` signature on 2 consecutive attempts
+(`166.64s`/`171.71s` — serial-baseline timing, `PYTEST_WORKERS=1` confirmed still pinned). Both attempts followed this
+same quickmerge's own cascade landing a real ancestor commit earlier in the session (the same-session writer-fix commit
+`market-tick-data-service@020b703e` had just landed via a prior quickmerge on this same repo, moving HEAD forward) —
+consistent with, not dispositive of, the cascade-step theory. **One genuinely NEW data point**: a direct
+`pytest -p no:xdist` (xdist plugin fully disabled, not just `-n 1`) run over the SAME file set that quickmerge's re-gate
+uses (`tests/unit/ ` + the 4 cefi files) passed clean (`6918 passed, 0 failed`, 133.51s) — i.e. even `-n 1` (xdist
+active with exactly one worker) differs from true `-p no:xdist` (xdist plugin absent entirely) in whatever triggers
+this. Not chased further (matches this doc's own "do not duplicate investigation" guidance) — retrying with spacing.

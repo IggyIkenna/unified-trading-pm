@@ -18,7 +18,7 @@ scope: [engineer, admin]
 tags: [tradfi, databento, massive, mtds, t1-batch, cron, data-correctness, sourcing]
 related: [../sports_legacy_bucket_cutover_2026_07_16.md]
 created: 2026-07-17
-last_updated: 2026-07-17
+last_updated: 2026-07-25
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -67,7 +67,16 @@ Add TradFi-source-scoped T+1 MTDS job(s) alongside `mtds_fast_t1_recon_job` / `m
 `deployment-service/terraform/gcp/audit03_cron_provisioning.tf` + `t1_batch_scheduler.tf`:
 
 - `…-tradfi-databento-t1-recon`: `--operation download --mode batch --asset-group TRADFI --source databento`
-- `…-tradfi-massive-t1-recon`: `--operation download --mode batch --asset-group TRADFI --source massive`
+- ~~`…-tradfi-massive-t1-recon`: `--operation download --mode batch --asset-group TRADFI --source massive`~~ —
+  **OBSOLETE (2026-07-19 operator ruling, corrected 2026-07-25 plan-reconcile)**: Massive was REMOVED as a tradfi source
+  entirely; `--source massive` routing is DELETED and now raises. No massive-scoped job is needed or possible. SSOT:
+  `/codex/02-data/tradfi-databento-sourcing-ssot.md`.
 
 (split by which datasets each vendor owns — see the sourcing SSOT). Verify each with a real execution that exits 0 and
-writes rows, per the T6.10 "run it, don't read it" gate.
+writes rows, per the T6.10 "run it, don't read it" gate. **Status note (2026-07-25 plan-reconcile)**: the databento leg
+above shipped — `uts-prod-market-tick-data-service-tradfi-databento-t1-recon` Cloud Run job +
+`uts-prod-market-tick-data-tradfi-databento-t1-schedule` scheduler, both ENABLED — per
+`/plans/active/tradfi_backfill_throughput_followups_2026_07_24.md` (which also tracks a live SIGKILL-at-2cpu/8Gi
+follow-up on that same job). This doc's own `status`/`resolved_by` frontmatter has not been reconciled against that
+shipment — left open here rather than unilaterally flipped, since the SIGKILL follow-up suggests the job isn't yet fully
+stable.

@@ -991,10 +991,6 @@ DEFERRED-OPERATOR-DECISION (BLOCKED-CREDENTIALS — Kalshi API key not yet provi
 - **Schema column in drilldown**: verify `canonical_question_group` schema link in deployment-api UI routes to correct
   `CanonicalQuestionGroup` UAC metadata per group (not flat Polymarket schema).
 
-## P3 — backlog; revisit quarterly
-
-_(no plans currently assigned at this priority)_
-
 ## Folded-in scope 2026-07-15 (plan-reconcile §6)
 
 - [ ] [SCRIPT] P1. **Predictions feature_groups → UAC `FEATURE_REQUIRED_INPUTS`**. Per-canonical_question_group +

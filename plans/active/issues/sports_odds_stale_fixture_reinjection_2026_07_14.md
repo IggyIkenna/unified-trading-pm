@@ -181,7 +181,7 @@ T-24h/T-1h):
 > blast radius (T-0 = 39.83% post-kickoff, 146,738/368,366 rows; all 7 other timeframes PROVEN CLEAN at 0/4,151,352):
 > `./sports_halftime_odds_sfi_vs_inplay_2026_07_16.md` § Progress Log 2026-07-16.
 
-- [ ] [CODE] P1. **Stop stale/zombie ticks at bucket assignment (fix locus: MDPS, not MTDS raw ingestion — see
+- [x] ✅ [CODE] P1. **Stop stale/zombie ticks at bucket assignment (fix locus: MDPS, not MTDS raw ingestion — see
       refinement above).** Primary fix in
       `market-data-processing-service/.../adapters/sports/bucket_assignment_adapter.py`: drop rows whose
       `staleness_seconds` (fetch_utc − bm_time) exceeds a sane cap (hours-scale, ≥ the largest horizon window) or whose
@@ -198,7 +198,16 @@ T-24h/T-1h):
       under the new day instead of being recognized as stale and dropped; or (b) a date-filter is missing between the
       odds-api response and the GCS write, so any fixture the API still happens to return (regardless of how old) gets
       bucketed. Fix: either drop rows where `kickoff_utc` falls outside a sane window of `day=<D>` (record
-      honest-absence/zero rows instead), or fix the fetch to only return live/ current-window fixtures per league.
+      honest-absence/zero rows instead), or fix the fetch to only return live/ current-window fixtures per league. —
+      SHIPPED 2026-07-25 (slot 7, data_engineering): added `STALENESS_CAP_SECONDS` (48h) + `KICKOFF_PAST_CAP_SECONDS` (7
+      days) checks to `_prepare_tick_data()` — the shared choke point both `process_to_candles()` and
+      `process_to_bucketed_df()` already call before horizon assignment (mirrors the existing `bm_time <= fetch_utc`
+      causality filter's placement there, rather than duplicating the check inside `assign_horizon_bucket()`/
+      `assign_horizon_buckets_vectorised()` themselves). 5 new tests (both zombie classes rejected, a fresh scrape and a
+      genuine near-term kickoff NOT dropped, partial-drop still processes valid rows) — 67/67 pass, QG fresh green. **P2
+      (contamination sweep) below is now unblocked but NOT started this session** — this todo only stops NEW zombie
+      ticks from being bucketed going forward; existing contaminated shards in the corpus are untouched.
+      market-data-processing-service@aa6e8ac.
 - [ ] [DATA] P2. **market-tick-data-service: sweep for the extent of the contamination.** Once the ingestion bug is
       fixed, scan `processed/by_date/*/pipeline_mode=batch_mdps_odds_horizon_bucket/.../data_type=odds_horizon_bucket/`
       for repeated (fixture_id, bookmaker_key, kickoff_utc) tuples spanning multiple `day=` partitions (the same

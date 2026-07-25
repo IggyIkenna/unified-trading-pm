@@ -27,6 +27,7 @@ tags: [quality-gates, ui, codex-compliance, scope-estimate-miss, any-type, conso
 related:
   [
     plans/active/issues/ui_codex_gate_blind_to_app_router_layout_2026_07_21.md,
+    plans/active/issues/ui_hardcoded_colour_and_localhost_debt_2026_07_21.md,
     /codex/06-coding-standards/ui-testing-layers.md,
   ]
 created: "2026-07-21"
@@ -198,9 +199,17 @@ This needs an operator/main call on sequencing + approach, not a unilateral pick
       Residual real-violation sweep filed as its own todo below (not fixed here — 501 hits across ~65 files with no
       Playwright coverage for most of them is not a same-session, same-todo fix).
 
-- [ ] [UI] P2. Sweep the residual 501 real hardcoded-colour hits across ~65 component/page files (post-triage — excludes
-      the two legitimate categories from todo 3 above) to CSS vars / Tailwind classes / `chart-theme.ts` tokens. Get the
-      current file-by-file breakdown fresh via
+- [ ] [UI] P2. **2026-07-25 note: mostly done elsewhere, don't duplicate.** The sibling issue doc
+      `/plans/active/issues/ui_hardcoded_colour_and_localhost_debt_2026_07_21.md` picked up from this same 501-hit
+      baseline (`unified-trading-system-ui@2bb398c1c`) and drove it down via 5 shipped batches to a final combined count
+      of **96** (its own line ~253: "final combined colour count 171→96"). Before starting this todo, re-run the
+      breakdown below and diff against that doc's batches — most of the top offenders named here (`_home-client.tsx`,
+      `components/trading/sports/*.tsx`, `components/shared/status-badge.tsx`) are already covered there. The genuinely
+      residual scope (not touched by the sibling doc's batches, per its own file list) is at minimum `lib/taxonomy.ts`
+      (60) and `lib/reference-data.ts` (19) — this todo should be narrowed to that residual set rather than re-swept
+      whole. Sweep the (now much smaller) residual real hardcoded-colour hits across the remaining component/page files
+      (post-triage — excludes the two legitimate categories from todo 3 above) to CSS vars / Tailwind classes /
+      `chart-theme.ts` tokens. Get the current file-by-file breakdown fresh via
       `rg '#[0-9a-fA-F]{6}\b|#[0-9a-fA-F]{3}\b|rgb\(|rgba\(' app components lib --glob "!**/*.test.*" --glob     "!**/chart-theme.*" --glob "!**/globals.css" --glob "!**/*.css" -c`
       (plus the `CODEX_COLOUR_EXCLUDE_GLOBS` entries in `scripts/quality-gates.sh` to exclude the already-triaged
       legitimate files) — the top offenders as of 2026-07-21 are `lib/taxonomy.ts` (60), `app/(public)/_home-client.tsx`

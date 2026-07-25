@@ -7,8 +7,7 @@ authoritative_for:
   Canonical shape for per-AlertCode operator runbooks. Every runbook in this directory MUST conform to this template.
   Copy this file, replace `<AlertCode>` with the actual code, and fill in every section. Empty sections MUST be replaced
   with "N/A — <one-line reason>" rather than deleted.
-referenced_by: [codex/15-runbooks/alerting/README.md]
-  - plans/active/alerting_service_live_rules_2026_05_07.md
+referenced_by: [/codex/15-runbooks/alerting/README.md, /plans/active/alerting_service_live_rules_2026_05_07.md]
 related:
   - codex/15-runbooks/alerting/README.md
   - codex/15-runbooks/alerting/operator-playbook.md

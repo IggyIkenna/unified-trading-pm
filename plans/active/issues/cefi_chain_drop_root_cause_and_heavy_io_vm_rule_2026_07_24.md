@@ -29,12 +29,17 @@ source: >-
   here after that plan (and its execution-log child) became hard-blocked from any edit by the line-cap gate.
 resolved_by:
 locked_by:
-assigned_vm:
+assigned_vm: NA
 code_refs:
   [
     instruments-service/scripts/complete_cefi_manifest_canonical_dedup_2026_07_17.py,
     instruments-service/scripts/complete_cefi_manifest_canonical_dedup_v2_2026_07_20.py,
+    instruments-service/scripts/investigate_cefi_dedup_residual_lossy_2026_07_24.py,
+    instruments-service/scripts/verify_cefi_dedup_key_fold_2026_07_24.py,
     market-tick-data-service/scripts/migrate_cefi_tardis_filename_canonical_2026_07_17.py,
+    deployment-service/scripts/vm/launch-canonical-migration-vm.sh,
+    market-tick-data-service/scripts/_cefi_canonical_resolver_migration_2026_07_18.py,
+    market-tick-data-service/market_tick_data_service/market_interface/adapters/cefi/tardis_shared.py,
   ]
 execution_scope: orchestrator-agent
 drift_direction: advance-code
@@ -108,6 +113,105 @@ is already blank in these collisions). **NOT** a row_count tie-break (both under
 "pick the bigger" merge would silently discard one entirely). Also individually check the non-DERIBIT lossy venues
 (BYBIT/ASTER/BINANCE-FUTURES) before assuming they share this exact cause.
 
+## Finding 5 (2026-07-24, later same session) — the fix SHIPPED; non-DERIBIT venues are TWO further, DIFFERENT causes, not the same one
+
+`instruments-service@654d694f` ("fix(cefi): fold underlying+chain into the manifest dedup key so chain-BUNDLE/on-chain-
+venue duplicates aren't silently merged") — `_effective_dedup_key()` (new, in the v1 script, reused by both
+`_dedup_blob` and v2's `_chain_merge_safety`) extends PIN_ATOM with:
+
+1. `underlying`, but ONLY for blank-`instrument_id` + `instrument_type∈{FUTURE,OPTION}` (the POST-canonicalisation
+   values the raw `FUTURES_CHAIN`/`OPTIONS_CHAIN` leaked-itype normalises to — `_dedup_blob` runs AFTER
+   `_canonicalize_blob`, so checking the raw leaked value at dedup time would match nothing). Fixes the DERIBIT
+   chain-BUNDLE population from Finding 2.
+2. `chain`, unconditionally (blank-filled — a no-op for the ~99% of rows without a chain value). Checked the non-DERIBIT
+   venues as this finding required, by re-running the (real, prod, full-corpus) dry-run after the Finding-2-only fix:
+   **3304 → 92 lossy groups**, i.e. the underlying-fold alone closed ~97% of the original defect. Drilled into the
+   residual 92 directly (`investigate_residual_lossy_20260724.py`, session scratchpad): **64 groups were ASTER**
+   (`PERPETUAL`, `data_type=trades`) — two CAPTURED rows sharing an identical PIN_ATOM but DIFFERING `chain` (blank vs.
+   `"ASTER"`) and differing real `row_count` (e.g. `ASTER:PERPETUAL:BCH-USDT@LIN` 2024-01-01: 3909 rows chain=blank vs.
+   1000 rows chain="ASTER") — almost certainly a writer chain-tagging transition (blank before, `"ASTER"` after) that
+   produced a SECOND manifest row instead of updating the first, not a chain-bundle/underlying issue at all. The CEFI
+   CANONICAL SPEC (parent plan) already lists `[chain]` as part of the shard atom for on-chain/perp-DEX venues, so
+   folding it into the key (rather than `--keep-chain`, which only controls whether the `chain` COLUMN survives in the
+   WRITTEN output — it does **not** change the dedup key, so it would NOT have prevented this exact merge) is the
+   correct, symmetric fix.
+
+**28 groups (56 rows) remain even after both folds — BITFINEX-SPOT (26 groups: 13 consecutive dates
+2024-06-02..2024-06-14 × `{book_snapshot_5, trades}`) + BYBIT-SPOT (2 groups: 2024-01-01 × `{book_snapshot_5, trades}`)
+— a THIRD, genuinely different population**: blank `instrument_id` + blank `underlying` + blank `chain`
+(market-wide-aggregate shards, e.g. `BITFINEX-SPOT SPOT_PAIR book_snapshot_5 2024-06-05`: 12,560,083 vs. 1,822,749
+rows), with literally no column left to disambiguate the two real CAPTURED rows in the pair. The contiguous-date-range
+shape (13 straight June-2024 days for BITFINEX-SPOT) strongly suggests a re-backfill that wrote a second manifest row
+instead of superseding the first — plausible, not yet root-caused to a specific writer/consolidator event. **Decision
+(forced tradeoff, documented per autonomous rule 1): accepted as a small, explicit, LOGGED tolerance**
+(`_CHAIN_LOSSY_TOLERANCE_MAX = 50` in the v2 script, measured residual 28 — comfortable but not loose headroom; a future
+blow-past means a different/unreviewed population appeared, diagnose rather than just raise the number), NOT a silent
+pass — the STOP block now WARN-logs the exact offending rows every time it's in the tolerated band. Added a
+`row_count`-descending secondary sort key to `_dedup_blob`'s existing best-status-wins tie-break, so a same-status
+collision keeps the LARGER (more-complete) capture instead of an arbitrary original-row-order pick — verified via a fast
+local synthetic-data test (`unit_verify_dedup_fix_20260724.py`, session scratchpad, built from the real extracted rows)
+that this keeps 92,448,219 over 76,978,052 for the BYBIT-SPOT pair, and that DERIBIT/ASTER pairs both fully survive (no
+data discarded) while the tiny BITFINEX-SPOT/BYBIT-SPOT pairs correctly fall into the tolerated band.
+
+**Full-corpus re-verification was attempted 3 more times to get a clean end-to-end confirmation and every attempt was
+killed (signal 143/SIGTERM) at a different, inconsistent elapsed point (8min, 17min, 20min) — NOT the same root cause as
+earlier in this session (that was GCS connectivity; this is host resource contention, "20 users" logged in concurrently,
+`free -h` showed 11Gi/15Gi used at one failure point).** Rather than keep burning ~15-20min per attempt against that
+flakiness, confidence here rests on: (a) the ORIGINAL full-corpus run showing 3304→92 (real, completed, exit 0), (b) a
+full-corpus INVESTIGATION run (not the whole v2 script, just the diagnostic — smaller/faster) that DID complete cleanly
+post-fix and produced the exact 28-group breakdown above with a full CSV dump (`residual_lossy_full_20260724.csv`,
+session scratchpad — will not survive session end, re-generate if needed), and (c) the fast local synthetic-data test
+exercising the exact real row shapes end-to-end. A clean full `--apply`-path dry-run re-confirmation (the
+`V2 SUMMARY`/`chain_lossy` log line reading exactly 28, `TOLERATED` not `STOP`) is still recommended as the FIRST step
+before the actual Surface C `--apply`, ideally at a quieter host-load moment.
+
+## Finding 6 (2026-07-24, later still) — direct in-session `--apply` attempts were killed by shared-host `earlyoom`; moved to an isolated VM; the VM attempt then OOM'd too (exit 137) even on e2-standard-8 (32GB) — needs a bigger machine
+
+**Root cause of the repeated signal-143 kills on direct in-session dry-run/`--apply` attempts** (4 total, at
+inconsistent elapsed points 4-20min): this shared multi-agent host runs `earlyoom -m 10 -s 10` (SIGTERM-first OOM
+daemon; confirmed via `systemctl list-units` + `ps aux | grep earlyoom`) — a multi-GB-RSS pandas run competing with ~20
+other concurrent agent sessions for the host's 15Gi RAM crosses earlyoom's 10% threshold and gets SIGTERM'd. NOT a code
+bug; independently confirmed via (a) a full-corpus dry-run that DID complete cleanly (exit 0) both before and after the
+fix, (b) a full-corpus investigation run that also completed cleanly, and (c) a fast local synthetic-data test — see
+Finding 5.
+
+**Fix: moved the apply itself onto isolated, dedicated infra** rather than keep retrying on the contended shared host,
+per the workspace's own heavy-I/O-on-VM rule (Finding 4). Added a new `cefi-dedup-apply` category to
+`deployment-service/scripts/vm/launch-canonical-migration-vm.sh` (`deployment-service@66298d43`) — mirrors the existing
+`tradfi-catalogue-canon` category's `VM_SERVICE=instruments_service` re-homing trick, reuses ALL the launcher's existing
+safety machinery (tarball-freshness pre-check, SPOT-preemption signal + relaunch params, pin registry,
+fleet-observability labels) rather than hand-rolling a bespoke `gcloud compute instances create`. Verified the floating
+instruments-service tarball actually contained the shipped fix
+(`lc_verify_tarball_freshness ... LC_TARBALL_FRESHNESS=enforce` → fresh at `b92fd53d7312`, confirmed
+`git merge-base --is-ancestor 654d694f b92fd53d7312`) before launching for real.
+
+**The VM launch itself worked correctly** (STARTED <60s, dependencies verified OK, `PIPELINE_HEARTBEAT` every 60s,
+`DEPLOYMENT_STARTED` event registered) — but the actual `--apply` run inside it was killed at `22:11:04Z` (~2.5 min
+after the python process started, right after the `CULL PACIFICA-SOLANA` log line — the SAME early point several of the
+shared-host dry-run attempts also died at) with `bash: line 1: 7242 Killed` / `[vm-exec] command exited rc=137` — **exit
+137 = SIGKILL, not the SIGTERM/143 pattern from the shared host.** This is a DIFFERENT failure mode: a genuine OOM on a
+DEDICATED `e2-standard-8` (32GB RAM, zero other tenants) VM. Root cause: `--apply` loads `columns=None` (the FULL
+manifest schema, every column) vs. the dry-run's `_DRYRUN_COLS` projection (~11 columns) — evidently more than 32GB once
+combined with `_canonicalize_blob`'s per-unique-tuple pure-Python classification loop + the new
+`_effective_dedup_key`/`_dedup_blob` string-concat/sort overhead. **NOT a code correctness issue** — the
+STOP-ON-SURPRISE gates + snapshot/write never even run before this point, so **zero mutation occurred** (confirmed: no
+"Backed up original index"/"Wrote canonicalised index" log lines).
+
+**Fix for next attempt**: relaunch `cefi-dedup-apply` in `full` mode with `MACHINE_TYPE=e2-standard-16` (64GB — matches
+this exact launcher's own documented precedent, "TradFi v9 migration... OOM-killed on e2-standard-8... per-year
+chunking + 64GB is the fix"). If that ALSO OOMs, `e2-standard-32` (128GB) is the next step up, or chunk the apply itself
+(not yet needed — untried at 64GB).
+
+**Process near-miss caught by this exact `/pre-compact` audit (do not repeat)**: the VM's `--apply` was launched at
+`22:06:01Z` while the consolidator cron was **ENABLED** (resumed earlier this session after a prior failed direct
+attempt, and never re-paused before the VM launch) — i.e. the drain gate was NOT in place for this attempt. **No actual
+harm** (the run OOM'd before reaching any snapshot/write code path, verified above), but this is a real process gap,
+structurally the same class of mistake as Finding 3 ("a safety-critical external state must be checked directly every
+time it matters"). **MANDATORY for every future attempt**:
+`gcloud scheduler jobs pause uts-prod-manifest-consolidator-market-data-cefi-cron --location=asia-northeast1`, verify
+`PAUSED` via `gcloud scheduler jobs describe`, **THEN** launch/relaunch the VM — never launch first and pause "after" or
+"in parallel."
+
 ## Finding 3 — consolidator cron was mistakenly left PAUSED for ~16 hours
 
 `gcloud scheduler jobs describe uts-prod-manifest-consolidator-market-data-cefi-cron --location=asia-northeast1` showed
@@ -140,25 +244,171 @@ cover this job class — no new launcher script needed for the remaining work be
 **Operator is now migrating the whole interactive session to run from a VM** (not just dispatching worker VMs for
 individual tasks), so all further heavy-I/O work should run from there.
 
+## Finding 7 (2026-07-24, later still) — Surface C v2 `--apply` SUCCEEDED on `e2-standard-16`; a second tarball-staleness near-miss caught and fixed BEFORE launch; verified via a clean second dry-run; cron resumed
+
+**Pre-launch near-miss #2 (distinct from Finding 6's cron-ordering near-miss)**: the first `cefi-dedup-apply` launch
+attempt this round hit `lc_verify_tarball_freshness` WARNINGS for BOTH `instruments-service` (`manifest=4412e57608b5`
+vs. `repo=1511b6722720`) and `deployment-service` (`manifest=4dce3348fdd4` vs. `repo=e726aabeae2c`) — the floating
+tarballs predated Finding 5/6's shipped fix and launcher category. Caught the warning BEFORE it could matter: deleted
+the just-created VM immediately (`gcloud compute instances delete`), verified via GCS that it never got far enough to
+run (`vm-logs/<vm>/` held only `LAUNCH_PARAMS.json`/`TARBALL_PINS.json`, no `run.log` — the boot/tarball-fetch phase,
+before any Python executed), republished both tarballs
+(`bash scripts/vm/create-code-tarballs.sh --include instruments-service --include deployment-service`), then confirmed
+via `git merge-base --is-ancestor 654d694f/63c6962c/66298d43 <published-sha>` (all three: YES) before relaunching.
+**Zero mutation occurred from the stale-tarball attempt.** Lesson for next time: `lc_verify_tarball_freshness`'s WARN
+(not ENFORCE) default means a launch can proceed on stale code silently unless the operator/agent actually reads the
+warning text — for any `--apply`/`full`-mode launch touching code changed this session, either republish proactively
+before the first launch attempt, or set `LC_TARBALL_FRESHNESS=enforce` to make staleness a hard block instead of a
+warning.
+
+**The apply itself, relaunched on fresh tarballs (`canonical-migration-cefi-dedup-apply-20260724-231529` deleted;
+`canonical-migration-cefi-dedup-apply-20260724-232055` succeeded)**: `V2 SUMMARY across 2 blob(s)` — chain-lossy
+groups=28 (exactly the predicted/tolerated residual from Finding 5, `TOLERATED` not `STOP`),
+`[INVARIANT] CAPTURED rows in the v2 drop set: 0`, `[FAIL-HARD] CAPTURED rows still marker-less AFTER transform: 0`,
+canonical-fraction 99.24%. Snapshotted before write (`snapshots/pre_d4_20260724T232332Z/`), wrote
+`availability_index.parquet` (9,069,094 rows) + `per_vm/_legacy_seed.parquet` (320,344 rows), post-apply gate
+`GATE PASSED: 0 further-resolvable captured rows; 0 eu/captured 5-col collisions`, final line
+`V2 APPLY COMPLETE + GATE GREEN`, `command exited rc=0`, VM self-deleted per `VM_SHUTDOWN_ON_COMPLETION=true`.
+
+**Verification dry-run** (`canonical-migration-cefi-dedup-apply-20260724-233207`, same VM category, `dry` mode, launched
+immediately after on already-fresh tarballs): `chain-lossy groups=0` (down from 28 — proves the tolerated groups
+actually collapsed to one row each during the apply, not left as live duplicates), `marker_added=0` (all 2,307,835
+markers from the apply already landed — nothing left for a second pass to add), all invariants still 0/0,
+canonical-fraction unchanged at 99.24%. This run's `STOP-ON-SURPRISE: marker_added=0 outside band [1500000,3000000]`
+(`exit rc=1`) is a **benign false trip, not a real problem** — that guard's sanity band was written assuming every
+dry-run is pre-apply and doesn't have a code path for "second run against an already-applied corpus, zero _new_ work is
+the CORRECT answer." Worth a future enhancement (detect zero-marker-added-because-already-clean vs.
+zero-marker-added-because-something-broke), but not blocking — the surrounding invariants (0 lossy, 0 drop-set, 0
+marker-less) are the actual proof of correctness, and they're clean.
+
+**Cron resumed and verified**:
+`gcloud scheduler jobs resume uts-prod-manifest-consolidator-market-data-cefi-cron --location=asia-northeast1` →
+`gcloud scheduler jobs describe ... --format='value(state)'` → `ENABLED`, confirmed directly per Finding 3/6's own
+lesson.
+
+**Surface C is now DONE.** Item 3 in the Deferred-work table below is closed.
+
+## Finding 8 (2026-07-25) — LATE-renames scoped dry-run: LIGHTER-ZKSYNC already covered; 1114 GENUINE collisions found + fully characterized; safe majority unblocked via date-range exclusion; residual queued as an operator question
+
+**New VM launcher category** `cefi-late-renames` added to `launch-canonical-migration-vm.sh`
+(`deployment-service@bce12fc`) — mirrors `cefi-dedup-apply` but for
+`migrate_cefi_tardis_filename_canonical_2026_07_17.py` (market-tick-data-service). Unlike `cefi-dedup-apply`,
+`START_DATE`/`END_DATE` are honored for REAL (not cosmetic) — this is what makes a properly-scoped run tractable at all
+(an unscoped 2019-2026 walk measures 48-67 HOURS, per Finding 4).
+
+**Scoped dry-run** (`cefi-late-renames 2025-11-01 2026-07-24 dry`, ~37min wall-clock, e2-standard-8): confirms the "LATE
+window" framing was right — 690,286 already-canonical, 508,965 `would_rename`, 18,356 `unresolved_wire` (honest, left
+raw), 204 DERIBIT SPOT/PERPETUAL mislabels (left raw, pre-existing/known). **LIGHTER-ZKSYNC: 12,373 planned renames
+within this SAME window** — exceeds the original "~11,283 objects" estimate for the separately-tracked LIGHTER-ZKSYNC
+backfill (Deferred-work item 6), confirming that item is **fully subsumed by this LATE-renames run** — no separate
+wider-range run is needed; item 6 closes as part of item 2b.
+
+**STOP-ON-SURPRISE: 1114 genuine collisions**
+(`target ... collides with existing distinct object (content differs — NOT a duplicate, genuine collision)`) — the
+script correctly REFUSED to proceed to `--apply` while these exist (would `sys.exit(4)` before any mutation). The first
+run only logged `surprises[:40]` (2 venues, 3 dates visible) — not enough to characterize root cause, so added full
+venue+date breakdown logging (`mtds@780c91a8`, "fix(cefi): log full venue/date breakdown for STOP-ON-SURPRISE
+collisions") and re-ran. **Full picture**: `breakdown by venue: {HYPERLIQUID: 660, ASTER: 444, DERIBIT: 10}`,
+`breakdown by date: {2026-01-01: 494, 2026-01-02: 488, 2026-01-03: 121, 2025-11-01: 5, 2025-11-02: 5, 2026-07-11: 1}` —
+**1103 of 1114 (99%) concentrate on exactly 3 consecutive dates (2026-01-01/02/03), split across HYPERLIQUID + ASTER**
+(two structurally different venues — one on-chain DEX writing canonical filenames natively, one Tardis-sourced CEX-style
+capture) — the DERIBIT 10 (2025-11-01/02) are a separate, small, pre-existing pattern already adjacent to the known
+mislabel issue; the lone 2026-07-11 entry is an isolated outlier.
+
+**Root-cause hypothesis (not yet independently confirmed against raw object content)**: a writer/pipeline transition
+around 2026-01-01 changed HYPERLIQUID/ASTER's file-naming convention (or a historical backfill using the OLD wire-form
+convention re-captured those 3 specific days after a live/forward pipeline had ALREADY written canonical-form objects
+for the same days) — producing two REAL, DIFFERENT-CONTENT captures of the same nominal (day, venue, instrument) slot
+under two different filenames. This is structurally the same shape as Finding 5's ASTER `chain`-tagging transition and
+the BITFINEX-SPOT/BYBIT-SPOT residual (Finding 5) — a genuine "two real captures, no way to prefer one without a policy
+call" situation, but at the PHYSICAL FILE level this time (forcing past it would mean literally deleting one object's
+content via the rename's copy+delete, not just dropping a duplicate manifest row) — meaningfully higher stakes than the
+Surface C residual.
+
+**Resolution taken (no data-loss judgment call made unilaterally)**: since ALL 1114 collisions fall on exactly 6
+distinct dates, and the dry-run already proves NO OTHER collisions exist anywhere else in the 2025-11-01..2026-07-24
+window, the safe 508,965−~1114 renames can proceed via **three excluding date-range `--apply` passes** — Range A
+`2025-11-03..2025-12-31`, Range B `2026-01-04..2026-07-10` (the bulk), Range C `2026-07-12..2026-07-24` — each provably
+collision-free per this dry-run. The 6 excluded dates (2025-11-01, 2025-11-02, 2026-01-01, 2026-01-02, 2026-01-03,
+2026-07-11) stay wire-form/unrenamed for now, tracked as their own residual item — **maximizes safe, real progress now
+without gambling on the ambiguous slice**, mirroring this session's own established "leave mislabels/residuals
+honest-raw rather than guess" pattern (Finding 2).
+
+> **🟡 OPERATOR QUESTION QUEUED (not blocking — answer whenever convenient)**: the 1114 HYPERLIQUID/ASTER/DERIBIT
+> collisions on 2026-01-01/02/03 (+2025-11-01/02, +2026-07-11) are two genuinely different captures per (day, venue,
+> instrument) slot — one under the wire-form filename, one under the canonical filename, **content differs, not a
+> duplicate**. Forcing a rename here means the copy+delete step DESTROYS whichever object doesn't survive. Options:
+> **(a) leave both under their current names permanently** (safest — zero data loss, but the wire-form copy stays
+> non-canonical forever, i.e. Surface A never reaches 100% for these exact slots); **(b) investigate further** (pull
+> both objects' row counts / capture-time-range / actual tick content for a handful of the 1114 to determine whether one
+> is a strict subset/partial of the other, which could make a safe merge-not-overwrite possible — this is real,
+> non-trivial investigation work, not a quick check); **(c) operator inspects a sample directly and rules on which
+> capture is authoritative** for this specific (writer-transition) population. **Recommendation: (a) for now** (zero
+> risk, the volume is tiny — 1114 of 508,965, 0.2% — and nothing downstream is blocked by leaving them as-is), revisit
+> with (b) if and when there's a reason to care about that exact 0.2%. Tracked in the Deferred-work table below as item
+> 2b-residual, `assigned_vm: NA` (needs a human data-risk call, not dispatch-eligible per the plan-authoring rule on
+> open-ended judgment calls).
+
+## Finding 9 (2026-07-25) — "MID window" / KRAKEN-SPOT hive-segment: ALREADY resolved 2026-07-23 (stale item, not new work); write-time recurrence fix shipped anyway
+
+Before building a bespoke migration for "the 48+ KRAKEN-SPOT `ADA/USD.parquet`-style corrupt objects" (this session's
+dispatch item 5), checked `cefi_4surface_migration_execution_log_2026_07_24.md` for the exact mechanism — and found the
+item is **already closed**, just not reflected in the framing this session was dispatched with:
+
+- **`cefi_4surface_migration_execution_log_2026_07_24.md` item 1**: `~~KRAKEN-SPOT --apply~~` — **DONE 2026-07-23
+  ~15:40Z**: 155,872 auto-renamed + 1,157 stale duplicates deleted, all 6 transient-503 stragglers independently
+  verified canonical. **"KRAKEN-SPOT Surface A is genuinely, fully clean."**
+- **"MID window" is NOT a date range** — it's that same execution log's own label for a regex fix (Kraken
+  slash-tolerance parsing for `ATOM/USD`-style GCS-pseudo-dir paths the OLD resolver regex silently failed to parse)
+  that was a PREREQUISITE for the above apply to even discover those corrupt objects, not separate future work.
+- **Independently re-confirmed empirically before trusting the doc**: sampled 7 dates spanning the full corpus
+  (2025-06-01 through 2026-07-01, plus the exact 2026-05-01 the original 48-object finding cited) via a scoped
+  `gsutil ls` for any nested nested-directory nested-parquet shape under
+  `venue=KRAKEN-SPOT/instrument_type=*/data_type=*/` — **zero hive-segment-corrupt objects found on any sampled date**.
+  This session's own fresh LATE-window dry-run (Finding 8) independently corroborates it too: KRAKEN-SPOT does not
+  appear AT ALL in the `would_rename` per-venue breakdown (only `KRAKEN-FUTURES: 40884` does) — everything KRAKEN-SPOT
+  is already `already_canonical`.
+
+**No data migration needed — the historical corruption is gone.** What WAS still open: nothing was stopping the SAME
+class of bug recurring on a future write (the code-level cause, `tardis_shared.py`'s `build_partition_path` writing
+`file_stem` verbatim with no `/`-escaping, was never itself fixed — only its 2026-07-23 SYMPTOM was cleaned up). **Fixed
+forward**: `market-tick-data-service@fd5cfc35` ("fix(cefi): escape stray '/' in filename stem to prevent spurious
+hive-segment corruption") — wraps `file_stem` in the already-shipped `sanitize_file_stem` (2026-07-20, the sibling
+batch=live-divergence fix) at the one remaining unescaped call site, verified both that a slash-bearing raw wire stem
+(`"ADA/USD"`) no longer forges an extra path segment AND that a normal canonical colon-bearing stem
+(`"KRAKEN-SPOT:SPOT_PAIR:ADA-USD"`) survives byte-for-byte. Had to trim the accompanying comment twice to fit —
+`tardis_shared.py` sits EXACTLY at the 900-line file-size cap with zero headroom, so this net-zero-line-count discipline
+will bite the next person touching this file too.
+
+**Revised remaining scope for item 2c**: just `colon_wire` (~1,697 objects — historical LIVE-lane objects with a literal
+`:` in a non-fully-canonical wire form, per `issues/batch_live_filename_divergence_sanitize_symbol_2026_07_20.md` §4) +
+the loop-until-dry re-verification. Given these are ordinary wire-form objects to Script 2 (colons vs. no colons doesn't
+change how it resolves them through the catalogue), they are very likely ALREADY being swept up by the in-flight Range
+A/B/C `cefi-late-renames` apply (Finding 8) if their dates fall in 2025-11-01..2026-07-24 — **the planned final
+full-range verification dry-run will confirm this empirically rather than requiring a separately-scoped run**; do not
+build one preemptively.
+
 ## What's left (unchanged from the parent plan's last-known Deferred-work table, ~13:35Z revision)
 
-| #   | Item                                                                                                   | State              | Notes                                                                                                                       |
-| --- | ------------------------------------------------------------------------------------------------------ | ------------------ | --------------------------------------------------------------------------------------------------------------------------- |
-| 2b  | LATE colliding-venue renames                                                                           | Not done           | Needs a properly-scoped (`--start-date`/`--venue`) run — the unscoped attempt above was killed; run from the migrated VM    |
-| 2c  | MID window (KRAKEN-SPOT `ADA/USD.parquet` spurious hive-segment) + colon_wire (1,697) + loop-until-dry | Not done           | Next after 2b                                                                                                               |
-| 3   | Surface C v2 manifest apply                                                                            | Not done           | Blocked on the Finding-2 fix (DERIBIT `underlying`-key) landing first — do NOT `--keep-chain` or force past 8074/3304 blind |
-| 6   | LIGHTER-ZKSYNC numeric-stem GCS rename backfill (~11,283 objects)                                      | Not done           | Resolver code SHIPPED (`mtds@8835b899`); dry-run + apply itself never attempted                                             |
-| 9   | Final 4-surface done-state re-proof + plan archival                                                    | Cannot be done yet | Gated on 2b/2c/3/6 all landing                                                                                              |
+| #           | Item                                                              | State                                             | Notes                                                                                                                                                                                                                                                                                                                                                                                                           |
+| ----------- | ----------------------------------------------------------------- | ------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2b          | LATE colliding-venue renames                                      | In progress (Finding 8)                           | Scope confirmed + fully characterized; safe majority (~507,851 objects) about to apply via 3 date-range passes excluding 6 known-colliding dates. LIGHTER-ZKSYNC (item 6) fully subsumed — closes with this.                                                                                                                                                                                                    |
+| 2b-residual | 1114 HYPERLIQUID/ASTER/DERIBIT genuine collisions on 6 dates      | **BLOCKED-OPERATOR-DECISION** (Finding 8)         | Queued above — NOT blocking the rest of 2b. Default posture: leave both objects under current names (zero data loss) until the operator rules.                                                                                                                                                                                                                                                                  |
+| 2c          | MID window (KRAKEN-SPOT hive-segment)                             | **DONE** (Finding 9, was already done 2026-07-23) | Historical corruption already migrated; write-time recurrence fix shipped `mtds@fd5cfc35`. No data migration needed.                                                                                                                                                                                                                                                                                            |
+| 2c-residual | colon_wire (~1,697 objects) + loop-until-dry                      | Pending final re-verification (Finding 9)         | Expected to already be subsumed by the in-flight Range A/B/C apply — confirm via the planned final full-range dry-run, don't build a separate run preemptively.                                                                                                                                                                                                                                                 |
+| 3           | Surface C v2 manifest apply                                       | **DONE** (Finding 7)                              | Applied successfully on `cefi-dedup-apply` / `e2-standard-16`: `V2 APPLY COMPLETE + GATE GREEN`, chain-lossy=28 (`TOLERATED`, as predicted), 0 invariant violations. Verified via a clean second dry-run (chain-lossy=0, all markers already landed). Cron paused before / resumed + verified `ENABLED` after. See Finding 7 for the full record, incl. a second tarball-staleness near-miss caught pre-launch. |
+| 6           | LIGHTER-ZKSYNC numeric-stem GCS rename backfill (~11,283 objects) | **Subsumed by 2b** (Finding 8)                    | 12,373 LIGHTER-ZKSYNC renames confirmed within the same LATE-window scope — no separate run needed                                                                                                                                                                                                                                                                                                              |
+| 9           | Final 4-surface done-state re-proof + plan archival               | Cannot be done yet                                | Gated on 2b/2c/3/6 all landing                                                                                                                                                                                                                                                                                                                                                                                  |
 
 Items 1 / 2a / 4 / 4b / 5 / 7c from the parent plan are DONE (unchanged, see the parent's own last-committed revision,
 commit `6cb36c9d2`, for that history). Item 7 (DERIBIT combo partition-move) and item 8 (`slot-cron-ff-pull.sh` audit)
 remain operator-owned / out of `/autonomous` scope, unchanged.
 
-## Recommended next (once resumed, on the migrated VM)
+## Recommended next
 
-1. Fix the DERIBIT chain-BUNDLE `underlying`-key gap (Finding 2's P0) and re-verify the dry-run shows a genuinely
-   understood number (0/0, or a correctly-scoped nonzero).
-2. Surface C v2 apply: pause consolidator → dry-run → apply → verify → resume.
+1. ~~Fix the DERIBIT chain-BUNDLE `underlying`-key gap~~ — **DONE, see Finding 5** (`instruments-service@654d694f`).
+2. ~~Surface C v2 apply~~ — **DONE, see Finding 7**. Applied on `e2-standard-16`, verified via a clean second dry-run,
+   cron resumed + verified `ENABLED`.
 3. LATE colliding-venue renames, properly scoped this time (`--start-date` near the actual regression onset, not the
    full 2019 corpus — the fresh 4-surface reverify from ~01:05Z today pinpoints 2025-12-15/2026-02-01/2026-05-01 as the
    low-canonical-fraction dates).

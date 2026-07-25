@@ -32,12 +32,7 @@ related:
     /codex/02-data/availability-manifest-and-data-status.md,
   ]
 created: 2026-07-06
-last_updated:
-  "2026-07-12 (was: '2026-07-06 (2026-07-06 20:15Z — cefi sub-bucket blank-chain phantom audit cross-reference marker
-  closed [4th marker]; cefi _index verified glued, defi _index verified 0 legacy-combined blank-chain rows across
-  oracle/perp sub-buckets, slot-7·planning)' — verify-rerun-2 finding 142, corrected 2026-07-14 — body carries
-  substantive [2026-07-12 correction, finding 115] and [2026-07-12 correction, finding 344] annotations never reflected
-  in this field)"
+last_updated: "2026-07-14"
 parent_epic: instruments_master
 assigned_vm: NA
 execution_scope: orchestrator-agent
@@ -385,6 +380,17 @@ resolved_by:
       `instruments-service/scripts/enumerate_expected_universe.py:1745-1753` (filter code with
       `_PREDICTION_CQG_DATA_TYPE` predicate + decision-338 logger.info tag),
       `foundation_gates_and_capture_to_100_2026_07_06.md#L221-223` (Plan 5 -008 gate DONE with prediction bullet).
+
+## Progress Log
+
+- **2026-07-06 20:15Z** (slot-7·planning): cefi sub-bucket blank-chain phantom audit cross-reference marker closed (4th
+  marker); cefi `_index` verified glued, defi `_index` verified 0 legacy-combined blank-chain rows across oracle/perp
+  sub-buckets.
+- **2026-07-12** (verify-rerun-2, finding 142; correction, finding 115; correction, finding 344): substantive
+  corrections applied to the body (see inline annotations).
+- **2026-07-14**: verify-rerun-2 finding 142 correction landed; `last_updated` frontmatter field cleaned up to a plain
+  date (was previously carrying this whole narrative as a quoted string, violating the plan frontmatter schema's
+  expectation of a simple date value — moved here 2026-07-25).
 
 ## Provenance
 

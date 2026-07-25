@@ -57,10 +57,14 @@ source:
     "operator report: CRITICAL DP_CATALOG_NOT_RUNNING x2 (sports, prediction) at 2026-07-15 ~03:47",
     "Group-C Cloud Run job-failure triage, 2026-07-16 (utl_uac_skew_fleet_audit_2026_07_15.md follow-up)",
   ]
-status: resolved
+status: open
 assigned_vm:
 resolved_by:
-  ["instruments-service@24f84e86 (sports)", "deployment-service@6bfa284 (prediction)", "re-verified live 2026-07-23"]
+  [
+    "instruments-service@24f84e86 (sports)",
+    "deployment-service@6bfa284 (prediction)",
+    "re-verified live 2026-07-23 -- cefi addendum STILL OPEN, see RE-TRIAGE",
+  ]
 locked_by:
 locked_since:
 execution_scope: orchestrator-agent
@@ -237,6 +241,14 @@ pair. `cefi_monotonicity_guard_alerting_and_dark_venues_2026_07_07.md` covers th
       `storage.objects.create` on `central-element-323112-events` (or the correct events-sink bucket) so
       `CATALOGUE_SHRINK_BLOCKED`/similar structured events stop silently 403ing out of the event-log sink. Repo:
       deployment-service (IAM) — low priority, Cloud Logging already carries the same signal.
+- [ ] [DATA] P1. **cefi `CATALOGUE_SHRINK_BLOCKED` — added per RE-TRIAGE (2026-07-23) recommendation, still unresolved
+      as of that check.** `lifecycle-catalogue-regen-cefi` has hit `CATALOGUE_SHRINK_BLOCKED` on 07-16 and again on
+      07-23 (`new=428410 < current=429129`); today's drop-list is dominated by `dropped_delisted` expired-derivative
+      contract IDs (DERIBIT/OKX-FUTURES/BINANCE-DELIVERY/BINANCE-FUTURES/KRAKEN-FUTURES) — the same "aged out of the
+      window, no frozen tail" bug class already fixed for sports (`_merge_sports_ftp_with_frozen_tail`,
+      `instruments-service@24f84e86`) but never generalized to cefi. Generalize the frozen-tail merge fix to the cefi
+      `_merge_incremental` path and re-run `lifecycle-catalogue-regen-cefi` to confirm `CATALOGUE_PROMOTED`. Repo:
+      instruments-service.
 
 ## Progress Log
 
@@ -337,8 +349,9 @@ cefi/defi addendum below the title claim is a mixed picture, re-verified live an
   check time, well under the 24h DP-CATALOG-001 threshold).
 - `gs://instruments-store-pred-prd-.../prod/catalog.parquet` — `Update time: 2026-07-23 01:03:17 GMT` (~7.8h old).
 - Both jobs (`lifecycle-catalogue-regen-{sports,prediction}`) have been promoting daily without incident since the
-  2026-07-15 fixes shipped — no further staleness alerts implied by these fresh timestamps. Flipping `status` to
-  `resolved`.
+  2026-07-15 fixes shipped — no further staleness alerts implied by these fresh timestamps. **`status` kept `open`**
+  (not flipped to `resolved`) because the doc's own asset_group also covers cefi/defi and the cefi addendum below is
+  confirmed still failing in production — see "cefi/defi addendum" immediately below.
 
 **cefi/defi addendum (2026-07-16 section) — re-verified live 2026-07-23, PARTIALLY still open:**
 

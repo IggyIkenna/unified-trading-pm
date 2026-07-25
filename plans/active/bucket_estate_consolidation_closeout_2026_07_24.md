@@ -87,11 +87,16 @@ Codex SSOTs: `/codex/05-infrastructure/bucket-isolation-model.md`, `/codex/05-in
       this session, still open. Original todo: operator decides kind vs prefix; provision; repoint
       `batch_live_reconciliation_service/config.py` to the resolver; fix launcher doc; end-to-end T1 chain run; next
       scheduled run green; wire Cloud Run failure alerting (55 silent failures).
-- [ ] [DATA] P0. Track to completion the deletions OWNED BY OTHER PLANS (checkpoint; UPDATED 2026-07-14: DeFi trio —
-      parity re-verified by agent incl. closing a 6,941-object gap, lst-rates-prd + perp-funding-prd DELETED,
-      dex-pools-prd purge-lifecycle armed (24h async; disarm window if concerns), kinds removed from all 5 yaml copies
-      (34), TF state clean; L6 twins — cefi/defi/tradfi tick+instruments purge-lifecycle armed (sports pair HELD for
-      sports-plan E1/E8; bucket deletes = follow-up one-liner once purged); lending pair still HELD — Morpho VM
+- [ ] [DATA] P0. Track to completion the deletions OWNED BY OTHER PLANS (checkpoint; UPDATED 2026-07-25 — was:
+      "dex-pools-prd purge-lifecycle armed (24h async; disarm window if concerns)", stale vs. the sibling plan's more
+      final status, corrected per `defi_dedicated_bucket_shared_migration_2026_07_13.md`:221-224: DeFi trio — parity
+      re-verified by agent incl. closing a 6,941-object gap, all 3 of lst-rates-prd/perp-funding-prd/dex-pools-prd
+      CONFIRMED DELETED (`gcloud storage buckets list`, zero matches in any form, 2026-07-14) — dex-pools-prd was
+      deleted directly by the operator on 2026-07-14T11:03:47Z, BEFORE that todo's own snapshot-before-delete step ran
+      (not via the planned 24h purge-lifecycle path; no independent pre-delete object-diff of the ~209k-object legacy
+      tree exists — risk assessed low, not zero, per the sibling plan's own writeup), kinds removed from all 5 yaml
+      copies (34), TF state clean; L6 twins — cefi/defi/tradfi tick+instruments purge-lifecycle armed (sports pair HELD
+      for sports-plan E1/E8; bucket deletes = follow-up one-liner once purged); lending pair still HELD — Morpho VM
       completed but write-target verification inconclusive): `dex-pools-prd`/`lst-rates-prd`/`perp-funding-prd` (−3,
       [[defi_dedicated_bucket_shared_migration_2026_07_13]] todos 6-9 incl. the TF-resource removal added 2026-07-13);
       `lending-indices`+`-prd` (−2, same plan / estate cleanup §5i, gated on VM `mtds-lending-indices-20260712-112557`
@@ -123,12 +128,12 @@ Codex SSOTs: `/codex/05-infrastructure/bucket-isolation-model.md`, `/codex/05-in
       `bucket_naming.py`) is removed. **KEEP permanently**: `tick-data`, `features-cross-instrument`,
       `features-multi-timeframe` (live consumer vocabulary, not retired). **Gate**: each of the 11 grep-clean of
       `resolve_bucket_name(kind=<retired>)`, its alias removed, and `terraform plan` stays green after removal. "No
-      double SSOT." > **Not this todo's scope, deferred separately (found during the fold, not omitted)**: a
-      `deployment-service` > git stash reverting a digest-pin fix on
-      `terraform/services/features-service-sports/gcp/terraform.tfvars` > (owner: features-service-sports, "NOT decided
-      autonomously" — a real pin-vs-`:latest` tradeoff); 4 UAC git > stashes (replay/source-capability WIP, a different
-      feature's WIP, not bucket-fold scope). Neither is tracked > anywhere else yet — flagging so they don't get lost,
-      not claiming them here.
+      double SSOT." **Not this todo's scope, deferred separately (found during the fold, not omitted)**: a
+      `deployment-service` git stash reverting a digest-pin fix on
+      `terraform/services/features-service-sports/gcp/terraform.tfvars` (owner: features-service-sports, "NOT decided
+      autonomously" — a real pin-vs-`:latest` tradeoff); 4 UAC git stashes (replay/source-capability WIP, a different
+      feature's WIP, not bucket-fold scope). Neither is tracked anywhere else yet — flagging so they don't get lost, not
+      claiming them here.
 - [ ] [CONFIG] P2. **Residual asset-group-parity drift the 2026-07-17 sweep found but left** (all cosmetic/waste, none
       blocking; the GCP live path is fully reconciled): (a)
       `deployment-service/terraform/aws/manifest_consolidator_scheduler.tf:35` + `terraform/aws/main.tf:74` still

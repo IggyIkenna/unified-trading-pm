@@ -30,7 +30,7 @@ repos: [unified-trading-library, market-data-processing-service, instruments-ser
 scope: [engineer]
 tags: [manifest, honest-coverage, sports, dedup, captured-outranks, recency-masking]
 related:
-  - /plans/active/sports_closeout_batch1_ao_ready_2026_07_24.md
+  - /plans/archive/2026_07/sports_closeout_batch1_ao_ready_2026_07_24.md
   - /plans/active/sports_consolidated_closeout_2026_07_19.md
   - /plans/active/issues/sports_index_recency_masked_captured_atoms_2026_07_13.md
   - /plans/active/issues/sports_odds_manifest_consolidator_captured_outranks_resurrection_2026_07_24.md
@@ -151,7 +151,7 @@ up that DIAG item has this data point.
       already-shipped `flip_sports_odds_captured_leak_to_attempted_failed.py --apply` survives >=2 consolidator cycles
       without reverting. Re-run `--dry-run` first to confirm scope is still exactly the 31 target rows (no drift). Repo:
       instruments-service (script) + deployment-service or infra (if Option A2's cron-pause is picked). — RESOLVED,
-      Option A2, instruments-service@\<next-sha\> (script hardened to the codex §519 paused-consolidator CAS recipe).
+      Option A2, instruments-service@d5e80b32 (script hardened to the codex §519 paused-consolidator CAS recipe).
       Sequence: (1) paused `uts-prod-manifest-consolidator-instruments-sports-cron` via Cloud Scheduler API, (2) found +
       waited out 2 ALREADY-IN-FLIGHT overlapping executions (one ran 7m47s — matches the documented sports slow-cycle
       class) since pausing the scheduler doesn't kill a running execution, (3) re-ran `--dry-run` (still exactly 31
@@ -234,3 +234,30 @@ one; the backup snapshot + this script remain valid and re-runnable.
   direct-canonical-hand-edit script workspace-wide, not just this one) and have them add a write-time
   optimistic-concurrency guard (e.g. `if_generation_match` on the canonical write, or acquire `_index/consolidator.lock`
   before an external write) rather than re-solving it per-script.
+
+## Todos (continued)
+
+- [x] [CODE] P0. Implement Option C2 as the permanent, systemic fix (complementary to the A2 immediate correction above,
+      which fixed these 3 rows but requires a manual cron-pause dance for every future correction): close the
+      consolidator's own read-modify-write TOCTOU race so no future direct-writer correction needs a paused-cron window
+      at all. Root cause confirmed in `unified_trading_library.manifest_consolidator._write_consolidated`: the CAS
+      write's `if_generation_match` came from a fresh `blob.reload()` taken right before the upload, not the generation
+      the merge's own canonical read actually saw — a late reload always reflects whatever is CURRENT at that moment, so
+      it trivially matches itself and lets the write through even when an external writer landed a change in the merge's
+      (90-120s in production) read-to-write window. Fix: `_duckdb_merge_payload`/`_download_canonical_with_generation`
+      now capture the canonical's generation via `download_bytes_with_generation` at the SAME read that produces the
+      merge payload, and `_write_consolidated` uses THAT captured value (not a fresh reload) as the CAS token on every
+      attempt (including retries) — any intervening external write now correctly fails the CAS check and drives the
+      existing re-merge retry loop instead of being silently clobbered. Also hardened the canonical read to never trust
+      the caller's `canonical_present` mtime-probe hint blindly (a stale-False-negative surfaced by
+      `test_consolidate_idempotent`'s second cycle during this fix) — the CAS token now always reflects the OBSERVED
+      generation, not a possibly-stale hint. — **unified-trading-library@14301571** (full `quality-gates.sh` green;
+      98/98 `test_manifest_consolidator.py` + 60/60 `test_manifest_writer_per_vm.py` passing, including the existing
+      lost-update-race regression test and 3 other consolidator test files updated for the new 4-tuple
+      `_duckdb_merge_payload` return shape). Reaches the live consolidator automatically per
+      `/codex/05-infrastructure/manifest-consolidator-ssot.md` (the UTL base image auto-republishes on every LDR push;
+      Cloud Run jobs resolve `:latest` on their next ~1-min invocation) — **deployment propagation + a fresh live
+      durability re-verification (a NEW direct-writer correction surviving >=2 consolidator cycles without any cron
+      pause) is not yet confirmed post-deploy**; that confirmation is deferred to whoever next needs to run a similar
+      direct-canonical correction (or a dedicated verification pass), since the 3 dates this issue doc exists for are
+      already durably fixed via A2 and don't need re-touching.
