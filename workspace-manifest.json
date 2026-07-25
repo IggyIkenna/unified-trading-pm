@@ -80,7 +80,7 @@
     "system-integration-tests": "0.3.3",
     "unified-api-contracts": "0.72.0",
     "unified-trading-library": "0.57.0",
-    "unified-trading-pm": "1.2.600",
+    "unified-trading-pm": "1.2.601",
     "market-data-processing-service": "0.22.0",
     "e2e-testing": "0.6.0",
     "agent-orchestrator": "0.97.0",
@@ -88,7 +88,7 @@
     "trading-agent-service": "0.12.11",
     "strategy-service": "0.47.0",
     "ml-service": "0.50.0",
-    "alerting-service": "0.57.0",
+    "alerting-service": "0.58.0",
     "unified-trading-api": "0.2.19",
     "client-reporting-api": "0.32.0"
   },
