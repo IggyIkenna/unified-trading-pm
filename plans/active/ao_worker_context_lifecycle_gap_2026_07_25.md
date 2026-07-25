@@ -175,30 +175,38 @@ sequential: true
       (existing kill-path tests for `context_full`/`stuck_at_prompt`/etc. pass unmodified — verified, 84/84 green).
       `quality-gates.sh` green.
 - [x] ✅ [BACKEND] P1. **Sharpen the kill trigger to only fire after the graceful path has already failed** —
-      `agent-orchestrator@4dfa759`. Added `context_burn_kill_min_pct: int = Field(default=98, ge=1, le=100)` to `Tuning`
-      (`server/config.py`), distinct from `context_burn_min_pct` (stays 80, unchanged — still gates only the
-      unconditional `context_burn_suspected` flag/Slack alert). New pure gate function
-      `_context_burn_kill_ready(context_pct, directive_issued) -> bool` in `worker_liveness_watchdog.py`, called at the
-      Trigger-4 kill site as
-      `will_kill = _CONTEXT_BURN_KILL and _context_burn_kill_ready(ctx_pct,     bool(slot.context_directive_issued))` —
-      and `will_kill` (not the raw feature flag) is what's now logged + Slack-alerted, so neither ever claims a kill
-      that didn't happen. **Deviation from this todo's original text**: dropped the "2 consecutive `/progress`/`/done`
-      reports with no pct drop" grace-window mechanic from the original spec. That would have needed a NEW `slots` table
-      column (a report-count or directive-issued-at timestamp) — given this exact table just had a live P0 today from a
-      column present in the ORM model but missing from the `_add_missing_columns` ALTER-TABLE list
-      (`agent-orchestrator@ca5d10d`, broke `/done` fleet-wide for `context_directive_issued` itself), adding a second
-      new column in the same session carried real repeat-incident risk for a refinement beyond the operator's actual
-      words ("so high it can't take instruction anymore" — the "2 reports" framing was this session's own elaboration,
-      not a verbatim operator requirement). Instead the gate reuses the EXISTING, already-migrated
-      `slot.context_directive_issued` boolean directly: it is already True only while a `compact_now` directive is
-      outstanding and NOT yet complied with (cleared to `False` the instant `progress_slot` observes an actual
-      compaction drop) — so "≥98% AND directive_issued" already encodes "graceful path already tried and not yet
-      succeeded," just without the extra 2-report counting. A slot that hits 98%+ with no directive ever issued (e.g.
-      one long tool call, no intervening `/progress`) correctly does NOT get killed — it still gets the unconditional
-      Slack page. Unit tests: 4 pure `_context_burn_kill_ready` cases (below-threshold, no-directive, above-threshold,
-      exact boundary) + 2 `_tick_once` integration tests (`test_tick_context_burn_kill_gated_below_kill_threshold`,
-      `test_tick_context_burn_kill_fires_above_threshold_with_directive`) + a `TuningDefaults` bounds test. All green;
-      `quality-gates.sh` green.
+      `agent-orchestrator@4dfa759` (slot 3, initial cut) → **corrected + completed by `agent-orchestrator@54850f6`**
+      (slot 2, this entry). Slot 3's cut added `context_burn_kill_min_pct` +
+      `_context_burn_kill_ready(context_pct, directive_issued)` but explicitly deviated from this todo's own spec by
+      dropping the "2 consecutive `/progress`/`/done` reports with no pct drop" grace-window mechanic (cited
+      migration-risk after the same-day `context_directive_issued` ALTER-TABLE P0, `agent-orchestrator@ca5d10d`) — so a
+      slot with a directive issued THIS SAME TICK at ≥98% could be killed with zero grace, which the plan's own **Done
+      when** text explicitly requires NOT to happen ("does NOT fire at 99% if a directive was sent but the grace window
+      hasn't elapsed yet"). This entry closes that gap rather than leaving it as an accepted deviation: added
+      `SlotRow.context_directive_grace_reports` (`server/orm.py`) — a counter maintained centrally in `update_slot_ping`
+      (`server/state_store/slots.py`): increments on any no-drop report while `context_directive_issued` is True, resets
+      to 0 (alongside the flag) the instant a real compaction drop is observed. `_context_burn_kill_ready` is now 3-arg
+      (`context_pct, directive_issued, directive_grace_reports`), requiring
+      `directive_grace_reports >= _CONTEXT_BURN_GRACE_REPORTS` (2). The Trigger-4 block was also restructured —
+      extracted into `_handle_context_burn_trigger()` — because the kill decision must now be RE-EVALUATED on every tick
+      a slot stays flagged (the grace counter accumulates over multiple ticks after the suspicion flag first fires), not
+      decided once at flag-time as both the original and slot-3's code did (this also fixed a `_tick_once`
+      C901-complexity gate failure the restructure itself introduced, cleanly, as a side effect). Directly applied the
+      migration-risk lesson slot 3 cited: added `context_directive_grace_reports` to `bootstrap.py`'s
+      `_add_missing_columns` ALTER-TABLE list in the SAME commit as the ORM column, with a comment naming the sibling
+      incident, rather than accepting the gap. Reconciled via a real (second) `git stash pop` conflict during quickmerge
+      against slot 3's already-landed commit — resolved by keeping slot 3's `context_burn_kill` and
+      `context_burn_kill_min_pct` additions verbatim and layering the grace-window mechanic on top (not a blind
+      overwrite); a SECOND stash conflict during the retry (against the operator's meanwhile-landed todo 10
+      `context_burn_kill: True` flip) was resolved the same way — kept the operator's `True` default, did not regress it
+      back to `False`. Tests: kept + fixed slot 3's 4 pure-gate + 2 `TuningDefaults`/integration tests (updated to the
+      3-arg signature and the new grace-window semantics — the old assertions were simply wrong under the corrected
+      contract), added 4 more pure-gate tests in `tests/test_e2e_findings_remediation.py` (the exact 3 "Done when"
+      scenarios + the no-directive case), a `SlotRow.context_directive_grace_reports` end-to-end counter test through
+      the real `/progress` route in `tests/test_task_lifecycle_done_gate_resume.py`, and 2 restructured `_tick_once`
+      integration tests (`test_tick_context_burn_kill_withheld_until_grace_window_elapses`,
+      `test_tick_context_burn_kill_fires_once_grace_window_elapsed`) replacing slot 3's now-incorrect
+      "fires-immediately" one. 1674/1674 tests pass; `quality-gates.sh` PASSED.
 - [x] ✅ [BACKEND] P2. **APPROVED 2026-07-25 (operator, in-session, verbatim: "you can do this please now"; re-confirmed
       after the pre-compact checkpoint, same wording, once the two prerequisites above had actually landed)** — flip
       `context_burn_kill` (`server/config.py`) default `False` → `True`. **`agent-orchestrator@bf81e6b`**, shipped after
@@ -239,8 +247,32 @@ sequential: true
       `context_saturated_session_lost_task_requeued` (todo 12) event types appear when their trigger conditions are
       manually reproduced in a test env. **Done when**: a written verification note citing actual post-deploy event/log
       evidence for (a)-(c), attached to this plan's Progress Log.
+- [ ] [BACKEND] P2. **Add a migration-completeness test** asserting every column in `server/orm.py`'s `SlotRow` (and
+      ideally `AgentRow`) exists in `bootstrap.py`'s `_add_missing_columns` ALTER-TABLE lists — discovered this session
+      after the SAME gap bit the `slots` table TWICE in one day: `context_directive_issued` (todo 4,
+      `agent-orchestrator@ca5d10d`, live P0 that broke `/done` fleet-wide) and would have recurred for
+      `context_directive_grace_reports` (todo 9's reconciliation) had it not been caught manually. Tests using
+      `create_all_tables()` (`Base.metadata.create_all`) never catch this class of bug — that path builds the schema
+      straight from the ORM, bypassing the ALTER-TABLE list entirely, so the exact code path that's broken in production
+      is untested. **Done when**: a unit test iterates `SlotRow.__table__.columns` (and `AgentRow`'s) and asserts each
+      name appears in the corresponding `_add_missing_columns` dict — failing loud, by name, the next time this drifts;
+      `quality-gates.sh` green.
 
 ## Progress Log
+
+**2026-07-25 (slot 2, backend_engineer, ~05:55-06:15 UTC).** Continued draining this sequential plan after todos 3-4
+(gate `done_slot`/`progress_slot` on self-reported context — `agent-orchestrator@55148c8`/`3ace754`). Dispatch briefly
+routed this slot to an unrelated higher-priority backlog item (`deployment_api_sigabrt_crash_loop_2026_07_24.md`'s
+`[BACKEND] P1` — root-caused + fixed `deployment-api@7ba17e2`, see that issue doc) since todo 5 here is `[INFRA]`-tagged
+and this slot's role is `backend_engineer`; heartbeat then dispatched todo 9 directly (sequential ordering apparently
+skips over role-ineligible todos rather than hard-blocking on them — todos 5-8 were still open at dispatch time).
+Implementing todo 9 hit a live merge conflict: slot 3 had ALREADY shipped a partial version
+(`agent-orchestrator@4dfa759`) while this slot was mid-implementation, and separately the operator had approved + landed
+todo 10's `context_burn_kill` flip (`True`) in the same window. Reconciled both (see todo 9's own entry above for the
+technical detail) rather than force-pushing over either — kept the operator's flag flip, kept slot 3's
+`context_burn_kill_min_pct` field, added the missing grace-window mechanic on top. Also flagged the recurring
+ALTER-TABLE migration-list gap as a new P2 todo (added above) rather than just fixing it silently — the SAME class of
+bug bit this exact table twice in one session. `agent-orchestrator@54850f6`.
 
 **2026-07-25 (autonomous session, ~05:00-05:20 UTC).** Fleet picked this plan up and is executing it — slot 2 completed
 todos 1 (`agent-orchestrator@9c08c61`, "feat(config): add worker-scoped context-gate Tuning knobs") and 2
