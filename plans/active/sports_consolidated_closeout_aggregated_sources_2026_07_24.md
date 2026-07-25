@@ -411,3 +411,13 @@ drift_direction: advance-code
 
 - **Folded-in, excluded from the digest above (all `superseded_by: sports_consolidated_closeout_2026_07_19.md`, live
   content absorbed into Track C/S2 — see the callout at the top of this section for the full list of 5)**.
+
+## Deferred work — migrated to:
+
+The lone `DEFERRED` annotation in this file (the `[CODE] P1. DEFERRED — register XG_SHOTS in SPORTS_DATA_TYPE_META`
+digest bullet under "API-Football / source-adapter correctness") is a mirrored reference, not this doc's own tracked
+work — its real owner is
+[`plans/active/issues/understat_bulk_download_backfill_2026_06_29.md`](/plans/active/issues/understat_bulk_download_backfill_2026_06_29.md),
+already linked in the digest entry immediately above it. That issue doc's own todo list is the SSOT for this item
+(blocked on deployment-api LDR going QG-green); this file only aggregates a digest pointer, per this section's own
+"referenced, not duplicated" framing.
