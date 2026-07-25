@@ -20,6 +20,14 @@
 #   bash scripts/orchestrator/enable_slack_alerts.sh                    # defaults to: orchestrator
 #   bash scripts/orchestrator/enable_slack_alerts.sh orchestrator audit-stale-gate-references audit-false-done
 #
+# Run this AS THE OPERATOR USER (e.g. `sudo -u ubuntu -H bash -c '... enable_slack_alerts.sh ...'`),
+# NOT as literal root — confirmed live 2026-07-25 on i-0c9b283b31d6b5ca7: the instance-role
+# credential root's shell resolves (`uts-orchestrator-epic-role`) lacks
+# `secretsmanager:GetSecretValue` on this secret, while the operator IAM user does not. The
+# script's own privileged writes (drop-in file, systemctl) are internally `sudo`-prefixed so
+# it still works when invoked this way — mirrors the identical ubuntu+internal-sudo pattern
+# `install-audit-crons.sh` already uses for the same root-credential-mismatch reason.
+#
 # Secret resolution order (first hit wins), on whichever cloud the VM is on:
 #   1. AGENT_ORCHESTRATOR_SLACK_WEBHOOK   (dedicated orchestrator webhook)
 #   2. alerting-slack-webhook-url         (shared alerting-service / "hives" webhook)
@@ -78,21 +86,23 @@ case "$WEBHOOK" in
   *) echo "ERROR: resolved webhook is not an https URL — refusing to write" >&2; exit 1 ;;
 esac
 
+# sudo-prefixed throughout below: this script runs as the operator user (see the usage
+# note above), which needs its OWN credentials for the secret fetch above but not root
+# privilege for it; the drop-in/systemctl operations below need root, which sudo supplies.
 for UNIT in "${UNITS[@]}"; do
   DROPIN_DIR="/etc/systemd/system/${UNIT}.service.d"
   DROPIN_FILE="$DROPIN_DIR/slack-alerts.conf"
-  mkdir -p "$DROPIN_DIR"
-  umask 077
-  cat > "$DROPIN_FILE" <<EOF
-[Service]
-Environment=AGENT_ORCHESTRATOR_SLACK_WEBHOOK=$WEBHOOK
-EOF
-  chmod 600 "$DROPIN_FILE"
-  umask 022
+  sudo mkdir -p "$DROPIN_DIR"
+  # `sudo tee` (not `sudo cat > file`, which would try the redirect as the CALLING user's
+  # shell, not root's) -- tee's own stdout mirror is redirected to /dev/null so the
+  # secret is never echoed to the console/SSM output.
+  printf '[Service]\nEnvironment=AGENT_ORCHESTRATOR_SLACK_WEBHOOK=%s\n' "$WEBHOOK" | sudo tee "$DROPIN_FILE" >/dev/null
+  sudo chmod 600 "$DROPIN_FILE"
+  sudo chown root:root "$DROPIN_FILE"
   echo "Wrote $DROPIN_FILE (mode 600, value redacted)"
 done
 
-systemctl daemon-reload
+sudo systemctl daemon-reload
 
 # orchestrator is the only long-running Type=simple unit this script ever targets — its
 # already-running process needs a restart to pick up the new env. audit-stale-gate-
@@ -102,14 +112,14 @@ systemctl daemon-reload
 # just re-runs it early — harmless, but unnecessary).
 for UNIT in "${UNITS[@]}"; do
   if [[ "$UNIT" == "orchestrator" ]]; then
-    systemctl restart orchestrator
+    sudo systemctl restart orchestrator
     echo "orchestrator restarted"
   fi
 done
 
 # Verify the env is present WITHOUT printing the secret.
 for UNIT in "${UNITS[@]}"; do
-  if systemctl show "$UNIT" --property=Environment | grep -q 'AGENT_ORCHESTRATOR_SLACK_WEBHOOK='; then
+  if sudo systemctl show "$UNIT" --property=Environment | grep -q 'AGENT_ORCHESTRATOR_SLACK_WEBHOOK='; then
     echo "✅ AGENT_ORCHESTRATOR_SLACK_WEBHOOK is set for ${UNIT} — Slack alerts ENABLED"
   else
     echo "⚠️  env not visible via systemctl show for ${UNIT} — check /etc/systemd/system/${UNIT}.service.d/slack-alerts.conf"
