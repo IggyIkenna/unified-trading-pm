@@ -22,7 +22,7 @@ referenced_by:
     plans/audit/instructions/orchestrator_master_audit_instructions.md,
   ]
 owner:
-last_reviewed: 2026-07-20
+last_reviewed: 2026-07-25
 code_refs:
 ---
 
@@ -213,13 +213,13 @@ not by VM — see the single-VM SSOT § "Dispatch".
 
 ## Environment variables
 
-| Variable                                   | Default                 | Purpose                                                            |
-| ------------------------------------------ | ----------------------- | ------------------------------------------------------------------ |
-| `ORCHESTRATOR_PM_REPO_PATH`                | `../unified-trading-pm` | Override PM repo location                                          |
-| `ORCHESTRATOR_PLAN_REGEN_INTERVAL_SECONDS` | `1800`                  | Tick cadence (30 min; was 6 h/21600); set to `0` to disable        |
-| `ORCHESTRATOR_REGEN_PRUNE_STALE`           | `false`                 | Enable orphan pruning on every tick                                |
-| `ORCHESTRATOR_REGEN_DB_PATH`               | —                       | state.db path for safe-row deletion (yaml-only prune when unset)   |
-| `ORCHESTRATOR_VM_ID`                       | — (unset)               | Retired multi-VM filter; unset = no filter = the single-VM reality |
+| Variable                                   | Default                 | Purpose                                                                                                                |
+| ------------------------------------------ | ----------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `ORCHESTRATOR_PM_REPO_PATH`                | `../unified-trading-pm` | Override PM repo location                                                                                              |
+| `ORCHESTRATOR_PLAN_REGEN_INTERVAL_SECONDS` | `1800`                  | Tick cadence (30 min; was 6 h/21600); set to `0` to disable                                                            |
+| `ORCHESTRATOR_REGEN_PRUNE_STALE`           | `true`                  | Enable orphan pruning on every tick (verified `server/config.py:786`, 2026-07-25 — was documented `false` here, stale) |
+| `ORCHESTRATOR_REGEN_DB_PATH`               | —                       | state.db path for safe-row deletion (yaml-only prune when unset)                                                       |
+| `ORCHESTRATOR_VM_ID`                       | — (unset)               | Retired multi-VM filter; unset = no filter = the single-VM reality                                                     |
 
 ---
 
@@ -279,6 +279,34 @@ Root cause: each edit to an unchecked `- [ ] description` line generates a new `
 causing a new task ID to be issued while the old one remains as an orphan. Fix: `prune_stale=true` with
 `ORCHESTRATOR_VM_ID` scoping eliminates this accumulation going forward. One-shot cleanup requires running `prune_stale`
 once on the affected VM.
+
+### A `done` task's checkbox is flipped back to `[ ]` after an audit — does dispatch notice?
+
+**Mechanically**: yes, the work redispatches, but under a **new** task_id, not the old one. Next regen tick, the
+reopened line is invisible to the reconcile match (`plan_tasks_by_brief` only looks at what's CURRENTLY in
+`backlog.yaml`, and the old id was already pruned the tick it went `done`) — so `regen_backlog_from_plan.py`'s ADD pass
+mints a fresh id and queues it like any other new todo. The **old** id's `TaskRow` is never touched — it keeps reading
+`status=done` forever (see "Never delete done/dispatched rows" above), citing whatever `done_sha` the audit later
+determined was wrong.
+
+**The residual risk**: `_completed_task_satisfied` (`server/dispatch.py`) trusts ANY `status=done` row by task_id alone
+— it has no notion of "is this id still the current representation of the work". For a `gate_on_depends`-wired plan this
+mostly self-heals within one regen cycle (`_wire_gate_on_depends_prereqs` adds the new id to every downstream gate;
+`_scrub_completed_upstream_prereqs` drops the stale old id the same tick it's pruned) — but the SAME function also
+treats an id absent from both yaml and DB as satisfied (the 2026-06-29 whole-fleet-idle-block fix), so the window
+between "old id scrubbed" and "new id wired in" is silently satisfied too, not blocked. A `completed_tasks` reference
+set outside that auto-managed wiring (hand-authored — banned by the plan-authoring convention "no per-todo prereq
+syntax", but the data model does not technically enforce the ban) never self-heals at all.
+
+**Detection**: `scripts/orchestrator/audit_stale_gate_references.py` (shipped 2026-07-25, mirrors
+`audit_false_done.py`'s pattern) finds the exact, mechanically-verifiable case — an orphaned `done` id still named in
+some live task's `completed_tasks`, whose own plan currently has an open todo hashing IDENTICALLY to its stored
+`brief_hash` (the same line, un-reworded, just un-checked). Run it the same session as any manual audit-and-reopen; it
+is read-only (report-only, no `--fix`) — correct a confirmed finding via `POST /api/backlog/{id}/reopen`-style mutation
+or by re-wiring the affected plan's `depends_on`, not by hand-editing `backlog.yaml`. A clean run means "no exact-reopen
+collision found", not "no drift is possible" — a reopened todo that was ALSO reworded on the same edit is undetectable
+by this tool (no plaintext brief survives an orphaned row to fuzzy-match against). SSOT for the full investigation:
+`plans/archive/issues/gate_completed_tasks_trusts_stale_done_after_checkbox_unflip_2026_07_25.md`.
 
 ---
 
