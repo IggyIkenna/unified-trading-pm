@@ -22,6 +22,7 @@ tags: [quality-gates, ui, codex-compliance, hardcoded-colours, gate-blind-spot]
 related:
   [
     plans/active/issues/ui_codex_gate_blind_to_app_router_layout_2026_07_21.md,
+    plans/active/issues/unified_trading_system_ui_codex_violations_far_exceed_estimate_2026_07_21.md,
     /codex/06-coding-standards/ui-testing-layers.md,
   ]
 created: "2026-07-21"

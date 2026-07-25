@@ -99,6 +99,15 @@ documented finding that `market-data-sports` shares the uniform `*/1 * * * *` Cl
 `updated` timestamps every check) even when I made no write of my own in between, confirming an external process is
 continuously rewriting it.
 
+> **⚠️ 2026-07-25 correction**: the attribution above (to the `market-data-sports` cron) was by analogy to a different
+> script's finding about a different bucket, and is a misattribution — this doc's own bucket in question is
+> `instruments-store-sports-prd-central-element-323112` (an `instruments-store`, not `market-data-tick`, bucket). Per
+> `/codex/05-infrastructure/manifest-consolidator-ssot.md`, `uts-prod-manifest-consolidator-instruments-sports-cron` and
+> `uts-prod-manifest-consolidator-market-data-sports-cron` are two DISTINCT Cloud Scheduler jobs for two DISTINCT
+> buckets. The actually-correct attribution — confirmed by this doc's own Cross-slot note below and independently by
+> `sports_odds_manifest_captured_outranks_blocks_legacy_leak_correction_2026_07_24.md` — is
+> `uts-prod-manifest-consolidator-instruments-sports-cron` (the one that was paused to land the durable fix).
+
 `unified_trading_library/manifest_consolidator.py`'s merge `ORDER BY` (lines ~2582-2588) makes
 `capture_status = 'captured'` **always outrank any non-captured status, regardless of recency**, for the same dedup-key
 group — a deliberate 2026-07-12 fix ("a later failed/empty/unattempted row must never silently erase an earlier real

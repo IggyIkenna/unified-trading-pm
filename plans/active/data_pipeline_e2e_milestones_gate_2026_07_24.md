@@ -141,7 +141,14 @@ audit's ground-truth table is stale relative to today's state.
       `deployment-api/deployment_api/routes/data_status/_distinct_values.py::_comparison_set()` confirmed defi's
       instrument_type casing is a SEPARATE, permanent, already-settled rule (canonical LOWERCASE, folded always) — NOT
       part of the same migration_pending population as cefi/tradfi's D1 UPPERCASE-target ruling. Added a scope
-      correction to taxonomy.md §5.1. `pm@<commit-pending>`.
+      correction to taxonomy.md §5.1. `pm@<commit-pending>`. > **⚠️ 2026-07-25 correction**: the framing above
+      (permanent, out-of-scope, folded-always LOWERCASE) was itself > superseded ~20 min after that same commit
+      (`4f81d0139`, 19:11:01 UTC) by the operator's own directive commit > (`adb28421d`, 19:31:37 UTC), which put defi
+      back in scope for a narrower **per-value least-migration-cost** > convergence rule — a different rule that happens
+      to produce the same LOWERCASE outcome today. See >
+      `/plans/active/issues/cross_ag_instrument_type_casing_100pct_directive_2026_07_24.md` (§ "Open todo", DONE >
+      2026-07-24) for the authoritative framing and the correction banners already added to >
+      `reconciliation-finding-taxonomy.md`, `canonical-cutover-register.md`, and `cross-asset-canonical-target-ssot.md`.
 - [x] [REVIEW] P2. ✅ **DONE 2026-07-24** — target: new issue doc under `plans/active/issues/`. Created
       `catalogue_census_equivalents_inventory_2026_07_24.md` with the bounded inventory todo (the investigation itself
       is future dispatch work). `pm@<commit-pending>`.
@@ -237,9 +244,10 @@ both a serial (4-8h) and a parallel (1-2h) launcher available.
       Parallelization Threshold for Long-Running VMs" section stating the generic rule (any VM run expected/observed to
       exceed a few hours must be cross-machine-sharded and/or intra-machine-parallelized, unless I/O-bound against a
       single shared external resource — the Tardis exception generalized). `pm@<commit-pending>`.
-- [x] [DATA] P1. ✅ **DONE 2026-07-24** — target: `/plans/active/defi_consolidated_closeout_2026_07_18.md`. Added the
-      launcher-confirmation todo in Track 5, gated on `candle_canonical_path_migration_execution_2026_07_24.md` reaching
-      P8. `pm@<commit-pending>`.
+- [x] [DATA] P1. ✅ **DONE 2026-07-24** — target: `/plans/active/defi_track5_coverage_mvp_backfill_2026_07_24.md` (Track
+      5 was forked out of `defi_consolidated_closeout_2026_07_18.md` earlier 2026-07-24; this is where the content
+      actually landed — see gate-audit §6 there). Added the launcher-confirmation todo, gated on
+      `candle_canonical_path_migration_execution_2026_07_24.md` reaching P8. `pm@<commit-pending>`.
 - [x] [DATA] P2. ✅ **DONE 2026-07-24** — target: `/plans/active/sports_consolidated_closeout_2026_07_19.md`. Added the
       launcher-determination todo naming both the serial and parallel launchers. `pm@<commit-pending>`.
 - [x] [DATA] P3. ✅ **DONE 2026-07-24** — target: `/plans/active/cefi_consolidated_closeout_2026_07_18.md`. Added the
@@ -326,8 +334,10 @@ sports's shard atoms.
 
 - [x] [PM] P2. ✅ **DONE 2026-07-24** — target: `/plans/active/task_template.md`. Added finding K (new §3 bullet)
       stating the explicit checkpoint-cadence rule. `pm@<commit-pending>`.
-- [x] [DATA] P1. ✅ **DONE 2026-07-24** — target: `/plans/active/defi_consolidated_closeout_2026_07_18.md`. Added one
-      combined `data-pipeline-check-is`/`-mtds` checkpoint-cadence todo in Track 5. `pm@<commit-pending>`.
+- [x] [DATA] P1. ✅ **DONE 2026-07-24** — target: `/plans/active/defi_track5_coverage_mvp_backfill_2026_07_24.md` (Track
+      5 was forked out of `defi_consolidated_closeout_2026_07_18.md` earlier 2026-07-24; this is where the content
+      actually landed — see gate-audit §11 there). Added one combined `data-pipeline-check-is`/`-mtds`
+      checkpoint-cadence todo. `pm@<commit-pending>`.
 - [x] [DATA] P1. ✅ **DONE 2026-07-24** — target: `/plans/active/cefi_consolidated_closeout_2026_07_18.md`. Added a new
       "Checkpoint cadence" subsection with 6 genuine RUN todos (3x each for -is/-mtds). `pm@<commit-pending>`.
 - [x] [DATA] P1. ✅ **DONE 2026-07-24** — target: `/plans/active/sports_consolidated_closeout_2026_07_19.md`. Added one
@@ -364,10 +374,12 @@ low-severity miss (a 0-open-todo doc).
 ## 13. AO-dispatch-readiness — zero contradictions, no open-ended items, crystal-clear for a cold Sonnet-5 worker
 
 **Gap**: NOT uniformly satisfied. Sports is the only one of the 5 with a full self-documented adversarial pass (Track Y,
-findings A-G) — and even it has one un-flagged prose-only ordering dependency. tradfi/defi/cefi got only the narrower
-2026-07-24 AO-flip-safety audit (checkbox-digest safety + `depends_on` gating) — a real but smaller slice; defi has a
-stale/broken cross-todo citation plus a self-contradiction about whether a fix already shipped; cefi has an open-ended
-judgment-call todo with no bounded scope. Prediction has had no adversarial pass at all.
+findings A-G — since archived out of the live sports closeout doc into
+`/plans/archive/2026_07/sports_consolidated_closeout_history_2026_07_24.md` as part of the same-day line-cap trim) — and
+even it has one un-flagged prose-only ordering dependency. tradfi/defi/cefi got only the narrower 2026-07-24
+AO-flip-safety audit (checkbox-digest safety + `depends_on` gating) — a real but smaller slice; defi has a stale/broken
+cross-todo citation plus a self-contradiction about whether a fix already shipped; cefi has an open-ended judgment-call
+todo with no bounded scope. Prediction has had no adversarial pass at all.
 
 - [x] [DOC] P2. ✅ **DONE 2026-07-24** — target: `/plans/active/sports_consolidated_closeout_2026_07_19.md`. Added a
       machine-gate caveat to Track C's EXCHANGE_ODDS/FIXED_ODDS fork sequence. `pm@<commit-pending>`.
@@ -399,8 +411,10 @@ cells have actually been proven wired through backfill=paper=live, vs. just decl
 - [x] [DATA] P2. ✅ **DONE 2026-07-24** — target: `/plans/active/tradfi_consolidated_closeout_2026_07_18.md`. Extended
       "## MVP universe" with a real per-cell proven-wired-vs-declared table + an honest gap finding.
       `pm@<commit-pending>`.
-- [x] [DATA] P2. ✅ **DONE 2026-07-24** — target: `/plans/active/defi_consolidated_closeout_2026_07_18.md`. Added a new
-      "## MVP universe" section stating no cell is yet proven wired backfill=paper=live. `pm@<commit-pending>`.
+- [x] [DATA] P2. ✅ **DONE 2026-07-24** — target: `/plans/active/defi_track5_coverage_mvp_backfill_2026_07_24.md` (Track
+      5 was forked out of `defi_consolidated_closeout_2026_07_18.md` earlier 2026-07-24; this is where the content
+      actually landed — see gate-audit §14 there). Added a new "## MVP universe" section stating no cell is yet proven
+      wired backfill=paper=live. `pm@<commit-pending>`.
 - [x] [DATA] P2. ✅ **DONE 2026-07-24** — target: `/plans/active/cefi_consolidated_closeout_2026_07_18.md`. Added a new
       "## MVP universe" section referencing `/codex/02-data/mvp-scope-canonical.md`, consolidating the scattered
       per-venue list + a table. `pm@<commit-pending>`.
