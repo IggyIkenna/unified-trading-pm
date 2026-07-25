@@ -890,6 +890,14 @@ source: >-
     **unified-api-contracts@7b13196e**. This closes the continental-majors SLICE of step 1 — the full ~300-league
     curated universe (the 171-country domestic top+below+cup selection) remains open; main todo checkbox stays unchecked
     since steps 2 (backfill) and 3 (residual drop) haven't started and even step 1 isn't fully done.
+  - **Post-ship consistency check (data, not guess)**: the 5 continental cups already in the registry before this
+    session (`UCL`, `UEL`, `UECL`, `COPA_LIBERTADORES`, `COPA_SUDAMERICANA`) are all `in_mvp_scope=True` (via the
+    field's default) — i.e. they were ALREADY intentionally part of the 96-league MVP baseline, consistent with
+    Directive A's "we pretty much narrow down our prediction leagues to the ones the odds API has data for."
+    Cross-checked whether any of the 11 NEWLY-shipped entries should have been `True` instead by the same logic: queried
+    the same backup parquet's `data_type=="ODDS"` captured rows — **zero overlap** between the 11 new entries and the
+    set of leagues with real captured odds data. Confirms `in_mvp_scope=False` was the correct call for all 11,
+    consistent with (not contradicting) how the 5 pre-existing continental cups are treated.
 
 - **2026-07-25 (slot 2, data_engineering) — "Eliminate the bare/legacy dual-layout" todo — VERIFIED CLEAN, no
   canonicalize/delete action needed.** Operator explicitly confirmed sign-off for the irreversible GCS apply this todo
