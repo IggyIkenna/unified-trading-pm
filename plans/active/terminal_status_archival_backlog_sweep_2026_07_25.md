@@ -87,9 +87,11 @@ For the named doc:
       `plans/active/issues/api_football_backfill_chronological_scan_never_reaches_pending_tail_2026_07_18.md`
       (status=resolved, doc_type=issue) per the Procedure below. Done when: `check_terminal_status_archived.py` no
       longer lists it.
-- [ ] [INFRA] P2. Archive `plans/active/issues/aster_capture_broken_coverage_and_completeness_2026_07_20.md`
+- [x] [INFRA] P2. ✅ Archive `plans/active/issues/aster_capture_broken_coverage_and_completeness_2026_07_20.md`
       (status=resolved, doc_type=issue) per the Procedure below. Done when: `check_terminal_status_archived.py` no
-      longer lists it.
+      longer lists it. — unified-trading-pm@be0f537c7 (moved to plans/archive/issues/, banner added,
+      check_terminal_status_archived.py confirmed clean; 4/5 referrers repointed, 1 blocked on a pre-existing line-cap
+      violation — see Progress Log).
 - [ ] [INFRA] P2. Archive
       `plans/active/issues/blocked_prerequisites_marker_excluded_from_dispatch_and_gate_2026_07_25.md` (status=resolved,
       doc_type=issue) per the Procedure below. Done when: `check_terminal_status_archived.py` no longer lists it.
