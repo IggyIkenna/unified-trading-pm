@@ -67,14 +67,23 @@ sequential: true
 
 ## Todos
 
-- [ ] [BACKEND] P0. **Add worker-scoped context-gate config to `Tuning`** in `server/config.py` (agent-orchestrator),
+- [x] ✅ [BACKEND] P0. **Add worker-scoped context-gate config to `Tuning`** in `server/config.py` (agent-orchestrator),
       mirroring the existing `context_compact_guidance_pct`/`context_recycle_compactions` `Field(...)` pattern
       immediately above them: `context_worker_compact_gate_pct: int = Field(default=70, ge=1, le=100)` (matches the
       number already documented as the honor-system threshold in `unified-trading-pm/agents/worker.md`) and
       `context_worker_directive_repeat_gate: bool = Field(default=True)` (governs whether todo 4 re-issues a directive
       every tick or only once per un-compacted stretch). **Done when**:
       `get_config().tuning.context_worker_compact_gate_pct` resolves to 70 by default and is env-overridable in a new
-      unit test; `quality-gates.sh` green.
+      unit test; `quality-gates.sh` green. — **`agent-orchestrator@9c08c61`**. **Correction to this todo's own
+      Done-when**: "env-overridable" is stale — `TuningDefaults` has been deliberately env-FREE since
+      `ao_config_env_var_consolidation` (2026-07-18; see the class's own docstring: "aliases stripped... env-free...
+      tune by editing the default here + redeploy, never via env"), and every sibling field in this same class
+      (`context_compact_guidance_pct`, `context_recycle_compactions`, etc.) follows that contract, not env override.
+      Implemented + tested against the ACTUAL established contract instead: default resolves to 70/`True`, a new test
+      (`test_context_worker_compact_gate_pct_default_and_bounds`, mirrors the adjacent
+      `test_loop_seconds_valid_and_bounds`) asserts the default, direct-injection via the existing `set_tuning` fixture,
+      and `Field` bounds validation (`ValidationError` on 0 and 101). 1648/1648 tests pass, ruff + basedpyright clean,
+      full `quality-gates.sh` PASSED.
 - [ ] [BACKEND] P0. **Add a typed `directive` field to `DoneResponse` and `ProgressResponse`** in
       `server/models/worker_api.py` — `directive: Literal["compact_before_next"] | None = None` on `DoneResponse`,
       `directive: Literal["compact_now"] | None = None` on `ProgressResponse`. Do NOT overload the existing free-text
