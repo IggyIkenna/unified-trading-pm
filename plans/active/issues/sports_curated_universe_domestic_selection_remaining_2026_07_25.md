@@ -239,8 +239,14 @@ inherited from the first shipped batch:
       to the same file/tests at the same time — resolved via a clean re-append against the merged base (not a manual
       hunk-by-hunk merge, too error-prone at 20+ conflict blocks) + recomputed the combined hardcoded-count tests fresh
       from the live registry (224 Understat gaps, 133 non-MVP football) rather than hand-adding deltas.
-- [ ] [DATA] P1. **South Asia (AFC)** — Bangladesh, Bhutan, India, Maldives, Nepal, Pakistan (6 countries). (repo:
-      unified-api-contracts). **Done when**: per the shared contract above, for this country list.
+- [x] ✅ [DATA] P1. **South Asia (AFC)** — Bangladesh, Bhutan, India, Maldives, Nepal, Pakistan (6 countries).
+      `unified-api-contracts@a7aa4226` (10 entries, all 6 countries verified). Two real near-miss traps caught via
+      WebSearch: (1) Bhutan's naming is INVERTED from the intuitive read — "Premier League" is the top tier, "Super
+      League" is the second tier; (2) India's catalog carries 7 entries across 3 unrelated axes (national club pyramid:
+      ISL top / I-League second — NOT "I-League 2nd Division", that's tier-3; the Santosh Trophy is an inter-state
+      representative competition, wrong axis; IFA Shield + Calcutta Premier Division are Kolkata-regional, sub-national
+      scope) — resolved to ISL/I-League/AIFF Super Cup only. 0 registry collisions, MVP-scope unchanged at 96.
+      quality-gates.sh green.
 - [x] ✅ [DATA] P1. **East/Southeast Asia (AFC)** — Cambodia, Chinese Taipei, Hong Kong, Indonesia, Laos, Macao,
       Malaysia, Mongolia, Myanmar, Philippines, Singapore, Thailand, Vietnam (13 countries).
       `unified-api-contracts@cf4c8491` (21 entries, 11 of 13 countries). Chinese Taipei + Hong Kong SKIPPED — zero
