@@ -219,7 +219,27 @@ flipping the checkbox.
       beyond the `CancelledError` symptom); if ticks ARE completing, re-sample the 30 previously-`status="stale"`
       entries to see whether they were archived or the reap logic itself is silently no-op'ing on them. Done-when: the
       root cause of non-convergence is identified and either fixed + re-verified (`active/` ≈ live-VM count) or a
-      concrete blocker is documented.
+      concrete blocker is documented. — **ROOT-CAUSED + FIXED 2026-07-25 (slot 2)**: `unified-trading-library@4773a3fd`.
+      `"[AUTO_SYNC] Reaper: archived"` confirmed STILL absent 3+ hours after the P0/P1 fixes deployed
+      (`gcloud logging read` against `uts-shared-deployment-api`, no matches over 3 days) — AND the exact same
+      `asyncio.wait_for(_background_task, timeout=20)` → `_run_deployment_reaper`'s `run_in_executor` failure from Todo
+      1 is STILL firing live (traceback captured `2026-07-25T01:03:36Z`, well after the 5s→20s fix shipped). Root cause:
+      `DeploymentsRegistry.list_active()` (`unified_trading_library/deployment_registry.py`) downloads every
+      `active/*.json` blob **sequentially**, one `download_string` call at a time — the doc's own cited ~138s/~3k-entry
+      rate implies ~46ms/blob, so at the current ~400-entry backlog the tick itself takes ~18-20s, landing right at (or
+      over) the 20s grace period. The P0 fix bought headroom but the tick's own duration eats it right back — every
+      container recycle (deploy, scale-down, or the sibling SIGABRT crash-loop) still interrupts it before completion,
+      so `_archive_reaped_entry` never runs and the backlog cannot converge even though the reap LOGIC itself is correct
+      (confirmed via existing test `test_reap_stale_archives_stale_entries`, still passing). **Fix**: parallelized the
+      per-blob downloads with a bounded `ThreadPoolExecutor(max_workers=32)` (mirrors the existing idiom in
+      `manifest_consolidator.py::_prune_stale_consolidated_shards`) — same ordering, same per-blob malformed-entry-skip
+      behavior (still logs + skips, never raises), just concurrent I/O instead of one-at-a-time; should cut wall-clock
+      roughly by the worker-count factor. All 42 pre-existing `test_deployment_registry.py` tests pass unmodified; full
+      `quality-gates.sh` green (254s). **Not re-verified live this session** — needs an automatic LDR→main promote +
+      fresh Cloud Run deploy + several minutes of reap-tick cadence (900s interval) before `active/` count convergence
+      can be measured; a future dispatch should re-run the same verification as Todo 3 (`active/` count vs live-VM
+      count, plus checking for the now-expected `"Reaper: archived"` log lines) once the fix is confirmed live via
+      `git merge-base --is-ancestor 4773a3fd origin/main` + the deployed image tag.
 
 - **2026-07-24 (slot-4, review)**: Re-ran the end-to-end verification per the todo above, against the freshly deployed
   `uts-shared-deployment-api-00270-2l9` (`deployment-api:366154d`) — confirmed via `gcloud builds log` (Cloud Build
