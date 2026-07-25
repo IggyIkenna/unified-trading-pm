@@ -94,7 +94,7 @@ Traced the gap:
    **RESOLVED (slot 6, 2026-07-25T14:xx): does NOT share this incident's root cause.** Evidence: (a) different SA —
    `cloud-build-router.yml`'s `route-build` job authenticates via `google-github-actions/auth@v3` WIF to
    `execution-service-sa@central-element-323112.iam.gserviceaccount.com` (`GCP_SERVICE_ACCOUNT` secret, per
-   `codex/07-security/gha-wif-migration.md`), NOT `unified-trading-sa` (this doc's affected SA, ambient ADC, no per-run
+   `/codex/07-security/gha-wif-migration.md`), NOT `unified-trading-sa` (this doc's affected SA, ambient ADC, no per-run
    auth step). (b) different failure signature — "Your credentials are invalid. Please run `$ gcloud auth login`" is
    `gsutil`'s classic parse failure on a WIF-issued `external_account` credential file (the legacy Python `gsutil`
    binary frequently can't consume short-lived WIF tokens the way `gcloud storage`/native SDK calls can — same failure
@@ -198,7 +198,7 @@ Traced the gap:
   todo 1) and is a legitimate separate INFRA P1 pickup.
 - **2026-07-25T14:xxZ (slot 6, infra) — todo 4 resolved: does NOT share this incident's root cause.** Also parked todo 2
   the same way (BLK-d5ab20de, main confirmed A: skip until operator restores IAM). For todo 4, pulled both
-  `cloud-build-router.yml`'s WIF-authenticated SA (`execution-service-sa`, per `codex/07-security/gha-wif-migration.md`
+  `cloud-build-router.yml`'s WIF-authenticated SA (`execution-service-sa`, per `/codex/07-security/gha-wif-migration.md`
   - this run's own `Authenticate to GCP via WIF` step) and the `gsutil` failure's onset (confirmed via direct job-log
     API pull on runs `30094405633` 2026-07-24T12:48Z, `30155923766` 2026-07-25T11:15Z, `30159646779` 13:24Z,
     `30160874407` 14:03Z — same "Your credentials are invalid" signature on every one, spanning >22h before AND after
