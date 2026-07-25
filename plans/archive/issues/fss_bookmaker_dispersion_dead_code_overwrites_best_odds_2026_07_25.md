@@ -49,6 +49,10 @@ resolved_by: features-service@fb8d57c0 (slot 10, 2026-07-25)
 
 # features-service: bookmaker-dispersion dead code silently downgrades best_odds_* from MAX to MEAN
 
+> **🟢 RESOLVED 2026-07-25 — ACKED-INTO-CODE** — fixed + shipped `features-service@fb8d57c0` (slot 10): `best_odds_*`
+> now keeps the correct per-fixture MAX and the 4 dispersion feature families compute real values instead of
+> always-zero; 3 regression tests added, QG green.
+
 ## What I found
 
 Tracing `features_service/sports/exporters/odds_features_exporter.py`'s odds-collapse path (while scoping an unrelated
