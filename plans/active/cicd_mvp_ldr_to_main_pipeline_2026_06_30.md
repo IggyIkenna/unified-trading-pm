@@ -23,7 +23,7 @@ created: 2026-06-30
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: orchestrator-agent
-priority: P1
+priority: P0
 estimate_class: refactor
 estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 1.2
@@ -214,11 +214,11 @@ Phase 1:
       `bash scripts/cicd/toggle-aws-image-builds.sh on|off|status` (flips the vars fleet-wide + creates/deletes the
       CodeBuild webhooks in one command). RE-ENABLE (Ikenna, whenever wanted): provision `AWS_BUILD_ROLE_ARN` per the
       ping, then `toggle-aws-image-builds.sh on`.
-- [ ] [CICD] P1. **Cron reliability — LEFT AS-IS per operator (2026-06-30).** GHA `schedule` fires ~1/1.5–2h
+- [ ] [CICD] P0. **Cron reliability — LEFT AS-IS per operator (2026-06-30).** GHA `schedule` fires ~1/1.5–2h
       (best-effort, drops ticks). Ikenna to decide when faster draining is needed. Options: (A) self-hosted VM heartbeat
       dispatching the promoter every 15 min via `gh workflow run` [recommended — deterministic]; (B) event-driven
       dispatch from quickmerge when content lands on a repo's LDR. The fleet still drains, just on a 30–90 min cadence.
-- [ ] [CICD] P1. **Now-tracked here (added 2026-07-14, findings 107/201):** `scripts/quickmerge.sh` silently no-ops on a
+- [ ] [CICD] P0. **Now-tracked here (added 2026-07-14, findings 107/201):** `scripts/quickmerge.sh` silently no-ops on a
       new-file-only ship — `quickmerge --agent --files '<newfile>'` where every `--files` path is untracked prints "No
       differences from main — nothing to merge" and exits 0 without staging/committing anything, because the no-diff
       guard (`git diff origin/main`, worktree-vs-commit) does not see untracked files (unlike the clean-tree guard
@@ -258,7 +258,7 @@ Phase 1:
       active.
 - [x] [DOCS] P2. ✅ `/codex/08-workflows/ci-cd-flow.md` MVP banner added (gate set + retired-gates note + pointer here);
       full rewrite of the 1208-line body deferred (Phase-3 follow-up below).
-- [ ] [DOCS] P3. Full rewrite of `ci-cd-flow.md` body + the CLAUDE.md "Git discipline + shipping pipeline" section to
+- [ ] [DOCS] P0. Full rewrite of `ci-cd-flow.md` body + the CLAUDE.md "Git discipline + shipping pipeline" section to
       the MVP (remove the complex-gate prose) — bigger contract edit, for operator review when Ikenna is back.
 
 ## Operator decisions / notes

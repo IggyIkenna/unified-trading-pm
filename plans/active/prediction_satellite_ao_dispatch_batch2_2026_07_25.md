@@ -34,7 +34,7 @@ last_updated: "2026-07-25"
 parent_epic: predictions_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
-priority: P2
+priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 0.5
 estimate_calibrated_ai_days: 0.4
@@ -68,7 +68,7 @@ drift_direction: advance-code
 
 ## Todos
 
-- [ ] [DIAG] P3. Verify + flip the stale `manifest_master.md` P2 "Prediction bucket naming migration" checkbox
+- [ ] [DIAG] P1. Verify + flip the stale `manifest_master.md` P2 "Prediction bucket naming migration" checkbox
       (currently `[ ]` unchecked at `plans/epics/manifest_master.md:261`). The target legacy prediction buckets
       (`market-data-tick-prediction-*`, `instruments-store-prediction-*`) were already purge-deleted 2026-07-13 per
       `plans/active/legacy_bucket_dual_write_decommission_2026_07_24.md` ("prediction: ✅ DONE 2026-07-13" — confirmed
@@ -83,7 +83,7 @@ drift_direction: advance-code
       the grep result + decommission-plan citation as evidence, or left open with a dated note naming the exact
       non-compliant file:line(s) found — never silently dropped. Source:
       `issues/kalshi_live_capture_regression_and_drift_2026_07_13.md`.
-- [ ] [DIAG] P2. **Conflict-check (2026-07-25 plan-reconcile)**: `prediction_satellite_ao_dispatch_batch1_2026_07_25.md`
+- [ ] [DIAG] P1. **Conflict-check (2026-07-25 plan-reconcile)**: `prediction_satellite_ao_dispatch_batch1_2026_07_25.md`
       todo 7 ALSO writes to `prediction_phase_ab_residuals_2026_07_24.md`'s Progress Log. Do not dispatch/commit
       concurrently with that todo — batch1 was drafted first, run batch1 todo 7 before this todo if both are active.
       **Re-verify the `instrument_type` casing/canonicalisation residual with the CORRECT (case-insensitive) comparison
@@ -113,7 +113,7 @@ drift_direction: advance-code
       its item-9 checkbox (lines 276-286) is flipped `[x]` if the count is 0 or explained if non-zero — citing the read,
       never re-citing either historical (2026-07-19 or 2026-07-20) snapshot as current. Source:
       `prediction_phase_ab_residuals_2026_07_24.md` (item 9).
-- [ ] [AGENT] P2. **Predictions MTDS `canonical_question_group` completion-% slice** — compute per-
+- [ ] [AGENT] P1. **Predictions MTDS `canonical_question_group` completion-% slice** — compute per-
       (canonical_question_group, day) completion % against the live manifest's `prediction_canonical_question_group`
       bundle rows
       (`asset_group=prediction, venue, data_type=prediction_canonical_question_group,     canonical_question_group, day`),
@@ -130,7 +130,7 @@ drift_direction: advance-code
       captured/empty_confirmed/expected_unattempted counts and the resulting %, broken out by HOURLY/DAILY/ELECTION
       cadence — is recorded in `predictions_ml_walk_forward_and_arb_2026_06_20.md`'s Progress Log (or a linked dated
       analysis doc), and that item's checkbox is flipped. Source: `predictions_ml_walk_forward_and_arb_2026_06_20.md`.
-- [ ] [SCRIPT] P2. **Prediction sentinel fan-out for zero-trading-day CQGs** — market-tick-data-service's prediction
+- [ ] [SCRIPT] P1. **Prediction sentinel fan-out for zero-trading-day CQGs** — market-tick-data-service's prediction
       manifest finalize function `_finalize_prediction_bundles`
       (`market_tick_data_service/engine/orchestrator/manifest_finalize.py`) only emits a
       `data_type=prediction_canonical_question_group` manifest row for CQGs present that day in
@@ -154,7 +154,7 @@ drift_direction: advance-code
       `empty_confirmed[SOURCE_RETURNED_ZERO]` `prediction_canonical_question_group` manifest row for that (venue, cqg,
       day) instead of omitting it; `quality-gates.sh` is green. Source:
       `predictions_other_bucket_and_ui_drilldown_2026_06_20.md`.
-- [ ] [OPERATOR] P2. **Combined residual-row diagnosis for
+- [ ] [OPERATOR] P1. **Combined residual-row diagnosis for
       `prediction_phantom_reconciler_wipes_bundle_atom_2026_07_10.md` (2 sub-items merged into one todo since both
       snapshot-then-write against the SAME prediction manifest `_index`, avoiding a concurrent-write race):** (a)
       Diagnose and, only if confirmed safe, purge the 17 blank-`data_type` phantom aggregate-marker rows in the live
@@ -184,7 +184,7 @@ drift_direction: advance-code
       with a before/after delta logged, or the item is recorded as already-resolved with the confirming count. Both
       recorded in `plans/active/issues/prediction_phantom_reconciler_wipes_bundle_atom_2026_07_10.md`'s Progress Log in
       the same commit. Source: `issues/prediction_phantom_reconciler_wipes_bundle_atom_2026_07_10.md`.
-- [ ] [REVIEW] P3. **Reconcile `prediction_universe_capture_dead_since_07_01_2026_07_06.md`'s stale `status: open`
+- [ ] [REVIEW] P1. **Reconcile `prediction_universe_capture_dead_since_07_01_2026_07_06.md`'s stale `status: open`
       against its already-shipped fix chain** — confirm `market-tick-data-service@a664511f` (Root Cause #4: composite
       `VENUE:TYPE:BARE_ID` lifecycle market_id → bare per-venue id normalization in `_load_market_lifecycle_for_date`),
       `instruments-service@1fa9177f` (Root Cause #5: per-venue `{group,day,venue}` `market_lifecycle` partition —

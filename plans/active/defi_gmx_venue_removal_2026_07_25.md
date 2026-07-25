@@ -159,13 +159,14 @@ changelog/docstring comment describing the historical removal itself (never insi
       (`pipeline_mode_resolver.py`), the `gmx` APY seed (`core/mock_defi_dynamics.py`), and `GMX` from the DeFi venue
       frozenset (`ml/models.py`). `grep -rli "\bgmx\b" . --include="*.py"` returns zero hits repo-wide (incl. tests).
       `quality-gates.sh` green (146s, exit 0).
-- [ ] [OPERATOR] P1. **Purge GMX GCS objects + manifest rows** -- delete every `raw_tick_data/**/venue=GMX/**` object
-      (all chains, all data_types: `perp_funding`, `derivative_ticker`, any `dex_pool_state` entries from the `gmx`
-      protocol table) in `market-data-tick-defi-prd-central-element-323112`, and the corresponding manifest rows.
-      Prod-bucket delete, human-gated per `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` -- no agent runs
-      this. Do this AFTER the code-removal todos above have landed (so nothing still tries to read GMX data mid-purge)
-      -- operator judgment on exact timing, not machine-gated. Done-when: zero `venue=GMX` objects remain in the bucket,
-      manifest shows zero rows for venue=gmx. (repo: market-tick-data-service)
+- [ ] [OPERATOR] P1. **🟢 AUTHORIZED 2026-07-25 (operator, in-session)** -- all 7 code-removal prerequisites above are
+      landed + verified clean, so this is cleared for execution, not blocked on a decision anymore. **Purge GMX GCS
+      objects + manifest rows** -- delete every `raw_tick_data/**/venue=GMX/**` object (all chains, all data_types:
+      `perp_funding`, `derivative_ticker`, any `dex_pool_state` entries from the `gmx` protocol table) in
+      `market-data-tick-defi-prd-central-element-323112`, and the corresponding manifest rows. Prod-bucket delete,
+      human-gated per `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` -- no agent runs this; still requires
+      a human with bucket-delete access to actually execute it. Done-when: zero `venue=GMX` objects remain in the
+      bucket, manifest shows zero rows for venue=gmx. (repo: market-tick-data-service)
 - [x] ✅ [DOC] P2. **Update documentation referencing GMX** -- any codex docs, this plan's parent
       (`defi_consolidated_closeout_2026_07_18.md`), and related issue docs that describe GMX as active/supported.
       Done-when: a grep across `codex/` + `plans/active/` for "GMX" shows only historical/changelog-style references

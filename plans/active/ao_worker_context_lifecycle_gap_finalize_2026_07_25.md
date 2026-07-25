@@ -19,7 +19,7 @@ last_updated: "2026-07-25"
 parent_epic: orchestrator_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
-priority: P1
+priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 0.4
 estimate_calibrated_ai_days: 0.32
@@ -48,23 +48,23 @@ sequential: true
 
 ## Todos
 
-- [ ] [REVIEW] P1. **Re-verify all 12 parent-plan done-claims.** For each dispatchable todo in
+- [ ] [REVIEW] P0. **Re-verify all 12 parent-plan done-claims.** For each dispatchable todo in
       `ao_worker_context_lifecycle_gap_2026_07_25.md`, confirm the cited evidence (commit SHA + a resolving
       `quality-gates.sh` run, or the specific test file/name for todos that only claim "a unit test asserts...")
       actually exists and passes — re-run `git show <sha>` for every cited commit; re-run the cited tests directly
       rather than trusting the checkbox. **Done when**: all 12 todos' evidence independently re-verified, any
       discrepancy logged in this doc's Progress Log and re-opened as a new todo if evidence doesn't hold up.
-- [ ] [INFRA] P1. **Re-check todo 8's `BLOCKED-OPERATOR-DECISION`** (context_burn_kill default flip). Ask whether the
+- [ ] [INFRA] P0. **Re-check todo 8's `BLOCKED-OPERATOR-DECISION`** (context_burn_kill default flip). Ask whether the
       operator has ruled on it since the parent plan shipped; if yes, spin the decision into a new tracked todo (either
       "flip context_burn_kill default to True in server/config.py, with tests" or "explicitly keep False, document why
       in the config comment") in a fresh small plan or as a follow-up here. If no ruling yet, leave it open and note
       that explicitly — do not silently drop it. **Done when**: this doc's Progress Log states either the new todo's
       location or that the decision remains genuinely open.
-- [ ] [REVIEW] P2. **Cross-check against `ao_fleet_throughput_incident_finalize_2026_07_25.md`'s dormant-slot finding**
+- [ ] [REVIEW] P0. **Cross-check against `ao_fleet_throughput_incident_finalize_2026_07_25.md`'s dormant-slot finding**
       (todo 2 of that finalize plan) — if AutoSpawn has a concurrency cap that limits which slots ever run long enough
       to need this plan's gate/directive logic, note whether that changes this plan's expected impact. **Done when**: a
       one-paragraph cross-check note is added to this doc's Progress Log.
-- [ ] [INFRA] P2. **Run the standard 6-step archival ritual** on `ao_worker_context_lifecycle_gap_2026_07_25.md`:
+- [ ] [INFRA] P0. **Run the standard 6-step archival ritual** on `ao_worker_context_lifecycle_gap_2026_07_25.md`:
       migrate any DEFERRED items into new tracked todos, add a `> **🟢 ARCHIVED**` banner, run the codex-alignment check
       (does `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` need a new section documenting the
       `/done`/`/progress` `directive` field contract this plan introduced?), update CLAUDE.md/codex on the new contract

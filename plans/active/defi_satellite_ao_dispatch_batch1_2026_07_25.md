@@ -48,7 +48,7 @@ last_updated: "2026-07-25"
 parent_epic: defi_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
-priority: P2
+priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 4.6
 estimate_calibrated_ai_days: 3.7
@@ -81,31 +81,31 @@ drift_direction: advance-code
 
 ## Todos
 
-- [ ] [SCRIPT] P2. Repoint `market-tick-data-service/scripts/migrate_legacy_solana_defi_to_canonical.py`'s
+- [ ] [SCRIPT] P1. Repoint `market-tick-data-service/scripts/migrate_legacy_solana_defi_to_canonical.py`'s
       `SubsetSpec.canonical_bucket_kind` off the invalid `"dex-pools"`/`"lst-rates"` values (falls through to a legacy
       fallback building now-404 flat bucket names) to `resolve_bucket_name(kind="tick-data",     asset_group="defi")`,
       mirroring the pattern already shipped in `canonical_dex_pool_provider.py` / `data_manifest_handler.py` in this
       same source plan. Repo: market-tick-data-service. **Done when**: neither kind resolves to the dead legacy
       fallback; the script's usage sites still import/parse cleanly; `quality-gates.sh` green. Source:
       `defi_dedicated_bucket_shared_migration_2026_07_13.md`.
-- [ ] [SCRIPT] P2. Repoint `strategy-service/scripts/trace_carry_staked_basis.py`'s `_LST_RATES_BUCKET_TEMPLATE` /
+- [ ] [SCRIPT] P1. Repoint `strategy-service/scripts/trace_carry_staked_basis.py`'s `_LST_RATES_BUCKET_TEMPLATE` /
       `_PERP_FUNDING_BUCKET_TEMPLATE` off the dead flat-bucket-name templates to
       `resolve_bucket_name(kind="tick-data",     asset_group="defi")`, mirroring the pattern already shipped for
       `canonical_dex_pool_provider.py` / `canonical_perp_funding_provider.py`. Repo: strategy-service. **Done when**:
       both templates are removed/replaced; `main()`'s slot-processing loop still runs against real prod GCS data without
       error; `quality-gates.sh` green. Source: `defi_dedicated_bucket_shared_migration_2026_07_13.md`.
-- [ ] [SCRIPT] P2. Repoint `strategy-service/scripts/probe_funding_rate_dispersion_coverage.py`'s
+- [ ] [SCRIPT] P1. Repoint `strategy-service/scripts/probe_funding_rate_dispersion_coverage.py`'s
       `_DEFAULT_PERP_FUNDING_BUCKET_TEMPLATE` default to `resolve_bucket_name(kind="tick-data", asset_group="defi")`.
       Repo: strategy-service. **Done when**: the default no longer references a dead flat bucket name; running with no
       `--perp-funding-bucket` override resolves the shared bucket; `quality-gates.sh` green. Source:
       `defi_dedicated_bucket_shared_migration_2026_07_13.md`.
-- [ ] [CHORE] P3. Correct (or remove) the stale `"bucket_type": "dex-pools"`/`"perp-funding"` values in the module-level
+- [ ] [CHORE] P1. Correct (or remove) the stale `"bucket_type": "dex-pools"`/`"perp-funding"` values in the module-level
       `OPERATIONS` constant in `market-tick-data-service/cli/handlers/data_manifest_handler.py` (confirmed unused
       elsewhere, contradicting the same file's own correct `_build_operations_dict()`, already `kind="tick-data"`).
       Repo: market-tick-data-service. **Done when**: `OPERATIONS`'s values no longer contradict
       `_build_operations_dict()`; a workspace grep confirms no other reader of the stale values; `quality-gates.sh`
       green. Source: `defi_dedicated_bucket_shared_migration_2026_07_13.md`.
-- [ ] [CHORE] P3. Fix the 2 stale comments in `strategy-service/strategy_service/cli/handlers/paper_run_handler.py` that
+- [ ] [CHORE] P1. Fix the 2 stale comments in `strategy-service/strategy_service/cli/handlers/paper_run_handler.py` that
       describe classes as "kind `perp-funding`"/"kind `dex-pools`" when the code already resolves `kind="tick-data"` —
       comment-only, no behavior change. Repo: strategy-service. **Done when**: both comments accurately describe the
       current resolution; no executable line changed; `quality-gates.sh` green. Source:
@@ -117,7 +117,7 @@ drift_direction: advance-code
       unit tests against known slab states. Repo: market-tick-data-service. **Done when**: a successful fetch calls
       `record_captured` (not `record_failed`) with all 5 fields populated; >=5 new unit tests pass; `quality-gates.sh`
       green. Source: `data_completion_defi_2026_07_15.md`.
-- [ ] [CODE] P2. Implement Orca Whirlpool tick-array binary decode in
+- [ ] [CODE] P1. Implement Orca Whirlpool tick-array binary decode in
       `market_tick_data_service/cli/handlers/orca_whirlpool_state_handler.py` — decode the 3 nearest tick arrays around
       the already-extracted `tick_current_index` (~150-200 LOC), captured per-snapshot alongside the existing pool-state
       row, so downstream consumers can compute fill slippage at arbitrary sizes. Repo: market-tick-data-service. **Done
@@ -179,14 +179,14 @@ drift_direction: advance-code
       affected row count + shard/venue/date breakdown; unit tests cover classification/dry-run/apply and pass;
       `quality-gates.sh` green; commit verified as an ancestor of `origin/live-defi-rollout`; script remains un-applied
       at hand-off. Source: `market_tick_data_service_lending_instrument_type_historical_restamp_2026_07_24.md`.
-- [ ] [CHORE] P3. Replace the stale `onchain/__init__.py` module docstring with the corrected text already drafted and
+- [ ] [CHORE] P1. Replace the stale `onchain/__init__.py` module docstring with the corrected text already drafted and
       verified in the source issue doc §2.2 (documents `GlassnodeAdapter` as `PLANNED_VENUES`-parked and
       `HeliusSolanaAdapter` as `BLOCKED-CREDENTIALS`-gated, replacing a stale 2026-04 "all adapters deleted" claim) —
       first confirm via `git status`/mtime that no other session has live uncommitted WIP in this file/package. Repo:
       market-tick-data-service. **Done when**: `market_interface/adapters/onchain/__init__.py`'s docstring matches the
       issue doc's §2.2 text verbatim, committed via quickmerge with `quality-gates.sh` green. Source:
       `issues/defi_adapter_dead_code_audit_2026_07_24.md`.
-- [ ] [DIAG] P3. Trace whether `market_interface/adapters/defi/curve_adapter.py::_download_liquidity`'s broad
+- [ ] [DIAG] P1. Trace whether `market_interface/adapters/defi/curve_adapter.py::_download_liquidity`'s broad
       `except Exception: ... return []` (~line 682) is distinguishable, in `base_defi_adapter.py`'s per-instrument
       loop's `if not result: continue` success/failure accounting, from a genuine zero-liquidity-snapshot day — write
       the finding (confirmed-masking or confirmed-legitimate) into an update appended to the issue doc, or a new issue
@@ -212,7 +212,7 @@ drift_direction: advance-code
       sample dates; the scoped SPOT backfill VM is launched and T+10min health-verified RUNNING; `quality-gates.sh`
       green. Source: `issues/defi_curve_optimism_subgraph_no_allocations_2026_07_15.md`,
       `issues/mtds_dex_pools_swaps_backfill_verification_2026_07_24.md`.
-- [ ] [SCRIPT] P3. Spot-check live subgraph health for the remaining un-investigated `dex_pool_swaps` long-tail
+- [ ] [SCRIPT] P1. Spot-check live subgraph health for the remaining un-investigated `dex_pool_swaps` long-tail
       `attempted_failed` buckets (`UNISWAP_V3` TimeoutError×25, `UNISWAP_V3`/POLYGON schema-drift×24, 1-5-row long-tail
       buckets) — repeat the doc's live-probe methodology (direct POST to each subgraph's TheGraph gateway; fresh
       `_meta.block.timestamp` = healthy vs 200-with-`errors[]` "no allocations" = dead); re-measure each bucket's
@@ -220,27 +220,27 @@ drift_direction: advance-code
       **Done when**: every distinct (venue, chain) subgraph ID backing the remaining long-tail buckets has a recorded
       live-probe verdict + current row count, written up as a follow-up issue doc. Source:
       `issues/defi_curve_optimism_subgraph_no_allocations_2026_07_15.md`.
-- [ ] [PM] P3. File a new tracked issue doc for the `collect-mev-events` pagination gap: `mev_events_handler.py` only
+- [ ] [PM] P1. File a new tracked issue doc for the `collect-mev-events` pagination gap: `mev_events_handler.py` only
       pages the newest ~100 Flashbots relay rows/day (hard-exits after the first page), under-covering any day with >100
       MEV-Boost relay payloads — already fully root-caused in the source doc, no new investigation needed. Correct
       frontmatter (`doc_type: issue`, `asset_group: [defi]`, `repos:     [market-tick-data-service]`). Repo:
       unified-trading-pm. **Done when**: a new `plans/active/issues/defi_mev_events_pagination_gap_<date>.md` exists
       with the file:line citation + correct frontmatter, cross-referenced from the source doc's follow-up line. Source:
       `issues/defi_five_never_captured_venues_fix_2026_07_22.md`.
-- [ ] [PM] P3. File a new tracked issue doc for the collect-* Terraform stagger's pre-existing T+1 freshness-deadline
+- [ ] [PM] P1. File a new tracked issue doc for the collect-* Terraform stagger's pre-existing T+1 freshness-deadline
       risk: `defi_collection_scheduler.tf`'s header requires the stagger finish by 02:25 UTC for `features-onchain` T+1
       freshness, but `solana-defi` alone (02:05 start, 1500s timeout) can already finish ~02:30 — appears
       pre-existing-violated. Name `t1_batch_scheduler.tf:124-128` as the owner to flag. Repo: unified-trading-pm. **Done
       when**: a new `plans/active/issues/defi_t1_freshness_deadline_stagger_<date>.md` exists citing both files and the
       deadline math. Source: `issues/defi_five_never_captured_venues_fix_2026_07_22.md`.
-- [ ] [PM] P3. File a new tracked issue doc for the gas-fees historical `venue=<CHAINNAME>` path-migration question: the
+- [ ] [PM] P1. File a new tracked issue doc for the gas-fees historical `venue=<CHAINNAME>` path-migration question: the
       2026-07-22 rename (`market-tick-data-service@522185a6`, `_GAS_FEE_VENUE="ALCHEMY"`) fixed paths only forward —
       pre-existing historical `gas_fees` objects still sit under `venue=<CHAINNAME>` and won't retroactively move. Flag
       migrate-vs-leave as operator-gated — do not decide/execute here. Repo: unified-trading-pm. **Done when**: a new
       `plans/active/issues/defi_gas_fees_historical_venue_path_migration_<date>.md` exists documenting the pre-rename
       objects + rename commit, tagged `[OPERATOR]`/human-gated. Source:
       `issues/defi_five_never_captured_venues_fix_2026_07_22.md`.
-- [ ] [PM] P3. File a new tracked issue doc for the ACROSS/STARGATE `bridge_events` historical-backfill capability gap:
+- [ ] [PM] P1. File a new tracked issue doc for the ACROSS/STARGATE `bridge_events` historical-backfill capability gap:
       `bridge_events_handler.py` has no `--start-date`/`--end-date` CLI support (confirmed via grep, zero matches), so
       the daily cron can't be reused for a historical backfill to genesis (ACROSS 2021-11-11, STARGATE 2022-03-17)
       without that flag first. Do not build the flag or run a backfill here. Repo: unified-trading-pm. **Done when**: a
@@ -263,7 +263,7 @@ drift_direction: advance-code
       covering a representative multi-venue/multi-day sample is recorded as a dated update to the issue doc, sufficient
       for the fold-vs-migrate decision to be answered against. Source:
       `issues/defi_legacy_precanonical_composite_venue_objects_2026_07_24.md`.
-- [ ] [DATA] P2. Corpus-wide scope audit for the KALSHI_PERP perp_funding manifest-emit failure: scan GCS under the
+- [ ] [DATA] P1. Corpus-wide scope audit for the KALSHI_PERP perp_funding manifest-emit failure: scan GCS under the
       scoped prefix (`pipeline_mode=batch_kalshi_perp/asset_group=defi/venue=KALSHI_PERP/...`) for all 5 observed
       KALSHI_PERP perp symbols across the full date range objects exist for (single-prefix listing, not a whole-corpus
       walk), cross-checking each day/symbol against the DeFi manifest index to confirm GCS-present / manifest-absent.
@@ -306,7 +306,7 @@ drift_direction: advance-code
       runs clean read-only against prod GCS/manifest for every named venue, and a match%/divergence report is appended
       to the source issue doc's Progress log. Source:
       `issues/defi_perp_funding_canonicalisation_derivative_ticker_all_perps_2026_07_15.md`.
-- [ ] [REVIEW] P2. Audit + verify each of the 6 known DeFi cross-chain pool-address collisions (1 CURVE
+- [ ] [REVIEW] P1. Audit + verify each of the 6 known DeFi cross-chain pool-address collisions (1 CURVE
       AVALANCHE+OPTIMISM, 5 BALANCER addresses patched by instruments-service's collision-backfill script) end-to-end
       across catalogue → MTDS (`defi_catalog_reader.py:192`) → MDPS → features-service → manifest/data-status,
       confirming for each row whether the symbolic `canonical_instrument_id`/`glued_pair_id` correctly disambiguates the
@@ -316,14 +316,14 @@ drift_direction: advance-code
       enumerating, for all 6 rows, the observed id values at each of the 5 pipeline stages with an explicit PASS/FAIL
       verdict per row (the 5 Balancer rows are expected to surface as a mismatch — a valid finding, not a failure).
       Source: `issues/defi_pool_chain_collision_curve_balancer_gap_2026_07_21.md`.
-- [ ] [DOC] P3. Port the already-decided two-id/dual-key POOL model into `/codex/02-data/defi-canonical-naming-ssot.md`
+- [ ] [DOC] P1. Port the already-decided two-id/dual-key POOL model into `/codex/02-data/defi-canonical-naming-ssot.md`
       — document that `instrument_id` stays bare `pool_address.lower()` while `chain` lives only in the symbolic
       `canonical_instrument_id`/`glued_pair_id` (Option A, operator ruling 2026-07-18), sourcing content already
       established in `unified_api_contracts/canonical/crosscutting/defi.py:313-331,409-435`,
       `instruments-service/docs/DEFI_INSTRUMENTS.md`, and the closeout plan's "The two-id model" section. Repo:
       unified-trading-pm. **Done when**: the codex doc contains a section documenting the two-id model consistent with
       those 3 sources. Source: `issues/defi_pool_chain_collision_curve_balancer_gap_2026_07_21.md`.
-- [ ] [INFRA] P2. Add a `staking-yields` entry to `deployment-service/terraform/gcp/defi_collection_scheduler.tf`'s
+- [ ] [INFRA] P1. Add a `staking-yields` entry to `deployment-service/terraform/gcp/defi_collection_scheduler.tf`'s
       `defi_collect_operations` map (cron `50 1 * * *`, the free slot between `eigenlayer-rewards` at 01:45 and
       `evm-defi` at 01:55; tier mirroring `eigenlayer-rewards`), apply via the same single-PR flow every other job in
       the file uses. Repo: deployment-service. **Done when**: `gcloud scheduler jobs list` shows a
@@ -331,14 +331,14 @@ drift_direction: advance-code
       run, at least 1 manifest row exists for `instrument_type=staking` (verify STARTED + the manifest row per
       no-fire-and-forget — do not mark done on terraform-apply alone). Source:
       `issues/defi_staking_yields_lst_rates_handler_gaps_2026_07_24.md`.
-- [ ] [DATA] P3. Correct `/codex/02-data/defi-data-types-catalog.md` § 7's `staking_yields` row: remove the
+- [ ] [DATA] P1. Correct `/codex/02-data/defi-data-types-catalog.md` § 7's `staking_yields` row: remove the
       `Status:     Production (2026-04-24)` label — live-verified FALSE (zero scheduler jobs, zero Cloud Run Job, zero
       GCS objects across 6 sampled days, confirmed 2026-07-24) — and restate as `Status: Implemented, unscheduled`. Do
       NOT flip to Production — gated on the separate scheduler-wiring todo shipping. Repo: unified-trading-pm. **Done
       when**: the row no longer reads `Production (2026-04-24)`, instead reads an unscheduled/never-run status
       consistent with § 1's live-verification findings. Source:
       `issues/defi_staking_yields_lst_rates_handler_gaps_2026_07_24.md`.
-- [ ] [VERIFY] P2. Run a bounded, read-only simulation of instruments-service's `enumerate_expected_universe.py` defi
+- [ ] [VERIFY] P1. Run a bounded, read-only simulation of instruments-service's `enumerate_expected_universe.py` defi
       resolution path (a scoped catalog subset, not a full prod re-run) to measure the `completeness_pct` denominator
       delta of adding the 7 `swaps_ohlcv_{15s,1m,5m,15m,1h,4h,1d}` keys to `DATA_TYPES_BY_ASSET_GROUP['defi']` WITH vs
       WITHOUT a `_DEFI_MTDS_TICK_MANIFEST_EXCLUDED_DATA_TYPES`-style exclusion guard (mirroring the existing tradfi
@@ -346,14 +346,14 @@ drift_direction: advance-code
       **Done when**: a report citing the measured completeness_pct delta for both scenarios exists, answering whether
       the registry addition is safe directly or needs the guard first. Source:
       `issues/defi_swaps_ohlcv_candle_data_types_axis_gap_2026_07_22.md`.
-- [ ] [VERIFY] P3. Determine the root cause of the `swaps_ohlcv_4h` timeframe discrepancy — live manifest shows 51,985
+- [ ] [VERIFY] P1. Determine the root cause of the `swaps_ohlcv_4h` timeframe discrepancy — live manifest shows 51,985
       real captured rows despite `4h` being absent from `unified-api-contracts`'s `_candle_contracts.py`
       module-docstring declared DeFi timeframe set. Confirm intentional (correct the stale docstring to include `4h`) or
       a policy-violating bug (identify the producing code path in MDPS's `DefiSwapAdapter`/`swap_adapter.py` and file a
       follow-up). Repos: unified-api-contracts, market-data-processing-service. **Done when**: root cause is determined
       and cited with evidence; if intentional, the docstring is corrected; if a bug, the producing path is identified
       and a follow-up issue filed. Source: `issues/defi_swaps_ohlcv_candle_data_types_axis_gap_2026_07_22.md`.
-- [ ] [SCRIPT] P3. Thread `mode=` into `assert_defi_catalog_fresh()` for the 9 remaining DeFi handlers still omitting it
+- [ ] [SCRIPT] P1. Thread `mode=` into `assert_defi_catalog_fresh()` for the 9 remaining DeFi handlers still omitting it
       (`liquidations_handler.py`, `native_staking_handler.py`, `liquidation_events_handler.py`,
       `token_transfers_handler.py`, `bridge_events_handler.py`, `flash_loan_events_handler.py`,
       `aggregator_route_handler.py`, `solana_defi_handler.py`, `lending_indices_handler.py`) — mirror the exact pattern
@@ -364,7 +364,7 @@ drift_direction: advance-code
       when**: all 9 handlers explicitly thread `mode=`, one new regression test per handler passes verifying the
       received kwarg across all 3 run-tag states, `bash scripts/quality-gates.sh --no-fix` is green. Source:
       `issues/defi_upstream_instruments_catalog_stale_2026_07_15.md`.
-- [ ] [CHORE] P3. Fix the stale EULER_V2-ARBITRUM phase-dict comment in
+- [ ] [CHORE] P1. Fix the stale EULER_V2-ARBITRUM phase-dict comment in
       `unified-api-contracts/unified_api_contracts/registry/defi_venues.py` (~line 508: claims "no UAC subgraph_id
       registered" — factually wrong since real Goldsky `SUBGRAPH_IDS` were registered and verified GREEN since
       2026-06-02). Replace with the real reason (mirroring the accurate EULER_V2-ETHEREUM sibling entry's wording:
@@ -372,7 +372,7 @@ drift_direction: advance-code
       untouched — comment-text-only fix. Repo: unified-api-contracts. **Done when**: the comment no longer claims "no
       UAC subgraph_id registered" and states the real Ethereum-only-adapter reason instead; `quality-gates.sh` green; no
       other lines changed. Source: `issues/defi_turbo_api_hides_real_captured_data_2026_07_07.md`.
-- [ ] [INFRA] P2. Diagnose and, if still broken, fix the `uts-prod-data-status-rollup` Cloud Run Job — as of 2026-07-10
+- [ ] [INFRA] P1. Diagnose and, if still broken, fix the `uts-prod-data-status-rollup` Cloud Run Job — as of 2026-07-10
       Cloud Scheduler had been firing into `UNAVAILABLE` (gRPC 14) since 2026-07-05T15:53Z. FIRST check current job
       health (`gcloud run jobs executions list`, blob `last_modified` on
       `gs://{pid}-data-status-rollups/market-tick-data-service/full.json.gz`) — a separate active plan
@@ -403,14 +403,14 @@ drift_direction: advance-code
       of newly-written DeFi objects (all 6 handlers routing through `write_defi_rows`) passes the UAC oracle's id-form
       check with 0 violations; new/updated regression test passes; `quality-gates.sh` green. Source:
       `issues/defi_write_defi_rows_leaf_symbol_not_canonical_id_capture_not_stopped_2026_07_24.md`.
-- [ ] [DOC] P2. Correct `canonical-cutover-register.md` §5's blanket "DeFi capture is STOPPED / no new defi writes"
+- [ ] [DOC] P1. Correct `canonical-cutover-register.md` §5's blanket "DeFi capture is STOPPED / no new defi writes"
       premise — measurably false for the batch lane (`pipeline_mode=batch_onchain_subgraph`/`batch_chainlink`/
       `batch_onchain_rpc`/`batch_aave` objects measured with `time_created=2026-07-24`). Narrow the claim to the
       live/websocket lane specifically, or substitute the measured fact that batch capture is actively writing. Repo:
       unified-trading-pm. **Done when**: §5 no longer makes an unqualified "no new defi writes" claim contradicting the
       measured batch-lane activity, with a cite to the source issue doc's Fact 1. Source:
       `issues/defi_write_defi_rows_leaf_symbol_not_canonical_id_capture_not_stopped_2026_07_24.md`.
-- [ ] [DOC] P3. Correct the stale "oracle id-form check is tradfi-only" claim in
+- [ ] [DOC] P1. Correct the stale "oracle id-form check is tradfi-only" claim in
       `four-surface-reconciliation-procedure.md` §4/§4.3 and `reconciliation-finding-taxonomy.md` §2.2 — the check has
       covered cefi+defi by default since `unified-api-contracts@d40c5d7d` (refined `@1cd27478`). Update both docs' scope
       statements to `{tradfi, cefi, defi}`, and correct their shared worked example (`ADAF0:USTF0.parquet`, cited as "0
@@ -418,7 +418,7 @@ drift_direction: advance-code
       unified-trading-pm. **Done when**: both docs state the check covers
       `_ID_FORM_CHECKED_ASSET_GROUPS={tradfi,cefi,defi}`; the shared example is corrected or replaced. Source:
       `issues/defi_write_defi_rows_leaf_symbol_not_canonical_id_capture_not_stopped_2026_07_24.md`.
-- [ ] [INFRA] P3. Apply the already-shipped `,`→`;` + `^;^`-delimiter metadata-parsing fix (live in
+- [ ] [INFRA] P1. Apply the already-shipped `,`→`;` + `^;^`-delimiter metadata-parsing fix (live in
       `launch-mtds-dex-pools-backfill-vm.sh` and `launch-mtds-dex-swaps-backfill-vm.sh`) to
       `deployment-service/scripts/vm/launch-mtds-lending-indices-backfill-vm.sh`'s `VM_LENDING_PROTOCOLS` metadata
       construction — identical bug shape (comma-separated `--lending-protocols` collides with gcloud's default
@@ -427,7 +427,7 @@ drift_direction: advance-code
       `--metadata="^;^${METADATA}"`; invoking it with a comma-separated `--lending-protocols` value no longer throws
       gcloud's `Bad syntax for dict arg`; single-protocol behavior unchanged. Source:
       `issues/mtds_dex_pools_swaps_backfill_verification_2026_07_24.md`.
-- [ ] [BACKEND] P2. Rename the onchain feature_group keys in unified-api-contracts' two vocabularies not updated during
+- [ ] [BACKEND] P1. Rename the onchain feature_group keys in unified-api-contracts' two vocabularies not updated during
       the writer/CLI-name ratification (`unified-api-contracts@e9faf32e`) — `FEATURE_REQUIRED_INPUTS`
       (`required_inputs.py`) and the feature_group refs in `_feature_contracts.py` — from old registry names
       (`aave_lending_rates`, `aave_utilization`, `aave_risk_params`, `lst_staking_yields`, `eigen_rewards`,
@@ -437,7 +437,7 @@ drift_direction: advance-code
       `rg -i     'aave_lending_rates|aave_utilization|aave_risk_params|lst_staking_yields|eigen_rewards|aave_rate_impact|onchain_regime|defillama_tvl|protocol_rewards'`
       over both files returns zero hits; `quality-gates.sh` green. Source:
       `issues/features_onchain_featureless_shards_and_vocabulary_split_2026_07_20.md`.
-- [ ] [SCRIPT] P2. Add a machine check to e2e-testing that imports the onchain feature_group vocabulary from
+- [ ] [SCRIPT] P1. Add a machine check to e2e-testing that imports the onchain feature_group vocabulary from
       unified-api-contracts' `FEATURE_GROUP_TO_FAMILY`, features-service onchain CLI's `FEATURE_GROUPS`, and
       ml-service's `DEFI_FEATURE_GROUPS`, using the same cross-repo `sys.path` pattern e2e-testing already uses in
       `scripts/defi/colocated_engine.py`, computes pairwise set differences, and prints/asserts a diff report. Repo:
@@ -445,7 +445,7 @@ drift_direction: advance-code
       reports pairwise set differences (verified by running it once); wired into e2e-testing's `quality-gates.sh` if a
       test, lifecycle-marked if a script. Source:
       `issues/features_onchain_featureless_shards_and_vocabulary_split_2026_07_20.md`.
-- [ ] [DIAG] P3. Verify the 2 unverified signals in the issue doc's §8: (a) sample onchain feature parquets under
+- [ ] [DIAG] P1. Verify the 2 unverified signals in the issue doc's §8: (a) sample onchain feature parquets under
       `gs://features-defi-prd-.../onchain/` (e.g. day=2026-03-05, day=2026-05-20) for exact duplicate rows (same
       timestamp+instrument_id repeated); (b) trace where `instrument_count` is computed in the onchain manifest-write
       path and determine why `onchain/_index/availability_index.parquet` shows the identical value 14,630,914 across six
@@ -462,33 +462,33 @@ drift_direction: advance-code
       HYPERLIQUID trades rows across both windows (post-force-rerun) with the pre-existing
       `empty_confirmed`/`SOURCE_RETURNED_ZERO` status cleared, and 2025-03-22..2025-05-24 correctly left empty. Source:
       `issues/non_tardis_dexperp_venue_data_status_smoketest_2026_07_07.md`.
-- [ ] [BACKEND] P2. Delete the retired perp_funding DeFi-routing residue: remove the stale `hyperliquid`/`aster`/
+- [ ] [BACKEND] P1. Delete the retired perp_funding DeFi-routing residue: remove the stale `hyperliquid`/`aster`/
       `lighter` entries from `_PROTOCOL_PIPELINE_SOURCE` (`perp_funding_handler.py:188-194`) and `_chain_map`
       (`:244-249`), delete the spent one-off script `scripts/backfill_hl_funding_from_s3_asset_ctxs_2026_06_17.py` (past
       its own `# Delete-when:` marker). Verify the `protocols` iterable no longer includes hyperliquid/aster/lighter
       before deleting the entries. Repo: market-tick-data-service. **Done when**: `perp_funding_handler.py` no longer
       routes those 3 venues through the defi bucket, the script file is deleted, `quality-gates.sh` green. Source:
       `issues/non_tardis_dexperp_venue_data_status_smoketest_2026_07_07.md`.
-- [ ] [BACKEND] P3. Add the missing `Mode.REPLAY` case to `possible_manifest._canonical_pipeline_mode_prefixes` in
+- [ ] [BACKEND] P1. Add the missing `Mode.REPLAY` case to `possible_manifest._canonical_pipeline_mode_prefixes` in
       unified-api-contracts so it also emits `replay_<source>/` prefixes alongside `Mode.BATCH`/`Mode.LIVE`, closing a
       latent gap in the phantom-shard auditor (additive, 1-line-class, no-risk future-proofing). Confirm
       `test_possible_manifest`'s prefix-count guard is quiescent before landing. Repo: unified-api-contracts. **Done
       when**: `_canonical_pipeline_mode_prefixes` iterates `(Mode.BATCH, Mode.LIVE, Mode.REPLAY)`; the prefix-count
       guard passes; `quality-gates.sh` green. Source:
       `issues/non_tardis_dexperp_venue_data_status_smoketest_2026_07_07.md`.
-- [ ] [DIAG] P2. Run a real past-day EXTENDED-STARKNET `book_snapshot_5` backfill and a real current-day run against the
+- [ ] [DIAG] P1. Run a real past-day EXTENDED-STARKNET `book_snapshot_5` backfill and a real current-day run against the
       shipped fix (`@55dac12a`, current-only-endpoint honest-skip) — confirm the past-day run produces 0 book rows with
       no fabricated HTTP/timestamp (honest absence) and the current-day run produces a real live current book row via
       the WS connector. Repo: market-tick-data-service. **Done when**: both runs are observed on real infra with the
       expected 0-past-row / real-current-row outcome, recorded in the doc's Progress Log. Source:
       `issues/non_tardis_dexperp_venue_data_status_smoketest_2026_07_07.md`.
-- [ ] [DIAG] P2. Re-verify the LIGHTER-ZKSYNC Tardis exchange-slug + numeric market_id fix
+- [ ] [DIAG] P1. Re-verify the LIGHTER-ZKSYNC Tardis exchange-slug + numeric market_id fix
       (`market-tick-data-service@0c4000a02`) against a real, free-tier-compatible first-of-month historical date to
       confirm real `trades`/`book_snapshot_5`/`derivative_ticker` rows still return. Repo: market-tick-data-service.
       **Done when**: a live Tardis probe on a first-of-month date for LIGHTER-ZKSYNC returns real, correctly-shaped rows
       for all 3 data types using current code, recorded in the doc's Progress Log. Source:
       `issues/non_tardis_dexperp_venue_data_status_smoketest_2026_07_07.md`.
-- [ ] [DIAG] P3. Investigate (live API probe) whether EXTENDED-STARKNET's `/info/markets/{symbol}/trades` endpoint's
+- [ ] [DIAG] P1. Investigate (live API probe) whether EXTENDED-STARKNET's `/info/markets/{symbol}/trades` endpoint's
       descending cursor can actually walk back to historical (non-today) dates — the endpoint takes no
       `startTime`/`endTime` param and 0 trades rows of any capture_status exist at any date. Repo:
       market-tick-data-service. **Done when**: a live probe either confirms deep cursor-walking reaches a real
@@ -509,7 +509,7 @@ drift_direction: advance-code
       index reflects dates beyond 2026-01-25); otherwise remediation stays open pending a human design decision and the
       todo completes on the documented diagnosis. Source:
       `issues/onchain_manifest_dishonest_and_recompute_blocked_2026_07_21.md`.
-- [ ] [DATA] P2. Diagnose (and fix ONLY if a clear code bug) the implausible identical `instrument_count=14,630,914`
+- [ ] [DATA] P1. Diagnose (and fix ONLY if a clear code bug) the implausible identical `instrument_count=14,630,914`
       reported across 5 different onchain feature_groups (health_factor, rewards, liquidation_events, risk_params,
       flash_loan_availability) plus lending_rates in the onchain availability_index — a per-group count shouldn't be
       identical across unrelated groups. Trace the count-aggregation/derivation code path and either fix the
@@ -517,7 +517,7 @@ drift_direction: advance-code
       market-tick-data-service. **Done when**: a written root cause is added to the issue doc as a dated Update, with
       either a shipped + verified fix (re-derived index shows distinct plausible counts) or a documented reason the
       shared count is legitimate. Source: `issues/onchain_manifest_dishonest_and_recompute_blocked_2026_07_21.md`.
-- [ ] [DATA] P2. Investigate + file the `lst_yields` coverage-extension follow-up — confirm the real GCS date-coverage
+- [ ] [DATA] P1. Investigate + file the `lst_yields` coverage-extension follow-up — confirm the real GCS date-coverage
       gap between features-onchain `lst_yields` (~15 days total as of 2026-07-23) and the underlying MTDS `lst_rates`
       raw corpus for the same EVM tokens (plausibly a features-layer compute lag, not raw-data absence — verify against
       real GCS, don't assume), then file a new dated issue doc proposing the concrete backfill scope (owning repo, date
@@ -537,7 +537,7 @@ drift_direction: advance-code
       excerpts/commit) is recorded as an update in the issue doc, or (b) it is confirmed and documented that retroactive
       diagnosis is no longer possible because the writer was retired and/or logs expired — either outcome closes this
       todo; no live code fix required. Source: `issues/phantom_captures_defi_2026_06_28.md`.
-- [ ] [VERIFY] P2. Confirm whether adding a data_type to `DATA_TYPES_BY_ASSET_GROUP["defi"]` (for an already-registered
+- [ ] [VERIFY] P1. Confirm whether adding a data_type to `DATA_TYPES_BY_ASSET_GROUP["defi"]` (for an already-registered
       venue×instrument_type combination) actually changes expected_unattempted materialisation / completeness_pct, or
       whether that denominator is scoped independently — small, cheap, read-only check mirroring the equivalent
       venue-axis check already run in `distinct_values_noncanonical_audit_2026_07_20.md` RESULT 4. Repo:
@@ -547,7 +547,7 @@ drift_direction: advance-code
       or move completeness_pct (NOTE: GMX dropped from this combination list — REMOVED 2026-07-25, see
       `defi_gmx_venue_removal_2026_07_25.md`). No code/schema/manifest changes made. Source:
       `issues/defi_perp_daily_ctx_manifest_gap_reader_risk_2026_07_22.md`.
-- [ ] [DATA] P2. **Resolve the Kamino/Solend `lending_indices` `instrument_type` shape conflict — probe BOTH candidate
+- [ ] [DATA] P1. **Resolve the Kamino/Solend `lending_indices` `instrument_type` shape conflict — probe BOTH candidate
       paths.** `issues/defi_solana_dex_pools_fake_history_recurrence_prd_bucket_2026_07_23.md` item 4 left this
       "inconclusive, not a clean bill": its own targeted shape (`instrument_type=solana_lending`, per
       `lending_indices_handler.py::resolve_lending_instrument_type()`) conflicts with

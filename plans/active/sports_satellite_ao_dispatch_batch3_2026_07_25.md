@@ -39,7 +39,7 @@ last_updated: "2026-07-25"
 parent_epic: sports_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
-priority: P2
+priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 0.9
 estimate_calibrated_ai_days: 0.7
@@ -67,7 +67,7 @@ drift_direction: advance-code
 
 ## Todos
 
-- [ ] [DATA] P2. **Build the alias→canonical league_id mapping for the 85 contaminated
+- [ ] [DATA] P1. **Build the alias→canonical league_id mapping for the 85 contaminated
       `day=2026-04-14     entity=fixtures_schedule` league folders and check GCS for existing canonical-folder fixtures
       data (read-only, no PROD write/delete).** For each of the 85 raw folder names (e.g. `ARGENTINA_RESERVE_LEAGUE`,
       `ENGLAND_CHAMPIONSHIP`, `ITALY_SERIE_B`, `SAUDI_ARABIA_PRO_LEAGUE`, ... — full list re-derivable via a bounded
@@ -88,7 +88,7 @@ drift_direction: advance-code
       canonical league_id or "no match", and (2) whether canonical-folder `day=2026-04-14` fixtures data already exists
       and its schema-correctness. No PROD GCS object is written, moved, or deleted. Source:
       `issues/sports_fixtures_schedule_wrong_schema_day_2026_04_14.md`.
-- [ ] [CODE] P2. **Close the PRIMERA_DIVISION (Chile) Odds-API team-name alias gap** — re-run the shipped
+- [ ] [CODE] P1. **Close the PRIMERA_DIVISION (Chile) Odds-API team-name alias gap** — re-run the shipped
       `FixtureIdResolver`/`validate_team_resolution()` match-rate measurement (mirroring this doc's own methodology)
       against every real captured `pipeline_mode=batch_odds_api` PRIMERA_DIVISION day currently in bucket
       `market-data-tick-sports-prd-central-element-323112` (not just the original 4-day sample) to enumerate the
@@ -112,7 +112,7 @@ drift_direction: advance-code
       `TeamResolutionError`; new regression tests pass; PRIMERA_DIVISION's `UNRESOLVED_TEAM_NAME` count is zero or every
       residual is explicitly documented; `quality-gates.sh` green. Source:
       `issues/sports_odds_team_name_alias_gap_south_america_2026_07_09.md`.
-- [ ] [DATA] P2. Re-pin unified-api-contracts's `source_data_latency.py` 5 p95-lag constants (SFI/API-Football/
+- [ ] [DATA] P1. Re-pin unified-api-contracts's `source_data_latency.py` 5 p95-lag constants (SFI/API-Football/
       FootyStats/Understat/Open-Meteo) from empirical `latency_observations` data — the ~2-week accrual window has
       passed (recorder shipped + wired to the live sports-scheduler 2026-06-22/24). Run
       `instruments-service/scripts/aggregate_source_latency_observations.py --emit-constants` (add
@@ -129,7 +129,7 @@ drift_direction: advance-code
       `sports_live_availability_and_source_latency_2026_07_24.md` (corrected 2026-07-25 plan-reconcile — the digest
       cited here as Source has 0 checkboxes and is not the real dispatch/reconciliation target; the actual open checkbox
       for this work lives in the doc now cited).
-- [ ] [DATA] P2. Determine the disposition of `market-data-tick-sports-prd`'s 20,785 `venue=KALSHI`/
+- [ ] [DATA] P1. Determine the disposition of `market-data-tick-sports-prd`'s 20,785 `venue=KALSHI`/
       `empty_confirmed`/`row_count=0` rows (paired with `source=polymarket_clob`, dates 2020-06-06..2026-05-21) —
       classify as (a) an independent instance of the same writer/consolidator asset_group-mislabeling class the
       fleet-wide TOCTOU bug (ROUND 4-6) produces in the sibling `instruments-store-sports-prd` bucket, (b) a legacy
@@ -144,7 +144,7 @@ drift_direction: advance-code
       Source: `cross_ag_prediction_rows_bleed_into_sports_instruments_index_2026_07_20.md` (corrected 2026-07-25
       plan-reconcile — this todo's own Done-when already names the real target, todo 15 in that doc; the digest cited
       here as Source has 0 checkboxes).
-- [ ] [DOC] P3. Write the sports features-bucket (`sports_features/`) path-layout SSOT in codex/02-data — document that
+- [ ] [DOC] P1. Write the sports features-bucket (`sports_features/`) path-layout SSOT in codex/02-data — document that
       `odds_features` is day-level (`sports_features/by_date/day=<D>/feature_group=odds_features/features.parquet`)
       while `derived_features`/`fixture_features` are per-league with RAW api-football numeric ids in the GCS path
       (`league=<raw_af_id>/feature_group={derived,fixture}_features/features.parquet`, historical/addressable,
@@ -155,7 +155,7 @@ drift_direction: advance-code
       **Done when**: a new codex/02-data doc exists documenting this exact layout with the cited writer file:line
       references, and its path is added to `sports_consolidated_closeout_2026_07_19.md`'s Codex SSOTs list. Source:
       `sports_consolidated_closeout_aggregated_sources_2026_07_24.md`.
-- [ ] [DATA] P3. Audit instruments-service's `odds_api_team_mapping.parquet` (`sports_reference/mappings/`) coverage
+- [ ] [DATA] P1. Audit instruments-service's `odds_api_team_mapping.parquet` (`sports_reference/mappings/`) coverage
       against the distinct `od_team_name` values actually present in MDPS's bucketed-odds shards, and extend the mapping
       table with the missing `od_team_name -> af_team_id` rows found (confirmed gap as of 2026-07-14: `Burgos CF`,
       SEGUNDA_DIVISION, is unmapped — smaller-league spellings are likely under-covered generally). Repo:
@@ -164,7 +164,7 @@ drift_direction: advance-code
       `odds_api_team_mapping.parquet` with the team/league identity confirmed (not guessed); any residual
       honestly-unmappable names are left dropping at ml-service merge time as already documented, not fabricated.
       Source: `sports_consolidated_closeout_aggregated_sources_2026_07_24.md`.
-- [ ] [DATA] P2. Remove/relabel the 2 confirmed cross-asset_group mislabeled rows sitting in the SPORTS manifest: (1)
+- [ ] [DATA] P1. Remove/relabel the 2 confirmed cross-asset_group mislabeled rows sitting in the SPORTS manifest: (1)
       `date=2026-06-26 venue=UNISWAP_V3-BASE asset_group=defi service_name=instruments-service     capture_status=attempted_failed source=api_football`,
       and (2) a second row `source=instruments_service asset_group=cefi capture_status=captured` found in the same
       2026-07-15 probe. Trace the writer path that emitted each into `instruments-store-sports-prd`'s manifest instead
@@ -176,7 +176,7 @@ drift_direction: advance-code
       `issues/api_football_reverify_attempted_failed_and_asset_group_2026_07_14.md`. Source:
       `issues/api_football_reverify_attempted_failed_and_asset_group_2026_07_14.md` (corrected 2026-07-25 plan-reconcile
       — matches this todo's own Done-when target; the digest previously cited as Source has 0 checkboxes).
-- [ ] [INFRA] P3. Grant `lifecycle-catalogue-regen@central-element-323112.iam.gserviceaccount.com`
+- [ ] [INFRA] P1. Grant `lifecycle-catalogue-regen@central-element-323112.iam.gserviceaccount.com`
       `storage.objects.create` on `central-element-323112-events` (or the correct events-sink bucket, confirm the exact
       name at execution time) so `CATALOGUE_SHRINK_BLOCKED`/similar structured events from the
       sports/prediction/cefi/defi `lifecycle-catalogue-regen-*` Cloud Run Jobs stop silently 403ing out of the event-log
@@ -185,7 +185,7 @@ drift_direction: advance-code
       it), and a fresh forced `CATALOGUE_SHRINK_BLOCKED`-class event (or a synthetic equivalent write) is confirmed
       reaching the events-sink bucket without a 403. Source:
       `sports_consolidated_closeout_aggregated_sources_2026_07_24.md`.
-- [ ] [DOC] P3. Re-verify and flip
+- [ ] [DOC] P1. Re-verify and flip
       `plans/active/issues/instruments_service_codex_compliance_ceiling_drift_2026_07_20.md` to `status: resolved` with
       `resolved_by: instruments-service@ac22305c` populated — it documents the identical 3 oversized sports-domain
       functions (`_AfManifestHooks.emit_empty_gaps_for_entity()` / `_fetch_teams_and_standings()` /
@@ -197,7 +197,7 @@ drift_direction: advance-code
       Source: `issues/instruments_service_codex_compliance_ceiling_drift_2026_07_20.md` (corrected 2026-07-25
       plan-reconcile — this todo's subject IS that doc; the digest previously cited as Source has 0 checkboxes and isn't
       the doc actually being flipped).
-- [ ] [DIAG] P2. **Verify whether the sports manifest's 2026-vs-prior-year enumeration-grain inconsistency (~10x more
+- [ ] [DIAG] P1. **Verify whether the sports manifest's 2026-vs-prior-year enumeration-grain inconsistency (~10x more
       cells seeded per data_type for 2026 than prior years) still persists** — measure current per-data_type
       cell-seeding counts for a matched 2025 vs 2026 sample window directly against the live
       `instruments-store-sports-prd/_index/availability_index.parquet` manifest. The diagnosed cause (over-seeding,
@@ -213,7 +213,7 @@ drift_direction: advance-code
       AND either (a) this item is annotated "resolved as side effect" with the measurement cited, or (b) a new scoped
       issue doc is filed under `plans/active/issues/` with the measurement + root-cause hypothesis (no fix implemented).
       Source: `data_completion_sports_2026_07_24.md`.
-- [ ] [DIAG] P2. Determine whether the free-text `error_reason` pattern documented in this doc's §2.5
+- [ ] [DIAG] P1. Determine whether the free-text `error_reason` pattern documented in this doc's §2.5
       ("record_empty(reason=SOURCE_RETURNED_ZERO) rejected: instruments-service catalog says ...") is still live-writing
       today by running a fresh distinct-`error_reason` census over the prod sports manifest
       (`market-data-tick-sports-prd-central-element-323112/_index/availability_index.parquet`, grouping
@@ -229,7 +229,7 @@ drift_direction: advance-code
       with a passing regression test proving `error_reason` for newly-written sports rows is always a member of the
       closed set, never a free-text sentence); `quality-gates.sh` green in the touched repo(s). Source:
       `issues/sports_shard_enumeration_cartesian_blowup_2026_07_20.md`.
-- [ ] [DOC] P3. Apply this doc's own already-specified §4.5 self-correction to itself: in
+- [ ] [DOC] P1. Apply this doc's own already-specified §4.5 self-correction to itself: in
       `sports_shard_enumeration_cartesian_blowup_2026_07_20.md`'s original "Why it is wrong" section, bullet 5 (~lines
       117-119: "Coverage is not universal even where it IS meaningful ... There is no per-(venue, fixture/market)
       expectation gate") is FALSE per the doc's own later VERIFIED DIAGNOSIS section — a per-(bookmaker,league)

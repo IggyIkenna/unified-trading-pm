@@ -25,7 +25,7 @@ last_updated: "2026-07-25"
 parent_epic: tradfi_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
-priority: P2
+priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 0.4
 estimate_calibrated_ai_days: 0.3
@@ -51,7 +51,7 @@ drift_direction: advance-code
 
 ## Todos
 
-- [ ] [REVIEW] P2. **Reconcile all 4 distinct source docs' checkboxes.** For each of
+- [ ] [REVIEW] P1. **Reconcile all 4 distinct source docs' checkboxes.** For each of
       `tradfi_satellite_ao_dispatch_batch1_2026_07_25.md`'s 5 now-done todos: flip the corresponding checkbox/ section
       in its named source doc (each todo's text ends with "Source: `<doc>.md`"), citing the batch-1 commit(s) that
       shipped it — verify the actual shipped commit exists before citing it. The 4 source docs:
@@ -61,7 +61,7 @@ drift_direction: advance-code
       now has 0 open todos remaining. Only flip a doc's `status` to `resolved` if it genuinely reaches 0 open todos
       (checkbox AND prose-form). **Done when**: all 4 source docs' corresponding checkboxes/sections are flipped with
       verified evidence, and any doc that genuinely reaches 0 open todos is flipped to `status: resolved`.
-- [ ] [REVIEW] P2. **Resolve the 38 conflict-gated Deferred items from batch1's own Deferred section**, now that the
+- [ ] [REVIEW] P1. **Resolve the 38 conflict-gated Deferred items from batch1's own Deferred section**, now that the
       operator has (presumably) ruled on the queued decision in `autonomous_session_operator_decisions_2026_07_25.md`.
       For each of the 13 docs listed there: re-read the specific conflicting todo in
       `tradfi_consolidated_closeout_2026_07_18.md` to check if it has since shipped (resolving the conflict by making
@@ -72,7 +72,7 @@ drift_direction: advance-code
       dedicated batch2 triage pass. **Done when**: each of the 13 conflict-gated docs has either (a) a new tracked
       todo/plan created because a conflict cleared, or (b) an explicit re-verified confirmation the conflict is still
       open; and a recommendation is recorded for the large/risky doc.
-- [ ] [DOC] P3. **Archive `tradfi_satellite_ao_dispatch_batch1_2026_07_25.md`** via the standard 6-step ritual (per
+- [ ] [DOC] P1. **Archive `tradfi_satellite_ao_dispatch_batch1_2026_07_25.md`** via the standard 6-step ritual (per
       CLAUDE.md's plan-archival rule): migrate any remaining Deferred items to a tracked todo elsewhere (todo 2 above
       should have already resolved all of them — verify none remain) → add the archive banner → run the codex-alignment
       check → grep the corpus for every referrer of `tradfi_satellite_ao_dispatch_batch1_2026_07_25` and fix each path

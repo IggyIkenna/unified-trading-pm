@@ -29,7 +29,7 @@ last_updated: 2026-07-14
 parent_epic: orchestrator_master
 assigned_vm: NA
 execution_scope: local-only
-priority: P1
+priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 2.4
@@ -192,7 +192,7 @@ through and render them multi-line, mirroring `notify_operator_gated_blocked` (`
       render. — agent-orchestrator@038beeb.
 - [x] [OPERATOR] P1. ✅ D1/D2/D3 all resolved by operator (2026-07-13) — see Decisions. Plan unblocked for
       implementation.
-- [ ] [BACKEND] P2. WS-E: **auto-deploys — verification pending only.** Code is landed on LDR (WS-A/B/C/D). The prod
+- [ ] [BACKEND] P0. WS-E: **auto-deploys — verification pending only.** Code is landed on LDR (WS-A/B/C/D). The prod
       backend runs uvicorn `--reload` **[CORRECTED 2026-07-13, verify-rerun finding 213: VM-verified (twice,
       2026-07-12/13) the installed orchestrator.service ExecStart runs uvicorn WITHOUT `--reload`; deploy-currency =
       scripts/ao-self-pull.sh 15-min root cron (FF-pull + systemctl restart on HEAD change) per
@@ -263,7 +263,7 @@ through and render them multi-line, mirroring `notify_operator_gated_blocked` (`
       = already gated to cap-hit). codex gains the **Complete pager audit table** as the durable SSOT; regression test
       `test_self_healing_lifecycle_alerts_are_summary_only`. Full `quality-gates.sh` green. —
       agent-orchestrator@bb87f59.
-- [ ] [INFRA] P2. Separate fix (surfaced by the audit): the daily `:broom: Plan-hygiene sweep FAILED` is a PM **Cloud
+- [ ] [INFRA] P0. Separate fix (surfaced by the audit): the daily `:broom: Plan-hygiene sweep FAILED` is a PM **Cloud
       Run cron** (`uts-prod-plan-hygiene-sweep`, 05:00) that re-posts the SAME unchanged failure
       (`hard failures: 1, soft     warnings: 1`) every day with no dedup (7/wk). Fix the underlying hygiene failure OR
       add read-back dedup to that job — it does NOT flow through `slack._post`, so it's out of the AO-notifier scope.

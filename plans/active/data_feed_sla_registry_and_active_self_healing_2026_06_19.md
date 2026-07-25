@@ -16,7 +16,7 @@ created: 2026-06-19
 parent_epic: observability_master
 assigned_vm: NA
 execution_scope: orchestrator-agent
-priority: P1
+priority: P0
 estimate_class: design
 estimate_baseline_ai_days: 5
 estimate_calibrated_ai_days: 3.0
@@ -130,7 +130,7 @@ ladder, the 4-state honest-absence manifest).
 Shipping the UAC change surfaced + required fleet-QG fixes (landed PM@`f7f393636` via carve-out #3 — `qg-common.sh` +
 `base-service.sh` + `base-library.sh`). Residual proper-fix follow-ups:
 
-- [ ] [SCRIPT] P2. **Bump msgpack `>=1.2.1` fleet-wide + lock-regen**, then drop its `--ignore-vuln GHSA-6v7p-g79w-8964`
+- [ ] [SCRIPT] P0. **Bump msgpack `>=1.2.1` fleet-wide + lock-regen**, then drop its `--ignore-vuln GHSA-6v7p-g79w-8964`
       from `base-service.sh` + `base-library.sh`. **18/20 SHIPPED + 3 were already 1.2.1 = 21/23 at 1.2.1.** Shipped:
       instruments@`9cd6540`, mdps@`f6f3554`, mtds@`0a1b389`, ml@`fc46485`, sit@`3b98675`, trading-agent@`f0d0a39`,
       uta@`9fa5a12`, UTL@`01f9b7b2`, PM@`467e86348`(PR#440), deployment-api@`ebe7cd0`, e2e-testing@`bd1f8af`,
@@ -154,7 +154,7 @@ Shipping the UAC change surfaced + required fleet-QG fixes (landed PM@`f7f393636
       `internal/reference/__init__.py` + `internal/__init__.py` (import + `__all__`);
       `from unified_api_contracts.internal     import ACCOUNT_STATE_FRESHNESS` now works. (Unblocked once the
       `ledger_asset_resolution` WIP landed.)
-- [ ] [DEFERRED] P3. **Drop the vcrpy `--ignore-vuln GHSA-rpj2-4hq8-938g`** when vcrpy can be bumped (gated on the
+- [ ] [DEFERRED] P0. **Drop the vcrpy `--ignore-vuln GHSA-rpj2-4hq8-938g`** when vcrpy can be bumped (gated on the
       aiohttp-3.14 unblock — `plans/active/issues/aiohttp_cve_2026_34993_vcrpy_deadlock_2026_06_03.md`).
 
 ## Phase 2 — active self-healing (`refetch-feed` recovery action) — depends on Phase 1
@@ -186,8 +186,8 @@ Shipping the UAC change surfaced + required fleet-QG fixes (landed PM@`f7f393636
 
 ## Success criteria
 
-- One typed SSOT (`ALL_FRESHNESS_CONTRACTS`/`DataFreshnessContract`) answers "feeds × max_age × criticality"; every freshness consumer reads it; no inline
-  threshold literals remain (grep-verified); the no-orphan-feed CI gate is green.
+- One typed SSOT (`ALL_FRESHNESS_CONTRACTS`/`DataFreshnessContract`) answers "feeds × max_age × criticality"; every
+  freshness consumer reads it; no inline threshold literals remain (grep-verified); the no-orphan-feed CI gate is green.
 - A stale `critical` feed in live mode triggers an active mapped re-fetch, escalates on failure through the existing
   ladder, and keeps the order gate closed until recovery — verified by synthetic smoke.
 - Codex SSOTs above updated in the same closing phase (Post-Plan-Phase Codex Audit rule).

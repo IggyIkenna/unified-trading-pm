@@ -28,7 +28,7 @@ last_updated: "2026-07-25"
 parent_epic: sports_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
-priority: P2
+priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 0.4
 estimate_calibrated_ai_days: 0.32
@@ -54,7 +54,7 @@ drift_direction: advance-code
 
 ## Todos
 
-- [ ] [REVIEW] P2. **Reconcile all 3 distinct source docs' checkboxes.** For each of
+- [ ] [REVIEW] P1. **Reconcile all 3 distinct source docs' checkboxes.** For each of
       `sports_satellite_ao_dispatch_batch4_2026_07_25.md`'s 3 now-done todos: flip the corresponding checkbox/section in
       its named source doc (each todo's text ends with "Source: `<doc>.md`"), citing the batch-4 commit(s) that shipped
       it — verify the actual shipped commit exists before citing it. The 3 source docs:
@@ -65,7 +65,7 @@ drift_direction: advance-code
       `status` to `resolved` if it genuinely reaches 0 open todos. **Done when**: all 3 source docs' corresponding
       checkboxes/sections are flipped with verified evidence, and any doc that genuinely reaches 0 open todos is flipped
       to `status: resolved`.
-- [ ] [REVIEW] P2. **Resolve the 4 conflict-gated Deferred items from batch4's own doc**, now that the operator has
+- [ ] [REVIEW] P1. **Resolve the 4 conflict-gated Deferred items from batch4's own doc**, now that the operator has
       (presumably) ruled on entries #5-8 in `autonomous_session_operator_decisions_2026_07_25.md`. For each of the 4
       items (`data_completion_sports_2026_07_24.md` Transfermarkt re-attempt [entry #5],
       `data_completion_sports_2026_07_24.md` ODDS+PREDICTIONS blank-reason measurement [entry #6],
@@ -79,7 +79,7 @@ drift_direction: advance-code
       time, just note the re-check happened and it's still awaiting an answer. **Done when**: each of the 4 items has
       either (a) a new tracked todo/plan created because the conflict cleared, or (b) an explicit re-verified
       confirmation the conflict/decision is still open.
-- [ ] [DOC] P3. **Archive `sports_satellite_ao_dispatch_batch4_2026_07_25.md`** via the standard 6-step ritual (per
+- [ ] [DOC] P1. **Archive `sports_satellite_ao_dispatch_batch4_2026_07_25.md`** via the standard 6-step ritual (per
       CLAUDE.md's plan-archival rule): migrate any remaining Deferred items to a tracked todo elsewhere (todo 2 above
       should have already resolved all 4 or confirmed them still-open — verify none silently vanish) → add the archive
       banner → run the codex-alignment check (no new durable contract from this batch, confirm still true) → grep the

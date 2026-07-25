@@ -24,7 +24,7 @@ last_updated: 2026-07-20
 parent_epic: orchestrator_master
 assigned_vm: NA # LOCAL execution — operator-assigned agents on this host, NOT AO-dispatched (2026-07-20)
 execution_scope: local-only
-priority: P1
+priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 3.5
 estimate_calibrated_ai_days: 2.8
@@ -205,7 +205,7 @@ is **`details_json`** (not `detail`/`payload`) — a grep for the wrong name ret
       failure isolation). Full `agent-orchestrator` `quality-gates.sh` green (1548 passed). **Gate met**: retention
       decision recorded (defer, no prune) WITH the growth alarm in place — the plan's own explicit acceptable-outcome
       clause.
-- [ ] [BACKEND] P3. **(AF-1a-followup) Re-measure the unresolved-escalation classification ~1 week post-fix.** AF-1a's
+- [ ] [BACKEND] P0. **(AF-1a-followup) Re-measure the unresolved-escalation classification ~1 week post-fix.** AF-1a's
       cicd.md backgrounding fix (`unified-trading-pm@a35c6996`) landed 2026-07-20; the 65%/33%/2%
       NEVER_FOUND_ROOT_CAUSE/FOUND_ROOT_CAUSE_THEN_SILENT/HIT_BLOCKED_QUESTION split was measured the SAME session the
       fix shipped, so it cannot yet reflect the fix's effect — a re-check too soon would just re-confirm pre-fix

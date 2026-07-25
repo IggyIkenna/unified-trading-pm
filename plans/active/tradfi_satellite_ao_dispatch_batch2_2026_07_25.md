@@ -42,7 +42,7 @@ last_updated: "2026-07-25"
 parent_epic: tradfi_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
-priority: P2
+priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 1.2
 estimate_calibrated_ai_days: 1.0
@@ -109,7 +109,7 @@ changed since batch1.
 
 ## Todos
 
-- [ ] [DATA] P2. **Re-run the tradfi manifest venue/data_type drift audit (no conflict was ever recorded against this
+- [ ] [DATA] P1. **Re-run the tradfi manifest venue/data_type drift audit (no conflict was ever recorded against this
       candidate — it was grouped under `data_completion_tradfi_2026_07_15.md`'s whole-doc deferral)**, combined with
       **deploying the already-shipped MDPS ohlcv_15m/24h `canonical_writer` fixes** into ONE todo (both edit the SAME
       doc file — `data_completion_tradfi_2026_07_15.md` — and would collide if dispatched as two concurrent AO todos):
@@ -138,7 +138,7 @@ changed since batch1.
       ohlcv_15m/24h cells for tradfi, and the line-629 checkbox's sub-bullet is updated with deploy evidence (tarball
       sha / VM name / T+10min manifest read). Source: `data_completion_tradfi_2026_07_15.md`.
 
-- [ ] [REVIEW] P2. **Combined instruments-foundation cleanup pass — 7 independent, conflict-clear candidates from
+- [ ] [REVIEW] P1. **Combined instruments-foundation cleanup pass — 7 independent, conflict-clear candidates from
       `instruments_tradfi_g1_g5_gate_execution_2026_07_24.md`, bundled into ONE todo because all 7 would otherwise edit
       the SAME doc file concurrently** (mirrors batch1's tradfi_legacy_twin combine): (1) Verify instruments-service CME
       (GLBX.MDP3) instrument-definition catalog manifest coverage for 2019-01-01 through today in
@@ -184,7 +184,7 @@ changed since batch1.
       checkboxes/table rows for items 1-7 are flipped/updated in the SAME commit. Source:
       `instruments_tradfi_g1_g5_gate_execution_2026_07_24.md`.
 
-- [ ] [SCRIPT] P2. **Conflict-check (2026-07-25 plan-reconcile): this todo's Done-when flips 3 checkboxes in
+- [ ] [SCRIPT] P1. **Conflict-check (2026-07-25 plan-reconcile): this todo's Done-when flips 3 checkboxes in
       `tradfi_backfill_throughput_followups_2026_07_24.md`; todo 9 below flips a 4th checkbox in that SAME doc. Do not
       dispatch/commit concurrently — run todo 9 (P1) first, then this todo (P2), so the two checkbox-flip commits don't
       race on the same file.** **Combined throughput-followups residual pass — 3 independent, conflict-clear candidates
@@ -209,7 +209,7 @@ changed since batch1.
       non-existent plan doc; all 3 corresponding checkboxes in `tradfi_backfill_throughput_followups_2026_07_24.md` are
       flipped/updated in the SAME commit. Source: `tradfi_backfill_throughput_followups_2026_07_24.md`.
 
-- [ ] [OPERATOR] P2. **Correct the live tradfi `availability_index` manifest for the ~97,828 combo/chain objects
+- [ ] [OPERATOR] P1. **Correct the live tradfi `availability_index` manifest for the ~97,828 combo/chain objects
       quarantined by the 2026-07-20 recovery run** — locate `recover_tradfi_garbage_underlying_2026_07.py --apply`'s
       retained per-shard `--out` TSV / `*.apply_outcomes.json` artifacts (VM launcher convention
       `gs://deployment-scripts-*/vm-logs/<vm>/...`) as the authoritative QUARANTINED-row list, then CAS-update those
@@ -234,7 +234,7 @@ changed since batch1.
       todo is reported BLOCKED with that finding. Source:
       `issues/cme_combo_underlying_extraction_garbage_2026_07_19.md`.
 
-- [ ] [AUDIT] P2. **Sweep `market-tick-data-service` for the remaining `run_in_executor(None, ...)` network-blocking
+- [ ] [AUDIT] P1. **Sweep `market-tick-data-service` for the remaining `run_in_executor(None, ...)` network-blocking
       call sites and classify each** — the doc's original "known so far" list is STALE (all 4 `databento_fetch`/
       `databento_batch_jobs` sites already moved to the dedicated `_get_dbn_fetch_executor()` pool, per
       `tradfi_backfill_throughput_followups_2026_07_24.md`'s own already-checked-off [BACKEND] P0). Two sites are NOT
@@ -251,7 +251,7 @@ changed since batch1.
       or the doc's status/resolved_by fields. Source:
       `issues/databento_default_executor_dns_starvation_risk_2026_07_17.md`.
 
-- [ ] [TRADFI] P2. **Profile market-tick-data-service's per-date OHLCV fetch/decode path with `memray`** against one
+- [ ] [TRADFI] P1. **Profile market-tick-data-service's per-date OHLCV fetch/decode path with `memray`** against one
       reproduced heavy chunk (a liquid `GC.OPT ohlcv_1s` expiry day, or a NASDAQ/NYSE many-symbol `ohlcv_1m` week) to
       identify what is holding the ~15 GB transient RSS peak despite ~1.3 MB/date of written output. Capture a memray
       flamegraph + summary and document the top allocation site(s) (e.g. eager DBN decode buffering vs an un-released
@@ -265,7 +265,7 @@ changed since batch1.
       `- [ ] [TRADFI] P2. memray...` checkbox is flipped to `[x]` citing that artifact/finding. Source:
       `issues/tradfi_backfill_oom_remediation_2026_06_24.md`.
 
-- [ ] [DATA] P3. **Codify the "reclassification races the consolidator too" near-miss into the manifest-consolidator
+- [ ] [DATA] P1. **Codify the "reclassification races the consolidator too" near-miss into the manifest-consolidator
       SSOT** — the 2026-07-15 floor-clip run (`correct_tradfi_universe_floor_clip_and_vix_index.py --apply`) mutated the
       canonical tradfi `_index` in-place WITHOUT pausing the consolidator cron, avoiding a lost-update only by observed
       timing luck. Extend `/codex/05-infrastructure/manifest-consolidator-ssot.md`'s existing "Surgical ROW REMOVAL from
@@ -329,7 +329,7 @@ changed since batch1.
       `issues/tradfi_todo_cells_below_vendor_discovery_floor_2026_07_20.md` (also covers
       `tradfi_backfill_throughput_followups_2026_07_24.md`'s duplicate candidate on the same ground).
 
-- [ ] [SCRIPT] P3. **Clean up the historical `corporate_action_confirmed`/`earnings_result` `attempted_failed` orphan
+- [ ] [SCRIPT] P1. **Clean up the historical `corporate_action_confirmed`/`earnings_result` `attempted_failed` orphan
       rows** (807/807 + 799/799 as of the 2026-07-15 alert batch; not independently re-verified against a live manifest
       query since) from the MTDS tradfi tick manifest bucket `market-data-tick-tradfi-prd-central-element-323112`. These
       cells can never be satisfied — the real capture code for both data_types lives entirely in features-service's
@@ -350,7 +350,7 @@ changed since batch1.
       consolidator merge cycles after resume confirm no resurrection. Source:
       `issues/tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md`.
 
-- [ ] [TEST] P3. **NICE-TO-HAVE — fix `deployment-service/tests/unit/test_event_logging.py`'s `get_service_name()`
+- [ ] [TEST] P1. **NICE-TO-HAVE — fix `deployment-service/tests/unit/test_event_logging.py`'s `get_service_name()`
       helper** (currently `Path.cwd().name`, confirmed unchanged via live grep 2026-07-25) to resolve the service
       identity from the repo's own identity (pyproject `name` field or git remote) instead of the checkout directory's
       basename, so `test_required_common_events_exist` correctly `pytest.skip`s deployment-service's

@@ -54,7 +54,7 @@ last_updated: 2026-07-17
 parent_epic: orchestrator_master
 assigned_vm: NA
 execution_scope: local-only
-priority: P1
+priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 6
 estimate_calibrated_ai_days: 4.8
@@ -260,7 +260,7 @@ NOT AO and are deliberately out of scope here.
       two so the same task can never reach two agents); test the exact race (resume in-flight when the invariant tick
       fires → invariant defers, no release).** **➡️ MOVED 2026-07-20 to `ao_worker_lifecycle_reap_2026_07_20.md` — do
       NOT action here.**
-- [ ] [INFRA] P3. **Root-cause the 96/day `tmux_session_lost` rate** (or record it as accepted churn). The 07-17
+- [ ] [INFRA] P0. **Root-cause the 96/day `tmux_session_lost` rate** (or record it as accepted churn). The 07-17
       incident was 5 losses in one second (backend/tmux blip); today's rate is 96/24h with 158 `worker_polling_dead`.
       Either find the driver (backend restarts? host pressure? tmux server?) or record the rate as expected with the
       lifecycle machinery absorbing it. Source: doc #3 timeline + this session's measurement. **Gate**: a named cause
@@ -369,12 +369,12 @@ NOT AO and are deliberately out of scope here.
       CWD-fallback bug in `regen_backlog_from_plan.py`), not the earlier, well-known 08:1x UTC `/tmp`-ENOSPC blip (which
       was real but contained). Root-fixed same day, `agent-orchestrator@fc9ac53`. Full hourly-breakdown methodology +
       activity-log evidence lives in that plan's Progress Log — not duplicated here.
-- [ ] [REVIEW] P2. **`ao_docs_reconciliation` close-out pass.** Verify tier-by-tier (1–6) what has since landed (several
+- [ ] [REVIEW] P0. **`ao_docs_reconciliation` close-out pass.** Verify tier-by-tier (1–6) what has since landed (several
       tiers were executed piecemeal: Tier-4 → `ao_residuals`; X2 → recovery doc; some Tier-1 flips landed in later
       commits), apply/route what remains, then flip the tracker `resolved` + archive. Its own X5 lesson applies: every
       edit lands committed+pushed in the same session. Source: doc #10. **Gate**: each tier marked landed/routed/dropped
       with evidence; doc archived.
-- [ ] [REVIEW] P3. **Archive each source doc as its items land** (5-step ritual each: migrate deferred → banner →
+- [ ] [REVIEW] P0. **Archive each source doc as its items land** (5-step ritual each: migrate deferred → banner →
       codex-alignment → codex update if a contract changed → clear lock). Docs #2 and #6-frontmatter carry bogus fields
       (`last_updated: 2026-06-27` predating `created`; stray `locked_by: live-defi-rollout`) — repair at archival.
       **Gate**: `plans/active/issues/` contains no resolved-but-unarchived AO doc; inventory regenerated.
@@ -571,7 +571,7 @@ NOT AO and are deliberately out of scope here.
 
 ### Phase LAST — operator-sequenced
 
-- [ ] [BACKEND] P2. **Recovery-audit Layer-1 producer rewire (operator ruling B, "do it at last").** Stand up the
+- [ ] [BACKEND] P0. **Recovery-audit Layer-1 producer rewire (operator ruling B, "do it at last").** Stand up the
       standalone recovery-audit-signoff producer (NOT an AO worker-role): consume PubSub `agent-recovery-actions`, POST
       verdicts to the live `POST /safety-ops/signoffs`; unmock the DART feed; clean the stale `routes/agents.py:146`
       comment. Only start once Phases 0–4 are done (the operator's sequencing). Source: doc #9. **Gate**: a real signoff
@@ -683,19 +683,19 @@ NOT AO and are deliberately out of scope here.
 > operator action** gates, not code. This plan now OWNS them — the child is archived and must not be reopened. Each
 > cites its source so the evidence trail survives.
 
-- [ ] [BACKEND] P2. **Re-measure the `tmux_session_lost` rate and record the delta.** Baseline **192 events since
+- [ ] [BACKEND] P0. **Re-measure the `tmux_session_lost` rate and record the delta.** Baseline **192 events since
       2026-07-18** (measured 2026-07-20). All four fixes are confirmed LIVE on the VM (`1e7fec0`, `390cdde`, `d84109a`,
       `f641968` all ancestors of the deployed HEAD, verified by SSM 2026-07-20 14:19 UTC; service restarted 14:15:21
       UTC). Re-measure over a window comparable to the baseline. **Report the honest number either way** — if the rate
       does NOT drop, record that the reaper was NOT the driver, so the churn hunt resumes with one hypothesis eliminated
       rather than quietly assumed closed. **Gate**: before/after counts over comparable windows + an explicit verdict.
       _Source: `ao_dispatch_liveness_p0_2026_07_20.md` (archived), todo 8._
-- [ ] [BACKEND] P1. **Stale-dispatch invariant — the live 24h spot-check.** Code + 9 regression tests shipped
+- [ ] [BACKEND] P0. **Stale-dispatch invariant — the live 24h spot-check.** Code + 9 regression tests shipped
       (`agent-orchestrator@aa81706`, `server/stale_dispatch.reclaim_stale_dispatches()`), including the no-double-
       dispatch race assertion. **Only the operational proof remains**: live `dispatched` count equals live-worker-held
       count across a 24h window. Needs the fix live for a full day before it means anything. **Gate**: the 24h
       comparison, stated explicitly. _Source: `ao_worker_lifecycle_reap_2026_07_20.md` (archived), todo 4._
-- [ ] [BACKEND] P1. **Prove ONE plan_reconciler run end-to-end (the reconciler's real gate) — plus pin two named
+- [ ] [BACKEND] P0. **Prove ONE plan_reconciler run end-to-end (the reconciler's real gate) — plus pin two named
       residuals from the root-cause fix.** Two runs have died so far (07-20 `agt-751738` at 07:33:30, same
       `tmux_session_lost`/`archived_lifecycle_complete` signature as the historical 07-15/17/18 deaths) — root-caused to
       an UNGUARDED `WorkerLivenessWatchdog._reclaim_idle_lingering_sessions` reaping a live-working reconciler whose
@@ -714,7 +714,7 @@ NOT AO and are deliberately out of scope here.
       `ao_backlog_regen_integrity`, `ao_dispatch_cooldown_and_park`) settle** — a live central VM mid-restart-churn from
       several concurrent plans is a bad environment to draw conclusions in. \_Source:
       `ao_scheduled_agent_hygiene_2026_07_20.md` (archived), todo 4 (+ R1/R2 residuals carried in todo 5).*
-- [ ] [BACKEND] P3. **Role lifecycle-field reclassification — align the declared `lifecycle` on plan-worker roles with
+- [ ] [BACKEND] P0. **Role lifecycle-field reclassification — align the declared `lifecycle` on plan-worker roles with
       reality.** `backend_engineer` / `ui_developer` / `quant_dev` / `infra` are declared `lifecycle: one_shot`;
       reclassify to `persistent`, and resolve `data_engineering` (scheduled-vs-persistent). **NOT required for
       correctness** — the shipped fix rekeyed reaping on DISPATCH CONTEXT (a bound `one_shot` `AgentRow`), so nothing

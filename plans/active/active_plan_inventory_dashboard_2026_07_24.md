@@ -17,7 +17,7 @@ created: "2026-07-24"
 parent_epic: agent_operating_framework_master
 assigned_vm: NA
 execution_scope: local-only
-priority: P2
+priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 0.5
 estimate_calibrated_ai_days: 0.4

@@ -98,7 +98,7 @@ drift_direction: advance-code
       dispatch speculatively. **Done when**: each of the 4 deferred items has either (a) a new tracked todo/plan created
       and dispatched because its gate cleared, or (b) an explicit, re-verified confirmation that its gate is still open
       (not just inherited from the original extraction — re-checked as of this todo's execution).
-- [ ] [DOC] P2. **Archive `sports_satellite_ao_dispatch_batch2_2026_07_24.md`** via the standard 6-step ritual (per
+- [ ] [DOC] P1. **Archive `sports_satellite_ao_dispatch_batch2_2026_07_24.md`** via the standard 6-step ritual (per
       CLAUDE.md's plan-archival rule): migrate any DEFERRED items to a tracked todo elsewhere (todo 2 above should have
       already cleared all 4 — verify none remain) → add the archive banner → run the codex-alignment check (do any codex
       docs need a status update now that these 37 items shipped — e.g. the WEATHER layout fix, the odds-feature naming

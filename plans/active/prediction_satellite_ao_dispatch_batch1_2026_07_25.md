@@ -32,7 +32,7 @@ last_updated: "2026-07-25"
 parent_epic: predictions_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
-priority: P2
+priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 0.6
 estimate_calibrated_ai_days: 0.5
@@ -70,7 +70,7 @@ drift_direction: advance-code
       third time. Repo: e2e-testing. **Done when**: `validate_batch_live_smoke_matrix.py` no longer references
       `trading-api.kalshi.com`; a new regression test/assertion exists that fails if that host string reappears anywhere
       in the smoke matrix; the smoke matrix runs green. Source: `prediction_phase_ab_residuals_2026_07_24.md`.
-- [ ] [DIAG] P2. Quantify the prediction-store event-capture gap the cefi KALSHI-PERP purge surfaced — diff the
+- [ ] [DIAG] P1. Quantify the prediction-store event-capture gap the cefi KALSHI-PERP purge surfaced — diff the
       PREDICTION store's KALSHI/POLYMARKET instrument set against the live Kalshi `/markets` (events host) and
       Polymarket CLOB universe to determine whether event markets (`KXMVESPORTSMULTIGAMEEXTENDED`, `KXMVECROSSCATEGORY`,
       etc.) are captured correctly. No code fix is in scope for this todo, only the quantified finding. Repo:
@@ -86,14 +86,14 @@ drift_direction: advance-code
       a synthetic event-contract record injected into a `-PERP` feed is rejected at write time (not written to the
       catalogue), proven by a new unit test; `quality-gates.sh` green. Source:
       `prediction_phase_ab_residuals_2026_07_24.md`.
-- [ ] [DIAG] P2. Re-measure prediction attempted/captured trajectory on a sampled window now that the pre-fetch
+- [ ] [DIAG] P1. Re-measure prediction attempted/captured trajectory on a sampled window now that the pre-fetch
       lifecycle gate (market-tick-data-service@abe0904d) and the active-window catalogue widening
       (instruments-service@41ca79d7) have both shipped, and append the before/after counts. Repo: read-only measurement.
       **Done when**: before/after attempted-vs-captured counts for a sampled window are appended to
       `plans/active/issues/prediction_lifecycle_prefetch_gate_and_resolution_day_catalogue_2026_07_14.md`'s Progress Log
       (and to the coverage docs if the model description changes). Source:
       `prediction_phase_ab_residuals_2026_07_24.md`.
-- [ ] [DIAG] P2. **Combined investigation for
+- [ ] [DIAG] P1. **Combined investigation for
       `prediction_polymarket_legacy_dual_write_trees_metadata_loss_2026_07_24.md` (2 sub-items merged into one todo
       since both append findings to that same doc):** (a) Grep-then-READ the MTDS Polymarket adapter
       (`market-tick-data-service/market_tick_data_service/market_interface/adapters/prediction/polymarket_adapter.py`),
@@ -108,7 +108,7 @@ drift_direction: advance-code
       title/slug-recoverability verdict with evidence (the specific row(s) checked) — both recorded in
       `plans/active/issues/prediction_polymarket_legacy_dual_write_trees_metadata_loss_2026_07_24.md`'s Progress Log in
       the same commit. Source: `prediction_phase_ab_residuals_2026_07_24.md`.
-- [ ] [CODE] P2. Route every prediction `instrument_id`/`underlying`/`canonical_question_group` writer
+- [ ] [CODE] P1. Route every prediction `instrument_id`/`underlying`/`canonical_question_group` writer
       (instruments-service `reference_data/adapters/prediction/kalshi.py` + `.../prediction/polymarket/`,
       market-tick-data-service `market_interface/adapters/prediction/`) through UAC's shared canonical-id-builder
       machinery and add a QG check that fails a non-canonical prediction `instrument_id`/ `canonical_question_group` on
@@ -116,7 +116,7 @@ drift_direction: advance-code
       leakage). Repos: instruments-service, market-tick-data-service, unified-api-contracts (new QG check). **Done
       when**: a new QG/test fails on a synthetic non-canonical prediction `instrument_id` or `canonical_question_group`
       write and passes on the current writers; QG green. Source: `prediction_phase_ab_residuals_2026_07_24.md`.
-- [ ] [DIAG] P3. **Conflict-check (2026-07-25 plan-reconcile)**: `prediction_satellite_ao_dispatch_batch2_2026_07_25.md`
+- [ ] [DIAG] P1. **Conflict-check (2026-07-25 plan-reconcile)**: `prediction_satellite_ao_dispatch_batch2_2026_07_25.md`
       todo 2 ALSO writes to `prediction_phase_ab_residuals_2026_07_24.md`'s Progress Log (and flips a checkbox there).
       Do not dispatch/commit concurrently with that todo — this batch (batch1) was drafted first, run this todo before
       batch2 todo 2 if both are active. Verify whether the existing `lifecycle-catalogue-regen-prediction-daily` cron

@@ -31,7 +31,7 @@ last_updated: "2026-07-25"
 parent_epic: tradfi_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
-priority: P2
+priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 0.5
 estimate_calibrated_ai_days: 0.4
@@ -60,7 +60,7 @@ drift_direction: advance-code
 
 ## Todos
 
-- [ ] [REVIEW] P2. Exhaustively diff `EXCHANGE_CODE_TO_NAME` between
+- [ ] [REVIEW] P1. Exhaustively diff `EXCHANGE_CODE_TO_NAME` between
       `unified_api_contracts/registry/tradfi_instrument_universe.py` and
       `unified_api_contracts/registry/tradfi_symbology.py` — enumerate EVERY key present in only one dict and every key
       whose value disagrees between the two (the doc's own banner names only 2 spot-checked entries, `HO` and `NG` — the
@@ -72,7 +72,7 @@ drift_direction: advance-code
       to the issue doc's evidence trail) — every key in either dict is accounted for as match / value-mismatch /
       present-in-only-one, 0 keys skipped or sampled. No dict is edited and no authoritative choice is made by this
       todo. Source: `issues/tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md`.
-- [ ] [REVIEW] P2. **Close out the two non-blocked remaining todos in
+- [ ] [REVIEW] P1. **Close out the two non-blocked remaining todos in
       `tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24.md` in one pass** (combined into one todo because both edit
       the SAME doc file and would collide if dispatched as two concurrent AO todos): (1) Verify or correct the doc's
       "cefi + sports already done" claim (frontmatter `summary:` + the BLOCKED-OPERATOR-DECISION todo's banner prose) —
@@ -90,7 +90,7 @@ drift_direction: advance-code
       either cited-and-kept with evidence, or corrected to the real state with a citation; (b) the dry-run output
       (report path + row count) is posted into the doc's Progress Log; `--apply` is NOT run in either step. Source:
       `tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24.md`.
-- [ ] [DIAG] P2. Confirm the terminal-state of the in-flight CBOE force+skip re-verification VM launched at the
+- [ ] [DIAG] P1. Confirm the terminal-state of the in-flight CBOE force+skip re-verification VM launched at the
       2026-07-24 session's wrap-up
       (`data-pipeline-check-mtds --asset-group TRADFI --venue CBOE --data-types     ohlcv_1s,ohlcv_1m --day 2026-07-13 --legs force,skip --require-captured --auto-day`,
       against code tarball `mtds-code@0205eaab...`) — read the VM's `run.log` and/or the manifest state to determine
@@ -102,7 +102,7 @@ drift_direction: advance-code
       `plans/active/tradfi_phase_d_terminal_gate_2026_07_24.md` with an evidence citation (a VM run.log GCS path, or a
       `plans/audit/results/` report path if freshly re-run), replacing the "Still in-flight at session end" row in the
       Deferred-work table. Source: `tradfi_phase_d_terminal_gate_2026_07_24.md`.
-- [ ] [DOC] P3. Add the two Phase-D pipeline-check launcher name patterns as named candidates in
+- [ ] [DOC] P1. Add the two Phase-D pipeline-check launcher name patterns as named candidates in
       `vm_fleet_preemption_autorecovery_gap_2026_07_23.md`'s item 8/9 scoping list. `mtds-backfill-*-pipelinecheck-*`
       and `instr-backfill-*-pipelinecheck-*` are registered in the fleet relaunch machinery by launcher-prefix match but
       were never named as candidates for the native-shutdown-script (`lc_write_preemption_signal_file`)
@@ -114,7 +114,7 @@ drift_direction: advance-code
       `plans/active/issues/vm_fleet_preemption_autorecovery_gap_2026_07_23.md`'s item 8 and/or item 9 candidate list
       explicitly names both `mtds-backfill-*-pipelinecheck-*` and `instr-backfill-*-pipelinecheck-*` as candidates for
       the native-shutdown-script pattern rollout. Source: `tradfi_phase_d_terminal_gate_2026_07_24.md`.
-- [ ] [CODE] P2. **Extend the 1-4 leg hard cap + logged-drop behavior to Deribit's existing combo builders** — mirror
+- [ ] [CODE] P1. **Extend the 1-4 leg hard cap + logged-drop behavior to Deribit's existing combo builders** — mirror
       the pattern already implemented for CME/CBOE spreads in
       `instruments_service/reference_data/adapters/tradfi/databento/symbology.py` (operator spec 2026-07-09: 1-4 real
       legs captured as structured `InstrumentLeg`s; a genuine 5+-leg combo is dropped — NOT captured, NOT truncated —

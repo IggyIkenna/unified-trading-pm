@@ -34,7 +34,7 @@ created: 2026-06-22
 parent_epic: observability_master
 assigned_vm: NA
 execution_scope: orchestrator-agent
-priority: P2
+priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 22
 estimate_calibrated_ai_days: 18
