@@ -203,7 +203,9 @@ source: >-
       Genuinely not completable this turn (started ~8h17m ago, ~4.25 of ~8.5 covered years so far at current rate —
       several more hours remain). No duplicate action taken; released back to the queue via `/skip-current-task` so
       other dispatchable work isn't blocked on this slot idling — a future dispatch should re-check
-      `PROGRESS.json`/`EXIT_STATUS` before assuming still-running.
+      `PROGRESS.json`/`EXIT_STATUS` before assuming still-running. — **Re-health-checked 2026-07-25T02:24Z (slot 2)**:
+      still RUNNING, `PROGRESS.json` monotonic-advanced to `last_completed_date=2024-03-31`, no stall signature.
+      Genuinely still hours from completion; released again, no duplicate action.
 - [x] ✅ [CODE] P1. **UAC canonical registry build/refine** — unified-api-contracts@ce18ff15. Audited every clause of
       the Architecture section against current code before touching anything (most of this program had already shipped):
       name/ids/country/season-start-end-per-year (`season_dates.get_season_start`/`get_season_end`, per-league-per-year)
