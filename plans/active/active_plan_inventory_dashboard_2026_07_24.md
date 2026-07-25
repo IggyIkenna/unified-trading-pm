@@ -141,6 +141,7 @@ epic._
 | [`mtds_venue_backfill_and_ops_hardening_residuals_2026_07_24`](./mtds_venue_backfill_and_ops_hardening_residuals_2026_07_24.md)                                         | master           | infra     | 16/38      | 42%          | 1.4      | —        |
 | [`canonical_id_builder_retrofit_checklist_2026_07_08`](./canonical_id_builder_retrofit_checklist_2026_07_08.md)                                                         | master           | refactor  | 4/13       | 31%          | 1.4      | —        |
 | [`tradfi_massive_dual_source_2026_05_28`](./tradfi_massive_dual_source_2026_05_28.md)                                                                                   | master           | infra     | 41/51      | 80%          | 1.4      | —        |
+| [`github_actions_staging_machinery_shutdown_2026_07_24`](./github_actions_staging_machinery_shutdown_2026_07_24.md)                                                     | master           | infra     | 2/3        | 67%          | 1.3      | —        |
 | [`infra_capture_and_devops_leftovers_2026_07_06`](./infra_capture_and_devops_leftovers_2026_07_06.md)                                                                   | master           | infra     | 4/9        | 44%          | 1.3      | —        |
 | [`l2_book_microstructure_capture_2026_07_13`](./l2_book_microstructure_capture_2026_07_13.md)                                                                           | master           | brand-new | 6/8        | 75%          | 1.2      | —        |
 | [`asset_class_to_asset_group_rename_2026_07_21`](./asset_class_to_asset_group_rename_2026_07_21.md)                                                                     | master           | refactor  | 0/7        | 0%           | 1.2      | —        |
@@ -231,11 +232,10 @@ epic._
 | [`deployment_api_cache_oom_and_ui_latency_remediation_2026_07_13`](./deployment_api_cache_oom_and_ui_latency_remediation_2026_07_13.md)                                 | master           | design    | 18/18      | 100%         | 0.0      | —        |
 | [`deployment_ui_plain_routes_retire_cockpit_tabs_2026_07_17`](./deployment_ui_plain_routes_retire_cockpit_tabs_2026_07_17.md)                                           | master           | refactor  | 12/12      | 100%         | 0.0      | —        |
 | [`docs_retrieval_layer_reconcile_2026_07_23`](./docs_retrieval_layer_reconcile_2026_07_23.md)                                                                           | master           | infra     | 7/7        | 100%         | 0.0      | —        |
-| [`github_actions_staging_machinery_shutdown_2026_07_24`](./github_actions_staging_machinery_shutdown_2026_07_24.md)                                                     | master           | infra     | 3/3        | 100%         | 0.0      | —        |
 | [`migration_verification_orphan_safety_2026_06_10`](./migration_verification_orphan_safety_2026_06_10.md)                                                               | master           | design    | 25/25      | 100%         | 0.0      | —        |
 | [`mvp_backfill_defi_onchain_v10_operational_log_2026_07_24`](./mvp_backfill_defi_onchain_v10_operational_log_2026_07_24.md)                                             | master           | infra     | 7/7        | 100%         | 0.0      | —        |
 | [`sports_closeout_batch1_finalize_2026_07_24`](./sports_closeout_batch1_finalize_2026_07_24.md)                                                                         | master           | infra     | 0/1        | 0%           | 0.0      | —        |
-| **TOTAL** (179 plans)                                                                                                                                                   | 0 orphans, 0 TBD | —         | —          | **45% done** | **402**  | —        |
+| **TOTAL** (179 plans)                                                                                                                                                   | 0 orphans, 0 TBD | —         | —          | **45% done** | **404**  | —        |
 
 <!-- AUTO-INVENTORY-END -->
 
