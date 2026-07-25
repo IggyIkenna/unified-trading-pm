@@ -213,6 +213,15 @@ ingested). Use for operator-only work, trackers, design docs, and dispatcher-sur
   was executing had tracked ~550,062 rows as recoverable for 8 days after the bucket had actually been deleted;
   `recovery_plan_source_liveness_probe_gap_2026_07_25.md`)._ A recovery/backfill todo's first step should confirm the
   named source (bucket/table/API) is still live, not assume the plan's authoring-time premise still holds.
+- **Every AO-eligible todo containing a GCS delete/`--apply` mutation or a VM launch must be explicitly self-justified
+  or operator-gated** _(finding O, 2026-07-25: a scoped `/plan-reconcile` pass across all 5 AGs' AO-dispatch batches
+  found 8 of ~15 batch docs contain a delete/`--apply` operation and 5 contain a VM launch, with no systematic check
+  that each is correctly tagged — only that SOME `[OPERATOR]` tag existed somewhere in the doc)._ Such a todo must
+  either (a) state inline why it's a safe, already-established idempotent pattern (e.g. "copy → crc32c-verify → delete",
+  the same shape used elsewhere in this doc family) needing no operator gate, or (b) carry `[OPERATOR]` + cite the
+  delete-safety protocol / the exact approval command. A todo with neither is a real gap, not a style nitpick.
+  Mechanically pre-flagged (soft) by `scripts/plan-hygiene/check_delete_vm_launch_gating.sh`; judged for real by
+  `/plan-reconcile`'s AO-dispatch-readiness hunter (this is a content-judgment call, not a regex-decidable one).
 
 ---
 
