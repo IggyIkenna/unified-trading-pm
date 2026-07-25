@@ -214,13 +214,21 @@ source: >-
       the chain-bundle content rewrite todo) + the FUTURE/OPTION-per-contract chain-bundle content population (tracked
       separately below). This todo (the one CAS migration pass itself) is done and durable. (repos:
       market-tick-data-service, unified-trading-library)
-- [ ] [DATA] P0. **Migrate GCS filenames + tick CONTENT (Surfaces C+D)** — single-walk worklist from the
-      availability_index rows; bundled OHLCV → `underlying={HUMAN_ROOT}`; flat per-contract → full
-      `VENUE:TYPE:ROOT-USD@LIN-...parquet`; rename via UTL `gcs_copy_object`+`gcs_delete_object` (never `gsutil`).
-      Historical tick parquet CONTENT `instrument_id` column rewritten with the primitive (do NOT touch the raw `symbol`
-      column — it's the classifier input). Then the **verify gate** `assert_tradfi_derivative_ids_canonical` (classify
-      by BODY not stored type; TARGET `^[A-Z0-9-]+:(FUTURE|OPTION):[A-Z0-9]+-USD@LIN-\d{8}(-\d+(\.\d+)?-[CP])?$`; 0
-      whitespace; bounded+enumerated quarantine sidecar) proves 0 raw on all four surfaces.
+- [ ] [DATA] P0. **Migrate GCS filenames + tick CONTENT (Surfaces C+D) — SINGLE-INSTRUMENT DONE (2026-07-22, mtds
+      `tradfi-cid` VM run, ~100% already-canonical); CHAIN-BUNDLE tool SHIPPED + MEASURED 2026-07-25, mtds@a23dd8bd,
+      `--apply` AT SCALE STILL PENDING.** New `scripts/rewrite_tradfi_chain_bundle_content_id_2026_07_25.py` (worklist:
+      underlying NOT blank + instrument_type in {futures_chain, options_chain}; per-ROW derivation via
+      `canonicalize_raw_tradfi_id` off the raw Databento symbol, since chain-bundle content has no expiry_date column;
+      trusts the bundle's path-level type, not the unreliable row-level column — see module docstring). **Dry-run
+      COMPLETE (2,000-object sample of 277,993 candidates, workers=4): 1,371 would_rewrite_content (68.6%) / 542
+      already_canonical (27.1%) / 43 unresolved-residue / 43 stale-manifest missing / 1 error** — matches the plan's
+      prior ~68.7%-legacy estimate. **NOT applied at scale**: ~278K-object `--apply` needs a dedicated VM
+      (`launch-canonical-migration-vm.sh` `tradfi-cid`, extended) — this host (15GB RAM) hit real swap pressure at
+      workers=4 on the 2K sample. Tool is proven correct (13 unit tests, real-content smoke-tested); only at-scale
+      execution remains. Then the **verify gate** `assert_tradfi_derivative_ids_canonical` (classify by BODY not stored
+      type; TARGET `^[A-Z0-9-]+:(FUTURE|OPTION):[A-Z0-9]+-USD@LIN-\d{8}(-\d+(\.\d+)?-[CP])?$`; 0 whitespace;
+      bounded+enumerated quarantine) proves 0 raw on all four surfaces. Rename via UTL `gcs_copy_object`+
+      `gcs_delete_object` (never `gsutil`); do NOT touch the raw `symbol` column (classifier input).
 - [ ] [DECISION] P1. **ICE qualifier variants (`BRN_Z`/`BRN!`/`BRN_MD1`) = BLOCKED-OPERATOR-DECISION** — the
       classifier + current writer emit `ICE:FUTURE:BRN_Z-USD@LIN-...` with banned chars (`_`,`!`);
       `EXCHANGE_CODE_TO_NAME` only maps the bare root. Non-MVP (ICE not in MVP universe) so quarantine-with-tracking
