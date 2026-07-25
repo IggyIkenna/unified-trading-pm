@@ -581,6 +581,18 @@ preventive: **after any commit that moved/renamed files across a rebase-heavy se
 `git show HEAD:<path> | wc -l` (or an equivalent content check) that the committed result matches intent** — don't just
 trust that a clean `git status` + a plausible commit message means the commit contains what you think it does.
 
+**A second, self-inflicted variant (2026-07-25): a pathspec-scoped `git commit -- <paths>` that omits the OLD half of a
+`git mv` silently drops the deletion.** `git mv old new` stages BOTH the removal of `old` and the creation of `new` as
+one paired rename in the index. A `git commit -m "..." -- <pathspec>` that names `new` (and unrelated referrer-fix
+paths) but never names `old` only commits the changes for the paths it was given — `old`'s staged removal doesn't match
+the pathspec, so it is silently left uncommitted, and the resulting commit's tree inherits `old` UNCHANGED from the
+parent. The archived doc and its stale pre-archival twin both end up live in the same commit, with no error and no
+unusual `git status` output at commit time. **Fix: a pathspec-scoped commit that includes a `git mv` MUST name both the
+old and new paths** (or just commit the rename with no pathspec restriction at all, once you've verified via
+`git diff --cached --stat` that nothing foreign is staged). Detected the same way as the rebase variant above —
+`git cat-file -e HEAD:<old-path>` unexpectedly succeeding — and fixed the same way: verify the resurrected content is
+byte-identical to the pre-move blob, then remove it with its own single-file `git rm` + commit naming that exact path.
+
 ### Isolated-worktree promotion (rare: concurrent session shares slot's `.git`)
 
 Under Path-B each slot is an independent clone with its OWN `.git`, so two agents sharing the same slot's `.git` is
