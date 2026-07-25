@@ -112,7 +112,7 @@ source:
 ## Split notice (2026-07-24 — plan-hygiene line-cap remediation)
 
 > **This plan was trimmed from 1488 lines and forked 5 ways**, per the operator-approved split in
-> `/plans/active/issues/plan_line_cap_remediation_2026_07_23.md` (row 22: "4-way split along the plan's own Phase A-E
+> `/plans/archive/issues/plan_line_cap_remediation_2026_07_23.md` (row 22: "4-way split along the plan's own Phase A-E
 > boundaries"). Every todo and every Progress Log line was moved **verbatim** to its destination — nothing was
 > summarized, rewritten, or silently dropped.
 >

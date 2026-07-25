@@ -18,7 +18,7 @@ related:
   [
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,
     /plans/active/cefi_4surface_migration_execution_log_2026_07_24.md,
-    /plans/active/issues/plan_line_cap_remediation_2026_07_23.md,
+    /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
     /codex/05-infrastructure/vm-launcher-runbook.md,
   ]
 created: 2026-07-24

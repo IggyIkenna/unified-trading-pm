@@ -30,7 +30,7 @@ tags: [cefi, close-out, canonicalisation, manifest, execution-log, progress-log,
 related:
   [
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,
-    /plans/active/issues/plan_line_cap_remediation_2026_07_23.md,
+    /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
     /plans/active/issues/cefi_residual_followups_after_honest_done_2026_07_17.md,
     /plans/active/issues/_cefi_canonical_blueprint_2026_07_17.md,
     /plans/archive/2026_07/cefi_4surface_migration_execution_log_history_part1_2026_07_24.md,

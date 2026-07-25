@@ -17,7 +17,7 @@ locked_by: live-defi-rollout
 locked_since: 2026-04-20
 depends_on:
   [
-    /codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md §3.6,
+    /codex/16-strategy-playbooks/infra-spec/stage-3e-refactor-plan.md §3.6,
     refactor_g1_1_phase_unification_2026_04_20.md,
     refactor_g1_3_locked_visible_ui_service_tile_mode_2026_04_20.md,
     refactor_g1_4_persona_combinatorial_expansion_2026_04_20.md,
@@ -60,7 +60,7 @@ surfaces.
 
 ## Mandatory read-set
 
-1. `/codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md` §3.6
+1. `/codex/16-strategy-playbooks/infra-spec/stage-3e-refactor-plan.md` §3.6
 2. `refactor_g1_1_phase_unification_2026_04_20.md`
 3. `refactor_g1_3_locked_visible_ui_service_tile_mode_2026_04_20.md`
 4. `refactor_g1_4_persona_combinatorial_expansion_2026_04_20.md`

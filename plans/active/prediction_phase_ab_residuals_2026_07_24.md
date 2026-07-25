@@ -49,7 +49,7 @@ related:
     /plans/active/prediction_perps_kalshi_polymarket_parked_2026_07_24.md,
     /plans/active/prediction_live_clob_depth_capture_2026_07_24.md,
     /plans/active/prediction_cross_venue_arb_and_coverage_2026_07_24.md,
-    /plans/active/issues/plan_line_cap_remediation_2026_07_23.md,
+    /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
   ]
 created: "2026-07-24"
 last_updated: "2026-07-24"

@@ -277,8 +277,8 @@ todos:
         slot-labels) + `dashboard-services-grid.md`. status: done
 
 - id: p4-codex-odum-paper-doc content: |
-  - [x] [AGENT] P1. Create `/codex/14-playbooks/shared-core/odum-paper-client-zero.md`: rationale + lifecycle + capital
-        seeding + retention + reality-vs-expected monitoring. status: done
+  - [x] [AGENT] P1. Create `/codex/14-customer-journeys/shared-core/odum-paper-client-zero.md`: rationale + lifecycle +
+        capital seeding + retention + reality-vs-expected monitoring. status: done
 
 # ────────────────────────────────────────────────────────────────────────────
 

@@ -17,8 +17,8 @@ locked_by: live-defi-rollout
 locked_since: 2026-04-20
 depends_on:
   [
-    /codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md §1.1,
-    /codex/14-playbooks/_ssot-rules/03-same-system-principle.md,
+    /codex/16-strategy-playbooks/infra-spec/stage-3e-refactor-plan.md §1.1,
+    /codex/14-customer-journeys/_ssot-rules/03-same-system-principle.md,
     /codex/09-strategy/TIER_ZERO_UI_DEMO_AND_PARITY.md,
   ]
 ---
@@ -59,8 +59,8 @@ rewiring inside — never a cloned component tree.
 
 ## Mandatory read-set
 
-1. `/codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md` §1.1
-2. `/codex/14-playbooks/_ssot-rules/03-same-system-principle.md`
+1. `/codex/16-strategy-playbooks/infra-spec/stage-3e-refactor-plan.md` §1.1
+2. `/codex/14-customer-journeys/_ssot-rules/03-same-system-principle.md`
 3. `/codex/09-strategy/TIER_ZERO_UI_DEMO_AND_PARITY.md`
 4. `unified-trading-system-ui/components/shell/lifecycle-nav.tsx`
 5. `unified-trading-system-ui/components/shell/service-tabs.tsx`
@@ -188,8 +188,8 @@ of the G1 refactor; it has no dependencies on other G1 items and can run in para
 ```
 cd /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm
 git checkout live-defi-rollout && git pull
-ls /codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md
-ls /codex/14-playbooks/_ssot-rules/03-same-system-principle.md
+ls /codex/16-strategy-playbooks/infra-spec/stage-3e-refactor-plan.md
+ls /codex/14-customer-journeys/_ssot-rules/03-same-system-principle.md
 ls /codex/09-strategy/TIER_ZERO_UI_DEMO_AND_PARITY.md
 ls ../unified-trading-system-ui/components/shell/
 ```

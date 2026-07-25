@@ -20,7 +20,7 @@ related:
     /plans/active/data_pipeline_hardening_self_monitoring_2026_06_22.md,
     /plans/active/data_pipeline_alert_substrate_residual_2026_07_24.md,
     /plans/active/data_pipeline_ag_residual_backfill_decisions_2026_07_24.md,
-    /plans/active/issues/plan_line_cap_remediation_2026_07_23.md,
+    /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
   ]
 created: "2026-07-24"
 last_updated: "2026-07-24"

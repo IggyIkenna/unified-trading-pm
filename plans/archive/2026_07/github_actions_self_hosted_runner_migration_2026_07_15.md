@@ -21,7 +21,7 @@ related:
   [
     /plans/active/github_actions_operator_gated_followups_2026_07_17.md,
     /plans/active/github_actions_staging_machinery_shutdown_2026_07_24.md,
-    /plans/active/issues/plan_line_cap_remediation_2026_07_23.md,
+    /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
     /plans/archive/issues/github_billing_dashboard_access_2026_07_09.md,
   ]
 created: "2026-07-24"

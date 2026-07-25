@@ -26,7 +26,7 @@ tags: [sports, discoverability, index, aggregated-source-docs, plan-hygiene]
 related:
   [
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
-    /plans/active/issues/plan_line_cap_remediation_2026_07_23.md,
+    /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
   ]
 created: "2026-07-24"
 parent_epic: sports_master
@@ -43,7 +43,7 @@ supersedes:
 superseded_by:
 depends_on: []
 source: >-
-  Plan line-cap hygiene remediation, 2nd pass, /plans/active/issues/plan_line_cap_remediation_2026_07_23.md -- operator
+  Plan line-cap hygiene remediation, 2nd pass, /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md -- operator
   ruling 2026-07-24 removed the umbrella:true exemption entirely (flat 1000L hard cap, no exceptions).
 assigned_role: data_engineering
 drift_direction: advance-code

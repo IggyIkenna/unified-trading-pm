@@ -21,7 +21,7 @@ related:
     /plans/archive/2026_07/tradfi_v9_stage1_finish_2026_07_06.md,
     /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
     /plans/active/migration_verification_orphan_safety_2026_06_10.md,
-    /plans/active/issues/plan_line_cap_remediation_2026_07_23.md,
+    /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
   ]
 created: "2026-07-24"
 last_updated: 2026-07-25

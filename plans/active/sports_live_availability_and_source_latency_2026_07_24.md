@@ -26,7 +26,7 @@ related:
     /plans/active/data_completion_to_100_all_ag_2026_06_21.md,
     /plans/active/data_completion_sports_2026_07_24.md,
     /plans/archive/2026_07/data_completion_sports_history_2026_07_24.md,
-    /plans/active/issues/plan_line_cap_remediation_2026_07_23.md,
+    /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
   ]
 created: "2026-07-24"
 parent_epic: manifest_master

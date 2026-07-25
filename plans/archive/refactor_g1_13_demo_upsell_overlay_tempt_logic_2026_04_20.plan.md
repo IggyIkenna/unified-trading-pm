@@ -17,8 +17,8 @@ locked_by: live-defi-rollout
 locked_since: 2026-04-20
 depends_on:
   [
-    /codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md §1.13,
-    /codex/14-playbooks/demo-ops/upsell-overlays.md,
+    /codex/16-strategy-playbooks/infra-spec/stage-3e-refactor-plan.md §1.13,
+    /codex/14-customer-journeys/demo-ops/upsell-overlays.md,
     refactor_g1_7_restriction_profile_engine_2026_04_20.md,
     refactor_g1_10_questionnaire_to_configuration_flow_2026_04_20.md,
   ]
@@ -55,18 +55,18 @@ transform applied between questionnaire ingestion and G1.7 `resolve_profile` exe
 - **Upstream (Wave E):** `refactor_g1_10_questionnaire_to_configuration_flow_2026_04_20.md` — consumes questionnaire
   response
 - **Sibling Wave F:** `refactor_g1_4_persona_combinatorial_expansion_2026_04_20.md`
-- **Demo-ops source:** `/codex/14-playbooks/demo-ops/upsell-overlays.md`,
-  `/codex/14-playbooks/demo-ops/demo-restriction-profiles.md`,
-  `/codex/14-playbooks/demo-ops/pre-demo-discovery-framework.md`
+- **Demo-ops source:** `/codex/14-customer-journeys/demo-ops/upsell-overlays.md`,
+  `/codex/14-customer-journeys/demo-ops/demo-restriction-profiles.md`,
+  `/codex/14-customer-journeys/demo-ops/pre-demo-discovery-framework.md`
 - **Rules cited:** `_ssot-rules/06-show-dont-show-discipline.md` (LOCKED-VISIBLE as the upsell surface)
 
 ## Mandatory read-set
 
-1. `/codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md` §1.13
-2. `/codex/14-playbooks/demo-ops/upsell-overlays.md` — full, especially "When overlays appear / When overlays do NOT
-   appear / Design principles / Anti-patterns"
-3. `/codex/14-playbooks/demo-ops/demo-restriction-profiles.md`
-4. `/codex/14-playbooks/demo-ops/pre-demo-discovery-framework.md`
+1. `/codex/16-strategy-playbooks/infra-spec/stage-3e-refactor-plan.md` §1.13
+2. `/codex/14-customer-journeys/demo-ops/upsell-overlays.md` — full, especially "When overlays appear / When overlays do
+   NOT appear / Design principles / Anti-patterns"
+3. `/codex/14-customer-journeys/demo-ops/demo-restriction-profiles.md`
+4. `/codex/14-customer-journeys/demo-ops/pre-demo-discovery-framework.md`
 5. `strategy-service/strategy_service/availability/restriction_profiles.py` (landed by G1.7)
 6. `unified-trading-system-ui/lib/auth/demo-provider.ts`
 7. `unified-trading-system-ui/app/questionnaire/` (landed by G1.10)
@@ -251,7 +251,7 @@ cd /Users/ikennaigboaka/Code/unified-trading-system-repos
 git -C unified-trading-pm checkout live-defi-rollout && git -C unified-trading-pm pull
 git -C strategy-service checkout live-defi-rollout && git -C strategy-service pull
 git -C unified-trading-system-ui checkout live-defi-rollout && git -C unified-trading-system-ui pull
-ls unified-trading-pm/codex/14-playbooks/demo-ops/upsell-overlays.md
+ls unified-trading-pm/codex/14-customer-journeys/demo-ops/upsell-overlays.md
 # Verify G1.7 + G1.10 merged
 ls strategy-service/strategy_service/availability/restriction_profiles.py
 ls unified-trading-system-ui/app/questionnaire/

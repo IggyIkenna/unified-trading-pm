@@ -132,7 +132,7 @@ system without reading this plan.
 | `/codex/06-coding-standards/strategy-display-conventions.md`           | NEW — pretty-printing rules + bespoke names                                                    |
 | `codex/14-playbooks/demo-ops/profiles/desmond-dart-full.yaml`          | NEW — Desmond DART Full profile                                                                |
 | `codex/14-playbooks/demo-ops/profiles/desmond-signals-in.yaml`         | NEW — Desmond Signals-In profile                                                               |
-| `/codex/14-playbooks/demo-ops/staging-demo-setup.md`                   | Update: email-based demo login pattern                                                         |
+| `/codex/14-customer-journeys/demo-ops/staging-demo-setup.md`           | Update: email-based demo login pattern                                                         |
 | `/codex/04-architecture/service-family-scope.md`                       | Update: Full vs Signals-In feature matrix, locked section design                               |
 | `/codex/02-data/questionnaire-axes.md`                                 | NEW or update: full 11-axis catalogue + Firestore schema                                       |
 
@@ -627,7 +627,7 @@ YAML profile following existing `prospect-dart.yaml` structure.
 
 YAML profile — same tile base, Research/Promote tiles padlocked.
 
-### - [ ] [DOC] P8.8 — Update `/codex/14-playbooks/demo-ops/staging-demo-setup.md`
+### - [ ] [DOC] P8.8 — Update `/codex/14-customer-journeys/demo-ops/staging-demo-setup.md`
 
 Add: email-based persona mapping mechanism, persona naming convention, how to onboard new demo client (checklist).
 

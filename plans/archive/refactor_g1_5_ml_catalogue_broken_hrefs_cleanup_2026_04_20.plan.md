@@ -16,7 +16,10 @@ owner: agent
 locked_by: live-defi-rollout
 locked_since: 2026-04-20
 depends_on:
-  [/codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md §1.5, /codex/14-playbooks/page-triage/broken-links.md]
+  [
+    /codex/16-strategy-playbooks/infra-spec/stage-3e-refactor-plan.md §1.5,
+    /codex/14-customer-journeys/page-triage/broken-links.md,
+  ]
 ---
 
 ## Deferred work — migrated to:
@@ -28,10 +31,11 @@ incidental DEFERRED / post-cutover / out-of-scope tokens in the body are histori
 
 ## Context
 
-Stage 3E §1.5 targets the 5 probable-broken outbound hrefs captured in `/codex/14-playbooks/page-triage/broken-links.md`
-"5 probable" block — all originating from `unified-trading-system-ui/lib/lifecycle-route-mappings.ts` and pointing into
-the ML Model Catalogue surface. Each must be decided build-or-prune with alignment to the coming G2.4 ML catalogue
-refactor direction; undecided links rot and break triage discipline.
+Stage 3E §1.5 targets the 5 probable-broken outbound hrefs captured in
+`/codex/14-customer-journeys/page-triage/broken-links.md` "5 probable" block — all originating from
+`unified-trading-system-ui/lib/lifecycle-route-mappings.ts` and pointing into the ML Model Catalogue surface. Each must
+be decided build-or-prune with alignment to the coming G2.4 ML catalogue refactor direction; undecided links rot and
+break triage discipline.
 
 ## Decisions locked with user (2026-04-20)
 
@@ -46,15 +50,15 @@ refactor direction; undecided links rot and break triage discipline.
 - **Sibling Wave A plans:** refactor*g1*{1,3,9,12,14}\_2026_04_20.md
 - **Future alignment (G2):** G2.4 ML catalogue refactor — the build decisions here should not pre-empt that refactor's
   IA choices.
-- **Source of the 5 probable hrefs:** `/codex/14-playbooks/page-triage/broken-links.md`
-- **Triage matrix:** `/codex/14-playbooks/page-triage/triage-matrix.md`
-- **Duplicate clusters:** `/codex/14-playbooks/page-triage/duplicate-clusters.md`
+- **Source of the 5 probable hrefs:** `/codex/14-customer-journeys/page-triage/broken-links.md`
+- **Triage matrix:** `/codex/14-customer-journeys/page-triage/triage-matrix.md`
+- **Duplicate clusters:** `/codex/14-customer-journeys/page-triage/duplicate-clusters.md`
 
 ## Mandatory read-set
 
-1. `/codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md` §1.5
-2. `/codex/14-playbooks/page-triage/broken-links.md` — the "5 probable" block
-3. `/codex/14-playbooks/page-triage/triage-matrix.md`
+1. `/codex/16-strategy-playbooks/infra-spec/stage-3e-refactor-plan.md` §1.5
+2. `/codex/14-customer-journeys/page-triage/broken-links.md` — the "5 probable" block
+3. `/codex/14-customer-journeys/page-triage/triage-matrix.md`
 4. `unified-trading-system-ui/lib/lifecycle-route-mappings.ts`
 5. `unified-trading-system-ui/app/services/ml/**` (or wherever ML catalogue pages live today — enumerate in Phase 5A)
 6. `/codex/14-customer-journeys/playbook-concepts/catalogue-ml-model.md`
@@ -105,7 +109,8 @@ refactor direction; undecided links rot and break triage discipline.
 - `unified-trading-system-ui/lib/lifecycle-route-mappings.ts` — remove PRUNE entries, update BUILD entries
 - `unified-trading-system-ui/next.config.ts` — add redirect rules for BUILD-via-redirect decisions
 - `unified-trading-system-ui/app/services/ml/**` — new stub pages per BUILD-via-stub decisions
-- `/codex/14-playbooks/page-triage/broken-links.md` — move the 5 probable entries into a "resolved 2026-04-20" section
+- `/codex/14-customer-journeys/page-triage/broken-links.md` — move the 5 probable entries into a "resolved 2026-04-20"
+  section
 - `unified-trading-system-ui/tests/e2e/playbooks/refactor/refactor-g1-5-ml-catalogue-hrefs.spec.ts` — NEW
 
 ## Execution DAG
@@ -161,7 +166,7 @@ Wave A; parallelisable with 1.1, 1.3, 1.9, 1.12, 1.14-markdown.
 ```
 cd /Users/ikennaigboaka/Code/unified-trading-system-repos/unified-trading-pm
 git checkout live-defi-rollout && git pull
-ls /codex/14-playbooks/page-triage/broken-links.md
+ls /codex/14-customer-journeys/page-triage/broken-links.md
 ls /codex/14-customer-journeys/playbook-concepts/catalogue-ml-model.md
 ls ../unified-trading-system-ui/lib/lifecycle-route-mappings.ts
 ```
@@ -216,7 +221,7 @@ PM repo:
 
 ```
 cd unified-trading-pm
-bash scripts/quickmerge.sh "docs(playbooks): G1.5 — stamp 5 probable-broken ML hrefs as resolved" --agent --files "/codex/14-playbooks/page-triage/broken-links.md"
+bash scripts/quickmerge.sh "docs(playbooks): G1.5 — stamp 5 probable-broken ML hrefs as resolved" --agent --files "/codex/14-customer-journeys/page-triage/broken-links.md"
 ```
 
 Fallback if quickmerge is blocked by unrelated WIP on live-defi-rollout:

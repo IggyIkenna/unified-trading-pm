@@ -147,11 +147,11 @@ only did the directory move + `git mv`, not a content sweep to rewrite incoming 
 CLAUDE.md (and by symlink, `SUB_AGENT_MANDATORY_RULES.md` + every per-repo `.claude/CLAUDE.md`) has 2 stale
 `14-playbooks/` references:
 
-- `cursor-configs/CLAUDE.md:119` — `/codex/14-playbooks/shared-core/signal-broadcast-architecture.md` (Signal Leasing
-  rule body). The actual file now lives at `/codex/16-strategy-playbooks/shared-core/signal-broadcast-architecture.md`
-  (verify path).
-- `cursor-configs/CLAUDE.md:926` — `unified-trading-pm/codex/14-playbooks/authentication/firebase-local.md`. The actual
-  file now lives at `/codex/14-customer-journeys/authentication/firebase-local.md`.
+- `cursor-configs/CLAUDE.md:119` — `/codex/14-customer-journeys/shared-core/signal-broadcast-architecture.md` (Signal
+  Leasing rule body). The actual file now lives at
+  `/codex/16-strategy-playbooks/shared-core/signal-broadcast-architecture.md` (verify path).
+- `cursor-configs/CLAUDE.md:926` — `unified-trading-pm/codex/14-customer-journeys/authentication/firebase-local.md`. The
+  actual file now lives at `/codex/14-customer-journeys/authentication/firebase-local.md`.
 
 **These are HIGH-impact stale references** because CLAUDE.md is loaded into every Claude Code session boot.
 

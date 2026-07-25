@@ -33,7 +33,7 @@ related:
     data_pipeline_check_mdps_features_2026_07_20,
     /plans/active/issues/candle_feature_canonical_path_divergence_2026_07_20.md,
     /plans/active/issues/mdps_derivative_ticker_candle_schema_violation_2026_07_20.md,
-    /plans/active/issues/plan_line_cap_remediation_2026_07_23.md,
+    /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
   ]
 created: "2026-07-24"
 last_updated: "2026-07-24"

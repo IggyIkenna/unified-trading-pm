@@ -102,7 +102,7 @@ related:
     /plans/active/canonical_id_builder_retrofit_checklist_2026_07_08.md,
     issues/batch_live_filename_divergence_sanitize_symbol_2026_07_20.md,
     issues/uac_build_instrument_id_colon_strictness_mtds_ripple_2026_07_21.md,
-    /plans/active/issues/plan_line_cap_remediation_2026_07_23.md,
+    /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
     /plans/active/data_pipeline_e2e_milestones_gate_2026_07_24.md,
   ]
 created: 2026-07-18
@@ -150,7 +150,7 @@ source:
 ## Split notice (2026-07-24 — plan-hygiene line-cap remediation)
 
 > **This plan was trimmed from 3447 lines and forked 3 ways**, per the operator-approved split in
-> `/plans/active/issues/plan_line_cap_remediation_2026_07_23.md` (row 11: "Extract Strategy/PnL index + 1800-line
+> `/plans/archive/issues/plan_line_cap_remediation_2026_07_23.md` (row 11: "Extract Strategy/PnL index + 1800-line
 > historical log") plus an additional fork (Track 1) needed to actually land the doc under 1000 lines. Every todo and
 > every Progress Log line was moved **verbatim** to its destination — nothing was summarized, rewritten, or silently
 > dropped; every still-open item surfaced by the historical Progress Log's two "Deferred work after ..." tables was

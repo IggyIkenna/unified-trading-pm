@@ -7,7 +7,7 @@ locked_by: live-defi-rollout
 locked_since: 2026-04-20
 amended: 2026-04-22
 depends_on:
-  - /codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md §2.2
+  - /codex/16-strategy-playbooks/infra-spec/stage-3e-refactor-plan.md §2.2
   - refactor_g2_1_org_scoped_jwt_claims_2026_04_20.plan.md
   - refactor_g2_6_staging_firebase_provisioning_2026_04_20.plan.md
   - plans/active/user_management_merge_2026_03_23.plan.md (folded)
@@ -56,7 +56,7 @@ deployment-api. UAC declares the `ApiKeyScope` enum: `read_data`, `read_reportin
 
 ## Mandatory read-set
 
-1. `/codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md` §2.2
+1. `/codex/16-strategy-playbooks/infra-spec/stage-3e-refactor-plan.md` §2.2
 2. `plans/active/user_management_merge_2026_03_23.plan.md`
 3. `refactor_g2_1_org_scoped_jwt_claims_2026_04_20.plan.md` — claim shape
 4. `/codex/06-coding-standards/config-reloader-pattern.md`

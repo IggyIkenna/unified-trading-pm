@@ -30,7 +30,7 @@ tags: [defi, discoverability, index, aggregated-source-docs, plan-hygiene]
 related:
   [
     /plans/active/defi_consolidated_closeout_2026_07_18.md,
-    /plans/active/issues/plan_line_cap_remediation_2026_07_23.md,
+    /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
     /plans/active/data_pipeline_e2e_milestones_gate_2026_07_24.md,
   ]
 created: "2026-07-24"
@@ -48,7 +48,7 @@ supersedes:
 superseded_by:
 depends_on: []
 source: >-
-  Plan line-cap hygiene remediation, 2nd pass, /plans/active/issues/plan_line_cap_remediation_2026_07_23.md -- operator
+  Plan line-cap hygiene remediation, 2nd pass, /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md -- operator
   ruling 2026-07-24 removed the umbrella:true exemption entirely (flat 1000L hard cap, no exceptions), requiring a
   second trim of defi_consolidated_closeout_2026_07_18.md beyond its earlier same-day pass.
 assigned_role: data_engineering

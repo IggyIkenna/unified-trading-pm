@@ -17,11 +17,11 @@ locked_by: live-defi-rollout
 locked_since: 2026-04-20
 depends_on:
   [
-    /codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md §1.7,
-    /codex/14-playbooks/demo-ops/demo-restriction-profiles.md,
-    /codex/14-playbooks/demo-ops/pre-demo-curation-rules.md,
-    /codex/14-playbooks/demo-ops/dart-demo-modes.md,
-    /codex/14-playbooks/demo-ops/demo-decision-matrix.md,
+    /codex/16-strategy-playbooks/infra-spec/stage-3e-refactor-plan.md §1.7,
+    /codex/14-customer-journeys/demo-ops/demo-restriction-profiles.md,
+    /codex/14-customer-journeys/demo-ops/pre-demo-curation-rules.md,
+    /codex/14-customer-journeys/demo-ops/dart-demo-modes.md,
+    /codex/14-customer-journeys/demo-ops/demo-decision-matrix.md,
     refactor_g1_6_derivation_engine_ship_to_strategy_service_availability_2026_04_20.md,
   ]
 ---
@@ -95,15 +95,15 @@ shape uses closed enum |
 
 ## Mandatory read-set
 
-1. `/codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md` §1.7
-2. `/codex/14-playbooks/demo-ops/demo-restriction-profiles.md` — full
-3. `/codex/14-playbooks/demo-ops/pre-demo-curation-rules.md`
-4. `/codex/14-playbooks/demo-ops/dart-demo-modes.md`
-5. `/codex/14-playbooks/demo-ops/demo-decision-matrix.md`
-6. `/codex/14-playbooks/demo-ops/pre-demo-discovery-framework.md`
-7. `/codex/14-playbooks/demo-ops/account-intelligence-record.md`
+1. `/codex/16-strategy-playbooks/infra-spec/stage-3e-refactor-plan.md` §1.7
+2. `/codex/14-customer-journeys/demo-ops/demo-restriction-profiles.md` — full
+3. `/codex/14-customer-journeys/demo-ops/pre-demo-curation-rules.md`
+4. `/codex/14-customer-journeys/demo-ops/dart-demo-modes.md`
+5. `/codex/14-customer-journeys/demo-ops/demo-decision-matrix.md`
+6. `/codex/14-customer-journeys/demo-ops/pre-demo-discovery-framework.md`
+7. `/codex/14-customer-journeys/demo-ops/account-intelligence-record.md`
 8. `/codex/14-customer-journeys/playbook-concepts/visibility-slicing.md`
-9. `/codex/14-playbooks/infra-spec/stage-3c-derivation-engine.md`
+9. `/codex/16-strategy-playbooks/infra-spec/stage-3c-derivation-engine.md`
 10. `strategy-service/strategy_service/availability/derivation.py` (landed by G1.6)
 11. `strategy-service/strategy_service/availability/store.py` (existing Phase-10.5)
 
@@ -313,8 +313,8 @@ cd /Users/ikennaigboaka/Code/unified-trading-system-repos
 git -C unified-trading-pm checkout live-defi-rollout && git -C unified-trading-pm pull
 git -C strategy-service checkout live-defi-rollout && git -C strategy-service pull
 git -C unified-trading-system-ui checkout live-defi-rollout && git -C unified-trading-system-ui pull
-ls unified-trading-pm/codex/14-playbooks/demo-ops/demo-restriction-profiles.md
-ls unified-trading-pm/codex/14-playbooks/demo-ops/pre-demo-curation-rules.md
+ls unified-trading-pm/codex/14-customer-journeys/demo-ops/demo-restriction-profiles.md
+ls unified-trading-pm/codex/14-customer-journeys/demo-ops/pre-demo-curation-rules.md
 # Verify G1.6 merged
 ls strategy-service/strategy_service/availability/derivation.py
 # Verify G1.3 stub landed

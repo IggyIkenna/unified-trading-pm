@@ -32,7 +32,7 @@ related:
     /plans/active/cefi_4surface_migration_execution_log_2026_07_24.md,
     /plans/archive/2026_07/cefi_4surface_migration_execution_log_history_part2_2026_07_24.md,
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,
-    /plans/active/issues/plan_line_cap_remediation_2026_07_23.md,
+    /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
   ]
 created: "2026-07-24"
 last_updated: "2026-07-24"

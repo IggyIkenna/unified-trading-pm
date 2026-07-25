@@ -61,7 +61,7 @@ related:
     /plans/archive/2026_07/data_pipeline_e2e_check_2026_07_10.md,
     /plans/active/consolidator_throughput_backlog_monitor_2026_07_09.md,
     /plans/active/issues/candle_feature_canonical_path_divergence_2026_07_20.md,
-    /plans/active/issues/plan_line_cap_remediation_2026_07_23.md,
+    /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
     /plans/active/data_pipeline_e2e_milestones_gate_2026_07_24.md,
   ]
 created: 2026-07-18
@@ -115,7 +115,7 @@ source:
 ## Split notice (2026-07-24 — plan-hygiene line-cap remediation)
 
 > **This plan was trimmed from 2549 lines and forked 3 ways**, per the operator-approved split in
-> `/plans/active/issues/plan_line_cap_remediation_2026_07_23.md` (row 29). The 3-way split was overwhelmingly driven by
+> `/plans/archive/issues/plan_line_cap_remediation_2026_07_23.md` (row 29). The 3-way split was overwhelmingly driven by
 > an ~1700-line tick-by-tick Progress Log sitting next to a small tail of genuinely open todos — every todo and every
 > Progress Log line was moved **verbatim** to its destination, nothing was summarized, rewritten, or dropped. This
 > parent stays under the 2000-line umbrella ceiling as a trimmed coordination index (the `umbrella=true` frontmatter key

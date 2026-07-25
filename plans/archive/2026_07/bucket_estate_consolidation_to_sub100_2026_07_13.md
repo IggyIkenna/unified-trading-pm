@@ -66,7 +66,7 @@ source:
 
 > **📦 ARCHIVED 2026-07-24 — 15/21 todos done; 6 remaining open todos FORKED to
 > [`bucket_estate_consolidation_closeout_2026_07_24.md`](/plans/active/bucket_estate_consolidation_closeout_2026_07_24.md)**
-> per the plan line-cap remediation (`/plans/active/issues/plan_line_cap_remediation_2026_07_23.md`, row 1 — this plan
+> per the plan line-cap remediation (`/plans/archive/issues/plan_line_cap_remediation_2026_07_23.md`, row 1 — this plan
 > hit 2129 lines against the 1000L hard-fail cap). This doc's Wave 0-3 checklists + Progress Log below are frozen
 > historical record; the 6 forked todos read "FORKED 2026-07-24 → ..." in place of their original checkbox lines. All
 > other content (15 done todos, Appendix A, Progress Log, Deferred-work table) is unchanged.

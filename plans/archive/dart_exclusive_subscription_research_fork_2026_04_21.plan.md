@@ -432,7 +432,7 @@ todos:
         §4.5, dart-tab-structure §2.\nstatus: done\n",
     }
   - { id: p5-codex-strategy-version-governance-playbook, content: "- [x] [AGENT] P1.
-        Create\n      `/codex/14-playbooks/shared-core/strategy-version-governance.md` —\n      operator-facing
+        Create\n      `/codex/14-customer-journeys/shared-core/strategy-version-governance.md` —\n      operator-facing
         playbook:\n        - Who approves (admin role + on-call rotation expectation).\n        - SLA: target 48h from
         request-approval to approve/reject under\n          normal load; 5 business days for multi-year backtest
         versions.\n        - Escalation: if backtest shard fails, runner retries 3×; on 3rd\n          failure version
@@ -514,7 +514,8 @@ todos:
         "- [ ] [HUMAN] P0. B3 business gate: record the first complete\n      subscribe → fork → request-approval →
         approved → rollout loop\n      from a non-odum client in staging. Capture evidence (screenshots\n      +
         event-log excerpt)
-        in\n      `/codex/14-playbooks/shared-core/strategy-version-governance.md`\n      §Appendix.\nstatus: pending\n",
+        in\n      `/codex/14-customer-journeys/shared-core/strategy-version-governance.md`\n      §Appendix.\nstatus:
+        pending\n",
     }
   - {
       id: p6-index-update-and-commit,

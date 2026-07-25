@@ -6,7 +6,7 @@ owner: agent
 locked_by: live-defi-rollout
 locked_since: 2026-04-20
 depends_on:
-  - /codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md §2.4
+  - /codex/16-strategy-playbooks/infra-spec/stage-3e-refactor-plan.md §2.4
   - refactor_g1_6_derivation_engine_ship_to_strategy_service_availability_2026_04_20.plan.md
   - refactor_g1_8_uac_archetype_capability_v2_2026_04_20.plan.md
   - refactor_g2_9_uac_remaining_gaps_2026_04_20.plan.md (gaps #6, #11 consumers)
@@ -57,7 +57,7 @@ Absorbs G1.5 stubbed ML routes. Consumes UAC gap #6 (IvSurfaceFidelity) for opti
 
 ## Mandatory read-set
 
-1. `/codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md` §2.4
+1. `/codex/16-strategy-playbooks/infra-spec/stage-3e-refactor-plan.md` §2.4
 2. `refactor_g1_5_ml_catalogue_broken_hrefs_cleanup_2026_04_20.plan.md` — absorbed scope
 3. `refactor_g1_6_derivation_engine_ship_to_strategy_service_availability_2026_04_20.plan.md`
 4. `refactor_g1_8_uac_archetype_capability_v2_2026_04_20.plan.md` — pattern to replicate

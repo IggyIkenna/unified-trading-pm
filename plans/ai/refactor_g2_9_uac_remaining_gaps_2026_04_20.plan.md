@@ -7,7 +7,7 @@ locked_by: live-defi-rollout
 locked_since: 2026-04-20
 amended: 2026-04-22
 depends_on:
-  - /codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md §2.9
+  - /codex/16-strategy-playbooks/infra-spec/stage-3e-refactor-plan.md §2.9
   - /codex/09-strategy/architecture-v2/uac-registry-gaps.md
   - UAC commit `e6f7c6d` (2026-04-21) — V2 suffix dropped; canonical is `ArchetypeCapability` (not
     `ArchetypeCapabilityV2`)
@@ -61,7 +61,7 @@ independently parallelisable by downstream agents; a single umbrella plan keeps 
 
 ## Mandatory read-set
 
-1. `/codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md` §2.9
+1. `/codex/16-strategy-playbooks/infra-spec/stage-3e-refactor-plan.md` §2.9
 2. `/codex/09-strategy/architecture-v2/uac-registry-gaps.md` — all 10 open gaps
 3. `/codex/09-strategy/architecture-v2/README.md` — 8 families × 18 archetypes × 7 axes
 4. `unified-api-contracts/unified_api_contracts/internal/architecture_v2/archetype_capability.py` (G1.8 precedent)

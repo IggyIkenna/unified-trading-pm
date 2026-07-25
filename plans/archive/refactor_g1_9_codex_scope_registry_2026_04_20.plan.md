@@ -17,7 +17,7 @@ locked_by: live-defi-rollout
 locked_since: 2026-04-20
 depends_on:
   [
-    /codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md §1.9,
+    /codex/16-strategy-playbooks/infra-spec/stage-3e-refactor-plan.md §1.9,
     codex/14-playbooks/_ssot-rules/ (all 10 rules),
     codex/00-SSOT-INDEX.md,
   ]
@@ -59,10 +59,10 @@ customer-facing help surfaces in unified-trading-system-ui).
 
 ## Mandatory read-set
 
-1. `/codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md` §1.9
+1. `/codex/16-strategy-playbooks/infra-spec/stage-3e-refactor-plan.md` §1.9
 2. `codex/00-SSOT-INDEX.md`
 3. All 10 files in `codex/14-playbooks/_ssot-rules/` (01–10 + README)
-4. `/codex/14-playbooks/README.md`
+4. `/codex/14-customer-journeys/README.md`
 5. `/codex/14-customer-journeys/playbook-concepts/visibility-slicing.md`
 
 ## Out of scope
@@ -77,8 +77,8 @@ customer-facing help surfaces in unified-trading-system-ui).
 
 ### Phase 9A — Define the scope frontmatter schema
 
-- [x] [AGENT] P0. Write `/codex/14-playbooks/_ssot-rules/11-codex-scope-registry.md` documenting the scope enum +
-      frontmatter shape + default behaviour.
+- [x] [AGENT] P0. Write `/codex/14-customer-journeys/_ssot-rules/11-codex-scope-registry.md` documenting the scope
+      enum + frontmatter shape + default behaviour.
 - [x] [AGENT] P0. Schema: `scope: [sales, engineer, admin, prospect, investor]` (array subset of enum; defaults to
       `[engineer, admin]` if omitted).
 - [x] [AGENT] P0. Add a 30-line example-per-audience block to rule 11.
@@ -115,7 +115,7 @@ customer-facing help surfaces in unified-trading-system-ui).
 
 ## Critical files to be modified
 
-- `/codex/14-playbooks/_ssot-rules/11-codex-scope-registry.md` — NEW
+- `/codex/14-customer-journeys/_ssot-rules/11-codex-scope-registry.md` — NEW
 - `codex/14-playbooks/_tools/build-scope-manifest.sh` (or `.py`) — NEW
 - `codex/14-playbooks/_tools/check-scope-coverage.sh` — NEW
 - `codex/14-playbooks/_generated/scope-manifest.json` — GENERATED (committed)
@@ -134,7 +134,7 @@ CI gate depends on the backfill being complete (else gate fails).
 
 ## Verification
 
-1. `/codex/14-playbooks/_ssot-rules/11-codex-scope-registry.md` exists and passes markdown lint.
+1. `/codex/14-customer-journeys/_ssot-rules/11-codex-scope-registry.md` exists and passes markdown lint.
 2. `bash codex/14-playbooks/_tools/build-scope-manifest.sh` produces valid JSON — pipe through `jq .` to confirm.
 3. `bash codex/14-playbooks/_tools/check-scope-coverage.sh` exits 0 (no uncovered docs).
 4. `codex/00-SSOT-INDEX.md` has a new entry for rule 11 + tool + manifest.
@@ -209,7 +209,7 @@ backfill pass).
 
 ### Deliverables
 
-- New: `/codex/14-playbooks/_ssot-rules/11-codex-scope-registry.md`
+- New: `/codex/14-customer-journeys/_ssot-rules/11-codex-scope-registry.md`
 - New: `codex/14-playbooks/_tools/build-scope-manifest.sh` (or `.py`)
 - New: `codex/14-playbooks/_tools/check-scope-coverage.sh`
 - Generated + committed: `codex/14-playbooks/_generated/scope-manifest.json`
@@ -233,7 +233,7 @@ Logical batches — one commit per batch to keep diffs reviewable.
 ```
 cd unified-trading-pm
 # batch 1: rule 11 + tool
-bash scripts/quickmerge.sh "docs(codex/playbooks): G1.9 — rule 11 codex scope registry + manifest tool" --agent --files "/codex/14-playbooks/_ssot-rules/11-codex-scope-registry.md codex/14-playbooks/_tools/ codex/14-playbooks/_generated/"
+bash scripts/quickmerge.sh "docs(codex/playbooks): G1.9 — rule 11 codex scope registry + manifest tool" --agent --files "/codex/14-customer-journeys/_ssot-rules/11-codex-scope-registry.md codex/14-playbooks/_tools/ codex/14-playbooks/_generated/"
 
 # batch 2: backfill by domain (one commit per major domain dir)
 bash scripts/quickmerge.sh "docs(codex): G1.9 backfill scope frontmatter — 09-strategy/" --agent --files "codex/09-strategy/"

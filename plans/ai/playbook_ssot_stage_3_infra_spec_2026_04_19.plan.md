@@ -14,7 +14,7 @@ depends_on:
 #   plans/active/playbook_ssot_stage_1_rules_2026_04_19.plan.md
 #   plans/active/playbook_ssot_stage_2_doc_rewrite_2026_04_19.plan.md
 supersedes_on_completion:
-  - /codex/14-playbooks/roadmap/next-waves.md (Stage 3E becomes the authoritative refactor doc)
+  - /codex/14-customer-journeys/roadmap/next-waves.md (Stage 3E becomes the authoritative refactor doc)
 ---
 
 # Stage 3 — Playbook SSOT infra spec
@@ -89,9 +89,9 @@ follow-up plans that Stage 3E enumerates.
 1. All 9 files in `codex/14-playbooks/_ssot-rules/`
 2. `codex/14-playbooks/experience/` — all 9 experience playbooks (if Stage 2 done; otherwise read Stage 2's plan to
    understand target)
-3. `/codex/14-playbooks/shared-core/strategy-origin-vs-stack-depth.md`
-4. `/codex/14-playbooks/commercial-model/pricing-building-blocks.md`
-5. `/codex/14-playbooks/demo-ops/demo-restriction-profiles.md`
+3. `/codex/14-customer-journeys/shared-core/strategy-origin-vs-stack-depth.md`
+4. `/codex/14-customer-journeys/commercial-model/pricing-building-blocks.md`
+5. `/codex/14-customer-journeys/demo-ops/demo-restriction-profiles.md`
 
 **Hard taxonomy sources — MUST read ALL of these for Stage 3B:** 6. `/codex/09-strategy/README.md` 7.
 `/codex/09-strategy/architecture-v2/README.md` 8. `/codex/09-strategy/architecture-v2/category-instrument-coverage.md` —
@@ -275,7 +275,7 @@ test).
     (G2), Execution-Algo (G2) w/ TCA page, staging Firebase provisioning (G2 — already tracked in five_space_ia #12),
     demo-provisioning automation (G2), account-intelligence-record CRM (G3), pricing-engine service (G3),
     pricing-numbers population from finance (G3 — non-codex), briefings-content CMS migration (G3).
-- [ ] [AGENT] P0. Mark `/codex/14-playbooks/roadmap/next-waves.md` with a superseded-by header pointing to
+- [ ] [AGENT] P0. Mark `/codex/14-customer-journeys/roadmap/next-waves.md` with a superseded-by header pointing to
       `stage-3e-refactor-plan.md`. Do NOT delete.
 - [ ] [AGENT] P0. Cross-link every refactor item in 3E to the experience playbook(s) it unblocks (e.g. "prospect-reg
       persona unblocks pb3a demo test coverage").
@@ -288,7 +288,7 @@ test).
       follow-up-plan-name.
 - [ ] [AGENT] P0. Every blocker rule in 3B cites a source file.
 - [ ] [AGENT] P0. Commit via
-      `bash scripts/quickmerge.sh "docs(codex/playbooks): Stage 3 — infra spec (audit + UAC combo + derivation engine + presentation + refactor plan)" --agent --files "codex/14-playbooks/infra-spec/ codex/14-playbooks/presentations/ /codex/14-playbooks/roadmap/next-waves.md unified-trading-system-ui/tests/e2e/playbooks/screenshots.spec.ts"`.
+      `bash scripts/quickmerge.sh "docs(codex/playbooks): Stage 3 — infra spec (audit + UAC combo + derivation engine + presentation + refactor plan)" --agent --files "codex/14-playbooks/infra-spec/ codex/14-playbooks/presentations/ /codex/14-customer-journeys/roadmap/next-waves.md unified-trading-system-ui/tests/e2e/playbooks/screenshots.spec.ts"`.
 
 ## Critical files
 
@@ -296,7 +296,7 @@ test).
 
 - `codex/14-playbooks/infra-spec/` — 4 docs (3a audit, 3b combo rules + YAML schema, 3c derivation engine, 3e refactor
   plan)
-- `/codex/14-playbooks/presentations/target-experience-post-refactor.md`
+- `/codex/14-customer-journeys/presentations/target-experience-post-refactor.md`
 - `codex/14-playbooks/presentations/screenshots/*.png` (5–8 images)
 
 **New (in UI repo):**
@@ -305,7 +305,7 @@ test).
 
 **Modified:**
 
-- `/codex/14-playbooks/roadmap/next-waves.md` — superseded-by header only
+- `/codex/14-customer-journeys/roadmap/next-waves.md` — superseded-by header only
 
 ## Execution DAG
 
@@ -384,7 +384,7 @@ ls codex/14-playbooks/_ssot-rules/
 Stage 2 status check:
 
 ```
-ls /codex/14-playbooks/commercial-model/pricing-building-blocks.md 2>&1 || echo "Stage 2 not done — you can still run 3A + 3B, but 3C onwards must wait"
+ls /codex/14-customer-journeys/commercial-model/pricing-building-blocks.md 2>&1 || echo "Stage 2 not done — you can still run 3A + 3B, but 3C onwards must wait"
 ```
 
 ### Mandatory rules injection
@@ -419,7 +419,7 @@ Execute every checkbox in Phases 3A through 3F of this plan:
 12. **UI state for audit**: `unified-trading-system-ui/lib/config/auth.ts`, `lib/auth/personas.ts`,
     `components/shell/lifecycle-nav.tsx`, `components/shell/service-tabs.tsx`, `spaces-nav-sections.tsx`,
     `lib/lifecycle-route-mappings.ts`
-13. **Existing audit material**: `/codex/14-playbooks/page-triage/triage-matrix.md` + `broken-links.md` +
+13. **Existing audit material**: `/codex/14-customer-journeys/page-triage/triage-matrix.md` + `broken-links.md` +
     `duplicate-clusters.md`
 14. **Existing plans that become Stage 3E sub-plans**: user_management_merge, share_class_architecture,
     deployment_topology, defi_demo_e2e, platform_strategy_families, five_space_ia_execution_child_plan
@@ -428,12 +428,12 @@ Execute every checkbox in Phases 3A through 3F of this plan:
 
 **New in PM repo:**
 
-- `/codex/14-playbooks/infra-spec/stage-3a-current-infra-audit.md`
-- `/codex/14-playbooks/infra-spec/stage-3b-uac-combo-rules.md`
+- `/codex/16-strategy-playbooks/infra-spec/stage-3a-current-infra-audit.md`
+- `/codex/16-strategy-playbooks/infra-spec/stage-3b-uac-combo-rules.md`
 - `codex/14-playbooks/infra-spec/stage-3b-combo-rules-schema.yaml`
-- `/codex/14-playbooks/infra-spec/stage-3c-derivation-engine.md`
-- `/codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md`
-- `/codex/14-playbooks/presentations/target-experience-post-refactor.md`
+- `/codex/16-strategy-playbooks/infra-spec/stage-3c-derivation-engine.md`
+- `/codex/16-strategy-playbooks/infra-spec/stage-3e-refactor-plan.md`
+- `/codex/14-customer-journeys/presentations/target-experience-post-refactor.md`
 - `codex/14-playbooks/presentations/screenshots/*.png` (5+ images)
 
 **New in UI repo:**
@@ -442,7 +442,7 @@ Execute every checkbox in Phases 3A through 3F of this plan:
 
 **Modified:**
 
-- `/codex/14-playbooks/roadmap/next-waves.md` (add superseded-by header)
+- `/codex/14-customer-journeys/roadmap/next-waves.md` (add superseded-by header)
 
 ### Commit strategy
 
@@ -454,7 +454,7 @@ PM repo:
 cd unified-trading-pm
 bash scripts/quickmerge.sh "docs(codex/playbooks): Stage 3 — infra spec (audit + UAC combo + derivation engine + presentation + refactor plan)" \
   --agent \
-  --files "codex/14-playbooks/infra-spec/ codex/14-playbooks/presentations/ /codex/14-playbooks/roadmap/next-waves.md"
+  --files "codex/14-playbooks/infra-spec/ codex/14-playbooks/presentations/ /codex/14-customer-journeys/roadmap/next-waves.md"
 ```
 
 UI repo:

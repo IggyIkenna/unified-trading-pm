@@ -96,6 +96,17 @@ depends_on: []
       pass (candidate for a Workflow fan-out — independent per-reference, no cross-file dependency) rather than one
       session's manual sweep. **Done when**: `existence_count` in the baseline reaches 0, or the remaining count is
       explicitly re-baselined with a stated reason per entry (e.g. "intentionally documents unshipped future work").
+- [x] [DOC] P3. ✅ **DONE 2026-07-25 (agt-72ba07)** — plan_health hard-failure regression (`existence_count` 1257→1381,
+      +124 net new dangling refs / 79 distinct stale targets) root-caused to two un-referrer-updated moves: (1) the
+      `codex/14-playbooks/` → `codex/14-customer-journeys/` rename (with a `infra-spec/` subset moving to
+      `codex/16-strategy-playbooks/infra-spec/` instead) left 78 distinct `/codex/14-playbooks/...` targets dangling
+      across 104 files; (2) `plans/active/issues/plan_line_cap_remediation_2026_07_23.md`'s archival to
+      `plans/archive/issues/...` (commit `61618a105`) left 66 referrers pointing at the old active/ path. Applied a
+      mechanical corpus-wide path substitution (old target → verified-real new target only; left the ~14 genuinely
+      unmapped `14-playbooks/...` refs untouched — those predate both renames and are part of the existing backlog
+      below, not this regression) — `existence_count` now 956 (< prior baseline 1257, a net IMPROVEMENT since the fix
+      touched every occurrence of each stale target, not just the new ones), baseline ratcheted down via
+      `--update-baseline`. `pm@<commit-pending>`.
 - [ ] [DOC] P3. **2026-07-25 plan_health regression (agt-4b54e5)**: 3 new dangling refs landed from the 2026-07-25
       terminal-status archival sweep (`ad4b1952c`) not updating referrers — `/plans/active/issues/<slug>.md` targets
       moved to `/plans/archive/issues/<slug>.md`. Fixed 2 of 3

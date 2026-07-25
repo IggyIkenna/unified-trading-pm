@@ -17,8 +17,8 @@ locked_by: live-defi-rollout
 locked_since: 2026-04-20
 depends_on:
   [
-    /codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md §1.6,
-    /codex/14-playbooks/infra-spec/stage-3c-derivation-engine.md,
+    /codex/16-strategy-playbooks/infra-spec/stage-3e-refactor-plan.md §1.6,
+    /codex/16-strategy-playbooks/infra-spec/stage-3c-derivation-engine.md,
     /codex/09-strategy/architecture-v2/uac-registry-gaps.md (gaps,
     refactor_g1_8_uac_archetype_capability_v2_2026_04_20.md,
   ]
@@ -85,15 +85,15 @@ access-control middleware.
   `access_control` consumes it
 - **Downstream Wave D:** `refactor_g1_7_restriction_profile_engine_2026_04_20.md` (consumer),
   `refactor_g1_11_service_family_scope_rules_2026_04_20.md` (consumer)
-- **Stage 3C infra spec:** `/codex/14-playbooks/infra-spec/stage-3c-derivation-engine.md` — the 4 formulas
+- **Stage 3C infra spec:** `/codex/16-strategy-playbooks/infra-spec/stage-3c-derivation-engine.md` — the 4 formulas
 - **UAC gaps:** `/codex/09-strategy/architecture-v2/uac-registry-gaps.md` #1, #11, #12
 - **Strategy v2 code (read-only):** `strategy-service/strategy_service/engine/strategies/v2/` — for `valid_pairs`
   reference and `archetype_build_registry.py`
 
 ## Mandatory read-set
 
-1. `/codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md` §1.6
-2. `/codex/14-playbooks/infra-spec/stage-3c-derivation-engine.md` — full, especially the 4 formula definitions
+1. `/codex/16-strategy-playbooks/infra-spec/stage-3e-refactor-plan.md` §1.6
+2. `/codex/16-strategy-playbooks/infra-spec/stage-3c-derivation-engine.md` — full, especially the 4 formula definitions
 3. `/codex/09-strategy/architecture-v2/uac-registry-gaps.md` — gaps #1, #11, #12 in full
 4. `/codex/09-strategy/architecture-v2/README.md` — 8 families × 18 archetypes
 5. `/codex/09-strategy/architecture-v2/category-instrument-coverage.md` — master matrix + 10 block-list groups
@@ -277,7 +277,7 @@ cd /Users/ikennaigboaka/Code/unified-trading-system-repos
 git -C unified-trading-pm checkout live-defi-rollout && git -C unified-trading-pm pull
 git -C unified-api-contracts checkout live-defi-rollout && git -C unified-api-contracts pull
 git -C strategy-service checkout live-defi-rollout && git -C strategy-service pull
-ls unified-trading-pm/codex/14-playbooks/infra-spec/stage-3c-derivation-engine.md
+ls unified-trading-pm/codex/16-strategy-playbooks/infra-spec/stage-3c-derivation-engine.md
 ls unified-trading-pm/codex/09-strategy/architecture-v2/uac-registry-gaps.md
 ls strategy-service/strategy_service/availability/store.py
 ls strategy-service/strategy_service/availability/watchdog.py

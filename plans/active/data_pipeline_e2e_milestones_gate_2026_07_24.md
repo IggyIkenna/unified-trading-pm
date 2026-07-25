@@ -45,7 +45,7 @@ tags:
 related:
   [
     /plans/active/issues/plan_quality_four_line_defense_architecture_2026_07_23.md,
-    /plans/active/issues/plan_line_cap_remediation_2026_07_23.md,
+    /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
     /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
     /plans/active/defi_consolidated_closeout_2026_07_18.md,
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,

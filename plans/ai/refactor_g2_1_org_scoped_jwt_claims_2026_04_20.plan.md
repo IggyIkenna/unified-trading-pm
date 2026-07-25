@@ -7,7 +7,7 @@ locked_by: live-defi-rollout
 locked_since: 2026-04-20
 amended: 2026-04-22
 depends_on:
-  - /codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md §2.1
+  - /codex/16-strategy-playbooks/infra-spec/stage-3e-refactor-plan.md §2.1
   - refactor_g2_6_staging_firebase_provisioning_2026_04_20.plan.md
   - plans/active/user_management_merge_2026_03_23.plan.md (folded)
   - plans/active/ui_unification_v2_sanitisation_2026_04_20.plan.md Phase 6 (user-management-ui fold-in — ARCHIVED
@@ -61,8 +61,8 @@ the lookup for localhost).
 
 ## Mandatory read-set
 
-1. `/codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md` §2.1
-2. `/codex/14-playbooks/_ssot-rules/12-service-family-scope-rules.md` + `.yaml` (G1.11)
+1. `/codex/16-strategy-playbooks/infra-spec/stage-3e-refactor-plan.md` §2.1
+2. `/codex/14-customer-journeys/_ssot-rules/12-service-family-scope-rules.md` + `.yaml` (G1.11)
 3. `plans/active/user_management_merge_2026_03_23.plan.md` — full, for JWT-shaping context being folded
 4. `unified-api-contracts/unified_api_contracts/internal/architecture_v2/derivation.py` — `UserContext` dataclass
 5. `unified-api-contracts/unified_api_contracts/internal/architecture_v2/service_family_scope.py` (G1.11)

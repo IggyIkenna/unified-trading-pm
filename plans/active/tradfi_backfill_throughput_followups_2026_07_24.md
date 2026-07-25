@@ -21,7 +21,7 @@ related:
     /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
     /plans/active/tradfi_manifest_content_recovery_completion_2026_07_24.md,
     /plans/active/tradfi_phase_d_terminal_gate_2026_07_24.md,
-    /plans/active/issues/plan_line_cap_remediation_2026_07_23.md,
+    /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
     /plans/active/consolidator_throughput_backlog_monitor_2026_07_09.md,
   ]
 created: "2026-07-24"
@@ -50,7 +50,7 @@ source:
 # TradFi backfill-throughput follow-ups
 
 > **Forked 2026-07-24** from `tradfi_consolidated_closeout_2026_07_18.md` (line-cap remediation, 3-way split — see
-> `/plans/active/issues/plan_line_cap_remediation_2026_07_23.md` row 29). This plan carries the download/backfill
+> `/plans/archive/issues/plan_line_cap_remediation_2026_07_23.md` row 29). This plan carries the download/backfill
 > THROUGHPUT workstream: Phase A3 (DNS-starvation executor, T+1 forward-fill job, OOM/SIGKILL hardening, phantom-row
 > retirement) and Phase A3.1 (the Databento e2e throughput optimization — gated concurrent-date driver, disk sizing,
 > concurrency-cap raise, equity re-sharding). All todos and Progress Log content below were moved **verbatim** from the

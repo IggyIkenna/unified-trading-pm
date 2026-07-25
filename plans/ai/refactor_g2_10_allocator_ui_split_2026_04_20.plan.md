@@ -7,7 +7,7 @@ locked_by: live-defi-rollout
 locked_since: 2026-04-20
 amended: 2026-04-22
 depends_on:
-  - /codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md §2.10
+  - /codex/16-strategy-playbooks/infra-spec/stage-3e-refactor-plan.md §2.10
   - refactor_g2_1_org_scoped_jwt_claims_2026_04_20.plan.md
   - refactor_g2_8_fund_business_unit_registry_2026_04_20.plan.md
   - plans/active/platform_strategy_families_and_haruko_gaps_2026_03_28.plan.md (folded)
@@ -65,13 +65,13 @@ Target:
 
 ## Mandatory read-set
 
-1. `/codex/14-playbooks/infra-spec/stage-3e-refactor-plan.md` §2.10
+1. `/codex/16-strategy-playbooks/infra-spec/stage-3e-refactor-plan.md` §2.10
 2. `plans/active/platform_strategy_families_and_haruko_gaps_2026_03_28.plan.md`
 3. `refactor_g2_1_org_scoped_jwt_claims_2026_04_20.plan.md`
 4. `refactor_g2_8_fund_business_unit_registry_2026_04_20.plan.md`
 5. `refactor_g1_6_derivation_engine_ship_to_strategy_service_availability_2026_04_20.plan.md`
 6. `/codex/09-strategy/architecture-v2/cross-cutting/strategy-availability-and-locking.md`
-7. `/codex/14-playbooks/_ssot-rules/03-same-system-principle.md`
+7. `/codex/14-customer-journeys/_ssot-rules/03-same-system-principle.md`
 8. `strategy-service/strategy_service/portfolio_allocator/service.py`
 9. `unified-trading-system-ui/app/(platform)/services/research/strategy/allocator/page.tsx` (current surface — to
    delete)
