@@ -271,7 +271,12 @@ Pass 1 — Quality Gates (MANDATORY — FULL run, no skip flags)
   Partial runs (--skip-tests / --skip-lint / --skip-codex / --quick) do NOT write sentinel
 
 Pass 2 — Quickmerge (--agent fast-path)
-  bash scripts/quickmerge.sh "feat: description" --agent --files '...'
+  bash scripts/quickmerge.sh "feat: description" --agent --files 'a.md b.md c.md'
+  • --files is SPACE-separated (the staging loop is `for f in $FILES_ARG`, unquoted —
+    word-splits on whitespace only). A comma-joined list ('a.md,b.md,c.md') collapses
+    into ONE bogus filename and fails every time with "Path not found (and not
+    tracked)" / "No valid paths from --files" (measured 2026-07-25, ~10 wasted retries
+    before catching it — not a quickmerge bug, just an easy invocation mistake).
   • Reads .qg_last_passed_sha — verifies SHA matches current HEAD
     SHA mismatch / sentinel missing → EXIT 1: "Run quality-gates.sh on current HEAD first"
     SHA match → skips all Pass 2 QG re-runs (sentinel IS the guarantee)
