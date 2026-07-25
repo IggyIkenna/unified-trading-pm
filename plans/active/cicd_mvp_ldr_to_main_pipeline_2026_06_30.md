@@ -375,6 +375,28 @@ Phase 1:
 
 ## Progress Log
 
+- 2026-07-25 (Phase 4 — LIVE end-to-end verification): The retargeted mechanism is **proven live**. UAC's change
+  promoted LDR→main, and the promote push (`chore(promote): LDR → main (Option-B direct)`) **self-activated the new
+  `push:[main]` trigger** — semver-agent fired on `unified-api-contracts` main at 2026-07-25T20:01:24Z (run
+  `30172757220`, conclusion **success**). Its log confirms the full retargeted path ran correctly: "Triggered by push to
+  main", `semver_policy=agent`, **"Baseline (latest git tag) … 0.71.0"** (the git-tag baseline — my Step-1 change —
+  reading the tag REACHABLE from main HEAD, not the stale `staging_versions` map), commit-range scan,
+  `Resolved bump category: breaking → Version: 0.71.0 → 0.72.0 (pre-1.0.0 override → MINOR)`, then the git-tag apply
+  path "minting tag v0.72.0" → **"Tag v0.72.0 already exists — idempotent, nothing to do"**, and "Dispatched
+  successfully to unified-trading-pm (attempt 1)". So trigger + checkout + git-tag baseline + bump-compute + git-tag
+  apply + PM dispatch (branch=main) ALL executed live and correct. **Why no brand-new tag on UAC (yet)**: a pre-existing
+  legacy-tag transient — v0.72.0 (minted 2026-06-27 on a staging→_backmerge commit `4ac8be3f`) is reachable from LDR but
+  **not yet from main** (main is behind LDR on the promotion backlog), so `git describe @main`=v0.71.0 → computes 0.72.0
+  → collides with the existing orphan → safe idempotent-skip (no wrong/dup mint). This **self-resolves**: the
+  Option-B-direct promote carries tagged commits into main's ancestry (proven: UTL's v0.56.0 sits on a
+  `chore(promote): LDR → main` commit and IS main-reachable), so as the promoter drains, main reaches v0.72.0 and the
+  next run mints 0.73.0 fresh; and every FUTURE tag mints on main HEAD (reachable by construction). **UTL is the clean
+  fresh-mint case** — its highest tag v0.56.0 is already main-reachable, so on its (still-pending) promote+fire it
+  computes a FRESH 0.57.0 → real `git tag` push → publish-package → wheel. A background watcher is observing UTL for
+  that fresh mint. **Verified-live**: trigger fires + full workflow logic runs to success (UAC).
+  **Reasoned/pending-observation**: the brand-new-tag `git push` + Artifact-Registry wheel (gated only on the
+  promotion-backlog drain / a main-reachable-baseline, not on the retarget). New finding logged as the orphan-tag
+  transient above; no action needed (self-resolving) beyond letting the promoter run.
 - 2026-07-25 (Phase 4 — semver-agent trigger retargeted staging→main, T0 shipped): Retargeted the fleet SSOT
   `semver-agent.yml.tmpl` from the dormant `staging` trigger to **`push: branches: [main]` only** (dropped the redundant
   `workflow_run: quality-gates-v2` leg — the LDR→main promote PR already required-checks v2), and rolled it to T0 only
