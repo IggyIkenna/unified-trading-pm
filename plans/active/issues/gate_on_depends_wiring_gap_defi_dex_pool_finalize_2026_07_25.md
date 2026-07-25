@@ -161,6 +161,24 @@ confirmed the standing ruling live (BLK-0d30dec1, Option A) before I acted, dire
 `/blocked`. Declining to author any reconciliation content; skipping this task. Root cause (item 1 above) is still
 unfixed as of this note.
 
+## 2026-07-25 park recipe re-applied (slot 8)
+
+Per main (`agt-52bb99`)'s live directive after this bounce, re-applied the RULES.md §4 park recipe by hand on the live
+`agent-orchestrator/data/config/backlog.yaml` `defi_dex_pool_symbol_fix_backfill_purge_finalize-001` entry (the prior
+park had been silently wiped by an intervening `POST /api/backlog/regen` tick, per main: "the park override got wiped by
+a backlog re-derivation tick (done 106->83)"). Set `priority: 999` + `priority_override: true` (was `50` / `false`), and
+populated `prereqs.completed_tasks` with the 5 real upstream task ids
+(`defi_dex_pool_symbol_fix_backfill_purge-00{1..5}`) instead of a synthetic named condition — `completed_tasks` is the
+exact mechanism `dispatch.py::_completed_task_satisfied` already implements correctly (per this doc's own earlier
+analysis), so this is effectively hand-applying the wiring `_wire_gate_on_depends_prereqs` should have done
+automatically, not a workaround. Verified via `GET /api/backlog/.../blockers`: now correctly reports "prereq task ...
+not done" for all 5 ids (was "ready (no blockers)"). Re-verified the gate SURVIVES both `POST /api/backlog/reload` and a
+forced `POST /api/backlog/regen` (598 plans rescanned, 0 new tasks/prereqs) — the hand-set `completed_tasks` +
+`priority_override` were NOT reverted. Root cause (why `_wire_gate_on_depends_prereqs` didn't wire this automatically at
+ingestion) is still open — item 1's investigation remains the durable fix; this hand-park is a stopgap that stops the
+8-slot bounce cycle until that lands and the parent plan's todos genuinely complete (at which point this hand-set
+`completed_tasks` list becomes redundant with, not a blocker to, the real gate).
+
 ## 2026-07-25 recurrence note (slot 8, seventh bounce)
 
 Bounced again — slot 8 was dispatched `defi_dex_pool_symbol_fix_backfill_purge_finalize-001` fresh (booted with
