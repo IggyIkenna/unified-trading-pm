@@ -186,14 +186,19 @@ entry). UTC datetimes only. `quality-gates.sh`-green before each commit; commit 
       `build_deployment_registry_store` lazily imports `google.cloud.firestore`; the VM installs deployment-service with
       `--no-deps` and UTL normally, so whether the SDK is present on a VM is **UNVERIFIED**. Same reason as link 3. —
       CONFIRMED ABSENT, then FIXED: unified-trading-library@907d3ab. Full detail in Progress Log.
-- [ ] [VERIFY] P1. **Verification must be POSITIVE — absence of errors proves NOTHING.** The
+- [x] ✅ [VERIFY] P1. **Verification must be POSITIVE — absence of errors proves NOTHING.** The
       `_maybe_build_registry_store()` hardening shipped above (deliberately, to protect fleet liveness) makes links 3+4
       fail **silently**: a missing SDK or missing IAM logs
       `dual-write store unavailable (...) — registry writes stay     GCS-only` and the VM carries on happily on GCS. So
       a flag flip that "looks clean" is NOT evidence of anything. Assert instead: (a) the Firestore `deployments` doc
       count goes **0 → non-zero** and tracks the live-VM count with fresh `last_heartbeat_at`; AND (b) grep a soaking
       VM's `run.log` and confirm that warning is **ABSENT**. Only once both hold does the `[DATA]` parity diff below
-      mean anything.
+      mean anything. — POSITIVELY VERIFIED 2026-07-25 (slot 7, infra): launched a real DUAL_WRITE=true soak VM
+      (`synbench-carry-staked-bas-c2-standard-4-20260725-000130`) against prod; Firestore `deployments` doc count **0 →
+      1** (doc id `bcad201c-7fcb-4858-8de4-9438fe2951cc`, `status=completed`, fresh
+      `last_heartbeat_at=2026-07-25T00:04:07Z`, `vm_name` matches the VM); `run.log` has **zero** occurrences of
+      `dual-write`/`firestore` (the warning path never fired). Full detail + the launcher bug found+fixed in Progress
+      Log.
 
 - [ ] [DATA] P1. Enable dual-write on a SUBSET of the live fleet (flag on for a few VMs first), let it run, then
       VALIDATE Firestore mirrors GCS: for N sampled live deployments, diff the Firestore doc vs the GCS blob (status,
@@ -259,6 +264,60 @@ entry). UTC datetimes only. `quality-gates.sh`-green before each commit; commit 
 - No `os.getenv`; UTC datetimes; reaper never raises into the sync loop; QG green on both repos.
 
 ## Progress Log
+
+- **2026-07-25 (slot 7, infra) — [VERIFY] P1 "Verification must be POSITIVE" — POSITIVELY CONFIRMED end-to-end on real
+  infra.** Dispatched this todo fresh; independently re-checked Link 3's state rather than trusting either the stale
+  BLOCKED-CREDENTIALS entry (mine, superseded) or the slot-2 RESOLVED entry at face value — confirmed via a direct
+  `cloudresourcemanager.googleapis.com:getIamPolicy` call over Application Default Credentials
+  (`gcloud auth application-default print-access-token`, resolves to `ikenna@odum-research.com` independent of the
+  `gcloud` CLI's stale active-account cache) that `roles/datastore.user` genuinely includes
+  `1060025368044-compute@developer.gserviceaccount.com` (the default compute SA every launcher uses) — Link 3 is live,
+  matching slot-2's finding. But the Firestore `deployments` collection was STILL 0 docs (checked directly via
+  `firestore.Client(project='central-element-323112').collection('deployments')`) — meaning no VM had actually exercised
+  the dual-write path yet (default flag is `false`; nothing turns it on without an explicit override), so the todo's
+  positive-evidence bar was still unmet. Rather than declare BLOCKED again, launched a real soak VM to produce the
+  evidence:
+  1. **Added a `DUAL_WRITE` opt-in override** to `launch-synthetic-benchmark-vm.sh` (the launcher already used for the
+     2026-07-17 session's synthetic-deployment code-correctness proof) — defaults to `false` (no behavior change for any
+     existing caller), threads `DEPLOYMENT_REGISTRY_FIRESTORE_DUALWRITE=${DUAL_WRITE}` into the VM's GCE metadata, which
+     `setup-data-pipeline-vm.sh`'s Link-2 plumbing (`deployment-service@e726aab`) already reads. —
+     deployment-service@73fdfb0, QG green 87-94s, shipped via quickmerge --agent.
+  2. **Found + fixed a genuine pre-existing bug while dry-running the launch**: the script's
+     `--metadata="\<newline>  KEY=val,\<newline>  ..."` multi-line continuation literal is fragile — bash removes the
+     backslash-newline pair inside a double-quoted string but NOT the 2-space indentation that follows it, so the built
+     string silently baked `"  KEY"` (leading spaces) into every metadata item past the first;
+     `resource.metadata.items[N].key`'s regex (`[a-zA-Z0-9-_]{1,128}`) rejects a leading space, so
+     `gcloud compute instances create` failed outright on the very first live attempt. Confirmed this is narrowly scoped
+     (only 2 of 156 launchers use this fragile inline-continuation style; the other 154 build an incremental
+     `METADATA="${METADATA},KEY=val"` string, which is what this fix converts to) — plausibly this launcher's real
+     `gcloud` path had simply never been exercised for a genuine live launch before (only via `--dry-run`, which never
+     builds the actual flag string end-to-end). — deployment-service@6bc52cc, QG green 87s, shipped via quickmerge
+     --agent (amended for the missing `Quickmerge:` trailer automatically by quickmerge's own recovery path — verified
+     `strict-quickmerge: no bypassed code commits` passed clean).
+  3. **Launched the soak VM for real**:
+     `DUAL_WRITE=true bash launch-synthetic-benchmark-vm.sh --archetype carry_staked_basis --shapes c2-standard-4 --date-start 2024-01-01 --date-end 2024-01-01 --mode stub --row-count-scale 0.01 --env prod`
+     → `synbench-carry-staked-bas-c2-standard-4-20260725-000130`. Verified STARTED (serial console showed apt bootstrap
+     within seconds, matching the no-fire-and-forget rule) and, ~90s later, confirmed via `gcloud storage ls` that
+     `run.log`/`EXIT_STATUS` appeared. `run.log` shows a clean lifecycle: registered
+     `bcad201c-7fcb-4858-8de4-9438fe2951cc` at `00:03:40Z`, `DEPLOYMENT_STARTED`, the stub synthetic harness ran 5
+     stages in ~25s, `command exited rc=0`, `VM_SHUTDOWN_ON_COMPLETION=true` sent SIGTERM at `00:04:07Z` which the
+     Link-4-era `HeartbeatDaemon` SIGTERM handler caught cleanly — "archived deployment ... (status=completed,
+     exit_code=0)" — self-terminating with no operator follow-up needed. `EXIT_STATUS=0`.
+  4. **Positive check, not absence-of-error**: `run.log` has **zero** occurrences of the strings `dual-write` or
+     `firestore` — confirmed via direct code read (`_maybe_build_registry_store`/`_mirror_firestore` in
+     `unified_trading_library/deployment_registry.py`) that this is BY DESIGN — the warning only fires on the
+     `except Exception` failure path; a successful dual-write is silent, so "no warning" alone is exactly the ambiguous
+     signal this todo warns against. The actual positive evidence: queried
+     `firestore.Client(project='central-element-323112').collection('deployments')` directly — **0 → 1 doc**, id
+     `bcad201c-7fcb-4858-8de4-9438fe2951cc` (matches the VM's own `deployment_id` from its run.log), `status=completed`,
+     `last_heartbeat_at=2026-07-25T00:04:07Z` (fresh — matches the archive timestamp exactly), `vm_name` matches. Both
+     halves of the todo's own bar are met: doc count went 0→non-zero with a fresh timestamp, AND the failure warning is
+     confirmed absent (by code-path reasoning, not just log silence). The `[DATA]` todo below (subset-of-live-fleet
+     rollout) is now genuinely unblocked to start — Link 3 is live, the launcher bug that would have silently broken any
+     real attempt is fixed, and the code path is now proven correct against real prod Firestore with a real VM using its
+     own default-compute-SA identity (not my own ADC identity, which is the credential gap Link 3 is actually about).
+     Left `[DATA]` itself unchecked — a single throwaway synthetic-benchmark VM is a code-path proof, not the "subset of
+     the live fleet" sampling/diff that todo asks for.
 
 - **2026-07-24 (slot 2, infra) — [INFRA] P1 "Link 3 — grant the VM SA Firestore write IAM" — RESOLVED, was a session
   credential-diagnosis error, not a real BLOCKED-CREDENTIALS.** After `BLK-ab723fe3` was filed and answered (main
