@@ -133,11 +133,6 @@ supposed to be the canonical, path-agnostic answer to "did this availability eve
 
 ## Todos
 
-- [ ] [DATA] P2. **Design a manifest-slice-based replacement for `check_api_football_dependency()`** — load+filter once
-      per backfill run (or per reasonable chunk, e.g. per year) rather than per-date network calls; keep the current
-      direct-GCS path as a fallback ONLY if a genuine same-run consolidation-lag risk is confirmed real (the manifest
-      consolidator cron runs every 1 minute — `/codex/05-infrastructure/manifest-consolidator-ssot.md` — so there's a
-      real but small lag window worth explicitly deciding how to handle, not silently ignoring).
 - [x] [DATA] P0. **CRITICAL correctness bug found + fixed while auditing the ~9 sites (2026-07-08, later)**:
       `weather.py::_fetch_weather_data`'s primary fixtures read used the stale LEGACY bare prefix (`entity=fixtures/`,
       no `pipeline_mode=`) — confirmed via real GCS reads that this prefix has had **zero blobs** for every recent date

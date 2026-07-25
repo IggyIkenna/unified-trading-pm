@@ -64,7 +64,11 @@ resolved_by:
 
 - `active/` object count: **404** (re-measured minutes later: **403**) — a ~87% reduction from the 3,304 baseline, but
   NOT yet "≈ running-VM count" (measured 9 RUNNING GCE instances in `central-element-323112` + 2 unrelated persistent
-  AWS EC2 instances in `ap-northeast-1` that aren't part of this registry's tracked fleet).
+  AWS EC2 instances in `ap-northeast-1`, at this point framed as not part of this registry's tracked fleet — **note:**
+  the later 2026-07-24 slot-4 re-verification (Progress Log below / Todo 3) instead folds both into the comparator as
+  "~9 actually-running VMs (7 GCE + 2 AWS EC2)"; the two measurements are unreconciled — it's unclear whether AWS EC2 is
+  actually in scope for this registry's success criterion, and whether the GCE-only count genuinely dropped 9→7 between
+  measurements or was miscounted in one of the two passes).
 - Deployed revision confirmed: `uts-shared-deployment-api-00268-d2l`, image `deployment-api:e476c73` (contains the
   reaper-tick commit `8660e9e` per the plan's own 2026-07-24 Progress Log entry).
 - `GET /api/deployments/inventory` (no `status` filter — the query shape a real user/UI actually sends) → **HTTP 200**,
@@ -171,7 +175,10 @@ flipping the checkbox.
       cause: `_cancel_background_tasks()`'s 5s grace period is far shorter than a real reap tick's runtime (tens of
       seconds to minutes at current ~400-entry `active/` backlog scale; `run_in_executor`'s underlying thread can't be
       interrupted by asyncio cancellation), so essentially every worker recycle orphaned the tick with zero progress.
-      Fixed by bumping the grace period 5s→20s (within gunicorn's `graceful_timeout=30`). Also filed, separately,
+      Fixed by bumping the grace period 5s→20s (within gunicorn's `graceful_timeout=30`) — **this fixed only the
+      `CancelledError` symptom (ticks no longer get killed mid-flight), NOT the underlying drain/convergence problem**:
+      the 2026-07-24 (slot-4) re-verification below found `active/` unchanged at 403–404 post-fix, so Gap 1 (reaper not
+      draining) remains open — see Todo 4. Also filed, separately,
       `/plans/active/issues/deployment_api_sigabrt_crash_loop_2026_07_24.md` (an independent, undiagnosed SIGABRT
       crash-loop ~35×/day likely compounding the same interruption problem — not root-caused in this session).
 - [x] [BACKEND] P1. Bound or async-ify `_load_inventory`'s cold-cache path
@@ -201,6 +208,18 @@ flipping the checkbox.
       cold census computations — 2 concurrent cache-key computations OOM-killed the whole container, 17,002MiB used vs
       16,384MiB limit, `Container terminated on signal 9`, a MORE SEVERE failure mode than the bug it fixed) in
       [issues/deployment_api_inventory_cold_path_concurrent_oom_2026_07_24.md](deployment_api_inventory_cold_path_concurrent_oom_2026_07_24.md).
+- [ ] [BACKEND] P1. **Root-cause why `active/` is still not converging toward the live-VM count after the P0
+      `CancelledError`/grace-period fix (Todo 1) and P1 cold-cache fix (Todo 2) both shipped and were re-verified live
+      (Todo 3, slot-4: still 403–404, unchanged).** This is Gap 1 itself, distinct from the sibling OOM regression
+      (`deployment_api_inventory_cold_path_concurrent_oom_2026_07_24.md`, which tracks a DIFFERENT, newly-discovered
+      crash bug from the P1 fix) — that sibling doc's own fix does not address why reap ticks that DO complete aren't
+      archiving the sampled stale entries. Next steps: confirm a reap tick is actually completing end-to-end post-fix
+      (look for the `"[SYNC_SERVICE] Reaper: archived"` / `"[AUTO_SYNC] Reaper: archived"` log lines that were NEVER
+      observed in 7 days pre-fix — their continued absence post-fix would point at a second, still-undiagnosed blocker
+      beyond the `CancelledError` symptom); if ticks ARE completing, re-sample the 30 previously-`status="stale"`
+      entries to see whether they were archived or the reap logic itself is silently no-op'ing on them. Done-when: the
+      root cause of non-convergence is identified and either fixed + re-verified (`active/` ≈ live-VM count) or a
+      concrete blocker is documented.
 
 - **2026-07-24 (slot-4, review)**: Re-ran the end-to-end verification per the todo above, against the freshly deployed
   `uts-shared-deployment-api-00270-2l9` (`deployment-api:366154d`) — confirmed via `gcloud builds log` (Cloud Build

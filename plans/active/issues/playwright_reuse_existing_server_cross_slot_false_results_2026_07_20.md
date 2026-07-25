@@ -103,6 +103,18 @@ insufficient.
 A fix should also log the resolved port and whether a server was reused, so a foreign attach is at least visible in the
 run output rather than invisible.
 
+## Todos
+
+- [ ] [UI] P2. Implement per-slot Playwright port derivation (Recommended fix, Option A) in
+      `deployment-ui/playwright.config.ts` and all three `unified-trading-system-ui/playwright.config.ts` webServer
+      blocks — derive `PORT` from the slot number extracted from the checkout path (`.tabs/<N>/`), falling back to the
+      existing fixed-port default when not in a slot clone (pattern given above), keeping `reuseExistingServer: true`.
+      Also log the resolved port and whether the dev server was reused vs freshly spawned in the Playwright run output,
+      so a foreign attach is visible instead of silent. Done-when: two slots running Playwright concurrently on default
+      ports (no `PLAYWRIGHT_PORT` override) never collide — verified by launching concurrent runs from two different
+      `.tabs/<N>` clones and confirming each attaches only to its own dev server, with the resolved port/reuse status
+      printed in each run's output.
+
 ## Interim guidance for agents
 
 Until this is fixed, **always pass an explicit unique port** when running Playwright in a slot:
