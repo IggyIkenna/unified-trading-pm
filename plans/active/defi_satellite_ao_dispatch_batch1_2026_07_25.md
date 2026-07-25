@@ -542,6 +542,20 @@ drift_direction: advance-code
       `perp_daily_ctx` for the already-registered HYPERLIQUID/GMX/CeFi combinations would mint new expected_unattempted
       rows or move completeness_pct. No code/schema/manifest changes made. Source:
       `issues/defi_perp_daily_ctx_manifest_gap_reader_risk_2026_07_22.md`.
+- [ ] [DATA] P2. **Resolve the Kamino/Solend `lending_indices` `instrument_type` shape conflict — probe BOTH candidate
+      paths.** `issues/defi_solana_dex_pools_fake_history_recurrence_prd_bucket_2026_07_23.md` item 4 left this
+      "inconclusive, not a clean bill": its own targeted shape (`instrument_type=solana_lending`, per
+      `lending_indices_handler.py::resolve_lending_instrument_type()`) conflicts with
+      `defi_consolidated_closeout_2026_07_18.md` Track 2's independent 2026-07-20 live GCS probe, which found 47 real
+      KAMINO `lending_indices` objects under `instrument_type=solana_amm_pool` instead. Operator ruling 2026-07-25
+      (queued entry #3 in `issues/autonomous_session_operator_decisions_2026_07_25.md`, answered): probe BOTH shapes and
+      explicitly reconcile against the 47-object Track-2 finding before filing any verdict — do not conclude "clean
+      bill" from checking only `solana_lending`. Repo: market-tick-data-service (read-only probe). Source:
+      `issues/defi_solana_dex_pools_fake_history_recurrence_prd_bucket_2026_07_23.md` item 6 (added 2026-07-25 per the
+      operator's ruling). **Done when**: both `instrument_type=solana_lending` and `instrument_type=solana_amm_pool` are
+      sampled for real KAMINO/SOLEND objects (uri + timestamp-vs-day= check, same method as items 4/5 in the source
+      doc), the 47-object Track-2 population is accounted for, and a definitive verdict (clean / same fabrication bug as
+      the dex_pools class / a different issue) is recorded in the source doc.
 
 ## Deferred
 
@@ -580,17 +594,15 @@ drift_direction: advance-code
 extraction time; see each doc's own rationale. (`defi_dexpool_second_writer_path_and_zero_capture_2026_07_10.md` also
 appeared in this bucket but is listed once, above, under the more specific too-large-or-risky flag.)
 
-### Needs operator ruling — routed to the decision queue, not silently decided (1 item)
+### Needs operator ruling — RESOLVED 2026-07-25, moved into Todos above
 
 `issues/defi_solana_dex_pools_fake_history_recurrence_prd_bucket_2026_07_23.md`'s sole candidate ("Determine whether the
-dex_pools-class fake-history-snapshot bug also affects Kamino/Solend Solana lending_indices in the `-prd-` bucket") is a
-genuine cross-doc contradiction: the todo asserts `instrument_type=solana_lending` is the correct real path per
-`lending_indices_handler.py::resolve_lending_instrument_type()`, but `defi_consolidated_closeout_2026_07_18.md` Track 2
-reports an independent 2026-07-20 live GCS probe finding a KAMINO lending_indices canonical twin (47 objects) actually
-sitting under `instrument_type=solana_amm_pool` — a THIRD, different path shape from both the already-known-wrong
-`instrument_type=pool` and this todo's targeted `solana_lending`. Neither doc cross-checked the discrepancy. Filed as
-entry 3 in `plans/active/issues/autonomous_session_operator_decisions_2026_07_25.md` per the operator's queue-not-decide
-instruction — not shipped as a batch1 todo.
+dex_pools-class fake-history-snapshot bug also affects Kamino/Solend Solana lending_indices in the `-prd-` bucket") was
+a genuine cross-doc contradiction (`instrument_type=solana_lending` per the writer code vs. an independent
+`instrument_type=solana_amm_pool` live-probe finding, 47 objects, in `defi_consolidated_closeout_2026_07_18.md` Track
+2). Filed as entry 3 in `plans/active/issues/autonomous_session_operator_decisions_2026_07_25.md`; the operator answered
+same-day: probe both shapes before concluding. Widened + dispatched as a Todos-section item above (source doc also
+updated with a new item 6 carrying the same widened scope).
 
 ## Reconciliation
 

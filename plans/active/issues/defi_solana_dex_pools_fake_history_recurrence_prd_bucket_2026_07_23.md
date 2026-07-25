@@ -251,6 +251,20 @@ is regenerated after a fix.**
       signature; **prediction** — 30 samples (20 KALSHI `trades`, 10 POLYMARKET `trades`/`prediction_trades`): **30/30
       exact match**. Zero evidence of the dex_pools-class bug in either asset_group's completed backfill. Both cefi and
       prediction's `record_captured` cells are genuinely clean.
+- [ ] [DATA] P2. **Item 6 — resolve item 4's "inconclusive, not a clean bill" gap for Kamino/Solend `lending_indices` —
+      probe BOTH candidate path shapes before filing any verdict.** Item 4 above named `instrument_type=solana_lending`
+      (per `resolve_lending_instrument_type()` in
+      `market-tick-data-service/market_tick_data_service/cli/handlers/lending_indices_handler.py`) as the shape to
+      check, but `defi_consolidated_closeout_2026_07_18.md`'s Track 2 independently found a live 2026-07-20 GCS probe
+      with 47 real KAMINO `lending_indices` objects sitting under `instrument_type=solana_amm_pool` at `day=2026-04-14`
+      instead — a third, different shape from both this issue's `instrument_type=pool` (already ruled out) and item 4's
+      targeted `solana_lending`. Operator ruling 2026-07-25 (queued in
+      `issues/autonomous_session_operator_decisions_2026_07_25.md` #3): probe BOTH `instrument_type=solana_lending` AND
+      `instrument_type=solana_amm_pool` for KAMINO/SOLEND `lending_indices` and explicitly reconcile against Track 2's
+      47-object finding before concluding either a clean bill or a fake-history match. **Done when**: both shapes are
+      sampled for real objects (uri + timestamp-vs-day= check, same method as items 4/5 above), the 47-object Track-2
+      population is accounted for one way or the other, and a definitive verdict (clean / same fabrication bug /
+      different issue) is recorded here.
 
 ## Lesson (do not re-learn)
 
